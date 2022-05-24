@@ -3,14 +3,14 @@ import React, {ReactElement} from 'react';
 import styles from './component-compare-status-resolver.module.scss';
 import {Tooltip} from '@teambit/design.ui.tooltip';
 
-export type CompareStatus = 'modified' | 'added' | 'removed';
+export type CompareStatus = 'modified' | 'new' | 'deleted';
 
 function ToolTip({ status, children }: { status: CompareStatus; children: ReactElement<any> | string }) {
   const content = (
     <ul className={styles.list}>
-      {status === 'added' && <li>New component</li>}
+      {status === 'new' && <li>New component</li>}
       {status === 'modified' && <li>Modified component</li>}
-      {status === 'removed' && <li>Deleted component</li>}
+      {status === 'deleted' && <li>Deleted component</li>}
     </ul>
   );
 
@@ -37,9 +37,7 @@ export function ComponentCompareStatusResolver({ status }: ComponentCompareStatu
   return (
     <ToolTip status={status}>
       <div className={styles.statusLine}>
-        {status === 'added' && <Status status="added" />}
-        {status === 'removed' && <Status status="removed" />}
-        {status === 'modified' && <Status status="modified" />}
+        <Status status={status} />
       </div>
     </ToolTip>
   );

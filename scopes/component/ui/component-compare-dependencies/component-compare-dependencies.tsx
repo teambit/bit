@@ -50,7 +50,7 @@ function buildGraph(_baseGraph: GraphModel, _compareGraph: GraphModel) {
       allNodes.push({
         ...baseNode,
         compareVersion: baseNode.component.version,
-        status: 'removed',
+        status: 'deleted',
       });
     }
   }
@@ -60,7 +60,7 @@ function buildGraph(_baseGraph: GraphModel, _compareGraph: GraphModel) {
     allNodes.push({
       ...node,
       compareVersion: node.component.version,
-      status: 'added',
+      status: 'new',
     });
   }
 
