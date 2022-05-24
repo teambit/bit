@@ -3,8 +3,8 @@ import chalk from 'chalk';
 import { ForkingMain } from './forking.main.runtime';
 
 export class ScopeForkCmd implements Command {
-  name = 'fork <old-scope> <new-scope>';
-  description = 'rename a scope for components using the old-name, optionally change the dependencies source-code';
+  name = 'fork <original-scope> <new-scope>';
+  description = 'fork all components of the original-scope and refactor the source-code to use the new package names';
   options = [] as CommandOptions;
   group = 'development';
 
