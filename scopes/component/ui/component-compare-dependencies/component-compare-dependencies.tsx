@@ -1,24 +1,19 @@
-import { ComponentID } from '@teambit/component';
 import { useComponentCompareContext } from '@teambit/component.ui.component-compare';
-import { EdgeModel, EdgeType, GraphModel, NodeModel, useGraphQuery } from '@teambit/graph';
-import dagre, { graphlib } from 'dagre';
-import React from 'react';
+import { EdgeModel, GraphModel, NodeModel, useGraphQuery } from '@teambit/graph';
+import React, { useEffect, useMemo, useRef } from 'react';
 import ReactFlow, {
-  ArrowHeadType,
   Background,
-  Controls,
-  Edge,
-  Handle,
-  Node,
-  NodeProps,
+  Controls, Handle, NodeProps,
   NodeTypesType,
+  OnLoadParams,
   Position,
-  ReactFlowProvider,
+  ReactFlowProvider
 } from 'react-flow-renderer';
+import { calcElements } from './calc-elements';
 import { CompareGraphModel } from './compare-graph-model';
 import { CompareNodeModel } from './compare-node-model';
-import { ComponentCompareDependencyNode } from './component-compare-dependency-node';
 import styles from './component-compare-dependencies.module.scss';
+import { ComponentCompareDependencyNode } from './component-compare-dependency-node';
 
 function ComponentNodeContainer(props: NodeProps) {
   const { sourcePosition = Position.Top, targetPosition = Position.Bottom, data, id } = props;
@@ -34,73 +29,93 @@ function ComponentNodeContainer(props: NodeProps) {
 
 const NodeTypes: NodeTypesType = { ComponentNode: ComponentNodeContainer };
 
+function buildGraph(_baseGraph: GraphModel, _compareGraph: GraphModel) {
+  const baseNodes = _baseGraph.nodes;
+  const compareNodes = _compareGraph.nodes;
+  const baseNodesMap = new Map<string, NodeModel>(baseNodes.map((n) => [n.component.id.toStringWithoutVersion(), n]));
+  const compareNodesMap = new Map<string, NodeModel>(
+    compareNodes.map((n) => [n.component.id.toStringWithoutVersion(), n])
+  );
+
+  const allNodes: Array<CompareNodeModel> = [];
+  for (const baseNode of baseNodes) {
+    const compareNode = compareNodesMap.get(baseNode.component.id.toStringWithoutVersion());
+    if (compareNode) {
+      allNodes.push({
+        ...baseNode,
+        compareVersion: compareNode.component.version,
+        status: compareNode.component.version === baseNode.component.version ? 'unchanged' : 'modified',
+      });
+    } else {
+      allNodes.push({
+        ...baseNode,
+        compareVersion: baseNode.component.version,
+        status: 'removed',
+      });
+    }
+  }
+
+  const newNodes = compareNodes.filter((n) => !baseNodesMap.has(n.component.id.toStringWithoutVersion()));
+  for (const node of newNodes) {
+    allNodes.push({
+      ...node,
+      compareVersion: node.component.version,
+      status: 'added',
+    });
+  }
+
+  const baseEdgesMap = new Map<string, EdgeModel>(
+    _baseGraph.edges.map((e) => [`${e.sourceId.split('@')[0]} | ${e.targetId.split('@')[0]}`, e])
+  );
+  const edgesOnlyInCompare = _compareGraph.edges.filter(
+    (e) => !baseEdgesMap.has(`${e.sourceId.split('@')[0]} | ${e.targetId.split('@')[0]}`)
+  );
+  const allEdges = [..._baseGraph.edges, ...edgesOnlyInCompare];
+
+  return new CompareGraphModel(allNodes, allEdges);
+}
+
 export function ComponentCompareDependencies() {
+  const graphRef = useRef<OnLoadParams>();
   const componentCompare = useComponentCompareContext();
 
   if (componentCompare === undefined) {
     return <></>;
   }
 
-  const { base: baseComponent, compare: compareComponent } = componentCompare;
-  const { id: baseId } = baseComponent;
-  const { id: compareId } = compareComponent;
+  const {
+    base: { id: baseId },
+    compare: { id: compareId },
+  } = componentCompare;
   const filter = 'runtimeOnly'; // this controls the checkbox to show/hide runtime nodes
-  const { graph: baseGraph } = useGraphQuery([baseId.toString()], filter);
-  const { graph: compareGraph } = useGraphQuery([compareId.toString()], filter);
+  const { loading: baseLoading, graph: baseGraph } = useGraphQuery([baseId.toString()], filter);
+  const { loading: compareLoading, graph: compareGraph } = useGraphQuery([compareId.toString()], filter);
 
-  if (!baseGraph || !compareGraph) {
-    return <></>;
+  if (!baseLoading && !compareLoading) {
+    if (!baseGraph || !compareGraph) {
+      return <></>;
+    }
   }
 
-  function buildGraph(_baseGraph: GraphModel, _compareGraph: GraphModel) {
-    const baseNodes = _baseGraph.nodes;
-    const compareNodes = _compareGraph.nodes;
-    const baseNodesMap = new Map<string, NodeModel>(baseNodes.map((n) => [n.component.id.toStringWithoutVersion(), n]));
-    const compareNodesMap = new Map<string, NodeModel>(
-      compareNodes.map((n) => [n.component.id.toStringWithoutVersion(), n])
-    );
-
-    const allNodes: Array<CompareNodeModel> = [];
-    for (const baseNode of baseNodes) {
-      const compareNode = compareNodesMap.get(baseNode.component.id.toStringWithoutVersion());
-      if (compareNode) {
-        allNodes.push({
-          ...baseNode,
-          compareVersion: compareNode.component.version,
-          status: compareNode.component.version === baseNode.component.version ? 'unchanged' : 'modified',
-        });
-      } else {
-        allNodes.push({
-          ...baseNode,
-          compareVersion: baseNode.component.version,
-          status: 'removed',
-        });
-      }
-    }
-
-    const newNodes = compareNodes.filter((n) => !baseNodesMap.has(n.component.id.toStringWithoutVersion()));
-    for (const node of newNodes) {
-      allNodes.push({
-        ...node,
-        compareVersion: node.component.version,
-        status: 'added',
-      });
-    }
-
-    const baseEdgesMap = new Map<string, EdgeModel>(
-      _baseGraph.edges.map((e) => [`${e.sourceId.split('@')[0]} | ${e.targetId.split('@')[0]}`, e])
-    );
-    const edgesOnlyInCompare = _compareGraph.edges.filter(
-      (e) => !baseEdgesMap.has(`${e.sourceId.split('@')[0]} | ${e.targetId.split('@')[0]}`)
-    );
-    const allEdges = [..._baseGraph.edges, ...edgesOnlyInCompare];
-
-    return new CompareGraphModel(allNodes, allEdges);
+  let graph: CompareGraphModel | undefined = undefined;
+  if (!!baseGraph && !!compareGraph) {
+    graph = buildGraph(baseGraph, compareGraph);
   }
 
-  const graph = buildGraph(baseGraph, compareGraph);
+  const elements = useMemo(() => {
+    if (!!graph) {
+      return calcElements(graph, baseId.toString(), compareId.toString());
+    }
+    return [];
+  }, [graph]);
 
-  const elements = calcElements(graph, baseId.toString(), compareId.toString());
+  useEffect(() => {
+    graphRef.current?.fitView();
+  }, [elements]);
+
+  function handleLoad(instance: OnLoadParams) {
+    graphRef.current = instance;
+  }
 
   return (
     <div className={styles.page}>
@@ -116,6 +131,7 @@ export function ComponentCompareDependencies() {
           className={styles.graph}
           elements={elements}
           nodeTypes={NodeTypes}
+          onLoad={handleLoad}
         >
           <Background />
           <Controls className={styles.controls} />
@@ -124,98 +140,4 @@ export function ComponentCompareDependencies() {
       </ReactFlowProvider>
     </div>
   );
-}
-
-// todo: move to new file
-const NODE_WIDTH = 260;
-const NODE_HEIGHT = 90;
-
-const BOTTOM_TO_TOP = 'BT';
-
-/**
- * calculate the specific location of each node in the graph
- */
-export function calcLayout(graph: CompareGraphModel) {
-  const g = new graphlib.Graph();
-  g.setGraph({ rankdir: BOTTOM_TO_TOP });
-  g.setDefaultEdgeLabel(() => ({}));
-
-  // make a new instance of { width, height } per node, or dagre will get confused and place all nodes in the same spot
-  graph.nodes.forEach((n) => g.setNode(n.id, { width: NODE_WIDTH, height: NODE_HEIGHT }));
-  graph.edges.forEach((e) => g.setEdge({ v: e.sourceId, w: e.targetId }));
-
-  // position items in graph
-  dagre.layout(g);
-
-  const positionsArr: [string, { x: number; y: number }][] = g.nodes().map((nodeId) => {
-    const node = g.node(nodeId);
-
-    const pos = {
-      x: node.x - node.width / 2,
-      y: node.y - node.height / 2,
-    };
-
-    return [nodeId, pos];
-  });
-
-  return new Map(positionsArr);
-}
-
-function calcElements(graph: CompareGraphModel, baseId: string, compareId: string) {
-  if (!graph) return [];
-
-  const positions = calcLayout(graph);
-
-  const nodes: Node[] = Array.from(graph.nodes.values()).map((x) => {
-    const rootNode = x.id === baseId || x.id === compareId ? ComponentID.fromString(x.id) : undefined;
-    return {
-      id: x.id,
-      type: 'ComponentNode',
-      data: {
-        node: x,
-        type: rootNode && x.component.id.isEqual(rootNode, { ignoreVersion: true }) ? 'root' : undefined,
-      },
-      position: positions.get(x.id) || { x: 0, y: 0 },
-    };
-  });
-
-  const edges: Edge[] = graph.edges.map((e) => ({
-    id: `_${e.sourceId}__${e.targetId}`,
-    source: e.sourceId,
-    target: e.targetId,
-    label: depTypeToLabel(e.dependencyLifecycleType),
-    labelBgPadding: [4, 4],
-    type: 'smoothstep',
-    className: depTypeToClass(e.dependencyLifecycleType),
-    arrowHeadType: ArrowHeadType.Arrow,
-  }));
-
-  return [...nodes, ...edges];
-}
-
-// todo: should be able to reuse from scopes/component/graph/ui/dependencies-graph/dep-edge/dep-edge.tsx
-export function depTypeToClass(depType: string) {
-  switch (depType) {
-    case 'DEV':
-      return styles.dev;
-    case 'PEER':
-      return styles.peer;
-    case 'RUNTIME':
-      return styles.runtime;
-    default:
-      return undefined;
-  }
-}
-
-export function depTypeToLabel(type: EdgeType) {
-  switch (type) {
-    case EdgeType.peer:
-      return 'Peer Dependency';
-    case EdgeType.dev:
-      return 'Development Dependency';
-    case EdgeType.runtime:
-      return 'Dependency';
-    default:
-      return (type as string).toLowerCase();
-  }
 }
