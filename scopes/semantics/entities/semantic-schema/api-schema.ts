@@ -1,6 +1,14 @@
 import { Transform, plainToInstance } from 'class-transformer';
 import chalk from 'chalk';
-import { ClassSchema, FunctionLikeSchema, InterfaceSchema, Module, TypeSchema, VariableSchema } from './schemas';
+import {
+  ClassSchema,
+  EnumSchema,
+  FunctionLikeSchema,
+  InterfaceSchema,
+  Module,
+  TypeSchema,
+  VariableSchema,
+} from './schemas';
 import { Location, SchemaNode } from './schema-node';
 import { schemaObjToInstance } from './schema-obj-to-class';
 
@@ -37,7 +45,8 @@ export class APISchema extends SchemaNode {
       getSection(InterfaceSchema, 'Interfaces') +
       getSection(FunctionLikeSchema, 'Functions') +
       getSection(VariableSchema, 'Variables') +
-      getSection(TypeSchema, 'Types')
+      getSection(TypeSchema, 'Types') +
+      getSection(EnumSchema, 'Enums')
     );
   }
 
