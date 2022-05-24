@@ -734,6 +734,13 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
   }
 
   /**
+   * get a component from a remote without importing it
+   */
+  async getManyRemoteComponents(ids: ComponentID[]): Promise<Component[]> {
+    return this.componentLoader.getManyRemoteComponents(ids);
+  }
+
+  /**
    * list all components in the scope.
    */
   async list(
@@ -908,6 +915,16 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
   // TODO: add new API for this
   async _legacyRemotes(): Promise<Remotes> {
     return getScopeRemotes(this.legacyScope);
+  }
+
+  /**
+   * list all component ids from a remote-scope
+   */
+  async listRemoteScope(scopeName: string): Promise<ComponentID[]> {
+    const remotes = await this._legacyRemotes();
+    const remote = await remotes.resolve(scopeName, this.legacyScope);
+    const results = await remote.list();
+    return results.map(({ id }) => ComponentID.fromLegacy(id));
   }
 
   /**

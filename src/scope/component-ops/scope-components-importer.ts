@@ -415,6 +415,22 @@ export default class ScopeComponentsImporter {
     return bitObjectsList;
   }
 
+  /**
+   * get components from a remote without saving it locally
+   */
+  async getManyRemoteComponents(ids: BitId[]): Promise<BitObjectList> {
+    logger.debug(`getManyRemoteComponents, ids: ${ids.map((id) => id.toString()).join(', ')}`);
+    ids.forEach((id) => {
+      if (!id.scope) {
+        throw new Error(`unable to get remote component "${id.toString()}", the scope is empty`);
+      }
+    });
+    const remotes = await getScopeRemotes(this.scope);
+    const grouped = groupByScopeName(ids);
+    const streams = await remotes.fetch(grouped, this.scope);
+    return this.multipleStreamsToBitObjects(Object.values(streams));
+  }
+
   private async multipleStreamsToBitObjects(streams: ObjectItemsStream[]): Promise<BitObjectList> {
     const objectListPerRemote = await Promise.all(streams.map((stream) => ObjectList.fromReadableStream(stream)));
     const objectList = ObjectList.mergeMultipleInstances(objectListPerRemote);

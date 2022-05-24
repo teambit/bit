@@ -1,4 +1,5 @@
 import { Component, ComponentFS, ComponentID, Config, Snap, State, Tag, TagMap } from '@teambit/component';
+import pMapSeries from 'p-map-series';
 import { Logger } from '@teambit/logger';
 import { SemVer } from 'semver';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
@@ -83,6 +84,22 @@ export class ScopeComponentLoader {
     objectList?.getAll().forEach((obj) => this.scope.legacyScope.objects.setCache(obj));
     const consumerComponent = await this.scope.legacyScope.getConsumerComponent(id._legacy);
     return this.getFromConsumerComponent(consumerComponent);
+  }
+
+  /**
+   * get components from a remote without importing it
+   */
+  async getManyRemoteComponents(ids: ComponentID[]): Promise<Component[]> {
+    const compImport = new ScopeComponentsImporter(this.scope.legacyScope);
+    const legacyIds = ids.map((id) => id._legacy);
+    const objectList = await compImport.getManyRemoteComponents(legacyIds);
+    // it's crucial to add all objects to the Repository cache. otherwise, later, when it asks
+    // for the consumerComponent from the legacyScope, it won't work.
+    objectList?.getAll().forEach((obj) => this.scope.legacyScope.objects.setCache(obj));
+    return pMapSeries(legacyIds, async (legacyId) => {
+      const consumerComponent = await this.scope.legacyScope.getConsumerComponent(legacyId);
+      return this.getFromConsumerComponent(consumerComponent);
+    });
   }
 
   async getState(id: ComponentID, hash: string): Promise<State> {
