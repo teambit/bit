@@ -71,7 +71,6 @@ export class LanesUI {
                   <LaneReadmeOverview host={this.host} overviewSlot={this.overviewSlot} routeSlot={this.routeSlot} />
                 }
               />
-              <Route path="~readme" element={<div>readme page</div>} />
               <Route
                 path="~gallery"
                 element={
@@ -111,6 +110,7 @@ export class LanesUI {
       {
         props: {
           href: '.',
+          exact: true,
           children: 'README',
         },
         order: 1,
@@ -123,6 +123,7 @@ export class LanesUI {
         props: {
           href: '~gallery',
           children: 'Gallery',
+          exact: true,
         },
         order: 1,
       },
