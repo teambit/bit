@@ -69,20 +69,22 @@ export class SchemaExtractorContext {
     return sourceFile.fileName;
   }
 
-  /**
-   * create a reference to a type from a component.
-   * think if we don't need this because of type ref
-   */
-  // createRef() {
-  //   return {};
-  // }
-
-  getQuickInfo(node: Node) {
-    return this.tsserver.getQuickInfo(this.getPath(node), this.getLocation(node));
+  async getQuickInfo(node: Node) {
+    const location = this.getLocation(node);
+    try {
+      return await this.tsserver.getQuickInfo(this.getPath(node), location);
+    } catch (err: any) {
+      if (err.message === 'No content available.') {
+        throw new Error(
+          `unable to get quickinfo data from tsserver at ${location.file}, Ln ${location.line}, Col ${location.character}`
+        );
+      }
+      throw err;
+    }
   }
 
   async getQuickInfoDisplayString(node: Node): Promise<string> {
-    const quickInfo = await this.tsserver.getQuickInfo(this.getPath(node), this.getLocation(node));
+    const quickInfo = await this.getQuickInfo(node);
     return quickInfo?.body?.displayString || '';
   }
 
@@ -280,7 +282,7 @@ export class SchemaExtractorContext {
     // when we can't figure out the component/package/type of this node, we'll use the typeStr as the type.
     const unknownExactType = async () => {
       if (isTypeStrFromQuickInfo) {
-        return new InferenceTypeSchema(location, typeStr);
+        return new InferenceTypeSchema(location, typeStr || 'any');
       }
       const info = await this.getQuickInfo(node);
       const type = parseTypeFromQuickInfo(info);
