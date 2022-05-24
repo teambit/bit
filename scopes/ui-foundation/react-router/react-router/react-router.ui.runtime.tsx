@@ -16,7 +16,6 @@ type RouteChangeSlot = SlotRegistry<LocationListener>;
 type RenderContext = { initialLocation?: string };
 
 export class ReactRouterUI {
-  // private routerHistory?: History;
   private routingMode = isBrowser ? Routing.url : Routing.static;
 
   constructor(

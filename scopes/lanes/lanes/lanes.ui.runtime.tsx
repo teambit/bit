@@ -64,7 +64,6 @@ export class LanesUI {
         path: LanesModel.lanesPrefix,
         children: (
           <>
-            {/* TODO - handle lanes without org id */}
             <Route path={LanesModel.lanePath}>
               <Route
                 index
