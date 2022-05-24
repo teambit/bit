@@ -62,7 +62,7 @@ export class ReactRouterUI {
    */
   navigateTo = (
     /** destination */
-    path: Location,
+    path: Location | string,
     /** history action to execute (pop / push / replace) */
     action?: NavigationType
   ) => {
