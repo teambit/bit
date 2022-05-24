@@ -4,11 +4,10 @@ import { Component } from '@teambit/component';
  * This function will calculate the package version for a component.
  * It is used mainly for supporting lanes and snaps during capsule creation
  * The general format is like this:
- * {closestTagSemver}-{snapHash}
+ * {0.0.0}-{snapHash}
  * but there are some exceptions:
  * in case the snapHash equal to the closestTagSemver snap hash the format will be just
  * {closestTagSemver}
- * In case the component is new the result will be: 0.0.0
  * @param component
  */
 export async function getComponentPackageVersion(component: Component, snapId?: string): Promise<string> {
