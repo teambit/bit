@@ -11,6 +11,8 @@ import styles from './component-compare-dependency-node.module.scss';
 import variants from './component-compare-dependency-variants.module.scss';
 import { CompareNodeModel } from './compare-node-model';
 import { ComponentCompareStatusResolver } from '@teambit/component.ui.component-compare-status-resolver';
+import { NavLink } from '@teambit/base-ui.routing.nav-link';
+import { ComponentUrl } from '@teambit/component.modules.component-url';
 
 export type ComponentCompareDependencyNodeProps = {
   node: CompareNodeModel;
@@ -34,8 +36,10 @@ export function ComponentCompareDependencyNode(props: ComponentCompareDependency
   return (
     <Card className={classnames(styles.compNode, variants[type])} elevation="none">
       <div className={styles.firstRow}>
-        <Breadcrumbs componentId={baseId} className={mutedText} />
         <EnvIcon component={baseComponent} className={styles.envIcon} />
+        <NavLink className={styles.link} external={true} href={ComponentUrl.toUrl(baseId, { includeVersion: false })}>
+          <Breadcrumbs componentId={baseId} className={mutedText} />
+        </NavLink>
       </div>
       <div className={styles.nameLine}>
         <span className={classnames(styles.name, ellipsis)}>{baseId.name}</span>

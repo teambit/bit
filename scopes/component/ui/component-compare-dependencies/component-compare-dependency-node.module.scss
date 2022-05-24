@@ -12,7 +12,6 @@
 .firstRow {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   margin-bottom: 4px;
 }
 
@@ -74,4 +73,14 @@
 
 .versionDown {
   color: #E72A60;
+}
+
+.link {
+  text-decoration: none;
+  color: var(--bit-text-color-heavyed);
+  // font-size: 14px;
+  // margin-bottom: 8px;
+  &:hover {
+    text-decoration: underline;
+  }
 }
