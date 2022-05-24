@@ -186,6 +186,9 @@ export default class CommandHelper {
   fork(sourceId: string, values = '') {
     return this.runCmd(`bit fork ${sourceId} ${values}`);
   }
+  forkScope(originalScope: string, newScope: string) {
+    return this.runCmd(`bit scope fork ${originalScope} ${newScope}`);
+  }
   rename(sourceId: string, targetId: string, flags = '') {
     return this.runCmd(`bit rename ${sourceId} ${targetId} ${flags}`);
   }
