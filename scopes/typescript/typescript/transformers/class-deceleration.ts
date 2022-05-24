@@ -1,7 +1,7 @@
 import pMapSeries from 'p-map-series';
 import { compact } from 'lodash';
 import { ClassSchema, GetAccessorSchema, SetAccessorSchema } from '@teambit/semantics.entities.semantic-schema';
-import ts, { Node, ClassDeclaration } from 'typescript';
+import ts, { Node, ClassDeclaration, isSemicolonClassElement } from 'typescript';
 import { SchemaTransformer } from '../schema-transformer';
 import { SchemaExtractorContext } from '../schema-extractor-context';
 import { ExportIdentifier } from '../export-identifier';
@@ -27,6 +27,9 @@ export class ClassDecelerationTransformer implements SchemaTransformer {
     const members = await pMapSeries(node.members, async (member) => {
       const isPrivate = member.modifiers?.some((modifier) => modifier.kind === ts.SyntaxKind.PrivateKeyword);
       if (isPrivate) {
+        return null;
+      }
+      if (isSemicolonClassElement(member)) {
         return null;
       }
       switch (member.kind) {

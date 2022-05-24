@@ -11,9 +11,14 @@ import {
   IntersectionTypeNode,
   UnionTypeNode,
   TypeLiteralNode,
+  ParenthesizedTypeNode,
+  TypePredicateNode,
+  isIdentifier,
+  IndexedAccessTypeNode,
 } from 'typescript';
 import {
   SchemaNode,
+  TypeRefSchema,
   TypeIntersectionSchema,
   TypeUnionSchema,
   TypeLiteralSchema,
@@ -24,6 +29,9 @@ import {
   TypeOperatorSchema,
   TupleTypeSchema,
   FunctionLikeSchema,
+  ParenthesizedTypeSchema,
+  TypePredicateSchema,
+  IndexedAccessSchema,
 } from '@teambit/semantics.entities.semantic-schema';
 import pMapSeries from 'p-map-series';
 import { SchemaExtractorContext } from '../../schema-extractor-context';
@@ -56,16 +64,19 @@ export async function typeNodeToSchema(node: TypeNode, context: SchemaExtractorC
       return typeOperator(node as TypeOperatorNode, context);
     case SyntaxKind.TupleType:
       return tupleType(node as TupleTypeNode, context);
+    case SyntaxKind.ParenthesizedType:
+      return parenthesizedType(node as ParenthesizedTypeNode, context);
     case SyntaxKind.TypePredicate:
+      return typePredicate(node as TypePredicateNode, context);
+    case SyntaxKind.IndexedAccessType:
+      return indexedAccessType(node as IndexedAccessTypeNode, context);
     case SyntaxKind.ConstructorType:
     case SyntaxKind.NamedTupleMember:
     case SyntaxKind.OptionalType:
     case SyntaxKind.RestType:
     case SyntaxKind.ConditionalType:
     case SyntaxKind.InferType:
-    case SyntaxKind.ParenthesizedType:
     case SyntaxKind.ThisType:
-    case SyntaxKind.IndexedAccessType:
     case SyntaxKind.MappedType:
     case SyntaxKind.TemplateLiteralType:
     case SyntaxKind.TemplateLiteralTypeSpan:
@@ -82,10 +93,10 @@ export async function typeNodeToSchema(node: TypeNode, context: SchemaExtractorC
     case SyntaxKind.JSDocNamepathType:
     case SyntaxKind.JSDocSignature:
     case SyntaxKind.JSDocTypeLiteral:
-      throw new Error(`TypeNode "${SyntaxKind[node.kind]}" was not implemented yet.
+      throw new Error(`TypeNode ${node.kind} (probably ${SyntaxKind[node.kind]}) was not implemented yet.
 context: ${node.getText()}`);
     default:
-      throw new Error(`Node "${SyntaxKind[node.kind]}" is not a TypeNode.
+      throw new Error(`Node ${node.kind} (probably ${SyntaxKind[node.kind]}) is not a TypeNode.
 context: ${node.getText()}`);
   }
 }
@@ -154,6 +165,10 @@ async function typeLiteral(node: TypeLiteralNode, context: SchemaExtractorContex
 async function typeReference(node: TypeReferenceNode, context: SchemaExtractorContext) {
   const name = node.typeName.getText();
   const type = await context.resolveType(node, name, false);
+  if (node.typeArguments && type instanceof TypeRefSchema) {
+    const args = await pMapSeries(node.typeArguments, (arg) => typeNodeToSchema(arg, context));
+    type.typeArgs = args;
+  }
   return type;
 }
 
@@ -209,4 +224,22 @@ async function tupleType(node: TupleTypeNode, context: SchemaExtractorContext) {
     return typeSchema;
   });
   return new TupleTypeSchema(context.getLocation(node), elements);
+}
+
+async function parenthesizedType(node: ParenthesizedTypeNode, context: SchemaExtractorContext) {
+  const type = await typeNodeToSchema(node.type, context);
+  return new ParenthesizedTypeSchema(context.getLocation(node), type);
+}
+
+async function typePredicate(node: TypePredicateNode, context: SchemaExtractorContext) {
+  const parameterName = isIdentifier(node.parameterName) ? node.parameterName.getText() : 'this';
+  const type = node.type ? await typeNodeToSchema(node.type, context) : undefined;
+  const hasAssertsModifier = Boolean(node.assertsModifier);
+  return new TypePredicateSchema(context.getLocation(node), parameterName, type, hasAssertsModifier);
+}
+
+async function indexedAccessType(node: IndexedAccessTypeNode, context: SchemaExtractorContext) {
+  const objectType = await typeNodeToSchema(node.objectType, context);
+  const indexType = await typeNodeToSchema(node.indexType, context);
+  return new IndexedAccessSchema(context.getLocation(node), objectType, indexType);
 }

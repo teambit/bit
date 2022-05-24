@@ -25,5 +25,9 @@ export {
   TypeOperatorSchema,
   TupleTypeSchema,
   ParameterSchema,
+  EnumSchema,
+  ParenthesizedTypeSchema,
+  TypePredicateSchema,
+  IndexedAccessSchema,
 } from './schemas';
 export type { JSONSchema, JSONSchemaObject } from './json-schema';

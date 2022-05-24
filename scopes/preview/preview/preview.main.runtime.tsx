@@ -393,7 +393,10 @@ export class PreviewMain {
   }
 
   private getDefaultStrategies() {
-    return [new EnvBundlingStrategy(this), new ComponentBundlingStrategy(this, this.pkg, this.dependencyResolver)];
+    return [
+      new EnvBundlingStrategy(this, this.pkg, this.dependencyResolver),
+      new ComponentBundlingStrategy(this, this.pkg, this.dependencyResolver),
+    ];
   }
 
   // TODO - executionContext should be responsible for updating components list, and emit 'update' events
@@ -559,8 +562,8 @@ export class PreviewMain {
 
     if (!config.disabled)
       builder.registerBuildTasks([
-        new EnvPreviewTemplateTask(preview, envs, aspectLoader),
-        new PreviewTask(bundler, preview),
+        new EnvPreviewTemplateTask(preview, envs, aspectLoader, dependencyResolver, logger),
+        new PreviewTask(bundler, preview, dependencyResolver, logger),
       ]);
 
     if (workspace) {
