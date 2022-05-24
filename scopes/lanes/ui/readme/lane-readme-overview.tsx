@@ -18,5 +18,5 @@ export function LaneReadmeOverview({ host, overviewSlot, routeSlot }: LaneReadme
     return <LaneReadme host={host} viewedLane={viewedLane} overviewSlot={overviewSlot} routeSlot={routeSlot} />;
   }
 
-  return <Navigate to={`./~gallery`} />;
+  return <Navigate to={`./~gallery`} replace />;
 }
