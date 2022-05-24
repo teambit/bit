@@ -1,6 +1,7 @@
 import { ComponentModel, ComponentModelProps } from '@teambit/component';
 import { ScopeModel } from '@teambit/scope.models.scope-model';
 import { ComponentID, ComponentIdObj } from '@teambit/component-id';
+import { affix } from '@teambit/base-ui.utils.string.affix';
 import { pathToRegexp } from 'path-to-regexp';
 /**
  * GQL (lanes/getLanes/components)
@@ -61,6 +62,7 @@ export type LanesModelProps = {
   viewedLane?: LaneModel;
   currentLane?: LaneModel;
 };
+
 /**
  * Represents the entire Lanes State in a Workspace/Scope
  * Provides helper methods to extract and map Lane information
@@ -69,7 +71,6 @@ export type LanesModelProps = {
 export class LanesModel {
   static lanesPrefix = '~lane';
   static baseLaneComponentRoute = '/~component';
-
   static lanePath = ':scopeId/:laneId';
 
   static drawer = {
@@ -93,10 +94,12 @@ export class LanesModel {
 
   static getLaneUrl = (laneId: string) => `/${LanesModel.lanesPrefix}/${laneId}`;
 
-  static getLaneComponentUrl = (componentId: ComponentID, laneId: string) =>
-    `${LanesModel.getLaneUrl(laneId)}${LanesModel.baseLaneComponentRoute}/${componentId.fullName}?version=${
-      componentId.version
-    }`;
+  static getLaneComponentUrl = (componentId: ComponentID, laneId: string) => {
+    const laneUrl = LanesModel.getLaneUrl(laneId);
+    const urlSearch = affix('?version=', componentId.version);
+
+    return `${laneUrl}${LanesModel.baseLaneComponentRoute}/${componentId.fullName}${urlSearch}`;
+  };
 
   static mapToLaneModel(laneData: LaneQueryResult, host: string, currentScope?: ScopeModel): LaneModel {
     const { id: name, remote, isMerged, components, readmeComponent } = laneData;
