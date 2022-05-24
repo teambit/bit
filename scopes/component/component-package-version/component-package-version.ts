@@ -21,9 +21,5 @@ export async function getComponentPackageVersion(component: Component, snapId?: 
   if (tagBySnap) {
     return `${tagBySnap.version}`;
   }
-  const closestTag = await component.getClosestTag(actualSnapId);
-  if (!closestTag) {
-    return `0.0.0-${actualSnapId}`;
-  }
-  return `${closestTag.version}-${actualSnapId}`;
+  return `0.0.0-${actualSnapId}`;
 }
