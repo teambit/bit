@@ -10,6 +10,7 @@ import { valid, compare } from 'semver';
 import styles from './component-compare-dependency-node.module.scss';
 import variants from './component-compare-dependency-variants.module.scss';
 import { CompareNodeModel } from './compare-node-model';
+import { ComponentCompareStatusResolver } from '@teambit/component.ui.component-compare-status-resolver';
 
 export type ComponentCompareDependencyNodeProps = {
   node: CompareNodeModel;
@@ -20,15 +21,13 @@ export function ComponentCompareDependencyNode(props: ComponentCompareDependency
   const { node, type = 'defaultNode' } = props;
   const [versionDiff, setVersionDiff] = useState(0);
 
-  const { id: baseIdStr, component: baseComponent, compareVersion } = node;
+  const { id: baseIdStr, component: baseComponent, compareVersion, status } = node;
   const { version: baseVersion } = baseComponent;
   const baseId = ComponentID.fromString(baseIdStr);
 
   useEffect(() => {
     if (valid(baseVersion) && valid(compareVersion)) {
       setVersionDiff(compare(baseVersion, compareVersion));
-      // -1 - right side is greater
-      // 1 - left side is greater
     }
   }, [baseVersion, compareVersion]);
 
@@ -60,10 +59,7 @@ export function ComponentCompareDependencyNode(props: ComponentCompareDependency
 
         <div className={styles.buffs}>
           <DeprecationIcon component={baseComponent} />
-          {/* {graphContext &&
-              graphContext.componentWidgets
-                .toArray()
-                .map(([widgetId, Widget]) => <Widget key={widgetId} component={component} />)} */}
+          {status !== 'unchanged' && <ComponentCompareStatusResolver status={status} />}
         </div>
       </div>
     </Card>
