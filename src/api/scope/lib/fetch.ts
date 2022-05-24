@@ -17,8 +17,8 @@ import { LaneNotFound } from './exceptions/lane-not-found';
 export type FETCH_TYPE = 'component' | 'lane' | 'object' | 'component-delta';
 export type FETCH_OPTIONS = {
   type: FETCH_TYPE;
-  withoutDependencies: boolean;
-  includeArtifacts: boolean;
+  withoutDependencies: boolean; // default - true
+  includeArtifacts: boolean; // default - false
   allowExternal: boolean; // allow fetching components of other scope from this scope. needed for lanes.
 };
 
