@@ -573,8 +573,6 @@ jobs:
           paths:
             - /home/circleci/.bvm
       - run: cd bit && bbit install
-      - run: cd bit && echo pnpm-lock.yaml && cat ./pnpm-lock.yaml
-      - run: cd bit && echo installed react-router-dom && cat ./node_modules/react-router-dom/package.json
       - run: cd bit && npm run link-bit-legacy
       - run: cd bit && bbit compile
       - run:
