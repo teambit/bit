@@ -69,3 +69,26 @@ $b70: #0d2de3;
   border: solid 1px var(--bit-border-color-lightest, #ededed);
   background: var(--bit-bg-dent, #f6f6f6);
 }
+
+.minimap {
+  right: 24px;
+  bottom: 24px;
+  box-shadow: var(--bit-shadow-faint);
+  background: white !important; // override inline styles from package
+  border-radius: 5px;
+
+  :global {
+    .react-flow__minimap-mask {
+      stroke: $b70;
+      stroke-width: 4px;
+      fill: transparent;
+    }
+  }
+}
+
+.controls {
+  box-shadow: var(--bit-shadow-faint);
+
+  left: 24px;
+  bottom: 24px;
+}

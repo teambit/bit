@@ -1,9 +1,9 @@
 import { useComponentCompareContext } from '@teambit/component.ui.component-compare';
-import { EdgeModel, GraphModel, NodeModel, useGraphQuery } from '@teambit/graph';
+import { calcMinimapColors, EdgeModel, GraphModel, NodeModel, useGraphQuery } from '@teambit/graph';
 import React, { useEffect, useMemo, useRef } from 'react';
 import ReactFlow, {
   Background,
-  Controls, Handle, NodeProps,
+  Controls, Handle, MiniMap, NodeProps,
   NodeTypesType,
   OnLoadParams,
   Position,
@@ -135,7 +135,7 @@ export function ComponentCompareDependencies() {
         >
           <Background />
           <Controls className={styles.controls} />
-          {/* <MiniMap nodeColor={calcMinimapColors} className={styles.minimap} /> */}
+          <MiniMap nodeColor={calcMinimapColors} className={styles.minimap} />
         </ReactFlow>
       </ReactFlowProvider>
     </div>
