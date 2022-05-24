@@ -24,7 +24,7 @@
         "@pnpm/client": "6.1.4",
         "@pnpm/colorize-semver-diff": "1.0.1",
         "@pnpm/config": "13.13.3",
-        "@pnpm/core": "2.9.0",
+        "@pnpm/core": "2.9.3",
         "@pnpm/default-reporter": "8.4.2",
         "@pnpm/default-resolver": "14.0.13",
         "@pnpm/error": "2.1.0",
