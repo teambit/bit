@@ -1,13 +1,16 @@
 import { useComponentCompareContext } from '@teambit/component.ui.component-compare';
-import { calcMinimapColors, EdgeModel, GraphModel, NodeModel, useGraphQuery } from '@teambit/graph';
-import React, { useEffect, useMemo, useRef } from 'react';
+import { calcMinimapColors, EdgeModel, GraphModel, NodeModel, useGraphQuery, GraphFilters, GraphFilter } from '@teambit/graph';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import ReactFlow, {
   Background,
-  Controls, Handle, MiniMap, NodeProps,
+  Controls,
+  Handle,
+  MiniMap,
+  NodeProps,
   NodeTypesType,
   OnLoadParams,
   Position,
-  ReactFlowProvider
+  ReactFlowProvider,
 } from 'react-flow-renderer';
 import { calcElements } from './calc-elements';
 import { CompareGraphModel } from './compare-graph-model';
@@ -87,9 +90,11 @@ export function ComponentCompareDependencies() {
     base: { id: baseId },
     compare: { id: compareId },
   } = componentCompare;
-  const filter = 'runtimeOnly'; // this controls the checkbox to show/hide runtime nodes
+  const [filter, setFilter] = useState<GraphFilter>('runtimeOnly');
+  const isFiltered = filter === 'runtimeOnly';
   const { loading: baseLoading, graph: baseGraph } = useGraphQuery([baseId.toString()], filter);
   const { loading: compareLoading, graph: compareGraph } = useGraphQuery([compareId.toString()], filter);
+  const loading = baseLoading || compareLoading;
 
   if (!baseLoading && !compareLoading) {
     if (!baseGraph || !compareGraph) {
@@ -118,6 +123,10 @@ export function ComponentCompareDependencies() {
     graphRef.current?.fitView();
   }
 
+  const onCheckFilter = (isFiltered: boolean) => {
+    setFilter(isFiltered ? 'runtimeOnly' : undefined);
+  };
+
   return (
     <div className={styles.page}>
       <ReactFlowProvider>
@@ -137,6 +146,12 @@ export function ComponentCompareDependencies() {
           <Background />
           <Controls className={styles.controls} />
           <MiniMap nodeColor={calcMinimapColors} className={styles.minimap} />
+          <GraphFilters
+            className={styles.filters}
+            disable={loading}
+            isFiltered={isFiltered}
+            onChangeFilter={onCheckFilter}
+          />
         </ReactFlow>
       </ReactFlowProvider>
     </div>
