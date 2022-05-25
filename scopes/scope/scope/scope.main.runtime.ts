@@ -1,5 +1,6 @@
 import mapSeries from 'p-map-series';
 import semver from 'semver';
+import multimatch from 'multimatch';
 import type { AspectLoaderMain } from '@teambit/aspect-loader';
 import { TaskResultsList, BuilderData, BuilderAspect } from '@teambit/builder';
 import { readdirSync, existsSync } from 'fs-extra';
@@ -39,6 +40,7 @@ import { ObjectList } from '@teambit/legacy/dist/scope/objects/object-list';
 import { Http, DEFAULT_AUTH_TYPE, AuthData, getAuthDataFromHeader } from '@teambit/legacy/dist/scope/network/http/http';
 import { buildOneGraphForComponentsUsingScope } from '@teambit/legacy/dist/scope/graph/components-graph';
 import { remove } from '@teambit/legacy/dist/api/scope';
+import { BitError } from '@teambit/bit-error';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { resumeExport } from '@teambit/legacy/dist/scope/component-ops/export-scope-components';
 import { ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config';
@@ -895,6 +897,30 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
 
     const components = await this.getMany(ids);
     return components;
+  }
+
+  /**
+   * get component-ids matching the given pattern. a pattern can have multiple patterns separated by a comma.
+   * it supports negate (!) character to exclude ids.
+   */
+  async idsByPattern(pattern: string, throwForNoMatch = true): Promise<ComponentID[]> {
+    if (!pattern.includes('*') && !pattern.includes(',')) {
+      // if it's not a pattern but just id, resolve it without multimatch to support specifying id without scope-name
+      const id = await this.resolveComponentId(pattern);
+      const exists = await this.hasId(id);
+      if (exists) return [id];
+      if (throwForNoMatch) throw new BitError(`unable to find "${pattern}" in the scope`);
+      return [];
+    }
+    const ids = await this.listIds();
+    const patterns = pattern.split(',').map((p) => p.trim());
+    // check also as legacyId.toString, as it doesn't have the defaultScope
+    const idsToCheck = (id: ComponentID) => [id.toStringWithoutVersion(), id._legacy.toStringWithoutVersion()];
+    const idsFiltered = ids.filter((id) => multimatch(idsToCheck(id), patterns).length);
+    if (throwForNoMatch && !idsFiltered.length) {
+      throw new BitError(`unable to find any matching for "${pattern}" pattern`);
+    }
+    return idsFiltered;
   }
 
   async getExactVersionBySemverRange(id: ComponentID, range: string): Promise<string | undefined> {

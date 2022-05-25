@@ -47,7 +47,7 @@ export class TypeScriptExtractor implements SchemaExtractor {
     const apiScheme = moduleSchema;
     const location = context.getLocation(mainAst);
 
-    return new APISchema(location, apiScheme);
+    return new APISchema(location, apiScheme, component.id);
   }
 
   async computeExportedIdentifiers(node: Node, context: SchemaExtractorContext) {
