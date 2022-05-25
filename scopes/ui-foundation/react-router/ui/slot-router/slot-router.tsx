@@ -1,42 +1,47 @@
+import React, { PropsWithChildren } from 'react';
 import { SlotRegistry } from '@teambit/harmony';
-import React from 'react';
-import { Route, RouteProps, Switch, useRouteMatch } from 'react-router-dom';
+import { Routes, Route, RouteProps } from 'react-router-dom';
 import { flatten } from 'lodash';
-import { extendPath } from '@teambit/ui-foundation.ui.react-router.extend-path';
-import { NavLinkProps } from '@teambit/base-ui.routing.nav-link';
+import type { LinkProps } from '@teambit/base-react.navigation.link';
 
 export type RouteSlot = SlotRegistry<RouteProps | RouteProps[]>;
-export type NavigationSlot = SlotRegistry<NavLinkProps>;
+export type NavigationSlot = SlotRegistry<LinkProps>;
 
-export type SlotRouterProps = {
+export type SlotRouterProps = PropsWithChildren<{
   slot: RouteSlot;
   rootRoutes?: RouteProps[];
-};
+  parentPath?: string;
+}>;
 
-export function SlotRouter({ slot, rootRoutes }: SlotRouterProps) {
+export function SlotRouter({ slot, rootRoutes, children, parentPath }: SlotRouterProps) {
   const routes = flatten(slot.values());
-
   const withRoot = routes.concat(rootRoutes || []);
 
+  const jsxRoutes = withRoot.map((route) => <Route key={toKey(route)} {...route} />);
+
+  if (parentPath) {
+    return (
+      <Routes>
+        <Route path={parentPath}>
+          {jsxRoutes}
+          {children}
+        </Route>
+      </Routes>
+    );
+  }
+
   return (
-    <Switch>
-      {withRoot.map((route, idx) => (
-        <Route key={idx} {...route} />
-      ))}
-    </Switch>
+    <Routes>
+      <Route path={parentPath}>
+        {jsxRoutes}
+        {children}
+      </Route>
+    </Routes>
   );
 }
 
-export function SlotSubRouter({ slot, basePath }: { slot: RouteSlot; basePath?: string }) {
-  const routes = flatten(slot.values());
-  const { path: contextPath } = useRouteMatch();
-  // TODO - generate key as part of the slot.
-
-  return (
-    <Switch>
-      {routes.map((route, idx) => (
-        <Route key={idx} {...route} path={extendPath(basePath || contextPath, route.path as any)} />
-      ))}
-    </Switch>
-  );
+function toKey(route: RouteProps) {
+  if (route.path) return route.path;
+  if (route.index) return '/';
+  return '.';
 }

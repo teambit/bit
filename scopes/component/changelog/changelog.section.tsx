@@ -6,7 +6,7 @@ import { ChangeLogPage } from './ui/change-log-page';
 export class ChangelogSection implements Section {
   route = {
     path: '~changelog',
-    children: <ChangeLogPage />,
+    element: <ChangeLogPage />,
   };
   navigationLink = {
     href: '~changelog',

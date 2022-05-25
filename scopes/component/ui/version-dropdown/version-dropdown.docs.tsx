@@ -1,6 +1,5 @@
 import React from 'react';
-import { Router } from 'react-router-dom';
-import { createBrowserHistory } from 'history';
+import { MemoryRouter } from 'react-router-dom';
 import { Section } from '@teambit/documenter.ui.section';
 import { ThemeCompositions } from '@teambit/documenter.theme.theme-compositions';
 import { Separator } from '@teambit/documenter.ui.separator';
@@ -49,20 +48,18 @@ Overview.examples = [
     scope: {
       VersionDropdown,
       style,
-      Router,
-      createBrowserHistory,
+      MemoryRouter,
     },
     title: 'Version Dropdown with multiple versions',
     description: 'Using the Version Dropdown component with more than one version',
     code: `
     () => {
-      const history = createBrowserHistory();
       const versions = ['0.3', '0.2', '0.1'];
       return (
         <div style={{...style, minHeight: 400, alignItems: 'end', justifyContent: 'flex-end', margin: 10 }}>
-          <Router history={history}>
+          <MemoryRouter>
             <VersionDropdown versions={versions} currentVersion={versions[0]} />
-          </Router>
+          </MemoryRouter>
         </div>
       );
     }

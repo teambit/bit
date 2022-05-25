@@ -9,7 +9,7 @@ import {
 } from '@teambit/lanes.ui.lanes';
 import { ComponentCard } from '@teambit/explorer.ui.gallery.component-card';
 import { ComponentPreview } from '@teambit/preview.ui.component-preview';
-import { RouteSlot, SlotSubRouter } from '@teambit/ui-foundation.ui.react-router.slot-router';
+import { RouteSlot, SlotRouter } from '@teambit/ui-foundation.ui.react-router.slot-router';
 import { PreviewPlaceholder } from '@teambit/preview.ui.preview-placeholder';
 import flatten from 'lodash.flatten';
 import styles from './lane-readme.module.scss';
@@ -57,7 +57,7 @@ export function LaneReadme({ viewedLane, overviewSlot, routeSlot }: LaneReadmePr
             />
           </div>
         </div>
-        {routeSlot && <SlotSubRouter slot={routeSlot} />}
+        {routeSlot && <SlotRouter slot={routeSlot} />}
         {overviewItems.length > 0 && overviewItems.map((Item, index) => <Item key={index} />)}
       </div>
     </LanesProvider>

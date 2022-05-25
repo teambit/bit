@@ -6,7 +6,7 @@ import { Ellipsis } from '@teambit/design.ui.styles.ellipsis';
 import { linkStyles } from '@teambit/ui-foundation.ui.use-box.bottom-link';
 import { LaneModel, LanesHost, useLanesContext } from '@teambit/lanes.ui.lanes';
 import { UseBoxDropdown } from '@teambit/ui-foundation.ui.use-box.dropdown';
-import { Link } from '@teambit/base-ui.routing.link';
+import { Link } from '@teambit/base-react.navigation.link';
 import styles from './use-lanes-menu.module.scss';
 
 export type LaneImportContentProps = {

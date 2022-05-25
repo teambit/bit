@@ -1,4 +1,4 @@
-import { NavLink } from '@teambit/base-ui.routing.nav-link';
+import { Link } from '@teambit/base-react.navigation.link';
 import classNames from 'classnames';
 import React, { ComponentType } from 'react';
 import { indentClass } from '@teambit/base-ui.graph.tree.indent';
@@ -24,12 +24,10 @@ export type TreeNodeComponentProps<Payload = any> = {
 export function TreeNode<T>(props: TreeNodeComponentProps<T>) {
   const { node, isActive, icon, onClick, widgets, href } = props;
 
-  const active = isActive !== undefined ? () => isActive : undefined;
-
   return (
-    <NavLink
+    <Link
       href={href || node.id}
-      isActive={active}
+      active={isActive}
       exact
       strict
       className={classNames(indentClass, styles.fileNode)}
@@ -46,6 +44,6 @@ export function TreeNode<T>(props: TreeNodeComponentProps<T>) {
           <Widget key={index} node={node} />
         ))}
       </div>
-    </NavLink>
+    </Link>
   );
 }

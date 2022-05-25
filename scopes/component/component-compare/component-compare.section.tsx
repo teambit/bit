@@ -14,7 +14,7 @@ export class ComponentCompareSection implements Section {
 
   route = {
     path: '~compare',
-    children: this.componentCompare.getComponentComparePage(),
+    element: this.componentCompare.getComponentComparePage(),
   };
 
   order = 35;
