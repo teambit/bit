@@ -1,4 +1,5 @@
 import { ComponentFactory } from '@teambit/component';
+import { GraphQLJSONObject } from 'graphql-type-json';
 import gql from 'graphql-tag';
 
 import { SchemaMain } from './schema.main.runtime';
@@ -6,15 +7,13 @@ import { SchemaMain } from './schema.main.runtime';
 export function schemaSchema(schema: SchemaMain) {
   return {
     typeDefs: gql`
+      scalar JSONObject
       extend type ComponentHost {
-        getSchema(id: String!): SchemaDocs
-      }
-
-      type SchemaDocs {
-        exports: [String]
+        getSchema(id: String!): JSONObject
       }
     `,
     resolvers: {
+      JSONObject: GraphQLJSONObject,
       ComponentHost: {
         getSchema: async (host: ComponentFactory, { id }: { id: string }) => {
           const componentId = await host.resolveComponentId(id);
