@@ -38,6 +38,8 @@ export function ComponentCompare({ navSlot, host, routeSlot }: ComponentCompareP
     loading,
   };
 
+  
+
   return (
     <ComponentCompareContext.Provider value={componentCompareModel}>
       <div className={styles.componentCompareContainer}>

@@ -1,16 +1,15 @@
+import React from 'react';
+import classnames from 'classnames';
+import flatten from 'lodash.flatten';
+import { useLocation } from 'react-router-dom';
 import { MenuItemSlot } from '@teambit/ui-foundation.ui.main-dropdown';
 import { SlotRegistry } from '@teambit/harmony';
-import classnames from 'classnames';
-import React from 'react';
-import flatten from 'lodash.flatten';
-import { NavLink, NavLinkProps } from '@teambit/base-ui.routing.nav-link';
-import { extendPath } from '@teambit/ui-foundation.ui.react-router.extend-path';
+import { Link, LinkProps } from '@teambit/base-react.navigation.link';
 import { Menu, MenuWidgetSlot } from '@teambit/ui-foundation.ui.menu';
-import { useRouteMatch, useLocation } from 'react-router-dom';
 import styles from './lanes-overview-menu.module.scss';
 
 export type LanesNavPlugin = {
-  props: NavLinkProps;
+  props: LinkProps;
   order?: number;
   hide?: () => boolean;
 };
@@ -80,21 +79,20 @@ function sortFn({ order: first }: LanesNavPlugin, { order: second }: LanesNavPlu
 }
 
 /** TODO: replace it with tab-link */
-function TopBarNav(props: NavLinkProps) {
-  const { url } = useRouteMatch();
-  const { search, pathname } = useLocation(); // sticky query params
+function TopBarNav(props: LinkProps) {
+  const { search } = useLocation(); // sticky query params
   const { href } = props;
 
-  const target = `${extendPath(url, href)}${search}`;
+  const target = `${href}${search}`;
 
   return (
-    <NavLink
+    <Link
       {...props}
       className={classnames(props.className, styles.topBarLink)}
-      activeClassName={classnames(props.activeClassName, target === pathname && styles.active)}
+      activeClassName={classnames(props.activeClassName, styles.active)}
       href={target}
     >
       <div>{props.children}</div>
-    </NavLink>
+    </Link>
   );
 }

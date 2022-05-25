@@ -1,5 +1,6 @@
 import { useQuery } from '@teambit/ui-foundation.ui.react-router.use-query';
 import { useLocation } from '@teambit/base-ui.routing.routing-provider';
+import { useParams } from 'react-router-dom';
 
 export type ComponentCompareQueryParams = {
   baseVersion?: string;
@@ -10,10 +11,9 @@ export type ComponentCompareQueryParams = {
   selectedAspect?: string;
 };
 export type ComponentCompareRouteProps = ComponentCompareQueryParams;
-
-// export type ComponentCompareRouteParams = {
-//   componentId: string;
-// };
+export type ComponentCompareRouteParams = {
+  subRoute?: string;
+};
 
 /**
  * path = /<org>/<scope>/<componentId>/~compare/<~compositions | ~dependencies | ~code | ~aspects>/

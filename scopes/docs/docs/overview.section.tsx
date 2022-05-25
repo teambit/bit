@@ -13,15 +13,14 @@ export class OverviewSection implements Section {
   ) {}
 
   navigationLink = {
-    href: '',
+    href: '.',
     exact: true,
     children: 'Overview',
   };
 
   route = {
-    path: '',
-    exact: true,
-    children: <Overview titleBadges={this.docs.titleBadgeSlot} />,
+    index: true,
+    element: <Overview titleBadges={this.docs.titleBadgeSlot} />,
   };
 
   order = 10;

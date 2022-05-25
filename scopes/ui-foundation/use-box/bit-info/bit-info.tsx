@@ -3,7 +3,7 @@ import { Icon } from '@teambit/evangelist.elements.icon';
 import { links } from '@teambit/documenter.content.documentation-links';
 import { CopyBox } from '@teambit/documenter.ui.copy-box';
 import { TabContent } from '@teambit/ui-foundation.ui.use-box.tab-content';
-import { Link } from '@teambit/base-ui.routing.link';
+import { Link } from '@teambit/base-react.navigation.link';
 import { linkStyles } from '@teambit/ui-foundation.ui.use-box.bottom-link';
 import styles from './bit-info.module.scss';
 

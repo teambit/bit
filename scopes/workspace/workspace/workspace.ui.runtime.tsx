@@ -129,8 +129,8 @@ export class WorkspaceUI {
     return {
       routes: [
         {
-          path: '/',
-          children: (
+          path: '/*',
+          element: (
             <Workspace
               menuSlot={this.menuSlot}
               routeSlot={this.routeSlot}
@@ -226,20 +226,19 @@ export class WorkspaceUI {
 
     workspaceUI.registerMenuRoutes([
       {
-        exact: true,
         path: '/',
-        children: <Menu menuItemSlot={workspaceUI.menuItemSlot} />,
+        element: <Menu menuItemSlot={workspaceUI.menuItemSlot} />,
       },
       {
         path: workspaceUI.componentUi.routePath,
-        children: workspaceUI.componentUi.getMenu(WorkspaceAspect.id),
+        element: workspaceUI.componentUi.getMenu(WorkspaceAspect.id),
       },
     ]);
 
     workspaceUI.registerRoutes([
       {
         path: workspaceUI.componentUi.routePath,
-        children: workspaceUI.componentUi.getComponentUI(WorkspaceAspect.id),
+        element: workspaceUI.componentUi.getComponentUI(WorkspaceAspect.id),
       },
     ]);
 

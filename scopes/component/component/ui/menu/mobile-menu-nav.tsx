@@ -1,9 +1,8 @@
 import React, { useMemo } from 'react';
-import { Switch, Route, useRouteMatch } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import classnames from 'classnames';
 import { Icon } from '@teambit/design.elements.icon';
 import { Dropdown } from '@teambit/design.inputs.dropdown';
-import { extendPath } from '@teambit/ui-foundation.ui.react-router.extend-path';
 import { TopBarNav } from '../top-bar-nav';
 import styles from './menu.module.scss';
 import mobileStyles from './mobile-menu-nav.module.scss';
@@ -18,7 +17,6 @@ export function MobileMenuNav({
   widgetSlot: OrderedNavigationSlot;
   className?: string;
 }) {
-  const { url } = useRouteMatch();
   const totalSlots = useMemo(
     () => [...navigationSlot.toArray().sort(sortFn), ...widgetSlot.toArray().sort(sortFn)],
     [navigationSlot, widgetSlot]
@@ -27,7 +25,7 @@ export function MobileMenuNav({
   return (
     <Dropdown
       // @ts-ignore - mismatch between @types/react
-      placeholder={<Placeholder slots={totalSlots} baseUrl={url} />}
+      placeholder={<Placeholder slots={totalSlots} />}
       className={classnames(styles.navigation, styles.mobileNav, className)}
       dropClass={mobileStyles.mobileMenu}
     >
@@ -63,19 +61,20 @@ type PlaceholderProps = {
   baseUrl?: string;
 } & React.HTMLAttributes<HTMLDivElement>;
 
-function Placeholder({ slots, baseUrl = '', ...rest }: PlaceholderProps) {
+function Placeholder({ slots, ...rest }: PlaceholderProps) {
   return (
     <div {...rest} className={mobileStyles.placeholder}>
-      <Switch>
-        {slots?.map(([id, menuItem]) => {
-          const path = extendPath(baseUrl, menuItem?.props?.href);
-          return (
-            <Route key={id} exact path={path}>
-              {typeof menuItem?.props?.children === 'string' ? menuItem?.props?.children : menuItem?.props?.displayName}
-            </Route>
-          );
-        })}
-      </Switch>
+      <Routes>
+        {slots?.map(([id, menuItem]) => (
+          <Route
+            key={id}
+            path={menuItem?.props?.href}
+            element={
+              typeof menuItem?.props?.children === 'string' ? menuItem?.props?.children : menuItem?.props?.displayName
+            }
+          />
+        ))}
+      </Routes>
       <Icon of="fat-arrow-down" />
     </div>
   );

@@ -1,6 +1,6 @@
 import React from 'react';
 import classNames from 'classnames';
-import { ExternalLink } from '@teambit/design.ui.external-link';
+import { Link } from '@teambit/base-react.navigation.link';
 import { Icon } from '@teambit/evangelist.elements.icon';
 import { textSize } from '@teambit/base-ui.text.text-sizes';
 import styles from './empty-component-gallery.module.scss';
@@ -24,13 +24,14 @@ export function EmptyComponentGallery({ name, children }: EmptyComponentGalleryP
       {children}
       <div className={styles.title}>
         <span>New to Bit?</span> &nbsp;
-        <ExternalLink
+        <Link
+          external
           href={`https://bit.dev/docs/getting-started/installing-bit/installing-bit`}
           className={styles.purpleLink}
         >
           <span className={styles.text}>Start tutorial</span>
           <Icon of="right_arrow" className={classNames(styles.icon, textSize.xxs)} />
-        </ExternalLink>
+        </Link>
       </div>
       <div className={styles.bottomText}>We're here to help</div>
       <IconLine />
@@ -41,15 +42,15 @@ export function EmptyComponentGallery({ name, children }: EmptyComponentGalleryP
 function IconLine() {
   return (
     <div className={styles.iconLine}>
-      <ExternalLink href="https://join.slack.com/t/bit-dev-community/shared_invite/zt-o2tim18y-UzwOCFdTafmFKEqm2tXE4w">
+      <Link external href="https://join.slack.com/t/bit-dev-community/shared_invite/zt-o2tim18y-UzwOCFdTafmFKEqm2tXE4w">
         <img alt="slack-logo" className={styles.logo} src="https://static.bit.dev/harmony/slack-round-icon.svg" />
-      </ExternalLink>
-      <ExternalLink href="https://github.com/teambit/bit">
+      </Link>
+      <Link external href="https://github.com/teambit/bit">
         <img alt="github-logo" className={styles.logo} src="https://static.bit.dev/harmony/github.svg" />
-      </ExternalLink>
-      <ExternalLink href="https://bit.cloud/support">
+      </Link>
+      <Link external href="https://bit.cloud/support">
         <img alt="support" className={styles.logo} src="https://static.bit.dev/harmony/support.svg" />
-      </ExternalLink>
+      </Link>
     </div>
   );
 }

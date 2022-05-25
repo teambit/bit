@@ -2,12 +2,12 @@ import { ComponentContext } from '@teambit/component';
 import classNames from 'classnames';
 import React, { useContext, useState, HTMLAttributes, useMemo, useCallback } from 'react';
 import { flatten } from 'lodash';
+import { affix } from '@teambit/base-ui.utils.string.affix';
 import { SplitPane, Pane, Layout } from '@teambit/base-ui.surfaces.split-pane.split-pane';
 import { HoverSplitter } from '@teambit/base-ui.surfaces.split-pane.hover-splitter';
 import { Collapser } from '@teambit/ui-foundation.ui.buttons.collapser';
 import { useCode } from '@teambit/code.ui.queries.get-component-code';
 import { Label } from '@teambit/documenter.ui.label';
-import { LanesModel, useLanesContext } from '@teambit/lanes.ui.lanes';
 import type { FileIconSlot } from '@teambit/code';
 import { CodeView } from '@teambit/code.ui.code-view';
 import { CodeTabTree } from '@teambit/code.ui.code-tab-tree';
@@ -24,15 +24,11 @@ type CodePageProps = {
 } & HTMLAttributes<HTMLDivElement>;
 
 export function CodePage({ className, fileIconSlot }: CodePageProps) {
-  const fileName = useCodeParams();
+  const urlParams = useCodeParams();
   const component = useContext(ComponentContext);
   const { mainFile, fileTree = [], dependencies, devFiles } = useCode(component.id);
 
-  const fileFromUrl = useMemo(() => {
-    return fileName.file;
-  }, [fileName]);
-
-  const currentFile = fileFromUrl || mainFile;
+  const currentFile = urlParams.file || mainFile;
   const isMobile = useIsMobile();
   const [isSidebarOpen, setSidebarOpenness] = useState(!isMobile);
   const sidebarOpenness = isSidebarOpen ? Layout.row : Layout.left;
@@ -40,16 +36,11 @@ export function CodePage({ className, fileIconSlot }: CodePageProps) {
   const icon = getFileIcon(fileIconMatchers, currentFile);
   const treeNodeRenderer = useCallback(
     function TreeNode(props: any) {
-      const urlParams = useCodeParams();
       const children = props.node.children;
       const { selected } = useContext(TreeContext);
-      const lanesContext = useLanesContext();
 
-      const currentLaneUrl = lanesContext?.viewedLane
-        ? `${LanesModel.getLaneUrl(lanesContext?.viewedLane.id)}${LanesModel.baseLaneComponentRoute}`
-        : '';
-      const version = urlParams.version ? `?version=${urlParams.version}` : '';
-      const href = `${currentLaneUrl}/${urlParams.componentId}/~code/${props.node.id}${version}`;
+      const href = `${props.node.id}${affix('?version=', urlParams.version)}`;
+
       const widgets = getWidgets(props.node.id, mainFile, devFiles);
 
       if (!children) {

@@ -8,7 +8,7 @@ import {
   LanesHost,
 } from '@teambit/lanes.ui.lanes';
 import { ComponentGrid } from '@teambit/explorer.ui.gallery.component-grid';
-import { RouteSlot, SlotSubRouter } from '@teambit/ui-foundation.ui.react-router.slot-router';
+import { RouteSlot, SlotRouter } from '@teambit/ui-foundation.ui.react-router.slot-router';
 import { WorkspaceComponentCard } from '@teambit/workspace.ui.workspace-component-card';
 import flatten from 'lodash.flatten';
 import { SlotRegistry } from '@teambit/harmony';
@@ -79,7 +79,7 @@ function LaneGalleryWithPreview({ currentLane, overviewItems, routeSlot, host }:
           <ComponentCard component={component} key={index} />
         ))}
       </ComponentGrid>
-      {routeSlot && <SlotSubRouter slot={routeSlot} />}
+      {routeSlot && <SlotRouter slot={routeSlot} />}
       {overviewItems.length > 0 && overviewItems.map((Item, index) => <Item key={index} />)}
     </div>
   );

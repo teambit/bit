@@ -8,7 +8,7 @@ export class TestsSection implements Section {
 
   route = {
     path: '~tests',
-    children: <TestsPage emptyState={this.emptyStateSlot} />,
+    element: <TestsPage emptyState={this.emptyStateSlot} />,
   };
   navigationLink = {
     href: '~tests',

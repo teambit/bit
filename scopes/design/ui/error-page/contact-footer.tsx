@@ -1,5 +1,5 @@
 import React, { CSSProperties, HTMLAttributes } from 'react';
-import { Link } from '@teambit/base-ui.routing.link';
+import { Link } from '@teambit/base-react.navigation.link';
 
 const styles: Record<string, CSSProperties> = {
   link: {

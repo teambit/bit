@@ -1,10 +1,10 @@
 import React from 'react';
+import classNames from 'classnames';
 import { Icon } from '@teambit/evangelist.elements.icon';
 import { Ellipsis } from '@teambit/design.ui.styles.ellipsis';
-import classNames from 'classnames';
+import { Link } from '@teambit/base-react.navigation.link';
 
 import { LaneModel, LanesModel } from '@teambit/lanes.ui.lanes';
-import { NavLink } from '@teambit/base-ui.routing.nav-link';
 
 import styles from './lane-breadcrumb.module.scss';
 
@@ -14,11 +14,11 @@ export function LaneBreadcrumb({ lane, className, ...rest }: LaneBreadcrumbProps
   if (!lane) return null;
 
   return (
-    <NavLink href={LanesModel.getLaneUrl(lane.id)} className={styles.laneUrl}>
+    <Link href={LanesModel.getLaneUrl(lane.id)} className={styles.laneUrl}>
       <div {...rest} className={classNames(styles.lane, className)}>
         <Icon of="lane"></Icon>
         <Ellipsis className={styles.laneId}>{lane.id}</Ellipsis>
       </div>
-    </NavLink>
+    </Link>
   );
 }
