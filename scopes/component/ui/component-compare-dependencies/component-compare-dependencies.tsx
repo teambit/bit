@@ -115,6 +115,7 @@ export function ComponentCompareDependencies() {
 
   function handleLoad(instance: OnLoadParams) {
     graphRef.current = instance;
+    graphRef.current?.fitView();
   }
 
   return (
