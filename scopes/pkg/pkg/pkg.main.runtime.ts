@@ -83,7 +83,7 @@ export type ComponentPackageManifest = {
   versions: VersionPackageManifest[];
 };
 
-type VersionPackageManifest = {
+export type VersionPackageManifest = {
   [key: string]: any;
   dist: {
     tarball: string;
