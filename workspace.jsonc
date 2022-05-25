@@ -114,6 +114,7 @@
         "@teambit/design.ui.icon-button": "1.0.16",
         "@teambit/design.ui.input.option-button": "1.0.0",
         "@teambit/design.ui.input.toggle": "1.0.12",
+        "@teambit/design.ui.separator": "0.0.354",
         "@teambit/design.ui.surfaces.menu.item": "0.0.354",
         "@teambit/design.ui.surfaces.menu.link-item": "0.0.379",
         "@teambit/design.ui.surfaces.menu.section": "0.0.347",
