@@ -37,12 +37,12 @@ export function ComponentCompareDependencyNode(props: ComponentCompareDependency
     <Card className={classnames(styles.compNode, variants[type])} elevation="none">
       <div className={styles.firstRow}>
         <EnvIcon component={baseComponent} className={styles.envIcon} />
-        <NavLink className={styles.link} external={true} href={ComponentUrl.toUrl(baseId, { includeVersion: false })}>
-          <Breadcrumbs componentId={baseId} className={mutedText} />
-        </NavLink>
+        <Breadcrumbs componentId={baseId} className={mutedText} />
       </div>
       <div className={styles.nameLine}>
-        <span className={classnames(styles.name, ellipsis)}>{baseId.name}</span>
+        <NavLink className={styles.link} external={true} href={ComponentUrl.toUrl(baseId, { includeVersion: false })}>
+          <span className={classnames(styles.name, ellipsis)}>{baseId.name}</span>
+        </NavLink>
         {baseId.version && <span className={classnames(styles.version, ellipsis)}>{baseId.version}</span>}
         <img
           className={classnames([styles.arrowIcon, styles.versionUp])}

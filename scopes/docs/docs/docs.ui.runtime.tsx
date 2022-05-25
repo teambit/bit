@@ -6,15 +6,17 @@ import { UIRuntime } from '@teambit/ui';
 import { DocsAspect } from './docs.aspect';
 import { OverviewSection } from './overview.section';
 import { TitleBadgeSlot } from './overview';
+import ComponentCompareAspect, { ComponentCompareUI } from '@teambit/component-compare';
 
 export class DocsUI {
-  constructor(readonly titleBadgeSlot: TitleBadgeSlot) {}
+  constructor(readonly titleBadgeSlot: TitleBadgeSlot, private readonly componentCompareUI: ComponentCompareUI) {}
 
   /**
    * register a new title badge into the overview section of a component.
    */
   registerTitleBadge(...titleBadge: TitleBadge[]) {
     this.titleBadgeSlot.register(titleBadge);
+    this.componentCompareUI.registerTitleBadge(titleBadge);
     return this;
   }
 
@@ -25,14 +27,14 @@ export class DocsUI {
     return this.titleBadgeSlot;
   }
 
-  static dependencies = [ComponentAspect];
+  static dependencies = [ComponentAspect, ComponentCompareAspect];
 
   static runtime = UIRuntime;
 
   static slots = [Slot.withType<TitleBadge>()];
 
-  static async provider([component]: [ComponentUI], config, [titleBadgeSlot]: [TitleBadgeSlot]) {
-    const docs = new DocsUI(titleBadgeSlot);
+  static async provider([component, componentCompareUI]: [ComponentUI, ComponentCompareUI], config, [titleBadgeSlot]: [TitleBadgeSlot]) {
+    const docs = new DocsUI(titleBadgeSlot, componentCompareUI);
     const section = new OverviewSection(docs);
 
     component.registerRoute(section.route);
