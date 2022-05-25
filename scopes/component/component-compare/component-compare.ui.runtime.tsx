@@ -16,7 +16,7 @@ import { UIRuntime } from '@teambit/ui';
 import { RouteSlot } from '@teambit/ui-foundation.ui.react-router.slot-router';
 import WorkspaceAspect from '@teambit/workspace';
 import React, { ComponentType } from 'react';
-import { RouteProps } from 'react-router-dom';
+import { RouteProps, Route } from 'react-router-dom';
 import { ComponentCompareAspect } from './component-compare.aspect';
 import { ComponentCompareSection } from './component-compare.section';
 
@@ -97,29 +97,16 @@ export class ComponentCompareUI {
 
   private compareRoutes: RouteProps[] = [
     {
-      exact: true,
-      path: '',
-      children: () => this.getComponentCompositionComparePage(),
-    },
-    {
-      exact: true,
-      path: '/compositions',
-      children: () => this.getComponentCompositionComparePage(),
-    },
-    {
-      exact: true,
-      path: '/code',
-      children: () => this.getComponentCodeComparePage(),
-    },
-    {
-      exact: true,
-      path: '/dependencies',
-      children: () => this.getComponentDependenciesComparePage(),
-    },
-    {
-      exact: true,
-      path: '/aspects',
-      children: () => this.getComponentAspectsComparePage(),
+      path: "~compare/*",
+      children: (
+        <>
+          <Route index element={this.getComponentCompositionComparePage()}></Route>
+          <Route path={"compositions"} element={this.getComponentCompositionComparePage()}></Route>
+          <Route path={"code"} element={this.getComponentCodeComparePage()}></Route>
+          <Route path={"dependencies"} element={this.getComponentDependenciesComparePage()}></Route>
+          <Route path={"aspects"} element={this.getComponentAspectsComparePage()}></Route>
+        </>
+      ),
     },
   ];
 
