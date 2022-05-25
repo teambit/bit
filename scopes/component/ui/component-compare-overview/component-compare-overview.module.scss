@@ -2,6 +2,7 @@
     margin-top: 16px;
     display: flex;
     height: 100%;
+    overflow: hidden;
   }
   
   .subContainerLeft {
@@ -19,4 +20,5 @@
   .subView {
     height: 100%;
     background-color: white;
+    overflow: auto;
   }
