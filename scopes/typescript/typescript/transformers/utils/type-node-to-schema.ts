@@ -15,6 +15,8 @@ import {
   TypePredicateNode,
   isIdentifier,
   IndexedAccessTypeNode,
+  TemplateLiteralTypeNode,
+  TemplateLiteralTypeSpan,
 } from 'typescript';
 import {
   SchemaNode,
@@ -32,6 +34,8 @@ import {
   ParenthesizedTypeSchema,
   TypePredicateSchema,
   IndexedAccessSchema,
+  TemplateLiteralTypeSpanSchema,
+  TemplateLiteralTypeSchema,
 } from '@teambit/semantics.entities.semantic-schema';
 import pMapSeries from 'p-map-series';
 import { SchemaExtractorContext } from '../../schema-extractor-context';
@@ -70,6 +74,10 @@ export async function typeNodeToSchema(node: TypeNode, context: SchemaExtractorC
       return typePredicate(node as TypePredicateNode, context);
     case SyntaxKind.IndexedAccessType:
       return indexedAccessType(node as IndexedAccessTypeNode, context);
+    case SyntaxKind.TemplateLiteralTypeSpan:
+      return templateLiteralTypeSpan(node as TemplateLiteralTypeSpan, context);
+    case SyntaxKind.TemplateLiteralType:
+      return templateLiteralType(node as TemplateLiteralTypeNode, context);
     case SyntaxKind.ConstructorType:
     case SyntaxKind.NamedTupleMember:
     case SyntaxKind.OptionalType:
@@ -78,8 +86,6 @@ export async function typeNodeToSchema(node: TypeNode, context: SchemaExtractorC
     case SyntaxKind.InferType:
     case SyntaxKind.ThisType:
     case SyntaxKind.MappedType:
-    case SyntaxKind.TemplateLiteralType:
-    case SyntaxKind.TemplateLiteralTypeSpan:
     case SyntaxKind.ImportType:
     case SyntaxKind.ExpressionWithTypeArguments:
     case SyntaxKind.JSDocTypeExpression:
@@ -242,4 +248,16 @@ async function indexedAccessType(node: IndexedAccessTypeNode, context: SchemaExt
   const objectType = await typeNodeToSchema(node.objectType, context);
   const indexType = await typeNodeToSchema(node.indexType, context);
   return new IndexedAccessSchema(context.getLocation(node), objectType, indexType);
+}
+
+async function templateLiteralType(node: TemplateLiteralTypeNode, context: SchemaExtractorContext) {
+  const templateSpans = await pMapSeries(node.templateSpans, (span) => templateLiteralTypeSpan(span, context));
+  const head = node.head.text;
+  return new TemplateLiteralTypeSchema(context.getLocation(node), head, templateSpans);
+}
+
+async function templateLiteralTypeSpan(node: TemplateLiteralTypeSpan, context: SchemaExtractorContext) {
+  const type = await typeNodeToSchema(node.type, context);
+  const literal = node.literal.text;
+  return new TemplateLiteralTypeSpanSchema(context.getLocation(node), literal, type);
 }

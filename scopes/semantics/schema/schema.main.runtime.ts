@@ -81,6 +81,10 @@ export class SchemaMain {
     return schemaExtractor.extract(component);
   }
 
+  getSchemaFromObject(obj: Record<string, any>): APISchema {
+    return APISchema.fromObject(obj);
+  }
+
   /**
    * register a new parser.
    */
@@ -116,3 +120,5 @@ export class SchemaMain {
 }
 
 SchemaAspect.addRuntime(SchemaMain);
+
+export default SchemaMain;

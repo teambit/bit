@@ -69,20 +69,22 @@ export class SchemaExtractorContext {
     return sourceFile.fileName;
   }
 
-  /**
-   * create a reference to a type from a component.
-   * think if we don't need this because of type ref
-   */
-  // createRef() {
-  //   return {};
-  // }
-
-  getQuickInfo(node: Node) {
-    return this.tsserver.getQuickInfo(this.getPath(node), this.getLocation(node));
+  async getQuickInfo(node: Node) {
+    const location = this.getLocation(node);
+    try {
+      return await this.tsserver.getQuickInfo(this.getPath(node), location);
+    } catch (err: any) {
+      if (err.message === 'No content available.') {
+        throw new Error(
+          `unable to get quickinfo data from tsserver at ${location.file}, Ln ${location.line}, Col ${location.character}`
+        );
+      }
+      throw err;
+    }
   }
 
   async getQuickInfoDisplayString(node: Node): Promise<string> {
-    const quickInfo = await this.tsserver.getQuickInfo(this.getPath(node), this.getLocation(node));
+    const quickInfo = await this.getQuickInfo(node);
     return quickInfo?.body?.displayString || '';
   }
 
@@ -132,23 +134,25 @@ export class SchemaExtractorContext {
    * return the file if part of the component.
    * otherwise, a reference to the target package and the type name.
    */
-  private getSourceFile(filePath: string) {
+  getSourceFileInsideComponent(filePath: string) {
     const file = this.findFileInComponent(filePath);
     if (!file) return undefined;
     return this.extractor.parseSourceFile(file);
   }
 
   async getSourceFileFromNode(node: Node) {
+    const filePath = await this.getFilePathByNode(node);
+    if (!filePath) {
+      return undefined;
+    }
+    return this.getSourceFileInsideComponent(filePath);
+  }
+
+  async getFilePathByNode(node: Node) {
     const def = await this.tsserver.getDefinition(this.getPath(node), this.getLocation(node));
 
     const firstDef = head(def.body);
-    if (!firstDef) {
-      return undefined;
-    }
-
-    const sourceFile = this.getSourceFile(firstDef.file);
-
-    return sourceFile;
+    return firstDef?.file;
   }
 
   /**
@@ -163,7 +167,7 @@ export class SchemaExtractorContext {
     }
 
     const startPosition = firstDef.start;
-    const sourceFile = this.getSourceFile(firstDef.file);
+    const sourceFile = this.getSourceFileInsideComponent(firstDef.file);
     if (!sourceFile) {
       return undefined; // learn how to return a reference to a different component here.
     }
@@ -198,7 +202,7 @@ export class SchemaExtractorContext {
     const specifierPathStr = exportDec.moduleSpecifier?.getText() || '';
     const specifierPath = specifierPathStr.substring(1, specifierPathStr.length - 1);
     const absPath = resolve(file, '..', specifierPath);
-    const sourceFile = this.getSourceFile(absPath);
+    const sourceFile = this.getSourceFileInsideComponent(absPath);
     if (!sourceFile) return [];
     return this.extractor.computeExportedIdentifiers(sourceFile, this);
   }
@@ -278,7 +282,7 @@ export class SchemaExtractorContext {
     // when we can't figure out the component/package/type of this node, we'll use the typeStr as the type.
     const unknownExactType = async () => {
       if (isTypeStrFromQuickInfo) {
-        return new InferenceTypeSchema(location, typeStr);
+        return new InferenceTypeSchema(location, typeStr || 'any');
       }
       const info = await this.getQuickInfo(node);
       const type = parseTypeFromQuickInfo(info);
@@ -305,19 +309,23 @@ export class SchemaExtractorContext {
       const schemaNode = await this.jump(file, definition.start);
       return schemaNode || unknownExactType();
     }
-    const compIdByPath = await this.extractor.getComponentIDByPath(definition.file);
+    return this.getTypeRefForExternalPath(typeStr, definition.file, location);
+  }
+
+  private getCompIdByPkgName(pkgName: string): ComponentID | undefined {
+    return this.componentDeps.find((dep) => dep.packageName === pkgName)?.componentId;
+  }
+
+  async getTypeRefForExternalPath(typeStr: string, filePath: string, location: Location): Promise<TypeRefSchema> {
+    const compIdByPath = await this.extractor.getComponentIDByPath(filePath);
     if (compIdByPath) {
       return new TypeRefSchema(location, typeStr, compIdByPath);
     }
-    const pkgName = this.parsePackageNameFromPath(definition.file);
+    const pkgName = this.parsePackageNameFromPath(filePath);
     const compIdByPkg = this.getCompIdByPkgName(pkgName);
     if (compIdByPkg) {
       return new TypeRefSchema(location, typeStr, compIdByPkg);
     }
     return new TypeRefSchema(location, typeStr, undefined, pkgName);
-  }
-
-  private getCompIdByPkgName(pkgName: string): ComponentID | undefined {
-    return this.componentDeps.find((dep) => dep.packageName === pkgName)?.componentId;
   }
 }
