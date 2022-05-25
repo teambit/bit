@@ -7,6 +7,7 @@ import { ComponentCompareAspects } from '@teambit/component.ui.component-compare
 import { ComponentCompareCode } from '@teambit/component.ui.component-compare-code';
 import { ComponentCompareComposition } from '@teambit/component.ui.component-compare-composition';
 import { ComponentCompareDependencies } from '@teambit/component.ui.component-compare-dependencies';
+import { ComponentCompareOverview } from '@teambit/component.ui.component-compare-overview';
 import { EmptyStateSlot } from '@teambit/compositions';
 import ComponentAspect, { ComponentUI } from '@teambit/component';
 import { Harmony, Slot, SlotRegistry } from '@teambit/harmony';
@@ -95,11 +96,20 @@ export class ComponentCompareUI {
     return <ComponentCompareAspects />;
   }
 
+  getComponentOverviewComparePage() {
+    return <ComponentCompareOverview />;
+  }
+
   private compareRoutes: RouteProps[] = [
     {
       exact: true,
       path: '',
       children: () => this.getComponentCompositionComparePage(),
+    },
+    {
+      exact: true,
+      path: '/overview',
+      children: () => this.getComponentOverviewComparePage(),
     },
     {
       exact: true,
@@ -120,38 +130,45 @@ export class ComponentCompareUI {
       exact: true,
       path: '/aspects',
       children: () => this.getComponentAspectsComparePage(),
-    },
+    }
   ];
 
   private compareNavLinks: ComponentCompareNav[] = [
     {
       props: {
+        href: '/overview',
+        children: 'Overview',
+      },
+      order: 0,
+    },
+    {
+      props: {
         href: '/compositions',
         children: 'Compositions',
       },
-      order: 0,
+      order: 1,
     },
     {
       props: {
         href: '/code',
         children: 'Code',
       },
-      order: 1,
+      order: 2,
     },
     {
       props: {
         href: '/dependencies',
         children: 'Dependencies',
       },
-      order: 2,
+      order: 3,
     },
     {
       props: {
         href: '/aspects',
         children: 'Aspects',
       },
-      order: 3,
-    },
+      order: 4,
+    }
   ];
 
   static async provider(

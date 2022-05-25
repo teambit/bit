@@ -7,7 +7,7 @@ export class ComponentCompareSection implements Section {
   constructor(private componentCompare: ComponentCompareUI) {}
 
   navigationLink = {
-    href: '~compare/compositions',
+    href: '~compare/overview',
     displayName: 'Compare',
     children: <ComponentCompareMenuWidget />,
   };

@@ -1092,6 +1092,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/ui/component-compare-dependencies"
     },
+    "ui/component-compare-overview": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/component/ui/component-compare-overview"
+    },
     "ui/component-compare-status-resolver": {
         "scope": "",
         "version": "",
