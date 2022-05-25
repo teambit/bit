@@ -1560,12 +1560,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/scope/ui/scope-title"
     },
-    "ui/separator": {
-        "scope": "teambit.design",
-        "version": "0.0.354",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/design/ui/separator"
-    },
     "ui/side-bar": {
         "scope": "teambit.ui-foundation",
         "version": "0.0.555",
