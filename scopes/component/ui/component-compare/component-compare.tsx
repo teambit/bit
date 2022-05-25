@@ -16,7 +16,7 @@ export type ComponentCompareProps = {
 } & HTMLAttributes<HTMLDivElement>;
 
 export function ComponentCompare({ navSlot, host, routeSlot }: ComponentCompareProps) {
-  const { baseVersion } = useComponentCompareParams();
+  const { baseVersion, parentPath } = useComponentCompareParams();
   const component = useContext(ComponentContext);
 
   const [lastVersionInfo] = useMemo(() => {
@@ -47,7 +47,7 @@ export function ComponentCompare({ navSlot, host, routeSlot }: ComponentCompareP
         </div>
         <div className={styles.bottom}>
           <CompareMenuNav navSlot={navSlot} />
-          <SlotRouter slot={routeSlot} parentPath={'/*/~compare/*'}/>
+          <SlotRouter slot={routeSlot} parentPath={`${parentPath}*`} />
         </div>
       </div>
     </ComponentCompareContext.Provider>

@@ -177,7 +177,7 @@ export class ComponentCompareUI {
     },
     {
       props: {
-        href: '/tests',
+        href: 'tests',
         children: 'Tests',
       },
       order: 5,
