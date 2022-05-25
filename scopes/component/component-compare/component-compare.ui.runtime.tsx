@@ -9,6 +9,7 @@ import { ComponentCompareCode } from '@teambit/component.ui.component-compare-co
 import { ComponentCompareComposition } from '@teambit/component.ui.component-compare-composition';
 import { ComponentCompareDependencies } from '@teambit/component.ui.component-compare-dependencies';
 import { ComponentCompareOverview } from '@teambit/component.ui.component-compare-overview';
+import { ComponentCompareTests } from '@teambit/component.ui.component-compare-tests';
 import type { TitleBadge } from '@teambit/component.ui.component-meta';
 import { EmptyStateSlot } from '@teambit/compositions';
 import { TitleBadgeSlot } from '@teambit/docs';
@@ -43,7 +44,12 @@ export class ComponentCompareUI {
 
   static runtime = UIRuntime;
 
-  static slots = [Slot.withType<ComponentCompareNavSlot>(), Slot.withType<RouteSlot>(), Slot.withType<string>(), Slot.withType<TitleBadge>()];
+  static slots = [
+    Slot.withType<ComponentCompareNavSlot>(),
+    Slot.withType<RouteSlot>(),
+    Slot.withType<string>(),
+    Slot.withType<TitleBadge>(),
+  ];
 
   static dependencies = [ComponentAspect, WorkspaceAspect, ScopeAspect];
 
@@ -108,6 +114,10 @@ export class ComponentCompareUI {
     return <ComponentCompareOverview titleBadges={this.titleBadgeSlot} />;
   }
 
+  getComponentTestsComparePage() {
+    return <ComponentCompareTests />;
+  }
+
   private compareRoutes: RouteProps[] = [
     {
       exact: true,
@@ -138,7 +148,12 @@ export class ComponentCompareUI {
       exact: true,
       path: '/aspects',
       children: () => this.getComponentAspectsComparePage(),
-    }
+    },
+    {
+      exact: true,
+      path: '/tests',
+      children: () => this.getComponentTestsComparePage(),
+    },
   ];
 
   private compareNavLinks: ComponentCompareNav[] = [
@@ -176,6 +191,13 @@ export class ComponentCompareUI {
         children: 'Aspects',
       },
       order: 4,
+    },
+    {
+      props: {
+        href: '/tests',
+        children: 'Tests',
+      },
+      order: 5,
     },
   ];
 
