@@ -1,5 +1,13 @@
 import { useComponentCompareContext } from '@teambit/component.ui.component-compare';
-import { calcMinimapColors, EdgeModel, GraphModel, NodeModel, useGraphQuery, GraphFilters, GraphFilter } from '@teambit/graph';
+import {
+  calcMinimapColors,
+  EdgeModel,
+  GraphModel,
+  NodeModel,
+  useGraphQuery,
+  GraphFilters,
+  GraphFilter,
+} from '@teambit/graph';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import ReactFlow, {
   Background,
@@ -17,6 +25,7 @@ import { CompareGraphModel } from './compare-graph-model';
 import { CompareNodeModel } from './compare-node-model';
 import styles from './component-compare-dependencies.module.scss';
 import { ComponentCompareDependencyNode } from './component-compare-dependency-node';
+import { RoundLoader } from '@teambit/design.ui.round-loader';
 
 function ComponentNodeContainer(props: NodeProps) {
   const { sourcePosition = Position.Top, targetPosition = Position.Bottom, data, id } = props;
@@ -96,10 +105,8 @@ export function ComponentCompareDependencies() {
   const { loading: compareLoading, graph: compareGraph } = useGraphQuery([compareId.toString()], filter);
   const loading = baseLoading || compareLoading;
 
-  if (!baseLoading && !compareLoading) {
-    if (!baseGraph || !compareGraph) {
-      return <></>;
-    }
+  if (!loading && (!baseGraph || !compareGraph)) {
+    return <></>;
   }
 
   let graph: CompareGraphModel | undefined = undefined;
@@ -129,6 +136,11 @@ export function ComponentCompareDependencies() {
 
   return (
     <div className={styles.page}>
+      {loading && (
+        <div className={styles.loader}>
+          <RoundLoader />
+        </div>
+      )}
       <ReactFlowProvider>
         <ReactFlow
           draggable={false}
