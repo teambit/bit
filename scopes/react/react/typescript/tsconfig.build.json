@@ -23,6 +23,11 @@
     "package.json"
   ],
   "include": [
+    "**/*.ts",
+    "**/*.js",
+    "**/*.tsx",
+    "**/*.jsx",
+    "**/*.d.ts",
     "**/*.json"
   ]
 }

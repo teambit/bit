@@ -18,6 +18,9 @@
     "package.json"
   ],
   "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    "**/*.d.ts",
     "**/*.json"
   ]
 }
