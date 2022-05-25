@@ -97,44 +97,53 @@ export class ComponentCompareUI {
 
   private compareRoutes: RouteProps[] = [
     {
-      path: "~compare/*",
-      children: (
-        <>
-          <Route index element={this.getComponentCompositionComparePage()}></Route>
-          <Route path={"compositions"} element={this.getComponentCompositionComparePage()}></Route>
-          <Route path={"code"} element={this.getComponentCodeComparePage()}></Route>
-          <Route path={"dependencies"} element={this.getComponentDependenciesComparePage()}></Route>
-          <Route path={"aspects"} element={this.getComponentAspectsComparePage()}></Route>
-        </>
-      ),
+      index: true,
+      element: this.getComponentCompositionComparePage(),
+    },
+    {
+      path: 'compositions/*',
+      element: this.getComponentCompositionComparePage(),
+    },
+    {
+      path: 'code/*',
+      element: this.getComponentCodeComparePage(),
+    },
+    {
+      path: 'dependencies/*',
+      element: this.getComponentDependenciesComparePage(),
+    },
+    {
+      path: 'aspects/*',
+      element: this.getComponentAspectsComparePage(),
     },
   ];
 
   private compareNavLinks: ComponentCompareNav[] = [
     {
       props: {
-        href: '/compositions',
+        href: '.',
+        exact: true,
         children: 'Compositions',
       },
       order: 0,
     },
     {
       props: {
-        href: '/code',
+        href: 'code',
         children: 'Code',
       },
       order: 1,
     },
     {
       props: {
-        href: '/dependencies',
+        href: 'dependencies',
         children: 'Dependencies',
       },
       order: 2,
     },
     {
       props: {
-        href: '/aspects',
+        href: 'aspects',
         children: 'Aspects',
       },
       order: 3,

@@ -13,7 +13,7 @@ export class ComponentCompareSection implements Section {
   };
 
   route = {
-    path: '~compare',
+    path: '~compare/*',
     element: this.componentCompare.getComponentComparePage(),
   };
 

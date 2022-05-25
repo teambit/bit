@@ -47,7 +47,7 @@ export function ComponentCompare({ navSlot, host, routeSlot }: ComponentCompareP
         </div>
         <div className={styles.bottom}>
           <CompareMenuNav navSlot={navSlot} />
-          <SlotRouter slot={routeSlot} />
+          <SlotRouter slot={routeSlot} parentPath={'/*/~compare/*'}/>
         </div>
       </div>
     </ComponentCompareContext.Provider>
