@@ -6,6 +6,7 @@ import {
   FunctionLikeSchema,
   InterfaceSchema,
   Module,
+  TypeRefSchema,
   TypeSchema,
   VariableSchema,
 } from './schemas';
@@ -46,7 +47,8 @@ export class APISchema extends SchemaNode {
       getSection(FunctionLikeSchema, 'Functions') +
       getSection(VariableSchema, 'Variables') +
       getSection(TypeSchema, 'Types') +
-      getSection(EnumSchema, 'Enums')
+      getSection(EnumSchema, 'Enums') +
+      getSection(TypeRefSchema, 'TypeReferences')
     );
   }
 
