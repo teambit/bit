@@ -1,6 +1,8 @@
+import { Transform } from 'class-transformer';
 import { ComponentID } from '@teambit/component';
 import chalk from 'chalk';
-import { SchemaNode } from '../schema-node';
+import { Location, SchemaNode } from '../schema-node';
+import { schemaObjArrayToInstances } from '../schema-obj-to-class';
 
 export type PlainTypeRefSchema = {
   name: string;
@@ -8,8 +10,21 @@ export type PlainTypeRefSchema = {
   packageName?: string;
 };
 
-export class TypeRefSchema implements SchemaNode {
+/**
+ * can be one of the following:
+ * 1. a reference to another "export" in the same component
+ * 2. a reference to another component.
+ * 3. a reference to a package.
+ */
+export class TypeRefSchema extends SchemaNode {
+  @Transform(schemaObjArrayToInstances)
+  /**
+   *  optional type arguments, e.g. type Foo = Bar<X, Y>. The X and Y are type arguments.
+   */
+  typeArgs?: SchemaNode[];
+
   constructor(
+    readonly location: Location,
     /**
      * name of the reference to type.
      */
@@ -24,23 +39,27 @@ export class TypeRefSchema implements SchemaNode {
      * target package name. existing if type is defined in different package.
      */
     readonly packageName?: string
-  ) {}
-
-  toObject() {
-    return {
-      constructorName: this.constructor.name,
-      name: this.name,
-      componentId: this.componentId,
-      packageName: this.packageName,
-    };
+  ) {
+    super();
   }
 
   toString() {
+    const name = this.nameToString();
+    if (!this.typeArgs) {
+      return name;
+    }
+    const args = this.typeArgs.map((arg) => arg.toString()).join(', ');
+    return `${name}<${args}>`;
+  }
+
+  private nameToString() {
     if (this.componentId) {
-      return `${this.componentId}/${this.name}`;
+      const compStr = chalk.dim(`(component: ${this.componentId.toStringWithoutVersion()})`);
+      return `${compStr} ${this.name}`;
     }
     if (this.packageName) {
-      return `${chalk.dim(this.packageName)}/${this.name}`;
+      const pkgStr = chalk.dim(`(package: ${this.packageName})`);
+      return `${pkgStr} ${this.name}`;
     }
     return this.name;
   }
@@ -52,11 +71,11 @@ export class TypeRefSchema implements SchemaNode {
     return !this.componentId && !this.packageName;
   }
 
-  static from(plainSchema: PlainTypeRefSchema) {
-    return new TypeRefSchema(
-      plainSchema.name,
-      plainSchema.componentId ? ComponentID.fromString(plainSchema.componentId) : undefined,
-      plainSchema.packageName
-    );
-  }
+  // static from(plainSchema: PlainTypeRefSchema) {
+  //   return new TypeRefSchema(
+  //     plainSchema.name,
+  //     plainSchema.componentId ? ComponentID.fromString(plainSchema.componentId) : undefined,
+  //     plainSchema.packageName
+  //   );
+  // }
 }

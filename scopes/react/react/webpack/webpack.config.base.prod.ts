@@ -2,23 +2,12 @@ import WorkboxWebpackPlugin from 'workbox-webpack-plugin';
 import CssMinimizerPlugin from 'css-minimizer-webpack-plugin';
 import TerserPlugin from 'terser-webpack-plugin';
 import { Configuration } from 'webpack';
-import { getExternals } from './get-externals';
-import { getExposedRules } from './get-exposed-rules';
 // import { WebpackManifestPlugin } from 'webpack-manifest-plugin';
 
 // This is the production and development configuration.
 // It is focused on developer experience, fast rebuilds, and a minimal bundle.
 // eslint-disable-next-line complexity
-export default function (externalizePeer: boolean, peers: string[], dev?: boolean): Configuration {
-  const externals = externalizePeer ? (getExternals(peers) as any) : undefined;
-  const exposedRules = externalizePeer ? undefined : getExposedRules(peers);
-
-  const module = externalizePeer
-    ? undefined
-    : {
-        rules: exposedRules,
-      };
-
+export default function (dev?: boolean): Configuration {
   const optimization = dev
     ? undefined
     : {
@@ -105,8 +94,6 @@ export default function (externalizePeer: boolean, peers: string[], dev?: boolea
       };
 
   return {
-    module,
-    externals,
     optimization,
 
     plugins: [

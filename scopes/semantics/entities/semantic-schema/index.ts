@@ -1,10 +1,9 @@
 export { APISchema } from './api-schema';
-export type { SchemaNode } from './schema-node';
+export { Export, StaticProperties } from './export';
+export type { SchemaNode, Location } from './schema-node';
 export {
-  Export,
   Module,
-  StaticProperties,
-  FunctionSchema,
+  FunctionLikeSchema,
   Modifier,
   TypeRefSchema,
   VariableSchema,
@@ -26,5 +25,11 @@ export {
   TypeOperatorSchema,
   TupleTypeSchema,
   ParameterSchema,
+  EnumSchema,
+  ParenthesizedTypeSchema,
+  TypePredicateSchema,
+  IndexedAccessSchema,
+  TemplateLiteralTypeSchema,
+  TemplateLiteralTypeSpanSchema,
 } from './schemas';
 export type { JSONSchema, JSONSchemaObject } from './json-schema';

@@ -131,6 +131,8 @@ export class PnpmPackageManager implements PackageManager {
         hoistPattern: config.hoistPattern,
         publicHoistPattern: ['*eslint*', '@prettier/plugin-*', '*prettier-plugin-*'],
         packageImportMethod: installOptions.packageImportMethod ?? config.packageImportMethod,
+        sideEffectsCacheRead: installOptions.sideEffectsCache ?? true,
+        sideEffectsCacheWrite: installOptions.sideEffectsCache ?? true,
       },
       this.logger
     );

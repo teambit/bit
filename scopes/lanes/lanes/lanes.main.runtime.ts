@@ -399,10 +399,9 @@ export class LanesMain {
     return laneDiffGenerator.generate(values, diffOptions);
   }
 
-  async getLaneComponentModels(name: string): Promise<Component[]> {
-    if (!name) return [];
+  async getLaneComponentModels(lane: LaneData): Promise<Component[]> {
+    if (!lane) return [];
 
-    const [lane] = await this.getLanes({ name });
     const laneComponents = lane.components;
     const host = this.componentAspect.getHost();
     const laneComponentIds = await Promise.all(
@@ -415,10 +414,8 @@ export class LanesMain {
     return components;
   }
 
-  async getLaneReadmeComponent(name: string): Promise<Component | undefined> {
-    if (!name) return undefined;
-
-    const [lane] = await this.getLanes({ name });
+  async getLaneReadmeComponent(lane: LaneData): Promise<Component | undefined> {
+    if (!lane) return undefined;
     const laneReadmeComponent = lane.readmeComponent;
     if (!laneReadmeComponent) return undefined;
     const host = this.componentAspect.getHost();

@@ -1,6 +1,5 @@
 export { Module } from './module';
-export { Export, StaticProperties } from './export';
-export { FunctionSchema, Modifier } from './function';
+export { FunctionLikeSchema, Modifier } from './function-like';
 export { TypeRefSchema } from './type-ref';
 export { VariableSchema } from './variable';
 export { ClassSchema } from './class';
@@ -21,3 +20,9 @@ export { TypeArraySchema } from './type-array';
 export { TypeOperatorSchema } from './type-operator';
 export { TupleTypeSchema } from './tuple-type';
 export { ParameterSchema } from './parameter';
+export { EnumSchema } from './enum';
+export { ParenthesizedTypeSchema } from './parenthesized-type';
+export { TypePredicateSchema } from './type-predicate';
+export { IndexedAccessSchema } from './indexed-access-type';
+export { TemplateLiteralTypeSchema } from './template-literal-type';
+export { TemplateLiteralTypeSpanSchema } from './template-literal-type-span';

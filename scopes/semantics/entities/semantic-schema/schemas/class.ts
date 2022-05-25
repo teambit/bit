@@ -1,15 +1,14 @@
+import { Transform } from 'class-transformer';
 import chalk from 'chalk';
-import { SchemaNode } from '../schema-node';
+import { Location, SchemaNode } from '../schema-node';
+import { schemaObjArrayToInstances } from '../schema-obj-to-class';
 
-export class ClassSchema implements SchemaNode {
-  constructor(readonly className: string, readonly members: SchemaNode[]) {}
-
-  toObject() {
-    return {
-      constructorName: this.constructor.name,
-      name: this.className,
-      members: this.members.map((member) => member.toObject()),
-    };
+export class ClassSchema extends SchemaNode {
+  @Transform(schemaObjArrayToInstances)
+  readonly members: SchemaNode[];
+  constructor(readonly className: string, members: SchemaNode[], readonly location: Location) {
+    super();
+    this.members = members;
   }
 
   toString() {
