@@ -126,7 +126,9 @@ export class PnpmPackageManager implements PackageManager {
       proxyConfig,
       networkConfig,
       {
+        engineStrict: installOptions.engineStrict ?? config.engineStrict,
         nodeLinker: installOptions.nodeLinker,
+        nodeVersion: installOptions.nodeVersion ?? config.nodeVersion,
         overrides: installOptions.overrides,
         hoistPattern: config.hoistPattern,
         publicHoistPattern: ['*eslint*', '@prettier/plugin-*', '*prettier-plugin-*'],
