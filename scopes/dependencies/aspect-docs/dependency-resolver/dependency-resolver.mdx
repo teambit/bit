@@ -418,6 +418,23 @@ Side-effects cache can be turned off by setting the `sideEffectsCache` field to 
 }
 ```
 
+## Node.js engine checks
+
+If you want to prevent contributors of your project from adding new incompatible dependencies, use `nodeVersion` and `engineStrict` in your `workspace.jsonc`:
+
+```json
+{
+  "@teambit.dependencies/dependency-resolver": {
+    "engineStrict": true,
+    "nodeVersion": "12.22.0"
+  }
+}
+```
+
+This way, even if someone is using Node.js v16, they will not be able to install a new dependency that doesn't support Node.js v12.22.0.
+
+NOTE: This works only with pnpm currently.
+
 ## CLI reference
 
 ### install
