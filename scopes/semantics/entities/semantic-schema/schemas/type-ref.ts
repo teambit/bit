@@ -2,7 +2,7 @@ import { Transform } from 'class-transformer';
 import { ComponentID } from '@teambit/component';
 import chalk from 'chalk';
 import { Location, SchemaNode } from '../schema-node';
-import { schemaObjArrayToInstances } from '../schema-obj-to-class';
+import { schemaObjArrayToInstances } from '../class-transformers';
 import { componentIdTransformer } from '../class-transformers/comp-id-transformer';
 
 export type PlainTypeRefSchema = {

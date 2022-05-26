@@ -1,7 +1,7 @@
 import { Transform } from 'class-transformer';
 import chalk from 'chalk';
 import { Location, SchemaNode } from '../schema-node';
-import { schemaObjArrayToInstances, schemaObjToInstance } from '../schema-obj-to-class';
+import { schemaObjArrayToInstances, schemaObjToInstance } from '../class-transformers';
 import { ParameterSchema } from './parameter';
 
 export type Modifier =
