@@ -23,7 +23,16 @@
   padding: 0px 8px;
   display: flex;
   flex-direction: column;
-  height: calc(100% - 64px);
+  /**
+  * Monaco container is not flex so providing it a fixed calculated height
+  * so it can fill up the remaining space correctly instead of overflowing
+  * 
+  * Subtract the following
+  *  selected file: (32px + 16px padding) = 48px; 
+  *  diff editor headers: (16px + 16px padding) * 2 = 64px;
+  *  total = 112px; 
+  */
+  height: calc(100% - 112px); 
 }
 
 .name {
