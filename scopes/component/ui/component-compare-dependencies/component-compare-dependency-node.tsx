@@ -7,12 +7,12 @@ import { EnvIcon } from '@teambit/envs.ui.env-icon';
 import classnames from 'classnames';
 import React, { useState, useEffect } from 'react';
 import { valid, compare } from 'semver';
-import styles from './component-compare-dependency-node.module.scss';
-import variants from './component-compare-dependency-variants.module.scss';
-import { CompareNodeModel } from './compare-node-model';
 import { ComponentCompareStatusResolver } from '@teambit/component.ui.component-compare-status-resolver';
 import { NavLink } from '@teambit/base-ui.routing.nav-link';
 import { ComponentUrl } from '@teambit/component.modules.component-url';
+import styles from './component-compare-dependency-node.module.scss';
+import variants from './component-compare-dependency-variants.module.scss';
+import { CompareNodeModel } from './compare-node-model';
 
 export type ComponentCompareDependencyNodeProps = {
   node: CompareNodeModel;

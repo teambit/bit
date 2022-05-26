@@ -2,11 +2,11 @@ import { ComponentAspect, ComponentUI } from '@teambit/component';
 import { Slot } from '@teambit/harmony';
 import type { TitleBadge } from '@teambit/component.ui.component-meta';
 import { UIRuntime } from '@teambit/ui';
+import ComponentCompareAspect, { ComponentCompareUI } from '@teambit/component-compare';
 
 import { DocsAspect } from './docs.aspect';
 import { OverviewSection } from './overview.section';
 import { TitleBadgeSlot } from './overview';
-import ComponentCompareAspect, { ComponentCompareUI } from '@teambit/component-compare';
 
 export class DocsUI {
   constructor(readonly titleBadgeSlot: TitleBadgeSlot, private readonly componentCompareUI: ComponentCompareUI) {}
@@ -33,7 +33,11 @@ export class DocsUI {
 
   static slots = [Slot.withType<TitleBadge>()];
 
-  static async provider([component, componentCompareUI]: [ComponentUI, ComponentCompareUI], config, [titleBadgeSlot]: [TitleBadgeSlot]) {
+  static async provider(
+    [component, componentCompareUI]: [ComponentUI, ComponentCompareUI],
+    config,
+    [titleBadgeSlot]: [TitleBadgeSlot]
+  ) {
     const docs = new DocsUI(titleBadgeSlot, componentCompareUI);
     const section = new OverviewSection(docs);
 

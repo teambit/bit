@@ -20,12 +20,12 @@ import ReactFlow, {
   Position,
   ReactFlowProvider,
 } from 'react-flow-renderer';
+import { RoundLoader } from '@teambit/design.ui.round-loader';
 import { calcElements } from './calc-elements';
 import { CompareGraphModel } from './compare-graph-model';
 import { CompareNodeModel } from './compare-node-model';
 import styles from './component-compare-dependencies.module.scss';
 import { ComponentCompareDependencyNode } from './component-compare-dependency-node';
-import { RoundLoader } from '@teambit/design.ui.round-loader';
 
 function ComponentNodeContainer(props: NodeProps) {
   const { sourcePosition = Position.Top, targetPosition = Position.Bottom, data, id } = props;

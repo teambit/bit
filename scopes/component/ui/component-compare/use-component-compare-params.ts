@@ -14,8 +14,8 @@ export type ComponentCompareRouteProps = ComponentCompareQueryParams & Component
 
 export type ComponentCompareRouteParams = {
   subRoute?: string;
-  parentPath: string;
 };
+
 /**
  * path = /<org>/<scope>/<componentId>/~compare/<~compositions | ~dependencies | ~code | ~aspects>/
  * variables = base, version, selectedCompositionBaseFile, selectedCompositionCompareFile, selectedFile
@@ -23,7 +23,6 @@ export type ComponentCompareRouteParams = {
 export function useComponentCompareParams(): ComponentCompareRouteProps {
   const query = useQuery();
   const params = useParams();
-  const location = useLocation();
 
   const baseVersion = query.get('baseVersion') || undefined;
   const version = query.get('version') || undefined;
@@ -31,8 +30,7 @@ export function useComponentCompareParams(): ComponentCompareRouteProps {
   const selectedAspect = query.get('selectedAspect') || undefined;
   const selectedCompositionBaseFile = query.get('selectedCompositionBaseFile') || undefined;
   const selectedCompositionCompareFile = query.get('selectedCompositionCompareFile') || undefined;
-  const subRoute = params["*"];
-  const parentPath = subRoute && location.pathname.split(subRoute)[0] || location.pathname;
+  const subRoute = params['*'];
 
   return {
     baseVersion,
@@ -42,7 +40,6 @@ export function useComponentCompareParams(): ComponentCompareRouteProps {
     selectedAspect,
     version,
     subRoute,
-    parentPath
   };
 }
 

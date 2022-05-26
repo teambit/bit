@@ -20,7 +20,7 @@ import { UIRuntime } from '@teambit/ui';
 import { RouteSlot } from '@teambit/ui-foundation.ui.react-router.slot-router';
 import WorkspaceAspect from '@teambit/workspace';
 import React, { ComponentType } from 'react';
-import { RouteProps, Route } from 'react-router-dom';
+import { RouteProps } from 'react-router-dom';
 import { ComponentCompareAspect } from './component-compare.aspect';
 import { ComponentCompareSection } from './component-compare.section';
 
@@ -121,7 +121,8 @@ export class ComponentCompareUI {
   private compareRoutes: RouteProps[] = [
     {
       index: true,
-      element: this.getComponentCompositionComparePage(),
+      path: '*',
+      element: this.getComponentOverviewComparePage(),
     },
     {
       path: 'compositions/*',
@@ -149,6 +150,14 @@ export class ComponentCompareUI {
     {
       props: {
         href: '.',
+        exact: true,
+        children: 'Overview',
+      },
+      order: 0,
+    },
+    {
+      props: {
+        href: 'compositions',
         exact: true,
         children: 'Compositions',
       },

@@ -1,8 +1,9 @@
 import React, { useRef, UIEvent } from 'react';
-import styles from './component-compare-overview.module.scss';
 import { useComponentCompareContext } from '@teambit/component.ui.component-compare';
-import { ComponentProvider, ComponentDescriptorProvider } from '@teambit/component';
+import { ComponentProvider } from '@teambit/component';
 import { Overview, TitleBadgeSlot } from '@teambit/docs';
+
+import styles from './component-compare-overview.module.scss';
 
 export type ComponentCompareOverviewProps = {
   titleBadges: TitleBadgeSlot;
