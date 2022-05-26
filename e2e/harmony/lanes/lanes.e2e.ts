@@ -904,9 +904,9 @@ describe('bit lane command', function () {
     });
     // previously, it used to error with "error: version "0.0.2" of component jozc1y79-remote2/bar2 was not found."
     it('should be able to export', () => {
-      expect(helper.command.export()).to.not.throw();
+      expect(() => helper.command.export()).to.not.throw();
       // import used to throw as well
-      expect(helper.command.import()).to.not.throw();
+      expect(() => helper.command.import()).to.not.throw();
     });
   });
   describe('snapping and un-tagging on a lane', () => {
