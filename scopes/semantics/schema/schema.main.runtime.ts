@@ -3,6 +3,7 @@ import ComponentAspect, { Component, ComponentMain } from '@teambit/component';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import GraphqlAspect, { GraphqlMain } from '@teambit/graphql';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
+import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { APISchema, Export } from '@teambit/semantics.entities.semantic-schema';
 import { Parser } from './parser';
 import { SchemaAspect } from './schema.aspect';
@@ -31,7 +32,9 @@ export class SchemaMain {
 
     private envs: EnvsMain,
 
-    private config: SchemaConfig
+    private config: SchemaConfig,
+
+    private logger: Logger
   ) {}
 
   /**
@@ -73,6 +76,7 @@ export class SchemaMain {
    * @param component target component.
    */
   async getSchema(component: Component): Promise<APISchema> {
+    this.logger.debug(`getSchema of ${component.id.toString()}`);
     const env = this.envs.getEnv(component).env;
     if (typeof env.getSchemaExtractor === 'undefined') {
       throw new Error(`No SchemaExtractor defined for ${env.name}`);
@@ -94,7 +98,7 @@ export class SchemaMain {
   }
 
   static runtime = MainRuntime;
-  static dependencies = [EnvsAspect, CLIAspect, ComponentAspect, GraphqlAspect];
+  static dependencies = [EnvsAspect, CLIAspect, ComponentAspect, GraphqlAspect, LoggerAspect];
   static slots = [Slot.withType<Parser>()];
 
   static defaultConfig = {
@@ -102,12 +106,13 @@ export class SchemaMain {
   };
 
   static async provider(
-    [envs, cli, component, graphql]: [EnvsMain, CLIMain, ComponentMain, GraphqlMain],
+    [envs, cli, component, graphql, loggerMain]: [EnvsMain, CLIMain, ComponentMain, GraphqlMain, LoggerMain],
     config: SchemaConfig,
     [parserSlot]: [ParserSlot]
   ) {
-    const schema = new SchemaMain(parserSlot, envs, config);
-    cli.register(new SchemaCommand(schema, component));
+    const logger = loggerMain.createLogger(SchemaAspect.id);
+    const schema = new SchemaMain(parserSlot, envs, config, logger);
+    cli.register(new SchemaCommand(schema, component, logger));
     graphql.register(schemaSchema(schema));
 
     // workspace.onComponentLoad(async (component) => {
