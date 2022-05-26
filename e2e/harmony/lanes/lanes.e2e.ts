@@ -868,6 +868,47 @@ describe('bit lane command', function () {
       });
     });
   });
+  describe('multiple scopes when main is ahead', () => {
+    let anotherRemote: string;
+    let localScope: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      const { scopeName, scopePath } = helper.scopeHelper.getNewBareScope();
+      anotherRemote = scopeName;
+      helper.scopeHelper.addRemoteScope(scopePath);
+      helper.scopeHelper.addRemoteScope(scopePath, helper.scopes.remotePath);
+      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, scopePath);
+      helper.fs.outputFile('bar1/foo1.js', 'console.log("v1");');
+      helper.fs.outputFile('bar2/foo2.js', 'console.log("v1");');
+      helper.command.addComponent('bar1');
+      helper.command.addComponent('bar2');
+      helper.command.setScope(anotherRemote, 'bar2');
+      helper.command.compile();
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.command.createLane();
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.export();
+      localScope = helper.scopeHelper.cloneLocalScope();
+
+      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.addRemoteScope(scopePath);
+      helper.command.import(`${scopeName}/bar2`);
+      helper.command.tagAllWithoutBuild('--unmodified');
+      helper.command.export();
+
+      helper.scopeHelper.getClonedLocalScope(localScope);
+      helper.command.import();
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+    });
+    // previously, it used to error with "error: version "0.0.2" of component jozc1y79-remote2/bar2 was not found."
+    it('should be able to export', () => {
+      expect(() => helper.command.export()).to.not.throw();
+      // import used to throw as well
+      expect(() => helper.command.import()).to.not.throw();
+    });
+  });
   describe('snapping and un-tagging on a lane', () => {
     let afterFirstSnap: string;
     before(() => {
