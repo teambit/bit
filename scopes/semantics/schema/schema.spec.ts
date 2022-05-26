@@ -30,7 +30,7 @@ describe('SchemaAspect', function () {
       const src = path.join(getMockDir(), 'button');
       await fs.copy(src, compDir);
       workspace = await loadAspect(WorkspaceAspect, workspacePath);
-      await workspace.track({ rootDir: compDir });
+      await workspace.track({ rootDir: compDir, defaultScope: 'org.scope' });
       await workspace.bitMap.write();
       schema = await loadAspect(SchemaAspect, workspacePath);
       const compId = await workspace.resolveComponentId('button');
