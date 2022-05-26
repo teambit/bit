@@ -1,7 +1,7 @@
 import { plainToInstance, TransformationType, ClassConstructor } from 'class-transformer';
 import { compact } from 'lodash';
-import { SchemaNode } from './schema-node';
-import * as Schemas from './schemas';
+import { SchemaNode } from '../schema-node';
+import * as Schemas from '../schemas';
 
 export function schemaObjArrayToInstances({ value, type }: { value: SchemaNode[]; type: TransformationType }) {
   if (type !== TransformationType.PLAIN_TO_CLASS) {
