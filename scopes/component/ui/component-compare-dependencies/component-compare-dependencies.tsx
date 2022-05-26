@@ -41,9 +41,11 @@ function ComponentNodeContainer(props: NodeProps) {
 
 const NodeTypes: NodeTypesType = { ComponentNode: ComponentNodeContainer };
 
-function buildGraph(_baseGraph: GraphModel, _compareGraph: GraphModel) {
-  const baseNodes = _baseGraph.nodes;
-  const compareNodes = _compareGraph.nodes;
+function buildGraph(baseGraph?: GraphModel, compareGraph?: GraphModel) {
+  if (!baseGraph || !compareGraph) return null;
+
+  const baseNodes = baseGraph.nodes;
+  const compareNodes = compareGraph.nodes;
   const baseNodesMap = new Map<string, NodeModel>(baseNodes.map((n) => [n.component.id.toStringWithoutVersion(), n]));
   const compareNodesMap = new Map<string, NodeModel>(
     compareNodes.map((n) => [n.component.id.toStringWithoutVersion(), n])
@@ -77,12 +79,12 @@ function buildGraph(_baseGraph: GraphModel, _compareGraph: GraphModel) {
   }
 
   const baseEdgesMap = new Map<string, EdgeModel>(
-    _baseGraph.edges.map((e) => [`${e.sourceId.split('@')[0]} | ${e.targetId.split('@')[0]}`, e])
+    baseGraph.edges.map((e) => [`${e.sourceId.split('@')[0]} | ${e.targetId.split('@')[0]}`, e])
   );
-  const edgesOnlyInCompare = _compareGraph.edges.filter(
+  const edgesOnlyInCompare = compareGraph.edges.filter(
     (e) => !baseEdgesMap.has(`${e.sourceId.split('@')[0]} | ${e.targetId.split('@')[0]}`)
   );
-  const allEdges = [..._baseGraph.edges, ...edgesOnlyInCompare];
+  const allEdges = [...baseGraph.edges, ...edgesOnlyInCompare];
 
   return new CompareGraphModel(allNodes, allEdges);
 }
@@ -104,18 +106,10 @@ export function ComponentCompareDependencies() {
   const { loading: baseLoading, graph: baseGraph } = useGraphQuery([baseId.toString()], filter);
   const { loading: compareLoading, graph: compareGraph } = useGraphQuery([compareId.toString()], filter);
   const loading = baseLoading || compareLoading;
-
-  if (!loading && (!baseGraph || !compareGraph)) {
-    return <></>;
-  }
-
-  let graph: CompareGraphModel | undefined = undefined;
-  if (!!baseGraph && !!compareGraph) {
-    graph = buildGraph(baseGraph, compareGraph);
-  }
+  const graph = buildGraph(baseGraph, compareGraph);
 
   const elements = useMemo(() => {
-    if (!!graph) {
+    if (graph) {
       return calcElements(graph, baseId.toString(), compareId.toString());
     }
     return [];
@@ -130,9 +124,13 @@ export function ComponentCompareDependencies() {
     graphRef.current?.fitView();
   }
 
-  const onCheckFilter = (isFiltered: boolean) => {
-    setFilter(isFiltered ? 'runtimeOnly' : undefined);
+  const onCheckFilter = (_isFiltered: boolean) => {
+    setFilter(_isFiltered ? 'runtimeOnly' : undefined);
   };
+
+  if (!loading && (!baseGraph || !compareGraph)) {
+    return <></>;
+  }
 
   return (
     <div className={styles.page}>

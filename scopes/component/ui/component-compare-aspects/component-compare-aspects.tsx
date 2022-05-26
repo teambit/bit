@@ -24,6 +24,7 @@ export type ComponentAspectData = {
 const GET_COMPONENT_ASPECT_DATA = gql`
   query GetComponentAspectData($id: String!) {
     getHost {
+      id # used for GQL caching
       get(id: $id) {
         aspects {
           id

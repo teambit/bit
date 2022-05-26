@@ -1,6 +1,7 @@
 import { ComponentID } from '@teambit/component-id';
 import { ComponentDescriptor } from '@teambit/component-descriptor';
 import { useLanesContext } from '@teambit/lanes.ui.lanes';
+import { useQuery } from '@teambit/ui-foundation.ui.react-router.use-query';
 import { ComponentModel } from './component-model';
 import { ComponentError } from './component-error';
 import { useComponentQuery } from './use-component-query';
@@ -15,11 +16,15 @@ export type Component = {
 export function useComponent(host: string, id?: string | ComponentID): Component {
   const lanesContext = useLanesContext();
 
-  const targetId =
-    (typeof id === 'string' && id) || typeof id !== 'undefined' && id.toString({ ignoreVersion: true });
+  const query = useQuery();
+  const versionFromUrl = query.get('version') || undefined;
 
-  const version = (typeof id === 'string' && id.split("@")[1]) || (id as ComponentID | undefined)?.version;
-  
+  const targetId =
+    (typeof id === 'string' && id) || (typeof id !== 'undefined' && id.toString({ ignoreVersion: true }));
+
+  const version =
+    (typeof id === 'string' && id.split('@')[1]) || (id as ComponentID | undefined)?.version || versionFromUrl;
+
   if (!targetId) throw new TypeError('useComponent received no component id');
   const currentLane = lanesContext?.viewedLane;
   // when on a lane, always fetch all the logs starting from the 'head' version
