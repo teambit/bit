@@ -1,3 +1,4 @@
+import { isObject, omit } from 'lodash';
 import { Configuration, ResolveOptions, RuleSetRule } from 'webpack';
 import { merge, mergeWithCustomize, mergeWithRules, CustomizeRule } from 'webpack-merge';
 import { ICustomizeOptions } from 'webpack-merge/dist/types';
@@ -119,6 +120,28 @@ export class WebpackConfigMutator {
     return this;
   }
 
+  /** Add rule to the module config
+   * @param entry
+   * @param opts
+   * @returns
+   */
+  addRuleToOneOf(rule: RuleSetRule, opts: AddToArrayOpts = {}): WebpackConfigMutator {
+    if (!this.raw.module) {
+      this.raw.module = {};
+    }
+    if (!this.raw.module.rules) {
+      this.raw.module.rules = [];
+    }
+    // @ts-ignore
+    if (!this.raw.module.rules.find(r => !!r.oneOf)){
+      this.raw.module.rules.unshift({ oneOf: [] })
+    }
+
+    addToArray((this.raw.module.rules.find(r => !!(r as RuleSetRule).oneOf) as RuleSetRule[]), rule, opts);
+    return this;
+  }
+
+
   /**
    * Add a new plugin
    * @param plugin
@@ -160,6 +183,25 @@ export class WebpackConfigMutator {
       this.raw.resolve.alias = {};
     }
     Object.assign(this.raw.resolve.alias, aliases);
+    return this;
+  }
+
+  /**
+   * Add aliases
+   * @param aliases
+   * @returns
+   */
+  removeAliases(aliases: string[]): WebpackConfigMutator {
+    if (!this.raw.resolve) {
+      return this;
+    }
+    if (!this.raw.resolve.alias) {
+      return this;
+    }
+    if (isObject(this.raw?.resolve?.alias)) {
+      // @ts-ignore
+      this.raw.resolve.alias = omit(this.raw.resolve.alias, aliases);
+    }
     return this;
   }
 

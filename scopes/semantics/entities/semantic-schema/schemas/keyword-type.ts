@@ -1,16 +1,11 @@
-import { SchemaNode } from '../schema-node';
+import { Location, SchemaNode } from '../schema-node';
 
 /**
  * e.g. 'string', 'boolean', etc.
  */
-export class KeywordTypeSchema implements SchemaNode {
-  constructor(private name: string) {}
-
-  toObject() {
-    return {
-      constructorName: this.constructor.name,
-      name: this.name,
-    };
+export class KeywordTypeSchema extends SchemaNode {
+  constructor(readonly location: Location, private name: string) {
+    super();
   }
 
   toString() {

@@ -17,6 +17,6 @@ export class IndexSignature implements SchemaTransformer {
   async transform(indexSig: IndexSignatureDeclaration, context: SchemaExtractorContext): Promise<SchemaNode> {
     const params = await getParams(indexSig.parameters, context);
     const type = await typeNodeToSchema(indexSig.type, context);
-    return new IndexSignatureSchema(params, type);
+    return new IndexSignatureSchema(context.getLocation(indexSig), params, type);
   }
 }

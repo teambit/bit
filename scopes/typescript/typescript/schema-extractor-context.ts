@@ -4,9 +4,10 @@ import { getTokenAtPosition } from 'tsutils';
 import { head } from 'lodash';
 // @ts-ignore david we should figure fix this.
 import type { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
-import { resolve, sep } from 'path';
-import { Component } from '@teambit/component';
+import { resolve, sep, relative } from 'path';
+import { Component, ComponentID } from '@teambit/component';
 import { TypeRefSchema, SchemaNode, InferenceTypeSchema, Location } from '@teambit/semantics.entities.semantic-schema';
+import { ComponentDependency } from '@teambit/dependency-resolver';
 import { TypeScriptExtractor } from './typescript.extractor';
 import { ExportList } from './export-list';
 import { typeNodeToSchema } from './transformers/utils/type-node-to-schema';
@@ -17,7 +18,8 @@ export class SchemaExtractorContext {
   constructor(
     readonly tsserver: TsserverClient,
     readonly component: Component,
-    readonly extractor: TypeScriptExtractor
+    readonly extractor: TypeScriptExtractor,
+    readonly componentDeps: ComponentDependency[]
   ) {}
 
   computeSchema(node: Node) {
@@ -27,17 +29,22 @@ export class SchemaExtractorContext {
   /**
    * returns the location of a node in a source file.
    */
-  getLocation(node: Node, targetSourceFile?: ts.SourceFile): Location {
+  getLocation(node: Node, targetSourceFile?: ts.SourceFile, absolutePath = false): Location {
     const sourceFile = targetSourceFile || node.getSourceFile();
     const position = sourceFile.getLineAndCharacterOfPosition(node.getStart());
     const line = position.line + 1;
     const character = position.character + 1;
 
     return {
-      file: sourceFile.fileName,
+      file: absolutePath ? sourceFile.fileName : this.getPathRelativeToComponent(sourceFile.fileName),
       line,
       character,
     };
+  }
+
+  getPathRelativeToComponent(filePath: string): string {
+    const basePath = this.component.filesystem.files[0].base;
+    return relative(basePath, filePath);
   }
 
   /**
@@ -62,20 +69,22 @@ export class SchemaExtractorContext {
     return sourceFile.fileName;
   }
 
-  /**
-   * create a reference to a type from a component.
-   * think if we don't need this because of type ref
-   */
-  // createRef() {
-  //   return {};
-  // }
-
-  getQuickInfo(node: Node) {
-    return this.tsserver.getQuickInfo(this.getPath(node), this.getLocation(node));
+  async getQuickInfo(node: Node) {
+    const location = this.getLocation(node);
+    try {
+      return await this.tsserver.getQuickInfo(this.getPath(node), location);
+    } catch (err: any) {
+      if (err.message === 'No content available.') {
+        throw new Error(
+          `unable to get quickinfo data from tsserver at ${location.file}, Ln ${location.line}, Col ${location.character}`
+        );
+      }
+      throw err;
+    }
   }
 
   async getQuickInfoDisplayString(node: Node): Promise<string> {
-    const quickInfo = await this.tsserver.getQuickInfo(this.getPath(node), this.getLocation(node));
+    const quickInfo = await this.getQuickInfo(node);
     return quickInfo?.body?.displayString || '';
   }
 
@@ -125,23 +134,25 @@ export class SchemaExtractorContext {
    * return the file if part of the component.
    * otherwise, a reference to the target package and the type name.
    */
-  private getSourceFile(filePath: string) {
+  getSourceFileInsideComponent(filePath: string) {
     const file = this.findFileInComponent(filePath);
     if (!file) return undefined;
     return this.extractor.parseSourceFile(file);
   }
 
   async getSourceFileFromNode(node: Node) {
+    const filePath = await this.getFilePathByNode(node);
+    if (!filePath) {
+      return undefined;
+    }
+    return this.getSourceFileInsideComponent(filePath);
+  }
+
+  async getFilePathByNode(node: Node) {
     const def = await this.tsserver.getDefinition(this.getPath(node), this.getLocation(node));
 
     const firstDef = head(def.body);
-    if (!firstDef) {
-      return undefined;
-    }
-
-    const sourceFile = this.getSourceFile(firstDef.file);
-
-    return sourceFile;
+    return firstDef?.file;
   }
 
   /**
@@ -156,7 +167,7 @@ export class SchemaExtractorContext {
     }
 
     const startPosition = firstDef.start;
-    const sourceFile = this.getSourceFile(firstDef.file);
+    const sourceFile = this.getSourceFileInsideComponent(firstDef.file);
     if (!sourceFile) {
       return undefined; // learn how to return a reference to a different component here.
     }
@@ -191,7 +202,7 @@ export class SchemaExtractorContext {
     const specifierPathStr = exportDec.moduleSpecifier?.getText() || '';
     const specifierPath = specifierPathStr.substring(1, specifierPathStr.length - 1);
     const absPath = resolve(file, '..', specifierPath);
-    const sourceFile = this.getSourceFile(absPath);
+    const sourceFile = this.getSourceFileInsideComponent(absPath);
     if (!sourceFile) return [];
     return this.extractor.computeExportedIdentifiers(sourceFile, this);
   }
@@ -241,7 +252,10 @@ export class SchemaExtractorContext {
     typeStr: string,
     isTypeStrFromQuickInfo = true
   ): Promise<SchemaNode> {
-    if (this._exports?.includes(typeStr)) return new TypeRefSchema(typeStr);
+    const location = this.getLocation(node);
+    if (this._exports?.includes(typeStr)) {
+      return new TypeRefSchema(location, typeStr);
+    }
     if (node.type && ts.isTypeNode(node.type)) {
       // if a node has "type" prop, it has the type data of the node. this normally happens when the code has the type
       // explicitly, e.g. `const str: string` vs implicitly `const str = 'some-string'`, which the node won't have "type"
@@ -268,11 +282,11 @@ export class SchemaExtractorContext {
     // when we can't figure out the component/package/type of this node, we'll use the typeStr as the type.
     const unknownExactType = async () => {
       if (isTypeStrFromQuickInfo) {
-        return new InferenceTypeSchema(typeStr);
+        return new InferenceTypeSchema(location, typeStr || 'any');
       }
       const info = await this.getQuickInfo(node);
       const type = parseTypeFromQuickInfo(info);
-      return new InferenceTypeSchema(type);
+      return new InferenceTypeSchema(location, type);
     };
     if (!definition) {
       return unknownExactType();
@@ -295,8 +309,23 @@ export class SchemaExtractorContext {
       const schemaNode = await this.jump(file, definition.start);
       return schemaNode || unknownExactType();
     }
-    const pkgName = this.parsePackageNameFromPath(definition.file);
-    // TODO: find component id is exists, otherwise add the package name.
-    return new TypeRefSchema(typeStr, undefined, pkgName);
+    return this.getTypeRefForExternalPath(typeStr, definition.file, location);
+  }
+
+  private getCompIdByPkgName(pkgName: string): ComponentID | undefined {
+    return this.componentDeps.find((dep) => dep.packageName === pkgName)?.componentId;
+  }
+
+  async getTypeRefForExternalPath(typeStr: string, filePath: string, location: Location): Promise<TypeRefSchema> {
+    const compIdByPath = await this.extractor.getComponentIDByPath(filePath);
+    if (compIdByPath) {
+      return new TypeRefSchema(location, typeStr, compIdByPath);
+    }
+    const pkgName = this.parsePackageNameFromPath(filePath);
+    const compIdByPkg = this.getCompIdByPkgName(pkgName);
+    if (compIdByPkg) {
+      return new TypeRefSchema(location, typeStr, compIdByPkg);
+    }
+    return new TypeRefSchema(location, typeStr, undefined, pkgName);
   }
 }

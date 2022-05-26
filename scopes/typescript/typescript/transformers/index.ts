@@ -13,3 +13,4 @@ export { LiteralTypeTransformer } from './literal-type';
 export { IndexSignature } from './index-signature';
 export { InterfaceDeclarationTransformer } from './interface-declaration';
 export { MethodSignatureTransformer } from './method-signature';
+export { EnumDeclarationTransformer } from './enum-declaration';

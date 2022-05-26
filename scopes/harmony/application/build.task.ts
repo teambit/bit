@@ -39,14 +39,19 @@ export class AppsBuildTask implements BuildTask {
 
       return {
         artifacts: deployContext.artifacts,
-        /**
-         * @guysaar223
-         * @ram8
-         * TODO: we need to think how to pass private metadata between build pipes, maybe create shared context
-         * or create new deploy context on builder
-         */
-        // @ts-ignore
-        componentResult: { component: capsule.component, _metadata: { deployContext } },
+        componentResult: {
+          component: capsule.component,
+          errors: deployContext.errors,
+          warnings: deployContext.warnings,
+          /**
+           * @guysaar223
+           * @ram8
+           * TODO: we need to think how to pass private metadata between build pipes, maybe create shared context
+           * or create new deploy context on builder
+           */
+          // @ts-ignore
+          _metadata: { deployContext },
+        },
       };
     });
 

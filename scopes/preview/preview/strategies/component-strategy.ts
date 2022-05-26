@@ -10,7 +10,7 @@ import { CAPSULE_ARTIFACTS_DIR, ComponentResult } from '@teambit/builder';
 import type { PkgMain } from '@teambit/pkg';
 import { BitError } from '@teambit/bit-error';
 import type { DependencyResolverMain } from '@teambit/dependency-resolver';
-import type { BundlerResult, BundlerContext, Asset, BundlerEntryMap, EntriesAssetsMap } from '@teambit/bundler';
+import type { BundlerResult, BundlerContext, Asset, BundlerEntryMap, EntriesAssetsMap, Target } from '@teambit/bundler';
 import { BundlingStrategy, ComputeTargetsContext } from '../bundling-strategy';
 import type { PreviewDefinition } from '../preview-definition';
 import type { ComponentPreviewMetaData, PreviewMain } from '../preview.main.runtime';
@@ -37,7 +37,7 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
 
   constructor(private preview: PreviewMain, private pkg: PkgMain, private dependencyResolver: DependencyResolverMain) {}
 
-  async computeTargets(context: ComputeTargetsContext, previewDefs: PreviewDefinition[]) {
+  async computeTargets(context: ComputeTargetsContext, previewDefs: PreviewDefinition[]): Promise<Target[]> {
     const outputPath = this.getOutputPath(context);
     if (!existsSync(outputPath)) mkdirpSync(outputPath);
 
@@ -61,6 +61,8 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
 
     const chunks = chunkSize ? chunk(entriesArr, chunkSize) : [entriesArr];
 
+    const peers = await this.dependencyResolver.getPeerDependenciesListFromEnv(context.env);
+
     const targets = chunks.map((currentChunk) => {
       const entries: BundlerEntryMap = {};
       const components: Component[] = [];
@@ -73,6 +75,11 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
         entries,
         components,
         outputPath,
+        /* It's a path to the root of the host component. */
+        // hostRootDir, handle this
+        hostDependencies: peers,
+        aliasHostDependencies: true,
+        externalizeHostDependencies: true,
       };
     });
 
@@ -168,7 +175,13 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
 
   private getAssetAbsolutePath(context: BundlerContext, asset: Asset): string {
     const path = this.getOutputPath(context);
-    return join(path, 'public', asset.name);
+    return join(path, 'public', this.getAssetFilename(asset));
+  }
+
+  private getAssetFilename(asset: Asset): string {
+    // handle cases where the asset name is something like my-image.svg?hash (while the filename in the fs is just my-image.svg)
+    const [name] = asset.name.split('?');
+    return name;
   }
 
   copyAssetsToCapsules(context: BundlerContext, result: BundlerResult) {
@@ -186,7 +199,7 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
         if (!existsSync(filePath)) {
           throw new PreviewOutputFileNotFound(component.id, filePath);
         }
-        const destFilePath = join(artifactDirFullPath, asset.name);
+        const destFilePath = join(artifactDirFullPath, this.getAssetFilename(asset));
         mkdirpSync(dirname(destFilePath));
         capsule.fs.copyFileSync(filePath, destFilePath);
       });
