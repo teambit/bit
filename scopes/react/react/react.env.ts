@@ -51,8 +51,8 @@ import componentPreviewProdConfigFactory from './webpack/webpack.config.componen
 import componentPreviewDevConfigFactory from './webpack/webpack.config.component.dev';
 
 // ensure dep on require.resolve
-import "@teambit/react.ui.compositions-app";
-import "@teambit/react.ui.docs-app";
+require('@teambit/react.ui.compositions-app');
+require('@teambit/react.ui.docs-app');
 
 export const ReactEnvType = 'react';
 const defaultTsConfig = require('./typescript/tsconfig.json');
