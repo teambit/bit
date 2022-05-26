@@ -10,9 +10,18 @@ export function schemaObjArrayToInstances({ value, type }: { value: SchemaNode[]
   return value.map((obj) => transformFromObjectToInstance(obj));
 }
 
-export function schemaObjToInstance({ value, type }: { value: Record<string, any>; type: TransformationType }) {
+export function schemaObjToInstance({
+  value,
+  type,
+}: {
+  value: Record<string, any> | undefined;
+  type: TransformationType;
+}) {
   if (type !== TransformationType.PLAIN_TO_CLASS) {
     return value;
+  }
+  if (!value) {
+    return undefined;
   }
   return transformFromObjectToInstance(value);
 }
