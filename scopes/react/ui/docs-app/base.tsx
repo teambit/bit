@@ -7,7 +7,6 @@ import { Composer } from '@teambit/base-ui.utils.composer';
 import { MDXLayout } from '@teambit/mdx.ui.mdx-layout';
 import { ErrorFallback } from '@teambit/react.ui.error-fallback';
 import { RenderingContext } from '@teambit/preview';
-import { ComponentOverview } from '@teambit/component.ui.component-meta';
 import { ReactAspect } from '@teambit/react';
 import { useFetchDocs } from '@teambit/component.ui.hooks.use-fetch-docs';
 import styles from './base.module.scss';
@@ -40,27 +39,14 @@ export function Base({ docs = defaultDocs, componentId, compositions, renderingC
   if (loading) return null;
   if (error) throw error;
 
-  const { component, docs: docsModel } = data;
+  const { docs: docsModel } = data;
 
-  const { examples = [], labels = [], abstract = docsModel.abstract } = docs;
-  const { displayName, version, packageName, description, elementsUrl } = component;
+  const { properties } = docsModel;
+  const { examples = [] } = docs;
   const Content: any = isFunction(docs.default) ? docs.default : () => null;
-
-  // no need to check the env type because base is only used in react based docs
-  const showHeaderInPreview = component?.preview?.includesEnvTemplate !== false;
 
   return (
     <div className={classNames(styles.docsMainBlock)} {...rest}>
-      {showHeaderInPreview && (
-        <ComponentOverview
-          displayName={Content.displayName || displayName}
-          version={version}
-          abstract={description || Content.abstract || abstract}
-          labels={component.labels || Content.labels || labels}
-          packageName={packageName}
-          elementsUrl={elementsUrl}
-        />
-      )}
       <ErrorBoundary FallbackComponent={ErrorFallback}>
         <Composer components={providers}>
           <ErrorBoundary FallbackComponent={ErrorFallback}>
@@ -81,7 +67,7 @@ export function Base({ docs = defaultDocs, componentId, compositions, renderingC
 
           <ExamplesOverview examples={Content.examples || examples} />
 
-          <Properties properties={docsModel.properties} />
+          <Properties properties={properties} />
         </Composer>
       </ErrorBoundary>
     </div>
