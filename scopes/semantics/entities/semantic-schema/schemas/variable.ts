@@ -4,7 +4,7 @@ import { Location, SchemaNode } from '../schema-node';
 import { schemaObjToInstance } from '../schema-obj-to-class';
 
 /**
- * can be also a property.
+ * can be also a property or property-signature
  */
 export class VariableSchema extends SchemaNode {
   @Transform(schemaObjToInstance)

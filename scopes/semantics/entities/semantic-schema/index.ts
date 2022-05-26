@@ -29,5 +29,7 @@ export {
   ParenthesizedTypeSchema,
   TypePredicateSchema,
   IndexedAccessSchema,
+  TemplateLiteralTypeSchema,
+  TemplateLiteralTypeSpanSchema,
 } from './schemas';
 export type { JSONSchema, JSONSchemaObject } from './json-schema';
