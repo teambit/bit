@@ -36,10 +36,7 @@ import { SchemaExtractor } from '@teambit/schema';
 import { join, resolve } from 'path';
 import { outputFileSync } from 'fs-extra';
 import { Logger } from '@teambit/logger';
-// Makes sure the @teambit/react.ui.docs-app is a dependency
-// TODO: remove this import once we can set policy from component to component with workspace version. Then set it via the component.json
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { ReactMainConfig } from './react.main.runtime';
+import type { ReactMainConfig } from './react.main.runtime';
 import { ReactAspect } from './react.aspect';
 // webpack configs for both components and envs
 import basePreviewConfigFactory from './webpack/webpack.config.base';
@@ -52,6 +49,10 @@ import envPreviewDevConfigFactory from './webpack/webpack.config.env.dev';
 // webpack configs for components only
 import componentPreviewProdConfigFactory from './webpack/webpack.config.component.prod';
 import componentPreviewDevConfigFactory from './webpack/webpack.config.component.dev';
+
+// ensure dep on require.resolve
+import "@teambit/react.ui.compositions-app";
+import "@teambit/react.ui.docs-app";
 
 export const ReactEnvType = 'react';
 const defaultTsConfig = require('./typescript/tsconfig.json');
