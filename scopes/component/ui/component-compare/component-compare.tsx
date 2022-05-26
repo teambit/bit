@@ -3,6 +3,8 @@ import { ComponentCompareNav, ComponentCompareNavSlot } from '@teambit/component
 import { H2 } from '@teambit/documenter.ui.heading';
 import { RouteSlot, SlotRouter } from '@teambit/ui-foundation.ui.react-router.slot-router';
 import flatten from 'lodash.flatten';
+import { useLocation } from '@teambit/base-ui.routing.routing-provider';
+import { LegacyComponentLog } from '@teambit/legacy-component-log';
 import React, { HTMLAttributes, useContext, useMemo } from 'react';
 import { ComponentCompareContext, ComponentCompareModel } from './component-compare-context';
 import { ComponentCompareVersionPicker } from './component-compare-version-picker/component-compare-version-picker';
@@ -18,9 +20,29 @@ export type ComponentCompareProps = {
 export function ComponentCompare({ navSlot, host, routeSlot }: ComponentCompareProps) {
   const { baseVersion } = useComponentCompareParams();
   const component = useContext(ComponentContext);
+  const location = useLocation();
 
-  const [lastVersionInfo] = useMemo(() => {
-    return component.logs?.slice().reverse() || [] || [];
+  const lastVersionInfo = useMemo(() => {
+    const allVersionInfo = component.logs?.slice().reverse() || [];
+    const isNew = allVersionInfo.length === 0;
+
+    const isWorkspace = host === 'teambit.workspace/workspace';
+
+    const compareVersion =
+      isWorkspace && !isNew && !location.search.includes('version') ? 'workspace' : component.id.version;
+
+    const findPrevVersionFromCurrent = (_, index: number, logs: LegacyComponentLog[]) => {
+      if (logs.length === 1) return true;
+      if (index === 0) return false;
+
+      const prevIndex = index - 1;
+
+      return logs[prevIndex].tag === compareVersion || logs[prevIndex].hash === compareVersion;
+    };
+
+    const prevVersionInfo = allVersionInfo.find(findPrevVersionFromCurrent);
+
+    return prevVersionInfo;
   }, [component.logs]);
 
   const baseId =

@@ -46,7 +46,7 @@ export function ComponentCompareDependencyNode(props: ComponentCompareDependency
         {baseId.version && <span className={classnames(styles.version, ellipsis)}>{baseId.version}</span>}
         <img
           className={classnames([styles.arrowIcon, styles.versionUp])}
-          src="https://static.bit.dev/bit-icons/arrow-right-bold.svg"
+          src="https://static.bit.dev/bit-icons/version-bump.svg"
         />
         {compareVersion && (
           <span
