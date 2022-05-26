@@ -1,11 +1,35 @@
 import { useEffect, useState } from 'react';
 import { request, gql } from 'graphql-request';
+import { ComponentModel } from '@teambit/component';
 
 const GQL_SERVER = '/graphql';
 const DOCS_QUERY = gql`
   query getComponentDocs($id: String!) {
     getHost {
-      id # for gql caching
+      id
+      get(id: $id) {
+        id {
+          name
+          version
+          scope
+        }
+        aspects {
+          id
+          icon
+          data
+        }
+        displayName
+        packageName
+        elementsUrl
+        description
+        labels
+        compositions {
+          identifier
+        }
+        preview {
+          includesEnvTemplate
+        }
+      }
       getDocs(id: $id) {
         abstract
         properties {
@@ -25,6 +49,24 @@ const DOCS_QUERY = gql`
 type QueryResults = {
   getHost: {
     id: string;
+    get: {
+      id: {
+        name: string;
+        version: string;
+        scope: string;
+      };
+      displayName: string;
+      packageName: string;
+      elementsUrl?: string;
+      description: string;
+      labels: string[];
+      compositions: {
+        identifier: string;
+      }[];
+      preview: {
+        includesEnvTemplate: boolean;
+      };
+    };
     getDocs: DocsItem;
   };
 };
@@ -42,7 +84,12 @@ type DocsItem = {
   };
 };
 
-type FetchDocsObj = { docs: DocsItem } | undefined;
+type FetchDocsObj =
+  | {
+      component: ComponentModel;
+      docs: DocsItem;
+    }
+  | undefined;
 
 export function useFetchDocs(componentId: string) {
   const [data, setData] = useState<FetchDocsObj>(undefined);
@@ -55,7 +102,10 @@ export function useFetchDocs(componentId: string) {
     const variables = { id: componentId };
     request(GQL_SERVER, DOCS_QUERY, variables)
       .then((result: QueryResults) => {
-        setData({ docs: result.getHost.getDocs });
+        setData({
+          component: ComponentModel.from(result.getHost.get),
+          docs: result.getHost.getDocs,
+        });
         setLoading(false);
       })
       .catch((e) => {
