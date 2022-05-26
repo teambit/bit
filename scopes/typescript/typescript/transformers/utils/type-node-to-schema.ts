@@ -40,6 +40,7 @@ import {
 import pMapSeries from 'p-map-series';
 import { SchemaExtractorContext } from '../../schema-extractor-context';
 import { getParams } from './get-params';
+import { typeElementToSchema } from './type-element-to-schema';
 
 // eslint-disable-next-line complexity
 export async function typeNodeToSchema(node: TypeNode, context: SchemaExtractorContext): Promise<SchemaNode> {
@@ -153,10 +154,7 @@ async function unionType(node: UnionTypeNode, context: SchemaExtractorContext) {
  * this "TypeLiteral" is an object with properties, such as: `{ a: string; b: number }`, similar to Interface.
  */
 async function typeLiteral(node: TypeLiteralNode, context: SchemaExtractorContext) {
-  const members = await pMapSeries(node.members, async (member) => {
-    const typeSchema = await context.computeSchema(member);
-    return typeSchema;
-  });
+  const members = await pMapSeries(node.members, (member) => typeElementToSchema(member, context));
   const location = context.getLocation(node);
   return new TypeLiteralSchema(location, members);
 }
