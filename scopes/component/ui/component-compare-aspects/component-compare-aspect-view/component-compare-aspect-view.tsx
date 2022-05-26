@@ -40,10 +40,7 @@ export function ComponentCompareAspectView({
   };
 
   return (
-    <div
-      key={`component-compare-aspect-view-${name}`}
-      className={classNames(styles.componentCompareAspectViewContainer, className)}
-    >
+    <div className={classNames(styles.componentCompareAspectViewContainer, className)}>
       <div className={styles.name}>
         <H4 size="xs" className={styles.name}>
           <span>{title}</span>

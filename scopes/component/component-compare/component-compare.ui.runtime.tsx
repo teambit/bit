@@ -107,7 +107,7 @@ export class ComponentCompareUI {
   }
 
   getComponentAspectsComparePage() {
-    return <ComponentCompareAspects />;
+    return <ComponentCompareAspects host={this.host} />;
   }
 
   getComponentOverviewComparePage() {

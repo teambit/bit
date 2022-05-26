@@ -5,6 +5,7 @@ import { RouteSlot, SlotRouter } from '@teambit/ui-foundation.ui.react-router.sl
 import flatten from 'lodash.flatten';
 import { useLocation } from '@teambit/base-ui.routing.routing-provider';
 import { LegacyComponentLog } from '@teambit/legacy-component-log';
+import { RoundLoader } from '@teambit/design.ui.round-loader';
 import React, { HTMLAttributes, useContext, useMemo } from 'react';
 import { ComponentCompareContext, ComponentCompareModel } from './component-compare-context';
 import { ComponentCompareVersionPicker } from './component-compare-version-picker/component-compare-version-picker';
@@ -22,11 +23,10 @@ export function ComponentCompare({ navSlot, host, routeSlot }: ComponentCompareP
   const component = useContext(ComponentContext);
   const location = useLocation();
 
+  const isWorkspace = host === 'teambit.workspace/workspace';
   const lastVersionInfo = useMemo(() => {
     const allVersionInfo = component.logs?.slice().reverse() || [];
     const isNew = allVersionInfo.length === 0;
-
-    const isWorkspace = host === 'teambit.workspace/workspace';
 
     const compareVersion =
       isWorkspace && !isNew && !location.search.includes('version') ? 'workspace' : component.id.version;
@@ -52,25 +52,35 @@ export function ComponentCompare({ navSlot, host, routeSlot }: ComponentCompareP
 
   const compare = component;
 
-  const { component: base, loading } = useComponent(host, baseId);
+  const { component: base, loading } = useComponent(host, `${baseId.fullName}@${baseId.version}`);
 
   const componentCompareModel: ComponentCompareModel = {
     compare,
-    base: base || compare,
+    base,
     loading,
+    isCompareVersionWorkspace: isWorkspace,
   };
 
   return (
     <ComponentCompareContext.Provider value={componentCompareModel}>
       <div className={styles.componentCompareContainer}>
-        <div className={styles.top}>
-          <H2 size="xs">Component Compare</H2>
-          <ComponentCompareVersionPicker host={host} />
-        </div>
-        <div className={styles.bottom}>
-          <CompareMenuNav navSlot={navSlot} />
-          <SlotRouter slot={routeSlot} />
-        </div>
+        {loading && (
+          <div className={styles.loader}>
+            <RoundLoader />
+          </div>
+        )}
+        {loading || (
+          <>
+            <div className={styles.top}>
+              <H2 size="xs">Component Compare</H2>
+              {loading || <ComponentCompareVersionPicker host={host} />}
+            </div>
+            <div className={styles.bottom}>
+              <CompareMenuNav navSlot={navSlot} />
+              <SlotRouter slot={routeSlot} />
+            </div>
+          </>
+        )}
       </div>
     </ComponentCompareContext.Provider>
   );

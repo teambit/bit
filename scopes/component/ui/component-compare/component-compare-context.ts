@@ -2,9 +2,10 @@ import { createContext, useContext } from 'react';
 import { ComponentModel } from '@teambit/component';
 
 export type ComponentCompareModel = {
-  base: ComponentModel;
+  base?: ComponentModel;
   compare: ComponentModel;
   loading?: boolean;
+  isCompareVersionWorkspace?: boolean;
 };
 
 export const ComponentCompareContext = createContext<ComponentCompareModel | undefined>(undefined);

@@ -51,7 +51,8 @@ export function ComponentCompareVersionPicker({ host }: ComponentCompareVersionP
   const compareVersion =
     isWorkspace && !isNew && !location.search.includes('version') ? 'workspace' : componentCompare?.compare.version;
 
-  const baseVersion = componentCompare?.base.version;
+  const baseVersion = componentCompare?.base?.version;
+  
   const key = `base-compare-version-dropdown-${
     componentCompare && !componentCompare.loading ? componentCompare.compare.id.toString() : componentCompare?.loading
   }`;

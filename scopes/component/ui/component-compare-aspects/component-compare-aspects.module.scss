@@ -42,3 +42,11 @@ $panelBg: #fafafa;
   white-space: nowrap;
   padding: 0 8px;
 }
+
+.loader {
+  display: flex;
+  align-items: center;
+  justify-items: center;
+  height: 100%;
+  width: 100%;
+}

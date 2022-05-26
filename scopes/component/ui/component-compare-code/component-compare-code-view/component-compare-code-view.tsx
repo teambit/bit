@@ -68,10 +68,7 @@ export function ComponentCompareCodeView({ className, base, compare, fileName }:
   };
 
   return (
-    <div
-      key={`component-compare-code-view-${fileName}`}
-      className={classNames(styles.componentCompareCodeViewContainer, className)}
-    >
+    <div className={classNames(styles.componentCompareCodeViewContainer, className)}>
       <div className={styles.fileName}>
         <H4 size="xs" className={styles.fileName}>
           <span>{title}</span>

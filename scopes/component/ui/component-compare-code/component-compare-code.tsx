@@ -5,8 +5,14 @@ import { Collapser } from '@teambit/ui-foundation.ui.buttons.collapser';
 import { SplitPane, Pane, Layout } from '@teambit/base-ui.surfaces.split-pane.split-pane';
 import { useIsMobile } from '@teambit/ui-foundation.ui.hooks.use-is-mobile';
 import { FileIconSlot } from '@teambit/code';
-import { useComponentCompareContext, useComponentCompareParams } from '@teambit/component.ui.component-compare';
 import { ComponentCompareCodeTree, ComponentCompareCodeView } from '@teambit/component.ui.component-compare-code';
+import {
+  useComponentCompareParams,
+  useComponentCompareContext,
+} from '@teambit/component.ui.component-compare';
+import { CompareStatus, ComponentCompareStatusResolver } from '@teambit/component.ui.component-compare-status-resolver';
+import { useFileContent } from '@teambit/code.ui.queries.get-file-content';
+
 import { useCode } from '@teambit/code.ui.queries.get-component-code';
 
 import styles from './component-compare-code.module.scss';
@@ -58,8 +64,33 @@ export function ComponentCompareCode({ fileIconSlot, className }: ComponentCompa
           currentFile={selectedFile}
           drawerName={'FILES'}
           queryParam={'selectedFile'}
+          getWidgets={getWidgets}
         />
       </Pane>
     </SplitPane>
   );
+}
+
+function getWidgets(fileName: string) {
+  const componentCompareContext = useComponentCompareContext();
+  const base = componentCompareContext?.base;
+  const compare = componentCompareContext?.compare;
+
+  const { fileContent: originalFileContent, loading: originalLoading } = useFileContent(base?.id, fileName);
+  const { fileContent: modifiedFileContent, loading: modifiedLoading } = useFileContent(compare?.id, fileName);
+
+  if (originalLoading || modifiedLoading) return null;
+
+  let status: CompareStatus | undefined;
+  if (!originalFileContent && modifiedFileContent) {
+    status = 'new';
+  } else if (!modifiedFileContent && originalFileContent) {
+    status = 'deleted';
+  } else if (modifiedFileContent !== originalFileContent) {
+    status = 'modified';
+  }
+
+  if(!status) return null;
+
+  return [() => <ComponentCompareStatusResolver status={status as CompareStatus}/>] 
 }

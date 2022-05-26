@@ -5,14 +5,15 @@ import { GET_GRAPH, RawGraphQuery } from './get-graph.query';
 import { GraphModel } from './graph-model';
 
 type QueryVariables = {
-  ids: string[];
+  ids?: string[];
   filter?: string;
 };
 
 /** provides dependencies graph data from graphQL */
-export function useGraphQuery(componentId: string[], filter?: string) {
+export function useGraphQuery(componentId?: string[], filter?: string) {
   const { data, error, loading } = useDataQuery<RawGraphQuery, QueryVariables>(GET_GRAPH, {
     variables: { ids: componentId, filter },
+    skip: !componentId,
   });
 
   const rawGraph = data?.graph;

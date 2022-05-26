@@ -8,9 +8,9 @@ export type CompareStatus = 'modified' | 'new' | 'deleted';
 function ToolTip({ status, children }: { status: CompareStatus; children: ReactElement<any> | string }) {
   const content = (
     <ul className={styles.list}>
-      {status === 'new' && <li>New component</li>}
-      {status === 'modified' && <li>Modified component</li>}
-      {status === 'deleted' && <li>Deleted component</li>}
+      {status === 'new' && <li>New</li>}
+      {status === 'modified' && <li>Modified</li>}
+      {status === 'deleted' && <li>Deleted</li>}
     </ul>
   );
 

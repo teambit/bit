@@ -93,23 +93,18 @@ export function ComponentCompareDependencies() {
   const graphRef = useRef<OnLoadParams>();
   const componentCompare = useComponentCompareContext();
 
-  if (componentCompare === undefined) {
-    return <></>;
-  }
+  const baseId = componentCompare?.base?.id;
+  const compareId = componentCompare?.compare?.id;
 
-  const {
-    base: { id: baseId },
-    compare: { id: compareId },
-  } = componentCompare;
   const [filter, setFilter] = useState<GraphFilter>('runtimeOnly');
   const isFiltered = filter === 'runtimeOnly';
-  const { loading: baseLoading, graph: baseGraph } = useGraphQuery([baseId.toString()], filter);
-  const { loading: compareLoading, graph: compareGraph } = useGraphQuery([compareId.toString()], filter);
+  const { loading: baseLoading, graph: baseGraph } = useGraphQuery(baseId && [baseId.toString()], filter);
+  const { loading: compareLoading, graph: compareGraph } = useGraphQuery(compareId && [compareId.toString()], filter);
   const loading = baseLoading || compareLoading;
   const graph = buildGraph(baseGraph, compareGraph);
 
   const elements = useMemo(() => {
-    if (graph) {
+    if (graph && baseId && compareId) {
       return calcElements(graph, baseId.toString(), compareId.toString());
     }
     return [];

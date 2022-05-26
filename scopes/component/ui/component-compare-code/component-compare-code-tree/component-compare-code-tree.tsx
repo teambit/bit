@@ -9,6 +9,7 @@ import { TreeContext } from '@teambit/base-ui.graph.tree.tree-context';
 import { useComponentCompareParams, getComponentCompareUrl } from '@teambit/component.ui.component-compare';
 import { DrawerUI } from '@teambit/ui-foundation.ui.tree.drawer';
 import { FileTree } from '@teambit/ui-foundation.ui.tree.file-tree';
+
 import styles from './component-compare-code-tree.module.scss';
 
 export type ComponentCompareCodeTreeProps = {
@@ -17,6 +18,7 @@ export type ComponentCompareCodeTreeProps = {
   fileTree: string[];
   drawerName: string;
   queryParam: string;
+  getWidgets?: (fileName: string) => (() => JSX.Element)[] | null;
 } & HTMLAttributes<HTMLDivElement>;
 
 export function ComponentCompareCodeTree({
@@ -26,6 +28,7 @@ export function ComponentCompareCodeTree({
   fileTree,
   drawerName,
   queryParam,
+  getWidgets,
 }: ComponentCompareCodeTreeProps) {
   const fileIconMatchers: FileIconMatch[] = useMemo(() => flatten(fileIconSlot?.values()), [fileIconSlot]);
 
@@ -37,9 +40,9 @@ export function ComponentCompareCodeTree({
 
       const href = getComponentCompareUrl({ ...compareQueryParams, [queryParam]: props.node.id });
       const icon = getFileIcon(fileIconMatchers, props.node.id);
-
+      const widgets = getWidgets?.(props.node.id);
       if (!children) {
-        return <Node href={href} {...props} isActive={props.node.id === selected} icon={icon} />;
+        return <Node href={href} {...props} isActive={props.node.id === selected} icon={icon} widgets={widgets} />;
       }
       return <FolderTreeNode {...props} />;
     },
@@ -71,17 +74,3 @@ export function ComponentCompareCodeTree({
     </div>
   );
 }
-
-// function getWidgets(fileName: string, mainFile?: string, devFiles?: string[]) {
-//   if (fileName === mainFile) {
-//     return [() => createLabel('main')];
-//   }
-//   if (devFiles?.includes(fileName)) {
-//     return [() => createLabel('dev')];
-//   }
-//   return null;
-// }
-
-// function createLabel(str: string) {
-//   return <Label className={styles.label}>{str}</Label>;
-// }

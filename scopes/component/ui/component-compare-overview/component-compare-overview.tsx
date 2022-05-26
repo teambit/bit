@@ -12,7 +12,7 @@ export type ComponentCompareOverviewProps = {
 export function ComponentCompareOverview(props: ComponentCompareOverviewProps) {
   const { titleBadges } = props;
   const componentCompare = useComponentCompareContext();
-  if (componentCompare === undefined) {
+  if (componentCompare === undefined || !componentCompare.base) {
     return <></>;
   }
 
