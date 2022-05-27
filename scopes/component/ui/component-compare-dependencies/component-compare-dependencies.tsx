@@ -7,6 +7,7 @@ import {
   useGraphQuery,
   GraphFilters,
   GraphFilter,
+  calcElements,
 } from '@teambit/graph';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import ReactFlow, {
@@ -21,7 +22,6 @@ import ReactFlow, {
   ReactFlowProvider,
 } from 'react-flow-renderer';
 import { RoundLoader } from '@teambit/design.ui.round-loader';
-import { calcElements } from './calc-elements';
 import { CompareGraphModel } from './compare-graph-model';
 import { CompareNodeModel } from './compare-node-model';
 import styles from './component-compare-dependencies.module.scss';
@@ -46,7 +46,7 @@ function buildGraph(baseGraph?: GraphModel, compareGraph?: GraphModel) {
 
   const baseNodes = baseGraph.nodes;
   const compareNodes = compareGraph.nodes;
-  
+
   const baseNodesMap = new Map<string, NodeModel>(baseNodes.map((n) => [n.component.id.toStringWithoutVersion(), n]));
   const compareNodesMap = new Map<string, NodeModel>(
     compareNodes.map((n) => [n.component.id.toStringWithoutVersion(), n])
@@ -102,14 +102,8 @@ export function ComponentCompareDependencies() {
   const { loading: baseLoading, graph: baseGraph } = useGraphQuery(baseId && [baseId.toString()], filter);
   const { loading: compareLoading, graph: compareGraph } = useGraphQuery(compareId && [compareId.toString()], filter);
   const loading = baseLoading || compareLoading;
-  const graph = buildGraph(baseGraph, compareGraph);
-
-  const elements = useMemo(() => {
-    if (graph && baseId && compareId) {
-      return calcElements(graph, baseId.toString(), compareId.toString());
-    }
-    return [];
-  }, [graph]);
+  const graph = buildGraph(baseGraph, compareGraph) ?? undefined;
+  const elements = calcElements(graph, { rootNode: baseId });
 
   useEffect(() => {
     graphRef.current?.fitView();

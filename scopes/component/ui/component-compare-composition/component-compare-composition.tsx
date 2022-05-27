@@ -24,7 +24,7 @@ export function ComponentCompareComposition(props: ComponentCompareCompositionPr
 
   const baseCompositions = base?.compositions;
   const compareCompositions = compare?.compositions;
-  const { ...params } = useComponentCompareParams();
+  const params = useComponentCompareParams();
 
   const selectedBaseComp =
     (params.selectedCompositionBaseFile &&
@@ -40,7 +40,7 @@ export function ComponentCompareComposition(props: ComponentCompareCompositionPr
 
   const baseCompositionDropdownSource =
     baseCompositions?.map((c) => {
-      const { ...rest } = useComponentCompareParams();
+      const rest = useComponentCompareParams();
 
       const href = getComponentCompareUrl({
         ...rest,
@@ -53,7 +53,7 @@ export function ComponentCompareComposition(props: ComponentCompareCompositionPr
 
   const compareCompositionDropdownSource =
     compareCompositions?.map((c) => {
-      const { ...rest } = useComponentCompareParams();
+      const rest = useComponentCompareParams();
 
       const href = getComponentCompareUrl({
         ...rest,
@@ -87,6 +87,7 @@ export function ComponentCompareComposition(props: ComponentCompareCompositionPr
     return <></>;
   }
 
+  // todo: add loading screen
   return (
     <>
       <div className={styles.dropdownContainer}>

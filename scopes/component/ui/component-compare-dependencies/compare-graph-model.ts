@@ -1,11 +1,18 @@
-import { EdgeModel } from '@teambit/graph';
+import { EdgeModel, GraphModel, RawGraph, NodeModel } from '@teambit/graph';
 import { CompareNodeModel } from './compare-node-model';
 
-export class CompareGraphModel {
-    
-  constructor(public nodes: CompareNodeModel[], public edges: EdgeModel[]) {}
+export class CompareGraphModel extends GraphModel {
+  constructor(public nodes: CompareNodeModel[], public edges: EdgeModel[]) {
+    super(nodes, edges);
+  }
 
-  static from(nodes: Array<CompareNodeModel>, edges: Array<EdgeModel>) {
+  static fromCompareNodeModels(nodes: Array<CompareNodeModel>, edges: Array<EdgeModel>) {
     return new CompareGraphModel(nodes, edges);
+  }
+
+  static from(rawGraph: RawGraph) {
+    const nodes = rawGraph.nodes.map(NodeModel.from);
+    const edges = rawGraph.edges.map(EdgeModel.from);
+    return new GraphModel(nodes, edges);
   }
 }
