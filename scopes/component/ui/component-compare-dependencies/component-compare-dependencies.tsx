@@ -1,15 +1,12 @@
 import { useComponentCompareContext } from '@teambit/component.ui.component-compare';
+import { RoundLoader } from '@teambit/design.ui.round-loader';
 import {
-  calcMinimapColors,
-  EdgeModel,
-  GraphModel,
+  calcElements, calcMinimapColors,
+  EdgeModel, GraphFilter, GraphFilters, GraphModel,
   NodeModel,
-  useGraphQuery,
-  GraphFilters,
-  GraphFilter,
-  calcElements,
+  useGraphQuery
 } from '@teambit/graph';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import ReactFlow, {
   Background,
   Controls,
@@ -19,9 +16,8 @@ import ReactFlow, {
   NodeTypesType,
   OnLoadParams,
   Position,
-  ReactFlowProvider,
+  ReactFlowProvider
 } from 'react-flow-renderer';
-import { RoundLoader } from '@teambit/design.ui.round-loader';
 import { CompareGraphModel } from './compare-graph-model';
 import { CompareNodeModel } from './compare-node-model';
 import styles from './component-compare-dependencies.module.scss';
@@ -59,7 +55,7 @@ function buildGraph(baseGraph?: GraphModel, compareGraph?: GraphModel) {
       allNodes.push({
         ...baseNode,
         compareVersion: compareNode.component.version,
-        status: compareNode.component.version === baseNode.component.version ? 'unchanged' : 'modified',
+        status: compareNode.component.id.isEqual(baseNode.component.id) ? 'unchanged' : 'modified',
       });
     } else {
       allNodes.push({
