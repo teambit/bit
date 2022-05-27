@@ -12,34 +12,34 @@ export type ComponentCompareOverviewProps = {
 export function ComponentCompareOverview(props: ComponentCompareOverviewProps) {
   const { titleBadges } = props;
   const componentCompare = useComponentCompareContext();
-  if (componentCompare === undefined || !componentCompare.base) {
-    return <></>;
-  }
-
-  const { base, compare } = componentCompare;
+  
   const leftPanelRef = useRef<HTMLDivElement>(null);
   const rightPanelRef = useRef<HTMLDivElement>(null);
-
+  
   function handleLeftPanelScroll(event: UIEvent<HTMLDivElement>) {
     rightPanelRef.current?.scrollTo({ top: event.currentTarget.scrollTop, left: event.currentTarget.scrollLeft });
   }
-
+  
   function handleRightPanelScroll(event: UIEvent<HTMLDivElement>) {
     leftPanelRef.current?.scrollTo({ top: event.currentTarget.scrollTop, left: event.currentTarget.scrollLeft });
+  }
+  
+  if (componentCompare === undefined || !componentCompare.base) {
+    return <></>;
   }
 
   return (
     <div className={styles.mainContainer}>
       <div className={styles.subContainerLeft}>
         <div className={styles.subView} ref={leftPanelRef} onScroll={handleLeftPanelScroll}>
-          <ComponentProvider component={base}>
+          <ComponentProvider component={componentCompare.base}>
             <Overview titleBadges={titleBadges} />
           </ComponentProvider>
         </div>
       </div>
       <div className={styles.subContainerRight}>
         <div className={styles.subView} ref={rightPanelRef} onScroll={handleRightPanelScroll}>
-          <ComponentProvider component={compare}>
+          <ComponentProvider component={componentCompare.compare}>
             <Overview titleBadges={titleBadges} />
           </ComponentProvider>
         </div>

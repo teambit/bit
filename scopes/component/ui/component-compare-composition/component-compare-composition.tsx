@@ -73,19 +73,19 @@ export function ComponentCompareComposition(props: ComponentCompareCompositionPr
     [compareCompositionParams]
   );
 
-  if (!component || !base || !compare) {
-    return <></>;
-  }
-
   const selectedBaseDropdown = selectedBaseComp && {
     id: selectedBaseComp.identifier,
     label: selectedBaseComp.displayName,
   };
-
+  
   const selectedCompareDropdown = selectedCompareComp && {
     id: selectedCompareComp.identifier,
     label: selectedCompareComp.displayName,
   };
+
+  if (!component || !base || !compare) {
+    return <></>;
+  }
 
   return (
     <>
