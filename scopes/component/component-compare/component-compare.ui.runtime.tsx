@@ -184,15 +184,15 @@ export class ComponentCompareUI {
     },
     {
       props: {
-        href: 'aspects',
-        children: 'Aspects',
+        href: 'tests',
+        children: 'Tests',
       },
       order: 4,
     },
     {
       props: {
-        href: 'tests',
-        children: 'Tests',
+        href: 'aspects',
+        children: 'Aspects',
       },
       order: 5,
     },
