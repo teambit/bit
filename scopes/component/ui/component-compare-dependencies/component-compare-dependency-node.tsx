@@ -16,7 +16,7 @@ import { CompareNodeModel } from './compare-node-model';
 
 export type ComponentCompareDependencyNodeProps = {
   node: CompareNodeModel;
-  type?: string; // todo: remove!
+  type?: string;
 };
 
 export function ComponentCompareDependencyNode(props: ComponentCompareDependencyNodeProps) {
