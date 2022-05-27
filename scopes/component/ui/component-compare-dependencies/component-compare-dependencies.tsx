@@ -1,10 +1,14 @@
 import { useComponentCompareContext } from '@teambit/component.ui.component-compare';
 import { RoundLoader } from '@teambit/design.ui.round-loader';
 import {
-  calcElements, calcMinimapColors,
-  EdgeModel, GraphFilter, GraphFilters, GraphModel,
+  calcElements,
+  calcMinimapColors,
+  EdgeModel,
+  GraphFilter,
+  GraphFilters,
+  GraphModel,
   NodeModel,
-  useGraphQuery
+  useGraphQuery,
 } from '@teambit/graph';
 import React, { useEffect, useRef, useState } from 'react';
 import ReactFlow, {
@@ -16,7 +20,7 @@ import ReactFlow, {
   NodeTypesType,
   OnLoadParams,
   Position,
-  ReactFlowProvider
+  ReactFlowProvider,
 } from 'react-flow-renderer';
 import { CompareGraphModel } from './compare-graph-model';
 import { CompareNodeModel } from './compare-node-model';
@@ -40,17 +44,19 @@ const NodeTypes: NodeTypesType = { ComponentNode: ComponentNodeContainer };
 function buildGraph(baseGraph?: GraphModel, compareGraph?: GraphModel) {
   if (!baseGraph || !compareGraph) return null;
 
+  // this to get a key with versions ignored so that we'll have a unique set of component nodes
+  const getIdWithoutVersion = (node: NodeModel) => node.component.id.toStringWithoutVersion();
+  const getEdgeId = (e: EdgeModel) => `${e.sourceId.split('@')[0]} | ${e.targetId.split('@')[0]}`;
+
   const baseNodes = baseGraph.nodes;
   const compareNodes = compareGraph.nodes;
 
-  const baseNodesMap = new Map<string, NodeModel>(baseNodes.map((n) => [n.component.id.toStringWithoutVersion(), n]));
-  const compareNodesMap = new Map<string, NodeModel>(
-    compareNodes.map((n) => [n.component.id.toStringWithoutVersion(), n])
-  );
+  const baseNodesMap = new Map<string, NodeModel>(baseNodes.map((n) => [getIdWithoutVersion(n), n]));
+  const compareNodesMap = new Map<string, NodeModel>(compareNodes.map((n) => [getIdWithoutVersion(n), n]));
 
   const allNodes: Array<CompareNodeModel> = [];
   for (const baseNode of baseNodes) {
-    const compareNode = compareNodesMap.get(baseNode.component.id.toStringWithoutVersion());
+    const compareNode = compareNodesMap.get(getIdWithoutVersion(baseNode));
     if (compareNode) {
       allNodes.push({
         ...baseNode,
@@ -66,7 +72,7 @@ function buildGraph(baseGraph?: GraphModel, compareGraph?: GraphModel) {
     }
   }
 
-  const newNodes = compareNodes.filter((n) => !baseNodesMap.has(n.component.id.toStringWithoutVersion()));
+  const newNodes = compareNodes.filter((n) => !baseNodesMap.has(getIdWithoutVersion(n)));
   for (const node of newNodes) {
     allNodes.push({
       ...node,
@@ -75,12 +81,8 @@ function buildGraph(baseGraph?: GraphModel, compareGraph?: GraphModel) {
     });
   }
 
-  const baseEdgesMap = new Map<string, EdgeModel>(
-    baseGraph.edges.map((e) => [`${e.sourceId.split('@')[0]} | ${e.targetId.split('@')[0]}`, e])
-  );
-  const edgesOnlyInCompare = compareGraph.edges.filter(
-    (e) => !baseEdgesMap.has(`${e.sourceId.split('@')[0]} | ${e.targetId.split('@')[0]}`)
-  );
+  const baseEdgesMap = new Map<string, EdgeModel>(baseGraph.edges.map((e) => [getEdgeId(e), e]));
+  const edgesOnlyInCompare = compareGraph.edges.filter((e) => !baseEdgesMap.has(getEdgeId(e)));
   const allEdges = [...baseGraph.edges, ...edgesOnlyInCompare];
 
   return new CompareGraphModel(allNodes, allEdges);
