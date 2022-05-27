@@ -3,6 +3,7 @@ import { FunctionLikeSchema, Modifier } from '@teambit/semantics.entities.semant
 import { SchemaExtractorContext } from '../../schema-extractor-context';
 import { getParams } from './get-params';
 import { parseTypeFromQuickInfo } from './parse-type-from-quick-info';
+import { jsDocToDocSchema } from './jsdoc-to-doc-schema';
 
 export async function toFunctionLikeSchema(
   node: SignatureDeclaration,
@@ -17,6 +18,6 @@ export async function toFunctionLikeSchema(
   const returnType = await context.resolveType(node, returnTypeStr, Boolean(info));
   const modifiers = node.modifiers?.map((modifier) => modifier.getText()) || [];
   const location = context.getLocation(node);
-
-  return new FunctionLikeSchema(location, name, args, returnType, displaySig, modifiers as Modifier[]);
+  const doc = await jsDocToDocSchema(node, context);
+  return new FunctionLikeSchema(location, name, args, returnType, displaySig, modifiers as Modifier[], doc);
 }

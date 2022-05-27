@@ -12,6 +12,7 @@ import { SchemaTransformer } from '../schema-transformer';
 import { SchemaExtractorContext } from '../schema-extractor-context';
 import { ExportIdentifier } from '../export-identifier';
 import { getAccessor, setAccessor } from './utils/type-element-to-schema';
+import { jsDocToDocSchema } from './utils/jsdoc-to-doc-schema';
 
 export class ClassDecelerationTransformer implements SchemaTransformer {
   predicate(node: Node) {
@@ -46,6 +47,7 @@ export class ClassDecelerationTransformer implements SchemaTransformer {
           return context.computeSchema(member);
       }
     });
-    return new ClassSchema(className, compact(members), context.getLocation(node));
+    const doc = await jsDocToDocSchema(node, context);
+    return new ClassSchema(className, compact(members), context.getLocation(node), doc);
   }
 }
