@@ -3,6 +3,8 @@ import chalk from 'chalk';
 import { Location, SchemaNode } from '../schema-node';
 import { schemaObjArrayToInstances, schemaObjToInstance } from '../class-transformers';
 import { ParameterSchema } from './parameter';
+import { DocSchema } from './docs';
+import { TagName } from './docs/tag';
 
 export type Modifier =
   | 'static'
@@ -25,6 +27,9 @@ export class FunctionLikeSchema extends SchemaNode {
   @Transform(schemaObjArrayToInstances)
   readonly params: ParameterSchema[];
 
+  @Transform(schemaObjToInstance)
+  readonly doc?: DocSchema;
+
   constructor(
     readonly location: Location,
     readonly name: string,
@@ -33,20 +38,26 @@ export class FunctionLikeSchema extends SchemaNode {
 
     returnType: SchemaNode,
     readonly signature: string,
-    readonly modifiers: Modifier[] = []
+    readonly modifiers: Modifier[] = [],
+    doc?: DocSchema
   ) {
     super();
     this.params = params;
     this.returnType = returnType;
-  }
-
-  getSignature() {
-    return this.signature;
+    this.doc = doc;
   }
 
   toString() {
     const paramsStr = this.params.map((param) => param.toString()).join(', ');
     return `${this.modifiersToString()}${chalk.bold(this.name)}(${paramsStr}): ${this.returnType.toString()}`;
+  }
+
+  isDeprecated(): boolean {
+    return Boolean(this.doc?.hasTag(TagName.deprecated));
+  }
+
+  isPrivate(): boolean {
+    return Boolean(this.modifiers.find((m) => m === 'private') || this.doc?.hasTag(TagName.private));
   }
 
   private modifiersToString() {

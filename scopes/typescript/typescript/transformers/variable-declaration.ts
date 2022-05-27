@@ -1,10 +1,11 @@
-import { SchemaNode, VariableSchema, FunctionLikeSchema } from '@teambit/semantics.entities.semantic-schema';
+import { SchemaNode, VariableSchema, FunctionLikeSchema, Modifier } from '@teambit/semantics.entities.semantic-schema';
 import ts, { Node, VariableDeclaration as VariableDeclarationNode, ArrowFunction } from 'typescript';
 import { SchemaTransformer } from '../schema-transformer';
 import { SchemaExtractorContext } from '../schema-extractor-context';
 import { ExportIdentifier } from '../export-identifier';
 import { getParams } from './utils/get-params';
 import { parseReturnTypeFromQuickInfo, parseTypeFromQuickInfo } from './utils/parse-type-from-quick-info';
+import { jsDocToDocSchema } from './utils/jsdoc-to-doc-schema';
 
 export class VariableDeclaration implements SchemaTransformer {
   predicate(node: Node) {
@@ -28,7 +29,9 @@ export class VariableDeclaration implements SchemaTransformer {
       const args = await getParams((varDec.initializer as ArrowFunction).parameters, context);
       const typeStr = parseReturnTypeFromQuickInfo(info);
       const returnType = await context.resolveType(varDec, typeStr);
-      return new FunctionLikeSchema(location, name, args, returnType, displaySig);
+      const modifiers = varDec.modifiers?.map((modifier) => modifier.getText()) || [];
+      const doc = await jsDocToDocSchema(varDec, context);
+      return new FunctionLikeSchema(location, name, args, returnType, displaySig, modifiers as Modifier[], doc);
     }
     const typeStr = parseTypeFromQuickInfo(info);
     const type = await context.resolveType(varDec, typeStr);

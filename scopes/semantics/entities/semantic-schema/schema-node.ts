@@ -1,4 +1,5 @@
 import { instanceToPlain } from 'class-transformer';
+import { DocSchema } from './schemas';
 
 /**
  * a convenient abstract class for all schema to extend.
@@ -8,6 +9,7 @@ import { instanceToPlain } from 'class-transformer';
 export abstract class SchemaNode {
   readonly __schema = this.constructor.name;
   abstract readonly location: Location;
+  readonly doc?: DocSchema;
   readonly signature?: string;
 
   abstract toString(): string;
