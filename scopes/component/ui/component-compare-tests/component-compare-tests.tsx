@@ -1,7 +1,8 @@
 import { useComponentCompareContext } from '@teambit/component.ui.component-compare';
+import { EmptyStateSlot } from '@teambit/compositions';
 import React, { HTMLAttributes, UIEvent, useRef } from 'react';
+import { ComponentCompareTestsPage } from './component-compare-tests-page';
 import styles from './component-compare-tests.module.scss';
-import { CompositionContent, EmptyStateSlot } from '@teambit/compositions';
 
 export type ComponentCompareTestsProps = {
   emptyState: EmptyStateSlot;
@@ -29,10 +30,14 @@ export function ComponentCompareTests(props: ComponentCompareTestsProps) {
   return (
     <div className={styles.mainContainer}>
       <div className={styles.subContainerLeft}>
-        <div className={styles.subView} ref={leftPanelRef} onScroll={handleLeftPanelScroll}></div>
+        <div className={styles.subView} ref={leftPanelRef} onScroll={handleLeftPanelScroll}>
+          <ComponentCompareTestsPage component={base} emptyState={emptyState} />
+        </div>
       </div>
       <div className={styles.subContainerRight}>
-        <div className={styles.subView} ref={rightPanelRef} onScroll={handleRightPanelScroll}></div>
+        <div className={styles.subView} ref={rightPanelRef} onScroll={handleRightPanelScroll}>
+          <ComponentCompareTestsPage component={compare} emptyState={emptyState} />
+        </div>
       </div>
     </div>
   );

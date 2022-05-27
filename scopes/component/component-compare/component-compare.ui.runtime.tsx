@@ -15,6 +15,7 @@ import { EmptyStateSlot } from '@teambit/compositions';
 import { TitleBadgeSlot } from '@teambit/docs';
 import { Harmony, Slot, SlotRegistry } from '@teambit/harmony';
 import { AddingCompositions } from '@teambit/react.instructions.react.adding-compositions';
+import { AddingTests } from '@teambit/react.instructions.react.adding-tests';
 import ScopeAspect from '@teambit/scope';
 import { UIRuntime } from '@teambit/ui';
 import { RouteSlot } from '@teambit/ui-foundation.ui.react-router.slot-router';
@@ -23,7 +24,6 @@ import React, { ComponentType } from 'react';
 import { RouteProps } from 'react-router-dom';
 import { ComponentCompareAspect } from './component-compare.aspect';
 import { ComponentCompareSection } from './component-compare.section';
-import { AddingTests } from '@teambit/react.instructions.react.adding-tests';
 
 export type ComponentCompareNav = {
   props: NavLinkProps;
