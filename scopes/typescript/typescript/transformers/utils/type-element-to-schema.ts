@@ -51,7 +51,7 @@ async function propertySignature(node: ts.PropertySignature, context: SchemaExtr
   return new VariableSchema(context.getLocation(node), name, displaySig, type);
 }
 
-async function indexSignature(node: IndexSignatureDeclaration, context: SchemaExtractorContext) {
+export async function indexSignature(node: IndexSignatureDeclaration, context: SchemaExtractorContext) {
   const params = await getParams(node.parameters, context);
   const type = await typeNodeToSchema(node.type, context);
   return new IndexSignatureSchema(context.getLocation(node), params, type);
