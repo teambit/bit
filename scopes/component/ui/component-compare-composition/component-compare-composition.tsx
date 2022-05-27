@@ -16,48 +16,53 @@ export type ComponentCompareCompositionProps = {
 
 export function ComponentCompareComposition(props: ComponentCompareCompositionProps) {
   const { emptyState } = props;
+
   const component = useComponentCompareContext();
 
-  if (component === undefined || component.loading === undefined) {
-    return <></>;
-  }
+  const base = component?.base;
+  const compare = component?.compare;
 
-  const { base, compare } = component;
-  const baseCompositions = base.compositions;
-  const compareCompositions = compare.compositions;
+  const baseCompositions = base?.compositions;
+  const compareCompositions = compare?.compositions;
   const { ...params } = useComponentCompareParams();
 
   const selectedBaseComp =
     (params.selectedCompositionBaseFile &&
+      baseCompositions &&
       baseCompositions.find((c) => c.identifier === params.selectedCompositionBaseFile)) ||
-    baseCompositions[0];
+    (baseCompositions && baseCompositions[0]);
+
   const selectedCompareComp =
     (params.selectedCompositionCompareFile &&
+      compareCompositions &&
       compareCompositions.find((c) => c.identifier === params.selectedCompositionCompareFile)) ||
-    compareCompositions[0];
+    (compareCompositions && compareCompositions[0]);
 
-  const baseCompositionDropdownSource = baseCompositions.map((c) => {
-    const { ...rest } = useComponentCompareParams();
+  const baseCompositionDropdownSource =
+    baseCompositions?.map((c) => {
+      const { ...rest } = useComponentCompareParams();
 
-    const href = getComponentCompareUrl({
-      ...rest,
-      selectedCompositionBaseFile: c.identifier,
-      selectedCompositionCompareFile: selectedCompareComp.identifier,
-    });
+      const href = getComponentCompareUrl({
+        ...rest,
+        selectedCompositionBaseFile: c.identifier,
+        selectedCompositionCompareFile: selectedCompareComp.identifier,
+      });
 
-    return { id: c.identifier, label: c.displayName, value: href };
-  });
-  const compareCompositionDropdownSource = compareCompositions.map((c) => {
-    const { ...rest } = useComponentCompareParams();
+      return { id: c.identifier, label: c.displayName, value: href };
+    }) || [];
+    
+  const compareCompositionDropdownSource =
+    compareCompositions?.map((c) => {
+      const { ...rest } = useComponentCompareParams();
 
-    const href = getComponentCompareUrl({
-      ...rest,
-      selectedCompositionBaseFile: selectedBaseComp.identifier,
-      selectedCompositionCompareFile: c.identifier,
-    });
+      const href = getComponentCompareUrl({
+        ...rest,
+        selectedCompositionBaseFile: selectedBaseComp.identifier,
+        selectedCompositionCompareFile: c.identifier,
+      });
 
-    return { id: c.identifier, label: c.displayName, value: href };
-  });
+      return { id: c.identifier, label: c.displayName, value: href };
+    }) || [];
 
   const [baseCompositionParams, setBaseCompositionParams] = useState<Record<string, any>>({});
   const baseCompQueryParams = useMemo(() => queryString.stringify(baseCompositionParams), [baseCompositionParams]);
@@ -67,6 +72,10 @@ export function ComponentCompareComposition(props: ComponentCompareCompositionPr
     () => queryString.stringify(compareCompositionParams),
     [compareCompositionParams]
   );
+
+  if (!component || !base || !compare) {
+    return <></>;
+  }
 
   return (
     <>

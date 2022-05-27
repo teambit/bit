@@ -9,7 +9,7 @@ export type ComponentCompareQueryParams = {
   selectedCompositionCompareFile?: string;
   selectedAspect?: string;
 };
-export type ComponentCompareRouteProps = ComponentCompareQueryParams & ComponentCompareRouteParams;
+export type ComponentCompareRouteProps = ComponentCompareQueryParams;
 
 /**
  * path = /<org>/<scope>/<componentId>/~compare/<~compositions | ~dependencies | ~code | ~aspects>/
