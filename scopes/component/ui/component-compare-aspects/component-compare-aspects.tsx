@@ -22,11 +22,11 @@ export type ComponentAspectData = {
   name?: string;
   config: any;
   data: any;
-  id: string;
+  aspectId: string;
 };
 
 const GET_COMPONENT_ASPECT_DATA = gql`
-  query ($id: String!, $extensionId: String!) {
+  query GetComponentAspectData($id: String!, $extensionId: String!) {
     getHost(id: $extensionId) {
       id # used for GQL caching
       get(id: $id) {
@@ -36,7 +36,7 @@ const GET_COMPONENT_ASPECT_DATA = gql`
           scope
         }
         aspects {
-          id
+          aspectId: id
           config
           data
           icon
@@ -47,9 +47,7 @@ const GET_COMPONENT_ASPECT_DATA = gql`
 `;
 
 export function ComponentCompareAspects({ host, className }: ComponentCompareAspectsProps) {
-  console.log('🚀🚀🚀🚀🚀🚀🚀🚀 render cycle ');
   const componentCompareContext = useComponentCompareContext();
-
   const base = componentCompareContext?.base;
   const compare = componentCompareContext?.compare;
   const isCompareVersionWorkspace = componentCompareContext?.isCompareVersionWorkspace;
@@ -60,6 +58,7 @@ export function ComponentCompareAspects({ host, className }: ComponentCompareAsp
     variables: { id: baseId, extensionId: host },
     skip: !base?.id,
   });
+  
   const { data: compareAspectData, loading: compareLoading } = useDataQuery(GET_COMPONENT_ASPECT_DATA, {
     variables: { id: compareId, extensionId: host },
     skip: !compare?.id,
@@ -67,35 +66,28 @@ export function ComponentCompareAspects({ host, className }: ComponentCompareAsp
 
   const loading = baseLoading || compareLoading || componentCompareContext?.loading;
   const baseAspectList: ComponentAspectData[] = baseAspectData?.getHost?.get?.aspects || [];
-
   const compareAspectList: ComponentAspectData[] = compareAspectData?.getHost?.get?.aspects || [];
 
   const isMobile = useIsMobile();
   const [isSidebarOpen, setSidebarOpenness] = useState(!isMobile);
   const sidebarOpenness = isSidebarOpen ? Layout.row : Layout.left;
+
   const params = useComponentCompareParams();
 
   const selected =
-    params?.selectedAspect || (!loading && compareAspectList?.length > 0 && compareAspectList[0].id) || undefined;
+    params?.selectedAspect || (!loading && compareAspectList?.length > 0 && compareAspectList[0].aspectId) || undefined;
 
   const selectedBaseAspect = useMemo(
-    () => baseAspectList?.find((baseAspect) => baseAspect.id === selected),
+    () => baseAspectList?.find((baseAspect) => baseAspect.aspectId === selected),
     [baseAspectList]
   );
-  console.log(
-    '🚀 ~ file: component-compare-aspects.tsx ~ line 81 ~ ComponentCompareAspects ~ selectedBaseAspect',
-    selectedBaseAspect
-  );
+  
   const selectedCompareAspect = useMemo(
-    () => compareAspectList?.find((compareAspect) => compareAspect.id === selected),
+    () => compareAspectList?.find((compareAspect) => compareAspect.aspectId === selected),
     [compareAspectList]
   );
 
-  console.log(
-    '🚀 ~ file: component-compare-aspects.tsx ~ line 83 ~ ComponentCompareAspects ~ selectedCompareAspect',
-    selectedCompareAspect
-  );
-  const aspectNames = (baseAspectList || []).concat(compareAspectList || []).map((aspect) => aspect.id);
+  const aspectNames = (baseAspectList || []).concat(compareAspectList || []).map((aspect) => aspect.aspectId);
 
   return (
     <ComponentCompareAspectsContext.Provider value={{ base: baseAspectList, compare: compareAspectList, loading }}>
@@ -149,8 +141,8 @@ function getWidgets(fileName: string) {
   const base = componentCompareAspectsContext?.base;
   const compare = componentCompareAspectsContext?.compare;
 
-  const matchingBaseAspect = base?.find((baseAspect) => baseAspect.id === fileName);
-  const matchingCompareAspect = compare?.find((compareAspect) => compareAspect.id === fileName);
+  const matchingBaseAspect = base?.find((baseAspect) => baseAspect.aspectId === fileName);
+  const matchingCompareAspect = compare?.find((compareAspect) => compareAspect.aspectId === fileName);
 
   if (!matchingBaseAspect && !matchingCompareAspect) return null;
 

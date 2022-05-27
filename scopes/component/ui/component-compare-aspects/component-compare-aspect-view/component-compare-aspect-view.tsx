@@ -20,7 +20,7 @@ export function ComponentCompareAspectView({
   className,
 }: ComponentCompareAspectViewProps) {
   const title = useMemo(() => name?.split('/').pop(), [name]);
-
+  
   if (loading) return null;
 
   const configDiffEditorProps: DiffEditorProps = {
@@ -40,7 +40,7 @@ export function ComponentCompareAspectView({
   };
 
   return (
-    <div className={classNames(styles.componentCompareAspectViewContainer, className)}>
+    <div key={`aspect-diff-editor-${title}`} className={classNames(styles.componentCompareAspectViewContainer, className)}>
       <div className={styles.name}>
         <H4 size="xs" className={styles.name}>
           <span>{title}</span>
@@ -51,13 +51,13 @@ export function ComponentCompareAspectView({
           <H4 size="xxs" className={styles.name}>
             <span>Config</span>
           </H4>
-          <DiffEditor {...configDiffEditorProps} />
+          <DiffEditor key={`aspect-config-diff-editor-${title}`} {...configDiffEditorProps} />
         </div>
         <div className={styles.componentCompareAspectCalculatedDiff}>
           <H4 size="xxs" className={styles.name}>
             <span>Calculated Data</span>
           </H4>
-          <DiffEditor {...calculatedDataDiffEditorProps} />
+          <DiffEditor key={`aspect-data-diff-editor-${title}`} {...calculatedDataDiffEditorProps} />
         </div>
       </div>
     </div>
