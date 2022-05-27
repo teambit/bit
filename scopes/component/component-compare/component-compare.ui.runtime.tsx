@@ -142,7 +142,7 @@ export class ComponentCompareUI {
     },
     {
       path: 'tests/*',
-      children: () => this.getComponentTestsComparePage(),
+      element: this.getComponentTestsComparePage(),
     },
   ];
 

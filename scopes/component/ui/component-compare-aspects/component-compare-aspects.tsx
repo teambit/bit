@@ -1,7 +1,7 @@
 import React, { HTMLAttributes, useState, useMemo } from 'react';
 import classNames from 'classnames';
 import { gql } from '@apollo/client';
-import { isEmpty, isEqual } from 'lodash';
+import { isEqual } from 'lodash';
 import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
 import { HoverSplitter } from '@teambit/base-ui.surfaces.split-pane.hover-splitter';
 import { Collapser } from '@teambit/ui-foundation.ui.buttons.collapser';
@@ -153,18 +153,24 @@ function getWidgets(fileName: string) {
   return [() => <ComponentCompareStatusResolver status={status as CompareStatus} />];
 }
 
-const UNDEFINED_CONFIG_MARKER = 'undefined';
-
 function getAspectStatus(aspectA?: ComponentAspectData, aspectB?: ComponentAspectData): CompareStatus | null {
-  const baseConfig = aspectA?.config || UNDEFINED_CONFIG_MARKER;
-  const baseData = aspectA?.data || UNDEFINED_CONFIG_MARKER;
-  const compareConfig = aspectB?.config || UNDEFINED_CONFIG_MARKER;
-  const compareData = aspectB?.data || UNDEFINED_CONFIG_MARKER;
+  const isUndefined = (data) => data === undefined;
+  const isDeleted = (base, compare) => {
+    return isUndefined(compare) && !isUndefined(base);
+  };
+  const isNew = (base, compare) => {
+    return !isUndefined(compare) && isUndefined(base);
+  };
 
-  if ((isEmpty(baseConfig) && !isEmpty(compareConfig)) || (isEmpty(baseData) && !isEmpty(compareData))) {
+  const baseConfig = aspectA?.config;
+  const baseData = aspectA?.data;
+  const compareConfig = aspectB?.config;
+  const compareData = aspectB?.data;
+
+  if (isDeleted(baseConfig, compareConfig) || isDeleted(baseData, compareData)) {
     return 'deleted';
   }
-  if ((!isEmpty(baseConfig) && isEmpty(compareConfig)) || (!isEmpty(baseData) && isEmpty(compareData))) {
+  if (isNew(baseConfig, compareConfig) || isNew(baseData, compareData)) {
     return 'new';
   }
   if (!isEqual(baseConfig, compareConfig) || !isEqual(baseData, compareData)) {
