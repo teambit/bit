@@ -12,12 +12,14 @@ import {
   VariableSchema,
 } from './schemas';
 import { Location, SchemaNode } from './schema-node';
-import { schemaObjToInstance } from './schema-obj-to-class';
+import { schemaObjToInstance } from './class-transformers';
+import { componentIdTransformer } from './class-transformers/comp-id-transformer';
 
 export class APISchema extends SchemaNode {
   @Transform(schemaObjToInstance)
   readonly module: Module;
 
+  @Transform(componentIdTransformer)
   readonly componentId: ComponentID;
 
   constructor(readonly location: Location, module: Module, componentId: ComponentID) {

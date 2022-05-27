@@ -31,5 +31,6 @@ export {
   IndexedAccessSchema,
   TemplateLiteralTypeSchema,
   TemplateLiteralTypeSpanSchema,
+  ThisTypeSchema,
 } from './schemas';
 export type { JSONSchema, JSONSchemaObject } from './json-schema';

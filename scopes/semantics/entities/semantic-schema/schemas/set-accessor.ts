@@ -2,7 +2,7 @@ import { Transform } from 'class-transformer';
 import chalk from 'chalk';
 import { Location, SchemaNode } from '../schema-node';
 import { ParameterSchema } from './parameter';
-import { schemaObjToInstance } from '../schema-obj-to-class';
+import { schemaObjToInstance } from '../class-transformers';
 
 export class SetAccessorSchema extends SchemaNode {
   @Transform(schemaObjToInstance)

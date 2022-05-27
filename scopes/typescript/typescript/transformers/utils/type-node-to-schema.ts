@@ -17,6 +17,7 @@ import {
   IndexedAccessTypeNode,
   TemplateLiteralTypeNode,
   TemplateLiteralTypeSpan,
+  ThisTypeNode,
 } from 'typescript';
 import {
   SchemaNode,
@@ -36,10 +37,12 @@ import {
   IndexedAccessSchema,
   TemplateLiteralTypeSpanSchema,
   TemplateLiteralTypeSchema,
+  ThisTypeSchema,
 } from '@teambit/semantics.entities.semantic-schema';
 import pMapSeries from 'p-map-series';
 import { SchemaExtractorContext } from '../../schema-extractor-context';
 import { getParams } from './get-params';
+import { typeElementToSchema } from './type-element-to-schema';
 
 // eslint-disable-next-line complexity
 export async function typeNodeToSchema(node: TypeNode, context: SchemaExtractorContext): Promise<SchemaNode> {
@@ -78,13 +81,14 @@ export async function typeNodeToSchema(node: TypeNode, context: SchemaExtractorC
       return templateLiteralTypeSpan(node as TemplateLiteralTypeSpan, context);
     case SyntaxKind.TemplateLiteralType:
       return templateLiteralType(node as TemplateLiteralTypeNode, context);
+    case SyntaxKind.ThisType:
+      return thisType(node as ThisTypeNode, context);
     case SyntaxKind.ConstructorType:
     case SyntaxKind.NamedTupleMember:
     case SyntaxKind.OptionalType:
     case SyntaxKind.RestType:
     case SyntaxKind.ConditionalType:
     case SyntaxKind.InferType:
-    case SyntaxKind.ThisType:
     case SyntaxKind.MappedType:
     case SyntaxKind.ImportType:
     case SyntaxKind.ExpressionWithTypeArguments:
@@ -153,10 +157,7 @@ async function unionType(node: UnionTypeNode, context: SchemaExtractorContext) {
  * this "TypeLiteral" is an object with properties, such as: `{ a: string; b: number }`, similar to Interface.
  */
 async function typeLiteral(node: TypeLiteralNode, context: SchemaExtractorContext) {
-  const members = await pMapSeries(node.members, async (member) => {
-    const typeSchema = await context.computeSchema(member);
-    return typeSchema;
-  });
+  const members = await pMapSeries(node.members, (member) => typeElementToSchema(member, context));
   const location = context.getLocation(node);
   return new TypeLiteralSchema(location, members);
 }
@@ -260,4 +261,8 @@ async function templateLiteralTypeSpan(node: TemplateLiteralTypeSpan, context: S
   const type = await typeNodeToSchema(node.type, context);
   const literal = node.literal.text;
   return new TemplateLiteralTypeSpanSchema(context.getLocation(node), literal, type);
+}
+
+async function thisType(node: ThisTypeNode, context: SchemaExtractorContext) {
+  return new ThisTypeSchema(context.getLocation(node));
 }

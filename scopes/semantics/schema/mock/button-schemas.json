@@ -1434,5 +1434,9 @@
         }
       }
     ]
+  },
+  "componentId": {
+    "name": "button",
+    "scope": "org.scope"
   }
 }

@@ -31,11 +31,8 @@ import {
   SourceFileTransformer,
   ClassDecelerationTransformer,
   Constructor,
-  PropertySignature,
   LiteralTypeTransformer,
-  IndexSignature,
   InterfaceDeclarationTransformer,
-  MethodSignatureTransformer,
   EnumDeclarationTransformer,
 } from './transformers';
 import { CheckTypesCmd } from './cmds/check-types.cmd';
@@ -269,11 +266,8 @@ export class TypescriptMain {
       new SourceFileTransformer(),
       new TypeAliasTransformer(),
       new ClassDecelerationTransformer(),
-      new PropertySignature(),
       new LiteralTypeTransformer(),
-      new IndexSignature(),
       new InterfaceDeclarationTransformer(),
-      new MethodSignatureTransformer(),
       new EnumDeclarationTransformer(),
     ]);
 

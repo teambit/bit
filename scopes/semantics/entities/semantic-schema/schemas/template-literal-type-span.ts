@@ -1,6 +1,6 @@
 import { Transform } from 'class-transformer';
 import { Location, SchemaNode } from '../schema-node';
-import { schemaObjToInstance } from '../schema-obj-to-class';
+import { schemaObjToInstance } from '../class-transformers';
 
 export class TemplateLiteralTypeSpanSchema extends SchemaNode {
   @Transform(schemaObjToInstance)

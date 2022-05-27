@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 import { Transform } from 'class-transformer';
 import { Location, SchemaNode } from '../schema-node';
-import { schemaObjArrayToInstances } from '../schema-obj-to-class';
+import { schemaObjArrayToInstances } from '../class-transformers';
 
 export class Module extends SchemaNode {
   @Transform(schemaObjArrayToInstances)
