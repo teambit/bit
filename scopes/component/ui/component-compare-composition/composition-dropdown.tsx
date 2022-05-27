@@ -7,7 +7,7 @@ import styles from './composition-dropdown.module.scss';
 export type DropdownItem = { id: string; label: string; value: string };
 
 export type CompositionDropdownProps = {
-  selected: Omit<DropdownItem, 'value'>;
+  selected?: Omit<DropdownItem, 'value'>;
   dropdownItems: Array<DropdownItem>;
 };
 
@@ -19,7 +19,7 @@ export function CompositionDropdown(props: CompositionDropdownProps) {
       dropClass={styles.menu}
       placeholder={
         <div className={styles.placeholder}>
-          <div>{selected.label}</div>
+          <div>{selected && selected.label}</div>
           <Icon of="fat-arrow-down" />
         </div>
       }
@@ -32,7 +32,7 @@ export function CompositionDropdown(props: CompositionDropdownProps) {
 }
 
 type MenuItemProps = {
-  selected: Omit<DropdownItem, 'value'>;
+  selected?: Omit<DropdownItem, 'value'>;
   current: DropdownItem;
 };
 
@@ -49,7 +49,7 @@ function MenuItem(props: MenuItemProps) {
 
   return (
     <div ref={currentVersionRef}>
-      <MenuLinkItem isActive={() => current.id === selected.id} href={current.value}>
+      <MenuLinkItem isActive={() => current.id === selected?.id} href={current.value}>
         <div>{current.label}</div>
       </MenuLinkItem>
     </div>

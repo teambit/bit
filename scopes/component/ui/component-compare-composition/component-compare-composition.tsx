@@ -45,19 +45,19 @@ export function ComponentCompareComposition(props: ComponentCompareCompositionPr
       const href = getComponentCompareUrl({
         ...rest,
         selectedCompositionBaseFile: c.identifier,
-        selectedCompositionCompareFile: selectedCompareComp.identifier,
+        selectedCompositionCompareFile: selectedCompareComp?.identifier,
       });
 
       return { id: c.identifier, label: c.displayName, value: href };
     }) || [];
-    
+
   const compareCompositionDropdownSource =
     compareCompositions?.map((c) => {
       const { ...rest } = useComponentCompareParams();
 
       const href = getComponentCompareUrl({
         ...rest,
-        selectedCompositionBaseFile: selectedBaseComp.identifier,
+        selectedCompositionBaseFile: selectedBaseComp?.identifier,
         selectedCompositionCompareFile: c.identifier,
       });
 
@@ -77,20 +77,24 @@ export function ComponentCompareComposition(props: ComponentCompareCompositionPr
     return <></>;
   }
 
+  const selectedBaseDropdown = selectedBaseComp && {
+    id: selectedBaseComp.identifier,
+    label: selectedBaseComp.displayName,
+  };
+
+  const selectedCompareDropdown = selectedCompareComp && {
+    id: selectedCompareComp.identifier,
+    label: selectedCompareComp.displayName,
+  };
+
   return (
     <>
       <div className={styles.dropdownContainer}>
         <div className={styles.leftDropdown}>
-          <CompositionDropdown
-            dropdownItems={baseCompositionDropdownSource}
-            selected={{ id: selectedBaseComp.identifier, label: selectedBaseComp.displayName }}
-          />
+          <CompositionDropdown dropdownItems={baseCompositionDropdownSource} selected={selectedBaseDropdown} />
         </div>
         <div className={styles.rightDropdown}>
-          <CompositionDropdown
-            dropdownItems={compareCompositionDropdownSource}
-            selected={{ id: selectedCompareComp.identifier, label: selectedCompareComp.displayName }}
-          />
+          <CompositionDropdown dropdownItems={compareCompositionDropdownSource} selected={selectedCompareDropdown} />
         </div>
       </div>
       <div className={styles.mainContainer}>
