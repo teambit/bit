@@ -24,7 +24,7 @@ export function calcLayout(graph: CompareGraphModel) {
   const positionsArr: [string, { x: number; y: number }][] = g.nodes().map((nodeId) => {
     const node = g.node(nodeId);
 
-    const pos = {
+    const pos = node && {
       x: node.x - node.width / 2,
       y: node.y - node.height / 2,
     };

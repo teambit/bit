@@ -46,6 +46,7 @@ function buildGraph(baseGraph?: GraphModel, compareGraph?: GraphModel) {
 
   const baseNodes = baseGraph.nodes;
   const compareNodes = compareGraph.nodes;
+  
   const baseNodesMap = new Map<string, NodeModel>(baseNodes.map((n) => [n.component.id.toStringWithoutVersion(), n]));
   const compareNodesMap = new Map<string, NodeModel>(
     compareNodes.map((n) => [n.component.id.toStringWithoutVersion(), n])
