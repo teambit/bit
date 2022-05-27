@@ -61,3 +61,11 @@
     display: none;
   }
 }
+
+.link {
+  text-decoration: none;
+  color: var(--bit-text-color-heavyed);
+  &:hover {
+    text-decoration: underline;
+  }
+}
