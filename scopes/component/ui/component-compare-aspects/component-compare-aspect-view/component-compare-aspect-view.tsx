@@ -24,16 +24,16 @@ export function ComponentCompareAspectView({
   if (loading) return null;
 
   const configDiffEditorProps: DiffEditorProps = {
-    modified: JSON.stringify(baseAspectData?.config, null, 2),
-    original: JSON.stringify(compareAspectData?.config, null, 2),
+    modified: JSON.stringify(compareAspectData?.config, null, 2),
+    original: JSON.stringify(baseAspectData?.config, null, 2),
     language: 'json',
     className: styles.diffEditor,
     theme: 'vs-dark',
   };
 
   const calculatedDataDiffEditorProps: DiffEditorProps = {
-    modified: JSON.stringify(baseAspectData?.data, null, 2),
-    original: JSON.stringify(compareAspectData?.data, null, 2),
+    modified: JSON.stringify(compareAspectData?.data, null, 2),
+    original: JSON.stringify(baseAspectData?.data, null, 2),
     language: 'json',
     className: styles.diffEditor,
     theme: 'vs-dark',

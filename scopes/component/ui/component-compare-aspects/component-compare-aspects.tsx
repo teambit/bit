@@ -162,10 +162,10 @@ function getAspectStatus(aspectA?: ComponentAspectData, aspectB?: ComponentAspec
   const compareData = aspectB?.data || UNDEFINED_CONFIG_MARKER;
 
   if ((isEmpty(baseConfig) && !isEmpty(compareConfig)) || (isEmpty(baseData) && !isEmpty(compareData))) {
-    return 'new';
+    return 'deleted';
   }
   if ((!isEmpty(baseConfig) && isEmpty(compareConfig)) || (!isEmpty(baseData) && isEmpty(compareData))) {
-    return 'deleted';
+    return 'new';
   }
   if (!isEqual(baseConfig, compareConfig) || !isEqual(baseData, compareData)) {
     return 'modified';
