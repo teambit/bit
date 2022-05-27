@@ -72,7 +72,7 @@ export function TestsPage({ className, emptyState }: TestsPageProps) {
   const component = useContext(ComponentContext);
   const onTestsChanged = useSubscription(TESTS_SUBSCRIPTION_CHANGED, { variables: { id: component.id.toString() } });
   const { data } = useQuery(GET_COMPONENT, {
-    variables: { id: component.id._legacy.name },
+    variables: { id: component.id.toString() },
   });
 
   const testData = onTestsChanged.data?.testsChanged || data?.getHost?.getTests;
