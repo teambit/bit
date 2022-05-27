@@ -58,7 +58,7 @@ export function ComponentCompareAspects({ host, className }: ComponentCompareAsp
     variables: { id: baseId, extensionId: host },
     skip: !base?.id,
   });
-  
+
   const { data: compareAspectData, loading: compareLoading } = useDataQuery(GET_COMPONENT_ASPECT_DATA, {
     variables: { id: compareId, extensionId: host },
     skip: !compare?.id,
@@ -79,12 +79,12 @@ export function ComponentCompareAspects({ host, className }: ComponentCompareAsp
 
   const selectedBaseAspect = useMemo(
     () => baseAspectList?.find((baseAspect) => baseAspect.aspectId === selected),
-    [baseAspectList]
+    [baseAspectList, selected]
   );
-  
+
   const selectedCompareAspect = useMemo(
     () => compareAspectList?.find((compareAspect) => compareAspect.aspectId === selected),
-    [compareAspectList]
+    [compareAspectList, selected]
   );
 
   const aspectNames = (baseAspectList || []).concat(compareAspectList || []).map((aspect) => aspect.aspectId);
