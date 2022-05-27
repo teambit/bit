@@ -50,7 +50,9 @@ export function ComponentCompareAspects({ host, className }: ComponentCompareAsp
   const componentCompareContext = useComponentCompareContext();
   const base = componentCompareContext?.base;
   const compare = componentCompareContext?.compare;
+  
   const isCompareVersionWorkspace = componentCompareContext?.isCompareVersionWorkspace;
+  
   const baseId = `${base?.id.fullName}@${base?.id.version}`;
   const compareId = isCompareVersionWorkspace ? compare?.id.fullName : `${compare?.id.fullName}@${compare?.id.version}`;
 
@@ -75,7 +77,7 @@ export function ComponentCompareAspects({ host, className }: ComponentCompareAsp
   const params = useComponentCompareParams();
 
   const selected =
-    params?.selectedAspect || (!loading && compareAspectList?.length > 0 && compareAspectList[0].aspectId) || undefined;
+    params?.selectedAspect || (compareAspectList?.length > 0 && compareAspectList[0].aspectId) || undefined;
 
   const selectedBaseAspect = useMemo(
     () => baseAspectList?.find((baseAspect) => baseAspect.aspectId === selected),

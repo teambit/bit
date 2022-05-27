@@ -34,6 +34,7 @@ export function ComponentCompareCode({ fileIconSlot, className }: ComponentCompa
 
   const { fileTree: baseFileTree = [], mainFile } = useCode(base?.id);
   const { fileTree: compareFileTree = [] } = useCode(compare?.id);
+
   const fileTree = baseFileTree.concat(compareFileTree);
   const params = useComponentCompareParams();
   const selectedFile = params?.selectedFile || mainFile || DEFAULT_FILE;
