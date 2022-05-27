@@ -88,7 +88,6 @@ export function ComponentCompareComposition(props: ComponentCompareCompositionPr
     return <></>;
   }
 
-  // todo: add loading screen
   return (
     <>
       {component.loading && (
