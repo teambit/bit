@@ -44,7 +44,7 @@ const NodeTypes: NodeTypesType = { ComponentNode: ComponentNodeContainer };
 function buildGraph(baseGraph?: GraphModel, compareGraph?: GraphModel) {
   if (!baseGraph || !compareGraph) return null;
 
-  // this to get a key with versions ignored so that we'll have a unique set of component nodes
+  // this is to get a key with versions ignored so that we'll have a unique set of component nodes
   const getIdWithoutVersion = (node: NodeModel) => node.component.id.toStringWithoutVersion();
   const getEdgeId = (e: EdgeModel) => `${e.sourceId.split('@')[0]} | ${e.targetId.split('@')[0]}`;
 

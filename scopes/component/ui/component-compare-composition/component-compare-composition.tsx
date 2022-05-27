@@ -1,10 +1,11 @@
 import {
   getComponentCompareUrl,
   useComponentCompareContext,
-  useComponentCompareParams,
+  useComponentCompareParams
 } from '@teambit/component.ui.component-compare';
 import { CompositionContent, EmptyStateSlot } from '@teambit/compositions';
 import { CompositionContextProvider } from '@teambit/compositions.ui.hooks.use-composition';
+import { RoundLoader } from '@teambit/design.ui.round-loader';
 import queryString from 'query-string';
 import React, { useMemo, useState } from 'react';
 import styles from './component-compare-composition.module.scss';
@@ -77,7 +78,7 @@ export function ComponentCompareComposition(props: ComponentCompareCompositionPr
     id: selectedBaseComp.identifier,
     label: selectedBaseComp.displayName,
   };
-  
+
   const selectedCompareDropdown = selectedCompareComp && {
     id: selectedCompareComp.identifier,
     label: selectedCompareComp.displayName,
@@ -90,6 +91,11 @@ export function ComponentCompareComposition(props: ComponentCompareCompositionPr
   // todo: add loading screen
   return (
     <>
+      {component.loading && (
+        <div className={styles.loader}>
+          <RoundLoader />
+        </div>
+      )}
       <div className={styles.dropdownContainer}>
         <div className={styles.leftDropdown}>
           <CompositionDropdown dropdownItems={baseCompositionDropdownSource} selected={selectedBaseDropdown} />
