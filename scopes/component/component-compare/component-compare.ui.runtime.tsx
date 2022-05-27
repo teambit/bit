@@ -23,6 +23,7 @@ import React, { ComponentType } from 'react';
 import { RouteProps } from 'react-router-dom';
 import { ComponentCompareAspect } from './component-compare.aspect';
 import { ComponentCompareSection } from './component-compare.section';
+import { AddingTests } from '@teambit/react.instructions.react.adding-tests';
 
 export type ComponentCompareNav = {
   props: NavLinkProps;
@@ -37,7 +38,8 @@ export class ComponentCompareUI {
     private host: string,
     private navSlot: ComponentCompareNavSlot,
     private routeSlot: RouteSlot,
-    private emptyStateSlot: EmptyStateSlot,
+    private compositionEmptyStateSlot: EmptyStateSlot,
+    private testsEmptyStateSlot: EmptyStateSlot,
     private titleBadgeSlot: TitleBadgeSlot,
     private fileIconSlot?: FileIconSlot
   ) {}
@@ -49,6 +51,7 @@ export class ComponentCompareUI {
     Slot.withType<RouteSlot>(),
     Slot.withType<string>(),
     Slot.withType<TitleBadge>(),
+    Slot.withType<EmptyStateSlot>(),
   ];
 
   static dependencies = [ComponentAspect, WorkspaceAspect, ScopeAspect];
@@ -81,11 +84,13 @@ export class ComponentCompareUI {
     return this;
   }
 
-  /**
-   * register a new tester empty state. this allows to register a different empty state from each environment for example.
-   */
-  registerEmptyState(emptyStateComponent: ComponentType) {
-    this.emptyStateSlot.register(emptyStateComponent);
+  registerCompositionEmptyState(emptyStateComponent: ComponentType) {
+    this.compositionEmptyStateSlot.register(emptyStateComponent);
+    return this;
+  }
+
+  registerTestsEmptyState(emptyStateComponent: ComponentType) {
+    this.testsEmptyStateSlot.register(emptyStateComponent);
     return this;
   }
 
@@ -103,7 +108,7 @@ export class ComponentCompareUI {
   }
 
   getComponentCompositionComparePage() {
-    return <ComponentCompareComposition emptyState={this.emptyStateSlot} />;
+    return <ComponentCompareComposition emptyState={this.compositionEmptyStateSlot} />;
   }
 
   getComponentAspectsComparePage() {
@@ -115,7 +120,7 @@ export class ComponentCompareUI {
   }
 
   getComponentTestsComparePage() {
-    return <ComponentCompareTests />;
+    return <ComponentCompareTests emptyState={this.testsEmptyStateSlot} />;
   }
 
   private compareRoutes: RouteProps[] = [
@@ -196,9 +201,10 @@ export class ComponentCompareUI {
   static async provider(
     [componentUi]: [ComponentUI],
     _,
-    [navSlot, routeSlot, emptyStateSlot, titleBadgeSlot, fileIconSlot]: [
+    [navSlot, routeSlot, compositionEmptyStateSlot, testsEmptyStateSlot, titleBadgeSlot, fileIconSlot]: [
       ComponentCompareNavSlot,
       RouteSlot,
+      EmptyStateSlot,
       EmptyStateSlot,
       TitleBadgeSlot,
       FileIconSlot
@@ -211,7 +217,8 @@ export class ComponentCompareUI {
       host,
       navSlot,
       routeSlot,
-      emptyStateSlot,
+      compositionEmptyStateSlot,
+      testsEmptyStateSlot,
       titleBadgeSlot,
       fileIconSlot
     );
@@ -220,9 +227,13 @@ export class ComponentCompareUI {
     componentCompareUI.registerEnvFileIcon([
       (fileName) => (isTsx.test(fileName) ? `${staticStorageUrl}/file-icons/file_type_typescript.svg` : undefined),
     ]);
-    componentCompareUI.registerEmptyState(() => {
+    componentCompareUI.registerCompositionEmptyState(() => {
       return <AddingCompositions />;
     });
+    componentCompareUI.registerTestsEmptyState(() => {
+      return <AddingTests />;
+    });
+
     const componentCompareSection = new ComponentCompareSection(componentCompareUI);
     componentUi.registerRoute([componentCompareSection.route]);
     componentUi.registerWidget(componentCompareSection.navigationLink, componentCompareSection.order);
