@@ -12,7 +12,7 @@ export type ComponentCompareQueryParams = {
 export type ComponentCompareRouteProps = ComponentCompareQueryParams;
 
 /**
- * path = /<org>/<scope>/<componentId>/~compare/<~compositions | ~dependencies | ~code | ~aspects>/
+ * path = /<org>/<scope>/<componentId>/compare/<sub-page>/
  * variables = base, version, selectedCompositionBaseFile, selectedCompositionCompareFile, selectedFile
  */
 export function useComponentCompareParams(): ComponentCompareRouteProps {
