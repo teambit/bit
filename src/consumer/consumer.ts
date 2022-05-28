@@ -3,7 +3,7 @@ import mapSeries from 'p-map-series';
 import * as path from 'path';
 import R from 'ramda';
 import semver from 'semver';
-import { LaneId } from '@teambit/lane-id';
+import { DEFAULT_LANE, LaneId } from '@teambit/lane-id';
 import { Analytics } from '../analytics/analytics';
 import { BitId, BitIds } from '../bit-id';
 import { BitIdStr } from '../bit-id/bit-id';
@@ -242,10 +242,24 @@ export default class Consumer {
   }
 
   async write(): Promise<Consumer> {
+    this.updateScopeJsonWithCurrentLaneIfNeeded();
     await Promise.all([this.config.write({ workspaceDir: this.projectPath }), this.scope.ensureDir()]);
     this.bitMap.markAsChanged();
     await this.writeBitMap();
     return this;
+  }
+
+  updateScopeJsonWithCurrentLaneIfNeeded() {
+    const scopeJson = this.scope.scopeJson;
+    if (this.bitMap.remoteLaneId && scopeJson.lanes.current === DEFAULT_LANE && !scopeJson.lanes.tracking.length) {
+      const laneId = this.bitMap.remoteLaneId;
+      scopeJson.trackLane({
+        remoteLane: laneId.name,
+        remoteScope: laneId.scope,
+        localLane: laneId.name,
+      });
+      scopeJson.setCurrentLane(laneId.name);
+    }
   }
 
   getPath(): PathOsBased {

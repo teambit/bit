@@ -1114,4 +1114,24 @@ describe('bit lane command', function () {
       expect(status).to.not.have.string(IMPORT_PENDING_MSG);
     });
   });
+  describe('deleting the local scope after exporting a lane', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.command.createLane('dev');
+      helper.fixtures.populateComponents(1);
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.exportLane();
+      helper.fs.deletePath('.bit');
+      helper.command.init();
+      helper.scopeHelper.addRemoteScope();
+    });
+    it('should re-create scope.json with checkout to the lane specified in the .bitmap file', () => {
+      helper.command.expectCurrentLaneToBe('dev');
+    });
+    // previously, it used to throw "component X has no versions and the head is empty"
+    it('bit import should not throw an error', () => {
+      expect(() => helper.command.import()).to.not.throw();
+    });
+  });
 });
