@@ -49,3 +49,11 @@
   height: 100%;
   flex-direction: column;
 }
+
+.loader {
+  display: flex;
+  align-items: center;
+  justify-items: center;
+  height: 100%;
+  width: 100%;
+}

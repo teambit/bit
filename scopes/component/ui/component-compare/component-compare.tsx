@@ -32,8 +32,8 @@ export function ComponentCompare({ navSlot, host, routeSlot }: ComponentCompareP
       isWorkspace && !isNew && !location.search.includes('version') ? 'workspace' : component.id.version;
 
     const findPrevVersionFromCurrent = (_, index: number, logs: LegacyComponentLog[]) => {
-      if (logs.length === 1) return true;
       if (index === 0) return false;
+      if (logs.length === 1) return true;
 
       const prevIndex = index - 1;
 
@@ -73,7 +73,7 @@ export function ComponentCompare({ navSlot, host, routeSlot }: ComponentCompareP
           <>
             <div className={styles.top}>
               <H2 size="xs">Component Compare</H2>
-              {loading || <ComponentCompareVersionPicker host={host} />}
+              {loading || <ComponentCompareVersionPicker />}
             </div>
             <div className={styles.bottom}>
               <CompareMenuNav navSlot={navSlot} />

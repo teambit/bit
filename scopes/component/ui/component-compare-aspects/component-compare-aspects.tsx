@@ -50,9 +50,9 @@ export function ComponentCompareAspects({ host, className }: ComponentCompareAsp
   const componentCompareContext = useComponentCompareContext();
   const base = componentCompareContext?.base;
   const compare = componentCompareContext?.compare;
-  
+
   const isCompareVersionWorkspace = componentCompareContext?.isCompareVersionWorkspace;
-  
+
   const baseId = `${base?.id.fullName}@${base?.id.version}`;
   const compareId = isCompareVersionWorkspace ? compare?.id.fullName : `${compare?.id.fullName}@${compare?.id.version}`;
 
@@ -89,7 +89,7 @@ export function ComponentCompareAspects({ host, className }: ComponentCompareAsp
     [compareAspectList, selected]
   );
 
-  const aspectNames = (baseAspectList || []).concat(compareAspectList || []).map((aspect) => aspect.aspectId);
+  const aspectNames = baseAspectList.concat(compareAspectList).map((aspect) => aspect.aspectId);
 
   return (
     <ComponentCompareAspectsContext.Provider value={{ base: baseAspectList, compare: compareAspectList, loading }}>

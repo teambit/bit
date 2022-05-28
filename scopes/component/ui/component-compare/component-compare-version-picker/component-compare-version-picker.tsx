@@ -8,16 +8,14 @@ import {
   getComponentCompareUrl,
 } from '@teambit/component.ui.component-compare';
 import { ComponentContext } from '@teambit/component';
-import { useLocation } from '@teambit/base-ui.routing.routing-provider';
 import classNames from 'classnames';
 import styles from './component-compare-version-picker.module.scss';
 
-export type ComponentCompareVersionPickerProps = { host: string } & HTMLAttributes<HTMLDivElement>;
+export type ComponentCompareVersionPickerProps = {} & HTMLAttributes<HTMLDivElement>;
 
-export function ComponentCompareVersionPicker({ host }: ComponentCompareVersionPickerProps) {
+export function ComponentCompareVersionPicker({ className }: ComponentCompareVersionPickerProps) {
   const component = useContext(ComponentContext);
   const componentCompare = useComponentCompareContext();
-  const location = useLocation();
 
   const snaps: DropdownComponentVersion[] = useMemo(() => {
     const logs = component?.logs;
@@ -44,24 +42,17 @@ export function ComponentCompareVersionPicker({ host }: ComponentCompareVersionP
     ).map((tag) => ({ ...tag, version: tag.tag as string }));
   }, [component?.logs]);
 
-  const isNew = snaps.length === 0 && tags.length === 0;
-
-  const isWorkspace = host === 'teambit.workspace/workspace';
-
-  const compareVersion =
-    isWorkspace && !isNew && !location.search.includes('version') ? 'workspace' : componentCompare?.compare.version;
+  const compareVersion = componentCompare?.isCompareVersionWorkspace ? 'workspace' : componentCompare?.compare.version;
 
   const baseVersion = componentCompare?.base?.version;
-  
-  const key = `base-compare-version-dropdown-${
-    componentCompare && !componentCompare.loading ? componentCompare.compare.id.toString() : componentCompare?.loading
-  }`;
+
+  const key = `base-compare-version-dropdown-${componentCompare?.compare.id.toString()}`;
 
   return (
     <div className={styles.componentCompareVersionPicker}>
       <VersionDropdown
         key={key}
-        className={classNames(styles.componentCompareVersionContainer, styles.left)}
+        className={classNames(styles.componentCompareVersionContainer, styles.left, className)}
         dropdownClassName={styles.componentCompareDropdown}
         placeholderClassName={styles.componentCompareVersionPlaceholder}
         menuClassName={classNames(styles.componentCompareVersionMenu, styles.showMenuOverNav)}

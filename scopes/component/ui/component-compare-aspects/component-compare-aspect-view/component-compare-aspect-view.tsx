@@ -2,6 +2,7 @@ import React, { HTMLAttributes, useMemo } from 'react';
 import classNames from 'classnames';
 import { H4 } from '@teambit/documenter.ui.heading';
 import { ComponentAspectData } from '@teambit/component.ui.component-compare-aspects';
+import { RoundLoader } from '@teambit/design.ui.round-loader';
 import { DiffEditor, DiffEditorProps } from '@monaco-editor/react';
 import styles from './component-compare-aspect-view.module.scss';
 
@@ -20,8 +21,6 @@ export function ComponentCompareAspectView({
   className,
 }: ComponentCompareAspectViewProps) {
   const title = useMemo(() => name?.split('/').pop(), [name]);
-  
-  if (loading) return null;
 
   const configDiffEditorProps: DiffEditorProps = {
     modified: JSON.stringify(compareAspectData?.config, null, 2),
@@ -29,6 +28,11 @@ export function ComponentCompareAspectView({
     language: 'json',
     className: styles.diffEditor,
     theme: 'vs-dark',
+    loading: (
+      <div className={styles.loader}>
+        <RoundLoader />
+      </div>
+    ),
   };
 
   const calculatedDataDiffEditorProps: DiffEditorProps = {
@@ -37,10 +41,18 @@ export function ComponentCompareAspectView({
     language: 'json',
     className: styles.diffEditor,
     theme: 'vs-dark',
+    loading: (
+      <div className={styles.loader}>
+        <RoundLoader />
+      </div>
+    ),
   };
 
   return (
-    <div key={`aspect-diff-editor-${title}`} className={classNames(styles.componentCompareAspectViewContainer, className)}>
+    <div
+      key={`aspect-diff-editor-${title}`}
+      className={classNames(styles.componentCompareAspectViewContainer, className)}
+    >
       <div className={styles.name}>
         <H4 size="xs" className={styles.name}>
           <span>{title}</span>

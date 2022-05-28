@@ -41,6 +41,7 @@ export function ComponentCompareCodeTree({
       const href = getComponentCompareUrl({ ...compareQueryParams, [queryParam]: props.node.id });
       const icon = getFileIcon(fileIconMatchers, props.node.id);
       const widgets = getWidgets?.(props.node.id);
+      
       if (!children) {
         return <Node href={href} {...props} isActive={props.node.id === selected} icon={icon} widgets={widgets} />;
       }
