@@ -29,11 +29,11 @@ export function ComponentCompareCodeView({ className, base, compare, fileName }:
   const [ignoreWhitespace, setIgnoreWhitespace] = useState(true);
   const monacoRef = useRef<any>();
 
-  const [selected] = useState(fileName);
   const title = useMemo(() => fileName?.split('/').pop(), [fileName]);
+
   const language = useMemo(() => {
-    if (!selected) return languages.ts;
-    const fileEnding = selected?.split('.').pop();
+    if (!fileName) return languages.ts;
+    const fileEnding = fileName?.split('.').pop();
     return languages[fileEnding || ''] || fileEnding;
   }, [fileName]);
 

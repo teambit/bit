@@ -72,7 +72,7 @@
   user-select: none;
   transition: background-color 300ms ease-in-out;
   border: 1px solid var(--bit-border-color, #babec9);
-  
+
   > span {
     display: none;
   }
@@ -84,6 +84,12 @@
   }
   .versionName {
     padding: 0px 8px;
+    &.tag {
+      min-width: fit-content;
+    }
+    &.snap {
+      min-width: 20%;
+    }
   }
   .commitMessage,
   .emptyMessage {

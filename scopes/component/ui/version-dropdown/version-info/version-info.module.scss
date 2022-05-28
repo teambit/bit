@@ -26,7 +26,7 @@
 .versionName {
   padding: 0px 8px;
   &.tag {
-    min-width: 40px;
+    min-width: fit-content;
   }
   &.snap {
     min-width: 20%;

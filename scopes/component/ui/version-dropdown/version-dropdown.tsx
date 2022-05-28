@@ -162,7 +162,15 @@ function VersionPlaceholder({
   return (
     <div className={classNames(styles.placeholder, className, disabled && styles.disabled)}>
       {showDetails && <UserAvatar size={24} account={author} className={styles.versionUserAvatar} showTooltip={true} />}
-      <Ellipsis className={styles.versionName}>{currentVersion}</Ellipsis>
+      <Ellipsis
+        className={classNames(
+          styles.versionName,
+          versionDetails?.tag && styles.tag,
+          !versionDetails?.tag && styles.snap
+        )}
+      >
+        {currentVersion}
+      </Ellipsis>
       {showDetails && <div className={styles.author}>{author?.displayName}</div>}
       {showDetails && commitMessage(versionDetails?.message)}
       {showDetails && (

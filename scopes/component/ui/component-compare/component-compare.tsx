@@ -24,13 +24,14 @@ export function ComponentCompare({ navSlot, host, routeSlot }: ComponentCompareP
   const location = useLocation();
 
   const isWorkspace = host === 'teambit.workspace/workspace';
+  
+  const allVersionInfo = component.logs?.slice().reverse() || [];
+  const isNew = allVersionInfo.length === 0;
+  const compareVersion =
+    isWorkspace && !isNew && !location.search.includes('version') ? 'workspace' : component.id.version;
+  const isCompareVersionWorkspace = compareVersion === 'workspace';
+
   const lastVersionInfo = useMemo(() => {
-    const allVersionInfo = component.logs?.slice().reverse() || [];
-    const isNew = allVersionInfo.length === 0;
-
-    const compareVersion =
-      isWorkspace && !isNew && !location.search.includes('version') ? 'workspace' : component.id.version;
-
     const findPrevVersionFromCurrent = (_, index: number, logs: LegacyComponentLog[]) => {
       if (index === 0) return false;
       if (logs.length === 1) return true;
@@ -58,7 +59,7 @@ export function ComponentCompare({ navSlot, host, routeSlot }: ComponentCompareP
     compare,
     base,
     loading,
-    isCompareVersionWorkspace: isWorkspace,
+    isCompareVersionWorkspace,
   };
 
   return (
