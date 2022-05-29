@@ -13,6 +13,7 @@ import { reactWorkspaceAnalyticsTemplate } from './templates/react-workspace-ana
 import { reactWorkspaceDataFetchingTemplate } from './templates/react-workspace-data-fetching';
 import { reactWorkspaceAppTemplate } from './templates/react-workspace-app';
 import { reactWorkspaceLibTemplate } from './templates/react-workspace-lib';
+import { reactWorkspaceBlogTemplate } from './templates/react-workspace-blog';
 
 export const componentTemplates: ComponentTemplate[] = [
   reactComponent,
@@ -34,4 +35,5 @@ export const workspaceTemplates: WorkspaceTemplate[] = [
   reactWorkspaceWikiTemplate,
   reactWorkspaceAnalyticsTemplate,
   reactWorkspaceDataFetchingTemplate,
+  reactWorkspaceBlogTemplate,
 ];
