@@ -26,3 +26,5 @@ export { TypePredicateSchema } from './type-predicate';
 export { IndexedAccessSchema } from './indexed-access-type';
 export { TemplateLiteralTypeSchema } from './template-literal-type';
 export { TemplateLiteralTypeSpanSchema } from './template-literal-type-span';
+export { ThisTypeSchema } from './this-type';
+export * from './docs';

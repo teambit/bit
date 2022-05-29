@@ -33,6 +33,10 @@ export type PackageManagerInstallOptions = {
   packageImportMethod?: PackageImportMethod;
 
   sideEffectsCache?: boolean
+
+  engineStrict?: boolean
+
+  nodeVersion?: string
 };
 
 export type PackageManagerGetPeerDependencyIssuesOptions = PackageManagerInstallOptions;

@@ -382,7 +382,7 @@
       },
       "peerDependencies": {
         "@apollo/client": "^3.0.0",
-        "@teambit/legacy": "1.0.272",
+        "@teambit/legacy": "1.0.273",
         "browserslist": "4.16.3",
         "core-js": "^3.10.0",
         "graphql": "14.7.0",
@@ -392,6 +392,8 @@
       }
     },
     "nodeLinker": "hoisted",
+    "nodeVersion": "12.22.0",
+    "engineStrict": true,
     // This is a temporary workaround to fix "bit compile" on macOS and Windows.
     // "bit compile" breaks node_modules when hard links are used.
     "packageImportMethod": "copy",
@@ -461,7 +463,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.272"
+            "@teambit/legacy": "1.0.273"
           }
         }
       },
@@ -726,7 +728,7 @@
           "peerDependencies": {
             "react": "^16.8.0 || ^17.0.0",
             "react-dom": "^16.8.0 || ^17.0.0",
-            "@teambit/legacy": "1.0.272"
+            "@teambit/legacy": "1.0.273"
           }
         }
       }
@@ -799,7 +801,7 @@
         "policy": {
           "dependencies": {
             "@apollo/client": "3.3.6",
-            "@teambit/legacy": "1.0.272",
+            "@teambit/legacy": "1.0.273",
             "graphql": "14.7.0",
             "browserslist": "4.16.3",
             "reflect-metadata": "0.1.13",
@@ -929,7 +931,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.272"
+            "@teambit/legacy": "1.0.273"
           }
         }
       }

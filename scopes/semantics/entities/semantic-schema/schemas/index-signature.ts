@@ -1,7 +1,7 @@
 import { Transform } from 'class-transformer';
 import { Location, SchemaNode } from '../schema-node';
 import { ParameterSchema } from './parameter';
-import { schemaObjArrayToInstances, schemaObjToInstance } from '../schema-obj-to-class';
+import { schemaObjArrayToInstances, schemaObjToInstance } from '../class-transformers';
 
 /**
  * e.g. `{ [key: string]: boolean };`
