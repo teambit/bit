@@ -1488,29 +1488,11 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/code/queries/get-file-content"
     },
-    "ui/react-router/extend-path": {
-        "scope": "teambit.ui-foundation",
-        "version": "0.0.486",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/ui-foundation/react-router/ui/extend-path"
-    },
-    "ui/react-router/link": {
-        "scope": "teambit.ui-foundation",
-        "version": "0.0.489",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/ui-foundation/react-router/ui/link"
-    },
     "ui/react-router/link-anchor": {
         "scope": "teambit.ui-foundation",
         "version": "0.0.123",
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/react-router/ui/link-anchor"
-    },
-    "ui/react-router/nav-link": {
-        "scope": "teambit.ui-foundation",
-        "version": "0.0.489",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/ui-foundation/react-router/ui/nav-link"
     },
     "ui/react-router/slot-router": {
         "scope": "teambit.ui-foundation",

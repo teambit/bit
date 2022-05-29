@@ -1,6 +1,7 @@
 import { ComponentModel, ComponentModelProps } from '@teambit/component';
 import { ScopeModel } from '@teambit/scope.models.scope-model';
 import { ComponentID, ComponentIdObj } from '@teambit/component-id';
+import { affix } from '@teambit/base-ui.utils.string.affix';
 import { pathToRegexp } from 'path-to-regexp';
 /**
  * GQL (lanes/getLanes/components)
@@ -61,19 +62,16 @@ export type LanesModelProps = {
   viewedLane?: LaneModel;
   currentLane?: LaneModel;
 };
+
 /**
  * Represents the entire Lanes State in a Workspace/Scope
  * Provides helper methods to extract and map Lane information
  * Keeps track of all the lanes and the currently selected lane from the UI
  */
 export class LanesModel {
-  static baseLaneRoute = '/~lane';
+  static lanesPrefix = '~lane';
   static baseLaneComponentRoute = '/~component';
-
-  static laneRouteUrlRegex = `${LanesModel.baseLaneRoute}/:orgId([\\w-]+)?/:scopeId([\\w-]+)/:laneId([\\w-]+)`;
-
-  static laneComponentIdUrlRegex = '[\\w\\/-]*[\\w-]';
-  static laneComponentUrlRegex = `${LanesModel.laneRouteUrlRegex}${LanesModel.baseLaneComponentRoute}/:componentId(${LanesModel.laneComponentIdUrlRegex})`;
+  static lanePath = ':scopeId/:laneId';
 
   static drawer = {
     id: 'LANES',
@@ -81,30 +79,27 @@ export class LanesModel {
     order: 100,
   };
 
-  static regexp = pathToRegexp(LanesModel.laneRouteUrlRegex);
+  private static laneFromPathRegex = pathToRegexp(`${LanesModel.lanesPrefix}/${LanesModel.lanePath}`, undefined, {
+    end: false,
+    start: false,
+  });
 
-  static getLaneIdFromPathname: (pathname: string) => string | undefined = (pathname) => {
-    let path = pathname.split(this.baseLaneRoute).pop();
-    if (!path) return undefined;
-
-    // removes sub routes from the pathname
-    path = path.split('~')[0];
-
-    // attach the base lane route
-    path = `${this.baseLaneRoute}${path}`;
-
-    const matches = LanesModel.regexp.exec(path);
+  static getLaneIdFromPathname = (pathname: string): string | undefined => {
+    const matches = LanesModel.laneFromPathRegex.exec(pathname);
     if (!matches) return undefined;
-    const [, orgId, scopeId, laneId] = matches;
-    return `${orgId ? orgId.concat('.').concat(scopeId) : scopeId}/${laneId}`;
+    const [, scopeId, laneId] = matches;
+
+    return `${scopeId}/${laneId}`;
   };
 
-  static getLaneUrl = (laneId: string) => `${LanesModel.baseLaneRoute}/${laneId.replace('.', '/')}`;
+  static getLaneUrl = (laneId: string) => `/${LanesModel.lanesPrefix}/${laneId}`;
 
-  static getLaneComponentUrl = (componentId: ComponentID, laneId: string) =>
-    `${LanesModel.getLaneUrl(laneId)}${LanesModel.baseLaneComponentRoute}/${componentId.fullName}?version=${
-      componentId.version
-    }`;
+  static getLaneComponentUrl = (componentId: ComponentID, laneId: string) => {
+    const laneUrl = LanesModel.getLaneUrl(laneId);
+    const urlSearch = affix('?version=', componentId.version);
+
+    return `${laneUrl}${LanesModel.baseLaneComponentRoute}/${componentId.fullName}${urlSearch}`;
+  };
 
   static mapToLaneModel(laneData: LaneQueryResult, host: string, currentScope?: ScopeModel): LaneModel {
     const { id: name, remote, isMerged, components, readmeComponent } = laneData;
