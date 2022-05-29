@@ -510,7 +510,7 @@ importers:
       react-flow-renderer: 8.3.7
       react-native-web: '>=0.16.0 <0.17.0'
       react-refresh: 0.10.0
-      react-router-dom: '>=6.0.0 <7.0.0'
+      react-router-dom: 6.3.0
       react-syntax-highlighter: 15.4.3
       react-tabs: 3.2.0
       react-test-renderer: 16.14.0
