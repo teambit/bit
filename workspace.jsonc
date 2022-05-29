@@ -112,6 +112,7 @@
         "@teambit/design.ui.icon-button": "1.0.16",
         "@teambit/design.ui.input.option-button": "1.0.0",
         "@teambit/design.ui.input.toggle": "1.0.12",
+        "@teambit/design.ui.separator": "0.0.354",
         "@teambit/design.ui.surfaces.menu.item": "0.0.354",
         "@teambit/design.ui.surfaces.menu.link-item": "0.0.379",
         "@teambit/design.ui.surfaces.menu.section": "0.0.347",
@@ -376,7 +377,7 @@
       },
       "peerDependencies": {
         "@apollo/client": "^3.0.0",
-        "@teambit/legacy": "1.0.272",
+        "@teambit/legacy": "1.0.273",
         "@teambit/base-react.navigation.link": "2.0.27",
         "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
         "browserslist": "4.16.3",
@@ -389,6 +390,8 @@
       }
     },
     "nodeLinker": "hoisted",
+    "nodeVersion": "12.22.0",
+    "engineStrict": true,
     // This is a temporary workaround to fix "bit compile" on macOS and Windows.
     // "bit compile" breaks node_modules when hard links are used.
     "packageImportMethod": "copy",
@@ -458,7 +461,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.272"
+            "@teambit/legacy": "1.0.273"
           }
         }
       },
@@ -723,7 +726,7 @@
           "peerDependencies": {
             "react": "^16.8.0 || ^17.0.0",
             "react-dom": "^16.8.0 || ^17.0.0",
-            "@teambit/legacy": "1.0.272"
+            "@teambit/legacy": "1.0.273"
           }
         }
       }
@@ -796,7 +799,7 @@
         "policy": {
           "dependencies": {
             "@apollo/client": "3.3.6",
-            "@teambit/legacy": "1.0.272",
+            "@teambit/legacy": "1.0.273",
             "graphql": "14.7.0",
             "browserslist": "4.16.3",
             "reflect-metadata": "0.1.13",
@@ -926,7 +929,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.272"
+            "@teambit/legacy": "1.0.273"
           }
         }
       }

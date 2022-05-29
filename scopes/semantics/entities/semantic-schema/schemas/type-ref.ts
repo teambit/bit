@@ -2,7 +2,8 @@ import { Transform } from 'class-transformer';
 import { ComponentID } from '@teambit/component';
 import chalk from 'chalk';
 import { Location, SchemaNode } from '../schema-node';
-import { schemaObjArrayToInstances } from '../schema-obj-to-class';
+import { schemaObjArrayToInstances } from '../class-transformers';
+import { componentIdTransformer } from '../class-transformers/comp-id-transformer';
 
 export type PlainTypeRefSchema = {
   name: string;
@@ -23,6 +24,9 @@ export class TypeRefSchema extends SchemaNode {
    */
   typeArgs?: SchemaNode[];
 
+  @Transform(componentIdTransformer)
+  readonly componentId?: ComponentID;
+
   constructor(
     readonly location: Location,
     /**
@@ -33,7 +37,7 @@ export class TypeRefSchema extends SchemaNode {
     /**
      * target component id. existing if the type is defined in another component.
      */
-    readonly componentId?: ComponentID,
+    componentId?: ComponentID,
 
     /**
      * target package name. existing if type is defined in different package.
@@ -41,6 +45,7 @@ export class TypeRefSchema extends SchemaNode {
     readonly packageName?: string
   ) {
     super();
+    this.componentId = componentId;
   }
 
   toString() {
@@ -70,12 +75,4 @@ export class TypeRefSchema extends SchemaNode {
   isFromThisComponent() {
     return !this.componentId && !this.packageName;
   }
-
-  // static from(plainSchema: PlainTypeRefSchema) {
-  //   return new TypeRefSchema(
-  //     plainSchema.name,
-  //     plainSchema.componentId ? ComponentID.fromString(plainSchema.componentId) : undefined,
-  //     plainSchema.packageName
-  //   );
-  // }
 }

@@ -155,6 +155,9 @@ export default class CommandHelper {
   setConfig(configName: string, configVal: string) {
     return this.runCmd(`bit config set ${configName} ${configVal}`);
   }
+  setScope(scopeName: string, component: string) {
+    return this.runCmd(`bit scope set ${scopeName} ${component}`);
+  }
   setEnv(compId: string, envId: string) {
     return this.runCmd(`bit envs set ${compId} ${envId}`);
   }

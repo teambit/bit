@@ -14,10 +14,6 @@ export function myFunc(a = 4, b = 5): number {
   return a + b;
 }
 
-// import { Bar } from './button';
-
-// export { Button } from './button';
-// export type { ButtonProps } from './button';
 export * from './button';
 
 export function Hi() {}
@@ -59,9 +55,6 @@ export interface Hello {
 }
 
 const obj = { a: 1, b: 2 };
-// export const obj = () => ({ a: 1, b: 2 });
-// export function getObj(a: string) { return { a: 1, b: 2 } };
-// export function getObj(a: string, func: (b: number) => string, { a: any }) { return { a: 1, b: 2 } };
 
 export const a1: typeof obj = { a: 5, b: 9 };
 
@@ -109,3 +102,15 @@ interface config {
   someField: { a: string; b: boolean };
 }
 export type IndexedAccessType = config['someField'];
+
+const computedName = 'str';
+export interface ComputedNameWithType {
+  [computedName]: boolean;
+}
+export interface ComputedNameNoType {
+  [computedName];
+}
+
+type World1 = 'world1-a' | 'world1-b';
+type World2 = 'world2';
+export type templateLiteralType = `hello ${World1} hi ${World2}`;

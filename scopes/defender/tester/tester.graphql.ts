@@ -1,6 +1,7 @@
 import { GraphqlMain, Schema } from '@teambit/graphql';
 import { ComponentFactory } from '@teambit/component';
 import { withFilter } from 'graphql-subscriptions';
+import { BitId } from '@teambit/legacy/dist/bit-id';
 import gql from 'graphql-tag';
 
 import { TesterMain } from './tester.main.runtime';
@@ -66,9 +67,10 @@ export function testerSchema(tester: TesterMain, graphql: GraphqlMain): Schema {
       ComponentHost: {
         getTests: async (host: ComponentFactory, { id }: { id: string }) => {
           const componentId = await host.resolveComponentId(id);
+          const idHasVersion = BitId.parse(id).hasVersion();
           const component = await host.get(componentId);
           if (!component) return null;
-          const testsResults = await tester.getTestsResults(component);
+          const testsResults = await tester.getTestsResults(component, idHasVersion);
           if (!testsResults) return null;
           return testsResults;
         },
