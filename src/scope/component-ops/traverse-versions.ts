@@ -114,6 +114,7 @@ export async function getAllVersionsInfo({
     if (head) await addParentsRecursively(head);
   }
   if (stopped) return results;
+  if (!modelComponent.isLegacy) return results;
   // backward compatibility.
   // components created before v15, might not have head.
   // even if they do have head (as a result of tag/snap after v15), they

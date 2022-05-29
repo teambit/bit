@@ -3,6 +3,7 @@ import fs from 'fs-extra';
 import { APISchema } from '@teambit/semantics.entities.semantic-schema';
 import { loadAspect } from '@teambit/harmony.testing.load-aspect';
 import { mockWorkspace, destroyWorkspace, WorkspaceData } from '@teambit/workspace.testing.mock-workspace';
+import { ComponentID } from '@teambit/component-id';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import { SchemaMain } from './schema.main.runtime';
 import { SchemaAspect } from '.';
@@ -13,6 +14,10 @@ describe('SchemaAspect', function () {
   let workspaceData: WorkspaceData;
   beforeAll(async () => {
     workspaceData = mockWorkspace();
+    const { workspacePath } = workspaceData;
+    // eslint-disable-next-line no-console
+    console.log('workspace created at ', workspacePath);
+    schema = await loadAspect(SchemaAspect, workspacePath);
   });
   afterAll(async () => {
     await destroyWorkspace(workspaceData);
@@ -21,13 +26,11 @@ describe('SchemaAspect', function () {
     let apiSchema: APISchema;
     beforeAll(async () => {
       const { workspacePath } = workspaceData;
-      // eslint-disable-next-line no-console
-      console.log('workspace created at ', workspacePath);
       const compDir = path.join(workspacePath, 'button');
       const src = path.join(getMockDir(), 'button');
       await fs.copy(src, compDir);
       workspace = await loadAspect(WorkspaceAspect, workspacePath);
-      await workspace.track({ rootDir: compDir });
+      await workspace.track({ rootDir: compDir, defaultScope: 'org.scope' });
       await workspace.bitMap.write();
       schema = await loadAspect(SchemaAspect, workspacePath);
       const compId = await workspace.resolveComponentId('button');
@@ -50,6 +53,7 @@ describe('SchemaAspect', function () {
       const json = fs.readJsonSync(jsonPath);
       const apiSchema = schema.getSchemaFromObject(json);
       expect(apiSchema instanceof APISchema).toBeTruthy();
+      expect(apiSchema.componentId instanceof ComponentID).toBeTruthy();
       // @ts-ignore it exists on Jest. for some reason ts assumes this is Jasmine.
       expect(apiSchema.toObject()).toMatchObject(json);
     });

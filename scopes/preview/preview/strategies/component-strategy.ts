@@ -175,7 +175,13 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
 
   private getAssetAbsolutePath(context: BundlerContext, asset: Asset): string {
     const path = this.getOutputPath(context);
-    return join(path, 'public', asset.name);
+    return join(path, 'public', this.getAssetFilename(asset));
+  }
+
+  private getAssetFilename(asset: Asset): string {
+    // handle cases where the asset name is something like my-image.svg?hash (while the filename in the fs is just my-image.svg)
+    const [name] = asset.name.split('?');
+    return name;
   }
 
   copyAssetsToCapsules(context: BundlerContext, result: BundlerResult) {
@@ -193,7 +199,7 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
         if (!existsSync(filePath)) {
           throw new PreviewOutputFileNotFound(component.id, filePath);
         }
-        const destFilePath = join(artifactDirFullPath, asset.name);
+        const destFilePath = join(artifactDirFullPath, this.getAssetFilename(asset));
         mkdirpSync(dirname(destFilePath));
         capsule.fs.copyFileSync(filePath, destFilePath);
       });
