@@ -1363,7 +1363,11 @@ Env2Aspect.addRuntime(EnvMain);
     helper.command.tagAllComponents();
     helper.command.export();
 
-    helper.scopeHelper.reInitLocalScopeHarmony();
+    helper.scopeHelper.reInitLocalScopeHarmony({
+      yarnRCConfig: {
+        unsafeHttpWhitelist: ['localhost'],
+      },
+    });
     helper.scopeHelper.addRemoteScope();
     helper.bitJsonc.setupDefault();
   });

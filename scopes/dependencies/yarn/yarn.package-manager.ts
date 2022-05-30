@@ -117,7 +117,7 @@ export class YarnPackageManager implements PackageManager {
         ...manifests,
       };
     } else if (installOptions.useNesting) {
-      // Nesting in used for scope aspect capsules.
+      // Nesting is used for scope aspect capsules.
       // In a capsule, all peer dependencies should be installed,
       // so we make runtime dependencies from peer dependencies.
       manifests[rootDir].dependencies = {

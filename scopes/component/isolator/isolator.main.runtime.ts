@@ -265,7 +265,7 @@ export class IsolatorMain {
       return capsuleList;
     }
 
-    if (opts.skipIfExists) {
+    if (opts.skipIfExists && !installOptions.useNesting) {
       const existingCapsules = CapsuleList.fromArray(
         capsuleList.filter((capsule) => capsule.fs.existsSync('package.json'))
       );
@@ -277,12 +277,23 @@ export class IsolatorMain {
     await this.writeComponentsInCapsules(components, capsuleList, legacyScope);
     await this.updateWithCurrentPackageJsonData(capsulesWithPackagesData, capsuleList);
     if (installOptions.installPackages) {
-      // When nesting is used, the first component (which is the entry component) is installed in the root
-      // and all other components (which are the dependencies of the entry component) are installed in
-      // a subdirectory.
-      const rootDir = installOptions?.useNesting ? capsuleList[0].path : capsulesDir;
-      await this.installInCapsules(rootDir, capsuleList, installOptions, opts.cachePackagesOnCapsulesRoot ?? false);
-      await this.linkInCapsules(capsulesDir, capsuleList, capsulesWithPackagesData, opts.linkingOptions ?? {});
+      const cachePackagesOnCapsulesRoot = opts.cachePackagesOnCapsulesRoot ?? false
+      const linkingOptions = opts.linkingOptions ?? {}
+      if (installOptions.useNesting) {
+        await Promise.all(capsuleList.map(async (capsule) => {
+          if (opts.skipIfExists && capsule.fs.existsSync('package.json')) return
+          const newCapsuleList = CapsuleList.fromArray([capsule])
+          await this.installInCapsules(capsule.path, newCapsuleList, installOptions, cachePackagesOnCapsulesRoot);
+          await this.linkInCapsules(capsulesDir, newCapsuleList, capsulesWithPackagesData, linkingOptions);
+        }))
+      } else {
+        // When nesting is used, the first component (which is the entry component) is installed in the root
+        // and all other components (which are the dependencies of the entry component) are installed in
+        // a subdirectory.
+        const rootDir = installOptions?.useNesting ? capsuleList[0].path : capsulesDir;
+        await this.installInCapsules(rootDir, capsuleList, installOptions, cachePackagesOnCapsulesRoot);
+        await this.linkInCapsules(capsulesDir, capsuleList, capsulesWithPackagesData, linkingOptions);
+      }
     }
 
     // rewrite the package-json with the component dependencies in it. the original package.json
