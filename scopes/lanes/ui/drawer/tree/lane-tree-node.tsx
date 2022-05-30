@@ -1,4 +1,4 @@
-import { NavLink } from '@teambit/base-ui.routing.nav-link';
+import { Link } from '@teambit/base-react.navigation.link';
 import classNames from 'classnames';
 import React, { useCallback, useContext } from 'react';
 import { TreeContext } from '@teambit/base-ui.graph.tree.tree-context';
@@ -26,7 +26,7 @@ export function LaneTreeNode(props: LaneTreeNodeProps) {
   );
 
   return (
-    <NavLink
+    <Link
       href={LanesModel.getLaneUrl(lane.id)}
       className={classNames(indentClass, styles.lane)}
       activeClassName={styles.active}
@@ -36,6 +36,6 @@ export function LaneTreeNode(props: LaneTreeNodeProps) {
         <Icon of="lane"></Icon>
         <Ellipsis className={styles.laneName}>{lane.name}</Ellipsis>
       </div>
-    </NavLink>
+    </Link>
   );
 }

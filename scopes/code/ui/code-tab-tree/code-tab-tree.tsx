@@ -1,5 +1,6 @@
 import React, { useState, useCallback, HTMLAttributes, useContext } from 'react';
 import classNames from 'classnames';
+import { affix } from '@teambit/base-ui.utils.string.affix';
 import { FileTree } from '@teambit/ui-foundation.ui.tree.file-tree';
 import { DrawerUI } from '@teambit/ui-foundation.ui.tree.drawer';
 import { TreeNode as Node } from '@teambit/ui-foundation.ui.tree.tree-node';
@@ -10,7 +11,6 @@ import { useCodeParams } from '@teambit/code.ui.hooks.use-code-params';
 import { Label } from '@teambit/documenter.ui.label';
 import type { DependencyType } from '@teambit/code.ui.queries.get-component-code';
 import { DependencyTree } from '@teambit/code.ui.dependency-tree';
-import { LanesModel, useLanesContext } from '@teambit/lanes.ui.lanes';
 
 import styles from './code-tab-tree.module.scss';
 
@@ -48,18 +48,16 @@ export function CodeTabTree({
       const urlParams = useCodeParams();
       const children = props.node.children;
       const { selected } = useContext(TreeContext);
-      const lanesContext = useLanesContext();
 
-      const currentLaneUrl = lanesContext?.viewedLane
-        ? `${LanesModel.getLaneUrl(lanesContext?.viewedLane.id)}${LanesModel.baseLaneComponentRoute}`
-        : '';
-      const version = urlParams.version ? `?version=${urlParams.version}` : '';
-      const href = `${currentLaneUrl}/${urlParams.componentId}/~code/${props.node.id}${version}`;
+      const fileUrl = `${props.node.id}${affix('?version=', urlParams.version)}`;
+      // (for reference - absolute url)
+      // const href = `${currentLaneUrl}${toPathname(component.id)}/~code/${fileUrl}`
+
       const widgets = getWidgets(props.node.id, mainFile, devFiles);
       if (!children) {
         return (
           <Node
-            href={href}
+            href={`./${fileUrl}`}
             {...props}
             isActive={props.node.id === selected}
             icon={getFileIcon(fileIconMatchers, props.node.id)}

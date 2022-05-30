@@ -1,5 +1,5 @@
 import { ComponentTreeSlot } from '@teambit/component-tree';
-import { NavLink } from '@teambit/base-ui.routing.nav-link';
+import { Link } from '@teambit/base-react.navigation.link';
 import { EnvIcon } from '@teambit/envs.ui.env-icon';
 import { DeprecationIcon } from '@teambit/component.ui.deprecation-icon';
 import classNames from 'classnames';
@@ -36,7 +36,7 @@ export function ComponentView(props: ComponentViewProps<PayloadType>) {
   const envId = ComponentID.fromString(component.environment?.id as string);
 
   const envTooltip = (
-    <NavLink
+    <Link
       className={styles.envLink}
       href={ComponentUrl.toUrl(envId, { includeVersion: true })}
       external={true}
@@ -47,11 +47,11 @@ export function ComponentView(props: ComponentViewProps<PayloadType>) {
     >
       <div className={styles.componentEnvTitle}>Environment</div>
       <div>{component.environment?.id}</div>
-    </NavLink>
+    </Link>
   );
 
   return (
-    <NavLink
+    <Link
       href={`/${component.id.fullName}`}
       className={classNames(indentClass, styles.component)}
       activeClassName={styles.active}
@@ -71,6 +71,6 @@ export function ComponentView(props: ComponentViewProps<PayloadType>) {
         {props.treeNodeSlot &&
           props.treeNodeSlot.toArray().map(([id, treeNode]) => <treeNode.widget key={id} component={component} />)}
       </div>
-    </NavLink>
+    </Link>
   );
 }
