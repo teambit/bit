@@ -15,6 +15,7 @@ export type { Author } from './snap/author';
 // TODO: check why it's not working when using the index in tag dir like this:
 // export { Tag } from './tag';
 export { Tag, TagProps } from './tag/tag';
+export type { IComponent } from './component-interface';
 export { State } from './state';
 export type { Hash } from './hash';
 export { TagMap } from './tag-map';

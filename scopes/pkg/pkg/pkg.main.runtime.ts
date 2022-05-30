@@ -2,7 +2,7 @@ import { compact, omit } from 'lodash';
 import { join } from 'path';
 import fs from 'fs-extra';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import ComponentAspect, { Component, ComponentMain, Snap } from '@teambit/component';
+import ComponentAspect, { Component, ComponentMain, IComponent, Snap } from '@teambit/component';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { IsolatorAspect, IsolatorMain } from '@teambit/isolator';
@@ -384,8 +384,8 @@ export class PkgMain implements CloneConfig {
    * This will usually determined by the latest version of the component
    * @param component
    */
-  isPublishedToExternalRegistry(component: Component): boolean {
-    const pkgExt = component.state.aspects.get(PkgAspect.id);
+  isPublishedToExternalRegistry(component: IComponent): boolean {
+    const pkgExt = component.get(PkgAspect.id);
     // By default publish to bit registry
     if (!pkgExt) return false;
     return !!(pkgExt.config?.packageJson?.name || pkgExt.config?.packageJson?.publishConfig);
