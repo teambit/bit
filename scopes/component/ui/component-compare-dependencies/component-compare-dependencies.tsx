@@ -22,6 +22,7 @@ import ReactFlow, {
   Position,
   ReactFlowProvider,
 } from 'react-flow-renderer';
+import { ComponentID } from '@teambit/component';
 import { CompareGraphModel } from './compare-graph-model';
 import { CompareNodeModel } from './compare-node-model';
 import styles from './component-compare-dependencies.module.scss';
@@ -41,22 +42,26 @@ function ComponentNodeContainer(props: NodeProps) {
 
 const NodeTypes: NodeTypesType = { ComponentNode: ComponentNodeContainer };
 
-function buildGraph(baseGraph?: GraphModel, compareGraph?: GraphModel) {
-  if (!baseGraph || !compareGraph) return null;
+function buildGraph(baseGraph?: GraphModel, compareGraph?: GraphModel, baseId?: ComponentID) {
+  if (!baseGraph || !compareGraph || !baseId) return null;
 
   // this is to get a key with versions ignored so that we'll have a unique set of component nodes
-  const getIdWithoutVersion = (node: NodeModel) => node.component.id.toStringWithoutVersion();
-  const getEdgeId = (e: EdgeModel) => `${e.sourceId.split('@')[0]} | ${e.targetId.split('@')[0]}`;
+  const getIdWithoutVersionFromNode = (node: NodeModel) => node.component.id.toStringWithoutVersion();
+  const getIdWithoutVersionFromNodeId = (nodeId: string) => nodeId.split('@')[0];
+  const delim = '::';
+  const getEdgeId = (_e: EdgeModel) => {
+    return `${getIdWithoutVersionFromNodeId(_e.sourceId)}${delim}${getIdWithoutVersionFromNodeId(_e.targetId)}`;
+  };
 
   const baseNodes = baseGraph.nodes;
   const compareNodes = compareGraph.nodes;
 
-  const baseNodesMap = new Map<string, NodeModel>(baseNodes.map((n) => [getIdWithoutVersion(n), n]));
-  const compareNodesMap = new Map<string, NodeModel>(compareNodes.map((n) => [getIdWithoutVersion(n), n]));
+  const baseNodesMap = new Map<string, NodeModel>(baseNodes.map((n) => [getIdWithoutVersionFromNode(n), n]));
+  const compareNodesMap = new Map<string, NodeModel>(compareNodes.map((n) => [getIdWithoutVersionFromNode(n), n]));
 
   const allNodes: Array<CompareNodeModel> = [];
   for (const baseNode of baseNodes) {
-    const compareNode = compareNodesMap.get(getIdWithoutVersion(baseNode));
+    const compareNode = compareNodesMap.get(getIdWithoutVersionFromNode(baseNode));
     if (compareNode) {
       allNodes.push({
         ...baseNode,
@@ -72,19 +77,28 @@ function buildGraph(baseGraph?: GraphModel, compareGraph?: GraphModel) {
     }
   }
 
-  const newNodes = compareNodes.filter((n) => !baseNodesMap.has(getIdWithoutVersion(n)));
+  const newNodes = compareNodes.filter((n) => !baseNodesMap.has(getIdWithoutVersionFromNode(n)));
+
   for (const node of newNodes) {
     allNodes.push({
       ...node,
-      compareVersion: node.component.version,
+      compareVersion: '',
       status: 'new',
     });
   }
+  const allNodesMap = new Map<string, CompareNodeModel>(allNodes.map((n) => [getIdWithoutVersionFromNode(n), n]));
 
-  const baseEdgesMap = new Map<string, EdgeModel>(baseGraph.edges.map((e) => [getEdgeId(e), e]));
-  const edgesOnlyInCompare = compareGraph.edges.filter((e) => !baseEdgesMap.has(getEdgeId(e)));
+  const baseEdgesMap = new Map<string, EdgeModel>(baseGraph.edges.map((baseEdge) => [getEdgeId(baseEdge), baseEdge]));
+  const edgesOnlyInCompare = compareGraph.edges
+    .filter((compareEdge) => !baseEdgesMap.has(getEdgeId(compareEdge)))
+    .map((compareEdge) => ({
+      ...compareEdge,
+      sourceId:
+        allNodesMap.get(getIdWithoutVersionFromNodeId(compareEdge.sourceId))?.id.toString() || baseId.toString(),
+      targetId:
+        allNodesMap.get(getIdWithoutVersionFromNodeId(compareEdge.targetId))?.id.toString() || baseId.toString(),
+    }));
   const allEdges = [...baseGraph.edges, ...edgesOnlyInCompare];
-
   return new CompareGraphModel(allNodes, allEdges);
 }
 
@@ -100,7 +114,7 @@ export function ComponentCompareDependencies() {
   const { loading: baseLoading, graph: baseGraph } = useGraphQuery(baseId && [baseId.toString()], filter);
   const { loading: compareLoading, graph: compareGraph } = useGraphQuery(compareId && [compareId.toString()], filter);
   const loading = baseLoading || compareLoading;
-  const graph = buildGraph(baseGraph, compareGraph) ?? undefined;
+  const graph = buildGraph(baseGraph, compareGraph, baseId) ?? undefined;
   const elements = calcElements(graph, { rootNode: baseId });
 
   useEffect(() => {

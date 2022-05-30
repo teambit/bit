@@ -44,11 +44,13 @@ export function ComponentCompareDependencyNode(props: ComponentCompareDependency
           <span className={classnames(styles.name, ellipsis)}>{baseId.name}</span>
         </NavLink>
         {baseId.version && <span className={classnames(styles.version, ellipsis)}>{baseId.version}</span>}
-        <img
-          className={classnames([styles.arrowIcon, styles.versionUp])}
-          src="https://static.bit.dev/bit-icons/version-bump.svg"
-        />
-        {compareVersion && (
+        {(versionDiff === -1 || versionDiff === 1) && (
+          <img
+            className={classnames([styles.arrowIcon, styles.versionUp])}
+            src="https://static.bit.dev/bit-icons/version-bump.svg"
+          />
+        )}
+        {compareVersion && (versionDiff === -1 || versionDiff === 1) && (
           <span
             className={classnames(
               styles.version,
