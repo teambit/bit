@@ -8,8 +8,7 @@ import { ComponentOverview, TitleBadge } from '@teambit/component.ui.component-m
 import { LaneBreadcrumb, useLanesContext } from '@teambit/lanes.ui.lanes';
 import { Separator } from '@teambit/design.ui.separator';
 import styles from './overview.module.scss';
-
-const ENV_LIST_WITH_DOCS_TEMPLATE = ['react', 'env', 'aspect', 'lit', 'html', 'node', 'mdx', 'react-native', 'readme']; // envs using react based docs
+import { hasLegacyDocs } from './legacy-docs';
 
 const ENV_ASPECT_NAME = 'teambit.envs/envs';
 
@@ -25,9 +24,8 @@ export function Overview({ titleBadges }: OverviewProps) {
   const lanesModel = useLanesContext();
   const currentLane = lanesModel?.viewedLane;
 
-  const envType: string = componentDescriptor?.get<any>(ENV_ASPECT_NAME)?.type;
-  const showHeaderOutsideIframe =
-    component?.preview?.includesEnvTemplate === false || !ENV_LIST_WITH_DOCS_TEMPLATE.includes(envType);
+  const envType = componentDescriptor?.get<any>(ENV_ASPECT_NAME)?.type;
+  const showHeader = !hasLegacyDocs(component, envType);
 
   if (component?.buildStatus === 'pending' && component?.host === 'teambit.scope/scope')
     return (
@@ -35,22 +33,15 @@ export function Overview({ titleBadges }: OverviewProps) {
         this might take some time
       </StatusMessageCard>
     );
+
   if (component?.buildStatus === 'failed' && component?.host === 'teambit.scope/scope')
-    return (
-      <StatusMessageCard
-        style={{ margin: 'auto' }}
-        status="FAILURE"
-        title="failed to get component preview "
-      ></StatusMessageCard>
-    );
+    return <StatusMessageCard style={{ margin: 'auto' }} status="FAILURE" title="failed to get component preview " />;
 
-  if (showHeaderOutsideIframe) {
-    const badges = flatten(titleBadges.values());
-
-    return (
-      <div className={styles.overviewWrapper}>
-        <LaneBreadcrumb lane={currentLane} />
-        <Separator isPresentational />
+  return (
+    <div className={styles.overviewWrapper}>
+      {currentLane && <LaneBreadcrumb lane={currentLane} />}
+      {currentLane && <Separator isPresentational />}
+      {showHeader && (
         <ComponentOverview
           className={styles.componentOverviewBlock}
           displayName={component.displayName}
@@ -58,25 +49,11 @@ export function Overview({ titleBadges }: OverviewProps) {
           abstract={component.description}
           labels={component.labels}
           packageName={component.packageName}
-          titleBadges={badges}
+          titleBadges={flatten(titleBadges.values())}
           componentDescriptor={componentDescriptor}
           deprecation={component.deprecation}
         />
-        <ComponentPreview
-          component={component}
-          style={{ width: '100%', height: '100%' }}
-          previewName="overview"
-          fullContentHeight
-          scrolling="no"
-        />
-      </div>
-    );
-  }
-
-  return currentLane ? (
-    <div className={styles.overviewWrapper}>
-      <LaneBreadcrumb lane={currentLane} />
-      <Separator isPresentational />
+      )}
       <ComponentPreview
         component={component}
         style={{ width: '100%', height: '100%' }}
@@ -85,12 +62,5 @@ export function Overview({ titleBadges }: OverviewProps) {
         scrolling="no"
       />
     </div>
-  ) : (
-    <ComponentPreview
-      component={component}
-      style={{ width: '100%', height: '100%' }}
-      previewName="overview"
-      fullContentHeight
-    />
   );
 }

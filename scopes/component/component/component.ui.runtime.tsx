@@ -269,7 +269,10 @@ export class ComponentUI {
       commandBarUI,
       reactRouterUI
     );
+<<<<<<< HEAD
     const section = new AspectSection();
+=======
+>>>>>>> origin/master
     const aspectSection = new AspectSection();
 
     // @ts-ignore
@@ -278,8 +281,11 @@ export class ComponentUI {
     componentUI.commandBarUI.addCommand(...componentUI.keyBindings);
     commandBarUI.addSearcher(componentUI.componentSearcher);
     componentUI.registerMenuItem(componentUI.menuItems);
+<<<<<<< HEAD
     componentUI.registerRoute([section.route]);
     componentUI.registerWidget(section.navigationLink, section.order);
+=======
+>>>>>>> origin/master
     componentUI.registerRoute(aspectSection.route);
     componentUI.registerWidget(aspectSection.navigationLink, aspectSection.order);
     componentUI.registerConsumeMethod(componentUI.bitMethod);
