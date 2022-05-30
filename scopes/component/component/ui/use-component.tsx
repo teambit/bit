@@ -14,7 +14,6 @@ export type Component = {
 };
 
 export function useComponent(host: string, id?: string | ComponentID): Component {
-<<<<<<< HEAD
   const lanesContext = useLanesContext();
 
   const query = useQuery();
@@ -26,15 +25,8 @@ export function useComponent(host: string, id?: string | ComponentID): Component
   const version =
     (typeof id === 'string' && id.split('@')[1]) || (id as ComponentID | undefined)?.version || versionFromUrl;
 
-=======
-  const query = useQuery();
-  const version = query.get('version') || undefined;
-  const lanesContext = useLanesContext();
-
-  const targetId =
-    (typeof id === 'string' && id) || (typeof id !== 'undefined' && id.toString({ ignoreVersion: true }));
->>>>>>> origin/master
   if (!targetId) throw new TypeError('useComponent received no component id');
+  
   const currentLane = lanesContext?.viewedLane;
   // when on a lane, always fetch all the logs starting from the 'head' version
   const laneComponentId = lanesContext?.viewedLane?.components.find(
