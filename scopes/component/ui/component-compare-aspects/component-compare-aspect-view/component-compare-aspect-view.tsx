@@ -16,7 +16,7 @@ export type ComponentCompareAspectViewProps = {
 export function ComponentCompareAspectView({
   baseAspectData,
   compareAspectData,
-  loading,
+  // loading,
   name,
   className,
 }: ComponentCompareAspectViewProps) {
