@@ -67,8 +67,8 @@ export class CompilerMain {
    */
   getRelativeDistFolder(component: Component): string {
     const environment = this.envs.getOrCalculateEnv(component).env;
-    const compilerInstance = environment.getCompiler?.();
-    if (!compilerInstance) return DEFAULT_DIST_DIRNAME;
+    const compilerInstance: Compiler | undefined = environment.getCompiler?.();
+    if (!compilerInstance || !compilerInstance.getDistDir) return DEFAULT_DIST_DIRNAME;
     return compilerInstance.getDistDir();
   }
 

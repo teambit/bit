@@ -170,7 +170,7 @@ export async function install(
     overrides?: Record<string, string>;
     rootComponents?: boolean;
     rootComponentsForCapsules?: boolean;
-  } & Pick<InstallOptions, 'publicHoistPattern' | 'hoistPattern'> &
+  } & Pick<InstallOptions, 'publicHoistPattern' | 'hoistPattern' | 'nodeVersion' | 'engineStrict'> &
     Pick<CreateStoreControllerOptions, 'packageImportMethod'>,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   logger?: Logger

@@ -1,9 +1,10 @@
 import ts, { Node } from 'typescript';
 import { SchemaExtractor } from '@teambit/schema';
 import { TsserverClient } from '@teambit/ts-server';
+import type { Workspace } from '@teambit/workspace';
+import { ComponentDependency, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { SchemaNode, APISchema, Module } from '@teambit/semantics.entities.semantic-schema';
 import { Component } from '@teambit/component';
-// @ts-ignore david what to do?
 import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 import { flatten } from 'lodash';
 import { TypescriptMain, SchemaTransformerSlot } from './typescript.main.runtime';
@@ -16,7 +17,9 @@ export class TypeScriptExtractor implements SchemaExtractor {
     private tsconfig: any,
     private schemaTransformerSlot: SchemaTransformerSlot,
     private tsMain: TypescriptMain,
-    private rootPath: string
+    private rootPath: string,
+    private depResolver: DependencyResolverMain,
+    private workspace: Workspace | undefined
   ) {}
 
   parseSourceFile(file: AbstractVinyl) {
@@ -36,7 +39,7 @@ export class TypeScriptExtractor implements SchemaExtractor {
     const tsserver = await this.getTsServer();
     const mainFile = component.mainFile;
     const mainAst = this.parseSourceFile(mainFile);
-    const context = this.createContext(tsserver, component);
+    const context = await this.createContext(tsserver, component);
     const exportNames = await this.computeExportedIdentifiers(mainAst, context);
     context.setExports(new ExportList(exportNames));
     const moduleSchema = (await this.computeSchema(mainAst, context)) as Module;
@@ -44,17 +47,26 @@ export class TypeScriptExtractor implements SchemaExtractor {
     const apiScheme = moduleSchema;
     const location = context.getLocation(mainAst);
 
-    return new APISchema(location, apiScheme);
+    return new APISchema(location, apiScheme, component.id);
   }
 
   async computeExportedIdentifiers(node: Node, context: SchemaExtractorContext) {
-    const transformer = this.getTransformer(node, context.component);
-    if (!transformer || !transformer.getIdentifiers) throw new TransformerNotFound(node, context.component);
+    const transformer = this.getTransformer(node, context);
+    if (!transformer || !transformer.getIdentifiers) {
+      throw new TransformerNotFound(node, context.component, context.getLocation(node));
+    }
     return transformer.getIdentifiers(node, context);
   }
 
-  private createContext(tsserver: TsserverClient, component: Component): SchemaExtractorContext {
-    return new SchemaExtractorContext(tsserver, component, this);
+  private async createContext(tsserver: TsserverClient, component: Component): Promise<SchemaExtractorContext> {
+    const componentDeps = await this.getComponentDeps(component);
+    return new SchemaExtractorContext(tsserver, component, this, componentDeps);
+  }
+
+  private async getComponentDeps(component: Component): Promise<ComponentDependency[]> {
+    const deps = await this.depResolver.getDependencies(component);
+    const componentDeps = deps.getComponentDependencies();
+    return componentDeps;
   }
 
   private tsserver: TsserverClient | undefined = undefined;
@@ -75,20 +87,27 @@ export class TypeScriptExtractor implements SchemaExtractor {
   }
 
   async computeSchema(node: Node, context: SchemaExtractorContext): Promise<SchemaNode> {
-    const transformer = this.getTransformer(node, context.component);
+    const transformer = this.getTransformer(node, context);
     // leave the next line commented out, it is used for debugging
     // console.log('transformer', transformer.constructor.name, node.getText());
     return transformer.transform(node, context);
   }
 
+  async getComponentIDByPath(file: string) {
+    if (!this.workspace) {
+      return null;
+    }
+    return this.workspace.getComponentIdByPath(file);
+  }
+
   /**
    * select the correct transformer for a node.
    */
-  private getTransformer(node: Node, component: Component) {
+  private getTransformer(node: Node, context: SchemaExtractorContext) {
     const transformers = flatten(this.schemaTransformerSlot.values());
     const transformer = transformers.find((singleTransformer) => singleTransformer.predicate(node));
 
-    if (!transformer) throw new TransformerNotFound(node, component);
+    if (!transformer) throw new TransformerNotFound(node, context.component, context.getLocation(node));
 
     return transformer;
   }

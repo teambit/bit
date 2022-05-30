@@ -155,6 +155,9 @@ export default class CommandHelper {
   setConfig(configName: string, configVal: string) {
     return this.runCmd(`bit config set ${configName} ${configVal}`);
   }
+  setScope(scopeName: string, component: string) {
+    return this.runCmd(`bit scope set ${scopeName} ${component}`);
+  }
   setEnv(compId: string, envId: string) {
     return this.runCmd(`bit envs set ${compId} ${envId}`);
   }
@@ -185,6 +188,9 @@ export default class CommandHelper {
   }
   fork(sourceId: string, values = '') {
     return this.runCmd(`bit fork ${sourceId} ${values}`);
+  }
+  forkScope(originalScope: string, newScope: string) {
+    return this.runCmd(`bit scope fork ${originalScope} ${newScope}`);
   }
   rename(sourceId: string, targetId: string, flags = '') {
     return this.runCmd(`bit rename ${sourceId} ${targetId} ${flags}`);

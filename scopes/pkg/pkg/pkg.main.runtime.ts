@@ -77,14 +77,14 @@ export type ComponentPkgExtensionData = {
   checksum?: string;
 };
 
-type ComponentPackageManifest = {
+export type ComponentPackageManifest = {
   name: string;
   distTags: Record<string, string>;
   externalRegistry: boolean;
   versions: VersionPackageManifest[];
 };
 
-type VersionPackageManifest = {
+export type VersionPackageManifest = {
   [key: string]: any;
   dist: {
     tarball: string;

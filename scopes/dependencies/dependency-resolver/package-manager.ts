@@ -41,6 +41,10 @@ export type PackageManagerInstallOptions = {
   keepExistingModulesDir?: boolean;
 
   sideEffectsCache?: boolean;
+
+  engineStrict?: boolean;
+
+  nodeVersion?: string;
 };
 
 export type PackageManagerGetPeerDependencyIssuesOptions = PackageManagerInstallOptions;

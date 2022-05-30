@@ -1,6 +1,7 @@
 import { uniqBy, property } from 'lodash';
 import { Dependency, DependencyLifecycleType, SerializedDependency, SemverVersion, PackageName } from './dependency';
 import { KEY_NAME_BY_LIFECYCLE_TYPE } from './constants';
+import { ComponentDependency } from './component-dependency';
 
 export type LifecycleDependenciesManifest = Record<PackageName, SemverVersion>;
 
@@ -68,6 +69,10 @@ export class DependencyList {
       return dep.serialize();
     });
     return serialized;
+  }
+
+  getComponentDependencies(): ComponentDependency[] {
+    return this.dependencies.filter((dep) => dep instanceof ComponentDependency) as ComponentDependency[];
   }
 
   toDependenciesManifest(): Required<DependenciesManifest> {

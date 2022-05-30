@@ -1,5 +1,5 @@
 import React, { ReactNode } from 'react';
-import { RouteProps } from 'react-router-dom';
+import { Route, RouteProps } from 'react-router-dom';
 import { Slot, Harmony } from '@teambit/harmony';
 import { UIRuntime, UiUI, UIAspect } from '@teambit/ui';
 import { LanesAspect } from '@teambit/lanes';
@@ -19,6 +19,7 @@ import {
   LanesNavPlugin,
   LaneReadmeOverview,
 } from '@teambit/lanes.ui.lanes';
+import { NotFoundPage } from '@teambit/design.ui.pages.not-found';
 import ScopeAspect, { ScopeUI } from '@teambit/scope';
 import WorkspaceAspect, { WorkspaceUI } from '@teambit/workspace';
 import ComponentAspect, { ComponentUI } from '@teambit/component';
@@ -60,31 +61,42 @@ export class LanesUI {
     if (!this.hostAspect) return;
     this.hostAspect.registerRoutes([
       {
-        path: LanesModel.laneComponentUrlRegex,
-        children: this.componentUi.getComponentUI(this.host),
-      },
-      {
-        path: `${LanesModel.laneRouteUrlRegex}/~readme`,
-        children: <LaneReadmeOverview host={this.host} overviewSlot={this.overviewSlot} routeSlot={this.routeSlot} />,
-      },
-      {
-        path: `${LanesModel.laneRouteUrlRegex}/~gallery`,
-        children: <LaneGallery routeSlot={this.routeSlot} overviewSlot={this.overviewSlot} host={this.lanesHost} />,
-      },
-      {
-        exact: true,
-        path: `${LanesModel.laneRouteUrlRegex}`,
-        children: <LaneReadmeOverview host={this.host} overviewSlot={this.overviewSlot} routeSlot={this.routeSlot} />,
+        path: LanesModel.lanesPrefix,
+        children: (
+          <>
+            <Route path={LanesModel.lanePath}>
+              <Route
+                index
+                element={
+                  <LaneReadmeOverview host={this.host} overviewSlot={this.overviewSlot} routeSlot={this.routeSlot} />
+                }
+              />
+              <Route
+                path="~gallery"
+                element={
+                  <LaneGallery routeSlot={this.routeSlot} overviewSlot={this.overviewSlot} host={this.lanesHost} />
+                }
+              />
+              <Route path="~component/*" element={this.componentUi.getComponentUI(this.host)} />
+              <Route path="*" element={<NotFoundPage />} />
+            </Route>
+            <Route path="*" element={<NotFoundPage />} />
+          </>
+        ),
       },
     ]);
     this.hostAspect.registerMenuRoutes([
       {
-        path: LanesModel.laneComponentUrlRegex,
-        children: this.componentUi.getMenu(this.host),
-      },
-      {
-        path: LanesModel.laneRouteUrlRegex,
-        children: <LanesOverviewMenu navigationSlot={this.navSlot} widgetSlot={this.menuWidgetSlot} />,
+        path: LanesModel.lanesPrefix,
+        children: (
+          <Route path={`${LanesModel.lanePath}/*`}>
+            <Route
+              path="*"
+              element={<LanesOverviewMenu navigationSlot={this.navSlot} widgetSlot={this.menuWidgetSlot} />}
+            />
+            <Route path="~component/*" element={this.componentUi.getMenu(this.host)} />
+          </Route>
+        ),
       },
     ]);
   }
@@ -97,7 +109,8 @@ export class LanesUI {
     this.registerNavigation([
       {
         props: {
-          href: '',
+          href: '.',
+          exact: true,
           children: 'README',
         },
         order: 1,
@@ -110,6 +123,7 @@ export class LanesUI {
         props: {
           href: '~gallery',
           children: 'Gallery',
+          exact: true,
         },
         order: 1,
       },

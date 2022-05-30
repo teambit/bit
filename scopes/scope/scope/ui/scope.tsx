@@ -79,10 +79,9 @@ export function Scope({
               />
             </HoverSplitter>
             <Pane>
-              <SlotRouter slot={routeSlot} />
-              <Route exact path="/">
-                <ScopeOverview badgeSlot={badgeSlot} overviewSlot={overviewLineSlot} />
-              </Route>
+              <SlotRouter slot={routeSlot}>
+                <Route index element={<ScopeOverview badgeSlot={badgeSlot} overviewSlot={overviewLineSlot} />} />
+              </SlotRouter>
             </Pane>
           </SplitPane>
         </div>

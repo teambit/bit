@@ -68,7 +68,12 @@ import { NoComponentDir } from '@teambit/legacy/dist/consumer/component/exceptio
 import { ExtensionDataList, ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config/extension-data';
 import { pathIsInside } from '@teambit/legacy/dist/utils';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
-import { PathOsBased, PathOsBasedRelative, PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
+import {
+  PathOsBased,
+  PathOsBasedRelative,
+  PathOsBasedAbsolute,
+  pathNormalizeToLinux,
+} from '@teambit/legacy/dist/utils/path';
 import fs from 'fs-extra';
 import { slice, uniqBy, difference, compact, pick, partition, isEmpty } from 'lodash';
 import path from 'path';
@@ -1845,6 +1850,19 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
     });
     const res = await linker.link(this.path, mergedRootPolicy, compDirMap, options);
     return res;
+  }
+
+  /**
+   * @param componentPath can be relative or absolute. supports Linux and Windows
+   */
+  async getComponentIdByPath(componentPath: PathOsBased): Promise<ComponentID | undefined> {
+    const relativePath = path.isAbsolute(componentPath) ? path.relative(this.path, componentPath) : componentPath;
+    const linuxPath = pathNormalizeToLinux(relativePath);
+    const bitId = this.consumer.bitMap.getComponentIdByPath(linuxPath);
+    if (bitId) {
+      return this.resolveComponentId(bitId);
+    }
+    return undefined;
   }
 
   /**
