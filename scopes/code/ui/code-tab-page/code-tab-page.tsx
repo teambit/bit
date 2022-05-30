@@ -19,15 +19,11 @@ type CodePageProps = {
 } & HTMLAttributes<HTMLDivElement>;
 
 export function CodePage({ className, fileIconSlot }: CodePageProps) {
-  const fileName = useCodeParams();
+  const urlParams = useCodeParams();
   const component = useContext(ComponentContext);
   const { mainFile, fileTree = [], dependencies, devFiles } = useCode(component.id);
 
-  const fileFromUrl = useMemo(() => {
-    return fileName.file;
-  }, [fileName]);
-
-  const currentFile = fileFromUrl || mainFile;
+  const currentFile = urlParams.file || mainFile;
   const isMobile = useIsMobile();
   const [isSidebarOpen, setSidebarOpenness] = useState(!isMobile);
   const sidebarOpenness = isSidebarOpen ? Layout.row : Layout.left;
