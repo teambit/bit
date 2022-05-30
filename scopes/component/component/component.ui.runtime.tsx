@@ -272,7 +272,6 @@ export class ComponentUI {
     const aspectSection = new AspectSection();
     // @ts-ignore
     componentUI.registerSearchResultWidget({ key: 'deprecation', end: DeprecationIcon });
-
     componentUI.commandBarUI.addCommand(...componentUI.keyBindings);
     commandBarUI.addSearcher(componentUI.componentSearcher);
     componentUI.registerMenuItem(componentUI.menuItems);
