@@ -600,6 +600,7 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
         `failed loading aspects from capsules due to MODULE_NOT_FOUND error, re-creating the capsules and trying again`
       );
       const resolvedAspectsAgain = await this.getResolvedAspects(components, {
+        ...opts,
         skipIfExists: false,
       });
       const manifestAgain = await requireWithCatch(resolvedAspectsAgain);
