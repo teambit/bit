@@ -1,8 +1,9 @@
-import React, { useMemo } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import React, { ReactNode, useMemo } from 'react';
+import { useResolvedPath } from 'react-router-dom';
 import classnames from 'classnames';
 import { Icon } from '@teambit/design.elements.icon';
 import { Dropdown } from '@teambit/design.inputs.dropdown';
+import { useLocation } from '@teambit/base-react.navigation.link';
 import { TopBarNav } from '../top-bar-nav';
 import styles from './menu.module.scss';
 import mobileStyles from './mobile-menu-nav.module.scss';
@@ -64,21 +65,44 @@ type PlaceholderProps = {
 function Placeholder({ slots, ...rest }: PlaceholderProps) {
   return (
     <div {...rest} className={mobileStyles.placeholder}>
-      <Routes>
-        {slots?.map(([id, menuItem]) => (
-          <Route
-            key={id}
-            path={hrefToPath(menuItem.props.href)}
-            element={typeof menuItem.props.children === 'string' ? menuItem.props.children : menuItem.props.displayName}
-          />
-        ))}
-      </Routes>
+      {slots.map(([id, menuItem]) => (
+        <ShowWhenMatch key={id} href={menuItem.props.href || ''} end={menuItem.props.exact}>
+          {typeof menuItem.props.children === 'string' ? menuItem.props.children : menuItem.props.displayName}
+        </ShowWhenMatch>
+      ))}
       <Icon of="fat-arrow-down" />
     </div>
   );
 }
 
-function hrefToPath(href?: string) {
-  if (href === '.') return '/';
-  return href ?? '/';
+function ShowWhenMatch({
+  href,
+  children,
+  caseSensitive,
+  end: exact,
+}: {
+  href: string;
+  children: ReactNode;
+  caseSensitive?: boolean;
+  end?: boolean;
+}) {
+  const isMatch = useLinkMatch(href, { caseSensitive, exact });
+  if (!isMatch) return null;
+  return <>{children}</>;
+}
+
+function useLinkMatch(href: string, { caseSensitive, exact }: { caseSensitive?: boolean; exact?: boolean } = {}) {
+  const location = useLocation();
+  let pathname = location?.pathname || '/';
+  let destination = useResolvedPath(href).pathname;
+
+  if (!caseSensitive) {
+    pathname = pathname.toLowerCase();
+    destination = destination.toLowerCase();
+  }
+
+  return (
+    destination === pathname ||
+    (!exact && pathname.startsWith(destination) && pathname.charAt(destination.length) === '/')
+  );
 }
