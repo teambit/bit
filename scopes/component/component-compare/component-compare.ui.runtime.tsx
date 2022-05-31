@@ -1,6 +1,6 @@
 import { NavLinkProps } from '@teambit/base-ui.routing.nav-link';
 import ComponentAspect, { ComponentUI } from '@teambit/component';
-import { ComponentCompare } from '@teambit/component.ui.component-compare';
+import { ComponentCompare } from '@teambit/component.ui.compare';
 import { Harmony, Slot, SlotRegistry } from '@teambit/harmony';
 import { UIRuntime } from '@teambit/ui';
 import { RouteSlot } from '@teambit/ui-foundation.ui.react-router.slot-router';

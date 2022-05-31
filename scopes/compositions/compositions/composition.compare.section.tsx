@@ -1,7 +1,7 @@
 import React from 'react';
 import { EmptyStateSlot } from '@teambit/compositions';
 import { Section } from '@teambit/component';
-import { ComponentCompareComposition } from '@teambit/component.ui.component-compare-composition';
+import { CompositionCompare } from '@teambit/compositions.ui.composition-compare';
 
 export class CompositionCompareSection implements Section {
   constructor(private emptyStateSlot: EmptyStateSlot) {}
@@ -14,6 +14,6 @@ export class CompositionCompareSection implements Section {
 
   route = {
     path: 'compositions/*',
-    element: <ComponentCompareComposition emptyState={this.emptyStateSlot} />,
+    element: <CompositionCompare emptyState={this.emptyStateSlot} />,
   };
 }

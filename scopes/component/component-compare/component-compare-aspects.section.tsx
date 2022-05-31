@@ -1,6 +1,6 @@
 import React from 'react';
 import { Section } from '@teambit/component';
-import { ComponentCompareAspects } from '@teambit/component.ui.component-compare-aspects';
+import { ComponentCompareAspects } from '@teambit/component.ui.compare';
 
 export class AspectsCompareSection implements Section {
   constructor(private host: string) {}

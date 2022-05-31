@@ -1,7 +1,7 @@
 import React from 'react';
 import { FileIconSlot } from '@teambit/code';
 import { Section } from '@teambit/component';
-import { ComponentCompareCode } from '@teambit/component.ui.component-compare-code';
+import { CodeCompare } from '@teambit/code.ui.code-compare';
 
 export class CodeCompareSection implements Section {
   constructor(private fileIconSlot: FileIconSlot) {}
@@ -14,6 +14,6 @@ export class CodeCompareSection implements Section {
 
   route = {
     path: 'code/*',
-    element: <ComponentCompareCode fileIconSlot={this.fileIconSlot} />,
+    element: <CodeCompare fileIconSlot={this.fileIconSlot} />,
   };
 }

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Section } from '@teambit/component';
-import { ComponentCompareDependencies } from '@teambit/component.ui.component-compare-dependencies';
+import { DependenciesCompare } from '@teambit/graph';
 
 export class GraphCompareSection implements Section {
   navigationLink = {
@@ -11,6 +11,6 @@ export class GraphCompareSection implements Section {
 
   route = {
     path: 'dependencies/*',
-    element: <ComponentCompareDependencies />,
+    element: <DependenciesCompare />,
   };
 }

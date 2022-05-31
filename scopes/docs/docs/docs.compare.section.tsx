@@ -1,7 +1,7 @@
 import React from 'react';
 import { TitleBadgeSlot } from '@teambit/docs';
 import { Section } from '@teambit/component';
-import { ComponentCompareOverview } from '@teambit/component.ui.component-compare-overview';
+import { OverviewCompare } from '@teambit/docs.ui.overview-compare';
 
 export class OverviewCompareSection implements Section {
   constructor(private titleBadgeSlot: TitleBadgeSlot) {}
@@ -15,6 +15,6 @@ export class OverviewCompareSection implements Section {
 
   route = {
     path: '*',
-    element: <ComponentCompareOverview titleBadges={this.titleBadgeSlot} />,
+    element: <OverviewCompare titleBadges={this.titleBadgeSlot} />,
   };
 }

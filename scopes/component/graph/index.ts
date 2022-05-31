@@ -11,4 +11,4 @@ export { IdGraph, objectListToGraph } from './object-list-to-graph';
 export { calcLayout, calcMinimapColors, depTypeToClass, depTypeToLabel, calcElements } from './ui/dependencies-graph';
 export { GraphFilters } from './ui/graph-page';
 export { EdgeModel, GraphModel, NodeModel, RawGraph, useGraph, useGraphQuery } from './ui/query';
-
+export { DependenciesCompare } from './ui/dependencies-compare'

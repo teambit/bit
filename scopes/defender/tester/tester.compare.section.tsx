@@ -1,6 +1,6 @@
 import React from 'react';
 import { Section } from '@teambit/component';
-import { ComponentCompareTests } from '@teambit/component.ui.component-compare-tests';
+import { CompareTests } from '@teambit/defender.ui.test-compare';
 import { EmptyStateSlot } from './tester.ui.runtime';
 
 export class TesterCompareSection implements Section {
@@ -14,6 +14,6 @@ export class TesterCompareSection implements Section {
 
   route = {
     path: 'tests/*',
-    element: <ComponentCompareTests emptyState={this.emptyStateSlot} />,
+    element: <CompareTests emptyState={this.emptyStateSlot} />,
   };
 }
