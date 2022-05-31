@@ -9,6 +9,7 @@ export function previewSchema(previewExtension: PreviewMain) {
       type Preview {
         # url: String!
         includesEnvTemplate: Boolean
+        legacyHeader: Boolean
       }
 
       extend type Component {
@@ -25,6 +26,9 @@ export function previewSchema(previewExtension: PreviewMain) {
       Preview: {
         includesEnvTemplate: ({ component }) => {
           return previewExtension.isBundledWithEnv(component);
+        },
+        legacyHeader: ({ component }) => {
+          return previewExtension.isLegacyHeader(component);
         },
       },
     },

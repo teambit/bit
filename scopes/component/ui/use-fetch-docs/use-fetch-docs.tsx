@@ -28,6 +28,7 @@ const DOCS_QUERY = gql`
         }
         preview {
           includesEnvTemplate
+          legacyHeader
         }
       }
       getDocs(id: $id) {
@@ -65,6 +66,7 @@ type QueryResults = {
       }[];
       preview: {
         includesEnvTemplate: boolean;
+        legacyHeader: boolean;
       };
     };
     getDocs: DocsItem;
