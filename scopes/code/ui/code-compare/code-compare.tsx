@@ -5,13 +5,16 @@ import { Collapser } from '@teambit/ui-foundation.ui.buttons.collapser';
 import { SplitPane, Pane, Layout } from '@teambit/base-ui.surfaces.split-pane.split-pane';
 import { useIsMobile } from '@teambit/ui-foundation.ui.hooks.use-is-mobile';
 import { FileIconSlot } from '@teambit/code';
+import {
+  useComponentCompareParams,
+  useComponentCompareContext,
+  CompareStatus,
+  CompareStatusResolver,
+} from '@teambit/component.ui.compare';
+import { useFileContent } from '@teambit/code.ui.queries.get-file-content';
+import { useCode } from '@teambit/code.ui.queries.get-component-code';
 import { CodeCompareTree } from './code-compare-tree';
 import { CodeCompareView } from './code-compare-view';
-import { useComponentCompareParams, useComponentCompareContext } from '@teambit/component.ui.compare';
-import { CompareStatus, CompareStatusResolver } from '@teambit/component.ui.compare';
-import { useFileContent } from '@teambit/code.ui.queries.get-file-content';
-
-import { useCode } from '@teambit/code.ui.queries.get-component-code';
 
 import styles from './code-compare.module.scss';
 
