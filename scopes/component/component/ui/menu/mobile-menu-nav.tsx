@@ -68,14 +68,17 @@ function Placeholder({ slots, ...rest }: PlaceholderProps) {
         {slots?.map(([id, menuItem]) => (
           <Route
             key={id}
-            path={menuItem?.props?.href}
-            element={
-              typeof menuItem?.props?.children === 'string' ? menuItem?.props?.children : menuItem?.props?.displayName
-            }
+            path={hrefToPath(menuItem.props.href)}
+            element={typeof menuItem.props.children === 'string' ? menuItem.props.children : menuItem.props.displayName}
           />
         ))}
       </Routes>
       <Icon of="fat-arrow-down" />
     </div>
   );
+}
+
+function hrefToPath(href?: string) {
+  if (href === '.') return '/';
+  return href ?? '/';
 }
