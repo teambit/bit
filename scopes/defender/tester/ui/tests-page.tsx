@@ -1,5 +1,6 @@
 import { useQuery, useSubscription, gql } from '@apollo/client';
 import { ComponentContext } from '@teambit/component';
+import { useQuery as useRouterQuery } from '@teambit/ui-foundation.ui.react-router.use-query';
 import { H1 } from '@teambit/documenter.ui.heading';
 import { Separator } from '@teambit/design.ui.separator';
 import { EmptyBox } from '@teambit/design.ui.empty-box';
@@ -69,10 +70,20 @@ type TestsPageProps = {
 } & HTMLAttributes<HTMLDivElement>;
 
 export function TestsPage({ className, emptyState }: TestsPageProps) {
+  const query = useRouterQuery();
+
   const component = useContext(ComponentContext);
-  const onTestsChanged = useSubscription(TESTS_SUBSCRIPTION_CHANGED, { variables: { id: component.id.toString() } });
+
+  const queryHasVersion = query.get('version');
+
+  const id = queryHasVersion ? component.id.toString() : component.id.toStringWithoutVersion();
+
+  const onTestsChanged = useSubscription(TESTS_SUBSCRIPTION_CHANGED, {
+    variables: { id },
+  });
+
   const { data } = useQuery(GET_COMPONENT, {
-    variables: { id: component.id._legacy.name },
+    variables: { id },
   });
 
   const testData = onTestsChanged.data?.testsChanged || data?.getHost?.getTests;

@@ -1,7 +1,5 @@
 /* eslint-disable complexity */
-import camelcase from 'camelcase';
 import webpack, { Configuration } from 'webpack';
-import { generateExternals } from '@teambit/webpack.modules.generate-externals';
 import { isUndefined, omitBy } from 'lodash';
 import CompressionPlugin from 'compression-webpack-plugin';
 import { sep } from 'path';
@@ -23,9 +21,6 @@ export function configFactory(target: Target, context: BundlerContext): Configur
   const htmlConfig = target.html ?? context.html;
   const compress = target.compress ?? context.compress;
   const htmlPlugins = htmlConfig ? generateHtmlPlugins(htmlConfig) : undefined;
-  const shouldExternalizePeers =
-    (target.externalizePeer ?? context.externalizePeer) && target.peers && target.peers.length;
-  const externals = shouldExternalizePeers ? (getExternals(target.peers || []) as any) : undefined;
   const splitChunks = target.chunking?.splitChunks;
 
   const config: Configuration = {
@@ -95,9 +90,6 @@ export function configFactory(target: Target, context: BundlerContext): Configur
     }
     config.plugins = config.plugins.concat(new CompressionPlugin());
   }
-  if (externals) {
-    config.externals = externals;
-  }
   return config;
 }
 
@@ -129,10 +121,4 @@ function generateHtmlPlugin(config: BundlerHtmlConfig) {
   }
   const filteredConfig = omitBy(baseConfig, isUndefined);
   return new HtmlWebpackPlugin(filteredConfig);
-}
-
-export function getExternals(deps: string[]) {
-  return generateExternals(deps, {
-    transformName: (depName) => camelcase(depName.replace('@', '').replace('/', '-'), { pascalCase: true }),
-  });
 }

@@ -71,17 +71,6 @@ module.exports = {
     '@typescript-eslint/explicit-function-return-type': 'off',
     'import/no-cycle': 'off',
     'import/no-useless-path-segments': 'off',
-    'no-restricted-imports': [
-      'error',
-      {
-        name: '@teambit/ui-foundation.ui.react-router.link',
-        message: 'use @teambit/base-ui.routing.link',
-      },
-      {
-        name: '@teambit/ui-foundation.ui.react-router.nav-link',
-        message: 'use @teambit/base-ui.routing.nav-link',
-      },
-    ],
     'lines-between-class-members': 'off',
     radix: 'off',
     'no-underscore-dangle': 'off',

@@ -2,7 +2,7 @@ import mapSeries from 'p-map-series';
 import { MainRuntime } from '@teambit/cli';
 import ComponentAspect, { Component, ComponentMap, ComponentMain } from '@teambit/component';
 import type { ConfigMain } from '@teambit/config';
-import { get, pick } from 'lodash';
+import { get, pick, uniq } from 'lodash';
 import { ConfigAspect } from '@teambit/config';
 import { DependenciesEnv, EnvsAspect, EnvsMain } from '@teambit/envs';
 import { Slot, SlotRegistry, ExtensionManifest, Aspect, RuntimeManifest } from '@teambit/harmony';
@@ -220,6 +220,21 @@ export interface DependencyResolverWorkspaceConfig {
    * Controls the way packages are imported from the store.
    */
   packageImportMethod?: PackageImportMethod;
+
+  /*
+   * Use and cache the results of (pre/post)install hooks.
+   */
+  sideEffectsCache?: boolean;
+
+  /*
+   * The node version to use when checking a package's engines setting.
+   */
+  nodeVersion?: string;
+
+  /*
+   * Refuse to install any package that claims to not be compatible with the current Node.js version.
+   */
+  engineStrict?: boolean;
 }
 
 export interface DependencyResolverVariantConfig {
@@ -501,7 +516,11 @@ export class DependencyResolverMain {
       cacheRootDir,
       preInstallSubscribers,
       postInstallSubscribers,
-      this.config.nodeLinker
+      this.config.nodeLinker,
+      this.config.packageImportMethod,
+      this.config.sideEffectsCache,
+      this.config.nodeVersion,
+      this.config.engineStrict,
     );
   }
 
@@ -864,6 +883,26 @@ export class DependencyResolverMain {
       }
     }
     return new EnvPolicyFactory().getEmpty();
+  }
+
+  /**
+   * Get a list of peer dependencies applied from an env
+   * This will merge different peers list like:
+   * 1. peerDependencies from the getDependencies
+   * 2. peers from getDependencies
+   * 3. getAdditionalHostDependencies
+   * @param env
+   */
+  async getPeerDependenciesListFromEnv(env: DependenciesEnv): Promise<string[]> {
+    const envPolicy = await this.getComponentEnvPolicyFromEnv(env);
+    const peers = uniq(
+      envPolicy.peersAutoDetectPolicy.names.concat(envPolicy.variantPolicy.byLifecycleType('peer').names)
+    );
+    let additionalHostDeps: string[] = [];
+    if (env.getAdditionalHostDependencies && typeof env.getAdditionalHostDependencies === 'function') {
+      additionalHostDeps = await env.getAdditionalHostDependencies();
+    }
+    return uniq(peers.concat(additionalHostDeps));
   }
 
   /**

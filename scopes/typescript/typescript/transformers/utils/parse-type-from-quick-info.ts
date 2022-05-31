@@ -1,6 +1,8 @@
 // eslint-disable-next-line import/no-unresolved
 import protocol from 'typescript/lib/protocol';
 
+export const UNRESOLVED = '<<unresolved>>';
+
 /**
  * try to parse the type from the quickinfo.
  * this is an error-prone process, we do our best here.
@@ -49,7 +51,13 @@ export function parseTypeFromQuickInfo(quickInfo: protocol.QuickInfoResponse | u
     case 'function': {
       const split = displayString.split('): ');
       if (split.length !== 2) {
-        throw new Error(`quickinfo of a function below was not implemented.\n${displayString}`);
+        // it's hard to determine where the return-type is. so it's better to show unresolved.
+        // maybe, in the UI, in this case, it's best to show the signature.
+        // e.g.
+        // (method) IssuesList.getIssue<T extends ComponentIssue>(IssueClass: {
+        //   new (): T;
+        // }): T | undefined
+        return UNRESOLVED;
       }
       return split[1].trim();
     }

@@ -21,7 +21,7 @@ import { WebpackAspect } from '@teambit/webpack';
 import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { DevServerContext, BundlerContext } from '@teambit/bundler';
-import { EnvPolicyConfigObject } from '@teambit/dependency-resolver';
+import { DependencyResolverAspect, DependencyResolverMain, EnvPolicyConfigObject } from '@teambit/dependency-resolver';
 import ts from 'typescript';
 import { ApplicationAspect, ApplicationMain } from '@teambit/application';
 import { FormatterContext } from '@teambit/formatter';
@@ -50,6 +50,7 @@ type ReactDeps = [
   PrettierMain,
   ApplicationMain,
   GeneratorMain,
+  DependencyResolverMain,
   LoggerMain
 ];
 
@@ -393,6 +394,7 @@ export class ReactMain {
     PrettierAspect,
     ApplicationAspect,
     GeneratorAspect,
+    DependencyResolverAspect,
     LoggerAspect,
   ];
 
@@ -411,6 +413,7 @@ export class ReactMain {
       prettier,
       application,
       generator,
+      dependencyResolver,
       loggerMain,
     ]: ReactDeps,
     config: ReactMainConfig
@@ -427,6 +430,7 @@ export class ReactMain {
       config,
       eslint,
       prettier,
+      dependencyResolver,
       logger,
       CompilerAspect.id
     );

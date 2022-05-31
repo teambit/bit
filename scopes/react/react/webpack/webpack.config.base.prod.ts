@@ -1,16 +1,12 @@
-import WorkboxWebpackPlugin from 'workbox-webpack-plugin';
 import CssMinimizerPlugin from 'css-minimizer-webpack-plugin';
 import TerserPlugin from 'terser-webpack-plugin';
 import { Configuration } from 'webpack';
-import { getExternals } from './get-externals';
 // import { WebpackManifestPlugin } from 'webpack-manifest-plugin';
 
 // This is the production and development configuration.
 // It is focused on developer experience, fast rebuilds, and a minimal bundle.
 // eslint-disable-next-line complexity
-export default function (externalizePeer: boolean, peers: string[], dev?: boolean): Configuration {
-  const externals = externalizePeer ? (getExternals(peers) as any) : undefined;
-
+export default function (dev?: boolean): Configuration {
   const optimization = dev
     ? undefined
     : {
@@ -97,7 +93,6 @@ export default function (externalizePeer: boolean, peers: string[], dev?: boolea
       };
 
   return {
-    externals,
     optimization,
 
     plugins: [
@@ -125,21 +120,6 @@ export default function (externalizePeer: boolean, peers: string[], dev?: boolea
       // }),
       // Generate a service worker script that will precache, and keep up to date,
       // the HTML & assets that are part of the webpack build.
-      new WorkboxWebpackPlugin.GenerateSW({
-        clientsClaim: true,
-        exclude: [/\.map$/, /asset-manifest\.json$/],
-        // importWorkboxFrom: 'cdn',
-        navigateFallback: 'public/index.html',
-        navigateFallbackDenylist: [
-          // Exclude URLs starting with /_, as they're likely an API call
-          new RegExp('^/_'),
-          // Exclude any URLs whose last part seems to be a file extension
-          // as they're likely a resource and not a SPA route.
-          // URLs containing a "?" character won't be blacklisted as they're likely
-          // a route with query params (e.g. auth callbacks).
-          new RegExp('/[^/?]+\\.[^/]+$'),
-        ],
-      }),
     ].filter(Boolean),
     // Turn off performance processing because we utilize
     // our own hints via the FileSizeReporter

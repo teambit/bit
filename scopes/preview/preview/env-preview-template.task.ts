@@ -14,6 +14,8 @@ import { Bundler, BundlerContext, BundlerEntryMap, BundlerHtmlConfig, BundlerRes
 import type { EnvDefinition, Environment, EnvsMain } from '@teambit/envs';
 import { join } from 'path';
 import { compact, flatten, isEmpty } from 'lodash';
+import { Logger } from '@teambit/logger';
+import { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { existsSync, mkdirpSync } from 'fs-extra';
 import type { PreviewMain } from './preview.main.runtime';
 import { PreviewDefinition } from '.';
@@ -27,6 +29,7 @@ export type ModuleExpose = {
 
 type TargetsGroup = {
   env: Environment;
+  envToGetBundler: Environment;
   targets: Target[];
 };
 type TargetsGroupMap = {
@@ -43,7 +46,13 @@ export class EnvPreviewTemplateTask implements BuildTask {
   location: TaskLocation = 'end';
   // readonly dependencies = [CompilerAspect.id];
 
-  constructor(private preview: PreviewMain, private envs: EnvsMain, private aspectLoader: AspectLoaderMain) {}
+  constructor(
+    private preview: PreviewMain,
+    private envs: EnvsMain,
+    private aspectLoader: AspectLoaderMain,
+    private dependencyResolver: DependencyResolverMain,
+    private logger: Logger
+  ) {}
 
   async execute(context: BuildContext): Promise<BuiltTaskResult> {
     const previewDefs = this.preview.getDefs();
@@ -76,7 +85,8 @@ export class EnvPreviewTemplateTask implements BuildTask {
         }
         if (!grouped[groupEnvId]) {
           grouped[groupEnvId] = {
-            env: envToGetBundler,
+            env,
+            envToGetBundler,
             targets: [target],
           };
         } else {
@@ -96,7 +106,6 @@ export class EnvPreviewTemplateTask implements BuildTask {
     const bundlerContext: BundlerContext = Object.assign(context, {
       targets: [],
       entry: [],
-      externalizePeer: false,
       development: context.dev,
       metaData: {
         initiator: `${GENERATE_ENV_TEMPLATE_TASK_NAME} task`,
@@ -105,7 +114,7 @@ export class EnvPreviewTemplateTask implements BuildTask {
     });
     const bundlerResults = await mapSeries(Object.entries(groups), async ([, targetsGroup]) => {
       bundlerContext.targets = targetsGroup.targets;
-      const bundler: Bundler = await targetsGroup.env.getTemplateBundler(bundlerContext);
+      const bundler: Bundler = await targetsGroup.envToGetBundler.getTemplateBundler(bundlerContext);
       const bundlerResult = await bundler.run();
       return bundlerResult;
     });
@@ -115,7 +124,7 @@ export class EnvPreviewTemplateTask implements BuildTask {
   }
 
   private shouldUseDefaultBundler(envDef: EnvDefinition): boolean {
-    if (this.aspectLoader.isCoreEnv(envDef.id)) return true;
+    if (this.aspectLoader.isCoreEnv(envDef.id) && envDef.id !== 'teambit.react/react-native') return true;
     const env = envDef.env;
     if (env.getTemplateBundler && typeof env.getTemplateBundler === 'function') return false;
     return true;
@@ -130,17 +139,8 @@ export class EnvPreviewTemplateTask implements BuildTask {
     const env = envDef.env;
     const envPreviewConfig = this.preview.getEnvPreviewConfig(envDef.env);
     const isSplitComponentBundle = envPreviewConfig.splitComponentBundle ?? false;
-    let peers;
-    if (env.getHostDependencies && typeof env.getHostDependencies === 'function') {
-      peers = (await env.getHostDependencies()) || [];
-    } else {
-      const envComponentPeers = Object.keys((await env.getDependencies()).peerDependencies || {}) || [];
-      let additionalHostDeps = [];
-      if (env.getAdditionalHostDependencies && typeof env.getAdditionalHostDependencies === 'function') {
-        additionalHostDeps = await env.getAdditionalHostDependencies();
-      }
-      peers = envComponentPeers.concat(additionalHostDeps);
-    }
+    const peers = await this.dependencyResolver.getPeerDependenciesListFromEnv(env);
+    // console.log('envid22', env.__getDescriptor(), 'peers', peers)
 
     // const module = await this.getPreviewModule(envComponent);
     // const entries = Object.keys(module).map((key) => module.exposes[key]);
@@ -167,6 +167,11 @@ export class EnvPreviewTemplateTask implements BuildTask {
       },
       components: [envComponent],
       outputPath,
+      /* It's a path to the root of the host component. */
+      // hostRootDir, handle this
+      hostDependencies: peers,
+      aliasHostDependencies: true,
+      exposeHostDependencies: true,
     };
   }
 

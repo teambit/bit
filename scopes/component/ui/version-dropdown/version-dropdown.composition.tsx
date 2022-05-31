@@ -1,6 +1,5 @@
 import React from 'react';
-import { Router } from 'react-router-dom';
-import { createBrowserHistory } from 'history';
+import { MemoryRouter } from 'react-router-dom';
 import { ThemeCompositions } from '@teambit/documenter.theme.theme-compositions';
 import { VersionDropdown } from './version-dropdown';
 
@@ -15,13 +14,12 @@ export const VersionDropdownWithOneVersion = () => {
 };
 
 export const VersionDropdownWithMultipleVersions = () => {
-  const history = createBrowserHistory();
   const versions = ['0.3', '0.2', '0.1'].map((version) => ({ version }));
   return (
     <ThemeCompositions style={style}>
-      <Router history={history}>
+      <MemoryRouter>
         <VersionDropdown tags={versions} currentVersion={versions[0].version} />
-      </Router>
+      </MemoryRouter>
     </ThemeCompositions>
   );
 };

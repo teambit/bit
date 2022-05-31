@@ -16,6 +16,11 @@ import { merge } from 'webpack-merge';
 import WsDevServer from 'webpack-dev-server';
 import { WebpackConfigMutator } from '@teambit/webpack.modules.config-mutator';
 
+import {
+  generateAddAliasesFromPeersTransformer,
+  generateExposePeersTransformer,
+  generateExternalsTransformer,
+} from './transformers';
 import { configFactory as devServerConfigFactory } from './config/webpack.dev.config';
 import { configFactory as baseConfigFactory } from './config/webpack.config';
 
@@ -27,7 +32,7 @@ export type WebpackConfigTransformContext = GlobalWebpackConfigTransformContext 
   target: Target;
 };
 
-export type WebpackConfigDevServerTransformContext = GlobalWebpackConfigTransformContext;
+export type WebpackConfigDevServerTransformContext = GlobalWebpackConfigTransformContext & DevServerContext;
 
 export type GlobalWebpackConfigTransformContext = {
   mode: BundlerMode;
@@ -79,8 +84,14 @@ export class WebpackMain {
       context.title
     ) as any;
     const configMutator = new WebpackConfigMutator(config);
-    const transformerContext: GlobalWebpackConfigTransformContext = { mode: 'dev' };
-    const afterMutation = runTransformersWithContext(configMutator.clone(), transformers, transformerContext);
+    const transformerContext: WebpackConfigDevServerTransformContext = Object.assign(context, { mode: 'dev' as const });
+    const internalTransformers = this.generateTransformers(undefined, transformerContext);
+
+    const afterMutation = runTransformersWithContext(
+      configMutator.clone(),
+      [...internalTransformers, ...transformers],
+      transformerContext
+    );
     // @ts-ignore - fix this
     return new WebpackDevServer(afterMutation.raw, webpack, WsDevServer);
   }
@@ -114,9 +125,39 @@ export class WebpackMain {
       const baseConfig = factory(target, bundlerContext);
       const configMutator = new WebpackConfigMutator(baseConfig);
       const context = Object.assign({}, transformerContext, { target });
-      const afterMutation = runTransformersWithContext(configMutator.clone(), transformers, context);
+      const internalTransformers = this.generateTransformers(context, undefined, target);
+      const afterMutation = runTransformersWithContext(
+        configMutator.clone(),
+        [...internalTransformers, ...transformers],
+        context
+      );
       return afterMutation.raw;
     });
+  }
+
+  private generateTransformers(
+    _bundlerContext?: WebpackConfigTransformContext,
+    devServerContext?: WebpackConfigDevServerTransformContext,
+    target?: Target
+  ): Array<WebpackConfigTransformer> {
+    const transformers: WebpackConfigTransformer[] = [];
+    // TODO: handle dev server
+    const hostDeps = target?.hostDependencies || devServerContext?.hostDependencies;
+    if (hostDeps) {
+      if (target?.aliasHostDependencies || devServerContext?.aliasHostDependencies) {
+        const peerAliasesTransformer = generateAddAliasesFromPeersTransformer(hostDeps, this.logger);
+        transformers.push(peerAliasesTransformer);
+      }
+      if (target?.exposeHostDependencies || devServerContext?.exposeHostDependencies) {
+        const exposePeersTransformer = generateExposePeersTransformer(hostDeps, this.logger);
+        transformers.push(exposePeersTransformer);
+      }
+      if (target?.externalizeHostDependencies || devServerContext?.externalizeHostDependencies) {
+        const externalsTransformer = generateExternalsTransformer(hostDeps);
+        transformers.push(externalsTransformer);
+      }
+    }
+    return transformers;
   }
 
   private createDevServerConfig(
@@ -146,7 +187,8 @@ WebpackAspect.addRuntime(WebpackMain);
 export function runTransformersWithContext(
   config: WebpackConfigMutator,
   transformers: Array<WebpackConfigTransformer | WebpackConfigDevServerTransformer> = [],
-  context: WebpackConfigTransformContext | WebpackConfigDevServerTransformContext
+  // context: WebpackConfigTransformContext | WebpackConfigDevServerTransformContext
+  context: any
 ): WebpackConfigMutator {
   if (!Array.isArray(transformers)) return config;
   const newConfig = transformers.reduce((acc, transformer) => {

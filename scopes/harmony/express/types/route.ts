@@ -19,6 +19,7 @@ export enum Verb {
 export interface Route {
   method: string;
   route: string | RegExp;
+  disableNamespace?: boolean;
   verb?: Verb;
   middlewares: Middleware[];
 }
