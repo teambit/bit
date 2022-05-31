@@ -13,6 +13,7 @@ import styles from './component-compare-tests-page.module.scss';
 export type ComponentCompareTestsPageProps = {
   component: ComponentModel;
   emptyState: EmptyStateSlot;
+  isCompareVersionWorkspace?: boolean;
 } & HTMLAttributes<HTMLDivElement>;
 
 const TESTS_SUBSCRIPTION_CHANGED = gql`
@@ -68,10 +69,14 @@ const GET_COMPONENT = gql`
 `;
 
 export function ComponentCompareTestsPage(props: ComponentCompareTestsPageProps) {
-  const { component, emptyState, className } = props;
-  const onTestsChanged = useSubscription(TESTS_SUBSCRIPTION_CHANGED, { variables: { id: component.id.toString() } });
+  const { component, emptyState, className, isCompareVersionWorkspace } = props;
+
+  const id = !isCompareVersionWorkspace ? component.id.toString() : component.id.toStringWithoutVersion();
+
+  const onTestsChanged = useSubscription(TESTS_SUBSCRIPTION_CHANGED, { variables: { id } });
+
   const { data } = useQuery(GET_COMPONENT, {
-    variables: { id: component.id.toString() },
+    variables: { id },
   });
 
   const testData = onTestsChanged.data?.testsChanged || data?.getHost?.getTests;

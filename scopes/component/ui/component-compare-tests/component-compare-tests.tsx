@@ -55,7 +55,11 @@ export function ComponentCompareTests(props: ComponentCompareTestsProps) {
         </div>
         <div className={styles.subContainerRight}>
           <div className={styles.subView} ref={rightPanelRef} onScroll={handleRightPanelScroll}>
-            <ComponentCompareTestsPage component={componentCompare.compare} emptyState={emptyState} />
+            <ComponentCompareTestsPage
+              component={componentCompare.compare}
+              isCompareVersionWorkspace={componentCompare.isCompareVersionWorkspace}
+              emptyState={emptyState}
+            />
           </div>
         </div>
       </div>
