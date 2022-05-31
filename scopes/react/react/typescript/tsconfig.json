@@ -15,13 +15,10 @@
     "resolveJsonModule": true
   },
   "exclude": [
-    "dist",
-    "package.json"
+    "dist"
   ],
   "include": [
-    "**/*.ts",
-    "**/*.tsx",
-    "**/*.d.ts",
+    "**/*",
     "**/*.json"
   ]
 }
