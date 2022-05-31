@@ -1,25 +1,25 @@
 import React, { HTMLAttributes, useMemo } from 'react';
 import classNames from 'classnames';
 import { H4 } from '@teambit/documenter.ui.heading';
-import { ComponentAspectData } from '@teambit/component.ui.compare';
 import { RoundLoader } from '@teambit/design.ui.round-loader';
+import { ComponentAspectData } from '@teambit/component.ui.compare';
 import { DiffEditor, DiffEditorProps } from '@monaco-editor/react';
-import styles from './component-compare-aspect-view.module.scss';
+import styles from './compare-aspect-view.module.scss';
 
-export type ComponentCompareAspectViewProps = {
+export type CompareAspectViewProps = {
   baseAspectData?: ComponentAspectData;
   compareAspectData?: ComponentAspectData;
   loading?: boolean;
   name?: string;
 } & HTMLAttributes<HTMLDivElement>;
 
-export function ComponentCompareAspectView({
+export function CompareAspectView({
   baseAspectData,
   compareAspectData,
   // loading,
   name,
   className,
-}: ComponentCompareAspectViewProps) {
+}: CompareAspectViewProps) {
   const title = useMemo(() => name?.split('/').pop(), [name]);
 
   const configDiffEditorProps: DiffEditorProps = {

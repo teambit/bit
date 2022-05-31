@@ -1,5 +1,5 @@
 import { createContext, useContext } from 'react';
-import { ComponentAspectData } from './component-compare-aspects';
+import { ComponentAspectData } from './compare-aspects';
 
 export type ComponentCompareAspectsModel = {
   base: ComponentAspectData[];

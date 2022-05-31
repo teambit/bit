@@ -7,14 +7,13 @@ import { HoverSplitter } from '@teambit/base-ui.surfaces.split-pane.hover-splitt
 import { Collapser } from '@teambit/ui-foundation.ui.buttons.collapser';
 import { SplitPane, Pane, Layout } from '@teambit/base-ui.surfaces.split-pane.split-pane';
 import { useIsMobile } from '@teambit/ui-foundation.ui.hooks.use-is-mobile';
-import { ComponentCompareCodeTree } from '@teambit/component.ui.compare';
-import { CompareStatus, ComponentCompareStatusResolver } from '@teambit/component.ui.compare';
-import { useComponentCompareContext, useComponentCompareParams } from '@teambit/component.ui.compare';
 import { RoundLoader } from '@teambit/design.ui.round-loader';
-import { ComponentCompareAspectView } from './component-compare-aspect-view';
+import { CompareStatus, CompareStatusResolver, useComponentCompareContext, useComponentCompareParams } from '@teambit/component.ui.compare';
+import { CodeCompareTree } from '@teambit/code.ui.code-compare';
+import { ComponentCompareAspectsContext, useComponentCompareAspectsContext } from './compare-aspects-context';
+import { CompareAspectView } from './compare-aspect-view';
 
-import styles from './component-compare-aspects.module.scss';
-import { ComponentCompareAspectsContext, useComponentCompareAspectsContext } from './component-compare-aspects-context';
+import styles from './compare-aspects.module.scss';
 
 export type ComponentCompareAspectsProps = { host: string } & HTMLAttributes<HTMLDivElement>;
 export type ComponentAspectData = {
@@ -104,7 +103,7 @@ export function ComponentCompareAspects({ host, className }: ComponentCompareAsp
               <RoundLoader />
             </div>
           )}
-          <ComponentCompareAspectView
+          <CompareAspectView
             name={selected}
             baseAspectData={selectedBaseAspect}
             compareAspectData={selectedCompareAspect}
@@ -122,7 +121,7 @@ export function ComponentCompareAspects({ host, className }: ComponentCompareAsp
           />
         </HoverSplitter>
         <Pane className={classNames(styles.right, styles.dark)}>
-          <ComponentCompareCodeTree
+          <CodeCompareTree
             fileTree={aspectNames}
             currentFile={selected}
             drawerName={'ASPECTS'}
@@ -152,7 +151,7 @@ function getWidgets(fileName: string) {
 
   if (!status) return null;
 
-  return [() => <ComponentCompareStatusResolver status={status as CompareStatus} />];
+  return [() => <CompareStatusResolver status={status as CompareStatus} />];
 }
 
 function getAspectStatus(aspectA?: ComponentAspectData, aspectB?: ComponentAspectData): CompareStatus | null {

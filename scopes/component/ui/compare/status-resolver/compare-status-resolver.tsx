@@ -1,7 +1,7 @@
 import classNames from 'classnames';
 import React, { ReactElement } from 'react';
 import { Tooltip } from '@teambit/design.ui.tooltip';
-import styles from './component-compare-status-resolver.module.scss';
+import styles from './compare-status-resolver.module.scss';
 
 export type CompareStatus = 'modified' | 'new' | 'deleted';
 

@@ -1,6 +1,2 @@
-export {
-  ComponentAspectData,
-  ComponentCompareAspects,
-  ComponentCompareAspectsProps,
-} from './component-compare-aspects';
-export { ComponentCompareAspectsContext, useComponentCompareAspectsContext } from './component-compare-aspects-context';
+export { ComponentAspectData, ComponentCompareAspects, ComponentCompareAspectsProps } from './compare-aspects';
+export { ComponentCompareAspectsContext, useComponentCompareAspectsContext } from './compare-aspects-context';

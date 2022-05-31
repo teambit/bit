@@ -7,7 +7,7 @@ import { EnvIcon } from '@teambit/envs.ui.env-icon';
 import classnames from 'classnames';
 import React, { useState, useEffect } from 'react';
 import { valid, compare } from 'semver';
-import { ComponentCompareStatusResolver } from '@teambit/component.ui.compare';
+import { CompareStatusResolver } from '@teambit/component.ui.compare';
 import { NavLink } from '@teambit/base-ui.routing.nav-link';
 import { ComponentUrl } from '@teambit/component.modules.component-url';
 import styles from './dependency-compare-node.module.scss';
@@ -65,7 +65,7 @@ export function DependencyCompareNode(props: DependencyCompareNodeProps) {
 
         <div className={styles.buffs}>
           <DeprecationIcon component={baseComponent} />
-          {status !== 'unchanged' && <ComponentCompareStatusResolver status={status} />}
+          {status !== 'unchanged' && <CompareStatusResolver status={status} />}
         </div>
       </div>
     </Card>
