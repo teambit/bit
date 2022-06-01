@@ -96,7 +96,7 @@ commands: # reusable commands
   docker_build:
     parameters:
       node_version:
-        default: ''
+        default: '12.22.0'
         type: string
       image_name:
         default: 'bitcli/bit'
@@ -108,8 +108,21 @@ commands: # reusable commands
       - run: echo "$DOCKER_PASS" | docker login --username $DOCKER_USER --password-stdin
       - run: cd bit/scripts && docker build -f ./docker-teambit-bit/<<parameters.docker_file_name>> --build-arg BASE_IMAGE=node:<<parameters.node_version>> -t <<parameters.image_name>>:`npm show @teambit/bit version`-node-<<parameters.node_version>> .
       - run: cd bit/scripts && docker build -f ./docker-teambit-bit/<<parameters.docker_file_name>> --build-arg BASE_IMAGE=node:<<parameters.node_version>> -t <<parameters.image_name>>:latest-node-<<parameters.node_version>> .
-      - run: cd bit && docker push <<parameters.image_name>>:`npm show @teambit/bit version`-node-<<parameters.node_version>>
-      - run: cd bit && docker push <<parameters.image_name>>:latest-node-<<parameters.node_version>>
+      - docker_push:
+          image_name: "<<parameters.image_name>>"
+          docker_tag_suffix: "-node-<<parameters.node_version>>"
+
+  docker_push:
+    parameters:
+      image_name:
+        default: 'bitcli/bit'
+        type: string
+      docker_tag_suffix:
+        default: ''
+        type: string
+    steps:
+      - run: cd bit && docker push <<parameters.image_name>>:`npm show @teambit/bit version`<<parameters.docker_tag_suffix>>
+      - run: cd bit && docker push <<parameters.image_name>>:latest<<parameters.docker_tag_suffix>>
 
   bit_global_for_npm:
     steps:
@@ -191,11 +204,10 @@ jobs:
     steps:
       - attach_workspace:
           at: ./
-      - run: echo "$DOCKER_PASS" | docker login --username $DOCKER_USER --password-stdin
-      - run: cd bit/scripts && docker build -f ./docker-teambit-bit/Dockerfile-bit -t bitcli/bit:`npm show @teambit/bit version` .
-      - run: cd bit/scripts && docker build -f ./docker-teambit-bit/Dockerfile-bit -t bitcli/bit:latest .
-      - run: cd bit && docker push bitcli/bit:`npm show @teambit/bit version`
-      - run: cd bit && docker push bitcli/bit:latest
+      - docker_build
+      # pushing again without the node version
+      - docker_push:
+          docker_tag_suffix: ""
 
   docker_build_node_14:
     machine:
@@ -203,11 +215,8 @@ jobs:
     steps:
       - attach_workspace:
           at: ./
-      - run: echo "$DOCKER_PASS" | docker login --username $DOCKER_USER --password-stdin
-      - run: cd bit/scripts && docker build -f ./docker-teambit-bit/Dockerfile-bit --build-arg BASE_IMAGE=node:14.19.1 -t bitcli/bit:`npm show @teambit/bit version`-node-14.19.1 .
-      - run: cd bit/scripts && docker build -f ./docker-teambit-bit/Dockerfile-bit --build-arg BASE_IMAGE=node:14.19.1 -t bitcli/bit:latest-node-14.19.1 .
-      - run: cd bit && docker push bitcli/bit:`npm show @teambit/bit version`-node-14.19.1
-      - run: cd bit && docker push bitcli/bit:latest-node-14.19.1
+      - docker_build:
+          node_version: "14.19.1"
 
   docker_build_node_16:
     machine:
@@ -217,8 +226,6 @@ jobs:
           at: ./
       - docker_build:
           node_version: "16.15.0"
-          image_name: "bitcli/bit"
-          docker_file_name: "Dockerfile-bit"
 
   docker_non_root_build:
     machine:
@@ -226,11 +233,13 @@ jobs:
     steps:
       - attach_workspace:
           at: ./
-      - run: echo "$DOCKER_PASS" | docker login --username $DOCKER_USER --password-stdin
-      - run: cd bit/scripts && docker build -f ./docker-teambit-bit/Dockerfile-bit-non-root -t bitcli/bit-non-root:`npm show @teambit/bit version` .
-      - run: cd bit/scripts && docker build -f ./docker-teambit-bit/Dockerfile-bit-non-root -t bitcli/bit-non-root:latest .
-      - run: cd bit && docker push bitcli/bit-non-root:`npm show @teambit/bit version`
-      - run: cd bit && docker push bitcli/bit-non-root:latest
+      - docker_build:
+          image_name: "bitcli/bit-non-root"
+          docker_file_name: "Dockerfile-bit-non-root"
+      # pushing again without the node version
+      - docker_push:
+          image_name: "bitcli/bit-non-root"
+          docker_tag_suffix: ""
 
   docker_non_root_build_node_14:
     machine:
@@ -238,11 +247,21 @@ jobs:
     steps:
       - attach_workspace:
           at: ./
-      - run: echo "$DOCKER_PASS" | docker login --username $DOCKER_USER --password-stdin
-      - run: cd bit/scripts && docker build -f ./docker-teambit-bit/Dockerfile-bit-non-root --build-arg BASE_IMAGE=node:14.19.1 -t bitcli/bit-non-root:`npm show @teambit/bit version`-node-14.19.1 .
-      - run: cd bit/scripts && docker build -f ./docker-teambit-bit/Dockerfile-bit-non-root --build-arg BASE_IMAGE=node:14.19.1 -t bitcli/bit-non-root:latest-node-14.19.1 .
-      - run: cd bit && docker push bitcli/bit-non-root:`npm show @teambit/bit version`-node-14.19.1
-      - run: cd bit && docker push bitcli/bit-non-root:latest-node-14.19.1
+      - docker_build:
+          node_version: "14.19.1"
+          image_name: "bitcli/bit-non-root"
+          docker_file_name: "Dockerfile-bit-non-root"
+
+  docker_non_root_build_node_16:
+    machine:
+      image: ubuntu-2004:202111-02
+    steps:
+      - attach_workspace:
+          at: ./
+      - docker_build:
+          node_version: "16.15.0"
+          image_name: "bitcli/bit-non-root"
+          docker_file_name: "Dockerfile-bit-non-root"
 
   server_docker_build:
     machine:
@@ -250,11 +269,13 @@ jobs:
     steps:
       - attach_workspace:
           at: ./
-      - run: echo "$DOCKER_PASS" | docker login --username $DOCKER_USER --password-stdin
-      - run: cd bit/scripts && docker build -f ./docker-teambit-bit/Dockerfile-bit-server -t bitcli/bit-server:`npm show @teambit/bit version` --build-arg BIT_VERSION=`npm show @teambit/bit version` .
-      - run: cd bit/scripts && docker build -f ./docker-teambit-bit/Dockerfile-bit-server -t bitcli/bit-server:latest .
-      - run: cd bit && docker push bitcli/bit-server:`npm show @teambit/bit version`
-      - run: cd bit && docker push bitcli/bit-server:latest
+      - docker_build:
+          image_name: "bitcli/bit-server"
+          docker_file_name: "Dockerfile-bit-server"
+      # pushing again without the node version
+      - docker_push:
+          image_name: "bitcli/bit-server"
+          docker_tag_suffix: ""
 
   server_docker_build_node_14:
     machine:
@@ -262,11 +283,21 @@ jobs:
     steps:
       - attach_workspace:
           at: ./
-      - run: echo "$DOCKER_PASS" | docker login --username $DOCKER_USER --password-stdin
-      - run: cd bit/scripts && docker build -f ./docker-teambit-bit/Dockerfile-bit-server -t bitcli/bit-server:`npm show @teambit/bit version`-node-14.19.1 --build-arg BIT_VERSION=`npm show @teambit/bit version`-node-14.19.1 .
-      - run: cd bit/scripts && docker build -f ./docker-teambit-bit/Dockerfile-bit-server -t bitcli/bit-server:latest-node-14.19.1 --build-arg BIT_VERSION=latest-node-14.19.1 .
-      - run: cd bit && docker push bitcli/bit-server:`npm show @teambit/bit version`-node-14.19.1
-      - run: cd bit && docker push bitcli/bit-server:latest-node-14.19.1
+      - docker_build:
+          node_version: "14.19.1"
+          image_name: "bitcli/bit-server"
+          docker_file_name: "Dockerfile-bit-server"
+
+  server_docker_build_node_16:
+    machine:
+      image: ubuntu-2004:202111-02
+    steps:
+      - attach_workspace:
+          at: ./
+      - docker_build:
+          node_version: "16.15.0"
+          image_name: "bitcli/bit-server"
+          docker_file_name: "Dockerfile-bit-server"
 
   set_ssh_key:
     <<: *defaults
