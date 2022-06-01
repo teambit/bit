@@ -1,6 +1,6 @@
 import { ComponentProvider } from '@teambit/component';
 import { useComponentCompareContext } from '@teambit/component.ui.compare';
-import { CheckboxItem } from '@teambit/design.inputs.selectors.checkbox-item';
+import { Toggle } from '@teambit/design.ui.input.toggle';
 import { RoundLoader } from '@teambit/design.ui.round-loader';
 import { Overview, TitleBadgeSlot } from '@teambit/docs';
 import React, { UIEvent, useRef, useState } from 'react';
@@ -47,9 +47,10 @@ export function OverviewCompare(props: OverviewCompareProps) {
         </div>
       )}
       <div className={styles.checkboxContainer}>
-        <CheckboxItem checked={isScrollingSynced} onInputChanged={handleScrollingSyncChange}>
+        <div className={styles.toggleContainer}>
+          <Toggle checked={isScrollingSynced} onInputChanged={handleScrollingSyncChange} className={styles.toggle}/>
           Synchronize Scrolling
-        </CheckboxItem>
+        </div>
       </div>
       <div className={styles.mainContainer}>
         <div className={styles.subContainerLeft}>

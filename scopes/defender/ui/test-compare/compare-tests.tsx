@@ -1,6 +1,6 @@
 import { useComponentCompareContext } from '@teambit/component.ui.compare';
 import { EmptyStateSlot } from '@teambit/compositions';
-import { CheckboxItem } from '@teambit/design.inputs.selectors.checkbox-item';
+import { Toggle } from '@teambit/design.ui.input.toggle';
 import { RoundLoader } from '@teambit/design.ui.round-loader';
 import React, { HTMLAttributes, UIEvent, useRef, useState } from 'react';
 import { CompareTestsPage } from './compare-tests-page';
@@ -43,9 +43,10 @@ export function CompareTests(props: CompareTestsProps) {
         </div>
       )}
       <div className={styles.checkboxContainer}>
-        <CheckboxItem checked={isScrollingSynced} onInputChanged={handleScrollingSyncChange}>
+        <div className={styles.toggleContainer}>
+          <Toggle checked={isScrollingSynced} onInputChanged={handleScrollingSyncChange} className={styles.toggle} />
           Synchronize Scrolling
-        </CheckboxItem>
+        </div>
       </div>
       <div className={styles.mainContainer}>
         <div className={styles.subContainerLeft}>

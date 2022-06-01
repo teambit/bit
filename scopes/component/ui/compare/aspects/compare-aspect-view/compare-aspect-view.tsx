@@ -28,6 +28,9 @@ export function CompareAspectView({
     language: 'json',
     className: styles.diffEditor,
     theme: 'vs-dark',
+    options: {
+      readOnly: true,
+    },
     loading: (
       <div className={styles.loader}>
         <RoundLoader />
@@ -41,6 +44,9 @@ export function CompareAspectView({
     language: 'json',
     className: styles.diffEditor,
     theme: 'vs-dark',
+    options: {
+      readOnly: true,
+    },
     loading: (
       <div className={styles.loader}>
         <RoundLoader />

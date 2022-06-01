@@ -1,10 +1,10 @@
-import React, { HTMLAttributes, useState, useMemo, useRef } from 'react';
-import classNames from 'classnames';
-import { H4 } from '@teambit/documenter.ui.heading';
 import { DiffEditor, DiffEditorProps, DiffOnMount } from '@monaco-editor/react';
-import { ComponentModel } from '@teambit/component';
 import { useFileContent } from '@teambit/code.ui.queries.get-file-content';
-import { CheckboxItem } from '@teambit/design.inputs.selectors.checkbox-item';
+import { ComponentModel } from '@teambit/component';
+import { Toggle } from '@teambit/design.ui.input.toggle';
+import { H4 } from '@teambit/documenter.ui.heading';
+import classNames from 'classnames';
+import React, { HTMLAttributes, useMemo, useRef, useState } from 'react';
 import styles from './code-compare-view.module.scss';
 
 export type CodeCompareViewProps = {
@@ -60,6 +60,7 @@ export function CodeCompareView({ className, base, compare, fileName }: CodeComp
     theme: 'vs-dark',
     options: {
       ignoreTrimWhitespace: ignoreWhitespace,
+      readOnly: true
     },
   };
 
@@ -78,9 +79,10 @@ export function CodeCompareView({ className, base, compare, fileName }: CodeComp
         </H4>
       </div>
       <div className={styles.ignoreWhitespaceControlContainer}>
-        <CheckboxItem onInputChanged={onIgnoreWhitespaceToggled} checked={ignoreWhitespace}>
+        <div className={styles.toggleContainer}>
+          <Toggle checked={ignoreWhitespace} onInputChanged={onIgnoreWhitespaceToggled} className={styles.toggle} />
           Ignore Whitespace
-        </CheckboxItem>
+        </div>
       </div>
       <div className={styles.componentCompareCodeDiffEditorContainer}>
         <DiffEditor {...diffEditorProps} />

@@ -35,3 +35,14 @@
   width: fit-content;
   padding: 0px 8px;
 }
+
+.toggleContainer {
+  display: flex;
+  align-items: center;
+  margin-left: 8px;
+  margin-bottom: 8px;
+
+  .toggle {
+    margin-right: 8px;
+  }
+}

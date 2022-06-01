@@ -32,3 +32,13 @@
   align-items: center;
   height: 100%;
 }
+
+.toggleContainer {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+
+  .toggle {
+    margin-right: 8px;
+  }
+}
