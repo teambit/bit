@@ -50,7 +50,20 @@ export function ComponentMenu({
   consumeMethodSlot,
 }: MenuProps) {
   const componentId = useIdFromLocation();
-  const { component } = useComponent(host, componentId);
+  const lanesContext = useLanesContext();
+  const laneComponentId = componentId ? lanesContext?.getLaneComponentIdFromViewedLane(componentId) : undefined;
+  const useComponentOptions = laneComponentId
+    ? {
+        version: laneComponentId.version,
+        logFilters: {
+          log: {
+            logHead: laneComponentId.version,
+          },
+        },
+      }
+    : undefined;
+
+  const { component } = useComponent(host, laneComponentId?.toString() || componentId, useComponentOptions);
   const mainMenuItems = useMemo(() => groupBy(flatten(menuItemSlot.values()), 'category'), [menuItemSlot]);
   if (!component) return <FullLoader />;
   return (

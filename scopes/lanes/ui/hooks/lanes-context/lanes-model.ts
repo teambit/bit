@@ -211,4 +211,6 @@ export class LanesModel {
   setViewedLane = (viewedLaneId?: string) => {
     this.viewedLane = this.lanes.find((lane) => lane.id === viewedLaneId);
   };
+  getLaneComponentIdFromViewedLane = (fullName: string) =>
+    this.viewedLane?.components.find((component) => component.id.fullName === fullName)?.id;
 }
