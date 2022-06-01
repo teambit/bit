@@ -104,13 +104,16 @@ commands: # reusable commands
       docker_file_name:
         default: 'Dockerfile-bit'
         type: string
+      docker_tag_suffix:
+        default: '-node-<<parameters.node_version>>'
+        type: string
     steps:
       - run: echo "$DOCKER_PASS" | docker login --username $DOCKER_USER --password-stdin
       - run: cd bit/scripts && docker build -f ./docker-teambit-bit/<<parameters.docker_file_name>> --build-arg BASE_IMAGE=node:<<parameters.node_version>> -t <<parameters.image_name>>:`npm show @teambit/bit version`-node-<<parameters.node_version>> .
       - run: cd bit/scripts && docker build -f ./docker-teambit-bit/<<parameters.docker_file_name>> --build-arg BASE_IMAGE=node:<<parameters.node_version>> -t <<parameters.image_name>>:latest-node-<<parameters.node_version>> .
       - docker_push:
           image_name: "<<parameters.image_name>>"
-          docker_tag_suffix: "-node-<<parameters.node_version>>"
+          docker_tag_suffix: "<<parameters.docker_tag_suffix>>"
 
   docker_push:
     parameters:
@@ -204,7 +207,8 @@ jobs:
     steps:
       - attach_workspace:
           at: ./
-      - docker_build
+      - docker_build:
+          docker_tag_suffix: ""
       # pushing again without the node version
       - docker_push:
           docker_tag_suffix: ""
@@ -236,6 +240,7 @@ jobs:
       - docker_build:
           image_name: "bitcli/bit-non-root"
           docker_file_name: "Dockerfile-bit-non-root"
+          docker_tag_suffix: ""
       # pushing again without the node version
       - docker_push:
           image_name: "bitcli/bit-non-root"
@@ -272,6 +277,7 @@ jobs:
       - docker_build:
           image_name: "bitcli/bit-server"
           docker_file_name: "Dockerfile-bit-server"
+          docker_tag_suffix: ""
       # pushing again without the node version
       - docker_push:
           image_name: "bitcli/bit-server"
