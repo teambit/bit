@@ -53,7 +53,7 @@ export function ComponentCompare({ navSlot, host, routeSlot }: ComponentCompareP
 
   const compare = component;
 
-  const { component: base, loading } = useComponent(host, `${baseId.fullName}@${baseId.version}`);
+  const { component: base, loading } = useComponent(host, baseId.toString());
 
   const componentCompareModel: ComponentCompareModel = {
     compare,

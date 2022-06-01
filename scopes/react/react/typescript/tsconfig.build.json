@@ -19,7 +19,8 @@
     "resolveJsonModule": true
   },
   "exclude": [
-    "dist"
+    "dist",
+    "package.json"
   ],
   "include": [
     "**/*",
