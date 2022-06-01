@@ -1722,6 +1722,15 @@ workflows:
       - server_docker_build_node_14:
           requires:
             - docker_build_node_14
+      - docker_build_node_16:
+          requires:
+            - harmony_publish_to_gcloud
+      - docker_non_root_build_node_16:
+          requires:
+            - harmony_publish_to_gcloud
+      - server_docker_build_node_16:
+          requires:
+            - docker_build_node_16
 
   windows-nightly:
     triggers:
@@ -1856,6 +1865,18 @@ workflows:
           requires:
             - harmony_deploy_approval_job
             - docker_build_node_14
+      - docker_build_node_16:
+          requires:
+            - harmony_deploy_approval_job
+            - harmony_publish_to_gcloud
+      - docker_non_root_build_node_16:
+          requires:
+            - harmony_deploy_approval_job
+            - harmony_publish_to_gcloud
+      - server_docker_build_node_16:
+          requires:
+            - harmony_deploy_approval_job
+            - docker_build_node_16
   # uncomment to update esbuild arm64 cache
   # get_esbuild_arm64_workflow:
   #   jobs:
