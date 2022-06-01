@@ -54,12 +54,7 @@ export function ComponentMenu({
   const laneComponentId = componentId ? lanesContext?.getLaneComponentIdFromViewedLane(componentId) : undefined;
   const useComponentOptions = laneComponentId
     ? {
-        version: laneComponentId.version,
-        logFilters: {
-          log: {
-            logHead: laneComponentId.version,
-          },
-        },
+        logFilters: { log: { logHead: laneComponentId.version } },
       }
     : undefined;
 
