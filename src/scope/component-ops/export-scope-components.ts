@@ -120,6 +120,7 @@ please run "bit lane track" command to specify a remote-scope for this lane`);
   }
   const scopeRemotes: Remotes = await getScopeRemotes(scope);
   const idsGroupedByScope = ids.toGroupByScopeName(idsWithFutureScope);
+  await validateTargetScopeForLanes();
   const groupedByScopeString = Object.keys(idsGroupedByScope)
     .map((scopeName) => `scope "${scopeName}": ${idsGroupedByScope[scopeName].toString()}`)
     .join(', ');
@@ -191,6 +192,35 @@ please run "bit lane track" command to specify a remote-scope for this lane`);
       const idsPerScope = exportedBitIds.filter((id) => id.scope === objectPerRemote.remote.name);
       // it's possible that idsPerScope is an empty array, in case the objects were exported already before
       objectPerRemote.exportedIds = idsPerScope.map((id) => id.toString());
+    });
+  }
+
+  /**
+   * when a component is exported for the first time, and the lane-scope is not the same as the component-scope, it's
+   * important to validate that there is no such component in the original scope. otherwise, later, it'll be impossible
+   * to merge the lane because these two components don't have any snap in common.
+   */
+  async function validateTargetScopeForLanes() {
+    if (!laneObject) {
+      return;
+    }
+    const newIds = BitIds.fromArray(ids.filter((id) => !id.hasScope()));
+    const newIdsGrouped = newIds.toGroupByScopeName(idsWithFutureScope);
+    await mapSeries(Object.keys(newIdsGrouped), async (scopeName) => {
+      if (scopeName === laneObject.scope) {
+        // this validation is redundant if the lane-component is in the same scope as the lane-object
+        return;
+      }
+      // by getting the remote we also validate that this scope actually exists.
+      const remote = await scopeRemotes.resolve(scopeName, scope);
+      const list = await remote.list();
+      const listIds = BitIds.fromArray(list.map((listItem) => listItem.id));
+      newIdsGrouped[scopeName].forEach((id) => {
+        if (listIds.hasWithoutScopeAndVersion(id)) {
+          throw new Error(`unable to export a lane with a new component "${id.toString()}", which has the default-scope "${scopeName}".
+this scope already has a component with the same name. as such, it'll be impossible to merge the lane later because these two components are different`);
+        }
+      });
     });
   }
 
