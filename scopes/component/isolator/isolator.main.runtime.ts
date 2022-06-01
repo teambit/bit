@@ -1,5 +1,6 @@
 import { MainRuntime } from '@teambit/cli';
 import { compact, pick } from 'lodash';
+import { AspectLoaderMain, AspectLoaderAspect } from '@teambit/aspect-loader';
 import { Component, ComponentMap, ComponentAspect, ComponentID } from '@teambit/component';
 import type { ComponentMain, ComponentFactory } from '@teambit/component';
 import { getComponentPackageVersion } from '@teambit/component-package-version';
@@ -156,19 +157,41 @@ const DEFAULT_ISOLATE_INSTALL_OPTIONS: IsolateComponentsInstallOptions = {
 
 export class IsolatorMain {
   static runtime = MainRuntime;
-  static dependencies = [DependencyResolverAspect, LoggerAspect, ComponentAspect, GraphAspect, GlobalConfigAspect];
+  static dependencies = [
+    DependencyResolverAspect,
+    LoggerAspect,
+    ComponentAspect, 
+    GraphAspect,
+    GlobalConfigAspect,
+    AspectLoaderAspect,
+  ];
   static defaultConfig = {};
   _componentsPackagesVersionCache: { [idStr: string]: string } = {}; // cache packages versions of components
 
-  static async provider([dependencyResolver, loggerExtension, componentAspect, graphAspect, globalConfig]: [
+  static async provider([
+    dependencyResolver,
+    loggerExtension,
+    componentAspect,
+    graphAspect,
+    globalConfig,
+    aspectLoader,
+  ]: [
     DependencyResolverMain,
     LoggerMain,
     ComponentMain,
     GraphBuilder,
-    GlobalConfigMain
+    GlobalConfigMain,
+    AspectLoaderMain,
   ]): Promise<IsolatorMain> {
     const logger = loggerExtension.createLogger(IsolatorAspect.id);
-    const isolator = new IsolatorMain(dependencyResolver, logger, componentAspect, graphAspect, globalConfig);
+    const isolator = new IsolatorMain(
+      dependencyResolver,
+      logger,
+      componentAspect,
+      graphAspect,
+      globalConfig,
+      aspectLoader
+    );
     return isolator;
   }
   constructor(
@@ -176,7 +199,8 @@ export class IsolatorMain {
     private logger: Logger,
     private componentAspect: ComponentMain,
     private graphBuilder: GraphBuilder,
-    private globalConfig: GlobalConfigMain
+    private globalConfig: GlobalConfigMain,
+    private aspectLoader: AspectLoaderMain
   ) {}
 
   // TODO: the legacy scope used for the component writer, which then decide if it need to write the artifacts and dists
@@ -369,6 +393,13 @@ export class IsolatorMain {
     if (!this.dependencyResolver.hasRootComponents()) {
       await symlinkOnCapsuleRoot(capsuleList, this.logger, capsulesDir);
       await symlinkDependenciesToCapsules(capsulesWithModifiedPackageJson, capsuleList, this.logger);
+    } else {
+      const coreAspectIds = this.aspectLoader.getCoreAspectIds();
+      const coreAspectCapsules = CapsuleList.fromArray(capsuleList.filter((capsule) => {
+        const [compIdWithoutVersion] = capsule.component.id.toString().split('@');
+        return coreAspectIds.includes(compIdWithoutVersion);
+      }));
+      await symlinkOnCapsuleRoot(coreAspectCapsules, this.logger, capsulesDir);
     }
     // TODO: this is a hack to have access to the bit bin project in order to access core extensions from user extension
     // TODO: remove this after exporting core extensions as components
