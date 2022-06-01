@@ -1,18 +1,18 @@
+import { NavLink } from '@teambit/base-ui.routing.nav-link';
 import { Card } from '@teambit/base-ui.surfaces.card';
 import { mutedText } from '@teambit/base-ui.text.muted-text';
 import { ComponentID } from '@teambit/component';
+import { ComponentUrl } from '@teambit/component.modules.component-url';
+import { CompareStatusResolver } from '@teambit/component.ui.compare';
 import { DeprecationIcon } from '@teambit/component.ui.deprecation-icon';
 import { ellipsis } from '@teambit/design.ui.styles.ellipsis';
 import { EnvIcon } from '@teambit/envs.ui.env-icon';
 import classnames from 'classnames';
-import React, { useState, useEffect } from 'react';
-import { valid, compare } from 'semver';
-import { CompareStatusResolver } from '@teambit/component.ui.compare';
-import { NavLink } from '@teambit/base-ui.routing.nav-link';
-import { ComponentUrl } from '@teambit/component.modules.component-url';
+import React, { useMemo } from 'react';
+import { compare, valid } from 'semver';
+import { CompareNodeModel } from './compare-node-model';
 import styles from './dependency-compare-node.module.scss';
 import variants from './dependency-compare-variants.module.scss';
-import { CompareNodeModel } from './compare-node-model';
 
 export type DependencyCompareNodeProps = {
   node: CompareNodeModel;
@@ -21,17 +21,13 @@ export type DependencyCompareNodeProps = {
 
 export function DependencyCompareNode(props: DependencyCompareNodeProps) {
   const { node, type = 'defaultNode' } = props;
-  const [versionDiff, setVersionDiff] = useState(0);
-
   const { id: baseIdStr, component: baseComponent, compareVersion, status } = node;
   const { version: baseVersion } = baseComponent;
   const baseId = ComponentID.fromString(baseIdStr);
-
-  useEffect(() => {
-    if (valid(baseVersion) && valid(compareVersion)) {
-      setVersionDiff(compare(baseVersion, compareVersion));
-    }
-  }, [baseVersion, compareVersion]);
+  const versionDiff = useMemo(
+    () => valid(baseVersion) && valid(compareVersion) && compare(baseVersion, compareVersion),
+    [baseVersion, compareVersion]
+  );
 
   return (
     <Card className={classnames(styles.compNode, variants[type])} elevation="none">
@@ -44,13 +40,13 @@ export function DependencyCompareNode(props: DependencyCompareNodeProps) {
           <span className={classnames(styles.name, ellipsis)}>{baseId.name}</span>
         </NavLink>
         {baseId.version && <span className={classnames(styles.version, ellipsis)}>{baseId.version}</span>}
-        {(versionDiff === -1 || versionDiff === 1) && (
+        {versionDiff !== 0 && (
           <img
             className={classnames([styles.arrowIcon, styles.versionUp])}
             src="https://static.bit.dev/bit-icons/version-bump.svg"
           />
         )}
-        {compareVersion && (versionDiff === -1 || versionDiff === 1) && (
+        {compareVersion && versionDiff !== 0 && (
           <span
             className={classnames(
               styles.version,
@@ -65,7 +61,7 @@ export function DependencyCompareNode(props: DependencyCompareNodeProps) {
 
         <div className={styles.buffs}>
           <DeprecationIcon component={baseComponent} />
-          {status !== 'unchanged' && <CompareStatusResolver status={status} />}
+          {status !== 'same' && <CompareStatusResolver status={status} />}
         </div>
       </div>
     </Card>
