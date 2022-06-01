@@ -8,7 +8,7 @@ import fs from 'fs-extra';
  * @param destDirs - The target directories.
  */
 export async function hardLinkDirectory(src: string, destDirs: string[]) {
-  const files = fs.readdirSync(src);
+  const files = await fs.readdir(src);
   await Promise.all(files.map(async (file) => {
     if (file === 'node_modules') return;
     const srcFile = path.join(src, file);
@@ -29,7 +29,14 @@ export async function hardLinkDirectory(src: string, destDirs: string[]) {
       try {
         await fs.link(srcFile, destFile);
       } catch (err: any) {
-        if (err.code !== 'EEXIST') throw err;
+        if (err.code === 'ENOENT') {
+          await fs.mkdir(destDir, { recursive: true });
+          await fs.link(srcFile, destFile);
+          return
+        }
+        if (err.code !== 'EEXIST') {
+          throw err;
+        }
       }
     }));
   }))
