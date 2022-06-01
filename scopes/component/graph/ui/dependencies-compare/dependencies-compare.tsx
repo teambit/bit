@@ -1,6 +1,16 @@
 import { useComponentCompareContext } from '@teambit/component.ui.compare';
 import { RoundLoader } from '@teambit/design.ui.round-loader';
-import { calcElements, calcMinimapColors, GraphFilter, GraphFilters, useGraphQuery } from '@teambit/graph';
+import {
+  graph as graphStyles,
+  minimap as minimapStyles,
+  controls as controlStyles,
+  filters as filterStyles,
+  calcElements,
+  calcMinimapColors,
+  GraphFilter,
+  GraphFilters,
+  useGraphQuery,
+} from '@teambit/graph';
 import React, { useEffect, useRef, useState } from 'react';
 import ReactFlow, {
   Background,
@@ -11,7 +21,7 @@ import ReactFlow, {
   NodeTypesType,
   OnLoadParams,
   Position,
-  ReactFlowProvider
+  ReactFlowProvider,
 } from 'react-flow-renderer';
 import styles from './dependencies-compare.module.scss';
 import { DependencyCompareNode } from './dependency-compare-node';
@@ -79,16 +89,16 @@ export function DependenciesCompare() {
           zoomOnDoubleClick={false}
           elementsSelectable={false}
           maxZoom={1}
-          className={styles.graph}
+          className={graphStyles}
           elements={elements}
           nodeTypes={NodeTypes}
           onLoad={handleLoad}
         >
           <Background />
-          <Controls className={styles.controls} />
-          <MiniMap nodeColor={calcMinimapColors} className={styles.minimap} />
+          <Controls className={controlStyles} />
+          <MiniMap nodeColor={calcMinimapColors} className={minimapStyles} />
           <GraphFilters
-            className={styles.filters}
+            className={filterStyles}
             disable={loading}
             isFiltered={isFiltered}
             onChangeFilter={onCheckFilter}

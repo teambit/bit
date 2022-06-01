@@ -5,3 +5,8 @@ export { depTypeToClass, depTypeToLabel } from './dep-edge';
 export { calcMinimapColors } from './minimap';
 export { calcLayout } from './calc-layout';
 export { calcElements } from './calc-elements';
+
+import styles from './dependencies-graph.module.scss';
+export const graph = styles.graph;
+export const minimap = styles.minimap;
+export const controls = styles.controls;
