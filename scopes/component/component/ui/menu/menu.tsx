@@ -51,14 +51,12 @@ export function ComponentMenu({
 }: MenuProps) {
   const componentId = useIdFromLocation();
   const lanesContext = useLanesContext();
-  const laneComponentId = componentId ? lanesContext?.getLaneComponentIdFromViewedLane(componentId) : undefined;
-  const useComponentOptions = laneComponentId
-    ? {
-        logFilters: { log: { logHead: laneComponentId.version } },
-      }
-    : undefined;
+  const laneComponent = componentId ? lanesContext?.resolveComponent(componentId) : undefined;
+  const useComponentOptions = laneComponent && {
+    logFilters: { log: { logHead: laneComponent.version } },
+  };
 
-  const { component } = useComponent(host, laneComponentId?.toString() || componentId, useComponentOptions);
+  const { component } = useComponent(host, laneComponent?.id.toString() || componentId, useComponentOptions);
   const mainMenuItems = useMemo(() => groupBy(flatten(menuItemSlot.values()), 'category'), [menuItemSlot]);
   if (!component) return <FullLoader />;
   return (

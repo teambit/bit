@@ -29,16 +29,14 @@ export type ComponentProps = {
 export function Component({ routeSlot, containerSlot, host, onComponentChange }: ComponentProps) {
   const componentId = useIdFromLocation();
   const lanesContext = useLanesContext();
-  const laneComponentId = componentId ? lanesContext?.getLaneComponentIdFromViewedLane(componentId) : undefined;
-  const useComponentOptions = laneComponentId
-    ? {
-        logFilters: { log: { logHead: laneComponentId.version } },
+  const laneComponent = componentId ? lanesContext?.resolveComponent(componentId) : undefined;
+  const useComponentOptions = laneComponent && {
+        logFilters: { log: { logHead: laneComponent.version } },
       }
-    : undefined;
 
   const { component, componentDescriptor, error } = useComponent(
     host,
-    laneComponentId?.toString() || componentId,
+    laneComponent?.id.toString() || componentId,
     useComponentOptions
   );
   // trigger onComponentChange when component changes

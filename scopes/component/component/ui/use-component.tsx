@@ -2,7 +2,7 @@ import { useQuery } from '@teambit/ui-foundation.ui.react-router.use-query';
 import { ComponentDescriptor } from '@teambit/component-descriptor';
 import { ComponentModel } from './component-model';
 import { ComponentError } from './component-error';
-import { useComponentQuery } from './use-component-query';
+import { Filters, useComponentQuery } from './use-component-query';
 
 export type Component = {
   component?: ComponentModel;
@@ -11,9 +11,7 @@ export type Component = {
 };
 export type UseComponentOptions = {
   version?: string;
-  logFilters?: {
-    log?: { logType?: string; logOffset?: number; logLimit?: number; logHead?: string; logSort?: string };
-  };
+  logFilters?: Filters
 };
 
 export function useComponent(host: string, id?: string, options?: UseComponentOptions): Component {
