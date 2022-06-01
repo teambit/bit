@@ -2,6 +2,7 @@ import React, { useEffect, ReactNode, useMemo } from 'react';
 import flatten from 'lodash.flatten';
 import { RouteSlot, SlotRouter } from '@teambit/ui-foundation.ui.react-router.slot-router';
 import { SlotRegistry } from '@teambit/harmony';
+import { useLanesContext } from '@teambit/lanes.ui.lanes';
 
 import styles from './component.module.scss';
 import { ComponentProvider, ComponentDescriptorProvider } from './context';
@@ -27,7 +28,17 @@ export type ComponentProps = {
  */
 export function Component({ routeSlot, containerSlot, host, onComponentChange }: ComponentProps) {
   const componentId = useIdFromLocation();
-  const { component, componentDescriptor, error } = useComponent(host, componentId);
+  const lanesContext = useLanesContext();
+  const laneComponent = componentId ? lanesContext?.resolveComponent(componentId) : undefined;
+  const useComponentOptions = laneComponent && {
+        logFilters: { log: { logHead: laneComponent.version } },
+      }
+
+  const { component, componentDescriptor, error } = useComponent(
+    host,
+    laneComponent?.id.toString() || componentId,
+    useComponentOptions
+  );
   // trigger onComponentChange when component changes
   useEffect(() => onComponentChange?.(component), [component]);
   // cleanup when unmounting component
