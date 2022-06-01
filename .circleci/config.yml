@@ -1876,31 +1876,38 @@ workflows:
   #           - bundle_version_macos
   #           - bundle_version_linux
   #           - bundle_version_windows
-  #     - docker_build:
-  #         requires:
-  #           - checkout_code
-  #           - harmony_publish_to_gcloud
-      # - docker_build_node_14:
-      #     requires:
-      #       - checkout_code
-      #       - harmony_publish_to_gcloud
+      - docker_build:
+          requires:
+            - checkout_code
+            # - harmony_publish_to_gcloud
+      - docker_build_node_14:
+          requires:
+            - checkout_code
+            # - harmony_publish_to_gcloud
       - docker_build_node_16:
           requires:
             - checkout_code
-      #       - harmony_publish_to_gcloud
-      # - docker_non_root_build:
-      #     requires:
-      #       - checkout_code
-      #       - harmony_publish_to_gcloud
-      # - docker_non_root_build_node_14:
-      #     requires:
-      #       - checkout_code
-      #       - harmony_publish_to_gcloud
-  #     - server_docker_build:
-  #         requires:
-  #           - docker_build
-      # - server_docker_build_node_14:
-      #     requires:
-      #       - docker_build_node_14
+            # - harmony_publish_to_gcloud
+      - docker_non_root_build:
+          requires:
+            - checkout_code
+            # - harmony_publish_to_gcloud
+      - docker_non_root_build_node_14:
+          requires:
+            - checkout_code
+            # - harmony_publish_to_gcloud
+      - docker_non_root_build_node_16:
+          requires:
+            - checkout_code
+            # - harmony_publish_to_gcloud
+      - server_docker_build:
+          requires:
+            - docker_build
+      - server_docker_build_node_14:
+          requires:
+            - docker_build_node_14
+      - server_docker_build_node_16:
+          requires:
+            - docker_build_node_14
 
 
