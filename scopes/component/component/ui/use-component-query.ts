@@ -45,6 +45,7 @@ export const componentOverviewFields = gql`
     }
     preview {
       includesEnvTemplate
+      legacyHeader
     }
     compositions {
       identifier

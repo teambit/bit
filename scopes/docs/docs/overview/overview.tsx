@@ -8,9 +8,6 @@ import { ComponentOverview, TitleBadge } from '@teambit/component.ui.component-m
 import { LaneBreadcrumb, useLanesContext } from '@teambit/lanes.ui.lanes';
 import { Separator } from '@teambit/design.ui.separator';
 import styles from './overview.module.scss';
-import { hasLegacyDocs } from './legacy-docs';
-
-const ENV_ASPECT_NAME = 'teambit.envs/envs';
 
 export type TitleBadgeSlot = SlotRegistry<TitleBadge[]>;
 
@@ -24,8 +21,7 @@ export function Overview({ titleBadges }: OverviewProps) {
   const lanesModel = useLanesContext();
   const currentLane = lanesModel?.viewedLane;
 
-  const envType = componentDescriptor?.get<any>(ENV_ASPECT_NAME)?.type;
-  const showHeader = !hasLegacyDocs(component, envType);
+  const showHeader = !component.preview?.legacyHeader;
 
   if (component?.buildStatus === 'pending' && component?.host === 'teambit.scope/scope')
     return (
