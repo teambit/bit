@@ -93,6 +93,23 @@ commands: # reusable commands
       # - run: 'bit config set user.token <<parameters.token>>'
       - run: 'bit config set hub_domain <<parameters.env>>.bit.dev'
       - run: 'bit config set package-manager.cache /home/circleci/package-manager-cache'
+  docker_build:
+    parameters:
+      node_version:
+        default: ''
+        type: string
+      image_name:
+        default: 'bitcli/bit'
+        type: string
+      docker_file_name:
+        default: 'Dockerfile-bit'
+        type: string
+    steps:
+      - run: echo "$DOCKER_PASS" | docker login --username $DOCKER_USER --password-stdin
+      - run: cd bit/scripts && docker build -f ./docker-teambit-bit/<<parameters.docker_file_name>> --build-arg BASE_IMAGE=node:<<parameters.node_version>> -t <<parameters.image_name>>:`npm show @teambit/bit version`-node-<<parameters.node_version>> .
+      - run: cd bit/scripts && docker build -f ./docker-teambit-bit/<<parameters.docker_file_name>> --build-arg BASE_IMAGE=node:<<parameters.node_version>> -t <<parameters.image_name>>:latest-node-<<parameters.node_version>> .
+      - run: cd bit && docker push <<parameters.image_name>>:`npm show @teambit/bit version`-node-<<parameters.node_version>>
+      - run: cd bit && docker push <<parameters.image_name>>:latest-node-<<parameters.node_version>>
 
   bit_global_for_npm:
     steps:
@@ -191,6 +208,17 @@ jobs:
       - run: cd bit/scripts && docker build -f ./docker-teambit-bit/Dockerfile-bit --build-arg BASE_IMAGE=node:14.19.1 -t bitcli/bit:latest-node-14.19.1 .
       - run: cd bit && docker push bitcli/bit:`npm show @teambit/bit version`-node-14.19.1
       - run: cd bit && docker push bitcli/bit:latest-node-14.19.1
+
+  docker_build_node_16:
+    machine:
+      image: ubuntu-2004:202111-02
+    steps:
+      - attach_workspace:
+          at: ./
+      - docker_build:
+          node_version: "16.15.0"
+          image_name: "bitcli/bit"
+          docker_file_name: "Dockerfile-bit"
 
   docker_non_root_build:
     machine:
@@ -1785,12 +1813,12 @@ workflows:
   #           branches:
   #             only: circle-esbuild-cache
   # uncomment and change the filter branch name to debug the bvm bundle jobs
-  # bvm_bundle_debug:
-  #   jobs:
-  #     - checkout_code:
-  #         filters:
-  #           branches:
-  #             only: fix-circle-cache
+  bvm_bundle_debug:
+    jobs:
+      - checkout_code:
+          filters:
+            branches:
+              only: docker-node16
   #     - bundle_version_linux:
   #         filters:
   #           branches:
@@ -1824,6 +1852,10 @@ workflows:
       # - docker_build_node_14:
       #     requires:
       #       - checkout_code
+      #       - harmony_publish_to_gcloud
+      - docker_build_node_16:
+          requires:
+            - checkout_code
       #       - harmony_publish_to_gcloud
       # - docker_non_root_build:
       #     requires:
