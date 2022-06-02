@@ -42,8 +42,8 @@ export class SignMain {
   ) {}
 
   async sign(ids: ComponentID[], isMultiple?: boolean, push?: boolean, laneIdStr?: string): Promise<SignResult | null> {
+    let lane: Lane | undefined;
     if (isMultiple) {
-      let lane: Lane | undefined;
       if (laneIdStr) {
         const laneId = LaneId.parse(laneIdStr);
         lane = await this.lanes.importLane(laneId);
@@ -75,7 +75,7 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
     const buildStatus = pipeWithError ? BuildStatus.Failed : BuildStatus.Succeed;
     if (push) {
       if (isMultiple) {
-        await this.exportExtensionsDataIntoScopes(legacyComponents, buildStatus);
+        await this.exportExtensionsDataIntoScopes(legacyComponents, buildStatus, lane);
       } else {
         await this.saveExtensionsDataIntoScope(legacyComponents, buildStatus);
       }
@@ -120,7 +120,7 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
     await this.scope.legacyScope.objects.persist();
   }
 
-  private async exportExtensionsDataIntoScopes(components: ConsumerComponent[], buildStatus: BuildStatus) {
+  private async exportExtensionsDataIntoScopes(components: ConsumerComponent[], buildStatus: BuildStatus, lane?: Lane) {
     const objectList = new ObjectList();
     const signComponents = await mapSeries(components, async (component) => {
       component.buildStatus = buildStatus;
@@ -131,6 +131,10 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
       objectList.mergeObjectList(objectToMerge);
       return ComponentID.fromLegacy(component.id);
     });
+    if (lane) {
+      // the components should be exported to the lane-scope, not to their original scope.
+      objectList.addScopeName(lane.scope);
+    }
     const http = await Http.connect(CENTRAL_BIT_HUB_URL, CENTRAL_BIT_HUB_NAME);
     await http.pushToCentralHub(objectList, {
       persist: true,

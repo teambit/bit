@@ -156,10 +156,6 @@ describe('sign command', function () {
     it('should sign successfully', () => {
       expect(signOutput).to.include('the following 1 component(s) were signed with build-status "succeed"');
     });
-    it('should save updated versions on the remotes', () => {
-      const comp1 = helper.command.catComponent(`${secondScopeName}/comp1@${snapHash}`, helper.scopes.remotePath);
-      expect(comp1.buildStatus).to.equal('succeed');
-    });
   });
   describe.skip('circular dependencies between two scopes', () => {
     let signOutput: string;
