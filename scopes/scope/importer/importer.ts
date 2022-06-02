@@ -22,7 +22,7 @@ export class Importer {
       const currentRemoteLane = await this.workspace.getCurrentRemoteLane();
       if (currentRemoteLane) {
         importOptions.lanes = { laneIds: [currentRemoteLane.toLaneId()], lanes: [currentRemoteLane] };
-      } else if (!importOptions.ids) {
+      } else if (!importOptions.ids.length) {
         // the lane is probably new, it's not yet on the remote, so nothing to import
         return {
           dependencies: [],
