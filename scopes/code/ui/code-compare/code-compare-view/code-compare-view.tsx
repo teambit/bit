@@ -1,10 +1,11 @@
-import { DiffEditor, DiffEditorProps, DiffOnMount } from '@monaco-editor/react';
+import { DiffEditor, DiffOnMount } from '@monaco-editor/react';
 import { useFileContent } from '@teambit/code.ui.queries.get-file-content';
 import { ComponentModel } from '@teambit/component';
 import { Toggle } from '@teambit/design.ui.input.toggle';
 import { H4 } from '@teambit/documenter.ui.heading';
 import classNames from 'classnames';
 import React, { HTMLAttributes, useMemo, useRef, useState } from 'react';
+import { darkMode } from '@teambit/base-ui.theme.dark-theme';
 import styles from './code-compare-view.module.scss';
 
 export type CodeCompareViewProps = {
@@ -64,7 +65,7 @@ export function CodeCompareView({ className, base, compare, fileName }: CodeComp
       language={language}
       height={'100vh'}
       onMount={handleEditorDidMount}
-      className={styles.diffEditor}
+      className={darkMode}
       theme={'vs-dark'}
       options={{
         ignoreTrimWhitespace: ignoreWhitespace,

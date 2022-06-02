@@ -1,20 +1,3 @@
-.diffEditor {
-  // TODO - remove unneeded css vars overrides
-  // TODO - find a better place to put the color overrides. maybe move to a theme?
-  --bit-text-color-heavy: #f6f6f6;
-  --bit-text-color-light: #f6f6f6;
-  --bit-border-color-lightest: #434343;
-  --on-background-color: #f6f6f6;
-  --surface-neutral-color: #161616;
-  --bit-accent-heavy: #f6f6f6;
-  --bit-accent-color: #9183ff;
-
-  --bit-accent-bg: #2d2842;
-  --bit-bg-heavy: #140f27;
-  --editor-bg-color: #1e1e1e;
-  background-color: var(--editor-bg-color, #1e1e1e);
-}
-
 .componentCompareCodeViewContainer {
   width: 100%;
   height: 100%;
@@ -31,7 +14,7 @@
 }
 
 .ignoreWhitespaceControlContainer {
-  color: #000;
+  color: var(--bit-text-color, #414141);
   width: fit-content;
   padding: 0px 8px;
 }
