@@ -65,7 +65,7 @@ export default class BitMap {
     public schema: string,
     private isLegacy: boolean,
     public workspaceLane: WorkspaceLane | null, // null if not checked out to a lane
-    private remoteLaneId?: LaneId
+    public remoteLaneId?: LaneId
   ) {
     this.components = [];
     this.hasChanged = false;
@@ -171,11 +171,11 @@ export default class BitMap {
       throw new InvalidBitMap(currentLocation, e.message);
     }
     const schema = componentsJson[SCHEMA_FIELD] || componentsJson.version;
-    const remoteLaneName = componentsJson[LANE_KEY];
+    const laneId = new LaneId(componentsJson[LANE_KEY]);
 
     BitMap.removeNonComponentFields(componentsJson);
 
-    const bitMap = new BitMap(dirPath, currentLocation, schema, isLegacy, workspaceLane, remoteLaneName);
+    const bitMap = new BitMap(dirPath, currentLocation, schema, isLegacy, workspaceLane, laneId);
     bitMap.loadComponents(componentsJson);
     await bitMap.loadFiles();
     return bitMap;

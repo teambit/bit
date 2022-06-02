@@ -15,7 +15,22 @@ export class Importer {
   async import(importOptions: ImportOptions, packageManagerArgs: string[]): Promise<ImportResult> {
     const consumer = this.workspace.consumer;
     consumer.packageManagerArgs = packageManagerArgs;
-    await this.populateLanesDataIfNeeded(importOptions);
+    if (!importOptions.ids.length) {
+      importOptions.objectsOnly = true;
+    }
+    if (this.workspace.consumer.isOnLane()) {
+      const currentRemoteLane = await this.workspace.getCurrentRemoteLane();
+      if (currentRemoteLane) {
+        importOptions.lanes = { laneIds: [currentRemoteLane.toLaneId()], lanes: [currentRemoteLane] };
+      } else {
+        // the lane is probably new, it's not yet on the remote, so nothing to import
+        return {
+          dependencies: [],
+          importDetails: [],
+          cancellationMessage: `your lane wasn't exported yet, nothing to import`,
+        };
+      }
+    }
     const importComponents = new ImportComponents(consumer, importOptions);
     const { dependencies, importDetails } = await importComponents.importComponents();
     const bitIds = dependencies.map(R.path(['component', 'id']));
@@ -36,15 +51,5 @@ export class Importer {
 
   private getImportedPackagesNames(components: ConsumerComponent[]): string[] {
     return components.map((component) => componentIdToPackageName(component));
-  }
-
-  private async populateLanesDataIfNeeded(importOptions: ImportOptions) {
-    if (!importOptions.ids.length) {
-      importOptions.objectsOnly = true;
-    }
-    const currentRemoteLane = await this.workspace.getCurrentRemoteLane();
-    if (currentRemoteLane) {
-      importOptions.lanes = { laneIds: [currentRemoteLane.toLaneId()], lanes: [currentRemoteLane] };
-    }
   }
 }
