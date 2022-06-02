@@ -10,14 +10,14 @@ import { CodeCompareTree } from '@teambit/code.ui.code-compare';
 import { ComponentCompareAspectsContext } from './compare-aspects-context';
 import { CompareAspectView } from './compare-aspect-view';
 import { Widget } from './compare-aspects.widgets';
-import { useCompareAspects } from './use-compare-aspects';
+import { useCompareAspectsQuery } from './use-compare-aspects-query';
 
 import styles from './compare-aspects.module.scss';
 
 export type ComponentCompareAspectsProps = { host: string } & HTMLAttributes<HTMLDivElement>;
 
 export function ComponentCompareAspects({ host, className }: ComponentCompareAspectsProps) {
-  const { base, compare, loading, selectedBase, selectedCompare, selected } = useCompareAspects(host);
+  const { base, compare, loading, selectedBase, selectedCompare, selected } = useCompareAspectsQuery(host);
   const isMobile = useIsMobile();
   const [isSidebarOpen, setSidebarOpenness] = useState(!isMobile);
   const sidebarOpenness = isSidebarOpen ? Layout.row : Layout.left;

@@ -33,7 +33,7 @@ const GET_COMPONENT_ASPECT_DATA = gql`
   }
 `;
 
-export function useCompareAspects(host: string): ComponentCompareAspectsModel {
+export function useCompareAspectsQuery(host: string): ComponentCompareAspectsModel {
   const componentCompareContext = useComponentCompare();
   const base = componentCompareContext?.base;
   const compare = componentCompareContext?.compare;
