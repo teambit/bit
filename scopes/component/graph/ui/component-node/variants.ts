@@ -1,5 +1,5 @@
 import variants from './variants.module.scss';
 
-const { root, defaultNode, rootNodeColor, defaultNodeColor, externalNodeColor } = variants;
+const { root, defaultNode, external, rootNodeColor, defaultNodeColor, externalNodeColor } = variants;
 
-export { root, defaultNode, rootNodeColor, defaultNodeColor, externalNodeColor };
+export { root, defaultNode, external, rootNodeColor, defaultNodeColor, externalNodeColor };

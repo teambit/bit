@@ -19,5 +19,19 @@ export {
   graph,
   minimap,
 } from './ui/dependencies-graph';
-export { filters, GraphFilters } from './ui/graph-page';
+export { graph as graphClass, filters as filtersClass, GraphFilters } from './ui/graph-page';
 export { EdgeModel, GraphModel, NodeModel, RawGraph, useGraph, useGraphQuery } from './ui/query';
+export {
+  compNodeClass,
+  firstRowClass,
+  envIconClass,
+  breadcrumbsClass,
+  nameLineClass,
+  nameClass,
+  versionClass,
+  buffsClass,
+  linkClass,
+  root,
+  defaultNode,
+  external,
+} from './ui/component-node';

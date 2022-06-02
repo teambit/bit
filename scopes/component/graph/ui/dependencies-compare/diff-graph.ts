@@ -14,7 +14,11 @@ const getEdgeId = (_e: EdgeModel) => {
   return `${toShortIdFromNodeId(_e.sourceId)}${delim}${toShortIdFromNodeId(_e.targetId)}`;
 };
 
-export function diffGraph(baseGraph?: GraphModel, compareGraph?: GraphModel, baseId?: ComponentID) {
+export function diffGraph(
+  baseGraph?: GraphModel<NodeModel, EdgeModel>,
+  compareGraph?: GraphModel<NodeModel, EdgeModel>,
+  baseId?: ComponentID
+) {
   if (!baseGraph || !compareGraph || !baseId) return null;
 
   const baseNodes = baseGraph.nodes;
@@ -30,7 +34,7 @@ export function diffGraph(baseGraph?: GraphModel, compareGraph?: GraphModel, bas
       allNodes.push({
         ...baseNode,
         compareVersion: compareNode.component.version,
-        status: compareNode.component.id.isEqual(baseNode.component.id) ? 'same' : 'modified',
+        status: compareNode.component.id.isEqual(baseNode.component.id) ? undefined : 'modified',
       });
     } else {
       allNodes.push({
