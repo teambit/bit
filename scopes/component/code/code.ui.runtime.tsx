@@ -55,7 +55,7 @@ export class CodeUI {
     component.registerWidget(section.navigationLink, section.order);
     const codeCompare = new CodeCompareSection(fileIconSlot);
     componentCompare.registerNavigation({
-      props: { ...codeCompare.navigationLink },
+      props: codeCompare.navigationLink,
       order: codeCompare.navigationLink.order,
     });
     componentCompare.registerRoutes([codeCompare.route]);

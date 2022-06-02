@@ -45,7 +45,7 @@ export class DocsUI {
     component.registerRoute(section.route);
     component.registerNavigation(section.navigationLink, section.order);
     componentCompare.registerNavigation({
-      props: { ...compareSection.navigationLink },
+      props: compareSection.navigationLink,
       order: compareSection.navigationLink.order,
     });
     componentCompare.registerRoutes([compareSection.route]);

@@ -57,7 +57,7 @@ export class ComponentCompareUI {
     componentUi.registerWidget(componentCompareSection.navigationLink, componentCompareSection.order);
     const aspectCompareSection = new AspectsCompareSection(host);
     componentCompareUI.registerNavigation({
-      props: { ...aspectCompareSection.navigationLink },
+      props: aspectCompareSection.navigationLink,
       order: aspectCompareSection.navigationLink.order,
     });
     componentCompareUI.registerRoutes([aspectCompareSection.route]);

@@ -38,7 +38,7 @@ export class TesterUI {
     component.registerRoute(section.route);
     component.registerNavigation(section.navigationLink, section.order);
     componentCompare.registerNavigation({
-      props: { ...testerCompareSection.navigationLink },
+      props: testerCompareSection.navigationLink,
       order: testerCompareSection.navigationLink.order,
     });
     componentCompare.registerRoutes([testerCompareSection.route]);
