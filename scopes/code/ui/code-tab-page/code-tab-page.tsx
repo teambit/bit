@@ -55,9 +55,9 @@ export function CodePage({ className, fileIconSlot }: CodePageProps) {
           currentFile={currentFile}
           dependencies={dependencies}
           fileTree={fileTree}
-          widgets={[generateWidget(mainFile, devFiles)]}
-          getHref={(node) => `${node.id}${affix('?version=', urlParams.version)}`}
-          getIcon={generateIcon(fileIconMatchers)}
+          widgets={useMemo(() => [generateWidget(mainFile, devFiles)], [mainFile, devFiles])}
+          getHref={useMemo(() => (node) => `${node.id}${affix('?version=', urlParams.version)}`, [urlParams.version])}
+          getIcon={useMemo(() => generateIcon(fileIconMatchers), fileIconMatchers)}
         />
       </Pane>
     </SplitPane>
