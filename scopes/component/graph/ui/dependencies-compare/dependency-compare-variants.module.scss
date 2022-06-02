@@ -1,8 +1,4 @@
 $success: #37b26c;
-$regularNodeColor: #3a95ff;
-$br20: #f3faff;
-$d40: #6c707c;
-
 $borderLabelHeight: 20px;
 
 .root {
@@ -22,22 +18,4 @@ $borderLabelHeight: 20px;
     color: white;
     line-height: $borderLabelHeight;
   }
-}
-
-.defaultNode {
-  border-color: $regularNodeColor;
-
-  box-shadow: 0px 0px 0px 2px $br20;
-}
-
-.external {
-  border-color: $d40;
-
-  box-shadow: 0px 0px 0px 2px var(border--color);
-}
-
-:export {
-  rootNodeColor: $success;
-  defaultNodeColor: $regularNodeColor;
-  externalNodeColor: $d40;
 }

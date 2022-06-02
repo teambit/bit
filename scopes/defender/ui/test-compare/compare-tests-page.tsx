@@ -1,3 +1,4 @@
+import React, { HTMLAttributes } from 'react';
 import { gql, useQuery, useSubscription } from '@apollo/client';
 import { ComponentModel } from '@teambit/component';
 import { EmptyStateSlot } from '@teambit/compositions';
@@ -6,9 +7,8 @@ import { TestTable } from '@teambit/defender.ui.test-table';
 import { AlertCard } from '@teambit/design.ui.alert-card';
 import { EmptyBox } from '@teambit/design.ui.empty-box';
 import { MDXLayout } from '@teambit/mdx.ui.mdx-layout';
+import { testBlockClass, testsPageClass } from '@teambit/tester';
 import classNames from 'classnames';
-import React, { HTMLAttributes } from 'react';
-import styles from './compare-tests-page.module.scss';
 
 export type CompareTestsPageProps = {
   component: ComponentModel;
@@ -94,7 +94,7 @@ export function CompareTestsPage(props: CompareTestsPageProps) {
     EmptyStateTemplate
   ) {
     return (
-      <div className={classNames(styles.testsPage, className)}>
+      <div className={classNames(testsPageClass, className)}>
         <div>
           <AlertCard
             level="info"
@@ -122,9 +122,9 @@ export function CompareTestsPage(props: CompareTestsPageProps) {
   }
 
   return (
-    <div className={classNames(styles.testsPage, className)}>
+    <div className={classNames(testsPageClass, className)}>
       <div>
-        <TestTable testResults={testResults} className={styles.testBlock} />
+        <TestTable testResults={testResults} className={testBlockClass} />
       </div>
     </div>
   );

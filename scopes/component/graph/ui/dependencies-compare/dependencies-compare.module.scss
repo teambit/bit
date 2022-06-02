@@ -2,14 +2,7 @@ $d30: #878c9a;
 $b70: #0d2de3;
 
 .page {
-  height: 100%;
   margin-top: 16px; // not exported
-  flex-grow: 1;
-  width: unset;
-
-  border-radius: 5px;
-  border: solid 1px var(--bit-border-color-lightest, #ededed);
-  background: var(--bit-bg-dent, #f6f6f6);
 }
 
 .loader {
