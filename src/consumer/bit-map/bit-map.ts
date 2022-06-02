@@ -171,7 +171,7 @@ export default class BitMap {
       throw new InvalidBitMap(currentLocation, e.message);
     }
     const schema = componentsJson[SCHEMA_FIELD] || componentsJson.version;
-    const laneId = new LaneId(componentsJson[LANE_KEY]);
+    const laneId = componentsJson[LANE_KEY] ? new LaneId(componentsJson[LANE_KEY]) : undefined;
 
     BitMap.removeNonComponentFields(componentsJson);
 
