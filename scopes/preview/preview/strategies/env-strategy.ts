@@ -14,6 +14,8 @@ import { PreviewDefinition } from '../preview-definition';
 import { PreviewMain } from '../preview.main.runtime';
 import { html } from '../webpack';
 
+export const ENV_STRATEGY_ARTIFACT_NAME = 'preview';
+
 /**
  * bundles all components in a given env into the same bundle.
  */
@@ -80,7 +82,7 @@ export class EnvBundlingStrategy implements BundlingStrategy {
 
     return [
       {
-        name: 'preview',
+        name: ENV_STRATEGY_ARTIFACT_NAME,
         globPatterns: ['public/**'],
         rootDir,
         context: env,

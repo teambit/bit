@@ -17,8 +17,9 @@ export class TesterTask implements BuildTask {
   constructor(readonly aspectId: string, private devFiles: DevFilesMain) {}
 
   async execute(context: BuildContext): Promise<BuiltTaskResult> {
+    const components = context.capsuleNetwork.originalSeedersCapsules.getAllComponents();
     const tester: Tester = context.env.getTester();
-    const componentsSpecFiles = ComponentMap.as(context.components, (component) => {
+    const componentsSpecFiles = ComponentMap.as(components, (component) => {
       return detectTestFiles(component, this.devFiles);
     });
 
@@ -29,7 +30,7 @@ export class TesterTask implements BuildTask {
         componentsResults: [],
       };
 
-    const specFilesWithCapsule = ComponentMap.as(context.components, (component) => {
+    const specFilesWithCapsule = ComponentMap.as(components, (component) => {
       const componentSpecFiles = componentsSpecFiles.get(component);
       if (!componentSpecFiles) throw new Error('capsule not found');
       const [, specs] = componentSpecFiles;

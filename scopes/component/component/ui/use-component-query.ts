@@ -45,6 +45,7 @@ export const componentOverviewFields = gql`
     }
     preview {
       includesEnvTemplate
+      legacyHeader
     }
     compositions {
       identifier
@@ -141,13 +142,11 @@ const SUB_COMPONENT_REMOVED = gql`
   }
   ${componentIdFields}
 `;
-
+export type Filters = {
+  log?: { logType?: string; logOffset?: number; logLimit?: number; logHead?: string; logSort?: string };
+};
 /** provides data to component ui page, making sure both variables and return value are safely typed and memoized */
-export function useComponentQuery(
-  componentId: string,
-  host: string,
-  filters?: { log?: { logType?: string; logOffset?: number; logLimit?: number; logHead?: string; logSort?: string } }
-) {
+export function useComponentQuery(componentId: string, host: string, filters?: Filters) {
   const idRef = useRef(componentId);
   idRef.current = componentId;
   const { data, error, loading, subscribeToMore } = useDataQuery(GET_COMPONENT, {
