@@ -29,7 +29,7 @@ export function ComponentCompare({ navSlot, host, routeSlot }: ComponentCompareP
   const isNew = allVersionInfo.length === 0;
   const compareVersion =
     isWorkspace && !isNew && !location.search.includes('version') ? 'workspace' : component.id.version;
-  const isCompareVersionWorkspace = compareVersion === 'workspace';
+  const compareIsLocalChanges = compareVersion === 'workspace';
 
   const lastVersionInfo = useMemo(() => {
     const findPrevVersionFromCurrent = (_, index: number, logs: LegacyComponentLog[]) => {
@@ -59,7 +59,7 @@ export function ComponentCompare({ navSlot, host, routeSlot }: ComponentCompareP
     compare,
     base,
     loading,
-    compareIsLocalChanges: isCompareVersionWorkspace,
+    compareIsLocalChanges,
   };
 
   return (

@@ -13,16 +13,9 @@ export type ComponentCompareQueryParams = {
 export function useUpdatedUrlFromQuery(queryParams: ComponentCompareQueryParams): string {
   const query = useQuery();
   const location = useLocation();
-  const updatedObj = {};
+  const queryObj = Object.entries(query.entries());
 
-  for (const [key, value] of query.entries()) {
-    updatedObj[key] = queryParams[key] || value;
-  }
-
-  for (const key of Object.keys(queryParams)) {
-    updatedObj[key] = queryParams[key];
-  }
-
+  const updatedObj = { ...queryObj, ...queryParams };
   const queryString = new URLSearchParams(updatedObj).toString();
 
   return `${location.pathname}?${queryString}`;

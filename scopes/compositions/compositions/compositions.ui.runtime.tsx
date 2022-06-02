@@ -47,11 +47,13 @@ export class CompositionsUI {
     component.registerRoute(section.route);
     component.registerNavigation(section.navigationLink, section.order);
     componentCompare.registerNavigation({
-      props: { ...compositionCompare.navigationLink },
+      props: compositionCompare.navigationLink,
       order: compositionCompare.navigationLink.order,
     });
     componentCompare.registerRoutes([compositionCompare.route]);
     return compositions;
+
+    
   }
 }
 

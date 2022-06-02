@@ -21,7 +21,9 @@
   display: flex;
   align-items: center;
   min-height: 56px;
+  border-bottom: 1px solid var(--bit-border-color-lightest,#ededed);
 }
+
 .navigation {
   display: flex;
   list-style: none;
