@@ -93,6 +93,68 @@ commands: # reusable commands
       # - run: 'bit config set user.token <<parameters.token>>'
       - run: 'bit config set hub_domain <<parameters.env>>.bit.dev'
       - run: 'bit config set package-manager.cache /home/circleci/package-manager-cache'
+  docker_build_and_push:
+    parameters:
+      docker_build_arg_name:
+        default: 'BASE_IMAGE'
+        type: string
+      docker_build_arg_value:
+        default: 'node:12.22.0'
+        type: string
+      image_name:
+        default: 'bitcli/bit'
+        type: string
+      docker_file_name:
+        default: 'Dockerfile-bit'
+        type: string
+      docker_tag_suffix:
+        # I want this to be something like '-node-<<parameters.node_version>>' but I don't think we can access other params here
+        default: ''
+        type: string
+    steps:
+      - docker_build_internal:
+          image_name: "<<parameters.image_name>>"
+          docker_file_name: "<<parameters.docker_file_name>>"
+          docker_tag_suffix: "<<parameters.docker_tag_suffix>>"
+          docker_build_arg_name: "<<parameters.docker_build_arg_name>>"
+          docker_build_arg_value: "<<parameters.docker_build_arg_value>>"
+      - docker_push:
+          image_name: "<<parameters.image_name>>"
+          docker_tag_suffix: "<<parameters.docker_tag_suffix>>"
+
+  docker_build_internal:
+    parameters:
+      docker_build_arg_name:
+        default: 'BASE_IMAGE'
+        type: string
+      docker_build_arg_value:
+        default: 'node:12.22.0'
+        type: string
+      image_name:
+        default: 'bitcli/bit'
+        type: string
+      docker_file_name:
+        default: 'Dockerfile-bit'
+        type: string
+      docker_tag_suffix:
+        default: ""
+        type: string
+    steps:
+      - run: cd bit/scripts && docker build -f ./docker-teambit-bit/<<parameters.docker_file_name>> --build-arg <<parameters.docker_build_arg_name>>=<<parameters.docker_build_arg_value>> -t <<parameters.image_name>>:`npm show @teambit/bit version`<<parameters.docker_tag_suffix>> .
+      - run: cd bit/scripts && docker build -f ./docker-teambit-bit/<<parameters.docker_file_name>> --build-arg <<parameters.docker_build_arg_name>>=<<parameters.docker_build_arg_value>> -t <<parameters.image_name>>:latest<<parameters.docker_tag_suffix>> .
+
+  docker_push:
+    parameters:
+      image_name:
+        default: 'bitcli/bit'
+        type: string
+      docker_tag_suffix:
+        default: ''
+        type: string
+    steps:
+      - run: echo "$DOCKER_PASS" | docker login --username $DOCKER_USER --password-stdin
+      - run: cd bit && docker push <<parameters.image_name>>:`npm show @teambit/bit version`<<parameters.docker_tag_suffix>>
+      - run: cd bit && docker push <<parameters.image_name>>:latest<<parameters.docker_tag_suffix>>
 
   bit_global_for_npm:
     steps:
@@ -174,11 +236,7 @@ jobs:
     steps:
       - attach_workspace:
           at: ./
-      - run: echo "$DOCKER_PASS" | docker login --username $DOCKER_USER --password-stdin
-      - run: cd bit/scripts && docker build -f ./docker-teambit-bit/Dockerfile-bit -t bitcli/bit:`npm show @teambit/bit version` .
-      - run: cd bit/scripts && docker build -f ./docker-teambit-bit/Dockerfile-bit -t bitcli/bit:latest .
-      - run: cd bit && docker push bitcli/bit:`npm show @teambit/bit version`
-      - run: cd bit && docker push bitcli/bit:latest
+      - docker_build_and_push
 
   docker_build_node_14:
     machine:
@@ -186,11 +244,19 @@ jobs:
     steps:
       - attach_workspace:
           at: ./
-      - run: echo "$DOCKER_PASS" | docker login --username $DOCKER_USER --password-stdin
-      - run: cd bit/scripts && docker build -f ./docker-teambit-bit/Dockerfile-bit --build-arg BASE_IMAGE=node:14.19.1 -t bitcli/bit:`npm show @teambit/bit version`-node-14.19.1 .
-      - run: cd bit/scripts && docker build -f ./docker-teambit-bit/Dockerfile-bit --build-arg BASE_IMAGE=node:14.19.1 -t bitcli/bit:latest-node-14.19.1 .
-      - run: cd bit && docker push bitcli/bit:`npm show @teambit/bit version`-node-14.19.1
-      - run: cd bit && docker push bitcli/bit:latest-node-14.19.1
+      - docker_build_and_push:
+          docker_build_arg_value: "node:14.19.1"
+          docker_tag_suffix: "-node-14.19.1"
+
+  docker_build_node_16:
+    machine:
+      image: ubuntu-2004:202111-02
+    steps:
+      - attach_workspace:
+          at: ./
+      - docker_build_and_push:
+          docker_build_arg_value: "node:16.15.0"
+          docker_tag_suffix: "-node-16.15.0"
 
   docker_non_root_build:
     machine:
@@ -198,11 +264,9 @@ jobs:
     steps:
       - attach_workspace:
           at: ./
-      - run: echo "$DOCKER_PASS" | docker login --username $DOCKER_USER --password-stdin
-      - run: cd bit/scripts && docker build -f ./docker-teambit-bit/Dockerfile-bit-non-root -t bitcli/bit-non-root:`npm show @teambit/bit version` .
-      - run: cd bit/scripts && docker build -f ./docker-teambit-bit/Dockerfile-bit-non-root -t bitcli/bit-non-root:latest .
-      - run: cd bit && docker push bitcli/bit-non-root:`npm show @teambit/bit version`
-      - run: cd bit && docker push bitcli/bit-non-root:latest
+      - docker_build_and_push:
+          image_name: "bitcli/bit-non-root"
+          docker_file_name: "Dockerfile-bit-non-root"
 
   docker_non_root_build_node_14:
     machine:
@@ -210,11 +274,24 @@ jobs:
     steps:
       - attach_workspace:
           at: ./
-      - run: echo "$DOCKER_PASS" | docker login --username $DOCKER_USER --password-stdin
-      - run: cd bit/scripts && docker build -f ./docker-teambit-bit/Dockerfile-bit-non-root --build-arg BASE_IMAGE=node:14.19.1 -t bitcli/bit-non-root:`npm show @teambit/bit version`-node-14.19.1 .
-      - run: cd bit/scripts && docker build -f ./docker-teambit-bit/Dockerfile-bit-non-root --build-arg BASE_IMAGE=node:14.19.1 -t bitcli/bit-non-root:latest-node-14.19.1 .
-      - run: cd bit && docker push bitcli/bit-non-root:`npm show @teambit/bit version`-node-14.19.1
-      - run: cd bit && docker push bitcli/bit-non-root:latest-node-14.19.1
+      - docker_build_and_push:
+          docker_build_arg_value: "node:14.19.1"
+          image_name: "bitcli/bit-non-root"
+          docker_file_name: "Dockerfile-bit-non-root"
+          docker_tag_suffix: "-node-14.19.1"
+
+
+  docker_non_root_build_node_16:
+    machine:
+      image: ubuntu-2004:202111-02
+    steps:
+      - attach_workspace:
+          at: ./
+      - docker_build_and_push:
+          docker_build_arg_value: "node:16.15.0"
+          image_name: "bitcli/bit-non-root"
+          docker_file_name: "Dockerfile-bit-non-root"
+          docker_tag_suffix: "-node-16.15.0"
 
   server_docker_build:
     machine:
@@ -222,11 +299,12 @@ jobs:
     steps:
       - attach_workspace:
           at: ./
-      - run: echo "$DOCKER_PASS" | docker login --username $DOCKER_USER --password-stdin
-      - run: cd bit/scripts && docker build -f ./docker-teambit-bit/Dockerfile-bit-server -t bitcli/bit-server:`npm show @teambit/bit version` --build-arg BIT_VERSION=`npm show @teambit/bit version` .
-      - run: cd bit/scripts && docker build -f ./docker-teambit-bit/Dockerfile-bit-server -t bitcli/bit-server:latest .
-      - run: cd bit && docker push bitcli/bit-server:`npm show @teambit/bit version`
-      - run: cd bit && docker push bitcli/bit-server:latest
+      - docker_build_and_push:
+          docker_build_arg_name: "BIT_IMAGE"
+          docker_build_arg_value: "latest"
+          image_name: "bitcli/bit-server"
+          docker_file_name: "Dockerfile-bit-server"
+          docker_tag_suffix: ""
 
   server_docker_build_node_14:
     machine:
@@ -234,11 +312,25 @@ jobs:
     steps:
       - attach_workspace:
           at: ./
-      - run: echo "$DOCKER_PASS" | docker login --username $DOCKER_USER --password-stdin
-      - run: cd bit/scripts && docker build -f ./docker-teambit-bit/Dockerfile-bit-server -t bitcli/bit-server:`npm show @teambit/bit version`-node-14.19.1 --build-arg BIT_VERSION=`npm show @teambit/bit version`-node-14.19.1 .
-      - run: cd bit/scripts && docker build -f ./docker-teambit-bit/Dockerfile-bit-server -t bitcli/bit-server:latest-node-14.19.1 --build-arg BIT_VERSION=latest-node-14.19.1 .
-      - run: cd bit && docker push bitcli/bit-server:`npm show @teambit/bit version`-node-14.19.1
-      - run: cd bit && docker push bitcli/bit-server:latest-node-14.19.1
+      - docker_build_and_push:
+          docker_build_arg_name: "BIT_IMAGE"
+          docker_build_arg_value: "`npm show @teambit/bit version`-node-14.19.1"
+          image_name: "bitcli/bit-server"
+          docker_file_name: "Dockerfile-bit-server"
+          docker_tag_suffix: "-node-14.19.1"
+
+  server_docker_build_node_16:
+    machine:
+      image: ubuntu-2004:202111-02
+    steps:
+      - attach_workspace:
+          at: ./
+      - docker_build_and_push:
+          docker_build_arg_name: "BIT_IMAGE"
+          docker_build_arg_value: "`npm show @teambit/bit version`-node-16.15.0"
+          image_name: "bitcli/bit-server"
+          docker_file_name: "Dockerfile-bit-server"
+          docker_tag_suffix: "-node-16.15.0"
 
   set_ssh_key:
     <<: *defaults
@@ -1643,6 +1735,15 @@ workflows:
       - server_docker_build_node_14:
           requires:
             - docker_build_node_14
+      - docker_build_node_16:
+          requires:
+            - harmony_publish_to_gcloud
+      - docker_non_root_build_node_16:
+          requires:
+            - harmony_publish_to_gcloud
+      - server_docker_build_node_16:
+          requires:
+            - docker_build_node_16
 
   windows-nightly:
     triggers:
@@ -1777,6 +1878,18 @@ workflows:
           requires:
             - harmony_deploy_approval_job
             - docker_build_node_14
+      - docker_build_node_16:
+          requires:
+            - harmony_deploy_approval_job
+            - harmony_publish_to_gcloud
+      - docker_non_root_build_node_16:
+          requires:
+            - harmony_deploy_approval_job
+            - harmony_publish_to_gcloud
+      - server_docker_build_node_16:
+          requires:
+            - harmony_deploy_approval_job
+            - docker_build_node_16
   # uncomment to update esbuild arm64 cache
   # get_esbuild_arm64_workflow:
   #   jobs:
@@ -1790,7 +1903,7 @@ workflows:
   #     - checkout_code:
   #         filters:
   #           branches:
-  #             only: fix-circle-cache
+  #             only: docker-node16
   #     - bundle_version_linux:
   #         filters:
   #           branches:
@@ -1817,27 +1930,38 @@ workflows:
   #           - bundle_version_macos
   #           - bundle_version_linux
   #           - bundle_version_windows
-  #     - docker_build:
-  #         requires:
-  #           - checkout_code
-  #           - harmony_publish_to_gcloud
+      # - docker_build:
+      #     requires:
+      #       - checkout_code
+      #       # - harmony_publish_to_gcloud
       # - docker_build_node_14:
       #     requires:
       #       - checkout_code
-      #       - harmony_publish_to_gcloud
+      #       # - harmony_publish_to_gcloud
+      # - docker_build_node_16:
+      #     requires:
+      #       - checkout_code
+      #       # - harmony_publish_to_gcloud
       # - docker_non_root_build:
       #     requires:
       #       - checkout_code
-      #       - harmony_publish_to_gcloud
+      #       # - harmony_publish_to_gcloud
       # - docker_non_root_build_node_14:
       #     requires:
       #       - checkout_code
-      #       - harmony_publish_to_gcloud
-  #     - server_docker_build:
-  #         requires:
-  #           - docker_build
+      #       # - harmony_publish_to_gcloud
+      # - docker_non_root_build_node_16:
+      #     requires:
+      #       - checkout_code
+      #       # - harmony_publish_to_gcloud
+      # - server_docker_build:
+      #     requires:
+      #       - docker_build
       # - server_docker_build_node_14:
       #     requires:
       #       - docker_build_node_14
+      # - server_docker_build_node_16:
+      #     requires:
+      #       - docker_build_node_16
 
 
