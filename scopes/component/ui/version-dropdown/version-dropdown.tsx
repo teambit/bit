@@ -154,11 +154,6 @@ function VersionPlaceholder({
     };
   }, [versionDetails]);
 
-  function commitMessage(message?: string) {
-    if (!message || message === '') return <Ellipsis className={styles.emptyMessage}>No commit message</Ellipsis>;
-    return <Ellipsis className={styles.commitMessage}>{message}</Ellipsis>;
-  }
-
   return (
     <div className={classNames(styles.placeholder, className, disabled && styles.disabled)}>
       {showDetails && <UserAvatar size={24} account={author} className={styles.versionUserAvatar} showTooltip={true} />}
@@ -182,6 +177,12 @@ function VersionPlaceholder({
     </div>
   );
 }
+
+function commitMessage(message?: string) {
+  if (!message || message === '') return <Ellipsis className={styles.emptyMessage}>No commit message</Ellipsis>;
+  return <Ellipsis className={styles.commitMessage}>{message}</Ellipsis>;
+}
+
 type VersionMenuProps = {
   tags?: DropdownComponentVersion[];
   snaps?: DropdownComponentVersion[];
