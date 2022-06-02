@@ -73,6 +73,45 @@
             "character": 39
           },
           "name": "number"
+        },
+        "doc": {
+          "__schema": "DocSchema",
+          "location": {
+            "file": "index.ts",
+            "line": 7,
+            "character": 1
+          },
+          "tags": [
+            {
+              "__schema": "TagSchema",
+              "location": {
+                "file": "index.ts",
+                "line": 9,
+                "character": 4
+              },
+              "tagName": "implements",
+              "comment": "this is A"
+            },
+            {
+              "__schema": "TagSchema",
+              "location": {
+                "file": "index.ts",
+                "line": 10,
+                "character": 4
+              },
+              "tagName": "implements",
+              "comment": "this is B"
+            },
+            {
+              "__schema": "ReturnTagSchema",
+              "location": {
+                "file": "index.ts",
+                "line": 11,
+                "character": 4
+              },
+              "tagName": "return"
+            }
+          ]
         }
       },
       {
@@ -375,7 +414,69 @@
             "__schema": "FunctionLikeSchema",
             "location": {
               "file": "button.composition.tsx",
-              "line": 10,
+              "line": 13,
+              "character": 1
+            },
+            "name": "Footer",
+            "signature": "function Footer({ children }: {\n    children?: any;\n}): any",
+            "modifiers": [
+              "export"
+            ],
+            "params": [
+              {
+                "__schema": "ParameterSchema",
+                "location": {
+                  "file": "button.composition.tsx",
+                  "line": 13,
+                  "character": 24
+                },
+                "name": "{ children = <BasicButton /> }",
+                "type": {
+                  "__schema": "TypeLiteralSchema",
+                  "location": {
+                    "file": "button.composition.tsx",
+                    "line": 13,
+                    "character": 24
+                  },
+                  "members": [
+                    {
+                      "__schema": "InferenceTypeSchema",
+                      "location": {
+                        "file": "button.composition.tsx",
+                        "line": 13,
+                        "character": 24
+                      },
+                      "type": "any",
+                      "name": "children"
+                    }
+                  ]
+                }
+              }
+            ],
+            "returnType": {
+              "__schema": "InferenceTypeSchema",
+              "location": {
+                "file": "button.composition.tsx",
+                "line": 13,
+                "character": 1
+              },
+              "type": "any"
+            },
+            "doc": {
+              "__schema": "DocSchema",
+              "location": {
+                "file": "button.composition.tsx",
+                "line": 10,
+                "character": 1
+              },
+              "comment": "example of passing a JSX Element as a parameter"
+            }
+          },
+          {
+            "__schema": "FunctionLikeSchema",
+            "location": {
+              "file": "button.composition.tsx",
+              "line": 21,
               "character": 14
             },
             "name": "ButtonWithCustomStyles",
@@ -386,7 +487,7 @@
               "__schema": "InferenceTypeSchema",
               "location": {
                 "file": "button.composition.tsx",
-                "line": 10,
+                "line": 21,
                 "character": 14
               },
               "type": "any"
@@ -396,7 +497,7 @@
             "__schema": "FunctionLikeSchema",
             "location": {
               "file": "button.composition.tsx",
-              "line": 14,
+              "line": 25,
               "character": 14
             },
             "name": "ButtonWithIcon",
@@ -407,7 +508,7 @@
               "__schema": "InferenceTypeSchema",
               "location": {
                 "file": "button.composition.tsx",
-                "line": 14,
+                "line": 25,
                 "character": 14
               },
               "type": "any"
@@ -417,7 +518,7 @@
             "__schema": "FunctionLikeSchema",
             "location": {
               "file": "button.composition.tsx",
-              "line": 23,
+              "line": 34,
               "character": 14
             },
             "name": "ButtonAsALink",
@@ -428,7 +529,7 @@
               "__schema": "InferenceTypeSchema",
               "location": {
                 "file": "button.composition.tsx",
-                "line": 23,
+                "line": 34,
                 "character": 14
               },
               "type": "any"
