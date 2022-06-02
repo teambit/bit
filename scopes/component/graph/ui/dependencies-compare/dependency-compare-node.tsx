@@ -84,7 +84,7 @@ export function DependencyCompareNode(props: DependencyCompareNodeProps) {
 
         <div className={styles.buffs}>
           <DeprecationIcon component={baseComponent} />
-          {status !== 'same' && <CompareStatusResolver status={status} />}
+          {status !== undefined && <CompareStatusResolver status={status} />}
         </div>
       </div>
     </Card>

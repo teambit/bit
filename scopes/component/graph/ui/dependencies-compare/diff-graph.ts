@@ -15,8 +15,8 @@ const getEdgeId = (_e: EdgeModel) => {
 };
 
 export function diffGraph(
-  baseGraph?: GraphModel<CompareNodeModel, EdgeModel>,
-  compareGraph?: GraphModel<CompareNodeModel, EdgeModel>,
+  baseGraph?: GraphModel<NodeModel, EdgeModel>,
+  compareGraph?: GraphModel<NodeModel, EdgeModel>,
   baseId?: ComponentID
 ) {
   if (!baseGraph || !compareGraph || !baseId) return null;
@@ -34,7 +34,7 @@ export function diffGraph(
       allNodes.push({
         ...baseNode,
         compareVersion: compareNode.component.version,
-        status: compareNode.component.id.isEqual(baseNode.component.id) ? 'same' : 'modified',
+        status: compareNode.component.id.isEqual(baseNode.component.id) ? undefined : 'modified',
       });
     } else {
       allNodes.push({
