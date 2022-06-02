@@ -13,7 +13,7 @@ export type ComponentCompareQueryParams = {
 export function useUpdatedUrlFromQuery(queryParams: ComponentCompareQueryParams): string {
   const query = useQuery();
   const location = useLocation();
-  const queryObj = Object.entries(query.entries());
+  const queryObj = Object.fromEntries(query.entries());
 
   const updatedObj = { ...queryObj, ...queryParams };
   const queryString = new URLSearchParams(updatedObj).toString();

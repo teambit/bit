@@ -55,15 +55,16 @@ export function CodePage({ className, fileIconSlot }: CodePageProps) {
           currentFile={currentFile}
           dependencies={dependencies}
           fileTree={fileTree}
-          widgets={[getWidget(mainFile, devFiles)]}
-          getHref={(node) => `${node.id}${affix('?version=', urlParams.version)}`}
-          getIcon={getIcon(fileIconMatchers)}
+          widgets={useMemo(() => [generateWidget(mainFile, devFiles)], [mainFile, devFiles])}
+          getHref={useMemo(() => (node) => `${node.id}${affix('?version=', urlParams.version)}`, [urlParams.version])}
+          getIcon={useMemo(() => generateIcon(fileIconMatchers), fileIconMatchers)}
         />
       </Pane>
     </SplitPane>
   );
 }
-function getWidget(mainFile?: string, devFiles?: string[]) {
+
+function generateWidget(mainFile?: string, devFiles?: string[]) {
   return function Widget({ node }: WidgetProps<any>) {
     const fileName = node?.id;
     if (fileName === mainFile) {
@@ -76,7 +77,7 @@ function getWidget(mainFile?: string, devFiles?: string[]) {
   };
 }
 
-function getIcon(fileIconMatchers: FileIconMatch[]) {
+function generateIcon(fileIconMatchers: FileIconMatch[]) {
   return function Icon({ id }: TreeNode) {
     return getFileIcon(fileIconMatchers, id);
   };

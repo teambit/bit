@@ -1,6 +1,8 @@
 .statusLine {
   display: flex;
   align-items: baseline;
+  line-height: 16px;
+
   > div:not(:last-of-type) {
     margin-right: 2px;
     &:after {

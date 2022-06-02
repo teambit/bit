@@ -40,14 +40,14 @@ export function FileTree({
   }, [files]);
 
   return (
-    <FileTreeContext.Provider value={{ getIcon, getHref, widgets }}>
-      <div style={{ ...indentStyle(1), ...rest.style }} {...rest}>
+    <div style={{ ...indentStyle(1), ...rest.style }} {...rest}>
+      <FileTreeContext.Provider value={{ getIcon, getHref, widgets }}>
         <TreeNodeContext.Provider value={CustomTreeNode}>
           <TreeContextProvider onSelect={onSelect} selected={selected}>
             <RootNode node={rootNode} depth={1} />
           </TreeContextProvider>
         </TreeNodeContext.Provider>
-      </div>
-    </FileTreeContext.Provider>
+      </FileTreeContext.Provider>
+    </div>
   );
 }
