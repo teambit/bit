@@ -1,3 +1,10 @@
+/**
+  * Monaco container is not flex so providing it a fixed calculated height
+  * so it can fill up the remaining space correctly instead of overflowing
+  *  diff editor headers: h4 (24px) + padding (16px * 2) = 56px
+  */
+$editor-padding: 56px;
+
 .diffEditor {
   // TODO - remove unneeded css vars overrides
   // TODO - find a better place to put the color overrides. maybe move to a theme?
@@ -8,7 +15,6 @@
   --surface-neutral-color: #161616;
   --bit-accent-heavy: #f6f6f6;
   --bit-accent-color: #9183ff;
-
   --bit-accent-bg: #2d2842;
   --bit-bg-heavy: #140f27;
   --editor-bg-color: #1e1e1e;
@@ -23,16 +29,7 @@
   padding: 0px 8px;
   display: flex;
   flex-direction: column;
-  /**
-  * Monaco container is not flex so providing it a fixed calculated height
-  * so it can fill up the remaining space correctly instead of overflowing
-  * 
-  * Subtract the following
-  *  selected file: (32px + 16px padding) = 48px; 
-  *  diff editor headers: (16px + 16px padding) * 2 = 64px;
-  *  total = 112px; 
-  */
-  height: calc(100% - 112px); 
+  height: calc(100% - $editor-padding);
 }
 
 .name {

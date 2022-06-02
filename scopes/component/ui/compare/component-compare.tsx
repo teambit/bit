@@ -59,7 +59,7 @@ export function ComponentCompare({ navSlot, host, routeSlot }: ComponentCompareP
     compare,
     base,
     loading,
-    isCompareVersionWorkspace,
+    compareIsLocalChanges: isCompareVersionWorkspace,
   };
 
   return (

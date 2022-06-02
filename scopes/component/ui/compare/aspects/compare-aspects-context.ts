@@ -8,7 +8,7 @@ export type ComponentCompareAspectsModel = {
 };
 
 export const ComponentCompareAspectsContext = createContext<ComponentCompareAspectsModel | undefined>(undefined);
-export const useComponentCompareAspectsContext: () => ComponentCompareAspectsModel | undefined = () => {
+export const useAspectCompare: () => ComponentCompareAspectsModel | undefined = () => {
   const componentCompareAspectsContext = useContext(ComponentCompareAspectsContext);
   return componentCompareAspectsContext;
 };

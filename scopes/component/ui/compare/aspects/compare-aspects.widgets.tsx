@@ -2,12 +2,12 @@ import React from 'react';
 import { WidgetProps } from '@teambit/ui-foundation.ui.tree.tree-node';
 import { CompareStatusResolver, ComponentAspectData, CompareStatus } from '@teambit/component.ui.compare';
 import { isEqual } from 'lodash';
-import { useComponentCompareAspectsContext } from './compare-aspects-context';
+import { useAspectCompare } from './compare-aspects-context';
 
 export function Widget({ node }: WidgetProps<any>) {
   const fileName = node.id;
 
-  const componentCompareAspectsContext = useComponentCompareAspectsContext();
+  const componentCompareAspectsContext = useAspectCompare();
 
   if (componentCompareAspectsContext?.loading) return null;
 

@@ -39,8 +39,11 @@ export function CodeCompareView({ className, base, compare, fileName }: CodeComp
 
   if (originalLoading || modifiedLoading) return null;
 
-  // this disables ts errors in editor
   const handleEditorDidMount: DiffOnMount = (_, monaco) => {
+    /**
+     * disable syntax check
+     * ts cant validate all types because imported files arent available to the editor
+     */
     monacoRef.current = monaco;
     if (monacoRef.current) {
       monacoRef.current.languages.typescript.typescriptDefaults.setDiagnosticsOptions({
@@ -50,23 +53,25 @@ export function CodeCompareView({ className, base, compare, fileName }: CodeComp
     }
   };
 
-  const diffEditorProps: DiffEditorProps = {
-    modified: modifiedFileContent,
-    original: originalFileContent,
-    language,
-    height: '100%',
-    onMount: handleEditorDidMount,
-    className: styles.diffEditor,
-    theme: 'vs-dark',
-    options: {
-      ignoreTrimWhitespace: ignoreWhitespace,
-      readOnly: true
-    },
-  };
-
   const onIgnoreWhitespaceToggled = () => {
     setIgnoreWhitespace((exsitingState) => !exsitingState);
   };
+
+  const diffEditor = (
+    <DiffEditor
+      modified={modifiedFileContent}
+      original={originalFileContent}
+      language={language}
+      height={'100vh'}
+      onMount={handleEditorDidMount}
+      className={styles.diffEditor}
+      theme={'vs-dark'}
+      options={{
+        ignoreTrimWhitespace: ignoreWhitespace,
+        readOnly: true,
+      }}
+    />
+  );
 
   return (
     <div
@@ -84,9 +89,7 @@ export function CodeCompareView({ className, base, compare, fileName }: CodeComp
           Ignore Whitespace
         </div>
       </div>
-      <div className={styles.componentCompareCodeDiffEditorContainer}>
-        <DiffEditor {...diffEditorProps} />
-      </div>
+      <div className={styles.componentCompareCodeDiffEditorContainer}>{diffEditor}</div>
     </div>
   );
 }

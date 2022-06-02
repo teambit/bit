@@ -5,7 +5,7 @@ export type ComponentCompareModel = {
   base?: ComponentModel;
   compare: ComponentModel;
   loading?: boolean;
-  isCompareVersionWorkspace?: boolean;
+  compareIsLocalChanges?: boolean;
 };
 
 export const ComponentCompareContext = createContext<ComponentCompareModel | undefined>(undefined);

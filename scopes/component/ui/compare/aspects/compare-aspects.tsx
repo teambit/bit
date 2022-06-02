@@ -54,7 +54,7 @@ export function ComponentCompareAspects({ host, className }: ComponentCompareAsp
   const base = componentCompareContext?.base;
   const compare = componentCompareContext?.compare;
 
-  const isCompareVersionWorkspace = componentCompareContext?.isCompareVersionWorkspace;
+  const isCompareVersionWorkspace = componentCompareContext?.compareIsLocalChanges;
 
   const baseId = `${base?.id.fullName}@${base?.id.version}`;
   const compareId = isCompareVersionWorkspace ? compare?.id.fullName : `${compare?.id.fullName}@${compare?.id.version}`;

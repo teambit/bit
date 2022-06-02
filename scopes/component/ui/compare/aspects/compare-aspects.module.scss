@@ -2,7 +2,8 @@
 $panelBg: #fafafa;
 
 .componentCompareAspectContainer {
-  height: 100%;
+  // add just for nav
+  min-height: calc(100% - 56px);
   width: 100%;
   display: flex;
 }
@@ -21,6 +22,8 @@ $panelBg: #fafafa;
   // this is to fix the right panel when it gets too big or too small
   min-width: 200px;
   max-width: calc(100% - 200px);
+  // this is to adjust for the header
+  max-height: 100%;
 }
 
 .splitter {
