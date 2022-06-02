@@ -73,6 +73,7 @@ export function DependencyCompareNode(props: DependencyCompareNodeProps) {
           <span
             className={classnames(
               styles.version,
+              versionClass,
               ellipsis,
               versionDiff === -1 && styles.versionUp,
               versionDiff === 1 && styles.versionDown
