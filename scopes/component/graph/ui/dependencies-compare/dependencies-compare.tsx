@@ -4,13 +4,10 @@ import { RoundLoader } from '@teambit/design.ui.round-loader';
 import {
   calcElements,
   calcMinimapColors,
-  controls as controlClass,
-  filtersClass,
-  graph as graphClass,
-  graphClass as graphPageClass,
+  dependenciesGraphStyles,
   GraphFilter,
   GraphFilters,
-  minimap as minimapClass,
+  graphPageStyles,
   useGraphQuery,
 } from '@teambit/graph';
 import React, { useEffect, useRef, useState } from 'react';
@@ -76,7 +73,7 @@ export function DependenciesCompare() {
   }
 
   return (
-    <div className={classNames([styles.page, graphPageClass])}>
+    <div className={classNames([styles.page, graphPageStyles.graph])}>
       {loading && (
         <div className={styles.loader}>
           <RoundLoader />
@@ -91,16 +88,16 @@ export function DependenciesCompare() {
           zoomOnDoubleClick={false}
           elementsSelectable={false}
           maxZoom={1}
-          className={graphClass}
+          className={dependenciesGraphStyles.graph}
           elements={elements}
           nodeTypes={NodeTypes}
           onLoad={handleLoad}
         >
           <Background />
-          <Controls className={controlClass} />
-          <MiniMap nodeColor={calcMinimapColors} className={minimapClass} />
+          <Controls className={dependenciesGraphStyles.controls} />
+          <MiniMap nodeColor={calcMinimapColors} className={dependenciesGraphStyles.minimap} />
           <GraphFilters
-            className={filtersClass}
+            className={graphPageStyles.filters}
             disable={loading}
             isFiltered={isFiltered}
             onChangeFilter={onCheckFilter}

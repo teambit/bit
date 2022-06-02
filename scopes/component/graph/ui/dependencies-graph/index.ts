@@ -1,4 +1,4 @@
-import styles from './dependencies-graph.module.scss';
+import componentStyles from './dependencies-graph.module.scss';
 
 export { DependenciesGraph } from './dependencies-graph';
 export { ComponentGraphContext, ComponentGraph } from './graph-context';
@@ -8,6 +8,5 @@ export { calcMinimapColors } from './minimap';
 export { calcLayout } from './calc-layout';
 export { calcElements } from './calc-elements';
 
-export const graph = styles.graph;
-export const minimap = styles.minimap;
-export const controls = styles.controls;
+const { graph, minimap, controls } = componentStyles;
+export const styles = { graph, minimap, controls };

@@ -13,25 +13,10 @@ export {
   calcElements,
   calcLayout,
   calcMinimapColors,
-  controls,
   depTypeToClass,
   depTypeToLabel,
-  graph,
-  minimap,
+  styles as dependenciesGraphStyles,
 } from './ui/dependencies-graph';
-export { graph as graphClass, filters as filtersClass, GraphFilters } from './ui/graph-page';
+export { GraphFilters, styles as graphPageStyles } from './ui/graph-page';
 export { EdgeModel, GraphModel, NodeModel, RawGraph, useGraph, useGraphQuery } from './ui/query';
-export {
-  compNodeClass,
-  firstRowClass,
-  envIconClass,
-  breadcrumbsClass,
-  nameLineClass,
-  nameClass,
-  versionClass,
-  buffsClass,
-  linkClass,
-  root,
-  defaultNode,
-  external,
-} from './ui/component-node';
+export { styles as componentNodeStyles, root, defaultNode, external } from './ui/component-node';
