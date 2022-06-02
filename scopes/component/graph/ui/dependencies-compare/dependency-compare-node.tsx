@@ -7,7 +7,16 @@ import { CompareStatusResolver } from '@teambit/component.ui.compare';
 import { DeprecationIcon } from '@teambit/component.ui.deprecation-icon';
 import { ellipsis } from '@teambit/design.ui.styles.ellipsis';
 import { EnvIcon } from '@teambit/envs.ui.env-icon';
-import { compNode, defaultNode, envIcon, external, firstRow, name, nameLine, version } from '@teambit/graph';
+import {
+  compNodeClass,
+  defaultNode,
+  envIconClass,
+  external,
+  firstRowClass,
+  nameClass,
+  nameLineClass,
+  versionClass,
+} from '@teambit/graph';
 import classnames from 'classnames';
 import React, { useMemo } from 'react';
 import { compare, valid } from 'semver';
@@ -44,16 +53,16 @@ export function DependencyCompareNode(props: DependencyCompareNodeProps) {
   );
 
   return (
-    <Card className={classnames(compNode, getVariant(type))} elevation="none">
-      <div className={firstRow}>
-        <EnvIcon component={baseComponent} className={envIcon} />
+    <Card className={classnames(compNodeClass, getVariant(type))} elevation="none">
+      <div className={firstRowClass}>
+        <EnvIcon component={baseComponent} className={envIconClass} />
         <Breadcrumbs componentId={baseId} className={mutedText} />
       </div>
-      <div className={nameLine}>
+      <div className={nameLineClass}>
         <NavLink className={styles.link} external={true} href={ComponentUrl.toUrl(baseId, { includeVersion: false })}>
-          <span className={classnames(name, ellipsis)}>{baseId.name}</span>
+          <span className={classnames(nameClass, ellipsis)}>{baseId.name}</span>
         </NavLink>
-        {baseId.version && <span className={classnames(version, ellipsis)}>{baseId.version}</span>}
+        {baseId.version && <span className={classnames(versionClass, ellipsis)}>{baseId.version}</span>}
         {versionDiff !== 0 && (
           <img
             className={classnames([styles.arrowIcon, styles.versionUp])}
