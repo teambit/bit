@@ -301,6 +301,7 @@ jobs:
           at: ./
       - docker_build_and_push:
           docker_build_arg_name: "BIT_IMAGE"
+          docker_build_arg_value: "latest"
           image_name: "bitcli/bit-server"
           docker_file_name: "Dockerfile-bit-server"
           docker_tag_suffix: ""
