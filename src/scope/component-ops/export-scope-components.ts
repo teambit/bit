@@ -106,12 +106,7 @@ export async function exportMany({
 }): Promise<{ exported: BitIds; updatedLocally: BitIds; newIdsOnRemote: BitId[] }> {
   logger.debugAndAddBreadCrumb('scope.exportMany', 'ids: {ids}', { ids: ids.toString() });
   if (laneObject) {
-    const trackingData = scope.lanes.getRemoteTrackedDataByLocalLane(laneObject.name);
-    if (!trackingData) {
-      throw new Error(`error: unable to find tracking data for lane "${laneObject.name}".
-please run "bit lane track" command to specify a remote-scope for this lane`);
-    }
-    remoteName = trackingData.remoteScope;
+    remoteName = laneObject.scope;
   }
   if (includeDependencies) {
     const dependenciesIds = await getDependenciesImportIfNeeded();
