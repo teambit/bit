@@ -1,8 +1,8 @@
-import { useComponentCompare } from '@teambit/component.ui.compare';
+import { CompareSplitLayoutPreset, useComponentCompare } from '@teambit/component.ui.compare';
 import { EmptyStateSlot } from '@teambit/compositions';
 import { Toggle } from '@teambit/design.ui.input.toggle';
 import { RoundLoader } from '@teambit/design.ui.round-loader';
-import React, { HTMLAttributes, UIEvent, useRef, useState } from 'react';
+import React, { HTMLAttributes, UIEvent, useMemo, useRef, useState } from 'react';
 import { CompareTestsPage } from './compare-tests-page';
 import styles from './compare-tests.module.scss';
 
@@ -19,10 +19,12 @@ export function CompareTests(props: CompareTestsProps) {
   const rightPanelRef = useRef<HTMLDivElement>(null);
 
   function handleLeftPanelScroll(event: UIEvent<HTMLDivElement>) {
+    if (!isScrollingSynced) return;
     rightPanelRef.current?.scrollTo({ top: event.currentTarget.scrollTop, left: event.currentTarget.scrollLeft });
   }
 
   function handleRightPanelScroll(event: UIEvent<HTMLDivElement>) {
+    if (!isScrollingSynced) return;
     leftPanelRef.current?.scrollTo({ top: event.currentTarget.scrollTop, left: event.currentTarget.scrollLeft });
   }
 
@@ -31,13 +33,37 @@ export function CompareTests(props: CompareTestsProps) {
     setIsScrollingSynced((prev) => !prev);
   }
 
-  if (componentCompare === undefined || !componentCompare.base) {
-    return <></>;
-  }
+  const BaseLayout = useMemo(() => {
+    if (componentCompare?.base === undefined) {
+      return <></>;
+    }
+
+    return (
+      <div className={styles.subView} ref={leftPanelRef} onScroll={handleLeftPanelScroll}>
+        <CompareTestsPage component={componentCompare.base} emptyState={emptyState} />
+      </div>
+    );
+  }, [componentCompare?.base, isScrollingSynced]);
+
+  const CompareLayout = useMemo(() => {
+    if (componentCompare?.compare === undefined) {
+      return <></>;
+    }
+
+    return (
+      <div className={styles.subView} ref={rightPanelRef} onScroll={handleRightPanelScroll}>
+        <CompareTestsPage
+          component={componentCompare.compare}
+          isCompareVersionWorkspace={componentCompare.compareIsLocalChanges}
+          emptyState={emptyState}
+        />
+      </div>
+    );
+  }, [componentCompare?.compare, isScrollingSynced]);
 
   return (
     <>
-      {componentCompare.loading && (
+      {componentCompare?.loading && (
         <div className={styles.loader}>
           <RoundLoader />
         </div>
@@ -48,22 +74,7 @@ export function CompareTests(props: CompareTestsProps) {
           Synchronize Scrolling
         </div>
       </div>
-      <div className={styles.mainContainer}>
-        <div className={styles.subContainerLeft}>
-          <div className={styles.subView} ref={leftPanelRef} onScroll={handleLeftPanelScroll}>
-            <CompareTestsPage component={componentCompare.base} emptyState={emptyState} />
-          </div>
-        </div>
-        <div className={styles.subContainerRight}>
-          <div className={styles.subView} ref={rightPanelRef} onScroll={handleRightPanelScroll}>
-            <CompareTestsPage
-              component={componentCompare.compare}
-              isCompareVersionWorkspace={componentCompare.compareIsLocalChanges}
-              emptyState={emptyState}
-            />
-          </div>
-        </div>
-      </div>
+      <CompareSplitLayoutPreset base={BaseLayout} compare={CompareLayout} />
     </>
   );
 }

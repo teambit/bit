@@ -1,4 +1,9 @@
-import { useUpdatedUrlFromQuery, useComponentCompare, useCompareQueryParam } from '@teambit/component.ui.compare';
+import {
+  CompareSplitLayoutPreset,
+  useCompareQueryParam,
+  useComponentCompare,
+  useUpdatedUrlFromQuery,
+} from '@teambit/component.ui.compare';
 import { CompositionContent, EmptyStateSlot } from '@teambit/compositions';
 import { CompositionContextProvider } from '@teambit/compositions.ui.hooks.use-composition';
 import { RoundLoader } from '@teambit/design.ui.round-loader';
@@ -74,13 +79,47 @@ export function CompositionCompare(props: CompositionCompareProps) {
     label: selectedCompareComp.displayName,
   };
 
-  if (!component || !base || !compare) {
-    return <></>;
-  }
+  const BaseLayout = useMemo(() => {
+    if (component?.base === undefined) {
+      return <></>;
+    }
+
+    return (
+      <div className={styles.subView}>
+        <CompositionContextProvider queryParams={baseCompositionParams} setQueryParams={setBaseCompositionParams}>
+          <CompositionContent
+            emptyState={emptyState}
+            component={component?.base}
+            selected={selectedBaseComp}
+            queryParams={baseCompQueryParams}
+          />
+        </CompositionContextProvider>
+      </div>
+    );
+  }, [component?.base, selectedBaseComp]);
+
+  const CompareLayout = useMemo(() => {
+    if (component?.compare === undefined) {
+      return <></>;
+    }
+
+    return (
+      <div className={styles.subView}>
+        <CompositionContextProvider queryParams={compareCompositionParams} setQueryParams={setCompareCompositionParams}>
+          <CompositionContent
+            emptyState={emptyState}
+            component={component.compare}
+            selected={selectedCompareComp}
+            queryParams={compareCompQueryParams}
+          />
+        </CompositionContextProvider>
+      </div>
+    );
+  }, [component?.compare, selectedCompareComp]);
 
   return (
     <>
-      {component.loading && (
+      {component?.loading && (
         <div className={styles.loader}>
           <RoundLoader />
         </div>
@@ -93,35 +132,7 @@ export function CompositionCompare(props: CompositionCompareProps) {
           <CompositionDropdown dropdownItems={compareCompositionDropdownSource} selected={selectedCompareDropdown} />
         </div>
       </div>
-      <div className={styles.mainContainer}>
-        <div className={styles.subContainerLeft}>
-          <div className={styles.subView}>
-            <CompositionContextProvider queryParams={baseCompositionParams} setQueryParams={setBaseCompositionParams}>
-              <CompositionContent
-                emptyState={emptyState}
-                component={base}
-                selected={selectedBaseComp}
-                queryParams={baseCompQueryParams}
-              />
-            </CompositionContextProvider>
-          </div>
-        </div>
-        <div className={styles.subContainerRight}>
-          <div className={styles.subView}>
-            <CompositionContextProvider
-              queryParams={compareCompositionParams}
-              setQueryParams={setCompareCompositionParams}
-            >
-              <CompositionContent
-                emptyState={emptyState}
-                component={compare}
-                selected={selectedCompareComp}
-                queryParams={compareCompQueryParams}
-              />
-            </CompositionContextProvider>
-          </div>
-        </div>
-      </div>
+      <CompareSplitLayoutPreset base={BaseLayout} compare={CompareLayout} />
     </>
   );
 }

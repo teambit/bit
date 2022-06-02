@@ -1,9 +1,9 @@
 import { ComponentProvider } from '@teambit/component';
-import { useComponentCompare } from '@teambit/component.ui.compare';
+import { CompareSplitLayoutPreset, useComponentCompare } from '@teambit/component.ui.compare';
 import { Toggle } from '@teambit/design.ui.input.toggle';
 import { RoundLoader } from '@teambit/design.ui.round-loader';
 import { Overview, TitleBadgeSlot } from '@teambit/docs';
-import React, { UIEvent, useRef, useState } from 'react';
+import React, { UIEvent, useMemo, useRef, useState } from 'react';
 import styles from './overview-compare.module.scss';
 
 export type OverviewCompareProps = {
@@ -35,13 +35,37 @@ export function OverviewCompare(props: OverviewCompareProps) {
     setIsScrollingSynced((prev) => !prev);
   }
 
-  if (componentCompare === undefined || !componentCompare.base) {
-    return <></>;
-  }
+  const BaseLayout = useMemo(() => {
+    if (componentCompare?.base === undefined) {
+      return <></>;
+    }
+
+    return (
+      <div className={styles.subView} ref={leftPanelRef} onScroll={handleLeftPanelScroll}>
+        <ComponentProvider component={componentCompare.base}>
+          <Overview titleBadges={titleBadges} />
+        </ComponentProvider>
+      </div>
+    );
+  }, [componentCompare?.base, isScrollingSynced]);
+
+  const CompareLayout = useMemo(() => {
+    if (componentCompare?.compare === undefined) {
+      return <></>;
+    }
+
+    return (
+      <div className={styles.subView} ref={rightPanelRef} onScroll={handleRightPanelScroll}>
+        <ComponentProvider component={componentCompare.compare}>
+          <Overview titleBadges={titleBadges} />
+        </ComponentProvider>
+      </div>
+    );
+  }, [componentCompare?.compare, isScrollingSynced]);
 
   return (
     <>
-      {componentCompare.loading && (
+      {componentCompare?.loading && (
         <div className={styles.loader}>
           <RoundLoader />
         </div>
@@ -52,22 +76,7 @@ export function OverviewCompare(props: OverviewCompareProps) {
           Synchronize Scrolling
         </div>
       </div>
-      <div className={styles.mainContainer}>
-        <div className={styles.subContainerLeft}>
-          <div className={styles.subView} ref={leftPanelRef} onScroll={handleLeftPanelScroll}>
-            <ComponentProvider component={componentCompare.base}>
-              <Overview titleBadges={titleBadges} />
-            </ComponentProvider>
-          </div>
-        </div>
-        <div className={styles.subContainerRight}>
-          <div className={styles.subView} ref={rightPanelRef} onScroll={handleRightPanelScroll}>
-            <ComponentProvider component={componentCompare.compare}>
-              <Overview titleBadges={titleBadges} />
-            </ComponentProvider>
-          </div>
-        </div>
-      </div>
+      <CompareSplitLayoutPreset base={BaseLayout} compare={CompareLayout} />
     </>
   );
 }
