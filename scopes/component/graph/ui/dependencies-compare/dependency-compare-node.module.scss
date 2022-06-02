@@ -1,3 +1,6 @@
+$positive-color: #37b26c;
+$negative-color: #e62e5c;
+
 .compNode {
   max-width: 400px;
   min-width: 200px;
@@ -68,11 +71,11 @@
 }
 
 .versionUp {
-  color: #3FBA73;
+  color: var(--positive-color, #37b26c);
 }
 
 .versionDown {
-  color: #E72A60;
+  color: var(--negative-color, #e62e5c);
 }
 
 .link {
