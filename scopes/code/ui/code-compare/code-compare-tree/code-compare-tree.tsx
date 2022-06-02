@@ -29,23 +29,13 @@ export function CodeCompareTree({
   getHref
 }: CodeCompareTreeProps) {
   const fileIconMatchers: FileIconMatch[] = useMemo(() => flatten(fileIconSlot?.values()), [fileIconSlot]);
-
-  const [openDrawerList, onToggleDrawer] = useState([drawerName]);
-
-  const handleDrawerToggle = (id: string) => {
-    const isDrawerOpen = openDrawerList.includes(id);
-    if (isDrawerOpen) {
-      onToggleDrawer((list) => list.filter((drawer) => drawer !== id));
-      return;
-    }
-    onToggleDrawer((list) => list.concat(id));
-  };
+  const [drawerOpen, onToggleDrawer] = useState(true);
 
   return (
     <div className={classNames(styles.componentCompareCodeTreeContainer, className)}>
       <DrawerUI
-        isOpen={openDrawerList.includes(drawerName)}
-        onToggle={() => handleDrawerToggle(drawerName)}
+        isOpen={drawerOpen}
+        onToggle={() => onToggleDrawer(open => !open)}
         name={drawerName}
         contentClass={styles.componentCompareCodeDrawerContent}
         className={classNames(styles.componentCompareCodeTabDrawer)}
