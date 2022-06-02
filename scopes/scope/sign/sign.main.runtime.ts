@@ -17,7 +17,9 @@ import { ObjectList } from '@teambit/legacy/dist/scope/objects/object-list';
 import { Remotes } from '@teambit/legacy/dist/remotes';
 import { BitIds } from '@teambit/legacy/dist/bit-id';
 import { Http } from '@teambit/legacy/dist/scope/network/http';
-
+import LanesAspect, { LanesMain } from '@teambit/lanes';
+import { LaneId } from '@teambit/lane-id';
+import { Lane } from '@teambit/legacy/dist/scope/models';
 import { SignCmd } from './sign.cmd';
 import { SignAspect } from './sign.aspect';
 
@@ -35,11 +37,20 @@ export class SignMain {
     private scope: ScopeMain,
     private logger: Logger,
     private builder: BuilderMain,
-    private onPostSignSlot: OnPostSignSlot
+    private onPostSignSlot: OnPostSignSlot,
+    private lanes: LanesMain
   ) {}
 
-  async sign(ids: ComponentID[], isMultiple?: boolean, push?: boolean): Promise<SignResult | null> {
-    if (isMultiple) await this.scope.import(ids);
+  async sign(ids: ComponentID[], isMultiple?: boolean, push?: boolean, laneIdStr?: string): Promise<SignResult | null> {
+    if (isMultiple) {
+      let lane: Lane | undefined;
+      if (laneIdStr) {
+        const laneId = LaneId.parse(laneIdStr);
+        lane = await this.lanes.importLane(laneId);
+      }
+      await this.scope.import(ids, { lane });
+    }
+    this.lanes.importLane;
     const { componentsToSkip, componentsToSign } = await this.getComponentIdsToSign(ids);
     if (ids.length && componentsToSkip.length) {
       // eslint-disable-next-line no-console
@@ -153,18 +164,18 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
 
   static runtime = MainRuntime;
 
-  static dependencies = [CLIAspect, ScopeAspect, LoggerAspect, BuilderAspect];
+  static dependencies = [CLIAspect, ScopeAspect, LoggerAspect, BuilderAspect, LanesAspect];
 
   static slots = [Slot.withType<OnPostSignSlot>()];
 
   static async provider(
-    [cli, scope, loggerMain, builder]: [CLIMain, ScopeMain, LoggerMain, BuilderMain],
+    [cli, scope, loggerMain, builder, lanes]: [CLIMain, ScopeMain, LoggerMain, BuilderMain, LanesMain],
     _,
     [onPostSignSlot]: [OnPostSignSlot]
   ) {
     const logger = loggerMain.createLogger(SignAspect.id);
-    const signMain = new SignMain(scope, logger, builder, onPostSignSlot);
-    cli.register(new SignCmd(signMain, scope, logger));
+    const signMain = new SignMain(scope, logger, builder, onPostSignSlot, lanes);
+    cli.register(new SignCmd(signMain));
     return signMain;
   }
 }
