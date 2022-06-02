@@ -116,7 +116,7 @@ commands: # reusable commands
           image_name: "<<parameters.image_name>>"
           docker_file_name: "<<parameters.docker_file_name>>"
           docker_tag_suffix: "<<parameters.docker_tag_suffix>>"
-          docker_build_arg_name: "<<parameters.docker_build_arg_value>>"
+          docker_build_arg_name: "<<parameters.docker_build_arg_name>>"
           docker_build_arg_value: "<<parameters.docker_build_arg_value>>"
       - docker_push:
           image_name: "<<parameters.image_name>>"
