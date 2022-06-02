@@ -149,7 +149,7 @@ export type Filters = {
 export function useComponentQuery(componentId: string, host: string, filters?: Filters) {
   const idRef = useRef(componentId);
   idRef.current = componentId;
-  const { data, error, loading, subscribeToMore } = useDataQuery(GET_COMPONENT, {
+  const { data, error, loading, subscribeToMore, ...rest } = useDataQuery(GET_COMPONENT, {
     variables: { id: componentId, extensionId: host, ...(filters?.log || {}) },
   });
 
@@ -253,6 +253,7 @@ export function useComponentQuery(componentId: string, host: string, filters?: F
         ? new ComponentError(404)
         : undefined,
       loading,
+      ...rest,
     };
   }, [rawComponent, host, error]);
 }

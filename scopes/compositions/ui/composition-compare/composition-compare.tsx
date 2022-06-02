@@ -1,8 +1,4 @@
-import {
-  useUpdatedUrlFromQuery,
-  useComponentCompareContext,
-  useCompareQueryParam,
-} from '@teambit/component.ui.compare';
+import { useUpdatedUrlFromQuery, useComponentCompare, useCompareQueryParam } from '@teambit/component.ui.compare';
 import { CompositionContent, EmptyStateSlot } from '@teambit/compositions';
 import { CompositionContextProvider } from '@teambit/compositions.ui.hooks.use-composition';
 import { RoundLoader } from '@teambit/design.ui.round-loader';
@@ -18,7 +14,7 @@ export type CompositionCompareProps = {
 export function CompositionCompare(props: CompositionCompareProps) {
   const { emptyState } = props;
 
-  const component = useComponentCompareContext();
+  const component = useComponentCompare();
 
   const base = component?.base;
   const compare = component?.compare;

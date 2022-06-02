@@ -1,24 +1,21 @@
 import React, { HTMLAttributes, useState, useMemo } from 'react';
 import classNames from 'classnames';
 import { gql } from '@apollo/client';
-import { isEqual } from 'lodash';
 import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
 import { HoverSplitter } from '@teambit/base-ui.surfaces.split-pane.hover-splitter';
 import { Collapser } from '@teambit/ui-foundation.ui.buttons.collapser';
 import { SplitPane, Pane, Layout } from '@teambit/base-ui.surfaces.split-pane.split-pane';
 import { useIsMobile } from '@teambit/ui-foundation.ui.hooks.use-is-mobile';
 import { RoundLoader } from '@teambit/design.ui.round-loader';
-import { WidgetProps } from '@teambit/ui-foundation.ui.tree.tree-node';
 import {
-  CompareStatus,
-  CompareStatusResolver,
-  useComponentCompareContext,
+  useComponentCompare,
   useCompareQueryParam,
   useUpdatedUrlFromQuery,
 } from '@teambit/component.ui.compare';
 import { CodeCompareTree } from '@teambit/code.ui.code-compare';
-import { ComponentCompareAspectsContext, useComponentCompareAspectsContext } from './compare-aspects-context';
+import { ComponentCompareAspectsContext } from './compare-aspects-context';
 import { CompareAspectView } from './compare-aspect-view';
+import { Widget } from './compare-aspects.widgets';
 
 import styles from './compare-aspects.module.scss';
 
@@ -53,7 +50,7 @@ const GET_COMPONENT_ASPECT_DATA = gql`
 `;
 
 export function ComponentCompareAspects({ host, className }: ComponentCompareAspectsProps) {
-  const componentCompareContext = useComponentCompareContext();
+  const componentCompareContext = useComponentCompare();
   const base = componentCompareContext?.base;
   const compare = componentCompareContext?.compare;
 
@@ -138,52 +135,4 @@ export function ComponentCompareAspects({ host, className }: ComponentCompareAsp
       </SplitPane>
     </ComponentCompareAspectsContext.Provider>
   );
-}
-
-function Widget({ node }: WidgetProps<any>) {
-  const fileName = node.id;
-
-  const componentCompareAspectsContext = useComponentCompareAspectsContext();
-
-  if (componentCompareAspectsContext?.loading) return null;
-
-  const base = componentCompareAspectsContext?.base;
-  const compare = componentCompareAspectsContext?.compare;
-
-  const matchingBaseAspect = base?.find((baseAspect) => baseAspect.aspectId === fileName);
-  const matchingCompareAspect = compare?.find((compareAspect) => compareAspect.aspectId === fileName);
-
-  if (!matchingBaseAspect && !matchingCompareAspect) return null;
-
-  const status = getAspectStatus(matchingBaseAspect, matchingCompareAspect);
-
-  if (!status) return null;
-
-  return <CompareStatusResolver status={status as CompareStatus} />;
-}
-
-function getAspectStatus(aspectA?: ComponentAspectData, aspectB?: ComponentAspectData): CompareStatus | null {
-  const isUndefined = (data) => data === undefined;
-  const isDeleted = (base, compare) => {
-    return isUndefined(compare) && !isUndefined(base);
-  };
-  const isNew = (base, compare) => {
-    return !isUndefined(compare) && isUndefined(base);
-  };
-
-  const baseConfig = aspectA?.config;
-  const baseData = aspectA?.data;
-  const compareConfig = aspectB?.config;
-  const compareData = aspectB?.data;
-
-  if (isDeleted(baseConfig, compareConfig) || isDeleted(baseData, compareData)) {
-    return 'deleted';
-  }
-  if (isNew(baseConfig, compareConfig) || isNew(baseData, compareData)) {
-    return 'new';
-  }
-  if (!isEqual(baseConfig, compareConfig) || !isEqual(baseData, compareData)) {
-    return 'modified';
-  }
-  return null;
 }

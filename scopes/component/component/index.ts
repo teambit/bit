@@ -30,7 +30,6 @@ export { ConsumePlugin } from './ui/menu';
 export { RegisteredComponentRoute, ComponentUrlParams } from './component.route';
 export { ComponentModel, ComponentModelProps } from './ui/component-model';
 export { TopBarNav, TopBarNavProps } from './ui/top-bar-nav';
-export { useIdFromLocation } from './ui/use-component-from-location';
 export type { ShowFragment, ShowRow } from './show';
 export { default as Config } from './config';
 export { useComponent } from './ui';

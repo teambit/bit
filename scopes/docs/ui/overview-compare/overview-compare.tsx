@@ -1,5 +1,5 @@
 import { ComponentProvider } from '@teambit/component';
-import { useComponentCompareContext } from '@teambit/component.ui.compare';
+import { useComponentCompare } from '@teambit/component.ui.compare';
 import { Toggle } from '@teambit/design.ui.input.toggle';
 import { RoundLoader } from '@teambit/design.ui.round-loader';
 import { Overview, TitleBadgeSlot } from '@teambit/docs';
@@ -12,7 +12,7 @@ export type OverviewCompareProps = {
 
 export function OverviewCompare(props: OverviewCompareProps) {
   const { titleBadges } = props;
-  const componentCompare = useComponentCompareContext();
+  const componentCompare = useComponentCompare();
   const [isScrollingSynced, setIsScrollingSynced] = useState<boolean>(true);
 
   const leftPanelRef = useRef<HTMLDivElement>(null);
@@ -48,7 +48,7 @@ export function OverviewCompare(props: OverviewCompareProps) {
       )}
       <div className={styles.checkboxContainer}>
         <div className={styles.toggleContainer}>
-          <Toggle checked={isScrollingSynced} onInputChanged={handleScrollingSyncChange} className={styles.toggle}/>
+          <Toggle checked={isScrollingSynced} onInputChanged={handleScrollingSyncChange} className={styles.toggle} />
           Synchronize Scrolling
         </div>
       </div>

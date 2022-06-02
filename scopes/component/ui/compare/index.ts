@@ -1,6 +1,6 @@
 export { ComponentAspectData, ComponentCompareAspects, ComponentCompareAspectsProps } from './aspects';
 export { ComponentCompare, ComponentCompareProps } from './component-compare';
-export { useComponentCompareContext } from './component-compare-context';
+export { useComponentCompare } from './component-compare-context';
 export { CompareStatus, CompareStatusResolver, CompareStatusResolverProps } from './status-resolver';
 export {
   ComponentCompareQueryParams,

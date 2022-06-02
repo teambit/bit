@@ -1,4 +1,4 @@
-import { useComponentCompareContext } from '@teambit/component.ui.compare';
+import { useComponentCompare } from '@teambit/component.ui.compare';
 import { EmptyStateSlot } from '@teambit/compositions';
 import { Toggle } from '@teambit/design.ui.input.toggle';
 import { RoundLoader } from '@teambit/design.ui.round-loader';
@@ -12,7 +12,7 @@ export type CompareTestsProps = {
 
 export function CompareTests(props: CompareTestsProps) {
   const { emptyState } = props;
-  const componentCompare = useComponentCompareContext();
+  const componentCompare = useComponentCompare();
   const [isScrollingSynced, setIsScrollingSynced] = useState<boolean>(true);
 
   const leftPanelRef = useRef<HTMLDivElement>(null);
