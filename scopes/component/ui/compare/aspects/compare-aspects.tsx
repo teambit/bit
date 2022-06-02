@@ -8,7 +8,14 @@ import { Collapser } from '@teambit/ui-foundation.ui.buttons.collapser';
 import { SplitPane, Pane, Layout } from '@teambit/base-ui.surfaces.split-pane.split-pane';
 import { useIsMobile } from '@teambit/ui-foundation.ui.hooks.use-is-mobile';
 import { RoundLoader } from '@teambit/design.ui.round-loader';
-import { CompareStatus, CompareStatusResolver, useComponentCompareContext, useComponentCompareParams } from '@teambit/component.ui.compare';
+import { WidgetProps } from '@teambit/ui-foundation.ui.tree.tree-node';
+import {
+  CompareStatus,
+  CompareStatusResolver,
+  useComponentCompareContext,
+  useCompareQueryParam,
+  useUpdatedUrlFromQuery,
+} from '@teambit/component.ui.compare';
 import { CodeCompareTree } from '@teambit/code.ui.code-compare';
 import { ComponentCompareAspectsContext, useComponentCompareAspectsContext } from './compare-aspects-context';
 import { CompareAspectView } from './compare-aspect-view';
@@ -73,10 +80,9 @@ export function ComponentCompareAspects({ host, className }: ComponentCompareAsp
   const [isSidebarOpen, setSidebarOpenness] = useState(!isMobile);
   const sidebarOpenness = isSidebarOpen ? Layout.row : Layout.left;
 
-  const params = useComponentCompareParams();
+  const selectedAspect = useCompareQueryParam('aspect');
 
-  const selected =
-    params?.selectedAspect || (compareAspectList?.length > 0 && compareAspectList[0].aspectId) || undefined;
+  const selected = selectedAspect || (compareAspectList?.length > 0 && compareAspectList[0].aspectId) || undefined;
 
   const selectedBaseAspect = useMemo(
     () => baseAspectList?.find((baseAspect) => baseAspect.aspectId === selected),
@@ -125,8 +131,8 @@ export function ComponentCompareAspects({ host, className }: ComponentCompareAsp
             fileTree={aspectNames}
             currentFile={selected}
             drawerName={'ASPECTS'}
-            queryParam={'selectedAspect'}
-            getWidgets={getWidgets}
+            widgets={[Widget]}
+            getHref={(node) => useUpdatedUrlFromQuery({ aspect: node.id })}
           />
         </Pane>
       </SplitPane>
@@ -134,7 +140,9 @@ export function ComponentCompareAspects({ host, className }: ComponentCompareAsp
   );
 }
 
-function getWidgets(fileName: string) {
+function Widget({ node }: WidgetProps<any>) {
+  const fileName = node.id;
+
   const componentCompareAspectsContext = useComponentCompareAspectsContext();
 
   if (componentCompareAspectsContext?.loading) return null;
@@ -151,7 +159,7 @@ function getWidgets(fileName: string) {
 
   if (!status) return null;
 
-  return [() => <CompareStatusResolver status={status as CompareStatus} />];
+  return <CompareStatusResolver status={status as CompareStatus} />;
 }
 
 function getAspectStatus(aspectA?: ComponentAspectData, aspectB?: ComponentAspectData): CompareStatus | null {

@@ -1,22 +1,22 @@
 import { ComponentContext } from '@teambit/component';
 import classNames from 'classnames';
-import React, { useContext, useState, HTMLAttributes, useMemo, useCallback } from 'react';
+import React, { useContext, useState, HTMLAttributes, useMemo } from 'react';
 import { flatten } from 'lodash';
-import { affix } from '@teambit/base-ui.utils.string.affix';
+import { Label } from '@teambit/documenter.ui.label';
 import { SplitPane, Pane, Layout } from '@teambit/base-ui.surfaces.split-pane.split-pane';
 import { HoverSplitter } from '@teambit/base-ui.surfaces.split-pane.hover-splitter';
 import { Collapser } from '@teambit/ui-foundation.ui.buttons.collapser';
 import { useCode } from '@teambit/code.ui.queries.get-component-code';
-import { Label } from '@teambit/documenter.ui.label';
 import type { FileIconSlot } from '@teambit/code';
 import { CodeView } from '@teambit/code.ui.code-view';
 import { CodeTabTree } from '@teambit/code.ui.code-tab-tree';
 import { useIsMobile } from '@teambit/ui-foundation.ui.hooks.use-is-mobile';
-import { TreeNode as Node } from '@teambit/ui-foundation.ui.tree.tree-node';
-import { FolderTreeNode } from '@teambit/ui-foundation.ui.tree.folder-tree-node';
+import { WidgetProps } from '@teambit/ui-foundation.ui.tree.tree-node';
 import { getFileIcon, FileIconMatch } from '@teambit/code.ui.utils.get-file-icon';
-import { TreeContext } from '@teambit/base-ui.graph.tree.tree-context';
 import { useCodeParams } from '@teambit/code.ui.hooks.use-code-params';
+import { TreeNode } from '@teambit/design.ui.tree';
+import { affix } from '@teambit/base-ui.utils.string.affix';
+
 import styles from './code-tab-page.module.scss';
 
 type CodePageProps = {
@@ -34,30 +34,6 @@ export function CodePage({ className, fileIconSlot }: CodePageProps) {
   const sidebarOpenness = isSidebarOpen ? Layout.row : Layout.left;
   const fileIconMatchers: FileIconMatch[] = useMemo(() => flatten(fileIconSlot?.values()), [fileIconSlot]);
   const icon = getFileIcon(fileIconMatchers, currentFile);
-  const treeNodeRenderer = useCallback(
-    function TreeNode(props: any) {
-      const children = props.node.children;
-      const { selected } = useContext(TreeContext);
-
-      const href = `${props.node.id}${affix('?version=', urlParams.version)}`;
-
-      const widgets = getWidgets(props.node.id, mainFile, devFiles);
-
-      if (!children) {
-        return (
-          <Node
-            href={href}
-            {...props}
-            isActive={props.node.id === selected}
-            icon={getFileIcon(fileIconMatchers, props.node.id)}
-            widgets={widgets}
-          />
-        );
-      }
-      return <FolderTreeNode {...props} />;
-    },
-    [fileIconMatchers, devFiles]
-  );
 
   return (
     <SplitPane layout={sidebarOpenness} size="85%" className={classNames(styles.codePage, className)}>
@@ -79,23 +55,29 @@ export function CodePage({ className, fileIconSlot }: CodePageProps) {
           currentFile={currentFile}
           dependencies={dependencies}
           fileTree={fileTree}
-          treeNodeRenderer={treeNodeRenderer}
+          widgets={[getWidget(mainFile, devFiles)]}
+          getHref={(node) => `${node.id}${affix('?version=', urlParams.version)}`}
+          getIcon={getIcon(fileIconMatchers)}
         />
       </Pane>
     </SplitPane>
   );
 }
-
-function getWidgets(fileName: string, mainFile?: string, devFiles?: string[]) {
-  if (fileName === mainFile) {
-    return [() => createLabel('main')];
-  }
-  if (devFiles?.includes(fileName)) {
-    return [() => createLabel('dev')];
-  }
-  return null;
+function getWidget(mainFile?: string, devFiles?: string[]) {
+  return function Widget({ node }: WidgetProps<any>) {
+    const fileName = node?.id;
+    if (fileName === mainFile) {
+      return <Label className={styles.label}>main</Label>;
+    }
+    if (devFiles?.includes(fileName)) {
+      return <Label className={styles.label}>dev</Label>;
+    }
+    return null;
+  };
 }
 
-function createLabel(str: string) {
-  return <Label className={styles.label}>{str}</Label>;
+function getIcon(fileIconMatchers: FileIconMatch[]) {
+  return function Icon({ id }: TreeNode) {
+    return getFileIcon(fileIconMatchers, id);
+  };
 }

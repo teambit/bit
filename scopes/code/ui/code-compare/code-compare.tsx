@@ -6,13 +6,15 @@ import { SplitPane, Pane, Layout } from '@teambit/base-ui.surfaces.split-pane.sp
 import { useIsMobile } from '@teambit/ui-foundation.ui.hooks.use-is-mobile';
 import { FileIconSlot } from '@teambit/code';
 import {
-  useComponentCompareParams,
   useComponentCompareContext,
+  useCompareQueryParam,
   CompareStatus,
   CompareStatusResolver,
+  useUpdatedUrlFromQuery,
 } from '@teambit/component.ui.compare';
 import { useFileContent } from '@teambit/code.ui.queries.get-file-content';
 import { useCode } from '@teambit/code.ui.queries.get-component-code';
+import { WidgetProps } from '@teambit/ui-foundation.ui.tree.tree-node';
 import { CodeCompareTree } from './code-compare-tree';
 import { CodeCompareView } from './code-compare-view';
 
@@ -26,7 +28,6 @@ export type CodeCompareProps = {
 
 export function CodeCompare({ fileIconSlot, className }: CodeCompareProps) {
   const componentCompareContext = useComponentCompareContext();
-
   const { base, compare } = componentCompareContext || {};
 
   const isMobile = useIsMobile();
@@ -37,8 +38,10 @@ export function CodeCompare({ fileIconSlot, className }: CodeCompareProps) {
   const { fileTree: compareFileTree = [] } = useCode(compare?.id);
 
   const fileTree = baseFileTree.concat(compareFileTree);
-  const params = useComponentCompareParams();
-  const selectedFile = params?.selectedFile || mainFile || DEFAULT_FILE;
+
+  const selectedFileFromParams = useCompareQueryParam('file');
+
+  const selectedFile = selectedFileFromParams || mainFile || DEFAULT_FILE;
 
   return (
     <SplitPane
@@ -65,19 +68,23 @@ export function CodeCompare({ fileIconSlot, className }: CodeCompareProps) {
           fileTree={fileTree}
           currentFile={selectedFile}
           drawerName={'FILES'}
-          queryParam={'selectedFile'}
-          getWidgets={getWidgets}
+          widgets={[Widget]}
+          getHref={(node) => useUpdatedUrlFromQuery({ file: node.id })}
         />
       </Pane>
     </SplitPane>
   );
 }
 
-function getWidgets(fileName: string) {
+function Widget({ node }: WidgetProps<any>) {
+  const fileName = node.id;
   const componentCompareContext = useComponentCompareContext();
   const base = componentCompareContext?.base;
   const compare = componentCompareContext?.compare;
-
+  /**
+   * Note: This is temporary for the first release. 
+   * TBD move this to the Component Compare GQL API
+   */
   const { fileContent: originalFileContent, loading: originalLoading } = useFileContent(base?.id, fileName);
   const { fileContent: modifiedFileContent, loading: modifiedLoading } = useFileContent(compare?.id, fileName);
 
@@ -94,5 +101,5 @@ function getWidgets(fileName: string) {
 
   if (!status) return null;
 
-  return [() => <CompareStatusResolver status={status as CompareStatus} />];
+  return <CompareStatusResolver status={status as CompareStatus} />;
 }

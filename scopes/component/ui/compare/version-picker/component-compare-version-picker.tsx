@@ -2,11 +2,7 @@ import React, { HTMLAttributes, useContext, useMemo } from 'react';
 import compact from 'lodash.compact';
 import { LegacyComponentLog } from '@teambit/legacy-component-log';
 import { DropdownComponentVersion, VersionDropdown } from '@teambit/component.ui.version-dropdown';
-import {
-  useComponentCompareContext,
-  useComponentCompareParams,
-  getComponentCompareUrl,
-} from '@teambit/component.ui.compare';
+import { useComponentCompareContext, useUpdatedUrlFromQuery } from '@teambit/component.ui.compare';
 import { ComponentContext } from '@teambit/component';
 import classNames from 'classnames';
 import styles from './component-compare-version-picker.module.scss';
@@ -61,8 +57,7 @@ export function ComponentCompareVersionPicker({ className }: ComponentCompareVer
         currentVersion={baseVersion as string}
         loading={componentCompare?.loading}
         overrideVersionHref={(_baseVersion) => {
-          const compareQueryParams = useComponentCompareParams();
-          return getComponentCompareUrl({ ...compareQueryParams, baseVersion: _baseVersion });
+          return useUpdatedUrlFromQuery({ baseVersion: _baseVersion });
         }}
         showVersionDetails={true}
       />

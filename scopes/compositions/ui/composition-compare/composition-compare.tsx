@@ -1,7 +1,7 @@
 import {
-  getComponentCompareUrl,
+  useUpdatedUrlFromQuery,
   useComponentCompareContext,
-  useComponentCompareParams
+  useCompareQueryParam,
 } from '@teambit/component.ui.compare';
 import { CompositionContent, EmptyStateSlot } from '@teambit/compositions';
 import { CompositionContextProvider } from '@teambit/compositions.ui.hooks.use-composition';
@@ -25,28 +25,26 @@ export function CompositionCompare(props: CompositionCompareProps) {
 
   const baseCompositions = base?.compositions;
   const compareCompositions = compare?.compositions;
-  const params = useComponentCompareParams();
+  const selectedCompositionBaseFile = useCompareQueryParam('compositionBaseFile');
+  const selectedCompositionCompareFile = useCompareQueryParam('compositionCompareFile');
 
   const selectedBaseComp =
-    (params.selectedCompositionBaseFile &&
+    (selectedCompositionBaseFile &&
       baseCompositions &&
-      baseCompositions.find((c) => c.identifier === params.selectedCompositionBaseFile)) ||
+      baseCompositions.find((c) => c.identifier === selectedCompositionBaseFile)) ||
     (baseCompositions && baseCompositions[0]);
 
   const selectedCompareComp =
-    (params.selectedCompositionCompareFile &&
+    (selectedCompositionCompareFile &&
       compareCompositions &&
-      compareCompositions.find((c) => c.identifier === params.selectedCompositionCompareFile)) ||
+      compareCompositions.find((c) => c.identifier === selectedCompositionCompareFile)) ||
     (compareCompositions && compareCompositions[0]);
 
   const baseCompositionDropdownSource =
     baseCompositions?.map((c) => {
-      const rest = useComponentCompareParams();
-
-      const href = getComponentCompareUrl({
-        ...rest,
-        selectedCompositionBaseFile: c.identifier,
-        selectedCompositionCompareFile: selectedCompareComp?.identifier,
+      const href = useUpdatedUrlFromQuery({
+        compositionBaseFile: c.identifier,
+        compositionCompareFile: selectedCompareComp?.identifier,
       });
 
       return { id: c.identifier, label: c.displayName, value: href };
@@ -54,14 +52,10 @@ export function CompositionCompare(props: CompositionCompareProps) {
 
   const compareCompositionDropdownSource =
     compareCompositions?.map((c) => {
-      const rest = useComponentCompareParams();
-
-      const href = getComponentCompareUrl({
-        ...rest,
-        selectedCompositionBaseFile: selectedBaseComp?.identifier,
-        selectedCompositionCompareFile: c.identifier,
+      const href = useUpdatedUrlFromQuery({
+        compositionBaseFile: selectedBaseComp?.identifier,
+        compositionCompareFile: c.identifier,
       });
-
       return { id: c.identifier, label: c.displayName, value: href };
     }) || [];
 
