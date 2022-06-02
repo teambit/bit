@@ -15,7 +15,7 @@ export type CodeCompareViewProps = {
 } & HTMLAttributes<HTMLDivElement>;
 
 // a translation list of specific monaco languages that are not the same as their file ending.
-const languages = {
+const languageOverrides = {
   ts: 'typescript',
   tsx: 'typescript',
   js: 'javascript',
@@ -33,9 +33,9 @@ export function CodeCompareView({ className, base, compare, fileName }: CodeComp
   const title = useMemo(() => fileName?.split('/').pop(), [fileName]);
 
   const language = useMemo(() => {
-    if (!fileName) return languages.ts;
+    if (!fileName) return languageOverrides.ts;
     const fileEnding = fileName?.split('.').pop();
-    return languages[fileEnding || ''] || fileEnding;
+    return languageOverrides[fileEnding || ''] || fileEnding;
   }, [fileName]);
 
   if (originalLoading || modifiedLoading) return null;
