@@ -8,7 +8,7 @@ import { SplitPane, Pane, Layout } from '@teambit/base-ui.surfaces.split-pane.sp
 import { useIsMobile } from '@teambit/ui-foundation.ui.hooks.use-is-mobile';
 import { RoundLoader } from '@teambit/design.ui.round-loader';
 import {
-  useComponentCompareContext,
+  useComponentCompare,
   useCompareQueryParam,
   useUpdatedUrlFromQuery,
 } from '@teambit/component.ui.compare';
@@ -50,7 +50,7 @@ const GET_COMPONENT_ASPECT_DATA = gql`
 `;
 
 export function ComponentCompareAspects({ host, className }: ComponentCompareAspectsProps) {
-  const componentCompareContext = useComponentCompareContext();
+  const componentCompareContext = useComponentCompare();
   const base = componentCompareContext?.base;
   const compare = componentCompareContext?.compare;
 

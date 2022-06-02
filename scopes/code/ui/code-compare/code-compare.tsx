@@ -5,11 +5,7 @@ import { Collapser } from '@teambit/ui-foundation.ui.buttons.collapser';
 import { SplitPane, Pane, Layout } from '@teambit/base-ui.surfaces.split-pane.split-pane';
 import { useIsMobile } from '@teambit/ui-foundation.ui.hooks.use-is-mobile';
 import { FileIconSlot } from '@teambit/code';
-import {
-  useComponentCompareContext,
-  useCompareQueryParam,
-  useUpdatedUrlFromQuery,
-} from '@teambit/component.ui.compare';
+import { useComponentCompare, useCompareQueryParam, useUpdatedUrlFromQuery } from '@teambit/component.ui.compare';
 import { useCode } from '@teambit/code.ui.queries.get-component-code';
 import { CodeCompareTree } from './code-compare-tree';
 import { CodeCompareView } from './code-compare-view';
@@ -24,7 +20,7 @@ export type CodeCompareProps = {
 } & HTMLAttributes<HTMLDivElement>;
 
 export function CodeCompare({ fileIconSlot, className }: CodeCompareProps) {
-  const componentCompareContext = useComponentCompareContext();
+  const componentCompareContext = useComponentCompare();
   const { base, compare } = componentCompareContext || {};
 
   const isMobile = useIsMobile();

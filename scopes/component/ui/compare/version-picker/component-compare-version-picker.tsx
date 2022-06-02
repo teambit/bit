@@ -2,7 +2,7 @@ import React, { HTMLAttributes, useContext, useMemo } from 'react';
 import compact from 'lodash.compact';
 import { LegacyComponentLog } from '@teambit/legacy-component-log';
 import { DropdownComponentVersion, VersionDropdown } from '@teambit/component.ui.version-dropdown';
-import { useComponentCompareContext, useUpdatedUrlFromQuery } from '@teambit/component.ui.compare';
+import { useComponentCompare, useUpdatedUrlFromQuery } from '@teambit/component.ui.compare';
 import { ComponentContext } from '@teambit/component';
 import classNames from 'classnames';
 import styles from './component-compare-version-picker.module.scss';
@@ -11,7 +11,7 @@ export type ComponentCompareVersionPickerProps = {} & HTMLAttributes<HTMLDivElem
 
 export function ComponentCompareVersionPicker({ className }: ComponentCompareVersionPickerProps) {
   const component = useContext(ComponentContext);
-  const componentCompare = useComponentCompareContext();
+  const componentCompare = useComponentCompare();
 
   const snaps: DropdownComponentVersion[] = useMemo(() => {
     const logs = component?.logs;

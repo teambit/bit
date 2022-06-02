@@ -1,5 +1,5 @@
 import classNames from 'classnames';
-import { useComponentCompareContext } from '@teambit/component.ui.compare';
+import { useComponentCompare } from '@teambit/component.ui.compare';
 import { RoundLoader } from '@teambit/design.ui.round-loader';
 import {
   calcElements,
@@ -45,7 +45,7 @@ const NodeTypes: NodeTypesType = { ComponentNode: ComponentNodeContainer };
 
 export function DependenciesCompare() {
   const graphRef = useRef<OnLoadParams>();
-  const componentCompare = useComponentCompareContext();
+  const componentCompare = useComponentCompare();
 
   const baseId = componentCompare?.base?.id;
   const compareId = componentCompare?.compare?.id;

@@ -9,7 +9,7 @@ export type ComponentCompareModel = {
 };
 
 export const ComponentCompareContext = createContext<ComponentCompareModel | undefined>(undefined);
-export const useComponentCompareContext: () => ComponentCompareModel | undefined = () => {
+export const useComponentCompare: () => ComponentCompareModel | undefined = () => {
   const componentCompareContext = useContext(ComponentCompareContext);
   return componentCompareContext;
 };

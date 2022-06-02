@@ -1,11 +1,11 @@
 import React from 'react';
 import { WidgetProps } from '@teambit/ui-foundation.ui.tree.tree-node';
-import { CompareStatus, CompareStatusResolver, useComponentCompareContext } from '@teambit/component.ui.compare';
+import { CompareStatus, CompareStatusResolver, useComponentCompare } from '@teambit/component.ui.compare';
 import { useFileContent } from '@teambit/code.ui.queries.get-file-content';
 
 export function Widget({ node }: WidgetProps<any>) {
   const fileName = node.id;
-  const componentCompareContext = useComponentCompareContext();
+  const componentCompareContext = useComponentCompare();
   const base = componentCompareContext?.base;
   const compare = componentCompareContext?.compare;
   /**
