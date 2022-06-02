@@ -9,8 +9,8 @@ import { RoundLoader } from '@teambit/design.ui.round-loader';
 import React, { HTMLAttributes, useContext, useMemo } from 'react';
 import { ComponentCompareContext, ComponentCompareModel } from './component-compare-context';
 import { ComponentCompareVersionPicker } from './version-picker/component-compare-version-picker';
+import { useCompareQueryParam } from './use-component-compare-query';
 import styles from './component-compare.module.scss';
-import { useComponentCompareParams } from './use-component-compare-params';
 
 export type ComponentCompareProps = {
   navSlot: ComponentCompareNavSlot;
@@ -19,7 +19,7 @@ export type ComponentCompareProps = {
 } & HTMLAttributes<HTMLDivElement>;
 
 export function ComponentCompare({ navSlot, host, routeSlot }: ComponentCompareProps) {
-  const { baseVersion } = useComponentCompareParams();
+  const baseVersion = useCompareQueryParam('baseVersion');
   const component = useContext(ComponentContext);
   const location = useLocation();
 

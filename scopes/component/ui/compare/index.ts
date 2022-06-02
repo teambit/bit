@@ -4,6 +4,7 @@ export { useComponentCompareContext } from './component-compare-context';
 export { CompareStatus, CompareStatusResolver, CompareStatusResolverProps } from './status-resolver';
 export {
   ComponentCompareQueryParams,
-  ComponentCompareRouteProps, getComponentCompareUrl, useComponentCompareParams
-} from './use-component-compare-params';
+  useUpdatedUrlFromQuery,
+  useCompareQueryParam
+} from './use-component-compare-query';
 export { ComponentCompareVersionPicker, ComponentCompareVersionPickerProps } from './version-picker';

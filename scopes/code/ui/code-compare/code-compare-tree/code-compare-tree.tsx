@@ -1,14 +1,12 @@
-import React, { HTMLAttributes, useContext, useMemo, useCallback, useState } from 'react';
+import React, { HTMLAttributes, useState, useMemo, ComponentType } from 'react';
 import classNames from 'classnames';
 import { FileIconSlot } from '@teambit/code';
-import { TreeNode as Node } from '@teambit/ui-foundation.ui.tree.tree-node';
-import { FolderTreeNode } from '@teambit/ui-foundation.ui.tree.folder-tree-node';
-import { FileIconMatch, getFileIcon } from '@teambit/code.ui.utils.get-file-icon';
-import flatten from 'lodash.flatten';
-import { TreeContext } from '@teambit/base-ui.graph.tree.tree-context';
-import { useComponentCompareParams, getComponentCompareUrl } from '@teambit/component.ui.compare';
+import { flatten } from 'lodash';
+import { WidgetProps } from '@teambit/ui-foundation.ui.tree.tree-node';
 import { DrawerUI } from '@teambit/ui-foundation.ui.tree.drawer';
 import { FileTree } from '@teambit/ui-foundation.ui.tree.file-tree';
+import { FileIconMatch, getFileIcon } from '@teambit/code.ui.utils.get-file-icon';
+import { TreeNode } from '@teambit/design.ui.tree';
 
 import styles from './code-compare-tree.module.scss';
 
@@ -17,8 +15,8 @@ export type CodeCompareTreeProps = {
   fileIconSlot?: FileIconSlot;
   fileTree: string[];
   drawerName: string;
-  queryParam: string;
-  getWidgets?: (fileName: string) => (() => JSX.Element)[] | null;
+  widgets?: ComponentType<WidgetProps<any>>[];
+  getHref?: (node: TreeNode) => string;
 } & HTMLAttributes<HTMLDivElement>;
 
 export function CodeCompareTree({
@@ -27,28 +25,10 @@ export function CodeCompareTree({
   className,
   fileTree,
   drawerName,
-  queryParam,
-  getWidgets,
+  widgets,
+  getHref
 }: CodeCompareTreeProps) {
   const fileIconMatchers: FileIconMatch[] = useMemo(() => flatten(fileIconSlot?.values()), [fileIconSlot]);
-
-  const treeNodeRenderer = useCallback(
-    function TreeNode(props: any) {
-      const children = props.node.children;
-      const { selected } = useContext(TreeContext);
-      const compareQueryParams = useComponentCompareParams();
-
-      const href = getComponentCompareUrl({ ...compareQueryParams, [queryParam]: props.node.id });
-      const icon = getFileIcon(fileIconMatchers, props.node.id);
-      const widgets = getWidgets?.(props.node.id);
-      
-      if (!children) {
-        return <Node href={href} {...props} isActive={props.node.id === selected} icon={icon} widgets={widgets} />;
-      }
-      return <FolderTreeNode {...props} />;
-    },
-    [fileIconMatchers]
-  );
 
   const [openDrawerList, onToggleDrawer] = useState([drawerName]);
 
@@ -70,8 +50,20 @@ export function CodeCompareTree({
         contentClass={styles.componentCompareCodeDrawerContent}
         className={classNames(styles.componentCompareCodeTabDrawer)}
       >
-        <FileTree TreeNode={treeNodeRenderer} files={fileTree || ['']} selected={currentFile} />
+        <FileTree
+          getHref={getHref}
+          files={fileTree || ['']}
+          selected={currentFile}
+          widgets={widgets}
+          getIcon={getIcon(fileIconMatchers)}
+        />
       </DrawerUI>
     </div>
   );
+}
+
+function getIcon(fileIconMatchers: FileIconMatch[]) {
+  return function Icon({ id }: TreeNode) {
+    return getFileIcon(fileIconMatchers, id);
+  };
 }

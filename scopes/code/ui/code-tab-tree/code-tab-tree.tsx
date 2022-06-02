@@ -1,11 +1,11 @@
-import React, { useState, HTMLAttributes } from 'react';
+import React, { useState, HTMLAttributes, ComponentType } from 'react';
 import classNames from 'classnames';
 import { FileTree } from '@teambit/ui-foundation.ui.tree.file-tree';
 import { DrawerUI } from '@teambit/ui-foundation.ui.tree.drawer';
-
 import type { DependencyType } from '@teambit/code.ui.queries.get-component-code';
 import { DependencyTree } from '@teambit/code.ui.dependency-tree';
-import { TreeNodeRenderer } from '@teambit/base-ui.graph.tree.recursive-tree';
+import { TreeNode } from '@teambit/design.ui.tree';
+import { WidgetProps } from '@teambit/ui-foundation.ui.tree.tree-node';
 
 import styles from './code-tab-tree.module.scss';
 
@@ -13,7 +13,9 @@ export type CodeTabTreeProps = {
   fileTree: any[];
   dependencies?: DependencyType[];
   currentFile?: string;
-  treeNodeRenderer: TreeNodeRenderer<any>;
+  widgets?: ComponentType<WidgetProps<any>>[];
+  getHref?: (node: TreeNode) => string;
+  getIcon?: (node: TreeNode) => string | undefined;
 } & HTMLAttributes<HTMLDivElement>;
 
 export function CodeTabTree({
@@ -21,7 +23,9 @@ export function CodeTabTree({
   fileTree,
   dependencies,
   currentFile = '',
-  treeNodeRenderer,
+  widgets,
+  getHref,
+  getIcon,
 }: CodeTabTreeProps) {
   const [openDrawerList, onToggleDrawer] = useState(['FILES']);
 
@@ -43,7 +47,13 @@ export function CodeTabTree({
         contentClass={styles.codeDrawerContent}
         className={classNames(styles.codeTabDrawer)}
       >
-        <FileTree TreeNode={treeNodeRenderer} files={fileTree || ['']} selected={currentFile} />
+        <FileTree
+          files={fileTree || ['']}
+          widgets={widgets}
+          getHref={getHref}
+          getIcon={getIcon}
+          selected={currentFile}
+        />
       </DrawerUI>
       <DrawerUI
         isOpen={openDrawerList.includes('DEPENDENCIES')}
