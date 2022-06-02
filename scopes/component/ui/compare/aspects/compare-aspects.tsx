@@ -1,100 +1,31 @@
-import React, { HTMLAttributes, useState, useMemo } from 'react';
+import React, { HTMLAttributes, useState } from 'react';
 import classNames from 'classnames';
-import { gql } from '@apollo/client';
-import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
 import { HoverSplitter } from '@teambit/base-ui.surfaces.split-pane.hover-splitter';
 import { Collapser } from '@teambit/ui-foundation.ui.buttons.collapser';
 import { SplitPane, Pane, Layout } from '@teambit/base-ui.surfaces.split-pane.split-pane';
 import { useIsMobile } from '@teambit/ui-foundation.ui.hooks.use-is-mobile';
 import { RoundLoader } from '@teambit/design.ui.round-loader';
-import {
-  useComponentCompare,
-  useCompareQueryParam,
-  useUpdatedUrlFromQuery,
-} from '@teambit/component.ui.compare';
+import { useUpdatedUrlFromQuery } from '@teambit/component.ui.compare';
 import { CodeCompareTree } from '@teambit/code.ui.code-compare';
 import { ComponentCompareAspectsContext } from './compare-aspects-context';
 import { CompareAspectView } from './compare-aspect-view';
 import { Widget } from './compare-aspects.widgets';
+import { useCompareAspects } from './use-compare-aspects';
 
 import styles from './compare-aspects.module.scss';
 
 export type ComponentCompareAspectsProps = { host: string } & HTMLAttributes<HTMLDivElement>;
-export type ComponentAspectData = {
-  icon?: string;
-  name?: string;
-  config: any;
-  data: any;
-  aspectId: string;
-};
-
-const GET_COMPONENT_ASPECT_DATA = gql`
-  query GetComponentAspectData($id: String!, $extensionId: String!) {
-    getHost(id: $extensionId) {
-      id # used for GQL caching
-      get(id: $id) {
-        id {
-          name
-          version
-          scope
-        }
-        aspects {
-          aspectId: id
-          config
-          data
-          icon
-        }
-      }
-    }
-  }
-`;
 
 export function ComponentCompareAspects({ host, className }: ComponentCompareAspectsProps) {
-  const componentCompareContext = useComponentCompare();
-  const base = componentCompareContext?.base;
-  const compare = componentCompareContext?.compare;
-
-  const isCompareVersionWorkspace = componentCompareContext?.compareIsLocalChanges;
-
-  const baseId = `${base?.id.fullName}@${base?.id.version}`;
-  const compareId = isCompareVersionWorkspace ? compare?.id.fullName : `${compare?.id.fullName}@${compare?.id.version}`;
-
-  const { data: baseAspectData, loading: baseLoading } = useDataQuery(GET_COMPONENT_ASPECT_DATA, {
-    variables: { id: baseId, extensionId: host },
-    skip: !base?.id,
-  });
-
-  const { data: compareAspectData, loading: compareLoading } = useDataQuery(GET_COMPONENT_ASPECT_DATA, {
-    variables: { id: compareId, extensionId: host },
-    skip: !compare?.id,
-  });
-
-  const loading = baseLoading || compareLoading || componentCompareContext?.loading;
-  const baseAspectList: ComponentAspectData[] = baseAspectData?.getHost?.get?.aspects || [];
-  const compareAspectList: ComponentAspectData[] = compareAspectData?.getHost?.get?.aspects || [];
-
+  const { base, compare, loading, selectedBase, selectedCompare, selected } = useCompareAspects(host);
   const isMobile = useIsMobile();
   const [isSidebarOpen, setSidebarOpenness] = useState(!isMobile);
   const sidebarOpenness = isSidebarOpen ? Layout.row : Layout.left;
 
-  const selectedAspect = useCompareQueryParam('aspect');
-
-  const selected = selectedAspect || (compareAspectList?.length > 0 && compareAspectList[0].aspectId) || undefined;
-
-  const selectedBaseAspect = useMemo(
-    () => baseAspectList?.find((baseAspect) => baseAspect.aspectId === selected),
-    [baseAspectList, selected]
-  );
-
-  const selectedCompareAspect = useMemo(
-    () => compareAspectList?.find((compareAspect) => compareAspect.aspectId === selected),
-    [compareAspectList, selected]
-  );
-
-  const aspectNames = baseAspectList.concat(compareAspectList).map((aspect) => aspect.aspectId);
+  const aspectNames = base.concat(compare).map((aspect) => aspect.aspectId);
 
   return (
-    <ComponentCompareAspectsContext.Provider value={{ base: baseAspectList, compare: compareAspectList, loading }}>
+    <ComponentCompareAspectsContext.Provider value={{ base, compare, loading, selectedBase, selectedCompare }}>
       <SplitPane
         layout={sidebarOpenness}
         size="85%"
@@ -108,8 +39,8 @@ export function ComponentCompareAspects({ host, className }: ComponentCompareAsp
           )}
           <CompareAspectView
             name={selected}
-            baseAspectData={selectedBaseAspect}
-            compareAspectData={selectedCompareAspect}
+            baseAspectData={selectedBase}
+            compareAspectData={selectedCompare}
             loading={loading}
           />
         </Pane>

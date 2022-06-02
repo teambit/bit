@@ -1,10 +1,13 @@
 import { createContext, useContext } from 'react';
-import { ComponentAspectData } from './compare-aspects';
+import { ComponentAspectData } from './use-compare-aspects';
 
 export type ComponentCompareAspectsModel = {
   base: ComponentAspectData[];
   compare: ComponentAspectData[];
   loading?: boolean;
+  selectedBase?: ComponentAspectData;
+  selectedCompare?: ComponentAspectData;
+  selected?: string
 };
 
 export const ComponentCompareAspectsContext = createContext<ComponentCompareAspectsModel | undefined>(undefined);
