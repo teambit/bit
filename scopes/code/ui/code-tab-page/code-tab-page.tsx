@@ -57,7 +57,7 @@ export function CodePage({ className, fileIconSlot }: CodePageProps) {
           fileTree={fileTree}
           widgets={[generateWidget(mainFile, devFiles)]}
           getHref={(node) => `${node.id}${affix('?version=', urlParams.version)}`}
-          getIcon={getIcon(fileIconMatchers)}
+          getIcon={generateIcon(fileIconMatchers)}
         />
       </Pane>
     </SplitPane>
@@ -77,7 +77,7 @@ function generateWidget(mainFile?: string, devFiles?: string[]) {
   };
 }
 
-function getIcon(fileIconMatchers: FileIconMatch[]) {
+function generateIcon(fileIconMatchers: FileIconMatch[]) {
   return function Icon({ id }: TreeNode) {
     return getFileIcon(fileIconMatchers, id);
   };
