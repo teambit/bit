@@ -7,16 +7,7 @@ import { CompareStatusResolver } from '@teambit/component.ui.compare';
 import { DeprecationIcon } from '@teambit/component.ui.deprecation-icon';
 import { ellipsis } from '@teambit/design.ui.styles.ellipsis';
 import { EnvIcon } from '@teambit/envs.ui.env-icon';
-import {
-  compNodeClass,
-  defaultNode,
-  envIconClass,
-  external,
-  firstRowClass,
-  nameClass,
-  nameLineClass,
-  versionClass,
-} from '@teambit/graph';
+import { componentNodeStyles, defaultNode, external } from '@teambit/graph';
 import classnames from 'classnames';
 import React, { useMemo } from 'react';
 import { compare, valid } from 'semver';
@@ -53,16 +44,16 @@ export function DependencyCompareNode(props: DependencyCompareNodeProps) {
   );
 
   return (
-    <Card className={classnames(compNodeClass, getVariant(type))} elevation="none">
-      <div className={firstRowClass}>
-        <EnvIcon component={baseComponent} className={envIconClass} />
+    <Card className={classnames(componentNodeStyles.compNode, getVariant(type))} elevation="none">
+      <div className={componentNodeStyles.firstRow}>
+        <EnvIcon component={baseComponent} className={componentNodeStyles.envIcon} />
         <Breadcrumbs componentId={baseId} className={mutedText} />
       </div>
-      <div className={nameLineClass}>
+      <div className={componentNodeStyles.nameLine}>
         <NavLink className={styles.link} external={true} href={ComponentUrl.toUrl(baseId, { includeVersion: false })}>
-          <span className={classnames(nameClass, ellipsis)}>{baseId.name}</span>
+          <span className={classnames(componentNodeStyles.name, ellipsis)}>{baseId.name}</span>
         </NavLink>
-        {baseId.version && <span className={classnames(versionClass, ellipsis)}>{baseId.version}</span>}
+        {baseId.version && <span className={classnames(componentNodeStyles.version, ellipsis)}>{baseId.version}</span>}
         {versionDiff !== 0 && (
           <img
             className={classnames([styles.arrowIcon, styles.versionUp])}
@@ -73,7 +64,7 @@ export function DependencyCompareNode(props: DependencyCompareNodeProps) {
           <span
             className={classnames(
               styles.version,
-              versionClass,
+              componentNodeStyles.version,
               ellipsis,
               versionDiff === -1 && styles.versionUp,
               versionDiff === 1 && styles.versionDown

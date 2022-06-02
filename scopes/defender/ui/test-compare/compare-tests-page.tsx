@@ -7,7 +7,7 @@ import { TestTable } from '@teambit/defender.ui.test-table';
 import { AlertCard } from '@teambit/design.ui.alert-card';
 import { EmptyBox } from '@teambit/design.ui.empty-box';
 import { MDXLayout } from '@teambit/mdx.ui.mdx-layout';
-import { testBlockClass, testsPageClass } from '@teambit/tester';
+import { styles } from '@teambit/tester';
 import classNames from 'classnames';
 
 export type CompareTestsPageProps = {
@@ -94,7 +94,7 @@ export function CompareTestsPage(props: CompareTestsPageProps) {
     EmptyStateTemplate
   ) {
     return (
-      <div className={classNames(testsPageClass, className)}>
+      <div className={classNames(styles.testsPage, className)}>
         <div>
           <AlertCard
             level="info"
@@ -122,9 +122,9 @@ export function CompareTestsPage(props: CompareTestsPageProps) {
   }
 
   return (
-    <div className={classNames(testsPageClass, className)}>
+    <div className={classNames(styles.testsPage, className)}>
       <div>
-        <TestTable testResults={testResults} className={testBlockClass} />
+        <TestTable testResults={testResults} className={styles.testBlock} />
       </div>
     </div>
   );
