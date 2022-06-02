@@ -14,7 +14,11 @@ const getEdgeId = (_e: EdgeModel) => {
   return `${toShortIdFromNodeId(_e.sourceId)}${delim}${toShortIdFromNodeId(_e.targetId)}`;
 };
 
-export function diffGraph(baseGraph?: GraphModel, compareGraph?: GraphModel, baseId?: ComponentID) {
+export function diffGraph(
+  baseGraph?: GraphModel<CompareNodeModel, EdgeModel>,
+  compareGraph?: GraphModel<CompareNodeModel, EdgeModel>,
+  baseId?: ComponentID
+) {
   if (!baseGraph || !compareGraph || !baseId) return null;
 
   const baseNodes = baseGraph.nodes;
