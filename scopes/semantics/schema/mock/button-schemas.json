@@ -476,11 +476,32 @@
             "__schema": "FunctionLikeSchema",
             "location": {
               "file": "button.composition.tsx",
-              "line": 21,
+              "line": 17,
               "character": 14
             },
             "name": "ButtonWithCustomStyles",
             "signature": "const ButtonWithCustomStyles: () => any",
+            "modifiers": [],
+            "params": [],
+            "returnType": {
+              "__schema": "InferenceTypeSchema",
+              "location": {
+                "file": "button.composition.tsx",
+                "line": 17,
+                "character": 14
+              },
+              "type": "any"
+            }
+          },
+          {
+            "__schema": "FunctionLikeSchema",
+            "location": {
+              "file": "button.composition.tsx",
+              "line": 21,
+              "character": 14
+            },
+            "name": "ButtonWithIcon",
+            "signature": "const ButtonWithIcon: () => any",
             "modifiers": [],
             "params": [],
             "returnType": {
@@ -497,28 +518,7 @@
             "__schema": "FunctionLikeSchema",
             "location": {
               "file": "button.composition.tsx",
-              "line": 25,
-              "character": 14
-            },
-            "name": "ButtonWithIcon",
-            "signature": "const ButtonWithIcon: () => any",
-            "modifiers": [],
-            "params": [],
-            "returnType": {
-              "__schema": "InferenceTypeSchema",
-              "location": {
-                "file": "button.composition.tsx",
-                "line": 25,
-                "character": 14
-              },
-              "type": "any"
-            }
-          },
-          {
-            "__schema": "FunctionLikeSchema",
-            "location": {
-              "file": "button.composition.tsx",
-              "line": 34,
+              "line": 30,
               "character": 14
             },
             "name": "ButtonAsALink",
@@ -529,7 +529,7 @@
               "__schema": "InferenceTypeSchema",
               "location": {
                 "file": "button.composition.tsx",
-                "line": 34,
+                "line": 30,
                 "character": 14
               },
               "type": "any"
