@@ -26,7 +26,7 @@ export function VersionInfo({ version, currentVersion, latestVersion, date, user
   const currentVersionRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (isCurrent) {
-      currentVersionRef.current?.scrollIntoView();
+      currentVersionRef.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
     }
   }, [isCurrent]);
 
