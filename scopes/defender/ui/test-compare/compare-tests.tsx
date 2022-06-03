@@ -74,7 +74,7 @@ export function CompareTests(props: CompareTestsProps) {
           Synchronize Scrolling
         </div>
       </div>
-      <CompareSplitLayoutPreset base={BaseLayout} compare={CompareLayout} />
+      <CompareSplitLayoutPreset base={BaseLayout} compare={CompareLayout} className={styles.splitLayout} />
     </>
   );
 }
