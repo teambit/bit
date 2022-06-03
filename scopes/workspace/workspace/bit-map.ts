@@ -137,4 +137,12 @@ export class BitMap {
     bitMapEntry.id = targetId._legacy;
     this.legacyBitMap.setComponent(bitMapEntry.id, bitMapEntry);
   }
+
+  /**
+   * this is the lane-id of the recently exported lane. in case of a new lane, which was not exported yet, this will be
+   * empty.
+   */
+  getExportedLaneId() {
+    return this.legacyBitMap.remoteLaneId;
+  }
 }
