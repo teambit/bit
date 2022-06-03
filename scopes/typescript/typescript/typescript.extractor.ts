@@ -1,4 +1,4 @@
-import ts, { Node } from 'typescript';
+import ts, { Node, SourceFile } from 'typescript';
 import { SchemaExtractor } from '@teambit/schema';
 import { TsserverClient } from '@teambit/ts-server';
 import type { Workspace } from '@teambit/workspace';
@@ -22,14 +22,17 @@ export class TypeScriptExtractor implements SchemaExtractor {
     private workspace: Workspace | undefined
   ) {}
 
-  parseSourceFile(file: AbstractVinyl) {
-    return ts.createSourceFile(
+  parseSourceFile(file: AbstractVinyl): SourceFile {
+    const sourceFile = ts.createSourceFile(
       file.path,
       file.contents.toString('utf8'),
       ts.ScriptTarget.Latest,
-      true,
-      this.tsconfig.compilerOptions
+      true
+      /** don't pass the scriptKind, it'll be determined automatically by typescript by the filepath */
     );
+    // leave this commented out, it's helpful when there are issues with ASTs. consider throwing in this case.
+    // console.log("sourceFile Errors", file.path, sourceFile.parseDiagnostics);
+    return sourceFile;
   }
 
   /**
