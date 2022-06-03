@@ -39,11 +39,11 @@ type MenuItemProps = {
 function MenuItem(props: MenuItemProps) {
   const { selected, current } = props;
 
-  const isCurrent = selected === current;
+  const isCurrent = selected?.id === current.id;
   const currentVersionRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (isCurrent) {
-      currentVersionRef.current?.scrollIntoView();
+      currentVersionRef.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
     }
   }, [isCurrent]);
 

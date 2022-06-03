@@ -1,0 +1,30 @@
+.mainContainer {
+  margin-top: 8px;
+  display: flex;
+  height: 100%;
+  overflow: hidden;
+}
+
+.subContainerLeft {
+  flex: 1;
+  background-color: #ededed;
+  padding: 16px;
+}
+
+.subContainerRight {
+  flex: 1;
+  background-color: #ededed;
+  padding: 16px 16px 16px 0px;
+}
+
+.subView {
+  height: 100%;
+  background-color: white;
+  overflow: auto;
+}
+
+.loader {
+  display: flex;
+  align-items: center;
+  height: 100%;
+}

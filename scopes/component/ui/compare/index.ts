@@ -5,6 +5,7 @@ export { CompareStatus, CompareStatusResolver, CompareStatusResolverProps } from
 export {
   ComponentCompareQueryParams,
   useUpdatedUrlFromQuery,
-  useCompareQueryParam
+  useCompareQueryParam,
 } from './use-component-compare-query';
 export { ComponentCompareVersionPicker, ComponentCompareVersionPickerProps } from './version-picker';
+export { CompareSplitLayoutPreset } from './layouts/compare-split-layout-preset/compare-split-layout-preset';
