@@ -68,7 +68,6 @@ export function DetailedVersion({ currentVersion, className, disabled, snaps, ta
       >
         {currentVersion}
       </Ellipsis>
-      <div className={styles.author}>{author?.displayName}</div>
       {commitMessage(versionDetails?.message)}
       <Ellipsis className={styles.versionTimestamp}>
         <TimeAgo date={timestamp} />
