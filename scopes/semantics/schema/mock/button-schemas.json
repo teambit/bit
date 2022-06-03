@@ -1533,6 +1533,60 @@
             }
           ]
         }
+      },
+      {
+        "__schema": "InterfaceSchema",
+        "location": {
+          "file": "index.ts",
+          "line": 118,
+          "character": 1
+        },
+        "name": "CallSignatureWithTypeParams",
+        "members": [
+          {
+            "__schema": "FunctionLikeSchema",
+            "location": {
+              "file": "index.ts",
+              "line": 119,
+              "character": 3
+            },
+            "name": "",
+            "signature": "",
+            "modifiers": [],
+            "typeParams": [
+              "T"
+            ],
+            "params": [
+              {
+                "__schema": "ParameterSchema",
+                "location": {
+                  "file": "index.ts",
+                  "line": 119,
+                  "character": 7
+                },
+                "name": "a",
+                "type": {
+                  "__schema": "KeywordTypeSchema",
+                  "location": {
+                    "file": "index.ts",
+                    "line": 119,
+                    "character": 10
+                  },
+                  "name": "string"
+                }
+              }
+            ],
+            "returnType": {
+              "__schema": "InferenceTypeSchema",
+              "location": {
+                "file": "index.ts",
+                "line": 119,
+                "character": 19
+              },
+              "type": "T"
+            }
+          }
+        ]
       }
     ]
   },

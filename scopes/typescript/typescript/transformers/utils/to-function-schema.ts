@@ -17,7 +17,17 @@ export async function toFunctionLikeSchema(
   const args = await getParams(node.parameters, context);
   const returnType = await context.resolveType(node, returnTypeStr, Boolean(info));
   const modifiers = node.modifiers?.map((modifier) => modifier.getText()) || [];
+  const typeParameters = node.typeParameters?.map((typeParam) => typeParam.name.getText());
   const location = context.getLocation(node);
   const doc = await jsDocToDocSchema(node, context);
-  return new FunctionLikeSchema(location, name, args, returnType, displaySig, modifiers as Modifier[], doc);
+  return new FunctionLikeSchema(
+    location,
+    name,
+    args,
+    returnType,
+    displaySig,
+    modifiers as Modifier[],
+    doc,
+    typeParameters
+  );
 }
