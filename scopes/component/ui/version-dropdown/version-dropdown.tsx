@@ -1,9 +1,6 @@
-import React, { useState, HTMLAttributes, useMemo } from 'react';
-import { Icon } from '@teambit/evangelist.elements.icon';
+import React, { useState } from 'react';
 import { MenuLinkItem } from '@teambit/design.ui.surfaces.menu.link-item';
 import { Dropdown } from '@teambit/evangelist.surfaces.dropdown';
-import { TimeAgo } from '@teambit/design.ui.time-ago';
-import { Ellipsis } from '@teambit/design.ui.styles.ellipsis';
 import { Tab } from '@teambit/ui-foundation.ui.use-box.tab';
 import { LegacyComponentLog } from '@teambit/legacy-component-log';
 import { UserAvatar } from '@teambit/design.ui.avatar';
@@ -14,6 +11,7 @@ import classNames from 'classnames';
 import styles from './version-dropdown.module.scss';
 import { VersionInfo } from './version-info';
 import { LaneInfo } from './lane-info';
+import { DetailedVersion, SimpleVersion } from './version-dropdown-placeholder';
 
 export const LOCAL_VERSION = 'workspace';
 
@@ -57,20 +55,25 @@ export function VersionDropdown({
   const [key, setKey] = useState(0);
 
   const singleVersion = (snaps || []).concat(tags).length < 2 && !localVersion;
-
+  const placeholder = (showVersionDetails && (
+    <DetailedVersion
+      disabled={disabled}
+      snaps={snaps}
+      tags={tags}
+      className={placeholderClassName}
+      currentVersion={currentVersion}
+    />
+  )) || (
+    <SimpleVersion
+      disabled={disabled}
+      snaps={snaps}
+      tags={tags}
+      className={placeholderClassName}
+      currentVersion={currentVersion}
+    />
+  );
   if (disabled || (singleVersion && !loading)) {
-    return (
-      <div className={classNames(styles.noVersions, className)}>
-        <VersionPlaceholder
-          disabled={disabled}
-          snaps={snaps}
-          tags={tags}
-          showDetails={showVersionDetails}
-          className={placeholderClassName}
-          currentVersion={currentVersion}
-        />
-      </div>
-    );
+    return <div className={classNames(styles.noVersions, className)}>{placeholder}</div>;
   }
 
   return (
@@ -82,19 +85,11 @@ export function VersionDropdown({
         clickPlaceholderToggles={true}
         onChange={(_e, open) => open && setKey((x) => x + 1)} // to reset menu to initial state when toggling
         PlaceholderComponent={({ children, ...other }) => (
-          <div {...other} className={classNames(placeholderClassName)}>
+          <div {...other} className={placeholderClassName}>
             {children}
           </div>
         )}
-        placeholder={
-          <VersionPlaceholder
-            snaps={snaps}
-            tags={tags}
-            currentVersion={currentVersion}
-            showDetails={showVersionDetails}
-            className={classNames(styles.withVersions, placeholderClassName)}
-          />
-        }
+        placeholder={placeholder}
       >
         {loading && <LineSkeleton className={styles.loading} count={6} />}
         {loading || (
@@ -115,72 +110,6 @@ export function VersionDropdown({
       </Dropdown>
     </div>
   );
-}
-
-type VersionPlaceholderProps = {
-  showDetails?: boolean;
-  currentVersion: string;
-  tags: DropdownComponentVersion[];
-  snaps?: DropdownComponentVersion[];
-  disabled?: boolean;
-} & HTMLAttributes<HTMLDivElement>;
-
-function VersionPlaceholder({
-  currentVersion,
-  className,
-  showDetails,
-  tags,
-  snaps,
-  disabled,
-}: VersionPlaceholderProps) {
-  const getVersionDetailFromTags = (version) => tags.find((tag) => tag.tag === version);
-  const getVersionDetailFromSnaps = (version) => (snaps || []).find((snap) => snap.hash === version);
-  const getVersionDetails = (version?: string) => {
-    if (!showDetails || !version) return undefined;
-    if (version === 'workspace' || version === 'new') return { version };
-    return getVersionDetailFromTags(currentVersion) || getVersionDetailFromSnaps(currentVersion);
-  };
-
-  const versionDetails = getVersionDetails(currentVersion);
-  const timestamp = useMemo(
-    () => (versionDetails?.date ? new Date(parseInt(versionDetails.date)).toString() : new Date().toString()),
-    [versionDetails?.date]
-  );
-
-  const author = useMemo(() => {
-    return {
-      displayName: versionDetails?.username,
-      email: versionDetails?.email,
-    };
-  }, [versionDetails]);
-
-  return (
-    <div className={classNames(styles.placeholder, className, disabled && styles.disabled)}>
-      {showDetails && <UserAvatar size={24} account={author} className={styles.versionUserAvatar} showTooltip={true} />}
-      <Ellipsis
-        className={classNames(
-          styles.versionName,
-          versionDetails?.tag && styles.tag,
-          !versionDetails?.tag && styles.snap
-        )}
-      >
-        {currentVersion}
-      </Ellipsis>
-      {showDetails && <div className={styles.author}>{author?.displayName}</div>}
-      {showDetails && commitMessage(versionDetails?.message)}
-      {showDetails && (
-        <Ellipsis className={styles.versionTimestamp}>
-          <TimeAgo date={timestamp} />
-        </Ellipsis>
-      )}
-      <Icon of="fat-arrow-down" />
-    </div>
-  );
-}
-
-function commitMessage(message?: string) {
-  if (!message || message === '') return <Ellipsis className={styles.emptyMessage}>No commit message</Ellipsis>;
-  return <Ellipsis className={styles.commitMessage}>{message}</Ellipsis>;
 }
 
 type VersionMenuProps = {

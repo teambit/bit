@@ -62,55 +62,6 @@
   }
 }
 
-.placeholder {
-  display: flex;
-  align-items: center;
-  box-sizing: border-box;
-  padding: 0 8px;
-  height: 30px;
-  border-radius: 6px;
-  user-select: none;
-  transition: background-color 300ms ease-in-out;
-  border: 1px solid var(--bit-border-color, #babec9);
-
-  > span {
-    display: none;
-  }
-  > div {
-    max-width: 80px;
-  }
-  &.disabled {
-    background-color: #ededed;
-  }
-  .versionName {
-    padding: 0px 8px;
-    &.tag {
-      min-width: fit-content;
-    }
-    &.snap {
-      min-width: 20%;
-    }
-  }
-  .commitMessage,
-  .emptyMessage {
-    max-width: 50%;
-    padding: 0px 8px;
-  }
-  .emptyMessage {
-    font-style: italic;
-    color: var(--bit-text-color-light, #6c707c);
-  }
-  .author {
-    text-transform: capitalize;
-    min-width: fit-content;
-  }
-  .versionTimestamp {
-    min-width: fit-content;
-    margin-right: 2px;
-    text-align: right;
-  }
-}
-
 .withVersions {
   cursor: pointer;
   > div {
