@@ -117,6 +117,27 @@ export function CompositionCompare(props: CompositionCompareProps) {
     );
   }, [component?.compare, selectedCompareComp]);
 
+  function CompositionDropdowns() {
+    if (baseCompositionDropdownSource.length < 0 && compareCompositionDropdownSource.length < 0) {
+      return <></>;
+    }
+
+    return (
+      <div className={styles.dropdownContainer}>
+        <div className={styles.leftDropdown}>
+          {baseCompositionDropdownSource.length > 0 && (
+            <CompositionDropdown dropdownItems={baseCompositionDropdownSource} selected={selectedBaseDropdown} />
+          )}
+        </div>
+        <div className={styles.rightDropdown}>
+          {compareCompositionDropdownSource.length > 0 && (
+            <CompositionDropdown dropdownItems={compareCompositionDropdownSource} selected={selectedCompareDropdown} />
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <>
       {component?.loading && (
@@ -124,14 +145,7 @@ export function CompositionCompare(props: CompositionCompareProps) {
           <RoundLoader />
         </div>
       )}
-      <div className={styles.dropdownContainer}>
-        <div className={styles.leftDropdown}>
-          <CompositionDropdown dropdownItems={baseCompositionDropdownSource} selected={selectedBaseDropdown} />
-        </div>
-        <div className={styles.rightDropdown}>
-          <CompositionDropdown dropdownItems={compareCompositionDropdownSource} selected={selectedCompareDropdown} />
-        </div>
-      </div>
+      <CompositionDropdowns />
       <CompareSplitLayoutPreset base={BaseLayout} compare={CompareLayout} />
     </>
   );
