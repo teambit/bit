@@ -1,0 +1,21 @@
+.arrowIcon {
+  height: 16px;
+  padding-right: 8px;
+}
+
+.versionUp {
+  color: var(--positive-color, #37b26c);
+}
+
+.versionDown {
+  color: var(--negative-color, #e62e5c);
+}
+
+.link {
+  text-decoration: none;
+  color: var(--bit-text-color-heavyed);
+
+  &:hover {
+    text-decoration: underline;
+  }
+}

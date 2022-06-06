@@ -1,0 +1,32 @@
+.componentCompareCodeTreeContainer {
+  display: flex;
+  flex-direction: column;
+  overflow: auto;
+  height: 100%;
+  font-size: 14px;
+  border-right: 2px solid #ededed;
+}
+
+.componentCompareCodeTabDrawer {
+  // drawer name
+  > div:first-child {
+    border: none;
+    border-bottom: 1px solid var(--bit-border-color-lightest, #ededed);
+  }
+  height: 100%;
+}
+
+.componentCompareCodeDrawerContent {
+  overflow-y: auto;
+}
+
+.drawerIcon {
+  margin-right: 8px;
+  font-size: 14px;
+}
+
+.label {
+  font-size: 10px;
+  font-weight: unset;
+  padding: 4px;
+}

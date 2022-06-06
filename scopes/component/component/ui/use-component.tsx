@@ -8,17 +8,18 @@ export type Component = {
   component?: ComponentModel;
   error?: ComponentError;
   componentDescriptor?: ComponentDescriptor;
+  loading?: boolean;
 };
 export type UseComponentOptions = {
   version?: string;
-  logFilters?: Filters
+  logFilters?: Filters;
 };
 
 export function useComponent(host: string, id?: string, options?: UseComponentOptions): Component {
   const query = useQuery();
   const { version, logFilters } = options || {};
   const componentVersion = (version || query.get('version')) ?? undefined;
-  
+
   if (!id) throw new TypeError('useComponent received no component id');
 
   const componentIdStr = withVersion(id, componentVersion);

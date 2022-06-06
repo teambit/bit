@@ -14,18 +14,7 @@ export class GenerateCommandsDoc {
 
   generate(): string {
     const commands = this.getAllPublicCommandsSorted();
-    const metadata = {
-      id: 'cli-all',
-      title: 'CLI Commands',
-      ...this.options.metadata,
-    };
-    const metadataStr = Object.keys(metadata)
-      .map((key) => `${key}: ${metadata[key]}`)
-      .join('\n');
-    let output = `---
-${metadataStr}
----
-
+    let output = `${this.getFrontmatter()}
 # CLI Reference
 
 Commands that are marked as workspace only must be executed inside a workspace. Commands that are marked as not workspace only, can be executed from anywhere and will run on a remote server.
@@ -47,6 +36,21 @@ Commands that are marked as workspace only must be executed inside a workspace. 
       }
       return cmdObject;
     });
+  }
+
+  private getFrontmatter() {
+    const metadata = this.options.metadata;
+    if (!metadata) {
+      return '';
+    }
+    const metadataStr = Object.keys(metadata)
+      .map((key) => `${key}: ${metadata[key]}`)
+      .join('\n');
+
+    return `---
+    ${metadataStr}
+    ---
+`;
   }
 
   private getAllPublicCommandsSorted() {
