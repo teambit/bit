@@ -5,7 +5,7 @@ import { EmptyStateSlot } from './tester.ui.runtime';
 
 export class TesterCompareSection implements Section {
   constructor(private emptyStateSlot: EmptyStateSlot) {}
- 
+
   navigationLink = {
     href: 'tests',
     children: 'Tests',

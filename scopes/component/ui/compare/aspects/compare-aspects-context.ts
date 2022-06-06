@@ -7,7 +7,7 @@ export type ComponentCompareAspectsModel = {
   loading?: boolean;
   selectedBase?: ComponentAspectData;
   selectedCompare?: ComponentAspectData;
-  selected?: string
+  selected?: string;
 };
 
 export const ComponentCompareAspectsContext = createContext<ComponentCompareAspectsModel | undefined>(undefined);

@@ -7,5 +7,5 @@ export class CompareNodeModel extends NodeModel {
   id: string;
   component: ComponentModel;
   compareVersion: string;
-  status: CompareStatus
+  status: CompareStatus;
 }

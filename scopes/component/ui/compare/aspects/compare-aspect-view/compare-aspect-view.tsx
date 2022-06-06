@@ -14,12 +14,7 @@ export type CompareAspectViewProps = {
   name?: string;
 } & HTMLAttributes<HTMLDivElement>;
 
-export function CompareAspectView({
-  baseAspectData,
-  compareAspectData,
-  name,
-  className,
-}: CompareAspectViewProps) {
+export function CompareAspectView({ baseAspectData, compareAspectData, name, className }: CompareAspectViewProps) {
   const title = useMemo(() => name?.split('/').pop(), [name]);
 
   const configDiffEditor = (

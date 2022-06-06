@@ -1,5 +1,1 @@
-export {
-  CompareStatusResolver,
-  CompareStatusResolverProps,
-  CompareStatus,
-} from './compare-status-resolver';
+export { CompareStatusResolver, CompareStatusResolverProps, CompareStatus } from './compare-status-resolver';
