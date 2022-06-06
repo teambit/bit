@@ -13,7 +13,6 @@ export type NewOptions = {
 export class NewCmd implements Command {
   name = 'new <templateName> <workspaceName>';
   description = 'Create a new workspace from a template';
-  shortDescription = '';
   alias = '';
   loader = true;
   group = 'start';

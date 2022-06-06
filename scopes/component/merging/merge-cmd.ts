@@ -12,9 +12,9 @@ import { MergingMain } from './merging.main.runtime';
 
 export class MergeCmd implements Command {
   name = 'merge [values...]';
-  shortDescription = 'merge changes of different component versions';
+  description = 'merge changes of different component versions';
   group = 'development';
-  description = `merge changes of different component versions
+  extendedDescription = `merge changes of different component versions
   \`bit merge <version> [ids...]\` => merge changes of the given version into the checked out version
   \`bit merge [ids...]\` => EXPERIMENTAL. merge changes of the remote head into local, optionally use '--abort' or '--resolve'
   ${WILDCARD_HELP('merge 0.0.1')}`;

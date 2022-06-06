@@ -13,7 +13,6 @@ export type CreateOptions = {
 export class CreateCmd implements Command {
   name = 'create <templateName> <componentNames...>';
   description = 'create a new component from a template';
-  shortDescription = '';
   alias = '';
   loader = true;
   group = 'development';
