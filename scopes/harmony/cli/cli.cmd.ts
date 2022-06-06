@@ -20,12 +20,17 @@ export class CliGenerateCmd implements Command {
       'metadata',
       'metadata/front-matter to place at the top of the .md file, enter as an object e.g. --metadata.id=cli --metadata.title=commands',
     ],
+    ['j', 'json', 'output the commands info as JSON'],
   ] as CommandOptions;
 
   constructor(private cliMain: CLIMain) {}
 
   async report(args, { metadata }: GenerateOpts): Promise<string> {
     return new GenerateCommandsDoc(this.cliMain.commands, { metadata }).generate();
+  }
+
+  async json() {
+    return new GenerateCommandsDoc(this.cliMain.commands, {}).generateJson();
   }
 }
 

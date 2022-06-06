@@ -743,6 +743,7 @@ jobs:
       - run: bvm link
       - run: cd bit && bit status
       - run: cd bit && npm run generate-cli-reference
+      - run: cd bit && npm run generate-cli-reference-json
       - run: cd bit && bit status # just to make sure that the new cli-reference.mdx file is valid
       - run: cd bit && bit checkout latest teambit.harmony/content/cli-reference --ours --skip-dependency-installation
       - run: cd bit && bit checkout latest --all --skip-dependency-installation
