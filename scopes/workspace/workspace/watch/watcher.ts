@@ -42,8 +42,11 @@ export type WatchOptions = {
   preCompile?: boolean; // whether compile all components before start watching
 };
 
+const DEBOUNCE_WAIT_MS = 100;
+
 export class Watcher {
   private fsWatcher: FSWatcher;
+  private changedFilesPerComponent: { [componentId: string]: string[] } = {};
   constructor(
     private workspace: Workspace,
     private pubsub: PubsubMain,
@@ -78,16 +81,22 @@ export class Watcher {
       // eslint-disable-next-line @typescript-eslint/no-misused-promises
       watcher.on('change', async (filePath) => {
         const startTime = new Date().getTime();
-        const buildResults = (await this.handleChange(filePath, opts?.initiator)) || [];
+        const { files, results, debounced, failureMsg } = await this.handleChange(filePath, opts?.initiator);
+        if (debounced) {
+          return;
+        }
         const duration = new Date().getTime() - startTime;
-        msgs?.onChange(filePath, buildResults, this.verbose, duration);
+        msgs?.onChange(files, results, this.verbose, duration, failureMsg);
       });
       // eslint-disable-next-line @typescript-eslint/no-misused-promises
       watcher.on('add', async (filePath) => {
         const startTime = new Date().getTime();
-        const buildResults = (await this.handleChange(filePath)) || [];
+        const { files, results, debounced, failureMsg } = await this.handleChange(filePath, opts?.initiator);
+        if (debounced) {
+          return;
+        }
         const duration = new Date().getTime() - startTime;
-        msgs?.onAdd(filePath, buildResults, this.verbose, duration);
+        msgs?.onAdd(files, results, this.verbose, duration, failureMsg);
       });
       // eslint-disable-next-line @typescript-eslint/no-misused-promises
       watcher.on('unlink', async (p) => {
@@ -101,28 +110,102 @@ export class Watcher {
     });
   }
 
-  private async handleChange(filePath: string, initiator?: CompilationInitiator): Promise<OnComponentEventResult[]> {
+  /**
+   * some actions trigger multiple files changes at (almost) the same time. e.g. "git pull".
+   * this causes some performance and instability issues. a debouncing mechanism was implemented to help with this.
+   * the way how it works is that the first file of the same component starts the execution with a delay (e.g. 200ms).
+   * if, in the meanwhile, another file of the same component was changed, it won't start a new execution, instead,
+   * it'll only add the file to `this.changedFilesPerComponent` prop.
+   * once the execution starts, it'll delete this component-id from the `this.changedFilesPerComponent` array,
+   * indicating the next file-change to start a new execution.
+   *
+   * implementation wise, `lodash.debounce` doesn't help here, because:
+   * A) it doesn't return the results, unless "leading" option is true. here, it must be false, otherwise, it'll start
+   * the execution immediately.
+   * B) it debounces the method regardless the param passes to it. so it'll disregard the component-id and will delay
+   * other components undesirably.
+   *
+   */
+  private async handleChange(
+    filePath: string,
+    initiator?: CompilationInitiator
+  ): Promise<{
+    results: OnComponentEventResult[];
+    files?: string[];
+    failureMsg?: string;
+    debounced?: boolean;
+  }> {
     try {
       if (filePath.endsWith(BIT_MAP)) {
         const buildResults = await this.handleBitmapChanges();
-        this.completeWatch();
-        return buildResults;
+        loader.stop();
+        return { results: buildResults, files: [filePath] };
       }
-      const componentId = await this.getComponentIdAndClearItsCache(filePath);
+      const componentId = this.getComponentIdByPath(filePath);
       if (!componentId) {
-        logger.debug(`file ${filePath} is not part of any component, ignoring it`);
-        return this.completeWatch();
+        const failureMsg = `file ${filePath} is not part of any component, ignoring it`;
+        logger.debug(failureMsg);
+        loader.stop();
+        return { results: [], files: [filePath], failureMsg };
       }
 
-      const buildResults = await this.executeWatchOperationsOnComponent(componentId, [filePath], true, initiator);
-      this.completeWatch();
-      return buildResults;
+      const compIdStr = componentId.toString();
+      if (this.changedFilesPerComponent[compIdStr]) {
+        this.changedFilesPerComponent[compIdStr].push(filePath);
+        loader.stop();
+        return { results: [], debounced: true };
+      }
+      this.changedFilesPerComponent[compIdStr] = [filePath];
+      await this.sleep(DEBOUNCE_WAIT_MS);
+      const files = this.changedFilesPerComponent[compIdStr];
+      delete this.changedFilesPerComponent[compIdStr];
+
+      const buildResults = await this.triggerCompChanges(componentId, files, initiator);
+      const failureMsg = buildResults.length
+        ? undefined
+        : `files ${files.join(', ')} are inside the component ${compIdStr} but configured to be ignored`;
+      loader.stop();
+      return { results: buildResults, files, failureMsg };
     } catch (err: any) {
       const msg = `watcher found an error while handling ${filePath}`;
       logger.error(msg, err);
       logger.console(`${msg}, ${err.message}`);
+      loader.stop();
+      return { results: [], files: [filePath], failureMsg: err.message };
+    }
+  }
+
+  private async sleep(ms: number) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  /**
+   * if a file was added/remove, once the component is loaded, it changes .bitmap, and then the
+   * entire cache is invalidated and the consumer is reloaded.
+   * when a file just changed, no need to reload the consumer, it is enough to just delete the
+   * component from the cache (both, workspace and consumer)
+   */
+  private async triggerCompChanges(
+    componentId: ComponentID,
+    files: string[],
+    initiator?: CompilationInitiator
+  ): Promise<OnComponentEventResult[]> {
+    this.workspace.clearComponentCache(componentId);
+    const component = await this.workspace.get(componentId);
+    const componentMap: ComponentMap = component.state._consumer.componentMap;
+    const compFiles = files.filter((filePath) => {
+      const relativeFile = this.getRelativePathLinux(filePath);
+      const isCompFile = Boolean(componentMap.getFilesRelativeToConsumer().find((p) => p === relativeFile));
+      if (!isCompFile) {
+        logger.debug(`file ${filePath} is inside the component ${componentId.toString()} but configured to be ignored`);
+      }
+      return isCompFile;
+    });
+    if (!compFiles.length) {
       return [];
     }
+    const buildResults = await this.executeWatchOperationsOnComponent(componentId, compFiles, true, initiator);
+    return buildResults;
   }
 
   /**
@@ -188,11 +271,7 @@ export class Watcher {
       logger.console(`\n${msg}: ${err.message || err}`);
       return [];
     }
-    if (buildResults && buildResults.length) {
-      return buildResults;
-    }
-    logger.console(`${idStr} doesn't have a compiler, nothing to build`);
-    return [];
+    return buildResults;
   }
 
   private creatOnComponentRemovedEvent(idStr) {
@@ -207,11 +286,6 @@ export class Watcher {
     return new OnComponentAddEvent(Date.now(), idStr, hook);
   }
 
-  private completeWatch() {
-    loader.stop();
-    return [];
-  }
-
   private isComponentWatchedExternally(componentId: ComponentID) {
     const watcherData = this.multipleWatchers.find((m) => m.componentIds.find((id) => id.isEqual(componentId._legacy)));
     if (watcherData) {
@@ -221,29 +295,19 @@ export class Watcher {
     return false;
   }
 
-  /**
-   * if a file was added/remove, once the component is loaded, it changes .bitmap, and then the
-   * entire cache is invalidated and the consumer is reloaded.
-   * when a file just changed, no need to reload the consumer, it is enough to just delete the
-   * component from the cache (both, workspace and consumer)
-   */
-  private async getComponentIdAndClearItsCache(filePath: string): Promise<ComponentID | null> {
-    const relativeFile = pathNormalizeToLinux(this.consumer.getPathRelativeToConsumer(filePath));
+  private getComponentIdByPath(filePath: string): ComponentID | null {
+    const relativeFile = this.getRelativePathLinux(filePath);
     const trackDir = this.findTrackDirByFilePathRecursively(relativeFile);
     if (!trackDir) {
       // the file is not part of any component. If it was a new component, or a new file of
       // existing component, then, handleBitmapChanges() should deal with it.
       return null;
     }
-    const componentId = this.trackDirs[trackDir];
-    this.workspace.clearComponentCache(componentId);
-    const component = await this.workspace.get(componentId);
-    const componentMap: ComponentMap = component.state._consumer.componentMap;
-    if (componentMap.getFilesRelativeToConsumer().find((p) => p === relativeFile)) {
-      return componentId;
-    }
-    // the file is inside the component dir but it's ignored. (e.g. it's in IGNORE_LIST)
-    return null;
+    return this.trackDirs[trackDir];
+  }
+
+  private getRelativePathLinux(filePath: string) {
+    return pathNormalizeToLinux(this.consumer.getPathRelativeToConsumer(filePath));
   }
 
   private findTrackDirByFilePathRecursively(filePath: string): string | null {

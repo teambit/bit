@@ -70,6 +70,7 @@ export type ImportResult = {
   dependencies: ComponentWithDependencies[];
   envComponents?: Component[];
   importDetails: ImportDetails[];
+  cancellationMessage?: string;
 };
 
 export default class ImportComponents {

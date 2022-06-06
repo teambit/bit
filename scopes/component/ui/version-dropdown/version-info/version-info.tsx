@@ -40,7 +40,7 @@ export function VersionInfo({
   const currentVersionRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (isCurrent) {
-      currentVersionRef.current?.scrollIntoView();
+      currentVersionRef.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
     }
   }, [isCurrent]);
 

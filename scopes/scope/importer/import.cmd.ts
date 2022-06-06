@@ -186,7 +186,7 @@ ${WILDCARD_HELP('import')}`;
 
     const getImportOutput = () => {
       if (dependenciesOutput) return dependenciesOutput;
-      return chalk.yellow('nothing to import');
+      return chalk.yellow(importResults.cancellationMessage || 'nothing to import');
     };
 
     return getImportOutput();
