@@ -83,10 +83,6 @@ export class VariantPolicy implements Policy<VariantPolicyConfigObject> {
     return new VariantPolicy(filtered);
   }
 
-  byLifecycleType(lifecycleType?: DependencyLifecycleType): VariantPolicy {
-    return this.filter((entry) => entry.lifecycleType === lifecycleType);
-  }
-
   /**
    * Filter only deps which should be resolved from the env
    */

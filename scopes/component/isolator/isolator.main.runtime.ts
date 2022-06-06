@@ -47,7 +47,6 @@ import { symlinkOnCapsuleRoot, symlinkDependenciesToCapsules } from './symlink-d
 import { Network } from './network';
 
 const DEFAULT_CAPSULES_BASE_DIR = path.join(CACHE_ROOT, 'capsules'); // TODO: move elsewhere
-const SUBCAPSULES_DIR_NAME = 'subcapsules';
 
 export type ListResults = {
   workspace: string;
