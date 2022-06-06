@@ -16,7 +16,7 @@ import {
   SetAccessorSchema,
   VariableSchema,
 } from '@teambit/semantics.entities.semantic-schema';
-import { toFunctionLikeSchema } from './to-function-schema';
+import { toFunctionLikeSchema } from './to-function-like-schema';
 import { SchemaExtractorContext } from '../../schema-extractor-context';
 import { parseTypeFromQuickInfo } from './parse-type-from-quick-info';
 import { typeNodeToSchema } from './type-node-to-schema';
@@ -49,7 +49,8 @@ async function propertySignature(node: ts.PropertySignature, context: SchemaExtr
   const displaySig = info?.body?.displayString || '';
   const typeStr = parseTypeFromQuickInfo(info);
   const type = await context.resolveType(node, typeStr);
-  return new VariableSchema(context.getLocation(node), name, displaySig, type);
+  const isOptional = Boolean(node.questionToken);
+  return new VariableSchema(context.getLocation(node), name, displaySig, type, isOptional);
 }
 
 export async function indexSignature(node: IndexSignatureDeclaration, context: SchemaExtractorContext) {
