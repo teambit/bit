@@ -5,7 +5,7 @@ import mapSeries from 'p-map-series';
 import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
 import groupArray from 'group-array';
 import R from 'ramda';
-import { compact, flatten, intersection } from 'lodash';
+import { compact, flatten } from 'lodash';
 import loader from '../../cli/loader';
 import { Scope } from '..';
 import { Analytics } from '../../analytics/analytics';
@@ -464,6 +464,9 @@ export default class ScopeComponentsImporter {
           // this happens for example when importing a remote lane and then running "bit fetch --components"
           // the head is empty because it exists on the lane only, it was never tagged and
           // laneHeadLocal was never set as it originated from the scope, not the consumer.
+          logger.warn(
+            `multipleCompsDefsToVersionDeps, id: ${id.toString()} has no version and no head, cannot provide the VersionDeps`
+          );
           return null;
         }
         const versionComp: ComponentVersion = component.toComponentVersion(id.version);
@@ -714,17 +717,22 @@ export function groupByScopeName(ids: Array<BitId | LaneId>): { [scopeName: stri
 }
 
 export function groupByLanes(ids: BitId[], lanes: Lane[]): { [scopeName: string]: string[] } {
-  const bitIdsStr = ids.map((id) => id.toString());
+  const bitIds = BitIds.fromArray(ids);
   const grouped = {};
   lanes.forEach((lane) => {
     const scope = lane.scope;
     if (!scope) {
       throw new Error(`can't group by Lane object, the scope is undefined for ${lane.id()}`);
     }
-    const laneIdsStr = lane.toBitIds().map((id) => id.toString());
-    const intersectIds = intersection(bitIdsStr, laneIdsStr);
-    if (!intersectIds.length) return;
-    (grouped[scope] ||= []).push(...laneIdsStr);
+    const idsFromThisLane = lane.toBitIds().filter((bitId) => {
+      if (bitIds.has(bitId)) return true;
+      const foundWithoutVersion = bitIds.searchWithoutVersion(bitId);
+      if (!foundWithoutVersion) return false;
+      const shouldIgnoreVersion = !foundWithoutVersion.hasVersion();
+      return shouldIgnoreVersion;
+    });
+    if (!idsFromThisLane.length) return;
+    (grouped[scope] ||= []).push(...idsFromThisLane.map((id) => id.toString()));
   });
 
   // ids that were not found on any of the lanes, fetch from main.

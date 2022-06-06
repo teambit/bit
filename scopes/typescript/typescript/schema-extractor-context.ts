@@ -76,7 +76,9 @@ export class SchemaExtractorContext {
     } catch (err: any) {
       if (err.message === 'No content available.') {
         throw new Error(
-          `unable to get quickinfo data from tsserver at ${location.file}, Ln ${location.line}, Col ${location.character}`
+          `unable to get quickinfo data from tsserver at ${this.getPath(node)}, Ln ${location.line}, Col ${
+            location.character
+          }`
         );
       }
       throw err;
