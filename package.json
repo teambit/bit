@@ -283,7 +283,7 @@
     "eslint-plugin-simple-import-sort": "5.0.3",
     "gh-release": "3.5.0",
     "husky": "4.3.8",
-    "lint-staged": ">=10",
+    "lint-staged": "^12.5.0",
     "mocha": "9.2.0",
     "mocha-circleci-reporter": "0.0.3",
     "mocha-junit-reporter": "1.23.3",
