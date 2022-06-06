@@ -17,7 +17,8 @@ export default class Checkout implements LegacyCommand {
   group: Group = 'development';
   extendedDescription = `
   \`bit checkout <version> [ids...]\` => checkout the specified ids (or all components when --all is used) to the specified version
-  \`bit checkout latest [ids...]\` => checkout the specified ids (or all components when --all is used) to their latest versions
+  \`bit checkout latest\` => checkout all components to their latest versions
+  \`bit checkout latest [ids...]\` => checkout the specified ids to their latest versions
   \`bit checkout [ids...] --reset\` => remove local modifications from the specified ids (or all components when --all is used)
   ${WILDCARD_HELP('checkout 0.0.1')}`;
   alias = 'U';
