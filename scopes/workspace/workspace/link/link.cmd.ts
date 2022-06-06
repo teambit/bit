@@ -20,6 +20,7 @@ export class LinkCommand implements Command {
   name = 'link [ids...]';
   alias = '';
   description = 'link components and core aspects';
+  extendedDescription: string;
   group = 'development';
   private = false;
   options = [
@@ -47,7 +48,7 @@ export class LinkCommand implements Command {
 
     private docsDomain: string
   ) {
-    this.description = `generate symlinks to resolve module paths for imported components.\nhttps://${this.docsDomain}/workspace/component-links`;
+    this.extendedDescription = `https://${this.docsDomain}/workspace/component-links`;
   }
 
   async report([ids]: [string[]], opts: LinkCommandOpts) {
