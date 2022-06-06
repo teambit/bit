@@ -6,6 +6,8 @@ import { DeprecationIcon } from '@teambit/component.ui.deprecation-icon';
 import { EnvIcon } from '@teambit/envs.ui.env-icon';
 import { ellipsis } from '@teambit/design.ui.styles.ellipsis';
 import { Card, CardProps } from '@teambit/base-ui.surfaces.card';
+import { NavLink } from '@teambit/base-ui.routing.nav-link';
+import { ComponentUrl } from '@teambit/component.modules.component-url';
 import { NodeModel } from '../query/node-model';
 import { ComponentGraphContext } from '../dependencies-graph/';
 
@@ -30,7 +32,9 @@ export function ComponentNode({ node, type = 'defaultNode', ...rest }: Component
         <Breadcrumbs componentId={id} className={mutedText} />
       </div>
       <div className={styles.nameLine}>
-        <span className={classnames(styles.name, ellipsis)}>{id.name}</span>
+        <NavLink className={styles.link} external={true} href={ComponentUrl.toUrl(id, { includeVersion: false })}>
+          <span className={classnames(styles.name, ellipsis)}>{id.name}</span>
+        </NavLink>
         {id.version && <span className={classnames(styles.version, ellipsis)}>{id.version}</span>}
 
         <div className={styles.buffs}>

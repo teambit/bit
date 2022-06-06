@@ -6,7 +6,6 @@
     align-items: center;
   }
   .menu {
-    width: 350px;
     padding: 0;
     right: 0;
     // top: 43px;
@@ -36,7 +35,7 @@
   justify-content: space-between;
   align-items: center;
   height: 40px;
-  padding: 0 24px;
+  padding: 0 16px;
 
   &.localVersion {
     border-bottom: 1px solid var(--bit-border-color-lightest, #ededed);
@@ -59,24 +58,7 @@
   }
   .versionName {
     padding: 0px 8px;
-  }
-}
-
-.placeholder {
-  display: flex;
-  align-items: center;
-  box-sizing: border-box;
-  padding: 0 8px;
-  height: 30px;
-  border-radius: 6px;
-  user-select: none;
-  transition: background-color 300ms ease-in-out;
-  border: 1px solid var(--bit-border-color, #babec9);
-  > span {
-    display: none;
-  }
-  > div {
-    max-width: 80px;
+    min-width: fit-content;
   }
 }
 
@@ -107,6 +89,8 @@
   line-height: 14px;
   border-bottom: 1px solid var(--bit-border-color-lightest, #ededed);
   overflow-x: auto;
+  margin-top: 8px;
+
   .tab {
     font-weight: bold;
     padding-top: 4px;

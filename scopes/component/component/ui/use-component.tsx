@@ -8,6 +8,7 @@ export type Component = {
   component?: ComponentModel;
   error?: ComponentError;
   componentDescriptor?: ComponentDescriptor;
+  loading?: boolean;
 };
 export type UseComponentOptions = {
   version?: string;

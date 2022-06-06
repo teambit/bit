@@ -20,6 +20,7 @@
         "@mdx-js/loader": "1.6.21",
         "@mdx-js/mdx": "1.6.21",
         "@mdx-js/react": "1.6.22",
+        "@monaco-editor/react": "4.4.2",
         "@pmmmwh/react-refresh-webpack-plugin": "0.5.4",
         "@pnpm/client": "6.1.4",
         "@pnpm/colorize-semver-diff": "1.0.1",

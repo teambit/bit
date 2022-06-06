@@ -297,6 +297,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/component"
     },
+    "component-compare": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/component/component-compare"
+    },
     "component-descriptor": {
         "scope": "teambit.component",
         "version": "0.0.58",
@@ -1038,6 +1044,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/design/ui/cli-snippet"
     },
+    "ui/code-compare": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/code/ui/code-compare"
+    },
     "ui/code-tab-page": {
         "scope": "teambit.code",
         "version": "0.0.567",
@@ -1055,6 +1067,12 @@
         "version": "0.0.489",
         "mainFile": "index.ts",
         "rootDir": "scopes/code/ui/code-view"
+    },
+    "ui/compare": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/component/ui/compare"
     },
     "ui/component-deprecated": {
         "scope": "teambit.component",
@@ -1115,6 +1133,12 @@
         "version": "0.0.495",
         "mainFile": "index.ts",
         "rootDir": "scopes/compositions/ui/composition-card"
+    },
+    "ui/composition-compare": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/compositions/ui/composition-compare"
     },
     "ui/compositions-menu-bar": {
         "scope": "teambit.compositions",
@@ -1428,6 +1452,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/notifications/ui/notification-store"
     },
+    "ui/overview-compare": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/docs/ui/overview-compare"
+    },
     "ui/pages/not-found": {
         "scope": "teambit.design",
         "version": "0.0.355",
@@ -1583,6 +1613,12 @@
         "version": "0.0.7",
         "mainFile": "index.ts",
         "rootDir": "scopes/design/ui/status-message-card"
+    },
+    "ui/test-compare": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/defender/ui/test-compare"
     },
     "ui/test-loader": {
         "scope": "teambit.defender",
