@@ -8,9 +8,9 @@ import { CommandOptions, LegacyCommand } from '../../legacy-command';
 
 export default class Move implements LegacyCommand {
   name = 'move <existing-dir> <new-dir>';
-  shortDescription = 'move a component to a different filesystem path';
+  description = 'move a component to a different filesystem path';
   group: Group = 'development';
-  description = `move files or directories of component(s)\n  https://${BASE_DOCS_DOMAIN}/workspace/moving-components`;
+  extendedDescription = `move files or directories of component(s)\n  https://${BASE_DOCS_DOMAIN}/workspace/moving-components`;
   alias = 'mv';
   opts = [
     [

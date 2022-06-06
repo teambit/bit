@@ -24,7 +24,6 @@ export class PackCmd implements Command {
     // ['c', 'use-capsule', 'isolate using the capsule and pack on the capsule'],
     ['j', 'json', 'return the output as JSON'],
   ] as CommandOptions;
-  shortDescription = '';
   alias = '';
   group = 'collaborate';
 

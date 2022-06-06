@@ -10,7 +10,7 @@ export class SchemaCommand implements Command {
   name = 'schema <pattern>';
   description = 'shows the API schema of a certain component.';
   extendedDescription = `${PATTERN_HELP('schema')}`;
-  group = 'component';
+  group = 'development';
   options = [['j', 'json', 'return the component data in json format']] as CommandOptions;
 
   constructor(private schema: SchemaMain, private component: ComponentMain, private logger: Logger) {}

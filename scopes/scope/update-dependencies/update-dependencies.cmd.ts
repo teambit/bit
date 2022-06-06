@@ -12,9 +12,8 @@ import {
 export class UpdateDependenciesCmd implements Command {
   name = 'update-dependencies <data>';
   private = true;
-  shortDescription = 'update dependencies for components and tag/snap the results';
-  description = `update versions dependencies for components and tag/snap the results.
-this command should be running from a new bare scope, it first imports the components it needs and then processes the update.
+  description = 'update dependencies for components and tag/snap the results';
+  extendedDescription = `this command should be running from a new bare scope, it first imports the components it needs and then processes the update.
 the input data is a stringified JSON of an array of the following object.
 {
   componentId: string; // ids always have scope, so it's safe to parse them from string

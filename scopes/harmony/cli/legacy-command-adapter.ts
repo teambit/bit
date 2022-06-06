@@ -7,7 +7,7 @@ export class LegacyCommandAdapter implements Command {
   name: string;
   description: string;
   options: CommandOptions;
-  shortDescription?: string;
+  extendedDescription?: string;
   group?: string;
   loader?: boolean;
   commands: Command[];
@@ -21,12 +21,11 @@ export class LegacyCommandAdapter implements Command {
     this.description = cmd.description;
     this.options = cmd.opts || [];
     this.alias = cmd.alias;
-    this.shortDescription = cmd.shortDescription;
+    this.extendedDescription = cmd.extendedDescription;
     this.skipWorkspace = cmd.skipWorkspace;
     this.group = cmd.group;
     this.loader = cmd.loader;
     this.private = cmd.private;
-
     this.migration = cmd.migration;
     this.internal = cmd.internal;
     this.commands = (cmd.commands || []).map((sub) => new LegacyCommandAdapter(sub, cliExtension));
