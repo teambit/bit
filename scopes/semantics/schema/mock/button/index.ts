@@ -114,3 +114,7 @@ export interface ComputedNameNoType {
 type World1 = 'world1-a' | 'world1-b';
 type World2 = 'world2';
 export type templateLiteralType = `hello ${World1} hi ${World2}`;
+
+export interface CallSignatureWithTypeParams {
+  <T>(a: string): T;
+}
