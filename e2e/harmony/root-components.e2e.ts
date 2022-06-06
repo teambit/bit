@@ -34,8 +34,8 @@ describe('app root components', function () {
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(4);
       helper.extensions.bitJsonc.addKeyValToDependencyResolver('rootComponents', true);
-      helper.bitJsonc.addKeyVal(undefined, `${helper.scopes.remote}/comp3`, {});
-      helper.bitJsonc.addKeyVal(undefined, `${helper.scopes.remote}/comp4`, {});
+      helper.bitJsonc.addKeyVal(`${helper.scopes.remote}/comp3`, {});
+      helper.bitJsonc.addKeyVal(`${helper.scopes.remote}/comp4`, {});
       helper.fs.outputFile(`comp1/index.js`, `const React = require("react")`);
       helper.fs.outputFile(
         `comp2/index.js`,
@@ -429,8 +429,8 @@ module.exports.default = {
       helper.fixtures.populateComponents(4);
       helper.extensions.bitJsonc.addKeyValToDependencyResolver('nodeLinker', 'hoisted');
       helper.extensions.bitJsonc.addKeyValToDependencyResolver('rootComponents', true);
-      helper.bitJsonc.addKeyVal(undefined, `${helper.scopes.remote}/comp3`, {});
-      helper.bitJsonc.addKeyVal(undefined, `${helper.scopes.remote}/comp4`, {});
+      helper.bitJsonc.addKeyVal(`${helper.scopes.remote}/comp3`, {});
+      helper.bitJsonc.addKeyVal(`${helper.scopes.remote}/comp4`, {});
       helper.fs.outputFile(`comp1/index.js`, `const React = require("react")`);
       helper.fs.outputFile(
         `comp2/index.js`,
@@ -1255,8 +1255,8 @@ Env2Aspect.addRuntime(EnvMain);
       );
       helper.fixtures.populateComponents(2);
       helper.extensions.bitJsonc.addKeyValToDependencyResolver('rootComponents', true);
-      helper.bitJsonc.addKeyVal(undefined, `${helper.scopes.remote}/comp3`, {});
-      helper.bitJsonc.addKeyVal(undefined, `${helper.scopes.remote}/comp4`, {});
+      helper.bitJsonc.addKeyVal(`${helper.scopes.remote}/comp3`, {});
+      helper.bitJsonc.addKeyVal(`${helper.scopes.remote}/comp4`, {});
       helper.fs.outputFile(`comp1/index.js`, `const React = require("react")`);
       helper.fs.outputFile(
         `comp2/index.js`,
