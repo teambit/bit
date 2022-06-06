@@ -26,7 +26,7 @@ export function CodeCompareTree({
   fileTree,
   drawerName,
   widgets,
-  getHref
+  getHref,
 }: CodeCompareTreeProps) {
   const fileIconMatchers: FileIconMatch[] = useMemo(() => flatten(fileIconSlot?.values()), [fileIconSlot]);
   const [drawerOpen, onToggleDrawer] = useState(true);
@@ -35,7 +35,7 @@ export function CodeCompareTree({
     <div className={classNames(styles.componentCompareCodeTreeContainer, className)}>
       <DrawerUI
         isOpen={drawerOpen}
-        onToggle={() => onToggleDrawer(open => !open)}
+        onToggle={() => onToggleDrawer((open) => !open)}
         name={drawerName}
         contentClass={styles.componentCompareCodeDrawerContent}
         className={classNames(styles.componentCompareCodeTabDrawer)}

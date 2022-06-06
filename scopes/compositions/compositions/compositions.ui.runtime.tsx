@@ -52,8 +52,6 @@ export class CompositionsUI {
     });
     componentCompare.registerRoutes([compositionCompare.route]);
     return compositions;
-
-    
   }
 }
 

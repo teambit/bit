@@ -1,10 +1,14 @@
 import { Command } from '@teambit/legacy/dist/cli/command';
 import { CommandOptions } from '@teambit/legacy/dist/cli/legacy-command';
+import { pick } from 'lodash';
 import { getCommandId } from './get-command-id';
 
 export type GenerateOpts = {
   metadata?: Record<string, string>;
 };
+
+type CommandObject = ReturnType<typeof oneCommandToObject> & { commands?: any };
+
 export class GenerateCommandsDoc {
   constructor(private commands: Command[], private options: GenerateOpts) {}
 
@@ -18,6 +22,20 @@ Commands that are marked as workspace only must be executed inside a workspace. 
     output += commands.map((cmd) => this.generateCommand(cmd)).join('\n');
 
     return output;
+  }
+
+  generateJson() {
+    return this.commandsToObjects();
+  }
+
+  private commandsToObjects(commands: Command[] = this.commands): CommandObject[] {
+    return commands.map((command) => {
+      const cmdObject: CommandObject = oneCommandToObject(command);
+      if (command.commands?.length) {
+        cmdObject.commands = this.commandsToObjects(command.commands);
+      }
+      return cmdObject;
+    });
   }
 
   private getFrontmatter() {
@@ -100,4 +118,19 @@ Commands that are marked as workspace only must be executed inside a workspace. 
     const description = this.formatStringToMD(command.description as string);
     return `${description}${extendedDescription}  \n\n`;
   }
+}
+
+function oneCommandToObject(command: Command) {
+  return pick(command, [
+    'name',
+    'alias',
+    'options',
+    'description',
+    'extendedDescription',
+    'group',
+    'private',
+    'internal',
+    'remoteOp',
+    'skipWorkspace',
+  ]);
 }
