@@ -42,7 +42,7 @@ Commands that are marked as workspace only must be executed inside a workspace. 
   private commandsToObjects(commands: Command[] = this.commands): CommandObject[] {
     return commands.map((command) => {
       const cmdObject: CommandObject = oneCommandToObject(command);
-      if (command.commands) {
+      if (command.commands?.length) {
         cmdObject.commands = this.commandsToObjects(command.commands);
       }
       return cmdObject;
