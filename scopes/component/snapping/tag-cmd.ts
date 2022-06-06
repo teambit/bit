@@ -15,8 +15,7 @@ import { SnappingMain } from './snapping.main.runtime';
 export class TagCmd implements Command {
   name = 'tag [id...]';
   group = 'development';
-  shortDescription = 'record component changes and lock versions';
-  description: string;
+  description = 'record component changes and lock versions';
   alias = 't';
   loader = true;
   options = [

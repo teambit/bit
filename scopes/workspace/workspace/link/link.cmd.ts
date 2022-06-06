@@ -19,8 +19,7 @@ type LinkCommandOpts = {
 export class LinkCommand implements Command {
   name = 'link [ids...]';
   alias = '';
-  description: string;
-  shortDescription = 'link components and core aspects';
+  description = 'link components and core aspects';
   group = 'development';
   private = false;
   options = [

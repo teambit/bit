@@ -4,8 +4,7 @@ import { ComponentLogMain } from './component-log.main.runtime';
 
 export default class LogCmd implements Command {
   name = 'log <id>';
-  shortDescription = 'show components(s) version history';
-  description: string;
+  description = 'show components(s) version history';
   group = 'info';
   alias = '';
   options = [

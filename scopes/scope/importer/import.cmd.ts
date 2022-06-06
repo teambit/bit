@@ -17,9 +17,8 @@ import { Importer } from './importer';
 
 export default class ImportCmd implements Command {
   name = 'import [ids...]';
-  shortDescription = 'import components into your current working area';
+  description = 'import components into your current working area';
   group = 'collaborate';
-  description: string;
   alias = '';
   options = [
     ['p', 'path <path>', 'import components into a specific directory'],

@@ -4,8 +4,8 @@ import { ScopeMain } from '@teambit/scope';
 
 export class ResumeExportCmd implements Command {
   name = 'resume-export <export-id> <remotes...>';
-  shortDescription = 'EXPERIMENTAL. resume failed export';
-  description = `resume failed export to persist the pending objects on the given remotes.
+  description = 'EXPERIMENTAL. resume failed export';
+  extendedDescription = `resume failed export to persist the pending objects on the given remotes.
 the export-id is the id the client got in the error message during the failure.
 alternatively, exporting to any one of the failed scopes, throws server-is-busy error with the export-id`;
   alias = '';

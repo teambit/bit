@@ -83,7 +83,6 @@ export class WatchCommand implements Command {
   description = 'watch a set of components';
   alias = '';
   group = 'development';
-  shortDescription = '';
   options = [
     ['v', 'verbose', 'showing npm verbose output for inspection and prints stack trace'],
     ['', 'skip-pre-compilation', 'skip the compilation step before starting to watch'],

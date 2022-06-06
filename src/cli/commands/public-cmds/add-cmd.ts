@@ -13,10 +13,9 @@ import AddTestsWithoutId from '../exceptions/add-tests-without-id';
 
 export default class Add implements LegacyCommand {
   name = 'add [path...]';
-  shortDescription = 'Add any subset of files to be tracked as a component(s).';
+  description = 'Add any subset of files to be tracked as a component(s).';
   group: Group = 'development';
-  description = `add any subset of files to be tracked as a component(s)
-  all flags support glob patterns and {PARENT} {FILE_NAME} annotations
+  extendedDescription = `all flags support glob patterns and {PARENT} {FILE_NAME} annotations
   https://${BASE_DOCS_DOMAIN}/components/adding-components`;
   alias = 'a';
   opts = [
