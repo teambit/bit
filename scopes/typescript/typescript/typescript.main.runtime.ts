@@ -31,6 +31,7 @@ import {
   LiteralTypeTransformer,
   InterfaceDeclarationTransformer,
   EnumDeclarationTransformer,
+  BindingElementTransformer,
 } from './transformers';
 import { CheckTypesCmd } from './cmds/check-types.cmd';
 
@@ -263,6 +264,7 @@ export class TypescriptMain {
       new LiteralTypeTransformer(),
       new InterfaceDeclarationTransformer(),
       new EnumDeclarationTransformer(),
+      new BindingElementTransformer(),
     ]);
 
     if (workspace) {
