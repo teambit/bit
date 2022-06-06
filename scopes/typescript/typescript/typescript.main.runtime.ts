@@ -28,7 +28,6 @@ import {
   VariableDeclaration,
   SourceFileTransformer,
   ClassDecelerationTransformer,
-  LiteralTypeTransformer,
   InterfaceDeclarationTransformer,
   EnumDeclarationTransformer,
 } from './transformers';
@@ -260,7 +259,6 @@ export class TypescriptMain {
       new SourceFileTransformer(),
       new TypeAliasTransformer(),
       new ClassDecelerationTransformer(),
-      new LiteralTypeTransformer(),
       new InterfaceDeclarationTransformer(),
       new EnumDeclarationTransformer(),
     ]);
