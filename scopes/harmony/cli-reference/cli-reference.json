@@ -59,7 +59,8 @@
         "EXPERIMENTAL. start an interactive process"
       ]
     ],
-    "description": "initialize an empty bit scope\nhttps://bit.dev/docs/workspace/creating-workspaces#initialize-a-workspace-on-an-existing-project",
+    "description": "create or reinitialize an empty workspace",
+    "extendedDescription": "https://bit.dev/docs/workspace/creating-workspaces#initialize-a-workspace-on-an-existing-project",
     "group": "start",
     "private": false,
     "skipWorkspace": true
@@ -104,7 +105,8 @@
         "show only specified namespace by using wildcards"
       ]
     ],
-    "description": "list components on a local or a remote scope.\n  https://bit.dev/docs/reference/cli-reference#list",
+    "description": "list components on a workspace, local scope or a remote scope.",
+    "extendedDescription": "https://bit.dev/docs/reference/cli-reference#list",
     "group": "discover",
     "private": false,
     "skipWorkspace": true
@@ -113,7 +115,8 @@
     "name": "config",
     "alias": "",
     "options": [],
-    "description": "global config management.\n  https://bit.dev/docs/config/bit-config",
+    "description": "global config management",
+    "extendedDescription": "https://bit.dev/docs/config/bit-config",
     "group": "general",
     "private": false,
     "commands": [
@@ -122,6 +125,7 @@
         "alias": "",
         "options": [],
         "description": "set a global configuration",
+        "extendedDescription": "",
         "group": "ungrouped",
         "private": false,
         "skipWorkspace": true
@@ -131,6 +135,7 @@
         "alias": "",
         "options": [],
         "description": "delete given key from global configuration",
+        "extendedDescription": "",
         "group": "ungrouped",
         "private": false
       },
@@ -139,6 +144,7 @@
         "alias": "",
         "options": [],
         "description": "get a global configuration",
+        "extendedDescription": "",
         "group": "ungrouped",
         "private": false
       },
@@ -147,6 +153,7 @@
         "alias": "",
         "options": [],
         "description": "list all configuration(s)",
+        "extendedDescription": "",
         "group": "ungrouped",
         "private": false
       }
@@ -162,7 +169,8 @@
         "see globally configured remotes"
       ]
     ],
-    "description": "manage set of tracked bit scope(s)\n  https://bit.dev/docs/scope/remote-scopes",
+    "description": "manage set of tracked bit scope(s)",
+    "extendedDescription": "https://bit.dev/docs/scope/remote-scopes",
     "group": "collaborate",
     "private": false,
     "commands": [
@@ -176,7 +184,8 @@
             "configure a remote bit scope"
           ]
         ],
-        "description": "add a bare-scope as a remote. supported protocols are [file, http, ssh].\nfor example: \"http://localhost:3000\", \"file:///tmp/local-scope\", \"ssh://user@127.0.0.1:/tmp/local-scope\".\nLegacy support [file, ssh]. Harmony supports [file, http].",
+        "description": "add a bare-scope as a remote",
+        "extendedDescription": "supported protocols are [file, http].\nfor example: \"http://localhost:3000\", \"file:///tmp/local-scope\"",
         "group": "ungrouped",
         "private": false
       },
@@ -191,6 +200,7 @@
           ]
         ],
         "description": "remove a tracked bit remote",
+        "extendedDescription": "",
         "group": "ungrouped",
         "private": false
       }
@@ -217,6 +227,7 @@
       ]
     ],
     "description": "cat a bit object by hash",
+    "extendedDescription": "",
     "group": "ungrouped",
     "private": true
   },
@@ -231,6 +242,7 @@
       ]
     ],
     "description": "cat a bit object by component-id",
+    "extendedDescription": "",
     "group": "ungrouped",
     "private": true
   },
@@ -239,6 +251,7 @@
     "alias": "cl",
     "options": [],
     "description": "cat a bit object by lane-name",
+    "extendedDescription": "",
     "group": "ungrouped",
     "private": true
   },
@@ -247,6 +260,7 @@
     "alias": "",
     "options": [],
     "description": "EXPERIMENTAL. show dependents of the given component",
+    "extendedDescription": "",
     "group": "info",
     "private": false
   },
@@ -261,6 +275,7 @@
       ]
     ],
     "description": "EXPERIMENTAL. show dependencies (direct and indirect) of the given component",
+    "extendedDescription": "",
     "group": "info",
     "private": false
   },
@@ -269,6 +284,7 @@
     "alias": "",
     "options": [],
     "description": "show component logs",
+    "extendedDescription": "",
     "group": "ungrouped",
     "private": true,
     "internal": true
@@ -278,6 +294,7 @@
     "alias": "",
     "options": [],
     "description": "upload a component to a scope",
+    "extendedDescription": "",
     "group": "ungrouped",
     "private": true,
     "internal": true
@@ -287,6 +304,7 @@
     "alias": "",
     "options": [],
     "description": "list scope components",
+    "extendedDescription": "",
     "group": "ungrouped",
     "private": true,
     "internal": true
@@ -296,6 +314,7 @@
     "alias": "",
     "options": [],
     "description": "show a specific component on scope",
+    "extendedDescription": "",
     "group": "ungrouped",
     "private": true,
     "internal": true
@@ -305,6 +324,7 @@
     "alias": "",
     "options": [],
     "description": "returns scope graph or sub-graph when component id is given",
+    "extendedDescription": "",
     "group": "ungrouped",
     "private": true,
     "internal": true
@@ -330,6 +350,7 @@
       ]
     ],
     "description": "fetch components(s) from a scope",
+    "extendedDescription": "",
     "group": "ungrouped",
     "private": true,
     "internal": true
@@ -339,6 +360,7 @@
     "alias": "",
     "options": [],
     "description": "execute a generic action",
+    "extendedDescription": "",
     "group": "ungrouped",
     "private": true,
     "internal": true
@@ -354,6 +376,7 @@
       ]
     ],
     "description": "injecting components configuration",
+    "extendedDescription": "",
     "group": "ungrouped",
     "private": true
   },
@@ -362,6 +385,7 @@
     "alias": "",
     "options": [],
     "description": "describe a scope",
+    "extendedDescription": "",
     "group": "ungrouped",
     "private": true,
     "internal": true
@@ -392,6 +416,7 @@
       ]
     ],
     "description": "run an update for build and test of a certain bit-component",
+    "extendedDescription": "",
     "group": "ungrouped",
     "private": true
   },
@@ -416,6 +441,7 @@
       ]
     ],
     "description": "cat a scope and show all the contents",
+    "extendedDescription": "",
     "group": "ungrouped",
     "private": true
   },
@@ -424,6 +450,7 @@
     "alias": "",
     "options": [],
     "description": "scope config management",
+    "extendedDescription": "",
     "group": "general",
     "private": false,
     "commands": [
@@ -432,6 +459,7 @@
         "alias": "",
         "options": [],
         "description": "set a scope configuration",
+        "extendedDescription": "",
         "group": "ungrouped",
         "private": true
       },
@@ -440,6 +468,7 @@
         "alias": "",
         "options": [],
         "description": "delete given key from global configuration",
+        "extendedDescription": "",
         "group": "ungrouped",
         "private": false
       },
@@ -448,6 +477,7 @@
         "alias": "",
         "options": [],
         "description": "get a scope configuration",
+        "extendedDescription": "",
         "group": "ungrouped",
         "private": true
       },
@@ -456,6 +486,7 @@
         "alias": "",
         "options": [],
         "description": "list all scope configuration(s)",
+        "extendedDescription": "",
         "group": "ungrouped",
         "private": false
       }
@@ -466,6 +497,7 @@
     "alias": "",
     "options": [],
     "description": "returns the status of the dependency status of bit map against bit dependencies",
+    "extendedDescription": "",
     "group": "ungrouped",
     "private": true
   },
@@ -509,7 +541,8 @@
         "sets the component's scope-name. if not entered, the default-scope will be used"
       ]
     ],
-    "description": "add any subset of files to be tracked as a component(s)\n  all flags support glob patterns and {PARENT} {FILE_NAME} annotations\n  https://bit.dev/docs/components/adding-components",
+    "description": "Add any subset of files to be tracked as a component(s).",
+    "extendedDescription": "all flags support glob patterns and {PARENT} {FILE_NAME} annotations\n  https://bit.dev/docs/components/adding-components",
     "group": "development",
     "private": false
   },
@@ -524,6 +557,7 @@
       ]
     ],
     "description": "DEPRECATED (use \"bit remove\" instead). untrack a new component(s)\n  https://legacy-docs.bit.dev/docs/add-and-isolate-components#untracking-components\n  you can use a pattern for multiple ids, such as bit untrack \"utils/*\". (wrap the pattern with quotes to avoid collision with shell commands)",
+    "extendedDescription": "",
     "group": "ungrouped",
     "private": true
   },
@@ -547,7 +581,8 @@
         "revert the tag even if used as a dependency. WARNING: components that depend on this tag will corrupt"
       ]
     ],
-    "description": "revert version(s) tagged for component(s)\n  https://bit.dev/docs/components/tags#undoing-a-tag\n  you can use a pattern for multiple ids, such as bit untag \"utils/*\". (wrap the pattern with quotes to avoid collision with shell commands)",
+    "description": "revert versions tagged for component(s)",
+    "extendedDescription": "https://bit.dev/docs/components/tags#undoing-a-tag\nyou can use a pattern for multiple ids, such as bit untag \"utils/*\". (wrap the pattern with quotes to avoid collision with shell commands)",
     "group": "development",
     "private": false
   },
@@ -561,7 +596,8 @@
         "move component files that are spread over multiple directories to one directory. synopsis: `move <component-id> <directory>`"
       ]
     ],
-    "description": "move files or directories of component(s)\n  https://bit.dev/docs/workspace/moving-components",
+    "description": "move a component to a different filesystem path",
+    "extendedDescription": "move files or directories of component(s)\n  https://bit.dev/docs/workspace/moving-components",
     "group": "development",
     "private": false
   },
@@ -600,7 +636,8 @@
         "skip confirmation"
       ]
     ],
-    "description": "remove a component (local/remote)\n  https://bit.dev/docs/components/removing-components\n  you can use a pattern for multiple ids, such as bit remove \"utils/*\". (wrap the pattern with quotes to avoid collision with shell commands)",
+    "description": "remove component(s) from your workspace, or a remote scope",
+    "extendedDescription": "https://bit.dev/docs/components/removing-components\nyou can use a pattern for multiple ids, such as bit remove \"utils/*\". (wrap the pattern with quotes to avoid collision with shell commands)",
     "group": "collaborate",
     "private": false,
     "skipWorkspace": true
@@ -610,6 +647,7 @@
     "alias": "",
     "options": [],
     "description": "remove a component from a scope",
+    "extendedDescription": "",
     "group": "ungrouped",
     "private": true,
     "internal": true
@@ -619,6 +657,7 @@
     "alias": "",
     "options": [],
     "description": "deprecate a component from a scope",
+    "extendedDescription": "",
     "group": "ungrouped",
     "private": true,
     "internal": true
@@ -628,6 +667,7 @@
     "alias": "",
     "options": [],
     "description": "undeprecate a component from a scope",
+    "extendedDescription": "",
     "group": "ungrouped",
     "private": true,
     "internal": true
@@ -637,6 +677,7 @@
     "alias": "",
     "options": [],
     "description": "latest version numbers of given components",
+    "extendedDescription": "",
     "group": "ungrouped",
     "private": true,
     "internal": true
@@ -706,7 +747,8 @@
         "do not write dist files (when exist)"
       ]
     ],
-    "description": "switch between component versions or remove local changes\n  `bit checkout <version> [ids...]` => checkout the specified ids (or all components when --all is used) to the specified version\n  `bit checkout latest [ids...]` => checkout the specified ids (or all components when --all is used) to their latest versions\n  `bit checkout [ids...] --reset` => remove local modifications from the specified ids (or all components when --all is used)\n  you can use a pattern for multiple ids, such as bit checkout 0.0.1 \"utils/*\". (wrap the pattern with quotes to avoid collision with shell commands)",
+    "description": "switch between component versions or remove local changes",
+    "extendedDescription": "\n  `bit checkout <version> [ids...]` => checkout the specified ids (or all components when --all is used) to the specified version\n  `bit checkout latest [ids...]` => checkout the specified ids (or all components when --all is used) to their latest versions\n  `bit checkout [ids...] --reset` => remove local modifications from the specified ids (or all components when --all is used)\n  you can use a pattern for multiple ids, such as bit checkout 0.0.1 \"utils/*\". (wrap the pattern with quotes to avoid collision with shell commands)",
     "group": "development",
     "private": false
   },
@@ -725,7 +767,8 @@
         "show tables instead of plain text for dependencies diff"
       ]
     ],
-    "description": "show diff between components files\n  bit diff => compare all modified components to their model version\n  bit diff [ids...] => compare the specified components against their modified states\n  bit diff [id] [version] => compare the specified version to used or modified files\n  bit diff [id] [version] [to_version] => compare the specified version files to to_version files\n  you can use a pattern for multiple ids, such as bit diff \"utils/*\". (wrap the pattern with quotes to avoid collision with shell commands)",
+    "description": "show diff between components files",
+    "extendedDescription": "bit diff => compare all modified components to their model version\n  bit diff [ids...] => compare the specified components against their modified states\n  bit diff [id] [version] => compare the specified version to used or modified files\n  bit diff [id] [version] [to_version] => compare the specified version files to to_version files\n  you can use a pattern for multiple ids, such as bit diff \"utils/*\". (wrap the pattern with quotes to avoid collision with shell commands)",
     "group": "development",
     "private": false
   },
@@ -760,6 +803,7 @@
       ]
     ],
     "description": "log the CLI into Bit Cloud",
+    "extendedDescription": "",
     "group": "general",
     "private": false,
     "skipWorkspace": true
@@ -769,6 +813,7 @@
     "alias": "",
     "options": [],
     "description": "log the CLI out of Bit",
+    "extendedDescription": "",
     "group": "general",
     "private": false
   },
@@ -788,6 +833,7 @@
       ]
     ],
     "description": "migrate scope to the current version",
+    "extendedDescription": "",
     "group": "ungrouped",
     "private": true
   },
@@ -812,6 +858,7 @@
       ]
     ],
     "description": "diagnose a bit workspace",
+    "extendedDescription": "",
     "group": "general",
     "private": false
   },
@@ -841,6 +888,7 @@
       ]
     ],
     "description": "EXPERIMENTAL. generate an image file with the dependencies graph",
+    "extendedDescription": "",
     "group": "discover",
     "private": false
   },
@@ -869,7 +917,8 @@
         "fetch indirect dependencies from their original scope as opposed to from their dependents"
       ]
     ],
-    "description": "fetch remote objects and store locally.\nfor lanes, use \"/\" as a separator between the remote and the lane name, e.g. teambit.ui/fix-button",
+    "description": "fetch remote objects and store locally",
+    "extendedDescription": "for lanes, use \"/\" as a separator between the remote and the lane name, e.g. teambit.ui/fix-button",
     "group": "ungrouped",
     "private": true
   },
@@ -878,6 +927,7 @@
     "alias": "",
     "options": [],
     "description": "run an action on a remote",
+    "extendedDescription": "",
     "group": "ungrouped",
     "private": true
   },
@@ -892,6 +942,7 @@
       ]
     ],
     "description": "list lanes",
+    "extendedDescription": "",
     "group": "ungrouped",
     "private": true,
     "internal": true
@@ -901,6 +952,7 @@
     "alias": "",
     "options": [],
     "description": "enable bash/zsh-completion shortcuts for commands and options",
+    "extendedDescription": "",
     "group": "general",
     "private": false
   },
@@ -909,6 +961,7 @@
     "alias": "",
     "options": [],
     "description": "EXPERIMENTAL. enters bit cli program and generates commands list",
+    "extendedDescription": "",
     "group": "general",
     "private": false,
     "commands": [
@@ -928,6 +981,7 @@
           ]
         ],
         "description": "EXPERIMENTAL. generate an .md file with all commands details",
+        "extendedDescription": "",
         "group": "general",
         "private": false
       }
@@ -938,6 +992,7 @@
     "alias": "$0",
     "options": [],
     "description": "shows help",
+    "extendedDescription": "",
     "group": "general",
     "private": false
   },
@@ -946,6 +1001,7 @@
     "alias": "",
     "options": [],
     "description": "set up aspects in the workspace/scope config",
+    "extendedDescription": "",
     "group": "collaborate",
     "private": false,
     "remoteOp": true
@@ -976,6 +1032,7 @@
       ]
     ],
     "description": "show a component",
+    "extendedDescription": "",
     "group": "info",
     "private": false
   },
@@ -990,6 +1047,7 @@
       ]
     ],
     "description": "list all globals",
+    "extendedDescription": "",
     "group": "workspace",
     "private": false
   },
@@ -998,6 +1056,7 @@
     "alias": "env",
     "options": [],
     "description": "list all components envs",
+    "extendedDescription": "",
     "group": "development",
     "private": false,
     "commands": [
@@ -1006,6 +1065,7 @@
         "alias": "",
         "options": [],
         "description": "list all envs available in the workspace",
+        "extendedDescription": "",
         "group": "development",
         "private": false
       },
@@ -1014,6 +1074,7 @@
         "alias": "",
         "options": [],
         "description": "show component's env details",
+        "extendedDescription": "",
         "group": "development",
         "private": false
       },
@@ -1075,6 +1136,7 @@
       ]
     ],
     "description": "Start a dev environment for a workspace or a specific component",
+    "extendedDescription": "",
     "group": "development",
     "private": false
   },
@@ -1083,6 +1145,7 @@
     "alias": "c",
     "options": [],
     "description": "build production assets for deployment.",
+    "extendedDescription": "",
     "group": "development",
     "private": false
   },
@@ -1091,6 +1154,7 @@
     "alias": "",
     "options": [],
     "description": "EXPERIMENTAL. manage scope-name",
+    "extendedDescription": "",
     "group": "development",
     "private": false,
     "commands": [
@@ -1162,6 +1226,7 @@
       ]
     ],
     "description": "install development workspace dependencies",
+    "extendedDescription": "",
     "group": "development",
     "private": false
   },
@@ -1176,6 +1241,7 @@
       ]
     ],
     "description": "update dependencies",
+    "extendedDescription": "",
     "group": "development",
     "private": false
   },
@@ -1184,6 +1250,7 @@
     "alias": "un",
     "options": [],
     "description": "uninstall dependencies",
+    "extendedDescription": "",
     "group": "development",
     "private": false
   },
@@ -1211,7 +1278,8 @@
     "name": "capsule <sub-command>",
     "alias": "",
     "options": [],
-    "description": "manage capsules.\na capsule is a directory contains the component code, isolated from the workspace.\nnormally, capsules are created during the build process, the component files are copied and the packages are installed\nvia the configured package-manager. the purpose is to compile/test them in isolation to make sure they will work for\nother users after publishing/exporting them.",
+    "description": "manage capsules",
+    "extendedDescription": "a capsule is a directory contains the component code, isolated from the workspace.\nnormally, capsules are created during the build process, the component files are copied and the packages are installed\nvia the configured package-manager. the purpose is to compile/test them in isolation to make sure they will work for\nother users after publishing/exporting them.",
     "group": "capsules",
     "private": false,
     "commands": [
@@ -1226,6 +1294,7 @@
           ]
         ],
         "description": "list all capsules",
+        "extendedDescription": "",
         "group": "capsules",
         "private": false
       },
@@ -1275,6 +1344,7 @@
           ]
         ],
         "description": "create capsules",
+        "extendedDescription": "",
         "group": "capsules",
         "private": false
       },
@@ -1293,7 +1363,8 @@
             "delete all capsules for all workspaces and scopes"
           ]
         ],
-        "description": "delete capsules. with no args, only workspace's capsules are deleted",
+        "description": "delete capsules",
+        "extendedDescription": "with no args, only workspace's capsules are deleted",
         "group": "capsules",
         "private": false
       }
@@ -1320,6 +1391,7 @@
       ]
     ],
     "description": "watch a set of components",
+    "extendedDescription": "",
     "group": "development",
     "private": false
   },
@@ -1353,7 +1425,8 @@
         "skip fetch missing objects from remotes before linking"
       ]
     ],
-    "description": "generate symlinks to resolve module paths for imported components.\nhttps://bit.dev/docs/workspace/component-links",
+    "description": "link components and core aspects",
+    "extendedDescription": "https://bit.dev/docs/workspace/component-links",
     "group": "development",
     "private": false
   },
@@ -1368,6 +1441,7 @@
       ]
     ],
     "description": "list the component ids matching the given pattern",
+    "extendedDescription": "",
     "group": "development",
     "private": false
   },
@@ -1446,7 +1520,8 @@
         "relevant for fetching all components objects. avoid optimizations, fetch all history versions, always"
       ]
     ],
-    "description": "import components into your current workspace.\nhttps://bit.dev/docs/components/importing-components\nyou can use a pattern for multiple ids, such as bit import \"utils/*\". (wrap the pattern with quotes to avoid collision with shell commands)",
+    "description": "import components into your workspace",
+    "extendedDescription": "https://bit.dev/docs/components/importing-components\nyou can use a pattern for multiple ids, such as bit import \"utils/*\". (wrap the pattern with quotes to avoid collision with shell commands)",
     "group": "collaborate",
     "private": false,
     "remoteOp": true
@@ -1482,6 +1557,7 @@
       ]
     ],
     "description": "create a new component from a template",
+    "extendedDescription": "",
     "group": "development",
     "private": false
   },
@@ -1495,7 +1571,8 @@
         "show hidden templates"
       ]
     ],
-    "description": "list components templates when inside bit-workspace (for bit-create), otherwise, list workspace templates (for bit-new)",
+    "description": "list templates for \"bit create\" and \"bit new\"",
+    "extendedDescription": "list components templates when inside bit-workspace (for bit-create), otherwise, list workspace templates (for bit-new)",
     "group": "development",
     "private": false
   },
@@ -1535,6 +1612,7 @@
       ]
     ],
     "description": "Create a new workspace from a template",
+    "extendedDescription": "",
     "group": "start",
     "private": false
   },
@@ -1579,6 +1657,7 @@
       ]
     ],
     "description": "run set of tasks for build",
+    "extendedDescription": "",
     "group": "development",
     "private": false
   },
@@ -1607,7 +1686,8 @@
         "download the files to the specified dir"
       ]
     ],
-    "description": "EXPERIMENTAL. list and download components artifacts.\nartifacts are created on isolated capsules during tag or snap commands.\nexample of artifacts are dists files generated by a compiler, a JUnit.xml file generated by a tester\nand a package.tgz file generated by pkg aspect.\n",
+    "description": "EXPERIMENTAL. list and download components artifacts",
+    "extendedDescription": "artifacts are created on isolated capsules during tag or snap commands.\nexample of artifacts are dists files generated by a compiler, a JUnit.xml file generated by a tester\nand a package.tgz file generated by pkg aspect.\n",
     "group": "development",
     "private": false
   },
@@ -1642,6 +1722,7 @@
       ]
     ],
     "description": "create tar for npm publish",
+    "extendedDescription": "",
     "group": "collaborate",
     "private": false
   },
@@ -1666,6 +1747,7 @@
       ]
     ],
     "description": "publish components to npm (npm publish)",
+    "extendedDescription": "",
     "group": "collaborate",
     "private": true
   },
@@ -1674,6 +1756,7 @@
     "alias": "",
     "options": [],
     "description": "EXPERIMENTAL. source code refactoring / codemod",
+    "extendedDescription": "",
     "group": "development",
     "private": false,
     "commands": [
@@ -1699,7 +1782,8 @@
       ]
     ],
     "description": "list available component-issues",
-    "group": "ungrouped",
+    "extendedDescription": "",
+    "group": "development",
     "private": false
   },
   {
@@ -1718,6 +1802,7 @@
       ]
     ],
     "description": "Insights on component graph",
+    "extendedDescription": "",
     "group": "development",
     "private": true
   },
@@ -1841,7 +1926,8 @@
         "DEPRECATED. use --disable-tag-pipeline instead"
       ]
     ],
-    "description": "record component changes and lock versions.\nif no ids are provided, it will tag all new and modified components.\nif component ids are entered, you can specify a version per id using \"@\" sign, e.g. bit tag foo@1.0.0 bar@minor baz@major\nhttps://bit.dev/components/tags\nyou can use a pattern for multiple ids, such as bit tag \"utils/*\". (wrap the pattern with quotes to avoid collision with shell commands)",
+    "description": "record component changes and lock versions",
+    "extendedDescription": "if no ids are provided, it will tag all new and modified components.\nif component ids are entered, you can specify a version per id using \"@\" sign, e.g. bit tag foo@1.0.0 bar@minor baz@major\nhttps://bit.dev/components/tags\nyou can use a pattern for multiple ids, such as bit tag \"utils/*\". (wrap the pattern with quotes to avoid collision with shell commands)",
     "group": "development",
     "private": false,
     "remoteOp": true
@@ -1902,6 +1988,7 @@
       ]
     ],
     "description": "record component changes.\nhttps://bit.dev/components/snaps\nyou can use a pattern for multiple ids, such as bit snap \"utils/*\". (wrap the pattern with quotes to avoid collision with shell commands)",
+    "extendedDescription": "",
     "group": "ungrouped",
     "private": true
   },
@@ -1950,7 +2037,8 @@
         "EXPERIMENTAL. override the default message for the auto snap"
       ]
     ],
-    "description": "merge changes of different component versions\n  `bit merge <version> [ids...]` => merge changes of the given version into the checked out version\n  `bit merge [ids...]` => EXPERIMENTAL. merge changes of the remote head into local, optionally use '--abort' or '--resolve'\n  you can use a pattern for multiple ids, such as bit merge 0.0.1 \"utils/*\". (wrap the pattern with quotes to avoid collision with shell commands)",
+    "description": "merge changes of different component versions",
+    "extendedDescription": "merge changes of different component versions\n  `bit merge <version> [ids...]` => merge changes of the given version into the checked out version\n  `bit merge [ids...]` => EXPERIMENTAL. merge changes of the remote head into local, optionally use '--abort' or '--resolve'\n  you can use a pattern for multiple ids, such as bit merge 0.0.1 \"utils/*\". (wrap the pattern with quotes to avoid collision with shell commands)",
     "group": "development",
     "private": false
   },
@@ -1969,7 +2057,8 @@
         "in case issues found, exit with code 1"
       ]
     ],
-    "description": "show the working area component(s) status.\n  https://bit.dev/docs/workspace/workspace-status",
+    "description": "show the working area component(s) status",
+    "extendedDescription": "https://bit.dev/docs/workspace/workspace-status",
     "group": "development",
     "private": false
   },
@@ -1999,6 +2088,7 @@
       ]
     ],
     "description": "compile components in the development workspace",
+    "extendedDescription": "",
     "group": "development",
     "private": false
   },
@@ -2023,6 +2113,7 @@
       ]
     ],
     "description": "run an application",
+    "extendedDescription": "",
     "group": "apps",
     "private": false
   },
@@ -2037,6 +2128,7 @@
       ]
     ],
     "description": "DEPRECATED. use \"bit app list\"",
+    "extendedDescription": "",
     "group": "apps",
     "private": true
   },
@@ -2045,6 +2137,7 @@
     "alias": "",
     "options": [],
     "description": "manage applications",
+    "extendedDescription": "",
     "group": "apps",
     "private": false,
     "commands": [
@@ -2059,6 +2152,7 @@
           ]
         ],
         "description": "list all registered applications",
+        "extendedDescription": "",
         "group": "apps",
         "private": false
       }
@@ -2105,6 +2199,7 @@
       ]
     ],
     "description": "test set of components in your workspace",
+    "extendedDescription": "",
     "group": "development",
     "private": false
   },
@@ -2120,7 +2215,7 @@
     ],
     "description": "shows the API schema of a certain component.",
     "extendedDescription": "you can use a `<pattern>` for multiple component ids, such as `bit schema \"org.scope/utils/**\"`. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\"\nalways wrap the pattern with quotes to avoid collision with shell commands.\nto validate the pattern before running this command, run `bit pattern <pattern>`.\n",
-    "group": "component",
+    "group": "development",
     "private": false
   },
   {
@@ -2139,6 +2234,7 @@
       ]
     ],
     "description": "check typescript types",
+    "extendedDescription": "",
     "group": "development",
     "private": false
   },
@@ -2147,6 +2243,7 @@
     "alias": "",
     "options": [],
     "description": "EXPERIMENTAL. manage aspects",
+    "extendedDescription": "",
     "group": "development",
     "private": false,
     "commands": [
@@ -2181,6 +2278,7 @@
           ]
         ],
         "description": "show aspects' data and configuration of the given component",
+        "extendedDescription": "",
         "group": "development",
         "private": false
       },
@@ -2244,7 +2342,8 @@
         "EXPERIMENTAL. show parents and lanes data"
       ]
     ],
-    "description": "show components(s) tag history.\n  https://bit.dev/docs/reference/cli-reference#log",
+    "description": "show components(s) version history",
+    "extendedDescription": "https://bit.dev/docs/reference/cli-reference#log",
     "group": "info",
     "private": false,
     "remoteOp": true,
@@ -2261,6 +2360,7 @@
       ]
     ],
     "description": "deprecate a component",
+    "extendedDescription": "",
     "group": "collaborate",
     "private": false,
     "remoteOp": true,
@@ -2271,6 +2371,7 @@
     "alias": "",
     "options": [],
     "description": "undeprecate a deprecated component (local/remote)",
+    "extendedDescription": "",
     "group": "collaborate",
     "private": false,
     "remoteOp": true,
@@ -2361,6 +2462,7 @@
       ]
     ],
     "description": "show lanes details\nhttps://bit.dev/docs/components/lanes",
+    "extendedDescription": "",
     "group": "ungrouped",
     "private": true,
     "remoteOp": true,
@@ -2397,6 +2499,7 @@
           ]
         ],
         "description": "list lanes",
+        "extendedDescription": "",
         "group": "ungrouped",
         "private": true,
         "remoteOp": true,
@@ -2433,6 +2536,7 @@
           ]
         ],
         "description": "switch to the specified lane",
+        "extendedDescription": "",
         "group": "ungrouped",
         "private": true
       },
@@ -2452,6 +2556,7 @@
           ]
         ],
         "description": "show lane details",
+        "extendedDescription": "",
         "group": "ungrouped",
         "private": true,
         "remoteOp": true,
@@ -2528,6 +2633,7 @@
           ]
         ],
         "description": "merge a local or a remote lane",
+        "extendedDescription": "",
         "group": "ungrouped",
         "private": true,
         "remoteOp": true
@@ -2553,6 +2659,7 @@
           ]
         ],
         "description": "remove lanes",
+        "extendedDescription": "",
         "group": "ungrouped",
         "private": true
       },
@@ -2561,6 +2668,7 @@
         "alias": "",
         "options": [],
         "description": "change the remote scope of a lane",
+        "extendedDescription": "",
         "group": "ungrouped",
         "private": true
       },
@@ -2578,6 +2686,7 @@
         "alias": "",
         "options": [],
         "description": "EXPERIMENTAL. change the lane-name locally and on the remote (if exported)",
+        "extendedDescription": "",
         "group": "ungrouped",
         "private": true
       },
@@ -2597,6 +2706,7 @@
         "alias": "",
         "options": [],
         "description": "EXPERIMENTAL. add lane readme component",
+        "extendedDescription": "",
         "group": "ungrouped",
         "private": true,
         "skipWorkspace": false
@@ -2606,6 +2716,7 @@
         "alias": "",
         "options": [],
         "description": "EXPERIMENTAL. remove lane readme component",
+        "extendedDescription": "",
         "group": "ungrouped",
         "private": true,
         "skipWorkspace": false
@@ -2621,6 +2732,7 @@
           ]
         ],
         "description": "import a remote lane to your workspace",
+        "extendedDescription": "",
         "group": "ungrouped",
         "private": true
       }
@@ -2657,6 +2769,7 @@
       ]
     ],
     "description": "switch to the specified lane",
+    "extendedDescription": "",
     "group": "ungrouped",
     "private": true
   },
@@ -2689,9 +2802,10 @@
     "name": "resume-export <export-id> <remotes...>",
     "alias": "",
     "options": [],
-    "description": "resume failed export to persist the pending objects on the given remotes.\nthe export-id is the id the client got in the error message during the failure.\nalternatively, exporting to any one of the failed scopes, throws server-is-busy error with the export-id",
+    "description": "EXPERIMENTAL. resume failed export",
+    "extendedDescription": "resume failed export to persist the pending objects on the given remotes.\nthe export-id is the id the client got in the error message during the failure.\nalternatively, exporting to any one of the failed scopes, throws server-is-busy error with the export-id",
     "group": "collaborate",
-    "private": false,
+    "private": true,
     "remoteOp": true
   },
   {
@@ -2754,7 +2868,8 @@
         "show output in json format"
       ]
     ],
-    "description": "export components to a remote scope.\nbit export => export all staged components to their current scope, if checked out to a lane, export the lane as well\n`bit export [id...]` => export the given ids to their current scope\n\nhttps://bit.dev/docs/components/exporting-components\nyou can use a pattern for multiple ids, such as bit export remote-scope \"utils/*\". (wrap the pattern with quotes to avoid collision with shell commands)",
+    "description": "Export components to a remote scope",
+    "extendedDescription": "bit export => export all staged components to their current scope, if checked out to a lane, export the lane as well\n`bit export [id...]` => export the given ids to their current scope\n\nhttps://bit.dev/docs/components/exporting-components\nyou can use a pattern for multiple ids, such as bit export remote-scope \"utils/*\". (wrap the pattern with quotes to avoid collision with shell commands)",
     "group": "collaborate",
     "private": false,
     "remoteOp": true
@@ -2799,7 +2914,8 @@
         "avoid throwing an error when running on a non-new scope"
       ]
     ],
-    "description": "update versions dependencies for components and tag/snap the results.\nthis command should be running from a new bare scope, it first imports the components it needs and then processes the update.\nthe input data is a stringified JSON of an array of the following object.\n{\n  componentId: string; // ids always have scope, so it's safe to parse them from string\n  dependencies: string[]; // e.g. [teambit/compiler@1.0.0, teambit/tester@1.0.0]\n  versionToTag?: string; // specific version (e.g. '1.0.0') or semver (e.g. 'minor', 'patch')\n}\nan example of the final data: '[{\"componentId\":\"ci.remote2/comp-b\",\"dependencies\":[\"ci.remote/comp1@0.0.2\"]}]'\n",
+    "description": "update dependencies for components and tag/snap the results",
+    "extendedDescription": "this command should be running from a new bare scope, it first imports the components it needs and then processes the update.\nthe input data is a stringified JSON of an array of the following object.\n{\n  componentId: string; // ids always have scope, so it's safe to parse them from string\n  dependencies: string[]; // e.g. [teambit/compiler@1.0.0, teambit/tester@1.0.0]\n  versionToTag?: string; // specific version (e.g. '1.0.0') or semver (e.g. 'minor', 'patch')\n}\nan example of the final data: '[{\"componentId\":\"ci.remote2/comp-b\",\"dependencies\":[\"ci.remote/comp1@0.0.2\"]}]'\n",
     "group": "development",
     "private": true
   },
@@ -2854,6 +2970,7 @@
       ]
     ],
     "description": "format components in the development workspace",
+    "extendedDescription": "",
     "group": "development",
     "private": false
   },
@@ -2883,6 +3000,7 @@
       ]
     ],
     "description": "lint components in the development workspace",
+    "extendedDescription": "",
     "group": "development",
     "private": false
   }
