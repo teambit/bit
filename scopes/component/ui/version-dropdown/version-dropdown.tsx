@@ -153,7 +153,7 @@ function VersionMenu({
     if (currentLane) return tabs.findIndex((tab) => tab.name === 'LANE');
     if ((snaps || []).some((snap) => snap.version === currentVersion))
       return tabs.findIndex((tab) => tab.name === 'SNAP');
-    return tabs.findIndex((tab) => tab.name === 'TAG');
+    return 0;
   };
 
   const [activeTabIndex, setActiveTab] = useState<number>(getActiveTabIndex());
