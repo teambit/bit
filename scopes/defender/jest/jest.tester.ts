@@ -253,8 +253,10 @@ export class JestTester implements Tester {
     const mappedValues = ['<rootDir>/node_modules/$1', `${rootPath}/node_modules/$1`];
 
     const moduleNameMapper = depsToMap.reduce((acc, peerName) => {
-      const keyName = `(${peerName}.*)$`;
+      const keyName = `^(${peerName})$`;
       acc[keyName] = mappedValues;
+      const internalPathKeyName = `^(${peerName}/.*)$`;
+      acc[internalPathKeyName] = mappedValues;
       return acc;
     }, {});
 
