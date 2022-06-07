@@ -79,13 +79,14 @@ export default class ImportComponents {
   options: ImportOptions;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   mergeStatus: { [id: string]: FilesStatus };
-  private laneObjects: Lane[] = [];
+  private laneObjects: Lane[];
   private divergeData: Array<ModelComponent> = [];
   // @ts-ignore
   constructor(consumer: Consumer, options: ImportOptions) {
     this.consumer = consumer;
     this.scope = consumer.scope;
     this.options = options;
+    this.laneObjects = this.options.lanes ? (this.options.lanes.lanes as Lane[]) : [];
   }
 
   importComponents(): Promise<ImportResult> {
@@ -96,10 +97,47 @@ export default class ImportComponents {
       this.options.installNpmPackages = false;
       this.options.saveDependenciesAsComponents = true;
     }
-    if (!this.options.lanes && (!this.options.ids || R.isEmpty(this.options.ids))) {
-      return this.importAccordingToBitMap();
+    if (this.options.lanes && !this.options.ids.length) {
+      return this.importObjectsOnLane();
     }
-    return this.importSpecificComponents();
+    if (this.options.ids.length) {
+      return this.importSpecificComponents();
+    }
+    return this.importAccordingToBitMap();
+  }
+
+  async importObjectsOnLane(): Promise<ImportResult> {
+    if (!this.laneObjects.length || !this.options.objectsOnly || this.consumer.isLegacy) {
+      throw new Error(`importObjectsOnLane should work on Harmony and have laneObjects and objectsOnly=true`);
+    }
+    if (this.laneObjects.length > 1) {
+      throw new Error(`importObjectsOnLane does not support more than one lane`);
+    }
+    const lane = this.laneObjects[0];
+    const bitIds: BitIds = await this.getBitIds();
+    logger.debug(`importObjectsOnLane, Lane: ${lane.id()}, Ids: ${bitIds.toString()}`);
+    const beforeImportVersions = await this._getCurrentVersions(bitIds);
+    const componentsWithDependencies = await this.consumer.importComponentsObjectsHarmony(
+      bitIds,
+      false,
+      this.options.allHistory,
+      lane
+    );
+
+    // merge the lane objects
+    const mergeAllLanesResults = await pMapSeries(this.laneObjects, (laneObject) =>
+      this.scope.sources.mergeLane(laneObject, true)
+    );
+    const mergedLanes = mergeAllLanesResults.map((result) => result.mergeLane);
+    await Promise.all(mergedLanes.map((mergedLane) => this.scope.lanes.saveLane(mergedLane)));
+
+    const componentsWithDependenciesFiltered = this._filterComponentsWithLowerVersions(componentsWithDependencies);
+    await this._fetchDivergeData(componentsWithDependenciesFiltered);
+    this._throwForDivergedHistory();
+    await this._writeToFileSystem(componentsWithDependenciesFiltered);
+    await this._saveLaneDataIfNeeded(componentsWithDependenciesFiltered);
+    const importDetails = await this._getImportDetails(beforeImportVersions, componentsWithDependencies);
+    return { dependencies: componentsWithDependenciesFiltered, importDetails };
   }
 
   async importSpecificComponents(): Promise<ImportResult> {
@@ -187,7 +225,6 @@ export default class ImportComponents {
     if (!this.options.lanes) {
       throw new Error(`getBitIdsForLanes: this.options.lanes must be set`);
     }
-    this.laneObjects = this.options.lanes.lanes as Lane[];
     const bitIdsFromLane = BitIds.fromArray(this.laneObjects.flatMap((lane) => lane.toBitIds()));
 
     if (!this.options.ids.length) {

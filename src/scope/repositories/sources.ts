@@ -49,7 +49,7 @@ export type MergeResult = {
   mergedVersions: string[];
 };
 
-const MAX_AGE_UN_BUILT_COMPS_CACHE = 60 * 1000;
+const MAX_AGE_UN_BUILT_COMPS_CACHE = 60 * 1000; // 1 min
 
 export default class SourceRepository {
   scope: Scope;
@@ -153,6 +153,10 @@ export default class SourceRepository {
     version.dependencies = version.dependencies.filter((d) => !d.id.isEqualWithoutVersion(component.toBitId()));
 
     return returnComponent(version as Version);
+  }
+
+  isUnBuiltInCache(bitId: BitId): boolean {
+    return Boolean(this.cacheUnBuiltIds.get(bitId.toString()));
   }
 
   async _findComponent(component: ModelComponent): Promise<ModelComponent | undefined> {
