@@ -26,6 +26,7 @@ import { ScopeMenu, ScopeUseBox } from './ui/menu';
 import { ScopeAspect } from './scope.aspect';
 import { Scope } from './ui/scope';
 import { scopeDrawer } from './scope.ui.drawer';
+import { GetScopeOptions } from './get-scope-options';
 
 export type ScopeBadge = ComponentType;
 
@@ -111,6 +112,24 @@ export class ScopeUI {
   registerBadge(...badges: ScopeBadge[]) {
     this.scopeBadgeSlot.register(badges);
     return this;
+  }
+
+  getScope(options: GetScopeOptions) {
+    return (
+      <Scope
+        TargetCorner={options.Corner}
+        routeSlot={this.routeSlot}
+        menuSlot={this.menuSlot}
+        sidebar={<this.sidebar.render itemSlot={this.sidebarItemSlot} />}
+        scopeUi={this}
+        userUseScopeQuery={options.useScope}
+        badgeSlot={this.scopeBadgeSlot}
+        overviewLineSlot={this.overviewSlot}
+        context={this.getContext()}
+        onSidebarTogglerChange={this.setSidebarToggle}
+        cornerSlot={this.cornerSlot}
+      />
+    );
   }
 
   /**
@@ -236,7 +255,7 @@ export class ScopeUI {
     this.drawerWidgetSlot.register(widgets);
   };
 
-  uiRoot(): UIRoot {
+  registerDefaultDrawers() {
     this.sidebar.registerDrawer(
       scopeDrawer({
         treeWidgets: this.sidebarSlot,
@@ -244,6 +263,10 @@ export class ScopeUI {
         drawerWidgetSlot: this.drawerWidgetSlot,
       })
     );
+  }
+
+  uiRoot(): UIRoot {
+    this.registerDefaultDrawers();
     const [setKeyBindHandler] = this.commandBarUI.addCommand({
       id: 'sidebar.toggle', // TODO - extract to a component!
       action: () => {},
@@ -365,7 +388,7 @@ export class ScopeUI {
       <FilterWidget key={'workspace-filter-widget'} />,
       <TreeToggleWidget key={'workspace-tree-toggle-widget'} />,
     ]);
-    ui.registerRoot(scopeUi.uiRoot.bind(scopeUi));
+    if (ui) ui.registerRoot(scopeUi.uiRoot.bind(scopeUi));
     scopeUi.registerMenuItem(scopeUi.menuItems);
     scopeUi.registerMenuWidget(() => <ScopeUseBox />);
     scopeUi.registerSidebarLink(() => (

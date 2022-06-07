@@ -6,7 +6,7 @@ import { useLanesContext } from '@teambit/lanes.ui.lanes';
 
 import styles from './component.module.scss';
 import { ComponentProvider, ComponentDescriptorProvider } from './context';
-import { useComponent } from './use-component';
+import { useComponent, Component as ComponentType } from './use-component';
 import { ComponentModel } from './component-model';
 import { useIdFromLocation } from './use-component-from-location';
 
@@ -21,6 +21,7 @@ export type ComponentProps = {
   routeSlot: RouteSlot;
   host: string;
   onComponentChange?: (activeComponent?: ComponentModel) => void;
+  useComponent?: () => ComponentType
 };
 
 /**

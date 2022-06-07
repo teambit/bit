@@ -225,7 +225,7 @@ export class ComponentUI {
   };
 
   updateComponents = (components: ComponentModel[]) => {
-    this.componentSearcher.update(components);
+    this.componentSearcher.update(components || []);
   };
 
   static dependencies = [PubsubAspect, CommandBarAspect, ReactRouterAspect];
@@ -274,8 +274,11 @@ export class ComponentUI {
     // @ts-ignore
     componentUI.registerSearchResultWidget({ key: 'deprecation', end: DeprecationIcon });
 
-    componentUI.commandBarUI.addCommand(...componentUI.keyBindings);
-    commandBarUI.addSearcher(componentUI.componentSearcher);
+    if (componentUI.commandBarUI) {
+      componentUI.commandBarUI.addCommand(...componentUI.keyBindings);
+      commandBarUI.addSearcher(componentUI.componentSearcher);
+    }
+    
     componentUI.registerMenuItem(componentUI.menuItems);
     componentUI.registerRoute(aspectSection.route);
     componentUI.registerWidget(aspectSection.navigationLink, aspectSection.order);
