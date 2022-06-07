@@ -1,7 +1,7 @@
 export { Module } from './module';
 export { FunctionLikeSchema, Modifier } from './function-like';
 export { TypeRefSchema } from './type-ref';
-export { VariableSchema } from './variable';
+export { VariableLikeSchema } from './variable-like';
 export { ClassSchema } from './class';
 export { ConstructorSchema } from './constructor';
 export { TypeSchema } from './type';
