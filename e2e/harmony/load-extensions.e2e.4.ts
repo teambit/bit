@@ -15,7 +15,6 @@ const assertArrays = require('chai-arrays');
 
 chai.use(assertArrays);
 
-// @TODO: REMOVE THE SKIP ASAP
 describe('load extensions', function () {
   this.timeout(0);
   let helper: Helper;
@@ -69,7 +68,9 @@ describe('load extensions', function () {
           expect(output).to.have.string('new components');
         });
         it('should show a warning about the problematic extension', () => {
-          expect(output).to.have.string(UNABLE_TO_LOAD_EXTENSION('my-scope/non-requireable-aspect'));
+          expect(output).to.have.string(
+            UNABLE_TO_LOAD_EXTENSION('my-scope/non-requireable-aspect', 'error by purpose')
+          );
         });
       });
     });

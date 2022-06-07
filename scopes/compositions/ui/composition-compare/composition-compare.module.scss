@@ -1,0 +1,42 @@
+.dropdownContainer {
+  display: flex;
+}
+
+.leftDropdown {
+  flex: 1;
+  padding: 16px;
+}
+
+.rightDropdown {
+  flex: 1;
+  padding: 16px 16px 16px 0px;
+}
+
+.mainContainer {
+  display: flex;
+  height: 100%;
+}
+
+.subContainerLeft {
+  flex: 1;
+  background-color: #ededed;
+  padding: 16px;
+}
+
+.subContainerRight {
+  flex: 1;
+  background-color: #ededed;
+  padding: 16px 16px 16px 0px;
+}
+
+.subView {
+  height: 100%;
+  background-color: white;
+  overflow-y: scroll;
+}
+
+.loader {
+  display: flex;
+  align-items: center;
+  height: 100%;
+}

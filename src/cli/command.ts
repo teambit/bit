@@ -16,21 +16,13 @@ export interface Command {
   alias?: string;
 
   /**
-   * Description of the command in commands summery
-   * `bit -h`
-   * `bit`
-   */
-  shortDescription?: string;
-
-  /**
-   * The description of the command. Will be seen in bit command help.
-   * `bit add --help`
+   * The description of the command. Being used in the commands summery (`bit --help`) and the help (e.g. `bit create --help`).
+   * should be short and precise. not more than one line. (use extendedDescription for more info).
    */
   description?: string;
 
   /**
-   * The extended description of the command. Will be seen in bit command help, just after the description
-   * `bit add --help`
+   * The extended description of the command. Will be seen in only in the command help, just after the description.
    */
   extendedDescription?: string;
 

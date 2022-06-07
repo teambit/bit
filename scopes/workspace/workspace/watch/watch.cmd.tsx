@@ -33,20 +33,40 @@ export class WatchCommand implements Command {
         )
       );
     },
-    onChange: (filePath: string, buildResults: OnComponentEventResult[], verbose: boolean, duration) => {
+    onChange: (
+      filePaths: string[],
+      buildResults: OnComponentEventResult[],
+      verbose: boolean,
+      duration,
+      failureMsg?: string
+    ) => {
+      const files = filePaths.join(', ');
       clearOutdatedData();
       if (!buildResults.length) {
-        this.logger.console(`The file ${filePath} has been changed, but nothing to compile.\n\n`);
+        failureMsg = failureMsg || `The files ${files} have been changed, but nothing to compile`;
+        this.logger.console(`${failureMsg}\n\n`);
         return;
       }
-      this.logger.console(`The file ${filePath} has been changed.\n\n`);
+      this.logger.console(`The file(s) ${files} have been changed.\n\n`);
       this.logger.console(formatCompileResults(buildResults, verbose));
       this.logger.console(`Finished. (${duration}ms)`);
       this.logger.console(chalk.yellow(`Watching for component changes (${moment().format('HH:mm:ss')})...`));
     },
-    onAdd: (filePath: string, buildResults: OnComponentEventResult[], verbose: boolean, duration) => {
+    onAdd: (
+      filePaths: string[],
+      buildResults: OnComponentEventResult[],
+      verbose: boolean,
+      duration,
+      failureMsg?: string
+    ) => {
+      const files = filePaths.join(', ');
       clearOutdatedData();
-      this.logger.console(`The file ${filePath} has been added.\n\n`);
+      if (!buildResults.length) {
+        failureMsg = failureMsg || `The files ${files} have been added, but nothing to compile`;
+        this.logger.console(`${failureMsg}\n\n`);
+        return;
+      }
+      this.logger.console(`The file(s) ${filePaths} have been added.\n\n`);
       this.logger.console(formatCompileResults(buildResults, verbose));
       this.logger.console(`Finished. (${duration}ms)`);
       this.logger.console(chalk.yellow(`Watching for component changes (${moment().format('HH:mm:ss')})...`));
@@ -63,7 +83,6 @@ export class WatchCommand implements Command {
   description = 'watch a set of components';
   alias = '';
   group = 'development';
-  shortDescription = '';
   options = [
     ['v', 'verbose', 'showing npm verbose output for inspection and prints stack trace'],
     ['', 'skip-pre-compilation', 'skip the compilation step before starting to watch'],

@@ -17,7 +17,9 @@ import { ObjectList } from '@teambit/legacy/dist/scope/objects/object-list';
 import { Remotes } from '@teambit/legacy/dist/remotes';
 import { BitIds } from '@teambit/legacy/dist/bit-id';
 import { Http } from '@teambit/legacy/dist/scope/network/http';
-
+import LanesAspect, { LanesMain } from '@teambit/lanes';
+import { LaneId } from '@teambit/lane-id';
+import { Lane } from '@teambit/legacy/dist/scope/models';
 import { SignCmd } from './sign.cmd';
 import { SignAspect } from './sign.aspect';
 
@@ -35,11 +37,20 @@ export class SignMain {
     private scope: ScopeMain,
     private logger: Logger,
     private builder: BuilderMain,
-    private onPostSignSlot: OnPostSignSlot
+    private onPostSignSlot: OnPostSignSlot,
+    private lanes: LanesMain
   ) {}
 
-  async sign(ids: ComponentID[], isMultiple?: boolean, push?: boolean): Promise<SignResult | null> {
-    if (isMultiple) await this.scope.import(ids);
+  async sign(ids: ComponentID[], isMultiple?: boolean, push?: boolean, laneIdStr?: string): Promise<SignResult | null> {
+    let lane: Lane | undefined;
+    if (isMultiple) {
+      if (laneIdStr) {
+        const laneId = LaneId.parse(laneIdStr);
+        lane = await this.lanes.importLane(laneId);
+      }
+      await this.scope.import(ids, { lane });
+    }
+    this.lanes.importLane;
     const { componentsToSkip, componentsToSign } = await this.getComponentIdsToSign(ids);
     if (ids.length && componentsToSkip.length) {
       // eslint-disable-next-line no-console
@@ -64,7 +75,7 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
     const buildStatus = pipeWithError ? BuildStatus.Failed : BuildStatus.Succeed;
     if (push) {
       if (isMultiple) {
-        await this.exportExtensionsDataIntoScopes(legacyComponents, buildStatus);
+        await this.exportExtensionsDataIntoScopes(legacyComponents, buildStatus, lane);
       } else {
         await this.saveExtensionsDataIntoScope(legacyComponents, buildStatus);
       }
@@ -109,7 +120,7 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
     await this.scope.legacyScope.objects.persist();
   }
 
-  private async exportExtensionsDataIntoScopes(components: ConsumerComponent[], buildStatus: BuildStatus) {
+  private async exportExtensionsDataIntoScopes(components: ConsumerComponent[], buildStatus: BuildStatus, lane?: Lane) {
     const objectList = new ObjectList();
     const signComponents = await mapSeries(components, async (component) => {
       component.buildStatus = buildStatus;
@@ -120,6 +131,10 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
       objectList.mergeObjectList(objectToMerge);
       return ComponentID.fromLegacy(component.id);
     });
+    if (lane) {
+      // the components should be exported to the lane-scope, not to their original scope.
+      objectList.addScopeName(lane.scope);
+    }
     const http = await Http.connect(CENTRAL_BIT_HUB_URL, CENTRAL_BIT_HUB_NAME);
     await http.pushToCentralHub(objectList, {
       persist: true,
@@ -153,18 +168,18 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
 
   static runtime = MainRuntime;
 
-  static dependencies = [CLIAspect, ScopeAspect, LoggerAspect, BuilderAspect];
+  static dependencies = [CLIAspect, ScopeAspect, LoggerAspect, BuilderAspect, LanesAspect];
 
   static slots = [Slot.withType<OnPostSignSlot>()];
 
   static async provider(
-    [cli, scope, loggerMain, builder]: [CLIMain, ScopeMain, LoggerMain, BuilderMain],
+    [cli, scope, loggerMain, builder, lanes]: [CLIMain, ScopeMain, LoggerMain, BuilderMain, LanesMain],
     _,
     [onPostSignSlot]: [OnPostSignSlot]
   ) {
     const logger = loggerMain.createLogger(SignAspect.id);
-    const signMain = new SignMain(scope, logger, builder, onPostSignSlot);
-    cli.register(new SignCmd(signMain, scope, logger));
+    const signMain = new SignMain(scope, logger, builder, onPostSignSlot, lanes);
+    cli.register(new SignCmd(signMain));
     return signMain;
   }
 }

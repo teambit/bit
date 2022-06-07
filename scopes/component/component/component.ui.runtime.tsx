@@ -188,8 +188,8 @@ export class ComponentUI {
     );
   }
 
-  registerRoute(route: RouteProps) {
-    this.routeSlot.register(route);
+  registerRoute(routes: RouteProps[] | RouteProps) {
+    this.routeSlot.register(routes);
     return this;
   }
 
@@ -270,7 +270,6 @@ export class ComponentUI {
       reactRouterUI
     );
     const aspectSection = new AspectSection();
-
     // @ts-ignore
     componentUI.registerSearchResultWidget({ key: 'deprecation', end: DeprecationIcon });
 
@@ -278,7 +277,7 @@ export class ComponentUI {
       componentUI.commandBarUI.addCommand(...componentUI.keyBindings);
       commandBarUI.addSearcher(componentUI.componentSearcher);
     }
-    
+
     componentUI.registerMenuItem(componentUI.menuItems);
     componentUI.registerRoute(aspectSection.route);
     componentUI.registerWidget(aspectSection.navigationLink, aspectSection.order);

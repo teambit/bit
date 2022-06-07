@@ -2,16 +2,21 @@ import { ComponentContext } from '@teambit/component';
 import classNames from 'classnames';
 import React, { useContext, useState, HTMLAttributes, useMemo } from 'react';
 import { flatten } from 'lodash';
+import { Label } from '@teambit/documenter.ui.label';
 import { SplitPane, Pane, Layout } from '@teambit/base-ui.surfaces.split-pane.split-pane';
 import { HoverSplitter } from '@teambit/base-ui.surfaces.split-pane.hover-splitter';
 import { Collapser } from '@teambit/ui-foundation.ui.buttons.collapser';
 import { useCode } from '@teambit/code.ui.queries.get-component-code';
-import { getFileIcon, FileIconMatch } from '@teambit/code.ui.utils.get-file-icon';
 import type { FileIconSlot } from '@teambit/code';
 import { CodeView } from '@teambit/code.ui.code-view';
 import { CodeTabTree } from '@teambit/code.ui.code-tab-tree';
-import { useCodeParams } from '@teambit/code.ui.hooks.use-code-params';
 import { useIsMobile } from '@teambit/ui-foundation.ui.hooks.use-is-mobile';
+import { WidgetProps } from '@teambit/ui-foundation.ui.tree.tree-node';
+import { getFileIcon, FileIconMatch } from '@teambit/code.ui.utils.get-file-icon';
+import { useCodeParams } from '@teambit/code.ui.hooks.use-code-params';
+import { TreeNode } from '@teambit/design.ui.tree';
+import { affix } from '@teambit/base-ui.utils.string.affix';
+
 import styles from './code-tab-page.module.scss';
 
 type CodePageProps = {
@@ -50,11 +55,30 @@ export function CodePage({ className, fileIconSlot }: CodePageProps) {
           currentFile={currentFile}
           dependencies={dependencies}
           fileTree={fileTree}
-          devFiles={devFiles}
-          mainFile={mainFile}
-          fileIconMatchers={fileIconMatchers}
+          widgets={useMemo(() => [generateWidget(mainFile, devFiles)], [mainFile, devFiles])}
+          getHref={useMemo(() => (node) => `${node.id}${affix('?version=', urlParams.version)}`, [urlParams.version])}
+          getIcon={useMemo(() => generateIcon(fileIconMatchers), fileIconMatchers)}
         />
       </Pane>
     </SplitPane>
   );
+}
+
+function generateWidget(mainFile?: string, devFiles?: string[]) {
+  return function Widget({ node }: WidgetProps<any>) {
+    const fileName = node?.id;
+    if (fileName === mainFile) {
+      return <Label className={styles.label}>main</Label>;
+    }
+    if (devFiles?.includes(fileName)) {
+      return <Label className={styles.label}>dev</Label>;
+    }
+    return null;
+  };
+}
+
+function generateIcon(fileIconMatchers: FileIconMatch[]) {
+  return function Icon({ id }: TreeNode) {
+    return getFileIcon(fileIconMatchers, id);
+  };
 }

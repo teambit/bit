@@ -2,12 +2,14 @@ import { ComponentType } from 'react';
 import { UIRuntime } from '@teambit/ui';
 import { SlotRegistry, Slot } from '@teambit/harmony';
 import { ComponentAspect, ComponentUI } from '@teambit/component';
+import { ComponentCompareUI, ComponentCompareAspect } from '@teambit/component-compare';
 import { TestsSection } from './tests.section';
 import { TesterAspect } from './tester.aspect';
+import { TesterCompareSection } from './tester.compare.section';
 
 export type EmptyStateSlot = SlotRegistry<ComponentType>;
 export class TesterUI {
-  static dependencies = [ComponentAspect];
+  static dependencies = [ComponentAspect, ComponentCompareAspect];
 
   static runtime = UIRuntime;
 
@@ -25,14 +27,21 @@ export class TesterUI {
 
   static slots = [Slot.withType<ComponentType>()];
 
-  static async provider([component]: [ComponentUI], config, [emptyStateSlot]: [EmptyStateSlot]) {
+  static async provider(
+    [component, componentCompare]: [ComponentUI, ComponentCompareUI],
+    config,
+    [emptyStateSlot]: [EmptyStateSlot]
+  ) {
     const testerUi = new TesterUI(component, emptyStateSlot);
-
     const section = new TestsSection(emptyStateSlot);
-
+    const testerCompareSection = new TesterCompareSection(emptyStateSlot);
     component.registerRoute(section.route);
     component.registerNavigation(section.navigationLink, section.order);
-
+    componentCompare.registerNavigation({
+      props: testerCompareSection.navigationLink,
+      order: testerCompareSection.navigationLink.order,
+    });
+    componentCompare.registerRoutes([testerCompareSection.route]);
     return testerUi;
   }
 }

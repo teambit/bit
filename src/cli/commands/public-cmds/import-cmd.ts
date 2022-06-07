@@ -16,11 +16,10 @@ import { CommandOptions, LegacyCommand } from '../../legacy-command';
 
 export default class Import implements LegacyCommand {
   name = 'import [ids...]';
-  shortDescription = 'import components into your current working area';
+  description = 'import components into your workspace';
   group: Group = 'collaborate';
-  description = `import components into your current workspace.
-  https://${BASE_DOCS_DOMAIN}/components/importing-components
-  ${WILDCARD_HELP('import')}`;
+  extendedDescription = `https://${BASE_DOCS_DOMAIN}/components/importing-components
+${WILDCARD_HELP('import')}`;
   alias = '';
   opts = [
     ['t', 'tester', 'import a tester environment component'],

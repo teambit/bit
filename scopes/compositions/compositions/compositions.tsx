@@ -118,14 +118,14 @@ export function Compositions({ menuBarWidgets, emptyState }: CompositionsProp) {
   );
 }
 
-type CompositionContentProps = {
+export type CompositionContentProps = {
   component: ComponentModel;
   selected?: Composition;
   queryParams?: string | string[];
   emptyState?: EmptyStateSlot;
 };
 
-function CompositionContent({ component, selected, queryParams, emptyState }: CompositionContentProps) {
+export function CompositionContent({ component, selected, queryParams, emptyState }: CompositionContentProps) {
   const env = component.environment?.id;
   const EmptyStateTemplate = emptyState?.get(env || ''); // || defaultTemplate;
 

@@ -13,11 +13,12 @@ import { CommandOptions, LegacyCommand } from '../../legacy-command';
 
 export default class Checkout implements LegacyCommand {
   name = 'checkout [values...]';
-  shortDescription = 'switch between component versions';
+  description = 'switch between component versions or remove local changes';
   group: Group = 'development';
-  description = `switch between component versions or remove local changes
+  extendedDescription = `
   \`bit checkout <version> [ids...]\` => checkout the specified ids (or all components when --all is used) to the specified version
-  \`bit checkout latest [ids...]\` => checkout the specified ids (or all components when --all is used) to their latest versions
+  \`bit checkout latest\` => checkout all components to their latest versions
+  \`bit checkout latest [ids...]\` => checkout the specified ids to their latest versions
   \`bit checkout [ids...] --reset\` => remove local modifications from the specified ids (or all components when --all is used)
   ${WILDCARD_HELP('checkout 0.0.1')}`;
   alias = 'U';

@@ -6,10 +6,9 @@ import { CommandOptions, LegacyCommand } from '../../legacy-command';
 
 export default class Diff implements LegacyCommand {
   name = 'diff [values...]';
-  shortDescription = 'show diff between components files';
   group: Group = 'development';
-  description = `show diff between components files
-  bit diff => compare all modified components to their model version
+  description = 'show diff between components files';
+  extendedDescription = `bit diff => compare all modified components to their model version
   bit diff [ids...] => compare the specified components against their modified states
   bit diff [id] [version] => compare the specified version to used or modified files
   bit diff [id] [version] [to_version] => compare the specified version files to to_version files

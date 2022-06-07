@@ -15,9 +15,9 @@ let verboseReport = false;
 export default class Test implements LegacyCommand {
   // TODO: call old tester from harmony in case legacy
   name = 'test [id]';
-  shortDescription = 'test any set of components with configured tester (component tester or as defined in bit.json)';
+  description = 'test any set of components with configured tester (component tester or as defined in bit.json)';
   group: Group = 'development';
-  description = `test any set of components with a configured tester as defined in bit.json (by default applies only on modified components)\n  https://${BASE_LEGACY_DOCS_DOMAIN}/docs/testing-components)`;
+  extendedDescription = `test any set of components with a configured tester as defined in bit.json (by default applies only on modified components)\n  https://${BASE_LEGACY_DOCS_DOMAIN}/docs/testing-components)`;
   alias = '';
   opts = [
     ['a', 'all', 'test all components in your workspace, including unmodified components'],
