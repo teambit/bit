@@ -30,6 +30,7 @@ import {
   ClassDecelerationTransformer,
   InterfaceDeclarationTransformer,
   EnumDeclarationTransformer,
+  BindingElementTransformer,
 } from './transformers';
 import { CheckTypesCmd } from './cmds/check-types.cmd';
 
@@ -261,6 +262,7 @@ export class TypescriptMain {
       new ClassDecelerationTransformer(),
       new InterfaceDeclarationTransformer(),
       new EnumDeclarationTransformer(),
+      new BindingElementTransformer(),
     ]);
 
     if (workspace) {
