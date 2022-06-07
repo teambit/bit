@@ -9,9 +9,9 @@ import linkTemplate from '../../templates/link-template';
 
 export default class Link implements LegacyCommand {
   name = 'link [ids...]';
-  shortDescription = 'Generate symlinks for imported components absolute path resolution.';
+  description = 'Generate symlinks for imported components absolute path resolution.';
   group: Group = 'collaborate';
-  description = `generate symlinks to resolve module paths for imported components.\n  https://${BASE_DOCS_DOMAIN}/workspace/component-links`;
+  extendedDescription = `generate symlinks to resolve module paths for imported components.\n  https://${BASE_DOCS_DOMAIN}/workspace/component-links`;
   alias = 'b';
   opts = [
     ['j', 'json', 'return the output as JSON'],

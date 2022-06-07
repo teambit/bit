@@ -9,12 +9,18 @@ import { schemaObjToInstance } from '../class-transformers';
 export class VariableSchema extends SchemaNode {
   @Transform(schemaObjToInstance)
   type: SchemaNode;
-  constructor(readonly location: Location, readonly name: string, readonly signature: string, type: SchemaNode) {
+  constructor(
+    readonly location: Location,
+    readonly name: string,
+    readonly signature: string,
+    type: SchemaNode,
+    readonly isOptional: boolean
+  ) {
     super();
     this.type = type;
   }
 
   toString() {
-    return `${chalk.bold(this.name)}: ${this.type.toString()}`;
+    return `${chalk.bold(this.name)}${this.isOptional ? '?' : ''}: ${this.type.toString()}`;
   }
 }

@@ -21,7 +21,6 @@ export class StartCmd implements Command {
   description = 'Start a dev environment for a workspace or a specific component';
   alias = 'c';
   group = 'development';
-  shortDescription = '';
   options = [
     ['d', 'dev', 'start UI server in dev mode.'],
     ['p', 'port [number]', 'port of the UI server.'],

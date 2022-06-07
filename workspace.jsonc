@@ -20,6 +20,7 @@
         "@mdx-js/loader": "1.6.21",
         "@mdx-js/mdx": "1.6.21",
         "@mdx-js/react": "1.6.22",
+        "@monaco-editor/react": "4.4.2",
         "@pmmmwh/react-refresh-webpack-plugin": "0.5.4",
         "@pnpm/client": "6.1.4",
         "@pnpm/colorize-semver-diff": "1.0.1",
@@ -371,7 +372,7 @@
       },
       "peerDependencies": {
         "@apollo/client": "^3.0.0",
-        "@teambit/legacy": "1.0.276",
+        "@teambit/legacy": "1.0.277",
         "@teambit/base-react.navigation.link": "2.0.27",
         "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
         "browserslist": "4.16.3",
@@ -455,7 +456,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.276"
+            "@teambit/legacy": "1.0.277"
           }
         }
       },
@@ -718,7 +719,7 @@
           "peerDependencies": {
             "react": "^16.8.0 || ^17.0.0",
             "react-dom": "^16.8.0 || ^17.0.0",
-            "@teambit/legacy": "1.0.276"
+            "@teambit/legacy": "1.0.277"
           }
         }
       }
@@ -804,7 +805,7 @@
             "@teambit/base-react.navigation.link": "2.0.27",
             "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
             "@apollo/client": "3.3.6",
-            "@teambit/legacy": "1.0.276",
+            "@teambit/legacy": "1.0.277",
             "graphql": "14.7.0",
             "browserslist": "4.16.3",
             "reflect-metadata": "0.1.13",
@@ -938,7 +939,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.276"
+            "@teambit/legacy": "1.0.277"
           }
         }
       }

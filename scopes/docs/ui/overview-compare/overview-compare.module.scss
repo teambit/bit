@@ -1,0 +1,29 @@
+.checkboxContainer {
+  margin-top: 16px;
+}
+
+.subView {
+  height: 100%;
+  background-color: white;
+  overflow: auto;
+}
+
+.loader {
+  display: flex;
+  align-items: center;
+  height: 100%;
+}
+
+.toggleContainer {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+
+  .toggle {
+    margin-right: 8px;
+  }
+}
+
+.splitLayout {
+  margin-top: 8px;
+}

@@ -13,11 +13,10 @@ import paintRemoved from '../../templates/remove-template';
 
 export default class Remove implements LegacyCommand {
   name = 'remove <ids...>';
-  shortDescription = 'remove component(s) from your working area, or a remote scope';
+  description = 'remove component(s) from your workspace, or a remote scope';
   group: Group = 'collaborate';
-  description = `remove a component (local/remote)
-  https://${BASE_DOCS_DOMAIN}/components/removing-components
-  ${WILDCARD_HELP('remove')}`;
+  extendedDescription = `https://${BASE_DOCS_DOMAIN}/components/removing-components
+${WILDCARD_HELP('remove')}`;
   skipWorkspace = true;
   alias = 'rm';
   opts = [

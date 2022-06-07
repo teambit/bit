@@ -14,7 +14,6 @@ export class PublishCmd implements Command {
     ['', 'allow-staged', 'allow publish components that were not exported yet (not recommended)'],
     ['j', 'json', 'return the output as JSON'],
   ] as CommandOptions;
-  shortDescription = '';
   alias = '';
   private = true;
   group = 'collaborate';

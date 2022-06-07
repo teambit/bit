@@ -1,0 +1,21 @@
+$success: #37b26c;
+$borderLabelHeight: 20px;
+
+.root {
+  border-color: $success;
+  border-top-width: 20px;
+
+  border-radius: 10px;
+  box-shadow: 0px 0px 0px 2px #d0f1de, var(--bit-shadow-hover-medium);
+
+  &:before {
+    content: 'Current component';
+    position: absolute;
+    top: 1px;
+    left: 10px;
+
+    font-size: $borderLabelHeight * 0.5;
+    color: white;
+    line-height: $borderLabelHeight;
+  }
+}

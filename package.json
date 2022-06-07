@@ -1,6 +1,6 @@
 {
   "name": "@teambit/legacy",
-  "version": "1.0.276",
+  "version": "1.0.277",
   "license": "Apache-2.0",
   "main": "./dist/api.js",
   "preferGlobal": true,
@@ -106,7 +106,8 @@
     "build:ext": "tsc -p tsconfig.extensions.json",
     "build:pjson": "cp package.json dist/",
     "build:src": "babel src -d dist --verbose --extensions \".ts,.tsx,.js\" --copy-files",
-    "generate-cli-reference": "bit cli generate > scopes/harmony/cli-reference/cli-reference.mdx && prettier scopes/harmony/cli-reference/cli-reference.mdx --write"
+    "generate-cli-reference": "bit cli generate > scopes/harmony/cli-reference/cli-reference.mdx && prettier scopes/harmony/cli-reference/cli-reference.mdx --write",
+    "generate-cli-reference-json": "bit cli generate --json > scopes/harmony/cli-reference/cli-reference.json"
   },
   "dependencies": {
     "@teambit/defender.fs.global-bit-temp-dir": "0.0.1",
