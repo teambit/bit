@@ -44,8 +44,8 @@ export default class ImportCmd implements Command {
     ['', 'dependents', 'EXPERIMENTAL. import component dependents to allow auto-tag updating them upon tag'],
     [
       '',
-      'skip-lane',
-      'EXPERIMENTAL. when checked out to a lane, do not import the component into the lane, save it on main',
+      'save-in-lane',
+      'EXPERIMENTAL. when checked out to a lane and the component is not on the remote-lane, save it in the lane (default to save on main)',
     ],
     [
       '',
@@ -76,7 +76,7 @@ ${WILDCARD_HELP('import')}`;
       skipNpmInstall = false,
       skipDependencyInstallation = false,
       merge,
-      skipLane = false,
+      saveInLane = false,
       dependencies = false,
       dependents = false,
       allHistory = false,
@@ -91,7 +91,7 @@ ${WILDCARD_HELP('import')}`;
       skipNpmInstall?: boolean;
       skipDependencyInstallation?: boolean;
       merge?: MergeStrategy;
-      skipLane?: boolean;
+      saveInLane?: boolean;
       dependencies?: boolean;
       dependents?: boolean;
       allHistory?: boolean;
@@ -135,7 +135,7 @@ ${WILDCARD_HELP('import')}`;
       override,
       writeConfig: Boolean(conf),
       installNpmPackages: !skipDependencyInstallation,
-      skipLane,
+      saveInLane,
       importDependenciesDirectly: dependencies,
       importDependents: dependents,
       allHistory,
