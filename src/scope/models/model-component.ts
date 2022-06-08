@@ -934,6 +934,13 @@ make sure to call "getAllIdsAvailableOnLane" and not "getAllBitIdsFromAllLanes"`
     return this.switchHashesWithTagsIfExist(localHashes).reverse(); // reverse to get the older first
   }
 
+  getLocalHashes(): Ref[] {
+    const divergeData = this.getDivergeData();
+    const localHashes = divergeData.snapsOnLocalOnly;
+    if (!localHashes.length) return [];
+    return localHashes.reverse(); // reverse to get the older first
+  }
+
   /**
    * for most cases, use `isLocallyChanged`, which takes into account lanes.
    * this is for cases when we only care about the versions exist in the `state` prop.

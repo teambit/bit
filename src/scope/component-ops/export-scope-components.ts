@@ -12,7 +12,7 @@ import replacePackageName from '../../utils/string/replace-package-name';
 import ComponentObjects from '../component-objects';
 import { ComponentNotFound, MergeConflict, MergeConflictOnRemote } from '../exceptions';
 import ComponentNeedsUpdate from '../exceptions/component-needs-update';
-import { Lane, ModelComponent, Symlink, Version } from '../models';
+import { Lane, ModelComponent, Symlink, Version, ExportMetadata } from '../models';
 import Source from '../models/source';
 import { BitObject, Ref } from '../objects';
 import Scope from '../scope';
@@ -25,6 +25,7 @@ import { getAllVersionHashes } from './traverse-versions';
 import { PersistFailed } from '../exceptions/persist-failed';
 import { Http } from '../network/http';
 import { MergeResult } from '../repositories/sources';
+import { ExportVersions } from '../models/export-metadata';
 
 type ModelComponentAndObjects = { component: ModelComponent; objects: BitObject[] };
 
@@ -121,6 +122,7 @@ export async function exportMany({
     .join(', ');
   logger.debug(`export-scope-components, export to the following scopes ${groupedByScopeString}`);
   let manyObjectsPerRemote: ObjectsPerRemote[];
+  const exportVersions: ExportVersions[] = [];
   if (isLegacy) {
     manyObjectsPerRemote = remoteName
       ? [await getUpdatedObjectsToExportLegacy(remoteName, ids)]
@@ -174,8 +176,19 @@ export async function exportMany({
     );
   }
 
+  async function getExportMetadata(): Promise<ObjectItem> {
+    const exportMetadata = new ExportMetadata({ exportVersions });
+    const exportMetadataObj = await exportMetadata.compress();
+    const exportMetadataItem: ObjectItem = {
+      ref: exportMetadata.hash(),
+      buffer: exportMetadataObj,
+    };
+    return exportMetadataItem;
+  }
+
   async function pushAllToCentralHub() {
     const objectList = transformToOneObjectListWithScopeData(manyObjectsPerRemote);
+    objectList.addIfNotExist([await getExportMetadata()]);
     const http = await Http.connect(CENTRAL_BIT_HUB_URL, CENTRAL_BIT_HUB_NAME);
     const pushResults = await http.pushToCentralHub(objectList);
     const { failedScopes, successIds, errors } = pushResults;
@@ -382,6 +395,7 @@ this scope already has a component with the same name. as such, it'll be impossi
   }
 
   async function getVersionsToExport(modelComponent: ModelComponent, lane?: Lane): Promise<string[]> {
+    exportVersions.push({ id: modelComponent.toBitId(), versions: modelComponent.getLocalHashes() });
     if (!allVersions && !lane) {
       // if lane is exported, components from other remotes may be exported to this remote. we need their history.
       return modelComponent.getLocalTagsOrHashes();
