@@ -5,6 +5,7 @@ import { Toggle } from '@teambit/design.ui.input.toggle';
 import { H4 } from '@teambit/documenter.ui.heading';
 import classNames from 'classnames';
 import React, { HTMLAttributes, useMemo, useRef, useState } from 'react';
+import { RoundLoader } from '@teambit/design.ui.round-loader';
 import { darkMode } from '@teambit/base-ui.theme.dark-theme';
 import styles from './code-compare-view.module.scss';
 
@@ -63,14 +64,19 @@ export function CodeCompareView({ className, base, compare, fileName }: CodeComp
       modified={modifiedFileContent}
       original={originalFileContent}
       language={language}
-      height={'100vh'}
+      height={'100%'}
       onMount={handleEditorDidMount}
-      className={darkMode}
+      className={classNames(darkMode, styles.editor)}
       theme={'vs-dark'}
       options={{
         ignoreTrimWhitespace: ignoreWhitespace,
         readOnly: true,
       }}
+      loading={
+        <div className={styles.loader}>
+          <RoundLoader />
+        </div>
+      }
     />
   );
 

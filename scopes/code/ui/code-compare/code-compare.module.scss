@@ -2,8 +2,9 @@
 $panelBg: #fafafa;
 
 .componentCompareCodeContainer {
+  // adjust for nav
+  min-height: calc(100% - 56px);
   display: flex;
-  height: 100%;
   width: 100%;
 }
 

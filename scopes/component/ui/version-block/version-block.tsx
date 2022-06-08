@@ -3,9 +3,10 @@ import { Contributors } from '@teambit/design.ui.contributors';
 import { Link } from '@teambit/base-react.navigation.link';
 import { Labels } from '@teambit/component.ui.version-label';
 import classNames from 'classnames';
-import { LegacyComponentLog } from '@teambit/legacy-component-log';
 import React, { HTMLAttributes, useMemo } from 'react';
+import { LegacyComponentLog } from '@teambit/legacy-component-log';
 import { LanesModel, useLanesContext } from '@teambit/lanes.ui.lanes';
+import { Tooltip } from '@teambit/design.ui.tooltip';
 
 import styles from './version-block.module.scss';
 
@@ -47,11 +48,13 @@ export function VersionBlock({ isLatest, className, snap, componentId, isCurrent
         <div className={styles.placeholder} />
       </div>
       <div className={classNames(styles.right, className)} {...rest}>
-        <Link className={styles.titleLink} href={`${currentLaneUrl}/${componentId}?version=${version}`}>
-          <H3 size="xs" className={styles.versionTitle}>
-            {tag ? `v${tag}` : hash}
-          </H3>
-        </Link>
+        <Tooltip placement="right" content={hash}>
+          <Link className={styles.titleLink} href={`${currentLaneUrl}/${componentId}?version=${version}`}>
+            <H3 size="xs" className={styles.versionTitle}>
+              {tag ? `v${tag}` : hash}
+            </H3>
+          </Link>
+        </Tooltip>
         <Contributors contributors={[author || {}]} timestamp={timestamp} />
         {commitMessage(message)}
       </div>
