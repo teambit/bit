@@ -98,9 +98,7 @@ export default class ImportComponents {
       this.options.saveDependenciesAsComponents = true;
     }
     if (this.options.lanes && !this.options.ids.length) {
-      // @todo: uncomment this once the code is deployed to the server
-      // return this.importObjectsOnLane();
-      return this.importSpecificComponents();
+      return this.importObjectsOnLane();
     }
     if (this.options.ids.length) {
       return this.importSpecificComponents();
