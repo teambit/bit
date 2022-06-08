@@ -55,7 +55,7 @@ async function createStoreController(
     verifyStoreIntegrity: true,
     httpProxy: options.proxyConfig?.httpProxy,
     httpsProxy: options.proxyConfig?.httpsProxy,
-    ca: options.proxyConfig?.ca,
+    ca: options.proxyConfig?.ca as string,
     cert: options.proxyConfig?.cert,
     key: options.proxyConfig?.key,
     localAddress: options.networkConfig?.localAddress,
