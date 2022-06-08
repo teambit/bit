@@ -7,7 +7,7 @@ import { getProxyAgent } from '@teambit/toolbox.network.proxy-agent';
 const HttpsAgent = HttpAgent.HttpsAgent;
 
 export interface AgentOptions {
-  ca?: string;
+  ca?: string | string[];
   cert?: string;
   httpProxy?: string;
   httpsProxy?: string;

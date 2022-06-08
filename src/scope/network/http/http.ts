@@ -2,6 +2,7 @@ import { ClientError, gql, GraphQLClient } from 'graphql-request';
 import fetch, { Response } from 'node-fetch';
 import readLine from 'readline';
 import HttpAgent from 'agentkeepalive';
+import { readCAFileSync } from '@pnpm/network.ca-file';
 
 import { HttpsProxyAgent } from 'https-proxy-agent';
 import { SocksProxyAgent } from 'socks-proxy-agent';
@@ -23,6 +24,7 @@ import {
   CFG_PROXY,
   CFG_USER_TOKEN_KEY,
   CFG_PROXY_CA,
+  CFG_PROXY_CA_FILE,
   CFG_PROXY_CERT,
   CFG_PROXY_KEY,
   CFG_PROXY_NO_PROXY,
@@ -53,7 +55,7 @@ export enum Verb {
 }
 
 export type ProxyConfig = {
-  ca?: string;
+  ca?: string | string[];
   cert?: string;
   httpProxy?: string;
   httpsProxy?: string;
@@ -113,7 +115,7 @@ export class Http implements Network {
     }
 
     return {
-      ca: obj[CFG_PROXY_CA],
+      ca: Http.getCA(obj),
       cert: obj[CFG_PROXY_CERT],
       httpProxy,
       httpsProxy,
@@ -121,6 +123,13 @@ export class Http implements Network {
       noProxy: obj[CFG_PROXY_NO_PROXY],
       strictSSL: obj[CFG_PROXY_STRICT_SSL],
     };
+  }
+
+  static getCA (obj: any): string[] | undefined {
+    if (obj[CFG_PROXY_CA]) return obj[CFG_PROXY_CA];
+    const caFile = obj[CFG_PROXY_CA_FILE];
+    if (!caFile) return undefined;
+    return readCAFileSync(caFile);
   }
 
   static async getNetworkConfig(): Promise<NetworkConfig> {
