@@ -434,14 +434,15 @@ export default class Consumer {
   async importComponentsObjectsHarmony(
     ids: BitIds,
     fromOriginalScope = false,
-    allHistory = false
+    allHistory = false,
+    lane?: Lane
   ): Promise<ComponentWithDependencies[]> {
     const scopeComponentsImporter = ScopeComponentsImporter.getInstance(this.scope);
-    await scopeComponentsImporter.importManyDeltaWithoutDeps(ids, allHistory);
+    await scopeComponentsImporter.importManyDeltaWithoutDeps(ids, allHistory, lane);
     loader.start(`import ${ids.length} components with their dependencies (if missing)`);
     const versionDependenciesArr: VersionDependencies[] = fromOriginalScope
       ? await scopeComponentsImporter.importManyFromOriginalScopes(ids)
-      : await scopeComponentsImporter.importMany({ ids });
+      : await scopeComponentsImporter.importMany({ ids, lanes: lane ? [lane] : undefined });
     const componentWithDependencies = await multipleVersionDependenciesToConsumer(
       versionDependenciesArr,
       this.scope.objects

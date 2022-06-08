@@ -37,12 +37,14 @@ export function ComponentCompareAspects({ host, className }: ComponentCompareAsp
               <RoundLoader />
             </div>
           )}
-          <CompareAspectView
-            name={selected}
-            baseAspectData={selectedBase}
-            compareAspectData={selectedCompare}
-            loading={loading}
-          />
+          {loading || (
+            <CompareAspectView
+              name={selected}
+              baseAspectData={selectedBase}
+              compareAspectData={selectedCompare}
+              loading={loading}
+            />
+          )}
         </Pane>
         <HoverSplitter className={styles.splitter}>
           <Collapser

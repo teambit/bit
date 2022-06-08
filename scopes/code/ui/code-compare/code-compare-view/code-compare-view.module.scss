@@ -1,10 +1,26 @@
+/**
+  * TODO: Review this
+  *
+  * Monaco container is not flex so providing it a fixed calculated height
+  * so it can fill up the remaining space correctly instead of overflowing
+  * editor header: h4 (48px) + padding (16px) + 
+  * ignoreWhitespace (24px) + 
+  * editor padding (8px)= 96px
+  */
+$editor-padding: 96px;
+
 .componentCompareCodeViewContainer {
   width: 100%;
   height: 100%;
 }
 .componentCompareCodeDiffEditorContainer {
-  height: 100%;
-  padding: 8px 16px;
+  height: calc(100% - $editor-padding);
+  padding: 8px 16px 0px 16px;
+
+  > section {
+    overflow: hidden;
+    border-radius: 8px;
+  }
 }
 
 .fileName {
@@ -17,6 +33,7 @@
   color: var(--bit-text-color, #414141);
   width: fit-content;
   padding: 0px 8px;
+  height: 24px;
 }
 
 .toggleContainer {
@@ -28,4 +45,12 @@
   .toggle {
     margin-right: 8px;
   }
+}
+
+.loader {
+  display: flex;
+  align-items: center;
+  justify-items: center;
+  height: 100%;
+  width: 100%;
 }

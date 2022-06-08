@@ -2,7 +2,7 @@ import React, { HTMLAttributes } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import classNames from 'classnames';
 import { docsFile } from '@teambit/documenter.types.docs-file';
-import { isFunction } from 'ramda-adjunct';
+import { isFunction } from 'lodash';
 import { Composer } from '@teambit/base-ui.utils.composer';
 import { MDXLayout } from '@teambit/mdx.ui.mdx-layout';
 import { ErrorFallback } from '@teambit/react.ui.error-fallback';
