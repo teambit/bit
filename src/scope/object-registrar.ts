@@ -4,6 +4,7 @@ export default function types() {
   return [Source, ModelComponent, Version, ScopeMeta, Symlink, Lane, ExportMetadata];
 }
 
+// it's possible to define the return type as `{ [typeName: string]: Types[0] }`. not sure if it makes sense
 export function typesToObject(typesArr: Function[]) {
   return typesArr.reduce((map, objectType) => {
     map[objectType.name] = objectType;

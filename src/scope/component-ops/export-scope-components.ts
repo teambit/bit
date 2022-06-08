@@ -182,6 +182,7 @@ export async function exportMany({
     const exportMetadataItem: ObjectItem = {
       ref: exportMetadata.hash(),
       buffer: exportMetadataObj,
+      type: ExportMetadata.name,
     };
     return exportMetadataItem;
   }
