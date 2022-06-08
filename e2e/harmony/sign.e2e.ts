@@ -117,7 +117,7 @@ describe('sign command', function () {
     });
     describe('running bit import on the workspace', () => {
       before(() => {
-        helper.command.importAllComponents();
+        helper.command.import('--all-history');
       });
       it('should bring the updated Version from the remote', () => {
         const comp1 = helper.command.catComponent(`${helper.scopes.remote}/bar@latest`);
