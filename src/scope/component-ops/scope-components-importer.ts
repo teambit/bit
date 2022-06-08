@@ -28,6 +28,7 @@ import VersionDependencies from '../version-dependencies';
 import { BitObjectList } from '../objects/bit-object-list';
 import { ObjectFetcher } from '../objects-fetcher/objects-fetcher';
 import { concurrentComponentsLimit } from '../../utils/concurrency';
+import { BuildStatus } from '../../constants';
 
 const removeNils = R.reject(R.isNil);
 
@@ -82,9 +83,10 @@ export default class ScopeComponentsImporter {
   }): Promise<VersionDependencies[]> {
     logger.debugAndAddBreadCrumb(
       'importMany',
-      `cache ${cache}, throwForDependencyNotFound: ${throwForDependencyNotFound}. ids: {ids}`,
+      `cache ${cache}, throwForDependencyNotFound: ${throwForDependencyNotFound}. ids: {ids}, lanes: {lanes}`,
       {
         ids: ids.toString(),
+        lanes: lanes ? lanes.map((lane) => lane.id()).join(', ') : undefined,
       }
     );
     const idsToImport = compact(ids.filter((id) => id.hasScope()));
@@ -232,7 +234,7 @@ export default class ScopeComponentsImporter {
    * delta between the local head and the remote head. mainly to improve performance
    * not applicable and won't work for legacy. for legacy, refer to importManyWithAllVersions
    */
-  async importManyDeltaWithoutDeps(ids: BitIds, allHistory = false): Promise<void> {
+  async importManyDeltaWithoutDeps(ids: BitIds, allHistory = false, lane?: Lane): Promise<void> {
     logger.debugAndAddBreadCrumb('importManyDeltaWithoutDeps', `Ids: {ids}`, { ids: ids.toString() });
     const idsWithoutNils = BitIds.uniqFromArray(compact(ids));
     if (R.isEmpty(idsWithoutNils)) return;
@@ -243,8 +245,7 @@ export default class ScopeComponentsImporter {
         // remove the version to fetch it with all versions.
         return id.changeVersion(undefined);
       }
-      // @todo: fix to consider local lane
-      const remoteLaneId = LaneId.from(DEFAULT_LANE, id.scope as string);
+      const remoteLaneId = lane ? lane.toLaneId() : LaneId.from(DEFAULT_LANE, id.scope as string);
       const remoteHead = await this.repo.remoteLanes.getRef(remoteLaneId, id);
       if (!remoteHead) {
         return id.changeVersion(undefined);
@@ -258,7 +259,7 @@ export default class ScopeComponentsImporter {
       }
       return id.changeVersion(remoteHead.toString());
     });
-    const groupedIds = groupByScopeName(idsToFetch);
+    const groupedIds = lane ? groupByLanes(idsToFetch, [lane]) : groupByScopeName(idsToFetch);
     const idsOnlyDelta = idsToFetch.filter((id) => id.hasVersion());
     const idsAllHistory = idsToFetch.filter((id) => !id.hasVersion());
     const remotesCount = Object.keys(groupedIds).length;
@@ -273,8 +274,10 @@ export default class ScopeComponentsImporter {
       {
         type: 'component-delta',
         withoutDependencies: true,
+        laneId: lane ? lane.id() : undefined,
       },
-      idsToFetch
+      idsToFetch,
+      lane ? [lane] : undefined
     ).fetchFromRemoteAndWrite();
   }
 
@@ -338,7 +341,7 @@ export default class ScopeComponentsImporter {
     return compact(componentVersionArr);
   }
 
-  async fetchWithDeps(ids: BitIds, allowExternal: boolean): Promise<VersionDependencies[]> {
+  async fetchWithDeps(ids: BitIds, allowExternal: boolean, onlyIfBuild = false): Promise<VersionDependencies[]> {
     logger.debugAndAddBreadCrumb('fetchWithDeps', `ids: {ids}`, { ids: ids.toString() });
     if (!allowExternal) this.throwIfExternalFound(ids);
     // avoid race condition of getting multiple "fetch" requests, which later translates into
@@ -346,7 +349,7 @@ export default class ScopeComponentsImporter {
     return this.fetchWithDepsMutex.runExclusive(async () => {
       logger.debug('fetchWithDeps, acquiring a lock');
       const localDefs: ComponentDef[] = await this.sources.getMany(ids);
-      const versionDeps = await this.multipleCompsDefsToVersionDeps(localDefs);
+      const versionDeps = await this.multipleCompsDefsToVersionDeps(localDefs, undefined, onlyIfBuild);
       logger.debug('fetchWithDeps, releasing the lock');
       return versionDeps;
     });
@@ -453,7 +456,8 @@ export default class ScopeComponentsImporter {
 
   private async multipleCompsDefsToVersionDeps(
     compsDefs: ComponentDef[],
-    lanes: Lane[] = []
+    lanes: Lane[] = [],
+    onlyIfBuilt = false
   ): Promise<VersionDependencies[]> {
     const concurrency = concurrentComponentsLimit();
     const componentsWithVersionsWithNulls = await pMap(
@@ -473,6 +477,14 @@ export default class ScopeComponentsImporter {
         const version = await this.getVersionFromComponentDef(component, id);
         if (!version) {
           throw new Error(`ScopeComponentImporter, expect ${id.toString()} to have a Version object`);
+        }
+        if (onlyIfBuilt && version.buildStatus !== BuildStatus.Succeed) {
+          logger.debug(
+            `multipleCompsDefsToVersionDeps, id: ${id.toString()} is skipped because its build-status is ${
+              version.buildStatus
+            }`
+          );
+          return null;
         }
 
         return { componentVersion: versionComp, versionObj: version };
@@ -508,21 +520,29 @@ export default class ScopeComponentsImporter {
     lanes: Lane[] = []
   ): Promise<VersionDependencies[]> {
     if (!ids.length) return [];
-    logger.debugAndAddBreadCrumb('ScopeComponentsImporter.getExternalMany', `fetching from remote scope. Ids: {ids}`, {
-      ids: ids.join(', '),
-    });
+    logger.debugAndAddBreadCrumb(
+      'ScopeComponentsImporter.getExternalMany',
+      `fetching from remote scope. Ids: {ids}, Lanes: {lanes}`,
+      {
+        ids: ids.join(', '),
+        lanes: lanes.map((lane) => lane.id()).join(', '),
+      }
+    );
     const context = {};
     ids.forEach((id) => {
       if (id.isLocal(this.scope.name))
         throw new Error(`getExternalMany expects to get external ids only, got ${id.toString()}`);
     });
     enrichContextFromGlobal(Object.assign({}, { requestedBitIds: ids.map((id) => id.toString()) }));
+    // avoid re-fetching the components with all deps if they're still un-built
+    const onlyIfBuilt = ids.every((id) => this.sources.isUnBuiltInCache(id));
     await new ObjectFetcher(
       this.repo,
       this.scope,
       remotes,
       {
         withoutDependencies: false,
+        onlyIfBuilt,
       },
       ids,
       lanes,
