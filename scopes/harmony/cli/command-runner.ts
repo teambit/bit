@@ -111,6 +111,7 @@ export class CommandRunner {
       logger.shouldWriteToConsole = false;
     }
     if (this.flags.log) {
+      // probably not necessary anymore. it is handled in src/logger - determineWritingLogToScreen()
       const logValue = typeof this.flags.log === 'string' ? this.flags.log : undefined;
       logger.switchToConsoleLogger(logValue as LoggerLevel);
     }

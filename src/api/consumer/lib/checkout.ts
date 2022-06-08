@@ -9,6 +9,7 @@ import ComponentsList from '../../../consumer/component/components-list';
 import checkoutVersion, { CheckoutProps } from '../../../consumer/versions-ops/checkout-version';
 import { ApplyVersionResults } from '../../../consumer/versions-ops/merge-version';
 import GeneralError from '../../../error/general-error';
+import logger from '../../../logger/logger';
 import hasWildcard from '../../../utils/string/has-wildcard';
 import FlagHarmonyOnly from './exceptions/flag-harmony-only';
 import NoIdMatchWildcard from './exceptions/no-id-match-wildcard';
@@ -31,6 +32,12 @@ async function parseValues(consumer: Consumer, values: string[], checkoutProps: 
     firstValue && (BitId.isValidVersion(firstValue) || firstValue === LATEST) ? firstValue : undefined;
   const ids = checkoutProps.version ? R.tail(values) : values; // if first value is a version, the rest are ids
   checkoutProps.latestVersion = Boolean(checkoutProps.version && checkoutProps.version === LATEST);
+  if (checkoutProps.latestVersion && !ids.length) {
+    if (checkoutProps.all) {
+      logger.console(`"--all" is deprecated for "bit checkout latest", please omit it.`);
+    }
+    checkoutProps.all = true;
+  }
   if (!firstValue && !checkoutProps.reset && !checkoutProps.all) {
     throw new GeneralError('please enter [values...] or use --reset --all flags');
   }

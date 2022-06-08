@@ -1,12 +1,14 @@
 import React, { useEffect, ReactNode, useMemo } from 'react';
 import flatten from 'lodash.flatten';
-import { RouteSlot, SlotSubRouter } from '@teambit/ui-foundation.ui.react-router.slot-router';
+import { RouteSlot, SlotRouter } from '@teambit/ui-foundation.ui.react-router.slot-router';
 import { SlotRegistry } from '@teambit/harmony';
+import { useLanesContext } from '@teambit/lanes.ui.lanes';
 
 import styles from './component.module.scss';
 import { ComponentProvider, ComponentDescriptorProvider } from './context';
 import { useComponent } from './use-component';
 import { ComponentModel } from './component-model';
+import { useIdFromLocation } from './use-component-from-location';
 
 export type ComponentPageSlot = SlotRegistry<ComponentPageElement[]>;
 export type ComponentPageElement = {
@@ -25,7 +27,18 @@ export type ComponentProps = {
  * main UI component of the Component extension.
  */
 export function Component({ routeSlot, containerSlot, host, onComponentChange }: ComponentProps) {
-  const { component, componentDescriptor, error } = useComponent(host);
+  const componentId = useIdFromLocation();
+  const lanesContext = useLanesContext();
+  const laneComponent = componentId ? lanesContext?.resolveComponent(componentId) : undefined;
+  const useComponentOptions = laneComponent && {
+    logFilters: { log: { logHead: laneComponent.version } },
+  };
+
+  const { component, componentDescriptor, error } = useComponent(
+    host,
+    laneComponent?.id.toString() || componentId,
+    useComponentOptions
+  );
   // trigger onComponentChange when component changes
   useEffect(() => onComponentChange?.(component), [component]);
   // cleanup when unmounting component
@@ -42,7 +55,9 @@ export function Component({ routeSlot, containerSlot, host, onComponentChange }:
     <ComponentDescriptorProvider componentDescriptor={componentDescriptor}>
       <ComponentProvider component={component}>
         {before}
-        <div className={styles.container}>{routeSlot && <SlotSubRouter slot={routeSlot} />}</div>
+        <div className={styles.container}>
+          {routeSlot && <SlotRouter parentPath={`${componentId}/*`} slot={routeSlot} />}
+        </div>
         {after}
       </ComponentProvider>
     </ComponentDescriptorProvider>

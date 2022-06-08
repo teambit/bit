@@ -4,8 +4,8 @@ import { ComponentLogMain } from './component-log.main.runtime';
 
 export default class LogCmd implements Command {
   name = 'log <id>';
-  shortDescription = 'show components(s) version history';
-  description: string;
+  description = 'show components(s) version history';
+  extendedDescription: string;
   group = 'info';
   alias = '';
   options = [
@@ -17,7 +17,7 @@ export default class LogCmd implements Command {
   skipWorkspace = true;
 
   constructor(private componentLog: ComponentLogMain, docsDomain: string) {
-    this.description = `show components(s) tag history.\n  https://${docsDomain}/reference/cli-reference#log`;
+    this.extendedDescription = `https://${docsDomain}/reference/cli-reference#log`;
   }
 
   async report([id]: [string], { remote = false, parents = false }: { remote: boolean; parents: boolean }) {

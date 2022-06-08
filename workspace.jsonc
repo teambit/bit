@@ -20,11 +20,12 @@
         "@mdx-js/loader": "1.6.21",
         "@mdx-js/mdx": "1.6.21",
         "@mdx-js/react": "1.6.22",
+        "@monaco-editor/react": "4.4.2",
         "@pmmmwh/react-refresh-webpack-plugin": "0.5.4",
         "@pnpm/client": "6.1.4",
         "@pnpm/colorize-semver-diff": "1.0.1",
-        "@pnpm/config": "13.13.3",
-        "@pnpm/core": "2.9.3",
+        "@pnpm/config": "13.13.6",
+        "@pnpm/core": "2.9.5",
         "@pnpm/default-reporter": "8.4.2",
         "@pnpm/default-resolver": "14.0.13",
         "@pnpm/error": "2.1.0",
@@ -42,7 +43,7 @@
         "@pnpm/resolver-base": "8.1.6",
         "@pnpm/semver-diff": "1.1.0",
         "@pnpm/sort-packages": "2.1.7",
-        "@pnpm/store-connection-manager": "3.2.14",
+        "@pnpm/store-connection-manager": "3.2.17",
         "@pnpm/tarball-fetcher": "9.3.17",
         "@pnpm/tarball-resolver": "5.0.11",
         "@pnpm/types": "7.10.0",
@@ -69,10 +70,7 @@
         "@teambit/base-ui.layout.page-frame": "1.0.0",
         "@teambit/base-ui.loaders.loader-ribbon": "1.0.0",
         "@teambit/base-ui.loaders.skeleton": "1.0.1",
-        "@teambit/base-ui.routing.link": "1.0.0",
-        "@teambit/base-ui.routing.native-link": "1.0.0",
         "@teambit/base-ui.routing.native-nav-link": "1.0.0",
-        "@teambit/base-ui.routing.nav-link": "1.0.0",
         "@teambit/base-ui.routing.routing-provider": "1.0.0",
         "@teambit/base-ui.styles.flex-center": "1.0.0",
         "@teambit/base-ui.surfaces.background": "1.0.1",
@@ -123,7 +121,6 @@
         "@teambit/documenter.content.documentation-links": "4.1.3",
         "@teambit/documenter.markdown.hybrid-live-code-snippet": "0.1.10",
         "@teambit/documenter.markdown.mdx": "0.1.11",
-        "@teambit/documenter.routing.external-link": "4.1.0",
         "@teambit/documenter.theme.theme-compositions": "4.1.1",
         "@teambit/documenter.theme.theme-context": "4.0.3",
         "@teambit/documenter.types.docs-file": "4.0.10",
@@ -187,7 +184,6 @@
         "@types/express": "4.17.9",
         "@types/find-root": "1.1.2",
         "@types/get-port": "4.2.0",
-        "@types/history": "4.7.8",
         "@types/http-proxy-agent": "2.0.2",
         "@types/json-schema": "7.0.9",
         "@types/lodash": "4.14.165",
@@ -206,7 +202,6 @@
         "@types/react": "17.0.8",
         "@types/react-dev-utils": "9.0.10",
         "@types/react-dom": "17.0.5",
-        "@types/react-router-dom": "5.1.7",
         "@types/react-tabs": "2.3.2",
         "@types/react-tooltip": "3.11.0",
         "@types/socket.io-client": "1.4.35",
@@ -271,7 +266,7 @@
         "graphql-tag": "2.12.1",
         "graphql-tools": "6.2.4",
         "graphql-type-json": "0.3.2",
-        "history": "4.10.1",
+        "history": "^5.2.0",
         "html-escaper": "3.0.0",
         "html-webpack-plugin": "5.3.2",
         "http-proxy": "1.18.1",
@@ -332,7 +327,6 @@
         "react-error-boundary": "^3.0.0",
         "react-error-overlay": "6.0.9",
         "react-flow-renderer": "8.3.7",
-        "react-router-dom": "5.2.0",
         "react-syntax-highlighter": "15.4.3",
         "react-tabs": "3.2.0",
         "react-test-renderer": "16.14.0",
@@ -356,7 +350,6 @@
         "terser-webpack-plugin": "5.2.0",
         "tippy.js": "6.2.7",
         "typedoc": "0.22.5",
-        "typescript-language-server": "0.4.0",
         "ua-parser-js": "0.7.24",
         "unist-util-remove": "2.0.1",
         "unist-util-visit": "2.0.3",
@@ -367,10 +360,7 @@
         "vfile": "4.2.0",
         "vscode-icons-js": "11.0.0",
         "vscode-jsonrpc": "6.0.0",
-        "vscode-languageclient": "6.1.3",
-        "vscode-languageserver": "6.1.1",
         "vscode-languageserver-types": "3.16.0",
-        "vscode-ws-jsonrpc": "0.2.0",
         "webpack": "5.51.1",
         "webpack-assets-manifest": "5.1.0",
         "webpack-dev-server": "4.1.0",
@@ -382,13 +372,16 @@
       },
       "peerDependencies": {
         "@apollo/client": "^3.0.0",
-        "@teambit/legacy": "1.0.273",
+        "@teambit/legacy": "1.0.278",
+        "@teambit/base-react.navigation.link": "2.0.27",
+        "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
         "browserslist": "4.16.3",
         "core-js": "^3.10.0",
         "graphql": "14.7.0",
         "mz": "2.7.0",
         "react": "17.0.2",
-        "react-dom": "17.0.2"
+        "react-dom": "17.0.2",
+        "react-router-dom": "^6.0.0"
       }
     },
     "nodeLinker": "hoisted",
@@ -463,7 +456,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.273"
+            "@teambit/legacy": "1.0.278"
           }
         }
       },
@@ -728,7 +721,7 @@
           "peerDependencies": {
             "react": "^16.8.0 || ^17.0.0",
             "react-dom": "^16.8.0 || ^17.0.0",
-            "@teambit/legacy": "1.0.273"
+            "@teambit/legacy": "1.0.278"
           }
         }
       }
@@ -800,8 +793,10 @@
       "teambit.dependencies/dependency-resolver": {
         "policy": {
           "dependencies": {
+            "@teambit/base-react.navigation.link": "2.0.27",
+            "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
             "@apollo/client": "3.3.6",
-            "@teambit/legacy": "1.0.273",
+            "@teambit/legacy": "1.0.278",
             "graphql": "14.7.0",
             "browserslist": "4.16.3",
             "reflect-metadata": "0.1.13",
@@ -814,7 +809,8 @@
             // Those are here to make sure we have them in the root with specific versions when installing with bvm
             "postcss": "8.2.9",
             "buffer": "6.0.3",
-            "process": "0.11.10"
+            "process": "0.11.10",
+            "react-router-dom": "6.3.0"
           },
           "devDependencies": {
             // "@types/react": "-",
@@ -823,12 +819,15 @@
             // "@types/node": "12.20.4"
           },
           "peerDependencies": {
+            "@teambit/base-react.navigation.link": "-",
             "@teambit/legacy": "-",
+            "@teambit/ui-foundation.ui.navigation.react-router-adapter": "-",
             "browserslist": "-",
             "graphql": "-",
             "react": "-",
             "react-dom": "-",
             "react-native-web": "-",
+            "react-router-dom": "-",
             "core-js": "-"
           }
         }
@@ -931,7 +930,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.273"
+            "@teambit/legacy": "1.0.278"
           }
         }
       }

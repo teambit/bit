@@ -26,11 +26,34 @@ describe('bit lane command', function () {
       helper.command.createLane();
       beforeImport = helper.scopeHelper.cloneLocalScope();
     });
-    describe('without --skip-lane flag', () => {
+    describe('without --save-in-lane flag', () => {
       before(() => {
         helper.command.importComponent('bar/foo');
       });
-      it('the component should be part of the lane', () => {
+      it('the component should not be part of the lane', () => {
+        const lane = helper.command.showOneLaneParsed('dev');
+        expect(lane.components).to.have.lengthOf(0);
+      });
+      it('the component should be available on the lane as part of main', () => {
+        const list = helper.command.listParsed();
+        expect(list).to.have.lengthOf(1);
+      });
+      describe('switching to main', () => {
+        before(() => {
+          helper.command.switchLocalLane('main');
+        });
+        it('bit list should show the component', () => {
+          const list = helper.command.listParsed();
+          expect(list).to.have.lengthOf(1);
+        });
+      });
+    });
+    describe('with --save-in-lane flag', () => {
+      before(() => {
+        helper.scopeHelper.getClonedLocalScope(beforeImport);
+        helper.command.importComponent('bar/foo --save-in-lane');
+      });
+      it('the component should be part of the current lane', () => {
         const lane = helper.command.showOneLaneParsed('dev');
         expect(lane.components).to.have.lengthOf(1);
       });
@@ -41,25 +64,6 @@ describe('bit lane command', function () {
         it('bit list should not show the component', () => {
           const list = helper.command.listParsed();
           expect(list).to.have.lengthOf(0);
-        });
-      });
-    });
-    describe('with --skip-lane flag', () => {
-      before(() => {
-        helper.scopeHelper.getClonedLocalScope(beforeImport);
-        helper.command.importComponent('bar/foo --skip-lane');
-      });
-      it('the component should not be part of the current lane', () => {
-        const lane = helper.command.showOneLaneParsed('dev');
-        expect(lane.components).to.have.lengthOf(0);
-      });
-      describe('switching to main', () => {
-        before(() => {
-          helper.command.switchLocalLane('main');
-        });
-        it('bit list should show the component', () => {
-          const list = helper.command.listLocalScopeParsed();
-          expect(list).to.have.lengthOf(1);
         });
       });
     });
@@ -112,7 +116,7 @@ describe('bit lane command', function () {
       helper.scopeHelper.reInitLocalScopeHarmony();
       helper.scopeHelper.addRemoteScope();
       helper.command.createLane();
-      helper.command.importComponent('comp1');
+      helper.command.importComponent('comp1 --save-in-lane');
     });
     it('should not save all the dependencies into the lane, only the imported component', () => {
       const lane = helper.command.showOneLaneParsed('dev');
@@ -120,24 +124,40 @@ describe('bit lane command', function () {
     });
   });
   describe('bit-import with no params when checked out to a lane', () => {
-    let importOutput: string;
-    before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
-      helper.bitJsonc.setupDefault();
-      helper.command.createLane('dev');
-      helper.fixtures.populateComponents();
-      helper.command.snapAllComponents();
-      helper.command.exportLane();
-
-      helper.scopeHelper.reInitLocalScopeHarmony();
-      helper.scopeHelper.addRemoteScope();
-      helper.command.switchRemoteLane('dev');
-
-      importOutput = helper.command.import();
+    describe('when the lane is new', () => {
+      let importOutput: string;
+      before(() => {
+        helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+        helper.bitJsonc.setupDefault();
+        helper.command.createLane('dev');
+        helper.fixtures.populateComponents(1);
+        helper.command.snapAllComponentsWithoutBuild();
+        importOutput = helper.command.import();
+      });
+      it('should indicate that there is nothing to import because the lane is new', () => {
+        expect(importOutput).to.have.string("your lane wasn't exported yet, nothing to import");
+      });
     });
-    // before, it was throwing an error about missing head.
-    it('should import the remote lane successfully', () => {
-      expect(importOutput).to.have.string('successfully imported 3 components');
+    describe('when the lane is exported', () => {
+      let importOutput: string;
+      before(() => {
+        helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+        helper.bitJsonc.setupDefault();
+        helper.command.createLane('dev');
+        helper.fixtures.populateComponents();
+        helper.command.snapAllComponents();
+        helper.command.exportLane();
+
+        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.scopeHelper.addRemoteScope();
+        helper.command.switchRemoteLane('dev');
+
+        importOutput = helper.command.import();
+      });
+      // before, it was throwing an error about missing head.
+      it('should import the remote lane successfully', () => {
+        expect(importOutput).to.have.string('successfully imported 3 components');
+      });
     });
   });
 });

@@ -909,6 +909,45 @@ describe('bit lane command', function () {
       expect(() => helper.command.import()).to.not.throw();
     });
   });
+  describe('multiple scopes when a component in the origin is different than on the lane', () => {
+    let anotherRemote: string;
+    let beforeExport: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      const { scopeName, scopePath } = helper.scopeHelper.getNewBareScope();
+      anotherRemote = scopeName;
+      helper.scopeHelper.addRemoteScope(scopePath);
+      helper.scopeHelper.addRemoteScope(scopePath, helper.scopes.remotePath);
+      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, scopePath);
+      helper.fixtures.populateComponents(1);
+      helper.command.setScope(anotherRemote, 'comp1');
+      beforeExport = helper.scopeHelper.cloneLocalScope();
+
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+
+      helper.scopeHelper.getClonedLocalScope(beforeExport);
+      helper.command.createLane();
+      helper.command.snapAllComponentsWithoutBuild();
+    });
+    it('bit export should throw an error', () => {
+      expect(() => helper.command.export()).to.throw('unable to export a lane with a new component "comp1"');
+    });
+  });
+  describe('multiple scopes when a scope of the component does not exist', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents(1);
+      helper.command.setScope('non-exist-scope', 'comp1');
+      helper.command.createLane();
+      helper.command.snapAllComponentsWithoutBuild();
+    });
+    it('bit export should throw an error saying the scope does not exist', () => {
+      expect(() => helper.command.export()).to.throw('cannot find scope');
+    });
+  });
   describe('snapping and un-tagging on a lane', () => {
     let afterFirstSnap: string;
     before(() => {

@@ -20,7 +20,6 @@ export default class InstallCmd implements Command {
   description = 'install development workspace dependencies';
   alias = 'in';
   group = 'development';
-  shortDescription = '';
   options = [
     ['v', 'variants <variants>', 'add packages to specific variants'],
     ['t', 'type [lifecycleType]', '"runtime" (default) or "peer" (dev is not a valid option)'],

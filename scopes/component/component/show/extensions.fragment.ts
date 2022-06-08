@@ -9,7 +9,7 @@ export class ExtensionsFragment implements ShowFragment {
 
   async renderRow(component: Component) {
     return {
-      title: 'extensions',
+      title: 'aspects',
       content: this.renderList(component),
     };
   }

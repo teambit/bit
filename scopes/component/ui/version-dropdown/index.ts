@@ -1,1 +1,1 @@
-export { VersionDropdown } from './version-dropdown';
+export { VersionDropdown, DropdownComponentVersion } from './version-dropdown';

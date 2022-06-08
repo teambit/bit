@@ -1,29 +1,30 @@
 import chalk from 'chalk';
 import { Command, CommandOptions } from '@teambit/cli';
 import { ComponentID } from '@teambit/component';
-import { ScopeMain } from '@teambit/scope';
 import { BuildStatus } from '@teambit/legacy/dist/constants';
-import { Logger } from '@teambit/logger';
 import { SignMain } from './sign.main.runtime';
 
-type SignOptions = { multiple: boolean; alwaysSucceed: boolean; push: boolean };
+type SignOptions = { multiple: boolean; alwaysSucceed: boolean; push: boolean; lane?: string };
 export class SignCmd implements Command {
   name = 'sign [component...]';
   private = true;
   description = 'complete the build process for components';
+  extendedDescription = `without --multiple, this will be running on the original scope.
+with --multiple, a new bare-scope needs to be created and it will import the components to this scope first`;
   alias = '';
   group = 'development';
   options = [
     ['', 'multiple', 'sign components from multiple scopes'],
     ['', 'always-succeed', 'exit with code 0 even though the build failed'],
     ['', 'push', 'export the updated objects to the original scopes once done'],
+    ['', 'lane <lane-id>', 'helps to fetch the components from the lane scope (relevant for --multiple)'],
   ] as CommandOptions;
 
-  constructor(private signMain: SignMain, private scope: ScopeMain, private logger: Logger) {}
+  constructor(private signMain: SignMain) {}
 
-  async report([components = []]: [string[]], { multiple, alwaysSucceed, push }: SignOptions) {
+  async report([components = []]: [string[]], { multiple, alwaysSucceed, push, lane }: SignOptions) {
     const componentIds = components.map((c) => ComponentID.fromString(c));
-    const results = await this.signMain.sign(componentIds, multiple, push);
+    const results = await this.signMain.sign(componentIds, multiple, push, lane);
     if (!results) {
       return chalk.bold('no more components left to sign');
     }

@@ -11,7 +11,6 @@ export default class UpdateCmd implements Command {
   description = 'update dependencies';
   alias = 'up';
   group = 'development';
-  shortDescription = '';
   options = [['y', 'yes', 'automatically update all outdated packages']] as CommandOptions;
 
   constructor(

@@ -15,8 +15,8 @@ import { SnappingMain } from './snapping.main.runtime';
 export class TagCmd implements Command {
   name = 'tag [id...]';
   group = 'development';
-  shortDescription = 'record component changes and lock versions';
-  description: string;
+  description = 'record component changes and lock versions';
+  extendedDescription: string;
   alias = 't';
   loader = true;
   options = [
@@ -70,8 +70,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
   remoteOp = true; // In case a compiler / tester is not installed
 
   constructor(docsDomain: string, private snapping: SnappingMain, private logger: Logger) {
-    this.description = `record component changes and lock versions.
-if no ids are provided, it will tag all new and modified components.
+    this.extendedDescription = `if no ids are provided, it will tag all new and modified components.
 if component ids are entered, you can specify a version per id using "@" sign, e.g. bit tag foo@1.0.0 bar@minor baz@major
 https://${docsDomain}/components/tags
 ${WILDCARD_HELP('tag')}`;

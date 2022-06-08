@@ -3,7 +3,7 @@ import fs from 'fs-extra';
 import * as path from 'path';
 import { compact, uniq } from 'lodash';
 import R from 'ramda';
-import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
+import { LaneId } from '@teambit/lane-id';
 import { BitError } from '@teambit/bit-error';
 import type { Consumer } from '..';
 import { BitId, BitIds } from '../../bit-id';
@@ -172,11 +172,11 @@ export default class BitMap {
       throw new InvalidBitMap(currentLocation, e.message);
     }
     const schema = componentsJson[SCHEMA_FIELD] || componentsJson.version;
-    const remoteLaneId = componentsJson[LANE_KEY];
+    const laneId = componentsJson[LANE_KEY] ? new LaneId(componentsJson[LANE_KEY]) : undefined;
 
     BitMap.removeNonComponentFields(componentsJson);
 
-    const bitMap = new BitMap(dirPath, currentLocation, schema, isLegacy, workspaceLane, remoteLaneId);
+    const bitMap = new BitMap(dirPath, currentLocation, schema, isLegacy, workspaceLane, laneId);
     bitMap.loadComponents(componentsJson);
     await bitMap.loadFiles();
     return bitMap;

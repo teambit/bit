@@ -44,6 +44,7 @@ import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config';
 import WorkspaceConfig from '@teambit/legacy/dist/consumer/config/workspace-config';
 import { BitIds } from '@teambit/legacy/dist/bit-id';
 import { propogateUntil as propagateUntil } from '@teambit/legacy/dist/utils';
+import logger from '@teambit/legacy/dist/logger/logger';
 import { ExternalActions } from '@teambit/legacy/dist/api/scope/lib/action';
 import loader from '@teambit/legacy/dist/cli/loader';
 import { readdir } from 'fs-extra';
@@ -199,6 +200,7 @@ function shouldLoadInSafeMode() {
 
 export async function loadBit(path = process.cwd()) {
   clearGlobalsIfNeeded();
+  logger.info(`*** Loading Bit *** argv:\n${process.argv.join('\n')}`);
   const loadCLIOnly = shouldLoadInSafeMode();
   const config = await getConfig(path);
   registerCoreExtensions();

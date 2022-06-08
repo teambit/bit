@@ -238,16 +238,34 @@ function addBreadCrumb(category: string, message: string, data: Record<string, a
   Analytics.addBreadCrumb(category, messageWithHashedData, extraData);
 }
 
-/**
- * prefix BIT_LOG to the command, provides the ability to log into the console.
- * two options are available here:
- * 1) use the level. e.g. `BIT_LOG=error bit import`.
- * 2) use the message prefix, e.g. `BIT_LOG=ssh bit import`.
- * 3) use multiple message prefixes, e.g. `BIT_LOG=ssh,env bit import`.
- */
-if (process.env.BIT_LOG) {
-  writeLogToScreen(process.env.BIT_LOG);
+function determineWritingLogToScreen() {
+  /**
+   * prefix BIT_LOG to the command, provides the ability to log into the console.
+   * two options are available here:
+   * 1) use the level. e.g. `BIT_LOG=error bit import`.
+   * 2) use the message prefix, e.g. `BIT_LOG=ssh bit import`.
+   * 3) use multiple message prefixes, e.g. `BIT_LOG=ssh,env bit import`.
+   */
+  if (process.env.BIT_LOG) {
+    writeLogToScreen(process.env.BIT_LOG);
+    return;
+  }
+
+  // more common scenario is when the user enters `--log` flag. It can be just "--log", which defaults to info.
+  // or it can have a level: `--log=error` or `--log error`: both syntaxes are supported
+  if (process.argv.includes('--log')) {
+    const level = process.argv.find((arg) => LEVELS.includes(arg)) as Level | undefined;
+    logger.switchToConsoleLogger(level || 'info');
+    return;
+  }
+  LEVELS.forEach((level) => {
+    if (process.argv.includes(`--log=${level}`)) {
+      logger.switchToConsoleLogger(level as Level);
+    }
+  });
 }
+
+determineWritingLogToScreen();
 
 function getLogLevel(): Level {
   const defaultLevel = 'debug';

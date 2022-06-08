@@ -3,7 +3,7 @@ import ts, { Node, FunctionDeclaration as FunctionDeclarationNode } from 'typesc
 import { SchemaExtractorContext } from '../schema-extractor-context';
 import { SchemaTransformer } from '../schema-transformer';
 import { ExportIdentifier } from '../export-identifier';
-import { toFunctionLikeSchema } from './utils/to-function-schema';
+import { toFunctionLikeSchema } from './utils/to-function-like-schema';
 
 export class FunctionDeclaration implements SchemaTransformer {
   predicate(node: Node) {

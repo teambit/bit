@@ -5,7 +5,6 @@ import { ConfigMain } from '@teambit/config';
 
 export class UseCmd implements Command {
   name = 'use [ids...]';
-  shortDescription = 'set up aspects in the workspace/scope config';
   group = 'collaborate';
   description = 'set up aspects in the workspace/scope config';
   alias = '';

@@ -22,6 +22,7 @@ import ComponentAspect, { Component, ComponentMain } from '@teambit/component';
 import removeLanes from '@teambit/legacy/dist/consumer/lanes/remove-lanes';
 import WorkspaceLane from '@teambit/legacy/dist/consumer/bit-map/workspace-lane';
 import { Lane } from '@teambit/legacy/dist/scope/models';
+import ScopeComponentsImporter from '@teambit/legacy/dist/scope/component-ops/scope-components-importer';
 import { Scope as LegacyScope } from '@teambit/legacy/dist/scope';
 import { BitId } from '@teambit/legacy-bit-id';
 import { BitIds } from '@teambit/legacy/dist/bit-id';
@@ -315,6 +316,12 @@ export class LanesMain {
       idsWithFutureScope: new BitIds(),
       allVersions: false,
     });
+  }
+
+  async importLane(laneId: LaneId): Promise<Lane> {
+    const scopeComponentImporter = ScopeComponentsImporter.getInstance(this.scope.legacyScope);
+    const results = await scopeComponentImporter.importLanes([laneId]);
+    return results[0];
   }
 
   async removeLanes(laneNames: string[], { remote, force }: { remote: boolean; force: boolean }): Promise<string[]> {

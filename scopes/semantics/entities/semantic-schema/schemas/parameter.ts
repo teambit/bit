@@ -9,6 +9,7 @@ export class ParameterSchema extends SchemaNode {
     readonly location: Location,
     readonly name: string,
     type: SchemaNode,
+    readonly isOptional: boolean,
     readonly defaultValue?: any,
     readonly description?: string
   ) {
@@ -17,6 +18,6 @@ export class ParameterSchema extends SchemaNode {
   }
 
   toString() {
-    return `${this.name}: ${this.type.toString()}`;
+    return `${this.name}${this.isOptional ? '?' : ''}: ${this.type.toString()}`;
   }
 }
