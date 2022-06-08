@@ -97,9 +97,9 @@ export default class ImportComponents {
       this.options.installNpmPackages = false;
       this.options.saveDependenciesAsComponents = true;
     }
-    if (this.options.lanes && !this.options.ids.length) {
-      return this.importObjectsOnLane();
-    }
+    // if (this.options.lanes && !this.options.ids.length) {
+    //   return this.importObjectsOnLane();
+    // }
     if (this.options.ids.length) {
       return this.importSpecificComponents();
     }
