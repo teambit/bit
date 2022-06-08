@@ -60,6 +60,7 @@ export function ComponentCompareVersionPicker({ className }: ComponentCompareVer
           return useUpdatedUrlFromQuery({ baseVersion: _baseVersion });
         }}
         showVersionDetails={true}
+        disabled={snaps.concat(tags).length < 2}
       />
       <div className={styles.arrowContainer}>
         <img src="https://static.bit.dev/bit-icons/arrow-left.svg" />
