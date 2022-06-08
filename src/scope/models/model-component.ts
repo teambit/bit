@@ -703,8 +703,7 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
     if (versionNum === VERSION_ZERO) {
       throw new Error(`the component ${this.id()} has no versions and the head is empty.
 this is probably a component from another lane which should not be loaded in this lane (or main).
-it could happen as a result of deleting the "scope.json" file, which keeps track on the current lane.
-please run "bit lane" to verify the lane you are checked out to and "bit switch" if needed.
+if this component is on a lane, make sure to ask for it with a version.
 if that's not the case, make sure to call "getAllIdsAvailableOnLane" and not "getAllBitIdsFromAllLanes"`);
     }
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
