@@ -66,7 +66,7 @@ export function CodeCompareView({ className, base, compare, fileName }: CodeComp
       language={language}
       height={'100%'}
       onMount={handleEditorDidMount}
-      className={classNames(darkMode, styles.editor)}
+      className={darkMode}
       theme={'vs-dark'}
       options={{
         ignoreTrimWhitespace: ignoreWhitespace,
