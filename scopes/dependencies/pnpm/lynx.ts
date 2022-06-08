@@ -89,7 +89,7 @@ async function generateResolverAndFetcher(
     cacheDir,
     httpProxy: proxyConfig?.httpProxy,
     httpsProxy: proxyConfig?.httpsProxy,
-    ca: proxyConfig?.ca,
+    ca: proxyConfig?.ca as string,
     cert: proxyConfig?.cert,
     key: proxyConfig?.key,
     localAddress: networkConfig?.localAddress,
