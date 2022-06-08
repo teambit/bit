@@ -47,7 +47,7 @@ export type ImportOptions = {
   importDependenciesDirectly?: boolean; // default: false, normally it imports them as packages or nested, not as imported
   importDependents?: boolean; // default: false,
   fromOriginalScope?: boolean; // default: false, otherwise, it fetches flattened dependencies from their dependents
-  skipLane?: boolean; // save on main instead of current lane
+  saveInLane?: boolean; // save the imported component on the current lane (won't be available on main)
   lanes?: { laneIds: LaneId[]; lanes?: Lane[] };
   allHistory?: boolean;
 };
@@ -98,9 +98,7 @@ export default class ImportComponents {
       this.options.saveDependenciesAsComponents = true;
     }
     if (this.options.lanes && !this.options.ids.length) {
-      // @todo: uncomment this once the code is deployed to the server
-      // return this.importObjectsOnLane();
-      return this.importSpecificComponents();
+      return this.importObjectsOnLane();
     }
     if (this.options.ids.length) {
       return this.importSpecificComponents();
@@ -283,8 +281,7 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
   }
 
   private async getBitIds(): Promise<BitIds> {
-    const bitIds: BitId[] =
-      this.options.lanes && !this.options.skipLane ? await this.getBitIdsForLanes() : await this.getBitIdsForNonLanes();
+    const bitIds: BitId[] = this.options.lanes ? await this.getBitIdsForLanes() : await this.getBitIdsForNonLanes();
     if (this.options.importDependenciesDirectly || this.options.importDependents) {
       const graphs = await this._getComponentsGraphs(bitIds);
       if (this.options.importDependenciesDirectly) {
@@ -644,7 +641,7 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
   }
 
   _shouldSaveLaneData(): boolean {
-    if (this.options.skipLane || this.options.objectsOnly) {
+    if (this.options.objectsOnly) {
       return false;
     }
     return this.consumer.isOnLane();
@@ -658,9 +655,15 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
     if (!currentLane) {
       return; // user on main
     }
+    const idsFromRemoteLanes = BitIds.fromArray(this.laneObjects.flatMap((lane) => lane.toBitIds()));
     const components = componentsWithDependencies.map((c) => c.component);
     await Promise.all(
       components.map(async (comp) => {
+        const existOnRemoteLane = idsFromRemoteLanes.has(comp.id);
+        if (!existOnRemoteLane && !this.options.saveInLane) {
+          this.consumer.bitMap.setComponentProp(comp.id, 'onLanesOnly', false);
+          return;
+        }
         const modelComponent = await this.scope.getModelComponent(comp.id);
         const ref = modelComponent.getRef(comp.id.version as string);
         if (!ref) throw new Error(`_saveLaneDataIfNeeded unable to get ref for ${comp.id.toString()}`);
