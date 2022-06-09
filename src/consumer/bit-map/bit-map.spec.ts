@@ -12,7 +12,6 @@ const scope = {
   lanes: { getCurrentLaneName: () => 'main' },
 };
 
-const bitMapFixtureDir = path.join(__dirname, '../../../fixtures/bitmap-fixtures');
 const getBitmapInstance = async () => {
   const consumer = { getPath: () => __dirname, isLegacy: true, scope };
   // @ts-ignore

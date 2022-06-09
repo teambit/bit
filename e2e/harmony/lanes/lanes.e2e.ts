@@ -493,6 +493,7 @@ describe('bit lane command', function () {
       helper.command.exportLane();
       helper.git.mimicGitCloneLocalProjectHarmony();
       helper.scopeHelper.addRemoteScope();
+      helper.command.import();
       helper.fixtures.populateComponents(1, undefined, ' v2');
       helper.bitJsonc.disablePreview();
       helper.command.snapAllComponents();
