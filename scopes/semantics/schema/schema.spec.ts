@@ -1,13 +1,12 @@
 import path from 'path';
 import fs from 'fs-extra';
-import { APISchema } from '@teambit/semantics.entities.semantic-schema';
+import { APISchema, UnknownSchema } from '@teambit/semantics.entities.semantic-schema';
 import { loadAspect } from '@teambit/harmony.testing.load-aspect';
 import { mockWorkspace, destroyWorkspace, WorkspaceData } from '@teambit/workspace.testing.mock-workspace';
 import { ComponentID } from '@teambit/component-id';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import { SchemaMain } from './schema.main.runtime';
 import { SchemaAspect } from '.';
-import { UnknownSchema } from '@teambit/semantics.entities.semantic-schema';
 
 describe('SchemaAspect', function () {
   let schema: SchemaMain;
