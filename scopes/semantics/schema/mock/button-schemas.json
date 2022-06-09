@@ -34,6 +34,7 @@
               "character": 24
             },
             "name": "a",
+            "isOptional": false,
             "defaultValue": "4",
             "type": {
               "__schema": "InferenceTypeSchema",
@@ -53,6 +54,7 @@
               "character": 31
             },
             "name": "b",
+            "isOptional": false,
             "defaultValue": "5",
             "type": {
               "__schema": "InferenceTypeSchema",
@@ -178,7 +180,7 @@
               },
               "members": [
                 {
-                  "__schema": "VariableSchema",
+                  "__schema": "VariableLikeSchema",
                   "location": {
                     "file": "button.tsx",
                     "line": 13,
@@ -186,6 +188,7 @@
                   },
                   "name": "children",
                   "signature": "(property) children: any",
+                  "isOptional": false,
                   "type": {
                     "__schema": "InferenceTypeSchema",
                     "location": {
@@ -196,7 +199,7 @@
                   }
                 },
                 {
-                  "__schema": "VariableSchema",
+                  "__schema": "VariableLikeSchema",
                   "location": {
                     "file": "button.tsx",
                     "line": 18,
@@ -204,6 +207,7 @@
                   },
                   "name": "href",
                   "signature": "(property) href?: string",
+                  "isOptional": true,
                   "type": {
                     "__schema": "KeywordTypeSchema",
                     "location": {
@@ -215,7 +219,7 @@
                   }
                 },
                 {
-                  "__schema": "VariableSchema",
+                  "__schema": "VariableLikeSchema",
                   "location": {
                     "file": "button.tsx",
                     "line": 23,
@@ -223,6 +227,7 @@
                   },
                   "name": "className",
                   "signature": "(property) className?: string",
+                  "isOptional": true,
                   "type": {
                     "__schema": "KeywordTypeSchema",
                     "location": {
@@ -267,6 +272,7 @@
               "character": 24
             },
             "name": "props",
+            "isOptional": false,
             "type": {
               "__schema": "TypeRefSchema",
               "location": {
@@ -344,7 +350,7 @@
         }
       },
       {
-        "__schema": "VariableSchema",
+        "__schema": "VariableLikeSchema",
         "location": {
           "file": "index.ts",
           "line": 21,
@@ -352,6 +358,7 @@
         },
         "name": "a",
         "signature": "const a: 4",
+        "isOptional": false,
         "type": {
           "__schema": "InferenceTypeSchema",
           "location": {
@@ -363,7 +370,7 @@
         }
       },
       {
-        "__schema": "VariableSchema",
+        "__schema": "VariableLikeSchema",
         "location": {
           "file": "index.ts",
           "line": 22,
@@ -371,6 +378,7 @@
         },
         "name": "b",
         "signature": "const b: 5",
+        "isOptional": false,
         "type": {
           "__schema": "LiteralTypeSchema",
           "location": {
@@ -431,6 +439,7 @@
                   "character": 24
                 },
                 "name": "{ children = <BasicButton /> }",
+                "isOptional": false,
                 "type": {
                   "__schema": "TypeLiteralSchema",
                   "location": {
@@ -539,7 +548,7 @@
         "namespace": "Compositions"
       },
       {
-        "__schema": "VariableSchema",
+        "__schema": "VariableLikeSchema",
         "location": {
           "file": "index.ts",
           "line": 26,
@@ -547,6 +556,7 @@
         },
         "name": "HiThere",
         "signature": "const HiThere: \"HiThere\"",
+        "isOptional": false,
         "type": {
           "__schema": "InferenceTypeSchema",
           "location": {
@@ -579,7 +589,7 @@
         }
       },
       {
-        "__schema": "VariableSchema",
+        "__schema": "VariableLikeSchema",
         "location": {
           "file": "index.ts",
           "line": 30,
@@ -587,6 +597,7 @@
         },
         "name": "Array",
         "signature": "const Array: string[]",
+        "isOptional": false,
         "type": {
           "__schema": "TypeRefSchema",
           "location": {
@@ -608,7 +619,7 @@
         },
         "members": [
           {
-            "__schema": "VariableSchema",
+            "__schema": "VariableLikeSchema",
             "location": {
               "file": "index.ts",
               "line": 35,
@@ -616,6 +627,7 @@
             },
             "name": "app",
             "signature": "(property) ClassSomething.app: string",
+            "isOptional": false,
             "type": {
               "__schema": "InferenceTypeSchema",
               "location": {
@@ -642,6 +654,7 @@
                   "character": 15
                 },
                 "name": "da",
+                "isOptional": false,
                 "type": {
                   "__schema": "LiteralTypeSchema",
                   "location": {
@@ -711,6 +724,7 @@
                 "character": 14
               },
               "name": "a",
+              "isOptional": false,
               "type": {
                 "__schema": "KeywordTypeSchema",
                 "location": {
@@ -757,6 +771,7 @@
                     "character": 27
                   },
                   "name": "key",
+                  "isOptional": false,
                   "type": {
                     "__schema": "KeywordTypeSchema",
                     "location": {
@@ -791,7 +806,7 @@
         "name": "Hello",
         "members": [
           {
-            "__schema": "VariableSchema",
+            "__schema": "VariableLikeSchema",
             "location": {
               "file": "index.ts",
               "line": 53,
@@ -799,6 +814,7 @@
             },
             "name": "propertySig",
             "signature": "(property) Hello.propertySig: () => void",
+            "isOptional": false,
             "type": {
               "__schema": "FunctionLikeSchema",
               "location": {
@@ -845,7 +861,7 @@
         ]
       },
       {
-        "__schema": "VariableSchema",
+        "__schema": "VariableLikeSchema",
         "location": {
           "file": "index.ts",
           "line": 59,
@@ -853,6 +869,7 @@
         },
         "name": "a1",
         "signature": "const a1: {\n    a: number;\n    b: number;\n}",
+        "isOptional": false,
         "type": {
           "__schema": "TypeQuerySchema",
           "location": {
@@ -928,6 +945,7 @@
               "character": 24
             },
             "name": "bar",
+            "isOptional": false,
             "type": {
               "__schema": "TypeRefSchema",
               "location": {
@@ -968,6 +986,7 @@
               "character": 23
             },
             "name": "[ a, b, c ]",
+            "isOptional": false,
             "type": {
               "__schema": "TupleTypeSchema",
               "location": {
@@ -1182,6 +1201,7 @@
               "character": 33
             },
             "name": "str",
+            "isOptional": false,
             "type": {
               "__schema": "KeywordTypeSchema",
               "location": {
@@ -1234,6 +1254,7 @@
               "character": 39
             },
             "name": "condition",
+            "isOptional": false,
             "type": {
               "__schema": "KeywordTypeSchema",
               "location": {
@@ -1252,6 +1273,7 @@
               "character": 55
             },
             "name": "msg",
+            "isOptional": true,
             "type": {
               "__schema": "KeywordTypeSchema",
               "location": {
@@ -1296,6 +1318,7 @@
               "character": 45
             },
             "name": "{ prop = 1 }",
+            "isOptional": false,
             "type": {
               "__schema": "TypeLiteralSchema",
               "location": {
@@ -1350,6 +1373,7 @@
               "character": 44
             },
             "name": "[ prop ]",
+            "isOptional": false,
             "type": {
               "__schema": "TupleTypeSchema",
               "location": {
@@ -1427,7 +1451,7 @@
         "name": "ComputedNameWithType",
         "members": [
           {
-            "__schema": "VariableSchema",
+            "__schema": "VariableLikeSchema",
             "location": {
               "file": "index.ts",
               "line": 108,
@@ -1435,6 +1459,7 @@
             },
             "name": "[computedName]",
             "signature": "",
+            "isOptional": false,
             "type": {
               "__schema": "KeywordTypeSchema",
               "location": {
@@ -1457,7 +1482,7 @@
         "name": "ComputedNameNoType",
         "members": [
           {
-            "__schema": "VariableSchema",
+            "__schema": "VariableLikeSchema",
             "location": {
               "file": "index.ts",
               "line": 111,
@@ -1465,6 +1490,7 @@
             },
             "name": "[computedName]",
             "signature": "",
+            "isOptional": false,
             "type": {
               "__schema": "InferenceTypeSchema",
               "location": {
@@ -1565,6 +1591,7 @@
                   "character": 7
                 },
                 "name": "a",
+                "isOptional": false,
                 "type": {
                   "__schema": "KeywordTypeSchema",
                   "location": {
