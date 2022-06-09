@@ -10,7 +10,8 @@ import { SnappingMain } from './snapping.main.runtime';
 
 export class SnapCmd implements Command {
   name = 'snap [id]';
-  description: string;
+  description = 'EXPERIMENTAL. record component changes';
+  extendedDescription: string;
   alias = '';
   options = [
     ['m', 'message <message>', 'log message describing the user changes'],
@@ -39,8 +40,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
   migration = true;
 
   constructor(docsDomain: string, private snapping: SnappingMain, private logger: Logger) {
-    this.description = `record component changes.
-https://${docsDomain}/components/snaps
+    this.extendedDescription = `https://${docsDomain}/components/snaps
 ${WILDCARD_HELP('snap')}`;
   }
 
