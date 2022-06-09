@@ -285,6 +285,7 @@ export const CFG_CAPSULES_ROOT_BASE_DIR = 'capsules_root_base_dir';
 export const CFG_PROXY = 'proxy';
 export const CFG_HTTPS_PROXY = 'https_proxy';
 export const CFG_PROXY_CA = 'proxy.ca';
+export const CFG_PROXY_CA_FILE = 'proxy.cafile';
 export const CFG_PROXY_STRICT_SSL = 'proxy.strict_ssl';
 export const CFG_PROXY_CERT = 'proxy.cert';
 export const CFG_PROXY_KEY = 'proxy.key';
