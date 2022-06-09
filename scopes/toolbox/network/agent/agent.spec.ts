@@ -5,7 +5,8 @@ test('getAgent reads cafile', () => {
   const agent = getAgent('https://node.bit.cloud', {
     cafile: path.join(__dirname, 'fixtures/cafile.txt'),
   });
-  expect(agent['options'].ca).toStrictEqual([
+  // @ts-ignore
+  expect(agent['options'].ca).toStrictEqual([ // eslint-disable-line
     `-----BEGIN CERTIFICATE-----
 XXXX
 -----END CERTIFICATE-----`,
