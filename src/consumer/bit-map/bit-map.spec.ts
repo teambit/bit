@@ -136,18 +136,4 @@ describe('BitMap', function () {
       );
     });
   });
-  describe('getAuthoredExportedComponents', () => {
-    it('should return an empty array when there are no authored components', async () => {
-      const consumer = {
-        getPath: () => path.join(bitMapFixtureDir, 'only-imported'),
-        isLegacy: true,
-        scope,
-      };
-      // @ts-ignore
-      const bitMap = await BitMap.load(consumer);
-      const results = bitMap.getAuthoredExportedComponents();
-      expect(results).to.be.an('array');
-      expect(results).to.have.lengthOf(0);
-    });
-  });
 });
