@@ -36,7 +36,7 @@ export class SchemaExtractorContext {
     const character = position.character + 1;
 
     return {
-      file: absolutePath ? sourceFile.fileName : this.getPathRelativeToComponent(sourceFile.fileName),
+      path: absolutePath ? sourceFile.fileName : this.getPathRelativeToComponent(sourceFile.fileName),
       line,
       character,
     };
