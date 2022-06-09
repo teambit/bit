@@ -295,6 +295,10 @@ export default class CommandHelper {
     const results = this.runCmd(`bit lane list ${options} --json`);
     return JSON.parse(results);
   }
+  expectCurrentLaneToBe(laneName: string) {
+    const lanes = this.listLanesParsed();
+    expect(lanes.currentLane).to.equal(laneName);
+  }
   listRemoteLanesParsed(options = '') {
     const results = this.runCmd(`bit lane list --remote ${this.scopes.remote} ${options} --json`);
     return JSON.parse(results);

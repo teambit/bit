@@ -6,7 +6,7 @@ import { schemaObjToInstance } from '../class-transformers';
 /**
  * can be also a property or property-signature
  */
-export class VariableSchema extends SchemaNode {
+export class VariableLikeSchema extends SchemaNode {
   @Transform(schemaObjToInstance)
   type: SchemaNode;
   constructor(
