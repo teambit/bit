@@ -1,14 +1,14 @@
 {
   "__schema": "APISchema",
   "location": {
-    "file": "index.ts",
+    "filePath": "index.ts",
     "line": 13,
     "character": 1
   },
   "module": {
     "__schema": "Module",
     "location": {
-      "file": "index.ts",
+      "filePath": "index.ts",
       "line": 13,
       "character": 1
     },
@@ -16,7 +16,7 @@
       {
         "__schema": "FunctionLikeSchema",
         "location": {
-          "file": "index.ts",
+          "filePath": "index.ts",
           "line": 13,
           "character": 1
         },
@@ -29,7 +29,7 @@
           {
             "__schema": "ParameterSchema",
             "location": {
-              "file": "index.ts",
+              "filePath": "index.ts",
               "line": 13,
               "character": 24
             },
@@ -39,7 +39,7 @@
             "type": {
               "__schema": "InferenceTypeSchema",
               "location": {
-                "file": "index.ts",
+                "filePath": "index.ts",
                 "line": 13,
                 "character": 24
               },
@@ -49,7 +49,7 @@
           {
             "__schema": "ParameterSchema",
             "location": {
-              "file": "index.ts",
+              "filePath": "index.ts",
               "line": 13,
               "character": 31
             },
@@ -59,7 +59,7 @@
             "type": {
               "__schema": "InferenceTypeSchema",
               "location": {
-                "file": "index.ts",
+                "filePath": "index.ts",
                 "line": 13,
                 "character": 31
               },
@@ -70,7 +70,7 @@
         "returnType": {
           "__schema": "KeywordTypeSchema",
           "location": {
-            "file": "index.ts",
+            "filePath": "index.ts",
             "line": 13,
             "character": 39
           },
@@ -79,7 +79,7 @@
         "doc": {
           "__schema": "DocSchema",
           "location": {
-            "file": "index.ts",
+            "filePath": "index.ts",
             "line": 7,
             "character": 1
           },
@@ -87,7 +87,7 @@
             {
               "__schema": "TagSchema",
               "location": {
-                "file": "index.ts",
+                "filePath": "index.ts",
                 "line": 9,
                 "character": 4
               },
@@ -97,7 +97,7 @@
             {
               "__schema": "TagSchema",
               "location": {
-                "file": "index.ts",
+                "filePath": "index.ts",
                 "line": 10,
                 "character": 4
               },
@@ -107,7 +107,7 @@
             {
               "__schema": "ReturnTagSchema",
               "location": {
-                "file": "index.ts",
+                "filePath": "index.ts",
                 "line": 11,
                 "character": 4
               },
@@ -119,7 +119,7 @@
       {
         "__schema": "TypeSchema",
         "location": {
-          "file": "button.tsx",
+          "filePath": "button.tsx",
           "line": 7,
           "character": 1
         },
@@ -128,7 +128,7 @@
         "type": {
           "__schema": "TypeUnionSchema",
           "location": {
-            "file": "button.tsx",
+            "filePath": "button.tsx",
             "line": 7,
             "character": 33
           },
@@ -136,7 +136,7 @@
             {
               "__schema": "LiteralTypeSchema",
               "location": {
-                "file": "button.tsx",
+                "filePath": "button.tsx",
                 "line": 7,
                 "character": 33
               },
@@ -145,7 +145,7 @@
             {
               "__schema": "LiteralTypeSchema",
               "location": {
-                "file": "button.tsx",
+                "filePath": "button.tsx",
                 "line": 7,
                 "character": 39
               },
@@ -157,7 +157,7 @@
       {
         "__schema": "TypeSchema",
         "location": {
-          "file": "button.tsx",
+          "filePath": "button.tsx",
           "line": 9,
           "character": 1
         },
@@ -166,7 +166,7 @@
         "type": {
           "__schema": "TypeIntersectionSchema",
           "location": {
-            "file": "button.tsx",
+            "filePath": "button.tsx",
             "line": 9,
             "character": 27
           },
@@ -174,7 +174,7 @@
             {
               "__schema": "TypeLiteralSchema",
               "location": {
-                "file": "button.tsx",
+                "filePath": "button.tsx",
                 "line": 9,
                 "character": 27
               },
@@ -182,7 +182,7 @@
                 {
                   "__schema": "VariableLikeSchema",
                   "location": {
-                    "file": "button.tsx",
+                    "filePath": "button.tsx",
                     "line": 13,
                     "character": 3
                   },
@@ -192,7 +192,7 @@
                   "type": {
                     "__schema": "InferenceTypeSchema",
                     "location": {
-                      "file": "button.tsx",
+                      "filePath": "button.tsx",
                       "line": 13,
                       "character": 13
                     }
@@ -201,7 +201,7 @@
                 {
                   "__schema": "VariableLikeSchema",
                   "location": {
-                    "file": "button.tsx",
+                    "filePath": "button.tsx",
                     "line": 18,
                     "character": 3
                   },
@@ -211,7 +211,7 @@
                   "type": {
                     "__schema": "KeywordTypeSchema",
                     "location": {
-                      "file": "button.tsx",
+                      "filePath": "button.tsx",
                       "line": 18,
                       "character": 10
                     },
@@ -221,7 +221,7 @@
                 {
                   "__schema": "VariableLikeSchema",
                   "location": {
-                    "file": "button.tsx",
+                    "filePath": "button.tsx",
                     "line": 23,
                     "character": 3
                   },
@@ -231,7 +231,7 @@
                   "type": {
                     "__schema": "KeywordTypeSchema",
                     "location": {
-                      "file": "button.tsx",
+                      "filePath": "button.tsx",
                       "line": 23,
                       "character": 15
                     },
@@ -243,7 +243,7 @@
             {
               "__schema": "InferenceTypeSchema",
               "location": {
-                "file": "button.tsx",
+                "filePath": "button.tsx",
                 "line": 24,
                 "character": 5
               }
@@ -254,7 +254,7 @@
       {
         "__schema": "FunctionLikeSchema",
         "location": {
-          "file": "button.tsx",
+          "filePath": "button.tsx",
           "line": 26,
           "character": 1
         },
@@ -267,7 +267,7 @@
           {
             "__schema": "ParameterSchema",
             "location": {
-              "file": "button.tsx",
+              "filePath": "button.tsx",
               "line": 26,
               "character": 24
             },
@@ -276,7 +276,7 @@
             "type": {
               "__schema": "TypeRefSchema",
               "location": {
-                "file": "button.tsx",
+                "filePath": "button.tsx",
                 "line": 26,
                 "character": 31
               },
@@ -287,7 +287,7 @@
         "returnType": {
           "__schema": "InferenceTypeSchema",
           "location": {
-            "file": "button.tsx",
+            "filePath": "button.tsx",
             "line": 26,
             "character": 1
           },
@@ -298,7 +298,7 @@
         "__schema": "ClassSchema",
         "className": "Bar",
         "location": {
-          "file": "button.tsx",
+          "filePath": "button.tsx",
           "line": 61,
           "character": 1
         },
@@ -306,7 +306,7 @@
           {
             "__schema": "FunctionLikeSchema",
             "location": {
-              "file": "button.tsx",
+              "filePath": "button.tsx",
               "line": 62,
               "character": 3
             },
@@ -317,7 +317,7 @@
             "returnType": {
               "__schema": "InferenceTypeSchema",
               "location": {
-                "file": "button.tsx",
+                "filePath": "button.tsx",
                 "line": 62,
                 "character": 3
               },
@@ -329,7 +329,7 @@
       {
         "__schema": "FunctionLikeSchema",
         "location": {
-          "file": "index.ts",
+          "filePath": "index.ts",
           "line": 19,
           "character": 1
         },
@@ -342,7 +342,7 @@
         "returnType": {
           "__schema": "InferenceTypeSchema",
           "location": {
-            "file": "index.ts",
+            "filePath": "index.ts",
             "line": 19,
             "character": 1
           },
@@ -352,7 +352,7 @@
       {
         "__schema": "VariableLikeSchema",
         "location": {
-          "file": "index.ts",
+          "filePath": "index.ts",
           "line": 21,
           "character": 14
         },
@@ -362,7 +362,7 @@
         "type": {
           "__schema": "InferenceTypeSchema",
           "location": {
-            "file": "index.ts",
+            "filePath": "index.ts",
             "line": 21,
             "character": 14
           },
@@ -372,7 +372,7 @@
       {
         "__schema": "VariableLikeSchema",
         "location": {
-          "file": "index.ts",
+          "filePath": "index.ts",
           "line": 22,
           "character": 3
         },
@@ -382,7 +382,7 @@
         "type": {
           "__schema": "LiteralTypeSchema",
           "location": {
-            "file": "index.ts",
+            "filePath": "index.ts",
             "line": 22,
             "character": 6
           },
@@ -392,7 +392,7 @@
       {
         "__schema": "Module",
         "location": {
-          "file": "button.composition.tsx",
+          "filePath": "button.composition.tsx",
           "line": 3,
           "character": 1
         },
@@ -400,7 +400,7 @@
           {
             "__schema": "FunctionLikeSchema",
             "location": {
-              "file": "button.composition.tsx",
+              "filePath": "button.composition.tsx",
               "line": 6,
               "character": 14
             },
@@ -411,7 +411,7 @@
             "returnType": {
               "__schema": "InferenceTypeSchema",
               "location": {
-                "file": "button.composition.tsx",
+                "filePath": "button.composition.tsx",
                 "line": 6,
                 "character": 14
               },
@@ -421,7 +421,7 @@
           {
             "__schema": "FunctionLikeSchema",
             "location": {
-              "file": "button.composition.tsx",
+              "filePath": "button.composition.tsx",
               "line": 13,
               "character": 1
             },
@@ -434,7 +434,7 @@
               {
                 "__schema": "ParameterSchema",
                 "location": {
-                  "file": "button.composition.tsx",
+                  "filePath": "button.composition.tsx",
                   "line": 13,
                   "character": 24
                 },
@@ -443,7 +443,7 @@
                 "type": {
                   "__schema": "TypeLiteralSchema",
                   "location": {
-                    "file": "button.composition.tsx",
+                    "filePath": "button.composition.tsx",
                     "line": 13,
                     "character": 24
                   },
@@ -451,7 +451,7 @@
                     {
                       "__schema": "InferenceTypeSchema",
                       "location": {
-                        "file": "button.composition.tsx",
+                        "filePath": "button.composition.tsx",
                         "line": 13,
                         "character": 24
                       },
@@ -465,7 +465,7 @@
             "returnType": {
               "__schema": "InferenceTypeSchema",
               "location": {
-                "file": "button.composition.tsx",
+                "filePath": "button.composition.tsx",
                 "line": 13,
                 "character": 1
               },
@@ -474,7 +474,7 @@
             "doc": {
               "__schema": "DocSchema",
               "location": {
-                "file": "button.composition.tsx",
+                "filePath": "button.composition.tsx",
                 "line": 10,
                 "character": 1
               },
@@ -484,7 +484,7 @@
           {
             "__schema": "FunctionLikeSchema",
             "location": {
-              "file": "button.composition.tsx",
+              "filePath": "button.composition.tsx",
               "line": 17,
               "character": 14
             },
@@ -495,7 +495,7 @@
             "returnType": {
               "__schema": "InferenceTypeSchema",
               "location": {
-                "file": "button.composition.tsx",
+                "filePath": "button.composition.tsx",
                 "line": 17,
                 "character": 14
               },
@@ -505,7 +505,7 @@
           {
             "__schema": "FunctionLikeSchema",
             "location": {
-              "file": "button.composition.tsx",
+              "filePath": "button.composition.tsx",
               "line": 21,
               "character": 14
             },
@@ -516,7 +516,7 @@
             "returnType": {
               "__schema": "InferenceTypeSchema",
               "location": {
-                "file": "button.composition.tsx",
+                "filePath": "button.composition.tsx",
                 "line": 21,
                 "character": 14
               },
@@ -526,7 +526,7 @@
           {
             "__schema": "FunctionLikeSchema",
             "location": {
-              "file": "button.composition.tsx",
+              "filePath": "button.composition.tsx",
               "line": 30,
               "character": 14
             },
@@ -537,7 +537,7 @@
             "returnType": {
               "__schema": "InferenceTypeSchema",
               "location": {
-                "file": "button.composition.tsx",
+                "filePath": "button.composition.tsx",
                 "line": 30,
                 "character": 14
               },
@@ -550,7 +550,7 @@
       {
         "__schema": "VariableLikeSchema",
         "location": {
-          "file": "index.ts",
+          "filePath": "index.ts",
           "line": 26,
           "character": 14
         },
@@ -560,7 +560,7 @@
         "type": {
           "__schema": "InferenceTypeSchema",
           "location": {
-            "file": "index.ts",
+            "filePath": "index.ts",
             "line": 26,
             "character": 14
           },
@@ -570,7 +570,7 @@
       {
         "__schema": "FunctionLikeSchema",
         "location": {
-          "file": "index.ts",
+          "filePath": "index.ts",
           "line": 28,
           "character": 14
         },
@@ -581,7 +581,7 @@
         "returnType": {
           "__schema": "InferenceTypeSchema",
           "location": {
-            "file": "index.ts",
+            "filePath": "index.ts",
             "line": 28,
             "character": 14
           },
@@ -591,7 +591,7 @@
       {
         "__schema": "VariableLikeSchema",
         "location": {
-          "file": "index.ts",
+          "filePath": "index.ts",
           "line": 30,
           "character": 14
         },
@@ -601,7 +601,7 @@
         "type": {
           "__schema": "TypeRefSchema",
           "location": {
-            "file": "index.ts",
+            "filePath": "index.ts",
             "line": 30,
             "character": 14
           },
@@ -613,7 +613,7 @@
         "__schema": "ClassSchema",
         "className": "ClassSomething",
         "location": {
-          "file": "index.ts",
+          "filePath": "index.ts",
           "line": 34,
           "character": 1
         },
@@ -621,7 +621,7 @@
           {
             "__schema": "VariableLikeSchema",
             "location": {
-              "file": "index.ts",
+              "filePath": "index.ts",
               "line": 35,
               "character": 3
             },
@@ -631,7 +631,7 @@
             "type": {
               "__schema": "InferenceTypeSchema",
               "location": {
-                "file": "index.ts",
+                "filePath": "index.ts",
                 "line": 35,
                 "character": 3
               },
@@ -641,7 +641,7 @@
           {
             "__schema": "ConstructorSchema",
             "location": {
-              "file": "index.ts",
+              "filePath": "index.ts",
               "line": 36,
               "character": 3
             },
@@ -649,7 +649,7 @@
               {
                 "__schema": "ParameterSchema",
                 "location": {
-                  "file": "index.ts",
+                  "filePath": "index.ts",
                   "line": 36,
                   "character": 15
                 },
@@ -658,7 +658,7 @@
                 "type": {
                   "__schema": "LiteralTypeSchema",
                   "location": {
-                    "file": "index.ts",
+                    "filePath": "index.ts",
                     "line": 36,
                     "character": 28
                   },
@@ -670,7 +670,7 @@
           {
             "__schema": "FunctionLikeSchema",
             "location": {
-              "file": "index.ts",
+              "filePath": "index.ts",
               "line": 38,
               "character": 3
             },
@@ -681,7 +681,7 @@
             "returnType": {
               "__schema": "InferenceTypeSchema",
               "location": {
-                "file": "index.ts",
+                "filePath": "index.ts",
                 "line": 38,
                 "character": 3
               },
@@ -691,7 +691,7 @@
           {
             "__schema": "GetAccessorSchema",
             "location": {
-              "file": "index.ts",
+              "filePath": "index.ts",
               "line": 41,
               "character": 3
             },
@@ -700,7 +700,7 @@
             "type": {
               "__schema": "InferenceTypeSchema",
               "location": {
-                "file": "index.ts",
+                "filePath": "index.ts",
                 "line": 41,
                 "character": 3
               },
@@ -710,7 +710,7 @@
           {
             "__schema": "SetAccessorSchema",
             "location": {
-              "file": "index.ts",
+              "filePath": "index.ts",
               "line": 45,
               "character": 3
             },
@@ -719,7 +719,7 @@
             "param": {
               "__schema": "ParameterSchema",
               "location": {
-                "file": "index.ts",
+                "filePath": "index.ts",
                 "line": 45,
                 "character": 14
               },
@@ -728,7 +728,7 @@
               "type": {
                 "__schema": "KeywordTypeSchema",
                 "location": {
-                  "file": "index.ts",
+                  "filePath": "index.ts",
                   "line": 45,
                   "character": 17
                 },
@@ -741,7 +741,7 @@
       {
         "__schema": "TypeSchema",
         "location": {
-          "file": "index.ts",
+          "filePath": "index.ts",
           "line": 50,
           "character": 1
         },
@@ -750,7 +750,7 @@
         "type": {
           "__schema": "TypeLiteralSchema",
           "location": {
-            "file": "index.ts",
+            "filePath": "index.ts",
             "line": 50,
             "character": 24
           },
@@ -758,7 +758,7 @@
             {
               "__schema": "IndexSignatureSchema",
               "location": {
-                "file": "index.ts",
+                "filePath": "index.ts",
                 "line": 50,
                 "character": 26
               },
@@ -766,7 +766,7 @@
                 {
                   "__schema": "ParameterSchema",
                   "location": {
-                    "file": "index.ts",
+                    "filePath": "index.ts",
                     "line": 50,
                     "character": 27
                   },
@@ -775,7 +775,7 @@
                   "type": {
                     "__schema": "KeywordTypeSchema",
                     "location": {
-                      "file": "index.ts",
+                      "filePath": "index.ts",
                       "line": 50,
                       "character": 32
                     },
@@ -786,7 +786,7 @@
               "type": {
                 "__schema": "KeywordTypeSchema",
                 "location": {
-                  "file": "index.ts",
+                  "filePath": "index.ts",
                   "line": 50,
                   "character": 41
                 },
@@ -799,7 +799,7 @@
       {
         "__schema": "InterfaceSchema",
         "location": {
-          "file": "index.ts",
+          "filePath": "index.ts",
           "line": 52,
           "character": 1
         },
@@ -808,7 +808,7 @@
           {
             "__schema": "VariableLikeSchema",
             "location": {
-              "file": "index.ts",
+              "filePath": "index.ts",
               "line": 53,
               "character": 3
             },
@@ -818,7 +818,7 @@
             "type": {
               "__schema": "FunctionLikeSchema",
               "location": {
-                "file": "index.ts",
+                "filePath": "index.ts",
                 "line": 53,
                 "character": 16
               },
@@ -829,7 +829,7 @@
               "returnType": {
                 "__schema": "KeywordTypeSchema",
                 "location": {
-                  "file": "index.ts",
+                  "filePath": "index.ts",
                   "line": 53,
                   "character": 22
                 },
@@ -840,7 +840,7 @@
           {
             "__schema": "FunctionLikeSchema",
             "location": {
-              "file": "index.ts",
+              "filePath": "index.ts",
               "line": 54,
               "character": 3
             },
@@ -851,7 +851,7 @@
             "returnType": {
               "__schema": "KeywordTypeSchema",
               "location": {
-                "file": "index.ts",
+                "filePath": "index.ts",
                 "line": 54,
                 "character": 16
               },
@@ -863,7 +863,7 @@
       {
         "__schema": "VariableLikeSchema",
         "location": {
-          "file": "index.ts",
+          "filePath": "index.ts",
           "line": 59,
           "character": 14
         },
@@ -873,7 +873,7 @@
         "type": {
           "__schema": "TypeQuerySchema",
           "location": {
-            "file": "index.ts",
+            "filePath": "index.ts",
             "line": 59,
             "character": 18
           },
@@ -881,7 +881,7 @@
           "type": {
             "__schema": "InferenceTypeSchema",
             "location": {
-              "file": "index.ts",
+              "filePath": "index.ts",
               "line": 59,
               "character": 25
             },
@@ -892,7 +892,7 @@
       {
         "__schema": "TypeSchema",
         "location": {
-          "file": "index.ts",
+          "filePath": "index.ts",
           "line": 61,
           "character": 1
         },
@@ -901,7 +901,7 @@
         "type": {
           "__schema": "TypeOperatorSchema",
           "location": {
-            "file": "index.ts",
+            "filePath": "index.ts",
             "line": 61,
             "character": 28
           },
@@ -909,7 +909,7 @@
           "type": {
             "__schema": "TypeQuerySchema",
             "location": {
-              "file": "index.ts",
+              "filePath": "index.ts",
               "line": 61,
               "character": 34
             },
@@ -917,7 +917,7 @@
             "type": {
               "__schema": "InferenceTypeSchema",
               "location": {
-                "file": "index.ts",
+                "filePath": "index.ts",
                 "line": 61,
                 "character": 41
               },
@@ -929,7 +929,7 @@
       {
         "__schema": "FunctionLikeSchema",
         "location": {
-          "file": "index.ts",
+          "filePath": "index.ts",
           "line": 67,
           "character": 14
         },
@@ -940,7 +940,7 @@
           {
             "__schema": "ParameterSchema",
             "location": {
-              "file": "index.ts",
+              "filePath": "index.ts",
               "line": 67,
               "character": 24
             },
@@ -949,7 +949,7 @@
             "type": {
               "__schema": "TypeRefSchema",
               "location": {
-                "file": "index.ts",
+                "filePath": "index.ts",
                 "line": 67,
                 "character": 29
               },
@@ -960,7 +960,7 @@
         "returnType": {
           "__schema": "TypeRefSchema",
           "location": {
-            "file": "index.ts",
+            "filePath": "index.ts",
             "line": 67,
             "character": 14
           },
@@ -970,7 +970,7 @@
       {
         "__schema": "FunctionLikeSchema",
         "location": {
-          "file": "index.ts",
+          "filePath": "index.ts",
           "line": 69,
           "character": 14
         },
@@ -981,7 +981,7 @@
           {
             "__schema": "ParameterSchema",
             "location": {
-              "file": "index.ts",
+              "filePath": "index.ts",
               "line": 69,
               "character": 23
             },
@@ -990,7 +990,7 @@
             "type": {
               "__schema": "TupleTypeSchema",
               "location": {
-                "file": "index.ts",
+                "filePath": "index.ts",
                 "line": 69,
                 "character": 34
               },
@@ -998,7 +998,7 @@
                 {
                   "__schema": "KeywordTypeSchema",
                   "location": {
-                    "file": "index.ts",
+                    "filePath": "index.ts",
                     "line": 69,
                     "character": 35
                   },
@@ -1007,7 +1007,7 @@
                 {
                   "__schema": "TypeRefSchema",
                   "location": {
-                    "file": "index.ts",
+                    "filePath": "index.ts",
                     "line": 69,
                     "character": 43
                   },
@@ -1016,7 +1016,7 @@
                 {
                   "__schema": "TypeRefSchema",
                   "location": {
-                    "file": "index.ts",
+                    "filePath": "index.ts",
                     "line": 69,
                     "character": 53
                   },
@@ -1026,7 +1026,7 @@
                     {
                       "__schema": "KeywordTypeSchema",
                       "location": {
-                        "file": "index.ts",
+                        "filePath": "index.ts",
                         "line": 69,
                         "character": 60
                       },
@@ -1035,7 +1035,7 @@
                     {
                       "__schema": "KeywordTypeSchema",
                       "location": {
-                        "file": "index.ts",
+                        "filePath": "index.ts",
                         "line": 69,
                         "character": 68
                       },
@@ -1050,7 +1050,7 @@
         "returnType": {
           "__schema": "InferenceTypeSchema",
           "location": {
-            "file": "index.ts",
+            "filePath": "index.ts",
             "line": 69,
             "character": 14
           },
@@ -1060,7 +1060,7 @@
       {
         "__schema": "EnumSchema",
         "location": {
-          "file": "index.ts",
+          "filePath": "index.ts",
           "line": 71,
           "character": 1
         },
@@ -1074,7 +1074,7 @@
       {
         "__schema": "FunctionLikeSchema",
         "location": {
-          "file": "index.ts",
+          "filePath": "index.ts",
           "line": 77,
           "character": 1
         },
@@ -1088,7 +1088,7 @@
         "returnType": {
           "__schema": "TypeRefSchema",
           "location": {
-            "file": "index.ts",
+            "filePath": "index.ts",
             "line": 77,
             "character": 37
           },
@@ -1098,7 +1098,7 @@
             {
               "__schema": "KeywordTypeSchema",
               "location": {
-                "file": "index.ts",
+                "filePath": "index.ts",
                 "line": 77,
                 "character": 45
               },
@@ -1110,7 +1110,7 @@
       {
         "__schema": "TypeSchema",
         "location": {
-          "file": "index.ts",
+          "filePath": "index.ts",
           "line": 84,
           "character": 1
         },
@@ -1119,7 +1119,7 @@
         "type": {
           "__schema": "InferenceTypeSchema",
           "location": {
-            "file": "index.ts",
+            "filePath": "index.ts",
             "line": 84,
             "character": 31
           },
@@ -1129,7 +1129,7 @@
       {
         "__schema": "TypeSchema",
         "location": {
-          "file": "index.ts",
+          "filePath": "index.ts",
           "line": 86,
           "character": 1
         },
@@ -1138,21 +1138,21 @@
         "type": {
           "__schema": "TypeArraySchema",
           "location": {
-            "file": "index.ts",
+            "filePath": "index.ts",
             "line": 86,
             "character": 33
           },
           "type": {
             "__schema": "ParenthesizedTypeSchema",
             "location": {
-              "file": "index.ts",
+              "filePath": "index.ts",
               "line": 86,
               "character": 33
             },
             "type": {
               "__schema": "TypeUnionSchema",
               "location": {
-                "file": "index.ts",
+                "filePath": "index.ts",
                 "line": 86,
                 "character": 34
               },
@@ -1160,7 +1160,7 @@
                 {
                   "__schema": "InferenceTypeSchema",
                   "location": {
-                    "file": "index.ts",
+                    "filePath": "index.ts",
                     "line": 86,
                     "character": 34
                   },
@@ -1169,7 +1169,7 @@
                 {
                   "__schema": "InferenceTypeSchema",
                   "location": {
-                    "file": "index.ts",
+                    "filePath": "index.ts",
                     "line": 86,
                     "character": 39
                   },
@@ -1183,7 +1183,7 @@
       {
         "__schema": "FunctionLikeSchema",
         "location": {
-          "file": "index.ts",
+          "filePath": "index.ts",
           "line": 88,
           "character": 1
         },
@@ -1196,7 +1196,7 @@
           {
             "__schema": "ParameterSchema",
             "location": {
-              "file": "index.ts",
+              "filePath": "index.ts",
               "line": 88,
               "character": 33
             },
@@ -1205,7 +1205,7 @@
             "type": {
               "__schema": "KeywordTypeSchema",
               "location": {
-                "file": "index.ts",
+                "filePath": "index.ts",
                 "line": 88,
                 "character": 38
               },
@@ -1216,7 +1216,7 @@
         "returnType": {
           "__schema": "TypePredicateSchema",
           "location": {
-            "file": "index.ts",
+            "filePath": "index.ts",
             "line": 88,
             "character": 44
           },
@@ -1225,7 +1225,7 @@
           "type": {
             "__schema": "KeywordTypeSchema",
             "location": {
-              "file": "index.ts",
+              "filePath": "index.ts",
               "line": 88,
               "character": 51
             },
@@ -1236,7 +1236,7 @@
       {
         "__schema": "FunctionLikeSchema",
         "location": {
-          "file": "index.ts",
+          "filePath": "index.ts",
           "line": 92,
           "character": 1
         },
@@ -1249,7 +1249,7 @@
           {
             "__schema": "ParameterSchema",
             "location": {
-              "file": "index.ts",
+              "filePath": "index.ts",
               "line": 92,
               "character": 39
             },
@@ -1258,7 +1258,7 @@
             "type": {
               "__schema": "KeywordTypeSchema",
               "location": {
-                "file": "index.ts",
+                "filePath": "index.ts",
                 "line": 92,
                 "character": 50
               },
@@ -1268,7 +1268,7 @@
           {
             "__schema": "ParameterSchema",
             "location": {
-              "file": "index.ts",
+              "filePath": "index.ts",
               "line": 92,
               "character": 55
             },
@@ -1277,7 +1277,7 @@
             "type": {
               "__schema": "KeywordTypeSchema",
               "location": {
-                "file": "index.ts",
+                "filePath": "index.ts",
                 "line": 92,
                 "character": 61
               },
@@ -1288,7 +1288,7 @@
         "returnType": {
           "__schema": "TypePredicateSchema",
           "location": {
-            "file": "index.ts",
+            "filePath": "index.ts",
             "line": 92,
             "character": 70
           },
@@ -1299,7 +1299,7 @@
       {
         "__schema": "FunctionLikeSchema",
         "location": {
-          "file": "index.ts",
+          "filePath": "index.ts",
           "line": 94,
           "character": 1
         },
@@ -1313,7 +1313,7 @@
           {
             "__schema": "ParameterSchema",
             "location": {
-              "file": "index.ts",
+              "filePath": "index.ts",
               "line": 94,
               "character": 45
             },
@@ -1322,7 +1322,7 @@
             "type": {
               "__schema": "TypeLiteralSchema",
               "location": {
-                "file": "index.ts",
+                "filePath": "index.ts",
                 "line": 94,
                 "character": 45
               },
@@ -1330,7 +1330,7 @@
                 {
                   "__schema": "InferenceTypeSchema",
                   "location": {
-                    "file": "index.ts",
+                    "filePath": "index.ts",
                     "line": 94,
                     "character": 45
                   },
@@ -1344,7 +1344,7 @@
         "returnType": {
           "__schema": "InferenceTypeSchema",
           "location": {
-            "file": "index.ts",
+            "filePath": "index.ts",
             "line": 94,
             "character": 1
           },
@@ -1354,7 +1354,7 @@
       {
         "__schema": "FunctionLikeSchema",
         "location": {
-          "file": "index.ts",
+          "filePath": "index.ts",
           "line": 97,
           "character": 1
         },
@@ -1368,7 +1368,7 @@
           {
             "__schema": "ParameterSchema",
             "location": {
-              "file": "index.ts",
+              "filePath": "index.ts",
               "line": 97,
               "character": 44
             },
@@ -1377,7 +1377,7 @@
             "type": {
               "__schema": "TupleTypeSchema",
               "location": {
-                "file": "index.ts",
+                "filePath": "index.ts",
                 "line": 97,
                 "character": 52
               },
@@ -1385,7 +1385,7 @@
                 {
                   "__schema": "KeywordTypeSchema",
                   "location": {
-                    "file": "index.ts",
+                    "filePath": "index.ts",
                     "line": 97,
                     "character": 53
                   },
@@ -1398,7 +1398,7 @@
         "returnType": {
           "__schema": "InferenceTypeSchema",
           "location": {
-            "file": "index.ts",
+            "filePath": "index.ts",
             "line": 97,
             "character": 1
           },
@@ -1408,7 +1408,7 @@
       {
         "__schema": "TypeSchema",
         "location": {
-          "file": "index.ts",
+          "filePath": "index.ts",
           "line": 104,
           "character": 1
         },
@@ -1417,14 +1417,14 @@
         "type": {
           "__schema": "IndexedAccessSchema",
           "location": {
-            "file": "index.ts",
+            "filePath": "index.ts",
             "line": 104,
             "character": 33
           },
           "objectType": {
             "__schema": "InferenceTypeSchema",
             "location": {
-              "file": "index.ts",
+              "filePath": "index.ts",
               "line": 104,
               "character": 33
             },
@@ -1433,7 +1433,7 @@
           "indexType": {
             "__schema": "LiteralTypeSchema",
             "location": {
-              "file": "index.ts",
+              "filePath": "index.ts",
               "line": 104,
               "character": 40
             },
@@ -1444,7 +1444,7 @@
       {
         "__schema": "InterfaceSchema",
         "location": {
-          "file": "index.ts",
+          "filePath": "index.ts",
           "line": 107,
           "character": 1
         },
@@ -1453,7 +1453,7 @@
           {
             "__schema": "VariableLikeSchema",
             "location": {
-              "file": "index.ts",
+              "filePath": "index.ts",
               "line": 108,
               "character": 3
             },
@@ -1463,7 +1463,7 @@
             "type": {
               "__schema": "KeywordTypeSchema",
               "location": {
-                "file": "index.ts",
+                "filePath": "index.ts",
                 "line": 108,
                 "character": 19
               },
@@ -1475,7 +1475,7 @@
       {
         "__schema": "InterfaceSchema",
         "location": {
-          "file": "index.ts",
+          "filePath": "index.ts",
           "line": 110,
           "character": 1
         },
@@ -1484,7 +1484,7 @@
           {
             "__schema": "VariableLikeSchema",
             "location": {
-              "file": "index.ts",
+              "filePath": "index.ts",
               "line": 111,
               "character": 3
             },
@@ -1494,7 +1494,7 @@
             "type": {
               "__schema": "InferenceTypeSchema",
               "location": {
-                "file": "index.ts",
+                "filePath": "index.ts",
                 "line": 111,
                 "character": 3
               },
@@ -1506,7 +1506,7 @@
       {
         "__schema": "TypeSchema",
         "location": {
-          "file": "index.ts",
+          "filePath": "index.ts",
           "line": 116,
           "character": 1
         },
@@ -1515,7 +1515,7 @@
         "type": {
           "__schema": "TemplateLiteralTypeSchema",
           "location": {
-            "file": "index.ts",
+            "filePath": "index.ts",
             "line": 116,
             "character": 35
           },
@@ -1524,7 +1524,7 @@
             {
               "__schema": "TemplateLiteralTypeSpanSchema",
               "location": {
-                "file": "index.ts",
+                "filePath": "index.ts",
                 "line": 116,
                 "character": 44
               },
@@ -1532,7 +1532,7 @@
               "type": {
                 "__schema": "InferenceTypeSchema",
                 "location": {
-                  "file": "index.ts",
+                  "filePath": "index.ts",
                   "line": 116,
                   "character": 44
                 },
@@ -1542,7 +1542,7 @@
             {
               "__schema": "TemplateLiteralTypeSpanSchema",
               "location": {
-                "file": "index.ts",
+                "filePath": "index.ts",
                 "line": 116,
                 "character": 57
               },
@@ -1550,7 +1550,7 @@
               "type": {
                 "__schema": "InferenceTypeSchema",
                 "location": {
-                  "file": "index.ts",
+                  "filePath": "index.ts",
                   "line": 116,
                   "character": 57
                 },
@@ -1563,7 +1563,7 @@
       {
         "__schema": "InterfaceSchema",
         "location": {
-          "file": "index.ts",
+          "filePath": "index.ts",
           "line": 118,
           "character": 1
         },
@@ -1572,7 +1572,7 @@
           {
             "__schema": "FunctionLikeSchema",
             "location": {
-              "file": "index.ts",
+              "filePath": "index.ts",
               "line": 119,
               "character": 3
             },
@@ -1586,7 +1586,7 @@
               {
                 "__schema": "ParameterSchema",
                 "location": {
-                  "file": "index.ts",
+                  "filePath": "index.ts",
                   "line": 119,
                   "character": 7
                 },
@@ -1595,7 +1595,7 @@
                 "type": {
                   "__schema": "KeywordTypeSchema",
                   "location": {
-                    "file": "index.ts",
+                    "filePath": "index.ts",
                     "line": 119,
                     "character": 10
                   },
@@ -1606,7 +1606,7 @@
             "returnType": {
               "__schema": "InferenceTypeSchema",
               "location": {
-                "file": "index.ts",
+                "filePath": "index.ts",
                 "line": 119,
                 "character": 19
               },
