@@ -53,10 +53,26 @@ export class ExportDeclaration implements SchemaTransformer {
 
     // e.g. `export { button1, button2 } as Composition from './button';
     if (exportClause.kind === SyntaxKind.NamedExports) {
-      exportClause as NamedExports;
       const schemas = await Promise.all(
         exportClause.elements.map(async (element) => {
-          return context.visitDefinition(element.name);
+          const definitionNode = await context.definition(element.name);
+          if (!definitionNode) {
+            throw new Error(
+              `unable to find the definition of "${element.name.getText()}" at ${context.getLocationAsString(
+                element.name
+              )}`
+            );
+          }
+          if (definitionNode.parent.kind === SyntaxKind.ExportSpecifier) {
+            // the definition node is the same node as element.name. tsserver wasn't able to find the source for it
+            // normally, "bit install" should fix it. another option is to open vscode and look for errors.
+            throw new Error(`error: tsserver is unable to locate the identifier "${element.name.getText()}" at ${context.getLocationAsString(
+              element.name
+            )}.
+make sure "bit status" is clean and there are no errors about missing packages/links.
+also, make sure the tsconfig.json in the root has the "jsx" setting defined.`);
+          }
+          return context.computeSchema(definitionNode);
         })
       );
 

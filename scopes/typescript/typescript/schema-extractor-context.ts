@@ -42,6 +42,11 @@ export class SchemaExtractorContext {
     };
   }
 
+  getLocationAsString(node: Node): string {
+    const location = this.getLocation(node);
+    return `${node.getSourceFile().fileName}, line: ${location.line}, character: ${location.character}`;
+  }
+
   getPathRelativeToComponent(filePath: string): string {
     const basePath = this.component.filesystem.files[0].base;
     return relative(basePath, filePath);
