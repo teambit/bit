@@ -56,7 +56,7 @@ export enum Verb {
 
 export type ProxyConfig = {
   ca?: string | string[];
-  cert?: string;
+  cert?: string | string[];
   httpProxy?: string;
   httpsProxy?: string;
   key?: string;

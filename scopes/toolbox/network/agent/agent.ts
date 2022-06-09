@@ -8,7 +8,7 @@ const HttpsAgent = HttpAgent.HttpsAgent;
 
 export interface AgentOptions {
   ca?: string | string[];
-  cert?: string;
+  cert?: string | string[];
   httpProxy?: string;
   httpsProxy?: string;
   key?: string;

@@ -57,7 +57,7 @@ function getProxy(
   proxyUrl: URL,
   opts: {
     ca?: string | string[];
-    cert?: string;
+    cert?: string | string[];
     key?: string;
     timeout?: number;
     localAddress?: string;
