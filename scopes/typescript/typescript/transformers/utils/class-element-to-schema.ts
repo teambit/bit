@@ -8,7 +8,7 @@ import {
   SetAccessorDeclaration,
   SyntaxKind,
 } from 'typescript';
-import { ConstructorSchema, SchemaNode, VariableSchema } from '@teambit/semantics.entities.semantic-schema';
+import { ConstructorSchema, SchemaNode, VariableLikeSchema } from '@teambit/semantics.entities.semantic-schema';
 import { SchemaExtractorContext } from '../../schema-extractor-context';
 import { getParams } from './get-params';
 import { getAccessor, indexSignature, setAccessor } from './type-element-to-schema';
@@ -54,7 +54,7 @@ async function propertyDeclaration(node: PropertyDeclaration, context: SchemaExt
   const type = await context.resolveType(node, typeStr);
   const isOptional = Boolean(node.questionToken);
 
-  return new VariableSchema(context.getLocation(node), name, displaySig || '', type, isOptional);
+  return new VariableLikeSchema(context.getLocation(node), name, displaySig || '', type, isOptional);
 }
 
 async function methodDeclaration(node: MethodDeclaration, context: SchemaExtractorContext) {

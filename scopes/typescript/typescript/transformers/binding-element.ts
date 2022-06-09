@@ -1,5 +1,5 @@
 import ts, { BindingElement, Node } from 'typescript';
-import { VariableSchema } from '@teambit/semantics.entities.semantic-schema';
+import { VariableLikeSchema } from '@teambit/semantics.entities.semantic-schema';
 import { SchemaTransformer } from '../schema-transformer';
 import { SchemaExtractorContext } from '../schema-extractor-context';
 import { ExportIdentifier } from '../export-identifier';
@@ -27,6 +27,6 @@ export class BindingElementTransformer implements SchemaTransformer {
     const displaySig = info?.body?.displayString || '';
     const typeStr = parseTypeFromQuickInfo(info);
     const type = await context.resolveType(node, typeStr);
-    return new VariableSchema(context.getLocation(node), name, displaySig, type, false);
+    return new VariableLikeSchema(context.getLocation(node), name, displaySig, type, false);
   }
 }

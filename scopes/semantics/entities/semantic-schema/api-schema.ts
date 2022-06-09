@@ -9,7 +9,7 @@ import {
   Module,
   TypeRefSchema,
   TypeSchema,
-  VariableSchema,
+  VariableLikeSchema,
 } from './schemas';
 import { Location, SchemaNode } from './schema-node';
 import { schemaObjToInstance } from './class-transformers';
@@ -53,7 +53,7 @@ export class APISchema extends SchemaNode {
       getSection(ClassSchema, 'Classes') +
       getSection(InterfaceSchema, 'Interfaces') +
       getSection(FunctionLikeSchema, 'Functions') +
-      getSection(VariableSchema, 'Variables') +
+      getSection(VariableLikeSchema, 'Variables') +
       getSection(TypeSchema, 'Types') +
       getSection(EnumSchema, 'Enums') +
       getSection(TypeRefSchema, 'TypeReferences')
