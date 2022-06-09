@@ -9,6 +9,7 @@ import {
   Module,
   TypeRefSchema,
   TypeSchema,
+  UnresolvedSchema,
   VariableLikeSchema,
 } from './schemas';
 import { Location, SchemaNode } from './schema-node';
@@ -56,7 +57,8 @@ export class APISchema extends SchemaNode {
       getSection(VariableLikeSchema, 'Variables') +
       getSection(TypeSchema, 'Types') +
       getSection(EnumSchema, 'Enums') +
-      getSection(TypeRefSchema, 'TypeReferences')
+      getSection(TypeRefSchema, 'TypeReferences') +
+      getSection(UnresolvedSchema, 'Unresolved')
     );
   }
 
