@@ -60,6 +60,13 @@ export interface Command {
   options: CommandOptions;
 
   /**
+   * arguments are defined in the "name" property, and that's where the source of truth is.
+   * this prop is optional and provides a way to describe the args. later, it'll support more fields, such as defaultValue.
+   * if this is set, it'll be shown in the command help under "Arguments" section.
+   */
+  arguments?: CommandArg[];
+
+  /**
    * sub commands for example:
    * bit capsule list to list active capsules.
    */
@@ -113,3 +120,4 @@ export type CLIArgs = Array<string[] | string>;
 export type GenericObject = { [k: string]: any };
 export type Report = { data: string; code: number };
 export type RenderResult = { data: React.ReactElement; code: number };
+export type CommandArg = { name: string; description?: string };

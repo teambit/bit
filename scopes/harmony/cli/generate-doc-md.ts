@@ -132,5 +132,6 @@ function oneCommandToObject(command: Command) {
     'internal',
     'remoteOp',
     'skipWorkspace',
+    'arguments',
   ]);
 }
