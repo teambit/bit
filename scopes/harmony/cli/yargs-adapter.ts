@@ -1,5 +1,5 @@
 import { Command } from '@teambit/legacy/dist/cli/command';
-import { Arguments, CommandBuilder, CommandModule } from 'yargs';
+import { Arguments, CommandModule, Argv } from 'yargs';
 import { TOKEN_FLAG } from '@teambit/legacy/dist/constants';
 import { camelCase } from 'lodash';
 import { CommandRunner } from './command-runner';
@@ -11,12 +11,20 @@ export class YargsAdapter implements CommandModule {
   command: string;
   describe?: string;
   aliases?: string;
-  builder: CommandBuilder;
   constructor(private commanderCommand: Command) {
     this.command = commanderCommand.name;
     this.describe = commanderCommand.description;
     this.aliases = commanderCommand.alias;
-    this.builder = this.optionsToBuilder(commanderCommand);
+  }
+
+  builder(yargs: Argv) {
+    const options = YargsAdapter.optionsToBuilder(this.commanderCommand);
+    yargs.option(options);
+    this.commanderCommand.arguments?.forEach((arg) => {
+      yargs.positional(arg.name, { description: arg.description });
+    });
+
+    return yargs;
   }
 
   handler(argv: Arguments) {
@@ -36,7 +44,11 @@ export class YargsAdapter implements CommandModule {
     return commandRunner.runCommand();
   }
 
-  private optionsToBuilder(command: Command) {
+  get positional() {
+    return this.commanderCommand.arguments;
+  }
+
+  static optionsToBuilder(command: Command) {
     const option = command.options.reduce((acc, [alias, opt, desc]) => {
       const optName = opt.split(' ')[0];
       acc[optName] = {
@@ -48,12 +60,12 @@ export class YargsAdapter implements CommandModule {
       };
       return acc;
     }, {});
-    const globalOptions = this.getGlobalOptions(command);
+    const globalOptions = YargsAdapter.getGlobalOptions(command);
 
     return { ...option, ...globalOptions };
   }
 
-  getGlobalOptions(command: Command): Record<string, any> {
+  static getGlobalOptions(command: Command): Record<string, any> {
     const globalOptions: Record<string, any> = {};
     if (command.remoteOp) {
       globalOptions[TOKEN_FLAG] = {

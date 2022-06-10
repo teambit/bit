@@ -7,6 +7,10 @@ export class EnvsReplaceCmd implements Command {
   description = 'replace an existing env with another env for all components using the old env';
   options = [];
   group = 'development';
+  arguments = [
+    { name: 'old-env', description: 'current environment id' },
+    { name: 'new-env', description: 'target environment id' },
+  ];
 
   constructor(private workspace: Workspace) {}
 

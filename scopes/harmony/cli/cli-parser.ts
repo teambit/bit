@@ -126,7 +126,7 @@ export class CLIParser {
         yargs.command(subCommand);
       });
       // since the "builder" method is overridden, the global flags of the main command are gone, this fixes it.
-      yargs.options(yarnCommand.getGlobalOptions(command));
+      yargs.options(YargsAdapter.getGlobalOptions(command));
       return yargs;
     };
     yarnCommand.builder = builderFunc;
@@ -135,6 +135,7 @@ export class CLIParser {
 
   private getYargsCommand(command: Command): YargsAdapter {
     const yarnCommand = new YargsAdapter(command);
+    yarnCommand.builder = yarnCommand.builder.bind(yarnCommand);
     yarnCommand.handler = yarnCommand.handler.bind(yarnCommand);
 
     return yarnCommand;
@@ -192,10 +193,12 @@ export class CLIParser {
     const options: string[] = [];
     const globalOptions: string[] = [];
     const subCommands: string[] = [];
+    const args: string[] = [];
 
     let optionsStarted = false;
     let globalStarted = false;
     let subCommandsStarted = false;
+    let positionalsStarted = false;
     for (let i = 1; i < linesWithoutEmpty.length; i += 1) {
       const currentLine = linesWithoutEmpty[i];
       if (currentLine === STANDARD_GROUP) {
@@ -204,6 +207,10 @@ export class CLIParser {
         globalStarted = true;
       } else if (currentLine === 'Commands:') {
         subCommandsStarted = true;
+      } else if (currentLine === 'Positionals:') {
+        positionalsStarted = true;
+      } else if (positionalsStarted) {
+        args.push(currentLine);
       } else if (globalStarted) {
         globalOptions.push(currentLine);
       } else if (optionsStarted) {
@@ -218,6 +225,7 @@ export class CLIParser {
     // show the flags in green
     const optionsColored = options.map((opt) => opt.replace(/(--)([\w-]+)/, replacer).replace(/(-)([\w-]+)/, replacer));
     const optionsStr = options.length ? `\n${STANDARD_GROUP}\n${optionsColored.join('\n')}\n` : '';
+    const argumentsStr = args.length ? `\nArguments:\n${args.join('\n')}\n` : '';
     const subCommandsStr = subCommands.length ? `\n${'Commands:'}\n${subCommands.join('\n')}\n` : '';
     // show the description in yellow
     const descriptionColored = description.map((desc) => chalk.yellow(desc));
@@ -230,7 +238,7 @@ export class CLIParser {
     const finalOutput = `${cmdLine}
 
 ${descriptionStr}
-${subCommandsStr}${optionsStr}
+${argumentsStr}${subCommandsStr}${optionsStr}
 ${GLOBAL_GROUP}
 ${globalOptionsStr}`;
 
