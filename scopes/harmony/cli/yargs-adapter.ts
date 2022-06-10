@@ -23,6 +23,9 @@ export class YargsAdapter implements CommandModule {
     this.commanderCommand.arguments?.forEach((arg) => {
       yargs.positional(arg.name, { description: arg.description });
     });
+    this.commanderCommand.examples?.forEach((example) => {
+      yargs.example(example.cmd, example.description);
+    });
 
     return yargs;
   }

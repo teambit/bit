@@ -11,6 +11,12 @@ export class EnvsReplaceCmd implements Command {
     { name: 'old-env', description: 'current environment id' },
     { name: 'new-env', description: 'target environment id' },
   ];
+  examples = [
+    {
+      cmd: 'replace teambit.harmony/aspect teambit.harmony/node',
+      description: 'all components using aspect env, will be replaced with node env',
+    },
+  ];
 
   constructor(private workspace: Workspace) {}
 
