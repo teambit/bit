@@ -20,6 +20,7 @@ import { OnComponentChangeEvent, OnComponentAddEvent, OnComponentRemovedEvent } 
 import { Workspace } from '../workspace';
 import { OnComponentEventResult } from '../on-component-events';
 import { CheckTypes } from './check-types';
+import { WatchQueue } from './watch-queue';
 
 export type WatcherProcessData = { watchProcess: ChildProcess; compilerId: BitId; componentIds: BitId[] };
 
@@ -47,6 +48,8 @@ const DEBOUNCE_WAIT_MS = 100;
 export class Watcher {
   private fsWatcher: FSWatcher;
   private changedFilesPerComponent: { [componentId: string]: string[] } = {};
+  private watchQueue = new WatchQueue();
+  private bitMapChangesInProgress = false;
   constructor(
     private workspace: Workspace,
     private pubsub: PubsubMain,
@@ -111,6 +114,7 @@ export class Watcher {
   }
 
   /**
+   * *** DEBOUNCING ***
    * some actions trigger multiple files changes at (almost) the same time. e.g. "git pull".
    * this causes some performance and instability issues. a debouncing mechanism was implemented to help with this.
    * the way how it works is that the first file of the same component starts the execution with a delay (e.g. 200ms).
@@ -125,6 +129,24 @@ export class Watcher {
    * B) it debounces the method regardless the param passes to it. so it'll disregard the component-id and will delay
    * other components undesirably.
    *
+   * *** QUEUE ***
+   * the debouncing helps to not execute the same component multiple times concurrently. however, multiple components
+   * and .bitmap changes execution can still be processed concurrently.
+   * the following example explains why this is an issue.
+   * compA is changed in the .bitmap file from version 0.0.1 to 0.0.2. its files were changed as well.
+   * all these changes get pulled at the same time by "git pull", as a result, the execution of compA and the .bitmap
+   * happen at the same time.
+   * during the execution of compA, the component id is parsed as compA@0.0.1, later, it asks for the Workspace for this
+   * id. while the workspace is looking for this id, the .bitmap execution reloaded the consumer and changed all versions.
+   * after this change, the workspace doesn't have this id anymore, which will trigger an error.
+   * to ensure this won't happen, we keep a flag to indicate whether the .bitmap execution is running, and if so, all
+   * other executions are paused until the queue is empty (this is done by awaiting for queue.onIdle).
+   * once the queue is empty, we know the .bitmap process was done and the workspace has all new ids.
+   * in the example above, at this stage, the id will be resolved to compA@0.0.2.
+   * one more thing, the queue is configured to have concurrency of 1. to make sure two components are not processed at
+   * the same time. (the same way is done when loading all components from the filesystem/scope).
+   * this way we can also ensure that if compA was started before the .bitmap execution, it will complete before the
+   * .bitmap execution starts.
    */
   private async handleChange(
     filePath: string,
@@ -137,9 +159,14 @@ export class Watcher {
   }> {
     try {
       if (filePath.endsWith(BIT_MAP)) {
-        const buildResults = await this.handleBitmapChanges();
+        this.bitMapChangesInProgress = true;
+        const buildResults = await this.watchQueue.add(() => this.handleBitmapChanges());
+        this.bitMapChangesInProgress = false;
         loader.stop();
         return { results: buildResults, files: [filePath] };
+      }
+      if (this.bitMapChangesInProgress) {
+        await this.watchQueue.onIdle();
       }
       const componentId = this.getComponentIdByPath(filePath);
       if (!componentId) {
@@ -148,7 +175,6 @@ export class Watcher {
         loader.stop();
         return { results: [], files: [filePath], failureMsg };
       }
-
       const compIdStr = componentId.toString();
       if (this.changedFilesPerComponent[compIdStr]) {
         this.changedFilesPerComponent[compIdStr].push(filePath);
@@ -160,7 +186,7 @@ export class Watcher {
       const files = this.changedFilesPerComponent[compIdStr];
       delete this.changedFilesPerComponent[compIdStr];
 
-      const buildResults = await this.triggerCompChanges(componentId, files, initiator);
+      const buildResults = await this.watchQueue.add(() => this.triggerCompChanges(componentId, files, initiator));
       const failureMsg = buildResults.length
         ? undefined
         : `files ${files.join(', ')} are inside the component ${compIdStr} but configured to be ignored`;
