@@ -85,6 +85,11 @@ export interface Command {
   skipWorkspace?: boolean;
 
   /**
+   * optionally, give some examples how to use the command.
+   */
+  examples?: Example[];
+
+  /**
    * do not set this. it is being set once the command run.
    * the values are those followed `--` in the command line. (e.g. `bit import -- --no-optional`)
    */
@@ -121,3 +126,4 @@ export type GenericObject = { [k: string]: any };
 export type Report = { data: string; code: number };
 export type RenderResult = { data: React.ReactElement; code: number };
 export type CommandArg = { name: string; description?: string };
+export type Example = { cmd: string; description: string };

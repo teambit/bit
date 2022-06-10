@@ -68,6 +68,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
   ] as CommandOptions;
   migration = true;
   remoteOp = true; // In case a compiler / tester is not installed
+  examples = [{ cmd: 'tag --ver 1.0.0', description: 'tag all components to version 1.0.0' }];
 
   constructor(docsDomain: string, private snapping: SnappingMain, private logger: Logger) {
     this.extendedDescription = `if no ids are provided, it will tag all new and modified components.

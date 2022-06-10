@@ -181,6 +181,14 @@ export class CLIParser {
   /**
    * manipulate the command help output. there is no API from Yarn to do any of this, so it needs to be done manually.
    * see https://github.com/yargs/yargs/issues/1956
+   *
+   * the original order of the output:
+   * description
+   * Options
+   * Commands
+   * Global
+   * Positionals
+   * Examples
    */
   private logCommandHelp(help: string) {
     const command = this.findCommandByArgv();
@@ -194,11 +202,13 @@ export class CLIParser {
     const globalOptions: string[] = [];
     const subCommands: string[] = [];
     const args: string[] = [];
+    const examples: string[] = [];
 
     let optionsStarted = false;
     let globalStarted = false;
     let subCommandsStarted = false;
     let positionalsStarted = false;
+    let examplesStarted = false;
     for (let i = 1; i < linesWithoutEmpty.length; i += 1) {
       const currentLine = linesWithoutEmpty[i];
       if (currentLine === STANDARD_GROUP) {
@@ -209,6 +219,10 @@ export class CLIParser {
         subCommandsStarted = true;
       } else if (currentLine === 'Positionals:') {
         positionalsStarted = true;
+      } else if (currentLine === 'Examples:') {
+        examplesStarted = true;
+      } else if (examplesStarted) {
+        examples.push(currentLine);
       } else if (positionalsStarted) {
         args.push(currentLine);
       } else if (globalStarted) {
@@ -226,6 +240,7 @@ export class CLIParser {
     const optionsColored = options.map((opt) => opt.replace(/(--)([\w-]+)/, replacer).replace(/(-)([\w-]+)/, replacer));
     const optionsStr = options.length ? `\n${STANDARD_GROUP}\n${optionsColored.join('\n')}\n` : '';
     const argumentsStr = args.length ? `\nArguments:\n${args.join('\n')}\n` : '';
+    const examplesStr = examples.length ? `\nExamples:\n${examples.join('\n')}\n` : '';
     const subCommandsStr = subCommands.length ? `\n${'Commands:'}\n${subCommands.join('\n')}\n` : '';
     // show the description in yellow
     const descriptionColored = description.map((desc) => chalk.yellow(desc));
@@ -238,7 +253,7 @@ export class CLIParser {
     const finalOutput = `${cmdLine}
 
 ${descriptionStr}
-${argumentsStr}${subCommandsStr}${optionsStr}
+${argumentsStr}${subCommandsStr}${optionsStr}${examplesStr}
 ${GLOBAL_GROUP}
 ${globalOptionsStr}`;
 
