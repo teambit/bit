@@ -25,7 +25,7 @@ export type BasicTagParams = {
   persist: boolean;
   disableTagAndSnapPipelines: boolean;
   forceDeploy: boolean;
-  preRelease?: string;
+  preReleaseId?: string;
   editor?: string;
   unmodified?: boolean;
 };
