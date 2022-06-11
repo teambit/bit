@@ -121,6 +121,7 @@ ${WILDCARD_HELP('tag')}`;
       minor?: boolean;
       major?: boolean;
       increment?: ReleaseType;
+      preRelease?: string;
       prereleaseId?: string;
       ignoreUnresolvedDependencies?: boolean;
       ignoreIssues?: string;

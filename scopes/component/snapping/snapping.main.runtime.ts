@@ -76,7 +76,7 @@ export class SnappingMain {
     all?: boolean | string;
     snapped?: boolean;
     version?: string;
-    releaseType: ReleaseType;
+    releaseType?: ReleaseType;
     ignoreIssues?: string;
     scope?: string | boolean;
     incrementBy?: number;
