@@ -4,6 +4,7 @@ import { getTokenAtPosition } from 'tsutils';
 import { head } from 'lodash';
 // @ts-ignore david we should figure fix this.
 import type { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
+import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
 import { resolve, sep, relative } from 'path';
 import { Component, ComponentID } from '@teambit/component';
 import { TypeRefSchema, SchemaNode, InferenceTypeSchema, Location } from '@teambit/semantics.entities.semantic-schema';
@@ -34,12 +35,18 @@ export class SchemaExtractorContext {
     const position = sourceFile.getLineAndCharacterOfPosition(node.getStart());
     const line = position.line + 1;
     const character = position.character + 1;
+    const filePath = absolutePath ? sourceFile.fileName : this.getPathRelativeToComponent(sourceFile.fileName);
 
     return {
-      file: absolutePath ? sourceFile.fileName : this.getPathRelativeToComponent(sourceFile.fileName),
+      filePath: pathNormalizeToLinux(filePath),
       line,
       character,
     };
+  }
+
+  getLocationAsString(node: Node): string {
+    const location = this.getLocation(node);
+    return `${node.getSourceFile().fileName}, line: ${location.line}, character: ${location.character}`;
   }
 
   getPathRelativeToComponent(filePath: string): string {
@@ -76,7 +83,9 @@ export class SchemaExtractorContext {
     } catch (err: any) {
       if (err.message === 'No content available.') {
         throw new Error(
-          `unable to get quickinfo data from tsserver at ${location.file}, Ln ${location.line}, Col ${location.character}`
+          `unable to get quickinfo data from tsserver at ${this.getPath(node)}, Ln ${location.line}, Col ${
+            location.character
+          }`
         );
       }
       throw err;

@@ -1,0 +1,49 @@
+@import '~@teambit/ui-foundation.ui.constants.z-indexes/z-indexes.module.scss';
+
+.componentCompareVersionPicker {
+  display: flex;
+  flex-direction: row;
+  padding: 24px 0px 8px 0px;
+}
+
+.componentCompareVersionPlaceholder,
+.componentCompareVersionMenu {
+  max-width: 100%;
+  width: 100%;
+}
+.showMenuOverNav {
+  z-index: $nav-z-index + 1;
+}
+
+.componentCompareVersionPlaceholder {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.componentCompareVersionContainer {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+
+  &.left {
+    padding-right: 32px;
+  }
+  &.right {
+    padding-left: 32px;
+  }
+}
+
+.componentCompareDropdown {
+  width: 100%;
+}
+.arrowContainer {
+  height: 60%;
+  align-self: center;
+  display: flex;
+  img {
+    display: flex;
+    align-self: center;
+    height: 100%;
+  }
+}

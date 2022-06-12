@@ -702,8 +702,9 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     if (versionNum === VERSION_ZERO) {
       throw new Error(`the component ${this.id()} has no versions and the head is empty.
-this is probably a component from another lane which should not be loaded in this lane.
-make sure to call "getAllIdsAvailableOnLane" and not "getAllBitIdsFromAllLanes"`);
+this is probably a component from another lane which should not be loaded in this lane (or main).
+if this component is on a lane, make sure to ask for it with a version.
+if that's not the case, make sure to call "getAllIdsAvailableOnLane" and not "getAllBitIdsFromAllLanes"`);
     }
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     if (isTag(versionNum) && !this.hasTagIncludeOrphaned(versionNum!)) {

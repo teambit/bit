@@ -9,11 +9,10 @@ import { CommandOptions, LegacyCommand } from '../../legacy-command';
 
 export default class Untag implements LegacyCommand {
   name = 'untag [id] [version]';
-  shortDescription = 'revert versions tagged for component(s)';
+  description = 'revert versions tagged for component(s)';
   group: Group = 'development';
-  description = `revert version(s) tagged for component(s)
-  https://${BASE_DOCS_DOMAIN}/components/tags#undoing-a-tag
-  ${WILDCARD_HELP('untag')}`;
+  extendedDescription = `https://${BASE_DOCS_DOMAIN}/components/tags#undoing-a-tag
+${WILDCARD_HELP('untag')}`;
   alias = '';
   opts = [
     ['a', 'all', 'revert tag for all tagged components'],

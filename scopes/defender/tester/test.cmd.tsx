@@ -25,7 +25,6 @@ export class TestCmd implements Command {
   description = 'test set of components in your workspace';
   alias = 'at';
   group = 'development';
-  shortDescription = '';
   options = [
     ['w', 'watch', 'start the tester in watch mode.'],
     ['d', 'debug', 'start the tester in debug mode.'],

@@ -101,7 +101,7 @@ export class CLIMain {
   private setDefaults(command: Command) {
     command.alias = command.alias || '';
     command.description = command.description || '';
-    command.shortDescription = command.shortDescription || '';
+    command.extendedDescription = command.extendedDescription || '';
     command.group = command.group || 'ungrouped';
     command.options = command.options || [];
     command.private = command.private || false;

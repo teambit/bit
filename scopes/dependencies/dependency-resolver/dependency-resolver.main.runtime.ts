@@ -28,6 +28,7 @@ import { Version as VersionModel } from '@teambit/legacy/dist/scope/models';
 import LegacyComponent from '@teambit/legacy/dist/consumer/component';
 import fs from 'fs-extra';
 import { BitId } from '@teambit/legacy-bit-id';
+import { readCAFileSync } from '@pnpm/network.ca-file';
 import semver, { SemVer } from 'semver';
 import AspectLoaderAspect, { AspectLoaderMain } from '@teambit/aspect-loader';
 import GlobalConfigAspect, { GlobalConfigMain } from '@teambit/global-config';
@@ -674,7 +675,11 @@ export class DependencyResolverMain {
   }
 
   private async getProxyConfigFromGlobalConfig(): Promise<ProxyConfig> {
-    return Http.getProxyConfig();
+    const globalProxyConfig = await Http.getProxyConfig();
+    if (!globalProxyConfig.ca && globalProxyConfig.cafile) {
+      globalProxyConfig.ca = readCAFileSync(globalProxyConfig.cafile);
+    }
+    return globalProxyConfig;
   }
 
   /**

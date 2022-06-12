@@ -631,20 +631,13 @@ export class Workspace implements ComponentFactory {
    * return the remote lane id (name+scope). otherwise, return null.
    */
   async getCurrentRemoteLane(): Promise<Lane | null> {
-    const currentLane = this.getCurrentLaneId();
-    if (currentLane.isDefault()) {
-      return null;
-    }
-    const trackData = this.scope.legacyScope.lanes.getRemoteTrackedDataByLocalLane(currentLane.name);
-    if (!trackData) {
+    const currentLaneId = this.getCurrentLaneId();
+    if (currentLaneId.isDefault()) {
       return null;
     }
     const scopeComponentImporter = ScopeComponentsImporter.getInstance(this.consumer.scope);
-    const laneId = LaneId.from(trackData.remoteLane, trackData.remoteScope);
     try {
-      const lanes = await scopeComponentImporter.importLanes([laneId]);
-
-      if (!lanes || lanes.length === 0) return null;
+      const lanes = await scopeComponentImporter.importLanes([currentLaneId]);
 
       return lanes[0];
     } catch (err) {
@@ -654,6 +647,10 @@ export class Workspace implements ComponentFactory {
         err instanceof LaneNotFound ||
         err instanceof InvalidScopeNameFromRemote
       ) {
+        const bitMapLaneId = this.bitMap.getExportedLaneId();
+        if (bitMapLaneId?.isEqual(currentLaneId)) {
+          throw err; // we know the lane is not new, so the error is legit
+        }
         // the lane could be a local lane so no need to throw an error in such case
         loader.stop();
         this.logger.warn(`unable to get lane's data from a remote due to an error:\n${err.message}`);

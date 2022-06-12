@@ -147,8 +147,19 @@ export default class Scope {
   /**
    * import components to the `Scope.
    */
-  async import(ids: BitIds, cache = true, reFetchUnBuiltVersion = true): Promise<VersionDependencies[]> {
-    return this.scopeImporter.importMany({ ids, cache, throwForDependencyNotFound: false, reFetchUnBuiltVersion });
+  async import(
+    ids: BitIds,
+    cache = true,
+    reFetchUnBuiltVersion = true,
+    lanes?: Lane[]
+  ): Promise<VersionDependencies[]> {
+    return this.scopeImporter.importMany({
+      ids,
+      cache,
+      throwForDependencyNotFound: false,
+      reFetchUnBuiltVersion,
+      lanes,
+    });
   }
 
   async getDependencyGraph(): Promise<DependencyGraph> {
@@ -811,18 +822,28 @@ export default class Scope {
     }
     const component = await this.loadModelComponentByIdStr(id);
     const idHasScope = Boolean(component && component.scope);
-    if (!idHasScope) {
-      const [idWithoutVersion] = id.toString().split('@');
-      if (idWithoutVersion.includes('.')) {
-        // we allow . only on scope names, so if it has . it must be with scope name
-        return BitId.parse(id, true);
-      }
-      // if it's not in the scope, it's probably new, we assume it doesn't have scope.
+    if (idHasScope) {
+      const bitId: BitId = component.toBitId();
+      const version = BitId.getVersionOnlyFromString(id);
+      return bitId.changeVersion(version || LATEST);
+    }
+    const [idWithoutVersion] = id.toString().split('@');
+    if (idWithoutVersion.includes('.')) {
+      // we allow . only on scope names, so if it has . it must be with scope name
+      return BitId.parse(id, true);
+    }
+    const idSplit = id.split('/');
+    if (idSplit.length === 1) {
+      // it doesn't have any slash, so the id doesn't include the scope-name
       return BitId.parse(id, false);
     }
-    const bitId: BitId = component.toBitId();
-    const version = BitId.getVersionOnlyFromString(id);
-    return bitId.changeVersion(version || LATEST);
+    const maybeScope = idSplit[0];
+    const isRemoteConfiguredLocally = this.scopeJson.remotes[maybeScope];
+    if (isRemoteConfiguredLocally) {
+      return BitId.parse(id, true);
+    }
+    // it's probably new, we assume it doesn't have scope.
+    return BitId.parse(id, false);
   }
 
   async writeObjectsToPendingDir(objectList: ObjectList, clientId: string): Promise<void> {

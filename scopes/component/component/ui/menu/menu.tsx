@@ -50,7 +50,13 @@ export function ComponentMenu({
   consumeMethodSlot,
 }: MenuProps) {
   const componentId = useIdFromLocation();
-  const { component } = useComponent(host, componentId);
+  const lanesContext = useLanesContext();
+  const laneComponent = componentId ? lanesContext?.resolveComponent(componentId) : undefined;
+  const useComponentOptions = laneComponent && {
+    logFilters: { log: { logHead: laneComponent.version } },
+  };
+
+  const { component } = useComponent(host, laneComponent?.id.toString() || componentId, useComponentOptions);
   const mainMenuItems = useMemo(() => groupBy(flatten(menuItemSlot.values()), 'category'), [menuItemSlot]);
   if (!component) return <FullLoader />;
   return (
@@ -87,7 +93,6 @@ function VersionRelatedDropdowns({
   host: string;
 }) {
   const location = useLocation();
-  const isNew = component.tags.isEmpty();
   const lanesContext = useLanesContext();
   const currentLane = lanesContext?.viewedLane;
   const { logs } = component;
@@ -115,6 +120,8 @@ function VersionRelatedDropdowns({
     ).map((tag) => ({ ...tag, version: tag.tag as string }));
   }, [logs]);
 
+  const isNew = snaps.length === 0 && tags.length === 0;
+
   const lanes = lanesContext?.getLanesByComponentId(component.id) || [];
   const localVersion = isWorkspace && !isNew && !currentLane;
 
@@ -139,6 +146,7 @@ function VersionRelatedDropdowns({
         currentVersion={currentVersion}
         latestVersion={component.latest}
         currentLane={currentLane}
+        menuClassName={styles.componentVersionMenu}
       />
     </>
   );

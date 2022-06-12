@@ -16,11 +16,10 @@ import { CommandOptions, LegacyCommand } from '../../legacy-command';
 
 export default class Import implements LegacyCommand {
   name = 'import [ids...]';
-  shortDescription = 'import components into your current working area';
+  description = 'import components into your workspace';
   group: Group = 'collaborate';
-  description = `import components into your current workspace.
-  https://${BASE_DOCS_DOMAIN}/components/importing-components
-  ${WILDCARD_HELP('import')}`;
+  extendedDescription = `https://${BASE_DOCS_DOMAIN}/components/importing-components
+${WILDCARD_HELP('import')}`;
   alias = '';
   opts = [
     ['t', 'tester', 'import a tester environment component'],
@@ -57,8 +56,8 @@ export default class Import implements LegacyCommand {
     ['', 'dependents', 'EXPERIMENTAL. import component dependents to allow auto-tag updating them upon tag'],
     [
       '',
-      'skip-lane',
-      'EXPERIMENTAL. when checked out to a lane, do not import the component into the lane, save it on main',
+      'save-in-lane',
+      'EXPERIMENTAL. when checked out to a lane and the component is not on the remote-lane, save it in the lane (default to save on main)',
     ],
     [
       '',
@@ -87,7 +86,7 @@ export default class Import implements LegacyCommand {
       skipNpmInstall = false,
       ignorePackageJson = false,
       merge,
-      skipLane = false,
+      saveInLane = false,
       dependencies = false,
       dependents = false,
       allHistory = false,
@@ -106,7 +105,7 @@ export default class Import implements LegacyCommand {
       skipNpmInstall?: boolean;
       ignorePackageJson?: boolean;
       merge?: MergeStrategy;
-      skipLane?: boolean;
+      saveInLane?: boolean;
       dependencies?: boolean;
       dependents?: boolean;
       allHistory?: boolean;
@@ -148,7 +147,7 @@ export default class Import implements LegacyCommand {
       writeConfig: !!conf,
       installNpmPackages: !skipNpmInstall,
       writePackageJson: !ignorePackageJson,
-      skipLane,
+      saveInLane,
       importDependenciesDirectly: dependencies,
       importDependents: dependents,
       allHistory,

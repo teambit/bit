@@ -9,9 +9,8 @@ import { CommandOptions, LegacyCommand } from '../../legacy-command';
 
 export default class Fetch implements LegacyCommand {
   name = 'fetch [ids...]';
-  shortDescription = `fetch remote objects and store locally`;
-  description = `fetch remote objects and store locally.
-for lanes, use "/" as a separator between the remote and the lane name, e.g. teambit.ui/fix-button`;
+  description = `fetch remote objects and store locally`;
+  extendedDescription = `for lanes, use "/" as a separator between the remote and the lane name, e.g. teambit.ui/fix-button`;
   alias = '';
   private = true;
   opts = [

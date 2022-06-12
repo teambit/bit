@@ -1,7 +1,7 @@
 export { Module } from './module';
 export { FunctionLikeSchema, Modifier } from './function-like';
 export { TypeRefSchema } from './type-ref';
-export { VariableSchema } from './variable';
+export { VariableLikeSchema } from './variable-like';
 export { ClassSchema } from './class';
 export { ConstructorSchema } from './constructor';
 export { TypeSchema } from './type';
@@ -27,4 +27,6 @@ export { IndexedAccessSchema } from './indexed-access-type';
 export { TemplateLiteralTypeSchema } from './template-literal-type';
 export { TemplateLiteralTypeSpanSchema } from './template-literal-type-span';
 export { ThisTypeSchema } from './this-type';
+export { UnknownSchema } from './unknown-schema';
+export { UnresolvedSchema } from './unresolved-schema';
 export * from './docs';

@@ -1,4 +1,9 @@
-import { SchemaNode, VariableSchema, FunctionLikeSchema, Modifier } from '@teambit/semantics.entities.semantic-schema';
+import {
+  SchemaNode,
+  VariableLikeSchema,
+  FunctionLikeSchema,
+  Modifier,
+} from '@teambit/semantics.entities.semantic-schema';
 import ts, { Node, VariableDeclaration as VariableDeclarationNode, ArrowFunction } from 'typescript';
 import { SchemaTransformer } from '../schema-transformer';
 import { SchemaExtractorContext } from '../schema-extractor-context';
@@ -35,6 +40,6 @@ export class VariableDeclaration implements SchemaTransformer {
     }
     const typeStr = parseTypeFromQuickInfo(info);
     const type = await context.resolveType(varDec, typeStr);
-    return new VariableSchema(location, name, displaySig, type);
+    return new VariableLikeSchema(location, name, displaySig, type, false);
   }
 }

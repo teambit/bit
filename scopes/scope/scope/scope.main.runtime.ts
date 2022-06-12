@@ -600,6 +600,7 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
         `failed loading aspects from capsules due to MODULE_NOT_FOUND error, re-creating the capsules and trying again`
       );
       const resolvedAspectsAgain = await this.getResolvedAspects(components, {
+        ...opts,
         skipIfExists: false,
       });
       const manifestAgain = await requireWithCatch(resolvedAspectsAgain);
@@ -693,6 +694,7 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
       useCache = true,
       throwIfNotExist = false,
       reFetchUnBuiltVersion = true,
+      lane,
     }: {
       /**
        * if the component exists locally, don't go to the server to search for updates.
@@ -704,6 +706,11 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
        * whether the version was already built there.
        */
       reFetchUnBuiltVersion?: boolean;
+      /**
+       * if the component is on a lane, provide the lane object. the component will be fetched from the lane-scope and
+       * not from the component-scope.
+       */
+      lane?: Lane;
     } = {}
   ): Promise<Component[]> {
     const legacyIds = ids.map((id) => {
@@ -715,7 +722,13 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
     const withoutOwnScopeAndLocals = legacyIds.filter((id) => {
       return id.scope !== this.name && id.hasScope();
     });
-    await this.legacyScope.import(ComponentsIds.fromArray(withoutOwnScopeAndLocals), useCache, reFetchUnBuiltVersion);
+    const lanes = lane ? [lane] : undefined;
+    await this.legacyScope.import(
+      ComponentsIds.fromArray(withoutOwnScopeAndLocals),
+      useCache,
+      reFetchUnBuiltVersion,
+      lanes
+    );
 
     return this.getMany(ids, throwIfNotExist);
   }

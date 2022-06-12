@@ -117,12 +117,44 @@ describe('sign command', function () {
     });
     describe('running bit import on the workspace', () => {
       before(() => {
-        helper.command.importAllComponents();
+        helper.command.import('--all-history');
       });
       it('should bring the updated Version from the remote', () => {
         const comp1 = helper.command.catComponent(`${helper.scopes.remote}/bar@latest`);
         expect(comp1.buildStatus).to.equal('failed');
       });
+    });
+  });
+  describe('sign components from lanes', () => {
+    let signOutput: string;
+    let secondScopeName: string;
+    let snapHash: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+
+      const secondRemote = helper.scopeHelper.getNewBareScope();
+      helper.scopeHelper.addRemoteScope(secondRemote.scopePath);
+      helper.scopeHelper.addRemoteScope(secondRemote.scopePath, helper.scopes.remotePath);
+      secondScopeName = secondRemote.scopeName;
+
+      helper.command.createLane();
+      helper.fixtures.populateComponents(1);
+      helper.command.setScope(secondScopeName, 'comp1');
+      helper.command.snapAllComponentsWithoutBuild();
+      snapHash = helper.command.getHeadOfLane('dev', 'comp1');
+      helper.command.export();
+
+      const signRemote = helper.scopeHelper.getNewBareScope('-remote-sign');
+      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, signRemote.scopePath);
+      signOutput = helper.command.sign(
+        [`${secondScopeName}/comp1@${snapHash}`],
+        `--multiple --lane ${helper.scopes.remote}/dev`,
+        signRemote.scopePath
+      );
+    });
+    it('should sign successfully', () => {
+      expect(signOutput).to.include('the following 1 component(s) were signed with build-status "succeed"');
     });
   });
   describe.skip('circular dependencies between two scopes', () => {

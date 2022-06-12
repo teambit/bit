@@ -2,11 +2,9 @@ import fs from 'fs-extra';
 import path from 'path';
 import chai, { expect } from 'chai';
 import { IssuesClasses } from '../../scopes/component/component-issues';
-
 import { Extensions, IS_WINDOWS } from '../../src/constants';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
-import { UNABLE_TO_LOAD_EXTENSION } from '../../scopes/harmony/aspect-loader/constants';
 
 chai.use(require('chai-fs'));
 chai.use(require('chai-string'));
@@ -229,8 +227,7 @@ describe('custom env', function () {
       });
       it('should re-create the capsule dir and should not show any warning/error about loading the env', () => {
         const status = helper.command.status();
-        const errMsg = UNABLE_TO_LOAD_EXTENSION(`${envId}@0.0.1`);
-        expect(status).to.not.include(errMsg);
+        expect(status).to.not.include('unable to load the extension');
       });
       it('bit show should show the correct env', () => {
         const env = helper.env.getComponentEnv('comp1');
@@ -255,6 +252,25 @@ describe('custom env', function () {
     it('should be able to re-tag with no errors', () => {
       // important! don't skip the build. it's important for the Preview task to run.
       expect(() => helper.command.tagIncludeUnmodified()).not.to.throw();
+    });
+  });
+  describe('when the env is exported to a remote scope and is not exist locally', () => {
+    let envId: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      const envName = helper.env.setCustomEnv();
+      envId = `${helper.scopes.remote}/${envName}`;
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+
+      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.addRemoteScope();
+      helper.fixtures.populateComponents(1);
+    });
+    // previously, it errored "Cannot read property 'id' of undefined"
+    it('bit env-set should not throw any error', () => {
+      expect(() => helper.command.setEnv('comp1', envId));
     });
   });
 });
