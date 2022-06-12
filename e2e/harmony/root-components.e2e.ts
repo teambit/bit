@@ -1253,7 +1253,7 @@ export class EnvMain {
 Env2Aspect.addRuntime(EnvMain);
 `
       );
-      helper.fixtures.populateComponents(2);
+      helper.fixtures.populateComponents(4);
       helper.extensions.bitJsonc.addKeyValToDependencyResolver('rootComponents', true);
       helper.bitJsonc.addKeyVal(`${helper.scopes.remote}/comp3`, {});
       helper.bitJsonc.addKeyVal(`${helper.scopes.remote}/comp4`, {});
@@ -1264,6 +1264,30 @@ Env2Aspect.addRuntime(EnvMain);
       );
       helper.extensions.addExtensionToVariant('comp1', `${helper.scopes.remote}/custom-react/env1`, {});
       helper.extensions.addExtensionToVariant('comp2', `${helper.scopes.remote}/custom-react/env2`, {});
+      helper.fs.outputFile(
+        `comp3/index.js`,
+        `const React = require("react");const comp2 = require("@${helper.scopes.remote}/comp2");`
+      );
+      helper.fs.outputFile(
+        `comp3/comp3.node-app.js`,
+        `const React = require("react");
+module.exports.default = {
+  name: 'comp3',
+  entry: require.resolve('./index.js'),
+}`
+      );
+      helper.fs.outputFile(
+        `comp4/index.js`,
+        `const React = require("react");const comp2 = require("@${helper.scopes.remote}/comp2");`
+      );
+      helper.fs.outputFile(
+        `comp4/comp4.node-app.js`,
+        `const React = require("react");
+module.exports.default = {
+  name: 'comp4',
+  entry: require.resolve('./index.js'),
+}`
+      );
       helper.extensions.addExtensionToVariant('custom-react', 'teambit.envs/env', {});
       helper.bitJsonc.addKeyValToDependencyResolver('policy', {
         dependencies: {
