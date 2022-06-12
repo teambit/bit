@@ -493,7 +493,7 @@ describe('bit lane command', function () {
       helper.command.exportLane();
       helper.git.mimicGitCloneLocalProjectHarmony();
       helper.scopeHelper.addRemoteScope();
-      helper.command.switchRemoteLane('dev');
+      helper.command.import();
       helper.fixtures.populateComponents(1, undefined, ' v2');
       helper.bitJsonc.disablePreview();
       helper.command.snapAllComponents();
@@ -1151,6 +1151,25 @@ describe('bit lane command', function () {
     it('bit status should not complain about outdated objects', () => {
       const status = helper.command.status();
       expect(status).to.not.have.string(IMPORT_PENDING_MSG);
+    });
+  });
+  describe('deleting the local scope after exporting a lane', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.command.createLane('dev');
+      helper.fixtures.populateComponents(1);
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.exportLane();
+      helper.fs.deletePath('.bit');
+      helper.scopeHelper.addRemoteScope();
+    });
+    it('should re-create scope.json with checkout to the lane specified in the .bitmap file', () => {
+      helper.command.expectCurrentLaneToBe('dev');
+    });
+    // previously, it used to throw "component X has no versions and the head is empty"
+    it('bit import should not throw an error', () => {
+      expect(() => helper.command.import()).to.not.throw();
     });
   });
 });

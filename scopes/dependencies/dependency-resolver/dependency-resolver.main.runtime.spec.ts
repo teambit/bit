@@ -3,10 +3,13 @@ jest.mock('@teambit/legacy/dist/scope/network/http', () => ({
   Http: {
     // @ts-ignore
     getNetworkConfig: jest.fn(),
+    // @ts-ignore
+    getProxyConfig: jest.fn(),
   },
 }));
 
 /* eslint-disable import/first */
+import path from 'path';
 import { Http } from '@teambit/legacy/dist/scope/network/http';
 import { DependencyResolverMain } from './dependency-resolver.main.runtime';
 
@@ -150,6 +153,46 @@ describe('DepenendencyResolverMain.getNetworkConfig()', () => {
       networkConcurrency: 666,
       maxSockets: 777,
     });
+  });
+});
+
+describe('DepenendencyResolverMain.getProxyConfig()', () => {
+  const packageManagerSlot = {
+    // @ts-ignore
+    get: jest.fn(),
+  };
+  it('should read cafile when it is returned by the global config', async () => {
+    const depResolver = new DependencyResolverMain(
+      {} as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      { debug: jest.fn() } as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      packageManagerSlot as any,
+      {} as any,
+      {} as any,
+      {} as any
+    );
+    packageManagerSlot.get.mockReturnValue({
+      getProxyConfig: () => {},
+    });
+    // @ts-ignore
+    Http.getProxyConfig.mockReturnValue(
+      Promise.resolve({
+        httpProxy: 'http://proxy.bit',
+        cafile: path.join(__dirname, 'fixtures/cafile.txt'),
+      })
+    );
+    // @ts-ignore
+    expect((await depResolver.getProxyConfig()).ca).toStrictEqual([
+      `-----BEGIN CERTIFICATE-----
+XXXX
+-----END CERTIFICATE-----`,
+    ]);
   });
 });
 

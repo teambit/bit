@@ -62,7 +62,7 @@
         "peerDependencies": {
           "react": "^16.8.0 || ^17.0.0",
           "react-dom": "^16.8.0 || ^17.0.0",
-          "@teambit/legacy": "1.0.277"
+          "@teambit/legacy": "1.0.281"
         }
       }
     }

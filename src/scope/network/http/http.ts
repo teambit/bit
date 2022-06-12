@@ -23,6 +23,7 @@ import {
   CFG_PROXY,
   CFG_USER_TOKEN_KEY,
   CFG_PROXY_CA,
+  CFG_PROXY_CA_FILE,
   CFG_PROXY_CERT,
   CFG_PROXY_KEY,
   CFG_PROXY_NO_PROXY,
@@ -53,8 +54,9 @@ export enum Verb {
 }
 
 export type ProxyConfig = {
-  ca?: string;
-  cert?: string;
+  ca?: string | string[];
+  cafile?: string;
+  cert?: string | string[];
   httpProxy?: string;
   httpsProxy?: string;
   key?: string;
@@ -114,6 +116,7 @@ export class Http implements Network {
 
     return {
       ca: obj[CFG_PROXY_CA],
+      cafile: obj[CFG_PROXY_CA_FILE],
       cert: obj[CFG_PROXY_CERT],
       httpProxy,
       httpsProxy,

@@ -927,17 +927,17 @@ either, use the ignore file syntax or change the require statement to have a mod
   }
 
   processErrors(originFile: PathLinuxRelative) {
-    const error = this.tree[originFile].error;
+    const error: any = this.tree[originFile].error;
     if (!error) return;
     logger.errorAndAddBreadCrumb(
       'dependency-resolver.processErrors',
       'got an error from the driver while resolving dependencies'
     );
     logger.error('dependency-resolver.processErrors', error);
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    if (error.code === 'PARSING_ERROR')
-      this.issues.getOrCreate(IssuesClasses.ParseErrors).data[originFile] = error.message;
-    else this.issues.getOrCreate(IssuesClasses.ResolveErrors).data[originFile] = error.message;
+    if (error.code === 'PARSING_ERROR') {
+      const location = error.lineNumber && error.column ? ` (line: ${error.lineNumber}, column: ${error.column})` : '';
+      this.issues.getOrCreate(IssuesClasses.ParseErrors).data[originFile] = error.message + location;
+    } else this.issues.getOrCreate(IssuesClasses.ResolveErrors).data[originFile] = error.message;
   }
 
   /**

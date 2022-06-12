@@ -29,6 +29,11 @@ $editor-padding: 56px;
   padding: 8px;
   height: 100%;
   flex-direction: column;
+
+  > section {
+    overflow: hidden;
+    border-radius: 8px;
+  }
 }
 
 .loader {

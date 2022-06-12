@@ -56,7 +56,7 @@ export default async function importAction(
   }
 
   const consumer: Consumer = await loadConsumer();
-  if (importOptions.skipLane && consumer.isLegacy) throw new LanesIsDisabled();
+  if (importOptions.saveInLane && consumer.isLegacy) throw new LanesIsDisabled();
   consumer.packageManagerArgs = packageManagerArgs;
   if (environmentOptions.tester || environmentOptions.compiler) {
     return importEnvironment(consumer);
