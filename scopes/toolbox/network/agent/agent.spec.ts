@@ -1,3 +1,4 @@
+/* eslint-disable dot-notation */
 import path from 'path';
 import { getAgent } from './agent';
 
@@ -7,7 +8,6 @@ test('getAgent reads cafile', () => {
   });
   // @ts-ignore
   expect(agent['options'].ca).toStrictEqual([
-    // eslint-disable-line
     `-----BEGIN CERTIFICATE-----
 XXXX
 -----END CERTIFICATE-----`,
