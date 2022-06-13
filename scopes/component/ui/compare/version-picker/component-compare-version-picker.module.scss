@@ -3,7 +3,7 @@
 .componentCompareVersionPicker {
   display: flex;
   flex-direction: row;
-  padding: 24px 0px 8px 0px;
+  padding: 8px 0px;
 }
 
 .componentCompareVersionPlaceholder,
@@ -23,14 +23,15 @@
 
 .componentCompareVersionContainer {
   display: flex;
-  flex: 1;
   min-width: 0;
-
+  align-items: center;
+  font-size: 14px;
+  
   &.left {
-    padding-right: 32px;
+    padding-right: 16px;
   }
   &.right {
-    padding-left: 32px;
+    padding-left: 16px;
   }
 }
 
@@ -46,4 +47,14 @@
     align-self: center;
     height: 100%;
   }
+}
+
+.titleText {
+  display: flex;
+  align-self: center;
+  font-size: 32px;
+}
+
+.rightPad {
+  padding-right: 8px;
 }

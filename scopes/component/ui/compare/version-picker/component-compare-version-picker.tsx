@@ -46,6 +46,7 @@ export function ComponentCompareVersionPicker({ className }: ComponentCompareVer
 
   return (
     <div className={styles.componentCompareVersionPicker}>
+      <div className={classNames(styles.titleText, styles.rightPad)}>Comparing</div>
       <VersionDropdown
         key={key}
         className={classNames(styles.componentCompareVersionContainer, styles.left, className)}
@@ -62,9 +63,7 @@ export function ComponentCompareVersionPicker({ className }: ComponentCompareVer
         showVersionDetails={true}
         disabled={snaps.concat(tags).length < 2}
       />
-      <div className={styles.arrowContainer}>
-        <img src="https://static.bit.dev/bit-icons/arrow-left.svg" />
-      </div>
+      <div className={styles.titleText}>with</div>
       <VersionDropdown
         className={classNames(styles.componentCompareVersionContainer, styles.right)}
         dropdownClassName={styles.componentCompareDropdown}

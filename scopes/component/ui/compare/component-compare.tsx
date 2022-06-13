@@ -79,7 +79,6 @@ export function ComponentCompare({ navSlot, host, routeSlot }: ComponentCompareP
         {showSubMenus && (
           <>
             <div className={styles.top}>
-              <H2 size="xs">Component Compare</H2>
               <ComponentCompareVersionPicker />
             </div>
             <div className={styles.bottom}>
