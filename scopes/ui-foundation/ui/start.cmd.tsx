@@ -23,9 +23,9 @@ export class StartCmd implements Command {
   group = 'development';
   options = [
     ['d', 'dev', 'start UI server in dev mode.'],
-    ['p', 'port [number]', 'port of the UI server.'],
+    ['p', 'port [port-number]', 'port of the UI server.'],
     ['r', 'rebuild', 'rebuild the UI'],
-    ['v', 'verbose', 'showing verbose output for inspection and prints stack trace'],
+    ['v', 'verbose', 'show verbose output for inspection and prints stack trace'],
     ['', 'no-browser', 'do not automatically open browser when ready'],
     ['', 'skip-compilation', 'skip the auto-compilation before starting the web-server'],
   ] as CommandOptions;
