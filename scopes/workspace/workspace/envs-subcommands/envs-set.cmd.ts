@@ -1,11 +1,10 @@
 import { Command } from '@teambit/cli';
 import chalk from 'chalk';
-import { PATTERN_HELP } from '@teambit/legacy/dist/constants';
 import { Workspace } from '../workspace';
 
 export class EnvsSetCmd implements Command {
   name = 'set <component-pattern> <env>';
-  description = 'sets one or more components with a development environment (env)';
+  description = 'Sets one or more components with a development environment (env)';
   arguments = [
     {
       name: 'component-pattern',
@@ -34,7 +33,6 @@ export class EnvsSetCmd implements Command {
   ];
   options = [];
   group = 'development';
-  extendedDescription = `${PATTERN_HELP('env set')}`;
 
   constructor(private workspace: Workspace) {}
 

@@ -15,12 +15,10 @@ export class ForkCmd implements Command {
     { name: 'source-component-id', description: 'the component id of the source component' },
     {
       name: 'target-component-name',
-      description: 'the name for the new component (component name without scope)',
+      description:
+        "the name for the new component (component name without scope). to set a different scope, use the '--scope' flag",
     },
   ];
-
-  extendedDescription = `note that [target-name] is the name only without the scope.
-to set the default-scope, please use --scope flag`;
   group = 'collaborate';
   skipWorkspace = true;
   alias = '';

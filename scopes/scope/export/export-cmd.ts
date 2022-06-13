@@ -6,11 +6,10 @@ import { CURRENT_UPSTREAM, WILDCARD_HELP } from '@teambit/legacy/dist/constants'
 import GeneralError from '@teambit/legacy/dist/error/general-error';
 import chalk from 'chalk';
 import { isEmpty } from 'lodash';
-import { CommandArg } from '../../../dist/cli/command';
 
 export class ExportCmd implements Command {
   name = 'export [remote] [component-names...]';
-  description = 'Export components from the workspace to remote scopes';
+  description = 'Exports components from the workspace to remote scopes';
   arguments = [
     { name: 'remote', description: 'LEGACY ONLY.' },
     {
