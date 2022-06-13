@@ -592,6 +592,10 @@ export default class CommandHelper {
   log(id: string, flags = '') {
     return this.runCmd(`bit log ${id} ${flags}`);
   }
+  logParsed(id: string, flags = '') {
+    const log = this.runCmd(`bit log ${id} ${flags} --json`);
+    return JSON.parse(log);
+  }
   move(from: string, to: string) {
     return this.runCmd(`bit move ${path.normalize(from)} ${path.normalize(to)}`);
   }
