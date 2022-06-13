@@ -10,7 +10,7 @@ import { ComponentMain } from '../component.main.runtime';
 
 export class ShowCmd implements Command {
   name = 'show <component-name>';
-  description = "Displays the component's essential information.";
+  description = "display the component's essential information";
   alias = '';
   group = 'info';
   arguments = [{ name: 'component-name', description: 'component name or component id' }];

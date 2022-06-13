@@ -10,12 +10,11 @@ import { SnappingMain } from './snapping.main.runtime';
 
 export class SnapCmd implements Command {
   name = 'snap [component_name]';
-  description =
-    'EXPERIMENTAL. Creates an immutable and exportable component snapshot. Useful for component collaboration.';
+  description = 'EXPERIMENTAL. create an immutable and exportable component snapshot (no release version)';
   arguments = [
     {
       name: 'component_name',
-      description: 'component names or component ID',
+      description: 'component names or component ID (defaults to all components)',
     },
   ];
   alias = '';

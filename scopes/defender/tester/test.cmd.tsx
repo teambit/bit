@@ -22,7 +22,7 @@ type TestFlags = {
 
 export class TestCmd implements Command {
   name = 'test [component-pattern]';
-  description = 'Tests components in your workspace';
+  description = 'test components in the workspace';
   arguments = [
     {
       name: 'component-pattern',

@@ -6,7 +6,7 @@ import { ConfigMain } from '@teambit/config';
 export class UseCmd implements Command {
   name = 'use [component-ids...]';
   group = 'collaborate';
-  description = 'Sets aspects in the workspace/scope config to make them loadable by the workspace/scope.';
+  description = 'set aspects in the workspace/scope config to make them loadable by the workspace/scope';
   arguments = [{ name: 'component-ids...', description: 'the component IDs of the aspects' }];
   alias = '';
   options = [] as CommandOptions;

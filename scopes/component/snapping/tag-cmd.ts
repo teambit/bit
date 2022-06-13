@@ -18,7 +18,7 @@ const RELEASE_TYPES = ['major', 'premajor', 'minor', 'preminor', 'patch', 'prepa
 export class TagCmd implements Command {
   name = 'tag [component-names...]';
   group = 'development';
-  description = 'Creates an immutable and exportable component snapshot, tagged with a release version.';
+  description = 'create an immutable and exportable component snapshot, tagged with a release version.';
   arguments = [
     {
       name: 'component-names...',
