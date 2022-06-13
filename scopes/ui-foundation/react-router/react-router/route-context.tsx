@@ -25,10 +25,7 @@ type RootRouteProps = {
 export function RouteContext({ routing = Routing.url, children, location }: RouterContextProps) {
   return (
     <Router type={routing} location={location}>
-      <NavigationProvider implementation={reactRouterAdapter}>
-        <div>new routes v2</div>
-        {children}
-      </NavigationProvider>
+      <NavigationProvider implementation={reactRouterAdapter}>{children}</NavigationProvider>
     </Router>
   );
 }
