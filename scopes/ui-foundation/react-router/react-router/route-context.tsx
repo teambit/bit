@@ -6,7 +6,6 @@ import { NavigationProvider } from '@teambit/base-react.navigation.link';
 import { reactRouterAdapter } from '@teambit/ui-foundation.ui.navigation.react-router-adapter';
 import { ReactRouterUI } from './react-router.ui.runtime';
 import { Routing } from './routing-method';
-import { LegacyNavProvider } from './legacy-routing';
 
 type RouterContextProps = {
   reactRouterUi: ReactRouterUI;
@@ -27,10 +26,8 @@ export function RouteContext({ routing = Routing.url, children, location }: Rout
   return (
     <Router type={routing} location={location}>
       <NavigationProvider implementation={reactRouterAdapter}>
-        <LegacyNavProvider>
-          {/* route tree root: */}
-          {children}
-        </LegacyNavProvider>
+        <div>new routes v2</div>
+        {children}
       </NavigationProvider>
     </Router>
   );
