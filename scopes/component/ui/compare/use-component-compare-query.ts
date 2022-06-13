@@ -1,5 +1,5 @@
 import { useQuery } from '@teambit/ui-foundation.ui.react-router.use-query';
-import { useLocation } from '@teambit/base-ui.routing.routing-provider';
+import { useLocation } from '@teambit/base-react.navigation.link';
 
 export type ComponentCompareQueryParams = {
   baseVersion?: string;
@@ -12,7 +12,7 @@ export type ComponentCompareQueryParams = {
 
 export function useUpdatedUrlFromQuery(queryParams: ComponentCompareQueryParams): string {
   const query = useQuery();
-  const location = useLocation();
+  const location = useLocation() || { pathname: '/' };
   const queryObj = Object.fromEntries(query.entries());
 
   const updatedObj = { ...queryObj, ...queryParams };
