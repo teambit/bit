@@ -27,7 +27,7 @@ export class TestCmd implements Command {
     {
       name: 'component-pattern',
       description:
-        'the components to test (defaults to all components). use component name, component id, or component pattern. use component pattern to select multiple components. \nuse comma to separate patterns and "!" to exclude. e.g. "ui/**, !ui/button"\nwrap the pattern with quotes',
+        'the components to test (defaults to all components). use component name, component id, or component pattern. use component pattern to select multiple components. \nuse comma to separate patterns. e.g. "ui/**, pages/**"\nwrap the pattern with quotes (note that the "!" exclusion sign cannot be used here)',
     },
   ];
   alias = 'at';

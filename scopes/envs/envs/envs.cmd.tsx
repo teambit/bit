@@ -87,7 +87,7 @@ export class GetEnvCmd implements Command {
 export class EnvsCmd implements Command {
   name = 'envs';
   alias = 'env';
-  description = 'lists all components maintained by the workspace and their corresponding envs';
+  description = 'Lists all components maintained by the workspace and their corresponding envs';
   options = [];
   group = 'development';
   commands: Command[] = [];
