@@ -2,7 +2,7 @@ import chalk from 'chalk';
 import { IssuesClasses } from '@teambit/component-issues';
 import { Command, CommandOptions } from '@teambit/cli';
 import { isFeatureEnabled, BUILD_ON_CI } from '@teambit/legacy/dist/api/consumer/lib/feature-toggle';
-import { WILDCARD_HELP, NOTHING_TO_SNAP_MSG, AUTO_SNAPPED_MSG } from '@teambit/legacy/dist/constants';
+import { NOTHING_TO_SNAP_MSG, AUTO_SNAPPED_MSG } from '@teambit/legacy/dist/constants';
 import { BitError } from '@teambit/bit-error';
 import { Logger } from '@teambit/logger';
 import { SnapResults } from '@teambit/legacy/dist/api/consumer/lib/snap';
@@ -44,10 +44,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
   private = true;
   migration = true;
 
-  constructor(docsDomain: string, private snapping: SnappingMain, private logger: Logger) {
-    this.extendedDescription = `https://${docsDomain}/components/snaps
-${WILDCARD_HELP('snap')}`;
-  }
+  constructor(docsDomain: string, private snapping: SnappingMain, private logger: Logger) {}
 
   async report(
     [id]: string[],
