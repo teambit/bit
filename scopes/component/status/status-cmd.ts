@@ -22,7 +22,7 @@ please run "bit migrate --harmony" to convert these records to "rootDir".`;
 
 export class StatusCmd implements Command {
   name = 'status';
-  description = 'Presents the current status of components in the workspace, and notifies when issues are detected.';
+  description = 'present the current status of components in the workspace, and notifies when issues are detected';
   group = 'development';
   extendedDescription: string;
   alias = 's';

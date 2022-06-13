@@ -12,7 +12,7 @@ export type NewOptions = {
 
 export class NewCmd implements Command {
   name = 'new <template-name> <workspace-name>';
-  description = 'Creates a new workspace from a template.';
+  description = 'create a new workspace from a template';
   arguments = [
     {
       name: 'template-name',

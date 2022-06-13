@@ -403,7 +403,7 @@ export class LaneImportCmd implements Command {
 
 export class LaneCmd implements Command {
   name = 'lane [lane-name]';
-  description = 'shows lanes details';
+  description = 'show lanes details';
   alias = '';
   options = [
     ['d', 'details', 'show more details on the state of each component in each lane'],

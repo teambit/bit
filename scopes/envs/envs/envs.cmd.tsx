@@ -10,7 +10,7 @@ import { EnvOverview } from './components/env-overview';
 
 export class ListEnvsCmd implements Command {
   name = 'list';
-  description = 'lists all envs available in the workspace';
+  description = 'list all envs available in the workspace';
   options = [];
   group = 'development';
 
@@ -25,7 +25,7 @@ export class ListEnvsCmd implements Command {
 
 export class GetEnvCmd implements Command {
   name = 'get <component-name>';
-  description = "shows information about a component's env";
+  description = "show information about a component's env";
   arguments = [
     {
       name: 'component-name',
@@ -87,7 +87,7 @@ export class GetEnvCmd implements Command {
 export class EnvsCmd implements Command {
   name = 'envs';
   alias = 'env';
-  description = 'Lists all components maintained by the workspace and their corresponding envs';
+  description = 'list all components maintained by the workspace and their corresponding envs';
   options = [];
   group = 'development';
   commands: Command[] = [];

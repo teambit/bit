@@ -9,7 +9,7 @@ import { isEmpty } from 'lodash';
 
 export class ExportCmd implements Command {
   name = 'export [remote] [component-names...]';
-  description = 'Exports components from the workspace to remote scopes';
+  description = 'export components from the workspace to remote scopes';
   arguments = [
     { name: 'remote', description: 'LEGACY ONLY.' },
     {

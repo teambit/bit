@@ -18,7 +18,7 @@ type StartFlags = {
 
 export class StartCmd implements Command {
   name = 'start [type] [pattern]';
-  description = 'Start a dev environment for a workspace or a specific component';
+  description = 'run the ui/development server';
   alias = 'c';
   group = 'development';
   options = [
