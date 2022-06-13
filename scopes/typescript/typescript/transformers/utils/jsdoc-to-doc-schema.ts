@@ -24,7 +24,8 @@ export async function jsDocToDocSchema(node: Node, context: SchemaExtractorConte
 }
 
 async function tagParser(tag: JSDocTag, context: SchemaExtractorContext): Promise<TagSchema> {
-  let tagName: TagName | string = tag.tagName.getText();
+  // for some reason, in some cases, if `tag.getSourceFile()` is not provided to the `getText()`, it throws "Cannot read property 'text' of undefined"
+  let tagName: TagName | string = tag.tagName.getText(tag.getSourceFile());
   switch (tag.kind) {
     case SyntaxKind.JSDocReturnTag:
       return returnTag(tag as JSDocReturnTag, context);
