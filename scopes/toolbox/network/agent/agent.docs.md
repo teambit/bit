@@ -3,13 +3,13 @@ labels: ['typescript', 'utils', 'network']
 description: 'An http/s agent factory with proxy support'
 ---
 
-_Based on - https://github.com/pnpm/pnpm/blob/acc1782c6f18e1388e333c6fd44ccd378faba553/packages/npm-registry-agent/src/index.ts#L0-L1_
+A wrapper over the [http agent used by pnpm](https://bit.cloud/pnpm/network/agent).
 
 Create an http/s agent from uri and options.
 This support http/s proxy server with different configuration.
 
 In case there is matching proxy option that matching the uri protocol (`httpProxy` for `http:` uri and `httpsProxy` for `https:` uri), and the uri is not excluded by the `noProxy` config, it will create a proxy agent.
-To read more about the proxy agent, read the docs of the `proxy-agent` component.
+To read more about the proxy agent, read the docs of the [`proxy-agent`](https://bit.cloud/pnpm/network/proxy-agent) component.
 
 API:
 
@@ -37,6 +37,13 @@ Available configuration (AgentOptions):
    * allows for multiple CA's, as well as for the CA information to be stored in a file on disk.
    */
   ca?: string;
+
+  /**
+   * A path to a file containing one or multiple Certificate Authority signing certificates.
+   * Similar to the ca setting, but allows for multiple CAs, as well as for the CA information to be stored in a file
+   * instead of being specified via CLI.
+   */
+  cafile?: string;
 
   /**
    * Whether or not to do SSL key validation when making requests to the registry via https
