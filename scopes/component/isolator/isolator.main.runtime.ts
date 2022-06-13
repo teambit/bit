@@ -159,7 +159,7 @@ export class IsolatorMain {
   static dependencies = [
     DependencyResolverAspect,
     LoggerAspect,
-    ComponentAspect, 
+    ComponentAspect,
     GraphAspect,
     GlobalConfigAspect,
     AspectLoaderAspect,
@@ -282,18 +282,24 @@ export class IsolatorMain {
     if (opts.emptyRootDir) {
       await fs.emptyDir(capsulesDir);
     }
-    const capsules = await this.createCapsulesFromComponents(components, capsulesDir, config);
-    const capsuleList = CapsuleList.fromArray(capsules);
+    let capsules = await this.createCapsulesFromComponents(components, capsulesDir, config);
+    const allCapsuleList = CapsuleList.fromArray(capsules);
+    let capsuleList = allCapsuleList;
     if (opts.getExistingAsIs) {
       return capsuleList;
     }
 
-    if (opts.skipIfExists && !installOptions.useNesting) {
-      const existingCapsules = CapsuleList.fromArray(
-        capsuleList.filter((capsule) => capsule.fs.existsSync('package.json'))
-      );
+    if (opts.skipIfExists) {
+      if (!installOptions.useNesting) {
+        const existingCapsules = CapsuleList.fromArray(
+          capsuleList.filter((capsule) => capsule.fs.existsSync('package.json'))
+        );
 
-      if (existingCapsules.length === capsuleList.length) return existingCapsules;
+        if (existingCapsules.length === capsuleList.length) return existingCapsules;
+      } else {
+        capsules = capsules.filter((capsule) => !capsule.fs.existsSync('package.json'));
+        capsuleList = CapsuleList.fromArray(capsules);
+      }
     }
     const capsulesWithPackagesData = await this.getCapsulesPreviousPackageJson(capsules);
 
@@ -304,7 +310,6 @@ export class IsolatorMain {
       const linkingOptions = opts.linkingOptions ?? {}
       if (installOptions.useNesting) {
         await Promise.all(capsuleList.map(async (capsule) => {
-          if (opts.skipIfExists && capsule.fs.existsSync('package.json')) return
           const newCapsuleList = CapsuleList.fromArray([capsule])
           await this.installInCapsules(capsule.path, newCapsuleList, installOptions, cachePackagesOnCapsulesRoot);
           await this.linkInCapsules(capsulesDir, newCapsuleList, capsulesWithPackagesData, linkingOptions);
@@ -331,7 +336,7 @@ export class IsolatorMain {
       capsuleWithPackageData.capsule.fs.writeFileSync(PACKAGE_JSON, JSON.stringify(currentPackageJson, null, 2));
     });
 
-    return capsuleList;
+    return allCapsuleList;
   }
 
   private async installInCapsules(
