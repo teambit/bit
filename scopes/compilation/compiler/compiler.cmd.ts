@@ -20,8 +20,14 @@ export type ComponentsStatus = {
 
 export class CompileCmd implements Command {
   componentsStatus: ComponentsStatus[] = [];
-  name = 'compile [component...]';
-  description = 'compile components in the development workspace';
+  name = 'compile [component-names...]';
+  description = 'Compiles components in the workspace';
+  arguments = [
+    {
+      name: 'component-names...',
+      description: 'a list of component names or component IDs (defaults to all components)',
+    },
+  ];
   alias = '';
   group = 'development';
   options = [

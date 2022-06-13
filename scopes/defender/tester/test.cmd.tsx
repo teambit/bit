@@ -21,8 +21,15 @@ type TestFlags = {
 };
 
 export class TestCmd implements Command {
-  name = 'test [pattern]';
-  description = 'test set of components in your workspace';
+  name = 'test [component-pattern]';
+  description = 'Tests components in your workspace';
+  arguments = [
+    {
+      name: 'component-pattern',
+      description:
+        'the components to test (defaults to all components). use component name, component id, or component pattern. use component pattern to select multiple components. \nuse comma to separate patterns and "!" to exclude. e.g. "ui/**, !ui/button"\nwrap the pattern with quotes',
+    },
+  ];
   alias = 'at';
   group = 'development';
   options = [
@@ -32,7 +39,7 @@ export class TestCmd implements Command {
     ['', 'junit <filepath>', 'write tests results as JUnit XML format into the specified file path'],
     ['', 'coverage', 'show code coverage data'],
     ['e', 'env <id>', 'test only the given env'],
-    ['s', 'scope <scope>', 'name of the scope to test'],
+    ['s', 'scope <scope-name>', 'name of the scope to test'],
     // TODO: we need to reduce this redundant casting every time.
   ] as CommandOptions;
 

@@ -11,8 +11,15 @@ type RunOptions = {
 };
 
 export class RunCmd implements Command {
-  name = 'run <app>';
-  description = 'run an application';
+  name = 'run <app-name>';
+  description = "Runs an app (independent of Bit's dev server)";
+  arguments = [
+    {
+      name: 'app-name',
+      description:
+        "the app's name is registered by the app (run 'bit app list' to list the names of the available apps)",
+    },
+  ];
   alias = 'c';
   group = 'apps';
   options = [
