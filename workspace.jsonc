@@ -24,8 +24,8 @@
         "@pmmmwh/react-refresh-webpack-plugin": "0.5.4",
         "@pnpm/client": "6.1.6",
         "@pnpm/colorize-semver-diff": "1.0.1",
-        "@pnpm/config": "13.14.0",
-        "@pnpm/core": "2.9.7",
+        "@pnpm/config": "13.14.1",
+        "@pnpm/core": "2.9.8",
         "@pnpm/default-reporter": "8.4.2",
         "@pnpm/default-resolver": "14.0.14",
         "@pnpm/error": "2.1.0",
@@ -44,7 +44,7 @@
         "@pnpm/resolver-base": "8.1.6",
         "@pnpm/semver-diff": "1.1.0",
         "@pnpm/sort-packages": "2.1.7",
-        "@pnpm/store-connection-manager": "3.2.19",
+        "@pnpm/store-connection-manager": "3.2.20",
         "@pnpm/tarball-fetcher": "9.3.18",
         "@pnpm/tarball-resolver": "5.0.11",
         "@pnpm/types": "7.10.0",
@@ -374,7 +374,7 @@
       "peerDependencies": {
         "@apollo/client": "^3.0.0",
         "@teambit/base-react.navigation.link": "2.0.27",
-        "@teambit/legacy": "1.0.280",
+        "@teambit/legacy": "1.0.281",
         "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
         "browserslist": "4.16.3",
         "core-js": "^3.10.0",
@@ -457,7 +457,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.280"
+            "@teambit/legacy": "1.0.281"
           }
         }
       },
@@ -722,7 +722,7 @@
           "peerDependencies": {
             "react": "^16.8.0 || ^17.0.0",
             "react-dom": "^16.8.0 || ^17.0.0",
-            "@teambit/legacy": "1.0.280"
+            "@teambit/legacy": "1.0.281"
           }
         }
       }
@@ -797,7 +797,7 @@
             "@teambit/base-react.navigation.link": "2.0.27",
             "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
             "@apollo/client": "3.3.6",
-            "@teambit/legacy": "1.0.280",
+            "@teambit/legacy": "1.0.281",
             "graphql": "14.7.0",
             "browserslist": "4.16.3",
             "reflect-metadata": "0.1.13",
@@ -931,7 +931,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.280"
+            "@teambit/legacy": "1.0.281"
           }
         }
       }
