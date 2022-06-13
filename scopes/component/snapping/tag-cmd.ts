@@ -6,11 +6,14 @@ import {
   AUTO_TAGGED_MSG,
   BasicTagParams,
 } from '@teambit/legacy/dist/api/consumer/lib/tag';
-import { WILDCARD_HELP } from '@teambit/legacy/dist/constants';
+import { DEFAULT_BIT_RELEASE_TYPE, WILDCARD_HELP } from '@teambit/legacy/dist/constants';
 import { IssuesClasses } from '@teambit/component-issues';
+import { ReleaseType } from 'semver';
 import { BitError } from '@teambit/bit-error';
 import { Logger } from '@teambit/logger';
 import { SnappingMain } from './snapping.main.runtime';
+
+const RELEASE_TYPES = ['major', 'premajor', 'minor', 'preminor', 'patch', 'prepatch', 'prerelease'];
 
 export class TagCmd implements Command {
   name = 'tag [component-names...]';
@@ -35,11 +38,13 @@ export class TagCmd implements Command {
       'EXPERIMENTAL. open an editor to write a tag message for each component. optionally, specify the editor-name (defaults to vim).',
     ],
     ['v', 'ver <version>', 'specify a tag version'],
-    ['p', 'patch', 'increment the patch version number'],
-    ['', 'minor', 'increment the minor version number'],
-    ['', 'major', 'increment the major version number'],
-    ['', 'snapped', 'tag components that their head is a snap (not a tag)'],
-    ['', 'pre-release [identifier]', 'EXPERIMENTAL. increment a pre-release version (e.g. 1.0.0-dev.1)'],
+    ['l', 'increment <level>', `options are: [${RELEASE_TYPES.join(', ')}], default to patch`],
+    ['', 'prerelease-id <id>', 'prerelease identifier (e.g. "dev" to get "1.0.0-dev.1")'],
+    ['p', 'patch', 'syntactic sugar for "--increment patch"'],
+    ['', 'minor', 'syntactic sugar for "--increment minor"'],
+    ['', 'major', 'syntactic sugar for "--increment major"'],
+    ['', 'snapped', 'EXPERIMENTAL. tag components that their head is a snap (not a tag)'],
+    ['', 'pre-release [identifier]', 'DEPRECATED. use "-l prerelease" (and --prerelease-id) instead'],
     ['', 'skip-tests', 'skip running component tests during tag process'],
     ['', 'skip-auto-tag', 'skip auto tagging dependents'],
     ['', 'soft', 'do not persist. only keep note of the changes to be made'],
@@ -84,6 +89,7 @@ https://${docsDomain}/components/tags
 ${WILDCARD_HELP('tag')}`;
   }
 
+  // eslint-disable-next-line complexity
   async report(
     [id = []]: [string[]],
     {
@@ -96,6 +102,8 @@ ${WILDCARD_HELP('tag')}`;
       minor,
       major,
       preRelease,
+      increment,
+      prereleaseId,
       force = false,
       ignoreUnresolvedDependencies,
       ignoreIssues,
@@ -119,6 +127,9 @@ ${WILDCARD_HELP('tag')}`;
       patch?: boolean;
       minor?: boolean;
       major?: boolean;
+      increment?: ReleaseType;
+      preRelease?: string;
+      prereleaseId?: string;
       ignoreUnresolvedDependencies?: boolean;
       ignoreIssues?: string;
       scope?: string | boolean;
@@ -163,6 +174,26 @@ ${WILDCARD_HELP('tag')}`;
       if (id.length) unmodified = true;
     }
 
+    const releaseFlags = [patch, minor, major, preRelease].filter((x) => x);
+    if (releaseFlags.length > 1) {
+      throw new BitError('you can use only one of the following - patch, minor, major, pre-release');
+    }
+
+    const getReleaseType = (): ReleaseType => {
+      if (increment) {
+        if (!RELEASE_TYPES.includes(increment)) {
+          throw new BitError(`invalid increment-level "${increment}".
+  semver allows the following options only: ${RELEASE_TYPES.join(', ')}`);
+        }
+        return increment;
+      }
+      if (major) return 'major';
+      if (minor) return 'minor';
+      if (patch) return 'patch';
+      if (preRelease) return 'prerelease';
+      return DEFAULT_BIT_RELEASE_TYPE;
+    };
+
     const disableTagAndSnapPipelines = disableTagPipeline || disableDeployPipeline;
 
     const params = {
@@ -170,7 +201,8 @@ ${WILDCARD_HELP('tag')}`;
       snapped,
       editor,
       message,
-      preRelease,
+      releaseType: getReleaseType(),
+      preReleaseId: prereleaseId || preRelease || undefined,
       ignoreIssues,
       ignoreNewestVersion,
       skipTests,
@@ -183,9 +215,6 @@ ${WILDCARD_HELP('tag')}`;
       forceDeploy,
       incrementBy,
       version: ver,
-      patch,
-      minor,
-      major,
     };
 
     const results = await this.snapping.tag(params);

@@ -11,7 +11,8 @@
         "dependencies": {
           "@teambit/legacy": "-",
           "@babel/preset-env": "7.12.17",
-          "@babel/preset-react": "7.13.13"
+          "@babel/preset-react": "7.13.13",
+          "@babel/plugin-proposal-class-properties": "7.12.13"
         },
         "devDependencies": {
           "@teambit/legacy": "-",

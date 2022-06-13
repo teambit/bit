@@ -57,7 +57,7 @@ function createResolver() {
   const myResolver = ResolverFactory.createResolver({
     fileSystem: new CachedInputFileSystem(fs, 4000),
     useSyncFileSystemCalls: true,
-    mainFields: ['module', 'main'],
+    mainFields: ['browser', 'module', 'main'],
   });
   return myResolver;
 }
