@@ -8,17 +8,12 @@ import { formatBitString, formatNewBit } from '@teambit/legacy/dist/cli/chalk-bo
 import { getInvalidComponentLabel, formatIssues } from '@teambit/legacy/dist/cli/templates/component-issues-template';
 import { ModelComponent } from '@teambit/legacy/dist/scope/models';
 import {
-  BASE_DOCS_DOMAIN,
   IMPORT_PENDING_MSG,
   statusFailureMsg,
   statusInvalidComponentsMsg,
   statusWorkspaceIsCleanMsg,
 } from '@teambit/legacy/dist/constants';
 import { StatusMain, StatusResult } from './status.main.runtime';
-
-const TROUBLESHOOTING_MESSAGE = `${chalk.yellow(
-  `learn more at https://${BASE_DOCS_DOMAIN}/components/adding-components`
-)}`;
 
 const individualFilesDesc = `these components were added as individual files and not as directories, which are invalid in Harmony
 please make sure each component has its own directory and re-add it. alternatively, use "bit move --component" to help with the move.`;
@@ -27,9 +22,9 @@ please run "bit migrate --harmony" to convert these records to "rootDir".`;
 
 export class StatusCmd implements Command {
   name = 'status';
-  description = 'show the working area component(s) status';
+  description = 'Presents the current status of components in the workspace, and notifies when issues are detected.';
   group = 'development';
-  extendedDescription = `https://${BASE_DOCS_DOMAIN}/workspace/workspace-status`;
+  extendedDescription: string;
   alias = 's';
   options = [
     ['j', 'json', 'return a json version of the component'],

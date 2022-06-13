@@ -6,15 +6,28 @@ import { CURRENT_UPSTREAM, WILDCARD_HELP } from '@teambit/legacy/dist/constants'
 import GeneralError from '@teambit/legacy/dist/error/general-error';
 import chalk from 'chalk';
 import { isEmpty } from 'lodash';
+import { CommandArg } from '../../../dist/cli/command';
 
 export class ExportCmd implements Command {
-  name = 'export [remote] [id...]';
-  description = 'Export components to a remote scope';
+  name = 'export [remote] [component-names...]';
+  description = 'Export components from the workspace to remote scopes';
+  arguments = [
+    { name: 'remote', description: 'LEGACY ONLY.' },
+    {
+      name: 'component-names...',
+      description:
+        'a list of component names or component IDs (separated by space). By default, all new component versions are exported.',
+    },
+  ];
   extendedDescription: string;
   alias = 'e';
   options = [
-    ['e', 'eject', 'replaces the exported components from the local scope with the corresponding packages'],
-    ['a', 'all', 'export all components include non-staged'],
+    [
+      'e',
+      'eject',
+      'replace the exported components with their corresponding packages (to use these components without further maintaining them)',
+    ],
+    ['a', 'all', 'export all components, including non-staged'],
     [
       'd',
       'include-dependencies',
