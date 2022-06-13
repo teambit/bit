@@ -9,12 +9,20 @@ import { SnapResults } from '@teambit/legacy/dist/api/consumer/lib/snap';
 import { SnappingMain } from './snapping.main.runtime';
 
 export class SnapCmd implements Command {
-  name = 'snap [id]';
-  description = 'EXPERIMENTAL. record component changes';
+  name = 'snap [component_names...]';
+  description =
+    'EXPERIMENTAL. Creates an immutable and exportable component snapshot. Useful for component collaboration.';
+  arguments = [
+    {
+      name: 'component_names...',
+      description:
+        'a list of component names or component IDs (separated by space). By default, all modified components are snapped.',
+    },
+  ];
   extendedDescription: string;
   alias = '';
   options = [
-    ['m', 'message <message>', 'log message describing the user changes'],
+    ['m', 'message <message>', 'log message describing the latest changes'],
     ['', 'unmodified', 'include unmodified components (by default, only new and modified components are snapped)'],
     ['', 'build', 'Harmony only. run the pipeline build and complete the tag'],
     ['', 'skip-tests', 'skip running component tests during snap process'],

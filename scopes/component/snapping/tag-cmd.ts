@@ -13,21 +13,28 @@ import { Logger } from '@teambit/logger';
 import { SnappingMain } from './snapping.main.runtime';
 
 export class TagCmd implements Command {
-  name = 'tag [id...]';
+  name = 'tag [component-names...]';
   group = 'development';
-  description = 'record component changes and lock versions';
+  description = 'Creates an immutable and exportable component snapshot, tagged with a release version.';
+  arguments = [
+    {
+      name: 'component-names...',
+      description:
+        'a list of component names or component IDs (separated by space). By default, all modified are tagged.',
+    },
+  ];
   extendedDescription: string;
   alias = 't';
   loader = true;
   options = [
-    ['m', 'message <message>', 'log message describing the user changes'],
+    ['m', 'message <message>', 'a log message describing latest changes'],
     ['', 'unmodified', 'include unmodified components (by default, only new and modified components are tagged)'],
     [
       '',
       'editor [editor]',
-      'EXPERIMENTAL. open an editor to edit the tag messages per component, optionally specify the editor-name, default to vim',
+      'EXPERIMENTAL. open an editor to write a tag message for each component. optionally, specify the editor-name (defaults to vim).',
     ],
-    ['v', 'ver <version>', 'tag with the given version'],
+    ['v', 'ver <version>', 'specify a tag version'],
     ['p', 'patch', 'increment the patch version number'],
     ['', 'minor', 'increment the minor version number'],
     ['', 'major', 'increment the major version number'],
