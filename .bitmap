@@ -1242,12 +1242,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/design/ui/error-page"
     },
-    "ui/external-link": {
-        "scope": "teambit.design",
-        "version": "0.0.347",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/design/ui/external-link"
-    },
     "ui/full-loader": {
         "scope": "teambit.ui-foundation",
         "version": "0.0.486",
@@ -1517,12 +1511,6 @@
         "version": "0.0.488",
         "mainFile": "index.ts",
         "rootDir": "scopes/code/queries/get-file-content"
-    },
-    "ui/react-router/link-anchor": {
-        "scope": "teambit.ui-foundation",
-        "version": "0.0.123",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/ui-foundation/react-router/ui/link-anchor"
     },
     "ui/react-router/slot-router": {
         "scope": "teambit.ui-foundation",
