@@ -9,18 +9,19 @@ import LegacyShow from '@teambit/legacy/dist/cli/commands/public-cmds/show-cmd';
 import { ComponentMain } from '../component.main.runtime';
 
 export class ShowCmd implements Command {
-  name = 'show <id>';
-  description = 'show a component';
+  name = 'show <component-name>';
+  description = "Displays the component's essential information.";
   alias = '';
   group = 'info';
+  arguments = [{ name: 'component-name', description: 'the component name or component ID' }];
   options = [
-    ['j', 'json', 'return the component data in json format'],
+    ['j', 'json', 'return the component data in a json format'],
     ['l', 'legacy', 'use the legacy bit show.'],
     ['r', 'remote', 'show a remote component'],
     [
       'c',
       'compare',
-      'compare current file system component to latest tagged component [default=latest]. only works in legacy.',
+      'compare current file system component to the latest tagged component [default=latest]. only works in legacy.',
     ],
   ] as CommandOptions;
 
