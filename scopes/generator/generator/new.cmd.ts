@@ -11,24 +11,32 @@ export type NewOptions = {
 };
 
 export class NewCmd implements Command {
-  name = 'new <templateName> <workspaceName>';
-  description = 'Create a new workspace from a template';
+  name = 'new <template-name> <workspace-name>';
+  description = 'Creates a new workspace from a template.';
+  arguments = [
+    {
+      name: 'template-name',
+      description:
+        "the name of the workspace template (run 'bit templates', outside of a workspace, to get a list of available templates)",
+    },
+    { name: 'workspace-name', description: 'the name for the new workspace and workspace directory' },
+  ];
   alias = '';
   loader = true;
   group = 'start';
   options = [
     [
       'a',
-      'aspect <string>',
+      'aspect <aspect-id>',
       'aspect-id of the template. mandatory for non-core aspects. helpful for core aspects in case of a name collision',
     ],
-    ['d', 'default-scope <string>', `set defaultScope in the new workspace.jsonc`],
+    ['d', 'default-scope <scope-name>', `set defaultScope in the new workspace.jsonc`],
     ['', 'standalone', 'DEPRECATED. use --skip-git instead'],
     ['s', 'skip-git', 'skip generation of Git repository'],
     ['e', 'empty', 'empty workspace with no components (relevant for templates that add components by default)'],
     [
       '',
-      'load-from <string>',
+      'load-from <path-to-template>',
       'path to the workspace containing the template. helpful during a development of a workspace-template',
     ],
   ] as CommandOptions;
