@@ -27,9 +27,9 @@ please run "bit migrate --harmony" to convert these records to "rootDir".`;
 
 export class StatusCmd implements Command {
   name = 'status';
-  shortDescription = 'show the working area component(s) status';
+  description = 'show the working area component(s) status';
   group = 'development';
-  description = `show the working area component(s) status.\n  https://${BASE_DOCS_DOMAIN}/workspace/workspace-status`;
+  extendedDescription = `https://${BASE_DOCS_DOMAIN}/workspace/workspace-status`;
   alias = 's';
   options = [
     ['j', 'json', 'return a json version of the component'],

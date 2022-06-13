@@ -1,6 +1,6 @@
 {
   "name": "@teambit/legacy",
-  "version": "1.0.273",
+  "version": "1.0.281",
   "license": "Apache-2.0",
   "main": "./dist/api.js",
   "preferGlobal": true,
@@ -106,7 +106,8 @@
     "build:ext": "tsc -p tsconfig.extensions.json",
     "build:pjson": "cp package.json dist/",
     "build:src": "babel src -d dist --verbose --extensions \".ts,.tsx,.js\" --copy-files",
-    "generate-cli-reference": "bit cli generate > scopes/harmony/cli-reference/cli-reference.mdx && prettier scopes/harmony/cli-reference/cli-reference.mdx --write"
+    "generate-cli-reference": "bit cli generate > scopes/harmony/cli-reference/cli-reference.mdx && prettier scopes/harmony/cli-reference/cli-reference.mdx --write",
+    "generate-cli-reference-json": "bit cli generate --json > scopes/harmony/cli-reference/cli-reference.json"
   },
   "dependencies": {
     "@teambit/toolbox.network.agent": "0.0.116",
@@ -283,7 +284,7 @@
     "eslint-plugin-simple-import-sort": "5.0.3",
     "gh-release": "3.5.0",
     "husky": "4.3.8",
-    "lint-staged": ">=10",
+    "lint-staged": "^12.5.0",
     "mocha": "9.2.0",
     "mocha-circleci-reporter": "0.0.3",
     "mocha-junit-reporter": "1.23.3",

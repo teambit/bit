@@ -33,13 +33,12 @@ export class FunctionLikeSchema extends SchemaNode {
   constructor(
     readonly location: Location,
     readonly name: string,
-    // readonly doc: any,
     params: ParameterSchema[],
-
     returnType: SchemaNode,
     readonly signature: string,
     readonly modifiers: Modifier[] = [],
-    doc?: DocSchema
+    doc?: DocSchema,
+    readonly typeParams?: string[] // generics e.g. <T>myFunction
   ) {
     super();
     this.params = params;
@@ -49,7 +48,10 @@ export class FunctionLikeSchema extends SchemaNode {
 
   toString() {
     const paramsStr = this.params.map((param) => param.toString()).join(', ');
-    return `${this.modifiersToString()}${chalk.bold(this.name)}(${paramsStr}): ${this.returnType.toString()}`;
+    const typeParamsStr = this.typeParams ? `<${this.typeParams.join(', ')}>` : '';
+    return `${this.modifiersToString()}${typeParamsStr}${chalk.bold(
+      this.name
+    )}(${paramsStr}): ${this.returnType.toString()}`;
   }
 
   isDeprecated(): boolean {

@@ -22,7 +22,7 @@ export class CompositionsSection implements Section {
 
   route = {
     path: '~compositions',
-    children: <Compositions menuBarWidgets={this.options.menuBarWidgetSlot} emptyState={this.emptyStateSlot} />,
+    element: <Compositions menuBarWidgets={this.options.menuBarWidgetSlot} emptyState={this.emptyStateSlot} />,
   };
 
   order = 20;

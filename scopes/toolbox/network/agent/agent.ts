@@ -3,12 +3,16 @@
 import { URL } from 'url';
 import HttpAgent from 'agentkeepalive';
 import { getProxyAgent } from '@teambit/toolbox.network.proxy-agent';
+import { readCAFileSync } from '@pnpm/network.ca-file';
+import memoize from 'memoizee';
 
+const readCAFileSyncCached = memoize(readCAFileSync);
 const HttpsAgent = HttpAgent.HttpsAgent;
 
 export interface AgentOptions {
-  ca?: string;
-  cert?: string;
+  ca?: string | string[];
+  cafile?: string;
+  cert?: string | string[];
   httpProxy?: string;
   httpsProxy?: string;
   key?: string;
@@ -20,6 +24,12 @@ export interface AgentOptions {
 }
 
 export function getAgent(uri: string, opts: AgentOptions) {
+  if (!opts.ca && opts.cafile) {
+    opts = {
+      ...opts,
+      ca: readCAFileSyncCached(opts.cafile),
+    };
+  }
   const noProxy = checkNoProxy(uri, opts);
   if (!noProxy && (opts.httpProxy || opts.httpsProxy)) {
     const proxy = getProxyAgent(uri, opts);

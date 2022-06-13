@@ -401,8 +401,7 @@ export class LaneImportCmd implements Command {
 
 export class LaneCmd implements Command {
   name = 'lane [name]';
-  shortDescription = 'show lanes details';
-  description: string;
+  description = 'show lanes details';
   alias = '';
   options = [
     ['d', 'details', 'show more details on the state of each component in each lane'],

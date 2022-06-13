@@ -12,7 +12,6 @@ const scope = {
   lanes: { getCurrentLaneName: () => 'main' },
 };
 
-const bitMapFixtureDir = path.join(__dirname, '../../../fixtures/bitmap-fixtures');
 const getBitmapInstance = async () => {
   const consumer = { getPath: () => __dirname, isLegacy: true, scope };
   // @ts-ignore
@@ -134,20 +133,6 @@ describe('BitMap', function () {
       expect(() => bitMap.loadComponents(invalidBitMap)).to.throw(
         '.bitmap entry of "scope/comp1" is invalid, it has a scope-name "scope", however, it does not have any version'
       );
-    });
-  });
-  describe('getAuthoredExportedComponents', () => {
-    it('should return an empty array when there are no authored components', async () => {
-      const consumer = {
-        getPath: () => path.join(bitMapFixtureDir, 'only-imported'),
-        isLegacy: true,
-        scope,
-      };
-      // @ts-ignore
-      const bitMap = await BitMap.load(consumer);
-      const results = bitMap.getAuthoredExportedComponents();
-      expect(results).to.be.an('array');
-      expect(results).to.have.lengthOf(0);
     });
   });
 });

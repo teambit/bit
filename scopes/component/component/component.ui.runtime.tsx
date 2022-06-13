@@ -3,7 +3,7 @@ import flatten from 'lodash.flatten';
 import copy from 'copy-to-clipboard';
 import type { RouteProps } from 'react-router-dom';
 
-import { NavLinkProps } from '@teambit/base-ui.routing.nav-link';
+import type { LinkProps } from '@teambit/base-react.navigation.link';
 import CommandBarAspect, { CommandBarUI, CommandEntry } from '@teambit/command-bar';
 import { DeprecationIcon } from '@teambit/component.ui.deprecation-icon';
 import { Slot, SlotRegistry } from '@teambit/harmony';
@@ -21,7 +21,7 @@ import { ComponentAspect } from './component.aspect';
 import { ComponentModel } from './ui';
 import { Component, ComponentPageElement, ComponentPageSlot } from './ui/component';
 import { ComponentResultPlugin, ComponentSearcher } from './ui/component-searcher';
-import { ConsumeMethodSlot, ConsumePlugin, Menu, NavPlugin, OrderedNavigationSlot } from './ui/menu';
+import { ConsumeMethodSlot, ConsumePlugin, ComponentMenu, NavPlugin, OrderedNavigationSlot } from './ui/menu';
 
 export type ComponentSearchResultSlot = SlotRegistry<ComponentResultPlugin[]>;
 
@@ -34,10 +34,8 @@ export type ComponentMeta = {
   id: string;
 };
 
-export const componentIdUrlRegex = '[\\w\\/-]*[\\w-]';
-
 export class ComponentUI {
-  readonly routePath = `/:componentId(${componentIdUrlRegex})`;
+  readonly routePath = `/*`;
   private componentSearcher: ComponentSearcher;
 
   constructor(
@@ -180,7 +178,7 @@ export class ComponentUI {
 
   getMenu(host: string) {
     return (
-      <Menu
+      <ComponentMenu
         navigationSlot={this.navSlot}
         consumeMethodSlot={this.consumeMethodSlot}
         widgetSlot={this.widgetSlot}
@@ -190,12 +188,12 @@ export class ComponentUI {
     );
   }
 
-  registerRoute(route: RouteProps) {
-    this.routeSlot.register(route);
+  registerRoute(routes: RouteProps[] | RouteProps) {
+    this.routeSlot.register(routes);
     return this;
   }
 
-  registerNavigation(nav: NavLinkProps, order?: number) {
+  registerNavigation(nav: LinkProps, order?: number) {
     this.navSlot.register({
       props: nav,
       order,
@@ -206,7 +204,7 @@ export class ComponentUI {
     this.consumeMethodSlot.register(consumeMethods);
   }
 
-  registerWidget(widget: NavLinkProps, order?: number) {
+  registerWidget(widget: LinkProps, order?: number) {
     this.widgetSlot.register({ props: widget, order });
   }
 
@@ -271,15 +269,14 @@ export class ComponentUI {
       commandBarUI,
       reactRouterUI
     );
-    const section = new AspectSection();
-
+    const aspectSection = new AspectSection();
+    // @ts-ignore
     componentUI.registerSearchResultWidget({ key: 'deprecation', end: DeprecationIcon });
-
     componentUI.commandBarUI.addCommand(...componentUI.keyBindings);
     commandBarUI.addSearcher(componentUI.componentSearcher);
     componentUI.registerMenuItem(componentUI.menuItems);
-    componentUI.registerRoute(section.route);
-    componentUI.registerWidget(section.navigationLink, section.order);
+    componentUI.registerRoute(aspectSection.route);
+    componentUI.registerWidget(aspectSection.navigationLink, aspectSection.order);
     componentUI.registerConsumeMethod(componentUI.bitMethod);
     return componentUI;
   }

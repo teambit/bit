@@ -16,21 +16,13 @@ export interface Command {
   alias?: string;
 
   /**
-   * Description of the command in commands summery
-   * `bit -h`
-   * `bit`
-   */
-  shortDescription?: string;
-
-  /**
-   * The description of the command. Will be seen in bit command help.
-   * `bit add --help`
+   * The description of the command. Being used in the commands summery (`bit --help`) and the help (e.g. `bit create --help`).
+   * should be short and precise. not more than one line. (use extendedDescription for more info).
    */
   description?: string;
 
   /**
-   * The extended description of the command. Will be seen in bit command help, just after the description
-   * `bit add --help`
+   * The extended description of the command. Will be seen in only in the command help, just after the description.
    */
   extendedDescription?: string;
 
@@ -68,6 +60,13 @@ export interface Command {
   options: CommandOptions;
 
   /**
+   * arguments are defined in the "name" property, and that's where the source of truth is.
+   * this prop is optional and provides a way to describe the args. later, it'll support more fields, such as defaultValue.
+   * if this is set, it'll be shown in the command help under "Arguments" section.
+   */
+  arguments?: CommandArg[];
+
+  /**
    * sub commands for example:
    * bit capsule list to list active capsules.
    */
@@ -84,6 +83,11 @@ export interface Command {
    * workspace
    */
   skipWorkspace?: boolean;
+
+  /**
+   * optionally, give some examples how to use the command.
+   */
+  examples?: Example[];
 
   /**
    * do not set this. it is being set once the command run.
@@ -121,3 +125,5 @@ export type CLIArgs = Array<string[] | string>;
 export type GenericObject = { [k: string]: any };
 export type Report = { data: string; code: number };
 export type RenderResult = { data: React.ReactElement; code: number };
+export type CommandArg = { name: string; description?: string };
+export type Example = { cmd: string; description: string };

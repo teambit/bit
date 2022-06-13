@@ -12,10 +12,9 @@ import RemoteUndefined from '../exceptions/remote-undefined';
 
 class RemoteAdd implements LegacyCommand {
   name = 'add <url>';
-  shortDescription = 'add a tracked bit remote';
-  description = `add a bare-scope as a remote. supported protocols are [file, http, ssh].
-for example: "http://localhost:3000", "file:///tmp/local-scope", "ssh://user@127.0.0.1:/tmp/local-scope".
-Legacy support [file, ssh]. Harmony supports [file, http].`;
+  description = 'add a bare-scope as a remote';
+  extendedDescription = `supported protocols are [file, http].
+for example: "http://localhost:3000", "file:///tmp/local-scope"`;
   alias = '';
   opts = [['g', 'global', 'configure a remote bit scope']] as CommandOptions;
 
@@ -50,9 +49,9 @@ class RemoteRm implements LegacyCommand {
 
 export default class Remote implements LegacyCommand {
   name = 'remote';
-  shortDescription = 'manage set of tracked bit scope(s)';
+  description = 'manage set of tracked bit scope(s)';
   group: Group = 'collaborate';
-  description = `manage set of tracked bit scope(s)\n  https://${BASE_DOCS_DOMAIN}/scope/remote-scopes`;
+  extendedDescription = `https://${BASE_DOCS_DOMAIN}/scope/remote-scopes`;
   alias = '';
   opts = [['g', 'global', 'see globally configured remotes']] as CommandOptions;
   migration = true;

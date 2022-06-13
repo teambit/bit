@@ -7,6 +7,13 @@ export const BasicButton = () => {
   return <Button>click me</Button>;
 };
 
+/**
+ * example of passing a JSX Element as a parameter
+ */
+export function Footer({ children = <BasicButton /> }) {
+  return <Button>{children}</Button>;
+}
+
 export const ButtonWithCustomStyles = () => {
   return <Button style={{ background: 'red' }}>click me</Button>;
 };

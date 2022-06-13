@@ -5,7 +5,8 @@ export type CommandOptions = Array<CommandOption>;
 
 export interface LegacyCommand {
   name: string;
-  description: string;
+  description: string; // for "bit help"
+  extendedDescription?: string; // for the command itself
   alias: string;
   opts?: CommandOptions;
   commands?: LegacyCommand[];
@@ -16,7 +17,6 @@ export interface LegacyCommand {
   internal?: boolean; // used for serialize the error it returns
   remoteOp?: boolean; // Used for adding the token option globally
   group?: Group; // for grouping in the "bit help" page
-  shortDescription?: string; // for the "bit help" page.
 
   action(params: any, opts: { [key: string]: any }, packageManagerArgs?: string[]): Promise<any>;
 

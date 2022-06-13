@@ -1,11 +1,22 @@
-export { GraphAspect as default, GraphAspect } from './graph.aspect';
-
-export { Dependency } from './model/dependency';
-export { DuplicateDependency, VersionSubgraph } from './duplicate-dependency';
 export type { ComponentGraph } from './component-graph';
-export type { GraphBuilder } from './graph-builder';
-export type { GraphMain } from './graph.main.runtime';
+export { DuplicateDependency, VersionSubgraph } from './duplicate-dependency';
 export { EdgeType } from './edge-type';
-export type { GraphUI, ComponentWidget, ComponentWidgetSlot, ComponentWidgetProps } from './graph.ui.runtime';
-export { useGraph, useGraphQuery, GraphModel, EdgeModel, NodeModel } from './ui/query';
-export { objectListToGraph, IdGraph } from './object-list-to-graph';
+export type { GraphBuilder } from './graph-builder';
+export { GraphAspect as default, GraphAspect } from './graph.aspect';
+export type { GraphMain } from './graph.main.runtime';
+export type { ComponentWidget, ComponentWidgetProps, ComponentWidgetSlot, GraphUI } from './graph.ui.runtime';
+export { Dependency } from './model/dependency';
+export { GraphFilter } from './model/graph-filters';
+export { IdGraph, objectListToGraph } from './object-list-to-graph';
+export { DependenciesCompare } from './ui/dependencies-compare';
+export {
+  calcElements,
+  calcLayout,
+  calcMinimapColors,
+  depTypeToClass,
+  depTypeToLabel,
+  styles as dependenciesGraphStyles,
+} from './ui/dependencies-graph';
+export { GraphFilters, styles as graphPageStyles } from './ui/graph-page';
+export { EdgeModel, GraphModel, NodeModel, RawGraph, useGraph, useGraphQuery } from './ui/query';
+export { styles as componentNodeStyles, root, defaultNode, external } from './ui/component-node';

@@ -17,9 +17,9 @@ import { Importer } from './importer';
 
 export default class ImportCmd implements Command {
   name = 'import [ids...]';
-  shortDescription = 'import components into your current working area';
+  description = 'import components into your workspace';
+  extendedDescription: string;
   group = 'collaborate';
-  description: string;
   alias = '';
   options = [
     ['p', 'path <path>', 'import components into a specific directory'],
@@ -44,8 +44,8 @@ export default class ImportCmd implements Command {
     ['', 'dependents', 'EXPERIMENTAL. import component dependents to allow auto-tag updating them upon tag'],
     [
       '',
-      'skip-lane',
-      'EXPERIMENTAL. when checked out to a lane, do not import the component into the lane, save it on main',
+      'save-in-lane',
+      'EXPERIMENTAL. when checked out to a lane and the component is not on the remote-lane, save it in the lane (default to save on main)',
     ],
     [
       '',
@@ -59,8 +59,7 @@ export default class ImportCmd implements Command {
   _packageManagerArgs: string[]; // gets populated by yargs-adapter.handler().
 
   constructor(private importer: Importer, private docsDomain: string) {
-    this.description = `import components into your current workspace.
-https://${docsDomain}/components/importing-components
+    this.extendedDescription = `https://${docsDomain}/components/importing-components
 ${WILDCARD_HELP('import')}`;
   }
 
@@ -77,7 +76,7 @@ ${WILDCARD_HELP('import')}`;
       skipNpmInstall = false,
       skipDependencyInstallation = false,
       merge,
-      skipLane = false,
+      saveInLane = false,
       dependencies = false,
       dependents = false,
       allHistory = false,
@@ -92,7 +91,7 @@ ${WILDCARD_HELP('import')}`;
       skipNpmInstall?: boolean;
       skipDependencyInstallation?: boolean;
       merge?: MergeStrategy;
-      skipLane?: boolean;
+      saveInLane?: boolean;
       dependencies?: boolean;
       dependents?: boolean;
       allHistory?: boolean;
@@ -136,7 +135,7 @@ ${WILDCARD_HELP('import')}`;
       override,
       writeConfig: Boolean(conf),
       installNpmPackages: !skipDependencyInstallation,
-      skipLane,
+      saveInLane,
       importDependenciesDirectly: dependencies,
       importDependents: dependents,
       allHistory,
@@ -186,7 +185,7 @@ ${WILDCARD_HELP('import')}`;
 
     const getImportOutput = () => {
       if (dependenciesOutput) return dependenciesOutput;
-      return chalk.yellow('nothing to import');
+      return chalk.yellow(importResults.cancellationMessage || 'nothing to import');
     };
 
     return getImportOutput();

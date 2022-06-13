@@ -3,7 +3,7 @@ import fs from 'fs-extra';
 import * as path from 'path';
 import { compact, uniq } from 'lodash';
 import R from 'ramda';
-import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
+import { LaneId } from '@teambit/lane-id';
 import { BitError } from '@teambit/bit-error';
 import type { Consumer } from '..';
 import { BitId, BitIds } from '../../bit-id';
@@ -65,7 +65,7 @@ export default class BitMap {
     public schema: string,
     private isLegacy: boolean,
     public workspaceLane: WorkspaceLane | null, // null if not checked out to a lane
-    private remoteLaneId?: LaneId
+    public remoteLaneId?: LaneId
   ) {
     this.components = [];
     this.hasChanged = false;
@@ -156,12 +156,10 @@ export default class BitMap {
     const dirPath: PathOsBasedAbsolute = consumer.getPath();
     const scopePath: string = consumer.scope.path;
     const isLegacy = consumer.isLegacy;
-    const laneName = consumer.scope.lanes.getCurrentLaneName();
     const { currentLocation, defaultLocation } = BitMap.getBitMapLocation(dirPath);
     const mapFileContent = BitMap.loadRawSync(dirPath);
-    const workspaceLane = laneName && laneName !== DEFAULT_LANE ? WorkspaceLane.load(laneName, scopePath) : null;
     if (!mapFileContent || !currentLocation) {
-      return new BitMap(dirPath, defaultLocation, CURRENT_BITMAP_SCHEMA, isLegacy, workspaceLane);
+      return new BitMap(dirPath, defaultLocation, CURRENT_BITMAP_SCHEMA, isLegacy, null);
     }
     let componentsJson;
     try {
@@ -171,11 +169,24 @@ export default class BitMap {
       throw new InvalidBitMap(currentLocation, e.message);
     }
     const schema = componentsJson[SCHEMA_FIELD] || componentsJson.version;
-    const remoteLaneName = componentsJson[LANE_KEY];
+    const laneId = componentsJson[LANE_KEY] ? new LaneId(componentsJson[LANE_KEY]) : undefined;
+    const currentLaneId = consumer.getCurrentLaneId();
+    const laneName = consumer.scope.lanes.getAliasByLaneId(currentLaneId);
+    if (laneId && currentLaneId.isDefault()) {
+      const scopeJson = consumer.scope.scopeJson;
+      scopeJson.trackLane({
+        remoteLane: laneId.name,
+        remoteScope: laneId.scope,
+        localLane: laneId.name,
+      });
+      scopeJson.setCurrentLane(laneId.name);
+    }
+
+    const workspaceLane = !currentLaneId.isDefault() && laneName ? WorkspaceLane.load(laneName, scopePath) : null;
 
     BitMap.removeNonComponentFields(componentsJson);
 
-    const bitMap = new BitMap(dirPath, currentLocation, schema, isLegacy, workspaceLane, remoteLaneName);
+    const bitMap = new BitMap(dirPath, currentLocation, schema, isLegacy, workspaceLane, laneId);
     bitMap.loadComponents(componentsJson);
     await bitMap.loadFiles();
     return bitMap;

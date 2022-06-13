@@ -1,46 +1,28 @@
-import { useRouteMatch } from 'react-router-dom';
-import { ComponentID } from '@teambit/component-id';
 import { useQuery } from '@teambit/ui-foundation.ui.react-router.use-query';
 import { ComponentDescriptor } from '@teambit/component-descriptor';
-import { useLanesContext } from '@teambit/lanes.ui.lanes';
 import { ComponentModel } from './component-model';
 import { ComponentError } from './component-error';
-import { useComponentQuery } from './use-component-query';
+import { Filters, useComponentQuery } from './use-component-query';
 
 export type Component = {
   component?: ComponentModel;
   error?: ComponentError;
   componentDescriptor?: ComponentDescriptor;
+  loading?: boolean;
+};
+export type UseComponentOptions = {
+  version?: string;
+  logFilters?: Filters;
 };
 
-type ComponentRoute = {
-  componentId?: string;
-};
-
-export function useComponent(host: string, id?: ComponentID): Component {
-  const {
-    params: { componentId },
-  } = useRouteMatch<ComponentRoute>();
+export function useComponent(host: string, id?: string, options?: UseComponentOptions): Component {
   const query = useQuery();
-  const version = query.get('version') || undefined;
-  const lanesContext = useLanesContext();
-  const targetId = id?.toString({ ignoreVersion: true }) || componentId;
-  if (!targetId) throw new TypeError('useComponent received no component id');
-  const currentLane = lanesContext?.viewedLane;
-  // when on a lane, always fetch all the logs starting from the 'head' version
-  const laneComponentId = lanesContext?.viewedLane?.components.find(
-    (component) => component.id.fullName === targetId
-  )?.id;
+  const { version, logFilters } = options || {};
+  const componentVersion = (version || query.get('version')) ?? undefined;
 
-  const componentIdStr = laneComponentId ? laneComponentId?.toString() : withVersion(targetId, version);
+  if (!id) throw new TypeError('useComponent received no component id');
 
-  const logFilters = currentLane
-    ? {
-        log: {
-          logHead: laneComponentId?.version,
-        },
-      }
-    : undefined;
+  const componentIdStr = withVersion(id, componentVersion);
 
   return useComponentQuery(componentIdStr, host, logFilters);
 }

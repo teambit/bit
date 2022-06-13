@@ -40,6 +40,8 @@
   }
   .titleLink {
     text-decoration: none;
+    display: inline-block;
+    max-width: fit-content;
   }
   @media screen and (max-width: 768px) {
     padding-left: 0;

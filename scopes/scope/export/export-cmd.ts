@@ -9,7 +9,8 @@ import { isEmpty } from 'lodash';
 
 export class ExportCmd implements Command {
   name = 'export [remote] [id...]';
-  description: string;
+  description = 'Export components to a remote scope';
+  extendedDescription: string;
   alias = 'e';
   options = [
     ['e', 'eject', 'replaces the exported components from the local scope with the corresponding packages'],
@@ -51,12 +52,10 @@ export class ExportCmd implements Command {
   loader = true;
   migration = true;
   group = 'collaborate';
-  shortDescription = 'Export components to a remote scope';
   remoteOp = true;
 
-  constructor(private docsDomain: string) {
-    this.description = `export components to a remote scope.
-bit export => export all staged components to their current scope, if checked out to a lane, export the lane as well
+  constructor(docsDomain: string) {
+    this.extendedDescription = `bit export => export all staged components to their current scope, if checked out to a lane, export the lane as well
 \`bit export [id...]\` => export the given ids to their current scope
 
 https://${docsDomain}/components/exporting-components

@@ -1,6 +1,6 @@
 import path from 'path';
 import fs from 'fs-extra';
-import { APISchema } from '@teambit/semantics.entities.semantic-schema';
+import { APISchema, UnknownSchema } from '@teambit/semantics.entities.semantic-schema';
 import { loadAspect } from '@teambit/harmony.testing.load-aspect';
 import { mockWorkspace, destroyWorkspace, WorkspaceData } from '@teambit/workspace.testing.mock-workspace';
 import { ComponentID } from '@teambit/component-id';
@@ -56,6 +56,15 @@ describe('SchemaAspect', function () {
       expect(apiSchema.componentId instanceof ComponentID).toBeTruthy();
       // @ts-ignore it exists on Jest. for some reason ts assumes this is Jasmine.
       expect(apiSchema.toObject()).toMatchObject(json);
+    });
+    it('should not throw when it does not recognize the schema', () => {
+      const jsonPath = path.join(getMockDir(), 'button-old-schema.json');
+      const json = fs.readJsonSync(jsonPath);
+      const apiSchema = schema.getSchemaFromObject(json);
+      expect(apiSchema instanceof APISchema).toBeTruthy();
+      expect(apiSchema.module.exports[0] instanceof UnknownSchema).toBeTruthy();
+      // @ts-ignore
+      expect(apiSchema.module.exports[0].location).toMatchObject({ file: 'index.ts', line: 21, character: 14 });
     });
   });
 });
