@@ -50,7 +50,6 @@ export class SignMain {
       }
       await this.scope.import(ids, { lane });
     }
-    this.lanes.importLane;
     const { componentsToSkip, componentsToSign } = await this.getComponentIdsToSign(ids);
     if (ids.length && componentsToSkip.length) {
       // eslint-disable-next-line no-console
@@ -61,7 +60,10 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
       return null;
     }
 
-    const components = await this.scope.getMany(componentsToSign);
+    // using `loadMany` instead of `getMany` to make sure component aspects are loaded.
+    this.logger.setStatusLine(`loading ${componentsToSign.length} components and their aspects...`);
+    const components = await this.scope.loadMany(componentsToSign);
+    this.logger.clearStatusLine();
     const { builderDataMap, pipeResults } = await this.builder.tagListener(
       components,
       { throwOnError: false },
@@ -150,9 +152,8 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
     if (!ids.length) {
       ids = await this.scope.listIds();
     }
-    // using `loadMany` instead of `getMany` to make sure component aspects are loaded.
-    this.logger.setStatusLine(`loading ${ids.length} components and their aspects...`);
-    const components = await this.scope.loadMany(ids);
+    this.logger.setStatusLine(`loading ${ids.length} components to determine whether they need to be signed...`);
+    const components = await this.scope.getMany(ids);
     this.logger.clearStatusLine();
     const componentsToSign: ComponentID[] = [];
     const componentsToSkip: ComponentID[] = [];
