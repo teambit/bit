@@ -4,9 +4,10 @@ import chalk from 'chalk';
 import { ConfigMain } from '@teambit/config';
 
 export class UseCmd implements Command {
-  name = 'use [ids...]';
+  name = 'use [component-ids...]';
   group = 'collaborate';
-  description = 'set up aspects in the workspace/scope config';
+  description = 'Sets aspects in the workspace/scope config to make them loadable by the workspace/scope.';
+  arguments = [{ name: 'component-ids...', description: 'the component IDs of the aspects' }];
   alias = '';
   options = [] as CommandOptions;
   loader = true;
