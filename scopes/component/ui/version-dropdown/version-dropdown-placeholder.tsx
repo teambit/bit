@@ -23,6 +23,7 @@ const getVersionDetails = (version, tags, snaps) => {
 };
 
 export function SimpleVersion({ currentVersion, className, disabled, tags, snaps }: VersionProps) {
+  const showArrowDown = useMemo(() => (snaps || []).concat(tags).length > 1, [tags, snaps]);
   const versionDetails = useMemo(() => getVersionDetails(currentVersion, tags, snaps), [currentVersion, tags, snaps]);
 
   return (
@@ -36,12 +37,13 @@ export function SimpleVersion({ currentVersion, className, disabled, tags, snaps
       >
         {currentVersion}
       </Ellipsis>
-      <Icon of="fat-arrow-down" />
+      {showArrowDown && <Icon of="fat-arrow-down" />}
     </div>
   );
 }
 
 export function DetailedVersion({ currentVersion, className, disabled, snaps, tags }: VersionProps) {
+  const showArrowDown = useMemo(() => (snaps || []).concat(tags).length > 1, [tags, snaps]);
   const versionDetails = useMemo(() => getVersionDetails(currentVersion, tags, snaps), [currentVersion, tags, snaps]);
 
   const timestamp = useMemo(
@@ -72,7 +74,7 @@ export function DetailedVersion({ currentVersion, className, disabled, snaps, ta
       <Ellipsis className={styles.versionTimestamp}>
         <TimeAgo date={timestamp} />
       </Ellipsis>
-      <Icon of="fat-arrow-down" />
+      {showArrowDown && <Icon of="fat-arrow-down" />}
     </div>
   );
 }
