@@ -174,7 +174,7 @@ commands: # reusable commands
       - run: 'ssh-add ~/.ssh/id_rsa'
   install_bvm:
     steps:
-      - run: npm i -g @teambit/bvm@0.0.38
+      - run: npm i -g @teambit/bvm
       - run: "echo 'export PATH=~/.npm-global/bin:$PATH' >> $BASH_ENV"
 
   set_git_credentials:
