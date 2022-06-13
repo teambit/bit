@@ -338,7 +338,7 @@ describe('tag components on Harmony', function () {
       helper.bitJsonc.setupDefault();
       helper.bitJsonc.setPackageManager();
       helper.fixtures.populateComponents(3);
-      tagOutput = helper.command.tagAllWithoutBuild('--pre-release dev');
+      tagOutput = helper.command.tagAllWithoutBuild('--increment prerelease --prerelease-id dev');
     });
     it('should tag all components according to the pre-release version', () => {
       expect(tagOutput).to.have.string('comp1@0.0.1-dev.0');
@@ -346,7 +346,7 @@ describe('tag components on Harmony', function () {
     describe('increment pre-release', () => {
       before(() => {
         helper.fixtures.populateComponents(3, undefined, 'v2');
-        tagOutput = helper.command.tagAllWithoutBuild('--pre-release');
+        tagOutput = helper.command.tagAllWithoutBuild('--increment prerelease');
       });
       it('should use the last pre-release identifier and increment it', () => {
         expect(tagOutput).to.have.string('comp1@0.0.1-dev.1');
