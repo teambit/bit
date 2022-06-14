@@ -11,6 +11,7 @@ import { SnappingMain } from './snapping.main.runtime';
 export class SnapCmd implements Command {
   name = 'snap [component_name]';
   description = 'EXPERIMENTAL. create an immutable and exportable component snapshot (no release version)';
+  extendedDescription: string;
   arguments = [
     {
       name: 'component_name',
