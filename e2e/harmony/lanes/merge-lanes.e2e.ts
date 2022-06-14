@@ -226,4 +226,34 @@ describe('merge lanes', function () {
       expect(list).to.have.lengthOf(1);
     });
   });
+  describe('merge with squash', () => {
+    let headOnMain: string;
+    let headOnLane: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild();
+      headOnMain = helper.command.getHead('comp1');
+      helper.command.createLane('dev');
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      headOnLane = helper.command.getHeadOfLane('dev', 'comp1');
+      // as an intermediate step, verify that it has 4 snaps.
+      const log = helper.command.logParsed('comp1');
+      expect(log).to.have.lengthOf(4);
+
+      helper.command.switchLocalLane('main');
+      helper.command.mergeLane('dev', '--squash');
+    });
+    it('should squash the snaps and leave only the last one', () => {
+      const log = helper.command.logParsed('comp1');
+      expect(log).to.have.lengthOf(2);
+
+      expect(log[0].hash).to.equal(headOnLane);
+      expect(log[0].parents[0]).to.equal(headOnMain);
+      expect(log[1].hash).to.equal(headOnMain);
+    });
+  });
 });
