@@ -12,7 +12,7 @@
   width: 100%;
 }
 .showMenuOverNav {
-  z-index: $nav-z-index + 1;
+  z-index: $topBar-zIndex;
 }
 
 .componentCompareVersionPlaceholder {
