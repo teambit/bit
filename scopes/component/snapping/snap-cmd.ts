@@ -9,7 +9,7 @@ import { SnapResults } from '@teambit/legacy/dist/api/consumer/lib/snap';
 import { SnappingMain } from './snapping.main.runtime';
 
 export class SnapCmd implements Command {
-  name = 'snap [component_name]';
+  name = 'snap [component-name]';
   description = 'EXPERIMENTAL. create an immutable and exportable component snapshot (no release version)';
   extendedDescription: string;
   arguments = [
