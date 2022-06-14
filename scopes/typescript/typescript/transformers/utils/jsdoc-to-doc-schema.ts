@@ -1,8 +1,23 @@
 /* eslint-disable no-fallthrough */
-import { getTextOfJSDocComment, JSDocReturnTag, JSDocTag, Node, SyntaxKind } from 'typescript';
+import {
+  getTextOfJSDocComment,
+  JSDocParameterTag,
+  JSDocPropertyLikeTag,
+  JSDocPropertyTag,
+  JSDocReturnTag,
+  JSDocTag,
+  Node,
+  SyntaxKind,
+} from 'typescript';
 import { getJsDoc, canHaveJsDoc } from 'tsutils';
 import pMapSeries from 'p-map-series';
-import { DocSchema, ReturnTagSchema, TagName, TagSchema } from '@teambit/semantics.entities.semantic-schema';
+import {
+  DocSchema,
+  PropertyLikeTagSchema,
+  ReturnTagSchema,
+  TagName,
+  TagSchema,
+} from '@teambit/semantics.entities.semantic-schema';
 import { SchemaExtractorContext } from '../../schema-extractor-context';
 import { typeNodeToSchema } from './type-node-to-schema';
 
@@ -25,50 +40,52 @@ export async function jsDocToDocSchema(node: Node, context: SchemaExtractorConte
 
 async function tagParser(tag: JSDocTag, context: SchemaExtractorContext): Promise<TagSchema> {
   // for some reason, in some cases, if `tag.getSourceFile()` is not provided to the `getText()`, it throws "Cannot read property 'text' of undefined"
-  let tagName: TagName | string = tag.tagName.getText(tag.getSourceFile());
+
   switch (tag.kind) {
     case SyntaxKind.JSDocReturnTag:
       return returnTag(tag as JSDocReturnTag, context);
-    case SyntaxKind.JSDocAugmentsTag:
-      tagName = TagName.augments;
-    case SyntaxKind.JSDocAuthorTag:
-      tagName = TagName.author;
-    case SyntaxKind.JSDocClassTag:
-      tagName = TagName.class;
-    case SyntaxKind.JSDocCallbackTag:
-      tagName = TagName.callback;
-    case SyntaxKind.JSDocPublicTag:
-      tagName = TagName.public;
-    case SyntaxKind.JSDocPrivateTag:
-      tagName = TagName.private;
-    case SyntaxKind.JSDocProtectedTag:
-      tagName = TagName.protected;
-    case SyntaxKind.JSDocReadonlyTag:
-      tagName = TagName.readonly;
-    case SyntaxKind.JSDocOverrideTag:
-      tagName = TagName.override;
-    case SyntaxKind.JSDocDeprecatedTag:
-      tagName = TagName.deprecated;
-    case SyntaxKind.JSDocSeeTag:
-      tagName = TagName.see;
-    case SyntaxKind.JSDocEnumTag:
-      tagName = TagName.enum;
-    case SyntaxKind.JSDocParameterTag:
-      tagName = TagName.parameter;
-    case SyntaxKind.JSDocThisTag:
-      tagName = TagName.this;
-    case SyntaxKind.JSDocTypeTag:
-      tagName = TagName.type;
-    case SyntaxKind.JSDocTemplateTag:
-      tagName = TagName.template;
-    case SyntaxKind.JSDocTypedefTag:
-      tagName = TagName.typedef;
     case SyntaxKind.JSDocPropertyTag:
-      tagName = TagName.property;
+      return propertyLikeTag(tag as JSDocPropertyTag, context);
+    case SyntaxKind.JSDocParameterTag:
+      return propertyLikeTag(tag as JSDocParameterTag, context);
+    case SyntaxKind.JSDocAugmentsTag:
+      return simpleTag(tag, TagName.augments, context);
+    case SyntaxKind.JSDocAuthorTag:
+      return simpleTag(tag, TagName.author, context);
+    case SyntaxKind.JSDocClassTag:
+      return simpleTag(tag, TagName.class, context);
+    case SyntaxKind.JSDocCallbackTag:
+      return simpleTag(tag, TagName.callback, context);
+    case SyntaxKind.JSDocPublicTag:
+      return simpleTag(tag, TagName.public, context);
+    case SyntaxKind.JSDocPrivateTag:
+      return simpleTag(tag, TagName.private, context);
+    case SyntaxKind.JSDocProtectedTag:
+      return simpleTag(tag, TagName.protected, context);
+    case SyntaxKind.JSDocReadonlyTag:
+      return simpleTag(tag, TagName.readonly, context);
+    case SyntaxKind.JSDocOverrideTag:
+      return simpleTag(tag, TagName.override, context);
+    case SyntaxKind.JSDocDeprecatedTag:
+      return simpleTag(tag, TagName.deprecated, context);
+    case SyntaxKind.JSDocSeeTag:
+      return simpleTag(tag, TagName.see, context);
+    case SyntaxKind.JSDocEnumTag:
+      return simpleTag(tag, TagName.enum, context);
+    case SyntaxKind.JSDocThisTag:
+      return simpleTag(tag, TagName.this, context);
+    case SyntaxKind.JSDocTypeTag:
+      return simpleTag(tag, TagName.type, context);
+    case SyntaxKind.JSDocTemplateTag:
+      return simpleTag(tag, TagName.template, context);
+    case SyntaxKind.JSDocTypedefTag:
+      return simpleTag(tag, TagName.typedef, context);
     case SyntaxKind.JSDocImplementsTag:
-      tagName = TagName.implements;
-    default:
+      return simpleTag(tag, TagName.implements, context);
+    default: {
+      const tagName: TagName | string = tag.tagName.getText(tag.getSourceFile());
       return simpleTag(tag, tagName, context);
+    }
   }
 }
 
@@ -78,5 +95,15 @@ function simpleTag(tag: JSDocTag, tagName: TagName | string, context: SchemaExtr
 
 async function returnTag(tag: JSDocReturnTag, context: SchemaExtractorContext) {
   const type = tag.typeExpression?.type ? await typeNodeToSchema(tag.typeExpression?.type, context) : undefined;
-  return new ReturnTagSchema(context.getLocation(tag), TagName.return, getTextOfJSDocComment(tag.comment), type);
+  return new ReturnTagSchema(context.getLocation(tag), getTextOfJSDocComment(tag.comment), type);
+}
+
+async function propertyLikeTag(tag: JSDocPropertyLikeTag, context: SchemaExtractorContext) {
+  const type = tag.typeExpression?.type ? await typeNodeToSchema(tag.typeExpression?.type, context) : undefined;
+  return new PropertyLikeTagSchema(
+    context.getLocation(tag),
+    tag.name.getText(),
+    getTextOfJSDocComment(tag.comment),
+    type
+  );
 }

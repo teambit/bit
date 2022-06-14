@@ -4,11 +4,13 @@
 /* eslint-disable @typescript-eslint/prefer-as-const */
 /* eslint-disable one-var */
 /* eslint-disable max-classes-per-file */
+
 /**
- *
- * @param a this is A
+ * General comment of the myFunc
+ * @deprecate example of deprecation tag
+ * @param a { number } this is A
  * @param b this is B
- * @returns
+ * @returns { number } results of adding a to b
  */
 export function myFunc(a = 4, b = 5): number {
   return a + b;
