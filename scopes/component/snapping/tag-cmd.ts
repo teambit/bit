@@ -16,19 +16,26 @@ import { SnappingMain } from './snapping.main.runtime';
 const RELEASE_TYPES = ['major', 'premajor', 'minor', 'preminor', 'patch', 'prepatch', 'prerelease'];
 
 export class TagCmd implements Command {
-  name = 'tag [id...]';
+  name = 'tag [component-names...]';
   group = 'development';
-  description = 'record component changes and lock versions';
+  description = 'create an immutable and exportable component snapshot, tagged with a release version.';
+  arguments = [
+    {
+      name: 'component-names...',
+      description:
+        'a list of component names or component IDs (separated by space). By default, all modified are tagged.',
+    },
+  ];
   extendedDescription: string;
   alias = 't';
   loader = true;
   options = [
-    ['m', 'message <message>', 'log message describing the user changes'],
+    ['m', 'message <message>', 'a log message describing latest changes'],
     ['', 'unmodified', 'include unmodified components (by default, only new and modified components are tagged)'],
     [
       '',
       'editor [editor]',
-      'EXPERIMENTAL. open an editor to edit the tag messages per component, optionally specify the editor-name, default to vim',
+      'EXPERIMENTAL. open an editor to write a tag message for each component. optionally, specify the editor-name (defaults to vim).',
     ],
     ['v', 'ver <version>', 'tag with the given version'],
     ['l', 'increment <level>', `options are: [${RELEASE_TYPES.join(', ')}], default to patch`],
