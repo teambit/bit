@@ -6,7 +6,7 @@ import { ApplyVersionResults } from '@teambit/legacy/dist/consumer/versions-ops/
 import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
 import { Lane } from '@teambit/legacy/dist/scope/models';
 import { Tmp } from '@teambit/legacy/dist/scope/repositories';
-import { MergingMain } from '@teambit/merging';
+import { MergingMain, ComponentStatus } from '@teambit/merging';
 import { remove } from '@teambit/legacy/dist/api/consumer';
 import { MergeLaneOptions } from './lanes.main.runtime';
 
@@ -62,57 +62,7 @@ export async function mergeLanes({
   const allComponentsStatus = await getAllComponentsStatus();
 
   if (squash) {
-    const failedComponents = allComponentsStatus.filter((c) => c.failureMessage && !c.unchangedLegitimately);
-    if (failedComponents.length) {
-      const failureMsgs = failedComponents
-        .map(
-          (failedComponent) =>
-            `${chalk.bold(failedComponent.id.toString())} - ${chalk.red(failedComponent.failureMessage as string)}`
-        )
-        .join('\n');
-      throw new BitError(`unable to squash due to the following failures:\n${failureMsgs}`);
-    }
-    const succeededComponents = allComponentsStatus.filter((c) => !c.failureMessage);
-    succeededComponents.forEach(({ id, divergeData, componentFromModel }) => {
-      if (!divergeData) {
-        throw new Error(`unable to squash. divergeData is missing from ${id.toString()}`);
-      }
-      if (divergeData.isDiverged()) {
-        throw new BitError(`unable to squash because ${id.toString()} is diverged in history.
-consider switching to ${laneName} first, merging this lane, then switching back to this lane and merging ${laneName}`);
-      }
-      if (divergeData.isLocalAhead()) {
-        // nothing to do. current is ahead, nothing to merge. (it was probably filtered out already as a "failedComponent")
-        return;
-      }
-      if (!divergeData.isRemoteAhead()) {
-        // nothing to do. current and remote are the same, nothing to merge. (it was probably filtered out already as a "failedComponent")
-        return;
-      }
-      // remote is ahead and was not diverge.
-      const remoteSnaps = divergeData.snapsOnRemoteOnly;
-      if (remoteSnaps.length === 0) {
-        throw new Error(`remote is ahead but it has no snaps. it's impossible`);
-      }
-      if (remoteSnaps.length === 1) {
-        // nothing to squash. it has only one commit.
-        return;
-      }
-      if (!componentFromModel) {
-        throw new Error('unable to squash, the componentFromModel is missing');
-      }
-
-      // do the squash.
-      if (divergeData.commonSnapBeforeDiverge) {
-        componentFromModel.addAsOnlyParent(divergeData.commonSnapBeforeDiverge);
-      } else {
-        // there is no commonSnapBeforeDiverge. the local has no snaps, all are remote, no need for parents. keep only head.
-        componentFromModel.parents.forEach((ref) => componentFromModel.removeParent(ref));
-      }
-      const squashedSnaps = remoteSnaps.filter((snap) => !snap.isEqual(componentFromModel.hash()));
-      componentFromModel.setSquashed(squashedSnaps);
-      consumer.scope.objects.add(componentFromModel);
-    });
+    squashSnaps(allComponentsStatus, laneName, consumer);
   }
 
   const mergeResults = await merging.mergeSnaps({
@@ -153,7 +103,7 @@ consider switching to ${laneName} first, merging this lane, then switching back 
 
   return { mergeResults, deleteResults };
 
-  async function getAllComponentsStatus() {
+  async function getAllComponentsStatus(): Promise<ComponentStatus[]> {
     const tmp = new Tmp(consumer.scope);
     try {
       const componentsStatus = await Promise.all(
@@ -166,4 +116,58 @@ consider switching to ${laneName} first, merging this lane, then switching back 
       throw err;
     }
   }
+}
+
+function squashSnaps(allComponentsStatus: ComponentStatus[], laneName: string, consumer: Consumer) {
+  const failedComponents = allComponentsStatus.filter((c) => c.failureMessage && !c.unchangedLegitimately);
+  if (failedComponents.length) {
+    const failureMsgs = failedComponents
+      .map(
+        (failedComponent) =>
+          `${chalk.bold(failedComponent.id.toString())} - ${chalk.red(failedComponent.failureMessage as string)}`
+      )
+      .join('\n');
+    throw new BitError(`unable to squash due to the following failures:\n${failureMsgs}`);
+  }
+  const succeededComponents = allComponentsStatus.filter((c) => !c.failureMessage);
+  succeededComponents.forEach(({ id, divergeData, componentFromModel }) => {
+    if (!divergeData) {
+      throw new Error(`unable to squash. divergeData is missing from ${id.toString()}`);
+    }
+    if (divergeData.isDiverged()) {
+      throw new BitError(`unable to squash because ${id.toString()} is diverged in history.
+consider switching to ${laneName} first, merging this lane, then switching back to this lane and merging ${laneName}`);
+    }
+    if (divergeData.isLocalAhead()) {
+      // nothing to do. current is ahead, nothing to merge. (it was probably filtered out already as a "failedComponent")
+      return;
+    }
+    if (!divergeData.isRemoteAhead()) {
+      // nothing to do. current and remote are the same, nothing to merge. (it was probably filtered out already as a "failedComponent")
+      return;
+    }
+    // remote is ahead and was not diverge.
+    const remoteSnaps = divergeData.snapsOnRemoteOnly;
+    if (remoteSnaps.length === 0) {
+      throw new Error(`remote is ahead but it has no snaps. it's impossible`);
+    }
+    if (remoteSnaps.length === 1) {
+      // nothing to squash. it has only one commit.
+      return;
+    }
+    if (!componentFromModel) {
+      throw new Error('unable to squash, the componentFromModel is missing');
+    }
+
+    // do the squash.
+    if (divergeData.commonSnapBeforeDiverge) {
+      componentFromModel.addAsOnlyParent(divergeData.commonSnapBeforeDiverge);
+    } else {
+      // there is no commonSnapBeforeDiverge. the local has no snaps, all are remote, no need for parents. keep only head.
+      componentFromModel.parents.forEach((ref) => componentFromModel.removeParent(ref));
+    }
+    const squashedSnaps = remoteSnaps.filter((snap) => !snap.isEqual(componentFromModel.hash()));
+    componentFromModel.setSquashed(squashedSnaps);
+    consumer.scope.objects.add(componentFromModel);
+  });
 }
