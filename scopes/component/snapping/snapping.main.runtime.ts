@@ -8,7 +8,7 @@ import semver, { ReleaseType } from 'semver';
 import { compact } from 'lodash';
 import { Analytics } from '@teambit/legacy/dist/analytics/analytics';
 import { BitId, BitIds } from '@teambit/legacy/dist/bit-id';
-import { POST_TAG_ALL_HOOK, POST_TAG_HOOK, DEFAULT_BIT_RELEASE_TYPE } from '@teambit/legacy/dist/constants';
+import { POST_TAG_ALL_HOOK, POST_TAG_HOOK } from '@teambit/legacy/dist/constants';
 import { Consumer } from '@teambit/legacy/dist/consumer';
 import ComponentsList from '@teambit/legacy/dist/consumer/component/components-list';
 import HooksManager from '@teambit/legacy/dist/hooks';
@@ -58,10 +58,8 @@ export class SnappingMain {
     version,
     editor = '',
     snapped = false,
-    patch,
-    minor,
-    major,
-    preRelease,
+    releaseType,
+    preReleaseId,
     ignoreIssues,
     ignoreNewestVersion = false,
     skipTests = false,
@@ -78,9 +76,7 @@ export class SnappingMain {
     all?: boolean | string;
     snapped?: boolean;
     version?: string;
-    patch?: boolean;
-    minor?: boolean;
-    major?: boolean;
+    releaseType?: ReleaseType;
     ignoreIssues?: string;
     scope?: string | boolean;
     incrementBy?: number;
@@ -97,21 +93,7 @@ export class SnappingMain {
       throw new BitError('you can use either --editor or --message, but not both');
     }
 
-    const releaseFlags = [patch, minor, major, preRelease].filter((x) => x);
-    if (releaseFlags.length > 1) {
-      throw new BitError('you can use only one of the following - patch, minor, major, pre-release');
-    }
-
-    let releaseType: ReleaseType = DEFAULT_BIT_RELEASE_TYPE;
-
-    if (major) releaseType = 'major';
-    else if (minor) releaseType = 'minor';
-    else if (patch) releaseType = 'patch';
-    else if (preRelease) releaseType = 'prerelease';
-
     const exactVersion = version;
-    preRelease = typeof preRelease === 'string' ? preRelease : '';
-
     if (!this.workspace) throw new ConsumerNotFound();
     const idsHasWildcard = hasWildcard(ids);
     const isAll = Boolean(!ids.length || idsHasWildcard);
@@ -149,7 +131,7 @@ export class SnappingMain {
       editor,
       exactVersion: validExactVersion,
       releaseType,
-      preRelease,
+      preReleaseId,
       consumer: this.workspace.consumer,
       ignoreNewestVersion,
       skipTests,
