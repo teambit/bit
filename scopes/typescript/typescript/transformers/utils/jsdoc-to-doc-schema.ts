@@ -20,7 +20,7 @@ export async function jsDocToDocSchema(node: Node, context: SchemaExtractorConte
   const location = context.getLocation(jsDoc);
   const comment = getTextOfJSDocComment(jsDoc.comment);
   const tags = jsDoc.tags ? await pMapSeries(jsDoc.tags, (tag) => tagParser(tag, context)) : undefined;
-  return new DocSchema(location, comment, tags);
+  return new DocSchema(location, jsDoc.getText(), comment, tags);
 }
 
 async function tagParser(tag: JSDocTag, context: SchemaExtractorContext): Promise<TagSchema> {
