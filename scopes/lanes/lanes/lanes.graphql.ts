@@ -36,11 +36,16 @@ export function lanesSchema(lanesMainRuntime: LanesMain): Schema {
         color: Boolean
       }
 
+      type LaneComponent {
+        id: ComponentID!
+        head: String!
+      }
+
       type Lane {
         id: String!
         isMerged: Boolean
         remote: String
-        components(offset: Int, limit: Int): [Component!]!
+        components(offset: Int, limit: Int): [LaneComponent!]!
         readmeComponent: Component
       }
 
