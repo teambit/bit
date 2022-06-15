@@ -1,11 +1,17 @@
 import { createContext, useContext } from 'react';
 import { ComponentModel } from '@teambit/component';
+import { LegacyComponentLog } from '@teambit/legacy-component-log';
+
+export type ComponentCompareComponentModel = {
+  model: ComponentModel;
+  versionInfo?: LegacyComponentLog;
+  isLocalChanges?: boolean;
+};
 
 export type ComponentCompareModel = {
-  base?: ComponentModel;
-  compare: ComponentModel;
+  base?: ComponentCompareComponentModel;
+  compare: ComponentCompareComponentModel;
   loading?: boolean;
-  compareIsLocalChanges?: boolean;
 };
 
 export const ComponentCompareContext = createContext<ComponentCompareModel | undefined>(undefined);

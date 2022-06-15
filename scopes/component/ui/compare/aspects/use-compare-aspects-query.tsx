@@ -35,8 +35,8 @@ const GET_COMPONENT_ASPECT_DATA = gql`
 
 export function useCompareAspectsQuery(host: string): ComponentCompareAspectsModel {
   const componentCompareContext = useComponentCompare();
-  const base = componentCompareContext?.base;
-  const compare = componentCompareContext?.compare;
+  const base = componentCompareContext?.base?.model;
+  const compare = componentCompareContext?.compare.model;
 
   const isCompareVersionWorkspace = componentCompareContext?.compareIsLocalChanges;
 

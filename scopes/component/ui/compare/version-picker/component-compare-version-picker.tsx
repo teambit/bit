@@ -38,11 +38,11 @@ export function ComponentCompareVersionPicker({ className }: ComponentCompareVer
     ).map((tag) => ({ ...tag, version: tag.tag as string }));
   }, [component?.logs]);
 
-  const compareVersion = componentCompare?.compareIsLocalChanges ? 'workspace' : componentCompare?.compare.version;
+  const compareVersion = componentCompare?.compare.isLocalChanges ? 'workspace' : componentCompare?.compare.model.version;
 
-  const baseVersion = componentCompare?.base?.version;
+  const baseVersion = componentCompare?.base?.model.version;
 
-  const key = `base-compare-version-dropdown-${componentCompare?.compare.id.toString()}`;
+  const key = `base-compare-version-dropdown-${componentCompare?.compare.model.id.toString()}`;
 
   return (
     <div className={styles.componentCompareVersionPicker}>

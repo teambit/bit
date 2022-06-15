@@ -40,7 +40,7 @@ export function CompareTests(props: CompareTestsProps) {
 
     return (
       <div className={styles.subView} ref={leftPanelRef} onScroll={handleLeftPanelScroll}>
-        <CompareTestsPage component={componentCompare.base} emptyState={emptyState} />
+        <CompareTestsPage component={componentCompare.base?.model} emptyState={emptyState} />
       </div>
     );
   }, [componentCompare?.base, isScrollingSynced]);
@@ -53,8 +53,8 @@ export function CompareTests(props: CompareTestsProps) {
     return (
       <div className={styles.subView} ref={rightPanelRef} onScroll={handleRightPanelScroll}>
         <CompareTestsPage
-          component={componentCompare.compare}
-          isCompareVersionWorkspace={componentCompare.compareIsLocalChanges}
+          component={componentCompare.compare.model}
+          isCompareVersionWorkspace={componentCompare.compare.isLocalChanges}
           emptyState={emptyState}
         />
       </div>

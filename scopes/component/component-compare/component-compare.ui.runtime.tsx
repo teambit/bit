@@ -9,6 +9,7 @@ import { RouteProps } from 'react-router-dom';
 import { AspectsCompareSection } from './component-compare-aspects.section';
 import { ComponentCompareAspect } from './component-compare.aspect';
 import { ComponentCompareSection } from './component-compare.section';
+import { CompareChangelogSection } from './component-compare-changelog.section';
 
 export type ComponentCompareNav = {
   props: NavLinkProps;
@@ -56,11 +57,19 @@ export class ComponentCompareUI {
     componentUi.registerRoute([componentCompareSection.route]);
     componentUi.registerWidget(componentCompareSection.navigationLink, componentCompareSection.order);
     const aspectCompareSection = new AspectsCompareSection(host);
-    componentCompareUI.registerNavigation({
-      props: aspectCompareSection.navigationLink,
-      order: aspectCompareSection.navigationLink.order,
-    });
-    componentCompareUI.registerRoutes([aspectCompareSection.route]);
+    const compareChangelog = new CompareChangelogSection();
+    componentCompareUI.registerNavigation([
+      {
+        props: aspectCompareSection.navigationLink,
+        order: aspectCompareSection.navigationLink.order,
+      },
+      {
+        props: compareChangelog.navigationLink,
+        order: compareChangelog.navigationLink.order,
+      },
+    ]);
+
+    componentCompareUI.registerRoutes([aspectCompareSection.route, compareChangelog.route]);
     return componentCompareUI;
   }
 }

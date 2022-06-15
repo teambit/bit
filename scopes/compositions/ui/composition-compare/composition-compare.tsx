@@ -89,7 +89,7 @@ export function CompositionCompare(props: CompositionCompareProps) {
         <CompositionContextProvider queryParams={baseCompositionParams} setQueryParams={setBaseCompositionParams}>
           <CompositionContent
             emptyState={emptyState}
-            component={component?.base}
+            component={component?.base.model}
             selected={selectedBaseComp}
             queryParams={baseCompQueryParams}
           />
@@ -108,7 +108,7 @@ export function CompositionCompare(props: CompositionCompareProps) {
         <CompositionContextProvider queryParams={compareCompositionParams} setQueryParams={setCompareCompositionParams}>
           <CompositionContent
             emptyState={emptyState}
-            component={component.compare}
+            component={component.compare.model}
             selected={selectedCompareComp}
             queryParams={compareCompQueryParams}
           />

@@ -19,13 +19,24 @@ export type ComponentCompareProps = {
   host: string;
 } & HTMLAttributes<HTMLDivElement>;
 
+const findPrevVersionFromCurrent = (compareVersion) => (_, index: number, logs: LegacyComponentLog[]) => {
+  if (index === 0) return false;
+  if (logs.length === 1) return true;
+
+  const prevIndex = index - 1;
+
+  return logs[prevIndex].tag === compareVersion || logs[prevIndex].hash === compareVersion;
+};
+
+const findMatchingVersionInfo = (version?: string) => (log: LegacyComponentLog) =>
+  version && (log.hash === version || log.tag === version);
+
 export function ComponentCompare({ navSlot, host, routeSlot }: ComponentCompareProps) {
   const baseVersion = useCompareQueryParam('baseVersion');
   const component = useContext(ComponentContext);
   const location = useLocation();
 
   const isWorkspace = host === 'teambit.workspace/workspace';
-
   const allVersionInfo = component.logs?.slice().reverse() || [];
   const isNew = allVersionInfo.length === 0;
   const compareVersion =
@@ -33,17 +44,7 @@ export function ComponentCompare({ navSlot, host, routeSlot }: ComponentCompareP
   const compareIsLocalChanges = compareVersion === 'workspace';
 
   const lastVersionInfo = useMemo(() => {
-    const findPrevVersionFromCurrent = (_, index: number, logs: LegacyComponentLog[]) => {
-      if (index === 0) return false;
-      if (logs.length === 1) return true;
-
-      const prevIndex = index - 1;
-
-      return logs[prevIndex].tag === compareVersion || logs[prevIndex].hash === compareVersion;
-    };
-
-    const prevVersionInfo = allVersionInfo.find(findPrevVersionFromCurrent);
-
+    const prevVersionInfo = allVersionInfo.find(findPrevVersionFromCurrent(compareVersion));
     return prevVersionInfo;
   }, [component.logs]);
 
@@ -57,15 +58,26 @@ export function ComponentCompare({ navSlot, host, routeSlot }: ComponentCompareP
   const { component: base, loading } = useComponent(host, baseId.toString());
 
   const nothingToCompare = !loading && !compareIsLocalChanges && (component.logs?.length || []) < 2;
+  const showSubMenus = !loading && !nothingToCompare;
+
+  const baseVersionInfo = useMemo(() => allVersionInfo.find(findMatchingVersionInfo(baseId.version)), [baseId]);
+  const compareVersionInfo = useMemo(
+    () => allVersionInfo.find(findMatchingVersionInfo(compare.version)),
+    [compare.version]
+  );
 
   const componentCompareModel: ComponentCompareModel = {
-    compare,
-    base,
+    compare: {
+      model: compare,
+      isLocalChanges: compareIsLocalChanges,
+      versionInfo: compareVersionInfo,
+    },
+    base: base && {
+      model: base,
+      versionInfo: baseVersionInfo,
+    },
     loading,
-    compareIsLocalChanges,
   };
-
-  const showSubMenus = !loading && !nothingToCompare;
 
   return (
     <ComponentCompareContext.Provider value={componentCompareModel}>
