@@ -1,6 +1,5 @@
 import { ComponentContext, TopBarNav, useComponent } from '@teambit/component';
 import { ComponentCompareNav, ComponentCompareNavSlot } from '@teambit/component-compare';
-import { H2 } from '@teambit/documenter.ui.heading';
 import { RouteSlot, SlotRouter } from '@teambit/ui-foundation.ui.react-router.slot-router';
 import flatten from 'lodash.flatten';
 import { useLocation } from '@teambit/base-ui.routing.routing-provider';
