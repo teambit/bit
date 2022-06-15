@@ -6,7 +6,7 @@ import { TagName, TagSchema } from './tag';
 export class DocSchema extends SchemaNode {
   @Transform(schemaObjArrayToInstances)
   readonly tags?: TagSchema[];
-  constructor(readonly location: Location, readonly comment?: string, tags?: TagSchema[]) {
+  constructor(readonly location: Location, readonly raw: string, readonly comment?: string, tags?: TagSchema[]) {
     super();
     this.tags = tags;
   }
