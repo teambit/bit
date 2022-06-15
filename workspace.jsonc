@@ -35,6 +35,7 @@
         "@pnpm/local-resolver": "7.0.8",
         "@pnpm/logger": "4.0.0",
         "@pnpm/modules-yaml": "9.1.1",
+        "@pnpm/network.agent": "0.0.3",
         "@pnpm/network.ca-file": "1.0.1",
         "@pnpm/npm-resolver": "12.1.8",
         "@pnpm/package-store": "12.1.16",
