@@ -6,10 +6,9 @@
   padding: 8px 0px;
 }
 
-.componentCompareVersionPlaceholder,
 .componentCompareVersionMenu {
-  max-width: 100%;
-  width: 100%;
+  left: 0;
+  min-width: 400px;
 }
 .showMenuOverNav {
   z-index: $nav-z-index + 1;
@@ -52,7 +51,8 @@
 .titleText {
   display: flex;
   align-self: center;
-  font-size: 32px;
+  font-size: 16px;
+  font-weight: bold;
 }
 
 .rightPad {

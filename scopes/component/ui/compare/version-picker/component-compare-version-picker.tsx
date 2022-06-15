@@ -60,8 +60,8 @@ export function ComponentCompareVersionPicker({ className }: ComponentCompareVer
         overrideVersionHref={(_baseVersion) => {
           return useUpdatedUrlFromQuery({ baseVersion: _baseVersion });
         }}
-        showVersionDetails={true}
         disabled={snaps.concat(tags).length < 2}
+        showVersionDetails={true}
       />
       <div className={styles.titleText}>with</div>
       <VersionDropdown
@@ -74,7 +74,6 @@ export function ComponentCompareVersionPicker({ className }: ComponentCompareVer
         disabled={true}
         loading={componentCompare?.loading}
         currentVersion={compareVersion as string}
-        showVersionDetails={true}
       />
     </div>
   );

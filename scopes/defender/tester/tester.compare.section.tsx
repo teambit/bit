@@ -9,7 +9,7 @@ export class TesterCompareSection implements Section {
   navigationLink = {
     href: 'tests',
     children: 'Tests',
-    order: 4,
+    order: 3,
   };
 
   route = {
