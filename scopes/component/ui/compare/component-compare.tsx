@@ -56,7 +56,7 @@ export function ComponentCompare({ navSlot, host, routeSlot }: ComponentCompareP
 
   const { component: base, loading } = useComponent(host, baseId.toString());
 
-  const nothingToCompare = !compareIsLocalChanges && (component.logs?.length || []) < 2;
+  const nothingToCompare = !loading && !compareIsLocalChanges && (component.logs?.length || []) < 2;
 
   const componentCompareModel: ComponentCompareModel = {
     compare,
