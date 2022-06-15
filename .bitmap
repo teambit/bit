@@ -754,12 +754,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/toolbox/network/get-port"
     },
-    "network/proxy-agent": {
-        "scope": "teambit.toolbox",
-        "version": "0.0.537",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/toolbox/network/proxy-agent"
-    },
     "new-component-helper": {
         "scope": "teambit.component",
         "version": "0.0.166",
