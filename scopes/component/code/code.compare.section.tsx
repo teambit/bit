@@ -9,7 +9,7 @@ export class CodeCompareSection implements Section {
   navigationLink = {
     href: 'code',
     children: 'Code',
-    order: 2,
+    order: 4,
   };
 
   route = {
