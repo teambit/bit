@@ -2,7 +2,6 @@
 import chalk from 'chalk';
 import memoize from 'memoizee';
 import mapSeries from 'p-map-series';
-import multimatch from 'multimatch';
 import type { PubsubMain } from '@teambit/pubsub';
 import { IssuesList } from '@teambit/component-issues';
 import type { AspectLoaderMain, AspectDefinition } from '@teambit/aspect-loader';
@@ -736,14 +735,7 @@ export class Workspace implements ComponentFactory {
       return [];
     }
     const ids = await this.listIds();
-    const patterns = pattern.split(',').map((p) => p.trim());
-    // check also as legacyId.toString, as it doesn't have the defaultScope
-    const idsToCheck = (id: ComponentID) => [id.toStringWithoutVersion(), id._legacy.toStringWithoutVersion()];
-    const idsFiltered = ids.filter((id) => multimatch(idsToCheck(id), patterns).length);
-    if (throwForNoMatch && !idsFiltered.length) {
-      throw new BitError(`unable to find any matching for "${pattern}" pattern`);
-    }
-    return idsFiltered;
+    return this.scope.filterIdsFromPoolIdsByPattern(pattern, ids, throwForNoMatch);
   }
 
   /**
