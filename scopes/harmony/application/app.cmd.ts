@@ -7,7 +7,7 @@ import { ApplicationMain } from './application.main.runtime';
 
 export class AppListCmd implements Command {
   name = 'list';
-  description = 'list all registered applications';
+  description = 'list all registered apps';
   alias = '';
   group = 'apps';
   options = [['j', 'json', 'return the component data in json format']] as CommandOptions;
@@ -30,7 +30,7 @@ export class AppListCmd implements Command {
 
 export class AppCmd implements Command {
   name = 'app <sub-command>';
-  description = 'manage applications';
+  description = 'Manages apps';
   alias = '';
   group = 'apps';
   commands: Command[] = [];
