@@ -63,6 +63,7 @@ export type MergeLaneOptions = {
   existingOnWorkspaceOnly: boolean;
   build: boolean;
   keepReadme: boolean;
+  squash: boolean;
 };
 
 export type CreateLaneOptions = {

@@ -3,6 +3,7 @@ import { DeprecationInfo } from '@teambit/deprecation';
 import { Descriptor } from '@teambit/envs';
 import { ComponentID, ComponentIdObj } from '@teambit/component-id';
 import { LegacyComponentLog } from '@teambit/legacy-component-log';
+import { ComponentPreviewSize } from '@teambit/preview';
 import { Tag } from '../../tag';
 import { TagMap } from '../../tag-map';
 import { TagProps } from '../../tag/tag';
@@ -30,6 +31,7 @@ export type ComponentModelProps = {
   latest?: string;
   preview?: ComponentPreview;
   logs?: LegacyComponentLog[];
+  size?: ComponentPreviewSize;
 };
 
 export type ComponentPreview = {
@@ -116,6 +118,12 @@ export class ComponentModel {
     readonly host?: string,
 
     /**
+     *
+     * size preview
+     */
+    readonly size?: ComponentPreviewSize,
+
+    /**
      * latest version of component
      */
     readonly latest?: string,
@@ -151,6 +159,7 @@ export class ComponentModel {
     host,
     latest,
     preview,
+    size,
     logs,
   }: ComponentModelProps) {
     return new ComponentModel(
@@ -169,6 +178,7 @@ export class ComponentModel {
       description,
       labels,
       host,
+      size,
       latest,
       preview,
       logs

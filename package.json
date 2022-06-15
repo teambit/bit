@@ -1,6 +1,6 @@
 {
   "name": "@teambit/legacy",
-  "version": "1.0.281",
+  "version": "1.0.283",
   "license": "Apache-2.0",
   "main": "./dist/api.js",
   "preferGlobal": true,
@@ -113,6 +113,7 @@
     "@teambit/toolbox.network.agent": "0.0.116",
     "@babel/core": "7.12.17",
     "@babel/runtime": "7.12.18",
+    "@teambit/component-version": "0.0.395",
     "@teambit/bvm.list": "0.0.33",
     "@teambit/network.agent": "0.0.1",
     "@vuedoc/parser": "2.4.0",
