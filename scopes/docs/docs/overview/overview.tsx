@@ -47,7 +47,7 @@ export function Overview({ titleBadges }: OverviewProps) {
           packageName={component.packageName}
           titleBadges={flatten(titleBadges.values())}
           componentDescriptor={componentDescriptor}
-          deprecation={component.deprecation}
+          component={component}
         />
       )}
       <ComponentPreview

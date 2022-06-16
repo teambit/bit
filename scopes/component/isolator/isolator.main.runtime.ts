@@ -21,12 +21,7 @@ import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { BitIds } from '@teambit/legacy/dist/bit-id';
 import LegacyScope from '@teambit/legacy/dist/scope/scope';
 import GlobalConfigAspect, { GlobalConfigMain } from '@teambit/global-config';
-import {
-  CACHE_ROOT,
-  DEPENDENCIES_FIELDS,
-  PACKAGE_JSON,
-  CFG_CAPSULES_ROOT_BASE_DIR,
-} from '@teambit/legacy/dist/constants';
+import { DEPENDENCIES_FIELDS, PACKAGE_JSON } from '@teambit/legacy/dist/constants';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import PackageJsonFile from '@teambit/legacy/dist/consumer/component/package-json-file';
 import { importMultipleDistsArtifacts } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
@@ -44,8 +39,6 @@ import { IsolatorAspect } from './isolator.aspect';
 import { symlinkBitLegacyToCapsules } from './symlink-bit-legacy-to-capsules';
 import { symlinkOnCapsuleRoot, symlinkDependenciesToCapsules } from './symlink-dependencies-to-capsules';
 import { Network } from './network';
-
-const DEFAULT_CAPSULES_BASE_DIR = path.join(CACHE_ROOT, 'capsules'); // TODO: move elsewhere
 
 export type ListResults = {
   workspace: string;
@@ -467,7 +460,7 @@ export class IsolatorMain {
   }
 
   private getRootDirOfAllCapsules(): string {
-    return this.globalConfig.getSync(CFG_CAPSULES_ROOT_BASE_DIR) || DEFAULT_CAPSULES_BASE_DIR;
+    return this.globalConfig.getGlobalCapsulesBaseDir();
   }
 
   private wereDependenciesInPackageJsonChanged(capsuleWithPackageData: CapsulePackageJsonData): boolean {
