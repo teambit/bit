@@ -158,7 +158,7 @@
         "@teambit/evangelist.input.input": "1.0.2",
         "@teambit/evangelist.surfaces.dropdown": "1.0.2",
         "@teambit/evangelist.surfaces.tooltip": "1.0.1",
-        "@teambit/explorer.ui.command-bar": "1.0.2",
+        "@teambit/explorer.ui.command-bar": "1.2.0",
         "@teambit/graph.cleargraph": "0.0.1",
         "@teambit/harmony": "0.3.3",
         "@teambit/pkg.content.packages-overview": "1.95.9",
