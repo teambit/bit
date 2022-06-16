@@ -6,7 +6,7 @@ import {
   AUTO_TAGGED_MSG,
   BasicTagParams,
 } from '@teambit/legacy/dist/api/consumer/lib/tag';
-import { DEFAULT_BIT_RELEASE_TYPE, WILDCARD_HELP } from '@teambit/legacy/dist/constants';
+import { DEFAULT_BIT_RELEASE_TYPE } from '@teambit/legacy/dist/constants';
 import { IssuesClasses } from '@teambit/component-issues';
 import { ReleaseType } from 'semver';
 import { BitError } from '@teambit/bit-error';
