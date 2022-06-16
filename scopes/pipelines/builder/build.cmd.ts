@@ -1,7 +1,7 @@
 import { Command, CommandOptions } from '@teambit/cli';
 import { Logger } from '@teambit/logger';
 import { Workspace } from '@teambit/workspace';
-import { PATTERN_HELP } from '@teambit/legacy/dist/constants';
+import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
 import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
 import chalk from 'chalk';
 import { BuilderMain } from './builder.main.runtime';
@@ -20,7 +20,7 @@ type BuildOpts = {
 export class BuilderCmd implements Command {
   name = 'build [pattern]';
   description = 'run set of tasks for build';
-  arguments = [{ name: 'pattern', description: PATTERN_HELP('build') }];
+  arguments = [{ name: 'pattern', description: COMPONENT_PATTERN_HELP }];
   alias = '';
   group = 'development';
   options = [
