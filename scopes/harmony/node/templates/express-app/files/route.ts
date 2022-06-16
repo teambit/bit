@@ -1,12 +1,20 @@
 export function route() {
   return {
     relativePath: `route.ts`,
-    content: `import { Request, Response } from 'express';
+    content: `import express, { Request, Response } from 'express';
 
-export type RouteDefinition = {
-  method: string,
-  route: string,
-  callback: (req: Request, res: Response) => any
+/**
+ * define express Middleware
+ */
+export type Middleware = (req: Request, res: Response, next: express.NextFunction) => Promise<any>;
+
+/**
+ * express new Route
+ */
+export interface Route {
+  method: string;
+  route: string | RegExp;
+  middlewares: Middleware[];
 }
 `,
   };

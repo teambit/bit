@@ -20,7 +20,7 @@ function registerRoutes(app: Application.Application) {
   const mockRoute = getMockRoute();
   const routes = [mockRoute];
   routes.forEach(route => {
-    app[route.method](route.route, route.callback);
+    app[route.method](route.route, route.middlewares);
   })
 }
 

@@ -1,13 +1,13 @@
 export function mockRoute() {
   return {
     relativePath: `mock-route.ts`,
-    content: `import type { RouteDefinition } from './route';
+    content: `import type { Route } from './route';
 
-export function getMockRoute(): RouteDefinition {
+export function getMockRoute(): Route {
   return {
     method: 'get',
     route: '/',
-    callback: (req, res) => res.send('hello world')
+    middlewares: [async (req, res) => res.send('hello world')]
   }
 }
 `,
