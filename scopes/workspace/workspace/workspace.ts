@@ -707,6 +707,8 @@ export class Workspace implements ComponentFactory {
   }
 
   /**
+   * @deprecated use `this.idsByPattern` instead for consistency. also, it supports negation and list of patterns.
+   *
    * load components into the workspace through a variants pattern.
    * @param pattern variants.
    * @param scope scope name.
@@ -757,7 +759,8 @@ export class Workspace implements ComponentFactory {
       return this.list();
     }
     if (pattern) {
-      return this.byPattern(pattern);
+      const ids = await this.idsByPattern(pattern);
+      return this.getMany(ids);
     }
     const newAndModified = await this.newAndModified();
     if (includeDependents) {

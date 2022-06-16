@@ -6,7 +6,6 @@ import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
 import { Timer } from '@teambit/legacy/dist/toolbox/timer';
 import { Box, Text } from 'ink';
 import React from 'react';
-import { NoMatchingComponents } from './exceptions';
 
 import type { TesterMain } from './tester.main.runtime';
 
@@ -21,13 +20,13 @@ type TestFlags = {
 };
 
 export class TestCmd implements Command {
-  name = 'test [component-pattern]';
+  name = 'test [pattern]';
   description = 'test components in the workspace';
   arguments = [
     {
-      name: 'component-pattern',
+      name: 'pattern',
       description:
-        'the components to test (defaults to all components). use component name, component id, or component pattern. use component pattern to select multiple components. \nuse comma to separate patterns. e.g. "ui/**, pages/**"\nwrap the pattern with quotes (note that the "!" exclusion sign cannot be used here)',
+        'the components to test (defaults to all components). use component name, component id, or component pattern. use component pattern to select multiple components. \nuse comma to separate patterns. e.g. "ui/**, pages/**"\nwrap the pattern with quotes',
     },
   ];
   alias = 'at';
@@ -39,7 +38,11 @@ export class TestCmd implements Command {
     ['', 'junit <filepath>', 'write tests results as JUnit XML format into the specified file path'],
     ['', 'coverage', 'show code coverage data'],
     ['e', 'env <id>', 'test only the given env'],
-    ['s', 'scope <scope-name>', 'name of the scope to test'],
+    [
+      's',
+      'scope <scope-name>',
+      'DEPRECATED. (use the pattern instead, e.g. "scopeName/**"). name of the scope to test',
+    ],
     // TODO: we need to reduce this redundant casting every time.
   ] as CommandOptions;
 
@@ -51,6 +54,11 @@ export class TestCmd implements Command {
   ) {
     const timer = Timer.create();
     const scopeName = typeof scope === 'string' ? scope : undefined;
+    if (scopeName) {
+      this.logger.consoleWarning(
+        `--scope is deprecated, use the pattern argument instead. e.g. "scopeName/**" for the entire scope`
+      );
+    }
     timer.start();
     if (!this.workspace) throw new ConsumerNotFound();
 
@@ -62,7 +70,6 @@ export class TestCmd implements Command {
     const patternWithScope = getPatternWithScope();
     const components = await this.workspace.getComponentsByUserInput(all, patternWithScope, true);
     if (!components.length) {
-      if (userPattern) throw new NoMatchingComponents(userPattern);
       return {
         code: 0,
         data: (
