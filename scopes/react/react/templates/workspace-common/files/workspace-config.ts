@@ -20,7 +20,7 @@ export async function workspaceConfig({ name, defaultScope }: WorkspaceContext) 
       'eslint-plugin-react': '7.25.1',
     },
     peerDependencies: {
-      '@testing-library/react': '12.0.0',
+      '@testing-library/react': '^12.1.5',
       react: '17.0.2',
       'react-dom': '17.0.2',
     },
