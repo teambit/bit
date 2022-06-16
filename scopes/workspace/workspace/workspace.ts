@@ -2,7 +2,6 @@
 import chalk from 'chalk';
 import memoize from 'memoizee';
 import mapSeries from 'p-map-series';
-import multimatch from 'multimatch';
 import type { PubsubMain } from '@teambit/pubsub';
 import { IssuesList } from '@teambit/component-issues';
 import type { AspectLoaderMain, AspectDefinition } from '@teambit/aspect-loader';
@@ -738,14 +737,7 @@ export class Workspace implements ComponentFactory {
       return [];
     }
     const ids = await this.listIds();
-    const patterns = pattern.split(',').map((p) => p.trim());
-    // check also as legacyId.toString, as it doesn't have the defaultScope
-    const idsToCheck = (id: ComponentID) => [id.toStringWithoutVersion(), id._legacy.toStringWithoutVersion()];
-    const idsFiltered = ids.filter((id) => multimatch(idsToCheck(id), patterns).length);
-    if (throwForNoMatch && !idsFiltered.length) {
-      throw new BitError(`unable to find any matching for "${pattern}" pattern`);
-    }
-    return idsFiltered;
+    return this.scope.filterIdsFromPoolIdsByPattern(pattern, ids, throwForNoMatch);
   }
 
   /**
@@ -1987,95 +1979,101 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
       return ComponentID.fromString(id.toString());
     }
     let legacyId = this.consumer.getParsedIdIfExist(id.toString(), true, true);
-    if (!legacyId) {
-      try {
-        const idWithVersion = id.toString();
-        const [idWithoutVersion, version] = id.toString().split('@');
-        const _bitMapId = this.consumer.getParsedIdIfExist(idWithoutVersion, false, true);
-        // This logic is very specific, and very sensitive for changes please do not touch this without consulting with @ran or @gilad
-        // example (partial list) cases which should be handled are:
-        // use case 1 - ws component provided with the local scope name:
-        // source id        : my-scope1/my-name1
-        // bitmap res (_id) : my-name1 (comp is tagged but not exported)
-        // local scope name : my-scope1
-        // scope content    : my-name1
-        // expected result  : my-name1
-        // use case 2 - component with same name exist in ws and scope (but with different scope name)
-        // source id        : my-scope2/my-name1
-        // bitmap res (_id) : my-name1 (comp exist in ws but it's actually different component)
-        // local scope name : my-scope1
-        // scope content    : my-scope2/my-name1
-        // expected result  : my-scope2/my-name1
-        // use case 3 - component with same name exist in ws and scope (but with different scope name) - source provided without scope name
-        // source id        : my-name1
-        // bitmap res (_id) : my-name1 (comp exist in ws but it's actually different component)
-        // local scope name : my-scope1
-        // scope content    : my-scope1/my-name1 and my-scope2/my-name1
-        // expected result  : my-name1 (get the name from the bitmap)
-        // use case 4 - component with the same name and different scope are imported into the ws
-        // source id        : my-name1
-        // bitmap res (_id) : my-scope2/my-name1 (comp exist in ws from different scope (imported))
-        // local scope name : my-scope1
-        // scope content    : my-scope2/my-name1
-        // expected result  : my-scope2/my-name1 (get the name from the bitmap)
-
-        // No entry in bitmap at all, search for the original input id
-        if (!_bitMapId) {
-          return await this.scope.resolveComponentId(id.toString());
-        }
-        const _bitMapIdWithoutVersion = _bitMapId.toStringWithoutVersion();
-        const _bitMapIdWithVersion = _bitMapId.changeVersion(version).toString();
-        // The id in the bitmap has prefix which is not in the source id - the bitmap entry has scope name
-        // Handle use case 4
-        if (_bitMapIdWithoutVersion.endsWith(idWithoutVersion) && _bitMapIdWithoutVersion !== idWithoutVersion) {
-          return await this.scope.resolveComponentId(_bitMapIdWithVersion);
-        }
-        // Handle case when I tagged the component locally with a default scope which is not the local scope
-        // but not exported it yet
-        // now i'm trying to load it with source id contain the default scope prefix
-        // we want to get it from the local first before assuming it's something coming from outside
-        if (!_bitMapId.scope) {
-          const defaultScopeForBitmapId = await getDefaultScope(_bitMapId, { ignoreVersion: true });
-          const getFromBitmapAddDefaultScope = () => {
-            let _bitmapIdWithVersionForSource = _bitMapId;
-            if (version) {
-              _bitmapIdWithVersionForSource = _bitMapId.changeVersion(version);
-            }
-            return ComponentID.fromLegacy(_bitmapIdWithVersionForSource, defaultScopeForBitmapId);
-          };
-          // a case when the given id contains the default scope
-          if (idWithVersion.startsWith(`${defaultScopeForBitmapId}/${_bitMapIdWithoutVersion}`)) {
-            return getFromBitmapAddDefaultScope();
-          }
-          // a case when the given id does not contain the default scope
-          const fromScope = await this.scope.resolveComponentId(idWithVersion);
-          if (!fromScope._legacy.hasScope()) {
-            return getFromBitmapAddDefaultScope();
-          }
-        }
-
-        if (idWithoutVersion.endsWith(_bitMapIdWithoutVersion) && _bitMapIdWithoutVersion !== idWithoutVersion) {
-          // The id in the bitmap doesn't have scope, the source id has scope
-          // Handle use case 2 and use case 1
-          if (id.toString().startsWith(this.scope.name)) {
-            // Handle use case 1 - the provided id has scope name same as the local scope name
-            // we want to send it as it appear in the bitmap
-            return await this.scope.resolveComponentId(_bitMapIdWithVersion);
-          }
-          // Handle use case 2 - the provided id has scope which is not the local scope
-          // we want to search by the source id
-          return await this.scope.resolveComponentId(idWithVersion);
-        }
-        // Handle use case 3
-        return await this.scope.resolveComponentId(idWithVersion);
-      } catch (error: any) {
-        legacyId = BitId.parse(id.toString(), true);
-        return ComponentID.fromLegacy(legacyId);
+    if (legacyId) {
+      const defaultScope = await getDefaultScope(legacyId);
+      // only reason to strip the scopeName from the given id is when this id has the defaultScope, because .bitmap
+      // doesn't have the defaultScope. if the given id doesn't have scope or has scope different than the default,
+      // then don't ignore it. search with the scope-name.
+      const shouldSearchWithoutScopeInProvidedId = id.toString().startsWith(`${defaultScope}/`);
+      legacyId = this.consumer.getParsedIdIfExist(id.toString(), true, shouldSearchWithoutScopeInProvidedId);
+      if (legacyId) {
+        return ComponentID.fromLegacy(legacyId, defaultScope);
       }
     }
+    try {
+      const idWithVersion = id.toString();
+      const [idWithoutVersion, version] = id.toString().split('@');
+      const _bitMapId = this.consumer.getParsedIdIfExist(idWithoutVersion, false, true);
+      // This logic is very specific, and very sensitive for changes please do not touch this without consulting with @ran or @gilad
+      // example (partial list) cases which should be handled are:
+      // use case 1 - ws component provided with the local scope name:
+      // source id        : my-scope1/my-name1
+      // bitmap res (_id) : my-name1 (comp is tagged but not exported)
+      // local scope name : my-scope1
+      // scope content    : my-name1
+      // expected result  : my-name1
+      // use case 2 - component with same name exist in ws and scope (but with different scope name)
+      // source id        : my-scope2/my-name1
+      // bitmap res (_id) : my-name1 (comp exist in ws but it's actually different component)
+      // local scope name : my-scope1
+      // scope content    : my-scope2/my-name1
+      // expected result  : my-scope2/my-name1
+      // use case 3 - component with same name exist in ws and scope (but with different scope name) - source provided without scope name
+      // source id        : my-name1
+      // bitmap res (_id) : my-name1 (comp exist in ws but it's actually different component)
+      // local scope name : my-scope1
+      // scope content    : my-scope1/my-name1 and my-scope2/my-name1
+      // expected result  : my-name1 (get the name from the bitmap)
+      // use case 4 - component with the same name and different scope are imported into the ws
+      // source id        : my-name1
+      // bitmap res (_id) : my-scope2/my-name1 (comp exist in ws from different scope (imported))
+      // local scope name : my-scope1
+      // scope content    : my-scope2/my-name1
+      // expected result  : my-scope2/my-name1 (get the name from the bitmap)
 
-    const defaultScope = await getDefaultScope(legacyId);
-    return ComponentID.fromLegacy(legacyId, defaultScope);
+      // No entry in bitmap at all, search for the original input id
+      if (!_bitMapId) {
+        return await this.scope.resolveComponentId(id.toString());
+      }
+      const _bitMapIdWithoutVersion = _bitMapId.toStringWithoutVersion();
+      const _bitMapIdWithVersion = _bitMapId.changeVersion(version).toString();
+      // The id in the bitmap has prefix which is not in the source id - the bitmap entry has scope name
+      // Handle use case 4
+      if (_bitMapIdWithoutVersion.endsWith(idWithoutVersion) && _bitMapIdWithoutVersion !== idWithoutVersion) {
+        return await this.scope.resolveComponentId(_bitMapIdWithVersion);
+      }
+      // Handle case when I tagged the component locally with a default scope which is not the local scope
+      // but not exported it yet
+      // now i'm trying to load it with source id contain the default scope prefix
+      // we want to get it from the local first before assuming it's something coming from outside
+      if (!_bitMapId.scope) {
+        const defaultScopeForBitmapId = await getDefaultScope(_bitMapId, { ignoreVersion: true });
+        const getFromBitmapAddDefaultScope = () => {
+          let _bitmapIdWithVersionForSource = _bitMapId;
+          if (version) {
+            _bitmapIdWithVersionForSource = _bitMapId.changeVersion(version);
+          }
+          return ComponentID.fromLegacy(_bitmapIdWithVersionForSource, defaultScopeForBitmapId);
+        };
+        // a case when the given id contains the default scope
+        if (idWithVersion.startsWith(`${defaultScopeForBitmapId}/${_bitMapIdWithoutVersion}`)) {
+          return getFromBitmapAddDefaultScope();
+        }
+        // a case when the given id does not contain the default scope
+        const fromScope = await this.scope.resolveComponentId(idWithVersion);
+        if (!fromScope._legacy.hasScope()) {
+          return getFromBitmapAddDefaultScope();
+        }
+      }
+
+      if (idWithoutVersion.endsWith(_bitMapIdWithoutVersion) && _bitMapIdWithoutVersion !== idWithoutVersion) {
+        // The id in the bitmap doesn't have scope, the source id has scope
+        // Handle use case 2 and use case 1
+        if (id.toString().startsWith(this.scope.name)) {
+          // Handle use case 1 - the provided id has scope name same as the local scope name
+          // we want to send it as it appear in the bitmap
+          return await this.scope.resolveComponentId(_bitMapIdWithVersion);
+        }
+        // Handle use case 2 - the provided id has scope which is not the local scope
+        // we want to search by the source id
+        return await this.scope.resolveComponentId(idWithVersion);
+      }
+      // Handle use case 3
+      return await this.scope.resolveComponentId(idWithVersion);
+    } catch (error: any) {
+      legacyId = BitId.parse(id.toString(), true);
+      return ComponentID.fromLegacy(legacyId);
+    }
   }
 
   async resolveMultipleComponentIds(ids: Array<string | ComponentID | BitId>): Promise<ComponentID[]> {
