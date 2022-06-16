@@ -1,3 +1,8 @@
+/**
+ * LEGACY ONLY
+ * @see scopes/component/lister/list.cmd.ts for Harmony
+ */
+
 import { VERSION_DELIMITER } from '../../constants';
 import { ListScopeResult } from '../../consumer/component/components-list';
 
