@@ -238,8 +238,9 @@ export class CLIParser {
 
     // show the flags in green
     const optionsColored = options.map((opt) => opt.replace(/(--)([\w-]+)/, replacer).replace(/(-)([\w-]+)/, replacer));
+    const argsColored = args.map((arg) => arg.replace(/^ {2}\S+/, (argName) => chalk.green(argName))); // regex: two spaces then the first word until a white space
     const optionsStr = options.length ? `\n${STANDARD_GROUP}\n${optionsColored.join('\n')}\n` : '';
-    const argumentsStr = args.length ? `\nArguments:\n${args.join('\n')}\n` : '';
+    const argumentsStr = args.length ? `\nArguments:\n${argsColored.join('\n')}\n` : '';
     const examplesStr = examples.length ? `\nExamples:\n${examples.join('\n')}\n` : '';
     const subCommandsStr = subCommands.length ? `\n${'Commands:'}\n${subCommands.join('\n')}\n` : '';
     // show the description in yellow
