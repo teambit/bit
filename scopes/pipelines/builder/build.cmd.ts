@@ -1,6 +1,7 @@
 import { Command, CommandOptions } from '@teambit/cli';
 import { Logger } from '@teambit/logger';
 import { Workspace } from '@teambit/workspace';
+import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
 import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
 import chalk from 'chalk';
 import { BuilderMain } from './builder.main.runtime';
@@ -17,8 +18,9 @@ type BuildOpts = {
 };
 
 export class BuilderCmd implements Command {
-  name = 'build [pattern]';
+  name = 'build [component-pattern]';
   description = 'run set of tasks for build';
+  arguments = [{ name: 'component-pattern', description: COMPONENT_PATTERN_HELP }];
   alias = '';
   group = 'development';
   options = [
@@ -43,7 +45,7 @@ specify the task-name (e.g. "TypescriptCompiler") or the task-aspect-id (e.g. te
   constructor(private builder: BuilderMain, private workspace: Workspace, private logger: Logger) {}
 
   async report(
-    [userPattern]: [string],
+    [pattern]: [string],
     {
       all = false,
       dev = false,
@@ -60,7 +62,7 @@ specify the task-name (e.g. "TypescriptCompiler") or the task-aspect-id (e.g. te
     }
 
     const longProcessLogger = this.logger.createLongProcessLogger('build');
-    const components = await this.workspace.getComponentsByUserInput(all, userPattern, true);
+    const components = await this.workspace.getComponentsByUserInput(all, pattern, true);
     if (!components.length) {
       return chalk.bold(
         `no components found to build. use "--all" flag to build all components or specify the ids to build, otherwise, only new and modified components will be built`
