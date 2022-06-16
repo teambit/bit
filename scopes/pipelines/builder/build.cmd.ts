@@ -18,9 +18,9 @@ type BuildOpts = {
 };
 
 export class BuilderCmd implements Command {
-  name = 'build [pattern]';
+  name = 'build [component-pattern]';
   description = 'run set of tasks for build';
-  arguments = [{ name: 'pattern', description: COMPONENT_PATTERN_HELP }];
+  arguments = [{ name: 'component-pattern', description: COMPONENT_PATTERN_HELP }];
   alias = '';
   group = 'development';
   options = [

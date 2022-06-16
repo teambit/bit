@@ -3,13 +3,13 @@ import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
 import { Logger } from '@teambit/logger';
 import { Workspace } from '@teambit/workspace';
 import chalk from 'chalk';
-import { PATTERN_HELP } from '@teambit/legacy/dist/constants';
+import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
 import { TypescriptMain } from '../typescript.main.runtime';
 
 export class CheckTypesCmd implements Command {
-  name = 'check-types [pattern]';
+  name = 'check-types [component-pattern]';
   description = 'check typescript types';
-  arguments = [{ name: 'pattern', description: PATTERN_HELP('check-types') }];
+  arguments = [{ name: 'component-pattern', description: COMPONENT_PATTERN_HELP }];
   alias = '';
   group = 'development';
   options = [

@@ -4,9 +4,9 @@ import { Logger } from '@teambit/logger';
 import { Workspace } from '@teambit/workspace';
 import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
 import { Timer } from '@teambit/legacy/dist/toolbox/timer';
+import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/src/constants';
 import { Box, Text } from 'ink';
 import React from 'react';
-
 import type { TesterMain } from './tester.main.runtime';
 
 type TestFlags = {
@@ -20,13 +20,12 @@ type TestFlags = {
 };
 
 export class TestCmd implements Command {
-  name = 'test [pattern]';
+  name = 'test [component-pattern]';
   description = 'test components in the workspace';
   arguments = [
     {
-      name: 'pattern',
-      description:
-        'the components to test (defaults to all components). use component name, component id, or component pattern. use component pattern to select multiple components. \nuse comma to separate patterns. e.g. "ui/**, pages/**"\nwrap the pattern with quotes',
+      name: 'component-pattern',
+      description: COMPONENT_PATTERN_HELP,
     },
   ];
   alias = 'at';
