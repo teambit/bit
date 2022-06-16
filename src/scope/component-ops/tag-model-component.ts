@@ -199,7 +199,7 @@ export default async function tagModelComponent({
   editor,
   exactVersion,
   releaseType,
-  preRelease,
+  preReleaseId,
   consumer,
   ignoreNewestVersion = false,
   skipTests = false,
@@ -311,7 +311,7 @@ export default async function tagModelComponent({
         autoTagIds,
         ids,
         incrementBy,
-        preRelease,
+        preReleaseId,
         soft
       );
   setCurrentSchema(allComponentsToTag, consumer);
@@ -321,7 +321,7 @@ export default async function tagModelComponent({
   await addLogToComponents(componentsToTag, autoTagComponents, persist, message, messagePerId);
 
   if (soft) {
-    consumer.updateNextVersionOnBitmap(allComponentsToTag, preRelease);
+    consumer.updateNextVersionOnBitmap(allComponentsToTag, preReleaseId);
   } else {
     if (!skipTests) addSpecsResultsToComponents(allComponentsToTag, testsResults);
     await addFlattenedDependenciesToComponents(consumer.scope, allComponentsToTag);

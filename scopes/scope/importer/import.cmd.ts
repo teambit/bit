@@ -16,23 +16,24 @@ import { formatPlainComponentItem } from '@teambit/legacy/dist/cli/chalk-box';
 import { Importer } from './importer';
 
 export default class ImportCmd implements Command {
-  name = 'import [ids...]';
-  description = 'import components into your workspace';
+  name = 'import [component-ids...]';
+  description = 'import components from remote scopes to the local workspace';
+  arguments = [{ name: 'component-ids...', description: 'a list of component IDs (separated by space) to import' }];
   extendedDescription: string;
   group = 'collaborate';
   alias = '';
   options = [
-    ['p', 'path <path>', 'import components into a specific directory'],
+    ['p', 'path <path>', 'import components into a specific directory (a relative path in the workspace)'],
     [
       'o',
       'objects',
-      "import components objects only, don't write the components to the file system. This is a default behavior for import with no id",
+      'import components objects to the local scope without checkout (without writing them to the file system). This is a default behavior for import with no id argument',
     ],
     ['d', 'display-dependencies', 'display the imported dependencies'],
     ['O', 'override', 'override local changes'],
-    ['v', 'verbose', 'showing verbose output for inspection'],
+    ['v', 'verbose', 'show verbose output for inspection'],
     ['j', 'json', 'return the output as JSON'],
-    ['', 'conf', 'write the configuration file (component.json) of the component (harmony components only)'],
+    ['', 'conf', 'write the configuration file (component.json) of the component'],
     ['', 'skip-npm-install', 'DEPRECATED. use "--skip-dependency-installation" instead'],
     ['', 'skip-dependency-installation', 'do not install packages of the imported components'],
     [

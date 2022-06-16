@@ -3,8 +3,12 @@ import chalk from 'chalk';
 import { RenamingMain } from './renaming.main.runtime';
 
 export class ScopeRenameCmd implements Command {
-  name = 'rename <old-name> <new-name>';
-  description = 'rename a scope for components using the old-name, optionally change the dependencies source-code';
+  name = 'rename <current-scope-name> <new-scope-name>';
+  description = "Renames the scope name for all components with the specified 'current scope name'";
+  arguments = [
+    { name: 'current-scope-name', description: 'the scope name to be replaced by another scope name' },
+    { name: 'new-scope-name', description: 'a new scope name to replace the current scope name' },
+  ];
   options = [
     ['r', 'refactor', 'change the source code of all components using the original scope-name with the new scope-name'],
   ] as CommandOptions;

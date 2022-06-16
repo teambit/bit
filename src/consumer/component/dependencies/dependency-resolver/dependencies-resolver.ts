@@ -3,6 +3,7 @@ import fs from 'fs-extra';
 import R from 'ramda';
 import { isNilOrEmpty } from 'ramda-adjunct';
 import semver from 'semver';
+import { uniq } from 'lodash';
 import { IssuesList, IssuesClasses } from '@teambit/component-issues';
 import { Dependency } from '..';
 import { BitId, BitIds } from '../../../../bit-id';
@@ -1377,7 +1378,7 @@ either, use the ignore file syntax or change the require statement to have a mod
   }
   _pushToMissingPackagesDependenciesIssues(originFile: PathLinuxRelative, missingPackages: string[]) {
     (this.issues.getOrCreate(IssuesClasses.MissingPackagesDependenciesOnFs).data[originFile] ||= []).push(
-      ...missingPackages
+      ...uniq(missingPackages)
     );
   }
   _pushToMissingCustomModuleIssues(originFile: PathLinuxRelative, componentId: string) {

@@ -1,6 +1,5 @@
 import { ComponentContext, TopBarNav, useComponent } from '@teambit/component';
 import { ComponentCompareNav, ComponentCompareNavSlot } from '@teambit/component-compare';
-import { H2 } from '@teambit/documenter.ui.heading';
 import { RouteSlot, SlotRouter } from '@teambit/ui-foundation.ui.react-router.slot-router';
 import flatten from 'lodash.flatten';
 import { useLocation } from '@teambit/base-ui.routing.routing-provider';
@@ -10,6 +9,8 @@ import React, { HTMLAttributes, useContext, useMemo } from 'react';
 import { ComponentCompareContext, ComponentCompareModel } from './component-compare-context';
 import { ComponentCompareVersionPicker } from './version-picker/component-compare-version-picker';
 import { useCompareQueryParam } from './use-component-compare-query';
+import { ComponentCompareBlankState } from './blank-state';
+
 import styles from './component-compare.module.scss';
 
 export type ComponentCompareProps = {
@@ -55,12 +56,16 @@ export function ComponentCompare({ navSlot, host, routeSlot }: ComponentCompareP
 
   const { component: base, loading } = useComponent(host, baseId.toString());
 
+  const nothingToCompare = !loading && !compareIsLocalChanges && (component.logs?.length || []) < 2;
+
   const componentCompareModel: ComponentCompareModel = {
     compare,
     base,
     loading,
     compareIsLocalChanges,
   };
+
+  const showSubMenus = !loading && !nothingToCompare;
 
   return (
     <ComponentCompareContext.Provider value={componentCompareModel}>
@@ -70,11 +75,10 @@ export function ComponentCompare({ navSlot, host, routeSlot }: ComponentCompareP
             <RoundLoader />
           </div>
         )}
-        {loading || (
+        {showSubMenus && (
           <>
             <div className={styles.top}>
-              <H2 size="xs">Component Compare</H2>
-              {loading || <ComponentCompareVersionPicker />}
+              <ComponentCompareVersionPicker />
             </div>
             <div className={styles.bottom}>
               <CompareMenuNav navSlot={navSlot} />
@@ -82,6 +86,7 @@ export function ComponentCompare({ navSlot, host, routeSlot }: ComponentCompareP
             </div>
           </>
         )}
+        {nothingToCompare && <ComponentCompareBlankState />}
       </div>
     </ComponentCompareContext.Provider>
   );

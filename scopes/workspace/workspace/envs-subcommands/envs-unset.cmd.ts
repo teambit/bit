@@ -4,8 +4,15 @@ import chalk from 'chalk';
 import { Workspace } from '../workspace';
 
 export class EnvsUnsetCmd implements Command {
-  name = 'unset <pattern>';
-  description = 'unset an environment from component(s) that was set by "bit env set"';
+  name = 'unset <component-pattern>';
+  description = 'un-sets an env from components that were previously set by "bit env set" or by a component template';
+  arguments = [
+    {
+      name: 'component-pattern',
+      description:
+        'component name, component id, or component pattern. use component pattern to select multiple components. \nuse comma to separate patterns and "!" to exclude. e.g. "ui/**, !ui/button"\nwrap the pattern with quotes',
+    },
+  ];
   options = [];
   group = 'development';
   extendedDescription = `keep in mind that this doesn't remove envs that are set in the variants.
