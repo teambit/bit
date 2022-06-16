@@ -16,14 +16,14 @@ import { SnappingMain } from './snapping.main.runtime';
 const RELEASE_TYPES = ['major', 'premajor', 'minor', 'preminor', 'patch', 'prepatch', 'prerelease'];
 
 export class TagCmd implements Command {
-  name = 'tag [component-names...]';
+  name = 'tag [patterns...]';
   group = 'development';
   description = 'create an immutable and exportable component snapshot, tagged with a release version.';
   arguments = [
     {
-      name: 'component-names...',
+      name: 'patterns...',
       description:
-        'a list of component names or component IDs (separated by space). By default, all modified are tagged.',
+        'a list of patterns (separated by space). run "bit pattern --help" to get more data about patterns. By default, all modified are tagged.',
     },
   ];
   extendedDescription: string;
@@ -83,15 +83,14 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
   examples = [{ cmd: 'tag --ver 1.0.0', description: 'tag all components to version 1.0.0' }];
 
   constructor(docsDomain: string, private snapping: SnappingMain, private logger: Logger) {
-    this.extendedDescription = `if no ids are provided, it will tag all new and modified components.
-if component ids are entered, you can specify a version per id using "@" sign, e.g. bit tag foo@1.0.0 bar@minor baz@major
-https://${docsDomain}/components/tags
-${WILDCARD_HELP('tag')}`;
+    this.extendedDescription = `if no patterns are provided, it will tag all new and modified components.
+if patterns are entered, you can specify a version per pattern using "@" sign, e.g. bit tag foo@1.0.0 bar@minor baz@major
+https://${docsDomain}/components/tags`;
   }
 
   // eslint-disable-next-line complexity
   async report(
-    [id = []]: [string[]],
+    [patterns = []]: [string[]],
     {
       message = '',
       ver,
@@ -171,7 +170,7 @@ ${WILDCARD_HELP('tag')}`;
       this.logger.consoleWarning(
         `--force is deprecated, use either --skip-tests or --unmodified depending on the use case`
       );
-      if (id.length) unmodified = true;
+      if (patterns.length) unmodified = true;
     }
 
     const releaseFlags = [patch, minor, major, preRelease].filter((x) => x);
@@ -197,7 +196,7 @@ ${WILDCARD_HELP('tag')}`;
     const disableTagAndSnapPipelines = disableTagPipeline || disableDeployPipeline;
 
     const params = {
-      ids: id,
+      ids: patterns,
       snapped,
       editor,
       message,
