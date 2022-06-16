@@ -24,8 +24,8 @@ export function CompositionCompare(props: CompositionCompareProps) {
   const base = component?.base;
   const compare = component?.compare;
 
-  const baseCompositions = base?.compositions;
-  const compareCompositions = compare?.compositions;
+  const baseCompositions = base?.model.compositions;
+  const compareCompositions = compare?.model.compositions;
   const selectedCompositionBaseFile = useCompareQueryParam('compositionBaseFile');
   const selectedCompositionCompareFile = useCompareQueryParam('compositionCompareFile');
 

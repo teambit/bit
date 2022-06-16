@@ -38,7 +38,7 @@ export function useCompareAspectsQuery(host: string): ComponentCompareAspectsMod
   const base = componentCompareContext?.base?.model;
   const compare = componentCompareContext?.compare.model;
 
-  const isCompareVersionWorkspace = componentCompareContext?.compareIsLocalChanges;
+  const isCompareVersionWorkspace = componentCompareContext?.compare.isLocalChanges;
 
   const baseId = `${base?.id.fullName}@${base?.id.version}`;
   const compareId = isCompareVersionWorkspace ? compare?.id.fullName : `${compare?.id.fullName}@${compare?.id.version}`;
