@@ -4,7 +4,7 @@ import { Logger } from '@teambit/logger';
 import { Workspace } from '@teambit/workspace';
 import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
 import { Timer } from '@teambit/legacy/dist/toolbox/timer';
-import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/src/constants';
+import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
 import { Box, Text } from 'ink';
 import React from 'react';
 import type { TesterMain } from './tester.main.runtime';
