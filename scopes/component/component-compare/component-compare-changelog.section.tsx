@@ -6,7 +6,7 @@ export class CompareChangelogSection implements Section {
   navigationLink = {
     href: 'changelog',
     children: 'Changelog',
-    order: 6,
+    order: 5,
   };
 
   route = {
