@@ -16,6 +16,7 @@ import { NodeEnv } from './node.env';
 import { nodeEnvTemplate } from './templates/node-env';
 import { nodeTemplate } from './templates/node';
 import { NodeAppType } from './node.app-type';
+import { expressAppTemplate } from './templates/express-app';
 
 export class NodeMain {
   constructor(
@@ -163,7 +164,7 @@ export class NodeMain {
     envs.registerEnv(nodeEnv);
     const nodeAppType = new NodeAppType('node-app', nodeEnv, logger);
     application.registerAppType(nodeAppType);
-    generator.registerComponentTemplate([nodeEnvTemplate, nodeTemplate]);
+    generator.registerComponentTemplate([nodeEnvTemplate, nodeTemplate, expressAppTemplate]);
     return new NodeMain(react, tsAspect, nodeEnv, envs);
   }
 }
