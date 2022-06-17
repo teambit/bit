@@ -1,10 +1,7 @@
 import chai, { expect } from 'chai';
 import fs from 'fs-extra';
 import * as path from 'path';
-import { IssuesClasses } from '@teambit/component-issues';
-import Helper, { VERSION_DELIMITER } from '../../src/e2e-helper/e2e-helper';
-import * as fixtures from '../../src/fixtures/fixtures';
-import { IS_WINDOWS, statusFailureMsg } from '../../src/constants';
+import Helper from '../../src/e2e-helper/e2e-helper';
 
 chai.use(require('chai-fs'));
 const assertArrays = require('chai-arrays');
@@ -347,6 +344,141 @@ describe('bit import', function () {
         localConsumerFiles.forEach((fileName) => {
           expect(fileName.startsWith(path.join('node_modules', 'undefined'))).to.be.false;
         });
+      });
+    });
+  });
+  describe('import a component when the local version is modified', () => {
+    let localScope;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.createComponentBarFoo();
+      helper.fixtures.addComponentBarFooAsDir();
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.addRemoteScope();
+      helper.command.importComponent('bar/foo');
+      const barFooFixtureV2 = "module.exports = function foo() { return 'got foo v2'; };";
+      helper.fs.createFile(path.join(helper.scopes.remote, 'bar', 'foo'), 'foo.js', barFooFixtureV2);
+
+      const appJsFixture = `const barFoo = require('./${helper.scopes.remote}/bar/foo'); console.log(barFoo());`;
+      fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), appJsFixture);
+      localScope = helper.scopeHelper.cloneLocalScope();
+    });
+    describe('without --override flag', () => {
+      let output;
+      before(() => {
+        try {
+          helper.command.importComponent('bar/foo');
+        } catch (err: any) {
+          output = err.toString();
+        }
+      });
+      it('should display a warning saying it was unable to import', () => {
+        expect(output).to.have.string('unable to import');
+      });
+    });
+    describe('with --override flag', () => {
+      let output;
+      before(() => {
+        output = helper.command.importComponent('bar/foo --override');
+      });
+      it('should display a successful message', () => {
+        expect(output).to.have.string('successfully imported');
+      });
+    });
+    describe('with --merge=manual', () => {
+      let output;
+      before(() => {
+        helper.scopeHelper.getClonedLocalScope(localScope);
+        output = helper.command.importComponent('bar/foo --merge=manual');
+      });
+      it('should display a successful message', () => {
+        expect(output).to.have.string('successfully imported');
+      });
+    });
+    describe('re-import a component after tagging the component', () => {
+      before(() => {
+        helper.scopeHelper.getClonedLocalScope(localScope);
+        helper.command.tagAllWithoutBuild();
+      });
+      it('should import successfully', () => {
+        const output = helper.command.importComponent('bar/foo');
+        expect(output).to.have.string('successfully imported');
+      });
+    });
+  });
+  describe('importing a component when it has a local tag', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.createComponentBarFoo();
+      helper.fixtures.addComponentBarFooAsDir();
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+    });
+    describe('as imported', () => {
+      before(() => {
+        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.scopeHelper.addRemoteScope();
+        helper.command.importComponent('bar/foo', '--path components/bar/foo');
+        helper.fs.createFile('components/bar/foo', 'foo.js', 'v2');
+        const tagOutput = helper.command.tagAllWithoutBuild();
+        expect(tagOutput).to.have.string('0.0.2');
+
+        // at this stage, the remote component has only 0.0.1. The local component has also 0.0.2
+        helper.command.importComponent('bar/foo');
+      });
+      it('should not remove the local version', () => {
+        const catComponent = helper.command.catComponent(`${helper.scopes.remote}/bar/foo`);
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+        expect(catComponent.versions).to.have.property('0.0.1');
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+        expect(catComponent.versions).to.have.property('0.0.2');
+      });
+      it('should not override the local component', () => {
+        const catComponent = helper.command.catComponent(`${helper.scopes.remote}/bar/foo`);
+        expect(catComponent).to.have.property('state');
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+        expect(catComponent.state).to.have.property('versions');
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+        expect(catComponent.state.versions).to.have.property('0.0.2');
+      });
+      describe('importing a specific version', () => {
+        let output;
+        before(() => {
+          output = helper.command.importComponent('bar/foo@0.0.1');
+        });
+        it('should not throw an error saying the component was not found', () => {
+          expect(output).to.have.string('successfully imported');
+        });
+      });
+    });
+  });
+  describe('import with wildcards', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents();
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.addRemoteScope();
+    });
+    describe('import the entire scope', () => {
+      let output;
+      before(() => {
+        output = helper.command.importComponent('*');
+      });
+      it('should import all components from the remote scope', () => {
+        expect(output).to.have.string('comp1');
+        expect(output).to.have.string('comp2');
+        expect(output).to.have.string('comp3');
+      });
+      it('bit ls should show that all components from the remote scope were imported', () => {
+        const ls = helper.command.listLocalScopeParsed();
+        expect(ls).to.be.lengthOf(3);
       });
     });
   });

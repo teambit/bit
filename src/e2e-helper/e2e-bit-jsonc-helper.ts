@@ -98,6 +98,10 @@ export default class BitJsoncHelper {
   addDefaultOwner(owner: string) {
     this.addKeyValToWorkspace('defaultOwner', owner);
   }
+  corrupt() {
+    const bitJsoncPath = composePath(this.scopes.localPath);
+    fs.writeFileSync(bitJsoncPath, '"corrupted');
+  }
   disablePreview() {
     this.addKeyVal('teambit.preview/preview', { disabled: true });
   }
