@@ -55,14 +55,6 @@ describe('bit add command', function () {
       expect(addCmd).to.not.throw();
     });
   });
-  describe('add before running "bit init" with .bit.map.json', () => {
-    it('Should init consumer add then add component', () => {
-      helper.bitMap.create();
-      helper.fixtures.createComponentBarFoo();
-      const output = helper.fixtures.addComponentBarFoo();
-      expect(output).to.contain('tracking component bar/foo');
-    });
-  });
   describe('add one component', () => {
     let output;
     beforeEach(() => {
@@ -70,33 +62,23 @@ describe('bit add command', function () {
     });
     it('Should print tracking component: id', () => {
       helper.fixtures.createComponentBarFoo();
-      output = helper.fixtures.addComponentBarFoo();
+      output = helper.fixtures.addComponentBarFooAsDir();
       expect(output).to.contain('tracking component bar/foo');
     });
-    it('Should print warning when trying to add file that is already tracked with different id and not add it as a new one', () => {
+    // @TODO: FIX ON HARMONY!
+    it.skip('Should print warning when trying to add file that is already tracked with different id and not add it as a new one', () => {
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFoo();
-      output = helper.command.addComponent('bar/foo.js -i bar/new');
+      helper.fixtures.addComponentBarFooAsDir();
+      output = helper.command.addComponent('bar -i bar/new');
       expect(output).to.have.string('warning: files bar/foo.js already used by component: bar/foo');
       const bitMap = helper.bitMap.read();
       expect(bitMap).to.not.have.property('bar/new');
-    });
-    it('Should not add component if bit.json is corrupted', () => {
-      helper.fs.createFile('bar', 'foo2.js');
-      helper.bitJson.corrupt();
-      try {
-        helper.command.addComponent('bar');
-      } catch (err: any) {
-        output = err.toString();
-      }
-      expect(output).to.include('error: invalid bit.json: ');
-      expect(output).to.include(`${path.join(helper.scopes.localPath, 'bit.json')}`);
     });
     it('Should add component with namespace flag to bitmap with correct name', () => {
       helper.fs.createFile('bar', 'foo2.js');
       helper.command.addComponent('bar', { n: 'test' });
       const bitMap = helper.bitMap.read();
-      expect(bitMap).to.have.property('test/foo2');
+      expect(bitMap).to.have.property('test/bar');
     });
     it('Should throw error when no index file is found', () => {
       const file1 = 'foo1.js';
@@ -132,9 +114,9 @@ describe('bit add command', function () {
       helper.fs.createFile('bar', 'foo1.js');
       helper.command.addComponent('bar', { m: mainFileOs, n: 'test' });
       const bitMap = helper.bitMap.read();
-      const mainFile = bitMap['test/bar'].mainFile;
       expect(bitMap).to.have.property('test/bar');
-      expect(mainFile).to.equal('bar/bar.js');
+      const mainFile = bitMap['test/bar'].mainFile;
+      expect(mainFile).to.equal('bar.js');
     });
     it('Should return error if used an invalid ID', () => {
       helper.fs.createFile('bar', 'foo.js');
@@ -162,10 +144,11 @@ describe('bit add command', function () {
     });
     it('should identify the closest index file as the main file', () => {
       const bitMap = helper.bitMap.read();
-      expect(bitMap['bar/foo'].mainFile).to.equal('bar/index.js');
+      expect(bitMap['bar/foo'].mainFile).to.equal('index.js');
     });
   });
-  describe('add component/s with gitignore', () => {
+  // @TODO: FIX ON HARMONY!
+  describe.skip('add component/s with gitignore', () => {
     let errorMessage;
     before(() => {
       helper.scopeHelper.reInitLocalScopeHarmony();
@@ -202,16 +185,10 @@ describe('bit add command', function () {
       expect(bitMap).to.have.property('bar/foo');
     });
     it('Should contain inside bitmap only files that are not inside gitignore', () => {
-      const bitMap = helper.bitMap.read();
-      const expectedArray = [
-        { relativePath: 'bar/boo.js', test: false, name: 'boo.js' },
-        { relativePath: 'bar/index.js', test: false, name: 'index.js' },
-      ];
-      expect(bitMap).to.have.property('bar/foo');
-      const files = bitMap['bar/foo'].files;
-      expect(files).to.be.array();
+      const files = helper.command.getComponentFiles('bar/foo');
+      expect(files).to.include('boo.js');
+      expect(files).to.include('index.js');
       expect(files).to.be.ofSize(2);
-      expect(files).to.deep.equal(expectedArray);
     });
   });
   describe('add component when id includes a version', () => {
@@ -238,11 +215,12 @@ describe('bit add command', function () {
       helper.general.expectToThrow(addFunc, error);
     });
   });
-  describe('add file as lowercase and then re-add it as CamelCase', () => {
+  // @TODO: FIX ON HARMONY!
+  describe.skip('add file as lowercase and then re-add it as CamelCase', () => {
     before(() => {
       helper.scopeHelper.reInitLocalScopeHarmony();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.command.addComponent('bar', { i: 'bar/foo' });
       fs.removeSync(path.join(helper.scopes.localPath, 'bar'));
       helper.fs.createFile('Bar', 'foo.js');
       helper.command.addComponent('Bar', { i: 'bar/foo' });
@@ -268,10 +246,10 @@ describe('bit add command', function () {
       expect(status).to.have.string(statusInvalidComponentsMsg);
       expect(status).to.have.string('main-file was removed');
       helper.fs.createFile('bar', 'foo-main2.js');
-      output = helper.command.addComponent('bar/foo-main2.js', { m: 'bar/foo-main2.js', i: 'bar/foo' });
+      output = helper.command.addComponent('bar', { m: 'bar/foo-main2.js', i: 'bar/foo' });
     });
     it('should add the main file successfully', () => {
-      expect(output).to.have.string('added bar/foo-main2.js');
+      expect(output).to.have.string('added foo-main2.js');
     });
   });
   describe('directory is with upper case and test/main flags are written with lower case', () => {
@@ -287,13 +265,13 @@ describe('bit add command', function () {
         expect(addOutput).to.have.string('was not found');
       } else {
         expect(addOutput).to.have.string('added');
+
+        const files = helper.command.getComponentFiles('bar');
+        expect(files).to.include('foo.js');
+
         const bitMap = helper.bitMap.read();
         expect(bitMap).to.have.property('bar');
-        const files = bitMap.bar.files.map((file) => file.relativePath);
-        expect(files).to.include('Bar/foo.js');
-        expect(files).to.include('Bar/foo.spec.js');
-        expect(files).not.to.include('bar/foo.js');
-        expect(files).not.to.include('bar/foo.js');
+        expect(bitMap.bar.rootDir).to.equal('Bar');
       }
     });
   });
@@ -322,7 +300,7 @@ describe('bit add command', function () {
     it('should resolve the mainFile as the file with the same name as the directory', () => {
       const bitMap = helper.bitMap.read();
       const bar = bitMap.bar;
-      expect(bar.mainFile).to.equal('bar/bar.js');
+      expect(bar.mainFile).to.equal('bar.js');
     });
   });
   describe('sort .bitmap components', () => {
