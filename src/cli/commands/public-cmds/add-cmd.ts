@@ -24,13 +24,13 @@ export default class Add implements LegacyCommand {
     [
       't',
       'tests <file>/"<file>,<file>"',
-      'specify test files to track. use quotation marks to list files or use a glob pattern',
+      'LEGACY ONLY. specify test files to track. use quotation marks to list files or use a glob pattern',
     ],
     ['n', 'namespace <namespace>', 'organize component in a namespace'],
     [
       'e',
       'exclude <file>/"<file>,<file>"',
-      'exclude file from being tracked. use quotation marks to list files or use a glob pattern',
+      'LEGACY ONLY. exclude file from being tracked. use quotation marks to list files or use a glob pattern',
     ],
     ['o', 'override <boolean>', 'override existing component if exists (default = false)'],
     ['s', 'scope <string>', `sets the component's scope-name. if not entered, the default-scope will be used`],

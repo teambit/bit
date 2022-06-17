@@ -4,10 +4,13 @@ import { BASE_CLOUD_DOMAIN } from '../src/constants';
 
 // const apiBaseUrl = process.env.NODE_ENV === 'production' ? `https://api.${BASE_CLOUD_DOMAIN}` : `https://api-stg.${BASE_CLOUD_DOMAIN}`;
 const skipBitDevTests = process.env.SKIP_BIT_DEV_TESTS === 'True' || process.env.SKIP_BIT_DEV_TESTS === 'true';
+console.log('🚀 ~ file: bitsrc-tester.ts ~ line 7 ~ skipBitDevTests', skipBitDevTests);
 const supportTestingOnBitsrc = !skipBitDevTests;
+console.log('🚀 ~ file: bitsrc-tester.ts ~ line 9 ~ supportTestingOnBitsrc', supportTestingOnBitsrc);
 // const supportTestingOnBitsrc = true;
 const apiBaseUrl =
   process.env.BITSRC_ENV === 'stg' ? `https://api-stg.${BASE_CLOUD_DOMAIN}` : `https://api.${BASE_CLOUD_DOMAIN}`;
+console.log('🚀 ~ file: bitsrc-tester.ts ~ line 12 ~ apiBaseUrl', apiBaseUrl);
 const username = process.env.testerBitsrcUsername || 'tester';
 const password = process.env.testerBitsrcPassword;
 
