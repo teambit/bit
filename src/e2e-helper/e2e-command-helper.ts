@@ -74,7 +74,7 @@ export default class CommandHelper {
   }
 
   listRemoteScope(raw = true, options = '') {
-    return this.runCmd(`bit list ${this.scopes.remote} ${options} ${raw ? '--ids' : ''}`);
+    return this.runCmd(`bit list ${this.scopes.remote} ${options} ${raw ? '--raw' : ''}`);
   }
   list(options = '') {
     return this.runCmd(`bit list ${options}`);
