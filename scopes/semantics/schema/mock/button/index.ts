@@ -120,3 +120,8 @@ export type templateLiteralType = `hello ${World1} hi ${World2}`;
 export interface CallSignatureWithTypeParams {
   <T>(a: string): T;
 }
+
+/**
+ * Conditional Generic Type
+ */
+export type If<T, U, Y, N> = T extends U ? Y : N;
