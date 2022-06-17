@@ -261,8 +261,7 @@ describe('bit add command', function () {
     });
     it('should throw an error for case sensitive filesystem saying the file was not found. for other system, it should work', () => {
       if (addOutput.includes('error')) {
-        expect(addOutput).to.have.string('file or directory');
-        expect(addOutput).to.have.string('was not found');
+        expect(addOutput).to.have.string('does not contain a main file');
       } else {
         expect(addOutput).to.have.string('added');
 
