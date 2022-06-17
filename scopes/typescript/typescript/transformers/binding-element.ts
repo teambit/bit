@@ -4,6 +4,7 @@ import { SchemaTransformer } from '../schema-transformer';
 import { SchemaExtractorContext } from '../schema-extractor-context';
 import { ExportIdentifier } from '../export-identifier';
 import { parseTypeFromQuickInfo } from './utils/parse-type-from-quick-info';
+import { jsDocToDocSchema } from './utils/jsdoc-to-doc-schema';
 
 /**
  * for example:
@@ -27,6 +28,7 @@ export class BindingElementTransformer implements SchemaTransformer {
     const displaySig = info?.body?.displayString || '';
     const typeStr = parseTypeFromQuickInfo(info);
     const type = await context.resolveType(node, typeStr);
-    return new VariableLikeSchema(context.getLocation(node), name, displaySig, type, false);
+    const doc = await jsDocToDocSchema(node, context);
+    return new VariableLikeSchema(context.getLocation(node), name, displaySig, type, false, doc);
   }
 }
