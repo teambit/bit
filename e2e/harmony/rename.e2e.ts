@@ -47,7 +47,7 @@ describe('bit rename command', function () {
         const list = helper.command.listParsed();
         const ids = list.map((_) => _.id);
         expect(ids).to.include(`${helper.scopes.remote}/comp1`);
-        expect(ids).to.include('comp2');
+        expect(ids).to.include(`${helper.scopes.remote}/comp2`);
       });
     });
     describe('rename with --scope', () => {

@@ -573,6 +573,13 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/defender/linter"
     },
+    "lister": {
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.component",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/component/lister"
+    },
     "logger": {
         "scope": "teambit.harmony",
         "version": "0.0.598",

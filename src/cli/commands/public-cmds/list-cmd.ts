@@ -1,3 +1,8 @@
+/**
+ * LEGACY ONLY
+ * @see scopes/component/lister/list.cmd.ts for Harmony
+ */
+
 import chalk from 'chalk';
 import R from 'ramda';
 
