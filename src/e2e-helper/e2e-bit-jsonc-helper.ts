@@ -87,6 +87,10 @@ export default class BitJsoncHelper {
     this.addKeyValToWorkspace('defaultScope', scope);
   }
 
+  setComponentsDir(compDir: string) {
+    this.addKeyValToWorkspace('defaultDirectory', compDir);
+  }
+
   setPackageManager(packageManager = 'teambit.dependencies/yarn') {
     this.addKeyValToDependencyResolver('packageManager', packageManager);
   }
