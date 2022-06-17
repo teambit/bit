@@ -1,20 +1,14 @@
-/**
- * LEGACY ONLY
- * @see scopes/component/lister/list-template.ts for Harmony
- */
-
 import c from 'chalk';
 import semver from 'semver';
 import Table from 'cli-table';
-
-import { ListScopeResult } from '../../consumer/component/components-list';
+import { ListScopeResult } from './lister.main.runtime';
 
 type Row = { id: string; localVersion: string; currentVersion: string; remoteVersion?: string };
 
-export default (listScopeResults: ListScopeResult[], json: boolean, showRemoteVersion: boolean) => {
+export function listTemplate(listScopeResults: ListScopeResult[], json: boolean, showRemoteVersion: boolean) {
   function tabulateComponent(listScopeResult: ListScopeResult): Row {
     const id = listScopeResult.id.toStringWithoutVersion();
-    let version = listScopeResult.id.version || '<new>';
+    let version = listScopeResult.id.hasVersion() ? (listScopeResult.id.version as string) : '<new>';
     if (!json && showRemoteVersion) {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const color = listScopeResult.remoteVersion && semver.gt(listScopeResult.remoteVersion, version!) ? 'red' : null;
@@ -57,10 +51,10 @@ export default (listScopeResults: ListScopeResult[], json: boolean, showRemoteVe
 
   function toJsonComponent(listScopeResult: ListScopeResult): Record<string, any> {
     const id = listScopeResult.id.toStringWithoutVersion();
-    const version = listScopeResult.id.version;
+    const localVersion = listScopeResult.id.hasVersion() ? (listScopeResult.id.version as string) : '<new>';
     const data = {
       id,
-      localVersion: version || '<new>',
+      localVersion,
       deprecated: listScopeResult.deprecated,
       currentVersion: listScopeResult.currentlyUsedVersion || 'N/A',
       remoteVersion: listScopeResult.remoteVersion || 'N/A',
@@ -69,8 +63,7 @@ export default (listScopeResults: ListScopeResult[], json: boolean, showRemoteVe
   }
 
   if (json) {
-    const jsonResults = listScopeResults.map(toJsonComponent);
-    return JSON.stringify(jsonResults, null, 2);
+    return listScopeResults.map(toJsonComponent);
   }
   const rows = listScopeResults.map(tabulateComponent);
   const head = ['component ID', 'latest in scope', 'used in workspace'];
@@ -81,4 +74,4 @@ export default (listScopeResults: ListScopeResult[], json: boolean, showRemoteVe
   const table = new Table({ head, style: { head: ['cyan'] } });
   rows.map((row) => table.push(Object.values(row)));
   return table.toString();
-};
+}
