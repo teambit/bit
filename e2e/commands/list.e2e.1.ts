@@ -7,18 +7,9 @@ describe('bit list command', function () {
   let helper: Helper;
   before(() => {
     helper = new Helper();
-    helper.command.setFeatures('legacy-workspace-config');
   });
   after(() => {
     helper.scopeHelper.destroy();
-  });
-  describe('list before running "bit init" with .bit.map.json', () => {
-    it('Should init consumer add then list component', () => {
-      helper.bitMap.create();
-      helper.fs.createFile('bar', 'foo.js');
-      const output = helper.command.listLocalScope();
-      expect(output.includes('found 0 components')).to.be.true;
-    });
   });
   describe('when no components created', () => {
     before(() => {
@@ -35,7 +26,7 @@ describe('bit list command', function () {
       helper.scopeHelper.clean();
       helper.scopeHelper.initWorkspace();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFoo();
+      helper.fixtures.addComponentBarFooAsDir();
     });
     it('should display "found 0 components"', () => {
       const output = helper.command.listLocalScope();
@@ -47,38 +38,34 @@ describe('bit list command', function () {
       helper.scopeHelper.clean();
       helper.scopeHelper.initWorkspace();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFoo();
+      helper.fixtures.addComponentBarFooAsDir();
       helper.fixtures.tagComponentBarFoo();
     });
     it('should display "found 1 components"', () => {
       const output = helper.command.listLocalScope();
       expect(output.includes('found 1 components')).to.be.true;
     });
-    it('should list deprecated component', () => {
-      helper.command.deprecateComponent('bar/foo');
-      const output = helper.command.listLocalScope();
-      expect(output).to.have.string('bar/foo [Deprecated]');
-    });
   });
   describe('with --outdated flag', () => {
     describe('when a remote component has a higher version than the local component', () => {
       let output;
       before(() => {
-        helper.scopeHelper.setNewLocalAndRemoteScopes();
+        helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+        helper.bitJsonc.setupDefault();
         helper.fixtures.createComponentBarFoo();
-        helper.fixtures.addComponentBarFoo();
+        helper.fixtures.addComponentBarFooAsDir();
         helper.fixtures.tagComponentBarFoo();
-        helper.command.exportAllComponents();
-        helper.scopeHelper.reInitLocalScope();
+        helper.command.export();
+        helper.scopeHelper.reInitLocalScopeHarmony();
         helper.scopeHelper.addRemoteScope();
         helper.command.importComponent('bar/foo@0.0.1');
         const clonedScopePath = helper.scopeHelper.cloneLocalScope();
 
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitLocalScopeHarmony();
         helper.scopeHelper.addRemoteScope();
         helper.command.importComponent('bar/foo@0.0.1');
         helper.command.tagComponent('bar/foo', 'msg', '-f');
-        helper.command.exportAllComponents();
+        helper.command.export();
 
         helper.scopeHelper.getClonedLocalScope(clonedScopePath);
         output = helper.command.listLocalScopeParsed('-o');
@@ -92,12 +79,13 @@ describe('bit list command', function () {
     describe('when a remote component has the same version as the local component', () => {
       let output;
       before(() => {
-        helper.scopeHelper.setNewLocalAndRemoteScopes();
+        helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+        helper.bitJsonc.setupDefault();
         helper.fs.createFile('bar', 'baz.js');
-        helper.command.addComponent('bar/baz.js', { i: 'bar/baz' });
-        helper.command.tagComponent('bar/baz');
-        helper.command.exportAllComponents();
-        helper.scopeHelper.reInitLocalScope();
+        helper.command.addComponent('bar', { i: 'bar/baz' });
+        helper.command.tagWithoutBuild('bar/baz');
+        helper.command.export();
+        helper.scopeHelper.reInitLocalScopeHarmony();
         helper.scopeHelper.addRemoteScope();
         helper.command.importComponent('bar/baz@0.0.1');
         output = helper.command.listLocalScopeParsed('-o');
@@ -110,14 +98,14 @@ describe('bit list command', function () {
     describe('when a component is local only (never exported)', () => {
       let output;
       before(() => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitLocalScopeHarmony();
         helper.fs.createFile('bar', 'local');
-        helper.command.addComponent('bar/local', { i: 'bar/local' });
-        helper.command.tagComponent('bar/local');
+        helper.command.addComponent('bar', { i: 'bar/local' });
+        helper.command.tagWithoutBuild('bar/local');
         output = helper.command.listLocalScopeParsed('-o');
       });
       it('should show that the component does not have a remote version', () => {
-        const barLocal = output.find((item) => item.id === 'bar/local');
+        const barLocal = output.find((item) => item.id === 'my-scope/bar/local');
         expect(barLocal.remoteVersion).to.equal('N/A');
       });
     });
