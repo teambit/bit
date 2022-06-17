@@ -18,6 +18,7 @@ import {
   TemplateLiteralTypeNode,
   TemplateLiteralTypeSpan,
   ThisTypeNode,
+  ConditionalTypeNode,
 } from 'typescript';
 import {
   SchemaNode,
@@ -39,6 +40,7 @@ import {
   TemplateLiteralTypeSchema,
   ThisTypeSchema,
   Modifier,
+  ConditionalTypeSchema,
 } from '@teambit/semantics.entities.semantic-schema';
 import pMapSeries from 'p-map-series';
 import { SchemaExtractorContext } from '../../schema-extractor-context';
@@ -85,11 +87,12 @@ export async function typeNodeToSchema(node: TypeNode, context: SchemaExtractorC
       return templateLiteralType(node as TemplateLiteralTypeNode, context);
     case SyntaxKind.ThisType:
       return thisType(node as ThisTypeNode, context);
+    case SyntaxKind.ConditionalType:
+      return conditionalType(node as ConditionalTypeNode, context);
     case SyntaxKind.ConstructorType:
     case SyntaxKind.NamedTupleMember:
     case SyntaxKind.OptionalType:
     case SyntaxKind.RestType:
-    case SyntaxKind.ConditionalType:
     case SyntaxKind.InferType:
     case SyntaxKind.MappedType:
     case SyntaxKind.ImportType:
@@ -269,4 +272,12 @@ async function templateLiteralTypeSpan(node: TemplateLiteralTypeSpan, context: S
 
 async function thisType(node: ThisTypeNode, context: SchemaExtractorContext) {
   return new ThisTypeSchema(context.getLocation(node));
+}
+
+async function conditionalType(node: ConditionalTypeNode, context: SchemaExtractorContext) {
+  const checkType = await typeNodeToSchema(node.checkType, context);
+  const extendsType = await typeNodeToSchema(node.extendsType, context);
+  const trueType = await typeNodeToSchema(node.trueType, context);
+  const falseType = await typeNodeToSchema(node.falseType, context);
+  return new ConditionalTypeSchema(context.getLocation(node), checkType, extendsType, trueType, falseType);
 }
