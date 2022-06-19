@@ -1,14 +1,19 @@
 import { Command, CommandOptions } from '@teambit/cli';
 import { Workspace } from '@teambit/workspace';
 import ejectTemplate from '@teambit/legacy/dist/cli/templates/eject-template';
-import { PATTERN_HELP } from '@teambit/legacy/dist/constants';
 import { Logger } from '@teambit/logger';
 import { ComponentsEjector } from './components-ejector';
 
 export class EjectCmd implements Command {
-  name = 'eject <pattern>';
-  description = 'replaces the components from the local scope with the corresponding packages';
-  extendedDescription = `${PATTERN_HELP('eject')}`;
+  name = 'eject <component-pattern>';
+  description = 'replace components maintained in the workspace with their corresponding packages';
+  arguments = [
+    {
+      name: 'component-pattern',
+      description:
+        'the components to eject. use component name, component id, or component pattern.\nuse component pattern to select multiple components. use comma to separate patterns and "!" to exclude. e.g. "ui/**, !ui/button"\nwrap the pattern with quotes',
+    },
+  ];
   alias = 'E';
   options = [
     ['f', 'force', 'ignore local version. remove the components even when they are staged or modified'],
