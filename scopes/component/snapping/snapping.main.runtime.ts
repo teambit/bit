@@ -12,6 +12,7 @@ import { POST_TAG_ALL_HOOK, POST_TAG_HOOK } from '@teambit/legacy/dist/constants
 import { Consumer } from '@teambit/legacy/dist/consumer';
 import ComponentsList from '@teambit/legacy/dist/consumer/component/components-list';
 import HooksManager from '@teambit/legacy/dist/hooks';
+import pMapSeries from 'p-map-series';
 import { TagResults, BasicTagParams } from '@teambit/legacy/dist/api/consumer/lib/tag';
 import hasWildcard from '@teambit/legacy/dist/utils/string/has-wildcard';
 import { validateVersion } from '@teambit/legacy/dist/utils/semver-helper';
@@ -356,6 +357,69 @@ export class SnappingMain {
   }
 
   private async getComponentsToTag(
+    includeUnmodified: boolean,
+    exactVersion: string | undefined,
+    persist: boolean,
+    ids: string[],
+    snapped: boolean
+  ): Promise<{ bitIds: BitId[]; warnings: string[] }> {
+    if (this.workspace.isLegacy) {
+      return this.getComponentsToTagLegacy(includeUnmodified, exactVersion, persist, ids, snapped);
+    }
+    const warnings: string[] = [];
+    const componentsList = new ComponentsList(this.workspace.consumer);
+    if (persist) {
+      const softTaggedComponents = componentsList.listSoftTaggedComponents();
+      return { bitIds: softTaggedComponents, warnings: [] };
+    }
+
+    const tagPendingBitIds = includeUnmodified
+      ? await componentsList.listPotentialTagAllWorkspace()
+      : await componentsList.listTagPendingComponents();
+
+    const tagPendingComponentsIds = await this.workspace.resolveMultipleComponentIds(tagPendingBitIds);
+
+    const snappedComponents = await componentsList.listSnappedComponentsOnMain();
+    const snappedComponentsIds = snappedComponents.map((c) => c.toBitId());
+
+    if (ids.length) {
+      const componentIds = await pMapSeries(ids, async (id) => {
+        const [idWithoutVer, version] = id.split('@');
+        const idHasWildcard = hasWildcard(id);
+        if (idHasWildcard) {
+          const allIds = this.workspace.scope.filterIdsFromPoolIdsByPattern(idWithoutVer, tagPendingComponentsIds);
+          return allIds.map((componentId) => componentId.changeVersion(version));
+        }
+        const componentId = await this.workspace.resolveComponentId(idWithoutVer);
+        if (!includeUnmodified) {
+          const componentStatus = await this.workspace.consumer.getComponentStatusById(componentId._legacy);
+          if (componentStatus.modified === false) return null;
+        }
+        return componentId.changeVersion(version);
+      });
+
+      return { bitIds: compact(componentIds.flat()).map((bitId) => bitId._legacy), warnings };
+    }
+
+    if (snapped) {
+      return { bitIds: snappedComponentsIds, warnings };
+    }
+
+    tagPendingBitIds.push(...snappedComponentsIds);
+
+    if (includeUnmodified && exactVersion) {
+      const tagPendingComponentsLatest = await this.workspace.scope.legacyScope.latestVersions(tagPendingBitIds, false);
+      tagPendingComponentsLatest.forEach((componentId) => {
+        if (componentId.version && semver.valid(componentId.version) && semver.gt(componentId.version, exactVersion)) {
+          warnings.push(`warning: ${componentId.toString()} has a version greater than ${exactVersion}`);
+        }
+      });
+    }
+
+    return { bitIds: tagPendingBitIds.map((id) => id.changeVersion(undefined)), warnings };
+  }
+
+  private async getComponentsToTagLegacy(
     includeUnmodified: boolean,
     exactVersion: string | undefined,
     persist: boolean,
