@@ -11,7 +11,7 @@ export class EjectCmd implements Command {
     {
       name: 'component-pattern',
       description:
-        'the components to eject. use component name, component id, or component pattern.\nuse component pattern to select multiple components. use comma to separate patterns and "!" to exclude. e.g. "ui/**, !ui/button"\nwrap the pattern with quotes',
+        'component name, component id, or component pattern.\nuse component pattern to select multiple components. use comma to separate patterns and "!" to exclude. e.g. "ui/**, !ui/button"\nwrap the pattern with quotes',
     },
   ];
   alias = 'E';

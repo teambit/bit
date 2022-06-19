@@ -12,8 +12,15 @@ import loader from '../../loader';
 import paintRemoved from '../../templates/remove-template';
 
 export default class Remove implements LegacyCommand {
-  name = 'remove <ids...>';
-  description = 'remove component(s) from your workspace, or a remote scope';
+  name = 'remove <component-ids...>';
+  description = 'remove component(s) from the workspace, or a remote scope';
+  arguments = [
+    {
+      name: 'component-ids...',
+      description:
+        'a list of component names or IDs, separated by spaces (use component IDs to remove components from a remote scope)',
+    },
+  ];
   group: Group = 'collaborate';
   extendedDescription = `https://${BASE_DOCS_DOMAIN}/components/removing-components
 ${WILDCARD_HELP('remove')}`;
