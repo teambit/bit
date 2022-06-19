@@ -83,6 +83,7 @@
             "line": 8,
             "character": 1
           },
+          "raw": "/**\n * General comment of the myFunc\n * @deprecate example of deprecation tag\n * @param a { number } this is A\n * @param b this is B\n * @returns { number } results of adding a to b\n */",
           "comment": "General comment of the myFunc",
           "tags": [
             {
@@ -227,7 +228,8 @@
                       "filePath": "button.tsx",
                       "line": 13,
                       "character": 13
-                    }
+                    },
+                    "name": "ReactNode"
                   }
                 },
                 {
@@ -278,7 +280,8 @@
                 "filePath": "button.tsx",
                 "line": 24,
                 "character": 5
-              }
+              },
+              "name": "React.ButtonHTMLAttributes"
             }
           ]
         }
@@ -510,6 +513,7 @@
                 "line": 10,
                 "character": 1
               },
+              "raw": "/**\n * example of passing a JSX Element as a parameter\n */",
               "comment": "example of passing a JSX Element as a parameter"
             }
           },
@@ -917,7 +921,8 @@
               "line": 61,
               "character": 25
             },
-            "type": "{\n    a: number;\n    b: number;\n}"
+            "type": "{\n    a: number;\n    b: number;\n}",
+            "name": "obj"
           }
         }
       },
@@ -953,7 +958,8 @@
                 "line": 63,
                 "character": 41
               },
-              "type": "{\n    a: number;\n    b: number;\n}"
+              "type": "{\n    a: number;\n    b: number;\n}",
+              "name": "obj"
             }
           }
         }
@@ -1155,7 +1161,8 @@
             "line": 86,
             "character": 31
           },
-          "type": "class T3<T, K>"
+          "type": "class T3<T, K>",
+          "name": "T3"
         }
       },
       {
@@ -1196,7 +1203,8 @@
                     "line": 88,
                     "character": 34
                   },
-                  "type": "class T1"
+                  "type": "class T1",
+                  "name": "T1"
                 },
                 {
                   "__schema": "InferenceTypeSchema",
@@ -1205,7 +1213,8 @@
                     "line": 88,
                     "character": 39
                   },
-                  "type": "class T2"
+                  "type": "class T2",
+                  "name": "T2"
                 }
               ]
             }
@@ -1460,7 +1469,8 @@
               "line": 106,
               "character": 33
             },
-            "type": "interface config"
+            "type": "interface config",
+            "name": "config"
           },
           "indexType": {
             "__schema": "LiteralTypeSchema",
@@ -1568,7 +1578,8 @@
                   "line": 118,
                   "character": 44
                 },
-                "type": "\"world1-a\" | \"world1-b\""
+                "type": "\"world1-a\" | \"world1-b\"",
+                "name": "World1"
               }
             },
             {
@@ -1586,7 +1597,8 @@
                   "line": 118,
                   "character": 57
                 },
-                "type": "\"world2\""
+                "type": "\"world2\"",
+                "name": "World2"
               }
             }
           ]
@@ -1642,10 +1654,69 @@
                 "line": 121,
                 "character": 19
               },
-              "type": "T"
+              "type": "T",
+              "name": "T"
             }
           }
         ]
+      },
+      {
+        "__schema": "TypeSchema",
+        "location": {
+          "filePath": "index.ts",
+          "line": 127,
+          "character": 1
+        },
+        "name": "If",
+        "signature": "type If<T, U, Y, N> = T extends U ? Y : N",
+        "type": {
+          "__schema": "ConditionalTypeSchema",
+          "location": {
+            "filePath": "index.ts",
+            "line": 127,
+            "character": 30
+          },
+          "checkType": {
+            "__schema": "InferenceTypeSchema",
+            "location": {
+              "filePath": "index.ts",
+              "line": 127,
+              "character": 30
+            },
+            "type": "(type parameter) T in type If<T, U, Y, N>",
+            "name": "T"
+          },
+          "extendsType": {
+            "__schema": "InferenceTypeSchema",
+            "location": {
+              "filePath": "index.ts",
+              "line": 127,
+              "character": 40
+            },
+            "type": "(type parameter) U in type If<T, U, Y, N>",
+            "name": "U"
+          },
+          "trueType": {
+            "__schema": "InferenceTypeSchema",
+            "location": {
+              "filePath": "index.ts",
+              "line": 127,
+              "character": 44
+            },
+            "type": "(type parameter) Y in type If<T, U, Y, N>",
+            "name": "Y"
+          },
+          "falseType": {
+            "__schema": "InferenceTypeSchema",
+            "location": {
+              "filePath": "index.ts",
+              "line": 127,
+              "character": 48
+            },
+            "type": "(type parameter) N in type If<T, U, Y, N>",
+            "name": "N"
+          }
+        }
       }
     ]
   },

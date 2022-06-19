@@ -480,10 +480,15 @@ export const WILDCARD_HELP = (command: string) =>
   `you can use a pattern for multiple ids, such as bit ${command} "utils/*". (wrap the pattern with quotes to avoid collision with shell commands)`;
 
 export const PATTERN_HELP = (command: string) =>
-  `you can use a \`<pattern>\` for multiple component ids, such as \`bit ${command} "org.scope/utils/**"\`. use comma to separate patterns and "!" to exclude. e.g. "ui/**, !ui/button"
+  `you can use a \`<pattern>\` for multiple component ids, such as \`bit ${command} "org.scope/utils/**"\`.
+use comma to separate patterns and "!" to exclude. e.g. "ui/**, !ui/button"
 always wrap the pattern with quotes to avoid collision with shell commands.
-to validate the pattern before running this command, run \`bit pattern <pattern>\`.
+use \`bit pattern --help\` to understand patterns better and \`bit pattern <pattern>\` to validate the pattern.
 `;
+
+export const COMPONENT_PATTERN_HELP = `component name, component id, or component pattern. use component pattern to select multiple components.
+use comma to separate patterns and "!" to exclude. e.g. "ui/**, !ui/button"
+wrap the pattern with quotes`;
 
 export const CURRENT_UPSTREAM = 'current';
 

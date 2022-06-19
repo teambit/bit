@@ -3,11 +3,13 @@ import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
 import { Logger } from '@teambit/logger';
 import { Workspace } from '@teambit/workspace';
 import chalk from 'chalk';
+import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
 import { TypescriptMain } from '../typescript.main.runtime';
 
 export class CheckTypesCmd implements Command {
-  name = 'check-types [pattern]';
+  name = 'check-types [component-pattern]';
   description = 'check typescript types';
+  arguments = [{ name: 'component-pattern', description: COMPONENT_PATTERN_HELP }];
   alias = '';
   group = 'development';
   options = [
@@ -17,9 +19,9 @@ export class CheckTypesCmd implements Command {
 
   constructor(private typescript: TypescriptMain, private workspace: Workspace, private logger: Logger) {}
 
-  async report([userPattern]: [string], { all = false, strict = false }: { all: boolean; strict: boolean }) {
+  async report([pattern]: [string], { all = false, strict = false }: { all: boolean; strict: boolean }) {
     if (!this.workspace) throw new ConsumerNotFound();
-    const components = await this.workspace.getComponentsByUserInput(all, userPattern);
+    const components = await this.workspace.getComponentsByUserInput(all, pattern);
     this.logger.setStatusLine(`checking types for ${components.length} components`);
     const files = this.typescript.getSupportedFilesForTsserver(components);
     await this.typescript.initTsserverClientFromWorkspace({ printTypeErrors: true }, files);

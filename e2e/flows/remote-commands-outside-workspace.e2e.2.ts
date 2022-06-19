@@ -38,7 +38,7 @@ describe('bit remote command', function () {
       helper.general.expectToThrow(func, error);
     });
     it('bit list with --remote flag should list the global remote successfully', () => {
-      const output = helper.command.listRemoteScope();
+      const output = helper.command.listRemoteScope(false);
       expect(output).to.have.string('found 1 components');
     });
     it('bit show should show the component and not throw an error about missing workspace', () => {

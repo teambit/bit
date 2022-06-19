@@ -46,7 +46,7 @@ describe('bit deprecate and undeprecate commands', function () {
       });
       it('bit list should show the component as deprecated', () => {
         const list = helper.command.listParsed();
-        const comp2 = list.find((c) => c.id === 'comp2');
+        const comp2 = list.find((c) => c.id === `${helper.scopes.remote}/comp2`);
         expect(comp2?.deprecated).to.be.true;
       });
       describe('exporting the component', () => {
