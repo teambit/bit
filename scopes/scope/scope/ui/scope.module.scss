@@ -28,7 +28,7 @@
   position: relative;
 
   > :first-child {
-    z-index: $nav-z-index + 1;
+    z-index: $pane-splitter-zIndex;
     position: absolute;
   }
 }
