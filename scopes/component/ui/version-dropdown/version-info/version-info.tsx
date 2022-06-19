@@ -48,7 +48,7 @@ export function VersionInfo({
 
   return (
     <div ref={currentVersionRef}>
-      <MenuLinkItem isActive={() => isCurrent} href={href} className={styles.versionRow}>
+      <MenuLinkItem active={isCurrent} href={href} className={styles.versionRow}>
         <div className={styles.version}>
           <UserAvatar size={24} account={author} className={styles.versionUserAvatar} showTooltip={true} />
           <Ellipsis className={classNames(styles.versionName, tag && styles.tag, !tag && styles.snap)}>
