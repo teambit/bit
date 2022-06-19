@@ -45,6 +45,12 @@ ${chalk.red('Red')} - indicates a semantically breaking change`,
       // Otherwise, only the names of the selected choices would've been included.
       return this.map(names);
     },
+    cancel() {
+      // By default, canceling the prompt via Ctrl+c throws an empty string.
+      // The custom cancel function prevents that behavior.
+      // Otherwise, Bit CLI would print an error and confuse users.
+      // See related issue: https://github.com/enquirer/enquirer/issues/225
+    },
   } as any)) as { updateDependencies: Record<string, string | OutdatedPkg> };
   return Object.values(updateDependencies ?? {})
     .filter((updateDependency) => typeof updateDependency !== 'string') as OutdatedPkg[];
