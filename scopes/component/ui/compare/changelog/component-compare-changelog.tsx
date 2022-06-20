@@ -29,7 +29,7 @@ const getLogsBetweenVersions: (
   compareVersion?: LegacyComponentLog
 ) => LegacyComponentLog[] = (allLogs, baseVersion, compareVersion) => {
   const [startingVersion, endingVersion] = orderByDate(baseVersion, compareVersion);
-  const logIndicies = allLogs.reduce((accum, next, index) => {
+  const { startingVersionIndex, endingVersionIndex } = allLogs.reduce((accum, next, index) => {
     if (next.hash === startingVersion?.hash) {
       return { ...accum, startingVersionIndex: index };
     }
@@ -39,9 +39,7 @@ const getLogsBetweenVersions: (
     return accum;
   }, {} as { startingVersionIndex: number; endingVersionIndex: number });
 
-  return allLogs.filter(
-    (_, index) => index >= logIndicies.startingVersionIndex && index <= logIndicies.endingVersionIndex
-  );
+  return allLogs.filter((_, index) => index >= startingVersionIndex && index <= endingVersionIndex);
 };
 
 export function ComponentCompareChangelog({ className }: ComponentCompareChangelog) {
@@ -54,7 +52,7 @@ export function ComponentCompareChangelog({ className }: ComponentCompareChangel
   const compareVersionInfo = compare?.model.version ? logsByVersion?.get(compare?.model.version) : undefined;
 
   const filterLogs = useCallback(getLogsBetweenVersions, [baseVersionInfo, compareVersionInfo]);
-  
+
   const logs = filterLogs(allLogs, baseVersionInfo, compareVersionInfo);
 
   return (
