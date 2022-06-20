@@ -11,7 +11,7 @@ const assertArrays = require('chai-arrays');
 
 chai.use(assertArrays);
 
-describe.only('bit status command', function () {
+describe('bit status command', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {
