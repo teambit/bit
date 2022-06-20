@@ -6,6 +6,7 @@ import { ComponentAspect, ComponentUI, ComponentModel } from '@teambit/component
 import { GraphAspect } from './graph.aspect';
 import { GraphSection } from './ui/graph.section';
 import { GraphCompareSection } from './graph.compare.section';
+import { DependenciesGraph } from './ui/dependencies-graph';
 
 export interface ComponentWidgetProps extends React.HTMLAttributes<HTMLDivElement> {
   component: ComponentModel;
@@ -17,6 +18,10 @@ export type ComponentWidgetSlot = SlotRegistry<ComponentWidget>;
  * Presents dependencies graph in the component page
  */
 export class GraphUI {
+  getDependenciesGraph() {
+    return DependenciesGraph;
+  }
+
   /**
    * adds plugins to component nodes
    * @param value

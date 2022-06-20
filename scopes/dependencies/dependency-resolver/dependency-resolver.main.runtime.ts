@@ -1,6 +1,6 @@
 import mapSeries from 'p-map-series';
 import { MainRuntime } from '@teambit/cli';
-import ComponentAspect, { Component, ComponentMap, ComponentMain } from '@teambit/component';
+import ComponentAspect, { Component, ComponentMap, ComponentMain, IComponent } from '@teambit/component';
 import type { ConfigMain } from '@teambit/config';
 import { get, pick, uniq } from 'lodash';
 import { ConfigAspect } from '@teambit/config';
@@ -398,8 +398,8 @@ export class DependencyResolverMain {
    * Main function to get the dependency list of a given component
    * @param component
    */
-  async getDependencies(component: Component): Promise<DependencyList> {
-    const entry = component.state.aspects.get(DependencyResolverAspect.id);
+  async getDependencies(component: IComponent): Promise<DependencyList> {
+    const entry = component.get(DependencyResolverAspect.id);
     if (!entry) {
       return DependencyList.fromArray([]);
     }

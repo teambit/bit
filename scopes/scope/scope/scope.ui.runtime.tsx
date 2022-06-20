@@ -153,7 +153,7 @@ export class ScopeUI {
     return this;
   };
 
-  private registerExplicitRoutes() {
+  private applyMenuRoutes() {
     this.registerMenuRoutes([
       {
         path: this.componentUi.routePath,
@@ -161,9 +161,17 @@ export class ScopeUI {
       },
       {
         path: '/',
-        element: <ScopeMenu widgetSlot={this.menuWidgetSlot} menuItemSlot={this.menuItemSlot} />,
+        element: this.getScopeMenu(),
       },
     ]);
+  }
+
+  getScopeMenu() {
+    return <ScopeMenu widgetSlot={this.menuWidgetSlot} menuItemSlot={this.menuItemSlot} />;
+  }
+
+  private registerExplicitRoutes() {
+    this.applyMenuRoutes();
     this.registerRoutes([
       {
         path: this.componentUi.routePath,
@@ -392,11 +400,11 @@ export class ScopeUI {
     scopeUi.registerMenuItem(scopeUi.menuItems);
     scopeUi.registerMenuWidget(() => <ScopeUseBox />);
     scopeUi.registerSidebarLink(() => (
-      <MenuLinkItem exact href="/" icon="comps">
+      <MenuLinkItem exact href="" icon="comps">
         Gallery
       </MenuLinkItem>
     ));
-    scopeUi.registerExplicitRoutes();
+    if (ui) scopeUi.registerExplicitRoutes();
 
     return scopeUi;
   }

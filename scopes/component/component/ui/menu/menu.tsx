@@ -12,12 +12,13 @@ import { Menu as ConsumeMethodsMenu } from '@teambit/ui-foundation.ui.use-box.me
 import { LaneModel, useLanesContext } from '@teambit/lanes.ui.lanes';
 import { LegacyComponentLog } from '@teambit/legacy-component-log';
 import type { ComponentModel } from '../component-model';
-import { useComponent } from '../use-component';
+import { useComponent as useComponentQuery, UseComponentType } from '../use-component';
 import { MenuNav } from './menu-nav';
 import { MobileMenuNav } from './mobile-menu-nav';
 import styles from './menu.module.scss';
 import { OrderedNavigationSlot, ConsumeMethodSlot } from './nav-plugin';
 import { useIdFromLocation } from '../use-component-from-location';
+import { ComponentID } from '../..';
 
 export type MenuProps = {
   className?: string;
@@ -36,6 +37,10 @@ export type MenuProps = {
   menuItemSlot: MenuItemSlot;
 
   consumeMethodSlot: ConsumeMethodSlot;
+
+  componentIdStr?: string;
+
+  useComponent?: UseComponentType;
 };
 
 /**
@@ -48,21 +53,30 @@ export function ComponentMenu({
   host,
   menuItemSlot,
   consumeMethodSlot,
+  componentIdStr,
+  useComponent,
 }: MenuProps) {
-  const componentId = useIdFromLocation();
+  const idFromLocation = useIdFromLocation();
+  const componentId = componentIdStr ? ComponentID.fromString(componentIdStr) : undefined;
+  const fullName = componentId?.fullName || idFromLocation;
   const lanesContext = useLanesContext();
-  const laneComponent = componentId ? lanesContext?.resolveComponent(componentId) : undefined;
-  const useComponentOptions = laneComponent && {
-    logFilters: { log: { logHead: laneComponent.version } },
+  const laneComponent = fullName ? lanesContext?.resolveComponent(fullName) : undefined;
+  const useComponentOptions = {
+    logFilters: laneComponent && { log: { logHead: laneComponent.version } },
+    customUseComponent: useComponent,
   };
 
-  const { component } = useComponent(host, laneComponent?.id.toString() || componentId, useComponentOptions);
+  const { component } = useComponentQuery(
+    host,
+    laneComponent?.id.toString() || componentId?.toStringWithoutVersion(),
+    useComponentOptions
+  );
   const mainMenuItems = useMemo(() => groupBy(flatten(menuItemSlot.values()), 'category'), [menuItemSlot]);
   if (!component) return <FullLoader />;
   return (
     <Routes>
       <Route
-        path={`${componentId}/*`}
+        path={`${fullName}/*`}
         element={
           <div className={classnames(styles.topBar, className)}>
             <div className={styles.leftSide}>

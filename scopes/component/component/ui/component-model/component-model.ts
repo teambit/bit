@@ -2,8 +2,10 @@ import { Composition, CompositionProps } from '@teambit/compositions';
 import { DeprecationInfo } from '@teambit/deprecation';
 import { Descriptor } from '@teambit/envs';
 import { ComponentID, ComponentIdObj } from '@teambit/component-id';
+import { ComponentDescriptor } from '@teambit/component-descriptor';
 import { LegacyComponentLog } from '@teambit/legacy-component-log';
 import { Tag } from '../../tag';
+import { getPackageName, getDisplayName, getDescription, getLabels, getDeprecation, getEnv } from './descriptor-transformers';
 import { TagMap } from '../../tag-map';
 import { TagProps } from '../../tag/tag';
 // import { Snap } from '../../snap';
@@ -177,6 +179,18 @@ export class ComponentModel {
 
   static fromArray(componentsProps: ComponentModelProps[]) {
     return componentsProps.map((rawComponent) => ComponentModel.from(rawComponent));
+  }
+
+  static fromDescriptor(componentDescriptor: ComponentDescriptor) {
+    return ComponentModel.from({
+      id: componentDescriptor.id.toObject(),
+      displayName: getDisplayName(componentDescriptor),
+      packageName: getPackageName(componentDescriptor),
+      env: getEnv(componentDescriptor),
+      deprecation: getDeprecation(componentDescriptor),
+      description: getDescription(componentDescriptor),
+      labels: getLabels(componentDescriptor)
+    });
   }
 
   static empty() {

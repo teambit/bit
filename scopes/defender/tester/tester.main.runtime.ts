@@ -1,6 +1,6 @@
 import fs from 'fs-extra';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import { Component } from '@teambit/component';
+import { Component, IComponent } from '@teambit/component';
 import compact from 'lodash.compact';
 import { EnvsAspect, EnvsExecutionResult, EnvsMain } from '@teambit/envs';
 import { LoggerAspect, LoggerMain } from '@teambit/logger';
@@ -156,10 +156,10 @@ export class TesterMain {
   }
 
   async getTestsResults(
-    component: Component,
+    component: IComponent,
     idHasVersion = true
   ): Promise<{ testsResults?: TestsResult; loading: boolean } | undefined> {
-    const entry = component.state.aspects.get(TesterAspect.id);
+    const entry = component.get(TesterAspect.id);
     const isModified = !idHasVersion && (await component.isModified());
     const data = this.builder.getDataByAspect(component, TesterAspect.id) as { tests: TestsResult };
     if ((entry || data) && !isModified) {
@@ -168,7 +168,7 @@ export class TesterMain {
     return this.getTestsResultsFromState(component);
   }
 
-  private getTestsResultsFromState(component: Component) {
+  private getTestsResultsFromState(component: IComponent) {
     const tests = this._testsResults[component.id.toString()];
     return { testsResults: tests?.results, loading: tests?.loading || false };
   }

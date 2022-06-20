@@ -17,7 +17,7 @@ export type AspectListPropsJson = {
 };
 
 export class AspectList {
-  constructor(private entries: AspectDataEntry[]) {}
+  constructor(readonly entries: AspectDataEntry[]) {}
 
   get<T>(aspectId: string): T | undefined {
     const aspectEntry = this.entries.find((entry) => entry.aspectId === aspectId);

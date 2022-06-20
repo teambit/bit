@@ -39,6 +39,10 @@ export class ComponentDescriptor implements IComponent {
     };
   }
 
+  async isModified() {
+    return false;
+  }
+
   stringify() {
     return JSON.stringify(this.toObject());
   }
