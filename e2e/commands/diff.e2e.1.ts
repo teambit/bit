@@ -105,7 +105,7 @@ describe('bit diff command', function () {
       helper.fixtures.addComponentBarFooAsDir();
       helper.fixtures.createComponentIsType();
       helper.fixtures.addComponentUtilsIsTypeAsDir();
-      helper.fixtures.createComponentIsString();
+      helper.fixtures.createComponentIsString('');
       helper.fixtures.addComponentUtilsIsStringAsDir();
       helper.command.tagAllComponents();
 
