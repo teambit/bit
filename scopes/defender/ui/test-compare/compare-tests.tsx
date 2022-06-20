@@ -54,7 +54,7 @@ export function CompareTests(props: CompareTestsProps) {
       <div className={styles.subView} ref={rightPanelRef} onScroll={handleRightPanelScroll}>
         <CompareTestsPage
           component={componentCompare.compare.model}
-          isCompareVersionWorkspace={componentCompare.compare.isLocalChanges}
+          isCompareVersionWorkspace={componentCompare.compare.hasLocalChanges}
           emptyState={emptyState}
         />
       </div>

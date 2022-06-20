@@ -28,8 +28,12 @@ const findPrevVersionFromCurrent = (compareVersion) => (_, index: number, logs: 
   return logs[prevIndex].tag === compareVersion || logs[prevIndex].hash === compareVersion;
 };
 
-const findMatchingVersionInfo = (version?: string) => (log: LegacyComponentLog) =>
-  version && (log.hash === version || log.tag === version);
+const groupByVersion = (accum: Map<string, LegacyComponentLog>, current: LegacyComponentLog) => {
+  if (!accum.has(current.tag || current.hash)) {
+    accum.set(current.tag || current.hash, current);
+  }
+  return accum;
+};
 
 export function ComponentCompare({ navSlot, host, routeSlot }: ComponentCompareProps) {
   const baseVersion = useCompareQueryParam('baseVersion');
@@ -60,23 +64,21 @@ export function ComponentCompare({ navSlot, host, routeSlot }: ComponentCompareP
   const nothingToCompare = !loading && !compareIsLocalChanges && (component.logs?.length || []) < 2;
   const showSubMenus = !loading && !nothingToCompare;
 
-  const baseVersionInfo = useMemo(() => allVersionInfo.find(findMatchingVersionInfo(baseId.version)), [baseId]);
-  const compareVersionInfo = useMemo(
-    () => allVersionInfo.find(findMatchingVersionInfo(compare.version)),
-    [compare.version]
+  const logsByVersion = useMemo(
+    () => allVersionInfo.reduce(groupByVersion, new Map<string, LegacyComponentLog>()),
+    [compare.id, baseId]
   );
 
   const componentCompareModel: ComponentCompareModel = {
     compare: {
       model: compare,
-      isLocalChanges: compareIsLocalChanges,
-      versionInfo: compareVersionInfo,
+      hasLocalChanges: compareIsLocalChanges,
     },
     base: base && {
       model: base,
-      versionInfo: baseVersionInfo,
     },
     loading,
+    logsByVersion,
   };
 
   return (
