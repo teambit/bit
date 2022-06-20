@@ -20,7 +20,7 @@ export default class InstallCmd implements Command {
   description = 'installs workspace dependencies';
   extendedDescription =
     'when no package is specified, all workspace dependencies are installed and all workspace components are imported.';
-  arguments: [{ name: 'packages...'; description: 'a list of packages to install (separated by spaces)' }];
+  arguments = [{ name: 'packages...', description: 'a list of packages to install (separated by spaces)' }];
   alias = 'in';
   group = 'development';
   options = [

@@ -42,7 +42,7 @@ export function OverviewCompare(props: OverviewCompareProps) {
 
     return (
       <div className={styles.subView} ref={leftPanelRef} onScroll={handleLeftPanelScroll}>
-        <ComponentProvider component={componentCompare.base}>
+        <ComponentProvider component={componentCompare.base.model}>
           <Overview titleBadges={titleBadges} />
         </ComponentProvider>
       </div>
@@ -56,7 +56,7 @@ export function OverviewCompare(props: OverviewCompareProps) {
 
     return (
       <div className={styles.subView} ref={rightPanelRef} onScroll={handleRightPanelScroll}>
-        <ComponentProvider component={componentCompare.compare}>
+        <ComponentProvider component={componentCompare.compare.model}>
           <Overview titleBadges={titleBadges} />
         </ComponentProvider>
       </div>

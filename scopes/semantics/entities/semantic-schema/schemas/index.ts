@@ -29,4 +29,5 @@ export { TemplateLiteralTypeSpanSchema } from './template-literal-type-span';
 export { ThisTypeSchema } from './this-type';
 export { UnknownSchema } from './unknown-schema';
 export { UnresolvedSchema } from './unresolved-schema';
+export { ConditionalTypeSchema } from './conditional-type';
 export * from './docs';

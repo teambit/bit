@@ -164,7 +164,7 @@ function VersionMenu({
         {localVersion && (
           <MenuLinkItem
             href={'?'}
-            isActive={() => currentVersion === LOCAL_VERSION}
+            active={currentVersion === LOCAL_VERSION}
             className={classNames(styles.versionRow, styles.localVersion)}
           >
             <div className={styles.version}>

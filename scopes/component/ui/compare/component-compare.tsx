@@ -2,7 +2,7 @@ import { ComponentContext, TopBarNav, useComponent } from '@teambit/component';
 import { ComponentCompareNav, ComponentCompareNavSlot } from '@teambit/component-compare';
 import { RouteSlot, SlotRouter } from '@teambit/ui-foundation.ui.react-router.slot-router';
 import flatten from 'lodash.flatten';
-import { useLocation } from '@teambit/base-ui.routing.routing-provider';
+import { useLocation } from '@teambit/base-react.navigation.link';
 import { LegacyComponentLog } from '@teambit/legacy-component-log';
 import { RoundLoader } from '@teambit/design.ui.round-loader';
 import React, { HTMLAttributes, useContext, useMemo } from 'react';
@@ -19,31 +19,36 @@ export type ComponentCompareProps = {
   host: string;
 } & HTMLAttributes<HTMLDivElement>;
 
+const findPrevVersionFromCurrent = (compareVersion) => (_, index: number, logs: LegacyComponentLog[]) => {
+  if (index === 0) return false;
+  if (logs.length === 1) return true;
+
+  const prevIndex = index - 1;
+
+  return logs[prevIndex].tag === compareVersion || logs[prevIndex].hash === compareVersion;
+};
+
+const groupByVersion = (accum: Map<string, LegacyComponentLog>, current: LegacyComponentLog) => {
+  if (!accum.has(current.tag || current.hash)) {
+    accum.set(current.tag || current.hash, current);
+  }
+  return accum;
+};
+
 export function ComponentCompare({ navSlot, host, routeSlot }: ComponentCompareProps) {
   const baseVersion = useCompareQueryParam('baseVersion');
   const component = useContext(ComponentContext);
   const location = useLocation();
 
   const isWorkspace = host === 'teambit.workspace/workspace';
-
   const allVersionInfo = component.logs?.slice().reverse() || [];
   const isNew = allVersionInfo.length === 0;
   const compareVersion =
-    isWorkspace && !isNew && !location.search.includes('version') ? 'workspace' : component.id.version;
+    isWorkspace && !isNew && !location?.search.includes('version') ? 'workspace' : component.id.version;
   const compareIsLocalChanges = compareVersion === 'workspace';
 
   const lastVersionInfo = useMemo(() => {
-    const findPrevVersionFromCurrent = (_, index: number, logs: LegacyComponentLog[]) => {
-      if (index === 0) return false;
-      if (logs.length === 1) return true;
-
-      const prevIndex = index - 1;
-
-      return logs[prevIndex].tag === compareVersion || logs[prevIndex].hash === compareVersion;
-    };
-
-    const prevVersionInfo = allVersionInfo.find(findPrevVersionFromCurrent);
-
+    const prevVersionInfo = allVersionInfo.find(findPrevVersionFromCurrent(compareVersion));
     return prevVersionInfo;
   }, [component.logs]);
 
@@ -57,15 +62,24 @@ export function ComponentCompare({ navSlot, host, routeSlot }: ComponentCompareP
   const { component: base, loading } = useComponent(host, baseId.toString());
 
   const nothingToCompare = !loading && !compareIsLocalChanges && (component.logs?.length || []) < 2;
+  const showSubMenus = !loading && !nothingToCompare;
+
+  const logsByVersion = useMemo(
+    () => allVersionInfo.reduce(groupByVersion, new Map<string, LegacyComponentLog>()),
+    [compare.id, baseId]
+  );
 
   const componentCompareModel: ComponentCompareModel = {
-    compare,
-    base,
+    compare: {
+      model: compare,
+      hasLocalChanges: compareIsLocalChanges,
+    },
+    base: base && {
+      model: base,
+    },
     loading,
-    compareIsLocalChanges,
+    logsByVersion,
   };
-
-  const showSubMenus = !loading && !nothingToCompare;
 
   return (
     <ComponentCompareContext.Provider value={componentCompareModel}>
