@@ -31,10 +31,10 @@ const getLogsBetweenVersions: (
   const [startingVersion, endingVersion] = orderByDate(baseVersion, compareVersion);
   const { startingVersionIndex, endingVersionIndex } = allLogs.reduce((accum, next, index) => {
     if (next.hash === startingVersion?.hash) {
-      return { ...accum, startingVersionIndex: index };
+      accum = { ...accum, startingVersionIndex: index };
     }
     if (next.hash === endingVersion?.hash) {
-      return { ...accum, endingVersionIndex: index };
+      accum = { ...accum, endingVersionIndex: index };
     }
     return accum;
   }, {} as { startingVersionIndex: number; endingVersionIndex: number });
