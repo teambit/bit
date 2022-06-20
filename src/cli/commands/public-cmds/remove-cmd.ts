@@ -21,7 +21,7 @@ ${WILDCARD_HELP('remove')}`;
   alias = 'rm';
   opts = [
     ['r', 'remote', 'remove a component from a remote scope'],
-    ['t', 'track', 'keep tracking component (default = false)'],
+    ['t', 'track', 'keep tracking component in .bitmap (default = false), helps transform a tagged-component to new'],
     ['d', 'delete-files', 'DEPRECATED (this is now the default). delete local component files'],
     ['', 'keep-files', 'keep component files (just untrack the component)'],
     [
