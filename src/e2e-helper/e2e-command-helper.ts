@@ -616,9 +616,6 @@ export default class CommandHelper {
   new(templateName: string, flags = '', workspaceName = 'my-workspace', cwd = this.scopes.localPath) {
     return this.runCmd(`bit new ${templateName} ${workspaceName} ${flags}`, cwd);
   }
-  moveComponent(id: string, to: string) {
-    return this.runCmd(`bit move ${id} ${path.normalize(to)} --component`);
-  }
   link(flags?: string) {
     return this.runCmd(`bit link ${flags || ''}`);
   }

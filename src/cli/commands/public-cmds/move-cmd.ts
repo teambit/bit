@@ -16,7 +16,7 @@ export default class Move implements LegacyCommand {
     [
       'c',
       'component',
-      'move component files that are spread over multiple directories to one directory. synopsis: `move <component-id> <directory>`',
+      'LEGACY ONLY. move component files that are spread over multiple directories to one directory. synopsis: `move <component-id> <directory>`',
     ],
   ] as CommandOptions;
   loader = true;
