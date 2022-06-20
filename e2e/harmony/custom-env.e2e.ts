@@ -254,6 +254,25 @@ describe('custom env', function () {
       expect(() => helper.command.tagIncludeUnmodified()).not.to.throw();
     });
   });
+  describe('when the env is exported to a remote scope and is not exist locally', () => {
+    let envId: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      const envName = helper.env.setCustomEnv();
+      envId = `${helper.scopes.remote}/${envName}`;
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+
+      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.addRemoteScope();
+      helper.fixtures.populateComponents(1);
+    });
+    // previously, it errored "Cannot read property 'id' of undefined"
+    it('bit env-set should not throw any error', () => {
+      expect(() => helper.command.setEnv('comp1', envId));
+    });
+  });
 });
 
 function getEnvIdFromModel(compModel: any): string {

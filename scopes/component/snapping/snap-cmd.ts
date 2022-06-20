@@ -9,11 +9,18 @@ import { SnapResults } from '@teambit/legacy/dist/api/consumer/lib/snap';
 import { SnappingMain } from './snapping.main.runtime';
 
 export class SnapCmd implements Command {
-  name = 'snap [id]';
-  description: string;
+  name = 'snap [component-name]';
+  description = 'EXPERIMENTAL. create an immutable and exportable component snapshot (no release version)';
+  extendedDescription: string;
+  arguments = [
+    {
+      name: 'component_name',
+      description: 'component names or component ID (defaults to all components)',
+    },
+  ];
   alias = '';
   options = [
-    ['m', 'message <message>', 'log message describing the user changes'],
+    ['m', 'message <message>', 'log message describing the latest changes'],
     ['', 'unmodified', 'include unmodified components (by default, only new and modified components are snapped)'],
     ['', 'build', 'Harmony only. run the pipeline build and complete the tag'],
     ['', 'skip-tests', 'skip running component tests during snap process'],
@@ -39,8 +46,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
   migration = true;
 
   constructor(docsDomain: string, private snapping: SnappingMain, private logger: Logger) {
-    this.description = `record component changes.
-https://${docsDomain}/components/snaps
+    this.extendedDescription = `https://${docsDomain}/components/snaps
 ${WILDCARD_HELP('snap')}`;
   }
 

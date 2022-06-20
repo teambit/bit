@@ -6,7 +6,7 @@ export class GraphCompareSection implements Section {
   navigationLink = {
     href: 'dependencies',
     children: 'Dependencies',
-    order: 3,
+    order: 2,
   };
 
   route = {

@@ -285,6 +285,7 @@ export const CFG_CAPSULES_ROOT_BASE_DIR = 'capsules_root_base_dir';
 export const CFG_PROXY = 'proxy';
 export const CFG_HTTPS_PROXY = 'https_proxy';
 export const CFG_PROXY_CA = 'proxy.ca';
+export const CFG_PROXY_CA_FILE = 'proxy.cafile';
 export const CFG_PROXY_STRICT_SSL = 'proxy.strict_ssl';
 export const CFG_PROXY_CERT = 'proxy.cert';
 export const CFG_PROXY_KEY = 'proxy.key';
@@ -392,6 +393,8 @@ export const GLOBAL_LOGS: PathOsBased = path.join(CACHE_ROOT, 'logs');
 
 export const GLOBAL_SCOPE: PathOsBased = path.join(CACHE_ROOT, 'scope');
 
+export const GLOBALS_DEFAULT_CAPSULES = path.join(CACHE_ROOT, 'capsules');
+
 export const GLOBAL_CONFIG_FILE = 'config.json';
 
 export const GLOBAL_REMOTES = 'global-remotes.json';
@@ -477,10 +480,15 @@ export const WILDCARD_HELP = (command: string) =>
   `you can use a pattern for multiple ids, such as bit ${command} "utils/*". (wrap the pattern with quotes to avoid collision with shell commands)`;
 
 export const PATTERN_HELP = (command: string) =>
-  `you can use a \`<pattern>\` for multiple component ids, such as \`bit ${command} "org.scope/utils/**"\`. use comma to separate patterns and "!" to exclude. e.g. "ui/**, !ui/button"
+  `you can use a \`<pattern>\` for multiple component ids, such as \`bit ${command} "org.scope/utils/**"\`.
+use comma to separate patterns and "!" to exclude. e.g. "ui/**, !ui/button"
 always wrap the pattern with quotes to avoid collision with shell commands.
-to validate the pattern before running this command, run \`bit pattern <pattern>\`.
+use \`bit pattern --help\` to understand patterns better and \`bit pattern <pattern>\` to validate the pattern.
 `;
+
+export const COMPONENT_PATTERN_HELP = `component name, component id, or component pattern. use component pattern to select multiple components.
+use comma to separate patterns and "!" to exclude. e.g. "ui/**, !ui/button"
+wrap the pattern with quotes`;
 
 export const CURRENT_UPSTREAM = 'current';
 

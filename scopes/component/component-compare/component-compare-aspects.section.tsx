@@ -8,7 +8,7 @@ export class AspectsCompareSection implements Section {
   navigationLink = {
     href: 'aspects',
     children: 'Aspects',
-    order: 5,
+    order: 6,
   };
 
   route = {

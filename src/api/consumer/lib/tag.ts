@@ -25,14 +25,14 @@ export type BasicTagParams = {
   persist: boolean;
   disableTagAndSnapPipelines: boolean;
   forceDeploy: boolean;
-  preRelease?: string;
+  preReleaseId?: string;
   editor?: string;
   unmodified?: boolean;
 };
 
 export type TagParams = {
   exactVersion: string | undefined;
-  releaseType: semver.ReleaseType;
+  releaseType?: semver.ReleaseType;
   ignoreIssues?: string;
   ignoreNewestVersion: boolean;
   ids: string[];

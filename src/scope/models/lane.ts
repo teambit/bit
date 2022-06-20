@@ -2,7 +2,7 @@ import { v4 } from 'uuid';
 import { isHash } from '@teambit/component-version';
 import { LaneId, DEFAULT_LANE, LANE_REMOTE_DELIMITER } from '@teambit/lane-id';
 import { Scope } from '..';
-import { BitId } from '../../bit-id';
+import { BitId, BitIds } from '../../bit-id';
 import { CFG_USER_EMAIL_KEY, CFG_USER_NAME_KEY, PREVIOUS_DEFAULT_LANE } from '../../constants';
 import ValidationError from '../../error/validation-error';
 import logger from '../../logger/logger';
@@ -181,8 +181,8 @@ export default class Lane extends BitObject {
     );
     return { merged, unmerged };
   }
-  toBitIds(): BitId[] {
-    return this.components.map((c) => c.id.changeVersion(c.head.toString()));
+  toBitIds(): BitIds {
+    return BitIds.fromArray(this.components.map((c) => c.id.changeVersion(c.head.toString())));
   }
   toLaneId() {
     return new LaneId({ scope: this.scope, name: this.name });

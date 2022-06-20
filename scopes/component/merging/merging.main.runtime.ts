@@ -39,6 +39,7 @@ import checkoutVersion, { applyModifiedVersion } from '@teambit/legacy/dist/cons
 import threeWayMerge, {
   MergeResultsThreeWay,
 } from '@teambit/legacy/dist/consumer/versions-ops/merge-version/three-way-merge';
+import { DivergeData } from '@teambit/legacy/dist/scope/component-ops/diverge-data';
 import { MergeCmd } from './merge-cmd';
 import { MergingAspect } from './merging.aspect';
 
@@ -49,6 +50,7 @@ export type ComponentStatus = {
   failureMessage?: string;
   unchangedLegitimately?: boolean; // failed to merge but for a legitimate reason, such as, up-to-date
   mergeResults?: MergeResultsThreeWay | null;
+  divergeData?: DivergeData;
 };
 
 export class MergingMain {
@@ -260,6 +262,7 @@ export class MergingMain {
           componentFromModel: componentOnLane,
           id,
           mergeResults: null,
+          divergeData,
         };
       }
       // we know that localHead and remoteHead are set, so if none of them is ahead they must be equal
@@ -277,7 +280,7 @@ export class MergingMain {
       currentLabel: `${currentlyUsedVersion} (local)`,
       baseComponent,
     });
-    return { componentFromFS: component, id, mergeResults };
+    return { componentFromFS: component, id, mergeResults, divergeData };
   }
 
   private async applyVersion({

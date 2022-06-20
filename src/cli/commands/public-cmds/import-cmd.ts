@@ -56,8 +56,8 @@ ${WILDCARD_HELP('import')}`;
     ['', 'dependents', 'EXPERIMENTAL. import component dependents to allow auto-tag updating them upon tag'],
     [
       '',
-      'skip-lane',
-      'EXPERIMENTAL. when checked out to a lane, do not import the component into the lane, save it on main',
+      'save-in-lane',
+      'EXPERIMENTAL. when checked out to a lane and the component is not on the remote-lane, save it in the lane (default to save on main)',
     ],
     [
       '',
@@ -86,7 +86,7 @@ ${WILDCARD_HELP('import')}`;
       skipNpmInstall = false,
       ignorePackageJson = false,
       merge,
-      skipLane = false,
+      saveInLane = false,
       dependencies = false,
       dependents = false,
       allHistory = false,
@@ -105,7 +105,7 @@ ${WILDCARD_HELP('import')}`;
       skipNpmInstall?: boolean;
       ignorePackageJson?: boolean;
       merge?: MergeStrategy;
-      skipLane?: boolean;
+      saveInLane?: boolean;
       dependencies?: boolean;
       dependents?: boolean;
       allHistory?: boolean;
@@ -147,7 +147,7 @@ ${WILDCARD_HELP('import')}`;
       writeConfig: !!conf,
       installNpmPackages: !skipNpmInstall,
       writePackageJson: !ignorePackageJson,
-      skipLane,
+      saveInLane,
       importDependenciesDirectly: dependencies,
       importDependents: dependents,
       allHistory,

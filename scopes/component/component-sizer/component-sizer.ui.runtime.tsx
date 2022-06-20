@@ -1,6 +1,6 @@
 import React from 'react';
 import { UIRuntime } from '@teambit/ui';
-import type { ComponentDescriptor } from '@teambit/component-descriptor';
+import { ComponentModel } from '@teambit/component';
 import { DocsAspect, DocsUI } from '@teambit/docs';
 import { ComponentSize } from '@teambit/component.ui.component-size';
 import { ComponentSizerAspect } from './component-sizer.aspect';
@@ -15,8 +15,8 @@ export class SizerUIRuntime {
 
   static async provider([docs]: [DocsUI]) {
     docs.registerTitleBadge({
-      component: function badge({ componentDescriptor }: { componentDescriptor: ComponentDescriptor }) {
-        return <ComponentSize componentDescriptor={componentDescriptor} />;
+      component: function badge({ legacyComponentModel }: { legacyComponentModel: ComponentModel }) {
+        return <ComponentSize legacyComponentModel={legacyComponentModel} />;
       },
       weight: 30,
     });

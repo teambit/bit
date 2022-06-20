@@ -38,14 +38,15 @@ export function ComponentCompareVersionPicker({ className }: ComponentCompareVer
     ).map((tag) => ({ ...tag, version: tag.tag as string }));
   }, [component?.logs]);
 
-  const compareVersion = componentCompare?.compareIsLocalChanges ? 'workspace' : componentCompare?.compare.version;
+  const compareVersion = componentCompare?.compare.hasLocalChanges ? 'workspace' : componentCompare?.compare.model.version;
 
-  const baseVersion = componentCompare?.base?.version;
+  const baseVersion = componentCompare?.base?.model.version;
 
-  const key = `base-compare-version-dropdown-${componentCompare?.compare.id.toString()}`;
+  const key = `base-compare-version-dropdown-${componentCompare?.compare.model.id.toString()}`;
 
   return (
     <div className={styles.componentCompareVersionPicker}>
+      <div className={classNames(styles.titleText, styles.rightPad)}>Comparing</div>
       <VersionDropdown
         key={key}
         className={classNames(styles.componentCompareVersionContainer, styles.left, className)}
@@ -59,11 +60,10 @@ export function ComponentCompareVersionPicker({ className }: ComponentCompareVer
         overrideVersionHref={(_baseVersion) => {
           return useUpdatedUrlFromQuery({ baseVersion: _baseVersion });
         }}
+        disabled={snaps.concat(tags).length < 2}
         showVersionDetails={true}
       />
-      <div className={styles.arrowContainer}>
-        <img src="https://static.bit.dev/bit-icons/arrow-left.svg" />
-      </div>
+      <div className={styles.titleText}>with</div>
       <VersionDropdown
         className={classNames(styles.componentCompareVersionContainer, styles.right)}
         dropdownClassName={styles.componentCompareDropdown}
@@ -74,7 +74,6 @@ export function ComponentCompareVersionPicker({ className }: ComponentCompareVer
         disabled={true}
         loading={componentCompare?.loading}
         currentVersion={compareVersion as string}
-        showVersionDetails={true}
       />
     </div>
   );

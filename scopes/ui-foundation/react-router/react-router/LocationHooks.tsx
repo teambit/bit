@@ -3,7 +3,8 @@ import { useLocation, useNavigate, NavigateFunction, useNavigationType } from 'r
 import { LocationListener } from './react-router.ui.runtime';
 
 export function LocationHooks({
-  onLocationChange, onNavigatorChange,
+  onLocationChange,
+  onNavigatorChange,
 }: {
   onLocationChange: LocationListener;
   onNavigatorChange: (nav: NavigateFunction) => void;

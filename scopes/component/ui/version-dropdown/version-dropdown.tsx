@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, ReactNode } from 'react';
 import { MenuLinkItem } from '@teambit/design.ui.surfaces.menu.link-item';
 import { Dropdown } from '@teambit/evangelist.surfaces.dropdown';
 import { Tab } from '@teambit/ui-foundation.ui.use-box.tab';
@@ -11,7 +11,7 @@ import classNames from 'classnames';
 import styles from './version-dropdown.module.scss';
 import { VersionInfo } from './version-info';
 import { LaneInfo } from './lane-info';
-import { DetailedVersion, SimpleVersion } from './version-dropdown-placeholder';
+import { SimpleVersion } from './version-dropdown-placeholder';
 
 export const LOCAL_VERSION = 'workspace';
 
@@ -32,6 +32,7 @@ export type VersionDropdownProps = {
   menuClassName?: string;
   showVersionDetails?: boolean;
   disabled?: boolean;
+  placeholderComponent?: ReactNode;
 } & React.HTMLAttributes<HTMLDivElement>;
 
 export function VersionDropdown({
@@ -50,20 +51,7 @@ export function VersionDropdown({
   menuClassName,
   showVersionDetails,
   disabled,
-  ...rest
-}: VersionDropdownProps) {
-  const [key, setKey] = useState(0);
-
-  const singleVersion = (snaps || []).concat(tags).length < 2 && !localVersion;
-  const placeholder = (showVersionDetails && (
-    <DetailedVersion
-      disabled={disabled}
-      snaps={snaps}
-      tags={tags}
-      className={placeholderClassName}
-      currentVersion={currentVersion}
-    />
-  )) || (
+  placeholderComponent = (
     <SimpleVersion
       disabled={disabled}
       snaps={snaps}
@@ -71,9 +59,15 @@ export function VersionDropdown({
       className={placeholderClassName}
       currentVersion={currentVersion}
     />
-  );
+  ),
+  ...rest
+}: VersionDropdownProps) {
+  const [key, setKey] = useState(0);
+
+  const singleVersion = (snaps || []).concat(tags).length < 2 && !localVersion;
+
   if (disabled || (singleVersion && !loading)) {
-    return <div className={classNames(styles.noVersions, className)}>{placeholder}</div>;
+    return <div className={classNames(styles.noVersions, className)}>{placeholderComponent}</div>;
   }
 
   return (
@@ -89,7 +83,7 @@ export function VersionDropdown({
             {children}
           </div>
         )}
-        placeholder={placeholder}
+        placeholder={placeholderComponent}
       >
         {loading && <LineSkeleton className={styles.loading} count={6} />}
         {loading || (
@@ -153,7 +147,7 @@ function VersionMenu({
     if (currentLane) return tabs.findIndex((tab) => tab.name === 'LANE');
     if ((snaps || []).some((snap) => snap.version === currentVersion))
       return tabs.findIndex((tab) => tab.name === 'SNAP');
-    return tabs.findIndex((tab) => tab.name === 'TAG');
+    return 0;
   };
 
   const [activeTabIndex, setActiveTab] = useState<number>(getActiveTabIndex());
@@ -170,7 +164,7 @@ function VersionMenu({
         {localVersion && (
           <MenuLinkItem
             href={'?'}
-            isActive={() => currentVersion === LOCAL_VERSION}
+            active={currentVersion === LOCAL_VERSION}
             className={classNames(styles.versionRow, styles.localVersion)}
           >
             <div className={styles.version}>

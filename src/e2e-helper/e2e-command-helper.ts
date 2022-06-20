@@ -295,6 +295,10 @@ export default class CommandHelper {
     const results = this.runCmd(`bit lane list ${options} --json`);
     return JSON.parse(results);
   }
+  expectCurrentLaneToBe(laneName: string) {
+    const lanes = this.listLanesParsed();
+    expect(lanes.currentLane).to.equal(laneName);
+  }
   listRemoteLanesParsed(options = '') {
     const results = this.runCmd(`bit lane list --remote ${this.scopes.remote} ${options} --json`);
     return JSON.parse(results);
@@ -587,6 +591,10 @@ export default class CommandHelper {
   }
   log(id: string, flags = '') {
     return this.runCmd(`bit log ${id} ${flags}`);
+  }
+  logParsed(id: string, flags = '') {
+    const log = this.runCmd(`bit log ${id} ${flags} --json`);
+    return JSON.parse(log);
   }
   move(from: string, to: string) {
     return this.runCmd(`bit move ${path.normalize(from)} ${path.normalize(to)}`);

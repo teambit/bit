@@ -19,4 +19,11 @@ export abstract class SchemaNode {
   }
 }
 
-export type Location = { file: string; line: number; character: number };
+export type Location = {
+  /**
+   * file-path relative to the component root-dir. normalized to Linux.
+   */
+  filePath: string;
+  line: number;
+  character: number;
+};

@@ -2,8 +2,12 @@
 $panelBg: #fafafa;
 
 .componentCompareCodeContainer {
+  /**
+  * TODO: Review this
+  * adjust for nav
+  */
+  min-height: calc(100% - 56px);
   display: flex;
-  height: 100%;
   width: 100%;
 }
 
@@ -27,7 +31,7 @@ $panelBg: #fafafa;
   position: relative;
 
   > :first-child {
-    z-index: $nav-z-index + 1;
+    z-index: $pane-splitter-zIndex;
     position: absolute;
   }
 }

@@ -444,12 +444,12 @@ export default class Component extends BitObject {
     releaseType: semver.ReleaseType = DEFAULT_BIT_RELEASE_TYPE,
     exactVersion?: string | null,
     incrementBy?: number,
-    preRelease?: string
+    preReleaseId?: string
   ): string {
     if (exactVersion && this.versions[exactVersion]) {
       throw new VersionAlreadyExists(exactVersion, this.id());
     }
-    return exactVersion || this.version(releaseType, incrementBy, preRelease);
+    return exactVersion || this.version(releaseType, incrementBy, preReleaseId);
   }
 
   isEqual(component: Component, considerOrphanedVersions = true): boolean {
@@ -531,14 +531,15 @@ export default class Component extends BitObject {
     return versionToAdd;
   }
 
-  version(releaseType: semver.ReleaseType = DEFAULT_BIT_RELEASE_TYPE, incrementBy = 1, preRelease?: string): string {
-    if (preRelease) releaseType = 'prerelease';
+  version(releaseType: semver.ReleaseType = DEFAULT_BIT_RELEASE_TYPE, incrementBy = 1, preReleaseId?: string): string {
+    // if (preRelease) releaseType = 'prerelease';
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const increment = (ver: string) => semver.inc(ver, releaseType, undefined, preRelease)!;
+    const increment = (ver: string) => semver.inc(ver, releaseType, undefined, preReleaseId)!;
 
     const latest = this.latestVersion();
     if (!latest) {
-      return preRelease ? increment(DEFAULT_BIT_VERSION) : DEFAULT_BIT_VERSION;
+      const isPreReleaseLike = ['prerelease', 'premajor', 'preminor', 'prepatch'].includes(releaseType);
+      return isPreReleaseLike ? increment(DEFAULT_BIT_VERSION) : DEFAULT_BIT_VERSION;
     }
     let result = increment(latest);
     if (incrementBy === 1) return result;
@@ -702,8 +703,9 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     if (versionNum === VERSION_ZERO) {
       throw new Error(`the component ${this.id()} has no versions and the head is empty.
-this is probably a component from another lane which should not be loaded in this lane.
-make sure to call "getAllIdsAvailableOnLane" and not "getAllBitIdsFromAllLanes"`);
+this is probably a component from another lane which should not be loaded in this lane (or main).
+if this component is on a lane, make sure to ask for it with a version.
+if that's not the case, make sure to call "getAllIdsAvailableOnLane" and not "getAllBitIdsFromAllLanes"`);
     }
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     if (isTag(versionNum) && !this.hasTagIncludeOrphaned(versionNum!)) {
