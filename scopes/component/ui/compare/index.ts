@@ -9,3 +9,4 @@ export {
 } from './use-component-compare-query';
 export { ComponentCompareVersionPicker, ComponentCompareVersionPickerProps } from './version-picker';
 export { CompareSplitLayoutPreset } from './layouts/compare-split-layout-preset/compare-split-layout-preset';
+export { ComponentCompareChangelog } from './changelog';

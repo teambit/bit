@@ -341,7 +341,7 @@ export class LaneMergeCmd implements Command {
 
 export class LaneRemoveCmd implements Command {
   name = 'remove <lanes...>';
-  arguments: [{ name: 'lanes...'; description: 'A list of lane names, separated by spaces' }];
+  arguments = [{ name: 'lanes...', description: 'A list of lane names, separated by spaces' }];
   description = `remove lanes`;
   alias = '';
   options = [
@@ -386,7 +386,7 @@ export class LaneRemoveCmd implements Command {
 export class LaneImportCmd implements Command {
   name = 'import <lane>';
   description = `import a remote lane to your workspace`;
-  arguments: [{ name: 'lane'; description: 'the remote lane name' }];
+  arguments = [{ name: 'lane', description: 'the remote lane name' }];
   alias = '';
   options = [
     ['', 'skip-dependency-installation', 'do not install packages of the imported components'],
@@ -459,9 +459,9 @@ export class LaneRemoveReadmeCmd implements Command {
 export class LaneAddReadmeCmd implements Command {
   name = 'add-readme <component-name> [lane-name]';
   description = 'EXPERIMENTAL. adds a readme component to a lane';
-  arguments: [
-    { name: 'component-id'; description: "the component name or id of the component to use as the lane's readme" },
-    { name: 'lane-name'; description: 'the lane to attach the readme to (defaults to the current lane)' }
+  arguments = [
+    { name: 'component-id', description: "the component name or id of the component to use as the lane's readme" },
+    { name: 'lane-name', description: 'the lane to attach the readme to (defaults to the current lane)' },
   ];
   options = [] as CommandOptions;
   loader = true;

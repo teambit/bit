@@ -44,8 +44,8 @@ export function DependenciesCompare() {
   const graphRef = useRef<OnLoadParams>();
   const componentCompare = useComponentCompare();
 
-  const baseId = componentCompare?.base?.id;
-  const compareId = componentCompare?.compare?.id;
+  const baseId = componentCompare?.base?.model.id;
+  const compareId = componentCompare?.compare?.model.id;
 
   const [filter, setFilter] = useState<GraphFilter>('runtimeOnly');
   const isFiltered = filter === 'runtimeOnly';
