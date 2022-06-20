@@ -1,4 +1,4 @@
-import React, { HTMLAttributes, useMemo, useContext, useCallback, useEffect, useRef } from 'react';
+import React, { HTMLAttributes, useMemo, useContext, useEffect, useRef } from 'react';
 import { useComponentCompare } from '@teambit/component.ui.compare';
 import { LegacyComponentLog } from '@teambit/legacy-component-log';
 import { VersionBlock } from '@teambit/component.ui.version-block';
