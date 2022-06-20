@@ -190,6 +190,7 @@ export async function install(
     workspacePackages,
     preferFrozenLockfile: true,
     pruneLockfileImporters: true,
+    modulesCacheMaxAge: 0,
     registries: registriesMap,
     rawConfig: authConfig,
     ...options,
@@ -208,7 +209,7 @@ export async function install(
   try {
     await mutateModules(packagesToBuild, opts);
   } catch (err: any) {
-    throw pnpmErrorToBitError(err)
+    throw pnpmErrorToBitError(err);
   } finally {
     stopReporting();
   }
