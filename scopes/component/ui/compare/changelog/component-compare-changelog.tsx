@@ -52,9 +52,10 @@ export function ComponentCompareChangelog({ className }: ComponentCompareChangel
   const baseVersionInfo = base?.model.version ? logsByVersion?.get(base?.model.version) : undefined;
   const compareVersionInfo = compare?.model.version ? logsByVersion?.get(compare?.model.version) : undefined;
 
-  const filterLogs = useCallback(getLogsBetweenVersions, [baseVersionInfo, compareVersionInfo]);
-
-  const logs = filterLogs(allLogs, baseVersionInfo, compareVersionInfo);
+  const logs = useMemo(
+    () => getLogsBetweenVersions(allLogs, baseVersionInfo, compareVersionInfo),
+    [baseVersionInfo, compareVersionInfo]
+  );
 
   useEffect(
     () =>
