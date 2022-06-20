@@ -6,8 +6,8 @@ import { useFileContent } from '@teambit/code.ui.queries.get-file-content';
 export function Widget({ node }: WidgetProps<any>) {
   const fileName = node.id;
   const componentCompareContext = useComponentCompare();
-  const base = componentCompareContext?.base;
-  const compare = componentCompareContext?.compare;
+  const base = componentCompareContext?.base?.model;
+  const compare = componentCompareContext?.compare?.model;
   /**
    * Note: This is temporary for the first release.
    * TBD move this to the Component Compare GQL API
