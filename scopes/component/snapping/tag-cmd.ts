@@ -16,14 +16,14 @@ import { SnappingMain } from './snapping.main.runtime';
 const RELEASE_TYPES = ['major', 'premajor', 'minor', 'preminor', 'patch', 'prepatch', 'prerelease'];
 
 export class TagCmd implements Command {
-  name = 'tag [patterns...]';
+  name = 'tag [component-patterns...]';
   group = 'development';
   description = 'create an immutable and exportable component snapshot, tagged with a release version.';
   arguments = [
     {
-      name: 'patterns...',
+      name: 'component-patterns...',
       description:
-        'a list of patterns (separated by space). run "bit pattern --help" to get more data about patterns. By default, all modified are tagged.',
+        'a list of component names, IDs or patterns (separated by space). run "bit pattern --help" to get more data about patterns. By default, all modified are tagged.',
     },
   ];
   extendedDescription: string;
