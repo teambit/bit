@@ -31,6 +31,7 @@ import { Logger } from '@teambit/logger';
 import toNerfDart from 'nerf-dart';
 import { promisify } from 'util';
 import pkgsGraph from 'pkgs-graph';
+import { pnpmErrorToBitError } from './pnpm-error-to-bit-error';
 import { readConfig } from './read-config';
 
 const link = promisify(fs.link);
@@ -240,6 +241,8 @@ export async function install(
     installsRunning[rootManifest.rootDir] = mutateModules(packagesToBuild, opts)
     await installsRunning[rootManifest.rootDir]
     delete installsRunning[rootManifest.rootDir]
+  } catch (err: any) {
+    throw pnpmErrorToBitError(err)
   } finally {
     stopReporting();
   }
@@ -461,7 +464,7 @@ export async function resolveRemoteVersion(
     };
   } catch (e: any) {
     if (!e.message?.includes('is not a valid string')) {
-      throw e;
+      throw pnpmErrorToBitError(e);
     }
     // The provided package is probably a git url or path to a folder
     const wantedDep: WantedDependency = {
