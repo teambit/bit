@@ -7,7 +7,7 @@ import { CommandOptions, LegacyCommand } from '../../legacy-command';
 
 export default class Login implements LegacyCommand {
   name = 'login';
-  description = 'log the CLI into Bit Cloud';
+  description = 'log in to Bit cloud';
   group: Group = 'general';
   alias = '';
   skipWorkspace = true;
@@ -18,7 +18,7 @@ export default class Login implements LegacyCommand {
     ['', 'skip-registry-config', `don't configure ${BASE_CLOUD_DOMAIN} registry`],
     [
       '',
-      'machine-name <string>',
+      'machine-name <name>',
       'specify machine-name to pair with the token (useful for CI to avoid accidentally revoke the token)',
     ],
   ] as CommandOptions;
