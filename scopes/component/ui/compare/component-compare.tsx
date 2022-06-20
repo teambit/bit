@@ -2,7 +2,7 @@ import { ComponentContext, TopBarNav, useComponent } from '@teambit/component';
 import { ComponentCompareNav, ComponentCompareNavSlot } from '@teambit/component-compare';
 import { RouteSlot, SlotRouter } from '@teambit/ui-foundation.ui.react-router.slot-router';
 import flatten from 'lodash.flatten';
-import { useLocation } from '@teambit/base-ui.routing.routing-provider';
+import { useLocation } from '@teambit/base-react.navigation.link';
 import { LegacyComponentLog } from '@teambit/legacy-component-log';
 import { RoundLoader } from '@teambit/design.ui.round-loader';
 import React, { HTMLAttributes, useContext, useMemo } from 'react';
@@ -44,7 +44,7 @@ export function ComponentCompare({ navSlot, host, routeSlot }: ComponentCompareP
   const allVersionInfo = component.logs?.slice().reverse() || [];
   const isNew = allVersionInfo.length === 0;
   const compareVersion =
-    isWorkspace && !isNew && !location.search.includes('version') ? 'workspace' : component.id.version;
+    isWorkspace && !isNew && !location?.search.includes('version') ? 'workspace' : component.id.version;
   const compareIsLocalChanges = compareVersion === 'workspace';
 
   const lastVersionInfo = useMemo(() => {

@@ -5,6 +5,7 @@ import { SchemaTransformer } from '../schema-transformer';
 import { SchemaExtractorContext } from '../schema-extractor-context';
 import { ExportIdentifier } from '../export-identifier';
 import { typeElementToSchema } from './utils/type-element-to-schema';
+import { jsDocToDocSchema } from './utils/jsdoc-to-doc-schema';
 
 export class InterfaceDeclarationTransformer implements SchemaTransformer {
   predicate(node: Node) {
@@ -17,6 +18,7 @@ export class InterfaceDeclarationTransformer implements SchemaTransformer {
 
   async transform(interfaceDec: InterfaceDeclaration, context: SchemaExtractorContext) {
     const members = await pMapSeries(interfaceDec.members, (member) => typeElementToSchema(member, context));
-    return new InterfaceSchema(context.getLocation(interfaceDec), interfaceDec.name.getText(), members);
+    const doc = await jsDocToDocSchema(interfaceDec, context);
+    return new InterfaceSchema(context.getLocation(interfaceDec), interfaceDec.name.getText(), members, doc);
   }
 }

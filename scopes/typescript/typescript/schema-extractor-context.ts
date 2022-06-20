@@ -295,7 +295,7 @@ export class SchemaExtractorContext {
       }
       const info = await this.getQuickInfo(node);
       const type = parseTypeFromQuickInfo(info);
-      return new InferenceTypeSchema(location, type);
+      return new InferenceTypeSchema(location, type, typeStr);
     };
     if (!definition) {
       return unknownExactType();

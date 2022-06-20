@@ -27,6 +27,7 @@ import { ProjectManifest } from '@pnpm/types';
 import { Logger } from '@teambit/logger';
 import toNerfDart from 'nerf-dart';
 import pkgsGraph from 'pkgs-graph';
+import { pnpmErrorToBitError } from './pnpm-error-to-bit-error';
 import { readConfig } from './read-config';
 
 type RegistriesMap = {
@@ -206,6 +207,8 @@ export async function install(
   });
   try {
     await mutateModules(packagesToBuild, opts);
+  } catch (err: any) {
+    throw pnpmErrorToBitError(err)
   } finally {
     stopReporting();
   }
@@ -282,7 +285,7 @@ export async function resolveRemoteVersion(
     };
   } catch (e: any) {
     if (!e.message?.includes('is not a valid string')) {
-      throw e;
+      throw pnpmErrorToBitError(e);
     }
     // The provided package is probably a git url or path to a folder
     const wantedDep: WantedDependency = {

@@ -73,7 +73,6 @@
         "@teambit/base-ui.loaders.loader-ribbon": "1.0.0",
         "@teambit/base-ui.loaders.skeleton": "1.0.1",
         "@teambit/base-ui.routing.native-nav-link": "1.0.0",
-        "@teambit/base-ui.routing.routing-provider": "1.0.0",
         "@teambit/base-ui.styles.flex-center": "1.0.0",
         "@teambit/base-ui.surfaces.background": "1.0.1",
         "@teambit/base-ui.surfaces.card": "1.0.1",
@@ -116,7 +115,7 @@
         "@teambit/design.ui.input.toggle": "1.0.12",
         "@teambit/design.ui.separator": "0.0.354",
         "@teambit/design.ui.surfaces.menu.item": "0.0.354",
-        "@teambit/design.ui.surfaces.menu.link-item": "0.0.379",
+        "@teambit/design.ui.surfaces.menu.link-item": "1.0.0",
         "@teambit/design.ui.surfaces.menu.section": "0.0.347",
         "@teambit/docs.content.docs-overview": "1.95.9",
         "@teambit/documenter.code.react-playground": "4.0.1",
@@ -158,7 +157,7 @@
         "@teambit/evangelist.input.input": "1.0.2",
         "@teambit/evangelist.surfaces.dropdown": "1.0.2",
         "@teambit/evangelist.surfaces.tooltip": "1.0.1",
-        "@teambit/explorer.ui.command-bar": "1.0.2",
+        "@teambit/explorer.ui.command-bar": "1.2.0",
         "@teambit/graph.cleargraph": "0.0.1",
         "@teambit/harmony": "0.3.3",
         "@teambit/pkg.content.packages-overview": "1.95.9",
@@ -375,7 +374,7 @@
       "peerDependencies": {
         "@apollo/client": "^3.0.0",
         "@teambit/base-react.navigation.link": "2.0.27",
-        "@teambit/legacy": "1.0.284",
+        "@teambit/legacy": "1.0.286",
         "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
         "browserslist": "4.16.3",
         "core-js": "^3.10.0",
@@ -458,7 +457,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.284"
+            "@teambit/legacy": "1.0.286"
           }
         }
       },
@@ -723,7 +722,7 @@
           "peerDependencies": {
             "react": "^16.8.0 || ^17.0.0",
             "react-dom": "^16.8.0 || ^17.0.0",
-            "@teambit/legacy": "1.0.284"
+            "@teambit/legacy": "1.0.286"
           }
         }
       }
@@ -798,7 +797,7 @@
             "@teambit/base-react.navigation.link": "2.0.27",
             "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
             "@apollo/client": "3.3.6",
-            "@teambit/legacy": "1.0.284",
+            "@teambit/legacy": "1.0.286",
             "graphql": "14.7.0",
             "browserslist": "4.16.3",
             "reflect-metadata": "0.1.13",
@@ -932,7 +931,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.284"
+            "@teambit/legacy": "1.0.286"
           }
         }
       }

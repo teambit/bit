@@ -1,3 +1,8 @@
+/**
+ * LEGACY ONLY
+ * @see scopes/component/lister/list-template.ts for Harmony
+ */
+
 import c from 'chalk';
 import semver from 'semver';
 import Table from 'cli-table';

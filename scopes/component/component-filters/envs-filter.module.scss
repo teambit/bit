@@ -3,13 +3,12 @@
   > div {
     line-height: 16px;
     display: flex;
-    // otherwise when the dropdown is open it clashes with the content of the tree
-    z-index: $nav-z-index + 2;
   }
 
   .filterIcon {
     display: flex;
     padding: 8px;
+    border-radius: 8px;
 
     &:hover {
       background: var(--bit-bg-heavy, #f6f6f6);
@@ -38,6 +37,9 @@
 
 .envFilterDropdown {
   width: 100%;
+  // otherwise when the dropdown is open it clashes with the content of the tree
+  // (this is bizarre, the tree has no position absolute)
+  z-index: $nav-z-index;
 }
 
 .envDropdownItemContainer {
