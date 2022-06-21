@@ -47,7 +47,7 @@ export class ExportCmd implements Command {
     [
       '',
       'origin-directly',
-      'HARMONY ONLY. avoid export to the central hub, instead, export directly to the original scopes. not recommended!',
+      'EXPERIMENTAL. avoid export to the central hub, instead, export directly to the original scopes. not recommended!',
     ],
     [
       '',
