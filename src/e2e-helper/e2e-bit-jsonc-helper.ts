@@ -87,12 +87,20 @@ export default class BitJsoncHelper {
     this.addKeyValToWorkspace('defaultScope', scope);
   }
 
+  setComponentsDir(compDir: string) {
+    this.addKeyValToWorkspace('defaultDirectory', compDir);
+  }
+
   setPackageManager(packageManager = 'teambit.dependencies/yarn') {
     this.addKeyValToDependencyResolver('packageManager', packageManager);
   }
 
   addDefaultOwner(owner: string) {
     this.addKeyValToWorkspace('defaultOwner', owner);
+  }
+  corrupt() {
+    const bitJsoncPath = composePath(this.scopes.localPath);
+    fs.writeFileSync(bitJsoncPath, '"corrupted');
   }
   disablePreview() {
     this.addKeyVal('teambit.preview/preview', { disabled: true });

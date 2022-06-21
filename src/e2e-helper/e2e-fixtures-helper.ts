@@ -63,9 +63,20 @@ export default class FixtureHelper {
   addComponentUtilsIsType() {
     return this.command.addComponent('utils/is-type.js', { i: 'utils/is-type' });
   }
-
+  createComponentIsType() {
+    this.fs.createFile('is-type', 'is-type.js');
+  }
+  addComponentUtilsIsTypeAsDir() {
+    return this.command.addComponent('is-type', { i: 'utils/is-type' });
+  }
+  createComponentIsString(impl = fixtures.isStringHarmony) {
+    this.fs.createFile('is-string', 'is-string.js', impl);
+  }
   addComponentUtilsIsString() {
     return this.command.addComponent('utils/is-string.js', { i: 'utils/is-string' });
+  }
+  addComponentUtilsIsStringAsDir() {
+    return this.command.addComponent('is-string', { i: 'utils/is-string' });
   }
 
   tagComponentBarFoo() {
