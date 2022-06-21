@@ -15,4 +15,9 @@ export interface AppBuildContext extends BuildContext {
    * app Component object
    */
   appComponent: Component;
+
+  /**
+   * A path (relative to the capsule root) that contain artifacts that will be picked and store by default
+   */
+  artifactsDir: string;
 }
