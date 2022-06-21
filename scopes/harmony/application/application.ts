@@ -25,4 +25,9 @@ export interface Application {
    * application deployment. this is a build task.
    */
   deploy?: DeployFn;
+
+  /**
+   * Type of the application
+   */
+  applicationType?: string;
 }

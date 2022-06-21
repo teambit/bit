@@ -46,7 +46,7 @@ export class AppsBuildTask implements BuildTask {
         artifactsDir: this.getArtifactDirectory(),
       });
       const deployContext = await app.build(appDeployContext);
-      const defaultArtifacts: ArtifactDefinition[] = this.getDefaultArtifactDef();
+      const defaultArtifacts: ArtifactDefinition[] = this.getDefaultArtifactDef(app.applicationType || app.name);
       const artifacts = defaultArtifacts.concat(deployContext.artifacts || []);
 
       return {
@@ -87,10 +87,10 @@ export class AppsBuildTask implements BuildTask {
     return join(CAPSULE_ARTIFACTS_DIR, ARTIFACTS_DIR_NAME);
   }
 
-  private getDefaultArtifactDef(): ArtifactDefinition[] {
+  private getDefaultArtifactDef(nameSuffix: string): ArtifactDefinition[] {
     return [
       {
-        name: 'apps',
+        name: `app-build-${nameSuffix}`,
         globPatterns: ['**'],
         rootDir: this.getArtifactDirectory(),
       },
