@@ -116,59 +116,6 @@ describe('auto tagging functionality', function () {
         expect(result.trim()).to.equal('got is-type v2 and got is-string'); // notice the "v2"
       });
     });
-    describe('with dependents tests failing', () => {
-      let tagOutput;
-      before(() => {
-        helper.scopeHelper.setNewLocalAndRemoteScopes();
-        helper.env.importTester();
-        helper.npm.installNpmPackage('chai', '4.1.2');
-        helper.fs.createFile('utils', 'is-type.js', fixtures.isType);
-        helper.fixtures.addComponentUtilsIsType();
-        helper.fs.createFile('utils', 'is-string.js', fixtures.isString);
-        helper.fs.createFile('utils', 'is-string.spec.js', fixtures.isStringSpec(true));
-
-        helper.command.addComponent('utils/is-string.js', { t: 'utils/is-string.spec.js', i: 'utils/is-string' });
-        helper.command.tagAllComponents(); // tests are passing at this point
-        helper.command.exportAllComponents();
-
-        helper.scopeHelper.reInitLocalScope();
-        helper.scopeHelper.addRemoteScope();
-        helper.scopeHelper.addGlobalRemoteScope();
-        helper.command.importComponent('utils/is-string');
-        helper.command.importComponent('utils/is-type');
-
-        const isTypeFixtureChanged = "module.exports = function isType() { return 'got is-type!'; }"; // notice the addition of "!" which will break the the tests.
-        helper.fs.createFile(path.join('components', 'utils', 'is-type'), 'is-type.js', isTypeFixtureChanged); // modify is-type
-        const statusOutput = helper.command.runCmd('bit status');
-        expect(statusOutput).to.have.string('components pending to be tagged automatically');
-      });
-      describe('running all tests', () => {
-        let testResults;
-        before(() => {
-          testResults = helper.general.runWithTryCatch('bit test');
-        });
-        it('should test also the auto tag pending components', () => {
-          expect(testResults).to.have.string('utils/is-string');
-        });
-        it('should fail the tests because of the auto tag', () => {
-          expect(testResults).to.have.string('tests failed');
-        });
-      });
-      describe('tagging without --verbose flag', () => {
-        before(() => {
-          try {
-            tagOutput = helper.command.tagComponent('utils/is-type');
-          } catch (err: any) {
-            tagOutput = err.toString();
-          }
-        });
-        it('should not auto-tag the dependents', () => {
-          expect(tagOutput).to.have.string(
-            'component tests failed. please make sure all tests pass before tagging a new version or use the "--force" flag to force-tag components.\nto view test failures, please use the "--verbose" flag or use the "bit test" command\n'
-          );
-        });
-      });
-    });
   });
   describe('with dependencies of dependencies', () => {
     /**
