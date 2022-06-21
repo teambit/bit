@@ -1,11 +1,20 @@
+import { join } from 'path';
 import mapSeries from 'p-map-series';
-import { BuildTask, BuiltTaskResult, BuildContext, ComponentResult, ArtifactDefinition } from '@teambit/builder';
+import {
+  BuildTask,
+  BuiltTaskResult,
+  BuildContext,
+  ComponentResult,
+  ArtifactDefinition,
+  CAPSULE_ARTIFACTS_DIR,
+} from '@teambit/builder';
 import { ComponentID } from '@teambit/component';
 import { ApplicationAspect } from './application.aspect';
 import { ApplicationMain } from './application.main.runtime';
 import { AppBuildContext } from './app-build-context';
 
 export const BUILD_TASK = 'build_application';
+export const ARTIFACTS_DIR_NAME = 'apps';
 
 export type AppsResults = {
   componentResult: ComponentResult;
@@ -34,11 +43,14 @@ export class AppsBuildTask implements BuildTask {
         capsule,
         appComponent: component,
         name: app.name,
+        artifactsDir: this.getArtifactDirectory(),
       });
       const deployContext = await app.build(appDeployContext);
+      const defaultArtifacts: ArtifactDefinition[] = this.getDefaultArtifactDef();
+      const artifacts = defaultArtifacts.concat(deployContext.artifacts || []);
 
       return {
-        artifacts: deployContext.artifacts,
+        artifacts,
         componentResult: {
           component: capsule.component,
           errors: deployContext.errors,
@@ -69,5 +81,19 @@ export class AppsBuildTask implements BuildTask {
       artifacts,
       componentsResults: _componentsResults,
     };
+  }
+
+  private getArtifactDirectory() {
+    return join(CAPSULE_ARTIFACTS_DIR, ARTIFACTS_DIR_NAME);
+  }
+
+  private getDefaultArtifactDef(): ArtifactDefinition[] {
+    return [
+      {
+        name: 'apps',
+        globPatterns: ['**'],
+        rootDir: this.getArtifactDirectory(),
+      },
+    ];
   }
 }
