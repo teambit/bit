@@ -194,6 +194,7 @@ export default class Version extends BitObject {
     const filterFunction = (val, key) => {
       if (
         key === 'devDependencies' ||
+        key === 'extensionDependencies' ||
         key === 'devPackageDependencies' ||
         key === 'peerPackageDependencies' ||
         key === 'overrides' ||
