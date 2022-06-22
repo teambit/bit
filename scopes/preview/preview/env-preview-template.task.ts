@@ -9,8 +9,7 @@ import {
 import mapSeries from 'p-map-series';
 import { Component, ComponentMap } from '@teambit/component';
 import { AspectLoaderMain } from '@teambit/aspect-loader';
-import { Capsule } from '@teambit/isolator';
-import { Bundler, BundlerContext, BundlerEntryMap, BundlerHtmlConfig, BundlerResult, Target } from '@teambit/bundler';
+import { Bundler, BundlerContext, BundlerHtmlConfig, BundlerResult, Target } from '@teambit/bundler';
 import type { EnvDefinition, Environment, EnvsMain } from '@teambit/envs';
 import { join } from 'path';
 import { compact, flatten, isEmpty } from 'lodash';
@@ -20,6 +19,7 @@ import { existsSync, mkdirpSync } from 'fs-extra';
 import type { PreviewMain } from './preview.main.runtime';
 import { PreviewDefinition } from '.';
 import { html } from './webpack';
+import { generateTemplateEntries } from './webpack/chunks';
 
 export type ModuleExpose = {
   name: string;
@@ -138,10 +138,8 @@ export class EnvPreviewTemplateTask implements BuildTask {
   ): Promise<Target | undefined> {
     const env = envDef.env;
     const envPreviewConfig = this.preview.getEnvPreviewConfig(envDef.env);
-    const isSplitComponentBundle = envPreviewConfig.splitComponentBundle ?? false;
-    const peers = await this.dependencyResolver.getPeerDependenciesListFromEnv(env);
-    // console.log('envid22', env.__getDescriptor(), 'peers', peers)
 
+    const peers = await this.dependencyResolver.getPeerDependenciesListFromEnv(env);
     // const module = await this.getPreviewModule(envComponent);
     // const entries = Object.keys(module).map((key) => module.exposes[key]);
     const capsule = context.capsuleNetwork.graphCapsules.getCapsule(envComponent.id);
@@ -149,22 +147,23 @@ export class EnvPreviewTemplateTask implements BuildTask {
     // Passing here the env itself to make sure it's preview runtime will be part of the preview root file
     // that's needed to make sure the providers register there are running correctly
     const previewRoot = await this.preview.writePreviewRuntime(context, [envComponent.id.toString()]);
-    const previewModules = await this.getPreviewModules(envDef);
-    // const templatesFile = previewModules.map((template) => {
-    //   return this.preview.writeLink(template.name, ComponentMap.create([]), template.path, capsule.path);
-    // });
+    const entries = await this.generateEntries({
+      envDef,
+      splitComponentBundle: envPreviewConfig.splitComponentBundle,
+      workDir: capsule.path,
+      peers,
+      previewRoot,
+    });
+
     const outputPath = this.computeOutputPath(context, envComponent);
     if (!existsSync(outputPath)) mkdirpSync(outputPath);
-    const entries = this.getEntries(previewModules, capsule, previewRoot, isSplitComponentBundle, peers);
 
     return {
       peers,
       runtimeChunkName: 'runtime',
       html: htmlConfig,
       entries,
-      chunking: {
-        splitChunks: true,
-      },
+      chunking: { splitChunks: true },
       components: [envComponent],
       outputPath,
       /* It's a path to the root of the host component. */
@@ -193,11 +192,12 @@ export class EnvPreviewTemplateTask implements BuildTask {
     peersChunkName: string,
     options: { dev?: boolean }
   ): BundlerHtmlConfig {
-    const previewDeps = previewDef.include || [];
-    const chunks = [...previewDeps, previewDef.prefix, previewRootChunkName];
-    if (previewDef.includePeers) {
-      chunks.unshift(peersChunkName);
-    }
+    const chunks = compact([
+      previewDef.includePeers && peersChunkName,
+      previewRootChunkName,
+      ...(previewDef.include || []),
+      previewDef.prefix,
+    ]);
 
     const config = {
       title: 'Preview',
@@ -209,50 +209,27 @@ export class EnvPreviewTemplateTask implements BuildTask {
     return config;
   }
 
-  getEntries(
-    previewModules: ModuleExpose[],
-    capsule: Capsule,
-    previewRoot: string,
-    isSplitComponentBundle = false,
-    peers: string[] = []
-  ): BundlerEntryMap {
-    const previewRootEntry = {
-      filename: 'preview-root.[chunkhash].js',
-      import: previewRoot,
-    };
+  private async generateEntries({
+    previewRoot,
+    workDir,
+    peers,
+    envDef,
+    splitComponentBundle = false,
+  }: {
+    previewRoot: string;
+    workDir: string;
+    peers: string[];
+    envDef: EnvDefinition;
+    splitComponentBundle?: boolean;
+  }) {
+    const previewModules = await this.getPreviewModules(envDef);
+    const previewEntries = previewModules.map(({ name, path, ...rest }) => {
+      const linkFile = this.preview.writeLink(name, ComponentMap.create([]), path, workDir, splitComponentBundle);
 
-    const peersRootEntry = {
-      filename: 'peers.[chunkhash].js',
-      import: peers,
-    };
+      return { name, path, ...rest, entry: linkFile };
+    });
 
-    const entries = previewModules.reduce(
-      (acc, module) => {
-        const linkFile = this.preview.writeLink(
-          module.name,
-          ComponentMap.create([]),
-          module.path,
-          capsule.path,
-          isSplitComponentBundle
-        );
-        acc[module.name] = {
-          // filename: `${module.name}.[contenthash].js`,
-          filename: `${module.name}.[chunkhash].js`,
-          // filename: `${module.name}.js`,
-          import: linkFile,
-          // library: {
-          //   name: module.name,
-          //   type: 'umd',
-          // },
-        };
-        if (module.include) {
-          acc[module.name].dependOn = module.include;
-        }
-        return acc;
-      },
-      { [PREVIEW_ROOT_CHUNK_NAME]: previewRootEntry, [PEERS_CHUNK_NAME]: peersRootEntry }
-    );
-
+    const entries = generateTemplateEntries({ peers, previewRootPath: previewRoot, previewModules: previewEntries });
     return entries;
   }
 
@@ -280,7 +257,7 @@ export class EnvPreviewTemplateTask implements BuildTask {
     };
   }
 
-  async getPreviewModules(envDef: EnvDefinition): Promise<ModuleExpose[]> {
+  private async getPreviewModules(envDef: EnvDefinition): Promise<ModuleExpose[]> {
     const previewDefs = this.preview.getDefs();
 
     const modules = compact(
