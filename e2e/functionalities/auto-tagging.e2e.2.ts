@@ -155,7 +155,7 @@ describe('auto tagging functionality', function () {
       let tagOutput: string;
       before(() => {
         helper.scopeHelper.getClonedLocalScope(scopeBeforeTag);
-        tagOutput = helper.command.tagAllWithoutBuild(undefined, '2.0.0');
+        tagOutput = helper.command.tagAllWithoutBuild('--ver 2.0.0');
       });
       it('should auto tag all dependents', () => {
         expect(tagOutput).to.have.string(AUTO_TAGGED_MSG);
