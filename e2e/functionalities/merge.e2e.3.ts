@@ -9,7 +9,6 @@ describe('merge functionality', function () {
   let helper: Helper;
   before(() => {
     helper = new Helper();
-    helper.command.setFeatures('legacy-workspace-config');
   });
   after(() => {
     helper.scopeHelper.destroy();
@@ -23,7 +22,7 @@ describe('merge functionality', function () {
       helper.fixtures.tagComponentBarFoo();
 
       helper.fs.createFile('bar2', 'foo2.js');
-      helper.command.addComponent('bar2/foo2.js', { i: 'bar2/foo2' });
+      helper.command.addComponent('bar2', { i: 'bar2/foo2' });
       helper.command.tagWithoutBuild('bar2/foo2');
 
       helper.command.export();
@@ -33,13 +32,13 @@ describe('merge functionality', function () {
       helper.command.importComponent('bar/foo');
       helper.command.importComponent('bar2/foo2');
       const scopeWithV1 = helper.scopeHelper.cloneLocalScope();
-      helper.command.tagWithoutBuild('bar/foo', 'msg', '-f');
-      helper.command.tagWithoutBuild('bar2/foo2', 'msg', '-f');
+      helper.command.tagWithoutBuild('bar/foo', '--unmodified');
+      helper.command.tagWithoutBuild('bar2/foo2', '--unmodified');
       helper.command.export(); // v2 is exported
 
       helper.scopeHelper.getClonedLocalScope(scopeWithV1);
-      helper.command.tagWithoutBuild('bar/foo', 'msg', '-f');
-      helper.command.tagWithoutBuild('bar2/foo2', 'msg', '-f');
+      helper.command.tagWithoutBuild('bar/foo', '--unmodified');
+      helper.command.tagWithoutBuild('bar2/foo2', '--unmodified');
     });
     it('should throw MergeConflictOnRemote error when exporting the component', () => {
       const exportFunc = () => helper.command.export(); // v2 is exported again
