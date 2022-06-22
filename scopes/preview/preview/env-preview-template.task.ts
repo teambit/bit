@@ -160,7 +160,6 @@ export class EnvPreviewTemplateTask implements BuildTask {
 
     return {
       peers,
-      runtimeChunkName: 'runtime',
       html: htmlConfig,
       entries,
       chunking: { splitChunks: true },
