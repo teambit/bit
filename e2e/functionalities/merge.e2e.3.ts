@@ -16,32 +16,33 @@ describe('merge functionality', function () {
   });
   describe('re-exporting/importing an existing version', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFoo();
+      helper.fixtures.addComponentBarFooAsDir();
       helper.fixtures.tagComponentBarFoo();
 
       helper.fs.createFile('bar2', 'foo2.js');
       helper.command.addComponent('bar2/foo2.js', { i: 'bar2/foo2' });
-      helper.command.tagComponent('bar2/foo2');
+      helper.command.tagWithoutBuild('bar2/foo2');
 
-      helper.command.exportAllComponents();
+      helper.command.export();
 
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitLocalScopeHarmony();
       helper.scopeHelper.addRemoteScope();
       helper.command.importComponent('bar/foo');
       helper.command.importComponent('bar2/foo2');
       const scopeWithV1 = helper.scopeHelper.cloneLocalScope();
-      helper.command.tagComponent('bar/foo', 'msg', '-f');
-      helper.command.tagComponent('bar2/foo2', 'msg', '-f');
-      helper.command.exportAllComponents(); // v2 is exported
+      helper.command.tagWithoutBuild('bar/foo', 'msg', '-f');
+      helper.command.tagWithoutBuild('bar2/foo2', 'msg', '-f');
+      helper.command.export(); // v2 is exported
 
       helper.scopeHelper.getClonedLocalScope(scopeWithV1);
-      helper.command.tagComponent('bar/foo', 'msg', '-f');
-      helper.command.tagComponent('bar2/foo2', 'msg', '-f');
+      helper.command.tagWithoutBuild('bar/foo', 'msg', '-f');
+      helper.command.tagWithoutBuild('bar2/foo2', 'msg', '-f');
     });
     it('should throw MergeConflictOnRemote error when exporting the component', () => {
-      const exportFunc = () => helper.command.exportAllComponents(); // v2 is exported again
+      const exportFunc = () => helper.command.export(); // v2 is exported again
       const idsAndVersions = [
         { id: `${helper.scopes.remote}/bar/foo`, versions: ['0.0.2'] },
         { id: `${helper.scopes.remote}/bar2/foo2`, versions: ['0.0.2'] },
@@ -59,18 +60,19 @@ describe('merge functionality', function () {
   describe('importing a component with --merge flag', () => {
     let beforeImport;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
       helper.fs.createFile('utils', 'is-type.js', fixtures.isType);
       helper.fs.createFile('utils', 'is-string.js', fixtures.isString);
       helper.fixtures.addComponentUtilsIsType();
       helper.fixtures.addComponentUtilsIsString();
-      helper.command.tagAllComponents();
+      helper.command.tagAllWithoutBuild();
       helper.fs.createFile('utils', 'is-type.js', fixtures.isTypeV2);
       helper.fixtures.addComponentUtilsIsType();
-      helper.command.tagAllComponents();
-      helper.command.exportAllComponents();
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
 
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitLocalScopeHarmony();
       helper.scopeHelper.addRemoteScope();
       beforeImport = helper.scopeHelper.cloneLocalScope();
       helper.command.importComponent('utils/is-type@0.0.1');

@@ -18,17 +18,18 @@ describe('component config', function () {
   });
   describe('when importing a component', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
       helper.fs.createFile('utils', 'is-type.js', fixtures.isType);
       helper.fixtures.addComponentUtilsIsType();
       helper.fs.createFile('utils', 'is-string.js', fixtures.isString);
       helper.fixtures.addComponentUtilsIsString();
       helper.fixtures.createComponentBarFoo(fixtures.barFooFixture);
-      helper.fixtures.addComponentBarFoo();
+      helper.fixtures.addComponentBarFooAsDir();
       helper.env.importDummyCompiler();
-      helper.command.tagAllComponents();
-      helper.command.exportAllComponents();
-      helper.scopeHelper.reInitLocalScope();
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.scopeHelper.reInitLocalScopeHarmony();
       helper.scopeHelper.addRemoteScope();
       helper.scopeHelper.addRemoteEnvironment();
     });
@@ -65,8 +66,8 @@ describe('component config', function () {
           helper.command.status();
           helper.command.listLocalScope();
           helper.fs.createFile('components/bar/foo/bar', 'foo.js', 'console.log("hello");');
-          helper.command.tagAllComponents();
-          helper.command.exportAllComponents();
+          helper.command.tagAllWithoutBuild();
+          helper.command.export();
         });
       });
       describe('changing the environments on package.json', () => {
@@ -135,9 +136,10 @@ describe('component config', function () {
   });
   describe('a component with overrides settings', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFoo();
+      helper.fixtures.addComponentBarFooAsDir();
       helper.npm.addNpmPackage('chai', '2.4');
       helper.packageJson.create({ dependencies: { chai: '2.4' } });
       const overrides = {
@@ -151,9 +153,9 @@ describe('component config', function () {
         },
       };
       helper.bitJson.addOverrides(overrides);
-      helper.command.tagAllComponents();
-      helper.command.exportAllComponents();
-      helper.scopeHelper.reInitLocalScope();
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.scopeHelper.reInitLocalScopeHarmony();
       helper.scopeHelper.addRemoteScope();
       helper.command.importComponent('bar/foo');
     });

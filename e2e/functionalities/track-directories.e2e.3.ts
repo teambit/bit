@@ -15,7 +15,7 @@ describe('track directories functionality', function () {
   });
   describe('add directory with tests', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitLocalScopeHarmony();
       helper.fs.createFile('utils/bar', 'foo.js');
       helper.fs.createFile('utils/bar', 'foo.spec.js');
       helper.command.addComponent('utils/bar', { t: 'utils/bar/foo.spec.js', i: 'utils/bar' });
@@ -40,16 +40,17 @@ describe('track directories functionality', function () {
   describe('import a component with dependencies', () => {
     let barFooId;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
       helper.fs.createFile('utils', 'is-type.js', fixtures.isType);
       helper.fixtures.addComponentUtilsIsType();
       helper.fs.createFile('utils', 'is-string.js', fixtures.isString);
       helper.fixtures.addComponentUtilsIsString();
       helper.fixtures.createComponentBarFoo(fixtures.barFooFixture);
-      helper.fixtures.addComponentBarFoo();
-      helper.command.tagAllComponents();
-      helper.command.exportAllComponents();
-      helper.scopeHelper.reInitLocalScope();
+      helper.fixtures.addComponentBarFooAsDir();
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.scopeHelper.reInitLocalScopeHarmony();
       helper.scopeHelper.addRemoteScope();
       helper.command.importComponent('bar/foo');
       barFooId = `${helper.scopes.remote}/bar/foo@0.0.1`;
@@ -90,7 +91,7 @@ describe('track directories functionality', function () {
       });
       describe('tagging the component', () => {
         before(() => {
-          helper.command.tagAllComponents();
+          helper.command.tagAllWithoutBuild();
           statusOutput = helper.command.runCmd('bit status');
         });
         it('bit status should show the component as staged and not as modified', () => {

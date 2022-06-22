@@ -23,7 +23,8 @@ describe('binary files', function () {
     let pngSize;
     let destPngFile;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
       helper.fixtures.createComponentBarFoo();
       const sourcePngFile = path.join(__dirname, '..', 'fixtures', 'png_fixture.png');
       destPngFile = path.join(helper.scopes.localPath, 'bar', 'png_fixture.png');
@@ -31,11 +32,11 @@ describe('binary files', function () {
       const stats = fs.statSync(destPngFile);
       pngSize = stats.size;
       helper.command.addComponent('bar', { m: 'foo.js', i: 'bar/foo' });
-      helper.command.tagAllComponents();
-      helper.command.exportAllComponents();
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
     });
     it('should export it with no errors', () => {
-      const output = helper.command.listRemoteScope();
+      const output = helper.command.listRemoteScopeIds();
       expect(output.includes('found 1 components')).to.be.true;
       expect(output.includes('bar/foo')).to.be.true;
     });
@@ -56,18 +57,19 @@ describe('binary files', function () {
     let pngSize;
     let destPngFile;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
       const sourcePngFile = path.join(__dirname, '..', 'fixtures', 'png_fixture.png');
       destPngFile = path.join(helper.scopes.localPath, 'bar', 'png_fixture.png');
       fs.copySync(sourcePngFile, destPngFile);
       const stats = fs.statSync(destPngFile);
       pngSize = stats.size;
       helper.command.addComponent('bar', { m: 'png_fixture.png', i: 'bar/foo' });
-      helper.command.tagAllComponents();
-      helper.command.exportAllComponents();
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
     });
     it('should export it with no errors', () => {
-      const output = helper.command.listRemoteScope();
+      const output = helper.command.listRemoteScopeIds();
       expect(output.includes('found 1 components')).to.be.true;
       expect(output.includes('bar/foo')).to.be.true;
     });
@@ -93,7 +95,7 @@ describe('binary files', function () {
     });
     describe('after importing the file', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitLocalScopeHarmony();
         helper.scopeHelper.addRemoteScope();
         helper.command.importComponent('bar/foo');
       });
@@ -111,7 +113,8 @@ describe('binary files', function () {
   describe('importing a PNG file as the only file and have it as a dependency of another component', () => {
     let destPngFile;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
       const sourcePngFile = path.join(__dirname, '..', 'fixtures', 'png_fixture.png');
       destPngFile = path.join(helper.scopes.localPath, 'bar', 'png_fixture.png');
       fs.copySync(sourcePngFile, destPngFile);
@@ -119,10 +122,10 @@ describe('binary files', function () {
       const fixture = 'require("./png_fixture.png")';
       helper.fs.createFile('bar', 'foo.js', fixture);
       helper.command.addComponent('bar/foo.js', { i: 'bar/foo' });
-      helper.command.tagAllComponents();
-      helper.command.exportAllComponents();
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
 
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitLocalScopeHarmony();
       helper.scopeHelper.addRemoteScope();
       helper.command.importComponent('bar/foo');
     });
@@ -143,7 +146,8 @@ describe('binary files', function () {
     let npmCiRegistry;
     before(() => {
       npmCiRegistry = new NpmCiRegistry(helper);
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
 
       npmCiRegistry.setCiScopeInBitJson();
       const bitJson = helper.bitJson.read();
@@ -157,10 +161,10 @@ describe('binary files', function () {
       const fixture = 'require("bar/png_fixture.png")';
       helper.fs.createFile('src/foo', 'foo.js', fixture);
       helper.command.addComponent('src/foo/foo.js', { i: 'bar/foo' });
-      helper.command.tagAllComponents();
-      helper.command.exportAllComponents();
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
 
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitLocalScopeHarmony();
       helper.scopeHelper.addRemoteScope();
       helper.command.importComponent('bar/foo');
     });
@@ -184,7 +188,7 @@ describe('binary files', function () {
         npmCiRegistry.publishComponent('bar/png');
         npmCiRegistry.publishComponent('bar/foo');
 
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitLocalScopeHarmony();
         helper.command.runCmd('npm init -y');
         helper.command.runCmd(`npm install @ci/${helper.scopes.remote}.bar.foo`);
 
@@ -213,7 +217,8 @@ describe('binary files', function () {
       helper = new Helper();
       helper.command.setFeatures('legacy-workspace-config');
       npmCiRegistry = new NpmCiRegistry(helper);
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
       npmCiRegistry.setCiScopeInBitJson();
       const sourcePngFile = path.join(__dirname, '..', 'fixtures', 'png_fixture.png');
       destPngFile = path.join(helper.scopes.localPath, 'src/bar', 'png_fixture.png');
@@ -222,10 +227,10 @@ describe('binary files', function () {
       const fixture = 'require("../bar/png_fixture.png")';
       helper.fs.createFile('src/foo', 'foo.js', fixture);
       helper.command.addComponent('src/foo/foo.js', { i: 'bar/foo' });
-      helper.command.tagAllComponents();
-      helper.command.exportAllComponents();
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
 
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitLocalScopeHarmony();
       helper.scopeHelper.addRemoteScope();
       helper.command.importComponent('bar/foo');
     });
@@ -256,7 +261,7 @@ describe('binary files', function () {
       });
       describe('installing a component using NPM', () => {
         before(() => {
-          helper.scopeHelper.reInitLocalScope();
+          helper.scopeHelper.reInitLocalScopeHarmony();
           helper.command.runCmd('npm init -y');
           helper.command.runCmd(`npm install @ci/${helper.scopes.remote}.bar.foo`);
         });
@@ -273,7 +278,7 @@ describe('binary files', function () {
       });
       describe('installing a component using bit import', () => {
         before(() => {
-          helper.scopeHelper.reInitLocalScope();
+          helper.scopeHelper.reInitLocalScopeHarmony();
           npmCiRegistry.setCiScopeInBitJson();
           npmCiRegistry.setResolver();
           helper.command.importComponent('bar/foo');
@@ -298,7 +303,8 @@ describe('binary files', function () {
       helper = new Helper();
       helper.command.setFeatures('legacy-workspace-config');
       npmCiRegistry = new NpmCiRegistry(helper);
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
       npmCiRegistry.setCiScopeInBitJson();
       const sourcePngFile = path.join(__dirname, '..', 'fixtures', 'png_fixture.png');
       destPngFile = path.join(helper.scopes.localPath, 'src/bar', 'png_fixture.png');
@@ -308,10 +314,10 @@ describe('binary files', function () {
       helper.fs.createFile('src/foo', 'foo.js', fixture);
       helper.command.addComponent('src/foo/foo.js', { i: 'bar/foo' });
       helper.env.importDummyCompiler();
-      helper.command.tagAllComponents();
-      helper.command.exportAllComponents();
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
 
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitLocalScopeHarmony();
       helper.scopeHelper.addRemoteScope();
       helper.command.importComponent('bar/foo');
     });
@@ -343,7 +349,7 @@ describe('binary files', function () {
       });
       describe('installing a component using NPM', () => {
         before(() => {
-          helper.scopeHelper.reInitLocalScope();
+          helper.scopeHelper.reInitLocalScopeHarmony();
           helper.command.runCmd('npm init -y');
           helper.command.runCmd(`npm install @ci/${helper.scopes.remote}.bar.foo`);
         });
@@ -360,7 +366,7 @@ describe('binary files', function () {
       });
       describe('installing a component using bit import', () => {
         before(() => {
-          helper.scopeHelper.reInitLocalScope();
+          helper.scopeHelper.reInitLocalScopeHarmony();
           npmCiRegistry.setCiScopeInBitJson();
           npmCiRegistry.setResolver();
           helper.command.importComponent('bar/foo');
@@ -395,7 +401,8 @@ describe('binary files', function () {
       helper = new Helper();
       helper.command.setFeatures('legacy-workspace-config');
       npmCiRegistry = new NpmCiRegistry(helper);
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
       npmCiRegistry.setCiScopeInBitJson();
       const sourcePngFile = path.join(__dirname, '..', 'fixtures', 'png_fixture.png');
       destPngFile = path.join(helper.scopes.localPath, 'src/bar', 'png_fixture.png');
@@ -406,10 +413,10 @@ describe('binary files', function () {
       helper.fs.createFile('src/foo', 'foo.js', fixture);
       helper.command.addComponent('src/foo/foo.js', { i: 'bar/foo' });
       helper.env.importDummyCompiler();
-      helper.command.tagAllComponents();
-      helper.command.exportAllComponents();
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
 
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitLocalScopeHarmony();
       helper.scopeHelper.addRemoteScope();
       helper.command.importComponent('bar/foo');
     });
@@ -441,7 +448,7 @@ describe('binary files', function () {
       });
       describe('installing a component using NPM', () => {
         before(() => {
-          helper.scopeHelper.reInitLocalScope();
+          helper.scopeHelper.reInitLocalScopeHarmony();
           helper.command.runCmd('npm init -y');
           helper.command.runCmd(`npm install @ci/${helper.scopes.remote}.bar.foo`);
         });
@@ -458,7 +465,7 @@ describe('binary files', function () {
       });
       describe('installing a component using bit import', () => {
         before(() => {
-          helper.scopeHelper.reInitLocalScope();
+          helper.scopeHelper.reInitLocalScopeHarmony();
           npmCiRegistry.setCiScopeInBitJson();
           npmCiRegistry.setResolver();
           helper.command.importComponent('bar/foo');
@@ -488,15 +495,16 @@ describe('binary files', function () {
   });
   describe('export an md file with the same name as another js file with compiler (bug #1628)', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
       helper.fs.createFile('bar', 'my-comp.md', 'some md5 content');
       helper.fs.createFile('bar', 'my-comp.js');
       helper.command.addComponent('bar', { m: 'my-comp.js', i: 'bar/foo' });
-      helper.command.tagAllComponents();
-      helper.command.exportAllComponents();
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
       helper.env.importDummyCompiler();
-      helper.command.tagAllComponents();
-      helper.command.exportAllComponents();
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
     });
     it('should not overwrite the md file with an auto-generated content', () => {
       const mdContent = helper.fs.readFile('bar/my-comp.md');

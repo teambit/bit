@@ -16,7 +16,8 @@ describe('default scope functionality', function () {
   });
   describe('basic flow', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
       helper.fixtures.populateWorkspaceWithThreeComponentsAndModulePath();
       helper.bitJson.addDefaultScope();
       helper.command.runCmd('bit link');
@@ -29,7 +30,7 @@ describe('default scope functionality', function () {
     describe('tagging the components', () => {
       let tagOutput;
       before(() => {
-        tagOutput = helper.command.tagAllComponents();
+        tagOutput = helper.command.tagAllWithoutBuild();
       });
       it('should be able to to tag them successfully', () => {
         expect(tagOutput).to.have.string('tagged');
@@ -43,7 +44,7 @@ describe('default scope functionality', function () {
       });
       describe('exporting the components', () => {
         before(() => {
-          helper.command.exportAllComponents();
+          helper.command.export();
         });
         it('should be able to export them all successfully', () => {
           const status = helper.command.statusJson();

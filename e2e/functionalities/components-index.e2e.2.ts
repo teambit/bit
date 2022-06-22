@@ -17,9 +17,10 @@ describe('scope components index mechanism', function () {
   });
   describe('after tagging a component', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFoo();
+      helper.fixtures.addComponentBarFooAsDir();
       helper.fixtures.tagComponentBarFoo();
     });
     it('should save the component in the index.json file', () => {
@@ -35,7 +36,7 @@ describe('scope components index mechanism', function () {
     });
     describe('after exporting the component', () => {
       before(() => {
-        helper.command.exportAllComponents();
+        helper.command.export();
       });
       it('should create a new record with the new scope', () => {
         const indexJson = helper.general.getComponentsFromIndexJson();
@@ -68,7 +69,7 @@ describe('scope components index mechanism', function () {
       });
       describe('importing the component to a new scope', () => {
         before(() => {
-          helper.scopeHelper.reInitLocalScope();
+          helper.scopeHelper.reInitLocalScopeHarmony();
           helper.scopeHelper.addRemoteScope();
           helper.command.importComponent('bar/foo');
         });
@@ -94,9 +95,9 @@ describe('scope components index mechanism', function () {
   });
   describe('changing the index.json file manually to be empty', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitLocalScopeHarmony();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFoo();
+      helper.fixtures.addComponentBarFooAsDir();
       helper.fixtures.tagComponentBarFoo();
 
       // as an intermediate step, make sure bit list shows one component
@@ -130,10 +131,10 @@ describe('scope components index mechanism', function () {
   describe('outdated / out-of-sync index.json', () => {
     describe('adding a non-exist component to index.json', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitLocalScopeHarmony();
         helper.fixtures.createComponentBarFoo();
-        helper.fixtures.addComponentBarFoo();
-        helper.command.tagAllComponents();
+        helper.fixtures.addComponentBarFooAsDir();
+        helper.command.tagAllWithoutBuild();
         const indexJsonWithBarFoo = helper.general.getComponentsFromIndexJson();
         helper.command.untag('bar/foo');
         helper.general.writeIndexJson(indexJsonWithBarFoo);

@@ -23,11 +23,12 @@ describe('dynamic namespaces', function () {
       let catComp;
 
       before(() => {
-        helper.scopeHelper.setNewLocalAndRemoteScopes();
+        helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+        helper.bitJsonc.setupDefault();
         helper.fs.createFile('bar', 'foo.js');
         const addOutput = helper.command.addComponent('bar/foo.js', { i: componentName });
         expect(addOutput).to.have.string('added');
-        tagOutput = helper.command.tagAllComponents();
+        tagOutput = helper.command.tagAllWithoutBuild();
         catComp = helper.command.catComponent(componentName);
       });
       it('should be tagged successfully', () => {
@@ -54,8 +55,8 @@ describe('dynamic namespaces', function () {
       });
       describe('after import', () => {
         before(() => {
-          helper.command.exportAllComponents();
-          helper.scopeHelper.reInitLocalScope();
+          helper.command.export();
+          helper.scopeHelper.reInitLocalScopeHarmony();
           helper.scopeHelper.addRemoteScope();
           helper.command.importComponent(componentName);
         });
@@ -68,13 +69,14 @@ describe('dynamic namespaces', function () {
   });
   describe('import a component with same id string as a local different component', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
       helper.fs.createFile('', 'foo.js');
       helper.command.addComponent('foo.js', { i: 'foo' });
-      helper.command.tagAllComponents();
-      helper.command.exportAllComponents();
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
 
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitLocalScopeHarmony();
       helper.scopeHelper.addRemoteScope();
       helper.fs.createFile('bar', 'foo.js');
       helper.command.addComponent('bar/foo.js', { i: `${helper.scopes.remote}/foo` });
@@ -86,7 +88,7 @@ describe('dynamic namespaces', function () {
       expect(Object.keys(bitMap)).to.have.lengthOf(1);
     });
     it('should throw an error also after tagging', () => {
-      helper.command.tagAllComponents();
+      helper.command.tagAllWithoutBuild();
       const output = helper.general.runWithTryCatch(`bit import ${helper.scopes.remote}/foo`);
       expect(output).to.have.string('unable to import');
     });

@@ -20,12 +20,13 @@ describe('workspace config', function () {
   describe('when the config exists in both bit.json and package.json', () => {
     let localScope;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFoo();
-      helper.command.tagAllComponents();
-      helper.command.exportAllComponents();
-      helper.scopeHelper.reInitLocalScope();
+      helper.fixtures.addComponentBarFooAsDir();
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.scopeHelper.reInitLocalScopeHarmony();
       helper.scopeHelper.addRemoteScope();
       helper.npm.initNpm();
       const packageJson = helper.packageJson.read();
@@ -73,12 +74,13 @@ describe('workspace config', function () {
     describe('changing component dependencies versions', () => {
       let localScope;
       before(() => {
-        helper.scopeHelper.setNewLocalAndRemoteScopes();
+        helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+        helper.bitJsonc.setupDefault();
         helper.fs.createFile('', 'foo.js');
         helper.fs.createFile('', 'bar.js', "require('./foo');");
         helper.command.addComponent('foo.js');
         helper.command.addComponent('bar.js');
-        helper.command.tagAllComponents();
+        helper.command.tagAllWithoutBuild();
         helper.command.tagIncludeUnmodified('2.0.0');
         localScope = helper.scopeHelper.cloneLocalScope();
       });
@@ -105,7 +107,7 @@ describe('workspace config', function () {
         });
         describe('tagging the component', () => {
           before(() => {
-            helper.command.tagAllComponents();
+            helper.command.tagAllWithoutBuild();
           });
           it('should save the overridden dependency version', () => {
             const bar = helper.command.catComponent('bar@latest');
@@ -146,7 +148,7 @@ describe('workspace config', function () {
         });
         describe('tagging the component', () => {
           before(() => {
-            helper.command.tagAllComponents();
+            helper.command.tagAllWithoutBuild();
           });
           it('should save the overridden dependency version', () => {
             const bar = helper.command.catComponent('bar@latest');
@@ -160,9 +162,10 @@ describe('workspace config', function () {
     });
     describe('changing packages dependencies versions', () => {
       before(() => {
-        helper.scopeHelper.setNewLocalAndRemoteScopes();
+        helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+        helper.bitJsonc.setupDefault();
         helper.fixtures.createComponentBarFoo('require("chai");');
-        helper.fixtures.addComponentBarFoo();
+        helper.fixtures.addComponentBarFooAsDir();
         helper.npm.addNpmPackage('chai', '2.2.0');
         const overrides = {
           'bar/foo': {
@@ -180,7 +183,7 @@ describe('workspace config', function () {
       });
       describe('tagging the component', () => {
         before(() => {
-          helper.command.tagAllComponents();
+          helper.command.tagAllWithoutBuild();
         });
         it('should save the overridden package version', () => {
           const bar = helper.command.catComponent('bar/foo@latest');
@@ -193,7 +196,8 @@ describe('workspace config', function () {
       let scopeAfterAdding;
       let remoteScopeEmpty;
       before(() => {
-        helper.scopeHelper.setNewLocalAndRemoteScopes();
+        helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+        helper.bitJsonc.setupDefault();
         helper.fs.createFile('foo-dir', 'foo1.js');
         helper.fs.createFile('foo-dir', 'foo2.js');
         helper.fs.createFile('bar-dir', 'bar.js', "require('../foo-dir/foo1'); require('../foo-dir/foo2'); ");
@@ -315,8 +319,8 @@ describe('workspace config', function () {
           let showBar;
           before(() => {
             helper.scopeHelper.getClonedLocalScope(scopeAfterAdding);
-            helper.command.tagAllComponents();
-            helper.command.exportAllComponents();
+            helper.command.tagAllWithoutBuild();
+            helper.command.export();
             helper.fs.createFile(
               'bar-dir',
               'bar.js',
@@ -349,8 +353,8 @@ describe('workspace config', function () {
             helper.scopeHelper.getClonedLocalScope(scopeAfterAdding);
             helper.command.link();
             helper.scopeHelper.reInitRemoteScope();
-            helper.command.tagAllComponents();
-            helper.command.exportAllComponents();
+            helper.command.tagAllWithoutBuild();
+            helper.command.export();
             helper.fs.createFile(
               'bar-dir',
               'bar.js',
@@ -371,7 +375,7 @@ describe('workspace config', function () {
             expect(showBar.dependencies).to.have.lengthOf(1);
           });
           it('should not allow tagging the component', () => {
-            const tagFunc = () => helper.command.tagAllComponents();
+            const tagFunc = () => helper.command.tagAllWithoutBuild();
             expect(tagFunc).to.throw('some dependencies are duplicated');
           });
         });
@@ -472,8 +476,8 @@ describe('workspace config', function () {
         before(() => {
           helper.scopeHelper.getClonedLocalScope(scopeAfterAdding);
           helper.scopeHelper.getClonedRemoteScope(remoteScopeEmpty);
-          helper.command.tagAllComponents();
-          helper.command.exportAllComponents();
+          helper.command.tagAllWithoutBuild();
+          helper.command.export();
           helper.fs.createFile(
             'bar-dir',
             'bar.js',
@@ -504,7 +508,7 @@ describe('workspace config', function () {
       describe('ignoring a missing package', () => {
         let showBar;
         before(() => {
-          helper.scopeHelper.reInitLocalScope();
+          helper.scopeHelper.reInitLocalScopeHarmony();
           helper.fs.createFile('bar-dir', 'bar.js', "require('non-exist-package')");
           helper.command.addComponent('bar-dir/bar.js', { i: 'bar' });
 
@@ -534,7 +538,7 @@ describe('workspace config', function () {
       describe('ignoring an existing package', () => {
         let showBar;
         before(() => {
-          helper.scopeHelper.reInitLocalScope();
+          helper.scopeHelper.reInitLocalScopeHarmony();
           helper.npm.addNpmPackage('existing-package');
           helper.npm.addNpmPackage('another-existing-package');
           helper.fs.createFile(
@@ -566,7 +570,7 @@ describe('workspace config', function () {
       describe('ignoring an existing devDependency package', () => {
         let showBar;
         before(() => {
-          helper.scopeHelper.reInitLocalScope();
+          helper.scopeHelper.reInitLocalScopeHarmony();
           helper.npm.addNpmPackage('existing-package');
           helper.npm.addNpmPackage('another-existing-package');
           helper.fs.createFile('bar-dir', 'bar.js');
@@ -610,11 +614,11 @@ describe('workspace config', function () {
         before(() => {
           // keep in mind that the 'chai' dependency is a regular package dependency, which
           // also saved as a peerDependency
-          helper.scopeHelper.reInitLocalScope();
+          helper.scopeHelper.reInitLocalScopeHarmony();
           helper.fixtures.createComponentBarFoo("import chai from 'chai';");
           helper.npm.addNpmPackage('chai', '2.2.0');
           helper.packageJson.create({ peerDependencies: { chai: '>= 2.1.2 < 5' } });
-          helper.fixtures.addComponentBarFoo();
+          helper.fixtures.addComponentBarFooAsDir();
           const overrides = {
             'bar/foo': {
               peerDependencies: {
@@ -644,15 +648,16 @@ describe('workspace config', function () {
     });
     describe('ignoring dependencies components entire flow', () => {
       before(() => {
-        helper.scopeHelper.setNewLocalAndRemoteScopes();
+        helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+        helper.bitJsonc.setupDefault();
         helper.fs.createFile('', 'foo1.js');
         helper.fs.createFile('', 'foo2.js');
         helper.fs.createFile('', 'bar.js');
         helper.command.addComponent('foo1.js');
         helper.command.addComponent('foo2.js');
         helper.command.addComponent('bar.js');
-        helper.command.tagAllComponents();
-        helper.command.exportAllComponents();
+        helper.command.tagAllWithoutBuild();
+        helper.command.export();
         helper.fs.createFile(
           '',
           'bar.js',
@@ -695,8 +700,8 @@ describe('workspace config', function () {
           let barRoot;
           before(() => {
             barRoot = path.join(helper.scopes.localPath, 'components/bar/');
-            helper.command.exportAllComponents();
-            helper.scopeHelper.reInitLocalScope();
+            helper.command.export();
+            helper.scopeHelper.reInitLocalScopeHarmony();
             helper.scopeHelper.addRemoteScope();
             helper.command.importComponent('bar');
           });
@@ -743,10 +748,11 @@ describe('workspace config', function () {
     describe('author ignored package, imported changed to not ignore', () => {
       let authorScope;
       before(() => {
-        helper.scopeHelper.setNewLocalAndRemoteScopes();
+        helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+        helper.bitJsonc.setupDefault();
         helper.fixtures.createComponentBarFoo("import chai from 'chai';");
         helper.npm.addNpmPackage('chai', '2.2.0');
-        helper.fixtures.addComponentBarFoo();
+        helper.fixtures.addComponentBarFooAsDir();
         const overrides = {
           'bar/foo': {
             dependencies: {
@@ -755,10 +761,10 @@ describe('workspace config', function () {
           },
         };
         helper.bitJson.addOverrides(overrides);
-        helper.command.tagAllComponents();
-        helper.command.exportAllComponents();
+        helper.command.tagAllWithoutBuild();
+        helper.command.export();
         authorScope = helper.scopeHelper.cloneLocalScope();
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitLocalScopeHarmony();
         helper.scopeHelper.addRemoteScope();
         helper.command.importComponent('bar/foo');
         helper.npm.addNpmPackage('chai', '2.2.0');
@@ -771,8 +777,8 @@ describe('workspace config', function () {
         // an intermediate step to make sure we're good so far
         const diff = helper.command.diff('--verbose');
         expect(diff).to.have.string('- [ chai@- ]');
-        helper.command.tagAllComponents();
-        helper.command.exportAllComponents();
+        helper.command.tagAllWithoutBuild();
+        helper.command.export();
       });
       it('should be saved into the model with an empty overrides', () => {
         const barFoo = helper.command.catComponent('bar/foo@latest');
@@ -870,10 +876,10 @@ describe('workspace config', function () {
     });
     describe('changing overrides of a component in consumer config after tag', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitLocalScopeHarmony();
         helper.fixtures.createComponentBarFoo("require('chai');");
         helper.npm.addNpmPackage('chai', '2.2.0');
-        helper.fixtures.addComponentBarFoo();
+        helper.fixtures.addComponentBarFooAsDir();
         const overrides = {
           'bar/foo': {
             dependencies: {
@@ -882,7 +888,7 @@ describe('workspace config', function () {
           },
         };
         helper.bitJson.addOverrides(overrides);
-        helper.command.tagAllComponents();
+        helper.command.tagAllWithoutBuild();
         const overridesChanged = {
           'bar/foo': {
             dependencies: {},
@@ -897,11 +903,11 @@ describe('workspace config', function () {
     });
     describe('changing order of the overrides dependencies after tag', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitLocalScopeHarmony();
         helper.fixtures.createComponentBarFoo("require('chai'); require('lodash')");
         helper.npm.addNpmPackage('chai', '2.2.0');
         helper.npm.addNpmPackage('lodash', '2.2.0');
-        helper.fixtures.addComponentBarFoo();
+        helper.fixtures.addComponentBarFooAsDir();
         const overrides = {
           'bar/foo': {
             dependencies: {
@@ -911,7 +917,7 @@ describe('workspace config', function () {
           },
         };
         helper.bitJson.addOverrides(overrides);
-        helper.command.tagAllComponents();
+        helper.command.tagAllWithoutBuild();
         const overridesChangedOrder = {
           'bar/foo': {
             dependencies: {
@@ -931,11 +937,11 @@ describe('workspace config', function () {
       describe('moving a package from dependencies to peerDependencies', () => {
         let showBar;
         before(() => {
-          helper.scopeHelper.reInitLocalScope();
+          helper.scopeHelper.reInitLocalScopeHarmony();
           helper.fixtures.createComponentBarFoo("import chai from 'chai';");
           helper.npm.addNpmPackage('chai', '2.2.0');
           helper.packageJson.create({ dependencies: { chai: '2.2.0' } });
-          helper.fixtures.addComponentBarFoo();
+          helper.fixtures.addComponentBarFooAsDir();
           const overrides = {
             'bar/foo': {
               dependencies: {
@@ -970,9 +976,9 @@ describe('workspace config', function () {
       describe('adding a package with version that does not exist in package.json', () => {
         let showBar;
         before(() => {
-          helper.scopeHelper.reInitLocalScope();
+          helper.scopeHelper.reInitLocalScopeHarmony();
           helper.fixtures.createComponentBarFoo("import chai from 'chai';");
-          helper.fixtures.addComponentBarFoo();
+          helper.fixtures.addComponentBarFooAsDir();
           const overrides = {
             'bar/foo': {
               peerDependencies: {
@@ -995,9 +1001,9 @@ describe('workspace config', function () {
       });
       describe('adding a package without version that does not exist in package.json', () => {
         before(() => {
-          helper.scopeHelper.reInitLocalScope();
+          helper.scopeHelper.reInitLocalScopeHarmony();
           helper.fixtures.createComponentBarFoo("import chai from 'chai';");
-          helper.fixtures.addComponentBarFoo();
+          helper.fixtures.addComponentBarFooAsDir();
           const overrides = {
             'bar/foo': {
               peerDependencies: {
@@ -1023,12 +1029,13 @@ describe('workspace config', function () {
       describe('adding a component with a version', () => {
         let showBar;
         before(() => {
-          helper.scopeHelper.setNewLocalAndRemoteScopes();
+          helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+          helper.bitJsonc.setupDefault();
           helper.fs.createFile('', 'bar.js');
           helper.fs.createFile('', 'foo.js');
           helper.command.addComponent('bar.js');
           helper.command.addComponent('foo.js');
-          helper.command.tagAllComponents();
+          helper.command.tagAllWithoutBuild();
           const overrides = {
             bar: {
               dependencies: {
@@ -1051,7 +1058,7 @@ describe('workspace config', function () {
           before(() => {
             // with non-legacy mode, it complains about the missing foo@0.0.1 during the capsule write
             // this is fine. normally users use the version once the version created.
-            helper.command.tagAllComponents();
+            helper.command.tagAllWithoutBuild();
             catBar = helper.command.catComponent('bar@latest');
           });
           it('should save the overrides data into the scope', () => {
@@ -1071,9 +1078,9 @@ describe('workspace config', function () {
             let originalAuthorScope;
             let afterImport;
             before(() => {
-              helper.command.exportAllComponents();
+              helper.command.export();
               originalAuthorScope = helper.scopeHelper.cloneLocalScope();
-              helper.scopeHelper.reInitLocalScope();
+              helper.scopeHelper.reInitLocalScopeHarmony();
               helper.scopeHelper.addRemoteScope();
               helper.command.importComponent('bar');
               afterImport = helper.scopeHelper.cloneLocalScope();
@@ -1125,9 +1132,9 @@ describe('workspace config', function () {
               });
               describe('tagging, exporting the component and then re-import for original author', () => {
                 before(() => {
-                  helper.command.tagAllComponents();
-                  helper.command.exportAllComponents();
-                  helper.scopeHelper.reInitLocalScope();
+                  helper.command.tagAllWithoutBuild();
+                  helper.command.export();
+                  helper.scopeHelper.reInitLocalScopeHarmony();
                   helper.scopeHelper.getClonedLocalScope(originalAuthorScope);
                   helper.command.importComponent('bar');
                 });
@@ -1155,7 +1162,8 @@ describe('workspace config', function () {
       describe('adding a component without a version', () => {
         let showBar;
         before(() => {
-          helper.scopeHelper.setNewLocalAndRemoteScopes();
+          helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+          helper.bitJsonc.setupDefault();
           helper.fs.createFile('', 'bar.js');
           helper.fs.createFile('', 'foo.js');
           helper.command.addComponent('bar.js');
@@ -1180,7 +1188,7 @@ describe('workspace config', function () {
         describe('tagging the components', () => {
           let catBar;
           before(() => {
-            helper.command.tagAllComponents();
+            helper.command.tagAllWithoutBuild();
             catBar = helper.command.catComponent('bar@latest');
           });
           it('should save the overrides data into the scope', () => {
@@ -1199,8 +1207,8 @@ describe('workspace config', function () {
         });
         describe('importing the component', () => {
           before(() => {
-            helper.command.exportAllComponents();
-            helper.scopeHelper.reInitLocalScope();
+            helper.command.export();
+            helper.scopeHelper.reInitLocalScopeHarmony();
             helper.scopeHelper.addRemoteScope();
             helper.command.importComponent('bar');
           });
@@ -1222,7 +1230,7 @@ describe('workspace config', function () {
     describe('override environments', () => {
       describe('default workspace compiler and different compilers for different components', () => {
         before(() => {
-          helper.scopeHelper.reInitLocalScope();
+          helper.scopeHelper.reInitLocalScopeHarmony();
           helper.fs.createFile('bar', 'foo-default.js');
           helper.fs.createFile('bar', 'foo1.js');
           helper.fs.createFile('bar', 'foo2.js');
@@ -1298,7 +1306,8 @@ describe('workspace config', function () {
     // legacy test in order to check the originallySharedDir
     describe('ignoring files with originallySharedDir', () => {
       before(() => {
-        helper.scopeHelper.setNewLocalAndRemoteScopes();
+        helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+        helper.bitJsonc.setupDefault();
         const fooFixture = 'require("../utils/is-string");';
         helper.fs.createFile('src/bar', 'foo.js', fooFixture);
         helper.fs.createFile('src/utils', 'is-string.js');
@@ -1312,7 +1321,7 @@ describe('workspace config', function () {
           },
         };
         helper.bitJson.addOverrides(overrides);
-        helper.command.tagAllComponents();
+        helper.command.tagAllWithoutBuild();
         // intermediate step, make sure the dependency is-string is ignored
         const foo = helper.command.catComponent('foo@latest');
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -1320,8 +1329,8 @@ describe('workspace config', function () {
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         expect(Object.keys(foo.overrides.dependencies)).to.have.lengthOf(1);
 
-        helper.command.exportAllComponents();
-        helper.scopeHelper.reInitLocalScope();
+        helper.command.export();
+        helper.scopeHelper.reInitLocalScopeHarmony();
         helper.scopeHelper.addRemoteScope();
         helper.command.importComponent('foo');
         // change the file to have it as modified.
@@ -1343,7 +1352,7 @@ describe('workspace config', function () {
       });
       describe('tagging the component', () => {
         before(() => {
-          helper.command.tagAllComponents();
+          helper.command.tagAllWithoutBuild();
         });
         it('should add back the sharedDir into the overrides', () => {
           const catFoo = helper.command.catComponent(`${helper.scopes.remote}/foo@latest`);
@@ -1355,12 +1364,13 @@ describe('workspace config', function () {
     describe('adding overrides data on consumer-config to imported component', () => {
       let overrides;
       before(() => {
-        helper.scopeHelper.setNewLocalAndRemoteScopes();
+        helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+        helper.bitJsonc.setupDefault();
         helper.fixtures.createComponentBarFoo();
-        helper.fixtures.addComponentBarFoo();
-        helper.command.tagAllComponents();
-        helper.command.exportAllComponents();
-        helper.scopeHelper.reInitLocalScope();
+        helper.fixtures.addComponentBarFooAsDir();
+        helper.command.tagAllWithoutBuild();
+        helper.command.export();
+        helper.scopeHelper.reInitLocalScopeHarmony();
         helper.scopeHelper.addRemoteScope();
         helper.command.importComponent('bar/foo');
         overrides = {
@@ -1412,9 +1422,10 @@ describe('workspace config', function () {
     });
     describe('override package.json values', () => {
       before(() => {
-        helper.scopeHelper.setNewLocalAndRemoteScopes();
+        helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+        helper.bitJsonc.setupDefault();
         helper.fixtures.createComponentBarFoo();
-        helper.fixtures.addComponentBarFoo();
+        helper.fixtures.addComponentBarFooAsDir();
         const overrides = {
           'bar/*': {
             bin: 'my-bin-file.js',
@@ -1429,10 +1440,10 @@ describe('workspace config', function () {
       describe('tag, export and import the component', () => {
         let authorScope;
         before(() => {
-          helper.command.tagAllComponents();
-          helper.command.exportAllComponents();
+          helper.command.tagAllWithoutBuild();
+          helper.command.export();
           authorScope = helper.scopeHelper.cloneLocalScope();
-          helper.scopeHelper.reInitLocalScope();
+          helper.scopeHelper.reInitLocalScopeHarmony();
           helper.scopeHelper.addRemoteScope();
           helper.command.importComponent('bar/foo');
         });
@@ -1473,8 +1484,8 @@ describe('workspace config', function () {
           });
           describe('tagging, exporting and re-importing as author', () => {
             before(() => {
-              helper.command.tagAllComponents();
-              helper.command.exportAllComponents();
+              helper.command.tagAllWithoutBuild();
+              helper.command.export();
               helper.scopeHelper.getClonedLocalScope(authorScope);
               helper.command.importComponent('bar/foo');
             });
@@ -1500,9 +1511,10 @@ describe('workspace config', function () {
       let show;
       let overrides;
       before(() => {
-        helper.scopeHelper.setNewLocalAndRemoteScopes();
+        helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+        helper.bitJsonc.setupDefault();
         helper.fixtures.createComponentBarFoo();
-        helper.fixtures.addComponentBarFoo();
+        helper.fixtures.addComponentBarFooAsDir();
         helper.fs.outputFile('baz.js');
         helper.command.addComponent('baz.js');
         overrides = {
@@ -1564,7 +1576,7 @@ describe('workspace config', function () {
       });
       describe('tagging the components and then changing the propagate of one component', () => {
         before(() => {
-          helper.command.tagAllComponents();
+          helper.command.tagAllWithoutBuild();
           const bitJson = helper.bitJson.read();
           bitJson.overrides['bar/foo'].propagate = false;
           helper.bitJson.write(bitJson);
@@ -1577,9 +1589,9 @@ describe('workspace config', function () {
     });
     describe('using "exclude" to exclude component from a rule', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitLocalScopeHarmony();
         helper.fixtures.createComponentBarFoo();
-        helper.fixtures.addComponentBarFoo();
+        helper.fixtures.addComponentBarFooAsDir();
       });
       describe('exclude with an exact id', () => {
         before(() => {
@@ -1616,7 +1628,7 @@ describe('workspace config', function () {
   describe('basic validations', () => {
     describe('when overrides is not an object', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitLocalScopeHarmony();
         const overrides = ['dependencies'];
         helper.bitJson.addOverrides(overrides);
       });
@@ -1627,7 +1639,7 @@ describe('workspace config', function () {
     });
     describe('when overrides of a component is not an object', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitLocalScopeHarmony();
         const overrides = {
           bar: 1234,
         };
@@ -1640,7 +1652,7 @@ describe('workspace config', function () {
     });
     describe('when a forbidden field is added into overrides of a component', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitLocalScopeHarmony();
         const overrides = {
           bar: {
             name: 'foo', // the name field of package.json is not permitted to change
@@ -1655,9 +1667,9 @@ describe('workspace config', function () {
     });
     describe('when a non-compliant package.json field is added into overrides of a component', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitLocalScopeHarmony();
         helper.fixtures.createComponentBarFoo();
-        helper.fixtures.addComponentBarFoo();
+        helper.fixtures.addComponentBarFooAsDir();
         const overrides = {
           'bar/*': {
             private: 'foo', // according to npm specs it should be boolean
@@ -1674,7 +1686,7 @@ describe('workspace config', function () {
     });
     describe('when a dependency field is not an object', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitLocalScopeHarmony();
         const overrides = {
           bar: {
             dependencies: 1234,
@@ -1689,7 +1701,7 @@ describe('workspace config', function () {
     });
     describe('when a dependency rule is not a string', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitLocalScopeHarmony();
         const overrides = {
           foo: {
             dependencies: {
@@ -1706,7 +1718,7 @@ describe('workspace config', function () {
     });
     describe('when "exclude" prop that is not an array', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitLocalScopeHarmony();
         const overrides = {
           '*': {
             exclude: 'bar',
@@ -1722,12 +1734,13 @@ describe('workspace config', function () {
   });
   describe('export a component with compiler then import', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFoo();
+      helper.fixtures.addComponentBarFooAsDir();
       helper.env.importDummyCompiler();
-      helper.command.tagAllComponents();
-      helper.command.exportAllComponents();
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
       helper.command.importComponent('bar/foo');
     });
     it('should not add the component into the overrides of the workspace because nothing has changed', () => {

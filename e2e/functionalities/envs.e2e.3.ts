@@ -44,7 +44,8 @@ describe.skip('envs', function () {
   let authorScopeBeforeChanges;
   let remoteScopeBeforeChanges;
   before(() => {
-    helper.scopeHelper.setNewLocalAndRemoteScopes();
+    helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+    helper.bitJsonc.setupDefault();
     const compiler = path.join('compilers', 'new-babel', 'compiler.js');
     helper.fixtures.copyFixtureFile(compiler);
     helper.command.addComponent('compiler.js', {
@@ -62,9 +63,9 @@ describe.skip('envs', function () {
     helper.npm.addNpmPackage('mocha', '5.1.1');
     helper.npm.addNpmPackage('vinyl', '2.1.0');
     helper.npm.addNpmPackage('resolve', '1.7.1');
-    helper.command.tagAllComponents();
-    helper.command.exportAllComponents(helper.scopes.env);
-    helper.scopeHelper.reInitLocalScope();
+    helper.command.tagAllWithoutBuild();
+    helper.command.export(helper.scopes.env);
+    helper.scopeHelper.reInitLocalScopeHarmony();
     helper.scopeHelper.addRemoteScope();
     helper.npm.initNpm();
     helper.scopeHelper.addRemoteEnvironment();
@@ -92,8 +93,8 @@ describe.skip('envs', function () {
     helper.npm.installNpmPackage('babel-preset-env', '1.6.1');
     helper.npm.installNpmPackage('chai', '4.1.2');
     authorScopeBeforeExport = helper.scopeHelper.cloneLocalScope();
-    helper.command.tagAllComponents();
-    helper.command.exportAllComponents();
+    helper.command.tagAllWithoutBuild();
+    helper.command.export();
     authorScopeBeforeChanges = helper.scopeHelper.cloneLocalScope();
     remoteScopeBeforeChanges = helper.scopeHelper.cloneRemoteScope();
   });
@@ -198,15 +199,15 @@ describe.skip('envs', function () {
       let compId;
       before(() => {
         // Change the component envs in imported environment to make sure they are detached
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitLocalScopeHarmony();
         helper.scopeHelper.addRemoteScope();
         helper.scopeHelper.addRemoteEnvironment();
         helper.command.importComponentWithOptions('comp/my-comp', { '-conf': '' });
         fullComponentFolder = path.join(helper.scopes.localPath, 'components', 'comp', 'my-comp');
         helper.bitJson.addToRawConfigOfEnv(fullComponentFolder, 'a', 'compiler', COMPILER_ENV_TYPE);
         helper.bitJson.addToRawConfigOfEnv(fullComponentFolder, 'a', 'tester', TESTER_ENV_TYPE);
-        helper.command.tagAllComponents();
-        helper.command.exportAllComponents();
+        helper.command.tagAllWithoutBuild();
+        helper.command.export();
         helper.scopeHelper.getClonedLocalScope(authorScopeBeforeChanges);
         helper.command.importComponent('comp/my-comp');
         compId = `${helper.scopes.remote}/comp/my-comp@0.0.2`;
@@ -244,7 +245,7 @@ describe.skip('envs', function () {
         before(() => {
           // Change the component
           helper.fs.createFile('', 'objRestSpread.js', 'const a = 3');
-          helper.command.tagAllComponents();
+          helper.command.tagAllWithoutBuild();
           compId = `${helper.scopes.remote}/comp/my-comp@0.0.3`;
           componentFilesystem = helper.command.catComponent(compId);
         });
@@ -269,7 +270,7 @@ describe.skip('envs', function () {
           });
           describe('tagging re-attached component', () => {
             before(() => {
-              helper.command.tagAllComponents();
+              helper.command.tagAllWithoutBuild();
               compId = `${helper.scopes.remote}/comp/my-comp@0.0.4`;
               componentFilesystem = helper.command.catComponent(compId);
             });
@@ -515,7 +516,7 @@ describe.skip('envs', function () {
 
     describe('without ejecting (--conf)', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitLocalScopeHarmony();
         helper.scopeHelper.addRemoteScope();
         helper.scopeHelper.addRemoteEnvironment();
         helper.command.importComponent('comp/my-comp');
@@ -687,7 +688,7 @@ describe.skip('envs', function () {
 
       describe('with default ejectedEnvsDirectory', () => {
         before(() => {
-          helper.scopeHelper.reInitLocalScope();
+          helper.scopeHelper.reInitLocalScopeHarmony();
           helper.scopeHelper.addRemoteScope();
           helper.scopeHelper.addRemoteEnvironment();
           helper.command.importComponentWithOptions('comp/my-comp', { '-conf': '' });
@@ -791,7 +792,7 @@ describe.skip('envs', function () {
             before(() => {
               helper.bitJson.addToRawConfigOfEnv(fullComponentFolder, 'a', 'compiler', COMPILER_ENV_TYPE);
               helper.bitJson.addToRawConfigOfEnv(fullComponentFolder, 'a', 'tester', TESTER_ENV_TYPE);
-              helper.command.tagAllComponents();
+              helper.command.tagAllWithoutBuild();
               componentModel = helper.command.catComponent(compId);
             });
             it('should save the new config into the model', () => {
@@ -868,7 +869,7 @@ describe.skip('envs', function () {
           //     before(() => {
           //       helper.fs.createFile(componentFolder, 'objRestSpread.js', 'const g = 5;');
           //       helper.scopeHelper.addRemoteEnvironment();
-          //       helper.command.tagAllComponents();
+          //       helper.command.tagAllWithoutBuild();
           //       compId = `${helper.scopes.remoteScope}/comp/my-comp@0.0.2`;
           //       componentModel = helper.command.catComponent(compId);
           //     });
@@ -962,7 +963,7 @@ describe('add an env with an invalid env name', function () {
   });
   let numOfObjectsBeforeTagging;
   before(() => {
-    helper.scopeHelper.reInitLocalScope();
+    helper.scopeHelper.reInitLocalScopeHarmony();
     helper.env.importDummyCompiler();
     const bitJson = helper.bitJson.read();
     bitJson.env = {
@@ -982,7 +983,7 @@ describe('add an env with an invalid env name', function () {
     const objectFiles = helper.fs.getObjectFiles();
     numOfObjectsBeforeTagging = objectFiles.length;
     helper.fixtures.createComponentBarFoo();
-    helper.fixtures.addComponentBarFoo();
+    helper.fixtures.addComponentBarFooAsDir();
   });
   after(() => {
     helper.scopeHelper.destroy();

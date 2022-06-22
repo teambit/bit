@@ -17,12 +17,12 @@ describe('peer-dependencies functionality', function () {
   describe('when a package is a regular dependency and a peer dependency', () => {
     let catComponent;
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitLocalScopeHarmony();
       helper.packageJson.create({ peerDependencies: { chai: '>= 2.1.2 < 5' } });
 
       helper.npm.addNpmPackage('chai', '2.4');
       helper.fixtures.createComponentBarFoo("import chai from 'chai';");
-      helper.fixtures.addComponentBarFoo();
+      helper.fixtures.addComponentBarFooAsDir();
       helper.fixtures.tagComponentBarFoo();
       catComponent = helper.command.catComponent('bar/foo@latest');
     });
@@ -45,9 +45,9 @@ describe('peer-dependencies functionality', function () {
       before(() => {
         helper.scopeHelper.reInitRemoteScope();
         helper.scopeHelper.addRemoteScope();
-        helper.command.exportAllComponents();
+        helper.command.export();
 
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitLocalScopeHarmony();
         helper.scopeHelper.addRemoteScope();
         const output = helper.command.importComponent('bar/foo');
         expect(output).to.have.string('requires a peer');
@@ -81,12 +81,12 @@ describe('peer-dependencies functionality', function () {
 
   describe('when a package is only a peer dependency but not required in the code', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitLocalScopeHarmony();
       helper.packageJson.create({ peerDependencies: { chai: '>= 2.1.2 < 5' } });
 
       helper.npm.addNpmPackage('chai', '2.4');
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFoo();
+      helper.fixtures.addComponentBarFooAsDir();
       helper.fixtures.tagComponentBarFoo();
     });
     it('should not save the peer dependencies in the model', () => {
@@ -103,13 +103,14 @@ describe('peer-dependencies functionality', function () {
   });
   describe('when a component has a package dependency that has peerDependency and installed as a compiler', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
       helper.npm.addNpmPackage('@babel/plugin-proposal-class-properties', '7.7.0');
       helper.fixtures.createComponentBarFoo('require ("@babel/plugin-proposal-class-properties");');
-      helper.fixtures.addComponentBarFoo();
-      helper.command.tagAllComponents();
-      helper.command.exportAllComponents();
-      helper.scopeHelper.reInitLocalScope();
+      helper.fixtures.addComponentBarFooAsDir();
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.scopeHelper.reInitLocalScopeHarmony();
       helper.scopeHelper.addRemoteScope();
       helper.command.importComponent('bar/foo --compiler');
     });

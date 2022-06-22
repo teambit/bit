@@ -20,7 +20,8 @@ describe('dev-dependencies functionality', function () {
   describe('environment with compiler and tester', () => {
     let clonedScope;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
       helper.env.importCompiler();
       helper.env.importTester();
       clonedScope = helper.scopeHelper.cloneLocalScope();
@@ -33,13 +34,13 @@ describe('dev-dependencies functionality', function () {
         helper.fs.createFile('utils', 'is-string.js', fixtures.isStringES6);
         helper.fixtures.addComponentUtilsIsString();
         helper.fixtures.createComponentBarFoo(fixtures.barFooES6);
-        helper.fixtures.addComponentBarFoo();
+        helper.fixtures.addComponentBarFooAsDir();
 
         helper.fs.createFile('bar', 'foo.spec.js', fixtures.barFooSpecES6(true));
         helper.npm.installNpmPackage('chai', '4.1.2');
         helper.command.addComponent('bar/foo.js', { i: 'bar/foo', t: 'bar/foo.spec.js' });
         helper.command.build(); // needed for building the dependencies
-        helper.command.tagAllComponents();
+        helper.command.tagAllWithoutBuild();
         barFoo = helper.command.catComponent('bar/foo@0.0.1');
       });
       it('should not save the dev-dependencies because they are the same as dependencies', () => {
@@ -72,7 +73,7 @@ describe('dev-dependencies functionality', function () {
         helper.fs.createFile('utils', 'is-string.js', fixtures.isStringES6);
         helper.fixtures.addComponentUtilsIsString();
         helper.fixtures.createComponentBarFoo('console.log("got foo")');
-        helper.fixtures.addComponentBarFoo();
+        helper.fixtures.addComponentBarFooAsDir();
 
         helper.fs.createFile(
           'bar',
@@ -90,7 +91,7 @@ describe('foo', () => {
         helper.command.addComponent('bar/foo.js', { i: 'bar/foo', t: 'bar/foo.spec.js' });
         helper.command.build(); // needed for building the dependencies
         localScope = helper.scopeHelper.cloneLocalScope();
-        helper.command.tagAllComponents();
+        helper.command.tagAllWithoutBuild();
         barFoo = helper.command.catComponent('bar/foo@0.0.1');
       });
       it('should save the dev-dependencies', () => {
@@ -119,8 +120,8 @@ describe('foo', () => {
       });
       describe('export and import to a new scope', () => {
         before(() => {
-          helper.command.exportAllComponents();
-          helper.scopeHelper.reInitLocalScope();
+          helper.command.export();
+          helper.scopeHelper.reInitLocalScopeHarmony();
           helper.scopeHelper.addRemoteScope();
           helper.scopeHelper.addGlobalRemoteScope();
           helper.command.importComponent('bar/foo');
@@ -139,13 +140,13 @@ describe('foo', () => {
           helper.scopeHelper.reInitRemoteScope();
           npmCiRegistry.setCiScopeInBitJson();
 
-          helper.command.tagAllComponents();
-          helper.command.exportAllComponents();
+          helper.command.tagAllWithoutBuild();
+          helper.command.export();
 
           await npmCiRegistry.init();
           npmCiRegistry.publishEntireScope();
 
-          helper.scopeHelper.reInitLocalScope();
+          helper.scopeHelper.reInitLocalScopeHarmony();
           npmCiRegistry.setCiScopeInBitJson();
           npmCiRegistry.setResolver();
           helper.command.importComponent('bar/foo');
@@ -166,13 +167,14 @@ describe('foo', () => {
   describe('dev-dependency of a nested component that originated from a prod dep', () => {
     let output;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
       helper.fs.createFile('bar', 'foo.js', fixtures.barFooFixture);
       helper.fs.createFile('utils', 'is-string-spec.js', fixtures.isString);
       helper.fs.createFile('utils', 'is-string.js', '');
       helper.fs.createFile('utils', 'is-type.js', 'require("./baz");');
       helper.fs.createFile('utils', 'baz.js', '');
-      helper.fixtures.addComponentBarFoo();
+      helper.fixtures.addComponentBarFooAsDir();
       helper.fixtures.addComponentUtilsIsType();
       helper.command.addComponent('utils/is-string.js', {
         m: 'utils/is-string.js',
@@ -180,10 +182,10 @@ describe('foo', () => {
         t: 'utils/is-string-spec.js',
       });
       helper.command.addComponent('utils/baz.js');
-      helper.command.tagAllComponents();
-      helper.command.exportAllComponents();
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
 
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitLocalScopeHarmony();
       helper.scopeHelper.addRemoteScope();
       output = helper.command.importComponent('bar/foo');
     });
@@ -203,7 +205,8 @@ describe('foo', () => {
   // (bar ->(dev)-> is-string ->(dev)->is-type
   describe('dev-dependency of a nested component that originated from a dev dep', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
       helper.fs.createFile('utils', 'is-string-spec.js', fixtures.isString);
       helper.fs.createFile('utils', 'is-string.js', '');
       helper.fs.createFile('utils', 'is-type.js', '');
@@ -213,7 +216,7 @@ describe('foo', () => {
         i: 'utils/is-string',
         t: 'utils/is-string-spec.js',
       });
-      helper.command.tagAllComponents();
+      helper.command.tagAllWithoutBuild();
 
       helper.fs.createFile('bar', 'foo.js', '');
       helper.fs.createFile('bar', 'foo.spec.js', fixtures.barFooFixture);
@@ -223,7 +226,7 @@ describe('foo', () => {
         t: 'bar/foo.spec.js',
       });
 
-      helper.command.tagAllComponents();
+      helper.command.tagAllWithoutBuild();
     });
     it('the flattened dependencies should contain the entire chain of the dependencies', () => {
       const barFoo = helper.command.catComponent('bar/foo@latest');
@@ -235,7 +238,7 @@ describe('foo', () => {
   describe('dev-dependency that requires prod-dependency', () => {
     let barFoo;
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitLocalScopeHarmony();
       helper.fixtures.createComponentBarFoo();
       helper.fs.createFile('bar', 'foo.spec.js', fixtures.barFooFixture);
       helper.fs.createFile('utils', 'is-string.js', fixtures.isString);
@@ -244,7 +247,7 @@ describe('foo', () => {
       helper.fixtures.addComponentUtilsIsString();
       helper.fixtures.addComponentUtilsIsType();
       helper.command.linkAndRewire();
-      helper.command.tagAllComponents();
+      helper.command.tagAllWithoutBuild();
       barFoo = helper.command.catComponent('bar/foo@latest');
 
       // as an intermediate step, make sure barFoo has is-string as a dev dependency only
