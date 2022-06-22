@@ -1,9 +1,6 @@
 import chai, { expect } from 'chai';
-import * as path from 'path';
-
 import Helper from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../src/fixtures/fixtures';
-import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
 
 chai.use(require('chai-fs'));
 
@@ -129,36 +126,6 @@ describe('foo', () => {
         it('tests should pass', () => {
           const output = helper.command.testComponent('bar/foo');
           expect(output).to.have.string('tests passed');
-        });
-      });
-
-      (supportNpmCiRegistryTesting ? describe : describe.skip)('export and import dependencies as packages', () => {
-        let npmCiRegistry: NpmCiRegistry;
-        before(async () => {
-          npmCiRegistry = new NpmCiRegistry(helper);
-          helper.scopeHelper.getClonedLocalScope(localScope);
-          helper.scopeHelper.reInitRemoteScope();
-          npmCiRegistry.setCiScopeInBitJson();
-
-          helper.command.tagAllWithoutBuild();
-          helper.command.export();
-
-          await npmCiRegistry.init();
-          npmCiRegistry.publishEntireScope();
-
-          helper.scopeHelper.reInitLocalScopeHarmony();
-          npmCiRegistry.setCiScopeInBitJson();
-          npmCiRegistry.setResolver();
-          helper.command.importComponent('bar/foo');
-        });
-        after(() => {
-          npmCiRegistry.destroy();
-        });
-        it('should save the bit-dev-dependencies component as devDependencies packages in package.json', () => {
-          const packageJson = helper.packageJson.read(path.join(helper.scopes.localPath, 'components/bar/foo'));
-          const id = `@ci/${helper.scopes.remote}.utils.is-string`;
-          expect(packageJson.dependencies).to.not.have.property(id);
-          expect(packageJson.devDependencies).to.have.property(id);
         });
       });
     });
