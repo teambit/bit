@@ -1,12 +1,11 @@
-import fetch from 'node-fetch';
-import { setContext } from 'apollo-link-context';
-import { HttpLink } from 'apollo-link-http';
+import fetch from 'cross-fetch';
 import { makeRemoteExecutableSchema, introspectSchema } from 'apollo-server';
-import { WebSocketLink } from 'apollo-link-ws';
-import { split, ApolloLink } from 'apollo-link';
-import { getMainDefinition } from 'apollo-utilities';
-import { SubscriptionClient } from 'subscriptions-transport-ws';
-import ws from 'ws';
+import { createClient } from 'graphql-ws';
+import { ApolloLink, HttpLink, split } from '@apollo/client';
+import { GraphQLWsLink } from '@apollo/client/link/subscriptions';
+import { getMainDefinition } from '@apollo/client/utilities';
+import { setContext } from '@apollo/client/link/context';
+
 import { GraphQLServer } from '../graphql-server';
 
 async function getRemoteSchema({ uri, subscriptionsUri }) {
@@ -19,7 +18,6 @@ async function getRemoteSchema({ uri, subscriptionsUri }) {
       return response;
     });
   });
-  // @ts-ignore
   const http = new HttpLink({ uri, fetch });
   const httpLink = setContext((request, previousContext) => {
     return {
@@ -31,14 +29,14 @@ async function getRemoteSchema({ uri, subscriptionsUri }) {
 
   if (!subscriptionsUri) {
     return makeRemoteExecutableSchema({
+      // TODO
       schema: await introspectSchema(httpLink),
       link: httpLink,
     });
   }
 
   // Create WebSocket link with custom client
-  const client = new SubscriptionClient(subscriptionsUri, { reconnect: true }, ws);
-  const wsLink = new WebSocketLink(client);
+  const wsLink = new GraphQLWsLink(createClient({ url: subscriptionsUri }));
 
   // Using the ability to split links, we can send data to each link
   // depending on what kind of operation is being sent
@@ -52,6 +50,7 @@ async function getRemoteSchema({ uri, subscriptionsUri }) {
   );
 
   return makeRemoteExecutableSchema({
+    // TODO
     schema: await introspectSchema(httpLink),
     link,
   });

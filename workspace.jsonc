@@ -214,6 +214,7 @@
         "@types/url-parse": "1.4.3",
         "@types/webpack": "5.28.0",
         "@types/webpack-dev-server": "4.0.3",
+        "@types/ws": "8.5.3",
         "@yarnpkg/cli": "3.2.0-rc.7",
         "@yarnpkg/core": "^3.2.0-rc.7",
         "@yarnpkg/fslib": "2.6.1-rc.2",
@@ -373,7 +374,7 @@
         "webpack-manifest-plugin": "4.0.2",
         "webpack-merge": "5.8.0",
         "workbox-webpack-plugin": "6.2.4",
-        "ws": "7.4.2",
+        "ws": "8.8.0",
         "yaml": "1.10.2"
       },
       "peerDependencies": {

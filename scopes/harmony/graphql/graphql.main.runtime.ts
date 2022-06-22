@@ -8,9 +8,10 @@ import { graphqlHTTP } from 'express-graphql';
 import { Port } from '@teambit/toolbox.network.get-port';
 import { execute, subscribe } from 'graphql';
 import { PubSubEngine, PubSub } from 'graphql-subscriptions';
+import { WebSocketServer } from 'ws';
 import { createServer, Server } from 'http';
 import httpProxy from 'http-proxy';
-import { SubscriptionServer } from 'subscriptions-transport-ws';
+import { useServer } from 'graphql-ws/lib/use/ws';
 import cors from 'cors';
 import { GraphQLServer } from './graphql-server';
 import { createRemoteSchemas } from './create-remote-schemas';
@@ -40,7 +41,7 @@ export type GraphQLServerOptions = {
   graphiql?: boolean;
   remoteSchemas?: GraphQLServer[];
   subscriptionsPortRange?: number[];
-  onWsConnect?: Function;
+  onWsConnect?: () => any;
 };
 
 export class GraphqlMain {
@@ -181,37 +182,26 @@ export class GraphqlMain {
   /** create Subscription server with different port */
 
   private async createSubscription(options: GraphQLServerOptions, port: number) {
-    // Create WebSocket listener server
-    const websocketServer = createServer((request, response) => {
-      response.writeHead(404);
-      response.end();
-    });
-
-    // Bind it to port and start listening
-    websocketServer.listen(port, () =>
-      this.logger.debug(`Websocket Server is now running on http://localhost:${port}`)
-    );
+    const path = this.config.subscriptionsPath;
+    const wsServer = new WebSocketServer({ port, path });
 
     const localSchema = this.createRootModule(options.schemaSlot);
     const remoteSchemas = await createRemoteSchemas(options.remoteSchemas || this.graphQLServerSlot.values());
     const schemas = [localSchema.schema].concat(remoteSchemas).filter((x) => x);
-    const schema = mergeSchemas({
-      schemas,
-    });
+    const schema = mergeSchemas({ schemas });
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const subServer = new SubscriptionServer(
+    const subServer = useServer(
       {
         execute,
         subscribe,
         schema,
         onConnect: options.onWsConnect,
       },
-      {
-        server: websocketServer,
-        path: this.config.subscriptionsPath,
-      }
+      wsServer
     );
+
+    this.logger.debug(`Websocket Server is now running on http://localhost:${port}${path}`);
+
     return { subServer, port };
   }
   /** proxy ws Subscription server to avoid conflict with different websocket connections */
