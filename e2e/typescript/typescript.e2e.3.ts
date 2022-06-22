@@ -63,10 +63,10 @@ export class List extends React.Component {
         export {};`
       );
 
-      helper.npm.addNpmPackage('ninja', '13.0.0');
-      helper.npm.addNpmPackage('@types/ninja', '1.0.0');
-      helper.npm.addNpmPackage('@scoped/ninja', '11.5.0');
-      helper.npm.addNpmPackage('@types/scoped__ninja', '1.0.5');
+      helper.npm.addFakeNpmPackage('ninja', '13.0.0');
+      helper.npm.addFakeNpmPackage('@types/ninja', '1.0.0');
+      helper.npm.addFakeNpmPackage('@scoped/ninja', '11.5.0');
+      helper.npm.addFakeNpmPackage('@types/scoped__ninja', '1.0.5');
       helper.packageJson.addKeyValue({ dependencies: { ninja: '13.0.0', '@scoped/ninja': '11.5.0' } });
       helper.packageJson.addKeyValue({ devDependencies: { '@types/ninja': '1.0.0', '@types/scoped__ninja': '1.0.5' } });
 

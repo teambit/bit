@@ -166,7 +166,7 @@ describe('workspace config', function () {
         helper.bitJsonc.setupDefault();
         helper.fixtures.createComponentBarFoo('require("chai");');
         helper.fixtures.addComponentBarFooAsDir();
-        helper.npm.addNpmPackage('chai', '2.2.0');
+        helper.npm.addFakeNpmPackage('chai', '2.2.0');
         const overrides = {
           'bar/foo': {
             dependencies: {
@@ -539,8 +539,8 @@ describe('workspace config', function () {
         let showBar;
         before(() => {
           helper.scopeHelper.reInitLocalScopeHarmony();
-          helper.npm.addNpmPackage('existing-package');
-          helper.npm.addNpmPackage('another-existing-package');
+          helper.npm.addFakeNpmPackage('existing-package');
+          helper.npm.addFakeNpmPackage('another-existing-package');
           helper.fs.createFile(
             'bar-dir',
             'bar.js',
@@ -571,8 +571,8 @@ describe('workspace config', function () {
         let showBar;
         before(() => {
           helper.scopeHelper.reInitLocalScopeHarmony();
-          helper.npm.addNpmPackage('existing-package');
-          helper.npm.addNpmPackage('another-existing-package');
+          helper.npm.addFakeNpmPackage('existing-package');
+          helper.npm.addFakeNpmPackage('another-existing-package');
           helper.fs.createFile('bar-dir', 'bar.js');
           helper.fs.createFile(
             'bar-dir',
@@ -616,7 +616,7 @@ describe('workspace config', function () {
           // also saved as a peerDependency
           helper.scopeHelper.reInitLocalScopeHarmony();
           helper.fixtures.createComponentBarFoo("import chai from 'chai';");
-          helper.npm.addNpmPackage('chai', '2.2.0');
+          helper.npm.addFakeNpmPackage('chai', '2.2.0');
           helper.packageJson.create({ peerDependencies: { chai: '>= 2.1.2 < 5' } });
           helper.fixtures.addComponentBarFooAsDir();
           const overrides = {
@@ -751,7 +751,7 @@ describe('workspace config', function () {
         helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
         helper.bitJsonc.setupDefault();
         helper.fixtures.createComponentBarFoo("import chai from 'chai';");
-        helper.npm.addNpmPackage('chai', '2.2.0');
+        helper.npm.addFakeNpmPackage('chai', '2.2.0');
         helper.fixtures.addComponentBarFooAsDir();
         const overrides = {
           'bar/foo': {
@@ -767,7 +767,7 @@ describe('workspace config', function () {
         helper.scopeHelper.reInitLocalScopeHarmony();
         helper.scopeHelper.addRemoteScope();
         helper.command.importComponent('bar/foo');
-        helper.npm.addNpmPackage('chai', '2.2.0');
+        helper.npm.addFakeNpmPackage('chai', '2.2.0');
         const componentDir = path.join(helper.scopes.localPath, 'components/bar/foo');
         const packageJson = helper.packageJson.read(componentDir);
         // an intermediate step to make sure we're good so far
@@ -878,7 +878,7 @@ describe('workspace config', function () {
       before(() => {
         helper.scopeHelper.reInitLocalScopeHarmony();
         helper.fixtures.createComponentBarFoo("require('chai');");
-        helper.npm.addNpmPackage('chai', '2.2.0');
+        helper.npm.addFakeNpmPackage('chai', '2.2.0');
         helper.fixtures.addComponentBarFooAsDir();
         const overrides = {
           'bar/foo': {
@@ -905,8 +905,8 @@ describe('workspace config', function () {
       before(() => {
         helper.scopeHelper.reInitLocalScopeHarmony();
         helper.fixtures.createComponentBarFoo("require('chai'); require('lodash')");
-        helper.npm.addNpmPackage('chai', '2.2.0');
-        helper.npm.addNpmPackage('lodash', '2.2.0');
+        helper.npm.addFakeNpmPackage('chai', '2.2.0');
+        helper.npm.addFakeNpmPackage('lodash', '2.2.0');
         helper.fixtures.addComponentBarFooAsDir();
         const overrides = {
           'bar/foo': {
@@ -939,7 +939,7 @@ describe('workspace config', function () {
         before(() => {
           helper.scopeHelper.reInitLocalScopeHarmony();
           helper.fixtures.createComponentBarFoo("import chai from 'chai';");
-          helper.npm.addNpmPackage('chai', '2.2.0');
+          helper.npm.addFakeNpmPackage('chai', '2.2.0');
           helper.packageJson.create({ dependencies: { chai: '2.2.0' } });
           helper.fixtures.addComponentBarFooAsDir();
           const overrides = {

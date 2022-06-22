@@ -10,7 +10,6 @@ describe('dynamic namespaces', function () {
   let helper: Helper;
   before(() => {
     helper = new Helper();
-    helper.command.setFeatures('legacy-workspace-config');
   });
   after(() => {
     helper.scopeHelper.destroy();
@@ -26,7 +25,7 @@ describe('dynamic namespaces', function () {
         helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
         helper.bitJsonc.setupDefault();
         helper.fs.createFile('bar', 'foo.js');
-        const addOutput = helper.command.addComponent('bar/foo.js', { i: componentName });
+        const addOutput = helper.command.addComponent('bar', { i: componentName });
         expect(addOutput).to.have.string('added');
         tagOutput = helper.command.tagAllWithoutBuild();
         catComp = helper.command.catComponent(componentName);
@@ -61,8 +60,8 @@ describe('dynamic namespaces', function () {
           helper.command.importComponent(componentName);
         });
         it('should create the directories according to the multiple namespaces', () => {
-          expect(path.join(helper.scopes.localPath, 'components', componentName)).to.be.a.path();
-          expect(path.join(helper.scopes.localPath, 'components', componentName, 'foo.js')).to.be.a.file();
+          expect(path.join(helper.scopes.localPath, helper.scopes.remote, componentName)).to.be.a.path();
+          expect(path.join(helper.scopes.localPath, helper.scopes.remote, componentName, 'foo.js')).to.be.a.file();
         });
       });
     });
@@ -71,15 +70,15 @@ describe('dynamic namespaces', function () {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       helper.bitJsonc.setupDefault();
-      helper.fs.createFile('', 'foo.js');
-      helper.command.addComponent('foo.js', { i: 'foo' });
+      helper.fs.createFile('foo', 'foo.js');
+      helper.command.addComponent('foo', { i: 'foo' });
       helper.command.tagAllWithoutBuild();
       helper.command.export();
 
       helper.scopeHelper.reInitLocalScopeHarmony();
       helper.scopeHelper.addRemoteScope();
       helper.fs.createFile('bar', 'foo.js');
-      helper.command.addComponent('bar/foo.js', { i: `${helper.scopes.remote}/foo` });
+      helper.command.addComponent('bar', { i: `${helper.scopes.remote}/foo` });
     });
     it('should throw an error and not allow the import', () => {
       const output = helper.general.runWithTryCatch(`bit import ${helper.scopes.remote}/foo`);

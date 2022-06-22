@@ -20,7 +20,7 @@ describe('peer-dependencies functionality', function () {
       helper.scopeHelper.reInitLocalScopeHarmony();
       helper.packageJson.create({ peerDependencies: { chai: '>= 2.1.2 < 5' } });
 
-      helper.npm.addNpmPackage('chai', '2.4');
+      helper.npm.addFakeNpmPackage('chai', '2.4');
       helper.fixtures.createComponentBarFoo("import chai from 'chai';");
       helper.fixtures.addComponentBarFooAsDir();
       helper.fixtures.tagComponentBarFoo();
@@ -51,7 +51,7 @@ describe('peer-dependencies functionality', function () {
         helper.scopeHelper.addRemoteScope();
         const output = helper.command.importComponent('bar/foo');
         expect(output).to.have.string('requires a peer');
-        helper.npm.addNpmPackage('chai', '2.4'); // it's not automatically installed because it's a peer-dependency
+        helper.npm.addFakeNpmPackage('chai', '2.4'); // it's not automatically installed because it's a peer-dependency
       });
       it('should not be shown as modified', () => {
         helper.command.expectStatusToBeClean();
@@ -84,7 +84,7 @@ describe('peer-dependencies functionality', function () {
       helper.scopeHelper.reInitLocalScopeHarmony();
       helper.packageJson.create({ peerDependencies: { chai: '>= 2.1.2 < 5' } });
 
-      helper.npm.addNpmPackage('chai', '2.4');
+      helper.npm.addFakeNpmPackage('chai', '2.4');
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
       helper.fixtures.tagComponentBarFoo();
@@ -105,7 +105,7 @@ describe('peer-dependencies functionality', function () {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       helper.bitJsonc.setupDefault();
-      helper.npm.addNpmPackage('@babel/plugin-proposal-class-properties', '7.7.0');
+      helper.npm.addFakeNpmPackage('@babel/plugin-proposal-class-properties', '7.7.0');
       helper.fixtures.createComponentBarFoo('require ("@babel/plugin-proposal-class-properties");');
       helper.fixtures.addComponentBarFooAsDir();
       helper.command.tagAllWithoutBuild();

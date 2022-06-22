@@ -83,6 +83,12 @@ export default class BitJsoncHelper {
     return depResolver.policy;
   }
 
+  addPolicyToDependencyResolver(policy: Record<string, any>) {
+    const currentPolicy = this.getPolicyFromDependencyResolver();
+    assign(currentPolicy, policy);
+    this.addKeyValToDependencyResolver('policy', currentPolicy);
+  }
+
   addDefaultScope(scope = this.scopes.remote) {
     this.addKeyValToWorkspace('defaultScope', scope);
   }
