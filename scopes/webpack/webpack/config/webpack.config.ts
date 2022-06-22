@@ -102,23 +102,16 @@ function generateHtmlPlugins(configs: BundlerHtmlConfig[]) {
 }
 
 function generateHtmlPlugin(config: BundlerHtmlConfig) {
-  const baseConfig = {
+  const baseConfig: HtmlWebpackPlugin.Options = {
     filename: config.filename,
     chunks: config.chunks,
     title: config.title,
     templateContent: config.templateContent,
     minify: config.minify,
     cache: false,
-    chunksSortMode: 'auto' as const,
     favicon: config.favicon,
   };
-  if (baseConfig.chunks && baseConfig.chunks.length) {
-    // Make sure the order is that the preview root coming after the preview def
-    // we can't make it like this on the entries using depend on because this will
-    // prevent the splitting between different preview defs
-    // @ts-ignore
-    baseConfig.chunksSortMode = 'manual' as const;
-  }
+
   const filteredConfig = omitBy(baseConfig, isUndefined);
   return new HtmlWebpackPlugin(filteredConfig);
 }
