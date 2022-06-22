@@ -125,6 +125,7 @@ describe('custom env', function () {
       envId = `${helper.scopes.remote}/${envName}`;
       helper.command.compile();
       helper.command.tagAllComponents();
+      helper.command.tagAllComponents('--unmodified');
       helper.command.export();
 
       helper.scopeHelper.reInitLocalScopeHarmony();
@@ -155,7 +156,7 @@ describe('custom env', function () {
       });
       it('should save it with the latest version in root', () => {
         const bitMap = helper.bitMap.read();
-        expect(bitMap.comp1.config).to.have.property(`${envId}@0.0.1`);
+        expect(bitMap.comp1.config).to.have.property(`${envId}@0.0.2`);
       });
     });
     describe('set up the env using bit env set with a version', () => {
@@ -163,11 +164,11 @@ describe('custom env', function () {
         helper.scopeHelper.reInitLocalScopeHarmony();
         helper.scopeHelper.addRemoteScope();
         helper.fixtures.populateComponents(1);
-        helper.command.setEnv('comp1', `${envId}@0.0.1`);
+        helper.command.setEnv('comp1', `${envId}@0.0.2`);
       });
       it('should save it with a version in root but without version in envs/envs', () => {
         const bitMap = helper.bitMap.read();
-        expect(bitMap.comp1.config).to.have.property(`${envId}@0.0.1`);
+        expect(bitMap.comp1.config).to.have.property(`${envId}@0.0.2`);
         expect(bitMap.comp1.config[Extensions.envs].env).equal(envId);
       });
     });
@@ -210,6 +211,20 @@ describe('custom env', function () {
         expect(bitMap.comp1.config).to.not.have.property(`${envId}@0.0.1`);
         expect(bitMap.comp1.config).to.have.property(`${envId}@0.0.2`);
         expect(bitMap.comp1.config[Extensions.envs].env).equal(envId);
+      });
+    });
+    describe('tag and change the env version', () => {
+      before(() => {
+        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.scopeHelper.addRemoteScope();
+        helper.fixtures.populateComponents(1);
+        helper.command.setEnv('comp1', `${envId}@0.0.1`);
+        helper.command.tagAllWithoutBuild();
+        helper.command.setEnv('comp1', `${envId}@0.0.2`);
+      });
+      it('bit status should show it as modified', () => {
+        const isModified = helper.command.statusComponentIsModified('comp1@0.0.1');
+        expect(isModified).to.be.true;
       });
     });
 
