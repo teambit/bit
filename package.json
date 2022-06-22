@@ -120,6 +120,7 @@
     "acorn": "6.4.2",
     "ajv": "6.12.6",
     "app-module-path": "2.2.0",
+    "archy": "1.0.0",
     "array-difference": "0.0.2",
     "async-mutex": "0.3.1",
     "bluebird": "3.7.2",
