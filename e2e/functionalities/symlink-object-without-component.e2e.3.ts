@@ -10,7 +10,6 @@ describe('scope with a symlink object reference to a non-exist component', funct
   let helper: Helper;
   before(() => {
     helper = new Helper();
-    helper.command.setFeatures('legacy-workspace-config');
   });
   after(() => {
     helper.scopeHelper.destroy();
@@ -49,7 +48,7 @@ describe('scope with a symlink object reference to a non-exist component', funct
   it('bit tag should throw a descriptive error', () => {
     helper.bitMap.delete();
     helper.fixtures.addComponentBarFooAsDir();
-    const output = helper.general.runWithTryCatch('bit tag -a');
+    const output = helper.general.runWithTryCatch('bit tag');
     expect(output).to.have.string('error: found a symlink object "bar/foo" that references to a non-exist component');
   });
   it('bit doctor should report this as an issue', () => {

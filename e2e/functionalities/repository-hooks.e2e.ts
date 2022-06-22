@@ -12,7 +12,6 @@ describe('repository-hooks', function () {
   let helper: Helper;
   before(() => {
     helper = new Helper();
-    helper.command.setFeatures('legacy-workspace-config');
   });
   after(() => {
     helper.scopeHelper.destroy();
@@ -40,8 +39,6 @@ describe('repository-hooks', function () {
       // 3 objects - component, version and file
       expect(count).to.have.lengthOf(3);
     });
-    // TODO: think how to implement
-    it.skip('should persist content after manipulation', () => {});
 
     describe('import from remote scope with manipulation hook', () => {
       before(() => {
