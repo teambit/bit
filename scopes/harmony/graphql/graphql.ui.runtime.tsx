@@ -1,9 +1,10 @@
 import React, { ReactNode } from 'react';
 import { UIRuntime } from '@teambit/ui';
 
-import { InMemoryCache, ApolloClient, ApolloLink, HttpLink, createHttpLink } from '@apollo/client';
+import { InMemoryCache, ApolloClient, ApolloLink, HttpLink } from '@apollo/client';
 import type { NormalizedCacheObject } from '@apollo/client';
-import { WebSocketLink } from '@apollo/client/link/ws';
+import { createClient } from 'graphql-ws';
+import { GraphQLWsLink } from '@apollo/client/link/subscriptions';
 import { onError } from '@apollo/client/link/error';
 
 import crossFetch from 'cross-fetch';
@@ -40,7 +41,7 @@ export class GraphqlUI {
   createSsrClient({ serverUrl, headers }: { serverUrl: string; headers: any }) {
     const link = ApolloLink.from([
       onError(logError),
-      createHttpLink({
+      new HttpLink({
         credentials: 'include',
         uri: serverUrl,
         headers,
@@ -67,13 +68,9 @@ export class GraphqlUI {
 
   private createLink(uri: string, { subscriptionUri }: { subscriptionUri?: string } = {}) {
     const httpLink = new HttpLink({ credentials: 'include', uri });
-    const subsLink = subscriptionUri
-      ? new WebSocketLink({
-          uri: subscriptionUri,
-          options: { reconnect: true },
-        })
-      : undefined;
+    const subsLink = subscriptionUri ? new GraphQLWsLink(createClient({ url: subscriptionUri })) : undefined;
 
+    // const hybridLink = httpLink;
     const hybridLink = subsLink ? createSplitLink(httpLink, subsLink) : httpLink;
     const errorLogger = onError(logError);
 
