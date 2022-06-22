@@ -55,5 +55,16 @@ describe('MDXCompiler', () => {
         expect(output.contents).to.include('My very new component.');
       });
     });
+
+    describe('parse import statements', () => {
+      it('should parse import statements with new lines separating them', async () => {
+        const importFile = readFileSync(join(__dirname, 'mocks', 'with-import.mdx'), 'utf-8');
+        const output = await compile(importFile);
+        const importSpecifiers = output.getImportSpecifiers();
+        expect(importSpecifiers).to.have.lengthOf(2);
+        const modules = importSpecifiers.map((specifier) => specifier.fromModule);
+        expect(modules).to.deep.equal(['a', 'b']);
+      });
+    });
   });
 });
