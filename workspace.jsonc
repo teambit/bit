@@ -160,6 +160,7 @@
         "@teambit/evangelist.surfaces.tooltip": "1.0.1",
         "@teambit/explorer.ui.command-bar": "1.2.0",
         "@teambit/graph.cleargraph": "0.0.1",
+        "@teambit/graphql.hooks.use-query-light": "1.0.0",
         "@teambit/harmony": "0.3.3",
         "@teambit/pkg.content.packages-overview": "1.95.9",
         "@teambit/react.content.react-overview": "1.95.0",
@@ -749,7 +750,7 @@
         ]
       }
     },
-    // overrides for @teambit/bit ("teambit.harmony/bit") package:
+    // overrides for "@teambit/bit", the root package: (aka "teambit.harmony/bit")
     "scopes/harmony/bit": {
       "teambit.component/issues": {
         // This is here because in load-bit, we have to import harmony config from non main file
