@@ -730,6 +730,11 @@ either, use the ignore file syntax or change the require statement to have a mod
     if (!components || R.isEmpty(components)) return;
     components.forEach((compDep) => {
       let componentId = this.getComponentIdByResolvedPackageData(compDep);
+      if (componentId.isEqual(this.componentId)) {
+        // the component is importing itself, so ignore it. although currently it doesn't cause any issues, (probably
+        // because it filtered out later), it's better to remove it as soon as possible, for less-confusing debugging.
+        return;
+      }
       const depDebug: DebugComponentsDependency = {
         id: componentId,
         dependencyPackageJsonPath: compDep.packageJsonPath,
