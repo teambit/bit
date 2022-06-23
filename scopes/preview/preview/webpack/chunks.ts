@@ -6,7 +6,7 @@ import type { BundlerEntryMap } from '@teambit/bundler';
 // - especially move webpack-only syntax, like dependsOn, filename template
 // - consider adding 'runtime'
 
-const CHUNK_NAMES = {
+export const CHUNK_NAMES = {
   previewRoot: 'preview-root',
   peers: 'peers',
 };

@@ -17,9 +17,8 @@ import { Logger } from '@teambit/logger';
 import { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { existsSync, mkdirpSync } from 'fs-extra';
 import type { PreviewMain } from './preview.main.runtime';
-import { PreviewDefinition } from '.';
-import { html } from './webpack';
 import { generateTemplateEntries } from './webpack/chunks';
+import { generateHtmlConfig } from './webpack/html-plugin';
 
 export type ModuleExpose = {
   name: string;
@@ -37,8 +36,6 @@ type TargetsGroupMap = {
 };
 
 export const GENERATE_ENV_TEMPLATE_TASK_NAME = 'GenerateEnvTemplate';
-export const PREVIEW_ROOT_CHUNK_NAME = 'previewRoot';
-export const PEERS_CHUNK_NAME = 'peers';
 
 export class EnvPreviewTemplateTask implements BuildTask {
   aspectId = 'teambit.preview/preview';
@@ -56,9 +53,7 @@ export class EnvPreviewTemplateTask implements BuildTask {
 
   async execute(context: BuildContext): Promise<BuiltTaskResult> {
     const previewDefs = this.preview.getDefs();
-    const htmlConfig = this.generateHtmlConfig(previewDefs, PREVIEW_ROOT_CHUNK_NAME, PEERS_CHUNK_NAME, {
-      dev: context.dev,
-    });
+    const htmlConfig = previewDefs.map((previewModule) => generateHtmlConfig(previewModule, { dev: context.dev }));
     const originalSeedersIds = context.capsuleNetwork.originalSeedersCapsules.map((c) => c.component.id.toString());
     const grouped: TargetsGroupMap = {};
     await Promise.all(
@@ -171,41 +166,6 @@ export class EnvPreviewTemplateTask implements BuildTask {
       aliasHostDependencies: true,
       exposeHostDependencies: true,
     };
-  }
-
-  private generateHtmlConfig(
-    previewDefs: PreviewDefinition[],
-    previewRootChunkName: string,
-    peersChunkName: string,
-    options: { dev?: boolean }
-  ): BundlerHtmlConfig[] {
-    const htmlConfigs = previewDefs.map((previewModule) =>
-      this.generateHtmlConfigForPreviewDef(previewModule, previewRootChunkName, peersChunkName, options)
-    );
-    return htmlConfigs;
-  }
-
-  private generateHtmlConfigForPreviewDef(
-    previewDef: PreviewDefinition,
-    previewRootChunkName: string,
-    peersChunkName: string,
-    options: { dev?: boolean }
-  ): BundlerHtmlConfig {
-    const chunks = compact([
-      previewDef.includePeers && peersChunkName,
-      previewRootChunkName,
-      ...(previewDef.include || []),
-      previewDef.prefix,
-    ]);
-
-    const config = {
-      title: 'Preview',
-      templateContent: html('Preview'),
-      minify: options?.dev ?? true,
-      chunks,
-      filename: `${previewDef.prefix}.html`,
-    };
-    return config;
   }
 
   private async generateEntries({
