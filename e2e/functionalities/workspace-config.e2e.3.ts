@@ -32,7 +32,7 @@ describe('workspace config', function () {
         helper.command.tagIncludeUnmodified('2.0.0');
         const policy = {
           dependencies: {
-            [`${helper.scopes.remote}/foo`]: '0.0.1',
+            [`@${helper.scopes.remote}/foo`]: '0.0.1',
           },
         };
         helper.bitJsonc.setPolicyToVariant('bar', policy);
@@ -73,7 +73,6 @@ describe('workspace config', function () {
         helper.command.addComponent('bar');
         helper.command.linkAndRewire();
         scopeAfterAdding = helper.scopeHelper.cloneLocalScope();
-        remoteScopeEmpty = helper.scopeHelper.cloneRemoteScope();
       });
       describe('ignoring a dependency component', () => {
         describe('when requiring with module path', () => {
@@ -199,7 +198,7 @@ describe('workspace config', function () {
           expect(showBar.manuallyRemovedDependencies).to.not.have.property('dependencies');
         });
       });
-      describe.only('ignoring an existing peerDependency package', () => {
+      describe('ignoring an existing peerDependency package', () => {
         let showBar;
         before(() => {
           // keep in mind that the 'chai' dependency is a regular package dependency, which
@@ -239,34 +238,27 @@ describe('workspace config', function () {
       before(() => {
         helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
         helper.bitJsonc.setupDefault();
-        helper.fs.createFile('', 'foo1.js');
-        helper.fs.createFile('', 'foo2.js');
-        helper.fs.createFile('', 'bar.js');
-        helper.command.addComponent('foo1.js');
-        helper.command.addComponent('foo2.js');
-        helper.command.addComponent('bar.js');
+        helper.fs.createFile('foo1', 'foo1.js');
+        helper.fs.createFile('foo2', 'foo2.js');
+        helper.fs.createFile('bar', 'bar.js', "require('../foo1/foo1'); require('../foo2/foo2'); ");
+        helper.command.addComponent('foo1', { i: 'utils/foo/foo1' });
+        helper.command.addComponent('foo2', { i: 'utils/foo/foo2' });
+        helper.command.addComponent('bar');
+        helper.command.linkAndRewire();
         helper.command.tagAllWithoutBuild();
         helper.command.export();
-        helper.fs.createFile(
-          '',
-          'bar.js',
-          `require('@bit/${helper.scopes.remote}.foo1'); require('@bit/${helper.scopes.remote}.foo2');`
-        );
-
-        const overrides = {
-          bar: {
-            dependencies: {
-              [`${OVERRIDE_COMPONENT_PREFIX}foo2`]: '-',
-            },
+        const policy = {
+          dependencies: {
+            [`@${helper.scopes.remote}/utils.foo.foo2`]: '-',
           },
         };
-        helper.bitJson.addOverrides(overrides);
+        helper.bitJsonc.setPolicyToVariant('bar', policy);
       });
       describe('tagging the component', () => {
         let output;
         let catBar;
         before(() => {
-          output = helper.general.runWithTryCatch('bit tag bar');
+          output = helper.command.tagWithoutBuild('bar');
           catBar = helper.command.catComponent('bar@latest');
         });
         it('should be able to tag successfully', () => {
@@ -278,29 +270,19 @@ describe('workspace config', function () {
         it('should save the overrides data into the model', () => {
           expect(catBar).to.have.property('overrides');
           expect(catBar.overrides).to.have.property('dependencies');
-          expect(catBar.overrides.dependencies).to.have.property(`${OVERRIDE_COMPONENT_PREFIX}foo2`);
-          expect(catBar.overrides.dependencies[`${OVERRIDE_COMPONENT_PREFIX}foo2`]).to.equal('-');
+          expect(catBar.overrides.dependencies).to.have.property(`@${helper.scopes.remote}/utils.foo.foo2`);
+          expect(catBar.overrides.dependencies[`@${helper.scopes.remote}/utils.foo.foo2`]).to.equal('-');
         });
         it('should not show the component as modified', () => {
           const status = helper.command.status();
           expect(status).to.not.have.string('modified components');
         });
         describe('importing the component', () => {
-          let barRoot;
           before(() => {
-            barRoot = path.join(helper.scopes.localPath, 'components/bar/');
             helper.command.export();
             helper.scopeHelper.reInitLocalScopeHarmony();
             helper.scopeHelper.addRemoteScope();
-            helper.command.importComponent('bar');
-          });
-          it('should write the overrides data into the package.json of the component', () => {
-            const packageJson = helper.packageJson.read(barRoot);
-            expect(packageJson).to.have.property('bit');
-            expect(packageJson.bit).to.have.property('overrides');
-            expect(packageJson.bit.overrides).to.have.property('dependencies');
-            expect(packageJson.bit.overrides.dependencies).to.have.property(`${OVERRIDE_COMPONENT_PREFIX}foo2`);
-            expect(packageJson.bit.overrides.dependencies[`${OVERRIDE_COMPONENT_PREFIX}foo2`]).to.equal('-');
+            helper.command.importComponent('*');
           });
           it('bit status should not show the component as modified', () => {
             helper.command.expectStatusToBeClean();
@@ -311,188 +293,24 @@ describe('workspace config', function () {
           });
           describe('changing the imported component to not ignore the dependency', () => {
             before(() => {
-              const packageJson = helper.packageJson.read(path.join(helper.scopes.localPath, 'components/bar/'));
-              packageJson.bit.overrides.dependencies = {};
-              helper.packageJson.write(packageJson, barRoot);
+              helper.command.ejectConf('bar');
+              helper.componentJson.removeExtension(
+                'teambit.dependencies/dependency-resolver',
+                `${helper.scopes.remote}/bar`
+              );
             });
             it('bit status should show the component as modified', () => {
               const status = helper.command.status();
               expect(status).to.have.string('modified components');
             });
-            it('should show the previously ignored dependency as a missing component', () => {
-              const status = helper.command.status();
-              expect(status).to.have.string(statusFailureMsg);
-              expect(status).to.have.string('missing components');
-            });
             it('bit diff should show the overrides differences', () => {
               const diff = helper.command.diff('bar --verbose');
               expect(diff).to.have.string('--- Overrides Dependencies (0.0.2 original)');
               expect(diff).to.have.string('+++ Overrides Dependencies (0.0.2 modified)');
-              expect(diff).to.have.string(`- [ ${OVERRIDE_COMPONENT_PREFIX}foo2@- ]`);
+              expect(diff).to.have.string(`- [ @${helper.scopes.remote}/utils.foo.foo2@- ]`);
             });
           });
         });
-      });
-    });
-    describe('author ignored package, imported changed to not ignore', () => {
-      let authorScope;
-      before(() => {
-        helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
-        helper.bitJsonc.setupDefault();
-        helper.fixtures.createComponentBarFoo("import chai from 'chai';");
-        helper.npm.addFakeNpmPackage('chai', '2.2.0');
-        helper.fixtures.addComponentBarFooAsDir();
-        const overrides = {
-          'bar/foo': {
-            dependencies: {
-              chai: '-',
-            },
-          },
-        };
-        helper.bitJson.addOverrides(overrides);
-        helper.command.tagAllWithoutBuild();
-        helper.command.export();
-        authorScope = helper.scopeHelper.cloneLocalScope();
-        helper.scopeHelper.reInitLocalScopeHarmony();
-        helper.scopeHelper.addRemoteScope();
-        helper.command.importComponent('bar/foo');
-        helper.npm.addFakeNpmPackage('chai', '2.2.0');
-        const componentDir = path.join(helper.scopes.localPath, 'components/bar/foo');
-        const packageJson = helper.packageJson.read(componentDir);
-        // an intermediate step to make sure we're good so far
-        expect(packageJson.bit.overrides.dependencies).to.deep.equal({ chai: '-' });
-        packageJson.bit.overrides.dependencies = {};
-        helper.packageJson.write(packageJson, componentDir);
-        // an intermediate step to make sure we're good so far
-        const diff = helper.command.diff('--verbose');
-        expect(diff).to.have.string('- [ chai@- ]');
-        helper.command.tagAllWithoutBuild();
-        helper.command.export();
-      });
-      it('should be saved into the model with an empty overrides', () => {
-        const barFoo = helper.command.catComponent('bar/foo@latest');
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        expect(barFoo.overrides).to.have.property('dependencies');
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        expect(barFoo.overrides.dependencies).to.be.empty;
-      });
-      it('should be saved into the model with the package in place', () => {
-        const barFoo = helper.command.catComponent('bar/foo@latest');
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        expect(barFoo.packageDependencies).to.deep.equal({ chai: '2.2.0' });
-      });
-      describe('then, author re-import', () => {
-        let scopeAfterReImport;
-        before(() => {
-          helper.scopeHelper.getClonedLocalScope(authorScope);
-          helper.command.importComponent('bar/foo');
-          scopeAfterReImport = helper.scopeHelper.cloneLocalScope();
-        });
-        it('bit status should not show the component as modified', () => {
-          helper.command.expectStatusToBeClean();
-        });
-        it('should save the new overrides to the consumer config', () => {
-          const bitJson = helper.bitJson.read();
-          expect(bitJson.overrides['bar/foo'].dependencies).to.be.empty;
-        });
-        describe('then author checkout to the first version', () => {
-          before(() => {
-            helper.command.checkoutVersion('0.0.1', 'bar/foo');
-          });
-          it('bit status should not show the component as modified', () => {
-            const status = helper.command.status();
-            expect(status).to.not.have.string('modified components');
-          });
-          it('should show the dependency as ignored', () => {
-            const showBar = helper.command.showComponentParsed('bar/foo');
-            expect(showBar).to.have.property('manuallyRemovedDependencies');
-            expect(showBar.manuallyRemovedDependencies).to.have.property('dependencies');
-            expect(showBar.manuallyRemovedDependencies.dependencies).to.include('chai');
-          });
-          it('should save the overrides of the first version into consumer config', () => {
-            const bitJson = helper.bitJson.read();
-            expect(bitJson.overrides['bar/foo'].dependencies).to.not.be.empty;
-            expect(bitJson.overrides['bar/foo'].dependencies).to.deep.equal({ chai: '-' });
-          });
-        });
-        describe('then author merge the first version', () => {
-          before(() => {
-            helper.scopeHelper.getClonedLocalScope(scopeAfterReImport);
-            helper.command.mergeVersion('0.0.1', 'bar/foo');
-          });
-          it('bit status should not show the component as modified', () => {
-            const status = helper.command.status();
-            expect(status).to.not.have.string('modified components');
-          });
-          it('should not show the dependency as ignored', () => {
-            const showBar = helper.command.showComponentParsed('bar/foo');
-            expect(showBar).to.have.property('manuallyRemovedDependencies');
-            expect(showBar.manuallyRemovedDependencies).to.be.empty;
-          });
-          it('should not change the consumer config', () => {
-            const bitJson = helper.bitJson.read();
-            expect(bitJson.overrides['bar/foo'].dependencies).to.be.empty;
-          });
-        });
-        describe('when the consumer config is saved also in the package.json file', () => {
-          before(() => {
-            helper.scopeHelper.getClonedLocalScope(authorScope);
-            helper.npm.initNpm();
-            const packageJson = helper.packageJson.read();
-            packageJson.dependencies = { chai: '2.2.0' };
-            packageJson.bit = {
-              env: {},
-              componentsDefaultDirectory: 'components/{name}',
-              packageManager: 'npm',
-            };
-            helper.packageJson.write(packageJson);
-            try {
-              helper.command.importComponent('bar/foo --skip-npm-install');
-            } catch (err: any) {
-              // ignore. it shows an error because chai is missing, which is missing by purpose
-            }
-          });
-          it('should still update bit.json', () => {
-            const bitJson = helper.bitJson.read();
-            expect(bitJson.overrides['bar/foo'].dependencies).to.be.empty;
-          });
-          it('should also update package.json', () => {
-            const packageJson = helper.packageJson.read();
-            expect(packageJson.bit.overrides['bar/foo'].dependencies).to.be.empty;
-          });
-        });
-      });
-    });
-    describe('changing order of the overrides dependencies after tag', () => {
-      before(() => {
-        helper.scopeHelper.reInitLocalScopeHarmony();
-        helper.fixtures.createComponentBarFoo("require('chai'); require('lodash')");
-        helper.npm.addFakeNpmPackage('chai', '2.2.0');
-        helper.npm.addFakeNpmPackage('lodash', '2.2.0');
-        helper.fixtures.addComponentBarFooAsDir();
-        const overrides = {
-          'bar/foo': {
-            dependencies: {
-              chai: '-',
-              lodash: '-',
-            },
-          },
-        };
-        helper.bitJson.addOverrides(overrides);
-        helper.command.tagAllWithoutBuild();
-        const overridesChangedOrder = {
-          'bar/foo': {
-            dependencies: {
-              lodash: '-',
-              chai: '-',
-            },
-          },
-        };
-        helper.bitJson.addOverrides(overridesChangedOrder);
-      });
-      it('bit status should not show the component as modified', () => {
-        const status = helper.command.status();
-        expect(status).to.not.have.string('modified components');
       });
     });
     describe('manually adding dependencies', () => {
@@ -504,17 +322,15 @@ describe('workspace config', function () {
           helper.npm.addFakeNpmPackage('chai', '2.2.0');
           helper.packageJson.create({ dependencies: { chai: '2.2.0' } });
           helper.fixtures.addComponentBarFooAsDir();
-          const overrides = {
-            'bar/foo': {
-              dependencies: {
-                chai: '-',
-              },
-              peerDependencies: {
-                chai: '+',
-              },
+          const policy = {
+            dependencies: {
+              chai: '-',
+            },
+            peerDependencies: {
+              chai: '+',
             },
           };
-          helper.bitJson.addOverrides(overrides);
+          helper.bitJsonc.setPolicyToVariant('bar', policy);
           showBar = helper.command.showComponentParsed('bar/foo');
         });
         it('should ignore the specified package from dependencies', () => {
@@ -541,14 +357,12 @@ describe('workspace config', function () {
           helper.scopeHelper.reInitLocalScopeHarmony();
           helper.fixtures.createComponentBarFoo("import chai from 'chai';");
           helper.fixtures.addComponentBarFooAsDir();
-          const overrides = {
-            'bar/foo': {
-              peerDependencies: {
-                chai: '2.2.0',
-              },
+          const policy = {
+            peerDependencies: {
+              chai: '2.2.0',
             },
           };
-          helper.bitJson.addOverrides(overrides);
+          helper.bitJsonc.setPolicyToVariant('bar', policy);
           showBar = helper.command.showComponentParsed('bar/foo');
         });
         it('should add the specified package to peerDependencies', () => {
@@ -566,14 +380,12 @@ describe('workspace config', function () {
           helper.scopeHelper.reInitLocalScopeHarmony();
           helper.fixtures.createComponentBarFoo("import chai from 'chai';");
           helper.fixtures.addComponentBarFooAsDir();
-          const overrides = {
-            'bar/foo': {
-              peerDependencies: {
-                chai: '+',
-              },
+          const policy = {
+            peerDependencies: {
+              chai: '+',
             },
           };
-          helper.bitJson.addOverrides(overrides);
+          helper.bitJsonc.setPolicyToVariant('bar', policy);
         });
         // See similar test in show.e2e - component with overrides data
         it('should not show the package in dependencies', () => {
@@ -584,11 +396,12 @@ describe('workspace config', function () {
         it('should show a missing package in status', () => {
           const output = helper.command.status().replace(/\n/g, '');
           helper.command.expectStatusToHaveIssue(IssuesClasses.MissingPackagesDependenciesOnFs.name);
-          expect(output).to.have.string('bar/foo.js -> chai');
+          expect(output).to.have.string('foo.js -> chai');
           expect(output).to.have.string(`${MISSING_PACKAGES_FROM_OVERRIDES_LABEL} -> chai`);
         });
       });
-      describe('adding a component with a version', () => {
+      // skipped for now. see the first test for more details.
+      describe.skip('adding a component with a version', () => {
         let showBar;
         before(() => {
           helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
@@ -721,7 +534,8 @@ describe('workspace config', function () {
           });
         });
       });
-      describe('adding a component without a version', () => {
+      // skipped for now. see the first test for more details.
+      describe.skip('adding a component without a version', () => {
         let showBar;
         before(() => {
           helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
