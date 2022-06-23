@@ -753,6 +753,7 @@ export default class BitMap {
     this.components.forEach((componentMap) =>
       componentMap.updatePerLane(this.remoteLaneId, this.workspaceLane ? this.workspaceLane.ids : null)
     );
+    this.markAsChanged();
   }
 
   sortValidateAndMarkAsChanged(componentMap: ComponentMap) {
