@@ -109,13 +109,12 @@ describe('bit lane command', function () {
           helper.command.switchLocalLane('main');
           helper.command.switchLocalLane('int');
         });
+        it('should switch successfully', () => {
+          helper.command.expectCurrentLaneToBe('int');
+        });
         it('should not save the local lane in bitmap', () => {
           const bitMap = helper.bitMap.read();
           expect(bitMap[LANE_KEY]).to.not.deep.equal({ name: 'int', scope: helper.scopes.remote });
-        });
-        it('should have the last exported lane in bitmap', () => {
-          const bitMap = helper.bitMap.read();
-          expect(bitMap[LANE_KEY]).to.deep.equal({ name: 'dev', scope: helper.scopes.remote });
         });
         it('should not throw an error on bit install', () => {
           expect(() => helper.command.install()).not.to.throw();
