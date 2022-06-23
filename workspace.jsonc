@@ -768,6 +768,9 @@
           "name": "@teambit/{name}", // @teambit/discovery.ui.sidebar
           "private": false,
           // Change back to "bin": "bin/bit" once released to prod
+          "bvm": {
+            "node": "16.15.1"
+          },
           "bin": {
             "bbit": "bin/bit"
           },
