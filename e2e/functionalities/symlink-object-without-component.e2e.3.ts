@@ -45,12 +45,6 @@ describe('scope with a symlink object reference to a non-exist component', funct
     const output = helper.general.runWithTryCatch('bit import bar/foo');
     expect(output).to.have.string('error: found a symlink object "bar/foo" that references to a non-exist component');
   });
-  it('bit tag should throw a descriptive error', () => {
-    helper.bitMap.delete();
-    helper.fixtures.addComponentBarFooAsDir();
-    const output = helper.general.runWithTryCatch('bit tag');
-    expect(output).to.have.string('error: found a symlink object "bar/foo" that references to a non-exist component');
-  });
   it('bit doctor should report this as an issue', () => {
     const output = helper.command.doctorOne(DIAGNOSIS_NAME, { j: '' });
     const orphanSymlinkObjectsResult = JSON.parse(output);
