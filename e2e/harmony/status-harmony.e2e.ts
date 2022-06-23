@@ -74,4 +74,19 @@ describe('status command on Harmony', function () {
       expect(status.newComponents).to.have.lengthOf(2);
     });
   });
+  describe('components that imports itself', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fs.outputFile('bar/index.js', 'export const a = "b";');
+      helper.fs.outputFile('bar/foo.js', `import { a } from '@${helper.scopes.remote}/bar';`);
+      helper.command.add('bar');
+      helper.command.link();
+    });
+    // @todo: maybe we should show a component-issue suggesting to fix the import statement
+    it('should not add itself as a dependency', () => {
+      const show = helper.command.showComponentParsed('bar');
+      expect(show.dependencies).to.have.lengthOf(0);
+    });
+  });
 });
