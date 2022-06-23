@@ -36,6 +36,11 @@ import {
   CFG_LOCAL_ADDRESS,
   CFG_MAX_SOCKETS,
   CFG_NETWORK_CONCURRENCY,
+  CFG_NETWORK_CA,
+  CFG_NETWORK_CA_FILE,
+  CFG_NETWORK_CERT,
+  CFG_NETWORK_KEY,
+  CFG_NETWORK_STRICT_SSL,
 } from '../../../constants';
 import logger from '../../../logger/logger';
 import { ObjectItemsStream, ObjectList } from '../../objects/object-list';
@@ -54,14 +59,9 @@ export enum Verb {
 }
 
 export type ProxyConfig = {
-  ca?: string | string[];
-  cafile?: string;
-  cert?: string | string[];
   httpProxy?: string;
   httpsProxy?: string;
-  key?: string;
   noProxy?: boolean | string;
-  strictSSL?: boolean;
 };
 
 export type NetworkConfig = {
@@ -73,6 +73,11 @@ export type NetworkConfig = {
   localAddress?: string;
   maxSockets?: number;
   networkConcurrency?: number;
+  strictSSL?: boolean;
+  ca?: string | string[];
+  cafile?: string;
+  cert?: string | string[];
+  key?: string;
 };
 
 type Agent = HttpsProxyAgent | HttpAgent | HttpAgent.HttpsAgent | HttpProxyAgent | SocksProxyAgent | undefined;
@@ -115,20 +120,16 @@ export class Http implements Network {
     }
 
     return {
-      ca: obj[CFG_PROXY_CA],
-      cafile: obj[CFG_PROXY_CA_FILE],
-      cert: obj[CFG_PROXY_CERT],
       httpProxy,
       httpsProxy,
-      key: obj[CFG_PROXY_KEY],
       noProxy: obj[CFG_PROXY_NO_PROXY],
-      strictSSL: obj[CFG_PROXY_STRICT_SSL],
     };
   }
 
   static async getNetworkConfig(): Promise<NetworkConfig> {
     const obj = await list();
 
+    const strictSSL = obj[CFG_NETWORK_STRICT_SSL] ?? obj[CFG_PROXY_STRICT_SSL]
     return {
       fetchRetries: obj[CFG_FETCH_RETRIES],
       fetchRetryFactor: obj[CFG_FETCH_RETRY_FACTOR],
@@ -138,6 +139,11 @@ export class Http implements Network {
       localAddress: obj[CFG_LOCAL_ADDRESS],
       maxSockets: obj[CFG_MAX_SOCKETS],
       networkConcurrency: obj[CFG_NETWORK_CONCURRENCY],
+      strictSSL: typeof strictSSL === 'string' ? strictSSL === 'true' : strictSSL,
+      ca: obj[CFG_NETWORK_CA] ?? obj[CFG_PROXY_CA],
+      cafile: obj[CFG_NETWORK_CA_FILE] ?? obj[CFG_PROXY_CA_FILE],
+      cert: obj[CFG_NETWORK_CERT] ?? obj[CFG_PROXY_CERT],
+      key: obj[CFG_NETWORK_KEY] ?? obj[CFG_PROXY_KEY],
     };
   }
 
@@ -578,8 +584,7 @@ export class Http implements Network {
     const networkConfig = await Http.getNetworkConfig();
     const agent = await Http.getAgent(host, {
       ...proxyConfig,
-      localAddress: networkConfig.localAddress,
-      maxSockets: networkConfig.maxSockets,
+      ...networkConfig,
     });
     const graphQlUrl = `${host}/graphql`;
     const graphQlFetcher = await getFetcherWithAgent(graphQlUrl);
@@ -602,8 +607,7 @@ export async function getFetcherWithAgent(uri: string) {
   const networkConfig = await Http.getNetworkConfig();
   const agent = await Http.getAgent(uri, {
     ...proxyConfig,
-    localAddress: networkConfig.localAddress,
-    maxSockets: networkConfig.maxSockets,
+    ...networkConfig,
   });
   const fetcher = agent ? wrapFetcherWithAgent(agent) : fetch;
   return fetcher;
