@@ -824,9 +824,22 @@ either, use the ignore file syntax or change the require statement to have a mod
   }
 
   private getValidVersion(version: string | undefined) {
-    if (!version) return null;
-    if (!semver.valid(version) && !semver.validRange(version)) return null; // it's probably a relative path to the component
-    return version.replace(/[^0-9.]/g, '');
+    if (!version) {
+      return null;
+    }
+    if (semver.valid(version)) {
+      // this takes care of pre-releases as well, as they're considered valid semver.
+      return version;
+    }
+    if (semver.validRange(version)) {
+      // if this is a range, e.g. ^1.0.0, return a valid version: 1.0.0.
+      const coerced = semver.coerce(version);
+      if (coerced) {
+        return coerced.version;
+      }
+    }
+    // it's probably a relative path to the component
+    return null;
   }
 
   processPackages(originFile: PathLinuxRelative, fileType: FileType) {
