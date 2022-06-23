@@ -129,6 +129,7 @@ export class Http implements Network {
   static async getNetworkConfig(): Promise<NetworkConfig> {
     const obj = await list();
 
+    const strictSSL = obj[CFG_NETWORK_STRICT_SSL] ?? obj[CFG_PROXY_STRICT_SSL]
     return {
       fetchRetries: obj[CFG_FETCH_RETRIES],
       fetchRetryFactor: obj[CFG_FETCH_RETRY_FACTOR],
@@ -138,7 +139,7 @@ export class Http implements Network {
       localAddress: obj[CFG_LOCAL_ADDRESS],
       maxSockets: obj[CFG_MAX_SOCKETS],
       networkConcurrency: obj[CFG_NETWORK_CONCURRENCY],
-      strictSSL: obj[CFG_NETWORK_STRICT_SSL] ?? obj[CFG_PROXY_STRICT_SSL],
+      strictSSL: typeof strictSSL === 'string' ? strictSSL === 'true' : strictSSL,
       ca: obj[CFG_NETWORK_CA] ?? obj[CFG_PROXY_CA],
       cafile: obj[CFG_NETWORK_CA_FILE] ?? obj[CFG_PROXY_CA_FILE],
       cert: obj[CFG_NETWORK_CERT] ?? obj[CFG_PROXY_CERT],
