@@ -219,6 +219,10 @@ export class PnpmPackageManager implements PackageManager {
       fetchTimeout: config.fetchTimeout,
       fetchRetryMaxtimeout: config.fetchRetryMaxtimeout,
       fetchRetryMintimeout: config.fetchRetryMintimeout,
+      strictSSL: config.strictSsl,
+      ca: config.ca,
+      cert: config.cert,
+      key: config.key,
     };
   }
 
