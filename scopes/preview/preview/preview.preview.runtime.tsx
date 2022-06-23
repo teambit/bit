@@ -11,10 +11,11 @@ import { ClickInsideAnIframeEvent } from './events';
 import { PreviewModule } from './types/preview-module';
 import { RenderingContext } from './rendering-context';
 import { fetchComponentAspects } from './gql/fetch-component-aspects';
+import { PreviewModules } from './preview-modules';
 
 export type PreviewSlot = SlotRegistry<PreviewType>;
 
-const PREVIEW_MODULES: Record<string, PreviewModule> = {};
+const PREVIEW_MODULES = new PreviewModules();
 
 export type RenderingContextOptions = { aspectsFilter?: string[] };
 export type RenderingContextProvider = (options: RenderingContextOptions) => { [key: string]: any };
@@ -46,6 +47,32 @@ export class PreviewPreview {
   }
 
   private isDev = false;
+
+  private isReady() {
+    const { previewName } = this.getLocation();
+    const name = previewName || this.getDefault();
+
+    if (!PREVIEW_MODULES.has(name)) return false;
+    const preview = this.getPreview(name);
+    if (!preview) return false;
+    const includedReady = preview.include?.every((included) => PREVIEW_MODULES.has(included)) ?? true;
+    if (!includedReady) return false;
+
+    return true;
+  }
+
+  private _setupPromise?: Promise<void>;
+  setup = () => {
+    if (this.isReady()) return Promise.resolve();
+
+    this._setupPromise ??= new Promise((resolve) => {
+      PREVIEW_MODULES.onSet.add(() => {
+        if (this.isReady()) resolve();
+      });
+    });
+
+    return this._setupPromise;
+  };
 
   /**
    * render the preview.
@@ -85,15 +112,17 @@ export class PreviewPreview {
   };
 
   async getPreviewModule(name: string, id: ComponentID, parentPreviewName?: string): Promise<PreviewModule> {
-    const relevantModel = PREVIEW_MODULES[name];
+    const relevantModel = PREVIEW_MODULES.get(name);
+    if (!relevantModel) throw new Error(`[preview.preview] missing preview "${name}"`);
     if (relevantModel.componentMap[id.fullName]) return relevantModel;
 
+    if (parentPreviewName && !PREVIEW_MODULES.has(parentPreviewName))
+      throw new Error(`[preview.preview] missing parent preview "${parentPreviewName}"`);
+
     let component;
+    const parentPreview = parentPreviewName ? PREVIEW_MODULES.get(parentPreviewName) : undefined;
     // Handle case when there is overview but no composition on the workspace dev server
-    if (!parentPreviewName || !PREVIEW_MODULES[parentPreviewName].componentMap[id.fullName]) {
-      // if (!window[name]) throw new PreviewNotFound(name);
-      // const isSplitComponentBundle = relevantModel.isSplitComponentBundle ?? false;
-      // const component = window[id.toStringWithoutVersion()];
+    if (parentPreview?.componentMap[id.fullName]) {
       component = await this.fetchComponentPreview(id, name);
     }
 
@@ -277,7 +306,7 @@ export class PreviewPreview {
 }
 
 export function linkModules(previewName: string, previewModule: PreviewModule) {
-  PREVIEW_MODULES[previewName] = previewModule;
+  PREVIEW_MODULES.set(previewName, previewModule);
 }
 
 PreviewAspect.addRuntime(PreviewPreview);
