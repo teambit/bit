@@ -43,7 +43,7 @@ export class List extends React.Component {
         helper.command.addComponent('list', { i: 'list/list' });
         helper.command.addComponent('item', { i: 'item/item' });
       });
-      it.only('should be able to parse .tsx syntax successfully and recognize the dependencies', () => {
+      it('should be able to parse .tsx syntax successfully and recognize the dependencies', () => {
         const outputParsed = helper.command.showComponentParsed('list/list');
         expect(outputParsed.dependencies).to.have.lengthOf(1);
         expect(outputParsed.dependencies[0].id).to.equal('item/item');
