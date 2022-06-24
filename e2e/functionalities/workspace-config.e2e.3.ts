@@ -119,6 +119,7 @@ describe('workspace config', function () {
           helper.scopeHelper.reInitLocalScopeHarmony();
           helper.fs.createFile('bar', 'bar.js', "require('non-exist-package')");
           helper.command.addComponent('bar');
+          helper.command.compile();
 
           // an intermediate step, make sure bit status shows the component with an issue of a missing file
           const status = helper.command.status();
