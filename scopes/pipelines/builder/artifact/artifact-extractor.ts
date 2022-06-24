@@ -14,6 +14,7 @@ export type ExtractorResult = {
 };
 
 export type ExtractorArtifactResult = {
+  artifactName: string;
   aspectId: string;
   taskName: string;
   files: string[];
@@ -84,6 +85,7 @@ export class ArtifactExtractor {
     return artifactObjectsPerId.map(({ id, artifacts }) => {
       const results: ExtractorArtifactResult[] = artifacts.map((artifact) => {
         return {
+          artifactName: artifact.name,
           aspectId: artifact.task.id,
           taskName: artifact.task.name || artifact.generatedBy,
           files: artifact.files.refs.map((ref) => ref.relativePath),

@@ -21,7 +21,7 @@ export type ArtifactObject = {
   generatedBy: string;
   storage: string;
   task: {
-    id: string;
+    id: string; // aspect-id
     name?: string;
   };
   files: ArtifactFiles;
