@@ -3,22 +3,17 @@ import R from 'ramda';
 import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
 import { BitId, BitIds } from '../../bit-id';
 import { CENTRAL_BIT_HUB_NAME, CENTRAL_BIT_HUB_URL } from '../../constants';
-import GeneralError from '../../error/general-error';
 import enrichContextFromGlobal from '../../hooks/utils/enrich-context-from-global';
 import logger from '../../logger/logger';
 import { Remote, Remotes } from '../../remotes';
-import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
-import replacePackageName from '../../utils/string/replace-package-name';
-import ComponentObjects from '../component-objects';
 import { ComponentNotFound, MergeConflict, MergeConflictOnRemote } from '../exceptions';
 import ComponentNeedsUpdate from '../exceptions/component-needs-update';
 import { Lane, ModelComponent, Symlink, Version } from '../models';
-import Source from '../models/source';
-import { BitObject, Ref } from '../objects';
+import { BitObject } from '../objects';
 import Scope from '../scope';
 import { getScopeRemotes } from '../scope-remotes';
 import ScopeComponentsImporter from './scope-components-importer';
-import { ObjectItem, ObjectList } from '../objects/object-list';
+import { ObjectList } from '../objects/object-list';
 import { ExportPersist, ExportValidate, RemovePendingDir } from '../actions';
 import loader from '../../cli/loader';
 import { getAllVersionHashes } from './traverse-versions';
@@ -77,11 +72,7 @@ export async function exportMany({
   scope,
   isLegacy,
   ids, // when exporting a lane, the ids are the lane component ids
-  remoteName,
   context = {},
-  includeDependencies = false, // kind of fork. by default dependencies only cached, with this, their scope-name is changed
-  changeLocallyAlthoughRemoteIsDifferent = false, // by default only if remote stays the same the component is changed from staged to exported
-  codemod = false,
   laneObject,
   allVersions,
   originDirectly,
@@ -92,11 +83,7 @@ export async function exportMany({
   scope: Scope;
   isLegacy: boolean;
   ids: BitIds;
-  remoteName: string | null | undefined;
   context?: Record<string, any>;
-  includeDependencies: boolean;
-  changeLocallyAlthoughRemoteIsDifferent: boolean;
-  codemod: boolean;
   laneObject?: Lane;
   allVersions: boolean;
   originDirectly?: boolean;
@@ -105,14 +92,6 @@ export async function exportMany({
   ignoreMissingArtifacts?: boolean;
 }): Promise<{ exported: BitIds; updatedLocally: BitIds; newIdsOnRemote: BitId[] }> {
   logger.debugAndAddBreadCrumb('scope.exportMany', 'ids: {ids}', { ids: ids.toString() });
-  if (laneObject) {
-    remoteName = laneObject.scope;
-  }
-  if (includeDependencies) {
-    const dependenciesIds = await getDependenciesImportIfNeeded();
-    ids.push(...dependenciesIds);
-    ids = BitIds.uniqFromArray(ids);
-  }
   const scopeRemotes: Remotes = await getScopeRemotes(scope);
   const idsGroupedByScope = ids.toGroupByScopeName(idsWithFutureScope);
   await validateTargetScopeForLanes();
@@ -120,20 +99,11 @@ export async function exportMany({
     .map((scopeName) => `scope "${scopeName}": ${idsGroupedByScope[scopeName].toString()}`)
     .join(', ');
   logger.debug(`export-scope-components, export to the following scopes ${groupedByScopeString}`);
-  let manyObjectsPerRemote: ObjectsPerRemote[];
-  if (isLegacy) {
-    manyObjectsPerRemote = remoteName
-      ? [await getUpdatedObjectsToExportLegacy(remoteName, ids)]
-      : await mapSeries(Object.keys(idsGroupedByScope), (scopeName) =>
-          getUpdatedObjectsToExportLegacy(scopeName, idsGroupedByScope[scopeName])
-        );
-  } else {
-    manyObjectsPerRemote = remoteName
-      ? [await getUpdatedObjectsToExport(remoteName, ids, laneObject)]
-      : await mapSeries(Object.keys(idsGroupedByScope), (scopeName) =>
-          getUpdatedObjectsToExport(scopeName, idsGroupedByScope[scopeName], laneObject)
-        );
-  }
+  const manyObjectsPerRemote = laneObject
+    ? [await getUpdatedObjectsToExport(laneObject.scope, ids, laneObject)]
+    : await mapSeries(Object.keys(idsGroupedByScope), (scopeName) =>
+        getUpdatedObjectsToExport(scopeName, idsGroupedByScope[scopeName], laneObject)
+      );
 
   if (resumeExportId) {
     const remotes = manyObjectsPerRemote.map((o) => o.remote);
@@ -219,105 +189,6 @@ this scope already has a component with the same name. as such, it'll be impossi
     });
   }
 
-  async function getUpdatedObjectsToExportLegacy(
-    remoteNameStr: string,
-    bitIds: BitIds,
-    lanes: Lane[] = []
-  ): Promise<ObjectsPerRemote> {
-    bitIds.throwForDuplicationIgnoreVersion();
-    const remote: Remote = await scopeRemotes.resolve(remoteNameStr, scope);
-    const componentObjects = await mapSeries(bitIds, (id) => scope.sources.getObjects(id));
-    const idsToChangeLocally = BitIds.fromArray(
-      bitIds.filter((id) => !id.scope || id.scope === remoteNameStr || changeLocallyAlthoughRemoteIsDifferent)
-    );
-    const idsAndObjectsP = lanes.map((laneObj) => laneObj.collectObjectsById(scope.objects));
-    const idsAndObjects = R.flatten(await Promise.all(idsAndObjectsP));
-    const componentsAndObjects: ModelComponentAndObjects[] = [];
-    const objectList = new ObjectList();
-    const objectListPerName: ObjectListPerName = {};
-    const processComponentObjects = async (componentObject: ComponentObjects) => {
-      const componentAndObject = componentObject.toObjects();
-      const localVersions = componentAndObject.component.getLocalVersions();
-      idsAndObjects.forEach((idAndObjects) => {
-        if (componentAndObject.component.toBitId().isEqual(idAndObjects.id)) {
-          // @todo: remove duplication. check whether the same hash already exist, and don't push it.
-          componentAndObject.objects.push(...idAndObjects.objects);
-        }
-      });
-      componentAndObject.component.clearStateData();
-      const didConvertScope = await convertToCorrectScopeLegacy(
-        scope,
-        componentAndObject,
-        remoteNameStr,
-        includeDependencies,
-        bitIds,
-        codemod,
-        idsWithFutureScope
-      );
-      const remoteObj = { url: remote.host, name: remote.name, date: Date.now().toString() };
-      componentAndObject.component.addScopeListItem(remoteObj);
-
-      if (idsToChangeLocally.hasWithoutScopeAndVersion(componentAndObject.component.toBitId())) {
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        componentsAndObjects.push(componentAndObject);
-      } else {
-        // the component should not be changed locally. only add the new scope to the scope-list
-        const componentAndObjectCloned = componentObject.toObjects();
-        componentAndObjectCloned.component.addScopeListItem(remoteObj);
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        componentsAndObjects.push(componentAndObjectCloned);
-      }
-
-      const componentBuffer = await componentAndObject.component.compress();
-      const componentData: ObjectItem = {
-        ref: componentAndObject.component.hash(),
-        buffer: componentBuffer,
-        scope: componentAndObject.component.scope as string,
-      };
-      const getObjectsData = async (): Promise<ObjectItem[]> => {
-        // @todo currently, for lanes (componentAndObject.component.head) this optimization is skipped.
-        // it should be enabled with a different mechanism
-        if (
-          allVersions ||
-          includeDependencies ||
-          didConvertScope ||
-          componentAndObject.component.head ||
-          lanes.length
-        ) {
-          // only when really needed (e.g. fork or version changes), collect all versions objects
-          return Promise.all(
-            componentAndObject.objects.map(async (obj) => ({ ref: obj.hash(), buffer: await obj.compress() }))
-          );
-        }
-        // when possible prefer collecting only new/local versions. the server has already
-        // the rest, so no point of sending them.
-        return componentAndObject.component.collectVersionsObjects(scope.objects, localVersions);
-      };
-      const objectsBuffer = await getObjectsData();
-      const allObjectsData = [componentData, ...objectsBuffer];
-      objectListPerName[componentAndObject.component.name] = new ObjectList(allObjectsData);
-      objectList.addIfNotExist(allObjectsData);
-    };
-    // don't use Promise.all, otherwise, it'll throw "JavaScript heap out of memory" on a large set of data
-    await mapSeries(componentObjects, processComponentObjects);
-    const lanesData = await Promise.all(
-      lanes.map(async (lane) => {
-        lane.components.forEach((c) => {
-          c.id = c.id.changeScope(remoteName);
-        });
-        if (lane.readmeComponent) {
-          lane.readmeComponent.id = lane.readmeComponent.id.changeScope(remoteName);
-        }
-        return { ref: lane.hash(), buffer: await lane.compress() };
-      })
-    );
-    objectList.addIfNotExist(lanesData);
-    return { remote, objectList, objectListPerName, idsToChangeLocally, componentsAndObjects };
-  }
-
-  /**
-   * Harmony only. The legacy is running `getUpdatedObjectsToExportLegacy`.
-   */
   async function getUpdatedObjectsToExport(
     remoteNameStr: string,
     bitIds: BitIds,
@@ -325,9 +196,7 @@ this scope already has a component with the same name. as such, it'll be impossi
   ): Promise<ObjectsPerRemote> {
     bitIds.throwForDuplicationIgnoreVersion();
     const remote: Remote = await scopeRemotes.resolve(remoteNameStr, scope);
-    const idsToChangeLocally = BitIds.fromArray(
-      bitIds.filter((id) => !id.scope || id.scope === remoteNameStr || changeLocallyAlthoughRemoteIsDifferent)
-    );
+    const idsToChangeLocally = BitIds.fromArray(bitIds.filter((id) => !id.scope || id.scope === remoteNameStr));
     const componentsAndObjects: ModelComponentAndObjects[] = [];
     const objectList = new ObjectList();
     const objectListPerName: ObjectListPerName = {};
@@ -367,12 +236,12 @@ this scope already has a component with the same name. as such, it'll be impossi
     if (lane) {
       lane.components.forEach((c) => {
         const idWithFutureScope = idsWithFutureScope.searchWithoutScopeAndVersion(c.id);
-        c.id = c.id.hasScope() ? c.id : c.id.changeScope(idWithFutureScope?.scope || remoteName);
+        c.id = c.id.hasScope() ? c.id : c.id.changeScope(idWithFutureScope?.scope || lane.scope);
       });
       if (lane.readmeComponent) {
         lane.readmeComponent.id = lane.readmeComponent.id.hasScope()
           ? lane.readmeComponent.id
-          : lane.readmeComponent.id.changeScope(remoteName);
+          : lane.readmeComponent.id.changeScope(lane.scope);
       }
       const laneData = { ref: lane.hash(), buffer: await lane.compress() };
       objectList.addIfNotExist([laneData]);
@@ -503,15 +372,6 @@ this scope already has a component with the same name. as such, it'll be impossi
       };
     });
   }
-
-  async function getDependenciesImportIfNeeded(): Promise<BitId[]> {
-    const scopeComponentImporter = new ScopeComponentsImporter(scope);
-    const versionsDependencies = await scopeComponentImporter.importManyWithAllVersions(ids, true, true);
-    const allDependencies = R.flatten(
-      versionsDependencies.map((versionDependencies) => versionDependencies.allDependencies)
-    );
-    return allDependencies.map((componentVersion) => componentVersion.component.toBitId());
-  }
 }
 
 /**
@@ -619,232 +479,6 @@ async function throwForMissingLocalDependencies(scope: Scope, versions: Version[
       );
     })
   );
-}
-
-/**
- * Component and dependencies id changes:
- * When exporting components with dependencies to a bare-scope, some of the dependencies may be created locally and as
- * a result their scope-name is null. Once the bare-scope gets the components, it needs to convert these scope names
- * to the bare-scope name.
- * Since the changes it does affect the Version objects, the version REF of a component, needs to be changed as well.
- *
- * Dist code changes:
- * see https://github.com/teambit/bit/issues/1770 for complete info
- * some compilers require the links to be part of the bundle, change the component name in these
- * files from the id without scope to the id with the scope
- * e.g. `@bit/utils.is-string` becomes `@bit/scope-name.utils.is-string`.
- * these files changes need to be done regardless the "--rewire" flag.
- *
- * Source code changes (codemod):
- * when "--rewire" flag is used, import/require statement should be changed from the old scope-name
- * to the new scope-name. Or from no-scope to the new scope.
- */
-async function convertToCorrectScopeLegacy(
-  scope: Scope,
-  componentsObjects: ModelComponentAndObjects,
-  remoteScope: string,
-  fork: boolean,
-  exportingIds: BitIds,
-  codemod: boolean,
-  idsWithFutureScope: BitIds
-): Promise<boolean> {
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  const versionsObjects: Version[] = componentsObjects.objects.filter((object) => object instanceof Version);
-  const haveVersionsChanged = await Promise.all(
-    versionsObjects.map(async (objectVersion: Version) => {
-      const hashBefore = objectVersion.hash().toString();
-      const didCodeMod = await _replaceSrcOfVersionIfNeeded(objectVersion);
-      const didDependencyChange = changeDependencyScope(objectVersion);
-      changeExtensionsScope(objectVersion);
-      if (updateDependenciesOnExport && typeof updateDependenciesOnExport === 'function') {
-        // @ts-ignore
-        objectVersion = updateDependenciesOnExport(objectVersion, getIdWithUpdatedScope.bind(this));
-      }
-      // @todo: after v15 is deployed, remove the following code until the next "// END" comment.
-      // this is currently needed because remote-servers with older code still saving Version
-      // objects into the calculated hash path and not into the originally created hash.
-      // in this scenario, the calculated hash is different than the original hash due to the scope
-      // changes. if we don't do this hash replacement, these remote servers will write the version
-      // objects into different paths and then throw an error of component-not-found due to failure
-      // finding the Version objects on the fs.
-      const hashAfter = objectVersion.calculateHash().toString();
-      const isTag = componentsObjects.component.getTagOfRefIfExists(objectVersion.hash());
-      if (isTag && hashBefore !== hashAfter) {
-        if (!didCodeMod && !didDependencyChange) {
-          throw new Error('hash should not be changed if there was not any dependency scope changes nor codemod');
-        }
-        objectVersion._hash = hashAfter;
-        logger.debugAndAddBreadCrumb(
-          'scope._convertToCorrectScope',
-          `switching {id} version hash from ${hashBefore} to ${hashAfter}`,
-          { id: componentsObjects.component.id().toString() }
-        );
-        const versions = componentsObjects.component.versions;
-        Object.keys(versions).forEach((version) => {
-          if (versions[version].toString() === hashBefore) {
-            componentsObjects.component.setVersion(version, Ref.from(hashAfter));
-          }
-        });
-        if (componentsObjects.component.getHeadStr() === hashBefore) {
-          componentsObjects.component.setHead(Ref.from(hashAfter));
-        }
-        versionsObjects.forEach((versionObj) => {
-          versionObj.parents = versionObj.parents.map((parent) => {
-            if (parent.toString() === hashBefore) return Ref.from(hashAfter);
-            return parent;
-          });
-        });
-      }
-      // END DELETION OF BIT > v15.
-      return didCodeMod || didDependencyChange;
-    })
-  );
-  const hasComponentChanged = remoteScope !== componentsObjects.component.scope;
-  componentsObjects.component.scope = remoteScope;
-
-  // return true if one of the versions has changed or the component itself
-  return haveVersionsChanged.some((x) => x) || hasComponentChanged;
-
-  function changeDependencyScope(version: Version): boolean {
-    let hasChanged = false;
-    version.getAllDependencies().forEach((dependency) => {
-      const updatedScope = getIdWithUpdatedScope(dependency.id);
-      if (!updatedScope.isEqual(dependency.id)) {
-        hasChanged = true;
-        dependency.id = updatedScope;
-      }
-    });
-    const ids: BitIds = version.flattenedDependencies;
-    const needsChange = ids.some((id) => id.scope !== remoteScope);
-    if (needsChange) {
-      version.flattenedDependencies = getBitIdsWithUpdatedScope(ids);
-      hasChanged = true;
-    }
-    return hasChanged;
-  }
-
-  function changeExtensionsScope(version: Version): boolean {
-    let hasChanged = false;
-    version.extensions.forEach((ext) => {
-      if (ext.extensionId) {
-        const updatedScope = getIdWithUpdatedScope(ext.extensionId);
-        if (!updatedScope.isEqual(ext.extensionId)) {
-          hasChanged = true;
-          ext.extensionId = updatedScope;
-        }
-      }
-    });
-    return hasChanged;
-  }
-
-  function getIdWithUpdatedScope(dependencyId: BitId): BitId {
-    if (dependencyId.scope === remoteScope) {
-      return dependencyId; // nothing has changed
-    }
-    if (!dependencyId.scope || fork || exportingIds.hasWithoutVersion(dependencyId)) {
-      const depId = ModelComponent.fromBitId(dependencyId);
-      // todo: use 'load' for async and switch the foreach with map.
-      const dependencyObject = scope.objects.loadSync(depId.hash());
-      if (dependencyObject instanceof Symlink) {
-        return dependencyId.changeScope(dependencyObject.realScope);
-      }
-      const currentlyExportedDep = idsWithFutureScope.searchWithoutScopeAndVersion(dependencyId);
-      if (currentlyExportedDep && currentlyExportedDep.scope) {
-        // it's possible that a dependency has a different defaultScope settings.
-        return dependencyId.changeScope(currentlyExportedDep.scope);
-      }
-      return dependencyId.changeScope(remoteScope);
-    }
-    return dependencyId;
-  }
-  function getBitIdsWithUpdatedScope(bitIds: BitIds): BitIds {
-    const updatedIds = bitIds.map((id) => getIdWithUpdatedScope(id));
-    return BitIds.fromArray(updatedIds);
-  }
-  async function _replaceSrcOfVersionIfNeeded(version: Version): Promise<boolean> {
-    let hasVersionChanged = false;
-    const processFile = async (file, isDist: boolean) => {
-      const newFileObject = await _createNewFileIfNeeded(version, file, isDist);
-      if (newFileObject && (codemod || isDist)) {
-        file.file = newFileObject.hash();
-        componentsObjects.objects.push(newFileObject);
-        hasVersionChanged = true;
-      }
-      return null;
-    };
-    await Promise.all(version.files.map((file) => processFile(file, false)));
-    await Promise.all((version.dists || []).map((file) => processFile(file, true)));
-    return hasVersionChanged;
-  }
-  /**
-   * in the following cases it is needed to change files content:
-   * 1. fork. exporting components of scope-a to scope-b. requirement: 1) --rewire flag. 2) id must have scope.
-   * 2. dists. changing no-scope to current scope. requirement: 1) id should not have scope.
-   * 3. no-scope. changing src no-scope to current scope. requirement: 1) --rewire flag. 2) id should not have scope.
-   *
-   * according to these three. if --rewire was not used and id has scope, no need to do anything.
-   *
-   * in the following conditions the process should stop and ask for --rewire flag:
-   * 1. --rewire flag was not entered.
-   * 2. id does not have scope.
-   * 3. the file is not a dist file.
-   * 4. the file content has pkg name without scope-name.
-   */
-  async function _createNewFileIfNeeded(
-    version: Version,
-    file: Record<string, any>,
-    isDist: boolean
-  ): Promise<Source | null | undefined> {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const currentHash = file.file;
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const fileObject: Source = await scope.objects.load(currentHash);
-    const fileString = fileObject.contents.toString();
-    const dependenciesIds = version.getAllDependencies().map((d) => d.id);
-    const componentId = componentsObjects.component.toBitId();
-    const allIds = [...dependenciesIds, componentId];
-    let newFileString = fileString;
-    allIds.forEach((id) => {
-      if (id.scope === remoteScope) {
-        return; // nothing to do, the remote has not changed
-      }
-      const idWithNewScope = id.changeScope(remoteScope);
-      const pkgNameWithOldScope = componentIdToPackageName({
-        id,
-        bindingPrefix: componentsObjects.component.bindingPrefix,
-        extensions: version.extensions,
-      });
-      if (!codemod) {
-        // use did not enter --rewire flag
-        if (id.hasScope()) {
-          return; // because only --rewire is permitted to change from scope-a to scope-b.
-        }
-        // dists can change no-scope to scope without --rewire flag. if this is not a dist file
-        // and the file needs to change from no-scope to scope, it needs to --rewire flag.
-        // for non-legacy the no-scope is not possible, so no need to check for it.
-        if (!isDist && fileString.includes(pkgNameWithOldScope) && version.isLegacy) {
-          throw new GeneralError(`please use "--rewire" flag to fix the import/require statements "${pkgNameWithOldScope}" in "${
-            file.relativePath
-          }" file of ${componentId.toString()},
-the current import/require module has no scope-name, which result in an invalid module path upon import`);
-        }
-      }
-      // at this stage, we know that either 1) --rewire was used. 2) it's dist and id doesn't have scope-name
-      // in both cases, if the file has the old package-name, it should be replaced to the new one.
-      const pkgNameWithNewScope = componentIdToPackageName({
-        id: idWithNewScope,
-        bindingPrefix: componentsObjects.component.bindingPrefix,
-        extensions: version.extensions,
-      });
-      // replace old scope to a new scope (e.g. '@bit/old-scope.is-string' => '@bit/new-scope.is-string')
-      // or no-scope to a new scope. (e.g. '@bit/is-string' => '@bit/new-scope.is-string')
-      newFileString = replacePackageName(newFileString, pkgNameWithOldScope, pkgNameWithNewScope);
-    });
-    if (newFileString !== fileString) {
-      return Source.from(Buffer.from(newFileString));
-    }
-    return null;
-  }
 }
 
 /**
