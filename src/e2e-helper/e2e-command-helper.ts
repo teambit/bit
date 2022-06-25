@@ -341,11 +341,6 @@ export default class CommandHelper {
   untagSoft(id: string) {
     return this.runCmd(`bit untag ${id} --soft`);
   }
-  exportComponent(id: string, scope: string = this.scopes.remote, assert = true, flags = '') {
-    const result = this.runCmd(`bit export ${scope} ${id} ${flags}`);
-    if (assert) expect(result).to.not.have.string('nothing to export');
-    return result;
-  }
   exportIds(ids: string, flags = '', assert = true) {
     const result = this.runCmd(`bit export ${ids} ${flags}`);
     if (assert) expect(result).to.not.have.string('nothing to export');
@@ -356,21 +351,8 @@ export default class CommandHelper {
     if (assert) expect(result).to.not.have.string('nothing to export');
     return result;
   }
-  exportAllComponents(scope: string = this.scopes.remote) {
-    return this.runCmd(`bit export ${scope} --force`);
-  }
-  exportAllComponentsAndRewire(scope: string = this.scopes.remote) {
-    return this.runCmd(`bit export ${scope} --rewire --force`);
-  }
-  exportToDefaultAndRewire() {
-    return this.runCmd(`bit export --rewire --force`);
-  }
-  exportToCurrentScope(ids?: string) {
-    return this.runCmd(`bit export ${CURRENT_UPSTREAM} ${ids || ''}`);
-  }
   export(options = '') {
-    // --force just silents the prompt, which obviously needed for CIs
-    return this.runCmd(`bit export ${options} --force`);
+    return this.runCmd(`bit export ${options}`);
   }
   resumeExport(exportId: string, remotes: string[]) {
     return this.runCmd(`bit resume-export ${exportId} ${remotes.join(' ')}`);

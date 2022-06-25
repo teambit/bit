@@ -65,7 +65,7 @@ describe('relative paths flow (components requiring each other by relative paths
         });
         describe('should work after importing to another workspace', () => {
           before(() => {
-            helper.command.exportToDefaultAndRewire();
+            helper.command.export();
             helper.scopeHelper.reInitLocalScopeHarmony();
             helper.scopeHelper.addRemoteScope();
             helper.command.importComponent('*');
