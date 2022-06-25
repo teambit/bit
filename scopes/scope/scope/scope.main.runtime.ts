@@ -921,7 +921,7 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
     if (!pattern.includes('*') && !pattern.includes(',')) {
       // if it's not a pattern but just id, resolve it without multimatch to support specifying id without scope-name
       const id = await this.resolveComponentId(pattern);
-      const exists = await this.hasId(id);
+      const exists = await this.hasId(id, true);
       if (exists) return [id];
       if (throwForNoMatch) throw new BitError(`unable to find "${pattern}" in the scope`);
       return [];
