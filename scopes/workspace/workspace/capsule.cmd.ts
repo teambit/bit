@@ -15,8 +15,8 @@ type CreateOpts = {
 };
 
 export class CapsuleCreateCmd implements Command {
-  name = 'create [componentIds...]';
-  description = `create capsules`;
+  name = 'create [component-id...]';
+  description = `create capsules for components`;
   group = 'capsules';
   alias = '';
   options = [
@@ -79,7 +79,7 @@ export class CapsuleCreateCmd implements Command {
 
 export class CapsuleListCmd implements Command {
   name = 'list';
-  description = `list all capsules`;
+  description = `list the capsules generated for this workspace`;
   group = 'capsules';
   alias = '';
   options = [['j', 'json', 'json format']] as CommandOptions;
@@ -140,7 +140,7 @@ export class CapsuleDeleteCmd implements Command {
 export class CapsuleCmd implements Command {
   name = 'capsule <sub-command>';
   description = 'manage capsules';
-  extendedDescription = `a capsule is a directory contains the component code, isolated from the workspace.
+  extendedDescription = `a capsule is a directory containing the component code, isolated from the workspace.
 normally, capsules are created during the build process, the component files are copied and the packages are installed
 via the configured package-manager. the purpose is to compile/test them in isolation to make sure they will work for
 other users after publishing/exporting them.`;

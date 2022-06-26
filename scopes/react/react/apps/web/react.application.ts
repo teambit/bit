@@ -73,7 +73,7 @@ export class ReactApp implements Application {
     const bundler = await this.getBundler(context);
     const bundleResult = await bundler.run();
 
-    return computeResults(bundleResult, { publicDir: `${this.getPublicDir()}/${this.dir}` });
+    return computeResults(bundleResult, { publicDir: `${this.getPublicDir(context.artifactsDir)}/${this.dir}` });
   }
 
   private getBundler(context: AppBuildContext) {
@@ -83,7 +83,7 @@ export class ReactApp implements Application {
   private async getDefaultBundler(context: AppBuildContext) {
     const { capsule } = context;
     const reactEnv: ReactEnv = context.env as ReactEnv;
-    const publicDir = this.getPublicDir();
+    const publicDir = this.getPublicDir(context.artifactsDir);
     const outputPath = join(capsule.path, publicDir);
     const { distDir } = reactEnv.getCompiler();
     const entries = this.entry.map((entry) => require.resolve(`${capsule.path}/${distDir}/${basename(entry)}`));
@@ -178,8 +178,8 @@ export class ReactApp implements Application {
     });
   };
 
-  private getPublicDir() {
-    return join(this.applicationType, this.name);
+  private getPublicDir(artifactsDir: string) {
+    return join(artifactsDir, this.applicationType, this.name);
   }
 
   private async getDevServerContext(context: AppContext): Promise<DevServerContext> {

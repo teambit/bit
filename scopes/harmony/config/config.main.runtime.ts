@@ -15,12 +15,7 @@ import { CLIAspect, MainRuntime, CLIMain } from '@teambit/cli';
 import { Slot, SlotRegistry, GlobalConfig } from '@teambit/harmony';
 import path from 'path';
 import { UseCmd } from './use.cmd';
-import {
-  LegacyInitProps,
-  transformLegacyPropsToExtensions,
-  WorkspaceConfig,
-  WorkspaceConfigFileProps,
-} from './workspace-config';
+import { transformLegacyPropsToExtensions, WorkspaceConfig, WorkspaceConfigFileProps } from './workspace-config';
 import { ConfigType, HostConfig } from './types';
 import { ConfigAspect } from './config.aspect';
 
@@ -77,10 +72,9 @@ export class ConfigMain {
    */
   static async ensureWorkspace(
     dirPath: PathOsBasedAbsolute,
-    workspaceConfigProps: WorkspaceConfigFileProps = {} as any,
-    legacyInitProps?: LegacyInitProps
+    workspaceConfigProps: WorkspaceConfigFileProps = {} as any
   ): Promise<ConfigMain> {
-    const workspaceConfig = await WorkspaceConfig.ensure(dirPath, workspaceConfigProps, legacyInitProps);
+    const workspaceConfig = await WorkspaceConfig.ensure(dirPath, workspaceConfigProps);
     return new ConfigMain(workspaceConfig);
   }
 
@@ -160,17 +154,14 @@ function onLegacyWorkspaceLoad(config?: ConfigMain): WorkspaceConfigLoadFunction
 function onLegacyWorkspaceEnsure(): WorkspaceConfigEnsureFunction {
   const func: WorkspaceConfigEnsureFunction = async (
     dirPath: string,
-    standAlone = false,
+    standAlone,
     legacyWorkspaceConfigProps?: LegacyWorkspaceConfigProps
   ) => {
     let workspaceConfigProps;
     if (legacyWorkspaceConfigProps) {
       workspaceConfigProps = transformLegacyPropsToExtensions(legacyWorkspaceConfigProps);
     }
-    const legacyInitProps: LegacyInitProps = {
-      standAlone,
-    };
-    const config = await ConfigMain.ensureWorkspace(dirPath, workspaceConfigProps, legacyInitProps);
+    const config = await ConfigMain.ensureWorkspace(dirPath, workspaceConfigProps);
     const workspaceConfig = config.config;
     return (workspaceConfig as WorkspaceConfig).toLegacy();
   };

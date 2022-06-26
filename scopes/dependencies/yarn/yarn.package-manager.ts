@@ -373,6 +373,7 @@ export class YarnPackageManager implements PackageManager {
   ): Promise<Configuration> {
     const registries = await this.depResolver.getRegistries();
     const proxyConfig = await this.depResolver.getProxyConfig();
+    const networkConfig = await this.depResolver.getNetworkConfig();
     const pluginConfig = getPluginConfiguration();
     let startingCwd: PortablePath;
     if (options.packageManagerConfigRootDir) {
@@ -396,7 +397,7 @@ export class YarnPackageManager implements PackageManager {
       npmAlwaysAuth: defaultRegistry.alwaysAuth,
       httpProxy: proxyConfig?.httpProxy,
       httpsProxy: proxyConfig?.httpsProxy,
-      enableStrictSsl: proxyConfig.strictSSL,
+      enableStrictSsl: networkConfig?.strictSSL,
       // enableInlineBuilds: true,
       globalFolder: `${userHome}/.yarn/global`,
       // We need to disable self-references as say create circular symlinks.

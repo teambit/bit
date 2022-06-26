@@ -7,25 +7,27 @@ describe('two components with the same name but different scope-name', function 
   let helper: Helper;
   before(() => {
     helper = new Helper();
-    helper.command.setFeatures('legacy-workspace-config');
   });
   after(() => {
     helper.scopeHelper.destroy();
   });
   describe('importing from another scope', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
       const { scopeName, scopePath } = helper.scopeHelper.getNewBareScope();
       helper.scopeHelper.addRemoteScope(scopePath);
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFoo();
-      helper.command.tagAllComponents();
+      helper.fixtures.addComponentBarFooAsDir();
+      helper.command.setScope(scopeName, 'bar/foo');
+      helper.command.tagAllWithoutBuild();
       helper.command.tagIncludeUnmodified('0.0.2');
-      helper.command.exportComponent('bar/foo', scopeName);
+      helper.command.exportIds('bar/foo');
 
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFoo();
+      helper.fixtures.addComponentBarFooAsDir();
       helper.scopeHelper.addRemoteScope(scopePath);
       helper.command.runCmd(`bit import ${scopeName}/bar/foo --objects`);
     });

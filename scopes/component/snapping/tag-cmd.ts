@@ -16,14 +16,14 @@ import { SnappingMain } from './snapping.main.runtime';
 const RELEASE_TYPES = ['major', 'premajor', 'minor', 'preminor', 'patch', 'prepatch', 'prerelease'];
 
 export class TagCmd implements Command {
-  name = 'tag [patterns...]';
+  name = 'tag [component-patterns...]';
   group = 'development';
   description = 'create an immutable and exportable component snapshot, tagged with a release version.';
   arguments = [
     {
-      name: 'patterns...',
+      name: 'component-patterns...',
       description:
-        'a list of patterns (separated by space). run "bit pattern --help" to get more data about patterns. By default, all modified are tagged.',
+        'a list of component names, IDs or patterns (separated by space). run "bit pattern --help" to get more data about patterns. By default, all modified are tagged.',
     },
   ];
   extendedDescription: string;
@@ -43,8 +43,8 @@ export class TagCmd implements Command {
     ['p', 'patch', 'syntactic sugar for "--increment patch"'],
     ['', 'minor', 'syntactic sugar for "--increment minor"'],
     ['', 'major', 'syntactic sugar for "--increment major"'],
+    ['', 'pre-release [identifier]', 'syntactic sugar for "--increment prerelease" and "--prerelease-id <identifier>"'],
     ['', 'snapped', 'EXPERIMENTAL. tag components that their head is a snap (not a tag)'],
-    ['', 'pre-release [identifier]', 'DEPRECATED. use "-l prerelease" (and --prerelease-id) instead'],
     ['', 'skip-tests', 'skip running component tests during tag process'],
     ['', 'skip-auto-tag', 'skip auto tagging dependents'],
     ['', 'soft', 'do not persist. only keep note of the changes to be made'],
@@ -192,6 +192,15 @@ https://${docsDomain}/components/tags`;
       if (preRelease) return 'prerelease';
       return DEFAULT_BIT_RELEASE_TYPE;
     };
+    const getPreReleaseId = (): string | undefined => {
+      if (prereleaseId) {
+        return prereleaseId;
+      }
+      if (preRelease && typeof preRelease === 'string') {
+        return preRelease;
+      }
+      return undefined;
+    };
 
     const disableTagAndSnapPipelines = disableTagPipeline || disableDeployPipeline;
 
@@ -201,7 +210,7 @@ https://${docsDomain}/components/tags`;
       editor,
       message,
       releaseType: getReleaseType(),
-      preReleaseId: prereleaseId || preRelease || undefined,
+      preReleaseId: getPreReleaseId(),
       ignoreIssues,
       ignoreNewestVersion,
       skipTests,

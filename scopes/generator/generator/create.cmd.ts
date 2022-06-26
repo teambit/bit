@@ -15,15 +15,16 @@ export class CreateCmd implements Command {
   description = 'create a new component (source files and config) using a template.';
   alias = '';
   loader = true;
-  arguments: [
+  arguments = [
     {
-      name: 'template-name';
-      description: "the template for generating the component \n(run 'bit templates' for a list of available templates)";
+      name: 'template-name',
+      description:
+        "the template for generating the component \n(run 'bit templates' for a list of available templates)",
     },
     {
-      name: 'component-names...';
-      description: 'a list of component names to generate';
-    }
+      name: 'component-names...',
+      description: 'a list of component names to generate',
+    },
   ];
   examples = [
     {

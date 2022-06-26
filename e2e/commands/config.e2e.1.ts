@@ -7,7 +7,6 @@ describe('bit config', function () {
   let helper: Helper;
   before(() => {
     helper = new Helper();
-    helper.command.setFeatures('legacy-workspace-config');
   });
 
   after(() => {
@@ -20,7 +19,7 @@ describe('bit config', function () {
     let delOutput;
 
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitLocalScopeHarmony();
       setOutput = helper.command.runCmd('bit config set conf.key conf.value');
       getOutput = helper.command.runCmd('bit config get conf.key');
       delOutput = helper.command.runCmd('bit config del conf.key');
@@ -41,9 +40,9 @@ describe('bit config', function () {
     });
   });
 
-  describe('git propogation', () => {
+  describe('git propagation', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitLocalScopeHarmony();
       helper.git.initNewGitRepo();
       helper.command.runCmd('bit config set conf.key bit-value');
       // Commented because of permission issue

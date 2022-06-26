@@ -8,7 +8,11 @@ import {
   ImportDetails,
   ImportStatus,
 } from '@teambit/legacy/dist/consumer/component-ops/import-components';
-import { MergeOptions, MergeStrategy } from '@teambit/legacy/dist/consumer/versions-ops/merge-version/merge-version';
+import {
+  FileStatus,
+  MergeOptions,
+  MergeStrategy,
+} from '@teambit/legacy/dist/consumer/versions-ops/merge-version/merge-version';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component/consumer-component';
 import GeneralError from '@teambit/legacy/dist/error/general-error';
 import { immutableUnshift } from '@teambit/legacy/dist/utils';
@@ -207,8 +211,8 @@ function formatPlainComponentItemWithVersions(component: ConsumerComponent, impo
   const usedVersion = status === 'added' ? `, currently used version ${component.version}` : '';
   const getConflictMessage = () => {
     if (!importDetails.filesStatus) return '';
-    const conflictedFiles = Object.keys(importDetails.filesStatus) // $FlowFixMe file is set
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    const conflictedFiles = Object.keys(importDetails.filesStatus)
+      // @ts-ignore file is set
       .filter((file) => importDetails.filesStatus[file] === FileStatus.manual);
     if (!conflictedFiles.length) return '';
     return `(the following files were saved with conflicts ${conflictedFiles

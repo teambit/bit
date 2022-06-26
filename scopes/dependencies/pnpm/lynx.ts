@@ -63,12 +63,12 @@ async function createStoreController(
     verifyStoreIntegrity: true,
     httpProxy: options.proxyConfig?.httpProxy,
     httpsProxy: options.proxyConfig?.httpsProxy,
-    ca: options.proxyConfig?.ca,
-    cert: options.proxyConfig?.cert,
-    key: options.proxyConfig?.key,
+    ca: options.networkConfig?.ca,
+    cert: options.networkConfig?.cert,
+    key: options.networkConfig?.key,
     localAddress: options.networkConfig?.localAddress,
     noProxy: options.proxyConfig?.noProxy,
-    strictSsl: options.proxyConfig.strictSSL,
+    strictSsl: options.networkConfig.strictSSL,
     maxSockets: options.networkConfig.maxSockets,
     networkConcurrency: options.networkConfig.networkConcurrency,
     packageImportMethod: options.packageImportMethod,
@@ -97,12 +97,12 @@ async function generateResolverAndFetcher(
     cacheDir,
     httpProxy: proxyConfig?.httpProxy,
     httpsProxy: proxyConfig?.httpsProxy,
-    ca: proxyConfig?.ca,
-    cert: proxyConfig?.cert,
-    key: proxyConfig?.key,
+    ca: networkConfig?.ca,
+    cert: networkConfig?.cert,
+    key: networkConfig?.key,
     localAddress: networkConfig?.localAddress,
     noProxy: proxyConfig?.noProxy,
-    strictSsl: proxyConfig.strictSSL,
+    strictSsl: networkConfig.strictSSL,
     timeout: networkConfig.fetchTimeout,
     retry: {
       factor: networkConfig.fetchRetryFactor,
@@ -219,6 +219,7 @@ export async function install(
     workspacePackages,
     preferFrozenLockfile: true,
     pruneLockfileImporters: true,
+    modulesCacheMaxAge: 0,
     registries: registriesMap,
     rawConfig: authConfig,
     hooks: { readPackage },
@@ -242,7 +243,7 @@ export async function install(
     await installsRunning[rootManifest.rootDir]
     delete installsRunning[rootManifest.rootDir]
   } catch (err: any) {
-    throw pnpmErrorToBitError(err)
+    throw pnpmErrorToBitError(err);
   } finally {
     stopReporting();
   }

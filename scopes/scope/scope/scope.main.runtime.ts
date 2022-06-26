@@ -920,7 +920,7 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
   }
 
   /**
-   * load components into the scope through a variants pattern.
+   * @deprecated use `this.idsByPattern` instead for consistency, which supports also negation and list of patterns.
    */
   async byPattern(patterns: string[], scope = '**'): Promise<Component[]> {
     const patternsWithScope = patterns.map((pattern) => `${scope}/${pattern || '**'}`);
@@ -933,18 +933,19 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
 
   /**
    * get component-ids matching the given pattern. a pattern can have multiple patterns separated by a comma.
-   * it supports negate (!) character to exclude ids.
+   * it uses multimatch (https://www.npmjs.com/package/multimatch) package for the matching algorithm, which supports
+   * (among others) negate character "!" to exclude ids. See the package page for more supported characters.
    */
   async idsByPattern(pattern: string, throwForNoMatch = true): Promise<ComponentID[]> {
     if (!pattern.includes('*') && !pattern.includes(',')) {
       // if it's not a pattern but just id, resolve it without multimatch to support specifying id without scope-name
       const id = await this.resolveComponentId(pattern);
-      const exists = await this.hasId(id);
+      const exists = await this.hasId(id, true);
       if (exists) return [id];
       if (throwForNoMatch) throw new BitError(`unable to find "${pattern}" in the scope`);
       return [];
     }
-    const ids = await this.listIds();
+    const ids = await this.listIds(true);
     return this.filterIdsFromPoolIdsByPattern(pattern, ids, throwForNoMatch);
   }
 

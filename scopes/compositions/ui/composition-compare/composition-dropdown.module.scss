@@ -11,6 +11,7 @@
   user-select: none;
   transition: background-color 300ms ease-in-out;
   border: 1px solid var(--bit-border-color, #babec9);
+  background-color: var(--bit-bg-color, #ffffff);
 }
 
 .menu {

@@ -154,13 +154,6 @@ describe('DepenendencyResolverMain.getNetworkConfig()', () => {
       maxSockets: 777,
     });
   });
-});
-
-describe('DepenendencyResolverMain.getProxyConfig()', () => {
-  const packageManagerSlot = {
-    // @ts-ignore
-    get: jest.fn(),
-  };
   it('should read cafile when it is returned by the global config', async () => {
     const depResolver = new DependencyResolverMain(
       {} as any,
@@ -178,18 +171,14 @@ describe('DepenendencyResolverMain.getProxyConfig()', () => {
       {} as any
     );
     packageManagerSlot.get.mockReturnValue({
-      getProxyConfig: () => {},
+      getNetworkConfig: () => {},
     });
     // @ts-ignore
-    Http.getProxyConfig.mockReturnValue(
-      Promise.resolve({
-        httpProxy: 'http://proxy.bit',
-        cafile: path.join(__dirname, 'fixtures/cafile.txt'),
-      })
-    );
+    Http.getNetworkConfig.mockReturnValue(Promise.resolve({
+      cafile: path.join(__dirname, 'fixtures/cafile.txt'),
+    }));
     // @ts-ignore
-    expect((await depResolver.getProxyConfig()).ca).toStrictEqual([
-      `-----BEGIN CERTIFICATE-----
+    expect((await depResolver.getNetworkConfig()).ca).toStrictEqual([`-----BEGIN CERTIFICATE-----
 XXXX
 -----END CERTIFICATE-----`,
     ]);

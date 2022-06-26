@@ -76,6 +76,9 @@ export default class CommandHelper {
   listRemoteScope(raw = true, options = '') {
     return this.runCmd(`bit list ${this.scopes.remote} ${options} ${raw ? '--raw' : ''}`);
   }
+  listRemoteScopeIds(options = '') {
+    return this.runCmd(`bit list ${this.scopes.remote} ${options} --ids`);
+  }
   list(options = '') {
     return this.runCmd(`bit list ${options}`);
   }
@@ -343,6 +346,11 @@ export default class CommandHelper {
     if (assert) expect(result).to.not.have.string('nothing to export');
     return result;
   }
+  exportIds(ids: string, flags = '', assert = true) {
+    const result = this.runCmd(`bit export ${ids} ${flags}`);
+    if (assert) expect(result).to.not.have.string('nothing to export');
+    return result;
+  }
   exportLane(assert = true) {
     const result = this.export();
     if (assert) expect(result).to.not.have.string('nothing to export');
@@ -607,9 +615,6 @@ export default class CommandHelper {
   }
   new(templateName: string, flags = '', workspaceName = 'my-workspace', cwd = this.scopes.localPath) {
     return this.runCmd(`bit new ${templateName} ${workspaceName} ${flags}`, cwd);
-  }
-  moveComponent(id: string, to: string) {
-    return this.runCmd(`bit move ${id} ${path.normalize(to)} --component`);
   }
   link(flags?: string) {
     return this.runCmd(`bit link ${flags || ''}`);
