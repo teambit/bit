@@ -302,7 +302,7 @@ export const CFG_MAX_SOCKETS = 'network.max_sockets';
 export const CFG_NETWORK_CONCURRENCY = 'network.concurrency';
 export const CFG_NETWORK_CA = 'network.ca';
 export const CFG_NETWORK_CA_FILE = 'network.cafile';
-export const CFG_NETWORK_STRICT_SSL = 'network.strict_ssl';
+export const CFG_NETWORK_STRICT_SSL = 'network.strict-ssl';
 export const CFG_NETWORK_CERT = 'network.cert';
 export const CFG_NETWORK_KEY = 'network.key';
 
