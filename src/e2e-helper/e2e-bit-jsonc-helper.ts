@@ -63,6 +63,15 @@ export default class BitJsoncHelper {
     this.addKeyVal('teambit.workspace/variants', variants, bitJsoncDir);
   }
 
+  setPolicyToVariant(variant: string, policy: Record<string, any>) {
+    const config = {
+      'teambit.dependencies/dependency-resolver': {
+        policy,
+      },
+    };
+    this.setVariant(undefined, variant, config);
+  }
+
   addKeyValToWorkspace(key: string, val: any, bitJsoncDir: string = this.scopes.localPath) {
     const bitJsonc = this.read(bitJsoncDir);
     const workspace = bitJsonc['teambit.workspace/workspace'];
@@ -81,6 +90,12 @@ export default class BitJsoncHelper {
     const bitJsonc = this.read();
     const depResolver = bitJsonc['teambit.dependencies/dependency-resolver'];
     return depResolver.policy;
+  }
+
+  addPolicyToDependencyResolver(policy: Record<string, any>) {
+    const currentPolicy = this.getPolicyFromDependencyResolver();
+    assign(currentPolicy, policy);
+    this.addKeyValToDependencyResolver('policy', currentPolicy);
   }
 
   addDefaultScope(scope = this.scopes.remote) {

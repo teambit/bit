@@ -2,7 +2,7 @@ import { ComponentContext } from '@teambit/generator';
 
 export function mainRuntimeFile({ namePascalCase: Name, name }: ComponentContext) {
   return `import { MainRuntime } from '@teambit/cli';
-import { ReactAspect, ReactMain } from '@teambit/react';
+import { ReactAspect, ReactMain, UseTypescriptModifiers } from '@teambit/react';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { ${Name}Aspect } from './${name}.aspect';
 //import {
@@ -21,17 +21,18 @@ export class ${Name}Main {
 
   static runtime = MainRuntime;
 
-  //const webpackModifiers: UseWebpackModifiers = {
-  //  previewConfig: [previewConfigTransformer],
-  //  devServerConfig: [devServerConfigTransformer],
-  //};
-
-  //const tsModifiers: UseTypescriptModifiers = {
-  //  devConfig: [devConfigTransformer],
-  //  buildConfig: [buildConfigTransformer],
-  //};
-
   static async provider([react, envs]: [ReactMain, EnvsMain]) {
+
+    //const webpackModifiers: UseWebpackModifiers = {
+      //  previewConfig: [previewConfigTransformer],
+      //  devServerConfig: [devServerConfigTransformer],
+    //};
+
+    //const tsModifiers: UseTypescriptModifiers = {
+      //  devConfig: [devConfigTransformer],
+      //  buildConfig: [buildConfigTransformer],
+    //};
+
     const ${Name}Env = react.compose([
       /**
        * Uncomment to override the config files for TypeScript, Webpack or Jest

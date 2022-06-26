@@ -213,4 +213,50 @@ describe('import functionality on Harmony', function () {
       });
     });
   });
+  (supportNpmCiRegistryTesting ? describe : describe.skip)(
+    'import and install components with pre-release versions',
+    () => {
+      let scopeWithoutOwner: string;
+      before(async () => {
+        helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+        helper.bitJsonc.setupDefault();
+        scopeWithoutOwner = helper.scopes.remoteWithoutOwner;
+        helper.fixtures.populateComponents(3);
+        npmCiRegistry = new NpmCiRegistry(helper);
+        npmCiRegistry.configureCiInPackageJsonHarmony();
+        await npmCiRegistry.init();
+        helper.command.tagAllComponents('--increment prerelease --prerelease-id beta');
+        helper.command.export();
+      });
+      after(() => {
+        npmCiRegistry.destroy();
+      });
+      describe('install as packages', () => {
+        before(() => {
+          helper.scopeHelper.reInitLocalScopeHarmony();
+          helper.scopeHelper.addRemoteScope();
+          helper.npm.initNpm();
+        });
+        it('should be able to install the package with no errors', () => {
+          const installFunc = () =>
+            helper.npm.installNpmPackage(`@${DEFAULT_OWNER}/${scopeWithoutOwner}.comp1`, '0.0.1-beta.0');
+          expect(installFunc).to.not.throw();
+        });
+      });
+      describe('importing the components', () => {
+        before(() => {
+          helper.scopeHelper.reInitLocalScopeHarmony();
+          npmCiRegistry.setResolver();
+          helper.command.importComponent('comp1');
+        });
+        it('should import the component with the pre-release correctly', () => {
+          helper.bitMap.expectToHaveIdHarmony('comp1', '0.0.1-beta.0', helper.scopes.remote);
+        });
+        // previously, it threw an error: "error: version 0.0.1.0 is not a valid semantic version. learn more: https://semver.org"
+        it('bit status should be clean with no errors', () => {
+          helper.command.expectStatusToBeClean();
+        });
+      });
+    }
+  );
 });

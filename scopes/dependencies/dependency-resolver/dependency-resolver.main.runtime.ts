@@ -616,13 +616,9 @@ export class DependencyResolverMain {
 
   private getProxyConfigFromDepResolverConfig(): ProxyConfig {
     return {
-      ca: this.config.ca,
-      cert: this.config.cert,
       httpProxy: this.config.proxy,
       httpsProxy: this.config.httpsProxy || this.config.proxy,
-      key: this.config.key,
       noProxy: this.config.noProxy,
-      strictSSL: this.config.strictSsl?.toLowerCase() === 'true',
     };
   }
 
@@ -635,11 +631,15 @@ export class DependencyResolverMain {
   }
 
   private async getNetworkConfigFromGlobalConfig(): Promise<NetworkConfig> {
-    return Http.getNetworkConfig();
+    const globalNetworkConfig = await Http.getNetworkConfig();
+    if (!globalNetworkConfig.ca && globalNetworkConfig.cafile) {
+      globalNetworkConfig.ca = readCAFileSync(globalNetworkConfig.cafile);
+    }
+    return globalNetworkConfig;
   }
 
   private getNetworkConfigFromDepResolverConfig(): NetworkConfig {
-    return pick(this.config, [
+    const config: NetworkConfig = pick(this.config, [
       'fetchTimeout',
       'fetchRetries',
       'fetchRetryFactor',
@@ -647,7 +647,17 @@ export class DependencyResolverMain {
       'fetchRetryMaxtimeout',
       'maxSockets',
       'networkConcurrency',
+      'key',
+      'cert',
+      'ca',
+      'cafile',
     ]);
+    if (this.config.strictSsl != null) {
+      config.strictSSL = typeof this.config.strictSsl === 'string'
+        ? this.config.strictSsl.toLowerCase() === 'true'
+        : this.config.strictSsl;
+    }
+    return config;
   }
 
   private async getNetworkConfigFromPackageManager(): Promise<NetworkConfig> {
@@ -674,12 +684,8 @@ export class DependencyResolverMain {
     return proxyConfigFromPackageManager;
   }
 
-  private async getProxyConfigFromGlobalConfig(): Promise<ProxyConfig> {
-    const globalProxyConfig = await Http.getProxyConfig();
-    if (!globalProxyConfig.ca && globalProxyConfig.cafile) {
-      globalProxyConfig.ca = readCAFileSync(globalProxyConfig.cafile);
-    }
-    return globalProxyConfig;
+  private getProxyConfigFromGlobalConfig(): Promise<ProxyConfig> {
+    return Http.getProxyConfig();
   }
 
   /**
