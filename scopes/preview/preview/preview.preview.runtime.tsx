@@ -8,7 +8,7 @@ import { PreviewNotFound } from './exceptions';
 import { PreviewType } from './preview-type';
 import { PreviewAspect, PreviewRuntime } from './preview.aspect';
 import { ClickInsideAnIframeEvent } from './events';
-import { PreviewModule } from './types/preview-module';
+import { ModuleFile, PreviewModule } from './types/preview-module';
 import { RenderingContext } from './rendering-context';
 import { fetchComponentAspects } from './gql/fetch-component-aspects';
 import { PreviewModules } from './preview-modules';
@@ -88,14 +88,12 @@ export class PreviewPreview {
     }
 
     const includesAll = await Promise.all(
-      (preview.include || []).map(async (prevName) => {
-        const includedPreview = this.getPreview(prevName);
+      (preview.include || []).map(async (inclPreviewName) => {
+        const includedPreview = this.getPreview(inclPreviewName);
         if (!includedPreview) return undefined;
 
-        return includedPreview.selectPreviewModel?.(
-          componentId.fullName,
-          await this.getPreviewModule(prevName, componentId, name)
-        );
+        const inclPreviewModule = await this.getPreviewModule(inclPreviewName, componentId);
+        return includedPreview.selectPreviewModel?.(componentId.fullName, inclPreviewModule);
       })
     );
 
@@ -111,20 +109,17 @@ export class PreviewPreview {
     );
   };
 
-  async getPreviewModule(name: string, id: ComponentID, parentPreviewName?: string): Promise<PreviewModule> {
-    const relevantModel = PREVIEW_MODULES.get(name);
-    if (!relevantModel) throw new Error(`[preview.preview] missing preview "${name}"`);
-    if (relevantModel.componentMap[id.fullName]) return relevantModel;
+  async getPreviewModule(previewName: string, id: ComponentID): Promise<PreviewModule> {
+    const compShortId = id.fullName;
 
-    if (parentPreviewName && !PREVIEW_MODULES.has(parentPreviewName))
-      throw new Error(`[preview.preview] missing parent preview "${parentPreviewName}"`);
+    const relevantModel = PREVIEW_MODULES.get(previewName);
+    if (!relevantModel) throw new Error(`[preview.preview] missing preview "${previewName}"`);
+    if (relevantModel.componentMap[compShortId]) return relevantModel;
 
-    let component;
-    const parentPreview = parentPreviewName ? PREVIEW_MODULES.get(parentPreviewName) : undefined;
-    // Handle case when there is overview but no composition on the workspace dev server
-    if (parentPreview?.componentMap[id.fullName]) {
-      component = await this.fetchComponentPreview(id, name);
-    }
+    const componentPreviews = await this.fetchComponentPreview(id, previewName);
+    PREVIEW_MODULES.loadComponentPreviews(compShortId, componentPreviews);
+
+    const component = componentPreviews[previewName];
 
     return {
       mainModule: relevantModel.mainModule,
@@ -134,13 +129,12 @@ export class PreviewPreview {
     };
   }
 
-  async fetchComponentPreview(id: ComponentID, name: string) {
-    let previewFile;
+  async fetchComponentPreview(id: ComponentID, name: string): Promise<Record<string, ModuleFile[]>> {
+    let previewFile: string | undefined;
     const allFiles = await this.fetchComponentPreviewFiles(id, name);
     // It's a component bundled with the env
-    if (allFiles === null) {
-      return Promise.resolve(undefined);
-    }
+    if (allFiles === null) return {};
+
     allFiles.forEach((file) => {
       // We want to run the preview file always last
       if (file.endsWith('-preview.js')) {
@@ -149,10 +143,9 @@ export class PreviewPreview {
         this.addComponentFileElement(id, file);
       }
     });
-    return new Promise((resolve, reject) => {
-      const previewScriptElement = this.getPreviewScriptElement(id, name, previewFile, resolve, reject);
-      document.head.appendChild(previewScriptElement);
-    });
+
+    if (!previewFile) return {};
+    return this.loadPreviewScript(id, name, previewFile);
   }
 
   private addComponentFileElement(id: ComponentID, previewBundleFileName: string) {
@@ -206,23 +199,24 @@ export class PreviewPreview {
     return link;
   }
 
-  private getPreviewScriptElement(id: ComponentID, name: string, previewBundleFileName: string, resolve, reject) {
-    const script = document.createElement('script');
-    script.setAttribute('defer', 'defer');
-    const stringId = id.toString();
-    // const previewRoute = `~aspect/preview`;
-    const previewRoute = `~aspect/component-preview`;
-    const src = `/api/${stringId}/${previewRoute}/${previewBundleFileName}`;
-    script.src = src; // generate path to remote scope. [scope url]/
-    script.onload = () => {
-      const componentPreview = window[`${id.toStringWithoutVersion()}-preview`];
-      if (!componentPreview) return reject(new PreviewNotFound(name));
-      const targetPreview = componentPreview[name];
-      if (!targetPreview) return resolve(undefined);
+  private async loadPreviewScript(id: ComponentID, previewName: string, previewBundleFileName: string) {
+    await new Promise<void>((resolve, reject) => {
+      const script = document.createElement('script');
+      const previewRoute = `~aspect/component-preview`;
+      const src = `/api/${id.toString()}/${previewRoute}/${previewBundleFileName}`;
+      script.src = src;
+      script.setAttribute('defer', 'defer');
+      script.onload = () => resolve();
+      script.onerror = (message, _, _1, _2, error) =>
+        reject(error || new Error(`[preview.preview] failed to load preview script: ${message}`));
+      document.head.appendChild(script);
+    });
 
-      return resolve(targetPreview);
-    };
-    return script;
+    const globalId = `${id.toStringWithoutVersion()}-preview`;
+    const componentPreview = window[globalId];
+    if (!componentPreview) throw new PreviewNotFound(previewName);
+
+    return componentPreview as Record<string, ModuleFile[]>;
   }
 
   private getComponentAspects = memoize(fetchComponentAspects, {
