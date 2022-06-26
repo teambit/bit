@@ -1,11 +1,5 @@
 import type { BundlerEntryMap } from '@teambit/bundler';
 
-// TODO:
-// - use config `output.filename: "[name].[chunkhash].js",`
-// - move config to the env
-// - especially move webpack-only syntax, like dependsOn, filename template
-// - consider adding 'runtime'
-
 export const CHUNK_NAMES = {
   previewRoot: 'preview-root',
   peers: 'peers',
