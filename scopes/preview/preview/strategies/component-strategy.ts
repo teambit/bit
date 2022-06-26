@@ -365,10 +365,10 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
     const moduleMapsPromise = defs.map(async (previewDef) => {
       const moduleMap = await previewDef.getModuleMap([component]);
       const maybeFiles = moduleMap.get(component);
-      if (!maybeFiles || !capsule) return [];
+      if (!maybeFiles || !capsule) return { prefix: previewDef.prefix, paths: [] };
+
       const [, files] = maybeFiles;
       const compiledPaths = this.getPaths(context, component, files);
-      // const files = flatten(paths.toArray().map(([, file]) => file));
 
       return {
         prefix: previewDef.prefix,
@@ -376,7 +376,7 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
       };
     });
 
-    const moduleMaps = flatten(await Promise.all(moduleMapsPromise));
+    const moduleMaps = await Promise.all(moduleMapsPromise);
 
     const contents = generateComponentLink(moduleMaps);
     return this.preview.writeLinkContents(contents, this.getComponentOutputPath(capsule), 'preview');
