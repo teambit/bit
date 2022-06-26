@@ -1,7 +1,3 @@
-// ensure dep on require.resolve
-import '@teambit/react.ui.compositions-app';
-import '@teambit/react.ui.docs-app';
-
 import ts, { TsConfigSourceFile } from 'typescript';
 import { tmpdir } from 'os';
 import { Component } from '@teambit/component';
@@ -59,6 +55,10 @@ const defaultTsConfig = require('./typescript/tsconfig.json');
 const buildTsConfig = require('./typescript/tsconfig.build.json');
 const eslintConfig = require('./eslint/eslintrc');
 const prettierConfig = require('./prettier/prettier.config.js');
+
+// ensure bit identifies these as a dep because they are used via require.resolve() later on
+require('@teambit/react.ui.compositions-app');
+require('@teambit/react.ui.docs-app');
 
 // TODO: move to be taken from the key mode of compiler context
 type CompilerMode = 'build' | 'dev';
