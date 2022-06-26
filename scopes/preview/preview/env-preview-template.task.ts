@@ -144,7 +144,7 @@ export class EnvPreviewTemplateTask implements BuildTask {
     const previewRoot = await this.preview.writePreviewRuntime(context, [envComponent.id.toString()]);
     const entries = await this.generateEntries({
       envDef,
-      splitComponentBundle: envPreviewConfig.splitComponentBundle,
+      splitComponentBundle: envPreviewConfig.splitComponentBundle ?? false,
       workDir: capsule.path,
       peers,
       previewRoot,
@@ -173,13 +173,13 @@ export class EnvPreviewTemplateTask implements BuildTask {
     workDir,
     peers,
     envDef,
-    splitComponentBundle = false,
+    splitComponentBundle,
   }: {
     previewRoot: string;
     workDir: string;
     peers: string[];
     envDef: EnvDefinition;
-    splitComponentBundle?: boolean;
+    splitComponentBundle: boolean;
   }) {
     const previewModules = await this.getPreviewModules(envDef);
     const previewEntries = previewModules.map(({ name, path, ...rest }) => {
