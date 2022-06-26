@@ -159,6 +159,11 @@ export type HtmlConfig = {
    */
   chunks?: string[];
   /**
+   * Load chunks according to their order in the `chunks` array
+   * @default auto
+   */
+  chunkOrder?: 'auto' | 'manual';
+  /**
    * provide an inline template
    */
   templateContent: string;

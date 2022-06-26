@@ -105,6 +105,7 @@ function generateHtmlPlugin(config: BundlerHtmlConfig) {
   const baseConfig: HtmlWebpackPlugin.Options = {
     filename: config.filename,
     chunks: config.chunks,
+    chunksSortMode: config.chunkOrder,
     title: config.title,
     templateContent: config.templateContent,
     minify: config.minify,
