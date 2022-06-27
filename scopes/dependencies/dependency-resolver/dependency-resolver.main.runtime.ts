@@ -623,11 +623,13 @@ export class DependencyResolverMain {
   }
 
   async getNetworkConfig(): Promise<NetworkConfig> {
-    return {
+    const networkConfig = {
       ...(await this.getNetworkConfigFromGlobalConfig()),
       ...(await this.getNetworkConfigFromPackageManager()),
       ...this.getNetworkConfigFromDepResolverConfig(),
     };
+    this.logger.debug(`the next network configuration is used: ${networkConfig}`);
+    return networkConfig;
   }
 
   private async getNetworkConfigFromGlobalConfig(): Promise<NetworkConfig> {
@@ -661,14 +663,16 @@ export class DependencyResolverMain {
   }
 
   private async getNetworkConfigFromPackageManager(): Promise<NetworkConfig> {
-    const packageManager = this.getPackageManager();
-    if (typeof packageManager?.getNetworkConfig !== 'function') return {};
-    return packageManager.getNetworkConfig();
-  }
-
-  private getPackageManager() {
     const packageManager = this.packageManagerSlot.get(this.config.packageManager);
-    return packageManager ?? this.getSystemPackageManager();
+    let networkConfigFromPackageManager: NetworkConfig = {};
+    if (typeof packageManager?.getNetworkConfig === 'function') {
+      networkConfigFromPackageManager = await packageManager?.getNetworkConfig();
+    } else {
+      const systemPm = this.getSystemPackageManager();
+      if (!systemPm.getNetworkConfig) throw new Error('system package manager must implement `getNetworkConfig()`');
+      networkConfigFromPackageManager = await systemPm.getNetworkConfig();
+    }
+    return networkConfigFromPackageManager;
   }
 
   private async getProxyConfigFromPackageManager(): Promise<ProxyConfig> {
