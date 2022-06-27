@@ -30,19 +30,14 @@ export function generateTemplateEntries(options: TemplateEntryOptions): BundlerE
   const previewChunks = {};
   options.previewModules.forEach(({ name, entry, include = [] }) => {
     previewChunks[name] = {
-      filename: `${name}.[chunkhash].js`,
       dependOn: [CHUNK_NAMES.peers, CHUNK_NAMES.previewRoot, ...include],
       import: entry,
     };
   });
 
   return {
-    [CHUNK_NAMES.peers]: {
-      filename: 'peers.[chunkhash].js',
-      import: options.peers,
-    },
+    [CHUNK_NAMES.peers]: options.peers,
     [CHUNK_NAMES.previewRoot]: {
-      filename: 'preview-root.[chunkhash].js',
       dependOn: [CHUNK_NAMES.peers],
       import: options.previewRootPath,
     },
