@@ -280,28 +280,6 @@ describe('bit import', function () {
           );
         });
       });
-      describe('when the DSL has the obsolete "namespace" parameter', () => {
-        let output;
-        before(() => {
-          helper.scopeHelper.reInitLocalScopeHarmony();
-          helper.bitJsonc.setComponentsDir('{namespace}/{name}');
-          helper.scopeHelper.addRemoteScope();
-          output = helper.command.importComponent('global/simple');
-        });
-        it('should import the component successfully', () => {
-          expect(output).to.have.string('successfully imported one component');
-        });
-        it('should import the component into the given structure without the namespace part', () => {
-          expect(path.join(helper.scopes.localPath, 'global/simple')).to.be.a.directory('should not be empty').and.not
-            .empty;
-        });
-        it('bitmap should contain component with correct rootDir according to dsl', () => {
-          const bitMap = helper.bitMap.read();
-          const componentId = `global/simple`;
-          expect(bitMap).to.have.property(componentId);
-          expect(bitMap[componentId].rootDir).to.equal('global/simple');
-        });
-      });
     });
   });
   // @TODO: FIX ON HARMONY!

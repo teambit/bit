@@ -1,9 +1,8 @@
 import * as path from 'path';
 import fs from 'fs-extra';
 import R from 'ramda';
-import { isNilOrEmpty } from 'ramda-adjunct';
 import semver from 'semver';
-import { uniq } from 'lodash';
+import { uniq, isEmpty } from 'lodash';
 import { IssuesList, IssuesClasses } from '@teambit/component-issues';
 import { Dependency } from '..';
 import { BitId, BitIds } from '../../../../bit-id';
@@ -858,7 +857,7 @@ either, use the ignore file syntax or change the require statement to have a mod
     if (!missing) return;
     const processMissingFiles = () => {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      if (isNilOrEmpty(missing.files)) return;
+      if (isEmpty(missing.files)) return;
       const absOriginFile = this.consumer.toAbsolutePath(originFile);
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const missingFiles = missing.files.filter((missingFile) => {
@@ -871,7 +870,7 @@ either, use the ignore file syntax or change the require statement to have a mod
       this._pushToMissingDependenciesOnFs(originFile, missingFiles);
     };
     const processMissingPackages = () => {
-      if (isNilOrEmpty(missing.packages)) return;
+      if (isEmpty(missing.packages)) return;
       const missingPackages = missing.packages.filter(
         (pkg) => !this.overridesDependencies.shouldIgnorePackage(pkg, fileType)
       );
@@ -892,7 +891,7 @@ either, use the ignore file syntax or change the require statement to have a mod
       }
     };
     const processMissingComponents = () => {
-      if (isNilOrEmpty(missing.components)) return;
+      if (isEmpty(missing.components)) return;
       this._addToMissingComponentsIfNeeded(missing.components, originFile, fileType);
     };
     processMissingFiles();
