@@ -9,6 +9,7 @@ export interface CompositionsSummaryProps extends SectionProps {
 }
 
 export function CompositionsSummary({ compositions, compositionCardClass, ...rest }: CompositionsSummaryProps) {
+
   if (!compositions || Object.keys(compositions).length === 0) {
     return null;
   }
