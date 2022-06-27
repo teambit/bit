@@ -15,7 +15,7 @@ export const CHUNK_NAMES = {
   peers: 'peers',
 };
 
-type templateEntryOptions = {
+type TemplateEntryOptions = {
   previewRootPath: string;
   peers: string[];
   previewModules: {
@@ -26,7 +26,7 @@ type templateEntryOptions = {
   }[];
 };
 
-export function generateTemplateEntries(options: templateEntryOptions): BundlerEntryMap {
+export function generateTemplateEntries(options: TemplateEntryOptions): BundlerEntryMap {
   const previewChunks = {};
   options.previewModules.forEach(({ name, entry, include = [] }) => {
     previewChunks[name] = {
