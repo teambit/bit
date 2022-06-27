@@ -17,8 +17,8 @@ import { Logger } from '@teambit/logger';
 import { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { existsSync, mkdirpSync } from 'fs-extra';
 import type { PreviewMain } from './preview.main.runtime';
-import { generateTemplateEntries } from './webpack/chunks';
-import { generateHtmlConfig } from './webpack/html-plugin';
+import { generateTemplateEntries } from './bundler/chunks';
+import { generateHtmlConfig } from './bundler/html-plugin';
 
 export type ModuleExpose = {
   name: string;
