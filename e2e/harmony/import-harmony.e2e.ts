@@ -259,4 +259,31 @@ describe('import functionality on Harmony', function () {
       });
     }
   );
+  describe('changing the component default directory', () => {
+    let beforeImport: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.addRemoteScope();
+      beforeImport = helper.scopeHelper.cloneLocalScope();
+    });
+    it('should import with no errors when defaultDirectory has "{owner}" placeholder', () => {
+      helper.bitJsonc.setComponentsDir('{owner}/{name}');
+      expect(() => helper.command.importComponent('comp1')).to.not.throw();
+    });
+    it('should import with no errors when defaultDirectory has "{scope-id}" placeholder', () => {
+      helper.scopeHelper.getClonedLocalScope(beforeImport);
+      helper.bitJsonc.setComponentsDir('{scopeId}/{name}');
+      expect(() => helper.command.importComponent('comp1')).to.not.throw();
+    });
+    it('should throw an error when the placeholder is not supported', () => {
+      helper.scopeHelper.getClonedLocalScope(beforeImport);
+      helper.bitJsonc.setComponentsDir('{hello}/{name}');
+      expect(() => helper.command.importComponent('comp1')).to.throw();
+    });
+  });
 });
