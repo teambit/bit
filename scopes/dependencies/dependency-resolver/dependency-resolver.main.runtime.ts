@@ -628,7 +628,10 @@ export class DependencyResolverMain {
       ...(await this.getNetworkConfigFromPackageManager()),
       ...this.getNetworkConfigFromDepResolverConfig(),
     };
-    this.logger.debug(`the next network configuration is used: ${networkConfig}`);
+    this.logger.debug(`the next network configuration is used: ${{
+      ...networkConfig,
+      key: networkConfig.key ? 'set' : 'not set', // this is sensitive information, we should not log it
+    }}`);
     return networkConfig;
   }
 
