@@ -1,6 +1,6 @@
 import mapSeries from 'p-map-series';
 import R from 'ramda';
-import { isNilOrEmpty, compact } from 'ramda-adjunct';
+import { isEmpty, compact } from 'lodash';
 import { ReleaseType } from 'semver';
 import { v4 } from 'uuid';
 import * as globalConfig from '../../api/consumer/lib/global-config';
@@ -273,7 +273,7 @@ export default async function tagModelComponent({
     });
     const newestVersions = await Promise.all(newestVersionsP);
     const newestVersionsWithoutEmpty = newestVersions.filter((newest) => newest);
-    if (!isNilOrEmpty(newestVersionsWithoutEmpty)) {
+    if (!isEmpty(newestVersionsWithoutEmpty)) {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       throw new NewerVersionFound(newestVersionsWithoutEmpty);
     }
