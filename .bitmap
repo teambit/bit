@@ -1146,6 +1146,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/compositions/ui/compositions-menu-bar"
     },
+    "ui/compositions-summary": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/react/ui/compositions-summary"
+    },
     "ui/constants/z-indexes": {
         "scope": "teambit.ui-foundation",
         "version": "0.0.488",
@@ -1181,6 +1187,12 @@
         "version": "0.0.176",
         "mainFile": "index.tsx",
         "rootDir": "scopes/react/ui/docs-app"
+    },
+    "ui/docs-content": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/react/ui/docs-content"
     },
     "ui/docs/link": {
         "scope": "teambit.mdx",
@@ -1324,7 +1336,7 @@
         "scope": "teambit.component",
         "version": "0.0.5",
         "mainFile": "index.ts",
-        "rootDir": "scopes/component/ui/use-fetch-docs"
+        "rootDir": "scopes/component/ui/hooks/use-fetch-docs"
     },
     "ui/hooks/use-in-out-transition": {
         "scope": "teambit.ui-foundation",
@@ -1493,6 +1505,12 @@
         "version": "0.0.487",
         "mainFile": "index.ts",
         "rootDir": "scopes/preview/ui/preview-placeholder"
+    },
+    "ui/properties": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/react/ui/properties"
     },
     "ui/queries/get-component-code": {
         "scope": "teambit.code",
