@@ -11,11 +11,12 @@ import { ClickInsideAnIframeEvent } from './events';
 import { ModuleFile, PreviewModule } from './types/preview-module';
 import { RenderingContext } from './rendering-context';
 import { fetchComponentAspects } from './gql/fetch-component-aspects';
-import { PreviewModules } from './preview-modules';
+import { PREVIEW_MODULES } from './preview-modules';
+
+// forward linkModules() for generate-link.ts
+export { linkModules } from './preview-modules';
 
 export type PreviewSlot = SlotRegistry<PreviewType>;
-
-const PREVIEW_MODULES = new PreviewModules();
 
 export type RenderingContextOptions = { aspectsFilter?: string[] };
 export type RenderingContextProvider = (options: RenderingContextOptions) => { [key: string]: any };
@@ -297,10 +298,6 @@ export class PreviewPreview {
 
     return preview;
   }
-}
-
-export function linkModules(previewName: string, previewModule: PreviewModule) {
-  PREVIEW_MODULES.set(previewName, previewModule);
 }
 
 PreviewAspect.addRuntime(PreviewPreview);

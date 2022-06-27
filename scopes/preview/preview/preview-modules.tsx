@@ -20,3 +20,9 @@ export class PreviewModules extends Map<ModuleId, PreviewModule> {
     });
   }
 }
+
+export const PREVIEW_MODULES = new PreviewModules();
+
+export function linkModules(previewName: string, previewModule: PreviewModule) {
+  PREVIEW_MODULES.set(previewName, previewModule);
+}
