@@ -1,6 +1,6 @@
 {
   "name": "@teambit/legacy",
-  "version": "1.0.291",
+  "version": "1.0.292",
   "license": "Apache-2.0",
   "main": "./dist/api.js",
   "preferGlobal": true,
@@ -200,7 +200,6 @@
     "prettier": "2.3.2",
     "prompt": "1.1.0",
     "ramda": "0.27.1",
-    "ramda-adjunct": "2.31.1",
     "react-docgen": "5.3.1",
     "react-docgen-typescript": "1.21.0",
     "read-pkg-up": "7.0.1",
