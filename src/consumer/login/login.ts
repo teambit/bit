@@ -3,7 +3,7 @@ import http from 'http';
 import open from 'open';
 import os from 'os';
 import url from 'url';
-import uuid from 'uuid';
+import { v4 } from 'uuid';
 
 import { getSync, setSync } from '../../api/consumer/lib/global-config';
 import {
@@ -36,7 +36,7 @@ export default function loginToBitSrc(
 }> {
   let actualNpmrcPath = npmrcPath;
   return new Promise((resolve, reject) => {
-    const clientGeneratedId = uuid();
+    const clientGeneratedId = v4();
     if (getSync(CFG_USER_TOKEN_KEY)) {
       return resolve({
         isAlreadyLoggedIn: true,
