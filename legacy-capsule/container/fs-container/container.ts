@@ -1,6 +1,6 @@
 import fs from 'fs-extra';
 import os from 'os';
-import v4 from 'uuid';
+import { v4 } from 'uuid';
 import * as path from 'path';
 import { spawn } from 'child_process';
 import { Container, ExecOptions, Exec, ContainerStatus } from '../../core/capsule';

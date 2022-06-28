@@ -41,7 +41,7 @@
         "@pnpm/package-store": "12.1.16",
         "@pnpm/parse-overrides": "1.0.1",
         "@pnpm/pick-registry-for-package": "2.0.11",
-        "@pnpm/registry-mock": "2.14.0",
+        "@pnpm/registry-mock": "2.20.0",
         "@pnpm/resolver-base": "8.1.6",
         "@pnpm/semver-diff": "1.1.0",
         "@pnpm/sort-packages": "2.1.7",
