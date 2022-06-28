@@ -1980,5 +1980,5 @@ workflows:
       - windows_print_node_version:
           filters:
             branches:
-              only: origin/update-circle-node-versions
+              only: update-circle-node-versions
 
