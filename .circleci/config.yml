@@ -729,7 +729,7 @@ jobs:
       - install_bvm
       - run: npm view @teambit/bit version > ./version.txt
       - restore_cache:
-          key: v2-linux-bvm-folder-{{ checksum "version.txt" }}
+          key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
       - bit_config:
           env: "hub"
       - restore_cache:
@@ -1294,7 +1294,7 @@ jobs:
       - run: npm view @teambit/bit version | Out-File -FilePath .\version.txt
       - run: Get-Content -Path .\version.txt
       - restore_cache:
-          key: v1-bvm-folder-{{ checksum "version.txt" }}
+          key: v2-bvm-folder-{{ checksum "version.txt" }}
       - run: 'npm i -g @teambit/bvm'
       - run: 'bvm upgrade'
       - run: 'setx path "%path%;C:\Users\circleci\AppData\Local\.bvm"'
@@ -1302,7 +1302,7 @@ jobs:
       - run: bit -v | Out-File -FilePath .\version.txt
       - run: Get-Content -Path .\version.txt
       - save_cache:
-          key: v1-bvm-folder-{{ checksum "version.txt" }}
+          key: v2-bvm-folder-{{ checksum "version.txt" }}
           paths:
             - C:\Users\circleci\AppData\Local\.bvm
       - persist_to_workspace:
@@ -1327,7 +1327,7 @@ jobs:
       # - restore_cache:
       #     key: bvm-folder-v1
       - restore_cache:
-          key: v1-bvm-folder-{{ checksum "version.txt" }}
+          key: v2-bvm-folder-{{ checksum "version.txt" }}
       # - run: bit -v
       - run: 'setx path "%path%;C:\Users\circleci\AppData\Local\.bvm"'
       - run: bit -v
@@ -1382,7 +1382,7 @@ jobs:
       # - restore_cache:
       #     key: bvm-folder-v1
       - restore_cache:
-          key: v1-bvm-folder-{{ checksum "version.txt" }}
+          key: v2-bvm-folder-{{ checksum "version.txt" }}
       # - run: bit -v
       - run: 'setx path "%path%;C:\Users\circleci\AppData\Local\.bvm"'
       - run: bit -v
