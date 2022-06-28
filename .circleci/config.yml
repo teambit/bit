@@ -647,9 +647,11 @@ jobs:
       - restore_cache:
           key: bitsrc-registry9
       - run: node -v
+      - run: npm -v
       - run:
           name: 'install husky globally'
-          command: 'sudo npm i -g husky'
+          # command: 'sudo npm i -g husky'
+          command: 'npm i -g husky'
 
       - install_bvm
       - run: npm view @teambit/bit version > ./version.txt
