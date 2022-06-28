@@ -690,7 +690,7 @@ jobs:
     <<: *defaults
     environment:
       # change the npm config to avoid using sudo
-      NPM_CONFIG_PREFIX: ~/.npm-global
+      # NPM_CONFIG_PREFIX: ~/.npm-global
     steps:
       - attach_workspace:
           at: ./
@@ -721,7 +721,7 @@ jobs:
     <<: *defaults
     environment:
       # change the npm config to avoid using sudo
-      NPM_CONFIG_PREFIX: ~/.npm-global
+      # NPM_CONFIG_PREFIX: ~/.npm-global
     steps:
       - attach_workspace:
           at: ./
@@ -1020,7 +1020,7 @@ jobs:
     <<: *defaults
     environment:
       # change the npm config to avoid using sudo
-      NPM_CONFIG_PREFIX: ~/.npm-global
+      # NPM_CONFIG_PREFIX: ~/.npm-global
     steps:
       - attach_workspace:
           at: ./
@@ -1062,7 +1062,7 @@ jobs:
     <<: *defaults
     environment:
       # change the npm config to avoid using sudo
-      NPM_CONFIG_PREFIX: ~/.npm-global
+      # NPM_CONFIG_PREFIX: ~/.npm-global
       BITSRC_ENV: stg
     parallelism: 25
     steps:
@@ -1105,7 +1105,7 @@ jobs:
     resource_class: medium
     environment:
       # change the npm config to avoid using sudo
-      NPM_CONFIG_PREFIX: ~/.npm-global
+      # NPM_CONFIG_PREFIX: ~/.npm-global
       BITSRC_ENV: stg
       # NPM_CONFIG_DEBUG: true
     parallelism: 1
@@ -1134,7 +1134,7 @@ jobs:
     resource_class: medium
     environment:
       # change the npm config to avoid using sudo
-      NPM_CONFIG_PREFIX: ~/.npm-global
+      # NPM_CONFIG_PREFIX: ~/.npm-global
       BITSRC_ENV: stg
       # NPM_CONFIG_DEBUG: true
     parallelism: 1
