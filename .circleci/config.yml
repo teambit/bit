@@ -2,7 +2,7 @@ version: 2.1
 
 default_image: &default_image
   docker:
-    - image: cimg/node:12.22.10
+    - image: cimg/node:16.15.1
 
 default_resource_class: &default_resource_class
   resource_class: medium
@@ -29,7 +29,7 @@ windows_defaults: &windows_defaults
   <<: *windows_default_working_dir
 
 mac_default_xcode_version: &mac_default_xcode_version
-  xcode: 13.0.0
+  xcode: 14.0.0
 
 mac_default_executor: &mac_default_executor
   macos:
@@ -935,7 +935,7 @@ jobs:
   bundle_version_windows:
     <<: *windows_defaults
     steps:
-      - run: choco install nodejs --version 12.22.0
+      - run: choco install nodejs --version 16.15.1
       # - run: nodejs.install v12.16.0
       - run: node -v
       - run: 'yarn -v'
