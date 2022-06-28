@@ -640,12 +640,13 @@ jobs:
     <<: *defaults
     environment:
       # change the npm config to avoid using sudo
-      NPM_CONFIG_PREFIX: ~/.npm-global
+      # NPM_CONFIG_PREFIX: ~/.npm-global
     steps:
       - attach_workspace:
           at: ./
       - restore_cache:
           key: bitsrc-registry9
+      - run: node -v
       - run:
           name: 'install husky globally'
           command: 'sudo npm i -g husky'
