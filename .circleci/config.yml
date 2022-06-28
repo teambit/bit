@@ -1182,7 +1182,9 @@ jobs:
       - run: node -v
       - run: npm -v
       - run: yarn -v
-      - run: choco install nodejs --version 16.15.1
+      # - run: choco install nodejs --version 16.15.1
+      # - run: node -v
+      - run: cinst nodejs --version 16.15.1
       - run: node -v
 
   windows_checkout_code:
