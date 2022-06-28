@@ -209,7 +209,7 @@ describe('many components Harmony', function () {
             let exportTimeInSeconds;
             before(() => {
               const start = process.hrtime();
-              helper.command.exportAllComponents();
+              helper.command.export();
               [exportTimeInSeconds] = process.hrtime(start);
               console.log('exportTimeInSeconds', exportTimeInSeconds);
             });
