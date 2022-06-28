@@ -13,6 +13,9 @@ windows_default_resource_size: &windows_default_resource_size
 default_working_dir: &default_working_dir
   working_directory: ~/bit
 
+orbs:
+  win: circleci/windows@4.1
+
 windows_default_working_dir: &windows_default_working_dir
   working_directory: C:\Users\circleci\project\bit
 
@@ -197,10 +200,6 @@ commands: # reusable commands
       - run: cd bit && git remote rm origin
       # todo: find a better way. currently, the ssh doesn't work, see the commented steps above.
       - run: cd bit && git remote add origin https://davidfirst:$GH_RELEASE_GITHUB_API_TOKEN@github.com/teambit/bit.git
-
-
-orbs:
-  win: circleci/windows@2.4.0
 
 jobs:
   checkout_code:
@@ -1173,6 +1172,17 @@ jobs:
     steps:
       - run: 'echo "starting windows build"'
 
+  # simple job just to print node version on windows
+  # this is to check what version of node you get when you update the windows orb
+  # as it's missing in their docs
+  windows_print_node_version:
+    <<: *windows_defaults
+    steps:
+      # - checkout
+      - run: node -v
+      - run: npm -v
+      - run: yarn -v
+
   windows_checkout_code:
     <<: *windows_defaults
     steps:
@@ -1964,5 +1974,11 @@ workflows:
       # - server_docker_build_node_16:
       #     requires:
       #       - docker_build_node_16
-
+  # uncomment to print node version on windows default orb
+  windows_print_node_version_workflow:
+    jobs:
+      - windows_print_node_version:
+          filters:
+            branches:
+              only: origin/update-circle-node-versions
 
