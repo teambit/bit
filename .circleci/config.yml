@@ -934,7 +934,8 @@ jobs:
   bundle_version_windows:
     <<: *windows_defaults
     steps:
-      - run: choco install nodejs --version 16.15.1
+      # - run: choco install nodejs --version 16.15.1
+      - run: cinst nodejs --version 16.15.1
       # - run: nodejs.install v12.16.0
       - run: node -v
       - run: 'yarn -v'
@@ -1316,7 +1317,7 @@ jobs:
     steps:
       - attach_workspace:
           at: .
-      - run: cinst nodejs --version 12.22.0
+      - run: cinst nodejs --version 16.15.1
       - run: node -v
       - run: npm -v
       # - run: Get-Content -Path .\version.txt
@@ -1371,7 +1372,7 @@ jobs:
     steps:
       - attach_workspace:
           at: .
-      - run: cinst nodejs --version 12.22.0
+      - run: cinst nodejs --version 16.15.1
       - run: node -v
       - run: npm -v
       # - run: Get-Content -Path .\version.txt
@@ -1979,10 +1980,10 @@ workflows:
       #     requires:
       #       - docker_build_node_16
   # uncomment to print node version on windows default orb
-  windows_print_node_version_workflow:
-    jobs:
-      - windows_print_node_version:
-          filters:
-            branches:
-              only: update-circle-node-versions
+  # windows_print_node_version_workflow:
+  #   jobs:
+  #     - windows_print_node_version:
+  #         filters:
+  #           branches:
+  #             only: update-circle-node-versions
 
