@@ -322,12 +322,6 @@ export class ReactEnv
     const baseProdConfig = basePreviewProdConfigFactory(context.development);
     const templateConfig = templateWebpackConfigFactory();
 
-    [baseConfig, baseProdConfig].forEach((config) => {
-      delete config.resolve?.mainFields;
-      delete config.resolve?.extensions;
-      delete config.optimization; // TODO!
-    });
-
     const defaultTransformer: WebpackConfigTransformer = (configMutator) => {
       const merged = configMutator.merge([baseConfig, baseProdConfig, templateConfig]);
       return merged;

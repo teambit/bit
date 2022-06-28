@@ -19,6 +19,7 @@ import { existsSync, mkdirpSync } from 'fs-extra';
 import type { PreviewMain } from './preview.main.runtime';
 import { generateTemplateEntries } from './bundler/chunks';
 import { generateHtmlConfig } from './bundler/html-plugin';
+import { writePeerLink } from './bundler/peers-link';
 
 export type ModuleExpose = {
   name: string;
@@ -164,7 +165,6 @@ export class EnvPreviewTemplateTask implements BuildTask {
       // hostRootDir, handle this
       hostDependencies: peers,
       aliasHostDependencies: true,
-      exposeHostDependencies: true,
     };
   }
 
@@ -187,8 +187,13 @@ export class EnvPreviewTemplateTask implements BuildTask {
 
       return { name, path, ...rest, entry: linkFile };
     });
+    const peerLink = await writePeerLink(peers, workDir);
 
-    const entries = generateTemplateEntries({ peers, previewRootPath: previewRoot, previewModules: previewEntries });
+    const entries = generateTemplateEntries({
+      peers: peerLink,
+      previewRootPath: previewRoot,
+      previewModules: previewEntries,
+    });
     return entries;
   }
 

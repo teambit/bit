@@ -17,7 +17,7 @@ export const CHUNK_NAMES = {
 
 type TemplateEntryOptions = {
   previewRootPath: string;
-  peers: string[];
+  peers: string | string[];
   previewModules: {
     name: string;
     entry: string;
