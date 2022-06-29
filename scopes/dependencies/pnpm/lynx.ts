@@ -224,6 +224,12 @@ export async function install(
     rawConfig: authConfig,
     hooks: { readPackage },
     hoistingLimits,
+    peerDependencyRules: {
+      allowedVersions: {
+        '@teambit/legacy': '*',
+      },
+      ignoreMissing: ['@teambit/legacy'],
+    },
     ...options,
   };
 
