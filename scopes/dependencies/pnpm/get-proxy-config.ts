@@ -7,21 +7,13 @@ export function getProxyConfig(config: Config): PackageManagerProxyConfig {
   const proxyConfig: PackageManagerProxyConfig = {
     httpProxy,
     httpsProxy,
-    ca: config.ca,
-    cert: config.cert,
-    key: config.key,
     noProxy: config.rawConfig.noproxy,
-    strictSSL: config.strictSsl,
   };
   return proxyConfig;
 }
 
 export type ProxyConfig = {
-  ca?: string;
-  cert?: string;
   httpProxy?: string;
   httpsProxy?: string;
-  key?: string;
   noProxy?: boolean | string;
-  strictSSL?: boolean;
 };

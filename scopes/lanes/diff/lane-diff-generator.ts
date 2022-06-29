@@ -81,7 +81,8 @@ export class LaneDiffGenerator {
 
   private async componentDiff(id: BitId, toLaneHead: Ref, diffOptions: DiffOptions) {
     const modelComponent = await this.scope.legacyScope.getModelComponent(id);
-    const fromLaneHead = this.fromLaneData?.components.find((c) => c.id === id)?.head || modelComponent.head;
+    const fromLaneHead =
+      this.fromLaneData?.components.find((c) => c.id.isEqualWithoutVersion(id))?.head || modelComponent.head;
     if (!fromLaneHead) {
       this.newComps.push(id);
       return;

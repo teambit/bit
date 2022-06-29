@@ -32,9 +32,18 @@ export function render(...props){
     .then((harmony) => {
       return harmony
       .run()
-      .then(() => {
-        const rootExtension = harmony.get('${rootAspect}');
+      .then(() => harmony.get('${rootAspect}'))
+      .then((rootExtension) => {
+        const ssrSetup = !isBrowser && rootExtension.setupSsr;
+        const setup = rootExtension.setup;
+        const setupFunc = (ssrSetup || setup || function noop(){}).bind(rootExtension);
 
+        return (
+          Promise.resolve(setupFunc())
+            .then(() => rootExtension)
+        );
+      })
+      .then((rootExtension) => {
         if (isBrowser) {
           return rootExtension.render(${rootId}, ...props);
         } else {

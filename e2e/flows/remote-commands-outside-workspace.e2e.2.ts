@@ -8,20 +8,20 @@ describe('bit remote command', function () {
   let helper: Helper;
   before(() => {
     helper = new Helper();
-    helper.command.setFeatures('legacy-workspace-config');
   });
   after(() => {
     helper.scopeHelper.destroy();
   });
   describe('exporting a component to a global remote', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitLocalScopeHarmony();
       helper.scopeHelper.reInitRemoteScope();
+      helper.bitJsonc.setupDefault();
       helper.command.runCmd(`bit remote add file://${helper.scopes.remotePath} --global`);
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFoo();
-      helper.command.tagAllComponents();
-      helper.command.exportAllComponents();
+      helper.fixtures.addComponentBarFooAsDir();
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
       helper.scopeHelper.cleanLocalScope();
     });
     after(() => {

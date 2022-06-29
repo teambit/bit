@@ -18,6 +18,8 @@ module.exports = function isType() { return leftPad('got is-type', 15, 0); };
 export const isTypeTS = "export default function isType() { return 'got is-type'; };";
 export const isString =
   "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
+export const isStringHarmony =
+  "const isType = require('../is-type/is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
 export const isStringV2 =
   "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string v2'; };";
 export const isStringV3 =
