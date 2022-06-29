@@ -14,6 +14,7 @@ export function useUpdatedUrlFromQuery(queryParams: ComponentCompareQueryParams)
   const query = useQuery();
   const location = useLocation() || { pathname: '/' };
 
+  // @ts-ignore
   const queryObj = Object.fromEntries(query.entries());
 
   const updatedObj = { ...queryObj, ...queryParams };
