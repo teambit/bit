@@ -32,7 +32,6 @@ import { ExportPersist, PostSign } from '@teambit/legacy/dist/scope/actions';
 import { getScopeRemotes } from '@teambit/legacy/dist/scope/scope-remotes';
 import { Remotes } from '@teambit/legacy/dist/remotes';
 import { isMatchNamespacePatternItem } from '@teambit/workspace.modules.match-pattern';
-import { ConfigMain, ConfigAspect } from '@teambit/config';
 import { Scope } from '@teambit/legacy/dist/scope';
 import { Types } from '@teambit/legacy/dist/scope/object-registrar';
 import { FETCH_OPTIONS } from '@teambit/legacy/dist/api/scope/lib/fetch';
@@ -1023,7 +1022,6 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
     ExpressAspect,
     LoggerAspect,
     EnvsAspect,
-    ConfigAspect,
   ];
 
   static defaultConfig: ScopeConfig = {
@@ -1031,7 +1029,7 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
   };
 
   static async provider(
-    [componentExt, ui, graphql, cli, isolator, aspectLoader, express, loggerMain, envs, configMain]: [
+    [componentExt, ui, graphql, cli, isolator, aspectLoader, express, loggerMain, envs]: [
       ComponentMain,
       UiMain,
       GraphqlMain,
@@ -1040,8 +1038,7 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
       AspectLoaderMain,
       ExpressMain,
       LoggerMain,
-      EnvsMain,
-      ConfigMain
+      EnvsMain
     ],
     config: ScopeConfig,
     [tagSlot, postPutSlot, postDeleteSlot, postExportSlot, postObjectsPersistSlot, preFetchObjectsSlot]: [
