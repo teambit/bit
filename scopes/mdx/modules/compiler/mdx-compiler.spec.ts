@@ -58,7 +58,10 @@ describe('MDXCompiler', () => {
 
     describe('parse import statements', () => {
       it('should parse import statements with new lines separating them', async () => {
-        const importFile = readFileSync(join(__dirname, 'mocks', 'with-import.mdx'), 'utf-8');
+        const importFile = `import a from 'a';
+
+import b from 'b';
+`;
         const output = await compile(importFile);
         const importSpecifiers = output.getImportSpecifiers();
         expect(importSpecifiers).to.have.lengthOf(2);
