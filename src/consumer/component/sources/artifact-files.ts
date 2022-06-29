@@ -106,11 +106,14 @@ export class ArtifactFiles {
     });
   }
 
-  async getVinylsAndImportIfMissing(scopeName: string, scope: Scope): Promise<ArtifactVinyl[]> {
+  async getVinylsAndImportIfMissing(id: BitId, scope: Scope): Promise<ArtifactVinyl[]> {
     if (this.isEmpty()) return [];
     if (this.vinyls.length) return this.vinyls;
     const allHashes = this.refs.map((artifact) => artifact.ref.hash);
     const scopeComponentsImporter = ScopeComponentsImporter.getInstance(scope);
+    const lane = await scope.getCurrentLaneObject();
+    const isIdOnLane = lane?.toBitIds().hasWithoutVersion(id);
+    const scopeName = isIdOnLane ? (lane?.scope as string) : (id.scope as string);
     await scopeComponentsImporter.importManyObjects({ [scopeName]: allHashes });
     const getOneArtifact = async (artifact: ArtifactRef) => {
       const content = (await artifact.ref.load(scope.objects)) as Source;
