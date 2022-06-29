@@ -1,5 +1,5 @@
 import { Command } from '@teambit/legacy/dist/cli/command';
-import { Arguments, CommandModule, Argv } from 'yargs';
+import { Arguments, CommandModule, Argv, Options } from 'yargs';
 import { TOKEN_FLAG } from '@teambit/legacy/dist/constants';
 import { camelCase } from 'lodash';
 import { CommandRunner } from './command-runner';
@@ -51,7 +51,7 @@ export class YargsAdapter implements CommandModule {
     return this.commanderCommand.arguments;
   }
 
-  static optionsToBuilder(command: Command) {
+  static optionsToBuilder(command: Command): { [key: string]: Options } {
     const option = command.options.reduce((acc, [alias, opt, desc]) => {
       const optName = opt.split(' ')[0];
       acc[optName] = {
@@ -60,7 +60,7 @@ export class YargsAdapter implements CommandModule {
         group: STANDARD_GROUP,
         type: opt.includes(' ') ? 'string' : 'boolean',
         requiresArg: opt.includes('<'),
-      };
+      } as Options;
       return acc;
     }, {});
     const globalOptions = YargsAdapter.getGlobalOptions(command);

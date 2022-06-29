@@ -41,7 +41,7 @@
         "@pnpm/package-store": "12.1.16",
         "@pnpm/parse-overrides": "1.0.1",
         "@pnpm/pick-registry-for-package": "2.0.11",
-        "@pnpm/registry-mock": "2.14.0",
+        "@pnpm/registry-mock": "2.20.0",
         "@pnpm/resolver-base": "8.1.6",
         "@pnpm/semver-diff": "1.1.0",
         "@pnpm/sort-packages": "2.1.7",
@@ -160,6 +160,7 @@
         "@teambit/evangelist.surfaces.tooltip": "1.0.1",
         "@teambit/explorer.ui.command-bar": "1.2.0",
         "@teambit/graph.cleargraph": "0.0.1",
+        "@teambit/graphql.hooks.use-query-light": "1.0.0",
         "@teambit/harmony": "0.3.3",
         "@teambit/pkg.content.packages-overview": "1.95.9",
         "@teambit/react.content.react-overview": "1.95.0",
@@ -375,7 +376,7 @@
       "peerDependencies": {
         "@apollo/client": "^3.0.0",
         "@teambit/base-react.navigation.link": "2.0.27",
-        "@teambit/legacy": "1.0.287",
+        "@teambit/legacy": "1.0.293",
         "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
         "browserslist": "4.16.3",
         "core-js": "^3.10.0",
@@ -458,7 +459,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.287"
+            "@teambit/legacy": "1.0.293"
           }
         }
       },
@@ -723,7 +724,7 @@
           "peerDependencies": {
             "react": "^16.8.0 || ^17.0.0",
             "react-dom": "^16.8.0 || ^17.0.0",
-            "@teambit/legacy": "1.0.287"
+            "@teambit/legacy": "1.0.293"
           }
         }
       }
@@ -749,7 +750,7 @@
         ]
       }
     },
-    // overrides for @teambit/bit ("teambit.harmony/bit") package:
+    // overrides for "@teambit/bit", the root package: (aka "teambit.harmony/bit")
     "scopes/harmony/bit": {
       "teambit.component/issues": {
         // This is here because in load-bit, we have to import harmony config from non main file
@@ -767,6 +768,9 @@
           "name": "@teambit/{name}", // @teambit/discovery.ui.sidebar
           "private": false,
           // Change back to "bin": "bin/bit" once released to prod
+          "bvm": {
+            "node": "16.15.1"
+          },
           "bin": {
             "bbit": "bin/bit"
           },
@@ -798,7 +802,7 @@
             "@teambit/base-react.navigation.link": "2.0.27",
             "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
             "@apollo/client": "3.3.6",
-            "@teambit/legacy": "1.0.287",
+            "@teambit/legacy": "1.0.293",
             "graphql": "14.7.0",
             "browserslist": "4.16.3",
             "reflect-metadata": "0.1.13",
@@ -932,7 +936,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.287"
+            "@teambit/legacy": "1.0.293"
           }
         }
       }
