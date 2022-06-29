@@ -1128,16 +1128,6 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
     Scope.onPostExport = onPostExportHook;
     Repository.onPostObjectsPersist = onPostObjectsPersistHook;
 
-    configMain?.registerPreAddingAspectsSlot?.(async (compIds) => {
-      const loadedIds = await scope.loadAspects(compIds, true);
-      // find the full component-ids including versions in the load-aspects results.
-      // we need it for bit-use to be added to the config file.
-      return compIds.map((compId) => {
-        const loaded = loadedIds.find((loadedId) => loadedId.startsWith(`${compId}@`));
-        return loaded || compId;
-      });
-    });
-
     express.register([
       new PutRoute(scope, postPutSlot),
       new FetchRoute(scope, logger),
