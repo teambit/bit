@@ -816,8 +816,25 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
    * @param forCapsule
    */
   async importAndGetMany(ids: Array<ComponentID>, forCapsule = false): Promise<Component[]> {
+    await this.importAndGetCurrentLane();
     await this.scope.import(ids, { reFetchUnBuiltVersion: shouldReFetchUnBuiltVersion() });
     return this.componentLoader.getMany(ids, forCapsule);
+  }
+
+  async importAndGetCurrentLane() {
+    const laneId = this.getCurrentLaneId();
+    const laneObj = await this.scope.legacyScope.getCurrentLaneObject();
+    if (laneId.isDefault() || laneObj) {
+      return;
+    }
+    const lane = await this.getCurrentRemoteLane();
+    if (!lane) {
+      return;
+    }
+    const scopeComponentsImporter = ScopeComponentsImporter.getInstance(this.scope.legacyScope);
+    const ids = BitIds.fromArray(lane.toBitIds().filter((id) => id.hasScope()));
+    await scopeComponentsImporter.importManyDeltaWithoutDeps(ids, true, lane);
+    await scopeComponentsImporter.importMany({ ids, lanes: lane ? [lane] : undefined });
   }
 
   /**
