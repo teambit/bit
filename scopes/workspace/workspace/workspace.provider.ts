@@ -216,6 +216,7 @@ export default async function provideWorkspace(
   component.registerHost(workspace);
 
   cli.registerOnStart(async () => {
+    await workspace.importCurrentLaneIfMissing();
     await workspace.loadAspects(aspectLoader.getNotLoadedConfiguredExtensions());
   });
 

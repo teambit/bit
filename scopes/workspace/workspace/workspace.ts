@@ -820,6 +820,23 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     return this.componentLoader.getMany(ids, forCapsule);
   }
 
+  async importCurrentLaneIfMissing() {
+    const laneId = this.getCurrentLaneId();
+    const laneObj = await this.scope.legacyScope.getCurrentLaneObject();
+    if (laneId.isDefault() || laneObj) {
+      return;
+    }
+    const lane = await this.getCurrentRemoteLane();
+    if (!lane) {
+      return;
+    }
+    this.logger.debug(`current lane ${laneId.toString()} is missing, importing it`);
+    const scopeComponentsImporter = ScopeComponentsImporter.getInstance(this.scope.legacyScope);
+    const ids = BitIds.fromArray(lane.toBitIds().filter((id) => id.hasScope()));
+    await scopeComponentsImporter.importManyDeltaWithoutDeps(ids, true, lane);
+    await scopeComponentsImporter.importMany({ ids, lanes: lane ? [lane] : undefined });
+  }
+
   /**
    * @deprecated use this.track() instead
    * track a new component. (practically, add it to .bitmap).

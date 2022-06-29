@@ -737,32 +737,30 @@ export function groupByScopeName(ids: Array<BitId | LaneId>): { [scopeName: stri
 }
 
 export function groupByLanes(ids: BitId[], lanes: Lane[]): { [scopeName: string]: string[] } {
-  const bitIds = BitIds.fromArray(ids);
-  const grouped = {};
-  lanes.forEach((lane) => {
-    const scope = lane.scope;
-    if (!scope) {
-      throw new Error(`can't group by Lane object, the scope is undefined for ${lane.id()}`);
-    }
-    const idsFromThisLane = lane.toBitIds().filter((bitId) => {
-      if (bitIds.has(bitId)) return true;
-      const foundWithoutVersion = bitIds.searchWithoutVersion(bitId);
-      if (!foundWithoutVersion) return false;
-      const shouldIgnoreVersion = !foundWithoutVersion.hasVersion();
-      return shouldIgnoreVersion;
-    });
-    if (!idsFromThisLane.length) return;
-    (grouped[scope] ||= []).push(...idsFromThisLane.map((id) => id.toString()));
-  });
+  const lane = lanes[0];
+  if (!lane.scope) {
+    throw new Error(`can't group by Lane object, the scope is undefined for ${lane.id()}`);
+  }
+  const laneIds = lane.toBitIds();
+  if (lanes.length > 1) {
+    throw new Error(`groupByLanes does not support more than one lane`);
+  }
+  const grouped: { [scopeName: string]: string[] } = {};
 
-  // ids that were not found on any of the lanes, fetch from main.
-  const allIdsFromLanes = Object.keys(grouped)
-    .map((scope) => grouped[scope])
-    .flat();
+  const isLaneIncludeId = (id: BitId, laneBitIds: BitIds) => {
+    if (laneBitIds.has(id)) return true;
+    const foundWithoutVersion = laneBitIds.searchWithoutVersion(id);
+    if (!foundWithoutVersion) return false;
+    const shouldIgnoreVersion = !id.hasVersion();
+    return shouldIgnoreVersion;
+  };
+
   ids.forEach((id) => {
-    const idStr = id.toString();
-    if (!allIdsFromLanes.includes(idStr)) {
-      (grouped[id.scope as string] ||= []).push(idStr);
+    if (isLaneIncludeId(id, laneIds)) {
+      (grouped[lane.scope] ||= []).push(id.toString());
+    } else {
+      // if not found on a lane, fetch from main.
+      (grouped[id.scope as string] ||= []).push(id.toString());
     }
   });
 
