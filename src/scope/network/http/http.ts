@@ -129,16 +129,17 @@ export class Http implements Network {
   static async getNetworkConfig(): Promise<NetworkConfig> {
     const obj = await list();
 
-    const strictSSL = obj[CFG_NETWORK_STRICT_SSL] ?? obj[CFG_PROXY_STRICT_SSL]
+    // Reading strictSSL from both network.strict-ssl and network.strict_ssl for backward compatibility.
+    const strictSSL = obj[CFG_NETWORK_STRICT_SSL] ?? obj['network.strict_ssl'] ?? obj[CFG_PROXY_STRICT_SSL];
     return {
-      fetchRetries: obj[CFG_FETCH_RETRIES],
-      fetchRetryFactor: obj[CFG_FETCH_RETRY_FACTOR],
-      fetchRetryMintimeout: obj[CFG_FETCH_RETRY_MINTIMEOUT],
-      fetchRetryMaxtimeout: obj[CFG_FETCH_RETRY_MAXTIMEOUT],
-      fetchTimeout: obj[CFG_FETCH_TIMEOUT],
+      fetchRetries: obj[CFG_FETCH_RETRIES] ?? 2,
+      fetchRetryFactor: obj[CFG_FETCH_RETRY_FACTOR] ?? 10,
+      fetchRetryMintimeout: obj[CFG_FETCH_RETRY_MINTIMEOUT] ?? 10000,
+      fetchRetryMaxtimeout: obj[CFG_FETCH_RETRY_MAXTIMEOUT] ?? 60000,
+      fetchTimeout: obj[CFG_FETCH_TIMEOUT] ?? 60000,
       localAddress: obj[CFG_LOCAL_ADDRESS],
-      maxSockets: obj[CFG_MAX_SOCKETS],
-      networkConcurrency: obj[CFG_NETWORK_CONCURRENCY],
+      maxSockets: obj[CFG_MAX_SOCKETS] ?? 15,
+      networkConcurrency: obj[CFG_NETWORK_CONCURRENCY] ?? 16,
       strictSSL: typeof strictSSL === 'string' ? strictSSL === 'true' : strictSSL,
       ca: obj[CFG_NETWORK_CA] ?? obj[CFG_PROXY_CA],
       cafile: obj[CFG_NETWORK_CA_FILE] ?? obj[CFG_PROXY_CA_FILE],

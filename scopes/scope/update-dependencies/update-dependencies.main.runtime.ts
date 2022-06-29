@@ -307,10 +307,6 @@ to bypass this error, use --skip-new-scope-validation flag (not recommended. it 
       scope: this.scope.legacyScope,
       isLegacy: false,
       ids,
-      codemod: false,
-      changeLocallyAlthoughRemoteIsDifferent: false,
-      includeDependencies: false,
-      remoteName: null,
       idsWithFutureScope: ids,
       allVersions: false,
     });

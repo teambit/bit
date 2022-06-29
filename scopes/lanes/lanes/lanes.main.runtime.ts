@@ -310,10 +310,6 @@ export class LanesMain {
       isLegacy: false,
       laneObject: lane,
       ids: new BitIds(),
-      codemod: false,
-      changeLocallyAlthoughRemoteIsDifferent: false,
-      includeDependencies: false,
-      remoteName: null,
       idsWithFutureScope: new BitIds(),
       allVersions: false,
     });

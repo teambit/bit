@@ -166,7 +166,7 @@ describe('bit export command', function () {
       it('should throw an error indicating that the group does not exist (unless it is Windows)', () => {
         const output = helper.general.runWithTryCatch(`bit export`);
         if (isWin) {
-          expect(output).to.have.string('exported 1 components');
+          expect(output).to.have.string('exported the following 1 component(s)');
         } else {
           expect(output).to.have.string('unable to resolve group id of "nonExistGroup"');
         }
@@ -243,7 +243,7 @@ describe('bit export command', function () {
     });
     // this was a bug where on the third export, it parses the id "bar/foo" as: { scope: bar, name: foo }
     it('should not show the "fork" prompt', () => {
-      expect(output).to.have.string('exported 1 components');
+      expect(output).to.have.string('exported the following 1 component(s)');
     });
   });
 });

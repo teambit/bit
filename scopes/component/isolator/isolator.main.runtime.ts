@@ -173,7 +173,7 @@ export class IsolatorMain {
     ComponentMain,
     GraphBuilder,
     GlobalConfigMain,
-    AspectLoaderMain,
+    AspectLoaderMain
   ]): Promise<IsolatorMain> {
     const logger = loggerExtension.createLogger(IsolatorAspect.id);
     const isolator = new IsolatorMain(
@@ -299,14 +299,16 @@ export class IsolatorMain {
     await this.writeComponentsInCapsules(components, capsuleList, legacyScope);
     await this.updateWithCurrentPackageJsonData(capsulesWithPackagesData, capsuleList);
     if (installOptions.installPackages) {
-      const cachePackagesOnCapsulesRoot = opts.cachePackagesOnCapsulesRoot ?? false
-      const linkingOptions = opts.linkingOptions ?? {}
+      const cachePackagesOnCapsulesRoot = opts.cachePackagesOnCapsulesRoot ?? false;
+      const linkingOptions = opts.linkingOptions ?? {};
       if (installOptions.useNesting) {
-        await Promise.all(capsuleList.map(async (capsule) => {
-          const newCapsuleList = CapsuleList.fromArray([capsule])
-          await this.installInCapsules(capsule.path, newCapsuleList, installOptions, cachePackagesOnCapsulesRoot);
-          await this.linkInCapsules(capsulesDir, newCapsuleList, capsulesWithPackagesData, linkingOptions);
-        }))
+        await Promise.all(
+          capsuleList.map(async (capsule) => {
+            const newCapsuleList = CapsuleList.fromArray([capsule]);
+            await this.installInCapsules(capsule.path, newCapsuleList, installOptions, cachePackagesOnCapsulesRoot);
+            await this.linkInCapsules(capsulesDir, newCapsuleList, capsulesWithPackagesData, linkingOptions);
+          })
+        );
       } else {
         // When nesting is used, the first component (which is the entry component) is installed in the root
         // and all other components (which are the dependencies of the entry component) are installed in
@@ -392,10 +394,12 @@ export class IsolatorMain {
       await symlinkDependenciesToCapsules(capsulesWithModifiedPackageJson, capsuleList, this.logger);
     } else {
       const coreAspectIds = this.aspectLoader.getCoreAspectIds();
-      const coreAspectCapsules = CapsuleList.fromArray(capsuleList.filter((capsule) => {
-        const [compIdWithoutVersion] = capsule.component.id.toString().split('@');
-        return coreAspectIds.includes(compIdWithoutVersion);
-      }));
+      const coreAspectCapsules = CapsuleList.fromArray(
+        capsuleList.filter((capsule) => {
+          const [compIdWithoutVersion] = capsule.component.id.toString().split('@');
+          return coreAspectIds.includes(compIdWithoutVersion);
+        })
+      );
       await symlinkOnCapsuleRoot(coreAspectCapsules, this.logger, capsulesDir);
     }
     // TODO: this is a hack to have access to the bit bin project in order to access core extensions from user extension
@@ -422,8 +426,12 @@ export class IsolatorMain {
     await Promise.all(
       components.map(async (component) => {
         const isModified = await component.isModified();
-        if (isModified) modifiedComps.push(component);
-        else unmodifiedComps.push(component);
+        if (!isModified && component.buildStatus === 'succeed') {
+          // the "component.buildStatus" check is important for "bit sign" when on lane to not go to the original scope
+          unmodifiedComps.push(component);
+        } else {
+          modifiedComps.push(component);
+        }
       })
     );
     const legacyUnmodifiedComps = unmodifiedComps.map((component) => component.state._consumer.clone());

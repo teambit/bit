@@ -8,7 +8,7 @@ import { ExtensionDataEntry } from '../../../config';
 import Component from '../../consumer-component';
 import { DependenciesData } from './dependencies-data';
 import DependencyResolver from './dependencies-resolver';
-import { COMPONENT_CONFIG_FILE_NAME, PACKAGE_JSON } from '../../../../constants';
+import { COMPONENT_CONFIG_FILE_NAME } from '../../../../constants';
 import { MISSING_PACKAGES_FROM_OVERRIDES_LABEL } from '../../../../cli/templates/component-issues-template';
 
 type Opts = {
@@ -60,8 +60,7 @@ export class DependenciesLoader {
       return null;
     }
     const filesPaths = this.component.files.map((f) => f.path);
-    const componentConfigFilename = this.consumer.isLegacy ? PACKAGE_JSON : COMPONENT_CONFIG_FILE_NAME;
-    const componentConfigPath = path.join(this.consumer.getPath(), rootDir, componentConfigFilename);
+    const componentConfigPath = path.join(this.consumer.getPath(), rootDir, COMPONENT_CONFIG_FILE_NAME);
     filesPaths.push(componentConfigPath);
     const lastModifiedComponent = await getLastModifiedComponentTimestampMs(rootDir, filesPaths);
     const wasModifiedAfterCache = lastModifiedComponent > cacheData.timestamp;

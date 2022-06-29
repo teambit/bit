@@ -684,24 +684,26 @@ export class DependencyResolverMain {
   }
 
   private getNetworkConfigFromDepResolverConfig(): NetworkConfig {
-    return {
-      ...pick(this.config, [
-        'fetchTimeout',
-        'fetchRetries',
-        'fetchRetryFactor',
-        'fetchRetryMintimeout',
-        'fetchRetryMaxtimeout',
-        'maxSockets',
-        'networkConcurrency',
-        'key',
-        'cert',
-        'ca',
-        'cafile',
-      ]),
-      strictSSL: typeof this.config.strictSsl === 'string'
-        ? this.config.strictSsl.toLowerCase() === 'true'
-        : this.config.strictSsl,
-    };
+    const config: NetworkConfig = pick(this.config, [
+      'fetchTimeout',
+      'fetchRetries',
+      'fetchRetryFactor',
+      'fetchRetryMintimeout',
+      'fetchRetryMaxtimeout',
+      'maxSockets',
+      'networkConcurrency',
+      'key',
+      'cert',
+      'ca',
+      'cafile',
+    ]);
+    if (this.config.strictSsl != null) {
+      config.strictSSL =
+        typeof this.config.strictSsl === 'string'
+          ? this.config.strictSsl.toLowerCase() === 'true'
+          : this.config.strictSsl;
+    }
+    return config;
   }
 
   private async getNetworkConfigFromPackageManager(): Promise<NetworkConfig> {
