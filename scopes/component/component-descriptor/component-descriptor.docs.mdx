@@ -1,0 +1,139 @@
+---
+description: The Bit component descriptor.
+labels: ['module', 'components', 'component graph']
+---
+
+import { ObjectFormatter } from '@teambit/code.ui.object-formatter';
+import { descriptorMock, plainsApectObject } from './component-descriptor.mocks';
+import { ComponentID } from '@teambit/component-id';
+import { ComponentDescriptor } from './component-descriptor';
+import { AspectList } from './aspect-list';
+
+`Component descriptor` is the bit.dev API for a Bit Component.
+It provides a simple API for inspecting and interacting with Bit components programmatically
+and acts as a proxy for Bit Components on remote scopes.
+
+### Component Descriptor API
+
+The descriptor provides methods to extract data about a component.
+
+The main ones being:
+
+- id
+- scope
+- fromObject
+- toObject
+- toString
+- get
+
+Fetching `id` and `scope`.
+
+```ts live
+() => {
+  const componentId = descriptorMock.id;
+  return <ObjectFormatter style={{ width: '100vw' }} data={componentId} depth={10} />;
+};
+```
+
+```ts live
+() => {
+  return (
+    <div>
+      <div>{descriptorMock.id.toString()}</div>
+      <div>{descriptorMock.id.toString({ ignoreVersion: true })}</div>
+      <div>{descriptorMock.scope}</div>
+    </div>
+  );
+};
+```
+
+#### Deserialize component
+
+`fromObject`:
+
+```ts live
+() => {
+  const descriptor = ComponentDescriptor.fromObject({
+    id: 'teambit.cloud/blocks/footer',
+    aspectList: new AspectList(plainsApectObject),
+  });
+
+  return <ObjectFormatter depth={6} data={descriptor} />;
+};
+```
+
+`toObject`:
+
+```ts live
+() => {
+  const descriptor = ComponentDescriptor.fromObject({
+    id: 'teambit.cloud/blocks/footer',
+    aspectList: new AspectList(plainsApectObject),
+  });
+  const backToPlainObject = descriptor.toObject();
+  return <ObjectFormatter depth={6} data={backToPlainObject} />;
+};
+```
+
+#### Serialize component
+
+`toString`:
+
+```ts live
+() => {
+  const descriptor = ComponentDescriptor.fromObject({
+    id: 'teambit.cloud/blocks/footer',
+    aspectList: new AspectList(plainsApectObject),
+  });
+  const seroalized = descriptor.toString();
+
+  return <ObjectFormatter depth={4} data={seroalized} />;
+};
+```
+
+#### Aspect data
+
+The descriptor provides an `AspectList` which contains all the other data that is provided to the component via other `aspects`.
+To access this info, use the `get` method and provide it with the aspect id that holds this data.
+
+For example, the component's _docs aspect_.
+
+```ts live
+() => {
+  const docsData = descriptorMock.get('teambit.docs/docs').data;
+  return (
+    <div>
+      {docsData.doc.props.map((docProp) => (
+        <div key={docProp.name} style={{ display: 'flex' }}>
+          <div style={{ marginRight: 10 }}>{docProp.name}: </div>
+          <div>
+            {Array.isArray(docProp.value) ? docProp.value.map((x, i) => <div key={i}>{x}</div>) : docProp.value}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+```
+
+Or the component's `env aspect`, which also holds the icon of the component's env.
+
+```ts live
+() => {
+  const envData = descriptorMock.get('teambit.envs/envs').data;
+  return (
+    <div>
+      <div>env type {envData.type}</div>
+      <img src={envData.icon} />
+    </div>
+  );
+};
+```
+
+Here is a list of all the aspect that this component currently has
+
+```ts live
+() => {
+  return <ObjectFormatter depth={4} data={descriptorMock} />;
+};
+```

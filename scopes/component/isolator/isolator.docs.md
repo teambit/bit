@@ -1,6 +1,6 @@
 ---
 description: Isolate components for build, debugging, development and testing.
-labels: ['isolation', 'component']
+labels: ['isolation', 'component', 'core aspect']
 ---
 
 ## Isolate a component

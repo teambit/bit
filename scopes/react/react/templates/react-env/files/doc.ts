@@ -8,10 +8,23 @@ labels: ['react', 'typescript', 'env', 'extension']
 
 ## Overview
 
-A customized version which extends the default React component development environment created by teambit. This environment can be applied to all your components or a set of components under the variants of your \`workspace.json\` file. That means they will use your custom environment instead of the default environment. Environment components are just like any other Bit components in that they can be exported and then shared and used in various projects which makes it easier to create standards when working with many teams.
+A customized version which extends the default React component development environment created by teambit.
+
+This environment can be applied to all your components or a set of components via the command \`bit env set <pattern or component_id> ${componentId}\`, or under the variants of your \`workspace.json\` file.
+That means they will use your custom environment instead of the default environment. Environment components are just like any other Bit components in that they can be
+exported and then shared and used in various projects which makes it easier to create standards when working with many teams.
 
 ### Usage instructions
 
+#### Recommended usage:
+
+Run the command \`bit env set <"pattern" or component_id> ${componentId}\` where the pattern is a glob pattern to select multiple components. This will put the env
+config in your component's entry in the \`.bitmap\` file.
+
+:::Note - this will override any variants policy that tries to set an env for this component in the workspace.jsonc
+:::
+
+#### Alternative Usage
 Under the **variant** section of your \`workspace.json\` file choose which components you want to have the custom environment set. You can find the id of the extension in the \`${name}.aspect.ts\` file.
 
 \`\`\`json
@@ -24,6 +37,7 @@ Under the **variant** section of your \`workspace.json\` file choose which compo
 }
 \`\`\`
 
+This usage may be deprecated in future in favour of the recommended usage above
 ## Runtime Configurations
 
 Extend the \`main.runtime\` file when you want to add custom configurations at runtime.

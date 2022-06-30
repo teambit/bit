@@ -6,6 +6,8 @@ import { Compiler } from '@teambit/compiler';
 import { ComponentMap } from '@teambit/component';
 import { Capsule } from '@teambit/isolator';
 import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
+import { DependencyResolverMain } from '@teambit/dependency-resolver';
+import { Logger } from '@teambit/logger';
 import { PreviewMain } from './preview.main.runtime';
 
 export const PREVIEW_TASK_NAME = 'GeneratePreview';
@@ -19,7 +21,10 @@ export class PreviewTask implements BuildTask {
     /**
      * preview extension.
      */
-    private preview: PreviewMain
+    private preview: PreviewMain,
+
+    private dependencyResolver: DependencyResolverMain,
+    private logger: Logger
   ) {}
 
   aspectId = 'teambit.preview/preview';
@@ -39,15 +44,18 @@ export class PreviewTask implements BuildTask {
 
     const bundlerContext: BundlerContext = Object.assign(context, {
       targets,
-      externalizePeer: bundlingStrategy.name !== 'env',
       compress: bundlingStrategy.name !== 'env' && splitComponentBundle,
       entry: [],
       publicPath: this.getPreviewDirectory(context),
       rootPath: url,
       development: context.dev,
+      metaData: {
+        initiator: `${PREVIEW_TASK_NAME} task`,
+        envId: context.id,
+      },
     });
 
-    const bundler: Bundler = await context.env.getBundler(bundlerContext, []);
+    const bundler: Bundler = await context.env.getBundler(bundlerContext);
     const bundlerResults = await bundler.run();
 
     const results = bundlingStrategy.computeResults(bundlerContext, bundlerResults, this);

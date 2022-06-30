@@ -8,6 +8,7 @@ import { PackageJsonProps } from '@teambit/pkg';
 import { TypescriptConfigMutator } from '@teambit/typescript.modules.ts-config-mutator';
 import { WorkspaceAspect } from '@teambit/workspace';
 import type { WatchOptions, Workspace } from '@teambit/workspace';
+import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import pMapSeries from 'p-map-series';
 import { TsserverClient, TsserverClientOpts } from '@teambit/ts-server';
 import AspectLoaderAspect, { AspectLoaderMain } from '@teambit/aspect-loader';
@@ -24,7 +25,12 @@ import {
   TypeAliasTransformer,
   FunctionDeclaration,
   VariableStatementTransformer,
+  VariableDeclaration,
   SourceFileTransformer,
+  ClassDecelerationTransformer,
+  InterfaceDeclarationTransformer,
+  EnumDeclarationTransformer,
+  BindingElementTransformer,
 } from './transformers';
 import { CheckTypesCmd } from './cmds/check-types.cmd';
 
@@ -45,7 +51,8 @@ export class TypescriptMain {
   constructor(
     private logger: Logger,
     private schemaTransformerSlot: SchemaTransformerSlot,
-    private workspace: Workspace
+    private workspace: Workspace,
+    private depResolver: DependencyResolverMain
   ) {}
 
   private tsServer: TsserverClient;
@@ -104,19 +111,85 @@ export class TypescriptMain {
   }
 
   /**
+   * Create a compiler instance and run the cjs transformer for it
+   * @param options
+   * @param transformers
+   * @param tsModule
+   * @returns
+   */
+  createCjsCompiler(options: TypeScriptCompilerOptions, transformers: TsConfigTransformer[] = [], tsModule = ts) {
+    return this.createCompiler(options, [this.getCjsTransformer(), ...transformers], tsModule);
+  }
+
+  /**
+   * Create a compiler instance and run the esm transformer for it
+   * @param options
+   * @param transformers
+   * @param tsModule
+   * @returns
+   */
+  createEsmCompiler(options: TypeScriptCompilerOptions, transformers: TsConfigTransformer[] = [], tsModule = ts) {
+    return this.createCompiler(options, [this.getEsmTransformer(), ...transformers], tsModule);
+  }
+
+  /**
+   * Create a transformer that change the ts module to CommonJS
+   * @returns
+   */
+  getCjsTransformer(): TsConfigTransformer {
+    const cjsTransformer = (config: TypescriptConfigMutator) => {
+      config.setModule('CommonJS');
+      return config;
+    };
+    return cjsTransformer;
+  }
+
+  /**
+   * Create a transformer that change the ts module to ES2020
+   * @returns
+   */
+  getEsmTransformer(): TsConfigTransformer {
+    const esmTransformer = (config: TypescriptConfigMutator) => {
+      config.setModule('ES2020');
+      return config;
+    };
+    return esmTransformer;
+  }
+
+  /**
    * create an instance of a typescript semantic schema extractor.
    */
   createSchemaExtractor(tsconfig: any, path?: string): SchemaExtractor {
-    return new TypeScriptExtractor(tsconfig, this.schemaTransformerSlot, this, path || this.workspace.path);
+    return new TypeScriptExtractor(
+      tsconfig,
+      this.schemaTransformerSlot,
+      this,
+      path || this.workspace.path,
+      this.depResolver,
+      this.workspace
+    );
   }
 
   /**
    * add the default package json properties to the component
    * :TODO @gilad why do we need this DSL? can't I just get the args here.
    */
-  getPackageJsonProps(): PackageJsonProps {
+  getCjsPackageJsonProps(): PackageJsonProps {
     return {
       main: 'dist/{main}.js',
+      types: '{main}.ts',
+    };
+  }
+
+  /**
+   * add type: module to the package.json props and the default props
+   * :TODO @gilad why do we need this DSL? can't I just get the args here.
+   */
+  getEsmPackageJsonProps(): PackageJsonProps {
+    return {
+      // main: 'dist-esm/{main}.js',
+      main: 'dist/{main}.js',
+      type: 'module',
       types: '{main}.ts',
     };
   }
@@ -153,24 +226,43 @@ export class TypescriptMain {
   }
 
   static runtime = MainRuntime;
-  static dependencies = [SchemaAspect, LoggerAspect, AspectLoaderAspect, WorkspaceAspect, CLIAspect];
+  static dependencies = [
+    SchemaAspect,
+    LoggerAspect,
+    AspectLoaderAspect,
+    WorkspaceAspect,
+    CLIAspect,
+    DependencyResolverAspect,
+  ];
   static slots = [Slot.withType<SchemaTransformer[]>()];
 
   static async provider(
-    [schema, loggerExt, aspectLoader, workspace, cli]: [SchemaMain, LoggerMain, AspectLoaderMain, Workspace, CLIMain],
+    [schema, loggerExt, aspectLoader, workspace, cli, depResolver]: [
+      SchemaMain,
+      LoggerMain,
+      AspectLoaderMain,
+      Workspace,
+      CLIMain,
+      DependencyResolverMain
+    ],
     config,
     [schemaTransformerSlot]: [SchemaTransformerSlot]
   ) {
     schema.registerParser(new TypeScriptParser());
     const logger = loggerExt.createLogger(TypescriptAspect.id);
     aspectLoader.registerPlugins([new SchemaTransformerPlugin(schemaTransformerSlot)]);
-    const tsMain = new TypescriptMain(logger, schemaTransformerSlot, workspace);
+    const tsMain = new TypescriptMain(logger, schemaTransformerSlot, workspace, depResolver);
     schemaTransformerSlot.register([
       new ExportDeclaration(),
       new FunctionDeclaration(),
       new VariableStatementTransformer(),
+      new VariableDeclaration(),
       new SourceFileTransformer(),
       new TypeAliasTransformer(),
+      new ClassDecelerationTransformer(),
+      new InterfaceDeclarationTransformer(),
+      new EnumDeclarationTransformer(),
+      new BindingElementTransformer(),
     ]);
 
     if (workspace) {

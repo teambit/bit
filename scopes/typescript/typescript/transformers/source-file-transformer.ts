@@ -1,5 +1,7 @@
 import ts, { Node, SourceFile } from 'typescript';
 import { compact, flatten } from 'lodash';
+import pMapSeries from 'p-map-series';
+import { Module } from '@teambit/semantics.entities.semantic-schema';
 import { SchemaTransformer } from '../schema-transformer';
 import { ExportIdentifier } from '../export-identifier';
 import { SchemaExtractorContext } from '../schema-extractor-context';
@@ -29,13 +31,11 @@ export class SourceFileTransformer implements SchemaTransformer {
 
   async transform(node: SourceFile, context: SchemaExtractorContext) {
     const exports = this.listExports(node);
-    const schemas = await Promise.all(
-      exports.map((exportNode) => {
-        return context.computeSchema(exportNode);
-      })
-    );
+    const schemas = await pMapSeries(exports, (exportNode) => {
+      return context.computeSchema(exportNode);
+    });
 
-    return schemas;
+    return new Module(context.getLocation(node), schemas);
   }
 
   /**

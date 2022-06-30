@@ -2,7 +2,7 @@ import mapSeries from 'p-map-series';
 import { MainRuntime } from '@teambit/cli';
 import ComponentAspect, { Component, ComponentMap, ComponentMain } from '@teambit/component';
 import type { ConfigMain } from '@teambit/config';
-import { get, pick } from 'lodash';
+import { get, pick, uniq } from 'lodash';
 import { ConfigAspect } from '@teambit/config';
 import { DependenciesEnv, EnvsAspect, EnvsMain } from '@teambit/envs';
 import { Slot, SlotRegistry, ExtensionManifest, Aspect, RuntimeManifest } from '@teambit/harmony';
@@ -28,6 +28,7 @@ import { Version as VersionModel } from '@teambit/legacy/dist/scope/models';
 import LegacyComponent from '@teambit/legacy/dist/consumer/component';
 import fs from 'fs-extra';
 import { BitId } from '@teambit/legacy-bit-id';
+import { readCAFileSync } from '@pnpm/network.ca-file';
 import semver, { SemVer } from 'semver';
 import AspectLoaderAspect, { AspectLoaderMain } from '@teambit/aspect-loader';
 import GlobalConfigAspect, { GlobalConfigMain } from '@teambit/global-config';
@@ -58,6 +59,7 @@ import {
   SerializedVariantPolicy,
 } from './policy';
 import {
+  PackageImportMethod,
   PackageManager,
   PeerDependencyIssuesByProjects,
   PackageManagerGetPeerDependencyIssuesOptions,
@@ -214,6 +216,26 @@ export interface DependencyResolverWorkspaceConfig {
    * Supported values are hoisted and isolated.
    */
   nodeLinker?: 'hoisted' | 'isolated';
+
+  /*
+   * Controls the way packages are imported from the store.
+   */
+  packageImportMethod?: PackageImportMethod;
+
+  /*
+   * Use and cache the results of (pre/post)install hooks.
+   */
+  sideEffectsCache?: boolean;
+
+  /*
+   * The node version to use when checking a package's engines setting.
+   */
+  nodeVersion?: string;
+
+  /*
+   * Refuse to install any package that claims to not be compatible with the current Node.js version.
+   */
+  engineStrict?: boolean;
 }
 
 export interface DependencyResolverVariantConfig {
@@ -495,7 +517,11 @@ export class DependencyResolverMain {
       cacheRootDir,
       preInstallSubscribers,
       postInstallSubscribers,
-      this.config.nodeLinker
+      this.config.nodeLinker,
+      this.config.packageImportMethod,
+      this.config.sideEffectsCache,
+      this.config.nodeVersion,
+      this.config.engineStrict
     );
   }
 
@@ -590,13 +616,9 @@ export class DependencyResolverMain {
 
   private getProxyConfigFromDepResolverConfig(): ProxyConfig {
     return {
-      ca: this.config.ca,
-      cert: this.config.cert,
       httpProxy: this.config.proxy,
       httpsProxy: this.config.httpsProxy || this.config.proxy,
-      key: this.config.key,
       noProxy: this.config.noProxy,
-      strictSSL: this.config.strictSsl?.toLowerCase() === 'true',
     };
   }
 
@@ -609,11 +631,15 @@ export class DependencyResolverMain {
   }
 
   private async getNetworkConfigFromGlobalConfig(): Promise<NetworkConfig> {
-    return Http.getNetworkConfig();
+    const globalNetworkConfig = await Http.getNetworkConfig();
+    if (!globalNetworkConfig.ca && globalNetworkConfig.cafile) {
+      globalNetworkConfig.ca = readCAFileSync(globalNetworkConfig.cafile);
+    }
+    return globalNetworkConfig;
   }
 
   private getNetworkConfigFromDepResolverConfig(): NetworkConfig {
-    return pick(this.config, [
+    const config: NetworkConfig = pick(this.config, [
       'fetchTimeout',
       'fetchRetries',
       'fetchRetryFactor',
@@ -621,7 +647,18 @@ export class DependencyResolverMain {
       'fetchRetryMaxtimeout',
       'maxSockets',
       'networkConcurrency',
+      'key',
+      'cert',
+      'ca',
+      'cafile',
     ]);
+    if (this.config.strictSsl != null) {
+      config.strictSSL =
+        typeof this.config.strictSsl === 'string'
+          ? this.config.strictSsl.toLowerCase() === 'true'
+          : this.config.strictSsl;
+    }
+    return config;
   }
 
   private async getNetworkConfigFromPackageManager(): Promise<NetworkConfig> {
@@ -648,7 +685,7 @@ export class DependencyResolverMain {
     return proxyConfigFromPackageManager;
   }
 
-  private async getProxyConfigFromGlobalConfig(): Promise<ProxyConfig> {
+  private getProxyConfigFromGlobalConfig(): Promise<ProxyConfig> {
     return Http.getProxyConfig();
   }
 
@@ -837,6 +874,13 @@ export class DependencyResolverMain {
     return this.getComponentEnvPolicyFromEnv(env);
   }
 
+  async getEnvPolicyFromEnvLegacyId(id: BitId): Promise<EnvPolicy | undefined> {
+    const envDef = await this.envs.getEnvDefinitionByLegacyId(id);
+    if (!envDef) return undefined;
+    const env = envDef.env;
+    return this.getComponentEnvPolicyFromEnv(env);
+  }
+
   async getComponentEnvPolicy(component: Component): Promise<EnvPolicy> {
     const env = this.envs.getEnv(component).env;
     return this.getComponentEnvPolicyFromEnv(env);
@@ -851,6 +895,26 @@ export class DependencyResolverMain {
       }
     }
     return new EnvPolicyFactory().getEmpty();
+  }
+
+  /**
+   * Get a list of peer dependencies applied from an env
+   * This will merge different peers list like:
+   * 1. peerDependencies from the getDependencies
+   * 2. peers from getDependencies
+   * 3. getAdditionalHostDependencies
+   * @param env
+   */
+  async getPeerDependenciesListFromEnv(env: DependenciesEnv): Promise<string[]> {
+    const envPolicy = await this.getComponentEnvPolicyFromEnv(env);
+    const peers = uniq(
+      envPolicy.peersAutoDetectPolicy.names.concat(envPolicy.variantPolicy.byLifecycleType('peer').names)
+    );
+    let additionalHostDeps: string[] = [];
+    if (env.getAdditionalHostDependencies && typeof env.getAdditionalHostDependencies === 'function') {
+      additionalHostDeps = await env.getAdditionalHostDependencies();
+    }
+    return uniq(peers.concat(additionalHostDeps));
   }
 
   /**
@@ -995,26 +1059,19 @@ export class DependencyResolverMain {
         // Lazily get the dependencies
         resolvedParentDeps = resolvedParentDeps || (await this.getDependencies(resolvedParentComponent));
         const resolvedDep = resolvedParentDeps.findDependency(dep.id, { ignoreVersion: true });
-        // TODO: add a way to update id in harmony
-        // @ts-ignore
         dep.id = resolvedDep?.id ?? dep.id;
         await this.resolveRequireableExtensionManifestDepsVersionsRecursively(dep.id, dep);
       });
     };
     if (manifest.dependencies) {
-      // TODO: add a way to access it properly with harmony (currently it's readonly)
-      // @ts-ignore
       manifest.dependencies = manifest.dependencies.map((dep) => this.aspectLoader.cloneManifest(dep));
       await updateDirectDepsVersions(manifest.dependencies);
     }
-    // TODO: add a function to get all runtimes and not access private member
     // @ts-ignore
-    if (manifest._runtimes) {
+    if (manifest?._runtimes) {
       // @ts-ignore
-      await mapSeries(manifest._runtimes, async (runtime: RuntimeManifest) => {
+      await mapSeries(manifest?._runtimes, async (runtime: RuntimeManifest) => {
         if (runtime.dependencies) {
-          // TODO: add a way to access it properly with harmony (currently it's readonly)
-          // @ts-ignore
           runtime.dependencies = runtime.dependencies.map((dep) => this.aspectLoader.cloneManifest(dep));
           await updateDirectDepsVersions(runtime.dependencies);
         }
@@ -1198,9 +1255,16 @@ export class DependencyResolverMain {
       const workspacePolicy = dependencyResolver.getWorkspacePolicy();
       return workspacePolicy.toManifest();
     });
-    DependencyResolver.registerHarmonyEnvPeersPolicyGetter(async (configuredExtensions: ExtensionDataList) => {
-      const envPolicy = await dependencyResolver.getComponentEnvPolicyFromExtension(configuredExtensions);
-      return envPolicy.peersAutoDetectPolicy.toNameSupportedRangeMap();
+    DependencyResolver.registerHarmonyEnvPeersPolicyForComponentGetter(
+      async (configuredExtensions: ExtensionDataList) => {
+        const envPolicy = await dependencyResolver.getComponentEnvPolicyFromExtension(configuredExtensions);
+        return envPolicy.peersAutoDetectPolicy.toNameSupportedRangeMap();
+      }
+    );
+    DependencyResolver.registerHarmonyEnvPeersPolicyForEnvItselfGetter(async (id: BitId) => {
+      const envPolicy = await dependencyResolver.getEnvPolicyFromEnvLegacyId(id);
+      if (!envPolicy) return undefined;
+      return envPolicy.peersAutoDetectPolicy.toVersionManifest();
     });
     registerUpdateDependenciesOnTag(dependencyResolver.updateDepsOnLegacyTag.bind(dependencyResolver));
     registerUpdateDependenciesOnExport(dependencyResolver.updateDepsOnLegacyExport.bind(dependencyResolver));

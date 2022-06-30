@@ -7,7 +7,7 @@ export const reactWorkspaceTemplate: WorkspaceTemplate = {
   generateFiles: async (context: WorkspaceContext) => {
     return generateCommonFiles(context);
   },
-  importComponents: () => {
+  fork: () => {
     return [
       {
         id: 'teambit.react/templates/react-native/envs/my-react-native',

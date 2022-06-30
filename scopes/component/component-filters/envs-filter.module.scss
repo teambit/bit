@@ -1,0 +1,94 @@
+@import '~@teambit/ui-foundation.ui.constants.z-indexes/z-indexes.module.scss';
+.envsFilterContainer {
+  > div {
+    line-height: 16px;
+    display: flex;
+  }
+
+  .filterIcon {
+    display: flex;
+    padding: 8px;
+    border-radius: 8px;
+
+    &:hover {
+      background: var(--bit-bg-heavy, #f6f6f6);
+      cursor: pointer;
+    }
+
+    img {
+      width: 16px;
+      filter: invert(44%) sepia(7%) saturate(560%) hue-rotate(187deg) brightness(96%) contrast(91%);
+    }
+
+    .filterIconLabel {
+      margin: 0px 8px;
+      font-size: 14px;
+    }
+
+    .dropdownArrow {
+      display: flex;
+    }
+  }
+}
+
+.envFilterDropdownContainer {
+  width: 100%;
+}
+
+.envFilterDropdown {
+  width: 100%;
+  // otherwise when the dropdown is open it clashes with the content of the tree
+  // (this is bizarre, the tree has no position absolute)
+  z-index: $nav-z-index;
+}
+
+.envDropdownItemContainer {
+  display: flex;
+  width: calc(100% - 24px);
+  align-items: baseline;
+  flex-direction: column;
+}
+
+.envDropdownItemIconContainer {
+  display: flex;
+  height: 16px;
+  width: 16px;
+}
+
+.envDropdownItem {
+  padding-left: 8px;
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  font-size: var(--bit-p-md, 16px);
+}
+
+.envDropdownItemLabel,
+.envDropdownItemIcon {
+  display: flex;
+  justify-content: space-between;
+  padding-left: 8px;
+}
+.description {
+  font-size: var(--bit-p-xs, 14px);
+  padding-left: 8px;
+  padding-right: 16px;
+  color: var(--bit-text-color-light, #6c707c);
+  width: calc(100% - 24px);
+}
+
+.envDropdownItemContainerWithIcon {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  width: calc(100% - 24px);
+}
+
+.descriptionText {
+  width: 100%;
+}
+
+.envLink {
+  color: white;
+  text-decoration: none;
+}

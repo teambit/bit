@@ -7,16 +7,26 @@ import { Group } from '../../command-groups';
 import { CommandOptions, LegacyCommand } from '../../legacy-command';
 
 export default class Move implements LegacyCommand {
-  name = 'move <from> <to>';
-  shortDescription = 'move a component to a different filesystem path';
+  name = 'move <current-component-dir> <new-component-dir>';
+  description = 'move a component to a different filesystem path';
+  arguments = [
+    {
+      name: 'current-component-dir',
+      description: 'the current relative path (in the workspace) to the component directory',
+    },
+    {
+      name: 'new-component-dir',
+      description: 'the new relative path (in the workspace) to the component directory',
+    },
+  ];
   group: Group = 'development';
-  description = `move files or directories of component(s)\n  https://${BASE_DOCS_DOMAIN}/workspace/moving-components`;
+  extendedDescription = `move files or directories of component(s)\n  https://${BASE_DOCS_DOMAIN}/workspace/moving-components`;
   alias = 'mv';
   opts = [
     [
       'c',
       'component',
-      'move component files that are spread over multiple directories to one directory. synopsis: `move <component-id> <directory>`',
+      'LEGACY ONLY. move component files that are spread over multiple directories to one directory. synopsis: `move <component-id> <directory>`',
     ],
   ] as CommandOptions;
   loader = true;

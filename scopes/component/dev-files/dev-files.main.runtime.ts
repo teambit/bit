@@ -1,5 +1,5 @@
 import { MainRuntime } from '@teambit/cli';
-import { flatten } from 'lodash';
+import { flatten, isFunction } from 'lodash';
 import { SlotRegistry, Slot } from '@teambit/harmony';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
@@ -13,9 +13,9 @@ import { DevFilesFragment } from './dev-files.fragment';
 import { devFilesSchema } from './dev-files.graphql';
 
 /**
- * dev pattern is of type string. an example to a pattern can be "*.spec.ts"
+ * dev pattern is a list of strings or a function that returns a list of strings. an example to a pattern can be "[*.spec.ts]"
  */
-export type DevPatterns = string[];
+export type DevPatterns = ((component: Component) => string[]) | string[];
 
 /**
  * slot for dev file patterns.
@@ -40,21 +40,27 @@ export class DevFilesMain {
 
   /**
    * compute all dev patterns on a component.
-   * computing of dev patterns is a merge of the configuration, the env (env.getDevPatterns()) and
+   * computing of dev patterns is a merge of the configuration, the env (env.getDevPatterns(component)) and
    * the registering aspects (through registerDevPattern()).
    */
   computeDevPatterns(component: Component) {
     const entry = component.state.aspects.get(DevFilesAspect.id);
     const configuredPatterns = entry?.config.devFilePatterns || [];
     const envDef = this.envs.calculateEnv(component);
-    const envPatterns: DevPatterns[] = envDef.env?.getDevPatterns ? envDef.env.getDevPatterns() : [];
+    const envPatterns: DevPatterns[] = envDef.env?.getDevPatterns ? envDef.env.getDevPatterns(component) : [];
 
+    const getPatterns = (devPatterns: DevPatterns) => {
+      if (isFunction(devPatterns)) {
+        return devPatterns(component);
+      }
+      return devPatterns;
+    };
     const patternSlot = this.devPatternSlot.toArray();
     const fromSlot: { [id: string]: any } = patternSlot.reduce((acc, current) => {
       const [aspectId, patterns] = current;
       if (!acc[aspectId]) acc[aspectId] = [];
       // if (component.state.aspects.get(aspectId)) acc[aspectId] = acc[aspectId].concat(patterns);
-      acc[aspectId] = acc[aspectId].concat(patterns);
+      acc[aspectId] = acc[aspectId].concat(getPatterns(patterns));
       return acc;
     }, {});
 

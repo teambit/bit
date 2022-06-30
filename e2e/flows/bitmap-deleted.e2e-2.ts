@@ -11,7 +11,6 @@ describe('user deleted only .bitmap file leaving the objects in place', function
   let helper: Helper;
   before(() => {
     helper = new Helper();
-    helper.command.setFeatures('legacy-workspace-config');
   });
   after(() => {
     helper.scopeHelper.destroy();
@@ -19,9 +18,9 @@ describe('user deleted only .bitmap file leaving the objects in place', function
   describe('tagging a component, then, deleting .bitmap file', () => {
     let scopeAfterDeletion;
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitLocalScopeHarmony();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFoo();
+      helper.fixtures.addComponentBarFooAsDir();
       helper.fixtures.tagComponentBarFoo();
       helper.bitMap.delete();
       scopeAfterDeletion = helper.scopeHelper.cloneLocalScope();

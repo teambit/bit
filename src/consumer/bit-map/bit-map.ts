@@ -3,20 +3,13 @@ import fs from 'fs-extra';
 import * as path from 'path';
 import { compact, uniq } from 'lodash';
 import R from 'ramda';
+import { LaneId } from '@teambit/lane-id';
 import { BitError } from '@teambit/bit-error';
 import type { Consumer } from '..';
 import { BitId, BitIds } from '../../bit-id';
 import { BitIdStr } from '../../bit-id/bit-id';
-import {
-  BIT_MAP,
-  COMPONENT_ORIGINS,
-  DEFAULT_LANE,
-  OLD_BIT_MAP,
-  VERSION_DELIMITER,
-  BITMAP_PREFIX_MESSAGE,
-} from '../../constants';
+import { BIT_MAP, COMPONENT_ORIGINS, OLD_BIT_MAP, VERSION_DELIMITER, BITMAP_PREFIX_MESSAGE } from '../../constants';
 import ShowDoctorError from '../../error/show-doctor-error';
-import { RemoteLaneId } from '../../lane-id/lane-id';
 import logger from '../../logger/logger';
 import { isDir, outputFile, pathJoinLinux, pathNormalizeToLinux, sortObject } from '../../utils';
 import { PathLinux, PathOsBased, PathOsBasedAbsolute, PathOsBasedRelative, PathRelative } from '../../utils/path';
@@ -72,7 +65,7 @@ export default class BitMap {
     public schema: string,
     private isLegacy: boolean,
     public workspaceLane: WorkspaceLane | null, // null if not checked out to a lane
-    private remoteLaneName?: RemoteLaneId
+    public remoteLaneId?: LaneId
   ) {
     this.components = [];
     this.hasChanged = false;
@@ -163,12 +156,10 @@ export default class BitMap {
     const dirPath: PathOsBasedAbsolute = consumer.getPath();
     const scopePath: string = consumer.scope.path;
     const isLegacy = consumer.isLegacy;
-    const laneName = consumer.scope.lanes.getCurrentLaneName();
     const { currentLocation, defaultLocation } = BitMap.getBitMapLocation(dirPath);
     const mapFileContent = BitMap.loadRawSync(dirPath);
-    const workspaceLane = laneName && laneName !== DEFAULT_LANE ? WorkspaceLane.load(laneName, scopePath) : null;
     if (!mapFileContent || !currentLocation) {
-      return new BitMap(dirPath, defaultLocation, CURRENT_BITMAP_SCHEMA, isLegacy, workspaceLane);
+      return new BitMap(dirPath, defaultLocation, CURRENT_BITMAP_SCHEMA, isLegacy, null);
     }
     let componentsJson;
     try {
@@ -178,11 +169,24 @@ export default class BitMap {
       throw new InvalidBitMap(currentLocation, e.message);
     }
     const schema = componentsJson[SCHEMA_FIELD] || componentsJson.version;
-    const remoteLaneName = componentsJson[LANE_KEY];
+    const laneId = componentsJson[LANE_KEY] ? new LaneId(componentsJson[LANE_KEY]) : undefined;
+    const currentLaneId = consumer.getCurrentLaneId();
+    const laneName = consumer.scope.lanes.getAliasByLaneId(currentLaneId);
+    if (laneId && currentLaneId.isDefault()) {
+      const scopeJson = consumer.scope.scopeJson;
+      scopeJson.trackLane({
+        remoteLane: laneId.name,
+        remoteScope: laneId.scope,
+        localLane: laneId.name,
+      });
+      scopeJson.setCurrentLane(laneId.name);
+    }
+
+    const workspaceLane = !currentLaneId.isDefault() && laneName ? WorkspaceLane.load(laneName, scopePath) : null;
 
     BitMap.removeNonComponentFields(componentsJson);
 
-    const bitMap = new BitMap(dirPath, currentLocation, schema, isLegacy, workspaceLane, remoteLaneName);
+    const bitMap = new BitMap(dirPath, currentLocation, schema, isLegacy, workspaceLane, laneId);
     bitMap.loadComponents(componentsJson);
     await bitMap.loadFiles();
     return bitMap;
@@ -305,7 +309,7 @@ export default class BitMap {
       }
       componentFromJson.id = bitId;
       const componentMap = ComponentMap.fromJson(componentFromJson);
-      componentMap.updatePerLane(this.remoteLaneName, this.workspaceLane ? this.workspaceLane.ids : null);
+      componentMap.updatePerLane(this.remoteLaneId, this.workspaceLane ? this.workspaceLane.ids : null);
       componentMap.setMarkAsChangedCb(this.markAsChangedBinded);
       this.components.push(componentMap);
     });
@@ -396,6 +400,11 @@ export default class BitMap {
 
     if (!origin) return getIdsOfOrigin();
     return BitIds.fromArray(R.flatten(origin.map((oneOrigin) => getIdsOfOrigin(oneOrigin))));
+  }
+
+  isIdAvailableOnCurrentLane(id: BitId): boolean {
+    const allIdsOfCurrentLane = this.getAllIdsAvailableOnLane();
+    return allIdsOfCurrentLane.hasWithoutScopeAndVersion(id);
   }
 
   /**
@@ -675,6 +684,10 @@ export default class BitMap {
           // it is saved in the workspaceLane. but the .bitmap has always the "main" version.
           componentMap.defaultVersion = componentMap.defaultVersion || componentMap.id.version;
         }
+        if (!this.workspaceLane && componentMap.onLanesOnly) {
+          // happens when merging from another lane to main and main is empty
+          componentMap.onLanesOnly = false;
+        }
         componentMap.id = componentId;
         return componentMap;
       }
@@ -683,7 +696,11 @@ export default class BitMap {
         this.deleteOlderVersionsOfComponent(componentId);
       }
       // @ts-ignore not easy to fix, we can't instantiate ComponentMap with mainFile because we don't have it yet
-      const newComponentMap = new ComponentMap({ files, origin });
+      const newComponentMap = new ComponentMap({
+        files,
+        origin,
+        onLanesOnly: Boolean(this.workspaceLane) && componentId.hasVersion(),
+      });
       newComponentMap.setMarkAsChangedCb(this.markAsChangedBinded);
       this.setComponent(componentId, newComponentMap);
       return newComponentMap;
@@ -729,13 +746,14 @@ export default class BitMap {
     return componentMap;
   }
 
-  reLoadAfterSwitchingLane(workspaceLane: null | WorkspaceLane) {
+  syncWithLanes(workspaceLane: null | WorkspaceLane) {
     this.workspaceLane = workspaceLane;
-    if (!workspaceLane) this.remoteLaneName = undefined;
+    if (!workspaceLane) this.remoteLaneId = undefined;
     this._invalidateCache();
     this.components.forEach((componentMap) =>
-      componentMap.updatePerLane(this.remoteLaneName, this.workspaceLane ? this.workspaceLane.ids : null)
+      componentMap.updatePerLane(this.remoteLaneId, this.workspaceLane ? this.workspaceLane.ids : null)
     );
+    this.markAsChanged();
   }
 
   sortValidateAndMarkAsChanged(componentMap: ComponentMap) {
@@ -828,7 +846,7 @@ export default class BitMap {
     this.markAsChanged();
   }
 
-  updateLanesProperty(workspaceLane: WorkspaceLane, remoteLaneId: RemoteLaneId) {
+  updateLanesProperty(workspaceLane: WorkspaceLane, remoteLaneId: LaneId) {
     workspaceLane.ids.forEach((bitIdOnLane) => {
       // we ignore version but we do require the scope to be the same because if the scope is
       // empty, the lane is going to populate the id itself, so no need to replicate it in the
@@ -909,8 +927,8 @@ export default class BitMap {
     return allChanges;
   }
 
-  setRemoteLane(remoteLane: RemoteLaneId) {
-    this.remoteLaneName = remoteLane;
+  setRemoteLane(remoteLane: LaneId) {
+    this.remoteLaneId = remoteLane;
     this.hasChanged = true;
   }
 
@@ -974,8 +992,8 @@ export default class BitMap {
 
   getContent(): Record<string, any> {
     const bitMapContent = { ...this.toObjects(), [SCHEMA_FIELD]: this.schema };
-    if (this.remoteLaneName) {
-      bitMapContent[LANE_KEY] = this.remoteLaneName;
+    if (this.remoteLaneId) {
+      bitMapContent[LANE_KEY] = this.remoteLaneId;
     }
     return bitMapContent;
   }

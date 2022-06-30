@@ -1,5 +1,7 @@
 import { Environment } from '@teambit/envs';
 
+export const HtmlEnvType = 'html';
+
 export class HtmlEnv implements Environment {
   icon = 'https://static.bit.dev/file_type_html5.svg';
 
@@ -23,6 +25,12 @@ export class HtmlEnv implements Environment {
     return {
       strategyName: 'component',
       splitComponentBundle: true,
+    };
+  }
+
+  async __getDescriptor() {
+    return {
+      type: HtmlEnvType,
     };
   }
 }

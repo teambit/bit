@@ -31,6 +31,10 @@ export class MultiCompiler implements Compiler {
     readonly options: MultiCompilerOptions = {}
   ) {}
 
+  getDistDir() {
+    return this.distDir;
+  }
+
   getArtifactDefinition() {
     return [
       {
@@ -136,6 +140,7 @@ export class MultiCompiler implements Compiler {
       return '';
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     return matchedCompiler.getPreviewComponentRootPath!(component);
   }
 

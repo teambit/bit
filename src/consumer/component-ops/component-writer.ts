@@ -43,7 +43,6 @@ export type ComponentWriterProps = {
   deleteBitDirContent?: boolean;
   existingComponentMap?: ComponentMap;
   excludeRegistryPrefix?: boolean;
-  saveOnLane?: boolean;
   applyPackageJsonTransformers?: boolean;
 };
 
@@ -62,7 +61,6 @@ export default class ComponentWriter {
   deleteBitDirContent: boolean | undefined;
   existingComponentMap: ComponentMap | undefined;
   excludeRegistryPrefix: boolean;
-  saveOnLane: boolean;
   applyPackageJsonTransformers: boolean;
 
   constructor({
@@ -80,7 +78,6 @@ export default class ComponentWriter {
     deleteBitDirContent,
     existingComponentMap,
     excludeRegistryPrefix = false,
-    saveOnLane = false,
     applyPackageJsonTransformers = true,
   }: ComponentWriterProps) {
     this.component = component;
@@ -97,7 +94,6 @@ export default class ComponentWriter {
     this.deleteBitDirContent = deleteBitDirContent;
     this.existingComponentMap = existingComponentMap;
     this.excludeRegistryPrefix = excludeRegistryPrefix;
-    this.saveOnLane = saveOnLane;
     this.applyPackageJsonTransformers = applyPackageJsonTransformers;
   }
 
@@ -228,6 +224,10 @@ export default class ComponentWriter {
       // build-pipeline. when capsules are written via the scope, we do need the dists.
       return;
     }
+    if (this.component.buildStatus !== 'succeed') {
+      // this is important for "bit sign" when on lane to not go to the original scope
+      return;
+    }
     const extensionsNamesForArtifacts = ['teambit.compilation/compiler'];
     const artifactsFiles = flatten(
       extensionsNamesForArtifacts.map((extName) => getArtifactFilesByExtension(this.component.extensions, extName))
@@ -242,7 +242,7 @@ export default class ComponentWriter {
         }
         // fyi, if this is coming from the isolator aspect, it is optimized to import all at once.
         // see artifact-files.importMultipleDistsArtifacts().
-        const vinylFiles = await artifactFiles.getVinylsAndImportIfMissing(this.component.scope as string, scope);
+        const vinylFiles = await artifactFiles.getVinylsAndImportIfMissing(this.component.id, scope);
         artifactsVinylFlattened.push(...vinylFiles);
       })
     );
@@ -278,7 +278,6 @@ export default class ComponentWriter {
       trackDir: this.existingComponentMap && this.existingComponentMap.trackDir,
       originallySharedDir: this.component.originallySharedDir,
       wrapDir: this.component.wrapDir,
-      onLanesOnly: this.saveOnLane,
     });
   }
 

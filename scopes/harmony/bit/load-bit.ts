@@ -11,6 +11,9 @@ import { nativeCompileCache } from '@teambit/toolbox.performance.v8-cache';
 // Enable v8 compile cache, keep this before other imports
 nativeCompileCache?.install();
 
+// needed for class-transformer package
+import 'reflect-metadata';
+
 import './hook-require';
 
 import {
@@ -23,11 +26,10 @@ import {
 import json from 'comment-json';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { ConfigAspect, ConfigRuntime } from '@teambit/config';
-import { Harmony, RuntimeDefinition } from '@teambit/harmony';
-import { Extension } from '@teambit/harmony/dist/extension';
-import { Config } from '@teambit/harmony/dist/harmony-config';
-// TODO: expose this type from harmony
-import { ConfigOptions } from '@teambit/harmony/dist/harmony-config/harmony-config';
+import { Harmony, RuntimeDefinition, Extension } from '@teambit/harmony';
+// TODO: expose this types from harmony (once we have a way to expose it only for node)
+import { Config, ConfigOptions } from '@teambit/harmony/dist/harmony-config';
+
 import { BitId, VERSION_DELIMITER } from '@teambit/legacy-bit-id';
 import { DependencyResolver } from '@teambit/legacy/dist/consumer/component/dependencies/dependency-resolver';
 import { getConsumerInfo, loadConsumer } from '@teambit/legacy/dist/consumer';
@@ -37,11 +39,14 @@ import ComponentLoader from '@teambit/legacy/dist/consumer/component/component-l
 import ComponentConfig from '@teambit/legacy/dist/consumer/config/component-config';
 import ComponentOverrides from '@teambit/legacy/dist/consumer/config/component-overrides';
 import { PackageJsonTransformer } from '@teambit/legacy/dist/consumer/component/package-json-transformer';
+import { satisfies } from 'semver';
 import ManyComponentsWriter from '@teambit/legacy/dist/consumer/component-ops/many-components-writer';
+import { getHarmonyVersion } from '@teambit/legacy/dist/bootstrap';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config';
 import WorkspaceConfig from '@teambit/legacy/dist/consumer/config/workspace-config';
 import { BitIds } from '@teambit/legacy/dist/bit-id';
 import { propogateUntil as propagateUntil } from '@teambit/legacy/dist/utils';
+import logger from '@teambit/legacy/dist/logger/logger';
 import { ExternalActions } from '@teambit/legacy/dist/api/scope/lib/action';
 import loader from '@teambit/legacy/dist/cli/loader';
 import { readdir } from 'fs-extra';
@@ -49,6 +54,7 @@ import { resolve } from 'path';
 import { manifestsMap } from './manifests';
 import { BitAspect } from './bit.aspect';
 import { registerCoreExtensions } from './bit.main.runtime';
+import { BitConfig } from './bit.provider';
 
 async function loadLegacyConfig(config: any) {
   const harmony = await Harmony.load([ConfigAspect], ConfigRuntime.name, config.toObject());
@@ -189,6 +195,7 @@ function shouldLoadInSafeMode() {
     'login',
     'logout',
     'config',
+    'remote',
   ];
   const hasSafeModeFlag = process.argv.includes('--safe-mode');
   const isSafeModeCommand = safeModeCommands.includes(currentCommand);
@@ -197,17 +204,17 @@ function shouldLoadInSafeMode() {
 
 export async function loadBit(path = process.cwd()) {
   clearGlobalsIfNeeded();
-  const loadCLIOnly = shouldLoadInSafeMode();
+  logger.info(`*** Loading Bit *** argv:\n${process.argv.join('\n')}`);
   const config = await getConfig(path);
   registerCoreExtensions();
   await loadLegacyConfig(config);
   const configMap = config.toObject();
-
-  configMap['teambit.harmony/bit'] = {
-    cwd: path,
-  };
+  configMap[BitAspect.id] ||= {};
+  configMap[BitAspect.id].cwd = path;
+  verifyEngine(configMap[BitAspect.id]);
 
   const aspectsToLoad = [CLIAspect];
+  const loadCLIOnly = shouldLoadInSafeMode();
   if (!loadCLIOnly) {
     aspectsToLoad.push(BitAspect);
   }
@@ -221,6 +228,21 @@ export async function loadBit(path = process.cwd()) {
   aspectLoader.setMainAspect(getMainAspect());
   registerCoreAspectsToLegacyDepResolver(aspectLoader);
   return harmony;
+}
+
+function verifyEngine(bitConfig: BitConfig) {
+  if (!bitConfig.engine) {
+    return;
+  }
+  const bitVersion = getHarmonyVersion(true);
+  if (satisfies(bitVersion, bitConfig.engine)) {
+    return;
+  }
+  const msg = `your bit version "${bitVersion}" doesn't satisfies the required "${bitConfig.engine}" version`;
+  if (bitConfig.engineStrict) {
+    throw new Error(`error: ${msg}`);
+  }
+  logger.console(msg, 'warn', 'yellow');
 }
 
 export async function runCLI() {

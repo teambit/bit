@@ -1,6 +1,6 @@
 import fs from 'fs-extra';
 import * as path from 'path';
-import v4 from 'uuid';
+import { v4 } from 'uuid';
 
 import { BitId, BitIds } from '../bit-id';
 import { ISOLATED_ENV_ROOT } from '../constants';

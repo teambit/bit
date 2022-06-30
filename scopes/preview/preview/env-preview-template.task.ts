@@ -9,15 +9,16 @@ import {
 import mapSeries from 'p-map-series';
 import { Component, ComponentMap } from '@teambit/component';
 import { AspectLoaderMain } from '@teambit/aspect-loader';
-import { Capsule } from '@teambit/isolator';
-import { Bundler, BundlerContext, BundlerEntryMap, BundlerHtmlConfig, BundlerResult, Target } from '@teambit/bundler';
+import { Bundler, BundlerContext, BundlerHtmlConfig, BundlerResult, Target } from '@teambit/bundler';
 import type { EnvDefinition, Environment, EnvsMain } from '@teambit/envs';
 import { join } from 'path';
-import { cloneDeep, compact, flatten, isEmpty } from 'lodash';
+import { compact, flatten, isEmpty } from 'lodash';
+import { Logger } from '@teambit/logger';
+import { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { existsSync, mkdirpSync } from 'fs-extra';
 import type { PreviewMain } from './preview.main.runtime';
-import { PreviewDefinition } from '.';
-import { html } from './webpack';
+import { generateTemplateEntries } from './bundler/chunks';
+import { generateHtmlConfig } from './bundler/html-plugin';
 
 export type ModuleExpose = {
   name: string;
@@ -27,6 +28,7 @@ export type ModuleExpose = {
 
 type TargetsGroup = {
   env: Environment;
+  envToGetBundler: Environment;
   targets: Target[];
 };
 type TargetsGroupMap = {
@@ -34,8 +36,6 @@ type TargetsGroupMap = {
 };
 
 export const GENERATE_ENV_TEMPLATE_TASK_NAME = 'GenerateEnvTemplate';
-export const PREVIEW_ROOT_CHUNK_NAME = 'previewRoot';
-export const PEERS_CHUNK_NAME = 'peers';
 
 export class EnvPreviewTemplateTask implements BuildTask {
   aspectId = 'teambit.preview/preview';
@@ -43,13 +43,17 @@ export class EnvPreviewTemplateTask implements BuildTask {
   location: TaskLocation = 'end';
   // readonly dependencies = [CompilerAspect.id];
 
-  constructor(private preview: PreviewMain, private envs: EnvsMain, private aspectLoader: AspectLoaderMain) {}
+  constructor(
+    private preview: PreviewMain,
+    private envs: EnvsMain,
+    private aspectLoader: AspectLoaderMain,
+    private dependencyResolver: DependencyResolverMain,
+    private logger: Logger
+  ) {}
 
   async execute(context: BuildContext): Promise<BuiltTaskResult> {
     const previewDefs = this.preview.getDefs();
-    const htmlConfig = this.generateHtmlConfig(previewDefs, PREVIEW_ROOT_CHUNK_NAME, PEERS_CHUNK_NAME, {
-      dev: context.dev,
-    });
+    const htmlConfig = previewDefs.map((previewModule) => generateHtmlConfig(previewModule, { dev: context.dev }));
     const originalSeedersIds = context.capsuleNetwork.originalSeedersCapsules.map((c) => c.component.id.toString());
     const grouped: TargetsGroupMap = {};
     await Promise.all(
@@ -76,7 +80,8 @@ export class EnvPreviewTemplateTask implements BuildTask {
         }
         if (!grouped[groupEnvId]) {
           grouped[groupEnvId] = {
-            env: envToGetBundler,
+            env,
+            envToGetBundler,
             targets: [target],
           };
         } else {
@@ -93,15 +98,18 @@ export class EnvPreviewTemplateTask implements BuildTask {
   }
 
   private async runBundlerForGroups(context: BuildContext, groups: TargetsGroupMap): Promise<BuiltTaskResult> {
-    const bundlerContext: BundlerContext = Object.assign(cloneDeep(context), {
+    const bundlerContext: BundlerContext = Object.assign(context, {
       targets: [],
       entry: [],
-      externalizePeer: false,
       development: context.dev,
+      metaData: {
+        initiator: `${GENERATE_ENV_TEMPLATE_TASK_NAME} task`,
+        envId: context.id,
+      },
     });
     const bundlerResults = await mapSeries(Object.entries(groups), async ([, targetsGroup]) => {
       bundlerContext.targets = targetsGroup.targets;
-      const bundler: Bundler = await targetsGroup.env.getTemplateBundler(bundlerContext);
+      const bundler: Bundler = await targetsGroup.envToGetBundler.getTemplateBundler(bundlerContext);
       const bundlerResult = await bundler.run();
       return bundlerResult;
     });
@@ -111,7 +119,7 @@ export class EnvPreviewTemplateTask implements BuildTask {
   }
 
   private shouldUseDefaultBundler(envDef: EnvDefinition): boolean {
-    if (this.aspectLoader.isCoreEnv(envDef.id)) return true;
+    if (this.aspectLoader.isCoreEnv(envDef.id) && envDef.id !== 'teambit.react/react-native') return true;
     const env = envDef.env;
     if (env.getTemplateBundler && typeof env.getTemplateBundler === 'function') return false;
     return true;
@@ -125,19 +133,8 @@ export class EnvPreviewTemplateTask implements BuildTask {
   ): Promise<Target | undefined> {
     const env = envDef.env;
     const envPreviewConfig = this.preview.getEnvPreviewConfig(envDef.env);
-    const isSplitComponentBundle = envPreviewConfig.splitComponentBundle ?? false;
-    let peers;
-    if (env.getHostDependencies && typeof env.getHostDependencies === 'function') {
-      peers = (await env.getHostDependencies()) || [];
-    } else {
-      const envComponentPeers = Object.keys((await env.getDependencies()).peerDependencies || {}) || [];
-      let additionalHostDeps = [];
-      if (env.getAdditionalHostDependencies && typeof env.getAdditionalHostDependencies === 'function') {
-        additionalHostDeps = await env.getAdditionalHostDependencies();
-      }
-      peers = envComponentPeers.concat(additionalHostDeps);
-    }
 
+    const peers = await this.dependencyResolver.getPeerDependenciesListFromEnv(env);
     // const module = await this.getPreviewModule(envComponent);
     // const entries = Object.keys(module).map((key) => module.exposes[key]);
     const capsule = context.capsuleNetwork.graphCapsules.getCapsule(envComponent.id);
@@ -145,105 +142,53 @@ export class EnvPreviewTemplateTask implements BuildTask {
     // Passing here the env itself to make sure it's preview runtime will be part of the preview root file
     // that's needed to make sure the providers register there are running correctly
     const previewRoot = await this.preview.writePreviewRuntime(context, [envComponent.id.toString()]);
-    const previewModules = await this.getPreviewModules(envDef);
-    // const templatesFile = previewModules.map((template) => {
-    //   return this.preview.writeLink(template.name, ComponentMap.create([]), template.path, capsule.path);
-    // });
+    const entries = await this.generateEntries({
+      envDef,
+      splitComponentBundle: envPreviewConfig.splitComponentBundle ?? false,
+      workDir: capsule.path,
+      peers,
+      previewRoot,
+    });
+
     const outputPath = this.computeOutputPath(context, envComponent);
     if (!existsSync(outputPath)) mkdirpSync(outputPath);
-    const entries = this.getEntries(previewModules, capsule, previewRoot, isSplitComponentBundle, peers);
 
     return {
       peers,
-      runtimeChunkName: 'runtime',
       html: htmlConfig,
       entries,
-      chunking: {
-        splitChunks: true,
-      },
+      chunking: { splitChunks: true },
       components: [envComponent],
       outputPath,
+      /* It's a path to the root of the host component. */
+      // hostRootDir, handle this
+      hostDependencies: peers,
+      aliasHostDependencies: true,
+      exposeHostDependencies: true,
     };
   }
 
-  private generateHtmlConfig(
-    previewDefs: PreviewDefinition[],
-    previewRootChunkName: string,
-    peersChunkName: string,
-    options: { dev?: boolean }
-  ): BundlerHtmlConfig[] {
-    const htmlConfigs = previewDefs.map((previewModule) =>
-      this.generateHtmlConfigForPreviewDef(previewModule, previewRootChunkName, peersChunkName, options)
-    );
-    return htmlConfigs;
-  }
+  private async generateEntries({
+    previewRoot,
+    workDir,
+    peers,
+    envDef,
+    splitComponentBundle,
+  }: {
+    previewRoot: string;
+    workDir: string;
+    peers: string[];
+    envDef: EnvDefinition;
+    splitComponentBundle: boolean;
+  }) {
+    const previewModules = await this.getPreviewModules(envDef);
+    const previewEntries = previewModules.map(({ name, path, ...rest }) => {
+      const linkFile = this.preview.writeLink(name, ComponentMap.create([]), path, workDir, splitComponentBundle);
 
-  private generateHtmlConfigForPreviewDef(
-    previewDef: PreviewDefinition,
-    previewRootChunkName: string,
-    peersChunkName: string,
-    options: { dev?: boolean }
-  ): BundlerHtmlConfig {
-    const previewDeps = previewDef.include || [];
-    const chunks = [...previewDeps, previewDef.prefix, previewRootChunkName];
-    if (previewDef.includePeers) {
-      chunks.unshift(peersChunkName);
-    }
+      return { name, path, ...rest, entry: linkFile };
+    });
 
-    const config = {
-      title: 'Preview',
-      templateContent: html('Preview'),
-      minify: options?.dev ?? true,
-      chunks,
-      filename: `${previewDef.prefix}.html`,
-    };
-    return config;
-  }
-
-  getEntries(
-    previewModules: ModuleExpose[],
-    capsule: Capsule,
-    previewRoot: string,
-    isSplitComponentBundle = false,
-    peers: string[] = []
-  ): BundlerEntryMap {
-    const previewRootEntry = {
-      filename: 'preview-root.[chunkhash].js',
-      import: previewRoot,
-    };
-
-    const peersRootEntry = {
-      filename: 'peers.[chunkhash].js',
-      import: peers,
-    };
-
-    const entries = previewModules.reduce(
-      (acc, module) => {
-        const linkFile = this.preview.writeLink(
-          module.name,
-          ComponentMap.create([]),
-          module.path,
-          capsule.path,
-          isSplitComponentBundle
-        );
-        acc[module.name] = {
-          // filename: `${module.name}.[contenthash].js`,
-          filename: `${module.name}.[chunkhash].js`,
-          // filename: `${module.name}.js`,
-          import: linkFile,
-          // library: {
-          //   name: module.name,
-          //   type: 'umd',
-          // },
-        };
-        if (module.include) {
-          acc[module.name].dependOn = module.include;
-        }
-        return acc;
-      },
-      { [PREVIEW_ROOT_CHUNK_NAME]: previewRootEntry, [PEERS_CHUNK_NAME]: peersRootEntry }
-    );
-
+    const entries = generateTemplateEntries({ peers, previewRootPath: previewRoot, previewModules: previewEntries });
     return entries;
   }
 
@@ -271,7 +216,7 @@ export class EnvPreviewTemplateTask implements BuildTask {
     };
   }
 
-  async getPreviewModules(envDef: EnvDefinition): Promise<ModuleExpose[]> {
+  private async getPreviewModules(envDef: EnvDefinition): Promise<ModuleExpose[]> {
     const previewDefs = this.preview.getDefs();
 
     const modules = compact(

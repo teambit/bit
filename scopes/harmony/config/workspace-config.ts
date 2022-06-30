@@ -1,5 +1,4 @@
 import { Analytics } from '@teambit/legacy/dist/analytics/analytics';
-import { isLegacyEnabled } from '@teambit/legacy/dist/api/consumer/lib/feature-toggle';
 import { COMPILER_ENV_TYPE, DEFAULT_LANGUAGE, WORKSPACE_JSONC } from '@teambit/legacy/dist/constants';
 import { ResolveModulesConfig } from '@teambit/legacy/dist/consumer/component/dependencies/files-dependency-builder/types/dependency-tree-type';
 import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
@@ -85,7 +84,7 @@ export class WorkspaceConfig implements HostConfig {
   isLegacy: boolean;
 
   constructor(private data?: WorkspaceConfigFileProps, private legacyConfig?: LegacyWorkspaceConfig) {
-    this.isLegacy = Boolean(isLegacyEnabled() || legacyConfig);
+    this.isLegacy = Boolean(legacyConfig);
     const isHarmony = !this.isLegacy;
     logger.debug(`workspace-config, isLegacy: ${this.isLegacy}`);
     Analytics.setExtraData('is_harmony', isHarmony);
@@ -132,9 +131,14 @@ export class WorkspaceConfig implements HostConfig {
 
   setExtension(extensionId: string, config: Record<string, any>, options: SetExtensionOptions): any {
     const existing = this.extension(extensionId, options.ignoreVersion);
-    if (existing && !options.overrideExisting) {
-      throw new ExtensionAlreadyConfigured(extensionId);
+    if (existing) {
+      if (options.mergeIntoExisting) {
+        config = { ...existing, ...config };
+      } else if (!options.overrideExisting) {
+        throw new ExtensionAlreadyConfigured(extensionId);
+      }
     }
+
     this.raw[extensionId] = config;
     this.loadExtensions();
   }
@@ -171,28 +175,7 @@ export class WorkspaceConfig implements HostConfig {
    * @returns
    * @memberof WorkspaceConfig
    */
-  static async create(
-    props: WorkspaceConfigFileProps,
-    dirPath?: PathOsBasedAbsolute,
-    legacyInitProps?: LegacyInitProps
-  ) {
-    if (isLegacyEnabled() && dirPath) {
-      if (!dirPath) throw new Error('workspace-config, dirPath is missing');
-      // Only support here what needed for e2e tests
-      const legacyProps: LegacyWorkspaceConfigProps = {};
-      if (props['teambit.dependencies/dependency-resolver']) {
-        legacyProps.packageManager = props['teambit.dependencies/dependency-resolver'].packageManager;
-      }
-      if (props['teambit.workspace/workspace']) {
-        legacyProps.componentsDefaultDirectory = props['teambit.workspace/workspace'].defaultDirectory;
-      }
-
-      const standAlone = legacyInitProps?.standAlone ?? false;
-      const legacyConfig = await LegacyWorkspaceConfig._ensure(dirPath, standAlone, legacyProps);
-      const instance = WorkspaceConfig.fromLegacyConfig(legacyConfig);
-      return instance;
-    }
-
+  static async create(props: WorkspaceConfigFileProps, dirPath?: PathOsBasedAbsolute) {
     const template = await getWorkspaceConfigTemplateParsed();
     // TODO: replace this assign with some kind of deepAssign that keeps the comments
     // right now the comments above the internal props are overrides after the assign
@@ -216,15 +199,14 @@ export class WorkspaceConfig implements HostConfig {
    */
   static async ensure(
     dirPath: PathOsBasedAbsolute,
-    workspaceConfigProps: WorkspaceConfigFileProps = {} as any,
-    legacyInitProps?: LegacyInitProps
+    workspaceConfigProps: WorkspaceConfigFileProps = {} as any
   ): Promise<WorkspaceConfig> {
     try {
       let workspaceConfig = await this.loadIfExist(dirPath);
       if (workspaceConfig) {
         return workspaceConfig;
       }
-      workspaceConfig = await this.create(workspaceConfigProps, dirPath, legacyInitProps);
+      workspaceConfig = await this.create(workspaceConfigProps, dirPath);
       return workspaceConfig;
     } catch (err: any) {
       if (err instanceof InvalidBitJson || err instanceof InvalidConfigFile) {
@@ -250,7 +232,7 @@ export class WorkspaceConfig implements HostConfig {
     const newProps: WorkspaceConfigFileProps = transformLegacyPropsToExtensions(legacyWorkspaceConfigProps);
     // TODO: gilad move to constants file
     newProps.$schemaVersion = '1.0.0';
-    return WorkspaceConfig.ensure(dirPath, newProps, { standAlone });
+    return WorkspaceConfig.ensure(dirPath, newProps);
   }
 
   static async reset(dirPath: PathOsBasedAbsolute, resetHard: boolean): Promise<void> {

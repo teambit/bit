@@ -21,11 +21,12 @@ import { WebpackAspect } from '@teambit/webpack';
 import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { DevServerContext, BundlerContext } from '@teambit/bundler';
-import { EnvPolicyConfigObject } from '@teambit/dependency-resolver';
+import { DependencyResolverAspect, DependencyResolverMain, EnvPolicyConfigObject } from '@teambit/dependency-resolver';
 import ts from 'typescript';
 import { ApplicationAspect, ApplicationMain } from '@teambit/application';
 import { FormatterContext } from '@teambit/formatter';
 import { LinterContext } from '@teambit/linter';
+import { LoggerAspect, LoggerMain } from '@teambit/logger';
 import { ESLintMain, ESLintAspect, EslintConfigTransformer } from '@teambit/eslint';
 import { PrettierMain, PrettierAspect, PrettierConfigTransformer } from '@teambit/prettier';
 import { ReactAspect } from './react.aspect';
@@ -33,6 +34,7 @@ import { ReactEnv } from './react.env';
 import { ReactAppType } from './apps/web';
 import { reactSchema } from './react.graphql';
 import { componentTemplates, workspaceTemplates } from './react.templates';
+import { ReactAppOptions } from './apps/web/react-app-options';
 
 type ReactDeps = [
   EnvsMain,
@@ -47,7 +49,9 @@ type ReactDeps = [
   ESLintMain,
   PrettierMain,
   ApplicationMain,
-  GeneratorMain
+  GeneratorMain,
+  DependencyResolverMain,
+  LoggerMain
 ];
 
 export type ReactMainConfig = {
@@ -97,10 +101,21 @@ export class ReactMain {
 
     private application: ApplicationMain,
 
-    private workspace: Workspace
+    private reactAppType: ReactAppType
   ) {}
 
   readonly env = this.reactEnv;
+
+  getReactAppType(name: string) {
+    return new ReactAppType(name, this.reactEnv);
+  }
+
+  /**
+   * use this to register apps programmatically.
+   */
+  async registerApp(reactApp: ReactAppOptions) {
+    return this.application.registerApp(await this.reactAppType.createApp(reactApp));
+  }
 
   /**
    * override the env's typescript config for both dev and build time.
@@ -297,7 +312,7 @@ export class ReactMain {
    * override the compiler tasks inside the build pipeline of the component environment.
    */
   overrideCompilerTasks(tasks: BuildTask[]) {
-    const pipeWithoutCompiler = this.reactEnv.getBuildPipe().filter((task) => task.aspectId !== CompilerAspect.id);
+    const pipeWithoutCompiler = this.reactEnv.getBuildPipeWithoutCompiler();
 
     return this.envs.override({
       getBuildPipe: () => [...tasks, ...pipeWithoutCompiler],
@@ -339,8 +354,8 @@ export class ReactMain {
     return this.envs.override({
       getPackageJsonProps: () => {
         return {
-          ...props,
           ...this.reactEnv.getPackageJsonProps(),
+          ...props,
         };
       },
     });
@@ -379,6 +394,8 @@ export class ReactMain {
     PrettierAspect,
     ApplicationAspect,
     GeneratorAspect,
+    DependencyResolverAspect,
+    LoggerAspect,
   ];
 
   static async provider(
@@ -396,9 +413,12 @@ export class ReactMain {
       prettier,
       application,
       generator,
+      dependencyResolver,
+      loggerMain,
     ]: ReactDeps,
     config: ReactMainConfig
   ) {
+    const logger = loggerMain.createLogger(ReactAspect.id);
     const reactEnv = new ReactEnv(
       jestAspect,
       tsAspect,
@@ -409,14 +429,19 @@ export class ReactMain {
       tester,
       config,
       eslint,
-      prettier
+      prettier,
+      dependencyResolver,
+      logger,
+      CompilerAspect.id
     );
-    const react = new ReactMain(reactEnv, envs, application, workspace);
+    const appType = new ReactAppType('react-app', reactEnv);
+    const react = new ReactMain(reactEnv, envs, application, appType);
     graphql.register(reactSchema(react));
     envs.registerEnv(reactEnv);
     generator.registerComponentTemplate(componentTemplates);
     generator.registerWorkspaceTemplate(workspaceTemplates);
-    application.registerAppType(new ReactAppType('react-app', reactEnv));
+    application.registerAppType(appType);
+
     return react;
   }
 }

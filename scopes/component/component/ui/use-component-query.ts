@@ -7,7 +7,7 @@ import { ComponentDescriptor } from '@teambit/component-descriptor';
 import { ComponentModel } from './component-model';
 import { ComponentError } from './component-error';
 
-const componentIdFields = gql`
+export const componentIdFields = gql`
   fragment componentIdFields on ComponentID {
     name
     version
@@ -15,39 +15,63 @@ const componentIdFields = gql`
   }
 `;
 
-const componentFields = gql`
-  fragment componentFields on Component {
+export const componentOverviewFields = gql`
+  fragment componentOverviewFields on Component {
     id {
       ...componentIdFields
     }
-    aspects(include: ["teambit.preview/preview", "teambit.pipelines/builder", "teambit.envs/envs"]) {
+    aspects(include: ["teambit.preview/preview", "teambit.envs/envs"]) {
       # 'id' property in gql refers to a *global* identifier and used for caching.
       # this makes aspect data cache under the same key, even when they are under different components.
       # renaming the property fixes that.
       aspectId: id
       aspectData: data
     }
-    packageName
     elementsUrl
     description
+    deprecation {
+      isDeprecate
+    }
     labels
     displayName
-    latest
     server {
       env
       url
     }
     buildStatus
+    env {
+      id
+      icon
+    }
+    size {
+      compressedTotal
+    }
+    preview {
+      includesEnvTemplate
+      legacyHeader
+    }
+    compositions {
+      identifier
+      displayName
+    }
+  }
+  ${componentIdFields}
+`;
+
+export const componentFields = gql`
+  fragment componentFields on Component {
+    id {
+      ...componentIdFields
+    }
+    ...componentOverviewFields
+    packageName
+    latest
     compositions {
       identifier
       displayName
     }
     tags {
       version
-    }
-    env {
-      id
-      icon
     }
     logs(type: $logType, offset: $logOffset, limit: $logLimit, head: $logHead, sort: $logSort) {
       id
@@ -58,11 +82,9 @@ const componentFields = gql`
       hash
       tag
     }
-    preview {
-      includesEnvTemplate
-    }
   }
   ${componentIdFields}
+  ${componentOverviewFields}
 `;
 
 const GET_COMPONENT = gql`
@@ -123,16 +145,14 @@ const SUB_COMPONENT_REMOVED = gql`
   }
   ${componentIdFields}
 `;
-
+export type Filters = {
+  log?: { logType?: string; logOffset?: number; logLimit?: number; logHead?: string; logSort?: string };
+};
 /** provides data to component ui page, making sure both variables and return value are safely typed and memoized */
-export function useComponentQuery(
-  componentId: string,
-  host: string,
-  filters?: { log?: { logType?: string; logOffset?: number; logLimit?: number; logHead?: string; logSort?: string } }
-) {
+export function useComponentQuery(componentId: string, host: string, filters?: Filters) {
   const idRef = useRef(componentId);
   idRef.current = componentId;
-  const { data, error, loading, subscribeToMore } = useDataQuery(GET_COMPONENT, {
+  const { data, error, loading, subscribeToMore, ...rest } = useDataQuery(GET_COMPONENT, {
     variables: { id: componentId, extensionId: host, ...(filters?.log || {}) },
   });
 
@@ -235,6 +255,8 @@ export function useComponentQuery(
         : !rawComponent && !loading
         ? new ComponentError(404)
         : undefined,
+      loading,
+      ...rest,
     };
   }, [rawComponent, host, error]);
 }

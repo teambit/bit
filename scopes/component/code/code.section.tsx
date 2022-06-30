@@ -6,12 +6,13 @@ import type { CodeUI } from './code.ui.runtime';
 export class CodeSection implements Section {
   constructor(private codeUI: CodeUI) {}
   route = {
-    path: '~code/:file*',
-    children: this.codeUI.getCodePage(),
+    path: '~code/*',
+    element: this.codeUI.getCodePage(),
   };
   navigationLink = {
     href: '~code',
     children: <MenuWidgetIcon icon="Code" tooltipContent="Code" />,
+    displayName: 'Code',
   };
   order = 30;
 }

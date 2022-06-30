@@ -18,7 +18,7 @@ import { MDXLayout } from '@teambit/mdx.ui.mdx-layout';
 import { Separator } from '@teambit/design.ui.separator';
 import { H1 } from '@teambit/documenter.ui.heading';
 import { AlertCard } from '@teambit/design.ui.alert-card';
-import { NativeLink } from '@teambit/base-ui.routing.native-link';
+import { Link } from '@teambit/base-react.navigation.link';
 import { OptionButton } from '@teambit/design.ui.input.option-button';
 import { StatusMessageCard } from '@teambit/design.ui.surfaces.status-message-card';
 import { EmptyStateSlot } from './compositions.ui.runtime';
@@ -70,9 +70,9 @@ export function Compositions({ menuBarWidgets, emptyState }: CompositionsProp) {
       <SplitPane layout={sidebarOpenness} size="85%" className={styles.compositionsPage}>
         <Pane className={styles.left}>
           <CompositionsMenuBar menuBarWidgets={menuBarWidgets} className={styles.menuBar}>
-            <NativeLink external href={currentCompositionUrl} className={styles.openInNewTab}>
+            <Link external href={currentCompositionUrl} className={styles.openInNewTab}>
               <OptionButton icon="open-tab" />
-            </NativeLink>
+            </Link>
           </CompositionsMenuBar>
           <CompositionContent
             emptyState={emptyState}
@@ -118,14 +118,14 @@ export function Compositions({ menuBarWidgets, emptyState }: CompositionsProp) {
   );
 }
 
-type CompositionContentProps = {
+export type CompositionContentProps = {
   component: ComponentModel;
   selected?: Composition;
   queryParams?: string | string[];
   emptyState?: EmptyStateSlot;
 };
 
-function CompositionContent({ component, selected, queryParams, emptyState }: CompositionContentProps) {
+export function CompositionContent({ component, selected, queryParams, emptyState }: CompositionContentProps) {
   const env = component.environment?.id;
   const EmptyStateTemplate = emptyState?.get(env || ''); // || defaultTemplate;
 

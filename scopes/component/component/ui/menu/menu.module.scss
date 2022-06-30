@@ -1,3 +1,5 @@
+@import '~@teambit/base-ui.layout.breakpoints/_breakpoints.scss';
+
 .topBar {
   display: flex;
   justify-content: space-between;
@@ -13,18 +15,35 @@
 }
 
 .navigation {
-  display: flex;
   list-style: none;
   height: 100%;
   padding-left: 28px;
-  @media screen and (max-width: 768px) {
-    padding-left: 6px;
+  @media screen and (max-width: $br-md) {
+    padding-left: 0;
   }
 
-  > li {
+  li {
     display: block;
     margin-right: 16px;
     height: 100%;
+  }
+
+  // show desktop nav on larger res
+  &.desktopNav {
+    display: flex;
+    @media screen and (max-width: $br-lg) {
+      display: none;
+    }
+  }
+
+  // show mobile nav on smaller res
+  &.mobileNav {
+    align-items: center;
+    display: none;
+    @media screen and (max-width: $br-lg) {
+      display: flex;
+      margin-right: 8px;
+    }
   }
 }
 
@@ -36,6 +55,11 @@
     margin-right: 12px;
     &:last-child {
       margin-right: 16px;
+    }
+  }
+  @media screen and (max-width: $br-lg) {
+    > * {
+      margin-right: 8px;
     }
   }
   .widgets {
@@ -51,6 +75,9 @@
         }
       }
     }
+    @media screen and (max-width: $br-lg) {
+      display: none;
+    }
   }
   .widget {
     font-size: 17px;
@@ -59,4 +86,8 @@
 
 .useBox {
   --bit-drawer-margin: 14px;
+}
+
+.componentVersionMenu {
+  width: 350px;
 }

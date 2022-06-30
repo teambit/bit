@@ -1,12 +1,15 @@
-// import { ReactNode } from 'react';
 import { SlotRegistry } from '@teambit/harmony';
-import { NavLinkProps } from '@teambit/base-ui.routing.nav-link';
+import type { LinkProps } from '@teambit/base-react.navigation.link';
 import type { ConsumeMethod } from '@teambit/ui-foundation.ui.use-box.menu';
 import { LaneModel } from '@teambit/lanes.ui.lanes';
 import { ComponentModel } from '../../ui';
 
+export type NavPluginProps = {
+  displayName?: string;
+} & LinkProps;
+
 export type NavPlugin = {
-  props: NavLinkProps;
+  props: NavPluginProps;
   order?: number;
 };
 

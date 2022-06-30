@@ -1,10 +1,13 @@
+import * as path from 'path';
+import fs from 'fs-extra';
 import AspectLoaderAspect, { AspectLoaderMain } from '@teambit/aspect-loader';
 import { BuilderAspect, BuilderMain } from '@teambit/builder';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
+import { IssuesClasses } from '@teambit/component-issues';
 import { Component, ComponentID } from '@teambit/component';
+import { DEFAULT_DIST_DIRNAME } from '@teambit/legacy/dist/constants';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { BitId } from '@teambit/legacy-bit-id';
-
 import ManyComponentsWriter from '@teambit/legacy/dist/consumer/component-ops/many-components-writer';
 import { LoggerAspect, LoggerMain } from '@teambit/logger';
 import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
@@ -26,7 +29,8 @@ export class CompilerMain {
     private pubsub: PubsubMain,
     private workspaceCompiler: WorkspaceCompiler,
     private envs: EnvsMain,
-    private builder: BuilderMain
+    private builder: BuilderMain,
+    private workspace: Workspace
   ) {}
 
   /**
@@ -56,11 +60,42 @@ export class CompilerMain {
     return compilerInstance.getDistPathBySrcPath(srcPath);
   }
 
+  /**
+   * find the compiler configured on the workspace and ask for the dist folder path.
+   */
+  getRelativeDistFolder(component: Component): string {
+    const environment = this.envs.getOrCalculateEnv(component).env;
+    const compilerInstance: Compiler | undefined = environment.getCompiler?.();
+    if (!compilerInstance || !compilerInstance.getDistDir) return DEFAULT_DIST_DIRNAME;
+    return compilerInstance.getDistDir();
+  }
+
+  /**
+   * Check if the dist folder (in the component package under node_modules) exist
+   * @param component
+   * @returns
+   */
+  isDistDirExists(component: Component): boolean {
+    const packageDir = this.workspace.getComponentPackagePath(component);
+    const distDir = this.getRelativeDistFolder(component);
+    const pathToCheck = path.join(packageDir, distDir);
+    return fs.existsSync(pathToCheck);
+  }
+
   async getDistsFiles(component: Component): Promise<DistArtifact> {
     const artifacts = await this.builder.getArtifactsVinylByExtension(component, CompilerAspect.id);
     if (!artifacts.length) throw new DistArtifactNotFound(component.id);
 
     return new DistArtifact(artifacts);
+  }
+
+  async addMissingDistsIssue(component: Component) {
+    const exist = this.isDistDirExists(component);
+    if (!exist) {
+      component.state.issues.getOrCreate(IssuesClasses.MissingDists).data = true;
+    }
+    // we don't want to add any data to the compiler aspect, only to add issues on the component
+    return undefined;
   }
 
   static runtime = MainRuntime;
@@ -91,8 +126,11 @@ export class CompilerMain {
     const logger = loggerMain.createLogger(CompilerAspect.id);
     const workspaceCompiler = new WorkspaceCompiler(workspace, envs, pubsub, aspectLoader, ui, logger);
     envs.registerService(new CompilerService());
-    const compilerMain = new CompilerMain(pubsub, workspaceCompiler, envs, builder);
+    const compilerMain = new CompilerMain(pubsub, workspaceCompiler, envs, builder, workspace);
     cli.register(new CompileCmd(workspaceCompiler, logger, pubsub));
+    if (workspace) {
+      workspace.onComponentLoad(compilerMain.addMissingDistsIssue.bind(compilerMain));
+    }
     generator.registerComponentTemplate([compilerTemplate]);
     ManyComponentsWriter.externalCompiler = compilerMain.compileOnWorkspace.bind(compilerMain);
 

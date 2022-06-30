@@ -1,8 +1,8 @@
 import { useMemo } from 'react';
-import { Node, Edge, ArrowHeadType } from 'react-flow-renderer';
+import { ArrowHeadType, Edge, Node } from 'react-flow-renderer';
 import { ComponentID } from '@teambit/component';
 import { calcLayout } from './calc-layout';
-import { GraphModel } from '../query';
+import { EdgeModel, GraphModel, NodeModel } from '../query';
 
 import { depTypeToClass, depTypeToLabel } from './dep-edge';
 
@@ -13,7 +13,7 @@ type ElementsOptions = {
 /**
  * generate Nodes and Edges for the ReactFlowRenderer graph renderer
  */
-export function calcElements(graph: GraphModel | undefined, { rootNode }: ElementsOptions) {
+export function calcElements(graph: GraphModel<NodeModel, EdgeModel> | undefined, { rootNode }: ElementsOptions) {
   return useMemo(() => {
     if (!graph) return [];
 

@@ -1,23 +1,23 @@
 import { Component, ComponentID } from '@teambit/component';
-import { Graph } from 'cleargraph';
+import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
 
 import { Dependency } from '../model/dependency';
 import { DuplicateDependency, VersionSubgraph } from '../duplicate-dependency';
 
 export const DEPENDENCIES_TYPES = ['dependencies', 'devDependencies'];
 
-type Node = { id: string; node: Component };
-type Edge = { sourceId: string; targetId: string; edge: Dependency };
+type ComponentNode = Node<Component>;
+type DependencyEdge = Edge<Dependency>;
 
 export class ComponentGraph extends Graph<Component, Dependency> {
   versionMap: Map<string, { allVersionNodes: string[]; latestVersionNode: string }>;
   seederIds: ComponentID[] = []; // component IDs that started the graph. (if from workspace, the .bitmap ids normally)
-  constructor(nodes: Node[] = [], edges: Edge[] = []) {
+  constructor(nodes: ComponentNode[] = [], edges: DependencyEdge[] = []) {
     super(nodes, edges);
     this.versionMap = new Map();
   }
 
-  protected create(nodes: Node[] = [], edges: Edge[] = []): this {
+  protected create(nodes: ComponentNode[] = [], edges: DependencyEdge[] = []): this {
     return new ComponentGraph(nodes, edges) as this;
   }
 
@@ -67,31 +67,13 @@ export class ComponentGraph extends Graph<Component, Dependency> {
   }
 
   buildFromCleargraph(graph: Graph<Component, Dependency>): ComponentGraph {
-    // TODO: once cleargraph constructor and graph.nodes are consistent we should just use this line
-    // this.create(graph.nodes, graph.edges)
-
-    const newGraph = new ComponentGraph();
-    const newGraphNodes: Node[] = graph.nodes.map((node) => {
-      return {
-        id: node.id,
-        node: node.attr,
-      };
-    });
-    const newGraphEdges: Edge[] = graph.edges.map((edge) => {
-      return {
-        sourceId: edge.sourceId,
-        targetId: edge.targetId,
-        edge: edge.attr,
-      };
-    });
-    newGraph.setNodes(newGraphNodes);
-    newGraph.setEdges(newGraphEdges);
-
-    return newGraph;
+    return this.create(graph.nodes, graph.edges);
   }
 
   runtimeOnly(componentIds: string[]) {
-    return this.successorsSubgraph(componentIds, (edge) => edge.attr.type === 'runtime');
+    return this.successorsSubgraph(componentIds, {
+      edgeFilter: (edge: DependencyEdge) => edge.attr.type === 'runtime',
+    });
   }
 
   private shouldLimitToSeedersOnly() {

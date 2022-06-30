@@ -7,6 +7,10 @@ export class StencilCompiler implements Compiler {
   constructor(readonly id: string, private transpileOpts: TranspileOptions) {}
   distDir = 'dist';
 
+  getDistDir() {
+    return this.distDir;
+  }
+
   transpileFile(fileContent: string, options: TranspileFileParams): TranspileFileOutput {
     const output = transpileSync(fileContent, this.transpileOpts);
     const path = options.filePath.split('.');

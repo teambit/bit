@@ -93,7 +93,7 @@ export default function paintComponent(
       .map((field) => {
         const arr = [];
         if (!printableOriginalComponent[field] && !printableComponentToCompare[field]) return null;
-        const title = `${field[0].toUpperCase()}${field.substr(1)}`.replace(/([A-Z])/g, ' $1').trim();
+        const title = `${field[0].toUpperCase()}${field.slice(1)}`.replace(/([A-Z])/g, ' $1').trim();
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         arr.push(field in componentsDiffs && field !== 'id' ? c.red(title) : c.cyan(title));
         if (printableComponentToCompare[field] instanceof Array) {

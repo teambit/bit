@@ -11,6 +11,7 @@ export class AppListCmdDeprecated implements Command {
   name = 'app-list';
   description = 'DEPRECATED. use "bit app list"';
   alias = '';
+  private = true;
   group = 'apps';
   options = [['j', 'json', 'return the component data in json format']] as CommandOptions;
 

@@ -1,26 +1,25 @@
-import { NavLink, NavLinkProps } from '@teambit/base-ui.routing.nav-link';
-import { extendPath } from '@teambit/ui-foundation.ui.react-router.extend-path';
-import classnames from 'classnames';
 import React from 'react';
-import { useRouteMatch, useLocation } from 'react-router-dom';
+import classnames from 'classnames';
+import { useLocation } from 'react-router-dom';
+import { Link, LinkProps } from '@teambit/base-react.navigation.link';
 
 import styles from './top-bar-nav.module.scss';
 
-export function TopBarNav(props: NavLinkProps) {
-  const { url } = useRouteMatch();
-  const { search } = useLocation(); // sticky query params
-  const { href } = props;
+export type TopBarNavProps = {} & LinkProps;
 
-  const target = `${extendPath(url, href)}${search}`;
+export function TopBarNav({ href, className, activeClassName, children, ...rest }: TopBarNavProps) {
+  const { search } = useLocation(); // sticky query params
+
+  const target = `${href}${search}`;
 
   return (
-    <NavLink
-      {...props}
-      className={classnames(props.className, styles.topBarLink)}
-      activeClassName={classnames(props.className, styles.active)}
+    <Link
+      {...rest}
+      className={classnames(className, styles.topBarLink)}
+      activeClassName={classnames(activeClassName, styles.active)}
       href={target}
     >
-      <div>{props.children}</div>
-    </NavLink>
+      <div>{children}</div>
+    </Link>
   );
 }

@@ -8,6 +8,7 @@ import { Section, SectionProps } from '@teambit/documenter.ui.section';
 import { Separator } from '@teambit/design.ui.separator';
 import { Subtitle } from '@teambit/documenter.ui.sub-title';
 import { isBrowser } from '@teambit/ui-foundation.ui.is-browser';
+import { ComponentModel } from '@teambit/component';
 import styles from './component-overview.module.scss';
 
 export type TitleBadge = {
@@ -24,6 +25,7 @@ export type ComponentOverviewProps = {
   elementsUrl?: string;
   titleBadges?: TitleBadge[];
   componentDescriptor?: ComponentDescriptor;
+  component?: ComponentModel;
 } & SectionProps;
 
 export function ComponentOverview({
@@ -34,6 +36,7 @@ export function ComponentOverview({
   packageName,
   elementsUrl,
   componentDescriptor,
+  component,
   ...rest
 }: ComponentOverviewProps) {
   let finalElementsUrl = elementsUrl;
@@ -51,7 +54,13 @@ export function ComponentOverview({
               // @ts-ignore
               ?.sort((a, b) => a?.weight - b?.weight)
               ?.map((titleBadge, index) => {
-                return <titleBadge.component key={index} componentDescriptor={componentDescriptor} />;
+                return (
+                  <titleBadge.component
+                    key={index}
+                    componentDescriptor={componentDescriptor}
+                    legacyComponentModel={component}
+                  />
+                );
               })}
           </div>
         </div>

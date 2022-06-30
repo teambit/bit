@@ -100,7 +100,9 @@ export class Publisher {
     const idsToPublish = await this.getIdsToPublish(componentIds);
     this.logger.debug(`total ${idsToPublish.length} to publish out of ${componentIds.length}`);
     const componentIdsToPublish = await this.workspace.resolveMultipleComponentIds(idsToPublish);
-    const network = await this.isolator.isolateComponents(componentIdsToPublish);
+    const network = await this.isolator.isolateComponents(componentIdsToPublish, {
+      packageManagerConfigRootDir: this.workspace.path,
+    });
     return network.seedersCapsules;
   }
 

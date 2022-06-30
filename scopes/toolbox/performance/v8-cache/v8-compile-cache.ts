@@ -148,7 +148,7 @@ export class NativeCompileCache {
       // https://nodejs.org/api/vm.html#vm_new_vm_script_code_options
       importModuleDynamically() {
         throw new Error(
-          '[v8-compile-cache] Dynamic imports are currently not supported. See https://git.io/Jge6z for more information. You should call `NativeCompileCache.uninstall()` before using dynamic imports.'
+          '[v8-compile-cache] Dynamic imports are currently not supported. See https://github.com/zertosh/v8-compile-cache/issues/30 for more information. You should call `NativeCompileCache.uninstall()` before using dynamic imports.'
         );
       },
     });

@@ -7,9 +7,8 @@ import * as path from 'path';
 
 import Helper from '../src/e2e-helper/e2e-helper';
 
-const isAppVeyor = process.env.APPVEYOR === 'True';
 const skipRegistryTests = process.env.SKIP_REGISTRY_TESTS === 'True' || process.env.SKIP_REGISTRY_TESTS === 'true';
-export const supportNpmCiRegistryTesting = !isAppVeyor && !skipRegistryTests;
+export const supportNpmCiRegistryTesting = !skipRegistryTests;
 
 /**
  * some features, such as installing dependencies as packages, require npm registry to be set.

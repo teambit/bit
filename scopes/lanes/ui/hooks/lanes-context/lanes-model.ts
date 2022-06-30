@@ -1,6 +1,7 @@
-import { ComponentModel } from '@teambit/component';
+import { ComponentModel, ComponentModelProps } from '@teambit/component';
 import { ScopeModel } from '@teambit/scope.models.scope-model';
 import { ComponentID, ComponentIdObj } from '@teambit/component-id';
+import { affix } from '@teambit/base-ui.utils.string.affix';
 import { pathToRegexp } from 'path-to-regexp';
 /**
  * GQL (lanes/getLanes/components)
@@ -11,61 +12,66 @@ export type LaneComponentQueryResult = {
   head: string;
 };
 /**
- * GQL (lanes/getLanes)
+ * GQL
+ *  lanes/list
+ *  lanes/current
  * Return type of each Lane in a Scope/Workspace
  */
 export type LaneQueryResult = {
-  name: string;
+  id: string;
   remote?: string;
   isMerged: boolean;
-  components: LaneComponentQueryResult[];
+  components: ComponentModelProps[];
+  readmeComponent?: ComponentModelProps;
+};
+/**
+ * GQL
+ * Return type of the lanes query
+ */
+export type LanesQueryResult = {
+  list?: LaneQueryResult[];
+  current?: LaneQueryResult;
 };
 /**
  * GQL (lanes)
  * Return type of the entire /lanes query.
  * Represents All Lanes and Current Lane in Scope/Workspace
  */
-export type LanesQueryResult = {
-  lanes?: {
-    getLanes?: LaneQueryResult[];
-  };
+export type LanesQuery = {
+  lanes?: LanesQueryResult;
 };
+
 export type LanesHost = 'workspace' | 'scope';
-/**
- * Represents a Component on a Lane. Extends ComponentModel and adds a Lane Component URL
- */
-export type LaneComponentModel = { model: ComponentModel; url: string };
+// export type LaneComponentModel = { model: ComponentModel; url: string };
 /**
  * Represents a single Lane in a Workspace/Scope
  */
 export type LaneModel = {
   id: string;
   scope: string;
-  url: string;
   name: string;
   isMerged: boolean | null;
-  components: LaneComponentModel[];
+  components: ComponentModel[];
+  readmeComponent?: ComponentModel;
 };
 /**
  * Props to instantiate a LanesModel
  */
 export type LanesModelProps = {
   lanes?: LaneModel[];
+  viewedLane?: LaneModel;
   currentLane?: LaneModel;
 };
+
 /**
  * Represents the entire Lanes State in a Workspace/Scope
  * Provides helper methods to extract and map Lane information
  * Keeps track of all the lanes and the currently selected lane from the UI
  */
 export class LanesModel {
-  static baseLaneRoute = '/~lane';
+  static lanesPrefix = '~lane';
   static baseLaneComponentRoute = '/~component';
-
-  static laneRouteUrlRegex = `${LanesModel.baseLaneRoute}/:orgId([\\w-]+)?/:scopeId([\\w-]+)/:laneId([\\w-]+)`;
-
-  static laneComponentIdUrlRegex = '[\\w\\/-]*[\\w-]';
-  static laneComponentUrlRegex = `${LanesModel.laneRouteUrlRegex}${LanesModel.baseLaneComponentRoute}/:componentId(${LanesModel.laneComponentIdUrlRegex})`;
+  static lanePath = ':scopeId/:laneId';
 
   static drawer = {
     id: 'LANES',
@@ -73,51 +79,49 @@ export class LanesModel {
     order: 100,
   };
 
-  static regexp = pathToRegexp(LanesModel.laneRouteUrlRegex);
+  private static laneFromPathRegex = pathToRegexp(`${LanesModel.lanesPrefix}/${LanesModel.lanePath}`, undefined, {
+    end: false,
+    start: false,
+  });
 
-  static getLaneIdFromPathname: (pathname: string) => string | undefined = (pathname) => {
-    const path = pathname.includes(LanesModel.baseLaneComponentRoute)
-      ? pathname.split(LanesModel.baseLaneComponentRoute)[0]
-      : pathname;
-    const matches = LanesModel.regexp.exec(path);
+  static getLaneIdFromPathname = (pathname: string): string | undefined => {
+    const matches = LanesModel.laneFromPathRegex.exec(pathname);
     if (!matches) return undefined;
-    const [, orgId, scopeId, laneId] = matches;
-    return `${orgId ? orgId.concat('.').concat(scopeId) : scopeId}/${laneId}`;
+    const [, scopeId, laneId] = matches;
+
+    return `${scopeId}/${laneId}`;
   };
 
-  static getLaneUrl = (laneId: string) => `${LanesModel.baseLaneRoute}/${laneId.replace('.', '/')}`;
+  static getLaneUrl = (laneId: string) => `/${LanesModel.lanesPrefix}/${laneId}`;
 
-  static getLaneComponentUrl = (componentId: ComponentID, laneId: string) =>
-    `${LanesModel.getLaneUrl(laneId)}${LanesModel.baseLaneComponentRoute}/${componentId.fullName}?version=${
-      componentId.version
-    }`;
+  static getLaneComponentUrl = (componentId: ComponentID, laneId: string) => {
+    const laneUrl = LanesModel.getLaneUrl(laneId);
+    const urlSearch = affix('?version=', componentId.version);
 
-  static mapToLaneModel(laneData: LaneQueryResult, currentScope?: ScopeModel): LaneModel {
-    const { name, remote, isMerged } = laneData;
+    return `${laneUrl}${LanesModel.baseLaneComponentRoute}/${componentId.fullName}${urlSearch}`;
+  };
+
+  static mapToLaneModel(laneData: LaneQueryResult, host: string, currentScope?: ScopeModel): LaneModel {
+    const { id: name, remote, isMerged, components, readmeComponent } = laneData;
     const laneName = name;
     const laneScope = remote?.split('/')[0] || currentScope?.name || '';
     const laneId = remote || `${laneScope ? laneScope.concat('/') : ''}${name}`;
 
-    const components = laneData.components.map((component) => {
-      const componentModel = ComponentModel.from({
-        id: { ...component.id, version: component.head, scope: component.id.scope || laneScope },
-        displayName: component.id.name,
-        compositions: [],
-        packageName: '',
-        description: '',
-      });
-      const laneComponentUrl = LanesModel.getLaneComponentUrl(componentModel.id, laneId);
-      return { model: componentModel, url: laneComponentUrl };
-    });
+    const componentModels =
+      components?.map((component) => {
+        const componentModel = ComponentModel.from({ ...component, host });
+        return componentModel;
+      }) || [];
 
-    const laneUrl = LanesModel.getLaneUrl(laneId);
+    const readmeComponentModel = readmeComponent && ComponentModel.from({ ...readmeComponent, host });
+
     return {
       id: laneId,
       name: laneName,
       scope: laneScope,
       isMerged,
-      url: laneUrl,
-      components,
+      components: componentModels,
+      readmeComponent: readmeComponentModel,
     };
   }
 
@@ -136,16 +140,16 @@ export class LanesModel {
   }
 
   static groupByComponentHashAndId(lanes: LaneModel[]): {
-    byHash: Map<string, { lane: LaneModel; component: LaneComponentModel }>;
+    byHash: Map<string, { lane: LaneModel; component: ComponentModel }>;
     byId: Map<string, LaneModel[]>;
   } {
-    const byHash = new Map<string, { lane: LaneModel; component: LaneComponentModel }>();
+    const byHash = new Map<string, { lane: LaneModel; component: ComponentModel }>();
     const byId = new Map<string, LaneModel[]>();
     lanes.forEach((lane) => {
       const { components } = lane;
       components.forEach((component) => {
-        const id = component.model.id.fullName;
-        const version = component.model.id.version as string;
+        const id = component.id.fullName;
+        const version = component.id.version as string;
         byHash.set(version, { lane, component });
         const existing = byId.get(id) || [];
         existing.push(lane);
@@ -155,13 +159,28 @@ export class LanesModel {
     return { byHash, byId };
   }
 
-  static from(lanesData: LanesQueryResult, currentScope?: ScopeModel): LaneModel[] {
-    const lanesResult = lanesData.lanes?.getLanes || [];
-    const lanes = lanesResult.map((result) => LanesModel.mapToLaneModel(result, currentScope));
-    return lanes;
+  static from({
+    data,
+    host,
+    scope,
+    viewedLaneId,
+  }: {
+    data: LanesQuery;
+    host: string;
+    scope?: ScopeModel;
+    viewedLaneId?: string;
+  }): LanesModel {
+    const lanes = data?.lanes?.list?.map((lane) => LanesModel.mapToLaneModel(lane, host, scope)) || [];
+    const currentLane = data.lanes?.current?.id
+      ? lanes.find((lane) => lane.name === data.lanes?.current?.id)
+      : undefined;
+    const lanesModel = new LanesModel({ lanes, currentLane });
+    lanesModel.setViewedLane(viewedLaneId);
+    return lanesModel;
   }
 
-  constructor({ lanes, currentLane }: LanesModelProps) {
+  constructor({ lanes, viewedLane, currentLane }: LanesModelProps) {
+    this.viewedLane = viewedLane;
     this.currentLane = currentLane;
     this.lanes = lanes || [];
     this.lanesByScope = LanesModel.groupByScope(this.lanes);
@@ -171,21 +190,29 @@ export class LanesModel {
   }
 
   readonly lanesByScope: Map<string, LaneModel[]>;
-  readonly lanebyComponentHash: Map<string, { lane: LaneModel; component: LaneComponentModel }>;
+  readonly lanebyComponentHash: Map<string, { lane: LaneModel; component: ComponentModel }>;
   readonly lanesByComponentId: Map<string, LaneModel[]>;
 
-  readonly currentLane?: LaneModel;
+  viewedLane?: LaneModel;
+  currentLane?: LaneModel;
   readonly lanes: LaneModel[];
 
-  isInCurrentLane = (componentId: ComponentID) =>
-    this.currentLane?.components.some((comp) => comp.model.id.name === componentId.name);
+  isInViewedLane = (componentId: ComponentID) =>
+    this.viewedLane?.components.some((comp) => comp.id.name === componentId.name);
 
   getLaneComponentUrlByVersion = (version?: string) => {
     if (!version) return '';
     const componentAndLane = this.lanebyComponentHash.get(version);
     if (!componentAndLane) return '';
-    return LanesModel.getLaneComponentUrl(componentAndLane.component.model.id, componentAndLane.lane.id);
+    return LanesModel.getLaneComponentUrl(componentAndLane.component.id, componentAndLane.lane.id);
   };
 
   getLanesByComponentId = (componentId: ComponentID) => this.lanesByComponentId.get(componentId.fullName);
+  setViewedLane = (viewedLaneId?: string) => {
+    this.viewedLane = this.lanes.find((lane) => lane.id === viewedLaneId);
+  };
+  resolveComponent = (fullName: string, laneId?: string) =>
+    ((laneId && this.lanes.find((lane) => lane.id === laneId)) || this.viewedLane)?.components.find(
+      (component) => component.id.fullName === fullName
+    );
 }

@@ -42,7 +42,7 @@ export class LanesDrawer implements DrawerType {
 
   Context = ({ children }) => {
     const lanesContext = useLanesContext();
-    const isCollapsed = !lanesContext?.currentLane;
+    const isCollapsed = !lanesContext?.viewedLane;
     const [collapsed, setCollapsed] = useState(isCollapsed);
     return (
       <LaneTreeContext.Provider value={{ collapsed, setCollapsed, canCollapse: this.props.showScope }}>

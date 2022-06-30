@@ -10,17 +10,17 @@ describe('scope with a symlink object reference to a non-exist component', funct
   let helper: Helper;
   before(() => {
     helper = new Helper();
-    helper.command.setFeatures('legacy-workspace-config');
   });
   after(() => {
     helper.scopeHelper.destroy();
   });
   before(() => {
-    helper.scopeHelper.setNewLocalAndRemoteScopes();
+    helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+    helper.bitJsonc.setupDefault();
     helper.fixtures.createComponentBarFoo();
-    helper.fixtures.addComponentBarFoo();
-    helper.command.tagAllComponents();
-    helper.command.exportAllComponents();
+    helper.fixtures.addComponentBarFooAsDir();
+    helper.command.tagAllWithoutBuild();
+    helper.command.export();
 
     // intermediate step, make sure, the local scope has both, the Symlink and ModelComponent objects
     const scope = helper.command.catScope(true);
@@ -33,7 +33,7 @@ describe('scope with a symlink object reference to a non-exist component', funct
     // delete manually the modelComponent object. there is no other known way how to get a scope
     // with only symlink without the component.
     const hash = modelComponent.hash;
-    helper.fs.deletePath(`.bit/objects/${hash.substr(0, 2)}/${hash.substr(2)}`);
+    helper.fs.deletePath(`.bit/objects/${hash.slice(0, 2)}/${hash.slice(2)}`);
     const scopeAfterDelete = helper.command.catScope(true);
     expect(scopeAfterDelete).to.have.lengthOf(1);
 
@@ -43,12 +43,6 @@ describe('scope with a symlink object reference to a non-exist component', funct
   });
   it('bit import should throw a descriptive error', () => {
     const output = helper.general.runWithTryCatch('bit import bar/foo');
-    expect(output).to.have.string('error: found a symlink object "bar/foo" that references to a non-exist component');
-  });
-  it('bit tag should throw a descriptive error', () => {
-    helper.bitMap.delete();
-    helper.fixtures.addComponentBarFoo();
-    const output = helper.general.runWithTryCatch('bit tag -a');
     expect(output).to.have.string('error: found a symlink object "bar/foo" that references to a non-exist component');
   });
   it('bit doctor should report this as an issue', () => {

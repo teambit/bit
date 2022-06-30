@@ -7,8 +7,13 @@ import { reactHook } from './templates/react-hook';
 import { reactContext } from './templates/react-context';
 import { reactAppTemplate } from './templates/react-app';
 import { reactWorkspaceTemplate } from './templates/react-workspace';
+import { reactWorkspaceDesignSystemTemplate } from './templates/react-workspace-design-system';
+import { reactWorkspaceWikiTemplate } from './templates/react-workspace-wiki';
+import { reactWorkspaceAnalyticsTemplate } from './templates/react-workspace-analytics';
+import { reactWorkspaceDataFetchingTemplate } from './templates/react-workspace-data-fetching';
 import { reactWorkspaceAppTemplate } from './templates/react-workspace-app';
 import { reactWorkspaceLibTemplate } from './templates/react-workspace-lib';
+import { reactWorkspaceBlogTemplate } from './templates/react-workspace-blog';
 
 export const componentTemplates: ComponentTemplate[] = [
   reactComponent,
@@ -26,4 +31,9 @@ export const workspaceTemplates: WorkspaceTemplate[] = [
   reactWorkspaceAppTemplate,
   reactWorkspaceLibTemplate,
   deprecatedReactWorkspaceTemplate,
+  reactWorkspaceDesignSystemTemplate,
+  reactWorkspaceWikiTemplate,
+  reactWorkspaceAnalyticsTemplate,
+  reactWorkspaceDataFetchingTemplate,
+  reactWorkspaceBlogTemplate,
 ];

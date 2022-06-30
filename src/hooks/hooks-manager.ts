@@ -195,7 +195,7 @@ function _stripHeaders(headers) {
   const res = R.clone(headers);
   if (res.context && res.context.pubSshKey) {
     const key = res.context.pubSshKey;
-    res.context.pubSshKey = `last 70 characters: ${key.substr(key.length - 70)}`;
+    res.context.pubSshKey = `last 70 characters: ${key.slice(key.length - 70)}`;
   }
   return res;
 }

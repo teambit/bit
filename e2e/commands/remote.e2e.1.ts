@@ -9,14 +9,13 @@ describe('bit remote command', function () {
   let helper: Helper;
   before(() => {
     helper = new Helper();
-    helper.command.setFeatures('legacy-workspace-config');
   });
   after(() => {
     helper.scopeHelper.destroy();
   });
   describe('adding a global remote', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitLocalScopeHarmony();
       helper.scopeHelper.reInitRemoteScope();
       helper.command.runCmd(`bit remote add file://${helper.scopes.remotePath} --global`);
     });
@@ -25,13 +24,13 @@ describe('bit remote command', function () {
       expect(output).to.have.string(helper.scopes.remote);
     });
     it('should be shown from any other workspace as well', () => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitLocalScopeHarmony();
       const output = helper.command.runCmd('bit remote');
       expect(output).to.have.string(helper.scopes.remote);
     });
     describe('deleting remote', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitLocalScopeHarmony();
       });
       it('deleting a non-exist remote should throw an error', () => {
         const output = helper.general.runWithTryCatch('bit remote del non-exist-remote');
@@ -54,7 +53,7 @@ describe('bit remote command', function () {
   });
   describe('adding a local remote', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitLocalScopeHarmony();
       helper.scopeHelper.reInitRemoteScope();
       helper.command.runCmd(`bit remote add file://${helper.scopes.remotePath}`);
     });
@@ -63,13 +62,13 @@ describe('bit remote command', function () {
       expect(output).to.have.string(helper.scopes.remote);
     });
     it('should not be shown from other workspace', () => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitLocalScopeHarmony();
       const output = helper.command.runCmd('bit remote');
       expect(output).to.not.have.string(helper.scopes.remote);
     });
     describe('deleting remote', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitLocalScopeHarmony();
         helper.command.runCmd(`bit remote add file://${helper.scopes.remotePath}`);
       });
       it('deleting the remote with "--global" flag should throw an error', () => {

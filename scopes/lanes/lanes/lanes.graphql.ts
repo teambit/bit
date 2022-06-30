@@ -1,22 +1,13 @@
 import { Schema } from '@teambit/graphql';
+import { LaneData } from '@teambit/legacy/dist/scope/lanes/lanes';
 import gql from 'graphql-tag';
+import { flatten, slice } from 'lodash';
+
 import { LanesMain } from './lanes.main.runtime';
 
-export function lanesSchema(lanesMain: LanesMain): Schema {
+export function lanesSchema(lanesMainRuntime: LanesMain): Schema {
   return {
     typeDefs: gql`
-      type CompLaneData {
-        id: ComponentID!
-        head: String!
-      }
-
-      type LanesData {
-        name: String!
-        components: [CompLaneData]
-        isMerged: Boolean
-        remote: String
-      }
-
       type FileDiff {
         filePath: String!
         diffOutput: String
@@ -45,11 +36,20 @@ export function lanesSchema(lanesMain: LanesMain): Schema {
         color: Boolean
       }
 
+      type Lane {
+        id: String!
+        isMerged: Boolean
+        remote: String
+        components(offset: Int, limit: Int): [Component!]!
+        readmeComponent: Component
+      }
+
+      # Lane API
       type Lanes {
-        getLanes: [LanesData]
-        getLaneByName(name: String): LanesData
-        getCurrentLaneName: String
-        getDiff(values: [String], options: DiffOptions): GetDiffResult
+        id: String!
+        list(ids: [String!], offset: Int, limit: Int): [Lane!]!
+        diff(from: String!, to: String!, options: DiffOptions): GetDiffResult
+        current: Lane
       }
 
       type Query {
@@ -58,44 +58,58 @@ export function lanesSchema(lanesMain: LanesMain): Schema {
     `,
     resolvers: {
       Lanes: {
-        getLanes: async (lanes: LanesMain) => {
-          const lanesResults = await lanes.getLanes({});
-          return lanesResults.map((lane) => ({
-            name: lane.name,
-            components: lane.components.map((component) => ({
-              ...component,
-              /**
-               * make sure the BitId has the version mapped,
-               * otherwise graphql will cache the lane component response across different lanes with the same component id
-               */
-              id: { ...component.id, version: component.head },
-            })),
-            isMerged: Boolean(lane.isMerged),
-            remote: lane.remote,
-          }));
+        // need this for Apollo InMemory Caching
+        id: () => 'lanes',
+        list: async (
+          lanesMain: LanesMain,
+          { ids, limit, offset }: { ids?: string[]; offset?: number; limit?: number }
+        ) => {
+          let lanes: LaneData[] = [];
+
+          if (!ids || ids.length === 0) {
+            lanes = await lanesMain.getLanes({});
+          } else {
+            lanes = flatten(await Promise.all(ids.map((id) => lanesMain.getLanes({ name: id }))));
+          }
+
+          if (limit || offset) {
+            lanes = slice(lanes, offset, limit && limit + (offset || 0));
+          }
+
+          return lanes;
         },
-        getLaneByName: async (lanes: LanesMain, { name }: { name: string }) => {
-          const lanesResults = await lanes.getLanes({ name });
-          const laneResult = lanesResults[0];
-          return {
-            name: laneResult.name,
-            components: laneResult.components,
-            isMerged: Boolean(laneResult.isMerged),
-          };
+        current: async (lanesMain: LanesMain) => {
+          const currentLaneId = lanesMain.getCurrentLane();
+          if (!currentLaneId) return undefined;
+          const [currentLane] = await lanesMain.getLanes({ name: currentLaneId });
+          return currentLane;
         },
-        getCurrentLaneName: (lanes: LanesMain) => {
-          return lanes.getCurrentLane();
-        },
-        getDiff: async (lanes: LanesMain, { values, options }: { values: string[]; options: { color?: boolean } }) => {
-          const getDiffResults = await lanes.getDiff(values, options);
+        diff: async (
+          lanesMain: LanesMain,
+          { from, to, options }: { to: string; from: string; options: { color?: boolean } }
+        ) => {
+          const getDiffResults = await lanesMain.getDiff([from, to], options);
           return {
             ...getDiffResults,
             compsWithDiff: getDiffResults.compsWithDiff.map((item) => ({ ...item, id: item.id.toString() })),
           };
         },
       },
+      Lane: {
+        id: (lane: LaneData) => lane.name,
+        isMerged: (lane: LaneData) => lane.isMerged,
+        remote: (lane: LaneData) => lane.remote,
+        components: async (lane: LaneData) => {
+          const laneComponents = await lanesMainRuntime.getLaneComponentModels(lane);
+          return laneComponents;
+        },
+        readmeComponent: async (lane: LaneData) => {
+          const laneReadmeComponent = await lanesMainRuntime.getLaneReadmeComponent(lane);
+          return laneReadmeComponent;
+        },
+      },
       Query: {
-        lanes: () => lanesMain,
+        lanes: () => lanesMainRuntime,
       },
     },
   };

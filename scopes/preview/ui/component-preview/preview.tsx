@@ -45,13 +45,15 @@ export function ComponentPreview({
   queryParams,
   pubsub = true,
   fullContentHeight = false,
+  style,
   ...rest
 }: ComponentPreviewProps) {
   const [iframeRef, iframeHeight] = useIframeContentHeight({ skip: !fullContentHeight });
+  // @ts-ignore (https://github.com/frenic/csstype/issues/156)
+  const height = iframeHeight || style?.height;
   usePubSubIframe(pubsub ? iframeRef : undefined);
 
   const url = toPreviewUrl(component, previewName, queryParams);
-  return (
-    <iframe {...rest} ref={iframeRef} style={{ ...rest.style, height: iframeHeight || rest.style?.height }} src={url} />
-  );
+
+  return <iframe {...rest} ref={iframeRef} style={{ ...style, height }} src={url} />;
 }

@@ -16,7 +16,7 @@ describe('artifacts storage resolver', function () {
     // helper.bitJsonc.setPackageManager();
     envName = helper.env.setCustomEnv('elements-storage-resolver-env');
     envId = `${helper.scopes.remote}/${envName}`;
-    helper.fixtures.populateComponents(1);
+    helper.fixtures.populateComponents(1, undefined, undefined, undefined, true);
     helper.extensions.addExtensionToVariant('*', envId);
     helper.command.compile();
     helper.command.tagAllComponents();
@@ -46,19 +46,19 @@ describe('artifacts storage resolver', function () {
         expect(url).to.equal(`http://fake-url/${file.relativePath}`);
       });
     });
-  });
-  describe('store url from storage resolver after import', () => {
-    before(() => {
-      helper.scopeHelper.reInitLocalScopeHarmony();
-      helper.scopeHelper.addRemoteScope();
-      helper.command.importComponent('comp1');
-    });
-    it('should store the urls for the artifacts', () => {
-      const comp1 = helper.command.catComponent(`${helper.scopes.remote}/comp1@latest`, helper.scopes.remotePath);
-      const files = getElementsArtifactsFromModel(comp1);
-      files.forEach((file) => {
-        const url = file.url;
-        expect(url).to.equal(`http://fake-url/${file.relativePath}`);
+    describe('store url from storage resolver after import', () => {
+      before(() => {
+        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.scopeHelper.addRemoteScope();
+        helper.command.importComponent('comp1');
+      });
+      it('should store the urls for the artifacts', () => {
+        const comp1 = helper.command.catComponent(`${helper.scopes.remote}/comp1@latest`, helper.scopes.remotePath);
+        const files = getElementsArtifactsFromModel(comp1);
+        files.forEach((file) => {
+          const url = file.url;
+          expect(url).to.equal(`http://fake-url/${file.relativePath}`);
+        });
       });
     });
   });

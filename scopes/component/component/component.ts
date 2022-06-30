@@ -168,9 +168,7 @@ export class Component {
    * determines whether this component is modified in the workspace.
    */
   isModified(): Promise<boolean> {
-    if (!this.head) return Promise.resolve(true);
-    return Promise.resolve(this.state.isModified);
-    // return Promise.resolve(this.state.hash !== this.head.hash);
+    return this.factory.isModified(this);
   }
 
   /**

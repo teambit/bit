@@ -7,14 +7,13 @@ import {
 import type { DebugDependencies } from '../../../consumer/component/dependencies/dependency-resolver/dependencies-resolver';
 import type { OverridesDependenciesData } from '../../../consumer/component/dependencies/dependency-resolver/dependencies-data';
 import ConsumerNotFound from '../../../consumer/exceptions/consumer-not-found';
-import DependencyGraph, { DependenciesInfo } from '../../../scope/graph/scope-graph';
-import { IdNotFoundInGraph } from '../../../scope/exceptions/id-not-found-in-graph';
+import DependencyGraph from '../../../scope/graph/scope-graph';
 
 export type DependenciesResultsDebug = DebugDependencies & OverridesDependenciesData & { coreAspects: string[] };
 
 export type DependenciesResults = {
-  scopeDependencies: DependenciesInfo[];
-  workspaceDependencies: DependenciesInfo[];
+  scopeGraph: DependencyGraph;
+  workspaceGraph: DependencyGraph;
   id: BitId;
 };
 
@@ -35,17 +34,9 @@ export async function dependencies(
   }
   const scopeGraph = await DependencyGraph.buildGraphFromScope(consumer.scope);
   const scopeDependencyGraph = new DependencyGraph(scopeGraph);
-  const getScopeDependencies = () => {
-    try {
-      return scopeDependencyGraph.getDependenciesInfo(bitId);
-    } catch (err) {
-      if (err instanceof IdNotFoundInGraph) return []; // component might be new
-      throw err;
-    }
-  };
-  const scopeDependencies = getScopeDependencies();
+
   const workspaceGraph = await DependencyGraph.buildGraphFromWorkspace(consumer, true);
   const workspaceDependencyGraph = new DependencyGraph(workspaceGraph);
-  const workspaceDependencies = workspaceDependencyGraph.getDependenciesInfo(bitId);
-  return { scopeDependencies, workspaceDependencies, id: bitId };
+
+  return { scopeGraph: scopeDependencyGraph, workspaceGraph: workspaceDependencyGraph, id: bitId };
 }

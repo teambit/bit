@@ -1,5 +1,6 @@
 import { compact, omit } from 'lodash';
 import { join } from 'path';
+import fs from 'fs-extra';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import ComponentAspect, { Component, ComponentMain, Snap } from '@teambit/component';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
@@ -14,10 +15,12 @@ import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-i
 import { BuilderMain, BuilderAspect } from '@teambit/builder';
 import { CloneConfig } from '@teambit/new-component-helper';
 import { BitError } from '@teambit/bit-error';
+import { IssuesClasses } from '@teambit/component-issues';
 import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 import { GraphqlMain, GraphqlAspect } from '@teambit/graphql';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
-
+import { getMaxSizeForComponents, InMemoryCache } from '@teambit/legacy/dist/cache/in-memory-cache';
+import { createInMemoryCache } from '@teambit/legacy/dist/cache/cache-factory';
 import { Packer, PackOptions, PackResult, TAR_FILE_ARTIFACT_NAME } from './packer';
 // import { BitCli as CLI, BitCliExt as CLIExtension } from '@teambit/cli';
 import { PackCmd } from './pack.cmd';
@@ -73,14 +76,14 @@ export type ComponentPkgExtensionData = {
   checksum?: string;
 };
 
-type ComponentPackageManifest = {
+export type ComponentPackageManifest = {
   name: string;
   distTags: Record<string, string>;
   externalRegistry: boolean;
   versions: VersionPackageManifest[];
 };
 
-type VersionPackageManifest = {
+export type VersionPackageManifest = {
   [key: string]: any;
   dist: {
     tarball: string;
@@ -160,6 +163,7 @@ export class PkgMain implements CloneConfig {
     if (workspace) {
       // workspace.onComponentLoad(pkg.mergePackageJsonProps.bind(pkg));
       workspace.onComponentLoad(async (component) => {
+        await pkg.addMissingLinksFromNodeModulesIssue(component);
         const data = await pkg.mergePackageJsonProps(component);
         return {
           packageJsonModification: data,
@@ -197,13 +201,21 @@ export class PkgMain implements CloneConfig {
     return relativePath;
   }
 
-  /**
-   *Creates an instance of PkgExtension.
-   * @param {PkgExtensionConfig} config
-   * @param {PackageJsonPropsRegistry} packageJsonPropsRegistry
-   * @param {Packer} packer
-   * @memberof PkgExtension
-   */
+  isModulePathExists(component: Component): boolean {
+    const packageDir = this.getModulePath(component, { absPath: true });
+    return fs.existsSync(packageDir);
+  }
+
+  async addMissingLinksFromNodeModulesIssue(component: Component) {
+    const exist = this.isModulePathExists(component);
+    if (!exist) {
+      component.state.issues.getOrCreate(IssuesClasses.MissingLinksFromNodeModulesToSrc).data = true;
+    }
+    // we don't want to add any data to the compiler aspect, only to add issues on the component
+    return undefined;
+  }
+
+  private manifestCache: InMemoryCache<{ head: string; manifest: VersionPackageManifest[] }>; // cache components manifests
   constructor(
     /**
      * logger extension
@@ -239,7 +251,9 @@ export class PkgMain implements CloneConfig {
      * keep it as public. external env might want to register it to the snap pipeline
      */
     public publishTask: PublishTask
-  ) {}
+  ) {
+    this.manifestCache = createInMemoryCache({ maxSize: getMaxSizeForComponents() });
+  }
 
   /**
    * register changes in the package.json
@@ -327,15 +341,29 @@ export class PkgMain implements CloneConfig {
       latest: latestVersion,
       ...preReleaseLatestTags,
     };
+    const versionsFromCache = this.manifestCache.get(name);
+    const getVersions = async (): Promise<VersionPackageManifest[]> => {
+      const headHash = component.head?.hash;
+      if (!headHash) throw new BitError(`unable to get manifest for "${name}", the head is empty`);
+      if (versionsFromCache) {
+        if (versionsFromCache.head !== headHash) this.manifestCache.delete(name);
+        else {
+          return versionsFromCache.manifest;
+        }
+      }
+      const versions = await this.getAllSnapsManifests(component);
+      const versionsWithoutEmpty = compact(versions);
+      this.manifestCache.set(name, { head: headHash, manifest: versionsWithoutEmpty });
+      return versionsWithoutEmpty;
+    };
 
-    const versions = await this.getAllSnapsManifests(component);
-    const versionsWithoutEmpty: VersionPackageManifest[] = compact(versions);
+    const versions = await getVersions();
     const externalRegistry = this.isPublishedToExternalRegistry(component);
     return {
       name,
       distTags,
       externalRegistry,
-      versions: versionsWithoutEmpty,
+      versions,
     };
   }
 
@@ -374,13 +402,21 @@ export class PkgMain implements CloneConfig {
 
   async getSnapManifest(component: Component, snap: Snap): Promise<VersionPackageManifest | undefined> {
     const idWithCorrectVersion = component.id.changeVersion(snap.hash);
-    // const state = await this.scope.getState(component.id, tag.hash);
-    // const currentExtension = state.aspects.get(PkgAspect.id);
-    const updatedComponent = await this.componentAspect.getHost().get(idWithCorrectVersion, true);
-    if (!updatedComponent) {
-      throw new BitError(`snap ${snap.hash} for component ${component.id.toString()} is missing`);
-    }
-    const currentData = this.getComponentBuildData(updatedComponent);
+
+    // @todo: this is a hack. see below the right way to do it.
+    const version = await this.scope.legacyScope.getVersionInstance(idWithCorrectVersion._legacy);
+    const builderData = version.extensions.findCoreExtension(BuilderAspect.id)?.data?.aspectsData;
+    const currentData = builderData?.find((a) => a.aspectId === PkgAspect.id)?.data;
+
+    // @todo: this is the proper way to communicate with the builder aspect. however, getting
+    // the entire Component for each one of the snaps is terrible in terms of the performance.
+
+    // const updatedComponent = await this.componentAspect.getHost().get(idWithCorrectVersion, true);
+    // if (!updatedComponent) {
+    //   throw new BitError(`snap ${snap.hash} for component ${component.id.toString()} is missing`);
+    // }
+    // const currentData = this.getComponentBuildData(updatedComponent);
+
     // If for some reason the version has no package.json manifest, return undefined
     if (!currentData?.pkgJson) {
       return undefined;

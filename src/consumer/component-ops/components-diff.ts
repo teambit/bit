@@ -188,7 +188,7 @@ async function getOneFileDiff(
   const regExpA = /--- ["]?a.*\n/; // exact "---", follow by a or "a (for Windows) then \n
   const regExpB = /\+\+\+ ["]?b.*\n/; // exact "+++", follow by b or "b (for Windows) then \n
   return fileDiff
-    .substr(diffStart)
+    .slice(diffStart)
     .replace(regExpA, `--- ${fileName} (${fileALabel})\n`)
     .replace(regExpB, `+++ ${fileName} (${fileBLabel})\n`);
 }

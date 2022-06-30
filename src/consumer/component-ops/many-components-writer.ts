@@ -47,7 +47,6 @@ export interface ManyComponentsWriterParams {
   verbose?: boolean;
   installProdPackagesOnly?: boolean;
   excludeRegistryPrefix?: boolean;
-  saveOnLane?: boolean;
   isLegacy?: boolean;
   applyPackageJsonTransformers?: boolean;
   resetConfig?: boolean;
@@ -88,7 +87,6 @@ export default class ManyComponentsWriter {
   isolated: boolean; // a preparation for the capsule feature
   bitMap: BitMap;
   basePath?: string;
-  saveOnLane?: boolean; // whether a component belongs to a lane, needed for populating `onLanesOnly` prop of .bitmap
   packageManager?: string;
   isLegacy?: boolean;
   applyPackageJsonTransformers?: boolean;
@@ -116,7 +114,6 @@ export default class ManyComponentsWriter {
     this.dependenciesIdsCache = {};
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.bitMap = this.consumer ? this.consumer.bitMap : new BitMap(undefined, undefined, undefined, params.isLegacy);
-    this.saveOnLane = params.saveOnLane;
     this.packageManager = params.packageManager;
     this.isLegacy = this.consumer ? this.consumer.isLegacy : params.isLegacy;
     this.applyPackageJsonTransformers = params.applyPackageJsonTransformers ?? true;
@@ -136,7 +133,9 @@ export default class ManyComponentsWriter {
   async writeAll() {
     await this._writeComponentsAndDependencies();
     await this._installPackages();
-    await this._writeLinks();
+    if (this.consumer?.isLegacy) {
+      await this._writeLinks();
+    }
     logger.debug('ManyComponentsWriter, Done!');
   }
   async _writeComponentsAndDependencies() {
@@ -156,7 +155,7 @@ export default class ManyComponentsWriter {
     }
     await this._installPackagesIfNeeded();
   }
-  async _writeLinks() {
+  private async _writeLinks() {
     logger.debug('ManyComponentsWriter, _writeLinks');
     const links: DataToPersist = await this._getAllLinks();
     if (this.basePath) {
@@ -273,7 +272,6 @@ export default class ManyComponentsWriter {
       return {
         origin,
         existingComponentMap: componentMap,
-        saveOnLane: this.saveOnLane,
       };
     };
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

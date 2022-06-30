@@ -10,7 +10,7 @@ export type RelativeComponentsAuthoredEntry = {
   };
 };
 
-export class relativeComponentsAuthored extends ComponentIssue {
+export class RelativeComponentsAuthored extends ComponentIssue {
   description = 'components with relative import statements found';
   solution = 'replace to module paths or use "bit link --rewire" to replace';
   data: { [fileName: string]: RelativeComponentsAuthoredEntry[] } = {};

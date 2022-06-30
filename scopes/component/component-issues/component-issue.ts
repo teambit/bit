@@ -12,6 +12,7 @@ export class ComponentIssue {
   data: any;
   isTagBlocker = true; // if true, it stops the tag process and shows the issue
   isCacheBlocker = true; // if true, it doesn't cache the component in the filesystem
+  isLegacyIssue = false;
   formatDataFunction: FormatIssueFunc = componentIssueToString;
   get descriptionWithSolution() {
     const solution = this.solution ? ` (${this.solution})` : '';

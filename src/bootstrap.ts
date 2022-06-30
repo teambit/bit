@@ -11,7 +11,7 @@ import HooksManager from './hooks';
 import { printWarning } from './logger/logger';
 import loader from './cli/loader';
 
-const MINIMUM_NODE_VERSION = '12.22.0';
+const SUPPORTED_NODE_VERSIONS = '>=12.22.0 <17.0.0';
 
 process.env.MEMFS_DONT_WARN = 'true'; // suppress fs experimental warnings from memfs
 
@@ -47,12 +47,13 @@ async function ensureDirectories() {
 
 function verifyNodeVersionCompatibility() {
   const nodeVersion = process.versions.node.split('-')[0];
-  const isCompatible = semver.satisfies(nodeVersion, `>=${MINIMUM_NODE_VERSION}`);
+  const isCompatible = semver.satisfies(nodeVersion, SUPPORTED_NODE_VERSIONS);
   if (!isCompatible) {
     // eslint-disable-next-line no-console
     console.log(
       chalk.red(
-        `Node version ${nodeVersion} is not supported, please use Node.js ${MINIMUM_NODE_VERSION} or higher. If you must use legacy versions of Node.js, please use our binary installation methods. https://docs.bit.dev/docs/installation`
+        `Node version ${nodeVersion} is not supported, please use Node.js ${SUPPORTED_NODE_VERSIONS}.
+If you must use legacy versions of Node.js, please use our binary installation methods. https://docs.bit.dev/docs/installation`
       )
     );
     process.exit(1);

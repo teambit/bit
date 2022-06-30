@@ -93,6 +93,68 @@ commands: # reusable commands
       # - run: 'bit config set user.token <<parameters.token>>'
       - run: 'bit config set hub_domain <<parameters.env>>.bit.dev'
       - run: 'bit config set package-manager.cache /home/circleci/package-manager-cache'
+  docker_build_and_push:
+    parameters:
+      docker_build_arg_name:
+        default: 'BASE_IMAGE'
+        type: string
+      docker_build_arg_value:
+        default: 'node:12.22.0'
+        type: string
+      image_name:
+        default: 'bitcli/bit'
+        type: string
+      docker_file_name:
+        default: 'Dockerfile-bit'
+        type: string
+      docker_tag_suffix:
+        # I want this to be something like '-node-<<parameters.node_version>>' but I don't think we can access other params here
+        default: ''
+        type: string
+    steps:
+      - docker_build_internal:
+          image_name: "<<parameters.image_name>>"
+          docker_file_name: "<<parameters.docker_file_name>>"
+          docker_tag_suffix: "<<parameters.docker_tag_suffix>>"
+          docker_build_arg_name: "<<parameters.docker_build_arg_name>>"
+          docker_build_arg_value: "<<parameters.docker_build_arg_value>>"
+      - docker_push:
+          image_name: "<<parameters.image_name>>"
+          docker_tag_suffix: "<<parameters.docker_tag_suffix>>"
+
+  docker_build_internal:
+    parameters:
+      docker_build_arg_name:
+        default: 'BASE_IMAGE'
+        type: string
+      docker_build_arg_value:
+        default: 'node:12.22.0'
+        type: string
+      image_name:
+        default: 'bitcli/bit'
+        type: string
+      docker_file_name:
+        default: 'Dockerfile-bit'
+        type: string
+      docker_tag_suffix:
+        default: ""
+        type: string
+    steps:
+      - run: cd bit/scripts && docker build -f ./docker-teambit-bit/<<parameters.docker_file_name>> --build-arg <<parameters.docker_build_arg_name>>=<<parameters.docker_build_arg_value>> -t <<parameters.image_name>>:`npm show @teambit/bit version`<<parameters.docker_tag_suffix>> .
+      - run: cd bit/scripts && docker build -f ./docker-teambit-bit/<<parameters.docker_file_name>> --build-arg <<parameters.docker_build_arg_name>>=<<parameters.docker_build_arg_value>> -t <<parameters.image_name>>:latest<<parameters.docker_tag_suffix>> .
+
+  docker_push:
+    parameters:
+      image_name:
+        default: 'bitcli/bit'
+        type: string
+      docker_tag_suffix:
+        default: ''
+        type: string
+    steps:
+      - run: echo "$DOCKER_PASS" | docker login --username $DOCKER_USER --password-stdin
+      - run: cd bit && docker push <<parameters.image_name>>:`npm show @teambit/bit version`<<parameters.docker_tag_suffix>>
+      - run: cd bit && docker push <<parameters.image_name>>:latest<<parameters.docker_tag_suffix>>
 
   bit_global_for_npm:
     steps:
@@ -154,7 +216,8 @@ jobs:
             - bit
 
   symphony_docker_build:
-    machine: true
+    machine:
+      image: ubuntu-2004:202111-02
     steps:
       - attach_workspace:
           at: ./
@@ -168,37 +231,106 @@ jobs:
       - run: cd bit && docker push bitcli/bit-symphony:latest
 
   docker_build:
-    machine: true
+    machine:
+      image: ubuntu-2004:202111-02
     steps:
       - attach_workspace:
           at: ./
-      - run: echo "$DOCKER_PASS" | docker login --username $DOCKER_USER --password-stdin
-      - run: cd bit/scripts && docker build -f ./docker-teambit-bit/Dockerfile-bit -t bitcli/bit:`npm show @teambit/bit version` .
-      - run: cd bit/scripts && docker build -f ./docker-teambit-bit/Dockerfile-bit -t bitcli/bit:latest .
-      - run: cd bit && docker push bitcli/bit:`npm show @teambit/bit version`
-      - run: cd bit && docker push bitcli/bit:latest
+      - docker_build_and_push
+
+  docker_build_node_14:
+    machine:
+      image: ubuntu-2004:202111-02
+    steps:
+      - attach_workspace:
+          at: ./
+      - docker_build_and_push:
+          docker_build_arg_value: "node:14.19.1"
+          docker_tag_suffix: "-node-14.19.1"
+
+  docker_build_node_16:
+    machine:
+      image: ubuntu-2004:202111-02
+    steps:
+      - attach_workspace:
+          at: ./
+      - docker_build_and_push:
+          docker_build_arg_value: "node:16.15.0"
+          docker_tag_suffix: "-node-16.15.0"
 
   docker_non_root_build:
-    machine: true
+    machine:
+      image: ubuntu-2004:202111-02
     steps:
       - attach_workspace:
           at: ./
-      - run: echo "$DOCKER_PASS" | docker login --username $DOCKER_USER --password-stdin
-      - run: cd bit/scripts && docker build -f ./docker-teambit-bit/Dockerfile-bit-non-root -t bitcli/bit-non-root:`npm show @teambit/bit version` .
-      - run: cd bit/scripts && docker build -f ./docker-teambit-bit/Dockerfile-bit-non-root -t bitcli/bit-non-root:latest .
-      - run: cd bit && docker push bitcli/bit-non-root:`npm show @teambit/bit version`
-      - run: cd bit && docker push bitcli/bit-non-root:latest
+      - docker_build_and_push:
+          image_name: "bitcli/bit-non-root"
+          docker_file_name: "Dockerfile-bit-non-root"
+
+  docker_non_root_build_node_14:
+    machine:
+      image: ubuntu-2004:202111-02
+    steps:
+      - attach_workspace:
+          at: ./
+      - docker_build_and_push:
+          docker_build_arg_value: "node:14.19.1"
+          image_name: "bitcli/bit-non-root"
+          docker_file_name: "Dockerfile-bit-non-root"
+          docker_tag_suffix: "-node-14.19.1"
+
+
+  docker_non_root_build_node_16:
+    machine:
+      image: ubuntu-2004:202111-02
+    steps:
+      - attach_workspace:
+          at: ./
+      - docker_build_and_push:
+          docker_build_arg_value: "node:16.15.0"
+          image_name: "bitcli/bit-non-root"
+          docker_file_name: "Dockerfile-bit-non-root"
+          docker_tag_suffix: "-node-16.15.0"
 
   server_docker_build:
-    machine: true
+    machine:
+      image: ubuntu-2004:202111-02
     steps:
       - attach_workspace:
           at: ./
-      - run: echo "$DOCKER_PASS" | docker login --username $DOCKER_USER --password-stdin
-      - run: cd bit/scripts && docker build -f ./docker-teambit-bit/Dockerfile-bit-server -t bitcli/bit-server:`npm show @teambit/bit version` --build-arg BIT_VERSION=`npm show @teambit/bit version` .
-      - run: cd bit/scripts && docker build -f ./docker-teambit-bit/Dockerfile-bit-server -t bitcli/bit-server:latest .
-      - run: cd bit && docker push bitcli/bit-server:`npm show @teambit/bit version`
-      - run: cd bit && docker push bitcli/bit-server:latest
+      - docker_build_and_push:
+          docker_build_arg_name: "BIT_IMAGE"
+          docker_build_arg_value: "latest"
+          image_name: "bitcli/bit-server"
+          docker_file_name: "Dockerfile-bit-server"
+          docker_tag_suffix: ""
+
+  server_docker_build_node_14:
+    machine:
+      image: ubuntu-2004:202111-02
+    steps:
+      - attach_workspace:
+          at: ./
+      - docker_build_and_push:
+          docker_build_arg_name: "BIT_IMAGE"
+          docker_build_arg_value: "`npm show @teambit/bit version`-node-14.19.1"
+          image_name: "bitcli/bit-server"
+          docker_file_name: "Dockerfile-bit-server"
+          docker_tag_suffix: "-node-14.19.1"
+
+  server_docker_build_node_16:
+    machine:
+      image: ubuntu-2004:202111-02
+    steps:
+      - attach_workspace:
+          at: ./
+      - docker_build_and_push:
+          docker_build_arg_name: "BIT_IMAGE"
+          docker_build_arg_value: "`npm show @teambit/bit version`-node-16.15.0"
+          image_name: "bitcli/bit-server"
+          docker_file_name: "Dockerfile-bit-server"
+          docker_tag_suffix: "-node-16.15.0"
 
   set_ssh_key:
     <<: *defaults
@@ -522,14 +654,14 @@ jobs:
       - install_bvm
       - run: npm view @teambit/bit version > ./version.txt
       - restore_cache:
-          key: v2-linux-bvm-folder-{{ checksum "version.txt" }}
+          key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
       - run: bvm config set DEFAULT_LINK bbit
       # - run: bvm install 0.0.428
       - run: bvm upgrade
       - run: bvm link --verbose
       - run: bbit
       - save_cache:
-          key: v2-linux-bvm-folder-{{ checksum "version.txt" }}
+          key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
           paths:
             - /home/circleci/.bvm
       - run: cd bit && bbit install
@@ -595,7 +727,7 @@ jobs:
       - install_bvm
       - run: npm view @teambit/bit version > ./version.txt
       - restore_cache:
-          key: v2-linux-bvm-folder-{{ checksum "version.txt" }}
+          key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
       - bit_config:
           env: "hub"
       - restore_cache:
@@ -609,10 +741,12 @@ jobs:
           command: echo "//registry.npmjs.org/:_authToken=${npmjsRegistryToken}" >> ~/.npmrc
       - run: cd bit && node scripts/bump-bit-legacy-ver.js
       - run: bvm link
-      - run: cd bit && bbit status
-      # temporarily. otherwise it fails on bit-checkout during Yarn installation with "Error: ENOENT: no such file or directory, chmod '/home/******ci/bit/bit/node_modules/@teambit/legacy/node_modules/@babel/core/node_modules/semver/bin/semver'""
-      - run: cd bit && rm -rf node_modules
-      - run: cd bit && bbit checkout latest --all --skip-npm-install
+      - run: cd bit && bit status
+      - run: cd bit && npm run generate-cli-reference
+      - run: cd bit && npm run generate-cli-reference-json
+      - run: cd bit && bit status # just to make sure that the new cli-reference.mdx file is valid
+      - run: cd bit && bit checkout latest teambit.harmony/content/cli-reference --ours --skip-dependency-installation
+      - run: cd bit && bit checkout latest --all --skip-dependency-installation
       # - run: cd bit && rm -rf node_modules/@teambit/legacy
       # - run: cd bit && bbit checkout latest --all
       # - run: cd bit && npm run link-bit-legacy
@@ -715,15 +849,38 @@ jobs:
       - store_artifacts:
           path: linux
 
+  get_esbuild_arm64:
+    <<: *defaults
+    resource_class: small
+    steps:
+      - run: mkdir esbuild-arm
+      # in order to bring new version of esbuild, you need to install it on m1, tar it, and upload to the bucket
+      # then you can download it here and change the cache name (don't forget to change both save_cache and restore_cache key)
+      - run: cd esbuild-arm && wget https://storage.googleapis.com/bvm.bit.dev/external-assets/esbuild-0.14.29-darwin-arm64.tar.gz
+      # - save_cache:
+      #     key: esbuild-0.14.29-darwin-arm64-v1
+      #     paths:
+      #       - esbuild-arm/esbuild-0.14.29-darwin-arm64.tar.gz
+      - persist_to_workspace:
+          root: .
+          paths:
+            - esbuild-arm
+
   bundle_version_macos:
     <<: *mac_defaults
     steps:
+      - attach_workspace:
+            at: ./
       - run: node -v
       - run: rm -rf /usr/local/bin/yarn
       - run: rm -rf /usr/local/bin/yarnpkg
       - run: npm install --global yarn --force
       - run: yarn cache clean
       - run: yarn -v
+      # - run: mkdir esbuild-arm
+      # - restore_cache:
+      #     key: esbuild-0.14.29-darwin-arm64-v1
+      - run: cd esbuild-arm && tar -xvf esbuild-0.14.29-darwin-arm64.tar.gz
       - run:
           name: set bit.dev registry
           command: npm config set @teambit:registry https://node.bit.dev
@@ -751,12 +908,29 @@ jobs:
       - run:
           name: move to macos folder
           command: mv bit-${BIT_VERSION}.tar.gz macos/bit-${BIT_VERSION}.tar.gz
+      - run:
+          name: create macos-arm64
+          command: mkdir macos-arm64
+      - run: rm -rf bit-${BIT_VERSION}/node_modules/esbuild
+      - run: rm -rf bit-${BIT_VERSION}/node_modules/esbuild-darwin-64
+      - run: cp -r esbuild-arm/node_modules/* bit-${BIT_VERSION}/node_modules
+      - run:
+          name: compress bit arm64
+          command: tar -cvf bit-${BIT_VERSION}.tar.gz bit-${BIT_VERSION}
+      - run:
+          name: move to macos-arm64 folder
+          command: mv bit-${BIT_VERSION}.tar.gz macos-arm64/bit-${BIT_VERSION}.tar.gz
+
+
       - persist_to_workspace:
           root: .
           paths:
             - macos
+            - macos-arm64
       - store_artifacts:
           path: macos
+      - store_artifacts:
+          path: macos-arm64
 
   bundle_version_windows:
     <<: *windows_defaults
@@ -834,6 +1008,9 @@ jobs:
       - run:
           name: Upload tar file (OSX)
           command: gsutil cp macos/bit-${BIT_VERSION}.tar.gz gs://bvm.bit.dev/versions/dev/Darwin/${BIT_VERSION}/bit-${BIT_VERSION}.tar.gz
+      - run:
+          name: Upload tar file (OSX-arm64)
+          command: gsutil cp macos-arm64/bit-${BIT_VERSION}.tar.gz gs://bvm.bit.dev/versions/dev/Darwin-arm64/${BIT_VERSION}/bit-${BIT_VERSION}.tar.gz
 
 
   bit_export:
@@ -863,7 +1040,7 @@ jobs:
           command: cd bit && tar -zcvf objects-after-export.tar .git/bit/objects
       - run: cd bit && git commit -am "bump teambit version to `npm show @teambit/bit version` [skip ci]"
       # git pull first in case another commit entered to master so then the push could work with no errors.
-      - run: cd bit && GIT_MERGE_AUTOEDIT=no git pull origin master
+      - run: cd bit && git config pull.rebase true && GIT_MERGE_AUTOEDIT=no git pull origin master
       # we use master here instead of ${CIRCLE_BRANCH} because we want to support running this from tag (manual nightly) as well
       - run: cd bit && git push origin master
       - store_artifacts:
@@ -1099,7 +1276,7 @@ jobs:
       - run: npm view @teambit/bit version | Out-File -FilePath .\version.txt
       - run: Get-Content -Path .\version.txt
       - restore_cache:
-          key: v1-bvm-folder-{{ checksum "version.txt" }}
+          key: v2-bvm-folder-{{ checksum "version.txt" }}
       - run: 'npm i -g @teambit/bvm'
       - run: 'bvm upgrade'
       - run: 'setx path "%path%;C:\Users\circleci\AppData\Local\.bvm"'
@@ -1107,7 +1284,7 @@ jobs:
       - run: bit -v | Out-File -FilePath .\version.txt
       - run: Get-Content -Path .\version.txt
       - save_cache:
-          key: v1-bvm-folder-{{ checksum "version.txt" }}
+          key: v2-bvm-folder-{{ checksum "version.txt" }}
           paths:
             - C:\Users\circleci\AppData\Local\.bvm
       - persist_to_workspace:
@@ -1132,7 +1309,7 @@ jobs:
       # - restore_cache:
       #     key: bvm-folder-v1
       - restore_cache:
-          key: v1-bvm-folder-{{ checksum "version.txt" }}
+          key: v2-bvm-folder-{{ checksum "version.txt" }}
       # - run: bit -v
       - run: 'setx path "%path%;C:\Users\circleci\AppData\Local\.bvm"'
       - run: bit -v
@@ -1187,7 +1364,7 @@ jobs:
       # - restore_cache:
       #     key: bvm-folder-v1
       - restore_cache:
-          key: v1-bvm-folder-{{ checksum "version.txt" }}
+          key: v2-bvm-folder-{{ checksum "version.txt" }}
       # - run: bit -v
       - run: 'setx path "%path%;C:\Users\circleci\AppData\Local\.bvm"'
       - run: bit -v
@@ -1506,6 +1683,7 @@ workflows:
       - checkout_code
       - set_ssh_key
       - set_npm_registries
+      - get_esbuild_arm64
       - setup_harmony:
           requires:
             - set_npm_registries
@@ -1526,6 +1704,7 @@ workflows:
           <<: *master_only_filter
           requires:
             - bit_tag
+            - get_esbuild_arm64
       - harmony_publish_to_gcloud:
           <<: *master_only_filter
           requires:
@@ -1548,6 +1727,24 @@ workflows:
       - server_docker_build:
           requires:
             - docker_build
+      - docker_build_node_14:
+          requires:
+            - harmony_publish_to_gcloud
+      - docker_non_root_build_node_14:
+          requires:
+            - harmony_publish_to_gcloud
+      - server_docker_build_node_14:
+          requires:
+            - docker_build_node_14
+      - docker_build_node_16:
+          requires:
+            - harmony_publish_to_gcloud
+      - docker_non_root_build_node_16:
+          requires:
+            - harmony_publish_to_gcloud
+      - server_docker_build_node_16:
+          requires:
+            - docker_build_node_16
 
   windows-nightly:
     triggers:
@@ -1603,6 +1800,10 @@ workflows:
           <<: *master_only_filter
           requires:
             - harmony_deploy_approval_job
+      - get_esbuild_arm64:
+          <<: *master_only_filter
+          requires:
+            - harmony_deploy_approval_job
       - set_ssh_key:
           <<: *master_only_filter
           requires:
@@ -1637,6 +1838,7 @@ workflows:
           requires:
             - harmony_deploy_approval_job
             - bit_tag
+            - get_esbuild_arm64
       - harmony_publish_to_gcloud:
           <<: *master_only_filter
           requires:
@@ -1665,19 +1867,102 @@ workflows:
           requires:
             - harmony_deploy_approval_job
             - docker_build
+      - docker_build_node_14:
+          requires:
+            - harmony_deploy_approval_job
+            - harmony_publish_to_gcloud
+      - docker_non_root_build_node_14:
+          requires:
+            - harmony_deploy_approval_job
+            - harmony_publish_to_gcloud
+      - server_docker_build_node_14:
+          requires:
+            - harmony_deploy_approval_job
+            - docker_build_node_14
+      - docker_build_node_16:
+          requires:
+            - harmony_deploy_approval_job
+            - harmony_publish_to_gcloud
+      - docker_non_root_build_node_16:
+          requires:
+            - harmony_deploy_approval_job
+            - harmony_publish_to_gcloud
+      - server_docker_build_node_16:
+          requires:
+            - harmony_deploy_approval_job
+            - docker_build_node_16
+  # uncomment to update esbuild arm64 cache
+  # get_esbuild_arm64_workflow:
+  #   jobs:
+  #     - get_esbuild_arm64:
+  #         filters:
+  #           branches:
+  #             only: circle-esbuild-cache
   # uncomment and change the filter branch name to debug the bvm bundle jobs
   # bvm_bundle_debug:
   #   jobs:
+  #     - checkout_code:
+  #         filters:
+  #           branches:
+  #             only: docker-node16
   #     - bundle_version_linux:
   #         filters:
   #           branches:
-  #             only: bvm-build-from-bit-dev-registry
-      # - bundle_version_windows:
-      #     filters:
-      #       branches:
-      #         only: bvm-build-from-bit-dev-registry1
+  #             only: fix-circle-cache
+  #     - bundle_version_windows:
+  #         filters:
+  #           branches:
+  #             only: fix-circle-cache
+  #     - get_esbuild_arm64:
+  #         filters:
+  #           branches:
+  #             only: fix-circle-cache
   #     - bundle_version_macos:
   #         filters:
   #           branches:
-  #             only: bvm-build-from-bit-dev-registry
+  #             only: fix-circle-cache
+  #         requires:
+  #           - get_esbuild_arm64
+  #     - harmony_publish_to_gcloud:
+  #         filters:
+  #           branches:
+  #             only: fix-circle-cache
+  #         requires:
+  #           - bundle_version_macos
+  #           - bundle_version_linux
+  #           - bundle_version_windows
+      # - docker_build:
+      #     requires:
+      #       - checkout_code
+      #       # - harmony_publish_to_gcloud
+      # - docker_build_node_14:
+      #     requires:
+      #       - checkout_code
+      #       # - harmony_publish_to_gcloud
+      # - docker_build_node_16:
+      #     requires:
+      #       - checkout_code
+      #       # - harmony_publish_to_gcloud
+      # - docker_non_root_build:
+      #     requires:
+      #       - checkout_code
+      #       # - harmony_publish_to_gcloud
+      # - docker_non_root_build_node_14:
+      #     requires:
+      #       - checkout_code
+      #       # - harmony_publish_to_gcloud
+      # - docker_non_root_build_node_16:
+      #     requires:
+      #       - checkout_code
+      #       # - harmony_publish_to_gcloud
+      # - server_docker_build:
+      #     requires:
+      #       - docker_build
+      # - server_docker_build_node_14:
+      #     requires:
+      #       - docker_build_node_14
+      # - server_docker_build_node_16:
+      #     requires:
+      #       - docker_build_node_16
+
 

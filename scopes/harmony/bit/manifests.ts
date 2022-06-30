@@ -61,6 +61,7 @@ import WorkerAspect from '@teambit/worker';
 import { GlobalConfigAspect } from '@teambit/global-config';
 import MultiCompilerAspect from '@teambit/multi-compiler';
 import MDXAspect from '@teambit/mdx';
+import ReadmeAspect from '@teambit/readme';
 import { ApplicationAspect } from '@teambit/application';
 import { UpdateDependenciesAspect } from '@teambit/update-dependencies';
 import { ExportAspect } from '@teambit/export';
@@ -79,6 +80,13 @@ import { MochaAspect } from '@teambit/mocha';
 import { BitCustomAspectAspect } from '@teambit/bit-custom-aspect';
 import { CommunityAspect } from '@teambit/community';
 import { CloudAspect } from '@teambit/cloud';
+import { StatusAspect } from '@teambit/status';
+import { SnappingAspect } from '@teambit/snapping';
+import { MergingAspect } from '@teambit/merging';
+import { IssuesAspect } from '@teambit/issues';
+import { RefactoringAspect } from '@teambit/refactoring';
+import { ComponentCompareAspect } from '@teambit/component-compare';
+import { ListerAspect } from '@teambit/lister';
 import { BitAspect } from './bit.aspect';
 
 export const manifestsMap = {
@@ -93,6 +101,7 @@ export const manifestsMap = {
   [FormatterAspect.id]: FormatterAspect,
   [ComponentAspect.id]: ComponentAspect,
   [MDXAspect.id]: MDXAspect,
+  [ReadmeAspect.id]: ReadmeAspect,
   [PreviewAspect.id]: PreviewAspect,
   [ComponentSizerAspect.id]: ComponentSizerAspect,
   [DocsAspect.id]: DocsAspect,
@@ -160,8 +169,15 @@ export const manifestsMap = {
   [MochaAspect.id]: MochaAspect,
   [BitCustomAspectAspect.id]: BitCustomAspectAspect,
   [DiagnosticAspect.id]: DiagnosticAspect,
+  [StatusAspect.id]: StatusAspect,
   [CommunityAspect.id]: CommunityAspect,
   [CloudAspect.id]: CloudAspect,
+  [SnappingAspect.id]: SnappingAspect,
+  [MergingAspect.id]: MergingAspect,
+  [IssuesAspect.id]: IssuesAspect,
+  [RefactoringAspect.id]: RefactoringAspect,
+  [ComponentCompareAspect.id]: ComponentCompareAspect,
+  [ListerAspect.id]: ListerAspect,
 };
 
 export function isCoreAspect(id: string) {

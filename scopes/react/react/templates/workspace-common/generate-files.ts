@@ -7,6 +7,7 @@ import { styleTypes } from './files/types/style';
 import { eslintConfig } from './files/eslint-config';
 import { tsConfig } from './files/ts-config';
 import { prettierConfig } from './files/prettier-config';
+import { launchJson } from './files/launch-json';
 
 type GeneratedFile = {
   relativePath: string;
@@ -22,6 +23,10 @@ export async function generateFiles(context: WorkspaceContext): Promise<Generate
     {
       relativePath: `.gitignore`,
       content: gitIgnore(),
+    },
+    {
+      relativePath: '.vscode/launch.json',
+      content: launchJson(context),
     },
     {
       relativePath: `README.md`,

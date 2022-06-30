@@ -1,9 +1,9 @@
 import fs from 'fs-extra';
 import path from 'path';
+import { LaneId } from '@teambit/lane-id';
 import { Mutex } from 'async-mutex';
 import { BitId } from '../../bit-id';
 import { PREVIOUS_DEFAULT_LANE, REMOTE_REFS_DIR } from '../../constants';
-import { RemoteLaneId } from '../../lane-id/lane-id';
 import { glob } from '../../utils';
 import { Lane, ModelComponent } from '../models';
 import { LaneComponent } from '../models/lane';
@@ -22,7 +22,7 @@ export default class RemoteLanes {
     this.basePath = path.join(scopePath, REMOTE_REFS_DIR);
     this.remotes = {};
   }
-  async addEntry(remoteLaneId: RemoteLaneId, componentId: BitId, head?: Ref) {
+  async addEntry(remoteLaneId: LaneId, componentId: BitId, head?: Ref) {
     if (!remoteLaneId) throw new TypeError('addEntry expects to get remoteLaneId');
     if (!head) return; // do nothing
     const remoteLane = await this.getRemoteLane(remoteLaneId);
@@ -38,7 +38,7 @@ export default class RemoteLanes {
     }
   }
 
-  async addEntriesFromModelComponents(remoteLaneId: RemoteLaneId, components: ModelComponent[]) {
+  async addEntriesFromModelComponents(remoteLaneId: LaneId, components: ModelComponent[]) {
     const remoteLane = await this.getRemoteLane(remoteLaneId);
     components.forEach((component) => {
       if (!component.remoteHead) return;
@@ -46,7 +46,7 @@ export default class RemoteLanes {
     });
   }
 
-  async getRef(remoteLaneId: RemoteLaneId, bitId: BitId): Promise<Ref | null> {
+  async getRef(remoteLaneId: LaneId, bitId: BitId): Promise<Ref | null> {
     if (!remoteLaneId) throw new TypeError('getEntry expects to get remoteLaneId');
     if (!this.remotes[remoteLaneId.scope] || !this.remotes[remoteLaneId.scope][remoteLaneId.name]) {
       await this.loadRemoteLane(remoteLaneId);
@@ -57,19 +57,19 @@ export default class RemoteLanes {
     return existingComponent.head;
   }
 
-  async getRemoteLane(remoteLaneId: RemoteLaneId): Promise<LaneComponent[]> {
+  async getRemoteLane(remoteLaneId: LaneId): Promise<LaneComponent[]> {
     if (!this.remotes[remoteLaneId.scope] || !this.remotes[remoteLaneId.scope][remoteLaneId.name]) {
       await this.loadRemoteLane(remoteLaneId);
     }
     return this.remotes[remoteLaneId.scope][remoteLaneId.name];
   }
 
-  async getRemoteBitIds(remoteLaneId: RemoteLaneId): Promise<BitId[]> {
+  async getRemoteBitIds(remoteLaneId: LaneId): Promise<BitId[]> {
     const remoteLane = await this.getRemoteLane(remoteLaneId);
     return remoteLane.map((item) => item.id.changeVersion(item.head.toString()));
   }
 
-  async loadRemoteLane(remoteLaneId: RemoteLaneId) {
+  async loadRemoteLane(remoteLaneId: LaneId) {
     const remoteName = remoteLaneId.scope;
     const laneName = remoteLaneId.name;
     const remoteLanePath = this.composeRemoteLanePath(remoteName, laneName);
@@ -90,18 +90,18 @@ export default class RemoteLanes {
     }
   }
 
-  async getAllRemoteLaneIds(): Promise<RemoteLaneId[]> {
+  async getAllRemoteLaneIds(): Promise<LaneId[]> {
     const matches = await glob(path.join('*', '*'), { cwd: this.basePath });
     // in the future, lane-name might have slashes, so until the first slash is the scope.
     // the rest are the name
     return matches
       .map((match) => match.split(path.sep))
-      .map(([head, ...tail]) => RemoteLaneId.from(tail.join('/'), head))
+      .map(([head, ...tail]) => LaneId.from(tail.join('/'), head))
       .filter((remoteLaneId) => !remoteLaneId.isDefault() && remoteLaneId.name !== PREVIOUS_DEFAULT_LANE);
   }
 
   async syncWithLaneObject(remoteName: string, lane: Lane) {
-    const remoteLaneId = RemoteLaneId.from(lane.name, remoteName);
+    const remoteLaneId = LaneId.from(lane.name, remoteName);
     if (!this.remotes[remoteName] || !this.remotes[remoteName][lane.name]) {
       await this.loadRemoteLane(remoteLaneId);
     }
@@ -116,6 +116,20 @@ export default class RemoteLanes {
     await this.writeMutex.runExclusive(() =>
       Promise.all(Object.keys(this.remotes).map((remoteName) => this.writeRemoteLanes(remoteName)))
     );
+  }
+
+  async renameRefByNewScopeName(laneName: string, oldScopeName: string, newScopeName: string) {
+    const remoteLaneId = LaneId.from(laneName, oldScopeName);
+    const remoteLane = await this.getRemoteLane(remoteLaneId);
+    this.remotes[newScopeName] = { ...this.remotes[newScopeName], [laneName]: remoteLane };
+    delete this.remotes[oldScopeName][laneName];
+  }
+
+  async renameRefByNewLaneName(oldLaneName: string, newLaneName: string, scopeName: string) {
+    const remoteLaneId = LaneId.from(oldLaneName, scopeName);
+    const remoteLane = await this.getRemoteLane(remoteLaneId);
+    this.remotes[scopeName] = { ...this.remotes[scopeName], [newLaneName]: remoteLane };
+    delete this.remotes[scopeName][oldLaneName];
   }
 
   private async writeRemoteLanes(remoteName: string) {

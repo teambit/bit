@@ -38,6 +38,10 @@ export class TypescriptCompiler implements Compiler {
     return this.stringifyTsconfig(this.options.tsconfig);
   }
 
+  getDistDir() {
+    return this.distDir;
+  }
+
   /**
    * compile one file on the workspace
    */
@@ -160,7 +164,10 @@ export class TypescriptCompiler implements Compiler {
    */
   private async runTscBuild(network: Network): Promise<ComponentResult[]> {
     const rootDir = network.capsulesRootDir;
-    const capsules = network.graphCapsules;
+    const capsules = await network.getCapsulesToCompile();
+    if (!capsules.length) {
+      return [];
+    }
     const capsuleDirs = capsules.getAllCapsuleDirs();
     const formatHost = {
       getCanonicalFileName: (p) => p,

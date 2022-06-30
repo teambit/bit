@@ -1,4 +1,5 @@
 import { ComponentFactory, ComponentID, ComponentMain } from '@teambit/component';
+import { Node, Edge } from '@teambit/graph.cleargraph';
 import type LegacyGraph from '@teambit/legacy/dist/scope/graph/graph';
 import { ComponentGraph } from './component-graph';
 import { Dependency } from './model/dependency';
@@ -43,7 +44,7 @@ export class GraphBuilder {
       const componentId = await componentHost.resolveComponentId(nodeId);
       const component = await componentHost.get(componentId);
       if (component) {
-        newGraph.setNode(componentId.toString(), component);
+        newGraph.setNode(new Node(componentId.toString(), component));
       }
     });
     await Promise.all(setNodeP);
@@ -53,7 +54,7 @@ export class GraphBuilder {
       const target = await componentHost.resolveComponentId(edgeId.w);
       const edgeObj =
         legacyGraph.edge(edgeId.v, edgeId.w) === 'dependencies' ? new Dependency('runtime') : new Dependency('dev');
-      newGraph.setEdge(source.toString(), target.toString(), edgeObj);
+      newGraph.setEdge(new Edge(source.toString(), target.toString(), edgeObj));
     });
     await Promise.all(setEdgePromise);
 

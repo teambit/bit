@@ -60,9 +60,9 @@ export class State {
   }
 
   /**
-   * is modified
+   * @deprecated please use `component.isModified`.
+   * the way it's implemented here is unreliable and will only work if in the legacy the "isModified" was calculated.
    */
-
   get isModified(): boolean {
     return this._consumer._isModified;
   }

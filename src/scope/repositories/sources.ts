@@ -1,5 +1,6 @@
 import R from 'ramda';
 import pMap from 'p-map';
+import { BitError } from '@teambit/bit-error';
 import { isHash } from '@teambit/component-version';
 import { BitId, BitIds } from '../../bit-id';
 import { BuildStatus, COMPONENT_ORIGINS, Extensions } from '../../constants';
@@ -48,7 +49,7 @@ export type MergeResult = {
   mergedVersions: string[];
 };
 
-const MAX_AGE_UN_BUILT_COMPS_CACHE = 60 * 1000;
+const MAX_AGE_UN_BUILT_COMPS_CACHE = 60 * 1000; // 1 min
 
 export default class SourceRepository {
   scope: Scope;
@@ -98,6 +99,11 @@ export default class SourceRepository {
     const emptyComponent = ModelComponent.fromBitId(bitId);
     const component: ModelComponent | undefined = await this._findComponent(emptyComponent);
     if (!component) return undefined;
+    if (!component.laneDataIsPopulated) {
+      const currentLane = await this.scope.getCurrentLaneObject();
+      await component.populateLocalAndRemoteHeads(this.objects(), currentLane);
+      component.laneDataIsPopulated = true;
+    }
     if (!bitId.hasVersion()) return component;
 
     const returnComponent = (version: Version): ModelComponent | undefined => {
@@ -147,6 +153,10 @@ export default class SourceRepository {
     version.dependencies = version.dependencies.filter((d) => !d.id.isEqualWithoutVersion(component.toBitId()));
 
     return returnComponent(version as Version);
+  }
+
+  isUnBuiltInCache(bitId: BitId): boolean {
+    return Boolean(this.cacheUnBuiltIds.get(bitId.toString()));
   }
 
   async _findComponent(component: ModelComponent): Promise<ModelComponent | undefined> {
@@ -625,7 +635,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
       existingHeadIsMissingInIncomingComponent
     );
     const { mergedComponent, mergedVersions } = await modelComponentMerger.merge();
-    if (existingComponentHead) {
+    if (existingComponentHead || mergedComponent.hasHead()) {
       const mergedSnaps = await this.getMergedSnaps(existingComponentHead, incomingComp, versionObjects);
       mergedVersions.push(...mergedSnaps);
     }
@@ -634,7 +644,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
   }
 
   private async getMergedSnaps(
-    existingHead: Ref,
+    existingHead: Ref | undefined,
     incomingComp: ModelComponent,
     versionObjects: Version[]
   ): Promise<string[]> {
@@ -708,8 +718,23 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     lane: Lane,
     isImport: boolean // otherwise, it's coming from export
   ): Promise<{ mergeResults: MergeResult[]; mergeErrors: ComponentNeedsUpdate[]; mergeLane: Lane }> {
+    logger.debug(`sources.mergeLane, lane: ${lane.toLaneId()}`);
     const repo = this.objects();
-    const existingLane = await this.scope.loadLane(lane.toLaneId());
+    const existingLaneWithSameId = await this.scope.loadLane(lane.toLaneId());
+    const hasSameHash = existingLaneWithSameId && existingLaneWithSameId.hash().isEqual(lane.hash());
+    if (existingLaneWithSameId && !hasSameHash) {
+      throw new BitError(`unable to merge "${lane.toLaneId()}" lane. a lane with the same id already exists with a different hash.
+you can either export to a different scope (use bit lane track) or create a new lane with a different name and export.
+otherwise, to collaborate on the same lane as the remote, you'll need to remove the local lane and import the remote lane (bit lane import)`);
+    }
+
+    const existingLane = hasSameHash ? existingLaneWithSameId : await this.scope.loadLaneByHash(lane.hash());
+
+    if (existingLane && !existingLaneWithSameId) {
+      // the lane id has changed
+      existingLane.scope = lane.scope;
+      existingLane.name = lane.name;
+    }
     const mergeResults: MergeResult[] = [];
     const mergeErrors: ComponentNeedsUpdate[] = [];
     await Promise.all(

@@ -1,4 +1,5 @@
 import { Component, ComponentFS, ComponentID, Config, Snap, State, Tag, TagMap } from '@teambit/component';
+import pMapSeries from 'p-map-series';
 import { Logger } from '@teambit/logger';
 import { SemVer } from 'semver';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
@@ -45,11 +46,10 @@ export class ScopeComponentLoader {
     }
     if (!modelComponent) return undefined;
 
-    // :TODO move to head snap once we have it merged, for now using `latest`.
     const versionStr = id.version && id.version !== 'latest' ? id.version : modelComponent.latest();
     const newId = id.changeVersion(versionStr);
     const version = await modelComponent.loadVersion(versionStr, this.scope.legacyScope.objects);
-    const snap = this.createSnapFromVersion(version);
+    const snap = await this.getHeadSnap(modelComponent);
     const state = await this.createStateFromVersion(id, version);
     const tagMap = this.getTagMap(modelComponent);
 
@@ -66,7 +66,7 @@ export class ScopeComponentLoader {
     const version =
       consumerComponent.pendingVersion ||
       (await modelComponent.loadVersion(legacyId.version as string, this.scope.legacyScope.objects));
-    const snap = this.createSnapFromVersion(version);
+    const snap = await this.getHeadSnap(modelComponent);
     const state = await this.createStateFromVersion(id, version);
     const tagMap = this.getTagMap(modelComponent);
 
@@ -84,6 +84,22 @@ export class ScopeComponentLoader {
     objectList?.getAll().forEach((obj) => this.scope.legacyScope.objects.setCache(obj));
     const consumerComponent = await this.scope.legacyScope.getConsumerComponent(id._legacy);
     return this.getFromConsumerComponent(consumerComponent);
+  }
+
+  /**
+   * get components from a remote without importing it
+   */
+  async getManyRemoteComponents(ids: ComponentID[]): Promise<Component[]> {
+    const compImport = new ScopeComponentsImporter(this.scope.legacyScope);
+    const legacyIds = ids.map((id) => id._legacy);
+    const objectList = await compImport.getManyRemoteComponents(legacyIds);
+    // it's crucial to add all objects to the Repository cache. otherwise, later, when it asks
+    // for the consumerComponent from the legacyScope, it won't work.
+    objectList?.getAll().forEach((obj) => this.scope.legacyScope.objects.setCache(obj));
+    return pMapSeries(legacyIds, async (legacyId) => {
+      const consumerComponent = await this.scope.legacyScope.getConsumerComponent(legacyId);
+      return this.getFromConsumerComponent(consumerComponent);
+    });
   }
 
   async getState(id: ComponentID, hash: string): Promise<State> {
@@ -138,6 +154,20 @@ export class ScopeComponentLoader {
       tagMap.set(tag.version, tag);
     });
     return tagMap;
+  }
+
+  private async getHeadSnap(modelComponent: ModelComponent): Promise<Snap | null> {
+    const head = modelComponent.getHeadRegardlessOfLane();
+    if (!head) {
+      // happens for example when on main and merging a lane.
+      return null;
+    }
+    const version = await modelComponent.loadVersion(head.toString(), this.scope.legacyScope.objects, false);
+    if (!version) {
+      // might happen when the component is just a dependency and a previous version was needed.
+      return null;
+    }
+    return this.createSnapFromVersion(version);
   }
 
   private createSnapFromVersion(version: Version): Snap {

@@ -326,22 +326,21 @@ export class AspectLoaderMain {
       const idStr = requireableExtension.component.id.toString();
       try {
         return await this.doRequire(requireableExtension);
-      } catch (e: any) {
+      } catch (firstErr: any) {
         this.addFailure(idStr);
-        const errorMsg = UNABLE_TO_LOAD_EXTENSION(idStr);
-        this.logger.error(errorMsg, e);
-        const isFixed = await this.triggerOnAspectLoadError(e, requireableExtension.component);
+        this.logger.warn(`failed loading an aspect "${idStr}", will try to fix and reload`, firstErr);
+        const isFixed = await this.triggerOnAspectLoadError(firstErr, requireableExtension.component);
         let errAfterReLoad;
         if (isFixed) {
-          this.logger.info(`the loading issue has been fixed, re-loading ${idStr}`);
+          this.logger.info(`the loading issue might be fixed now, re-loading ${idStr}`);
           try {
             return await this.doRequire(requireableExtension);
           } catch (err: any) {
-            this.logger.error('re-load of the aspect failed as well', err);
+            this.logger.warn(`re-load of the aspect "${idStr}" failed as well`, err);
             errAfterReLoad = err;
           }
         }
-        const error = errAfterReLoad || e;
+        const error = errAfterReLoad || firstErr;
         this.handleExtensionLoadingError(error, idStr, throwOnError);
       }
       return undefined;
@@ -353,18 +352,18 @@ export class AspectLoaderMain {
   }
 
   handleExtensionLoadingError(error: Error, idStr: string, throwOnError: boolean) {
-    const errorMsg = UNABLE_TO_LOAD_EXTENSION(idStr);
+    const errorMsg = error.message.split('\n')[0]; // show only the first line if the error is long (e.g. happens with MODULE_NOT_FOUND errors)
+    const msg = UNABLE_TO_LOAD_EXTENSION(idStr, errorMsg);
     if (throwOnError) {
       // @ts-ignore
       this.logger.console(error);
       throw new CannotLoadExtension(idStr, error);
     }
-    this.logger.error(errorMsg, error);
+    this.logger.error(msg, error);
     if (this.logger.isLoaderStarted) {
-      this.logger.consoleFailure(errorMsg);
+      this.logger.consoleFailure(msg);
     } else {
-      this.logger.console(errorMsg);
-      this.logger.console(error.message);
+      this.logger.console(msg);
     }
   }
 
@@ -479,7 +478,7 @@ export class AspectLoaderMain {
       const ids = extensionsManifests.map((manifest) => manifest.id || 'unknown');
       // TODO: improve texts
       const warning = UNABLE_TO_LOAD_EXTENSION_FROM_LIST(ids);
-      this.logger.warn(warning, e);
+      this.logger.error(warning, e);
       if (this.logger.isLoaderStarted) {
         this.logger.consoleFailure(warning);
       } else {

@@ -23,6 +23,10 @@ export class PeersAutoDetectPolicy {
     return this.entries.length;
   }
 
+  get names(): string[] {
+    return this.entries.map((e) => e.name);
+  }
+
   find(name: string): PeersAutoDetectPolicyEntry | undefined {
     const matchedEntry = this.entries.find((entry) => entry.name === name);
     return matchedEntry;

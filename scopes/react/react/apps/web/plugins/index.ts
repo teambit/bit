@@ -1,1 +1,1 @@
-export { prerenderSPAPlugin } from './prerender';
+export { prerenderPlugin } from './prerender';

@@ -52,12 +52,16 @@ export class ObjectFetcher {
       ...this.fetchOptions,
     };
     const idsGrouped = this.lanes.length ? groupByLanes(this.ids, this.lanes) : groupByScopeName(this.ids);
-    logger.debug('[-] Running fetch on remotes, with the following options', this.fetchOptions);
+    const scopes = Object.keys(idsGrouped);
+    logger.debug(
+      `[-] Running fetch on ${scopes.length} remote(s), to get ${this.ids.length} id(s), with the following options`,
+      this.fetchOptions
+    );
     const objectsQueue = new WriteObjectsQueue();
     const componentsQueue = new WriteComponentsQueue();
     this.showProgress(objectsQueue, componentsQueue);
     await pMap(
-      Object.keys(idsGrouped),
+      scopes,
       async (scopeName) => {
         const readableStream = await this.fetchFromSingleRemote(scopeName, idsGrouped[scopeName]);
         if (!readableStream) return;
@@ -76,7 +80,7 @@ server responded with the following error messages:
 ${failedScopesErr.join('\n')}`);
     }
     await Promise.all([objectsQueue.onIdle(), componentsQueue.onIdle()]);
-    logger.debug('[-] fetchFromRemoteAndWrite, completed writing all objects');
+    logger.debug(`[-] fetchFromRemoteAndWrite, completed writing ${objectsQueue.added} objects`);
     loader.start('all objects were processed and written to the filesystem successfully');
     await this.repo.writeRemoteLanes();
   }

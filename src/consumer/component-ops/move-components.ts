@@ -1,3 +1,4 @@
+import { BitError } from '@teambit/bit-error';
 import fs from 'fs-extra';
 import path from 'path';
 import R from 'ramda';
@@ -7,7 +8,7 @@ import BitIds from '../../bit-id/bit-ids';
 import { COMPONENT_ORIGINS } from '../../constants';
 import GeneralError from '../../error/general-error';
 import { NodeModuleLinker, reLinkDependents } from '../../links';
-import { isDirEmptySync } from '../../utils';
+import { isDir, isDirEmptySync } from '../../utils';
 import moveSync from '../../utils/fs/move-sync';
 import { pathJoinLinux, PathOsBasedAbsolute, PathOsBasedRelative } from '../../utils/path';
 import { PathChangeResult } from '../bit-map/bit-map';
@@ -27,7 +28,11 @@ export async function movePaths(
     throw new GeneralError(`unable to move because both paths from (${from}) and to (${to}) already exist`);
   }
   if (!fromExists && !toExists) throw new GeneralError(`both paths from (${from}) and to (${to}) do not exist`);
-
+  if (!consumer.isLegacy && fromExists && !isDir(from)) {
+    throw new BitError(`bit move supports moving directories only, not files.
+files withing a component dir are automatically tracked, no action is needed.
+to change the main-file, use "bit add <component-dir> --main <new-main-file>"`);
+  }
   const fromRelative = consumer.getPathRelativeToConsumer(from);
   const toRelative = consumer.getPathRelativeToConsumer(to);
   const fromAbsolute = consumer.toAbsolutePath(fromRelative);

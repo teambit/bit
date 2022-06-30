@@ -5,7 +5,7 @@ import type { Logger } from '@teambit/logger';
 
 import type { PreviewMain } from './preview.main.runtime';
 import type { PreviewArtifact } from './preview-artifact';
-import { getArtifactFileMiddleware } from './artifact-file-middleware';
+import { getArtifactFileMiddleware, GetCacheControlFunc } from './artifact-file-middleware';
 
 type UrlParams = ComponentUrlParams & {
   filePath?: string;
@@ -13,6 +13,14 @@ type UrlParams = ComponentUrlParams & {
 
 // Week for now
 const CACHE_MAX_AGE = 60 * 60 * 24 * 7;
+
+const getCacheControl: GetCacheControlFunc = (_filePath: string, _contents: string, mimeType?: string | null) => {
+  // Do not cache the html files
+  if (mimeType && mimeType === 'text/html') {
+    return undefined;
+  }
+  return `private, max-age=${CACHE_MAX_AGE}`;
+};
 
 export class EnvTemplateRoute implements RegisteredComponentRoute {
   constructor(
@@ -53,14 +61,12 @@ export class EnvTemplateRoute implements RegisteredComponentRoute {
         // @ts-ignore
         req.isLegacyPath = false;
 
-        res.set('Cache-control', `private, max-age=${CACHE_MAX_AGE}`);
-
         return next();
       } catch (e: any) {
         this.logger.error('failed getting preview', e);
         return res.status(500).send(serverError());
       }
     },
-    getArtifactFileMiddleware(this.logger),
+    getArtifactFileMiddleware(this.logger, getCacheControl),
   ];
 }

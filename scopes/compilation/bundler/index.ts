@@ -7,6 +7,7 @@ export {
   HtmlConfig as BundlerHtmlConfig,
   EntryMap as BundlerEntryMap,
   Entry as BundlerEntry,
+  MetaData as BundlerContextMetaData,
 } from './bundler-context';
 export { Bundler, BundlerResult, BundlerMode, Asset, ChunksAssetsMap, EntriesAssetsMap, EntryAssets } from './bundler';
 export type { BundlerMain } from './bundler.main.runtime';

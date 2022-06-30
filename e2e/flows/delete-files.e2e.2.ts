@@ -7,7 +7,6 @@ describe('delete files from a component', function () {
   let helper: Helper;
   before(() => {
     helper = new Helper();
-    helper.command.setFeatures('legacy-workspace-config');
   });
   after(() => {
     helper.scopeHelper.destroy();
@@ -15,7 +14,7 @@ describe('delete files from a component', function () {
   describe('after adding it', () => {
     let statusOutput;
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitLocalScopeHarmony();
       helper.fixtures.createComponentBarFoo();
       helper.fs.createFile('bar', 'baz.js');
       helper.command.addComponent('bar -i bar/foo -m bar/foo.js');
@@ -27,27 +26,13 @@ describe('delete files from a component', function () {
       expect(statusOutput.includes('bar/foo')).to.be.true;
     });
   });
-  describe('when tagging it', () => {
-    before(() => {
-      helper.scopeHelper.reInitLocalScope();
-      helper.fixtures.createComponentBarFoo();
-      helper.fs.createFile('bar', 'baz.js');
-      helper.command.addComponent('bar -i bar/foo -m bar/foo.js');
-      helper.fs.deletePath('bar/baz.js');
-      helper.command.tagComponent('bar/foo');
-    });
-    it('should delete the file from bit.map', () => {
-      const bitMap = helper.bitMap.read();
-      expect(bitMap['bar/foo@0.0.1'].files.length).to.equal(1);
-    });
-  });
   describe('tag and then delete a file', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitLocalScopeHarmony();
       helper.fixtures.createComponentBarFoo();
       helper.fs.createFile('bar', 'baz.js');
       helper.command.addComponent('bar -i bar/foo -m bar/foo.js');
-      helper.command.tagComponent('bar/foo');
+      helper.command.tagWithoutBuild('bar/foo');
       helper.fs.deletePath('bar/baz.js');
     });
     it('bit status should show the component as modified', () => {
@@ -58,22 +43,18 @@ describe('delete files from a component', function () {
   });
   describe('adding a file, tagging it, deleting it and then tagging again', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitLocalScopeHarmony();
       helper.fixtures.createComponentBarFoo();
       helper.fs.createFile('bar', 'baz.js');
       helper.command.addComponent('bar -i bar/foo -m bar/foo.js');
-      helper.command.tagComponent('bar/foo');
+      helper.command.tagWithoutBuild('bar/foo');
       helper.fs.deletePath('bar/baz.js');
-      helper.command.tagComponent('bar/foo');
-    });
-    it('should delete the file from bit.map', () => {
-      const bitMap = helper.bitMap.read();
-      expect(bitMap['bar/foo@0.0.2'].files.length).to.equal(1);
+      helper.command.tagWithoutBuild('bar/foo');
     });
     it('should not show the deleted file in bit show command', () => {
       const output = helper.command.showComponent('bar/foo');
-      expect(output).to.have.string('bar/foo.js');
-      expect(output).not.to.have.string('bar/baz.js');
+      expect(output).to.have.string('foo.js');
+      expect(output).not.to.have.string('baz.js');
     });
   });
 });

@@ -1,28 +1,30 @@
-import React, { ReactNode } from 'react';
-import { Slot, SlotRegistry } from '@teambit/harmony';
+import React, { useState } from 'react';
+import flatten from 'lodash.flatten';
 import Mousetrap from 'mousetrap';
-
+import { Slot, SlotRegistry } from '@teambit/harmony';
 import UIAspect, { UIRuntime, UiUI } from '@teambit/ui';
 import { PubsubAspect, PubsubUI } from '@teambit/pubsub';
+import { ReactRouterAspect } from '@teambit/react-router';
 import { isBrowser } from '@teambit/ui-foundation.ui.is-browser';
-import { CommandBar } from './ui/command-bar';
-import { CommandSearcher } from './ui/command-searcher';
+import { CommandBar } from '@teambit/explorer.ui.command-bar';
 import { CommandBarAspect } from './command-bar.aspect';
 import { commandBarCommands } from './command-bar.commands';
-import { SearchProvider, Keybinding, CommandHandler, CommandId } from './types';
+import { CommandSearcher, SearchProvider } from './searchers';
+import { Keybinding, CommandHandler, CommandId } from './types';
 import { DuplicateCommandError } from './duplicate-command-error';
 import { KeyEvent } from './model/key-event';
-import { CommandBarContext } from './ui/command-bar-context';
 import { MousetrapStub } from './mousetrap-stub';
 import { openCommandBarKeybinding } from './keybinding';
 
+import styles from './command-bar.module.scss';
+
 const RESULT_LIMIT = 5;
-type SearcherSlot = SlotRegistry<SearchProvider>;
+type SearcherSlot = SlotRegistry<SearchProvider[]>;
 type CommandSlot = SlotRegistry<CommandEntry[]>;
 
 export type CommandEntry = {
   id: CommandId;
-  handler: CommandHandler;
+  action: CommandHandler;
   keybinding?: Keybinding;
   displayName: string;
 };
@@ -44,7 +46,7 @@ export class CommandBarUI {
   };
 
   /** Add and autocomplete provider. To support keyboard navigation, each result should have a props `active: boolean`, and `exectue: () => any` */
-  addSearcher(commandSearcher: SearchProvider) {
+  addSearcher(...commandSearcher: SearchProvider[]) {
     this.searcherSlot.register(commandSearcher);
     return this;
   }
@@ -61,7 +63,7 @@ export class CommandBarUI {
     const commands = originalCommands.map((x) => ({
       id: x.id,
       displayName: x.displayName,
-      handler: x.handler,
+      action: x.action,
       keybinding: x.keybinding,
     }));
 
@@ -76,7 +78,7 @@ export class CommandBarUI {
     this.updateCommandsSearcher();
 
     const updaters = commands.map((command) => (next: CommandHandler) => {
-      command.handler = next;
+      command.action = next;
     });
     return updaters;
   }
@@ -89,7 +91,7 @@ export class CommandBarUI {
     const commandEntry = this.getCommand(commandId);
     if (!commandEntry) return undefined;
 
-    return commandEntry.handler();
+    return commandEntry.action();
   }
 
   /**
@@ -100,9 +102,9 @@ export class CommandBarUI {
   };
 
   private search = (term: string, limit: number = RESULT_LIMIT) => {
-    const searchers = this.searcherSlot.values();
+    const searchers = flatten(this.searcherSlot.values());
 
-    const searcher = searchers.find((x) => x.test(term));
+    const searcher = searchers.find((x) => x && x.test(term));
     return searcher?.search(term, limit) || [];
   };
 
@@ -124,51 +126,61 @@ export class CommandBarUI {
     this.mousetrap.bind(key, this.run.bind(this, command));
   }
 
-  private renderContext = ({ children }: { children: ReactNode }) => {
-    return <CommandBarContext.Provider value={this}>{children}</CommandBarContext.Provider>;
-  };
-
   /**
-   * internal. Opens and closes the command bar UI.
+   * Opens and closes the command bar UI.
    */
-  setVisibility?: (visible: boolean) => void;
+  private setVisibility?: (visible: boolean) => void;
 
   /**
    * generate the ui for command bar
    */
-  getCommandBar = () => {
-    return <CommandBar key="CommandBarUI" search={this.search} commander={this} />;
+  CommandBar = () => {
+    const [visible, setVisibility] = useState(false);
+    this.setVisibility = setVisibility;
+
+    return (
+      <CommandBar
+        key="CommandBarUI"
+        className={styles.commanderUi}
+        searcher={this.search}
+        placeholder="Search anything or type > to only search commands"
+        visible={visible}
+        autofocus
+        onVisibilityChange={setVisibility}
+      />
+    );
   };
 
-  constructor(private searcherSlot: SearcherSlot, private commandSlot: CommandSlot, pubSub: PubsubUI) {
-    this.addSearcher(this.commandSearcher);
-    pubSub.sub(CommandBarAspect.id, (e: KeyEvent) => {
-      const keyboardEvent = new KeyboardEvent(e.type, e.data);
-      document.dispatchEvent(keyboardEvent);
-    });
-  }
+  constructor(private searcherSlot: SearcherSlot, private commandSlot: CommandSlot) {}
 
-  static dependencies = [UIAspect, PubsubAspect];
+  static dependencies = [UIAspect, PubsubAspect, ReactRouterAspect];
   static slots = [Slot.withType<SearchProvider>(), Slot.withType<CommandEntry[]>()];
   static runtime = UIRuntime;
   static async provider(
-    [uiUi, pubsubUI]: [UiUI, PubsubUI],
+    [uiUi, pubsubUI]: [UiUI | undefined, PubsubUI | undefined],
     config,
     [searcherSlot, commandSlots]: [SearcherSlot, CommandSlot]
   ) {
-    const commandBar = new CommandBarUI(searcherSlot, commandSlots, pubsubUI);
+    const commandBar = new CommandBarUI(searcherSlot, commandSlots);
 
+    commandBar.addSearcher(commandBar.commandSearcher);
     commandBar.addCommand({
       id: commandBarCommands.open,
-      handler: commandBar.open,
+      action: commandBar.open,
       displayName: 'Open command bar',
       keybinding: openCommandBarKeybinding,
     });
 
-    uiUi.registerHudItem(commandBar.getCommandBar());
-    uiUi.registerRenderHooks({
-      reactContext: commandBar.renderContext,
-    });
+    if (pubsubUI) {
+      pubsubUI.sub(CommandBarAspect.id, (e: KeyEvent) => {
+        const keyboardEvent = new KeyboardEvent(e.type, e.data);
+        document.dispatchEvent(keyboardEvent);
+      });
+    }
+
+    if (uiUi) {
+      uiUi.registerHudItem(<commandBar.CommandBar />);
+    }
 
     return commandBar;
   }

@@ -45,6 +45,7 @@ export class MDXMain {
   }
 
   static runtime = MainRuntime;
+
   static dependencies = [
     DocsAspect,
     DependencyResolverAspect,
@@ -99,6 +100,13 @@ export class MDXMain {
         },
       }),
       react.overrideCompilerTasks([compiler.createTask('MDXCompiler', mdxCompiler)]),
+      envs.override({
+        __getDescriptor: async () => {
+          return {
+            type: 'mdx',
+          };
+        },
+      }),
     ]);
     envs.registerEnv(mdxEnv);
     depResolver.registerDetector(new MDXDependencyDetector(config.extensions));

@@ -1,11 +1,12 @@
 import { H3 } from '@teambit/documenter.ui.heading';
 import { Contributors } from '@teambit/design.ui.contributors';
-import { NavLink } from '@teambit/base-ui.routing.nav-link';
+import { Link } from '@teambit/base-react.navigation.link';
 import { Labels } from '@teambit/component.ui.version-label';
 import classNames from 'classnames';
-import { LegacyComponentLog } from '@teambit/legacy-component-log';
 import React, { HTMLAttributes, useMemo } from 'react';
+import { LegacyComponentLog } from '@teambit/legacy-component-log';
 import { LanesModel, useLanesContext } from '@teambit/lanes.ui.lanes';
+import { Tooltip } from '@teambit/design.ui.tooltip';
 
 import styles from './version-block.module.scss';
 
@@ -22,7 +23,9 @@ export type VersionBlockProps = {
 export function VersionBlock({ isLatest, className, snap, componentId, isCurrent, ...rest }: VersionBlockProps) {
   const { username, email, message, tag, hash, date } = snap;
   const lanes = useLanesContext();
-  const currentLaneUrl = lanes?.currentLane ? `${lanes?.currentLane?.url}${LanesModel.baseLaneComponentRoute}` : '';
+  const currentLaneUrl = lanes?.viewedLane
+    ? `${LanesModel.getLaneUrl(lanes?.viewedLane?.id)}${LanesModel.baseLaneComponentRoute}`
+    : '';
   const version = tag || hash;
   const author = useMemo(() => {
     return {
@@ -36,20 +39,22 @@ export function VersionBlock({ isLatest, className, snap, componentId, isCurrent
     <div className={classNames(styles.versionWrapper, className)}>
       <div className={styles.left}>
         <Labels isLatest={isLatest} isCurrent={isCurrent} />
-        <NavLink className={styles.link} href={`~tests?version=${version}`}>
+        <Link className={styles.link} href={`~tests?version=${version}`}>
           Tests
-        </NavLink>
-        <NavLink className={styles.link} href={`~compositions?version=${version}`}>
+        </Link>
+        <Link className={styles.link} href={`~compositions?version=${version}`}>
           Compositions
-        </NavLink>
+        </Link>
         <div className={styles.placeholder} />
       </div>
       <div className={classNames(styles.right, className)} {...rest}>
-        <NavLink className={styles.titleLink} href={`${currentLaneUrl}/${componentId}?version=${version}`}>
-          <H3 size="xs" className={styles.versionTitle}>
-            {tag ? `v${tag}` : hash}
-          </H3>
-        </NavLink>
+        <Tooltip placement="right" content={hash}>
+          <Link className={styles.titleLink} href={`${currentLaneUrl}/${componentId}?version=${version}`}>
+            <H3 size="xs" className={styles.versionTitle}>
+              {tag ? `v${tag}` : hash}
+            </H3>
+          </Link>
+        </Tooltip>
         <Contributors contributors={[author || {}]} timestamp={timestamp} />
         {commitMessage(message)}
       </div>

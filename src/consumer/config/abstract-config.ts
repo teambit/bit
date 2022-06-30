@@ -1,7 +1,7 @@
 import fs from 'fs-extra';
 import * as path from 'path';
 import R from 'ramda';
-import { isNilOrEmpty } from 'ramda-adjunct';
+import { isEmpty } from 'lodash';
 
 import { BitIds } from '../../bit-id';
 import {
@@ -135,7 +135,7 @@ export default class AbstractConfig {
     if (!envObj) return undefined;
     if (Object.keys(envObj).length !== 1) return envObj; // it has more than one id
     const envId = Object.keys(envObj)[0];
-    if (isNilOrEmpty(envObj[envId].rawConfig) && isNilOrEmpty(envObj[envId].options)) {
+    if (isEmpty(envObj[envId].rawConfig) && isEmpty(envObj[envId].options)) {
       return envId;
     }
     return envObj;

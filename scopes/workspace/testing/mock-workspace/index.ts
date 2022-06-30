@@ -1,1 +1,1 @@
-export { mockWorkspace, destroyWorkspace, WorkspaceData } from './mock-workspace';
+export { mockWorkspace, destroyWorkspace, WorkspaceData, setWorkspaceConfig } from './mock-workspace';

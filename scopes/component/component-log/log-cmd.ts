@@ -4,20 +4,22 @@ import { ComponentLogMain } from './component-log.main.runtime';
 
 export default class LogCmd implements Command {
   name = 'log <id>';
-  shortDescription = 'show components(s) version history';
-  description: string;
+  description = 'show components(s) version history';
+  extendedDescription: string;
   group = 'info';
   alias = '';
   options = [
     ['r', 'remote', 'show log of a remote component'],
     ['', 'parents', 'EXPERIMENTAL. show parents and lanes data'],
+    ['j', 'json', 'json format'],
   ] as CommandOptions;
   migration = true;
   remoteOp = true; // should support log against remote
   skipWorkspace = true;
+  arguments = [{ name: 'id', description: 'component-id or component-name' }];
 
   constructor(private componentLog: ComponentLogMain, docsDomain: string) {
-    this.description = `show components(s) tag history.\n  https://${docsDomain}/reference/cli-reference#log`;
+    this.extendedDescription = `https://${docsDomain}/reference/cli-reference#log`;
   }
 
   async report([id]: [string], { remote = false, parents = false }: { remote: boolean; parents: boolean }) {
@@ -27,5 +29,12 @@ export default class LogCmd implements Command {
     }
     const logs = await this.componentLog.getLogs(id, remote);
     return logs.reverse().map(paintLog).join('\n');
+  }
+
+  async json([id]: [string], { remote = false, parents = false }: { remote: boolean; parents: boolean }) {
+    if (parents) {
+      return this.componentLog.getLogsWithParents(id);
+    }
+    return this.componentLog.getLogs(id, remote);
   }
 }

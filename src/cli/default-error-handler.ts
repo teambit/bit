@@ -53,7 +53,6 @@ import {
   ConsumerAlreadyExists,
   ConsumerNotFound,
   LoginFailed,
-  MissingDependencies,
   NewerVersionFound,
   NothingToImport,
 } from '../consumer/exceptions';
@@ -100,7 +99,6 @@ import GitNotFound from '../utils/git/exceptions/git-not-found';
 import { paintSpecsResults } from './chalk-box';
 import AddTestsWithoutId from './commands/exceptions/add-tests-without-id';
 import RemoteUndefined from './commands/exceptions/remote-undefined';
-import componentIssuesTemplate from './templates/component-issues-template';
 import newerVersionTemplate from './templates/newer-version-template';
 
 const reportIssueToGithubMsg =
@@ -188,13 +186,11 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
   [
     ComponentNotFound,
     (err) => {
-      const baseMsg = err.dependentId
+      return err.dependentId
         ? `error: the component dependency "${chalk.bold(err.id)}" required by "${chalk.bold(
             err.dependentId
           )}" was not found`
         : `error: component "${chalk.bold(err.id)}" was not found`;
-      const msg = `${baseMsg}\nconsider running "bit dependents ${err.id}" to understand why this component was needed`;
-      return msg;
     },
   ],
   [
@@ -269,13 +265,6 @@ Original Error: ${err.message}`,
 if it is originated from another git branch, go back to that branch to continue working on the component.
 if possible, remove the component using "bit remove" and re-import or re-create it.
 to re-start Bit from scratch, deleting all objects from the scope, use "bit init --reset-hard"`,
-  ],
-  [
-    MissingDependencies,
-    (err) => {
-      const missingDepsColored = componentIssuesTemplate(err.components);
-      return `error: issues found with the following component dependencies\n${missingDepsColored}`;
-    },
   ],
   [NothingToImport, () => chalk.yellow('nothing to import. please use `bit import [component_id]`')],
   [

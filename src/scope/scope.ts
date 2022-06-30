@@ -2,6 +2,7 @@ import fs from 'fs-extra';
 import mapSeries from 'p-map-series';
 import * as pathLib from 'path';
 import R from 'ramda';
+import { LaneId } from '@teambit/lane-id';
 import semver from 'semver';
 import { Analytics } from '../analytics/analytics';
 import { BitId, BitIds } from '../bit-id';
@@ -30,7 +31,6 @@ import Consumer from '../consumer/consumer';
 import SpecsResults from '../consumer/specs-results';
 import { SpecsResultsWithComponentId } from '../consumer/specs-results/specs-results';
 import GeneralError from '../error/general-error';
-import LaneId, { RemoteLaneId } from '../lane-id/lane-id';
 import logger from '../logger/logger';
 import getMigrationVersions, { MigrationResult } from '../migration/migration-helper';
 import { currentDirName, first, pathHasAll, propogateUntil, readDirSyncIgnoreDsStore } from '../utils';
@@ -107,7 +107,14 @@ export type OnTagOpts = {
   skipTests?: boolean;
   isSnap?: boolean;
 };
-export type OnTagFunc = (components: Component[], options?: OnTagOpts) => Promise<LegacyOnTagResult[]>;
+export type IsolateComponentsOptions = {
+  packageManagerConfigRootDir?: string;
+};
+export type OnTagFunc = (
+  components: Component[],
+  options: OnTagOpts,
+  isolateOptions: IsolateComponentsOptions
+) => Promise<LegacyOnTagResult[]>;
 
 export default class Scope {
   created = false;
@@ -140,8 +147,19 @@ export default class Scope {
   /**
    * import components to the `Scope.
    */
-  async import(ids: BitIds, cache = true, reFetchUnBuiltVersion = true): Promise<VersionDependencies[]> {
-    return this.scopeImporter.importMany({ ids, cache, throwForDependencyNotFound: false, reFetchUnBuiltVersion });
+  async import(
+    ids: BitIds,
+    cache = true,
+    reFetchUnBuiltVersion = true,
+    lanes?: Lane[]
+  ): Promise<VersionDependencies[]> {
+    return this.scopeImporter.importMany({
+      ids,
+      cache,
+      throwForDependencyNotFound: false,
+      reFetchUnBuiltVersion,
+      lanes,
+    });
   }
 
   async getDependencyGraph(): Promise<DependencyGraph> {
@@ -311,6 +329,7 @@ export default class Scope {
   async listIncludeRemoteHead(laneId: LaneId): Promise<ModelComponent[]> {
     const components = await this.list();
     const lane = laneId.isDefault() ? null : await this.loadLane(laneId);
+    // @todo: not sure this is needed anymore. probably the heads are populated when the component was loaded
     await Promise.all(components.map((component) => component.populateLocalAndRemoteHeads(this.objects, lane)));
     return components;
   }
@@ -325,11 +344,11 @@ export default class Scope {
   }
 
   async loadLane(id: LaneId): Promise<Lane | null> {
-    const lane = await this.lanes.loadLane(id);
-    const remoteTrackedData = this.lanes.getRemoteTrackedDataByLocalLane(id.name);
-    if (lane && remoteTrackedData?.remoteLane && remoteTrackedData.remoteScope) {
-      lane.remoteLaneId = RemoteLaneId.from(remoteTrackedData?.remoteLane, remoteTrackedData.remoteScope);
-    }
+    return this.lanes.loadLane(id);
+  }
+
+  async loadLaneByHash(ref: Ref): Promise<Lane | null> {
+    const lane = (await this.objects.load(ref)) as Lane | null;
     return lane;
   }
 
@@ -487,13 +506,7 @@ export default class Scope {
   }
 
   async getModelComponentIfExist(id: BitId): Promise<ModelComponent | undefined> {
-    const modelComponent = await this.sources.get(id);
-    if (modelComponent) {
-      // @todo: what about other places the model-component is loaded
-      const currentLane = await this.getCurrentLaneObject();
-      await modelComponent.populateLocalAndRemoteHeads(this.objects, currentLane);
-    }
-    return modelComponent;
+    return this.sources.get(id);
   }
 
   async getCurrentLaneObject() {
@@ -518,7 +531,9 @@ export default class Scope {
    * for each one of the given components, find its dependents
    */
   async getDependentsBitIds(bitIds: BitIds, returnResultsWithVersion = false): Promise<{ [key: string]: BitId[] }> {
+    logger.debug(`scope.getDependentsBitIds, bitIds: ${bitIds.toString()}`);
     const idsGraph = await DependencyGraph.buildIdsGraphWithAllVersions(this);
+    logger.debug(`scope.getDependentsBitIds, idsGraph the graph was built successfully`);
     const dependencyGraph = new DependencyGraph(idsGraph);
     const dependentsGraph = bitIds.reduce((acc, current) => {
       const dependents = dependencyGraph.getDependentsForAllVersions(current);
@@ -807,18 +822,28 @@ export default class Scope {
     }
     const component = await this.loadModelComponentByIdStr(id);
     const idHasScope = Boolean(component && component.scope);
-    if (!idHasScope) {
-      const [idWithoutVersion] = id.toString().split('@');
-      if (idWithoutVersion.includes('.')) {
-        // we allow . only on scope names, so if it has . it must be with scope name
-        return BitId.parse(id, true);
-      }
-      // if it's not in the scope, it's probably new, we assume it doesn't have scope.
+    if (idHasScope) {
+      const bitId: BitId = component.toBitId();
+      const version = BitId.getVersionOnlyFromString(id);
+      return bitId.changeVersion(version || LATEST);
+    }
+    const [idWithoutVersion] = id.toString().split('@');
+    if (idWithoutVersion.includes('.')) {
+      // we allow . only on scope names, so if it has . it must be with scope name
+      return BitId.parse(id, true);
+    }
+    const idSplit = id.split('/');
+    if (idSplit.length === 1) {
+      // it doesn't have any slash, so the id doesn't include the scope-name
       return BitId.parse(id, false);
     }
-    const bitId: BitId = component.toBitId();
-    const version = BitId.getVersionOnlyFromString(id);
-    return bitId.changeVersion(version || LATEST);
+    const maybeScope = idSplit[0];
+    const isRemoteConfiguredLocally = this.scopeJson.remotes[maybeScope];
+    if (isRemoteConfiguredLocally) {
+      return BitId.parse(id, true);
+    }
+    // it's probably new, we assume it doesn't have scope.
+    return BitId.parse(id, false);
   }
 
   async writeObjectsToPendingDir(objectList: ObjectList, clientId: string): Promise<void> {

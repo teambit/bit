@@ -3,6 +3,7 @@ import { isEmpty } from 'lodash';
 import * as semver from 'semver';
 import { versionParser, isHash, isTag } from '@teambit/component-version';
 import { v4 } from 'uuid';
+import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
 import { LegacyComponentLog } from '@teambit/legacy-component-log';
 import { BitId } from '../../bit-id';
 import {
@@ -10,7 +11,6 @@ import {
   DEFAULT_BINDINGS_PREFIX,
   DEFAULT_BIT_RELEASE_TYPE,
   DEFAULT_BIT_VERSION,
-  DEFAULT_LANE,
   DEFAULT_LANGUAGE,
   Extensions,
   TESTER_ENV_TYPE,
@@ -23,7 +23,6 @@ import SpecsResults from '../../consumer/specs-results';
 import GeneralError from '../../error/general-error';
 import ShowDoctorError from '../../error/show-doctor-error';
 import ValidationError from '../../error/validation-error';
-import { RemoteLaneId } from '../../lane-id/lane-id';
 import { makeEnvFromModel } from '../../legacy-extensions/env-factory';
 import logger from '../../logger/logger';
 import { empty, filterObject, forEach, getStringifyArgs, mapObject, sha1 } from '../../utils';
@@ -111,6 +110,7 @@ export default class Component extends BitObject {
    */
   laneHeadLocal?: Ref | null;
   laneHeadRemote?: Ref | null; // doesn't get saved in the scope, used to easier access the remote snap head data
+  laneDataIsPopulated = false; // doesn't get saved in the scope, used to improve performance of loading the lane data
   schema: string | undefined;
   private divergeData?: DivergeData;
 
@@ -265,12 +265,11 @@ export default class Component extends BitObject {
   async populateLocalAndRemoteHeads(repo: Repository, lane: Lane | null) {
     this.setLaneHeadLocal(lane);
     if (this.scope) {
-      // otherwise, it was never exported, so no remote head
-      if (lane?.remoteLaneId) {
-        this.laneHeadRemote = await repo.remoteLanes.getRef(lane.remoteLaneId, this.toBitId());
+      if (lane) {
+        this.laneHeadRemote = await repo.remoteLanes.getRef(lane.toLaneId(), this.toBitId());
       }
       // we need also the remote head of main, otherwise, the diverge-data assumes all versions are local
-      this.remoteHead = await repo.remoteLanes.getRef(RemoteLaneId.from(DEFAULT_LANE, this.scope), this.toBitId());
+      this.remoteHead = await repo.remoteLanes.getRef(LaneId.from(DEFAULT_LANE, this.scope), this.toBitId());
     }
   }
 
@@ -320,7 +319,7 @@ export default class Component extends BitObject {
 
   latest(): string {
     if (this.isEmpty() && !this.laneHeadLocal) return VERSION_ZERO;
-    const head = this.laneHeadLocal || this.getHead();
+    const head = this.getHeadRegardlessOfLane();
     if (head) {
       return this.getTagOfRefIfExists(head) || head.toString();
     }
@@ -341,7 +340,7 @@ export default class Component extends BitObject {
     const latestLocally = this.latest();
     const remoteHead = this.laneHeadRemote;
     if (!remoteHead) return latestLocally;
-    if (!this.laneHeadLocal && !this.hasHead()) {
+    if (!this.getHeadRegardlessOfLane()) {
       return remoteHead.toString(); // user never merged the remote version, so remote is the latest
     }
 
@@ -445,12 +444,12 @@ export default class Component extends BitObject {
     releaseType: semver.ReleaseType = DEFAULT_BIT_RELEASE_TYPE,
     exactVersion?: string | null,
     incrementBy?: number,
-    preRelease?: string
+    preReleaseId?: string
   ): string {
     if (exactVersion && this.versions[exactVersion]) {
       throw new VersionAlreadyExists(exactVersion, this.id());
     }
-    return exactVersion || this.version(releaseType, incrementBy, preRelease);
+    return exactVersion || this.version(releaseType, incrementBy, preReleaseId);
   }
 
   isEqual(component: Component, considerOrphanedVersions = true): boolean {
@@ -493,13 +492,18 @@ export default class Component extends BitObject {
           'unable to tag when checked out to a lane, please switch to main, merge the lane and then tag again'
         );
       }
+      const currentBitId = this.toBitId();
       const versionToAddRef = Ref.from(versionToAdd);
-      const existingComponentInLane = lane.getComponentByName(this.toBitId());
+      const existingComponentInLane = lane.getComponentByName(currentBitId);
       const currentHead = (existingComponentInLane && existingComponentInLane.head) || this.getHead();
       if (currentHead && !currentHead.isEqual(versionToAddRef)) {
         version.addAsOnlyParent(currentHead);
       }
-      lane.addComponent({ id: this.toBitId(), head: versionToAddRef });
+      lane.addComponent({ id: currentBitId, head: versionToAddRef });
+
+      if (lane.readmeComponent && lane.readmeComponent.id.isEqualWithoutScopeAndVersion(currentBitId)) {
+        lane.setReadmeComponent(currentBitId);
+      }
       repo.add(lane);
       this.laneHeadLocal = versionToAddRef;
       return versionToAdd;
@@ -527,14 +531,15 @@ export default class Component extends BitObject {
     return versionToAdd;
   }
 
-  version(releaseType: semver.ReleaseType = DEFAULT_BIT_RELEASE_TYPE, incrementBy = 1, preRelease?: string): string {
-    if (preRelease) releaseType = 'prerelease';
+  version(releaseType: semver.ReleaseType = DEFAULT_BIT_RELEASE_TYPE, incrementBy = 1, preReleaseId?: string): string {
+    // if (preRelease) releaseType = 'prerelease';
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const increment = (ver: string) => semver.inc(ver, releaseType, undefined, preRelease)!;
+    const increment = (ver: string) => semver.inc(ver, releaseType, undefined, preReleaseId)!;
 
     const latest = this.latestVersion();
     if (!latest) {
-      return preRelease ? increment(DEFAULT_BIT_VERSION) : DEFAULT_BIT_VERSION;
+      const isPreReleaseLike = ['prerelease', 'premajor', 'preminor', 'prepatch'].includes(releaseType);
+      return isPreReleaseLike ? increment(DEFAULT_BIT_VERSION) : DEFAULT_BIT_VERSION;
     }
     let result = increment(latest);
     if (incrementBy === 1) return result;
@@ -698,8 +703,9 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     if (versionNum === VERSION_ZERO) {
       throw new Error(`the component ${this.id()} has no versions and the head is empty.
-this is probably a component from another lane which should not be loaded in this lane.
-make sure to call "getAllIdsAvailableOnLane" and not "getAllBitIdsFromAllLanes"`);
+this is probably a component from another lane which should not be loaded in this lane (or main).
+if this component is on a lane, make sure to ask for it with a version.
+if that's not the case, make sure to call "getAllIdsAvailableOnLane" and not "getAllBitIdsFromAllLanes"`);
     }
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     if (isTag(versionNum) && !this.hasTagIncludeOrphaned(versionNum!)) {
@@ -736,6 +742,23 @@ make sure to call "getAllIdsAvailableOnLane" and not "getAllBitIdsFromAllLanes"`
     return deprecationAspect.config.deprecate;
   }
 
+  async isLaneReadmeOf(repo: Repository): Promise<string[]> {
+    const head = this.getHeadRegardlessOfLane();
+    if (!head) {
+      // we dont support lanes in legacy
+      return [];
+    }
+    const version = (await repo.load(head)) as Version;
+    if (!version) {
+      // the head Version doesn't exist locally, there is no way to know whether it is a lane readme component
+      return [];
+    }
+    const lanesAspect = version.extensions.findCoreExtension(Extensions.lanes);
+    if (!lanesAspect || !lanesAspect.config.readme) {
+      return [];
+    }
+    return Object.keys(lanesAspect.config.readme);
+  }
   /**
    * convert a ModelComponent of a specific version to ConsumerComponent
    * when it's being called from the Consumer, some manipulation are done on the component, such

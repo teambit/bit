@@ -1,0 +1,11 @@
+.label {
+  background-color: var(--warning-color, #ffc640);
+  color: #2b2b2b;
+  border-color: transparent;
+  padding: 4px 8px;
+
+  > img {
+    width: 16px;
+    margin-right: 8px;
+  }
+}

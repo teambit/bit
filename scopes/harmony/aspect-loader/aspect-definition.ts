@@ -33,8 +33,8 @@ export class AspectDefinition {
   ) {}
 
   get getId() {
-    if (this.id) return this.id;
     if (this.component) return this.component.id.toString();
+    if (this.id) return this.id;
     return null;
   }
 

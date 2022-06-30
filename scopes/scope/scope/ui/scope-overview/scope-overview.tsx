@@ -45,9 +45,10 @@ export function ScopeOverview({ badgeSlot, overviewSlot }: ScopeOverviewProps) {
 
 type ScopeComponentCardProps = {
   component: ComponentModel;
+  componentUrl?: string;
 };
 
-export function ScopeComponentCard({ component }: ScopeComponentCardProps) {
+export function ScopeComponentCard({ component, componentUrl }: ScopeComponentCardProps) {
   const shouldShowPreview = component.compositions.length > 0;
   return (
     <ComponentCard
@@ -55,6 +56,7 @@ export function ScopeComponentCard({ component }: ScopeComponentCardProps) {
       envIcon={component.environment?.icon}
       description={component.description}
       version={component.version}
+      href={componentUrl}
       preview={<PreviewPlaceholder component={component} shouldShowPreview={shouldShowPreview} />}
     />
   );

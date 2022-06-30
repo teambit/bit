@@ -42,6 +42,7 @@ import {
 import { EnvTemplateRoute } from './env-template.route';
 import { ComponentPreviewRoute } from './component-preview.route';
 import { COMPONENT_STRATEGY_ARTIFACT_NAME, COMPONENT_STRATEGY_SIZE_KEY_NAME } from './strategies/component-strategy';
+import { ENV_STRATEGY_ARTIFACT_NAME } from './strategies/env-strategy';
 import { previewSchema } from './preview.graphql';
 import { PreviewAssetsRoute } from './preview-assets.route';
 
@@ -79,6 +80,12 @@ export type ComponentPreviewMetaData = {
 export type PreviewConfig = {
   bundlingStrategy?: string;
   disabled: boolean;
+  /**
+   * limit concurrent components when running the bundling step for your bundler during generate components preview task.
+   * this helps mitigate large memory consumption for the build pipeline. This may increase the overall time for the generate-preview task, but reduce memory footprint.
+   * default - no limit.
+   */
+  maxChunkSize?: number;
 };
 
 export type EnvPreviewConfig = {
@@ -176,6 +183,25 @@ export class PreviewMain {
     if (!artifacts || !artifacts.length) return true;
 
     return false;
+  }
+
+  /**
+   * Check if the component preview bundle contain the header inside of it (legacy)
+   * today we are not including the header inside anymore
+   * @param component
+   * @returns
+   */
+  async isLegacyHeader(component: Component): Promise<boolean> {
+    // these envs had header in their docs
+    const ENV_WITH_LEGACY_DOCS = ['react', 'env', 'aspect', 'lit', 'html', 'node', 'mdx', 'react-native', 'readme'];
+
+    const artifacts = await this.builder.getArtifactsVinylByExtensionAndName(
+      component,
+      PreviewAspect.id,
+      ENV_STRATEGY_ARTIFACT_NAME
+    );
+    const envType = this.envs.getEnvData(component).type;
+    return !!artifacts && !!artifacts.length && ENV_WITH_LEGACY_DOCS.includes(envType);
   }
 
   /**
@@ -317,10 +343,10 @@ export class PreviewMain {
       const templatePath = await previewDef.renderTemplatePath?.(context);
 
       const map = await previewDef.getModuleMap(components);
-      const environment = context.envRuntime.env;
       const isSplitComponentBundle = this.getEnvPreviewConfig().splitComponentBundle ?? false;
-      const compilerInstance = environment.getCompiler?.();
       const withPaths = map.map<string[]>((files, component) => {
+        const environment = this.envs.getEnv(component).env;
+        const compilerInstance = environment.getCompiler?.();
         const modulePath =
           compilerInstance?.getPreviewComponentRootPath?.(component) || this.pkg.getModulePath(component);
         return files.map((file) => {
@@ -387,7 +413,10 @@ export class PreviewMain {
   }
 
   private getDefaultStrategies() {
-    return [new EnvBundlingStrategy(this), new ComponentBundlingStrategy(this, this.pkg, this.dependencyResolver)];
+    return [
+      new EnvBundlingStrategy(this, this.pkg, this.dependencyResolver),
+      new ComponentBundlingStrategy(this, this.pkg, this.dependencyResolver),
+    ];
   }
 
   // TODO - executionContext should be responsible for updating components list, and emit 'update' events
@@ -553,8 +582,8 @@ export class PreviewMain {
 
     if (!config.disabled)
       builder.registerBuildTasks([
-        new EnvPreviewTemplateTask(preview, envs, aspectLoader),
-        new PreviewTask(bundler, preview),
+        new EnvPreviewTemplateTask(preview, envs, aspectLoader, dependencyResolver, logger),
+        new PreviewTask(bundler, preview, dependencyResolver, logger),
       ]);
 
     if (workspace) {

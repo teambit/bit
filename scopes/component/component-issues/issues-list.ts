@@ -8,21 +8,22 @@ import { MissingDists } from './missing-dists';
 import { MissingLinks } from './missing-links';
 import { MissingPackagesDependenciesOnFs } from './missing-packages-dependencies-on-fs';
 import { ParseErrors } from './parse-errors';
-import { relativeComponents } from './relative-components';
-import { relativeComponentsAuthored } from './relative-components-authored';
+import { RelativeComponents } from './relative-components';
+import { RelativeComponentsAuthored } from './relative-components-authored';
 import { ResolveErrors } from './resolve-errors';
 import { UntrackedDependencies } from './untracked-dependencies';
 import { LegacyInsideHarmony } from './legacy-inside-harmony';
 import { MultipleEnvs } from './multiple-envs';
 import { MissingLinksFromNodeModulesToSrc } from './missing-links-from-nm-to-src';
+import { CircularDependencies } from './circular-dependencies';
 
 export const IssuesClasses = {
   MissingPackagesDependenciesOnFs,
   MissingComponents,
   UntrackedDependencies,
   ResolveErrors,
-  relativeComponents,
-  relativeComponentsAuthored,
+  RelativeComponents,
+  RelativeComponentsAuthored,
   ParseErrors,
   MissingLinks,
   MissingDists,
@@ -33,6 +34,7 @@ export const IssuesClasses = {
   CustomModuleResolutionUsed,
   MultipleEnvs,
   MissingLinksFromNodeModulesToSrc,
+  CircularDependencies,
 };
 export type IssuesNames = keyof typeof IssuesClasses;
 
@@ -62,6 +64,10 @@ export class IssuesList {
     }));
   }
 
+  getHarmonyIssues() {
+    return this.issues.filter((issue) => !issue.isLegacyIssue);
+  }
+
   add(issue: ComponentIssue) {
     this.issues.push(issue);
   }
@@ -82,6 +88,10 @@ export class IssuesList {
     return this.issues;
   }
 
+  getAllIssueNames(): string[] {
+    return this.issues.map((issue) => issue.constructor.name);
+  }
+
   createIssue<T extends ComponentIssue>(IssueClass: { new (): T }): T {
     const newIssue = new IssueClass();
     this.add(newIssue);
@@ -98,6 +108,10 @@ export class IssuesList {
 
   shouldBlockTagging(): boolean {
     return this.issues.some((issue) => issue.isTagBlocker);
+  }
+
+  filterNonTagBlocking(): IssuesList {
+    return new IssuesList(this.issues.filter((issue) => issue.isTagBlocker));
   }
 
   serialize() {

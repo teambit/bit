@@ -1,13 +1,10 @@
-import { join } from 'path';
-import PrerenderSPAPlugin from '@dreysolano/prerender-spa-plugin';
+import PrerenderSPAPlugin from 'prerender-spa-plugin-next';
+import { PuppeteerRenderer } from '@teambit/react.modules.prerenderer-puppeteer';
+import { ReactAppPrerenderOptions } from '../react-app-options';
 
-export const prerenderSPAPlugin = (prerenderRoutes: string[], staticDir: string) => {
+export const prerenderPlugin = (options: ReactAppPrerenderOptions) => {
   return new PrerenderSPAPlugin({
-    staticDir,
-    routes: prerenderRoutes,
-    postProcess(renderedRoute: any) {
-      renderedRoute.outputPath = join(staticDir, `${renderedRoute.originalRoute}.html`);
-      return renderedRoute;
-    },
+    renderer: PuppeteerRenderer,
+    ...options,
   });
 };

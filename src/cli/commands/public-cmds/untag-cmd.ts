@@ -8,12 +8,21 @@ import { Group } from '../../command-groups';
 import { CommandOptions, LegacyCommand } from '../../legacy-command';
 
 export default class Untag implements LegacyCommand {
-  name = 'untag [id] [version]';
-  shortDescription = 'revert versions tagged for component(s)';
+  name = 'untag [component-name] [component-version]';
+  description = 'revert tagged or snapped versions for component(s)';
+  arguments = [
+    {
+      name: 'component-name',
+      description: 'the component name or component id',
+    },
+    {
+      name: 'component-version',
+      description: 'the version to untag (semver for tags. hash for snaps)',
+    },
+  ];
   group: Group = 'development';
-  description = `revert version(s) tagged for component(s)
-  https://${BASE_DOCS_DOMAIN}/components/tags#undoing-a-tag
-  ${WILDCARD_HELP('untag')}`;
+  extendedDescription = `https://${BASE_DOCS_DOMAIN}/components/tags#undoing-a-tag
+${WILDCARD_HELP('untag')}`;
   alias = '';
   opts = [
     ['a', 'all', 'revert tag for all tagged components'],

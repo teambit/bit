@@ -1,3 +1,5 @@
+@import '~@teambit/base-ui.layout.breakpoints/_breakpoints.scss';
+
 $topbarHeight: 56px;
 
 .corner {
@@ -9,12 +11,9 @@ $topbarHeight: 56px;
   padding: 10px;
   user-select: none;
   box-sizing: border-box;
-  width: 30%;
+  max-width: 30%;
   font-weight: bold;
   max-width: 264px; // for now until we have the split pane in pixels
-  @media screen and (max-width: 768px) {
-    display: none;
-  }
 
   .link {
     display: flex;
@@ -35,6 +34,9 @@ $topbarHeight: 56px;
       text-overflow: ellipsis;
       white-space: nowrap;
       padding: 0 8px;
+      @media screen and (max-width: $br-sm) {
+        display: none;
+      }
     }
   }
 

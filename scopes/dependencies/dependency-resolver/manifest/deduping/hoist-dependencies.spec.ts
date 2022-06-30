@@ -303,7 +303,7 @@ describe('hoistDependencies', () => {
       dedupedDependencies = hoistDependencies(index);
     });
     it('should hoist the best range to the root', () => {
-      expectRootToHave(dedupedDependencies, depKeyName, dependencyName, '^4.0.4');
+      expectRootToHave(dedupedDependencies, depKeyName, dependencyName, '>=4.0.4 <5.0.0');
     });
     it('should not put the dependency in components that matches the best range', () => {
       expectComponentDependenciesMapToBeEmpty(`${DEFAULT_DEPENDENT_COMPONENT_NAME_PREFIX}-0`, dedupedDependencies);
@@ -387,7 +387,7 @@ describe('hoistDependencies', () => {
         dedupedDependencies = hoistDependencies(index);
       });
       it('should hoist the best range to the root', () => {
-        expectRootToHave(dedupedDependencies, depKeyName, dependencyName, '^4.0.4');
+        expectRootToHave(dedupedDependencies, depKeyName, dependencyName, '>=4.0.4 <5.0.0');
       });
       it('should not put the dependency in components that matches the best range', () => {
         expectComponentDependenciesMapToBeEmpty(`${DEFAULT_DEPENDENT_COMPONENT_NAME_PREFIX}-0`, dedupedDependencies);

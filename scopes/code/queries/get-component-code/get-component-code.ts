@@ -48,10 +48,11 @@ type CodeResults = {
   };
 };
 
-export function useCode(componentId: ComponentID) {
-  const id = componentId.toString();
+export function useCode(componentId?: ComponentID) {
+  const id = componentId?.toString();
   const { data, ...rest } = useDataQuery<CodeResults>(getCode, {
     variables: { id },
+    skip: !componentId,
   });
 
   const fileTree = data?.getHost?.get.fs;

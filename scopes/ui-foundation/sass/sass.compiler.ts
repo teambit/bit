@@ -18,6 +18,10 @@ export class SassCompiler implements Compiler {
     return '';
   }
 
+  getDistDir() {
+    return this.distDir;
+  }
+
   transpileFile(fileContent: string, options: TranspileFileParams): TranspileFileOutput {
     const cssContent = renderSync({
       file: fileContent,

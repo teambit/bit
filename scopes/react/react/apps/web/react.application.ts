@@ -2,12 +2,16 @@ import { join, basename } from 'path';
 import { Application, AppContext, AppBuildContext } from '@teambit/application';
 import { Bundler, DevServer, BundlerContext, DevServerContext, BundlerHtmlConfig } from '@teambit/bundler';
 import { Port } from '@teambit/toolbox.network.get-port';
+import { remove } from 'lodash';
+import TerserPlugin from 'terser-webpack-plugin';
 import { WebpackConfigTransformer } from '@teambit/webpack';
 import { ReactEnv } from '../../react.env';
-import { prerenderSPAPlugin } from './plugins';
+import { prerenderPlugin } from './plugins';
 import { ReactAppBuildResult } from './react-build-result';
+import { ReactAppPrerenderOptions } from './react-app-options';
 import { html } from '../../webpack';
 import { ReactDeployContext } from '.';
+import { computeResults } from './compute-results';
 
 export class ReactApp implements Application {
   constructor(
@@ -15,15 +19,16 @@ export class ReactApp implements Application {
     readonly entry: string[],
     readonly portRange: number[],
     private reactEnv: ReactEnv,
-    readonly prerenderRoutes?: string[],
+    readonly prerender?: ReactAppPrerenderOptions,
     readonly bundler?: Bundler,
     readonly devServer?: DevServer,
-    readonly transformers?: WebpackConfigTransformer[],
-    readonly deploy?: (context: ReactDeployContext) => Promise<void>
+    readonly transformers: WebpackConfigTransformer[] = [],
+    readonly deploy?: (context: ReactDeployContext) => Promise<void>,
+    readonly favicon?: string
   ) {}
-
   readonly applicationType = 'react-common-js';
   readonly dir = 'public';
+
   async run(context: AppContext): Promise<number> {
     const [from, to] = this.portRange;
     const port = await Port.getPort(from, to);
@@ -31,21 +36,22 @@ export class ReactApp implements Application {
       await this.devServer.listen(port);
       return port;
     }
-    const devServerContext = this.getDevServerContext(context);
+    const devServerContext = await this.getDevServerContext(context);
     const devServer = this.reactEnv.getDevServer(devServerContext, [
-      (configMutator) => {
+      (configMutator) =>
         configMutator.addTopLevel('devServer', {
           historyApiFallback: {
             index: '/index.html',
             disableDotRule: true,
           },
-        });
-
+        }),
+      (configMutator) => {
         if (!configMutator.raw.output) configMutator.raw.output = {};
         configMutator.raw.output.publicPath = '/';
 
         return configMutator;
       },
+      ...this.transformers,
     ]);
     await devServer.listen(port);
     return port;
@@ -57,13 +63,17 @@ export class ReactApp implements Application {
         title: context.name,
         templateContent: html(context.name),
         minify: false,
+        favicon: this.favicon,
         // filename: ''.html`,
       },
     ];
-    Object.assign(context, { html: htmlConfig });
+    Object.assign(context, {
+      html: htmlConfig,
+    });
     const bundler = await this.getBundler(context);
-    await bundler.run();
-    return { publicDir: `${this.getPublicDir()}/${this.dir}` };
+    const bundleResult = await bundler.run();
+
+    return computeResults(bundleResult, { publicDir: `${this.getPublicDir(context.artifactsDir)}/${this.dir}` });
   }
 
   private getBundler(context: AppBuildContext) {
@@ -73,7 +83,7 @@ export class ReactApp implements Application {
   private async getDefaultBundler(context: AppBuildContext) {
     const { capsule } = context;
     const reactEnv: ReactEnv = context.env;
-    const publicDir = this.getPublicDir();
+    const publicDir = this.getPublicDir(context.artifactsDir);
     const outputPath = join(capsule.path, publicDir);
     const { distDir } = reactEnv.getCompiler();
     const entries = this.entry.map((entry) => require.resolve(`${capsule.path}/${distDir}/${basename(entry)}`));
@@ -85,32 +95,105 @@ export class ReactApp implements Application {
           components: [capsule?.component],
           entries,
           outputPath,
+          hostDependencies: await this.getPeers(),
+          aliasHostDependencies: true,
         },
       ],
       entry: [],
       rootPath: '/',
+      metaData: {
+        initiator: `building app: ${context.name}`,
+        envId: context.id,
+      },
     });
 
     const defaultTransformer: WebpackConfigTransformer = (configMutator) => {
       const config = configMutator.addTopLevel('output', { path: staticDir, publicPath: `/` });
-      if (this.prerenderRoutes) config.addPlugin(prerenderSPAPlugin(this.prerenderRoutes, staticDir));
+      if (this.prerender) config.addPlugin(prerenderPlugin(this.prerender));
+      if (config.raw.optimization?.minimizer) {
+        remove(config.raw.optimization?.minimizer, (minimizer) => {
+          return minimizer.constructor.name === 'TerserPlugin';
+        });
+
+        config.raw.optimization?.minimizer.push(this.getESBuildConfig());
+      }
+
       return config;
     };
-    const transformers = [defaultTransformer, ...(this.transformers ?? [])];
+    const transformers = [defaultTransformer, ...this.transformers];
     const bundler: Bundler = await reactEnv.getBundler(bundlerContext, transformers);
     return bundler;
   }
+  private getESBuildConfig = (isPrerendering = this.prerender) => {
+    // We don't want to use esbuild in case of prerendering since the headless browser puppeteer doesn't support
+    // the output of esbuild
 
-  private getPublicDir() {
-    return join(this.applicationType, this.name);
+    if (isPrerendering) {
+      return new TerserPlugin({
+        extractComments: false,
+        terserOptions: {
+          parse: {
+            // We want terser to parse ecma 8 code. However, we don't want it
+            // to apply any minification steps that turns valid ecma 5 code
+            // into invalid ecma 5 code. This is why the 'compress' and 'output'
+            // sections only apply transformations that are ecma 5 safe
+            // https://github.com/facebook/create-react-app/pull/4234
+            ecma: 8,
+          },
+          compress: {
+            ecma: 5,
+            warnings: false,
+            // Disabled because of an issue with Uglify breaking seemingly valid code:
+            // https://github.com/facebook/create-react-app/issues/2376
+            // Pending further investigation:
+            // https://github.com/mishoo/UglifyJS2/issues/2011
+            comparisons: false,
+            // Disabled because of an issue with Terser breaking valid code:
+            // https://github.com/facebook/create-react-app/issues/5250
+            // Pending further investigation:
+            // https://github.com/terser-js/terser/issues/120
+            inline: 2,
+          },
+          mangle: {
+            safari10: true,
+          },
+          output: {
+            ecma: 5,
+            comments: false,
+            // Turned on because emoji and regex is not minified properly using default
+            // https://github.com/facebook/create-react-app/issues/2488
+            ascii_only: true,
+          },
+        },
+      });
+    }
+    return new TerserPlugin({
+      minify: TerserPlugin.esbuildMinify,
+      // `terserOptions` options will be passed to `esbuild`
+      // Link to options - https://esbuild.github.io/api/#minify
+      terserOptions: {
+        minify: true,
+      },
+    });
+  };
+
+  private getPublicDir(artifactsDir: string) {
+    return join(artifactsDir, this.applicationType, this.name);
   }
 
-  private getDevServerContext(context: AppContext): DevServerContext {
+  private async getDevServerContext(context: AppContext): Promise<DevServerContext> {
     return Object.assign(context, {
       entry: this.entry,
       rootPath: '',
       publicPath: `public/${this.name}`,
       title: this.name,
+      favicon: this.favicon,
+      hostDependencies: await this.getPeers(),
+      aliasHostDependencies: true,
     });
+  }
+
+  private getPeers(): Promise<string[]> {
+    return this.reactEnv.getPeerDependenciesList();
   }
 }

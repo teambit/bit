@@ -1,12 +1,14 @@
 import { Compiler } from '@teambit/compiler';
-import type { DependenciesEnv, GetNpmIgnoreContext } from '@teambit/envs';
+import type { DependenciesEnv, PackageEnv, GetNpmIgnoreContext, PreviewEnv } from '@teambit/envs';
 import { merge } from 'lodash';
+import { PackageJsonProps } from '@teambit/pkg';
 import { TsConfigSourceFile } from 'typescript';
 import { ReactEnv } from '@teambit/react';
 import { CAPSULE_ARTIFACTS_DIR } from '@teambit/builder';
 import type { AspectLoaderMain } from '@teambit/aspect-loader';
 import { Bundler, BundlerContext } from '@teambit/bundler';
 import { WebpackConfigTransformer } from '@teambit/webpack';
+import { Tester } from '@teambit/tester';
 
 const tsconfig = require('./typescript/tsconfig.json');
 
@@ -15,7 +17,7 @@ export const AspectEnvType = 'aspect';
 /**
  * a component environment built for Aspects .
  */
-export class AspectEnv implements DependenciesEnv {
+export class AspectEnv implements DependenciesEnv, PackageEnv, PreviewEnv {
   constructor(private reactEnv: ReactEnv, private aspectLoader: AspectLoaderMain) {}
 
   icon = 'https://static.bit.dev/extensions-icons/default.svg';
@@ -31,15 +33,36 @@ export class AspectEnv implements DependenciesEnv {
     return targetConf;
   }
 
+  // TODO: should probably use the transformer from the main runtime?
+  // TODO: this doesn't seems to work as expected, the getTsConfig is not a transformer and the react env API expect a transformers array not an object
   createTsCompiler(tsConfig: TsConfigSourceFile): Compiler {
-    return this.reactEnv.getCompiler(this.getTsConfig(tsConfig));
+    return this.reactEnv.getTsCjsCompiler(this.getTsConfig(tsConfig));
+  }
+
+  /**
+   * returns a component tester.
+   */
+  getTester(jestConfigPath: string, jestModulePath?: string): Tester {
+    const config = jestConfigPath || require.resolve('@teambit/node/jest/jest.config');
+    return this.reactEnv.getCjsJestTester(config, jestModulePath);
   }
 
   async getTemplateBundler(context: BundlerContext, transformers: WebpackConfigTransformer[] = []): Promise<Bundler> {
+    return this.createTemplateWebpackBundler(context, transformers);
+  }
+
+  async createTemplateWebpackBundler(
+    context: BundlerContext,
+    transformers: WebpackConfigTransformer[] = []
+  ): Promise<Bundler> {
     return this.reactEnv.createTemplateWebpackBundler(context, transformers);
   }
 
-  getNpmIgnore(context: GetNpmIgnoreContext) {
+  getPackageJsonProps(): PackageJsonProps {
+    return this.reactEnv.getCjsPackageJsonProps();
+  }
+
+  getNpmIgnore(context?: GetNpmIgnoreContext) {
     // ignores only .ts files in the root directory, so d.ts files inside dists are unaffected.
     // without this change, the package has "index.ts" file in the root, causing typescript to parse it instead of the
     // d.ts files. (changing the "types" prop in the package.json file doesn't help).
@@ -49,7 +72,7 @@ export class AspectEnv implements DependenciesEnv {
     // This is because we don't have the core envs in the local scope so we load it from the package itself in the bvm installation
     // as this will be excluded from the package tar by default (as it's under the CAPSULE_ARTIFACTS_DIR)
     // we want to make sure to add it for the core envs
-    if (this.aspectLoader.isCoreEnv(context.component.id.toStringWithoutVersion())) {
+    if (context && this.aspectLoader.isCoreEnv(context.component.id.toStringWithoutVersion())) {
       patterns.push(`!${CAPSULE_ARTIFACTS_DIR}/env-template`);
     }
     return patterns;

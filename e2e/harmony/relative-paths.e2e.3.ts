@@ -28,7 +28,7 @@ describe('relative paths flow (components requiring each other by relative paths
     });
     it('should block bit tag', () => {
       const output = helper.general.runWithTryCatch('bit tag -a');
-      const RelativeComponentAuthoredClass = IssuesClasses.relativeComponentsAuthored;
+      const RelativeComponentAuthoredClass = IssuesClasses.RelativeComponentsAuthored;
       expect(output).to.have.string(new RelativeComponentAuthoredClass().description);
       expect(output).to.have.string('index.js -> "../comp2" (comp2)');
     });
@@ -65,7 +65,7 @@ describe('relative paths flow (components requiring each other by relative paths
         });
         describe('should work after importing to another workspace', () => {
           before(() => {
-            helper.command.exportToDefaultAndRewire();
+            helper.command.export();
             helper.scopeHelper.reInitLocalScopeHarmony();
             helper.scopeHelper.addRemoteScope();
             helper.command.importComponent('*');

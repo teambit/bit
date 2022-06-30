@@ -1,7 +1,6 @@
 import loader from '@teambit/legacy/dist/cli/loader';
 import logger, { IBitLogger } from '@teambit/legacy/dist/logger/logger';
 import chalk from 'chalk';
-import stc from 'string-to-color';
 
 import { LongProcessLogger } from './long-process-logger';
 
@@ -107,13 +106,15 @@ export class Logger implements IBitLogger {
    * print to the screen with a red `⚠` prefix. if message is empty, print the last logged message.
    */
   consoleWarning(message?: string) {
-    if (message) this.warn(message);
+    if (message) {
+      this.warn(message);
+      message = chalk.yellow(message);
+    }
     loader.warn(message);
   }
 
   private colorMessage(message: string) {
-    const text = `${this.extensionName}, ${message}`;
-    if (logger.isJsonFormat) return text;
-    return chalk.hex(stc(this.extensionName))(text);
+    if (logger.isJsonFormat) return `${this.extensionName}, ${message}`;
+    return `${chalk.bold(this.extensionName)}, ${message}`;
   }
 }

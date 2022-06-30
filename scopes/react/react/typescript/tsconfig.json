@@ -4,16 +4,22 @@
       "es2019", "DOM", "ES6" ,"DOM.Iterable"
     ],
     "target": "es2015",
-    "module": "commonjs",
+    "module": "es2020",
     "jsx": "react",
     "declaration": true,
     "sourceMap": true,
+    "experimentalDecorators": true,
     "skipLibCheck": true,
     "moduleResolution": "node",
     "esModuleInterop": true,
     "resolveJsonModule": true
   },
   "exclude": [
-    "dist"
+    "dist",
+    "package.json"
+  ],
+  "include": [
+    "**/*",
+    "**/*.json"
   ]
 }

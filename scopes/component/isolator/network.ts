@@ -1,5 +1,6 @@
 import { ComponentID } from '@teambit/component';
 import { PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
+import { compact } from 'lodash';
 import CapsuleList from './capsule-list';
 
 /**
@@ -59,6 +60,24 @@ export class Network {
       return capsule;
     });
     return CapsuleList.fromArray(capsules);
+  }
+
+  /**
+   * some of the capsules (non-modified) are written already with the dists files, so no need to re-compile them.
+   * this method helps optimizing compilers that are running on the capsules.
+   */
+  async getCapsulesToCompile() {
+    const originalSeedersCapsules = this.originalSeedersCapsules;
+    const capsules = await Promise.all(
+      this.seedersCapsules.map(async (seederCapsule) => {
+        if (originalSeedersCapsules.getCapsule(seederCapsule.component.id)) {
+          return seederCapsule;
+        }
+        const isModified = await seederCapsule.component.isModified();
+        return isModified ? seederCapsule : null;
+      })
+    );
+    return CapsuleList.fromArray(compact(capsules));
   }
 
   /**

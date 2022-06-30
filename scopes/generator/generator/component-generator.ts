@@ -3,8 +3,7 @@ import fs from 'fs-extra';
 import pMapSeries from 'p-map-series';
 import path from 'path';
 import { Workspace } from '@teambit/workspace';
-import EnvsAspect, { EnvDefinition, EnvsMain } from '@teambit/envs';
-import { Component } from '@teambit/component';
+import EnvsAspect, { EnvsMain } from '@teambit/envs';
 import camelcase from 'camelcase';
 import { BitError } from '@teambit/bit-error';
 import { PathOsBasedRelative } from '@teambit/legacy/dist/utils/path';
@@ -15,7 +14,7 @@ import { ComponentID } from '@teambit/component-id';
 import { ComponentTemplate, ComponentFile, ComponentConfig } from './component-template';
 import { CreateOptions } from './create.cmd';
 
-export type GenerateResult = { id: ComponentID; dir: string; files: string[]; envId: string };
+export type GenerateResult = { id: ComponentID; dir: string; files: string[]; envId: string; envSetBy: string };
 
 export class ComponentGenerator {
   constructor(
@@ -76,31 +75,66 @@ export class ComponentGenerator {
     const nameCamelCase = camelcase(name);
     const files = this.template.generateFiles({ name, namePascalCase, nameCamelCase, componentId });
     const mainFile = files.find((file) => file.isMain);
-    let config = this.template.config;
-    if (config && typeof config === 'function') {
-      config = config({ aspectId: this.aspectId });
-    }
-    const configWithEnv = this.addEnvIfProvidedByUser(config);
     await this.writeComponentFiles(componentPath, files);
     const addResults = await this.workspace.track({
       rootDir: componentPath,
       mainFile: mainFile?.relativePath,
       componentName: componentId.fullName,
       defaultScope: this.options.scope,
-      config: configWithEnv,
     });
     const component = await this.workspace.get(componentId);
-    const env = this.envs.getEnv(component);
-    await this.removeOtherEnvs(component, env, configWithEnv);
+    const hasEnvConfiguredOriginally = this.envs.hasEnvConfigured(component);
+    const envBeforeConfigChanges = this.envs.getEnv(component);
+
+    let config = this.template.config;
+    if (config && typeof config === 'function') {
+      config = config({ aspectId: this.aspectId });
+    }
+
+    const templateEnv = config?.[EnvsAspect.id]?.env;
+
+    if (config && templateEnv && hasEnvConfiguredOriginally) {
+      // remove the env we got from the template.
+      delete config[templateEnv];
+      delete config[EnvsAspect.id].env;
+      if (Object.keys(config[EnvsAspect.id]).length === 0) delete config[EnvsAspect.id];
+      if (Object.keys(config).length === 0) config = undefined;
+    }
+
+    const configWithEnv = await this.addEnvIfProvidedByFlag(config);
+    if (configWithEnv) this.workspace.bitMap.setEntireConfig(component.id, configWithEnv);
+
+    const getEnvData = () => {
+      const envFromFlag = this.options.env; // env entered by the user when running `bit create --env`
+      const envFromTemplate = config?.[EnvsAspect.id]?.env;
+      if (envFromFlag) {
+        return {
+          envId: envFromFlag,
+          setBy: '--env flag',
+        };
+      }
+      if (envFromTemplate) {
+        return {
+          envId: envFromTemplate,
+          setBy: 'template',
+        };
+      }
+      return {
+        envId: envBeforeConfigChanges.id,
+        setBy: hasEnvConfiguredOriginally ? 'workspace variants' : '<default>',
+      };
+    };
+    const { envId, setBy } = getEnvData();
     return {
       id: componentId,
       dir: componentPath,
       files: addResults.files,
-      envId: env.id,
+      envId,
+      envSetBy: setBy,
     };
   }
 
-  private addEnvIfProvidedByUser(config?: ComponentConfig): ComponentConfig | undefined {
+  private async addEnvIfProvidedByFlag(config?: ComponentConfig): Promise<ComponentConfig | undefined> {
     const userEnv = this.options.env; // env entered by the user when running `bit create --env`
     const templateEnv = config?.[EnvsAspect.id]?.env;
     if (!userEnv || userEnv === templateEnv) {
@@ -111,22 +145,12 @@ export class ComponentGenerator {
       // the component template has an env and the user wants a different env.
       delete config[templateEnv];
     }
-    config[userEnv] = {};
+    const userEnvId = await this.workspace.resolveComponentId(userEnv);
+    const userEnvIdWithPotentialVersion = await this.workspace.resolveEnvIdWithPotentialVersionForConfig(userEnvId);
+    config[userEnvIdWithPotentialVersion] = {};
     config[EnvsAspect.id] = config[EnvsAspect.id] || {};
-    config[EnvsAspect.id].env = userEnv;
+    config[EnvsAspect.id].env = userEnvId.toStringWithoutVersion();
     return config;
-  }
-
-  private async removeOtherEnvs(component: Component, env: EnvDefinition, config?: ComponentConfig) {
-    const envFromTemplate = config?.[EnvsAspect.id]?.env;
-    if (!envFromTemplate) {
-      return;
-    }
-    const envsNotFromConfig = this.envs.getEnvsNotFromEnvsConfig(component).map((envDef) => envDef.id);
-    const envsToRemove = envsNotFromConfig.filter((envId) => envId !== envFromTemplate);
-    envsToRemove.forEach((envId) => (config[envId] = '-'));
-    const bitMapRecord = this.workspace.bitMap.getBitmapEntry(component.id);
-    bitMapRecord.config = config;
   }
 
   /**

@@ -12,6 +12,7 @@ import { Slot, SlotRegistry } from '@teambit/harmony';
 import { BitError } from '@teambit/bit-error';
 import AspectLoaderAspect, { AspectLoaderMain } from '@teambit/aspect-loader';
 import NewComponentHelperAspect, { NewComponentHelperMain } from '@teambit/new-component-helper';
+import ImporterAspect, { ImporterMain } from '@teambit/importer';
 import { ComponentTemplate } from './component-template';
 import { GeneratorAspect } from './generator.aspect';
 import { CreateCmd, CreateOptions } from './create.cmd';
@@ -51,7 +52,8 @@ export class GeneratorMain {
     private workspace: Workspace,
     private envs: EnvsMain,
     private aspectLoader: AspectLoaderMain,
-    private newComponentHelper: NewComponentHelperMain
+    private newComponentHelper: NewComponentHelperMain,
+    private importer: ImporterMain
   ) {}
 
   /**
@@ -277,19 +279,21 @@ export class GeneratorMain {
     AspectLoaderAspect,
     NewComponentHelperAspect,
     CommunityAspect,
+    ImporterAspect,
   ];
 
   static runtime = MainRuntime;
 
   static async provider(
-    [workspace, cli, graphql, envs, aspectLoader, newComponentHelper, community]: [
+    [workspace, cli, graphql, envs, aspectLoader, newComponentHelper, community, importer]: [
       Workspace,
       CLIMain,
       GraphqlMain,
       EnvsMain,
       AspectLoaderMain,
       NewComponentHelperMain,
-      CommunityMain
+      CommunityMain,
+      ImporterMain
     ],
     config: GeneratorConfig,
     [componentTemplateSlot, workspaceTemplateSlot]: [ComponentTemplateSlot, WorkspaceTemplateSlot]
@@ -301,7 +305,8 @@ export class GeneratorMain {
       workspace,
       envs,
       aspectLoader,
-      newComponentHelper
+      newComponentHelper,
+      importer
     );
     const commands = [
       new CreateCmd(generator, community.getDocsDomain()),

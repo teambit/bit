@@ -2,6 +2,7 @@ import React from 'react';
 import openBrowser from 'react-dev-utils/openBrowser';
 import { Command, CommandOptions } from '@teambit/cli';
 import { Logger } from '@teambit/logger';
+import { BitError } from '@teambit/bit-error';
 import { UIServerConsole } from '@teambit/ui-foundation.cli.ui-server-console';
 import type { UiMain } from './ui.main.runtime';
 
@@ -17,15 +18,14 @@ type StartFlags = {
 
 export class StartCmd implements Command {
   name = 'start [type] [pattern]';
-  description = 'Start a dev environment for a workspace or a specific component';
+  description = 'run the ui/development server';
   alias = 'c';
   group = 'development';
-  shortDescription = '';
   options = [
     ['d', 'dev', 'start UI server in dev mode.'],
-    ['p', 'port [number]', 'port of the UI server.'],
+    ['p', 'port [port-number]', 'port of the UI server.'],
     ['r', 'rebuild', 'rebuild the UI'],
-    ['v', 'verbose', 'showing verbose output for inspection and prints stack trace'],
+    ['v', 'verbose', 'show verbose output for inspection and prints stack trace'],
     ['', 'no-browser', 'do not automatically open browser when ready'],
     ['', 'skip-compilation', 'skip the auto-compilation before starting the web-server'],
   ] as CommandOptions;
@@ -60,6 +60,11 @@ export class StartCmd implements Command {
     { dev, port, rebuild, verbose, noBrowser, skipCompilation }: StartFlags
   ): Promise<React.ReactElement> {
     this.logger.off();
+    if (!this.ui.isHostAvailable()) {
+      throw new BitError(
+        `bit start can only be run inside a bit workspace or a bit scope - please ensure you are running the command in the correct directory`
+      );
+    }
     const appName = this.ui.getUiName(uiRootName);
     await this.ui.invokePreStart({ skipCompilation });
     const uiServer = this.ui.createRuntime({

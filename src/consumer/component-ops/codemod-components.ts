@@ -22,14 +22,16 @@ export async function changeCodeFromRelativeToModulePaths(
 ): Promise<CodemodResult[]> {
   const components = await loadComponents(consumer, bitIds);
   const componentsWithRelativeIssues = components.filter(
-    (c) => c.issues && c.issues.getIssue(IssuesClasses.relativeComponentsAuthored)
+    (c) => c.issues && c.issues.getIssue(IssuesClasses.RelativeComponentsAuthored)
   );
   const dataToPersist = new DataToPersist();
-  const codemodResults = componentsWithRelativeIssues.map((component) => {
-    const { files, warnings } = codemodComponent(consumer, component);
-    dataToPersist.addManyFiles(files);
-    return { id: component.id, changedFiles: files.map((f) => f.relative), warnings };
-  });
+  const codemodResults = await Promise.all(
+    componentsWithRelativeIssues.map(async (component) => {
+      const { files, warnings } = await codemodComponent(consumer, component);
+      dataToPersist.addManyFiles(files);
+      return { id: component.id, changedFiles: files.map((f) => f.relative), warnings };
+    })
+  );
   await dataToPersist.persistAllToFS();
   const idsToReload = codemodResults.filter((c) => !c.warnings || c.warnings.length === 0).map((c) => c.id);
   await reloadComponents(consumer, idsToReload);
@@ -42,7 +44,7 @@ async function reloadComponents(consumer: Consumer, bitIds: BitId[]) {
   if (!bitIds.length) return;
   const components = await loadComponents(consumer, bitIds);
   const componentsWithRelativeIssues = components.filter(
-    (c) => c.issues && c.issues.getIssue(IssuesClasses.relativeComponentsAuthored)
+    (c) => c.issues && c.issues.getIssue(IssuesClasses.RelativeComponentsAuthored)
   );
   if (componentsWithRelativeIssues.length) {
     const failedComps = componentsWithRelativeIssues.map((c) => c.id.toString()).join(', ');
@@ -57,44 +59,52 @@ async function loadComponents(consumer: Consumer, bitIds: BitId[]): Promise<Comp
   return components;
 }
 
-function codemodComponent(consumer: Consumer, component: Component): { files: SourceFile[]; warnings?: string[] } {
+async function codemodComponent(
+  consumer: Consumer,
+  component: Component
+): Promise<{ files: SourceFile[]; warnings?: string[] }> {
   const issues = component.issues;
   const files: SourceFile[] = [];
-  if (!issues || !issues.getIssue(IssuesClasses.relativeComponentsAuthored)) return { files };
+  if (!issues || !issues.getIssue(IssuesClasses.RelativeComponentsAuthored)) return { files };
   const warnings: string[] = [];
-  component.files.forEach((file: SourceFile) => {
-    const relativeInstances = issues.getIssue(IssuesClasses.relativeComponentsAuthored)?.data[
-      pathNormalizeToLinux(file.relative)
-    ];
-    if (!relativeInstances) return;
-    // @ts-ignore
-    const fileBefore = file.contents.toString() as string;
-    let newFileString = fileBefore;
-    relativeInstances.forEach((relativeEntry: RelativeComponentsAuthoredEntry) => {
-      const id = relativeEntry.componentId;
-      if (isLinkFileHasDifferentImportType(relativeEntry.relativePath.importSpecifiers)) {
-        warnings.push(
-          `"${file.relative}" requires "${id.toString()}" through a link-file ("${
-            relativeEntry.importSource
-          }") and not directly, which makes it difficult change the import, please change your code to require the component directly`
-        );
-        return;
-      }
-      const packageName = componentIdToPackageName({ ...component, id });
-      const cssFamily = ['.css', '.scss', '.less', '.sass'];
-      const isCss = cssFamily.includes(file.extname);
-      const packageNameSupportCss = isCss ? `~${packageName}` : packageName;
-      const stringToReplace = getNameWithoutInternalPath(consumer, relativeEntry);
-      // @todo: the "dist" should be replaced by the compiler dist-dir.
-      // newFileString = replacePackageName(newFileString, stringToReplace, packageNameSupportCss, 'dist');
-      newFileString = replacePackageName(newFileString, stringToReplace, packageNameSupportCss);
-    });
-    if (fileBefore !== newFileString) {
+  await Promise.all(
+    component.files.map(async (file: SourceFile) => {
+      const relativeInstances = issues.getIssue(IssuesClasses.RelativeComponentsAuthored)?.data[
+        pathNormalizeToLinux(file.relative)
+      ];
+      if (!relativeInstances) return;
       // @ts-ignore
-      file.contents = Buffer.from(newFileString);
-      files.push(file);
-    }
-  });
+      const fileBefore = file.contents.toString() as string;
+      let newFileString = fileBefore;
+      await Promise.all(
+        relativeInstances.map(async (relativeEntry: RelativeComponentsAuthoredEntry) => {
+          const id = relativeEntry.componentId;
+          if (isLinkFileHasDifferentImportType(relativeEntry.relativePath.importSpecifiers)) {
+            warnings.push(
+              `"${file.relative}" requires "${id.toString()}" through a link-file ("${
+                relativeEntry.importSource
+              }") and not directly, which makes it difficult change the import, please change your code to require the component directly`
+            );
+            return;
+          }
+          const requiredComponent = await consumer.loadComponent(id);
+          const packageName = componentIdToPackageName({ ...requiredComponent, id });
+          const cssFamily = ['.css', '.scss', '.less', '.sass'];
+          const isCss = cssFamily.includes(file.extname);
+          const packageNameSupportCss = isCss ? `~${packageName}` : packageName;
+          const stringToReplace = getNameWithoutInternalPath(consumer, relativeEntry);
+          // @todo: the "dist" should be replaced by the compiler dist-dir.
+          // newFileString = replacePackageName(newFileString, stringToReplace, packageNameSupportCss, 'dist');
+          newFileString = replacePackageName(newFileString, stringToReplace, packageNameSupportCss);
+        })
+      );
+      if (fileBefore !== newFileString) {
+        // @ts-ignore
+        file.contents = Buffer.from(newFileString);
+        files.push(file);
+      }
+    })
+  );
   return { files, warnings };
 }
 

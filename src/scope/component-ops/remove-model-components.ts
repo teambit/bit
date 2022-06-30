@@ -34,10 +34,13 @@ export default class RemoveModelComponents {
 
   async remove(): Promise<RemovedObjects> {
     const { missingComponents, foundComponents } = await this.scope.filterFoundAndMissingComponents(this.bitIds);
+    logger.debug(`RemoveModelComponents.remove, found ${foundComponents.length} components to remove`);
     await this.setCurrentLane();
     const dependentBits = await this.scope.getDependentsBitIds(foundComponents);
+    logger.debug(`RemoveModelComponents.remove, found ${Object.keys(dependentBits).length} dependents`);
     if (R.isEmpty(dependentBits) || this.force) {
       const removalData = await mapSeries(foundComponents, (bitId) => this.getRemoveSingleData(bitId));
+      logger.debug(`RemoveModelComponents.remove, got removalData`);
       const compIds = new BitIds(...removalData.map((x) => x.compId));
       const refsToRemoveAll = removalData.map((removed) => removed.refsToRemove).flat();
       if (this.currentLane) {

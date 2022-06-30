@@ -1,8 +1,8 @@
 import { Readable } from 'stream';
+import { LaneId } from '@teambit/lane-id';
 import { BitIds } from '../../../bit-id';
-import { POST_SEND_OBJECTS, PRE_SEND_OBJECTS } from '../../../constants';
+import { LATEST_BIT_VERSION, POST_SEND_OBJECTS, PRE_SEND_OBJECTS } from '../../../constants';
 import HooksManager from '../../../hooks';
-import { RemoteLaneId } from '../../../lane-id/lane-id';
 import logger from '../../../logger/logger';
 import { loadScope, Scope } from '../../../scope';
 import ScopeComponentsImporter from '../../../scope/component-ops/scope-components-importer';
@@ -13,13 +13,16 @@ import {
   ObjectsReadableGenerator,
 } from '../../../scope/objects/objects-readable-generator';
 import { LaneNotFound } from './exceptions/lane-not-found';
+import { Lane } from '../../../scope/models';
 
 export type FETCH_TYPE = 'component' | 'lane' | 'object' | 'component-delta';
 export type FETCH_OPTIONS = {
   type: FETCH_TYPE;
-  withoutDependencies: boolean;
-  includeArtifacts: boolean;
+  withoutDependencies: boolean; // default - true
+  includeArtifacts: boolean; // default - false
   allowExternal: boolean; // allow fetching components of other scope from this scope. needed for lanes.
+  laneId?: string; // relevant for "component-delta" type to know where to find the component latest
+  onlyIfBuilt?: boolean; // relevant when fetching with deps. if true, and the component wasn't built successfully, don't fetch it.
 };
 
 const HooksManagerInstance = HooksManager.getInstance();
@@ -50,7 +53,7 @@ export default async function fetch(
   switch (fetchOptions.type) {
     case 'component': {
       const bitIds: BitIds = BitIds.deserialize(ids);
-      const { withoutDependencies, includeArtifacts, allowExternal } = fetchOptions;
+      const { withoutDependencies, includeArtifacts, allowExternal, onlyIfBuilt } = fetchOptions;
       const collectParents = !withoutDependencies;
       const scopeComponentsImporter = ScopeComponentsImporter.getInstance(scope);
       const getComponentsWithOptions = async (): Promise<ComponentWithCollectOptions[]> => {
@@ -63,7 +66,7 @@ export default async function fetch(
             collectParents,
           }));
         }
-        const versionsDependencies = await scopeComponentsImporter.fetchWithDeps(bitIds, allowExternal);
+        const versionsDependencies = await scopeComponentsImporter.fetchWithDeps(bitIds, allowExternal, onlyIfBuilt);
         return versionsDependencies
           .map((versionDep) => [
             {
@@ -89,7 +92,9 @@ export default async function fetch(
     case 'component-delta': {
       const bitIdsWithHashToStop: BitIds = BitIds.deserialize(ids);
       const scopeComponentsImporter = ScopeComponentsImporter.getInstance(scope);
-      const bitIdsLatest = bitIdsWithHashToStop.toVersionLatest();
+      const laneId = fetchOptions.laneId ? LaneId.parse(fetchOptions.laneId) : null;
+      const lane = laneId ? await scope.loadLane(laneId) : null;
+      const bitIdsLatest = bitIdsToLatest(bitIdsWithHashToStop, lane);
       const importedComponents = await scopeComponentsImporter.fetchWithoutDeps(
         bitIdsLatest,
         fetchOptions.allowExternal
@@ -109,7 +114,7 @@ export default async function fetch(
       break;
     }
     case 'lane': {
-      const laneIds: RemoteLaneId[] = ids.map((id) => RemoteLaneId.parse(id));
+      const laneIds: LaneId[] = ids.map((id) => LaneId.parse(id));
       const lanes = await scope.listLanes();
       const lanesToFetch = laneIds.map((laneId) => {
         const laneToFetch = lanes.find((lane) => lane.name === laneId.name);
@@ -150,4 +155,17 @@ export default async function fetch(
   }
   logger.debug('scope.fetch returns readable');
   return objectsReadableGenerator.readable;
+}
+
+function bitIdsToLatest(bitIds: BitIds, lane: Lane | null) {
+  if (!lane) {
+    return bitIds.toVersionLatest();
+  }
+  const laneIds = lane.toBitIds();
+  return BitIds.fromArray(
+    bitIds.map((bitId) => {
+      const inLane = laneIds.searchWithoutVersion(bitId);
+      return inLane || bitId.changeVersion(LATEST_BIT_VERSION);
+    })
+  );
 }

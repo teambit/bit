@@ -1,11 +1,10 @@
 import fs from 'fs-extra';
 import * as path from 'path';
 import R from 'ramda';
-
+import { LaneId } from '@teambit/lane-id';
 import { BitId, BitIds } from '../../bit-id';
 import { BIT_MAP, COMPONENT_ORIGINS } from '../../constants';
 import ValidationError from '../../error/validation-error';
-import { RemoteLaneId } from '../../lane-id/lane-id';
 import logger from '../../logger/logger';
 import { isValidPath, pathJoinLinux, pathNormalizeToLinux, pathRelativeLinux, sortObject } from '../../utils';
 import { getLastModifiedDirTimestampMs } from '../../utils/fs/last-modified';
@@ -37,7 +36,7 @@ export type NextVersion = {
   email?: string;
 };
 
-type LaneVersion = { remoteLane: RemoteLaneId; version: string };
+type LaneVersion = { remoteLane: LaneId; version: string };
 
 export type ComponentMapData = {
   id: BitId;
@@ -129,7 +128,7 @@ export default class ComponentMap {
       ...componentMapObj,
       lanes: componentMapObj.lanes
         ? componentMapObj.lanes.map((lane) => ({
-            remoteLane: RemoteLaneId.parse(lane.remoteLane),
+            remoteLane: LaneId.parse(lane.remoteLane),
             version: lane.version,
           }))
         : [],
@@ -369,7 +368,7 @@ export default class ComponentMap {
    * @param currentRemote
    * @param currentLaneIds
    */
-  updatePerLane(currentRemote?: RemoteLaneId | null, currentLaneIds?: BitIds | null) {
+  updatePerLane(currentRemote?: LaneId | null, currentLaneIds?: BitIds | null) {
     this.isAvailableOnCurrentLane = undefined;
     const replaceVersion = (version) => {
       this.defaultVersion = this.id.version;
@@ -391,10 +390,13 @@ export default class ComponentMap {
     }
   }
 
-  addLane(remoteLaneId: RemoteLaneId, version: string) {
+  addLane(remoteLaneId: LaneId, version: string) {
     const existing = this.lanes.find((l) => l.remoteLane.isEqual(remoteLaneId));
-    if (existing) existing.version = version;
-    this.lanes.push({ remoteLane: remoteLaneId, version });
+    if (existing) {
+      existing.version = version;
+    } else {
+      this.lanes.push({ remoteLane: remoteLaneId, version });
+    }
   }
 
   /**

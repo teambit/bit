@@ -13,12 +13,12 @@ describe('remove components on Harmony', function () {
   after(() => {
     helper.scopeHelper.destroy();
   });
-  describe('remove new component without --delete-files flag', () => {
+  describe('remove new component with --keep-files flag', () => {
     before(() => {
       helper.scopeHelper.reInitLocalScopeHarmony();
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(1);
-      helper.command.removeComponent('comp1');
+      helper.command.removeComponent('comp1', '--keep-files');
     });
     it('should remove the component from .bitmap', () => {
       const bitMap = helper.bitMap.read();
@@ -31,12 +31,12 @@ describe('remove components on Harmony', function () {
       expect(path.join(helper.scopes.localPath, `node_modules/@${helper.scopes.remote}`, 'comp1')).to.not.be.a.path();
     });
   });
-  describe('remove new component with --delete-files flag', () => {
+  describe('remove new component without --keep-files flag', () => {
     before(() => {
       helper.scopeHelper.reInitLocalScopeHarmony();
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(1);
-      helper.command.removeComponent('comp1', '--delete-files');
+      helper.command.removeComponent('comp1');
     });
     it('should remove the component from .bitmap', () => {
       const bitMap = helper.bitMap.read();

@@ -92,6 +92,13 @@ export interface ComponentFactory {
 
   listIds(): Promise<ComponentID[]>;
 
+  /**
+   * get component-ids matching the given pattern. a pattern can have multiple patterns separated by a comma.
+   * it uses multimatch (https://www.npmjs.com/package/multimatch) package for the matching algorithm, which supports
+   * (among others) negate character "!" to exclude ids. See the package page for more supported characters.
+   */
+  idsByPattern(pattern: string, throwForNoMatch?: boolean): Promise<ComponentID[]>;
+
   hasId(componentId: ComponentID): Promise<boolean>;
 
   /**
@@ -99,6 +106,19 @@ export interface ComponentFactory {
    * @param componentId
    */
   hasIdNested(componentId: ComponentID, includeCache?: boolean): Promise<boolean>;
+
+  /**
+   * whether a component is not the same as its head.
+   * for a new component, it'll return "true" as it has no head yet.
+   * this is relevant for component from the workspace, where it can be locally changed. on the scope it's always false
+   */
+  isModified(component: Component): Promise<boolean>;
+
+  /**
+   * write the component to the filesystem when applicable (no-op for scope).
+   * to change the component-path, specify the "rootPath", which should be a relative path inside the workspace.
+   */
+  write(component: Component, rootPath?: string): Promise<void>;
 
   /**
    * determine whether host should be the prior one in case multiple hosts persist.

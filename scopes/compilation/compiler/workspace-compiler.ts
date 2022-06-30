@@ -122,7 +122,7 @@ ${this.compileErrors.map(formatError).join('\n')}`);
   private get distDir(): PathOsBasedRelative {
     const packageName = componentIdToPackageName(this.component.state._consumer);
     const packageDir = path.join('node_modules', packageName);
-    const distDirName = DEFAULT_DIST_DIRNAME;
+    const distDirName = this.compilerInstance.getDistDir?.() || DEFAULT_DIST_DIRNAME;
     return path.join(packageDir, distDirName);
   }
 

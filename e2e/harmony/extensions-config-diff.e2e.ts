@@ -11,6 +11,7 @@ chai.use(assertArrays);
 describe('extensions config diff', function () {
   this.timeout(0);
   let helper: Helper;
+  let beforeEject: string;
   before(() => {
     helper = new Helper();
     helper.scopeHelper.reInitLocalScopeHarmony();
@@ -25,6 +26,7 @@ describe('extensions config diff', function () {
     helper.command.install();
     helper.command.compile();
     helper.command.tagAllComponents();
+    beforeEject = helper.scopeHelper.cloneLocalScope();
   });
   after(() => {
     helper.scopeHelper.destroy();
@@ -57,6 +59,7 @@ describe('extensions config diff', function () {
     });
     describe('remove extension', () => {
       before(() => {
+        helper.scopeHelper.getClonedLocalScope(beforeEject);
         reEjectAndCheckStatusBefore(helper);
         helper.componentJson.removeExtension('my-scope/ext3@0.0.1');
       });

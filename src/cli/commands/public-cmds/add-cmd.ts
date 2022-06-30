@@ -13,10 +13,9 @@ import AddTestsWithoutId from '../exceptions/add-tests-without-id';
 
 export default class Add implements LegacyCommand {
   name = 'add [path...]';
-  shortDescription = 'Add any subset of files to be tracked as a component(s).';
+  description = 'Add any subset of files to be tracked as a component(s).';
   group: Group = 'development';
-  description = `add any subset of files to be tracked as a component(s)
-  all flags support glob patterns and {PARENT} {FILE_NAME} annotations
+  extendedDescription = `all flags support glob patterns and {PARENT} {FILE_NAME} annotations
   https://${BASE_DOCS_DOMAIN}/components/adding-components`;
   alias = 'a';
   opts = [
@@ -25,15 +24,16 @@ export default class Add implements LegacyCommand {
     [
       't',
       'tests <file>/"<file>,<file>"',
-      'specify test files to track. use quotation marks to list files or use a glob pattern',
+      'LEGACY ONLY. specify test files to track. use quotation marks to list files or use a glob pattern',
     ],
     ['n', 'namespace <namespace>', 'organize component in a namespace'],
     [
       'e',
       'exclude <file>/"<file>,<file>"',
-      'exclude file from being tracked. use quotation marks to list files or use a glob pattern',
+      'LEGACY ONLY. exclude file from being tracked. use quotation marks to list files or use a glob pattern',
     ],
     ['o', 'override <boolean>', 'override existing component if exists (default = false)'],
+    ['s', 'scope <string>', `sets the component's scope-name. if not entered, the default-scope will be used`],
   ] as CommandOptions;
   loader = true;
   migration = true;
@@ -46,6 +46,7 @@ export default class Add implements LegacyCommand {
       tests,
       namespace,
       exclude,
+      scope,
       override = false,
     }: {
       id: string | null | undefined;
@@ -53,6 +54,7 @@ export default class Add implements LegacyCommand {
       tests: string | null | undefined;
       namespace: string | null | undefined;
       exclude: string | null | undefined;
+      scope?: string;
       override: boolean;
     }
   ): Promise<any> {
@@ -82,6 +84,7 @@ export default class Add implements LegacyCommand {
       namespace,
       tests: testsArray,
       exclude: excludedFiles,
+      defaultScope: scope,
       override,
     });
   }

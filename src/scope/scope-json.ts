@@ -1,9 +1,9 @@
 import fs from 'fs-extra';
 // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import pathlib from 'path';
-
+import { DEFAULT_LANE } from '@teambit/lane-id';
 import BitId from '../bit-id/bit-id';
-import { DEFAULT_LANE, SCOPE_JSON, SCOPE_JSONC } from '../constants';
+import { SCOPE_JSON, SCOPE_JSONC } from '../constants';
 import GeneralError from '../error/general-error';
 import { Remote } from '../remotes';
 import { cleanObject, writeFile } from '../utils';
@@ -117,7 +117,7 @@ export class ScopeJson {
   }
 
   trackLane(trackLaneData: TrackLane) {
-    const existing = this.lanes.tracking.find((t) => t.localLane === trackLaneData.localLane);
+    const existing = this.getTrackLane(trackLaneData.localLane);
     if (existing) {
       existing.remoteLane = trackLaneData.remoteLane;
       existing.remoteScope = trackLaneData.remoteScope;
@@ -126,6 +126,15 @@ export class ScopeJson {
     }
 
     this.hasChanged = true;
+  }
+  removeTrackLane(localLane: string) {
+    const index = this.lanes.tracking.findIndex((t) => t.localLane === localLane);
+    if (index === -1) return;
+    this.lanes.tracking.splice(index, 1);
+    this.hasChanged = true;
+  }
+  private getTrackLane(localLane: string): TrackLane | undefined {
+    return this.lanes.tracking.find((t) => t.localLane === localLane);
   }
   setCurrentLane(laneName: string): void {
     if (this.lanes.current !== laneName) {

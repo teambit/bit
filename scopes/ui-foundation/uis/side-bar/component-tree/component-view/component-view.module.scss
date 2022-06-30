@@ -46,6 +46,7 @@
     align-items: center;
     flex: 1;
     min-width: 0;
+    line-height: 16px;
 
     > span {
       overflow: hidden;
@@ -57,6 +58,8 @@
   .envIcon {
     transition: filter 300ms ease-in-out;
     filter: grayscale(1);
+    width: 16px;
+    height: 16px;
   }
 
   .right {
@@ -82,4 +85,9 @@
     font-weight: bold;
     margin-bottom: 4px;
   }
+}
+
+.envLink {
+  color: white;
+  text-decoration: none;
 }

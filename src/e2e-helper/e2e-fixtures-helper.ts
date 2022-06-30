@@ -63,9 +63,20 @@ export default class FixtureHelper {
   addComponentUtilsIsType() {
     return this.command.addComponent('utils/is-type.js', { i: 'utils/is-type' });
   }
-
+  createComponentIsType() {
+    this.fs.createFile('is-type', 'is-type.js');
+  }
+  addComponentUtilsIsTypeAsDir() {
+    return this.command.addComponent('is-type', { i: 'utils/is-type' });
+  }
+  createComponentIsString(impl = fixtures.isStringHarmony) {
+    this.fs.createFile('is-string', 'is-string.js', impl);
+  }
   addComponentUtilsIsString() {
     return this.command.addComponent('utils/is-string.js', { i: 'utils/is-string' });
+  }
+  addComponentUtilsIsStringAsDir() {
+    return this.command.addComponent('is-string', { i: 'utils/is-string' });
   }
 
   tagComponentBarFoo() {
@@ -160,18 +171,22 @@ export default class FixtureHelper {
    *
    * @returns the expected output in case "node app.js" is running
    */
-  populateComponents(numOfComponents = 3, rewire = true, additionalStr = '', compile = true): string {
-    const getImp = (index) => {
-      if (index === numOfComponents) return `module.exports = () => 'comp${index}${additionalStr}';`;
-      const nextComp = `comp${index + 1}`;
-      return `const ${nextComp} = require('../${nextComp}');
-module.exports = () => 'comp${index}${additionalStr} and ' + ${nextComp}();`;
-    };
+  populateComponents(numOfComponents = 3, rewire = true, additionalStr = '', compile = true, esm = false): string {
     for (let i = 1; i <= numOfComponents; i += 1) {
-      this.fs.outputFile(path.join(`comp${i}`, `index.js`), getImp(i));
+      let content;
+      if (!esm) {
+        content = this.getCjsImplForPopulate(numOfComponents, i, additionalStr);
+      } else {
+        content = this.getEsmImplForPopulate(numOfComponents, i, additionalStr);
+      }
+      this.fs.outputFile(path.join(`comp${i}`, `index.js`), content);
       this.command.addComponent(`comp${i}`);
     }
-    this.fs.outputFile('app.js', "const comp1 = require('./comp1');\nconsole.log(comp1())");
+    let appContent = "const comp1 = require('./comp1');\nconsole.log(comp1())";
+    if (esm) {
+      appContent = "import comp1 from './comp1';\nconsole.log(comp1())";
+    }
+    this.fs.outputFile('app.js', appContent);
     if (rewire) {
       this.command.linkAndRewire();
     }
@@ -180,6 +195,23 @@ module.exports = () => 'comp${index}${additionalStr} and ' + ${nextComp}();`;
       .fill(null)
       .map((val, key) => `comp${key + 1}${additionalStr}`)
       .join(' and ');
+  }
+
+  private getCjsImplForPopulate(numOfComponents: number, index: number, additionalStr = ''): string {
+    if (index === numOfComponents) return `module.exports = () => 'comp${index}${additionalStr}';`;
+    const nextComp = `comp${index + 1}`;
+    return `const ${nextComp} = require('../${nextComp}');
+module.exports = () => 'comp${index}${additionalStr} and ' + ${nextComp}();`;
+  }
+
+  private getEsmImplForPopulate(numOfComponents: number, index: number, additionalStr = ''): string {
+    if (index === numOfComponents)
+      return `export default function(){
+return 'comp${index}${additionalStr}';
+}`;
+    const nextComp = `comp${index + 1}`;
+    return `import ${nextComp} from '../${nextComp}';
+module.exports = () => 'comp${index}${additionalStr} and ' + ${nextComp}();`;
   }
 
   /**
@@ -303,28 +335,6 @@ export default () => 'comp${index} and ' + ${nextComp}();`;
     this.addComponentUtilsIsString();
     this.createComponentBarFoo(fixtures.barFooFixture);
     this.addComponentBarFoo();
-  }
-
-  addExtensionTS() {
-    const extensionsDir = path.join(__dirname, '..', 'extensions');
-    const extDestination = path.join(this.scopes.localPath, 'extensions');
-    fs.copySync(path.join(extensionsDir, 'typescript'), path.join(extDestination, 'typescript'));
-
-    this.command.addComponent('extensions/typescript', { i: 'extensions/typescript' });
-
-    this.npm.initNpm();
-    const dependencies = {
-      typescript: '^3.8',
-    };
-
-    this.packageJson.addKeyValue({ dependencies });
-    this.command.link();
-
-    // @todo: currently, the defaultScope is not enforced, so unless the extension is exported
-    // first, the full-id won't be recognized when loading the extension.
-    // once defaultScope is mandatory, make sure this is working without the next two lines
-    this.command.tagComponent('extensions/typescript');
-    this.command.exportComponent('extensions/typescript');
   }
 
   /**

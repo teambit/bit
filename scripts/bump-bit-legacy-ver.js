@@ -7,7 +7,10 @@ const cwd = path.resolve(__dirname, '..');
 const WAIT_FOR_NPM_IN_SEC = 10;
 const MAX_NPM_ATTEMPTS = 50;
 gitStatus(); // to debug errors with git-pull
+backupPnpmLockFile();
+resetPnpmLockChanges();
 gitPull(); // this way, if the script is re-running after another commit, it has the correct data
+revertPnpmLockChanges();
 const shouldBump = shouldBumpBitLegacy();
 if (!shouldBump) {
   console.log('there was no change on legacy @teambit/legacy that requires bumping its version');
@@ -111,6 +114,18 @@ function gitPush() {
 
 function gitPull() {
   exec('GIT_MERGE_AUTOEDIT=no git pull origin master');
+}
+
+function backupPnpmLockFile() {
+  exec('cp pnpm-lock.yaml pnpm-lock.yaml.bak');
+}
+
+function revertPnpmLockChanges() {
+  exec('mv pnpm-lock.yaml.bak pnpm-lock.yaml');
+}
+
+function resetPnpmLockChanges() {
+  exec('git checkout pnpm-lock.yaml');
 }
 
 function gitStatus() {

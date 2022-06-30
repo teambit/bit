@@ -62,7 +62,7 @@ export class CLIMain {
    * get an instance of a registered command. (useful for aspects to modify and extend existing commands)
    */
   getCommand(name: string): Command | undefined {
-    return this.commands.find((command) => command.name === name);
+    return this.commands.find((command) => getCommandId(command.name) === name);
   }
 
   /**
@@ -101,7 +101,7 @@ export class CLIMain {
   private setDefaults(command: Command) {
     command.alias = command.alias || '';
     command.description = command.description || '';
-    command.shortDescription = command.shortDescription || '';
+    command.extendedDescription = command.extendedDescription || '';
     command.group = command.group || 'ungrouped';
     command.options = command.options || [];
     command.private = command.private || false;

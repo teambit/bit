@@ -4,6 +4,7 @@ import { concurrentIOLimit } from '../../utils/concurrency';
 export class WriteObjectsQueue {
   private queue: PQueue;
   private addedHashes: string[] = [];
+  added = 0;
   constructor(concurrency = concurrentIOLimit()) {
     this.queue = new PQueue({ concurrency, autoStart: true });
   }
@@ -18,6 +19,7 @@ export class WriteObjectsQueue {
     return this.queue;
   }
   add<T>(fn: () => T, priority?: number): Promise<T> {
+    this.added += 1;
     return this.queue.add(fn, { priority });
   }
   onIdle(): Promise<void> {

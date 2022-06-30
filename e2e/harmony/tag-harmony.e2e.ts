@@ -58,7 +58,7 @@ describe('tag components on Harmony', function () {
       helper.fixtures.populateComponents();
       helper.command.tagAllComponents();
       helper.command.export();
-      helper.command.tagScope('0.0.2');
+      helper.command.tagIncludeUnmodified('0.0.2');
     });
     it('should not show the component as modified', () => {
       const status = helper.command.statusJson();
@@ -145,6 +145,19 @@ describe('tag components on Harmony', function () {
         });
       });
     });
+    describe('soft tag with specific version attached to a component-id', () => {
+      before(() => {
+        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.fixtures.populateComponents(1);
+        helper.command.softTag('comp1@0.0.5');
+      });
+      it('should save the version into the .bitmap file', () => {
+        const bitMap = helper.bitMap.readComponentsMapOnly();
+        const componentMap = bitMap.comp1;
+        expect(componentMap).to.have.property('nextVersion');
+        expect(componentMap.nextVersion.version).to.equal('0.0.5');
+      });
+    });
     describe('soft tag after soft tag', () => {
       let tagOutput;
       before(() => {
@@ -190,7 +203,7 @@ describe('tag components on Harmony', function () {
     describe('without version', () => {
       let output;
       before(() => {
-        output = helper.command.tagScopeWithoutBuild();
+        output = helper.command.tagIncludeUnmodifiedWithoutBuild();
       });
       it('should bump each component by patch', () => {
         expect(output).to.have.string('comp1@0.0.2');
@@ -202,7 +215,7 @@ describe('tag components on Harmony', function () {
       let output;
       before(() => {
         helper.scopeHelper.getClonedLocalScope(beforeTagScope);
-        output = helper.command.tagScopeWithoutBuild('', '--minor');
+        output = helper.command.tagIncludeUnmodifiedWithoutBuild('', '--minor');
       });
       it('should bump each component by patch', () => {
         expect(output).to.have.string('comp1@0.1.0');
@@ -246,7 +259,7 @@ describe('tag components on Harmony', function () {
     });
     describe('tag with specific version', () => {
       before(() => {
-        helper.command.tagAllWithoutBuild('1.0.0');
+        helper.command.tagAllWithoutBuild('--ver 1.0.0');
       });
       it('should set the specified version to the modified component and bumped by patch the auto-tagged', () => {
         const bitMap = helper.bitMap.read();
@@ -258,7 +271,7 @@ describe('tag components on Harmony', function () {
     describe('tag with --scope flag', () => {
       before(() => {
         helper.fs.appendFile('comp3/index.js');
-        helper.command.tagScopeWithoutBuild('2.0.0');
+        helper.command.tagIncludeUnmodifiedWithoutBuild('2.0.0');
       });
       it('should set all components versions to the scope flag', () => {
         const bitMap = helper.bitMap.read();
@@ -325,7 +338,7 @@ describe('tag components on Harmony', function () {
       helper.bitJsonc.setupDefault();
       helper.bitJsonc.setPackageManager();
       helper.fixtures.populateComponents(3);
-      tagOutput = helper.command.tagAllWithoutBuild('--pre-release dev');
+      tagOutput = helper.command.tagAllWithoutBuild('--increment prerelease --prerelease-id dev');
     });
     it('should tag all components according to the pre-release version', () => {
       expect(tagOutput).to.have.string('comp1@0.0.1-dev.0');
@@ -333,7 +346,7 @@ describe('tag components on Harmony', function () {
     describe('increment pre-release', () => {
       before(() => {
         helper.fixtures.populateComponents(3, undefined, 'v2');
-        tagOutput = helper.command.tagAllWithoutBuild('--pre-release');
+        tagOutput = helper.command.tagAllWithoutBuild('--increment prerelease');
       });
       it('should use the last pre-release identifier and increment it', () => {
         expect(tagOutput).to.have.string('comp1@0.0.1-dev.1');
@@ -376,6 +389,21 @@ describe('tag components on Harmony', function () {
       const taskIds = builderExt.data.pipeline.map((p) => `${p.taskId}:${p.taskName}`);
       const taskIdsUniq = uniq(taskIds);
       expect(taskIds.length).to.equal(taskIdsUniq.length);
+    });
+  });
+  describe('soft tag --minor with auto-tag', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents();
+      helper.command.tagAllWithoutBuild();
+      helper.fs.appendFile('comp2/index.js');
+      helper.command.softTag('--minor');
+    });
+    it('should not bump the auto-tagged with minor but with patch', () => {
+      const bitMap = helper.bitMap.readComponentsMapOnly();
+      expect(bitMap.comp2.nextVersion.version).equal('minor');
+      expect(bitMap.comp1.nextVersion.version).equal('patch');
     });
   });
 });

@@ -8,7 +8,7 @@ export const reactWorkspaceAppTemplate: WorkspaceTemplate = {
   generateFiles: async (context: WorkspaceContext) => {
     return generateCommonFiles(context);
   },
-  importComponents: () => {
+  fork: () => {
     return [
       { id: 'teambit.react/templates/apps/my-app', path: 'apps/my-app' },
       { id: 'teambit.react/templates/envs/my-react', path: 'envs/my-react' },

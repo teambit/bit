@@ -9,4 +9,4 @@ export const indexFile = (context: ComponentContext) => {
 export type { ${Name}Props } from './${name}';
 `,
   };
-}
+};

@@ -7,6 +7,8 @@ import { NetworkConfig, ProxyConfig } from './dependency-resolver.main.runtime';
 
 export { PeerDependencyIssuesByProjects };
 
+export type PackageImportMethod = 'auto' | 'hardlink' | 'copy' | 'clone';
+
 export type PackageManagerInstallOptions = {
   cacheRootDir?: string;
   /**
@@ -27,6 +29,14 @@ export type PackageManagerInstallOptions = {
   nodeLinker?: 'hoisted' | 'isolated';
 
   packageManagerConfigRootDir?: string;
+
+  packageImportMethod?: PackageImportMethod;
+
+  sideEffectsCache?: boolean;
+
+  engineStrict?: boolean;
+
+  nodeVersion?: string;
 };
 
 export type PackageManagerGetPeerDependencyIssuesOptions = PackageManagerInstallOptions;

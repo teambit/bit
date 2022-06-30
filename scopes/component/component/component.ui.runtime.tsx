@@ -1,21 +1,29 @@
-import PubsubAspect, { PubsubUI, BitBaseEvent } from '@teambit/pubsub';
+import React from 'react';
+import flatten from 'lodash.flatten';
+import copy from 'copy-to-clipboard';
+import type { RouteProps } from 'react-router-dom';
+
+import type { LinkProps } from '@teambit/base-react.navigation.link';
+import CommandBarAspect, { CommandBarUI, CommandEntry } from '@teambit/command-bar';
+import { DeprecationIcon } from '@teambit/component.ui.deprecation-icon';
+import { Slot, SlotRegistry } from '@teambit/harmony';
 import PreviewAspect, { ClickInsideAnIframeEvent } from '@teambit/preview';
-import { MenuItemSlot, MenuItem } from '@teambit/ui-foundation.ui.main-dropdown';
-import { Slot } from '@teambit/harmony';
-import { NavigationSlot, RouteSlot } from '@teambit/ui-foundation.ui.react-router.slot-router';
-import { NavLinkProps } from '@teambit/base-ui.routing.nav-link';
+import PubsubAspect, { BitBaseEvent, PubsubUI } from '@teambit/pubsub';
+import ReactRouterAspect, { ReactRouterUI } from '@teambit/react-router';
 import { UIRuntime } from '@teambit/ui';
 import { isBrowser } from '@teambit/ui-foundation.ui.is-browser';
-import React from 'react';
+import { MenuItem, MenuItemSlot } from '@teambit/ui-foundation.ui.main-dropdown';
+import { NavigationSlot, RouteSlot } from '@teambit/ui-foundation.ui.react-router.slot-router';
 import { Import } from '@teambit/ui-foundation.ui.use-box.menu';
-import { RouteProps } from 'react-router-dom';
-import CommandBarAspect, { CommandBarUI, CommandEntry } from '@teambit/command-bar';
-import copy from 'copy-to-clipboard';
-import { ComponentAspect } from './component.aspect';
-import { Component, ComponentPageElement, ComponentPageSlot } from './ui/component';
-import { Menu, NavPlugin, OrderedNavigationSlot, ConsumeMethodSlot, ConsumePlugin } from './ui/menu';
+
 import { AspectSection } from './aspect.section';
+import { ComponentAspect } from './component.aspect';
 import { ComponentModel } from './ui';
+import { Component, ComponentPageElement, ComponentPageSlot } from './ui/component';
+import { ComponentResultPlugin, ComponentSearcher } from './ui/component-searcher';
+import { ConsumeMethodSlot, ConsumePlugin, ComponentMenu, NavPlugin, OrderedNavigationSlot } from './ui/menu';
+
+export type ComponentSearchResultSlot = SlotRegistry<ComponentResultPlugin[]>;
 
 export type Server = {
   env: string;
@@ -26,10 +34,9 @@ export type ComponentMeta = {
   id: string;
 };
 
-export const componentIdUrlRegex = '[\\w\\/-]*[\\w-]';
-
 export class ComponentUI {
-  readonly routePath = `/:componentId(${componentIdUrlRegex})`;
+  readonly routePath = `/*`;
+  private componentSearcher: ComponentSearcher;
 
   constructor(
     /**
@@ -52,8 +59,13 @@ export class ComponentUI {
 
     private pageItemSlot: ComponentPageSlot,
 
-    private commandBarUI: CommandBarUI
+    private componentSearchResultSlot: ComponentSearchResultSlot,
+
+    private commandBarUI: CommandBarUI,
+
+    reactRouterUi: ReactRouterUI
   ) {
+    this.componentSearcher = new ComponentSearcher({ navigate: reactRouterUi.navigateTo });
     if (isBrowser) this.registerPubSub();
   }
 
@@ -77,7 +89,7 @@ export class ComponentUI {
   private keyBindings: CommandEntry[] = [
     {
       id: 'component.copyBitId', // TODO - extract to a component!
-      handler: () => {
+      action: () => {
         copy(this.activeComponent?.id.toString() || '');
       },
       displayName: 'Copy component ID',
@@ -85,7 +97,7 @@ export class ComponentUI {
     },
     {
       id: 'component.copyNpmId', // TODO - extract to a component!
-      handler: this.copyNpmId,
+      action: this.copyNpmId,
       displayName: 'Copy component package name',
       keybinding: ',',
     },
@@ -166,7 +178,7 @@ export class ComponentUI {
 
   getMenu(host: string) {
     return (
-      <Menu
+      <ComponentMenu
         navigationSlot={this.navSlot}
         consumeMethodSlot={this.consumeMethodSlot}
         widgetSlot={this.widgetSlot}
@@ -176,12 +188,12 @@ export class ComponentUI {
     );
   }
 
-  registerRoute(route: RouteProps) {
-    this.routeSlot.register(route);
+  registerRoute(routes: RouteProps[] | RouteProps) {
+    this.routeSlot.register(routes);
     return this;
   }
 
-  registerNavigation(nav: NavLinkProps, order?: number) {
+  registerNavigation(nav: LinkProps, order?: number) {
     this.navSlot.register({
       props: nav,
       order,
@@ -192,7 +204,7 @@ export class ComponentUI {
     this.consumeMethodSlot.register(consumeMethods);
   }
 
-  registerWidget(widget: NavLinkProps, order?: number) {
+  registerWidget(widget: LinkProps, order?: number) {
     this.widgetSlot.register({ props: widget, order });
   }
 
@@ -204,7 +216,19 @@ export class ComponentUI {
     this.pageItemSlot.register(items);
   };
 
-  static dependencies = [PubsubAspect, CommandBarAspect];
+  /** register widgets to the components listed in the command bar */
+  registerSearchResultWidget = (...items: ComponentResultPlugin[]) => {
+    this.componentSearchResultSlot.register(items);
+    const totalPlugins = flatten(this.componentSearchResultSlot.values());
+
+    this.componentSearcher.updatePlugins(totalPlugins);
+  };
+
+  updateComponents = (components: ComponentModel[]) => {
+    this.componentSearcher.update(components);
+  };
+
+  static dependencies = [PubsubAspect, CommandBarAspect, ReactRouterAspect];
 
   static runtime = UIRuntime;
 
@@ -215,18 +239,20 @@ export class ComponentUI {
     Slot.withType<ConsumeMethodSlot>(),
     Slot.withType<MenuItemSlot>(),
     Slot.withType<ComponentPageSlot>(),
+    Slot.withType<ComponentSearchResultSlot>(),
   ];
 
   static async provider(
-    [pubsub, commandBarUI]: [PubsubUI, CommandBarUI],
+    [pubsub, commandBarUI, reactRouterUI]: [PubsubUI, CommandBarUI, ReactRouterUI],
     config,
-    [routeSlot, navSlot, consumeMethodSlot, widgetSlot, menuItemSlot, pageSlot]: [
+    [routeSlot, navSlot, consumeMethodSlot, widgetSlot, menuItemSlot, pageSlot, componentSearchResultSlot]: [
       RouteSlot,
       OrderedNavigationSlot,
       ConsumeMethodSlot,
       OrderedNavigationSlot,
       MenuItemSlot,
-      ComponentPageSlot
+      ComponentPageSlot,
+      ComponentSearchResultSlot
     ]
   ) {
     // TODO: refactor ComponentHost to a separate extension (including sidebar, host, graphql, etc.)
@@ -239,14 +265,18 @@ export class ComponentUI {
       widgetSlot,
       menuItemSlot,
       pageSlot,
-      commandBarUI
+      componentSearchResultSlot,
+      commandBarUI,
+      reactRouterUI
     );
-    const section = new AspectSection();
-
+    const aspectSection = new AspectSection();
+    // @ts-ignore
+    componentUI.registerSearchResultWidget({ key: 'deprecation', end: DeprecationIcon });
     componentUI.commandBarUI.addCommand(...componentUI.keyBindings);
+    commandBarUI.addSearcher(componentUI.componentSearcher);
     componentUI.registerMenuItem(componentUI.menuItems);
-    componentUI.registerRoute(section.route);
-    componentUI.registerWidget(section.navigationLink, section.order);
+    componentUI.registerRoute(aspectSection.route);
+    componentUI.registerWidget(aspectSection.navigationLink, aspectSection.order);
     componentUI.registerConsumeMethod(componentUI.bitMethod);
     return componentUI;
   }

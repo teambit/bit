@@ -6,17 +6,18 @@ import { ReactEnv } from '../../react.env';
 export class ReactAppType implements ApplicationType<ReactAppOptions> {
   constructor(readonly name: string, private reactEnv: ReactEnv) {}
 
-  createApp(options: ReactAppOptions) {
+  async createApp(options: ReactAppOptions) {
     return new ReactApp(
       options.name,
       options.entry,
       options.portRange || [3000, 4000],
       this.reactEnv,
-      options.prerender?.routes,
+      options.prerender,
       options.bundler,
       options.devServer,
       options.webpackTransformers,
-      options.deploy
+      options.deploy,
+      options.favicon
     );
   }
 }

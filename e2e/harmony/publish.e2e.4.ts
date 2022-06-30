@@ -66,7 +66,7 @@ describe('publish functionality', function () {
       describe('using "bit publish"', () => {
         before(async () => {
           helper.scopeHelper.getClonedLocalScope(scopeBeforeTag);
-          helper.command.tagScope('2.0.0');
+          helper.command.tagIncludeUnmodified('2.0.0');
           helper.command.publish('comp1', '--allow-staged');
           helper.command.publish('comp2', '--allow-staged');
           helper.command.publish('comp3', '--allow-staged');
@@ -87,7 +87,7 @@ describe('publish functionality', function () {
       describe('with pre-release', () => {
         before(async () => {
           helper.scopeHelper.getClonedLocalScope(scopeBeforeTag);
-          helper.command.tagScope('3.0.0-dev.1');
+          helper.command.tagIncludeUnmodified('3.0.0-dev.1');
         });
         it('should publish with the tag flag and be able to npm install them by the tag name', () => {
           helper.scopeHelper.reInitLocalScopeHarmony();

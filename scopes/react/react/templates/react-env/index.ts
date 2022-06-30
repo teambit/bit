@@ -5,7 +5,9 @@ import { mainRuntimeFile } from './files/main.runtime';
 import { previewRuntimeFile } from './files/preview.runtime';
 import { aspectFile } from './files/aspect';
 import { webpackConfigFile } from './files/webpack.config';
-import { typescriptConfigFile } from './files/typescript.config';
+import { typescriptConfigFile } from './files/typescript/typescript.config';
+import { globalStylesFile } from './files/typescript/styles';
+import { tsTransformerFile } from './files/typescript/ts-transformer';
 import { jestConfigFile } from './files/jest.config';
 
 export const reactEnvTemplate: ComponentTemplate = {
@@ -43,13 +45,21 @@ export const reactEnvTemplate: ComponentTemplate = {
         content: typescriptConfigFile(),
       },
       {
+        relativePath: `typescript/styles.d.ts`,
+        content: globalStylesFile(),
+      },
+      {
+        relativePath: `typescript/ts-transformer.ts`,
+        content: tsTransformerFile(),
+      },
+      {
         relativePath: `jest/jest.config.js`,
         content: jestConfigFile(),
       },
     ];
   },
   config: {
-    'teambit.react/react': {},
+    'teambit.envs/env': {},
     'teambit.envs/envs': {
       env: 'teambit.envs/env',
     },

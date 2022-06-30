@@ -7,6 +7,7 @@ import { WebpackAspect } from './webpack.aspect';
 
 export interface WebpackConfigWithDevServer extends Configuration {
   devServer: WDS.Configuration;
+  favicon?: string;
 }
 export class WebpackDevServer implements DevServer {
   constructor(

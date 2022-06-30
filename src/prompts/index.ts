@@ -6,10 +6,12 @@ import passphraseSchema from './schemas/passphrase';
 import removeSchema from './schemas/remote-remove';
 import resolveConflictSchema from './schemas/resolve-conflict';
 import userpassSchema from './schemas/user-password';
+import approveOperationSchema from './schemas/approve-operation';
 
 const passphrase = prompt(passphraseSchema);
 const userpass = prompt(userpassSchema);
-const removePrompt = prompt(removeSchema);
+const approveOperation = prompt(approveOperationSchema);
+const removePrompt = (deleteFiles: boolean) => prompt(removeSchema(deleteFiles));
 const resolveConflictPrompt = prompt(resolveConflictSchema);
 const analyticsPrompt = prompt(analyticsSchema);
 const errorReportingPrompt = prompt(errorReportingSchema);
@@ -18,6 +20,7 @@ const forkComponentsPrompt = (bitIds, remote) => prompt(forkComponentsSchema(bit
 export {
   passphrase,
   userpass,
+  approveOperation,
   removePrompt,
   resolveConflictPrompt,
   analyticsPrompt,

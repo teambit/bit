@@ -1,22 +1,22 @@
-import React, { useMemo, useCallback, useRef, useEffect } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import classnames from 'classnames';
 import ReactFlow, {
-  ReactFlowProvider,
-  Controls,
   Background,
-  MiniMap,
-  OnLoadParams,
-  NodeTypesType,
+  Controls,
   Handle,
-  Position,
+  MiniMap,
   NodeProps,
+  NodeTypesType,
+  OnLoadParams,
+  Position,
   ReactFlowProps,
+  ReactFlowProvider,
 } from 'react-flow-renderer';
 import { ComponentID } from '@teambit/component';
 
 import { ComponentWidgetSlot } from '../../graph.ui.runtime';
 import { ComponentNode } from '../component-node';
-import { GraphModel } from '../query';
+import { EdgeModel, GraphModel, NodeModel } from '../query';
 import { calcElements } from './calc-elements';
 import { calcMinimapColors } from './minimap';
 import { ComponentGraphContext } from './graph-context';
@@ -35,11 +35,12 @@ function ComponentNodeContainer(props: NodeProps) {
   );
 }
 
+// @ts-ignore - incorrect NodeTypes https://github.com/wbkd/react-flow/issues/2101 (#5746)
 const NodeTypes: NodeTypesType = { ComponentNode: ComponentNodeContainer };
 
 export type DependenciesGraphProps = {
   rootNode: ComponentID;
-  graph: GraphModel;
+  graph: GraphModel<NodeModel, EdgeModel>;
   componentWidgets: ComponentWidgetSlot;
   onLoad?: (instance: OnLoadParams) => void;
 } & Omit<ReactFlowProps, 'elements'>;
@@ -75,6 +76,7 @@ export function DependenciesGraph({
 
   return (
     <ComponentGraphContext.Provider value={context}>
+      {/* @ts-ignore - TODO - remove when ReactFlowProvider will be of type `FC<PropsWithChildren<{}>>` instead of `FC` (#5746) */}
       <ReactFlowProvider>
         <ReactFlow
           draggable={false}

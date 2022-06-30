@@ -1,25 +1,13 @@
-import React, { ReactNode, useMemo } from 'react';
-import { useLanesQuery, LanesModel } from '@teambit/lanes.ui.lanes';
+import React, { ReactNode } from 'react';
+import { useLanes } from '@teambit/lanes.ui.lanes';
 import { LanesContext } from './lanes-context';
 
 export type LanesProviderProps = {
   children: ReactNode;
-  currentLaneId?: string;
+  viewedLaneId?: string;
 };
 
-export function LanesProvider({ children, currentLaneId }: LanesProviderProps) {
-  const { lanes } = useLanesQuery();
-
-  const model = useMemo(
-    () =>
-      new LanesModel({
-        lanes,
-        currentLane: lanes?.find((lane) => {
-          return currentLaneId === lane.id;
-        }),
-      }),
-    [lanes, currentLaneId]
-  );
-
-  return <LanesContext.Provider value={model}>{children}</LanesContext.Provider>;
+export function LanesProvider({ children, viewedLaneId }: LanesProviderProps) {
+  const { lanes } = useLanes(viewedLaneId);
+  return <LanesContext.Provider value={lanes}>{children}</LanesContext.Provider>;
 }

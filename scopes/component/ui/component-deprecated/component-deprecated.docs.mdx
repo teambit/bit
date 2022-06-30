@@ -1,0 +1,18 @@
+---
+description: A Deprecated component label.
+---
+
+import { ComponentDeprecated } from './component-deprecated';
+
+A component that renders a deprecated label when the component is deprecated.
+
+### Component usage
+
+```js live
+() => {
+  const deprecation = {
+    isDeprecate: true,
+  };
+  return <ComponentDeprecated deprecation={deprecation} />;
+};
+```

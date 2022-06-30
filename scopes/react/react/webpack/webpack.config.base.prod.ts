@@ -1,67 +1,71 @@
-import WorkboxWebpackPlugin from 'workbox-webpack-plugin';
 import CssMinimizerPlugin from 'css-minimizer-webpack-plugin';
 import TerserPlugin from 'terser-webpack-plugin';
 import { Configuration } from 'webpack';
-import { getExternals } from './get-externals';
-import { getExposedRules } from './get-exposed-rules';
 // import { WebpackManifestPlugin } from 'webpack-manifest-plugin';
 
 // This is the production and development configuration.
 // It is focused on developer experience, fast rebuilds, and a minimal bundle.
 // eslint-disable-next-line complexity
-export default function (externalizePeer: boolean, peers: string[], dev?: boolean): Configuration {
-  const externals = externalizePeer ? (getExternals(peers) as any) : undefined;
-  const exposedRules = externalizePeer ? undefined : getExposedRules(peers);
-
-  const module = externalizePeer
-    ? undefined
-    : {
-        rules: exposedRules,
-      };
-
+export default function (dev?: boolean): Configuration {
   const optimization = dev
     ? undefined
     : {
         minimize: true,
         minimizer: [
-          // This is only used in production mode
           new TerserPlugin({
-            extractComments: false,
+            minify: TerserPlugin.esbuildMinify,
+            // `terserOptions` options will be passed to `esbuild`
+            // Link to options - https://esbuild.github.io/api/#minify
+            // Note: the `minify` options is true by default (and override other `minify*` options), so if you want to disable the `minifyIdentifiers` option (or other `minify*` options) please use:
             terserOptions: {
-              parse: {
-                // We want terser to parse ecma 8 code. However, we don't want it
-                // to apply any minification steps that turns valid ecma 5 code
-                // into invalid ecma 5 code. This is why the 'compress' and 'output'
-                // sections only apply transformations that are ecma 5 safe
-                // https://github.com/facebook/create-react-app/pull/4234
-                ecma: 8,
-              },
-              compress: {
-                ecma: 5,
-                warnings: false,
-                // Disabled because of an issue with Uglify breaking seemingly valid code:
-                // https://github.com/facebook/create-react-app/issues/2376
-                // Pending further investigation:
-                // https://github.com/mishoo/UglifyJS2/issues/2011
-                comparisons: false,
-                // Disabled because of an issue with Terser breaking valid code:
-                // https://github.com/facebook/create-react-app/issues/5250
-                // Pending further investigation:
-                // https://github.com/terser-js/terser/issues/120
-                inline: 2,
-              },
-              mangle: {
-                safari10: true,
-              },
-              output: {
-                ecma: 5,
-                comments: false,
-                // Turned on because emoji and regex is not minified properly using default
-                // https://github.com/facebook/create-react-app/issues/2488
-                ascii_only: true,
-              },
+              minify: false,
+              minifyWhitespace: true,
+              // We don't want to minify identifiers to enable easier debugging on remote scopes when there are preview issues
+              minifyIdentifiers: false,
+              // minifyIdentifiers: true,
+              minifySyntax: true,
             },
+            // terserOptions: {},
           }),
+
+          // This is only used in production mode
+          // new TerserPlugin({
+          //   extractComments: false,
+          //   terserOptions: {
+          //     parse: {
+          //       // We want terser to parse ecma 8 code. However, we don't want it
+          //       // to apply any minification steps that turns valid ecma 5 code
+          //       // into invalid ecma 5 code. This is why the 'compress' and 'output'
+          //       // sections only apply transformations that are ecma 5 safe
+          //       // https://github.com/facebook/create-react-app/pull/4234
+          //       ecma: 8,
+          //     },
+          //     compress: {
+          //       ecma: 5,
+          //       warnings: false,
+          //       // Disabled because of an issue with Uglify breaking seemingly valid code:
+          //       // https://github.com/facebook/create-react-app/issues/2376
+          //       // Pending further investigation:
+          //       // https://github.com/mishoo/UglifyJS2/issues/2011
+          //       comparisons: false,
+          //       // Disabled because of an issue with Terser breaking valid code:
+          //       // https://github.com/facebook/create-react-app/issues/5250
+          //       // Pending further investigation:
+          //       // https://github.com/terser-js/terser/issues/120
+          //       inline: 2,
+          //     },
+          //     mangle: {
+          //       safari10: true,
+          //     },
+          //     output: {
+          //       ecma: 5,
+          //       comments: false,
+          //       // Turned on because emoji and regex is not minified properly using default
+          //       // https://github.com/facebook/create-react-app/issues/2488
+          //       ascii_only: true,
+          //     },
+          //   },
+          // }),
           new CssMinimizerPlugin({
             minimizerOptions: {
               preset: [
@@ -89,8 +93,6 @@ export default function (externalizePeer: boolean, peers: string[], dev?: boolea
       };
 
   return {
-    module,
-    externals,
     optimization,
 
     plugins: [
@@ -108,7 +110,6 @@ export default function (externalizePeer: boolean, peers: string[], dev?: boolea
       //       return manifest;
       //     }, seed);
       //     const entrypointFiles = entrypoints.main.filter((fileName) => !fileName.endsWith('.map'));
-
       //     // @ts-ignore - https://github.com/shellscape/webpack-manifest-plugin/issues/276
       //     return {
       //       files: manifestFiles,
@@ -118,21 +119,6 @@ export default function (externalizePeer: boolean, peers: string[], dev?: boolea
       // }),
       // Generate a service worker script that will precache, and keep up to date,
       // the HTML & assets that are part of the webpack build.
-      new WorkboxWebpackPlugin.GenerateSW({
-        clientsClaim: true,
-        exclude: [/\.map$/, /asset-manifest\.json$/],
-        // importWorkboxFrom: 'cdn',
-        navigateFallback: 'public/index.html',
-        navigateFallbackDenylist: [
-          // Exclude URLs starting with /_, as they're likely an API call
-          new RegExp('^/_'),
-          // Exclude any URLs whose last part seems to be a file extension
-          // as they're likely a resource and not a SPA route.
-          // URLs containing a "?" character won't be blacklisted as they're likely
-          // a route with query params (e.g. auth callbacks).
-          new RegExp('/[^/?]+\\.[^/]+$'),
-        ],
-      }),
     ].filter(Boolean),
     // Turn off performance processing because we utilize
     // our own hints via the FileSizeReporter
