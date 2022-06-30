@@ -54,7 +54,7 @@ describe('components that are not synced between the scope and the consumer', fu
         output = helper.command.exportIds('bar/foo');
       });
       it('should export the component successfully', () => {
-        expect(output).to.have.string('exported 1 components');
+        expect(output).to.have.string('exported the following 1 component(s)');
       });
     });
     describe('bit export all', () => {

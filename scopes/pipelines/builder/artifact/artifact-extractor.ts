@@ -72,7 +72,7 @@ export class ArtifactExtractor {
     await pMapSeries(artifactObjectsPerId, async ({ id, artifacts }) => {
       const vinyls = await Promise.all(
         artifacts.map((artifactObject) =>
-          artifactObject.files.getVinylsAndImportIfMissing(id.scope as string, this.scope.legacyScope)
+          artifactObject.files.getVinylsAndImportIfMissing(id._legacy, this.scope.legacyScope)
         )
       );
       const flattenedVinyls = vinyls.flat();

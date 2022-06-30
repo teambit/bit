@@ -11,10 +11,9 @@ import LegacyWorkspaceConfig, {
   WorkspaceConfigLoadFunction,
 } from '@teambit/legacy/dist/consumer/config/workspace-config';
 import { PathOsBased, PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
-import { CLIAspect, MainRuntime, CLIMain } from '@teambit/cli';
-import { Slot, SlotRegistry, GlobalConfig } from '@teambit/harmony';
+import { CLIAspect, MainRuntime } from '@teambit/cli';
+import { GlobalConfig } from '@teambit/harmony';
 import path from 'path';
-import { UseCmd } from './use.cmd';
 import { transformLegacyPropsToExtensions, WorkspaceConfig, WorkspaceConfigFileProps } from './workspace-config';
 import { ConfigType, HostConfig } from './types';
 import { ConfigAspect } from './config.aspect';
@@ -29,18 +28,8 @@ export type ConfigDeps = [];
 
 export type ConfigConfig = {};
 
-/**
- * pass the aspectIds entered by the user. returns the complete ids including versions.
- */
-export type PreAddingAspects = (aspectIds: string[]) => Promise<string[]>;
-export type PreAddingAspectsSlot = SlotRegistry<PreAddingAspects>;
-
 export class ConfigMain {
-  constructor(
-    public workspaceConfig?: WorkspaceConfig,
-    public scopeConfig?: WorkspaceConfig,
-    public preAddingAspectsSlot?: PreAddingAspectsSlot
-  ) {}
+  constructor(public workspaceConfig?: WorkspaceConfig, public scopeConfig?: WorkspaceConfig) {}
 
   get type(): ConfigType {
     if (this.workspaceConfig) {
@@ -99,15 +88,11 @@ export class ConfigMain {
     return config;
   }
 
-  registerPreAddingAspectsSlot(func: PreAddingAspects) {
-    this.preAddingAspectsSlot?.register(func);
-  }
-
   static runtime = MainRuntime;
-  static slots = [Slot.withType<PreAddingAspects>()];
+  static slots = [];
   static dependencies = [CLIAspect];
   static config = {};
-  static async provider([cli]: [CLIMain], config: any, [preAddingAspectsSlot]: [PreAddingAspectsSlot]) {
+  static async provider() {
     LegacyWorkspaceConfig.registerOnWorkspaceConfigIsExist(onLegacyWorkspaceConfigIsExist());
     LegacyWorkspaceConfig.registerOnWorkspaceConfigEnsuring(onLegacyWorkspaceEnsure());
     const consumerInfo = await getConsumerInfo(process.cwd());
@@ -116,7 +101,7 @@ export class ConfigMain {
     const configDirPath = consumerInfo?.path || process.cwd();
     const workspaceConfig = await WorkspaceConfig.loadIfExist(configDirPath);
     if (workspaceConfig) {
-      configMain = new ConfigMain(workspaceConfig, undefined, preAddingAspectsSlot);
+      configMain = new ConfigMain(workspaceConfig, undefined);
     } else {
       // TODO: try load scope config here
       configMain = {};
@@ -125,7 +110,6 @@ export class ConfigMain {
     LegacyWorkspaceConfig.registerOnWorkspaceConfigReset((dirPath, resetHard) =>
       WorkspaceConfig.reset(dirPath, resetHard)
     );
-    cli.register(new UseCmd(configMain));
     return configMain;
   }
 }
