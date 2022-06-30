@@ -186,7 +186,6 @@
         "@types/eslint": "7.28.0",
         "@types/express": "4.17.9",
         "@types/find-root": "1.1.2",
-        "@types/get-port": "4.2.0",
         "@types/http-proxy-agent": "2.0.2",
         "@types/json-schema": "7.0.9",
         "@types/lodash": "4.14.165",
@@ -376,7 +375,7 @@
       "peerDependencies": {
         "@apollo/client": "^3.0.0",
         "@teambit/base-react.navigation.link": "2.0.27",
-        "@teambit/legacy": "1.0.293",
+        "@teambit/legacy": "1.0.294",
         "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
         "browserslist": "4.16.3",
         "core-js": "^3.10.0",
@@ -459,7 +458,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.293"
+            "@teambit/legacy": "1.0.294"
           }
         }
       },
@@ -724,7 +723,7 @@
           "peerDependencies": {
             "react": "^16.8.0 || ^17.0.0",
             "react-dom": "^16.8.0 || ^17.0.0",
-            "@teambit/legacy": "1.0.293"
+            "@teambit/legacy": "1.0.294"
           }
         }
       }
@@ -802,7 +801,7 @@
             "@teambit/base-react.navigation.link": "2.0.27",
             "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
             "@apollo/client": "3.3.6",
-            "@teambit/legacy": "1.0.293",
+            "@teambit/legacy": "1.0.294",
             "graphql": "14.7.0",
             "browserslist": "4.16.3",
             "reflect-metadata": "0.1.13",
@@ -936,7 +935,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.293"
+            "@teambit/legacy": "1.0.294"
           }
         }
       }

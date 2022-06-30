@@ -860,6 +860,29 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     return addResults;
   }
 
+  async use(aspectIdStr: string): Promise<string> {
+    const aspectId = await this.resolveComponentId(aspectIdStr);
+    let aspectIdToAdd = aspectId.toStringWithoutVersion();
+    if (!(await this.hasId(aspectId))) {
+      const loadedIds = await this.scope.loadAspects([aspectIdStr], true);
+      if (loadedIds[0]) aspectIdToAdd = loadedIds[0];
+    }
+    const config = this.harmony.get<ConfigMain>('teambit.harmony/config').workspaceConfig;
+    if (!config) {
+      throw new Error(`use() unable to get the workspace config`);
+    }
+    config.setExtension(
+      aspectIdToAdd,
+      {},
+      {
+        overrideExisting: false,
+        ignoreVersion: false,
+      }
+    );
+    await config.write({ dir: path.dirname(config.path) });
+    return aspectIdToAdd;
+  }
+
   /**
    * add a new component to the .bitmap file.
    * this method only adds the records in memory but doesn't persist to the filesystem.
