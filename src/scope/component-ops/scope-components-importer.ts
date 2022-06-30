@@ -292,8 +292,7 @@ export default class ScopeComponentsImporter {
   async importLanes(remoteLaneIds: LaneId[]): Promise<Lane[]> {
     const remotes = await getScopeRemotes(this.scope);
     const objectsStreamPerRemote = await remotes.fetch(groupByScopeName(remoteLaneIds), this.scope, { type: 'lane' });
-    const multipleStreams = Object.values(objectsStreamPerRemote);
-    const bitObjects = await this.multipleStreamsToBitObjects(multipleStreams);
+    const bitObjects = await this.multipleStreamsToBitObjects(objectsStreamPerRemote);
     const lanes = bitObjects.getLanes();
     await Promise.all(lanes.map((lane) => this.repo.remoteLanes.syncWithLaneObject(lane.scope as string, lane)));
     return lanes;
@@ -321,7 +320,7 @@ export default class ScopeComponentsImporter {
     const remotes = await getScopeRemotes(this.scope);
     const multipleStreams = await remotes.fetch(groupedHashedMissing, this.scope, { type: 'object' });
 
-    const bitObjectsList = await this.multipleStreamsToBitObjects(Object.values(multipleStreams));
+    const bitObjectsList = await this.multipleStreamsToBitObjects(multipleStreams);
     await this.repo.writeObjectsToTheFS(bitObjectsList.getAll());
   }
 
@@ -409,7 +408,7 @@ export default class ScopeComponentsImporter {
     let bitObjectsList: BitObjectList;
     try {
       const streams = await remotes.fetch({ [id.scope as string]: [id.toString()] }, this.scope);
-      bitObjectsList = await this.multipleStreamsToBitObjects(Object.values(streams));
+      bitObjectsList = await this.multipleStreamsToBitObjects(streams);
     } catch (err: any) {
       logger.error(`getRemoteComponent, failed to get ${id.toString()}`, err);
       return null; // probably doesn't exist
@@ -431,11 +430,22 @@ export default class ScopeComponentsImporter {
     const remotes = await getScopeRemotes(this.scope);
     const grouped = groupByScopeName(ids);
     const streams = await remotes.fetch(grouped, this.scope);
-    return this.multipleStreamsToBitObjects(Object.values(streams));
+    return this.multipleStreamsToBitObjects(streams);
   }
 
-  private async multipleStreamsToBitObjects(streams: ObjectItemsStream[]): Promise<BitObjectList> {
-    const objectListPerRemote = await Promise.all(streams.map((stream) => ObjectList.fromReadableStream(stream)));
+  private async multipleStreamsToBitObjects(remoteStreams: {
+    [remoteName: string]: ObjectItemsStream;
+  }): Promise<BitObjectList> {
+    const objectListPerRemote = await Promise.all(
+      Object.keys(remoteStreams).map(async (remoteName) => {
+        try {
+          return await ObjectList.fromReadableStream(remoteStreams[remoteName]);
+        } catch (err: any) {
+          logger.error(`multipleStreamsToBitObjects, error from ${remoteName}`, err);
+          throw new Error(`the remote "${remoteName}" threw an error:\n${err.message}`);
+        }
+      })
+    );
     const objectList = ObjectList.mergeMultipleInstances(objectListPerRemote);
     const bitObjects = await objectList.toBitObjects();
     return bitObjects;
