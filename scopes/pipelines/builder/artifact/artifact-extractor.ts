@@ -76,7 +76,8 @@ export class ArtifactExtractor {
         )
       );
       const flattenedVinyls = vinyls.flat();
-      const compPath = path.join(outDir, id.toStringWithoutVersion());
+      // if asked for only one component, shorten the path by omitting the id
+      const compPath = artifactObjectsPerId.length > 1 ? path.join(outDir, id.toStringWithoutVersion()) : outDir;
       await Promise.all(flattenedVinyls.map((vinyl) => fs.outputFile(path.join(compPath, vinyl.path), vinyl.contents)));
     });
   }
