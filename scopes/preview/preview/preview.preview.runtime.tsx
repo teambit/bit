@@ -204,9 +204,9 @@ export class PreviewPreview {
     await new Promise<void>((resolve, reject) => {
       const script = document.createElement('script');
       const previewRoute = `~aspect/component-preview`;
+      script.setAttribute('defer', 'defer');
       const src = `/api/${id.toString()}/${previewRoute}/${previewBundleFileName}`;
       script.src = src;
-      script.setAttribute('defer', 'defer');
       script.onload = () => resolve();
       script.onerror = (message, _, _1, _2, error) =>
         reject(error || new Error(`[preview.preview] failed to load preview script: ${message}`));
