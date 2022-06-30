@@ -12,7 +12,8 @@ export async function writePeerLink(peers: string[], workdir: string) {
   return fullpath;
 }
 
-// TODO - use a better strategy like umd, systemjs, or jsonp
+// TODO - this exposes the packages in the "window" strategy,
+// should use a better strategy like umd, systemjs, or jsonp
 
 export function generatePeerLink(peers: string[]) {
   if (!peers) return '';

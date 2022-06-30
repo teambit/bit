@@ -19,7 +19,7 @@ import { existsSync, mkdirpSync } from 'fs-extra';
 import type { PreviewMain } from './preview.main.runtime';
 import { generateTemplateEntries } from './bundler/chunks';
 import { generateHtmlConfig } from './bundler/html-plugin';
-import { writePeerLink } from './bundler/peers-link';
+import { writePeerLink } from './bundler/create-peers-link';
 
 export type ModuleExpose = {
   name: string;

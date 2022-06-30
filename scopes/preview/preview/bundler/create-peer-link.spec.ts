@@ -1,4 +1,4 @@
-import { generatePeerLink } from './peers-link';
+import { generatePeerLink } from './create-peers-link';
 
 const guardSnapshot = `function guard(property, expected) {
   var existing = globalObj[property];

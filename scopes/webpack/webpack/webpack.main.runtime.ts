@@ -1,5 +1,3 @@
-import { inspect } from 'util';
-import { writeFileSync } from 'fs';
 import webpack, { Configuration } from 'webpack';
 import PubsubAspect, { PubsubMain } from '@teambit/pubsub';
 import {
