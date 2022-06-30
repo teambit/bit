@@ -35,6 +35,7 @@ import { SnapCmd } from './snap-cmd';
 import { SnappingAspect } from './snapping.aspect';
 import { TagCmd } from './tag-cmd';
 import { ComponentsHaveIssues } from './components-have-issues';
+import ResetCmd from './reset-cmd';
 
 const HooksManagerInstance = HooksManager.getInstance();
 
@@ -497,7 +498,8 @@ export class SnappingMain {
     const snapping = new SnappingMain(workspace, logger, issues, insights);
     const snapCmd = new SnapCmd(community.getBaseDomain(), snapping, logger);
     const tagCmd = new TagCmd(community.getBaseDomain(), snapping, logger);
-    cli.register(tagCmd, snapCmd);
+    const resetCmd = new ResetCmd();
+    cli.register(tagCmd, snapCmd, resetCmd);
     return snapping;
   }
 }
