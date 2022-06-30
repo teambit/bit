@@ -38,7 +38,7 @@ describe('bit checkout command', function () {
     });
     it('before tagging it should show an error saying the component was not tagged yet', () => {
       const output = helper.general.runWithTryCatch('bit checkout 1.0.0 bar/foo');
-      expect(output).to.have.string("component bar/foo doesn't have any version yet");
+      expect(output).to.have.string('component bar/foo is new, no version to checkout');
     });
     describe('after the component was tagged', () => {
       before(() => {
