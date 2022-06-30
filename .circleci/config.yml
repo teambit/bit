@@ -746,9 +746,9 @@ jobs:
       - run: cd bit && npm run generate-cli-reference-json
       - run: cd bit && bit status # just to make sure that the new cli-reference.mdx file is valid
       - run: cd bit && bit checkout latest teambit.harmony/content/cli-reference --ours --skip-dependency-installation
-      - run: cd bit && bit checkout latest --all --skip-dependency-installation
+      - run: cd bit && bit checkout latest --skip-dependency-installation
       # - run: cd bit && rm -rf node_modules/@teambit/legacy
-      # - run: cd bit && bbit checkout latest --all
+      # - run: cd bit && bbit checkout latest
       # - run: cd bit && npm run link-bit-legacy
       # since we removed the node_modules we need to make sure we compile, install and link everything again
       - run: cd bit && bbit install --skip-import
@@ -757,10 +757,9 @@ jobs:
       # - run: cd bit && node scripts/soft-tag-scope-teambit.js
       - run:
           name: tag persist
-          # command: cd bit && bit tag --all --ignore-newest-version
-          # command: cd bit && bit tag --scope 0.0.297
-          # command: cd bit && bit tag --all --increment-by 2
-          command: cd bit && bit tag --all
+          # command: cd bit && bit tag --ignore-newest-version
+          # command: cd bit && bit tag --increment-by 2
+          command: cd bit && bit tag
           # command: cd bit && bit tag --persist --ignore-newest-version
           no_output_timeout: '25m'
           environment:
