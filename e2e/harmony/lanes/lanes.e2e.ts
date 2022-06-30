@@ -982,7 +982,7 @@ describe('bit lane command', function () {
         helper.scopeHelper.getClonedLocalScope(afterFirstSnap);
         helper.command.snapComponentWithoutBuild('comp1', '--force');
         const head = helper.command.getHeadOfLane('dev', 'comp1');
-        helper.command.untagAll(head);
+        helper.command.untag('comp1', head);
       });
       it('should not show the component as new', () => {
         const status = helper.command.statusJson();
