@@ -7,7 +7,7 @@ import logger from '../../logger/logger';
 import { Lane } from '../models';
 import ModelComponent from '../models/model-component';
 
-export type untagResult = { id: BitId; versions: string[]; component: ModelComponent };
+export type untagResult = { id: BitId; versions: string[]; component?: ModelComponent };
 
 /**
  * If not specified version, remove all local versions.
@@ -90,7 +90,7 @@ export async function removeLocalVersionsForComponentsMatchedByWildcard(
   return removeLocalVersionsForMultipleComponents(componentsToUntag, lane, version, force, consumer.scope);
 }
 
-async function removeLocalVersionsForMultipleComponents(
+export async function removeLocalVersionsForMultipleComponents(
   componentsToUntag: ModelComponent[],
   lane: Lane | null,
   version?: string,
@@ -127,7 +127,7 @@ async function removeLocalVersionsForMultipleComponents(
   );
 }
 
-async function getComponentsWithOptionToUntag(consumer: Consumer, version?: string): Promise<ModelComponent[]> {
+export async function getComponentsWithOptionToUntag(consumer: Consumer, version?: string): Promise<ModelComponent[]> {
   const componentList = new ComponentsList(consumer);
   const laneObj = await consumer.getCurrentLaneObject();
   const components: ModelComponent[] = await componentList.listExportPendingComponents(laneObj);

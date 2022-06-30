@@ -30,6 +30,13 @@ import pMap from 'p-map';
 import { InsightsAspect, InsightsMain } from '@teambit/insights';
 import { concurrentComponentsLimit } from '@teambit/legacy/dist/utils/concurrency';
 import { FailedLoadForTag } from '@teambit/legacy/dist/consumer/component/exceptions/failed-load-for-tag';
+import {
+  removeLocalVersionsForAllComponents,
+  untagResult,
+  getComponentsWithOptionToUntag,
+  removeLocalVersionsForMultipleComponents,
+} from '@teambit/legacy/dist/scope/component-ops/untag-component';
+import { ModelComponent } from '@teambit/legacy/dist/scope/models';
 import IssuesAspect, { IssuesMain } from '@teambit/issues';
 import { SnapCmd } from './snap-cmd';
 import { SnappingAspect } from './snapping.aspect';
@@ -261,6 +268,64 @@ export class SnappingMain {
         : tagPendingComponents;
       return BitIds.fromArray(bitIds);
     }
+  }
+
+  /**
+   * remove tags/snaps that exist locally, which were not exported yet.
+   * once a tag/snap is exported, it's impossible to delete it as other components may depend on it
+   */
+  async reset(
+    componentPattern?: string,
+    version?: string,
+    force = false,
+    soft = false
+  ): Promise<{ results: untagResult[]; isSoftUntag: boolean }> {
+    if (!this.workspace) throw new ConsumerNotFound();
+    const consumer = this.workspace.consumer;
+    const currentLane = await consumer.getCurrentLaneObject();
+    const untag = async (): Promise<untagResult[]> => {
+      if (!componentPattern) {
+        return removeLocalVersionsForAllComponents(consumer, currentLane, version, force);
+      }
+      const candidateComponents = await getComponentsWithOptionToUntag(consumer, version);
+      const idsMatchingPattern = await this.workspace.idsByPattern(componentPattern);
+      const idsMatchingPatternBitIds = BitIds.fromArray(idsMatchingPattern.map((id) => id._legacy));
+      const componentsToUntag = candidateComponents.filter((modelComponent) =>
+        idsMatchingPatternBitIds.hasWithoutVersion(modelComponent.toBitId())
+      );
+      return removeLocalVersionsForMultipleComponents(componentsToUntag, currentLane, version, force, consumer.scope);
+    };
+    const softUntag = async () => {
+      const componentsList = new ComponentsList(consumer);
+      const softTaggedComponents = componentsList.listSoftTaggedComponents();
+      const softTaggedComponentsIds = await this.workspace.resolveMultipleComponentIds(softTaggedComponents);
+      const idsToRemoveSoftTags = componentPattern
+        ? this.workspace.scope.filterIdsFromPoolIdsByPattern(componentPattern, softTaggedComponentsIds)
+        : softTaggedComponentsIds;
+      return compact(
+        idsToRemoveSoftTags.map((componentId) => {
+          const componentMap = consumer.bitMap.getComponent(componentId._legacy, { ignoreScopeAndVersion: true });
+          const removedVersion = componentMap.nextVersion?.version;
+          if (!removedVersion) return null;
+          componentMap.clearNextVersion();
+          return { id: componentId._legacy, versions: [removedVersion] };
+        })
+      );
+    };
+    let results: untagResult[];
+    const isRealUntag = !soft;
+    if (isRealUntag) {
+      results = await untag();
+      await consumer.scope.objects.persist();
+      const components = results.map((result) => result.component);
+      await consumer.updateComponentsVersions(components as ModelComponent[]);
+    } else {
+      results = await softUntag();
+      consumer.bitMap.markAsChanged();
+    }
+
+    await consumer.onDestroy();
+    return { results, isSoftUntag: !isRealUntag };
   }
 
   private async loadComponentsForTag(ids: BitIds): Promise<ConsumerComponent[]> {
@@ -498,7 +563,7 @@ export class SnappingMain {
     const snapping = new SnappingMain(workspace, logger, issues, insights);
     const snapCmd = new SnapCmd(community.getBaseDomain(), snapping, logger);
     const tagCmd = new TagCmd(community.getBaseDomain(), snapping, logger);
-    const resetCmd = new ResetCmd();
+    const resetCmd = new ResetCmd(snapping);
     cli.register(tagCmd, snapCmd, resetCmd);
     return snapping;
   }
