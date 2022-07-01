@@ -5,6 +5,7 @@ import pMapSeries from 'p-map-series';
 import { Consumer } from '@teambit/legacy/dist/consumer';
 import { ApplyVersionResults } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
 import { BitIds } from '@teambit/legacy/dist/bit-id';
+import { ComponentID } from '@teambit/component-id';
 import { Workspace } from '@teambit/workspace';
 import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
 import { Lane } from '@teambit/legacy/dist/scope/models';
@@ -12,7 +13,6 @@ import { Tmp } from '@teambit/legacy/dist/scope/repositories';
 import { MergingMain, ComponentMergeStatus } from '@teambit/merging';
 import { remove } from '@teambit/legacy/dist/api/consumer';
 import { MergeLaneOptions } from './lanes.main.runtime';
-import { ComponentID } from '@teambit/component-id';
 
 export async function mergeLanes({
   merging,
@@ -141,7 +141,7 @@ export async function mergeLanes({
     const tmp = new Tmp(consumer.scope);
     try {
       const componentsStatus = await Promise.all(
-        bitIds.map((bitId) => merging.getComponentMergeStatus(bitId, localLane, otherLaneName, existingOnWorkspaceOnly))
+        bitIds.map((bitId) => merging.getComponentMergeStatus(bitId, localLane, otherLaneName))
       );
       await tmp.clear();
       return componentsStatus;
