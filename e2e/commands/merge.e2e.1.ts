@@ -220,6 +220,8 @@ describe('bit merge command', function () {
         helper.command.addComponent('bar', { i: 'bar/foo' });
         helper.command.tagAllWithoutBuild(); // 0.0.3
         fs.removeSync(path.join(helper.scopes.localPath, 'bar/foo2.js'));
+        // remove the symlink from node_modules. otherwise, Windows on Circle fails with ENOENT when running "helper.scopeHelper.cloneLocalScope()"
+        fs.removeSync(path.join(helper.scopes.localPath, 'node_modules', '@my-scope', 'bar/foo', 'foo2.js'));
         helper.fixtures.createComponentBarFoo(barFooV4); // change also foo.js so it'll have conflict
         helper.command.tagAllWithoutBuild(); // 0.0.4 without bar/foo2.js
         scopeWithRemovedFile = helper.scopeHelper.cloneLocalScope();
