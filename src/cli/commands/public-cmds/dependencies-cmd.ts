@@ -80,10 +80,10 @@ try running "bit cat-component ${results.id.toStringWithoutVersion()}" to see wh
 
     const scopeTable = generateDependenciesInfoTable(scopeGraph, results.id);
     const workspaceTable = generateDependenciesInfoTable(workspaceGraph, results.id);
-    return `${chalk.bold('Dependents originated from workspace')}
+    return `${chalk.bold('Dependencies originated from workspace')}
 ${workspaceTable || '<none>'}
 
-${chalk.bold('Dependents originated from scope')}
+${chalk.bold('Dependencies originated from scope')}
 ${scopeTable || '<none>'}`;
   }
 }
