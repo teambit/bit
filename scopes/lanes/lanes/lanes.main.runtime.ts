@@ -64,6 +64,8 @@ export type MergeLaneOptions = {
   build: boolean;
   keepReadme: boolean;
   squash: boolean;
+  pattern?: string;
+  includeDeps?: boolean;
 };
 
 export type CreateLaneOptions = {
@@ -337,7 +339,7 @@ export class LanesMain {
     }
     const results = await mergeLanes({
       merging: this.merging,
-      consumer: this.workspace.consumer,
+      workspace: this.workspace,
       laneName,
       ...options,
     });
