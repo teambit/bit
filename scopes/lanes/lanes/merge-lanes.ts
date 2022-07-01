@@ -73,26 +73,36 @@ export async function mergeLanes({
   if (pattern) {
     const componentIds = await workspace.resolveMultipleComponentIds(bitIds);
     const compIdsFromPattern = workspace.scope.filterIdsFromPoolIdsByPattern(pattern, componentIds);
-    allComponentsStatus = await filterIdsByPattern(
+    allComponentsStatus = await filterComponentsStatus(
       allComponentsStatus,
       compIdsFromPattern,
       bitIds,
       workspace,
       includeDeps
     );
+    bitIds.forEach((bitId) => {
+      if (!allComponentsStatus.find((c) => c.id.isEqualWithoutVersion(bitId))) {
+        allComponentsStatus.push({ id: bitId, unmergedLegitimately: true, unmergedMessage: `excluded by pattern` });
+      }
+    });
   }
   if (existingOnWorkspaceOnly) {
     const workspaceIds = await workspace.listIds();
     const compIdsFromPattern = workspaceIds.filter((id) =>
       allComponentsStatus.find((c) => c.id.isEqualWithoutVersion(id._legacy))
     );
-    allComponentsStatus = await filterIdsByPattern(
+    allComponentsStatus = await filterComponentsStatus(
       allComponentsStatus,
       compIdsFromPattern,
       bitIds,
       workspace,
       includeDeps
     );
+    bitIds.forEach((bitId) => {
+      if (!allComponentsStatus.find((c) => c.id.isEqualWithoutVersion(bitId))) {
+        allComponentsStatus.push({ id: bitId, unmergedLegitimately: true, unmergedMessage: `not in the workspace` });
+      }
+    });
   }
 
   if (squash) {
@@ -165,21 +175,21 @@ export async function mergeLanes({
   }
 }
 
-async function filterIdsByPattern(
+async function filterComponentsStatus(
   allComponentsStatus: ComponentMergeStatus[],
-  compIdsFromPattern: ComponentID[],
+  compIdsToKeep: ComponentID[],
   allBitIds: BitId[],
   workspace: Workspace,
   includeDeps = false
 ): Promise<ComponentMergeStatus[]> {
-  const bitIdsFromPattern = BitIds.fromArray(compIdsFromPattern.map((c) => c._legacy));
+  const bitIdsFromPattern = BitIds.fromArray(compIdsToKeep.map((c) => c._legacy));
   const bitIdsNotFromPattern = allBitIds.filter((bitId) => !bitIdsFromPattern.hasWithoutVersion(bitId));
   const filteredComponentStatus: ComponentMergeStatus[] = [];
   const depsToAdd: BitId[] = [];
-  await pMapSeries(compIdsFromPattern, async (compId) => {
+  await pMapSeries(compIdsToKeep, async (compId) => {
     const fromStatus = allComponentsStatus.find((c) => c.id.isEqualWithoutVersion(compId._legacy));
     if (!fromStatus) {
-      throw new Error(`filterIdsByPattern: unable to find ${compId.toString()} in component-status`);
+      throw new Error(`filterComponentsStatus: unable to find ${compId.toString()} in component-status`);
     }
     filteredComponentStatus.push(fromStatus);
     if (fromStatus.unmergedMessage) {
@@ -187,7 +197,7 @@ async function filterIdsByPattern(
     }
     const { divergeData } = fromStatus;
     if (!divergeData) {
-      throw new Error(`filterIdsByPattern: unable to find divergeData for ${compId.toString()}`);
+      throw new Error(`filterComponentsStatus: unable to find divergeData for ${compId.toString()}`);
     }
     const remoteVersions = divergeData.snapsOnRemoteOnly;
     if (!remoteVersions.length) {
@@ -215,7 +225,7 @@ ${depsNotIncludeInPattern.map((d) => d.toString()).join('\n')}`);
     depsUniq.forEach((id) => {
       const fromStatus = allComponentsStatus.find((c) => c.id.isEqualWithoutVersion(id));
       if (!fromStatus) {
-        throw new Error(`filterIdsByPattern: unable to find ${id.toString()} in component-status`);
+        throw new Error(`filterComponentsStatus: unable to find ${id.toString()} in component-status`);
       }
       filteredComponentStatus.push(fromStatus);
     });

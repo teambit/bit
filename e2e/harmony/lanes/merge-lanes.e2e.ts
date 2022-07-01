@@ -77,7 +77,7 @@ describe('merge lanes', function () {
       });
       it('should indicate that the components were not merge because they are not in the workspace', () => {
         expect(mergeOutput).to.have.string('the merge has been canceled on the following component(s)');
-        expect(mergeOutput).to.have.string('is not in the workspace');
+        expect(mergeOutput).to.have.string('not in the workspace');
       });
       it('bitmap should not save any component', () => {
         const bitMap = helper.bitMap.readComponentsMapOnly();
