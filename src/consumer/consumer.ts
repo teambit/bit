@@ -177,6 +177,9 @@ export default class Consumer {
     return this.scope.lanes.getCurrentLaneId();
   }
 
+  /**
+   * the name can be a full lane-id or only the lane-name, which can be the alias (local-lane) or the remote-name.
+   */
   async getParsedLaneId(name: string): Promise<LaneId> {
     return this.scope.lanes.parseLaneIdFromString(name);
   }
