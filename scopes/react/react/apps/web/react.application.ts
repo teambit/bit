@@ -43,6 +43,9 @@ export class ReactApp implements Application {
           historyApiFallback: {
             index: '/index.html',
             disableDotRule: true,
+            headers: {
+              'Access-Control-Allow-Headers': '*',
+            }
           },
         }),
       (configMutator) => {
