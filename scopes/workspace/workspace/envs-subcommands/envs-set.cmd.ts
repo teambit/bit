@@ -1,5 +1,6 @@
 import { Command } from '@teambit/cli';
 import chalk from 'chalk';
+import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
 import { Workspace } from '../workspace';
 
 export class EnvsSetCmd implements Command {
@@ -8,8 +9,7 @@ export class EnvsSetCmd implements Command {
   arguments = [
     {
       name: 'component-pattern',
-      description:
-        'component name, component id, or component pattern. use component pattern to select multiple components. \nuse commas to separate patterns and "!" to exclude. e.g. "ui/**, !ui/button"\nwrap the pattern with quotes',
+      description: COMPONENT_PATTERN_HELP,
     },
     {
       name: 'env',

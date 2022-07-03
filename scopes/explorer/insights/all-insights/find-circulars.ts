@@ -4,7 +4,7 @@ import { GraphBuilder } from '@teambit/graph';
 import { uniq } from 'lodash';
 import { Insight, InsightResult, RawResult } from '../insight';
 
-export const INSIGHT_CIRCULAR_DEPS_NAME = 'circular dependencies';
+export const INSIGHT_CIRCULAR_DEPS_NAME = 'circular';
 
 export default class FindCycles implements Insight {
   name = INSIGHT_CIRCULAR_DEPS_NAME;

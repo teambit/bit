@@ -143,7 +143,7 @@ async function getComponentStatus(
     return componentStatus;
   };
   if (!componentModel) {
-    return returnFailure(`component ${component.id.toString()} doesn't have any version yet`);
+    return returnFailure(`component ${component.id.toString()} is new, no version to checkout`, true);
   }
   const unmerged = repo.unmergedComponents.getEntry(component.name);
   if (!reset && unmerged && unmerged.resolved === false) {
