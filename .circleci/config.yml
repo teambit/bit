@@ -1012,16 +1012,16 @@ jobs:
           command: gsutil cp macos-arm64/bit-${BIT_VERSION}.tar.gz gs://bvm.bit.dev/versions/dev/Darwin-arm64/${BIT_VERSION}/bit-${BIT_VERSION}.tar.gz
       - run:
           name: Upload tar file (Linux)
-          command: gsutil cp linux/bit-${BIT_VERSION}.tar.gz gs://bvm.bit.dev/bit/versions/${BIT_VERSION}/bit-${BIT_VERSION}-linux-x64.tar.gz && sha256sum linux/bit-${BIT_VERSION}.tar.gz > checksum.txt && gsutil cp checksum.txt gs://bvm.bit.dev/bit/versions/${BIT_VERSION}/bit-${BIT_VERSION}-linux-x64.checksum.txt
+          command: gsutil cp linux/bit-${BIT_VERSION}.tar.gz gs://bvm.bit.dev/bit/versions/${BIT_VERSION}/bit-${BIT_VERSION}-linux-x64.tar.gz && mv linux/bit-${BIT_VERSION}.tar.gz bit-${BIT_VERSION}-linux-x64.tar.gz && sha256sum bit-${BIT_VERSION}-linux-x64.tar.gz > checksum.txt && gsutil cp checksum.txt gs://bvm.bit.dev/bit/versions/${BIT_VERSION}/bit-${BIT_VERSION}-linux-x64.checksum.txt
       - run:
           name: Upload tar file (Windows)
-          command: gsutil cp windows/bit-${BIT_VERSION}.tar.gz gs://bvm.bit.dev/bit/versions/${BIT_VERSION}/bit-${BIT_VERSION}-win-x64.tar.gz && sha256sum windows/bit-${BIT_VERSION}.tar.gz > checksum.txt && gsutil cp checksum.txt gs://bvm.bit.dev/bit/versions/${BIT_VERSION}/bit-${BIT_VERSION}-windows-x64.checksum.txt
+          command: gsutil cp windows/bit-${BIT_VERSION}.tar.gz gs://bvm.bit.dev/bit/versions/${BIT_VERSION}/bit-${BIT_VERSION}-win-x64.tar.gz && mv windows/bit-${BIT_VERSION}.tar.gz bit-${BIT_VERSION}-win-x64.tar.gz && sha256sum bit-${BIT_VERSION}-win-x64.tar.gz > checksum.txt && gsutil cp checksum.txt gs://bvm.bit.dev/bit/versions/${BIT_VERSION}/bit-${BIT_VERSION}-win-x64.checksum.txt
       - run:
           name: Upload tar file (OSX)
-          command: gsutil cp macos/bit-${BIT_VERSION}.tar.gz gs://bvm.bit.dev/bit/versions/${BIT_VERSION}/bit-${BIT_VERSION}-darwin-x64.tar.gz && sha256sum macos/bit-${BIT_VERSION}.tar.gz > checksum.txt && gsutil cp checksum.txt gs://bvm.bit.dev/bit/versions/${BIT_VERSION}/bit-${BIT_VERSION}-darwin-x64.checksum.txt
+          command: gsutil cp macos/bit-${BIT_VERSION}.tar.gz gs://bvm.bit.dev/bit/versions/${BIT_VERSION}/bit-${BIT_VERSION}-darwin-x64.tar.gz && mv macos/bit-${BIT_VERSION}.tar.gz bit-${BIT_VERSION}-darwin-x64.tar.gz && sha256sum bit-${BIT_VERSION}-darwin-x64.tar.gz > checksum.txt && gsutil cp checksum.txt gs://bvm.bit.dev/bit/versions/${BIT_VERSION}/bit-${BIT_VERSION}-darwin-x64.checksum.txt
       - run:
           name: Upload tar file (OSX-arm64)
-          command: gsutil cp macos-arm64/bit-${BIT_VERSION}.tar.gz gs://bvm.bit.dev/bit/versions/${BIT_VERSION}/bit-${BIT_VERSION}-darwin-arm64.tar.gz && sha256sum macos-arm64/bit-${BIT_VERSION}.tar.gz > checksum.txt && gsutil cp checksum.txt gs://bvm.bit.dev/bit/versions/${BIT_VERSION}/bit-${BIT_VERSION}-darwin-arm64.checksum.txt
+          command: gsutil cp macos-arm64/bit-${BIT_VERSION}.tar.gz gs://bvm.bit.dev/bit/versions/${BIT_VERSION}/bit-${BIT_VERSION}-darwin-arm64.tar.gz && mv macos-arm64/bit-${BIT_VERSION}.tar.gz bit-${BIT_VERSION}-darwin-arm64.tar.gz && sha256sum bit-${BIT_VERSION}-darwin-arm64.tar.gz > checksum.txt && gsutil cp checksum.txt gs://bvm.bit.dev/bit/versions/${BIT_VERSION}/bit-${BIT_VERSION}-darwin-arm64.checksum.txt
 
 
   bit_export:
