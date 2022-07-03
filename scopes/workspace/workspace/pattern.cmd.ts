@@ -14,7 +14,20 @@ to exclude, use "!". e.g. "ui/**, !ui/button"
 always wrap the pattern with quotes to avoid collision with shell commands.
 the matching algorithm is done by multimatch (@see https://github.com/sindresorhus/multimatch)
 `;
-
+  examples = [
+    { cmd: 'bit pattern "**"', description: 'matches all components' },
+    {
+      cmd: 'bit pattern "*/ui/*"',
+      description:
+        'matches components with any scope-name and the "ui" namespace. e.g. "ui/button" but not "ui/elements/button"',
+    },
+    {
+      cmd: 'bit pattern "*/ui/**"',
+      description: 'matches components that their namespace starts with "ui/" e.g. "ui/button", "ui/elements/button"',
+    },
+    { cmd: 'bit pattern "bar, foo"', description: 'matches two components: bar and foo' },
+    { cmd: 'bit pattern "my-scope.org/**"', description: 'matches all components of the scope "my-scope.org"' },
+  ];
   group = 'development';
   private = false;
   options = [['j', 'json', 'return the output as JSON']] as CommandOptions;

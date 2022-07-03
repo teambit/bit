@@ -929,6 +929,7 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
     return this.filterIdsFromPoolIdsByPattern(pattern, ids, throwForNoMatch);
   }
 
+  // todo: move this to somewhere else (where?)
   filterIdsFromPoolIdsByPattern(pattern: string, ids: ComponentID[], throwForNoMatch = true) {
     const patterns = pattern.split(',').map((p) => p.trim());
     // check also as legacyId.toString, as it doesn't have the defaultScope
