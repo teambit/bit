@@ -43,7 +43,7 @@ export class TagCmd implements Command {
     ['p', 'patch', 'syntactic sugar for "--increment patch"'],
     ['', 'minor', 'syntactic sugar for "--increment minor"'],
     ['', 'major', 'syntactic sugar for "--increment major"'],
-    ['', 'pre-release [identifier]', 'syntactic sugar for "--increment prerelease" and "--prerelease-id <identifier>"'],
+    ['', 'pre-release [identifier]', 'syntactic sugar for "--increment prerelease" and `--prerelease-id <identifier>`'],
     ['', 'snapped', 'EXPERIMENTAL. tag components that their head is a snap (not a tag)'],
     ['', 'skip-tests', 'skip running component tests during tag process'],
     ['', 'skip-auto-tag', 'skip auto tagging dependents'],

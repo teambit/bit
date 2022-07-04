@@ -192,7 +192,7 @@ describe('component id with wildcard', function () {
           output = helper.command.exportIds('"*/fs/*"');
         });
         it('should indicate the exported components', () => {
-          expect(output).to.have.string('exported 2 components');
+          expect(output).to.have.string('exported the following 2 component(s)');
         });
         it('should export only the matched components', () => {
           const ls = helper.command.listRemoteScopeParsed();

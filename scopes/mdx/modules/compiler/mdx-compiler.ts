@@ -148,7 +148,7 @@ function extractImports() {
           isDefault: importSpecifier.isDefault,
         }));
       });
-      file.data.imports = imports;
+      (file.data.imports ||= []).push(...imports);
     });
 
     remove(tree, 'yaml');

@@ -224,6 +224,10 @@ export default class ComponentWriter {
       // build-pipeline. when capsules are written via the scope, we do need the dists.
       return;
     }
+    if (this.component.buildStatus !== 'succeed') {
+      // this is important for "bit sign" when on lane to not go to the original scope
+      return;
+    }
     const extensionsNamesForArtifacts = ['teambit.compilation/compiler'];
     const artifactsFiles = flatten(
       extensionsNamesForArtifacts.map((extName) => getArtifactFilesByExtension(this.component.extensions, extName))
@@ -238,7 +242,7 @@ export default class ComponentWriter {
         }
         // fyi, if this is coming from the isolator aspect, it is optimized to import all at once.
         // see artifact-files.importMultipleDistsArtifacts().
-        const vinylFiles = await artifactFiles.getVinylsAndImportIfMissing(this.component.scope as string, scope);
+        const vinylFiles = await artifactFiles.getVinylsAndImportIfMissing(this.component.id, scope);
         artifactsVinylFlattened.push(...vinylFiles);
       })
     );

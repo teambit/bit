@@ -1,4 +1,4 @@
-import v4 from 'uuid';
+import { v4 } from 'uuid';
 import { rmdirSync } from 'fs';
 import { expect } from 'chai';
 import { Logger } from '@teambit/logger';

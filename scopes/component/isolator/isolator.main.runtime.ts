@@ -358,8 +358,12 @@ export class IsolatorMain {
     await Promise.all(
       components.map(async (component) => {
         const isModified = await component.isModified();
-        if (isModified) modifiedComps.push(component);
-        else unmodifiedComps.push(component);
+        if (!isModified && component.buildStatus === 'succeed') {
+          // the "component.buildStatus" check is important for "bit sign" when on lane to not go to the original scope
+          unmodifiedComps.push(component);
+        } else {
+          modifiedComps.push(component);
+        }
       })
     );
     const legacyUnmodifiedComps = unmodifiedComps.map((component) => component.state._consumer.clone());
