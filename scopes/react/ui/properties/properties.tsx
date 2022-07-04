@@ -5,7 +5,6 @@ import { useFetchDocs } from '@teambit/component.ui.hooks.use-fetch-docs';
 import React from 'react';
 
 export function Properties({ componentId }: any) {
-
   const { loading, error, data } = useFetchDocs(componentId);
 
   if (!data || loading) return null;
