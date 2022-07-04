@@ -21,6 +21,7 @@ import {
   ComponentFiltersSlot,
 } from '@teambit/component.ui.component-drawer';
 import { ComponentFilters, DeprecateFilter, EnvsFilter } from '@teambit/component.ui.component-filters';
+import { ComponentUrlResolver, ComponentUrlProvider } from '@teambit/component.modules.component-url';
 
 import { ScopeMenu, ScopeUseBox } from './ui/menu';
 import { ScopeAspect } from './scope.aspect';
@@ -161,6 +162,11 @@ export class ScopeUI {
     this.cornerSlot.register(corner);
   }
 
+  private componentUrlFunc: ComponentUrlResolver | undefined;
+  registerComponentUrl(func: ComponentUrlResolver) {
+    this.componentUrlFunc = func;
+  }
+
   /**
    * register a scope overview.
    */
@@ -198,7 +204,12 @@ export class ScopeUI {
 
   private getContext() {
     const contexts = this.contextSlot.values();
-    return flatten(contexts);
+    // eslint-disable-next-line react/prop-types
+    const ComponentUrlFuncProvider: ScopeContextType = ({ children }) => (
+      <ComponentUrlProvider value={this.componentUrlFunc}>{children}</ComponentUrlProvider>
+    );
+
+    return flatten(contexts).concat(ComponentUrlFuncProvider);
   }
 
   registerMenuItem = (menuItems: MenuItem[]) => {
