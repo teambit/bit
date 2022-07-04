@@ -26,6 +26,7 @@ export function generateAddAliasesFromPeersTransformer(peers: string[], logger: 
   };
 }
 
+// [dead code] - no longer used
 /**
  * Generate a transformer that expose all the peers as global via the expose loader
  * @param peers
