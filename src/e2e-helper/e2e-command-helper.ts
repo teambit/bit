@@ -333,13 +333,13 @@ export default class CommandHelper {
     return artifacts;
   }
   untag(id: string, version = '') {
-    return this.runCmd(`bit untag ${id} ${version}`);
+    return this.runCmd(`bit reset ${id} ${version}`);
   }
   untagAll(options = '') {
-    return this.runCmd(`bit untag ${options} --all`);
+    return this.runCmd(`bit reset ${options} --all`);
   }
   untagSoft(id: string) {
-    return this.runCmd(`bit untag ${id} --soft`);
+    return this.runCmd(`bit reset ${id} --soft`);
   }
   exportIds(ids: string, flags = '', assert = true) {
     const result = this.runCmd(`bit export ${ids} ${flags}`);
