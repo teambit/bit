@@ -1,0 +1,13 @@
+.compositionSection {
+  margin-top: 40px;
+}
+
+.compositionCard {
+  max-width: 100%;
+  overflow: hidden;
+  max-height: 500px; // limit the composition card height in the overview page
+}
+
+.mdx {
+  font-size: 16px;
+}
