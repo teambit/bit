@@ -8,7 +8,11 @@ import {
   ImportDetails,
   ImportStatus,
 } from '@teambit/legacy/dist/consumer/component-ops/import-components';
-import { MergeOptions, MergeStrategy } from '@teambit/legacy/dist/consumer/versions-ops/merge-version/merge-version';
+import {
+  FileStatus,
+  MergeOptions,
+  MergeStrategy,
+} from '@teambit/legacy/dist/consumer/versions-ops/merge-version/merge-version';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component/consumer-component';
 import GeneralError from '@teambit/legacy/dist/error/general-error';
 import { immutableUnshift } from '@teambit/legacy/dist/utils';
@@ -16,23 +20,24 @@ import { formatPlainComponentItem } from '@teambit/legacy/dist/cli/chalk-box';
 import { Importer } from './importer';
 
 export default class ImportCmd implements Command {
-  name = 'import [ids...]';
-  description = 'import components into your workspace';
+  name = 'import [component-ids...]';
+  description = 'import components from remote scopes to the local workspace';
+  arguments = [{ name: 'component-ids...', description: 'a list of component IDs (separated by space) to import' }];
   extendedDescription: string;
   group = 'collaborate';
   alias = '';
   options = [
-    ['p', 'path <path>', 'import components into a specific directory'],
+    ['p', 'path <path>', 'import components into a specific directory (a relative path in the workspace)'],
     [
       'o',
       'objects',
-      "import components objects only, don't write the components to the file system. This is a default behavior for import with no id",
+      'import components objects to the local scope without checkout (without writing them to the file system). This is a default behavior for import with no id argument',
     ],
     ['d', 'display-dependencies', 'display the imported dependencies'],
     ['O', 'override', 'override local changes'],
-    ['v', 'verbose', 'showing verbose output for inspection'],
+    ['v', 'verbose', 'show verbose output for inspection'],
     ['j', 'json', 'return the output as JSON'],
-    ['', 'conf', 'write the configuration file (component.json) of the component (harmony components only)'],
+    ['', 'conf', 'write the configuration file (component.json) of the component'],
     ['', 'skip-npm-install', 'DEPRECATED. use "--skip-dependency-installation" instead'],
     ['', 'skip-dependency-installation', 'do not install packages of the imported components'],
     [
@@ -206,8 +211,8 @@ function formatPlainComponentItemWithVersions(component: ConsumerComponent, impo
   const usedVersion = status === 'added' ? `, currently used version ${component.version}` : '';
   const getConflictMessage = () => {
     if (!importDetails.filesStatus) return '';
-    const conflictedFiles = Object.keys(importDetails.filesStatus) // $FlowFixMe file is set
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    const conflictedFiles = Object.keys(importDetails.filesStatus)
+      // @ts-ignore file is set
       .filter((file) => importDetails.filesStatus[file] === FileStatus.manual);
     if (!conflictedFiles.length) return '';
     return `(the following files were saved with conflicts ${conflictedFiles

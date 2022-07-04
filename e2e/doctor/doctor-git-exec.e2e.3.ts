@@ -8,7 +8,6 @@ describe('bit doctor - git exec validation', function () {
   let helper: Helper;
   before(() => {
     helper = new Helper();
-    helper.command.setFeatures('legacy-workspace-config');
   });
 
   after(() => {
@@ -16,7 +15,7 @@ describe('bit doctor - git exec validation', function () {
   });
 
   before(() => {
-    helper.scopeHelper.reInitLocalScope();
+    helper.scopeHelper.reInitLocalScopeHarmony();
   });
 
   // This test case assume you have proper configuration of git executable

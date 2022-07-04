@@ -80,11 +80,11 @@ export class WatchCommand implements Command {
   };
 
   name = 'watch';
-  description = 'watch a set of components';
+  description = 'automatically recompile modified components (on save)';
   alias = '';
   group = 'development';
   options = [
-    ['v', 'verbose', 'showing npm verbose output for inspection and prints stack trace'],
+    ['v', 'verbose', 'show npm verbose output for inspection and print the stack trace'],
     ['', 'skip-pre-compilation', 'skip the compilation step before starting to watch'],
     [
       't',

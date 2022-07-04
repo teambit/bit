@@ -1,13 +1,16 @@
 .dropdownContainer {
   display: flex;
+  background-color: var(--bit-bg-heaviest, #ededed);
 }
 
 .leftDropdown {
+  display: flex;
   flex: 1;
   padding: 16px;
 }
 
 .rightDropdown {
+  display: flex;
   flex: 1;
   padding: 16px 16px 16px 0px;
 }

@@ -12,7 +12,7 @@ import { PkgMain } from '@teambit/pkg';
 import type { BundlingStrategy, ComputeTargetsContext } from '../bundling-strategy';
 import { PreviewDefinition } from '../preview-definition';
 import { PreviewMain } from '../preview.main.runtime';
-import { html } from '../webpack';
+import { html } from '../bundler/html-template';
 
 export const ENV_STRATEGY_ARTIFACT_NAME = 'preview';
 

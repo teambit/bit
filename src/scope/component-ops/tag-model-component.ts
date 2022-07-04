@@ -1,6 +1,6 @@
 import mapSeries from 'p-map-series';
 import R from 'ramda';
-import { isNilOrEmpty, compact } from 'ramda-adjunct';
+import { isEmpty, compact } from 'lodash';
 import { ReleaseType } from 'semver';
 import { v4 } from 'uuid';
 import * as globalConfig from '../../api/consumer/lib/global-config';
@@ -199,7 +199,7 @@ export default async function tagModelComponent({
   editor,
   exactVersion,
   releaseType,
-  preRelease,
+  preReleaseId,
   consumer,
   ignoreNewestVersion = false,
   skipTests = false,
@@ -273,7 +273,7 @@ export default async function tagModelComponent({
     });
     const newestVersions = await Promise.all(newestVersionsP);
     const newestVersionsWithoutEmpty = newestVersions.filter((newest) => newest);
-    if (!isNilOrEmpty(newestVersionsWithoutEmpty)) {
+    if (!isEmpty(newestVersionsWithoutEmpty)) {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       throw new NewerVersionFound(newestVersionsWithoutEmpty);
     }
@@ -311,7 +311,7 @@ export default async function tagModelComponent({
         autoTagIds,
         ids,
         incrementBy,
-        preRelease,
+        preReleaseId,
         soft
       );
   setCurrentSchema(allComponentsToTag, consumer);
@@ -321,7 +321,7 @@ export default async function tagModelComponent({
   await addLogToComponents(componentsToTag, autoTagComponents, persist, message, messagePerId);
 
   if (soft) {
-    consumer.updateNextVersionOnBitmap(allComponentsToTag, preRelease);
+    consumer.updateNextVersionOnBitmap(allComponentsToTag, preReleaseId);
   } else {
     if (!skipTests) addSpecsResultsToComponents(allComponentsToTag, testsResults);
     await addFlattenedDependenciesToComponents(consumer.scope, allComponentsToTag);

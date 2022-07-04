@@ -8,10 +8,11 @@ import semver, { ReleaseType } from 'semver';
 import { compact } from 'lodash';
 import { Analytics } from '@teambit/legacy/dist/analytics/analytics';
 import { BitId, BitIds } from '@teambit/legacy/dist/bit-id';
-import { POST_TAG_ALL_HOOK, POST_TAG_HOOK, DEFAULT_BIT_RELEASE_TYPE } from '@teambit/legacy/dist/constants';
+import { POST_TAG_ALL_HOOK, POST_TAG_HOOK } from '@teambit/legacy/dist/constants';
 import { Consumer } from '@teambit/legacy/dist/consumer';
 import ComponentsList from '@teambit/legacy/dist/consumer/component/components-list';
 import HooksManager from '@teambit/legacy/dist/hooks';
+import pMapSeries from 'p-map-series';
 import { TagResults, BasicTagParams } from '@teambit/legacy/dist/api/consumer/lib/tag';
 import hasWildcard from '@teambit/legacy/dist/utils/string/has-wildcard';
 import { validateVersion } from '@teambit/legacy/dist/utils/semver-helper';
@@ -29,11 +30,19 @@ import pMap from 'p-map';
 import { InsightsAspect, InsightsMain } from '@teambit/insights';
 import { concurrentComponentsLimit } from '@teambit/legacy/dist/utils/concurrency';
 import { FailedLoadForTag } from '@teambit/legacy/dist/consumer/component/exceptions/failed-load-for-tag';
+import {
+  removeLocalVersionsForAllComponents,
+  untagResult,
+  getComponentsWithOptionToUntag,
+  removeLocalVersionsForMultipleComponents,
+} from '@teambit/legacy/dist/scope/component-ops/untag-component';
+import { ModelComponent } from '@teambit/legacy/dist/scope/models';
 import IssuesAspect, { IssuesMain } from '@teambit/issues';
 import { SnapCmd } from './snap-cmd';
 import { SnappingAspect } from './snapping.aspect';
 import { TagCmd } from './tag-cmd';
 import { ComponentsHaveIssues } from './components-have-issues';
+import ResetCmd from './reset-cmd';
 
 const HooksManagerInstance = HooksManager.getInstance();
 
@@ -58,10 +67,8 @@ export class SnappingMain {
     version,
     editor = '',
     snapped = false,
-    patch,
-    minor,
-    major,
-    preRelease,
+    releaseType,
+    preReleaseId,
     ignoreIssues,
     ignoreNewestVersion = false,
     skipTests = false,
@@ -78,9 +85,7 @@ export class SnappingMain {
     all?: boolean | string;
     snapped?: boolean;
     version?: string;
-    patch?: boolean;
-    minor?: boolean;
-    major?: boolean;
+    releaseType?: ReleaseType;
     ignoreIssues?: string;
     scope?: string | boolean;
     incrementBy?: number;
@@ -97,21 +102,7 @@ export class SnappingMain {
       throw new BitError('you can use either --editor or --message, but not both');
     }
 
-    const releaseFlags = [patch, minor, major, preRelease].filter((x) => x);
-    if (releaseFlags.length > 1) {
-      throw new BitError('you can use only one of the following - patch, minor, major, pre-release');
-    }
-
-    let releaseType: ReleaseType = DEFAULT_BIT_RELEASE_TYPE;
-
-    if (major) releaseType = 'major';
-    else if (minor) releaseType = 'minor';
-    else if (patch) releaseType = 'patch';
-    else if (preRelease) releaseType = 'prerelease';
-
     const exactVersion = version;
-    preRelease = typeof preRelease === 'string' ? preRelease : '';
-
     if (!this.workspace) throw new ConsumerNotFound();
     const idsHasWildcard = hasWildcard(ids);
     const isAll = Boolean(!ids.length || idsHasWildcard);
@@ -149,7 +140,7 @@ export class SnappingMain {
       editor,
       exactVersion: validExactVersion,
       releaseType,
-      preRelease,
+      preReleaseId,
       consumer: this.workspace.consumer,
       ignoreNewestVersion,
       skipTests,
@@ -279,6 +270,64 @@ export class SnappingMain {
     }
   }
 
+  /**
+   * remove tags/snaps that exist locally, which were not exported yet.
+   * once a tag/snap is exported, it's impossible to delete it as other components may depend on it
+   */
+  async reset(
+    componentPattern?: string,
+    version?: string,
+    force = false,
+    soft = false
+  ): Promise<{ results: untagResult[]; isSoftUntag: boolean }> {
+    if (!this.workspace) throw new ConsumerNotFound();
+    const consumer = this.workspace.consumer;
+    const currentLane = await consumer.getCurrentLaneObject();
+    const untag = async (): Promise<untagResult[]> => {
+      if (!componentPattern) {
+        return removeLocalVersionsForAllComponents(consumer, currentLane, version, force);
+      }
+      const candidateComponents = await getComponentsWithOptionToUntag(consumer, version);
+      const idsMatchingPattern = await this.workspace.idsByPattern(componentPattern);
+      const idsMatchingPatternBitIds = BitIds.fromArray(idsMatchingPattern.map((id) => id._legacy));
+      const componentsToUntag = candidateComponents.filter((modelComponent) =>
+        idsMatchingPatternBitIds.hasWithoutVersion(modelComponent.toBitId())
+      );
+      return removeLocalVersionsForMultipleComponents(componentsToUntag, currentLane, version, force, consumer.scope);
+    };
+    const softUntag = async () => {
+      const componentsList = new ComponentsList(consumer);
+      const softTaggedComponents = componentsList.listSoftTaggedComponents();
+      const softTaggedComponentsIds = await this.workspace.resolveMultipleComponentIds(softTaggedComponents);
+      const idsToRemoveSoftTags = componentPattern
+        ? this.workspace.scope.filterIdsFromPoolIdsByPattern(componentPattern, softTaggedComponentsIds)
+        : softTaggedComponentsIds;
+      return compact(
+        idsToRemoveSoftTags.map((componentId) => {
+          const componentMap = consumer.bitMap.getComponent(componentId._legacy, { ignoreScopeAndVersion: true });
+          const removedVersion = componentMap.nextVersion?.version;
+          if (!removedVersion) return null;
+          componentMap.clearNextVersion();
+          return { id: componentId._legacy, versions: [removedVersion] };
+        })
+      );
+    };
+    let results: untagResult[];
+    const isRealUntag = !soft;
+    if (isRealUntag) {
+      results = await untag();
+      await consumer.scope.objects.persist();
+      const components = results.map((result) => result.component);
+      await consumer.updateComponentsVersions(components as ModelComponent[]);
+    } else {
+      results = await softUntag();
+      consumer.bitMap.markAsChanged();
+    }
+
+    await consumer.onDestroy();
+    return { results, isSoftUntag: !isRealUntag };
+  }
+
   private async loadComponentsForTag(ids: BitIds): Promise<ConsumerComponent[]> {
     const { components } = await this.workspace.consumer.loadComponents(ids.toVersionLatest());
     if (this.workspace.isLegacy) {
@@ -380,6 +429,69 @@ export class SnappingMain {
     ids: string[],
     snapped: boolean
   ): Promise<{ bitIds: BitId[]; warnings: string[] }> {
+    if (this.workspace.isLegacy) {
+      return this.getComponentsToTagLegacy(includeUnmodified, exactVersion, persist, ids, snapped);
+    }
+    const warnings: string[] = [];
+    const componentsList = new ComponentsList(this.workspace.consumer);
+    if (persist) {
+      const softTaggedComponents = componentsList.listSoftTaggedComponents();
+      return { bitIds: softTaggedComponents, warnings: [] };
+    }
+
+    const tagPendingBitIds = includeUnmodified
+      ? await componentsList.listPotentialTagAllWorkspace()
+      : await componentsList.listTagPendingComponents();
+
+    const tagPendingComponentsIds = await this.workspace.resolveMultipleComponentIds(tagPendingBitIds);
+
+    const snappedComponents = await componentsList.listSnappedComponentsOnMain();
+    const snappedComponentsIds = snappedComponents.map((c) => c.toBitId());
+
+    if (ids.length) {
+      const componentIds = await pMapSeries(ids, async (id) => {
+        const [idWithoutVer, version] = id.split('@');
+        const idHasWildcard = hasWildcard(id);
+        if (idHasWildcard) {
+          const allIds = this.workspace.scope.filterIdsFromPoolIdsByPattern(idWithoutVer, tagPendingComponentsIds);
+          return allIds.map((componentId) => componentId.changeVersion(version));
+        }
+        const componentId = await this.workspace.resolveComponentId(idWithoutVer);
+        if (!includeUnmodified) {
+          const componentStatus = await this.workspace.consumer.getComponentStatusById(componentId._legacy);
+          if (componentStatus.modified === false) return null;
+        }
+        return componentId.changeVersion(version);
+      });
+
+      return { bitIds: compact(componentIds.flat()).map((bitId) => bitId._legacy), warnings };
+    }
+
+    if (snapped) {
+      return { bitIds: snappedComponentsIds, warnings };
+    }
+
+    tagPendingBitIds.push(...snappedComponentsIds);
+
+    if (includeUnmodified && exactVersion) {
+      const tagPendingComponentsLatest = await this.workspace.scope.legacyScope.latestVersions(tagPendingBitIds, false);
+      tagPendingComponentsLatest.forEach((componentId) => {
+        if (componentId.version && semver.valid(componentId.version) && semver.gt(componentId.version, exactVersion)) {
+          warnings.push(`warning: ${componentId.toString()} has a version greater than ${exactVersion}`);
+        }
+      });
+    }
+
+    return { bitIds: tagPendingBitIds.map((id) => id.changeVersion(undefined)), warnings };
+  }
+
+  private async getComponentsToTagLegacy(
+    includeUnmodified: boolean,
+    exactVersion: string | undefined,
+    persist: boolean,
+    ids: string[],
+    snapped: boolean
+  ): Promise<{ bitIds: BitId[]; warnings: string[] }> {
     const warnings: string[] = [];
     const componentsList = new ComponentsList(this.workspace.consumer);
     if (persist) {
@@ -451,7 +563,8 @@ export class SnappingMain {
     const snapping = new SnappingMain(workspace, logger, issues, insights);
     const snapCmd = new SnapCmd(community.getBaseDomain(), snapping, logger);
     const tagCmd = new TagCmd(community.getBaseDomain(), snapping, logger);
-    cli.register(tagCmd, snapCmd);
+    const resetCmd = new ResetCmd(snapping);
+    cli.register(tagCmd, snapCmd, resetCmd);
     return snapping;
   }
 }

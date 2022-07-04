@@ -49,7 +49,7 @@ function MenuItem(props: MenuItemProps) {
 
   return (
     <div ref={currentVersionRef}>
-      <MenuLinkItem isActive={() => current.id === selected?.id} href={current.value}>
+      <MenuLinkItem active={current.id === selected?.id} href={current.value}>
         <div>{current.label}</div>
       </MenuLinkItem>
     </div>

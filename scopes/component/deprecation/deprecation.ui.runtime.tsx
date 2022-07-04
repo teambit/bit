@@ -1,6 +1,6 @@
 import React from 'react';
 import { UIRuntime } from '@teambit/ui';
-import type { DeprecationInfo } from '@teambit/deprecation';
+import { ComponentModel } from '@teambit/component';
 import { DocsAspect, DocsUI } from '@teambit/docs';
 import { ComponentDeprecated } from '@teambit/component.ui.component-deprecated';
 import { DeprecationAspect } from './deprecation.aspect';
@@ -12,8 +12,8 @@ export class DeprecationUIRuntime {
 
   static async provider([docsUI]: [DocsUI]) {
     docsUI.registerTitleBadge({
-      component: function Badge({ deprecation }: { deprecation: DeprecationInfo }) {
-        return <ComponentDeprecated deprecation={deprecation} />;
+      component: function Badge({ legacyComponentModel }: { legacyComponentModel: ComponentModel }) {
+        return <ComponentDeprecated deprecation={legacyComponentModel.deprecation} />;
       },
       weight: 40,
     });

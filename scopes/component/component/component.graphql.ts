@@ -34,7 +34,7 @@ export function componentSchema(componentExtension: ComponentMain) {
         timestamp: String!
 
         # parents of the snap
-        parents: [Snap]!
+        parents: [String]!
 
         # snapper
         author: Author!

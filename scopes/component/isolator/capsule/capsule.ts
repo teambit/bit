@@ -5,7 +5,7 @@ import filenamify from 'filenamify';
 import { realpathSync } from 'fs';
 import glob from 'glob';
 import path from 'path';
-import v4 from 'uuid';
+import { v4 } from 'uuid';
 
 import FsContainer, { BitExecOption } from './container';
 import ContainerExec from './container-exec';

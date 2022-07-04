@@ -45,6 +45,7 @@ import basePreviewProdConfigFactory from './webpack/webpack.config.base.prod';
 // webpack configs for envs only
 // import devPreviewConfigFactory from './webpack/webpack.config.preview.dev';
 import envPreviewDevConfigFactory from './webpack/webpack.config.env.dev';
+import { templateWebpackConfigFactory } from './webpack/webpack.config.env.template';
 
 // webpack configs for components only
 import componentPreviewProdConfigFactory from './webpack/webpack.config.component.prod';
@@ -316,9 +317,10 @@ export class ReactEnv
   ): Promise<Bundler> {
     const baseConfig = basePreviewConfigFactory(!context.development);
     const baseProdConfig = basePreviewProdConfigFactory(context.development);
+    const templateConfig = templateWebpackConfigFactory();
 
     const defaultTransformer: WebpackConfigTransformer = (configMutator) => {
-      const merged = configMutator.merge([baseConfig, baseProdConfig]);
+      const merged = configMutator.merge([baseConfig, baseProdConfig, templateConfig]);
       return merged;
     };
     const mergedTransformers = [defaultTransformer, ...transformers];

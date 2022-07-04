@@ -39,6 +39,7 @@ import { EnvsUnsetCmd } from './envs-subcommands/envs-unset.cmd';
 import { PatternCommand } from './pattern.cmd';
 import { EnvsReplaceCmd } from './envs-subcommands/envs-replace.cmd';
 import { ScopeSetCmd } from './scope-subcommands/scope-set.cmd';
+import { UseCmd } from './use.cmd';
 
 export type WorkspaceDeps = [
   PubsubMain,
@@ -210,12 +211,14 @@ export default async function provideWorkspace(
     commands.push(new WatchCommand(pubsub, logger, watcher));
     cli.unregister('link');
     commands.push(new LinkCommand(workspace, logger, community.getDocsDomain()));
+    commands.push(new UseCmd(workspace));
   }
   commands.push(new PatternCommand(workspace));
   cli.register(...commands);
   component.registerHost(workspace);
 
   cli.registerOnStart(async () => {
+    await workspace.importCurrentLaneIfMissing();
     await workspace.loadAspects(aspectLoader.getNotLoadedConfiguredExtensions());
   });
 

@@ -50,12 +50,20 @@ export class ObjectsReadableGenerator {
   async pushObjects(refs: Ref[], scope: Scope) {
     try {
       await pMapSeries(refs, async (ref) => {
-        const objectItem = await scope.getObjectItem(ref);
+        const objectItem = await this.getObject(ref, scope);
         this.push(objectItem);
       });
       this.readable.push(null);
     } catch (err: any) {
       this.readable.destroy(err);
+    }
+  }
+
+  private async getObject(ref: Ref, scope: Scope) {
+    try {
+      return await scope.getObjectItem(ref);
+    } catch (err: any) {
+      throw new Error(`failed retrieving an object ${ref.toString()} from the filesystem.\n${err.message}`);
     }
   }
 

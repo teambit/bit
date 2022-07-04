@@ -28,7 +28,6 @@
     }
   }
   .versionName {
-    padding: 0px 8px;
     &.tag {
       min-width: fit-content;
     }
@@ -67,7 +66,6 @@
     }
   }
   .versionName {
-    padding: 0px 8px;
     &.tag {
       min-width: fit-content;
     }
@@ -92,5 +90,8 @@
     min-width: fit-content;
     margin-right: 2px;
     text-align: right;
+  }
+  .versionUserAvatar {
+    flex: none;
   }
 }

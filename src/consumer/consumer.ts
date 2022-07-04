@@ -177,6 +177,9 @@ export default class Consumer {
     return this.scope.lanes.getCurrentLaneId();
   }
 
+  /**
+   * the name can be a full lane-id or only the lane-name, which can be the alias (local-lane) or the remote-name.
+   */
   async getParsedLaneId(name: string): Promise<LaneId> {
     return this.scope.lanes.parseLaneIdFromString(name);
   }
@@ -708,11 +711,8 @@ export default class Consumer {
 
   composeRelativeComponentPath(bitId: BitId): PathLinuxRelative {
     const { componentsDefaultDirectory } = this.dirStructure;
-    // in the past, scope was the full-scope (owner+scope-name), currently, scope is only the scope-name.
-    const compDirBackwardCompatible = this.isLegacy
-      ? componentsDefaultDirectory.replace('{scope}', '{scopeId}')
-      : componentsDefaultDirectory;
-    return composeComponentPath(bitId, compDirBackwardCompatible);
+
+    return composeComponentPath(bitId, componentsDefaultDirectory);
   }
 
   composeComponentPath(bitId: BitId): PathOsBasedAbsolute {

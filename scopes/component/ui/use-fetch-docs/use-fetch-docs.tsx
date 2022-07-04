@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { request, gql } from 'graphql-request';
+import { useMemo } from 'react';
+import { useQuery, gql } from '@teambit/graphql.hooks.use-query-light';
 
 const GQL_SERVER = '/graphql';
 const DOCS_QUERY = gql`
@@ -42,27 +42,13 @@ type DocsItem = {
   };
 };
 
-type FetchDocsObj = { docs: DocsItem } | undefined;
-
 export function useFetchDocs(componentId: string) {
-  const [data, setData] = useState<FetchDocsObj>(undefined);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(undefined);
+  const variables = { id: componentId };
+  const request = useQuery<QueryResults>(DOCS_QUERY, { variables, server: GQL_SERVER });
 
-  useEffect(() => {
-    setLoading(true);
+  const result = useMemo(() => {
+    return { ...request, data: request.data && { docs: request.data?.getHost.getDocs } };
+  }, [request]);
 
-    const variables = { id: componentId };
-    request(GQL_SERVER, DOCS_QUERY, variables)
-      .then((result: QueryResults) => {
-        setData({ docs: result.getHost.getDocs });
-        setLoading(false);
-      })
-      .catch((e) => {
-        setError(e);
-        setLoading(false);
-      });
-  }, [componentId]);
-
-  return { data, loading, error };
+  return result;
 }

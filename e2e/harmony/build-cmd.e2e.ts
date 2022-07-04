@@ -1,5 +1,6 @@
 import chai, { expect } from 'chai';
 import path from 'path';
+import fs from 'fs-extra';
 import { loadBit } from '@teambit/bit';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { BuilderMain, BuilderAspect } from '@teambit/builder';
@@ -84,6 +85,41 @@ describe('build command', function () {
       const builder = harmony.get<BuilderMain>(BuilderAspect.id);
       const tasks = builder.listTasks(component);
       expect(tasks.snapTasks).to.include('teambit.pkg/pkg:PublishComponents');
+    });
+  });
+
+  describe('dist file is deleted from the remote', () => {
+    let errorOutput: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllComponents();
+      helper.command.export();
+
+      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.addRemoteScope();
+      helper.command.importComponent('comp1');
+
+      const artifacts = helper.command.getArtifacts(`${helper.scopes.remote}/comp1`);
+      const artifactDist = artifacts.find((a) => a.name === 'dist');
+      const artifactDistFile = artifactDist.files[0].file;
+      const artifactPath = path.join(
+        helper.scopes.remotePath,
+        'objects',
+        helper.general.getHashPathOfObject(artifactDistFile)
+      );
+      fs.removeSync(artifactPath);
+      errorOutput = helper.general.runWithTryCatch('bit build comp1');
+    });
+    it('the error should mention the remote where the error is coming from', () => {
+      expect(errorOutput).to.have.string(`the remote "${helper.scopes.remote}" threw an error`);
+    });
+    it('the error should explain the issue', () => {
+      expect(errorOutput).to.have.string(`failed retrieving an object`);
+    });
+    it('the error should print the original error', () => {
+      expect(errorOutput).to.have.string(`ENOENT: no such file or directory`);
     });
   });
 });
