@@ -10,6 +10,5 @@ export const ComponentUrlProvider = ComponentUrlContext.Provider;
 
 export const useComponentUrl: ComponentUrlResolver = (id, options) => {
   const urlFunc = useContext(ComponentUrlContext);
-  if (!urlFunc) return undefined;
-  return urlFunc(id, options);
+  return urlFunc?.(id, options);
 };
