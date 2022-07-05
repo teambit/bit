@@ -6,7 +6,8 @@ import parser from './';
 
 const fixtures = path.join(__dirname, '../../..', 'fixtures', 'jsdoc', 'vue');
 
-describe('Vue docs Parser', () => {
+// Skipping the following tests because vue is not supported in harmony yet.
+describe.skip('Vue docs Parser', () => {
   describe('Invalid code', () => {
     it('should returns an empty object', async () => {
       const doclets = (await parser('this is an invalid code'))[0];
