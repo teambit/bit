@@ -19,7 +19,7 @@ export default class ExportMetadata extends BitObject {
   toObject(): Record<string, any> {
     return {
       exportVersions: this.exportVersions.map((exportComp) => ({
-        id: exportComp.id.toString(),
+        id: exportComp.id.toStringWithoutVersion(),
         versions: exportComp.versions.map((ref) => ref.toString()),
       })),
     };
