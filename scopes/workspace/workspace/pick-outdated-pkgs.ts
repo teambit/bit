@@ -40,7 +40,7 @@ ${chalk.red('Red')} - indicates a semantically breaking change`,
     k() {
       return this.up();
     },
-    result (names: string[]) {
+    result(names: string[]) {
       // This is needed in order to have the values of the choices in the answer object.
       // Otherwise, only the names of the selected choices would've been included.
       return this.map(names);
@@ -52,8 +52,9 @@ ${chalk.red('Red')} - indicates a semantically breaking change`,
       // See related issue: https://github.com/enquirer/enquirer/issues/225
     },
   } as any)) as { updateDependencies: Record<string, string | OutdatedPkg> };
-  return Object.values(updateDependencies ?? {})
-    .filter((updateDependency) => typeof updateDependency !== 'string') as OutdatedPkg[];
+  return Object.values(updateDependencies ?? {}).filter(
+    (updateDependency) => typeof updateDependency !== 'string'
+  ) as OutdatedPkg[];
 }
 
 const DEP_TYPE_PRIORITY = {

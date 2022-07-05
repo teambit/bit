@@ -521,7 +521,7 @@ export class DependencyResolverMain {
       this.config.packageImportMethod,
       this.config.sideEffectsCache,
       this.config.nodeVersion,
-      this.config.engineStrict,
+      this.config.engineStrict
     );
   }
 
@@ -653,9 +653,10 @@ export class DependencyResolverMain {
       'cafile',
     ]);
     if (this.config.strictSsl != null) {
-      config.strictSSL = typeof this.config.strictSsl === 'string'
-        ? this.config.strictSsl.toLowerCase() === 'true'
-        : this.config.strictSsl;
+      config.strictSSL =
+        typeof this.config.strictSsl === 'string'
+          ? this.config.strictSsl.toLowerCase() === 'true'
+          : this.config.strictSsl;
     }
     return config;
   }

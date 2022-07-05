@@ -5,34 +5,37 @@ const BIT_VERSION = process.env.BIT_VERSION;
 
 (async () => {
   if (!BIT_VERSION) return;
-  https.get({
-    host: 'bvm.bit.dev',
-    path: '/index.json',
-    port: 443,
-    headers: {
-      'Content-Type': 'application/json',
+  https.get(
+    {
+      host: 'bvm.bit.dev',
+      path: '/index.json',
+      port: 443,
+      headers: {
+        'Content-Type': 'application/json',
+      },
     },
-  }, (response) => {
-    let body = '';
-    response.on('data', (d) => {
-      body += d;
-    });
-    response.on('end', () => {
-      let index;
-      if (response.statusCode === 404) {
-        index = [];
-      } else {
-        index = JSON.parse(body);
-      }
-      index = index.filter((release) => release.version !== BIT_VERSION);
-      index.push({
-        version: BIT_VERSION,
-        date: getDate(),
-        nightly: true,
+    (response) => {
+      let body = '';
+      response.on('data', (d) => {
+        body += d;
       });
-      fs.writeFileSync('index.json', JSON.stringify(index), 'utf8');
-    });
-  });
+      response.on('end', () => {
+        let index;
+        if (response.statusCode === 404) {
+          index = [];
+        } else {
+          index = JSON.parse(body);
+        }
+        index = index.filter((release) => release.version !== BIT_VERSION);
+        index.push({
+          version: BIT_VERSION,
+          date: getDate(),
+          nightly: true,
+        });
+        fs.writeFileSync('index.json', JSON.stringify(index), 'utf8');
+      });
+    }
+  );
 })();
 
 function getDate() {

@@ -8,18 +8,19 @@ import logger from '../../logger/logger';
 import { Remote, Remotes } from '../../remotes';
 import { ComponentNotFound, MergeConflict, MergeConflictOnRemote } from '../exceptions';
 import ComponentNeedsUpdate from '../exceptions/component-needs-update';
-import { Lane, ModelComponent, Symlink, Version } from '../models';
+import { Lane, ModelComponent, Symlink, Version, ExportMetadata } from '../models';
 import { BitObject } from '../objects';
 import Scope from '../scope';
 import { getScopeRemotes } from '../scope-remotes';
 import ScopeComponentsImporter from './scope-components-importer';
-import { ObjectList } from '../objects/object-list';
+import { ObjectItem, ObjectList } from '../objects/object-list';
 import { ExportPersist, ExportValidate, RemovePendingDir } from '../actions';
 import loader from '../../cli/loader';
 import { getAllVersionHashes } from './traverse-versions';
 import { PersistFailed } from '../exceptions/persist-failed';
 import { Http } from '../network/http';
 import { MergeResult } from '../repositories/sources';
+import { ExportVersions } from '../models/export-metadata';
 
 type ModelComponentAndObjects = { component: ModelComponent; objects: BitObject[] };
 
@@ -99,6 +100,7 @@ export async function exportMany({
     .map((scopeName) => `scope "${scopeName}": ${idsGroupedByScope[scopeName].toString()}`)
     .join(', ');
   logger.debug(`export-scope-components, export to the following scopes ${groupedByScopeString}`);
+  const exportVersions: ExportVersions[] = [];
   const manyObjectsPerRemote = laneObject
     ? [await getUpdatedObjectsToExport(laneObject.scope, ids, laneObject)]
     : await mapSeries(Object.keys(idsGroupedByScope), (scopeName) =>
@@ -144,8 +146,20 @@ export async function exportMany({
     );
   }
 
+  async function getExportMetadata(): Promise<ObjectItem> {
+    const exportMetadata = new ExportMetadata({ exportVersions });
+    const exportMetadataObj = await exportMetadata.compress();
+    const exportMetadataItem: ObjectItem = {
+      ref: exportMetadata.hash(),
+      buffer: exportMetadataObj,
+      type: ExportMetadata.name,
+    };
+    return exportMetadataItem;
+  }
+
   async function pushAllToCentralHub() {
     const objectList = transformToOneObjectListWithScopeData(manyObjectsPerRemote);
+    objectList.addIfNotExist([await getExportMetadata()]);
     const http = await Http.connect(CENTRAL_BIT_HUB_URL, CENTRAL_BIT_HUB_NAME);
     const pushResults = await http.pushToCentralHub(objectList);
     const { failedScopes, successIds, errors } = pushResults;
@@ -251,6 +265,8 @@ this scope already has a component with the same name. as such, it'll be impossi
   }
 
   async function getVersionsToExport(modelComponent: ModelComponent, lane?: Lane): Promise<string[]> {
+    await modelComponent.setDivergeData(scope.objects);
+    exportVersions.push({ id: modelComponent.toBitId(), versions: modelComponent.getLocalHashes() });
     if (!allVersions && !lane) {
       // if lane is exported, components from other remotes may be exported to this remote. we need their history.
       return modelComponent.getLocalTagsOrHashes();

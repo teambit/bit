@@ -11,6 +11,6 @@ export class CompareChangelogSection implements Section {
 
   route = {
     path: 'changelog/*',
-    element: <ComponentCompareChangelog/>,
+    element: <ComponentCompareChangelog />,
   };
 }
