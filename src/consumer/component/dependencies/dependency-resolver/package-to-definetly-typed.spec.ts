@@ -15,7 +15,6 @@ const scenarios = new Map([
   ['express', '@types/express'],
   ['find-cache-dir', '@types/find-cache-dir'],
   ['find-root', '@types/find-root'],
-  ['get-port', '@types/get-port'],
   ['history', '@types/history'],
   ['http-proxy-agent', '@types/http-proxy-agent'],
   ['lodash', '@types/lodash'],

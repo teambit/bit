@@ -17,12 +17,13 @@ type LinkCommandOpts = {
   skipFetchingObjects?: boolean;
 };
 export class LinkCommand implements Command {
-  name = 'link [ids...]';
+  name = 'link [component-names...]';
   alias = '';
-  description = 'link components and core aspects';
+  description = 'create links in the node_modules directory, to core aspects and to components in the workspace';
   extendedDescription: string;
   group = 'development';
   private = false;
+  arguments = [{ name: 'component-names...', description: 'names or IDs of the components to link' }];
   options = [
     ['j', 'json', 'return the output as JSON'],
     ['', 'verbose', 'verbose output'],

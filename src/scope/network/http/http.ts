@@ -23,6 +23,7 @@ import {
   CFG_PROXY,
   CFG_USER_TOKEN_KEY,
   CFG_PROXY_CA,
+  CFG_PROXY_CA_FILE,
   CFG_PROXY_CERT,
   CFG_PROXY_KEY,
   CFG_PROXY_NO_PROXY,
@@ -35,6 +36,11 @@ import {
   CFG_LOCAL_ADDRESS,
   CFG_MAX_SOCKETS,
   CFG_NETWORK_CONCURRENCY,
+  CFG_NETWORK_CA,
+  CFG_NETWORK_CA_FILE,
+  CFG_NETWORK_CERT,
+  CFG_NETWORK_KEY,
+  CFG_NETWORK_STRICT_SSL,
 } from '../../../constants';
 import logger from '../../../logger/logger';
 import { ObjectItemsStream, ObjectList } from '../../objects/object-list';
@@ -53,13 +59,9 @@ export enum Verb {
 }
 
 export type ProxyConfig = {
-  ca?: string;
-  cert?: string;
   httpProxy?: string;
   httpsProxy?: string;
-  key?: string;
   noProxy?: boolean | string;
-  strictSSL?: boolean;
 };
 
 export type NetworkConfig = {
@@ -71,6 +73,11 @@ export type NetworkConfig = {
   localAddress?: string;
   maxSockets?: number;
   networkConcurrency?: number;
+  strictSSL?: boolean;
+  ca?: string | string[];
+  cafile?: string;
+  cert?: string | string[];
+  key?: string;
 };
 
 type Agent = HttpsProxyAgent | HttpAgent | HttpAgent.HttpsAgent | HttpProxyAgent | SocksProxyAgent | undefined;
@@ -113,28 +120,31 @@ export class Http implements Network {
     }
 
     return {
-      ca: obj[CFG_PROXY_CA],
-      cert: obj[CFG_PROXY_CERT],
       httpProxy,
       httpsProxy,
-      key: obj[CFG_PROXY_KEY],
       noProxy: obj[CFG_PROXY_NO_PROXY],
-      strictSSL: obj[CFG_PROXY_STRICT_SSL],
     };
   }
 
   static async getNetworkConfig(): Promise<NetworkConfig> {
     const obj = await list();
 
+    // Reading strictSSL from both network.strict-ssl and network.strict_ssl for backward compatibility.
+    const strictSSL = obj[CFG_NETWORK_STRICT_SSL] ?? obj['network.strict_ssl'] ?? obj[CFG_PROXY_STRICT_SSL];
     return {
-      fetchRetries: obj[CFG_FETCH_RETRIES],
-      fetchRetryFactor: obj[CFG_FETCH_RETRY_FACTOR],
-      fetchRetryMintimeout: obj[CFG_FETCH_RETRY_MINTIMEOUT],
-      fetchRetryMaxtimeout: obj[CFG_FETCH_RETRY_MAXTIMEOUT],
-      fetchTimeout: obj[CFG_FETCH_TIMEOUT],
+      fetchRetries: obj[CFG_FETCH_RETRIES] ?? 2,
+      fetchRetryFactor: obj[CFG_FETCH_RETRY_FACTOR] ?? 10,
+      fetchRetryMintimeout: obj[CFG_FETCH_RETRY_MINTIMEOUT] ?? 10000,
+      fetchRetryMaxtimeout: obj[CFG_FETCH_RETRY_MAXTIMEOUT] ?? 60000,
+      fetchTimeout: obj[CFG_FETCH_TIMEOUT] ?? 60000,
       localAddress: obj[CFG_LOCAL_ADDRESS],
-      maxSockets: obj[CFG_MAX_SOCKETS],
-      networkConcurrency: obj[CFG_NETWORK_CONCURRENCY],
+      maxSockets: obj[CFG_MAX_SOCKETS] ?? 15,
+      networkConcurrency: obj[CFG_NETWORK_CONCURRENCY] ?? 16,
+      strictSSL: typeof strictSSL === 'string' ? strictSSL === 'true' : strictSSL,
+      ca: obj[CFG_NETWORK_CA] ?? obj[CFG_PROXY_CA],
+      cafile: obj[CFG_NETWORK_CA_FILE] ?? obj[CFG_PROXY_CA_FILE],
+      cert: obj[CFG_NETWORK_CERT] ?? obj[CFG_PROXY_CERT],
+      key: obj[CFG_NETWORK_KEY] ?? obj[CFG_PROXY_KEY],
     };
   }
 
@@ -575,8 +585,7 @@ export class Http implements Network {
     const networkConfig = await Http.getNetworkConfig();
     const agent = await Http.getAgent(host, {
       ...proxyConfig,
-      localAddress: networkConfig.localAddress,
-      maxSockets: networkConfig.maxSockets,
+      ...networkConfig,
     });
     const graphQlUrl = `${host}/graphql`;
     const graphQlFetcher = await getFetcherWithAgent(graphQlUrl);
@@ -599,8 +608,7 @@ export async function getFetcherWithAgent(uri: string) {
   const networkConfig = await Http.getNetworkConfig();
   const agent = await Http.getAgent(uri, {
     ...proxyConfig,
-    localAddress: networkConfig.localAddress,
-    maxSockets: networkConfig.maxSockets,
+    ...networkConfig,
   });
   const fetcher = agent ? wrapFetcherWithAgent(agent) : fetch;
   return fetcher;

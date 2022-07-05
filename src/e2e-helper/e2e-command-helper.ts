@@ -8,7 +8,7 @@ import tar from 'tar';
 import { LANE_REMOTE_DELIMITER } from '@teambit/lane-id';
 import { BUILD_ON_CI, ENV_VAR_FEATURE_TOGGLE } from '../api/consumer/lib/feature-toggle';
 import { NOTHING_TO_TAG_MSG } from '../api/consumer/lib/tag';
-import { CURRENT_UPSTREAM, NOTHING_TO_SNAP_MSG } from '../constants';
+import { NOTHING_TO_SNAP_MSG } from '../constants';
 import runInteractive, { InteractiveInputs } from '../interactive/utils/run-interactive-cmd';
 import { removeChalkCharacters } from '../utils';
 import ScopesData from './e2e-scopes';
@@ -75,6 +75,9 @@ export default class CommandHelper {
 
   listRemoteScope(raw = true, options = '') {
     return this.runCmd(`bit list ${this.scopes.remote} ${options} ${raw ? '--raw' : ''}`);
+  }
+  listRemoteScopeIds(options = '') {
+    return this.runCmd(`bit list ${this.scopes.remote} ${options} --ids`);
   }
   list(options = '') {
     return this.runCmd(`bit list ${options}`);
@@ -295,6 +298,10 @@ export default class CommandHelper {
     const results = this.runCmd(`bit lane list ${options} --json`);
     return JSON.parse(results);
   }
+  expectCurrentLaneToBe(laneName: string) {
+    const lanes = this.listLanesParsed();
+    expect(lanes.currentLane).to.equal(laneName);
+  }
   listRemoteLanesParsed(options = '') {
     const results = this.runCmd(`bit lane list --remote ${this.scopes.remote} ${options} --json`);
     return JSON.parse(results);
@@ -326,16 +333,16 @@ export default class CommandHelper {
     return artifacts;
   }
   untag(id: string, version = '') {
-    return this.runCmd(`bit untag ${id} ${version}`);
+    return this.runCmd(`bit reset ${id} ${version}`);
   }
   untagAll(options = '') {
-    return this.runCmd(`bit untag ${options} --all`);
+    return this.runCmd(`bit reset ${options} --all`);
   }
   untagSoft(id: string) {
-    return this.runCmd(`bit untag ${id} --soft`);
+    return this.runCmd(`bit reset ${id} --soft`);
   }
-  exportComponent(id: string, scope: string = this.scopes.remote, assert = true, flags = '') {
-    const result = this.runCmd(`bit export ${scope} ${id} ${flags}`);
+  exportIds(ids: string, flags = '', assert = true) {
+    const result = this.runCmd(`bit export ${ids} ${flags}`);
     if (assert) expect(result).to.not.have.string('nothing to export');
     return result;
   }
@@ -344,21 +351,8 @@ export default class CommandHelper {
     if (assert) expect(result).to.not.have.string('nothing to export');
     return result;
   }
-  exportAllComponents(scope: string = this.scopes.remote) {
-    return this.runCmd(`bit export ${scope} --force`);
-  }
-  exportAllComponentsAndRewire(scope: string = this.scopes.remote) {
-    return this.runCmd(`bit export ${scope} --rewire --force`);
-  }
-  exportToDefaultAndRewire() {
-    return this.runCmd(`bit export --rewire --force`);
-  }
-  exportToCurrentScope(ids?: string) {
-    return this.runCmd(`bit export ${CURRENT_UPSTREAM} ${ids || ''}`);
-  }
   export(options = '') {
-    // --force just silents the prompt, which obviously needed for CIs
-    return this.runCmd(`bit export ${options} --force`);
+    return this.runCmd(`bit export ${options}`);
   }
   resumeExport(exportId: string, remotes: string[]) {
     return this.runCmd(`bit resume-export ${exportId} ${remotes.join(' ')}`);
@@ -588,6 +582,10 @@ export default class CommandHelper {
   log(id: string, flags = '') {
     return this.runCmd(`bit log ${id} ${flags}`);
   }
+  logParsed(id: string, flags = '') {
+    const log = this.runCmd(`bit log ${id} ${flags} --json`);
+    return JSON.parse(log);
+  }
   move(from: string, to: string) {
     return this.runCmd(`bit move ${path.normalize(from)} ${path.normalize(to)}`);
   }
@@ -599,9 +597,6 @@ export default class CommandHelper {
   }
   new(templateName: string, flags = '', workspaceName = 'my-workspace', cwd = this.scopes.localPath) {
     return this.runCmd(`bit new ${templateName} ${workspaceName} ${flags}`, cwd);
-  }
-  moveComponent(id: string, to: string) {
-    return this.runCmd(`bit move ${id} ${path.normalize(to)} --component`);
   }
   link(flags?: string) {
     return this.runCmd(`bit link ${flags || ''}`);

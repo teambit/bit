@@ -1,6 +1,5 @@
 import React, { ComponentType } from 'react';
 import type { ComponentDescriptor } from '@teambit/component-descriptor';
-import type { DeprecationInfo } from '@teambit/deprecation';
 import { textColumn } from '@teambit/base-ui.layout.page-frame';
 import { ConsumableLink } from '@teambit/documenter.ui.consumable-link';
 import { H1 } from '@teambit/documenter.ui.heading';
@@ -9,6 +8,7 @@ import { Section, SectionProps } from '@teambit/documenter.ui.section';
 import { Separator } from '@teambit/design.ui.separator';
 import { Subtitle } from '@teambit/documenter.ui.sub-title';
 import { isBrowser } from '@teambit/ui-foundation.ui.is-browser';
+import { ComponentModel } from '@teambit/component';
 import styles from './component-overview.module.scss';
 
 export type TitleBadge = {
@@ -25,7 +25,7 @@ export type ComponentOverviewProps = {
   elementsUrl?: string;
   titleBadges?: TitleBadge[];
   componentDescriptor?: ComponentDescriptor;
-  deprecation?: DeprecationInfo;
+  component?: ComponentModel;
 } & SectionProps;
 
 export function ComponentOverview({
@@ -36,7 +36,7 @@ export function ComponentOverview({
   packageName,
   elementsUrl,
   componentDescriptor,
-  deprecation,
+  component,
   ...rest
 }: ComponentOverviewProps) {
   let finalElementsUrl = elementsUrl;
@@ -58,7 +58,7 @@ export function ComponentOverview({
                   <titleBadge.component
                     key={index}
                     componentDescriptor={componentDescriptor}
-                    deprecation={deprecation}
+                    legacyComponentModel={component}
                   />
                 );
               })}

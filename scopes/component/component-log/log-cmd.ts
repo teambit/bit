@@ -11,10 +11,12 @@ export default class LogCmd implements Command {
   options = [
     ['r', 'remote', 'show log of a remote component'],
     ['', 'parents', 'EXPERIMENTAL. show parents and lanes data'],
+    ['j', 'json', 'json format'],
   ] as CommandOptions;
   migration = true;
   remoteOp = true; // should support log against remote
   skipWorkspace = true;
+  arguments = [{ name: 'id', description: 'component-id or component-name' }];
 
   constructor(private componentLog: ComponentLogMain, docsDomain: string) {
     this.extendedDescription = `https://${docsDomain}/reference/cli-reference#log`;
@@ -27,5 +29,12 @@ export default class LogCmd implements Command {
     }
     const logs = await this.componentLog.getLogs(id, remote);
     return logs.reverse().map(paintLog).join('\n');
+  }
+
+  async json([id]: [string], { remote = false, parents = false }: { remote: boolean; parents: boolean }) {
+    if (parents) {
+      return this.componentLog.getLogsWithParents(id);
+    }
+    return this.componentLog.getLogs(id, remote);
   }
 }

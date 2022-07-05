@@ -63,6 +63,9 @@ export type MergeLaneOptions = {
   existingOnWorkspaceOnly: boolean;
   build: boolean;
   keepReadme: boolean;
+  squash: boolean;
+  pattern?: string;
+  includeDeps?: boolean;
 };
 
 export type CreateLaneOptions = {
@@ -309,10 +312,6 @@ export class LanesMain {
       isLegacy: false,
       laneObject: lane,
       ids: new BitIds(),
-      codemod: false,
-      changeLocallyAlthoughRemoteIsDifferent: false,
-      includeDependencies: false,
-      remoteName: null,
       idsWithFutureScope: new BitIds(),
       allVersions: false,
     });
@@ -340,7 +339,7 @@ export class LanesMain {
     }
     const results = await mergeLanes({
       merging: this.merging,
-      consumer: this.workspace.consumer,
+      workspace: this.workspace,
       laneName,
       ...options,
     });

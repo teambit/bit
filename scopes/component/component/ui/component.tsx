@@ -31,8 +31,8 @@ export function Component({ routeSlot, containerSlot, host, onComponentChange }:
   const lanesContext = useLanesContext();
   const laneComponent = componentId ? lanesContext?.resolveComponent(componentId) : undefined;
   const useComponentOptions = laneComponent && {
-        logFilters: { log: { logHead: laneComponent.version } },
-      }
+    logFilters: { log: { logHead: laneComponent.version } },
+  };
 
   const { component, componentDescriptor, error } = useComponent(
     host,

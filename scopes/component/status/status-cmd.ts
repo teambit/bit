@@ -16,20 +16,19 @@ import {
 } from '@teambit/legacy/dist/constants';
 import { StatusMain, StatusResult } from './status.main.runtime';
 
+const individualFilesDesc = `these components were added as individual files and not as directories, which are invalid in Harmony
+please make sure each component has its own directory and re-add it. alternatively, use "bit move --component" to help with the move.`;
 const TROUBLESHOOTING_MESSAGE = `${chalk.yellow(
   `learn more at https://${BASE_DOCS_DOMAIN}/components/adding-components`
 )}`;
-
-const individualFilesDesc = `these components were added as individual files and not as directories, which are invalid in Harmony
-please make sure each component has its own directory and re-add it. alternatively, use "bit move --component" to help with the move.`;
 const trackDirDesc = `these components were added by an older version of Bit and therefore have "trackDir" record in the .bitmap file
 please run "bit migrate --harmony" to convert these records to "rootDir".`;
 
 export class StatusCmd implements Command {
   name = 'status';
-  description = 'show the working area component(s) status';
+  description = 'present the current status of components in the workspace, and notifies when issues are detected';
   group = 'development';
-  extendedDescription = `https://${BASE_DOCS_DOMAIN}/workspace/workspace-status`;
+  extendedDescription: string;
   alias = 's';
   options = [
     ['j', 'json', 'return a json version of the component'],

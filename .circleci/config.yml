@@ -654,14 +654,14 @@ jobs:
       - install_bvm
       - run: npm view @teambit/bit version > ./version.txt
       - restore_cache:
-          key: v2-linux-bvm-folder-{{ checksum "version.txt" }}
+          key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
       - run: bvm config set DEFAULT_LINK bbit
       # - run: bvm install 0.0.428
       - run: bvm upgrade
       - run: bvm link --verbose
       - run: bbit
       - save_cache:
-          key: v2-linux-bvm-folder-{{ checksum "version.txt" }}
+          key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
           paths:
             - /home/circleci/.bvm
       - run: cd bit && bbit install
@@ -727,7 +727,7 @@ jobs:
       - install_bvm
       - run: npm view @teambit/bit version > ./version.txt
       - restore_cache:
-          key: v2-linux-bvm-folder-{{ checksum "version.txt" }}
+          key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
       - bit_config:
           env: "hub"
       - restore_cache:
@@ -746,9 +746,9 @@ jobs:
       - run: cd bit && npm run generate-cli-reference-json
       - run: cd bit && bit status # just to make sure that the new cli-reference.mdx file is valid
       - run: cd bit && bit checkout latest teambit.harmony/content/cli-reference --ours --skip-dependency-installation
-      - run: cd bit && bit checkout latest --all --skip-dependency-installation
+      - run: cd bit && bit checkout latest --skip-dependency-installation
       # - run: cd bit && rm -rf node_modules/@teambit/legacy
-      # - run: cd bit && bbit checkout latest --all
+      # - run: cd bit && bbit checkout latest
       # - run: cd bit && npm run link-bit-legacy
       # since we removed the node_modules we need to make sure we compile, install and link everything again
       - run: cd bit && bbit install --skip-import
@@ -757,10 +757,9 @@ jobs:
       # - run: cd bit && node scripts/soft-tag-scope-teambit.js
       - run:
           name: tag persist
-          # command: cd bit && bit tag --all --ignore-newest-version
-          # command: cd bit && bit tag --scope 0.0.297
-          # command: cd bit && bit tag --all --increment-by 2
-          command: cd bit && bit tag --all
+          # command: cd bit && bit tag --ignore-newest-version
+          # command: cd bit && bit tag --increment-by 2
+          command: cd bit && bit tag
           # command: cd bit && bit tag --persist --ignore-newest-version
           no_output_timeout: '25m'
           environment:
@@ -1000,17 +999,33 @@ jobs:
           name: Configure gcloud auth
           command: echo "${COMMAND_GCLOUD_AUTHENTICATE}" > /tmp/gcloud-service-key.json && gcloud auth activate-service-account --key-file=/tmp/gcloud-service-key.json
       - run:
-          name: Upload tar file (Linux)
+          name: Upload tar file (Linux) to old location
           command: gsutil cp linux/bit-${BIT_VERSION}.tar.gz gs://bvm.bit.dev/versions/dev/Linux/${BIT_VERSION}/bit-${BIT_VERSION}.tar.gz
       - run:
-          name: Upload tar file (Windows)
+          name: Upload tar file (Windows) to old location
           command: gsutil cp windows/bit-${BIT_VERSION}.tar.gz gs://bvm.bit.dev/versions/dev/Windows_NT/${BIT_VERSION}/bit-${BIT_VERSION}.tar.gz
       - run:
-          name: Upload tar file (OSX)
+          name: Upload tar file (OSX) to old location
           command: gsutil cp macos/bit-${BIT_VERSION}.tar.gz gs://bvm.bit.dev/versions/dev/Darwin/${BIT_VERSION}/bit-${BIT_VERSION}.tar.gz
       - run:
-          name: Upload tar file (OSX-arm64)
+          name: Upload tar file (OSX-arm64) to old location
           command: gsutil cp macos-arm64/bit-${BIT_VERSION}.tar.gz gs://bvm.bit.dev/versions/dev/Darwin-arm64/${BIT_VERSION}/bit-${BIT_VERSION}.tar.gz
+      - run:
+          name: Upload tar file (Linux)
+          command: gsutil cp linux/bit-${BIT_VERSION}.tar.gz gs://bvm.bit.dev/bit/versions/${BIT_VERSION}/bit-${BIT_VERSION}-linux-x64.tar.gz && mv linux/bit-${BIT_VERSION}.tar.gz bit-${BIT_VERSION}-linux-x64.tar.gz && sha256sum bit-${BIT_VERSION}-linux-x64.tar.gz > checksum.txt && gsutil cp checksum.txt gs://bvm.bit.dev/bit/versions/${BIT_VERSION}/bit-${BIT_VERSION}-linux-x64.checksum.txt
+      - run:
+          name: Upload tar file (Windows)
+          command: gsutil cp windows/bit-${BIT_VERSION}.tar.gz gs://bvm.bit.dev/bit/versions/${BIT_VERSION}/bit-${BIT_VERSION}-win-x64.tar.gz && mv windows/bit-${BIT_VERSION}.tar.gz bit-${BIT_VERSION}-win-x64.tar.gz && sha256sum bit-${BIT_VERSION}-win-x64.tar.gz > checksum.txt && gsutil cp checksum.txt gs://bvm.bit.dev/bit/versions/${BIT_VERSION}/bit-${BIT_VERSION}-win-x64.checksum.txt
+      - run:
+          name: Upload tar file (OSX)
+          command: gsutil cp macos/bit-${BIT_VERSION}.tar.gz gs://bvm.bit.dev/bit/versions/${BIT_VERSION}/bit-${BIT_VERSION}-darwin-x64.tar.gz && mv macos/bit-${BIT_VERSION}.tar.gz bit-${BIT_VERSION}-darwin-x64.tar.gz && sha256sum bit-${BIT_VERSION}-darwin-x64.tar.gz > checksum.txt && gsutil cp checksum.txt gs://bvm.bit.dev/bit/versions/${BIT_VERSION}/bit-${BIT_VERSION}-darwin-x64.checksum.txt
+      - run:
+          name: Upload tar file (OSX-arm64)
+          command: gsutil cp macos-arm64/bit-${BIT_VERSION}.tar.gz gs://bvm.bit.dev/bit/versions/${BIT_VERSION}/bit-${BIT_VERSION}-darwin-arm64.tar.gz && mv macos-arm64/bit-${BIT_VERSION}.tar.gz bit-${BIT_VERSION}-darwin-arm64.tar.gz && sha256sum bit-${BIT_VERSION}-darwin-arm64.tar.gz > checksum.txt && gsutil cp checksum.txt gs://bvm.bit.dev/bit/versions/${BIT_VERSION}/bit-${BIT_VERSION}-darwin-arm64.checksum.txt
+      - run: cd bit && node scripts/update-bit-gcp-index.js
+      - run:
+          name: Update index.json
+          command: gsutil cp bit/index.json gs://bvm.bit.dev/bit/index.json
 
 
   bit_export:
@@ -1276,7 +1291,7 @@ jobs:
       - run: npm view @teambit/bit version | Out-File -FilePath .\version.txt
       - run: Get-Content -Path .\version.txt
       - restore_cache:
-          key: v1-bvm-folder-{{ checksum "version.txt" }}
+          key: v2-bvm-folder-{{ checksum "version.txt" }}
       - run: 'npm i -g @teambit/bvm'
       - run: 'bvm upgrade'
       - run: 'setx path "%path%;C:\Users\circleci\AppData\Local\.bvm"'
@@ -1284,7 +1299,7 @@ jobs:
       - run: bit -v | Out-File -FilePath .\version.txt
       - run: Get-Content -Path .\version.txt
       - save_cache:
-          key: v1-bvm-folder-{{ checksum "version.txt" }}
+          key: v2-bvm-folder-{{ checksum "version.txt" }}
           paths:
             - C:\Users\circleci\AppData\Local\.bvm
       - persist_to_workspace:
@@ -1309,7 +1324,7 @@ jobs:
       # - restore_cache:
       #     key: bvm-folder-v1
       - restore_cache:
-          key: v1-bvm-folder-{{ checksum "version.txt" }}
+          key: v2-bvm-folder-{{ checksum "version.txt" }}
       # - run: bit -v
       - run: 'setx path "%path%;C:\Users\circleci\AppData\Local\.bvm"'
       - run: bit -v
@@ -1364,7 +1379,7 @@ jobs:
       # - restore_cache:
       #     key: bvm-folder-v1
       - restore_cache:
-          key: v1-bvm-folder-{{ checksum "version.txt" }}
+          key: v2-bvm-folder-{{ checksum "version.txt" }}
       # - run: bit -v
       - run: 'setx path "%path%;C:\Users\circleci\AppData\Local\.bvm"'
       - run: bit -v
@@ -1711,6 +1726,7 @@ workflows:
             - bundle_version_linux
             - bundle_version_windows
             - bundle_version_macos
+            - checkout_code # This is needed to generate index.json
       - bit_export:
           <<: *master_only_filter
           requires:
@@ -1846,6 +1862,7 @@ workflows:
             - bundle_version_linux
             - bundle_version_windows
             - bundle_version_macos
+            - checkout_code # This is needed to generate index.json
       - bit_export:
           <<: *master_only_filter
           requires:
@@ -1904,7 +1921,7 @@ workflows:
   #     - checkout_code:
   #         filters:
   #           branches:
-  #             only: docker-node16
+  #             only: fix-circle-cache
   #     - bundle_version_linux:
   #         filters:
   #           branches:
@@ -1931,6 +1948,7 @@ workflows:
   #           - bundle_version_macos
   #           - bundle_version_linux
   #           - bundle_version_windows
+  #           - checkout_code # This is needed to generate index.json
       # - docker_build:
       #     requires:
       #       - checkout_code

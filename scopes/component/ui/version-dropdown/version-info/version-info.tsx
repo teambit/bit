@@ -40,7 +40,7 @@ export function VersionInfo({
   const currentVersionRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (isCurrent) {
-      currentVersionRef.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      currentVersionRef.current?.scrollIntoView({ block: 'nearest' });
     }
   }, [isCurrent]);
 
@@ -48,7 +48,7 @@ export function VersionInfo({
 
   return (
     <div ref={currentVersionRef}>
-      <MenuLinkItem isActive={() => isCurrent} href={href} className={styles.versionRow}>
+      <MenuLinkItem active={isCurrent} href={href} className={styles.versionRow}>
         <div className={styles.version}>
           <UserAvatar size={24} account={author} className={styles.versionUserAvatar} showTooltip={true} />
           <Ellipsis className={classNames(styles.versionName, tag && styles.tag, !tag && styles.snap)}>

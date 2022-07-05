@@ -14,6 +14,7 @@ export type ExtractorResult = {
 };
 
 export type ExtractorArtifactResult = {
+  artifactName: string;
   aspectId: string;
   taskName: string;
   files: string[];
@@ -33,12 +34,13 @@ export class ArtifactExtractor {
   constructor(
     private scope: ScopeMain,
     private builder: BuilderMain,
-    private patterns: string[],
+    private pattern: string,
     private options: ArtifactsOpts
   ) {}
 
   async list(): Promise<ExtractorResult[]> {
-    const components = await this.scope.byPattern(this.patterns);
+    const ids = await this.scope.idsByPattern(this.pattern);
+    const components = await this.scope.loadMany(ids);
     const artifactObjectsPerId: ArtifactObjectsPerId[] = components.map((component) => {
       return {
         id: component.id,
@@ -70,11 +72,12 @@ export class ArtifactExtractor {
     await pMapSeries(artifactObjectsPerId, async ({ id, artifacts }) => {
       const vinyls = await Promise.all(
         artifacts.map((artifactObject) =>
-          artifactObject.files.getVinylsAndImportIfMissing(id.scope as string, this.scope.legacyScope)
+          artifactObject.files.getVinylsAndImportIfMissing(id._legacy, this.scope.legacyScope)
         )
       );
       const flattenedVinyls = vinyls.flat();
-      const compPath = path.join(outDir, id.toStringWithoutVersion());
+      // if asked for only one component, shorten the path by omitting the id
+      const compPath = artifactObjectsPerId.length > 1 ? path.join(outDir, id.toStringWithoutVersion()) : outDir;
       await Promise.all(flattenedVinyls.map((vinyl) => fs.outputFile(path.join(compPath, vinyl.path), vinyl.contents)));
     });
   }
@@ -83,6 +86,7 @@ export class ArtifactExtractor {
     return artifactObjectsPerId.map(({ id, artifacts }) => {
       const results: ExtractorArtifactResult[] = artifacts.map((artifact) => {
         return {
+          artifactName: artifact.name,
           aspectId: artifact.task.id,
           taskName: artifact.task.name || artifact.generatedBy,
           files: artifact.files.refs.map((ref) => ref.relativePath),

@@ -39,4 +39,10 @@ export const reactAppTemplate: ComponentTemplate = {
       },
     ];
   },
+  config: {
+    'teambit.harmony/aspect': {},
+    'teambit.envs/envs': {
+      env: 'teambit.harmony/aspect',
+    },
+  },
 };

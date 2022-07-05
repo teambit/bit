@@ -117,14 +117,6 @@ export type Target = {
    * this will usually replace the instance of import one of the host dependencies by the instance of the env provided it
    */
   aliasHostDependencies?: boolean;
-
-  /**
-   * Expose the hostDependencies on the global (window) object.
-   * the path of each one will be resolved by [hostRootDir, process.cwd(), __dirname]
-   * from the webpack plugin docs:
-   * The expose-loader loader allows to expose a module (in whole or in part) to global object (self, window and global).
-   */
-  exposeHostDependencies?: boolean;
 };
 
 export type ModuleTarget = {
@@ -158,6 +150,11 @@ export type HtmlConfig = {
    * Allows you to add only some chunks (e.g only the unit-test chunk)
    */
   chunks?: string[];
+  /**
+   * Load chunks according to their order in the `chunks` array
+   * @default auto
+   */
+  chunkOrder?: 'auto' | 'manual';
   /**
    * provide an inline template
    */

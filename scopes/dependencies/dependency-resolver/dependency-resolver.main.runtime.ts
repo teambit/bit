@@ -28,6 +28,7 @@ import { Version as VersionModel } from '@teambit/legacy/dist/scope/models';
 import LegacyComponent from '@teambit/legacy/dist/consumer/component';
 import fs from 'fs-extra';
 import { BitId } from '@teambit/legacy-bit-id';
+import { readCAFileSync } from '@pnpm/network.ca-file';
 import semver, { SemVer } from 'semver';
 import AspectLoaderAspect, { AspectLoaderMain } from '@teambit/aspect-loader';
 import GlobalConfigAspect, { GlobalConfigMain } from '@teambit/global-config';
@@ -520,7 +521,7 @@ export class DependencyResolverMain {
       this.config.packageImportMethod,
       this.config.sideEffectsCache,
       this.config.nodeVersion,
-      this.config.engineStrict,
+      this.config.engineStrict
     );
   }
 
@@ -615,13 +616,9 @@ export class DependencyResolverMain {
 
   private getProxyConfigFromDepResolverConfig(): ProxyConfig {
     return {
-      ca: this.config.ca,
-      cert: this.config.cert,
       httpProxy: this.config.proxy,
       httpsProxy: this.config.httpsProxy || this.config.proxy,
-      key: this.config.key,
       noProxy: this.config.noProxy,
-      strictSSL: this.config.strictSsl?.toLowerCase() === 'true',
     };
   }
 
@@ -634,11 +631,15 @@ export class DependencyResolverMain {
   }
 
   private async getNetworkConfigFromGlobalConfig(): Promise<NetworkConfig> {
-    return Http.getNetworkConfig();
+    const globalNetworkConfig = await Http.getNetworkConfig();
+    if (!globalNetworkConfig.ca && globalNetworkConfig.cafile) {
+      globalNetworkConfig.ca = readCAFileSync(globalNetworkConfig.cafile);
+    }
+    return globalNetworkConfig;
   }
 
   private getNetworkConfigFromDepResolverConfig(): NetworkConfig {
-    return pick(this.config, [
+    const config: NetworkConfig = pick(this.config, [
       'fetchTimeout',
       'fetchRetries',
       'fetchRetryFactor',
@@ -646,7 +647,18 @@ export class DependencyResolverMain {
       'fetchRetryMaxtimeout',
       'maxSockets',
       'networkConcurrency',
+      'key',
+      'cert',
+      'ca',
+      'cafile',
     ]);
+    if (this.config.strictSsl != null) {
+      config.strictSSL =
+        typeof this.config.strictSsl === 'string'
+          ? this.config.strictSsl.toLowerCase() === 'true'
+          : this.config.strictSsl;
+    }
+    return config;
   }
 
   private async getNetworkConfigFromPackageManager(): Promise<NetworkConfig> {
@@ -673,7 +685,7 @@ export class DependencyResolverMain {
     return proxyConfigFromPackageManager;
   }
 
-  private async getProxyConfigFromGlobalConfig(): Promise<ProxyConfig> {
+  private getProxyConfigFromGlobalConfig(): Promise<ProxyConfig> {
     return Http.getProxyConfig();
   }
 
