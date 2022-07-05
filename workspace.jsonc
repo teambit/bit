@@ -398,7 +398,11 @@
     // Setting this to false, to make sure we are not consuming anything that exists only on the bit.dev registry
     // "installFromBitDevRegistry": false,
     "savePrefix": "",
-    "extraArgs": []
+    "extraArgs": [],
+    "peerDependencyRules": {
+      "allowAny": [],
+      "ignoreMissing": []
+    }
   },
   "teambit.preview/preview": {
     "bundlingStrategy": "component"

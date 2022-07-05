@@ -528,6 +528,7 @@ export class DependencyResolverMain {
       this.config.sideEffectsCache,
       this.config.nodeVersion,
       this.config.engineStrict,
+      this.config.peerDependencyRules,
     );
   }
 

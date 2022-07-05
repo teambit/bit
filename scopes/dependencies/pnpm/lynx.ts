@@ -193,12 +193,12 @@ export async function install(
     modulesCacheMaxAge: 0,
     registries: registriesMap,
     rawConfig: authConfig,
+    ...options,
     peerDependencyRules: {
       allowAny: ['*'],
       ignoreMissing: ['*'],
       ...options?.peerDependencyRules,
     },
-    ...options,
   };
 
   const stopReporting = defaultReporter({
