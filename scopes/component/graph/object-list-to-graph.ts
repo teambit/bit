@@ -16,15 +16,21 @@ export class IdGraph extends Graph<BitId, Dependency> {
 
 export async function objectListToGraph(objectList: ObjectList): Promise<IdGraph> {
   const bitObjectsList = await objectList.toBitObjects();
+  const exportMetadata = bitObjectsList.getExportMetadata();
   const components = bitObjectsList.getComponents();
   const versions = bitObjectsList.getVersions();
   const nodes: BitIdNode[] = [];
   const edges: DependencyEdge[] = [];
   await Promise.all(
     components.map(async (component) => {
+      const compFromMetadata = exportMetadata?.exportVersions.find((c) =>
+        c.id.isEqualWithoutVersion(component.toBitId())
+      );
+      const startFrom = compFromMetadata?.head;
       const versionsInfo = await getAllVersionsInfo({
         modelComponent: component,
         versionObjects: versions,
+        startFrom,
         throws: false,
       });
       versionsInfo.forEach((versionInfo) => {
