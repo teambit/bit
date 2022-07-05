@@ -7,7 +7,7 @@ test('getAgent reads cafile', () => {
     cafile: path.join(__dirname, 'fixtures/cafile.txt'),
   });
   // @ts-ignore
-  expect(agent['options'].ca).toStrictEqual([
+  expect(agent.options.ca).toStrictEqual([
     `-----BEGIN CERTIFICATE-----
 XXXX
 -----END CERTIFICATE-----`,

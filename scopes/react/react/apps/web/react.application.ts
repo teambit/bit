@@ -45,7 +45,7 @@ export class ReactApp implements Application {
             disableDotRule: true,
             headers: {
               'Access-Control-Allow-Headers': '*',
-            }
+            },
           },
         }),
       (configMutator) => {

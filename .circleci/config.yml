@@ -1022,6 +1022,10 @@ jobs:
       - run:
           name: Upload tar file (OSX-arm64)
           command: gsutil cp macos-arm64/bit-${BIT_VERSION}.tar.gz gs://bvm.bit.dev/bit/versions/${BIT_VERSION}/bit-${BIT_VERSION}-darwin-arm64.tar.gz && mv macos-arm64/bit-${BIT_VERSION}.tar.gz bit-${BIT_VERSION}-darwin-arm64.tar.gz && sha256sum bit-${BIT_VERSION}-darwin-arm64.tar.gz > checksum.txt && gsutil cp checksum.txt gs://bvm.bit.dev/bit/versions/${BIT_VERSION}/bit-${BIT_VERSION}-darwin-arm64.checksum.txt
+      - run: cd bit && node scripts/update-bit-gcp-index.js
+      - run:
+          name: Update index.json
+          command: gsutil cp bit/index.json gs://bvm.bit.dev/bit/index.json
 
 
   bit_export:
@@ -1722,6 +1726,7 @@ workflows:
             - bundle_version_linux
             - bundle_version_windows
             - bundle_version_macos
+            - checkout_code # This is needed to generate index.json
       - bit_export:
           <<: *master_only_filter
           requires:
@@ -1857,6 +1862,7 @@ workflows:
             - bundle_version_linux
             - bundle_version_windows
             - bundle_version_macos
+            - checkout_code # This is needed to generate index.json
       - bit_export:
           <<: *master_only_filter
           requires:
@@ -1915,7 +1921,7 @@ workflows:
   #     - checkout_code:
   #         filters:
   #           branches:
-  #             only: docker-node16
+  #             only: fix-circle-cache
   #     - bundle_version_linux:
   #         filters:
   #           branches:
@@ -1942,6 +1948,7 @@ workflows:
   #           - bundle_version_macos
   #           - bundle_version_linux
   #           - bundle_version_windows
+  #           - checkout_code # This is needed to generate index.json
       # - docker_build:
       #     requires:
       #       - checkout_code

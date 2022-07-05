@@ -174,11 +174,14 @@ describe('DepenendencyResolverMain.getNetworkConfig()', () => {
       getNetworkConfig: () => {},
     });
     // @ts-ignore
-    Http.getNetworkConfig.mockReturnValue(Promise.resolve({
-      cafile: path.join(__dirname, 'fixtures/cafile.txt'),
-    }));
+    Http.getNetworkConfig.mockReturnValue(
+      Promise.resolve({
+        cafile: path.join(__dirname, 'fixtures/cafile.txt'),
+      })
+    );
     // @ts-ignore
-    expect((await depResolver.getNetworkConfig()).ca).toStrictEqual([`-----BEGIN CERTIFICATE-----
+    expect((await depResolver.getNetworkConfig()).ca).toStrictEqual([
+      `-----BEGIN CERTIFICATE-----
 XXXX
 -----END CERTIFICATE-----`,
     ]);

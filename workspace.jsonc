@@ -95,7 +95,7 @@
         "@teambit/base-ui.utils.string.affix": "1.0.0",
         "@teambit/base-ui.utils.sub-paths": "1.0.0",
         "@teambit/base-ui.utils.time-ago": "1.0.1",
-        "@teambit/bit.content.what-is-bit": "1.95.0",
+        "@teambit/bit.content.what-is-bit": "1.96.2",
         "@teambit/bvm.config": "0.0.26",
         "@teambit/capsule": "0.0.12",
         "@teambit/code.ui.object-formatter": "0.0.1",
@@ -103,14 +103,14 @@
         "@teambit/component.content.component-overview": "1.95.0",
         "@teambit/component.content.dev-files": "1.95.9",
         "@teambit/component.instructions.exporting-components": "0.0.6",
-        "@teambit/defender.content.formatter-overview": "1.95.9",
+        "@teambit/defender.content.formatter-overview": "1.96.1",
         "@teambit/defender.content.linter-overview": "1.95.0",
         "@teambit/defender.content.tester-overview": "1.95.0",
         "@teambit/design.elements.icon": "1.0.5",
         "@teambit/design.inputs.dropdown": "0.0.7",
         "@teambit/design.inputs.selectors.multi-select": "0.0.20",
         "@teambit/design.ui.avatar": "0.1.2",
-        "@teambit/design.ui.brand.logo": "1.95.0",
+        "@teambit/design.ui.brand.logo": "1.96.2",
         "@teambit/design.ui.icon-button": "1.0.16",
         "@teambit/design.ui.input.option-button": "1.0.0",
         "@teambit/design.ui.input.toggle": "1.0.12",
@@ -171,20 +171,18 @@
         "@teambit/react.ui.component-highlighter": "0.1.0",
         "@teambit/react.ui.hover-selector": "0.1.0",
         "@teambit/scope.content.scope-overview": "1.95.0",
-        "@teambit/string.ellipsis": "0.0.7",
-        "@teambit/ui.composition-card": "0.0.259",
         "@teambit/workspace.content.variants": "1.95.9",
         "@teambit/workspace.content.workspace-overview": "1.95.0",
         "@testing-library/jest-dom": "5.16.2",
         "@testing-library/jest-native": "4.0.4",
-        "@testing-library/react": "11.2.6",
+        "@testing-library/react": "12.1.5",
         "@tippyjs/react": "4.2.0",
         "@types/classnames": "2.2.11",
         "@types/cors": "2.8.10",
         "@types/dagre": "0.7.44",
         "@types/didyoumean": "1.2.0",
         "@types/eslint": "7.28.0",
-        "@types/express": "4.17.9",
+        "@types/express": "4.17.13",
         "@types/find-root": "1.1.2",
         "@types/http-proxy-agent": "2.0.2",
         "@types/json-schema": "7.0.9",
@@ -212,11 +210,11 @@
         "@types/url-parse": "1.4.3",
         "@types/webpack": "5.28.0",
         "@types/webpack-dev-server": "4.0.3",
-        "@yarnpkg/cli": "3.2.0-rc.7",
-        "@yarnpkg/core": "^3.2.0-rc.7",
-        "@yarnpkg/fslib": "2.6.1-rc.2",
-        "@yarnpkg/parsers": "2.5.0-rc.5",
-        "@yarnpkg/plugin-npm": "2.6.1-rc.6",
+        "@yarnpkg/cli": "3.2.1",
+        "@yarnpkg/core": "^3.2.2",
+        "@yarnpkg/fslib": "2.6.2",
+        "@yarnpkg/parsers": "2.5.1",
+        "@yarnpkg/plugin-npm": "2.7.1",
         "@yarnpkg/plugin-pack": "3.1.0",
         "agentkeepalive": "4.1.4",
         "ansi-to-html": "0.6.14",
@@ -331,7 +329,7 @@
         "react-flow-renderer": "8.3.7",
         "react-syntax-highlighter": "15.4.3",
         "react-tabs": "3.2.0",
-        "react-test-renderer": "16.14.0",
+        "react-test-renderer": "17.0.2",
         "react-tooltip": "3.11.6",
         "remark-admonitions": "1.2.1",
         "remark-frontmatter": "2.0.0",
@@ -375,7 +373,7 @@
       "peerDependencies": {
         "@apollo/client": "^3.0.0",
         "@teambit/base-react.navigation.link": "2.0.27",
-        "@teambit/legacy": "1.0.296",
+        "@teambit/legacy": "1.0.297",
         "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
         "browserslist": "4.16.3",
         "core-js": "^3.10.0",
@@ -458,7 +456,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.296"
+            "@teambit/legacy": "1.0.297"
           }
         }
       },
@@ -721,7 +719,7 @@
           "peerDependencies": {
             "react": "^16.8.0 || ^17.0.0",
             "react-dom": "^16.8.0 || ^17.0.0",
-            "@teambit/legacy": "1.0.296"
+            "@teambit/legacy": "1.0.297"
           }
         }
       }
@@ -809,11 +807,12 @@
           "dependencies": {
             "@teambit/base-react.navigation.link": "2.0.27",
             "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
-            "@apollo/client": "3.3.6",
-            "@teambit/legacy": "1.0.296",
+            "@apollo/client": "3.3.7",
+            "@teambit/legacy": "1.0.297",
             "graphql": "14.7.0",
             "browserslist": "4.16.3",
             "reflect-metadata": "0.1.13",
+            "monaco-editor": "0.33.0",
             "mz": "2.7.0",
             // make sure the package manager installs an instance of react (and other peers)
             "react-native-web": "0.14.13",
@@ -944,7 +943,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.296"
+            "@teambit/legacy": "1.0.297"
           }
         }
       }

@@ -31,6 +31,7 @@ export const componentOverviewFields = gql`
     description
     deprecation {
       isDeprecate
+      newId
     }
     labels
     displayName
