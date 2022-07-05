@@ -4,11 +4,14 @@ const https = require('https');
 const BIT_VERSION = process.env.BIT_VERSION;
 
 (async () => {
-  if (!BIT_VERSION) return;
+  if (!BIT_VERSION) {
+    console.log('Skipping index.json generation because the BIT_VERSION env variable is not set');
+    return;
+  }
   https.get(
     {
       host: 'bvm.bit.dev',
-      path: '/index.json',
+      path: '/bit/index.json',
       port: 443,
       headers: {
         'Content-Type': 'application/json',
