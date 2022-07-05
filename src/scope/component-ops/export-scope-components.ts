@@ -13,13 +13,14 @@ import { BitObject } from '../objects';
 import Scope from '../scope';
 import { getScopeRemotes } from '../scope-remotes';
 import ScopeComponentsImporter from './scope-components-importer';
-import { ObjectList } from '../objects/object-list';
+import { ObjectItem, ObjectList } from '../objects/object-list';
 import { ExportPersist, ExportValidate, RemovePendingDir } from '../actions';
 import loader from '../../cli/loader';
 import { getAllVersionHashes } from './traverse-versions';
 import { PersistFailed } from '../exceptions/persist-failed';
 import { Http } from '../network/http';
 import { MergeResult } from '../repositories/sources';
+import { ExportVersions } from '../models/export-metadata';
 
 type ModelComponentAndObjects = { component: ModelComponent; objects: BitObject[] };
 
@@ -99,6 +100,7 @@ export async function exportMany({
     .map((scopeName) => `scope "${scopeName}": ${idsGroupedByScope[scopeName].toString()}`)
     .join(', ');
   logger.debug(`export-scope-components, export to the following scopes ${groupedByScopeString}`);
+  const exportVersions: ExportVersions[] = [];
   const manyObjectsPerRemote = laneObject
     ? [await getUpdatedObjectsToExport(laneObject.scope, ids, laneObject)]
     : await mapSeries(Object.keys(idsGroupedByScope), (scopeName) =>
