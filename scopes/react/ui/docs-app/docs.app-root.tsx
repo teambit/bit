@@ -5,23 +5,24 @@ import ReactDOM from 'react-dom';
 import { DocsApp } from './docs-app';
 import type { DocsFile } from './examples-overview/example';
 
-export type ReactDocsRootParams = [
-  /* Provider: */ React.ComponentType | undefined,
-  /* componentId: */ string,
-  /* docs: */ DocsFile | undefined,
-  /* compositions: */ Record<string, any>,
-  /* context: */ RenderingContext
-];
-
-export default function DocsRoot(
-  /**
-   * @deprecated
-   */
+/**
+ * These are the parameters supplied to all docs apps by the bit UI runtime
+ */
+export type ReactDocsRootType = (
   Provider: React.ComponentType | undefined,
   componentId: string,
   docs: DocsFile | undefined,
   compositions: any,
   context: RenderingContext
+) => void;
+
+
+const DocsRoot: ReactDocsRootType = function(
+  Provider,
+  componentId,
+  docs,
+  compositions,
+  context
 ) {
   ReactDOM.render(
     <DocsApp
@@ -34,6 +35,8 @@ export default function DocsRoot(
     document.getElementById('root')
   );
 }
+
+export default DocsRoot;
 
 // hot reloading works when components are in a different file.
 // do not declare react components here.

@@ -19,7 +19,7 @@ export type ReactDocsAppParams = {
   context: RenderingContext
 };
 
-const defaultDocs = {
+export const defaultDocs = {
   examples: [],
   labels: [],
   abstract: '',
