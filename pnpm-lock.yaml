@@ -1299,7 +1299,7 @@ importers:
       is-relative-path: 2.0.0
       is-url: 1.2.4
       isbinaryfile: 4.0.6
-      lint-staged: '>=10'
+      lint-staged: ^12.5.0
       lodash: 4.17.21
       lodash.assignwith: 4.2.0
       lodash.groupby: 4.6.0
@@ -29858,32 +29858,6 @@ packages:
     transitivePeerDependencies:
       - enquirer
     dev: false
-
-  registry.npmjs.org/lint-staged/13.0.3_enquirer@2.3.6:
-    resolution: {integrity: sha512-9hmrwSCFroTSYLjflGI8Uk+GWAwMB4OlpU4bMJEAT5d/llQwtYKoim4bLOyLCuWFAhWEupE0vkIFqtw/WIsPug==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/lint-staged/-/lint-staged-13.0.3.tgz}
-    id: registry.npmjs.org/lint-staged/13.0.3
-    name: lint-staged
-    version: 13.0.3
-    engines: {node: ^14.13.1 || >=16.0.0}
-    hasBin: true
-    dependencies:
-      cli-truncate: registry.npmjs.org/cli-truncate/3.1.0
-      colorette: registry.npmjs.org/colorette/2.0.19
-      commander: registry.npmjs.org/commander/9.3.0
-      debug: registry.npmjs.org/debug/4.3.4
-      execa: registry.npmjs.org/execa/6.1.0
-      lilconfig: registry.npmjs.org/lilconfig/2.0.5
-      listr2: registry.npmjs.org/listr2/4.0.5_enquirer@2.3.6
-      micromatch: registry.npmjs.org/micromatch/4.0.5
-      normalize-path: registry.npmjs.org/normalize-path/3.0.0
-      object-inspect: registry.npmjs.org/object-inspect/1.12.2
-      pidtree: registry.npmjs.org/pidtree/0.6.0
-      string-argv: registry.npmjs.org/string-argv/0.3.1
-      yaml: registry.npmjs.org/yaml/2.1.1
-    transitivePeerDependencies:
-      - enquirer
-      - supports-color
-    dev: true
 
   registry.npmjs.org/listr2/4.0.5_enquirer@2.3.6:
     resolution: {integrity: sha512-juGHV1doQdpNT3GSTs9IUN43QJb7KHdF9uqg7Vufs/tG9VTzpFphqF4pm/ICdAABGQxsyNn9CiYA3StkI6jpwA==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/listr2/-/listr2-4.0.5.tgz}
