@@ -245,10 +245,7 @@
         "dagre": "0.8.5",
         "didyoumean": "1.2.1",
         "enquirer": "2.3.6",
-        "eslint-config-airbnb-typescript": {
-          "version": "5.1.0",
-          "preserve": true
-        },
+        "eslint-config-airbnb-typescript": "17.0.0",
         "eslint-import-resolver-node": "0.3.4",
         "eventemitter2": "6.4.4",
         "expose-loader": "3.1.0",

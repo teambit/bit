@@ -35,7 +35,7 @@
         "dependencies": {
           "@typescript-eslint/eslint-plugin": "4.30.0",
           "@typescript-eslint/parser": "4.30.0",
-          "eslint-config-airbnb-typescript": "12.0.0",
+          "eslint-config-airbnb-typescript": "17.0.0",
           "@teambit/legacy": "-"
         },
         "devDependencies": {
