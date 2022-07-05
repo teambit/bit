@@ -69,7 +69,7 @@ export class DependencyInstaller {
 
     private engineStrict?: boolean,
 
-    private peerDependencyRules?: PeerDependencyRules,
+    private peerDependencyRules?: PeerDependencyRules
   ) {}
 
   async install(
