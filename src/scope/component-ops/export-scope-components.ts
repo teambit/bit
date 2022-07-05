@@ -267,7 +267,15 @@ this scope already has a component with the same name. as such, it'll be impossi
   async function getVersionsToExport(modelComponent: ModelComponent, lane?: Lane): Promise<string[]> {
     await modelComponent.setDivergeData(scope.objects);
     const localTagsOrHashes = modelComponent.getLocalTagsOrHashes();
-    exportVersions.push({ id: modelComponent.toBitId(), versions: localTagsOrHashes });
+    const head = modelComponent.getHeadRegardlessOfLane();
+    if (!head) {
+      throw new Error(`unable to export ${modelComponent.id()}, head is missing`);
+    }
+    exportVersions.push({
+      id: modelComponent.toBitId(),
+      versions: localTagsOrHashes,
+      head,
+    });
     if (!allVersions && !lane) {
       // if lane is exported, components from other remotes may be exported to this remote. we need their history.
       return localTagsOrHashes;
