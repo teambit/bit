@@ -27,6 +27,7 @@ const SCOPE = gql`
         buildStatus
         deprecation {
           isDeprecate
+          newId
         }
         preview {
           includesEnvTemplate

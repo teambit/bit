@@ -13,6 +13,7 @@ export function deprecationSchema(deprecation: DeprecationMain): Schema {
 
       type DeprecationInfo {
         isDeprecate: Boolean
+        newId: String
       }
 
       type DeprecationResult {
