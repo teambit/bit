@@ -1,3 +1,4 @@
+import { valid } from 'semver';
 import { Component } from '@teambit/component';
 
 /**
@@ -21,4 +22,9 @@ export async function getComponentPackageVersion(component: Component, snapId?: 
     return `${tagBySnap.version}`;
   }
   return `0.0.0-${actualSnapId}`;
+}
+
+export function versionToSamver(version: string): string {
+  if (!valid(version)) return `0.0.0-${version}`;
+  return version;
 }

@@ -15,6 +15,7 @@ import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-i
 import { BuilderMain, BuilderAspect } from '@teambit/builder';
 import { CloneConfig } from '@teambit/new-component-helper';
 import { BitError } from '@teambit/bit-error';
+import { versionToSamver } from '@teambit/component-package-version';
 import { IssuesClasses } from '@teambit/component-issues';
 import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 import { GraphqlMain, GraphqlAspect } from '@teambit/graphql';
@@ -338,7 +339,7 @@ export class PkgMain implements CloneConfig {
     }
     const preReleaseLatestTags = component.tags.getPreReleaseLatestTags();
     const distTags = {
-      latest: latestVersion,
+      latest: versionToSamver(latestVersion),
       ...preReleaseLatestTags,
     };
     const versionsFromCache = this.manifestCache.get(name);

@@ -1,1 +1,1 @@
-export { getComponentPackageVersion } from './component-package-version';
+export { getComponentPackageVersion, versionToSamver } from './component-package-version';
