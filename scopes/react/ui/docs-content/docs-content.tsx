@@ -18,7 +18,6 @@ const defaultDocs = {
 };
 
 export function DocsContent({ docs = defaultDocs, ...rest }: DocsContentProps) {
-
   const Content: any = isFunction(docs.default) ? docs.default : () => null;
 
   return (
