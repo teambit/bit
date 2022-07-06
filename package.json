@@ -77,6 +77,7 @@
     "build:types": "./scripts/build-types.bash",
     "build:types:windows": ".\\scripts\\build-types.bat",
     "link-bit-legacy": "node ./scripts/link-bit-legacy.js",
+    "setup": "bit install &&  bit compile && npm run link-bit-legacy && npm run build && npm run build:types",
     "full-setup": "rm -rf node_modules/.bin/bit && rm -rf node_modules/@teambit/legacy && bit install && npm run link-bit-legacy && bit compile && npm run build && npm run build:types",
     "full-setup:bbit": "rm -rf node_modules/.bin/bbit && rm -rf node_modules/@teambit/legacy && bbit install && npm run link-bit-legacy && bbit compile && npm run build && npm run build:types",
     "full-setup:windows": "bit install && npm run link-bit-legacy && bit compile && npm run build && npm run build:types:windows",
