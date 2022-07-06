@@ -38,7 +38,9 @@ export function ComponentCompareVersionPicker({ className }: ComponentCompareVer
     ).map((tag) => ({ ...tag, version: tag.tag as string }));
   }, [component?.logs]);
 
-  const compareVersion = componentCompare?.compare.hasLocalChanges ? 'workspace' : componentCompare?.compare.model.version;
+  const compareVersion = componentCompare?.compare.hasLocalChanges
+    ? 'workspace'
+    : componentCompare?.compare.model.version;
 
   const baseVersion = componentCompare?.base?.model.version;
 
