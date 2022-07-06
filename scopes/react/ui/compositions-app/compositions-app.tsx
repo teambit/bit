@@ -5,7 +5,6 @@ import { RenderingContext } from '@teambit/preview';
 import { ErrorFallback } from '@teambit/react.ui.error-fallback';
 import { useFallback } from '@teambit/react.ui.loader-fallback';
 import { ErrorBoundary } from 'react-error-boundary';
-import { ReactAspect } from './react.aspect';
 
 // hide scrollbars so they won't be visible in the preview at the component card (and it's ok not to show them in the compositions page)
 const hideScrollbars = 'body::-webkit-scrollbar {display: none;}';
@@ -15,9 +14,9 @@ export function CompositionsApp({
   previewContext,
 }: {
   Composition?: ComponentType;
-  previewContext: RenderingContext;
+  previewContext?: RenderingContext;
 }) {
-  const { providers = [] } = previewContext.get(ReactAspect.id) || {};
+  const { providers = [] } = previewContext?.get('teambit.react/react') || {};
 
   const safeComposition = useFallback(Composition && <Composition />, <StandaloneNotFoundPage />);
 
