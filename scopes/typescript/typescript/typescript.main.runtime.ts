@@ -291,3 +291,5 @@ export function runTransformersWithContext(
   }, config);
   return newConfig;
 }
+
+export default TypescriptMain;
