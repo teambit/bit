@@ -18,16 +18,12 @@ module.exports = {
     },
   },
   extends: [
+    'airbnb-base',
     'airbnb-typescript/base',
-    // 'plugin:@typescript-eslint/recommended-requiring-type-checking',
     'plugin:@typescript-eslint/recommended',
-    // 'plugin:eslint-comments/recommended',
     'plugin:promise/recommended',
     'plugin:react/recommended',
-    // 'plugin:unicorn/recommended',
-    // 'plugin:mocha/recommended',
     'prettier',
-    'prettier/@typescript-eslint',
   ],
   plugins: [
     '@typescript-eslint',
@@ -81,7 +77,7 @@ module.exports = {
     // 'sort-imports': 'off',
     // 'import/first': 'error',
     // 'import/newline-after-import': 'error',
-    'import/no-duplicates': 'error',
+    'no-duplicate-imports': 'error',
     'prefer-destructuring': 'off',
     'import/no-extraneous-dependencies': 'off',
     'no-restricted-syntax': [2, 'ForInStatement', 'LabeledStatement', 'WithStatement'],
@@ -104,15 +100,6 @@ module.exports = {
     // ERRORS OF plugin:react/recommended
     'react/no-unescaped-entities': 'off',
   },
-  // return the no-cycle once "import type" is working
-  // overrides: [
-  //   {
-  //     files: ['src/extensions/**/*.ts'],
-  //     rules: {
-  //       'import/no-cycle': ['error']
-  //     }
-  //   }
-  // ],
   env: {
     browser: true,
     node: true,
