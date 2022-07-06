@@ -1,17 +1,17 @@
 import React from 'react';
 import { isFunction } from 'lodash';
-import { Properties } from '@teambit/react.ui.properties';
 import { RenderingContext } from '@teambit/preview';
-import { CompositionsSummary } from '@teambit/react.ui.compositions-summary';
-import { DocsContent } from '@teambit/react.ui.docs-content';
-import { ApplyProviders } from '@teambit/react.ui.apply-providers';
+import { PropertiesTable } from '@teambit/react.ui.docs.properties-table';
+import { CompositionsCarousel } from '@teambit/react.ui.docs.compositions-carousel';
+import { DocsContent } from '@teambit/react.ui.docs.docs-content';
+import { ApplyProviders } from '@teambit/react.ui.docs.apply-providers';
 
 import { DocsTheme } from './docs-theme';
 import { ExamplesOverview } from './examples-overview';
 import type { DocsFile } from './examples-overview';
 import styles from './docs-app.module.scss';
 
-export type ReactDocsAppParams = {
+export type ReactDocsAppProps = {
   componentId: string,
   docs: DocsFile | undefined,
   compositions: any,
@@ -29,7 +29,7 @@ export function DocsApp({
     docs = defaultDocs,
     compositions,
     context
-  }: ReactDocsAppParams
+  }: ReactDocsAppProps
 ) {
 
   // Next 2 lines are to support legacy code (ExamplesOverview)
@@ -41,12 +41,12 @@ export function DocsApp({
       <ApplyProviders renderingContext={context}>
         <DocsContent docs={docs} className={styles.mdx}/>
 
-        <CompositionsSummary
+        <CompositionsCarousel
           compositions={compositions}
           className={styles.compositionSection}
           compositionCardClass={styles.compositionCard}
         />
-        <Properties componentId={componentId} />
+        <PropertiesTable componentId={componentId} />
         <ExamplesOverview examples={Content.examples || examples} />
       </ApplyProviders>
     </DocsTheme>

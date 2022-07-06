@@ -8,7 +8,7 @@ import type { DocsFile } from './examples-overview/example';
 /**
  * These are the parameters supplied to all docs apps by the bit UI runtime
  */
-export type ReactDocsRootType = (
+export type ReactDocsRoot = (
   Provider: React.ComponentType | undefined,
   componentId: string,
   docs: DocsFile | undefined,
@@ -17,7 +17,7 @@ export type ReactDocsRootType = (
 ) => void;
 
 
-const DocsRoot: ReactDocsRootType = function(
+const DocsRoot: ReactDocsRoot = function(
   Provider,
   componentId,
   docs,

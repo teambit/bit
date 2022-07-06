@@ -8,6 +8,15 @@
   max-height: 500px; // limit the composition card height in the overview page
 }
 
+.docsMainBlock {
+  padding: 50px 40px 10px 40px;
+  max-width: 1440px;
+  margin: 0 auto 150px auto;
+  .heading {
+    margin-bottom: unset;
+  }
+}
+
 .mdx {
   font-size: 16px;
 }

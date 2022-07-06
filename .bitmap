@@ -1020,7 +1020,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/design/ui/alert-card"
     },
-    "ui/apply-providers": {
+    "ui/docs/apply-providers": {
         "scope": "",
         "version": "",
         "mainFile": "index.ts",
@@ -1140,7 +1140,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/compositions/ui/composition-card"
     },
-    "ui/compositions-app": {
+    "ui/preview/compositions-app": {
         "scope": "",
         "version": "",
         "mainFile": "index.ts",
@@ -1158,11 +1158,11 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/compositions/ui/compositions-menu-bar"
     },
-    "ui/compositions-summary": {
+    "ui/docs/compositions-carousel": {
         "scope": "",
         "version": "",
         "mainFile": "index.ts",
-        "rootDir": "scopes/react/ui/compositions-summary"
+        "rootDir": "scopes/react/ui/compositions-carousel"
     },
     "ui/constants/z-indexes": {
         "scope": "teambit.ui-foundation",
@@ -1200,7 +1200,7 @@
         "mainFile": "index.tsx",
         "rootDir": "scopes/react/ui/docs-app"
     },
-    "ui/docs-content": {
+    "ui/docs/docs-content": {
         "scope": "",
         "version": "",
         "mainFile": "index.ts",
@@ -1518,11 +1518,11 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/preview/ui/preview-placeholder"
     },
-    "ui/properties": {
+    "ui/docs/properties-table": {
         "scope": "",
         "version": "",
         "mainFile": "index.ts",
-        "rootDir": "scopes/react/ui/properties"
+        "rootDir": "scopes/react/ui/properties-table"
     },
     "ui/queries/get-component-code": {
         "scope": "teambit.code",

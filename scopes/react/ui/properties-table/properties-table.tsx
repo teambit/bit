@@ -4,11 +4,11 @@ import { Section } from '@teambit/documenter.ui.section';
 import { useFetchDocs } from '@teambit/component.ui.hooks.use-fetch-docs';
 import React from 'react';
 
-export type PropertiesParams = {
+export type PropertiesTableProps = {
   componentId: string;
 }
 
-export function Properties({ componentId }: PropertiesParams) {
+export function PropertiesTable({ componentId }: PropertiesTableProps) {
   const { loading, error, data } = useFetchDocs(componentId);
 
   if (!data || loading) return null;

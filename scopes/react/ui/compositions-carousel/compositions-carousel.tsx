@@ -3,12 +3,12 @@ import { LinkedHeading } from '@teambit/documenter.ui.linked-heading';
 import { Section, SectionProps } from '@teambit/documenter.ui.section';
 import React from 'react';
 
-export interface CompositionsSummaryProps extends SectionProps {
+export interface CompositionsCarouselProps extends SectionProps {
   compositions: {};
   compositionCardClass?: string;
 }
 
-export function CompositionsSummary({ compositions, compositionCardClass, ...rest }: CompositionsSummaryProps) {
+export function CompositionsCarousel({ compositions, compositionCardClass, ...rest }: CompositionsCarouselProps) {
 
   if (!compositions || Object.keys(compositions).length === 0) {
     return null;
