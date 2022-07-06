@@ -163,6 +163,8 @@ export class PreviewPreview {
     this.addComponentFileLinkElement(id, previewBundleFileName).catch((err) => {
       console.error('[preview.preview]', 'failed loading asset', previewBundleFileName, err);
     });
+
+    // do NOT await non js assets, as they might never load (like images), and not critical for rendering.
     return undefined;
   }
 
