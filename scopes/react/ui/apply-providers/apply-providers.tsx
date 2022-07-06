@@ -4,7 +4,7 @@ import classNames from 'classnames';
 import { Composer } from '@teambit/base-ui.utils.composer';
 import { ErrorFallback } from '@teambit/react.ui.error-fallback';
 
-import { RenderingContext } from '@teambit/preview';
+import type { RenderingContext } from '@teambit/preview';
 import { ReactAspect } from '@teambit/react';
 import styles from './apply-providers.modules.scss';
 
