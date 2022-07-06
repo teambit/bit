@@ -23,7 +23,11 @@ export function ErrorFallback({
     <div className={classnames(styles.errorFallback, flexCenter, className)}>
       <div className={styles.icon} />
       <div className={styles.message}>{children}</div>
-      <IconButton onClick={handleClick} className={styles.retryButton}>
+
+      <IconButton
+        onClick={/* eslint-disable-line @typescript-eslint/no-misused-promises */ handleClick}
+        className={styles.retryButton}
+      >
         {cta}
       </IconButton>
     </div>

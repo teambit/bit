@@ -58,7 +58,7 @@ export const ReactEnvType = 'react';
 const defaultTsConfig = require('./typescript/tsconfig.json');
 const buildTsConfig = require('./typescript/tsconfig.build.json');
 const eslintConfig = require('./eslint/eslintrc');
-const prettierConfig = require('./prettier/prettier.config.js');
+const prettierConfig = require('./prettier/prettier.config');
 
 // TODO: move to be taken from the key mode of compiler context
 type CompilerMode = 'build' | 'dev';

@@ -17,11 +17,13 @@ export default class DoctorRegistrar {
   constructor() {
     if (!instance) {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      // eslint-disable-next-line @typescript-eslint/no-this-alias
       instance = this;
     }
 
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // eslint-disable-next-line no-constructor-return
     return instance;
   }
 

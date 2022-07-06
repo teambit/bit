@@ -52,6 +52,7 @@ export function ComponentOverview({
           <div className={styles.badgeContainer}>
             {titleBadges
               // @ts-ignore
+              // eslint-disable-next-line no-unsafe-optional-chaining
               ?.sort((a, b) => a?.weight - b?.weight)
               ?.map((titleBadge, index) => {
                 return (

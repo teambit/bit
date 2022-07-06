@@ -37,7 +37,7 @@ export function applyUpdates(
         if (outdatedPkg.variantPattern) {
           const { variantPattern, targetField, name } = outdatedPkg;
           updatedVariants.add(outdatedPkg.variantPattern);
-          // eslint-disable-next-line dot-notation
+          // eslint-disable-next-line @typescript-eslint/dot-notation
           if (variantPoliciesByPatterns[variantPattern]?.[targetField]?.[name]?.['version']) {
             // eslint-disable-line
             variantPoliciesByPatterns[variantPattern][targetField]![name]['version'] = outdatedPkg.latestRange; // eslint-disable-line

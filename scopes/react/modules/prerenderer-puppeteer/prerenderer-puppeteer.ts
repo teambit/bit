@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/dot-notation */
 /* eslint-disable no-console */
 /* eslint-disable dot-notation */
 import promiseLimit from 'promise-limit';

@@ -8,6 +8,7 @@ type GraphFilters = {
   disable?: boolean;
 } & CardProps;
 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export function GraphFilters({ onChangeFilter, isFiltered, disable, ...rest }: GraphFilters) {
   return (
     <Card {...rest}>

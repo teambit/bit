@@ -20,6 +20,7 @@ export interface ComponentNode extends CardProps {
   type: string;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export function ComponentNode({ node, type = 'defaultNode', ...rest }: ComponentNode) {
   const graphContext = useContext(ComponentGraphContext);
   const { component } = node;

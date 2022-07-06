@@ -13,6 +13,7 @@ export const formatCompileResults = (compileResults: ComponentsStatus[], verbose
       outputString += `${result.icon} ${result.status}\t${result.componentId}`;
       if (verbose) {
         outputString += ':';
+        // eslint-disable-next-line no-unsafe-optional-chaining
         outputString += result?.files?.reduce((fileList, file) => `${fileList}\t\t - ${file}\n`, '\n');
       }
       outputString += '\n';

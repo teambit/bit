@@ -42,13 +42,13 @@ export class AspectEntry {
     return this.legacy.data;
   }
 
-  get isRemoved(): boolean {
-    return this.legacy.isRemoved;
-  }
-
   // eslint-disable-next-line @typescript-eslint/adjacent-overload-signatures
   set data(val: { [key: string]: any }) {
     this.legacy.data = val;
+  }
+
+  get isRemoved(): boolean {
+    return this.legacy.isRemoved;
   }
 
   transform(newData: SerializableMap): AspectEntry {

@@ -345,6 +345,7 @@ export default class DependencyResolver {
     }
     if (this.tree[depFile].components && !R.isEmpty(this.tree[depFile].components)) {
       const components = this.tree[depFile].components || [];
+      // eslint-disable-next-line no-unreachable-loop
       for (const comp of components) {
         return this.getComponentIdByResolvedPackageData(comp);
       }

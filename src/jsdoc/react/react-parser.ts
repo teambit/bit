@@ -65,9 +65,6 @@ function stringifyType(prop: { name: string; value?: any; raw?: string }): strin
   let transformed;
 
   switch (name) {
-    default:
-      transformed = name;
-      break;
     case 'func':
       transformed = 'function';
       break;
@@ -90,6 +87,9 @@ function stringifyType(prop: { name: string; value?: any; raw?: string }): strin
       break;
     case 'arrayOf':
       transformed = `${stringifyType(prop.value)}[]`;
+      break;
+    default:
+      transformed = name;
       break;
   }
 
