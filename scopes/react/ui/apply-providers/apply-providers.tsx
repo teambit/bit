@@ -3,7 +3,7 @@ import { ErrorBoundary } from 'react-error-boundary';
 import { Composer } from '@teambit/base-ui.utils.composer';
 import { ErrorFallback } from '@teambit/react.ui.error-fallback';
 
-import { RenderingContext } from '@teambit/preview';
+import type { RenderingContext } from '@teambit/preview';
 import { ReactAspect } from '@teambit/react';
 
 export type ApplyProvidersProps = {
@@ -12,7 +12,7 @@ export type ApplyProvidersProps = {
 } & HTMLAttributes<HTMLDivElement>;
 
 /**
- * base template for react component documentation
+ * applies providers from rendering context, and error boundary
  */
 export function ApplyProviders({ renderingContext, children, ...rest }: ApplyProvidersProps) {
 
