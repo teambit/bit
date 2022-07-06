@@ -15,7 +15,7 @@ export type ApplyProvidersProps = {
 } & HTMLAttributes<HTMLDivElement>;
 
 /**
- * base template for react component documentation
+ * applies providers from rendering context, and error boundary
  */
 export function ApplyProviders({ renderingContext, children, ...rest }: ApplyProvidersProps) {
 
