@@ -1,8 +1,8 @@
 import mapObject from 'map-obj';
-import DocsRoot, { ReactDocsRootParams } from '@teambit/react.ui.docs-app';
+import DocsRoot, { ReactDocsRootType } from '@teambit/react.ui.docs-app';
 import { htmlToReact } from './html-to-react';
 
-export default function htmlDocsRoot(...args: ReactDocsRootParams) {
+const htmlDocsRoot: ReactDocsRootType = function(...args) {
   const [Provider, componentId, docs, compositions, ...rest] = args;
 
   // should be mapObject<Record<string, any>, Record<string, () => any>>
@@ -11,3 +11,5 @@ export default function htmlDocsRoot(...args: ReactDocsRootParams) {
 
   return DocsRoot(Provider, componentId, docs, reactCompositions, ...rest);
 }
+
+export default htmlDocsRoot;
