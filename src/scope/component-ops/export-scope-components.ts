@@ -225,6 +225,7 @@ this scope already has a component with the same name. as such, it'll be impossi
       const objectsList = await new ObjectList(objectItems).toBitObjects();
       const componentAndObject = { component: modelComponent, objects: objectsList.getAll() };
       await convertToCorrectScopeHarmony(scope, componentAndObject, remoteNameStr, bitIds, idsWithFutureScope);
+      populateExportMetadata(modelComponent);
       const remoteObj = { url: remote.host, name: remote.name, date: Date.now().toString() };
       modelComponent.addScopeListItem(remoteObj);
       componentsAndObjects.push(componentAndObject);
@@ -264,8 +265,7 @@ this scope already has a component with the same name. as such, it'll be impossi
     return { remote, objectList, objectListPerName, idsToChangeLocally, componentsAndObjects };
   }
 
-  async function getVersionsToExport(modelComponent: ModelComponent, lane?: Lane): Promise<string[]> {
-    await modelComponent.setDivergeData(scope.objects);
+  function populateExportMetadata(modelComponent: ModelComponent) {
     const localTagsOrHashes = modelComponent.getLocalTagsOrHashes();
     const head = modelComponent.getHeadRegardlessOfLane();
     if (!head) {
@@ -276,6 +276,11 @@ this scope already has a component with the same name. as such, it'll be impossi
       versions: localTagsOrHashes,
       head,
     });
+  }
+
+  async function getVersionsToExport(modelComponent: ModelComponent, lane?: Lane): Promise<string[]> {
+    await modelComponent.setDivergeData(scope.objects);
+    const localTagsOrHashes = modelComponent.getLocalTagsOrHashes();
     if (!allVersions && !lane) {
       // if lane is exported, components from other remotes may be exported to this remote. we need their history.
       return localTagsOrHashes;
