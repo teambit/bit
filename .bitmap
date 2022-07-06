@@ -1134,6 +1134,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/compositions/ui/composition-card"
     },
+    "ui/compositions-app": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/react/ui/compositions-app"
+    },
     "ui/composition-compare": {
         "scope": "teambit.compositions",
         "version": "0.0.23",
