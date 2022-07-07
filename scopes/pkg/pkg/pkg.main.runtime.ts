@@ -14,6 +14,7 @@ import LegacyComponent from '@teambit/legacy/dist/consumer/component';
 import { BuilderMain, BuilderAspect } from '@teambit/builder';
 import { CloneConfig } from '@teambit/new-component-helper';
 import { BitError } from '@teambit/bit-error';
+import { snapToSemver } from '@teambit/component-package-version';
 import { IssuesClasses } from '@teambit/component-issues';
 import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 import { GraphqlMain, GraphqlAspect } from '@teambit/graphql';
@@ -356,8 +357,9 @@ export class PkgMain implements CloneConfig {
       throw new BitError('can not get manifest for component without versions');
     }
     const preReleaseLatestTags = component.tags.getPreReleaseLatestTags();
+    const latest = snapToSemver(latestVersion);
     const distTags = {
-      latest: latestVersion,
+      latest,
       ...preReleaseLatestTags,
     };
     const versionsFromCache = this.manifestCache.get(name);

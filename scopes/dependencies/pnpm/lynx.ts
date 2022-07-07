@@ -171,7 +171,10 @@ export async function install(
     overrides?: Record<string, string>;
     rootComponents?: boolean;
     rootComponentsForCapsules?: boolean;
-  } & Pick<InstallOptions, 'publicHoistPattern' | 'hoistPattern' | 'nodeVersion' | 'engineStrict'> &
+  } & Pick<
+    InstallOptions,
+    'publicHoistPattern' | 'hoistPattern' | 'nodeVersion' | 'engineStrict' | 'peerDependencyRules'
+  > &
     Pick<CreateStoreControllerOptions, 'packageImportMethod'>,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   logger?: Logger
@@ -224,13 +227,12 @@ export async function install(
     rawConfig: authConfig,
     hooks: { readPackage },
     hoistingLimits,
-    peerDependencyRules: {
-      allowedVersions: {
-        '@teambit/legacy': '*',
-      },
-      ignoreMissing: ['@teambit/legacy'],
-    },
     ...options,
+    peerDependencyRules: {
+      allowAny: ['*'],
+      ignoreMissing: ['*'],
+      ...options?.peerDependencyRules,
+    },
   };
 
   const stopReporting = defaultReporter({
