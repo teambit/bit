@@ -24,6 +24,23 @@ export class DocsPreview {
   render = (componentId: ComponentID, modules: PreviewModule, [compositions]: [any], context: RenderingContext) => {
     const docsModule = this.selectPreviewModel(componentId.fullName, modules);
 
+    const isObject = !!modules.mainModule.default.apiObject;
+
+    /**
+     * for backwards compatibility - can be removed end of 2022
+     */
+    if (!isObject) {
+      const docsPropsArray = [
+        NoopProvider as React.ComponentType,
+        componentId.toString(),
+        docsModule as Docs,
+        compositions,
+        context,
+      ];
+      modules.mainModule.default(...docsPropsArray);
+      return;
+    }
+
     const docsProps: DocsRootProps = {
       Provider: NoopProvider as React.ComponentType,
       componentId: componentId.toString(),
