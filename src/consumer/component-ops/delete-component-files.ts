@@ -22,7 +22,7 @@ export default async function deleteComponentsFiles(consumer: Consumer, bitIds: 
         );
         return null;
       }
-      if (componentMap.origin === COMPONENT_ORIGINS.IMPORTED || componentMap.origin === COMPONENT_ORIGINS.NESTED) {
+      if (componentMap.origin === COMPONENT_ORIGINS.IMPORTED) {
         // $FlowFixMe rootDir is set for non authored
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         const rootDir: string = componentMap.rootDir;

@@ -28,7 +28,6 @@ import Fetch from './commands/public-cmds/fetch-cmd';
 import Graph from './commands/public-cmds/graph-cmd';
 import Init from './commands/public-cmds/init-cmd';
 import Dependents from './commands/public-cmds/dependents-cmd';
-import List from './commands/public-cmds/list-cmd';
 import Login from './commands/public-cmds/login-cmd';
 import Logout from './commands/public-cmds/logout-cmd';
 import Move from './commands/public-cmds/move-cmd';
@@ -45,8 +44,6 @@ export default function registerCommands(): CommandRegistry {
   return new CommandRegistry(BIT_USAGE, BIT_DESCRIPTION, BIT_VERSION, [
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     new Init(),
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    new List(),
     new Config(),
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     new Remote(),

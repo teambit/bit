@@ -92,12 +92,10 @@ export default class BitMap {
         `invalid bitmap id ${id}, a component must have a version when a scope-name is included`
       );
     }
-    if (componentMap.origin !== COMPONENT_ORIGINS.NESTED) {
-      // make sure there are no duplications (same name)
-      const similarIds = this.findSimilarIds(bitId, true);
-      if (similarIds.length) {
-        throw new ShowDoctorError(`your id ${id} is duplicated with ${similarIds.toString()}`);
-      }
+    // make sure there are no duplications (same name)
+    const similarIds = this.findSimilarIds(bitId, true);
+    if (similarIds.length) {
+      throw new ShowDoctorError(`your id ${id} is duplicated with ${similarIds.toString()}`);
     }
     componentMap.id = bitId;
     this.components.push(componentMap);
@@ -814,9 +812,6 @@ export default class BitMap {
     }
     logger.debug(`BitMap: updating an older component ${oldIdStr} with a newer component ${newId.toString()}`);
     const componentMap = this.getComponent(oldId);
-    if (componentMap.origin === COMPONENT_ORIGINS.NESTED) {
-      throw new Error('updateComponentId should not manipulate Nested components');
-    }
     if (this.workspaceLane && !updateScopeOnly) {
       // this code is executed when snapping/tagging and user is on a lane.
       // change the version only on the lane, not on .bitmap

@@ -82,11 +82,6 @@ export class ComponentStatusLoader {
       }
       throw err;
     }
-
-    if (this.consumer.isLegacy && componentFromFileSystem.componentMap.origin === COMPONENT_ORIGINS.NESTED) {
-      status.nested = true;
-      return status;
-    }
     if (!componentFromModel) {
       status.newlyCreated = true;
       return status;

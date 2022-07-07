@@ -483,13 +483,6 @@ you can add the directory these files are located at and it'll change the root d
    */
   _getIdAccordingToExistingComponent(currentId: BitIdStr): BitId {
     const existingComponentId = this.bitMap.getExistingBitId(currentId, false);
-    const componentExists = Boolean(existingComponentId);
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    if (componentExists && this.bitMap.getComponent(existingComponentId).origin === COMPONENT_ORIGINS.NESTED) {
-      throw new GeneralError(`One of your dependencies (${existingComponentId}) has already the same namespace and name.
-    If you're trying to add a new component, please choose a new namespace or name.
-    If you're trying to update a dependency component, please re-import it individually`);
-    }
     if (currentId.includes(VERSION_DELIMITER)) {
       if (
         !existingComponentId || // this id is new, it shouldn't have a version

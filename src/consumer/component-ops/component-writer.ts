@@ -122,7 +122,6 @@ export default class ComponentWriter {
     this._updateFilesBasePaths();
     this.component.componentMap = this.existingComponentMap || this.addComponentToBitMap(this.writeToPath);
     this._determineWhetherToDeleteComponentDirContent();
-    await this._handlePreviouslyNestedCurrentlyImportedCase();
     this._determineWhetherToWriteConfig();
     this._updateComponentRootPathAccordingToBitMap();
     this._updateBitMapIfNeeded();
@@ -262,21 +261,6 @@ export default class ComponentWriter {
   _determineWhetherToWritePackageJson() {
     // should never write package.json in Harmony
     this.writePackageJson = false;
-  }
-
-  /**
-   * when a user imports a component that was a dependency before, write the component directly
-   * into the components directory for an easy access/change. Then, remove the current record from
-   * bit.map and add an updated one.
-   */
-  async _handlePreviouslyNestedCurrentlyImportedCase() {
-    if (!this.consumer) return;
-    // $FlowFixMe this.component.componentMap is set
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    if (this.origin === COMPONENT_ORIGINS.IMPORTED && this.component.componentMap.origin === COMPONENT_ORIGINS.NESTED) {
-      await this._cleanOldNestedComponent();
-      this.component.componentMap = this.addComponentToBitMap(this.writeToPath);
-    }
   }
 
   /**

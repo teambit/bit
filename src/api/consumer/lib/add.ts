@@ -17,10 +17,8 @@ const HooksManagerInstance = HooksManager.getInstance();
 
 export async function addOne(addProps: AddProps): Promise<AddActionResults> {
   const consumer: Consumer = await loadConsumer();
-  if (!consumer.isLegacy) {
-    if (addProps.tests?.length) throw new BitError(`--tests flag is used for legacy only`);
-    if (addProps.exclude?.length) throw new BitError(`--exclude flag is used for legacy only`);
-  }
+  if (addProps.tests?.length) throw new BitError(`--tests flag is used for legacy only`);
+  if (addProps.exclude?.length) throw new BitError(`--exclude flag is used for legacy only`);
   const addContext: AddContext = { consumer };
   addProps.shouldHandleOutOfSync = true;
   const addComponents = new AddComponents(addContext, addProps);

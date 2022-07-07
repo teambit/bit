@@ -77,17 +77,13 @@ export default class ComponentOverrides {
     isLegacy: boolean
   ): Promise<ComponentOverrides> {
     const isAuthor = origin === COMPONENT_ORIGINS.AUTHORED;
-    const isNotNested = origin !== COMPONENT_ORIGINS.NESTED;
     // overrides from consumer-config is not relevant and should not affect imported
-    let legacyOverridesFromConsumer = isNotNested ? workspaceConfig?.getComponentConfig(componentId) : null;
+    let legacyOverridesFromConsumer = workspaceConfig?.getComponentConfig(componentId);
 
     if (isAuthor) {
       const plainLegacy = workspaceConfig?._legacyPlainObject();
       if (plainLegacy && plainLegacy.env) {
         legacyOverridesFromConsumer = legacyOverridesFromConsumer || {};
-        legacyOverridesFromConsumer.env = {};
-        legacyOverridesFromConsumer.env.compiler = plainLegacy.env.compiler;
-        legacyOverridesFromConsumer.env.tester = plainLegacy.env.tester;
       }
     }
 

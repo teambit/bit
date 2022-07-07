@@ -206,10 +206,8 @@ export default async function provideWorkspace(
     capsuleCmd,
   ];
   const watcher = new Watcher(workspace, pubsub);
-  if (workspace && !workspace.consumer.isLegacy) {
-    cli.unregister('watch');
+  if (workspace) {
     commands.push(new WatchCommand(pubsub, logger, watcher));
-    cli.unregister('link');
     commands.push(new LinkCommand(workspace, logger, community.getDocsDomain()));
     commands.push(new UseCmd(workspace));
   }

@@ -61,7 +61,7 @@ export class FlattenedDependencyLoader {
   async loadDependency(dependencyId: BitId): Promise<Component> {
     if (!this.cache[dependencyId.toString()]) {
       const componentMap = this.consumer.bitMap.getComponentIfExist(dependencyId);
-      const couldBeModified = componentMap && componentMap.origin !== COMPONENT_ORIGINS.NESTED;
+      const couldBeModified = componentMap;
       if (couldBeModified) {
         if (this.loadComponentsFunc) {
           const dependency = await this.loadComponentsFunc([dependencyId]);

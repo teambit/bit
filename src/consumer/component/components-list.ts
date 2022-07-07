@@ -480,7 +480,7 @@ export default class ComponentsList {
     };
     return listAllResults.filter((listResult) => {
       const componentMap = this.bitMap.getComponentIfExist(listResult.id, { ignoreVersion: true });
-      return componentMap && componentMap.origin !== COMPONENT_ORIGINS.NESTED && isIdOnCurrentLane(componentMap);
+      return componentMap && isIdOnCurrentLane(componentMap);
     });
   }
 

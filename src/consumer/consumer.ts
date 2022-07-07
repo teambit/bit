@@ -20,13 +20,11 @@ import {
 } from '../constants';
 import GeneralError from '../error/general-error';
 import logger from '../logger/logger';
-import { Remotes } from '../remotes';
 import { ComponentWithDependencies, Scope } from '../scope';
 import { getAutoTagPending } from '../scope/component-ops/auto-tag';
 import ScopeComponentsImporter from '../scope/component-ops/scope-components-importer';
 import { ComponentNotFound } from '../scope/exceptions';
 import { Lane, ModelComponent, Version } from '../scope/models';
-import { getScopeRemotes } from '../scope/scope-remotes';
 import VersionDependencies, { multipleVersionDependenciesToConsumer } from '../scope/version-dependencies';
 import { pathNormalizeToLinux, sortObject } from '../utils';
 import { composeComponentPath, composeDependencyPath } from '../utils/bit/compose-component-path';
@@ -316,19 +314,6 @@ export default class Consumer {
       throw new TypeError('consumer.loadComponentWithDependenciesFromModel, version is missing from the id');
     }
 
-    if (this.isLegacy) {
-      const versionDependencies = (await scopeComponentsImporter.componentToVersionDependencies(
-        modelComponent,
-        id
-      )) as VersionDependencies;
-      const manipulateDirData = await getManipulateDirWhenImportingComponents(
-        this.bitMap,
-        [versionDependencies],
-        this.scope.objects
-      );
-      return versionDependencies.toConsumer(this.scope.objects, manipulateDirData);
-    }
-
     const compVersion = modelComponent.toComponentVersion(id.version);
     const consumerComp = await compVersion.toConsumer(this.scope.objects, null);
     return new ComponentWithDependencies({
@@ -427,13 +412,10 @@ export default class Consumer {
     if (saveDependenciesAsComponents === undefined) {
       saveDependenciesAsComponents = this.config._saveDependenciesAsComponents;
     }
-    const remotes: Remotes = await getScopeRemotes(this.scope);
     const shouldDependenciesSavedAsComponents = bitIds.map((bitId: BitId) => {
       return {
         id: bitId, // if it doesn't go to the hub, it can't import dependencies as packages
-        saveDependenciesAsComponents: this.isLegacy
-          ? saveDependenciesAsComponents || !remotes.isHub(bitId.scope as string)
-          : false,
+        saveDependenciesAsComponents: false,
       };
     });
     return shouldDependenciesSavedAsComponents;

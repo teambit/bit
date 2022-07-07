@@ -223,9 +223,7 @@ function getDependencyComponentMap(bitMap, dependencyId): ComponentMap | undefin
  */
 function getComponentOrigin(bitmapOrigin: ComponentOrigin | undefined, isDependency: boolean): ComponentOrigin {
   if (!bitmapOrigin) return isDependency ? COMPONENT_ORIGINS.NESTED : COMPONENT_ORIGINS.IMPORTED;
-  if (bitmapOrigin === COMPONENT_ORIGINS.NESTED && !isDependency) {
-    return COMPONENT_ORIGINS.IMPORTED;
-  }
+
   return bitmapOrigin;
 }
 

@@ -376,7 +376,6 @@ export class BuilderMain {
     if (scope) scope.onTag(func);
     if (workspace && !workspace.consumer.isLegacy) {
       const commands = [new BuilderCmd(builder, workspace, logger), new ArtifactsCmd(builder, scope)];
-      cli.unregister('build');
       cli.register(...commands);
     }
     return builder;

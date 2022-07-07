@@ -503,10 +503,6 @@ export default class ComponentMap {
     if (!isValidPath(this.mainFile)) {
       throw new ValidationError(`${errorMessage} mainFile attribute ${this.mainFile} is invalid`);
     }
-    // if it's an environment component (such as compiler) the rootDir is empty
-    if (!this.rootDir && this.origin === COMPONENT_ORIGINS.NESTED) {
-      throw new ValidationError(`${errorMessage} rootDir attribute is missing`);
-    }
     if (this.rootDir && !isValidPath(this.rootDir)) {
       throw new ValidationError(`${errorMessage} rootDir attribute ${this.rootDir} is invalid`);
     }

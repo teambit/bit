@@ -145,9 +145,7 @@ export default class ImportComponents {
     const bitIds: BitIds = await this.getBitIds();
     const beforeImportVersions = await this._getCurrentVersions(bitIds);
     await this._throwForPotentialIssues(bitIds);
-    const componentsWithDependencies = this.consumer.isLegacy
-      ? await this.consumer.importComponentsLegacy(bitIds, true, this.options.saveDependenciesAsComponents)
-      : await this.consumer.importComponentsHarmony(bitIds, true, this.laneObjects);
+    const componentsWithDependencies = await this.consumer.importComponentsHarmony(bitIds, true, this.laneObjects);
     await this._throwForModifiedOrNewDependencies(componentsWithDependencies);
     if (this.laneObjects && this.options.objectsOnly) {
       // merge the lane objects
