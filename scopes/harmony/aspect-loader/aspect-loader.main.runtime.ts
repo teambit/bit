@@ -524,3 +524,5 @@ export class AspectLoaderMain {
 }
 
 AspectLoaderAspect.addRuntime(AspectLoaderMain);
+
+export default AspectLoaderMain;

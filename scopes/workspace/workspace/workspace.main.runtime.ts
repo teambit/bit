@@ -50,3 +50,5 @@ export const WorkspaceMain = {
 };
 
 WorkspaceAspect.addRuntime(WorkspaceMain);
+
+export default WorkspaceMain;

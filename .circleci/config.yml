@@ -813,6 +813,9 @@ jobs:
 
   bundle_version_linux:
     <<: *defaults
+    environment:
+      # do not download chromium when installing puppeteer
+      PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: true
     steps:
       - run:
           name: set bit.dev registry
@@ -867,6 +870,9 @@ jobs:
 
   bundle_version_macos:
     <<: *mac_defaults
+    environment:
+      # do not download chromium when installing puppeteer
+      PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: true
     steps:
       - attach_workspace:
             at: ./
@@ -933,6 +939,9 @@ jobs:
 
   bundle_version_windows:
     <<: *windows_defaults
+    environment:
+      # do not download chromium when installing puppeteer
+      PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: true
     steps:
       - run: choco install nodejs --version 12.22.0
       # - run: nodejs.install v12.16.0
