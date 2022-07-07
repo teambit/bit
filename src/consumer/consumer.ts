@@ -41,10 +41,6 @@ import BitMap, { CURRENT_BITMAP_SCHEMA } from './bit-map/bit-map';
 import { NextVersion } from './bit-map/component-map';
 import Component from './component';
 import { ComponentStatus, ComponentStatusLoader, ComponentStatusResult } from './component-ops/component-status-loader';
-import {
-  getManipulateDirForExistingComponents,
-  getManipulateDirWhenImportingComponents,
-} from './component-ops/manipulate-dir';
 import ComponentLoader from './component/component-loader';
 import { InvalidComponent } from './component/consumer-component';
 import { Dependencies } from './component/dependencies';
@@ -270,9 +266,7 @@ export default class Consumer {
     if (!id.version) throw new TypeError('consumer.loadComponentFromModel, version is missing from the id');
     const modelComponent: ModelComponent = await this.scope.getModelComponent(id);
 
-    const componentVersion = modelComponent.toComponentVersion(id.version);
-    const manipulateDirData = await getManipulateDirForExistingComponents(this, componentVersion);
-    return modelComponent.toConsumerComponent(id.version, this.scope.name, this.scope.objects, manipulateDirData);
+    return modelComponent.toConsumerComponent(id.version, this.scope.name, this.scope.objects);
   }
 
   /**
@@ -290,9 +284,7 @@ export default class Consumer {
   async loadAllVersionsOfComponentFromModel(id: BitId): Promise<Component[]> {
     const modelComponent: ModelComponent = await this.scope.getModelComponent(id);
     const componentsP = modelComponent.listVersions().map(async (versionNum) => {
-      const componentVersion = modelComponent.toComponentVersion(versionNum);
-      const manipulateDirData = await getManipulateDirForExistingComponents(this, componentVersion);
-      return modelComponent.toConsumerComponent(versionNum, this.scope.name, this.scope.objects, manipulateDirData);
+      return modelComponent.toConsumerComponent(versionNum, this.scope.name, this.scope.objects);
     });
     return Promise.all(componentsP);
   }
@@ -315,7 +307,7 @@ export default class Consumer {
     }
 
     const compVersion = modelComponent.toComponentVersion(id.version);
-    const consumerComp = await compVersion.toConsumer(this.scope.objects, null);
+    const consumerComp = await compVersion.toConsumer(this.scope.objects);
     return new ComponentWithDependencies({
       component: consumerComp,
       dependencies: [],
@@ -338,39 +330,6 @@ export default class Consumer {
     throwOnFailure = true
   ): Promise<{ components: Component[]; invalidComponents: InvalidComponent[] }> {
     return this.componentLoader.loadMany(ids, throwOnFailure);
-  }
-
-  async importComponentsLegacy(
-    ids: BitIds,
-    withAllVersions: boolean,
-    saveDependenciesAsComponents?: boolean
-  ): Promise<ComponentWithDependencies[]> {
-    const scopeComponentsImporter = ScopeComponentsImporter.getInstance(this.scope);
-    const versionDependenciesArr: VersionDependencies[] = withAllVersions
-      ? await scopeComponentsImporter.importManyWithAllVersions(ids, false)
-      : await scopeComponentsImporter.importMany({ ids });
-    const shouldDependenciesSavedAsComponents = await this.shouldDependenciesSavedAsComponents(
-      versionDependenciesArr.map((v) => v.component.id),
-      saveDependenciesAsComponents
-    );
-    const manipulateDirData = await getManipulateDirWhenImportingComponents(
-      this.bitMap,
-      versionDependenciesArr,
-      this.scope.objects
-    );
-    const componentWithDependencies = await mapSeries(versionDependenciesArr, (versionDependencies) =>
-      versionDependencies.toConsumer(this.scope.objects, manipulateDirData)
-    );
-    componentWithDependencies.forEach((componentWithDeps) => {
-      const shouldSavedAsComponents = shouldDependenciesSavedAsComponents.find((c) =>
-        c.id.isEqual(componentWithDeps.component.id)
-      );
-      if (!shouldSavedAsComponents) {
-        throw new Error(`saveDependenciesAsComponents is missing for ${componentWithDeps.component.id.toString()}`);
-      }
-      componentWithDeps.component.dependenciesSavedAsComponents = shouldSavedAsComponents.saveDependenciesAsComponents;
-    });
-    return componentWithDependencies;
   }
 
   async importComponentsHarmony(
@@ -450,14 +409,9 @@ export default class Consumer {
       );
     }
     if (typeof componentFromFileSystem._isModified === 'undefined') {
-      const componentMap = this.bitMap.getComponent(componentFromFileSystem.id);
-      if (componentMap.originallySharedDir) {
-        componentFromFileSystem.originallySharedDir = componentMap.originallySharedDir;
-      }
       componentFromFileSystem.log = componentFromModel.log; // ignore the log, it's irrelevant for the comparison
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const { version } = await this.scope.sources.consumerComponentToVersion({
-        consumer: this,
         consumerComponent: componentFromFileSystem,
       });
 
@@ -528,7 +482,6 @@ export default class Consumer {
     }
     componentFromFileSystem.log = componentFromModel.log; // in order to convert to Version object
     const { version } = await this.scope.sources.consumerComponentToVersion({
-      consumer: this,
       consumerComponent: componentFromFileSystem,
     });
 
@@ -820,22 +773,6 @@ export default class Consumer {
     ]);
     const componentsIds = BitIds.fromArray(components.map((c) => c.id));
     return this.scope.findDirectDependentComponents(authoredAndImportedComponents, componentsIds);
-  }
-
-  async getAuthoredAndImportedDependentsComponentsOf(components: Component[]): Promise<Component[]> {
-    const dependentsIds = await this.getAuthoredAndImportedDependentsIdsOf(components);
-    const scopeComponentsImporter = ScopeComponentsImporter.getInstance(this.scope);
-
-    const versionDependenciesArr = await scopeComponentsImporter.importMany({ ids: dependentsIds });
-    const manipulateDirData = await getManipulateDirWhenImportingComponents(
-      this.bitMap,
-      versionDependenciesArr,
-      this.scope.objects
-    );
-    const dependentComponentsP = versionDependenciesArr.map((c) =>
-      c.component.toConsumer(this.scope.objects, manipulateDirData)
-    );
-    return Promise.all(dependentComponentsP);
   }
 
   async writeBitMap() {

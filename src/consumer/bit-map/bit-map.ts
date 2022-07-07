@@ -627,7 +627,6 @@ export default class BitMap {
     origin,
     rootDir,
     trackDir,
-    originallySharedDir,
     wrapDir,
     onLanesOnly,
     config,
@@ -639,7 +638,6 @@ export default class BitMap {
     origin: ComponentOrigin;
     rootDir?: PathOsBasedAbsolute | PathOsBasedRelative;
     trackDir?: PathOsBased;
-    originallySharedDir?: PathLinux;
     wrapDir?: PathLinux;
     onLanesOnly?: boolean;
     config?: Config;
@@ -705,9 +703,6 @@ export default class BitMap {
       componentMap.config = config;
     }
     componentMap.removeTrackDirIfNeeded();
-    if (originallySharedDir) {
-      componentMap.originallySharedDir = originallySharedDir;
-    }
     this.sortValidateAndMarkAsChanged(componentMap);
     return componentMap;
   }

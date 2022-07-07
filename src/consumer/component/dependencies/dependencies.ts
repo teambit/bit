@@ -8,7 +8,6 @@ import { fetchRemoteVersions } from '../../../scope/scope-remotes';
 import { isValidPath } from '../../../utils';
 import { PathLinux } from '../../../utils/path';
 import validateType from '../../../utils/validate-type';
-import { ManipulateDirItem } from '../../component-ops/manipulate-dir';
 import Dependency, { RelativePath } from './dependency';
 
 export const DEPENDENCIES_TYPES = ['dependencies', 'devDependencies'];
@@ -79,18 +78,6 @@ export default class Dependencies {
       const dependencyClone = R.clone(dependency);
       dependencyClone.id = dependency.id.serialize();
       return dependencyClone;
-    });
-  }
-
-  stripOriginallySharedDir(manipulateDirData: ManipulateDirItem[], originallySharedDir: string): void {
-    this.dependencies.forEach((dependency) => {
-      Dependency.stripOriginallySharedDir(dependency, manipulateDirData, originallySharedDir);
-    });
-  }
-
-  addWrapDir(manipulateDirData: ManipulateDirItem[], wrapDir: PathLinux): void {
-    this.dependencies.forEach((dependency) => {
-      Dependency.addWrapDir(dependency, manipulateDirData, wrapDir);
     });
   }
 

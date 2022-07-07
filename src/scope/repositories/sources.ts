@@ -2,14 +2,13 @@ import pMap from 'p-map';
 import { BitError } from '@teambit/bit-error';
 import { isHash } from '@teambit/component-version';
 import { BitId, BitIds } from '../../bit-id';
-import { BuildStatus, COMPONENT_ORIGINS } from '../../constants';
+import { BuildStatus } from '../../constants';
 import ConsumerComponent from '../../consumer/component';
-import { revertDirManipulationForPath } from '../../consumer/component-ops/manipulate-dir';
 import { ArtifactFiles, ArtifactSource, getArtifactsFiles } from '../../consumer/component/sources/artifact-files';
 import Consumer from '../../consumer/consumer';
 import GeneralError from '../../error/general-error';
 import logger from '../../logger/logger';
-import { PathLinux, PathOsBased } from '../../utils/path';
+import { pathNormalizeToLinux } from '../../utils/path';
 import ComponentObjects from '../component-objects';
 import { getAllVersionHashes, getAllVersionsInfo, VersionInfo } from '../component-ops/traverse-versions';
 import { ComponentNotFound, MergeConflict } from '../exceptions';
@@ -268,47 +267,28 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
    */
   async consumerComponentToVersion({
     consumerComponent,
-    consumer,
   }: {
     readonly consumerComponent: ConsumerComponent;
-    consumer: Consumer;
   }): Promise<{ version: Version; files: any }> {
     const clonedComponent: ConsumerComponent = consumerComponent.clone();
-    const manipulateDirs = (pathStr: PathOsBased): PathLinux => {
-      return revertDirManipulationForPath(pathStr, clonedComponent.originallySharedDir, clonedComponent.wrapDir);
-    };
 
     const files = consumerComponent.files.map((file) => {
       return {
         name: file.basename,
-        relativePath: manipulateDirs(file.relative),
+        relativePath: pathNormalizeToLinux(file.relative),
         file: file.toSourceAsLinuxEOL(),
         test: file.test,
       };
     });
-    clonedComponent.mainFile = manipulateDirs(clonedComponent.mainFile);
+    clonedComponent.mainFile = pathNormalizeToLinux(clonedComponent.mainFile);
     clonedComponent.getAllDependencies().forEach((dependency) => {
-      // ignoreVersion because when persisting the tag is higher than currently exist in .bitmap
-      const depFromBitMap = consumer.bitMap.getComponentIfExist(dependency.id, { ignoreVersion: true });
       dependency.relativePaths.forEach((relativePath) => {
         if (!relativePath.isCustomResolveUsed) {
           // for isCustomResolveUsed it was never stripped
-          relativePath.sourceRelativePath = manipulateDirs(relativePath.sourceRelativePath);
-        }
-        if (depFromBitMap && depFromBitMap.origin !== COMPONENT_ORIGINS.AUTHORED) {
-          // when a dependency is not authored, we need to also change the
-          // destinationRelativePath, which is the path written in the link file, however, the
-          // dir manipulation should be according to this dependency component, not the
-          // consumerComponent passed to this function
-          relativePath.destinationRelativePath = revertDirManipulationForPath(
-            relativePath.destinationRelativePath,
-            depFromBitMap.originallySharedDir,
-            depFromBitMap.wrapDir
-          );
+          relativePath.sourceRelativePath = pathNormalizeToLinux(relativePath.sourceRelativePath);
         }
       });
     });
-    clonedComponent.overrides.addOriginallySharedDir(clonedComponent.originallySharedDir);
     const version: Version = Version.fromComponent({
       component: clonedComponent,
       files: files as any,
@@ -385,7 +365,6 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const { version, files } = await this.consumerComponentToVersion({
       consumerComponent: source,
-      consumer,
     });
     objectRepo.add(version);
     if (!source.version) throw new Error(`addSource expects source.version to be set`);

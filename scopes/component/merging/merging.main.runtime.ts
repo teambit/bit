@@ -375,13 +375,7 @@ export class MergingMain {
 
     if (mergeResults) {
       // update files according to the merge results
-      const { filesStatus: modifiedStatus, modifiedFiles } = applyModifiedVersion(
-        files,
-        mergeResults,
-        mergeStrategy,
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        componentWithDependencies.component.originallySharedDir
-      );
+      const { filesStatus: modifiedStatus, modifiedFiles } = applyModifiedVersion(files, mergeResults, mergeStrategy);
       componentWithDependencies.component.files = modifiedFiles;
       filesStatus = { ...filesStatus, ...modifiedStatus };
     }

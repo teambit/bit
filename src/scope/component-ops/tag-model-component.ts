@@ -7,7 +7,7 @@ import * as globalConfig from '../../api/consumer/lib/global-config';
 import { Scope } from '..';
 import { BitId, BitIds } from '../../bit-id';
 import loader from '../../cli/loader';
-import { BuildStatus, CFG_USER_EMAIL_KEY, CFG_USER_NAME_KEY, COMPONENT_ORIGINS, Extensions } from '../../constants';
+import { BuildStatus, CFG_USER_EMAIL_KEY, CFG_USER_NAME_KEY, Extensions } from '../../constants';
 import { CURRENT_SCHEMA } from '../../consumer/component/component-schema';
 import Component from '../../consumer/component/consumer-component';
 import Consumer from '../../consumer/consumer';
@@ -15,7 +15,7 @@ import { NewerVersionFound } from '../../consumer/exceptions';
 import ShowDoctorError from '../../error/show-doctor-error';
 import ValidationError from '../../error/validation-error';
 import logger from '../../logger/logger';
-import { pathJoinLinux, sha1 } from '../../utils';
+import { sha1 } from '../../utils';
 import { PathLinux } from '../../utils/path';
 import { AutoTagResult, getAutoTagInfo } from './auto-tag';
 import { FlattenedDependenciesGetter } from './get-flattened-dependencies';
@@ -151,21 +151,10 @@ function validateDirManipulation(components: Component[]): void {
   const validateComponent = (component: Component) => {
     if (!component.componentMap) throw new Error(`componentMap is missing from ${component.id.toString()}`);
     if (!component.componentFromModel) return;
-    // component.componentFromModel.setOriginallySharedDir();
-    const sharedDir = component.componentFromModel.originallySharedDir;
-    const wrapDir = component.componentFromModel.wrapDir;
     const pathWithSharedDir = (pathStr: PathLinux): PathLinux => {
-      // $FlowFixMe componentMap is set here
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      if (sharedDir && component.componentMap.origin === COMPONENT_ORIGINS.IMPORTED) {
-        return pathJoinLinux(sharedDir, pathStr);
-      }
       return pathStr;
     };
     const pathWithoutWrapDir = (pathStr: PathLinux): PathLinux => {
-      if (wrapDir) {
-        return pathStr.replace(`${wrapDir}/`, '');
-      }
       return pathStr;
     };
     const pathAfterDirManipulation = (pathStr: PathLinux): PathLinux => {

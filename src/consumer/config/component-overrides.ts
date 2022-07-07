@@ -174,35 +174,6 @@ export default class ComponentOverrides {
     const ignoredRules = this.getIgnored(field);
     return ignoredRules.filter((rule) => !rule.startsWith(OVERRIDE_FILE_PREFIX));
   }
-
-  stripOriginallySharedDir(sharedDir: string | null | undefined) {
-    if (!sharedDir) return;
-    DEPENDENCIES_FIELDS.forEach((field) => {
-      if (!this.overrides[field]) return;
-      Object.keys(this.overrides[field]).forEach((rule) => {
-        if (!rule.startsWith(OVERRIDE_FILE_PREFIX)) return;
-        const fileWithSharedDir = rule.replace(OVERRIDE_FILE_PREFIX, '');
-        const fileWithoutSharedDir = fileWithSharedDir.replace(`${sharedDir}/`, '');
-        const value = this.overrides[field][rule];
-        delete this.overrides[field][rule];
-        this.overrides[field][`${OVERRIDE_FILE_PREFIX}${fileWithoutSharedDir}`] = value;
-      });
-    });
-  }
-  addOriginallySharedDir(sharedDir: string | null | undefined) {
-    if (!sharedDir) return;
-    DEPENDENCIES_FIELDS.forEach((field) => {
-      if (!this.overrides[field]) return;
-      Object.keys(this.overrides[field]).forEach((rule) => {
-        if (!rule.startsWith(OVERRIDE_FILE_PREFIX)) return;
-        const fileWithoutSharedDir = rule.replace(OVERRIDE_FILE_PREFIX, '');
-        const fileWithSharedDir = `${sharedDir}/${fileWithoutSharedDir}`;
-        const value = this.overrides[field][rule];
-        delete this.overrides[field][rule];
-        this.overrides[field][`${OVERRIDE_FILE_PREFIX}${fileWithSharedDir}`] = value;
-      });
-    });
-  }
   static getAllFilesPaths(overrides: Record<string, any>): string[] {
     if (!overrides) return [];
     const allDeps = Object.assign({}, overrides.dependencies, overrides.devDependencies, overrides.peerDependencies);

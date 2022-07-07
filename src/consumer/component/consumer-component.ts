@@ -24,7 +24,6 @@ import BitMap from '../bit-map';
 import ComponentMap, { ComponentOrigin } from '../bit-map/component-map';
 import { IgnoredDirectory } from '../component-ops/add-components/exceptions/ignored-directory';
 import ComponentsPendingImport from '../component-ops/exceptions/components-pending-import';
-import { ManipulateDirItem, stripSharedDirFromPath } from '../component-ops/manipulate-dir';
 import { Dist, License, SourceFile } from '../component/sources';
 import ComponentConfig, { ILegacyWorkspaceConfig } from '../config';
 import ComponentOverrides from '../config/component-overrides';
@@ -122,9 +121,6 @@ export default class Component {
   log: Log | undefined;
   writtenPath?: PathOsBasedRelative; // needed for generate links
   dependenciesSavedAsComponents: boolean | undefined = true; // otherwise they're saved as npm packages.
-  originallySharedDir: PathLinux | undefined; // needed to reduce a potentially long path that was used by the author
-  _wasOriginallySharedDirStripped: boolean | undefined; // whether stripOriginallySharedDir() method had been called, we don't want to strip it twice
-  wrapDir: PathLinux | undefined; // needed when a user adds a package.json file to the component root
   loadedFromFileSystem = false; // whether a component was loaded from the filesystem or converted from the model
   schema?: string;
   componentMap: ComponentMap | undefined; // always populated when the loadedFromFileSystem is true
@@ -326,42 +322,6 @@ export default class Component {
   }
 
   /**
-   * Before writing the files into the file-system, remove the path-prefix that is shared among the main component files
-   * and its dependencies. It helps to avoid large file-system paths.
-   *
-   * This is relevant for IMPORTED and NESTED components only as the author may have long paths
-   * that are not needed for whoever imports it. AUTHORED components are written as is.
-   *
-   * @see sources.consumerComponentToVersion() for the opposite action. meaning, adding back the sharedDir.
-   */
-  stripOriginallySharedDir(manipulateDirData: ManipulateDirItem[]): void {
-    if (this._wasOriginallySharedDirStripped) return;
-    this.setOriginallySharedDir(manipulateDirData);
-    const originallySharedDir = this.originallySharedDir;
-    if (originallySharedDir) {
-      logger.debug(`stripping originallySharedDir "${originallySharedDir}" from ${this.id}`);
-    }
-    this.files.forEach((file) => {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      const newRelative = stripSharedDirFromPath(file.relative, originallySharedDir);
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      file.updatePaths({ newBase: file.base, newRelative });
-    });
-    this.mainFile = stripSharedDirFromPath(this.mainFile, originallySharedDir);
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    this.dependencies.stripOriginallySharedDir(manipulateDirData, originallySharedDir);
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    this.devDependencies.stripOriginallySharedDir(manipulateDirData, originallySharedDir);
-    this.customResolvedPaths.forEach((customPath) => {
-      customPath.destinationPath = pathNormalizeToLinux(
-        stripSharedDirFromPath(path.normalize(customPath.destinationPath), originallySharedDir)
-      );
-    });
-    this.overrides.stripOriginallySharedDir(originallySharedDir);
-    this._wasOriginallySharedDirStripped = true;
-  }
-
-  /**
    * components added since v14.8.0 have "rootDir" in .bitmap, which is mostly the same as the
    * sharedDir. so, if rootDir is found, no need to strip/add the sharedDir as the files are
    * already relative to the sharedDir rather than the author workspace.
@@ -374,39 +334,10 @@ export default class Component {
     return !this.schema || this.schema === SchemaName.Legacy;
   }
 
-  addWrapperDir(manipulateDirData: ManipulateDirItem[]): void {
-    const manipulateDirItem = manipulateDirData.find((m) => m.id.isEqual(this.id));
-    if (!manipulateDirItem || !manipulateDirItem.wrapDir) return;
-    this.wrapDir = manipulateDirItem.wrapDir;
-
-    const pathWithWrapDir = (pathStr: PathOsBased): PathOsBased => {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      return path.join(this.wrapDir, pathStr);
-    };
-    this.files.forEach((file) => {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      const newRelative = pathWithWrapDir(file.relative);
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      file.updatePaths({ newBase: file.base, newRelative });
-    });
-    // @todo: for dist also.
-    this.mainFile = pathWithWrapDir(this.mainFile);
-    const allDependencies = new Dependencies(this.getAllDependencies());
-    allDependencies.addWrapDir(manipulateDirData, this.wrapDir);
-    this.customResolvedPaths.forEach((customPath) => {
-      customPath.destinationPath = pathNormalizeToLinux(pathWithWrapDir(path.normalize(customPath.destinationPath)));
-    });
-  }
-
-  addSharedDir(pathStr: string): PathLinux {
-    const withSharedDir = this.originallySharedDir ? path.join(this.originallySharedDir, pathStr) : pathStr;
-    return pathNormalizeToLinux(withSharedDir);
-  }
-
   cloneFilesWithSharedDir(): SourceFile[] {
     return this.files.map((file) => {
       const newFile = file.clone();
-      const newRelative = this.addSharedDir(file.relative);
+      const newRelative = pathNormalizeToLinux(file.relative);
       newFile.updatePaths({ newRelative });
       return newFile;
     });
@@ -444,13 +375,6 @@ export default class Component {
 
   toString(): string {
     return JSON.stringify(this.toObject());
-  }
-
-  setOriginallySharedDir(manipulateDirData: ManipulateDirItem[]): void {
-    const manipulateDirItem = manipulateDirData.find((m) => m.id.isEqual(this.id));
-    if (manipulateDirItem) {
-      this.originallySharedDir = manipulateDirItem.originallySharedDir;
-    }
   }
 
   static isComponentInvalidByErrorType(err: Error): boolean {

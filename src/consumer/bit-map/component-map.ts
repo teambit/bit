@@ -46,7 +46,6 @@ export type ComponentMapData = {
   rootDir: PathLinux;
   trackDir?: PathLinux;
   origin: ComponentOrigin;
-  originallySharedDir?: PathLinux;
   wrapDir?: PathLinux;
   exported?: boolean;
   onLanesOnly: boolean;
@@ -71,7 +70,6 @@ export default class ComponentMap {
   // dependencies paths won't work).
   trackDir: PathLinux | undefined; // relevant for AUTHORED only when a component was added as a directory, used for tracking changes in that dir
   origin: ComponentOrigin;
-  originallySharedDir: PathLinux | undefined; // directory shared among a component and its dependencies by the original author. Relevant for IMPORTED only
   wrapDir: PathLinux | undefined; // a wrapper directory needed when a user adds a package.json file to the component root so then it won't collide with Bit generated one
   // wether the compiler / tester are detached from the workspace global configuration
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -95,7 +93,6 @@ export default class ComponentMap {
     rootDir,
     trackDir,
     origin,
-    originallySharedDir,
     wrapDir,
     onLanesOnly,
     lanes,
@@ -111,7 +108,6 @@ export default class ComponentMap {
     this.rootDir = rootDir;
     this.trackDir = trackDir;
     this.origin = origin;
-    this.originallySharedDir = originallySharedDir;
     this.wrapDir = wrapDir;
     this.onLanesOnly = onLanesOnly;
     this.lanes = lanes || [];
@@ -146,7 +142,6 @@ export default class ComponentMap {
       rootDir: this.rootDir,
       trackDir: this.trackDir,
       origin: undefined,
-      originallySharedDir: this.originallySharedDir,
       wrapDir: this.wrapDir,
       exported: this.exported,
       onLanesOnly: this.onLanesOnly || null, // if false, change to null so it won't be written
@@ -509,13 +504,6 @@ export default class ComponentMap {
     if (this.trackDir && this.origin !== COMPONENT_ORIGINS.AUTHORED) {
       throw new ValidationError(`${errorMessage} trackDir attribute should be set for AUTHORED component only`);
     }
-    // commented out because when importing a legacy component into Harmony it may have originallySharedDir
-    // and on Harmony all components are Authored.
-    // if (this.originallySharedDir && this.origin === COMPONENT_ORIGINS.AUTHORED) {
-    //   throw new ValidationError(
-    //     `${errorMessage} originallySharedDir attribute should be set for non AUTHORED components only`
-    //   );
-    // }
     if (this.nextVersion && !this.nextVersion.version) {
       throw new ValidationError(`${errorMessage} version attribute should be set when nextVersion prop is set`);
     }

@@ -337,14 +337,15 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
     let componentsAndDependencies: ComponentWithDependencies[] = [];
     if (componentsIdsToImport.length) {
       // change all ids version to 'latest'. otherwise, it tries to import local tags/snaps from a remote
-      const idsWithLatestVersion = componentsIdsToImport.toVersionLatest();
-      componentsAndDependencies = this.options.objectsOnly
-        ? await this.consumer.importComponentsObjectsHarmony(
-            componentsIdsToImport,
-            this.options.fromOriginalScope,
-            this.options.allHistory
-          )
-        : await this.consumer.importComponentsLegacy(BitIds.fromArray(idsWithLatestVersion), true);
+      // const idsWithLatestVersion = componentsIdsToImport.toVersionLatest();
+      if (!this.options.objectsOnly) {
+        throw new Error(`bit import with no ids and --merge flag was not implemented yet`);
+      }
+      componentsAndDependencies = await this.consumer.importComponentsObjectsHarmony(
+        componentsIdsToImport,
+        this.options.fromOriginalScope,
+        this.options.allHistory
+      );
       await this._writeToFileSystem(componentsAndDependencies);
     }
     const importDetails = await this._getImportDetails(beforeImportVersions, componentsAndDependencies);
@@ -548,9 +549,7 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
     const { filesStatus, modifiedFiles } = applyModifiedVersion(
       component.files,
       mergeResults,
-      this.options.mergeStrategy,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      component.originallySharedDir
+      this.options.mergeStrategy
     );
     component.files = modifiedFiles;
 

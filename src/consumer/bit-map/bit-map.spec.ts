@@ -25,14 +25,6 @@ const addComponentParamsFixture = {
   origin: COMPONENT_ORIGINS.AUTHORED,
 };
 
-const addComponentParamsImportedFixture = {
-  componentId: new BitId({ scope: 'my-scope', name: 'is-string-imported', version: '0.0.1' }),
-  files: [{ name: 'is-string-imported.js', relativePath: 'is-string-imported.js', test: false }],
-  mainFile: 'is-string-imported.js',
-  origin: COMPONENT_ORIGINS.IMPORTED,
-  rootDir: 'utils',
-};
-
 describe('BitMap', function () {
   // @ts-ignore
   logger.debug = () => {};

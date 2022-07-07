@@ -14,7 +14,6 @@ import {
   Extensions,
 } from '../../constants';
 import ConsumerComponent from '../../consumer/component';
-import { ManipulateDirItem } from '../../consumer/component-ops/manipulate-dir';
 import { License, SourceFile } from '../../consumer/component/sources';
 import ComponentOverrides from '../../consumer/config/component-overrides';
 import SpecsResults from '../../consumer/specs-results';
@@ -764,12 +763,7 @@ if that's not the case, make sure to call "getAllIdsAvailableOnLane" and not "ge
    *
    * @see sources.consumerComponentToVersion() for the opposite action.
    */
-  async toConsumerComponent(
-    versionStr: string,
-    scopeName: string,
-    repository: Repository,
-    manipulateDirData?: ManipulateDirItem[] | null
-  ): Promise<ConsumerComponent> {
+  async toConsumerComponent(versionStr: string, scopeName: string, repository: Repository): Promise<ConsumerComponent> {
     logger.debug(`model-component, converting ${this.id()}, version: ${versionStr} to ConsumerComponent`);
     const componentVersion = this.toComponentVersion(versionStr);
     const version: Version = await componentVersion.getVersion(repository);
@@ -829,10 +823,6 @@ if that's not the case, make sure to call "getAllIdsAvailableOnLane" and not "ge
       extensions,
       buildStatus: version.buildStatus,
     });
-    if (manipulateDirData) {
-      consumerComponent.stripOriginallySharedDir(manipulateDirData);
-      consumerComponent.addWrapperDir(manipulateDirData);
-    }
 
     return consumerComponent;
   }

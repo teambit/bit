@@ -11,7 +11,6 @@ import getScopeComponent from './lib/get-scope-component';
 // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import config from './lib/global-config';
 import init from './lib/init';
-import installAction from './lib/install';
 import linkAction from './lib/link';
 import { listScope } from './lib/list-scope';
 import login from './lib/login';
@@ -34,7 +33,6 @@ export {
   deprecate,
   undeprecate,
   listScope,
-  installAction,
   getConsumerComponent,
   getScopeComponent,
   getComponentLogs,
