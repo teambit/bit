@@ -279,7 +279,7 @@ export default async function tagModelComponent({
     }
   }
 
-  let testsResults = [];
+  const testsResults = [];
   logger.debugAndAddBreadCrumb('tag-model-components', 'sequentially persist all components');
   // go through all components and find the future versions for them
   isSnap

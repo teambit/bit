@@ -14,7 +14,6 @@ import { pathJoinLinux, PathOsBasedAbsolute, PathOsBasedRelative } from '../../u
 import { PathChangeResult } from '../bit-map/bit-map';
 import { PathChange } from '../bit-map/component-map';
 import Component from '../component/consumer-component';
-import * as packageJsonUtils from '../component/package-json-utils';
 import RemovePath from '../component/sources/remove-path';
 import Consumer from '../consumer';
 

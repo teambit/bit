@@ -68,11 +68,7 @@ export default class ComponentConfig extends AbstractConfig {
   }
 
   validate(bitJsonPath: string) {
-    if (
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      this.extensions() &&
-      typeof this.extensions() !== 'object'
-    ) {
+    if (this.extensions && typeof this.extensions !== 'object') {
       throw new ShowDoctorError(
         `bit.json at "${bitJsonPath}" is invalid, re-import the component with "--conf" flag to recreate it`
       );
