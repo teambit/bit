@@ -334,16 +334,8 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
     this.options.objectsOnly = !this.options.merge && !this.options.override;
     const componentsIdsToImport = this.getIdsToImportFromBitmap();
 
-    let compiler;
-    let tester;
-
     if (R.isEmpty(componentsIdsToImport)) {
       if (!this.options.withEnvironments) {
-        throw new NothingToImport();
-      }
-      compiler = await this.consumer.compiler;
-      tester = await this.consumer.tester;
-      if (!tester && !compiler) {
         throw new NothingToImport();
       }
     }
@@ -366,26 +358,6 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
       await this._writeToFileSystem(componentsAndDependencies);
     }
     const importDetails = await this._getImportDetails(beforeImportVersions, componentsAndDependencies);
-    if (this.options.withEnvironments) {
-      compiler = compiler || (await this.consumer.compiler);
-      tester = tester || (await this.consumer.tester);
-      const context = { workspaceDir: this.consumer.getPath() };
-      const envsArgs = [this.consumer.scope, { verbose: this.options.verbose }, context];
-      const envComponents = [];
-      if (compiler) {
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        envComponents.push(await compiler.install(...envsArgs));
-      }
-      if (tester) {
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        envComponents.push(await tester.install(...envsArgs));
-      }
-      return {
-        dependencies: componentsAndDependencies,
-        envComponents: R.flatten(envComponents),
-        importDetails,
-      };
-    }
 
     return { dependencies: componentsAndDependencies, importDetails };
   }

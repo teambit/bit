@@ -1,12 +1,10 @@
-import R from 'ramda';
 import pMap from 'p-map';
 import { BitError } from '@teambit/bit-error';
 import { isHash } from '@teambit/component-version';
 import { BitId, BitIds } from '../../bit-id';
-import { BuildStatus, COMPONENT_ORIGINS, Extensions } from '../../constants';
+import { BuildStatus, COMPONENT_ORIGINS } from '../../constants';
 import ConsumerComponent from '../../consumer/component';
 import { revertDirManipulationForPath } from '../../consumer/component-ops/manipulate-dir';
-import AbstractVinyl from '../../consumer/component/sources/abstract-vinyl';
 import { ArtifactFiles, ArtifactSource, getArtifactsFiles } from '../../consumer/component/sources/artifact-files';
 import Consumer from '../../consumer/consumer';
 import GeneralError from '../../error/general-error';
@@ -274,17 +272,8 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
   }: {
     readonly consumerComponent: ConsumerComponent;
     consumer: Consumer;
-  }): Promise<{ version: Version; files: any; dists: any; compilerFiles: any; testerFiles: any }> {
+  }): Promise<{ version: Version; files: any }> {
     const clonedComponent: ConsumerComponent = consumerComponent.clone();
-    const setEol = (files: AbstractVinyl[]) => {
-      if (!files) return null;
-      const result = files.map((file) => {
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        file.file = file.toSourceAsLinuxEOL();
-        return file;
-      });
-      return result;
-    };
     const manipulateDirs = (pathStr: PathOsBased): PathLinux => {
       return revertDirManipulationForPath(pathStr, clonedComponent.originallySharedDir, clonedComponent.wrapDir);
     };
@@ -297,22 +286,6 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
         test: file.test,
       };
     });
-    // @todo: is this the best way to find out whether a compiler is set?
-    const isCompileSet = Boolean(
-      consumerComponent.compiler ||
-        clonedComponent.extensions.some(
-          (e) => e.name === Extensions.compiler || e.name === 'bit.core/compile' || e.name === Extensions.envs
-        )
-    );
-    const { dists, mainDistFile } = clonedComponent.dists.toDistFilesModel(
-      consumer,
-      consumerComponent.originallySharedDir,
-      isCompileSet
-    );
-
-    const compilerFiles = setEol(R.path(['compiler', 'files'], consumerComponent));
-    const testerFiles = setEol(R.path(['tester', 'files'], consumerComponent));
-
     clonedComponent.mainFile = manipulateDirs(clonedComponent.mainFile);
     clonedComponent.getAllDependencies().forEach((dependency) => {
       // ignoreVersion because when persisting the tag is higher than currently exist in .bitmap
@@ -339,14 +312,11 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     const version: Version = Version.fromComponent({
       component: clonedComponent,
       files: files as any,
-      dists,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      mainDistFile,
     });
     // $FlowFixMe it's ok to override the pendingVersion attribute
     consumerComponent.pendingVersion = version as any; // helps to validate the version against the consumer-component
 
-    return { version, files, dists, compilerFiles, testerFiles };
+    return { version, files };
   }
 
   async consumerComponentToVersionHarmony(
@@ -413,7 +383,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     const artifactFiles = getArtifactsFiles(source.extensions);
     const artifacts = this.transformArtifactsFromVinylToSource(artifactFiles);
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const { version, files, dists, compilerFiles, testerFiles } = await this.consumerComponentToVersion({
+    const { version, files } = await this.consumerComponentToVersion({
       consumerComponent: source,
       consumer,
     });
@@ -434,9 +404,6 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     objectRepo.add(component);
 
     files.forEach((file) => objectRepo.add(file.file));
-    if (dists) dists.forEach((dist) => objectRepo.add(dist.file));
-    if (compilerFiles) compilerFiles.forEach((file) => objectRepo.add(file.file));
-    if (testerFiles) testerFiles.forEach((file) => objectRepo.add(file.file));
     if (artifacts) artifacts.forEach((file) => objectRepo.add(file.source));
 
     return component;

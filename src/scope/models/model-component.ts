@@ -7,23 +7,20 @@ import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
 import { LegacyComponentLog } from '@teambit/legacy-component-log';
 import { BitId } from '../../bit-id';
 import {
-  COMPILER_ENV_TYPE,
   DEFAULT_BINDINGS_PREFIX,
   DEFAULT_BIT_RELEASE_TYPE,
   DEFAULT_BIT_VERSION,
   DEFAULT_LANGUAGE,
   Extensions,
-  TESTER_ENV_TYPE,
 } from '../../constants';
 import ConsumerComponent from '../../consumer/component';
 import { ManipulateDirItem } from '../../consumer/component-ops/manipulate-dir';
-import { Dist, License, SourceFile } from '../../consumer/component/sources';
+import { License, SourceFile } from '../../consumer/component/sources';
 import ComponentOverrides from '../../consumer/config/component-overrides';
 import SpecsResults from '../../consumer/specs-results';
 import GeneralError from '../../error/general-error';
 import ShowDoctorError from '../../error/show-doctor-error';
 import ValidationError from '../../error/validation-error';
-import { makeEnvFromModel } from '../../legacy-extensions/env-factory';
 import logger from '../../logger/logger';
 import { empty, filterObject, forEach, getStringifyArgs, mapObject, sha1 } from '../../utils';
 import findDuplications from '../../utils/array/find-duplications';
@@ -786,22 +783,11 @@ if that's not the case, make sure to call "getAllIdsAvailableOnLane" and not "ge
       return new ClassName({ base: '.', path: file.relativePath, contents: content.contents, test: file.test });
     };
     const filesP = version.files ? Promise.all(version.files.map(loadFileInstance(SourceFile))) : null;
-    const distsP = version.dists ? Promise.all(version.dists.map(loadFileInstance(Dist))) : null;
     // @todo: this is weird. why the scopeMeta would be taken from the current scope and not he component scope?
     const scopeMetaP = scopeName ? ScopeMeta.fromScopeName(scopeName).load(repository) : Promise.resolve();
     const log = version.log || null;
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const compilerP = makeEnvFromModel(COMPILER_ENV_TYPE, version.compiler, repository);
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const testerP = makeEnvFromModel(TESTER_ENV_TYPE, version.tester, repository);
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const [files, dists, scopeMeta, compiler, tester] = await Promise.all([
-      filesP,
-      distsP,
-      scopeMetaP,
-      compilerP,
-      testerP,
-    ]);
+    // @ts-ignore
+    const [files, scopeMeta] = await Promise.all([filesP, scopeMetaP]);
 
     const extensions = version.extensions.clone();
 
@@ -820,23 +806,14 @@ if that's not the case, make sure to call "getAllIdsAvailableOnLane" and not "ge
       bindingPrefix,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       mainFile: version.mainFile || null,
-      // @ts-ignore
-      compiler,
-      // @ts-ignore
-      tester,
       dependencies: version.dependencies.getClone(),
       devDependencies: version.devDependencies.getClone(),
       flattenedDependencies: version.flattenedDependencies.clone(),
       packageDependencies: clone(version.packageDependencies),
       devPackageDependencies: clone(version.devPackageDependencies),
       peerPackageDependencies: clone(version.peerPackageDependencies),
-      compilerPackageDependencies: clone(version.compilerPackageDependencies),
-      testerPackageDependencies: clone(version.testerPackageDependencies),
       // @ts-ignore
       files,
-      // @ts-ignore
-      dists,
-      mainDistFile: version.mainDistFile,
       docs: version.docs,
       // @ts-ignore
       license: scopeMeta ? License.deserialize(scopeMeta.license) : undefined, // todo: make sure we have license in case of local scope

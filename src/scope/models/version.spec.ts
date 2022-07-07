@@ -176,30 +176,6 @@ describe('Version', () => {
       version.files[1].relativePath = 'bar/Foo.ts';
       expect(validateFunc).to.throw('files are duplicated bar/foo.ts, bar/Foo.ts');
     });
-    it('compiler should have name attribute', () => {
-      version.compiler = {};
-      expect(validateFunc).to.throw('missing the name attribute');
-    });
-    it('compiler.name should be a string', () => {
-      version.compiler.name = true;
-      expect(validateFunc).to.throw('to be string, got boolean');
-    });
-    it('compiler.name should be a valid bit id with version', () => {
-      version.compiler.name = 'scope/pref/aaa@latest';
-      expect(validateFunc).to.throw('does not have a version');
-    });
-    it('if a compiler is string, it should be a valid bit-id', () => {
-      version.compiler = 'this/is\\invalid?!/bit/id';
-      expect(validateFunc).to.throw('the environment-id has an invalid Bit id');
-    });
-    it('if a compiler is string, it should have scope', () => {
-      version.compiler = 'name@0.0.1';
-      expect(validateFunc).to.throw('the environment-id has an invalid Bit id');
-    });
-    // it('if a compiler is string, it should have version', () => {
-    //   version.compiler = 'scope/box/name';
-    //   expect(validateFunc).to.throw('does not have a version');
-    // });
     it('should throw for an invalid package version', () => {
       version.packageDependencies = { lodash: 34 };
       expect(validateFunc).to.throw('expected version of "lodash" to be string, got number');
@@ -219,22 +195,6 @@ describe('Version', () => {
     it('should throw for invalid peerPackageDependencies type', () => {
       version.peerPackageDependencies = true;
       expect(validateFunc).to.throw('to be object, got boolean');
-    });
-    it('should throw for invalid key inside compilerPackageDependencies', () => {
-      version.compilerPackageDependencies = { lodash: '2.0.0' };
-      expect(validateFunc).to.throw(
-        'the property lodash inside compilerPackageDependencies is invalid, allowed values are dependencies, devDependencies, peerDependencies'
-      );
-    });
-    it('should throw for invalid type inside compilerPackageDependencies.dependencies', () => {
-      version.compilerPackageDependencies = { dependencies: { lodash: 2 } };
-      expect(validateFunc).to.throw(
-        'expected compilerPackageDependencies.dependencies.lodash to be string, got number'
-      );
-    });
-    it('should throw for invalid dist object', () => {
-      version.dists = 'invalid dists';
-      expect(validateFunc).to.throw('to be array, got string');
     });
     it('should throw for invalid dist.relativePath', () => {
       version.dists[0].relativePath = 'invalid*path';

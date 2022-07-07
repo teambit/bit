@@ -17,14 +17,11 @@ src/hooks/hooks-manager.ts
 src/search/indexer.ts
 src/search/serverless-index.ts
 src/search/query-builder.ts
-src/legacy-extensions/core-extensions/ext-docs-parser.ts
-src/legacy-extensions/extension-command.ts
 src/consumer/migrations/consumer-migrator.ts
 src/consumer/migrations/bit-map/index.ts
 src/scope/migrations/component-version/to-semver-migration.ts
 src/scope/migrations/scope-migrator.ts
 src/scope/migrations/component-version/remove-latest-from-compiler.ts
-src/legacy-extensions/extension.ts
 src/consumer/component/environment/validate-plugin.ts
 src/addons/run-configuration.ts
 

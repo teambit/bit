@@ -9,15 +9,13 @@ import filterObject from '../../utils/filter-object';
 import { PathOsBasedAbsolute, PathOsBasedRelative } from '../../utils/path';
 import Component from '../component/consumer-component';
 import PackageJsonFile from '../component/package-json-file';
-import AbstractConfig, { Compilers, Testers } from './abstract-config';
+import AbstractConfig from './abstract-config';
 import { ComponentOverridesData } from './component-overrides';
 import { ExtensionDataList } from './extension-data';
 import { ILegacyWorkspaceConfig } from './legacy-workspace-config-interface';
 
 type ConfigProps = {
   lang?: string;
-  compiler?: string | Compilers;
-  tester?: string | Testers;
   bindingPrefix: string;
   extensions?: ExtensionDataList;
   defaultScope?: string;
@@ -46,10 +44,8 @@ export default class ComponentConfig extends AbstractConfig {
     this.componentConfigLegacyLoadingRegistry[extId] = func;
   }
 
-  constructor({ compiler, tester, lang, bindingPrefix, extensions, defaultScope, overrides }: ConfigProps) {
+  constructor({ lang, bindingPrefix, extensions, defaultScope, overrides }: ConfigProps) {
     super({
-      compiler,
-      tester,
       lang,
       bindingPrefix,
       extensions,
@@ -73,11 +69,9 @@ export default class ComponentConfig extends AbstractConfig {
 
   validate(bitJsonPath: string) {
     if (
-      typeof this.compiler !== 'object' ||
-      typeof this.tester !== 'object' ||
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      (this.extensions() && typeof this.extensions() !== 'object')
+      this.extensions() &&
+      typeof this.extensions() !== 'object'
     ) {
       throw new ShowDoctorError(
         `bit.json at "${bitJsonPath}" is invalid, re-import the component with "--conf" flag to recreate it`
@@ -96,7 +90,7 @@ export default class ComponentConfig extends AbstractConfig {
   }
 
   static fromPlainObject(object: Record<string, any>): ComponentConfig {
-    const { env, lang, bindingPrefix, extensions, overrides } = object;
+    const { lang, bindingPrefix, extensions, overrides } = object;
     let parsedExtensions = new ExtensionDataList();
     if (!(extensions instanceof ExtensionDataList)) {
       if (Array.isArray(extensions)) {
@@ -106,8 +100,6 @@ export default class ComponentConfig extends AbstractConfig {
       }
     }
     return new ComponentConfig({
-      compiler: env ? R.prop('compiler', env) : undefined,
-      tester: env ? R.prop('tester', env) : undefined,
       extensions: parsedExtensions,
       defaultScope: object.defaultScope,
       lang,
@@ -120,14 +112,11 @@ export default class ComponentConfig extends AbstractConfig {
 
   static fromComponent(component: Component): ComponentConfig {
     return new ComponentConfig({
+      // @ts-ignore
       version: component.version,
       scope: component.scope,
       lang: component.lang,
       bindingPrefix: component.bindingPrefix,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      compiler: component.compiler || {},
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      tester: component.tester || {},
       overrides: component.overrides.componentOverridesData,
     });
 

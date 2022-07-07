@@ -2,14 +2,10 @@ import { BitError } from '@teambit/bit-error';
 import fs from 'fs-extra';
 import mapSeries from 'p-map-series';
 import * as path from 'path';
-import R from 'ramda';
-
 import { BitId } from '../../bit-id';
 import { COMPONENT_ORIGINS, DEFAULT_DIR_DEPENDENCIES } from '../../constants';
 import GeneralError from '../../error/general-error';
-import { getAllComponentsLinks } from '../../links';
 import logger from '../../logger/logger';
-import { installNpmPackagesForComponents } from '../../npm-client/install-packages';
 import { ComponentWithDependencies } from '../../scope';
 import { isDir, isDirEmptySync } from '../../utils';
 import { composeComponentPath, composeDependencyPathForIsolated } from '../../utils/bit/compose-component-path';
@@ -17,7 +13,6 @@ import { PathLinuxRelative, pathNormalizeToLinux, PathOsBasedAbsolute, PathOsBas
 import BitMap from '../bit-map';
 import ComponentMap from '../bit-map/component-map';
 import Component from '../component/consumer-component';
-import * as packageJsonUtils from '../component/package-json-utils';
 import DataToPersist from '../component/sources/data-to-persist';
 import Consumer from '../consumer';
 import ComponentWriter, { ComponentWriterProps } from './component-writer';
@@ -133,35 +128,31 @@ export default class ManyComponentsWriter {
   async writeAll() {
     await this._writeComponentsAndDependencies();
     await this._installPackages();
-    if (this.consumer?.isLegacy) {
-      await this._writeLinks();
-    }
     logger.debug('ManyComponentsWriter, Done!');
   }
   async _writeComponentsAndDependencies() {
     logger.debug('ManyComponentsWriter, _writeComponentsAndDependencies');
     await this._populateComponentsFilesToWrite();
-    if (this.isLegacy) await this._populateComponentsDependenciesToWrite();
     this._moveComponentsIfNeeded();
     await this._persistComponentsData();
   }
   async _installPackages() {
     logger.debug('ManyComponentsWriter, _installPackages');
-    if (this.consumer && this.consumer.isLegacy) {
-      await packageJsonUtils.addWorkspacesToPackageJson(this.consumer, this.writeToPath);
-      if (this.addToRootPackageJson && this.consumer) {
-        await packageJsonUtils.addComponentsToRoot(this.consumer, this.writtenComponents);
-      }
+    if (!this.installNpmPackages) {
+      return;
     }
-    await this._installPackagesIfNeeded();
-  }
-  private async _writeLinks() {
-    logger.debug('ManyComponentsWriter, _writeLinks');
-    const links: DataToPersist = await this._getAllLinks();
-    if (this.basePath) {
-      links.addBasePath(this.basePath);
+    try {
+      await ManyComponentsWriter.externalInstaller?.install();
+    } catch (err: any) {
+      logger.error('_installPackagesIfNeeded, external package-installer found an error', err);
+      throw new BitError(`failed installing the packages, consider running the command with "--skip-dependency-installation" flag.
+error from the package-manager: ${err.message}.
+please use the '--log=error' flag for the full error.`);
     }
-    await links.persistAllToFS();
+    // this compiles all components on the workspace, not only the imported ones.
+    // reason being is that the installed above deletes all dists dir of components that are somehow part of the
+    // dependency graph. not only the imported components.
+    await ManyComponentsWriter.externalCompiler?.();
   }
   async _persistComponentsData() {
     const dataToPersist = new DataToPersist();
@@ -199,7 +190,7 @@ export default class ManyComponentsWriter {
       });
     }
     this.writtenComponents = await mapSeries(componentWriterInstances, (componentWriter: ComponentWriter) =>
-      componentWriter.populateComponentsFilesToWrite(this.packageManager)
+      componentWriter.populateComponentsFilesToWrite()
     );
   }
 
@@ -252,7 +243,6 @@ export default class ManyComponentsWriter {
       : this._getComponentRootDir(componentWithDeps.component.id);
     const getParams = () => {
       if (!this.consumer) {
-        componentWithDeps.component.dists.writeDistsFiles = this.writeDists;
         return {
           origin: COMPONENT_ORIGINS.IMPORTED,
         };
@@ -266,9 +256,6 @@ export default class ManyComponentsWriter {
           : COMPONENT_ORIGINS.IMPORTED;
       // $FlowFixMe consumer is set here
       this._throwErrorWhenDirectoryNotEmpty(this.consumer.toAbsolutePath(componentRootDir), componentMap);
-      // don't write dists files for authored components as the author has its own mechanism to generate them
-      // also, don't write dists file for imported component when a user used `--ignore-dist` flag
-      componentWithDeps.component.dists.writeDistsFiles = this.writeDists && origin === COMPONENT_ORIGINS.IMPORTED;
       return {
         origin,
         existingComponentMap: componentMap,
@@ -297,78 +284,6 @@ export default class ManyComponentsWriter {
       excludeRegistryPrefix: this.excludeRegistryPrefix,
     };
   }
-  async _populateComponentsDependenciesToWrite() {
-    const allDependenciesP = this.componentsWithDependencies.map((componentWithDeps: ComponentWithDependencies) => {
-      const writeDependenciesP = componentWithDeps.allDependencies.map((dep: Component) => {
-        const dependencyId = dep.id.toString();
-        const depFromBitMap = this.bitMap.getComponentIfExist(dep.id);
-        if (!dep.componentMap) dep.componentMap = depFromBitMap;
-        if (!componentWithDeps.component.dependenciesSavedAsComponents && !depFromBitMap) {
-          // when depFromBitMap is true, it means that this component was imported as a component already before
-          // don't change it now from a component to a package. (a user can do it at any time by using export --eject).
-          logger.debugAndAddBreadCrumb(
-            'writeToComponentsDir',
-            "ignore dependency {dependencyId}. It'll be installed later using npm-client",
-            { dependencyId }
-          );
-          return Promise.resolve(null);
-        }
-        if (depFromBitMap && depFromBitMap.origin === COMPONENT_ORIGINS.AUTHORED) {
-          dep.writtenPath = '.';
-          logger.debugAndAddBreadCrumb(
-            'writeToComponentsDir',
-            'writeToComponentsDir, ignore authored dependency {dependencyId} as it already exists in bit map',
-            { dependencyId }
-          );
-          return Promise.resolve(dep);
-        }
-        if (this.dependenciesIdsCache[dependencyId]) {
-          logger.debugAndAddBreadCrumb(
-            'writeToComponentsDir',
-            'writeToComponentsDir, ignore dependency {dependencyId} as it already exists in cache',
-            { dependencyId }
-          );
-          dep.writtenPath = this.dependenciesIdsCache[dependencyId];
-          return Promise.resolve(dep);
-        }
-        if (
-          depFromBitMap &&
-          depFromBitMap.origin === COMPONENT_ORIGINS.IMPORTED &&
-          (fs.existsSync(depFromBitMap.rootDir as string) ||
-            this.writtenComponents.find((c) => c.writtenPath === depFromBitMap.rootDir))
-        ) {
-          dep.writtenPath = depFromBitMap.rootDir;
-          logger.debugAndAddBreadCrumb(
-            'writeToComponentsDir',
-            'writeToComponentsDir, ignore non-authored dependency {dependencyId} as it already exists in bit map and file system',
-            { dependencyId }
-          );
-          return Promise.resolve(dep);
-        }
-        const depRootPath = this._getDependencyRootDir(dep.id);
-        dep.writtenPath = depRootPath;
-        this.dependenciesIdsCache[dependencyId] = depRootPath;
-        // When a component is NESTED we do interested in the exact version, because multiple
-        // components with the same scope and namespace can co-exist with different versions.
-        const componentMap = this.bitMap.getComponentIfExist(dep.id);
-        // @ts-ignore
-        const componentWriter = ComponentWriter.getInstance({
-          ...this._getDefaultWriteParams(),
-          writeConfig: false,
-          component: dep,
-          writeToPath: pathNormalizeToLinux(depRootPath),
-          origin: COMPONENT_ORIGINS.NESTED,
-          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-          existingComponentMap: componentMap,
-        });
-        return componentWriter.populateComponentsFilesToWrite();
-      });
-
-      return Promise.all(writeDependenciesP).then((deps) => deps.filter((dep) => dep));
-    });
-    const writtenDependenciesIncludesNull = await Promise.all(allDependenciesP);
-    this.writtenDependencies = R.flatten(writtenDependenciesIncludesNull).filter((dep) => dep);
-  }
   _moveComponentsIfNeeded() {
     if (this.writeToPath && this.consumer) {
       this.componentsWithDependencies.forEach((componentWithDeps) => {
@@ -393,48 +308,6 @@ to move all component files to a different directory, run bit remove and then bi
         }
       });
     }
-  }
-  async _installPackagesIfNeeded() {
-    if (!this.installNpmPackages) return;
-    if (this.consumer?.isLegacy) {
-      await installNpmPackagesForComponents({
-        // $FlowFixMe consumer is set here
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        consumer: this.consumer,
-        basePath: this.basePath,
-        componentsWithDependencies: this.componentsWithDependencies,
-        verbose: this.verbose, // $FlowFixMe
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        silentPackageManagerResult: this.silentPackageManagerResult,
-        installPeerDependencies: this.installPeerDependencies,
-        installProdPackagesOnly: this.installProdPackagesOnly,
-      });
-    } else {
-      try {
-        await ManyComponentsWriter.externalInstaller?.install();
-      } catch (err: any) {
-        logger.error('_installPackagesIfNeeded, external package-installer found an error', err);
-        throw new BitError(`failed installing the packages, consider running the command with "--skip-dependency-installation" flag.
-error from the package-manager: ${err.message}.
-please use the '--log=error' flag for the full error.`);
-      }
-      // this compiles all components on the workspace, not only the imported ones.
-      // reason being is that the installed above deletes all dists dir of components that are somehow part of the
-      // dependency graph. not only the imported components.
-      await ManyComponentsWriter.externalCompiler?.();
-    }
-  }
-  async _getAllLinks(): Promise<DataToPersist> {
-    return getAllComponentsLinks({
-      componentsWithDependencies: this.componentsWithDependencies,
-      writtenComponents: this.writtenComponents,
-      writtenDependencies: this.writtenDependencies,
-      consumer: this.consumer,
-      bitMap: this.bitMap,
-      createNpmLinkFiles: this.createNpmLinkFiles,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      writePackageJson: this.writePackageJson,
-    });
   }
   _getComponentRootDir(bitId: BitId): PathLinuxRelative {
     if (this.consumer) {

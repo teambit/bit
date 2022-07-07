@@ -7,7 +7,7 @@ import { BitId } from '../../bit-id';
 import BitIds from '../../bit-id/bit-ids';
 import { COMPONENT_ORIGINS } from '../../constants';
 import GeneralError from '../../error/general-error';
-import { NodeModuleLinker, reLinkDependents } from '../../links';
+import { NodeModuleLinker } from '../../links';
 import { isDir, isDirEmptySync } from '../../utils';
 import moveSync from '../../utils/fs/move-sync';
 import { pathJoinLinux, PathOsBasedAbsolute, PathOsBasedRelative } from '../../utils/path';
@@ -46,10 +46,8 @@ to change the main-file, use "bit add <component-dir> --main <new-main-file>"`);
   if (!R.isEmpty(changes)) {
     const componentsIds = changes.map((c) => c.id);
     const { components } = await consumer.loadComponents(BitIds.fromArray(componentsIds));
-    await packageJsonUtils.addComponentsToRoot(consumer, components);
     const nodeModuleLinker = new NodeModuleLinker(components, consumer, consumer.bitMap);
     await nodeModuleLinker.link();
-    await reLinkDependents(consumer, components);
   }
   return changes;
 }

@@ -7,7 +7,6 @@
   "private": false,
   "files": [
     "/bin",
-    "/legacy-capsule",
     "/dist"
   ],
   "engines": {

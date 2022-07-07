@@ -1,7 +1,7 @@
 import R from 'ramda';
 import { isHash } from '@teambit/component-version';
 import { BitId, BitIds } from '../../bit-id';
-import { BuildStatus, DEFAULT_BINDINGS_PREFIX, DEFAULT_BUNDLE_FILENAME, DEPENDENCIES_FIELDS } from '../../constants';
+import { BuildStatus, DEFAULT_BINDINGS_PREFIX, DEFAULT_BUNDLE_FILENAME } from '../../constants';
 import ConsumerComponent from '../../consumer/component';
 import { isSchemaSupport, SchemaFeature, SchemaName } from '../../consumer/component/component-schema';
 import { CustomResolvedPath } from '../../consumer/component/consumer-component';
@@ -12,9 +12,6 @@ import { ComponentOverridesData } from '../../consumer/config/component-override
 import { ExtensionDataEntry, ExtensionDataList } from '../../consumer/config/extension-data';
 import { Results } from '../../consumer/specs-results/specs-results';
 import { Doclet } from '../../jsdoc/types';
-import { CompilerExtensionModel } from '../../legacy-extensions/compiler-extension';
-import { EnvPackages } from '../../legacy-extensions/env-extension';
-import { TesterExtensionModel } from '../../legacy-extensions/tester-extension';
 import logger from '../../logger/logger';
 import { filterObject, first, getStringifyArgs } from '../../utils';
 import { PathLinux, PathLinuxRelative } from '../../utils/path';
@@ -55,10 +52,6 @@ export type Log = {
 export type VersionProps = {
   mainFile: PathLinux;
   files: Array<SourceFileModel>;
-  dists?: Array<DistFileModel> | undefined;
-  mainDistFile?: PathLinux | undefined;
-  compiler?: CompilerExtensionModel | undefined;
-  tester?: TesterExtensionModel | undefined;
   log: Log;
   ci?: CiProps;
   specsResults?: Results | undefined;
@@ -72,8 +65,6 @@ export type VersionProps = {
   devPackageDependencies?: { [key: string]: string };
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   peerPackageDependencies?: { [key: string]: string };
-  compilerPackageDependencies?: EnvPackages;
-  testerPackageDependencies?: EnvPackages;
   bindingPrefix?: string;
   schema?: string;
   customResolvedPaths?: CustomResolvedPath[];
@@ -95,8 +86,6 @@ export default class Version extends BitObject {
   files: Array<SourceFileModel>;
   dists: Array<DistFileModel> | undefined;
   mainDistFile: PathLinuxRelative | undefined;
-  compiler: CompilerExtensionModel | undefined;
-  tester: TesterExtensionModel | undefined;
   log: Log;
   ci: CiProps | {};
   specsResults: Results | undefined;
@@ -108,8 +97,6 @@ export default class Version extends BitObject {
   packageDependencies: { [key: string]: string };
   devPackageDependencies: { [key: string]: string };
   peerPackageDependencies: { [key: string]: string };
-  compilerPackageDependencies: EnvPackages;
-  testerPackageDependencies: EnvPackages;
   bindingPrefix: string | undefined;
   schema: string | undefined;
   customResolvedPaths: CustomResolvedPath[] | undefined;
@@ -126,10 +113,6 @@ export default class Version extends BitObject {
     super();
     this.mainFile = props.mainFile;
     this.files = props.files;
-    this.dists = props.dists;
-    this.mainDistFile = props.mainDistFile;
-    this.compiler = props.compiler;
-    this.tester = props.tester;
     this.log = props.log;
     this.dependencies = new Dependencies(props.dependencies);
     this.devDependencies = new Dependencies(props.devDependencies);
@@ -140,8 +123,6 @@ export default class Version extends BitObject {
     this.packageDependencies = props.packageDependencies || {};
     this.devPackageDependencies = props.devPackageDependencies || {};
     this.peerPackageDependencies = props.peerPackageDependencies || {};
-    this.compilerPackageDependencies = props.compilerPackageDependencies || {};
-    this.testerPackageDependencies = props.testerPackageDependencies || {};
     this.bindingPrefix = props.bindingPrefix;
     this.schema = props.schema;
     this.customResolvedPaths = props.customResolvedPaths;
@@ -212,10 +193,6 @@ export default class Version extends BitObject {
           mainFile: obj.mainFile,
           // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           files: obj.files,
-          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-          compiler: obj.compiler,
-          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-          tester: obj.tester,
           // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           log: obj.log,
           dependencies: getDependencies(this.dependencies),
@@ -346,42 +323,14 @@ export default class Version extends BitObject {
         test: file.test,
       };
     };
-
-    const _convertEnvToObject = (env) => {
-      if (typeof env === 'string') {
-        return env;
-      }
-      // Store the env as string in case there is no config and files (for backward compatibility)
-      if (envNameOnly(env)) {
-        return env.name;
-      }
-      const result = {
-        name: env.name,
-        config: env.config,
-        files: [],
-      };
-      return result;
-    };
-
-    const _removeEmptyPackagesEnvs = (pkgEnv) => {
-      DEPENDENCIES_FIELDS.forEach((dependencyType) => {
-        if (pkgEnv[dependencyType] && R.isEmpty(pkgEnv[dependencyType])) {
-          delete pkgEnv[dependencyType];
-        }
-      });
-      return pkgEnv;
-    };
-
     return filterObject(
       {
         files: this.files ? this.files.map(_convertFileToObject) : null,
         mainFile: this.mainFile,
         dists: this.dists ? this.dists.map(_convertFileToObject) : null,
         mainDistFile: this.mainDistFile,
-        compiler: this.compiler ? _convertEnvToObject(this.compiler) : null,
         bindingPrefix: this.bindingPrefix || DEFAULT_BINDINGS_PREFIX,
         schema: this.schema,
-        tester: this.tester ? _convertEnvToObject(this.tester) : null,
         log: {
           message: this.log.message,
           date: this.log.date,
@@ -398,8 +347,6 @@ export default class Version extends BitObject {
         packageDependencies: this.packageDependencies,
         devPackageDependencies: this.devPackageDependencies,
         peerPackageDependencies: this.peerPackageDependencies,
-        compilerPackageDependencies: _removeEmptyPackagesEnvs(this.compilerPackageDependencies),
-        testerPackageDependencies: _removeEmptyPackagesEnvs(this.testerPackageDependencies),
         customResolvedPaths: this.customResolvedPaths,
         overrides: this.overrides,
         buildStatus: this.buildStatus,
@@ -431,13 +378,9 @@ export default class Version extends BitObject {
     const contentParsed = JSON.parse(contents);
     const {
       mainFile,
-      dists,
-      mainDistFile,
       files,
-      compiler,
       bindingPrefix,
       schema,
-      tester,
       log,
       docs,
       ci,
@@ -448,8 +391,6 @@ export default class Version extends BitObject {
       flattenedDevDependencies,
       devPackageDependencies,
       peerPackageDependencies,
-      compilerPackageDependencies,
-      testerPackageDependencies,
       packageDependencies,
       customResolvedPaths,
       overrides,
@@ -536,12 +477,8 @@ export default class Version extends BitObject {
     return new Version({
       mainFile,
       files: files ? files.map(parseFile) : null,
-      dists: dists ? dists.map(parseFile) : null,
-      mainDistFile,
-      compiler: compiler ? parseEnv(compiler) : null,
       bindingPrefix: bindingPrefix || null,
       schema: schema || undefined,
-      tester: tester ? parseEnv(tester) : null,
       log: {
         message: log.message,
         date: log.date,
@@ -556,8 +493,6 @@ export default class Version extends BitObject {
       flattenedDependencies: _groupFlattenedDependencies(),
       devPackageDependencies,
       peerPackageDependencies,
-      compilerPackageDependencies,
-      testerPackageDependencies,
       packageDependencies,
       customResolvedPaths,
       overrides,
@@ -581,17 +516,7 @@ export default class Version extends BitObject {
    * Create version model object from consumer component
    * @param {*} param0
    */
-  static fromComponent({
-    component,
-    files,
-    dists,
-    mainDistFile,
-  }: {
-    component: ConsumerComponent;
-    files: Array<SourceFileModel>;
-    dists?: Array<DistFileModel> | undefined;
-    mainDistFile?: PathLinuxRelative;
-  }) {
+  static fromComponent({ component, files }: { component: ConsumerComponent; files: Array<SourceFileModel> }) {
     const parseFile = (file) => {
       return {
         file: file.file.hash(),
@@ -601,22 +526,11 @@ export default class Version extends BitObject {
       };
     };
 
-    const compiler = component.compiler ? component.compiler.toModelObject() : undefined;
-    const tester = component.tester ? component.tester.toModelObject() : undefined;
-
-    const compilerDynamicPakageDependencies = component.compiler
-      ? component.compiler.dynamicPackageDependencies
-      : undefined;
-    const testerDynamicPakageDependencies = component.tester ? component.tester.dynamicPackageDependencies : undefined;
     if (!component.log) throw new Error('Version.fromComponent - component.log is missing');
     const version = new Version({
       mainFile: component.mainFile,
       files: files.map(parseFile),
-      dists: dists ? dists.map(parseFile) : undefined,
-      mainDistFile,
-      compiler,
       bindingPrefix: component.bindingPrefix,
-      tester,
       log: component.log as Log,
       specsResults: component.specsResults as any as Results,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -626,14 +540,6 @@ export default class Version extends BitObject {
       packageDependencies: component.packageDependencies,
       devPackageDependencies: component.devPackageDependencies,
       peerPackageDependencies: component.peerPackageDependencies,
-      compilerPackageDependencies: R.mergeDeepRight(
-        component.compilerPackageDependencies || {},
-        compilerDynamicPakageDependencies || {}
-      ),
-      testerPackageDependencies: R.mergeDeepRight(
-        component.testerPackageDependencies || {},
-        testerDynamicPakageDependencies || {}
-      ),
       flattenedDependencies: component.flattenedDependencies,
       schema: component.schema,
       customResolvedPaths: component.customResolvedPaths,
@@ -719,25 +625,4 @@ export default class Version extends BitObject {
   validate(): void {
     validateVersionInstance(this);
   }
-}
-
-function parseEnv(env) {
-  if (typeof env === 'string') {
-    return env;
-  }
-  // Store the env as string in case there is no config and files (for backward compatibility)
-  if (envNameOnly(env)) {
-    return env.name;
-  }
-  return {
-    name: env.name,
-    config: env.config,
-  };
-}
-
-function envNameOnly(env) {
-  if ((!env.config || R.isEmpty(env.config)) && (!env.files || R.isEmpty(env.files))) {
-    return true;
-  }
-  return false;
 }

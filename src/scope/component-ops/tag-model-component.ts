@@ -280,24 +280,6 @@ export default async function tagModelComponent({
   }
 
   let testsResults = [];
-  if (consumer.isLegacy) {
-    logger.debugAndAddBreadCrumb('tag-model-components', 'sequentially build all components');
-    await scope.buildMultiple(allComponentsToTag, consumer, false, false);
-
-    logger.debug('scope.putMany: sequentially test all components');
-
-    if (!skipTests) {
-      const testsResultsP = scope.testMultiple({
-        components: allComponentsToTag,
-        consumer,
-        verbose: false,
-        rejectOnFailure: true,
-      });
-      // @ts-ignore
-      testsResults = await testsResultsP;
-    }
-  }
-
   logger.debugAndAddBreadCrumb('tag-model-components', 'sequentially persist all components');
   // go through all components and find the future versions for them
   isSnap

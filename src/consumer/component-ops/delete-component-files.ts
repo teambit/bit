@@ -2,7 +2,6 @@ import BitIds from '../../bit-id/bit-ids';
 import { COMPONENT_ORIGINS } from '../../constants';
 import logger from '../../logger/logger';
 import DataToPersist from '../component/sources/data-to-persist';
-import Dists from '../component/sources/dists';
 import RemovePath from '../component/sources/remove-path';
 import Consumer from '../consumer';
 
@@ -28,10 +27,6 @@ export default async function deleteComponentsFiles(consumer: Consumer, bitIds: 
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         const rootDir: string = componentMap.rootDir;
         dataToPersist.removePath(new RemovePath(rootDir, true));
-        if (!consumer.shouldDistsBeInsideTheComponent()) {
-          const distDir = Dists.getDistDirWhenDistIsOutsideCompDir(consumer.config, rootDir);
-          dataToPersist.removePath(new RemovePath(distDir, true));
-        }
       } else if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED && deleteFilesForAuthor) {
         const filesToRemove = componentMap.getAllFilesPaths().map((f) => new RemovePath(f));
         dataToPersist.removeManyPaths(filesToRemove);

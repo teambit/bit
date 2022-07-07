@@ -1,7 +1,6 @@
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { buildRegistry } from '@teambit/legacy/dist/cli';
 import { Command } from '@teambit/legacy/dist/cli/command';
-import LegacyLoadExtensions from '@teambit/legacy/dist/legacy-extensions/extensions-loader';
 import { CommunityAspect } from '@teambit/community';
 import type { CommunityMain } from '@teambit/community';
 
@@ -125,22 +124,8 @@ export class CLIMain {
     [commandsSlot, onStartSlot]: [CommandsSlot, OnStartSlot]
   ) {
     const cliMain = new CLIMain(commandsSlot, onStartSlot, community);
-    const legacyExtensions = await LegacyLoadExtensions();
-    // Make sure to register all the hooks actions in the global hooks manager
-    legacyExtensions.forEach((extension) => {
-      extension.registerHookActionsOnHooksManager();
-    });
-
-    const extensionsCommands = legacyExtensions.reduce((acc, curr) => {
-      if (curr.commands && curr.commands.length) {
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        acc = acc.concat(curr.commands);
-      }
-      return acc;
-    }, []);
-
-    const legacyRegistry = buildRegistry(extensionsCommands);
-    const legacyCommands = legacyRegistry.commands.concat(legacyRegistry.extensionsCommands || []);
+    const legacyRegistry = buildRegistry();
+    const legacyCommands = legacyRegistry.commands;
     const legacyCommandsAdapters = legacyCommands.map((command) => new LegacyCommandAdapter(command, cliMain));
     const cliGenerateCmd = new CliGenerateCmd(cliMain);
     const cliCmd = new CliCmd(cliMain, community.getDocsDomain());

@@ -39,7 +39,6 @@ import ExternalTestErrors from '../consumer/component/exceptions/external-test-e
 import { FailedLoadForTag } from '../consumer/component/exceptions/failed-load-for-tag';
 import FileSourceNotFound from '../consumer/component/exceptions/file-source-not-found';
 import InjectNonEjected from '../consumer/component/exceptions/inject-non-ejected';
-import InvalidCompilerInterface from '../consumer/component/exceptions/invalid-compiler-interface';
 import MainFileRemoved from '../consumer/component/exceptions/main-file-removed';
 import MissingFilesFromComponent from '../consumer/component/exceptions/missing-files-from-component';
 import { NoComponentDir } from '../consumer/component/exceptions/no-component-dir';
@@ -61,13 +60,6 @@ import { PathToNpmrcNotExist, WriteToNpmrcError } from '../consumer/login/except
 import GeneralError from '../error/general-error';
 import hashErrorIfNeeded from '../error/hash-error-object';
 import ValidationError from '../error/validation-error';
-import ExtensionFileNotFound from '../legacy-extensions/exceptions/extension-file-not-found';
-import ExtensionGetDynamicConfigError from '../legacy-extensions/exceptions/extension-get-dynamic-config-error';
-import ExtensionGetDynamicPackagesError from '../legacy-extensions/exceptions/extension-get-dynamic-packages-error';
-import ExtensionInitError from '../legacy-extensions/exceptions/extension-init-error';
-import ExtensionLoadError from '../legacy-extensions/exceptions/extension-load-error';
-import ExtensionNameNotValid from '../legacy-extensions/exceptions/extension-name-not-valid';
-import ExtensionSchemaError from '../legacy-extensions/exceptions/extension-schema-error';
 import PromptCanceled from '../prompts/exceptions/prompt-canceled';
 import RemoteNotFound from '../remotes/exceptions/remote-not-found';
 import {
@@ -143,12 +135,6 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
   [
     AddingIndividualFiles,
     (err) => `error: adding individual files is blocked ("${err.file}"), and only directories can be added`,
-  ],
-  [ExtensionFileNotFound, (err) => `file "${err.path}" was not found`],
-  [
-    ExtensionNameNotValid,
-    (err) =>
-      `error: the extension name "${err.name}" is not a valid component id (it must contain a scope name) fix it on your bit.json file`,
   ],
   [
     ProtocolNotSupported,
@@ -426,38 +412,6 @@ please use "bit remove" to delete the component or "bit add" with "--main" and "
       `error: bit failed to build ${err.id} with the following exception:\n${getExternalErrorsMessageAndStack(
         err.originalErrors
       )}`,
-  ],
-  [
-    ExtensionLoadError,
-    (err) =>
-      `error: bit failed to load ${err.compName} with the following exception:\n${getExternalErrorMessage(
-        err.originalError
-      )}.\n${err.printStack ? err.originalError.stack : ''}`,
-  ],
-  [
-    ExtensionSchemaError,
-    (err) => `error: configuration passed to extension ${chalk.bold(err.extensionName)} is invalid:\n${err.errors}`,
-  ],
-  [
-    ExtensionInitError,
-    (err) =>
-      `error: bit failed to initialized ${err.compName} with the following exception:\n${getExternalErrorMessage(
-        err.originalError
-      )}.\n${err.originalError.stack}`,
-  ],
-  [
-    ExtensionGetDynamicPackagesError,
-    (err) =>
-      `error: bit failed to get the dynamic packages from ${err.compName} with the following exception:\n${err.originalError.message}.\n${err.originalError.stack}`,
-  ],
-  [
-    ExtensionGetDynamicConfigError,
-    (err) =>
-      `error: bit failed to get the config from ${err.compName} with the following exception:\n${err.originalError.message}.\n${err.originalError.stack}`,
-  ],
-  [
-    InvalidCompilerInterface,
-    (err) => `"${err.compilerName}" does not have a valid compiler interface, it has to expose a compile method`,
   ],
   [
     ResolutionException,

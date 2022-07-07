@@ -679,15 +679,6 @@ export default class CommandHelper {
     const parsedOpts = this.parseOptions(options);
     return this.runCmd(`bit compile ${id} ${parsedOpts}`);
   }
-
-  injectConf(id = 'bar/foo', options: Record<string, any> | null | undefined) {
-    const value = options
-      ? Object.keys(options) // $FlowFixMe
-          .map((key) => `-${key} ${options[key]}`)
-          .join(' ')
-      : '';
-    return this.runCmd(`bit inject-conf ${id} ${value}`);
-  }
   doctor(options: Record<string, any>) {
     const parsedOpts = this.parseOptions(options);
     return this.runCmd(`bit doctor ${parsedOpts}`);

@@ -34,40 +34,6 @@ export default function validateVersionInstance(version: Version): void {
       throw new VersionInvalid(`${message}, the ${field} ${bitId.toString()} does not have a scope`);
     }
   };
-  const validateBitIdStr = (bitIdStr: string, field: string, validateVersion = true, validateScope = true) => {
-    validateType(message, bitIdStr, field, 'string');
-    let bitId;
-    try {
-      bitId = BitId.parse(bitIdStr, true);
-    } catch (err: any) {
-      throw new VersionInvalid(`${message}, the ${field} has an invalid Bit id`);
-    }
-    validateBitId(bitId, field, validateVersion, validateScope);
-  };
-  const _validateEnv = (env) => {
-    if (!env) return;
-    if (typeof env === 'string') {
-      // Do not validate version - for backward compatibility
-      validateBitIdStr(env, 'environment-id', false);
-      return;
-    }
-    validateType(message, env, 'env', 'object');
-    if (!env.name) {
-      throw new VersionInvalid(`${message}, the environment is missing the name attribute`);
-    }
-    validateBitIdStr(env.name, 'env.name');
-    if (env.files) {
-      const compilerName = env.name || '';
-      env.files.forEach((file) => {
-        if (!file.name) {
-          throw new VersionInvalid(
-            `${message}, the environment ${compilerName} has a file which missing the name attribute`
-          );
-        }
-      });
-    }
-  };
-
   const _validatePackageDependencyValue = (packageValue, packageName) => {
     // don't use semver.valid and semver.validRange to validate the package version because it
     // can be also a URL, Git URL or Github URL. see here: https://docs.npmjs.com/files/package.json#dependencies
@@ -92,22 +58,6 @@ export default function validateVersionInstance(version: Version): void {
   const _validatePackageDependencies = (packageDependencies) => {
     validateType(message, packageDependencies, 'packageDependencies', 'object');
     R.forEachObjIndexed(_validatePackageDependency, packageDependencies);
-  };
-  const _validateEnvPackages = (envPackages, fieldName) => {
-    validateType(message, envPackages, fieldName, 'object');
-    Object.keys(envPackages).forEach((dependencyType) => {
-      if (!DEPENDENCIES_FIELDS.includes(dependencyType)) {
-        throw new VersionInvalid(
-          `${message}, the property ${dependencyType} inside ${fieldName} is invalid, allowed values are ${DEPENDENCIES_FIELDS.join(
-            ', '
-          )}`
-        );
-      }
-      validateType(message, envPackages[dependencyType], `${fieldName}.${dependencyType}`, 'object');
-      Object.keys(envPackages[dependencyType]).forEach((pkg) => {
-        validateType(message, envPackages[dependencyType][pkg], `${fieldName}.${dependencyType}.${pkg}`, 'string');
-      });
-    });
   };
   const validateFile = (file, field: 'file' | 'dist-file' | 'artifact') => {
     validateType(message, file, field, 'object');
@@ -204,13 +154,9 @@ export default function validateVersionInstance(version: Version): void {
   if (duplicateFiles.length) {
     throw new VersionInvalid(`${message} the following files are duplicated ${duplicateFiles.join(', ')}`);
   }
-  _validateEnv(version.compiler);
-  _validateEnv(version.tester);
   _validatePackageDependencies(version.packageDependencies);
   _validatePackageDependencies(version.devPackageDependencies);
   _validatePackageDependencies(version.peerPackageDependencies);
-  _validateEnvPackages(version.compilerPackageDependencies, 'compilerPackageDependencies');
-  _validateEnvPackages(version.testerPackageDependencies, 'testerPackageDependencies');
   _validateExtensions(version.extensions);
   if (version.dists && version.dists.length) {
     validateType(message, version.dists, 'dist', 'array');
