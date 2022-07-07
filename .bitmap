@@ -1024,7 +1024,7 @@
         "scope": "",
         "version": "",
         "mainFile": "index.ts",
-        "rootDir": "scopes/react/ui/apply-providers"
+        "rootDir": "scopes/react/ui/docs/apply-providers"
     },
     "ui/aspect-box": {
         "scope": "teambit.harmony",
@@ -1162,7 +1162,7 @@
         "scope": "",
         "version": "",
         "mainFile": "index.ts",
-        "rootDir": "scopes/react/ui/compositions-carousel"
+        "rootDir": "scopes/react/ui/docs/compositions-carousel"
     },
     "ui/constants/z-indexes": {
         "scope": "teambit.ui-foundation",
@@ -1204,7 +1204,7 @@
         "scope": "",
         "version": "",
         "mainFile": "index.ts",
-        "rootDir": "scopes/react/ui/docs-content"
+        "rootDir": "scopes/react/ui/docs/docs-content"
     },
     "ui/docs/link": {
         "scope": "teambit.mdx",
@@ -1522,7 +1522,7 @@
         "scope": "",
         "version": "",
         "mainFile": "index.ts",
-        "rootDir": "scopes/react/ui/properties-table"
+        "rootDir": "scopes/react/ui/docs/properties-table"
     },
     "ui/queries/get-component-code": {
         "scope": "teambit.code",
