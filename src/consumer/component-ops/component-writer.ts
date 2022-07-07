@@ -23,6 +23,7 @@ import {
   deserializeArtifactFiles,
   getArtifactFilesByExtension,
 } from '../component/sources/artifact-files';
+import { preparePackageJsonToWrite } from '../component/package-json-utils';
 
 export type ComponentWriterProps = {
   component: Component;
@@ -63,7 +64,7 @@ export default class ComponentWriter {
     component,
     writeToPath,
     writeConfig = false,
-    writePackageJson = false,
+    writePackageJson = true,
     override = true,
     isolated = false,
     origin,
@@ -145,6 +146,45 @@ export default class ComponentWriter {
     }
     this.component.files.forEach((file) => (file.override = this.override));
     this.component.files.map((file) => this.component.dataToPersist.addFile(file));
+
+    // make sure the project's package.json is not overridden by Bit
+    // If a consumer is of isolated env it's ok to override the root package.json (used by the env installation
+    // of compilers / testers / extensions)
+    // In Harmony this is happening inside a capsule, which needs a package.json file
+    if (
+      this.writePackageJson &&
+      (this.isolated || (this.consumer && this.consumer.isolated) || this.writeToPath !== '.')
+    ) {
+      const artifactsDir = this.getArtifactsDir();
+      const { packageJson, distPackageJson } = preparePackageJsonToWrite(
+        this.bitMap,
+        this.component,
+        artifactsDir || this.writeToPath,
+        this.override,
+        this.ignoreBitDependencies,
+        this.excludeRegistryPrefix,
+        undefined,
+        Boolean(this.isolated)
+      );
+
+      // @todo: temporarily this is running only when there is no version (or version is "latest")
+      // so then package.json always has a valid version. we'll need to figure out when the version
+      // needs to be incremented and when it should not.
+      if ((!this.consumer || this.consumer.isolated) && !this.component.id.hasVersion()) {
+        // this only needs to be done in an isolated
+        // or consumerless (dependency in an isolated) environment
+        packageJson.addOrUpdateProperty('version', this._getNextPatchVersion());
+      }
+      if ((!this.consumer?.isLegacy || !this.scope?.isLegacy) && this.applyPackageJsonTransformers) {
+        await this._applyTransformers(this.component, packageJson);
+      }
+
+      this._mergePackageJsonPropsFromOverrides(packageJson);
+      this.component.dataToPersist.addFile(packageJson.toVinylFile());
+      if (distPackageJson) this.component.dataToPersist.addFile(distPackageJson.toVinylFile());
+      this.component.packageJsonFile = packageJson;
+    }
+
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (this.component.license && this.component.license.contents) {
       this.component.license.updatePaths({ newBase: this.writeToPath });
@@ -258,7 +298,7 @@ export default class ComponentWriter {
 
   _determineWhetherToWritePackageJson() {
     // should never write package.json in Harmony
-    this.writePackageJson = false;
+    this.writePackageJson = this.writePackageJson && this.origin !== COMPONENT_ORIGINS.AUTHORED;
   }
 
   /**
