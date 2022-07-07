@@ -1,18 +1,14 @@
 import { BitError } from '@teambit/bit-error';
 import fs from 'fs-extra';
-import path from 'path';
 import R from 'ramda';
-
-import { BitId } from '../../bit-id';
 import BitIds from '../../bit-id/bit-ids';
 import { COMPONENT_ORIGINS } from '../../constants';
 import GeneralError from '../../error/general-error';
 import { NodeModuleLinker } from '../../links';
-import { isDir, isDirEmptySync } from '../../utils';
+import { isDir } from '../../utils';
 import moveSync from '../../utils/fs/move-sync';
-import { pathJoinLinux, PathOsBasedAbsolute, PathOsBasedRelative } from '../../utils/path';
+import { PathOsBasedAbsolute, PathOsBasedRelative } from '../../utils/path';
 import { PathChangeResult } from '../bit-map/bit-map';
-import { PathChange } from '../bit-map/component-map';
 import Component from '../component/consumer-component';
 import RemovePath from '../component/sources/remove-path';
 import Consumer from '../consumer';
