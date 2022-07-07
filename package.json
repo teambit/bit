@@ -1,6 +1,6 @@
 {
   "name": "@teambit/legacy",
-  "version": "1.0.297",
+  "version": "1.0.299",
   "license": "Apache-2.0",
   "main": "./dist/api.js",
   "preferGlobal": true,
@@ -12,11 +12,6 @@
   ],
   "engines": {
     "node": ">=12.22.0"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged"
-    }
   },
   "lint-staged": {
     "*.{ts,js,jsx,tsx,css,scss,md,mdx}": [
@@ -78,10 +73,10 @@
     "build:types:windows": ".\\scripts\\build-types.bat",
     "link-bit-legacy": "node ./scripts/link-bit-legacy.js",
     "setup": "bit install &&  bit compile && npm run build && npm run build:types && npm run link-bit-legacy",
-    "full-setup": "rm -rf node_modules/.bin/bit && rm -rf node_modules/@teambit/legacy && bit install && npm run link-bit-legacy && bit compile && npm run build && npm run build:types",
-    "full-setup:bbit": "rm -rf node_modules/.bin/bbit && rm -rf node_modules/@teambit/legacy && bbit install && npm run link-bit-legacy && bbit compile && npm run build && npm run build:types",
-    "full-setup:windows": "bit install && npm run link-bit-legacy && bit compile && npm run build && npm run build:types:windows",
-    "full-setup:windows:bbit": "bbit install && npm run link-bit-legacy && bbit compile && npm run build && npm run build:types:windows",
+    "full-setup": "rm -rf node_modules/.bin/bit && rm -rf node_modules/@teambit/legacy && bit install && npm run link-bit-legacy && husky install && bit compile && npm run build && npm run build:types",
+    "full-setup:bbit": "rm -rf node_modules/.bin/bbit && rm -rf node_modules/@teambit/legacy && bbit install && npm run link-bit-legacy && husky install && bbit compile && npm run build && npm run build:types",
+    "full-setup:windows": "bit install && npm run link-bit-legacy && husky install && bit compile && npm run build && npm run build:types:windows",
+    "full-setup:windows:bbit": "bbit install && npm run link-bit-legacy && husky install && bbit compile && npm run build && npm run build:types:windows",
     "build-centos-image": "docker build ./scripts/linux/centos -t centos-rpm",
     "build-debian-image": "docker build ./scripts/linux/debian -t debian-deb",
     "doc-gen": "node ./scripts/doc-generator.js",
@@ -108,7 +103,8 @@
     "build:pjson": "cp package.json dist/",
     "build:src": "babel src -d dist --verbose --extensions \".ts,.tsx,.js\" --copy-files",
     "generate-cli-reference": "bit cli generate > scopes/harmony/cli-reference/cli-reference.mdx && prettier scopes/harmony/cli-reference/cli-reference.mdx --write",
-    "generate-cli-reference-json": "bit cli generate --json > scopes/harmony/cli-reference/cli-reference.json"
+    "generate-cli-reference-json": "bit cli generate --json > scopes/harmony/cli-reference/cli-reference.json",
+    "lint-staged": "lint-staged"
   },
   "dependencies": {
     "@teambit/toolbox.network.agent": "0.0.116",
@@ -283,7 +279,7 @@
     "eslint-plugin-react-hooks": "4.2.0",
     "eslint-plugin-simple-import-sort": "5.0.3",
     "gh-release": "3.5.0",
-    "husky": "4.3.8",
+    "husky": "7.0.4",
     "lint-staged": "^12.5.0",
     "mocha": "9.2.0",
     "mocha-circleci-reporter": "0.0.3",
