@@ -2,7 +2,6 @@ export { DocsTheme } from './docs-theme';
 export type { DocsAppProps } from './docs-theme';
 
 export { default } from './docs.app-root';
-export type { ReactDocsRoot } from './docs.app-root';
 
 export { defaultDocs } from './docs-app';
 export type { ReactDocsAppProps } from './docs-app';
