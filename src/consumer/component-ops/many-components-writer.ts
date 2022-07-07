@@ -108,7 +108,7 @@ export default class ManyComponentsWriter {
     this.excludeRegistryPrefix = this._setBooleanDefault(params.excludeRegistryPrefix, false);
     this.dependenciesIdsCache = {};
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    this.bitMap = this.consumer ? this.consumer.bitMap : new BitMap(undefined, undefined, undefined, params.isLegacy);
+    this.bitMap = this.consumer ? this.consumer.bitMap : new BitMap();
     this.packageManager = params.packageManager;
     this.isLegacy = this.consumer ? this.consumer.isLegacy : params.isLegacy;
     this.applyPackageJsonTransformers = params.applyPackageJsonTransformers ?? true;

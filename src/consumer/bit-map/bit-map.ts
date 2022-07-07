@@ -14,7 +14,6 @@ import logger from '../../logger/logger';
 import { isDir, outputFile, pathJoinLinux, pathNormalizeToLinux, sortObject } from '../../utils';
 import { PathLinux, PathOsBased, PathOsBasedAbsolute, PathOsBasedRelative, PathRelative } from '../../utils/path';
 import { getFilesByDir, getGitIgnoreHarmony } from '../component-ops/add-components/add-components';
-import { ComponentFsCache } from '../component/component-fs-cache';
 import ComponentMap, { ComponentMapFile, ComponentOrigin, Config, PathChange } from './component-map';
 import { InvalidBitMap, MissingBitMapComponent, MultipleMatches } from './exceptions';
 import WorkspaceLane from './workspace-lane';
@@ -63,7 +62,6 @@ export default class BitMap {
     public projectRoot: string,
     private mapPath: string,
     public schema: string,
-    private isLegacy: boolean,
     public workspaceLane: WorkspaceLane | null, // null if not checked out to a lane
     public remoteLaneId?: LaneId
   ) {
@@ -81,11 +79,9 @@ export default class BitMap {
   }
 
   setComponent(bitId: BitId, componentMap: ComponentMap) {
-    if (!this.isLegacy) {
-      // for Harmony, there is no different between AUTHORED and IMPORTED. and NESTED are not saved
-      // in the .bitmap file.
-      componentMap.origin = COMPONENT_ORIGINS.AUTHORED;
-    }
+    // for Harmony, there is no different between AUTHORED and IMPORTED. and NESTED are not saved
+    // in the .bitmap file.
+    componentMap.origin = COMPONENT_ORIGINS.AUTHORED;
     const id = bitId.toString();
     if (!bitId.hasVersion() && bitId.scope) {
       throw new ShowDoctorError(
@@ -107,9 +103,6 @@ export default class BitMap {
    * or other component's root-dir is a parent root-dir of this component, throw an error
    */
   private throwForExistingParentDir({ id, rootDir }: ComponentMap) {
-    if (this.isLegacy || !rootDir) {
-      return;
-    }
     const isParentDir = (parent: string, child: string) => {
       const relative = path.relative(parent, child);
       return relative && !relative.startsWith('..');
@@ -153,11 +146,10 @@ export default class BitMap {
   static async load(consumer: Consumer): Promise<BitMap> {
     const dirPath: PathOsBasedAbsolute = consumer.getPath();
     const scopePath: string = consumer.scope.path;
-    const isLegacy = consumer.isLegacy;
     const { currentLocation, defaultLocation } = BitMap.getBitMapLocation(dirPath);
     const mapFileContent = BitMap.loadRawSync(dirPath);
     if (!mapFileContent || !currentLocation) {
-      return new BitMap(dirPath, defaultLocation, CURRENT_BITMAP_SCHEMA, isLegacy, null);
+      return new BitMap(dirPath, defaultLocation, CURRENT_BITMAP_SCHEMA, null);
     }
     let componentsJson;
     try {
@@ -184,7 +176,7 @@ export default class BitMap {
 
     BitMap.removeNonComponentFields(componentsJson);
 
-    const bitMap = new BitMap(dirPath, currentLocation, schema, isLegacy, workspaceLane, laneId);
+    const bitMap = new BitMap(dirPath, currentLocation, schema, workspaceLane, laneId);
     bitMap.loadComponents(componentsJson);
     await bitMap.loadFiles();
     return bitMap;
@@ -197,7 +189,6 @@ export default class BitMap {
   }
 
   async loadFiles() {
-    if (this.isLegacy) return;
     const gitIgnore = getGitIgnoreHarmony(this.projectRoot);
     await Promise.all(
       this.components.map(async (componentMap) => {
@@ -295,11 +286,8 @@ export default class BitMap {
     this.throwForDuplicateRootDirs(componentsJson);
     Object.keys(componentsJson).forEach((componentId) => {
       const componentFromJson = componentsJson[componentId];
-      if (!this.isLegacy) {
-        componentFromJson.origin = COMPONENT_ORIGINS.AUTHORED;
-      }
-
-      const bitId = BitMap.getBitIdFromComponentJson(componentId, componentFromJson, this.isLegacy);
+      componentFromJson.origin = COMPONENT_ORIGINS.AUTHORED;
+      const bitId = BitMap.getBitIdFromComponentJson(componentId, componentFromJson);
       if (bitId.hasScope() && !bitId.hasVersion() && !componentFromJson.lanes) {
         throw new BitError(
           `.bitmap entry of "${componentId}" is invalid, it has a scope-name "${bitId.scope}", however, it does not have any version`
@@ -313,11 +301,7 @@ export default class BitMap {
     });
   }
 
-  static getBitIdFromComponentJson(
-    componentId: string,
-    componentFromJson: Record<string, any>,
-    isLegacy = false
-  ): BitId {
+  static getBitIdFromComponentJson(componentId: string, componentFromJson: Record<string, any>): BitId {
     // on Harmony, to parse the id, the old format used "exported" prop, the current format
     // uses "scope" and "version" props.
     const newHarmonyFormat = 'scope' in componentFromJson;
@@ -339,10 +323,6 @@ export default class BitMap {
           );
         }
         return componentFromJson.exported;
-      }
-      if (isLegacy) {
-        // backward compatibility
-        return BitId.parseObsolete(componentId).hasScope();
       }
       // on Harmony, if there is no "exported" we default to "true" as this is the most commonly
       // used. so it's better to have as little as possible of these props.
@@ -668,7 +648,7 @@ export default class BitMap {
     logger.debug(`adding to bit.map ${componentIdStr}`);
 
     const getOrCreateComponentMap = (): ComponentMap => {
-      const ignoreVersion = !this.isLegacy; // legacy can have two components on .bitmap with different versions
+      const ignoreVersion = true; // legacy can have two components on .bitmap with different versions
       const componentMap = this.getComponentIfExist(componentId, { ignoreVersion });
       if (componentMap) {
         logger.info(`bit.map: updating an exiting component ${componentMap.id.toString()}`);
@@ -935,24 +915,18 @@ export default class BitMap {
     this.components.forEach((componentMap) => {
       const componentMapCloned = componentMap.clone();
       let idStr = componentMapCloned.id.toString();
-      if (this.isLegacy) {
-        if (componentMapCloned.origin === COMPONENT_ORIGINS.AUTHORED) {
-          componentMapCloned.exported = componentMapCloned.id.hasScope();
-        }
-      } else {
-        // no need for "exported" property as there are scope and version props
-        // if not exist, we still need these properties so we know later to parse them correctly.
-        componentMapCloned.scope = componentMapCloned.id.hasScope() ? componentMapCloned.id.scope : '';
-        componentMapCloned.version = componentMapCloned.id.hasVersion() ? componentMapCloned.id.version : '';
-        // change back the id to the main id, so the local lanes data won't be saved in .bitmap
-        if (componentMapCloned.defaultVersion) {
-          componentMapCloned.version = componentMapCloned.defaultVersion;
-        }
-        idStr = componentMapCloned.id.name;
+      // no need for "exported" property as there are scope and version props
+      // if not exist, we still need these properties so we know later to parse them correctly.
+      componentMapCloned.scope = componentMapCloned.id.hasScope() ? componentMapCloned.id.scope : '';
+      componentMapCloned.version = componentMapCloned.id.hasVersion() ? componentMapCloned.id.version : '';
+      // change back the id to the main id, so the local lanes data won't be saved in .bitmap
+      if (componentMapCloned.defaultVersion) {
+        componentMapCloned.version = componentMapCloned.defaultVersion;
       }
+      idStr = componentMapCloned.id.name;
       // @ts-ignore
       delete componentMapCloned?.id;
-      components[idStr] = componentMapCloned.toPlainObject(this.isLegacy);
+      components[idStr] = componentMapCloned.toPlainObject();
     });
 
     return sortObject(components);
@@ -964,16 +938,7 @@ export default class BitMap {
    * the risk of calling this method in other places is a parallel writing of this file, which
    * may result in a damaged file
    */
-  async write(componentFsCache: ComponentFsCache): Promise<any> {
-    if (this.isLegacy) {
-      await Promise.all(
-        this.components.map(async (c) => {
-          if (c.recentlyTracked) {
-            await componentFsCache.setLastTrackTimestamp(c.id.toString(), Date.now());
-          }
-        })
-      );
-    }
+  async write(): Promise<any> {
     if (!this.hasChanged) return;
     logger.debug('writing to bit.map');
     if (this.workspaceLane) await this.workspaceLane.write();

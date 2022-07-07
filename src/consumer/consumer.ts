@@ -205,7 +205,7 @@ export default class Consumer {
     result.bitMap.markAsChanged();
     // Update the version of the bitmap instance of the consumer (to prevent duplicate migration)
     this.bitMap.schema = result.bitMap.schema;
-    await result.bitMap.write(this.componentFsCache);
+    await result.bitMap.write();
 
     loader.stop();
 
@@ -839,7 +839,7 @@ export default class Consumer {
   }
 
   async writeBitMap() {
-    await this.bitMap.write(this.componentFsCache);
+    await this.bitMap.write();
   }
 
   async onDestroy() {

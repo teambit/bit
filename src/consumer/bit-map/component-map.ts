@@ -6,7 +6,7 @@ import { BitId, BitIds } from '../../bit-id';
 import { BIT_MAP, COMPONENT_ORIGINS } from '../../constants';
 import ValidationError from '../../error/validation-error';
 import logger from '../../logger/logger';
-import { isValidPath, pathJoinLinux, pathNormalizeToLinux, pathRelativeLinux, sortObject } from '../../utils';
+import { isValidPath, pathJoinLinux, pathNormalizeToLinux, pathRelativeLinux } from '../../utils';
 import { getLastModifiedDirTimestampMs } from '../../utils/fs/last-modified';
 import { PathLinux, PathLinuxRelative, PathOsBased, PathOsBasedRelative } from '../../utils/path';
 import AddComponents from '../component-ops/add-components';
@@ -43,7 +43,7 @@ export type ComponentMapData = {
   files: ComponentMapFile[];
   defaultScope?: string;
   mainFile: PathLinux;
-  rootDir?: PathLinux;
+  rootDir: PathLinux;
   trackDir?: PathLinux;
   origin: ComponentOrigin;
   originallySharedDir?: PathLinux;
@@ -64,7 +64,7 @@ export default class ComponentMap {
   files: ComponentMapFile[];
   defaultScope?: string;
   mainFile: PathLinux;
-  rootDir?: PathLinux; // always set for IMPORTED and NESTED.
+  rootDir: PathLinux;
   // reason why trackDir and not re-use rootDir is because using rootDir requires all paths to be
   // relative to rootDir for consistency, then, when saving into the model changing them back to
   // be relative to consumer-root. (we can't save in the model relative to rootDir, otherwise the
@@ -136,16 +136,16 @@ export default class ComponentMap {
     return new ComponentMap(componentMapParams);
   }
 
-  toPlainObject(isLegacy: boolean): Record<string, any> {
+  toPlainObject(): Record<string, any> {
     let res = {
       scope: this.scope,
       version: this.version,
-      files: isLegacy || !this.rootDir ? this.files.map((file) => sortObject(file)) : null,
+      files: null,
       defaultScope: this.defaultScope,
       mainFile: this.mainFile,
       rootDir: this.rootDir,
       trackDir: this.trackDir,
-      origin: isLegacy ? this.origin : undefined,
+      origin: undefined,
       originallySharedDir: this.originallySharedDir,
       wrapDir: this.wrapDir,
       exported: this.exported,

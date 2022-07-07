@@ -5,7 +5,6 @@ import { BitError } from '@teambit/bit-error';
 import { Analytics, LEVEL } from '../analytics/analytics';
 import ConfigKeyNotFound from '../api/consumer/lib/exceptions/config-key-not-found';
 import DiagnosisNotFound from '../api/consumer/lib/exceptions/diagnosis-not-found';
-import FlagHarmonyOnly from '../api/consumer/lib/exceptions/flag-harmony-only';
 import IdExportedAlready from '../api/consumer/lib/exceptions/id-exported-already';
 import InvalidVersion from '../api/consumer/lib/exceptions/invalid-version';
 import MissingDiagnosisName from '../api/consumer/lib/exceptions/missing-diagnosis-name';
@@ -336,7 +335,6 @@ please use "bit remove" to delete the component or "bit add" with "--main" and "
     (err) => `error: file or directory "${chalk.bold(err.path)}" is located outside of the workspace.`,
   ],
   [ConfigKeyNotFound, (err) => `unable to find a key "${chalk.bold(err.key)}" in your bit config`],
-  [FlagHarmonyOnly, (err) => `the flag: "${chalk.bold(err.flag)}" allowed only on harmony workspace`],
   [WriteToNpmrcError, (err) => `unable to add @bit as a scoped registry at "${chalk.bold(err.path)}"`],
   [PathToNpmrcNotExist, (err) => `error: file or directory "${chalk.bold(err.path)}" was not found.`],
   [
