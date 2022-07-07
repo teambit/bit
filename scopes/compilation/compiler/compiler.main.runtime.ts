@@ -139,3 +139,5 @@ export class CompilerMain {
 }
 
 CompilerAspect.addRuntime(CompilerMain);
+
+export default CompilerMain;
