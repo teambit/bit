@@ -28,12 +28,6 @@ describe('Version', () => {
       it('should have files property', () => {
         expect(idParsed).to.haveOwnProperty('files');
       });
-      it('should have compiler property', () => {
-        expect(idParsed).to.haveOwnProperty('compiler');
-      });
-      it('should have tester property', () => {
-        expect(idParsed).to.haveOwnProperty('tester');
-      });
       it('should have log property', () => {
         expect(idParsed).to.haveOwnProperty('log');
       });
@@ -45,9 +39,6 @@ describe('Version', () => {
       });
       it('should have bindingPrefix property', () => {
         expect(idParsed).to.haveOwnProperty('bindingPrefix');
-      });
-      it('should not have dists property', () => {
-        expect(idParsed).to.not.haveOwnProperty('dists');
       });
       it('should not have ci property', () => {
         expect(idParsed).to.not.haveOwnProperty('ci');
@@ -102,7 +93,7 @@ describe('Version', () => {
   describe('hash()', () => {
     let version: Version;
     let hash;
-    const versionFixtureHash = '693679c1c397ca3c42f6f3486ce1ed042787886a';
+    const versionFixtureHash = '4f67925a80b5e1f52dd1177196bf4c003d2f8798';
     before(() => {
       // @ts-ignore
       version = new Version(versionFixture);
@@ -196,22 +187,6 @@ describe('Version', () => {
       version.peerPackageDependencies = true;
       expect(validateFunc).to.throw('to be object, got boolean');
     });
-    it('should throw for invalid dist.relativePath', () => {
-      version.dists[0].relativePath = 'invalid*path';
-      expect(validateFunc).to.throw(`dist-file ${version.dists[0].relativePath} is invalid`);
-    });
-    it('should throw for an empty dist.relativePath', () => {
-      version.dists[0].relativePath = '';
-      expect(validateFunc).to.throw(`dist-file ${version.dists[0].relativePath} is invalid`);
-    });
-    it('should throw for an invalid dist.name', () => {
-      version.dists[0].name = 4;
-      expect(validateFunc).to.throw('to be string, got number');
-    });
-    it('should throw when the file hash is not a string', () => {
-      version.dists[0].file.hash = {};
-      expect(validateFunc).to.throw('to be string, got object');
-    });
     it('should throw when dependencies are invalid', () => {
       version.dependencies = {};
       expect(validateFunc).to.throw('dependencies must be an instance of Dependencies, got object');
@@ -281,13 +256,6 @@ describe('Version', () => {
     describe('Harmony schema', () => {
       beforeEach(() => {
         version.schema = SchemaName.Harmony;
-      });
-      it('should throw for having compiler set on Harmony', () => {
-        expect(validateFunc).to.throw('the compiler field is not permitted according to schema "1.0.0"');
-      });
-      it('should throw for having dists set on Harmony', () => {
-        delete version.compiler;
-        expect(validateFunc).to.throw('the dists field is not permitted according to schema "1.0.0"');
       });
       it('should throw for having relativePaths on Harmony', () => {
         delete version.compiler;
