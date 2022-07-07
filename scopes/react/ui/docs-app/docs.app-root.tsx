@@ -4,7 +4,7 @@ import ReactDOM from 'react-dom';
 
 import { DocsApp } from './docs-app';
 
-export default function DocsRoot({
+function DocsRoot({
   componentId,
   docs,
   compositions,
@@ -25,6 +25,8 @@ export default function DocsRoot({
 
 // For backward compatibility - can be removed end of 2022
 DocsRoot.apiObject = true;
+
+export default DocsRoot;
 
 // hot reloading works when components are in a different file.
 // do not declare react components here.
