@@ -1,4 +1,5 @@
 import Bluebird from 'bluebird';
+import fs from 'fs-extra';
 import * as path from 'path';
 import Symlink from '../../../links/symlink';
 import logger from '../../../logger/logger';
@@ -70,6 +71,60 @@ export default class DataToPersist {
     await this._deletePathsFromFS();
     await this._persistFilesToFS();
     await this._persistSymlinksToFS();
+  }
+  async persistAllToCapsule(capsule: any, opts = { keepExistingCapsule: false }) {
+    this._log();
+    this._validateRelative();
+    if (!opts.keepExistingCapsule) {
+      await Promise.all(this.remove.map((pathToRemove) => capsule.removePath(pathToRemove.path)));
+    }
+    await Promise.all(
+      this.files.map((file) =>
+        this._writeFileToCapsule(capsule, file, { overwriteExistingFile: !!opts.keepExistingCapsule })
+      )
+    );
+    await Promise.all(this.symlinks.map((symlink) => this.atomicSymlink(capsule, symlink)));
+  }
+  async _writeFileToCapsule(capsule: any, file: AbstractVinyl, opts = { overwriteExistingFile: false }) {
+    // overwriteExistingFile: if a file with the same name exists in the capsule, overwrite it
+    if (opts.overwriteExistingFile) {
+      await capsule.removePath(file.path);
+      return capsule.outputFile(file.path, file.contents, {});
+    }
+    if (file.override === false) {
+      // @todo, capsule hack. use capsule.fs once you get it as a component.
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      const capsulePath = capsule.container.getPath();
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      const absPath = path.join(capsulePath, file.path);
+      try {
+        await fs.lstat(absPath); // if no errors have been thrown, the file exists
+        logger.debug(`skip file ${absPath}, it already exists`);
+        return null;
+      } catch (err: any) {
+        if (err.code !== 'ENOENT') {
+          throw err;
+        }
+      }
+    }
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    return capsule.outputFile(file.path, file.contents);
+  }
+  async atomicSymlink(capsule: any, symlink: Symlink) {
+    try {
+      await capsule.symlink(symlink.src, symlink.dest);
+    } catch (e: any) {
+      // On windows when the link already created by npm we got EPERM error
+      // TODO: We should handle this better and avoid creating the symlink if it's already exists
+      if (e.code !== 'EEXIST' && e.code !== 'EPERM') {
+        throw e;
+      } else {
+        logger.debug(`ignoring ${e.code} error on atomicSymlink creation`);
+      }
+    }
   }
   addBasePath(basePath: string) {
     this.files.forEach((file) => {
