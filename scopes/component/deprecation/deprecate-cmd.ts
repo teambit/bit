@@ -1,8 +1,6 @@
 import chalk from 'chalk';
 import { Workspace } from '@teambit/workspace';
 import { Command, CommandOptions } from '@teambit/cli';
-import { deprecateMany } from '@teambit/legacy/dist/scope/component-ops/components-deprecation';
-import { BitIds } from '@teambit/legacy/dist/bit-id';
 import { DeprecationMain } from './deprecation.main.runtime';
 
 export class DeprecateCmd implements Command {
@@ -27,11 +25,6 @@ export class DeprecateCmd implements Command {
   }
 
   private async deprecate(id: string, newId?: string): Promise<boolean> {
-    if (this.workspace.isLegacy) {
-      const bitId = this.workspace.consumer.getParsedId(id);
-      await deprecateMany(this.workspace.consumer.scope, new BitIds(bitId));
-      return true;
-    }
     const componentId = await this.workspace.resolveComponentId(id);
     const newComponentId = newId ? await this.workspace.resolveComponentId(newId) : undefined;
     return this.deprecation.deprecate(componentId, newComponentId);

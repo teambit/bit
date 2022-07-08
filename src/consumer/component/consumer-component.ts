@@ -563,9 +563,7 @@ export default class Component {
     );
     const packageJsonFile = (componentConfig && componentConfig.packageJsonFile) || undefined;
     const packageJsonChangedProps = componentFromModel ? componentFromModel.packageJsonChangedProps : undefined;
-    const files = consumer.isLegacy
-      ? await getLoadedFilesLegacy(consumer, componentMap, id, bitDir)
-      : await getLoadedFilesHarmony(consumer, componentMap, id, bitDir);
+    const files = await getLoadedFilesHarmony(consumer, componentMap, id, bitDir);
     const docsP = _getDocsForFiles(files, consumer.componentFsCache);
     const docs = await Promise.all(docsP);
     const flattenedDocs = docs ? R.flatten(docs) : [];
@@ -600,49 +598,6 @@ export default class Component {
       buildStatus: componentFromModel ? componentFromModel.buildStatus : undefined,
     });
   }
-}
-
-async function getLoadedFilesLegacy(
-  consumer: Consumer,
-  componentMap: ComponentMap,
-  id: BitId,
-  bitDir: string
-): Promise<SourceFile[]> {
-  const bitMap: BitMap = consumer.bitMap;
-  const sourceFiles = [];
-  await componentMap.trackDirectoryChangesLegacy(consumer, id);
-  const filesToDelete = [];
-  componentMap.files.forEach((file) => {
-    const filePath = path.join(bitDir, file.relativePath);
-    try {
-      const sourceFile = SourceFile.load(filePath, bitDir, consumer.getPath(), {
-        test: file.test,
-      });
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      sourceFiles.push(sourceFile);
-    } catch (err: any) {
-      if (!(err instanceof FileSourceNotFound)) throw err;
-      logger.warn(`a file ${filePath} will be deleted from bit.map as it does not exist on the file system`);
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      filesToDelete.push(file);
-    }
-  });
-  if (filesToDelete.length) {
-    if (!sourceFiles.length) throw new MissingFilesFromComponent(id.toString());
-    filesToDelete.forEach((fileToDelete) => {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      if (fileToDelete.relativePath === componentMap.mainFile) {
-        throw new MainFileRemoved(componentMap.mainFile, id.toString());
-      }
-    });
-    componentMap.removeFiles(filesToDelete);
-    bitMap.hasChanged = true;
-  }
-  const filePaths = componentMap.getAllFilesPaths();
-  if (!filePaths.includes(componentMap.mainFile)) {
-    throw new MainFileRemoved(componentMap.mainFile, id.toString());
-  }
-  return sourceFiles;
 }
 
 async function getLoadedFilesHarmony(

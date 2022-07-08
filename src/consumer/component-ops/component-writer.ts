@@ -255,7 +255,6 @@ export default class ComponentWriter {
       mainFile: pathNormalizeToLinux(this.component.mainFile),
       rootDir,
       origin: this.origin,
-      trackDir: this.existingComponentMap && this.existingComponentMap.trackDir,
     });
   }
 

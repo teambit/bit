@@ -86,23 +86,8 @@ export class WorkspaceConfig implements HostConfig {
     const isHarmony = !this.isLegacy;
     logger.debug(`workspace-config, isLegacy: ${this.isLegacy}`);
     Analytics.setExtraData('is_harmony', isHarmony);
-    if (isHarmony) {
-      this.raw = data;
-      this.loadExtensions();
-    } else {
-      // We know we have either data or legacy config
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      this._extensions = ExtensionDataList.fromConfigObject(transformLegacyPropsToExtensions(legacyConfig!));
-      if (legacyConfig) {
-        this._legacyProps = {
-          dependenciesDirectory: legacyConfig.dependenciesDirectory,
-          resolveModules: legacyConfig.resolveModules,
-          saveDependenciesAsComponents: legacyConfig.saveDependenciesAsComponents,
-          distEntry: legacyConfig.distEntry,
-          distTarget: legacyConfig.distTarget,
-        };
-      }
-    }
+    this.raw = data;
+    this.loadExtensions();
   }
 
   get path(): PathOsBased {

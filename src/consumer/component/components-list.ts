@@ -375,25 +375,11 @@ export default class ComponentsList {
    * valid on legacy only. Harmony requires components to have their own directories
    */
   async listComponentsWithIndividualFiles(): Promise<Component[]> {
-    if (this.consumer.isLegacy) return [];
     const workspaceComponents = await this.getFromFileSystem(COMPONENT_ORIGINS.AUTHORED);
     return workspaceComponents.filter((component) => {
       const componentMap = component.componentMap;
       if (!componentMap) throw new Error('listComponentsWithIndividualFiles componentMap is missing');
-      return Boolean(!componentMap.trackDir && !componentMap.rootDir);
-    });
-  }
-
-  /**
-   * valid on legacy only. Harmony creates `rootDir` instead of the `trackDir`.
-   */
-  async listComponentsWithTrackDir() {
-    if (this.consumer.isLegacy) return [];
-    const workspaceComponents = await this.getFromFileSystem(COMPONENT_ORIGINS.AUTHORED);
-    return workspaceComponents.filter((component) => {
-      const componentMap = component.componentMap;
-      if (!componentMap) throw new Error('listComponentsWithIndividualFiles componentMap is missing');
-      return Boolean(componentMap.trackDir);
+      return Boolean(!componentMap.rootDir);
     });
   }
 

@@ -330,9 +330,6 @@ export class SnappingMain {
 
   private async loadComponentsForTag(ids: BitIds): Promise<ConsumerComponent[]> {
     const { components } = await this.workspace.consumer.loadComponents(ids.toVersionLatest());
-    if (this.workspace.isLegacy) {
-      return components;
-    }
     let shouldReloadComponents = false;
     const componentsWithRelativePaths: string[] = [];
     const componentsWithFilesNotDir: string[] = [];
@@ -372,11 +369,6 @@ export class SnappingMain {
   }
 
   private async throwForComponentIssues(legacyComponents: ConsumerComponent[], ignoreIssues?: string) {
-    legacyComponents.forEach((component) => {
-      if (this.workspace.isLegacy && component.issues) {
-        component.issues.delete(IssuesClasses.RelativeComponentsAuthored);
-      }
-    });
     if (ignoreIssues === '*') {
       // ignore all issues
       return;
@@ -384,13 +376,11 @@ export class SnappingMain {
     const issuesToIgnoreFromFlag = ignoreIssues?.split(',').map((issue) => issue.trim()) || [];
     const issuesToIgnoreFromConfig = this.issues.getIssuesToIgnoreGlobally();
     const issuesToIgnore = [...issuesToIgnoreFromFlag, ...issuesToIgnoreFromConfig];
-    if (!this.workspace.isLegacy) {
-      const components = await this.workspace.getManyByLegacy(legacyComponents);
-      if (!issuesToIgnore.includes(IssuesClasses.CircularDependencies.name)) {
-        await this.insights.addInsightsAsComponentIssues(components);
-      }
-      this.issues.removeIgnoredIssuesFromComponents(components);
+    const components = await this.workspace.getManyByLegacy(legacyComponents);
+    if (!issuesToIgnore.includes(IssuesClasses.CircularDependencies.name)) {
+      await this.insights.addInsightsAsComponentIssues(components);
     }
+    this.issues.removeIgnoredIssuesFromComponents(components);
 
     const componentsWithBlockingIssues = legacyComponents.filter((component) => component.issues?.shouldBlockTagging());
     if (!R.isEmpty(componentsWithBlockingIssues)) {
@@ -399,9 +389,6 @@ export class SnappingMain {
   }
 
   private async throwForLegacyDependenciesInsideHarmony(components: ConsumerComponent[]) {
-    if (this.workspace.isLegacy) {
-      return;
-    }
     const throwForComponent = async (component: ConsumerComponent) => {
       const dependenciesIds = component.getAllDependenciesIds();
       const legacyScope = this.workspace.scope.legacyScope;
@@ -429,9 +416,6 @@ export class SnappingMain {
     ids: string[],
     snapped: boolean
   ): Promise<{ bitIds: BitId[]; warnings: string[] }> {
-    if (this.workspace.isLegacy) {
-      return this.getComponentsToTagLegacy(includeUnmodified, exactVersion, persist, ids, snapped);
-    }
     const warnings: string[] = [];
     const componentsList = new ComponentsList(this.workspace.consumer);
     if (persist) {
@@ -483,69 +467,6 @@ export class SnappingMain {
     }
 
     return { bitIds: tagPendingBitIds.map((id) => id.changeVersion(undefined)), warnings };
-  }
-
-  private async getComponentsToTagLegacy(
-    includeUnmodified: boolean,
-    exactVersion: string | undefined,
-    persist: boolean,
-    ids: string[],
-    snapped: boolean
-  ): Promise<{ bitIds: BitId[]; warnings: string[] }> {
-    const warnings: string[] = [];
-    const componentsList = new ComponentsList(this.workspace.consumer);
-    if (persist) {
-      const softTaggedComponents = componentsList.listSoftTaggedComponents();
-      return { bitIds: softTaggedComponents, warnings: [] };
-    }
-
-    const tagPendingComponents = includeUnmodified
-      ? await componentsList.listPotentialTagAllWorkspace()
-      : await componentsList.listTagPendingComponents();
-
-    const snappedComponents = await componentsList.listSnappedComponentsOnMain();
-    const snappedComponentsIds = snappedComponents.map((c) => c.toBitId());
-
-    if (ids.length) {
-      const bitIds = await Promise.all(
-        ids.map(async (id) => {
-          const [idWithoutVer, version] = id.split('@');
-          const idHasWildcard = hasWildcard(id);
-          if (idHasWildcard) {
-            const allIds = ComponentsList.filterComponentsByWildcard(tagPendingComponents, idWithoutVer);
-            return allIds.map((bitId) => bitId.changeVersion(version));
-          }
-          const bitId = this.workspace.consumer.getParsedId(idWithoutVer);
-          if (!includeUnmodified) {
-            const componentStatus = await this.workspace.consumer.getComponentStatusById(bitId);
-            if (componentStatus.modified === false) return null;
-          }
-          return bitId.changeVersion(version);
-        })
-      );
-
-      return { bitIds: compact(bitIds.flat()), warnings };
-    }
-
-    if (snapped) {
-      return { bitIds: snappedComponentsIds, warnings };
-    }
-
-    tagPendingComponents.push(...snappedComponentsIds);
-
-    if (includeUnmodified && exactVersion) {
-      const tagPendingComponentsLatest = await this.workspace.scope.legacyScope.latestVersions(
-        tagPendingComponents,
-        false
-      );
-      tagPendingComponentsLatest.forEach((componentId) => {
-        if (componentId.version && semver.valid(componentId.version) && semver.gt(componentId.version, exactVersion)) {
-          warnings.push(`warning: ${componentId.toString()} has a version greater than ${exactVersion}`);
-        }
-      });
-    }
-
-    return { bitIds: tagPendingComponents.map((id) => id.changeVersion(undefined)), warnings };
   }
 
   static slots = [];

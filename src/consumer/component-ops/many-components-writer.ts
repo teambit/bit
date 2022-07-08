@@ -289,14 +289,12 @@ please use the '--log=error' flag for the full error.`);
       this.componentsWithDependencies.forEach((componentWithDeps) => {
         // @ts-ignore componentWithDeps.component.componentMap is set
         const componentMap: ComponentMap = componentWithDeps.component.componentMap;
-        if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED && !componentMap.trackDir && !componentMap.rootDir) {
+        if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED && !componentMap.rootDir) {
           throw new GeneralError(`unable to use "--path" flag.
 to move individual files, use bit move.
 to move all component files to a different directory, run bit remove and then bit import --path`);
         }
-        const relativeWrittenPath = componentMap.trackDir
-          ? componentMap.trackDir
-          : componentWithDeps.component.writtenPath;
+        const relativeWrittenPath = componentWithDeps.component.writtenPath;
         // @ts-ignore relativeWrittenPath is set at this point
         const absoluteWrittenPath = this.consumer.toAbsolutePath(relativeWrittenPath);
         // @ts-ignore this.writeToPath is set at this point

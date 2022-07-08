@@ -304,35 +304,6 @@ export default class ComponentMap {
   }
 
   /**
-   * if one of the added files is outside of the trackDir, remove the trackDir attribute
-   */
-  removeTrackDirIfNeeded(): void {
-    if (!this.trackDir) return;
-    if (this.origin !== COMPONENT_ORIGINS.AUTHORED) {
-      this.trackDir = undefined;
-      return;
-    }
-    for (const file of this.files) {
-      if (!file.relativePath.startsWith(this.trackDir)) {
-        this.trackDir = undefined;
-        return;
-      }
-    }
-  }
-
-  /**
-   * directory to track for changes (such as files added/renamed)
-   */
-  getTrackDir(): PathLinux | undefined {
-    if (this.origin === COMPONENT_ORIGINS.AUTHORED) return this.rootDir || this.trackDir;
-    if (this.origin === COMPONENT_ORIGINS.IMPORTED) {
-      return this.wrapDir ? pathJoinLinux(this.rootDir, this.wrapDir) : this.rootDir;
-    }
-    // DO NOT track nested components!
-    return undefined;
-  }
-
-  /**
    * this.rootDir is not defined for author. instead, the current workspace is the rootDir
    * also, for imported environments (compiler/tester) components the rootDir is empty
    */
@@ -344,12 +315,7 @@ export default class ComponentMap {
     return Boolean(this.rootDir && this.rootDir !== '.');
   }
 
-  /**
-   * directory of the component (root / track)
-   * for legacy (bit.json) workspace, it can be undefined for authored when individual files were added
-   */
-  getComponentDir(): PathLinux | undefined {
-    if (this.origin === COMPONENT_ORIGINS.AUTHORED) return this.rootDir || this.trackDir;
+  getComponentDir(): PathLinux {
     return this.rootDir;
   }
 
@@ -392,55 +358,6 @@ export default class ComponentMap {
     } else {
       this.lanes.push({ remoteLane: remoteLaneId, version });
     }
-  }
-
-  /**
-   * in case new files were created in the track-dir directory, add them to the component-map
-   * so then they'll be tracked by bitmap.
-   * this doesn't get called on Harmony, it's for legacy only.
-   */
-  async trackDirectoryChangesLegacy(consumer: Consumer, id: BitId): Promise<void> {
-    const trackDir = this.getTrackDir();
-    if (!trackDir) {
-      return;
-    }
-    const trackDirAbsolute = path.join(consumer.getPath(), trackDir);
-    const trackDirRelative = path.relative(process.cwd(), trackDirAbsolute);
-    if (!fs.existsSync(trackDirAbsolute)) throw new ComponentNotFoundInPath(trackDirRelative);
-    const lastTrack = await consumer.componentFsCache.getLastTrackTimestamp(id.toString());
-    const wasModifiedAfterLastTrack = async () => {
-      const lastModified = await getLastModifiedDirTimestampMs(trackDirAbsolute);
-      return lastModified > lastTrack;
-    };
-    if (!(await wasModifiedAfterLastTrack())) {
-      return;
-    }
-    const addParams = {
-      componentPaths: [trackDirRelative || '.'],
-      id: id.toString(),
-      override: false, // this makes sure to not override existing files of componentMap
-      trackDirFeature: true,
-      origin: this.origin,
-    };
-    const numOfFilesBefore = this.files.length;
-    const addContext: AddContext = { consumer };
-    const addComponents = new AddComponents(addContext, addParams);
-    try {
-      await addComponents.add();
-    } catch (err: any) {
-      if (err instanceof NoFiles || err instanceof EmptyDirectory) {
-        // it might happen that a component is imported and current .gitignore configuration
-        // are effectively removing all files from bitmap. we should ignore the error in that
-        // case
-      } else {
-        throw err;
-      }
-    }
-    if (this.files.length > numOfFilesBefore) {
-      logger.info(`new file(s) have been added to .bitmap for ${id.toString()}`);
-      consumer.bitMap.hasChanged = true;
-    }
-    this.recentlyTracked = true;
   }
 
   /**
@@ -501,9 +418,6 @@ export default class ComponentMap {
     if (this.rootDir && !isValidPath(this.rootDir)) {
       throw new ValidationError(`${errorMessage} rootDir attribute ${this.rootDir} is invalid`);
     }
-    if (this.trackDir && this.origin !== COMPONENT_ORIGINS.AUTHORED) {
-      throw new ValidationError(`${errorMessage} trackDir attribute should be set for AUTHORED component only`);
-    }
     if (this.nextVersion && !this.nextVersion.version) {
       throw new ValidationError(`${errorMessage} version attribute should be set when nextVersion prop is set`);
     }
@@ -525,16 +439,6 @@ if you renamed the mainFile, please re-add the component with the "--main" flag 
     );
     if (duplicateFiles.length) {
       throw new ValidationError(`${errorMessage} the following files are duplicated ${duplicateFiles.join(', ')}`);
-    }
-    if (this.trackDir) {
-      const trackDir = this.trackDir;
-      this.files.forEach((file) => {
-        if (!file.relativePath.startsWith(trackDir)) {
-          throw new ValidationError(
-            `${errorMessage} a file path ${file.relativePath} is not in the trackDir ${trackDir}`
-          );
-        }
-      });
     }
   }
 }

@@ -259,7 +259,6 @@ export default class BitMap {
           mainFile: component.mainFile,
           rootDir: component.rootDir,
           exported: false,
-          trackDir: component.trackDir,
           files: component.files,
           origin: COMPONENT_ORIGINS.AUTHORED,
           onLanesOnly: false,
@@ -626,8 +625,6 @@ export default class BitMap {
     mainFile,
     origin,
     rootDir,
-    trackDir,
-    wrapDir,
     onLanesOnly,
     config,
   }: {
@@ -637,8 +634,6 @@ export default class BitMap {
     mainFile: PathLinux;
     origin: ComponentOrigin;
     rootDir?: PathOsBasedAbsolute | PathOsBasedRelative;
-    trackDir?: PathOsBased;
-    wrapDir?: PathLinux;
     onLanesOnly?: boolean;
     config?: Config;
   }): ComponentMap {
@@ -687,12 +682,6 @@ export default class BitMap {
       componentMap.rootDir = pathNormalizeToLinux(rootDir);
       this.throwForExistingParentDir(componentMap);
     }
-    if (trackDir) {
-      componentMap.trackDir = pathNormalizeToLinux(trackDir);
-    }
-    if (wrapDir) {
-      componentMap.wrapDir = wrapDir;
-    }
     if (onLanesOnly) {
       componentMap.onLanesOnly = onLanesOnly;
     }
@@ -702,7 +691,6 @@ export default class BitMap {
     if (config) {
       componentMap.config = config;
     }
-    componentMap.removeTrackDirIfNeeded();
     this.sortValidateAndMarkAsChanged(componentMap);
     return componentMap;
   }
