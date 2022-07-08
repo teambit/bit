@@ -4,7 +4,6 @@ import { BitId, BitIds } from '../../bit-id';
 import { BuildStatus, DEFAULT_BINDINGS_PREFIX, DEFAULT_BUNDLE_FILENAME } from '../../constants';
 import ConsumerComponent from '../../consumer/component';
 import { isSchemaSupport, SchemaFeature, SchemaName } from '../../consumer/component/component-schema';
-import { CustomResolvedPath } from '../../consumer/component/consumer-component';
 import { Dependencies, Dependency } from '../../consumer/component/dependencies';
 import { SourceFile } from '../../consumer/component/sources';
 import { getRefsFromExtensions } from '../../consumer/component/sources/artifact-files';

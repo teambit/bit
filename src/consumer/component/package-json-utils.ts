@@ -100,8 +100,6 @@ async function _addDependenciesPackagesIntoPackageJson(dir: PathOsBasedAbsolute,
 export async function removeComponentsFromNodeModules(consumer: Consumer, components: Component[]) {
   logger.debug(`removeComponentsFromNodeModules: ${components.map((c) => c.id.toString()).join(', ')}`);
   const pathsToRemoveWithNulls = components.map((c) => {
-    // for legacy, paths without scope name, don't have a symlink in node-modules
-    if (consumer.isLegacy) return c.id.scope ? getNodeModulesPathOfComponent(c) : null;
     return getNodeModulesPathOfComponent({ ...c, id: c.id, allowNonScope: true });
   });
   const pathsToRemove = compact(pathsToRemoveWithNulls);

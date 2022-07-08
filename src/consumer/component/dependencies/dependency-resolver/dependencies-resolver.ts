@@ -175,7 +175,6 @@ export default class DependencyResolver {
       workspacePath: this.consumerPath,
       filePaths: allFiles,
       bindingPrefix: this.component.bindingPrefix,
-      isLegacyProject: this.consumer.isLegacy,
       resolveModulesConfig: this.consumer.config._resolveModules,
       visited: cacheResolvedDependencies,
       cacheProjectAst,
