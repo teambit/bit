@@ -3,7 +3,6 @@ import glob from 'glob';
 import pMapSeries from 'p-map-series';
 import * as path from 'path';
 import R from 'ramda';
-import { IssuesClasses } from '@teambit/component-issues';
 import { BitId } from '../bit-id';
 import { COMPONENT_ORIGINS, IS_WINDOWS, PACKAGE_JSON, SOURCE_DIR_SYMLINK_TO_NM } from '../constants';
 import BitMap from '../consumer/bit-map/bit-map';
@@ -134,29 +133,7 @@ export default class NodeModuleLinker {
       this.dataToPersist.addSymlink(Symlink.makeInstance(fileWithRootDir, dest, componentId, true));
     });
     this._deleteExistingLinksRootIfSymlink(componentNodeModulesPath);
-    // remove this for now, it should be handled by dependency-linker.addSymlinkFromComponentDirNMToWorkspaceDirNM
-    // this.addSymlinkFromComponentDirNMToWorkspaceDirNM(component, componentNodeModulesPath);
-    await this._populateDependenciesAndMissingLinks(component);
   }
-
-  /**
-   * add symlink from the node_modules in the component's root-dir to the workspace node-modules
-   * of the component. e.g.
-   * ws-root/node_modules/comp1/node_modules -> ws-root/components/comp1/node_modules
-   */
-  // private addSymlinkFromComponentDirNMToWorkspaceDirNM(
-  //   component: Component,
-  //   componentNodeModulesPath: PathOsBasedRelative
-  // ) {
-  //   const componentMap = component.componentMap as ComponentMap;
-  //   if (!componentMap.rootDir || !this.consumer) return;
-  //   const nodeModulesInCompRoot = path.join(componentMap.rootDir, 'node_modules');
-  //   if (!fs.existsSync(this.consumer.toAbsolutePath(nodeModulesInCompRoot))) return;
-  //   const nodeModulesInWorkspaceRoot = path.join(componentNodeModulesPath, 'node_modules');
-  //   this.dataToPersist.addSymlink(
-  //     Symlink.makeInstance(nodeModulesInCompRoot, nodeModulesInWorkspaceRoot, component.id)
-  //   );
-  // }
 
   /**
    * even when an authored component has rootDir, we can't just symlink that rootDir to
@@ -241,20 +218,6 @@ export default class NodeModuleLinker {
         extensions: component.extensions,
       });
       this.dataToPersist.removePath(new RemovePath(previousDest));
-    }
-  }
-  /**
-   * for IMPORTED and NESTED components
-   */
-  async _populateDependenciesAndMissingLinks(component: Component): Promise<void> {
-    if (
-      component.issues &&
-      (component.issues.getIssue(IssuesClasses.MissingLinks) ||
-        component.issues.getIssue(IssuesClasses.MissingCustomModuleResolutionLinks)) &&
-      this.consumer &&
-      component.componentFromModel
-    ) {
-      component.copyAllDependenciesFromModel();
     }
   }
   /**
