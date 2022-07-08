@@ -40,7 +40,8 @@ export class CLIMain {
   }
 
   /**
-   * helpful for having the same command name in different environments (legacy and Harmony)
+   * helpful for having the same command name in different environments (e.g. legacy and non-legacy).
+   * for example `cli.unregister('tag');` removes the "bit tag" command.
    */
   unregister(commandName: string) {
     this.commandsSlot.toArray().forEach(([aspectId, commands]) => {
