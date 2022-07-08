@@ -535,12 +535,6 @@ either, use the ignore file syntax or change the require statement to have a mod
     // happens when in the same component one file requires another one. In this case, there is
     // noting to do regarding the dependencies
     if (componentId.isEqualWithoutVersion(this.componentId)) {
-      if (depFileObject.isCustomResolveUsed) {
-        this.component.customResolvedPaths.push({
-          destinationPath: depFileObject.file,
-          importSource,
-        });
-      }
       return false;
     }
 

@@ -811,7 +811,6 @@ if that's not the case, make sure to call "getAllIdsAvailableOnLane" and not "ge
       // @ts-ignore
       license: scopeMeta ? License.deserialize(scopeMeta.license) : undefined, // todo: make sure we have license in case of local scope
       log,
-      customResolvedPaths: clone(version.customResolvedPaths),
       overrides: ComponentOverrides.loadFromScope(version.overrides),
       packageJsonChangedProps: clone(version.packageJsonChangedProps),
       deprecated: this.deprecated,

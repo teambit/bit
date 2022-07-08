@@ -58,7 +58,6 @@ export type VersionProps = {
   peerPackageDependencies?: { [key: string]: string };
   bindingPrefix?: string;
   schema?: string;
-  customResolvedPaths?: CustomResolvedPath[];
   overrides: ComponentOverridesData;
   packageJsonChangedProps?: Record<string, any>;
   hash?: string;
@@ -86,7 +85,6 @@ export default class Version extends BitObject {
   peerPackageDependencies: { [key: string]: string };
   bindingPrefix: string | undefined;
   schema: string | undefined;
-  customResolvedPaths: CustomResolvedPath[] | undefined;
   overrides: ComponentOverridesData;
   packageJsonChangedProps: Record<string, any>;
   _hash: string; // reason for the underscore prefix is that we already have hash as a method
@@ -110,7 +108,6 @@ export default class Version extends BitObject {
     this.peerPackageDependencies = props.peerPackageDependencies || {};
     this.bindingPrefix = props.bindingPrefix;
     this.schema = props.schema;
-    this.customResolvedPaths = props.customResolvedPaths;
     this.overrides = props.overrides || {};
     this.packageJsonChangedProps = props.packageJsonChangedProps || {};
     // @ts-ignore yes, props.hash can be undefined here, but it gets populated as soon as Version is created
@@ -325,7 +322,6 @@ export default class Version extends BitObject {
         packageDependencies: this.packageDependencies,
         devPackageDependencies: this.devPackageDependencies,
         peerPackageDependencies: this.peerPackageDependencies,
-        customResolvedPaths: this.customResolvedPaths,
         overrides: this.overrides,
         buildStatus: this.buildStatus,
         packageJsonChangedProps: this.packageJsonChangedProps,
@@ -368,7 +364,6 @@ export default class Version extends BitObject {
       devPackageDependencies,
       peerPackageDependencies,
       packageDependencies,
-      customResolvedPaths,
       overrides,
       packageJsonChangedProps,
       extensions,
@@ -468,7 +463,6 @@ export default class Version extends BitObject {
       devPackageDependencies,
       peerPackageDependencies,
       packageDependencies,
-      customResolvedPaths,
       overrides,
       packageJsonChangedProps,
       hash,
@@ -515,7 +509,6 @@ export default class Version extends BitObject {
       peerPackageDependencies: component.peerPackageDependencies,
       flattenedDependencies: component.flattenedDependencies,
       schema: component.schema,
-      customResolvedPaths: component.customResolvedPaths,
       overrides: component.overrides.componentOverridesData,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       packageJsonChangedProps: component.packageJsonChangedProps,

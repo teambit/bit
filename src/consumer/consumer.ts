@@ -663,26 +663,6 @@ export default class Consumer {
     await Scope.reset(this.scope.path, true);
   }
 
-  static async createIsolatedWithExistingScope(consumerPath: PathOsBased, scope: Scope): Promise<Consumer> {
-    // if it's an isolated environment, it's normal to have already the consumer
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const config = await WorkspaceConfig._ensure(consumerPath);
-    // isolated environments in the workspace rely on a physical node_modules folder
-    // for this reason, we must use a package manager that supports one
-    config.packageManager = 'npm';
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const consumer = new Consumer({
-      projectPath: consumerPath,
-      created: true,
-      scope,
-      isolated: true,
-      // @ts-ignore @gilad, the config type is incorrect indeed
-      config,
-    });
-    await consumer.setBitMap();
-    return consumer;
-  }
-
   static locateProjectScope(projectPath: string) {
     if (fs.existsSync(path.join(projectPath, DOT_GIT_DIR, BIT_GIT_DIR))) {
       return path.join(projectPath, DOT_GIT_DIR, BIT_GIT_DIR);

@@ -58,7 +58,6 @@ export type ComponentProps = {
   packageDependencies?: Record<string, any>;
   devPackageDependencies?: Record<string, any>;
   peerPackageDependencies?: Record<string, any>;
-  customResolvedPaths?: CustomResolvedPath[];
   overrides: ComponentOverrides;
   defaultScope: string | null;
   packageJsonFile?: PackageJsonFile;
@@ -124,7 +123,6 @@ export default class Component {
   deprecated: boolean;
   defaultScope: string | null;
   origin: ComponentOrigin;
-  customResolvedPaths: CustomResolvedPath[]; // used when in the same component, one file requires another file using custom-resolve
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   _isModified: boolean;
   packageJsonFile: PackageJsonFile | undefined; // populated when loadedFromFileSystem or when writing the components. for author it never exists
@@ -173,7 +171,6 @@ export default class Component {
     log,
     deprecated,
     origin,
-    customResolvedPaths,
     scopesList,
     extensions,
     buildStatus,
@@ -201,7 +198,6 @@ export default class Component {
     this.log = log;
     this.deprecated = deprecated || false;
     this.origin = origin;
-    this.customResolvedPaths = customResolvedPaths || [];
     this.scopesList = scopesList;
     this.extensions = extensions || [];
     this.componentFromModel = componentFromModel;
