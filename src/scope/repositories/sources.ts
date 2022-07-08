@@ -14,7 +14,7 @@ import { getAllVersionHashes, getAllVersionsInfo, VersionInfo } from '../compone
 import { ComponentNotFound, MergeConflict } from '../exceptions';
 import ComponentNeedsUpdate from '../exceptions/component-needs-update';
 import UnmergedComponents from '../lanes/unmerged-components';
-import { ModelComponent, Source, Symlink, Version } from '../models';
+import { ModelComponent, Symlink, Version } from '../models';
 import Lane from '../models/lane';
 import { ComponentProps } from '../models/model-component';
 import { BitObject, Ref } from '../objects';
@@ -199,48 +199,6 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     return this._findComponent(comp).then((component) => {
       if (!component) return comp;
       return component;
-    });
-  }
-
-  modifyCIProps({ source, ciProps }: { source: ConsumerComponent; ciProps: Record<string, any> }): Promise<any> {
-    const objectRepo = this.objects();
-
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return this.findOrAddComponent(source).then((component) => {
-      return component.loadVersion(component.latest(), objectRepo).then((version) => {
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        version.setCIProps(ciProps);
-        return objectRepo._writeOne(version);
-      });
-    });
-  }
-
-  modifySpecsResults({ source, specsResults }: { source: ConsumerComponent; specsResults?: any }): Promise<any> {
-    const objectRepo = this.objects();
-
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return this.findOrAddComponent(source).then((component) => {
-      return component.loadVersion(component.latest(), objectRepo).then((version) => {
-        version.setSpecsResults(specsResults);
-        return objectRepo._writeOne(version);
-      });
-    });
-  }
-
-  // TODO: This should treat dist as an array
-  updateDist({ source }: { source: ConsumerComponent }): Promise<any> {
-    const objectRepo = this.objects();
-
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return this.findOrAddComponent(source).then((component) => {
-      return component.loadVersion(component.latest(), objectRepo).then((version) => {
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        const dist = source.dist ? Source.from(Buffer.from(source.dist.toString())) : undefined;
-        version.setDist(dist);
-        objectRepo.add(dist).add(version);
-        return objectRepo.persist();
-      });
     });
   }
 

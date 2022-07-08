@@ -2,7 +2,6 @@ import diff from './lib//diff';
 import { addMany, addOne as add } from './lib/add';
 import checkout from './lib/checkout';
 import dependencyStatus from './lib/dependency_status';
-import { deprecate, undeprecate } from './lib/deprecation';
 import exportAction, { registerDefaultScopeGetter } from './lib/export';
 import fetch from './lib/fetch';
 import getComponentLogs from './lib/get-component-logs';
@@ -29,8 +28,6 @@ export {
   exportAction,
   registerDefaultScopeGetter,
   remove,
-  deprecate,
-  undeprecate,
   listScope,
   getConsumerComponent,
   getScopeComponent,

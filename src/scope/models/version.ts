@@ -579,10 +579,6 @@ export default class Version extends BitObject {
       : null;
   }
 
-  setCIProps(ci: CiProps) {
-    this.ci = ci;
-  }
-
   hasParent(ref: Ref) {
     return this.parents.find((p) => p.toString() === ref.toString());
   }
