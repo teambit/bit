@@ -5,6 +5,7 @@ import { CommunityAspect } from '@teambit/community';
 import type { CommunityMain } from '@teambit/community';
 
 import { groups, GroupsType } from '@teambit/legacy/dist/cli/command-groups';
+import { loadConsumerIfExist } from '@teambit/legacy/dist/consumer';
 import { clone } from 'lodash';
 import { CLIAspect, MainRuntime } from './cli.aspect';
 import { AlreadyExistsError } from './exceptions/already-exists';
@@ -86,9 +87,20 @@ export class CLIMain {
    * execute commands registered to this aspect.
    */
   async run(hasWorkspace: boolean) {
+    await this.ensureWorkspaceAndScope();
     await this.invokeOnStart(hasWorkspace);
     const CliParser = new CLIParser(this.commands, this.groups, undefined, this.community.getDocsDomain());
     await CliParser.parse();
+  }
+
+  /**
+   * kind of a hack.
+   * in the legacy, this is running at the beginning and it take care of issues when Bit files are missing,
+   * such as ".bit".
+   * (to make this process better, you can easily remove it and run the e2e-tests. you'll see some failing)
+   */
+  private async ensureWorkspaceAndScope() {
+    await loadConsumerIfExist();
   }
 
   private async invokeOnStart(hasWorkspace: boolean) {
