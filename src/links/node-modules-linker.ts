@@ -153,7 +153,6 @@ export default class NodeModuleLinker {
 
     this.symlinkDirAuthorHarmony(component, linkPath);
     this._deleteExistingLinksRootIfSymlink(linkPath);
-    this._deleteOldLinksOfIdWithoutScope(component);
     await this._createPackageJsonForAuthor(component);
   }
 
@@ -200,26 +199,6 @@ export default class NodeModuleLinker {
     }
   }
 
-  /**
-   * for AUTHORED components, when a component is new, upon build, we generate links on
-   * node_modules. The path doesn't have the scope-name as it doesn't exist yet. (e.g. @bit/foo).
-   * Later on, when the component is exported and has a scope-name, the path is complete.
-   * (e.g. @bit/scope.foo). At this stage, this function deletes the old-partial paths.
-   *
-   * This is not needed in Harmony because in Harmony the node-module has already the default-scope.
-   */
-  _deleteOldLinksOfIdWithoutScope(component: Component) {
-    if (this.consumer?.isLegacy && component.id.scope) {
-      const previousDest = getNodeModulesPathOfComponent({
-        bindingPrefix: component.bindingPrefix,
-        id: component.id.changeScope(null),
-        allowNonScope: true,
-        defaultScope: this._getDefaultScope(component),
-        extensions: component.extensions,
-      });
-      this.dataToPersist.removePath(new RemovePath(previousDest));
-    }
-  }
   /**
    * When the dists is outside the components directory, it doesn't have access to the node_modules of the component's
    * root-dir. The solution is to go through the node_modules packages one by one and symlink them.
@@ -287,14 +266,12 @@ export default class NodeModuleLinker {
       })
     );
     const packageJson = PackageJsonFile.createFromComponent(dest, component, undefined, true, true);
-    if (!this.consumer?.isLegacy) {
-      await this._applyTransformers(component, packageJson);
-      if (IS_WINDOWS) {
-        // in the workspace, override the "types" and add the "src" prefix.
-        // otherwise, the navigation and auto-complete won't work on the IDE.
-        // this is for Windows only. For Linux, we use symlinks for the files.
-        packageJson.addOrUpdateProperty('types', `${SOURCE_DIR_SYMLINK_TO_NM}/${component.mainFile}`);
-      }
+    await this._applyTransformers(component, packageJson);
+    if (IS_WINDOWS) {
+      // in the workspace, override the "types" and add the "src" prefix.
+      // otherwise, the navigation and auto-complete won't work on the IDE.
+      // this is for Windows only. For Linux, we use symlinks for the files.
+      packageJson.addOrUpdateProperty('types', `${SOURCE_DIR_SYMLINK_TO_NM}/${component.mainFile}`);
     }
     if (packageJson.packageJsonObject.version === 'latest') {
       packageJson.packageJsonObject.version = '0.0.1-new';

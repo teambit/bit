@@ -42,7 +42,6 @@ export interface ManyComponentsWriterParams {
   verbose?: boolean;
   installProdPackagesOnly?: boolean;
   excludeRegistryPrefix?: boolean;
-  isLegacy?: boolean;
   applyPackageJsonTransformers?: boolean;
   resetConfig?: boolean;
 }
@@ -83,7 +82,6 @@ export default class ManyComponentsWriter {
   bitMap: BitMap;
   basePath?: string;
   packageManager?: string;
-  isLegacy?: boolean;
   applyPackageJsonTransformers?: boolean;
   resetConfig?: boolean;
   // Apply config added by extensions
@@ -110,7 +108,6 @@ export default class ManyComponentsWriter {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.bitMap = this.consumer ? this.consumer.bitMap : new BitMap();
     this.packageManager = params.packageManager;
-    this.isLegacy = this.consumer ? this.consumer.isLegacy : params.isLegacy;
     this.applyPackageJsonTransformers = params.applyPackageJsonTransformers ?? true;
     this.resetConfig = params.resetConfig;
     if (this.consumer && !this.isolated) this.basePath = this.consumer.getPath();

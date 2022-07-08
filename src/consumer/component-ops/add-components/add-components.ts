@@ -11,7 +11,7 @@ import format from 'string-format';
 import { Analytics } from '../../../analytics/analytics';
 import { BitId, BitIds } from '../../../bit-id';
 import { BitIdStr } from '../../../bit-id/bit-id';
-import { COMPONENT_ORIGINS, DEFAULT_DIST_DIRNAME, PACKAGE_JSON, VERSION_DELIMITER } from '../../../constants';
+import { COMPONENT_ORIGINS, PACKAGE_JSON, VERSION_DELIMITER } from '../../../constants';
 import BitMap from '../../../consumer/bit-map';
 import Consumer from '../../../consumer/consumer';
 import GeneralError from '../../../error/general-error';
@@ -116,7 +116,6 @@ export default class AddComponents {
   origin: ComponentOrigin;
   alternateCwd: string | null | undefined;
   addedComponents: AddResult[];
-  isLegacy: boolean;
   defaultScope?: string; // helpful for out-of-sync
   config?: Config;
   shouldHandleOutOfSync?: boolean; // only bit-add (not bit-create/new) should handle out-of-sync scenario
@@ -137,7 +136,6 @@ export default class AddComponents {
       existInScope: [],
     };
     this.addedComponents = [];
-    this.isLegacy = context.consumer.isLegacy;
     this.defaultScope = addProps.defaultScope;
     this.config = addProps.config;
     this.shouldHandleOutOfSync = addProps.shouldHandleOutOfSync;
@@ -335,7 +333,6 @@ export default class AddComponents {
     const getRootDir = (): PathLinuxRelative | undefined => {
       if (this.trackDirFeature) throw new Error('track dir should not calculate the rootDir');
       if (foundComponentFromBitMap) return foundComponentFromBitMap.rootDir;
-      if (this.consumer.isLegacy) return '';
       if (!trackDir) throw new Error(`addOrUpdateComponentInBitMap expect to have trackDir for non-legacy workspace`);
       const fileNotInsideTrackDir = componentFiles.find(
         (file) => !pathNormalizeToLinux(file.relativePath).startsWith(`${pathNormalizeToLinux(trackDir)}/`)
@@ -654,15 +651,7 @@ you can add the directory these files are located at and it'll change the root d
 
   getIgnoreList(): string[] {
     const consumerPath = this.consumer.getPath();
-    if (!this.isLegacy) return getIgnoreListHarmony(consumerPath);
-    let ignoreList = retrieveIgnoreList(consumerPath);
-    const importedComponents = this.bitMap.getAllComponents(COMPONENT_ORIGINS.IMPORTED);
-    const distDirsOfImportedComponents = importedComponents.map((componentMap) =>
-      pathJoinLinux(componentMap.rootDir, DEFAULT_DIST_DIRNAME, '**')
-    );
-    ignoreList = ignoreList.concat(distDirsOfImportedComponents);
-
-    return ignoreList;
+    return getIgnoreListHarmony(consumerPath);
   }
 
   async add(): Promise<AddActionResults> {
@@ -715,7 +704,7 @@ you can add the directory these files are located at and it'll change the root d
   }
 
   async linkComponents(ids: BitId[]) {
-    if (this.consumer.isLegacy || this.trackDirFeature) {
+    if (this.trackDirFeature) {
       // if trackDirFeature is set, it happens during the component-load and because we load the
       // components in the next line, it gets into an infinite loop.
       return;
@@ -810,9 +799,6 @@ you can add the directory these files are located at and it'll change the root d
   }
 
   private throwForExistingParentDir(relativeToConsumerPath: PathOsBased) {
-    if (this.isLegacy) {
-      return; // with legacy, you can add files inside dir to track them.
-    }
     const isParentDir = (parent: string) => {
       const relative = path.relative(parent, relativeToConsumerPath);
       return relative && !relative.startsWith('..') && !path.isAbsolute(relative);
