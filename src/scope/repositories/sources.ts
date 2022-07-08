@@ -8,7 +8,6 @@ import { ArtifactFiles, ArtifactSource, getArtifactsFiles } from '../../consumer
 import Consumer from '../../consumer/consumer';
 import GeneralError from '../../error/general-error';
 import logger from '../../logger/logger';
-import { pathNormalizeToLinux } from '../../utils/path';
 import ComponentObjects from '../component-objects';
 import { getAllVersionHashes, getAllVersionsInfo, VersionInfo } from '../component-ops/traverse-versions';
 import { ComponentNotFound, MergeConflict } from '../exceptions';

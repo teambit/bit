@@ -19,7 +19,6 @@ import { validateVersion } from '@teambit/legacy/dist/utils/semver-helper';
 import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
 import loader from '@teambit/legacy/dist/cli/loader';
 import tagModelComponent from '@teambit/legacy/dist/scope/component-ops/tag-model-component';
-import { LanesIsDisabled } from '@teambit/legacy/dist/consumer/lanes/exceptions/lanes-is-disabled';
 import { SnapResults } from '@teambit/legacy/dist/api/consumer/lib/snap';
 import ComponentsPendingImport from '@teambit/legacy/dist/consumer/component-ops/exceptions/components-pending-import';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
@@ -115,9 +114,6 @@ export class SnappingMain {
 
     const legacyBitIds = BitIds.fromArray(bitIds);
 
-    if (this.workspace.isLegacy) {
-      persist = true;
-    }
     this.logger.debug(`tagging the following components: ${legacyBitIds.toString()}`);
     Analytics.addBreadCrumb('tag', `tagging the following components: ${Analytics.hashData(legacyBitIds)}`);
     if (!soft) {
@@ -204,7 +200,6 @@ export class SnappingMain {
     if (!this.workspace) throw new ConsumerNotFound();
     if (id && legacyBitIds) throw new Error(`please pass either id or legacyBitIds, not both`);
     const consumer: Consumer = this.workspace.consumer;
-    if (consumer.isLegacy) throw new LanesIsDisabled();
     const componentsList = new ComponentsList(consumer);
     const newComponents = (await componentsList.listNewComponents()) as BitIds;
     const ids = legacyBitIds || (await getIdsToSnap());
