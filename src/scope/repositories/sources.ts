@@ -223,43 +223,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
    * @see model-components.toConsumerComponent() for the opposite action. (converting Version to
    * ConsumerComponent).
    */
-  async consumerComponentToVersion({
-    consumerComponent,
-  }: {
-    readonly consumerComponent: ConsumerComponent;
-  }): Promise<{ version: Version; files: any }> {
-    const clonedComponent: ConsumerComponent = consumerComponent.clone();
-
-    const files = consumerComponent.files.map((file) => {
-      return {
-        name: file.basename,
-        relativePath: pathNormalizeToLinux(file.relative),
-        file: file.toSourceAsLinuxEOL(),
-        test: file.test,
-      };
-    });
-    clonedComponent.mainFile = pathNormalizeToLinux(clonedComponent.mainFile);
-    clonedComponent.getAllDependencies().forEach((dependency) => {
-      dependency.relativePaths.forEach((relativePath) => {
-        if (!relativePath.isCustomResolveUsed) {
-          // for isCustomResolveUsed it was never stripped
-          relativePath.sourceRelativePath = pathNormalizeToLinux(relativePath.sourceRelativePath);
-        }
-      });
-    });
-    const version: Version = Version.fromComponent({
-      component: clonedComponent,
-      files: files as any,
-    });
-    // $FlowFixMe it's ok to override the pendingVersion attribute
-    consumerComponent.pendingVersion = version as any; // helps to validate the version against the consumer-component
-
-    return { version, files };
-  }
-
-  async consumerComponentToVersionHarmony(
-    consumerComponent: ConsumerComponent
-  ): Promise<{ version: Version; files: any }> {
+  async consumerComponentToVersion(consumerComponent: ConsumerComponent): Promise<{ version: Version; files: any }> {
     const clonedComponent: ConsumerComponent = consumerComponent.clone();
     const files = consumerComponent.files.map((file) => {
       return {
@@ -320,10 +284,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     }
     const artifactFiles = getArtifactsFiles(source.extensions);
     const artifacts = this.transformArtifactsFromVinylToSource(artifactFiles);
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const { version, files } = await this.consumerComponentToVersion({
-      consumerComponent: source,
-    });
+    const { version, files } = await this.consumerComponentToVersion(source);
     objectRepo.add(version);
     if (!source.version) throw new Error(`addSource expects source.version to be set`);
     component.addVersion(version, source.version, lane, objectRepo);
@@ -352,7 +313,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     const component = await this.findOrAddComponent(source);
     const artifactFiles = getArtifactsFiles(source.extensions);
     const artifacts = this.transformArtifactsFromVinylToSource(artifactFiles);
-    const { version, files } = await this.consumerComponentToVersionHarmony(source);
+    const { version, files } = await this.consumerComponentToVersion(source);
     objectRepo.add(version);
     if (!source.version) throw new Error(`addSource expects source.version to be set`);
     component.addVersion(version, source.version, null, objectRepo);

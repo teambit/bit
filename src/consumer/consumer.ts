@@ -410,10 +410,7 @@ export default class Consumer {
     }
     if (typeof componentFromFileSystem._isModified === 'undefined') {
       componentFromFileSystem.log = componentFromModel.log; // ignore the log, it's irrelevant for the comparison
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      const { version } = await this.scope.sources.consumerComponentToVersion({
-        consumerComponent: componentFromFileSystem,
-      });
+      const { version } = await this.scope.sources.consumerComponentToVersion(componentFromFileSystem);
 
       // sometime dependencies from the FS don't have an exact version.
       const copyDependenciesVersionsFromModelToFS = (dependenciesFS: Dependencies, dependenciesModel: Dependencies) => {
@@ -481,9 +478,7 @@ export default class Consumer {
       return false;
     }
     componentFromFileSystem.log = componentFromModel.log; // in order to convert to Version object
-    const { version } = await this.scope.sources.consumerComponentToVersion({
-      consumerComponent: componentFromFileSystem,
-    });
+    const { version } = await this.scope.sources.consumerComponentToVersion(componentFromFileSystem);
 
     version.files = R.sortBy(R.prop('relativePath'), version.files);
     componentFromModel.files = R.sortBy(R.prop('relativePath'), componentFromModel.files);
