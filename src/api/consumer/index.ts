@@ -21,7 +21,6 @@ import { add as remoteAdd, list as remoteList, remove as remoteRm } from './lib/
 import remove from './lib/remove';
 import show from './lib/show';
 import unTagAction from './lib/untag';
-import untrack from './lib/untrack';
 import { clearCache } from './lib/clear-cache';
 
 export {
@@ -42,7 +41,6 @@ export {
   add,
   addMany,
   dependencyStatus,
-  untrack,
   unTagAction,
   move,
   linkAction as link,

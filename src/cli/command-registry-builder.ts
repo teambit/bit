@@ -36,7 +36,6 @@ import Remove from './commands/public-cmds/remove-cmd';
 import ScopeConfig from './commands/public-cmds/scope-config-cmd';
 import Show from './commands/public-cmds/show-cmd';
 import Untag from './commands/public-cmds/untag-cmd';
-import Untrack from './commands/public-cmds/untrack-cmd';
 import RunAction from './commands/private-cmds/run-action.cmd';
 import Dependencies from './commands/public-cmds/dependencies-cmd';
 
@@ -71,8 +70,6 @@ export default function registerCommands(): CommandRegistry {
     new DependencyStatus(),
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     new Add(),
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    new Untrack(),
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     new Untag(),
     new Move(),
