@@ -31,7 +31,6 @@ import ComponentsPendingImport from '../consumer/component-ops/exceptions/compon
 import ComponentsPendingMerge from '../consumer/component-ops/exceptions/components-pending-merge';
 import EjectNoDir from '../consumer/component-ops/exceptions/eject-no-dir';
 import ComponentNotFoundInPath from '../consumer/component/exceptions/component-not-found-in-path';
-import EjectBoundToWorkspace from '../consumer/component/exceptions/eject-bound-to-workspace';
 import ExternalBuildErrors from '../consumer/component/exceptions/external-build-errors';
 import ExternalTestErrors from '../consumer/component/exceptions/external-test-errors';
 import FileSourceNotFound from '../consumer/component/exceptions/file-source-not-found';
@@ -45,7 +44,6 @@ import InvalidPackageJson from '../consumer/config/exceptions/invalid-package-js
 import InvalidPackageManager from '../consumer/config/exceptions/invalid-package-manager';
 import {
   ComponentOutOfSync,
-  ComponentSpecsFailed,
   ConsumerAlreadyExists,
   ConsumerNotFound,
   LoginFailed,
@@ -85,7 +83,6 @@ import {
 import ExportAnotherOwnerPrivate from '../scope/network/exceptions/export-another-owner-private';
 import RemoteResolverError from '../scope/network/exceptions/remote-resolver-error';
 import GitNotFound from '../utils/git/exceptions/git-not-found';
-import { paintSpecsResults } from './chalk-box';
 import RemoteUndefined from './commands/exceptions/remote-undefined';
 import newerVersionTemplate from './templates/newer-version-template';
 
@@ -129,11 +126,6 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
       'error: remote scope protocol is not supported, please use: `ssh://`, `file://`, `http://`, `https://` or `bit://`',
   ],
   [RemoteScopeNotFound, (err) => `error: remote scope "${chalk.bold(err.name)}" was not found.`],
-
-  [
-    EjectBoundToWorkspace,
-    () => 'error: could not eject config for authored component which are bound to the workspace configuration',
-  ],
   [InjectNonEjected, () => 'error: could not inject config for already injected component'],
   [ComponentsPendingImport, () => IMPORT_PENDING_MSG],
   // TODO: improve error
@@ -231,7 +223,6 @@ Original Error: ${err.message}`,
   ],
   [MissingDiagnosisName, () => 'error: please provide a diagnosis name'],
   [DiagnosisNotFound, (err) => `error: diagnosis ${chalk.bold(err.diagnosisName)} not found`],
-  [ComponentSpecsFailed, (err) => formatComponentSpecsFailed(err.id, err.specsResults)],
   [
     ComponentOutOfSync,
     (err) => `component ${chalk.bold(err.id)} is not in-sync between the consumer and the scope.
@@ -420,16 +411,6 @@ please use "bit remove" to delete the component or "bit add" with "--main" and "
 3. force workspace initialization without clearing data use the ${chalk.bold('--force')} flag.`,
   ],
 ];
-function formatComponentSpecsFailed(id, specsResults) {
-  // $FlowFixMe this.specsResults is not null at this point
-  const specsResultsPretty = specsResults ? paintSpecsResults(specsResults).join('\n') : '';
-  const componentIdPretty = id ? chalk.bold.white(id) : '';
-  const specsResultsAndIdPretty = `${componentIdPretty}${specsResultsPretty}\n`;
-  const additionalInfo =
-    'component tests failed. please make sure all tests pass before tagging a new version or use the "--force" flag to force-tag components.\nto view test failures, please use the "--verbose" flag or use the "bit test" command';
-  const res = `${specsResultsAndIdPretty}${additionalInfo}`;
-  return res;
-}
 
 export function findErrorDefinition(err: Error) {
   const error = errorsMap.find(([ErrorType]) => {

@@ -55,10 +55,6 @@ export type WorkspaceConfigProps = {
 };
 
 export default class WorkspaceConfig extends AbstractConfig {
-  distTarget: string | undefined; // path where to store build artifacts
-  // path to remove while storing build artifacts. If, for example the code is in 'src' directory, and the component
-  // is-string is in src/components/is-string, the dists files will be in dists/component/is-string (without the 'src')
-  distEntry: string | undefined;
   componentsDefaultDirectory: string;
   dependenciesDirectory: string;
   saveDependenciesAsComponents: boolean; // save hub dependencies as bit components rather than npm packages
@@ -129,7 +125,7 @@ export default class WorkspaceConfig extends AbstractConfig {
 
   toPlainObject() {
     const superObject = super.toPlainObject();
-    let consumerObject = R.merge(superObject, {
+    const consumerObject = R.merge(superObject, {
       componentsDefaultDirectory: this.componentsDefaultDirectory,
       dependenciesDirectory: this.dependenciesDirectory,
       saveDependenciesAsComponents: this.saveDependenciesAsComponents,
@@ -142,14 +138,6 @@ export default class WorkspaceConfig extends AbstractConfig {
       defaultScope: this.defaultScope,
       overrides: this.overrides.overrides,
     });
-    if (this.distEntry || this.distTarget) {
-      const dist = {};
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      if (this.distEntry) dist.entry = this.distEntry;
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      if (this.distTarget) dist.target = this.distTarget;
-      consumerObject = R.merge(consumerObject, { dist });
-    }
 
     const isPropDefault = (val, key) => {
       if (key === 'dependenciesDirectory') return val !== DEFAULT_DEPENDENCIES_DIR_PATH;

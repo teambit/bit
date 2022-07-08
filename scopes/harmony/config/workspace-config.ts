@@ -68,8 +68,6 @@ export type WorkspaceLegacyProps = {
   bindingPrefix?: string;
   resolveModules?: ResolveModulesConfig;
   saveDependenciesAsComponents?: boolean;
-  distEntry?: string;
-  distTarget?: string;
 };
 
 export type ExtensionsDefs = WorkspaceSettingsNewProps;
