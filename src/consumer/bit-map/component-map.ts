@@ -1,4 +1,3 @@
-import fs from 'fs-extra';
 import * as path from 'path';
 import R from 'ramda';
 import { LaneId } from '@teambit/lane-id';
@@ -9,10 +8,7 @@ import logger from '../../logger/logger';
 import { isValidPath, pathJoinLinux, pathNormalizeToLinux, pathRelativeLinux } from '../../utils';
 import { getLastModifiedDirTimestampMs } from '../../utils/fs/last-modified';
 import { PathLinux, PathLinuxRelative, PathOsBased, PathOsBasedRelative } from '../../utils/path';
-import AddComponents from '../component-ops/add-components';
-import { AddContext, getFilesByDir, getGitIgnoreHarmony } from '../component-ops/add-components/add-components';
-import { EmptyDirectory, NoFiles } from '../component-ops/add-components/exceptions';
-import ComponentNotFoundInPath from '../component/exceptions/component-not-found-in-path';
+import { getFilesByDir, getGitIgnoreHarmony } from '../component-ops/add-components/add-components';
 import { removeInternalConfigFields } from '../config/extension-data';
 import Consumer from '../consumer';
 import OutsideRootDir from './exceptions/outside-root-dir';

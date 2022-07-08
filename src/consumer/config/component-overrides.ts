@@ -3,7 +3,6 @@ import R from 'ramda';
 import { BitId } from '../../bit-id';
 import {
   COMPONENT_ORIGINS,
-  DEPENDENCIES_FIELDS,
   MANUALLY_ADD_DEPENDENCY,
   MANUALLY_REMOVE_DEPENDENCY,
   OVERRIDE_COMPONENT_PREFIX,

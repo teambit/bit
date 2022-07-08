@@ -158,17 +158,6 @@ export default function validateVersionInstance(version: Version): void {
   _validatePackageDependencies(version.devPackageDependencies);
   _validatePackageDependencies(version.peerPackageDependencies);
   _validateExtensions(version.extensions);
-  if (version.dists && version.dists.length) {
-    validateType(message, version.dists, 'dist', 'array');
-    version.dists.forEach((file) => {
-      validateFile(file, 'dist-file');
-    });
-  } else if (version.mainDistFile) {
-    throw new VersionInvalid(`${message} the mainDistFile cannot be set when the dists are empty`);
-  }
-  if (version.mainDistFile && !isValidPath(version.mainDistFile)) {
-    throw new VersionInvalid(`${message}, the mainDistFile ${version.mainDistFile} is invalid`);
-  }
   DEPENDENCIES_TYPES.forEach((dependenciesType) => {
     if (!(version[dependenciesType] instanceof Dependencies)) {
       throw new VersionInvalid(

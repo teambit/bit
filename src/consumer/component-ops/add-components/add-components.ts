@@ -367,7 +367,6 @@ export default class AddComponents {
         defaultScope: this.defaultScope,
         config: this.config,
         mainFile,
-        trackDir: rootDir ? '' : trackDir, // if rootDir exists, no need for trackDir.
         origin: COMPONENT_ORIGINS.AUTHORED,
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         override: this.override,

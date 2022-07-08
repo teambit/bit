@@ -20,7 +20,6 @@ import { ScopeListItem } from '../../scope/models/model-component';
 import Version, { Log } from '../../scope/models/version';
 import { pathNormalizeToLinux } from '../../utils';
 import { PathLinux, PathOsBased, PathOsBasedAbsolute, PathOsBasedRelative } from '../../utils/path';
-import BitMap from '../bit-map';
 import ComponentMap, { ComponentOrigin } from '../bit-map/component-map';
 import { IgnoredDirectory } from '../component-ops/add-components/exceptions/ignored-directory';
 import ComponentsPendingImport from '../component-ops/exceptions/components-pending-import';
@@ -36,7 +35,6 @@ import { CURRENT_SCHEMA, isSchemaSupport, SchemaFeature, SchemaName } from './co
 import { Dependencies, Dependency } from './dependencies';
 import { ManuallyChangedDependencies } from './dependencies/dependency-resolver/overrides-dependencies';
 import ComponentNotFoundInPath from './exceptions/component-not-found-in-path';
-import FileSourceNotFound from './exceptions/file-source-not-found';
 import MainFileRemoved from './exceptions/main-file-removed';
 import MissingFilesFromComponent from './exceptions/missing-files-from-component';
 import { NoComponentDir } from './exceptions/no-component-dir';

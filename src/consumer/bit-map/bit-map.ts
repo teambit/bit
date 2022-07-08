@@ -852,7 +852,7 @@ export default class BitMap {
     if (!this.allTrackDirs) {
       this.allTrackDirs = {};
       this.components.forEach((component) => {
-        const trackDir = component.getTrackDir();
+        const trackDir = component.getRootDir();
         if (!trackDir) return;
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         this.allTrackDirs[trackDir] = component.id;

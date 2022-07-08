@@ -14,7 +14,7 @@ import { Results } from '../../consumer/specs-results/specs-results';
 import { Doclet } from '../../jsdoc/types';
 import logger from '../../logger/logger';
 import { filterObject, first, getStringifyArgs } from '../../utils';
-import { PathLinux, PathLinuxRelative } from '../../utils/path';
+import { PathLinux } from '../../utils/path';
 import VersionInvalid from '../exceptions/version-invalid';
 import { BitObject, Ref } from '../objects';
 import { ObjectItem } from '../objects/object-list';
@@ -84,8 +84,6 @@ export type VersionProps = {
 export default class Version extends BitObject {
   mainFile: PathLinux;
   files: Array<SourceFileModel>;
-  dists: Array<DistFileModel> | undefined;
-  mainDistFile: PathLinuxRelative | undefined;
   log: Log;
   ci: CiProps | {};
   specsResults: Results | undefined;
@@ -286,9 +284,7 @@ export default class Version extends BitObject {
       return refs;
     };
     const files = extractRefsFromFiles(this.files);
-    const dists = extractRefsFromFiles(this.dists);
     allRefs.push(...files);
-    allRefs.push(...dists);
     if (includeParents) {
       allRefs.push(...this.parents);
     }
@@ -305,9 +301,8 @@ export default class Version extends BitObject {
       return refs;
     };
     const files = extractRefsFromFiles(this.files);
-    const dists = extractRefsFromFiles(this.dists);
     const artifacts = getRefsFromExtensions(this.extensions);
-    return [...dists, ...files, ...artifacts].filter((ref) => ref);
+    return [...files, ...artifacts].filter((ref) => ref);
   }
 
   async collectManyObjects(repo: Repository, refs: Ref[]): Promise<ObjectItem[]> {
@@ -327,8 +322,6 @@ export default class Version extends BitObject {
       {
         files: this.files ? this.files.map(_convertFileToObject) : null,
         mainFile: this.mainFile,
-        dists: this.dists ? this.dists.map(_convertFileToObject) : null,
-        mainDistFile: this.mainDistFile,
         bindingPrefix: this.bindingPrefix || DEFAULT_BINDINGS_PREFIX,
         schema: this.schema,
         log: {

@@ -6,7 +6,6 @@ import ValidationError from '../../../error/validation-error';
 import Scope from '../../../scope/scope';
 import { fetchRemoteVersions } from '../../../scope/scope-remotes';
 import { isValidPath } from '../../../utils';
-import { PathLinux } from '../../../utils/path';
 import validateType from '../../../utils/validate-type';
 import Dependency, { RelativePath } from './dependency';
 
