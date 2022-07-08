@@ -24,7 +24,6 @@ import {
   NoFiles,
   PathOutsideConsumer,
   PathsNotExist,
-  TestIsDirectory,
   VersionShouldBeRemoved,
 } from '../consumer/component-ops/add-components/exceptions';
 import { AddingIndividualFiles } from '../consumer/component-ops/add-components/exceptions/adding-individual-files';
@@ -87,7 +86,6 @@ import ExportAnotherOwnerPrivate from '../scope/network/exceptions/export-anothe
 import RemoteResolverError from '../scope/network/exceptions/remote-resolver-error';
 import GitNotFound from '../utils/git/exceptions/git-not-found';
 import { paintSpecsResults } from './chalk-box';
-import AddTestsWithoutId from './commands/exceptions/add-tests-without-id';
 import RemoteUndefined from './commands/exceptions/remote-undefined';
 import newerVersionTemplate from './templates/newer-version-template';
 
@@ -102,15 +100,6 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
     () =>
       chalk.red(
         'error: remote url must be defined. please use: `ssh://`, `file://` or `bit://` protocols to define remote access'
-      ),
-  ],
-  [
-    AddTestsWithoutId,
-    () =>
-      chalk.yellow(
-        `please specify a component ID to add test files to an existing component. \n${chalk.bold(
-          'example: bit add --tests [test_file_path] --id [component_id]'
-        )}`
       ),
   ],
   [ConsumerAlreadyExists, () => 'workspace already exists'],
@@ -309,11 +298,6 @@ please use "bit remove" to delete the component or "bit add" with "--main" and "
   [
     VersionShouldBeRemoved,
     (err) => `please remove the version part from the specified id ${chalk.bold(err.id)} and try again`,
-  ],
-  [
-    TestIsDirectory,
-    (err) =>
-      `error: the specified test path ${chalk.bold(err.path)} is a directory, please specify a file or a pattern DSL`,
   ],
   [
     MainFileIsDir,
