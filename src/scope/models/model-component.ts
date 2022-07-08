@@ -16,7 +16,6 @@ import {
 import ConsumerComponent from '../../consumer/component';
 import { License, SourceFile } from '../../consumer/component/sources';
 import ComponentOverrides from '../../consumer/config/component-overrides';
-import SpecsResults from '../../consumer/specs-results';
 import GeneralError from '../../error/general-error';
 import ShowDoctorError from '../../error/show-doctor-error';
 import ValidationError from '../../error/validation-error';
@@ -811,8 +810,6 @@ if that's not the case, make sure to call "getAllIdsAvailableOnLane" and not "ge
       docs: version.docs,
       // @ts-ignore
       license: scopeMeta ? License.deserialize(scopeMeta.license) : undefined, // todo: make sure we have license in case of local scope
-      // @ts-ignore
-      specsResults: version.specsResults ? version.specsResults.map((res) => SpecsResults.deserialize(res)) : null,
       log,
       customResolvedPaths: clone(version.customResolvedPaths),
       overrides: ComponentOverrides.loadFromScope(version.overrides),

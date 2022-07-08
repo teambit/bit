@@ -29,7 +29,6 @@ import ComponentOverrides from '../config/component-overrides';
 import { ExtensionDataList } from '../config/extension-data';
 import Consumer from '../consumer';
 import ComponentOutOfSync from '../exceptions/component-out-of-sync';
-import SpecsResults from '../specs-results';
 import { ComponentFsCache } from './component-fs-cache';
 import { CURRENT_SCHEMA, isSchemaSupport, SchemaFeature, SchemaName } from './component-schema';
 import { Dependencies, Dependency } from './dependencies';
@@ -68,7 +67,6 @@ export type ComponentProps = {
   docs?: Doclet[];
   dists?: Dist[];
   mainDistFile?: PathLinux;
-  specsResults?: SpecsResults;
   license?: License;
   deprecated?: boolean;
   origin: ComponentOrigin;
@@ -114,7 +112,6 @@ export default class Component {
   overrides: ComponentOverrides;
   docs: Doclet[] | undefined;
   files: SourceFile[];
-  specsResults: SpecsResults[] | undefined;
   license: License | undefined;
   log: Log | undefined;
   writtenPath?: PathOsBasedRelative; // needed for generate links
@@ -172,7 +169,6 @@ export default class Component {
     packageJsonFile,
     packageJsonChangedProps,
     docs,
-    specsResults,
     license,
     log,
     deprecated,
@@ -201,8 +197,6 @@ export default class Component {
     this.packageJsonFile = packageJsonFile;
     this.packageJsonChangedProps = packageJsonChangedProps;
     this.docs = docs || [];
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    this.specsResults = specsResults;
     this.license = license;
     this.log = log;
     this.deprecated = deprecated || false;
@@ -364,7 +358,6 @@ export default class Component {
       files: this.files,
       docs: this.docs,
       schema: this.schema,
-      specsResults: this.specsResults ? this.specsResults.map((res) => res.serialize()) : null,
       license: this.license ? this.license.serialize() : null,
       log: this.log,
       deprecated: this.deprecated,
@@ -455,8 +448,6 @@ export default class Component {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       files,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      specsResults,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       license,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       overrides,
@@ -479,7 +470,6 @@ export default class Component {
       mainFile,
       files,
       docs,
-      specsResults: specsResults ? SpecsResults.deserialize(specsResults) : undefined,
       license: license ? License.deserialize(license) : undefined,
       overrides: new ComponentOverrides(overrides),
       deprecated: deprecated || false,

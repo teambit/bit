@@ -210,7 +210,6 @@ export default async function tagModelComponent({
     }
   }
 
-  const testsResults = [];
   logger.debugAndAddBreadCrumb('tag-model-components', 'sequentially persist all components');
   // go through all components and find the future versions for them
   isSnap
@@ -236,7 +235,6 @@ export default async function tagModelComponent({
   if (soft) {
     consumer.updateNextVersionOnBitmap(allComponentsToTag, preReleaseId);
   } else {
-    if (!skipTests) addSpecsResultsToComponents(allComponentsToTag, testsResults);
     await addFlattenedDependenciesToComponents(consumer.scope, allComponentsToTag);
     emptyBuilderData(allComponentsToTag);
     addBuildStatus(allComponentsToTag, BuildStatus.Pending);
@@ -288,16 +286,6 @@ export async function addFlattenedDependenciesToComponents(scope: Scope, compone
   const flattenedDependenciesGetter = new FlattenedDependenciesGetter(scope, components);
   await flattenedDependenciesGetter.populateFlattenedDependencies();
   loader.stop();
-}
-
-function addSpecsResultsToComponents(components: Component[], testsResults): void {
-  components.forEach((component) => {
-    const testResult = testsResults.find((result) => {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      return component.id.isEqualWithoutScopeAndVersion(result.componentId);
-    });
-    component.specsResults = testResult ? testResult.specs : undefined;
-  });
 }
 
 async function addLogToComponents(

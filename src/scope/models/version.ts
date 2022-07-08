@@ -10,7 +10,6 @@ import { SourceFile } from '../../consumer/component/sources';
 import { getRefsFromExtensions } from '../../consumer/component/sources/artifact-files';
 import { ComponentOverridesData } from '../../consumer/config/component-overrides';
 import { ExtensionDataEntry, ExtensionDataList } from '../../consumer/config/extension-data';
-import { Results } from '../../consumer/specs-results/specs-results';
 import { Doclet } from '../../jsdoc/types';
 import logger from '../../logger/logger';
 import { filterObject, first, getStringifyArgs } from '../../utils';
@@ -21,12 +20,6 @@ import { ObjectItem } from '../objects/object-list';
 import Repository from '../objects/repository';
 import validateVersionInstance from '../version-validator';
 import Source from './source';
-
-type CiProps = {
-  error: Record<string, any>;
-  startTime: string;
-  endTime: string;
-};
 
 export type SourceFileModel = {
   name: string;
@@ -53,8 +46,6 @@ export type VersionProps = {
   mainFile: PathLinux;
   files: Array<SourceFileModel>;
   log: Log;
-  ci?: CiProps;
-  specsResults?: Results | undefined;
   docs?: Doclet[];
   dependencies?: Dependency[];
   devDependencies?: Dependency[];
@@ -85,8 +76,6 @@ export default class Version extends BitObject {
   mainFile: PathLinux;
   files: Array<SourceFileModel>;
   log: Log;
-  ci: CiProps | {};
-  specsResults: Results | undefined;
   docs: Doclet[] | undefined;
   dependencies: Dependencies;
   devDependencies: Dependencies;
@@ -115,8 +104,6 @@ export default class Version extends BitObject {
     this.dependencies = new Dependencies(props.dependencies);
     this.devDependencies = new Dependencies(props.devDependencies);
     this.docs = props.docs;
-    this.ci = props.ci || {};
-    this.specsResults = props.specsResults;
     this.flattenedDependencies = props.flattenedDependencies || new BitIds();
     this.packageDependencies = props.packageDependencies || {};
     this.devPackageDependencies = props.devPackageDependencies || {};
@@ -330,8 +317,6 @@ export default class Version extends BitObject {
           username: this.log.username,
           email: this.log.email,
         },
-        ci: this.ci,
-        specsResults: this.specsResults,
         docs: this.docs,
         dependencies: this.dependencies.cloneAsObject(),
         devDependencies: this.devDependencies.cloneAsObject(),
@@ -376,8 +361,6 @@ export default class Version extends BitObject {
       schema,
       log,
       docs,
-      ci,
-      specsResults,
       dependencies,
       devDependencies,
       flattenedDependencies,
@@ -478,8 +461,6 @@ export default class Version extends BitObject {
         username: log.username,
         email: log.email,
       },
-      ci,
-      specsResults,
       docs,
       dependencies: _getDependencies(dependencies),
       devDependencies: _getDependencies(devDependencies),
@@ -525,7 +506,6 @@ export default class Version extends BitObject {
       files: files.map(parseFile),
       bindingPrefix: component.bindingPrefix,
       log: component.log as Log,
-      specsResults: component.specsResults as any as Results,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       docs: component.docs,
       dependencies: component.dependencies.get(),
@@ -563,10 +543,6 @@ export default class Version extends BitObject {
 
   get isLegacy(): boolean {
     return !this.schema || this.schema === SchemaName.Legacy;
-  }
-
-  setSpecsResults(specsResults: Results | undefined) {
-    this.specsResults = specsResults;
   }
 
   setDist(dist: Source | undefined) {

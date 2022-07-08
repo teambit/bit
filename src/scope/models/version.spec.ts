@@ -40,12 +40,6 @@ describe('Version', () => {
       it('should have bindingPrefix property', () => {
         expect(idParsed).to.haveOwnProperty('bindingPrefix');
       });
-      it('should not have ci property', () => {
-        expect(idParsed).to.not.haveOwnProperty('ci');
-      });
-      it('should not have specsResults property', () => {
-        expect(idParsed).to.not.haveOwnProperty('specsResults');
-      });
       it('should not have docs property', () => {
         expect(idParsed).to.not.haveOwnProperty('docs');
       });
