@@ -100,7 +100,11 @@ export class CLIMain {
    * (to make this process better, you can easily remove it and run the e2e-tests. you'll see some failing)
    */
   private async ensureWorkspaceAndScope() {
-    await loadConsumerIfExist();
+    try {
+      await loadConsumerIfExist();
+    } catch (err) {
+      // do nothing. it could fail for example with ScopeNotFound error, which is taken care of in "bit init".
+    }
   }
 
   private async invokeOnStart(hasWorkspace: boolean) {
