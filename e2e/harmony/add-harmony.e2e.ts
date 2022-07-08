@@ -25,11 +25,6 @@ describe('add command on Harmony', function () {
       const error = new AddingIndividualFiles(path.normalize('bar/foo.js'));
       helper.general.expectToThrow(addFunc, error);
     });
-    it('when excluding a file, should throw an error', () => {
-      helper.fs.outputFile('bar/foo1.js');
-      const cmd = () => helper.command.addComponent('bar', { e: 'bar/foo1.js' });
-      expect(cmd).to.throw('--exclude flag is used for legacy only');
-    });
   });
   describe('add a directory inside an existing component', () => {
     before(() => {
