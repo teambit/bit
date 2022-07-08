@@ -1,7 +1,6 @@
 import { BIT_DESCRIPTION, BIT_USAGE, BIT_VERSION } from '../constants';
 import CommandRegistry from './command-registry';
 import Delete from './commands/private-cmds/_delete-cmd';
-import DeprecatePrivate from './commands/private-cmds/_deprecate-cmd';
 import _Fetch from './commands/private-cmds/_fetch-cmd';
 import Action from './commands/private-cmds/_action-cmd';
 import ScopeGraph from './commands/private-cmds/_graph-cmd';
@@ -12,7 +11,6 @@ import ScopeLog from './commands/private-cmds/_log-cmd';
 import Put from './commands/private-cmds/_put-cmd';
 import DescribeScope from './commands/private-cmds/_scope-cmd';
 import ScopeShow from './commands/private-cmds/_show-cmd';
-import UndeprecatePrivate from './commands/private-cmds/_undeprecate-cmd';
 import CatComponent from './commands/private-cmds/cat-component-cmd';
 import CatLane from './commands/private-cmds/cat-lane-cmd';
 import CatObject from './commands/private-cmds/cat-object-cmd';
@@ -76,8 +74,6 @@ export default function registerCommands(): CommandRegistry {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     new Remove(),
     new Delete(),
-    new DeprecatePrivate(),
-    new UndeprecatePrivate(),
     new Latest(),
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     new Checkout(),
