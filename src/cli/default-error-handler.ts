@@ -35,7 +35,6 @@ import ComponentNotFoundInPath from '../consumer/component/exceptions/component-
 import EjectBoundToWorkspace from '../consumer/component/exceptions/eject-bound-to-workspace';
 import ExternalBuildErrors from '../consumer/component/exceptions/external-build-errors';
 import ExternalTestErrors from '../consumer/component/exceptions/external-test-errors';
-import { FailedLoadForTag } from '../consumer/component/exceptions/failed-load-for-tag';
 import FileSourceNotFound from '../consumer/component/exceptions/file-source-not-found';
 import InjectNonEjected from '../consumer/component/exceptions/inject-non-ejected';
 import MainFileRemoved from '../consumer/component/exceptions/main-file-removed';
@@ -358,7 +357,6 @@ please use "bit remove" to delete the component or "bit add" with "--main" and "
         err.newId
       )}", however, this file already belong to "${chalk.bold(err.importedId)}"`,
   ],
-  [FailedLoadForTag, (err) => err.getErrorMessage()],
   [
     NoFiles,
     (err) =>

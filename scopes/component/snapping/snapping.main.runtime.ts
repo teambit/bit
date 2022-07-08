@@ -29,7 +29,6 @@ import ComponentMap from '@teambit/legacy/dist/consumer/bit-map/component-map';
 import pMap from 'p-map';
 import { InsightsAspect, InsightsMain } from '@teambit/insights';
 import { concurrentComponentsLimit } from '@teambit/legacy/dist/utils/concurrency';
-import { FailedLoadForTag } from '@teambit/legacy/dist/consumer/component/exceptions/failed-load-for-tag';
 import {
   removeLocalVersionsForAllComponents,
   untagResult,
@@ -330,42 +329,13 @@ export class SnappingMain {
 
   private async loadComponentsForTag(ids: BitIds): Promise<ConsumerComponent[]> {
     const { components } = await this.workspace.consumer.loadComponents(ids.toVersionLatest());
-    let shouldReloadComponents = false;
-    const componentsWithRelativePaths: string[] = [];
-    const componentsWithFilesNotDir: string[] = [];
-    const componentsWithCustomModuleResolution: string[] = [];
     components.forEach((component) => {
       const componentMap = component.componentMap as ComponentMap;
-      if (componentMap.rootDir) return;
-      const hasRelativePaths = component.issues?.getIssue(IssuesClasses.RelativeComponentsAuthored);
-      const hasCustomModuleResolutions = component.issues?.getIssue(IssuesClasses.MissingCustomModuleResolutionLinks);
-      // leaving this because it can be helpful for users upgrade from legacy
-      if (componentMap.trackDir && !hasRelativePaths) {
-        componentMap.changeRootDirAndUpdateFilesAccordingly(componentMap.trackDir);
-        shouldReloadComponents = true;
-        return;
-      }
-      if (hasRelativePaths) {
-        componentsWithRelativePaths.push(component.id.toStringWithoutVersion());
-      }
-      if (!componentMap.trackDir) {
-        componentsWithFilesNotDir.push(component.id.toStringWithoutVersion());
-      }
-      if (hasCustomModuleResolutions) {
-        componentsWithCustomModuleResolution.push(component.id.toStringWithoutVersion());
+      if (!componentMap.rootDir) {
+        throw new Error(`unable to tag ${component.id.toString()}, the "rootDir" is missing in the .bitmap file`);
       }
     });
-    if (componentsWithRelativePaths.length || componentsWithFilesNotDir.length) {
-      throw new FailedLoadForTag(
-        componentsWithRelativePaths.sort(),
-        componentsWithFilesNotDir.sort(),
-        componentsWithCustomModuleResolution.sort()
-      );
-    }
-    if (!shouldReloadComponents) return components;
-    this.workspace.clearCache();
-    const { components: reloadedComponents } = await this.workspace.consumer.loadComponents(ids);
-    return reloadedComponents;
+    return components;
   }
 
   private async throwForComponentIssues(legacyComponents: ConsumerComponent[], ignoreIssues?: string) {
