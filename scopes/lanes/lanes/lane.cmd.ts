@@ -170,6 +170,12 @@ export class LaneShowCmd implements Command {
 
 export class LaneCreateCmd implements Command {
   name = 'create <lane-name>';
+  arguments = [
+    {
+      name: 'lane-name',
+      description: 'the name for the new lane',
+    },
+  ];
   description = `creates a new lane and switches to it`;
   extendedDescription = `a lane created from main (default-lane) is empty until components are snapped.
 a lane created from another lane has all the components of the original lane.`;
