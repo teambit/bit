@@ -88,24 +88,9 @@ export class CLIMain {
    * execute commands registered to this aspect.
    */
   async run(hasWorkspace: boolean) {
-    await this.ensureWorkspaceAndScope();
     await this.invokeOnStart(hasWorkspace);
     const CliParser = new CLIParser(this.commands, this.groups, undefined, this.community.getDocsDomain());
     await CliParser.parse();
-  }
-
-  /**
-   * kind of a hack.
-   * in the legacy, this is running at the beginning and it take care of issues when Bit files are missing,
-   * such as ".bit".
-   * (to make this process better, you can easily remove it and run the e2e-tests. you'll see some failing)
-   */
-  private async ensureWorkspaceAndScope() {
-    try {
-      await loadConsumerIfExist();
-    } catch (err) {
-      // do nothing. it could fail for example with ScopeNotFound error, which is taken care of in "bit init".
-    }
   }
 
   private async invokeOnStart(hasWorkspace: boolean) {
@@ -142,6 +127,7 @@ export class CLIMain {
   ) {
     const cliMain = new CLIMain(commandsSlot, onStartSlot, community);
     const legacyRegistry = buildRegistry();
+    await ensureWorkspaceAndScope();
     const legacyCommands = legacyRegistry.commands;
     const legacyCommandsAdapters = legacyCommands.map((command) => new LegacyCommandAdapter(command, cliMain));
     const cliGenerateCmd = new CliGenerateCmd(cliMain);
@@ -154,3 +140,17 @@ export class CLIMain {
 }
 
 CLIAspect.addRuntime(CLIMain);
+
+/**
+ * kind of a hack.
+ * in the legacy, this is running at the beginning and it take care of issues when Bit files are missing,
+ * such as ".bit".
+ * (to make this process better, you can easily remove it and run the e2e-tests. you'll see some failing)
+ */
+async function ensureWorkspaceAndScope() {
+  try {
+    await loadConsumerIfExist();
+  } catch (err) {
+    // do nothing. it could fail for example with ScopeNotFound error, which is taken care of in "bit init".
+  }
+}
