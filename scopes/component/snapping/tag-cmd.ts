@@ -23,7 +23,7 @@ export class TagCmd implements Command {
     {
       name: 'component-patterns...',
       description:
-        'a list of component names, IDs or patterns (separated by space). run "bit pattern --help" to get more data about patterns. By default, all modified are tagged.',
+        'a list of component names, IDs or patterns (separated by space). run "bit pattern --help" to get more data about patterns. By default, all new and modified components are tagged.',
     },
   ];
   extendedDescription: string;

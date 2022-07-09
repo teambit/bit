@@ -9,13 +9,14 @@ import { SnapResults } from '@teambit/legacy/dist/api/consumer/lib/snap';
 import { SnappingMain } from './snapping.main.runtime';
 
 export class SnapCmd implements Command {
-  name = 'snap [component-name]';
+  name = 'snap [component-patterns...]';
   description = 'EXPERIMENTAL. create an immutable and exportable component snapshot (no release version)';
   extendedDescription: string;
   arguments = [
     {
-      name: 'component_name',
-      description: 'component names or component ID (defaults to all components)',
+      name: 'component-patterns...',
+      description:
+        'a list of component names, IDs or patterns (separated by space). run "bit pattern --help" to get more data about patterns. By default, all new and modified components are tagged.',
     },
   ];
   alias = '';
