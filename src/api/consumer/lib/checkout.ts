@@ -11,15 +11,11 @@ import { ApplyVersionResults } from '../../../consumer/versions-ops/merge-versio
 import GeneralError from '../../../error/general-error';
 import logger from '../../../logger/logger';
 import hasWildcard from '../../../utils/string/has-wildcard';
-import FlagHarmonyOnly from './exceptions/flag-harmony-only';
 import NoIdMatchWildcard from './exceptions/no-id-match-wildcard';
 
 export default async function checkout(values: string[], checkoutProps: CheckoutProps): Promise<ApplyVersionResults> {
   loader.start(BEFORE_CHECKOUT);
   const consumer: Consumer = await loadConsumer();
-  if (checkoutProps.writeConfig && consumer.config.isLegacy) {
-    throw new FlagHarmonyOnly('--conf');
-  }
   await parseValues(consumer, values, checkoutProps);
   const checkoutResults = await checkoutVersion(consumer, checkoutProps);
   await consumer.onDestroy();

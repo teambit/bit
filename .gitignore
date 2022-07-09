@@ -57,8 +57,6 @@ jspm_packages
 dist/*
 public/
 !components/*/dist/
-dist-legacy/
-flow-typed/
 eslint-report.html
 types/*
 

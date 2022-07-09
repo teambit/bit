@@ -91,7 +91,6 @@ async function exportComponents({ ids, includeNonStaged, originDirectly, ...para
   const { exported, updatedLocally, newIdsOnRemote } = await exportMany({
     ...params,
     scope: consumer.scope,
-    isLegacy: consumer.isLegacy,
     ids: idsToExport,
     laneObject,
     originDirectly,

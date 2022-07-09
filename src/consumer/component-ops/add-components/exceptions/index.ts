@@ -8,7 +8,6 @@ import MissingMainFileMultipleComponents from './missing-main-file-multiple-comp
 import NoFiles from './no-files';
 import PathOutsideConsumer from './path-outside-consumer';
 import PathsNotExist from './paths-not-exist';
-import TestIsDirectory from './test-is-directory';
 import VersionShouldBeRemoved from './version-should-be-removed';
 
 export {
@@ -22,6 +21,5 @@ export {
   ExcludedMainFile,
   MainFileIsDir,
   MissingMainFileMultipleComponents,
-  TestIsDirectory,
   PathOutsideConsumer,
 };

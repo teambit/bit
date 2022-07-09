@@ -3,40 +3,17 @@ import R from 'ramda';
 import { compact } from 'lodash';
 
 import { BitId, BitIds } from '../../bit-id';
-import { COMPONENT_ORIGINS, SUB_DIRECTORIES_GLOB_PATTERN } from '../../constants';
-import ShowDoctorError from '../../error/show-doctor-error';
 import logger from '../../logger/logger';
-import { pathRelativeLinux } from '../../utils';
 import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
 import getNodeModulesPathOfComponent from '../../utils/bit/component-node-modules-path';
-import searchFilesIgnoreExt from '../../utils/fs/search-files-ignore-ext';
-import { PathLinux, pathNormalizeToLinux, PathOsBasedAbsolute, PathRelative } from '../../utils/path';
-import BitMap from '../bit-map/bit-map';
-import ComponentMap from '../bit-map/component-map';
+import { PathLinux, pathNormalizeToLinux, PathOsBasedAbsolute, pathRelativeLinux } from '../../utils/path';
 import Component from '../component/consumer-component';
 import Consumer from '../consumer';
 import PackageJson from './package-json';
 import PackageJsonFile from './package-json-file';
-import JSONFile from './sources/json-file';
-
-/**
- * Add components as dependencies to root package.json
- */
-export async function addComponentsToRoot(consumer: Consumer, components: Component[]): Promise<void> {
-  const componentsToAdd = components.reduce((acc, component) => {
-    const componentMap = consumer.bitMap.getComponent(component.id);
-    if (componentMap.origin !== COMPONENT_ORIGINS.IMPORTED) return acc;
-    if (!componentMap.rootDir) {
-      throw new ShowDoctorError(`rootDir is missing from an imported component ${component.id.toString()}`);
-    }
-    const locationAsUnixFormat = convertToValidPathForPackageManager(componentMap.rootDir);
-    const packageName = componentIdToPackageName(component);
-    acc[packageName] = locationAsUnixFormat;
-    return acc;
-  }, {});
-  if (R.isEmpty(componentsToAdd)) return;
-  await _addDependenciesPackagesIntoPackageJson(consumer.getPath(), componentsToAdd);
-}
+import BitMap from '../bit-map';
+import ComponentMap from '../bit-map/component-map';
+import { COMPONENT_ORIGINS } from '../../constants';
 
 export async function addComponentsWithVersionToRoot(consumer: Consumer, components: Component[]) {
   const componentsToAdd = R.fromPairs(
@@ -48,47 +25,26 @@ export async function addComponentsWithVersionToRoot(consumer: Consumer, compone
   await _addDependenciesPackagesIntoPackageJson(consumer.getPath(), componentsToAdd);
 }
 
-export async function changeDependenciesToRelativeSyntax(
+export async function removeComponentsFromWorkspacesAndDependencies(
   consumer: Consumer,
   components: Component[],
-  dependencies: Component[]
-): Promise<JSONFile[]> {
-  const dependenciesIds = BitIds.fromArray(dependencies.map((dependency) => dependency.id));
-  const updateComponentPackageJson = async (component: Component): Promise<JSONFile | null | undefined> => {
-    const componentMap = consumer.bitMap.getComponent(component.id);
-    const componentRootDir = componentMap.rootDir;
-    if (!componentRootDir) return null;
-    const packageJsonFile = await PackageJsonFile.load(consumer.getPath(), componentRootDir);
-    if (!packageJsonFile.fileExist) return null; // if package.json doesn't exist no need to update anything
-    const devDeps = getPackages(component.devDependencies.getAllIds(), componentMap);
-    const extensionDeps = getPackages(component.extensions.extensionsBitIds, componentMap);
-    packageJsonFile.addDependencies(getPackages(component.dependencies.getAllIds(), componentMap));
-    packageJsonFile.addDevDependencies({ ...devDeps, ...extensionDeps });
-    return packageJsonFile.toVinylFile();
-  };
-  const packageJsonFiles = await Promise.all(components.map((component) => updateComponentPackageJson(component)));
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  return packageJsonFiles.filter((file) => file);
-
-  function getPackages(deps: BitIds, componentMap: ComponentMap) {
-    return deps.reduce((acc, dependencyId: BitId) => {
-      const dependencyIdStr = dependencyId.toStringWithoutVersion();
-      if (dependenciesIds.searchWithoutVersion(dependencyId)) {
-        const dependencyComponent = dependencies.find((d) => d.id.isEqualWithoutVersion(dependencyId));
-        if (!dependencyComponent) {
-          throw new Error('getDependenciesAsPackages, dependencyComponent is missing');
-        }
-        const dependencyComponentMap = consumer.bitMap.getComponentIfExist(dependencyComponent.id);
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        const dependencyPackageValue = getPackageDependencyValue(dependencyIdStr, componentMap, dependencyComponentMap);
-        if (dependencyPackageValue) {
-          const packageName = componentIdToPackageName({ ...dependencyComponent, id: dependencyId });
-          acc[packageName] = dependencyPackageValue;
-        }
-      }
-      return acc;
-    }, {});
+  invalidComponents: BitId[] = []
+) {
+  const bitIds = [...components.map((c) => c.id), ...invalidComponents];
+  const rootDir = consumer.getPath();
+  if (
+    consumer.config._manageWorkspaces &&
+    consumer.config.packageManager === 'yarn' &&
+    consumer.config._useWorkspaces
+  ) {
+    const dirsToRemove = bitIds.map((id) => consumer.bitMap.getComponent(id, { ignoreVersion: true }).rootDir);
+    if (dirsToRemove && dirsToRemove.length) {
+      const dirsToRemoveWithoutEmpty = compact(dirsToRemove);
+      await PackageJson.removeComponentsFromWorkspaces(rootDir, dirsToRemoveWithoutEmpty);
+    }
   }
+  await PackageJson.removeComponentsFromDependencies(rootDir, components);
+  await removeComponentsFromNodeModules(consumer, components);
 }
 
 export function preparePackageJsonToWrite(
@@ -120,7 +76,7 @@ export function preparePackageJsonToWrite(
   const bitDevDependencies = getBitDependencies(component.devDependencies.getAllIds());
   const bitExtensionDependencies = getBitDependencies(component.extensions.extensionsBitIds);
   const packageJson = PackageJsonFile.createFromComponent(bitDir, component, excludeRegistryPrefix, isIsolated);
-  const main = pathNormalizeToLinux(component.dists.calculateMainDistFile(component.mainFile));
+  const main = pathNormalizeToLinux(component.mainFile);
   packageJson.addOrUpdateProperty('main', main);
   const addDependencies = (packageJsonFile: PackageJsonFile) => {
     packageJsonFile.addDependencies(bitDependencies);
@@ -129,75 +85,10 @@ export function preparePackageJsonToWrite(
       ...bitExtensionDependencies,
     });
   };
-  packageJson.setPackageManager(packageManager);
   addDependencies(packageJson);
   let distPackageJson;
-  if (!component.dists.isEmpty() && !component.dists.areDistsInsideComponentDir) {
-    const distRootDir = component.dists.distsRootDir;
-    if (!distRootDir) throw new Error('component.dists.distsRootDir is not defined yet');
-    distPackageJson = PackageJsonFile.createFromComponent(distRootDir, component, excludeRegistryPrefix, isIsolated);
-    const distMainFile = searchFilesIgnoreExt(component.dists.get(), component.mainFile, 'relative');
-    distPackageJson.addOrUpdateProperty('main', component.dists.getMainDistFile() || distMainFile);
-    addDependencies(distPackageJson);
-  }
 
   return { packageJson, distPackageJson };
-}
-
-export async function updateAttribute(
-  consumer: Consumer,
-  componentDir: PathRelative,
-  attributeName: string,
-  attributeValue: string
-): Promise<void> {
-  const packageJsonFile = await PackageJsonFile.load(consumer.getPath(), componentDir);
-  if (!packageJsonFile.fileExist) return; // package.json doesn't exist, that's fine, no need to update anything
-  packageJsonFile.addOrUpdateProperty(attributeName, attributeValue);
-  await packageJsonFile.write();
-}
-
-/**
- * Adds workspace array to package.json - only if user wants to work with yarn workspaces
- */
-export async function addWorkspacesToPackageJson(consumer: Consumer, customImportPath: string | null | undefined) {
-  if (
-    consumer.config._manageWorkspaces &&
-    consumer.config.packageManager === 'yarn' &&
-    consumer.config._useWorkspaces
-  ) {
-    const rootDir = consumer.getPath();
-    const dependenciesDirectory = consumer.config._dependenciesDirectory;
-    const { componentsDefaultDirectory } = consumer.dirStructure;
-
-    await PackageJson.addWorkspacesToPackageJson(
-      rootDir,
-      componentsDefaultDirectory + SUB_DIRECTORIES_GLOB_PATTERN,
-      dependenciesDirectory + SUB_DIRECTORIES_GLOB_PATTERN,
-      customImportPath ? consumer.getPathRelativeToConsumer(customImportPath) : customImportPath
-    );
-  }
-}
-
-export async function removeComponentsFromWorkspacesAndDependencies(
-  consumer: Consumer,
-  components: Component[],
-  invalidComponents: BitId[] = []
-) {
-  const bitIds = [...components.map((c) => c.id), ...invalidComponents];
-  const rootDir = consumer.getPath();
-  if (
-    consumer.config._manageWorkspaces &&
-    consumer.config.packageManager === 'yarn' &&
-    consumer.config._useWorkspaces
-  ) {
-    const dirsToRemove = bitIds.map((id) => consumer.bitMap.getComponent(id, { ignoreVersion: true }).rootDir);
-    if (dirsToRemove && dirsToRemove.length) {
-      const dirsToRemoveWithoutEmpty = compact(dirsToRemove);
-      await PackageJson.removeComponentsFromWorkspaces(rootDir, dirsToRemoveWithoutEmpty);
-    }
-  }
-  await PackageJson.removeComponentsFromDependencies(rootDir, components);
-  await removeComponentsFromNodeModules(consumer, components);
 }
 
 async function _addDependenciesPackagesIntoPackageJson(dir: PathOsBasedAbsolute, dependencies: Record<string, any>) {
@@ -209,8 +100,6 @@ async function _addDependenciesPackagesIntoPackageJson(dir: PathOsBasedAbsolute,
 export async function removeComponentsFromNodeModules(consumer: Consumer, components: Component[]) {
   logger.debug(`removeComponentsFromNodeModules: ${components.map((c) => c.id.toString()).join(', ')}`);
   const pathsToRemoveWithNulls = components.map((c) => {
-    // for legacy, paths without scope name, don't have a symlink in node-modules
-    if (consumer.isLegacy) return c.id.scope ? getNodeModulesPathOfComponent(c) : null;
     return getNodeModulesPathOfComponent({ ...c, id: c.id, allowNonScope: true });
   });
   const pathsToRemove = compact(pathsToRemoveWithNulls);

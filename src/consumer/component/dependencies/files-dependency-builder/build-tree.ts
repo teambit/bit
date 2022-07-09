@@ -31,17 +31,12 @@ export type LinkFile = {
 function groupDependencyList(
   dependenciesPaths: string[],
   componentDir: string,
-  bindingPrefix: string,
-  isLegacyProject: boolean
+  bindingPrefix: string
 ): DependenciesTreeItem {
   const resultGroups = new DependenciesTreeItem();
   const isPackage = (str: string) => str.includes('node_modules/');
-  const isBitLegacyComponent = (str: string) =>
-    isLegacyProject &&
-    (str.includes(`node_modules/${bindingPrefix}`) || str.includes(`node_modules/${DEFAULT_BINDINGS_PREFIX}`));
   const isBitLegacyInsideHarmony = (str: string) =>
-    !isLegacyProject &&
-    (str.includes(`node_modules/${bindingPrefix}`) || str.includes(`node_modules/${DEFAULT_BINDINGS_PREFIX}`));
+    str.includes(`node_modules/${bindingPrefix}`) || str.includes(`node_modules/${DEFAULT_BINDINGS_PREFIX}`);
   dependenciesPaths.forEach((dependencyPath) => {
     if (!isPackage(dependencyPath)) {
       resultGroups.files.push({ file: dependencyPath });
@@ -58,10 +53,6 @@ function groupDependencyList(
     // @todo: currently, for author, the package.json doesn't have any version.
     // we might change this decision later. see https://github.com/teambit/bit/pull/2924
     if (resolvedPackage.componentId) {
-      resultGroups.components.push(resolvedPackage);
-      return;
-    }
-    if (isBitLegacyComponent(dependencyPath)) {
       resultGroups.components.push(resolvedPackage);
       return;
     }
@@ -90,16 +81,11 @@ remove the import statement to fix this error`);
  *
  * @returns new tree with grouped dependencies
  */
-function MadgeTreeToDependenciesTree(
-  tree: MadgeTree,
-  componentDir: string,
-  bindingPrefix: string,
-  isLegacyProject: boolean
-): DependenciesTree {
+function MadgeTreeToDependenciesTree(tree: MadgeTree, componentDir: string, bindingPrefix: string): DependenciesTree {
   const result: DependenciesTree = {};
   Object.keys(tree).forEach((filePath) => {
     if (tree[filePath] && !R.isEmpty(tree[filePath])) {
-      result[filePath] = groupDependencyList(tree[filePath], componentDir, bindingPrefix, isLegacyProject);
+      result[filePath] = groupDependencyList(tree[filePath], componentDir, bindingPrefix);
     } else {
       result[filePath] = new DependenciesTreeItem();
     }
@@ -235,7 +221,6 @@ export async function getDependencyTree({
   workspacePath,
   filePaths,
   bindingPrefix,
-  isLegacyProject,
   resolveModulesConfig,
   visited = {},
   cacheProjectAst,
@@ -260,13 +245,12 @@ export async function getDependencyTree({
     return path.resolve(componentDir, filePath);
   });
   const { madgeTree, skipped, pathMap, errors } = generateTree(fullPaths, config);
-  const tree: DependenciesTree = MadgeTreeToDependenciesTree(madgeTree, componentDir, bindingPrefix, isLegacyProject);
+  const tree: DependenciesTree = MadgeTreeToDependenciesTree(madgeTree, componentDir, bindingPrefix);
   const { missingGroups, foundPackages } = new MissingHandler(
     skipped,
     componentDir,
     workspacePath,
-    bindingPrefix,
-    isLegacyProject
+    bindingPrefix
   ).groupAndFindMissing();
 
   if (foundPackages) mergeManuallyFoundPackagesToTree(foundPackages, missingGroups, tree);

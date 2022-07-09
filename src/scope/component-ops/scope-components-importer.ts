@@ -385,7 +385,7 @@ export default class ScopeComponentsImporter {
   async loadRemoteComponent(id: BitId): Promise<ConsumerComponent> {
     const component = await this._getComponentVersion(id);
     if (!component) throw new ComponentNotFound(id.toString());
-    return component.toConsumer(this.scope.objects, null);
+    return component.toConsumer(this.scope.objects);
   }
 
   async loadComponent(id: BitId, localOnly = true): Promise<ConsumerComponent> {

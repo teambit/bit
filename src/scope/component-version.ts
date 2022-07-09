@@ -1,6 +1,5 @@
 import { BitId, BitIds } from '../bit-id';
 import ConsumerComponent from '../consumer/component';
-import { ManipulateDirItem } from '../consumer/component-ops/manipulate-dir';
 import ModelComponent from './models/model-component';
 import Version from './models/version';
 import { Ref } from './objects';
@@ -39,9 +38,9 @@ export default class ComponentVersion {
     return this.toId();
   }
 
-  toConsumer(repo: Repository, manipulateDirData: ManipulateDirItem[] | null | undefined): Promise<ConsumerComponent> {
+  toConsumer(repo: Repository): Promise<ConsumerComponent> {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return this.component.toConsumerComponent(this.version, this.component.scope, repo, manipulateDirData);
+    return this.component.toConsumerComponent(this.version, this.component.scope, repo);
   }
 }
 

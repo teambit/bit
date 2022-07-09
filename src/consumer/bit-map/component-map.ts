@@ -1,4 +1,3 @@
-import fs from 'fs-extra';
 import * as path from 'path';
 import R from 'ramda';
 import { LaneId } from '@teambit/lane-id';
@@ -6,13 +5,10 @@ import { BitId, BitIds } from '../../bit-id';
 import { BIT_MAP, COMPONENT_ORIGINS } from '../../constants';
 import ValidationError from '../../error/validation-error';
 import logger from '../../logger/logger';
-import { isValidPath, pathJoinLinux, pathNormalizeToLinux, pathRelativeLinux, sortObject } from '../../utils';
+import { isValidPath, pathJoinLinux, pathNormalizeToLinux, pathRelativeLinux } from '../../utils';
 import { getLastModifiedDirTimestampMs } from '../../utils/fs/last-modified';
 import { PathLinux, PathLinuxRelative, PathOsBased, PathOsBasedRelative } from '../../utils/path';
-import AddComponents from '../component-ops/add-components';
-import { AddContext, getFilesByDir, getGitIgnoreHarmony } from '../component-ops/add-components/add-components';
-import { EmptyDirectory, NoFiles } from '../component-ops/add-components/exceptions';
-import ComponentNotFoundInPath from '../component/exceptions/component-not-found-in-path';
+import { getFilesByDir, getGitIgnoreHarmony } from '../component-ops/add-components/add-components';
 import { removeInternalConfigFields } from '../config/extension-data';
 import Consumer from '../consumer';
 import OutsideRootDir from './exceptions/outside-root-dir';
@@ -43,10 +39,9 @@ export type ComponentMapData = {
   files: ComponentMapFile[];
   defaultScope?: string;
   mainFile: PathLinux;
-  rootDir?: PathLinux;
+  rootDir: PathLinux;
   trackDir?: PathLinux;
   origin: ComponentOrigin;
-  originallySharedDir?: PathLinux;
   wrapDir?: PathLinux;
   exported?: boolean;
   onLanesOnly: boolean;
@@ -64,14 +59,13 @@ export default class ComponentMap {
   files: ComponentMapFile[];
   defaultScope?: string;
   mainFile: PathLinux;
-  rootDir?: PathLinux; // always set for IMPORTED and NESTED.
+  rootDir: PathLinux;
   // reason why trackDir and not re-use rootDir is because using rootDir requires all paths to be
   // relative to rootDir for consistency, then, when saving into the model changing them back to
   // be relative to consumer-root. (we can't save in the model relative to rootDir, otherwise the
   // dependencies paths won't work).
   trackDir: PathLinux | undefined; // relevant for AUTHORED only when a component was added as a directory, used for tracking changes in that dir
   origin: ComponentOrigin;
-  originallySharedDir: PathLinux | undefined; // directory shared among a component and its dependencies by the original author. Relevant for IMPORTED only
   wrapDir: PathLinux | undefined; // a wrapper directory needed when a user adds a package.json file to the component root so then it won't collide with Bit generated one
   // wether the compiler / tester are detached from the workspace global configuration
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -95,7 +89,6 @@ export default class ComponentMap {
     rootDir,
     trackDir,
     origin,
-    originallySharedDir,
     wrapDir,
     onLanesOnly,
     lanes,
@@ -111,7 +104,6 @@ export default class ComponentMap {
     this.rootDir = rootDir;
     this.trackDir = trackDir;
     this.origin = origin;
-    this.originallySharedDir = originallySharedDir;
     this.wrapDir = wrapDir;
     this.onLanesOnly = onLanesOnly;
     this.lanes = lanes || [];
@@ -136,17 +128,16 @@ export default class ComponentMap {
     return new ComponentMap(componentMapParams);
   }
 
-  toPlainObject(isLegacy: boolean): Record<string, any> {
+  toPlainObject(): Record<string, any> {
     let res = {
       scope: this.scope,
       version: this.version,
-      files: isLegacy || !this.rootDir ? this.files.map((file) => sortObject(file)) : null,
+      files: null,
       defaultScope: this.defaultScope,
       mainFile: this.mainFile,
       rootDir: this.rootDir,
       trackDir: this.trackDir,
-      origin: isLegacy ? this.origin : undefined,
-      originallySharedDir: this.originallySharedDir,
+      origin: undefined,
       wrapDir: this.wrapDir,
       exported: this.exported,
       onLanesOnly: this.onLanesOnly || null, // if false, change to null so it won't be written
@@ -309,35 +300,6 @@ export default class ComponentMap {
   }
 
   /**
-   * if one of the added files is outside of the trackDir, remove the trackDir attribute
-   */
-  removeTrackDirIfNeeded(): void {
-    if (!this.trackDir) return;
-    if (this.origin !== COMPONENT_ORIGINS.AUTHORED) {
-      this.trackDir = undefined;
-      return;
-    }
-    for (const file of this.files) {
-      if (!file.relativePath.startsWith(this.trackDir)) {
-        this.trackDir = undefined;
-        return;
-      }
-    }
-  }
-
-  /**
-   * directory to track for changes (such as files added/renamed)
-   */
-  getTrackDir(): PathLinux | undefined {
-    if (this.origin === COMPONENT_ORIGINS.AUTHORED) return this.rootDir || this.trackDir;
-    if (this.origin === COMPONENT_ORIGINS.IMPORTED) {
-      return this.wrapDir ? pathJoinLinux(this.rootDir, this.wrapDir) : this.rootDir;
-    }
-    // DO NOT track nested components!
-    return undefined;
-  }
-
-  /**
    * this.rootDir is not defined for author. instead, the current workspace is the rootDir
    * also, for imported environments (compiler/tester) components the rootDir is empty
    */
@@ -349,12 +311,7 @@ export default class ComponentMap {
     return Boolean(this.rootDir && this.rootDir !== '.');
   }
 
-  /**
-   * directory of the component (root / track)
-   * for legacy (bit.json) workspace, it can be undefined for authored when individual files were added
-   */
-  getComponentDir(): PathLinux | undefined {
-    if (this.origin === COMPONENT_ORIGINS.AUTHORED) return this.rootDir || this.trackDir;
+  getComponentDir(): PathLinux {
     return this.rootDir;
   }
 
@@ -397,55 +354,6 @@ export default class ComponentMap {
     } else {
       this.lanes.push({ remoteLane: remoteLaneId, version });
     }
-  }
-
-  /**
-   * in case new files were created in the track-dir directory, add them to the component-map
-   * so then they'll be tracked by bitmap.
-   * this doesn't get called on Harmony, it's for legacy only.
-   */
-  async trackDirectoryChangesLegacy(consumer: Consumer, id: BitId): Promise<void> {
-    const trackDir = this.getTrackDir();
-    if (!trackDir) {
-      return;
-    }
-    const trackDirAbsolute = path.join(consumer.getPath(), trackDir);
-    const trackDirRelative = path.relative(process.cwd(), trackDirAbsolute);
-    if (!fs.existsSync(trackDirAbsolute)) throw new ComponentNotFoundInPath(trackDirRelative);
-    const lastTrack = await consumer.componentFsCache.getLastTrackTimestamp(id.toString());
-    const wasModifiedAfterLastTrack = async () => {
-      const lastModified = await getLastModifiedDirTimestampMs(trackDirAbsolute);
-      return lastModified > lastTrack;
-    };
-    if (!(await wasModifiedAfterLastTrack())) {
-      return;
-    }
-    const addParams = {
-      componentPaths: [trackDirRelative || '.'],
-      id: id.toString(),
-      override: false, // this makes sure to not override existing files of componentMap
-      trackDirFeature: true,
-      origin: this.origin,
-    };
-    const numOfFilesBefore = this.files.length;
-    const addContext: AddContext = { consumer };
-    const addComponents = new AddComponents(addContext, addParams);
-    try {
-      await addComponents.add();
-    } catch (err: any) {
-      if (err instanceof NoFiles || err instanceof EmptyDirectory) {
-        // it might happen that a component is imported and current .gitignore configuration
-        // are effectively removing all files from bitmap. we should ignore the error in that
-        // case
-      } else {
-        throw err;
-      }
-    }
-    if (this.files.length > numOfFilesBefore) {
-      logger.info(`new file(s) have been added to .bitmap for ${id.toString()}`);
-      consumer.bitMap.hasChanged = true;
-    }
-    this.recentlyTracked = true;
   }
 
   /**
@@ -503,23 +411,9 @@ export default class ComponentMap {
     if (!isValidPath(this.mainFile)) {
       throw new ValidationError(`${errorMessage} mainFile attribute ${this.mainFile} is invalid`);
     }
-    // if it's an environment component (such as compiler) the rootDir is empty
-    if (!this.rootDir && this.origin === COMPONENT_ORIGINS.NESTED) {
-      throw new ValidationError(`${errorMessage} rootDir attribute is missing`);
-    }
     if (this.rootDir && !isValidPath(this.rootDir)) {
       throw new ValidationError(`${errorMessage} rootDir attribute ${this.rootDir} is invalid`);
     }
-    if (this.trackDir && this.origin !== COMPONENT_ORIGINS.AUTHORED) {
-      throw new ValidationError(`${errorMessage} trackDir attribute should be set for AUTHORED component only`);
-    }
-    // commented out because when importing a legacy component into Harmony it may have originallySharedDir
-    // and on Harmony all components are Authored.
-    // if (this.originallySharedDir && this.origin === COMPONENT_ORIGINS.AUTHORED) {
-    //   throw new ValidationError(
-    //     `${errorMessage} originallySharedDir attribute should be set for non AUTHORED components only`
-    //   );
-    // }
     if (this.nextVersion && !this.nextVersion.version) {
       throw new ValidationError(`${errorMessage} version attribute should be set when nextVersion prop is set`);
     }
@@ -541,16 +435,6 @@ if you renamed the mainFile, please re-add the component with the "--main" flag 
     );
     if (duplicateFiles.length) {
       throw new ValidationError(`${errorMessage} the following files are duplicated ${duplicateFiles.join(', ')}`);
-    }
-    if (this.trackDir) {
-      const trackDir = this.trackDir;
-      this.files.forEach((file) => {
-        if (!file.relativePath.startsWith(trackDir)) {
-          throw new ValidationError(
-            `${errorMessage} a file path ${file.relativePath} is not in the trackDir ${trackDir}`
-          );
-        }
-      });
     }
   }
 }
