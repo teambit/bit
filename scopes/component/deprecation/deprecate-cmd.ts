@@ -4,7 +4,8 @@ import { Command, CommandOptions } from '@teambit/cli';
 import { DeprecationMain } from './deprecation.main.runtime';
 
 export class DeprecateCmd implements Command {
-  name = 'deprecate <id>';
+  name = 'deprecate <component-name>';
+  arguments = [{ name: 'component-name', description: 'component name or component id' }];
   description = 'deprecate a component';
   group = 'collaborate';
   skipWorkspace = true;
