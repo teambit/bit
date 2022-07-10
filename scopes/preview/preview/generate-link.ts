@@ -8,40 +8,31 @@ export function generateLink(
   mainModule?: string,
   isSplitComponentBundle = false
 ): string {
+  const links = componentMap.toArray().map(([component, modulePath], compIdx) => ({
+    componentIdentifier: component.id.fullName,
+    modules: modulePath.map((path, pathIdx) => ({
+      varName: moduleVarName(compIdx, pathIdx),
+      resolveFrom: toWindowsCompatiblePath(path),
+    })),
+  }));
+
   return `
 import { linkModules } from '${toWindowsCompatiblePath(require.resolve('./preview.preview.runtime'))}';
-import harmony from '${toWindowsCompatiblePath(require.resolve('@teambit/harmony'))}';
 ${mainModule ? `import * as mainModule from '${toWindowsCompatiblePath(mainModule)}';` : 'const mainModule = {};'}
 
-${
-  // generate imports:
-  componentMap
-    .toArray()
-    .map(([, modulePath], compIdx) =>
-      modulePath
-        .map(
-          (path, pathIdx) => `import * as ${moduleVarName(compIdx, pathIdx)} from '${toWindowsCompatiblePath(path)}'`
-        )
-        .join('\n')
-    )
-    .join('\n')
-}
+${links
+  .map((link) => link.modules.map((module) => `import * as ${module.varName} from "${module.resolveFrom}";`).join('\n'))
+  .filter((line) => line !== '') // prevent empty lines
+  .join('\n')}
 
 linkModules('${prefix}', {
   mainModule,
   isSplitComponentBundle: ${isSplitComponentBundle},
   componentMap: {
-${
-  // use imports:
-  componentMap
-    .toArray()
-    .map(([component, modulePaths], compIdx) => {
-      return `    '${component.id.fullName}': [${modulePaths
-        .map((_, pathIdx) => moduleVarName(compIdx, pathIdx))
-        .join(', ')}]`;
-    })
-    .join(',\n')
-}
+${links
+  // must include all components, including empty
+  .map((link) => `    "${link.componentIdentifier}": [${link.modules.map((module) => module.varName).join(', ')}]`)
+  .join(',\n')}
   }
 });
 `;

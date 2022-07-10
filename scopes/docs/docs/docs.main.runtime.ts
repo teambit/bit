@@ -117,7 +117,8 @@ export class DocsMain {
         const doc = await docReader.read(docFile.relative, docFile.contents, component);
         return doc;
       } catch (err: any) {
-        this.logger.error('docs.main.runtime.computeDoc caught an error', err);
+        // it's ok to fail here.
+        this.logger.debug(`docs.main.runtime.computeDoc caught an error: ${err.message}`);
         return null;
       }
     }
