@@ -38,7 +38,7 @@ export function Component({
 }: ComponentProps) {
   const idFromLocation = useIdFromLocation();
   const componentId = componentIdStr ? ComponentID.fromString(componentIdStr) : undefined;
-  const fullName = componentId?.fullName && idFromLocation;
+  const fullName = componentId?.fullName || idFromLocation;
   const lanesContext = useLanesContext();
   const laneComponent = fullName
     ? lanesContext?.resolveComponent(fullName)

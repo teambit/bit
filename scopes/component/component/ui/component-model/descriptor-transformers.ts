@@ -1,4 +1,5 @@
 import { ComponentDescriptor } from '@teambit/component-descriptor';
+import { CompositionsAspect, Composition } from '@teambit/compositions';
 import { capitalize } from '@teambit/toolbox.string.capitalize';
 import { DeprecationAspect } from '@teambit/deprecation';
 import DocsAspect from '@teambit/docs';
@@ -14,6 +15,15 @@ export function getPackageName(component: ComponentDescriptor) {
 export function getDisplayName(component: ComponentDescriptor) {
   const tokens = component.id.name.split('-').map((token) => capitalize(token));
   return tokens.join(' ');
+}
+
+export function getCompositions(component: ComponentDescriptor) {
+  const entry: any = component.get(CompositionsAspect.id);
+  if (!entry) return [];
+  const compositions = entry.data.compositions;
+  if (!compositions) return [];
+
+  return Composition.fromArray(compositions);
 }
 
 export function getEnv(component: ComponentDescriptor) {

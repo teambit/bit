@@ -6,7 +6,7 @@ import { ComponentDescriptor } from '@teambit/component-descriptor';
 import { LegacyComponentLog } from '@teambit/legacy-component-log';
 import { ComponentPreviewSize } from '@teambit/preview';
 import { Tag } from '../../tag';
-import { getPackageName, getDisplayName, getDescription, getLabels, getDeprecation, getEnv } from './descriptor-transformers';
+import { getPackageName, getDisplayName, getDescription, getLabels, getDeprecation, getEnv, getCompositions } from './descriptor-transformers';
 import { TagMap } from '../../tag-map';
 import { TagProps } from '../../tag/tag';
 // import { Snap } from '../../snap';
@@ -192,6 +192,11 @@ export class ComponentModel {
   }
 
   static fromDescriptor(componentDescriptor: ComponentDescriptor) {
+    const host = 'http://localhost:5001/component-service';
+    const scopeId = componentDescriptor.id.scope;
+    const envId = componentDescriptor.get<any>('teambit.envs/envs').data.id;
+    const url = `${host}/api/~scope-id~/${scopeId}/~component~/${envId}/~aspect-proxy/env-template/overview/`;
+
     return ComponentModel.from({
       id: componentDescriptor.id.toObject(),
       displayName: getDisplayName(componentDescriptor),
@@ -199,7 +204,12 @@ export class ComponentModel {
       env: getEnv(componentDescriptor),
       deprecation: getDeprecation(componentDescriptor),
       description: getDescription(componentDescriptor),
-      labels: getLabels(componentDescriptor)
+      labels: getLabels(componentDescriptor),
+      server: {
+        url,
+        env: envId
+      },
+      compositions: getCompositions(componentDescriptor)
     });
   }
 

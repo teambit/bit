@@ -68,7 +68,7 @@ export function ComponentMenu({
 
   const { component } = useComponentQuery(
     host,
-    laneComponent?.id.toString() || componentId?.toStringWithoutVersion(),
+    laneComponent?.id.toString() || componentId?.toStringWithoutVersion() || fullName,
     useComponentOptions
   );
   const mainMenuItems = useMemo(() => groupBy(flatten(menuItemSlot.values()), 'category'), [menuItemSlot]);
