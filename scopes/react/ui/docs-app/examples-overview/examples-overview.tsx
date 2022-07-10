@@ -1,7 +1,7 @@
 import classNames from 'classnames';
 import React from 'react';
 import jsxToString from 'jsx-to-string';
-import { Example } from '@teambit/docs';
+import type { Example } from '@teambit/docs';
 import { LinkedHeading } from '@teambit/documenter.ui.linked-heading';
 import { Section, SectionProps } from '@teambit/documenter.ui.section';
 import { Playground } from '@teambit/documenter.code.react-playground';
