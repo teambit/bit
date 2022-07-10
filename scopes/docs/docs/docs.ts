@@ -29,3 +29,10 @@ export type Docs = {
    */
   examples: Example[];
 };
+
+export const defaultDocs: Docs = {
+  default: () => null,
+  labels: [],
+  abstract: '',
+  examples: [],
+};
