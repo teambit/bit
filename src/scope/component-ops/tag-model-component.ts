@@ -7,16 +7,14 @@ import * as globalConfig from '../../api/consumer/lib/global-config';
 import { Scope } from '..';
 import { BitId, BitIds } from '../../bit-id';
 import loader from '../../cli/loader';
-import { BuildStatus, CFG_USER_EMAIL_KEY, CFG_USER_NAME_KEY, COMPONENT_ORIGINS, Extensions } from '../../constants';
+import { BuildStatus, CFG_USER_EMAIL_KEY, CFG_USER_NAME_KEY, Extensions } from '../../constants';
 import { CURRENT_SCHEMA } from '../../consumer/component/component-schema';
 import Component from '../../consumer/component/consumer-component';
 import Consumer from '../../consumer/consumer';
 import { NewerVersionFound } from '../../consumer/exceptions';
 import ShowDoctorError from '../../error/show-doctor-error';
-import ValidationError from '../../error/validation-error';
 import logger from '../../logger/logger';
-import { pathJoinLinux, sha1 } from '../../utils';
-import { PathLinux } from '../../utils/path';
+import { sha1 } from '../../utils';
 import { AutoTagResult, getAutoTagInfo } from './auto-tag';
 import { FlattenedDependenciesGetter } from './get-flattened-dependencies';
 import { getValidVersionOrReleaseType } from '../../utils/semver-helper';
@@ -124,73 +122,6 @@ function getVersionByEnteredId(
   return undefined;
 }
 
-/**
- * make sure the originallySharedDir was added before saving the component. also, make sure it was
- * not added twice.
- * we need three objects for this:
- * 1) component.pendingVersion => version pending to be saved in the filesystem. we want to make sure it has the added sharedDir.
- * 2) component.componentFromModel => previous version of the component. it has the original sharedDir.
- * 3) component.componentMap => current paths in the filesystem, which don't have the sharedDir.
- *
- * The component may be changed from the componentFromModel. The files may be removed and added and
- * new files may added, so we can't compare the files of componentFromModel to component.
- *
- * What we can do is calculating the sharedDir from component.componentFromModel
- * then, make sure that calculatedSharedDir + pathFromComponentMap === component.pendingVersion
- *
- * Also, make sure that the wrapDir has been removed
- */
-function validateDirManipulation(components: Component[]): void {
-  const throwOnError = (expectedPath: PathLinux, actualPath: PathLinux) => {
-    if (expectedPath !== actualPath) {
-      throw new ValidationError(
-        `failed validating the component paths with sharedDir, expected path ${expectedPath}, got ${actualPath}`
-      );
-    }
-  };
-  const validateComponent = (component: Component) => {
-    if (!component.componentMap) throw new Error(`componentMap is missing from ${component.id.toString()}`);
-    if (!component.componentFromModel) return;
-    // component.componentFromModel.setOriginallySharedDir();
-    const sharedDir = component.componentFromModel.originallySharedDir;
-    const wrapDir = component.componentFromModel.wrapDir;
-    const pathWithSharedDir = (pathStr: PathLinux): PathLinux => {
-      // $FlowFixMe componentMap is set here
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      if (sharedDir && component.componentMap.origin === COMPONENT_ORIGINS.IMPORTED) {
-        return pathJoinLinux(sharedDir, pathStr);
-      }
-      return pathStr;
-    };
-    const pathWithoutWrapDir = (pathStr: PathLinux): PathLinux => {
-      if (wrapDir) {
-        return pathStr.replace(`${wrapDir}/`, '');
-      }
-      return pathStr;
-    };
-    const pathAfterDirManipulation = (pathStr: PathLinux): PathLinux => {
-      const withoutWrapDir = pathWithoutWrapDir(pathStr);
-      return pathWithSharedDir(withoutWrapDir);
-    };
-    const expectedMainFile = pathAfterDirManipulation(component.componentMap.mainFile);
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    throwOnError(expectedMainFile, component.pendingVersion.mainFile);
-    // $FlowFixMe componentMap is set here
-    const componentMapFiles = component.componentMap.getAllFilesPaths();
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const componentFiles = component.pendingVersion.files.map((file) => file.relativePath);
-    componentMapFiles.forEach((file) => {
-      const expectedFile = pathAfterDirManipulation(file);
-      if (!componentFiles.includes(expectedFile)) {
-        throw new ValidationError(
-          `failed validating the component paths, expected a file ${expectedFile} to be in ${componentFiles.toString()} array`
-        );
-      }
-    });
-  };
-  components.forEach((component) => validateComponent(component));
-}
-
 export default async function tagModelComponent({
   consumerComponents,
   ids,
@@ -279,25 +210,6 @@ export default async function tagModelComponent({
     }
   }
 
-  let testsResults = [];
-  if (consumer.isLegacy) {
-    logger.debugAndAddBreadCrumb('tag-model-components', 'sequentially build all components');
-    await scope.buildMultiple(allComponentsToTag, consumer, false, false);
-
-    logger.debug('scope.putMany: sequentially test all components');
-
-    if (!skipTests) {
-      const testsResultsP = scope.testMultiple({
-        components: allComponentsToTag,
-        consumer,
-        verbose: false,
-        rejectOnFailure: true,
-      });
-      // @ts-ignore
-      testsResults = await testsResultsP;
-    }
-  }
-
   logger.debugAndAddBreadCrumb('tag-model-components', 'sequentially persist all components');
   // go through all components and find the future versions for them
   isSnap
@@ -314,7 +226,7 @@ export default async function tagModelComponent({
         preReleaseId,
         soft
       );
-  setCurrentSchema(allComponentsToTag, consumer);
+  setCurrentSchema(allComponentsToTag);
   // go through all dependencies and update their versions
   updateDependenciesVersions(allComponentsToTag);
 
@@ -323,17 +235,15 @@ export default async function tagModelComponent({
   if (soft) {
     consumer.updateNextVersionOnBitmap(allComponentsToTag, preReleaseId);
   } else {
-    if (!skipTests) addSpecsResultsToComponents(allComponentsToTag, testsResults);
     await addFlattenedDependenciesToComponents(consumer.scope, allComponentsToTag);
     emptyBuilderData(allComponentsToTag);
-    addBuildStatus(consumer, allComponentsToTag, BuildStatus.Pending);
+    addBuildStatus(allComponentsToTag, BuildStatus.Pending);
     await addComponentsToScope(consumer, allComponentsToTag, Boolean(resolveUnmerged));
-    if (consumer.isLegacy) validateDirManipulation(allComponentsToTag);
     await consumer.updateComponentsVersions(allComponentsToTag);
   }
 
   const publishedPackages: string[] = [];
-  if (!consumer.isLegacy && build) {
+  if (build) {
     const onTagOpts = { disableTagAndSnapPipelines, throwOnError: true, forceDeploy, skipTests, isSnap };
     const isolateOptions = { packageManagerConfigRootDir };
     const results: Array<LegacyOnTagResult[]> = await mapSeries(scope.onTag, (func) =>
@@ -341,7 +251,7 @@ export default async function tagModelComponent({
     );
     results.forEach((tagResult) => updateComponentsByTagResult(allComponentsToTag, tagResult));
     publishedPackages.push(...getPublishedPackages(allComponentsToTag));
-    addBuildStatus(consumer, allComponentsToTag, BuildStatus.Succeed);
+    addBuildStatus(allComponentsToTag, BuildStatus.Succeed);
     await mapSeries(allComponentsToTag, (consumerComponent) => scope.sources.enrichSource(consumerComponent));
   }
 
@@ -378,16 +288,6 @@ export async function addFlattenedDependenciesToComponents(scope: Scope, compone
   loader.stop();
 }
 
-function addSpecsResultsToComponents(components: Component[], testsResults): void {
-  components.forEach((component) => {
-    const testResult = testsResults.find((result) => {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      return component.id.isEqualWithoutScopeAndVersion(result.componentId);
-    });
-    component.specsResults = testResult ? testResult.specs : undefined;
-  });
-}
-
 async function addLogToComponents(
   components: Component[],
   autoTagComps: Component[],
@@ -422,8 +322,7 @@ async function addLogToComponents(
   });
 }
 
-function setCurrentSchema(components: Component[], consumer: Consumer) {
-  if (consumer.isLegacy) return;
+function setCurrentSchema(components: Component[]) {
   components.forEach((component) => {
     component.schema = CURRENT_SCHEMA;
   });
@@ -456,8 +355,7 @@ export function getPublishedPackages(components: Component[]): string[] {
   return compact(publishedPackages);
 }
 
-function addBuildStatus(consumer: Consumer, components: Component[], buildStatus: BuildStatus) {
-  if (consumer.isLegacy) return;
+function addBuildStatus(components: Component[], buildStatus: BuildStatus) {
   components.forEach((component) => {
     component.buildStatus = buildStatus;
   });

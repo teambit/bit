@@ -10,7 +10,11 @@ export class ScopeRenameCmd implements Command {
     { name: 'new-scope-name', description: 'a new scope name to replace the current scope name' },
   ];
   options = [
-    ['r', 'refactor', 'change the source code of all components using the original scope-name with the new scope-name'],
+    [
+      'r',
+      'refactor',
+      'update the import statements in all dependent components to the new package name (that contains the new scope name)',
+    ],
   ] as CommandOptions;
   group = 'development';
 

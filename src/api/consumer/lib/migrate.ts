@@ -1,5 +1,4 @@
-import { loadConsumer, loadConsumerIfExist } from '../../../consumer';
-import { HarmonyMigrator } from '../../../consumer/migrations/harmony-migrator';
+import { loadConsumerIfExist } from '../../../consumer';
 import logger from '../../../logger/logger';
 import { MigrationResult } from '../../../migration/migration-helper';
 import { loadScope, Scope } from '../../../scope';
@@ -38,12 +37,4 @@ export default async function migrate(
   logger.trace('migrate.migrate, running migration process for scope in consumer');
   if (verbose) console.log('running migration process for scope in consumer'); // eslint-disable-line no-console
   return scope.migrate(verbose);
-}
-
-export async function migrateToHarmony() {
-  const consumer = await loadConsumer();
-  const harmonyMigrator = new HarmonyMigrator(consumer);
-  const results = await harmonyMigrator.migrate();
-  await consumer.onDestroy();
-  return results;
 }

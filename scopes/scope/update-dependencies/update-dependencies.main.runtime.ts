@@ -305,7 +305,6 @@ to bypass this error, use --skip-new-scope-validation flag (not recommended. it 
     const ids = BitIds.fromArray(this.legacyComponents.map((c) => c.id));
     await exportMany({
       scope: this.scope.legacyScope,
-      isLegacy: false,
       ids,
       idsWithFutureScope: ids,
       allVersions: false,

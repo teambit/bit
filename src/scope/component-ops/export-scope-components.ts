@@ -71,7 +71,6 @@ type RemotesForPersist = {
  */
 export async function exportMany({
   scope,
-  isLegacy,
   ids, // when exporting a lane, the ids are the lane component ids
   context = {},
   laneObject,
@@ -82,7 +81,6 @@ export async function exportMany({
   ignoreMissingArtifacts,
 }: {
   scope: Scope;
-  isLegacy: boolean;
   ids: BitIds;
   context?: Record<string, any>;
   laneObject?: Lane;
@@ -136,7 +134,7 @@ export async function exportMany({
   }
 
   function shouldPushToCentralHub(): boolean {
-    if (isLegacy || originDirectly) return false;
+    if (originDirectly) return false;
     const hubRemotes = manyObjectsPerRemote.filter((m) => scopeRemotes.isHub(m.remote.name));
     if (!hubRemotes.length) return false;
     if (hubRemotes.length === manyObjectsPerRemote.length) return true; // all are hub

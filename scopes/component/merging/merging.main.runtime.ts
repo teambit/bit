@@ -3,7 +3,6 @@ import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import R from 'ramda';
 import { Consumer } from '@teambit/legacy/dist/consumer';
 import ComponentsList from '@teambit/legacy/dist/consumer/component/components-list';
-import { LanesIsDisabled } from '@teambit/legacy/dist/consumer/lanes/exceptions/lanes-is-disabled';
 import {
   ApplyVersionResults,
   MergeStrategy,
@@ -76,9 +75,6 @@ export class MergingMain {
   ): Promise<ApplyVersionResults> {
     if (!this.workspace) throw new ConsumerNotFound();
     const consumer: Consumer = this.workspace.consumer;
-    if (consumer.isLegacy && (noSnap || message || abort || resolve)) {
-      throw new LanesIsDisabled();
-    }
     let mergeResults;
     const firstValue = R.head(values);
     if (resolve) {
@@ -375,13 +371,7 @@ export class MergingMain {
 
     if (mergeResults) {
       // update files according to the merge results
-      const { filesStatus: modifiedStatus, modifiedFiles } = applyModifiedVersion(
-        files,
-        mergeResults,
-        mergeStrategy,
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        componentWithDependencies.component.originallySharedDir
-      );
+      const { filesStatus: modifiedStatus, modifiedFiles } = applyModifiedVersion(files, mergeResults, mergeStrategy);
       componentWithDependencies.component.files = modifiedFiles;
       filesStatus = { ...filesStatus, ...modifiedStatus };
     }
@@ -416,11 +406,9 @@ export class MergingMain {
     } else {
       // this is main
       const modelComponent = await consumer.scope.getModelComponent(id);
-      if (!consumer.isLegacy) {
-        modelComponent.setHead(remoteHead);
-        // mark it as local, otherwise, when importing this component from a remote, it'll override it.
-        modelComponent.markVersionAsLocal(remoteHead.toString());
-      }
+      modelComponent.setHead(remoteHead);
+      // mark it as local, otherwise, when importing this component from a remote, it'll override it.
+      modelComponent.markVersionAsLocal(remoteHead.toString());
       consumer.scope.objects.add(modelComponent);
     }
 

@@ -286,7 +286,6 @@ export class WorkspaceCompiler {
     noThrow?: boolean
   ): Promise<BuildResult[]> {
     if (!this.workspace) throw new ConsumerNotFound();
-    if (this.workspace.isLegacy) throw new Error('workspace-compiler should work for Harmony workspace only');
     const componentIds = await this.getIdsToCompile(componentsIds, options.changed);
     const components = await this.workspace.getMany(componentIds);
 

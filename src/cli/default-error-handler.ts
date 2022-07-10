@@ -5,7 +5,6 @@ import { BitError } from '@teambit/bit-error';
 import { Analytics, LEVEL } from '../analytics/analytics';
 import ConfigKeyNotFound from '../api/consumer/lib/exceptions/config-key-not-found';
 import DiagnosisNotFound from '../api/consumer/lib/exceptions/diagnosis-not-found';
-import FlagHarmonyOnly from '../api/consumer/lib/exceptions/flag-harmony-only';
 import IdExportedAlready from '../api/consumer/lib/exceptions/id-exported-already';
 import InvalidVersion from '../api/consumer/lib/exceptions/invalid-version';
 import MissingDiagnosisName from '../api/consumer/lib/exceptions/missing-diagnosis-name';
@@ -25,7 +24,6 @@ import {
   NoFiles,
   PathOutsideConsumer,
   PathsNotExist,
-  TestIsDirectory,
   VersionShouldBeRemoved,
 } from '../consumer/component-ops/add-components/exceptions';
 import { AddingIndividualFiles } from '../consumer/component-ops/add-components/exceptions/adding-individual-files';
@@ -33,13 +31,10 @@ import ComponentsPendingImport from '../consumer/component-ops/exceptions/compon
 import ComponentsPendingMerge from '../consumer/component-ops/exceptions/components-pending-merge';
 import EjectNoDir from '../consumer/component-ops/exceptions/eject-no-dir';
 import ComponentNotFoundInPath from '../consumer/component/exceptions/component-not-found-in-path';
-import EjectBoundToWorkspace from '../consumer/component/exceptions/eject-bound-to-workspace';
 import ExternalBuildErrors from '../consumer/component/exceptions/external-build-errors';
 import ExternalTestErrors from '../consumer/component/exceptions/external-test-errors';
-import { FailedLoadForTag } from '../consumer/component/exceptions/failed-load-for-tag';
 import FileSourceNotFound from '../consumer/component/exceptions/file-source-not-found';
 import InjectNonEjected from '../consumer/component/exceptions/inject-non-ejected';
-import InvalidCompilerInterface from '../consumer/component/exceptions/invalid-compiler-interface';
 import MainFileRemoved from '../consumer/component/exceptions/main-file-removed';
 import MissingFilesFromComponent from '../consumer/component/exceptions/missing-files-from-component';
 import { NoComponentDir } from '../consumer/component/exceptions/no-component-dir';
@@ -49,7 +44,6 @@ import InvalidPackageJson from '../consumer/config/exceptions/invalid-package-js
 import InvalidPackageManager from '../consumer/config/exceptions/invalid-package-manager';
 import {
   ComponentOutOfSync,
-  ComponentSpecsFailed,
   ConsumerAlreadyExists,
   ConsumerNotFound,
   LoginFailed,
@@ -61,13 +55,6 @@ import { PathToNpmrcNotExist, WriteToNpmrcError } from '../consumer/login/except
 import GeneralError from '../error/general-error';
 import hashErrorIfNeeded from '../error/hash-error-object';
 import ValidationError from '../error/validation-error';
-import ExtensionFileNotFound from '../legacy-extensions/exceptions/extension-file-not-found';
-import ExtensionGetDynamicConfigError from '../legacy-extensions/exceptions/extension-get-dynamic-config-error';
-import ExtensionGetDynamicPackagesError from '../legacy-extensions/exceptions/extension-get-dynamic-packages-error';
-import ExtensionInitError from '../legacy-extensions/exceptions/extension-init-error';
-import ExtensionLoadError from '../legacy-extensions/exceptions/extension-load-error';
-import ExtensionNameNotValid from '../legacy-extensions/exceptions/extension-name-not-valid';
-import ExtensionSchemaError from '../legacy-extensions/exceptions/extension-schema-error';
 import PromptCanceled from '../prompts/exceptions/prompt-canceled';
 import RemoteNotFound from '../remotes/exceptions/remote-not-found';
 import {
@@ -96,8 +83,6 @@ import {
 import ExportAnotherOwnerPrivate from '../scope/network/exceptions/export-another-owner-private';
 import RemoteResolverError from '../scope/network/exceptions/remote-resolver-error';
 import GitNotFound from '../utils/git/exceptions/git-not-found';
-import { paintSpecsResults } from './chalk-box';
-import AddTestsWithoutId from './commands/exceptions/add-tests-without-id';
 import RemoteUndefined from './commands/exceptions/remote-undefined';
 import newerVersionTemplate from './templates/newer-version-template';
 
@@ -112,15 +97,6 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
     () =>
       chalk.red(
         'error: remote url must be defined. please use: `ssh://`, `file://` or `bit://` protocols to define remote access'
-      ),
-  ],
-  [
-    AddTestsWithoutId,
-    () =>
-      chalk.yellow(
-        `please specify a component ID to add test files to an existing component. \n${chalk.bold(
-          'example: bit add --tests [test_file_path] --id [component_id]'
-        )}`
       ),
   ],
   [ConsumerAlreadyExists, () => 'workspace already exists'],
@@ -144,23 +120,12 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
     AddingIndividualFiles,
     (err) => `error: adding individual files is blocked ("${err.file}"), and only directories can be added`,
   ],
-  [ExtensionFileNotFound, (err) => `file "${err.path}" was not found`],
-  [
-    ExtensionNameNotValid,
-    (err) =>
-      `error: the extension name "${err.name}" is not a valid component id (it must contain a scope name) fix it on your bit.json file`,
-  ],
   [
     ProtocolNotSupported,
     () =>
       'error: remote scope protocol is not supported, please use: `ssh://`, `file://`, `http://`, `https://` or `bit://`',
   ],
   [RemoteScopeNotFound, (err) => `error: remote scope "${chalk.bold(err.name)}" was not found.`],
-
-  [
-    EjectBoundToWorkspace,
-    () => 'error: could not eject config for authored component which are bound to the workspace configuration',
-  ],
   [InjectNonEjected, () => 'error: could not inject config for already injected component'],
   [ComponentsPendingImport, () => IMPORT_PENDING_MSG],
   // TODO: improve error
@@ -258,7 +223,6 @@ Original Error: ${err.message}`,
   ],
   [MissingDiagnosisName, () => 'error: please provide a diagnosis name'],
   [DiagnosisNotFound, (err) => `error: diagnosis ${chalk.bold(err.diagnosisName)} not found`],
-  [ComponentSpecsFailed, (err) => formatComponentSpecsFailed(err.id, err.specsResults)],
   [
     ComponentOutOfSync,
     (err) => `component ${chalk.bold(err.id)} is not in-sync between the consumer and the scope.
@@ -327,11 +291,6 @@ please use "bit remove" to delete the component or "bit add" with "--main" and "
     (err) => `please remove the version part from the specified id ${chalk.bold(err.id)} and try again`,
   ],
   [
-    TestIsDirectory,
-    (err) =>
-      `error: the specified test path ${chalk.bold(err.path)} is a directory, please specify a file or a pattern DSL`,
-  ],
-  [
     MainFileIsDir,
     (err) =>
       `error: the specified main path ${chalk.bold(
@@ -350,7 +309,6 @@ please use "bit remove" to delete the component or "bit add" with "--main" and "
     (err) => `error: file or directory "${chalk.bold(err.path)}" is located outside of the workspace.`,
   ],
   [ConfigKeyNotFound, (err) => `unable to find a key "${chalk.bold(err.key)}" in your bit config`],
-  [FlagHarmonyOnly, (err) => `the flag: "${chalk.bold(err.flag)}" allowed only on harmony workspace`],
   [WriteToNpmrcError, (err) => `unable to add @bit as a scoped registry at "${chalk.bold(err.path)}"`],
   [PathToNpmrcNotExist, (err) => `error: file or directory "${chalk.bold(err.path)}" was not found.`],
   [
@@ -374,7 +332,6 @@ please use "bit remove" to delete the component or "bit add" with "--main" and "
         err.newId
       )}", however, this file already belong to "${chalk.bold(err.importedId)}"`,
   ],
-  [FailedLoadForTag, (err) => err.getErrorMessage()],
   [
     NoFiles,
     (err) =>
@@ -428,38 +385,6 @@ please use "bit remove" to delete the component or "bit add" with "--main" and "
       )}`,
   ],
   [
-    ExtensionLoadError,
-    (err) =>
-      `error: bit failed to load ${err.compName} with the following exception:\n${getExternalErrorMessage(
-        err.originalError
-      )}.\n${err.printStack ? err.originalError.stack : ''}`,
-  ],
-  [
-    ExtensionSchemaError,
-    (err) => `error: configuration passed to extension ${chalk.bold(err.extensionName)} is invalid:\n${err.errors}`,
-  ],
-  [
-    ExtensionInitError,
-    (err) =>
-      `error: bit failed to initialized ${err.compName} with the following exception:\n${getExternalErrorMessage(
-        err.originalError
-      )}.\n${err.originalError.stack}`,
-  ],
-  [
-    ExtensionGetDynamicPackagesError,
-    (err) =>
-      `error: bit failed to get the dynamic packages from ${err.compName} with the following exception:\n${err.originalError.message}.\n${err.originalError.stack}`,
-  ],
-  [
-    ExtensionGetDynamicConfigError,
-    (err) =>
-      `error: bit failed to get the config from ${err.compName} with the following exception:\n${err.originalError.message}.\n${err.originalError.stack}`,
-  ],
-  [
-    InvalidCompilerInterface,
-    (err) => `"${err.compilerName}" does not have a valid compiler interface, it has to expose a compile method`,
-  ],
-  [
     ResolutionException,
     (err) =>
       `error: bit failed to require ${err.filePath} due to the following exception:\n${getExternalErrorMessage(
@@ -486,16 +411,6 @@ please use "bit remove" to delete the component or "bit add" with "--main" and "
 3. force workspace initialization without clearing data use the ${chalk.bold('--force')} flag.`,
   ],
 ];
-function formatComponentSpecsFailed(id, specsResults) {
-  // $FlowFixMe this.specsResults is not null at this point
-  const specsResultsPretty = specsResults ? paintSpecsResults(specsResults).join('\n') : '';
-  const componentIdPretty = id ? chalk.bold.white(id) : '';
-  const specsResultsAndIdPretty = `${componentIdPretty}${specsResultsPretty}\n`;
-  const additionalInfo =
-    'component tests failed. please make sure all tests pass before tagging a new version or use the "--force" flag to force-tag components.\nto view test failures, please use the "--verbose" flag or use the "bit test" command';
-  const res = `${specsResultsAndIdPretty}${additionalInfo}`;
-  return res;
-}
 
 export function findErrorDefinition(err: Error) {
   const error = errorsMap.find(([ErrorType]) => {

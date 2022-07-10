@@ -1,7 +1,6 @@
 import Bluebird from 'bluebird';
 import fs from 'fs-extra';
 import * as path from 'path';
-import Capsule from '../../../../legacy-capsule/core/capsule';
 import Symlink from '../../../links/symlink';
 import logger from '../../../logger/logger';
 import { concurrentIOLimit } from '../../../utils/concurrency';
@@ -86,7 +85,7 @@ export default class DataToPersist {
     );
     await Promise.all(this.symlinks.map((symlink) => this.atomicSymlink(capsule, symlink)));
   }
-  async _writeFileToCapsule(capsule: Capsule, file: AbstractVinyl, opts = { overwriteExistingFile: false }) {
+  async _writeFileToCapsule(capsule: any, file: AbstractVinyl, opts = { overwriteExistingFile: false }) {
     // overwriteExistingFile: if a file with the same name exists in the capsule, overwrite it
     if (opts.overwriteExistingFile) {
       await capsule.removePath(file.path);
@@ -114,7 +113,7 @@ export default class DataToPersist {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return capsule.outputFile(file.path, file.contents);
   }
-  async atomicSymlink(capsule: Capsule, symlink: Symlink) {
+  async atomicSymlink(capsule: any, symlink: Symlink) {
     try {
       await capsule.symlink(symlink.src, symlink.dest);
     } catch (e: any) {
