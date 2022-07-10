@@ -29,17 +29,19 @@ type QueryResults = {
   };
 };
 
+type Property = {
+  name: string;
+  description: string;
+  required: boolean;
+  type: string;
+  default: {
+    value: string;
+  };
+}
+
 type DocsItem = {
   abstract: string;
-  properties: {
-    name: string;
-    description: string;
-    required: boolean;
-    type: string;
-    default: {
-      value: string;
-    };
-  };
+  properties: Property[];
 };
 
 export function useFetchDocs(componentId: string) {

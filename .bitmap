@@ -1020,6 +1020,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/design/ui/alert-card"
     },
+    "ui/docs/apply-providers": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/react/ui/docs/apply-providers"
+    },
     "ui/aspect-box": {
         "scope": "teambit.harmony",
         "version": "0.0.486",
@@ -1152,6 +1158,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/compositions/ui/compositions-menu-bar"
     },
+    "ui/docs/compositions-carousel": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/react/ui/docs/compositions-carousel"
+    },
     "ui/constants/z-indexes": {
         "scope": "teambit.ui-foundation",
         "version": "0.0.488",
@@ -1187,6 +1199,12 @@
         "version": "0.0.179",
         "mainFile": "index.tsx",
         "rootDir": "scopes/react/ui/docs-app"
+    },
+    "ui/docs/docs-content": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/react/ui/docs/docs-content"
     },
     "ui/docs/link": {
         "scope": "teambit.mdx",
@@ -1330,7 +1348,7 @@
         "scope": "teambit.component",
         "version": "0.0.5",
         "mainFile": "index.ts",
-        "rootDir": "scopes/component/ui/use-fetch-docs"
+        "rootDir": "scopes/component/ui/hooks/use-fetch-docs"
     },
     "ui/hooks/use-in-out-transition": {
         "scope": "teambit.ui-foundation",
@@ -1499,6 +1517,12 @@
         "version": "0.0.487",
         "mainFile": "index.ts",
         "rootDir": "scopes/preview/ui/preview-placeholder"
+    },
+    "ui/docs/properties-table": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/react/ui/docs/properties-table"
     },
     "ui/queries/get-component-code": {
         "scope": "teambit.code",
