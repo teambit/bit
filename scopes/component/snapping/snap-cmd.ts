@@ -2,12 +2,7 @@ import chalk from 'chalk';
 import { IssuesClasses } from '@teambit/component-issues';
 import { Command, CommandOptions } from '@teambit/cli';
 import { isFeatureEnabled, BUILD_ON_CI } from '@teambit/legacy/dist/api/consumer/lib/feature-toggle';
-import {
-  WILDCARD_HELP,
-  NOTHING_TO_SNAP_MSG,
-  AUTO_SNAPPED_MSG,
-  COMPONENT_PATTERN_HELP,
-} from '@teambit/legacy/dist/constants';
+import { WILDCARD_HELP, NOTHING_TO_SNAP_MSG, AUTO_SNAPPED_MSG } from '@teambit/legacy/dist/constants';
 import { BitError } from '@teambit/bit-error';
 import { Logger } from '@teambit/logger';
 import { SnapResults } from '@teambit/legacy/dist/api/consumer/lib/snap';
@@ -20,7 +15,8 @@ export class SnapCmd implements Command {
   arguments = [
     {
       name: 'component-pattern',
-      description: COMPONENT_PATTERN_HELP,
+      description:
+        'component name, component id, or component pattern. use component pattern to select multiple components. use comma to separate patterns e.g. "apps/**, ui/button". wrap the pattern with quotes',
     },
   ];
   alias = '';
