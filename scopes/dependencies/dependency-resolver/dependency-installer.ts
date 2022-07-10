@@ -5,6 +5,7 @@ import { MainAspect, AspectLoaderMain } from '@teambit/aspect-loader';
 import { ComponentMap } from '@teambit/component';
 import { Logger } from '@teambit/logger';
 import { PathAbsolute } from '@teambit/legacy/dist/utils/path';
+import { PeerDependencyRules } from '@pnpm/types';
 import { MainAspectNotInstallable, RootDirNotDefined } from './exceptions';
 import { PackageManager, PackageManagerInstallOptions, PackageImportMethod } from './package-manager';
 import { WorkspacePolicy } from './policy';
@@ -67,6 +68,8 @@ export class DependencyInstaller {
     private nodeVersion?: string,
 
     private engineStrict?: boolean,
+
+    private peerDependencyRules?: PeerDependencyRules
   ) {}
 
   async install(
@@ -99,6 +102,7 @@ export class DependencyInstaller {
       nodeVersion: this.nodeVersion,
       engineStrict: this.engineStrict,
       packageManagerConfigRootDir: options.packageManagerConfigRootDir,
+      peerDependencyRules: this.peerDependencyRules,
       ...packageManagerOptions,
     };
     if (options.installTeambitBit) {

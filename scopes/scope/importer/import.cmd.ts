@@ -46,7 +46,11 @@ export default class ImportCmd implements Command {
       'merge local changes with the imported version. strategy should be "theirs", "ours" or "manual"',
     ],
     ['', 'dependencies', 'EXPERIMENTAL. import all dependencies and write them to the workspace'],
-    ['', 'dependents', 'EXPERIMENTAL. import component dependents to allow auto-tag updating them upon tag'],
+    [
+      '',
+      'dependents',
+      "EXPERIMENTAL. import the components' dependents. this enables changes to propagate from (modified) components to their dependents",
+    ],
     [
       '',
       'save-in-lane',

@@ -3,7 +3,6 @@ import R from 'ramda';
 import { BitId } from '../../bit-id';
 import {
   COMPONENT_ORIGINS,
-  DEPENDENCIES_FIELDS,
   MANUALLY_ADD_DEPENDENCY,
   MANUALLY_REMOVE_DEPENDENCY,
   OVERRIDE_COMPONENT_PREFIX,
@@ -77,17 +76,13 @@ export default class ComponentOverrides {
     isLegacy: boolean
   ): Promise<ComponentOverrides> {
     const isAuthor = origin === COMPONENT_ORIGINS.AUTHORED;
-    const isNotNested = origin !== COMPONENT_ORIGINS.NESTED;
     // overrides from consumer-config is not relevant and should not affect imported
-    let legacyOverridesFromConsumer = isNotNested ? workspaceConfig?.getComponentConfig(componentId) : null;
+    let legacyOverridesFromConsumer = workspaceConfig?.getComponentConfig(componentId);
 
     if (isAuthor) {
       const plainLegacy = workspaceConfig?._legacyPlainObject();
       if (plainLegacy && plainLegacy.env) {
         legacyOverridesFromConsumer = legacyOverridesFromConsumer || {};
-        legacyOverridesFromConsumer.env = {};
-        legacyOverridesFromConsumer.env.compiler = plainLegacy.env.compiler;
-        legacyOverridesFromConsumer.env.tester = plainLegacy.env.tester;
       }
     }
 
@@ -177,35 +172,6 @@ export default class ComponentOverrides {
   getIgnoredPackages(field: string): string[] {
     const ignoredRules = this.getIgnored(field);
     return ignoredRules.filter((rule) => !rule.startsWith(OVERRIDE_FILE_PREFIX));
-  }
-
-  stripOriginallySharedDir(sharedDir: string | null | undefined) {
-    if (!sharedDir) return;
-    DEPENDENCIES_FIELDS.forEach((field) => {
-      if (!this.overrides[field]) return;
-      Object.keys(this.overrides[field]).forEach((rule) => {
-        if (!rule.startsWith(OVERRIDE_FILE_PREFIX)) return;
-        const fileWithSharedDir = rule.replace(OVERRIDE_FILE_PREFIX, '');
-        const fileWithoutSharedDir = fileWithSharedDir.replace(`${sharedDir}/`, '');
-        const value = this.overrides[field][rule];
-        delete this.overrides[field][rule];
-        this.overrides[field][`${OVERRIDE_FILE_PREFIX}${fileWithoutSharedDir}`] = value;
-      });
-    });
-  }
-  addOriginallySharedDir(sharedDir: string | null | undefined) {
-    if (!sharedDir) return;
-    DEPENDENCIES_FIELDS.forEach((field) => {
-      if (!this.overrides[field]) return;
-      Object.keys(this.overrides[field]).forEach((rule) => {
-        if (!rule.startsWith(OVERRIDE_FILE_PREFIX)) return;
-        const fileWithoutSharedDir = rule.replace(OVERRIDE_FILE_PREFIX, '');
-        const fileWithSharedDir = `${sharedDir}/${fileWithoutSharedDir}`;
-        const value = this.overrides[field][rule];
-        delete this.overrides[field][rule];
-        this.overrides[field][`${OVERRIDE_FILE_PREFIX}${fileWithSharedDir}`] = value;
-      });
-    });
   }
   static getAllFilesPaths(overrides: Record<string, any>): string[] {
     if (!overrides) return [];

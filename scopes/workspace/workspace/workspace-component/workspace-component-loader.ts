@@ -50,9 +50,7 @@ export class WorkspaceComponentLoader {
     });
     const components = await componentsP;
     errors.forEach((err) => {
-      if (!this.workspace.consumer.isLegacy) {
-        this.logger.console(`failed loading component ${err.id.toString()}, see full error in debug.log file`);
-      }
+      this.logger.console(`failed loading component ${err.id.toString()}, see full error in debug.log file`);
       this.logger.warn(`failed loading component ${err.id.toString()}`, err.err);
     });
     // remove errored components

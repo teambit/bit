@@ -1,4 +1,4 @@
-import { addMany as addManyInternal, build, buildAll as buildAllApi, getScopeComponent } from './api/consumer/index';
+import { addMany as addManyInternal, getScopeComponent } from './api/consumer/index';
 import { scopeList } from './api/scope/index';
 import { AddProps } from './consumer/component-ops/add-components/add-components';
 import { Packer } from './pack';
@@ -33,19 +33,6 @@ export function list(
   return scopeList(scopePath, namespacesUsingWildcards, loadScopeFromCache).then((listScopeResult) =>
     listScopeResult.map((result) => result.id.toString())
   );
-}
-
-export async function buildOne(
-  id: string,
-  noCache = false,
-  verbose = false,
-  workspaceDir?: string
-): Promise<string[] | null | undefined> {
-  return build(id, noCache, verbose, workspaceDir);
-}
-
-export async function buildAll(id: string, noCache = false, verbose = false): Promise<Record<string, any>> {
-  return buildAllApi(noCache, verbose);
 }
 
 export async function addMany(components: AddProps[], alternateCwd?: string) {

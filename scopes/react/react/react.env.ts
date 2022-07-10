@@ -36,6 +36,12 @@ import { SchemaExtractor } from '@teambit/schema';
 import { join, resolve } from 'path';
 import { outputFileSync } from 'fs-extra';
 import { Logger } from '@teambit/logger';
+// ensure reactEnv depends on compositions-app
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import { CompositionsApp } from '@teambit/react.ui.compositions-app';
+// ensure reactEnv depends on docs-app
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import DocsApps from '@teambit/react.ui.docs-app';
 import type { ReactMainConfig } from './react.main.runtime';
 import { ReactAspect } from './react.aspect';
 // webpack configs for both components and envs

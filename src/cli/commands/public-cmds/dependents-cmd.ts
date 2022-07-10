@@ -5,7 +5,13 @@ import { CommandOptions, LegacyCommand } from '../../legacy-command';
 import { generateDependentsInfoTable } from '../../templates/component-template';
 
 export default class Dependents implements LegacyCommand {
-  name = 'dependents <id>';
+  name = 'dependents <component-name>';
+  arguments = [
+    {
+      names: 'component-name',
+      description: 'component name or component id',
+    },
+  ];
   description = 'EXPERIMENTAL. show dependents of the given component';
   group: Group = 'info';
   alias = '';

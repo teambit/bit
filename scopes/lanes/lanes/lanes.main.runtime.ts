@@ -309,7 +309,6 @@ export class LanesMain {
   async exportLane(lane: Lane) {
     await exportMany({
       scope: this.scope.legacyScope,
-      isLegacy: false,
       laneObject: lane,
       ids: new BitIds(),
       idsWithFutureScope: new BitIds(),
@@ -562,28 +561,25 @@ export class LanesMain {
   ]) {
     const logger = loggerMain.createLogger(LanesAspect.id);
     const lanesMain = new LanesMain(workspace, scope, merging, component, logger);
-    const isLegacy = workspace && workspace.consumer.isLegacy;
     const switchCmd = new SwitchCmd(lanesMain);
-    if (!isLegacy) {
-      const laneCmd = new LaneCmd(lanesMain, workspace, scope, community.getDocsDomain());
-      laneCmd.commands = [
-        new LaneListCmd(lanesMain, workspace, scope),
-        switchCmd,
-        new LaneShowCmd(lanesMain, workspace, scope),
-        new LaneCreateCmd(lanesMain),
-        new LaneMergeCmd(lanesMain),
-        new LaneRemoveCmd(lanesMain),
-        new LaneChangeScopeCmd(lanesMain),
-        new LaneAliasCmd(lanesMain),
-        new LaneRenameCmd(lanesMain),
-        new LaneDiffCmd(workspace, scope),
-        new LaneAddReadmeCmd(lanesMain),
-        new LaneRemoveReadmeCmd(lanesMain),
-        new LaneImportCmd(switchCmd),
-      ];
-      cli.register(laneCmd, switchCmd);
-      graphql.register(lanesSchema(lanesMain));
-    }
+    const laneCmd = new LaneCmd(lanesMain, workspace, scope, community.getDocsDomain());
+    laneCmd.commands = [
+      new LaneListCmd(lanesMain, workspace, scope),
+      switchCmd,
+      new LaneShowCmd(lanesMain, workspace, scope),
+      new LaneCreateCmd(lanesMain),
+      new LaneMergeCmd(lanesMain),
+      new LaneRemoveCmd(lanesMain),
+      new LaneChangeScopeCmd(lanesMain),
+      new LaneAliasCmd(lanesMain),
+      new LaneRenameCmd(lanesMain),
+      new LaneDiffCmd(workspace, scope),
+      new LaneAddReadmeCmd(lanesMain),
+      new LaneRemoveReadmeCmd(lanesMain),
+      new LaneImportCmd(switchCmd),
+    ];
+    cli.register(laneCmd, switchCmd);
+    graphql.register(lanesSchema(lanesMain));
     return lanesMain;
   }
 }

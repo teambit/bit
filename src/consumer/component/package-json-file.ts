@@ -144,24 +144,12 @@ export default class PackageJsonFile {
       componentId: componentIdWithDefaultScope.serialize(),
       dependencies: {
         ...component.packageDependencies,
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        ...component.compilerPackageDependencies.dependencies,
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        ...component.testerPackageDependencies.dependencies,
       },
       devDependencies: {
         ...component.devPackageDependencies,
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        ...component.compilerPackageDependencies.devDependencies,
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        ...component.testerPackageDependencies.devDependencies,
       },
       peerDependencies: {
         ...component.peerPackageDependencies,
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        ...component.compilerPackageDependencies.peerDependencies,
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        ...component.testerPackageDependencies.peerDependencies,
       },
       license: `SEE LICENSE IN ${!R.isEmpty(component.license) ? 'LICENSE' : 'UNLICENSED'}`,
     };

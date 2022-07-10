@@ -92,11 +92,6 @@ export default class ImportComponents {
   importComponents(): Promise<ImportResult> {
     loader.start(BEFORE_IMPORT_ACTION);
     this.options.saveDependenciesAsComponents = this.consumer.config._saveDependenciesAsComponents;
-    if (this.consumer.isLegacy && !this.options.writePackageJson) {
-      // if package.json is not written, it's impossible to install the packages and dependencies as npm packages
-      this.options.installNpmPackages = false;
-      this.options.saveDependenciesAsComponents = true;
-    }
     if (this.options.lanes && !this.options.ids.length) {
       return this.importObjectsOnLane();
     }
@@ -107,8 +102,8 @@ export default class ImportComponents {
   }
 
   async importObjectsOnLane(): Promise<ImportResult> {
-    if (!this.laneObjects.length || !this.options.objectsOnly || this.consumer.isLegacy) {
-      throw new Error(`importObjectsOnLane should work on Harmony and have laneObjects and objectsOnly=true`);
+    if (!this.laneObjects.length || !this.options.objectsOnly) {
+      throw new Error(`importObjectsOnLane should have laneObjects and objectsOnly=true`);
     }
     if (this.laneObjects.length > 1) {
       throw new Error(`importObjectsOnLane does not support more than one lane`);
@@ -145,10 +140,7 @@ export default class ImportComponents {
     const bitIds: BitIds = await this.getBitIds();
     const beforeImportVersions = await this._getCurrentVersions(bitIds);
     await this._throwForPotentialIssues(bitIds);
-    const componentsWithDependencies = this.consumer.isLegacy
-      ? await this.consumer.importComponentsLegacy(bitIds, true, this.options.saveDependenciesAsComponents)
-      : await this.consumer.importComponentsHarmony(bitIds, true, this.laneObjects);
-    await this._throwForModifiedOrNewDependencies(componentsWithDependencies);
+    const componentsWithDependencies = await this.consumer.importComponentsHarmony(bitIds, true, this.laneObjects);
     if (this.laneObjects && this.options.objectsOnly) {
       // merge the lane objects
       const mergeAllLanesResults = await pMapSeries(this.laneObjects, (laneObject) =>
@@ -334,16 +326,8 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
     this.options.objectsOnly = !this.options.merge && !this.options.override;
     const componentsIdsToImport = this.getIdsToImportFromBitmap();
 
-    let compiler;
-    let tester;
-
     if (R.isEmpty(componentsIdsToImport)) {
       if (!this.options.withEnvironments) {
-        throw new NothingToImport();
-      }
-      compiler = await this.consumer.compiler;
-      tester = await this.consumer.tester;
-      if (!tester && !compiler) {
         throw new NothingToImport();
       }
     }
@@ -353,39 +337,18 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
     let componentsAndDependencies: ComponentWithDependencies[] = [];
     if (componentsIdsToImport.length) {
       // change all ids version to 'latest'. otherwise, it tries to import local tags/snaps from a remote
-      const idsWithLatestVersion = componentsIdsToImport.toVersionLatest();
-      componentsAndDependencies =
-        !this.consumer.isLegacy && this.options.objectsOnly
-          ? await this.consumer.importComponentsObjectsHarmony(
-              componentsIdsToImport,
-              this.options.fromOriginalScope,
-              this.options.allHistory
-            )
-          : await this.consumer.importComponentsLegacy(BitIds.fromArray(idsWithLatestVersion), true);
-      await this._throwForModifiedOrNewDependencies(componentsAndDependencies);
+      // const idsWithLatestVersion = componentsIdsToImport.toVersionLatest();
+      if (!this.options.objectsOnly) {
+        throw new Error(`bit import with no ids and --merge flag was not implemented yet`);
+      }
+      componentsAndDependencies = await this.consumer.importComponentsObjectsHarmony(
+        componentsIdsToImport,
+        this.options.fromOriginalScope,
+        this.options.allHistory
+      );
       await this._writeToFileSystem(componentsAndDependencies);
     }
     const importDetails = await this._getImportDetails(beforeImportVersions, componentsAndDependencies);
-    if (this.options.withEnvironments) {
-      compiler = compiler || (await this.consumer.compiler);
-      tester = tester || (await this.consumer.tester);
-      const context = { workspaceDir: this.consumer.getPath() };
-      const envsArgs = [this.consumer.scope, { verbose: this.options.verbose }, context];
-      const envComponents = [];
-      if (compiler) {
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        envComponents.push(await compiler.install(...envsArgs));
-      }
-      if (tester) {
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        envComponents.push(await tester.install(...envsArgs));
-      }
-      return {
-        dependencies: componentsAndDependencies,
-        envComponents: R.flatten(envComponents),
-        importDetails,
-      };
-    }
 
     return { dependencies: componentsAndDependencies, importDetails };
   }
@@ -503,20 +466,6 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
     }
   }
 
-  async _throwForModifiedOrNewDependencies(componentsAndDependencies: ComponentWithDependencies[]) {
-    if (!this.consumer.isLegacy) {
-      // only legacy has the concept of writing the dependencies as components.
-      // currently, they're installed as packages.
-      return;
-    }
-    const allDependenciesIds = R.flatten(
-      componentsAndDependencies.map((componentAndDependencies) =>
-        componentAndDependencies.component.dependencies.getAllIds()
-      )
-    );
-    await this._throwForModifiedOrNewComponents(allDependenciesIds);
-  }
-
   /**
    * Model Component id() calculation uses id.toString() for the hash.
    * If an imported component has scopereadonly name equals to a local name, both will have the exact same
@@ -600,9 +549,7 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
     const { filesStatus, modifiedFiles } = applyModifiedVersion(
       component.files,
       mergeResults,
-      this.options.mergeStrategy,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      component.originallySharedDir
+      this.options.mergeStrategy
     );
     component.files = modifiedFiles;
 

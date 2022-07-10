@@ -71,10 +71,6 @@ export const SUPPORTED_EXTENSIONS = ['.js', '.ts', '.jsx', '.tsx', '.css', '.scs
 
 export const NO_PLUGIN_TYPE = 'none';
 
-export const DEFAULT_COMPILER_ID = NO_PLUGIN_TYPE;
-
-export const DEFAULT_TESTER_ID = NO_PLUGIN_TYPE;
-
 export const DEFAULT_PACKAGE_MANAGER = 'npm';
 
 export const DEFAULT_HARMONY_PACKAGE_MANAGER = 'teambit.dependencies/pnpm';
@@ -457,10 +453,6 @@ export const WRAPPER_DIR = 'bit_wrapper_dir';
 export const PACKAGE_JSON = 'package.json';
 
 export const COMPONENT_CONFIG_FILE_NAME = 'component.json';
-
-export const COMPILER_ENV_TYPE = 'compiler';
-
-export const TESTER_ENV_TYPE = 'tester';
 
 export const DEBUG_LOG: PathOsBased = path.join(GLOBAL_LOGS, 'debug.log');
 

@@ -35,8 +35,6 @@ export type AllDependencies = {
 export type AllPackagesDependencies = {
   packageDependencies: Record<string, any> | null | undefined;
   devPackageDependencies: Record<string, any> | null | undefined;
-  compilerPackageDependencies: Record<string, any> | null | undefined;
-  testerPackageDependencies: Record<string, any> | null | undefined;
   peerPackageDependencies: Record<string, any> | null | undefined;
 };
 
@@ -129,8 +127,6 @@ export default class DependencyResolver {
     this.allPackagesDependencies = {
       packageDependencies: {},
       devPackageDependencies: {},
-      compilerPackageDependencies: {},
-      testerPackageDependencies: {},
       peerPackageDependencies: {},
     };
     this.processedFiles = [];
@@ -179,7 +175,6 @@ export default class DependencyResolver {
       workspacePath: this.consumerPath,
       filePaths: allFiles,
       bindingPrefix: this.component.bindingPrefix,
-      isLegacyProject: this.consumer.isLegacy,
       resolveModulesConfig: this.consumer.config._resolveModules,
       visited: cacheResolvedDependencies,
       cacheProjectAst,
@@ -241,7 +236,6 @@ export default class DependencyResolver {
     await this.applyAutoDetectedPeersFromEnvOnComponent();
     await this.applyAutoDetectedPeersFromEnvOnEnvItSelf();
     this.manuallyAddDependencies();
-    this.applyOverridesOnEnvPackages();
     this.coreAspects = R.uniq(this.coreAspects);
   }
 
@@ -276,14 +270,6 @@ export default class DependencyResolver {
       shouldBeIncludedDev,
       this.allPackagesDependencies.devPackageDependencies
     );
-    this.allPackagesDependencies.compilerPackageDependencies = R.pickBy(
-      shouldBeIncludedDev,
-      this.allPackagesDependencies.compilerPackageDependencies
-    );
-    this.allPackagesDependencies.testerPackageDependencies = R.pickBy(
-      shouldBeIncludedDev,
-      this.allPackagesDependencies.testerPackageDependencies
-    );
   }
 
   throwForNonExistFile(file: string) {
@@ -312,18 +298,6 @@ export default class DependencyResolver {
       if (packages[depField] && !R.isEmpty(packages[depField])) {
         Object.assign(this.allPackagesDependencies[this._pkgFieldMapping(depField)], packages[depField]);
       }
-    });
-  }
-
-  applyOverridesOnEnvPackages() {
-    [this.component.compilerPackageDependencies, this.component.testerPackageDependencies].forEach((packages) => {
-      DEPENDENCIES_FIELDS.forEach((fieldType) => {
-        if (!packages[fieldType]) return;
-        const shouldBeIncluded = (pkgVersion, pkgName) => {
-          return !this.overridesDependencies.shouldIgnorePackageByType(pkgName, fieldType);
-        };
-        packages[fieldType] = R.pickBy(shouldBeIncluded, packages[fieldType]);
-      });
     });
   }
 
@@ -560,12 +534,6 @@ either, use the ignore file syntax or change the require statement to have a mod
     // happens when in the same component one file requires another one. In this case, there is
     // noting to do regarding the dependencies
     if (componentId.isEqualWithoutVersion(this.componentId)) {
-      if (depFileObject.isCustomResolveUsed) {
-        this.component.customResolvedPaths.push({
-          destinationPath: depFileObject.file,
-          importSource,
-        });
-      }
       return false;
     }
 
@@ -1056,15 +1024,6 @@ either, use the ignore file syntax or change the require statement to have a mod
       getNotRegularPackages(this.allPackagesDependencies.devPackageDependencies),
       this.allPackagesDependencies.devPackageDependencies
     );
-    this.allPackagesDependencies.compilerPackageDependencies = R.pick(
-      getNotRegularPackages(this.allPackagesDependencies.compilerPackageDependencies),
-      this.allPackagesDependencies.compilerPackageDependencies
-    );
-    this.allPackagesDependencies.testerPackageDependencies = R.pick(
-      getNotRegularPackages(this.allPackagesDependencies.testerPackageDependencies),
-      this.allPackagesDependencies.testerPackageDependencies
-    );
-
     // remove dev dependencies that are also regular dependencies
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const componentDepsIds = new BitIds(...this.allDependencies.dependencies.map((c) => c.id));
