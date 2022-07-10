@@ -22,33 +22,33 @@
         "@mdx-js/react": "1.6.22",
         "@monaco-editor/react": "4.4.2",
         "@pmmmwh/react-refresh-webpack-plugin": "0.5.4",
-        "@pnpm/client": "6.1.6",
+        "@pnpm/client": "6.1.9",
         "@pnpm/colorize-semver-diff": "1.0.1",
-        "@pnpm/config": "13.14.1",
-        "@pnpm/core": "2.9.8",
-        "@pnpm/default-reporter": "8.6.2",
-        "@pnpm/default-resolver": "14.0.14",
+        "@pnpm/config": "13.14.2",
+        "@pnpm/core": "2.10.0",
+        "@pnpm/default-reporter": "8.6.3",
+        "@pnpm/default-resolver": "14.0.17",
         "@pnpm/error": "2.1.0",
-        "@pnpm/fetch": "4.2.6",
+        "@pnpm/fetch": "4.2.8",
         "@pnpm/fetching-types": "2.2.1",
-        "@pnpm/git-resolver": "5.1.19",
-        "@pnpm/local-resolver": "7.0.8",
+        "@pnpm/git-resolver": "5.2.1",
+        "@pnpm/local-resolver": "7.0.9",
         "@pnpm/logger": "4.0.0",
-        "@pnpm/modules-yaml": "9.1.1",
+        "@pnpm/modules-yaml": "9.1.2",
         "@pnpm/network.agent": "0.0.3",
         "@pnpm/network.ca-file": "1.0.1",
-        "@pnpm/npm-resolver": "12.1.8",
-        "@pnpm/package-store": "12.1.16",
+        "@pnpm/npm-resolver": "12.1.9",
+        "@pnpm/package-store": "12.2.1",
         "@pnpm/parse-overrides": "1.0.1",
         "@pnpm/pick-registry-for-package": "2.0.11",
         "@pnpm/registry-mock": "2.20.0",
-        "@pnpm/resolver-base": "8.1.6",
+        "@pnpm/resolver-base": "8.1.7",
         "@pnpm/semver-diff": "1.1.0",
-        "@pnpm/sort-packages": "2.1.7",
-        "@pnpm/store-connection-manager": "3.2.20",
-        "@pnpm/tarball-fetcher": "9.3.18",
-        "@pnpm/tarball-resolver": "5.0.11",
-        "@pnpm/types": "7.10.0",
+        "@pnpm/sort-packages": "2.1.9",
+        "@pnpm/store-connection-manager": "3.2.23",
+        "@pnpm/tarball-fetcher": "9.3.20",
+        "@pnpm/tarball-resolver": "5.0.12",
+        "@pnpm/types": "7.11.0",
         "@react-hook/latest": "1.0.3",
         "@stencil/core": "1.17.4",
         "@stencil/webpack": "0.0.6",
@@ -373,7 +373,7 @@
       "peerDependencies": {
         "@apollo/client": "^3.0.0",
         "@teambit/base-react.navigation.link": "2.0.27",
-        "@teambit/legacy": "1.0.299",
+        "@teambit/legacy": "1.0.300",
         "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
         "browserslist": "4.16.3",
         "core-js": "^3.10.0",
@@ -398,7 +398,11 @@
     // Setting this to false, to make sure we are not consuming anything that exists only on the bit.dev registry
     // "installFromBitDevRegistry": false,
     "savePrefix": "",
-    "extraArgs": []
+    "extraArgs": [],
+    "peerDependencyRules": {
+      "allowAny": [],
+      "ignoreMissing": []
+    }
   },
   "teambit.preview/preview": {
     "bundlingStrategy": "component"
@@ -456,7 +460,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.299"
+            "@teambit/legacy": "1.0.300"
           }
         }
       },
@@ -721,7 +725,7 @@
           "peerDependencies": {
             "react": "^16.8.0 || ^17.0.0",
             "react-dom": "^16.8.0 || ^17.0.0",
-            "@teambit/legacy": "1.0.299"
+            "@teambit/legacy": "1.0.300"
           }
         }
       }
@@ -799,7 +803,7 @@
             "@teambit/base-react.navigation.link": "2.0.27",
             "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
             "@apollo/client": "3.3.7",
-            "@teambit/legacy": "1.0.299",
+            "@teambit/legacy": "1.0.300",
             "graphql": "14.7.0",
             "browserslist": "4.16.3",
             "reflect-metadata": "0.1.13",
@@ -934,7 +938,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.299"
+            "@teambit/legacy": "1.0.300"
           }
         }
       }

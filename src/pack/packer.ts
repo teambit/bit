@@ -4,9 +4,7 @@ import path from 'path';
 import { isSnap } from '@teambit/component-version';
 import isRelative from 'is-relative-path';
 import { checksumFile } from '../utils';
-import IsolatedEnvironment from '../environment';
 import defaultLogger, { IBitLogger } from '../logger/logger';
-import Scope from '../scope/scope';
 
 export type PackResultMetadata = {
   pkgJson: Record<any, string>;
@@ -57,36 +55,6 @@ export type PackResult = {
 
 export class Packer {
   constructor(private logger: IBitLogger = defaultLogger) {}
-
-  async packByScopePath(componentId: string, scopePath: string, options: PackOptions): Promise<PackResult> {
-    const scope = await Scope.load(scopePath, options.loadScopeFromCache);
-    return this.pack(componentId, scope, options);
-  }
-
-  async pack(componentId: string, scope: Scope, options: PackOptions): Promise<PackResult> {
-    const isolatedEnvironment = new IsolatedEnvironment(scope, undefined);
-    await isolatedEnvironment.create();
-    const isolatePath = isolatedEnvironment.path;
-    const isolateOpts = {
-      writeBitDependencies: true,
-      createNpmLinkFiles: true,
-      installPackages: false,
-      noPackageJson: false,
-      excludeRegistryPrefix: !options.prefix,
-      saveDependenciesAsComponents: false,
-    };
-    await isolatedEnvironment.isolateComponent(componentId, isolateOpts);
-    const packResult = this.npmPack(
-      isolatePath,
-      options.writeOptions.outDir || isolatePath,
-      options.writeOptions.override,
-      options.dryRun
-    );
-    if (!options.keep) {
-      await isolatedEnvironment.destroy();
-    }
-    return packResult;
-  }
 
   async npmPack(
     cwd: string,

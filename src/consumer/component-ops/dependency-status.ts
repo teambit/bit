@@ -13,7 +13,6 @@ async function getTopLevelDependencies(consumer: Consumer, dependencyStatusProps
     workspacePath: consumerPath,
     filePaths: paths,
     bindingPrefix: DEFAULT_BINDINGS_PREFIX,
-    isLegacyProject: consumer.isLegacy,
     resolveModulesConfig: consumer.config._resolveModules,
   });
   const topLevelDependencies = Object.keys(tree.tree).map((topLevelFile) => topLevelFile);

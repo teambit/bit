@@ -177,9 +177,6 @@ export default class CommandHelper {
   unsetAspect(pattern: string, aspectId: string, flags = '') {
     return this.runCmd(`bit aspect unset ${pattern} ${aspectId} ${flags}`);
   }
-  untrackComponent(id = '', all = false, cwd: string = this.scopes.localPath) {
-    return this.runCmd(`bit untrack ${id} ${all ? '--all' : ''}`, cwd);
-  }
   removeComponent(id: string, flags = '') {
     return this.runCmd(`bit remove ${id} --silent ${flags}`);
   }
@@ -678,15 +675,6 @@ export default class CommandHelper {
   compile(id = '', options?: Record<string, any>) {
     const parsedOpts = this.parseOptions(options);
     return this.runCmd(`bit compile ${id} ${parsedOpts}`);
-  }
-
-  injectConf(id = 'bar/foo', options: Record<string, any> | null | undefined) {
-    const value = options
-      ? Object.keys(options) // $FlowFixMe
-          .map((key) => `-${key} ${options[key]}`)
-          .join(' ')
-      : '';
-    return this.runCmd(`bit inject-conf ${id} ${value}`);
   }
   doctor(options: Record<string, any>) {
     const parsedOpts = this.parseOptions(options);

@@ -1,5 +1,4 @@
 import { BitId, BitIds } from '../bit-id';
-import { ManipulateDirItem } from '../consumer/component-ops/manipulate-dir';
 import ComponentWithDependencies from './component-dependencies';
 import ComponentVersion from './component-version';
 import { DependenciesNotFound } from './exceptions/dependencies-not-found';
@@ -33,13 +32,10 @@ export default class VersionDependencies {
     }
   }
 
-  async toConsumer(
-    repo: Repository,
-    manipulateDirData?: ManipulateDirItem[] | null // not relevant for Harmony
-  ): Promise<ComponentWithDependencies> {
-    const depToConsumer = (dep) => dep.toConsumer(repo, manipulateDirData);
+  async toConsumer(repo: Repository): Promise<ComponentWithDependencies> {
+    const depToConsumer = (dep) => dep.toConsumer(repo);
     const dependenciesP = Promise.all(this.dependencies.map(depToConsumer));
-    const componentP = this.component.toConsumer(repo, manipulateDirData);
+    const componentP = this.component.toConsumer(repo);
     const [component, dependencies] = await Promise.all([componentP, dependenciesP]);
     return new ComponentWithDependencies({
       component,
@@ -67,7 +63,7 @@ export async function multipleVersionDependenciesToConsumer(
 
   await Promise.all(
     Object.keys(flattenedCompVer).map(async (idStr) => {
-      flattenedConsumerComp[idStr] = await flattenedCompVer[idStr].toConsumer(repo, null);
+      flattenedConsumerComp[idStr] = await flattenedCompVer[idStr].toConsumer(repo);
     })
   );
   return versionDependencies.map((verDep) => {
