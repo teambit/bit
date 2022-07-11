@@ -374,9 +374,8 @@ export class BuilderMain {
     generator.registerComponentTemplate([buildTaskTemplate]);
     const func = builder.tagListener.bind(builder);
     if (scope) scope.onTag(func);
-    if (workspace && !workspace.consumer.isLegacy) {
+    if (workspace) {
       const commands = [new BuilderCmd(builder, workspace, logger), new ArtifactsCmd(builder, scope)];
-      cli.unregister('build');
       cli.register(...commands);
     }
     return builder;

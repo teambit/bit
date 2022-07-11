@@ -31,7 +31,7 @@ export default class Checkout implements LegacyCommand {
     ['o', 'ours', 'in case of a conflict, override the used version with the current modification'],
     ['t', 'theirs', 'in case of a conflict, override the current modification with the specified version'],
     ['m', 'manual', 'in case of a conflict, leave the files with a conflict state to resolve them manually later'],
-    ['r', 'reset', 'remove local changes'],
+    ['r', 'reset', 'revert changes that were not snapped'],
     ['a', 'all', 'all components'],
     ['v', 'verbose', 'showing verbose output for inspection'],
     ['', 'skip-npm-install', 'DEPRECATED. use "--skip-dependency-installation" instead'],

@@ -1,7 +1,7 @@
 import mapSeries from 'p-map-series';
 import { Consumer } from '..';
 import { BitId } from '../../bit-id';
-import { COMPONENT_ORIGINS, LATEST } from '../../constants';
+import { LATEST } from '../../constants';
 import ShowDoctorError from '../../error/show-doctor-error';
 import { ModelComponent } from '../../scope/models';
 import { MissingBitMapComponent } from '../bit-map/exceptions';
@@ -81,11 +81,6 @@ export class ComponentStatusLoader {
         return status;
       }
       throw err;
-    }
-
-    if (this.consumer.isLegacy && componentFromFileSystem.componentMap.origin === COMPONENT_ORIGINS.NESTED) {
-      status.nested = true;
-      return status;
     }
     if (!componentFromModel) {
       status.newlyCreated = true;

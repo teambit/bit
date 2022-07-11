@@ -73,7 +73,6 @@ export type DependencyTreeParams = {
   workspacePath: string;
   filePaths: string[];
   bindingPrefix: string;
-  isLegacyProject: boolean;
   resolveModulesConfig?: ResolveModulesConfig;
   visited?: Record<string, any>;
   cacheResolvedDependencies?: Record<string, any>;

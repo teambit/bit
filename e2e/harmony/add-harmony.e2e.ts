@@ -1,4 +1,4 @@
-import chai, { expect } from 'chai';
+import chai from 'chai';
 import path from 'path';
 import { AddingIndividualFiles } from '../../src/consumer/component-ops/add-components/exceptions/adding-individual-files';
 import { ParentDirTracked } from '../../src/consumer/component-ops/add-components/exceptions/parent-dir-tracked';
@@ -24,11 +24,6 @@ describe('add command on Harmony', function () {
       const addFunc = () => helper.command.addComponent('bar/foo.js');
       const error = new AddingIndividualFiles(path.normalize('bar/foo.js'));
       helper.general.expectToThrow(addFunc, error);
-    });
-    it('when excluding a file, should throw an error', () => {
-      helper.fs.outputFile('bar/foo1.js');
-      const cmd = () => helper.command.addComponent('bar', { e: 'bar/foo1.js' });
-      expect(cmd).to.throw('--exclude flag is used for legacy only');
     });
   });
   describe('add a directory inside an existing component', () => {

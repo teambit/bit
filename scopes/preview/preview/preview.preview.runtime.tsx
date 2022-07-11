@@ -157,7 +157,17 @@ export class PreviewPreview {
     if (previewBundleFileName.endsWith('.js')) {
       return this.addComponentFileScriptElement(id, previewBundleFileName);
     }
-    return this.addComponentFileLinkElement(id, previewBundleFileName);
+
+    // TODO - should we load assets other than .css / .js?
+    // if (previewBundleFileName.endsWith('.css')) {
+    this.addComponentFileLinkElement(id, previewBundleFileName).catch((err) => {
+      throw new Error(
+        `[preview.preview] failed loading asset "${previewBundleFileName}". Error - "${err?.toString()}"`
+      );
+    });
+
+    // do NOT await non js assets, as they might never load (like images), and not critical for rendering.
+    return undefined;
   }
 
   private async fetchComponentPreviewFiles(id: ComponentID, previewName: string): Promise<string[] | null> {

@@ -2,8 +2,6 @@ import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { ExpressAspect, ExpressMain, Route } from '@teambit/express';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { Slot, SlotRegistry } from '@teambit/harmony';
-import { ConfigAspect } from '@teambit/config';
-import type { ConfigMain } from '@teambit/config';
 import { ComponentID } from '@teambit/component-id';
 import { flatten, orderBy } from 'lodash';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config';
@@ -145,19 +143,15 @@ export class ComponentMain {
   static slots = [Slot.withType<ComponentFactory>(), Slot.withType<Route[]>(), Slot.withType<ShowFragment[]>()];
 
   static runtime = MainRuntime;
-  static dependencies = [GraphqlAspect, ExpressAspect, CLIAspect, ConfigAspect];
+  static dependencies = [GraphqlAspect, ExpressAspect, CLIAspect];
 
   static async provider(
-    [graphql, express, cli, configAspect]: [GraphqlMain, ExpressMain, CLIMain, ConfigMain],
+    [graphql, express, cli]: [GraphqlMain, ExpressMain, CLIMain],
     config,
     [hostSlot, showFragmentSlot]: [ComponentHostSlot, ShowFragmentSlot]
   ) {
     const componentExtension = new ComponentMain(hostSlot, express, showFragmentSlot);
-
-    if ((configAspect.workspaceConfig && !configAspect.workspaceConfig.isLegacy) || configAspect.type === 'scope') {
-      cli.unregister('show');
-      cli.register(new ShowCmd(componentExtension));
-    }
+    cli.register(new ShowCmd(componentExtension));
 
     componentExtension.registerShowFragments([
       new NameFragment(),

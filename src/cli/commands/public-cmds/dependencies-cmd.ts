@@ -13,9 +13,10 @@ type DependenciesFlags = {
 };
 
 export default class Dependencies implements LegacyCommand {
-  name = 'dependencies <id>';
+  name = 'dependencies <component-name>';
+  arguments = [{ name: 'component-name', description: 'component name or component id' }];
   group: Group = 'info';
-  description = 'EXPERIMENTAL. show dependencies (direct and indirect) of the given component';
+  description = 'EXPERIMENTAL. show direct and indirect dependencies of the given component';
   alias = '';
   opts = [
     ['t', 'tree', 'render dependencies as a tree, similar to "npm ls"'],

@@ -130,7 +130,7 @@ export class Http implements Network {
     const obj = await list();
 
     // Reading strictSSL from both network.strict-ssl and network.strict_ssl for backward compatibility.
-    const strictSSL = obj[CFG_NETWORK_STRICT_SSL] ?? obj['network.strict_ssl'] ?? obj[CFG_PROXY_STRICT_SSL]
+    const strictSSL = obj[CFG_NETWORK_STRICT_SSL] ?? obj['network.strict_ssl'] ?? obj[CFG_PROXY_STRICT_SSL];
     return {
       fetchRetries: obj[CFG_FETCH_RETRIES] ?? 2,
       fetchRetryFactor: obj[CFG_FETCH_RETRY_FACTOR] ?? 10,
@@ -416,45 +416,6 @@ export class Http implements Network {
     });
 
     return Component.fromString(data.scope._getLegacy);
-  }
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async deprecateMany(ids: string[]): Promise<Record<string, any>[]> {
-    throw new Error(
-      `deprecation of a remote component has been disabled. deprecate locally with an updated version of bit and then tag and export`
-    );
-    // const DEPRECATE_COMPONENTS = gql`
-    //   mutation deprecate($bitIds: [String!]!) {
-    //     deprecate(bitIds: $bitIds) {
-    //       bitIds
-    //       missingComponents
-    //     }
-    //   }
-    // `;
-    // const res = await this.graphClientRequest(DEPRECATE_COMPONENTS, Verb.WRITE, {
-    //   bitIds: ids,
-    // });
-    // return res.deprecate;
-  }
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async undeprecateMany(ids: string[]): Promise<Record<string, any>[]> {
-    throw new Error(
-      `un-deprecation of a remote component has been disabled. undeprecate locally with an updated version of bit and then tag and export`
-    );
-    // const UNDEPRECATE_COMPONENTS = gql`
-    //   mutation deprecate($bitIds: [String!]!) {
-    //     undeprecate(bitIds: $bitIds) {
-    //       bitIds
-    //       missingComponents
-    //     }
-    //   }
-    // `;
-    // const res = await this.graphClientRequest(UNDEPRECATE_COMPONENTS, Verb.WRITE, {
-    //   bitIds: ids,
-    // });
-
-    // return res.undeprecate;
   }
 
   async log(id: BitId): Promise<ComponentLog[]> {

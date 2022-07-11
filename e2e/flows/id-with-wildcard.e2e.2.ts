@@ -51,31 +51,6 @@ describe('component id with wildcard', function () {
         });
       });
     });
-    describe('untrack with wildcard', () => {
-      before(() => {
-        helper.scopeHelper.getClonedLocalScope(scopeAfterAdd);
-      });
-      describe('when wildcard does not match any component', () => {
-        it('should not untrack any component', () => {
-          const output = helper.command.untrackComponent('none/*');
-          expect(output).to.have.string('no components untracked');
-        });
-      });
-      describe('when wildcard match some of the components', () => {
-        let output;
-        before(() => {
-          output = helper.command.untrackComponent('"utils/fs/*"');
-        });
-        it('should indicate the untracked components', () => {
-          expect(output).to.have.string('utils/fs/read');
-          expect(output).to.have.string('utils/fs/write');
-        });
-        it('should untrack only the matched components', () => {
-          const status = helper.command.statusJson();
-          expect(status.newComponents).to.have.lengthOf(3);
-        });
-      });
-    });
     describe('remove with wildcard', () => {
       before(() => {
         helper.scopeHelper.getClonedLocalScope(scopeAfterAdd);

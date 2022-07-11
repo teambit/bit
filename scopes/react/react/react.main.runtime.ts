@@ -172,6 +172,7 @@ export class ReactMain {
    */
   overrideDocsTemplate(templatePath: string) {
     return this.envs.override({
+      getDevEnvId: (context: DevServerContext) => this.reactEnv.getDevEnvId(context.envDefinition.id),
       getDocsTemplate: () => templatePath,
     });
   }

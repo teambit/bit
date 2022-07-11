@@ -71,10 +71,7 @@ export class ListerMain {
   static async provider([cli, loggerMain, workspace]: [CLIMain, LoggerMain, Workspace]) {
     const logger = loggerMain.createLogger(ListerAspect.id);
     const lister = new ListerMain(logger, workspace);
-    if (!workspace || !workspace.isLegacy) {
-      cli.unregister('list');
-      cli.register(new ListCmd(lister));
-    }
+    cli.register(new ListCmd(lister));
     return lister;
   }
 }

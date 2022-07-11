@@ -12,7 +12,7 @@ function parse(buffer: Buffer): BitObject {
   const headers = buffer.slice(0, firstNullByteLocation).toString();
   const contents = buffer.slice(firstNullByteLocation + 1, buffer.length);
   const [type, hash] = headers.split(SPACE_DELIMITER);
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  if (!types[type]) throw new Error(`BitObject: unable to find subclass "${type}"`);
   return types[type].parse(contents, hash);
 }
 

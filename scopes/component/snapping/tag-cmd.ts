@@ -143,8 +143,8 @@ https://${docsDomain}/components/tags`;
     if (ignoreIssues && typeof ignoreIssues === 'boolean') {
       throw new BitError(`--ignore-issues expects issues to be ignored, please run "bit tag -h" for the issues list`);
     }
-    if (disableTagPipeline) {
-      this.logger.consoleWarning(`--disable-tag-pipeline is deprecated, please use --disable-deploy-pipeline instead`);
+    if (disableDeployPipeline) {
+      this.logger.consoleWarning(`--disable-deploy-pipeline is deprecated, please use --disable-tag-pipeline instead`);
     }
     if (!message && !persist) {
       this.logger.consoleWarning(

@@ -1,7 +1,5 @@
 import fs from 'fs-extra';
 import path from 'path';
-import R from 'ramda';
-
 import { BitId } from '../../bit-id';
 import { PACKAGE_JSON } from '../../constants';
 import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
@@ -107,30 +105,6 @@ export default class PackageJson {
    */
   static saveRawObject(pathStr: string, obj: Record<string, any>) {
     return fs.outputJSON(composePath(pathStr), obj, { spaces: 2 });
-  }
-
-  /*
-   * For an existing package.json file of the root project, we don't want to do any change, other than what needed.
-   * That's why this method doesn't use the 'load' and 'write' methods of this class. Otherwise, it'd write only the
-   * PackageJsonPropsNames attributes.
-   * Also, in case there is no package.json file in this project, it generates a new one with only the 'dependencies'
-   * adds workspaces with private flag if dosent exist.
-   */
-  static async addWorkspacesToPackageJson(
-    rootDir: string,
-    componentsDefaultDirectory: string,
-    dependenciesDirectory: string,
-    customImportPath: string | null | undefined
-  ) {
-    const pkg = (await PackageJson.getPackageJson(rootDir)) || {};
-    const workSpaces = PackageJson.extractWorkspacesPackages(pkg) || [];
-    workSpaces.push(dependenciesDirectory);
-    workSpaces.push(componentsDefaultDirectory);
-    if (customImportPath) workSpaces.push(customImportPath);
-    if (!pkg.workspaces) pkg.workspaces = [];
-    this.updateWorkspacesPackages(pkg, R.uniq(workSpaces));
-    pkg.private = !!pkg.workspaces;
-    await PackageJson.saveRawObject(rootDir, pkg);
   }
 
   /*

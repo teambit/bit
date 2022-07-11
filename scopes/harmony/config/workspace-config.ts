@@ -1,15 +1,13 @@
 import { Analytics } from '@teambit/legacy/dist/analytics/analytics';
-import { COMPILER_ENV_TYPE, DEFAULT_LANGUAGE, WORKSPACE_JSONC } from '@teambit/legacy/dist/constants';
+import { DEFAULT_LANGUAGE, WORKSPACE_JSONC } from '@teambit/legacy/dist/constants';
 import { ResolveModulesConfig } from '@teambit/legacy/dist/consumer/component/dependencies/files-dependency-builder/types/dependency-tree-type';
 import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-to-persist';
 import { ExtensionDataList, ILegacyWorkspaceConfig } from '@teambit/legacy/dist/consumer/config';
-import { Compilers, Testers } from '@teambit/legacy/dist/consumer/config/abstract-config';
 import { InvalidBitJson } from '@teambit/legacy/dist/consumer/config/exceptions';
 import LegacyWorkspaceConfig, {
   WorkspaceConfigProps as LegacyWorkspaceConfigProps,
 } from '@teambit/legacy/dist/consumer/config/workspace-config';
-import { EnvType } from '@teambit/legacy/dist/legacy-extensions/env-extension-types';
 import logger from '@teambit/legacy/dist/logger/logger';
 import { PathOsBased, PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
 import { assign, parse, stringify, CommentJSONValue } from 'comment-json';
@@ -70,8 +68,6 @@ export type WorkspaceLegacyProps = {
   bindingPrefix?: string;
   resolveModules?: ResolveModulesConfig;
   saveDependenciesAsComponents?: boolean;
-  distEntry?: string;
-  distTarget?: string;
 };
 
 export type ExtensionsDefs = WorkspaceSettingsNewProps;
@@ -88,23 +84,8 @@ export class WorkspaceConfig implements HostConfig {
     const isHarmony = !this.isLegacy;
     logger.debug(`workspace-config, isLegacy: ${this.isLegacy}`);
     Analytics.setExtraData('is_harmony', isHarmony);
-    if (isHarmony) {
-      this.raw = data;
-      this.loadExtensions();
-    } else {
-      // We know we have either data or legacy config
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      this._extensions = ExtensionDataList.fromConfigObject(transformLegacyPropsToExtensions(legacyConfig!));
-      if (legacyConfig) {
-        this._legacyProps = {
-          dependenciesDirectory: legacyConfig.dependenciesDirectory,
-          resolveModules: legacyConfig.resolveModules,
-          saveDependenciesAsComponents: legacyConfig.saveDependenciesAsComponents,
-          distEntry: legacyConfig.distEntry,
-          distTarget: legacyConfig.distTarget,
-        };
-      }
-    }
+    this.raw = data;
+    this.loadExtensions();
   }
 
   get path(): PathOsBased {
@@ -342,25 +323,6 @@ export class WorkspaceConfig implements HostConfig {
   }
 
   toLegacy(): ILegacyWorkspaceConfig {
-    const _setCompiler = (compiler) => {
-      if (this.legacyConfig) {
-        this.legacyConfig.setCompiler(compiler);
-      }
-    };
-
-    const _setTester = (tester) => {
-      if (this.legacyConfig) {
-        this.legacyConfig.setTester(tester);
-      }
-    };
-
-    const _getEnvsByType = (type: EnvType): Compilers | Testers | undefined => {
-      if (type === COMPILER_ENV_TYPE) {
-        return this.legacyConfig?.compiler;
-      }
-      return this.legacyConfig?.tester;
-    };
-
     let componentsDefaultDirectory = this.extension('teambit.workspace/workspace', true)?.defaultDirectory;
     if (componentsDefaultDirectory && !componentsDefaultDirectory.includes('{name}')) {
       componentsDefaultDirectory = `${componentsDefaultDirectory}/{name}`;
@@ -373,8 +335,6 @@ export class WorkspaceConfig implements HostConfig {
       dependencyResolver: this.extension('teambit.dependencies/dependency-resolver', true),
       packageManager: this.extension('teambit.dependencies/dependency-resolver', true)?.packageManager,
       _bindingPrefix: this.extension('teambit.workspace/workspace', true)?.defaultOwner,
-      _distEntry: this._legacyProps?.distEntry,
-      _distTarget: this._legacyProps?.distTarget,
       _saveDependenciesAsComponents: this._legacyProps?.saveDependenciesAsComponents,
       _dependenciesDirectory: this._legacyProps?.dependenciesDirectory,
       componentsDefaultDirectory,
@@ -384,7 +344,6 @@ export class WorkspaceConfig implements HostConfig {
       extensions: this.extensions.toConfigObject(),
       // @ts-ignore
       path: this.path,
-      _getEnvsByType,
       isLegacy: this.isLegacy,
       write: ({ workspaceDir }) => this.write.call(this, { dir: workspaceDir }),
       toVinyl: this.toVinyl.bind(this),
@@ -395,10 +354,6 @@ export class WorkspaceConfig implements HostConfig {
       _legacyPlainObject: this.legacyConfig
         ? this.legacyConfig?.toPlainObject.bind(this.legacyConfig)
         : () => undefined,
-      _compiler: this.legacyConfig?.compiler,
-      _setCompiler,
-      _tester: this.legacyConfig?.tester,
-      _setTester,
     };
   }
 }
