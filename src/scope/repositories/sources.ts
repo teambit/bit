@@ -24,6 +24,7 @@ import { ModelComponentMerger } from '../component-ops/model-components-merger';
 import { concurrentComponentsLimit } from '../../utils/concurrency';
 import { InMemoryCache } from '../../cache/in-memory-cache';
 import { createInMemoryCache } from '../../cache/cache-factory';
+import { pathNormalizeToLinux } from '../../utils';
 
 export type ComponentTree = {
   component: ModelComponent;
@@ -227,7 +228,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     const files = consumerComponent.files.map((file) => {
       return {
         name: file.basename,
-        relativePath: file.relative,
+        relativePath: pathNormalizeToLinux(file.relative),
         file: file.toSourceAsLinuxEOL(),
         test: file.test,
       };
