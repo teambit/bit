@@ -88,11 +88,9 @@ export function ComponentOverview({
     <Section {...rest}>
       <div className={textColumn}>
         <ComponentWithTitleBadges position={TitleBadgePosition.Title}>
-          (
           <div className={styles.componentTitle}>
             <H1>{displayName}</H1>
           </div>
-          )
         </ComponentWithTitleBadges>
         <ComponentWithTitleBadges position={TitleBadgePosition.SubTitle}>
           {abstract && <Subtitle className={styles.subTitle}>{abstract}</Subtitle>}
@@ -103,9 +101,11 @@ export function ComponentOverview({
         <ComponentWithTitleBadges position={TitleBadgePosition.Package}>
           <ConsumableLink title="Package name" link={packageName}></ConsumableLink>
         </ComponentWithTitleBadges>
-        <ComponentWithTitleBadges position={TitleBadgePosition.ElementsPackage}>
-          {finalElementsUrl && <ConsumableLink title="Elements url" link={finalElementsUrl}></ConsumableLink>}
-        </ComponentWithTitleBadges>
+        {finalElementsUrl && (
+          <ComponentWithTitleBadges position={TitleBadgePosition.ElementsPackage}>
+            <ConsumableLink title="Elements url" link={finalElementsUrl}></ConsumableLink>
+          </ComponentWithTitleBadges>
+        )}
       </div>
       <Separator isPresentational />
     </Section>
