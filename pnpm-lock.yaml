@@ -1383,10 +1383,10 @@ importers:
   scopes/component/ui/deprecation-icon:
     specifiers: {}
 
-  scopes/component/ui/hooks/use-snaps:
+  scopes/component/ui/hooks/use-fetch-docs:
     specifiers: {}
 
-  scopes/component/ui/use-fetch-docs:
+  scopes/component/ui/hooks/use-snaps:
     specifiers: {}
 
   scopes/component/ui/version-block:
@@ -1792,6 +1792,18 @@ importers:
     specifiers: {}
 
   scopes/react/ui/docs-app:
+    specifiers: {}
+
+  scopes/react/ui/docs/apply-providers:
+    specifiers: {}
+
+  scopes/react/ui/docs/compositions-carousel:
+    specifiers: {}
+
+  scopes/react/ui/docs/docs-content:
+    specifiers: {}
+
+  scopes/react/ui/docs/properties-table:
     specifiers: {}
 
   scopes/react/ui/error-fallback:
