@@ -27,24 +27,32 @@ const whitelist = [
   'mocha-junit-reporter',
   'prettier-eslint',
   'type-coverage',
+  '@yarnpkg/plugin-pack',
+  'graceful-fs', // might be used as a peer by other stuff
+  'browserslist', // check with Uri if needed.
+  'mz', // needs to check what happens if gets removed.
 ];
 used.push(...whitelist);
 unused = unused.filter((dep) => !whitelist.includes(dep));
 unusedWorkspace = unusedWorkspace.filter((dep) => !whitelist.includes(dep));
 
+const isDepUsed = (content, dep) =>
+  content.includes(`'${dep}'`) ||
+  content.includes(`"${dep}"`) ||
+  content.includes(`'${dep}/`) ||
+  content.includes(`"${dep}/`);
+
 sourceFiles.forEach((file) => {
   const content = fs.readFileSync(file, 'utf8');
   unused.forEach((dep) => {
-    if (content.includes(`'${dep}'`) || content.includes(`"${dep}"`)) {
-      // if (content.includes(dep)) {
+    if (isDepUsed(content, dep)) {
       console.log('! found ', dep);
       unused = unused.filter((d) => d !== dep);
       used.push(dep);
     }
   });
   unusedWorkspace.forEach((dep) => {
-    if (content.includes(`'${dep}'`) || content.includes(`"${dep}"`)) {
-      // if (content.includes(dep)) {
+    if (isDepUsed(content, dep)) {
       console.log('! found ', dep);
       unusedWorkspace = unusedWorkspace.filter((d) => d !== dep);
       used.push(dep);
