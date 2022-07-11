@@ -29,9 +29,9 @@ export class Plugins {
 
     aspect.addRuntime({
       provider: async () => {
-        await Promise.all(plugins.map(async (plugin) => {
-          await plugin.register();
-        }));
+        plugins.forEach((plugin) => {
+          plugin.register();
+        });
       },
       runtime,
       // dependencies: this.computeDependencies(runtime)

@@ -9,5 +9,5 @@ export interface ApplicationType<T> {
   /**
    * a function that creates the app instance.
    */
-  createApp(options: T): Promise<Application>;
+  createApp(options: T): Application;
 }

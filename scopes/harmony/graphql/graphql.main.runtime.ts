@@ -81,6 +81,26 @@ export class GraphqlMain {
 
   private modules = new Map<string, GraphQLModule>();
 
+  /**
+   * returns the schema for a specific aspect by its id.
+   */
+   getSchema(aspectId: string) {
+    return this.moduleSlot.get(aspectId);
+  }
+
+  /**
+   * get multiple schema by aspect ids.
+   */
+  getSchemas(aspectIds: string[]) {
+    return this.moduleSlot.toArray()
+      .filter(([aspectId]) => {
+        return aspectIds.includes(aspectId);
+      })
+      .map(([, schema]) => {
+        return schema
+      });
+  }
+
   async createServer(options: GraphQLServerOptions) {
     const { graphiql = true } = options;
     const localSchema = this.createRootModule(options.schemaSlot);
