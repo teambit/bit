@@ -11,7 +11,7 @@ import { isBrowser } from '@teambit/ui-foundation.ui.is-browser';
 import { ComponentModel } from '@teambit/component';
 import styles from './component-overview.module.scss';
 
-export enum TitleBadgePosition {
+export enum BadgePosition {
   Title,
   SubTitle,
   Labels,
@@ -22,7 +22,7 @@ export enum TitleBadgePosition {
 export type TitleBadge = {
   component: ComponentType<any>;
   weight?: number;
-  position?: TitleBadgePosition;
+  position?: BadgePosition;
 };
 
 export type ComponentOverviewProps = {
@@ -61,7 +61,7 @@ export function ComponentOverview({
           <div className={styles.componentTitle}>
             <H1>{displayName}</H1>
             <BadgeSection
-              position={TitleBadgePosition.Title}
+              position={BadgePosition.Title}
               componentDescriptor={componentDescriptor}
               component={component}
               badges={titleBadges}
@@ -73,7 +73,7 @@ export function ComponentOverview({
             <>
               <Subtitle className={styles.subTitle}>{abstract}</Subtitle>
               <BadgeSection
-                position={TitleBadgePosition.SubTitle}
+                position={BadgePosition.SubTitle}
                 componentDescriptor={componentDescriptor}
                 component={component}
                 badges={titleBadges}
@@ -84,7 +84,7 @@ export function ComponentOverview({
         <Row>
           <LabelList>{labels}</LabelList>
           <BadgeSection
-            position={TitleBadgePosition.Labels}
+            position={BadgePosition.Labels}
             componentDescriptor={componentDescriptor}
             component={component}
             badges={titleBadges}
@@ -93,7 +93,7 @@ export function ComponentOverview({
         <Row>
           <ConsumableLink title="Package name" link={packageName}></ConsumableLink>
           <BadgeSection
-            position={TitleBadgePosition.Package}
+            position={BadgePosition.Package}
             componentDescriptor={componentDescriptor}
             component={component}
             badges={titleBadges}
@@ -103,7 +103,7 @@ export function ComponentOverview({
           <Row>
             <ConsumableLink title="Elements url" link={finalElementsUrl}></ConsumableLink>
             <BadgeSection
-              position={TitleBadgePosition.ElementsPackage}
+              position={BadgePosition.ElementsPackage}
               componentDescriptor={componentDescriptor}
               component={component}
               badges={titleBadges}
@@ -118,7 +118,7 @@ export function ComponentOverview({
 
 type CompWithTitleBadgesProps = {
   badges: TitleBadge[] | undefined;
-  position: TitleBadgePosition;
+  position: BadgePosition;
   componentDescriptor?: ComponentDescriptor;
   component?: ComponentModel;
 };
@@ -129,7 +129,7 @@ function BadgeSection({ badges, position, componentDescriptor, component }: Comp
         // eslint-disable-next-line react/prop-types
         ?.filter((badge) => {
           return (
-            (position === TitleBadgePosition.Title && !badge.position) || // default position is title
+            (position === BadgePosition.Title && !badge.position) || // default position is title
             badge.position === position
           );
         })
