@@ -9,8 +9,6 @@ import { LaneNotFound } from '../../api/scope/lib/exceptions/lane-not-found';
 // eslint-disable-next-line complexity
 export function remoteErrorHandler(code: number, parsedError: Record<string, any>, remotePath: string, err) {
   switch (code) {
-    default:
-      return new UnexpectedNetworkError(parsedError ? parsedError.message : err);
     case 127:
       return new ComponentNotFound((parsedError && parsedError.id) || err);
     case 128:
@@ -46,5 +44,7 @@ export function remoteErrorHandler(code: number, parsedError: Record<string, any
     case 138: {
       return new LaneNotFound(parsedError.scopeName, parsedError.laneName);
     }
+    default:
+      return new UnexpectedNetworkError(parsedError ? parsedError.message : err);
   }
 }

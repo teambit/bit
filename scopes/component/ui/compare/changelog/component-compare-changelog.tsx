@@ -42,6 +42,7 @@ const getLogsBetweenVersions: (
   return allLogs.filter((_, index) => index >= startingVersionIndex && index <= endingVersionIndex);
 };
 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export function ComponentCompareChangelog({ className }: ComponentCompareChangelog) {
   const component = useContext(ComponentContext);
   const componentCompareContext = useComponentCompare();

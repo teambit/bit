@@ -13,7 +13,7 @@ export async function workspaceConfig({ name, defaultScope }: WorkspaceContext) 
       '@teambit/eslint-config-bit-react': '~0.0.367',
       '@typescript-eslint/eslint-plugin': '4.29.3',
       'eslint-import-resolver-node': '0.3.6',
-      'eslint-plugin-import': '2.22.1',
+      'eslint-plugin-import': '2.26.0',
       'eslint-plugin-jest': '24.4.0',
       'eslint-plugin-jsx-a11y': '6.4.1',
       'eslint-plugin-mdx': '1.15.0',
