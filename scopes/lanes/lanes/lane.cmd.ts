@@ -170,6 +170,12 @@ export class LaneShowCmd implements Command {
 
 export class LaneCreateCmd implements Command {
   name = 'create <lane-name>';
+  arguments = [
+    {
+      name: 'lane-name',
+      description: 'the name for the new lane',
+    },
+  ];
   description = `creates a new lane and switches to it`;
   extendedDescription = `a lane created from main (default-lane) is empty until components are snapped.
 a lane created from another lane has all the components of the original lane.`;
@@ -277,7 +283,13 @@ export class LaneMergeCmd implements Command {
     ['', 'build', 'in case of snap during the merge, run the build-pipeline (similar to bit snap --build)'],
     ['m', 'message <message>', 'override the default message for the auto snap'],
     ['', 'keep-readme', 'skip deleting the lane readme component after merging'],
-    ['', 'squash', 'squash multiple snaps. keep the last one only'],
+    ['', 'squash', 'EXPERIMENTAL. squash multiple snaps. keep the last one only'],
+    ['', 'pattern <component-pattern>', 'EXPERIMENTAL. partially merge the lane with the specified component-pattern'],
+    [
+      '',
+      'include-deps',
+      'EXPERIMENTAL. relevant for "--pattern" and "--existing". merge also dependencies of the given components',
+    ],
   ] as CommandOptions;
   loader = true;
   private = true;
@@ -299,6 +311,8 @@ export class LaneMergeCmd implements Command {
       message: snapMessage = '',
       keepReadme = false,
       squash = false,
+      pattern,
+      includeDeps = false,
     }: {
       ours: boolean;
       theirs: boolean;
@@ -310,12 +324,16 @@ export class LaneMergeCmd implements Command {
       message: string;
       keepReadme?: boolean;
       squash: boolean;
+      pattern?: string;
+      includeDeps?: boolean;
     }
   ): Promise<string> {
     build = isFeatureEnabled(BUILD_ON_CI) ? Boolean(build) : true;
     const mergeStrategy = getMergeStrategy(ours, theirs, manual);
     if (noSnap && snapMessage) throw new BitError('unable to use "noSnap" and "message" flags together');
-
+    if (includeDeps && !pattern && !existingOnWorkspaceOnly) {
+      throw new BitError(`"--include-deps" flag is relevant only for --existing and --pattern flags`);
+    }
     const { mergeResults, deleteResults } = await this.lanes.mergeLane(name, {
       // @ts-ignore
       remoteName,
@@ -327,6 +345,8 @@ export class LaneMergeCmd implements Command {
       snapMessage,
       keepReadme,
       squash,
+      pattern,
+      includeDeps,
     });
 
     const mergeResult = `${mergeReport(mergeResults)}`;

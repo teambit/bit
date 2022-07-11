@@ -132,12 +132,12 @@ export function mergeReport({ components, failedComponents, version, mergeSnapRe
     if (!failedComponents || !failedComponents.length) return '';
     const title = 'the merge has been canceled on the following component(s)';
     const body = failedComponents
-      .map(
-        (failedComponent) =>
-          `${chalk.bold(failedComponent.id.toString())} - ${chalk.red(failedComponent.failureMessage)}`
-      )
+      .map((failedComponent) => {
+        const color = failedComponent.unchangedLegitimately ? 'white' : 'red';
+        return `${chalk.bold(failedComponent.id.toString())} - ${chalk[color](failedComponent.failureMessage)}`;
+      })
       .join('\n');
-    return `${chalk.underline(title)}\n${body}\n\n`;
+    return `\n${chalk.underline(title)}\n${body}\n\n`;
   };
 
   return getSuccessOutput() + getFailureOutput() + getSnapsOutput();

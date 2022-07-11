@@ -21,14 +21,6 @@ export interface Network {
   action<Options, Result>(name: string, options: Options): Promise<Result>;
   list(namespacesUsingWildcards?: string, strategiesNames?: SSHConnectionStrategyName[]): Promise<ListScopeResult[]>;
   show(bitId: BitId): Promise<Component | null | undefined>;
-  /**
-   * @deprecated
-   */
-  deprecateMany(ids: string[], context: Record<string, any> | null | undefined): Promise<Record<string, any>[]>;
-  /**
-   * @deprecated
-   */
-  undeprecateMany(ids: string[], context: Record<string, any> | null | undefined): Promise<Record<string, any>[]>;
   log(id: BitId): Promise<ComponentLog[]>;
   latestVersions(bitIds: BitIds): Promise<string[]>;
   graph(bitId?: BitId): Promise<DependencyGraph>;

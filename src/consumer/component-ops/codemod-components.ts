@@ -123,7 +123,7 @@ function getNameWithoutInternalPath(consumer: Consumer, relativeEntry: RelativeC
   const importSource = relativeEntry.importSource;
   const componentMap = consumer.bitMap.getComponentIfExist(relativeEntry.componentId);
   if (!componentMap) return importSource;
-  const rootDir = componentMap.trackDir || componentMap.rootDir;
+  const rootDir = componentMap.rootDir;
   if (!rootDir) return importSource;
   const mainFile = componentMap.trackDir ? componentMap.mainFile : pathJoinLinux(rootDir, componentMap.mainFile);
   const filePathRelativeToWorkspace = relativeEntry.relativePath.sourceRelativePath;

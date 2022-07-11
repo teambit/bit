@@ -58,7 +58,6 @@ export class GraphBuilder {
     });
     await Promise.all(setEdgePromise);
 
-    newGraph.versionMap = newGraph._calculateVersionMap();
     return newGraph;
   }
 }

@@ -9,7 +9,6 @@ import isBitIdMatchByWildcards from '../../utils/bit/is-bit-id-match-by-wildcard
 import hasWildcard from '../../utils/string/has-wildcard';
 import { validateUserInputType } from '../../utils/validate-type';
 import Component from '../component/consumer-component';
-import AbstractConfig from './abstract-config';
 import { ComponentOverridesData } from './component-overrides';
 
 export type ConsumerOverridesOfComponent = ComponentOverridesData & {
@@ -153,16 +152,6 @@ export default class ConsumerOverrides {
     if (!areEnvsChanged && this.areOverridesObjectsEqual(existingOverrides, overrides)) return false;
     const exactMatch = this.findExactMatch(id);
     const key = exactMatch || id.toStringWithoutVersion();
-    const env = {};
-    if (component.compiler) {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      env.compiler = AbstractConfig.convertEnvToStringIfPossible(component.compiler.toBitJsonObject('.'));
-    }
-    if (component.tester) {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      env.tester = AbstractConfig.convertEnvToStringIfPossible(component.tester.toBitJsonObject('.'));
-    }
-    if (!R.isEmpty(env)) overrides.env = env;
     this.overrides[key] = overrides;
     this.hasChanged = true;
     return true;

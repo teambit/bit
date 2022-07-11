@@ -33,6 +33,6 @@ export class DocsPreviewDefinition implements PreviewDefinition {
    */
   async getModuleMap(components: Component[]): Promise<ComponentMap<AbstractVinyl[]>> {
     const map = this.docs.getDocsMap(components);
-    return map.filter((value) => value.length !== 0);
+    return map;
   }
 }

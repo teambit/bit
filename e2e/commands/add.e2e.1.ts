@@ -208,7 +208,7 @@ describe('bit add command', function () {
       helper.fixtures.createComponentBarFoo();
       helper.fs.createFile('mainDir', 'mainFile.js');
     });
-    it('should throw an exception TestIsDirectory', () => {
+    it('should throw an exception MainFileIsDir', () => {
       const addFunc = () => helper.command.addComponent('bar', { i: 'bar/foo', m: 'mainDir' });
       const mainPath = path.join(helper.scopes.localPath, 'mainDir');
       const error = new MainFileIsDir(mainPath);

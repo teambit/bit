@@ -1,5 +1,5 @@
 import { BitObject } from '.';
-import { Lane, ModelComponent, Version } from '../models';
+import { ExportMetadata, Lane, ModelComponent, Version } from '../models';
 
 export class BitObjectList {
   constructor(private objects: BitObject[]) {}
@@ -18,6 +18,10 @@ export class BitObjectList {
 
   getAll(): BitObject[] {
     return this.objects;
+  }
+
+  getExportMetadata(): ExportMetadata | undefined {
+    return this.objects.find((object) => object instanceof ExportMetadata) as ExportMetadata | undefined;
   }
 
   /**

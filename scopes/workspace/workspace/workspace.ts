@@ -820,6 +820,23 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     return this.componentLoader.getMany(ids, forCapsule);
   }
 
+  async importCurrentLaneIfMissing() {
+    const laneId = this.getCurrentLaneId();
+    const laneObj = await this.scope.legacyScope.getCurrentLaneObject();
+    if (laneId.isDefault() || laneObj) {
+      return;
+    }
+    const lane = await this.getCurrentRemoteLane();
+    if (!lane) {
+      return;
+    }
+    this.logger.debug(`current lane ${laneId.toString()} is missing, importing it`);
+    const scopeComponentsImporter = ScopeComponentsImporter.getInstance(this.scope.legacyScope);
+    const ids = BitIds.fromArray(lane.toBitIds().filter((id) => id.hasScope()));
+    await scopeComponentsImporter.importManyDeltaWithoutDeps(ids, true, lane);
+    await scopeComponentsImporter.importMany({ ids, lanes: lane ? [lane] : undefined });
+  }
+
   /**
    * @deprecated use this.track() instead
    * track a new component. (practically, add it to .bitmap).
@@ -841,6 +858,29 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     //  .bitmap file. workspace needs a similar mechanism. once done, remove the next line.
     await this.bitMap.write();
     return addResults;
+  }
+
+  async use(aspectIdStr: string): Promise<string> {
+    const aspectId = await this.resolveComponentId(aspectIdStr);
+    let aspectIdToAdd = aspectId.toStringWithoutVersion();
+    if (!(await this.hasId(aspectId))) {
+      const loadedIds = await this.scope.loadAspects([aspectIdStr], true);
+      if (loadedIds[0]) aspectIdToAdd = loadedIds[0];
+    }
+    const config = this.harmony.get<ConfigMain>('teambit.harmony/config').workspaceConfig;
+    if (!config) {
+      throw new Error(`use() unable to get the workspace config`);
+    }
+    config.setExtension(
+      aspectIdToAdd,
+      {},
+      {
+        overrideExisting: false,
+        ignoreVersion: false,
+      }
+    );
+    await config.write({ dir: path.dirname(config.path) });
+    return aspectIdToAdd;
   }
 
   /**

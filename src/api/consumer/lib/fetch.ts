@@ -8,7 +8,6 @@ import { Analytics } from '../../../analytics/analytics';
 import loader from '../../../cli/loader';
 import { Consumer, loadConsumer } from '../../../consumer';
 import ImportComponents, { ImportOptions } from '../../../consumer/component-ops/import-components';
-import { LanesIsDisabled } from '../../../consumer/lanes/exceptions/lanes-is-disabled';
 import GeneralError from '../../../error/general-error';
 import { Lane } from '../../../scope/models';
 import { ScopeNotFoundOrDenied } from '../../../remotes/exceptions/scope-not-found-or-denied';
@@ -22,9 +21,6 @@ export default async function fetch(ids: string[], lanes: boolean, components: b
   }
   loader.start('fetching objects...');
   const consumer: Consumer = await loadConsumer();
-  if (consumer.isLegacy) {
-    throw new LanesIsDisabled();
-  }
   const importOptions: ImportOptions = {
     ids,
     objectsOnly: true,

@@ -379,32 +379,6 @@ export default class SSH implements Network {
     });
   }
 
-  deprecateMany(ids: string[], context?: Record<string, any>): Promise<ComponentObjects[]> {
-    return this.exec(
-      '_deprecate',
-      {
-        ids,
-      },
-      context
-    ).then((data: string) => {
-      const { payload } = this._unpack(data);
-      return payload;
-    });
-  }
-
-  undeprecateMany(ids: string[], context?: Record<string, any>): Promise<ComponentObjects[]> {
-    return this.exec(
-      '_undeprecate',
-      {
-        ids,
-      },
-      context
-    ).then((data: string) => {
-      const { payload } = this._unpack(data);
-      return payload;
-    });
-  }
-
   describeScope(): Promise<ScopeDescriptor> {
     return this.exec('_scope')
       .then((data) => {

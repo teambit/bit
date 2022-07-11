@@ -17,15 +17,15 @@ export function generateComponentLink(modules: ModuleVar[]): string {
   // import per preview file
   const importStr: string = links
     .map(({ entries }) => entries.map(({ path, linkName }) => `import * as ${linkName} from '${path}'`).join(';\n'))
-    .join('\n');
+    .join(';\n');
 
   // export files group per preview
   const exportsString: string = links
     .map(({ name, entries }) => `export const ${name} = [${entries.map((entry) => entry.linkName).join(', ')}]`)
     .join(';\n');
 
-  return `${importStr}
+  return `${importStr};
 
-${exportsString}
+${exportsString};
 `;
 }

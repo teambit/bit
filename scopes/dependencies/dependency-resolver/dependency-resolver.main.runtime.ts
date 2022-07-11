@@ -29,6 +29,7 @@ import LegacyComponent from '@teambit/legacy/dist/consumer/component';
 import fs from 'fs-extra';
 import { BitId } from '@teambit/legacy-bit-id';
 import { readCAFileSync } from '@pnpm/network.ca-file';
+import { PeerDependencyRules } from '@pnpm/types';
 import semver, { SemVer } from 'semver';
 import AspectLoaderAspect, { AspectLoaderMain } from '@teambit/aspect-loader';
 import GlobalConfigAspect, { GlobalConfigMain } from '@teambit/global-config';
@@ -236,6 +237,11 @@ export interface DependencyResolverWorkspaceConfig {
    * Refuse to install any package that claims to not be compatible with the current Node.js version.
    */
   engineStrict?: boolean;
+
+  /*
+   * Rules to mute specific peer dependeny warnings.
+   */
+  peerDependencyRules?: PeerDependencyRules;
 }
 
 export interface DependencyResolverVariantConfig {
@@ -522,6 +528,7 @@ export class DependencyResolverMain {
       this.config.sideEffectsCache,
       this.config.nodeVersion,
       this.config.engineStrict,
+      this.config.peerDependencyRules
     );
   }
 
@@ -628,10 +635,12 @@ export class DependencyResolverMain {
       ...(await this.getNetworkConfigFromPackageManager()),
       ...this.getNetworkConfigFromDepResolverConfig(),
     };
-    this.logger.debug(`the next network configuration is used in dependency-resolver: ${{
-      ...networkConfig,
-      key: networkConfig.key ? 'set' : 'not set', // this is sensitive information, we should not log it
-    }}`);
+    this.logger.debug(
+      `the next network configuration is used in dependency-resolver: ${{
+        ...networkConfig,
+        key: networkConfig.key ? 'set' : 'not set', // this is sensitive information, we should not log it
+      }}`
+    );
     return networkConfig;
   }
 
@@ -658,9 +667,10 @@ export class DependencyResolverMain {
       'cafile',
     ]);
     if (this.config.strictSsl != null) {
-      config.strictSSL = typeof this.config.strictSsl === 'string'
-        ? this.config.strictSsl.toLowerCase() === 'true'
-        : this.config.strictSsl;
+      config.strictSSL =
+        typeof this.config.strictSsl === 'string'
+          ? this.config.strictSsl.toLowerCase() === 'true'
+          : this.config.strictSsl;
     }
     return config;
   }

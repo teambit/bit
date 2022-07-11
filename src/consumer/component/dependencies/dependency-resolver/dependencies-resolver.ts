@@ -13,7 +13,6 @@ import ShowDoctorError from '../../../../error/show-doctor-error';
 import { isSupportedExtension } from '../../../../links/link-content';
 import logger from '../../../../logger/logger';
 import { getExt, pathNormalizeToLinux, pathRelativeLinux } from '../../../../utils';
-import { packageNameToComponentId } from '../../../../utils/bit/package-name-to-component-id';
 import { PathLinux, PathLinuxRelative, PathOsBased } from '../../../../utils/path';
 import ComponentMap from '../../../bit-map/component-map';
 import Component from '../../../component/consumer-component';
@@ -36,8 +35,6 @@ export type AllDependencies = {
 export type AllPackagesDependencies = {
   packageDependencies: Record<string, any> | null | undefined;
   devPackageDependencies: Record<string, any> | null | undefined;
-  compilerPackageDependencies: Record<string, any> | null | undefined;
-  testerPackageDependencies: Record<string, any> | null | undefined;
   peerPackageDependencies: Record<string, any> | null | undefined;
 };
 
@@ -58,7 +55,7 @@ export type DebugComponentsDependency = {
   // can be resolved here or can be any one of the strategies in dependencies-version-resolver
   versionResolvedFrom?: 'DependencyPkgJson' | 'DependentPkgJson' | 'BitMap' | 'Model' | string;
   version?: string;
-  componentIdResolvedFrom?: 'DependencyPkgJson' | 'DependencyPath' | 'LegacyUnknown';
+  componentIdResolvedFrom?: 'DependencyPkgJson' | 'DependencyPath';
   packageName?: string;
 };
 
@@ -80,17 +77,12 @@ export default class DependencyResolver {
   componentMap: ComponentMap;
   componentFromModel: Component;
   consumerPath: PathOsBased;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   tree: DependenciesTree;
   allDependencies: AllDependencies;
   allPackagesDependencies: AllPackagesDependencies;
   issues: IssuesList;
   coreAspects: string[] = [];
   processedFiles: string[];
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  compilerFiles: PathLinux[];
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  testerFiles: PathLinux[];
   overridesDependencies: OverridesDependencies;
   debugDependenciesData: DebugDependencies;
 
@@ -135,8 +127,6 @@ export default class DependencyResolver {
     this.allPackagesDependencies = {
       packageDependencies: {},
       devPackageDependencies: {},
-      compilerPackageDependencies: {},
-      testerPackageDependencies: {},
       peerPackageDependencies: {},
     };
     this.processedFiles = [];
@@ -185,7 +175,6 @@ export default class DependencyResolver {
       workspacePath: this.consumerPath,
       filePaths: allFiles,
       bindingPrefix: this.component.bindingPrefix,
-      isLegacyProject: this.consumer.isLegacy,
       resolveModulesConfig: this.consumer.config._resolveModules,
       visited: cacheResolvedDependencies,
       cacheProjectAst,
@@ -193,7 +182,7 @@ export default class DependencyResolver {
     // we have the files dependencies, these files should be components that are registered in bit.map. Otherwise,
     // they are referred as "untracked components" and the user should add them later on in order to tag
     this.setTree(dependenciesTree.tree);
-    const devFiles = this.consumer.isLegacy ? testsFiles : await DependencyResolver.getDevFiles(this.component);
+    const devFiles = await DependencyResolver.getDevFiles(this.component);
     await this.populateDependencies(allFiles, devFiles);
     return new DependenciesData(this.allDependencies, this.allPackagesDependencies, this.issues, this.coreAspects, {
       manuallyRemovedDependencies: this.overridesDependencies.manuallyRemovedDependencies,
@@ -243,18 +232,14 @@ export default class DependencyResolver {
     this.removeDevAndEnvDepsIfTheyAlsoRegulars();
     this.addCustomResolvedIssues();
     this.populatePeerPackageDependencies();
-    if (!this.consumer.isLegacy) {
-      this.applyWorkspacePolicy();
-      await this.applyAutoDetectedPeersFromEnvOnComponent();
-      await this.applyAutoDetectedPeersFromEnvOnEnvItSelf();
-    }
+    this.applyWorkspacePolicy();
+    await this.applyAutoDetectedPeersFromEnvOnComponent();
+    await this.applyAutoDetectedPeersFromEnvOnEnvItSelf();
     this.manuallyAddDependencies();
-    this.applyOverridesOnEnvPackages();
     this.coreAspects = R.uniq(this.coreAspects);
   }
 
   addCustomResolvedIssues() {
-    if (this.consumer.isLegacy) return;
     const deps: Dependency[] = [...this.allDependencies.dependencies, ...this.allDependencies.devDependencies];
     const customModulesDeps = deps.filter((dep) => dep.relativePaths.some((r) => r.isCustomResolveUsed));
     if (customModulesDeps.length) {
@@ -285,14 +270,6 @@ export default class DependencyResolver {
       shouldBeIncludedDev,
       this.allPackagesDependencies.devPackageDependencies
     );
-    this.allPackagesDependencies.compilerPackageDependencies = R.pickBy(
-      shouldBeIncludedDev,
-      this.allPackagesDependencies.compilerPackageDependencies
-    );
-    this.allPackagesDependencies.testerPackageDependencies = R.pickBy(
-      shouldBeIncludedDev,
-      this.allPackagesDependencies.testerPackageDependencies
-    );
   }
 
   throwForNonExistFile(file: string) {
@@ -321,18 +298,6 @@ export default class DependencyResolver {
       if (packages[depField] && !R.isEmpty(packages[depField])) {
         Object.assign(this.allPackagesDependencies[this._pkgFieldMapping(depField)], packages[depField]);
       }
-    });
-  }
-
-  applyOverridesOnEnvPackages() {
-    [this.component.compilerPackageDependencies, this.component.testerPackageDependencies].forEach((packages) => {
-      DEPENDENCIES_FIELDS.forEach((fieldType) => {
-        if (!packages[fieldType]) return;
-        const shouldBeIncluded = (pkgVersion, pkgName) => {
-          return !this.overridesDependencies.shouldIgnorePackageByType(pkgName, fieldType);
-        };
-        packages[fieldType] = R.pickBy(shouldBeIncluded, packages[fieldType]);
-      });
     });
   }
 
@@ -373,16 +338,10 @@ export default class DependencyResolver {
   }
 
   getComponentIdByResolvedPackageData(bit: ResolvedPackageData): BitId {
-    if (bit.componentId) {
-      return bit.componentId;
+    if (!bit.componentId) {
+      throw new Error(`resolved Bit component must have componentId prop in the package.json file`);
     }
-    if (!this.consumer.isLegacy) {
-      throw new Error(`on Harmony resolved Bit component must have componentId prop in the package.json file`);
-    }
-    if (bit.fullPath) {
-      return this.consumer.getComponentIdFromNodeModulesPath(bit.fullPath, this.component.bindingPrefix);
-    }
-    return packageNameToComponentId(this.consumer, bit.name, this.component.bindingPrefix);
+    return bit.componentId;
   }
 
   /**
@@ -560,7 +519,7 @@ export default class DependencyResolver {
       if (missingComponents) {
         // this depFile is a dependency link and this dependency is missing.
         // it can't happen on Harmony, as Harmony doesn't have the generated dependencies files.
-        this._addToMissingComponentsIfNeeded(missingComponents, originFile, fileType);
+        this.throwForMissingComponentsOnHarmony(missingComponents);
         return false;
       }
       this._pushToUntrackDependenciesIssues(originFile, depFileRelative, nested);
@@ -575,12 +534,6 @@ either, use the ignore file syntax or change the require statement to have a mod
     // happens when in the same component one file requires another one. In this case, there is
     // noting to do regarding the dependencies
     if (componentId.isEqualWithoutVersion(this.componentId)) {
-      if (depFileObject.isCustomResolveUsed) {
-        this.component.customResolvedPaths.push({
-          destinationPath: depFileObject.file,
-          importSource,
-        });
-      }
       return false;
     }
 
@@ -738,7 +691,7 @@ either, use the ignore file syntax or change the require statement to have a mod
         id: componentId,
         dependencyPackageJsonPath: compDep.packageJsonPath,
         dependentPackageJsonPath: compDep.dependentPackageJsonPath,
-        componentIdResolvedFrom: this.consumer.isLegacy ? 'LegacyUnknown' : 'DependencyPkgJson',
+        componentIdResolvedFrom: 'DependencyPkgJson',
         packageName: compDep.name,
       };
       const getVersionFromPkgJson = (): string | null => {
@@ -793,9 +746,6 @@ either, use the ignore file syntax or change the require statement to have a mod
   }
 
   private addImportNonMainIssueIfNeeded(filePath: PathLinuxRelative, dependencyPkgData: ResolvedPackageData) {
-    if (this.consumer.isLegacy) {
-      return; // this is relevant for Harmony only
-    }
     const depMain: PathLinuxRelative | undefined = dependencyPkgData.packageJsonContent?.main;
     if (!depMain) {
       return;
@@ -876,12 +826,6 @@ either, use the ignore file syntax or change the require statement to have a mod
       );
       if (R.isEmpty(missingPackages)) return;
       const customResolvedDependencies = this.findOriginallyCustomModuleResolvedDependencies(missingPackages);
-      if (customResolvedDependencies) {
-        Object.keys(customResolvedDependencies).forEach((missingPackage) => {
-          const componentId = customResolvedDependencies[missingPackage].toString();
-          this._pushToMissingCustomModuleIssues(originFile, componentId);
-        });
-      }
       const missingPackagesWithoutCustomResolved = customResolvedDependencies
         ? R.difference(missingPackages, Object.keys(customResolvedDependencies))
         : missingPackages;
@@ -892,36 +836,19 @@ either, use the ignore file syntax or change the require statement to have a mod
     };
     const processMissingComponents = () => {
       if (isEmpty(missing.components)) return;
-      this._addToMissingComponentsIfNeeded(missing.components, originFile, fileType);
+      this.throwForMissingComponentsOnHarmony(missing.components);
     };
     processMissingFiles();
     processMissingPackages();
     processMissingComponents();
   }
 
-  _addToMissingComponentsIfNeeded(missingComponents: string[], originFile: string, fileType: FileType) {
-    if (!this.consumer.isLegacy) {
-      // on Harmony we don't guess whether a path is a component or a package based on the path only,
-      // see missing-handler.groupMissingByType() for more info.
-      throw new Error(
-        `Harmony should not have "missing.components" (only "missing.packages"). got ${missingComponents.join(',')}`
-      );
-    }
-    missingComponents.forEach((missingBit) => {
-      const componentId: BitId = this.consumer.getComponentIdFromNodeModulesPath(
-        missingBit,
-        this.component.bindingPrefix
-      );
-      if (this.overridesDependencies.shouldIgnoreComponent(componentId, fileType)) return;
-      // In case the component it missing, it might consider as a package sometime, check if we should ignore it by the package name
-      if (this.overridesDependencies.shouldIgnorePackage(missingBit, fileType)) return;
-      // todo: a component might be on bit.map but not on the FS, yet, it's not about missing links.
-      if (this.consumer.bitMap.getBitIdIfExist(componentId, { ignoreVersion: true })) {
-        this._pushToMissingLinksIssues(originFile, componentId);
-      } else {
-        this._pushToMissingComponentsIssues(originFile, componentId);
-      }
-    });
+  throwForMissingComponentsOnHarmony(missingComponents: string[]) {
+    // on Harmony we don't guess whether a path is a component or a package based on the path only,
+    // see missing-handler.groupMissingByType() for more info.
+    throw new Error(
+      `Harmony should not have "missing.components" (only "missing.packages"). got ${missingComponents.join(',')}`
+    );
   }
 
   processErrors(originFile: PathLinuxRelative) {
@@ -1097,15 +1024,6 @@ either, use the ignore file syntax or change the require statement to have a mod
       getNotRegularPackages(this.allPackagesDependencies.devPackageDependencies),
       this.allPackagesDependencies.devPackageDependencies
     );
-    this.allPackagesDependencies.compilerPackageDependencies = R.pick(
-      getNotRegularPackages(this.allPackagesDependencies.compilerPackageDependencies),
-      this.allPackagesDependencies.compilerPackageDependencies
-    );
-    this.allPackagesDependencies.testerPackageDependencies = R.pick(
-      getNotRegularPackages(this.allPackagesDependencies.testerPackageDependencies),
-      this.allPackagesDependencies.testerPackageDependencies
-    );
-
     // remove dev dependencies that are also regular dependencies
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const componentDepsIds = new BitIds(...this.allDependencies.dependencies.map((c) => c.id));
@@ -1282,7 +1200,6 @@ either, use the ignore file syntax or change the require statement to have a mod
   }
 
   private setLegacyInsideHarmonyIssue() {
-    if (this.consumer.isLegacy) return;
     if (this.componentFromModel && this.componentFromModel.isLegacy) {
       this.issues.getOrCreate(IssuesClasses.LegacyInsideHarmony).data = true;
     }
@@ -1301,10 +1218,7 @@ either, use the ignore file syntax or change the require statement to have a mod
   _addTypesPackagesForTypeScript(packages: Record<string, any>, originFile: PathLinuxRelative): void {
     const isTypeScript = getExt(originFile) === 'ts' || getExt(originFile) === 'tsx';
     if (!isTypeScript) return;
-    let depsHost = this._getPackageJson();
-    if (!this.consumer.isLegacy) {
-      depsHost = DependencyResolver.getWorkspacePolicy();
-    }
+    const depsHost = DependencyResolver.getWorkspacePolicy();
     if (!depsHost) return;
     const addIfNeeded = (depField: string, packageName: string) => {
       if (!depsHost || !depsHost[depField]) return;
@@ -1377,14 +1291,6 @@ either, use the ignore file syntax or change the require statement to have a mod
     (this.issues.getOrCreate(IssuesClasses.MissingPackagesDependenciesOnFs).data[originFile] ||= []).push(
       ...uniq(missingPackages)
     );
-  }
-  _pushToMissingCustomModuleIssues(originFile: PathLinuxRelative, componentId: string) {
-    (this.issues.getOrCreate(IssuesClasses.MissingCustomModuleResolutionLinks).data[originFile] ||= []).push(
-      componentId
-    );
-  }
-  _pushToMissingLinksIssues(originFile: PathLinuxRelative, componentId: BitId) {
-    (this.issues.getOrCreate(IssuesClasses.MissingLinks).data[originFile] ||= []).push(componentId);
   }
   _pushToMissingComponentsIssues(originFile: PathLinuxRelative, componentId: BitId) {
     (this.issues.getOrCreate(IssuesClasses.MissingComponents).data[originFile] ||= []).push(componentId);

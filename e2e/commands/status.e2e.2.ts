@@ -269,7 +269,8 @@ describe('bit status command', function () {
       });
     });
   });
-  describe('when a component is exported, modified and the project cloned somewhere else', () => {
+  // todo: fix this once "bit import --merge" is fixed on Harmony
+  describe.skip('when a component is exported, modified and the project cloned somewhere else', () => {
     let output;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();

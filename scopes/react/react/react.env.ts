@@ -36,10 +36,13 @@ import { SchemaExtractor } from '@teambit/schema';
 import { join, resolve } from 'path';
 import { outputFileSync } from 'fs-extra';
 import { Logger } from '@teambit/logger';
-// Makes sure the @teambit/react.ui.docs-app is a dependency
-// TODO: remove this import once we can set policy from component to component with workspace version. Then set it via the component.json
+// ensure reactEnv depends on compositions-app
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { ReactMainConfig } from './react.main.runtime';
+import { CompositionsApp } from '@teambit/react.ui.compositions-app';
+// ensure reactEnv depends on docs-app
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import DocsApps from '@teambit/react.ui.docs-app';
+import type { ReactMainConfig } from './react.main.runtime';
 import { ReactAspect } from './react.aspect';
 // webpack configs for both components and envs
 import basePreviewConfigFactory from './webpack/webpack.config.base';
@@ -48,6 +51,7 @@ import basePreviewProdConfigFactory from './webpack/webpack.config.base.prod';
 // webpack configs for envs only
 // import devPreviewConfigFactory from './webpack/webpack.config.preview.dev';
 import envPreviewDevConfigFactory from './webpack/webpack.config.env.dev';
+import { templateWebpackConfigFactory } from './webpack/webpack.config.env.template';
 
 // webpack configs for components only
 import componentPreviewProdConfigFactory from './webpack/webpack.config.component.prod';
@@ -319,9 +323,10 @@ export class ReactEnv
   ): Promise<Bundler> {
     const baseConfig = basePreviewConfigFactory(!context.development);
     const baseProdConfig = basePreviewProdConfigFactory(context.development);
+    const templateConfig = templateWebpackConfigFactory();
 
     const defaultTransformer: WebpackConfigTransformer = (configMutator) => {
-      const merged = configMutator.merge([baseConfig, baseProdConfig]);
+      const merged = configMutator.merge([baseConfig, baseProdConfig, templateConfig]);
       return merged;
     };
     const mergedTransformers = [defaultTransformer, ...transformers];
@@ -356,10 +361,10 @@ export class ReactEnv
   icon = 'https://static.bit.dev/extensions-icons/react.svg';
 
   /**
-   * returns a paths to a function which mounts a given component to DOM
+   * returns the path to the compositions template
    */
   getMounter() {
-    return require.resolve('./mount');
+    return require.resolve('@teambit/react.ui.compositions-app');
   }
 
   getPreviewConfig() {

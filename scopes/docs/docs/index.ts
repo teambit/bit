@@ -8,8 +8,10 @@ export { Doc, DocProp, DocPropList } from '@teambit/docs.entities.doc';
 
 export type { DocsMain } from './docs.main.runtime';
 export type { DocsUI } from './docs.ui.runtime';
-export type { DocsPreview } from './docs.preview.runtime';
+export type { DocsPreview, DocsRootProps } from './docs.preview.runtime';
 export type { DocReader } from './doc-reader';
+export type { Docs, Example } from './docs';
+export { defaultDocs } from './docs';
 
 export type { TitleBadgeSlot } from './overview';
 export { Overview } from './overview';

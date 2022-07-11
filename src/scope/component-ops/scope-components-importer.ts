@@ -292,8 +292,7 @@ export default class ScopeComponentsImporter {
   async importLanes(remoteLaneIds: LaneId[]): Promise<Lane[]> {
     const remotes = await getScopeRemotes(this.scope);
     const objectsStreamPerRemote = await remotes.fetch(groupByScopeName(remoteLaneIds), this.scope, { type: 'lane' });
-    const multipleStreams = Object.values(objectsStreamPerRemote);
-    const bitObjects = await this.multipleStreamsToBitObjects(multipleStreams);
+    const bitObjects = await this.multipleStreamsToBitObjects(objectsStreamPerRemote);
     const lanes = bitObjects.getLanes();
     await Promise.all(lanes.map((lane) => this.repo.remoteLanes.syncWithLaneObject(lane.scope as string, lane)));
     return lanes;
@@ -321,7 +320,7 @@ export default class ScopeComponentsImporter {
     const remotes = await getScopeRemotes(this.scope);
     const multipleStreams = await remotes.fetch(groupedHashedMissing, this.scope, { type: 'object' });
 
-    const bitObjectsList = await this.multipleStreamsToBitObjects(Object.values(multipleStreams));
+    const bitObjectsList = await this.multipleStreamsToBitObjects(multipleStreams);
     await this.repo.writeObjectsToTheFS(bitObjectsList.getAll());
   }
 
@@ -386,7 +385,7 @@ export default class ScopeComponentsImporter {
   async loadRemoteComponent(id: BitId): Promise<ConsumerComponent> {
     const component = await this._getComponentVersion(id);
     if (!component) throw new ComponentNotFound(id.toString());
-    return component.toConsumer(this.scope.objects, null);
+    return component.toConsumer(this.scope.objects);
   }
 
   async loadComponent(id: BitId, localOnly = true): Promise<ConsumerComponent> {
@@ -409,7 +408,7 @@ export default class ScopeComponentsImporter {
     let bitObjectsList: BitObjectList;
     try {
       const streams = await remotes.fetch({ [id.scope as string]: [id.toString()] }, this.scope);
-      bitObjectsList = await this.multipleStreamsToBitObjects(Object.values(streams));
+      bitObjectsList = await this.multipleStreamsToBitObjects(streams);
     } catch (err: any) {
       logger.error(`getRemoteComponent, failed to get ${id.toString()}`, err);
       return null; // probably doesn't exist
@@ -431,11 +430,22 @@ export default class ScopeComponentsImporter {
     const remotes = await getScopeRemotes(this.scope);
     const grouped = groupByScopeName(ids);
     const streams = await remotes.fetch(grouped, this.scope);
-    return this.multipleStreamsToBitObjects(Object.values(streams));
+    return this.multipleStreamsToBitObjects(streams);
   }
 
-  private async multipleStreamsToBitObjects(streams: ObjectItemsStream[]): Promise<BitObjectList> {
-    const objectListPerRemote = await Promise.all(streams.map((stream) => ObjectList.fromReadableStream(stream)));
+  private async multipleStreamsToBitObjects(remoteStreams: {
+    [remoteName: string]: ObjectItemsStream;
+  }): Promise<BitObjectList> {
+    const objectListPerRemote = await Promise.all(
+      Object.keys(remoteStreams).map(async (remoteName) => {
+        try {
+          return await ObjectList.fromReadableStream(remoteStreams[remoteName]);
+        } catch (err: any) {
+          logger.error(`multipleStreamsToBitObjects, error from ${remoteName}`, err);
+          throw new Error(`the remote "${remoteName}" threw an error:\n${err.message}`);
+        }
+      })
+    );
     const objectList = ObjectList.mergeMultipleInstances(objectListPerRemote);
     const bitObjects = await objectList.toBitObjects();
     return bitObjects;
@@ -737,32 +747,30 @@ export function groupByScopeName(ids: Array<BitId | LaneId>): { [scopeName: stri
 }
 
 export function groupByLanes(ids: BitId[], lanes: Lane[]): { [scopeName: string]: string[] } {
-  const bitIds = BitIds.fromArray(ids);
-  const grouped = {};
-  lanes.forEach((lane) => {
-    const scope = lane.scope;
-    if (!scope) {
-      throw new Error(`can't group by Lane object, the scope is undefined for ${lane.id()}`);
-    }
-    const idsFromThisLane = lane.toBitIds().filter((bitId) => {
-      if (bitIds.has(bitId)) return true;
-      const foundWithoutVersion = bitIds.searchWithoutVersion(bitId);
-      if (!foundWithoutVersion) return false;
-      const shouldIgnoreVersion = !foundWithoutVersion.hasVersion();
-      return shouldIgnoreVersion;
-    });
-    if (!idsFromThisLane.length) return;
-    (grouped[scope] ||= []).push(...idsFromThisLane.map((id) => id.toString()));
-  });
+  const lane = lanes[0];
+  if (!lane.scope) {
+    throw new Error(`can't group by Lane object, the scope is undefined for ${lane.id()}`);
+  }
+  const laneIds = lane.toBitIds();
+  if (lanes.length > 1) {
+    throw new Error(`groupByLanes does not support more than one lane`);
+  }
+  const grouped: { [scopeName: string]: string[] } = {};
 
-  // ids that were not found on any of the lanes, fetch from main.
-  const allIdsFromLanes = Object.keys(grouped)
-    .map((scope) => grouped[scope])
-    .flat();
+  const isLaneIncludeId = (id: BitId, laneBitIds: BitIds) => {
+    if (laneBitIds.has(id)) return true;
+    const foundWithoutVersion = laneBitIds.searchWithoutVersion(id);
+    if (!foundWithoutVersion) return false;
+    const shouldIgnoreVersion = !id.hasVersion();
+    return shouldIgnoreVersion;
+  };
+
   ids.forEach((id) => {
-    const idStr = id.toString();
-    if (!allIdsFromLanes.includes(idStr)) {
-      (grouped[id.scope as string] ||= []).push(idStr);
+    if (isLaneIncludeId(id, laneIds)) {
+      (grouped[lane.scope] ||= []).push(id.toString());
+    } else {
+      // if not found on a lane, fetch from main.
+      (grouped[id.scope as string] ||= []).push(id.toString());
     }
   });
 

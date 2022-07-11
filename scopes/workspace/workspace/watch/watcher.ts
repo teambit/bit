@@ -373,10 +373,10 @@ export class Watcher {
     await Promise.all(
       componentsFromBitMap.map(async (componentMap) => {
         const bitId = componentMap.id;
-        const trackDir = componentMap.getTrackDir();
-        if (!trackDir) throw new Error(`${bitId.toString()} has no rootDir, which is invalid in Harmony`);
+        const rootDir = componentMap.getRootDir();
+        if (!rootDir) throw new Error(`${bitId.toString()} has no rootDir, which is invalid in Harmony`);
         const componentId = await this.workspace.resolveComponentId(bitId);
-        this.trackDirs[trackDir] = componentId;
+        this.trackDirs[rootDir] = componentId;
       })
     );
   }

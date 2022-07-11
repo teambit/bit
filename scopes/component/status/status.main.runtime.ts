@@ -28,7 +28,6 @@ export type StatusResult = {
   mergePendingComponents: DivergedComponent[];
   componentsDuringMergeState: BitIds;
   componentsWithIndividualFiles: ConsumerComponent[];
-  componentsWithTrackDirs: ConsumerComponent[];
   softTaggedComponents: BitId[];
   snappedComponents: BitId[];
   laneName: string | null; // null if default
@@ -60,7 +59,7 @@ export class StatusMain {
     const mergePendingComponents = await componentsList.listMergePendingComponents();
     const newAndModifiedLegacy: ConsumerComponent[] = newComponents.concat(modifiedComponent);
     const issuesToIgnore = this.issues.getIssuesToIgnoreGlobally();
-    if (!this.workspace.isLegacy && newAndModifiedLegacy.length) {
+    if (newAndModifiedLegacy.length) {
       const newAndModified = await this.workspace.getManyByLegacy(newAndModifiedLegacy);
       if (!issuesToIgnore.includes(IssuesClasses.CircularDependencies.name)) {
         await this.insights.addInsightsAsComponentIssues(newAndModified);
@@ -68,9 +67,6 @@ export class StatusMain {
       this.issues.removeIgnoredIssuesFromComponents(newAndModified);
     }
     const componentsWithIssues = newAndModifiedLegacy.filter((component: ConsumerComponent) => {
-      if (consumer.isLegacy && component.issues) {
-        component.issues.delete(IssuesClasses.RelativeComponentsAuthored);
-      }
       return component.issues && !component.issues.isEmpty();
     });
     const componentsDuringMergeState = componentsList.listDuringMergeStateComponents();
@@ -98,7 +94,6 @@ export class StatusMain {
       mergePendingComponents,
       componentsDuringMergeState,
       componentsWithIndividualFiles: await componentsList.listComponentsWithIndividualFiles(),
-      componentsWithTrackDirs: await componentsList.listComponentsWithTrackDir(),
       softTaggedComponents,
       snappedComponents,
       laneName,

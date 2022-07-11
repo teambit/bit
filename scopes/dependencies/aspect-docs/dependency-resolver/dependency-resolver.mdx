@@ -435,6 +435,72 @@ This way, even if someone is using Node.js v16, they will not be able to install
 
 NOTE: This works only with pnpm currently.
 
+## peerDependencyRules
+
+### peerDependencyRules.ignoreMissing
+
+Bit will not print warnings about missing peer dependencies from this list.
+
+For instance, with the following configuration, Bit will not print warnings if a dependency needs `react` but `react` is not installed:
+
+```json
+{
+  "@teambit.dependencies/dependency-resolver": {
+    "peerDependencyRules": {
+      "ignoreMissing": ["react"]
+    }
+  }
+}
+```
+
+Package name patterns may also be used:
+
+```json
+{
+  "@teambit.dependencies/dependency-resolver": {
+    "peerDependencyRules": {
+      "ignoreMissing": ["@babel/*", "@eslint/*"]
+    }
+  }
+}
+```
+
+### peerDependencyRules.allowedVersions
+
+Unmet peer dependency warnings will not be printed for peer dependencies of the specified range.
+
+For instance, if you have some dependencies that need `react@16` but you know that they work fine with `react@17`, then you may use the following configuration:
+
+```json
+{
+  "@teambit.dependencies/dependency-resolver": {
+    "peerDependencyRules": {
+      "allowedVersions": {
+        "react": "17"
+      }
+    }
+  }
+}
+```
+
+This will tell Bit that any dependency that has react in its peer dependencies should allow `react` v17 to be installed.
+
+### peerDependencyRules.allowAny
+
+`allowAny` is an array of package name patterns, any peer dependency matching the pattern will be resolved from any version, regardless of the range specified in `peerDependencies`. For instance:
+
+```json
+{
+  "@teambit.dependencies/dependency-resolver": {
+    "peerDependencyRules": {
+      "allowAny": ["@babel/*", "eslint"]
+    }
+  }
+}
+```
+
+The above setting will mute any warnings about peer dependency version mismatches related to `@babel/` packages or `eslint`.
+
 ## CLI reference
 
 ### install
