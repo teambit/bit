@@ -168,7 +168,7 @@
         "@teambit/react.instructions.react.adding-compositions": "0.0.6",
         "@teambit/react.instructions.react.adding-tests": "0.0.6",
         "@teambit/react.modules.dom-to-react": "0.1.0",
-        "@teambit/react.ui.component-highlighter": "0.1.0",
+        "@teambit/react.ui.component-highlighter": "0.2.0",
         "@teambit/react.ui.hover-selector": "0.1.0",
         "@teambit/scope.content.scope-overview": "1.95.0",
         "@teambit/workspace.content.variants": "1.95.9",
