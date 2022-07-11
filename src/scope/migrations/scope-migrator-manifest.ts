@@ -9,7 +9,6 @@ export default {
     Component: [componentMigrations.changeVersionToSemVerDeclartaion],
     Version: [
       versionMigrations.implSpecsToFilesDeclartaion,
-      versionMigrations.specsResultstoArrayDeclartaion,
       versionMigrations.addBindingPrefixDeclartaion,
       versionMigrations.changeVersionToSemVerDeclartaion,
     ],

@@ -28,7 +28,6 @@
       "src/consumer",
       "src/doctor",
       "src/driver",
-      "src/environment",
       "src/error",
       "src/extensions",
       "src/global-config",

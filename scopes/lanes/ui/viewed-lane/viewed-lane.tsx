@@ -1,5 +1,5 @@
 import React, { ReactNode, useMemo } from 'react';
-import { useLocation } from '@teambit/base-ui.routing.routing-provider';
+import { useLocation } from '@teambit/base-react.navigation.link';
 import { LanesModel, LanesProvider } from '@teambit/lanes.ui.lanes';
 
 export type ViewedLaneFromUrlProps = {
@@ -8,6 +8,9 @@ export type ViewedLaneFromUrlProps = {
 
 export function ViewedLaneFromUrl({ children }: ViewedLaneFromUrlProps) {
   const location = useLocation();
-  const viewedLaneId = useMemo(() => LanesModel.getLaneIdFromPathname(location.pathname), [location.pathname]);
+  const viewedLaneId = useMemo(
+    () => location && LanesModel.getLaneIdFromPathname(location.pathname),
+    [location?.pathname]
+  );
   return <LanesProvider viewedLaneId={viewedLaneId}>{children}</LanesProvider>;
 }

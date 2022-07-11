@@ -6,7 +6,7 @@ import { ReactEnv } from '../../react.env';
 export class ReactAppType implements ApplicationType<ReactAppOptions> {
   constructor(readonly name: string, private reactEnv: ReactEnv) {}
 
-  async createApp(options: ReactAppOptions) {
+  createApp(options: ReactAppOptions) {
     return new ReactApp(
       options.name,
       options.entry,

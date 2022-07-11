@@ -2,8 +2,8 @@ import { ComponentIssue, ISSUE_FORMAT_SPACE } from './component-issue';
 
 export class MultipleEnvs extends ComponentIssue {
   description = 'multiple envs';
-  // TODO: pass the docs url into here after fetch it from the community aspect
-  solution = `remove the old envs by setting them with "-" sign in the variants. see https://bit.dev/docs/envs/using-envs#component-must-have-a-single-env`;
+  solution =
+    'set the desired env by running "bit env set <component> <env>", if it doesn\'t work, run "bit aspect unset <component> <unwanted-env-id>". to keep troubleshooting run "bit aspect list <component-id>"';
   data: string[]; // env ids
   isTagBlocker = true;
   dataToString() {

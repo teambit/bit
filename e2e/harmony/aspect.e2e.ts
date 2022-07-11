@@ -1,3 +1,4 @@
+import { UNABLE_TO_LOAD_EXTENSION } from '@teambit/aspect-loader/constants';
 import chai, { expect } from 'chai';
 import { Extensions } from '../../src/constants';
 import Helper from '../../src/e2e-helper/e2e-helper';
@@ -37,6 +38,27 @@ describe('aspect', function () {
         const compJson = helper.componentJson.read('comp1');
         expect(compJson.extensions).to.not.have.property(Extensions.forking);
       });
+    });
+  });
+  describe('aspect loading failures', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.command.create('aspect', 'my-aspect');
+      helper.bitJsonc.addKeyVal('my-scope/my-aspect', {});
+    });
+    it('commands with loaders should show a descriptive error', () => {
+      const output = helper.command.status();
+      expect(output).to.have.string(
+        UNABLE_TO_LOAD_EXTENSION('my-scope/my-aspect', "Cannot find module '@teambit/harmony'")
+      );
+    });
+    it('commands without loaders should not show the entire stacktrace', () => {
+      const output = helper.command.list();
+      expect(output).to.not.have.string('Require stack');
+    });
+    it('using --log=error it should show the stacktrace', () => {
+      const output = helper.command.list('--log=error');
+      expect(output).to.have.string('Require stack');
     });
   });
 });

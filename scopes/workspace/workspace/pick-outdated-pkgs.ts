@@ -40,8 +40,21 @@ ${chalk.red('Red')} - indicates a semantically breaking change`,
     k() {
       return this.up();
     },
-  } as any)) as { updateDependencies: Array<string | OutdatedPkg> };
-  return updateDependencies.filter((updateDependency) => typeof updateDependency !== 'string') as OutdatedPkg[];
+    result(names: string[]) {
+      // This is needed in order to have the values of the choices in the answer object.
+      // Otherwise, only the names of the selected choices would've been included.
+      return this.map(names);
+    },
+    cancel() {
+      // By default, canceling the prompt via Ctrl+c throws an empty string.
+      // The custom cancel function prevents that behavior.
+      // Otherwise, Bit CLI would print an error and confuse users.
+      // See related issue: https://github.com/enquirer/enquirer/issues/225
+    },
+  } as any)) as { updateDependencies: Record<string, string | OutdatedPkg> };
+  return Object.values(updateDependencies ?? {}).filter(
+    (updateDependency) => typeof updateDependency !== 'string'
+  ) as OutdatedPkg[];
 }
 
 const DEP_TYPE_PRIORITY = {
@@ -67,7 +80,8 @@ export function makeOutdatedPkgChoices(outdatedPkgs: OutdatedPkg[]) {
     }
     groupedChoices[context].push({
       message: renderedTable[index],
-      name: outdatedPkg,
+      name: outdatedPkg.name,
+      value: outdatedPkg,
     });
   });
   const choices = Object.entries(groupedChoices).map(([context, subChoices]) => ({

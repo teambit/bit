@@ -1,11 +1,37 @@
 .label {
-  background-color: var(--warning-color, #ffc640);
+  background-color: var(--design-warning-surface-color, #fffcf4); // warningSurfaceColor: '',
   color: #2b2b2b;
-  border-color: transparent;
-  padding: 4px 8px;
+  border-color: var(--design-warning-color, #ffc640);
+  padding: 0;
 
-  > img {
+  > div {
+    padding: 4px 8px;
+    display: flex;
+    align-items: center;
+  }
+  .deprecatedImage,
+  .arrowImage {
     width: 16px;
+  }
+  .deprecatedImage {
     margin-right: 8px;
   }
+}
+.separator {
+  border-right: 1px solid var(--design-warning-color, #ffc640);
+}
+.componentTooltip {
+  padding: 0;
+  max-width: unset !important; // Override inline css from Tippyjs.
+}
+.componentTooltipContent {
+  font-size: 12px;
+  > div {
+    font-weight: bold;
+    margin-bottom: 8px;
+  }
+}
+.link {
+  color: inherit;
+  text-decoration: none;
 }

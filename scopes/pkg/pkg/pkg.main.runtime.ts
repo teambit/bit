@@ -2,7 +2,7 @@ import { compact, omit } from 'lodash';
 import { join } from 'path';
 import fs from 'fs-extra';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import ComponentAspect, { Component, ComponentMain, Snap } from '@teambit/component';
+import ComponentAspect, { Component, ComponentMain, IComponent, Snap } from '@teambit/component';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { IsolatorAspect, IsolatorMain } from '@teambit/isolator';
@@ -15,6 +15,7 @@ import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-i
 import { BuilderMain, BuilderAspect } from '@teambit/builder';
 import { CloneConfig } from '@teambit/new-component-helper';
 import { BitError } from '@teambit/bit-error';
+import { snapToSemver } from '@teambit/component-package-version';
 import { IssuesClasses } from '@teambit/component-issues';
 import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 import { GraphqlMain, GraphqlAspect } from '@teambit/graphql';
@@ -337,8 +338,9 @@ export class PkgMain implements CloneConfig {
       throw new BitError('can not get manifest for component without versions');
     }
     const preReleaseLatestTags = component.tags.getPreReleaseLatestTags();
+    const latest = snapToSemver(latestVersion);
     const distTags = {
-      latest: latestVersion,
+      latest,
       ...preReleaseLatestTags,
     };
     const versionsFromCache = this.manifestCache.get(name);
@@ -384,8 +386,8 @@ export class PkgMain implements CloneConfig {
    * This will usually determined by the latest version of the component
    * @param component
    */
-  isPublishedToExternalRegistry(component: Component): boolean {
-    const pkgExt = component.state.aspects.get(PkgAspect.id);
+  isPublishedToExternalRegistry(component: IComponent): boolean {
+    const pkgExt = component.get(PkgAspect.id);
     // By default publish to bit registry
     if (!pkgExt) return false;
     return !!(pkgExt.config?.packageJson?.name || pkgExt.config?.packageJson?.publishConfig);

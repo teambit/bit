@@ -4,35 +4,23 @@ import R from 'ramda';
 
 import { add } from '../../../api/consumer';
 import { BASE_DOCS_DOMAIN } from '../../../constants';
-import { AddActionResults, AddResult, PathOrDSL } from '../../../consumer/component-ops/add-components/add-components';
+import { AddActionResults, AddResult } from '../../../consumer/component-ops/add-components/add-components';
 import GeneralError from '../../../error/general-error';
 import { PathOsBased } from '../../../utils/path';
 import { Group } from '../../command-groups';
 import { CommandOptions, LegacyCommand } from '../../legacy-command';
-import AddTestsWithoutId from '../exceptions/add-tests-without-id';
 
 export default class Add implements LegacyCommand {
   name = 'add [path...]';
-  shortDescription = 'Add any subset of files to be tracked as a component(s).';
+  description = 'Add any subset of files to be tracked as a component(s).';
   group: Group = 'development';
-  description = `add any subset of files to be tracked as a component(s)
-  all flags support glob patterns and {PARENT} {FILE_NAME} annotations
+  extendedDescription = `all flags support glob patterns and {PARENT} {FILE_NAME} annotations
   https://${BASE_DOCS_DOMAIN}/components/adding-components`;
   alias = 'a';
   opts = [
     ['i', 'id <name>', 'manually set component id'],
     ['m', 'main <file>', 'define entry point for the components'],
-    [
-      't',
-      'tests <file>/"<file>,<file>"',
-      'specify test files to track. use quotation marks to list files or use a glob pattern',
-    ],
     ['n', 'namespace <namespace>', 'organize component in a namespace'],
-    [
-      'e',
-      'exclude <file>/"<file>,<file>"',
-      'exclude file from being tracked. use quotation marks to list files or use a glob pattern',
-    ],
     ['o', 'override <boolean>', 'override existing component if exists (default = false)'],
     ['s', 'scope <string>', `sets the component's scope-name. if not entered, the default-scope will be used`],
   ] as CommandOptions;
@@ -44,17 +32,13 @@ export default class Add implements LegacyCommand {
     {
       id,
       main,
-      tests,
       namespace,
-      exclude,
       scope,
       override = false,
     }: {
       id: string | null | undefined;
       main: string | null | undefined;
-      tests: string | null | undefined;
       namespace: string | null | undefined;
-      exclude: string | null | undefined;
       scope?: string;
       override: boolean;
     }
@@ -64,18 +48,6 @@ export default class Add implements LegacyCommand {
     }
 
     const normalizedPaths: PathOsBased[] = paths.map((p) => path.normalize(p));
-    const testsArray: PathOrDSL[] = tests
-      ? this.splitList(tests).map((filePath) => path.normalize(filePath.trim()))
-      : [];
-    const excludedFiles: PathOrDSL[] = exclude
-      ? this.splitList(exclude).map((filePath) => path.normalize(filePath.trim()))
-      : [];
-
-    // check if user is trying to add test files only without id
-    if (!R.isEmpty(tests) && !id && R.isEmpty(normalizedPaths)) {
-      throw new AddTestsWithoutId();
-    }
-
     return add({
       componentPaths: normalizedPaths,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -83,8 +55,6 @@ export default class Add implements LegacyCommand {
       main: main ? path.normalize(main) : undefined,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       namespace,
-      tests: testsArray,
-      exclude: excludedFiles,
       defaultScope: scope,
       override,
     });

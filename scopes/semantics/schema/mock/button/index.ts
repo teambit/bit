@@ -4,11 +4,13 @@
 /* eslint-disable @typescript-eslint/prefer-as-const */
 /* eslint-disable one-var */
 /* eslint-disable max-classes-per-file */
+
 /**
- *
- * @param a this is A
+ * General comment of the myFunc
+ * @deprecate example of deprecation tag
+ * @param a { number } this is A
  * @param b this is B
- * @returns
+ * @returns { number } results of adding a to b
  */
 export function myFunc(a = 4, b = 5): number {
   return a + b;
@@ -114,3 +116,12 @@ export interface ComputedNameNoType {
 type World1 = 'world1-a' | 'world1-b';
 type World2 = 'world2';
 export type templateLiteralType = `hello ${World1} hi ${World2}`;
+
+export interface CallSignatureWithTypeParams {
+  <T>(a: string): T;
+}
+
+/**
+ * Conditional Generic Type
+ */
+export type If<T, U, Y, N> = T extends U ? Y : N;

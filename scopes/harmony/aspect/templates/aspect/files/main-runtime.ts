@@ -9,7 +9,7 @@ export class ${namePascalCase}Main {
   getSomething() {}
 
   static slots = [];
-  // define your aspect dependencies here. 
+  // define your aspect dependencies here.
   // in case you need to use another aspect API.
   static dependencies = [];
 
@@ -21,5 +21,7 @@ export class ${namePascalCase}Main {
 }
 
 ${namePascalCase}Aspect.addRuntime(${namePascalCase}Main);
+
+export default ${namePascalCase}Main;
 `;
 }

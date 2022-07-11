@@ -85,6 +85,8 @@ import { SnappingAspect } from '@teambit/snapping';
 import { MergingAspect } from '@teambit/merging';
 import { IssuesAspect } from '@teambit/issues';
 import { RefactoringAspect } from '@teambit/refactoring';
+import { ComponentCompareAspect } from '@teambit/component-compare';
+import { ListerAspect } from '@teambit/lister';
 import { BitAspect } from './bit.aspect';
 
 export const manifestsMap = {
@@ -174,6 +176,8 @@ export const manifestsMap = {
   [MergingAspect.id]: MergingAspect,
   [IssuesAspect.id]: IssuesAspect,
   [RefactoringAspect.id]: RefactoringAspect,
+  [ComponentCompareAspect.id]: ComponentCompareAspect,
+  [ListerAspect.id]: ListerAspect,
 };
 
 export function isCoreAspect(id: string) {

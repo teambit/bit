@@ -2,7 +2,7 @@ import { flatten } from 'lodash';
 import { ArtifactVinyl } from '@teambit/legacy/dist/consumer/component/sources/artifact';
 import { AspectLoaderAspect, AspectLoaderMain } from '@teambit/aspect-loader';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import { Component, ComponentMap } from '@teambit/component';
+import { Component, ComponentMap, IComponent } from '@teambit/component';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { Slot, SlotRegistry } from '@teambit/harmony';
@@ -131,7 +131,7 @@ export class BuilderMain {
     const artifactsObjects = this.getArtifactsByExtension(component, aspectName);
     const vinyls = await Promise.all(
       (artifactsObjects || []).map((artifactObject) =>
-        artifactObject.files.getVinylsAndImportIfMissing(component.id.scope as string, this.scope.legacyScope)
+        artifactObject.files.getVinylsAndImportIfMissing(component.id._legacy, this.scope.legacyScope)
       )
     );
     return flatten(vinyls);
@@ -145,7 +145,7 @@ export class BuilderMain {
     const artifactsObjects = this.getArtifactsByExtensionAndName(component, aspectName, name);
     const vinyls = await Promise.all(
       (artifactsObjects || []).map((artifactObject) =>
-        artifactObject.files.getVinylsAndImportIfMissing(component.id.scope as string, this.scope.legacyScope)
+        artifactObject.files.getVinylsAndImportIfMissing(component.id._legacy, this.scope.legacyScope)
       )
     );
     return flatten(vinyls);
@@ -159,7 +159,7 @@ export class BuilderMain {
     const artifactsObjects = this.getArtifactsByExtensionAndTaskName(component, aspectName, taskName);
     const vinyls = await Promise.all(
       (artifactsObjects || []).map((artifactObject) =>
-        artifactObject.files.getVinylsAndImportIfMissing(component.id.scope as string, this.scope.legacyScope)
+        artifactObject.files.getVinylsAndImportIfMissing(component.id._legacy, this.scope.legacyScope)
       )
     );
     return flatten(vinyls);
@@ -189,7 +189,7 @@ export class BuilderMain {
     return artifacts?.filter((artifact) => artifact.task.id === aspectName && artifact.task.name === taskName);
   }
 
-  getDataByAspect(component: Component, aspectName: string): Serializable | undefined {
+  getDataByAspect(component: IComponent, aspectName: string): Serializable | undefined {
     const aspectsData = this.getBuilderData(component)?.aspectsData;
     const data = aspectsData?.find((aspectData) => aspectData.aspectId === aspectName);
     return data?.data;
@@ -199,8 +199,8 @@ export class BuilderMain {
     return this.getBuilderData(component)?.artifacts;
   }
 
-  getBuilderData(component: Component): BuilderData | undefined {
-    const data = component.state.aspects.get(BuilderAspect.id)?.data as BuilderData | undefined;
+  getBuilderData(component: IComponent): BuilderData | undefined {
+    const data = component.get(BuilderAspect.id)?.data as BuilderData | undefined;
     if (!data) return undefined;
     data.artifacts?.forEach((artifact) => {
       if (!(artifact.files instanceof ArtifactFiles)) {
@@ -374,9 +374,8 @@ export class BuilderMain {
     generator.registerComponentTemplate([buildTaskTemplate]);
     const func = builder.tagListener.bind(builder);
     if (scope) scope.onTag(func);
-    if (workspace && !workspace.consumer.isLegacy) {
+    if (workspace) {
       const commands = [new BuilderCmd(builder, workspace, logger), new ArtifactsCmd(builder, scope)];
-      cli.unregister('build');
       cli.register(...commands);
     }
     return builder;

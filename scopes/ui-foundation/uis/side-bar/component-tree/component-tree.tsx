@@ -1,6 +1,6 @@
 import { ComponentModel } from '@teambit/component';
 import React, { useMemo } from 'react';
-import { useLocation } from '@teambit/base-ui.routing.routing-provider';
+import { useLocation } from '@teambit/base-react.navigation.link';
 import { indentStyle } from '@teambit/base-ui.graph.tree.indent';
 import { inflateToTree, attachPayload } from '@teambit/base-ui.graph.tree.inflate-paths';
 import { Tree, TreeNodeRenderer } from '@teambit/design.ui.tree';
@@ -22,7 +22,7 @@ export function ComponentTree({
   className,
   TreeNode = DefaultTreeNodeRenderer,
 }: ComponentTreeProps) {
-  const { pathname } = useLocation();
+  const { pathname = '/' } = useLocation() || {};
 
   const activeComponent = useMemo(() => {
     const componentUrlRegex = new RegExp(componentIdUrlRegex);

@@ -27,6 +27,7 @@ export async function getParams(
       context.getLocation(param),
       getParamName(param),
       await getParamType(param, context),
+      Boolean(param.questionToken),
       param.initializer ? param.initializer.getText() : undefined
     );
   });

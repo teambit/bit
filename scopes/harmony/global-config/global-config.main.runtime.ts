@@ -1,5 +1,13 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import {
+  CACHE_ROOT,
+  DEBUG_LOG,
+  GLOBAL_SCOPE,
+  GLOBAL_CONFIG,
+  CFG_CAPSULES_ROOT_BASE_DIR,
+  GLOBALS_DEFAULT_CAPSULES,
+} from '@teambit/legacy/dist/constants';
+import {
   del,
   delSync,
   get,
@@ -48,9 +56,23 @@ export class GlobalConfigMain {
     return delSync(key);
   }
 
+  getGlobalCapsulesBaseDir() {
+    return this.getSync(CFG_CAPSULES_ROOT_BASE_DIR) || GLOBALS_DEFAULT_CAPSULES;
+  }
+
+  getKnownGlobalDirs() {
+    return {
+      'Global Dir': CACHE_ROOT,
+      'Log file': DEBUG_LOG,
+      'Global Scope Dir': GLOBAL_SCOPE,
+      'Config Dir': GLOBAL_CONFIG,
+      'Capsules Dir': this.getGlobalCapsulesBaseDir(),
+    };
+  }
+
   static async provider([cli]: [CLIMain]) {
-    cli.register(new GlobalsCmd());
     const globalConfig = new GlobalConfigMain();
+    cli.register(new GlobalsCmd(globalConfig));
     return globalConfig;
   }
 }

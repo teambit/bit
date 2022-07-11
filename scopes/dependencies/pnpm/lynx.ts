@@ -27,6 +27,7 @@ import { ProjectManifest } from '@pnpm/types';
 import { Logger } from '@teambit/logger';
 import toNerfDart from 'nerf-dart';
 import pkgsGraph from 'pkgs-graph';
+import { pnpmErrorToBitError } from './pnpm-error-to-bit-error';
 import { readConfig } from './read-config';
 
 type RegistriesMap = {
@@ -55,12 +56,12 @@ async function createStoreController(
     verifyStoreIntegrity: true,
     httpProxy: options.proxyConfig?.httpProxy,
     httpsProxy: options.proxyConfig?.httpsProxy,
-    ca: options.proxyConfig?.ca,
-    cert: options.proxyConfig?.cert,
-    key: options.proxyConfig?.key,
+    ca: options.networkConfig?.ca,
+    cert: options.networkConfig?.cert,
+    key: options.networkConfig?.key,
     localAddress: options.networkConfig?.localAddress,
     noProxy: options.proxyConfig?.noProxy,
-    strictSsl: options.proxyConfig.strictSSL,
+    strictSsl: options.networkConfig.strictSSL,
     maxSockets: options.networkConfig.maxSockets,
     networkConcurrency: options.networkConfig.networkConcurrency,
     packageImportMethod: options.packageImportMethod,
@@ -89,12 +90,12 @@ async function generateResolverAndFetcher(
     cacheDir,
     httpProxy: proxyConfig?.httpProxy,
     httpsProxy: proxyConfig?.httpsProxy,
-    ca: proxyConfig?.ca,
-    cert: proxyConfig?.cert,
-    key: proxyConfig?.key,
+    ca: networkConfig?.ca,
+    cert: networkConfig?.cert,
+    key: networkConfig?.key,
     localAddress: networkConfig?.localAddress,
     noProxy: proxyConfig?.noProxy,
-    strictSsl: proxyConfig.strictSSL,
+    strictSsl: networkConfig.strictSSL,
     timeout: networkConfig.fetchTimeout,
     retry: {
       factor: networkConfig.fetchRetryFactor,
@@ -161,7 +162,10 @@ export async function install(
   options?: {
     nodeLinker?: 'hoisted' | 'isolated';
     overrides?: Record<string, string>;
-  } & Pick<InstallOptions, 'publicHoistPattern' | 'hoistPattern' | 'nodeVersion' | 'engineStrict'> &
+  } & Pick<
+    InstallOptions,
+    'publicHoistPattern' | 'hoistPattern' | 'nodeVersion' | 'engineStrict' | 'peerDependencyRules'
+  > &
     Pick<CreateStoreControllerOptions, 'packageImportMethod'>,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   logger?: Logger
@@ -189,9 +193,15 @@ export async function install(
     workspacePackages,
     preferFrozenLockfile: true,
     pruneLockfileImporters: true,
+    modulesCacheMaxAge: 0,
     registries: registriesMap,
     rawConfig: authConfig,
     ...options,
+    peerDependencyRules: {
+      allowAny: ['*'],
+      ignoreMissing: ['*'],
+      ...options?.peerDependencyRules,
+    },
   };
 
   const stopReporting = defaultReporter({
@@ -206,6 +216,8 @@ export async function install(
   });
   try {
     await mutateModules(packagesToBuild, opts);
+  } catch (err: any) {
+    throw pnpmErrorToBitError(err);
   } finally {
     stopReporting();
   }
@@ -282,7 +294,7 @@ export async function resolveRemoteVersion(
     };
   } catch (e: any) {
     if (!e.message?.includes('is not a valid string')) {
-      throw e;
+      throw pnpmErrorToBitError(e);
     }
     // The provided package is probably a git url or path to a folder
     const wantedDep: WantedDependency = {

@@ -4,6 +4,7 @@
 
 import type { ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config/extension-data';
 import { ComponentID } from '@teambit/component-id';
+import { RawComponentMetadata } from './component-interface';
 
 export type Serializable = {
   toString(): string;
@@ -61,7 +62,7 @@ export class AspectEntry {
     return new AspectEntry(this.id, this.legacyEntry.clone());
   }
 
-  serialize() {
+  serialize(): RawComponentMetadata {
     return {
       id: this.id.toString(),
       config: this.config,

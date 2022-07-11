@@ -27,7 +27,7 @@ const GET_COMPONENT = gql`
 export function AspectPage() {
   const component = useContext(ComponentContext);
   const { data } = useDataQuery(GET_COMPONENT, {
-    variables: { id: component.id._legacy.name },
+    variables: { id: component.id.toString() },
   });
   const aspectList = data?.getHost?.get?.aspects;
 
@@ -47,10 +47,10 @@ export function AspectPage() {
         <H1 className={styles.title}>Configuration</H1>
         <Separator className={styles.separator} />
         {aspectList &&
-          aspectList.map((aspect, index) => {
+          aspectList.map((aspect) => {
             return (
               <AspectBox
-                key={index}
+                key={aspect.id}
                 className={styles.aspectBox}
                 name={aspect.id}
                 icon={aspect.icon}

@@ -3,12 +3,7 @@ import * as path from 'path';
 import { BIT_MAP, POST_ADD_HOOK } from '../../../constants';
 import { Consumer, loadConsumer } from '../../../consumer';
 import AddComponents from '../../../consumer/component-ops/add-components';
-import {
-  AddActionResults,
-  AddContext,
-  AddProps,
-  PathOrDSL,
-} from '../../../consumer/component-ops/add-components/add-components';
+import { AddActionResults, AddContext, AddProps } from '../../../consumer/component-ops/add-components/add-components';
 import HooksManager from '../../../hooks';
 import { PathOsBased } from '../../../utils/path';
 
@@ -41,13 +36,6 @@ export async function addMany(components: AddProps[], alternateCwd?: string): Pr
       return path.normalize(p);
     });
     component.componentPaths = normalizedPaths;
-    const normalizedTests: PathOrDSL[] = component.tests
-      ? component.tests.map((testFile) => path.normalize(testFile.trim()))
-      : [];
-    component.tests = normalizedTests;
-    component.exclude = component.exclude
-      ? component.exclude.map((excludeFile) => path.normalize(excludeFile.trim()))
-      : [];
     const addComponents = new AddComponents(addContext, component);
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     addComponentsArr.push(addComponents);

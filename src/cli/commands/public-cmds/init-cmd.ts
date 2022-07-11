@@ -16,9 +16,9 @@ import { CommandOptions, LegacyCommand } from '../../legacy-command';
 export default class Init implements LegacyCommand {
   name = 'init [path]';
   skipWorkspace = true;
-  shortDescription = 'create or reinitialize an empty workspace';
+  description = 'create or reinitialize an empty workspace';
   group: Group = 'start';
-  description = `initialize an empty bit scope\nhttps://${BASE_DOCS_DOMAIN}/workspace/creating-workspaces#initialize-a-workspace-on-an-existing-project`;
+  extendedDescription = `https://${BASE_DOCS_DOMAIN}/workspace/creating-workspaces#initialize-a-workspace-on-an-existing-project`;
   alias = '';
   opts = [
     ['b', 'bare [name]', 'initialize an empty bit bare scope'],
@@ -35,9 +35,6 @@ export default class Init implements LegacyCommand {
       'reset-hard',
       'delete all Bit files and directories, including Bit configuration, tracking and model data. Useful for re-start using Bit from scratch',
     ],
-    // Disabled until supported by the new config
-    // ['c', 'compiler <compiler>', 'set up compiler'],
-    // ['t', 'tester <tester>', 'set up tester'],
     ['d', 'default-directory <default-directory>', 'set up default directory to import components into'],
     ['p', 'package-manager <package-manager>', 'set up package manager (npm or yarn)'],
     ['f', 'force', 'force workspace initialization without clearing local objects'],
@@ -50,21 +47,7 @@ export default class Init implements LegacyCommand {
     if (!_isAnyNotInteractiveFlagUsed(flags) && (flags.interactive || shouldShowInteractive(CFG_INIT_INTERACTIVE))) {
       return initInteractive();
     }
-    const {
-      bare,
-      shared,
-      standalone,
-      reset,
-      resetNew,
-      resetHard,
-      force,
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      compiler,
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      tester,
-      defaultDirectory,
-      packageManager,
-    } = flags;
+    const { bare, shared, standalone, reset, resetNew, resetHard, force, defaultDirectory, packageManager } = flags;
     if (path) path = pathlib.resolve(path);
     if (bare) {
       if (reset || resetHard) throw new GeneralError('--reset and --reset-hard flags are not available for bare scope');

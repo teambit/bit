@@ -1,25 +1,21 @@
 import fs from 'fs-extra';
 import * as path from 'path';
-import R from 'ramda';
 import semver from 'semver';
 import { flatten } from 'lodash';
 import { BitIds } from '../../bit-id';
-import { COMPILER_ENV_TYPE, COMPONENT_DIST_PATH_TEMPLATE, COMPONENT_ORIGINS, TESTER_ENV_TYPE } from '../../constants';
+import { COMPONENT_ORIGINS } from '../../constants';
 import ShowDoctorError from '../../error/show-doctor-error';
-import EnvExtension from '../../legacy-extensions/env-extension';
 import logger from '../../logger/logger';
 import { Scope } from '../../scope';
 import getNodeModulesPathOfComponent from '../../utils/bit/component-node-modules-path';
-import { getPathRelativeRegardlessCWD, PathLinuxRelative, pathNormalizeToLinux } from '../../utils/path';
+import { PathLinuxRelative, pathNormalizeToLinux } from '../../utils/path';
 import BitMap from '../bit-map/bit-map';
 import ComponentMap, { ComponentOrigin } from '../bit-map/component-map';
 import Component from '../component/consumer-component';
 import PackageJsonFile from '../component/package-json-file';
 import { PackageJsonTransformer } from '../component/package-json-transformer';
-import { preparePackageJsonToWrite } from '../component/package-json-utils';
 import DataToPersist from '../component/sources/data-to-persist';
 import RemovePath from '../component/sources/remove-path';
-import ComponentConfig from '../config/component-config';
 import Consumer from '../consumer';
 import { ArtifactVinyl } from '../component/sources/artifact';
 import {
@@ -27,6 +23,7 @@ import {
   deserializeArtifactFiles,
   getArtifactFilesByExtension,
 } from '../component/sources/artifact-files';
+import { preparePackageJsonToWrite } from '../component/package-json-utils';
 
 export type ComponentWriterProps = {
   component: Component;
@@ -117,7 +114,7 @@ export default class ComponentWriter {
     return this.component;
   }
 
-  async populateComponentsFilesToWrite(packageManager?: string): Promise<Component> {
+  async populateComponentsFilesToWrite(): Promise<Component> {
     if (!this.component.files || !this.component.files.length) {
       throw new ShowDoctorError(`Component ${this.component.id.toString()} is invalid as it has no files`);
     }
@@ -125,44 +122,35 @@ export default class ComponentWriter {
     this.component.dataToPersist = new DataToPersist();
     this._updateFilesBasePaths();
     this.component.componentMap = this.existingComponentMap || this.addComponentToBitMap(this.writeToPath);
-    this._copyFilesIntoDistsWhenDistsOutsideComponentDir();
     this._determineWhetherToDeleteComponentDirContent();
-    await this._handlePreviouslyNestedCurrentlyImportedCase();
     this._determineWhetherToWriteConfig();
     this._updateComponentRootPathAccordingToBitMap();
     this._updateBitMapIfNeeded();
-    await this._updateConsumerConfigIfNeeded();
     this._determineWhetherToWritePackageJson();
-    await this.populateFilesToWriteToComponentDir(packageManager);
+    await this.populateFilesToWriteToComponentDir();
     if (this.isolated) await this.populateArtifacts();
     return this.component;
   }
 
   private throwForImportingLegacyIntoHarmony() {
-    if (this.component.isLegacy && this.consumer && !this.consumer.isLegacy) {
+    if (this.component.isLegacy && this.consumer) {
       throw new Error(
         `unable to write component "${this.component.id.toString()}", it is a legacy component and this workspace is Harmony`
       );
     }
   }
 
-  async populateFilesToWriteToComponentDir(packageManager?: string) {
+  async populateFilesToWriteToComponentDir() {
     if (this.deleteBitDirContent) {
       this.component.dataToPersist.removePath(new RemovePath(this.writeToPath));
     }
     this.component.files.forEach((file) => (file.override = this.override));
     this.component.files.map((file) => this.component.dataToPersist.addFile(file));
-    const dists = await this.component.dists.getDistsToWrite(this.component, this.bitMap, this.consumer, false);
-    if (dists) this.component.dataToPersist.merge(dists);
-    // TODO: change to new eject config
-    // if (this.writeConfig && this.consumer) {
-    //   const configToWrite = await this.component.getConfigToWrite(this.consumer, this.bitMap);
-    //   this.component.dataToPersist.merge(configToWrite.dataToPersist);
-    // }
 
     // make sure the project's package.json is not overridden by Bit
     // If a consumer is of isolated env it's ok to override the root package.json (used by the env installation
     // of compilers / testers / extensions)
+    // In Harmony this is happening inside a capsule, which needs a package.json file
     if (
       this.writePackageJson &&
       (this.isolated || (this.consumer && this.consumer.isolated) || this.writeToPath !== '.')
@@ -175,11 +163,10 @@ export default class ComponentWriter {
         this.override,
         this.ignoreBitDependencies,
         this.excludeRegistryPrefix,
-        packageManager,
+        undefined,
         Boolean(this.isolated)
       );
 
-      const componentConfig = ComponentConfig.fromComponent(this.component);
       // @todo: temporarily this is running only when there is no version (or version is "latest")
       // so then package.json always has a valid version. we'll need to figure out when the version
       // needs to be incremented and when it should not.
@@ -188,20 +175,16 @@ export default class ComponentWriter {
         // or consumerless (dependency in an isolated) environment
         packageJson.addOrUpdateProperty('version', this._getNextPatchVersion());
       }
-      componentConfig.setCompiler(this.component.compiler ? this.component.compiler.toBitJsonObject() : {});
-      componentConfig.setTester(this.component.tester ? this.component.tester.toBitJsonObject() : {});
-      packageJson.addOrUpdateProperty('bit', componentConfig.toPlainObject());
-
       if ((!this.consumer?.isLegacy || !this.scope?.isLegacy) && this.applyPackageJsonTransformers) {
         await this._applyTransformers(this.component, packageJson);
       }
 
-      this._mergeChangedPackageJsonProps(packageJson);
       this._mergePackageJsonPropsFromOverrides(packageJson);
       this.component.dataToPersist.addFile(packageJson.toVinylFile());
       if (distPackageJson) this.component.dataToPersist.addFile(distPackageJson.toVinylFile());
       this.component.packageJsonFile = packageJson;
     }
+
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (this.component.license && this.component.license.contents) {
       this.component.license.updatePaths({ newBase: this.writeToPath });
@@ -224,6 +207,10 @@ export default class ComponentWriter {
       // build-pipeline. when capsules are written via the scope, we do need the dists.
       return;
     }
+    if (this.component.buildStatus !== 'succeed') {
+      // this is important for "bit sign" when on lane to not go to the original scope
+      return;
+    }
     const extensionsNamesForArtifacts = ['teambit.compilation/compiler'];
     const artifactsFiles = flatten(
       extensionsNamesForArtifacts.map((extName) => getArtifactFilesByExtension(this.component.extensions, extName))
@@ -238,7 +225,7 @@ export default class ComponentWriter {
         }
         // fyi, if this is coming from the isolator aspect, it is optimized to import all at once.
         // see artifact-files.importMultipleDistsArtifacts().
-        const vinylFiles = await artifactFiles.getVinylsAndImportIfMissing(this.component.scope as string, scope);
+        const vinylFiles = await artifactFiles.getVinylsAndImportIfMissing(this.component.id, scope);
         artifactsVinylFlattened.push(...vinylFiles);
       })
     );
@@ -250,10 +237,7 @@ export default class ComponentWriter {
   }
 
   private getArtifactsDir() {
-    // @todo: decide whether new components are allowed to be imported to a legacy workspace
-    // if not, remove the "this.consumer.isLegacy" part in the condition below
-    if (!this.consumer || this.consumer.isLegacy || this.component.isLegacy) return this.component.writtenPath;
-    if (this.origin === COMPONENT_ORIGINS.NESTED) return this.component.writtenPath;
+    if (!this.consumer || this.component.isLegacy) return this.component.writtenPath;
     return getNodeModulesPathOfComponent({ ...this.component, id: this.component.id, allowNonScope: true });
   }
 
@@ -271,9 +255,6 @@ export default class ComponentWriter {
       mainFile: pathNormalizeToLinux(this.component.mainFile),
       rootDir,
       origin: this.origin,
-      trackDir: this.existingComponentMap && this.existingComponentMap.trackDir,
-      originallySharedDir: this.component.originallySharedDir,
-      wrapDir: this.component.wrapDir,
     });
   }
 
@@ -292,46 +273,6 @@ export default class ComponentWriter {
     return PackageJsonTransformer.applyTransformers(component, packageJson);
   }
 
-  /**
-   * these are changes done by a compiler
-   */
-  _mergeChangedPackageJsonProps(packageJson: PackageJsonFile) {
-    if (!this.component.packageJsonChangedProps) return;
-    const valuesToMerge = this._replaceDistPathTemplateWithCalculatedDistPath(packageJson);
-    packageJson.mergePackageJsonObject(valuesToMerge);
-  }
-
-  /**
-   * see https://github.com/teambit/bit/issues/1808 for more info why it's needed
-   */
-  _replaceDistPathTemplateWithCalculatedDistPath(packageJson: PackageJsonFile): Record<string, any> {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const packageJsonChangedProps: Record<string, any> = this.component.packageJsonChangedProps;
-    const isReplaceNeeded = R.values(packageJsonChangedProps).some((val) => val.includes(COMPONENT_DIST_PATH_TEMPLATE));
-    if (!isReplaceNeeded) {
-      return packageJsonChangedProps;
-    }
-    const distRootDir = this.component.dists.getDistDir(this.consumer, this.writeToPath || '.');
-    const distRelativeToPackageJson = getPathRelativeRegardlessCWD(
-      path.dirname(packageJson.filePath), // $FlowFixMe
-      distRootDir
-    );
-    return Object.keys(packageJsonChangedProps).reduce((acc, key) => {
-      const val = packageJsonChangedProps[key].replace(COMPONENT_DIST_PATH_TEMPLATE, distRelativeToPackageJson);
-      acc[key] = val;
-      return acc;
-    }, {});
-  }
-
-  _copyFilesIntoDistsWhenDistsOutsideComponentDir() {
-    if (!this.consumer) return; // not relevant when consumer is not available
-    if (!this.consumer.shouldDistsBeInsideTheComponent() && this.component.dists.isEmpty()) {
-      // since the dists are set to be outside the components dir, the source files must be saved there
-      // otherwise, other components in dists won't be able to link to this component
-      this.component.copyFilesIntoDists();
-    }
-  }
-
   _updateComponentRootPathAccordingToBitMap() {
     // $FlowFixMe this.component.componentMap is set
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -340,64 +281,10 @@ export default class ComponentWriter {
     this._updateFilesBasePaths();
   }
 
-  /**
-   * when there is componentMap, this component (with this version or other version) is already part of the project.
-   * There are several options as to what was the origin before and what is the origin now and according to this,
-   * we update/remove/don't-touch the record in bit.map.
-   * 1) current origin is AUTHORED - If the version is the same as before, don't update bit.map. Otherwise, update.
-   * 2) current origin is IMPORTED - If the version is the same as before, don't update bit.map. Otherwise, update.
-   * 3) current origin is NESTED - If it was not NESTED before, don't update.
-   */
   _updateBitMapIfNeeded() {
     if (this.isolated) return;
-    if (this.consumer?.isLegacy) {
-      // this logic is not needed in Harmony, and we can't just remove the component as it may have
-      // lanes data
-      const componentMapExistWithSameVersion = this.bitMap.isExistWithSameVersion(this.component.id);
-      if (componentMapExistWithSameVersion) {
-        if (
-          this.existingComponentMap &&
-          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-          this.existingComponentMap !== COMPONENT_ORIGINS.NESTED &&
-          this.origin === COMPONENT_ORIGINS.NESTED
-        ) {
-          return;
-        }
-        this.bitMap.removeComponent(this.component.id);
-      }
-    }
-
     // @ts-ignore this.component.componentMap is set
     this.component.componentMap = this.addComponentToBitMap(this.component.componentMap.rootDir);
-  }
-
-  async _updateConsumerConfigIfNeeded() {
-    // for authored components there is no bit.json/package.json component specific
-    // so if the overrides or envs were changed, it should be written to the consumer-config
-    const areEnvsChanged = async (): Promise<boolean> => {
-      // $FlowFixMe this.component.componentMap is set
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      const context = { componentDir: this.component?.componentMap?.getComponentDir() };
-      const compilerFromConsumer = this.consumer ? await this.consumer.getEnv(COMPILER_ENV_TYPE, context) : undefined;
-      const testerFromConsumer = this.consumer ? await this.consumer.getEnv(TESTER_ENV_TYPE, context) : undefined;
-      const compilerFromComponent = this.component.compiler ? this.component.compiler.toModelObject() : undefined;
-      const testerFromComponent = this.component.tester ? this.component.tester.toModelObject() : undefined;
-      return (
-        EnvExtension.areEnvsDifferent(
-          compilerFromConsumer ? compilerFromConsumer.toModelObject() : undefined,
-          compilerFromComponent
-        ) ||
-        EnvExtension.areEnvsDifferent(
-          testerFromConsumer ? testerFromConsumer.toModelObject() : undefined,
-          testerFromComponent
-        )
-      );
-    };
-    if (this.component.componentMap?.origin === COMPONENT_ORIGINS.AUTHORED && this.consumer) {
-      const envsChanged = await areEnvsChanged();
-      const componentsConfig = this.consumer?.config?.componentsConfig;
-      componentsConfig?.updateOverridesIfChanged(this.component, envsChanged);
-    }
   }
 
   _determineWhetherToWriteConfig() {
@@ -408,27 +295,9 @@ export default class ComponentWriter {
     }
   }
 
-  /**
-   * don't write the package.json for an authored component, because its dependencies are managed
-   * by the root package.json
-   */
   _determineWhetherToWritePackageJson() {
+    // should never write package.json in Harmony
     this.writePackageJson = this.writePackageJson && this.origin !== COMPONENT_ORIGINS.AUTHORED;
-  }
-
-  /**
-   * when a user imports a component that was a dependency before, write the component directly
-   * into the components directory for an easy access/change. Then, remove the current record from
-   * bit.map and add an updated one.
-   */
-  async _handlePreviouslyNestedCurrentlyImportedCase() {
-    if (!this.consumer) return;
-    // $FlowFixMe this.component.componentMap is set
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    if (this.origin === COMPONENT_ORIGINS.IMPORTED && this.component.componentMap.origin === COMPONENT_ORIGINS.NESTED) {
-      await this._cleanOldNestedComponent();
-      this.component.componentMap = this.addComponentToBitMap(this.writeToPath);
-    }
   }
 
   /**
@@ -446,9 +315,6 @@ export default class ComponentWriter {
   _updateFilesBasePaths() {
     const newBase = this.writeToPath || '.';
     this.component.files.forEach((file) => file.updatePaths({ newBase }));
-    if (!this.component.dists.isEmpty()) {
-      this.component.dists.get().forEach((dist) => dist.updatePaths({ newBase }));
-    }
   }
 
   async _cleanOldNestedComponent() {

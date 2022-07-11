@@ -8,12 +8,21 @@ import { Group } from '../../command-groups';
 import { CommandOptions, LegacyCommand } from '../../legacy-command';
 
 export default class Untag implements LegacyCommand {
-  name = 'untag [id] [version]';
-  shortDescription = 'revert versions tagged for component(s)';
+  name = 'untag [component-name] [component-version]';
+  description = 'revert tagged or snapped versions for component(s)';
+  arguments = [
+    {
+      name: 'component-name',
+      description: 'the component name or component id',
+    },
+    {
+      name: 'component-version',
+      description: 'the version to untag (semver for tags. hash for snaps)',
+    },
+  ];
   group: Group = 'development';
-  description = `revert version(s) tagged for component(s)
-  https://${BASE_DOCS_DOMAIN}/components/tags#undoing-a-tag
-  ${WILDCARD_HELP('untag')}`;
+  extendedDescription = `https://${BASE_DOCS_DOMAIN}/components/tags#undoing-a-tag
+${WILDCARD_HELP('untag')}`;
   alias = '';
   opts = [
     ['a', 'all', 'revert tag for all tagged components'],
@@ -26,11 +35,14 @@ export default class Untag implements LegacyCommand {
   ] as CommandOptions;
   loader = true;
   migration = true;
+  private = true;
 
   action(
     [id, version]: [string, string],
     { all = false, force = false, soft = false }: { all?: boolean; force?: boolean; soft?: boolean }
   ): Promise<{ results: untagResult[]; isSoftUntag: boolean }> {
+    // eslint-disable-next-line no-console
+    console.log(chalk.yellow(`"bit untag" has been deprecated, please use "bit reset" instead`));
     if (!id && !all) {
       throw new GeneralError('please specify a component ID or use --all flag');
     }

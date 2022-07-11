@@ -8,7 +8,6 @@ export class UIBuildCmd implements Command {
   description = 'build production assets for deployment.';
   alias = 'c';
   group = 'development';
-  shortDescription = '';
   options = [];
 
   constructor(

@@ -1,19 +1,17 @@
-import { Icon } from '@teambit/evangelist.elements.icon';
+import React, { useState, ReactNode } from 'react';
 import { MenuLinkItem } from '@teambit/design.ui.surfaces.menu.link-item';
 import { Dropdown } from '@teambit/evangelist.surfaces.dropdown';
-
-import { Ellipsis } from '@teambit/design.ui.styles.ellipsis';
 import { Tab } from '@teambit/ui-foundation.ui.use-box.tab';
 import { LegacyComponentLog } from '@teambit/legacy-component-log';
 import { UserAvatar } from '@teambit/design.ui.avatar';
 import { LineSkeleton } from '@teambit/base-ui.loaders.skeleton';
 import { LaneModel } from '@teambit/lanes.ui.lanes';
 import classNames from 'classnames';
-import React, { useState } from 'react';
 
 import styles from './version-dropdown.module.scss';
 import { VersionInfo } from './version-info';
 import { LaneInfo } from './lane-info';
+import { SimpleVersion } from './version-dropdown-placeholder';
 
 export const LOCAL_VERSION = 'workspace';
 
@@ -24,10 +22,17 @@ export type VersionDropdownProps = {
   snaps?: DropdownComponentVersion[];
   lanes?: LaneModel[];
   localVersion?: boolean;
-  currentVersion?: string;
+  currentVersion: string;
   currentLane?: LaneModel;
   latestVersion?: string;
   loading?: boolean;
+  overrideVersionHref?: (version: string) => string;
+  placeholderClassName?: string;
+  dropdownClassName?: string;
+  menuClassName?: string;
+  showVersionDetails?: boolean;
+  disabled?: boolean;
+  placeholderComponent?: ReactNode;
 } & React.HTMLAttributes<HTMLDivElement>;
 
 export function VersionDropdown({
@@ -39,32 +44,51 @@ export function VersionDropdown({
   localVersion,
   loading,
   currentLane,
+  overrideVersionHref,
+  className,
+  placeholderClassName,
+  dropdownClassName,
+  menuClassName,
+  showVersionDetails,
+  disabled,
+  placeholderComponent = (
+    <SimpleVersion
+      disabled={disabled}
+      snaps={snaps}
+      tags={tags}
+      className={placeholderClassName}
+      currentVersion={currentVersion}
+    />
+  ),
+  ...rest
 }: VersionDropdownProps) {
   const [key, setKey] = useState(0);
 
   const singleVersion = (snaps || []).concat(tags).length < 2 && !localVersion;
 
-  if (singleVersion && !loading) {
-    return (
-      <div className={styles.noVersions}>
-        <VersionPlaceholder currentVersion={currentVersion} />
-      </div>
-    );
+  if (disabled || (singleVersion && !loading)) {
+    return <div className={classNames(styles.noVersions, className)}>{placeholderComponent}</div>;
   }
 
   return (
-    <div className={styles.versionDropdown}>
+    <div {...rest} className={classNames(styles.versionDropdown, className)}>
       <Dropdown
-        className={styles.dropdown}
-        dropClass={styles.menu}
+        className={classNames(styles.dropdown, dropdownClassName)}
+        dropClass={classNames(styles.menu, menuClassName)}
         clickToggles={false}
         clickPlaceholderToggles={true}
         onChange={(_e, open) => open && setKey((x) => x + 1)} // to reset menu to initial state when toggling
-        placeholder={<VersionPlaceholder currentVersion={currentVersion} className={styles.withVersions} />}
+        PlaceholderComponent={({ children, ...other }) => (
+          <div {...other} className={placeholderClassName}>
+            {children}
+          </div>
+        )}
+        placeholder={placeholderComponent}
       >
         {loading && <LineSkeleton className={styles.loading} count={6} />}
         {loading || (
           <VersionMenu
+            className={menuClassName}
             key={key}
             tags={tags}
             snaps={snaps}
@@ -73,6 +97,8 @@ export function VersionDropdown({
             latestVersion={latestVersion}
             localVersion={localVersion}
             currentLane={currentLane}
+            overrideVersionHref={overrideVersionHref}
+            showVersionDetails={showVersionDetails}
           />
         )}
       </Dropdown>
@@ -80,14 +106,6 @@ export function VersionDropdown({
   );
 }
 
-function VersionPlaceholder({ currentVersion, className }: { currentVersion?: string; className?: string }) {
-  return (
-    <div className={classNames(styles.placeholder, className)}>
-      <Ellipsis>{currentVersion}</Ellipsis>
-      <Icon of="fat-arrow-down" />
-    </div>
-  );
-}
 type VersionMenuProps = {
   tags?: DropdownComponentVersion[];
   snaps?: DropdownComponentVersion[];
@@ -96,6 +114,8 @@ type VersionMenuProps = {
   currentVersion?: string;
   latestVersion?: string;
   currentLane?: LaneModel;
+  overrideVersionHref?: (version: string) => string;
+  showVersionDetails?: boolean;
 } & React.HTMLAttributes<HTMLDivElement>;
 
 const VERSION_TAB_NAMES = ['TAG', 'SNAP', 'LANE'] as const;
@@ -108,6 +128,8 @@ function VersionMenu({
   localVersion,
   latestVersion,
   currentLane,
+  overrideVersionHref,
+  showVersionDetails,
   ...rest
 }: VersionMenuProps) {
   const tabs = VERSION_TAB_NAMES.map((name) => {
@@ -125,7 +147,7 @@ function VersionMenu({
     if (currentLane) return tabs.findIndex((tab) => tab.name === 'LANE');
     if ((snaps || []).some((snap) => snap.version === currentVersion))
       return tabs.findIndex((tab) => tab.name === 'SNAP');
-    return tabs.findIndex((tab) => tab.name === 'TAG');
+    return 0;
   };
 
   const [activeTabIndex, setActiveTab] = useState<number>(getActiveTabIndex());
@@ -142,7 +164,7 @@ function VersionMenu({
         {localVersion && (
           <MenuLinkItem
             href={'?'}
-            isActive={() => currentVersion === LOCAL_VERSION}
+            active={currentVersion === LOCAL_VERSION}
             className={classNames(styles.versionRow, styles.localVersion)}
           >
             <div className={styles.version}>
@@ -178,6 +200,8 @@ function VersionMenu({
               key={payload.version}
               currentVersion={currentVersion}
               latestVersion={latestVersion}
+              overrideVersionHref={overrideVersionHref}
+              showDetails={showVersionDetails}
               {...payload}
             ></VersionInfo>
           ))}

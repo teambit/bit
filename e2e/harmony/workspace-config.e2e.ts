@@ -13,7 +13,7 @@ describe('workspace config (workspace.jsonc)', function () {
   describe('adding a non-component key', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
-      helper.bitJsonc.addKeyVal(undefined, 'non-comp', {});
+      helper.bitJsonc.addKeyVal('non-comp', {});
     });
     it('any command should throw a descriptive error', () => {
       expect(() => helper.command.status()).to.throw(

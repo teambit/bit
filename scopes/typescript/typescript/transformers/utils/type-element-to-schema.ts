@@ -7,19 +7,21 @@ import ts, {
   GetAccessorDeclaration,
   SetAccessorDeclaration,
   ConstructSignatureDeclaration,
+  CallSignatureDeclaration,
 } from 'typescript';
 import {
   GetAccessorSchema,
   IndexSignatureSchema,
   SchemaNode,
   SetAccessorSchema,
-  VariableSchema,
+  VariableLikeSchema,
 } from '@teambit/semantics.entities.semantic-schema';
-import { toFunctionLikeSchema } from './to-function-schema';
+import { toFunctionLikeSchema } from './to-function-like-schema';
 import { SchemaExtractorContext } from '../../schema-extractor-context';
 import { parseTypeFromQuickInfo } from './parse-type-from-quick-info';
 import { typeNodeToSchema } from './type-node-to-schema';
 import { getParams } from './get-params';
+import { jsDocToDocSchema } from './jsdoc-to-doc-schema';
 
 export async function typeElementToSchema(node: TypeElement, context: SchemaExtractorContext): Promise<SchemaNode> {
   switch (node.kind) {
@@ -28,7 +30,7 @@ export async function typeElementToSchema(node: TypeElement, context: SchemaExtr
     case SyntaxKind.ConstructSignature:
       return toFunctionLikeSchema(node as ConstructSignatureDeclaration, context, 'new');
     case SyntaxKind.CallSignature:
-      throw new Error(`CallSignature was not implemented yet`);
+      return callSignature(node as CallSignatureDeclaration, context);
     case SyntaxKind.PropertySignature:
       return propertySignature(node as ts.PropertySignature, context);
     case SyntaxKind.IndexSignature:
@@ -48,7 +50,9 @@ async function propertySignature(node: ts.PropertySignature, context: SchemaExtr
   const displaySig = info?.body?.displayString || '';
   const typeStr = parseTypeFromQuickInfo(info);
   const type = await context.resolveType(node, typeStr);
-  return new VariableSchema(context.getLocation(node), name, displaySig, type);
+  const isOptional = Boolean(node.questionToken);
+  const doc = await jsDocToDocSchema(node, context);
+  return new VariableLikeSchema(context.getLocation(node), name, displaySig, type, isOptional, doc);
 }
 
 export async function indexSignature(node: IndexSignatureDeclaration, context: SchemaExtractorContext) {
@@ -69,4 +73,8 @@ export async function setAccessor(node: SetAccessorDeclaration, context: SchemaE
   const params = await getParams(node.parameters, context);
   const displaySig = await context.getQuickInfoDisplayString(node.name);
   return new SetAccessorSchema(context.getLocation(node), node.name.getText(), params[0], displaySig);
+}
+
+async function callSignature(node: CallSignatureDeclaration, context: SchemaExtractorContext) {
+  return toFunctionLikeSchema(node, context);
 }

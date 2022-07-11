@@ -24,7 +24,7 @@ export default class BitJsoncHelper {
     const content = stringify(bitJsonc, null, 2);
     return fs.writeFileSync(bitJsoncPath, content);
   }
-  addKeyVal(bitJsoncDir: string = this.scopes.localPath, key: string, val: any) {
+  addKeyVal(key: string, val: any, bitJsoncDir: string = this.scopes.localPath) {
     const bitJsonc = this.read(bitJsoncDir);
     // Using this to keep the comments
     const obj = {
@@ -60,21 +60,30 @@ export default class BitJsoncHelper {
     const variants = bitJsonc['teambit.workspace/variants'];
     const newVariant = config;
     assign(variants, { [variant]: newVariant });
-    this.addKeyVal(bitJsoncDir, 'teambit.workspace/variants', variants);
+    this.addKeyVal('teambit.workspace/variants', variants, bitJsoncDir);
+  }
+
+  setPolicyToVariant(variant: string, policy: Record<string, any>) {
+    const config = {
+      'teambit.dependencies/dependency-resolver': {
+        policy,
+      },
+    };
+    this.setVariant(undefined, variant, config);
   }
 
   addKeyValToWorkspace(key: string, val: any, bitJsoncDir: string = this.scopes.localPath) {
     const bitJsonc = this.read(bitJsoncDir);
     const workspace = bitJsonc['teambit.workspace/workspace'];
     assign(workspace, { [key]: val });
-    this.addKeyVal(bitJsoncDir, 'teambit.workspace/workspace', workspace);
+    this.addKeyVal('teambit.workspace/workspace', workspace, bitJsoncDir);
   }
 
   addKeyValToDependencyResolver(key: string, val: any, bitJsoncDir: string = this.scopes.localPath) {
     const bitJsonc = this.read(bitJsoncDir);
     const depResolver = bitJsonc['teambit.dependencies/dependency-resolver'];
     assign(depResolver, { [key]: val });
-    this.addKeyVal(bitJsoncDir, 'teambit.dependencies/dependency-resolver', depResolver);
+    this.addKeyVal('teambit.dependencies/dependency-resolver', depResolver, bitJsoncDir);
   }
 
   getPolicyFromDependencyResolver() {
@@ -83,8 +92,18 @@ export default class BitJsoncHelper {
     return depResolver.policy;
   }
 
+  addPolicyToDependencyResolver(policy: Record<string, any>) {
+    const currentPolicy = this.getPolicyFromDependencyResolver();
+    assign(currentPolicy, policy);
+    this.addKeyValToDependencyResolver('policy', currentPolicy);
+  }
+
   addDefaultScope(scope = this.scopes.remote) {
     this.addKeyValToWorkspace('defaultScope', scope);
+  }
+
+  setComponentsDir(compDir: string) {
+    this.addKeyValToWorkspace('defaultDirectory', compDir);
   }
 
   setPackageManager(packageManager = 'teambit.dependencies/yarn') {
@@ -94,8 +113,12 @@ export default class BitJsoncHelper {
   addDefaultOwner(owner: string) {
     this.addKeyValToWorkspace('defaultOwner', owner);
   }
+  corrupt() {
+    const bitJsoncPath = composePath(this.scopes.localPath);
+    fs.writeFileSync(bitJsoncPath, '"corrupted');
+  }
   disablePreview() {
-    this.addKeyVal(undefined, 'teambit.preview/preview', { disabled: true });
+    this.addKeyVal('teambit.preview/preview', { disabled: true });
   }
   setupDefault() {
     this.disablePreview();

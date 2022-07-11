@@ -22,6 +22,7 @@ import ComponentAspect, { Component, ComponentMain } from '@teambit/component';
 import removeLanes from '@teambit/legacy/dist/consumer/lanes/remove-lanes';
 import WorkspaceLane from '@teambit/legacy/dist/consumer/bit-map/workspace-lane';
 import { Lane } from '@teambit/legacy/dist/scope/models';
+import ScopeComponentsImporter from '@teambit/legacy/dist/scope/component-ops/scope-components-importer';
 import { Scope as LegacyScope } from '@teambit/legacy/dist/scope';
 import { BitId } from '@teambit/legacy-bit-id';
 import { BitIds } from '@teambit/legacy/dist/bit-id';
@@ -62,6 +63,9 @@ export type MergeLaneOptions = {
   existingOnWorkspaceOnly: boolean;
   build: boolean;
   keepReadme: boolean;
+  squash: boolean;
+  pattern?: string;
+  includeDeps?: boolean;
 };
 
 export type CreateLaneOptions = {
@@ -305,16 +309,17 @@ export class LanesMain {
   async exportLane(lane: Lane) {
     await exportMany({
       scope: this.scope.legacyScope,
-      isLegacy: false,
       laneObject: lane,
       ids: new BitIds(),
-      codemod: false,
-      changeLocallyAlthoughRemoteIsDifferent: false,
-      includeDependencies: false,
-      remoteName: null,
       idsWithFutureScope: new BitIds(),
       allVersions: false,
     });
+  }
+
+  async importLane(laneId: LaneId): Promise<Lane> {
+    const scopeComponentImporter = ScopeComponentsImporter.getInstance(this.scope.legacyScope);
+    const results = await scopeComponentImporter.importLanes([laneId]);
+    return results[0];
   }
 
   async removeLanes(laneNames: string[], { remote, force }: { remote: boolean; force: boolean }): Promise<string[]> {
@@ -333,7 +338,7 @@ export class LanesMain {
     }
     const results = await mergeLanes({
       merging: this.merging,
-      consumer: this.workspace.consumer,
+      workspace: this.workspace,
       laneName,
       ...options,
     });
@@ -556,28 +561,25 @@ export class LanesMain {
   ]) {
     const logger = loggerMain.createLogger(LanesAspect.id);
     const lanesMain = new LanesMain(workspace, scope, merging, component, logger);
-    const isLegacy = workspace && workspace.consumer.isLegacy;
     const switchCmd = new SwitchCmd(lanesMain);
-    if (!isLegacy) {
-      const laneCmd = new LaneCmd(lanesMain, workspace, scope, community.getDocsDomain());
-      laneCmd.commands = [
-        new LaneListCmd(lanesMain, workspace, scope),
-        switchCmd,
-        new LaneShowCmd(lanesMain, workspace, scope),
-        new LaneCreateCmd(lanesMain),
-        new LaneMergeCmd(lanesMain),
-        new LaneRemoveCmd(lanesMain),
-        new LaneChangeScopeCmd(lanesMain),
-        new LaneAliasCmd(lanesMain),
-        new LaneRenameCmd(lanesMain),
-        new LaneDiffCmd(workspace, scope),
-        new LaneAddReadmeCmd(lanesMain),
-        new LaneRemoveReadmeCmd(lanesMain),
-        new LaneImportCmd(switchCmd),
-      ];
-      cli.register(laneCmd, switchCmd);
-      graphql.register(lanesSchema(lanesMain));
-    }
+    const laneCmd = new LaneCmd(lanesMain, workspace, scope, community.getDocsDomain());
+    laneCmd.commands = [
+      new LaneListCmd(lanesMain, workspace, scope),
+      switchCmd,
+      new LaneShowCmd(lanesMain, workspace, scope),
+      new LaneCreateCmd(lanesMain),
+      new LaneMergeCmd(lanesMain),
+      new LaneRemoveCmd(lanesMain),
+      new LaneChangeScopeCmd(lanesMain),
+      new LaneAliasCmd(lanesMain),
+      new LaneRenameCmd(lanesMain),
+      new LaneDiffCmd(workspace, scope),
+      new LaneAddReadmeCmd(lanesMain),
+      new LaneRemoveReadmeCmd(lanesMain),
+      new LaneImportCmd(switchCmd),
+    ];
+    cli.register(laneCmd, switchCmd);
+    graphql.register(lanesSchema(lanesMain));
     return lanesMain;
   }
 }

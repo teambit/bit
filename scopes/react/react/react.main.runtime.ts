@@ -114,7 +114,7 @@ export class ReactMain {
    * use this to register apps programmatically.
    */
   async registerApp(reactApp: ReactAppOptions) {
-    return this.application.registerApp(await this.reactAppType.createApp(reactApp));
+    return this.application.registerApp(this.reactAppType.createApp(reactApp));
   }
 
   /**
@@ -172,6 +172,7 @@ export class ReactMain {
    */
   overrideDocsTemplate(templatePath: string) {
     return this.envs.override({
+      getDevEnvId: (context: DevServerContext) => this.reactEnv.getDevEnvId(context.envDefinition.id),
       getDocsTemplate: () => templatePath,
     });
   }

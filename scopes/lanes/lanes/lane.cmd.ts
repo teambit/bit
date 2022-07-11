@@ -28,10 +28,10 @@ export class LaneListCmd implements Command {
   alias = '';
   options = [
     ['d', 'details', 'show more details on the state of each component in each lane'],
-    ['j', 'json', 'show lanes details in json format'],
-    ['r', 'remote <string>', 'show remote lanes'],
+    ['j', 'json', 'show lanes details in a json format'],
+    ['r', 'remote <remote-scope-name>', 'show remote lanes'],
     ['', 'merged', 'show merged lanes'],
-    ['', 'not-merged', 'show not merged lanes'],
+    ['', 'not-merged', 'show lanes that are not merged'],
   ] as CommandOptions;
   loader = true;
   private = true;
@@ -127,7 +127,7 @@ export class LaneListCmd implements Command {
 }
 
 export class LaneShowCmd implements Command {
-  name = 'show <name>';
+  name = 'show <lane-name>';
   description = `show lane details`;
   alias = '';
   options = [
@@ -169,21 +169,27 @@ export class LaneShowCmd implements Command {
 }
 
 export class LaneCreateCmd implements Command {
-  name = 'create <name>';
-  description = `create and switch to a new lane`;
+  name = 'create <lane-name>';
+  arguments = [
+    {
+      name: 'lane-name',
+      description: 'the name for the new lane',
+    },
+  ];
+  description = `creates a new lane and switches to it`;
   extendedDescription = `a lane created from main (default-lane) is empty until components are snapped.
 a lane created from another lane has all the components of the original lane.`;
   alias = '';
   options = [
     [
       '',
-      'remote-scope <string>',
+      'remote-scope <scope-name>',
       'remote scope where this lane will be exported to, default to the defaultScope (can be changed later with "bit lane change-scope")',
     ],
     [
       '',
-      'alias <string>',
-      'a local alias to refer to this lane, default to the <name> (can be added later with "bit lane alias")',
+      'alias <name>',
+      'a local alias to refer to this lane, defaults to the <lane-name> (can be added later with "bit lane alias")',
     ],
   ] as CommandOptions;
   loader = true;
@@ -205,7 +211,7 @@ a lane created from another lane has all the components of the original lane.`;
 
 export class LaneAliasCmd implements Command {
   name = 'alias <lane-name> <alias>';
-  description = 'add an alias to a lane';
+  description = 'adds an alias to a lane';
   extendedDescription = `an alias is a name that can be used to refer to a lane. it is saved locally and never reach the remote.
 it is useful when having multiple lanes with the same name, but with different remote scopes.`;
   alias = '';
@@ -223,8 +229,8 @@ it is useful when having multiple lanes with the same name, but with different r
 }
 
 export class LaneChangeScopeCmd implements Command {
-  name = 'change-scope <lane-name> <remote-scope>';
-  description = `change the remote scope of a lane`;
+  name = 'change-scope <lane-name> <remote-scope-name>';
+  description = `changes the remote scope of a lane`;
   alias = '';
   options = [] as CommandOptions;
   loader = true;
@@ -268,7 +274,7 @@ export class LaneMergeCmd implements Command {
   description = `merge a local or a remote lane`;
   alias = '';
   options = [
-    ['', 'remote <name>', 'remote scope name'],
+    ['', 'remote <scope-name>', 'remote scope name'],
     ['', 'ours', 'in case of a conflict, override the used version with the current modification'],
     ['', 'theirs', 'in case of a conflict, override the current modification with the specified version'],
     ['', 'manual', 'in case of a conflict, leave the files with a conflict state to resolve them manually later'],
@@ -277,6 +283,13 @@ export class LaneMergeCmd implements Command {
     ['', 'build', 'in case of snap during the merge, run the build-pipeline (similar to bit snap --build)'],
     ['m', 'message <message>', 'override the default message for the auto snap'],
     ['', 'keep-readme', 'skip deleting the lane readme component after merging'],
+    ['', 'squash', 'EXPERIMENTAL. squash multiple snaps. keep the last one only'],
+    ['', 'pattern <component-pattern>', 'EXPERIMENTAL. partially merge the lane with the specified component-pattern'],
+    [
+      '',
+      'include-deps',
+      'EXPERIMENTAL. relevant for "--pattern" and "--existing". merge also dependencies of the given components',
+    ],
   ] as CommandOptions;
   loader = true;
   private = true;
@@ -297,6 +310,9 @@ export class LaneMergeCmd implements Command {
       noSnap = false,
       message: snapMessage = '',
       keepReadme = false,
+      squash = false,
+      pattern,
+      includeDeps = false,
     }: {
       ours: boolean;
       theirs: boolean;
@@ -307,12 +323,17 @@ export class LaneMergeCmd implements Command {
       noSnap: boolean;
       message: string;
       keepReadme?: boolean;
+      squash: boolean;
+      pattern?: string;
+      includeDeps?: boolean;
     }
   ): Promise<string> {
     build = isFeatureEnabled(BUILD_ON_CI) ? Boolean(build) : true;
     const mergeStrategy = getMergeStrategy(ours, theirs, manual);
     if (noSnap && snapMessage) throw new BitError('unable to use "noSnap" and "message" flags together');
-
+    if (includeDeps && !pattern && !existingOnWorkspaceOnly) {
+      throw new BitError(`"--include-deps" flag is relevant only for --existing and --pattern flags`);
+    }
     const { mergeResults, deleteResults } = await this.lanes.mergeLane(name, {
       // @ts-ignore
       remoteName,
@@ -323,6 +344,9 @@ export class LaneMergeCmd implements Command {
       noSnap,
       snapMessage,
       keepReadme,
+      squash,
+      pattern,
+      includeDeps,
     });
 
     const mergeResult = `${mergeReport(mergeResults)}`;
@@ -336,7 +360,8 @@ export class LaneMergeCmd implements Command {
 }
 
 export class LaneRemoveCmd implements Command {
-  name = 'remove <lane...>';
+  name = 'remove <lanes...>';
+  arguments = [{ name: 'lanes...', description: 'A list of lane names, separated by spaces' }];
   description = `remove lanes`;
   alias = '';
   options = [
@@ -381,6 +406,7 @@ export class LaneRemoveCmd implements Command {
 export class LaneImportCmd implements Command {
   name = 'import <lane>';
   description = `import a remote lane to your workspace`;
+  arguments = [{ name: 'lane', description: 'the remote lane name' }];
   alias = '';
   options = [
     ['', 'skip-dependency-installation', 'do not install packages of the imported components'],
@@ -400,9 +426,8 @@ export class LaneImportCmd implements Command {
 }
 
 export class LaneCmd implements Command {
-  name = 'lane [name]';
-  shortDescription = 'show lanes details';
-  description: string;
+  name = 'lane [lane-name]';
+  description = 'show lanes details';
   alias = '';
   options = [
     ['d', 'details', 'show more details on the state of each component in each lane'],
@@ -452,8 +477,12 @@ export class LaneRemoveReadmeCmd implements Command {
 }
 
 export class LaneAddReadmeCmd implements Command {
-  name = 'add-readme <componentId> [laneName]';
-  description = 'EXPERIMENTAL. add lane readme component';
+  name = 'add-readme <component-name> [lane-name]';
+  description = 'EXPERIMENTAL. adds a readme component to a lane';
+  arguments = [
+    { name: 'component-id', description: "the component name or id of the component to use as the lane's readme" },
+    { name: 'lane-name', description: 'the lane to attach the readme to (defaults to the current lane)' },
+  ];
   options = [] as CommandOptions;
   loader = true;
   private = true;

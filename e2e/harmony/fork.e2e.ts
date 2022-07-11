@@ -46,7 +46,7 @@ describe('bit fork command', function () {
     });
     it('should name the new component, same as the old one', () => {
       const list = helper.command.listParsed();
-      expect(list[0].id).to.equal('comp1');
+      expect(list[0].id).to.equal('my-scope/comp1');
     });
     it('bit show should show the forked component', () => {
       const showFork = helper.command.showAspectConfig('comp1', Extensions.forking);

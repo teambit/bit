@@ -76,8 +76,8 @@ class ConfigDel implements LegacyCommand {
 
 export default class Config implements LegacyCommand {
   name = 'config';
-  description = `global config management.\n  https://${BASE_DOCS_DOMAIN}/config/bit-config`;
-  shortDescription = 'global config management';
+  description = 'global config management';
+  extendedDescription = `https://${BASE_DOCS_DOMAIN}/config/bit-config`;
   group: Group = 'general';
   alias = '';
   commands = [new ConfigSet(), new ConfigDel(), new ConfigGet(), new ConfigList()];

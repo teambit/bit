@@ -7,23 +7,18 @@ import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
 import { LegacyComponentLog } from '@teambit/legacy-component-log';
 import { BitId } from '../../bit-id';
 import {
-  COMPILER_ENV_TYPE,
   DEFAULT_BINDINGS_PREFIX,
   DEFAULT_BIT_RELEASE_TYPE,
   DEFAULT_BIT_VERSION,
   DEFAULT_LANGUAGE,
   Extensions,
-  TESTER_ENV_TYPE,
 } from '../../constants';
 import ConsumerComponent from '../../consumer/component';
-import { ManipulateDirItem } from '../../consumer/component-ops/manipulate-dir';
-import { Dist, License, SourceFile } from '../../consumer/component/sources';
+import { License, SourceFile } from '../../consumer/component/sources';
 import ComponentOverrides from '../../consumer/config/component-overrides';
-import SpecsResults from '../../consumer/specs-results';
 import GeneralError from '../../error/general-error';
 import ShowDoctorError from '../../error/show-doctor-error';
 import ValidationError from '../../error/validation-error';
-import { makeEnvFromModel } from '../../legacy-extensions/env-factory';
 import logger from '../../logger/logger';
 import { empty, filterObject, forEach, getStringifyArgs, mapObject, sha1 } from '../../utils';
 import findDuplications from '../../utils/array/find-duplications';
@@ -444,12 +439,12 @@ export default class Component extends BitObject {
     releaseType: semver.ReleaseType = DEFAULT_BIT_RELEASE_TYPE,
     exactVersion?: string | null,
     incrementBy?: number,
-    preRelease?: string
+    preReleaseId?: string
   ): string {
     if (exactVersion && this.versions[exactVersion]) {
       throw new VersionAlreadyExists(exactVersion, this.id());
     }
-    return exactVersion || this.version(releaseType, incrementBy, preRelease);
+    return exactVersion || this.version(releaseType, incrementBy, preReleaseId);
   }
 
   isEqual(component: Component, considerOrphanedVersions = true): boolean {
@@ -531,14 +526,15 @@ export default class Component extends BitObject {
     return versionToAdd;
   }
 
-  version(releaseType: semver.ReleaseType = DEFAULT_BIT_RELEASE_TYPE, incrementBy = 1, preRelease?: string): string {
-    if (preRelease) releaseType = 'prerelease';
+  version(releaseType: semver.ReleaseType = DEFAULT_BIT_RELEASE_TYPE, incrementBy = 1, preReleaseId?: string): string {
+    // if (preRelease) releaseType = 'prerelease';
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const increment = (ver: string) => semver.inc(ver, releaseType, undefined, preRelease)!;
+    const increment = (ver: string) => semver.inc(ver, releaseType, undefined, preReleaseId)!;
 
     const latest = this.latestVersion();
     if (!latest) {
-      return preRelease ? increment(DEFAULT_BIT_VERSION) : DEFAULT_BIT_VERSION;
+      const isPreReleaseLike = ['prerelease', 'premajor', 'preminor', 'prepatch'].includes(releaseType);
+      return isPreReleaseLike ? increment(DEFAULT_BIT_VERSION) : DEFAULT_BIT_VERSION;
     }
     let result = increment(latest);
     if (incrementBy === 1) return result;
@@ -702,8 +698,9 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     if (versionNum === VERSION_ZERO) {
       throw new Error(`the component ${this.id()} has no versions and the head is empty.
-this is probably a component from another lane which should not be loaded in this lane.
-make sure to call "getAllIdsAvailableOnLane" and not "getAllBitIdsFromAllLanes"`);
+this is probably a component from another lane which should not be loaded in this lane (or main).
+if this component is on a lane, make sure to ask for it with a version.
+if that's not the case, make sure to call "getAllIdsAvailableOnLane" and not "getAllBitIdsFromAllLanes"`);
     }
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     if (isTag(versionNum) && !this.hasTagIncludeOrphaned(versionNum!)) {
@@ -765,12 +762,7 @@ make sure to call "getAllIdsAvailableOnLane" and not "getAllBitIdsFromAllLanes"`
    *
    * @see sources.consumerComponentToVersion() for the opposite action.
    */
-  async toConsumerComponent(
-    versionStr: string,
-    scopeName: string,
-    repository: Repository,
-    manipulateDirData?: ManipulateDirItem[] | null
-  ): Promise<ConsumerComponent> {
+  async toConsumerComponent(versionStr: string, scopeName: string, repository: Repository): Promise<ConsumerComponent> {
     logger.debug(`model-component, converting ${this.id()}, version: ${versionStr} to ConsumerComponent`);
     const componentVersion = this.toComponentVersion(versionStr);
     const version: Version = await componentVersion.getVersion(repository);
@@ -784,22 +776,11 @@ make sure to call "getAllIdsAvailableOnLane" and not "getAllBitIdsFromAllLanes"`
       return new ClassName({ base: '.', path: file.relativePath, contents: content.contents, test: file.test });
     };
     const filesP = version.files ? Promise.all(version.files.map(loadFileInstance(SourceFile))) : null;
-    const distsP = version.dists ? Promise.all(version.dists.map(loadFileInstance(Dist))) : null;
     // @todo: this is weird. why the scopeMeta would be taken from the current scope and not he component scope?
     const scopeMetaP = scopeName ? ScopeMeta.fromScopeName(scopeName).load(repository) : Promise.resolve();
     const log = version.log || null;
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const compilerP = makeEnvFromModel(COMPILER_ENV_TYPE, version.compiler, repository);
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const testerP = makeEnvFromModel(TESTER_ENV_TYPE, version.tester, repository);
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const [files, dists, scopeMeta, compiler, tester] = await Promise.all([
-      filesP,
-      distsP,
-      scopeMetaP,
-      compilerP,
-      testerP,
-    ]);
+    // @ts-ignore
+    const [files, scopeMeta] = await Promise.all([filesP, scopeMetaP]);
 
     const extensions = version.extensions.clone();
 
@@ -818,30 +799,18 @@ make sure to call "getAllIdsAvailableOnLane" and not "getAllBitIdsFromAllLanes"`
       bindingPrefix,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       mainFile: version.mainFile || null,
-      // @ts-ignore
-      compiler,
-      // @ts-ignore
-      tester,
       dependencies: version.dependencies.getClone(),
       devDependencies: version.devDependencies.getClone(),
       flattenedDependencies: version.flattenedDependencies.clone(),
       packageDependencies: clone(version.packageDependencies),
       devPackageDependencies: clone(version.devPackageDependencies),
       peerPackageDependencies: clone(version.peerPackageDependencies),
-      compilerPackageDependencies: clone(version.compilerPackageDependencies),
-      testerPackageDependencies: clone(version.testerPackageDependencies),
       // @ts-ignore
       files,
-      // @ts-ignore
-      dists,
-      mainDistFile: version.mainDistFile,
       docs: version.docs,
       // @ts-ignore
       license: scopeMeta ? License.deserialize(scopeMeta.license) : undefined, // todo: make sure we have license in case of local scope
-      // @ts-ignore
-      specsResults: version.specsResults ? version.specsResults.map((res) => SpecsResults.deserialize(res)) : null,
       log,
-      customResolvedPaths: clone(version.customResolvedPaths),
       overrides: ComponentOverrides.loadFromScope(version.overrides),
       packageJsonChangedProps: clone(version.packageJsonChangedProps),
       deprecated: this.deprecated,
@@ -850,10 +819,6 @@ make sure to call "getAllIdsAvailableOnLane" and not "getAllBitIdsFromAllLanes"`
       extensions,
       buildStatus: version.buildStatus,
     });
-    if (manipulateDirData) {
-      consumerComponent.stripOriginallySharedDir(manipulateDirData);
-      consumerComponent.addWrapperDir(manipulateDirData);
-    }
 
     return consumerComponent;
   }
@@ -932,6 +897,13 @@ make sure to call "getAllIdsAvailableOnLane" and not "getAllBitIdsFromAllLanes"`
     const localHashes = divergeData.snapsOnLocalOnly;
     if (!localHashes.length) return localVersions;
     return this.switchHashesWithTagsIfExist(localHashes).reverse(); // reverse to get the older first
+  }
+
+  getLocalHashes(): Ref[] {
+    const divergeData = this.getDivergeData();
+    const localHashes = divergeData.snapsOnLocalOnly;
+    if (!localHashes.length) return [];
+    return localHashes.reverse(); // reverse to get the older first
   }
 
   /**

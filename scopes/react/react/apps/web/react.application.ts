@@ -16,7 +16,7 @@ import { computeResults } from './compute-results';
 export class ReactApp implements Application {
   constructor(
     readonly name: string,
-    readonly entry: string[],
+    readonly entry: string[]|(() => Promise<string[]>),
     readonly portRange: number[],
     private reactEnv: ReactEnv,
     readonly prerender?: ReactAppPrerenderOptions,
@@ -43,6 +43,9 @@ export class ReactApp implements Application {
           historyApiFallback: {
             index: '/index.html',
             disableDotRule: true,
+            headers: {
+              'Access-Control-Allow-Headers': '*',
+            },
           },
         }),
       (configMutator) => {
@@ -73,7 +76,7 @@ export class ReactApp implements Application {
     const bundler = await this.getBundler(context);
     const bundleResult = await bundler.run();
 
-    return computeResults(bundleResult, { publicDir: `${this.getPublicDir()}/${this.dir}` });
+    return computeResults(bundleResult, { publicDir: `${this.getPublicDir(context.artifactsDir)}/${this.dir}` });
   }
 
   private getBundler(context: AppBuildContext) {
@@ -83,10 +86,11 @@ export class ReactApp implements Application {
   private async getDefaultBundler(context: AppBuildContext) {
     const { capsule } = context;
     const reactEnv: ReactEnv = context.env;
-    const publicDir = this.getPublicDir();
+    const publicDir = this.getPublicDir(context.artifactsDir);
     const outputPath = join(capsule.path, publicDir);
     const { distDir } = reactEnv.getCompiler();
-    const entries = this.entry.map((entry) => require.resolve(`${capsule.path}/${distDir}/${basename(entry)}`));
+    const targetEntries = Array.isArray(this.entry) ? this.entry : await this.entry();
+    const entries = targetEntries.map((entry) => require.resolve(`${capsule.path}/${distDir}/${basename(entry)}`));
     const staticDir = join(outputPath, this.dir);
 
     const bundlerContext: BundlerContext = Object.assign(context, {
@@ -177,13 +181,19 @@ export class ReactApp implements Application {
     });
   };
 
-  private getPublicDir() {
-    return join(this.applicationType, this.name);
+  private getPublicDir(artifactsDir: string) {
+    return join(artifactsDir, this.applicationType, this.name);
+  }
+
+  async getEntries(): Promise<string[]> {
+    if (Array.isArray(this.entry)) return this.entry;
+    return this.entry();
   }
 
   private async getDevServerContext(context: AppContext): Promise<DevServerContext> {
+    const entries = await this.getEntries();
     return Object.assign(context, {
-      entry: this.entry,
+      entry: entries,
       rootPath: '',
       publicPath: `public/${this.name}`,
       title: this.name,
