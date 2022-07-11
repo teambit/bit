@@ -3,6 +3,15 @@ import { PreviewAspect, RenderingContext, PreviewPreview, PreviewRuntime, Previe
 import { ComponentID } from '@teambit/component-id';
 
 import { DocsAspect } from './docs.aspect';
+import type { Docs } from './docs';
+
+export type DocsRootProps = {
+  Provider: React.ComponentType | undefined;
+  componentId: string;
+  docs: Docs | undefined;
+  compositions: any;
+  context: RenderingContext;
+};
 
 export class DocsPreview {
   constructor(
@@ -15,7 +24,32 @@ export class DocsPreview {
   render = (componentId: ComponentID, modules: PreviewModule, [compositions]: [any], context: RenderingContext) => {
     const docsModule = this.selectPreviewModel(componentId.fullName, modules);
 
-    modules.mainModule.default(NoopProvider, componentId.toString(), docsModule, compositions, context);
+    const isObject = !!modules.mainModule.default.apiObject;
+
+    /**
+     * for backwards compatibility - can be removed end of 2022
+     */
+    if (!isObject) {
+      const docsPropsArray = [
+        NoopProvider as React.ComponentType,
+        componentId.toString(),
+        docsModule as Docs,
+        compositions,
+        context,
+      ];
+      modules.mainModule.default(...docsPropsArray);
+      return;
+    }
+
+    const docsProps: DocsRootProps = {
+      Provider: NoopProvider as React.ComponentType,
+      componentId: componentId.toString(),
+      docs: docsModule as Docs,
+      compositions,
+      context,
+    };
+
+    modules.mainModule.default(docsProps);
   };
 
   selectPreviewModel(componentId: string, modules: PreviewModule) {

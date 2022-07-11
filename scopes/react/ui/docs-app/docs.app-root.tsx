@@ -1,36 +1,32 @@
-import { RenderingContext } from '@teambit/preview';
+import { DocsRootProps } from '@teambit/docs';
 import React from 'react';
 import ReactDOM from 'react-dom';
 
 import { DocsApp } from './docs-app';
-import type { DocsFile } from './examples-overview/example';
 
-export type ReactDocsRootParams = [
-  /* Provider: */ React.ComponentType | undefined,
-  /* componentId: */ string,
-  /* docs: */ DocsFile | undefined,
-  /* compositions: */ Record<string, any>,
-  /* context: */ RenderingContext
-];
-
-export default function DocsRoot(
-  Provider: React.ComponentType | undefined,
-  componentId: string,
-  docs: DocsFile | undefined,
-  compositions: any,
-  context: RenderingContext
+function DocsRoot({
+  componentId,
+  docs,
+  compositions,
+  context
+}: DocsRootProps
 ) {
   ReactDOM.render(
     <DocsApp
-      Provider={Provider}
-      compositions={compositions}
-      docs={docs}
       componentId={componentId}
-      renderingContext={context}
-    />,
+      docs={docs}
+      compositions={compositions}
+      context={context}
+    />
+    ,
     document.getElementById('root')
   );
 }
+
+// For backward compatibility - can be removed end of 2022
+DocsRoot.apiObject = true;
+
+export default DocsRoot;
 
 // hot reloading works when components are in a different file.
 // do not declare react components here.
