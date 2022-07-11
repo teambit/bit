@@ -2,6 +2,7 @@ import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
 import { uniqBy } from 'lodash';
 import { BitId } from '@teambit/legacy-bit-id';
 import { ObjectList } from '@teambit/legacy/dist/scope/objects/object-list';
+import { BitObjectList } from '@teambit/legacy/dist/scope/objects/bit-object-list';
 import { getAllVersionsInfo } from '@teambit/legacy/dist/scope/component-ops/traverse-versions';
 import { Dependency } from './model/dependency';
 
@@ -14,8 +15,8 @@ export class IdGraph extends Graph<BitId, Dependency> {
   }
 }
 
-export async function objectListToGraph(objectList: ObjectList): Promise<IdGraph> {
-  const bitObjectsList = await objectList.toBitObjects();
+export async function objectListToGraph(objectList: ObjectList | BitObjectList): Promise<IdGraph> {
+  const bitObjectsList = objectList instanceof BitObjectList ? objectList : await objectList.toBitObjects();
   const exportMetadata = bitObjectsList.getExportMetadata();
   const components = bitObjectsList.getComponents();
   const versions = bitObjectsList.getVersions();
