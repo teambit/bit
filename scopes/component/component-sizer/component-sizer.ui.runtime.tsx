@@ -14,12 +14,14 @@ export class SizerUIRuntime {
   static runtime = UIRuntime;
 
   static async provider([docs]: [DocsUI]) {
-    docs.registerTitleBadge({
-      component: function badge({ legacyComponentModel }: { legacyComponentModel: ComponentModel }) {
-        return <ComponentSize legacyComponentModel={legacyComponentModel} />;
+    docs.registerTitleBadge([
+      {
+        component: function badge({ legacyComponentModel }: { legacyComponentModel: ComponentModel }) {
+          return <ComponentSize legacyComponentModel={legacyComponentModel} />;
+        },
+        weight: 30,
       },
-      weight: 30,
-    });
+    ]);
   }
 }
 
