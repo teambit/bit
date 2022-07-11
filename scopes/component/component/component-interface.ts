@@ -9,10 +9,11 @@ export interface IComponent {
   /**
    * get function to retrieve aspect
    */
-  get(id: string): RawComponentMetadata | undefined;
+  get(aspectId: string): RawComponentMetadata | undefined;
 
   /**
    * determines whether a component is a modified state.
+   * TODO: consider to remove after handling component descriptors correctly.
    */
   isModified(): Promise<boolean>;
 }
