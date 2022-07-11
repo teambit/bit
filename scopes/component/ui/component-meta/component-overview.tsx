@@ -54,60 +54,101 @@ export function ComponentOverview({
     finalElementsUrl = origin && elementsUrl ? `${origin}${elementsUrl}` : undefined;
   }
 
-  type CompWithTitleBadgesProps = { position: TitleBadgePosition; children: ReactNode };
-  function ComponentWithTitleBadges({ position, children }: CompWithTitleBadgesProps) {
-    return (
-      <div className={styles.componentWithBadgeContainer}>
-        {children}
-        <div className={styles.badgeContainer}>
-          {titleBadges
-            // eslint-disable-next-line react/prop-types
-            ?.filter((badge) => {
-              return (
-                (position === TitleBadgePosition.Title && !badge.position) || // default position is title
-                badge.position === position
-              );
-            })
-            // @ts-ignore
-            ?.sort((a, b) => a?.weight - b?.weight)
-            ?.map((titleBadge, index) => {
-              return (
-                <titleBadge.component
-                  key={index}
-                  componentDescriptor={componentDescriptor}
-                  legacyComponentModel={component}
-                />
-              );
-            })}
-        </div>
-      </div>
-    );
-  }
-
   return (
     <Section {...rest}>
       <div className={textColumn}>
-        <ComponentWithTitleBadges position={TitleBadgePosition.Title}>
+        <Row>
           <div className={styles.componentTitle}>
             <H1>{displayName}</H1>
+            <BadgeSection
+              position={TitleBadgePosition.Title}
+              componentDescriptor={componentDescriptor}
+              component={component}
+              badges={titleBadges}
+            />
           </div>
-        </ComponentWithTitleBadges>
-        <ComponentWithTitleBadges position={TitleBadgePosition.SubTitle}>
-          {abstract && <Subtitle className={styles.subTitle}>{abstract}</Subtitle>}
-        </ComponentWithTitleBadges>
-        <ComponentWithTitleBadges position={TitleBadgePosition.Labels}>
+        </Row>
+        <Row>
+          {abstract && (
+            <>
+              <Subtitle className={styles.subTitle}>{abstract}</Subtitle>
+              <BadgeSection
+                position={TitleBadgePosition.SubTitle}
+                componentDescriptor={componentDescriptor}
+                component={component}
+                badges={titleBadges}
+              />
+            </>
+          )}
+        </Row>
+        <Row>
           <LabelList>{labels}</LabelList>
-        </ComponentWithTitleBadges>
-        <ComponentWithTitleBadges position={TitleBadgePosition.Package}>
+          <BadgeSection
+            position={TitleBadgePosition.Labels}
+            componentDescriptor={componentDescriptor}
+            component={component}
+            badges={titleBadges}
+          />
+        </Row>
+        <Row>
           <ConsumableLink title="Package name" link={packageName}></ConsumableLink>
-        </ComponentWithTitleBadges>
+          <BadgeSection
+            position={TitleBadgePosition.Package}
+            componentDescriptor={componentDescriptor}
+            component={component}
+            badges={titleBadges}
+          />
+        </Row>
         {finalElementsUrl && (
-          <ComponentWithTitleBadges position={TitleBadgePosition.ElementsPackage}>
+          <Row>
             <ConsumableLink title="Elements url" link={finalElementsUrl}></ConsumableLink>
-          </ComponentWithTitleBadges>
+            <BadgeSection
+              position={TitleBadgePosition.ElementsPackage}
+              componentDescriptor={componentDescriptor}
+              component={component}
+              badges={titleBadges}
+            />
+          </Row>
         )}
       </div>
       <Separator isPresentational />
     </Section>
   );
+}
+
+type CompWithTitleBadgesProps = {
+  badges: TitleBadge[] | undefined;
+  position: TitleBadgePosition;
+  componentDescriptor?: ComponentDescriptor;
+  component?: ComponentModel;
+};
+function BadgeSection({ badges, position, componentDescriptor, component }: CompWithTitleBadgesProps) {
+  return (
+    <div className={styles.badgeContainer}>
+      {badges
+        // eslint-disable-next-line react/prop-types
+        ?.filter((badge) => {
+          return (
+            (position === TitleBadgePosition.Title && !badge.position) || // default position is title
+            badge.position === position
+          );
+        })
+        // @ts-ignore
+        ?.sort((a, b) => a?.weight - b?.weight)
+        ?.map((titleBadge, index) => {
+          return (
+            <titleBadge.component
+              key={index}
+              componentDescriptor={componentDescriptor}
+              legacyComponentModel={component}
+            />
+          );
+        })}
+    </div>
+  );
+}
+
+// Move to teambit.base-react?
+function Row({ children }: { children: ReactNode }) {
+  return <div className={styles.row}>{children}</div>;
 }
