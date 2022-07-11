@@ -53,6 +53,7 @@
         "@stencil/core": "1.17.4",
         "@stencil/webpack": "0.0.6",
         "@teambit/any-fs": "0.0.5",
+        "@teambit/base-react.layout.row": "0.0.1",
         "@teambit/base-react.navigation.link": "2.0.27",
         "@teambit/base-ui.constants.storage": "1.0.0",
         "@teambit/base-ui.css-components.pill": "1.0.0",

@@ -1,4 +1,4 @@
-import React, { ComponentType, ReactNode } from 'react';
+import React, { ComponentType } from 'react';
 import type { ComponentDescriptor } from '@teambit/component-descriptor';
 import { textColumn } from '@teambit/base-ui.layout.page-frame';
 import { ConsumableLink } from '@teambit/documenter.ui.consumable-link';
@@ -8,6 +8,7 @@ import { Section, SectionProps } from '@teambit/documenter.ui.section';
 import { Separator } from '@teambit/design.ui.separator';
 import { Subtitle } from '@teambit/documenter.ui.sub-title';
 import { isBrowser } from '@teambit/ui-foundation.ui.is-browser';
+import { Row } from '@teambit/base-react.layout.row';
 import { ComponentModel } from '@teambit/component';
 import styles from './component-overview.module.scss';
 
@@ -146,9 +147,4 @@ function BadgeSection({ badges, position, componentDescriptor, component }: Comp
         })}
     </div>
   );
-}
-
-// Move to teambit.base-react?
-function Row({ children }: { children: ReactNode }) {
-  return <div className={styles.row}>{children}</div>;
 }
