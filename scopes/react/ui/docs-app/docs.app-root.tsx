@@ -1,28 +1,15 @@
-import { RenderingContext } from '@teambit/preview';
+import { DocsRootProps } from '@teambit/docs';
 import React from 'react';
 import ReactDOM from 'react-dom';
 
 import { DocsApp } from './docs-app';
-import type { DocsFile } from './examples-overview/example';
 
-/**
- * These are the parameters supplied to all docs apps by the bit UI runtime
- */
-export type ReactDocsRoot = (
-  Provider: React.ComponentType | undefined,
-  componentId: string,
-  docs: DocsFile | undefined,
-  compositions: any,
-  context: RenderingContext
-) => void;
-
-
-const DocsRoot: ReactDocsRoot = function(
-  Provider,
+function DocsRoot({
   componentId,
   docs,
   compositions,
   context
+}: DocsRootProps
 ) {
   ReactDOM.render(
     <DocsApp
@@ -35,6 +22,9 @@ const DocsRoot: ReactDocsRoot = function(
     document.getElementById('root')
   );
 }
+
+// For backward compatibility - can be removed end of 2022
+DocsRoot.apiObject = true;
 
 export default DocsRoot;
 

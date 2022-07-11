@@ -1,5 +1,6 @@
 import React from 'react';
 import { isFunction } from 'lodash';
+import { Docs } from '@teambit/docs';
 import { RenderingContext } from '@teambit/preview';
 import { PropertiesTable } from '@teambit/react.ui.docs.properties-table';
 import { CompositionsCarousel } from '@teambit/react.ui.docs.compositions-carousel';
@@ -8,20 +9,20 @@ import { ApplyProviders } from '@teambit/react.ui.docs.apply-providers';
 
 import { DocsTheme } from './docs-theme';
 import { ExamplesOverview } from './examples-overview';
-import type { DocsFile } from './examples-overview';
 import styles from './docs-app.module.scss';
 
 export type ReactDocsAppProps = {
   componentId: string,
-  docs: DocsFile | undefined,
+  docs: Docs | undefined,
   compositions: any,
   context: RenderingContext
 };
 
 export const defaultDocs = {
-  examples: [],
+  default: () => null,
   labels: [],
   abstract: '',
+  examples: []
 };
 
 export function DocsApp({
