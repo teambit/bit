@@ -173,7 +173,7 @@ export class SnappingMain {
    * once a component is snapped on a lane, it becomes part of it.
    */
   async snap({
-    id, // @todo: rename to "patterns"
+    pattern, // @todo: rename to "patterns"
     legacyBitIds, // @todo: change to ComponentID[]. pass only if have the ids already parsed.
     resolveUnmerged = false,
     message = '',
@@ -185,7 +185,7 @@ export class SnappingMain {
     forceDeploy = false,
     unmodified = false,
   }: {
-    id?: string;
+    pattern?: string;
     legacyBitIds?: BitIds;
     resolveUnmerged?: boolean;
     message?: string;
@@ -198,11 +198,11 @@ export class SnappingMain {
     unmodified?: boolean;
   }): Promise<SnapResults | null> {
     if (!this.workspace) throw new ConsumerNotFound();
-    if (id && legacyBitIds) throw new Error(`please pass either id or legacyBitIds, not both`);
+    if (pattern && legacyBitIds) throw new Error(`please pass either pattern or legacyBitIds, not both`);
     const consumer: Consumer = this.workspace.consumer;
     const componentsList = new ComponentsList(consumer);
     const newComponents = (await componentsList.listNewComponents()) as BitIds;
-    const ids = legacyBitIds || (await getIdsToSnap());
+    const ids = legacyBitIds || (await getIdsToSnap(this.workspace));
     if (!ids) return null;
     this.logger.debug(`snapping the following components: ${ids.toString()}`);
     await this.workspace.consumer.componentFsCache.deleteAllDependenciesDataCache();
@@ -242,25 +242,16 @@ export class SnappingMain {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return snapResults;
 
-    async function getIdsToSnap(): Promise<BitIds | null> {
-      const idHasWildcard = id && hasWildcard(id);
-      if (id && !idHasWildcard) {
-        const bitId = consumer.getParsedId(id);
-        if (!unmodified) {
-          const componentStatus = await consumer.getComponentStatusById(bitId);
-          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-          if (componentStatus.modified === false) return null;
-        }
-        return new BitIds(bitId);
-      }
+    async function getIdsToSnap(workspace: Workspace): Promise<BitIds | null> {
       const tagPendingComponents = unmodified
         ? await componentsList.listPotentialTagAllWorkspace()
         : await componentsList.listTagPendingComponents();
       if (R.isEmpty(tagPendingComponents)) return null;
-      const bitIds = idHasWildcard
-        ? ComponentsList.filterComponentsByWildcard(tagPendingComponents, id)
-        : tagPendingComponents;
-      return BitIds.fromArray(bitIds);
+      const tagPendingComponentsIds = await workspace.resolveMultipleComponentIds(tagPendingComponents);
+      const componentIds = pattern
+        ? workspace.scope.filterIdsFromPoolIdsByPattern(pattern, tagPendingComponentsIds)
+        : tagPendingComponentsIds;
+      return BitIds.fromArray(componentIds.map((c) => c._legacy));
     }
   }
 
