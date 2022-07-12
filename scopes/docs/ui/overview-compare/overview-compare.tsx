@@ -3,12 +3,12 @@ import { CompareSplitLayoutPreset, useComponentCompare } from '@teambit/componen
 import { Toggle } from '@teambit/design.ui.input.toggle';
 import { RoundLoader } from '@teambit/design.ui.round-loader';
 import { Overview } from '@teambit/docs';
-import type { TitleBadge } from '@teambit/docs';
+import type { TitleBadgeSlot } from '@teambit/docs';
 import React, { UIEvent, useMemo, useRef, useState } from 'react';
 import styles from './overview-compare.module.scss';
 
 export type OverviewCompareProps = {
-  titleBadges: TitleBadge[];
+  titleBadges: TitleBadgeSlot;
 };
 
 export function OverviewCompare(props: OverviewCompareProps) {

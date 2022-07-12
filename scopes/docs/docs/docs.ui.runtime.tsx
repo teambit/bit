@@ -39,8 +39,8 @@ export class DocsUI {
     [titleBadgeSlot]: [TitleBadgeSlot]
   ) {
     const docs = new DocsUI(titleBadgeSlot);
-    const section = new OverviewSection(docs.listTitleBadges());
-    const compareSection = new OverviewCompareSection(docs.listTitleBadges());
+    const section = new OverviewSection(docs);
+    const compareSection = new OverviewCompareSection(docs);
 
     component.registerRoute(section.route);
     component.registerNavigation(section.navigationLink, section.order);

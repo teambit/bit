@@ -1,10 +1,10 @@
 import React from 'react';
 import { Section } from '@teambit/component';
 import { OverviewCompare } from '@teambit/docs.ui.overview-compare';
-import { TitleBadge } from './overview';
+import { DocsUI } from './docs.ui.runtime';
 
 export class OverviewCompareSection implements Section {
-  constructor(private titleBadges: TitleBadge[]) {}
+  constructor(private docs: DocsUI) {}
 
   navigationLink = {
     href: '.',
@@ -15,6 +15,6 @@ export class OverviewCompareSection implements Section {
 
   route = {
     path: '*',
-    element: <OverviewCompare titleBadges={this.titleBadges} />,
+    element: <OverviewCompare titleBadges={this.docs.titleBadgeSlot} />,
   };
 }

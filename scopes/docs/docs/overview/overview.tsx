@@ -1,4 +1,5 @@
 import React, { useContext, ComponentType } from 'react';
+import { flatten } from 'lodash';
 import { ComponentContext, useComponentDescriptor } from '@teambit/component';
 import type { SlotRegistry } from '@teambit/harmony';
 import { ComponentPreview } from '@teambit/preview.ui.component-preview';
@@ -25,7 +26,7 @@ export type TitleBadge = {
 export type TitleBadgeSlot = SlotRegistry<TitleBadge[]>;
 
 export type OverviewProps = {
-  titleBadges: TitleBadge[];
+  titleBadges: TitleBadgeSlot;
 };
 
 export function Overview({ titleBadges }: OverviewProps) {
@@ -58,7 +59,7 @@ export function Overview({ titleBadges }: OverviewProps) {
           abstract={component.description}
           labels={component.labels}
           packageName={component.packageName}
-          titleBadges={titleBadges}
+          titleBadges={flatten(titleBadges.values())}
           componentDescriptor={componentDescriptor}
           component={component}
         />
