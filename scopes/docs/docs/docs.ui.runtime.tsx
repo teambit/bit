@@ -15,7 +15,7 @@ export class DocsUI {
   /**
    * register a new title badge into the overview section of a component.
    */
-  registerTitleBadge(titleBadges: TitleBadge[]) {
+  registerTitleBadge(...titleBadges: TitleBadge[]) {
     this.titleBadgeSlot.register(titleBadges);
     return this;
   }
