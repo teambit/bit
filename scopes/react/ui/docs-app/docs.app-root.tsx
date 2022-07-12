@@ -4,21 +4,9 @@ import ReactDOM from 'react-dom';
 
 import { DocsApp } from './docs-app';
 
-function DocsRoot({
-  componentId,
-  docs,
-  compositions,
-  context
-}: DocsRootProps
-) {
+function DocsRoot({ componentId, docs, compositions, context }: DocsRootProps) {
   ReactDOM.render(
-    <DocsApp
-      componentId={componentId}
-      docs={docs}
-      compositions={compositions}
-      context={context}
-    />
-    ,
+    <DocsApp componentId={componentId} docs={docs} compositions={compositions} context={context} />,
     document.getElementById('root')
   );
 }

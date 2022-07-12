@@ -11,6 +11,7 @@ export type { DocsUI } from './docs.ui.runtime';
 export type { DocsPreview, DocsRootProps } from './docs.preview.runtime';
 export type { DocReader } from './doc-reader';
 export type { Docs, Example } from './docs';
+export { defaultDocs } from './docs';
 
 export type { TitleBadgeSlot, TitleBadge } from './overview';
 export { Overview, BadgePosition } from './overview';

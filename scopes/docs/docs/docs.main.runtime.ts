@@ -2,7 +2,7 @@ import { Slot, SlotRegistry } from '@teambit/harmony';
 import { MainRuntime } from '@teambit/cli';
 import { LoggerAspect, LoggerMain, Logger } from '@teambit/logger';
 import { CompilerAspect, CompilerMain } from '@teambit/compiler';
-import { Component, ComponentMap } from '@teambit/component';
+import { Component, ComponentMap, IComponent } from '@teambit/component';
 import { PkgAspect, PkgMain } from '@teambit/pkg';
 import type { Environment } from '@teambit/envs';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
@@ -126,8 +126,8 @@ export class DocsMain {
     return null;
   }
 
-  getDoc(component: Component) {
-    const docData = component.state.aspects.get(DocsAspect.id)?.data?.doc;
+  getDoc(component: IComponent) {
+    const docData = component.get(DocsAspect.id)?.data?.doc;
     if (!docData) return null;
     return new Doc(docData.filePath, new DocPropList(docData.props));
   }

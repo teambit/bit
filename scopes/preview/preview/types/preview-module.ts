@@ -10,7 +10,7 @@ export type PreviewModule<T = any> = {
     default: {
       (...args: any[]): void;
       apiObject?: boolean;
-    }
+    };
   };
 
   isSplitComponentBundle?: boolean;

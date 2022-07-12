@@ -90,7 +90,7 @@ export class PubsubUI {
       connect: pubsubUI.connectToIframe,
     });
 
-    uiUI.registerRenderHooks({ reactContext });
+    if (uiUI) uiUI.registerRenderHooks({ reactContext });
 
     return pubsubUI;
   }
