@@ -1,15 +1,13 @@
-import { Section } from '@teambit/component';
 import React from 'react';
-
-import { DocsUI } from './docs.ui.runtime';
-import { Overview } from './overview';
+import { Section } from '@teambit/component';
+import { Overview, TitleBadge } from './overview';
 
 export class OverviewSection implements Section {
   constructor(
     /**
      * docs ui extension.
      */
-    private docs: DocsUI
+    private titleBadges: TitleBadge[]
   ) {}
 
   navigationLink = {
@@ -20,7 +18,7 @@ export class OverviewSection implements Section {
 
   route = {
     index: true,
-    element: <Overview titleBadges={this.docs.titleBadgeSlot} />,
+    element: <Overview titleBadges={this.titleBadges} />,
   };
 
   order = 10;

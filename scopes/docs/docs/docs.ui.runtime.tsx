@@ -1,3 +1,4 @@
+import { flatten } from 'lodash';
 import { ComponentAspect, ComponentUI } from '@teambit/component';
 import { Slot } from '@teambit/harmony';
 import type { TitleBadge } from '@teambit/component.ui.component-meta';
@@ -24,7 +25,7 @@ export class DocsUI {
    * list all title badges registered.
    */
   listTitleBadges() {
-    return this.titleBadgeSlot;
+    return flatten(this.titleBadgeSlot.values());
   }
 
   static dependencies = [ComponentAspect, ComponentCompareAspect];
@@ -39,8 +40,8 @@ export class DocsUI {
     [titleBadgeSlot]: [TitleBadgeSlot]
   ) {
     const docs = new DocsUI(titleBadgeSlot);
-    const section = new OverviewSection(docs);
-    const compareSection = new OverviewCompareSection(titleBadgeSlot);
+    const section = new OverviewSection(docs.listTitleBadges());
+    const compareSection = new OverviewCompareSection(docs.listTitleBadges());
 
     component.registerRoute(section.route);
     component.registerNavigation(section.navigationLink, section.order);
