@@ -131,7 +131,7 @@ export class Http implements Network {
 
     // Reading strictSSL from both network.strict-ssl and network.strict_ssl for backward compatibility.
     const strictSSL = obj[CFG_NETWORK_STRICT_SSL] ?? obj['network.strict_ssl'] ?? obj[CFG_PROXY_STRICT_SSL];
-    return {
+    const networkConfig = {
       fetchRetries: obj[CFG_FETCH_RETRIES] ?? 2,
       fetchRetryFactor: obj[CFG_FETCH_RETRY_FACTOR] ?? 10,
       fetchRetryMintimeout: obj[CFG_FETCH_RETRY_MINTIMEOUT] ?? 10000,
@@ -146,6 +146,13 @@ export class Http implements Network {
       cert: obj[CFG_NETWORK_CERT] ?? obj[CFG_PROXY_CERT],
       key: obj[CFG_NETWORK_KEY] ?? obj[CFG_PROXY_KEY],
     };
+    logger.debug(
+      `the next network configuration is used in network.http: ${{
+        ...networkConfig,
+        key: networkConfig.key ? 'set' : 'not set', // this is sensitive information, we should not log it
+      }}`
+    );
+    return networkConfig;
   }
 
   static async getAgent(uri: string, agentOpts: AgentOptions): Promise<Agent> {

@@ -15,15 +15,12 @@ export type ApplyProvidersProps = {
  * applies providers from rendering context, and error boundary
  */
 export function ApplyProviders({ renderingContext, children, ...rest }: ApplyProvidersProps) {
-
   const { providers = [] } = renderingContext.get(ReactAspect.id) || {};
 
   return (
     <div {...rest}>
       <ErrorBoundary FallbackComponent={ErrorFallback}>
-        <Composer components={providers}>
-          {children}
-        </Composer>
+        <Composer components={providers}>{children}</Composer>
       </ErrorBoundary>
     </div>
   );

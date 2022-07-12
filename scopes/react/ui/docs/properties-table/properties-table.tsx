@@ -6,7 +6,7 @@ import React from 'react';
 
 export type PropertiesTableProps = {
   componentId: string;
-}
+};
 
 export function PropertiesTable({ componentId }: PropertiesTableProps) {
   const { loading, error, data } = useFetchDocs(componentId);

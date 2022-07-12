@@ -6,18 +6,14 @@ import { IconFont } from '@teambit/design.theme.icons-font';
 import styles from './docs-app.module.scss';
 
 export type DocsAppProps = {
-  children: React.ReactChild
+  children: React.ReactChild;
 };
 
-export function DocsTheme({
-  children
-}: DocsAppProps) {
+export function DocsTheme({ children }: DocsAppProps) {
   return (
     <ThemeContext>
       <IconFont query="q76y7n" />
-      <div className={classNames(styles.docsMainBlock)}>
-        {children}
-      </div>
+      <div className={classNames(styles.docsMainBlock)}>{children}</div>
     </ThemeContext>
   );
 }

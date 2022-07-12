@@ -16,6 +16,7 @@ import { State } from './state';
 import { TagMap } from './tag-map';
 import { Tag } from './tag';
 import { CouldNotFindLatest } from './exceptions';
+import { IComponent, RawComponentMetadata } from './component-interface';
 // import { Author } from './types';
 
 type SnapsIterableOpts = {
@@ -28,7 +29,7 @@ export type InvalidComponent = { id: ComponentID; err: Error };
 /**
  * in-memory representation of a component.
  */
-export class Component {
+export class Component implements IComponent {
   constructor(
     /**
      * component ID represented by the `ComponentId` type.
@@ -104,6 +105,13 @@ export class Component {
       }
       throw err;
     }
+  }
+
+  /**
+   * get aspect data from current state.
+   */
+  get(id: string): RawComponentMetadata | undefined {
+    return this.state.aspects.get(id)?.serialize();
   }
 
   async getLogs(filter?: { type?: string; offset?: number; limit?: number; head?: string; sort?: string }) {

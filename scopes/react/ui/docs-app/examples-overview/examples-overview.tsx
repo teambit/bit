@@ -7,7 +7,6 @@ import { Section, SectionProps } from '@teambit/documenter.ui.section';
 import { Playground } from '@teambit/documenter.code.react-playground';
 import styles from './examples-overview.module.scss';
 
-
 export interface ExamplesOverviewProps extends React.HTMLAttributes<HTMLDivElement> {
   examples: Example[];
 }
