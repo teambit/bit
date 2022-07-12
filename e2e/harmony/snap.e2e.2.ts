@@ -165,7 +165,7 @@ describe('bit snap command', function () {
       helper.command.export();
       scopeAfterFirstSnap = helper.scopeHelper.cloneLocalScope();
       helper.fixtures.createComponentBarFoo(fixtures.fooFixtureV2);
-      helper.command.snapComponent('bar/foo');
+      helper.command.snapComponent(`${helper.scopes.remote}/bar/foo`);
       secondSnap = helper.command.getHead('bar/foo');
       helper.command.export();
     });

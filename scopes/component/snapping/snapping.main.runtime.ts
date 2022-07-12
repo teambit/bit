@@ -173,7 +173,7 @@ export class SnappingMain {
    * once a component is snapped on a lane, it becomes part of it.
    */
   async snap({
-    pattern, // @todo: rename to "patterns"
+    pattern,
     legacyBitIds, // @todo: change to ComponentID[]. pass only if have the ids already parsed.
     resolveUnmerged = false,
     message = '',
@@ -199,6 +199,7 @@ export class SnappingMain {
   }): Promise<SnapResults | null> {
     if (!this.workspace) throw new ConsumerNotFound();
     if (pattern && legacyBitIds) throw new Error(`please pass either pattern or legacyBitIds, not both`);
+    console.log('🚀 ~ file: snapping.main.runtime.ts ~ line 202 ~ SnappingMain ~ legacyBitIds', legacyBitIds);
     const consumer: Consumer = this.workspace.consumer;
     const componentsList = new ComponentsList(consumer);
     const newComponents = (await componentsList.listNewComponents()) as BitIds;
@@ -246,6 +247,7 @@ export class SnappingMain {
       const tagPendingComponents = unmodified
         ? await componentsList.listPotentialTagAllWorkspace()
         : await componentsList.listTagPendingComponents();
+      console.log('tagPendingComponents', tagPendingComponents);
       if (R.isEmpty(tagPendingComponents)) return null;
       const tagPendingComponentsIds = await workspace.resolveMultipleComponentIds(tagPendingComponents);
       const componentIds = pattern
