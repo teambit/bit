@@ -1,13 +1,12 @@
 import { flatten } from 'lodash';
 import { ComponentAspect, ComponentUI } from '@teambit/component';
 import { Slot } from '@teambit/harmony';
-import type { TitleBadge } from '@teambit/component.ui.component-meta';
 import { UIRuntime } from '@teambit/ui';
 import ComponentCompareAspect, { ComponentCompareUI } from '@teambit/component-compare';
 
 import { DocsAspect } from './docs.aspect';
 import { OverviewSection } from './overview.section';
-import { TitleBadgeSlot } from './overview';
+import type { TitleBadgeSlot, TitleBadge } from './overview';
 import { OverviewCompareSection } from './docs.compare.section';
 
 export class DocsUI {
