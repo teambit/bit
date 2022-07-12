@@ -12,8 +12,8 @@ export type { DocsPreview, DocsRootProps } from './docs.preview.runtime';
 export type { DocReader } from './doc-reader';
 export type { Docs, Example } from './docs';
 
-export type { TitleBadgeSlot } from './overview';
-export { Overview } from './overview';
+export type { TitleBadgeSlot, TitleBadge } from './overview';
+export { Overview, BadgePosition } from './overview';
 
 export { DocsAspect };
 export default DocsAspect;

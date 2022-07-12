@@ -1,18 +1,31 @@
-import React, { useContext } from 'react';
-import flatten from 'lodash.flatten';
+import React, { useContext, ComponentType } from 'react';
 import { ComponentContext, useComponentDescriptor } from '@teambit/component';
 import type { SlotRegistry } from '@teambit/harmony';
 import { ComponentPreview } from '@teambit/preview.ui.component-preview';
 import { StatusMessageCard } from '@teambit/design.ui.surfaces.status-message-card';
-import { ComponentOverview, TitleBadge } from '@teambit/component.ui.component-meta';
+import { ComponentOverview } from '@teambit/component.ui.component-meta';
 import { LaneBreadcrumb, useLanesContext } from '@teambit/lanes.ui.lanes';
 import { Separator } from '@teambit/design.ui.separator';
 import styles from './overview.module.scss';
 
+export enum BadgePosition {
+  Title,
+  SubTitle,
+  Labels,
+  Package,
+  ElementsPackage,
+}
+
+export type TitleBadge = {
+  component: ComponentType<any>;
+  weight?: number;
+  position?: BadgePosition;
+};
+
 export type TitleBadgeSlot = SlotRegistry<TitleBadge[]>;
 
 export type OverviewProps = {
-  titleBadges: TitleBadgeSlot;
+  titleBadges: TitleBadge[];
 };
 
 export function Overview({ titleBadges }: OverviewProps) {
@@ -45,7 +58,7 @@ export function Overview({ titleBadges }: OverviewProps) {
           abstract={component.description}
           labels={component.labels}
           packageName={component.packageName}
-          titleBadges={flatten(titleBadges.values())}
+          titleBadges={titleBadges}
           componentDescriptor={componentDescriptor}
           component={component}
         />

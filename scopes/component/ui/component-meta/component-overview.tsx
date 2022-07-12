@@ -1,4 +1,4 @@
-import React, { ComponentType } from 'react';
+import React from 'react';
 import type { ComponentDescriptor } from '@teambit/component-descriptor';
 import { textColumn } from '@teambit/base-ui.layout.page-frame';
 import { ConsumableLink } from '@teambit/documenter.ui.consumable-link';
@@ -10,21 +10,9 @@ import { Subtitle } from '@teambit/documenter.ui.sub-title';
 import { isBrowser } from '@teambit/ui-foundation.ui.is-browser';
 import { Row } from '@teambit/base-react.layout.row';
 import { ComponentModel } from '@teambit/component';
+import { BadgePosition } from '@teambit/docs';
+import type { TitleBadge } from '@teambit/docs';
 import styles from './component-overview.module.scss';
-
-export enum BadgePosition {
-  Title,
-  SubTitle,
-  Labels,
-  Package,
-  ElementsPackage,
-}
-
-export type TitleBadge = {
-  component: ComponentType<any>;
-  weight?: number;
-  position?: BadgePosition;
-};
 
 export type ComponentOverviewProps = {
   displayName: string;
