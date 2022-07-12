@@ -11,12 +11,14 @@ export class DeprecationUIRuntime {
   static runtime = UIRuntime;
 
   static async provider([docsUI]: [DocsUI]) {
-    docsUI.registerTitleBadge({
-      component: function Badge({ legacyComponentModel }: { legacyComponentModel: ComponentModel }) {
-        return <ComponentDeprecated deprecation={legacyComponentModel.deprecation} />;
+    docsUI.registerTitleBadge([
+      {
+        component: function Badge({ legacyComponentModel }: { legacyComponentModel: ComponentModel }) {
+          return <ComponentDeprecated deprecation={legacyComponentModel.deprecation} />;
+        },
+        weight: 40,
       },
-      weight: 40,
-    });
+    ]);
   }
 }
 
