@@ -135,7 +135,7 @@ describe('bit lane command', function () {
         importOutput = helper.command.import();
       });
       it('should indicate that there is nothing to import because the lane is new', () => {
-        expect(importOutput).to.have.string("your lane wasn't exported yet, nothing to import");
+        expect(importOutput).to.have.string('nothing to import');
       });
     });
     describe('when the lane is exported', () => {

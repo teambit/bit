@@ -1,6 +1,6 @@
 import R from 'ramda';
 
-import { ParentNotFound } from '../exceptions';
+import { ParentNotFound, VersionNotFoundOnFS } from '../exceptions';
 import { NoCommonSnap } from '../exceptions/no-common-snap';
 import { ModelComponent, Version } from '../models';
 import { Ref, Repository } from '../objects';
@@ -80,7 +80,7 @@ bit import ${modelComponent.id()} --objects`);
   }
   const remoteVersion = (await repo.load(remoteHead)) as Version;
   if (!remoteVersion) {
-    throw new Error(`getDivergeData: unable to find Version ${remoteHead.toString()} of ${modelComponent.id()}`);
+    throw new VersionNotFoundOnFS(remoteHead.toString(), modelComponent.id());
   }
   await addParentsRecursively(remoteVersion, snapsOnRemote, false);
   if (localHeadExistsRemotely) {
