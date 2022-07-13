@@ -64,6 +64,7 @@
     "e2e-test:debug": "npm run e2e-test --debug --keep-envs",
     "e2e-test-circle": "mocha --require ./babel-register --reporter mocha-circleci-reporter './e2e/**/*.e2e*.ts'",
     "performance-test": "mocha --require ./babel-register ./e2e/performance/*.performance*.ts",
+    "performance-test:debug": "npm run performance-test --debug --keep-envs",
     "performance-test-circle": "mocha --require ./babel-register --reporter mocha-circleci-reporter ./e2e/performance/*.performance*.ts",
     "bit-hub-test-circle": "mocha --require ./babel-register --reporter mocha-circleci-reporter ./e2e/bit-hub/*.ts",
     "clean": "rm -rf dist && rm -rf types",
