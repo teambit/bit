@@ -247,12 +247,24 @@ export class SnappingMain {
       const tagPendingComponents = unmodified
         ? await componentsList.listPotentialTagAllWorkspace()
         : await componentsList.listTagPendingComponents();
-      console.log('tagPendingComponents', tagPendingComponents);
       if (R.isEmpty(tagPendingComponents)) return null;
       const tagPendingComponentsIds = await workspace.resolveMultipleComponentIds(tagPendingComponents);
+      // when unmodified, we ask for all components, throw if no matching. if not unmodified and no matching, see error
+      // below, suggesting to use --unmodified flag.
+      const shouldThrowForNoMatching = unmodified;
       const componentIds = pattern
-        ? workspace.scope.filterIdsFromPoolIdsByPattern(pattern, tagPendingComponentsIds)
+        ? workspace.scope.filterIdsFromPoolIdsByPattern(pattern, tagPendingComponentsIds, shouldThrowForNoMatching)
         : tagPendingComponentsIds;
+      if (!componentIds.length && pattern) {
+        const allTagPending = await componentsList.listPotentialTagAllWorkspace();
+        if (allTagPending.length) {
+          throw new BitError(`unable to find matching for "${pattern}" pattern among modified/new components.
+there are matching among unmodified components thought. consider using --unmodified flag if needed`);
+        }
+      }
+      if (!componentIds.length) {
+        return null;
+      }
       return BitIds.fromArray(componentIds.map((c) => c._legacy));
     }
   }

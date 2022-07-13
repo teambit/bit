@@ -23,7 +23,7 @@ describe('remove lanes', function () {
       helper.command.export();
 
       helper.command.createLane();
-      helper.command.snapComponent('comp1 -f');
+      helper.command.snapComponent(`${helper.scopes.remote}/comp1 --unmodified`);
     });
     it('as an intermediate step, make sure the snapped components are part of the lane', () => {
       const lane = helper.command.showOneLaneParsed('dev');
