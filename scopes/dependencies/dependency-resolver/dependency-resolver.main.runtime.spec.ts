@@ -13,10 +13,16 @@ import path from 'path';
 import { Http } from '@teambit/legacy/dist/scope/network/http';
 import { DependencyResolverMain } from './dependency-resolver.main.runtime';
 
+const logger = {
+  debug: () => {},
+};
+
 describe('DepenendencyResolverMain.getNetworkConfig()', () => {
   const packageManagerSlot = {
     // @ts-ignore
-    get: jest.fn(),
+    get: jest.fn(() => ({
+      getNetworkConfig: () => ({}),
+    })),
   };
   it('should return settings from global config', async () => {
     const depResolver = new DependencyResolverMain(
@@ -24,7 +30,7 @@ describe('DepenendencyResolverMain.getNetworkConfig()', () => {
       {} as any,
       {} as any,
       {} as any,
-      {} as any,
+      logger as any,
       {} as any,
       {} as any,
       {} as any,
@@ -34,7 +40,6 @@ describe('DepenendencyResolverMain.getNetworkConfig()', () => {
       {} as any,
       {} as any
     );
-    packageManagerSlot.get.mockReturnValue({});
     const globalConfig = {
       fetchTimeout: 1,
       fetchRetries: 2,
@@ -54,7 +59,7 @@ describe('DepenendencyResolverMain.getNetworkConfig()', () => {
       {} as any,
       {} as any,
       {} as any,
-      {} as any,
+      logger as any,
       {} as any,
       {} as any,
       {} as any,
@@ -90,7 +95,6 @@ describe('DepenendencyResolverMain.getNetworkConfig()', () => {
       networkConcurrency: 666,
       maxSockets: 777,
     } as any;
-    packageManagerSlot.get.mockReturnValue({});
     // @ts-ignore
     Http.getNetworkConfig.mockReturnValue(Promise.resolve({}));
     const depResolver = new DependencyResolverMain(
@@ -98,7 +102,7 @@ describe('DepenendencyResolverMain.getNetworkConfig()', () => {
       {} as any,
       {} as any,
       {} as any,
-      {} as any,
+      logger as any,
       {} as any,
       {} as any,
       {} as any,
@@ -134,7 +138,7 @@ describe('DepenendencyResolverMain.getNetworkConfig()', () => {
       {} as any,
       {} as any,
       {} as any,
-      {} as any,
+      logger as any,
       {} as any,
       {} as any,
       {} as any,
@@ -170,9 +174,6 @@ describe('DepenendencyResolverMain.getNetworkConfig()', () => {
       {} as any,
       {} as any
     );
-    packageManagerSlot.get.mockReturnValue({
-      getNetworkConfig: () => {},
-    });
     // @ts-ignore
     Http.getNetworkConfig.mockReturnValue(
       Promise.resolve({
@@ -210,6 +211,7 @@ describe('DepenendencyResolverMain.getOutdatedPkgsFromPolicies()', () => {
           'component1-peer-dep3@latest': '2.0.0',
         }[spec],
       }),
+      getNetworkConfig: () => ({}),
     }),
   };
   const depResolver = new DependencyResolverMain(
@@ -229,6 +231,8 @@ describe('DepenendencyResolverMain.getOutdatedPkgsFromPolicies()', () => {
     {} as any,
     {} as any,
     {
+      // @ts-ignore
+      debug: jest.fn(),
       // @ts-ignore
       setStatusLine: jest.fn(),
       // @ts-ignore

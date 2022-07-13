@@ -9,7 +9,6 @@ export interface CompositionsCarouselProps extends SectionProps {
 }
 
 export function CompositionsCarousel({ compositions, compositionCardClass, ...rest }: CompositionsCarouselProps) {
-
   if (!compositions || Object.keys(compositions).length === 0) {
     return null;
   }

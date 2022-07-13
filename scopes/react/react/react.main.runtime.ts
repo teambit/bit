@@ -114,7 +114,7 @@ export class ReactMain {
    * use this to register apps programmatically.
    */
   async registerApp(reactApp: ReactAppOptions) {
-    return this.application.registerApp(await this.reactAppType.createApp(reactApp));
+    return this.application.registerApp(this.reactAppType.createApp(reactApp));
   }
 
   /**

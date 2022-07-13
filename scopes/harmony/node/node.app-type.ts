@@ -8,7 +8,7 @@ import type { NodeAppOptions } from './node-app-options';
 export class NodeAppType implements ApplicationType<NodeAppOptions> {
   constructor(readonly name: string, private nodeEnv: NodeEnv & ReactEnv, private logger: Logger) {}
 
-  async createApp(options: NodeAppOptions) {
+  createApp(options: NodeAppOptions) {
     return new NodeApp(
       options.name,
       options.entry,

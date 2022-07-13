@@ -7,7 +7,7 @@ import { HoverSplitter } from '@teambit/base-ui.surfaces.split-pane.hover-splitt
 import { TopBar } from '@teambit/ui-foundation.ui.top-bar';
 import { Composer, ComponentTuple } from '@teambit/base-ui.utils.composer';
 import { FullLoader } from '@teambit/ui-foundation.ui.full-loader';
-import React, { useReducer } from 'react';
+import React, { useReducer, ComponentType } from 'react';
 import { Route } from 'react-router-dom';
 import { useIsMobile } from '@teambit/ui-foundation.ui.hooks.use-is-mobile';
 import { ScopeProvider } from '@teambit/scope.ui.hooks.scope-context';
@@ -15,6 +15,7 @@ import { useScopeQuery } from '@teambit/scope.ui.hooks.use-scope';
 import { ScopeOverview } from './scope-overview';
 import styles from './scope.module.scss';
 import ScopeUI, { ScopeBadgeSlot, ScopeContextType, CornerSlot, OverviewLineSlot } from '../scope.ui.runtime';
+import { ScopeModel } from '..';
 
 export type ScopeProps = {
   routeSlot: RouteSlot;
@@ -25,7 +26,9 @@ export type ScopeProps = {
   overviewLineSlot: OverviewLineSlot;
   cornerSlot: CornerSlot;
   context: ScopeContextType[];
+  userUseScopeQuery?: () => { scope: ScopeModel|undefined }
   onSidebarTogglerChange: (callback: () => void) => void;
+  TargetCorner?: ComponentType
 };
 
 /**
@@ -40,16 +43,18 @@ export function Scope({
   overviewLineSlot,
   cornerSlot,
   context = [],
+  TargetCorner,
   onSidebarTogglerChange,
+  userUseScopeQuery,
 }: ScopeProps) {
-  const { scope } = useScopeQuery();
+  const { scope } = userUseScopeQuery ? userUseScopeQuery() : useScopeQuery();
   const isMobile = useIsMobile();
   const [isSidebarOpen, handleSidebarToggle] = useReducer((x) => !x, !isMobile);
   const sidebarOpenness = isSidebarOpen ? Layout.row : Layout.right;
   if (!scope) {
     return <FullLoader />;
   }
-  const CornerOverride = cornerSlot?.values()[0];
+  const CornerOverride = TargetCorner || cornerSlot?.values()[0];
   scopeUi.setComponents(scope.components);
   const Context = context.map((ctx) => [ctx, { scope }] as ComponentTuple);
 

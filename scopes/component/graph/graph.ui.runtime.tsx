@@ -6,6 +6,7 @@ import { ComponentAspect, ComponentUI, ComponentModel } from '@teambit/component
 import { GraphAspect } from './graph.aspect';
 import { GraphSection } from './ui/graph.section';
 import { GraphCompareSection } from './graph.compare.section';
+import { DependenciesGraph } from './ui/dependencies-graph';
 
 export interface ComponentWidgetProps extends React.HTMLAttributes<HTMLDivElement> {
   component: ComponentModel;
@@ -13,10 +14,18 @@ export interface ComponentWidgetProps extends React.HTMLAttributes<HTMLDivElemen
 export type ComponentWidget = ComponentType<ComponentWidgetProps>;
 export type ComponentWidgetSlot = SlotRegistry<ComponentWidget>;
 
+export type GraphUIConfig = {
+  componentTab: boolean;
+};
+
 /**
  * Presents dependencies graph in the component page
  */
 export class GraphUI {
+  getDependenciesGraph() {
+    return DependenciesGraph;
+  }
+
   /**
    * adds plugins to component nodes
    * @param value
@@ -29,15 +38,19 @@ export class GraphUI {
   static dependencies = [ComponentAspect, ComponentCompareAspect];
   static runtime = UIRuntime;
   static slots = [Slot.withType<ComponentWidget>()];
+  static defaultConfig = {
+    componentTab: true
+  };
+
   static async provider(
     [componentUI, componentCompare]: [ComponentUI, ComponentCompareUI],
-    config,
+    config: GraphUIConfig,
     [componentWidgetSlot]: [ComponentWidgetSlot]
   ) {
     const graphUI = new GraphUI(componentWidgetSlot);
     const section = new GraphSection(componentWidgetSlot);
     const graphSection = new GraphCompareSection();
-    componentUI.registerNavigation(section.navigationLink, section.order);
+    if (config.componentTab) componentUI.registerNavigation(section.navigationLink, section.order);
     componentUI.registerRoute(section.route);
     componentCompare.registerNavigation({
       props: graphSection.navigationLink,
