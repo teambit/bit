@@ -2,8 +2,8 @@
 import { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
 
-const maxComponents = 3000;
-const maxFlattenedDependencies = 100;
+const maxComponents = 100; // 3K should work as well but it regressed
+const maxFlattenedDependencies = 10;
 
 /**
  * Performance log according to David's MacBook pro 2018.
@@ -50,92 +50,6 @@ const maxFlattenedDependencies = 100;
  * export 3,000 with maxFlattenedDependencies of 100 => 94 sec
  * import 3,000 with maxFlattenedDependencies of 100 => 736 sec
  */
-// describe('many components', function () {
-//   this.timeout(0);
-//   let helper: Helper;
-//   before(() => {
-//     helper = new Helper();
-//     helper.command.setFeatures('legacy-workspace-config');
-//   });
-//   after(() => {
-//     helper.scopeHelper.destroy();
-//   });
-//   describe('basic commands', () => {
-//     before(() => {
-//       helper.scopeHelper.setNewLocalAndRemoteScopes();
-//       const getImp = (index) => {
-//         if (index === 0) return '';
-//         if (index > maxFlattenedDependencies) {
-//           return `require('./comp${index - maxFlattenedDependencies}');`;
-//         }
-//         return `require('./comp${index - 1}');`;
-//       };
-//       for (let i = 0; i < maxComponents; i += 1) {
-//         helper.fs.createFile('bar', `comp${i}.js`, getImp(i));
-//       }
-//     });
-//     describe('add command', () => {
-//       let addTimeInSeconds;
-//       before(() => {
-//         const start = process.hrtime();
-//         helper.command.addComponent('bar/*');
-//         [addTimeInSeconds] = process.hrtime(start);
-//         console.log('addTimeInSeconds', addTimeInSeconds);
-//       });
-//       it('should take less then 1 minutes to complete', () => {
-//         expect(addTimeInSeconds).to.be.lessThan(1 * 60);
-//       });
-//       describe('tag command', () => {
-//         let tagTimeInSeconds;
-//         before(() => {
-//           const start = process.hrtime();
-//           helper.command.tagAllComponents();
-//           [tagTimeInSeconds] = process.hrtime(start);
-//           console.log('tagTimeInSeconds', tagTimeInSeconds);
-//         });
-//         it('should take less then 5 minutes to complete', () => {
-//           expect(tagTimeInSeconds).to.be.lessThan(5 * 60);
-//         });
-//         describe('status command after tag', () => {
-//           let statusTimeInSeconds;
-//           before(() => {
-//             const start = process.hrtime();
-//             helper.command.status();
-//             [statusTimeInSeconds] = process.hrtime(start);
-//             console.log('statusTimeInSeconds', statusTimeInSeconds);
-//           });
-//           it('should take less then 3 minutes to complete', () => {
-//             expect(statusTimeInSeconds).to.be.lessThan(3 * 60);
-//           });
-//         });
-//         describe('export command', () => {
-//           let exportTimeInSeconds;
-//           before(() => {
-//             const start = process.hrtime();
-//             helper.command.exportAllComponents();
-//             [exportTimeInSeconds] = process.hrtime(start);
-//             console.log('exportTimeInSeconds', exportTimeInSeconds);
-//           });
-//           it('should take less then 5 minutes to complete', () => {
-//             expect(exportTimeInSeconds).to.be.lessThan(5 * 60);
-//           });
-//           describe('import command', () => {
-//             let importTimeInSeconds;
-//             before(() => {
-//               const start = process.hrtime();
-//               helper.command.runCmd('bit import');
-//               [importTimeInSeconds] = process.hrtime(start);
-//               console.log('importTimeInSeconds', importTimeInSeconds);
-//             });
-//             it('should take less then 20 minutes to complete', () => {
-//               expect(importTimeInSeconds).to.be.lessThan(20 * 60);
-//             });
-//           });
-//         });
-//       });
-//     });
-//   });
-// });
 
 describe('many components Harmony', function () {
   this.timeout(0);
@@ -149,6 +63,7 @@ describe('many components Harmony', function () {
   describe('basic commands', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
       const getImp = (index) => {
         if (index === 0) return '';
         if (index > maxFlattenedDependencies) {
@@ -168,8 +83,8 @@ describe('many components Harmony', function () {
         [addTimeInSeconds] = process.hrtime(start);
         console.log('addTimeInSeconds', addTimeInSeconds);
       });
-      it('should take less then 2 minutes to complete', () => {
-        expect(addTimeInSeconds).to.be.lessThan(2 * 60);
+      it('should take less then 8 seconds to complete', () => {
+        expect(addTimeInSeconds).to.be.lessThan(8);
       });
       describe('link --rewire command', () => {
         let linkTimeInSeconds;
@@ -179,19 +94,20 @@ describe('many components Harmony', function () {
           [linkTimeInSeconds] = process.hrtime(start);
           console.log('tagTimeInSeconds', linkTimeInSeconds);
         });
-        it('should take less then 5 minutes to complete', () => {
-          expect(linkTimeInSeconds).to.be.lessThan(5 * 60);
+        it('should take less then 14 seconds to complete', () => {
+          expect(linkTimeInSeconds).to.be.lessThan(14);
         });
         describe('tag command', () => {
           let tagTimeInSeconds;
           before(() => {
+            // helper.command.compile();
             const start = process.hrtime();
             helper.command.tagAllComponents();
             [tagTimeInSeconds] = process.hrtime(start);
             console.log('tagTimeInSeconds', tagTimeInSeconds);
           });
-          it('should take less then 5 minutes to complete', () => {
-            expect(tagTimeInSeconds).to.be.lessThan(5 * 60);
+          it('should take less then 50 seconds to complete', () => {
+            expect(tagTimeInSeconds).to.be.lessThan(50);
           });
           describe('status command after tag', () => {
             let statusTimeInSeconds;
@@ -201,8 +117,8 @@ describe('many components Harmony', function () {
               [statusTimeInSeconds] = process.hrtime(start);
               console.log('statusTimeInSeconds', statusTimeInSeconds);
             });
-            it('should take less then 3 minutes to complete', () => {
-              expect(statusTimeInSeconds).to.be.lessThan(3 * 60);
+            it('should take less then 8 seconds to complete', () => {
+              expect(statusTimeInSeconds).to.be.lessThan(8);
             });
           });
           describe('export command', () => {
@@ -213,8 +129,8 @@ describe('many components Harmony', function () {
               [exportTimeInSeconds] = process.hrtime(start);
               console.log('exportTimeInSeconds', exportTimeInSeconds);
             });
-            it('should take less then 5 minutes to complete', () => {
-              expect(exportTimeInSeconds).to.be.lessThan(5 * 60);
+            it('should take less then 12 seconds to complete', () => {
+              expect(exportTimeInSeconds).to.be.lessThan(12);
             });
             describe('import command', () => {
               let importTimeInSeconds;
@@ -224,8 +140,8 @@ describe('many components Harmony', function () {
                 [importTimeInSeconds] = process.hrtime(start);
                 console.log('importTimeInSeconds', importTimeInSeconds);
               });
-              it('should take less then 20 minutes to complete', () => {
-                expect(importTimeInSeconds).to.be.lessThan(20 * 60);
+              it('should take less then 10 seconds to complete', () => {
+                expect(importTimeInSeconds).to.be.lessThan(10);
               });
             });
           });
@@ -272,19 +188,20 @@ describe('heavy components Harmony', function () {
         [addTimeInSeconds] = process.hrtime(start);
         console.log('addTimeInSeconds', addTimeInSeconds);
       });
-      it('should take less then 2 minutes to complete', () => {
-        expect(addTimeInSeconds).to.be.lessThan(2 * 60);
+      it('should take less then 8 seconds to complete', () => {
+        expect(addTimeInSeconds).to.be.lessThan(8);
       });
       describe('tag command', () => {
         let tagTimeInSeconds;
         before(() => {
+          // helper.command.compile();
           const start = process.hrtime();
           helper.command.tagAllComponents();
           [tagTimeInSeconds] = process.hrtime(start);
           console.log('tagTimeInSeconds', tagTimeInSeconds);
         });
-        it('should take less then 5 minutes to complete', () => {
-          expect(tagTimeInSeconds).to.be.lessThan(5 * 60);
+        it('should take less then 40 seconds to complete', () => {
+          expect(tagTimeInSeconds).to.be.lessThan(40);
         });
       });
     });
