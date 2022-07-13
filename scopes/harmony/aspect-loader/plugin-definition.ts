@@ -12,5 +12,5 @@ export interface PluginDefinition {
   /**
    * register the plugin to its slot registry.
    */
-  register<T>(object: T): Promise<void>;
+  register<T>(object: T): void;
 }
