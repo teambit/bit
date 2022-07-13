@@ -37,7 +37,7 @@ type Property = {
   default: {
     value: string;
   };
-}
+};
 
 type DocsItem = {
   abstract: string;

@@ -816,6 +816,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
    * @param forCapsule
    */
   async importAndGetMany(ids: Array<ComponentID>, forCapsule = false): Promise<Component[]> {
+    await this.importCurrentLaneIfMissing();
     await this.scope.import(ids, { reFetchUnBuiltVersion: shouldReFetchUnBuiltVersion() });
     return this.componentLoader.getMany(ids, forCapsule);
   }

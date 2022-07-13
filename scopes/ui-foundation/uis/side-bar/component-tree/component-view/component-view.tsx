@@ -52,7 +52,7 @@ export function ComponentView(props: ComponentViewProps<PayloadType>) {
 
   return (
     <Link
-      href={`/${component.id.fullName}`}
+      href={`${component.id.fullName}`}
       className={classNames(indentClass, styles.component)}
       activeClassName={styles.active}
       onClick={handleClick}
