@@ -165,7 +165,7 @@ describe('bit snap command', function () {
       helper.command.export();
       scopeAfterFirstSnap = helper.scopeHelper.cloneLocalScope();
       helper.fixtures.createComponentBarFoo(fixtures.fooFixtureV2);
-      helper.command.snapComponent(`${helper.scopes.remote}/bar/foo`);
+      helper.command.snapComponent('bar/foo');
       secondSnap = helper.command.getHead('bar/foo');
       helper.command.export();
     });
@@ -455,7 +455,7 @@ describe('bit snap command', function () {
             expect(output).to.have.string('nothing to tag');
           });
           it('should block snapping the component', () => {
-            const output = helper.general.runWithTryCatch('bit snap bar/foo');
+            const output = helper.general.runWithTryCatch('bit snap bar/foo --unmodified');
             expect(output).to.have.string('unable to snap/tag "bar/foo", it is unmerged with conflicts');
           });
         });

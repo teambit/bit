@@ -251,9 +251,19 @@ export class SnappingMain {
       // when unmodified, we ask for all components, throw if no matching. if not unmodified and no matching, see error
       // below, suggesting to use --unmodified flag.
       const shouldThrowForNoMatching = unmodified;
-      const componentIds = pattern
-        ? workspace.scope.filterIdsFromPoolIdsByPattern(pattern, tagPendingComponentsIds, shouldThrowForNoMatching)
-        : tagPendingComponentsIds;
+      const getCompIds = async () => {
+        if (!pattern) return tagPendingComponentsIds;
+        if (!pattern.includes('*') && !pattern.includes(',')) {
+          const compId = await workspace.resolveComponentId(pattern);
+          return [compId];
+        }
+        return workspace.scope.filterIdsFromPoolIdsByPattern(
+          pattern,
+          tagPendingComponentsIds,
+          shouldThrowForNoMatching
+        );
+      };
+      const componentIds = await getCompIds();
       if (!componentIds.length && pattern) {
         const allTagPending = await componentsList.listPotentialTagAllWorkspace();
         if (allTagPending.length) {
