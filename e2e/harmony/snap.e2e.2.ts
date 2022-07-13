@@ -223,7 +223,7 @@ describe('bit snap command', function () {
       before(() => {
         helper.scopeHelper.getClonedLocalScope(scopeAfterFirstSnap);
         helper.fixtures.createComponentBarFoo(fixtures.fooFixtureV3);
-        helper.command.snapComponent('bar/foo');
+        helper.command.snapAllComponentsWithoutBuild();
         localHead = helper.command.getHead('bar/foo');
         localScope = helper.scopeHelper.cloneLocalScope();
       });
