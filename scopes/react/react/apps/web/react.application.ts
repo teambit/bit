@@ -16,7 +16,7 @@ import { computeResults } from './compute-results';
 export class ReactApp implements Application {
   constructor(
     readonly name: string,
-    readonly entry: string[],
+    readonly entry: string[] | (() => Promise<string[]>),
     readonly portRange: number[],
     private reactEnv: ReactEnv,
     readonly prerender?: ReactAppPrerenderOptions,
@@ -89,7 +89,8 @@ export class ReactApp implements Application {
     const publicDir = this.getPublicDir(context.artifactsDir);
     const outputPath = join(capsule.path, publicDir);
     const { distDir } = reactEnv.getCompiler();
-    const entries = this.entry.map((entry) => require.resolve(`${capsule.path}/${distDir}/${basename(entry)}`));
+    const targetEntries = Array.isArray(this.entry) ? this.entry : await this.entry();
+    const entries = targetEntries.map((entry) => require.resolve(`${capsule.path}/${distDir}/${basename(entry)}`));
     const staticDir = join(outputPath, this.dir);
 
     const bundlerContext: BundlerContext = Object.assign(context, {
@@ -185,9 +186,15 @@ export class ReactApp implements Application {
     return join(artifactsDir, this.applicationType, this.name);
   }
 
+  async getEntries(): Promise<string[]> {
+    if (Array.isArray(this.entry)) return this.entry;
+    return this.entry();
+  }
+
   private async getDevServerContext(context: AppContext): Promise<DevServerContext> {
+    const entries = await this.getEntries();
     return Object.assign(context, {
-      entry: this.entry,
+      entry: entries,
       rootPath: '',
       publicPath: `public/${this.name}`,
       title: this.name,

@@ -13,18 +13,22 @@ export type Component = {
 export type UseComponentOptions = {
   version?: string;
   logFilters?: Filters;
+  customUseComponent?: UseComponentType;
 };
+
+export type UseComponentType = (id: string, host: string, filters?: Filters) => Component;
 
 export function useComponent(host: string, id?: string, options?: UseComponentOptions): Component {
   const query = useQuery();
-  const { version, logFilters } = options || {};
+  const { version, logFilters, customUseComponent } = options || {};
   const componentVersion = (version || query.get('version')) ?? undefined;
 
   if (!id) throw new TypeError('useComponent received no component id');
 
   const componentIdStr = withVersion(id, componentVersion);
+  const targetUseComponent = customUseComponent || useComponentQuery;
 
-  return useComponentQuery(componentIdStr, host, logFilters);
+  return targetUseComponent(componentIdStr, host, logFilters);
 }
 
 function withVersion(id: string, version?: string) {

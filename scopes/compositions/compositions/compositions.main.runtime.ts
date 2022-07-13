@@ -1,5 +1,5 @@
 import { MainRuntime } from '@teambit/cli';
-import { AspectData, Component, ComponentAspect, ComponentMap } from '@teambit/component';
+import { AspectData, Component, ComponentAspect, ComponentMap, IComponent } from '@teambit/component';
 import { DevFilesAspect, DevFilesMain } from '@teambit/dev-files';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
@@ -89,8 +89,8 @@ export class CompositionsMain {
   /**
    * get component compositions.
    */
-  getCompositions(component: Component): Composition[] {
-    const entry = component.state.aspects.get(CompositionsAspect.id);
+  getCompositions(component: IComponent): Composition[] {
+    const entry = component.get(CompositionsAspect.id);
     if (!entry) return [];
     const compositions = entry.data.compositions;
     if (!compositions) return [];

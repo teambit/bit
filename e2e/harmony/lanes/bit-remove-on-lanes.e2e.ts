@@ -73,4 +73,19 @@ describe('bit lane command', function () {
       expect(bitMap).to.not.have.property('comp1');
     });
   });
+  describe('remove a non-lane component when on a lane', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents(1);
+      helper.command.tagWithoutBuild();
+      helper.command.export();
+      helper.command.createLane();
+      helper.command.removeComponent('comp1');
+    });
+    it('should remove the component from the .bitmap file', () => {
+      const bitMap = helper.bitMap.read();
+      expect(bitMap).to.not.have.property('comp1');
+    });
+  });
 });

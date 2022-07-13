@@ -3,8 +3,10 @@ import { getHarmonyVersion } from '@teambit/legacy/dist/bootstrap';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { MainRuntime } from '@teambit/cli';
 import { ExpressAspect, ExpressMain } from '@teambit/express';
+import GraphqlAspect, { GraphqlMain } from '@teambit/graphql';
 import { DiagnosticAspect } from './diagnostic.aspect';
 import { DiagnosticRoute } from './diagnostic.route';
+import { DiagnosticGraphql } from './diagnostic.graphql';
 import { Diagnostic } from './diagnostic';
 
 export type DiagnosticSlot = SlotRegistry<Diagnostic[]>;
@@ -15,7 +17,7 @@ export class DiagnosticMain {
     private diagnosticSlot: DiagnosticSlot
   ) {}
   static slots = [Slot.withType<Diagnostic[]>()];
-  static dependencies = [ExpressAspect];
+  static dependencies = [ExpressAspect, GraphqlAspect];
   static runtime = MainRuntime;
 
   register(...diagnostic: Diagnostic[]) {
@@ -40,10 +42,15 @@ export class DiagnosticMain {
     return { version };
   }
 
-  static async provider([express]: [ExpressMain], config: any, [diagnosticSlot]: [DiagnosticSlot]) {
+  static async provider(
+    [express, graphql]: [ExpressMain, GraphqlMain],
+    config: any,
+    [diagnosticSlot]: [DiagnosticSlot]
+  ) {
     const diagnosticMain = new DiagnosticMain(diagnosticSlot);
     diagnosticMain.register({ diagnosticFn: DiagnosticMain.getBitVersion });
     express.register([new DiagnosticRoute(diagnosticMain)]);
+    graphql.register(new DiagnosticGraphql(diagnosticMain));
     return diagnosticMain;
   }
 }
