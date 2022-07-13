@@ -538,7 +538,7 @@ export class Http implements Network {
   }
 
   private getClientVersion(): string {
-    return getHarmonyVersion();
+    return getHarmonyVersion(true);
   }
 
   private addAgentIfExist(opts: { [key: string]: any } = {}): Record<string, any> {

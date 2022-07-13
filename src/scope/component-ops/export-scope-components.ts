@@ -165,11 +165,17 @@ export async function exportMany({
       throw new PersistFailed(failedScopes, errors);
     }
     const exportedBitIds = successIds.map((id) => BitId.parse(id, true));
-    manyObjectsPerRemote.forEach((objectPerRemote) => {
-      const idsPerScope = exportedBitIds.filter((id) => id.scope === objectPerRemote.remote.name);
-      // it's possible that idsPerScope is an empty array, in case the objects were exported already before
-      objectPerRemote.exportedIds = idsPerScope.map((id) => id.toString());
-    });
+    if (manyObjectsPerRemote.length === 1) {
+      // when on a lane, it's always exported to the lane. and the ids can be from different scopes, so having the
+      // filter below, will remove these components from the output of bit-export at the end.
+      manyObjectsPerRemote[0].exportedIds = exportedBitIds.map((id) => id.toString());
+    } else {
+      manyObjectsPerRemote.forEach((objectPerRemote) => {
+        const idsPerScope = exportedBitIds.filter((id) => id.scope === objectPerRemote.remote.name);
+        // it's possible that idsPerScope is an empty array, in case the objects were exported already before
+        objectPerRemote.exportedIds = idsPerScope.map((id) => id.toString());
+      });
+    }
   }
 
   /**

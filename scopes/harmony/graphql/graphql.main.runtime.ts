@@ -84,7 +84,7 @@ export class GraphqlMain {
   /**
    * returns the schema for a specific aspect by its id.
    */
-   getSchema(aspectId: string) {
+  getSchema(aspectId: string) {
     return this.moduleSlot.get(aspectId);
   }
 
@@ -92,12 +92,13 @@ export class GraphqlMain {
    * get multiple schema by aspect ids.
    */
   getSchemas(aspectIds: string[]) {
-    return this.moduleSlot.toArray()
+    return this.moduleSlot
+      .toArray()
       .filter(([aspectId]) => {
         return aspectIds.includes(aspectId);
       })
       .map(([, schema]) => {
-        return schema
+        return schema;
       });
   }
 

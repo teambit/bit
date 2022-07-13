@@ -70,7 +70,7 @@ export type ReactAppOptions = {
   /**
    * path to entry files of the application.
    */
-  entry: string[]|(() => Promise<string[]>);
+  entry: string[] | (() => Promise<string[]>);
 
   /**
    * use server-side rendering for the app.
