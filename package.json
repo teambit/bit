@@ -183,6 +183,7 @@
     "pad-right": "0.2.2",
     "parse-gitignore": "1.0.1",
     "pino": "6.11.1",
+     "pino-pretty": "4.5.0",
     "prettier": "2.3.2",
     "prompt": "1.1.0",
     "ramda": "0.27.1",
