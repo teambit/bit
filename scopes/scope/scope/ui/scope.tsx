@@ -26,9 +26,9 @@ export type ScopeProps = {
   overviewLineSlot: OverviewLineSlot;
   cornerSlot: CornerSlot;
   context: ScopeContextType[];
-  userUseScopeQuery?: () => { scope: ScopeModel|undefined }
+  userUseScopeQuery?: () => { scope: ScopeModel | undefined };
   onSidebarTogglerChange: (callback: () => void) => void;
-  TargetCorner?: ComponentType
+  TargetCorner?: ComponentType;
 };
 
 /**

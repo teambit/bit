@@ -248,7 +248,7 @@ export function useComponentQuery(componentId: string, host: string, filters?: F
         return {
           ...aspectObject,
           aspectId: aspectObject.id,
-          aspectData: aspectObject.data
+          aspectData: aspectObject.data,
         };
       }),
     };
