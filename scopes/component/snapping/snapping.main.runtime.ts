@@ -199,7 +199,6 @@ export class SnappingMain {
   }): Promise<SnapResults | null> {
     if (!this.workspace) throw new ConsumerNotFound();
     if (pattern && legacyBitIds) throw new Error(`please pass either pattern or legacyBitIds, not both`);
-    console.log('🚀 ~ file: snapping.main.runtime.ts ~ line 202 ~ SnappingMain ~ legacyBitIds', legacyBitIds);
     const consumer: Consumer = this.workspace.consumer;
     const componentsList = new ComponentsList(consumer);
     const newComponents = (await componentsList.listNewComponents()) as BitIds;
