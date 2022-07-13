@@ -38,8 +38,8 @@ export class WorkspaceUIRoot implements UIRoot {
     launchBrowserOnStart: true,
   };
 
-  async resolveAspects(runtimeName: string) {
-    return this.workspace.resolveAspects(runtimeName);
+  async resolveAspects(runtimeName: string, componentIds?: ComponentID[]) {
+    return this.workspace.resolveAspects(runtimeName, componentIds);
   }
 
   // TODO: @gilad please implement with variants.

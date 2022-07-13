@@ -1,5 +1,7 @@
 import { BuildContext, BuiltTaskResult, BuildTask, TaskResultsList } from '@teambit/builder';
 import { Capsule } from '@teambit/isolator';
+import { hardLinkDirectory } from '@teambit/toolbox.fs.hard-link-directory';
+import { DependencyResolverMain } from '@teambit/dependency-resolver';
 import fs from 'fs-extra';
 import path from 'path';
 
@@ -10,7 +12,12 @@ import { Compiler } from './types';
  */
 export class CompilerTask implements BuildTask {
   readonly description = 'compile components';
-  constructor(readonly aspectId: string, readonly name: string, private compilerInstance: Compiler) {
+  constructor(
+    readonly aspectId: string,
+    readonly name: string,
+    private compilerInstance: Compiler,
+    private dependencyResolver: DependencyResolverMain
+  ) {
     if (compilerInstance.artifactName) {
       this.description += ` for artifact ${compilerInstance.artifactName}`;
     }
@@ -28,7 +35,30 @@ export class CompilerTask implements BuildTask {
 
   async execute(context: BuildContext): Promise<BuiltTaskResult> {
     const buildResults = await this.compilerInstance.build(context);
+    await this._hardLinkBuildArtifactsOnCapsules(context);
     return buildResults;
+  }
+
+  /**
+   * This function hard links the compiled artifacts to the `node_modules` of other component capsules.
+   * For instance, if we have a `button` component that is a dependency of the `card` component,
+   * then the `dist` folder of the `button` component will be copied to `<card_capsule>/node_modules/button/dist`.
+   */
+  private async _hardLinkBuildArtifactsOnCapsules(context: BuildContext): Promise<void> {
+    await Promise.all(
+      context.capsuleNetwork.seedersCapsules.map(async (capsule) => {
+        const relCompDir = path.relative(context.capsuleNetwork.capsulesRootDir, capsule.path).replace(/\\/g, '/');
+        const injectedDirs = await this.dependencyResolver.getInjectedDirs(
+          context.capsuleNetwork.capsulesRootDir,
+          relCompDir,
+          this.dependencyResolver.getPackageName(capsule.component)
+        );
+        return hardLinkDirectory(
+          capsule.path,
+          injectedDirs.map((injectedDir) => path.join(context.capsuleNetwork.capsulesRootDir, injectedDir))
+        );
+      })
+    );
   }
 
   async postBuild?(context: BuildContext, tasksResults: TaskResultsList): Promise<void> {

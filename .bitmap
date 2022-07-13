@@ -477,6 +477,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/defender/formatter"
     },
+    "fs/hard-link-directory": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/toolbox/fs/hard-link-directory"
+    },
     "generator": {
         "scope": "teambit.generator",
         "version": "0.0.786",

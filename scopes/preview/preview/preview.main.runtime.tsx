@@ -7,7 +7,7 @@ import { Component, ComponentAspect, ComponentMain, ComponentMap, ComponentID } 
 import { EnvsAspect } from '@teambit/envs';
 import type { EnvsMain, ExecutionContext, PreviewEnv } from '@teambit/envs';
 import { Slot, SlotRegistry, Harmony } from '@teambit/harmony';
-import { UIAspect, UiMain } from '@teambit/ui';
+import { UIAspect, UiMain, UIRoot } from '@teambit/ui';
 import { CACHE_ROOT } from '@teambit/legacy/dist/constants';
 import { BitError } from '@teambit/bit-error';
 import objectHash from 'object-hash';
@@ -348,7 +348,7 @@ export class PreviewMain {
         const environment = this.envs.getEnv(component).env;
         const compilerInstance = environment.getCompiler?.();
         const modulePath =
-          compilerInstance?.getPreviewComponentRootPath?.(component) || this.pkg.getModulePath(component);
+          compilerInstance?.getPreviewComponentRootPath?.(component) || this.pkg.getRuntimeModulePath(component);
         return files.map((file) => {
           if (!this.workspace || !compilerInstance) {
             return file.path;
@@ -370,13 +370,28 @@ export class PreviewMain {
   }
 
   async writePreviewRuntime(context: { components: Component[] }, aspectsIdsToNotFilterOut: string[] = []) {
-    const ui = this.ui.getUi();
-    if (!ui) throw new Error('ui not found');
-    const [name, uiRoot] = ui;
-    const resolvedAspects = await uiRoot.resolveAspects(PreviewRuntime.name);
+    const [name, uiRoot] = this.getUi();
+    const resolvedAspects = await this.resolveAspects(PreviewRuntime.name, undefined, uiRoot);
     const filteredAspects = this.filterAspectsByExecutionContext(resolvedAspects, context, aspectsIdsToNotFilterOut);
     const filePath = await this.ui.generateRoot(filteredAspects, name, 'preview', PreviewAspect.id);
     return filePath;
+  }
+
+  async resolveAspects(
+    runtimeName?: string,
+    componentIds?: ComponentID[],
+    uiRoot?: UIRoot
+  ): Promise<AspectDefinition[]> {
+    const root = uiRoot || this.getUi()[1];
+    runtimeName = runtimeName || MainRuntime.name;
+    const resolvedAspects = await root.resolveAspects(runtimeName, componentIds);
+    return resolvedAspects;
+  }
+
+  private getUi() {
+    const ui = this.ui.getUi();
+    if (!ui) throw new Error('ui not found');
+    return ui;
   }
 
   /**

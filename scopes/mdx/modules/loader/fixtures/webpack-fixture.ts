@@ -19,11 +19,11 @@ export async function bundleFixture(fixturePath: string) {
           test: /\.mdx?$/,
           use: [
             {
-              loader: 'babel-loader',
+              loader: require.resolve('babel-loader'),
               options: {
                 babelrc: false,
                 configFile: false,
-                presets: ['@babel/preset-env', '@babel/preset-react']
+                presets: [require.resolve('@babel/preset-env'), require.resolve('@babel/preset-react')]
               }
             },
             {

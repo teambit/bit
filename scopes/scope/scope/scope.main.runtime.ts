@@ -481,6 +481,7 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
           copyPeerToRuntimeOnRoot: true,
           dedupe: false,
           packageManagerConfigRootDir: opts?.packageManagerConfigRootDir,
+          useNesting: true,
         },
       },
       this.legacyScope
@@ -629,7 +630,7 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
         // "No matching version found for <some-component-on-the-workspace>"
         seedersOnly: true,
         includeFromNestedHosts: true,
-        installOptions: { copyPeerToRuntimeOnRoot: true, dedupe: false },
+        installOptions: { copyPeerToRuntimeOnRoot: true, dedupe: false, useNesting: true },
         host: this,
       },
       this.legacyScope
@@ -649,7 +650,14 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
   }
 
   async resolveAspects(runtimeName?: string, componentIds?: ComponentID[]): Promise<AspectDefinition[]> {
-    const userAspectsIds = componentIds || (await this.resolveMultipleComponentIds(this.aspectLoader.getUserAspects()));
+    const coreAspectsIds = this.aspectLoader.getCoreAspectIds();
+    let userAspectsIds;
+    if (componentIds && componentIds.length) {
+      userAspectsIds = componentIds.filter((id) => !coreAspectsIds.includes(id.toString()));
+    } else {
+      userAspectsIds = await this.resolveMultipleComponentIds(this.aspectLoader.getUserAspects());
+    }
+
     const withoutLocalAspects = userAspectsIds.filter((aspectId) => {
       return !this.localAspects.find((localAspect) => {
         return localAspect.includes(aspectId.fullName.replace('/', '.'));
@@ -665,6 +673,17 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
     if (runtimeName) {
       defs = defs.filter((def) => def.runtimePath);
     }
+
+    if (componentIds && componentIds.length) {
+      const componentIdsString = componentIds.map((id) => id.toString());
+      defs = defs.filter((def) => {
+        return (
+          (def.id && componentIdsString.includes(def.id)) ||
+          (def.component && componentIdsString.includes(def.component?.id.toString()))
+        );
+      });
+    }
+
     return defs;
   }
 

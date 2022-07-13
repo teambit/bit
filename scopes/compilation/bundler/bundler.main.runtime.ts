@@ -1,9 +1,9 @@
 import PubsubAspect, { PubsubMain } from '@teambit/pubsub';
 import { MainRuntime } from '@teambit/cli';
 import { Component, ComponentAspect } from '@teambit/component';
+import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
-import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { BrowserRuntime } from './browser-runtime';
 import { BundlerAspect } from './bundler.aspect';

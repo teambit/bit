@@ -1477,7 +1477,7 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
     const wsComponents = await this.getMany(workspaceIds);
     const aspectDefs = await this.aspectLoader.resolveAspects(wsComponents, async (component) => {
       stringIds.push(component.id._legacy.toString());
-      const localPath = this.getComponentPackagePath(component.state._consumer);
+      const localPath = this.getComponentPackagePath(component);
       const isExist = await fs.pathExists(localPath);
       if (!isExist) {
         missingPaths = true;
@@ -1528,6 +1528,16 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
     let defs = uniqDefs;
     if (runtimeName) {
       defs = defs.filter((def) => def.runtimePath);
+    }
+
+    if (componentIds && componentIds.length) {
+      const componentIdsString = componentIds.map((id) => id.toString());
+      defs = defs.filter((def) => {
+        return (
+          (def.id && componentIdsString.includes(def.id)) ||
+          (def.component && componentIdsString.includes(def.component?.id.toString()))
+        );
+      });
     }
 
     return defs;
@@ -1819,6 +1829,18 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
       `installing dependencies in workspace using ${chalk.cyan(this.dependencyResolver.getPackageManagerName())}`
     );
     this.logger.debug(`installing dependencies in workspace with options`, options);
+    const hasRootComponents = this.dependencyResolver.hasRootComponents();
+    // TODO: this make duplicate
+    // this.logger.consoleSuccess();
+    // TODO: add the links results to the output
+    await this.link({
+      linkTeambitBit: true,
+      legacyLink: true,
+      linkCoreAspects: false,
+      linkDepsResolvedFromEnv: !hasRootComponents,
+      linkNestedDepsInNM: false,
+    });
+    this.consumer.componentLoader.clearComponentsCache();
     this.clearCache();
     // TODO: pass get install options
     const installer = this.dependencyResolver.getInstaller({});
@@ -1828,21 +1850,21 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
     const depsFilterFn = await this.generateFilterFnForDepsFromLocalRemote();
 
     const pmInstallOptions: PackageManagerInstallOptions = {
-      dedupe: options?.dedupe,
+      dedupe: !hasRootComponents && options?.dedupe,
       copyPeerToRuntimeOnRoot: options?.copyPeerToRuntimeOnRoot ?? true,
       copyPeerToRuntimeOnComponents: options?.copyPeerToRuntimeOnComponents ?? false,
       dependencyFilterFn: depsFilterFn,
       overrides: this.dependencyResolver.config.overrides,
+      packageImportMethod: this.dependencyResolver.config.packageImportMethod,
+      rootComponents: hasRootComponents,
     };
     await installer.install(this.path, mergedRootPolicy, compDirMap, { installTeambitBit: false }, pmInstallOptions);
-    // TODO: this make duplicate
-    // this.logger.consoleSuccess();
-    // TODO: add the links results to the output
     await this.link({
-      linkTeambitBit: true,
+      linkTeambitBit: false,
       legacyLink: true,
       linkCoreAspects: true,
-      linkNestedDepsInNM: !this.isLegacy,
+      linkDepsResolvedFromEnv: !hasRootComponents,
+      linkNestedDepsInNM: !this.isLegacy && !hasRootComponents,
     });
     await this.consumer.componentFsCache.deleteAllDependenciesDataCache();
     return compDirMap;
@@ -1971,11 +1993,9 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
     this.clearCache();
   }
 
-  getComponentPackagePath(component: ConsumerComponent | Component) {
-    const packageName = componentIdToPackageName(
-      component instanceof ConsumerComponent ? component : component.state._consumer
-    );
-    return path.join(this.modulesPath, packageName);
+  getComponentPackagePath(component: Component) {
+    const relativePath = this.dependencyResolver.getRuntimeModulePath(component);
+    return path.join(this.path, relativePath);
   }
 
   // TODO: should we return here the dir as it defined (aka components) or with /{name} prefix (as it used in legacy)
