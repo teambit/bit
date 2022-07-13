@@ -2,20 +2,25 @@ import chalk from 'chalk';
 import { IssuesClasses } from '@teambit/component-issues';
 import { Command, CommandOptions } from '@teambit/cli';
 import { isFeatureEnabled, BUILD_ON_CI } from '@teambit/legacy/dist/api/consumer/lib/feature-toggle';
-import { WILDCARD_HELP, NOTHING_TO_SNAP_MSG, AUTO_SNAPPED_MSG } from '@teambit/legacy/dist/constants';
+import {
+  WILDCARD_HELP,
+  NOTHING_TO_SNAP_MSG,
+  AUTO_SNAPPED_MSG,
+  COMPONENT_PATTERN_HELP,
+} from '@teambit/legacy/dist/constants';
 import { BitError } from '@teambit/bit-error';
 import { Logger } from '@teambit/logger';
 import { SnapResults } from '@teambit/legacy/dist/api/consumer/lib/snap';
 import { SnappingMain } from './snapping.main.runtime';
 
 export class SnapCmd implements Command {
-  name = 'snap [component-name]';
+  name = 'snap [component-pattern]';
   description = 'EXPERIMENTAL. create an immutable and exportable component snapshot (no release version)';
   extendedDescription: string;
   arguments = [
     {
-      name: 'component_name',
-      description: 'component names or component ID (defaults to all components)',
+      name: 'component-pattern',
+      description: `${COMPONENT_PATTERN_HELP}. By default, all new and modified components are snapped.`,
     },
   ];
   alias = '';
@@ -51,7 +56,7 @@ ${WILDCARD_HELP('snap')}`;
   }
 
   async report(
-    [id]: string[],
+    [pattern]: string[],
     {
       message = '',
       all = false,
@@ -91,7 +96,7 @@ ${WILDCARD_HELP('snap')}`;
       this.logger.consoleWarning(
         `--force is deprecated, use either --skip-tests or --unmodified depending on the use case`
       );
-      if (id) unmodified = true;
+      if (pattern) unmodified = true;
     }
     if (!message) {
       this.logger.consoleWarning(
@@ -100,7 +105,7 @@ ${WILDCARD_HELP('snap')}`;
     }
 
     const results = await this.snapping.snap({
-      id,
+      pattern,
       message,
       ignoreIssues,
       build,
