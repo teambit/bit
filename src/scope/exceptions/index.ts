@@ -17,6 +17,7 @@ import ScopeNotFound from './scope-not-found';
 import SourceNotFound from './source-not-found';
 import VersionAlreadyExists from './version-already-exists';
 import VersionNotFound from './version-not-found';
+import { VersionNotFoundOnFS } from './version-not-found-on-fs';
 
 export {
   ScopeNotFound,
@@ -38,4 +39,5 @@ export {
   InvalidIndexJson,
   OutdatedIndexJson,
   HeadNotFound,
+  VersionNotFoundOnFS,
 };
