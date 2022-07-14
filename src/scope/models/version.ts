@@ -19,6 +19,7 @@ import { ObjectItem } from '../objects/object-list';
 import Repository from '../objects/repository';
 import validateVersionInstance from '../version-validator';
 import Source from './source';
+import { getHarmonyVersion } from '../../bootstrap';
 
 export type SourceFileModel = {
   name: string;
@@ -65,6 +66,7 @@ export type VersionProps = {
   extensions?: ExtensionDataList;
   buildStatus?: BuildStatus;
   componentId?: BitId;
+  bitVersion?: string;
 };
 
 /**
@@ -92,6 +94,7 @@ export default class Version extends BitObject {
   extensions: ExtensionDataList;
   buildStatus?: BuildStatus;
   componentId?: BitId; // can help debugging errors when validating Version object
+  bitVersion?: string;
 
   constructor(props: VersionProps) {
     super();
@@ -116,6 +119,7 @@ export default class Version extends BitObject {
     this.extensions = props.extensions || ExtensionDataList.fromArray([]);
     this.buildStatus = props.buildStatus;
     this.componentId = props.componentId;
+    this.bitVersion = props.bitVersion;
     this.validateVersion();
   }
 
@@ -326,6 +330,7 @@ export default class Version extends BitObject {
         packageJsonChangedProps: this.packageJsonChangedProps,
         parents: this.parents.map((p) => p.toString()),
         squashed: this.squashed?.map((s) => s.toString()),
+        bitVersion: this.bitVersion,
       },
       (val) => !!val
     );
@@ -369,6 +374,7 @@ export default class Version extends BitObject {
       buildStatus,
       parents,
       squashed,
+      bitVersion,
     } = contentParsed;
 
     const _getDependencies = (deps = []): Dependency[] => {
@@ -469,6 +475,7 @@ export default class Version extends BitObject {
       squashed: squashed ? squashed.map((s) => Ref.from(s)) : undefined,
       extensions: _getExtensions(extensions),
       buildStatus,
+      bitVersion,
     });
   }
 
@@ -514,6 +521,7 @@ export default class Version extends BitObject {
       extensions: component.extensions,
       buildStatus: component.buildStatus,
       componentId: component.id,
+      bitVersion: getHarmonyVersion(true),
     });
     if (isHash(component.version)) {
       version._hash = component.version as string;
