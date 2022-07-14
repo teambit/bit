@@ -238,7 +238,7 @@ export default async function tagModelComponent({
     await addFlattenedDependenciesToComponents(consumer.scope, allComponentsToTag);
     emptyBuilderData(allComponentsToTag);
     addBuildStatus(allComponentsToTag, BuildStatus.Pending);
-    await addComponentsToScope(consumer, allComponentsToTag, Boolean(resolveUnmerged));
+    await addComponentsToScope(consumer, allComponentsToTag, Boolean(resolveUnmerged), build);
     await consumer.updateComponentsVersions(allComponentsToTag);
   }
 
@@ -262,7 +262,12 @@ export default async function tagModelComponent({
   return { taggedComponents: componentsToTag, autoTaggedResults: autoTagData, publishedPackages };
 }
 
-async function addComponentsToScope(consumer: Consumer, components: Component[], resolveUnmerged: boolean) {
+async function addComponentsToScope(
+  consumer: Consumer,
+  components: Component[],
+  resolveUnmerged: boolean,
+  shouldValidateVersion: boolean
+) {
   const lane = await consumer.getCurrentLaneObject();
   await mapSeries(components, async (component) => {
     await consumer.scope.sources.addSource({
@@ -270,6 +275,7 @@ async function addComponentsToScope(consumer: Consumer, components: Component[],
       consumer,
       lane,
       resolveUnmerged,
+      shouldValidateVersion,
     });
   });
 }
