@@ -11,6 +11,7 @@ import { ScopeAspect, ScopeMain, OnTagResults } from '@teambit/scope';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { IsolateComponentsOptions, IsolatorAspect, IsolatorMain } from '@teambit/isolator';
 import { OnTagOpts } from '@teambit/legacy/dist/scope/scope';
+import { getHarmonyVersion } from '@teambit/legacy/dist/bootstrap';
 import findDuplications from '@teambit/legacy/dist/utils/array/find-duplications';
 import { ArtifactFiles, ArtifactObject } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
 import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
@@ -35,6 +36,7 @@ export type BuilderData = {
   pipeline: PipelineReport[];
   artifacts: ArtifactObject[] | undefined;
   aspectsData: AspectData[];
+  bitVersion?: string;
 };
 
 export class BuilderMain {
@@ -77,7 +79,7 @@ export class BuilderMain {
       const aspectsData = buildPipelineResultList.getDataOfComponent(component.id);
       const pipelineReport = buildPipelineResultList.getPipelineReportOfComponent(component.id);
       const artifactsData = buildPipelineResultList.getArtifactsDataOfComponent(component.id);
-      return { pipeline: pipelineReport, artifacts: artifactsData, aspectsData };
+      return { pipeline: pipelineReport, artifacts: artifactsData, aspectsData, bitVersion: getHarmonyVersion(true) };
     });
   }
 

@@ -67,7 +67,11 @@ export class LaneSwitcher {
     }
     const failedComponents: FailedComponents[] = allComponentsStatus
       .filter((componentStatus) => componentStatus.failureMessage)
-      .map((componentStatus) => ({ id: componentStatus.id, failureMessage: componentStatus.failureMessage as string }));
+      .map((componentStatus) => ({
+        id: componentStatus.id,
+        failureMessage: componentStatus.failureMessage as string,
+        unchangedLegitimately: componentStatus.unchangedLegitimately,
+      }));
 
     const succeededComponents = allComponentsStatus.filter((componentStatus) => !componentStatus.failureMessage);
     // do not use Promise.all for applyVersion. otherwise, it'll write all components in parallel,
@@ -209,13 +213,14 @@ export class LaneSwitcher {
 
 async function getComponentStatus(consumer: Consumer, id: BitId, switchProps: SwitchProps): Promise<ComponentStatus> {
   const componentStatus: ComponentStatus = { id };
-  const returnFailure = (msg: string) => {
+  const returnFailure = (msg: string, unchangedLegitimately = false) => {
     componentStatus.failureMessage = msg;
+    componentStatus.unchangedLegitimately = unchangedLegitimately;
     return componentStatus;
   };
   const modelComponent = await consumer.scope.getModelComponentIfExist(id);
   if (!modelComponent) {
-    return returnFailure(`component ${id.toString()} had never imported`);
+    return returnFailure(`component ${id.toString()} had never imported`, true);
   }
   const unmerged = consumer.scope.objects.unmergedComponents.getEntry(id.name);
   if (unmerged && unmerged.resolved === false) {
@@ -225,13 +230,13 @@ async function getComponentStatus(consumer: Consumer, id: BitId, switchProps: Sw
   }
   const version = id.version;
   if (!version) {
-    return returnFailure(`component doesn't have any snaps on ${DEFAULT_LANE}`);
+    return returnFailure(`component doesn't have any snaps on ${DEFAULT_LANE}`, true);
   }
   const existingBitMapId = consumer.bitMap.getBitIdIfExist(id, { ignoreVersion: true });
   const componentOnLane: Version = await modelComponent.loadVersion(version, consumer.scope.objects);
   if (!existingBitMapId) {
     if (switchProps.existingOnWorkspaceOnly) {
-      return returnFailure(`component ${id.toStringWithoutVersion()} is not in the workspace`);
+      return returnFailure(`component ${id.toStringWithoutVersion()} is not in the workspace`, true);
     }
     return { componentFromFS: undefined, componentFromModel: componentOnLane, id, mergeResults: null };
   }
@@ -243,7 +248,7 @@ async function getComponentStatus(consumer: Consumer, id: BitId, switchProps: Sw
   }
   const currentlyUsedVersion = existingBitMapId.version;
   if (currentlyUsedVersion === version) {
-    return returnFailure(`component ${id.toStringWithoutVersion()} is already at version ${version}`);
+    return returnFailure(`component ${id.toStringWithoutVersion()} is already at version ${version}`, true);
   }
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const baseComponent: Version = await modelComponent.loadVersion(currentlyUsedVersion, consumer.scope.objects);

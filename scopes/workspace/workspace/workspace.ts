@@ -1103,7 +1103,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
         envWasFoundPreviously
       );
       if (envIsCurrentlySet) {
-        await this.warnAboutMisconfiguredEnv(extensions);
+        await this.warnAboutMisconfiguredEnv(componentId, extensions);
         envWasFoundPreviously = true;
       }
 
@@ -1160,7 +1160,11 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     };
   }
 
-  private async warnAboutMisconfiguredEnv(extensionDataList: ExtensionDataList) {
+  private async warnAboutMisconfiguredEnv(componentId: ComponentID, extensionDataList: ExtensionDataList) {
+    if (!(await this.hasId(componentId))) {
+      // if this is a dependency and not belong to the workspace, don't show the warning
+      return;
+    }
     const envAspect = extensionDataList.findExtension(EnvsAspect.id);
     const envFromEnvsAspect = envAspect?.config.env;
     if (!envFromEnvsAspect) return;
@@ -1175,7 +1179,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     }
     if (!this.envs.isUsingEnvEnv(env)) {
       this.warnedAboutMisconfiguredEnvs.push(envFromEnvsAspect);
-      this.logger.consoleFailure(
+      this.logger.consoleWarning(
         `env "${envFromEnvsAspect}" is not of type env. (correct the env's type, or component config with "bit env set")`
       );
     }

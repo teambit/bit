@@ -1,6 +1,6 @@
 {
   "name": "@teambit/legacy",
-  "version": "1.0.302",
+  "version": "1.0.304",
   "license": "Apache-2.0",
   "main": "./dist/api.js",
   "preferGlobal": true,
@@ -64,6 +64,7 @@
     "e2e-test:debug": "npm run e2e-test --debug --keep-envs",
     "e2e-test-circle": "mocha --require ./babel-register --reporter mocha-circleci-reporter './e2e/**/*.e2e*.ts'",
     "performance-test": "mocha --require ./babel-register ./e2e/performance/*.performance*.ts",
+    "performance-test:debug": "npm run performance-test --debug --keep-envs",
     "performance-test-circle": "mocha --require ./babel-register --reporter mocha-circleci-reporter ./e2e/performance/*.performance*.ts",
     "bit-hub-test-circle": "mocha --require ./babel-register --reporter mocha-circleci-reporter ./e2e/bit-hub/*.ts",
     "clean": "rm -rf dist && rm -rf types",
@@ -184,6 +185,7 @@
     "pad-right": "0.2.2",
     "parse-gitignore": "1.0.1",
     "pino": "6.11.1",
+     "pino-pretty": "4.5.0",
     "prettier": "2.3.2",
     "prompt": "1.1.0",
     "ramda": "0.27.1",

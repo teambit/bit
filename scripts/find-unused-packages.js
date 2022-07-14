@@ -18,6 +18,7 @@ const used = [];
 
 // these are not mentioned in the code, but still needed
 const whitelist = [
+  'pino-pretty', // needed for the logger. (although it has no import/require in the code)
   'regenerator-runtime',
   'babel-plugin-ramda',
   'eslint-plugin-mocha',
