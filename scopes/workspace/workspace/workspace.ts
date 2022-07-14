@@ -172,6 +172,7 @@ export class Workspace implements ComponentFactory {
   componentsScopeDirsMap: ComponentScopeDirMap;
   componentLoader: WorkspaceComponentLoader;
   bitMap: BitMap;
+  private _cachedListIds?: ComponentID[];
   private componentLoadedSelfAsAspects: InMemoryCache<boolean>; // cache loaded components
   private warnedAboutMisconfiguredEnvs: string[] = []; // cache env-ids that have been errored about not having "env" type
   constructor(
@@ -374,7 +375,13 @@ export class Workspace implements ComponentFactory {
    * get ids of all workspace components.
    */
   async listIds(): Promise<ComponentID[]> {
-    return this.resolveMultipleComponentIds(this.consumer.bitmapIdsFromCurrentLane);
+    if (this._cachedListIds && this.bitMap.hasChanged()) {
+      delete this._cachedListIds;
+    }
+    if (!this._cachedListIds) {
+      this._cachedListIds = await this.resolveMultipleComponentIds(this.consumer.bitmapIdsFromCurrentLane);
+    }
+    return this._cachedListIds;
   }
 
   /**
@@ -554,6 +561,7 @@ export class Workspace implements ComponentFactory {
 
   clearCache() {
     this.logger.debug('clearing the workspace and scope caches');
+    delete this._cachedListIds;
     this.componentLoader.clearCache();
     this.scope.clearCache();
     this.componentList = new ComponentsList(this.consumer);
