@@ -177,6 +177,9 @@ export default class CommandHelper {
   unsetAspect(pattern: string, aspectId: string, flags = '') {
     return this.runCmd(`bit aspect unset ${pattern} ${aspectId} ${flags}`);
   }
+  updateAspect(aspectId: string, pattern = '', flags = '') {
+    return this.runCmd(`bit aspect update ${aspectId} ${pattern} ${flags}`);
+  }
   removeComponent(id: string, flags = '') {
     return this.runCmd(`bit remove ${id} --silent ${flags}`);
   }
