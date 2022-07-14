@@ -411,7 +411,7 @@ export class ScopeUI {
     scopeUi.registerMenuItem(scopeUi.menuItems);
     scopeUi.registerMenuWidget(() => <ScopeUseBox />);
     scopeUi.registerSidebarLink(() => (
-      <MenuLinkItem exact href="" icon="comps">
+      <MenuLinkItem exact href="/" icon="comps">
         Gallery
       </MenuLinkItem>
     ));
