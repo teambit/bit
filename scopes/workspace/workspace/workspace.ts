@@ -1570,15 +1570,18 @@ needed-for: ${neededFor || '<unknown>'}`);
       defs = defs.filter((def) => def.runtimePath);
     }
 
-    if (componentIds && componentIds.length) {
-      const componentIdsString = componentIds.map((id) => id.toString());
-      defs = defs.filter((def) => {
-        return (
-          (def.id && componentIdsString.includes(def.id)) ||
-          (def.component && componentIdsString.includes(def.component?.id.toString()))
-        );
-      });
-    }
+    // @TODO: failed my code trying to resolve aspects (some were missing).
+    // I think excludeCore that I added on my branch (merged to master) as seen above
+    // will resolve the issue that gilad was trying to solve.
+    // if (componentIds && componentIds.length) {
+    //   const componentIdsString = componentIds.map((id) => id.toString());
+    //   defs = defs.filter((def) => {
+    //     return (
+    //       (def.id && componentIdsString.includes(def.id)) ||
+    //       (def.component && componentIdsString.includes(def.component?.id.toStringWithoutVersion()))
+    //     );
+    //   });
+    // }
 
     return defs;
   }
