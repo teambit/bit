@@ -266,11 +266,13 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     consumer,
     lane,
     resolveUnmerged = false,
+    shouldValidateVersion = false,
   }: {
     source: ConsumerComponent;
     consumer: Consumer;
     lane: Lane | null;
     resolveUnmerged?: boolean;
+    shouldValidateVersion?: boolean;
   }): Promise<ModelComponent> {
     const objectRepo = this.objects();
     // if a component exists in the model, add a new version. Otherwise, create a new component on the model
@@ -303,7 +305,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
 
     files.forEach((file) => objectRepo.add(file.file));
     if (artifacts) artifacts.forEach((file) => objectRepo.add(file.source));
-
+    if (shouldValidateVersion) version.validate();
     return component;
   }
 
