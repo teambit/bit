@@ -7,7 +7,7 @@ export type { GraphMain } from './graph.main.runtime';
 export type { ComponentWidget, ComponentWidgetProps, ComponentWidgetSlot, GraphUI } from './graph.ui.runtime';
 export { Dependency } from './model/dependency';
 export { GraphFilter } from './model/graph-filters';
-export { IdGraph, objectListToGraph } from './object-list-to-graph';
+export { IdGraph, objectListToGraph, bitObjectListToGraph } from './object-list-to-graph';
 export { DependenciesCompare } from './ui/dependencies-compare';
 export {
   calcElements,
