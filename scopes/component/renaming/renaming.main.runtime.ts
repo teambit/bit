@@ -85,7 +85,7 @@ once they are not in the workspace, you can fork them ("bit fork") with the new 
       const idsStr = tagged.map((comp) => comp.id.toString()).join(', ');
       throw new BitError(`unable to rename the scope for the following tagged components:\n${idsStr}
 because these components were tagged, the objects have the dependencies data of the old-scope.
-to be able to rename the scope, please untag the components first (using "bit untag" command)`);
+to be able to rename the scope, please untag the components first (using "bit reset" command)`);
     }
     if (this.workspace.defaultScope === oldScope) {
       await this.workspace.setDefaultScope(newScope);

@@ -332,8 +332,8 @@ export default class CommandHelper {
     if (!artifacts) throw new Error(`unable to find artifacts data for ${id}`);
     return artifacts;
   }
-  untag(id: string, head = false) {
-    return this.runCmd(`bit reset ${id} ${head ? '--head' : ''}`);
+  untag(id: string, head = false, flag = '') {
+    return this.runCmd(`bit reset ${id} ${head ? '--head' : ''} ${flag}`);
   }
   untagAll(options = '') {
     return this.runCmd(`bit reset ${options} --all`);

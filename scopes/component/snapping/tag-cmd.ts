@@ -234,9 +234,9 @@ https://${docsDomain}/components/tags`;
 
     const warningsOutput = warnings && warnings.length ? `${chalk.yellow(warnings.join('\n'))}\n\n` : '';
     const tagExplanationPersist = `\n(use "bit export [collection]" to push these components to a remote")
-(use "bit untag" to unstage versions)\n`;
+(use "bit reset" to unstage versions)\n`;
     const tagExplanationSoft = `\n(use "bit tag --persist" to persist the changes")
-(use "bit untag --soft" to remove the soft-tags)\n`;
+(use "bit reset --soft" to remove the soft-tags)\n`;
 
     const tagExplanation = results.isSoftTag ? tagExplanationSoft : tagExplanationPersist;
 

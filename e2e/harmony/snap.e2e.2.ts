@@ -701,12 +701,12 @@ describe('bit snap command', function () {
       const firstTag = compData.versions['0.0.1'];
       expect(() => helper.command.catObject(firstTag)).to.not.throw();
     });
-    it('bit status should suggest running either "bit untag" or "bit merge"', () => {
+    it('bit status should suggest running either "bit reset" or "bit merge"', () => {
       const output = helper.command.status();
-      expect(output).to.have.string('bit untag');
+      expect(output).to.have.string('bit reset');
       expect(output).to.have.string('bit merge');
     });
-    describe('bit untag a diverge component', () => {
+    describe('bit reset a diverge component', () => {
       before(() => {
         helper.command.untagAll();
       });

@@ -194,7 +194,7 @@ describe('component id with wildcard', function () {
       });
       describe('when wildcard does not match any component', () => {
         it('should throw an error saying that no components found', () => {
-          const output = helper.general.runWithTryCatch('bit untag "none/*"');
+          const output = helper.general.runWithTryCatch('bit reset "none/*"');
           expect(output).to.have.string('no components found');
         });
       });
