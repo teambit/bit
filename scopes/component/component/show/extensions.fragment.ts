@@ -4,7 +4,7 @@ import { Component } from '../component';
 export class ExtensionsFragment implements ShowFragment {
   private renderList(component: Component) {
     const aspects = component.state.aspects.entries.map((entry) => entry.id.toString());
-    return aspects.join('\n');
+    return aspects.sort().join('\n');
   }
 
   async renderRow(component: Component) {
