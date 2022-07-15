@@ -333,7 +333,7 @@ export default class CommandHelper {
     return artifacts;
   }
   untag(id: string, head = false) {
-    return this.runCmd(`bit reset ${id} ${head ? '--latest' : ''}`);
+    return this.runCmd(`bit reset ${id} ${head ? '--head' : ''}`);
   }
   untagAll(options = '') {
     return this.runCmd(`bit reset ${options} --all`);
