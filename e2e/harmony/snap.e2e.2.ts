@@ -109,7 +109,6 @@ describe('bit snap command', function () {
   });
   describe('untag a snap', () => {
     let firstSnap: string;
-    let secondSnap: string;
     let beforeUntagScope: string;
     before(() => {
       helper.scopeHelper.reInitLocalScopeHarmony();
@@ -119,13 +118,11 @@ describe('bit snap command', function () {
       const compAfterSnap1 = helper.command.catComponent('bar/foo');
       firstSnap = compAfterSnap1.head;
       helper.command.snapComponent('bar/foo -f');
-      const compAfterSnap2 = helper.command.catComponent('bar/foo');
-      secondSnap = compAfterSnap2.head;
       beforeUntagScope = helper.scopeHelper.cloneLocalScope();
     });
     describe('untag the head snap', () => {
       before(() => {
-        helper.command.untag(`bar/foo ${secondSnap}`);
+        helper.command.untag(`bar/foo`, true);
       });
       it('should change the head to the first snap', () => {
         const compAfterUntag = helper.command.catComponent('bar/foo');
@@ -134,19 +131,6 @@ describe('bit snap command', function () {
       it('should remove the snap from the state.versions array', () => {
         const compAfterUntag = helper.command.catComponent('bar/foo');
         expect(Object.keys(compAfterUntag.state.versions)).to.have.lengthOf(1);
-      });
-    });
-    describe('untag the first snap', () => {
-      before(() => {
-        helper.scopeHelper.getClonedLocalScope(beforeUntagScope);
-
-        // an intermediate step, make sure the parents of the second snap has the first snap
-        const barFoo = helper.command.catComponent('bar/foo@latest');
-        expect(barFoo.parents).to.have.lengthOf(1);
-        expect(barFoo.parents[0]).to.equal(firstSnap);
-      });
-      it('should not allow it', () => {
-        expect(() => helper.command.untag(`bar/foo ${firstSnap}`)).to.throw();
       });
     });
   });
