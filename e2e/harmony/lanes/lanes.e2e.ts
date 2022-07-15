@@ -608,7 +608,7 @@ describe('bit lane command', function () {
     it('bit status should show the correct staged versions', () => {
       // before it was a bug that "versions" part of the staged-component was empty
       // another bug was that it had all versions included exported.
-      const status = helper.command.status();
+      const status = helper.command.status('--verbose');
       const hash = helper.command.getHeadOfLane('dev', 'comp1');
       expect(status).to.have.string(`versions: ${hash} ...`);
     });

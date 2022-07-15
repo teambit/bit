@@ -32,6 +32,7 @@ export class StatusCmd implements Command {
   alias = 's';
   options = [
     ['j', 'json', 'return a json version of the component'],
+    ['', 'verbose', 'show full snap hashes'],
     ['', 'strict', 'in case issues found, exit with code 1'],
   ] as CommandOptions;
   loader = true;
@@ -75,7 +76,7 @@ export class StatusCmd implements Command {
     };
   }
 
-  async report(_args, { strict }: { strict?: boolean }) {
+  async report(_args, { strict, verbose }: { strict?: boolean; verbose?: boolean }) {
     const {
       newComponents,
       modifiedComponent,
@@ -121,11 +122,15 @@ export class StatusCmd implements Command {
           throw new Error(`expect "${component}" to be instance of ModelComponent`);
         }
         const localVersions = component.getLocalTagsOrHashes();
-        const [snaps, tags] = partition(localVersions, (version) => isHash(version));
-        const tagsStr = tags.length ? `versions: ${tags.join(', ')}` : '';
-        const snapsStr = snaps.length ? `${snaps.length} snap(s)` : '';
-        bitFormatted += `. `;
-        bitFormatted += tagsStr && snapsStr ? `${tagsStr}. and ${snapsStr}` : tagsStr || snapsStr;
+        if (verbose) {
+          bitFormatted += `. versions: ${localVersions.join(', ')}`;
+        } else {
+          const [snaps, tags] = partition(localVersions, (version) => isHash(version));
+          const tagsStr = tags.length ? `versions: ${tags.join(', ')}` : '';
+          const snapsStr = snaps.length ? `${snaps.length} snap(s)` : '';
+          bitFormatted += `. `;
+          bitFormatted += tagsStr && snapsStr ? `${tagsStr}. and ${snapsStr}` : tagsStr || snapsStr;
+        }
       }
       bitFormatted += ' ... ';
       if (!issues) return `${bitFormatted}${messageStatus}`;
