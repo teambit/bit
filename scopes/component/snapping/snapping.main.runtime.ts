@@ -284,7 +284,7 @@ there are matching among unmodified components thought. consider using --unmodif
    */
   async reset(
     componentPattern?: string,
-    version?: string,
+    head?: boolean,
     force = false,
     soft = false
   ): Promise<{ results: untagResult[]; isSoftUntag: boolean }> {
@@ -293,15 +293,15 @@ there are matching among unmodified components thought. consider using --unmodif
     const currentLane = await consumer.getCurrentLaneObject();
     const untag = async (): Promise<untagResult[]> => {
       if (!componentPattern) {
-        return removeLocalVersionsForAllComponents(consumer, currentLane, version, force);
+        return removeLocalVersionsForAllComponents(consumer, currentLane, head, force);
       }
-      const candidateComponents = await getComponentsWithOptionToUntag(consumer, version);
+      const candidateComponents = await getComponentsWithOptionToUntag(consumer);
       const idsMatchingPattern = await this.workspace.idsByPattern(componentPattern);
       const idsMatchingPatternBitIds = BitIds.fromArray(idsMatchingPattern.map((id) => id._legacy));
       const componentsToUntag = candidateComponents.filter((modelComponent) =>
         idsMatchingPatternBitIds.hasWithoutVersion(modelComponent.toBitId())
       );
-      return removeLocalVersionsForMultipleComponents(componentsToUntag, currentLane, version, force, consumer.scope);
+      return removeLocalVersionsForMultipleComponents(componentsToUntag, currentLane, head, force, consumer.scope);
     };
     const softUntag = async () => {
       const componentsList = new ComponentsList(consumer);
