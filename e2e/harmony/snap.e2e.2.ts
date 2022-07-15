@@ -109,7 +109,6 @@ describe('bit snap command', function () {
   });
   describe('untag a snap', () => {
     let firstSnap: string;
-    let beforeUntagScope: string;
     before(() => {
       helper.scopeHelper.reInitLocalScopeHarmony();
       helper.fixtures.createComponentBarFoo();
@@ -118,7 +117,6 @@ describe('bit snap command', function () {
       const compAfterSnap1 = helper.command.catComponent('bar/foo');
       firstSnap = compAfterSnap1.head;
       helper.command.snapComponent('bar/foo -f');
-      beforeUntagScope = helper.scopeHelper.cloneLocalScope();
     });
     describe('untag the head snap', () => {
       before(() => {
