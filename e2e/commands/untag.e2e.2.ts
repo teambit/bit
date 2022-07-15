@@ -193,7 +193,7 @@ describe('bit reset command', function () {
         });
         it('should throw a descriptive error', () => {
           expect(untagOutput).to.have.string(
-            'unable to untag utils/is-type, the version 0.0.1 has the following dependent(s) utils/is-string@0.0.1'
+            'unable to reset utils/is-type, the version 0.0.1 has the following dependent(s) utils/is-string@0.0.1'
           );
         });
       });
@@ -221,7 +221,7 @@ describe('bit reset command', function () {
           }
         });
         it('should show an error', () => {
-          expect(output).to.have.string(`unable to untag ${helper.scopes.remote}/utils/is-type`);
+          expect(output).to.have.string(`unable to reset ${helper.scopes.remote}/utils/is-type`);
         });
       });
     });
