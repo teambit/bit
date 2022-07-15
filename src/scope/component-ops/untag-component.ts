@@ -17,7 +17,7 @@ export async function removeLocalVersion(
   scope: Scope,
   id: BitId,
   lane: Lane | null,
-  head?: string,
+  head?: boolean,
   force = false
 ): Promise<untagResult> {
   const component: ModelComponent = await scope.getModelComponentIgnoreScope(id);
