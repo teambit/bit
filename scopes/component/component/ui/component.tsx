@@ -40,9 +40,7 @@ export function Component({
   const componentId = componentIdStr ? ComponentID.fromString(componentIdStr) : undefined;
   const fullName = componentId?.fullName || idFromLocation;
   const lanesContext = useLanesContext();
-  const laneComponent = fullName
-    ? lanesContext?.resolveComponent(fullName)
-    : undefined;
+  const laneComponent = fullName ? lanesContext?.resolveComponent(fullName) : undefined;
   const useComponentOptions = {
     logFilters: laneComponent && { log: { logHead: laneComponent.version } },
     customUseComponent: useComponent,

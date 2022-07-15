@@ -39,7 +39,7 @@ export class GraphUI {
   static runtime = UIRuntime;
   static slots = [Slot.withType<ComponentWidget>()];
   static defaultConfig = {
-    componentTab: true
+    componentTab: true,
   };
 
   static async provider(

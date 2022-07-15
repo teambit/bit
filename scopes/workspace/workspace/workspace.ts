@@ -172,8 +172,9 @@ export class Workspace implements ComponentFactory {
   componentsScopeDirsMap: ComponentScopeDirMap;
   componentLoader: WorkspaceComponentLoader;
   bitMap: BitMap;
+  private _cachedListIds?: ComponentID[];
   private componentLoadedSelfAsAspects: InMemoryCache<boolean>; // cache loaded components
-
+  private warnedAboutMisconfiguredEnvs: string[] = []; // cache env-ids that have been errored about not having "env" type
   constructor(
     /**
      * private pubsub.
@@ -374,7 +375,13 @@ export class Workspace implements ComponentFactory {
    * get ids of all workspace components.
    */
   async listIds(): Promise<ComponentID[]> {
-    return this.resolveMultipleComponentIds(this.consumer.bitmapIdsFromCurrentLane);
+    if (this._cachedListIds && this.bitMap.hasChanged()) {
+      delete this._cachedListIds;
+    }
+    if (!this._cachedListIds) {
+      this._cachedListIds = await this.resolveMultipleComponentIds(this.consumer.bitmapIdsFromCurrentLane);
+    }
+    return this._cachedListIds;
   }
 
   /**
@@ -554,6 +561,7 @@ export class Workspace implements ComponentFactory {
 
   clearCache() {
     this.logger.debug('clearing the workspace and scope caches');
+    delete this._cachedListIds;
     this.componentLoader.clearCache();
     this.scope.clearCache();
     this.componentList = new ComponentsList(this.consumer);
@@ -1102,7 +1110,10 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
         extsWithoutSelf,
         envWasFoundPreviously
       );
-      if (envIsCurrentlySet) envWasFoundPreviously = true;
+      if (envIsCurrentlySet) {
+        await this.warnAboutMisconfiguredEnv(componentId, extensions);
+        envWasFoundPreviously = true;
+      }
 
       extensionsToMerge.push({ origin, extensions: extensionDataListFiltered, extraData });
 
@@ -1155,6 +1166,31 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
       extensions,
       beforeMerge: extensionsToMerge,
     };
+  }
+
+  private async warnAboutMisconfiguredEnv(componentId: ComponentID, extensionDataList: ExtensionDataList) {
+    if (!(await this.hasId(componentId))) {
+      // if this is a dependency and not belong to the workspace, don't show the warning
+      return;
+    }
+    const envAspect = extensionDataList.findExtension(EnvsAspect.id);
+    const envFromEnvsAspect = envAspect?.config.env;
+    if (!envFromEnvsAspect) return;
+    if (this.envs.getCoreEnvsIds().includes(envFromEnvsAspect)) return;
+    if (this.warnedAboutMisconfiguredEnvs.includes(envFromEnvsAspect)) return;
+    let env: Component;
+    try {
+      const envId = await this.resolveComponentId(envFromEnvsAspect);
+      env = await this.get(envId);
+    } catch (err) {
+      return; // unable to get the component for some reason. don't sweat it. forget about the warning
+    }
+    if (!this.envs.isUsingEnvEnv(env)) {
+      this.warnedAboutMisconfiguredEnvs.push(envFromEnvsAspect);
+      this.logger.consoleWarning(
+        `env "${envFromEnvsAspect}" is not of type env. (correct the env's type, or component config with "bit env set")`
+      );
+    }
   }
 
   async isModified(component: Component): Promise<boolean> {

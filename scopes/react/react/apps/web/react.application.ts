@@ -16,7 +16,7 @@ import { computeResults } from './compute-results';
 export class ReactApp implements Application {
   constructor(
     readonly name: string,
-    readonly entry: string[]|(() => Promise<string[]>),
+    readonly entry: string[] | (() => Promise<string[]>),
     readonly portRange: number[],
     private reactEnv: ReactEnv,
     readonly prerender?: ReactAppPrerenderOptions,

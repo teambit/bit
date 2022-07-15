@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 import R from 'ramda';
 
-import { BitId } from '../../bit-id';
+import { BitId, BitIds } from '../../bit-id';
 
 export default (
   { dependentBits, modifiedComponents = [], removedComponentIds, missingComponents, removedFromLane },
@@ -20,17 +20,21 @@ export default (
     );
   };
   const paintRemoved = () => {
-    if (R.isEmpty(removedComponentIds)) return '';
-    const removedFrom = removedFromLane ? 'lane' : 'scope';
-    const msg = isRemote
-      ? `successfully removed components from the remote ${removedFrom}:`
-      : `successfully removed components from the local ${removedFrom} (to remove from the remote ${removedFrom}, please re-run the command with --remote flag):`;
-    return (
-      chalk.green(msg) +
-      chalk(
-        ` ${removedComponentIds.map((id) => (id.version === 'latest' ? id.toStringWithoutVersion() : id.toString()))}\n`
-      )
-    );
+    if (R.isEmpty(removedComponentIds) && R.isEmpty(removedFromLane)) return '';
+    const compToStr = (comps: BitIds) =>
+      chalk(` ${comps.map((id) => (id.version === 'latest' ? id.toStringWithoutVersion() : id.toString()))}\n`);
+    const getMsg = (isLane = false) => {
+      const removedFrom = isLane ? 'lane' : 'scope';
+      const msg = isRemote
+        ? `successfully removed components from the remote ${removedFrom}:`
+        : `successfully removed components from the local ${removedFrom} (to remove from the remote ${removedFrom}, please re-run the command with --remote flag):`;
+      return chalk.green(msg);
+    };
+    const newLine = '\n';
+    const compOutput = R.isEmpty(removedComponentIds) ? '' : getMsg(false) + compToStr(removedComponentIds) + newLine;
+    const laneOutput = R.isEmpty(removedFromLane) ? '' : getMsg(true) + compToStr(removedFromLane);
+
+    return `${compOutput}${laneOutput}`;
   };
 
   const paintUnRemovedComponents = () => {
