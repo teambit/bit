@@ -293,7 +293,7 @@ there are matching among unmodified components thought. consider using --unmodif
     const currentLane = await consumer.getCurrentLaneObject();
     const untag = async (): Promise<untagResult[]> => {
       if (!componentPattern) {
-        return removeLocalVersionsForAllComponents(consumer, currentLane, head, force);
+        return removeLocalVersionsForAllComponents(consumer, currentLane, head);
       }
       const candidateComponents = await getComponentsWithOptionToUntag(consumer);
       const idsMatchingPattern = await this.workspace.idsByPattern(componentPattern);

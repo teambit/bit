@@ -92,21 +92,6 @@ describe('bit reset command', function () {
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         expect(catComponent.versions).to.have.property('0.0.2');
       });
-      describe('untagging an exported version', () => {
-        let output;
-        before(() => {
-          try {
-            output = helper.command.untag('bar/foo', true);
-          } catch (err: any) {
-            output = err.message;
-          }
-        });
-        it('should throw an error', () => {
-          expect(output).to.have.string(
-            `unable to untag ${helper.scopes.remote}/bar/foo, the version 0.0.1 was exported already`
-          );
-        });
-      });
       describe('untagging without version', () => {
         before(() => {
           helper.command.untag('bar/foo');
@@ -130,9 +115,7 @@ describe('bit reset command', function () {
         }
       });
       it('should show an descriptive error', () => {
-        expect(output).to.have.string(
-          'untag non-exist-scope/non-exist-comp\nerror: component "non-exist-scope/non-exist-comp'
-        );
+        expect(output).to.have.string('unable to find "non-exist-scope/non-exist-comp" in the workspace');
       });
     });
   });
@@ -157,7 +140,6 @@ describe('bit reset command', function () {
       let untagOutput;
       before(() => {
         untagOutput = helper.command.untagAll();
-        helper.command.untagAll();
       });
       it('should display a descriptive successful message', () => {
         expect(untagOutput).to.have.string('2 component(s) were untagged');

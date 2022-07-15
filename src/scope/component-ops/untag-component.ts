@@ -62,10 +62,10 @@ export async function removeLocalVersion(
 export async function removeLocalVersionsForAllComponents(
   consumer: Consumer,
   lane: Lane | null,
-  head?: boolean,
-  force = false
+  head?: boolean
 ): Promise<untagResult[]> {
   const componentsToUntag = await getComponentsWithOptionToUntag(consumer);
+  const force = true; // when removing local versions from all components, no need to check if the component is used as a dependency
   return removeLocalVersionsForMultipleComponents(componentsToUntag, lane, head, force, consumer.scope);
 }
 
@@ -107,7 +107,7 @@ export async function removeLocalVersionsForMultipleComponents(
   }
   logger.debug(`found ${componentsToUntag.length} components to untag`);
   return Promise.all(
-    componentsToUntag.map((component) => removeLocalVersion(scope, component.toBitId(), lane, head, true))
+    componentsToUntag.map((component) => removeLocalVersion(scope, component.toBitId(), lane, head, force))
   );
 }
 
