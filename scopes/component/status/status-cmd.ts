@@ -14,6 +14,8 @@ import {
   statusInvalidComponentsMsg,
   statusWorkspaceIsCleanMsg,
 } from '@teambit/legacy/dist/constants';
+import { partition } from 'lodash';
+import { isHash } from '@teambit/component-version';
 import { StatusMain, StatusResult } from './status.main.runtime';
 
 const individualFilesDesc = `these components were added as individual files and not as directories, which are invalid in Harmony
@@ -119,7 +121,11 @@ export class StatusCmd implements Command {
           throw new Error(`expect "${component}" to be instance of ModelComponent`);
         }
         const localVersions = component.getLocalTagsOrHashes();
-        bitFormatted += `. versions: ${localVersions.join(', ')}`;
+        const [snaps, tags] = partition(localVersions, (version) => isHash(version));
+        const tagsStr = tags.length ? `versions: ${tags.join(', ')}` : '';
+        const snapsStr = snaps.length ? `${snaps.length} snap(s)` : '';
+        bitFormatted += `. `;
+        bitFormatted += tagsStr && snapsStr ? `${tagsStr}. and ${snapsStr}` : tagsStr || snapsStr;
       }
       bitFormatted += ' ... ';
       if (!issues) return `${bitFormatted}${messageStatus}`;
