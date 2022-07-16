@@ -126,7 +126,7 @@ ${WILDCARD_HELP('snap')}`;
 
     const warningsOutput = warnings && warnings.length ? `${chalk.yellow(warnings.join('\n'))}\n\n` : '';
     const tagExplanation = `\n(use "bit export" to push these components to a remote")
-(use "bit untag" to unstage versions)\n`;
+(use "bit reset" to unstage versions)\n`;
 
     const outputComponents = (comps) => {
       return comps
