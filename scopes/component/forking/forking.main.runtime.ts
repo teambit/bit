@@ -68,7 +68,7 @@ export class ForkingMain {
       : ComponentID.fromLegacy(BitId.parse(sourceId, true));
     const { targetCompId, component } = await this.forkRemoteComponent(sourceIdWithScope, targetId, options);
     await this.saveDeps(component);
-    await this.installDeps();
+    if (!options?.skipDependencyInstallation) await this.installDeps();
     return targetCompId;
   }
 
