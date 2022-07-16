@@ -465,8 +465,8 @@ export default class CommandHelper {
     return this.runCmd(`bit test ${id} ${value}`, cwd);
   }
 
-  status() {
-    return this.runCmd('bit status');
+  status(flags = '') {
+    return this.runCmd(`bit status ${flags}`);
   }
 
   statusJson(cwd = this.scopes.localPath) {
