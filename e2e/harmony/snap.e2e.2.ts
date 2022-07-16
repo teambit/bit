@@ -577,9 +577,9 @@ describe('bit snap command', function () {
           const content = helper.fs.readFile('bar/foo.js');
           expect(content).to.equal(fixtures.fooFixture);
         });
-        describe('bit checkout latest', () => {
+        describe('bit checkout head', () => {
           it('should checkout to the latest (second) snap', () => {
-            output = helper.command.checkout('latest bar/foo');
+            output = helper.command.checkoutHead('bar/foo');
             expect(output).to.have.string('successfully');
             expect(output).to.have.string(secondSnap);
             const content = helper.fs.readFile('bar/foo.js');
