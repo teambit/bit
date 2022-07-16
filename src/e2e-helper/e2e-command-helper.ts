@@ -465,8 +465,8 @@ export default class CommandHelper {
     return this.runCmd(`bit test ${id} ${value}`, cwd);
   }
 
-  status() {
-    return this.runCmd('bit status');
+  status(flags = '') {
+    return this.runCmd(`bit status ${flags}`);
   }
 
   statusJson(cwd = this.scopes.localPath) {
@@ -552,6 +552,9 @@ export default class CommandHelper {
 
   checkout(values: string) {
     return this.runCmd(`bit checkout ${values}`);
+  }
+  checkoutHead(values = '') {
+    return this.runCmd(`bit checkout head ${values}`);
   }
   switchLocalLane(lane: string, flags?: string) {
     return this.runCmd(`bit switch ${lane} ${flags || ''}`);

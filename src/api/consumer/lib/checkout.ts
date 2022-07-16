@@ -3,7 +3,7 @@ import R from 'ramda';
 import { BitId } from '../../../bit-id';
 import loader from '../../../cli/loader';
 import { BEFORE_CHECKOUT } from '../../../cli/loader/loader-messages';
-import { LATEST } from '../../../constants';
+import { HEAD, LATEST } from '../../../constants';
 import { Consumer, loadConsumer } from '../../../consumer';
 import ComponentsList from '../../../consumer/component/components-list';
 import checkoutVersion, { CheckoutProps } from '../../../consumer/versions-ops/checkout-version';
@@ -25,12 +25,19 @@ export default async function checkout(values: string[], checkoutProps: Checkout
 async function parseValues(consumer: Consumer, values: string[], checkoutProps: CheckoutProps) {
   const firstValue = R.head(values);
   checkoutProps.version =
-    firstValue && (BitId.isValidVersion(firstValue) || firstValue === LATEST) ? firstValue : undefined;
+    firstValue && (BitId.isValidVersion(firstValue) || firstValue === LATEST || firstValue === HEAD)
+      ? firstValue
+      : undefined;
   const ids = checkoutProps.version ? R.tail(values) : values; // if first value is a version, the rest are ids
-  checkoutProps.latestVersion = Boolean(checkoutProps.version && checkoutProps.version === LATEST);
+  checkoutProps.latestVersion = Boolean(
+    checkoutProps.version && (checkoutProps.version === LATEST || checkoutProps.version === HEAD)
+  );
+  if (checkoutProps.latestVersion && checkoutProps.version === LATEST) {
+    logger.console(`"latest" is deprecated. please use "${HEAD}" instead`);
+  }
   if (checkoutProps.latestVersion && !ids.length) {
     if (checkoutProps.all) {
-      logger.console(`"--all" is deprecated for "bit checkout latest", please omit it.`);
+      logger.console(`"--all" is deprecated for "bit checkout ${HEAD}", please omit it.`);
     }
     checkoutProps.all = true;
   }
