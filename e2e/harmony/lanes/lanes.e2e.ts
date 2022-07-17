@@ -608,7 +608,7 @@ describe('bit lane command', function () {
     it('bit status should show the correct staged versions', () => {
       // before it was a bug that "versions" part of the staged-component was empty
       // another bug was that it had all versions included exported.
-      const status = helper.command.status();
+      const status = helper.command.status('--verbose');
       const hash = helper.command.getHeadOfLane('dev', 'comp1');
       expect(status).to.have.string(`versions: ${hash} ...`);
     });
@@ -981,8 +981,7 @@ describe('bit lane command', function () {
       before(() => {
         helper.scopeHelper.getClonedLocalScope(afterFirstSnap);
         helper.command.snapComponentWithoutBuild('comp1', '--force');
-        const head = helper.command.getHeadOfLane('dev', 'comp1');
-        helper.command.untag('comp1', head);
+        helper.command.untag('comp1', true);
       });
       it('should not show the component as new', () => {
         const status = helper.command.statusJson();
@@ -1060,8 +1059,8 @@ describe('bit lane command', function () {
         const status = helper.command.statusJson();
         expect(status.outdatedComponents).to.have.lengthOf(1);
       });
-      it('bit checkout latest --all should update them all to the latest version', () => {
-        helper.command.checkout('latest --all');
+      it('bit checkout head --all should update them all to the head version', () => {
+        helper.command.checkoutHead('--all');
         helper.command.expectStatusToBeClean();
       });
     });

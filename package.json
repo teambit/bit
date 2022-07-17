@@ -1,6 +1,6 @@
 {
   "name": "@teambit/legacy",
-  "version": "1.0.305",
+  "version": "1.0.307",
   "license": "Apache-2.0",
   "main": "./dist/api.js",
   "preferGlobal": true,
@@ -165,7 +165,7 @@
     "minimatch": "3.0.4",
     "mockery": "2.1.0",
     "module-definition": "3.3.1",
-    "moment": "2.29.2",
+    "moment": "2.29.4",
     "node-fetch": "2.6.7",
     "node-source-walk": "4.2.0",
     "normalize-path": "2.1.1",

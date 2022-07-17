@@ -19,7 +19,6 @@ import paintGraph from './lib/paint-graph';
 import { add as remoteAdd, list as remoteList, remove as remoteRm } from './lib/remote';
 import remove from './lib/remove';
 import show from './lib/show';
-import unTagAction from './lib/untag';
 import { clearCache } from './lib/clear-cache';
 
 export {
@@ -38,7 +37,6 @@ export {
   add,
   addMany,
   dependencyStatus,
-  unTagAction,
   move,
   linkAction as link,
   checkout,

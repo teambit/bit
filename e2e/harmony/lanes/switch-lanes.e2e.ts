@@ -83,8 +83,8 @@ describe('bit lane command', function () {
           const status = helper.command.statusJson();
           expect(status.stagedComponents).to.have.lengthOf(1);
         });
-        it('bit status should show the staged hash', () => {
-          const status = helper.command.status();
+        it('bit status --verbose should show the staged hash', () => {
+          const status = helper.command.status('--verbose');
           const localSnap = helper.command.getHeadOfLane('dev', 'bar/foo');
           expect(status).to.have.string(localSnap);
         });

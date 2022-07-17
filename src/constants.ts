@@ -414,6 +414,8 @@ export const BIT_REGISTRY = '';
 
 export const LATEST = 'latest';
 
+export const HEAD = 'head';
+
 export const DEPENDENCY_DELIMITER = '/';
 
 export const BIT_SOURCES_DIRNAME = 'source';

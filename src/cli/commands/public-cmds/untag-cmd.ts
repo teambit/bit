@@ -1,9 +1,4 @@
-import chalk from 'chalk';
-
-import { unTagAction } from '../../../api/consumer';
 import { BASE_DOCS_DOMAIN, WILDCARD_HELP } from '../../../constants';
-import GeneralError from '../../../error/general-error';
-import { untagResult } from '../../../scope/component-ops/untag-component';
 import { Group } from '../../command-groups';
 import { CommandOptions, LegacyCommand } from '../../legacy-command';
 
@@ -37,29 +32,12 @@ ${WILDCARD_HELP('untag')}`;
   migration = true;
   private = true;
 
-  action(
-    [id, version]: [string, string],
-    { all = false, force = false, soft = false }: { all?: boolean; force?: boolean; soft?: boolean }
-  ): Promise<{ results: untagResult[]; isSoftUntag: boolean }> {
+  action(): any {
     // eslint-disable-next-line no-console
-    console.log(chalk.yellow(`"bit untag" has been deprecated, please use "bit reset" instead`));
-    if (!id && !all) {
-      throw new GeneralError('please specify a component ID or use --all flag');
-    }
-
-    if (all) {
-      version = id;
-      return unTagAction(version, force, soft);
-    }
-    return unTagAction(version, force, soft, id);
+    throw new Error(`"bit untag" has been removed, please use "bit reset" instead`);
   }
 
-  report({ results, isSoftUntag }: { results: untagResult[]; isSoftUntag: boolean }): string {
-    const titleSuffix = isSoftUntag ? 'soft-untagged (are not candidate for tagging anymore)' : 'untagged';
-    const title = chalk.green(`${results.length} component(s) were ${titleSuffix}:\n`);
-    const components = results.map((result) => {
-      return `${chalk.cyan(result.id.toStringWithoutVersion())}. version(s): ${result.versions.join(', ')}`;
-    });
-    return title + components.join('\n');
+  report(): string {
+    throw new Error(`"bit untag" has been removed, please use "bit reset" instead`);
   }
 }
