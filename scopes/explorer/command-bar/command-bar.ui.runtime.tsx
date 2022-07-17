@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, ComponentType } from 'react';
 import flatten from 'lodash.flatten';
 import Mousetrap from 'mousetrap';
 import { Slot, SlotRegistry } from '@teambit/harmony';
@@ -6,7 +6,7 @@ import UIAspect, { UIRuntime, UiUI } from '@teambit/ui';
 import { PubsubAspect, PubsubUI } from '@teambit/pubsub';
 import { ReactRouterAspect } from '@teambit/react-router';
 import { isBrowser } from '@teambit/ui-foundation.ui.is-browser';
-import { CommandBar, useSearcher } from '@teambit/explorer.ui.command-bar';
+import { CommandBar, useSearcher, ResultsComponentProps } from '@teambit/explorer.ui.command-bar';
 import { CommandBarAspect } from './command-bar.aspect';
 import { commandBarCommands } from './command-bar.commands';
 import { CommandSearcher, SearchProvider } from './searchers';
@@ -21,6 +21,10 @@ import styles from './command-bar.module.scss';
 const RESULT_LIMIT = 5;
 type SearcherSlot = SlotRegistry<SearchProvider[]>;
 type CommandSlot = SlotRegistry<CommandEntry[]>;
+
+export type CommandBarConfig = {
+  debounce?: number
+};
 
 export type CommandEntry = {
   id: CommandId;
@@ -105,7 +109,7 @@ export class CommandBarUI {
     const searchers = flatten(this.searcherSlot.values());
 
     const searcher = searchers.find((x) => x && x.test(term));
-    return searcher?.search(term, limit) || [];
+    return searcher?.search(term, limit) || { items: [] };
   };
 
   private getCommand(id: CommandId) {
@@ -134,11 +138,13 @@ export class CommandBarUI {
   /**
    * generate the ui for command bar
    */
-  CommandBar = () => {
+  CommandBar = ({ ResultComponent }: { ResultComponent?: ComponentType<ResultsComponentProps> }) => {
     const [visible, setVisibility] = useState(false);
     this.setVisibility = setVisibility;
 
-    const results = useSearcher(this.search);
+    const results = useSearcher(this.search, {
+      debounce: this.config.debounce
+    });
 
     return (
       <CommandBar
@@ -147,23 +153,33 @@ export class CommandBarUI {
         className={styles.commanderUi}
         placeholder="Search anything or type > to only search commands"
         visible={visible}
+        ResultsComponent={ResultComponent}
         onVisibilityChange={setVisibility}
         autofocus
       />
     );
   };
 
-  constructor(private searcherSlot: SearcherSlot, private commandSlot: CommandSlot) {}
+  constructor(
+    private searcherSlot: SearcherSlot, 
+    private commandSlot: CommandSlot,
+    private config: CommandBarConfig
+  ) {}
 
   static dependencies = [UIAspect, PubsubAspect, ReactRouterAspect];
   static slots = [Slot.withType<SearchProvider>(), Slot.withType<CommandEntry[]>()];
+  static defaultConfig: CommandBarConfig = {
+    debounce: undefined
+  };
+
   static runtime = UIRuntime;
+  
   static async provider(
     [uiUi, pubsubUI]: [UiUI | undefined, PubsubUI | undefined],
-    config,
+    config: CommandBarConfig,
     [searcherSlot, commandSlots]: [SearcherSlot, CommandSlot]
   ) {
-    const commandBar = new CommandBarUI(searcherSlot, commandSlots);
+    const commandBar = new CommandBarUI(searcherSlot, commandSlots, config);
 
     commandBar.addSearcher(commandBar.commandSearcher);
     commandBar.addCommand({

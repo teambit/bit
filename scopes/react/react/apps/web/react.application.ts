@@ -24,7 +24,8 @@ export class ReactApp implements Application {
     readonly devServer?: DevServer,
     readonly transformers: WebpackConfigTransformer[] = [],
     readonly deploy?: (context: ReactDeployContext) => Promise<void>,
-    readonly favicon?: string
+    readonly favicon?: string,
+    readonly ssr?: boolean
   ) {}
   readonly applicationType = 'react-common-js';
   readonly dir = 'public';

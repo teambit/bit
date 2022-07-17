@@ -1,0 +1,43 @@
+@import '~@teambit/ui-foundation.ui.constants.z-indexes/z-indexes.module.scss';
+
+.commandBar {
+  flex-direction: column;
+
+  border: 1px solid var(--bit-border-color, #babec9);
+  overflow: hidden; // enforce border-radius
+
+  color: var(--bit-text-color-heavy, #2b2b2b);
+
+  display: none;
+  &.visible {
+    display: flex;
+  }
+}
+
+.shadow {
+  box-shadow: 0 40px 60px 0 rgba(0, 0, 0, 0.32);
+}
+
+.commandBar {
+  padding: 0px;
+  z-index: $modal-z-index;
+}
+
+.input {
+  padding: 0 1.2em;
+  line-height: 2.8;
+}
+
+.results {
+  font-size: 0.7em;
+  transition: opacity 180ms;
+
+  &:not(:empty) {
+    margin-bottom: 8px;
+    border-top: solid 1px var(--bit-border-color, #babec9);
+  }
+
+  &.loading {
+    opacity: 0.61;
+  }
+}
