@@ -5,7 +5,7 @@ import { BASE_DOCS_DOMAIN, COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/c
 import { SnappingMain } from './snapping.main.runtime';
 
 export default class ResetCmd implements Command {
-  name = 'reset [component-pattern] [component-version]';
+  name = 'reset [component-pattern]';
   description = 'revert tagged or snapped versions for component(s)';
   arguments = [
     {
@@ -22,6 +22,7 @@ export default class ResetCmd implements Command {
   alias = '';
   options = [
     ['a', 'all', 'revert tag/snap for all tagged/snapped components'],
+    ['', 'head', 'revert the head tag/snap only (by default, all local tags/snaps are reverted)'],
     ['', 'soft', 'revert only soft-tags (components tagged with --soft flag)'],
     [
       'f',
@@ -35,8 +36,13 @@ export default class ResetCmd implements Command {
   constructor(private snapping: SnappingMain) {}
 
   async report(
-    [pattern, version]: [string, string],
-    { all = false, force = false, soft = false }: { all?: boolean; force?: boolean; soft?: boolean }
+    [pattern]: [string],
+    {
+      all = false,
+      head = false,
+      force = false,
+      soft = false,
+    }: { all?: boolean; head?: boolean; force?: boolean; soft?: boolean }
   ) {
     if (!pattern && !all) {
       throw new BitError('please specify a component-pattern or use --all flag');
@@ -44,7 +50,10 @@ export default class ResetCmd implements Command {
     if (pattern && all) {
       throw new BitError('please specify either a component-pattern or --all flag, not both');
     }
-    const { results, isSoftUntag } = await this.snapping.reset(pattern, version, force, soft);
+    if (soft && head) {
+      throw new BitError('please specify either --soft or --head flag, not both');
+    }
+    const { results, isSoftUntag } = await this.snapping.reset(pattern, head, force, soft);
     const titleSuffix = isSoftUntag ? 'soft-untagged (are not candidate for tagging anymore)' : 'untagged';
     const title = chalk.green(`${results.length} component(s) were ${titleSuffix}:\n`);
     const components = results.map((result) => {
