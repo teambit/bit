@@ -111,9 +111,9 @@ export default class ImportComponents {
     if (this.laneObjects.length > 1) {
       throw new Error(`importObjectsOnLane does not support more than one lane`);
     }
-    const lane = this.laneObjects[0];
+    const lane = this.laneObjects.length ? this.laneObjects[0] : undefined;
     const bitIds: BitIds = await this.getBitIds();
-    this.laneObjects.length
+    lane
       ? logger.debug(`importObjectsOnLane, Lane: ${lane.id()}, Ids: ${bitIds.toString()}`)
       : logger.debug(`importObjectsOnLane, the lane does not exist on the remote. importing only the main components`);
     const beforeImportVersions = await this._getCurrentVersions(bitIds);
@@ -123,6 +123,15 @@ export default class ImportComponents {
       this.options.allHistory,
       lane
     );
+
+    // import lane components from their original scope, this way, it's possible to run diff/merge on them
+    const bitIdsFromLane = lane?.toBitIds();
+    if (bitIdsFromLane?.length) {
+      // @todo: optimize this. currently, it imports twice.
+      // try to make the previous `importComponentsObjectsHarmony` import the same component once from the original
+      // scope and once from the lane-scope.
+      await this.consumer.importComponentsObjectsHarmony(bitIdsFromLane, false, this.options.allHistory);
+    }
 
     // merge the lane objects
     const mergeAllLanesResults = await pMapSeries(this.laneObjects, (laneObject) =>

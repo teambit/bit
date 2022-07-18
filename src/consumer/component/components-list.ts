@@ -1,3 +1,4 @@
+import { compact } from 'lodash';
 import * as path from 'path';
 import R from 'ramda';
 
@@ -5,6 +6,7 @@ import NoIdMatchWildcard from '../../api/consumer/lib/exceptions/no-id-match-wil
 import { BitId, BitIds } from '../../bit-id';
 import { COMPONENT_ORIGINS, LATEST } from '../../constants';
 import { DivergeData } from '../../scope/component-ops/diverge-data';
+import { getDivergeData } from '../../scope/component-ops/get-diverge-data';
 import { Lane } from '../../scope/models';
 import ModelComponent from '../../scope/models/model-component';
 import Version from '../../scope/models/version';
@@ -19,7 +21,7 @@ import { InvalidComponent } from '../component/consumer-component';
 import Consumer from '../consumer';
 
 export type ObjectsList = Promise<{ [componentId: string]: Version }>;
-
+export type DivergeDataPerId = { id: BitId; divergeData: DivergeData };
 export type ListScopeResult = {
   id: BitId;
   currentlyUsedVersion?: string | null | undefined;
@@ -161,6 +163,28 @@ export default class ComponentsList {
       .filter((c) => authoredAndImportedIds.hasWithoutVersion(c.toBitId()))
       .filter((c) => !compsDuringMerge.hasWithoutVersion(c.toBitId()))
       .filter((c) => c.isHeadSnap());
+  }
+
+  /**
+   * list components on a lane that their main got updates.
+   */
+  async listUpdatesFromMainPending(): Promise<DivergeDataPerId[]> {
+    if (this.scope.lanes.isOnMain()) {
+      return [];
+    }
+    const componentsFromModel = await this.getModelComponents();
+    const results = await Promise.all(
+      componentsFromModel.map(async (modelComponent) => {
+        const headOnMain = modelComponent.head;
+        const headOnLane = modelComponent.laneHeadLocal;
+        if (!headOnMain || !headOnLane) return undefined;
+        const divergeData = await getDivergeData(this.scope.objects, modelComponent, headOnMain, headOnLane);
+        if (!divergeData.snapsOnRemoteOnly) return undefined;
+        return { id: modelComponent.toBitId(), divergeData };
+      })
+    );
+
+    return compact(results);
   }
 
   async listMergePendingComponents(): Promise<DivergedComponent[]> {

@@ -91,6 +91,7 @@ export class StatusCmd implements Command {
       componentsWithIndividualFiles,
       softTaggedComponents,
       snappedComponents,
+      pendingUpdatesFromMain,
       laneName,
     }: StatusResult = await this.status.status();
     // If there is problem with at least one component we want to show a link to the
@@ -229,11 +230,19 @@ or use "bit merge [component-id] --abort" to cancel the merge operation)\n`;
       stagedComponents.length ? chalk.underline.white('staged components') + stagedDesc : ''
     ).join('\n');
 
-    const snappedDesc = '\n(use "bit tag --all [version]" or "bit tag --snapped [version]" to lock a version)\n';
+    const snappedDesc = '\n(use "bit tag [version]" or "bit tag --snapped [version]" to lock a version)\n';
     const snappedComponentsOutput = immutableUnshift(
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       snappedComponents.map((c) => format(c, true)),
       snappedComponents.length ? chalk.underline.white('snapped components') + snappedDesc : ''
+    ).join('\n');
+
+    const updatesFromMainDesc = '\n(use "bit tag [version]" or "bit tag --snapped [version]" to lock a version)\n';
+    const updatesFromMainOutput = immutableUnshift(
+      pendingUpdatesFromMain.map((c) =>
+        format(c.id, true, `main is ahead by ${c.divergeData.snapsOnRemoteOnly.length || 0} snaps`)
+      ),
+      pendingUpdatesFromMain.length ? chalk.underline.white('pending updates from main') + updatesFromMainDesc : ''
     ).join('\n');
 
     const laneStr = laneName ? `\non ${chalk.bold(laneName)} lane` : '';
@@ -245,6 +254,7 @@ or use "bit merge [component-id] --abort" to cancel the merge operation)\n`;
       [
         outdatedStr,
         pendingMergeStr,
+        updatesFromMainOutput,
         compWithConflictsStr,
         newComponentsOutput,
         modifiedComponentOutput,

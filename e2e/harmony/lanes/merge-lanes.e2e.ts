@@ -306,4 +306,35 @@ describe('merge lanes', function () {
       });
     });
   });
+  describe('getting updates from main when lane is diverge', () => {
+    let workspaceOnLane: string;
+    let comp2HeadOnMain: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents(2);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.command.createLane();
+      helper.fixtures.populateComponents(2, undefined, 'v2');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      workspaceOnLane = helper.scopeHelper.cloneLocalScope();
+      helper.command.switchLocalLane('main');
+      helper.fixtures.populateComponents(2, undefined, 'v3');
+      helper.command.snapAllComponentsWithoutBuild();
+      comp2HeadOnMain = helper.command.getHead(`${helper.scopes.remote}/comp2`);
+      helper.command.export();
+      helper.scopeHelper.getClonedLocalScope(workspaceOnLane);
+      helper.command.import();
+    });
+    it('bit import should bring the latest main objects', () => {
+      const head = helper.command.getHead(`${helper.scopes.remote}/comp2`);
+      expect(head).to.equal(comp2HeadOnMain);
+    });
+    it('bit status should indicate that the main is ahead', () => {
+      const status = helper.command.status();
+      expect(status).to.have.string(`${helper.scopes.remote}/comp1 ... main is ahead by 1 snaps`);
+    });
+  });
 });

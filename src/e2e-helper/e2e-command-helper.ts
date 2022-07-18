@@ -372,6 +372,9 @@ export default class CommandHelper {
   import(value = '') {
     return this.runCmd(`bit import ${value}`);
   }
+  importLane(laneName: string, flags = '') {
+    return this.runCmd(`bit lane import ${this.scopes.remote}/${laneName} ${flags}`);
+  }
   fetchLane(id: string) {
     return this.runCmd(`bit fetch ${id} --lanes`);
   }

@@ -663,6 +663,18 @@ export default class Scope {
     return BitId.parse(id, false);
   }
 
+  /**
+   * returns the main ids of the given lane
+   */
+  async getDefaultLaneIdsFromLane(lane: Lane): Promise<BitId[]> {
+    const laneIds = lane.toBitIds();
+    const modelComponents = await Promise.all(laneIds.map((id) => this.getModelComponent(id)));
+    return modelComponents.map((c) => {
+      if (!c.head) throw new Error(`component ${c.id.toString()} has no head`);
+      return c.toBitId().changeVersion(c.head.toString());
+    });
+  }
+
   async writeObjectsToPendingDir(objectList: ObjectList, clientId: string): Promise<void> {
     const pendingDir = pathLib.join(this.path, PENDING_OBJECTS_DIR, clientId);
     if (fs.pathExistsSync(pendingDir)) {
