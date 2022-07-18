@@ -145,4 +145,11 @@ export class BitMap {
   getExportedLaneId() {
     return this.legacyBitMap.remoteLaneId;
   }
+
+  /**
+   * whether .bitmap file has changed in-memory
+   */
+  hasChanged(): boolean {
+    return this.legacyBitMap.hasChanged;
+  }
 }

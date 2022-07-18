@@ -14,6 +14,8 @@ import {
   statusInvalidComponentsMsg,
   statusWorkspaceIsCleanMsg,
 } from '@teambit/legacy/dist/constants';
+import { partition } from 'lodash';
+import { isHash } from '@teambit/component-version';
 import { StatusMain, StatusResult } from './status.main.runtime';
 
 const individualFilesDesc = `these components were added as individual files and not as directories, which are invalid in Harmony
@@ -30,6 +32,7 @@ export class StatusCmd implements Command {
   alias = 's';
   options = [
     ['j', 'json', 'return a json version of the component'],
+    ['', 'verbose', 'show full snap hashes'],
     ['', 'strict', 'in case issues found, exit with code 1'],
   ] as CommandOptions;
   loader = true;
@@ -73,7 +76,7 @@ export class StatusCmd implements Command {
     };
   }
 
-  async report(_args, { strict }: { strict?: boolean }) {
+  async report(_args, { strict, verbose }: { strict?: boolean; verbose?: boolean }) {
     const {
       newComponents,
       modifiedComponent,
@@ -119,7 +122,15 @@ export class StatusCmd implements Command {
           throw new Error(`expect "${component}" to be instance of ModelComponent`);
         }
         const localVersions = component.getLocalTagsOrHashes();
-        bitFormatted += `. versions: ${localVersions.join(', ')}`;
+        if (verbose) {
+          bitFormatted += `. versions: ${localVersions.join(', ')}`;
+        } else {
+          const [snaps, tags] = partition(localVersions, (version) => isHash(version));
+          const tagsStr = tags.length ? `versions: ${tags.join(', ')}` : '';
+          const snapsStr = snaps.length ? `${snaps.length} snap(s)` : '';
+          bitFormatted += `. `;
+          bitFormatted += tagsStr && snapsStr ? `${tagsStr}. and ${snapsStr}` : tagsStr || snapsStr;
+        }
       }
       bitFormatted += ' ... ';
       if (!issues) return `${bitFormatted}${messageStatus}`;
@@ -149,7 +160,7 @@ export class StatusCmd implements Command {
     const outdatedStr = outdatedComponents.length ? [outdatedTitle, outdatedDesc, outdatedComps].join('\n') : '';
 
     const pendingMergeTitle = chalk.underline.white('pending merge');
-    const pendingMergeDesc = `(use "bit untag" to add local changes on top of the remote and discard local tags.
+    const pendingMergeDesc = `(use "bit reset" to add local changes on top of the remote and discard local tags.
 alternatively, to keep local tags/snaps history, use "bit merge <remote-name>/<lane-name> [component-id]")\n`;
     const pendingMergeComps = mergePendingComponents
       .map((component) => {

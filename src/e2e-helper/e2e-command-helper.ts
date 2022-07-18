@@ -177,6 +177,9 @@ export default class CommandHelper {
   unsetAspect(pattern: string, aspectId: string, flags = '') {
     return this.runCmd(`bit aspect unset ${pattern} ${aspectId} ${flags}`);
   }
+  updateAspect(aspectId: string, pattern = '', flags = '') {
+    return this.runCmd(`bit aspect update ${aspectId} ${pattern} ${flags}`);
+  }
   removeComponent(id: string, flags = '') {
     return this.runCmd(`bit remove ${id} --silent ${flags}`);
   }
@@ -329,8 +332,8 @@ export default class CommandHelper {
     if (!artifacts) throw new Error(`unable to find artifacts data for ${id}`);
     return artifacts;
   }
-  untag(id: string, version = '') {
-    return this.runCmd(`bit reset ${id} ${version}`);
+  untag(id: string, head = false, flag = '') {
+    return this.runCmd(`bit reset ${id} ${head ? '--head' : ''} ${flag}`);
   }
   untagAll(options = '') {
     return this.runCmd(`bit reset ${options} --all`);
@@ -462,8 +465,8 @@ export default class CommandHelper {
     return this.runCmd(`bit test ${id} ${value}`, cwd);
   }
 
-  status() {
-    return this.runCmd('bit status');
+  status(flags = '') {
+    return this.runCmd(`bit status ${flags}`);
   }
 
   statusJson(cwd = this.scopes.localPath) {
@@ -549,6 +552,9 @@ export default class CommandHelper {
 
   checkout(values: string) {
     return this.runCmd(`bit checkout ${values}`);
+  }
+  checkoutHead(values = '') {
+    return this.runCmd(`bit checkout head ${values}`);
   }
   switchLocalLane(lane: string, flags?: string) {
     return this.runCmd(`bit switch ${lane} ${flags || ''}`);

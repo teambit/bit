@@ -24,6 +24,19 @@ export class DependencyList {
     return this._dependencies;
   }
 
+  sort(): DependencyList {
+    const sorted = this.dependencies.sort((a, b) => {
+      if (a.id < b.id) {
+        return -1;
+      }
+      if (a.id > b.id) {
+        return 1;
+      }
+      return 0;
+    });
+    return new DependencyList(sorted);
+  }
+
   /**
    * @param componentIdStr complete string include the scope and the version
    */

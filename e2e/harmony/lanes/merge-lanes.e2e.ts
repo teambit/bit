@@ -98,7 +98,7 @@ describe('merge lanes', function () {
     });
     // in this case, the lane dev has v1 and v2 on the remote, but only v1 locally.
     // previously, it was needed `bit lane merge` to get v2 locally.
-    // currently, it's done by `bit import` and then `bit checkout latest`.
+    // currently, it's done by `bit import` and then `bit checkout head`.
     describe('importing a remote lane which is ahead of the local lane', () => {
       before(() => {
         helper.scopeHelper.reInitLocalScopeHarmony();
