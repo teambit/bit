@@ -1,6 +1,9 @@
-import { join, basename } from 'path';
+import { join, resolve, basename } from 'path';
+import Express from 'express';
+import { inspect } from 'util';
+import { merge } from 'webpack-merge';
 import { Application, AppContext, AppBuildContext } from '@teambit/application';
-import { Bundler, DevServer, BundlerContext, DevServerContext, BundlerHtmlConfig } from '@teambit/bundler';
+import type { Bundler, DevServer, BundlerContext, DevServerContext, BundlerHtmlConfig, Target } from '@teambit/bundler';
 import { Port } from '@teambit/toolbox.network.get-port';
 import { remove } from 'lodash';
 import TerserPlugin from 'terser-webpack-plugin';
@@ -12,12 +15,15 @@ import { ReactAppPrerenderOptions } from './react-app-options';
 import { html } from '../../webpack';
 import { ReactDeployContext } from '.';
 import { computeResults } from './compute-results';
+import { loadBundle, ssrConfig, SSR_OUTPUT_FOLDER } from './webpack.app.ssr.config';
+import { addDevServer, setOutput } from './webpack/mutators';
 
 export class ReactApp implements Application {
   constructor(
     readonly name: string,
     readonly entry: string[] | (() => Promise<string[]>),
-    readonly portRange: number[],
+    readonly ssr: string | (() => Promise<string>) | undefined,
+    readonly portRange: [number, number],
     private reactEnv: ReactEnv,
     readonly prerender?: ReactAppPrerenderOptions,
     readonly bundler?: Bundler,
@@ -32,32 +38,69 @@ export class ReactApp implements Application {
   async run(context: AppContext): Promise<number> {
     const [from, to] = this.portRange;
     const port = await Port.getPort(from, to);
+
     if (this.devServer) {
       await this.devServer.listen(port);
       return port;
     }
-    const devServerContext = await this.getDevServerContext(context);
-    const devServer = this.reactEnv.getDevServer(devServerContext, [
-      (configMutator) =>
-        configMutator.addTopLevel('devServer', {
-          historyApiFallback: {
-            index: '/index.html',
-            disableDotRule: true,
-            headers: {
-              'Access-Control-Allow-Headers': '*',
-            },
-          },
-        }),
-      (configMutator) => {
-        if (!configMutator.raw.output) configMutator.raw.output = {};
-        configMutator.raw.output.publicPath = '/';
 
-        return configMutator;
+    if (this.ssr) {
+      await this.runSsr(context, port);
+      return port;
+    }
+
+    const devServerContext = await this.getDevServerContext(context);
+    const devServer = this.reactEnv.getDevServer(devServerContext, [addDevServer, setOutput, ...this.transformers]);
+    await devServer.listen(port);
+    return port;
+  }
+
+  private async runSsr(context: AppContext, port: number) {
+    await this.buildSsr(context);
+    console.log('build success');
+    const { render } = await loadBundle();
+    console.log('load bundle success'); // TODO remove
+
+    const express = Express();
+    express.use((req, response, next) => {
+      const result = render();
+      response.send(result);
+    });
+
+    express.listen(port);
+    console.log('express success');
+    return port;
+  }
+
+  private async buildSsr(context: AppContext) {
+    const target: Target = {
+      entries: await this.getSsrEntries(),
+      components: [context.appComponent],
+      outputPath: resolve(SSR_OUTPUT_FOLDER),
+    };
+
+    const ctx: BundlerContext = {
+      ...context,
+      targets: [target],
+
+      // @ts-ignore ignore these, I just wanna build:
+      capsuleNetwork: undefined,
+      previousTasksResults: [],
+    };
+
+    const bundler = await this.reactEnv.getBundler(ctx, [
+      (config) => {
+        config.raw = merge(config.raw, ssrConfig());
+
+        return config;
       },
       ...this.transformers,
     ]);
-    await devServer.listen(port);
-    return port;
+
+    const bundleResult = await bundler.run();
+    const onlyBundle = bundleResult[0];
+
+    return onlyBundle;
   }
 
   async build(context: AppBuildContext): Promise<ReactAppBuildResult> {
@@ -188,6 +231,12 @@ export class ReactApp implements Application {
   async getEntries(): Promise<string[]> {
     if (Array.isArray(this.entry)) return this.entry;
     return this.entry();
+  }
+
+  async getSsrEntries(): Promise<string[]> {
+    if (!this.ssr) throw new Error('this was handled before'); // TODO
+    if (typeof this.ssr === 'string') return [this.ssr];
+    return [await this.ssr()];
   }
 
   private async getDevServerContext(context: AppContext): Promise<DevServerContext> {

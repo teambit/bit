@@ -10,6 +10,7 @@ export class ReactAppType implements ApplicationType<ReactAppOptions> {
     return new ReactApp(
       options.name,
       options.entry,
+      options.ssr,
       options.portRange || [3000, 4000],
       this.reactEnv,
       options.prerender,
