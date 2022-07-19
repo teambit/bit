@@ -3,6 +3,7 @@ import R from 'ramda';
 import { Command, CommandOptions } from '@teambit/cli';
 import { BitId } from '@teambit/legacy-bit-id';
 import Component from '@teambit/legacy/dist/consumer/component';
+import { DivergeData } from '@teambit/legacy/dist/scope/component-ops/diverge-data';
 import { immutableUnshift } from '@teambit/legacy/dist/utils';
 import { formatBitString, formatNewBit } from '@teambit/legacy/dist/cli/chalk-box';
 import { getInvalidComponentLabel, formatIssues } from '@teambit/legacy/dist/cli/templates/component-issues-template';
@@ -237,15 +238,19 @@ or use "bit merge [component-id] --abort" to cancel the merge operation)\n`;
       snappedComponents.length ? chalk.underline.white('snapped components') + snappedDesc : ''
     ).join('\n');
 
-    // @todo: once the merge from main is working, uncomment this.
+    const getUpdateFromMainMsg = (divergeData: DivergeData): string => {
+      if (divergeData.err) return divergeData.err.message;
+      let msg = `main is ahead by ${divergeData.snapsOnRemoteOnly.length || 0} snaps`;
+      if (divergeData.snapsOnLocalOnly) {
+        msg += ` (diverged since ${divergeData.commonSnapBeforeDiverge?.toShortString()})`;
+      }
+      return msg;
+    };
     const updatesFromMainDesc =
-      '\n(EXPERIMENTAL. use "bit merge" to merge the changes. Better to wait with this merge until it is stable)\n';
-    const pendingUpdatesFromMainIds = pendingUpdatesFromMain.map((c) => {
-      const msg = c.divergeData.err
-        ? c.divergeData.err.message
-        : `main is ahead by ${c.divergeData.snapsOnRemoteOnly.length || 0} snaps`;
-      return format(c.id, true, msg);
-    });
+      '\n(EXPERIMENTAL. use "bit lane merge main --partial <component-name>" to merge the changes)\n';
+    const pendingUpdatesFromMainIds = pendingUpdatesFromMain.map((c) =>
+      format(c.id, true, getUpdateFromMainMsg(c.divergeData))
+    );
     const updatesFromMainOutput = immutableUnshift(
       pendingUpdatesFromMainIds,
       pendingUpdatesFromMain.length ? chalk.underline.white('pending updates from main') + updatesFromMainDesc : ''
