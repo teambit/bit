@@ -17,7 +17,7 @@ export async function getDivergeData(
   modelComponent: ModelComponent,
   remoteHead: Ref | null,
   checkedOutLocalHead?: Ref | null, // in case locally on the workspace it has a different version
-  throws = true
+  throws = true // otherwise, save the error instance in the `DivergeData` object
 ): Promise<DivergeData> {
   const isOnLane = modelComponent.laneHeadLocal || modelComponent.laneHeadLocal === null;
   const localHead = checkedOutLocalHead || (isOnLane ? modelComponent.laneHeadLocal : modelComponent.getHead());
@@ -42,7 +42,8 @@ export async function getDivergeData(
   const snapsOnRemote: Ref[] = [];
   let remoteHeadExistsLocally = false;
   let localHeadExistsRemotely = false;
-  let commonSnapBeforeDiverge: Ref;
+  let commonSnapBeforeDiverge: Ref | undefined;
+  let error: Error | undefined;
   const addParentsRecursively = async (version: Version, snaps: Ref[], isLocal: boolean) => {
     if (isLocal && version.hash().isEqual(remoteHead)) {
       remoteHeadExistsLocally = true;
@@ -62,36 +63,47 @@ export async function getDivergeData(
         const parentVersion = (await parent.load(repo)) as Version;
         if (parentVersion) {
           await addParentsRecursively(parentVersion, snaps, isLocal);
-        } else if (throws) {
-          throw new ParentNotFound(modelComponent.id(), version.hash().toString(), parent.toString());
+        } else {
+          const err = new ParentNotFound(modelComponent.id(), version.hash().toString(), parent.toString());
+          if (throws) throw err;
+          error = err;
         }
       })
     );
   };
   const localVersion = (await repo.load(localHead)) as Version;
   if (!localVersion) {
-    throw new Error(`fatal: a component "${modelComponent.id()}" is missing the local head object (${localHead}) in the filesystem.
+    const err =
+      new Error(`fatal: a component "${modelComponent.id()}" is missing the local head object (${localHead}) in the filesystem.
 run the following command to fix it:
 bit import ${modelComponent.id()} --objects`);
+    if (throws) throw err;
+    return new DivergeData(snapsOnLocal, [], remoteHead, err);
   }
   await addParentsRecursively(localVersion, snapsOnLocal, true);
   if (remoteHeadExistsLocally) {
-    return new DivergeData(snapsOnLocal, [], remoteHead);
+    return new DivergeData(snapsOnLocal, [], remoteHead, error);
   }
   const remoteVersion = (await repo.load(remoteHead)) as Version;
   if (!remoteVersion) {
-    throw new VersionNotFoundOnFS(remoteHead.toString(), modelComponent.id());
+    const err = new VersionNotFoundOnFS(remoteHead.toString(), modelComponent.id());
+    if (throws) throw err;
+    return new DivergeData(snapsOnLocal, [], remoteHead, err);
   }
   await addParentsRecursively(remoteVersion, snapsOnRemote, false);
   if (localHeadExistsRemotely) {
-    return new DivergeData([], snapsOnRemote, localHead);
+    return new DivergeData([], snapsOnRemote, localHead, error);
   }
 
-  // @ts-ignore
-  if (!commonSnapBeforeDiverge) throw new NoCommonSnap(modelComponent.id());
+  if (!commonSnapBeforeDiverge) {
+    const err = new NoCommonSnap(modelComponent.id());
+    if (throws) throw err;
+    return new DivergeData(snapsOnLocal, [], remoteHead, err);
+  }
   return new DivergeData(
     R.difference(snapsOnLocal, snapsOnRemote),
     R.difference(snapsOnRemote, snapsOnLocal),
-    commonSnapBeforeDiverge
+    commonSnapBeforeDiverge,
+    error
   );
 }

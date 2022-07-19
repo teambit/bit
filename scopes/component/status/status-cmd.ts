@@ -237,11 +237,17 @@ or use "bit merge [component-id] --abort" to cancel the merge operation)\n`;
       snappedComponents.length ? chalk.underline.white('snapped components') + snappedDesc : ''
     ).join('\n');
 
-    const updatesFromMainDesc = '\n(use "bit tag [version]" or "bit tag --snapped [version]" to lock a version)\n';
+    // @todo: once the merge from main is working, uncomment this.
+    const updatesFromMainDesc =
+      '\n(EXPERIMENTAL. use "bit merge" to merge the changes. Better to wait with this merge until it is stable)\n';
+    const pendingUpdatesFromMainIds = pendingUpdatesFromMain.map((c) => {
+      const msg = c.divergeData.err
+        ? c.divergeData.err.message
+        : `main is ahead by ${c.divergeData.snapsOnRemoteOnly.length || 0} snaps`;
+      return format(c.id, true, msg);
+    });
     const updatesFromMainOutput = immutableUnshift(
-      pendingUpdatesFromMain.map((c) =>
-        format(c.id, true, `main is ahead by ${c.divergeData.snapsOnRemoteOnly.length || 0} snaps`)
-      ),
+      pendingUpdatesFromMainIds,
       pendingUpdatesFromMain.length ? chalk.underline.white('pending updates from main') + updatesFromMainDesc : ''
     ).join('\n');
 

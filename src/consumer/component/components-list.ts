@@ -178,8 +178,8 @@ export default class ComponentsList {
         const headOnMain = modelComponent.head;
         const headOnLane = modelComponent.laneHeadLocal;
         if (!headOnMain || !headOnLane) return undefined;
-        const divergeData = await getDivergeData(this.scope.objects, modelComponent, headOnMain, headOnLane);
-        if (!divergeData.snapsOnRemoteOnly) return undefined;
+        const divergeData = await getDivergeData(this.scope.objects, modelComponent, headOnMain, headOnLane, false);
+        if (!divergeData.snapsOnRemoteOnly.length && !divergeData.err) return undefined;
         return { id: modelComponent.toBitId(), divergeData };
       })
     );

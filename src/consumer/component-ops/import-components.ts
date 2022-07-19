@@ -125,12 +125,13 @@ export default class ImportComponents {
     );
 
     // import lane components from their original scope, this way, it's possible to run diff/merge on them
-    const bitIdsFromLane = lane?.toBitIds();
-    if (bitIdsFromLane?.length) {
-      // @todo: optimize this. currently, it imports twice.
+    if (lane) {
+      const mainIds = await this.scope.getDefaultLaneIdsFromLane(lane);
+      const mainIdsLatest = BitIds.fromArray(mainIds.map((m) => m.changeVersion(undefined)));
+      // @todo: optimize this maybe. currently, it imports twice.
       // try to make the previous `importComponentsObjectsHarmony` import the same component once from the original
       // scope and once from the lane-scope.
-      await this.consumer.importComponentsObjectsHarmony(bitIdsFromLane, false, this.options.allHistory);
+      await this.consumer.importComponentsObjectsHarmony(mainIdsLatest, false, this.options.allHistory);
     }
 
     // merge the lane objects
