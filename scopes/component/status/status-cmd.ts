@@ -243,7 +243,7 @@ or use "bit merge [component-id] --abort" to cancel the merge operation)\n`;
     const getUpdateFromMainMsg = (divergeData: DivergeData): string => {
       if (divergeData.err) return divergeData.err.message;
       let msg = `main is ahead by ${divergeData.snapsOnRemoteOnly.length || 0} snaps`;
-      if (divergeData.snapsOnLocalOnly) {
+      if (divergeData.snapsOnLocalOnly && verbose) {
         msg += ` (diverged since ${divergeData.commonSnapBeforeDiverge?.toShortString()})`;
       }
       return msg;
