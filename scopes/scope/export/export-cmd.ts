@@ -32,7 +32,7 @@ export class ExportCmd implements Command {
     [
       '',
       'all-versions',
-      'export not only staged versions but all of them (useful when components in the remote scope are corrupted or missing)',
+      'export not only staged versions but all of them (useful when versions in the remote scope are corrupted or missing)',
     ],
     [
       '',
