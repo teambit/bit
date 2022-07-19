@@ -7,13 +7,13 @@ import chalk from 'chalk';
 import { isEmpty } from 'lodash';
 
 export class ExportCmd implements Command {
-  name = 'export [component-names...]';
+  name = 'export [component-patterns...]';
   description = 'export components from the workspace to remote scopes';
   arguments = [
     {
-      name: 'component-names...',
+      name: 'component-patterns...',
       description:
-        'a list of component names or component IDs (separated by space). By default, all new component versions are exported.',
+        'component IDs, component names, or component patterns (separated by space). Use patterns to export groups of components using a common scope or namespace. E.g., "utils/*" (wrap with double quotes)',
     },
   ];
   extendedDescription: string;
@@ -24,8 +24,16 @@ export class ExportCmd implements Command {
       'eject',
       'replace the exported components with their corresponding packages (to use these components without further maintaining them)',
     ],
-    ['a', 'all', 'export all components, including non-staged'],
-    ['', 'all-versions', 'export not only staged versions but all of them'],
+    [
+      'a',
+      'all',
+      'export all components, including non-staged (useful when components in the remote scope are corrupted or missing)',
+    ],
+    [
+      '',
+      'all-versions',
+      'export not only staged versions but all of them (useful when components in the remote scope are corrupted or missing)',
+    ],
     [
       '',
       'origin-directly',
