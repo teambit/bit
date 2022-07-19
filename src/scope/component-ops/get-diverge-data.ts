@@ -11,6 +11,10 @@ import { getAllVersionHashes } from './traverse-versions';
  * traversing the snaps history is not cheap, so we first try to avoid it and if not possible,
  * traverse by the local head, if it finds the remote head, no need to traverse by the remote
  * head. (it also means that we can do fast-forward and no need for snap-merge).
+ *
+ * one exception is when at some point, there are two parents. because then, if traversing from one parent doesn't find
+ * the remote head, all the snaps from this parent will be considered local incorrectly. we need to traverse also the
+ * remote to be able to do the diff between the local snaps and the remote snaps.
  */
 export async function getDivergeData(
   repo: Repository,
@@ -43,6 +47,7 @@ export async function getDivergeData(
   let remoteHeadExistsLocally = false;
   let localHeadExistsRemotely = false;
   let commonSnapBeforeDiverge: Ref | undefined;
+  let hasMultipleParents = false;
   let error: Error | undefined;
   const addParentsRecursively = async (version: Version, snaps: Ref[], isLocal: boolean) => {
     if (isLocal && version.hash().isEqual(remoteHead)) {
@@ -58,6 +63,7 @@ export async function getDivergeData(
       if (snapExistLocally) commonSnapBeforeDiverge = snapExistLocally;
     }
     snaps.push(version.hash());
+    if (version.parents.length > 1) hasMultipleParents = true;
     await Promise.all(
       version.parents.map(async (parent) => {
         const parentVersion = (await parent.load(repo)) as Version;
@@ -81,24 +87,29 @@ bit import ${modelComponent.id()} --objects`);
     return new DivergeData(snapsOnLocal, [], remoteHead, err);
   }
   await addParentsRecursively(localVersion, snapsOnLocal, true);
-  if (remoteHeadExistsLocally) {
+  if (remoteHeadExistsLocally && !hasMultipleParents) {
     return new DivergeData(snapsOnLocal, [], remoteHead, error);
   }
-  const remoteVersion = (await repo.load(remoteHead)) as Version;
+  const remoteVersion = (await repo.load(remoteHead)) as Version | undefined;
   if (!remoteVersion) {
     const err = new VersionNotFoundOnFS(remoteHead.toString(), modelComponent.id());
     if (throws) throw err;
-    return new DivergeData(snapsOnLocal, [], remoteHead, err);
+    return new DivergeData([], [], undefined, err);
   }
   await addParentsRecursively(remoteVersion, snapsOnRemote, false);
   if (localHeadExistsRemotely) {
-    return new DivergeData([], snapsOnRemote, localHead, error);
+    return new DivergeData([], R.difference(snapsOnRemote, snapsOnLocal), localHead, error);
+  }
+
+  if (remoteHeadExistsLocally) {
+    // happens when `hasMultipleParents` is true. now that remote was traversed as well, it's possible to find the diff
+    return new DivergeData(R.difference(snapsOnLocal, snapsOnRemote), [], remoteHead, error);
   }
 
   if (!commonSnapBeforeDiverge) {
     const err = new NoCommonSnap(modelComponent.id());
     if (throws) throw err;
-    return new DivergeData(snapsOnLocal, [], remoteHead, err);
+    return new DivergeData(snapsOnLocal, snapsOnRemote, undefined, err);
   }
   return new DivergeData(
     R.difference(snapsOnLocal, snapsOnRemote),

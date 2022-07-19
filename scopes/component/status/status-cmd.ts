@@ -56,11 +56,12 @@ export class StatusCmd implements Command {
       componentsWithIndividualFiles,
       softTaggedComponents,
       snappedComponents,
+      pendingUpdatesFromMain,
     }: StatusResult = await this.status.status();
     return {
       newComponents,
       modifiedComponent: modifiedComponent.map((c) => c.id.toString()),
-      stagedComponents: stagedComponents.map((c) => c.id()),
+      stagedComponents: stagedComponents.map((c) => ({ id: c.id(), versions: c.getLocalTagsOrHashes() })),
       componentsWithIssues: componentsWithIssues.map((c) => ({
         id: c.id.toString(),
         issues: c.issues?.toObject(),
@@ -74,6 +75,7 @@ export class StatusCmd implements Command {
       componentsWithIndividualFiles: componentsWithIndividualFiles.map((c) => c.id.toString()),
       softTaggedComponents: softTaggedComponents.map((s) => s.toString()),
       snappedComponents: snappedComponents.map((s) => s.toString()),
+      pendingUpdatesFromMain: pendingUpdatesFromMain.map((p) => ({ id: p.id.toString(), divergeData: p.divergeData })),
     };
   }
 

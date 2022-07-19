@@ -336,5 +336,21 @@ describe('merge lanes', function () {
       const status = helper.command.status();
       expect(status).to.have.string(`${helper.scopes.remote}/comp1 ... main is ahead by 1 snaps`);
     });
+    describe('merging the lane', () => {
+      let status;
+      before(() => {
+        helper.command.mergeLane('main', '--theirs');
+        status = helper.command.statusJson();
+      });
+      it('bit status should show two staging versions, the main-head and merge-snap', () => {
+        const stagedVersions = status.stagedComponents.find((c) => c.id === `${helper.scopes.remote}/comp2`);
+        expect(stagedVersions.versions).to.have.lengthOf(2);
+        expect(stagedVersions.versions).to.include(comp2HeadOnMain);
+        expect(stagedVersions.versions).to.include(helper.command.getHeadOfLane('dev', 'comp2'));
+      });
+      it('bit status should not show the components in pending-merge', () => {
+        expect(status.mergePendingComponents).to.have.lengthOf(0);
+      });
+    });
   });
 });
