@@ -248,8 +248,7 @@ or use "bit merge [component-id] --abort" to cancel the merge operation)\n`;
       }
       return msg;
     };
-    const updatesFromMainDesc =
-      '\n(EXPERIMENTAL. use "bit lane merge main --partial <component-name>" to merge the changes)\n';
+    const updatesFromMainDesc = '\n(EXPERIMENTAL. use "bit lane merge main" to merge the changes)\n';
     const pendingUpdatesFromMainIds = pendingUpdatesFromMain.map((c) =>
       format(c.id, true, getUpdateFromMainMsg(c.divergeData))
     );
