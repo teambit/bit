@@ -43,6 +43,7 @@ export type ServeAppOptions = {
 export class ApplicationMain {
   constructor(
     private appSlot: ApplicationSlot,
+    // TODO unused
     private appTypeSlot: ApplicationTypeSlot,
     private deploymentProviderSlot: DeploymentProviderSlot,
     private envs: EnvsMain,
@@ -222,7 +223,7 @@ export class ApplicationMain {
       logger
     );
     const appCmd = new AppCmd();
-    appCmd.commands = [new AppListCmd(application)];
+    appCmd.commands = [new AppListCmd(application), new RunCmd(application, logger)];
     aspectLoader.registerPlugins([new AppPlugin(appSlot)]);
     builder.registerBuildTasks([new AppsBuildTask(application)]);
     builder.registerSnapTasks([new DeployTask(application, builder)]);
