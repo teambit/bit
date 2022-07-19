@@ -117,12 +117,10 @@ export default class ImportComponents {
       ? logger.debug(`importObjectsOnLane, Lane: ${lane.id()}, Ids: ${bitIds.toString()}`)
       : logger.debug(`importObjectsOnLane, the lane does not exist on the remote. importing only the main components`);
     const beforeImportVersions = await this._getCurrentVersions(bitIds);
-    const componentsWithDependencies = await this.consumer.importComponentsObjectsHarmony(
-      bitIds,
-      false,
-      this.options.allHistory,
-      lane
-    );
+    const componentsWithDependencies = await this.consumer.importComponentsObjects(bitIds, {
+      allHistory: this.options.allHistory,
+      lane,
+    });
 
     // import lane components from their original scope, this way, it's possible to run diff/merge on them
     if (lane) {
@@ -131,13 +129,10 @@ export default class ImportComponents {
       // @todo: optimize this maybe. currently, it imports twice.
       // try to make the previous `importComponentsObjectsHarmony` import the same component once from the original
       // scope and once from the lane-scope.
-      await this.consumer.importComponentsObjectsHarmony(
-        mainIdsLatest,
-        false,
-        this.options.allHistory,
-        undefined,
-        true
-      );
+      await this.consumer.importComponentsObjects(mainIdsLatest, {
+        allHistory: this.options.allHistory,
+        ignoreMissingHead: true,
+      });
     }
 
     // merge the lane objects
@@ -362,11 +357,10 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
       if (!this.options.objectsOnly) {
         throw new Error(`bit import with no ids and --merge flag was not implemented yet`);
       }
-      componentsAndDependencies = await this.consumer.importComponentsObjectsHarmony(
-        componentsIdsToImport,
-        this.options.fromOriginalScope,
-        this.options.allHistory
-      );
+      componentsAndDependencies = await this.consumer.importComponentsObjects(componentsIdsToImport, {
+        fromOriginalScope: this.options.fromOriginalScope,
+        allHistory: this.options.allHistory,
+      });
       await this._writeToFileSystem(componentsAndDependencies);
     }
     const importDetails = await this._getImportDetails(beforeImportVersions, componentsAndDependencies);
