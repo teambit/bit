@@ -477,6 +477,11 @@ export default class CommandHelper {
     return JSON.parse(status);
   }
 
+  getStagedIdsFromStatus(): string[] {
+    const status = this.statusJson();
+    return status.stagedComponents.map((s) => s.id);
+  }
+
   expectStatusToBeClean(exclude: string[] = []) {
     const statusJson = this.statusJson();
     Object.keys(statusJson).forEach((key) => {

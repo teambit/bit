@@ -131,7 +131,13 @@ export default class ImportComponents {
       // @todo: optimize this maybe. currently, it imports twice.
       // try to make the previous `importComponentsObjectsHarmony` import the same component once from the original
       // scope and once from the lane-scope.
-      await this.consumer.importComponentsObjectsHarmony(mainIdsLatest, false, this.options.allHistory);
+      await this.consumer.importComponentsObjectsHarmony(
+        mainIdsLatest,
+        false,
+        this.options.allHistory,
+        undefined,
+        true
+      );
     }
 
     // merge the lane objects

@@ -174,12 +174,12 @@ describe('component id with wildcard', function () {
           expect(ls).to.have.lengthOf(2);
         });
         it('should not export the non matched components', () => {
-          const status = helper.command.statusJson();
+          const staged = helper.command.getStagedIdsFromStatus();
           // (staged components were not exported)
-          expect(status.stagedComponents).to.have.lengthOf(3);
-          expect(status.stagedComponents).to.include('bar/foo');
-          expect(status.stagedComponents).to.include('utils/is/string');
-          expect(status.stagedComponents).to.include('utils/is/type');
+          expect(staged).to.have.lengthOf(3);
+          expect(staged).to.include('bar/foo');
+          expect(staged).to.include('utils/is/string');
+          expect(staged).to.include('utils/is/type');
         });
       });
     });
