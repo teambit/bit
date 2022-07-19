@@ -26,7 +26,7 @@ export default class ImportCmd implements Command {
     {
       name: 'component-patterns...',
       description:
-        'component IDs, component names, or component patterns (separated by space). Use patterns to import groups of components using a common scope or namespace. E.g., "utils/*" (wrap with double quotes)',
+        'component IDs or component patterns (separated by space). Use patterns to import groups of components using a common scope or namespace. E.g., "utils/*" (wrap with double quotes)',
     },
   ];
   extendedDescription: string;
