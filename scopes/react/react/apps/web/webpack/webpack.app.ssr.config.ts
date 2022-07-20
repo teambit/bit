@@ -53,7 +53,7 @@ export async function loadSsrApp(appName: string) {
 
 export function parseAssets(assets: Asset[], publicPath = PUBLIC_PATH): SsrContent['assets'] {
   const deadAssets = assets.filter((x) => !x.name);
-  if (deadAssets.length > 0) throw new Error('dead assets (kutner to handle)');
+  if (deadAssets.length > 0) throw new Error('missing some build assets (maybe need to turn on cachedAssets, etc)');
 
   return {
     css: assets
