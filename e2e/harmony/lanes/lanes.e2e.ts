@@ -1172,4 +1172,23 @@ describe('bit lane command', function () {
       expect(() => helper.command.import()).to.not.throw();
     });
   });
+  describe('lane-a => lane-b', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents(2);
+      helper.command.tagWithoutBuild();
+      helper.command.export();
+      helper.command.createLane('lane-a');
+      helper.fixtures.populateComponents(2, undefined, 'v2');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      helper.command.createLane('lane-b');
+    });
+    // previously, it was showing the components as staged, because it was comparing them to head, instead of
+    // comparing them to lane-a.
+    it('bit status should be clean', () => {
+      helper.command.expectStatusToBeClean();
+    });
+  });
 });

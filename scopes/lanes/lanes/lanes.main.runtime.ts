@@ -153,6 +153,7 @@ export class LanesMain {
       remoteScope: scope,
     };
     this.scope.legacyScope.lanes.trackLane(trackLaneData);
+    this.scope.legacyScope.scopeJson.setLaneAsNew(name);
     await this.workspace.consumer.onDestroy();
 
     return trackLaneData;
