@@ -20,6 +20,8 @@ export async function updateLanesAfterExport(consumer: Consumer, lane: Lane) {
   consumer.bitMap.updateLanesProperty(workspaceLane, lane.toLaneId());
   workspaceLane.reset();
   await Promise.all(workspaceLanesToUpdate.map((l) => l.write()));
+  consumer.scope.scopeJson.removeLaneFromNew(lane.name);
+  lane.isNew = false;
 }
 
 export async function getLaneCompIdsToExport(
