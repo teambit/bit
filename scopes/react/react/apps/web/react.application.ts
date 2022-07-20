@@ -1,6 +1,5 @@
 import { join, resolve, basename } from 'path';
 import Express from 'express';
-import { merge } from 'webpack-merge';
 import { Application, AppContext, AppBuildContext } from '@teambit/application';
 import type { Bundler, DevServer, BundlerContext, DevServerContext, BundlerHtmlConfig, Target } from '@teambit/bundler';
 import { serverError, notFound } from '@teambit/ui-foundation.ui.pages.static-error';
@@ -8,7 +7,7 @@ import { Port } from '@teambit/toolbox.network.get-port';
 import { Logger } from '@teambit/logger';
 import { remove } from 'lodash';
 import TerserPlugin from 'terser-webpack-plugin';
-import { WebpackConfigTransformer } from '@teambit/webpack';
+import { WebpackConfigMutator, WebpackConfigTransformer } from '@teambit/webpack';
 import { ReactEnv } from '../../react.env';
 import { prerenderPlugin } from './plugins';
 import { ReactAppBuildResult } from './react-build-result';
@@ -17,15 +16,15 @@ import { html } from '../../webpack';
 import { ReactDeployContext } from '.';
 import { computeResults } from './compute-results';
 import {
-  CLIENT_OUPUT_FOLDER,
-  loadBundle,
-  OUTPUT_FOLDER,
+  clientConfig,
   ssrConfig,
-  SSR_OUTPUT_FOLDER,
+  loadSsrApp,
+  parseAssets,
+  calcOutputPath,
+  PUBLIC_PATH,
 } from './webpack/webpack.app.ssr.config';
 import { addDevServer, setOutput } from './webpack/mutators';
 import { calcBrowserData } from './ssr/data';
-import { parseAssets } from './ssr/assets';
 
 export class ReactApp implements Application {
   constructor(
@@ -72,16 +71,18 @@ export class ReactApp implements Application {
     this.logger?.info('[react.application] [ssr] server bundle - complete');
     const assets = parseAssets(clientBundle.assets);
 
-    const { render } = await loadBundle();
+    const app = await loadSsrApp(context.appName);
     this.logger?.info('[react.application] [ssr] bundle code - loaded');
 
     const express = Express();
-    express.use(Express.static(resolve(CLIENT_OUPUT_FOLDER)));
+
+    const publicFolder = resolve(calcOutputPath(context.appName, 'browser'), 'public');
+    express.use(PUBLIC_PATH, Express.static(publicFolder));
     express.use('*', (request, response) => {
       this.logger?.info(`[react.application] [ssr] handling "${request.url}"`);
       const browser = calcBrowserData(request, port);
 
-      Promise.resolve(render({ assets, browser, request, response }))
+      Promise.resolve(app({ assets, browser, request, response }))
         .then((content) => {
           response.send(content);
           this.logger?.info(`[react.application] [ssr] success "${request.url}"`);
@@ -107,7 +108,7 @@ export class ReactApp implements Application {
         {
           entries: await this.getEntries(),
           components: [context.appComponent],
-          outputPath: resolve(OUTPUT_FOLDER),
+          outputPath: resolve(calcOutputPath(context.appName, 'browser')),
         },
       ],
 
@@ -116,7 +117,10 @@ export class ReactApp implements Application {
       previousTasksResults: [],
     };
 
-    const bundler = await this.reactEnv.getBundler(ctx, this.transformers);
+    const bundler = await this.reactEnv.getBundler(ctx, [
+      (config) => config.merge([clientConfig()]),
+      ...this.transformers,
+    ]);
 
     const bundleResult = await bundler.run();
     return bundleResult[0];
@@ -129,7 +133,7 @@ export class ReactApp implements Application {
         {
           entries: await this.getSsrEntries(),
           components: [context.appComponent],
-          outputPath: resolve(SSR_OUTPUT_FOLDER),
+          outputPath: resolve(calcOutputPath(context.appName, 'ssr')),
         },
       ],
 
