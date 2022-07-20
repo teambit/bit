@@ -36,7 +36,9 @@ export async function mergeLanes({
   const consumer = workspace.consumer;
   const currentLaneId = consumer.getCurrentLaneId();
   if (!remoteName && laneName === currentLaneId.name) {
-    throw new BitError(`unable to switch to lane "${laneName}", you're already checked out to this lane`);
+    throw new BitError(
+      `unable to merge lane "${laneName}", you're already at this lane. to get updates, simply run "bit checkout head"`
+    );
   }
   const parsedLaneId = await consumer.getParsedLaneId(laneName);
   const localLane = currentLaneId.isDefault() ? null : await consumer.scope.loadLane(currentLaneId);
@@ -47,7 +49,8 @@ export async function mergeLanes({
   const isDefaultLane = laneName === DEFAULT_LANE;
 
   if (isDefaultLane) {
-    bitIds = consumer.bitMap.getAuthoredAndImportedBitIdsOfDefaultLane().filter((id) => id.hasVersion());
+    if (!localLane) throw new Error(`unable to merge ${DEFAULT_LANE}, the current lane was not found`);
+    bitIds = await consumer.scope.getDefaultLaneIdsFromLane(localLane);
     otherLaneName = DEFAULT_LANE;
   } else if (remoteName) {
     const remoteLaneId = LaneId.from(parsedLaneId.name, remoteName);

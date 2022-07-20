@@ -362,8 +362,8 @@ describe('bit lane command', function () {
       // main components belong to lane-a only if they are snapped on lane-a, so utils/is-type
       // doesn't belong to lane-a and should not appear as staged when on lane-a.
       it('bit status should not show neither lane-b nor main components as staged', () => {
-        const statusParsed = helper.command.statusJson();
-        expect(statusParsed.stagedComponents).to.deep.equal(['utils/is-string']);
+        const staged = helper.command.getStagedIdsFromStatus();
+        expect(staged).to.deep.equal(['utils/is-string']);
         const status = helper.command.status();
         expect(status).to.not.have.string('bar/foo');
       });
@@ -383,8 +383,8 @@ describe('bit lane command', function () {
         expect(list).to.have.lengthOf(1);
       });
       it('bit status should show only main components as staged', () => {
-        const statusParsed = helper.command.statusJson();
-        expect(statusParsed.stagedComponents).to.deep.equal(['utils/is-type']);
+        const staged = helper.command.getStagedIdsFromStatus();
+        expect(staged).to.deep.equal(['utils/is-type']);
         const status = helper.command.status();
         expect(status).to.not.have.string('bar/foo');
         expect(status).to.not.have.string('utils/is-string');
@@ -401,8 +401,8 @@ describe('bit lane command', function () {
         expect(list).to.have.lengthOf(1);
       });
       it('bit status should show only main components as staged', () => {
-        const statusParsed = helper.command.statusJson();
-        expect(statusParsed.stagedComponents).to.deep.equal(['utils/is-type']);
+        const staged = helper.command.getStagedIdsFromStatus();
+        expect(staged).to.deep.equal(['utils/is-type']);
         const status = helper.command.status();
         expect(status).to.not.have.string('bar/foo');
         expect(status).to.not.have.string('utils/is-string');
@@ -545,9 +545,10 @@ describe('bit lane command', function () {
     it('bit-status should show them all as staged and not modified', () => {
       const status = helper.command.statusJson();
       expect(status.modifiedComponent).to.be.empty;
-      expect(status.stagedComponents).to.include('comp1');
-      expect(status.stagedComponents).to.include('comp2');
-      expect(status.stagedComponents).to.include('comp3');
+      const staged = helper.command.getStagedIdsFromStatus();
+      expect(staged).to.include('comp1');
+      expect(staged).to.include('comp2');
+      expect(staged).to.include('comp3');
     });
     // @todo
     describe.skip('importing the component to another scope', () => {

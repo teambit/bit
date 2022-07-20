@@ -87,6 +87,12 @@ Summary of when/what lanes data is saved per command:
 - in case the merge wasn't done and the user is trying to export, the remote blocks is as it finds out that its head doesn't exist on the incoming component.
 - in case the snap-merge failed due to a conflict, it saves the conflict and heads data into `.bit/unmerged.json` file.
 
+### Merge components
+
+- to merge an entire lane, use `bit lane merge`.
+- to get updates from a remote lane, run `bit import`, and then `bit checkout head`. alternatively, run `bit merge <component-id>` in one command.
+- to merge an individual component from a lane to main, run `bit lane merge <lane> --pattern <component-id>` when on main.
+
 ### Useful APIs
 
 - bit-map `getAllIdsAvailableOnLane()` filters the currently checked out lane.
