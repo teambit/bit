@@ -71,8 +71,6 @@ export async function mergeLanes({
 
   let allComponentsStatus = await getAllComponentsStatus();
 
-  throwForFailures();
-
   if (pattern) {
     const componentIds = await workspace.resolveMultipleComponentIds(bitIds);
     const compIdsFromPattern = workspace.scope.filterIdsFromPoolIdsByPattern(pattern, componentIds);
@@ -107,6 +105,8 @@ export async function mergeLanes({
       }
     });
   }
+
+  throwForFailures();
 
   if (squash) {
     squashSnaps(allComponentsStatus, laneName, consumer);
