@@ -1,12 +1,15 @@
 import { join, resolve } from 'path';
+import type { Configuration } from 'webpack';
 import * as fs from 'fs-extra';
 
 const SSR_ENTRY_FILENAME = 'index.js';
 export const SSR_OUTPUT_FOLDER = 'public/ssr';
+export const OUTPUT_FOLDER = 'public/client';
 const MAGIC_FOLDER = 'public'; // idk where this comes from
 const SSR_MAIN_FILE = join(SSR_OUTPUT_FOLDER, MAGIC_FOLDER, SSR_ENTRY_FILENAME);
+export const CLIENT_OUPUT_FOLDER = join(SSR_OUTPUT_FOLDER, MAGIC_FOLDER, SSR_ENTRY_FILENAME);
 
-export function ssrConfig() {
+export function ssrConfig(): Configuration {
   return {
     target: 'node',
     devtool: 'eval-cheap-source-map',

@@ -1,10 +1,11 @@
 import { join, resolve, basename } from 'path';
 import Express from 'express';
-import { inspect } from 'util';
 import { merge } from 'webpack-merge';
 import { Application, AppContext, AppBuildContext } from '@teambit/application';
 import type { Bundler, DevServer, BundlerContext, DevServerContext, BundlerHtmlConfig, Target } from '@teambit/bundler';
+import { serverError, notFound } from '@teambit/ui-foundation.ui.pages.static-error';
 import { Port } from '@teambit/toolbox.network.get-port';
+import { Logger } from '@teambit/logger';
 import { remove } from 'lodash';
 import TerserPlugin from 'terser-webpack-plugin';
 import { WebpackConfigTransformer } from '@teambit/webpack';
@@ -15,8 +16,16 @@ import { ReactAppPrerenderOptions } from './react-app-options';
 import { html } from '../../webpack';
 import { ReactDeployContext } from '.';
 import { computeResults } from './compute-results';
-import { loadBundle, ssrConfig, SSR_OUTPUT_FOLDER } from './webpack.app.ssr.config';
+import {
+  CLIENT_OUPUT_FOLDER,
+  loadBundle,
+  OUTPUT_FOLDER,
+  ssrConfig,
+  SSR_OUTPUT_FOLDER,
+} from './webpack/webpack.app.ssr.config';
 import { addDevServer, setOutput } from './webpack/mutators';
+import { calcBrowserData } from './ssr/data';
+import { parseAssets } from './ssr/assets';
 
 export class ReactApp implements Application {
   constructor(
@@ -30,7 +39,8 @@ export class ReactApp implements Application {
     readonly devServer?: DevServer,
     readonly transformers: WebpackConfigTransformer[] = [],
     readonly deploy?: (context: ReactDeployContext) => Promise<void>,
-    readonly favicon?: string
+    readonly favicon?: string,
+    private logger?: Logger
   ) {}
   readonly applicationType = 'react-common-js';
   readonly dir = 'public';
@@ -56,51 +66,85 @@ export class ReactApp implements Application {
   }
 
   private async runSsr(context: AppContext, port: number) {
+    const clientBundle = await this.buildClient(context);
+    this.logger?.info('[react.application] [ssr] client bundle - complete');
     await this.buildSsr(context);
-    console.log('build success');
+    this.logger?.info('[react.application] [ssr] server bundle - complete');
+    const assets = parseAssets(clientBundle.assets);
+
     const { render } = await loadBundle();
-    console.log('load bundle success'); // TODO remove
+    this.logger?.info('[react.application] [ssr] bundle code - loaded');
 
     const express = Express();
-    express.use((req, response, next) => {
-      const result = render();
-      response.send(result);
+    express.use(Express.static(resolve(CLIENT_OUPUT_FOLDER)));
+    express.use('*', (request, response) => {
+      this.logger?.info(`[react.application] [ssr] handling "${request.url}"`);
+      const browser = calcBrowserData(request, port);
+
+      Promise.resolve(render({ assets, browser, request, response }))
+        .then((content) => {
+          response.send(content);
+          this.logger?.info(`[react.application] [ssr] success "${request.url}"`);
+        })
+        .catch((error) => {
+          this.logger?.error(`[react.application] [ssr] error at "${request.url}"`, error);
+          response.status(500).send(serverError());
+        });
+    });
+
+    express.use((req, res) => {
+      res.send(notFound());
     });
 
     express.listen(port);
-    console.log('express success');
     return port;
   }
 
-  private async buildSsr(context: AppContext) {
-    const target: Target = {
-      entries: await this.getSsrEntries(),
-      components: [context.appComponent],
-      outputPath: resolve(SSR_OUTPUT_FOLDER),
-    };
-
+  private async buildClient(context: AppContext) {
     const ctx: BundlerContext = {
       ...context,
-      targets: [target],
+      targets: [
+        {
+          entries: await this.getEntries(),
+          components: [context.appComponent],
+          outputPath: resolve(OUTPUT_FOLDER),
+        },
+      ],
 
-      // @ts-ignore ignore these, I just wanna build:
+      // @ts-ignore
+      capsuleNetwork: undefined,
+      previousTasksResults: [],
+    };
+
+    const bundler = await this.reactEnv.getBundler(ctx, this.transformers);
+
+    const bundleResult = await bundler.run();
+    return bundleResult[0];
+  }
+
+  private async buildSsr(context: AppContext) {
+    const ctx: BundlerContext = {
+      ...context,
+      targets: [
+        {
+          entries: await this.getSsrEntries(),
+          components: [context.appComponent],
+          outputPath: resolve(SSR_OUTPUT_FOLDER),
+        },
+      ],
+
+      // @ts-ignore
       capsuleNetwork: undefined,
       previousTasksResults: [],
     };
 
     const bundler = await this.reactEnv.getBundler(ctx, [
-      (config) => {
-        config.raw = merge(config.raw, ssrConfig());
-
-        return config;
-      },
+      (config) => config.merge([ssrConfig()]),
       ...this.transformers,
     ]);
 
     const bundleResult = await bundler.run();
-    const onlyBundle = bundleResult[0];
-
-    return onlyBundle;
+    return bundleResult[0];
   }
 
   async build(context: AppBuildContext): Promise<ReactAppBuildResult> {

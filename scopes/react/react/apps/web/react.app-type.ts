@@ -1,10 +1,11 @@
 import { ApplicationType } from '@teambit/application';
+import { Logger } from '@teambit/logger';
 import { ReactAppOptions } from './react-app-options';
 import { ReactApp } from './react.application';
 import { ReactEnv } from '../../react.env';
 
 export class ReactAppType implements ApplicationType<ReactAppOptions> {
-  constructor(readonly name: string, private reactEnv: ReactEnv) {}
+  constructor(readonly name: string, private reactEnv: ReactEnv, private logger?: Logger) {}
 
   createApp(options: ReactAppOptions) {
     return new ReactApp(
@@ -18,7 +19,8 @@ export class ReactAppType implements ApplicationType<ReactAppOptions> {
       options.devServer,
       options.webpackTransformers,
       options.deploy,
-      options.favicon
+      options.favicon,
+      this.logger
     );
   }
 }
