@@ -112,7 +112,11 @@ export class ReactApp implements Application {
     });
 
     const defaultTransformer: WebpackConfigTransformer = (configMutator) => {
-      const config = configMutator.addTopLevel('output', { path: staticDir, publicPath: `/` });
+      const config = configMutator.addTopLevel('output', {
+        path: staticDir,
+        publicPath: `/`,
+        filename: '[name].[chunkhash].js',
+      });
       if (this.prerender) config.addPlugin(prerenderPlugin(this.prerender));
       if (config.raw.optimization?.minimizer) {
         remove(config.raw.optimization?.minimizer, (minimizer) => {
