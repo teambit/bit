@@ -462,7 +462,7 @@ there are matching among unmodified components thought. consider using --unmodif
     const logger = loggerMain.createLogger(SnappingAspect.id);
     const snapping = new SnappingMain(workspace, logger, issues, insights);
     const snapCmd = new SnapCmd(community.getBaseDomain(), snapping, logger);
-    const tagCmd = new TagCmd(community.getBaseDomain(), snapping, logger);
+    const tagCmd = new TagCmd(snapping, logger);
     const resetCmd = new ResetCmd(snapping);
     cli.register(tagCmd, snapCmd, resetCmd);
     return snapping;
