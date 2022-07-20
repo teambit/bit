@@ -24,7 +24,7 @@ export function calcOutputPath(appName: string, target: Targets | keyof typeof T
 
 export function clientConfig(): Configuration {
   return {
-    output: { publicPath: PUBLIC_PATH },
+    output: { publicPath: PUBLIC_PATH, filename: '[name].[chunkhash].js' },
   };
 }
 
