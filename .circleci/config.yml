@@ -83,7 +83,7 @@ commands: # reusable commands
         # default: 'hub'
         type: string
       token:
-        default: $BIT_DEV_PROD_TOKEN
+        default: $BIT_CLOUD_PROD_TOKEN
         type: string
     steps:
       - run: 'bit config set analytics_reporting false'
@@ -1054,7 +1054,7 @@ jobs:
           key: bitsrc-registry9
       - update_ssh_agent
       - set_git_credentials
-      - run: bit config set user.token ${BIT_DEV_PROD_TOKEN}
+      - run: bit config set user.token ${BIT_CLOUD_PROD_TOKEN}
       - run:
           name: export components
           command: cd bit && BIT_FEATURES=export-central bit export
