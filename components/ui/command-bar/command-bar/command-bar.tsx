@@ -1,9 +1,11 @@
 import React, { useEffect, ComponentType } from 'react';
+// import { useNavigate } from '@teambit/base-react.navigation.link';
 import classNames from 'classnames';
 import { Card, CardProps } from '@teambit/base-ui.surfaces.card';
 import usePrevious from '@react-hook/previous';
 import useOptionalState from 'use-optionally-controlled-state';
 import { use1dNav, useKey1dNav, Nav1D } from '@teambit/base-react.hooks.use-1d-nav';
+import { useNavigate } from 'react-router-dom';
 
 import { SearchResult } from '../search-result';
 import { AutoCompleteInput } from '../autocomplete-input';
@@ -48,6 +50,7 @@ export function CommandBar({
   ResultsComponent = DefaultResultComponent,
   ...rest
 }: CommandBarProps) {
+  const navigate = useNavigate();
   const [term = '', setTerm] = useOptionalState({ controlledValue: value, initialValue: defaultValue, onChange });
   useEffect(() => setTerm(defaultValue), [visible]); // reset on visibility change
 
@@ -58,6 +61,10 @@ export function CommandBar({
     setVisibility?.(false);
 
     const current = items[idxNav.activeIdx];
+    if (typeof current.action === 'string') {
+      navigate(current.action)
+      return;
+    }
     current?.action();
   };
 

@@ -29,6 +29,7 @@ export type ComponentsDrawerProps = Omit<DrawerType, 'render'> & {
   useComponents: () => { components: ComponentModel[]; loading?: boolean };
   emptyMessage?: ReactNode;
   plugins?: ComponentsDrawerPlugins;
+  assumeScopeInUrl?: boolean;
 };
 
 export type ComponentsDrawerPlugins = {
@@ -50,6 +51,7 @@ export class ComponentsDrawer implements DrawerType {
   emptyMessage?: ReactNode;
   widgets: ReactNode[];
   plugins: ComponentsDrawerPlugins;
+  assumeScopeInUrl: boolean;
 
   constructor(props: ComponentsDrawerProps) {
     Object.assign(this, props);
@@ -57,6 +59,7 @@ export class ComponentsDrawer implements DrawerType {
     this.emptyMessage = props.emptyMessage;
     this.plugins = props.plugins || {};
     this.setWidgets(props.plugins?.drawerWidgets);
+    this.assumeScopeInUrl = props.assumeScopeInUrl || false;
   }
 
   Context = ({ children }) => {
@@ -109,7 +112,12 @@ export class ComponentsDrawer implements DrawerType {
 
     return (
       <div className={styles.drawerTreeContainer}>
-        <ComponentTree components={components} isCollapsed={collapsed} TreeNode={TreeNode} />
+        <ComponentTree
+          components={components}
+          isCollapsed={collapsed}
+          assumeScopeInUrl={this.assumeScopeInUrl}
+          TreeNode={TreeNode}
+        />
       </div>
     );
   };
