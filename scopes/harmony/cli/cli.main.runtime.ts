@@ -114,6 +114,9 @@ export class CLIMain {
         command.loader = true;
       }
     }
+    if (command.helpUrl && !isFullUrl(command.helpUrl)) {
+      command.helpUrl = `https://${this.community.getDocsDomain()}/${command.helpUrl}`;
+    }
   }
 
   static dependencies = [CommunityAspect];
@@ -153,4 +156,8 @@ async function ensureWorkspaceAndScope() {
   } catch (err) {
     // do nothing. it could fail for example with ScopeNotFound error, which is taken care of in "bit init".
   }
+}
+
+function isFullUrl(url: string) {
+  return url.startsWith('http://') || url.startsWith('https://');
 }

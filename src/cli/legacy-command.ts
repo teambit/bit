@@ -7,6 +7,7 @@ export interface LegacyCommand {
   name: string;
   description: string; // for "bit help"
   extendedDescription?: string; // for the command itself
+  helpUrl?: string;
   alias: string;
   opts?: CommandOptions;
   commands?: LegacyCommand[];

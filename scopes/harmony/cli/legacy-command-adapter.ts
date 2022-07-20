@@ -15,10 +15,12 @@ export class LegacyCommandAdapter implements Command {
   migration?: boolean;
   internal?: boolean;
   skipWorkspace?: boolean;
+  helpUrl?: string;
   _packageManagerArgs?: string[];
   constructor(private cmd: LegacyCommand, cliExtension: CLIMain) {
     this.name = cmd.name;
     this.description = cmd.description;
+    this.helpUrl = cmd.helpUrl;
     this.options = cmd.opts || [];
     this.alias = cmd.alias;
     this.extendedDescription = cmd.extendedDescription;
