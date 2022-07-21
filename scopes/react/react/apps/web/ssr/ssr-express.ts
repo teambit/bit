@@ -29,14 +29,12 @@ export function createExpressSsr({ name, workdir, port, app, assets, logger }: E
 
   express.use(PUBLIC_PATH, Express.static(publicFolder));
   express.use((request, response, next) => {
-    if (request.query.rendering === 'client') {
+    if (request.query.rendering !== 'client') {
       next();
       return;
     }
-
     response.sendFile(resolve(workdir, calcOutputPath(name, 'browser'), MAGIC_FOLDER, 'index.html'));
   });
-
   express.use(async (request, response) => {
     logger?.info(`[react.application] [ssr] handling "${request.url}"`);
     const browser = calcBrowserData(request, port);
