@@ -176,6 +176,7 @@ export class ApplicationMain {
     return Object.assign(cloneDeep(context), {
       appName,
       appComponent: component,
+      workdir: this.workspace.path,
     });
   }
 

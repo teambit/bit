@@ -1,13 +1,11 @@
 import { join, resolve, basename } from 'path';
-import Express from 'express';
 import { Application, AppContext, AppBuildContext } from '@teambit/application';
-import type { Bundler, DevServer, BundlerContext, DevServerContext, BundlerHtmlConfig, Target } from '@teambit/bundler';
-import { serverError, notFound } from '@teambit/ui-foundation.ui.pages.static-error';
+import type { Bundler, DevServer, BundlerContext, DevServerContext, BundlerHtmlConfig } from '@teambit/bundler';
 import { Port } from '@teambit/toolbox.network.get-port';
 import { Logger } from '@teambit/logger';
 import { remove } from 'lodash';
 import TerserPlugin from 'terser-webpack-plugin';
-import { WebpackConfigMutator, WebpackConfigTransformer } from '@teambit/webpack';
+import { WebpackConfigTransformer } from '@teambit/webpack';
 import { ReactEnv } from '../../react.env';
 import { prerenderPlugin } from './plugins';
 import { ReactAppBuildResult } from './react-build-result';
@@ -15,16 +13,9 @@ import { ReactAppPrerenderOptions } from './react-app-options';
 import { html } from '../../webpack';
 import { ReactDeployContext } from '.';
 import { computeResults } from './compute-results';
-import {
-  clientConfig,
-  ssrConfig,
-  loadSsrApp,
-  parseAssets,
-  calcOutputPath,
-  PUBLIC_PATH,
-} from './webpack/webpack.app.ssr.config';
+import { clientConfig, ssrConfig, calcOutputPath } from './webpack/webpack.app.ssr.config';
 import { addDevServer, setOutput } from './webpack/mutators';
-import { calcBrowserData } from './ssr/data';
+import { createExpressSsr, loadSsrApp, parseAssets } from './ssr/ssr-express';
 
 export class ReactApp implements Application {
   constructor(
@@ -66,49 +57,60 @@ export class ReactApp implements Application {
 
   private async runSsr(context: AppContext, port: number) {
     const clientBundle = await this.buildClient(context);
-    this.logger?.info('[react.application] [ssr] client bundle - complete');
-    await this.buildSsr(context);
-    this.logger?.info('[react.application] [ssr] server bundle - complete');
-    const assets = parseAssets(clientBundle.assets);
+    if (clientBundle.errors.length > 0) {
+      // TODO - @Gilad help
+      // eslint-disable-next-line no-console
+      clientBundle.errors.forEach((err) => console.error('[react.application] webpack error', err));
+      process.exit();
+    }
 
-    const app = await loadSsrApp(context.appName);
+    this.logger?.info('[react.application] [ssr] client bundle - complete');
+    const serverBundle = await this.buildSsr(context);
+    if (clientBundle.errors.length > 0) {
+      // TODO - @Gilad help
+      // eslint-disable-next-line no-console
+      serverBundle.errors.forEach((err) => console.error('[react.application] webpack error', err));
+      process.exit();
+    }
+    this.logger?.info('[react.application] [ssr] server bundle - complete');
+
+    const assets = parseAssets(clientBundle.assets);
+    const app = await loadSsrApp(context.workdir, context.appName);
     this.logger?.info('[react.application] [ssr] bundle code - loaded');
 
-    const express = Express();
-
-    const publicFolder = resolve(calcOutputPath(context.appName, 'browser'), 'public');
-    express.use(PUBLIC_PATH, Express.static(publicFolder));
-    express.use('*', (request, response) => {
-      this.logger?.info(`[react.application] [ssr] handling "${request.url}"`);
-      const browser = calcBrowserData(request, port);
-
-      Promise.resolve(app({ assets, browser, request, response }))
-        .then((content) => {
-          response.send(content);
-          this.logger?.info(`[react.application] [ssr] success "${request.url}"`);
-        })
-        .catch((error) => {
-          this.logger?.error(`[react.application] [ssr] error at "${request.url}"`, error);
-          response.status(500).send(serverError());
-        });
+    const expressApp = createExpressSsr({
+      name: context.appName,
+      workdir: context.workdir,
+      port,
+      app,
+      assets,
+      logger: this.logger,
     });
+    expressApp.listen(port);
 
-    express.use((req, res) => {
-      res.send(notFound());
-    });
-
-    express.listen(port);
     return port;
   }
 
   private async buildClient(context: AppContext) {
+    const htmlConfig: BundlerHtmlConfig[] = [
+      {
+        title: context.appName,
+        templateContent: html(context.appName),
+        minify: false,
+        favicon: this.favicon,
+        // filename: ''.html`,
+      },
+    ];
+
     const ctx: BundlerContext = {
       ...context,
+      html: htmlConfig,
       targets: [
         {
           entries: await this.getEntries(),
           components: [context.appComponent],
-          outputPath: resolve(calcOutputPath(context.appName, 'browser')),
+          outputPath: resolve(context.workdir, calcOutputPath(context.appName, 'browser')),
+          aliasHostDependencies: true,
         },
       ],
 
@@ -133,7 +135,9 @@ export class ReactApp implements Application {
         {
           entries: await this.getSsrEntries(),
           components: [context.appComponent],
-          outputPath: resolve(calcOutputPath(context.appName, 'ssr')),
+          outputPath: resolve(context.workdir, calcOutputPath(context.appName, 'ssr')),
+          hostDependencies: await this.getPeers(),
+          aliasHostDependencies: true,
         },
       ],
 
