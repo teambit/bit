@@ -410,6 +410,7 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
     } = {}
   ): Promise<ManifestOrAspect[]> {
     ids = uniq(ids);
+    this.logger.debug(`getManifestsGraphRecursively, ids:\n${ids.join('\n')}`);
     const nonVisitedId = ids.filter((id) => !visited.includes(id));
     if (!nonVisitedId.length) {
       return [];
