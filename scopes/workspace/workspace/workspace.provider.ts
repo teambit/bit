@@ -215,7 +215,11 @@ export default async function provideWorkspace(
 
   cli.registerOnStart(async () => {
     await workspace.importCurrentLaneIfMissing();
-    await workspace.loadAspects(aspectLoader.getNotLoadedConfiguredExtensions());
+    await workspace.loadAspects(
+      aspectLoader.getNotLoadedConfiguredExtensions(),
+      undefined,
+      'workspace.cli.registerOnStart'
+    );
   });
 
   // add sub-commands "set" and "unset" to envs command.

@@ -223,7 +223,7 @@ export class ScopeMain implements ComponentFactory {
     };
 
     const idsToLoad = await getAspectsByPreviouslyUsedVersion();
-    await host.loadAspects(idsToLoad, false);
+    await host.loadAspects(idsToLoad, false, 'scope.reloadAspectsWithNewVersion');
   }
 
   getManyByLegacy(components: ConsumerComponent[]): Promise<Component[]> {
@@ -367,10 +367,10 @@ export class ScopeMain implements ComponentFactory {
 
   private localAspects: string[] = [];
 
-  async loadAspects(ids: string[], throwOnError = false, neededFor?: ComponentID): Promise<string[]> {
+  async loadAspects(ids: string[], throwOnError = false, neededFor?: string): Promise<string[]> {
     this.logger.info(`loadAspects, loading ${ids.length} aspects.
 ids: ${ids.join(', ')}
-needed-for: ${neededFor?.toString() || '<unknown>'}`);
+needed-for: ${neededFor || '<unknown>'}`);
     const grouped = await this.groupAspectIdsByEnvOfTheList(ids);
     const envsManifestsIds = await this.getManifestsAndLoadAspects(grouped.envs, throwOnError);
     const otherManifestsIds = await this.getManifestsAndLoadAspects(grouped.other, throwOnError);
@@ -982,14 +982,14 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
     if (this.aspectLoader.isAspectComponent(component)) {
       aspectIds.push(component.id.toString());
     }
-    await this.loadAspects(aspectIds, true, id);
+    await this.loadAspects(aspectIds, true, id.toString());
 
     return component;
   }
 
   async loadComponentsAspect(component: Component) {
     const aspectIds = component.state.aspects.ids;
-    await this.loadAspects(aspectIds, true, component.id);
+    await this.loadAspects(aspectIds, true, component.id.toString());
   }
 
   async isModified(): Promise<boolean> {
@@ -1077,7 +1077,7 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
     );
     cli.registerOnStart(async (hasWorkspace: boolean) => {
       if (hasWorkspace) return;
-      await scope.loadAspects(aspectLoader.getNotLoadedConfiguredExtensions());
+      await scope.loadAspects(aspectLoader.getNotLoadedConfiguredExtensions(), undefined, 'scope.cli.registerOnStart');
     });
     cli.register(new ScopeCmd());
 
