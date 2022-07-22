@@ -60,7 +60,7 @@ export default class BitMap {
   private updatedIds: { [oldIdStr: string]: ComponentMap } = {}; // needed for out-of-sync where the id is changed during the process
   constructor(
     public projectRoot: string,
-    private mapPath: string,
+    public mapPath: string,
     public schema: string,
     public workspaceLane: WorkspaceLane | null, // null if not checked out to a lane
     public remoteLaneId?: LaneId
