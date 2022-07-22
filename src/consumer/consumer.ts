@@ -749,6 +749,28 @@ export default class Consumer {
     await component.devDependencies.addRemoteAndLocalVersions(this.scope, modelDevDependencies);
   }
 
+  async getIdsOfDefaultLane(): Promise<BitIds> {
+    const ids = this.bitMap.getAuthoredAndImportedBitIdsOfDefaultLane();
+    const bitIds = await Promise.all(
+      ids.map(async (id) => {
+        if (!id.hasVersion()) return id;
+        const modelComponent = await this.scope.getModelComponentIfExist(id.changeVersion(undefined));
+        if (modelComponent) {
+          const head = modelComponent.getHeadAsTagIfExist();
+          if (head) {
+            return id.changeVersion(head);
+          }
+          throw new Error(`model-component on main should have head. the head on ${id.toString()} is missing`);
+        }
+        if (!id.hasVersion()) {
+          return id;
+        }
+        throw new Error(`getIdsOfDefaultLane: model-component of ${id.toString()} is missing, please run bit-import`);
+      })
+    );
+    return BitIds.fromArray(bitIds);
+  }
+
   async getAuthoredAndImportedDependentsIdsOf(components: Component[]): Promise<BitIds> {
     const authoredAndImportedComponents = this.bitMap.getAllIdsAvailableOnLane([
       COMPONENT_ORIGINS.IMPORTED,

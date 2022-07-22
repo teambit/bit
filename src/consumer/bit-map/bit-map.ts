@@ -379,7 +379,7 @@ export default class BitMap {
       const cacheKey = `lane-${oneOrigin}` || 'lane-all';
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       if (this._cacheIds[cacheKey]) return this._cacheIds[cacheKey];
-      const allComponents = this.components.filter((c) => c.isAvailableOnCurrentLane);
+      const allComponents = this.components.filter((c) => c.isAvailableOnCurrentLane || !c.onLanesOnly);
       const components = oneOrigin ? allComponents.filter((c) => c.origin === oneOrigin) : allComponents;
       const componentIds = ids(components);
       this._cacheIds[cacheKey] = componentIds;
@@ -498,6 +498,10 @@ export default class BitMap {
     return this.getAllIdsAvailableOnLane([COMPONENT_ORIGINS.AUTHORED, COMPONENT_ORIGINS.IMPORTED]);
   }
 
+  /**
+   * warning! don't use this function. the versions you'll get are not necessarily belong to main.
+   * instead, use `consumer.getIdsOfDefaultLane()`
+   */
   getAuthoredAndImportedBitIdsOfDefaultLane(): BitIds {
     const all = this.getAuthoredAndImportedBitIds();
     const filteredWithDefaultVersion = all.map((id) => {
@@ -689,6 +693,7 @@ export default class BitMap {
     if (config) {
       componentMap.config = config;
     }
+    componentMap.isAvailableOnCurrentLane = true;
     this.sortValidateAndMarkAsChanged(componentMap);
     return componentMap;
   }

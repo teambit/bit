@@ -530,7 +530,7 @@ export class LanesMain {
       const scopeComponents = await this.scope.list();
       bitIds = scopeComponents.filter((component) => component.head).map((component) => component.id._legacy);
     } else {
-      bitIds = consumer.bitMap.getAuthoredAndImportedBitIdsOfDefaultLane();
+      bitIds = await consumer.getIdsOfDefaultLane();
     }
 
     return {

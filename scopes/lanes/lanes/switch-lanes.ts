@@ -113,7 +113,7 @@ export class LaneSwitcher {
 
     const localLane = await this.consumer.scope.loadLane(laneId);
     if (laneId.isDefault()) {
-      this.populatePropsAccordingToDefaultLane();
+      await this.populatePropsAccordingToDefaultLane();
     } else if (localLane) {
       this.populatePropsAccordingToLocalLane(localLane);
     } else {
@@ -146,11 +146,11 @@ export class LaneSwitcher {
     this.logger.debug(`populatePropsAccordingToRemoteLane, completed`);
   }
 
-  private populatePropsAccordingToDefaultLane() {
+  private async populatePropsAccordingToDefaultLane() {
     if (!this.consumer.isOnLane()) {
       throw new BitError(`already checked out to "${this.switchProps.laneName}"`);
     }
-    this.switchProps.ids = this.consumer.bitMap.getAuthoredAndImportedBitIdsOfDefaultLane();
+    this.switchProps.ids = await this.consumer.getIdsOfDefaultLane();
     this.laneIdToSwitch = LaneId.from(DEFAULT_LANE, this.consumer.scope.name);
   }
 
