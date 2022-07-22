@@ -1594,6 +1594,18 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
         existOnWorkspace ? workspaceComps.push(component) : scopeComps.push(component);
       })
     );
+    this.logger.debug(
+      `loadAspects, found ${workspaceComps.length} components in the workspace:\n${workspaceComps
+        .map((c) => c.id.toString())
+        .join('\n')}`
+    );
+    this.logger.debug(
+      `loadAspects, ${
+        scopeComps.length
+      } components are not in the workspace and are loaded from the scope:\n${scopeComps
+        .map((c) => c.id.toString())
+        .join('\n')}`
+    );
     return { workspaceComps, scopeComps };
   }
 
