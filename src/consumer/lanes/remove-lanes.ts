@@ -20,9 +20,7 @@ export default async function removeLanes(
   }
   if (!consumer) throw new Error('consumer must exist for local removal');
   await consumer.scope.lanes.removeLanes(consumer.scope, lanes, force);
-  // const workspaceLanes = lanes.map((lane) => WorkspaceLane.load(lane, consumer.scope.path));
-  // workspaceLanes.forEach((workspaceLane) => workspaceLane.reset());
-  // await Promise.all(workspaceLanes.map((workspaceLane) => workspaceLane.write()));
+
   return { laneResults: lanes };
 }
 
