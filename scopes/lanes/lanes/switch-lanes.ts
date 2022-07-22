@@ -7,7 +7,6 @@ import { BitId } from '@teambit/legacy-bit-id';
 import { ComponentWithDependencies } from '@teambit/legacy/dist/scope';
 import { Version, Lane } from '@teambit/legacy/dist/scope/models';
 import { Tmp } from '@teambit/legacy/dist/scope/repositories';
-import WorkspaceLane from '@teambit/legacy/dist/consumer/bit-map/workspace-lane';
 import {
   applyVersion,
   ComponentStatus,
@@ -41,6 +40,7 @@ export type SwitchProps = {
 export class LaneSwitcher {
   private consumer: Consumer;
   private laneIdToSwitch: LaneId; // populated by `this.populateSwitchProps()`
+  private laneToSwitchTo: Lane | undefined; // populated by `this.populateSwitchProps()`, if default-lane, it's undefined
   constructor(
     private workspace: Workspace,
     private logger: Logger,
@@ -142,6 +142,7 @@ export class LaneSwitcher {
     this.switchProps.ids = remoteLane.components.map((l) => l.id.changeVersion(l.head.toString()));
     this.switchProps.localTrackedLane = this.consumer.scope.lanes.getAliasByLaneId(remoteLaneId) || undefined;
     this.switchProps.remoteLane = remoteLane;
+    this.laneToSwitchTo = remoteLane;
     this.logger.debug(`populatePropsAccordingToRemoteLane, completed`);
   }
 
@@ -159,6 +160,7 @@ export class LaneSwitcher {
     }
     this.switchProps.ids = localLane.components.map((c) => c.id.changeVersion(c.head.toString()));
     this.laneIdToSwitch = localLane.toLaneId();
+    this.laneToSwitchTo = localLane;
   }
 
   private async getAllComponentsStatus(): Promise<ComponentStatus[]> {
@@ -179,7 +181,7 @@ export class LaneSwitcher {
   private async saveLanesData() {
     const saveRemoteLaneToBitmap = () => {
       if (this.switchProps.remoteLane) {
-        this.consumer.bitMap.setRemoteLane(this.switchProps.remoteLane.toLaneId());
+        this.consumer.bitMap.setCurrentLane(this.switchProps.remoteLane.toLaneId());
       }
     };
     const throwIfLaneExists = async () => {
@@ -205,9 +207,8 @@ export class LaneSwitcher {
 
     saveRemoteLaneToBitmap();
     this.consumer.scope.lanes.setCurrentLane(localLaneName);
-    const workspaceLane =
-      localLaneName === DEFAULT_LANE ? null : WorkspaceLane.load(localLaneName, this.consumer.scope.path);
-    this.consumer.bitMap.syncWithLanes(workspaceLane);
+    this.consumer.bitMap.setCurrentLane(this.laneIdToSwitch, Boolean(this.switchProps.remoteLane));
+    this.consumer.bitMap.syncWithLanes(this.laneToSwitchTo);
   }
 }
 

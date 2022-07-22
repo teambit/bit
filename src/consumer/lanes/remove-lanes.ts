@@ -5,7 +5,6 @@ import { Consumer } from '..';
 import enrichContextFromGlobal from '../../hooks/utils/enrich-context-from-global';
 import { Remotes } from '../../remotes';
 import { getScopeRemotes } from '../../scope/scope-remotes';
-import WorkspaceLane from '../bit-map/workspace-lane';
 
 export default async function removeLanes(
   consumer: Consumer | undefined,
@@ -21,9 +20,9 @@ export default async function removeLanes(
   }
   if (!consumer) throw new Error('consumer must exist for local removal');
   await consumer.scope.lanes.removeLanes(consumer.scope, lanes, force);
-  const workspaceLanes = lanes.map((lane) => WorkspaceLane.load(lane, consumer.scope.path));
-  workspaceLanes.forEach((workspaceLane) => workspaceLane.reset());
-  await Promise.all(workspaceLanes.map((workspaceLane) => workspaceLane.write()));
+  // const workspaceLanes = lanes.map((lane) => WorkspaceLane.load(lane, consumer.scope.path));
+  // workspaceLanes.forEach((workspaceLane) => workspaceLane.reset());
+  // await Promise.all(workspaceLanes.map((workspaceLane) => workspaceLane.write()));
   return { laneResults: lanes };
 }
 
