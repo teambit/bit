@@ -637,14 +637,18 @@ describe('bit lane command', function () {
         before(() => {
           helper.command.switchLocalLane('dev');
         });
-        // before, it was changing the version to the head of the lane
-        it('should not change the version prop in .bitmap', () => {
+        it('should change the version prop in .bitmap', () => {
           const bitMap = helper.bitMap.read();
-          expect(bitMap.comp1.version).to.equal('0.0.1');
+          const head = helper.command.getHeadOfLane('dev', 'comp1');
+          expect(bitMap.comp1.version).to.equal(head);
         });
         describe('switch back to main', () => {
           before(() => {
             helper.command.switchLocalLane('main');
+          });
+          it('should change the version prop in .bitmap', () => {
+            const bitMap = helper.bitMap.read();
+            expect(bitMap.comp1.version).to.equal('0.0.1');
           });
           it('status should not show the components as pending updates', () => {
             helper.command.expectStatusToBeClean();
