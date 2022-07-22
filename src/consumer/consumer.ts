@@ -3,6 +3,7 @@ import mapSeries from 'p-map-series';
 import * as path from 'path';
 import R from 'ramda';
 import semver from 'semver';
+import { partition } from 'lodash';
 import { LaneId } from '@teambit/lane-id';
 import { Analytics } from '../analytics/analytics';
 import { BitId, BitIds } from '../bit-id';
@@ -724,6 +725,28 @@ export default class Consumer {
   async cleanFromBitMap(componentsToRemoveFromFs: BitIds) {
     logger.debug(`consumer.cleanFromBitMap, cleaning ${componentsToRemoveFromFs.toString()} from .bitmap`);
     this.bitMap.removeComponents(componentsToRemoveFromFs);
+  }
+
+  async cleanOrRevertFromBitMapWhenOnLane(ids: BitIds) {
+    logger.debug(`consumer.cleanFromBitMapWhenOnLane, cleaning ${ids.toString()} from`);
+    const [idsOnLane, idsOnMain] = partition(ids, (id) => {
+      const componentMap = this.bitMap.getComponent(id, { ignoreVersion: true });
+      return componentMap.onLanesOnly;
+    });
+    if (idsOnLane.length) {
+      await this.cleanFromBitMap(BitIds.fromArray(idsOnLane));
+    }
+    await Promise.all(
+      idsOnMain.map(async (id) => {
+        const modelComp = await this.scope.getModelComponentIfExist(id.changeVersion(undefined));
+        let updatedId = id.changeScope(undefined).changeVersion(undefined);
+        if (modelComp) {
+          const head = modelComp.getHeadAsTagIfExist();
+          if (head) updatedId = id.changeVersion(head);
+        }
+        this.bitMap.updateComponentId(updatedId, false, true);
+      })
+    );
   }
 
   async addRemoteAndLocalVersionsToDependencies(component: Component, loadedFromFileSystem: boolean) {

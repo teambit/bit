@@ -766,7 +766,7 @@ export default class BitMap {
    * in the file-system only one instance with the same component-name. As a result, we can strip the
    * scope-name and the version, find the older version in bit.map and update the id with the new one.
    */
-  updateComponentId(id: BitId, updateScopeOnly = false): BitId {
+  updateComponentId(id: BitId, updateScopeOnly = false, revertToMain = false): BitId {
     const newIdString = id.toString();
     const similarIds = this.findSimilarIds(id, true);
     if (!similarIds.length) {
@@ -788,6 +788,10 @@ export default class BitMap {
     const componentMap = this.getComponent(oldId);
     if (this.laneId && !updateScopeOnly && !newId.hasVersion()) {
       // component was un-snapped and is back to "new".
+      componentMap.onLanesOnly = false;
+    }
+    if (revertToMain) {
+      // happens during "bit remove" when on a lane
       componentMap.onLanesOnly = false;
     }
     if (updateScopeOnly) {
