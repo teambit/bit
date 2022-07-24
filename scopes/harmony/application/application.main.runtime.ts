@@ -33,7 +33,7 @@ export type ServeAppOptions = {
   /**
    * default port range used to serve applications.
    */
-  defaultPortRange?: number[];
+  defaultPortRange?: [start: number, end: number];
 
   /**
    * determine whether to start the application in dev mode.

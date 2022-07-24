@@ -86,7 +86,6 @@ export class ReactApp implements Application {
         templateContent: html(context.appName),
         minify: false,
         favicon: this.favicon,
-        // filename: ''.html`,
       },
     ];
 

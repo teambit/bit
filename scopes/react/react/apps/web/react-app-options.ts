@@ -72,9 +72,8 @@ export type ReactAppOptions = {
    */
   entry: string[] | (() => Promise<string[]>);
 
-  // TODO -
   /**
-   * path to SSR entrypoint of the app
+   * path to server-rendered entrypoint of the app
    */
   ssr?: string | (() => Promise<string>);
 
@@ -109,7 +108,7 @@ export type ReactAppOptions = {
   /**
    * ranges of ports to use to run the app server.
    */
-  portRange?: [number, number];
+  portRange?: [start: number, end: number];
 
   /**
    * favicon for the app. You can pass an abs path (using require.resolve()) or a url.
