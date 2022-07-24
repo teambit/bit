@@ -107,13 +107,13 @@ export function ComponentOverview({
   );
 }
 
-type CompWithTitleBadgesProps = {
+export type BadgeSectionProps = {
   badges: TitleBadge[] | undefined;
   position: BadgePosition;
   componentDescriptor?: ComponentDescriptor;
   component?: ComponentModel;
 };
-function BadgeSection({ badges, position, componentDescriptor, component }: CompWithTitleBadgesProps) {
+export function BadgeSection({ badges, position, componentDescriptor, component }: BadgeSectionProps) {
   return (
     <div className={styles.badgeContainer}>
       {badges

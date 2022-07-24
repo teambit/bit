@@ -15,8 +15,9 @@ export class DocsUI {
   /**
    * register a new title badge into the overview section of a component.
    */
-  registerTitleBadge(titleBadges: TitleBadge[]) {
-    this.titleBadgeSlot.register(titleBadges);
+  registerTitleBadge(titleBadges: TitleBadge | TitleBadge[]) {
+    const badges = Array.isArray(titleBadges) ? titleBadges : [titleBadges];
+    this.titleBadgeSlot.register(badges);
     return this;
   }
 
@@ -39,8 +40,8 @@ export class DocsUI {
     [titleBadgeSlot]: [TitleBadgeSlot]
   ) {
     const docs = new DocsUI(titleBadgeSlot);
-    const section = new OverviewSection(docs);
-    const compareSection = new OverviewCompareSection(docs);
+    const section = new OverviewSection(titleBadgeSlot);
+    const compareSection = new OverviewCompareSection(titleBadgeSlot);
 
     component.registerRoute(section.route);
     component.registerNavigation(section.navigationLink, section.order);
