@@ -519,7 +519,7 @@ export class Workspace implements ComponentFactory {
       try {
         this.componentLoadedSelfAsAspects.set(component.id.toString(), true);
         this.logger.debug(`trying to load self as aspect with id ${component.id.toString()}`);
-        await this.loadAspects([component.id.toString()], undefined, component.id);
+        await this.loadAspects([component.id.toString()], undefined, component.id.toString());
         // In most cases if the load self as aspect failed we don't care about it.
         // we only need it in specific cases to work, but this workspace.get runs on different
         // cases where it might fail (like when importing aspect, after the import objects
@@ -873,7 +873,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     const aspectId = await this.resolveComponentId(aspectIdStr);
     let aspectIdToAdd = aspectId.toStringWithoutVersion();
     if (!(await this.hasId(aspectId))) {
-      const loadedIds = await this.scope.loadAspects([aspectIdStr], true);
+      const loadedIds = await this.scope.loadAspects([aspectIdStr], true, 'bit use command');
       if (loadedIds[0]) aspectIdToAdd = loadedIds[0];
     }
     const config = this.harmony.get<ConfigMain>('teambit.harmony/config').workspaceConfig;
@@ -1397,10 +1397,10 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
    * load aspects from the workspace and if not exists in the workspace, load from the scope.
    * keep in mind that the graph may have circles.
    */
-  async loadAspects(ids: string[] = [], throwOnError = false, neededFor?: ComponentID): Promise<string[]> {
+  async loadAspects(ids: string[] = [], throwOnError = false, neededFor?: string): Promise<string[]> {
     this.logger.info(`loadAspects, loading ${ids.length} aspects.
 ids: ${ids.join(', ')}
-needed-for: ${neededFor?.toString() || '<unknown>'}`);
+needed-for: ${neededFor || '<unknown>'}`);
     const notLoadedIds = ids.filter((id) => !this.aspectLoader.isAspectLoaded(id));
     if (!notLoadedIds.length) return [];
     const coreAspectsStringIds = this.aspectLoader.getCoreAspectIds();
@@ -1453,7 +1453,11 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
     const scopeIdsGrouped = await this.scope.groupAspectIdsByEnvOfTheList(scopeIds);
     const scopeEnvsManifestsIds =
       scopeIdsGrouped.envs && scopeIdsGrouped.envs.length
-        ? await this.scope.loadAspects(scopeIdsGrouped.envs, throwOnError)
+        ? await this.scope.loadAspects(
+            scopeIdsGrouped.envs,
+            throwOnError,
+            'workspace.loadAspects loading scope aspects'
+          )
         : [];
     const scopeOtherManifests =
       scopeIdsGrouped.other && scopeIdsGrouped.other.length
@@ -1594,6 +1598,18 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
         existOnWorkspace ? workspaceComps.push(component) : scopeComps.push(component);
       })
     );
+    this.logger.debug(
+      `loadAspects, found ${workspaceComps.length} components in the workspace:\n${workspaceComps
+        .map((c) => c.id.toString())
+        .join('\n')}`
+    );
+    this.logger.debug(
+      `loadAspects, ${
+        scopeComps.length
+      } components are not in the workspace and are loaded from the scope:\n${scopeComps
+        .map((c) => c.id.toString())
+        .join('\n')}`
+    );
     return { workspaceComps, scopeComps };
   }
 
@@ -1620,7 +1636,7 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
     const loadedExtensions = this.harmony.extensionsIds;
     const extensionsToLoad = difference(extensionsIds, loadedExtensions);
     if (!extensionsToLoad.length) return;
-    await this.loadAspects(extensionsToLoad, throwOnError, originatedFrom);
+    await this.loadAspects(extensionsToLoad, throwOnError, originatedFrom?.toString());
   }
 
   /**

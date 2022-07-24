@@ -69,7 +69,8 @@ export default class SourceRepository {
   async getMany(ids: BitId[] | BitIds, versionShouldBeBuilt = false): Promise<ComponentDef[]> {
     if (!ids.length) return [];
     const concurrency = concurrentComponentsLimit();
-    logger.debug(`sources.getMany, Ids: ${ids.join(', ')}`);
+    logger.trace(`sources.getMany, Ids: ${ids.join(', ')}`);
+    logger.debug(`sources.getMany, ${ids.length} Ids`);
     return pMap(
       ids,
       async (id) => {

@@ -248,6 +248,9 @@ export class CLIParser {
     if (command?.extendedDescription) {
       descriptionColored.push(command?.extendedDescription);
     }
+    if (command?.helpUrl) {
+      descriptionColored.push(`for more info, visit: ${chalk.underline(command.helpUrl)}`);
+    }
     const descriptionStr = descriptionColored.join('\n');
     const globalOptionsStr = globalOptions.join('\n');
 

@@ -20,9 +20,15 @@ import { formatPlainComponentItem } from '@teambit/legacy/dist/cli/chalk-box';
 import { Importer } from './importer';
 
 export default class ImportCmd implements Command {
-  name = 'import [component-ids...]';
-  description = 'import components from remote scopes to the local workspace';
-  arguments = [{ name: 'component-ids...', description: 'a list of component IDs (separated by space) to import' }];
+  name = 'import [component-patterns...]';
+  description = 'import components from their remote scopes to the local workspace';
+  arguments = [
+    {
+      name: 'component-patterns...',
+      description:
+        'component IDs or component patterns (separated by space). Use patterns to import groups of components using a common scope or namespace. E.g., "utils/*" (wrap with double quotes)',
+    },
+  ];
   extendedDescription: string;
   group = 'collaborate';
   alias = '';

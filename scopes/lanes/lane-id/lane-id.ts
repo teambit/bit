@@ -31,6 +31,9 @@ export class LaneId {
 
     return this.scope + LANE_REMOTE_DELIMITER + this.name;
   }
+  toObject() {
+    return { scope: this.scope, name: this.name };
+  }
   static from(name: string, scope: string): LaneId {
     return new LaneId({ scope, name });
   }

@@ -263,7 +263,10 @@ export class MergingMain {
     if (!otherLaneHead) {
       throw new Error(`merging: unable finding a hash for the version ${version} of ${id.toString()}`);
     }
-    const divergeData = await getDivergeData(repo, modelComponent, otherLaneHead, localHead);
+    const divergeData = await getDivergeData(repo, modelComponent, otherLaneHead, localHead, false);
+    if (divergeData.err) {
+      return returnUnmerged(`unable to traverse ${component.id.toString()} history. error: ${divergeData.err.message}`);
+    }
     if (!divergeData.isDiverged()) {
       if (divergeData.isLocalAhead()) {
         // do nothing!
