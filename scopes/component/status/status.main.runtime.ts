@@ -7,7 +7,10 @@ import loader from '@teambit/legacy/dist/cli/loader';
 import { BEFORE_STATUS } from '@teambit/legacy/dist/cli/loader/loader-messages';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import ComponentsPendingImport from '@teambit/legacy/dist/consumer/component-ops/exceptions/components-pending-import';
-import ComponentsList, { DivergedComponent } from '@teambit/legacy/dist/consumer/component/components-list';
+import ComponentsList, {
+  DivergeDataPerId,
+  DivergedComponent,
+} from '@teambit/legacy/dist/consumer/component/components-list';
 import { InvalidComponent } from '@teambit/legacy/dist/consumer/component/consumer-component';
 import { ModelComponent } from '@teambit/legacy/dist/scope/models';
 import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
@@ -30,6 +33,7 @@ export type StatusResult = {
   componentsWithIndividualFiles: ConsumerComponent[];
   softTaggedComponents: BitId[];
   snappedComponents: BitId[];
+  pendingUpdatesFromMain: DivergeDataPerId[];
   laneName: string | null; // null if default
 };
 
@@ -72,6 +76,7 @@ export class StatusMain {
     const componentsDuringMergeState = componentsList.listDuringMergeStateComponents();
     const softTaggedComponents = componentsList.listSoftTaggedComponents();
     const snappedComponents = (await componentsList.listSnappedComponentsOnMain()).map((c) => c.toBitId());
+    const pendingUpdatesFromMain = await componentsList.listUpdatesFromMainPending();
     const currentLane = consumer.getCurrentLaneId();
     const laneName = currentLane.isDefault() ? null : currentLane.name;
     Analytics.setExtraData('new_components', newComponents.length);
@@ -96,6 +101,7 @@ export class StatusMain {
       componentsWithIndividualFiles: await componentsList.listComponentsWithIndividualFiles(),
       softTaggedComponents,
       snappedComponents,
+      pendingUpdatesFromMain,
       laneName,
     };
   }

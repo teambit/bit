@@ -49,7 +49,11 @@ function toComponentPreviewUrl(component: ComponentModel) {
  */
 function toEnvTemplatePreviewUrl(component: ComponentModel, previewName?: string) {
   const envId = component.environment?.id;
-  const envBasedUrl = `/api/${envId}/~aspect/env-template/${previewName}/`;
+  // add component id for cache busting,
+  // otherwise might have leftovers when switching between components of the same env.
+  // This query param is currently not used yet.
+  const search = `compId=${component.id.toString()}`;
+  const envBasedUrl = `/api/${envId}/~aspect/env-template/${previewName}/?${search}`;
   return envBasedUrl;
 }
 
