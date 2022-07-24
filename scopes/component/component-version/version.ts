@@ -12,6 +12,9 @@ export class Version {
     this.latest = latest;
   }
 
+  /**
+   * @deprecated this is super old method, which is not relevant anymore.
+   */
   resolve(availableVersion: string[]): string {
     const getLatest = () => semver.maxSatisfying(availableVersion, '*', { includePrerelease: true });
 
