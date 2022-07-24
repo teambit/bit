@@ -1,5 +1,5 @@
 import { join, resolve, basename } from 'path';
-import { Application, AppContext, AppBuildContext } from '@teambit/application';
+import { Application, AppContext, AppBuildContext, AppResult } from '@teambit/application';
 import type { Bundler, DevServer, BundlerContext, DevServerContext, BundlerHtmlConfig } from '@teambit/bundler';
 import { Port } from '@teambit/toolbox.network.get-port';
 import { Logger } from '@teambit/logger';
@@ -44,37 +44,25 @@ export class ReactApp implements Application {
       return port;
     }
 
-    if (this.ssr) {
-      await this.runSsr(context, port);
-      return port;
-    }
-
     const devServerContext = await this.getDevServerContext(context);
     const devServer = this.reactEnv.getDevServer(devServerContext, [addDevServer, setOutput, ...this.transformers]);
     await devServer.listen(port);
     return port;
   }
 
-  private async runSsr(context: AppContext, port: number) {
-    const clientBundle = await this.buildClient(context);
-    if (clientBundle.errors.length > 0) {
-      // TODO - @Gilad help
-      // eslint-disable-next-line no-console
-      clientBundle.errors.forEach((err) => console.error('[react.application] webpack error', err));
-      process.exit();
-    }
+  async runSsr(context: AppContext): Promise<AppResult> {
+    const [from, to] = this.portRange;
+    const port = await Port.getPort(from, to);
 
+    const clientBundle = await this.buildClient(context);
+    if (clientBundle.errors.length > 0) return { errors: clientBundle.errors };
     this.logger?.info('[react.application] [ssr] client bundle - complete');
+
     const serverBundle = await this.buildSsr(context);
-    if (clientBundle.errors.length > 0) {
-      // TODO - @Gilad help
-      // eslint-disable-next-line no-console
-      serverBundle.errors.forEach((err) => console.error('[react.application] webpack error', err));
-      process.exit();
-    }
+    if (serverBundle.errors.length > 0) return { errors: serverBundle.errors };
     this.logger?.info('[react.application] [ssr] server bundle - complete');
 
-    const assets = parseAssets(clientBundle.assets);
+    const clientAssets = parseAssets(clientBundle.assets);
     const app = await loadSsrApp(context.workdir, context.appName);
     this.logger?.info('[react.application] [ssr] bundle code - loaded');
 
@@ -83,12 +71,12 @@ export class ReactApp implements Application {
       workdir: context.workdir,
       port,
       app,
-      assets,
+      assets: clientAssets,
       logger: this.logger,
     });
     expressApp.listen(port);
 
-    return port;
+    return { port };
   }
 
   private async buildClient(context: AppContext) {

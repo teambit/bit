@@ -21,6 +21,7 @@ import { AppPlugin } from './app.plugin';
 import { AppTypePlugin } from './app-type.plugin';
 import { AppContext } from './app-context';
 import { DeployTask } from './deploy.task';
+import { AppNoSsr } from './exceptions/app-no-ssr';
 
 export type ApplicationTypeSlot = SlotRegistry<ApplicationType<unknown>[]>;
 export type ApplicationSlot = SlotRegistry<Application[]>;
@@ -38,6 +39,18 @@ export type ServeAppOptions = {
    * determine whether to start the application in dev mode.
    */
   dev: boolean;
+
+  /**
+   * actively watch and compile the workspace (like the bit watch command)
+   * @default true
+   */
+  watch?: boolean;
+
+  /**
+   * determine whether to start the application in server side mode.
+   * @default false
+   */
+  ssr?: boolean;
 };
 
 export class ApplicationMain {
@@ -118,25 +131,34 @@ export class ApplicationMain {
     return app;
   }
 
-  private computeOptions(opts: Partial<ServeAppOptions>) {
-    const defaultOpts: ServeAppOptions = {
-      dev: false,
-      defaultPortRange: [3100, 3500],
-    };
-
+  defaultOpts: ServeAppOptions = {
+    dev: false,
+    ssr: false,
+    watch: true,
+    defaultPortRange: [3100, 3500],
+  };
+  private computeOptions(opts: Partial<ServeAppOptions> = {}) {
     return {
-      defaultOpts,
+      ...this.defaultOpts,
       ...opts,
     };
   }
 
-  async runApp(appName: string, options: Partial<ServeAppOptions> & { skipWatch?: boolean } = {}) {
+  async runApp(appName: string, options?: ServeAppOptions) {
+    options = this.computeOptions(options);
     const app = this.getAppOrThrow(appName);
-    this.computeOptions(options);
     const context = await this.createAppContext(appName);
     if (!context) throw new AppNotFound(appName);
+
+    if (options.ssr) {
+      if (!app.runSsr) throw new AppNoSsr(appName);
+
+      const result = await app.runSsr(context);
+      return { app, ...result };
+    }
+
     const port = await app.run(context);
-    if (!options.skipWatch) {
+    if (options.watch) {
       this.workspace.watcher
         .watchAll({
           preCompile: false,
@@ -146,7 +168,7 @@ export class ApplicationMain {
           this.logger.error(`compilation failed`, err);
         });
     }
-    return { app, port };
+    return { app, port, errors: undefined };
   }
 
   /**
