@@ -922,6 +922,9 @@ export default class BitMap {
       // if not exist, we still need these properties so we know later to parse them correctly.
       componentMapCloned.scope = componentMapCloned.id.hasScope() ? componentMapCloned.id.scope : '';
       componentMapCloned.version = componentMapCloned.id.hasVersion() ? componentMapCloned.id.version : '';
+      if (componentMapCloned.isAvailableOnCurrentLane && !componentMapCloned.onLanesOnly) {
+        delete componentMapCloned.isAvailableOnCurrentLane;
+      }
       idStr = componentMapCloned.id.name;
       // @ts-ignore
       delete componentMapCloned?.id;
