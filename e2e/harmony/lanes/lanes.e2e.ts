@@ -184,7 +184,7 @@ describe('bit lane command', function () {
       });
       it('should change .bitmap to have the remote lane', () => {
         const bitMap = helper.bitMap.read();
-        expect(bitMap[LANE_KEY]).to.deep.equal({ name: 'dev', scope: helper.scopes.remote });
+        expect(bitMap[LANE_KEY].id).to.deep.equal({ name: 'dev', scope: helper.scopes.remote });
       });
       it('bit lane --remote should show the exported lane', () => {
         const remoteLanes = helper.command.listRemoteLanesParsed();
@@ -450,9 +450,9 @@ describe('bit lane command', function () {
       helper.bitJsonc.setupDefault();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
-      helper.command.tagAllComponents();
+      helper.command.tagWithoutBuild();
       helper.fixtures.createComponentBarFoo(fixtures.fooFixtureV2);
-      helper.command.tagAllComponents();
+      helper.command.tagWithoutBuild();
       helper.command.export();
 
       helper.scopeHelper.reInitLocalScopeHarmony();
@@ -462,14 +462,22 @@ describe('bit lane command', function () {
 
       helper.command.createLane();
       helper.fs.outputFile(`${helper.scopes.remote}/bar/foo/foo.js`, fixtures.fooFixtureV3);
-      helper.command.snapAllComponents();
+      helper.command.snapAllComponentsWithoutBuild();
 
       helper.command.switchLocalLane('main');
     });
-    it('should checkout to the same version the origin branch had before the switch', () => {
+    it('should checkout to the head of the origin branch', () => {
+      helper.bitMap.expectToHaveIdHarmony('bar/foo', '0.0.2');
+    });
+    it('bit status should be clean', () => {
+      helper.command.expectStatusToBeClean();
+    });
+    // previously, the behavior was to checkout to the same version it had before
+    it.skip('should checkout to the same version the origin branch had before the switch', () => {
       helper.bitMap.expectToHaveIdHarmony('bar/foo', '0.0.1');
     });
-    it('bit status should not show the component as modified only as pending update', () => {
+    // previously, the behavior was to checkout to the same version it had before
+    it.skip('bit status should not show the component as modified only as pending update', () => {
       const status = helper.command.statusJson();
       expect(status.modifiedComponent).to.have.lengthOf(0);
       expect(status.outdatedComponents).to.have.lengthOf(1);
@@ -629,14 +637,18 @@ describe('bit lane command', function () {
         before(() => {
           helper.command.switchLocalLane('dev');
         });
-        // before, it was changing the version to the head of the lane
-        it('should not change the version prop in .bitmap', () => {
+        it('should change the version prop in .bitmap', () => {
           const bitMap = helper.bitMap.read();
-          expect(bitMap.comp1.version).to.equal('0.0.1');
+          const head = helper.command.getHeadOfLane('dev', 'comp1');
+          expect(bitMap.comp1.version).to.equal(head);
         });
         describe('switch back to main', () => {
           before(() => {
             helper.command.switchLocalLane('main');
+          });
+          it('should change the version prop in .bitmap', () => {
+            const bitMap = helper.bitMap.read();
+            expect(bitMap.comp1.version).to.equal('0.0.1');
           });
           it('status should not show the components as pending updates', () => {
             helper.command.expectStatusToBeClean();

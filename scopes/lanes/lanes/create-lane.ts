@@ -1,8 +1,7 @@
 import { BitError } from '@teambit/bit-error';
 import { Consumer } from '@teambit/legacy/dist/consumer';
-import { BitIds } from '@teambit/legacy/dist/bit-id';
+// import { BitIds } from '@teambit/legacy/dist/bit-id';
 import Lane, { LaneComponent } from '@teambit/legacy/dist/scope/models/lane';
-import WorkspaceLane from '@teambit/legacy/dist/consumer/bit-map/workspace-lane';
 
 export async function createLane(
   consumer: Consumer,
@@ -22,14 +21,7 @@ export async function createLane(
     const currentLaneObject = await consumer.getCurrentLaneObject();
     return currentLaneObject ? currentLaneObject.components : [];
   };
-  const getDataToPopulateWorkspaceLaneIfNeeded = (): BitIds => {
-    if (remoteLane) return new BitIds(); // if remoteLane, this got created when importing a remote lane
-    // when branching from one lane to another, copy components from the origin workspace-lane
-    // when branching from main, no need to copy anything
-    const currentWorkspaceLane = consumer.bitMap.workspaceLane;
-    return currentWorkspaceLane ? currentWorkspaceLane.ids : new BitIds();
-  };
-  const forkedFrom = consumer.bitMap.remoteLaneId;
+  const forkedFrom = consumer.bitMap.laneId;
   const newLane = remoteLane
     ? Lane.from({
         name: laneName,
@@ -43,10 +35,6 @@ export async function createLane(
   newLane.setLaneComponents(dataToPopulate);
 
   await consumer.scope.lanes.saveLane(newLane);
-
-  const workspaceConfig = WorkspaceLane.load(laneName, consumer.scope.getPath());
-  workspaceConfig.ids = getDataToPopulateWorkspaceLaneIfNeeded();
-  await workspaceConfig.write();
 
   return newLane;
 }
