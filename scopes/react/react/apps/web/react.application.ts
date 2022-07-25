@@ -64,7 +64,7 @@ export class ReactApp implements Application {
     if (serverBundle.errors.length > 0) return { errors: serverBundle.errors };
     this.logger?.info('[react.application] [ssr] server bundle - complete');
 
-    // loading server-side runtime
+    // load server-side runtime
     const app = await loadSsrApp(context.workdir, context.appName);
     this.logger?.info('[react.application] [ssr] bundle code - loaded');
 
