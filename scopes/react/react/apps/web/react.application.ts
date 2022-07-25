@@ -54,15 +54,17 @@ export class ReactApp implements Application {
     const [from, to] = this.portRange;
     const port = await Port.getPort(from, to);
 
+    // bundle client
     const clientBundle = await this.buildClient(context);
     if (clientBundle.errors.length > 0) return { errors: clientBundle.errors };
     this.logger?.info('[react.application] [ssr] client bundle - complete');
 
+    // bundle server
     const serverBundle = await this.buildSsr(context);
     if (serverBundle.errors.length > 0) return { errors: serverBundle.errors };
     this.logger?.info('[react.application] [ssr] server bundle - complete');
 
-    const clientAssets = parseAssets(clientBundle.assets);
+    // loading server-side runtime
     const app = await loadSsrApp(context.workdir, context.appName);
     this.logger?.info('[react.application] [ssr] bundle code - loaded');
 
@@ -71,11 +73,11 @@ export class ReactApp implements Application {
       workdir: context.workdir,
       port,
       app,
-      assets: clientAssets,
+      assets: parseAssets(clientBundle.assets),
       logger: this.logger,
     });
-    expressApp.listen(port);
 
+    expressApp.listen(port);
     return { port };
   }
 
