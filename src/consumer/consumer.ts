@@ -804,7 +804,32 @@ export default class Consumer {
   }
 
   async writeBitMap() {
+    await this.backupBitMap();
     await this.bitMap.write();
+  }
+
+  private async backupBitMap() {
+    if (!this.bitMap.hasChanged) return;
+    try {
+      const baseDir = path.join(this.scope.path, 'bitmap-history');
+      await fs.ensureDir(baseDir);
+      const backupPath = path.join(baseDir, `.bitmap-${this.currentDateAndTimeToFileName()}`);
+      await fs.copyFile(this.bitMap.mapPath, backupPath);
+    } catch (err) {
+      // it's nice to have. don't kill the process if something goes wrong.
+      logger.error(`failed to backup bitmap`, err);
+    }
+  }
+
+  private currentDateAndTimeToFileName() {
+    const date = new Date();
+    const year = date.getFullYear();
+    const month = date.getMonth() + 1;
+    const day = date.getDate();
+    const hours = date.getHours();
+    const minutes = date.getMinutes();
+    const seconds = date.getSeconds();
+    return `${year}-${month}-${day}-${hours}-${minutes}-${seconds}`;
   }
 
   async onDestroy() {
