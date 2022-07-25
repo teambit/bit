@@ -29,7 +29,7 @@ export function createExpressSsr({ name, workdir, port, app, assets, logger }: E
 
   express.use(PUBLIC_PATH, Express.static(publicFolder));
   express.use((request, response, next) => {
-    if (request.query.rendering !== 'client') {
+    if (request.query._rendering !== 'client') {
       next();
       return;
     }
@@ -39,10 +39,9 @@ export function createExpressSsr({ name, workdir, port, app, assets, logger }: E
     logger?.info(`[react.application] [ssr] handling "${request.url}"`);
     const browser = browserFromExpress(request, port);
 
-    const content = await app({ assets, browser, request, response });
-
     try {
-      response.send(content);
+      // the app itself controls the response
+      await app({ assets, browser, request, response });
       logger?.info(`[react.application] [ssr] success "${request.url}"`);
     } catch (error) {
       logger?.error(`[react.application] [ssr] error at "${request.url}"`, error);
