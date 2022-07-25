@@ -1,4 +1,5 @@
 import { BitError } from '@teambit/bit-error';
+import { LaneId } from '@teambit/lane-id';
 import { Consumer } from '@teambit/legacy/dist/consumer';
 // import { BitIds } from '@teambit/legacy/dist/bit-id';
 import Lane, { LaneComponent } from '@teambit/legacy/dist/scope/models/lane';
@@ -21,7 +22,8 @@ export async function createLane(
     const currentLaneObject = await consumer.getCurrentLaneObject();
     return currentLaneObject ? currentLaneObject.components : [];
   };
-  const forkedFrom = consumer.bitMap.laneId;
+
+  const forkedFrom = await getLaneOrigin(consumer);
   const newLane = remoteLane
     ? Lane.from({
         name: laneName,
@@ -37,6 +39,17 @@ export async function createLane(
   await consumer.scope.lanes.saveLane(newLane);
 
   return newLane;
+}
+
+async function getLaneOrigin(consumer: Consumer): Promise<LaneId | undefined> {
+  const currentLaneId = consumer.bitMap.laneId;
+  if (!currentLaneId) return undefined;
+  if (consumer.bitMap.isLaneExported) {
+    return currentLaneId;
+  }
+  // current lane is new.
+  const currentLane = await consumer.getCurrentLaneObject();
+  return currentLane?.forkedFrom;
 }
 
 export function throwForInvalidLaneName(laneName: string) {
