@@ -1,12 +1,13 @@
 import { join } from 'path';
 import type { Configuration } from 'webpack';
 
-// TODO - workspace path
 const OUTPUT_FOLDER = 'public/bit-apps';
 export const SSR_ENTRY_FILE = 'index.js';
-/** base url for static files */
+/** _external_ base url for static files. (is not a folder)
+ * @example
+ * "http://localhost:3000/public/main.88a88d47d86aaabc0230.js"
+ */
 export const PUBLIC_PATH = '/public';
-/** idk where this is coming from */
 
 enum Targets {
   ssr = 'ssr',

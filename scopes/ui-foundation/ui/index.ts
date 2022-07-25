@@ -1,6 +1,6 @@
 import type * as SSR from '@teambit/react.rendering.ssr';
 
-export { UIAspect, UIAspect as default, UIRuntime } from './ui.aspect';
+export { UIAspect, UIRuntime, UIAspect as default } from './ui.aspect';
 
 export * from './events';
 export { UIRoot, PostStartOptions, ProxyEntry } from './ui-root';

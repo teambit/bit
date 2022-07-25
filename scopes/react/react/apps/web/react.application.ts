@@ -99,6 +99,7 @@ export class ReactApp implements Application {
           entries: await this.getEntries(),
           components: [context.appComponent],
           outputPath: resolve(context.workdir, calcOutputPath(context.appName, 'browser')),
+          hostDependencies: await this.getPeers(),
           aliasHostDependencies: true,
         },
       ],
@@ -279,7 +280,7 @@ export class ReactApp implements Application {
   }
 
   async getSsrEntries(): Promise<string[]> {
-    if (!this.ssr) throw new Error('this was handled before'); // TODO
+    if (!this.ssr) throw new Error('tried to build ssr without ssr entries');
     if (typeof this.ssr === 'string') return [this.ssr];
     return [await this.ssr()];
   }
