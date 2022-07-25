@@ -160,11 +160,13 @@ export default class BitMap {
     const schema = componentsJson[SCHEMA_FIELD] || componentsJson.version;
     let isLaneExported = false;
     let laneId: LaneId | undefined;
+    let shouldHandleLanesBackwardCompatibility = false;
     if (componentsJson[LANE_KEY]) {
       if (componentsJson[LANE_KEY].name) {
         // backward compatibility
         laneId = new LaneId(componentsJson[LANE_KEY]);
         isLaneExported = true;
+        shouldHandleLanesBackwardCompatibility = true;
       } else {
         laneId = new LaneId(componentsJson[LANE_KEY].id);
         isLaneExported = componentsJson[LANE_KEY].exported;
@@ -190,6 +192,29 @@ export default class BitMap {
 
     const bitMap = new BitMap(dirPath, currentLocation, schema, laneId, isLaneExported);
     bitMap.loadComponents(componentsJson);
+
+    // @todo: remove this if statement once we don't need the migration of the bitmap file for lanes
+    if (shouldHandleLanesBackwardCompatibility) {
+      if (!laneId) throw new Error(`laneId must be set if shouldHandleLanesBackwardCompatibility is true`);
+      if (!currentLaneId.isEqual(laneId)) {
+        throw new Error(
+          `unable to migrate lanes on .bitmap, the current lane ${currentLaneId.toString()} is not exported. go to an older version of bit and export the lane first.`
+        );
+      }
+      const lane = await consumer.scope.loadLane(laneId as LaneId);
+      if (!lane)
+        throw new Error(
+          `unable to migrate lanes on .bitmap, the lane of ${laneId?.toString()} is not found. go to an older version, and run "bit import"`
+        );
+      const laneIds = lane.toBitIds();
+      bitMap.components.forEach((componentMap) => {
+        const idOnLane = laneIds.searchWithoutVersion(componentMap.id);
+        if (idOnLane) {
+          componentMap.id = componentMap.id.changeVersion(idOnLane.version as string);
+        }
+      });
+    }
+
     await bitMap.loadFiles();
     return bitMap;
   }
