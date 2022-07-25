@@ -1836,5 +1836,5 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/dependencies/yarn"
     },
-    "$schema-version": "14.9.0"
+    "$schema-version": "15.0.0"
 }

@@ -1202,5 +1202,14 @@ describe('bit lane command', function () {
     it('bit status should be clean', () => {
       helper.command.expectStatusToBeClean();
     });
+    describe('lane-a (exported) => lane-b (not-exported) => lane-c', () => {
+      before(() => {
+        helper.command.createLane('lane-c');
+      });
+      it('forkedFrom should be of lane-a and not lane-b because this is the last exported one', () => {
+        const lane = helper.command.catLane('lane-c');
+        expect(lane.forkedFrom.name).to.equal('lane-a');
+      });
+    });
   });
 });
