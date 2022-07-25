@@ -2,7 +2,7 @@ import { Asset } from '@teambit/bundler';
 import { Logger } from '@teambit/logger';
 import { serverError } from '@teambit/ui-foundation.ui.pages.static-error';
 import { browserFromExpress } from '@teambit/react.rendering.ssr';
-import type { HtmlAssets } from '@teambit/react.rendering.ssr';
+import type { HtmlAssets, SsrSession } from '@teambit/react.rendering.ssr';
 
 import Express from 'express';
 import * as fs from 'fs-extra';
@@ -18,7 +18,7 @@ type ExpressSsrOptions = {
   workdir: string;
   port: number;
   app: any;
-  assets?: HtmlAssets;
+  assets: HtmlAssets;
   logger?: Logger;
 };
 
@@ -38,10 +38,11 @@ export function createExpressSsr({ name, workdir, port, app, assets, logger }: E
   express.use(async (request, response) => {
     logger?.info(`[react.application] [ssr] handling "${request.url}"`);
     const browser = browserFromExpress(request, port);
+    const session: SsrSession = { assets, browser, request, response };
 
     try {
       // the app itself controls the response
-      await app({ assets, browser, request, response });
+      await app(session);
       logger?.info(`[react.application] [ssr] success "${request.url}"`);
     } catch (error) {
       logger?.error(`[react.application] [ssr] error at "${request.url}"`, error);
