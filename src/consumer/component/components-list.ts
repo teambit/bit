@@ -77,10 +77,10 @@ export default class ComponentsList {
     return this._fromObjectsIds;
   }
 
-  async getAuthoredAndImportedFromFS(): Promise<Component[]> {
+  async getAuthoredAndImportedFromFS(opts?: { loadDocs?: boolean }): Promise<Component[]> {
     let [authored, imported] = await Promise.all([
-      this.getFromFileSystem(COMPONENT_ORIGINS.AUTHORED),
-      this.getFromFileSystem(COMPONENT_ORIGINS.IMPORTED),
+      this.getFromFileSystem(COMPONENT_ORIGINS.AUTHORED, opts),
+      this.getFromFileSystem(COMPONENT_ORIGINS.IMPORTED, opts),
     ]);
     authored = authored || [];
     imported = imported || [];
@@ -93,9 +93,9 @@ export default class ComponentsList {
    *
    * @param {boolean} [load=false] - Whether to load the component (false will return only the id)
    */
-  async listModifiedComponents(load = false): Promise<Array<BitId | Component>> {
+  async listModifiedComponents(load = false, opts?: { loadDocs?: boolean }): Promise<Array<BitId | Component>> {
     if (!this._modifiedComponents) {
-      const fileSystemComponents = await this.getAuthoredAndImportedFromFS();
+      const fileSystemComponents = await this.getAuthoredAndImportedFromFS(opts);
       const componentsWithUnresolvedConflicts = this.listDuringMergeStateComponents();
       const componentStatuses = await this.consumer.getManyComponentsStatuses(fileSystemComponents.map((f) => f.id));
       this._modifiedComponents = fileSystemComponents
@@ -110,8 +110,8 @@ export default class ComponentsList {
     return this._modifiedComponents.map((component) => component.id);
   }
 
-  async listOutdatedComponents(): Promise<Component[]> {
-    const fileSystemComponents = await this.getAuthoredAndImportedFromFS();
+  async listOutdatedComponents(opts?: { loadDocs?: boolean }): Promise<Component[]> {
+    const fileSystemComponents = await this.getAuthoredAndImportedFromFS(opts);
     const componentsFromModel = await this.getModelComponents();
     const componentsWithUnresolvedConflicts = this.listDuringMergeStateComponents();
     const mergePendingComponents = await this.listMergePendingComponents();
@@ -187,9 +187,9 @@ export default class ComponentsList {
     return compact(results);
   }
 
-  async listMergePendingComponents(): Promise<DivergedComponent[]> {
+  async listMergePendingComponents(opts?: { loadDocs?: boolean }): Promise<DivergedComponent[]> {
     if (!this._mergePendingComponents) {
-      const componentsFromFs = await this.getAuthoredAndImportedFromFS();
+      const componentsFromFs = await this.getAuthoredAndImportedFromFS(opts);
       const componentsFromModel = await this.getModelComponents();
       const componentsWithUnresolvedConflicts = this.listDuringMergeStateComponents();
       this._mergePendingComponents = (
@@ -237,8 +237,8 @@ export default class ComponentsList {
     return Promise.all(components);
   }
 
-  async authoredAndImportedComponents(): Promise<Component[]> {
-    return this.getAuthoredAndImportedFromFS();
+  async authoredAndImportedComponents(opts?: { loadDocs?: boolean }): Promise<Component[]> {
+    return this.getAuthoredAndImportedFromFS(opts);
   }
 
   async idsFromObjects(): Promise<BitIds> {
@@ -253,7 +253,7 @@ export default class ComponentsList {
    * @param {boolean} [load=false] - Whether to load the component (false will return only the id)
    * @memberof ComponentsList
    */
-  async listNewComponents(load = false): Promise<BitIds | Component[]> {
+  async listNewComponents(load = false, opts?: { loadDocs?: boolean }): Promise<BitIds | Component[]> {
     const idsFromBitMap = this.idsFromBitMap();
     const idsFromObjects = await this.idsFromObjects();
     const newComponents: BitId[] = [];
@@ -266,7 +266,7 @@ export default class ComponentsList {
     const newComponentsIds = new BitIds(...newComponents);
     if (!load || !newComponents.length) return newComponentsIds;
 
-    const { components } = await this.consumer.loadComponents(newComponentsIds, false);
+    const { components } = await this.consumer.loadComponents(newComponentsIds, false, opts);
     return components;
   }
 
@@ -318,21 +318,21 @@ export default class ComponentsList {
     return this.updateIdsFromModelIfTheyOutOfSync(ids);
   }
 
-  async listNonNewComponentsIds(): Promise<BitIds> {
-    const authoredAndImported = await this.getAuthoredAndImportedFromFS();
+  async listNonNewComponentsIds(opts?: { loadDocs?: boolean }): Promise<BitIds> {
+    const authoredAndImported = await this.getAuthoredAndImportedFromFS(opts);
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const newComponents: BitIds = await this.listNewComponents();
     const nonNewComponents = authoredAndImported.filter((component) => !newComponents.has(component.id));
     return BitIds.fromArray(nonNewComponents.map((c) => c.id.changeVersion(undefined)));
   }
 
-  async updateIdsFromModelIfTheyOutOfSync(ids: BitIds): Promise<BitIds> {
+  async updateIdsFromModelIfTheyOutOfSync(ids: BitIds, opts?: { loadDocs?: boolean }): Promise<BitIds> {
     const authoredAndImported = this.bitMap.getAuthoredAndImportedBitIds();
     const updatedIdsP = ids.map(async (id: BitId) => {
       const idFromBitMap = authoredAndImported.searchWithoutScopeAndVersion(id);
       if (idFromBitMap && !idFromBitMap.hasVersion()) {
         // component is out of sync, fix it by loading it from the consumer
-        const component = await this.consumer.loadComponent(id.changeVersion(LATEST));
+        const component = await this.consumer.loadComponent(id.changeVersion(LATEST), opts);
         return component.id;
       }
       return id;
@@ -371,12 +371,12 @@ export default class ComponentsList {
    * of that directory. The bit.map is used to find them all
    * If they are on bit.map but not on the file-system, populate them to _invalidComponents property
    */
-  async getFromFileSystem(origin?: ComponentOrigin): Promise<Component[]> {
+  async getFromFileSystem(origin?: ComponentOrigin, opts?: { loadDocs?: boolean }): Promise<Component[]> {
     const cacheKeyName = origin || 'all';
     if (!this._fromFileSystem[cacheKeyName]) {
       const idsFromBitMap = this.idsFromBitMap(origin);
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      const { components, invalidComponents } = await this.consumer.loadComponents(idsFromBitMap, false);
+      const { components, invalidComponents } = await this.consumer.loadComponents(idsFromBitMap, false, opts);
       this._fromFileSystem[cacheKeyName] = components;
       if (!this._invalidComponents && !origin) {
         this._invalidComponents = invalidComponents;

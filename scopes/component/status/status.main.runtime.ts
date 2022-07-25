@@ -46,8 +46,12 @@ export class StatusMain {
     const consumer = this.workspace.consumer;
     const laneObj = await consumer.getCurrentLaneObject();
     const componentsList = new ComponentsList(consumer);
-    const newComponents: ConsumerComponent[] = (await componentsList.listNewComponents(true)) as ConsumerComponent[];
-    const modifiedComponent = (await componentsList.listModifiedComponents(true)) as ConsumerComponent[];
+    const newComponents: ConsumerComponent[] = (await componentsList.listNewComponents(true, {
+      loadDocs: false,
+    })) as ConsumerComponent[];
+    const modifiedComponent = (await componentsList.listModifiedComponents(true, {
+      loadDocs: false,
+    })) as ConsumerComponent[];
     const stagedComponents: ModelComponent[] = await componentsList.listExportPendingComponents(laneObj);
     const autoTagPendingComponents = await componentsList.listAutoTagPendingComponents();
     const autoTagPendingComponentsIds = autoTagPendingComponents.map((component) => component.id);

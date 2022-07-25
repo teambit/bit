@@ -316,8 +316,8 @@ export default class Consumer {
     });
   }
 
-  async loadComponent(id: BitId): Promise<Component> {
-    const { components } = await this.loadComponents(BitIds.fromArray([id]));
+  async loadComponent(id: BitId, opts?: { loadDocs?: boolean }): Promise<Component> {
+    const { components } = await this.loadComponents(BitIds.fromArray([id]), true, opts);
     return components[0];
   }
 
@@ -327,9 +327,10 @@ export default class Consumer {
 
   async loadComponents(
     ids: BitIds,
-    throwOnFailure = true
+    throwOnFailure = true,
+    opts?: { loadDocs?: boolean }
   ): Promise<{ components: Component[]; invalidComponents: InvalidComponent[] }> {
-    return this.componentLoader.loadMany(ids, throwOnFailure);
+    return this.componentLoader.loadMany(ids, throwOnFailure, opts);
   }
 
   async importComponentsHarmony(

@@ -496,10 +496,18 @@ export class Workspace implements ComponentFactory {
     forCapsule = false,
     legacyComponent?: ConsumerComponent,
     useCache = true,
-    storeInCache = true
+    storeInCache = true,
+    opts?: { loadDocs?: boolean }
   ): Promise<Component> {
     this.logger.debug(`get ${componentId.toString()}`);
-    const component = await this.componentLoader.get(componentId, forCapsule, legacyComponent, useCache, storeInCache);
+    const component = await this.componentLoader.get(
+      componentId,
+      forCapsule,
+      legacyComponent,
+      useCache,
+      storeInCache,
+      opts
+    );
     // When loading a component if it's an env make sure to load it as aspect as well
     // We only want to try load it as aspect if it's the first time we load the component
     const tryLoadAsAspect = this.componentLoadedSelfAsAspects.get(component.id.toString()) === undefined;
