@@ -1,7 +1,8 @@
 import { Asset } from '@teambit/bundler';
 import { Logger } from '@teambit/logger';
 import { serverError } from '@teambit/ui-foundation.ui.pages.static-error';
-import type { SsrContent } from '@teambit/ui/react-ssr';
+import { browserFromExpress } from '@teambit/react.rendering.ssr';
+import type { HtmlAssets } from '@teambit/react.rendering.ssr';
 
 import Express from 'express';
 import * as fs from 'fs-extra';
@@ -9,7 +10,6 @@ import { resolve } from 'path';
 import urlJoin from 'url-join';
 
 import { calcOutputPath, PUBLIC_PATH, SSR_ENTRY_FILE } from '../webpack/webpack.app.ssr.config';
-import { calcBrowserData } from './browser-context';
 
 const MAGIC_FOLDER = 'public'; // idk where this is comping from
 
@@ -18,7 +18,7 @@ type ExpressSsrOptions = {
   workdir: string;
   port: number;
   app: any;
-  assets?: SsrContent['assets'];
+  assets?: HtmlAssets;
   logger?: Logger;
 };
 
@@ -37,7 +37,7 @@ export function createExpressSsr({ name, workdir, port, app, assets, logger }: E
   });
   express.use(async (request, response) => {
     logger?.info(`[react.application] [ssr] handling "${request.url}"`);
-    const browser = calcBrowserData(request, port);
+    const browser = browserFromExpress(request, port);
 
     const content = await app({ assets, browser, request, response });
 
@@ -64,7 +64,7 @@ export async function loadSsrApp(workdir: string, appName: string) {
   return app;
 }
 
-export function parseAssets(assets: Asset[], publicPath = PUBLIC_PATH): SsrContent['assets'] {
+export function parseAssets(assets: Asset[], publicPath = PUBLIC_PATH): HtmlAssets {
   const deadAssets = assets.filter((x) => !x.name);
   if (deadAssets.length > 0) throw new Error('missing some build assets (maybe need to turn on cachedAssets, etc)');
 
