@@ -32,7 +32,7 @@ export function componentCompareSchema(componentCompareMain: ComponentCompareMai
       ComponentCompareResult: {
         id: (result: ComponentCompareResult) => result.id,
         code: (result: ComponentCompareResult, { fileName }: { fileName?: string }) => {
-          if (fileName) return result.code.filter((codeFile) => codeFile.fileName === fileName);
+          if (fileName) return result.code.filter((codeFile) => codeFile.filePath === fileName);
           return result.code.map((c) => ({
             ...c,
             fileName: c.filePath,
