@@ -25,8 +25,8 @@ describe('bit deprecate and undeprecate commands', function () {
     });
     it('bit status should show the component as modified', () => {
       const status = helper.command.statusJson();
-      expect(status.modifiedComponent).to.have.lengthOf(1);
-      expect(status.modifiedComponent[0]).to.include('comp2');
+      expect(status.modifiedComponents).to.have.lengthOf(1);
+      expect(status.modifiedComponents[0]).to.include('comp2');
     });
     describe('tagging the component', () => {
       before(() => {
@@ -34,7 +34,7 @@ describe('bit deprecate and undeprecate commands', function () {
       });
       it('the component should not be modified', () => {
         const status = helper.command.statusJson();
-        expect(status.modifiedComponent).to.have.lengthOf(0);
+        expect(status.modifiedComponents).to.have.lengthOf(0);
       });
       it('bit show should show the component as deprecated', () => {
         const deprecationData = helper.command.showAspectConfig('comp2', Extensions.deprecation);

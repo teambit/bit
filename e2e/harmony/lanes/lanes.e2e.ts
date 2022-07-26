@@ -145,7 +145,7 @@ describe('bit lane command', function () {
       expect(status.stagedComponents).to.have.lengthOf(1);
       expect(status.importPendingComponents).to.have.lengthOf(0);
       expect(status.invalidComponents).to.have.lengthOf(0);
-      expect(status.modifiedComponent).to.have.lengthOf(0);
+      expect(status.modifiedComponents).to.have.lengthOf(0);
       expect(status.newComponents).to.have.lengthOf(0);
       expect(status.outdatedComponents).to.have.lengthOf(0);
     });
@@ -479,7 +479,7 @@ describe('bit lane command', function () {
     // previously, the behavior was to checkout to the same version it had before
     it.skip('bit status should not show the component as modified only as pending update', () => {
       const status = helper.command.statusJson();
-      expect(status.modifiedComponent).to.have.lengthOf(0);
+      expect(status.modifiedComponents).to.have.lengthOf(0);
       expect(status.outdatedComponents).to.have.lengthOf(1);
       expect(status.importPendingComponents).to.have.lengthOf(0);
       expect(status.stagedComponents).to.have.lengthOf(0);
@@ -552,7 +552,7 @@ describe('bit lane command', function () {
     });
     it('bit-status should show them all as staged and not modified', () => {
       const status = helper.command.statusJson();
-      expect(status.modifiedComponent).to.be.empty;
+      expect(status.modifiedComponents).to.be.empty;
       const staged = helper.command.getStagedIdsFromStatus();
       expect(staged).to.include('comp1');
       expect(staged).to.include('comp2');
@@ -1029,7 +1029,7 @@ describe('bit lane command', function () {
     });
     it('should not show the component as modified', () => {
       const status = helper.command.statusJson();
-      expect(status.modifiedComponent).to.have.lengthOf(0);
+      expect(status.modifiedComponents).to.have.lengthOf(0);
     });
     it('bit list should show the scope-version as latest and workspace-version as the checked out one', () => {
       const list = helper.command.listParsed();

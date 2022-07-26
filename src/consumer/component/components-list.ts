@@ -395,18 +395,6 @@ export default class ComponentsList {
     return this._invalidComponents;
   }
 
-  /**
-   * valid on legacy only. Harmony requires components to have their own directories
-   */
-  async listComponentsWithIndividualFiles(): Promise<Component[]> {
-    const workspaceComponents = await this.getFromFileSystem(COMPONENT_ORIGINS.AUTHORED);
-    return workspaceComponents.filter((component) => {
-      const componentMap = component.componentMap;
-      if (!componentMap) throw new Error('listComponentsWithIndividualFiles componentMap is missing');
-      return Boolean(!componentMap.rootDir);
-    });
-  }
-
   getFromBitMap(origin?: ComponentOrigin): BitIds {
     const originParam = origin ? [origin] : undefined;
     return this.bitMap.getAllIdsAvailableOnLane(originParam);

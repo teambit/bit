@@ -237,7 +237,7 @@ describe('bit snap command', function () {
           expect(status.mergePendingComponents).to.have.lengthOf(1);
           expect(status.outdatedComponents).to.have.lengthOf(0);
           expect(status.newComponents).to.have.lengthOf(0);
-          expect(status.modifiedComponent).to.have.lengthOf(0);
+          expect(status.modifiedComponents).to.have.lengthOf(0);
           expect(status.invalidComponents).to.have.lengthOf(0);
         });
       });
@@ -333,7 +333,7 @@ describe('bit snap command', function () {
             it('bit status should not show the component as during merge state', () => {
               const status = helper.command.statusJson();
               expect(status.componentsDuringMergeState).to.have.lengthOf(0);
-              expect(status.modifiedComponent).to.have.lengthOf(0);
+              expect(status.modifiedComponents).to.have.lengthOf(0);
               expect(status.outdatedComponents).to.have.lengthOf(0);
               expect(status.mergePendingComponents).to.have.lengthOf(0);
               expect(status.stagedComponents).to.have.lengthOf(1);
@@ -409,7 +409,7 @@ describe('bit snap command', function () {
         it('bit status should show it as component with conflict and not as pending update or modified', () => {
           const status = helper.command.statusJson();
           expect(status.componentsDuringMergeState).to.have.lengthOf(1);
-          expect(status.modifiedComponent).to.have.lengthOf(0);
+          expect(status.modifiedComponents).to.have.lengthOf(0);
           expect(status.outdatedComponents).to.have.lengthOf(0);
           expect(status.mergePendingComponents).to.have.lengthOf(0);
         });
@@ -461,7 +461,7 @@ describe('bit snap command', function () {
           it('bit status should not show the component as a component with conflicts but as modified', () => {
             const status = helper.command.statusJson();
             expect(status.componentsDuringMergeState).to.have.lengthOf(0);
-            expect(status.modifiedComponent).to.have.lengthOf(1);
+            expect(status.modifiedComponents).to.have.lengthOf(1);
             expect(status.mergePendingComponents).to.have.lengthOf(0);
             expect(status.stagedComponents).to.have.lengthOf(0);
           });
@@ -479,7 +479,7 @@ describe('bit snap command', function () {
           it('bit status should not show the component as if it has conflicts', () => {
             const status = helper.command.statusJson();
             expect(status.componentsDuringMergeState).to.have.lengthOf(0);
-            expect(status.modifiedComponent).to.have.lengthOf(0);
+            expect(status.modifiedComponents).to.have.lengthOf(0);
             expect(status.outdatedComponents).to.have.lengthOf(0);
             expect(status.mergePendingComponents).to.have.lengthOf(0);
             expect(status.stagedComponents).to.have.lengthOf(1);
@@ -508,7 +508,7 @@ describe('bit snap command', function () {
             const status = helper.command.statusJson();
             expect(status.mergePendingComponents).to.have.lengthOf(1);
             expect(status.componentsDuringMergeState).to.have.lengthOf(0);
-            expect(status.modifiedComponent).to.have.lengthOf(0);
+            expect(status.modifiedComponents).to.have.lengthOf(0);
             expect(status.outdatedComponents).to.have.lengthOf(0);
             expect(status.stagedComponents).to.have.lengthOf(1);
           });
@@ -628,7 +628,7 @@ describe('bit snap command', function () {
     });
     it('bit-status should show them all as staged and not modified', () => {
       const status = helper.command.statusJson();
-      expect(status.modifiedComponent).to.be.empty;
+      expect(status.modifiedComponents).to.be.empty;
       const staged = helper.command.getStagedIdsFromStatus();
       expect(staged).to.include('comp1');
       expect(staged).to.include('comp2');

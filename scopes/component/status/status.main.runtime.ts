@@ -1,5 +1,5 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import { IssuesClasses } from '@teambit/component-issues';
+import { IssuesClasses, IssuesList } from '@teambit/component-issues';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import { Analytics } from '@teambit/legacy/dist/analytics/analytics';
 import { BitId, BitIds } from '@teambit/legacy/dist/bit-id';
@@ -11,7 +11,6 @@ import ComponentsList, {
   DivergeDataPerId,
   DivergedComponent,
 } from '@teambit/legacy/dist/consumer/component/components-list';
-import { InvalidComponent } from '@teambit/legacy/dist/consumer/component/consumer-component';
 import { ModelComponent } from '@teambit/legacy/dist/scope/models';
 import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
 import { InsightsAspect, InsightsMain } from '@teambit/insights';
@@ -20,17 +19,16 @@ import { StatusCmd } from './status-cmd';
 import { StatusAspect } from './status.aspect';
 
 export type StatusResult = {
-  newComponents: ConsumerComponent[];
-  modifiedComponent: ConsumerComponent[];
-  stagedComponents: ModelComponent[];
-  componentsWithIssues: ConsumerComponent[];
+  newComponents: BitId[];
+  modifiedComponent: BitId[];
+  stagedComponents: { id: BitId; versions: string[] }[];
+  componentsWithIssues: { id: BitId; issues: IssuesList }[];
   importPendingComponents: BitId[];
   autoTagPendingComponents: BitId[];
-  invalidComponents: InvalidComponent[];
-  outdatedComponents: ConsumerComponent[];
+  invalidComponents: { id: BitId; error: Error }[];
+  outdatedComponents: { id: BitId; latestVersion: string }[];
   mergePendingComponents: DivergedComponent[];
   componentsDuringMergeState: BitIds;
-  componentsWithIndividualFiles: ConsumerComponent[];
   softTaggedComponents: BitId[];
   snappedComponents: BitId[];
   pendingUpdatesFromMain: DivergeDataPerId[];
@@ -86,19 +84,20 @@ export class StatusMain {
     Analytics.setExtraData('deleted', invalidComponents.length);
     await consumer.onDestroy();
     return {
-      newComponents: ComponentsList.sortComponentsByName(newComponents),
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      modifiedComponent: ComponentsList.sortComponentsByName(modifiedComponent),
-      stagedComponents: ComponentsList.sortComponentsByName(stagedComponents),
-      componentsWithIssues, // no need to sort, we don't print it as is
+      newComponents: ComponentsList.sortComponentsByName(newComponents).map((c) => c.id),
+      modifiedComponent: ComponentsList.sortComponentsByName(modifiedComponent).map((c) => c.id),
+      stagedComponents: ComponentsList.sortComponentsByName(stagedComponents).map((c) => ({
+        id: c.toBitId(),
+        versions: c.getLocalTagsOrHashes(),
+      })),
+      componentsWithIssues: componentsWithIssues.map((c) => ({ id: c.id, issues: c.issues })), // no need to sort, we don't print it as is
       importPendingComponents, // no need to sort, we use only its length
       autoTagPendingComponents: ComponentsList.sortComponentsByName(autoTagPendingComponentsIds),
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      invalidComponents,
-      outdatedComponents,
+      invalidComponents: invalidComponents.map((c) => ({ id: c.id, error: c.error })),
+      // @ts-ignore
+      outdatedComponents: outdatedComponents.map((c) => ({ id: c.id, latestVersion: c.latestVersion })),
       mergePendingComponents,
       componentsDuringMergeState,
-      componentsWithIndividualFiles: await componentsList.listComponentsWithIndividualFiles(),
       softTaggedComponents,
       snappedComponents,
       pendingUpdatesFromMain,

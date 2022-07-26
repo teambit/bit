@@ -301,7 +301,7 @@ describe('component id with wildcard', function () {
         // as an intermediate step, make sure all components are modified (so then they should show
         // an output for diff command)
         const status = helper.command.statusJson();
-        expect(status.modifiedComponent).to.have.lengthOf(5);
+        expect(status.modifiedComponents).to.have.lengthOf(5);
       });
       describe('when wildcard does not match any component', () => {
         it('should throw an error saying the wildcard does not match any id', () => {

@@ -519,7 +519,7 @@ export default class CommandHelper {
 
   statusComponentIsModified(fullId: string): boolean {
     const status = this.statusJson();
-    return status.modifiedComponent.includes(fullId);
+    return status.modifiedComponents.includes(fullId);
   }
 
   showComponent(id = 'bar/foo') {

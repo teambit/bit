@@ -34,7 +34,7 @@ describe('tag components on Harmony', function () {
     });
     it('bit status should work and not show modified', () => {
       const status = helper.command.statusJson();
-      expect(status.modifiedComponent).to.be.empty;
+      expect(status.modifiedComponents).to.be.empty;
     });
     describe('tag without build after full tag', () => {
       before(() => {
@@ -62,7 +62,7 @@ describe('tag components on Harmony', function () {
     });
     it('should not show the component as modified', () => {
       const status = helper.command.statusJson();
-      expect(status.modifiedComponent).to.be.empty;
+      expect(status.modifiedComponents).to.be.empty;
     });
     // this happens as a result of package.json in the node_modules for author point to the wrong
     // version. currently, the version is removed.
