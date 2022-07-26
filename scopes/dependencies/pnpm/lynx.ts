@@ -162,7 +162,10 @@ export async function install(
   options?: {
     nodeLinker?: 'hoisted' | 'isolated';
     overrides?: Record<string, string>;
-  } & Pick<InstallOptions, 'publicHoistPattern' | 'hoistPattern' | 'nodeVersion' | 'engineStrict'> &
+  } & Pick<
+    InstallOptions,
+    'publicHoistPattern' | 'hoistPattern' | 'nodeVersion' | 'engineStrict' | 'peerDependencyRules'
+  > &
     Pick<CreateStoreControllerOptions, 'packageImportMethod'>,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   logger?: Logger
@@ -194,6 +197,11 @@ export async function install(
     registries: registriesMap,
     rawConfig: authConfig,
     ...options,
+    peerDependencyRules: {
+      allowAny: ['*'],
+      ignoreMissing: ['*'],
+      ...options?.peerDependencyRules,
+    },
   };
 
   const stopReporting = defaultReporter({

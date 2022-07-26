@@ -12,6 +12,7 @@ import { ModuleFile, PreviewModule } from './types/preview-module';
 import { RenderingContext } from './rendering-context';
 import { fetchComponentAspects } from './gql/fetch-component-aspects';
 import { PREVIEW_MODULES } from './preview-modules';
+import { loadScript, loadLink } from './html-utils';
 
 // forward linkModules() for generate-link.ts
 export { linkModules } from './preview-modules';
@@ -136,14 +137,17 @@ export class PreviewPreview {
     // It's a component bundled with the env
     if (allFiles === null) return {};
 
-    allFiles.forEach((file) => {
-      // We want to run the preview file always last
-      if (file.endsWith('-preview.js')) {
-        previewFile = file;
-      } else {
-        this.addComponentFileElement(id, file);
-      }
-    });
+    await Promise.all(
+      allFiles.map((file) => {
+        // We want to run the preview file always last
+        if (file.endsWith('-preview.js')) {
+          previewFile = file;
+          return undefined;
+        }
+
+        return this.addComponentFileElement(id, file);
+      })
+    );
 
     if (!previewFile) return {};
     return this.loadPreviewScript(id, name, previewFile);
@@ -153,7 +157,17 @@ export class PreviewPreview {
     if (previewBundleFileName.endsWith('.js')) {
       return this.addComponentFileScriptElement(id, previewBundleFileName);
     }
-    return this.addComponentFileLinkElement(id, previewBundleFileName);
+
+    // TODO - should we load assets other than .css / .js?
+    // if (previewBundleFileName.endsWith('.css')) {
+    this.addComponentFileLinkElement(id, previewBundleFileName).catch((err) => {
+      throw new Error(
+        `[preview.preview] failed loading asset "${previewBundleFileName}". Error - "${err?.toString()}"`
+      );
+    });
+
+    // do NOT await non js assets, as they might never load (like images), and not critical for rendering.
+    return undefined;
   }
 
   private async fetchComponentPreviewFiles(id: ComponentID, previewName: string): Promise<string[] | null> {
@@ -177,42 +191,25 @@ export class PreviewPreview {
   }
 
   private addComponentFileScriptElement(id: ComponentID, previewBundleFileName: string) {
-    const script = document.createElement('script');
-    script.setAttribute('defer', 'defer');
-    const stringId = id.toString();
     const previewRoute = `~aspect/component-preview`;
+    const stringId = id.toString();
     const src = `/api/${stringId}/${previewRoute}/${previewBundleFileName}`;
-    script.src = src;
-    document.head.appendChild(script);
-    return script;
+    return loadScript({ src });
   }
 
   private addComponentFileLinkElement(id: ComponentID, previewBundleFileName: string) {
-    const link = document.createElement('link');
     const stringId = id.toString();
     const previewRoute = `~aspect/component-preview`;
     const href = `/api/${stringId}/${previewRoute}/${previewBundleFileName}`;
-    link.setAttribute('href', href);
-    if (previewBundleFileName.endsWith('.css')) {
-      link.setAttribute('rel', 'stylesheet');
-    }
-    document.head.appendChild(link);
-    return link;
+    return loadLink({ href });
   }
 
   private async loadPreviewScript(id: ComponentID, previewName: string, previewBundleFileName: string) {
-    await new Promise<void>((resolve, reject) => {
-      const script = document.createElement('script');
-      const previewRoute = `~aspect/component-preview`;
-      const src = `/api/${id.toString()}/${previewRoute}/${previewBundleFileName}`;
-      script.src = src;
-      script.setAttribute('defer', 'defer');
-      script.onload = () => resolve();
-      script.onerror = (message, _, _1, _2, error) =>
-        reject(error || new Error(`[preview.preview] failed to load preview script: ${message}`));
-      document.head.appendChild(script);
-    });
+    const previewRoute = `~aspect/component-preview`;
+    const src = `/api/${id.toString()}/${previewRoute}/${previewBundleFileName}`;
+    await loadScript({ src });
 
+    // TODO - replace with jsonp
     const globalId = `${id.toStringWithoutVersion()}-preview`;
     const componentPreview = window[globalId];
     if (!componentPreview) throw new PreviewNotFound(previewName);

@@ -2,7 +2,7 @@ import { MainRuntime } from '@teambit/cli';
 import { compact, pick } from 'lodash';
 import { Component, ComponentMap, ComponentAspect, ComponentID } from '@teambit/component';
 import type { ComponentMain, ComponentFactory } from '@teambit/component';
-import { getComponentPackageVersion } from '@teambit/component-package-version';
+import { getComponentPackageVersion, snapToSemver } from '@teambit/component-package-version';
 import { GraphAspect } from '@teambit/graph';
 import type { GraphBuilder } from '@teambit/graph';
 import {
@@ -525,6 +525,8 @@ export class IsolatorMain {
         let version = dep.version;
         if (depCapsule) {
           version = await this.getComponentPackageVersionWithCache(depCapsule?.component);
+        } else {
+          version = snapToSemver(version);
         }
         const keyName = KEY_NAME_BY_LIFECYCLE_TYPE[dep.lifecycle];
         const entry = dep.toManifest();

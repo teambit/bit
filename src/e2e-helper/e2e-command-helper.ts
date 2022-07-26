@@ -177,8 +177,8 @@ export default class CommandHelper {
   unsetAspect(pattern: string, aspectId: string, flags = '') {
     return this.runCmd(`bit aspect unset ${pattern} ${aspectId} ${flags}`);
   }
-  untrackComponent(id = '', all = false, cwd: string = this.scopes.localPath) {
-    return this.runCmd(`bit untrack ${id} ${all ? '--all' : ''}`, cwd);
+  updateAspect(aspectId: string, pattern = '', flags = '') {
+    return this.runCmd(`bit aspect update ${aspectId} ${pattern} ${flags}`);
   }
   removeComponent(id: string, flags = '') {
     return this.runCmd(`bit remove ${id} --silent ${flags}`);
@@ -332,14 +332,14 @@ export default class CommandHelper {
     if (!artifacts) throw new Error(`unable to find artifacts data for ${id}`);
     return artifacts;
   }
-  untag(id: string, version = '') {
-    return this.runCmd(`bit untag ${id} ${version}`);
+  untag(id: string, head = false, flag = '') {
+    return this.runCmd(`bit reset ${id} ${head ? '--head' : ''} ${flag}`);
   }
   untagAll(options = '') {
-    return this.runCmd(`bit untag ${options} --all`);
+    return this.runCmd(`bit reset ${options} --all`);
   }
   untagSoft(id: string) {
-    return this.runCmd(`bit untag ${id} --soft`);
+    return this.runCmd(`bit reset ${id} --soft`);
   }
   exportIds(ids: string, flags = '', assert = true) {
     const result = this.runCmd(`bit export ${ids} ${flags}`);
@@ -371,6 +371,9 @@ export default class CommandHelper {
   }
   import(value = '') {
     return this.runCmd(`bit import ${value}`);
+  }
+  importLane(laneName: string, flags = '') {
+    return this.runCmd(`bit lane import ${this.scopes.remote}/${laneName} ${flags}`);
   }
   fetchLane(id: string) {
     return this.runCmd(`bit fetch ${id} --lanes`);
@@ -465,13 +468,18 @@ export default class CommandHelper {
     return this.runCmd(`bit test ${id} ${value}`, cwd);
   }
 
-  status() {
-    return this.runCmd('bit status');
+  status(flags = '') {
+    return this.runCmd(`bit status ${flags}`);
   }
 
   statusJson(cwd = this.scopes.localPath) {
     const status = this.runCmd('bit status --json', cwd);
     return JSON.parse(status);
+  }
+
+  getStagedIdsFromStatus(): string[] {
+    const status = this.statusJson();
+    return status.stagedComponents.map((s) => s.id);
   }
 
   expectStatusToBeClean(exclude: string[] = []) {
@@ -552,6 +560,9 @@ export default class CommandHelper {
 
   checkout(values: string) {
     return this.runCmd(`bit checkout ${values}`);
+  }
+  checkoutHead(values = '') {
+    return this.runCmd(`bit checkout head ${values}`);
   }
   switchLocalLane(lane: string, flags?: string) {
     return this.runCmd(`bit switch ${lane} ${flags || ''}`);
@@ -678,15 +689,6 @@ export default class CommandHelper {
   compile(id = '', options?: Record<string, any>) {
     const parsedOpts = this.parseOptions(options);
     return this.runCmd(`bit compile ${id} ${parsedOpts}`);
-  }
-
-  injectConf(id = 'bar/foo', options: Record<string, any> | null | undefined) {
-    const value = options
-      ? Object.keys(options) // $FlowFixMe
-          .map((key) => `-${key} ${options[key]}`)
-          .join(' ')
-      : '';
-    return this.runCmd(`bit inject-conf ${id} ${value}`);
   }
   doctor(options: Record<string, any>) {
     const parsedOpts = this.parseOptions(options);

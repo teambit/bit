@@ -2,7 +2,7 @@ import { maxBy } from 'lodash';
 import type { DependencyList, DependencyLifecycleType, Dependency } from '../dependencies';
 
 export function serializeByLifecycle(deps: DependencyList, lifecycle: DependencyLifecycleType) {
-  const filteredByLifecycle = deps.filter((dep) => dep.lifecycle === lifecycle);
+  const filteredByLifecycle = deps.filter((dep) => dep.lifecycle === lifecycle).sort();
   const longestLength = getLongestDepName(filteredByLifecycle);
   const paddedNames = filteredByLifecycle.dependencies.map((dep) => {
     const paddedName = getNameWithVersion(dep).padEnd(longestLength + 1, '-');

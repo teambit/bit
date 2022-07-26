@@ -35,9 +35,11 @@ export default class Init implements LegacyCommand {
       'reset-hard',
       'delete all Bit files and directories, including Bit configuration, tracking and model data. Useful for re-start using Bit from scratch',
     ],
-    // Disabled until supported by the new config
-    // ['c', 'compiler <compiler>', 'set up compiler'],
-    // ['t', 'tester <tester>', 'set up tester'],
+    [
+      '',
+      'reset-scope',
+      'removes local scope (.bit or .git/bit). snaps that were not exported will be lost. workspace left intact',
+    ],
     ['d', 'default-directory <default-directory>', 'set up default directory to import components into'],
     ['p', 'package-manager <package-manager>', 'set up package manager (npm or yarn)'],
     ['f', 'force', 'force workspace initialization without clearing local objects'],
@@ -57,11 +59,8 @@ export default class Init implements LegacyCommand {
       reset,
       resetNew,
       resetHard,
+      resetScope,
       force,
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      compiler,
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      tester,
       defaultDirectory,
       packageManager,
     } = flags;
@@ -82,7 +81,7 @@ export default class Init implements LegacyCommand {
       componentsDefaultDirectory: defaultDirectory,
       packageManager,
     };
-    return init(path, standalone, reset, resetNew, resetHard, force, workspaceConfigFileProps).then(
+    return init(path, standalone, reset, resetNew, resetHard, resetScope, force, workspaceConfigFileProps).then(
       ({ created, addedGitHooks, existingGitHooks }) => {
         return {
           created,
@@ -90,12 +89,13 @@ export default class Init implements LegacyCommand {
           existingGitHooks,
           reset,
           resetHard,
+          resetScope,
         };
       }
     );
   }
 
-  report({ created, bare, reset, resetHard }: any): string {
+  report({ created, bare, reset, resetHard, resetScope }: any): string {
     if (bare) {
       // if (!created) return `${chalk.grey('successfully reinitialized a bare bit scope.')}`;
       // @TODO - a case that you already have a bit scope
@@ -107,6 +107,7 @@ export default class Init implements LegacyCommand {
     if (!created) initMessage = `${chalk.grey('successfully reinitialized a bit workspace.')}`;
     if (reset) initMessage = `${chalk.grey('your bit workspace has been reset successfully.')}`;
     if (resetHard) initMessage = `${chalk.grey('your bit workspace has been hard-reset successfully.')}`;
+    if (resetScope) initMessage = `${chalk.grey('your local scope has been reset successfully.')}`;
     // const addedGitHooksTemplate = _generateAddedGitHooksTemplate(addedGitHooks);
     // const existingGitHooksTemplate = _generateExistingGitHooksTemplate(existingGitHooks);
     // return `${initMessage}\n${addedGitHooksTemplate}\n${existingGitHooksTemplate}`;

@@ -160,7 +160,7 @@ describe('run bit init', function () {
       helper.bitJson.write(bitJson);
 
       bitMap = helper.bitMap.read();
-      localConsumerFiles = helper.fs.getConsumerFiles('*', true);
+      localConsumerFiles = helper.fs.getConsumerFiles('*', true).filter((file) => !file.includes('bitmap-history'));
       localScope = helper.scopeHelper.cloneLocalScope();
     });
     describe('bit init', () => {
@@ -178,7 +178,7 @@ describe('run bit init', function () {
         expect(currentBitJson.packageManager).to.be.equal('yarn');
       });
       it('should not change .bit directory', () => {
-        const currentFiles = helper.fs.getConsumerFiles('*', true);
+        const currentFiles = helper.fs.getConsumerFiles('*', true).filter((file) => !file.includes('bitmap-history'));
         expect(currentFiles).to.be.deep.equal(localConsumerFiles);
       });
     });
@@ -198,7 +198,7 @@ describe('run bit init', function () {
         expect(currentBitJson.packageManager).to.be.equal('yarn');
       });
       it('should not change .bit directory', () => {
-        const currentFiles = helper.fs.getConsumerFiles('*', true);
+        const currentFiles = helper.fs.getConsumerFiles('*', true).filter((file) => !file.includes('bitmap-history'));
         expect(currentFiles).to.be.deep.equal(localConsumerFiles);
       });
     });

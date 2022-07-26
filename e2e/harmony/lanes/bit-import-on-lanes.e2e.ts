@@ -135,7 +135,7 @@ describe('bit lane command', function () {
         importOutput = helper.command.import();
       });
       it('should indicate that there is nothing to import because the lane is new', () => {
-        expect(importOutput).to.have.string("your lane wasn't exported yet, nothing to import");
+        expect(importOutput).to.have.string('nothing to import');
       });
     });
     describe('when the lane is exported', () => {
@@ -157,6 +157,32 @@ describe('bit lane command', function () {
       // before, it was throwing an error about missing head.
       it('should import the remote lane successfully', () => {
         expect(importOutput).to.have.string('successfully imported 3 components');
+      });
+    });
+    describe('when the objects were deleted and a workspace has an aspect with deps', () => {
+      before(() => {
+        helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+        helper.bitJsonc.setupDefault();
+        helper.command.createLane();
+        helper.command.create('aspect', 'my-aspect');
+        helper.fixtures.populateComponents();
+        helper.fs.outputFile(
+          `${helper.scopes.remote}/my-aspect/foo.ts`,
+          `import comp1 from '@${helper.scopes.remote}/comp1';`
+        );
+        helper.command.compile();
+        // helper.command.use(`${helper.scopes.remote}/my-aspect`); // doesn't work
+        helper.bitJsonc.addKeyVal(`${helper.scopes.remote}/my-aspect`, {});
+        helper.command.snapAllComponentsWithoutBuild();
+        helper.command.snapAllComponentsWithoutBuild('--unmodified');
+        helper.command.export();
+        helper.fs.deletePath('.bit');
+        helper.scopeHelper.addRemoteScope();
+      });
+      // previously, it was throwing the following error:
+      // component bwkyh1me-remote/comp1 missing data. parent 0a27abfb2cab6ed73a36323216a5e95cba98ede0 of version 9e2e99134fa0465c4efa7c8f089fe33cf61e4c1a was not found.
+      it('bit import should not throw', () => {
+        expect(() => helper.command.import()).to.not.throw();
       });
     });
   });

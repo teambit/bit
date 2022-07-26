@@ -1,6 +1,7 @@
 import fs from 'fs-extra';
 import path from 'path';
 import R from 'ramda';
+import { BitId } from '../../../bit-id';
 import ShowDoctorError from '../../../error/show-doctor-error';
 import { Scope } from '../../../scope';
 import ScopeComponentsImporter from '../../../scope/component-ops/scope-components-importer';
@@ -105,11 +106,14 @@ export class ArtifactFiles {
     });
   }
 
-  async getVinylsAndImportIfMissing(scopeName: string, scope: Scope): Promise<ArtifactVinyl[]> {
+  async getVinylsAndImportIfMissing(id: BitId, scope: Scope): Promise<ArtifactVinyl[]> {
     if (this.isEmpty()) return [];
     if (this.vinyls.length) return this.vinyls;
     const allHashes = this.refs.map((artifact) => artifact.ref.hash);
     const scopeComponentsImporter = ScopeComponentsImporter.getInstance(scope);
+    const lane = await scope.getCurrentLaneObject();
+    const isIdOnLane = lane?.toBitIds().hasWithoutVersion(id);
+    const scopeName = isIdOnLane ? (lane?.scope as string) : (id.scope as string);
     await scopeComponentsImporter.importManyObjects({ [scopeName]: allHashes });
     const getOneArtifact = async (artifact: ArtifactRef) => {
       const content = (await artifact.ref.load(scope.objects)) as Source;
@@ -128,6 +132,9 @@ export class ArtifactFiles {
 
 export async function importMultipleDistsArtifacts(scope: Scope, components: Component[]) {
   const extensionsNamesForDistArtifacts = 'teambit.compilation/compiler';
+  const lane = await scope.getCurrentLaneObject();
+  const laneIds = lane?.toBitIds();
+  const isIdOnLane = (id: BitId) => laneIds?.hasWithoutVersion(id);
   const groupedHashes: { [scopeName: string]: string[] } = {};
   components.forEach((component) => {
     const artifactsFiles = getArtifactFilesByExtension(component.extensions, extensionsNamesForDistArtifacts);
@@ -139,7 +146,8 @@ export async function importMultipleDistsArtifacts(scope: Scope, components: Com
       if (artifactFiles.isEmpty()) return;
       if (artifactFiles.vinyls.length) return;
       const allHashes = artifactFiles.refs.map((artifact) => artifact.ref.hash);
-      (groupedHashes[component.scope as string] ||= []).push(...allHashes);
+      const scopeName = isIdOnLane(component.id) ? (lane?.scope as string) : (component.scope as string);
+      (groupedHashes[scopeName] ||= []).push(...allHashes);
     });
   });
   const scopeComponentsImporter = ScopeComponentsImporter.getInstance(scope);

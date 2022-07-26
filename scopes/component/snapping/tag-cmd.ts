@@ -19,6 +19,8 @@ export class TagCmd implements Command {
   name = 'tag [component-patterns...]';
   group = 'development';
   description = 'create an immutable and exportable component snapshot, tagged with a release version.';
+  extendedDescription = `if no patterns are provided, it will tag all new and modified components.
+if patterns are entered, you can specify a version per pattern using "@" sign, e.g. bit tag foo@1.0.0 bar@minor baz@major`;
   arguments = [
     {
       name: 'component-patterns...',
@@ -26,7 +28,7 @@ export class TagCmd implements Command {
         'a list of component names, IDs or patterns (separated by space). run "bit pattern --help" to get more data about patterns. By default, all modified are tagged.',
     },
   ];
-  extendedDescription: string;
+  helpUrl = 'components/tags';
   alias = 't';
   loader = true;
   options = [
@@ -82,11 +84,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
   remoteOp = true; // In case a compiler / tester is not installed
   examples = [{ cmd: 'tag --ver 1.0.0', description: 'tag all components to version 1.0.0' }];
 
-  constructor(docsDomain: string, private snapping: SnappingMain, private logger: Logger) {
-    this.extendedDescription = `if no patterns are provided, it will tag all new and modified components.
-if patterns are entered, you can specify a version per pattern using "@" sign, e.g. bit tag foo@1.0.0 bar@minor baz@major
-https://${docsDomain}/components/tags`;
-  }
+  constructor(private snapping: SnappingMain, private logger: Logger) {}
 
   // eslint-disable-next-line complexity
   async report(
@@ -143,8 +141,8 @@ https://${docsDomain}/components/tags`;
     if (ignoreIssues && typeof ignoreIssues === 'boolean') {
       throw new BitError(`--ignore-issues expects issues to be ignored, please run "bit tag -h" for the issues list`);
     }
-    if (disableTagPipeline) {
-      this.logger.consoleWarning(`--disable-tag-pipeline is deprecated, please use --disable-deploy-pipeline instead`);
+    if (disableDeployPipeline) {
+      this.logger.consoleWarning(`--disable-deploy-pipeline is deprecated, please use --disable-tag-pipeline instead`);
     }
     if (!message && !persist) {
       this.logger.consoleWarning(
@@ -234,9 +232,9 @@ https://${docsDomain}/components/tags`;
 
     const warningsOutput = warnings && warnings.length ? `${chalk.yellow(warnings.join('\n'))}\n\n` : '';
     const tagExplanationPersist = `\n(use "bit export [collection]" to push these components to a remote")
-(use "bit untag" to unstage versions)\n`;
+(use "bit reset" to unstage versions)\n`;
     const tagExplanationSoft = `\n(use "bit tag --persist" to persist the changes")
-(use "bit untag --soft" to remove the soft-tags)\n`;
+(use "bit reset --soft" to remove the soft-tags)\n`;
 
     const tagExplanation = results.isSoftTag ? tagExplanationSoft : tagExplanationPersist;
 

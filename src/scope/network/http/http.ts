@@ -130,8 +130,8 @@ export class Http implements Network {
     const obj = await list();
 
     // Reading strictSSL from both network.strict-ssl and network.strict_ssl for backward compatibility.
-    const strictSSL = obj[CFG_NETWORK_STRICT_SSL] ?? obj['network.strict_ssl'] ?? obj[CFG_PROXY_STRICT_SSL]
-    return {
+    const strictSSL = obj[CFG_NETWORK_STRICT_SSL] ?? obj['network.strict_ssl'] ?? obj[CFG_PROXY_STRICT_SSL];
+    const networkConfig = {
       fetchRetries: obj[CFG_FETCH_RETRIES] ?? 2,
       fetchRetryFactor: obj[CFG_FETCH_RETRY_FACTOR] ?? 10,
       fetchRetryMintimeout: obj[CFG_FETCH_RETRY_MINTIMEOUT] ?? 10000,
@@ -146,6 +146,13 @@ export class Http implements Network {
       cert: obj[CFG_NETWORK_CERT] ?? obj[CFG_PROXY_CERT],
       key: obj[CFG_NETWORK_KEY] ?? obj[CFG_PROXY_KEY],
     };
+    logger.debug(
+      `the next network configuration is used in network.http: ${{
+        ...networkConfig,
+        key: networkConfig.key ? 'set' : 'not set', // this is sensitive information, we should not log it
+      }}`
+    );
+    return networkConfig;
   }
 
   static async getAgent(uri: string, agentOpts: AgentOptions): Promise<Agent> {
@@ -418,45 +425,6 @@ export class Http implements Network {
     return Component.fromString(data.scope._getLegacy);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async deprecateMany(ids: string[]): Promise<Record<string, any>[]> {
-    throw new Error(
-      `deprecation of a remote component has been disabled. deprecate locally with an updated version of bit and then tag and export`
-    );
-    // const DEPRECATE_COMPONENTS = gql`
-    //   mutation deprecate($bitIds: [String!]!) {
-    //     deprecate(bitIds: $bitIds) {
-    //       bitIds
-    //       missingComponents
-    //     }
-    //   }
-    // `;
-    // const res = await this.graphClientRequest(DEPRECATE_COMPONENTS, Verb.WRITE, {
-    //   bitIds: ids,
-    // });
-    // return res.deprecate;
-  }
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async undeprecateMany(ids: string[]): Promise<Record<string, any>[]> {
-    throw new Error(
-      `un-deprecation of a remote component has been disabled. undeprecate locally with an updated version of bit and then tag and export`
-    );
-    // const UNDEPRECATE_COMPONENTS = gql`
-    //   mutation deprecate($bitIds: [String!]!) {
-    //     undeprecate(bitIds: $bitIds) {
-    //       bitIds
-    //       missingComponents
-    //     }
-    //   }
-    // `;
-    // const res = await this.graphClientRequest(UNDEPRECATE_COMPONENTS, Verb.WRITE, {
-    //   bitIds: ids,
-    // });
-
-    // return res.undeprecate;
-  }
-
   async log(id: BitId): Promise<ComponentLog[]> {
     const GET_LOG_QUERY = gql`
       query getLogs($id: String!) {
@@ -570,7 +538,7 @@ export class Http implements Network {
   }
 
   private getClientVersion(): string {
-    return getHarmonyVersion();
+    return getHarmonyVersion(true);
   }
 
   private addAgentIfExist(opts: { [key: string]: any } = {}): Record<string, any> {

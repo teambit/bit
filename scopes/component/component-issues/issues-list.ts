@@ -2,10 +2,8 @@ import { ComponentIssue } from './component-issue';
 import { CustomModuleResolutionUsed } from './custom-module-resolution-used';
 import { ImportNonMainFiles } from './import-non-main-files';
 import { MissingComponents } from './missing-components';
-import { MissingCustomModuleResolutionLinks } from './missing-custom-module-resolution-links';
 import { MissingDependenciesOnFs } from './missing-dependencies-on-fs';
 import { MissingDists } from './missing-dists';
-import { MissingLinks } from './missing-links';
 import { MissingPackagesDependenciesOnFs } from './missing-packages-dependencies-on-fs';
 import { ParseErrors } from './parse-errors';
 import { RelativeComponents } from './relative-components';
@@ -25,11 +23,9 @@ export const IssuesClasses = {
   RelativeComponents,
   RelativeComponentsAuthored,
   ParseErrors,
-  MissingLinks,
   MissingDists,
   LegacyInsideHarmony,
   MissingDependenciesOnFs,
-  MissingCustomModuleResolutionLinks,
   ImportNonMainFiles,
   CustomModuleResolutionUsed,
   MultipleEnvs,
@@ -62,10 +58,6 @@ export class IssuesList {
       ...issue.toObject(),
       data: issue.dataToString().trim(),
     }));
-  }
-
-  getHarmonyIssues() {
-    return this.issues.filter((issue) => !issue.isLegacyIssue);
   }
 
   add(issue: ComponentIssue) {

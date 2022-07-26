@@ -20,9 +20,15 @@ import { formatPlainComponentItem } from '@teambit/legacy/dist/cli/chalk-box';
 import { Importer } from './importer';
 
 export default class ImportCmd implements Command {
-  name = 'import [component-ids...]';
-  description = 'import components from remote scopes to the local workspace';
-  arguments = [{ name: 'component-ids...', description: 'a list of component IDs (separated by space) to import' }];
+  name = 'import [component-patterns...]';
+  description = 'import components from their remote scopes to the local workspace';
+  arguments = [
+    {
+      name: 'component-patterns...',
+      description:
+        'component IDs or component patterns (separated by space). Use patterns to import groups of components using a common scope or namespace. E.g., "utils/*" (wrap with double quotes)',
+    },
+  ];
   extendedDescription: string;
   group = 'collaborate';
   alias = '';
@@ -46,7 +52,11 @@ export default class ImportCmd implements Command {
       'merge local changes with the imported version. strategy should be "theirs", "ours" or "manual"',
     ],
     ['', 'dependencies', 'EXPERIMENTAL. import all dependencies and write them to the workspace'],
-    ['', 'dependents', 'EXPERIMENTAL. import component dependents to allow auto-tag updating them upon tag'],
+    [
+      '',
+      'dependents',
+      "EXPERIMENTAL. import the components' dependents. this enables changes to propagate from (modified) components to their dependents",
+    ],
     [
       '',
       'save-in-lane',

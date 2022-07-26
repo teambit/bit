@@ -143,7 +143,7 @@ async function getComponentStatus(
     return componentStatus;
   };
   if (!componentModel) {
-    return returnFailure(`component ${component.id.toString()} doesn't have any version yet`);
+    return returnFailure(`component ${component.id.toString()} is new, no version to checkout`, true);
   }
   const unmerged = repo.unmergedComponents.getEntry(component.name);
   if (!reset && unmerged && unmerged.resolved === false) {
@@ -266,12 +266,7 @@ export async function applyVersion(
   });
   if (mergeResults) {
     // update files according to the merge results
-    const { filesStatus: modifiedStatus, modifiedFiles } = applyModifiedVersion(
-      files,
-      mergeResults,
-      mergeStrategy,
-      componentWithDependencies.component.originallySharedDir
-    );
+    const { filesStatus: modifiedStatus, modifiedFiles } = applyModifiedVersion(files, mergeResults, mergeStrategy);
     filesStatus = { ...filesStatus, ...modifiedStatus };
     componentWithDependencies.component.files = modifiedFiles;
   }
@@ -295,8 +290,7 @@ export async function applyVersion(
 export function applyModifiedVersion(
   componentFiles: SourceFile[],
   mergeResults: MergeResultsThreeWay,
-  mergeStrategy: MergeStrategy | null | undefined,
-  sharedDir?: string
+  mergeStrategy: MergeStrategy | null | undefined
 ): { filesStatus: Record<string, any>; modifiedFiles: SourceFile[] } {
   let modifiedFiles = componentFiles.map((file) => file.clone());
   const filesStatus = {};
@@ -305,8 +299,7 @@ export function applyModifiedVersion(
   }
   mergeResults.modifiedFiles.forEach((file) => {
     const filePath: PathOsBased = path.normalize(file.filePath);
-    const pathWithSharedDir = (p: string) => (sharedDir ? path.join(sharedDir, p) : p);
-    const foundFile = modifiedFiles.find((componentFile) => pathWithSharedDir(componentFile.relative) === filePath);
+    const foundFile = modifiedFiles.find((componentFile) => componentFile.relative === filePath);
     if (!foundFile) throw new GeneralError(`file ${filePath} not found`);
     if (file.conflict) {
       foundFile.contents = Buffer.from(file.conflict);

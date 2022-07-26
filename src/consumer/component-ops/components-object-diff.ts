@@ -38,14 +38,10 @@ export function componentToPrintableForDiff(component: Component): Record<string
   const {
     lang,
     bindingPrefix,
-    compiler,
-    tester,
     dependencies,
     devDependencies,
     packageDependencies,
     devPackageDependencies,
-    compilerPackageDependencies,
-    testerPackageDependencies,
     files,
     extensions,
     mainFile,
@@ -53,18 +49,12 @@ export function componentToPrintableForDiff(component: Component): Record<string
   } = component;
   const allDevPackages = {
     ...devPackageDependencies,
-    ...compilerPackageDependencies.devDependencies,
-    ...testerPackageDependencies.devDependencies,
   };
   const allPackages = {
     ...packageDependencies,
-    ...compilerPackageDependencies.dependencies,
-    ...testerPackageDependencies.dependencies,
   };
   const allPeerPackages = {
     ...component.peerPackageDependencies,
-    ...compilerPackageDependencies.peerDependencies,
-    ...testerPackageDependencies.peerDependencies,
   };
   const parsedDevPackageDependencies = parsePackages(allDevPackages) || [];
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -72,10 +62,8 @@ export function componentToPrintableForDiff(component: Component): Record<string
   const overrides = component.overrides.componentOverridesData;
 
   obj.id = component.id.toStringWithoutScope();
-  obj.compiler = compiler ? compiler.name : null;
   obj.language = lang || null;
   obj.bindingPrefix = bindingPrefix || null;
-  obj.tester = tester ? tester.name : null;
   obj.mainFile = mainFile ? normalize(mainFile) : null;
   obj.dependencies = dependencies
     .toStringOfIds()

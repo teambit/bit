@@ -1,4 +1,5 @@
 import { Component } from '@teambit/component';
+import { isHash } from '@teambit/component-version';
 
 /**
  * This function will calculate the package version for a component.
@@ -20,5 +21,10 @@ export async function getComponentPackageVersion(component: Component, snapId?: 
   if (tagBySnap) {
     return `${tagBySnap.version}`;
   }
-  return `0.0.0-${actualSnapId}`;
+  return snapToSemver(actualSnapId);
+}
+
+export function snapToSemver(version: string): string {
+  if (isHash(version)) return `0.0.0-${version}`;
+  return version;
 }

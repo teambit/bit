@@ -1,4 +1,4 @@
-import { ComponentID } from '@teambit/component';
+import { ComponentID, IComponent } from '@teambit/component';
 import { AspectListProps, AspectList } from './aspect-list';
 
 export type ComponentDescriptorProps = {
@@ -12,7 +12,7 @@ export type ComponentDescriptorProps = {
   aspectList?: AspectListProps;
 };
 
-export class ComponentDescriptor {
+export class ComponentDescriptor implements IComponent {
   constructor(
     /**
      *  Component ID
@@ -37,6 +37,10 @@ export class ComponentDescriptor {
       id: this.id.toString(),
       aspectList: this.aspectList.toObject(),
     };
+  }
+
+  async isModified() {
+    return false;
   }
 
   stringify() {

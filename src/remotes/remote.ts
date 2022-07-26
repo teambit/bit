@@ -115,12 +115,6 @@ export default class Remote {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return this.connect().then((network) => network.deleteMany(ids, force, context, idsAreLanes));
   }
-  deprecateMany(ids: string[], context: Record<string, any> | null | undefined): Promise<Record<string, any>[]> {
-    return this.connect().then((network) => network.deprecateMany(ids, context));
-  }
-  undeprecateMany(ids: string[], context: Record<string, any> | null | undefined): Promise<Record<string, any>[]> {
-    return this.connect().then((network) => network.undeprecateMany(ids, context));
-  }
   log(id: BitId): Promise<ComponentLog[]> {
     return this.connect().then((network) => network.log(id));
   }

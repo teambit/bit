@@ -10,11 +10,9 @@ type ComponentNode = Node<Component>;
 type DependencyEdge = Edge<Dependency>;
 
 export class ComponentGraph extends Graph<Component, Dependency> {
-  versionMap: Map<string, { allVersionNodes: string[]; latestVersionNode: string }>;
   seederIds: ComponentID[] = []; // component IDs that started the graph. (if from workspace, the .bitmap ids normally)
   constructor(nodes: ComponentNode[] = [], edges: DependencyEdge[] = []) {
     super(nodes, edges);
-    this.versionMap = new Map();
   }
 
   protected create(nodes: ComponentNode[] = [], edges: DependencyEdge[] = []): this {
@@ -37,9 +35,10 @@ export class ComponentGraph extends Graph<Component, Dependency> {
   }
 
   findDuplicateDependencies(): Map<string, DuplicateDependency> {
+    const versionMap = this.calculateVersionMap();
     const seederIdsNoVersions = this.seederIds.map((id) => id.toStringWithoutVersion());
     const duplicateDependencies: Map<string, DuplicateDependency> = new Map();
-    for (const [compFullName, versions] of this.versionMap) {
+    for (const [compFullName, versions] of versionMap) {
       if (versions.allVersionNodes.length > 1) {
         const versionSubgraphs: VersionSubgraph[] = [];
         const notLatestVersions = versions.allVersionNodes.filter((version) => version !== versions.latestVersionNode);
@@ -80,7 +79,7 @@ export class ComponentGraph extends Graph<Component, Dependency> {
     return this.seederIds.length;
   }
 
-  _calculateVersionMap() {
+  private calculateVersionMap(): Map<string, { allVersionNodes: string[]; latestVersionNode: string }> {
     const versionMap: Map<string, { allVersionNodes: string[]; latestVersionNode: string }> = new Map();
     for (const node of this.nodes) {
       const comp = node.attr;
@@ -97,17 +96,18 @@ export class ComponentGraph extends Graph<Component, Dependency> {
           if (Object.prototype.hasOwnProperty.call(value, 'allVersionNodes')) {
             value.allVersionNodes.push(compKey);
           }
-          const currentComp = this.node(compKey)?.attr;
+          const currentComp = comp;
           const latestComp = this.node(value.latestVersionNode)?.attr;
-          const isLegacy = !currentComp?.head || !latestComp?.head;
-
-          if (isLegacy) {
-            const currentCompVersion = currentComp?.id._legacy.getVersion();
-            const latestCompVersion = latestComp?.id._legacy.getVersion();
-            if (!!currentCompVersion && !!latestCompVersion && currentCompVersion.isLaterThan(latestCompVersion)) {
-              value.latestVersionNode = compKey;
-            }
-          } else if (new Date(currentComp.head.timestamp) > new Date(latestComp.head.timestamp)) {
+          // @todo: this check won't work when the component doesn't have head.
+          // it happens when a dependency is needed in an old version (not head). which Bit doesn't fetch the head
+          // Version object, and as a result, the `Component.head` is empty.
+          // for now it's probably good enough because it's used only for `findDuplicateDependencies`, which only
+          // checks the components on the workspace.
+          if (
+            currentComp.head &&
+            latestComp?.head &&
+            new Date(currentComp.head.timestamp) > new Date(latestComp.head.timestamp)
+          ) {
             value.latestVersionNode = compKey;
           }
         }

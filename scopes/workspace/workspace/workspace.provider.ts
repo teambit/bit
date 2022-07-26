@@ -39,6 +39,7 @@ import { EnvsUnsetCmd } from './envs-subcommands/envs-unset.cmd';
 import { PatternCommand } from './pattern.cmd';
 import { EnvsReplaceCmd } from './envs-subcommands/envs-replace.cmd';
 import { ScopeSetCmd } from './scope-subcommands/scope-set.cmd';
+import { UseCmd } from './use.cmd';
 
 export type WorkspaceDeps = [
   PubsubMain,
@@ -144,13 +145,11 @@ export default async function provideWorkspace(
 
   consumer.onCacheClear.push(() => workspace.clearCache());
 
-  if (!workspace.isLegacy) {
-    LegacyComponentLoader.registerOnComponentLoadSubscriber(async (legacyComponent: ConsumerComponent) => {
-      const id = await workspace.resolveComponentId(legacyComponent.id);
-      const newComponent = await workspace.get(id, false, legacyComponent);
-      return newComponent.state._consumer;
-    });
-  }
+  LegacyComponentLoader.registerOnComponentLoadSubscriber(async (legacyComponent: ConsumerComponent) => {
+    const id = await workspace.resolveComponentId(legacyComponent.id);
+    const newComponent = await workspace.get(id, false, legacyComponent);
+    return newComponent.state._consumer;
+  });
 
   ConsumerComponent.registerOnComponentConfigLoading(EXT_NAME, async (id) => {
     const componentId = await workspace.resolveComponentId(id);
@@ -205,18 +204,22 @@ export default async function provideWorkspace(
     capsuleCmd,
   ];
   const watcher = new Watcher(workspace, pubsub);
-  if (workspace && !workspace.consumer.isLegacy) {
-    cli.unregister('watch');
+  if (workspace) {
     commands.push(new WatchCommand(pubsub, logger, watcher));
-    cli.unregister('link');
     commands.push(new LinkCommand(workspace, logger, community.getDocsDomain()));
+    commands.push(new UseCmd(workspace));
   }
   commands.push(new PatternCommand(workspace));
   cli.register(...commands);
   component.registerHost(workspace);
 
   cli.registerOnStart(async () => {
-    await workspace.loadAspects(aspectLoader.getNotLoadedConfiguredExtensions());
+    await workspace.importCurrentLaneIfMissing();
+    await workspace.loadAspects(
+      aspectLoader.getNotLoadedConfiguredExtensions(),
+      undefined,
+      'workspace.cli.registerOnStart'
+    );
   });
 
   // add sub-commands "set" and "unset" to envs command.

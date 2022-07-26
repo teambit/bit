@@ -6,6 +6,7 @@ import { BitObjectList } from './bit-object-list';
 import Ref from './ref';
 import logger from '../../logger/logger';
 import { concurrentIOLimit } from '../../utils/concurrency';
+import { ExportMetadata } from '../models';
 
 /**
  * when error occurred during streaming between HTTP server and client, there is no good way to
@@ -269,6 +270,9 @@ export class ObjectList {
   splitByScopeName(): { [scopeName: string]: ObjectList } {
     const objectListPerScope: { [scopeName: string]: ObjectList } = {};
     this.objects.forEach((obj) => {
+      if (obj.type === ExportMetadata.name) {
+        return; // no scope for this type. it's general for all export data from all scopes
+      }
       if (!obj.scope) {
         throw new Error(`ObjectList: unable to split by scopeName, the scopeName is missing for ${obj.ref.hash}`);
       }

@@ -48,7 +48,10 @@ export type ImportOptions = {
   importDependents?: boolean; // default: false,
   fromOriginalScope?: boolean; // default: false, otherwise, it fetches flattened dependencies from their dependents
   saveInLane?: boolean; // save the imported component on the current lane (won't be available on main)
-  lanes?: { laneIds: LaneId[]; lanes?: Lane[] };
+  lanes?: {
+    laneIds: LaneId[];
+    lanes: Lane[]; // it can be an empty array when a lane is a local lane and doesn't exist on the remote
+  };
   allHistory?: boolean;
 };
 type ComponentMergeStatus = {
@@ -92,11 +95,6 @@ export default class ImportComponents {
   importComponents(): Promise<ImportResult> {
     loader.start(BEFORE_IMPORT_ACTION);
     this.options.saveDependenciesAsComponents = this.consumer.config._saveDependenciesAsComponents;
-    if (this.consumer.isLegacy && !this.options.writePackageJson) {
-      // if package.json is not written, it's impossible to install the packages and dependencies as npm packages
-      this.options.installNpmPackages = false;
-      this.options.saveDependenciesAsComponents = true;
-    }
     if (this.options.lanes && !this.options.ids.length) {
       return this.importObjectsOnLane();
     }
@@ -107,22 +105,35 @@ export default class ImportComponents {
   }
 
   async importObjectsOnLane(): Promise<ImportResult> {
-    if (!this.laneObjects.length || !this.options.objectsOnly || this.consumer.isLegacy) {
-      throw new Error(`importObjectsOnLane should work on Harmony and have laneObjects and objectsOnly=true`);
+    if (!this.options.objectsOnly) {
+      throw new Error(`importObjectsOnLane should have objectsOnly=true`);
     }
     if (this.laneObjects.length > 1) {
       throw new Error(`importObjectsOnLane does not support more than one lane`);
     }
-    const lane = this.laneObjects[0];
+    const lane = this.laneObjects.length ? this.laneObjects[0] : undefined;
     const bitIds: BitIds = await this.getBitIds();
-    logger.debug(`importObjectsOnLane, Lane: ${lane.id()}, Ids: ${bitIds.toString()}`);
+    lane
+      ? logger.debug(`importObjectsOnLane, Lane: ${lane.id()}, Ids: ${bitIds.toString()}`)
+      : logger.debug(`importObjectsOnLane, the lane does not exist on the remote. importing only the main components`);
     const beforeImportVersions = await this._getCurrentVersions(bitIds);
-    const componentsWithDependencies = await this.consumer.importComponentsObjectsHarmony(
-      bitIds,
-      false,
-      this.options.allHistory,
-      lane
-    );
+    const componentsWithDependencies = await this.consumer.importComponentsObjects(bitIds, {
+      allHistory: this.options.allHistory,
+      lane,
+    });
+
+    // import lane components from their original scope, this way, it's possible to run diff/merge on them
+    if (lane) {
+      const mainIds = await this.scope.getDefaultLaneIdsFromLane(lane);
+      const mainIdsLatest = BitIds.fromArray(mainIds.map((m) => m.changeVersion(undefined)));
+      // @todo: optimize this maybe. currently, it imports twice.
+      // try to make the previous `importComponentsObjectsHarmony` import the same component once from the original
+      // scope and once from the lane-scope.
+      await this.consumer.importComponentsObjects(mainIdsLatest, {
+        allHistory: this.options.allHistory,
+        ignoreMissingHead: true,
+      });
+    }
 
     // merge the lane objects
     const mergeAllLanesResults = await pMapSeries(this.laneObjects, (laneObject) =>
@@ -145,10 +156,7 @@ export default class ImportComponents {
     const bitIds: BitIds = await this.getBitIds();
     const beforeImportVersions = await this._getCurrentVersions(bitIds);
     await this._throwForPotentialIssues(bitIds);
-    const componentsWithDependencies = this.consumer.isLegacy
-      ? await this.consumer.importComponentsLegacy(bitIds, true, this.options.saveDependenciesAsComponents)
-      : await this.consumer.importComponentsHarmony(bitIds, true, this.laneObjects);
-    await this._throwForModifiedOrNewDependencies(componentsWithDependencies);
+    const componentsWithDependencies = await this.consumer.importComponentsHarmony(bitIds, true, this.laneObjects);
     if (this.laneObjects && this.options.objectsOnly) {
       // merge the lane objects
       const mergeAllLanesResults = await pMapSeries(this.laneObjects, (laneObject) =>
@@ -167,6 +175,11 @@ export default class ImportComponents {
   }
 
   async _fetchDivergeData(componentsWithDependencies: ComponentWithDependencies[]) {
+    if (this.options.objectsOnly) {
+      // no need for it when importing objects only. if it's enabled, in case when on a lane and a non-lane
+      // component is in bitmap using an older version, it throws "getDivergeData: unable to find Version X of Y"
+      return;
+    }
     await Promise.all(
       componentsWithDependencies.map(async ({ component }) => {
         const modelComponent = await this.scope.getModelComponent(component.id);
@@ -329,16 +342,8 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
     this.options.objectsOnly = !this.options.merge && !this.options.override;
     const componentsIdsToImport = this.getIdsToImportFromBitmap();
 
-    let compiler;
-    let tester;
-
     if (R.isEmpty(componentsIdsToImport)) {
       if (!this.options.withEnvironments) {
-        throw new NothingToImport();
-      }
-      compiler = await this.consumer.compiler;
-      tester = await this.consumer.tester;
-      if (!tester && !compiler) {
         throw new NothingToImport();
       }
     }
@@ -348,39 +353,17 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
     let componentsAndDependencies: ComponentWithDependencies[] = [];
     if (componentsIdsToImport.length) {
       // change all ids version to 'latest'. otherwise, it tries to import local tags/snaps from a remote
-      const idsWithLatestVersion = componentsIdsToImport.toVersionLatest();
-      componentsAndDependencies =
-        !this.consumer.isLegacy && this.options.objectsOnly
-          ? await this.consumer.importComponentsObjectsHarmony(
-              componentsIdsToImport,
-              this.options.fromOriginalScope,
-              this.options.allHistory
-            )
-          : await this.consumer.importComponentsLegacy(BitIds.fromArray(idsWithLatestVersion), true);
-      await this._throwForModifiedOrNewDependencies(componentsAndDependencies);
+      // const idsWithLatestVersion = componentsIdsToImport.toVersionLatest();
+      if (!this.options.objectsOnly) {
+        throw new Error(`bit import with no ids and --merge flag was not implemented yet`);
+      }
+      componentsAndDependencies = await this.consumer.importComponentsObjects(componentsIdsToImport, {
+        fromOriginalScope: this.options.fromOriginalScope,
+        allHistory: this.options.allHistory,
+      });
       await this._writeToFileSystem(componentsAndDependencies);
     }
     const importDetails = await this._getImportDetails(beforeImportVersions, componentsAndDependencies);
-    if (this.options.withEnvironments) {
-      compiler = compiler || (await this.consumer.compiler);
-      tester = tester || (await this.consumer.tester);
-      const context = { workspaceDir: this.consumer.getPath() };
-      const envsArgs = [this.consumer.scope, { verbose: this.options.verbose }, context];
-      const envComponents = [];
-      if (compiler) {
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        envComponents.push(await compiler.install(...envsArgs));
-      }
-      if (tester) {
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        envComponents.push(await tester.install(...envsArgs));
-      }
-      return {
-        dependencies: componentsAndDependencies,
-        envComponents: R.flatten(envComponents),
-        importDetails,
-      };
-    }
 
     return { dependencies: componentsAndDependencies, importDetails };
   }
@@ -498,20 +481,6 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
     }
   }
 
-  async _throwForModifiedOrNewDependencies(componentsAndDependencies: ComponentWithDependencies[]) {
-    if (!this.consumer.isLegacy) {
-      // only legacy has the concept of writing the dependencies as components.
-      // currently, they're installed as packages.
-      return;
-    }
-    const allDependenciesIds = R.flatten(
-      componentsAndDependencies.map((componentAndDependencies) =>
-        componentAndDependencies.component.dependencies.getAllIds()
-      )
-    );
-    await this._throwForModifiedOrNewComponents(allDependenciesIds);
-  }
-
   /**
    * Model Component id() calculation uses id.toString() for the hash.
    * If an imported component has scopereadonly name equals to a local name, both will have the exact same
@@ -595,9 +564,7 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
     const { filesStatus, modifiedFiles } = applyModifiedVersion(
       component.files,
       mergeResults,
-      this.options.mergeStrategy,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      component.originallySharedDir
+      this.options.mergeStrategy
     );
     component.files = modifiedFiles;
 

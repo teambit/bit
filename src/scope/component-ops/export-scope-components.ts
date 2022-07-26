@@ -8,18 +8,19 @@ import logger from '../../logger/logger';
 import { Remote, Remotes } from '../../remotes';
 import { ComponentNotFound, MergeConflict, MergeConflictOnRemote } from '../exceptions';
 import ComponentNeedsUpdate from '../exceptions/component-needs-update';
-import { Lane, ModelComponent, Symlink, Version } from '../models';
+import { Lane, ModelComponent, Symlink, Version, ExportMetadata } from '../models';
 import { BitObject } from '../objects';
 import Scope from '../scope';
 import { getScopeRemotes } from '../scope-remotes';
 import ScopeComponentsImporter from './scope-components-importer';
-import { ObjectList } from '../objects/object-list';
+import { ObjectItem, ObjectList } from '../objects/object-list';
 import { ExportPersist, ExportValidate, RemovePendingDir } from '../actions';
 import loader from '../../cli/loader';
 import { getAllVersionHashes } from './traverse-versions';
 import { PersistFailed } from '../exceptions/persist-failed';
 import { Http } from '../network/http';
 import { MergeResult } from '../repositories/sources';
+import { ExportVersions } from '../models/export-metadata';
 
 type ModelComponentAndObjects = { component: ModelComponent; objects: BitObject[] };
 
@@ -70,7 +71,6 @@ type RemotesForPersist = {
  */
 export async function exportMany({
   scope,
-  isLegacy,
   ids, // when exporting a lane, the ids are the lane component ids
   context = {},
   laneObject,
@@ -81,7 +81,6 @@ export async function exportMany({
   ignoreMissingArtifacts,
 }: {
   scope: Scope;
-  isLegacy: boolean;
   ids: BitIds;
   context?: Record<string, any>;
   laneObject?: Lane;
@@ -99,6 +98,7 @@ export async function exportMany({
     .map((scopeName) => `scope "${scopeName}": ${idsGroupedByScope[scopeName].toString()}`)
     .join(', ');
   logger.debug(`export-scope-components, export to the following scopes ${groupedByScopeString}`);
+  const exportVersions: ExportVersions[] = [];
   const manyObjectsPerRemote = laneObject
     ? [await getUpdatedObjectsToExport(laneObject.scope, ids, laneObject)]
     : await mapSeries(Object.keys(idsGroupedByScope), (scopeName) =>
@@ -134,7 +134,7 @@ export async function exportMany({
   }
 
   function shouldPushToCentralHub(): boolean {
-    if (isLegacy || originDirectly) return false;
+    if (originDirectly) return false;
     const hubRemotes = manyObjectsPerRemote.filter((m) => scopeRemotes.isHub(m.remote.name));
     if (!hubRemotes.length) return false;
     if (hubRemotes.length === manyObjectsPerRemote.length) return true; // all are hub
@@ -144,8 +144,20 @@ export async function exportMany({
     );
   }
 
+  async function getExportMetadata(): Promise<ObjectItem> {
+    const exportMetadata = new ExportMetadata({ exportVersions });
+    const exportMetadataObj = await exportMetadata.compress();
+    const exportMetadataItem: ObjectItem = {
+      ref: exportMetadata.hash(),
+      buffer: exportMetadataObj,
+      type: ExportMetadata.name,
+    };
+    return exportMetadataItem;
+  }
+
   async function pushAllToCentralHub() {
     const objectList = transformToOneObjectListWithScopeData(manyObjectsPerRemote);
+    objectList.addIfNotExist([await getExportMetadata()]);
     const http = await Http.connect(CENTRAL_BIT_HUB_URL, CENTRAL_BIT_HUB_NAME);
     const pushResults = await http.pushToCentralHub(objectList);
     const { failedScopes, successIds, errors } = pushResults;
@@ -153,11 +165,17 @@ export async function exportMany({
       throw new PersistFailed(failedScopes, errors);
     }
     const exportedBitIds = successIds.map((id) => BitId.parse(id, true));
-    manyObjectsPerRemote.forEach((objectPerRemote) => {
-      const idsPerScope = exportedBitIds.filter((id) => id.scope === objectPerRemote.remote.name);
-      // it's possible that idsPerScope is an empty array, in case the objects were exported already before
-      objectPerRemote.exportedIds = idsPerScope.map((id) => id.toString());
-    });
+    if (manyObjectsPerRemote.length === 1) {
+      // when on a lane, it's always exported to the lane. and the ids can be from different scopes, so having the
+      // filter below, will remove these components from the output of bit-export at the end.
+      manyObjectsPerRemote[0].exportedIds = exportedBitIds.map((id) => id.toString());
+    } else {
+      manyObjectsPerRemote.forEach((objectPerRemote) => {
+        const idsPerScope = exportedBitIds.filter((id) => id.scope === objectPerRemote.remote.name);
+        // it's possible that idsPerScope is an empty array, in case the objects were exported already before
+        objectPerRemote.exportedIds = idsPerScope.map((id) => id.toString());
+      });
+    }
   }
 
   /**
@@ -211,6 +229,7 @@ this scope already has a component with the same name. as such, it'll be impossi
       const objectsList = await new ObjectList(objectItems).toBitObjects();
       const componentAndObject = { component: modelComponent, objects: objectsList.getAll() };
       await convertToCorrectScopeHarmony(scope, componentAndObject, remoteNameStr, bitIds, idsWithFutureScope);
+      populateExportMetadata(modelComponent);
       const remoteObj = { url: remote.host, name: remote.name, date: Date.now().toString() };
       modelComponent.addScopeListItem(remoteObj);
       componentsAndObjects.push(componentAndObject);
@@ -250,10 +269,25 @@ this scope already has a component with the same name. as such, it'll be impossi
     return { remote, objectList, objectListPerName, idsToChangeLocally, componentsAndObjects };
   }
 
+  function populateExportMetadata(modelComponent: ModelComponent) {
+    const localTagsOrHashes = modelComponent.getLocalTagsOrHashes();
+    const head = modelComponent.getHeadRegardlessOfLane();
+    if (!head) {
+      throw new Error(`unable to export ${modelComponent.id()}, head is missing`);
+    }
+    exportVersions.push({
+      id: modelComponent.toBitId(),
+      versions: localTagsOrHashes,
+      head,
+    });
+  }
+
   async function getVersionsToExport(modelComponent: ModelComponent, lane?: Lane): Promise<string[]> {
+    await modelComponent.setDivergeData(scope.objects);
+    const localTagsOrHashes = modelComponent.getLocalTagsOrHashes();
     if (!allVersions && !lane) {
       // if lane is exported, components from other remotes may be exported to this remote. we need their history.
-      return modelComponent.getLocalTagsOrHashes();
+      return localTagsOrHashes;
     }
     const allHashes = await getAllVersionHashes(modelComponent, scope.objects, true);
     return modelComponent.switchHashesWithTagsIfExist(allHashes);

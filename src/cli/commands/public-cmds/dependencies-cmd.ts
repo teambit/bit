@@ -13,9 +13,10 @@ type DependenciesFlags = {
 };
 
 export default class Dependencies implements LegacyCommand {
-  name = 'dependencies <id>';
+  name = 'dependencies <component-name>';
+  arguments = [{ name: 'component-name', description: 'component name or component id' }];
   group: Group = 'info';
-  description = 'EXPERIMENTAL. show dependencies (direct and indirect) of the given component';
+  description = 'EXPERIMENTAL. show direct and indirect dependencies of the given component';
   alias = '';
   opts = [
     ['t', 'tree', 'render dependencies as a tree, similar to "npm ls"'],
@@ -80,10 +81,10 @@ try running "bit cat-component ${results.id.toStringWithoutVersion()}" to see wh
 
     const scopeTable = generateDependenciesInfoTable(scopeGraph, results.id);
     const workspaceTable = generateDependenciesInfoTable(workspaceGraph, results.id);
-    return `${chalk.bold('Dependents originated from workspace')}
+    return `${chalk.bold('Dependencies originated from workspace')}
 ${workspaceTable || '<none>'}
 
-${chalk.bold('Dependents originated from scope')}
+${chalk.bold('Dependencies originated from scope')}
 ${scopeTable || '<none>'}`;
   }
 }

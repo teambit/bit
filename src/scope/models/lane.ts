@@ -22,6 +22,7 @@ export type LaneProps = {
   components?: LaneComponent[];
   hash: string;
   readmeComponent?: LaneReadmeComponent;
+  forkedFrom?: LaneId;
 };
 
 export type LaneComponent = { id: BitId; head: Ref };
@@ -32,8 +33,9 @@ export default class Lane extends BitObject {
   components: LaneComponent[];
   log: Log;
   readmeComponent?: LaneReadmeComponent;
+  forkedFrom?: LaneId;
   _hash: string; // reason for the underscore prefix is that we already have hash as a method
-
+  isNew = false; // doesn't get saved in the object. only needed for in-memory instance
   constructor(props: LaneProps) {
     super();
     if (!props.name) throw new TypeError('Lane constructor expects to get a name parameter');
@@ -43,6 +45,7 @@ export default class Lane extends BitObject {
     this.log = props.log || {};
     this._hash = props.hash;
     this.readmeComponent = props.readmeComponent;
+    this.forkedFrom = props.forkedFrom;
   }
   id(): string {
     return this.scope + LANE_REMOTE_DELIMITER + this.name;
@@ -62,7 +65,7 @@ export default class Lane extends BitObject {
     lane.validate();
   }
   toObject() {
-    return filterObject(
+    const obj = filterObject(
       {
         name: this.name,
         scope: this.scope,
@@ -75,20 +78,22 @@ export default class Lane extends BitObject {
           id: { scope: this.readmeComponent.id.scope, name: this.readmeComponent.id.name },
           head: this.readmeComponent.head?.toString() ?? null,
         },
+        forkedFrom: this.forkedFrom && this.forkedFrom.toObject(),
       },
       (val) => !!val
     );
+    return obj;
   }
   static from(props: LaneProps): Lane {
     return new Lane(props);
   }
-  static create(name: string, scope: string) {
+  static create(name: string, scope: string, forkedFrom?: LaneId) {
     const log = {
       date: Date.now().toString(),
       username: globalConfig.getSync(CFG_USER_NAME_KEY),
       email: globalConfig.getSync(CFG_USER_EMAIL_KEY),
     };
-    return new Lane({ name, scope, hash: sha1(v4()), log });
+    return new Lane({ name, scope, hash: sha1(v4()), log, forkedFrom });
   }
   static parse(contents: string, hash: string): Lane {
     const laneObject = JSON.parse(contents);
@@ -104,6 +109,7 @@ export default class Lane extends BitObject {
         id: new BitId({ scope: laneObject.readmeComponent.id.scope, name: laneObject.readmeComponent.id.name }),
         head: laneObject.readmeComponent.head && new Ref(laneObject.readmeComponent.head),
       },
+      forkedFrom: laneObject.forkedFrom && LaneId.from(laneObject.forkedFrom.name, laneObject.forkedFrom.scope),
       hash: laneObject.hash || hash,
     });
   }

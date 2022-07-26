@@ -32,7 +32,6 @@ import { ExportPersist, PostSign } from '@teambit/legacy/dist/scope/actions';
 import { getScopeRemotes } from '@teambit/legacy/dist/scope/scope-remotes';
 import { Remotes } from '@teambit/legacy/dist/remotes';
 import { isMatchNamespacePatternItem } from '@teambit/workspace.modules.match-pattern';
-import { ConfigMain, ConfigAspect } from '@teambit/config';
 import { Scope } from '@teambit/legacy/dist/scope';
 import { Types } from '@teambit/legacy/dist/scope/object-registrar';
 import { FETCH_OPTIONS } from '@teambit/legacy/dist/api/scope/lib/fetch';
@@ -224,7 +223,7 @@ export class ScopeMain implements ComponentFactory {
     };
 
     const idsToLoad = await getAspectsByPreviouslyUsedVersion();
-    await host.loadAspects(idsToLoad, false);
+    await host.loadAspects(idsToLoad, false, 'scope.reloadAspectsWithNewVersion');
   }
 
   getManyByLegacy(components: ConsumerComponent[]): Promise<Component[]> {
@@ -368,10 +367,10 @@ export class ScopeMain implements ComponentFactory {
 
   private localAspects: string[] = [];
 
-  async loadAspects(ids: string[], throwOnError = false, neededFor?: ComponentID): Promise<string[]> {
+  async loadAspects(ids: string[], throwOnError = false, neededFor?: string): Promise<string[]> {
     this.logger.info(`loadAspects, loading ${ids.length} aspects.
 ids: ${ids.join(', ')}
-needed-for: ${neededFor?.toString() || '<unknown>'}`);
+needed-for: ${neededFor || '<unknown>'}`);
     const grouped = await this.groupAspectIdsByEnvOfTheList(ids);
     const envsManifestsIds = await this.getManifestsAndLoadAspects(grouped.envs, throwOnError);
     const otherManifestsIds = await this.getManifestsAndLoadAspects(grouped.other, throwOnError);
@@ -411,6 +410,7 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
     } = {}
   ): Promise<ManifestOrAspect[]> {
     ids = uniq(ids);
+    this.logger.debug(`getManifestsGraphRecursively, ids:\n${ids.join('\n')}`);
     const nonVisitedId = ids.filter((id) => !visited.includes(id));
     if (!nonVisitedId.length) {
       return [];
@@ -930,6 +930,7 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
     return this.filterIdsFromPoolIdsByPattern(pattern, ids, throwForNoMatch);
   }
 
+  // todo: move this to somewhere else (where?)
   filterIdsFromPoolIdsByPattern(pattern: string, ids: ComponentID[], throwForNoMatch = true) {
     const patterns = pattern.split(',').map((p) => p.trim());
     // check also as legacyId.toString, as it doesn't have the defaultScope
@@ -982,14 +983,14 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
     if (this.aspectLoader.isAspectComponent(component)) {
       aspectIds.push(component.id.toString());
     }
-    await this.loadAspects(aspectIds, true, id);
+    await this.loadAspects(aspectIds, true, id.toString());
 
     return component;
   }
 
   async loadComponentsAspect(component: Component) {
     const aspectIds = component.state.aspects.ids;
-    await this.loadAspects(aspectIds, true, component.id);
+    await this.loadAspects(aspectIds, true, component.id.toString());
   }
 
   async isModified(): Promise<boolean> {
@@ -1023,7 +1024,6 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
     ExpressAspect,
     LoggerAspect,
     EnvsAspect,
-    ConfigAspect,
   ];
 
   static defaultConfig: ScopeConfig = {
@@ -1031,7 +1031,7 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
   };
 
   static async provider(
-    [componentExt, ui, graphql, cli, isolator, aspectLoader, express, loggerMain, envs, configMain]: [
+    [componentExt, ui, graphql, cli, isolator, aspectLoader, express, loggerMain, envs]: [
       ComponentMain,
       UiMain,
       GraphqlMain,
@@ -1040,8 +1040,7 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
       AspectLoaderMain,
       ExpressMain,
       LoggerMain,
-      EnvsMain,
-      ConfigMain
+      EnvsMain
     ],
     config: ScopeConfig,
     [tagSlot, postPutSlot, postDeleteSlot, postExportSlot, postObjectsPersistSlot, preFetchObjectsSlot]: [
@@ -1079,7 +1078,7 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
     );
     cli.registerOnStart(async (hasWorkspace: boolean) => {
       if (hasWorkspace) return;
-      await scope.loadAspects(aspectLoader.getNotLoadedConfiguredExtensions());
+      await scope.loadAspects(aspectLoader.getNotLoadedConfiguredExtensions(), undefined, 'scope.cli.registerOnStart');
     });
     cli.register(new ScopeCmd());
 
@@ -1127,16 +1126,6 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
     PostSign.onPutHook = onPutHook;
     Scope.onPostExport = onPostExportHook;
     Repository.onPostObjectsPersist = onPostObjectsPersistHook;
-
-    configMain?.registerPreAddingAspectsSlot?.(async (compIds) => {
-      const loadedIds = await scope.loadAspects(compIds, true);
-      // find the full component-ids including versions in the load-aspects results.
-      // we need it for bit-use to be added to the config file.
-      return compIds.map((compId) => {
-        const loaded = loadedIds.find((loadedId) => loadedId.startsWith(`${compId}@`));
-        return loaded || compId;
-      });
-    });
 
     express.register([
       new PutRoute(scope, postPutSlot),

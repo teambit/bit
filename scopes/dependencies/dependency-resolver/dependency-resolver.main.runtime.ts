@@ -1,6 +1,6 @@
 import mapSeries from 'p-map-series';
 import { MainRuntime } from '@teambit/cli';
-import ComponentAspect, { Component, ComponentMap, ComponentMain } from '@teambit/component';
+import ComponentAspect, { Component, ComponentMap, ComponentMain, IComponent } from '@teambit/component';
 import type { ConfigMain } from '@teambit/config';
 import { get, pick, uniq } from 'lodash';
 import { ConfigAspect } from '@teambit/config';
@@ -29,6 +29,7 @@ import LegacyComponent from '@teambit/legacy/dist/consumer/component';
 import fs from 'fs-extra';
 import { BitId } from '@teambit/legacy-bit-id';
 import { readCAFileSync } from '@pnpm/network.ca-file';
+import { PeerDependencyRules } from '@pnpm/types';
 import semver, { SemVer } from 'semver';
 import AspectLoaderAspect, { AspectLoaderMain } from '@teambit/aspect-loader';
 import GlobalConfigAspect, { GlobalConfigMain } from '@teambit/global-config';
@@ -236,6 +237,11 @@ export interface DependencyResolverWorkspaceConfig {
    * Refuse to install any package that claims to not be compatible with the current Node.js version.
    */
   engineStrict?: boolean;
+
+  /*
+   * Rules to mute specific peer dependeny warnings.
+   */
+  peerDependencyRules?: PeerDependencyRules;
 }
 
 export interface DependencyResolverVariantConfig {
@@ -399,8 +405,8 @@ export class DependencyResolverMain {
    * Main function to get the dependency list of a given component
    * @param component
    */
-  async getDependencies(component: Component): Promise<DependencyList> {
-    const entry = component.state.aspects.get(DependencyResolverAspect.id);
+  async getDependencies(component: IComponent): Promise<DependencyList> {
+    const entry = component.get(DependencyResolverAspect.id);
     if (!entry) {
       return DependencyList.fromArray([]);
     }
@@ -522,6 +528,7 @@ export class DependencyResolverMain {
       this.config.sideEffectsCache,
       this.config.nodeVersion,
       this.config.engineStrict,
+      this.config.peerDependencyRules
     );
   }
 
@@ -623,11 +630,18 @@ export class DependencyResolverMain {
   }
 
   async getNetworkConfig(): Promise<NetworkConfig> {
-    return {
+    const networkConfig = {
       ...(await this.getNetworkConfigFromGlobalConfig()),
       ...(await this.getNetworkConfigFromPackageManager()),
       ...this.getNetworkConfigFromDepResolverConfig(),
     };
+    this.logger.debug(
+      `the next network configuration is used in dependency-resolver: ${{
+        ...networkConfig,
+        key: networkConfig.key ? 'set' : 'not set', // this is sensitive information, we should not log it
+      }}`
+    );
+    return networkConfig;
   }
 
   private async getNetworkConfigFromGlobalConfig(): Promise<NetworkConfig> {
@@ -653,22 +667,25 @@ export class DependencyResolverMain {
       'cafile',
     ]);
     if (this.config.strictSsl != null) {
-      config.strictSSL = typeof this.config.strictSsl === 'string'
-        ? this.config.strictSsl.toLowerCase() === 'true'
-        : this.config.strictSsl;
+      config.strictSSL =
+        typeof this.config.strictSsl === 'string'
+          ? this.config.strictSsl.toLowerCase() === 'true'
+          : this.config.strictSsl;
     }
     return config;
   }
 
   private async getNetworkConfigFromPackageManager(): Promise<NetworkConfig> {
-    const packageManager = this.getPackageManager();
-    if (typeof packageManager?.getNetworkConfig !== 'function') return {};
-    return packageManager.getNetworkConfig();
-  }
-
-  private getPackageManager() {
     const packageManager = this.packageManagerSlot.get(this.config.packageManager);
-    return packageManager ?? this.getSystemPackageManager();
+    let networkConfigFromPackageManager: NetworkConfig = {};
+    if (typeof packageManager?.getNetworkConfig === 'function') {
+      networkConfigFromPackageManager = await packageManager?.getNetworkConfig();
+    } else {
+      const systemPm = this.getSystemPackageManager();
+      if (!systemPm.getNetworkConfig) throw new Error('system package manager must implement `getNetworkConfig()`');
+      networkConfigFromPackageManager = await systemPm.getNetworkConfig();
+    }
+    return networkConfigFromPackageManager;
   }
 
   private async getProxyConfigFromPackageManager(): Promise<ProxyConfig> {

@@ -49,8 +49,14 @@ export async function loadAspect<T>(targetAspect: Aspect, cwd = process.cwd(), r
     if (!runtimePath) throw new Error(`could not find runtime '${runtimeDef.name}' for aspect ID '${aspect.id}'`);
     // eslint-disable-next-line global-require, import/no-dynamic-require
     const runtimeC = require(join(packagePath, runtimePath));
-    if (aspect.id === targetAspect.id) {
-      targetAspect.addRuntime(runtimeC.default);
+    if (aspect.manifest._runtimes.length === 0 || aspect.id === targetAspect.id) {
+      // core-aspects running outside of bit-bin repo end up here. they don't have runtime.
+      // this makes sure to load them from the path were they're imported
+      if (!runtimeC.default) {
+        throw new Error(`error: ${aspect.id} does not export its main-runtime as default.
+go to the aspect-main file and add a new line with "export default YourAspectMain"`);
+      }
+      aspect.manifest.addRuntime(runtimeC.default);
     }
   });
 

@@ -38,7 +38,7 @@ describe('bit checkout command', function () {
     });
     it('before tagging it should show an error saying the component was not tagged yet', () => {
       const output = helper.general.runWithTryCatch('bit checkout 1.0.0 bar/foo');
-      expect(output).to.have.string("component bar/foo doesn't have any version yet");
+      expect(output).to.have.string('component bar/foo is new, no version to checkout');
     });
     describe('after the component was tagged', () => {
       before(() => {
@@ -173,7 +173,7 @@ describe('bit checkout command', function () {
       // previously, it was throwing an error:
       // error: version "0.0.2" of component tpkb99cd-remote/comp1 was not found on the filesystem.
       it('should not throw an error', () => {
-        expect(() => helper.command.checkout('latest --all')).to.not.throw();
+        expect(() => helper.command.checkoutHead('--all')).to.not.throw();
       });
     });
   });
@@ -228,9 +228,9 @@ describe('bit checkout command', function () {
       helper.fs.deletePath('comp1/foo.ts');
       scopeBeforeCheckout = helper.scopeHelper.cloneLocalScope();
     });
-    describe('bit checkout latest', () => {
+    describe('bit checkout head', () => {
       before(() => {
-        helper.command.checkout('latest comp1 --skip-npm-install');
+        helper.command.checkoutHead('comp1 --skip-npm-install');
       });
       it('should leave the file deleted', () => {
         const deletedFile = path.join(helper.scopes.localPath, 'comp1/foo.ts');
@@ -263,7 +263,7 @@ describe('bit checkout command', function () {
       helper.command.export();
       helper.scopeHelper.getClonedLocalScope(afterFirstExport);
       helper.command.import();
-      helper.command.checkout('latest --all');
+      helper.command.checkoutHead('--all');
     });
     it('should write the new files', () => {
       const newFilePath = path.join(helper.scopes.localPath, 'comp1/foo.ts');

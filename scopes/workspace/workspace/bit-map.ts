@@ -6,6 +6,7 @@ import { GetBitMapComponentOptions } from '@teambit/legacy/dist/consumer/bit-map
 import ComponentMap from '@teambit/legacy/dist/consumer/bit-map/component-map';
 import { REMOVE_EXTENSION_SPECIAL_SIGN } from '@teambit/legacy/dist/consumer/config';
 import { BitError } from '@teambit/bit-error';
+import { LaneId } from '@teambit/lane-id';
 /**
  * consider extracting to a new component.
  * (pro: making Workspace aspect smaller. con: it's an implementation details of the workspace)
@@ -142,7 +143,14 @@ export class BitMap {
    * this is the lane-id of the recently exported lane. in case of a new lane, which was not exported yet, this will be
    * empty.
    */
-  getExportedLaneId() {
-    return this.legacyBitMap.remoteLaneId;
+  getExportedLaneId(): LaneId | undefined {
+    return this.legacyBitMap.isLaneExported ? this.legacyBitMap.laneId : undefined;
+  }
+
+  /**
+   * whether .bitmap file has changed in-memory
+   */
+  hasChanged(): boolean {
+    return this.legacyBitMap.hasChanged;
   }
 }
