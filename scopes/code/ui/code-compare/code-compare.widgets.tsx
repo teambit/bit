@@ -8,12 +8,12 @@ export function Widget({ node }: WidgetProps<any>) {
   const componentCompareContext = useComponentCompare();
   const base = componentCompareContext?.base?.model;
   const compare = componentCompareContext?.compare?.model;
-  // /**
-  //  * Note: This is temporary for the first release.
-  //  * TBD move this to the Component Compare GQL API
-  //  */
-  // const { fileContent: originalFileContent, loading: originalLoading } = useFileContent(base?.id, fileName);
-  // const { fileContent: modifiedFileContent, loading: modifiedLoading } = useFileContent(compare?.id, fileName);
+  /**
+   * Note: This is temporary for the first release.
+   * TBD move this to the Component Compare GQL API
+   */
+  const { fileContent: originalFileContent, loading: originalLoading } = useFileContent(base?.id, fileName);
+  const { fileContent: modifiedFileContent, loading: modifiedLoading } = useFileContent(compare?.id, fileName);
 
   if (originalLoading || modifiedLoading) return null;
 

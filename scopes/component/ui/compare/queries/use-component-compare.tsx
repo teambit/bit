@@ -1,6 +1,5 @@
 import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
 import { gql, QueryResult } from '@apollo/client';
-import { ComponentCompareQueryResponse } from '';
 
 const QUERY_COMPONENT_COMPARE = gql`
   query ComponentCompare($baseId: String!, $compareId: String!, $fileName: String) {
