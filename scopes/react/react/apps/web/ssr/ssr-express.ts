@@ -43,9 +43,9 @@ export function createExpressSsr({ name, workdir, port, app, assets, logger }: E
     try {
       // the app itself controls the response
       await app(session);
-      logger?.info(`[react.application] [ssr] success "${request.url}"`);
-    } catch (error) {
-      logger?.error(`[react.application] [ssr] error at "${request.url}"`, error);
+      logger?.console(`[react.application] [ssr] success "${request.url}"`);
+    } catch (error: any) {
+      logger?.consoleError(`[react.application] [ssr] error at "${request.url}"`, error);
       response.status(500).send(serverError());
     }
   });
