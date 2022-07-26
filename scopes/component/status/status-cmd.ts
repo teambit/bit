@@ -95,7 +95,7 @@ export class StatusCmd implements Command {
     // troubleshooting doc
     let showTroubleshootingLink = false;
 
-    function format(id: BitId, message?: string, localVersions?: string[]): string {
+    function format(id: BitId, showIssues = false, message?: string, localVersions?: string[]): string {
       const bitId = id;
       const idWithIssues = componentsWithIssues.find((c) => c.id.isEqual(bitId));
       const softTagged = softTaggedComponents.find((softTaggedId) => softTaggedId.isEqual(bitId));
@@ -105,7 +105,7 @@ export class StatusCmd implements Command {
       const color = message ? 'yellow' : 'green';
       const messageStatus = chalk[color](messageStatusTextWithSoftTag);
 
-      if (id instanceof BitId) {
+      if (!showIssues) {
         return `${formatBitString(id.toStringWithoutVersion())} ... ${messageStatus}`;
       }
       let bitFormatted = `${formatNewBit(id)}`;
@@ -131,7 +131,7 @@ export class StatusCmd implements Command {
     const splitByMissing = R.groupBy((component) => {
       return component.includes(statusFailureMsg) ? 'missing' : 'nonMissing';
     });
-    const { missing, nonMissing } = splitByMissing(newComponents.map((c) => format(c)));
+    const { missing, nonMissing } = splitByMissing(newComponents.map((c) => format(c, true)));
 
     const outdatedTitle = chalk.underline.white('pending updates');
     const outdatedDesc =
@@ -184,7 +184,7 @@ or use "bit merge [component-id] --abort" to cancel the merge operation)\n`;
 
     const modifiedDesc = '(use "bit diff" to compare changes)\n';
     const modifiedComponentOutput = immutableUnshift(
-      modifiedComponent.map((c) => format(c)),
+      modifiedComponent.map((c) => format(c, true)),
       modifiedComponent.length
         ? chalk.underline.white('modified components') + newComponentDescription + modifiedDesc
         : ''
@@ -199,13 +199,13 @@ or use "bit merge [component-id] --abort" to cancel the merge operation)\n`;
 
     const invalidDesc = '\nthese components were failed to load.\n';
     const invalidComponentOutput = immutableUnshift(
-      invalidComponents.map((c) => format(c.id, getInvalidComponentLabel(c.error))).sort(),
+      invalidComponents.map((c) => format(c.id, false, getInvalidComponentLabel(c.error))).sort(),
       invalidComponents.length ? chalk.underline.white(statusInvalidComponentsMsg) + invalidDesc : ''
     ).join('\n');
 
     const stagedDesc = '\n(use "bit export to push these components to a remote scope")\n';
     const stagedComponentsOutput = immutableUnshift(
-      stagedComponents.map((c) => format(c.id, undefined, c.versions)),
+      stagedComponents.map((c) => format(c.id, true, undefined, c.versions)),
       stagedComponents.length ? chalk.underline.white('staged components') + stagedDesc : ''
     ).join('\n');
 
@@ -225,7 +225,7 @@ or use "bit merge [component-id] --abort" to cancel the merge operation)\n`;
     };
     const updatesFromMainDesc = '\n(EXPERIMENTAL. use "bit lane merge main" to merge the changes)\n';
     const pendingUpdatesFromMainIds = pendingUpdatesFromMain.map((c) =>
-      format(c.id, getUpdateFromMainMsg(c.divergeData))
+      format(c.id, false, getUpdateFromMainMsg(c.divergeData))
     );
     const updatesFromMainOutput = immutableUnshift(
       pendingUpdatesFromMainIds,
