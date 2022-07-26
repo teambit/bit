@@ -137,7 +137,8 @@ ${WILDCARD_HELP('snap')}`;
           );
           if (autoTag.length) {
             const autoTagComp = autoTag.map((a) => a.component.id.toString());
-            componentOutput += `\n       ${AUTO_SNAPPED_MSG}: ${autoTagComp.join(', ')}`;
+            componentOutput += `\n       ${AUTO_SNAPPED_MSG} (${autoTagComp.length} total):
+            ${autoTagComp.join('\n            ')}`;
           }
           return componentOutput;
         })

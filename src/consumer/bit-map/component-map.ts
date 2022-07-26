@@ -1,7 +1,6 @@
 import * as path from 'path';
 import R from 'ramda';
-import { LaneId } from '@teambit/lane-id';
-import { BitId, BitIds } from '../../bit-id';
+import { BitId } from '../../bit-id';
 import { BIT_MAP, COMPONENT_ORIGINS } from '../../constants';
 import ValidationError from '../../error/validation-error';
 import logger from '../../logger/logger';
@@ -32,8 +31,6 @@ export type NextVersion = {
   email?: string;
 };
 
-type LaneVersion = { remoteLane: LaneId; version: string };
-
 export type ComponentMapData = {
   id: BitId;
   files: ComponentMapFile[];
@@ -45,8 +42,6 @@ export type ComponentMapData = {
   wrapDir?: PathLinux;
   exported?: boolean;
   onLanesOnly: boolean;
-  lanes?: LaneVersion[];
-  defaultVersion?: string;
   isAvailableOnCurrentLane?: boolean;
   nextVersion?: NextVersion;
   config?: Config;
@@ -72,8 +67,6 @@ export default class ComponentMap {
   markBitMapChangedCb: Function;
   exported: boolean | null | undefined; // relevant for authored components only, it helps finding out whether a component has a scope
   onLanesOnly? = false; // whether a component is available only on lanes and not on main
-  lanes: LaneVersion[]; // save component versions per lanes if they're different than the id
-  defaultVersion?: string | null; // temporarily store the "main" version. so then, once the file is written, this value is saved as the version
   isAvailableOnCurrentLane? = true; // if a component was created on another lane, it might not be available on the current lane
   nextVersion?: NextVersion; // for soft-tag (harmony only), this data is used in the CI to persist
   recentlyTracked?: boolean; // eventually the timestamp is saved in the filesystem cache so it won't be re-tracked if not changed
@@ -91,8 +84,6 @@ export default class ComponentMap {
     origin,
     wrapDir,
     onLanesOnly,
-    lanes,
-    defaultVersion,
     isAvailableOnCurrentLane,
     nextVersion,
     config,
@@ -106,26 +97,13 @@ export default class ComponentMap {
     this.origin = origin;
     this.wrapDir = wrapDir;
     this.onLanesOnly = onLanesOnly;
-    this.lanes = lanes || [];
-    this.defaultVersion = defaultVersion;
     this.isAvailableOnCurrentLane = typeof isAvailableOnCurrentLane === 'undefined' ? true : isAvailableOnCurrentLane;
     this.nextVersion = nextVersion;
     this.config = config;
   }
 
-  static fromJson(
-    componentMapObj: Omit<ComponentMapData, 'lanes'> & { lanes: Array<{ remoteLane: string; version: string }> }
-  ): ComponentMap {
-    const componentMapParams = {
-      ...componentMapObj,
-      lanes: componentMapObj.lanes
-        ? componentMapObj.lanes.map((lane) => ({
-            remoteLane: LaneId.parse(lane.remoteLane),
-            version: lane.version,
-          }))
-        : [],
-    };
-    return new ComponentMap(componentMapParams);
+  static fromJson(componentMapObj: ComponentMapData): ComponentMap {
+    return new ComponentMap(componentMapObj);
   }
 
   toPlainObject(): Record<string, any> {
@@ -141,9 +119,7 @@ export default class ComponentMap {
       wrapDir: this.wrapDir,
       exported: this.exported,
       onLanesOnly: this.onLanesOnly || null, // if false, change to null so it won't be written
-      lanes: this.lanes.length
-        ? this.lanes.map((l) => ({ remoteLane: l.remoteLane.toString(), version: l.version }))
-        : null,
+      isAvailableOnCurrentLane: this.isAvailableOnCurrentLane,
       nextVersion: this.nextVersion,
       config: this.configToObject(),
     };
@@ -317,43 +293,6 @@ export default class ComponentMap {
 
   doesAuthorHaveRootDir(): boolean {
     return Boolean(this.origin === COMPONENT_ORIGINS.AUTHORED && this.rootDir);
-  }
-
-  /**
-   * this.id.version should indicate the currently used version, regardless of the lane.
-   * on the filesystem, id.version is saved according to the main, so it needs to be changed.
-   * @param currentRemote
-   * @param currentLaneIds
-   */
-  updatePerLane(currentRemote?: LaneId | null, currentLaneIds?: BitIds | null) {
-    this.isAvailableOnCurrentLane = undefined;
-    const replaceVersion = (version) => {
-      this.defaultVersion = this.id.version;
-      this.id = this.id.changeVersion(version);
-      this.isAvailableOnCurrentLane = true;
-    };
-    const localBitId = currentLaneIds ? currentLaneIds.searchWithoutVersion(this.id) : null;
-    if (localBitId) {
-      replaceVersion(localBitId.version);
-    } else if (currentRemote) {
-      const remoteExist = this.lanes.find((lane) => lane.remoteLane.isEqual(currentRemote));
-      if (remoteExist) {
-        replaceVersion(remoteExist.version);
-      }
-    }
-    if (typeof this.isAvailableOnCurrentLane === 'undefined') {
-      // either, it's the default lane. or, it's a lane and the component is not part of the lane
-      this.isAvailableOnCurrentLane = !this.onLanesOnly;
-    }
-  }
-
-  addLane(remoteLaneId: LaneId, version: string) {
-    const existing = this.lanes.find((l) => l.remoteLane.isEqual(remoteLaneId));
-    if (existing) {
-      existing.version = version;
-    } else {
-      this.lanes.push({ remoteLane: remoteLaneId, version });
-    }
   }
 
   /**

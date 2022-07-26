@@ -47,7 +47,7 @@ export class ListerMain {
   private async convertListScopeResultsFromLegacy(
     legacyListScopeResult: ListScopeResultLegacy[]
   ): Promise<ListScopeResult[]> {
-    return Promise.all(
+    const results = await Promise.all(
       legacyListScopeResult.map(async (legacyResult) => {
         const bitId = legacyResult.id;
         const componentId =
@@ -63,6 +63,7 @@ export class ListerMain {
         };
       })
     );
+    return results.sort((a, b) => a.id.toString().localeCompare(b.id.toString()));
   }
 
   static slots = [];

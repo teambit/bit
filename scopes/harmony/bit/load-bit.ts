@@ -101,6 +101,13 @@ function attachVersionsFromBitmap(config: Config, consumerInfo: ConsumerInfo): C
   let parsedBitMap = {};
   try {
     parsedBitMap = rawBitmap ? json.parse(rawBitmap?.toString('utf8'), undefined, true) : {};
+    // @todo: remove this if statement once we don't need the migration of the bitmap file for lanes
+    // @ts-ignore
+    if (parsedBitMap?._bit_lane?.name) {
+      // backward compatibility. if "_bit_land" has the old format, then, later, when the bitmap is loaded again,
+      // it'll take care of the migration.
+      parsedBitMap = {};
+    }
     BitMap.removeNonComponentFields(parsedBitMap);
     // Do nothing here, invalid bitmaps will be handled later
     // eslint-disable-next-line no-empty
