@@ -717,7 +717,7 @@ describe('bit snap command', function () {
         expect(head).to.be.equal(remoteHead);
       });
       it('bit status after untag should show the component as modified only', () => {
-        helper.command.expectStatusToBeClean(['modifiedComponent']);
+        helper.command.expectStatusToBeClean(['modifiedComponents']);
       });
     });
   });
