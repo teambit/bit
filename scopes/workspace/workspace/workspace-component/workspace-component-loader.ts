@@ -1,5 +1,4 @@
 import { Component, ComponentFS, ComponentID, Config, InvalidComponent, State, TagMap } from '@teambit/component';
-import { DocsAspect } from '@teambit/docs';
 import { BitId } from '@teambit/legacy-bit-id';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
 import mapSeries from 'p-map-series';
@@ -239,10 +238,7 @@ export class WorkspaceComponentLoader {
   private async executeLoadSlot(component: Component, opts?: { loadDocs?: boolean }) {
     const entries = this.workspace.onComponentLoadSlot.toArray();
     const promises = entries.map(async ([extension, onLoad]) => {
-      if (opts?.loadDocs === false && extension === DocsAspect.id) {
-        return;
-      }
-      const data = await onLoad(component);
+      const data = await onLoad(component, opts);
       return this.upsertExtensionData(component, extension, data);
     });
 

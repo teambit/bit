@@ -11,4 +11,7 @@ export type OnComponentAdd = (component: Component, files: string[]) => Promise<
 export type OnComponentRemove = (componentId: ComponentID) => Promise<SerializableResults>;
 export type OnComponentEventResult = { extensionId: string; results: SerializableResults };
 
-export type OnComponentLoad = (component: Component) => Promise<AspectData | undefined>;
+export type OnComponentLoadOptions = {
+  loadDocs?: boolean;
+};
+export type OnComponentLoad = (component: Component, opts?: OnComponentLoadOptions) => Promise<AspectData | undefined>;
