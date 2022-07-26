@@ -3,8 +3,8 @@ import pluralize from 'pluralize';
 import { Command, CommandOptions } from '@teambit/cli';
 import { Newline, Text } from 'ink';
 import { Logger } from '@teambit/logger';
+import type { RenderResult } from '@teambit/legacy/dist/cli/command';
 import { ApplicationMain } from './application.main.runtime';
-import { RenderResult } from '../../../src/cli/command';
 
 type RunOptions = {
   dev: boolean;
