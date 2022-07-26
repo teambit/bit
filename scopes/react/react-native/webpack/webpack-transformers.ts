@@ -5,7 +5,7 @@ import { reactNativeAlias } from './react-native-alias';
 
 const reactNativePackagesRule = {
   test: /\.(jsx?|tsx?)$/,
-  include: [new RegExp(join('node_modules$', 'react-native-/'))],
+  include: [new RegExp(join('node_modules', 'react-native-'))],
   loader: require.resolve('babel-loader'),
   options: {
     cacheDirectory: false,
