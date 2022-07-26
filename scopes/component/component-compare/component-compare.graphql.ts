@@ -1,6 +1,5 @@
 import gql from 'graphql-tag';
-import { ComponentFactory } from '@teambit/component';
-import { ComponentCompareMain } from './component-compare.main.runtime';
+import { ComponentCompareMain, ComponentCompareResult } from './component-compare.main.runtime';
 
 export function componentCompareSchema(componentCompareMain: ComponentCompareMain) {
   return {
@@ -9,13 +8,15 @@ export function componentCompareSchema(componentCompareMain: ComponentCompareMai
         fileName: String!
         baseContent: String!
         compareContent: String!
+        status: String
+        diffOutput: String
       }
 
       type ComponentCompareResult {
-        overview: FileCompareResult!
-        composition(compositionName: String): [FileCompareResult!]!
+        # unique id for graphql - baseId + compareId
+        id: String!
         code(fileName: String): [FileCompareResult!]!
-        dependencies
+        # aspects(id: String): [FileCompareResult!]!
       }
 
       extend type ComponentHost {
@@ -24,10 +25,21 @@ export function componentCompareSchema(componentCompareMain: ComponentCompareMai
     `,
     resolvers: {
       ComponentHost: {
-        compareComponent: async (
-          host: ComponentFactory,
-          { baseId, compareId }: { baseId: string; compareId: string }
-        ) => {},
+        compareComponent: async (_, { baseId, compareId }: { baseId: string; compareId: string }) => {
+          return componentCompareMain.compare(baseId, compareId);
+        },
+      },
+      ComponentCompareResult: {
+        id: (result: ComponentCompareResult) => result.id,
+        code: (result: ComponentCompareResult, { fileName }: { fileName?: string }) => {
+          if (fileName) return result.code.filter((codeFile) => codeFile.fileName === fileName);
+          return result.code.map((c) => ({
+            ...c,
+            fileName: c.filePath,
+            baseContent: c.fromContent,
+            compareContent: c.toContent,
+          }));
+        },
       },
     },
   };

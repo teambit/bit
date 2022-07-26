@@ -2,42 +2,58 @@ import { MainRuntime } from '@teambit/cli';
 import { ScopeMain, ScopeAspect } from '@teambit/scope';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
-import { BitId } from '@teambit/legacy-bit-id';
-import ComponentAspect, { ComponentID, ComponentMain } from '@teambit/component';
+import GeneralError from '@teambit/legacy/dist/error/general-error';
 import {
   diffBetweenVersionsObjects,
   DiffResults,
-  DiffOptions,
+  FileDiff,
 } from '@teambit/legacy/dist/consumer/component-ops/components-diff';
+import ComponentAspect, { ComponentMain } from '@teambit/component';
 import { componentCompareSchema } from './component-compare.graphql';
 import { ComponentCompareAspect } from './component-compare.aspect';
 
-type FileDiff = {};
-
-type FieldDiff = {};
-
 export type ComponentCompareResult = {
-  hasDiff: boolean;
-  code: {
-    newFiles: {
-      fileName: string;
-    };
-  };
+  id: string;
+  code: FileDiff[];
+  // aspects: FileCompareResult[];
 };
 
 export class ComponentCompareMain {
   constructor(private componentAspect: ComponentMain, private scope: ScopeMain, private logger: Logger) {}
 
-  async compare(from: ComponentID, to: ComponentID): Promise<ComponentCompareResult> {
-    const result: ComponentCompareResult = {
-      newComps: [],
-      unchangedComps: [],
-      modifiedComps: [],
+  async compare(baseIdStr: string, compareIdStr: string): Promise<ComponentCompareResult> {
+    const host = this.componentAspect.getHost();
+    const [baseCompId, compareCompId] = await host.resolveMultipleComponentIds([baseIdStr, compareIdStr]);
+    // const [baseComp, compareComp] = await host.getMany([baseCompId, compareCompId]);
+    const modelComponent = await this.scope.legacyScope.getModelComponentIfExist(compareCompId._legacy);
+    if (!modelComponent) {
+      throw new GeneralError(`component ${compareCompId.toString()} doesn't have any version yet`);
+    }
+
+    const baseVersion = baseCompId.version as string;
+    const compareVersion = compareCompId.version as string;
+
+    const repository = this.scope.legacyScope.objects;
+    const baseVersionObject = await modelComponent.loadVersion(baseVersion, repository);
+    const compareVersionObject = await modelComponent.loadVersion(compareVersion, repository);
+    const diff: DiffResults = await diffBetweenVersionsObjects(
+      modelComponent,
+      baseVersionObject,
+      compareVersionObject,
+      baseVersion,
+      compareVersion,
+      this.scope.legacyScope,
+      {}
+    );
+
+    const compareResult = {
+      id: `${baseCompId}-${compareCompId}`,
+      code: diff.filesDiff || [],
     };
 
-    const host = this.componentAspect.getHost();
+    console.log(diff);
 
-    return result;
+    return compareResult;
   }
 
   static slots = [];
@@ -50,3 +66,7 @@ export class ComponentCompareMain {
     return componentCompareMain;
   }
 }
+
+ComponentCompareAspect.addRuntime(ComponentCompareMain);
+
+export default ComponentCompareMain;
