@@ -6,6 +6,7 @@ import { Logger } from '@teambit/logger';
 import { remove } from 'lodash';
 import TerserPlugin from 'terser-webpack-plugin';
 import { WebpackConfigTransformer } from '@teambit/webpack';
+import { BitError } from '@teambit/bit-error';
 import { ReactEnv } from '../../react.env';
 import { prerenderPlugin } from './plugins';
 import { ReactAppBuildResult } from './react-build-result';
@@ -91,8 +92,8 @@ export class ReactApp implements Application {
       },
     ];
 
-    const ctx: BundlerContext = {
-      ...context,
+    // extend, including prototype methods
+    const ctx: BundlerContext = Object.assign(Object.create(context), {
       html: htmlConfig,
       targets: [
         {
@@ -107,7 +108,7 @@ export class ReactApp implements Application {
       // @ts-ignore
       capsuleNetwork: undefined,
       previousTasksResults: [],
-    };
+    });
 
     const bundler = await this.reactEnv.getBundler(ctx, [
       (config) => config.merge([clientConfig()]),
@@ -119,7 +120,8 @@ export class ReactApp implements Application {
   }
 
   private async buildSsr(context: AppContext) {
-    const ctx: BundlerContext = {
+    // extend, including prototype methods
+    const ctx: BundlerContext = Object.assign(Object.create(context), {
       ...context,
       targets: [
         {
@@ -134,7 +136,7 @@ export class ReactApp implements Application {
       // @ts-ignore
       capsuleNetwork: undefined,
       previousTasksResults: [],
-    };
+    });
 
     const bundler = await this.reactEnv.getBundler(ctx, [
       (config) => config.merge([ssrConfig()]),
@@ -280,7 +282,7 @@ export class ReactApp implements Application {
   }
 
   async getSsrEntries(): Promise<string[]> {
-    if (!this.ssr) throw new Error('tried to build ssr without ssr entries');
+    if (!this.ssr) throw new BitError('tried to build ssr without ssr entries');
     if (typeof this.ssr === 'string') return [this.ssr];
     return [await this.ssr()];
   }
