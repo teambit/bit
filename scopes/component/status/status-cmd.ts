@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 import R from 'ramda';
 import { Command, CommandOptions } from '@teambit/cli';
-import { BitId } from '@teambit/legacy-bit-id';
+import { ComponentID } from '@teambit/component-id';
 import { DivergeData } from '@teambit/legacy/dist/scope/component-ops/diverge-data';
 import { immutableUnshift } from '@teambit/legacy/dist/utils';
 import { IssuesList } from '@teambit/component-issues';
@@ -95,7 +95,7 @@ export class StatusCmd implements Command {
     // troubleshooting doc
     let showTroubleshootingLink = false;
 
-    function format(id: BitId, showIssues = false, message?: string, localVersions?: string[]): string {
+    function format(id: ComponentID, showIssues = false, message?: string, localVersions?: string[]): string {
       const bitId = id;
       const idWithIssues = componentsWithIssues.find((c) => c.id.isEqual(bitId));
       const softTagged = softTaggedComponents.find((softTaggedId) => softTaggedId.isEqual(bitId));
@@ -108,7 +108,7 @@ export class StatusCmd implements Command {
       if (!showIssues) {
         return `${formatBitString(id.toStringWithoutVersion())} ... ${messageStatus}`;
       }
-      let bitFormatted = `${formatNewBit(id)}`;
+      let bitFormatted = `${formatBitString(id.toStringWithoutVersion())}`;
       if (localVersions) {
         if (verbose) {
           bitFormatted += `. versions: ${localVersions.join(', ')}`;
@@ -153,8 +153,8 @@ alternatively, to keep local tags/snaps history, use "bit merge <remote-name>/<l
     const pendingMergeComps = mergePendingComponents
       .map((component) => {
         return `    > ${chalk.cyan(component.id.toString())} local and remote have diverged and have ${
-          component.diverge.snapsOnLocalOnly.length
-        } and ${component.diverge.snapsOnRemoteOnly.length} different snaps each, respectively\n`;
+          component.divergeData.snapsOnLocalOnly.length
+        } and ${component.divergeData.snapsOnRemoteOnly.length} different snaps each, respectively\n`;
       })
       .join('');
 

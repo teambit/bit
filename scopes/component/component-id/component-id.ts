@@ -219,4 +219,8 @@ export class ComponentID {
     if (!scope && !legacyId.scope) throw new MissingScope(legacyId);
     return new ComponentID(legacyId, scope);
   }
+
+  static sortIds(ids: ComponentID[]) {
+    return ids.sort((a, b) => a.toString().localeCompare(b.toString()));
+  }
 }
