@@ -4,7 +4,7 @@ import type { ApolloClient, NormalizedCacheObject } from '@apollo/client';
 import pick from 'lodash.pick';
 
 import { isBrowser } from '@teambit/ui-foundation.ui.is-browser';
-import type { RenderPlugin, SsrSession } from '@teambit/ui';
+import type { SSR } from '@teambit/ui';
 
 import type { GraphqlUI, GraphQLClient } from './graphql.ui.runtime';
 import { GraphQLProvider } from './graphql-provider';
@@ -16,12 +16,12 @@ type RenderContext = {
 
 const ALLOWED_HEADERS = ['cookie'];
 
-export class GraphqlRenderPlugins implements RenderPlugin<RenderContext, { state?: NormalizedCacheObject }> {
+export class GraphqlRenderPlugins implements SSR.RenderPlugin<RenderContext, { state?: NormalizedCacheObject }> {
   constructor(private graphqlUI: GraphqlUI) {}
 
   key = GraphqlAspect.id;
 
-  serverInit = ({ browser }: SsrSession) => {
+  serverInit = ({ browser }: SSR.SsrSession) => {
     const port = browser?.location.port || 3000;
     const serverUrl = `http://localhost:${port}/graphql`;
 
