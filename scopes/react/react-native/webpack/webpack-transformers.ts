@@ -1,10 +1,11 @@
+import { join } from 'path';
 import { WebpackConfigTransformer, WebpackConfigMutator, WebpackConfigTransformContext } from '@teambit/webpack';
 import { get, set } from 'lodash';
 import { reactNativeAlias } from './react-native-alias';
 
 const reactNativePackagesRule = {
   test: /\.(jsx?|tsx?)$/,
-  include: [/node_modules\/react-native-/],
+  include: [new RegExp(join('node_modules$', 'react-native-/'))],
   loader: require.resolve('babel-loader'),
   options: {
     cacheDirectory: false,
