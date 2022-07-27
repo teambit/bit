@@ -97,6 +97,8 @@ export function CommandBar({
 }
 
 export function DefaultResultComponent({ items, activeIndex }: ResultsComponentProps) {
+  const navigate = useNavigate();
+  
   return (
     <>
       {items.map(({ action, id, ...result }, idx) => (
@@ -104,7 +106,13 @@ export function DefaultResultComponent({ items, activeIndex }: ResultsComponentP
           key={id}
           active={idx === activeIndex}
           // execute action before blur, which closes the command bar
-          onMouseDown={() => action()}
+          onMouseDown={() => {
+            if (typeof action === 'string') {
+              navigate(action);
+              return;
+            }
+            action();
+          }}
           {...result}
         />
       ))}
