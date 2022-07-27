@@ -1,6 +1,4 @@
 import { DiffEditor, DiffOnMount } from '@monaco-editor/react';
-// import { ComponentModel } from '@teambit/component';
-// import { useFileContent } from '@teambit/code.ui.queries.get-file-content';
 import { Toggle } from '@teambit/design.ui.input.toggle';
 import { H4 } from '@teambit/documenter.ui.heading';
 import classNames from 'classnames';
@@ -11,8 +9,6 @@ import { darkMode } from '@teambit/base-ui.theme.dark-theme';
 import styles from './code-compare-view.module.scss';
 
 export type CodeCompareViewProps = {
-  // base?: ComponentModel;
-  // compare?: ComponentModel;
   fileName: string;
 } & HTMLAttributes<HTMLDivElement>;
 
@@ -27,8 +23,6 @@ const languageOverrides = {
 };
 
 export function CodeCompareView({ className, fileName }: CodeCompareViewProps) {
-  // const { fileContent: originalFileContent, loading: originalLoading } = useFileContent(base?.id, fileName);
-  // const { fileContent: modifiedFileContent, loading: modifiedLoading } = useFileContent(compare?.id, fileName);
   const codeCompareContext = useCodeCompare();
 
   const [ignoreWhitespace, setIgnoreWhitespace] = useState(true);
