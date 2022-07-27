@@ -25,9 +25,6 @@ export type FileDiff = {
 export type FieldsDiff = {
   fieldName: string;
   diffOutput: string;
-  // status: DiffStatus;
-  // fromValue: string;
-  // toValue: string;
 };
 export type DiffResults = {
   id: BitId;
