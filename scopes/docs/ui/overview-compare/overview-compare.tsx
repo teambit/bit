@@ -3,7 +3,7 @@ import { CompareSplitLayoutPreset, useComponentCompare } from '@teambit/componen
 import { Toggle } from '@teambit/design.ui.input.toggle';
 import { RoundLoader } from '@teambit/design.ui.round-loader';
 import { Overview, TitleBadgeSlot } from '@teambit/docs';
-import { useLanes, useLanesContext } from '@teambit/lanes.ui.lanes';
+import { LanesContext, LanesProvider, useLanes, useLanesContext } from '@teambit/lanes.ui.lanes';
 import React, { UIEvent, useMemo, useRef, useState } from 'react';
 import styles from './overview-compare.module.scss';
 
@@ -46,12 +46,15 @@ export function OverviewCompare(props: OverviewCompareProps) {
     const baseVersion = componentCompare?.base.model.version;
 
     const isBaseOnLane = !!lanesModel?.lanebyComponentHash.get(baseVersion);
+    const lanesContext = isBaseOnLane ? lanesModel : undefined;
 
     return (
       <div className={styles.subView} ref={leftPanelRef} onScroll={handleLeftPanelScroll}>
-        <ComponentProvider component={componentCompare.base.model}>
-          <Overview titleBadges={titleBadges} />
-        </ComponentProvider>
+        <LanesContext.Provider value={lanesContext}>
+          <ComponentProvider component={componentCompare.base.model}>
+            <Overview titleBadges={titleBadges} />
+          </ComponentProvider>
+        </LanesContext.Provider>
       </div>
     );
   }, [componentCompare?.base, isScrollingSynced]);
@@ -61,11 +64,18 @@ export function OverviewCompare(props: OverviewCompareProps) {
       return <></>;
     }
 
+    const compareVersion = componentCompare?.compare.model.version;
+
+    const isCompareOnLane = !!lanesModel?.lanebyComponentHash.get(compareVersion);
+    const lanesContext = isCompareOnLane ? lanesModel : undefined;
+
     return (
       <div className={styles.subView} ref={rightPanelRef} onScroll={handleRightPanelScroll}>
-        <ComponentProvider component={componentCompare.compare.model}>
-          <Overview titleBadges={titleBadges} />
-        </ComponentProvider>
+        <LanesContext.Provider value={lanesContext}>
+          <ComponentProvider component={componentCompare.compare.model}>
+            <Overview titleBadges={titleBadges} />
+          </ComponentProvider>
+        </LanesContext.Provider>
       </div>
     );
   }, [componentCompare?.compare, isScrollingSynced]);
