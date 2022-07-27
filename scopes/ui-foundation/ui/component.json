@@ -20,7 +20,7 @@
           "postcss-normalize": "10.0.0",
           "postcss-flexbugs-fixes": "5.0.2",
           "sanitize.css": "12.0.1",
-          "sass-loader": "11.0.1",
+          "sass-loader": "12.1.0",
           "less": "^4.1.1",
           "less-loader": "8.0.0",
           "path-browserify": "1.0.1",
@@ -33,7 +33,7 @@
           "@teambit/legacy": "-"
         },
         "peerDependencies": {
-          "@teambit/legacy": "1.0.265"
+          "@teambit/legacy": "1.0.313"
         }
       }
     }

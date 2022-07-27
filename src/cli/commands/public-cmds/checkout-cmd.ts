@@ -13,11 +13,12 @@ import { CommandOptions, LegacyCommand } from '../../legacy-command';
 
 export default class Checkout implements LegacyCommand {
   name = 'checkout [values...]';
-  shortDescription = 'switch between component versions';
+  description = 'switch between component versions or remove local changes';
   group: Group = 'development';
-  description = `switch between component versions or remove local changes
+  extendedDescription = `
   \`bit checkout <version> [ids...]\` => checkout the specified ids (or all components when --all is used) to the specified version
-  \`bit checkout latest [ids...]\` => checkout the specified ids (or all components when --all is used) to their latest versions
+  \`bit checkout head\` => checkout all components to their latest versions
+  \`bit checkout head [ids...]\` => checkout the specified ids to their latest versions
   \`bit checkout [ids...] --reset\` => remove local modifications from the specified ids (or all components when --all is used)
   ${WILDCARD_HELP('checkout 0.0.1')}`;
   alias = 'U';
@@ -30,7 +31,7 @@ export default class Checkout implements LegacyCommand {
     ['o', 'ours', 'in case of a conflict, override the used version with the current modification'],
     ['t', 'theirs', 'in case of a conflict, override the current modification with the specified version'],
     ['m', 'manual', 'in case of a conflict, leave the files with a conflict state to resolve them manually later'],
-    ['r', 'reset', 'remove local changes'],
+    ['r', 'reset', 'revert changes that were not snapped/tagged'],
     ['a', 'all', 'all components'],
     ['v', 'verbose', 'showing verbose output for inspection'],
     ['', 'skip-npm-install', 'DEPRECATED. use "--skip-dependency-installation" instead'],

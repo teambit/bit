@@ -77,7 +77,7 @@ describe('merge lanes', function () {
       });
       it('should indicate that the components were not merge because they are not in the workspace', () => {
         expect(mergeOutput).to.have.string('the merge has been canceled on the following component(s)');
-        expect(mergeOutput).to.have.string('is not in the workspace');
+        expect(mergeOutput).to.have.string('not in the workspace');
       });
       it('bitmap should not save any component', () => {
         const bitMap = helper.bitMap.readComponentsMapOnly();
@@ -96,6 +96,9 @@ describe('merge lanes', function () {
         expect(defaultLane.components).to.have.lengthOf(0);
       });
     });
+    // in this case, the lane dev has v1 and v2 on the remote, but only v1 locally.
+    // previously, it was needed `bit lane merge` to get v2 locally.
+    // currently, it's done by `bit import` and then `bit checkout head`.
     describe('importing a remote lane which is ahead of the local lane', () => {
       before(() => {
         helper.scopeHelper.reInitLocalScopeHarmony();
@@ -224,6 +227,130 @@ describe('merge lanes', function () {
     it('the component should be available on main', () => {
       const list = helper.command.listParsed();
       expect(list).to.have.lengthOf(1);
+    });
+  });
+  describe('merge with squash', () => {
+    let headOnMain: string;
+    let headOnLane: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild();
+      headOnMain = helper.command.getHead('comp1');
+      helper.command.createLane('dev');
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      headOnLane = helper.command.getHeadOfLane('dev', 'comp1');
+      // as an intermediate step, verify that it has 4 snaps.
+      const log = helper.command.logParsed('comp1');
+      expect(log).to.have.lengthOf(4);
+
+      helper.command.switchLocalLane('main');
+      helper.command.mergeLane('dev', '--squash');
+    });
+    it('should squash the snaps and leave only the last one', () => {
+      const log = helper.command.logParsed('comp1');
+      expect(log).to.have.lengthOf(2);
+
+      expect(log[0].hash).to.equal(headOnLane);
+      expect(log[0].parents[0]).to.equal(headOnMain);
+      expect(log[1].hash).to.equal(headOnMain);
+    });
+  });
+  describe('partial merge', () => {
+    describe('from a lane to main', () => {
+      let comp1HeadOnLane: string;
+      let comp2HeadOnLane: string;
+      let comp3HeadOnLane: string;
+      before(() => {
+        helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+        helper.bitJsonc.setupDefault();
+        helper.fixtures.populateComponents(3);
+        helper.command.tagAllWithoutBuild();
+        helper.command.export();
+        helper.command.createLane();
+        helper.fixtures.populateComponents(3, undefined, 'v2');
+        helper.command.snapAllComponentsWithoutBuild();
+        comp1HeadOnLane = helper.command.getHeadOfLane('dev', 'comp1');
+        comp2HeadOnLane = helper.command.getHeadOfLane('dev', 'comp2');
+        comp3HeadOnLane = helper.command.getHeadOfLane('dev', 'comp3');
+        helper.command.export();
+        helper.command.switchLocalLane('main');
+      });
+      describe('without --include-deps', () => {
+        it('should throw an error asking to enter --include-deps flag', () => {
+          const mergeFn = () => helper.command.mergeLane('dev', `--pattern ${helper.scopes.remote}/comp2`);
+          expect(mergeFn).to.throw(
+            'it has the following dependencies which were not included in the pattern. consider adding "--include-deps" flag'
+          );
+        });
+      });
+      describe('with --include-deps', () => {
+        before(() => {
+          helper.command.mergeLane('dev', `--pattern ${helper.scopes.remote}/comp2 --include-deps`);
+        });
+        it('should not merge components that were not part of the patterns nor part of the pattern dependencies', () => {
+          const comp1Head = helper.command.getHead(`${helper.scopes.remote}/comp1`);
+          expect(comp1Head).to.not.equal(comp1HeadOnLane);
+        });
+        it('should merge components that merge the pattern', () => {
+          const comp2Head = helper.command.getHead(`${helper.scopes.remote}/comp2`);
+          expect(comp2Head).to.equal(comp2HeadOnLane);
+        });
+        it('should merge components that are dependencies of the given pattern', () => {
+          const comp3Head = helper.command.getHead(`${helper.scopes.remote}/comp3`);
+          expect(comp3Head).to.equal(comp3HeadOnLane);
+        });
+      });
+    });
+  });
+  describe('getting updates from main when lane is diverge', () => {
+    let workspaceOnLane: string;
+    let comp2HeadOnMain: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents(2);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.command.createLane();
+      helper.fixtures.populateComponents(2, undefined, 'v2');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      workspaceOnLane = helper.scopeHelper.cloneLocalScope();
+      helper.command.switchLocalLane('main');
+      helper.fixtures.populateComponents(2, undefined, 'v3');
+      helper.command.snapAllComponentsWithoutBuild();
+      comp2HeadOnMain = helper.command.getHead(`${helper.scopes.remote}/comp2`);
+      helper.command.export();
+      helper.scopeHelper.getClonedLocalScope(workspaceOnLane);
+      helper.command.import();
+    });
+    it('bit import should bring the latest main objects', () => {
+      const head = helper.command.getHead(`${helper.scopes.remote}/comp2`);
+      expect(head).to.equal(comp2HeadOnMain);
+    });
+    it('bit status should indicate that the main is ahead', () => {
+      const status = helper.command.status();
+      expect(status).to.have.string(`${helper.scopes.remote}/comp1 ... main is ahead by 1 snaps`);
+    });
+    describe('merging the lane', () => {
+      let status;
+      before(() => {
+        helper.command.mergeLane('main', '--theirs');
+        status = helper.command.statusJson();
+      });
+      it('bit status should show two staging versions, the main-head and merge-snap', () => {
+        const stagedVersions = status.stagedComponents.find((c) => c.id === `${helper.scopes.remote}/comp2`);
+        expect(stagedVersions.versions).to.have.lengthOf(2);
+        expect(stagedVersions.versions).to.include(comp2HeadOnMain);
+        expect(stagedVersions.versions).to.include(helper.command.getHeadOfLane('dev', 'comp2'));
+      });
+      it('bit status should not show the components in pending-merge', () => {
+        expect(status.mergePendingComponents).to.have.lengthOf(0);
+      });
     });
   });
 });

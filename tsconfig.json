@@ -26,6 +26,7 @@
   ],
   "exclude": [
     "node_modules",
-    "e2e/fixtures"
+    "e2e/fixtures",
+    "scopes/semantics/schema/mock"
   ]
 }

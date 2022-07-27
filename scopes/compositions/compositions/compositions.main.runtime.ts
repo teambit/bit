@@ -1,13 +1,14 @@
-import { join } from 'path';
 import { MainRuntime } from '@teambit/cli';
-import { Component, ComponentAspect, ComponentMap, AspectData } from '@teambit/component';
+import { AspectData, Component, ComponentAspect, ComponentMap, IComponent } from '@teambit/component';
+import { DevFilesAspect, DevFilesMain } from '@teambit/dev-files';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
-import { PreviewAspect, PreviewMain } from '@teambit/preview';
-import { SchemaAspect, SchemaMain } from '@teambit/schema';
-import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 import { flatten } from '@teambit/legacy/dist/utils';
-import { DevFilesAspect, DevFilesMain } from '@teambit/dev-files';
+import { PreviewAspect, PreviewMain } from '@teambit/preview';
+import { SchemaAspect, SchemaMain } from '@teambit/schema';
+import { matchPatterns, splitPatterns } from '@teambit/toolbox.path.match-patterns';
+import { Workspace, WorkspaceAspect } from '@teambit/workspace';
+import { join } from 'path';
 import { Composition } from './composition';
 import { CompositionsAspect } from './compositions.aspect';
 import { compositionsSchema } from './compositions.graphql';
@@ -78,10 +79,18 @@ export class CompositionsMain {
   }
 
   /**
+   * checks if a file matches the composition file pattern.
+   */
+  isCompositionFile(filePath: string): boolean {
+    const { includePatterns, excludePatterns } = splitPatterns(this.compositionFilePattern);
+    return matchPatterns(filePath, includePatterns, excludePatterns);
+  }
+
+  /**
    * get component compositions.
    */
-  getCompositions(component: Component): Composition[] {
-    const entry = component.state.aspects.get(CompositionsAspect.id);
+  getCompositions(component: IComponent): Composition[] {
+    const entry = component.get(CompositionsAspect.id);
     if (!entry) return [];
     const compositions = entry.data.compositions;
     if (!compositions) return [];
@@ -116,8 +125,8 @@ export class CompositionsMain {
     const pathArray = file.path.split('.');
     pathArray[pathArray.length - 1] = 'js';
 
-    const module = this.schema.parseModule(join(this.workspace.componentDir(component.id), file.relative));
-    return module.exports.map((exportModel) => {
+    const exports = this.schema.parseModule(join(this.workspace.componentDir(component.id), file.relative));
+    return exports.map((exportModel) => {
       const displayName = exportModel.staticProperties?.get('compositionName');
 
       return new Composition(

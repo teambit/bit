@@ -73,7 +73,7 @@ export interface ComponentFactory {
    * load aspects.
    * returns the loaded aspect ids including the loaded versions.
    */
-  loadAspects: (ids: string[], throwOnError?: boolean, neededFor?: ComponentID) => Promise<string[]>;
+  loadAspects: (ids: string[], throwOnError?: boolean, neededFor?: string) => Promise<string[]>;
 
   /**
    * Resolve dirs for aspects
@@ -91,6 +91,13 @@ export interface ComponentFactory {
   listInvalid(): Promise<InvalidComponent[]>;
 
   listIds(): Promise<ComponentID[]>;
+
+  /**
+   * get component-ids matching the given pattern. a pattern can have multiple patterns separated by a comma.
+   * it uses multimatch (https://www.npmjs.com/package/multimatch) package for the matching algorithm, which supports
+   * (among others) negate character "!" to exclude ids. See the package page for more supported characters.
+   */
+  idsByPattern(pattern: string, throwForNoMatch?: boolean): Promise<ComponentID[]>;
 
   hasId(componentId: ComponentID): Promise<boolean>;
 

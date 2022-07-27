@@ -7,7 +7,10 @@ export type PreviewModule<T = any> = {
 
   /** The 'main file' for this Preview type */
   mainModule: {
-    default: (...args: any[]) => void;
+    default: {
+      (...args: any[]): void;
+      apiObject?: boolean;
+    };
   };
 
   isSplitComponentBundle?: boolean;

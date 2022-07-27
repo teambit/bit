@@ -4,10 +4,12 @@ export class DivergeData {
   snapsOnLocalOnly: Ref[];
   snapsOnRemoteOnly: Ref[];
   commonSnapBeforeDiverge: Ref | null;
-  constructor(snapsOnLocalOnly?: Ref[], snapsOnRemoteOnly?: Ref[], commonSnapBeforeDiverge?: Ref | null) {
+  err: Error | undefined;
+  constructor(snapsOnLocalOnly?: Ref[], snapsOnRemoteOnly?: Ref[], commonSnapBeforeDiverge?: Ref | null, err?: Error) {
     this.snapsOnLocalOnly = snapsOnLocalOnly || [];
     this.snapsOnRemoteOnly = snapsOnRemoteOnly || [];
     this.commonSnapBeforeDiverge = commonSnapBeforeDiverge || null;
+    this.err = err;
   }
   /**
    * when a local and remote history have diverged, a true merge is needed.

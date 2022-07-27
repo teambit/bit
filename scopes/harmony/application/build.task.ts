@@ -1,11 +1,20 @@
+import { join } from 'path';
 import mapSeries from 'p-map-series';
-import { BuildTask, BuiltTaskResult, BuildContext, ComponentResult, ArtifactDefinition } from '@teambit/builder';
+import {
+  BuildTask,
+  BuiltTaskResult,
+  BuildContext,
+  ComponentResult,
+  ArtifactDefinition,
+  CAPSULE_ARTIFACTS_DIR,
+} from '@teambit/builder';
 import { ComponentID } from '@teambit/component';
 import { ApplicationAspect } from './application.aspect';
 import { ApplicationMain } from './application.main.runtime';
 import { AppBuildContext } from './app-build-context';
 
 export const BUILD_TASK = 'build_application';
+export const ARTIFACTS_DIR_NAME = 'apps';
 
 export type AppsResults = {
   componentResult: ComponentResult;
@@ -34,19 +43,27 @@ export class AppsBuildTask implements BuildTask {
         capsule,
         appComponent: component,
         name: app.name,
+        artifactsDir: this.getArtifactDirectory(),
       });
       const deployContext = await app.build(appDeployContext);
+      const defaultArtifacts: ArtifactDefinition[] = this.getDefaultArtifactDef(app.applicationType || app.name);
+      const artifacts = defaultArtifacts.concat(deployContext.artifacts || []);
 
       return {
-        artifacts: deployContext.artifacts,
-        /**
-         * @guysaar223
-         * @ram8
-         * TODO: we need to think how to pass private metadata between build pipes, maybe create shared context
-         * or create new deploy context on builder
-         */
-        // @ts-ignore
-        componentResult: { component: capsule.component, _metadata: { deployContext } },
+        artifacts,
+        componentResult: {
+          component: capsule.component,
+          errors: deployContext.errors,
+          warnings: deployContext.warnings,
+          /**
+           * @guysaar223
+           * @ram8
+           * TODO: we need to think how to pass private metadata between build pipes, maybe create shared context
+           * or create new deploy context on builder
+           */
+          // @ts-ignore
+          _metadata: { deployContext },
+        },
       };
     });
 
@@ -64,5 +81,19 @@ export class AppsBuildTask implements BuildTask {
       artifacts,
       componentsResults: _componentsResults,
     };
+  }
+
+  private getArtifactDirectory() {
+    return join(CAPSULE_ARTIFACTS_DIR, ARTIFACTS_DIR_NAME);
+  }
+
+  private getDefaultArtifactDef(nameSuffix: string): ArtifactDefinition[] {
+    return [
+      {
+        name: `app-build-${nameSuffix}`,
+        globPatterns: ['**'],
+        rootDir: this.getArtifactDirectory(),
+      },
+    ];
   }
 }

@@ -8,7 +8,7 @@ import {
   LanesHost,
 } from '@teambit/lanes.ui.lanes';
 import { ComponentGrid } from '@teambit/explorer.ui.gallery.component-grid';
-import { RouteSlot, SlotSubRouter } from '@teambit/ui-foundation.ui.react-router.slot-router';
+import { RouteSlot, SlotRouter } from '@teambit/ui-foundation.ui.react-router.slot-router';
 import { WorkspaceComponentCard } from '@teambit/workspace.ui.workspace-component-card';
 import flatten from 'lodash.flatten';
 import { SlotRegistry } from '@teambit/harmony';
@@ -35,12 +35,7 @@ export function LaneGallery({ routeSlot, overviewSlot, host }: LaneGalleryProps)
   if (currentLane.components.length === 0) return <EmptyLane name={currentLane.name} />;
 
   return (
-    <LaneGalleryWithPreview
-      host={host}
-      currentLane={currentLane}
-      overviewItems={overviewItems}
-      routeSlot={routeSlot}
-    />
+    <LaneGalleryWithPreview host={host} currentLane={currentLane} overviewItems={overviewItems} routeSlot={routeSlot} />
   );
 }
 
@@ -64,7 +59,12 @@ function LaneGalleryWithPreview({ currentLane, overviewItems, routeSlot, host }:
             componentUrl={LanesModel.getLaneComponentUrl(component.id, currentLane.id)}
           />
         )
-      : ({ component }) => <ScopeComponentCard component={component} />;
+      : ({ component }) => (
+          <ScopeComponentCard
+            component={component}
+            componentUrl={LanesModel.getLaneComponentUrl(component.id, currentLane.id)}
+          />
+        );
 
   return (
     <div className={styles.container}>
@@ -79,7 +79,7 @@ function LaneGalleryWithPreview({ currentLane, overviewItems, routeSlot, host }:
           <ComponentCard component={component} key={index} />
         ))}
       </ComponentGrid>
-      {routeSlot && <SlotSubRouter slot={routeSlot} />}
+      {routeSlot && <SlotRouter slot={routeSlot} />}
       {overviewItems.length > 0 && overviewItems.map((Item, index) => <Item key={index} />)}
     </div>
   );

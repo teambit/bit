@@ -1,7 +1,5 @@
 /* eslint-disable complexity */
-import camelcase from 'camelcase';
 import webpack, { Configuration } from 'webpack';
-import { generateExternals } from '@teambit/webpack.modules.generate-externals';
 import { isUndefined, omitBy } from 'lodash';
 import CompressionPlugin from 'compression-webpack-plugin';
 import { sep } from 'path';
@@ -23,9 +21,6 @@ export function configFactory(target: Target, context: BundlerContext): Configur
   const htmlConfig = target.html ?? context.html;
   const compress = target.compress ?? context.compress;
   const htmlPlugins = htmlConfig ? generateHtmlPlugins(htmlConfig) : undefined;
-  const shouldExternalizePeers =
-    (target.externalizePeer ?? context.externalizePeer) && target.peers && target.peers.length;
-  const externals = shouldExternalizePeers ? (getExternals(target.peers || []) as any) : undefined;
   const splitChunks = target.chunking?.splitChunks;
 
   const config: Configuration = {
@@ -50,6 +45,7 @@ export function configFactory(target: Target, context: BundlerContext): Configur
     },
 
     resolve: {
+      // TODO - check - we should not need both fallbacks and alias and provider plugin
       alias: fallbacksAliases,
 
       fallback: fallbacks,
@@ -95,9 +91,6 @@ export function configFactory(target: Target, context: BundlerContext): Configur
     }
     config.plugins = config.plugins.concat(new CompressionPlugin());
   }
-  if (externals) {
-    config.externals = externals;
-  }
   return config;
 }
 
@@ -110,29 +103,17 @@ function generateHtmlPlugins(configs: BundlerHtmlConfig[]) {
 }
 
 function generateHtmlPlugin(config: BundlerHtmlConfig) {
-  const baseConfig = {
+  const baseConfig: HtmlWebpackPlugin.Options = {
     filename: config.filename,
     chunks: config.chunks,
+    chunksSortMode: config.chunkOrder,
     title: config.title,
     templateContent: config.templateContent,
     minify: config.minify,
     cache: false,
-    chunksSortMode: 'auto' as const,
     favicon: config.favicon,
   };
-  if (baseConfig.chunks && baseConfig.chunks.length) {
-    // Make sure the order is that the preview root coming after the preview def
-    // we can't make it like this on the entries using depend on because this will
-    // prevent the splitting between different preview defs
-    // @ts-ignore
-    baseConfig.chunksSortMode = 'manual' as const;
-  }
+
   const filteredConfig = omitBy(baseConfig, isUndefined);
   return new HtmlWebpackPlugin(filteredConfig);
-}
-
-export function getExternals(deps: string[]) {
-  return generateExternals(deps, {
-    transformName: (depName) => camelcase(depName.replace('@', '').replace('/', '-'), { pascalCase: true }),
-  });
 }

@@ -6,7 +6,7 @@ import UIAspect, { UIRuntime, UiUI } from '@teambit/ui';
 import { PubsubAspect, PubsubUI } from '@teambit/pubsub';
 import { ReactRouterAspect } from '@teambit/react-router';
 import { isBrowser } from '@teambit/ui-foundation.ui.is-browser';
-import { CommandBar } from '@teambit/explorer.ui.command-bar';
+import { CommandBar, useSearcher } from '@teambit/explorer.ui.command-bar';
 import { CommandBarAspect } from './command-bar.aspect';
 import { commandBarCommands } from './command-bar.commands';
 import { CommandSearcher, SearchProvider } from './searchers';
@@ -138,14 +138,17 @@ export class CommandBarUI {
     const [visible, setVisibility] = useState(false);
     this.setVisibility = setVisibility;
 
+    const results = useSearcher(this.search);
+
     return (
       <CommandBar
+        {...results}
         key="CommandBarUI"
         className={styles.commanderUi}
-        searcher={this.search}
         placeholder="Search anything or type > to only search commands"
         visible={visible}
         onVisibilityChange={setVisibility}
+        autofocus
       />
     );
   };

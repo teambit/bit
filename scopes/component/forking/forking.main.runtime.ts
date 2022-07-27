@@ -2,6 +2,7 @@ import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { BitId } from '@teambit/legacy-bit-id';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
+import { BitIds } from '@teambit/legacy/dist/bit-id';
 import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
 import { uniqBy } from 'lodash';
 import ComponentAspect, { Component, ComponentID, ComponentMain } from '@teambit/component';
@@ -16,9 +17,16 @@ import { ForkCmd, ForkOptions } from './fork.cmd';
 import { ForkingAspect } from './forking.aspect';
 import { ForkingFragment } from './forking.fragment';
 import { forkingSchema } from './forking.graphql';
+import { ScopeForkCmd } from './scope-fork.cmd';
 
 export type ForkInfo = {
   forkedFrom: ComponentID;
+};
+
+type MultipleForkInfo = {
+  targetCompId: ComponentID;
+  sourceId: string;
+  component: Component;
 };
 
 type MultipleComponentsToFork = Array<{
@@ -60,7 +68,7 @@ export class ForkingMain {
       : ComponentID.fromLegacy(BitId.parse(sourceId, true));
     const { targetCompId, component } = await this.forkRemoteComponent(sourceIdWithScope, targetId, options);
     await this.saveDeps(component);
-    await this.installDeps();
+    if (!options?.skipDependencyInstallation) await this.installDeps();
     return targetCompId;
   }
 
@@ -85,6 +93,10 @@ export class ForkingMain {
       const { targetCompId, component } = await this.forkRemoteComponent(sourceIdWithScope, targetId, { scope, path });
       return { targetCompId, sourceId, component };
     });
+    await this.refactorMultipleAndInstall(results);
+  }
+
+  private async refactorMultipleAndInstall(results: MultipleForkInfo[], options: MultipleForkOptions = {}) {
     const oldPackages: string[] = [];
     const stringsToReplace: MultipleStringsReplacement = results
       .map(({ targetCompId, sourceId, component }) => {
@@ -113,6 +125,36 @@ export class ForkingMain {
     if (options.install) {
       await this.installDeps();
     }
+  }
+
+  /**
+   * fork all components of the given scope
+   */
+  async forkScope(originalScope: string, newScope: string): Promise<ComponentID[]> {
+    const idsFromOriginalScope = await this.workspace.scope.listRemoteScope(originalScope);
+    if (!idsFromOriginalScope.length) {
+      throw new Error(`unable to find components to fork from ${originalScope}`);
+    }
+    const workspaceIds = await this.workspace.listIds();
+    const workspaceBitIds = BitIds.fromArray(workspaceIds.map((id) => id._legacy));
+    idsFromOriginalScope.forEach((id) => {
+      const existInWorkspace = workspaceBitIds.searchWithoutScopeAndVersion(id._legacy);
+      if (existInWorkspace) {
+        throw new Error(
+          `unable to fork "${id.toString()}". the workspace has a component "${existInWorkspace.toString()}" with the same name`
+        );
+      }
+    });
+    const multipleForkInfo: MultipleForkInfo[] = [];
+    const components = await this.workspace.scope.getManyRemoteComponents(idsFromOriginalScope);
+    await pMapSeries(components, async (component) => {
+      const config = await this.getConfig(component);
+      const targetCompId = ComponentID.fromObject({ name: component.id.fullName }, newScope);
+      await this.newComponentHelper.writeAndAddNewComp(component, targetCompId, { scope: newScope }, config);
+      multipleForkInfo.push({ targetCompId, sourceId: component.id.toStringWithoutVersion(), component });
+    });
+    await this.refactorMultipleAndInstall(multipleForkInfo, { refactor: true, install: true });
+    return multipleForkInfo.map((info) => info.targetCompId);
   }
 
   private async forkExistingInWorkspace(existing: Component, targetId?: string, options?: ForkOptions) {
@@ -236,6 +278,10 @@ the reason is that the refactor changes the components using ${sourceId.toString
     cli.register(new ForkCmd(forkingMain));
     graphql.register(forkingSchema(forkingMain));
     componentMain.registerShowFragments([new ForkingFragment(forkingMain)]);
+
+    const scopeCommand = cli.getCommand('scope');
+    scopeCommand?.commands?.push(new ScopeForkCmd(forkingMain));
+
     return forkingMain;
   }
 }

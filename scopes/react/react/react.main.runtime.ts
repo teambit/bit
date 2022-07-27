@@ -21,11 +21,12 @@ import { WebpackAspect } from '@teambit/webpack';
 import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { DevServerContext, BundlerContext } from '@teambit/bundler';
-import { EnvPolicyConfigObject } from '@teambit/dependency-resolver';
+import { DependencyResolverAspect, DependencyResolverMain, EnvPolicyConfigObject } from '@teambit/dependency-resolver';
 import ts from 'typescript';
 import { ApplicationAspect, ApplicationMain } from '@teambit/application';
 import { FormatterContext } from '@teambit/formatter';
 import { LinterContext } from '@teambit/linter';
+import { LoggerAspect, LoggerMain } from '@teambit/logger';
 import { ESLintMain, ESLintAspect, EslintConfigTransformer } from '@teambit/eslint';
 import { PrettierMain, PrettierAspect, PrettierConfigTransformer } from '@teambit/prettier';
 import { ReactAspect } from './react.aspect';
@@ -48,7 +49,9 @@ type ReactDeps = [
   ESLintMain,
   PrettierMain,
   ApplicationMain,
-  GeneratorMain
+  GeneratorMain,
+  DependencyResolverMain,
+  LoggerMain
 ];
 
 export type ReactMainConfig = {
@@ -111,9 +114,9 @@ export class ReactMain {
    * use this to register apps programmatically.
    */
   async registerApp(reactApp: ReactAppOptions) {
-    return this.application.registerApp(await this.reactAppType.createApp(reactApp));
+    return this.application.registerApp(this.reactAppType.createApp(reactApp));
   }
- 
+
   /**
    * override the env's typescript config for both dev and build time.
    * Replaces both overrideTsConfig (devConfig) and overrideBuildTsConfig (buildConfig)
@@ -169,6 +172,7 @@ export class ReactMain {
    */
   overrideDocsTemplate(templatePath: string) {
     return this.envs.override({
+      getDevEnvId: (context: DevServerContext) => this.reactEnv.getDevEnvId(context.envDefinition.id),
       getDocsTemplate: () => templatePath,
     });
   }
@@ -391,6 +395,8 @@ export class ReactMain {
     PrettierAspect,
     ApplicationAspect,
     GeneratorAspect,
+    DependencyResolverAspect,
+    LoggerAspect,
   ];
 
   static async provider(
@@ -408,9 +414,12 @@ export class ReactMain {
       prettier,
       application,
       generator,
+      dependencyResolver,
+      loggerMain,
     ]: ReactDeps,
     config: ReactMainConfig
   ) {
+    const logger = loggerMain.createLogger(ReactAspect.id);
     const reactEnv = new ReactEnv(
       jestAspect,
       tsAspect,
@@ -422,6 +431,8 @@ export class ReactMain {
       config,
       eslint,
       prettier,
+      dependencyResolver,
+      logger,
       CompilerAspect.id
     );
     const appType = new ReactAppType('react-app', reactEnv);

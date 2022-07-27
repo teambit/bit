@@ -15,18 +15,15 @@ describe('mix use of Legacy and Harmony', function () {
   });
   describe('legacy component into Harmony workspace', () => {
     before(() => {
-      helper.command.setFeatures('legacy-workspace-config');
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir();
-      helper.command.tagAllComponents();
-      helper.command.exportAllComponents();
-      helper.command.resetFeatures();
       helper.scopeHelper.reInitLocalScopeHarmony();
-      helper.scopeHelper.addRemoteScope();
+      const remoteName = '14epy6hr-remote';
+      const remotePath = helper.scopeHelper.getNewBareScopeWithSpecificName(remoteName);
+      helper.scopeHelper.addRemoteScope(remotePath);
+      helper.scopes.setRemoteScope(undefined, undefined, remoteName);
+      helper.fixtures.extractCompressedFixture('scopes/legacy-remote.tgz', helper.scopes.e2eDir);
     });
     it('should block importing the component', () => {
-      expect(() => helper.command.importComponent(`${helper.scopes.remote}/*`)).to.throw('unable to write component');
+      expect(() => helper.command.importComponent('bar/foo')).to.throw('unable to write component');
     });
     describe('re-creating the component in Harmony using the legacy objects', () => {
       before(() => {

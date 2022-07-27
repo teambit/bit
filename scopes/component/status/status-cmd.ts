@@ -3,6 +3,7 @@ import R from 'ramda';
 import { Command, CommandOptions } from '@teambit/cli';
 import { BitId } from '@teambit/legacy-bit-id';
 import Component from '@teambit/legacy/dist/consumer/component';
+import { DivergeData } from '@teambit/legacy/dist/scope/component-ops/diverge-data';
 import { immutableUnshift } from '@teambit/legacy/dist/utils';
 import { formatBitString, formatNewBit } from '@teambit/legacy/dist/cli/chalk-box';
 import { getInvalidComponentLabel, formatIssues } from '@teambit/legacy/dist/cli/templates/component-issues-template';
@@ -14,25 +15,25 @@ import {
   statusInvalidComponentsMsg,
   statusWorkspaceIsCleanMsg,
 } from '@teambit/legacy/dist/constants';
+import { partition } from 'lodash';
+import { isHash } from '@teambit/component-version';
 import { StatusMain, StatusResult } from './status.main.runtime';
 
+const individualFilesDesc = `these components were added as individual files and not as directories, which are invalid in Harmony
+please make sure each component has its own directory and re-add it. alternatively, use "bit move --component" to help with the move.`;
 const TROUBLESHOOTING_MESSAGE = `${chalk.yellow(
   `learn more at https://${BASE_DOCS_DOMAIN}/components/adding-components`
 )}`;
 
-const individualFilesDesc = `these components were added as individual files and not as directories, which are invalid in Harmony
-please make sure each component has its own directory and re-add it. alternatively, use "bit move --component" to help with the move.`;
-const trackDirDesc = `these components were added by an older version of Bit and therefore have "trackDir" record in the .bitmap file
-please run "bit migrate --harmony" to convert these records to "rootDir".`;
-
 export class StatusCmd implements Command {
   name = 'status';
-  shortDescription = 'show the working area component(s) status';
+  description = 'present the current status of components in the workspace, and notifies when issues are detected';
   group = 'development';
-  description = `show the working area component(s) status.\n  https://${BASE_DOCS_DOMAIN}/workspace/workspace-status`;
+  extendedDescription: string;
   alias = 's';
   options = [
     ['j', 'json', 'return a json version of the component'],
+    ['', 'verbose', 'show full snap hashes'],
     ['', 'strict', 'in case issues found, exit with code 1'],
   ] as CommandOptions;
   loader = true;
@@ -53,14 +54,14 @@ export class StatusCmd implements Command {
       mergePendingComponents,
       componentsDuringMergeState,
       componentsWithIndividualFiles,
-      componentsWithTrackDirs,
       softTaggedComponents,
       snappedComponents,
+      pendingUpdatesFromMain,
     }: StatusResult = await this.status.status();
     return {
       newComponents,
       modifiedComponent: modifiedComponent.map((c) => c.id.toString()),
-      stagedComponents: stagedComponents.map((c) => c.id()),
+      stagedComponents: stagedComponents.map((c) => ({ id: c.id(), versions: c.getLocalTagsOrHashes() })),
       componentsWithIssues: componentsWithIssues.map((c) => ({
         id: c.id.toString(),
         issues: c.issues?.toObject(),
@@ -72,13 +73,13 @@ export class StatusCmd implements Command {
       mergePendingComponents: mergePendingComponents.map((c) => c.id.toString()),
       componentsDuringMergeState: componentsDuringMergeState.map((id) => id.toString()),
       componentsWithIndividualFiles: componentsWithIndividualFiles.map((c) => c.id.toString()),
-      componentsWithTrackDirs: componentsWithTrackDirs.map((c) => c.id.toString()),
       softTaggedComponents: softTaggedComponents.map((s) => s.toString()),
       snappedComponents: snappedComponents.map((s) => s.toString()),
+      pendingUpdatesFromMain: pendingUpdatesFromMain.map((p) => ({ id: p.id.toString(), divergeData: p.divergeData })),
     };
   }
 
-  async report(_args, { strict }: { strict?: boolean }) {
+  async report(_args, { strict, verbose }: { strict?: boolean; verbose?: boolean }) {
     const {
       newComponents,
       modifiedComponent,
@@ -91,9 +92,9 @@ export class StatusCmd implements Command {
       mergePendingComponents,
       componentsDuringMergeState,
       componentsWithIndividualFiles,
-      componentsWithTrackDirs,
       softTaggedComponents,
       snappedComponents,
+      pendingUpdatesFromMain,
       laneName,
     }: StatusResult = await this.status.status();
     // If there is problem with at least one component we want to show a link to the
@@ -125,7 +126,15 @@ export class StatusCmd implements Command {
           throw new Error(`expect "${component}" to be instance of ModelComponent`);
         }
         const localVersions = component.getLocalTagsOrHashes();
-        bitFormatted += `. versions: ${localVersions.join(', ')}`;
+        if (verbose) {
+          bitFormatted += `. versions: ${localVersions.join(', ')}`;
+        } else {
+          const [snaps, tags] = partition(localVersions, (version) => isHash(version));
+          const tagsStr = tags.length ? `versions: ${tags.join(', ')}` : '';
+          const snapsStr = snaps.length ? `${snaps.length} snap(s)` : '';
+          bitFormatted += `. `;
+          bitFormatted += tagsStr && snapsStr ? `${tagsStr}. and ${snapsStr}` : tagsStr || snapsStr;
+        }
       }
       bitFormatted += ' ... ';
       if (!issues) return `${bitFormatted}${messageStatus}`;
@@ -155,7 +164,7 @@ export class StatusCmd implements Command {
     const outdatedStr = outdatedComponents.length ? [outdatedTitle, outdatedDesc, outdatedComps].join('\n') : '';
 
     const pendingMergeTitle = chalk.underline.white('pending merge');
-    const pendingMergeDesc = `(use "bit untag" to add local changes on top of the remote and discard local tags.
+    const pendingMergeDesc = `(use "bit reset" to add local changes on top of the remote and discard local tags.
 alternatively, to keep local tags/snaps history, use "bit merge <remote-name>/<lane-name> [component-id]")\n`;
     const pendingMergeComps = mergePendingComponents
       .map((component) => {
@@ -217,13 +226,6 @@ or use "bit merge [component-id] --abort" to cancel the merge operation)\n`;
         : ''
     ).join('\n');
 
-    const trackDirOutput = immutableUnshift(
-      componentsWithTrackDirs.map((c) => format(c.id, false, 'trackDir record')).sort(),
-      componentsWithTrackDirs.length
-        ? `${chalk.underline.white('components with trackDir record')}\n${trackDirDesc}\n`
-        : ''
-    ).join('\n');
-
     const stagedDesc = '\n(use "bit export to push these components to a remote scope")\n';
     const stagedComponentsOutput = immutableUnshift(
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -231,11 +233,28 @@ or use "bit merge [component-id] --abort" to cancel the merge operation)\n`;
       stagedComponents.length ? chalk.underline.white('staged components') + stagedDesc : ''
     ).join('\n');
 
-    const snappedDesc = '\n(use "bit tag --all [version]" or "bit tag --snapped [version]" to lock a version)\n';
+    const snappedDesc = '\n(use "bit tag [version]" or "bit tag --snapped [version]" to lock a version)\n';
     const snappedComponentsOutput = immutableUnshift(
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       snappedComponents.map((c) => format(c, true)),
       snappedComponents.length ? chalk.underline.white('snapped components') + snappedDesc : ''
+    ).join('\n');
+
+    const getUpdateFromMainMsg = (divergeData: DivergeData): string => {
+      if (divergeData.err) return divergeData.err.message;
+      let msg = `main is ahead by ${divergeData.snapsOnRemoteOnly.length || 0} snaps`;
+      if (divergeData.snapsOnLocalOnly && verbose) {
+        msg += ` (diverged since ${divergeData.commonSnapBeforeDiverge?.toShortString()})`;
+      }
+      return msg;
+    };
+    const updatesFromMainDesc = '\n(EXPERIMENTAL. use "bit lane merge main" to merge the changes)\n';
+    const pendingUpdatesFromMainIds = pendingUpdatesFromMain.map((c) =>
+      format(c.id, true, getUpdateFromMainMsg(c.divergeData))
+    );
+    const updatesFromMainOutput = immutableUnshift(
+      pendingUpdatesFromMainIds,
+      pendingUpdatesFromMain.length ? chalk.underline.white('pending updates from main') + updatesFromMainDesc : ''
     ).join('\n');
 
     const laneStr = laneName ? `\non ${chalk.bold(laneName)} lane` : '';
@@ -247,6 +266,7 @@ or use "bit merge [component-id] --abort" to cancel the merge operation)\n`;
       [
         outdatedStr,
         pendingMergeStr,
+        updatesFromMainOutput,
         compWithConflictsStr,
         newComponentsOutput,
         modifiedComponentOutput,
@@ -255,7 +275,6 @@ or use "bit merge [component-id] --abort" to cancel the merge operation)\n`;
         autoTagPendingOutput,
         invalidComponentOutput,
         individualFilesOutput,
-        trackDirOutput,
       ]
         .filter((x) => x)
         .join(chalk.underline('\n                         \n') + chalk.white('\n')) +

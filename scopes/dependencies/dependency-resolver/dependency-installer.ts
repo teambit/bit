@@ -5,8 +5,9 @@ import { MainAspect, AspectLoaderMain } from '@teambit/aspect-loader';
 import { ComponentMap } from '@teambit/component';
 import { Logger } from '@teambit/logger';
 import { PathAbsolute } from '@teambit/legacy/dist/utils/path';
+import { PeerDependencyRules } from '@pnpm/types';
 import { MainAspectNotInstallable, RootDirNotDefined } from './exceptions';
-import { PackageManager, PackageManagerInstallOptions } from './package-manager';
+import { PackageManager, PackageManagerInstallOptions, PackageImportMethod } from './package-manager';
 import { WorkspacePolicy } from './policy';
 
 const DEFAULT_PM_INSTALL_OPTIONS: PackageManagerInstallOptions = {
@@ -58,7 +59,17 @@ export class DependencyInstaller {
 
     private postInstallSubscriberList?: PostInstallSubscriberList,
 
-    private nodeLinker?: 'hoisted' | 'isolated'
+    private nodeLinker?: 'hoisted' | 'isolated',
+
+    private packageImportMethod?: PackageImportMethod,
+
+    private sideEffectsCache?: boolean,
+
+    private nodeVersion?: string,
+
+    private engineStrict?: boolean,
+
+    private peerDependencyRules?: PeerDependencyRules
   ) {}
 
   async install(
@@ -86,7 +97,12 @@ export class DependencyInstaller {
       ...DEFAULT_PM_INSTALL_OPTIONS,
       cacheRootDir: this.cacheRootDir,
       nodeLinker: this.nodeLinker,
+      packageImportMethod: this.packageImportMethod,
+      sideEffectsCache: this.sideEffectsCache,
+      nodeVersion: this.nodeVersion,
+      engineStrict: this.engineStrict,
       packageManagerConfigRootDir: options.packageManagerConfigRootDir,
+      peerDependencyRules: this.peerDependencyRules,
       ...packageManagerOptions,
     };
     if (options.installTeambitBit) {

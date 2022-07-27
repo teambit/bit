@@ -1,4 +1,3 @@
-import { Commands } from '../legacy-extensions/extension';
 import { first } from '../utils';
 import { LegacyCommand } from './legacy-command';
 
@@ -12,20 +11,11 @@ export default class CommandRegistry {
   usage: string;
   description: string;
   commands: LegacyCommand[];
-  extensionsCommands: LegacyCommand[] | null | undefined;
 
-  constructor(
-    usage: string,
-    description: string,
-    version: string,
-    commands: LegacyCommand[],
-    extensionsCommands: Array<Commands>
-  ) {
+  constructor(usage: string, description: string, version: string, commands: LegacyCommand[]) {
     this.usage = usage;
     this.description = description;
     this.version = version;
     this.commands = commands;
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    this.extensionsCommands = extensionsCommands;
   }
 }

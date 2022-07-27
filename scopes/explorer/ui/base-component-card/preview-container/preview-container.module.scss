@@ -3,7 +3,6 @@
   padding-bottom: 57%;
   height: 0;
   position: relative;
-  pointer-events: none;
   border-radius: 5px 5px 0 0;
 }
 .preview {
@@ -14,6 +13,9 @@
   right: 0;
   overflow: hidden;
   border-bottom: 1px solid var(--bit-border-color-light, #cccfd4);
+  > iframe {
+    pointer-events: none;
+  }
 }
 
 .emptyPreview {

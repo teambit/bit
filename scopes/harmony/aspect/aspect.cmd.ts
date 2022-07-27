@@ -1,6 +1,5 @@
 // eslint-disable-next-line max-classes-per-file
 import { Command, CommandOptions } from '@teambit/cli';
-import { PATTERN_HELP } from '@teambit/legacy/dist/constants';
 import { CLITable } from '@teambit/cli-table';
 import chalk from 'chalk';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config';
@@ -9,9 +8,15 @@ import { AspectMain } from './aspect.main.runtime';
 export class ListAspectCmd implements Command {
   name = 'list [pattern]';
   description = 'list all aspects configured on component(s)';
+  arguments = [
+    {
+      name: 'pattern',
+      description:
+        'component name, component id, or component pattern. use component pattern to select multiple components. \nuse comma to separate patterns and "!" to exclude. e.g. "ui/**, !ui/button"\nwrap the pattern with quotes',
+    },
+  ];
   options = [['d', 'debug', 'show the origins were the aspects were taken from']] as CommandOptions;
   group = 'development';
-  extendedDescription = `${PATTERN_HELP('aspect list')}`;
 
   constructor(private aspect: AspectMain) {}
 
@@ -36,10 +41,22 @@ export class ListAspectCmd implements Command {
 
 export class SetAspectCmd implements Command {
   name = 'set <pattern> <aspect-id> [config]';
-  description = 'set an aspect to component(s) with optional config.';
-  extendedDescription = `enter the config as stringified JSON (e.g. '{"foo":"bar"}' ).
-if no config entered, the aspect will be set with empty config ({}).
-${PATTERN_HELP('aspect set')}`;
+  description = 'set components with an aspect to extend their development tools, metadata and (possibly) artifacts';
+  arguments = [
+    {
+      name: 'pattern',
+      description:
+        'the components to extend. use component name, component id, or component pattern. use component pattern to select multiple components. use comma to separate patterns and "!" to exclude. e.g. "ui/**, !ui/button". wrap the pattern with quotes',
+    },
+    {
+      name: 'aspect-id',
+      description: "the aspect's component id",
+    },
+    {
+      name: 'config',
+      description: `the aspect config. enter the config as a stringified JSON (e.g. '{"foo":"bar"}' ). when no config is provided, an aspect is set with an empty config ({}).`,
+    },
+  ];
   options = [];
   group = 'development';
 
@@ -56,12 +73,28 @@ ${PATTERN_HELP('aspect set')}`;
 export class UpdateAspectCmd implements Command {
   name = 'update <aspect-id> [pattern]';
   description = 'update a version of an aspect';
-  extendedDescription = `default to all components using the aspect, unless "pattern" is provided.
-${PATTERN_HELP('aspect update <aspect-id>')}
-examples:
-"bit aspect update scope.org/aspect '**/ui/**'" - update "ui" components that use scope.org/aspect to the latest version
-"bit aspect update scope.org/aspect@2.0.0"      - updates all components using scope.org/aspect to version 2.0.0.`;
-
+  arguments = [
+    {
+      name: 'aspect-id',
+      description:
+        "the aspect's component id. optionally, add a version (id@version), otherwise, it finds the latest version on the remote",
+    },
+    {
+      name: 'pattern',
+      description:
+        'the components to update (defaults to all components). use component name, component id, or component pattern. use component pattern to select multiple components. use comma to separate patterns and "!" to exclude. e.g. "ui/**, !ui/button". wrap the pattern with quotes',
+    },
+  ];
+  examples = [
+    {
+      cmd: "update scope.org/aspect '**/ui/**'",
+      description: 'update "ui" components that use scope.org/aspect to use its latest version',
+    },
+    {
+      cmd: 'bit aspect update scope.org/aspect@2.0.0',
+      description: 'update all components that use scope.org/aspect to version 2.0.0 (of this aspect).',
+    },
+  ];
   options = [];
   group = 'development';
 
@@ -77,7 +110,17 @@ examples:
 export class UnsetAspectCmd implements Command {
   name = 'unset <pattern> <aspect-id>';
   description = `unset an aspect from component(s).`;
-  extendedDescription = `${PATTERN_HELP('aspect unset')}`;
+  arguments = [
+    {
+      name: 'pattern',
+      description:
+        'the components to target. use component name, component id, or component pattern. use component pattern to select multiple components. use comma to separate patterns and "!" to exclude. e.g. "ui/**, !ui/button". wrap the pattern with quotes',
+    },
+    {
+      name: 'aspect-id',
+      description: "the aspect's component id",
+    },
+  ];
   options = [];
   group = 'development';
 
@@ -91,8 +134,14 @@ export class UnsetAspectCmd implements Command {
 }
 
 export class GetAspectCmd implements Command {
-  name = 'get <component-id>';
-  description = "show aspects' data and configuration of the given component";
+  name = 'get <component-name>';
+  description = 'list the aspects set on a component, as well as their config and data';
+  arguments = [
+    {
+      name: 'component-name',
+      description: 'the component name or component id',
+    },
+  ];
   options = [
     ['d', 'debug', 'show the origins were the aspects were taken from'],
     ['j', 'json', 'format as json'],

@@ -17,7 +17,7 @@ describe('eject command on Harmony', function () {
   after(() => {
     helper.scopeHelper.destroy();
   });
-  (supportNpmCiRegistryTesting ? describe : describe.skip)('import with dependencies as packages', () => {
+  (supportNpmCiRegistryTesting ? describe : describe.skip)('eject components with dependencies after export', () => {
     let npmCiRegistry: NpmCiRegistry;
     let scopeWithoutOwner: string;
     let scopeBeforeEject: string;

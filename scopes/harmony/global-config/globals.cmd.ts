@@ -2,7 +2,8 @@
 import { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
 import padRight from 'pad-right';
-import { CACHE_ROOT, DEBUG_LOG, GLOBAL_SCOPE, GLOBAL_CONFIG, CACHE_GLOBALS_ENV } from '@teambit/legacy/dist/constants';
+import { CACHE_GLOBALS_ENV } from '@teambit/legacy/dist/constants';
+import { GlobalConfigMain } from './global-config.main.runtime';
 
 export class GlobalsCmd implements Command {
   name = 'globals';
@@ -10,6 +11,8 @@ export class GlobalsCmd implements Command {
   group = 'workspace';
   alias = '';
   options = [['j', 'json', 'json format']] as CommandOptions;
+
+  constructor(private globalConfig: GlobalConfigMain) {}
 
   async report() {
     const list = await this.json();
@@ -28,11 +31,6 @@ export class GlobalsCmd implements Command {
   }
 
   async json() {
-    return {
-      'Global Dir': CACHE_ROOT,
-      'Log file': DEBUG_LOG,
-      'Global Scope Dir': GLOBAL_SCOPE,
-      'Config Dir': GLOBAL_CONFIG,
-    };
+    return this.globalConfig.getKnownGlobalDirs();
   }
 }

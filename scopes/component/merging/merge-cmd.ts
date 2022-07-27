@@ -12,9 +12,9 @@ import { MergingMain } from './merging.main.runtime';
 
 export class MergeCmd implements Command {
   name = 'merge [values...]';
-  shortDescription = 'merge changes of different component versions';
+  description = 'merge changes of different component versions';
   group = 'development';
-  description = `merge changes of different component versions
+  extendedDescription = `merge changes of different component versions
   \`bit merge <version> [ids...]\` => merge changes of the given version into the checked out version
   \`bit merge [ids...]\` => EXPERIMENTAL. merge changes of the remote head into local, optionally use '--abort' or '--resolve'
   ${WILDCARD_HELP('merge 0.0.1')}`;
@@ -132,12 +132,12 @@ export function mergeReport({ components, failedComponents, version, mergeSnapRe
     if (!failedComponents || !failedComponents.length) return '';
     const title = 'the merge has been canceled on the following component(s)';
     const body = failedComponents
-      .map(
-        (failedComponent) =>
-          `${chalk.bold(failedComponent.id.toString())} - ${chalk.red(failedComponent.failureMessage)}`
-      )
+      .map((failedComponent) => {
+        const color = failedComponent.unchangedLegitimately ? 'white' : 'red';
+        return `${chalk.bold(failedComponent.id.toString())} - ${chalk[color](failedComponent.failureMessage)}`;
+      })
       .join('\n');
-    return `${chalk.underline(title)}\n${body}\n\n`;
+    return `\n${chalk.underline(title)}\n${body}\n\n`;
   };
 
   return getSuccessOutput() + getFailureOutput() + getSnapsOutput();

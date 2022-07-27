@@ -15,7 +15,21 @@ export class Importer {
   async import(importOptions: ImportOptions, packageManagerArgs: string[]): Promise<ImportResult> {
     const consumer = this.workspace.consumer;
     consumer.packageManagerArgs = packageManagerArgs;
-    await this.populateLanesDataIfNeeded(importOptions);
+    if (!importOptions.ids.length) {
+      importOptions.objectsOnly = true;
+    }
+    if (this.workspace.consumer.isOnLane()) {
+      const currentRemoteLane = await this.workspace.getCurrentRemoteLane();
+      if (currentRemoteLane) {
+        importOptions.lanes = { laneIds: [currentRemoteLane.toLaneId()], lanes: [currentRemoteLane] };
+      } else if (!importOptions.ids.length) {
+        // this is probably a local lane that was never exported.
+        // although no need to fetch from the lane, still, the import is needed for main (which are available on this
+        // local lane)
+        const currentLaneId = this.workspace.getCurrentLaneId();
+        importOptions.lanes = { laneIds: [currentLaneId], lanes: [] };
+      }
+    }
     const importComponents = new ImportComponents(consumer, importOptions);
     const { dependencies, importDetails } = await importComponents.importComponents();
     const bitIds = dependencies.map(R.path(['component', 'id']));
@@ -36,15 +50,5 @@ export class Importer {
 
   private getImportedPackagesNames(components: ConsumerComponent[]): string[] {
     return components.map((component) => componentIdToPackageName(component));
-  }
-
-  private async populateLanesDataIfNeeded(importOptions: ImportOptions) {
-    if (!importOptions.ids.length) {
-      importOptions.objectsOnly = true;
-    }
-    const currentRemoteLane = await this.workspace.getCurrentRemoteLane();
-    if (currentRemoteLane) {
-      importOptions.lanes = { laneIds: [currentRemoteLane.toLaneId()], lanes: [currentRemoteLane] };
-    }
   }
 }

@@ -11,6 +11,7 @@
     "declaration": true,
     "sourceMap": true,
     "skipLibCheck": true,
+    "experimentalDecorators": true,
     "outDir": "dist",
     "moduleResolution": "node",
     "esModuleInterop": true,
@@ -18,6 +19,11 @@
     "resolveJsonModule": true
   },
   "exclude": [
-    "dist"
+    "dist",
+    "package.json"
+  ],
+  "include": [
+    "**/*",
+    "**/*.json"
   ]
 }

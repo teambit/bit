@@ -1,6 +1,6 @@
 import fs from 'fs-extra';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import { Component } from '@teambit/component';
+import { Component, IComponent } from '@teambit/component';
 import compact from 'lodash.compact';
 import { EnvsAspect, EnvsExecutionResult, EnvsMain } from '@teambit/envs';
 import { LoggerAspect, LoggerMain } from '@teambit/logger';
@@ -155,17 +155,20 @@ export class TesterMain {
     return this.watch(components, { watch: true, debug: false, ui: true });
   }
 
-  async getTestsResults(component: Component): Promise<{ testsResults?: TestsResult; loading: boolean } | undefined> {
-    const entry = component.state.aspects.get(TesterAspect.id);
-    const componentStatus = await this.workspace?.getComponentStatus(component);
+  async getTestsResults(
+    component: IComponent,
+    idHasVersion = true
+  ): Promise<{ testsResults?: TestsResult; loading: boolean } | undefined> {
+    const entry = component.get(TesterAspect.id);
+    const isModified = !idHasVersion && (await component.isModified());
     const data = this.builder.getDataByAspect(component, TesterAspect.id) as { tests: TestsResult };
-    if ((entry || data) && !componentStatus?.modifyInfo?.hasModifiedFiles) {
+    if ((entry || data) && !isModified) {
       return { testsResults: data?.tests || entry?.data.tests, loading: false };
     }
     return this.getTestsResultsFromState(component);
   }
 
-  private getTestsResultsFromState(component: Component) {
+  private getTestsResultsFromState(component: IComponent) {
     const tests = this._testsResults[component.id.toString()];
     return { testsResults: tests?.results, loading: tests?.loading || false };
   }
@@ -225,8 +228,7 @@ export class TesterMain {
       builder
     );
 
-    if (workspace && !workspace.consumer.isLegacy) {
-      cli.unregister('test');
+    if (workspace) {
       ui.registerOnStart(async () => {
         if (!config.watchOnStart) return undefined;
         await tester.uiWatch();

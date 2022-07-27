@@ -1,11 +1,11 @@
-import { LinkedHeading } from '@teambit/documenter.ui.linked-heading';
-import { Section, SectionProps } from '@teambit/documenter.ui.section';
 import classNames from 'classnames';
 import React from 'react';
 import jsxToString from 'jsx-to-string';
+import type { Example } from '@teambit/docs';
+import { LinkedHeading } from '@teambit/documenter.ui.linked-heading';
+import { Section, SectionProps } from '@teambit/documenter.ui.section';
 import { Playground } from '@teambit/documenter.code.react-playground';
 import styles from './examples-overview.module.scss';
-import { Example } from './example';
 
 export interface ExamplesOverviewProps extends React.HTMLAttributes<HTMLDivElement> {
   examples: Example[];

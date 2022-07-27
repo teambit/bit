@@ -113,31 +113,10 @@ export async function getAllVersionsInfo({
     };
     if (head) await addParentsRecursively(head);
   }
+  // @todo: make sure the "stopped" is working. seems like it doesn't do anything now.
+  // previously, this function was longer and continued traversing all tags to find legacy Version objects that didn't
+  // have parents.
   if (stopped) return results;
-  // backward compatibility.
-  // components created before v15, might not have head.
-  // even if they do have head (as a result of tag/snap after v15), they
-  // have old versions without parents and new versions with parents
-  await Promise.all(
-    Object.keys(modelComponent.versionsIncludeOrphaned).map(async (version) => {
-      if (!results.find((r) => r.tag === version)) {
-        const ref = modelComponent.versionsIncludeOrphaned[version];
-        const versionObj = await getVersionObj(ref);
-        const versionInfo: VersionInfo = { ref, tag: version, parents: versionObj?.parents || [], onLane: false };
-        if (versionObj) {
-          versionInfo.version = versionObj;
-          // legacy versions didn't have the "parents" concept and they're part of the history.
-          // for new versions, since we didn't find this tag during the traversal, they're not part of history.
-          versionInfo.isPartOfHistory = Boolean(versionObj.isLegacy);
-        } else {
-          versionInfo.error = new VersionNotFound(version, modelComponent.id());
-          if (throws) throw versionInfo.error;
-        }
-        results.push(versionInfo);
-      }
-    })
-  );
-
   return results;
 }
 

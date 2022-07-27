@@ -6,16 +6,17 @@ import { remove } from 'lodash';
 import TerserPlugin from 'terser-webpack-plugin';
 import { WebpackConfigTransformer } from '@teambit/webpack';
 import { ReactEnv } from '../../react.env';
-import { prerenderSPAPlugin } from './plugins';
+import { prerenderPlugin } from './plugins';
 import { ReactAppBuildResult } from './react-build-result';
 import { ReactAppPrerenderOptions } from './react-app-options';
 import { html } from '../../webpack';
 import { ReactDeployContext } from '.';
+import { computeResults } from './compute-results';
 
 export class ReactApp implements Application {
   constructor(
     readonly name: string,
-    readonly entry: string[],
+    readonly entry: string[] | (() => Promise<string[]>),
     readonly portRange: number[],
     private reactEnv: ReactEnv,
     readonly prerender?: ReactAppPrerenderOptions,
@@ -35,13 +36,16 @@ export class ReactApp implements Application {
       await this.devServer.listen(port);
       return port;
     }
-    const devServerContext = this.getDevServerContext(context);
+    const devServerContext = await this.getDevServerContext(context);
     const devServer = this.reactEnv.getDevServer(devServerContext, [
       (configMutator) =>
         configMutator.addTopLevel('devServer', {
           historyApiFallback: {
             index: '/index.html',
             disableDotRule: true,
+            headers: {
+              'Access-Control-Allow-Headers': '*',
+            },
           },
         }),
       (configMutator) => {
@@ -70,8 +74,9 @@ export class ReactApp implements Application {
       html: htmlConfig,
     });
     const bundler = await this.getBundler(context);
-    await bundler.run();
-    return { publicDir: `${this.getPublicDir()}/${this.dir}` };
+    const bundleResult = await bundler.run();
+
+    return computeResults(bundleResult, { publicDir: `${this.getPublicDir(context.artifactsDir)}/${this.dir}` });
   }
 
   private getBundler(context: AppBuildContext) {
@@ -81,10 +86,11 @@ export class ReactApp implements Application {
   private async getDefaultBundler(context: AppBuildContext) {
     const { capsule } = context;
     const reactEnv: ReactEnv = context.env;
-    const publicDir = this.getPublicDir();
+    const publicDir = this.getPublicDir(context.artifactsDir);
     const outputPath = join(capsule.path, publicDir);
     const { distDir } = reactEnv.getCompiler();
-    const entries = this.entry.map((entry) => require.resolve(`${capsule.path}/${distDir}/${basename(entry)}`));
+    const targetEntries = Array.isArray(this.entry) ? this.entry : await this.entry();
+    const entries = targetEntries.map((entry) => require.resolve(`${capsule.path}/${distDir}/${basename(entry)}`));
     const staticDir = join(outputPath, this.dir);
 
     const bundlerContext: BundlerContext = Object.assign(context, {
@@ -93,6 +99,8 @@ export class ReactApp implements Application {
           components: [capsule?.component],
           entries,
           outputPath,
+          hostDependencies: await this.getPeers(),
+          aliasHostDependencies: true,
         },
       ],
       entry: [],
@@ -104,8 +112,12 @@ export class ReactApp implements Application {
     });
 
     const defaultTransformer: WebpackConfigTransformer = (configMutator) => {
-      const config = configMutator.addTopLevel('output', { path: staticDir, publicPath: `/` });
-      if (this.prerender) config.addPlugin(prerenderSPAPlugin(this.prerender, staticDir));
+      const config = configMutator.addTopLevel('output', {
+        path: staticDir,
+        publicPath: `/`,
+        filename: '[name].[chunkhash].js',
+      });
+      if (this.prerender) config.addPlugin(prerenderPlugin(this.prerender));
       if (config.raw.optimization?.minimizer) {
         remove(config.raw.optimization?.minimizer, (minimizer) => {
           return minimizer.constructor.name === 'TerserPlugin';
@@ -173,17 +185,29 @@ export class ReactApp implements Application {
     });
   };
 
-  private getPublicDir() {
-    return join(this.applicationType, this.name);
+  private getPublicDir(artifactsDir: string) {
+    return join(artifactsDir, this.applicationType, this.name);
   }
 
-  private getDevServerContext(context: AppContext): DevServerContext {
+  async getEntries(): Promise<string[]> {
+    if (Array.isArray(this.entry)) return this.entry;
+    return this.entry();
+  }
+
+  private async getDevServerContext(context: AppContext): Promise<DevServerContext> {
+    const entries = await this.getEntries();
     return Object.assign(context, {
-      entry: this.entry,
+      entry: entries,
       rootPath: '',
       publicPath: `public/${this.name}`,
       title: this.name,
       favicon: this.favicon,
+      hostDependencies: await this.getPeers(),
+      aliasHostDependencies: true,
     });
+  }
+
+  private getPeers(): Promise<string[]> {
+    return this.reactEnv.getPeerDependenciesList();
   }
 }

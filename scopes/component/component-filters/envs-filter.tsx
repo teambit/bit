@@ -5,7 +5,7 @@ import { ComponentUrl } from '@teambit/component.modules.component-url';
 import classNames from 'classnames';
 import { Ellipsis } from '@teambit/design.ui.styles.ellipsis';
 import { Tooltip } from '@teambit/design.ui.tooltip';
-import { NavLink } from '@teambit/base-ui.routing.nav-link';
+import { Link } from '@teambit/base-react.navigation.link';
 import { ComponentFilterCriteria, useComponentFilter } from './component-filters.context';
 import styles from './envs-filter.module.scss';
 
@@ -185,9 +185,13 @@ function EnvsDropdownItem({ displayName, icon, description, componentId, id }: E
     <Tooltip
       placement="right"
       content={
-        <NavLink className={styles.envLink} href={ComponentUrl.toUrl(componentId)} external={true}>
+        <Link
+          className={styles.envLink}
+          href={ComponentUrl.toUrl(componentId, { includeVersion: false })}
+          external={true}
+        >
           {id}
-        </NavLink>
+        </Link>
       }
     >
       <div className={styles.envDropdownItemContainer}>

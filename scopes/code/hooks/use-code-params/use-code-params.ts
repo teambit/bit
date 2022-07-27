@@ -2,8 +2,8 @@ import { useParams } from 'react-router-dom';
 import { useQuery } from '@teambit/ui-foundation.ui.react-router.use-query';
 
 export type CodeRouteParams = {
-  componentId: string;
-  file: string | undefined;
+  componentId?: string;
+  file?: string | undefined;
   version?: string;
 };
 
@@ -12,6 +12,8 @@ export function useCodeParams(): CodeRouteParams {
   // I think we should have a hook that keeps all qury parms and just overrides a specific one
   const query = useQuery();
   const version = query.get('version') || undefined;
-  const codeRouteParams: CodeRouteParams = useParams();
-  return { ...codeRouteParams, version };
+  const codeRouteParams = useParams<CodeRouteParams>();
+  const file = codeRouteParams['*'];
+
+  return { version, file };
 }

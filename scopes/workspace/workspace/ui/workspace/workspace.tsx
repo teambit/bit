@@ -64,10 +64,9 @@ export function Workspace({ routeSlot, menuSlot, sidebar, workspaceUI, onSidebar
             />
           </HoverSplitter>
           <Pane>
-            <SlotRouter slot={routeSlot} />
-            <Route exact path="/">
-              <WorkspaceOverview />
-            </Route>
+            <SlotRouter slot={routeSlot}>
+              <Route index element={<WorkspaceOverview />} />
+            </SlotRouter>
           </Pane>
         </SplitPane>
       </div>

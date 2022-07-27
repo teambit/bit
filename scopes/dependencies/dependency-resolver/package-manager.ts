@@ -1,4 +1,5 @@
 import { PeerDependencyIssuesByProjects } from '@pnpm/core';
+import { PeerDependencyRules } from '@pnpm/types';
 import { ComponentMap } from '@teambit/component';
 import { Registries } from './registry';
 import { DepsFilterFn } from './manifest';
@@ -31,6 +32,14 @@ export type PackageManagerInstallOptions = {
   packageManagerConfigRootDir?: string;
 
   packageImportMethod?: PackageImportMethod;
+
+  sideEffectsCache?: boolean;
+
+  engineStrict?: boolean;
+
+  nodeVersion?: string;
+
+  peerDependencyRules?: PeerDependencyRules;
 };
 
 export type PackageManagerGetPeerDependencyIssuesOptions = PackageManagerInstallOptions;

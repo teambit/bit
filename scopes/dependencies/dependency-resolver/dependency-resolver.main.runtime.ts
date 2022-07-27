@@ -1,8 +1,8 @@
 import mapSeries from 'p-map-series';
 import { MainRuntime } from '@teambit/cli';
-import ComponentAspect, { Component, ComponentMap, ComponentMain } from '@teambit/component';
+import ComponentAspect, { Component, ComponentMap, ComponentMain, IComponent } from '@teambit/component';
 import type { ConfigMain } from '@teambit/config';
-import { get, pick } from 'lodash';
+import { get, pick, uniq } from 'lodash';
 import { ConfigAspect } from '@teambit/config';
 import { DependenciesEnv, EnvsAspect, EnvsMain } from '@teambit/envs';
 import { Slot, SlotRegistry, ExtensionManifest, Aspect, RuntimeManifest } from '@teambit/harmony';
@@ -28,6 +28,8 @@ import { Version as VersionModel } from '@teambit/legacy/dist/scope/models';
 import LegacyComponent from '@teambit/legacy/dist/consumer/component';
 import fs from 'fs-extra';
 import { BitId } from '@teambit/legacy-bit-id';
+import { readCAFileSync } from '@pnpm/network.ca-file';
+import { PeerDependencyRules } from '@pnpm/types';
 import semver, { SemVer } from 'semver';
 import AspectLoaderAspect, { AspectLoaderMain } from '@teambit/aspect-loader';
 import GlobalConfigAspect, { GlobalConfigMain } from '@teambit/global-config';
@@ -220,6 +222,26 @@ export interface DependencyResolverWorkspaceConfig {
    * Controls the way packages are imported from the store.
    */
   packageImportMethod?: PackageImportMethod;
+
+  /*
+   * Use and cache the results of (pre/post)install hooks.
+   */
+  sideEffectsCache?: boolean;
+
+  /*
+   * The node version to use when checking a package's engines setting.
+   */
+  nodeVersion?: string;
+
+  /*
+   * Refuse to install any package that claims to not be compatible with the current Node.js version.
+   */
+  engineStrict?: boolean;
+
+  /*
+   * Rules to mute specific peer dependeny warnings.
+   */
+  peerDependencyRules?: PeerDependencyRules;
 }
 
 export interface DependencyResolverVariantConfig {
@@ -383,8 +405,8 @@ export class DependencyResolverMain {
    * Main function to get the dependency list of a given component
    * @param component
    */
-  async getDependencies(component: Component): Promise<DependencyList> {
-    const entry = component.state.aspects.get(DependencyResolverAspect.id);
+  async getDependencies(component: IComponent): Promise<DependencyList> {
+    const entry = component.get(DependencyResolverAspect.id);
     if (!entry) {
       return DependencyList.fromArray([]);
     }
@@ -501,7 +523,12 @@ export class DependencyResolverMain {
       cacheRootDir,
       preInstallSubscribers,
       postInstallSubscribers,
-      this.config.nodeLinker
+      this.config.nodeLinker,
+      this.config.packageImportMethod,
+      this.config.sideEffectsCache,
+      this.config.nodeVersion,
+      this.config.engineStrict,
+      this.config.peerDependencyRules
     );
   }
 
@@ -596,30 +623,37 @@ export class DependencyResolverMain {
 
   private getProxyConfigFromDepResolverConfig(): ProxyConfig {
     return {
-      ca: this.config.ca,
-      cert: this.config.cert,
       httpProxy: this.config.proxy,
       httpsProxy: this.config.httpsProxy || this.config.proxy,
-      key: this.config.key,
       noProxy: this.config.noProxy,
-      strictSSL: this.config.strictSsl?.toLowerCase() === 'true',
     };
   }
 
   async getNetworkConfig(): Promise<NetworkConfig> {
-    return {
+    const networkConfig = {
       ...(await this.getNetworkConfigFromGlobalConfig()),
       ...(await this.getNetworkConfigFromPackageManager()),
       ...this.getNetworkConfigFromDepResolverConfig(),
     };
+    this.logger.debug(
+      `the next network configuration is used in dependency-resolver: ${{
+        ...networkConfig,
+        key: networkConfig.key ? 'set' : 'not set', // this is sensitive information, we should not log it
+      }}`
+    );
+    return networkConfig;
   }
 
   private async getNetworkConfigFromGlobalConfig(): Promise<NetworkConfig> {
-    return Http.getNetworkConfig();
+    const globalNetworkConfig = await Http.getNetworkConfig();
+    if (!globalNetworkConfig.ca && globalNetworkConfig.cafile) {
+      globalNetworkConfig.ca = readCAFileSync(globalNetworkConfig.cafile);
+    }
+    return globalNetworkConfig;
   }
 
   private getNetworkConfigFromDepResolverConfig(): NetworkConfig {
-    return pick(this.config, [
+    const config: NetworkConfig = pick(this.config, [
       'fetchTimeout',
       'fetchRetries',
       'fetchRetryFactor',
@@ -627,18 +661,31 @@ export class DependencyResolverMain {
       'fetchRetryMaxtimeout',
       'maxSockets',
       'networkConcurrency',
+      'key',
+      'cert',
+      'ca',
+      'cafile',
     ]);
+    if (this.config.strictSsl != null) {
+      config.strictSSL =
+        typeof this.config.strictSsl === 'string'
+          ? this.config.strictSsl.toLowerCase() === 'true'
+          : this.config.strictSsl;
+    }
+    return config;
   }
 
   private async getNetworkConfigFromPackageManager(): Promise<NetworkConfig> {
-    const packageManager = this.getPackageManager();
-    if (typeof packageManager?.getNetworkConfig !== 'function') return {};
-    return packageManager.getNetworkConfig();
-  }
-
-  private getPackageManager() {
     const packageManager = this.packageManagerSlot.get(this.config.packageManager);
-    return packageManager ?? this.getSystemPackageManager();
+    let networkConfigFromPackageManager: NetworkConfig = {};
+    if (typeof packageManager?.getNetworkConfig === 'function') {
+      networkConfigFromPackageManager = await packageManager?.getNetworkConfig();
+    } else {
+      const systemPm = this.getSystemPackageManager();
+      if (!systemPm.getNetworkConfig) throw new Error('system package manager must implement `getNetworkConfig()`');
+      networkConfigFromPackageManager = await systemPm.getNetworkConfig();
+    }
+    return networkConfigFromPackageManager;
   }
 
   private async getProxyConfigFromPackageManager(): Promise<ProxyConfig> {
@@ -654,7 +701,7 @@ export class DependencyResolverMain {
     return proxyConfigFromPackageManager;
   }
 
-  private async getProxyConfigFromGlobalConfig(): Promise<ProxyConfig> {
+  private getProxyConfigFromGlobalConfig(): Promise<ProxyConfig> {
     return Http.getProxyConfig();
   }
 
@@ -864,6 +911,26 @@ export class DependencyResolverMain {
       }
     }
     return new EnvPolicyFactory().getEmpty();
+  }
+
+  /**
+   * Get a list of peer dependencies applied from an env
+   * This will merge different peers list like:
+   * 1. peerDependencies from the getDependencies
+   * 2. peers from getDependencies
+   * 3. getAdditionalHostDependencies
+   * @param env
+   */
+  async getPeerDependenciesListFromEnv(env: DependenciesEnv): Promise<string[]> {
+    const envPolicy = await this.getComponentEnvPolicyFromEnv(env);
+    const peers = uniq(
+      envPolicy.peersAutoDetectPolicy.names.concat(envPolicy.variantPolicy.byLifecycleType('peer').names)
+    );
+    let additionalHostDeps: string[] = [];
+    if (env.getAdditionalHostDependencies && typeof env.getAdditionalHostDependencies === 'function') {
+      additionalHostDeps = await env.getAdditionalHostDependencies();
+    }
+    return uniq(peers.concat(additionalHostDeps));
   }
 
   /**

@@ -1,3 +1,4 @@
+import { DEFAULT_LANE } from '@teambit/lane-id';
 import chai, { expect } from 'chai';
 import path from 'path';
 import { statusWorkspaceIsCleanMsg } from '../../../src/constants';
@@ -69,7 +70,8 @@ describe('import lanes', function () {
       });
       it('.bitmap should save the remote lane', () => {
         const bitMap = helper.bitMap.read();
-        expect(bitMap[LANE_KEY]).to.deep.equal({ name: 'dev', scope: helper.scopes.remote });
+        expect(bitMap[LANE_KEY].id).to.deep.equal({ name: 'dev', scope: helper.scopes.remote });
+        expect(bitMap[LANE_KEY].exported).to.be.true;
       });
       it('bit lane should show the component in the checked out lane', () => {
         const lanes = helper.command.showOneLaneParsed('dev');
@@ -91,6 +93,18 @@ describe('import lanes', function () {
       it('should save the lane object with the same hash as the original lane', () => {
         const laneObj = helper.command.catLane('dev');
         expect(laneObj.hash).to.eq(laneHash);
+      });
+      describe('switching to main', () => {
+        before(() => {
+          helper.command.switchLocalLane('main');
+        });
+        it('should remove the lane key from the .bitmap', () => {
+          const bitMap = helper.bitMap.read();
+          expect(bitMap).to.not.have.property(LANE_KEY);
+        });
+        it('should switch successfully', () => {
+          helper.command.expectCurrentLaneToBe(DEFAULT_LANE);
+        });
       });
     });
     describe('importing the lane and checking out with a different local lane-name', () => {
@@ -114,7 +128,8 @@ describe('import lanes', function () {
       });
       it('.bitmap should save the remote lane', () => {
         const bitMap = helper.bitMap.read();
-        expect(bitMap[LANE_KEY]).to.deep.equal({ name: 'dev', scope: helper.scopes.remote });
+        expect(bitMap[LANE_KEY].id).to.deep.equal({ name: 'dev', scope: helper.scopes.remote });
+        expect(bitMap[LANE_KEY].exported).to.be.true;
       });
     });
   });

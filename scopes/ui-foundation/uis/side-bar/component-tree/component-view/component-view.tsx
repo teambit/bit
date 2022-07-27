@@ -1,11 +1,12 @@
 import { ComponentTreeSlot } from '@teambit/component-tree';
-import { NavLink } from '@teambit/base-ui.routing.nav-link';
+import { Link } from '@teambit/base-react.navigation.link';
 import { EnvIcon } from '@teambit/envs.ui.env-icon';
 import { DeprecationIcon } from '@teambit/component.ui.deprecation-icon';
 import classNames from 'classnames';
+import { ComponentID, ComponentModel } from '@teambit/component';
+import { ComponentUrl } from '@teambit/component.modules.component-url';
 import React, { useCallback, useContext } from 'react';
 import { Tooltip } from '@teambit/design.ui.tooltip';
-import { ComponentModel } from '@teambit/component';
 import { TreeContext } from '@teambit/base-ui.graph.tree.tree-context';
 import { indentClass } from '@teambit/base-ui.graph.tree.indent';
 import { TreeNodeProps } from '@teambit/base-ui.graph.tree.recursive-tree';
@@ -32,16 +33,26 @@ export function ComponentView(props: ComponentViewProps<PayloadType>) {
 
   if (!(component instanceof ComponentModel)) return null;
 
+  const envId = ComponentID.fromString(component.environment?.id as string);
+
   const envTooltip = (
-    <>
+    <Link
+      className={styles.envLink}
+      href={ComponentUrl.toUrl(envId, { includeVersion: true })}
+      external={true}
+      onClick={(event) => {
+        // do not trigger component selection
+        event.stopPropagation();
+      }}
+    >
       <div className={styles.componentEnvTitle}>Environment</div>
       <div>{component.environment?.id}</div>
-    </>
+    </Link>
   );
 
   return (
-    <NavLink
-      href={`/${component.id.fullName}`}
+    <Link
+      href={`${component.id.fullName}`}
       className={classNames(indentClass, styles.component)}
       activeClassName={styles.active}
       onClick={handleClick}
@@ -60,6 +71,6 @@ export function ComponentView(props: ComponentViewProps<PayloadType>) {
         {props.treeNodeSlot &&
           props.treeNodeSlot.toArray().map(([id, treeNode]) => <treeNode.widget key={id} component={component} />)}
       </div>
-    </NavLink>
+    </Link>
   );
 }

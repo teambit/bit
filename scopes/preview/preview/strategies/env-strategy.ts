@@ -7,10 +7,14 @@ import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 import { Capsule } from '@teambit/isolator';
 import { ComponentResult } from '@teambit/builder';
 import { BundlerContext, BundlerHtmlConfig, BundlerResult } from '@teambit/bundler';
+import { DependencyResolverMain } from '@teambit/dependency-resolver';
+import { PkgMain } from '@teambit/pkg';
 import type { BundlingStrategy, ComputeTargetsContext } from '../bundling-strategy';
 import { PreviewDefinition } from '../preview-definition';
 import { PreviewMain } from '../preview.main.runtime';
-import { html } from '../webpack';
+import { html } from '../bundler/html-template';
+
+export const ENV_STRATEGY_ARTIFACT_NAME = 'preview';
 
 /**
  * bundles all components in a given env into the same bundle.
@@ -18,12 +22,13 @@ import { html } from '../webpack';
 export class EnvBundlingStrategy implements BundlingStrategy {
   name = 'env';
 
-  constructor(private preview: PreviewMain) {}
+  constructor(private preview: PreviewMain, private pkg: PkgMain, private dependencyResolver: DependencyResolverMain) {}
 
   async computeTargets(context: ComputeTargetsContext, previewDefs: PreviewDefinition[]) {
     const outputPath = this.getOutputPath(context);
     if (!existsSync(outputPath)) mkdirpSync(outputPath);
     const htmlConfig = this.generateHtmlConfig({ dev: context.dev });
+    const peers = await this.dependencyResolver.getPeerDependenciesListFromEnv(context.env);
 
     return [
       {
@@ -31,6 +36,10 @@ export class EnvBundlingStrategy implements BundlingStrategy {
         html: [htmlConfig],
         components: context.components,
         outputPath,
+        /* It's a path to the root of the host component. */
+        // hostRootDir, handle this
+        hostDependencies: peers,
+        aliasHostDependencies: true,
       },
     ];
   }
@@ -73,7 +82,7 @@ export class EnvBundlingStrategy implements BundlingStrategy {
 
     return [
       {
-        name: 'preview',
+        name: ENV_STRATEGY_ARTIFACT_NAME,
         globPatterns: ['public/**'],
         rootDir,
         context: env,

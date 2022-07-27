@@ -28,7 +28,6 @@ The following describes the final implementation, which differs from the specifi
 ## Remaining tasks
 
 - [ ] Remove components from a remote lane.
-- [ ] Bit import with no args. When bitmap has a remote lane, should import the lane.
 - [ ] Tag dependencies to include them in a lane.
 - [ ] Test bit-fetch components
 - [ ] Rename lanes: enable importing a lane after rename.
@@ -87,6 +86,12 @@ Summary of when/what lanes data is saved per command:
 - On `bit import <id>` we do the merge.
 - in case the merge wasn't done and the user is trying to export, the remote blocks is as it finds out that its head doesn't exist on the incoming component.
 - in case the snap-merge failed due to a conflict, it saves the conflict and heads data into `.bit/unmerged.json` file.
+
+### Merge components
+
+- to merge an entire lane, use `bit lane merge`.
+- to get updates from a remote lane, run `bit import`, and then `bit checkout head`. alternatively, run `bit merge <component-id>` in one command.
+- to merge an individual component from a lane to main, run `bit lane merge <lane> --pattern <component-id>` when on main.
 
 ### Useful APIs
 

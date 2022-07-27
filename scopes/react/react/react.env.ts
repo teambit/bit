@@ -27,6 +27,7 @@ import { WebpackConfigTransformer, WebpackMain } from '@teambit/webpack';
 import { Workspace } from '@teambit/workspace';
 import { ESLintMain, EslintConfigTransformer } from '@teambit/eslint';
 import { PrettierConfigTransformer, PrettierMain } from '@teambit/prettier';
+import { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { Linter, LinterContext } from '@teambit/linter';
 import { Formatter, FormatterContext } from '@teambit/formatter';
 import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
@@ -34,12 +35,15 @@ import type { ComponentMeta } from '@teambit/react.ui.highlighter.component-meta
 import { SchemaExtractor } from '@teambit/schema';
 import { join, resolve } from 'path';
 import { outputFileSync } from 'fs-extra';
-// Makes sure the @teambit/react.ui.docs-app is a dependency
-// TODO: remove this import once we can set policy from component to component with workspace version. Then set it via the component.json
+import { Logger } from '@teambit/logger';
+// ensure reactEnv depends on compositions-app
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { ReactMainConfig } from './react.main.runtime';
+import { CompositionsApp } from '@teambit/react.ui.compositions-app';
+// ensure reactEnv depends on docs-app
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import DocsApps from '@teambit/react.ui.docs-app';
+import type { ReactMainConfig } from './react.main.runtime';
 import { ReactAspect } from './react.aspect';
-
 // webpack configs for both components and envs
 import basePreviewConfigFactory from './webpack/webpack.config.base';
 import basePreviewProdConfigFactory from './webpack/webpack.config.base.prod';
@@ -47,11 +51,11 @@ import basePreviewProdConfigFactory from './webpack/webpack.config.base.prod';
 // webpack configs for envs only
 // import devPreviewConfigFactory from './webpack/webpack.config.preview.dev';
 import envPreviewDevConfigFactory from './webpack/webpack.config.env.dev';
+import { templateWebpackConfigFactory } from './webpack/webpack.config.env.template';
 
 // webpack configs for components only
 import componentPreviewProdConfigFactory from './webpack/webpack.config.component.prod';
 import componentPreviewDevConfigFactory from './webpack/webpack.config.component.dev';
-import { generateAddAliasesFromPeersTransformer } from './webpack/transformers';
 
 export const ReactEnvType = 'react';
 const defaultTsConfig = require('./typescript/tsconfig.json');
@@ -113,6 +117,10 @@ export class ReactEnv
     private eslint: ESLintMain,
 
     private prettier: PrettierMain,
+
+    private dependencyResolver: DependencyResolverMain,
+
+    private logger: Logger,
 
     private compilerAspectId: string
   ) {}
@@ -280,15 +288,13 @@ export class ReactEnv
     const baseConfig = basePreviewConfigFactory(false);
     const envDevConfig = envPreviewDevConfigFactory(context.id);
     const componentDevConfig = componentPreviewDevConfigFactory(this.workspace.path, context.id);
-    const peers = this.getAllHostDependencies();
-    const peerAliasesTransformer = generateAddAliasesFromPeersTransformer(peers);
 
     const defaultTransformer: WebpackConfigTransformer = (configMutator) => {
       const merged = configMutator.merge([baseConfig, envDevConfig, componentDevConfig]);
       return merged;
     };
 
-    return this.webpack.createDevServer(context, [defaultTransformer, peerAliasesTransformer, ...transformers]);
+    return this.webpack.createDevServer(context, [defaultTransformer, ...transformers]);
   }
 
   async getBundler(context: BundlerContext, transformers: WebpackConfigTransformer[] = []): Promise<Bundler> {
@@ -299,17 +305,15 @@ export class ReactEnv
     context: BundlerContext,
     transformers: WebpackConfigTransformer[] = []
   ): Promise<Bundler> {
-    const peers = this.getAllHostDependencies();
-    const peerAliasesTransformer = generateAddAliasesFromPeersTransformer(peers);
     const baseConfig = basePreviewConfigFactory(!context.development);
-    const baseProdConfig = basePreviewProdConfigFactory(Boolean(context.externalizePeer), peers, context.development);
+    const baseProdConfig = basePreviewProdConfigFactory(context.development);
     const componentProdConfig = componentPreviewProdConfigFactory();
 
     const defaultTransformer: WebpackConfigTransformer = (configMutator) => {
       const merged = configMutator.merge([baseConfig, baseProdConfig, componentProdConfig]);
       return merged;
     };
-    const mergedTransformers = [defaultTransformer, peerAliasesTransformer, ...transformers];
+    const mergedTransformers = [defaultTransformer, ...transformers];
     return this.createWebpackBundler(context, mergedTransformers);
   }
 
@@ -317,16 +321,15 @@ export class ReactEnv
     context: BundlerContext,
     transformers: WebpackConfigTransformer[] = []
   ): Promise<Bundler> {
-    const peers = this.getAllHostDependencies();
-    const peerAliasesTransformer = generateAddAliasesFromPeersTransformer(peers);
     const baseConfig = basePreviewConfigFactory(!context.development);
-    const baseProdConfig = basePreviewProdConfigFactory(Boolean(context.externalizePeer), peers, context.development);
+    const baseProdConfig = basePreviewProdConfigFactory(context.development);
+    const templateConfig = templateWebpackConfigFactory();
 
     const defaultTransformer: WebpackConfigTransformer = (configMutator) => {
-      const merged = configMutator.merge([baseConfig, baseProdConfig]);
+      const merged = configMutator.merge([baseConfig, baseProdConfig, templateConfig]);
       return merged;
     };
-    const mergedTransformers = [defaultTransformer, peerAliasesTransformer, ...transformers];
+    const mergedTransformers = [defaultTransformer, ...transformers];
     return this.createWebpackBundler(context, mergedTransformers);
   }
 
@@ -340,15 +343,12 @@ export class ReactEnv
   /**
    * Get the peers configured by the env on the components + the host deps configured by the env
    */
-  getAllHostDependencies() {
-    const envComponentPeers = Object.keys(this.getDependencies().peerDependencies || {}) || [];
-    const additionalHostDeps = this.getAdditionalHostDependencies() || [];
-    const peers = envComponentPeers.concat(additionalHostDeps);
-    return peers;
+  getPeerDependenciesList() {
+    return this.dependencyResolver.getPeerDependenciesListFromEnv(this);
   }
 
   getAdditionalHostDependencies(): string[] {
-    return ['@teambit/mdx.ui.mdx-scope-context', '@mdx-js/react'];
+    return ['@teambit/mdx.ui.mdx-scope-context', '@mdx-js/react', 'react'];
   }
 
   /**
@@ -361,10 +361,10 @@ export class ReactEnv
   icon = 'https://static.bit.dev/extensions-icons/react.svg';
 
   /**
-   * returns a paths to a function which mounts a given component to DOM
+   * returns the path to the compositions template
    */
   getMounter() {
-    return require.resolve('./mount');
+    return require.resolve('@teambit/react.ui.compositions-app');
   }
 
   getPreviewConfig() {

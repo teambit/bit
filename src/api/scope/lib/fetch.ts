@@ -1,7 +1,7 @@
 import { Readable } from 'stream';
 import { LaneId } from '@teambit/lane-id';
 import { BitIds } from '../../../bit-id';
-import { POST_SEND_OBJECTS, PRE_SEND_OBJECTS } from '../../../constants';
+import { LATEST_BIT_VERSION, POST_SEND_OBJECTS, PRE_SEND_OBJECTS } from '../../../constants';
 import HooksManager from '../../../hooks';
 import logger from '../../../logger/logger';
 import { loadScope, Scope } from '../../../scope';
@@ -13,13 +13,17 @@ import {
   ObjectsReadableGenerator,
 } from '../../../scope/objects/objects-readable-generator';
 import { LaneNotFound } from './exceptions/lane-not-found';
+import { Lane } from '../../../scope/models';
 
 export type FETCH_TYPE = 'component' | 'lane' | 'object' | 'component-delta';
 export type FETCH_OPTIONS = {
   type: FETCH_TYPE;
-  withoutDependencies: boolean;
-  includeArtifacts: boolean;
+  withoutDependencies: boolean; // default - true
+  includeArtifacts: boolean; // default - false
   allowExternal: boolean; // allow fetching components of other scope from this scope. needed for lanes.
+  laneId?: string; // relevant for "component-delta" type to know where to find the component latest
+  onlyIfBuilt?: boolean; // relevant when fetching with deps. if true, and the component wasn't built successfully, don't fetch it.
+  ignoreMissingHead?: boolean; // if asking for id without version and the component has no head, don't throw, just ignore
 };
 
 const HooksManagerInstance = HooksManager.getInstance();
@@ -50,12 +54,16 @@ export default async function fetch(
   switch (fetchOptions.type) {
     case 'component': {
       const bitIds: BitIds = BitIds.deserialize(ids);
-      const { withoutDependencies, includeArtifacts, allowExternal } = fetchOptions;
+      const { withoutDependencies, includeArtifacts, allowExternal, onlyIfBuilt } = fetchOptions;
       const collectParents = !withoutDependencies;
       const scopeComponentsImporter = ScopeComponentsImporter.getInstance(scope);
       const getComponentsWithOptions = async (): Promise<ComponentWithCollectOptions[]> => {
         if (withoutDependencies) {
-          const componentsVersions = await scopeComponentsImporter.fetchWithoutDeps(bitIds, allowExternal);
+          const componentsVersions = await scopeComponentsImporter.fetchWithoutDeps(
+            bitIds,
+            allowExternal,
+            fetchOptions.ignoreMissingHead
+          );
           return componentsVersions.map((compVersion) => ({
             component: compVersion.component,
             version: compVersion.version,
@@ -63,7 +71,7 @@ export default async function fetch(
             collectParents,
           }));
         }
-        const versionsDependencies = await scopeComponentsImporter.fetchWithDeps(bitIds, allowExternal);
+        const versionsDependencies = await scopeComponentsImporter.fetchWithDeps(bitIds, allowExternal, onlyIfBuilt);
         return versionsDependencies
           .map((versionDep) => [
             {
@@ -89,10 +97,13 @@ export default async function fetch(
     case 'component-delta': {
       const bitIdsWithHashToStop: BitIds = BitIds.deserialize(ids);
       const scopeComponentsImporter = ScopeComponentsImporter.getInstance(scope);
-      const bitIdsLatest = bitIdsWithHashToStop.toVersionLatest();
+      const laneId = fetchOptions.laneId ? LaneId.parse(fetchOptions.laneId) : null;
+      const lane = laneId ? await scope.loadLane(laneId) : null;
+      const bitIdsLatest = bitIdsToLatest(bitIdsWithHashToStop, lane);
       const importedComponents = await scopeComponentsImporter.fetchWithoutDeps(
         bitIdsLatest,
-        fetchOptions.allowExternal
+        fetchOptions.allowExternal,
+        fetchOptions.ignoreMissingHead
       );
       const componentsWithOptions: ComponentWithCollectOptions[] = importedComponents.map((compVersion) => {
         const hashToStop = bitIdsWithHashToStop.searchWithoutVersion(compVersion.id)?.version;
@@ -150,4 +161,17 @@ export default async function fetch(
   }
   logger.debug('scope.fetch returns readable');
   return objectsReadableGenerator.readable;
+}
+
+function bitIdsToLatest(bitIds: BitIds, lane: Lane | null) {
+  if (!lane) {
+    return bitIds.toVersionLatest();
+  }
+  const laneIds = lane.toBitIds();
+  return BitIds.fromArray(
+    bitIds.map((bitId) => {
+      const inLane = laneIds.searchWithoutVersion(bitId);
+      return inLane || bitId.changeVersion(LATEST_BIT_VERSION);
+    })
+  );
 }

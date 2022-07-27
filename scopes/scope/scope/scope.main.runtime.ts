@@ -1,5 +1,6 @@
 import mapSeries from 'p-map-series';
 import semver from 'semver';
+import multimatch from 'multimatch';
 import type { AspectLoaderMain } from '@teambit/aspect-loader';
 import { TaskResultsList, BuilderData, BuilderAspect } from '@teambit/builder';
 import { readdirSync, existsSync } from 'fs-extra';
@@ -31,7 +32,6 @@ import { ExportPersist, PostSign } from '@teambit/legacy/dist/scope/actions';
 import { getScopeRemotes } from '@teambit/legacy/dist/scope/scope-remotes';
 import { Remotes } from '@teambit/legacy/dist/remotes';
 import { isMatchNamespacePatternItem } from '@teambit/workspace.modules.match-pattern';
-import { ConfigMain, ConfigAspect } from '@teambit/config';
 import { Scope } from '@teambit/legacy/dist/scope';
 import { Types } from '@teambit/legacy/dist/scope/object-registrar';
 import { FETCH_OPTIONS } from '@teambit/legacy/dist/api/scope/lib/fetch';
@@ -39,6 +39,7 @@ import { ObjectList } from '@teambit/legacy/dist/scope/objects/object-list';
 import { Http, DEFAULT_AUTH_TYPE, AuthData, getAuthDataFromHeader } from '@teambit/legacy/dist/scope/network/http/http';
 import { buildOneGraphForComponentsUsingScope } from '@teambit/legacy/dist/scope/graph/components-graph';
 import { remove } from '@teambit/legacy/dist/api/scope';
+import { BitError } from '@teambit/bit-error';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { resumeExport } from '@teambit/legacy/dist/scope/component-ops/export-scope-components';
 import { ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config';
@@ -222,7 +223,7 @@ export class ScopeMain implements ComponentFactory {
     };
 
     const idsToLoad = await getAspectsByPreviouslyUsedVersion();
-    await host.loadAspects(idsToLoad, false);
+    await host.loadAspects(idsToLoad, false, 'scope.reloadAspectsWithNewVersion');
   }
 
   getManyByLegacy(components: ConsumerComponent[]): Promise<Component[]> {
@@ -366,10 +367,10 @@ export class ScopeMain implements ComponentFactory {
 
   private localAspects: string[] = [];
 
-  async loadAspects(ids: string[], throwOnError = false, neededFor?: ComponentID): Promise<string[]> {
+  async loadAspects(ids: string[], throwOnError = false, neededFor?: string): Promise<string[]> {
     this.logger.info(`loadAspects, loading ${ids.length} aspects.
 ids: ${ids.join(', ')}
-needed-for: ${neededFor?.toString() || '<unknown>'}`);
+needed-for: ${neededFor || '<unknown>'}`);
     const grouped = await this.groupAspectIdsByEnvOfTheList(ids);
     const envsManifestsIds = await this.getManifestsAndLoadAspects(grouped.envs, throwOnError);
     const otherManifestsIds = await this.getManifestsAndLoadAspects(grouped.other, throwOnError);
@@ -409,6 +410,7 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
     } = {}
   ): Promise<ManifestOrAspect[]> {
     ids = uniq(ids);
+    this.logger.debug(`getManifestsGraphRecursively, ids:\n${ids.join('\n')}`);
     const nonVisitedId = ids.filter((id) => !visited.includes(id));
     if (!nonVisitedId.length) {
       return [];
@@ -598,6 +600,7 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
         `failed loading aspects from capsules due to MODULE_NOT_FOUND error, re-creating the capsules and trying again`
       );
       const resolvedAspectsAgain = await this.getResolvedAspects(components, {
+        ...opts,
         skipIfExists: false,
       });
       const manifestAgain = await requireWithCatch(resolvedAspectsAgain);
@@ -691,6 +694,7 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
       useCache = true,
       throwIfNotExist = false,
       reFetchUnBuiltVersion = true,
+      lane,
     }: {
       /**
        * if the component exists locally, don't go to the server to search for updates.
@@ -702,6 +706,11 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
        * whether the version was already built there.
        */
       reFetchUnBuiltVersion?: boolean;
+      /**
+       * if the component is on a lane, provide the lane object. the component will be fetched from the lane-scope and
+       * not from the component-scope.
+       */
+      lane?: Lane;
     } = {}
   ): Promise<Component[]> {
     const legacyIds = ids.map((id) => {
@@ -713,7 +722,13 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
     const withoutOwnScopeAndLocals = legacyIds.filter((id) => {
       return id.scope !== this.name && id.hasScope();
     });
-    await this.legacyScope.import(ComponentsIds.fromArray(withoutOwnScopeAndLocals), useCache, reFetchUnBuiltVersion);
+    const lanes = lane ? [lane] : undefined;
+    await this.legacyScope.import(
+      ComponentsIds.fromArray(withoutOwnScopeAndLocals),
+      useCache,
+      reFetchUnBuiltVersion,
+      lanes
+    );
 
     return this.getMany(ids, throwIfNotExist);
   }
@@ -731,6 +746,13 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
    */
   async getRemoteComponent(id: ComponentID): Promise<Component> {
     return this.componentLoader.getRemoteComponent(id);
+  }
+
+  /**
+   * get a component from a remote without importing it
+   */
+  async getManyRemoteComponents(ids: ComponentID[]): Promise<Component[]> {
+    return this.componentLoader.getManyRemoteComponents(ids);
   }
 
   /**
@@ -879,7 +901,7 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
   }
 
   /**
-   * load components into the scope through a variants pattern.
+   * @deprecated use `this.idsByPattern` instead for consistency, which supports also negation and list of patterns.
    */
   async byPattern(patterns: string[], scope = '**'): Promise<Component[]> {
     const patternsWithScope = patterns.map((pattern) => `${scope}/${pattern || '**'}`);
@@ -888,6 +910,36 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
 
     const components = await this.getMany(ids);
     return components;
+  }
+
+  /**
+   * get component-ids matching the given pattern. a pattern can have multiple patterns separated by a comma.
+   * it uses multimatch (https://www.npmjs.com/package/multimatch) package for the matching algorithm, which supports
+   * (among others) negate character "!" to exclude ids. See the package page for more supported characters.
+   */
+  async idsByPattern(pattern: string, throwForNoMatch = true): Promise<ComponentID[]> {
+    if (!pattern.includes('*') && !pattern.includes(',')) {
+      // if it's not a pattern but just id, resolve it without multimatch to support specifying id without scope-name
+      const id = await this.resolveComponentId(pattern);
+      const exists = await this.hasId(id, true);
+      if (exists) return [id];
+      if (throwForNoMatch) throw new BitError(`unable to find "${pattern}" in the scope`);
+      return [];
+    }
+    const ids = await this.listIds(true);
+    return this.filterIdsFromPoolIdsByPattern(pattern, ids, throwForNoMatch);
+  }
+
+  // todo: move this to somewhere else (where?)
+  filterIdsFromPoolIdsByPattern(pattern: string, ids: ComponentID[], throwForNoMatch = true) {
+    const patterns = pattern.split(',').map((p) => p.trim());
+    // check also as legacyId.toString, as it doesn't have the defaultScope
+    const idsToCheck = (id: ComponentID) => [id.toStringWithoutVersion(), id._legacy.toStringWithoutVersion()];
+    const idsFiltered = ids.filter((id) => multimatch(idsToCheck(id), patterns).length);
+    if (throwForNoMatch && !idsFiltered.length) {
+      throw new BitError(`unable to find any matching for "${pattern}" pattern`);
+    }
+    return idsFiltered;
   }
 
   async getExactVersionBySemverRange(id: ComponentID, range: string): Promise<string | undefined> {
@@ -911,6 +963,16 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
   }
 
   /**
+   * list all component ids from a remote-scope
+   */
+  async listRemoteScope(scopeName: string): Promise<ComponentID[]> {
+    const remotes = await this._legacyRemotes();
+    const remote = await remotes.resolve(scopeName, this.legacyScope);
+    const results = await remote.list();
+    return results.map(({ id }) => ComponentID.fromLegacy(id));
+  }
+
+  /**
    * get a component and load its aspect
    */
   async load(id: ComponentID): Promise<Component | undefined> {
@@ -921,14 +983,14 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
     if (this.aspectLoader.isAspectComponent(component)) {
       aspectIds.push(component.id.toString());
     }
-    await this.loadAspects(aspectIds, true, id);
+    await this.loadAspects(aspectIds, true, id.toString());
 
     return component;
   }
 
   async loadComponentsAspect(component: Component) {
     const aspectIds = component.state.aspects.ids;
-    await this.loadAspects(aspectIds, true, component.id);
+    await this.loadAspects(aspectIds, true, component.id.toString());
   }
 
   async isModified(): Promise<boolean> {
@@ -962,7 +1024,6 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
     ExpressAspect,
     LoggerAspect,
     EnvsAspect,
-    ConfigAspect,
   ];
 
   static defaultConfig: ScopeConfig = {
@@ -970,7 +1031,7 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
   };
 
   static async provider(
-    [componentExt, ui, graphql, cli, isolator, aspectLoader, express, loggerMain, envs, configMain]: [
+    [componentExt, ui, graphql, cli, isolator, aspectLoader, express, loggerMain, envs]: [
       ComponentMain,
       UiMain,
       GraphqlMain,
@@ -979,8 +1040,7 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
       AspectLoaderMain,
       ExpressMain,
       LoggerMain,
-      EnvsMain,
-      ConfigMain
+      EnvsMain
     ],
     config: ScopeConfig,
     [tagSlot, postPutSlot, postDeleteSlot, postExportSlot, postObjectsPersistSlot, preFetchObjectsSlot]: [
@@ -1018,7 +1078,7 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
     );
     cli.registerOnStart(async (hasWorkspace: boolean) => {
       if (hasWorkspace) return;
-      await scope.loadAspects(aspectLoader.getNotLoadedConfiguredExtensions());
+      await scope.loadAspects(aspectLoader.getNotLoadedConfiguredExtensions(), undefined, 'scope.cli.registerOnStart');
     });
     cli.register(new ScopeCmd());
 
@@ -1066,16 +1126,6 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
     PostSign.onPutHook = onPutHook;
     Scope.onPostExport = onPostExportHook;
     Repository.onPostObjectsPersist = onPostObjectsPersistHook;
-
-    configMain?.registerPreAddingAspectsSlot?.(async (compIds) => {
-      const loadedIds = await scope.loadAspects(compIds, true);
-      // find the full component-ids including versions in the load-aspects results.
-      // we need it for bit-use to be added to the config file.
-      return compIds.map((compId) => {
-        const loaded = loadedIds.find((loadedId) => loadedId.startsWith(`${compId}@`));
-        return loaded || compId;
-      });
-    });
 
     express.register([
       new PutRoute(scope, postPutSlot),

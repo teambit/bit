@@ -1,5 +1,5 @@
 import dagre, { graphlib } from 'dagre';
-import { GraphModel } from '../query';
+import { EdgeModel, GraphModel, NodeModel } from '../query';
 
 const NODE_WIDTH = 260;
 const NODE_HEIGHT = 90;
@@ -9,7 +9,7 @@ const BOTTOM_TO_TOP = 'BT';
 /**
  * calculate the specific location of each node in the graph
  */
-export function calcLayout(graph: GraphModel) {
+export function calcLayout(graph: GraphModel<NodeModel, EdgeModel>) {
   const g = new graphlib.Graph();
   g.setGraph({ rankdir: BOTTOM_TO_TOP });
   g.setDefaultEdgeLabel(() => ({}));

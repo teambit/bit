@@ -126,11 +126,16 @@ export class PnpmPackageManager implements PackageManager {
       proxyConfig,
       networkConfig,
       {
+        engineStrict: installOptions.engineStrict ?? config.engineStrict,
         nodeLinker: installOptions.nodeLinker,
+        nodeVersion: installOptions.nodeVersion ?? config.nodeVersion,
         overrides: installOptions.overrides,
         hoistPattern: config.hoistPattern,
         publicHoistPattern: ['*eslint*', '@prettier/plugin-*', '*prettier-plugin-*'],
         packageImportMethod: installOptions.packageImportMethod ?? config.packageImportMethod,
+        peerDependencyRules: installOptions.peerDependencyRules,
+        sideEffectsCacheRead: installOptions.sideEffectsCache ?? true,
+        sideEffectsCacheWrite: installOptions.sideEffectsCache ?? true,
       },
       this.logger
     );
@@ -208,13 +213,21 @@ export class PnpmPackageManager implements PackageManager {
 
   async getNetworkConfig?(): Promise<PackageManagerNetworkConfig> {
     const { config } = await this.readConfig();
+    // We need to use config.rawConfig as it will only contain the settings defined by the user.
+    // config contains default values of the settings when they are not defined by the user.
     return {
-      maxSockets: config.maxSockets,
-      networkConcurrency: config.networkConcurrency,
-      fetchRetries: config.fetchRetries,
-      fetchTimeout: config.fetchTimeout,
-      fetchRetryMaxtimeout: config.fetchRetryMaxtimeout,
-      fetchRetryMintimeout: config.fetchRetryMintimeout,
+      maxSockets: config.rawConfig['max-sockets'],
+      networkConcurrency: config.rawConfig['network-concurrency'],
+      fetchRetries: config.rawConfig['fetch-retries'],
+      fetchTimeout: config.rawConfig['fetch-timeout'],
+      fetchRetryMaxtimeout: config.rawConfig['fetch-retry-maxtimeout'],
+      fetchRetryMintimeout: config.rawConfig['fetch-retry-mintimeout'],
+      strictSSL: config.rawConfig['strict-ssl'],
+      // These settings don't have default value, so it is safe to read them from config
+      // ca is automatically populated from the content of the file specified by cafile.
+      ca: config.ca,
+      cert: config.cert,
+      key: config.key,
     };
   }
 

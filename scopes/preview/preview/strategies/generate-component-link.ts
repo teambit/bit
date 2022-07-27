@@ -6,14 +6,26 @@ export type ModuleVar = {
 };
 
 export function generateComponentLink(modules: ModuleVar[]): string {
-  return `${modules
-    .map((moduleVar) => {
-      return `export const ${moduleVar.prefix} = [${moduleVar.paths
-        .map((path) => `require('${toWindowsCompatiblePath(path)}')`)
-        .join(', ')}]`;
+  const links = modules.map(({ prefix, paths }) => ({
+    name: prefix,
+    entries: paths.map((path, idx) => ({
+      path: toWindowsCompatiblePath(path),
+      linkName: `${prefix}_${idx}`,
+    })),
+  }));
 
-      // return `export { * as ${moduleVar.prefix} } from '${toWindowsCompatiblePath(moduleVar.paths)}'`;
-    })
-    .join('\n')}
+  // import per preview file
+  const importStr: string = links
+    .map(({ entries }) => entries.map(({ path, linkName }) => `import * as ${linkName} from '${path}'`).join(';\n'))
+    .join(';\n');
+
+  // export files group per preview
+  const exportsString: string = links
+    .map(({ name, entries }) => `export const ${name} = [${entries.map((entry) => entry.linkName).join(', ')}]`)
+    .join(';\n');
+
+  return `${importStr};
+
+${exportsString};
 `;
 }

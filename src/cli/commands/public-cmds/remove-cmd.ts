@@ -12,17 +12,23 @@ import loader from '../../loader';
 import paintRemoved from '../../templates/remove-template';
 
 export default class Remove implements LegacyCommand {
-  name = 'remove <ids...>';
-  shortDescription = 'remove component(s) from your working area, or a remote scope';
+  name = 'remove <component-ids...>';
+  description = 'remove component(s) from the workspace, or a remote scope';
+  arguments = [
+    {
+      name: 'component-ids...',
+      description:
+        'a list of component names or IDs, separated by spaces (use component IDs to remove components from a remote scope)',
+    },
+  ];
   group: Group = 'collaborate';
-  description = `remove a component (local/remote)
-  https://${BASE_DOCS_DOMAIN}/components/removing-components
-  ${WILDCARD_HELP('remove')}`;
+  extendedDescription = `https://${BASE_DOCS_DOMAIN}/components/removing-components
+${WILDCARD_HELP('remove')}`;
   skipWorkspace = true;
   alias = 'rm';
   opts = [
     ['r', 'remote', 'remove a component from a remote scope'],
-    ['t', 'track', 'keep tracking component (default = false)'],
+    ['t', 'track', 'keep tracking component in .bitmap (default = false), helps transform a tagged-component to new'],
     ['d', 'delete-files', 'DEPRECATED (this is now the default). delete local component files'],
     ['', 'keep-files', 'keep component files (just untrack the component)'],
     [

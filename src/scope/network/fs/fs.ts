@@ -1,4 +1,4 @@
-import { deprecate, fetch, put, remove, undeprecate } from '../../../api/scope';
+import { fetch, put, remove } from '../../../api/scope';
 import { action } from '../../../api/scope/lib/action';
 import { FETCH_OPTIONS } from '../../../api/scope/lib/fetch';
 import { PushOptions } from '../../../api/scope/lib/put';
@@ -53,16 +53,6 @@ export default class Fs implements Network {
   ): Promise<ComponentObjects[]> {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return remove({ path: this.scopePath, ids, force, lanes: idsAreLanes });
-  }
-
-  deprecateMany(ids: string[]): Promise<ComponentObjects[]> {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return deprecate({ path: this.scopePath, ids });
-  }
-
-  undeprecateMany(ids: string[]): Promise<ComponentObjects[]> {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return undeprecate({ path: this.scopePath, ids });
   }
 
   async fetch(ids: string[], fetchOptions: FETCH_OPTIONS): Promise<ObjectItemsStream> {

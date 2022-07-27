@@ -32,6 +32,10 @@ export default class DependencyGraph {
     this.scopeName = scopeName;
   }
 
+  hasCircular(): boolean {
+    return !GraphLib.alg.isAcyclic(this.graph);
+  }
+
   static async loadAllVersions(scope: Scope): Promise<DependencyGraph> {
     const graph = await DependencyGraph.buildGraphWithAllVersions(scope);
     return new DependencyGraph(graph);
@@ -242,6 +246,16 @@ export default class DependencyGraph {
     return dependencies;
   }
 
+  getDependenciesAsObjectTree(id: string): Record<string, any> {
+    const label = id;
+    const children = this.graph.outEdges(id);
+    if (!children || children.length === 0) {
+      return { label };
+    }
+    const nodes = children.map((child) => this.getDependenciesAsObjectTree(child.w));
+    return { label, nodes };
+  }
+
   getDependentsInfo(id: BitId): DependenciesInfo[] {
     const idWithVersion = this._getIdWithLatestVersion(id);
     const edgeFunc = (v) => this.graph.inEdges(v);
@@ -269,7 +283,7 @@ export default class DependencyGraph {
 
   getDependentsForAllVersions(id: BitId): BitIds {
     const allBitIds = this.graph.nodes().map((idStr) => this.graph.node(idStr));
-    const idWithAllVersions = BitIds.fromArray(allBitIds).filterWithoutVersion(id);
+    const idWithAllVersions = allBitIds.filter((bitId) => bitId.hasSameName(id) && bitId.hasSameScope(id));
     const dependentsIds = idWithAllVersions
       .map((idWithVer) => this.getDependentsInfo(idWithVer))
       .flat()

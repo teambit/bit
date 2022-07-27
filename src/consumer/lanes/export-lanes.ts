@@ -3,7 +3,6 @@ import { BitIds } from '../../bit-id';
 import loader from '../../cli/loader';
 import { BEFORE_LOADING_COMPONENTS } from '../../cli/loader/loader-messages';
 import { Lane } from '../../scope/models';
-import WorkspaceLane from '../bit-map/workspace-lane';
 import ComponentsList from '../component/components-list';
 
 export async function updateLanesAfterExport(consumer: Consumer, lane: Lane) {
@@ -14,12 +13,9 @@ export async function updateLanesAfterExport(consumer: Consumer, lane: Lane) {
       `updateLanesAfterExport should get called only with current lane, got ${lane.name}, current ${currentLane.name}`
     );
   }
-  const workspaceLanesToUpdate: WorkspaceLane[] = [];
-  consumer.bitMap.setRemoteLane(lane.toLaneId());
-  const workspaceLane = consumer.bitMap.workspaceLane as WorkspaceLane; // bitMap.workspaceLane is empty only when is on main
-  consumer.bitMap.updateLanesProperty(workspaceLane, lane.toLaneId());
-  workspaceLane.reset();
-  await Promise.all(workspaceLanesToUpdate.map((l) => l.write()));
+  consumer.bitMap.setCurrentLane(lane.toLaneId(), true);
+  consumer.scope.scopeJson.removeLaneFromNew(lane.name);
+  lane.isNew = false;
 }
 
 export async function getLaneCompIdsToExport(

@@ -1,4 +1,5 @@
-FROM node:12.22.0
+ARG BASE_IMAGE=node:12.22.0
+FROM $BASE_IMAGE
 RUN adduser --disabled-password --gecos '' user
 RUN chown -R user /usr/local/
 USER user

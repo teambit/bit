@@ -29,7 +29,7 @@ export default class ExtensionsHelper {
   }
 
   addExtensionToWorkspace(extName: string, extConfig = {}) {
-    this.bitJsonc.addKeyVal(this.scopes.localPath, extName, extConfig);
+    this.bitJsonc.addKeyVal(extName, extConfig);
   }
 
   addExtensionToVariant(variant: string, extName: string, extConfig = {}, replaceExisting = false) {

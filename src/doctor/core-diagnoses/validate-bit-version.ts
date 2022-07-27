@@ -1,6 +1,6 @@
 import semver from 'semver';
+import { listRemote } from '@teambit/bvm.list';
 import { getHarmonyVersion } from '../../bootstrap';
-import npmClient from '../../npm-client';
 import Diagnosis, { ExamineBareResult } from '../diagnosis';
 
 export default class ValidateBitVersion extends Diagnosis {
@@ -29,7 +29,8 @@ export default class ValidateBitVersion extends Diagnosis {
   }
 
   async _runExamine(): Promise<ExamineBareResult> {
-    const bitLatestVersion = await npmClient.getPackageLatestVersion('@teambit/bit');
+    const bitRemoteVersionOnBvm = await listRemote({ limit: 1 });
+    const bitLatestVersion = bitRemoteVersionOnBvm.entries[0].version;
     const bitCurrentVersion = getHarmonyVersion(true);
     if (bitLatestVersion) {
       if (semver.lt(bitCurrentVersion, bitLatestVersion)) {

@@ -1,4 +1,12 @@
-import React from 'react';
+import React, { ReactElement } from 'react';
+
+export type Example = {
+  title?: string;
+  description?: ReactElement;
+  scope?: { [key: string]: any };
+  jsx?: JSX.Element;
+  code: string;
+};
 
 export type Docs = {
   /**
@@ -15,4 +23,16 @@ export type Docs = {
    * array of labels.
    */
   labels: string[];
+
+  /**
+   * @deprecated
+   */
+  examples: Example[];
+};
+
+export const defaultDocs: Docs = {
+  default: () => null,
+  labels: [],
+  abstract: '',
+  examples: [],
 };

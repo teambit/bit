@@ -3,17 +3,26 @@ jest.mock('@teambit/legacy/dist/scope/network/http', () => ({
   Http: {
     // @ts-ignore
     getNetworkConfig: jest.fn(),
+    // @ts-ignore
+    getProxyConfig: jest.fn(),
   },
 }));
 
 /* eslint-disable import/first */
+import path from 'path';
 import { Http } from '@teambit/legacy/dist/scope/network/http';
 import { DependencyResolverMain } from './dependency-resolver.main.runtime';
+
+const logger = {
+  debug: () => {},
+};
 
 describe('DepenendencyResolverMain.getNetworkConfig()', () => {
   const packageManagerSlot = {
     // @ts-ignore
-    get: jest.fn(),
+    get: jest.fn(() => ({
+      getNetworkConfig: () => ({}),
+    })),
   };
   it('should return settings from global config', async () => {
     const depResolver = new DependencyResolverMain(
@@ -21,7 +30,7 @@ describe('DepenendencyResolverMain.getNetworkConfig()', () => {
       {} as any,
       {} as any,
       {} as any,
-      {} as any,
+      logger as any,
       {} as any,
       {} as any,
       {} as any,
@@ -31,7 +40,6 @@ describe('DepenendencyResolverMain.getNetworkConfig()', () => {
       {} as any,
       {} as any
     );
-    packageManagerSlot.get.mockReturnValue({});
     const globalConfig = {
       fetchTimeout: 1,
       fetchRetries: 2,
@@ -51,7 +59,7 @@ describe('DepenendencyResolverMain.getNetworkConfig()', () => {
       {} as any,
       {} as any,
       {} as any,
-      {} as any,
+      logger as any,
       {} as any,
       {} as any,
       {} as any,
@@ -87,7 +95,6 @@ describe('DepenendencyResolverMain.getNetworkConfig()', () => {
       networkConcurrency: 666,
       maxSockets: 777,
     } as any;
-    packageManagerSlot.get.mockReturnValue({});
     // @ts-ignore
     Http.getNetworkConfig.mockReturnValue(Promise.resolve({}));
     const depResolver = new DependencyResolverMain(
@@ -95,7 +102,7 @@ describe('DepenendencyResolverMain.getNetworkConfig()', () => {
       {} as any,
       {} as any,
       {} as any,
-      {} as any,
+      logger as any,
       {} as any,
       {} as any,
       {} as any,
@@ -131,7 +138,7 @@ describe('DepenendencyResolverMain.getNetworkConfig()', () => {
       {} as any,
       {} as any,
       {} as any,
-      {} as any,
+      logger as any,
       {} as any,
       {} as any,
       {} as any,
@@ -150,6 +157,35 @@ describe('DepenendencyResolverMain.getNetworkConfig()', () => {
       networkConcurrency: 666,
       maxSockets: 777,
     });
+  });
+  it('should read cafile when it is returned by the global config', async () => {
+    const depResolver = new DependencyResolverMain(
+      {} as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      { debug: jest.fn() } as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      packageManagerSlot as any,
+      {} as any,
+      {} as any,
+      {} as any
+    );
+    // @ts-ignore
+    Http.getNetworkConfig.mockReturnValue(
+      Promise.resolve({
+        cafile: path.join(__dirname, 'fixtures/cafile.txt'),
+      })
+    );
+    // @ts-ignore
+    expect((await depResolver.getNetworkConfig()).ca).toStrictEqual([
+      `-----BEGIN CERTIFICATE-----
+XXXX
+-----END CERTIFICATE-----`,
+    ]);
   });
 });
 
@@ -175,6 +211,7 @@ describe('DepenendencyResolverMain.getOutdatedPkgsFromPolicies()', () => {
           'component1-peer-dep3@latest': '2.0.0',
         }[spec],
       }),
+      getNetworkConfig: () => ({}),
     }),
   };
   const depResolver = new DependencyResolverMain(
@@ -194,6 +231,8 @@ describe('DepenendencyResolverMain.getOutdatedPkgsFromPolicies()', () => {
     {} as any,
     {} as any,
     {
+      // @ts-ignore
+      debug: jest.fn(),
       // @ts-ignore
       setStatusLine: jest.fn(),
       // @ts-ignore

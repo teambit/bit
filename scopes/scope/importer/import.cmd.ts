@@ -8,7 +8,11 @@ import {
   ImportDetails,
   ImportStatus,
 } from '@teambit/legacy/dist/consumer/component-ops/import-components';
-import { MergeOptions, MergeStrategy } from '@teambit/legacy/dist/consumer/versions-ops/merge-version/merge-version';
+import {
+  FileStatus,
+  MergeOptions,
+  MergeStrategy,
+} from '@teambit/legacy/dist/consumer/versions-ops/merge-version/merge-version';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component/consumer-component';
 import GeneralError from '@teambit/legacy/dist/error/general-error';
 import { immutableUnshift } from '@teambit/legacy/dist/utils';
@@ -16,23 +20,30 @@ import { formatPlainComponentItem } from '@teambit/legacy/dist/cli/chalk-box';
 import { Importer } from './importer';
 
 export default class ImportCmd implements Command {
-  name = 'import [ids...]';
-  shortDescription = 'import components into your current working area';
+  name = 'import [component-patterns...]';
+  description = 'import components from their remote scopes to the local workspace';
+  arguments = [
+    {
+      name: 'component-patterns...',
+      description:
+        'component IDs or component patterns (separated by space). Use patterns to import groups of components using a common scope or namespace. E.g., "utils/*" (wrap with double quotes)',
+    },
+  ];
+  extendedDescription: string;
   group = 'collaborate';
-  description: string;
   alias = '';
   options = [
-    ['p', 'path <path>', 'import components into a specific directory'],
+    ['p', 'path <path>', 'import components into a specific directory (a relative path in the workspace)'],
     [
       'o',
       'objects',
-      "import components objects only, don't write the components to the file system. This is a default behavior for import with no id",
+      'import components objects to the local scope without checkout (without writing them to the file system). This is a default behavior for import with no id argument',
     ],
     ['d', 'display-dependencies', 'display the imported dependencies'],
     ['O', 'override', 'override local changes'],
-    ['v', 'verbose', 'showing verbose output for inspection'],
+    ['v', 'verbose', 'show verbose output for inspection'],
     ['j', 'json', 'return the output as JSON'],
-    ['', 'conf', 'write the configuration file (component.json) of the component (harmony components only)'],
+    ['', 'conf', 'write the configuration file (component.json) of the component'],
     ['', 'skip-npm-install', 'DEPRECATED. use "--skip-dependency-installation" instead'],
     ['', 'skip-dependency-installation', 'do not install packages of the imported components'],
     [
@@ -41,11 +52,15 @@ export default class ImportCmd implements Command {
       'merge local changes with the imported version. strategy should be "theirs", "ours" or "manual"',
     ],
     ['', 'dependencies', 'EXPERIMENTAL. import all dependencies and write them to the workspace'],
-    ['', 'dependents', 'EXPERIMENTAL. import component dependents to allow auto-tag updating them upon tag'],
     [
       '',
-      'skip-lane',
-      'EXPERIMENTAL. when checked out to a lane, do not import the component into the lane, save it on main',
+      'dependents',
+      "EXPERIMENTAL. import the components' dependents. this enables changes to propagate from (modified) components to their dependents",
+    ],
+    [
+      '',
+      'save-in-lane',
+      'EXPERIMENTAL. when checked out to a lane and the component is not on the remote-lane, save it in the lane (default to save on main)',
     ],
     [
       '',
@@ -59,8 +74,7 @@ export default class ImportCmd implements Command {
   _packageManagerArgs: string[]; // gets populated by yargs-adapter.handler().
 
   constructor(private importer: Importer, private docsDomain: string) {
-    this.description = `import components into your current workspace.
-https://${docsDomain}/components/importing-components
+    this.extendedDescription = `https://${docsDomain}/components/importing-components
 ${WILDCARD_HELP('import')}`;
   }
 
@@ -77,7 +91,7 @@ ${WILDCARD_HELP('import')}`;
       skipNpmInstall = false,
       skipDependencyInstallation = false,
       merge,
-      skipLane = false,
+      saveInLane = false,
       dependencies = false,
       dependents = false,
       allHistory = false,
@@ -92,7 +106,7 @@ ${WILDCARD_HELP('import')}`;
       skipNpmInstall?: boolean;
       skipDependencyInstallation?: boolean;
       merge?: MergeStrategy;
-      skipLane?: boolean;
+      saveInLane?: boolean;
       dependencies?: boolean;
       dependents?: boolean;
       allHistory?: boolean;
@@ -136,7 +150,7 @@ ${WILDCARD_HELP('import')}`;
       override,
       writeConfig: Boolean(conf),
       installNpmPackages: !skipDependencyInstallation,
-      skipLane,
+      saveInLane,
       importDependenciesDirectly: dependencies,
       importDependents: dependents,
       allHistory,
@@ -186,7 +200,7 @@ ${WILDCARD_HELP('import')}`;
 
     const getImportOutput = () => {
       if (dependenciesOutput) return dependenciesOutput;
-      return chalk.yellow('nothing to import');
+      return chalk.yellow(importResults.cancellationMessage || 'nothing to import');
     };
 
     return getImportOutput();
@@ -207,8 +221,8 @@ function formatPlainComponentItemWithVersions(component: ConsumerComponent, impo
   const usedVersion = status === 'added' ? `, currently used version ${component.version}` : '';
   const getConflictMessage = () => {
     if (!importDetails.filesStatus) return '';
-    const conflictedFiles = Object.keys(importDetails.filesStatus) // $FlowFixMe file is set
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    const conflictedFiles = Object.keys(importDetails.filesStatus)
+      // @ts-ignore file is set
       .filter((file) => importDetails.filesStatus[file] === FileStatus.manual);
     if (!conflictedFiles.length) return '';
     return `(the following files were saved with conflicts ${conflictedFiles

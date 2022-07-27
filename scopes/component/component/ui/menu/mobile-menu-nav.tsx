@@ -1,9 +1,9 @@
-import React, { useMemo } from 'react';
-import { Switch, Route, useRouteMatch } from 'react-router-dom';
+import React, { ReactNode, useMemo } from 'react';
+import { useResolvedPath } from 'react-router-dom';
 import classnames from 'classnames';
 import { Icon } from '@teambit/design.elements.icon';
 import { Dropdown } from '@teambit/design.inputs.dropdown';
-import { extendPath } from '@teambit/ui-foundation.ui.react-router.extend-path';
+import { useLocation } from '@teambit/base-react.navigation.link';
 import { TopBarNav } from '../top-bar-nav';
 import styles from './menu.module.scss';
 import mobileStyles from './mobile-menu-nav.module.scss';
@@ -18,7 +18,6 @@ export function MobileMenuNav({
   widgetSlot: OrderedNavigationSlot;
   className?: string;
 }) {
-  const { url } = useRouteMatch();
   const totalSlots = useMemo(
     () => [...navigationSlot.toArray().sort(sortFn), ...widgetSlot.toArray().sort(sortFn)],
     [navigationSlot, widgetSlot]
@@ -27,7 +26,7 @@ export function MobileMenuNav({
   return (
     <Dropdown
       // @ts-ignore - mismatch between @types/react
-      placeholder={<Placeholder slots={totalSlots} baseUrl={url} />}
+      placeholder={<Placeholder slots={totalSlots} />}
       className={classnames(styles.navigation, styles.mobileNav, className)}
       dropClass={mobileStyles.mobileMenu}
     >
@@ -63,20 +62,47 @@ type PlaceholderProps = {
   baseUrl?: string;
 } & React.HTMLAttributes<HTMLDivElement>;
 
-function Placeholder({ slots, baseUrl = '', ...rest }: PlaceholderProps) {
+function Placeholder({ slots, ...rest }: PlaceholderProps) {
   return (
     <div {...rest} className={mobileStyles.placeholder}>
-      <Switch>
-        {slots?.map(([id, menuItem]) => {
-          const path = extendPath(baseUrl, menuItem?.props?.href);
-          return (
-            <Route key={id} exact path={path}>
-              {typeof menuItem?.props?.children === 'string' ? menuItem?.props?.children : menuItem?.props?.displayName}
-            </Route>
-          );
-        })}
-      </Switch>
+      {slots.map(([id, menuItem]) => (
+        <ShowWhenMatch key={id} href={menuItem.props.href || ''} end={menuItem.props.exact}>
+          {typeof menuItem.props.children === 'string' ? menuItem.props.children : menuItem.props.displayName}
+        </ShowWhenMatch>
+      ))}
       <Icon of="fat-arrow-down" />
     </div>
+  );
+}
+
+function ShowWhenMatch({
+  href,
+  children,
+  caseSensitive,
+  end: exact,
+}: {
+  href: string;
+  children: ReactNode;
+  caseSensitive?: boolean;
+  end?: boolean;
+}) {
+  const isMatch = useLinkMatch(href, { caseSensitive, exact });
+  if (!isMatch) return null;
+  return <>{children}</>;
+}
+
+function useLinkMatch(href: string, { caseSensitive, exact }: { caseSensitive?: boolean; exact?: boolean } = {}) {
+  const location = useLocation();
+  let pathname = location?.pathname || '/';
+  let destination = useResolvedPath(href).pathname;
+
+  if (!caseSensitive) {
+    pathname = pathname.toLowerCase();
+    destination = destination.toLowerCase();
+  }
+
+  return (
+    destination === pathname ||
+    (!exact && pathname.startsWith(destination) && pathname.charAt(destination.length) === '/')
   );
 }

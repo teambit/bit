@@ -132,10 +132,8 @@ async function removeLocal(
     force,
     consumer
   );
-  if (!removedFromLane) {
-    // otherwise, components should still be in .bitmap file
-    idsToCleanFromWorkspace.push(...removedComponentIds);
-  }
+  // otherwise, components should still be in .bitmap file
+  idsToCleanFromWorkspace.push(...removedComponentIds);
   if (idsToCleanFromWorkspace.length) {
     await deleteComponentsFiles(consumer, idsToCleanFromWorkspace, deleteFiles);
     if (!track) {
@@ -148,6 +146,9 @@ async function removeLocal(
       );
       await consumer.cleanFromBitMap(idsToCleanFromWorkspace);
     }
+  }
+  if (removedFromLane.length) {
+    await consumer.cleanOrRevertFromBitMapWhenOnLane(removedFromLane);
   }
   return new RemovedLocalObjects(
     BitIds.uniqFromArray([...idsToCleanFromWorkspace, ...removedComponentIds]),

@@ -20,17 +20,18 @@ export const componentOverviewFields = gql`
     id {
       ...componentIdFields
     }
-    aspects(include: ["teambit.preview/preview", "teambit.pipelines/builder", "teambit.envs/envs"]) {
+    aspects(include: ["teambit.preview/preview", "teambit.envs/envs"]) {
       # 'id' property in gql refers to a *global* identifier and used for caching.
       # this makes aspect data cache under the same key, even when they are under different components.
       # renaming the property fixes that.
-      aspectId: id
-      aspectData: data
+      id
+      data
     }
     elementsUrl
     description
     deprecation {
       isDeprecate
+      newId
     }
     labels
     displayName
@@ -43,8 +44,12 @@ export const componentOverviewFields = gql`
       id
       icon
     }
+    size {
+      compressedTotal
+    }
     preview {
       includesEnvTemplate
+      legacyHeader
     }
     compositions {
       identifier
@@ -141,16 +146,14 @@ const SUB_COMPONENT_REMOVED = gql`
   }
   ${componentIdFields}
 `;
-
+export type Filters = {
+  log?: { logType?: string; logOffset?: number; logLimit?: number; logHead?: string; logSort?: string };
+};
 /** provides data to component ui page, making sure both variables and return value are safely typed and memoized */
-export function useComponentQuery(
-  componentId: string,
-  host: string,
-  filters?: { log?: { logType?: string; logOffset?: number; logLimit?: number; logHead?: string; logSort?: string } }
-) {
+export function useComponentQuery(componentId: string, host: string, filters?: Filters) {
   const idRef = useRef(componentId);
   idRef.current = componentId;
-  const { data, error, loading, subscribeToMore } = useDataQuery(GET_COMPONENT, {
+  const { data, error, loading, subscribeToMore, ...rest } = useDataQuery(GET_COMPONENT, {
     variables: { id: componentId, extensionId: host, ...(filters?.log || {}) },
   });
 
@@ -241,7 +244,13 @@ export function useComponentQuery(
   const rawComponent = data?.getHost?.get;
   return useMemo(() => {
     const aspectList = {
-      entries: rawComponent?.aspects,
+      entries: rawComponent?.aspects.map((aspectObject) => {
+        return {
+          ...aspectObject,
+          aspectId: aspectObject.id,
+          aspectData: aspectObject.data,
+        };
+      }),
     };
     const id = rawComponent && ComponentID.fromObject(rawComponent.id);
     return {
@@ -253,6 +262,8 @@ export function useComponentQuery(
         : !rawComponent && !loading
         ? new ComponentError(404)
         : undefined,
+      loading,
+      ...rest,
     };
   }, [rawComponent, host, error]);
 }

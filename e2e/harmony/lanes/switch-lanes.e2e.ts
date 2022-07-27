@@ -41,7 +41,7 @@ describe('bit lane command', function () {
       });
       it('.bitmap should save the remote lane', () => {
         const bitMap = helper.bitMap.read();
-        expect(bitMap[LANE_KEY]).to.deep.equal({ name: 'dev', scope: helper.scopes.remote });
+        expect(bitMap[LANE_KEY].id).to.deep.equal({ name: 'dev', scope: helper.scopes.remote });
       });
       it('bit lane should show the component in the checked out lane', () => {
         const lanes = helper.command.showOneLaneParsed('dev');
@@ -83,8 +83,8 @@ describe('bit lane command', function () {
           const status = helper.command.statusJson();
           expect(status.stagedComponents).to.have.lengthOf(1);
         });
-        it('bit status should show the staged hash', () => {
-          const status = helper.command.status();
+        it('bit status --verbose should show the staged hash', () => {
+          const status = helper.command.status('--verbose');
           const localSnap = helper.command.getHeadOfLane('dev', 'bar/foo');
           expect(status).to.have.string(localSnap);
         });
@@ -109,13 +109,12 @@ describe('bit lane command', function () {
           helper.command.switchLocalLane('main');
           helper.command.switchLocalLane('int');
         });
+        it('should switch successfully', () => {
+          helper.command.expectCurrentLaneToBe('int');
+        });
         it('should not save the local lane in bitmap', () => {
           const bitMap = helper.bitMap.read();
           expect(bitMap[LANE_KEY]).to.not.deep.equal({ name: 'int', scope: helper.scopes.remote });
-        });
-        it('should have the last exported lane in bitmap', () => {
-          const bitMap = helper.bitMap.read();
-          expect(bitMap[LANE_KEY]).to.deep.equal({ name: 'dev', scope: helper.scopes.remote });
         });
         it('should not throw an error on bit install', () => {
           expect(() => helper.command.install()).not.to.throw();
@@ -131,7 +130,7 @@ describe('bit lane command', function () {
       helper.command.tagAllWithoutBuild();
       helper.command.createLane('migration');
       helper.fs.outputFile('comp1/comp1.spec.js');
-      helper.command.addComponent('comp1/', { t: 'comp1/comp1.spec.js' });
+      helper.command.addComponent('comp1/');
       helper.command.install();
       helper.command.compile();
       helper.command.snapAllComponentsWithoutBuild();

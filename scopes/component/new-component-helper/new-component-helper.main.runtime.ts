@@ -86,7 +86,7 @@ export class NewComponentHelperMain {
 
   async getConfigFromExistingToNewComponent(comp: Component) {
     const aspectIds = comp.state.aspects.entries.map((e) => e.id.toString());
-    await this.workspace.loadAspects(aspectIds);
+    await this.workspace.loadAspects(aspectIds, undefined, 'new-component-helper.getConfigFromExistingToNewComponent');
     const fromExisting = {};
     comp.state.aspects.entries.forEach((entry) => {
       if (!entry.config) return;
