@@ -15,7 +15,6 @@ import { ComponentCompareAspect } from './component-compare.aspect';
 export type ComponentCompareResult = {
   id: string;
   code: FileDiff[];
-  // aspects: FileCompareResult[];
 };
 
 export class ComponentCompareMain {
