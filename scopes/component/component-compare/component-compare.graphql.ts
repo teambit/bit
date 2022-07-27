@@ -31,7 +31,12 @@ export function componentCompareSchema(componentCompareMain: ComponentCompareMai
       ComponentCompareResult: {
         id: (result: ComponentCompareResult) => result.id,
         code: (result: ComponentCompareResult, { fileName }: { fileName?: string }) => {
-          if (fileName) return result.code.filter((codeFile) => codeFile.filePath === fileName);
+          if (fileName) {
+            return result.code
+              .filter((codeFile) => codeFile.filePath === fileName)
+              .map((c) => ({ ...c, fileName: c.filePath, baseContent: c.fromContent, compareContent: c.toContent }));
+          }
+
           return result.code.map((c) => ({
             ...c,
             fileName: c.filePath,
