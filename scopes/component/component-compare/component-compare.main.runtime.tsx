@@ -24,7 +24,6 @@ export class ComponentCompareMain {
   async compare(baseIdStr: string, compareIdStr: string): Promise<ComponentCompareResult> {
     const host = this.componentAspect.getHost();
     const [baseCompId, compareCompId] = await host.resolveMultipleComponentIds([baseIdStr, compareIdStr]);
-    // const [baseComp, compareComp] = await host.getMany([baseCompId, compareCompId]);
     const modelComponent = await this.scope.legacyScope.getModelComponentIfExist(compareCompId._legacy);
     if (!modelComponent) {
       throw new GeneralError(`component ${compareCompId.toString()} doesn't have any version yet`);
@@ -50,8 +49,6 @@ export class ComponentCompareMain {
       id: `${baseCompId}-${compareCompId}`,
       code: diff.filesDiff || [],
     };
-
-    console.log(diff);
 
     return compareResult;
   }

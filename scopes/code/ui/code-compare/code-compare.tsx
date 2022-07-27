@@ -1,6 +1,5 @@
 import React, { HTMLAttributes, useState } from 'react';
 import classNames from 'classnames';
-import { QueryResult } from '@apollo/client';
 import { HoverSplitter } from '@teambit/base-ui.surfaces.split-pane.hover-splitter';
 import { Collapser } from '@teambit/ui-foundation.ui.buttons.collapser';
 import { SplitPane, Pane, Layout } from '@teambit/base-ui.surfaces.split-pane.split-pane';
@@ -55,7 +54,7 @@ export function CodeCompare({ fileIconSlot, className }: CodeCompareProps) {
         className={classNames(styles.componentCompareCodeContainer, className)}
       >
         <Pane className={styles.left}>
-          <CodeCompareView base={base?.model} compare={compare?.model} fileName={selectedFile} />
+          <CodeCompareView fileName={selectedFile} />
         </Pane>
         <HoverSplitter className={styles.splitter}>
           <Collapser
@@ -82,7 +81,13 @@ export function CodeCompare({ fileIconSlot, className }: CodeCompareProps) {
   );
 }
 
-function mapToCodeCompareData({ loading, componentCompareData }): CodeCompareModel {
+function mapToCodeCompareData({
+  loading,
+  componentCompareData,
+}: {
+  loading?: boolean;
+  componentCompareData?: ComponentCompareQueryResponse;
+}): CodeCompareModel {
   const fileCompareDataByName = new Map<string, FileCompareResult>();
   if (loading || !componentCompareData) return { loading, fileCompareDataByName };
   componentCompareData.code.forEach((codeCompareData) => {

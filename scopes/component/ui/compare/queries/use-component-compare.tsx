@@ -1,5 +1,5 @@
 import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
-import { gql, QueryResult } from '@apollo/client';
+import { gql } from '@apollo/client';
 import { ComponentCompareQueryResponse } from '@teambit/component.ui.compare';
 
 const QUERY_COMPONENT_COMPARE = gql`
