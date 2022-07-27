@@ -3,6 +3,7 @@ import mapSeries from 'p-map-series';
 import * as path from 'path';
 import R from 'ramda';
 import semver from 'semver';
+import { partition } from 'lodash';
 import { LaneId } from '@teambit/lane-id';
 import { Analytics } from '../analytics/analytics';
 import { BitId, BitIds } from '../bit-id';
@@ -727,6 +728,28 @@ export default class Consumer {
     this.bitMap.removeComponents(componentsToRemoveFromFs);
   }
 
+  async cleanOrRevertFromBitMapWhenOnLane(ids: BitIds) {
+    logger.debug(`consumer.cleanFromBitMapWhenOnLane, cleaning ${ids.toString()} from`);
+    const [idsOnLane, idsOnMain] = partition(ids, (id) => {
+      const componentMap = this.bitMap.getComponent(id, { ignoreVersion: true });
+      return componentMap.onLanesOnly;
+    });
+    if (idsOnLane.length) {
+      await this.cleanFromBitMap(BitIds.fromArray(idsOnLane));
+    }
+    await Promise.all(
+      idsOnMain.map(async (id) => {
+        const modelComp = await this.scope.getModelComponentIfExist(id.changeVersion(undefined));
+        let updatedId = id.changeScope(undefined).changeVersion(undefined);
+        if (modelComp) {
+          const head = modelComp.getHeadAsTagIfExist();
+          if (head) updatedId = id.changeVersion(head);
+        }
+        this.bitMap.updateComponentId(updatedId, false, true);
+      })
+    );
+  }
+
   async addRemoteAndLocalVersionsToDependencies(component: Component, loadedFromFileSystem: boolean) {
     logger.debug(`addRemoteAndLocalVersionsToDependencies for ${component.id.toString()}`);
     Analytics.addBreadCrumb(
@@ -748,6 +771,28 @@ export default class Consumer {
     }
     await component.dependencies.addRemoteAndLocalVersions(this.scope, modelDependencies);
     await component.devDependencies.addRemoteAndLocalVersions(this.scope, modelDevDependencies);
+  }
+
+  async getIdsOfDefaultLane(): Promise<BitIds> {
+    const ids = this.bitMap.getAuthoredAndImportedBitIdsOfDefaultLane();
+    const bitIds = await Promise.all(
+      ids.map(async (id) => {
+        if (!id.hasVersion()) return id;
+        const modelComponent = await this.scope.getModelComponentIfExist(id.changeVersion(undefined));
+        if (modelComponent) {
+          const head = modelComponent.getHeadAsTagIfExist();
+          if (head) {
+            return id.changeVersion(head);
+          }
+          throw new Error(`model-component on main should have head. the head on ${id.toString()} is missing`);
+        }
+        if (!id.hasVersion()) {
+          return id;
+        }
+        throw new Error(`getIdsOfDefaultLane: model-component of ${id.toString()} is missing, please run bit-import`);
+      })
+    );
+    return BitIds.fromArray(bitIds);
   }
 
   async getAuthoredAndImportedDependentsIdsOf(components: Component[]): Promise<BitIds> {

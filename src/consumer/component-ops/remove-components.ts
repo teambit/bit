@@ -147,6 +147,9 @@ async function removeLocal(
       await consumer.cleanFromBitMap(idsToCleanFromWorkspace);
     }
   }
+  if (removedFromLane.length) {
+    await consumer.cleanOrRevertFromBitMapWhenOnLane(removedFromLane);
+  }
   return new RemovedLocalObjects(
     BitIds.uniqFromArray([...idsToCleanFromWorkspace, ...removedComponentIds]),
     missingComponents,
