@@ -1,3 +1,4 @@
+import { OnComponentLoadOptions } from '@teambit/workspace';
 import fs from 'fs-extra';
 import mapSeries from 'p-map-series';
 import * as path from 'path';
@@ -317,7 +318,7 @@ export default class Consumer {
     });
   }
 
-  async loadComponent(id: BitId, opts?: { loadDocs?: boolean }): Promise<Component> {
+  async loadComponent(id: BitId, opts?: OnComponentLoadOptions): Promise<Component> {
     const { components } = await this.loadComponents(BitIds.fromArray([id]), true, opts);
     return components[0];
   }
@@ -329,7 +330,7 @@ export default class Consumer {
   async loadComponents(
     ids: BitIds,
     throwOnFailure = true,
-    opts?: { loadDocs?: boolean }
+    opts?: OnComponentLoadOptions
   ): Promise<{ components: Component[]; invalidComponents: InvalidComponent[] }> {
     return this.componentLoader.loadMany(ids, throwOnFailure, opts);
   }

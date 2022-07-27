@@ -91,6 +91,7 @@ import {
   OnComponentChange,
   OnComponentEventResult,
   OnComponentLoad,
+  OnComponentLoadOptions,
   OnComponentRemove,
   SerializableResults,
 } from './on-component-events';
@@ -497,7 +498,7 @@ export class Workspace implements ComponentFactory {
     legacyComponent?: ConsumerComponent,
     useCache = true,
     storeInCache = true,
-    opts?: { loadDocs?: boolean }
+    opts?: OnComponentLoadOptions
   ): Promise<Component> {
     this.logger.debug(`get ${componentId.toString()}`);
     const component = await this.componentLoader.get(
