@@ -16,7 +16,6 @@ export function componentCompareSchema(componentCompareMain: ComponentCompareMai
         # unique id for graphql - baseId + compareId
         id: String!
         code(fileName: String): [FileCompareResult!]!
-        # aspects(id: String): [FileCompareResult!]!
       }
 
       extend type ComponentHost {
