@@ -340,7 +340,7 @@
       }
     },
     "nodeLinker": "hoisted",
-    "nodeVersion": "16.16.0",
+    "nodeVersion": "14.19.3",
     "engineStrict": true,
     // This is a temporary workaround to fix "bit compile" on macOS and Windows.
     // "bit compile" breaks node_modules when hard links are used.
