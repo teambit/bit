@@ -8,7 +8,7 @@ import { RoundLoader } from '@teambit/design.ui.round-loader';
 import React, { HTMLAttributes, useContext, useMemo } from 'react';
 import { ComponentCompareContext, ComponentCompareModel } from './component-compare-context';
 import { ComponentCompareVersionPicker } from './version-picker/component-compare-version-picker';
-import { useCompareQueryParam } from './use-component-compare-url';
+import { useCompareQueryParam } from './use-component-compare-query';
 import { ComponentCompareBlankState } from './blank-state';
 
 import styles from './component-compare.module.scss';

@@ -13,19 +13,8 @@ import Component from '../component/consumer-component';
 import { SourceFile } from '../component/sources';
 import { diffBetweenComponentsObjects } from './components-object-diff';
 
-export type DiffStatus = 'MODIFIED' | 'UNCHANGED' | 'NEW';
-
-export type FileDiff = {
-  filePath: string;
-  diffOutput: string;
-  status: DiffStatus;
-  fromContent: string;
-  toContent: string;
-};
-export type FieldsDiff = {
-  fieldName: string;
-  diffOutput: string;
-};
+type FileDiff = { filePath: string; diffOutput: string };
+export type FieldsDiff = { fieldName: string; diffOutput: string };
 export type DiffResults = {
   id: BitId;
   hasDiff: boolean;
@@ -218,24 +207,14 @@ async function getFilesDiff(
   const fileALabel = filesAVersion === filesBVersion ? `${filesAVersion} original` : filesAVersion;
   const fileBLabel = filesAVersion === filesBVersion ? `${filesBVersion} modified` : filesBVersion;
   const filesDiffP = allPaths.map(async (relativePath) => {
-    const getFileData = async (files): Promise<{ path: PathOsBased; content: string }> => {
+    const getFilePath = async (files): Promise<PathOsBased> => {
       const file = files.find((f) => f[fileNameAttribute] === relativePath);
-      const content = file ? file.contents : '';
-      const path = await saveIntoOsTmp(content);
-      return { path, content: content.toString('utf-8') };
+      const fileContent = file ? file.contents : '';
+      return saveIntoOsTmp(fileContent);
     };
-    const [{ path: fileAPath, content: fileAContent }, { path: fileBPath, content: fileBContent }] = await Promise.all([
-      getFileData(filesA),
-      getFileData(filesB),
-    ]);
-
+    const [fileAPath, fileBPath] = await Promise.all([getFilePath(filesA), getFilePath(filesB)]);
     const diffOutput = await getOneFileDiff(fileAPath, fileBPath, fileALabel, fileBLabel, relativePath, color);
-
-    let status: DiffStatus = 'UNCHANGED';
-    if (diffOutput && !fileAContent) status = 'NEW';
-    else if (diffOutput && fileAContent) status = 'MODIFIED';
-
-    return { filePath: relativePath, diffOutput, status, fromContent: fileAContent, toContent: fileBContent };
+    return { filePath: relativePath, diffOutput };
   });
   return Promise.all(filesDiffP);
 }
