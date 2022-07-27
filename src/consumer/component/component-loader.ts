@@ -1,7 +1,6 @@
 import mapSeries from 'p-map-series';
 import * as path from 'path';
 import { ComponentIssue } from '@teambit/component-issues';
-import { OnComponentLoadOptions } from '@teambit/workspace';
 import { BitId, BitIds } from '../../bit-id';
 import { createInMemoryCache } from '../../cache/cache-factory';
 import { getMaxSizeForComponents, InMemoryCache } from '../../cache/in-memory-cache';
@@ -18,6 +17,10 @@ import { ComponentFsCache } from './component-fs-cache';
 import { updateDependenciesVersions } from './dependencies/dependency-resolver';
 import { DependenciesLoader } from './dependencies/dependency-resolver/dependencies-loader';
 
+export type OnComponentLoadOptions = {
+  loadDocs?: boolean;
+  loadCompositions?: boolean;
+};
 type OnComponentLoadSubscriber = (component: Component, opts?: OnComponentLoadOptions) => Promise<Component>;
 type OnComponentIssuesCalcSubscriber = (component: Component) => Promise<ComponentIssue[]>;
 

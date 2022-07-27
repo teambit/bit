@@ -1,7 +1,6 @@
 import { compact } from 'lodash';
 import * as path from 'path';
 import R from 'ramda';
-import { OnComponentLoadOptions } from '@teambit/workspace';
 
 import NoIdMatchWildcard from '../../api/consumer/lib/exceptions/no-id-match-wildcard';
 import { BitId, BitIds } from '../../bit-id';
@@ -20,6 +19,7 @@ import ComponentMap, { ComponentOrigin } from '../bit-map/component-map';
 import Component from '../component';
 import { InvalidComponent } from '../component/consumer-component';
 import Consumer from '../consumer';
+import { OnComponentLoadOptions } from './component-loader';
 
 export type ObjectsList = Promise<{ [componentId: string]: Version }>;
 export type DivergeDataPerId = { id: BitId; divergeData: DivergeData };

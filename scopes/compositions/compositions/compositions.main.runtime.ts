@@ -7,12 +7,13 @@ import { flatten } from '@teambit/legacy/dist/utils';
 import { PreviewAspect, PreviewMain } from '@teambit/preview';
 import { SchemaAspect, SchemaMain } from '@teambit/schema';
 import { matchPatterns, splitPatterns } from '@teambit/toolbox.path.match-patterns';
-import { OnComponentLoadOptions, Workspace, WorkspaceAspect } from '@teambit/workspace';
+import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { join } from 'path';
 import { Composition } from './composition';
 import { CompositionsAspect } from './compositions.aspect';
 import { compositionsSchema } from './compositions.graphql';
 import { CompositionPreviewDefinition } from './compositions.preview-definition';
+import { OnComponentLoadOptions } from '@teambit/legacy/dist/consumer/component/component-loader';
 
 export type CompositionsConfig = {
   /**

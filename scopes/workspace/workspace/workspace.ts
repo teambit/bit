@@ -84,6 +84,7 @@ import loader from '@teambit/legacy/dist/cli/loader';
 import { Lane } from '@teambit/legacy/dist/scope/models';
 import { LaneNotFound } from '@teambit/legacy/dist/api/scope/lib/exceptions/lane-not-found';
 import { ScopeNotFoundOrDenied } from '@teambit/legacy/dist/remotes/exceptions/scope-not-found-or-denied';
+import { OnComponentLoadOptions } from '@teambit/legacy/dist/consumer/component/component-loader';
 import { ComponentConfigFile } from './component-config-file';
 import { DependencyTypeNotSupportedInPolicy } from './exceptions';
 import {
@@ -91,7 +92,6 @@ import {
   OnComponentChange,
   OnComponentEventResult,
   OnComponentLoad,
-  OnComponentLoadOptions,
   OnComponentRemove,
   SerializableResults,
 } from './on-component-events';
