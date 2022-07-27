@@ -73,7 +73,7 @@ export interface ComponentFactory {
    * load aspects.
    * returns the loaded aspect ids including the loaded versions.
    */
-  loadAspects: (ids: string[], throwOnError?: boolean, neededFor?: ComponentID) => Promise<string[]>;
+  loadAspects: (ids: string[], throwOnError?: boolean, neededFor?: string) => Promise<string[]>;
 
   /**
    * Resolve dirs for aspects

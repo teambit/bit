@@ -131,7 +131,7 @@ export async function mergeLanes({
   let deleteResults = {};
 
   if (!keepReadme && otherLane && otherLane.readmeComponent && mergedSuccessfully) {
-    await consumer.bitMap.syncWithLanes(consumer.bitMap.workspaceLane);
+    // await consumer.bitMap.syncWithLanes(consumer.bitMap.workspaceLane);
 
     const readmeComponentId = [
       otherLane.readmeComponent.id.changeVersion(otherLane.readmeComponent?.head?.hash).toString(),

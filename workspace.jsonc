@@ -261,6 +261,9 @@
         "multimatch": "5.0.0",
         "nanoid": "3.1.20",
         "nerf-dart": "1.0.0",
+        // Pinning the npm version to have consistent results in e2e tests.
+        // Without npm in the dependencies, e2e tests would use the globally installed npm CLI.
+        "npm": "6.14.17",
         "p-limit": "3.1.0",
         "parse-package-name": "0.1.0",
         "path-to-regexp": "6.2.0",
@@ -324,7 +327,7 @@
       "peerDependencies": {
         "@apollo/client": "^3.0.0",
         "@teambit/base-react.navigation.link": "2.0.27",
-        "@teambit/legacy": "1.0.308",
+        "@teambit/legacy": "1.0.313",
         "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
         "browserslist": "4.16.3",
         "core-js": "^3.10.0",
@@ -336,7 +339,7 @@
       }
     },
     "nodeLinker": "hoisted",
-    "nodeVersion": "12.22.0",
+    "nodeVersion": "14.19.3",
     "engineStrict": true,
     // This is a temporary workaround to fix "bit compile" on macOS and Windows.
     // "bit compile" breaks node_modules when hard links are used.
@@ -411,7 +414,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.308"
+            "@teambit/legacy": "1.0.313"
           }
         }
       },
@@ -676,7 +679,7 @@
           "peerDependencies": {
             "react": "^16.8.0 || ^17.0.0",
             "react-dom": "^16.8.0 || ^17.0.0",
-            "@teambit/legacy": "1.0.308"
+            "@teambit/legacy": "1.0.313"
           }
         }
       }
@@ -721,7 +724,7 @@
           "private": false,
           // Change back to "bin": "bin/bit" once released to prod
           "bvm": {
-            "node": "16.15.1"
+            "node": "16.16.0"
           },
           "bin": {
             "bbit": "bin/bit"
@@ -754,7 +757,7 @@
             "@teambit/base-react.navigation.link": "2.0.27",
             "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
             "@apollo/client": "3.3.7",
-            "@teambit/legacy": "1.0.308",
+            "@teambit/legacy": "1.0.313",
             "graphql": "14.7.0",
             "browserslist": "4.16.3",
             "reflect-metadata": "0.1.13",
@@ -889,7 +892,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.308"
+            "@teambit/legacy": "1.0.313"
           }
         }
       }

@@ -20,7 +20,6 @@ import { CommunityAspect } from '@teambit/community';
 import type { CommunityMain } from '@teambit/community';
 import ComponentAspect, { Component, ComponentMain } from '@teambit/component';
 import removeLanes from '@teambit/legacy/dist/consumer/lanes/remove-lanes';
-import WorkspaceLane from '@teambit/legacy/dist/consumer/bit-map/workspace-lane';
 import { Lane } from '@teambit/legacy/dist/scope/models';
 import ScopeComponentsImporter from '@teambit/legacy/dist/scope/component-ops/scope-components-importer';
 import { Scope as LegacyScope } from '@teambit/legacy/dist/scope';
@@ -137,6 +136,11 @@ export class LanesMain {
     return this.scope.legacyScope.lanes.getCurrentLaneId();
   }
 
+  setCurrentLane(laneId: LaneId, alias?: string, exported?: boolean) {
+    this.scope.legacyScope.lanes.setCurrentLane(alias || laneId.name);
+    this.workspace?.consumer.bitMap.setCurrentLane(laneId, exported);
+  }
+
   async createLane(name: string, { remoteScope, alias }: CreateLaneOptions = {}): Promise<TrackLane> {
     if (!this.workspace) {
       throw new BitError(`unable to create a lane outside of Bit workspace`);
@@ -146,7 +150,8 @@ export class LanesMain {
     }
     const scope = remoteScope || this.workspace.defaultScope;
     await createLane(this.workspace.consumer, name, scope);
-    this.scope.legacyScope.lanes.setCurrentLane(name);
+    const laneId = LaneId.from(name, scope);
+    this.setCurrentLane(laneId, alias, false);
     const trackLaneData = {
       localLane: alias || name,
       remoteLane: name,
@@ -263,12 +268,6 @@ export class LanesMain {
       throw new BitError(`unable to find a local lane "${currentName}"`);
     }
 
-    // rename the workspace-lane file
-    const previousAlias = this.scope.legacyScope.lanes.getAliasByLaneId(laneId);
-    if (previousAlias) {
-      await WorkspaceLane.rename(this.scope.legacyScope.getPath(), previousAlias, newName);
-    }
-
     // rename the ref file
     await this.scope.legacyScope.objects.remoteLanes.renameRefByNewLaneName(laneNameWithoutScope, newName, lane.scope);
 
@@ -287,7 +286,11 @@ export class LanesMain {
 
     // change current-lane if needed
     const currentLaneName = this.getCurrentLane();
-    if (currentLaneName === laneNameWithoutScope) this.scope.legacyScope.lanes.setCurrentLane(newName);
+    if (currentLaneName === laneNameWithoutScope) {
+      const newLaneId = LaneId.from(newName, lane.scope);
+      const isExported = this.workspace.consumer.bitMap.isLaneExported;
+      this.setCurrentLane(newLaneId, undefined, isExported);
+    }
 
     // export the lane with only the name-change
     const clonedLaneToExport = lane.clone();
@@ -345,7 +348,7 @@ export class LanesMain {
     });
 
     await this.workspace.consumer.onDestroy();
-    this.workspace.consumer.bitMap.syncWithLanes(this.workspace.consumer.bitMap.workspaceLane);
+    // this.workspace.consumer.bitMap.syncWithLanes();
     return results;
   }
 
@@ -527,7 +530,7 @@ export class LanesMain {
       const scopeComponents = await this.scope.list();
       bitIds = scopeComponents.filter((component) => component.head).map((component) => component.id._legacy);
     } else {
-      bitIds = consumer.bitMap.getAuthoredAndImportedBitIdsOfDefaultLane();
+      bitIds = await consumer.getIdsOfDefaultLane();
     }
 
     return {
