@@ -8,5 +8,5 @@ export type FileCompareResult = {
 
 export type ComponentCompareQueryResponse = {
   id: string;
-  code: FileCompareResult;
+  code: Array<FileCompareResult>;
 };
