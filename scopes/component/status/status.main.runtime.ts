@@ -48,9 +48,11 @@ export class StatusMain {
     const componentsList = new ComponentsList(consumer);
     const newComponents: ConsumerComponent[] = (await componentsList.listNewComponents(true, {
       loadDocs: false,
+      loadCompositions: false,
     })) as ConsumerComponent[];
     const modifiedComponent = (await componentsList.listModifiedComponents(true, {
       loadDocs: false,
+      loadCompositions: false,
     })) as ConsumerComponent[];
     const stagedComponents: ModelComponent[] = await componentsList.listExportPendingComponents(laneObj);
     const autoTagPendingComponents = await componentsList.listAutoTagPendingComponents();

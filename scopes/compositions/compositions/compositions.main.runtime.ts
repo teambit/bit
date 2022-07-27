@@ -7,7 +7,7 @@ import { flatten } from '@teambit/legacy/dist/utils';
 import { PreviewAspect, PreviewMain } from '@teambit/preview';
 import { SchemaAspect, SchemaMain } from '@teambit/schema';
 import { matchPatterns, splitPatterns } from '@teambit/toolbox.path.match-patterns';
-import { Workspace, WorkspaceAspect } from '@teambit/workspace';
+import { OnComponentLoadOptions, Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { join } from 'path';
 import { Composition } from './composition';
 import { CompositionsAspect } from './compositions.aspect';
@@ -113,7 +113,8 @@ export class CompositionsMain {
     );
   }
 
-  async onComponentLoad(component: Component): Promise<AspectData> {
+  async onComponentLoad(component: Component, opts?: OnComponentLoadOptions): Promise<AspectData | undefined> {
+    if (opts?.loadCompositions === false) return undefined;
     const compositions = this.readCompositions(component);
     return {
       compositions: compositions.map((composition) => composition.toObject()),

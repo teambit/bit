@@ -1,6 +1,7 @@
 import mapSeries from 'p-map-series';
 import * as path from 'path';
 import { ComponentIssue } from '@teambit/component-issues';
+import { OnComponentLoadOptions } from '@teambit/workspace';
 import { BitId, BitIds } from '../../bit-id';
 import { createInMemoryCache } from '../../cache/cache-factory';
 import { getMaxSizeForComponents, InMemoryCache } from '../../cache/in-memory-cache';
@@ -17,7 +18,7 @@ import { ComponentFsCache } from './component-fs-cache';
 import { updateDependenciesVersions } from './dependencies/dependency-resolver';
 import { DependenciesLoader } from './dependencies/dependency-resolver/dependencies-loader';
 
-type OnComponentLoadSubscriber = (component: Component, opts?: { loadDocs?: boolean }) => Promise<Component>;
+type OnComponentLoadSubscriber = (component: Component, opts?: OnComponentLoadOptions) => Promise<Component>;
 type OnComponentIssuesCalcSubscriber = (component: Component) => Promise<ComponentIssue[]>;
 
 export default class ComponentLoader {
@@ -108,7 +109,7 @@ export default class ComponentLoader {
   async loadMany(
     ids: BitIds,
     throwOnFailure = true,
-    opts?: { loadDocs?: boolean }
+    opts?: OnComponentLoadOptions
   ): Promise<{ components: Component[]; invalidComponents: InvalidComponent[] }> {
     logger.debugAndAddBreadCrumb('ComponentLoader', 'loading consumer-components from the file-system, ids: {ids}', {
       ids: ids.toString(),
@@ -155,7 +156,7 @@ export default class ComponentLoader {
     id: BitId,
     throwOnFailure: boolean,
     invalidComponents: InvalidComponent[],
-    opts?: { loadDocs?: boolean }
+    opts?: OnComponentLoadOptions
   ) {
     const componentMap = this.consumer.bitMap.getComponent(id);
     let bitDir = this.consumer.getPath();

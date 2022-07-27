@@ -13,5 +13,6 @@ export type OnComponentEventResult = { extensionId: string; results: Serializabl
 
 export type OnComponentLoadOptions = {
   loadDocs?: boolean;
+  loadCompositions?: boolean;
 };
 export type OnComponentLoad = (component: Component, opts?: OnComponentLoadOptions) => Promise<AspectData | undefined>;

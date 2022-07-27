@@ -9,7 +9,12 @@ export type { WatchOptions } from './watch/watcher';
 export { CheckTypes } from './watch/check-types';
 export * from './events';
 export type { WorkspaceUI } from './workspace.ui.runtime';
-export type { SerializableResults, OnComponentEventResult } from './on-component-events';
+export type {
+  SerializableResults,
+  OnComponentLoad,
+  OnComponentLoadOptions,
+  OnComponentEventResult,
+} from './on-component-events';
 export { ComponentStatus } from './workspace-component';
 export { WorkspaceModelComponent } from './ui/workspace/workspace-model';
 export { WorkspaceContext } from './ui/workspace/workspace-context';

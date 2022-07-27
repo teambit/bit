@@ -15,6 +15,7 @@ import { ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config';
 import { getMaxSizeForComponents, InMemoryCache } from '@teambit/legacy/dist/cache/in-memory-cache';
 import { createInMemoryCache } from '@teambit/legacy/dist/cache/cache-factory';
 import ComponentNotFoundInPath from '@teambit/legacy/dist/consumer/component/exceptions/component-not-found-in-path';
+import { OnComponentLoadOptions } from '@teambit/workspace';
 import { Workspace } from '../workspace';
 import { WorkspaceComponent } from './workspace-component';
 
@@ -87,7 +88,7 @@ export class WorkspaceComponentLoader {
     legacyComponent?: ConsumerComponent,
     useCache = true,
     storeInCache = true,
-    opts?: { loadDocs?: boolean }
+    opts?: OnComponentLoadOptions
   ): Promise<Component> {
     const bitIdWithVersion: BitId = getLatestVersionNumber(
       this.workspace.consumer.bitmapIdsFromCurrentLane,
@@ -147,7 +148,7 @@ export class WorkspaceComponentLoader {
     }
   }
 
-  private async loadOne(id: ComponentID, consumerComponent?: ConsumerComponent, opts?: { loadDocs?: boolean }) {
+  private async loadOne(id: ComponentID, consumerComponent?: ConsumerComponent, opts?: OnComponentLoadOptions) {
     const componentFromScope = await this.workspace.scope.get(id);
     if (!consumerComponent) {
       if (!componentFromScope) throw new MissingBitMapComponent(id.toString());
@@ -188,7 +189,7 @@ export class WorkspaceComponentLoader {
     return this.executeLoadSlot(this.newComponentFromState(id, state), opts);
   }
 
-  private saveInCache(component: Component, forCapsule: boolean, opts?: { loadDocs?: boolean }): void {
+  private saveInCache(component: Component, forCapsule: boolean, opts?: OnComponentLoadOptions): void {
     const cacheKey = createComponentCacheKey(component.id, opts);
     if (forCapsule) {
       this.componentsCacheForCapsule.set(cacheKey, component);
@@ -204,7 +205,7 @@ export class WorkspaceComponentLoader {
    * as a result, when out-of-sync is happening and the id is changed to include scope-name in the
    * legacy-id, the component is the cache has the old id.
    */
-  private getFromCache(id: ComponentID, forCapsule: boolean, opts?: { loadDocs?: boolean }): Component | undefined {
+  private getFromCache(id: ComponentID, forCapsule: boolean, opts?: OnComponentLoadOptions): Component | undefined {
     const cacheKey = createComponentCacheKey(id, opts);
     const fromCache = forCapsule ? this.componentsCacheForCapsule.get(cacheKey) : this.componentsCache.get(cacheKey);
     if (fromCache && fromCache.id._legacy.isEqual(id._legacy)) {
@@ -242,7 +243,7 @@ export class WorkspaceComponentLoader {
     );
   }
 
-  private async executeLoadSlot(component: Component, opts?: { loadDocs?: boolean }) {
+  private async executeLoadSlot(component: Component, opts?: OnComponentLoadOptions) {
     const entries = this.workspace.onComponentLoadSlot.toArray();
     const promises = entries.map(async ([extension, onLoad]) => {
       const data = await onLoad(component, opts);
@@ -293,6 +294,6 @@ export class WorkspaceComponentLoader {
   }
 }
 
-function createComponentCacheKey(id: ComponentID, opts?: { loadDocs?: boolean }): string {
+function createComponentCacheKey(id: ComponentID, opts?: OnComponentLoadOptions): string {
   return `${id.toString()}:${JSON.stringify(opts)}`;
 }

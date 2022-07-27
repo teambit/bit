@@ -1,6 +1,7 @@
 import { compact } from 'lodash';
 import * as path from 'path';
 import R from 'ramda';
+import { OnComponentLoadOptions } from '@teambit/workspace';
 
 import NoIdMatchWildcard from '../../api/consumer/lib/exceptions/no-id-match-wildcard';
 import { BitId, BitIds } from '../../bit-id';
@@ -253,7 +254,7 @@ export default class ComponentsList {
    * @param {boolean} [load=false] - Whether to load the component (false will return only the id)
    * @memberof ComponentsList
    */
-  async listNewComponents(load = false, opts?: { loadDocs?: boolean }): Promise<BitIds | Component[]> {
+  async listNewComponents(load = false, opts?: OnComponentLoadOptions): Promise<BitIds | Component[]> {
     const idsFromBitMap = this.idsFromBitMap();
     const idsFromObjects = await this.idsFromObjects();
     const newComponents: BitId[] = [];
@@ -318,7 +319,7 @@ export default class ComponentsList {
     return this.updateIdsFromModelIfTheyOutOfSync(ids);
   }
 
-  async listNonNewComponentsIds(opts?: { loadDocs?: boolean }): Promise<BitIds> {
+  async listNonNewComponentsIds(opts?: OnComponentLoadOptions): Promise<BitIds> {
     const authoredAndImported = await this.getAuthoredAndImportedFromFS(opts);
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const newComponents: BitIds = await this.listNewComponents();
