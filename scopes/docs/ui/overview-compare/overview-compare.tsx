@@ -3,6 +3,7 @@ import { CompareSplitLayoutPreset, useComponentCompare } from '@teambit/componen
 import { Toggle } from '@teambit/design.ui.input.toggle';
 import { RoundLoader } from '@teambit/design.ui.round-loader';
 import { Overview, TitleBadgeSlot } from '@teambit/docs';
+import { useLanes, useLanesContext } from '@teambit/lanes.ui.lanes';
 import React, { UIEvent, useMemo, useRef, useState } from 'react';
 import styles from './overview-compare.module.scss';
 
@@ -35,10 +36,16 @@ export function OverviewCompare(props: OverviewCompareProps) {
     setIsScrollingSynced((prev) => !prev);
   }
 
+  const lanesModel = useLanesContext();
+
   const BaseLayout = useMemo(() => {
     if (componentCompare?.base === undefined) {
       return <></>;
     }
+
+    const baseVersion = componentCompare?.base.model.version;
+
+    const isBaseOnLane = !!lanesModel?.lanebyComponentHash.get(baseVersion);
 
     return (
       <div className={styles.subView} ref={leftPanelRef} onScroll={handleLeftPanelScroll}>
