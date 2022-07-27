@@ -2,6 +2,7 @@ import { MainRuntime } from '@teambit/cli';
 import { AspectData, Component, ComponentAspect, ComponentMap, IComponent } from '@teambit/component';
 import { DevFilesAspect, DevFilesMain } from '@teambit/dev-files';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
+import { ComponentLoadOptions } from '@teambit/legacy/dist/consumer/component/component-loader';
 import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 import { flatten } from '@teambit/legacy/dist/utils';
 import { PreviewAspect, PreviewMain } from '@teambit/preview';
@@ -13,7 +14,6 @@ import { Composition } from './composition';
 import { CompositionsAspect } from './compositions.aspect';
 import { compositionsSchema } from './compositions.graphql';
 import { CompositionPreviewDefinition } from './compositions.preview-definition';
-import { ComponentLoadOptions } from '@teambit/legacy/dist/consumer/component/component-loader';
 
 export type CompositionsConfig = {
   /**

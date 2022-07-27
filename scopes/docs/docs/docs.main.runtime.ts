@@ -214,9 +214,6 @@ export class DocsMain {
 
     if (workspace) {
       workspace.onComponentLoad(async (component, opts) => {
-        if (opts == null) {
-          console.trace();
-        }
         if (opts?.loadDocs === false) return undefined;
         const doc = await docs.computeDoc(component);
 
