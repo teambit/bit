@@ -13,7 +13,7 @@ import { Composition } from './composition';
 import { CompositionsAspect } from './compositions.aspect';
 import { compositionsSchema } from './compositions.graphql';
 import { CompositionPreviewDefinition } from './compositions.preview-definition';
-import { OnComponentLoadOptions } from '@teambit/legacy/dist/consumer/component/component-loader';
+import { ComponentLoadOptions } from '@teambit/legacy/dist/consumer/component/component-loader';
 
 export type CompositionsConfig = {
   /**
@@ -114,8 +114,8 @@ export class CompositionsMain {
     );
   }
 
-  async onComponentLoad(component: Component, opts?: OnComponentLoadOptions): Promise<AspectData | undefined> {
-    if (opts?.loadCompositions === false) return undefined;
+  async onComponentLoad(component: Component, loadOpts?: ComponentLoadOptions): Promise<AspectData | undefined> {
+    if (loadOpts?.loadCompositions === false) return undefined;
     const compositions = this.readCompositions(component);
     return {
       compositions: compositions.map((composition) => composition.toObject()),

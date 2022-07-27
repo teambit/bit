@@ -84,7 +84,7 @@ import loader from '@teambit/legacy/dist/cli/loader';
 import { Lane } from '@teambit/legacy/dist/scope/models';
 import { LaneNotFound } from '@teambit/legacy/dist/api/scope/lib/exceptions/lane-not-found';
 import { ScopeNotFoundOrDenied } from '@teambit/legacy/dist/remotes/exceptions/scope-not-found-or-denied';
-import { OnComponentLoadOptions } from '@teambit/legacy/dist/consumer/component/component-loader';
+import { ComponentLoadOptions } from '@teambit/legacy/dist/consumer/component/component-loader';
 import { ComponentConfigFile } from './component-config-file';
 import { DependencyTypeNotSupportedInPolicy } from './exceptions';
 import {
@@ -498,7 +498,7 @@ export class Workspace implements ComponentFactory {
     legacyComponent?: ConsumerComponent,
     useCache = true,
     storeInCache = true,
-    opts?: OnComponentLoadOptions
+    loadOpts?: ComponentLoadOptions
   ): Promise<Component> {
     this.logger.debug(`get ${componentId.toString()}`);
     const component = await this.componentLoader.get(
@@ -507,7 +507,7 @@ export class Workspace implements ComponentFactory {
       legacyComponent,
       useCache,
       storeInCache,
-      opts
+      loadOpts
     );
     // When loading a component if it's an env make sure to load it as aspect as well
     // We only want to try load it as aspect if it's the first time we load the component
@@ -803,10 +803,10 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     return this.componentLoader.getMany(ids, forCapsule);
   }
 
-  getManyByLegacy(components: ConsumerComponent[]): Promise<Component[]> {
+  getManyByLegacy(components: ConsumerComponent[], loadOpts?: ComponentLoadOptions): Promise<Component[]> {
     return mapSeries(components, async (component) => {
       const id = await this.resolveComponentId(component.id);
-      return this.get(id, undefined, component);
+      return this.get(id, undefined, component, true, true, loadOpts);
     });
   }
 

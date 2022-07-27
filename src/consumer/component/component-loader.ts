@@ -17,11 +17,11 @@ import { ComponentFsCache } from './component-fs-cache';
 import { updateDependenciesVersions } from './dependencies/dependency-resolver';
 import { DependenciesLoader } from './dependencies/dependency-resolver/dependencies-loader';
 
-export type OnComponentLoadOptions = {
+export type ComponentLoadOptions = {
   loadDocs?: boolean;
   loadCompositions?: boolean;
 };
-type OnComponentLoadSubscriber = (component: Component, opts?: OnComponentLoadOptions) => Promise<Component>;
+type OnComponentLoadSubscriber = (component: Component, loadOpts?: ComponentLoadOptions) => Promise<Component>;
 type OnComponentIssuesCalcSubscriber = (component: Component) => Promise<ComponentIssue[]>;
 
 export default class ComponentLoader {
@@ -112,7 +112,7 @@ export default class ComponentLoader {
   async loadMany(
     ids: BitIds,
     throwOnFailure = true,
-    opts?: OnComponentLoadOptions
+    loadOpts?: ComponentLoadOptions
   ): Promise<{ components: Component[]; invalidComponents: InvalidComponent[] }> {
     logger.debugAndAddBreadCrumb('ComponentLoader', 'loading consumer-components from the file-system, ids: {ids}', {
       ids: ids.toString(),
@@ -142,7 +142,7 @@ export default class ComponentLoader {
 
     const allComponents: Component[] = [];
     await mapSeries(idsToProcess, async (id: BitId) => {
-      const component = await this.loadOne(id, throwOnFailure, invalidComponents, opts);
+      const component = await this.loadOne(id, throwOnFailure, invalidComponents, loadOpts);
       if (component) {
         this.componentsCache.set(component.id.toString(), component);
         logger.debugAndAddBreadCrumb('ComponentLoader', 'Finished loading the component "{id}"', {
@@ -159,7 +159,7 @@ export default class ComponentLoader {
     id: BitId,
     throwOnFailure: boolean,
     invalidComponents: InvalidComponent[],
-    opts?: OnComponentLoadOptions
+    loadOpts?: ComponentLoadOptions
   ) {
     const componentMap = this.consumer.bitMap.getComponent(id);
     let bitDir = this.consumer.getPath();
@@ -207,7 +207,7 @@ export default class ComponentLoader {
 
     const runOnComponentLoadEvent = async () => {
       return mapSeries(ComponentLoader.onComponentLoadSubscribers, async (subscriber) => {
-        component = await subscriber(component, opts);
+        component = await subscriber(component, loadOpts);
       });
     };
 

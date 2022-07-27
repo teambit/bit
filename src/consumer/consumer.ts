@@ -42,7 +42,7 @@ import BitMap, { CURRENT_BITMAP_SCHEMA } from './bit-map/bit-map';
 import { NextVersion } from './bit-map/component-map';
 import Component from './component';
 import { ComponentStatus, ComponentStatusLoader, ComponentStatusResult } from './component-ops/component-status-loader';
-import ComponentLoader, { OnComponentLoadOptions } from './component/component-loader';
+import ComponentLoader, { ComponentLoadOptions } from './component/component-loader';
 import { InvalidComponent } from './component/consumer-component';
 import { Dependencies } from './component/dependencies';
 import PackageJsonFile from './component/package-json-file';
@@ -317,8 +317,8 @@ export default class Consumer {
     });
   }
 
-  async loadComponent(id: BitId, opts?: OnComponentLoadOptions): Promise<Component> {
-    const { components } = await this.loadComponents(BitIds.fromArray([id]), true, opts);
+  async loadComponent(id: BitId, loadOpts?: ComponentLoadOptions): Promise<Component> {
+    const { components } = await this.loadComponents(BitIds.fromArray([id]), true, loadOpts);
     return components[0];
   }
 
@@ -329,9 +329,9 @@ export default class Consumer {
   async loadComponents(
     ids: BitIds,
     throwOnFailure = true,
-    opts?: OnComponentLoadOptions
+    loadOpts?: ComponentLoadOptions
   ): Promise<{ components: Component[]; invalidComponents: InvalidComponent[] }> {
-    return this.componentLoader.loadMany(ids, throwOnFailure, opts);
+    return this.componentLoader.loadMany(ids, throwOnFailure, loadOpts);
   }
 
   async importComponentsHarmony(
