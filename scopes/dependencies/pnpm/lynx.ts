@@ -196,6 +196,7 @@ export async function install(
     modulesCacheMaxAge: 0,
     registries: registriesMap,
     rawConfig: authConfig,
+    strictPeerDependencies: false,
     ...options,
     peerDependencyRules: {
       allowAny: ['*'],
