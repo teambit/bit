@@ -94,7 +94,7 @@ export class WorkspaceComponentLoader {
       componentId._legacy
     );
     const id = bitIdWithVersion.version ? componentId.changeVersion(bitIdWithVersion.version) : componentId;
-    const fromCache = this.getFromCache(id, forCapsule);
+    const fromCache = this.getFromCache(id, forCapsule, opts);
     if (fromCache && useCache) {
       return fromCache;
     }
@@ -104,7 +104,7 @@ export class WorkspaceComponentLoader {
     const component = await this.loadOne(updatedId, consumerComponent, opts);
     if (storeInCache) {
       this.addMultipleEnvsIssueIfNeeded(component); // it's in storeInCache block, otherwise, it wasn't fully loaded
-      this.saveInCache(component, forCapsule);
+      this.saveInCache(component, forCapsule, opts);
     }
     return component;
   }
@@ -135,8 +135,16 @@ export class WorkspaceComponentLoader {
   }
   clearComponentCache(id: ComponentID) {
     const idStr = id.toString();
-    this.componentsCache.delete(idStr);
-    this.componentsCacheForCapsule.delete(idStr);
+    for (const cacheKey of this.componentsCache.keys()) {
+      if (cacheKey === idStr || cacheKey.startsWith(`${idStr}:`)) {
+        this.componentsCache.delete(cacheKey);
+      }
+    }
+    for (const cacheKey of this.componentsCacheForCapsule.keys()) {
+      if (cacheKey === idStr || cacheKey.startsWith(`${idStr}:`)) {
+        this.componentsCacheForCapsule.delete(cacheKey);
+      }
+    }
   }
 
   private async loadOne(id: ComponentID, consumerComponent?: ConsumerComponent, opts?: { loadDocs?: boolean }) {
@@ -180,12 +188,12 @@ export class WorkspaceComponentLoader {
     return this.executeLoadSlot(this.newComponentFromState(id, state), opts);
   }
 
-  private saveInCache(component: Component, forCapsule: boolean): void {
+  private saveInCache(component: Component, forCapsule: boolean, opts?: { loadDocs?: boolean }): void {
+    const cacheKey = createComponentCacheKey(component.id, opts);
     if (forCapsule) {
-      this.componentsCacheForCapsule.set(component.id.toString(), component);
+      this.componentsCacheForCapsule.set(cacheKey, component);
     } else {
-      this.componentsCache.set(component.id.toString(), component);
-      // this.componentsCache.set(`${component.id.toString()}:${JSON.stringify(opts)}`, component);
+      this.componentsCache.set(cacheKey, component);
     }
   }
 
@@ -196,10 +204,9 @@ export class WorkspaceComponentLoader {
    * as a result, when out-of-sync is happening and the id is changed to include scope-name in the
    * legacy-id, the component is the cache has the old id.
    */
-  private getFromCache(id: ComponentID, forCapsule: boolean): Component | undefined {
-    const fromCache = forCapsule
-      ? this.componentsCacheForCapsule.get(id.toString())
-      : this.componentsCache.get(id.toString());
+  private getFromCache(id: ComponentID, forCapsule: boolean, opts?: { loadDocs?: boolean }): Component | undefined {
+    const cacheKey = createComponentCacheKey(id, opts);
+    const fromCache = forCapsule ? this.componentsCacheForCapsule.get(cacheKey) : this.componentsCache.get(cacheKey);
     if (fromCache && fromCache.id._legacy.isEqual(id._legacy)) {
       return fromCache;
     }
@@ -284,4 +291,8 @@ export class WorkspaceComponentLoader {
     // TODO: @gilad we need to refactor the extension data entry api.
     return new ExtensionDataEntry(undefined, undefined, extension, undefined, data);
   }
+}
+
+function createComponentCacheKey(id: ComponentID, opts?: { loadDocs?: boolean }): string {
+  return `${id.toString()}:${JSON.stringify(opts)}`;
 }
