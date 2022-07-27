@@ -1,7 +1,6 @@
 import { MainRuntime } from '@teambit/cli';
 import { ScopeMain, ScopeAspect } from '@teambit/scope';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
-import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import GeneralError from '@teambit/legacy/dist/error/general-error';
 import {
   diffBetweenVersionsObjects,
@@ -18,7 +17,7 @@ export type ComponentCompareResult = {
 };
 
 export class ComponentCompareMain {
-  constructor(private componentAspect: ComponentMain, private scope: ScopeMain, private logger: Logger) {}
+  constructor(private componentAspect: ComponentMain, private scope: ScopeMain) {}
 
   async compare(baseIdStr: string, compareIdStr: string): Promise<ComponentCompareResult> {
     const host = this.componentAspect.getHost();
@@ -53,11 +52,10 @@ export class ComponentCompareMain {
   }
 
   static slots = [];
-  static dependencies = [GraphqlAspect, ComponentAspect, ScopeAspect, LoggerAspect];
+  static dependencies = [GraphqlAspect, ComponentAspect, ScopeAspect];
   static runtime = MainRuntime;
-  static async provider([graphql, component, scope, loggerMain]: [GraphqlMain, ComponentMain, ScopeMain, LoggerMain]) {
-    const logger = loggerMain.createLogger(ComponentCompareAspect.id);
-    const componentCompareMain = new ComponentCompareMain(component, scope, logger);
+  static async provider([graphql, component, scope]: [GraphqlMain, ComponentMain, ScopeMain]) {
+    const componentCompareMain = new ComponentCompareMain(component, scope);
     graphql.register(componentCompareSchema(componentCompareMain));
     return componentCompareMain;
   }
