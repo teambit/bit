@@ -5,7 +5,7 @@ import { ComponentID } from '@teambit/component-id';
 import { DivergeData } from '@teambit/legacy/dist/scope/component-ops/diverge-data';
 import { immutableUnshift } from '@teambit/legacy/dist/utils';
 import { IssuesList } from '@teambit/component-issues';
-import { formatBitString, formatNewBit } from '@teambit/legacy/dist/cli/chalk-box';
+import { formatBitString } from '@teambit/legacy/dist/cli/chalk-box';
 import { getInvalidComponentLabel } from '@teambit/legacy/dist/cli/templates/component-issues-template';
 import {
   BASE_DOCS_DOMAIN,

@@ -519,7 +519,12 @@ export default class CommandHelper {
 
   statusComponentIsModified(fullId: string): boolean {
     const status = this.statusJson();
-    return status.modifiedComponents.includes(fullId);
+    return status.modifiedComponents.includes(`${this.scopes.remote}/${fullId}`);
+  }
+
+  statusComponentHasIssues(id: string): boolean {
+    const status = this.statusJson();
+    return status.componentsWithIssues.includes(`${this.scopes.remote}/${id}`);
   }
 
   showComponent(id = 'bar/foo') {
