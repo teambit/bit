@@ -2,7 +2,7 @@ version: 2.1
 
 default_image: &default_image
   docker:
-    - image: cimg/node:16.16.0
+    - image: cimg/node:14.20.0
 
 default_resource_class: &default_resource_class
   resource_class: medium
@@ -946,7 +946,7 @@ jobs:
       PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: true
     steps:
       # - run: choco install nodejs --version 16.15.1
-      - run: cinst nodejs --version 16.16.0
+      - run: cinst nodejs --version 14.20.0
       # - run: nodejs.install v12.16.0
       - run: node -v
       - run: 'yarn -v'
@@ -1210,9 +1210,9 @@ jobs:
       - run: node -v
       - run: npm -v
       - run: yarn -v
-      # - run: choco install nodejs --version 16.16.0
+      # - run: choco install nodejs --version 14.20.0
       # - run: node -v
-      - run: cinst nodejs --version 16.16.0
+      - run: cinst nodejs --version 14.20.0
       - run: node -v
 
   windows_checkout_code:
@@ -1344,7 +1344,7 @@ jobs:
     steps:
       - attach_workspace:
           at: .
-      - run: cinst nodejs --version 16.16.0
+      - run: cinst nodejs --version 14.20.0
       - run: node -v
       - run: npm -v
       # - run: Get-Content -Path .\version.txt
@@ -1399,7 +1399,7 @@ jobs:
     steps:
       - attach_workspace:
           at: .
-      - run: cinst nodejs --version 16.16.0
+      - run: cinst nodejs --version 14.20.0
       - run: node -v
       - run: npm -v
       # - run: Get-Content -Path .\version.txt
