@@ -306,4 +306,51 @@ describe('merge lanes', function () {
       });
     });
   });
+  describe('getting updates from main when lane is diverge', () => {
+    let workspaceOnLane: string;
+    let comp2HeadOnMain: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents(2);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.command.createLane();
+      helper.fixtures.populateComponents(2, undefined, 'v2');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      workspaceOnLane = helper.scopeHelper.cloneLocalScope();
+      helper.command.switchLocalLane('main');
+      helper.fixtures.populateComponents(2, undefined, 'v3');
+      helper.command.snapAllComponentsWithoutBuild();
+      comp2HeadOnMain = helper.command.getHead(`${helper.scopes.remote}/comp2`);
+      helper.command.export();
+      helper.scopeHelper.getClonedLocalScope(workspaceOnLane);
+      helper.command.import();
+    });
+    it('bit import should bring the latest main objects', () => {
+      const head = helper.command.getHead(`${helper.scopes.remote}/comp2`);
+      expect(head).to.equal(comp2HeadOnMain);
+    });
+    it('bit status should indicate that the main is ahead', () => {
+      const status = helper.command.status();
+      expect(status).to.have.string(`${helper.scopes.remote}/comp1 ... main is ahead by 1 snaps`);
+    });
+    describe('merging the lane', () => {
+      let status;
+      before(() => {
+        helper.command.mergeLane('main', '--theirs');
+        status = helper.command.statusJson();
+      });
+      it('bit status should show two staging versions, the main-head and merge-snap', () => {
+        const stagedVersions = status.stagedComponents.find((c) => c.id === `${helper.scopes.remote}/comp2`);
+        expect(stagedVersions.versions).to.have.lengthOf(2);
+        expect(stagedVersions.versions).to.include(comp2HeadOnMain);
+        expect(stagedVersions.versions).to.include(helper.command.getHeadOfLane('dev', 'comp2'));
+      });
+      it('bit status should not show the components in pending-merge', () => {
+        expect(status.mergePendingComponents).to.have.lengthOf(0);
+      });
+    });
+  });
 });

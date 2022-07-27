@@ -23,6 +23,7 @@ export type FETCH_OPTIONS = {
   allowExternal: boolean; // allow fetching components of other scope from this scope. needed for lanes.
   laneId?: string; // relevant for "component-delta" type to know where to find the component latest
   onlyIfBuilt?: boolean; // relevant when fetching with deps. if true, and the component wasn't built successfully, don't fetch it.
+  ignoreMissingHead?: boolean; // if asking for id without version and the component has no head, don't throw, just ignore
 };
 
 const HooksManagerInstance = HooksManager.getInstance();
@@ -58,7 +59,11 @@ export default async function fetch(
       const scopeComponentsImporter = ScopeComponentsImporter.getInstance(scope);
       const getComponentsWithOptions = async (): Promise<ComponentWithCollectOptions[]> => {
         if (withoutDependencies) {
-          const componentsVersions = await scopeComponentsImporter.fetchWithoutDeps(bitIds, allowExternal);
+          const componentsVersions = await scopeComponentsImporter.fetchWithoutDeps(
+            bitIds,
+            allowExternal,
+            fetchOptions.ignoreMissingHead
+          );
           return componentsVersions.map((compVersion) => ({
             component: compVersion.component,
             version: compVersion.version,
@@ -97,7 +102,8 @@ export default async function fetch(
       const bitIdsLatest = bitIdsToLatest(bitIdsWithHashToStop, lane);
       const importedComponents = await scopeComponentsImporter.fetchWithoutDeps(
         bitIdsLatest,
-        fetchOptions.allowExternal
+        fetchOptions.allowExternal,
+        fetchOptions.ignoreMissingHead
       );
       const componentsWithOptions: ComponentWithCollectOptions[] = importedComponents.map((compVersion) => {
         const hashToStop = bitIdsWithHashToStop.searchWithoutVersion(compVersion.id)?.version;

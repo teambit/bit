@@ -163,6 +163,11 @@ export default class BitMap {
     const currentLaneId = consumer.getCurrentLaneId();
     const laneName = consumer.scope.lanes.getAliasByLaneId(currentLaneId);
     if (laneId && currentLaneId.isDefault()) {
+      logger.console(
+        `workspace is auto-synced to "${laneId.toString()}" lane, please run "bit import" to obtain the missing objects`,
+        'warn',
+        'yellow'
+      );
       const scopeJson = consumer.scope.scopeJson;
       scopeJson.trackLane({
         remoteLane: laneId.name,

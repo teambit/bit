@@ -234,7 +234,12 @@ export default class ScopeComponentsImporter {
    * delta between the local head and the remote head. mainly to improve performance
    * not applicable and won't work for legacy. for legacy, refer to importManyWithAllVersions
    */
-  async importManyDeltaWithoutDeps(ids: BitIds, allHistory = false, lane?: Lane): Promise<void> {
+  async importManyDeltaWithoutDeps(
+    ids: BitIds,
+    allHistory = false,
+    lane?: Lane,
+    ignoreMissingHead = false
+  ): Promise<void> {
     logger.debugAndAddBreadCrumb('importManyDeltaWithoutDeps', `Ids: {ids}`, { ids: ids.toString() });
     const idsWithoutNils = BitIds.uniqFromArray(compact(ids));
     if (R.isEmpty(idsWithoutNils)) return;
@@ -275,6 +280,7 @@ export default class ScopeComponentsImporter {
         type: 'component-delta',
         withoutDependencies: true,
         laneId: lane ? lane.id() : undefined,
+        ignoreMissingHead,
       },
       idsToFetch,
       lane ? [lane] : undefined
@@ -324,14 +330,18 @@ export default class ScopeComponentsImporter {
     await this.repo.writeObjectsToTheFS(bitObjectsList.getAll());
   }
 
-  async fetchWithoutDeps(ids: BitIds, allowExternal: boolean): Promise<ComponentVersion[]> {
+  async fetchWithoutDeps(ids: BitIds, allowExternal: boolean, ignoreMissingHead = false): Promise<ComponentVersion[]> {
     logger.debugAndAddBreadCrumb('fetchWithoutDeps', `ids: {ids}`, { ids: ids.toString() });
     if (!allowExternal) this.throwIfExternalFound(ids);
     const localDefs: ComponentDef[] = await this.sources.getMany(ids);
     const componentVersionArr = await Promise.all(
       localDefs.map(({ id, component }) => {
         if (!component) {
-          logger.warn(`fetchWithoutDeps failed finding a local component ${id.toString()}`);
+          logger.warn(`fetchWithoutDeps, failed finding a local component ${id.toString()}`);
+          return null;
+        }
+        if (ignoreMissingHead && !component.head && !id.hasVersion()) {
+          logger.debug(`fetchWithoutDeps, ignored missing head ${id.toString()}`);
           return null;
         }
         return component.toComponentVersion(id.version as string);

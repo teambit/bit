@@ -29,9 +29,16 @@ export async function createLane(
     const currentWorkspaceLane = consumer.bitMap.workspaceLane;
     return currentWorkspaceLane ? currentWorkspaceLane.ids : new BitIds();
   };
+  const forkedFrom = consumer.bitMap.remoteLaneId;
   const newLane = remoteLane
-    ? Lane.from({ name: laneName, hash: remoteLane.hash().toString(), log: remoteLane.log, scope: remoteLane.scope })
-    : Lane.create(laneName, scopeName);
+    ? Lane.from({
+        name: laneName,
+        hash: remoteLane.hash().toString(),
+        log: remoteLane.log,
+        scope: remoteLane.scope,
+        forkedFrom,
+      })
+    : Lane.create(laneName, scopeName, forkedFrom);
   const dataToPopulate = await getDataToPopulateLaneObjectIfNeeded();
   newLane.setLaneComponents(dataToPopulate);
 
