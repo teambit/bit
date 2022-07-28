@@ -25,6 +25,7 @@ export class LaneDiffGenerator {
   private compsWithNoChanges: BitId[] = [];
   private fromLaneData: LaneData | null;
   private toLaneData: LaneData;
+  private failures: { id: BitId; msg: string }[] = [];
   constructor(private workspace: Workspace | undefined, private scope: ScopeMain) {}
 
   /**
@@ -88,6 +89,7 @@ export class LaneDiffGenerator {
       compsWithDiff: this.compsWithDiff,
       compsWithNoChanges: this.compsWithNoChanges.map((id) => id.toString()),
       toLaneName: this.toLaneData?.name,
+      failures: this.failures,
     };
   }
 
@@ -103,13 +105,19 @@ export class LaneDiffGenerator {
       this.compsWithNoChanges.push(id);
       return;
     }
-    const fromVersion = await fromLaneHead.load(this.scope.legacyScope.objects);
+    let fromVersion: Version;
+    try {
+      fromVersion = (await fromLaneHead.load(this.scope.legacyScope.objects, true)) as Version;
+    } catch (err: any) {
+      this.failures.push({ id, msg: err.message });
+      return;
+    }
     const toVersion = await toLaneHead.load(this.scope.legacyScope.objects);
     const fromLaneStr = this.fromLaneData ? this.fromLaneData.name : DEFAULT_LANE;
     diffOptions.formatDepsAsTable = false;
     const diff = await diffBetweenVersionsObjects(
       modelComponent,
-      fromVersion as Version,
+      fromVersion,
       toVersion as Version,
       fromLaneStr,
       this.toLaneData.name,
