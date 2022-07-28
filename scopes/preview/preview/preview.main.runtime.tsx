@@ -3,7 +3,7 @@ import type { BuilderMain } from '@teambit/builder';
 import { Asset, BundlerAspect, BundlerMain } from '@teambit/bundler';
 import { PubsubAspect, PubsubMain } from '@teambit/pubsub';
 import { MainRuntime } from '@teambit/cli';
-import { Component, ComponentAspect, ComponentMain, ComponentMap, ComponentID } from '@teambit/component';
+import { Component, ComponentAspect, ComponentMain, ComponentMap, ComponentID, ResolveAspectsOptions } from '@teambit/component';
 import { EnvsAspect } from '@teambit/envs';
 import type { EnvsMain, ExecutionContext, PreviewEnv } from '@teambit/envs';
 import { Slot, SlotRegistry, Harmony } from '@teambit/harmony';
@@ -380,11 +380,12 @@ export class PreviewMain {
   async resolveAspects(
     runtimeName?: string,
     componentIds?: ComponentID[],
-    uiRoot?: UIRoot
+    uiRoot?: UIRoot,
+    opts?: ResolveAspectsOptions
   ): Promise<AspectDefinition[]> {
     const root = uiRoot || this.getUi()[1];
     runtimeName = runtimeName || MainRuntime.name;
-    const resolvedAspects = await root.resolveAspects(runtimeName, componentIds);
+    const resolvedAspects = await root.resolveAspects(runtimeName, componentIds, opts);
     return resolvedAspects;
   }
 

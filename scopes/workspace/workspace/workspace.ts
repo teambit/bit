@@ -18,6 +18,7 @@ import {
   AspectList,
   AspectData,
   InvalidComponent,
+  ResolveAspectsOptions,
 } from '@teambit/component';
 import { Importer } from '@teambit/importer';
 import { BitError } from '@teambit/bit-error';
@@ -1505,8 +1506,13 @@ needed-for: ${neededFor || '<unknown>'}`);
   async resolveAspects(
     runtimeName?: string,
     componentIds?: ComponentID[],
-    excludeCore = false
+    opts?: ResolveAspectsOptions
   ): Promise<AspectDefinition[]> {
+    const defaultOpts: ResolveAspectsOptions = {
+      excludeCore: false,
+      requestedOnly: false,
+    }
+    const mergedOpts = { ...defaultOpts, ...opts };
     let missingPaths = false;
     const stringIds: string[] = [];
     const idsToResolve = componentIds ? componentIds.map((id) => id.toString()) : this.harmony.extensionsIds;
@@ -1554,13 +1560,13 @@ needed-for: ${neededFor || '<unknown>'}`);
 
     const allDefs = aspectDefs.concat(coreAspectDefs).concat(scopeAspectDefs);
     const ids = idsToResolve.map((idStr) => ComponentID.fromString(idStr).toStringWithoutVersion());
-    const afterExclusion = excludeCore
+    const afterExclusion = mergedOpts.excludeCore
       ? allDefs.filter((def) => {
           const isCore = coreAspectDefs.find((coreId) => def.getId === coreId.getId);
           const id = ComponentID.fromString(def.getId || '');
           const isTarget = ids.includes(id.toStringWithoutVersion());
           if (isTarget) return true;
-          return isCore && isTarget;
+          return !isCore;
         })
       : allDefs;
 
@@ -1570,7 +1576,7 @@ needed-for: ${neededFor || '<unknown>'}`);
       defs = defs.filter((def) => def.runtimePath);
     }
 
-    if (componentIds && componentIds.length) {
+    if (componentIds && componentIds.length && mergedOpts.excludeCore) {
       const componentIdsString = componentIds.map((id) => id.toString());
       defs = defs.filter((def) => {
         return (
