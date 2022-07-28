@@ -215,12 +215,22 @@ async function filterComponentsStatus(
       if (!depsNotIncludeInPattern.length) {
         return;
       }
+      const depsOnLane: BitId[] = [];
+      await Promise.all(
+        depsNotIncludeInPattern.map(async (dep) => {
+          const isOnLane = await workspace.consumer.scope.isIdOnLane(dep);
+          if (isOnLane) depsOnLane.push(dep);
+        })
+      );
+      if (!depsOnLane.length) {
+        return;
+      }
       if (!includeDeps) {
         throw new BitError(`unable to merge ${compId.toString()}.
 it has the following dependencies which were not included in the pattern. consider adding "--include-deps" flag
-${depsNotIncludeInPattern.map((d) => d.toString()).join('\n')}`);
+${depsOnLane.map((d) => d.toString()).join('\n')}`);
       }
-      depsToAdd.push(...depsNotIncludeInPattern);
+      depsToAdd.push(...depsOnLane);
     });
   });
   if (depsToAdd.length) {
