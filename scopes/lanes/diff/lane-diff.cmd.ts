@@ -1,7 +1,9 @@
 import { Command, CommandOptions } from '@teambit/cli';
+import { ScopeMain } from '@teambit/scope';
+import { Workspace } from '@teambit/workspace';
 import chalk from 'chalk';
 import { outputDiffResults } from '@teambit/legacy/dist/consumer/component-ops/components-diff';
-import { LanesMain } from '../lanes/lanes.main.runtime';
+import { LaneDiffGenerator } from './lane-diff-generator';
 
 export class LaneDiffCmd implements Command {
   name = 'diff [values...]';
@@ -19,10 +21,12 @@ bit lane diff from to => diff between "from" lane and "to" lane.`;
   remoteOp = true;
   skipWorkspace = true;
 
-  constructor(private lanes: LanesMain) {}
+  constructor(private workspace: Workspace, private scope: ScopeMain) {}
 
   async report([values = []]: [string[]], { pattern }: { pattern?: string }) {
-    const { compsWithDiff, newComps, toLaneName } = await this.lanes.getDiff(values, undefined, pattern);
+    const laneDiffGenerator = new LaneDiffGenerator(this.workspace, this.scope);
+    const { compsWithDiff, newComps, toLaneName } = await laneDiffGenerator.generate(values, undefined, pattern);
+
     const diffResultsStr = outputDiffResults(compsWithDiff);
     const newCompsIdsStr = newComps.map((id) => chalk.bold(id)).join('\n');
     const newCompsTitle = `The following components were introduced in ${chalk.bold(toLaneName)} lane`;
