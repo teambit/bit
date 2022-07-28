@@ -372,7 +372,7 @@ export class BuilderMain {
       snapTaskSlot
     );
 
-    graphql.register(builderSchema(builder));
+    graphql.register(builderSchema(builder, scope.legacyScope));
     generator.registerComponentTemplate([buildTaskTemplate]);
     const func = builder.tagListener.bind(builder);
     if (scope) scope.onTag(func);
