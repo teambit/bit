@@ -253,7 +253,9 @@ export default class Component extends BitObject {
 
   getDivergeData(): DivergeData {
     if (!this.divergeData)
-      throw new Error(`getDivergeData() expects divergeData to be populate, please use this.setDivergeData()`);
+      throw new Error(
+        `getDivergeData() expects divergeData to be populate, please use this.setDivergeData() for id: ${this.id()}`
+      );
     return this.divergeData;
   }
 

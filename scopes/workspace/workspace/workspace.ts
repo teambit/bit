@@ -1069,7 +1069,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     const relativeComponentDir = this.componentDir(componentId, { ignoreVersion: true }, { relative: true });
     const variantConfig = this.variants.byRootDirAndName(relativeComponentDir, componentId.fullName);
     if (variantConfig) {
-      variantsExtensions = variantConfig.extensions;
+      variantsExtensions = variantConfig.extensions.clone();
       // Do not merge from scope when there is specific variant (which is not *) that match the component
       // if (variantConfig.maxSpecificity > 0) {
       //   mergeFromScope = false;
