@@ -2,7 +2,7 @@ import { Component, ComponentFS, ComponentID, Config, InvalidComponent, State, T
 import { BitId } from '@teambit/legacy-bit-id';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
 import mapSeries from 'p-map-series';
-import { compact, uniq } from 'lodash';
+import { compact, fromPairs, uniq } from 'lodash';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { MissingBitMapComponent } from '@teambit/legacy/dist/consumer/bit-map/exceptions';
 import { getLatestVersionNumber } from '@teambit/legacy/dist/utils';
@@ -295,5 +295,9 @@ export class WorkspaceComponentLoader {
 }
 
 function createComponentCacheKey(id: ComponentID, loadOpts?: ComponentLoadOptions): string {
-  return `${id.toString()}:${JSON.stringify(loadOpts)}`;
+  return `${id.toString()}:${JSON.stringify(sortKeys(loadOpts ?? {}))}`;
+}
+
+function sortKeys(obj: Object) {
+  return fromPairs(Object.entries(obj).sort(([k1], [k2]) => k1.localeCompare(k2)));
 }
