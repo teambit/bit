@@ -577,7 +577,7 @@ export class LanesMain {
       new LaneChangeScopeCmd(lanesMain),
       new LaneAliasCmd(lanesMain),
       new LaneRenameCmd(lanesMain),
-      new LaneDiffCmd(lanesMain),
+      new LaneDiffCmd(workspace, scope),
       new LaneAddReadmeCmd(lanesMain),
       new LaneRemoveReadmeCmd(lanesMain),
       new LaneImportCmd(switchCmd),
