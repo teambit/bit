@@ -6,7 +6,6 @@ import { BuildStatus } from '../../constants';
 import ConsumerComponent from '../../consumer/component';
 import { ArtifactFiles, ArtifactSource, getArtifactsFiles } from '../../consumer/component/sources/artifact-files';
 import Consumer from '../../consumer/consumer';
-import GeneralError from '../../error/general-error';
 import logger from '../../logger/logger';
 import ComponentObjects from '../component-objects';
 import { getAllVersionHashes, getAllVersionsInfo, VersionInfo } from '../component-ops/traverse-versions';
