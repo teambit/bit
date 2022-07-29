@@ -299,9 +299,9 @@ export default class ComponentsList {
       this.listNewComponents(),
       this.listModifiedComponents(),
     ]);
+    const duringMergeIds = this.listDuringMergeStateComponents();
 
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return BitIds.fromArray([...newComponents, ...modifiedComponents]);
+    return BitIds.fromArray([...(newComponents as BitId[]), ...(modifiedComponents as BitId[]), ...duringMergeIds]);
   }
 
   async listExportPendingComponentsIds(lane?: Lane | null): Promise<BitIds> {
