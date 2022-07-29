@@ -101,7 +101,7 @@ export function mergeReport({
   failedComponents,
   version,
   mergeSnapResults,
-  conflictsFound,
+  leftUnresolvedConflicts,
 }: ApplyVersionResults): string {
   const getSuccessOutput = () => {
     if (!components || !components.length) return '';
@@ -112,7 +112,7 @@ export function mergeReport({
   };
 
   const getConflictSummary = () => {
-    if (!components || !components.length || !conflictsFound) return '';
+    if (!components || !components.length || !leftUnresolvedConflicts) return '';
     const title = `files with conflicts summary\n`;
     const suggestion = `\n\nthe merge process wasn't completed due to the conflicts above. fix them manually and then run "bit install".
 once ready, run "bit merge --resolve" to complete the merge.`;

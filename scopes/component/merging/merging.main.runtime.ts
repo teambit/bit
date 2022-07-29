@@ -187,6 +187,8 @@ export class MergingMain {
       });
     });
 
+    const leftUnresolvedConflicts = componentWithConflict && mergeStrategy === 'manual';
+
     if (localLane) consumer.scope.objects.add(localLane);
 
     await consumer.scope.objects.persist(); // persist anyway, if localLane is null it should save all main heads
@@ -196,13 +198,13 @@ export class MergingMain {
     // if one of the component has conflict, don't snap-merge. otherwise, some of the components would be snap-merged
     // and some not. except the fact that it could by mistake tag dependent, it's a confusing state. better not snap.
     const mergeSnapResults =
-      noSnap || componentWithConflict ? null : await this.snapResolvedComponents(consumer, snapMessage, build);
+      noSnap || leftUnresolvedConflicts ? null : await this.snapResolvedComponents(consumer, snapMessage, build);
 
     return {
       components: componentsResults,
       failedComponents,
       mergeSnapResults,
-      conflictsFound: Boolean(componentWithConflict),
+      leftUnresolvedConflicts,
     };
   }
 

@@ -40,7 +40,7 @@ export type ApplyVersionResults = {
   resolvedComponents?: Component[]; // relevant for bit merge --resolve
   abortedComponents?: ApplyVersionResult[]; // relevant for bit merge --abort
   mergeSnapResults?: { snappedComponents: Component[]; autoSnappedResults: AutoTagResult[] } | null;
-  conflictsFound?: boolean;
+  leftUnresolvedConflicts?: boolean;
 };
 type ComponentStatus = {
   componentFromFS: Component;
