@@ -266,25 +266,18 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     source,
     consumer,
     lane,
-    resolveUnmerged = false,
     shouldValidateVersion = false,
   }: {
     source: ConsumerComponent;
     consumer: Consumer;
     lane: Lane | null;
-    resolveUnmerged?: boolean;
     shouldValidateVersion?: boolean;
   }): Promise<ModelComponent> {
     const objectRepo = this.objects();
     // if a component exists in the model, add a new version. Otherwise, create a new component on the model
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const component = await this.findOrAddComponent(source);
-    const unmergedComponent = consumer.scope.objects.unmergedComponents.getEntry(component.name);
-    if (unmergedComponent && !unmergedComponent.resolved && !resolveUnmerged) {
-      throw new GeneralError(
-        `unable to snap/tag "${component.name}", it is unmerged with conflicts. please run "bit merge <id> --resolve"`
-      );
-    }
+
     const artifactFiles = getArtifactsFiles(source.extensions);
     const artifacts = this.transformArtifactsFromVinylToSource(artifactFiles);
     const { version, files } = await this.consumerComponentToVersion(source);
@@ -292,14 +285,13 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     if (!source.version) throw new Error(`addSource expects source.version to be set`);
     component.addVersion(version, source.version, lane, objectRepo);
 
+    const unmergedComponent = consumer.scope.objects.unmergedComponents.getEntry(component.name);
     if (unmergedComponent) {
       version.addParent(unmergedComponent.head);
       logger.debug(
         `sources.addSource, unmerged component "${component.name}". adding a parent ${unmergedComponent.head.hash}`
       );
-      version.log.message = version.log.message
-        ? version.log.message
-        : UnmergedComponents.buildSnapMessage(unmergedComponent);
+      version.log.message = version.log.message || UnmergedComponents.buildSnapMessage(unmergedComponent);
       consumer.scope.objects.unmergedComponents.removeComponent(component.name);
     }
     objectRepo.add(component);
