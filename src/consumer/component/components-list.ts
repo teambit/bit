@@ -172,9 +172,14 @@ export default class ComponentsList {
     if (this.scope.lanes.isOnMain()) {
       return [];
     }
+    const authoredAndImportedIds = this.bitMap.getAuthoredAndImportedBitIds();
+
     const componentsFromModel = await this.getModelComponents();
+    const compFromModelOnWorkspace = componentsFromModel.filter((c) =>
+      authoredAndImportedIds.hasWithoutVersion(c.toBitId())
+    );
     const results = await Promise.all(
-      componentsFromModel.map(async (modelComponent) => {
+      compFromModelOnWorkspace.map(async (modelComponent) => {
         const headOnMain = modelComponent.head;
         const headOnLane = modelComponent.laneHeadLocal;
         if (!headOnMain || !headOnLane) return undefined;
@@ -294,9 +299,9 @@ export default class ComponentsList {
       this.listNewComponents(),
       this.listModifiedComponents(),
     ]);
+    const duringMergeIds = this.listDuringMergeStateComponents();
 
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return BitIds.fromArray([...newComponents, ...modifiedComponents]);
+    return BitIds.fromArray([...(newComponents as BitId[]), ...(modifiedComponents as BitId[]), ...duringMergeIds]);
   }
 
   async listExportPendingComponentsIds(lane?: Lane | null): Promise<BitIds> {

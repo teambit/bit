@@ -67,13 +67,13 @@ describe('merge lanes', function () {
         });
       });
     });
-    describe('merging remote lane into main when components are not in workspace using --existing flag', () => {
+    describe('merging remote lane into main when components are not in workspace using --workspace flag', () => {
       let mergeOutput;
       before(() => {
         helper.scopeHelper.reInitLocalScopeHarmony();
         helper.scopeHelper.addRemoteScope();
         helper.command.fetchRemoteLane('dev');
-        mergeOutput = helper.command.mergeRemoteLane(`dev`, undefined, `--existing`);
+        mergeOutput = helper.command.mergeRemoteLane(`dev`, undefined, `--workspace`);
       });
       it('should indicate that the components were not merge because they are not in the workspace', () => {
         expect(mergeOutput).to.have.string('the merge has been canceled on the following component(s)');

@@ -163,13 +163,13 @@ alternatively, to keep local tags/snaps history, use "bit merge <remote-name>/<l
       : '';
 
     const compWithConflictsTitle = chalk.underline.white('components during merge state');
-    const compWithConflictsDesc = `(use "bit merge [component-id] --resolve" to mark them as resolved and snap the changes
+    const compWithConflictsDesc = `(use "bit snap/tag [--unmerged]" to complete the merge process
 or use "bit merge [component-id] --abort" to cancel the merge operation)\n`;
     const compWithConflictsComps = componentsDuringMergeState
       .map((id) => {
         return `    > ${chalk.cyan(id.toString())}`;
       })
-      .join('');
+      .join('\n');
 
     const compWithConflictsStr = compWithConflictsComps.length
       ? [compWithConflictsTitle, compWithConflictsDesc, compWithConflictsComps].join('\n')
@@ -203,7 +203,7 @@ or use "bit merge [component-id] --abort" to cancel the merge operation)\n`;
       invalidComponents.length ? chalk.underline.white(statusInvalidComponentsMsg) + invalidDesc : ''
     ).join('\n');
 
-    const stagedDesc = '\n(use "bit export to push these components to a remote scope")\n';
+    const stagedDesc = '\n(use "bit export" to push these components to a remote scope)\n';
     const stagedComponentsOutput = immutableUnshift(
       stagedComponents.map((c) => format(c.id, true, undefined, c.versions)),
       stagedComponents.length ? chalk.underline.white('staged components') + stagedDesc : ''
