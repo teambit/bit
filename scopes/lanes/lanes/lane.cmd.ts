@@ -308,7 +308,7 @@ export class LaneMergeCmd implements Command {
   constructor(private lanes: LanesMain) {}
 
   async report(
-    [name, pattern]: [string, string | undefined],
+    [name, pattern]: [string, string],
     {
       ours = false,
       theirs = false,
