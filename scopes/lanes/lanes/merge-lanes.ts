@@ -79,7 +79,8 @@ export async function mergeLanes({
       compIdsFromPattern,
       bitIds,
       workspace,
-      includeDeps
+      includeDeps,
+      otherLane
     );
     bitIds.forEach((bitId) => {
       if (!allComponentsStatus.find((c) => c.id.isEqualWithoutVersion(bitId))) {
@@ -183,7 +184,8 @@ async function filterComponentsStatus(
   compIdsToKeep: ComponentID[],
   allBitIds: BitId[],
   workspace: Workspace,
-  includeDeps = false
+  includeDeps = false,
+  lane?: Lane
 ): Promise<ComponentMergeStatus[]> {
   const bitIdsFromPattern = BitIds.fromArray(compIdsToKeep.map((c) => c._legacy));
   const bitIdsNotFromPattern = allBitIds.filter((bitId) => !bitIdsFromPattern.hasWithoutVersion(bitId));
@@ -208,6 +210,7 @@ async function filterComponentsStatus(
     }
     const modelComponent = await workspace.consumer.scope.getModelComponent(compId._legacy);
     // optimization suggestion: if squash is given, check only the last version.
+    const laneIds = lane?.toBitIds();
     await pMapSeries(remoteVersions, async (localVersion) => {
       const versionObj = await modelComponent.loadVersion(localVersion.toString(), workspace.consumer.scope.objects);
       const flattenedDeps = versionObj.getAllFlattenedDependencies();
@@ -218,7 +221,7 @@ async function filterComponentsStatus(
       const depsOnLane: BitId[] = [];
       await Promise.all(
         depsNotIncludeInPattern.map(async (dep) => {
-          const isOnLane = await workspace.consumer.scope.isIdOnLane(dep);
+          const isOnLane = await workspace.consumer.scope.isIdOnLane(dep, lane, laneIds);
           if (isOnLane) depsOnLane.push(dep);
         })
       );
