@@ -1,4 +1,5 @@
 import chalk from 'chalk';
+import { compact } from 'lodash';
 import * as path from 'path';
 
 import { BitId, BitIds } from '../../../bit-id';
@@ -39,6 +40,7 @@ export type ApplyVersionResults = {
   resolvedComponents?: Component[]; // relevant for bit merge --resolve
   abortedComponents?: ApplyVersionResult[]; // relevant for bit merge --abort
   mergeSnapResults?: { snappedComponents: Component[]; autoSnappedResults: AutoTagResult[] } | null;
+  leftUnresolvedConflicts?: boolean;
 };
 type ComponentStatus = {
   componentFromFS: Component;
@@ -258,3 +260,23 @@ export const applyVersionReport = (components: ApplyVersionResult[], addName = t
     })
     .join('\n\n');
 };
+
+export function conflictSummaryReport(components: ApplyVersionResult[]): string {
+  const tab = '\t';
+  return compact(
+    components.map((component: ApplyVersionResult) => {
+      const name = component.id.toStringWithoutVersion();
+      const files = compact(
+        Object.keys(component.filesStatus).map((file) => {
+          if (component.filesStatus[file] === FileStatus.manual) {
+            return `${tab}${component.filesStatus[file]} ${chalk.bold(file)}`;
+          }
+          return null;
+        })
+      );
+      if (!files.length) return null;
+
+      return `${name}\n${chalk.cyan(files.join('\n'))}`;
+    })
+  ).join('\n');
+}

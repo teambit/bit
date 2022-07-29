@@ -3,6 +3,7 @@ import { Command, CommandOptions } from '@teambit/cli';
 import { WILDCARD_HELP, AUTO_SNAPPED_MSG } from '@teambit/legacy/dist/constants';
 import {
   ApplyVersionResults,
+  conflictSummaryReport,
   getMergeStrategy,
   applyVersionReport,
 } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
@@ -95,13 +96,27 @@ export class MergeCmd implements Command {
   }
 }
 
-export function mergeReport({ components, failedComponents, version, mergeSnapResults }: ApplyVersionResults): string {
+export function mergeReport({
+  components,
+  failedComponents,
+  version,
+  mergeSnapResults,
+  leftUnresolvedConflicts,
+}: ApplyVersionResults): string {
   const getSuccessOutput = () => {
     if (!components || !components.length) return '';
     // @ts-ignore version is set in case of merge command
     const title = `successfully merged components${version ? `from version ${chalk.bold(version)}` : ''}\n`;
     // @ts-ignore components is set in case of merge command
     return chalk.underline(title) + chalk.green(applyVersionReport(components));
+  };
+
+  const getConflictSummary = () => {
+    if (!components || !components.length || !leftUnresolvedConflicts) return '';
+    const title = `files with conflicts summary\n`;
+    const suggestion = `\n\nthe merge process wasn't completed due to the conflicts above. fix them manually and then run "bit install".
+once ready, run "bit merge --resolve" to complete the merge.`;
+    return chalk.underline(title) + conflictSummaryReport(components) + chalk.yellow(suggestion);
   };
 
   const getSnapsOutput = () => {
@@ -130,7 +145,7 @@ export function mergeReport({ components, failedComponents, version, mergeSnapRe
 
   const getFailureOutput = () => {
     if (!failedComponents || !failedComponents.length) return '';
-    const title = 'the merge has been canceled on the following component(s)';
+    const title = '\nthe merge has been canceled on the following component(s)';
     const body = failedComponents
       .map((failedComponent) => {
         const color = failedComponent.unchangedLegitimately ? 'white' : 'red';
@@ -140,5 +155,5 @@ export function mergeReport({ components, failedComponents, version, mergeSnapRe
     return `\n${chalk.underline(title)}\n${body}\n\n`;
   };
 
-  return getSuccessOutput() + getFailureOutput() + getSnapsOutput();
+  return getSuccessOutput() + getFailureOutput() + getSnapsOutput() + getConflictSummary();
 }
