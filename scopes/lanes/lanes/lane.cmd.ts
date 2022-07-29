@@ -270,8 +270,18 @@ export class LaneRenameCmd implements Command {
 }
 
 export class LaneMergeCmd implements Command {
-  name = 'merge <lane>';
+  name = 'merge <lane> [pattern]';
   description = `merge a local or a remote lane`;
+  arguments = [
+    {
+      name: 'lane',
+      description: 'lane-name to merge to the current lane',
+    },
+    {
+      name: 'pattern',
+      description: 'EXPERIMENTAL. partially merge the lane with the specified component-pattern',
+    },
+  ];
   alias = '';
   options = [
     ['', 'remote <scope-name>', 'remote scope name'],
@@ -284,7 +294,6 @@ export class LaneMergeCmd implements Command {
     ['m', 'message <message>', 'override the default message for the auto snap'],
     ['', 'keep-readme', 'skip deleting the lane readme component after merging'],
     ['', 'squash', 'EXPERIMENTAL. squash multiple snaps. keep the last one only'],
-    ['', 'pattern <component-pattern>', 'EXPERIMENTAL. partially merge the lane with the specified component-pattern'],
     [
       '',
       'include-deps',
@@ -299,7 +308,7 @@ export class LaneMergeCmd implements Command {
   constructor(private lanes: LanesMain) {}
 
   async report(
-    [name]: [string],
+    [name, pattern]: [string, string | undefined],
     {
       ours = false,
       theirs = false,
@@ -311,7 +320,6 @@ export class LaneMergeCmd implements Command {
       message: snapMessage = '',
       keepReadme = false,
       squash = false,
-      pattern,
       includeDeps = false,
     }: {
       ours: boolean;
@@ -324,7 +332,6 @@ export class LaneMergeCmd implements Command {
       message: string;
       keepReadme?: boolean;
       squash: boolean;
-      pattern?: string;
       includeDeps?: boolean;
     }
   ): Promise<string> {
