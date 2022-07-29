@@ -403,9 +403,9 @@ export class LanesMain {
    * [to] => diff between the current lane (or default-lane when in scope) and "to" lane.
    * [from, to] => diff between "from" lane and "to" lane.
    */
-  public getDiff(values: string[], diffOptions: DiffOptions = {}) {
+  public getDiff(values: string[], diffOptions: DiffOptions = {}, pattern?: string) {
     const laneDiffGenerator = new LaneDiffGenerator(this.workspace, this.scope);
-    return laneDiffGenerator.generate(values, diffOptions);
+    return laneDiffGenerator.generate(values, diffOptions, pattern);
   }
 
   async getLaneComponentModels(lane: LaneData): Promise<Component[]> {

@@ -9,6 +9,7 @@ import {
   DiffOptions,
 } from '@teambit/legacy/dist/consumer/component-ops/components-diff';
 import { DEFAULT_LANE } from '@teambit/lane-id';
+import { BitIds } from '@teambit/legacy/dist/bit-id';
 
 type LaneData = {
   name: string;
@@ -17,7 +18,6 @@ type LaneData = {
     head: Ref;
   }>;
   remote: string | null;
-  isMerged: boolean | null;
 };
 export class LaneDiffGenerator {
   private newComps: BitId[] = [];
@@ -25,6 +25,7 @@ export class LaneDiffGenerator {
   private compsWithNoChanges: BitId[] = [];
   private fromLaneData: LaneData | null;
   private toLaneData: LaneData;
+  private failures: { id: BitId; msg: string }[] = [];
   constructor(private workspace: Workspace | undefined, private scope: ScopeMain) {}
 
   /**
@@ -33,7 +34,7 @@ export class LaneDiffGenerator {
    * [to] => diff between the current lane (or default-lane when in scope) and "to" lane.
    * [from, to] => diff between "from" lane and "to" lane.
    */
-  async generate(values: string[], diffOptions: DiffOptions = {}) {
+  async generate(values: string[], diffOptions: DiffOptions = {}, pattern?: string) {
     const { fromLaneName, toLaneName } = this.getLaneNames(values);
     if (fromLaneName === toLaneName) {
       throw new Error(`unable to run diff between "${fromLaneName}" and "${toLaneName}", they're the same lane`);
@@ -65,8 +66,20 @@ export class LaneDiffGenerator {
       this.toLaneData = await this.getDefaultLaneData(bitIds);
     }
 
+    let idsToCheckDiff: BitIds | undefined;
+    if (pattern) {
+      const allIds = this.toLaneData.components.map((c) => c.id);
+      const compIds = await (this.workspace || this.scope).resolveMultipleComponentIds(allIds);
+      idsToCheckDiff = BitIds.fromArray(
+        this.scope.filterIdsFromPoolIdsByPattern(pattern, compIds).map((c) => c._legacy)
+      );
+    }
+
     await Promise.all(
       this.toLaneData.components.map(async ({ id, head }) => {
+        if (idsToCheckDiff && !idsToCheckDiff.hasWithoutVersion(id)) {
+          return;
+        }
         await this.componentDiff(id, head, diffOptions);
       })
     );
@@ -76,6 +89,7 @@ export class LaneDiffGenerator {
       compsWithDiff: this.compsWithDiff,
       compsWithNoChanges: this.compsWithNoChanges.map((id) => id.toString()),
       toLaneName: this.toLaneData?.name,
+      failures: this.failures,
     };
   }
 
@@ -91,13 +105,19 @@ export class LaneDiffGenerator {
       this.compsWithNoChanges.push(id);
       return;
     }
-    const fromVersion = await fromLaneHead.load(this.scope.legacyScope.objects);
+    let fromVersion: Version;
+    try {
+      fromVersion = (await fromLaneHead.load(this.scope.legacyScope.objects, true)) as Version;
+    } catch (err: any) {
+      this.failures.push({ id, msg: err.message });
+      return;
+    }
     const toVersion = await toLaneHead.load(this.scope.legacyScope.objects);
     const fromLaneStr = this.fromLaneData ? this.fromLaneData.name : DEFAULT_LANE;
     diffOptions.formatDepsAsTable = false;
     const diff = await diffBetweenVersionsObjects(
       modelComponent,
-      fromVersion as Version,
+      fromVersion,
       toVersion as Version,
       fromLaneStr,
       this.toLaneData.name,
@@ -139,7 +159,6 @@ export class LaneDiffGenerator {
       name: DEFAULT_LANE,
       remote: null,
       components: [],
-      isMerged: null,
     };
 
     await Promise.all(
@@ -159,10 +178,8 @@ export class LaneDiffGenerator {
 
   private async mapToLaneData(lane: Lane): Promise<LaneData> {
     const { name, components } = lane;
-    const isMerged = await lane.isFullyMerged(this.scope.legacyScope);
     return {
       name,
-      isMerged,
       components: components.map((lc) => ({
         id: lc.id,
         head: lc.head,
