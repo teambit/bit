@@ -93,12 +93,12 @@ export default async function checkoutVersion(
   const componentsWithDependencies = componentsResults
     .map((c) => c.component)
     .filter((c) => c) as ComponentWithDependencies[];
-
+  const leftUnresolvedConflicts = componentWithConflict && checkoutProps.mergeStrategy === 'manual';
   if (componentsWithDependencies.length) {
     const manyComponentsWriter = new ManyComponentsWriter({
       consumer,
       componentsWithDependencies,
-      installNpmPackages: !checkoutProps.skipNpmInstall,
+      installNpmPackages: !checkoutProps.skipNpmInstall && !leftUnresolvedConflicts,
       override: true,
       verbose: checkoutProps.verbose,
       writeDists: !checkoutProps.ignoreDist,
@@ -112,7 +112,7 @@ export default async function checkoutVersion(
 
   const appliedVersionComponents = componentsResults.map((c) => c.applyVersionResult);
 
-  return { components: appliedVersionComponents, version, failedComponents };
+  return { components: appliedVersionComponents, version, failedComponents, leftUnresolvedConflicts };
 
   async function getAllComponentsStatus(): Promise<ComponentStatus[]> {
     const tmp = new Tmp(consumer.scope);
