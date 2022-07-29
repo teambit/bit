@@ -32,13 +32,13 @@ export function builderSchema(builder: BuilderMain, scope: Scope) {
       }
 
       type ArtifactData {
-        # same as artifact name
+        # aspect id that generated the artifact
         id: String!
         componentId: ComponentID!
         # artifact name
         name: String!
         description: String
-        # pipeline data
+        # aspect id that generated the artifact
         generatedBy: String
         files: [ArtifactFileData!]!
       }
@@ -106,7 +106,7 @@ export function builderSchema(builder: BuilderMain, scope: Scope) {
         warnings: (pipelineData: PipelineReport) => pipelineData.warnings,
       },
       ArtifactData: {
-        id: (artifactData: ArtifactGQLData) => artifactData.name,
+        id: (artifactData: ArtifactGQLData) => artifactData.generatedBy,
         name: (artifactData: ArtifactGQLData) => artifactData.name,
         description: (artifactData: ArtifactGQLData) => artifactData.description,
         generatedBy: (artifactData: ArtifactGQLData) => artifactData.generatedBy,
@@ -117,7 +117,9 @@ export function builderSchema(builder: BuilderMain, scope: Scope) {
             const { basename, path, contents } = vinyl;
             const isBinary = isBinaryPath(path);
             const content = !isBinary ? contents.toString('utf-8') : undefined;
-            const downloadUrl = encodeURI(`/builder/${artifactData.task.id}/${basename}`);
+            const downloadUrl = encodeURI(
+              `/api/${artifactData.componentId}/~aspect/builder/${artifactData.task.id}/~${path}`
+            );
             return { name: basename, path, content, downloadUrl };
           });
           return files;

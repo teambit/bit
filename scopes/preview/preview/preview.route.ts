@@ -23,6 +23,7 @@ export class PreviewRoute implements Route {
   middlewares = [
     async (req: Request<PreviewUrlParams>, res: Response, next: NextFunction) => {
       try {
+        console.log('🚀 ~ file: preview.route.ts ~ line 25 ~ PreviewRoute ~ req', req);
         // @ts-ignore TODO: @guy please fix.
         const component = req.component as Component | undefined;
         if (!component) return res.status(404).send(noPreview());

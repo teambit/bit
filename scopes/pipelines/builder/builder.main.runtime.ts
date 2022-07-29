@@ -2,7 +2,7 @@ import { flatten } from 'lodash';
 import { ArtifactVinyl } from '@teambit/legacy/dist/consumer/component/sources/artifact';
 import { AspectLoaderAspect, AspectLoaderMain } from '@teambit/aspect-loader';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import { Component, ComponentMap, IComponent } from '@teambit/component';
+import { Component, ComponentMap, IComponent, ComponentAspect, ComponentMain } from '@teambit/component';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { Slot, SlotRegistry } from '@teambit/harmony';
@@ -29,6 +29,7 @@ import { BuildPipelineResultList, AspectData, PipelineReport } from './build-pip
 import { Serializable } from './types';
 import { ArtifactsCmd } from './artifact/artifacts.cmd';
 import { buildTaskTemplate } from './templates/build-task';
+import { BuilderRoute } from './builder.route';
 
 export type TaskSlot = SlotRegistry<BuildTask[]>;
 
@@ -319,10 +320,11 @@ export class BuilderMain {
     AspectLoaderAspect,
     GraphqlAspect,
     GeneratorAspect,
+    ComponentAspect,
   ];
 
   static async provider(
-    [cli, envs, workspace, scope, isolator, loggerExt, aspectLoader, graphql, generator]: [
+    [cli, envs, workspace, scope, isolator, loggerExt, aspectLoader, graphql, generator, component]: [
       CLIMain,
       EnvsMain,
       Workspace,
@@ -331,7 +333,8 @@ export class BuilderMain {
       LoggerMain,
       AspectLoaderMain,
       GraphqlMain,
-      GeneratorMain
+      GeneratorMain,
+      ComponentMain
     ],
     config,
     [buildTaskSlot, tagTaskSlot, snapTaskSlot]: [TaskSlot, TaskSlot, TaskSlot]
@@ -373,6 +376,7 @@ export class BuilderMain {
     );
 
     graphql.register(builderSchema(builder, scope.legacyScope));
+    component.registerRoute([new BuilderRoute(builder)]);
     generator.registerComponentTemplate([buildTaskTemplate]);
     const func = builder.tagListener.bind(builder);
     if (scope) scope.onTag(func);
