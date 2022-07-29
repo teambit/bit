@@ -237,6 +237,7 @@
         "humanize-string": "2.1.0",
         "ini": "2.0.0",
         "inject-body-webpack-plugin": "1.3.0",
+        "is-binary-path": "2.1.0",
         "is-builtin-module": "3.1.0",
         "is-primitive": "3.0.1",
         "jest": "27.5.1",
@@ -262,8 +263,6 @@
         "multimatch": "5.0.0",
         "nanoid": "3.1.20",
         "nerf-dart": "1.0.0",
-        // Pinning the npm version to have consistent results in e2e tests.
-        // Without npm in the dependencies, e2e tests would use the globally installed npm CLI.
         "npm": "6.14.17",
         "p-limit": "3.1.0",
         "parse-package-name": "0.1.0",
