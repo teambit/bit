@@ -278,7 +278,7 @@ export class LaneMergeCmd implements Command {
     ['', 'ours', 'in case of a conflict, override the used version with the current modification'],
     ['', 'theirs', 'in case of a conflict, override the current modification with the specified version'],
     ['', 'manual', 'in case of a conflict, leave the files with a conflict state to resolve them manually later'],
-    ['', 'existing', 'checkout only components in a lane that exist in the workspace'],
+    ['', 'workspace', 'merge only components in a lane that exist in the workspace'],
     ['', 'no-snap', 'do not auto snap in case the merge completed without conflicts'],
     ['', 'build', 'in case of snap during the merge, run the build-pipeline (similar to bit snap --build)'],
     ['m', 'message <message>', 'override the default message for the auto snap'],
@@ -288,7 +288,7 @@ export class LaneMergeCmd implements Command {
     [
       '',
       'include-deps',
-      'EXPERIMENTAL. relevant for "--pattern" and "--existing". merge also dependencies of the given components',
+      'EXPERIMENTAL. relevant for "--pattern" and "--workspace". merge also dependencies of the given components',
     ],
   ] as CommandOptions;
   loader = true;
@@ -306,7 +306,7 @@ export class LaneMergeCmd implements Command {
       manual = false,
       remote: remoteName,
       build,
-      existing: existingOnWorkspaceOnly = false,
+      workspace: existingOnWorkspaceOnly = false,
       noSnap = false,
       message: snapMessage = '',
       keepReadme = false,
@@ -318,7 +318,7 @@ export class LaneMergeCmd implements Command {
       theirs: boolean;
       manual: boolean;
       remote?: string;
-      existing?: boolean;
+      workspace?: boolean;
       build?: boolean;
       noSnap: boolean;
       message: string;
@@ -332,7 +332,7 @@ export class LaneMergeCmd implements Command {
     const mergeStrategy = getMergeStrategy(ours, theirs, manual);
     if (noSnap && snapMessage) throw new BitError('unable to use "noSnap" and "message" flags together');
     if (includeDeps && !pattern && !existingOnWorkspaceOnly) {
-      throw new BitError(`"--include-deps" flag is relevant only for --existing and --pattern flags`);
+      throw new BitError(`"--include-deps" flag is relevant only for --workspace and --pattern flags`);
     }
     const { mergeResults, deleteResults } = await this.lanes.mergeLane(name, {
       // @ts-ignore
