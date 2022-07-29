@@ -80,7 +80,7 @@ export async function mergeLanes({
       bitIds,
       workspace,
       includeDeps,
-      otherLane
+      otherLane || undefined
     );
     bitIds.forEach((bitId) => {
       if (!allComponentsStatus.find((c) => c.id.isEqualWithoutVersion(bitId))) {
