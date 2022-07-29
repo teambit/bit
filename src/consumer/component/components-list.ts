@@ -172,9 +172,14 @@ export default class ComponentsList {
     if (this.scope.lanes.isOnMain()) {
       return [];
     }
+    const authoredAndImportedIds = this.bitMap.getAuthoredAndImportedBitIds();
+
     const componentsFromModel = await this.getModelComponents();
+    const compFromModelOnWorkspace = componentsFromModel.filter((c) =>
+      authoredAndImportedIds.hasWithoutVersion(c.toBitId())
+    );
     const results = await Promise.all(
-      componentsFromModel.map(async (modelComponent) => {
+      compFromModelOnWorkspace.map(async (modelComponent) => {
         const headOnMain = modelComponent.head;
         const headOnLane = modelComponent.laneHeadLocal;
         if (!headOnMain || !headOnLane) return undefined;

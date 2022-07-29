@@ -185,7 +185,7 @@ or use "bit merge [component-id] --abort" to cancel the merge operation)\n`;
       .map((id) => {
         return `    > ${chalk.cyan(id.toString())}`;
       })
-      .join('');
+      .join('\n');
 
     const compWithConflictsStr = compWithConflictsComps.length
       ? [compWithConflictsTitle, compWithConflictsDesc, compWithConflictsComps].join('\n')
