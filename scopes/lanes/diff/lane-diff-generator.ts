@@ -10,6 +10,7 @@ import {
 } from '@teambit/legacy/dist/consumer/component-ops/components-diff';
 import { DEFAULT_LANE } from '@teambit/lane-id';
 import { BitIds } from '@teambit/legacy/dist/bit-id';
+import { BitError } from '@teambit/bit-error';
 
 type LaneData = {
   name: string;
@@ -73,6 +74,10 @@ export class LaneDiffGenerator {
       idsToCheckDiff = BitIds.fromArray(
         this.scope.filterIdsFromPoolIdsByPattern(pattern, compIds).map((c) => c._legacy)
       );
+    }
+
+    if (!this.toLaneData.components.length) {
+      throw new BitError(`lane "${toLaneName}" is empty, nothing to show`);
     }
 
     await Promise.all(
@@ -143,7 +148,7 @@ export class LaneDiffGenerator {
         const toLaneName = currentLane.isDefault() ? DEFAULT_LANE : currentLane.name;
         return { toLaneName, fromLaneName: values[0] };
       }
-      return { toLaneName: values[0], fromLaneName: values[1] };
+      return { toLaneName: values[1], fromLaneName: values[0] };
     }
     // running from the scope
     if (values.length < 1) {
