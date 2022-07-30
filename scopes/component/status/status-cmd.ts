@@ -55,9 +55,9 @@ export class StatusCmd implements Command {
       pendingUpdatesFromMain,
     }: StatusResult = await this.status.status();
     return {
-      newComponents,
+      newComponents: newComponents.map((c) => c.toStringWithoutVersion()),
       modifiedComponents: modifiedComponent.map((c) => c.toString()),
-      stagedComponents: stagedComponents.map((c) => ({ id: c.id.toString(), versions: c.versions })),
+      stagedComponents: stagedComponents.map((c) => ({ id: c.id.toStringWithoutVersion(), versions: c.versions })),
       componentsWithIssues: componentsWithIssues.map((c) => ({
         id: c.id.toString(),
         issues: c.issues?.toObject(),

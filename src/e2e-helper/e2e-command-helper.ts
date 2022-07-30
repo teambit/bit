@@ -477,9 +477,11 @@ export default class CommandHelper {
     return JSON.parse(status);
   }
 
-  getStagedIdsFromStatus(): string[] {
+  getStagedIdsFromStatus(stripScopeName = true): string[] {
     const status = this.statusJson();
-    return status.stagedComponents.map((s) => s.id);
+    return status.stagedComponents
+      .map((s) => s.id)
+      .map((id) => (stripScopeName ? id.replace(`${this.scopes.remote}/`, '') : id));
   }
 
   expectStatusToBeClean(exclude: string[] = []) {
@@ -512,14 +514,9 @@ export default class CommandHelper {
     });
   }
 
-  statusComponentIsStaged(id: string): boolean {
+  statusComponentIsModified(idWithVersion: string): boolean {
     const status = this.statusJson();
-    return status.stagedComponents.includes(id);
-  }
-
-  statusComponentIsModified(fullId: string): boolean {
-    const status = this.statusJson();
-    return status.modifiedComponents.includes(`${this.scopes.remote}/${fullId}`);
+    return status.modifiedComponents.includes(`${this.scopes.remote}/${idWithVersion}`);
   }
 
   statusComponentHasIssues(id: string): boolean {
