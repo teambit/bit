@@ -447,7 +447,6 @@ export class MergingMain {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const { snappedComponents } = await this.snapping.snap({
       legacyBitIds: BitIds.fromArray(ids),
-      resolveUnmerged: true,
       build,
       message: snapMessage,
     });

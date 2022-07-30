@@ -251,7 +251,9 @@ export const applyVersionReport = (components: ApplyVersionResult[], addName = t
         .map((file) => {
           const note =
             component.filesStatus[file] === FileStatus.manual
-              ? chalk.white('automatic merge failed. please fix conflicts manually and then tag the results.')
+              ? chalk.white(
+                  'automatic merge failed. please fix conflicts manually and then run "bit install" and "bit compile"'
+                )
               : '';
           return `${tab}${component.filesStatus[file]} ${chalk.bold(file)} ${note}`;
         })
