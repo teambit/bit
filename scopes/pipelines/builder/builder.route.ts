@@ -1,6 +1,7 @@
 import { Request, Response, Route } from '@teambit/express';
 import { Component } from '@teambit/component';
-// import archiver from 'archiver';
+import archiver from 'archiver';
+import { Logger } from '@teambit/logger';
 import mime from 'mime';
 import { Scope } from '@teambit/legacy/dist/scope';
 import { BuilderMain } from './builder.main.runtime';
@@ -13,19 +14,25 @@ export type BuilderUrlParams = {
 };
 export const defaultExtension = '.tgz';
 export class BuilderRoute implements Route {
-  constructor(private builder: BuilderMain, private scope: Scope) {}
-  route = `/${routePath}/:aspectId(*)/~:filePath(*)`;
+  constructor(private builder: BuilderMain, private scope: Scope, private logger: Logger) {}
+  route = `/${routePath}/*`;
   method = 'get';
 
   middlewares = [
     async (req: Request<BuilderUrlParams>, res: Response) => {
       // @ts-ignore TODO: @guy please fix.
       const component = req.component as Component;
-      const { aspectId, filePath } = req.params;
+      const { params } = req;
+      const [aspectIdStr, filePath] = params[1].split('~');
+      // remove trailing slash
+      const aspectId = aspectIdStr.replace(/\/$/, '');
       const artifacts = aspectId
         ? this.builder.getArtifactsByExtension(component, aspectId)
         : this.builder.getArtifacts(component);
-      if (!artifacts) return res.status(404).jsonp({ error: 'not found' });
+      if (!artifacts)
+        return res
+          .status(404)
+          .jsonp({ error: `no artifacts found for component ${component.id} by aspect ${aspectId}` });
       const extensionsWithArtifacts = await Promise.all(
         artifacts.map(async (artifact) => {
           const files = await artifact.files.getVinylsAndImportIfMissing(component.id._legacy, this.scope);
@@ -33,12 +40,17 @@ export class BuilderRoute implements Route {
           return { extensionId: artifact.task.id, files: files.filter((file) => file.path === filePath) };
         })
       );
+
       const artifactFilesCount = extensionsWithArtifacts.reduce((accum, next) => accum + next.files.length, 0);
-      if (artifactFilesCount === 0) return res.status(404).jsonp({ error: 'not found' });
+
+      if (artifactFilesCount === 0)
+        return res
+          .status(404)
+          .jsonp({ error: `no artifacts found for component ${component.id} by aspect ${aspectId}` });
 
       if (artifactFilesCount === 1) {
         const extensionWithArtifact = extensionsWithArtifacts.find((e) => e.files.length > 0);
-        const fileName = `${extensionWithArtifact?.extensionId}/${extensionWithArtifact?.files[0].path}`;
+        const fileName = `${extensionWithArtifact?.extensionId}_${extensionWithArtifact?.files[0].path}`;
         const fileContent = extensionWithArtifact?.files[0].contents;
         const fileExt = extensionWithArtifact?.files[0].extname || defaultExtension;
         const contentType = mime.getType(fileExt);
@@ -47,9 +59,32 @@ export class BuilderRoute implements Route {
         return res.send(fileContent);
       }
 
-      // ZIP all files if requesting more than 1
-      console.log(req.params, component);
-      return res.send();
+      /**
+       * if requesting more than one file, zip them before sending
+       */
+      const archive = archiver('tar', { gzip: true });
+
+      archive.on('warning', (warn) => {
+        this.logger.warn(warn.message);
+      });
+
+      archive.on('error', (err) => {
+        this.logger.error(err.message);
+      });
+
+      extensionsWithArtifacts.forEach((extensionWithArtifacts) => {
+        extensionWithArtifacts.files.forEach((artifact) => {
+          archive.append(artifact.contents, { name: `${extensionWithArtifacts.extensionId}_${artifact.path}` });
+        });
+      });
+
+      try {
+        archive.pipe(res);
+        archive.finalize();
+        return res.attachment(`${aspectId}.tar`);
+      } catch (e: any) {
+        return res.send({ error: e.toString() });
+      }
     },
   ];
 }

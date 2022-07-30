@@ -8,6 +8,7 @@ import { PipelineReport } from './build-pipeline-result-list';
 
 export type BuilderGQLData = BuilderData & { id: ComponentID };
 export type ArtifactGQLData = ArtifactObject & { componentId: ComponentID };
+export const FILE_PATH_PARAM_DELIM = '~';
 
 export function builderSchema(builder: BuilderMain, scope: Scope) {
   return {
@@ -26,7 +27,7 @@ export function builderSchema(builder: BuilderMain, scope: Scope) {
       type ArtifactFileData {
         name: String!
         path: String!
-        # artifact file content (only for text files). Use /builder/{extension}/{name} to fetch binary files.
+        # artifact file content (only for text files). Use /api/<component-id>/~aspect/builder/<extension-id>/~<path> to fetch binary file data
         content: String
         downloadUrl: String
       }
@@ -34,13 +35,15 @@ export function builderSchema(builder: BuilderMain, scope: Scope) {
       type ArtifactData {
         # aspect id that generated the artifact
         id: String!
-        componentId: ComponentID!
         # artifact name
         name: String!
+        # task name
+        taskName: String!
         description: String
         # aspect id that generated the artifact
         generatedBy: String
-        files: [ArtifactFileData!]!
+        files(path: String): [ArtifactFileData!]!
+        componentId: ComponentID!
       }
 
       type AspectData {
@@ -52,48 +55,37 @@ export function builderSchema(builder: BuilderMain, scope: Scope) {
       type BuilderData {
         # component id
         id: ComponentID!
-        pipelines(taskId: String, taskName: String): [PipelineData!]
-        artifacts(name: String): [ArtifactData!]
-        aspectData(aspectId: String): [AspectData!]
+        pipelines: [PipelineData!]!
+        artifacts: [ArtifactData!]!
+        aspectsData: [AspectData!]!
       }
 
       extend type Component {
-        getBuilderData: BuilderData!
+        getBuilderData(extensionId: String): BuilderData!
       }
     `,
     resolvers: {
       Component: {
-        getBuilderData: async (component: Component) => {
-          const builderData = builder.getBuilderData(component) || {};
-          return { ...builderData, id: component.id };
-        },
-      },
-      BuilderData: {
-        pipelines: (builderData: BuilderGQLData, { taskId, taskName }: { taskId?: string; taskName?: string }) => {
-          if (taskId && taskName) {
-            return builderData.pipeline.filter((p) => p.taskId === taskId && p.taskName === taskName) || [];
+        getBuilderData: async (component: Component, { extensionId }: { extensionId?: string }) => {
+          const builderData = builder.getBuilderData(component);
+          const builderGQLData = {
+            aspectsData:
+              builderData?.aspectsData.map((aspectData) => ({ ...aspectData, id: aspectData.aspectId })) || [],
+            artifacts: (builderData?.artifacts || []).map((artifact) => ({ ...artifact, componentId: component.id })),
+            pipelines: builderData?.pipeline || [],
+            id: component.id,
+          };
+
+          if (extensionId) {
+            return {
+              pipelines: builderGQLData.pipelines.filter((pipeline) => pipeline.taskId === extensionId),
+              artifacts: builderGQLData.artifacts.filter((artifact) => artifact.task.id === extensionId),
+              aspectsData: builderGQLData.aspectsData.filter((a) => a.aspectId === extensionId),
+              id: component.id,
+            };
           }
-          if (taskId) return builderData.pipeline.filter((p) => p.taskId === taskId) || [];
-          if (taskName) return builderData.pipeline.filter((p) => p.taskName === taskName) || [];
-          return builderData.pipeline || [];
-        },
-        artifacts: (builderData: BuilderGQLData, { name }: { name?: string }) => {
-          if (name) {
-            return (builderData?.artifacts?.filter((artifact) => artifact.name === name) || []).map((artifact) => ({
-              ...artifact,
-              componentId: builderData.id,
-            }));
-          }
-          return (builderData.artifacts || []).map((artifact) => ({
-            ...artifact,
-            componentId: builderData.id,
-          }));
-        },
-        aspectData: (builderData: BuilderGQLData, { aspectId }: { aspectId?: string }) => {
-          if (aspectId) {
-            return builderData.aspectsData.filter((a) => a.aspectId === aspectId) || [];
-          }
-          return builderData.aspectsData || [];
+
+          return builderGQLData;
         },
       },
       PipelineData: {
@@ -106,22 +98,24 @@ export function builderSchema(builder: BuilderMain, scope: Scope) {
         warnings: (pipelineData: PipelineReport) => pipelineData.warnings,
       },
       ArtifactData: {
-        id: (artifactData: ArtifactGQLData) => artifactData.generatedBy,
+        id: (artifactData: ArtifactGQLData) => artifactData.task.id,
+        taskName: (artifactData: ArtifactGQLData) => artifactData.task.name,
         name: (artifactData: ArtifactGQLData) => artifactData.name,
         description: (artifactData: ArtifactGQLData) => artifactData.description,
         generatedBy: (artifactData: ArtifactGQLData) => artifactData.generatedBy,
-        files: async (artifactData: ArtifactGQLData) => {
-          const files = (
-            await artifactData.files.getVinylsAndImportIfMissing(artifactData.componentId._legacy, scope)
-          ).map(async (vinyl) => {
-            const { basename, path, contents } = vinyl;
-            const isBinary = isBinaryPath(path);
-            const content = !isBinary ? contents.toString('utf-8') : undefined;
-            const downloadUrl = encodeURI(
-              `/api/${artifactData.componentId}/~aspect/builder/${artifactData.task.id}/~${path}`
-            );
-            return { name: basename, path, content, downloadUrl };
-          });
+        files: async (artifactData: ArtifactGQLData, { path: pathFilter }: { path?: string }) => {
+          const files = (await artifactData.files.getVinylsAndImportIfMissing(artifactData.componentId._legacy, scope))
+            .filter((vinyl) => !pathFilter || vinyl.path === pathFilter)
+            .map(async (vinyl) => {
+              const { basename, path, contents } = vinyl;
+              const isBinary = isBinaryPath(path);
+              const content = !isBinary ? contents.toString('utf-8') : undefined;
+              const downloadUrl = encodeURI(
+                `/api/${artifactData.componentId}/~aspect/builder/${artifactData.task.id}/${FILE_PATH_PARAM_DELIM}${path}`
+              );
+              return { name: basename, path, content, downloadUrl };
+            });
+
           return files;
         },
       },
