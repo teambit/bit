@@ -46,19 +46,17 @@ export function ComponentOverview({
   return (
     <Section {...rest}>
       <div className={textColumn}>
-        <div className={styles.titleRow}>
-          <Row>
-            <div className={styles.componentTitle}>
-              <H1>{displayName}</H1>
-            </div>
-            <BadgeSection
-              position={BadgePosition.Title}
-              componentDescriptor={componentDescriptor}
-              component={component}
-              badges={titleBadges}
-            />
-          </Row>
-        </div>
+        <Row className={styles.titleRow}>
+          <div className={styles.componentTitle}>
+            <H1>{displayName}</H1>
+          </div>
+          <BadgeSection
+            position={BadgePosition.Title}
+            componentDescriptor={componentDescriptor}
+            component={component}
+            badges={titleBadges}
+          />
+        </Row>
         <Row>
           {abstract && (
             <>
