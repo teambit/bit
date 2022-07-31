@@ -1,6 +1,7 @@
 import fs from 'graceful-fs';
 import path from 'path';
 import semver from 'semver';
+import path from 'path';
 import parsePackageName from 'parse-package-name';
 import defaultReporter from '@pnpm/default-reporter';
 import { streamParser } from '@pnpm/logger';
@@ -31,11 +32,12 @@ import { Logger } from '@teambit/logger';
 import toNerfDart from 'nerf-dart';
 import { promisify } from 'util';
 import pkgsGraph from 'pkgs-graph';
+import userHome from 'user-home';
 import { pnpmErrorToBitError } from './pnpm-error-to-bit-error';
 import { readConfig } from './read-config';
 
 const link = promisify(fs.link);
-const installsRunning: Record<string, Promise<any>> = {}
+const installsRunning: Record<string, Promise<any>> = {};
 
 type RegistriesMap = {
   default: string;
@@ -72,6 +74,7 @@ async function createStoreController(
     maxSockets: options.networkConfig.maxSockets,
     networkConcurrency: options.networkConfig.networkConcurrency,
     packageImportMethod: options.packageImportMethod,
+    pnpmHomeDir: path.join(userHome, '.pnpm'), // This is not actually used in our case
   };
   // We should avoid the recreation of store.
   // The store holds cache that makes subsequent resolutions faster.
@@ -217,7 +220,6 @@ export async function install(
   const opts: InstallOptions = {
     storeDir: storeController.dir,
     dir: rootManifest.rootDir,
-    extendNodePath: false,
     storeController: storeController.ctrl,
     workspacePackages,
     preferFrozenLockfile: true,
@@ -227,6 +229,7 @@ export async function install(
     rawConfig: authConfig,
     hooks: { readPackage },
     hoistingLimits,
+    strictPeerDependencies: false,
     ...options,
     peerDependencyRules: {
       allowAny: ['*'],
@@ -246,10 +249,10 @@ export async function install(
     streamParser,
   });
   try {
-    await installsRunning[rootManifest.rootDir]
-    installsRunning[rootManifest.rootDir] = mutateModules(packagesToBuild, opts)
-    await installsRunning[rootManifest.rootDir]
-    delete installsRunning[rootManifest.rootDir]
+    await installsRunning[rootManifest.rootDir];
+    installsRunning[rootManifest.rootDir] = mutateModules(packagesToBuild, opts);
+    await installsRunning[rootManifest.rootDir];
+    delete installsRunning[rootManifest.rootDir];
   } catch (err: any) {
     throw pnpmErrorToBitError(err);
   } finally {
