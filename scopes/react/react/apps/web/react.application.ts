@@ -198,7 +198,7 @@ export class ReactApp implements Application {
     const entries = await this.getEntries();
     return Object.assign(context, {
       entry: entries,
-      rootPath: '/',
+      rootPath: '',
       publicPath: `public/${this.name}`,
       title: this.name,
       favicon: this.favicon,
