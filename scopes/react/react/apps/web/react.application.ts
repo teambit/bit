@@ -43,9 +43,9 @@ export class ReactApp implements Application {
           historyApiFallback: {
             index: '/index.html',
             disableDotRule: true,
-            headers: {
-              'Access-Control-Allow-Headers': '*',
-            },
+          },
+          headers: {
+            'Access-Control-Allow-Origin': '*',
           },
         }),
       (configMutator) => {
@@ -198,7 +198,7 @@ export class ReactApp implements Application {
     const entries = await this.getEntries();
     return Object.assign(context, {
       entry: entries,
-      rootPath: '',
+      rootPath: '/',
       publicPath: `public/${this.name}`,
       title: this.name,
       favicon: this.favicon,
