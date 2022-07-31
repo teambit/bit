@@ -10,6 +10,8 @@ export interface AppContext extends ExecutionContext {
   appName: string;
 
   appComponent: Component;
+  
+  workdir: string;
 
   /**
    * A path for the host root dir

@@ -25,12 +25,19 @@ bit lane diff from to => diff between "from" lane and "to" lane.`;
 
   async report([values = []]: [string[]], { pattern }: { pattern?: string }) {
     const laneDiffGenerator = new LaneDiffGenerator(this.workspace, this.scope);
-    const { compsWithDiff, newComps, toLaneName } = await laneDiffGenerator.generate(values, undefined, pattern);
+    const { compsWithDiff, newComps, toLaneName, failures } = await laneDiffGenerator.generate(
+      values,
+      undefined,
+      pattern
+    );
 
     const diffResultsStr = outputDiffResults(compsWithDiff);
     const newCompsIdsStr = newComps.map((id) => chalk.bold(id)).join('\n');
     const newCompsTitle = `The following components were introduced in ${chalk.bold(toLaneName)} lane`;
     const newCompsStr = newComps.length ? `${chalk.inverse(newCompsTitle)}\n${newCompsIdsStr}` : '';
-    return `${diffResultsStr}\n${newCompsStr}`;
+    const failuresTitle = `\n\nDiff failed on the following component(s)`;
+    const failuresIds = failures.map((f) => `${f.id.toString()} - ${chalk.red(f.msg)}`);
+    const failuresStr = failures.length ? `${chalk.inverse(failuresTitle)}\n${failuresIds}` : '';
+    return `${diffResultsStr}\n${newCompsStr}${failuresStr}`;
   }
 }

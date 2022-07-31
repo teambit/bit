@@ -140,22 +140,13 @@ export async function importMultipleDistsArtifacts(scope: Scope, components: Com
   const extensionsNamesForDistArtifacts = 'teambit.compilation/compiler';
   const lane = await scope.getCurrentLaneObject();
   const laneIds = lane?.toBitIds();
-  const isIdOnLane = async (id: BitId): Promise<boolean> => {
-    if (!lane) return false;
-    if (laneIds?.has(id)) return true; // in the lane with the same version
-    if (!laneIds?.hasWithoutVersion(id)) return false; // not in the lane at all
-    // component is in the lane object but with a different version.
-    // we have to figure out whether the current version exists on the lane or not.
-    const component = await scope.getModelComponent(id);
-    await component.setDivergeData(scope.objects, false);
-    const divergeData = component.getDivergeData();
-    return Boolean(divergeData.snapsOnLocalOnly.find((snap) => snap.toString() === id.version));
-  };
   const groupedHashes: { [scopeName: string]: string[] } = {};
   await Promise.all(
     components.map(async (component) => {
       const artifactsFiles = getArtifactFilesByExtension(component.extensions, extensionsNamesForDistArtifacts);
-      const scopeName = (await isIdOnLane(component.id)) ? (lane?.scope as string) : (component.scope as string);
+      const scopeName = (await scope.isIdOnLane(component.id, lane, laneIds))
+        ? (lane?.scope as string)
+        : (component.scope as string);
       artifactsFiles.forEach((artifactFiles) => {
         if (!artifactFiles) return;
         if (!(artifactFiles instanceof ArtifactFiles)) {

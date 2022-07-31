@@ -7,6 +7,7 @@ import {
   ApplyVersionResults,
   getMergeStrategy,
   applyVersionReport,
+  conflictSummaryReport,
 } from '../../../consumer/versions-ops/merge-version';
 import { Group } from '../../command-groups';
 import { CommandOptions, LegacyCommand } from '../../legacy-command';
@@ -103,7 +104,7 @@ export default class Checkout implements LegacyCommand {
   }
 
   report(
-    { components, version, failedComponents }: ApplyVersionResults,
+    { components, version, failedComponents, leftUnresolvedConflicts }: ApplyVersionResults,
     _,
     { verbose, all }: { verbose: boolean; all: boolean }
   ): string {
@@ -140,6 +141,14 @@ export default class Checkout implements LegacyCommand {
         .join('\n');
       return `${title}\n${body}\n\n`;
     };
+    const getConflictSummary = () => {
+      if (!components || !components.length || !leftUnresolvedConflicts) return '';
+      const title = `\n\nfiles with conflicts summary\n`;
+      const suggestion = `\n\nfix the conflicts above manually and then run "bit install" and "bit compile".
+once ready, snap/tag the components to persist the changes`;
+      return chalk.underline(title) + conflictSummaryReport(components) + chalk.yellow(suggestion);
+    };
+
     const getSuccessfulOutput = () => {
       if (!components || !components.length) return '';
       if (components.length === 1) {
@@ -167,6 +176,6 @@ export default class Checkout implements LegacyCommand {
       return title + componentsStr;
     };
 
-    return getFailureOutput() + getNeutralOutput() + getSuccessfulOutput();
+    return getFailureOutput() + getNeutralOutput() + getSuccessfulOutput() + getConflictSummary();
   }
 }

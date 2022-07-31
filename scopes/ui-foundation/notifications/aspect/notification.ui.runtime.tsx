@@ -25,7 +25,7 @@ export default class NotificationUI implements NotificationsStore {
 
   constructor(uiRuntimeExtension: UiUI) {
     uiRuntimeExtension.registerHudItem(<this.render key="NotificationUI" />);
-    uiRuntimeExtension.registerContext(this.renderContext);
+    uiRuntimeExtension.registerRenderHooks({ reactContext: this.renderContext });
   }
 
   private dispatch?: React.Dispatch<NotificationAction>;
