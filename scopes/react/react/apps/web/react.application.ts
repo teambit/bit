@@ -2,7 +2,7 @@ import { join, resolve, basename } from 'path';
 import { Application, AppContext, AppBuildContext, AppResult } from '@teambit/application';
 import type { Bundler, DevServer, BundlerContext, DevServerContext, BundlerHtmlConfig } from '@teambit/bundler';
 import { Port } from '@teambit/toolbox.network.get-port';
-import { Logger } from '@teambit/logger';
+import type { Logger } from '@teambit/logger';
 import { remove } from 'lodash';
 import TerserPlugin from 'terser-webpack-plugin';
 import { WebpackConfigTransformer } from '@teambit/webpack';

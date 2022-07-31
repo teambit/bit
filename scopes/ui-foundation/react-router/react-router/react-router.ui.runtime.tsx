@@ -2,8 +2,8 @@ import React, { ReactNode } from 'react';
 import { NavigateFunction } from 'react-router-dom';
 import type { Location, NavigationType, RouteProps } from 'react-router-dom';
 import { Slot, SlotRegistry } from '@teambit/harmony';
-import type { RenderPlugin } from '@teambit/react.rendering.ssr';
 import { UIRuntime } from '@teambit/ui';
+import type { SSR } from '@teambit/ui';
 import { RouteSlot } from '@teambit/ui-foundation.ui.react-router.slot-router';
 
 import { ReactRouterAspect } from './react-router.aspect';
@@ -111,7 +111,7 @@ export class ReactRouterUI {
     );
   };
 
-  public renderPlugin: RenderPlugin<RenderContext> = {
+  public renderPlugin: SSR.RenderPlugin<RenderContext> = {
     browserInit: () => {
       const initialLocation = `${window.location.pathname}${window.location.search}${window.location.hash}`;
       return { initialLocation };

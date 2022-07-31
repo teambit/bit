@@ -18,7 +18,7 @@ export { DataQueryResult, useDataQuery } from '@teambit/ui-foundation.ui.hooks.u
 export { useMutation } from '@apollo/client';
 
 // some types still used by Symphony
-export {
+export type {
   /** @deprecated - use SSR.BrowserData */
   BrowserData,
   /** @deprecated - use SSR.RenderPlugin */

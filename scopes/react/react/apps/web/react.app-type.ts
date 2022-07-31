@@ -1,5 +1,5 @@
 import { ApplicationType } from '@teambit/application';
-import { Logger } from '@teambit/logger';
+import type { Logger } from '@teambit/logger';
 import { ReactAppOptions } from './react-app-options';
 import { ReactApp } from './react.application';
 import { ReactEnv } from '../../react.env';
