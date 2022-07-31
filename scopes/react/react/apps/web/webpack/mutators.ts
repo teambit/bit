@@ -5,9 +5,9 @@ export function addDevServer(configMutator: WebpackConfigMutator) {
     historyApiFallback: {
       index: '/index.html',
       disableDotRule: true,
-      headers: {
-        'Access-Control-Allow-Headers': '*',
-      },
+    },
+    headers: {
+      'Access-Control-Allow-Origin': '*',
     },
   });
 }
