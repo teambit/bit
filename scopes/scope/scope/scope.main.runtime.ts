@@ -676,13 +676,11 @@ needed-for: ${neededFor || '<unknown>'}`);
     const userAspectsDefs = await this.resolveUserAspects(runtimeName, withoutLocalAspects);
     const localResolved = await this.resolveLocalAspects(this.localAspects, runtimeName);
     const coreAspectsDefs = await this.aspectLoader.getCoreAspectDefs(runtimeName);
-    const userAspectsIdsWithoutVersion = userAspectsIds.map((idStr) =>
-      ComponentID.fromString(idStr).toStringWithoutVersion()
-    );
 
     const allDefs = userAspectsDefs.concat(coreAspectsDefs).concat(localResolved);
     const afterExclusion = mergedOpts.excludeCore
       ? allDefs.filter((def) => {
+          const userAspectsIdsWithoutVersion = userAspectsIds.map((aspectId) => aspectId.toStringWithoutVersion());
           const isCore = coreAspectsDefs.find((coreId) => def.getId === coreId.getId);
           const id = ComponentID.fromString(def.getId || '');
           const isTarget = userAspectsIdsWithoutVersion.includes(id.toStringWithoutVersion());
