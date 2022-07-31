@@ -62,7 +62,6 @@ Currently, if it imports with no-deps, it doesn't ask for parents, if it imports
 Lane data, for the most cases is a map of component-id:snap-head, in other words, it saves per component the head snap. There are 3 different places where we store such data for different purposes.
 
 - `lane-object` "Lane" is saved in the scope `.bit/objects` (.bit can be .git/bit locally), it has a unique hash and contains a map of components and their heads. This object exists on both local and remote scopes. Its main purpose is to sync lane-data between scopes. See `Lane` class (in scope/model) for the implementation details.
-- `workspace-lane` (component and their versions) is saved in `.bit/workspace/lanes/lane-name`. Remote scopes don't have this data. Its main purpose is to store data that exists only locally and does not exist on the remote. See `WorkspaceLane` class for the implementation details. Without this, when a user is on a lane and check out to another snap, we can't save this checked out snap, because .bitmap has only main version and `Lane` object has only the heads.
 - `remote-lane` (component and their heads) is saved in `.bit/refs/remote/remote-name/lane-name`. These refs files are saved in both, local and remote scopes. Its main purpose is to keep track where the remote-heads are per lane. See `RemoteLanes` class for the implementation details.
 
 More places that stores lanes related data:
@@ -73,8 +72,8 @@ More places that stores lanes related data:
 Summary of when/what lanes data is saved per command:
 
 - `bit lane create`: creates a new lane-object and creates a new lane record in scope.json.
-- `bit snap`: adds an entry to the lane-object and to the workspace-lane.
-- `bit export`: 1) deletes all records from workspace-lane (as they're in sync with the remote). 2) pushes the lane-object to the remote. On the remote, the lane-object is created or updated/merged.
+- `bit snap`: adds an entry to the lane-object.
+- `bit export`: pushes the lane-object to the remote. On the remote, the lane-object is created or updated/merged.
 - `bit switch --remote`: 1) creates/updates lane-object in the scope. 2) creates/updates remote-lane. the remote-lane is updated also for main.
 - `bit fetch` or `bit import --objects`: creates/updates remote-lane. the remote-lane is updated also for main. It doesn't update/merge the lane object.
 

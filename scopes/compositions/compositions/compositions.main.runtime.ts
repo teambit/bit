@@ -2,6 +2,7 @@ import { MainRuntime } from '@teambit/cli';
 import { AspectData, Component, ComponentAspect, ComponentMap, IComponent } from '@teambit/component';
 import { DevFilesAspect, DevFilesMain } from '@teambit/dev-files';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
+import { ComponentLoadOptions } from '@teambit/legacy/dist/consumer/component/component-loader';
 import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 import { flatten } from '@teambit/legacy/dist/utils';
 import { PreviewAspect, PreviewMain } from '@teambit/preview';
@@ -113,7 +114,8 @@ export class CompositionsMain {
     );
   }
 
-  async onComponentLoad(component: Component): Promise<AspectData> {
+  async onComponentLoad(component: Component, loadOpts?: ComponentLoadOptions): Promise<AspectData | undefined> {
+    if (loadOpts?.loadCompositions === false) return undefined;
     const compositions = this.readCompositions(component);
     return {
       compositions: compositions.map((composition) => composition.toObject()),

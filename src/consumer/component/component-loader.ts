@@ -17,7 +17,11 @@ import { ComponentFsCache } from './component-fs-cache';
 import { updateDependenciesVersions } from './dependencies/dependency-resolver';
 import { DependenciesLoader } from './dependencies/dependency-resolver/dependencies-loader';
 
-type OnComponentLoadSubscriber = (component: Component) => Promise<Component>;
+export type ComponentLoadOptions = {
+  loadDocs?: boolean;
+  loadCompositions?: boolean;
+};
+type OnComponentLoadSubscriber = (component: Component, loadOpts?: ComponentLoadOptions) => Promise<Component>;
 type OnComponentIssuesCalcSubscriber = (component: Component) => Promise<ComponentIssue[]>;
 
 export default class ComponentLoader {
@@ -107,7 +111,8 @@ export default class ComponentLoader {
 
   async loadMany(
     ids: BitIds,
-    throwOnFailure = true
+    throwOnFailure = true,
+    loadOpts?: ComponentLoadOptions
   ): Promise<{ components: Component[]; invalidComponents: InvalidComponent[] }> {
     logger.debugAndAddBreadCrumb('ComponentLoader', 'loading consumer-components from the file-system, ids: {ids}', {
       ids: ids.toString(),
@@ -137,7 +142,7 @@ export default class ComponentLoader {
 
     const allComponents: Component[] = [];
     await mapSeries(idsToProcess, async (id: BitId) => {
-      const component = await this.loadOne(id, throwOnFailure, invalidComponents);
+      const component = await this.loadOne(id, throwOnFailure, invalidComponents, loadOpts);
       if (component) {
         this.componentsCache.set(component.id.toString(), component);
         logger.debugAndAddBreadCrumb('ComponentLoader', 'Finished loading the component "{id}"', {
@@ -150,7 +155,12 @@ export default class ComponentLoader {
     return { components: allComponents.concat(alreadyLoadedComponents), invalidComponents };
   }
 
-  private async loadOne(id: BitId, throwOnFailure: boolean, invalidComponents: InvalidComponent[]) {
+  private async loadOne(
+    id: BitId,
+    throwOnFailure: boolean,
+    invalidComponents: InvalidComponent[],
+    loadOpts?: ComponentLoadOptions
+  ) {
     const componentMap = this.consumer.bitMap.getComponent(id);
     let bitDir = this.consumer.getPath();
     if (componentMap.rootDir) {
@@ -197,7 +207,7 @@ export default class ComponentLoader {
 
     const runOnComponentLoadEvent = async () => {
       return mapSeries(ComponentLoader.onComponentLoadSubscribers, async (subscriber) => {
-        component = await subscriber(component);
+        component = await subscriber(component, loadOpts);
       });
     };
 

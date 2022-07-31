@@ -435,7 +435,7 @@ export class ReactMain {
       logger,
       CompilerAspect.id
     );
-    const appType = new ReactAppType('react-app', reactEnv);
+    const appType = new ReactAppType('react-app', reactEnv, logger);
     const react = new ReactMain(reactEnv, envs, application, appType);
     graphql.register(reactSchema(react));
     envs.registerEnv(reactEnv);
