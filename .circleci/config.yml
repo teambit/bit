@@ -362,7 +362,7 @@ jobs:
       # -
       # run: 'echo "//node-stg.bit.dev/:_authToken=$registryStgToken" >> ~/.npmrc'
       - save_cache:
-          key: bitsrc-registry9
+          key: bitsrc-registry10
           # key: bitsrc-registry-stg-v2
           paths:
             - ~/.npmrc
@@ -642,7 +642,7 @@ jobs:
       - attach_workspace:
           at: ./
       - restore_cache:
-          key: bitsrc-registry9
+          key: bitsrc-registry10
       - run: node -v
       - run: npm -v
       - run:
