@@ -347,6 +347,19 @@ export default class Scope {
     return lane;
   }
 
+  async isIdOnLane(id: BitId, lane?: Lane | null, laneIds?: BitIds): Promise<boolean> {
+    if (!lane) return false;
+    if (laneIds?.has(id)) return true; // in the lane with the same version
+    if (!laneIds?.hasWithoutVersion(id)) return false; // not in the lane at all
+    // component is in the lane object but with a different version.
+    // we have to figure out whether the current version exists on the lane or not.
+    const component = await this.getModelComponent(id);
+    if (component.head?.toString() === id.version) return false; // it's on main
+    await component.setDivergeData(this.objects, false);
+    const divergeData = component.getDivergeData();
+    return Boolean(divergeData.snapsOnLocalOnly.find((snap) => snap.toString() === id.version));
+  }
+
   async latestVersions(componentIds: BitId[], throwOnFailure = true): Promise<BitIds> {
     componentIds = componentIds.map((componentId) => componentId.changeVersion(undefined));
     const components = await this.sources.getMany(componentIds);

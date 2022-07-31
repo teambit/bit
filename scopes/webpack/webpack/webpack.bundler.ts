@@ -65,6 +65,7 @@ export class WebpackBundler implements Bundler {
             assets: true,
             chunkGroupAuxiliary: true,
             relatedAssets: true,
+            cachedAssets: true,
           });
           const assetsMap = this.getAssets(info);
           const entriesAssetsMap = this.getEntriesAssetsMap(info, assetsMap);
