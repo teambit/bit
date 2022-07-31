@@ -270,25 +270,34 @@ export class LaneRenameCmd implements Command {
 }
 
 export class LaneMergeCmd implements Command {
-  name = 'merge <lane>';
+  name = 'merge <lane> [pattern]';
   description = `merge a local or a remote lane`;
+  arguments = [
+    {
+      name: 'lane',
+      description: 'lane-name to merge to the current lane',
+    },
+    {
+      name: 'pattern',
+      description: 'EXPERIMENTAL. partially merge the lane with the specified component-pattern',
+    },
+  ];
   alias = '';
   options = [
     ['', 'remote <scope-name>', 'remote scope name'],
     ['', 'ours', 'in case of a conflict, override the used version with the current modification'],
     ['', 'theirs', 'in case of a conflict, override the current modification with the specified version'],
     ['', 'manual', 'in case of a conflict, leave the files with a conflict state to resolve them manually later'],
-    ['', 'existing', 'checkout only components in a lane that exist in the workspace'],
+    ['', 'workspace', 'merge only components in a lane that exist in the workspace'],
     ['', 'no-snap', 'do not auto snap in case the merge completed without conflicts'],
     ['', 'build', 'in case of snap during the merge, run the build-pipeline (similar to bit snap --build)'],
     ['m', 'message <message>', 'override the default message for the auto snap'],
     ['', 'keep-readme', 'skip deleting the lane readme component after merging'],
     ['', 'squash', 'EXPERIMENTAL. squash multiple snaps. keep the last one only'],
-    ['', 'pattern <component-pattern>', 'EXPERIMENTAL. partially merge the lane with the specified component-pattern'],
     [
       '',
       'include-deps',
-      'EXPERIMENTAL. relevant for "--pattern" and "--existing". merge also dependencies of the given components',
+      'EXPERIMENTAL. relevant for "--pattern" and "--workspace". merge also dependencies of the given components',
     ],
   ] as CommandOptions;
   loader = true;
@@ -299,32 +308,30 @@ export class LaneMergeCmd implements Command {
   constructor(private lanes: LanesMain) {}
 
   async report(
-    [name]: [string],
+    [name, pattern]: [string, string],
     {
       ours = false,
       theirs = false,
       manual = false,
       remote: remoteName,
       build,
-      existing: existingOnWorkspaceOnly = false,
+      workspace: existingOnWorkspaceOnly = false,
       noSnap = false,
       message: snapMessage = '',
       keepReadme = false,
       squash = false,
-      pattern,
       includeDeps = false,
     }: {
       ours: boolean;
       theirs: boolean;
       manual: boolean;
       remote?: string;
-      existing?: boolean;
+      workspace?: boolean;
       build?: boolean;
       noSnap: boolean;
       message: string;
       keepReadme?: boolean;
       squash: boolean;
-      pattern?: string;
       includeDeps?: boolean;
     }
   ): Promise<string> {
@@ -332,7 +339,7 @@ export class LaneMergeCmd implements Command {
     const mergeStrategy = getMergeStrategy(ours, theirs, manual);
     if (noSnap && snapMessage) throw new BitError('unable to use "noSnap" and "message" flags together');
     if (includeDeps && !pattern && !existingOnWorkspaceOnly) {
-      throw new BitError(`"--include-deps" flag is relevant only for --existing and --pattern flags`);
+      throw new BitError(`"--include-deps" flag is relevant only for --workspace and --pattern flags`);
     }
     const { mergeResults, deleteResults } = await this.lanes.mergeLane(name, {
       // @ts-ignore

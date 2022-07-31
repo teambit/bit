@@ -1,4 +1,5 @@
 import semver from 'semver';
+import path from 'path';
 import parsePackageName from 'parse-package-name';
 import defaultReporter from '@pnpm/default-reporter';
 import { streamParser } from '@pnpm/logger';
@@ -27,6 +28,7 @@ import { ProjectManifest } from '@pnpm/types';
 import { Logger } from '@teambit/logger';
 import toNerfDart from 'nerf-dart';
 import pkgsGraph from 'pkgs-graph';
+import userHome from 'user-home';
 import { pnpmErrorToBitError } from './pnpm-error-to-bit-error';
 import { readConfig } from './read-config';
 
@@ -65,6 +67,7 @@ async function createStoreController(
     maxSockets: options.networkConfig.maxSockets,
     networkConcurrency: options.networkConfig.networkConcurrency,
     packageImportMethod: options.packageImportMethod,
+    pnpmHomeDir: path.join(userHome, '.pnpm'), // This is not actually used in our case
   };
   // We should avoid the recreation of store.
   // The store holds cache that makes subsequent resolutions faster.
@@ -188,7 +191,6 @@ export async function install(
   const opts: InstallOptions = {
     storeDir: storeController.dir,
     dir: rootManifest.rootDir,
-    extendNodePath: false,
     storeController: storeController.ctrl,
     workspacePackages,
     preferFrozenLockfile: true,
@@ -196,6 +198,7 @@ export async function install(
     modulesCacheMaxAge: 0,
     registries: registriesMap,
     rawConfig: authConfig,
+    strictPeerDependencies: false,
     ...options,
     peerDependencyRules: {
       allowAny: ['*'],

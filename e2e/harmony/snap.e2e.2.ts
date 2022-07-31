@@ -422,23 +422,37 @@ describe('bit snap command', function () {
           expect(output).to.have.string('has conflicts that need to be resolved first');
         });
         describe('tagging or snapping the component', () => {
-          before(() => {
+          beforeEach(() => {
             helper.scopeHelper.getClonedLocalScope(scopeWithConflicts);
             // change the component to be valid, otherwise it has the conflicts marks and fail with
             // different errors
             helper.fixtures.createComponentBarFoo('');
           });
-          it('should block tagging the component', () => {
-            const output = helper.general.runWithTryCatch('bit tag bar/foo');
-            expect(output).to.have.string('unable to snap/tag "bar/foo", it is unmerged with conflicts');
+          it('should allow tagging the component successfully and add two parents to the Version object', () => {
+            const output = helper.command.tagWithoutBuild('bar/foo');
+            expect(output).to.have.string(`${helper.scopes.remote}/bar/foo@0.0.1`);
+
+            const lastVersion = helper.command.catComponent(`${helper.scopes.remote}/bar/foo@latest`);
+            expect(lastVersion.parents).to.have.lengthOf(2);
+            expect(lastVersion.parents).to.include(secondSnap); // the remote head
+            expect(lastVersion.parents).to.include(localHead);
           });
-          it('should not include the component when running bit tag --all', () => {
-            const output = helper.general.runWithTryCatch('bit tag -a -f');
-            expect(output).to.have.string('nothing to tag');
+          it('should include the component when running bit tag --all', () => {
+            const output = helper.command.tagAllWithoutBuild();
+            expect(output).to.not.have.string('nothing to tag');
+
+            const lastVersion = helper.command.catComponent(`${helper.scopes.remote}/bar/foo@latest`);
+            expect(lastVersion.parents).to.have.lengthOf(2);
+            expect(lastVersion.parents).to.include(secondSnap); // the remote head
+            expect(lastVersion.parents).to.include(localHead);
           });
-          it('should block snapping the component', () => {
-            const output = helper.general.runWithTryCatch('bit snap bar/foo --unmodified');
-            expect(output).to.have.string('unable to snap/tag "bar/foo", it is unmerged with conflicts');
+          it('should allow snapping the component successfully and add two parents to the Version object', () => {
+            helper.command.snapComponentWithoutBuild('bar/foo');
+
+            const lastVersion = helper.command.catComponent(`${helper.scopes.remote}/bar/foo@latest`);
+            expect(lastVersion.parents).to.have.lengthOf(2);
+            expect(lastVersion.parents).to.include(secondSnap); // the remote head
+            expect(lastVersion.parents).to.include(localHead);
           });
         });
         describe('removing the component', () => {

@@ -213,7 +213,8 @@ export class DocsMain {
     devFiles.registerDevPattern(docs.getDevPatternToRegister());
 
     if (workspace) {
-      workspace.onComponentLoad(async (component) => {
+      workspace.onComponentLoad(async (component, opts) => {
+        if (opts?.loadDocs === false) return undefined;
         const doc = await docs.computeDoc(component);
 
         return {
