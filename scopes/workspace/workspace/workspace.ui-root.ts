@@ -1,5 +1,5 @@
 import { BundlerMain } from '@teambit/bundler';
-import { Component, ComponentID } from '@teambit/component';
+import { Component, ComponentID, ResolveAspectsOptions } from '@teambit/component';
 import { UIRoot } from '@teambit/ui';
 import { GetBitMapComponentOptions } from '@teambit/legacy/dist/consumer/bit-map/bit-map';
 import { PathOsBased } from '@teambit/legacy/dist/utils/path';
@@ -38,8 +38,8 @@ export class WorkspaceUIRoot implements UIRoot {
     launchBrowserOnStart: true,
   };
 
-  async resolveAspects(runtimeName: string, componentIds?: ComponentID[]) {
-    return this.workspace.resolveAspects(runtimeName, componentIds);
+  async resolveAspects(runtimeName: string, componentIds?: ComponentID[], opts?: ResolveAspectsOptions) {
+    return this.workspace.resolveAspects(runtimeName, componentIds, opts);
   }
 
   // TODO: @gilad please implement with variants.

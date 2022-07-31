@@ -153,7 +153,9 @@ export class EnvPreviewTemplateTask implements BuildTask {
 
     const outputPath = this.computeOutputPath(context, envComponent);
     if (!existsSync(outputPath)) mkdirpSync(outputPath);
-    const resolvedEnvAspects = await this.preview.resolveAspects(undefined, [envComponent.id]);
+    const resolvedEnvAspects = await this.preview.resolveAspects(undefined, [envComponent.id], undefined, {
+      requestedOnly: true,
+    });
     const hostRootDir = resolvedEnvAspects[0].aspectPath;
 
     return {
