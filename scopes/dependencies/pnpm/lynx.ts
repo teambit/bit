@@ -1,7 +1,6 @@
 import fs from 'graceful-fs';
 import path from 'path';
 import semver from 'semver';
-import path from 'path';
 import parsePackageName from 'parse-package-name';
 import defaultReporter from '@pnpm/default-reporter';
 import { streamParser } from '@pnpm/logger';
