@@ -158,8 +158,8 @@ function filterComponents(dependencyList: DependencyList, componentsToFilterOut:
       // while the component.state._consumer.id has the upcoming version (the version that will be after the tag)
       // The dependency in some cases is already updated to the upcoming version
       return (
-        component.id._legacy.isEqual(dep.componentId._legacy) ||
-        component.state._consumer.id.isEqual(dep.componentId._legacy)
+        component.id._legacy.isEqualWithoutVersion(dep.componentId._legacy) ||
+        component.state._consumer.id.isEqualWithoutVersion(dep.componentId._legacy)
       );
     });
     if (existingComponent) return false;

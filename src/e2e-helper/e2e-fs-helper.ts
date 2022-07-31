@@ -96,6 +96,11 @@ export default class FsHelper {
     return fs.removeSync(path.join(this.scopes.localPath, '.bit/objects', objectPath));
   }
 
+  deleteRemoteObject(objectPath: string) {
+    // general-helper can be helpful with getting the path
+    return fs.removeSync(path.join(this.scopes.remotePath, 'objects', objectPath));
+  }
+
   createNewDirectory() {
     const newDir = `${generateRandomStr()}-dir`;
     const newDirPath = path.join(this.scopes.e2eDir, newDir);

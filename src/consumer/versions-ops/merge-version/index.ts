@@ -6,4 +6,5 @@ export {
   ApplyVersionResult,
   FailedComponents,
   applyVersionReport,
+  conflictSummaryReport,
 } from './merge-version';
