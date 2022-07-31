@@ -154,7 +154,7 @@ export class MergingMain {
     noSnap: boolean;
     snapMessage: string;
     build: boolean;
-  }) {
+  }): Promise<ApplyVersionResults> {
     const consumer = this.workspace.consumer;
     const componentWithConflict = allComponentsStatus.find(
       (component) => component.mergeResults && component.mergeResults.hasConflicts
@@ -187,15 +187,25 @@ export class MergingMain {
       });
     });
 
+    const leftUnresolvedConflicts = componentWithConflict && mergeStrategy === 'manual';
+
     if (localLane) consumer.scope.objects.add(localLane);
 
-    await consumer.scope.objects.persist(); // persist anyway, it localLane is null it should save all main heads
+    await consumer.scope.objects.persist(); // persist anyway, if localLane is null it should save all main heads
 
     await consumer.scope.objects.unmergedComponents.write();
 
-    const mergeSnapResults = noSnap ? null : await this.snapResolvedComponents(consumer, snapMessage, build);
+    // if one of the component has conflict, don't snap-merge. otherwise, some of the components would be snap-merged
+    // and some not. except the fact that it could by mistake tag dependent, it's a confusing state. better not snap.
+    const mergeSnapResults =
+      noSnap || leftUnresolvedConflicts ? null : await this.snapResolvedComponents(consumer, snapMessage, build);
 
-    return { components: componentsResults, failedComponents, mergeSnapResults };
+    return {
+      components: componentsResults,
+      failedComponents,
+      mergeSnapResults,
+      leftUnresolvedConflicts,
+    };
   }
 
   /**
@@ -263,7 +273,10 @@ export class MergingMain {
     if (!otherLaneHead) {
       throw new Error(`merging: unable finding a hash for the version ${version} of ${id.toString()}`);
     }
-    const divergeData = await getDivergeData(repo, modelComponent, otherLaneHead, localHead);
+    const divergeData = await getDivergeData(repo, modelComponent, otherLaneHead, localHead, false);
+    if (divergeData.err) {
+      return returnUnmerged(`unable to traverse ${component.id.toString()} history. error: ${divergeData.err.message}`);
+    }
     if (!divergeData.isDiverged()) {
       if (divergeData.isLocalAhead()) {
         // do nothing!
@@ -434,7 +447,6 @@ export class MergingMain {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const { snappedComponents } = await this.snapping.snap({
       legacyBitIds: BitIds.fromArray(ids),
-      resolveUnmerged: true,
       build,
       message: snapMessage,
     });

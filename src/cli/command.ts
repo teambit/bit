@@ -27,6 +27,12 @@ export interface Command {
   extendedDescription?: string;
 
   /**
+   * url to a doc page explaining the command. shown in the command help just after the extendedDescription.
+   * if a relative url is entered, the base url will be retrieved from `teambit.community/community` aspect.
+   */
+  helpUrl?: string;
+
+  /**
    * allow grouping of commands to hint summery renderer
    * Places in default automatic help
    */

@@ -27,7 +27,7 @@ import { DivergeData } from '../component-ops/diverge-data';
 import { getDivergeData } from '../component-ops/get-diverge-data';
 import { getAllVersionHashes, getAllVersionsInfo } from '../component-ops/traverse-versions';
 import ComponentVersion from '../component-version';
-import { VersionAlreadyExists, VersionNotFound } from '../exceptions';
+import { VersionAlreadyExists, VersionNotFound, VersionNotFoundOnFS } from '../exceptions';
 import { BitObject, Ref } from '../objects';
 import Repository from '../objects/repository';
 import { Lane } from '.';
@@ -253,7 +253,9 @@ export default class Component extends BitObject {
 
   getDivergeData(): DivergeData {
     if (!this.divergeData)
-      throw new Error(`getDivergeData() expects divergeData to be populate, please use this.setDivergeData()`);
+      throw new Error(
+        `getDivergeData() expects divergeData to be populate, please use this.setDivergeData() for id: ${this.id()}`
+      );
     return this.divergeData;
   }
 
@@ -261,7 +263,8 @@ export default class Component extends BitObject {
     this.setLaneHeadLocal(lane);
     if (this.scope) {
       if (lane) {
-        this.laneHeadRemote = await repo.remoteLanes.getRef(lane.toLaneId(), this.toBitId());
+        const remoteToCheck = lane.isNew && lane.forkedFrom ? lane.forkedFrom : lane.toLaneId();
+        this.laneHeadRemote = await repo.remoteLanes.getRef(remoteToCheck, this.toBitId());
       }
       // we need also the remote head of main, otherwise, the diverge-data assumes all versions are local
       this.remoteHead = await repo.remoteLanes.getRef(LaneId.from(DEFAULT_LANE, this.scope), this.toBitId());
@@ -597,7 +600,7 @@ export default class Component extends BitObject {
     const versionRef = this.getRef(versionStr);
     if (!versionRef) throw new VersionNotFound(versionStr, this.id());
     const version = await versionRef.load(repository);
-    if (!version && throws) throw new VersionNotFound(versionStr, this.id(), true);
+    if (!version && throws) throw new VersionNotFoundOnFS(versionStr, this.id());
     return version as Version;
   }
 

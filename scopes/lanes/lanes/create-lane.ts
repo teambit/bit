@@ -1,8 +1,8 @@
 import { BitError } from '@teambit/bit-error';
+import { LaneId } from '@teambit/lane-id';
 import { Consumer } from '@teambit/legacy/dist/consumer';
-import { BitIds } from '@teambit/legacy/dist/bit-id';
+// import { BitIds } from '@teambit/legacy/dist/bit-id';
 import Lane, { LaneComponent } from '@teambit/legacy/dist/scope/models/lane';
-import WorkspaceLane from '@teambit/legacy/dist/consumer/bit-map/workspace-lane';
 
 export async function createLane(
   consumer: Consumer,
@@ -22,26 +22,34 @@ export async function createLane(
     const currentLaneObject = await consumer.getCurrentLaneObject();
     return currentLaneObject ? currentLaneObject.components : [];
   };
-  const getDataToPopulateWorkspaceLaneIfNeeded = (): BitIds => {
-    if (remoteLane) return new BitIds(); // if remoteLane, this got created when importing a remote lane
-    // when branching from one lane to another, copy components from the origin workspace-lane
-    // when branching from main, no need to copy anything
-    const currentWorkspaceLane = consumer.bitMap.workspaceLane;
-    return currentWorkspaceLane ? currentWorkspaceLane.ids : new BitIds();
-  };
+
+  const forkedFrom = await getLaneOrigin(consumer);
   const newLane = remoteLane
-    ? Lane.from({ name: laneName, hash: remoteLane.hash().toString(), log: remoteLane.log, scope: remoteLane.scope })
-    : Lane.create(laneName, scopeName);
+    ? Lane.from({
+        name: laneName,
+        hash: remoteLane.hash().toString(),
+        log: remoteLane.log,
+        scope: remoteLane.scope,
+        forkedFrom,
+      })
+    : Lane.create(laneName, scopeName, forkedFrom);
   const dataToPopulate = await getDataToPopulateLaneObjectIfNeeded();
   newLane.setLaneComponents(dataToPopulate);
 
   await consumer.scope.lanes.saveLane(newLane);
 
-  const workspaceConfig = WorkspaceLane.load(laneName, consumer.scope.getPath());
-  workspaceConfig.ids = getDataToPopulateWorkspaceLaneIfNeeded();
-  await workspaceConfig.write();
-
   return newLane;
+}
+
+async function getLaneOrigin(consumer: Consumer): Promise<LaneId | undefined> {
+  const currentLaneId = consumer.bitMap.laneId;
+  if (!currentLaneId) return undefined;
+  if (consumer.bitMap.isLaneExported) {
+    return currentLaneId;
+  }
+  // current lane is new.
+  const currentLane = await consumer.getCurrentLaneObject();
+  return currentLane?.forkedFrom;
 }
 
 export function throwForInvalidLaneName(laneName: string) {

@@ -10,4 +10,6 @@ export interface AppContext extends ExecutionContext {
   appName: string;
 
   appComponent: Component;
+
+  workdir: string;
 }

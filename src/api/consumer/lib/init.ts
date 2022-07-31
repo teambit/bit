@@ -2,6 +2,7 @@ import fs from 'fs-extra';
 
 import { Consumer } from '../../../consumer';
 import { WorkspaceConfigProps } from '../../../consumer/config/workspace-config';
+import { Scope } from '../../../scope';
 import { Repository } from '../../../scope/objects';
 import { isDirEmpty } from '../../../utils';
 import ObjectsWithoutConsumer from './exceptions/objects-without-consumer';
@@ -12,6 +13,7 @@ export default async function init(
   reset = false,
   resetNew = false,
   resetHard = false,
+  resetScope = false,
   force = false,
   workspaceConfigProps: WorkspaceConfigProps
 ): Promise<Consumer> {
@@ -19,11 +21,14 @@ export default async function init(
     await Consumer.reset(absPath, resetHard, noGit);
   }
   const consumer: Consumer = await Consumer.create(absPath, noGit, workspaceConfigProps);
-  if (!force) {
+  if (!force && !resetScope) {
     await throwForOutOfSyncScope(consumer);
   }
   if (resetNew) {
     await consumer.resetNew();
+  }
+  if (resetScope) {
+    await Scope.reset(consumer.scope.path, true);
   }
   return consumer.write();
 }

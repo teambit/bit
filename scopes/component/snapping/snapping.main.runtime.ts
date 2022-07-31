@@ -65,6 +65,7 @@ export class SnappingMain {
     version,
     editor = '',
     snapped = false,
+    unmerged = false,
     releaseType,
     preReleaseId,
     ignoreIssues,
@@ -82,6 +83,7 @@ export class SnappingMain {
     ids?: string[];
     all?: boolean | string;
     snapped?: boolean;
+    unmerged?: boolean;
     version?: string;
     releaseType?: ReleaseType;
     ignoreIssues?: string;
@@ -109,7 +111,14 @@ export class SnappingMain {
     const componentsList = new ComponentsList(consumer);
     loader.start('determine components to tag...');
     const newComponents = await componentsList.listNewComponents();
-    const { bitIds, warnings } = await this.getComponentsToTag(unmodified, exactVersion, persist, ids, snapped);
+    const { bitIds, warnings } = await this.getComponentsToTag(
+      unmodified,
+      exactVersion,
+      persist,
+      ids,
+      snapped,
+      unmerged
+    );
     if (R.isEmpty(bitIds)) return null;
 
     const legacyBitIds = BitIds.fromArray(bitIds);
@@ -143,7 +152,6 @@ export class SnappingMain {
       soft,
       build,
       persist,
-      resolveUnmerged: false,
       disableTagAndSnapPipelines,
       forceDeploy,
       incrementBy,
@@ -173,9 +181,9 @@ export class SnappingMain {
    * once a component is snapped on a lane, it becomes part of it.
    */
   async snap({
-    id, // @todo: rename to "patterns"
+    pattern,
     legacyBitIds, // @todo: change to ComponentID[]. pass only if have the ids already parsed.
-    resolveUnmerged = false,
+    unmerged,
     message = '',
     ignoreIssues,
     skipTests = false,
@@ -185,9 +193,9 @@ export class SnappingMain {
     forceDeploy = false,
     unmodified = false,
   }: {
-    id?: string;
+    pattern?: string;
     legacyBitIds?: BitIds;
-    resolveUnmerged?: boolean;
+    unmerged?: boolean;
     message?: string;
     ignoreIssues?: string;
     build: boolean;
@@ -198,11 +206,11 @@ export class SnappingMain {
     unmodified?: boolean;
   }): Promise<SnapResults | null> {
     if (!this.workspace) throw new ConsumerNotFound();
-    if (id && legacyBitIds) throw new Error(`please pass either id or legacyBitIds, not both`);
+    if (pattern && legacyBitIds) throw new Error(`please pass either pattern or legacyBitIds, not both`);
     const consumer: Consumer = this.workspace.consumer;
     const componentsList = new ComponentsList(consumer);
     const newComponents = (await componentsList.listNewComponents()) as BitIds;
-    const ids = legacyBitIds || (await getIdsToSnap());
+    const ids = legacyBitIds || (await getIdsToSnap(this.workspace));
     if (!ids) return null;
     this.logger.debug(`snapping the following components: ${ids.toString()}`);
     await this.workspace.consumer.componentFsCache.deleteAllDependenciesDataCache();
@@ -226,7 +234,6 @@ export class SnappingMain {
       persist: true,
       soft: false,
       build,
-      resolveUnmerged,
       isSnap: true,
       disableTagAndSnapPipelines,
       forceDeploy,
@@ -242,25 +249,42 @@ export class SnappingMain {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return snapResults;
 
-    async function getIdsToSnap(): Promise<BitIds | null> {
-      const idHasWildcard = id && hasWildcard(id);
-      if (id && !idHasWildcard) {
-        const bitId = consumer.getParsedId(id);
-        if (!unmodified) {
-          const componentStatus = await consumer.getComponentStatusById(bitId);
-          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-          if (componentStatus.modified === false) return null;
-        }
-        return new BitIds(bitId);
+    async function getIdsToSnap(workspace: Workspace): Promise<BitIds | null> {
+      if (unmerged) {
+        return componentsList.listDuringMergeStateComponents();
       }
       const tagPendingComponents = unmodified
         ? await componentsList.listPotentialTagAllWorkspace()
         : await componentsList.listTagPendingComponents();
       if (R.isEmpty(tagPendingComponents)) return null;
-      const bitIds = idHasWildcard
-        ? ComponentsList.filterComponentsByWildcard(tagPendingComponents, id)
-        : tagPendingComponents;
-      return BitIds.fromArray(bitIds);
+      const tagPendingComponentsIds = await workspace.resolveMultipleComponentIds(tagPendingComponents);
+      // when unmodified, we ask for all components, throw if no matching. if not unmodified and no matching, see error
+      // below, suggesting to use --unmodified flag.
+      const shouldThrowForNoMatching = unmodified;
+      const getCompIds = async () => {
+        if (!pattern) return tagPendingComponentsIds;
+        if (!pattern.includes('*') && !pattern.includes(',')) {
+          const compId = await workspace.resolveComponentId(pattern);
+          return [compId];
+        }
+        return workspace.scope.filterIdsFromPoolIdsByPattern(
+          pattern,
+          tagPendingComponentsIds,
+          shouldThrowForNoMatching
+        );
+      };
+      const componentIds = await getCompIds();
+      if (!componentIds.length && pattern) {
+        const allTagPending = await componentsList.listPotentialTagAllWorkspace();
+        if (allTagPending.length) {
+          throw new BitError(`unable to find matching for "${pattern}" pattern among modified/new components.
+there are matching among unmodified components thought. consider using --unmodified flag if needed`);
+        }
+      }
+      if (!componentIds.length) {
+        return null;
+      }
+      return BitIds.fromArray(componentIds.map((c) => c._legacy));
     }
   }
 
@@ -270,7 +294,7 @@ export class SnappingMain {
    */
   async reset(
     componentPattern?: string,
-    version?: string,
+    head?: boolean,
     force = false,
     soft = false
   ): Promise<{ results: untagResult[]; isSoftUntag: boolean }> {
@@ -279,15 +303,15 @@ export class SnappingMain {
     const currentLane = await consumer.getCurrentLaneObject();
     const untag = async (): Promise<untagResult[]> => {
       if (!componentPattern) {
-        return removeLocalVersionsForAllComponents(consumer, currentLane, version, force);
+        return removeLocalVersionsForAllComponents(consumer, currentLane, head);
       }
-      const candidateComponents = await getComponentsWithOptionToUntag(consumer, version);
+      const candidateComponents = await getComponentsWithOptionToUntag(consumer);
       const idsMatchingPattern = await this.workspace.idsByPattern(componentPattern);
       const idsMatchingPatternBitIds = BitIds.fromArray(idsMatchingPattern.map((id) => id._legacy));
       const componentsToUntag = candidateComponents.filter((modelComponent) =>
         idsMatchingPatternBitIds.hasWithoutVersion(modelComponent.toBitId())
       );
-      return removeLocalVersionsForMultipleComponents(componentsToUntag, currentLane, version, force, consumer.scope);
+      return removeLocalVersionsForMultipleComponents(componentsToUntag, currentLane, head, force, consumer.scope);
     };
     const softUntag = async () => {
       const componentsList = new ComponentsList(consumer);
@@ -379,7 +403,8 @@ export class SnappingMain {
     exactVersion: string | undefined,
     persist: boolean,
     ids: string[],
-    snapped: boolean
+    snapped: boolean,
+    unmerged: boolean
   ): Promise<{ bitIds: BitId[]; warnings: string[] }> {
     const warnings: string[] = [];
     const componentsList = new ComponentsList(this.workspace.consumer);
@@ -420,6 +445,10 @@ export class SnappingMain {
       return { bitIds: snappedComponentsIds, warnings };
     }
 
+    if (unmerged) {
+      return { bitIds: componentsList.listDuringMergeStateComponents(), warnings };
+    }
+
     tagPendingBitIds.push(...snappedComponentsIds);
 
     if (includeUnmodified && exactVersion) {
@@ -448,7 +477,7 @@ export class SnappingMain {
     const logger = loggerMain.createLogger(SnappingAspect.id);
     const snapping = new SnappingMain(workspace, logger, issues, insights);
     const snapCmd = new SnapCmd(community.getBaseDomain(), snapping, logger);
-    const tagCmd = new TagCmd(community.getBaseDomain(), snapping, logger);
+    const tagCmd = new TagCmd(snapping, logger);
     const resetCmd = new ResetCmd(snapping);
     cli.register(tagCmd, snapCmd, resetCmd);
     return snapping;

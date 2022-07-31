@@ -84,6 +84,7 @@ import loader from '@teambit/legacy/dist/cli/loader';
 import { Lane } from '@teambit/legacy/dist/scope/models';
 import { LaneNotFound } from '@teambit/legacy/dist/api/scope/lib/exceptions/lane-not-found';
 import { ScopeNotFoundOrDenied } from '@teambit/legacy/dist/remotes/exceptions/scope-not-found-or-denied';
+import { ComponentLoadOptions } from '@teambit/legacy/dist/consumer/component/component-loader';
 import { ComponentConfigFile } from './component-config-file';
 import { DependencyTypeNotSupportedInPolicy } from './exceptions';
 import {
@@ -172,8 +173,9 @@ export class Workspace implements ComponentFactory {
   componentsScopeDirsMap: ComponentScopeDirMap;
   componentLoader: WorkspaceComponentLoader;
   bitMap: BitMap;
+  private _cachedListIds?: ComponentID[];
   private componentLoadedSelfAsAspects: InMemoryCache<boolean>; // cache loaded components
-
+  private warnedAboutMisconfiguredEnvs: string[] = []; // cache env-ids that have been errored about not having "env" type
   constructor(
     /**
      * private pubsub.
@@ -374,7 +376,13 @@ export class Workspace implements ComponentFactory {
    * get ids of all workspace components.
    */
   async listIds(): Promise<ComponentID[]> {
-    return this.resolveMultipleComponentIds(this.consumer.bitmapIdsFromCurrentLane);
+    if (this._cachedListIds && this.bitMap.hasChanged()) {
+      delete this._cachedListIds;
+    }
+    if (!this._cachedListIds) {
+      this._cachedListIds = await this.resolveMultipleComponentIds(this.consumer.bitmapIdsFromCurrentLane);
+    }
+    return this._cachedListIds;
   }
 
   /**
@@ -489,10 +497,18 @@ export class Workspace implements ComponentFactory {
     forCapsule = false,
     legacyComponent?: ConsumerComponent,
     useCache = true,
-    storeInCache = true
+    storeInCache = true,
+    loadOpts?: ComponentLoadOptions
   ): Promise<Component> {
     this.logger.debug(`get ${componentId.toString()}`);
-    const component = await this.componentLoader.get(componentId, forCapsule, legacyComponent, useCache, storeInCache);
+    const component = await this.componentLoader.get(
+      componentId,
+      forCapsule,
+      legacyComponent,
+      useCache,
+      storeInCache,
+      loadOpts
+    );
     // When loading a component if it's an env make sure to load it as aspect as well
     // We only want to try load it as aspect if it's the first time we load the component
     const tryLoadAsAspect = this.componentLoadedSelfAsAspects.get(component.id.toString()) === undefined;
@@ -512,7 +528,7 @@ export class Workspace implements ComponentFactory {
       try {
         this.componentLoadedSelfAsAspects.set(component.id.toString(), true);
         this.logger.debug(`trying to load self as aspect with id ${component.id.toString()}`);
-        await this.loadAspects([component.id.toString()], undefined, component.id);
+        await this.loadAspects([component.id.toString()], undefined, component.id.toString());
         // In most cases if the load self as aspect failed we don't care about it.
         // we only need it in specific cases to work, but this workspace.get runs on different
         // cases where it might fail (like when importing aspect, after the import objects
@@ -554,6 +570,7 @@ export class Workspace implements ComponentFactory {
 
   clearCache() {
     this.logger.debug('clearing the workspace and scope caches');
+    delete this._cachedListIds;
     this.componentLoader.clearCache();
     this.scope.clearCache();
     this.componentList = new ComponentsList(this.consumer);
@@ -786,10 +803,10 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     return this.componentLoader.getMany(ids, forCapsule);
   }
 
-  getManyByLegacy(components: ConsumerComponent[]): Promise<Component[]> {
+  getManyByLegacy(components: ConsumerComponent[], loadOpts?: ComponentLoadOptions): Promise<Component[]> {
     return mapSeries(components, async (component) => {
       const id = await this.resolveComponentId(component.id);
-      return this.get(id, undefined, component);
+      return this.get(id, undefined, component, true, true, loadOpts);
     });
   }
 
@@ -865,7 +882,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     const aspectId = await this.resolveComponentId(aspectIdStr);
     let aspectIdToAdd = aspectId.toStringWithoutVersion();
     if (!(await this.hasId(aspectId))) {
-      const loadedIds = await this.scope.loadAspects([aspectIdStr], true);
+      const loadedIds = await this.scope.loadAspects([aspectIdStr], true, 'bit use command');
       if (loadedIds[0]) aspectIdToAdd = loadedIds[0];
     }
     const config = this.harmony.get<ConfigMain>('teambit.harmony/config').workspaceConfig;
@@ -1061,7 +1078,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     const relativeComponentDir = this.componentDir(componentId, { ignoreVersion: true }, { relative: true });
     const variantConfig = this.variants.byRootDirAndName(relativeComponentDir, componentId.fullName);
     if (variantConfig) {
-      variantsExtensions = variantConfig.extensions;
+      variantsExtensions = variantConfig.extensions.clone();
       // Do not merge from scope when there is specific variant (which is not *) that match the component
       // if (variantConfig.maxSpecificity > 0) {
       //   mergeFromScope = false;
@@ -1102,7 +1119,10 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
         extsWithoutSelf,
         envWasFoundPreviously
       );
-      if (envIsCurrentlySet) envWasFoundPreviously = true;
+      if (envIsCurrentlySet) {
+        await this.warnAboutMisconfiguredEnv(componentId, extensions);
+        envWasFoundPreviously = true;
+      }
 
       extensionsToMerge.push({ origin, extensions: extensionDataListFiltered, extraData });
 
@@ -1155,6 +1175,31 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
       extensions,
       beforeMerge: extensionsToMerge,
     };
+  }
+
+  private async warnAboutMisconfiguredEnv(componentId: ComponentID, extensionDataList: ExtensionDataList) {
+    if (!(await this.hasId(componentId))) {
+      // if this is a dependency and not belong to the workspace, don't show the warning
+      return;
+    }
+    const envAspect = extensionDataList.findExtension(EnvsAspect.id);
+    const envFromEnvsAspect = envAspect?.config.env;
+    if (!envFromEnvsAspect) return;
+    if (this.envs.getCoreEnvsIds().includes(envFromEnvsAspect)) return;
+    if (this.warnedAboutMisconfiguredEnvs.includes(envFromEnvsAspect)) return;
+    let env: Component;
+    try {
+      const envId = await this.resolveComponentId(envFromEnvsAspect);
+      env = await this.get(envId);
+    } catch (err) {
+      return; // unable to get the component for some reason. don't sweat it. forget about the warning
+    }
+    if (!this.envs.isUsingEnvEnv(env)) {
+      this.warnedAboutMisconfiguredEnvs.push(envFromEnvsAspect);
+      this.logger.consoleWarning(
+        `env "${envFromEnvsAspect}" is not of type env. (correct the env's type, or component config with "bit env set")`
+      );
+    }
   }
 
   async isModified(component: Component): Promise<boolean> {
@@ -1361,10 +1406,10 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
    * load aspects from the workspace and if not exists in the workspace, load from the scope.
    * keep in mind that the graph may have circles.
    */
-  async loadAspects(ids: string[] = [], throwOnError = false, neededFor?: ComponentID): Promise<string[]> {
+  async loadAspects(ids: string[] = [], throwOnError = false, neededFor?: string): Promise<string[]> {
     this.logger.info(`loadAspects, loading ${ids.length} aspects.
 ids: ${ids.join(', ')}
-needed-for: ${neededFor?.toString() || '<unknown>'}`);
+needed-for: ${neededFor || '<unknown>'}`);
     const notLoadedIds = ids.filter((id) => !this.aspectLoader.isAspectLoaded(id));
     if (!notLoadedIds.length) return [];
     const coreAspectsStringIds = this.aspectLoader.getCoreAspectIds();
@@ -1417,7 +1462,11 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
     const scopeIdsGrouped = await this.scope.groupAspectIdsByEnvOfTheList(scopeIds);
     const scopeEnvsManifestsIds =
       scopeIdsGrouped.envs && scopeIdsGrouped.envs.length
-        ? await this.scope.loadAspects(scopeIdsGrouped.envs, throwOnError)
+        ? await this.scope.loadAspects(
+            scopeIdsGrouped.envs,
+            throwOnError,
+            'workspace.loadAspects loading scope aspects'
+          )
         : [];
     const scopeOtherManifests =
       scopeIdsGrouped.other && scopeIdsGrouped.other.length
@@ -1558,6 +1607,18 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
         existOnWorkspace ? workspaceComps.push(component) : scopeComps.push(component);
       })
     );
+    this.logger.debug(
+      `loadAspects, found ${workspaceComps.length} components in the workspace:\n${workspaceComps
+        .map((c) => c.id.toString())
+        .join('\n')}`
+    );
+    this.logger.debug(
+      `loadAspects, ${
+        scopeComps.length
+      } components are not in the workspace and are loaded from the scope:\n${scopeComps
+        .map((c) => c.id.toString())
+        .join('\n')}`
+    );
     return { workspaceComps, scopeComps };
   }
 
@@ -1584,7 +1645,7 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
     const loadedExtensions = this.harmony.extensionsIds;
     const extensionsToLoad = difference(extensionsIds, loadedExtensions);
     if (!extensionsToLoad.length) return;
-    await this.loadAspects(extensionsToLoad, throwOnError, originatedFrom);
+    await this.loadAspects(extensionsToLoad, throwOnError, originatedFrom?.toString());
   }
 
   /**

@@ -155,7 +155,9 @@ export class AspectMain {
         const aspect = comp.state.aspects.get(aspectCompId.toStringWithoutVersion());
         if (!aspect) return undefined;
         if (aspect.id.version === aspectCompId.version) return undefined; // nothing to update
-        await this.workspace.removeSpecificComponentConfig(comp.id, aspect.id.toString(), true);
+        // don't mark with minus if not exist in .bitmap. it's not needed. when the component is loaded, the
+        // merge-operation of the aspects removes duplicate aspect-id with different versions.
+        await this.workspace.removeSpecificComponentConfig(comp.id, aspect.id.toString(), false);
         await this.workspace.addSpecificComponentConfig(comp.id, aspectCompId.toString(), aspect.config);
         return comp.id;
       })

@@ -7,7 +7,6 @@ import { BitId } from '@teambit/legacy-bit-id';
 import { ComponentWithDependencies } from '@teambit/legacy/dist/scope';
 import { Version, Lane } from '@teambit/legacy/dist/scope/models';
 import { Tmp } from '@teambit/legacy/dist/scope/repositories';
-import WorkspaceLane from '@teambit/legacy/dist/consumer/bit-map/workspace-lane';
 import {
   applyVersion,
   ComponentStatus,
@@ -41,6 +40,7 @@ export type SwitchProps = {
 export class LaneSwitcher {
   private consumer: Consumer;
   private laneIdToSwitch: LaneId; // populated by `this.populateSwitchProps()`
+  private laneToSwitchTo: Lane | undefined; // populated by `this.populateSwitchProps()`, if default-lane, it's undefined
   constructor(
     private workspace: Workspace,
     private logger: Logger,
@@ -67,7 +67,11 @@ export class LaneSwitcher {
     }
     const failedComponents: FailedComponents[] = allComponentsStatus
       .filter((componentStatus) => componentStatus.failureMessage)
-      .map((componentStatus) => ({ id: componentStatus.id, failureMessage: componentStatus.failureMessage as string }));
+      .map((componentStatus) => ({
+        id: componentStatus.id,
+        failureMessage: componentStatus.failureMessage as string,
+        unchangedLegitimately: componentStatus.unchangedLegitimately,
+      }));
 
     const succeededComponents = allComponentsStatus.filter((componentStatus) => !componentStatus.failureMessage);
     // do not use Promise.all for applyVersion. otherwise, it'll write all components in parallel,
@@ -109,7 +113,7 @@ export class LaneSwitcher {
 
     const localLane = await this.consumer.scope.loadLane(laneId);
     if (laneId.isDefault()) {
-      this.populatePropsAccordingToDefaultLane();
+      await this.populatePropsAccordingToDefaultLane();
     } else if (localLane) {
       this.populatePropsAccordingToLocalLane(localLane);
     } else {
@@ -138,14 +142,15 @@ export class LaneSwitcher {
     this.switchProps.ids = remoteLane.components.map((l) => l.id.changeVersion(l.head.toString()));
     this.switchProps.localTrackedLane = this.consumer.scope.lanes.getAliasByLaneId(remoteLaneId) || undefined;
     this.switchProps.remoteLane = remoteLane;
+    this.laneToSwitchTo = remoteLane;
     this.logger.debug(`populatePropsAccordingToRemoteLane, completed`);
   }
 
-  private populatePropsAccordingToDefaultLane() {
+  private async populatePropsAccordingToDefaultLane() {
     if (!this.consumer.isOnLane()) {
       throw new BitError(`already checked out to "${this.switchProps.laneName}"`);
     }
-    this.switchProps.ids = this.consumer.bitMap.getAuthoredAndImportedBitIdsOfDefaultLane();
+    this.switchProps.ids = await this.consumer.getIdsOfDefaultLane();
     this.laneIdToSwitch = LaneId.from(DEFAULT_LANE, this.consumer.scope.name);
   }
 
@@ -155,6 +160,7 @@ export class LaneSwitcher {
     }
     this.switchProps.ids = localLane.components.map((c) => c.id.changeVersion(c.head.toString()));
     this.laneIdToSwitch = localLane.toLaneId();
+    this.laneToSwitchTo = localLane;
   }
 
   private async getAllComponentsStatus(): Promise<ComponentStatus[]> {
@@ -175,7 +181,7 @@ export class LaneSwitcher {
   private async saveLanesData() {
     const saveRemoteLaneToBitmap = () => {
       if (this.switchProps.remoteLane) {
-        this.consumer.bitMap.setRemoteLane(this.switchProps.remoteLane.toLaneId());
+        this.consumer.bitMap.setCurrentLane(this.switchProps.remoteLane.toLaneId());
       }
     };
     const throwIfLaneExists = async () => {
@@ -201,21 +207,21 @@ export class LaneSwitcher {
 
     saveRemoteLaneToBitmap();
     this.consumer.scope.lanes.setCurrentLane(localLaneName);
-    const workspaceLane =
-      localLaneName === DEFAULT_LANE ? null : WorkspaceLane.load(localLaneName, this.consumer.scope.path);
-    this.consumer.bitMap.syncWithLanes(workspaceLane);
+    this.consumer.bitMap.setCurrentLane(this.laneIdToSwitch, Boolean(this.switchProps.remoteLane));
+    this.consumer.bitMap.syncWithLanes(this.laneToSwitchTo);
   }
 }
 
 async function getComponentStatus(consumer: Consumer, id: BitId, switchProps: SwitchProps): Promise<ComponentStatus> {
   const componentStatus: ComponentStatus = { id };
-  const returnFailure = (msg: string) => {
+  const returnFailure = (msg: string, unchangedLegitimately = false) => {
     componentStatus.failureMessage = msg;
+    componentStatus.unchangedLegitimately = unchangedLegitimately;
     return componentStatus;
   };
   const modelComponent = await consumer.scope.getModelComponentIfExist(id);
   if (!modelComponent) {
-    return returnFailure(`component ${id.toString()} had never imported`);
+    return returnFailure(`component ${id.toString()} had never imported`, true);
   }
   const unmerged = consumer.scope.objects.unmergedComponents.getEntry(id.name);
   if (unmerged && unmerged.resolved === false) {
@@ -225,13 +231,13 @@ async function getComponentStatus(consumer: Consumer, id: BitId, switchProps: Sw
   }
   const version = id.version;
   if (!version) {
-    return returnFailure(`component doesn't have any snaps on ${DEFAULT_LANE}`);
+    return returnFailure(`component doesn't have any snaps on ${DEFAULT_LANE}`, true);
   }
   const existingBitMapId = consumer.bitMap.getBitIdIfExist(id, { ignoreVersion: true });
   const componentOnLane: Version = await modelComponent.loadVersion(version, consumer.scope.objects);
   if (!existingBitMapId) {
     if (switchProps.existingOnWorkspaceOnly) {
-      return returnFailure(`component ${id.toStringWithoutVersion()} is not in the workspace`);
+      return returnFailure(`component ${id.toStringWithoutVersion()} is not in the workspace`, true);
     }
     return { componentFromFS: undefined, componentFromModel: componentOnLane, id, mergeResults: null };
   }
@@ -243,7 +249,7 @@ async function getComponentStatus(consumer: Consumer, id: BitId, switchProps: Sw
   }
   const currentlyUsedVersion = existingBitMapId.version;
   if (currentlyUsedVersion === version) {
-    return returnFailure(`component ${id.toStringWithoutVersion()} is already at version ${version}`);
+    return returnFailure(`component ${id.toStringWithoutVersion()} is already at version ${version}`, true);
   }
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const baseComponent: Version = await modelComponent.loadVersion(currentlyUsedVersion, consumer.scope.objects);

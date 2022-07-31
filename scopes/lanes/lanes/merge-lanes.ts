@@ -36,7 +36,9 @@ export async function mergeLanes({
   const consumer = workspace.consumer;
   const currentLaneId = consumer.getCurrentLaneId();
   if (!remoteName && laneName === currentLaneId.name) {
-    throw new BitError(`unable to switch to lane "${laneName}", you're already checked out to this lane`);
+    throw new BitError(
+      `unable to merge lane "${laneName}", you're already at this lane. to get updates, simply run "bit checkout head"`
+    );
   }
   const parsedLaneId = await consumer.getParsedLaneId(laneName);
   const localLane = currentLaneId.isDefault() ? null : await consumer.scope.loadLane(currentLaneId);
@@ -47,7 +49,8 @@ export async function mergeLanes({
   const isDefaultLane = laneName === DEFAULT_LANE;
 
   if (isDefaultLane) {
-    bitIds = consumer.bitMap.getAuthoredAndImportedBitIdsOfDefaultLane().filter((id) => id.hasVersion());
+    if (!localLane) throw new Error(`unable to merge ${DEFAULT_LANE}, the current lane was not found`);
+    bitIds = await consumer.scope.getDefaultLaneIdsFromLane(localLane);
     otherLaneName = DEFAULT_LANE;
   } else if (remoteName) {
     const remoteLaneId = LaneId.from(parsedLaneId.name, remoteName);
@@ -68,8 +71,6 @@ export async function mergeLanes({
 
   let allComponentsStatus = await getAllComponentsStatus();
 
-  throwForFailures();
-
   if (pattern) {
     const componentIds = await workspace.resolveMultipleComponentIds(bitIds);
     const compIdsFromPattern = workspace.scope.filterIdsFromPoolIdsByPattern(pattern, componentIds);
@@ -78,7 +79,8 @@ export async function mergeLanes({
       compIdsFromPattern,
       bitIds,
       workspace,
-      includeDeps
+      includeDeps,
+      otherLane || undefined
     );
     bitIds.forEach((bitId) => {
       if (!allComponentsStatus.find((c) => c.id.isEqualWithoutVersion(bitId))) {
@@ -105,6 +107,8 @@ export async function mergeLanes({
     });
   }
 
+  throwForFailures();
+
   if (squash) {
     squashSnaps(allComponentsStatus, laneName, consumer);
   }
@@ -128,7 +132,7 @@ export async function mergeLanes({
   let deleteResults = {};
 
   if (!keepReadme && otherLane && otherLane.readmeComponent && mergedSuccessfully) {
-    await consumer.bitMap.syncWithLanes(consumer.bitMap.workspaceLane);
+    // await consumer.bitMap.syncWithLanes(consumer.bitMap.workspaceLane);
 
     const readmeComponentId = [
       otherLane.readmeComponent.id.changeVersion(otherLane.readmeComponent?.head?.hash).toString(),
@@ -180,7 +184,8 @@ async function filterComponentsStatus(
   compIdsToKeep: ComponentID[],
   allBitIds: BitId[],
   workspace: Workspace,
-  includeDeps = false
+  includeDeps = false,
+  lane?: Lane
 ): Promise<ComponentMergeStatus[]> {
   const bitIdsFromPattern = BitIds.fromArray(compIdsToKeep.map((c) => c._legacy));
   const bitIdsNotFromPattern = allBitIds.filter((bitId) => !bitIdsFromPattern.hasWithoutVersion(bitId));
@@ -205,6 +210,7 @@ async function filterComponentsStatus(
     }
     const modelComponent = await workspace.consumer.scope.getModelComponent(compId._legacy);
     // optimization suggestion: if squash is given, check only the last version.
+    const laneIds = lane?.toBitIds();
     await pMapSeries(remoteVersions, async (localVersion) => {
       const versionObj = await modelComponent.loadVersion(localVersion.toString(), workspace.consumer.scope.objects);
       const flattenedDeps = versionObj.getAllFlattenedDependencies();
@@ -212,12 +218,22 @@ async function filterComponentsStatus(
       if (!depsNotIncludeInPattern.length) {
         return;
       }
+      const depsOnLane: BitId[] = [];
+      await Promise.all(
+        depsNotIncludeInPattern.map(async (dep) => {
+          const isOnLane = await workspace.consumer.scope.isIdOnLane(dep, lane, laneIds);
+          if (isOnLane) depsOnLane.push(dep);
+        })
+      );
+      if (!depsOnLane.length) {
+        return;
+      }
       if (!includeDeps) {
         throw new BitError(`unable to merge ${compId.toString()}.
 it has the following dependencies which were not included in the pattern. consider adding "--include-deps" flag
-${depsNotIncludeInPattern.map((d) => d.toString()).join('\n')}`);
+${depsOnLane.map((d) => d.toString()).join('\n')}`);
       }
-      depsToAdd.push(...depsNotIncludeInPattern);
+      depsToAdd.push(...depsOnLane);
     });
   });
   if (depsToAdd.length) {

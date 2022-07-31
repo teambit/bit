@@ -184,7 +184,7 @@ describe('bit lane command', function () {
       });
       it('should change .bitmap to have the remote lane', () => {
         const bitMap = helper.bitMap.read();
-        expect(bitMap[LANE_KEY]).to.deep.equal({ name: 'dev', scope: helper.scopes.remote });
+        expect(bitMap[LANE_KEY].id).to.deep.equal({ name: 'dev', scope: helper.scopes.remote });
       });
       it('bit lane --remote should show the exported lane', () => {
         const remoteLanes = helper.command.listRemoteLanesParsed();
@@ -235,18 +235,14 @@ describe('bit lane command', function () {
     describe('bit lane diff {toLane - default} on the workspace', () => {
       let diffOutput: string;
       before(() => {
-        helper.command.switchLocalLane('main');
-        helper.command.createLane('stage');
-        helper.fixtures.createComponentBarFoo(fixtures.fooFixtureV2);
-        helper.command.snapAllComponents();
         diffOutput = helper.command.diffLane('main');
       });
       it('should show the diff correctly', () => {
-        expect(diffOutput).to.have.string('--- foo.js (stage)');
-        expect(diffOutput).to.have.string('+++ foo.js (main)');
+        expect(diffOutput).to.have.string('--- foo.js (main)');
+        expect(diffOutput).to.have.string('+++ foo.js (dev)');
 
-        expect(diffOutput).to.have.string(`-module.exports = function foo() { return 'got foo v2'; }`);
-        expect(diffOutput).to.have.string(`+module.exports = function foo() { return 'got foo'; }`);
+        expect(diffOutput).to.have.string(`-module.exports = function foo() { return 'got foo'; }`);
+        expect(diffOutput).to.have.string(`+module.exports = function foo() { return 'got foo v2'; }`);
       });
       it('should not show the id field as it is redundant', () => {
         expect(diffOutput).to.not.have.string('--- Id');
@@ -257,15 +253,18 @@ describe('bit lane command', function () {
       let diffOutput: string;
       before(() => {
         helper.command.switchLocalLane('main');
-        helper.command.createLane('int');
-        diffOutput = helper.command.diffLane('stage');
+        helper.command.createLane('stage');
+        helper.fixtures.createComponentBarFoo(fixtures.fooFixtureV3);
+        helper.command.snapAllComponents();
+
+        diffOutput = helper.command.diffLane('dev');
       });
       it('should show the diff correctly', () => {
-        expect(diffOutput).to.have.string('--- foo.js (int)');
+        expect(diffOutput).to.have.string('--- foo.js (dev)');
         expect(diffOutput).to.have.string('+++ foo.js (stage)');
 
-        expect(diffOutput).to.have.string(`-module.exports = function foo() { return 'got foo'; }`);
-        expect(diffOutput).to.have.string(`+module.exports = function foo() { return 'got foo v2'; }`);
+        expect(diffOutput).to.have.string(`-module.exports = function foo() { return 'got foo v2'; }`);
+        expect(diffOutput).to.have.string(`+module.exports = function foo() { return 'got foo v3'; }`);
       });
       it('should not show the id field as it is redundant', () => {
         expect(diffOutput).to.not.have.string('--- Id');
@@ -362,8 +361,8 @@ describe('bit lane command', function () {
       // main components belong to lane-a only if they are snapped on lane-a, so utils/is-type
       // doesn't belong to lane-a and should not appear as staged when on lane-a.
       it('bit status should not show neither lane-b nor main components as staged', () => {
-        const statusParsed = helper.command.statusJson();
-        expect(statusParsed.stagedComponents).to.deep.equal(['utils/is-string']);
+        const staged = helper.command.getStagedIdsFromStatus();
+        expect(staged).to.deep.equal(['utils/is-string']);
         const status = helper.command.status();
         expect(status).to.not.have.string('bar/foo');
       });
@@ -383,8 +382,8 @@ describe('bit lane command', function () {
         expect(list).to.have.lengthOf(1);
       });
       it('bit status should show only main components as staged', () => {
-        const statusParsed = helper.command.statusJson();
-        expect(statusParsed.stagedComponents).to.deep.equal(['utils/is-type']);
+        const staged = helper.command.getStagedIdsFromStatus();
+        expect(staged).to.deep.equal(['utils/is-type']);
         const status = helper.command.status();
         expect(status).to.not.have.string('bar/foo');
         expect(status).to.not.have.string('utils/is-string');
@@ -401,8 +400,8 @@ describe('bit lane command', function () {
         expect(list).to.have.lengthOf(1);
       });
       it('bit status should show only main components as staged', () => {
-        const statusParsed = helper.command.statusJson();
-        expect(statusParsed.stagedComponents).to.deep.equal(['utils/is-type']);
+        const staged = helper.command.getStagedIdsFromStatus();
+        expect(staged).to.deep.equal(['utils/is-type']);
         const status = helper.command.status();
         expect(status).to.not.have.string('bar/foo');
         expect(status).to.not.have.string('utils/is-string');
@@ -450,9 +449,9 @@ describe('bit lane command', function () {
       helper.bitJsonc.setupDefault();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
-      helper.command.tagAllComponents();
+      helper.command.tagWithoutBuild();
       helper.fixtures.createComponentBarFoo(fixtures.fooFixtureV2);
-      helper.command.tagAllComponents();
+      helper.command.tagWithoutBuild();
       helper.command.export();
 
       helper.scopeHelper.reInitLocalScopeHarmony();
@@ -462,14 +461,22 @@ describe('bit lane command', function () {
 
       helper.command.createLane();
       helper.fs.outputFile(`${helper.scopes.remote}/bar/foo/foo.js`, fixtures.fooFixtureV3);
-      helper.command.snapAllComponents();
+      helper.command.snapAllComponentsWithoutBuild();
 
       helper.command.switchLocalLane('main');
     });
-    it('should checkout to the same version the origin branch had before the switch', () => {
+    it('should checkout to the head of the origin branch', () => {
+      helper.bitMap.expectToHaveIdHarmony('bar/foo', '0.0.2');
+    });
+    it('bit status should be clean', () => {
+      helper.command.expectStatusToBeClean();
+    });
+    // previously, the behavior was to checkout to the same version it had before
+    it.skip('should checkout to the same version the origin branch had before the switch', () => {
       helper.bitMap.expectToHaveIdHarmony('bar/foo', '0.0.1');
     });
-    it('bit status should not show the component as modified only as pending update', () => {
+    // previously, the behavior was to checkout to the same version it had before
+    it.skip('bit status should not show the component as modified only as pending update', () => {
       const status = helper.command.statusJson();
       expect(status.modifiedComponent).to.have.lengthOf(0);
       expect(status.outdatedComponents).to.have.lengthOf(1);
@@ -545,9 +552,10 @@ describe('bit lane command', function () {
     it('bit-status should show them all as staged and not modified', () => {
       const status = helper.command.statusJson();
       expect(status.modifiedComponent).to.be.empty;
-      expect(status.stagedComponents).to.include('comp1');
-      expect(status.stagedComponents).to.include('comp2');
-      expect(status.stagedComponents).to.include('comp3');
+      const staged = helper.command.getStagedIdsFromStatus();
+      expect(staged).to.include('comp1');
+      expect(staged).to.include('comp2');
+      expect(staged).to.include('comp3');
     });
     // @todo
     describe.skip('importing the component to another scope', () => {
@@ -608,7 +616,7 @@ describe('bit lane command', function () {
     it('bit status should show the correct staged versions', () => {
       // before it was a bug that "versions" part of the staged-component was empty
       // another bug was that it had all versions included exported.
-      const status = helper.command.status();
+      const status = helper.command.status('--verbose');
       const hash = helper.command.getHeadOfLane('dev', 'comp1');
       expect(status).to.have.string(`versions: ${hash} ...`);
     });
@@ -628,14 +636,18 @@ describe('bit lane command', function () {
         before(() => {
           helper.command.switchLocalLane('dev');
         });
-        // before, it was changing the version to the head of the lane
-        it('should not change the version prop in .bitmap', () => {
+        it('should change the version prop in .bitmap', () => {
           const bitMap = helper.bitMap.read();
-          expect(bitMap.comp1.version).to.equal('0.0.1');
+          const head = helper.command.getHeadOfLane('dev', 'comp1');
+          expect(bitMap.comp1.version).to.equal(head);
         });
         describe('switch back to main', () => {
           before(() => {
             helper.command.switchLocalLane('main');
+          });
+          it('should change the version prop in .bitmap', () => {
+            const bitMap = helper.bitMap.read();
+            expect(bitMap.comp1.version).to.equal('0.0.1');
           });
           it('status should not show the components as pending updates', () => {
             helper.command.expectStatusToBeClean();
@@ -981,8 +993,7 @@ describe('bit lane command', function () {
       before(() => {
         helper.scopeHelper.getClonedLocalScope(afterFirstSnap);
         helper.command.snapComponentWithoutBuild('comp1', '--force');
-        const head = helper.command.getHeadOfLane('dev', 'comp1');
-        helper.command.untag('comp1', head);
+        helper.command.untag('comp1', true);
       });
       it('should not show the component as new', () => {
         const status = helper.command.statusJson();
@@ -1060,8 +1071,8 @@ describe('bit lane command', function () {
         const status = helper.command.statusJson();
         expect(status.outdatedComponents).to.have.lengthOf(1);
       });
-      it('bit checkout latest --all should update them all to the latest version', () => {
-        helper.command.checkout('latest --all');
+      it('bit checkout head --all should update them all to the head version', () => {
+        helper.command.checkoutHead('--all');
         helper.command.expectStatusToBeClean();
       });
     });
@@ -1170,6 +1181,34 @@ describe('bit lane command', function () {
     // previously, it used to throw "component X has no versions and the head is empty"
     it('bit import should not throw an error', () => {
       expect(() => helper.command.import()).to.not.throw();
+    });
+  });
+  describe('lane-a => lane-b', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents(2);
+      helper.command.tagWithoutBuild();
+      helper.command.export();
+      helper.command.createLane('lane-a');
+      helper.fixtures.populateComponents(2, undefined, 'v2');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      helper.command.createLane('lane-b');
+    });
+    // previously, it was showing the components as staged, because it was comparing them to head, instead of
+    // comparing them to lane-a.
+    it('bit status should be clean', () => {
+      helper.command.expectStatusToBeClean();
+    });
+    describe('lane-a (exported) => lane-b (not-exported) => lane-c', () => {
+      before(() => {
+        helper.command.createLane('lane-c');
+      });
+      it('forkedFrom should be of lane-a and not lane-b because this is the last exported one', () => {
+        const lane = helper.command.catLane('lane-c');
+        expect(lane.forkedFrom.name).to.equal('lane-a');
+      });
     });
   });
 });

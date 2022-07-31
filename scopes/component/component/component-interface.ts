@@ -20,7 +20,7 @@ export interface IComponent {
 
 export type RawComponentMetadata = {
   id: string;
-  config: Record<string, any>,
-  data: Record<string, any>,
-  icon?: string
+  config: Record<string, any>;
+  data: Record<string, any>;
+  icon?: string;
 };

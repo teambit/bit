@@ -13,10 +13,10 @@ export type Component = {
 export type UseComponentOptions = {
   version?: string;
   logFilters?: Filters;
-  customUseComponent?: UseComponentType
+  customUseComponent?: UseComponentType;
 };
 
-export type UseComponentType = (id: string, host: string, filters?: Filters) => Component
+export type UseComponentType = (id: string, host: string, filters?: Filters) => Component;
 
 export function useComponent(host: string, id?: string, options?: UseComponentOptions): Component {
   const query = useQuery();

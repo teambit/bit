@@ -76,7 +76,8 @@ export class UpdateAspectCmd implements Command {
   arguments = [
     {
       name: 'aspect-id',
-      description: "the aspect's component id",
+      description:
+        "the aspect's component id. optionally, add a version (id@version), otherwise, it finds the latest version on the remote",
     },
     {
       name: 'pattern',

@@ -2,7 +2,7 @@ version: 2.1
 
 default_image: &default_image
   docker:
-    - image: cimg/node:12.22.10
+    - image: cimg/node:14.19.3
 
 default_resource_class: &default_resource_class
   resource_class: medium
@@ -12,6 +12,9 @@ windows_default_resource_size: &windows_default_resource_size
 
 default_working_dir: &default_working_dir
   working_directory: ~/bit
+
+orbs:
+  win: circleci/windows@4.1
 
 windows_default_working_dir: &windows_default_working_dir
   working_directory: C:\Users\circleci\project\bit
@@ -29,7 +32,7 @@ windows_defaults: &windows_defaults
   <<: *windows_default_working_dir
 
 mac_default_xcode_version: &mac_default_xcode_version
-  xcode: 13.0.0
+  xcode: 14.0.0
 
 mac_default_executor: &mac_default_executor
   macos:
@@ -83,7 +86,7 @@ commands: # reusable commands
         # default: 'hub'
         type: string
       token:
-        default: $BIT_DEV_PROD_TOKEN
+        default: $BIT_CLOUD_PROD_TOKEN
         type: string
     steps:
       - run: 'bit config set analytics_reporting false'
@@ -197,10 +200,6 @@ commands: # reusable commands
       - run: cd bit && git remote rm origin
       # todo: find a better way. currently, the ssh doesn't work, see the commented steps above.
       - run: cd bit && git remote add origin https://davidfirst:$GH_RELEASE_GITHUB_API_TOKEN@github.com/teambit/bit.git
-
-
-orbs:
-  win: circleci/windows@2.4.0
 
 jobs:
   checkout_code:
@@ -639,17 +638,16 @@ jobs:
   setup_harmony:
     resource_class: large
     <<: *defaults
-    environment:
-      # change the npm config to avoid using sudo
-      NPM_CONFIG_PREFIX: ~/.npm-global
     steps:
       - attach_workspace:
           at: ./
       - restore_cache:
           key: bitsrc-registry9
+      - run: node -v
+      - run: npm -v
       - run:
           name: 'install husky globally'
-          command: 'sudo npm i -g husky'
+          command: 'npm i -g husky'
 
       - install_bvm
       - run: npm view @teambit/bit version > ./version.txt
@@ -686,9 +684,6 @@ jobs:
   bit_build:
     resource_class: xlarge
     <<: *defaults
-    environment:
-      # change the npm config to avoid using sudo
-      NPM_CONFIG_PREFIX: ~/.npm-global
     steps:
       - attach_workspace:
           at: ./
@@ -717,9 +712,6 @@ jobs:
   bit_tag:
     resource_class: xlarge
     <<: *defaults
-    environment:
-      # change the npm config to avoid using sudo
-      NPM_CONFIG_PREFIX: ~/.npm-global
     steps:
       - attach_workspace:
           at: ./
@@ -943,7 +935,8 @@ jobs:
       # do not download chromium when installing puppeteer
       PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: true
     steps:
-      - run: choco install nodejs --version 12.22.0
+      # - run: choco install nodejs --version 16.15.1
+      - run: cinst nodejs --version 14.19.3
       # - run: nodejs.install v12.16.0
       - run: node -v
       - run: 'yarn -v'
@@ -1039,9 +1032,6 @@ jobs:
 
   bit_export:
     <<: *defaults
-    environment:
-      # change the npm config to avoid using sudo
-      NPM_CONFIG_PREFIX: ~/.npm-global
     steps:
       - attach_workspace:
           at: ./
@@ -1054,7 +1044,7 @@ jobs:
           key: bitsrc-registry9
       - update_ssh_agent
       - set_git_credentials
-      - run: bit config set user.token ${BIT_DEV_PROD_TOKEN}
+      - run: bit config set user.token ${BIT_CLOUD_PROD_TOKEN}
       - run:
           name: export components
           command: cd bit && BIT_FEATURES=export-central bit export
@@ -1082,8 +1072,6 @@ jobs:
   e2e_test:
     <<: *defaults
     environment:
-      # change the npm config to avoid using sudo
-      NPM_CONFIG_PREFIX: ~/.npm-global
       BITSRC_ENV: stg
     parallelism: 25
     steps:
@@ -1125,8 +1113,6 @@ jobs:
     <<: *defaults
     resource_class: medium
     environment:
-      # change the npm config to avoid using sudo
-      NPM_CONFIG_PREFIX: ~/.npm-global
       BITSRC_ENV: stg
       # NPM_CONFIG_DEBUG: true
     parallelism: 1
@@ -1154,8 +1140,6 @@ jobs:
     <<: *defaults
     resource_class: medium
     environment:
-      # change the npm config to avoid using sudo
-      NPM_CONFIG_PREFIX: ~/.npm-global
       BITSRC_ENV: stg
       # NPM_CONFIG_DEBUG: true
     parallelism: 1
@@ -1196,6 +1180,21 @@ jobs:
     <<: *windows_defaults
     steps:
       - run: 'echo "starting windows build"'
+
+  # # simple job just to print node version on windows
+  # # this is to check what version of node you get when you update the windows orb
+  # # as it's missing in their docs
+  # windows_print_node_version:
+    # <<: *windows_defaults
+    # steps:
+      # # - checkout
+      # - run: node -v
+      # - run: npm -v
+      # - run: yarn -v
+      # # - run: choco install nodejs --version 14.19.3
+      # # - run: node -v
+      # - run: cinst nodejs --version 14.19.3
+      # - run: node -v
 
   windows_checkout_code:
     <<: *windows_defaults
@@ -1326,7 +1325,7 @@ jobs:
     steps:
       - attach_workspace:
           at: .
-      - run: cinst nodejs --version 12.22.0
+      - run: cinst nodejs --version 14.19.3
       - run: node -v
       - run: npm -v
       # - run: Get-Content -Path .\version.txt
@@ -1381,7 +1380,7 @@ jobs:
     steps:
       - attach_workspace:
           at: .
-      - run: cinst nodejs --version 12.22.0
+      - run: cinst nodejs --version 14.19.3
       - run: node -v
       - run: npm -v
       # - run: Get-Content -Path .\version.txt
@@ -1991,5 +1990,11 @@ workflows:
       # - server_docker_build_node_16:
       #     requires:
       #       - docker_build_node_16
-
+  # uncomment to print node version on windows default orb
+  # windows_print_node_version_workflow:
+  #   jobs:
+  #     - windows_print_node_version:
+  #         filters:
+  #           branches:
+  #             only: update-circle-node-versions
 

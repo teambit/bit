@@ -145,11 +145,13 @@ export default async function provideWorkspace(
 
   consumer.onCacheClear.push(() => workspace.clearCache());
 
-  LegacyComponentLoader.registerOnComponentLoadSubscriber(async (legacyComponent: ConsumerComponent) => {
-    const id = await workspace.resolveComponentId(legacyComponent.id);
-    const newComponent = await workspace.get(id, false, legacyComponent);
-    return newComponent.state._consumer;
-  });
+  LegacyComponentLoader.registerOnComponentLoadSubscriber(
+    async (legacyComponent: ConsumerComponent, opts?: { loadDocs?: boolean }) => {
+      const id = await workspace.resolveComponentId(legacyComponent.id);
+      const newComponent = await workspace.get(id, false, legacyComponent, true, true, opts);
+      return newComponent.state._consumer;
+    }
+  );
 
   ConsumerComponent.registerOnComponentConfigLoading(EXT_NAME, async (id) => {
     const componentId = await workspace.resolveComponentId(id);
@@ -215,7 +217,11 @@ export default async function provideWorkspace(
 
   cli.registerOnStart(async () => {
     await workspace.importCurrentLaneIfMissing();
-    await workspace.loadAspects(aspectLoader.getNotLoadedConfiguredExtensions());
+    await workspace.loadAspects(
+      aspectLoader.getNotLoadedConfiguredExtensions(),
+      undefined,
+      'workspace.cli.registerOnStart'
+    );
   });
 
   // add sub-commands "set" and "unset" to envs command.

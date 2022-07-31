@@ -9,7 +9,7 @@ import { Remote, Remotes } from '../../remotes';
 import { ComponentNotFound, MergeConflict, MergeConflictOnRemote } from '../exceptions';
 import ComponentNeedsUpdate from '../exceptions/component-needs-update';
 import { Lane, ModelComponent, Symlink, Version, ExportMetadata } from '../models';
-import { BitObject } from '../objects';
+import { BitObject, Ref } from '../objects';
 import Scope from '../scope';
 import { getScopeRemotes } from '../scope-remotes';
 import ScopeComponentsImporter from './scope-components-importer';
@@ -165,11 +165,17 @@ export async function exportMany({
       throw new PersistFailed(failedScopes, errors);
     }
     const exportedBitIds = successIds.map((id) => BitId.parse(id, true));
-    manyObjectsPerRemote.forEach((objectPerRemote) => {
-      const idsPerScope = exportedBitIds.filter((id) => id.scope === objectPerRemote.remote.name);
-      // it's possible that idsPerScope is an empty array, in case the objects were exported already before
-      objectPerRemote.exportedIds = idsPerScope.map((id) => id.toString());
-    });
+    if (manyObjectsPerRemote.length === 1) {
+      // when on a lane, it's always exported to the lane. and the ids can be from different scopes, so having the
+      // filter below, will remove these components from the output of bit-export at the end.
+      manyObjectsPerRemote[0].exportedIds = exportedBitIds.map((id) => id.toString());
+    } else {
+      manyObjectsPerRemote.forEach((objectPerRemote) => {
+        const idsPerScope = exportedBitIds.filter((id) => id.scope === objectPerRemote.remote.name);
+        // it's possible that idsPerScope is an empty array, in case the objects were exported already before
+        objectPerRemote.exportedIds = idsPerScope.map((id) => id.toString());
+      });
+    }
   }
 
   /**
@@ -284,7 +290,20 @@ this scope already has a component with the same name. as such, it'll be impossi
       return localTagsOrHashes;
     }
     const allHashes = await getAllVersionHashes(modelComponent, scope.objects, true);
+    await addMainHeadIfPossible(allHashes, modelComponent);
     return modelComponent.switchHashesWithTagsIfExist(allHashes);
+  }
+
+  /**
+   * by default, when exporting a lane, it traverse from the Lane's head and therefore it may skip the main head.
+   * later, if for some reason the original component was deleted in its scope, the head object will be missing.
+   */
+  async function addMainHeadIfPossible(allHashes: Ref[], modelComponent: ModelComponent) {
+    const head = modelComponent.head;
+    if (!head) return;
+    if (allHashes.find((h) => h.hash === head.hash)) return; // head is already in the list
+    if (!(await scope.objects.has(head))) return; // it should not happen. but if it does, we don't want to block the export
+    allHashes.push(head);
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars

@@ -23,12 +23,11 @@ export class Importer {
       if (currentRemoteLane) {
         importOptions.lanes = { laneIds: [currentRemoteLane.toLaneId()], lanes: [currentRemoteLane] };
       } else if (!importOptions.ids.length) {
-        // the lane is probably new, it's not yet on the remote, so nothing to import
-        return {
-          dependencies: [],
-          importDetails: [],
-          cancellationMessage: `your lane wasn't exported yet, nothing to import`,
-        };
+        // this is probably a local lane that was never exported.
+        // although no need to fetch from the lane, still, the import is needed for main (which are available on this
+        // local lane)
+        const currentLaneId = this.workspace.getCurrentLaneId();
+        importOptions.lanes = { laneIds: [currentLaneId], lanes: [] };
       }
     }
     const importComponents = new ImportComponents(consumer, importOptions);

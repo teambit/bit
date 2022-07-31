@@ -138,7 +138,6 @@ export default async function tagModelComponent({
   soft,
   build,
   persist,
-  resolveUnmerged,
   isSnap = false,
   disableTagAndSnapPipelines,
   forceDeploy,
@@ -152,7 +151,6 @@ export default async function tagModelComponent({
   releaseType?: ReleaseType;
   incrementBy?: number;
   consumer: Consumer;
-  resolveUnmerged?: boolean;
   isSnap?: boolean;
   packageManagerConfigRootDir?: string;
 } & BasicTagParams): Promise<{
@@ -238,7 +236,7 @@ export default async function tagModelComponent({
     await addFlattenedDependenciesToComponents(consumer.scope, allComponentsToTag);
     emptyBuilderData(allComponentsToTag);
     addBuildStatus(allComponentsToTag, BuildStatus.Pending);
-    await addComponentsToScope(consumer, allComponentsToTag, Boolean(resolveUnmerged));
+    await addComponentsToScope(consumer, allComponentsToTag, build);
     await consumer.updateComponentsVersions(allComponentsToTag);
   }
 
@@ -262,14 +260,14 @@ export default async function tagModelComponent({
   return { taggedComponents: componentsToTag, autoTaggedResults: autoTagData, publishedPackages };
 }
 
-async function addComponentsToScope(consumer: Consumer, components: Component[], resolveUnmerged: boolean) {
+async function addComponentsToScope(consumer: Consumer, components: Component[], shouldValidateVersion: boolean) {
   const lane = await consumer.getCurrentLaneObject();
   await mapSeries(components, async (component) => {
     await consumer.scope.sources.addSource({
       source: component,
       consumer,
       lane,
-      resolveUnmerged,
+      shouldValidateVersion,
     });
   });
 }

@@ -7,7 +7,10 @@ import loader from '@teambit/legacy/dist/cli/loader';
 import { BEFORE_STATUS } from '@teambit/legacy/dist/cli/loader/loader-messages';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import ComponentsPendingImport from '@teambit/legacy/dist/consumer/component-ops/exceptions/components-pending-import';
-import ComponentsList, { DivergedComponent } from '@teambit/legacy/dist/consumer/component/components-list';
+import ComponentsList, {
+  DivergeDataPerId,
+  DivergedComponent,
+} from '@teambit/legacy/dist/consumer/component/components-list';
 import { InvalidComponent } from '@teambit/legacy/dist/consumer/component/consumer-component';
 import { ModelComponent } from '@teambit/legacy/dist/scope/models';
 import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
@@ -30,6 +33,7 @@ export type StatusResult = {
   componentsWithIndividualFiles: ConsumerComponent[];
   softTaggedComponents: BitId[];
   snappedComponents: BitId[];
+  pendingUpdatesFromMain: DivergeDataPerId[];
   laneName: string | null; // null if default
 };
 
@@ -42,8 +46,15 @@ export class StatusMain {
     const consumer = this.workspace.consumer;
     const laneObj = await consumer.getCurrentLaneObject();
     const componentsList = new ComponentsList(consumer);
-    const newComponents: ConsumerComponent[] = (await componentsList.listNewComponents(true)) as ConsumerComponent[];
-    const modifiedComponent = (await componentsList.listModifiedComponents(true)) as ConsumerComponent[];
+    const loadOpts = {
+      loadDocs: false,
+      loadCompositions: false,
+    };
+    const newComponents: ConsumerComponent[] = (await componentsList.listNewComponents(
+      true,
+      loadOpts
+    )) as ConsumerComponent[];
+    const modifiedComponent = (await componentsList.listModifiedComponents(true, loadOpts)) as ConsumerComponent[];
     const stagedComponents: ModelComponent[] = await componentsList.listExportPendingComponents(laneObj);
     const autoTagPendingComponents = await componentsList.listAutoTagPendingComponents();
     const autoTagPendingComponentsIds = autoTagPendingComponents.map((component) => component.id);
@@ -60,7 +71,7 @@ export class StatusMain {
     const newAndModifiedLegacy: ConsumerComponent[] = newComponents.concat(modifiedComponent);
     const issuesToIgnore = this.issues.getIssuesToIgnoreGlobally();
     if (newAndModifiedLegacy.length) {
-      const newAndModified = await this.workspace.getManyByLegacy(newAndModifiedLegacy);
+      const newAndModified = await this.workspace.getManyByLegacy(newAndModifiedLegacy, loadOpts);
       if (!issuesToIgnore.includes(IssuesClasses.CircularDependencies.name)) {
         await this.insights.addInsightsAsComponentIssues(newAndModified);
       }
@@ -72,6 +83,7 @@ export class StatusMain {
     const componentsDuringMergeState = componentsList.listDuringMergeStateComponents();
     const softTaggedComponents = componentsList.listSoftTaggedComponents();
     const snappedComponents = (await componentsList.listSnappedComponentsOnMain()).map((c) => c.toBitId());
+    const pendingUpdatesFromMain = await componentsList.listUpdatesFromMainPending();
     const currentLane = consumer.getCurrentLaneId();
     const laneName = currentLane.isDefault() ? null : currentLane.name;
     Analytics.setExtraData('new_components', newComponents.length);
@@ -96,6 +108,7 @@ export class StatusMain {
       componentsWithIndividualFiles: await componentsList.listComponentsWithIndividualFiles(),
       softTaggedComponents,
       snappedComponents,
+      pendingUpdatesFromMain,
       laneName,
     };
   }
