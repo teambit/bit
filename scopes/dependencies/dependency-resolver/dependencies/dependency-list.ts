@@ -88,8 +88,8 @@ export class DependencyList {
     return this.dependencies.filter((dep) => dep instanceof ComponentDependency) as ComponentDependency[];
   }
 
-  toDependenciesManifest(): DependenciesManifest {
-    const manifest: DependenciesManifest = {
+  toDependenciesManifest(): Required<DependenciesManifest> {
+    const manifest: Required<DependenciesManifest> = {
       dependencies: {},
       devDependencies: {},
       peerDependencies: {},

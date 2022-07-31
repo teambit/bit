@@ -475,11 +475,15 @@
       "teambit.harmony/node": {}
     },
     // Special rules for all core envs
-    // "scopes/react/react, scopes/react/react-native, scopes/harmony/aspect, scopes/harmony/node, scopes/html/html": {
-    // "teambit.harmony/aspect": "-",
-    // Set the env env for all core envs
-    // "teambit.envs/env": {}
-    // },
+    // TODO: check if we can add scopes/harmony/aspect and scopes/envs/env here
+    "scopes/react/react, scopes/react/react-native, scopes/harmony/node, scopes/html/html, scopes/mdx/mdx, scopes/mdx/readme": {
+      "teambit.harmony/aspect": "-",
+      // Set the env env for all core envs
+      "teambit.envs/env": {},
+      "teambit.envs/envs": {
+        "env": "teambit.envs/env"
+      }
+    },
     "{modules/**}": {
       "teambit.envs/envs": {
         "env": "teambit.harmony/node"
@@ -573,12 +577,6 @@
     },
     "scopes/code": {
       "defaultScope": "teambit.code"
-    },
-    "scopes/mdx/readme": {
-      "teambit.envs/env": {},
-      "teambit.envs/envs": {
-        "env": "teambit.envs/env"
-      }
     },
     "scopes/component/component-id": {
       "teambit.envs/envs": {
@@ -682,6 +680,17 @@
             "react": "^16.8.0 || ^17.0.0",
             "react-dom": "^16.8.0 || ^17.0.0",
             "@teambit/legacy": "1.0.316"
+          }
+        }
+      }
+    },
+    "scopes/mdx/modules/loader": {
+      "teambit.dependencies/dependency-resolver": {
+        "policy": {
+          "devDependencies": {
+            "@babel/preset-react": "7.13.13",
+            "@babel/preset-env": "7.12.17",
+            "babel-loader": "8.2.2"
           }
         }
       }

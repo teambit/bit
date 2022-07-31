@@ -172,7 +172,7 @@ export class ReactApp implements Application {
   }
   private async getDefaultBundler(context: AppBuildContext) {
     const { capsule } = context;
-    const reactEnv: ReactEnv = context.env;
+    const reactEnv: ReactEnv = context.env as ReactEnv;
     const publicDir = this.getPublicDir(context.artifactsDir);
     const outputPath = join(capsule.path, publicDir);
     const { distDir } = reactEnv.getCompiler();
@@ -186,6 +186,7 @@ export class ReactApp implements Application {
           components: [capsule?.component],
           entries,
           outputPath,
+          hostRootDir: capsule?.path,
           hostDependencies: await this.getPeers(),
           aliasHostDependencies: true,
         },
