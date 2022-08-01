@@ -176,7 +176,7 @@ export class ReactApp implements Application {
     const publicDir = this.getPublicDir(context.artifactsDir);
     const outputPath = join(capsule.path, publicDir);
     const { distDir } = reactEnv.getCompiler();
-    const targetEntries = Array.isArray(this.entry) ? this.entry : await this.entry();
+    const targetEntries = await this.getEntries();
     const entries = targetEntries.map((entry) => require.resolve(`${capsule.path}/${distDir}/${basename(entry)}`));
     const staticDir = join(outputPath, this.dir);
 
