@@ -27,7 +27,7 @@ ${createImports(aspectDefs)}
 const isBrowser = typeof window !== "undefined";
 const config = JSON.parse('${stringifiedConfig}');
 ${idSetters.join('\n')}
-export function render(...props){
+export default function render(...props){
   return Harmony.load([${identifiers.join(', ')}], '${runtime}', config)
     .then((harmony) => {
       return harmony

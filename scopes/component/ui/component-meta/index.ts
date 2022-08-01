@@ -1,2 +1,2 @@
-export { ComponentOverview } from './component-overview';
-export type { ComponentOverviewProps, TitleBadge } from './component-overview';
+export { ComponentOverview, BadgeSection } from './component-overview';
+export type { ComponentOverviewProps, BadgeSectionProps } from './component-overview';

@@ -59,6 +59,11 @@ export type LinkingOptions = {
    * consumer is required for the legacyLink
    */
   consumer?: Consumer;
+
+  /**
+   * Link deps which should be linked to the env
+   */
+  linkDepsResolvedFromEnv?: boolean;
 };
 
 const DEFAULT_LINKING_OPTIONS: LinkingOptions = {
@@ -66,6 +71,7 @@ const DEFAULT_LINKING_OPTIONS: LinkingOptions = {
   rewire: false,
   linkTeambitBit: true,
   linkCoreAspects: true,
+  linkDepsResolvedFromEnv: true,
   linkNestedDepsInNM: true,
 };
 
@@ -155,9 +161,11 @@ export class DependencyLinker {
     }
 
     // Link deps which should be linked to the env
-    result.resolvedFromEnvLinks = await this.linkDepsResolvedFromEnv(componentDirectoryMap);
+    if (linkingOpts.linkDepsResolvedFromEnv) {
+      result.resolvedFromEnvLinks = await this.linkDepsResolvedFromEnv(componentDirectoryMap);
+    }
     if (linkingOpts.linkNestedDepsInNM) {
-      result.nestedDepsInNmLinks = await this.addSymlinkFromComponentDirNMToWorkspaceDirNM(
+      result.nestedDepsInNmLinks = this.addSymlinkFromComponentDirNMToWorkspaceDirNM(
         finalRootDir,
         componentDirectoryMap
       );
@@ -214,9 +222,11 @@ export class DependencyLinker {
   }
 
   /**
-   * add symlink from the node_modules in the component's root-dir to the workspace node-modules
+   * Add symlinks from the node_modules in the component's root-dir to the workspace node_modules
    * of the component. e.g.
-   * ws-root/node_modules/comp1/node_modules -> ws-root/components/comp1/node_modules
+   * <ws-root>/node_modules/comp1/node_modules/<dep> -> <ws-root>/components/comp1/node_modules/<dep>
+   * This is needed because the component is compiled into the dist folder at <ws-root>/node_modules/comp1/dist,
+   * so the files in the dist folder need to find the right dependencies of comp1.
    */
   private addSymlinkFromComponentDirNMToWorkspaceDirNM(
     rootDir: string,
@@ -625,6 +635,7 @@ function resolveModuleDirFromFile(resolvedModulePath: string, moduleId: string):
   }
 
   const [start, end] = resolvedModulePath.split('@');
+  if (!end) return path.basename(resolvedModulePath);
   const versionStr = head(end.split('/'));
   return `${start}@${versionStr}`;
 }
