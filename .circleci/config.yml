@@ -1966,7 +1966,7 @@ workflows:
       - harmony_publish_to_gcloud:
           filters:
             branches:
-              only: fix-circle-cache
+              only: bvm-publish
           requires:
             - bundle_version_macos
             - bundle_version_linux
