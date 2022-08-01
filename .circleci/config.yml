@@ -663,6 +663,8 @@ jobs:
           paths:
             - /home/circleci/.bvm
       - run: cd bit && bbit install
+      # temporary work around because for some reason since v0.0.805 @teambit/clear-cache is installed rather than linked
+      - run: cd bit && bbit link
       - run: cd bit && npm run link-bit-legacy
       - run: cd bit && bbit compile
       - run:
