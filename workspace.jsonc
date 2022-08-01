@@ -359,7 +359,8 @@
     "peerDependencyRules": {
       "allowAny": [],
       "ignoreMissing": []
-    }
+    },
+    "linkCoreAspects": false
   },
   "teambit.preview/preview": {
     "bundlingStrategy": "component"
