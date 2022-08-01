@@ -1,4 +1,5 @@
-import { uniqWith } from 'lodash';
+import { sha1 } from '@teambit/legacy/dist/utils';
+import { uniqWith, sortBy } from 'lodash';
 import { SemverVersion } from '../policy';
 
 export type EnvPolicyEntryVersion = SemverVersion;
@@ -30,6 +31,21 @@ export class PeersAutoDetectPolicy {
   find(name: string): PeersAutoDetectPolicyEntry | undefined {
     const matchedEntry = this.entries.find((entry) => entry.name === name);
     return matchedEntry;
+  }
+
+  sortByName(): PeersAutoDetectPolicy {
+    const sorted = sortBy(this.entries, ['name']);
+    return new PeersAutoDetectPolicy(sorted);
+  }
+
+  /**
+   * Return a hash of all the peers names and their version
+   * This useful when you want to compare 2 envs
+   */
+  hashNameVersion(): string {
+    const sorted = this.sortByName();
+    const toHash = sorted.entries.map(({ name, version }) => `${name}::${version}`).join(':::');
+    return sha1(toHash);
   }
 
   filter(predicate: (dep: PeersAutoDetectPolicyEntry, index?: number) => boolean): PeersAutoDetectPolicy {

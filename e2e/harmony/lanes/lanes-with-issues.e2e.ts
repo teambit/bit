@@ -34,5 +34,8 @@ describe('lanes with various issues', function () {
       expect(output).to.have.string('Diff failed on the following component(s)');
       expect(output).to.have.string('ENOENT: no such file or directory');
     });
+    it('bit diff main should not throw', () => {
+      expect(() => helper.command.diffLane('main')).not.to.throw();
+    });
   });
 });

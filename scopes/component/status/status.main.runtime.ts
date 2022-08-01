@@ -45,8 +45,15 @@ export class StatusMain {
     const consumer = this.workspace.consumer;
     const laneObj = await consumer.getCurrentLaneObject();
     const componentsList = new ComponentsList(consumer);
-    const newComponents: ConsumerComponent[] = (await componentsList.listNewComponents(true)) as ConsumerComponent[];
-    const modifiedComponent = (await componentsList.listModifiedComponents(true)) as ConsumerComponent[];
+    const loadOpts = {
+      loadDocs: false,
+      loadCompositions: false,
+    };
+    const newComponents: ConsumerComponent[] = (await componentsList.listNewComponents(
+      true,
+      loadOpts
+    )) as ConsumerComponent[];
+    const modifiedComponent = (await componentsList.listModifiedComponents(true, loadOpts)) as ConsumerComponent[];
     const stagedComponents: ModelComponent[] = await componentsList.listExportPendingComponents(laneObj);
     const autoTagPendingComponents = await componentsList.listAutoTagPendingComponents();
     const autoTagPendingComponentsIds = autoTagPendingComponents.map((component) => component.id);
@@ -63,7 +70,7 @@ export class StatusMain {
     const newAndModifiedLegacy: ConsumerComponent[] = newComponents.concat(modifiedComponent);
     const issuesToIgnore = this.issues.getIssuesToIgnoreGlobally();
     if (newAndModifiedLegacy.length) {
-      const newAndModified = await this.workspace.getManyByLegacy(newAndModifiedLegacy);
+      const newAndModified = await this.workspace.getManyByLegacy(newAndModifiedLegacy, loadOpts);
       if (!issuesToIgnore.includes(IssuesClasses.CircularDependencies.name)) {
         await this.insights.addInsightsAsComponentIssues(newAndModified);
       }

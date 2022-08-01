@@ -23,7 +23,7 @@ export class UserAgentUI {
 
     uiUi.registerRenderHooks<UserAgentRenderCtx, undefined>({
       serverInit: ({ browser }) => {
-        const userAgent = new UAParser(browser?.connection.headers?.['user-agent']);
+        const userAgent = new UAParser(browser.headers['user-agent']);
         return {
           userAgent,
         };
