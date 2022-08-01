@@ -83,7 +83,7 @@ async function loadRuntime(root: string, { logger }: { logger: Logger }) {
     }
 
     const imported = await import(entryFilepath);
-    render = imported?.render;
+    render = imported?.default || imported?.render;
 
     if (!render || typeof render !== 'function') {
       logger.warn('[ssr] - index file does not export a render() function. Skipping setup.');
