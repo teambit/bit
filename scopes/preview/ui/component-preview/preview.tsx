@@ -55,5 +55,5 @@ export function ComponentPreview({
 
   const url = toPreviewUrl(component, previewName, queryParams);
 
-  return <iframe {...rest} ref={iframeRef} style={{ ...style, height: height || 'calc(100vh + 200px)' }} src={url} />;
+  return <iframe {...rest} ref={iframeRef} style={{ ...style, height }} src={url} />;
 }
