@@ -127,7 +127,7 @@
         "@teambit/evangelist.input.checkbox.label": "1.0.3",
         "@teambit/evangelist.surfaces.dropdown": "1.0.2",
         "@teambit/evangelist.surfaces.tooltip": "1.0.1",
-        "@teambit/explorer.ui.command-bar": "2.0.2",
+        "@teambit/explorer.ui.command-bar": "2.0.3",
         "@teambit/graph.cleargraph": "0.0.1",
         "@teambit/graphql.hooks.use-query-light": "1.0.0",
         "@teambit/harmony": "0.3.3",
