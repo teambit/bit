@@ -127,7 +127,7 @@ export class UiUI {
   ) {
     const uiUi = new UiUI(router, uiRootSlot, hudSlot, renderLifecycleSlot);
 
-    uiUi.registerRenderHooks(GraphqlUi.renderPlugins);
+    if (GraphqlUi) uiUi.registerRenderHooks(GraphqlUi.renderPlugins);
 
     return uiUi;
   }

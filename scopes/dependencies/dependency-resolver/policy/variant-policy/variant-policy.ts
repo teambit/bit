@@ -1,4 +1,5 @@
-import { uniqWith } from 'lodash';
+import { sha1 } from '@teambit/legacy/dist/utils';
+import { sortBy, uniqWith } from 'lodash';
 import { DependenciesOverridesData } from '@teambit/legacy/dist/consumer/config/component-overrides';
 import { Policy, PolicyConfigKeys, PolicyEntry, SemverVersion } from '../policy';
 import { DependencyLifecycleType, KEY_NAME_BY_LIFECYCLE_TYPE } from '../../dependencies';
@@ -57,13 +58,29 @@ export class VariantPolicy implements Policy<VariantPolicyConfigObject> {
     return matchedEntry;
   }
 
-  filter(predicate: (dep: VariantPolicyEntry, index?: number) => boolean): VariantPolicy {
-    const filtered = this.entries.filter(predicate);
+  byLifecycleType(lifecycleType: DependencyLifecycleType): VariantPolicy {
+    const filtered = this._policiesEntries.filter((entry) => entry.lifecycleType === lifecycleType);
     return new VariantPolicy(filtered);
   }
 
-  byLifecycleType(lifecycleType?: DependencyLifecycleType): VariantPolicy {
-    return this.filter((entry) => entry.lifecycleType === lifecycleType);
+  sortByName(): VariantPolicy {
+    const sorted = sortBy(this.entries, ['dependencyId']);
+    return new VariantPolicy(sorted);
+  }
+
+  /**
+   * Return a hash of all the peers names and their version
+   * This useful when you want to compare 2 envs
+   */
+  hashNameVersion(): string {
+    const sorted = this.sortByName();
+    const toHash = sorted.entries.map(({ dependencyId, value }) => `${dependencyId}::${value.version}`).join(':::');
+    return sha1(toHash);
+  }
+
+  filter(predicate: (dep: VariantPolicyEntry, index?: number) => boolean): VariantPolicy {
+    const filtered = this.entries.filter(predicate);
+    return new VariantPolicy(filtered);
   }
 
   /**
