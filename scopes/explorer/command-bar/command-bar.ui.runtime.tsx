@@ -15,7 +15,6 @@ import { DuplicateCommandError } from './duplicate-command-error';
 import { KeyEvent } from './model/key-event';
 import { MousetrapStub } from './mousetrap-stub';
 import { openCommandBarKeybinding } from './keybinding';
-
 import styles from './command-bar.module.scss';
 
 const RESULT_LIMIT = 5;
