@@ -346,7 +346,7 @@ export class DependencyResolverMain {
   }
 
   linkCoreAspects(): boolean {
-    return this.config.linkCoreAspects ?? true;
+    return this.config.linkCoreAspects ?? DependencyResolverMain.defaultConfig.linkCoreAspects;
   }
 
   /**
@@ -1251,12 +1251,14 @@ export class DependencyResolverMain {
     Slot.withType<DependencyDetector>(),
   ];
 
-  static defaultConfig: DependencyResolverWorkspaceConfig = {
+  static defaultConfig: DependencyResolverWorkspaceConfig &
+    Required<Pick<DependencyResolverWorkspaceConfig, 'linkCoreAspects'>> = {
     /**
      * default package manager.
      */
     packageManager: 'teambit.dependencies/pnpm',
     policy: {},
+    linkCoreAspects: true,
   };
 
   static async provider(
