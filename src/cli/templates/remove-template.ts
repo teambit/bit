@@ -27,7 +27,7 @@ export default (
       const removedFrom = isLane ? 'lane' : 'scope';
       const msg = isRemote
         ? `successfully removed components from the remote ${removedFrom}:`
-        : `successfully removed components from the local ${removedFrom} (to remove from the remote ${removedFrom}, please re-run the command with --remote flag):`;
+        : `successfully removed components from the local ${removedFrom}:`;
       return chalk.green(msg);
     };
     const newLine = '\n';
