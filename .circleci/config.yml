@@ -669,6 +669,9 @@ jobs:
       - run: cd bit && bbit install
       - run: cd bit && ls -la node_modules/@teambit
       - run: cd bit && ls -la /home/circleci/.bvm/versions/0.0.805/bit-0.0.805/node_modules/@teambit/clear-cache
+      - run: cd bit && bbit link
+      - run: cd bit && ls -la node_modules/@teambit
+      - run: cd bit && ls -la /home/circleci/.bvm/versions/0.0.805/bit-0.0.805/node_modules/@teambit/clear-cache
 
       - run: cd bit && npm run link-bit-legacy
       - run: cd bit && ls -la node_modules/@teambit
