@@ -611,6 +611,7 @@ jobs:
             - 'repo-{{ checksum ".circle-sha" }}'
       - attach_workspace:
           at: ./
+      - run: cd bit && ls -la node_modules/@teambit
       - run:
           name: 'run ESLint'
           command: 'cd bit && npm run lint-circle'
@@ -663,14 +664,18 @@ jobs:
           paths:
             - /home/circleci/.bvm
       - run: cd bit && bbit install
+      - run: cd bit && ls -la node_modules/@teambit
       - run: cd bit && npm run link-bit-legacy
+      - run: cd bit && ls -la node_modules/@teambit
       - run: cd bit && bbit compile
+      - run: cd bit && ls -la node_modules/@teambit
       - run:
           name: 'Build bit source code'
           command: 'cd bit && npm run build'
       - run:
           name: 'Build bit-legacy types'
           command: 'cd bit && npm run build:types'
+      - run: cd bit && ls -la node_modules/@teambit
       - persist_to_workspace:
           root: .
           paths:
