@@ -250,6 +250,12 @@ export interface DependencyResolverWorkspaceConfig {
    * Rules to mute specific peer dependeny warnings.
    */
   peerDependencyRules?: PeerDependencyRules;
+
+  /*
+   * This setting is "true" by default and tells bit to link core aspects to the node_modules of the workspace.
+   * It only makes sense to set this to "false" in a workspace in which core aspects are actually developed.
+   */
+  linkCoreAspects?: boolean;
 }
 
 export interface DependencyResolverVariantConfig {
@@ -337,6 +343,10 @@ export class DependencyResolverMain {
 
   hasRootComponents(): boolean {
     return Boolean(this.config.rootComponents);
+  }
+
+  linkCoreAspects(): boolean {
+    return this.config.linkCoreAspects ?? true;
   }
 
   /**
