@@ -7,3 +7,4 @@ export { ApplicationType } from './application-type';
 export { AppDeployContext } from './app-deploy-context';
 export { AppBuildContext } from './app-build-context';
 export { AppBuildResult } from './app-build-result';
+export { ARTIFACTS_DIR_NAME } from './build.task';
