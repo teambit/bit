@@ -972,6 +972,9 @@ needed-for: ${neededFor || '<unknown>'}`);
   // todo: move this to somewhere else (where?)
   filterIdsFromPoolIdsByPattern(pattern: string, ids: ComponentID[], throwForNoMatch = true) {
     const patterns = pattern.split(',').map((p) => p.trim());
+    if (patterns.every((p) => p.startsWith('!'))) {
+      patterns.push('**'); // otherwise it'll never match anything
+    }
     // check also as legacyId.toString, as it doesn't have the defaultScope
     const idsToCheck = (id: ComponentID) => [id.toStringWithoutVersion(), id._legacy.toStringWithoutVersion()];
     const idsFiltered = ids.filter((id) => multimatch(idsToCheck(id), patterns).length);

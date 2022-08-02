@@ -1,12 +1,12 @@
+import { flatten } from 'lodash';
 import { ComponentAspect, ComponentUI } from '@teambit/component';
 import { Slot } from '@teambit/harmony';
-import type { TitleBadge } from '@teambit/component.ui.component-meta';
 import { UIRuntime } from '@teambit/ui';
 import ComponentCompareAspect, { ComponentCompareUI } from '@teambit/component-compare';
 
 import { DocsAspect } from './docs.aspect';
 import { OverviewSection } from './overview.section';
-import { TitleBadgeSlot } from './overview';
+import type { TitleBadgeSlot, TitleBadge } from './overview';
 import { OverviewCompareSection } from './docs.compare.section';
 
 export class DocsUI {
@@ -15,8 +15,9 @@ export class DocsUI {
   /**
    * register a new title badge into the overview section of a component.
    */
-  registerTitleBadge(...titleBadge: TitleBadge[]) {
-    this.titleBadgeSlot.register(titleBadge);
+  registerTitleBadge(titleBadges: TitleBadge | TitleBadge[]) {
+    const badges = Array.isArray(titleBadges) ? titleBadges : [titleBadges];
+    this.titleBadgeSlot.register(badges);
     return this;
   }
 
@@ -24,7 +25,7 @@ export class DocsUI {
    * list all title badges registered.
    */
   listTitleBadges() {
-    return this.titleBadgeSlot;
+    return flatten(this.titleBadgeSlot.values());
   }
 
   static dependencies = [ComponentAspect, ComponentCompareAspect];
@@ -39,7 +40,7 @@ export class DocsUI {
     [titleBadgeSlot]: [TitleBadgeSlot]
   ) {
     const docs = new DocsUI(titleBadgeSlot);
-    const section = new OverviewSection(docs);
+    const section = new OverviewSection(titleBadgeSlot);
     const compareSection = new OverviewCompareSection(titleBadgeSlot);
 
     component.registerRoute(section.route);

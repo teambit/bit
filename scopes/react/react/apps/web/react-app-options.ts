@@ -70,7 +70,7 @@ export type ReactAppOptions = {
   /**
    * path to entry files of the application.
    */
-  entry: string[] | (() => Promise<string[]>);
+  entry: string[] | ((path?: string) => Promise<string[]>);
 
   /**
    * path to server-rendered entrypoint of the app

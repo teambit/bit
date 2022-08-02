@@ -417,6 +417,7 @@ export class UiMain {
     runtimeName = UIRuntime.name,
     rootAspect = UIAspect.id,
     config?: object,
+    path?: string
   ) {
     const contents = await createRoot(
       aspectDefs,
@@ -425,7 +426,7 @@ export class UiMain {
       runtimeName,
       config || this.harmony.config.toObject()
     );
-    const filepath = resolve(join(__dirname, `${runtimeName}.root.${sha1(contents)}.js`));
+    const filepath = resolve(join(path || __dirname, `${runtimeName}.root${sha1(contents)}.js`));
     if (fs.existsSync(filepath)) return filepath;
     fs.outputFileSync(filepath, contents);
     return filepath;

@@ -4,6 +4,7 @@ import TerserPlugin from 'terser-webpack-plugin';
 
 export function addDevServer(configMutator: WebpackConfigMutator) {
   return configMutator.addTopLevel('devServer', {
+    allowedHosts: 'all',
     historyApiFallback: {
       index: '/index.html',
       disableDotRule: true,

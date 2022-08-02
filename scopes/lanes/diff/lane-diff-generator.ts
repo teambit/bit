@@ -20,13 +20,27 @@ type LaneData = {
   }>;
   remote: string | null;
 };
+
+type Failure = { id: BitId; msg: string };
+
+export type LaneDiffResults = {
+  newCompsFrom: string[];
+  newCompsTo: string[];
+  compsWithDiff: DiffResults[];
+  compsWithNoChanges: string[];
+  toLaneName: string;
+  fromLaneName: string;
+  failures: Failure[];
+};
+
 export class LaneDiffGenerator {
-  private newComps: BitId[] = [];
+  private newCompsFrom: BitId[] = [];
+  private newCompsTo: BitId[] = [];
   private compsWithDiff: DiffResults[] = [];
   private compsWithNoChanges: BitId[] = [];
-  private fromLaneData: LaneData | null;
+  private fromLaneData: LaneData;
   private toLaneData: LaneData;
-  private failures: { id: BitId; msg: string }[] = [];
+  private failures: Failure[] = [];
   constructor(private workspace: Workspace | undefined, private scope: ScopeMain) {}
 
   /**
@@ -35,7 +49,7 @@ export class LaneDiffGenerator {
    * [to] => diff between the current lane (or default-lane when in scope) and "to" lane.
    * [from, to] => diff between "from" lane and "to" lane.
    */
-  async generate(values: string[], diffOptions: DiffOptions = {}, pattern?: string) {
+  async generate(values: string[], diffOptions: DiffOptions = {}, pattern?: string): Promise<LaneDiffResults> {
     const { fromLaneName, toLaneName } = this.getLaneNames(values);
     if (fromLaneName === toLaneName) {
       throw new Error(`unable to run diff between "${fromLaneName}" and "${toLaneName}", they're the same lane`);
@@ -90,20 +104,26 @@ export class LaneDiffGenerator {
     );
 
     return {
-      newComps: this.newComps.map((id) => id.toString()),
+      newCompsFrom: this.newCompsFrom.map((id) => id.toString()),
+      newCompsTo: this.newCompsTo.map((id) => id.toString()),
       compsWithDiff: this.compsWithDiff,
       compsWithNoChanges: this.compsWithNoChanges.map((id) => id.toString()),
-      toLaneName: this.toLaneData?.name,
+      toLaneName: this.toLaneData.name,
+      fromLaneName: this.fromLaneData.name,
       failures: this.failures,
     };
   }
 
-  private async componentDiff(id: BitId, toLaneHead: Ref, diffOptions: DiffOptions) {
+  private async componentDiff(id: BitId, toLaneHead: Ref | null, diffOptions: DiffOptions) {
     const modelComponent = await this.scope.legacyScope.getModelComponent(id);
     const fromLaneHead =
-      this.fromLaneData?.components.find((c) => c.id.isEqualWithoutVersion(id))?.head || modelComponent.head;
+      this.fromLaneData.components.find((c) => c.id.isEqualWithoutVersion(id))?.head || modelComponent.head;
     if (!fromLaneHead) {
-      this.newComps.push(id);
+      this.newCompsTo.push(id);
+      return;
+    }
+    if (!toLaneHead) {
+      this.newCompsFrom.push(id);
       return;
     }
     if (fromLaneHead.isEqual(toLaneHead)) {
@@ -118,7 +138,7 @@ export class LaneDiffGenerator {
       return;
     }
     const toVersion = await toLaneHead.load(this.scope.legacyScope.objects);
-    const fromLaneStr = this.fromLaneData ? this.fromLaneData.name : DEFAULT_LANE;
+    const fromLaneStr = this.fromLaneData.name;
     diffOptions.formatDepsAsTable = false;
     const diff = await diffBetweenVersionsObjects(
       modelComponent,

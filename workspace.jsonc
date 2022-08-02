@@ -49,6 +49,7 @@
         "@stencil/core": "1.17.4",
         "@stencil/webpack": "0.0.6",
         "@teambit/any-fs": "0.0.5",
+        "@teambit/base-react.layout.row": "0.0.3",
         "@teambit/base-react.navigation.link": "2.0.27",
         "@teambit/base-ui.constants.storage": "1.0.0",
         "@teambit/base-ui.graph.tree.collapsable-tree-node": "0.0.4",
@@ -126,7 +127,7 @@
         "@teambit/evangelist.input.checkbox.label": "1.0.3",
         "@teambit/evangelist.surfaces.dropdown": "1.0.2",
         "@teambit/evangelist.surfaces.tooltip": "1.0.1",
-        "@teambit/explorer.ui.command-bar": "2.0.2",
+        "@teambit/explorer.ui.command-bar": "2.0.3",
         "@teambit/graph.cleargraph": "0.0.1",
         "@teambit/graphql.hooks.use-query-light": "1.0.0",
         "@teambit/harmony": "0.3.3",
@@ -263,8 +264,6 @@
         "multimatch": "5.0.0",
         "nanoid": "3.1.20",
         "nerf-dart": "1.0.0",
-        // Pinning the npm version to have consistent results in e2e tests.
-        // Without npm in the dependencies, e2e tests would use the globally installed npm CLI.
         "npm": "6.14.17",
         "p-limit": "3.1.0",
         "parse-package-name": "0.1.0",
@@ -329,7 +328,7 @@
       "peerDependencies": {
         "@apollo/client": "^3.0.0",
         "@teambit/base-react.navigation.link": "2.0.27",
-        "@teambit/legacy": "1.0.317",
+        "@teambit/legacy": "1.0.319",
         "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
         "browserslist": "4.16.3",
         "core-js": "^3.10.0",
@@ -358,7 +357,8 @@
     "peerDependencyRules": {
       "allowAny": [],
       "ignoreMissing": []
-    }
+    },
+    "linkCoreAspects": false
   },
   "teambit.preview/preview": {
     "bundlingStrategy": "component"
@@ -416,7 +416,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.317"
+            "@teambit/legacy": "1.0.319"
           }
         }
       },
@@ -679,7 +679,7 @@
           "peerDependencies": {
             "react": "^16.8.0 || ^17.0.0",
             "react-dom": "^16.8.0 || ^17.0.0",
-            "@teambit/legacy": "1.0.317"
+            "@teambit/legacy": "1.0.319"
           }
         }
       }
@@ -768,7 +768,7 @@
             "@teambit/base-react.navigation.link": "2.0.27",
             "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
             "@apollo/client": "3.3.7",
-            "@teambit/legacy": "1.0.317",
+            "@teambit/legacy": "1.0.319",
             "graphql": "14.7.0",
             "browserslist": "4.16.3",
             "reflect-metadata": "0.1.13",
@@ -903,7 +903,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.317"
+            "@teambit/legacy": "1.0.319"
           }
         }
       }
