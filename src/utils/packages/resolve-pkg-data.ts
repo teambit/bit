@@ -102,6 +102,7 @@ function enrichDataFromDependency(packageData: ResolvedPackageData) {
       delete packageInfo.componentId.scope;
     }
     packageData.componentId = new BitId(packageInfo.componentId);
+    if (packageData.componentId.hasVersion()) packageData.concreteVersion = packageData.componentId.version;
   }
 }
 
