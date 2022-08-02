@@ -2,9 +2,9 @@ import React, { ReactNode } from 'react';
 import { NavigateFunction } from 'react-router-dom';
 import type { Location, NavigationType, RouteProps } from 'react-router-dom';
 import { Slot, SlotRegistry } from '@teambit/harmony';
-import { RenderPlugins, UIRuntime } from '@teambit/ui';
+import { UIRuntime } from '@teambit/ui';
+import type { SSR } from '@teambit/ui';
 import { RouteSlot } from '@teambit/ui-foundation.ui.react-router.slot-router';
-import { isBrowser } from '@teambit/ui-foundation.ui.is-browser';
 
 import { ReactRouterAspect } from './react-router.aspect';
 import { RouteContext, RootRoute } from './route-context';
@@ -16,7 +16,7 @@ type RouteChangeSlot = SlotRegistry<LocationListener>;
 type RenderContext = { initialLocation?: string };
 
 export class ReactRouterUI {
-  private routingMode = isBrowser ? Routing.url : Routing.static;
+  private routingMode = Routing.url;
 
   constructor(
     /**
@@ -87,7 +87,7 @@ export class ReactRouterUI {
     listeners.forEach((listener) => listener(location, action));
   };
 
-  private AppRoutingContext = ({ children, renderCtx }: { children: ReactNode; renderCtx?: RenderContext }) => {
+  private RoutingContext = ({ children, renderCtx }: { children: ReactNode; renderCtx?: RenderContext }) => {
     return (
       <RouteContext reactRouterUi={this} routing={this.routingMode} location={renderCtx?.initialLocation}>
         {children}
@@ -99,7 +99,19 @@ export class ReactRouterUI {
     );
   };
 
-  public renderPlugin: RenderPlugins<RenderContext> = {
+  private ServerRouting = ({ children, renderCtx }: { children: ReactNode; renderCtx?: RenderContext }) => {
+    return (
+      <RouteContext reactRouterUi={this} routing={Routing.static} location={renderCtx?.initialLocation}>
+        {children}
+        <LocationHooks
+          onLocationChange={this.handleLocationChange}
+          onNavigatorChange={(nav) => (this.navigate = nav)}
+        />
+      </RouteContext>
+    );
+  };
+
+  public renderPlugin: SSR.RenderPlugin<RenderContext> = {
     browserInit: () => {
       const initialLocation = `${window.location.pathname}${window.location.search}${window.location.hash}`;
       return { initialLocation };
@@ -108,7 +120,8 @@ export class ReactRouterUI {
       const initialLocation = browser?.location.url;
       return { initialLocation };
     },
-    reactContext: this.AppRoutingContext,
+    reactClientContext: this.RoutingContext,
+    reactServerContext: this.ServerRouting,
   };
 
   static slots = [Slot.withType<RouteProps>(), Slot.withType<LocationListener>()];

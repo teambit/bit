@@ -9,9 +9,15 @@ export type ScopeDrawerProps = {
   treeWidgets: SidebarSlot;
   filtersSlot: ComponentFiltersSlot;
   drawerWidgetSlot: DrawerWidgetSlot;
+  assumeScopeInUrl?: boolean;
 };
 
-export const scopeDrawer = ({ treeWidgets, filtersSlot, drawerWidgetSlot }: ScopeDrawerProps) => {
+export const scopeDrawer = ({
+  treeWidgets,
+  filtersSlot,
+  drawerWidgetSlot,
+  assumeScopeInUrl = false,
+}: ScopeDrawerProps) => {
   const customScopeTreeNodeRenderer = (treeNodeSlot) =>
     function TreeNode(props: TreeNodeProps<PayloadType>) {
       const children = props.node.children;
@@ -33,6 +39,7 @@ export const scopeDrawer = ({ treeWidgets, filtersSlot, drawerWidgetSlot }: Scop
     };
 
   return new ComponentsDrawer({
+    assumeScopeInUrl,
     order: 0,
     id: 'scope-components-drawer',
     name: 'COMPONENTS',

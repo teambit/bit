@@ -3,6 +3,7 @@ import { Component, ComponentAspect, ComponentMain, ComponentID, AspectData } fr
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { Harmony, Slot, SlotRegistry } from '@teambit/harmony';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
+import type { AspectDefinition } from '@teambit/aspect-loader';
 import { ExtensionDataList, ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config/extension-data';
 import findDuplications from '@teambit/legacy/dist/utils/array/find-duplications';
 import { BitId } from '@teambit/legacy-bit-id';
@@ -549,12 +550,12 @@ export class EnvsMain {
   }
 
   // refactor here
-  private createRuntime(components: Component[]): Runtime {
-    return new Runtime(this.aggregateByDefs(components), this.logger);
+  private async createRuntime(components: Component[]): Promise<Runtime> {
+    return new Runtime(await this.aggregateByDefs(components), this.logger);
   }
 
   // :TODO can be refactored to few utilities who will make repeating this very easy.
-  private aggregateByDefs(components: Component[]): EnvRuntime[] {
+  private async aggregateByDefs(components: Component[]): Promise<EnvRuntime[]> {
     this.throwForDuplicateComponents(components);
     const envsMap = {};
     components.forEach((component: Component) => {
@@ -570,9 +571,19 @@ export class EnvsMain {
         };
     });
 
-    return Object.keys(envsMap).map((key) => {
-      return new EnvRuntime(key, envsMap[key].env, envsMap[key].components);
-    });
+    return Promise.all(
+      Object.keys(envsMap).map(async (key) => {
+        const envAspectDef = await this.getEnvAspectDef(key);
+        return new EnvRuntime(key, envsMap[key].env, envsMap[key].components, envAspectDef);
+      })
+    );
+  }
+
+  private async getEnvAspectDef(envId: string): Promise<AspectDefinition> {
+    const host = this.componentMain.getHost();
+    const id = await host.resolveComponentId(envId);
+    const def = (await host.resolveAspects(MainRuntime.name, [id], {requestedOnly: true}))[0];
+    return def;
   }
 
   private throwForDuplicateComponents(components: Component[]) {

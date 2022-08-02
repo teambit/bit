@@ -1,2 +1,2 @@
-export { Overview } from './overview';
-export type { TitleBadgeSlot } from './overview';
+export { Overview, BadgePosition } from './overview';
+export type { TitleBadgeSlot, TitleBadge } from './overview';
