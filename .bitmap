@@ -1080,6 +1080,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/ui/compare"
     },
+    "ui/component-artifact": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/component/ui/component-artifact"
+    },
     "ui/component-deprecated": {
         "scope": "teambit.component",
         "version": "0.0.7",

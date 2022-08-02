@@ -13,7 +13,7 @@ export const FILE_PATH_PARAM_DELIM = '~';
 export function builderSchema(builder: BuilderMain, scope: Scope) {
   return {
     typeDefs: gql`
-      type PipelineData {
+      type Pipeline {
         # task id: same as extension id
         id: String!
         name: String!
@@ -24,7 +24,7 @@ export function builderSchema(builder: BuilderMain, scope: Scope) {
         warnings: [String!]
       }
 
-      type ArtifactFileData {
+      type ArtifactFile {
         name: String!
         path: String!
         # artifact file content (only for text files). Use /api/<component-id>/~aspect/builder/<extension-id>/~<path> to fetch binary file data
@@ -32,17 +32,16 @@ export function builderSchema(builder: BuilderMain, scope: Scope) {
         downloadUrl: String
       }
 
-      type ArtifactData {
-        # aspect id that generated the artifact
+      type Artifact {
+        # aspect id that generated the artifact - same as taskId
         id: String!
         # artifact name
         name: String!
+        taskId: String!
         # task name
         taskName: String!
         description: String
-        # aspect id that generated the artifact
-        generatedBy: String
-        files(path: String): [ArtifactFileData!]!
+        files(path: String): [ArtifactFile!]!
         componentId: ComponentID!
       }
 
@@ -52,21 +51,21 @@ export function builderSchema(builder: BuilderMain, scope: Scope) {
         data: JSONObject
       }
 
-      type BuilderData {
+      type BuildArtifacts {
         # component id
         id: ComponentID!
-        pipelines: [PipelineData!]!
-        artifacts: [ArtifactData!]!
-        aspectsData: [AspectData!]!
+        pipelines: [Pipeline!]!
+        artifacts: [Artifact!]!
+        aspectsData: [Aspect!]!
       }
 
       extend type Component {
-        getBuilderData(extensionId: String): BuilderData!
+        buildArtifacts(extensionId: String): BuildArtifacts!
       }
     `,
     resolvers: {
       Component: {
-        getBuilderData: async (component: Component, { extensionId }: { extensionId?: string }) => {
+        buildArtifacts: async (component: Component, { extensionId }: { extensionId?: string }) => {
           const builderData = builder.getBuilderData(component);
           const builderGQLData = {
             aspectsData:
@@ -88,7 +87,7 @@ export function builderSchema(builder: BuilderMain, scope: Scope) {
           return builderGQLData;
         },
       },
-      PipelineData: {
+      Pipeline: {
         id: (pipelineData: PipelineReport) => pipelineData.taskId,
         name: (pipelineData: PipelineReport) => pipelineData.taskName,
         description: (pipelineData: PipelineReport) => pipelineData.taskDescription,
@@ -97,12 +96,12 @@ export function builderSchema(builder: BuilderMain, scope: Scope) {
         errors: (pipelineData: PipelineReport) => pipelineData.errors?.map((e) => e.toString()),
         warnings: (pipelineData: PipelineReport) => pipelineData.warnings,
       },
-      ArtifactData: {
+      Artifact: {
         id: (artifactData: ArtifactGQLData) => artifactData.task.id,
         taskName: (artifactData: ArtifactGQLData) => artifactData.task.name,
+        taskId: (artifactData: ArtifactGQLData) => artifactData.task.id,
         name: (artifactData: ArtifactGQLData) => artifactData.name,
         description: (artifactData: ArtifactGQLData) => artifactData.description,
-        generatedBy: (artifactData: ArtifactGQLData) => artifactData.generatedBy,
         files: async (artifactData: ArtifactGQLData, { path: pathFilter }: { path?: string }) => {
           const files = (await artifactData.files.getVinylsAndImportIfMissing(artifactData.componentId._legacy, scope))
             .filter((vinyl) => !pathFilter || vinyl.path === pathFilter)

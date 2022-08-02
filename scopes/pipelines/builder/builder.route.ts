@@ -60,7 +60,7 @@ export class BuilderRoute implements Route {
       }
 
       /**
-       * if requesting more than one file, zip them before sending
+       * if more than 1 file requested, zip them before sending
        */
       const archive = archiver('tar', { gzip: true });
 
@@ -81,7 +81,7 @@ export class BuilderRoute implements Route {
       try {
         archive.pipe(res);
         archive.finalize();
-        return res.attachment(`${aspectId}.tar`);
+        return res.attachment(`${aspectId.replace('/', '_')}.tar`);
       } catch (e: any) {
         return res.send({ error: e.toString() });
       }

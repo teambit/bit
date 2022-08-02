@@ -1,6 +1,6 @@
 import { Section } from '@teambit/component';
 import React from 'react';
-import { ComponentArtifactPage } from './ui/component-artifact-page';
+import { ComponentArtifactPage } from '@teambit/component.ui.component-artifact';
 
 export class ComponentArtifactSection implements Section {
   constructor(private host: string) {}
@@ -12,7 +12,7 @@ export class ComponentArtifactSection implements Section {
 
   navigationLink = {
     href: '~component-artifact',
-    children: 'Artifacts',
+    children: 'Build Artifacts',
   };
 
   order = 50;
