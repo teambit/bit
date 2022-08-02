@@ -20,9 +20,10 @@ export type ComponentArtifactPageProps = {
 export function ComponentArtifactPage({ host }: ComponentArtifactPageProps) {
   const component = useContext(ComponentContext);
   const { data } = useArtifacts(host, component.id.toString());
+  console.log('🚀 ~ file: component-artifact-page.tsx ~ line 23 ~ ComponentArtifactPage ~ data', data);
 
-  function calcDuration(startTime?: Date, endTime?: Date): number {
-    return Math.abs((endTime?.getMilliseconds() ?? 0) - (startTime?.getMilliseconds() ?? 0));
+  function calcDuration(startTime?: number, endTime?: number): number {
+    return (endTime || 0) - (startTime || 0);
   }
 
   function calcSeconds(duration: number): number {
@@ -59,16 +60,17 @@ export function ComponentArtifactPage({ host }: ComponentArtifactPageProps) {
     }
 
     const _edges: Array<Edge> = [];
-    nodes.forEach((_, i) => {
+
+    for (let i = 1; i < nodes.length; i += 1) {
       const edge: Edge = {
-        id: `${nodes[i - 1].id}_${nodes[i].id}`,
-        source: nodes[i - 1].id,
+        id: `${nodes[i].id}_${nodes[i].id}`,
+        source: nodes[i].id,
         target: nodes[i].id,
         arrowHeadType: ArrowHeadType.Arrow,
       };
       _edges.push(edge);
-    });
-    return edges;
+    }
+    return _edges;
   }, [nodes]);
 
   const elements = [...nodes, ...edges];

@@ -4,8 +4,8 @@ export type Pipeline = {
   description: string;
   errors: Array<string>;
   warnings: Array<string>;
-  startTime: Date;
-  endTime: Date;
+  startTime: number;
+  endTime: number;
 };
 
 export type ArtifactFile = {

@@ -6,26 +6,25 @@ const GET_BUILD_INFO = gql`
   query ComponentBuildArtifacts($id: String!, $extensionId: String!, $aspectId: String) {
     getHost(id: $extensionId) {
       get(id: $id) {
-          getBuilderData(aspectId: $aspectId) {
-            pipelines {
-              id
+        buildArtifacts(extensionId: $aspectId) {
+          pipelines {
+            id
+            name
+            startTime
+            endTime
+            errors
+            warnings
+            description
+          }
+          artifacts {
+            id
+            taskId
+            taskName
+            files {
+              content
+              path
               name
-              startTime
-              endTime
-              errors
-              warnings
-              description
-            }
-            artifacts {
-              id
-              taskId
-              taskName
-              files {
-                content
-                path
-                name
-                downloadUrl
-              }
+              downloadUrl
             }
           }
         }
@@ -35,10 +34,16 @@ const GET_BUILD_INFO = gql`
 `;
 
 export function useArtifacts(host: string, componentId: string): QueryResult<BuildArtifacts> {
-  const result = useDataQuery<BuildArtifacts>(GET_BUILD_INFO, {
+  const { data, ...rest } = useDataQuery(GET_BUILD_INFO, {
     variables: { id: componentId, extensionId: host },
   });
-  console.log('🚀 ~ file: use-artifacts.ts ~ line 42 ~ useArtifacts ~ result', result);
+  console.log('🚀 ~ file: use-artifacts.ts ~ line 42 ~ useArtifacts ~ result', data);
 
-  return result;
+  return {
+    ...rest,
+    data: {
+      pipelines: data?.getHost?.get?.buildArtifacts?.pipelines || [],
+      artifacts: data?.getHost?.get?.buildArtifacts?.pipelines || [],
+    },
+  };
 }
