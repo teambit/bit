@@ -2,6 +2,7 @@ import { WebpackConfigMutator } from '@teambit/webpack';
 
 export function addDevServer(configMutator: WebpackConfigMutator) {
   return configMutator.addTopLevel('devServer', {
+    allowedHosts: 'all',
     historyApiFallback: {
       index: '/index.html',
       disableDotRule: true,

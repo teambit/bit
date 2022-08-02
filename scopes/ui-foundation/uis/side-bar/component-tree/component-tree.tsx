@@ -14,12 +14,14 @@ type ComponentTreeProps = {
   components: ComponentModel[];
   TreeNode?: TreeNodeRenderer<PayloadType>;
   isCollapsed?: boolean;
+  assumeScopeInUrl?: boolean;
 } & React.HTMLAttributes<HTMLDivElement>;
 
 export function ComponentTree({
   components,
   isCollapsed,
   className,
+  assumeScopeInUrl = false,
   TreeNode = DefaultTreeNodeRenderer,
 }: ComponentTreeProps) {
   const { pathname = '/' } = useLocation() || {};
@@ -27,7 +29,8 @@ export function ComponentTree({
   const activeComponent = useMemo(() => {
     const componentUrlRegex = new RegExp(componentIdUrlRegex);
     const path = pathname?.startsWith('/') ? pathname.substring(1) : pathname;
-    const matcher = path.match(componentUrlRegex)?.[0]; // returns just the part that matches the componentId section without /~compositions etc.
+    const rawMatcher = path.match(componentUrlRegex)?.[0]; // returns just the part that matches the componentId section without /~compositions etc.
+    const matcher = assumeScopeInUrl ? rawMatcher?.split('/').slice(2).join('/') : rawMatcher;
     const active = components.find((x) => {
       return matcher && matcher === x.id.fullName;
     });

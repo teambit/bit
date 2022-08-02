@@ -1,7 +1,7 @@
 import React from 'react';
-import { TitleBadgeSlot } from '@teambit/docs';
 import { Section } from '@teambit/component';
 import { OverviewCompare } from '@teambit/docs.ui.overview-compare';
+import { TitleBadgeSlot } from './overview';
 
 export class OverviewCompareSection implements Section {
   constructor(private titleBadgeSlot: TitleBadgeSlot) {}
