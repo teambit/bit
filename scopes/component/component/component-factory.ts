@@ -8,6 +8,17 @@ import { Component, InvalidComponent } from './component';
 import { State } from './state';
 import { Snap } from './snap';
 
+export type ResolveAspectsOptions = {
+  /**
+   * Do not return results for the core aspects
+   */
+  excludeCore?: boolean;
+  /**
+   * Only return results for the provided list of ids
+   */
+  requestedOnly?: boolean;
+};
+
 export interface ComponentFactory {
   /**
    * name of the component host.
@@ -78,7 +89,11 @@ export interface ComponentFactory {
   /**
    * Resolve dirs for aspects
    */
-  resolveAspects: (runtimeName?: string, componentIds?: ComponentID[]) => Promise<AspectDefinition[]>;
+  resolveAspects: (
+    runtimeName?: string,
+    componentIds?: ComponentID[],
+    opts?: ResolveAspectsOptions
+  ) => Promise<AspectDefinition[]>;
 
   /**
    * list all components in the host.

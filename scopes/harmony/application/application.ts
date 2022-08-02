@@ -5,6 +5,11 @@ import { AppBuildResult } from './app-build-result';
 
 export type DeployFn = (context: AppDeployContext) => Promise<void>;
 
+export type AppResult = {
+  port?: number;
+  errors?: Error[];
+};
+
 export interface Application {
   /**
    * name of the application. e.g. ripple-ci.
@@ -15,6 +20,11 @@ export interface Application {
    * run the application.
    */
   run(context: AppContext): Promise<number | void>;
+
+  /**
+   * run the application in ssr mode
+   */
+  runSsr?(context: AppContext): Promise<AppResult>;
 
   /**
    * build the application.

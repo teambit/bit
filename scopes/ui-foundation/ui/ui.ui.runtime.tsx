@@ -3,18 +3,17 @@ import { GraphqlAspect } from '@teambit/graphql';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import type { ReactRouterUI } from '@teambit/react-router';
 import { ReactRouterAspect } from '@teambit/react-router';
+import { ServerRenderer, BrowserRenderer } from '@teambit/react.rendering.ssr';
+import type { SsrSession, RenderPlugin, ContextProps } from '@teambit/react.rendering.ssr';
 
 import React, { ReactNode, ComponentType } from 'react';
 
 import { UIRootFactory } from './ui-root.ui';
 import { UIAspect, UIRuntime } from './ui.aspect';
 import { ClientContext } from './ui/client-context';
-import type { SsrContent } from './react-ssr/ssr-content';
-import { ContextProps, RenderPlugins } from './react-ssr/render-lifecycle';
-import { ReactSSR } from './react-ssr/react-ssr';
 
 type HudSlot = SlotRegistry<ReactNode>;
-type RenderPluginsSlot = SlotRegistry<RenderPlugins>;
+type RenderPluginsSlot = SlotRegistry<RenderPlugin<any, any>>;
 type UIRootRegistry = SlotRegistry<UIRootFactory>;
 
 /**
@@ -45,8 +44,8 @@ export class UiUI {
     const hudItems = this.hudSlot.values();
     const lifecyclePlugins = this.getLifecyclePlugins();
 
-    const reactSsr = new ReactSSR(lifecyclePlugins);
-    await reactSsr.renderBrowser(
+    const reactSsr = new BrowserRenderer(lifecyclePlugins);
+    await reactSsr.render(
       <ClientContext>
         {hudItems}
         {routes}
@@ -55,7 +54,7 @@ export class UiUI {
   }
 
   /** render dehydrated server-side */
-  async renderSsr(rootExtension: string, ssrContent: SsrContent): Promise<string> {
+  async renderSsr(rootExtension: string, ssrContent: SsrSession): Promise<string> {
     const rootFactory = this.getRoot(rootExtension);
     if (!rootFactory) throw new Error(`root: ${rootExtension} was not found`);
 
@@ -64,8 +63,8 @@ export class UiUI {
     const hudItems = this.hudSlot.values();
     const lifecyclePlugins = this.getLifecyclePlugins();
 
-    const reactSsr = new ReactSSR(lifecyclePlugins);
-    const fullHtml = await reactSsr.renderServer(
+    const reactSsr = new ServerRenderer(lifecyclePlugins);
+    const fullHtml = await reactSsr.render(
       <ClientContext>
         {hudItems}
         {routes}
@@ -86,23 +85,27 @@ export class UiUI {
    * @deprecated replace with `.registerRenderHooks({ reactContext })`.
    */
   registerContext<T>(context: ComponentType<ContextProps<T>>) {
-    this.renderPluginsSlot.register({
-      reactContext: context,
-    });
+    this.renderPluginsSlot.register({ reactContext: context });
   }
 
   registerRoot(uiRoot: UIRootFactory) {
     return this.uiRootSlot.register(uiRoot);
   }
 
-  registerRenderHooks<T, Y>(plugins: RenderPlugins<T, Y>) {
-    return this.renderPluginsSlot.register(plugins);
+  registerRenderHooks<T, Y>(plugin: RenderPlugin<T, Y>) {
+    return this.renderPluginsSlot.register(plugin);
   }
 
   private getLifecyclePlugins() {
-    const lifecyclePlugins = this.renderPluginsSlot.toArray();
+    const lifecyclePlugins = this.renderPluginsSlot.toArray().map(([key, plugin]) => {
+      if (plugin.key) return plugin;
+
+      // for backward compatibility
+      return { ...plugin, key };
+    });
+
     // react-router should register its plugin, when we can reverse it's dependency to depend on Ui
-    lifecyclePlugins.unshift([ReactRouterAspect.id, this.router.renderPlugin]);
+    lifecyclePlugins.unshift(this.router.renderPlugin);
 
     return lifecyclePlugins;
   }
@@ -111,7 +114,7 @@ export class UiUI {
     return this.uiRootSlot.get(rootExtension);
   }
 
-  static slots = [Slot.withType<UIRootFactory>(), Slot.withType<ReactNode>(), Slot.withType<RenderPlugins>()];
+  static slots = [Slot.withType<UIRootFactory>(), Slot.withType<ReactNode>(), Slot.withType<RenderPlugin>()];
 
   static dependencies = [GraphqlAspect, ReactRouterAspect];
 
@@ -124,7 +127,7 @@ export class UiUI {
   ) {
     const uiUi = new UiUI(router, uiRootSlot, hudSlot, renderLifecycleSlot);
 
-    uiUi.registerRenderHooks(GraphqlUi.renderPlugins);
+    if (GraphqlUi) uiUi.registerRenderHooks(GraphqlUi.renderPlugins);
 
     return uiUi;
   }

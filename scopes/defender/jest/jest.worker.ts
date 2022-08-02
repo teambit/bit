@@ -10,11 +10,18 @@ export class JestWorker {
     // return this;
   }
 
-  watch(jestConfigPath: string, testFiles: string[], rootPath: string, jestModulePath: string): Promise<void> {
+  watch(
+    jestConfigPath: string,
+    testFiles: string[],
+    rootPath: string,
+    jestModulePath: string,
+    envRootDir: string
+  ): Promise<void> {
     return new Promise((resolve) => {
       // TODO: remove this after jest publish new version to npm: https://github.com/facebook/jest/pull/10804
       // eslint-disable-next-line
       console.warn = function () {};
+      /* The path to the jest config file. */
       // eslint-disable-next-line import/no-dynamic-require,global-require
       const jestConfig = require(jestConfigPath);
       // eslint-disable-next-line import/no-dynamic-require,global-require
@@ -25,11 +32,21 @@ export class JestWorker {
       });
 
       const config: any = {
+        // Setting the rootDir to the env root dir to make sure we can resolve all the jest presets/plugins
+        // from the env context
+        rootDir: envRootDir,
+        // Setting the roots (where to search for spec files) to the root path (either workspace or capsule root)
+        // TODO: consider change this to be an array of the components running dir.
+        // TODO: aka: in the workspace it will be something like <ws>/node_modules/<comp-package-name>/node_modules/<comp-package-name>
+        // TODO: see dependencyResolver.getRuntimeModulePath (this will make sure the peer deps resolved correctly)
+        // TODO: (@GiladShoham - when trying to set it to this paths, jest ignores it probably because the paths contains "node_modules"
+        // TODO: trying to set the https://jestjs.io/docs/27.x/configuration#testpathignorepatterns-arraystring to something else (as it contain node_modules by default)
+        // TODO: didn't help)
+        roots: [rootPath],
         // useStderr: true,
         // TODO: check way to enable it
         runInBand: true,
         silent: false,
-        rootDir: rootPath,
         watch: true,
         watchAll: true,
         watchPlugins: [
