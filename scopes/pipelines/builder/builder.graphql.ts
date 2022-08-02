@@ -70,7 +70,7 @@ export function builderSchema(builder: BuilderMain, scope: Scope) {
           const builderData = builder.getBuilderData(component);
           const builderGQLData = {
             aspectsData:
-              builderData?.aspectsData.map((aspectData) => ({ ...aspectData, id: aspectData.aspectId })) || [],
+              (builderData?.aspectsData || []).map((aspectData) => ({ ...aspectData, id: aspectData.aspectId })) || [],
             artifacts: (builderData?.artifacts || []).map((artifact) => ({ ...artifact, componentId: component.id })),
             pipelines: builderData?.pipeline || [],
             id: component.id,
