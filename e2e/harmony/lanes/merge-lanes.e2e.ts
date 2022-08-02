@@ -351,6 +351,21 @@ describe('merge lanes', function () {
       it('bit status should not show the components in pending-merge', () => {
         expect(status.mergePendingComponents).to.have.lengthOf(0);
       });
+      describe('switching to main and merging the lane to main', () => {
+        before(() => {
+          helper.command.switchLocalLane('main');
+          helper.command.mergeLane('dev');
+        });
+        it('head should have two parents', () => {
+          const cat = helper.command.catComponent('comp1@latest');
+          expect(cat.parents).to.have.lengthOf(2);
+        });
+        // previously it was throwing:
+        // removeComponentVersions found multiple parents for a local (un-exported) version 368fb583865af40a8823d2ac1d556f4b65582ba2 of iw4j2eko-remote/comp1
+        it('bit reset should not throw', () => {
+          expect(() => helper.command.untagAll()).to.not.throw();
+        });
+      });
     });
   });
 });
