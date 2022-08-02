@@ -11,6 +11,8 @@ import ReactFlow, {
   NodeTypesType,
   ReactFlowProvider,
 } from 'react-flow-renderer';
+import { SplitPane, Pane, Layout } from '@teambit/base-ui.surfaces.split-pane.split-pane';
+import { HoverSplitter } from '@teambit/base-ui.surfaces.split-pane.hover-splitter';
 import styles from './component-artifact-page.module.scss';
 
 export type ComponentArtifactPageProps = {
@@ -75,8 +77,12 @@ export function ComponentArtifactPage({ host }: ComponentArtifactPageProps) {
     artifactNode: ArtifactNode,
   };
 
+  const isMobile = useIsMobile();
+  const [isSidebarOpen, setSidebarOpenness] = useState(!isMobile);
+  const sidebarOpenness = isSidebarOpen ? Layout.row : Layout.left;
+
   return (
-    <div className={styles.page}>
+    <SplitPane className={styles.page}>
       <H2 size="xs">Component Artifacts</H2>
       <div className={styles.statContainer}>
         <div className={styles.statItem}>
@@ -87,7 +93,7 @@ export function ComponentArtifactPage({ host }: ComponentArtifactPageProps) {
         </div>
         <div className={styles.statItem}>
           <p className={styles.statTitle}>Status</p>
-          {/* <p>{data?.buildStatus}</p> */}
+          <p>{data?.buildStatus}</p>
         </div>
       </div>
       <ReactFlowProvider>
@@ -107,7 +113,7 @@ export function ComponentArtifactPage({ host }: ComponentArtifactPageProps) {
           <Controls className={styles.controls} />
         </ReactFlow>
       </ReactFlowProvider>
-    </div>
+    </SplitPane>
   );
 }
 

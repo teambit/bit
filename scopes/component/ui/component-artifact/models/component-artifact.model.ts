@@ -27,4 +27,5 @@ export type Artifact = {
 export type BuildArtifacts = {
   pipelines: Array<Pipeline>;
   artifacts: Array<Artifact>;
+  buildStatus?: string;
 };

@@ -29,6 +29,7 @@ const GET_BUILD_INFO = gql`
             }
           }
         }
+        buildStatus
       }
     }
   }
@@ -44,6 +45,7 @@ export function useArtifacts(host: string, componentId: string): QueryResult<Bui
     data: {
       pipelines: data?.getHost?.get?.buildArtifacts?.pipelines || [],
       artifacts: data?.getHost?.get?.buildArtifacts?.artifacts || [],
+      buildStatus: data?.getHost?.get?.buildStatus,
     },
   };
 }
