@@ -35,7 +35,7 @@ const GET_BUILD_INFO = gql`
   }
 `;
 
-export function useArtifacts(host: string, componentId: string): QueryResult<BuildArtifacts> {
+export function useBuildArtifactsQuery(host: string, componentId: string): QueryResult<BuildArtifacts> {
   const { data, ...rest } = useDataQuery(GET_BUILD_INFO, {
     variables: { id: componentId, extensionId: host },
   });

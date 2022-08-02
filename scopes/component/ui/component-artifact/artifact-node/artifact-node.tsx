@@ -2,6 +2,7 @@ import { Card } from '@teambit/base-ui.surfaces.card';
 import { ellipsis } from '@teambit/design.ui.styles.ellipsis';
 import classNames from 'classnames';
 import React from 'react';
+import { useComponentArtifactContext } from '@teambit/component.ui.component-artifact';
 import { Handle, NodeProps, Position } from 'react-flow-renderer';
 import styles from './artifact-node.module.scss';
 
@@ -9,13 +10,19 @@ export type ArtfactNodeProps = NodeProps & {};
 
 export function ArtifactNode(props: ArtfactNodeProps) {
   const {
+    id,
     isConnectable,
     data: { taskName, taskId, durationSecs, durationMilliSecs },
   } = props;
   const icon = 'https://static.bit.dev/extensions-icons/react.svg';
+  const componentArtifactContext = useComponentArtifactContext();
+  const onArtifactNodeClicked = () => {
+    const updatedId = componentArtifactContext?.artifactPanelState.selectedPipelineId === id ? undefined : id;
+    componentArtifactContext?.artifactPanelState.setSelectedPipelineId(updatedId);
+  };
 
   return (
-    <>
+    <div key={`artifact-node-${id}`}>
       <Handle type="target" position={Position.Left} style={{ background: '#555' }} isConnectable={isConnectable} />
       <Handle type="source" position={Position.Right} style={{ background: '#555' }} isConnectable={isConnectable} />
       <Card
@@ -25,7 +32,7 @@ export function ArtifactNode(props: ArtfactNodeProps) {
         )}
         roundness="small"
         elevation="none"
-        onClick={(_) => console.log('clicked')}
+        onClick={onArtifactNodeClicked}
       >
         <div style={{ display: 'flex' }}>
           <div className={classNames(styles.componentDetails)}>
@@ -43,7 +50,7 @@ export function ArtifactNode(props: ArtfactNodeProps) {
           </div>
         </div>
       </Card>
-    </>
+    </div>
   );
 }
 

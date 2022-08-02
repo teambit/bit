@@ -1,1 +1,1 @@
-export { useArtifacts } from './use-artifacts';
+export { useBuildArtifactsQuery } from './use-artifacts';

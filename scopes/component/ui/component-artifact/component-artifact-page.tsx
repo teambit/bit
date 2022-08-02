@@ -1,7 +1,11 @@
 import { ComponentContext } from '@teambit/component';
 import { H2 } from '@teambit/documenter.ui.heading';
-import React, { useContext, useMemo } from 'react';
-import { useArtifacts, ArtifactNode } from '@teambit/component.ui.component-artifact';
+import React, { useContext, useMemo, useState } from 'react';
+import {
+  useBuildArtifactsQuery,
+  ArtifactNode,
+  ComponentArtifactContext,
+} from '@teambit/component.ui.component-artifact';
 import ReactFlow, {
   ArrowHeadType,
   Background,
@@ -13,6 +17,7 @@ import ReactFlow, {
 } from 'react-flow-renderer';
 import { SplitPane, Pane, Layout } from '@teambit/base-ui.surfaces.split-pane.split-pane';
 import { HoverSplitter } from '@teambit/base-ui.surfaces.split-pane.hover-splitter';
+
 import styles from './component-artifact-page.module.scss';
 
 export type ComponentArtifactPageProps = {
@@ -21,7 +26,7 @@ export type ComponentArtifactPageProps = {
 
 export function ComponentArtifactPage({ host }: ComponentArtifactPageProps) {
   const component = useContext(ComponentContext);
-  const { data } = useArtifacts(host, component.id.toString());
+  const { data } = useBuildArtifactsQuery(host, component.id.toString());
 
   const nodes = useMemo(() => {
     if (!data) return [];
@@ -77,12 +82,19 @@ export function ComponentArtifactPage({ host }: ComponentArtifactPageProps) {
     artifactNode: ArtifactNode,
   };
 
-  const isMobile = useIsMobile();
-  const [isSidebarOpen, setSidebarOpenness] = useState(!isMobile);
-  const sidebarOpenness = isSidebarOpen ? Layout.row : Layout.left;
+  const [selectedPipelineId, setSelectedPipelineId] = useState<string | undefined>(undefined);
+  const sidebarOpenness = selectedPipelineId ? Layout.row : Layout.left;
 
   return (
-    <SplitPane className={styles.page}>
+    <ComponentArtifactContext.Provider
+      value={{
+        buildArtifacts: data,
+        artifactPanelState: {
+          selectedPipelineId,
+          setSelectedPipelineId,
+        },
+      }}
+    >
       <H2 size="xs">Component Artifacts</H2>
       <div className={styles.statContainer}>
         <div className={styles.statItem}>
@@ -96,24 +108,30 @@ export function ComponentArtifactPage({ host }: ComponentArtifactPageProps) {
           <p>{data?.buildStatus}</p>
         </div>
       </div>
-      <ReactFlowProvider>
-        <ReactFlow
-          draggable={false}
-          nodesDraggable={true}
-          selectNodesOnDrag={false}
-          nodesConnectable={false}
-          zoomOnDoubleClick={false}
-          elementsSelectable={false}
-          maxZoom={1}
-          elements={elements}
-          nodeTypes={NodeTypes}
-          className={styles.graph}
-        >
-          <Background />
-          <Controls className={styles.controls} />
-        </ReactFlow>
-      </ReactFlowProvider>
-    </SplitPane>
+      <SplitPane className={styles.page} layout={sidebarOpenness}>
+        <Pane size={selectedPipelineId ? '65%' : '100%'}>
+          <ReactFlowProvider>
+            <ReactFlow
+              draggable={false}
+              nodesDraggable={true}
+              selectNodesOnDrag={false}
+              nodesConnectable={false}
+              zoomOnDoubleClick={false}
+              elementsSelectable={false}
+              maxZoom={1}
+              elements={elements}
+              nodeTypes={NodeTypes}
+              className={styles.graph}
+            >
+              <Background />
+              <Controls className={styles.controls} />
+            </ReactFlow>
+          </ReactFlowProvider>
+        </Pane>
+        {(selectedPipelineId && <HoverSplitter></HoverSplitter>) || <></>}
+        {(selectedPipelineId && <Pane size={selectedPipelineId ? '35%' : '0%'}>{'ARTIFACT DATA'}</Pane>) || <></>}
+      </SplitPane>
+    </ComponentArtifactContext.Provider>
   );
 }
 
