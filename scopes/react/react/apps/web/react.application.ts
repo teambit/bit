@@ -236,6 +236,7 @@ export class ReactApp implements Application {
           components: [capsule?.component],
           entries,
           outputPath,
+          hostRootDir: capsule?.path,
           hostDependencies: await this.getPeers(),
           aliasHostDependencies: true,
         },
