@@ -43,7 +43,7 @@ export function useArtifacts(host: string, componentId: string): QueryResult<Bui
     ...rest,
     data: {
       pipelines: data?.getHost?.get?.buildArtifacts?.pipelines || [],
-      artifacts: data?.getHost?.get?.buildArtifacts?.pipelines || [],
+      artifacts: data?.getHost?.get?.buildArtifacts?.artifacts || [],
     },
   };
 }
