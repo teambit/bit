@@ -21,7 +21,7 @@ import { createExpressSsr, loadSsrApp, parseAssets } from './ssr/ssr-express';
 export class ReactApp implements Application {
   constructor(
     readonly name: string,
-    readonly entry: string[] | (() => Promise<string[]>),
+    readonly entry: string[] | ((path?: string) => Promise<string[]>),
     readonly ssr: string | (() => Promise<string>) | undefined,
     readonly portRange: [number, number],
     private reactEnv: ReactEnv,
@@ -170,13 +170,14 @@ export class ReactApp implements Application {
     if (this.bundler) return this.bundler;
     return this.getDefaultBundler(context);
   }
+  
   private async getDefaultBundler(context: AppBuildContext) {
     const { capsule } = context;
     const reactEnv: ReactEnv = context.env as ReactEnv;
     const publicDir = this.getPublicDir(context.artifactsDir);
     const outputPath = join(capsule.path, publicDir);
     const { distDir } = reactEnv.getCompiler();
-    const targetEntries = Array.isArray(this.entry) ? this.entry : await this.entry();
+    const targetEntries = Array.isArray(this.entry) ? this.entry : await this.entry(`${capsule.path}/${distDir}`);
     const entries = targetEntries.map((entry) => require.resolve(`${capsule.path}/${distDir}/${basename(entry)}`));
     const staticDir = join(outputPath, this.dir);
 
