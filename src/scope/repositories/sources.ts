@@ -342,7 +342,8 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     component: ModelComponent,
     versions: string[],
     allVersionsObjects: Version[],
-    lane: Lane | null
+    lane: Lane | null,
+    removeOnlyHead?: boolean
   ): void {
     logger.debug(`removeComponentVersion, component ${component.id()}, versions ${versions.join(', ')}`);
     const objectRepo = this.objects();
@@ -358,11 +359,20 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     });
 
     const getNewHead = () => {
-      const divergeData = component.getDivergeData();
-      if (divergeData.isDiverged()) {
-        if (!component.remoteHead) throw new Error(`remoteHead must be set when component is diverged`);
-        return component.remoteHead;
+      if (!removeOnlyHead) {
+        const divergeData = component.getDivergeData();
+        if (divergeData.isDiverged()) {
+          // if it's diverged, the Component object might have versions from the remote as part of the last import.
+          // run snap.e2e - 'bit reset a diverge component' case to understand why it's better to pick the remoteHead
+          // than the commonSnapBeforeDiverge. If it would set to commonSnapBeforeDiverge
+          if (!component.remoteHead) throw new Error(`remoteHead must be set when component is diverged`);
+          return component.remoteHead;
+        }
+        if (divergeData.commonSnapBeforeDiverge) {
+          return divergeData.commonSnapBeforeDiverge;
+        }
       }
+
       const head = component.head || laneItem?.head;
       if (!head) {
         return undefined;
