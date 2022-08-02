@@ -102,7 +102,12 @@ function enrichDataFromDependency(packageData: ResolvedPackageData) {
       delete packageInfo.componentId.scope;
     }
     packageData.componentId = new BitId(packageInfo.componentId);
-    if (packageData.componentId.hasVersion()) packageData.concreteVersion = packageData.componentId.version;
+    if (packageData.componentId.hasVersion() && packageInfo.version) {
+      // if packageInfo.version is not defined, it's coming from the workspace and the package.json is auto-generated
+      // during bit-link. ignore the componentId.version in this case, it's not up do date.
+      // otherwise, use it, because if it's a snap, the component-version is the snap. the pkg version is 0.0.0-snap.
+      packageData.concreteVersion = packageData.componentId.version;
+    }
   }
 }
 
