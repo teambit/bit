@@ -9,7 +9,8 @@ const GET_BUILD_INFO = gql`
         buildArtifacts(extensionId: $aspectId) {
           pipelines {
             id
-            name
+            taskId
+            taskName
             startTime
             endTime
             errors
@@ -37,7 +38,6 @@ export function useArtifacts(host: string, componentId: string): QueryResult<Bui
   const { data, ...rest } = useDataQuery(GET_BUILD_INFO, {
     variables: { id: componentId, extensionId: host },
   });
-  console.log('🚀 ~ file: use-artifacts.ts ~ line 42 ~ useArtifacts ~ result', data);
 
   return {
     ...rest,

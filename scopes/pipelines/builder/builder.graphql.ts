@@ -14,9 +14,10 @@ export function builderSchema(builder: BuilderMain, scope: Scope) {
   return {
     typeDefs: gql`
       type Pipeline {
-        # task id: same as extension id
+        # task id - task name
         id: String!
-        name: String!
+        taskId: String!
+        taskName: String!
         description: String
         startTime: String
         endTime: String
@@ -88,8 +89,9 @@ export function builderSchema(builder: BuilderMain, scope: Scope) {
         },
       },
       Pipeline: {
-        id: (pipelineData: PipelineReport) => pipelineData.taskId,
-        name: (pipelineData: PipelineReport) => pipelineData.taskName,
+        id: (pipelineData: PipelineReport) => `${pipelineData.taskId}-${pipelineData.taskName}`,
+        taskId: (pipelineData: PipelineReport) => pipelineData.taskId,
+        taskName: (pipelineData: PipelineReport) => pipelineData.taskName,
         description: (pipelineData: PipelineReport) => pipelineData.taskDescription,
         startTime: (pipelineData: PipelineReport) => pipelineData.startTime,
         endTime: (pipelineData: PipelineReport) => pipelineData.endTime,

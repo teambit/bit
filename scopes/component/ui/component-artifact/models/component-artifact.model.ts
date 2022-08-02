@@ -1,6 +1,7 @@
 export type Pipeline = {
   id: string;
-  name: string;
+  taskId: string;
+  taskName: string;
   description: string;
   errors: Array<string>;
   warnings: Array<string>;

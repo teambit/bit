@@ -20,19 +20,6 @@ export type ComponentArtifactPageProps = {
 export function ComponentArtifactPage({ host }: ComponentArtifactPageProps) {
   const component = useContext(ComponentContext);
   const { data } = useArtifacts(host, component.id.toString());
-  console.log('🚀 ~ file: component-artifact-page.tsx ~ line 23 ~ ComponentArtifactPage ~ data', data);
-
-  function calcDuration(startTime?: number, endTime?: number): number {
-    return (endTime || 0) - (startTime || 0);
-  }
-
-  function calcSeconds(duration: number): number {
-    return Math.floor(duration / 1000);
-  }
-
-  function calcMilliseconds(duration: number): number {
-    return duration % 1000;
-  }
 
   const nodes = useMemo(() => {
     if (!data) return [];
@@ -41,15 +28,15 @@ export function ComponentArtifactPage({ host }: ComponentArtifactPageProps) {
     return pipelines.map((pipeline, index) => {
       const duration = calcDuration(pipeline.startTime, pipeline.endTime);
       return {
-        id: index.toString(),
+        id: pipeline.id,
         type: 'artifactNode',
         data: {
-          taskId: pipeline.id,
-          taskName: pipeline.name,
+          taskId: pipeline.taskId,
+          taskName: pipeline.taskName,
           durationSecs: calcSeconds(duration),
           durationMilliSecs: calcMilliseconds(duration),
         },
-        position: { x: 100 + index * 300, y: 100 },
+        position: { x: 50 + index * 300, y: 300 },
       } as Node;
     });
   }, [data]);
@@ -63,8 +50,8 @@ export function ComponentArtifactPage({ host }: ComponentArtifactPageProps) {
 
     for (let i = 1; i < nodes.length; i += 1) {
       const edge: Edge = {
-        id: `${nodes[i].id}_${nodes[i].id}`,
-        source: nodes[i].id,
+        id: `${nodes[i - 1].id}_${nodes[i].id}`,
+        source: nodes[i - 1].id,
         target: nodes[i].id,
         arrowHeadType: ArrowHeadType.Arrow,
       };
@@ -122,4 +109,16 @@ export function ComponentArtifactPage({ host }: ComponentArtifactPageProps) {
       </ReactFlowProvider>
     </div>
   );
+}
+
+function calcDuration(startTime?: number, endTime?: number): number {
+  return (endTime || 0) - (startTime || 0);
+}
+
+function calcSeconds(duration: number): number {
+  return Math.floor(duration / 1000);
+}
+
+function calcMilliseconds(duration: number): number {
+  return duration % 1000;
 }
