@@ -56,15 +56,36 @@ export class Logger implements IBitLogger {
   /**
    * print to the screen. if message is empty, print the last logged message.
    */
-  console(message?: string) {
-    if (message) this.info(message);
+  console(message?: string, ...meta: any[]) {
+    if (message) this.info(message, meta);
     if (!loader.isStarted && logger.shouldWriteToConsole) {
       // eslint-disable-next-line no-console
-      console.log(message);
+      console.log(message, ...meta);
     } else {
       loader.stopAndPersist({ text: message });
     }
   }
+
+  consoleWarn(message?: string, ...meta: any[]) {
+    if (message) this.warn(message, ...meta);
+    if (!loader.isStarted && logger.shouldWriteToConsole) {
+      // eslint-disable-next-line no-console
+      console.warn(message, ...meta);
+    } else {
+      loader.stopAndPersist({ text: message });
+    }
+  }
+
+  consoleError(message?: string, ...meta: any[]) {
+    if (message) this.error(message, ...meta);
+    if (!loader.isStarted && logger.shouldWriteToConsole) {
+      // eslint-disable-next-line no-console
+      console.error(message, ...meta);
+    } else {
+      loader.stopAndPersist({ text: message });
+    }
+  }
+
   /**
    * print to the screen as a title, with bold text.
    */

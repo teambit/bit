@@ -24,6 +24,7 @@ with --multiple, a new bare-scope needs to be created and it will import the com
 
   async report([components = []]: [string[]], { multiple, alwaysSucceed, push, lane }: SignOptions) {
     const componentIds = components.map((c) => ComponentID.fromString(c));
+    this.warnForMissingVersions(componentIds);
     const results = await this.signMain.sign(componentIds, multiple, push, lane);
     if (!results) {
       return chalk.bold('no more components left to sign');
@@ -37,5 +38,18 @@ ${results.components.map((c) => c.id.toString()).join('\n')}`;
       data: error + chalk.bold[color](signed),
       code: error && !alwaysSucceed ? 1 : 0,
     };
+  }
+
+  private warnForMissingVersions(compIds: ComponentID[]) {
+    const compIdsWithoutVer = compIds.filter((c) => !c.hasVersion());
+    if (compIdsWithoutVer.length) {
+      const compIdsStr = compIdsWithoutVer.map((c) => c.toString()).join(', ');
+      // eslint-disable-next-line no-console
+      console.warn(
+        chalk.yellow(
+          `the following component-id(s) don't have a version: ${compIdsStr}, as a result, it might sign the wrong version especially when running with lanes`
+        )
+      );
+    }
   }
 }

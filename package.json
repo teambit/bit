@@ -1,6 +1,6 @@
 {
   "name": "@teambit/legacy",
-  "version": "1.0.313",
+  "version": "1.0.318",
   "license": "Apache-2.0",
   "main": "./dist/api.js",
   "preferGlobal": true,
@@ -105,6 +105,7 @@
     "lint-staged": "lint-staged"
   },
   "dependencies": {
+    "@teambit/defender.fs.global-bit-temp-dir": "0.0.1",
     "@teambit/toolbox.network.agent": "0.0.116",
     "@babel/core": "7.12.17",
     "@babel/runtime": "7.12.18",
@@ -184,7 +185,7 @@
     "pad-right": "0.2.2",
     "parse-gitignore": "1.0.1",
     "pino": "6.11.1",
-     "pino-pretty": "4.5.0",
+    "pino-pretty": "4.5.0",
     "prettier": "2.3.2",
     "prompt": "1.1.0",
     "ramda": "0.27.1",
@@ -250,7 +251,7 @@
     "@typescript-eslint/eslint-plugin": "4.30.0",
     "@typescript-eslint/parser": "4.30.0",
     "@typescript-eslint/typescript-estree": "4.30.0",
-    "babel-plugin-ramda": "2.0.0",
+    "babel-plugin-ramda": "2.1.1",
     "babel-plugin-transform-typescript-metadata": "0.3.1",
     "chai": "4.3.0",
     "chai-arrays": "1.1.0",

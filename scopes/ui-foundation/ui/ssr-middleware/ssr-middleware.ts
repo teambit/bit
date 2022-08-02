@@ -1,10 +1,9 @@
-import type { Assets } from '@teambit/ui-foundation.ui.rendering.html';
-import { Request, Response, NextFunction } from 'express';
+import { browserFromExpress } from '@teambit/react.rendering.ssr';
+import type { HtmlAssets, SsrSession } from '@teambit/react.rendering.ssr';
+import type { Logger } from '@teambit/logger';
+import type { Request, Response, NextFunction } from 'express';
 import path from 'path';
 import * as fs from 'fs-extra';
-import type { Logger } from '@teambit/logger';
-import type { SsrContent } from '../react-ssr';
-import { extractBrowserData } from './extract-browser-data';
 
 const denyList = /^\/favicon.ico$/;
 
@@ -27,10 +26,10 @@ export async function createSsrMiddleware({ root, port, title, logger }: ssrRend
   const { render } = runtime;
   const assets = { ...runtime.assets, title };
 
-  return async function serverRenderMiddleware(req: Request, res: Response, next: NextFunction) {
-    const { query, url } = req;
+  return async function serverRenderMiddleware(request: Request, response: Response, next: NextFunction) {
+    const { query, url } = request;
 
-    const browser = extractBrowserData(req, port);
+    const browser = browserFromExpress(request, port);
 
     if (denyList.test(url)) {
       logger.debug(`[ssr] skipping static denyList file ${url}`);
@@ -44,14 +43,14 @@ export async function createSsrMiddleware({ root, port, title, logger }: ssrRend
       return;
     }
 
-    logger.debug(`[ssr] ${req.method} ${url}`);
-    const server = { port, request: req, response: res };
-    const props: SsrContent = { assets, browser, server };
+    logger.debug(`[ssr] ${request.method} ${url}`);
+    const server = { port, request, response };
+    const props: SsrSession = { assets, browser, request, response, server };
 
     try {
       const rendered = await render(props);
-      res.set('Cache-Control', 'no-cache');
-      res.send(rendered);
+      response.set('Cache-Control', 'no-cache');
+      response.send(rendered);
       logger.debug(`[ssr] success '${url}'`);
     } catch (e: any) {
       logger.error(`[ssr] failed at '${url}'`, e);
@@ -62,7 +61,7 @@ export async function createSsrMiddleware({ root, port, title, logger }: ssrRend
 
 async function loadRuntime(root: string, { logger }: { logger: Logger }) {
   let render: (...arg: any[]) => any;
-  let assets: Assets | undefined;
+  let assets: HtmlAssets | undefined;
 
   try {
     const entryFilepath = path.join(root, 'ssr', 'index.js');
@@ -84,7 +83,7 @@ async function loadRuntime(root: string, { logger }: { logger: Logger }) {
     }
 
     const imported = await import(entryFilepath);
-    render = imported?.render;
+    render = imported?.default || imported?.render;
 
     if (!render || typeof render !== 'function') {
       logger.warn('[ssr] - index file does not export a render() function. Skipping setup.');
@@ -120,7 +119,7 @@ async function parseManifest(filepath: string, logger?: Logger) {
 }
 
 function getAssets(manifest: ManifestFile) {
-  const assets: Assets = { css: [], js: [] };
+  const assets: HtmlAssets = { css: [], js: [] };
 
   assets.css = manifest.entrypoints?.filter((x) => x.endsWith('css')).map((x) => path.join('/', x));
   assets.js = manifest.entrypoints?.filter((x) => x.endsWith('js')).map((x) => path.join('/', x));

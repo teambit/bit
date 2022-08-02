@@ -119,8 +119,14 @@ export class DependencyInstaller {
       });
     }
 
-    // remove node modules dir for all components dirs, since it might contain left overs from previous install
-    await this.cleanCompsNodeModules(componentDirectoryMap);
+    if (!packageManagerOptions.rootComponents && !packageManagerOptions.keepExistingModulesDir) {
+      // Remove node modules dir for all components dirs, since it might contain left overs from previous install.
+      //
+      // This is not needed when "rootComponents" are used, as in that case the package manager handles the node_modules
+      // and it never leaves node_modules in a broken state.
+      // Removing node_modules in that case would delete useful state information that is used by Yarn or pnpm.
+      await this.cleanCompsNodeModules(componentDirectoryMap);
+    }
 
     // TODO: the cache should be probably passed to the package manager constructor not to the install function
     await this.packageManager.install(finalRootDir, rootPolicy, componentDirectoryMap, calculatedPmOpts);

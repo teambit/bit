@@ -47,6 +47,7 @@ if patterns are entered, you can specify a version per pattern using "@" sign, e
     ['', 'major', 'syntactic sugar for "--increment major"'],
     ['', 'pre-release [identifier]', 'syntactic sugar for "--increment prerelease" and `--prerelease-id <identifier>`'],
     ['', 'snapped', 'EXPERIMENTAL. tag components that their head is a snap (not a tag)'],
+    ['', 'unmerged', 'EXPERIMENTAL. complete a merge process by tagging the unmerged components'],
     ['', 'skip-tests', 'skip running component tests during tag process'],
     ['', 'skip-auto-tag', 'skip auto tagging dependents'],
     ['', 'soft', 'do not persist. only keep note of the changes to be made'],
@@ -95,6 +96,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       all = false,
       editor = '',
       snapped = false,
+      unmerged = false,
       patch,
       minor,
       major,
@@ -119,6 +121,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
     }: {
       all?: boolean | string;
       snapped?: boolean;
+      unmerged?: boolean;
       ver?: string;
       force?: boolean;
       patch?: boolean;
@@ -205,6 +208,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
     const params = {
       ids: patterns,
       snapped,
+      unmerged,
       editor,
       message,
       releaseType: getReleaseType(),
