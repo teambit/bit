@@ -1,5 +1,5 @@
 import { merge } from 'lodash';
-import { join, sep } from 'path';
+import { sep } from 'path';
 import 'style-loader';
 import MiniCssExtractPlugin from 'mini-css-extract-plugin';
 import getCSSModuleLocalIdent from 'react-dev-utils/getCSSModuleLocalIdent';
