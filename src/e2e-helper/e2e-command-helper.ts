@@ -514,9 +514,9 @@ export default class CommandHelper {
     });
   }
 
-  statusComponentIsModified(idWithVersion: string): boolean {
+  statusComponentIsModified(fullIdWithVersion: string): boolean {
     const status = this.statusJson();
-    return status.modifiedComponents.includes(`${this.scopes.remote}/${idWithVersion}`);
+    return status.modifiedComponents.includes(fullIdWithVersion);
   }
 
   statusComponentHasIssues(id: string): boolean {
