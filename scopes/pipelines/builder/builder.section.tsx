@@ -1,13 +1,13 @@
 import { Section } from '@teambit/component';
 import React from 'react';
-import { ComponentArtifactPage } from '@teambit/component.ui.component-artifact';
+import { ComponentPipelinePage } from '@teambit/component.ui.component-pipeline';
 
-export class ComponentArtifactSection implements Section {
+export class BuilderSection implements Section {
   constructor(private host: string) {}
 
   route = {
     path: '~component-artifact',
-    element: <ComponentArtifactPage host={this.host} />,
+    element: <ComponentPipelinePage host={this.host} />,
   };
 
   navigationLink = {

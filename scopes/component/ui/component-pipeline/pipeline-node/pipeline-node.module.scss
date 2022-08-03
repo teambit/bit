@@ -7,6 +7,10 @@
   padding: 12px;
 
   text-align: left;
+
+  &.selected {
+    background: var(--bit-accent-bg, #eceaff);
+  }
 }
 
 // component icon

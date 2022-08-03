@@ -3,30 +3,41 @@ import gql from 'graphql-tag';
 import { Scope } from '@teambit/legacy/dist/scope';
 import { ArtifactObject } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
 import isBinaryPath from 'is-binary-path';
-import { BuilderData, BuilderMain } from './builder.main.runtime';
+import { BuilderMain } from './builder.main.runtime';
 import { PipelineReport } from './build-pipeline-result-list';
 
-export type BuilderGQLData = BuilderData & { id: ComponentID };
-export type ArtifactGQLData = ArtifactObject & { componentId: ComponentID };
+export type ArtifactGQLFile = {
+  id: string;
+  name: string;
+  path: string;
+  content?: string;
+  downloadUrl?: string;
+};
+export type ArtifactGQLData = ArtifactObject & { files: ArtifactGQLFile[]; componentId: ComponentID };
+export type TaskReport = PipelineReport & {
+  artifact: ArtifactGQLData;
+  componentId: ComponentID;
+};
 export const FILE_PATH_PARAM_DELIM = '~';
 
 export function builderSchema(builder: BuilderMain, scope: Scope) {
   return {
     typeDefs: gql`
-      type Pipeline {
-        # task id - task name
+      type TaskReport {
         id: String!
-        taskId: String!
-        taskName: String!
+        name: String!
         description: String
         startTime: String
         endTime: String
         errors: [String!]
         warnings: [String!]
+        artifact(path: String): Artifact
       }
 
       type ArtifactFile {
-        name: String!
+        # for GQL caching - same as the path
+        id: String!
+        name: String
         path: String!
         # artifact file content (only for text files). Use /api/<component-id>/~aspect/builder/<extension-id>/~<path> to fetch binary file data
         content: String
@@ -34,16 +45,10 @@ export function builderSchema(builder: BuilderMain, scope: Scope) {
       }
 
       type Artifact {
-        # aspect id that generated the artifact - same as taskId
-        id: String!
         # artifact name
-        name: String!
-        taskId: String!
-        # task name
-        taskName: String!
+        name: String
         description: String
-        files(path: String): [ArtifactFile!]!
-        componentId: ComponentID!
+        files: [ArtifactFile!]!
       }
 
       type AspectData {
@@ -52,72 +57,67 @@ export function builderSchema(builder: BuilderMain, scope: Scope) {
         data: JSONObject
       }
 
-      type BuildArtifacts {
-        # component id
-        id: ComponentID!
-        pipelines: [Pipeline!]!
-        artifacts: [Artifact!]!
-        aspectsData: [Aspect!]!
-      }
-
       extend type Component {
-        buildArtifacts(extensionId: String): BuildArtifacts!
+        pipelineReport(taskId: String): [TaskReport!]!
       }
     `,
+
     resolvers: {
       Component: {
-        buildArtifacts: async (component: Component, { extensionId }: { extensionId?: string }) => {
+        pipelineReport: async (component: Component, { taskId }: { taskId?: string }) => {
           const builderData = builder.getBuilderData(component);
-          const builderGQLData = {
-            aspectsData:
-              (builderData?.aspectsData || []).map((aspectData) => ({ ...aspectData, id: aspectData.aspectId })) || [],
-            artifacts: (builderData?.artifacts || []).map((artifact) => ({ ...artifact, componentId: component.id })),
-            pipelines: builderData?.pipeline || [],
-            id: component.id,
-          };
 
-          if (extensionId) {
-            return {
-              pipelines: builderGQLData.pipelines.filter((pipeline) => pipeline.taskId === extensionId),
-              artifacts: builderGQLData.artifacts.filter((artifact) => artifact.task.id === extensionId),
-              aspectsData: builderGQLData.aspectsData.filter((a) => a.aspectId === extensionId),
-              id: component.id,
-            };
-          }
+          const artifactsByTask = builderData?.artifacts
+            ?.filter((artifact) => !taskId || artifact.task.id === taskId)
+            .reduce((accum, next) => {
+              accum.set(next.task.id, next);
+              return accum;
+            }, new Map<string, ArtifactObject>());
 
-          return builderGQLData;
+          const pipelineReport = builderData?.pipeline
+            .filter((pipeline) => !taskId || pipeline.taskId === taskId)
+            .map((pipeline) => ({
+              ...pipeline,
+              artifact: artifactsByTask?.get(pipeline.taskId),
+              componentId: component.id,
+            }));
+
+          return pipelineReport;
         },
       },
-      Pipeline: {
-        id: (pipelineData: PipelineReport) => `${pipelineData.taskId}-${pipelineData.taskName}`,
-        taskId: (pipelineData: PipelineReport) => pipelineData.taskId,
-        taskName: (pipelineData: PipelineReport) => pipelineData.taskName,
-        description: (pipelineData: PipelineReport) => pipelineData.taskDescription,
-        startTime: (pipelineData: PipelineReport) => pipelineData.startTime,
-        endTime: (pipelineData: PipelineReport) => pipelineData.endTime,
-        errors: (pipelineData: PipelineReport) => pipelineData.errors?.map((e) => e.toString()),
-        warnings: (pipelineData: PipelineReport) => pipelineData.warnings,
-      },
-      Artifact: {
-        id: (artifactData: ArtifactGQLData) => artifactData.task.id,
-        taskName: (artifactData: ArtifactGQLData) => artifactData.task.name,
-        taskId: (artifactData: ArtifactGQLData) => artifactData.task.id,
-        name: (artifactData: ArtifactGQLData) => artifactData.name,
-        description: (artifactData: ArtifactGQLData) => artifactData.description,
-        files: async (artifactData: ArtifactGQLData, { path: pathFilter }: { path?: string }) => {
-          const files = (await artifactData.files.getVinylsAndImportIfMissing(artifactData.componentId._legacy, scope))
+      TaskReport: {
+        id: (taskReport: TaskReport) => taskReport.taskId,
+        name: (taskReport: TaskReport) => taskReport.taskName,
+        description: (taskReport: TaskReport) => taskReport.taskDescription,
+        startTime: (taskReport: TaskReport) => taskReport.startTime,
+        endTime: (taskReport: TaskReport) => taskReport.endTime,
+        errors: (taskReport: TaskReport) => taskReport.errors?.map((e) => e.toString()),
+        warnings: (taskReport: TaskReport) => taskReport.warnings,
+        artifact: async (taskReport: TaskReport, { path: pathFilter }: { path?: string }) => {
+          if (!taskReport.artifact) return undefined;
+
+          const files = (
+            await taskReport.artifact.files.getVinylsAndImportIfMissing(taskReport.componentId._legacy, scope)
+          )
             .filter((vinyl) => !pathFilter || vinyl.path === pathFilter)
             .map(async (vinyl) => {
               const { basename, path, contents } = vinyl;
               const isBinary = isBinaryPath(path);
               const content = !isBinary ? contents.toString('utf-8') : undefined;
               const downloadUrl = encodeURI(
-                `/api/${artifactData.componentId}/~aspect/builder/${artifactData.task.id}/${FILE_PATH_PARAM_DELIM}${path}`
+                `/api/${taskReport.componentId}/~aspect/builder/${taskReport.taskId}/${FILE_PATH_PARAM_DELIM}${path}`
               );
-              return { name: basename, path, content, downloadUrl };
+              return { id: path, name: basename, path, content, downloadUrl };
             });
 
-          return files;
+          return {
+            ...taskReport.artifact,
+            id: taskReport.artifact.task.id,
+            taskName: taskReport.artifact.task.name,
+            taskId: taskReport.artifact.task.id,
+            files,
+            componentId: taskReport.componentId,
+          };
         },
       },
     },

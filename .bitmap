@@ -297,12 +297,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/component"
     },
-    "component-artifact": {
-        "scope": "",
-        "version": "",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/component/component-artifact"
-    },
     "component-compare": {
         "scope": "teambit.component",
         "version": "0.0.53",
@@ -1086,12 +1080,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/ui/compare"
     },
-    "ui/component-artifact": {
-        "scope": "",
-        "version": "",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/component/ui/component-artifact"
-    },
     "ui/component-deprecated": {
         "scope": "teambit.component",
         "version": "0.0.7",
@@ -1115,6 +1103,12 @@
         "version": "0.0.97",
         "mainFile": "index.ts",
         "rootDir": "scopes/component/ui/component-meta"
+    },
+    "ui/component-pipeline": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/component/ui/component-pipeline"
     },
     "ui/component-preview": {
         "scope": "teambit.preview",

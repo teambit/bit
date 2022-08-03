@@ -2,23 +2,24 @@ import { Card } from '@teambit/base-ui.surfaces.card';
 import { ellipsis } from '@teambit/design.ui.styles.ellipsis';
 import classNames from 'classnames';
 import React from 'react';
-import { useComponentArtifactContext } from '@teambit/component.ui.component-artifact';
+import { useComponentPipelineContext } from '@teambit/component.ui.component-pipeline';
 import { Handle, NodeProps, Position } from 'react-flow-renderer';
-import styles from './artifact-node.module.scss';
+import styles from './pipeline-node.module.scss';
 
-export type ArtfactNodeProps = NodeProps & {};
+export type PipelineNodeProps = NodeProps & {};
 
-export function ArtifactNode(props: ArtfactNodeProps) {
+export function PipelineNode(props: PipelineNodeProps) {
   const {
     id,
     isConnectable,
-    data: { taskName, taskId, durationSecs, durationMilliSecs },
+    data: { id: taskId, name: taskName, durationSecs, durationMilliSecs },
   } = props;
   const icon = 'https://static.bit.dev/extensions-icons/react.svg';
-  const componentArtifactContext = useComponentArtifactContext();
-  const onArtifactNodeClicked = () => {
-    const updatedId = componentArtifactContext?.artifactPanelState.selectedPipelineId === id ? undefined : id;
-    componentArtifactContext?.artifactPanelState.setSelectedPipelineId(updatedId);
+  const componentPipelineContext = useComponentPipelineContext();
+  const isSelected = componentPipelineContext?.selectedPipelineId === id;
+  const onPipelineNodeClicked = () => {
+    const updatedId = isSelected ? undefined : id;
+    componentPipelineContext?.setSelectedPipelineId(updatedId);
   };
 
   return (
@@ -26,13 +27,10 @@ export function ArtifactNode(props: ArtfactNodeProps) {
       <Handle type="target" position={Position.Left} style={{ background: '#555' }} isConnectable={isConnectable} />
       <Handle type="source" position={Position.Right} style={{ background: '#555' }} isConnectable={isConnectable} />
       <Card
-        className={classNames(
-          styles.compNode
-          // variants.root
-        )}
+        className={classNames(styles.compNode, isSelected && styles.selected)}
         roundness="small"
         elevation="none"
-        onClick={onArtifactNodeClicked}
+        onClick={onPipelineNodeClicked}
       >
         <div style={{ display: 'flex' }}>
           <div className={classNames(styles.componentDetails)}>
@@ -54,4 +52,4 @@ export function ArtifactNode(props: ArtfactNodeProps) {
   );
 }
 
-export default ArtifactNode;
+export default PipelineNode;

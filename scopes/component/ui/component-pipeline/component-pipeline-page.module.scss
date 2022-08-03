@@ -8,30 +8,10 @@
     margin-bottom: 24px;
   }
 }
-
-.graph {
-  flex-grow: 1;
+.graphContainer {
+  display: flex;
+  flex-direction: column;
   height: 100%;
-  width: unset;
-
-  border-radius: 5px;
-  border: solid 1px var(--bit-border-color-lightest, #ededed);
-  background: var(--bit-bg-dent, #f6f6f6);
-}
-
-.summery {
-  margin-bottom: 24px;
-}
-
-.filters {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  padding: 8px;
-
-  font-size: 0.75em;
-  box-shadow: var(--bit-shadow-faint);
-  z-index: 8; // position above the abs positioned graph items
 }
 
 .graph {
@@ -43,8 +23,6 @@
   border: solid 1px var(--bit-border-color-lightest, #ededed);
   background: var(--bit-bg-dent, #f6f6f6);
 }
-
-// stat container
 
 .statContainer {
   display: flex;

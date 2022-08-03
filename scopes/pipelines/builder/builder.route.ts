@@ -74,14 +74,14 @@ export class BuilderRoute implements Route {
 
       extensionsWithArtifacts.forEach((extensionWithArtifacts) => {
         extensionWithArtifacts.files.forEach((artifact) => {
-          archive.append(artifact.contents, { name: `${extensionWithArtifacts.extensionId}_${artifact.path}` });
+          archive.append(artifact.contents, { name: `${extensionWithArtifacts.extensionId}-${artifact.path}` });
         });
       });
 
       try {
         archive.pipe(res);
-        archive.finalize();
-        return res.attachment(`${aspectId.replace('/', '_')}.tar`);
+        await archive.finalize();
+        return res.attachment(`${aspectId.replace('/', '-')}.tar`);
       } catch (e: any) {
         return res.send({ error: e.toString() });
       }
