@@ -188,7 +188,7 @@
     "pino-pretty": "4.5.0",
     "prettier": "2.3.2",
     "prompt": "1.1.0",
-    "ramda": "0.27.1",
+    "ramda": "0.28.0",
     "react-docgen": "5.3.1",
     "read-pkg-up": "7.0.1",
     "regenerator-runtime": "0.13.7",

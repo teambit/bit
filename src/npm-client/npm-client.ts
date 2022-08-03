@@ -97,10 +97,10 @@ const _installInOneDirectory = ({
 }): Promise<PackageManagerResults> => {
   // Handle process options
   const allowedPackageManagerProcessOptions = getAllowdPackageManagerProcessOptions(packageManagerProcessOptions);
-  const concretePackageManagerProcessOptions = merge(
-    defaultPackageManagerProcessOptions,
-    allowedPackageManagerProcessOptions
-  );
+  const concretePackageManagerProcessOptions = {
+    ...defaultPackageManagerProcessOptions,
+    ...allowedPackageManagerProcessOptions,
+  };
   concretePackageManagerProcessOptions.cwd = dir || concretePackageManagerProcessOptions.cwd;
   const cwd = concretePackageManagerProcessOptions.cwd;
 
