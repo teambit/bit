@@ -125,7 +125,8 @@ export default class WorkspaceConfig extends AbstractConfig {
 
   toPlainObject() {
     const superObject = super.toPlainObject();
-    const consumerObject = R.merge(superObject, {
+    const consumerObject = {
+      ...superObject,
       componentsDefaultDirectory: this.componentsDefaultDirectory,
       dependenciesDirectory: this.dependenciesDirectory,
       saveDependenciesAsComponents: this.saveDependenciesAsComponents,
@@ -137,7 +138,7 @@ export default class WorkspaceConfig extends AbstractConfig {
       resolveModules: this.resolveModules,
       defaultScope: this.defaultScope,
       overrides: this.overrides.overrides,
-    });
+    };
 
     const isPropDefault = (val, key) => {
       if (key === 'dependenciesDirectory') return val !== DEFAULT_DEPENDENCIES_DIR_PATH;

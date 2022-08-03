@@ -6,4 +6,5 @@ export type ReactAppBuildResult = {
    * when using ssr, public dir is undefined.
    */
   publicDir?: string;
+  ssrPublicDir?: string;
 } & AppBuildResult;

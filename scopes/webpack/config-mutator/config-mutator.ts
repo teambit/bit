@@ -133,14 +133,13 @@ export class WebpackConfigMutator {
       this.raw.module.rules = [];
     }
     // @ts-ignore
-    if (!this.raw.module.rules.find(r => !!r.oneOf)){
-      this.raw.module.rules.unshift({ oneOf: [] })
+    if (!this.raw.module.rules.find((r) => !!r.oneOf)) {
+      this.raw.module.rules.unshift({ oneOf: [] });
     }
 
-    addToArray((this.raw.module.rules.find(r => !!(r as RuleSetRule).oneOf) as RuleSetRule[]), rule, opts);
+    addToArray(this.raw.module.rules.find((r) => !!(r as RuleSetRule).oneOf) as RuleSetRule[], rule, opts);
     return this;
   }
-
 
   /**
    * Add a new plugin
@@ -254,7 +253,8 @@ export class WebpackConfigMutator {
    * @param configs
    * @param opts
    */
-  merge(configs: Configuration[], opts?: MergeOpts): WebpackConfigMutator {
+  merge(config: Configuration | Configuration[], opts?: MergeOpts): WebpackConfigMutator {
+    const configs = Array.isArray(config) ? config : [config];
     const concreteOpts = Object.assign({}, defaultMergeOpts, opts || {});
     const { firstConfig, configs: otherConfigs } = getConfigsToMerge(this.raw, configs, concreteOpts.rawConfigPosition);
     const merged = merge(firstConfig, ...otherConfigs);

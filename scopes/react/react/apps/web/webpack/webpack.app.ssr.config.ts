@@ -35,3 +35,27 @@ export function ssrConfig(): Configuration {
     },
   };
 }
+
+export function buildConfig({ outputPath }: { outputPath: string }): Configuration {
+  return {
+    output: {
+      path: outputPath,
+      publicPath: `/`,
+      filename: '[name].[chunkhash].js',
+    },
+  };
+}
+
+export function ssrBuildConfig({ outputPath }: { outputPath: string }): Configuration {
+  return {
+    target: 'node',
+    devtool: 'eval-cheap-source-map',
+
+    output: {
+      path: outputPath,
+      publicPath: `/`,
+      libraryTarget: 'commonjs',
+      filename: 'index.js',
+    },
+  };
+}
