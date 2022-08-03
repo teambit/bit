@@ -83,6 +83,11 @@ export type ReactAppOptions = {
   bundler?: Bundler;
 
   /**
+   * instance of serverside bundler to use. default is Webpack.
+   */
+  ssrBundler?: Bundler;
+
+  /**
    * instance of dev server to use. default is Webpack.
    */
   devServer?: DevServer;
