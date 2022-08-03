@@ -17,7 +17,14 @@ export function generateAddAliasesFromPeersTransformer(peers: string[], logger: 
       // for example, if we used "react-dom": require.resolve("react-dom"),
       // it would try to resolve "react-dom/test-utils" as:
       // node_modules/react-dom/index.js/test-utils
-      acc[peerName] = resolvePeerToDirOrFile(peerName, logger, hostRootDir);
+      const resolved = resolvePeerToDirOrFile(peerName, logger, hostRootDir);
+      // Sometime there are packages that only hold icons for example, so there is no main property in their package.json
+      // so they can't be resolved.
+      // in such cases do not add them to the aliases.
+      // We already log that cases in the resolvePeerToDirOrFile function.
+      if (resolved){
+        acc[peerName] = resolved
+      }
       return acc;
     }, {});
 
