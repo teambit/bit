@@ -296,7 +296,6 @@ export default class ComponentWriter {
   }
 
   _determineWhetherToWritePackageJson() {
-    // should never write package.json in Harmony
     this.writePackageJson = this.writePackageJson && this.origin !== COMPONENT_ORIGINS.AUTHORED;
   }
 

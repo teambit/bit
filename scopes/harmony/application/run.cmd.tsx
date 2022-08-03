@@ -1,13 +1,16 @@
 import React from 'react';
+import pluralize from 'pluralize';
 import { Command, CommandOptions } from '@teambit/cli';
-import { Text } from 'ink';
+import { Newline, Text } from 'ink';
 import { Logger } from '@teambit/logger';
+import type { RenderResult } from '@teambit/legacy/dist/cli/command';
 import { ApplicationMain } from './application.main.runtime';
 
 type RunOptions = {
   dev: boolean;
   verbose: boolean;
   skipWatch: boolean;
+  ssr: boolean;
 };
 
 export class RunCmd implements Command {
@@ -26,6 +29,7 @@ export class RunCmd implements Command {
     ['d', 'dev', 'start the application in dev mode.'],
     ['v', 'verbose', 'showing verbose output for inspection and prints stack trace'],
     ['', 'skip-watch', 'avoid running the watch process that compiles components in the background'],
+    ['', 'ssr', 'run app in server side rendering mode.'],
   ] as CommandOptions;
 
   constructor(
@@ -37,12 +41,20 @@ export class RunCmd implements Command {
     private logger: Logger
   ) {}
 
-  async render([appName]: [string], { dev, skipWatch }: RunOptions): Promise<React.ReactElement> {
+  async render([appName]: [string], { dev, skipWatch, ssr }: RunOptions): Promise<React.ReactElement | RenderResult> {
     // remove wds logs until refactoring webpack to a worker through the Worker aspect.
-    const { port } = await this.application.runApp(appName, {
+    const { port, errors } = await this.application.runApp(appName, {
       dev,
-      skipWatch,
+      watch: !skipWatch,
+      ssr,
     });
+
+    if (errors) {
+      return {
+        code: 1,
+        data: <ShowErrors errors={errors} />,
+      };
+    }
 
     if (port) {
       return (
@@ -52,6 +64,17 @@ export class RunCmd implements Command {
       );
     }
     return <Text>{appName} app is running</Text>;
-    // return <UIServerConsole appName={appName} futureUiServer={uiServer} />;
   }
+}
+
+function ShowErrors({ errors }: { errors: Error[] }) {
+  return (
+    <>
+      <Newline />
+      <Text underline>Fatal {pluralize('error', errors.length)}:</Text>
+      {errors.map((x, idx) => (
+        <Text key={idx}>{x.toString()}</Text>
+      ))}
+    </>
+  );
 }

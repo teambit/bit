@@ -3,6 +3,7 @@ import path from 'path';
 import R from 'ramda';
 import { BitId } from '../../../bit-id';
 import ShowDoctorError from '../../../error/show-doctor-error';
+import logger from '../../../logger/logger';
 import { Scope } from '../../../scope';
 import ScopeComponentsImporter from '../../../scope/component-ops/scope-components-importer';
 import { Source } from '../../../scope/models';
@@ -131,27 +132,36 @@ export class ArtifactFiles {
 }
 
 export async function importMultipleDistsArtifacts(scope: Scope, components: Component[]) {
+  logger.debug(
+    `importMultipleDistsArtifacts: ${components.length} components: ${components
+      .map((c) => c.id.toString())
+      .join(', ')}`
+  );
   const extensionsNamesForDistArtifacts = 'teambit.compilation/compiler';
   const lane = await scope.getCurrentLaneObject();
   const laneIds = lane?.toBitIds();
-  const isIdOnLane = (id: BitId) => laneIds?.hasWithoutVersion(id);
   const groupedHashes: { [scopeName: string]: string[] } = {};
-  components.forEach((component) => {
-    const artifactsFiles = getArtifactFilesByExtension(component.extensions, extensionsNamesForDistArtifacts);
-    artifactsFiles.forEach((artifactFiles) => {
-      if (!artifactFiles) return;
-      if (!(artifactFiles instanceof ArtifactFiles)) {
-        artifactFiles = deserializeArtifactFiles(artifactFiles);
-      }
-      if (artifactFiles.isEmpty()) return;
-      if (artifactFiles.vinyls.length) return;
-      const allHashes = artifactFiles.refs.map((artifact) => artifact.ref.hash);
-      const scopeName = isIdOnLane(component.id) ? (lane?.scope as string) : (component.scope as string);
-      (groupedHashes[scopeName] ||= []).push(...allHashes);
-    });
-  });
+  await Promise.all(
+    components.map(async (component) => {
+      const artifactsFiles = getArtifactFilesByExtension(component.extensions, extensionsNamesForDistArtifacts);
+      const scopeName = (await scope.isIdOnLane(component.id, lane, laneIds))
+        ? (lane?.scope as string)
+        : (component.scope as string);
+      artifactsFiles.forEach((artifactFiles) => {
+        if (!artifactFiles) return;
+        if (!(artifactFiles instanceof ArtifactFiles)) {
+          artifactFiles = deserializeArtifactFiles(artifactFiles);
+        }
+        if (artifactFiles.isEmpty()) return;
+        if (artifactFiles.vinyls.length) return;
+        const allHashes = artifactFiles.refs.map((artifact) => artifact.ref.hash);
+        (groupedHashes[scopeName] ||= []).push(...allHashes);
+      });
+    })
+  );
   const scopeComponentsImporter = ScopeComponentsImporter.getInstance(scope);
   await scopeComponentsImporter.importManyObjects(groupedHashes);
+  logger.debug(`importMultipleDistsArtifacts: ${components.length} components. completed successfully`);
 }
 
 export function refsToModelObjects(refs: ArtifactRef[]): ArtifactModel[] {

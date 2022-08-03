@@ -3,6 +3,7 @@ import mapSeries from 'p-map-series';
 import * as path from 'path';
 import R from 'ramda';
 import semver from 'semver';
+import { partition } from 'lodash';
 import { LaneId } from '@teambit/lane-id';
 import { Analytics } from '../analytics/analytics';
 import { BitId, BitIds } from '../bit-id';
@@ -41,7 +42,7 @@ import BitMap, { CURRENT_BITMAP_SCHEMA } from './bit-map/bit-map';
 import { NextVersion } from './bit-map/component-map';
 import Component from './component';
 import { ComponentStatus, ComponentStatusLoader, ComponentStatusResult } from './component-ops/component-status-loader';
-import ComponentLoader from './component/component-loader';
+import ComponentLoader, { ComponentLoadOptions } from './component/component-loader';
 import { InvalidComponent } from './component/consumer-component';
 import { Dependencies } from './component/dependencies';
 import PackageJsonFile from './component/package-json-file';
@@ -316,8 +317,8 @@ export default class Consumer {
     });
   }
 
-  async loadComponent(id: BitId): Promise<Component> {
-    const { components } = await this.loadComponents(BitIds.fromArray([id]));
+  async loadComponent(id: BitId, loadOpts?: ComponentLoadOptions): Promise<Component> {
+    const { components } = await this.loadComponents(BitIds.fromArray([id]), true, loadOpts);
     return components[0];
   }
 
@@ -327,9 +328,10 @@ export default class Consumer {
 
   async loadComponents(
     ids: BitIds,
-    throwOnFailure = true
+    throwOnFailure = true,
+    loadOpts?: ComponentLoadOptions
   ): Promise<{ components: Component[]; invalidComponents: InvalidComponent[] }> {
-    return this.componentLoader.loadMany(ids, throwOnFailure);
+    return this.componentLoader.loadMany(ids, throwOnFailure, loadOpts);
   }
 
   async importComponentsHarmony(
@@ -347,14 +349,22 @@ export default class Consumer {
     return componentWithDependencies;
   }
 
-  async importComponentsObjectsHarmony(
+  async importComponentsObjects(
     ids: BitIds,
-    fromOriginalScope = false,
-    allHistory = false,
-    lane?: Lane
+    {
+      fromOriginalScope = false,
+      allHistory = false,
+      lane,
+      ignoreMissingHead = false,
+    }: {
+      fromOriginalScope?: boolean;
+      allHistory?: boolean;
+      lane?: Lane;
+      ignoreMissingHead?: boolean;
+    }
   ): Promise<ComponentWithDependencies[]> {
     const scopeComponentsImporter = ScopeComponentsImporter.getInstance(this.scope);
-    await scopeComponentsImporter.importManyDeltaWithoutDeps(ids, allHistory, lane);
+    await scopeComponentsImporter.importManyDeltaWithoutDeps(ids, allHistory, lane, ignoreMissingHead);
     loader.start(`import ${ids.length} components with their dependencies (if missing)`);
     const versionDependenciesArr: VersionDependencies[] = fromOriginalScope
       ? await scopeComponentsImporter.importManyFromOriginalScopes(ids)
@@ -718,6 +728,28 @@ export default class Consumer {
     this.bitMap.removeComponents(componentsToRemoveFromFs);
   }
 
+  async cleanOrRevertFromBitMapWhenOnLane(ids: BitIds) {
+    logger.debug(`consumer.cleanFromBitMapWhenOnLane, cleaning ${ids.toString()} from`);
+    const [idsOnLane, idsOnMain] = partition(ids, (id) => {
+      const componentMap = this.bitMap.getComponent(id, { ignoreVersion: true });
+      return componentMap.onLanesOnly;
+    });
+    if (idsOnLane.length) {
+      await this.cleanFromBitMap(BitIds.fromArray(idsOnLane));
+    }
+    await Promise.all(
+      idsOnMain.map(async (id) => {
+        const modelComp = await this.scope.getModelComponentIfExist(id.changeVersion(undefined));
+        let updatedId = id.changeScope(undefined).changeVersion(undefined);
+        if (modelComp) {
+          const head = modelComp.getHeadAsTagIfExist();
+          if (head) updatedId = id.changeVersion(head);
+        }
+        this.bitMap.updateComponentId(updatedId, false, true);
+      })
+    );
+  }
+
   async addRemoteAndLocalVersionsToDependencies(component: Component, loadedFromFileSystem: boolean) {
     logger.debug(`addRemoteAndLocalVersionsToDependencies for ${component.id.toString()}`);
     Analytics.addBreadCrumb(
@@ -741,6 +773,28 @@ export default class Consumer {
     await component.devDependencies.addRemoteAndLocalVersions(this.scope, modelDevDependencies);
   }
 
+  async getIdsOfDefaultLane(): Promise<BitIds> {
+    const ids = this.bitMap.getAuthoredAndImportedBitIdsOfDefaultLane();
+    const bitIds = await Promise.all(
+      ids.map(async (id) => {
+        if (!id.hasVersion()) return id;
+        const modelComponent = await this.scope.getModelComponentIfExist(id.changeVersion(undefined));
+        if (modelComponent) {
+          const head = modelComponent.getHeadAsTagIfExist();
+          if (head) {
+            return id.changeVersion(head);
+          }
+          throw new Error(`model-component on main should have head. the head on ${id.toString()} is missing`);
+        }
+        if (!id.hasVersion()) {
+          return id;
+        }
+        throw new Error(`getIdsOfDefaultLane: model-component of ${id.toString()} is missing, please run bit-import`);
+      })
+    );
+    return BitIds.fromArray(bitIds);
+  }
+
   async getAuthoredAndImportedDependentsIdsOf(components: Component[]): Promise<BitIds> {
     const authoredAndImportedComponents = this.bitMap.getAllIdsAvailableOnLane([
       COMPONENT_ORIGINS.IMPORTED,
@@ -751,7 +805,32 @@ export default class Consumer {
   }
 
   async writeBitMap() {
+    await this.backupBitMap();
     await this.bitMap.write();
+  }
+
+  private async backupBitMap() {
+    if (!this.bitMap.hasChanged) return;
+    try {
+      const baseDir = path.join(this.scope.path, 'bitmap-history');
+      await fs.ensureDir(baseDir);
+      const backupPath = path.join(baseDir, `.bitmap-${this.currentDateAndTimeToFileName()}`);
+      await fs.copyFile(this.bitMap.mapPath, backupPath);
+    } catch (err) {
+      // it's nice to have. don't kill the process if something goes wrong.
+      logger.error(`failed to backup bitmap`, err);
+    }
+  }
+
+  private currentDateAndTimeToFileName() {
+    const date = new Date();
+    const year = date.getFullYear();
+    const month = date.getMonth() + 1;
+    const day = date.getDate();
+    const hours = date.getHours();
+    const minutes = date.getMinutes();
+    const seconds = date.getSeconds();
+    return `${year}-${month}-${day}-${hours}-${minutes}-${seconds}`;
   }
 
   async onDestroy() {

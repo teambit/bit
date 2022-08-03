@@ -27,6 +27,7 @@ export class SnapCmd implements Command {
   options = [
     ['m', 'message <message>', 'log message describing the latest changes'],
     ['', 'unmodified', 'include unmodified components (by default, only new and modified components are snapped)'],
+    ['', 'unmerged', 'EXPERIMENTAL. complete a merge process by snapping the unmerged components'],
     ['', 'build', 'Harmony only. run the pipeline build and complete the tag'],
     ['', 'skip-tests', 'skip running component tests during snap process'],
     ['', 'skip-auto-snap', 'skip auto snapping dependents'],
@@ -61,6 +62,7 @@ ${WILDCARD_HELP('snap')}`;
       message = '',
       all = false,
       force = false,
+      unmerged = false,
       ignoreIssues,
       build,
       skipTests = false,
@@ -72,6 +74,7 @@ ${WILDCARD_HELP('snap')}`;
       message?: string;
       all?: boolean;
       force?: boolean;
+      unmerged?: boolean;
       ignoreIssues?: string;
       build?: boolean;
       skipTests?: boolean;
@@ -107,6 +110,7 @@ ${WILDCARD_HELP('snap')}`;
     const results = await this.snapping.snap({
       pattern,
       message,
+      unmerged,
       ignoreIssues,
       build,
       skipTests,
@@ -137,7 +141,8 @@ ${WILDCARD_HELP('snap')}`;
           );
           if (autoTag.length) {
             const autoTagComp = autoTag.map((a) => a.component.id.toString());
-            componentOutput += `\n       ${AUTO_SNAPPED_MSG}: ${autoTagComp.join(', ')}`;
+            componentOutput += `\n       ${AUTO_SNAPPED_MSG} (${autoTagComp.length} total):
+            ${autoTagComp.join('\n            ')}`;
           }
           return componentOutput;
         })

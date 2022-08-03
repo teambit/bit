@@ -45,7 +45,7 @@ function convertToSemVer(versionStr: number) {
 }
 
 export function isHash(str: string | null | undefined): boolean {
-  return typeof str === 'string' && str.length === HASH_SIZE;
+  return typeof str === 'string' && str.length === HASH_SIZE && !semver.valid(str);
 }
 
 /**

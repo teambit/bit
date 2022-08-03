@@ -253,7 +253,9 @@ export default class Component extends BitObject {
 
   getDivergeData(): DivergeData {
     if (!this.divergeData)
-      throw new Error(`getDivergeData() expects divergeData to be populate, please use this.setDivergeData()`);
+      throw new Error(
+        `getDivergeData() expects divergeData to be populate, please use this.setDivergeData() for id: ${this.id()}`
+      );
     return this.divergeData;
   }
 
@@ -261,7 +263,8 @@ export default class Component extends BitObject {
     this.setLaneHeadLocal(lane);
     if (this.scope) {
       if (lane) {
-        this.laneHeadRemote = await repo.remoteLanes.getRef(lane.toLaneId(), this.toBitId());
+        const remoteToCheck = lane.isNew && lane.forkedFrom ? lane.forkedFrom : lane.toLaneId();
+        this.laneHeadRemote = await repo.remoteLanes.getRef(remoteToCheck, this.toBitId());
       }
       // we need also the remote head of main, otherwise, the diverge-data assumes all versions are local
       this.remoteHead = await repo.remoteLanes.getRef(LaneId.from(DEFAULT_LANE, this.scope), this.toBitId());

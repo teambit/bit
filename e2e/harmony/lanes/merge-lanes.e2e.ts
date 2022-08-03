@@ -67,13 +67,13 @@ describe('merge lanes', function () {
         });
       });
     });
-    describe('merging remote lane into main when components are not in workspace using --existing flag', () => {
+    describe('merging remote lane into main when components are not in workspace using --workspace flag', () => {
       let mergeOutput;
       before(() => {
         helper.scopeHelper.reInitLocalScopeHarmony();
         helper.scopeHelper.addRemoteScope();
         helper.command.fetchRemoteLane('dev');
-        mergeOutput = helper.command.mergeRemoteLane(`dev`, undefined, `--existing`);
+        mergeOutput = helper.command.mergeRemoteLane(`dev`, undefined, `--workspace`);
       });
       it('should indicate that the components were not merge because they are not in the workspace', () => {
         expect(mergeOutput).to.have.string('the merge has been canceled on the following component(s)');
@@ -302,6 +302,68 @@ describe('merge lanes', function () {
         it('should merge components that are dependencies of the given pattern', () => {
           const comp3Head = helper.command.getHead(`${helper.scopes.remote}/comp3`);
           expect(comp3Head).to.equal(comp3HeadOnLane);
+        });
+      });
+    });
+  });
+  describe('getting updates from main when lane is diverge', () => {
+    let workspaceOnLane: string;
+    let comp2HeadOnMain: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents(2);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.command.createLane();
+      helper.fixtures.populateComponents(2, undefined, 'v2');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      workspaceOnLane = helper.scopeHelper.cloneLocalScope();
+      helper.command.switchLocalLane('main');
+      helper.fixtures.populateComponents(2, undefined, 'v3');
+      helper.command.snapAllComponentsWithoutBuild();
+      comp2HeadOnMain = helper.command.getHead(`${helper.scopes.remote}/comp2`);
+      helper.command.export();
+      helper.scopeHelper.getClonedLocalScope(workspaceOnLane);
+      helper.command.import();
+    });
+    it('bit import should bring the latest main objects', () => {
+      const head = helper.command.getHead(`${helper.scopes.remote}/comp2`);
+      expect(head).to.equal(comp2HeadOnMain);
+    });
+    it('bit status should indicate that the main is ahead', () => {
+      const status = helper.command.status();
+      expect(status).to.have.string(`${helper.scopes.remote}/comp1 ... main is ahead by 1 snaps`);
+    });
+    describe('merging the lane', () => {
+      let status;
+      before(() => {
+        helper.command.mergeLane('main', '--theirs');
+        status = helper.command.statusJson();
+      });
+      it('bit status should show two staging versions, the main-head and merge-snap', () => {
+        const stagedVersions = status.stagedComponents.find((c) => c.id === `${helper.scopes.remote}/comp2`);
+        expect(stagedVersions.versions).to.have.lengthOf(2);
+        expect(stagedVersions.versions).to.include(comp2HeadOnMain);
+        expect(stagedVersions.versions).to.include(helper.command.getHeadOfLane('dev', 'comp2'));
+      });
+      it('bit status should not show the components in pending-merge', () => {
+        expect(status.mergePendingComponents).to.have.lengthOf(0);
+      });
+      describe('switching to main and merging the lane to main', () => {
+        before(() => {
+          helper.command.switchLocalLane('main');
+          helper.command.mergeLane('dev');
+        });
+        it('head should have two parents', () => {
+          const cat = helper.command.catComponent('comp1@latest');
+          expect(cat.parents).to.have.lengthOf(2);
+        });
+        // previously it was throwing:
+        // removeComponentVersions found multiple parents for a local (un-exported) version 368fb583865af40a8823d2ac1d556f4b65582ba2 of iw4j2eko-remote/comp1
+        it('bit reset should not throw', () => {
+          expect(() => helper.command.untagAll()).to.not.throw();
         });
       });
     });

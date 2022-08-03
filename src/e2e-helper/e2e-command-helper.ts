@@ -372,6 +372,9 @@ export default class CommandHelper {
   import(value = '') {
     return this.runCmd(`bit import ${value}`);
   }
+  importLane(laneName: string, flags = '') {
+    return this.runCmd(`bit lane import ${this.scopes.remote}/${laneName} ${flags}`);
+  }
   fetchLane(id: string) {
     return this.runCmd(`bit fetch ${id} --lanes`);
   }
@@ -472,6 +475,11 @@ export default class CommandHelper {
   statusJson(cwd = this.scopes.localPath) {
     const status = this.runCmd('bit status --json', cwd);
     return JSON.parse(status);
+  }
+
+  getStagedIdsFromStatus(): string[] {
+    const status = this.statusJson();
+    return status.stagedComponents.map((s) => s.id);
   }
 
   expectStatusToBeClean(exclude: string[] = []) {

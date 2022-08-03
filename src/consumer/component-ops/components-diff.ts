@@ -13,8 +13,19 @@ import Component from '../component/consumer-component';
 import { SourceFile } from '../component/sources';
 import { diffBetweenComponentsObjects } from './components-object-diff';
 
-type FileDiff = { filePath: string; diffOutput: string };
-export type FieldsDiff = { fieldName: string; diffOutput: string };
+export type DiffStatus = 'MODIFIED' | 'UNCHANGED' | 'NEW';
+
+export type FileDiff = {
+  filePath: string;
+  diffOutput: string;
+  status: DiffStatus;
+  fromContent: string;
+  toContent: string;
+};
+export type FieldsDiff = {
+  fieldName: string;
+  diffOutput: string;
+};
 export type DiffResults = {
   id: BitId;
   hasDiff: boolean;
@@ -67,8 +78,7 @@ export default async function componentsDiff(
       throw new GeneralError(`component ${component.id.toString()} doesn't have any version yet`);
     }
     const repository = consumer.scope.objects;
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const fromVersionObject: Version = await modelComponent.loadVersion(version, repository);
+    const fromVersionObject: Version = await modelComponent.loadVersion(version as string, repository);
     const versionFiles = await fromVersionObject.modelFilesToSourceFiles(repository);
     const fsFiles = component.files;
     // $FlowFixMe version must be defined as the component.componentFromModel do exist
@@ -207,14 +217,24 @@ async function getFilesDiff(
   const fileALabel = filesAVersion === filesBVersion ? `${filesAVersion} original` : filesAVersion;
   const fileBLabel = filesAVersion === filesBVersion ? `${filesBVersion} modified` : filesBVersion;
   const filesDiffP = allPaths.map(async (relativePath) => {
-    const getFilePath = async (files): Promise<PathOsBased> => {
+    const getFileData = async (files): Promise<{ path: PathOsBased; content: string }> => {
       const file = files.find((f) => f[fileNameAttribute] === relativePath);
-      const fileContent = file ? file.contents : '';
-      return saveIntoOsTmp(fileContent);
+      const content = file ? file.contents : '';
+      const path = await saveIntoOsTmp(content);
+      return { path, content: content.toString('utf-8') };
     };
-    const [fileAPath, fileBPath] = await Promise.all([getFilePath(filesA), getFilePath(filesB)]);
+    const [{ path: fileAPath, content: fileAContent }, { path: fileBPath, content: fileBContent }] = await Promise.all([
+      getFileData(filesA),
+      getFileData(filesB),
+    ]);
+
     const diffOutput = await getOneFileDiff(fileAPath, fileBPath, fileALabel, fileBLabel, relativePath, color);
-    return { filePath: relativePath, diffOutput };
+
+    let status: DiffStatus = 'UNCHANGED';
+    if (diffOutput && !fileAContent) status = 'NEW';
+    else if (diffOutput && fileAContent) status = 'MODIFIED';
+
+    return { filePath: relativePath, diffOutput, status, fromContent: fileAContent, toContent: fileBContent };
   });
   return Promise.all(filesDiffP);
 }

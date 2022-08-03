@@ -4,10 +4,11 @@ import type { ApolloClient, NormalizedCacheObject } from '@apollo/client';
 import pick from 'lodash.pick';
 
 import { isBrowser } from '@teambit/ui-foundation.ui.is-browser';
-import type { BrowserData, RenderPlugins } from '@teambit/ui';
+import type { SSR } from '@teambit/ui';
 
 import type { GraphqlUI, GraphQLClient } from './graphql.ui.runtime';
 import { GraphQLProvider } from './graphql-provider';
+import { GraphqlAspect } from './graphql.aspect';
 
 type RenderContext = {
   client: GraphQLClient<any>;
@@ -15,18 +16,18 @@ type RenderContext = {
 
 const ALLOWED_HEADERS = ['cookie'];
 
-export class GraphqlRenderPlugins implements RenderPlugins<RenderContext, { state?: NormalizedCacheObject }> {
+export class GraphqlRenderPlugins implements SSR.RenderPlugin<RenderContext, { state?: NormalizedCacheObject }> {
   constructor(private graphqlUI: GraphqlUI) {}
 
-  serverInit = ({ browser, server }: { browser?: BrowserData; server?: { port: number } } = {}) => {
-    if (!browser) return undefined;
+  key = GraphqlAspect.id;
 
-    const port = server?.port || 3000;
+  serverInit = ({ browser }: SSR.SsrSession) => {
+    const port = browser?.location.port || 3000;
     const serverUrl = `http://localhost:${port}/graphql`;
 
     const client = this.graphqlUI.createSsrClient({
       serverUrl,
-      headers: pick(browser.connection.headers, ALLOWED_HEADERS),
+      headers: pick(browser?.headers, ALLOWED_HEADERS),
     });
 
     const ctx: RenderContext = { client };

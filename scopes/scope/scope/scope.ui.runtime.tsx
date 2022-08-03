@@ -274,12 +274,13 @@ export class ScopeUI {
     this.drawerWidgetSlot.register(widgets);
   };
 
-  registerDefaultDrawers() {
+  registerDefaultDrawers(assumeScopeInUrl = false) {
     this.sidebar.registerDrawer(
       scopeDrawer({
         treeWidgets: this.sidebarSlot,
         filtersSlot: this.drawerComponentsFiltersSlot,
         drawerWidgetSlot: this.drawerWidgetSlot,
+        assumeScopeInUrl
       })
     );
   }

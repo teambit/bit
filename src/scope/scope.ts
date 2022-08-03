@@ -1,6 +1,7 @@
 import fs from 'fs-extra';
 import * as pathLib from 'path';
 import R from 'ramda';
+import { compact } from 'lodash';
 import { LaneId } from '@teambit/lane-id';
 import semver from 'semver';
 import { Analytics } from '../analytics/analytics';
@@ -346,6 +347,19 @@ export default class Scope {
     return lane;
   }
 
+  async isIdOnLane(id: BitId, lane?: Lane | null, laneIds?: BitIds): Promise<boolean> {
+    if (!lane) return false;
+    if (laneIds?.has(id)) return true; // in the lane with the same version
+    if (!laneIds?.hasWithoutVersion(id)) return false; // not in the lane at all
+    // component is in the lane object but with a different version.
+    // we have to figure out whether the current version exists on the lane or not.
+    const component = await this.getModelComponent(id);
+    if (component.head?.toString() === id.version) return false; // it's on main
+    await component.setDivergeData(this.objects, false);
+    const divergeData = component.getDivergeData();
+    return Boolean(divergeData.snapsOnLocalOnly.find((snap) => snap.toString() === id.version));
+  }
+
   async latestVersions(componentIds: BitId[], throwOnFailure = true): Promise<BitIds> {
     componentIds = componentIds.map((componentId) => componentId.changeVersion(undefined));
     const components = await this.sources.getMany(componentIds);
@@ -661,6 +675,20 @@ export default class Scope {
     }
     // it's probably new, we assume it doesn't have scope.
     return BitId.parse(id, false);
+  }
+
+  /**
+   * returns the main ids of the given lane
+   */
+  async getDefaultLaneIdsFromLane(lane: Lane): Promise<BitId[]> {
+    const laneIds = lane.toBitIds();
+    const modelComponents = await Promise.all(laneIds.map((id) => this.getModelComponent(id)));
+    return compact(
+      modelComponents.map((c) => {
+        if (!c.head) return null; // probably the component was never merged to main
+        return c.toBitId().changeVersion(c.head.toString());
+      })
+    );
   }
 
   async writeObjectsToPendingDir(objectList: ObjectList, clientId: string): Promise<void> {

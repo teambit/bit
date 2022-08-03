@@ -14,7 +14,7 @@ import {
 } from '@teambit/dependency-resolver';
 import { ComponentMap, Component } from '@teambit/component';
 import fs from 'fs-extra';
-import { join, resolve } from 'path';
+import { join, relative, resolve } from 'path';
 import {
   Workspace,
   Project,
@@ -37,6 +37,8 @@ import { PkgMain } from '@teambit/pkg';
 import userHome from 'user-home';
 import { Logger } from '@teambit/logger';
 import versionSelectorType from 'version-selector-type';
+import YAML from 'yaml';
+import { createRootComponentsDir } from './create-root-components-dir';
 
 type BackupJsons = {
   [path: string]: Buffer | undefined;
@@ -55,7 +57,7 @@ export class YarnPackageManager implements PackageManager {
     const options: CreateFromComponentsOptions = {
       filterComponentsFromManifests: true,
       createManifestForComponentsWithoutDependencies: true,
-      dedupe: true,
+      dedupe: !installOptions.rootComponentsForCapsules,
       dependencyFilterFn: installOptions.dependencyFilterFn,
     };
     const components = componentDirectoryMap.components;
@@ -84,39 +86,80 @@ export class YarnPackageManager implements PackageManager {
 
     // @ts-ignore
     project.setupResolutions();
+    if (installOptions.rootComponentsForCapsules && !installOptions.useNesting) {
+      installOptions.overrides = {
+        ...installOptions.overrides,
+        ...this._createLocalDirectoryOverrides(rootDir, componentDirectoryMap),
+      };
+    }
     const rootWs = await this.createWorkspace(rootDir, project, rootManifest, installOptions.overrides);
+    if (installOptions.rootComponents) {
+      rootWs.manifest.installConfig = {
+        hoistingLimits: 'dependencies',
+      };
+    }
 
     // const manifests = Array.from(workspaceManifest.componentsManifestsMap.entries());
-    const manifests = this.computeComponents(
+    let manifests = this.computeComponents(
       workspaceManifest.componentsManifestsMap,
       componentDirectoryMap,
       installOptions.copyPeerToRuntimeOnComponents
     );
-    await extendWithComponentsFromDir(rootDir, manifests);
+    if (installOptions.rootComponents) {
+      // Manifests are extended with "wrapper components"
+      // that group all workspace components with their dependencies and peer dependencies.
+      manifests = {
+        ...(await createRootComponentsDir({
+          depResolver: this.depResolver,
+          rootDir,
+          componentDirectoryMap,
+        })),
+        ...manifests,
+      };
+    } else if (installOptions.useNesting) {
+      // Nesting is used for scope aspect capsules.
+      // In a capsule, all peer dependencies should be installed,
+      // so we make runtime dependencies from peer dependencies.
+      manifests[rootDir].dependencies = {
+        ...manifests[rootDir].peerDependencies,
+        ...manifests[rootDir].defaultPeerDependencies,
+        ...manifests[rootDir].dependencies,
+      };
+    } else if (installOptions.rootComponentsForCapsules) {
+      await updateManifestsForInstallationInWorkspaceCapsules(manifests);
+    } else {
+      await extendWithComponentsFromDir(rootDir, manifests);
+    }
 
     this.logger.debug('root manifest for installation', rootManifest);
     this.logger.debug('components manifests for installation', manifests);
 
-    const workspacesIdents = {};
-
     const workspacesP = Object.keys(manifests).map(async (path) => {
       const manifest = manifests[path];
       const workspace = await this.createWorkspace(path, project, manifest);
-      const workspaceIdentHash = workspace.locator.identHash;
-      //
-      if (workspacesIdents[workspaceIdentHash]) {
-        this.logger.debug(
-          `overriding internal workspace fields to prevent duplications for workspace ${workspace.cwd}`
-        );
-        this.overrideInternalWorkspaceParams(workspace);
-      }
-      workspacesIdents[workspace.locator.identHash] = true;
       return workspace;
     });
 
     const workspaces = await Promise.all(workspacesP);
 
-    this.setupWorkspaces(project, workspaces.concat(rootWs));
+    if (!installOptions.rootComponents && !installOptions.rootComponentsForCapsules && !installOptions.useNesting) {
+      const workspacesIdents = {};
+      for (const workspace of workspaces) {
+        const workspaceIdentHash = workspace.locator.identHash;
+        if (workspacesIdents[workspaceIdentHash]) {
+          this.logger.debug(
+            `overriding internal workspace fields to prevent duplications for workspace ${workspace.cwd}`
+          );
+          this.overrideInternalWorkspaceParams(workspace);
+        }
+        workspacesIdents[workspace.locator.identHash] = true;
+      }
+    }
+
+    if (!manifests[rootDir]) {
+      workspaces.push(rootWs);
+    }
+    this.setupWorkspaces(project, workspaces);
 
     const cache = await Cache.find(config);
     // const existingPackageJsons = await this.backupPackageJsons(rootDir, componentDirectoryMap);
@@ -144,6 +187,22 @@ export class YarnPackageManager implements PackageManager {
     if (installReport.hasErrors()) process.exit(installReport.exitCode());
 
     this.logger.consoleSuccess('installing dependencies');
+  }
+
+  /**
+   * Every component is overriden with a local directory of that component.
+   * So the component will be installed from the local directory, not from the registry.
+   */
+  private _createLocalDirectoryOverrides(
+    rootDir: string,
+    componentDirectoryMap: ComponentMap<string>
+  ): Record<string, string> {
+    const overrides = {};
+    Array.from(componentDirectoryMap.hashMap.entries()).forEach(([, [component, path]]) => {
+      const name = this.depResolver.getPackageName(component);
+      overrides[name] = `file:${relative(rootDir, path)}`;
+    });
+    return overrides;
   }
 
   private getPackageJsonPath(dir: string): string {
@@ -212,6 +271,7 @@ export class YarnPackageManager implements PackageManager {
     ws.manifest.dependencies = this.computeDeps(manifest.dependencies);
     ws.manifest.devDependencies = this.computeDeps(manifest.devDependencies);
     ws.manifest.peerDependencies = this.computeDeps(manifest.peerDependencies);
+    ws.manifest.installConfig = manifest.installConfig;
     if (overrides) {
       ws.manifest.resolutions = convertOverridesToResolutions(overrides);
     }
@@ -340,6 +400,8 @@ export class YarnPackageManager implements PackageManager {
       enableStrictSsl: networkConfig?.strictSSL,
       // enableInlineBuilds: true,
       globalFolder: `${userHome}/.yarn/global`,
+      // We need to disable self-references as say create circular symlinks.
+      nmSelfReferences: false,
 
       // TODO: check about support for the following: (see more here - https://github.com/yarnpkg/berry/issues/1434#issuecomment-801449010)
       // ca?: string;
@@ -440,6 +502,27 @@ export class YarnPackageManager implements PackageManager {
       isSemver: true,
     };
   }
+
+  async getInjectedDirs(rootDir: string, componentDir: string, packageName: string): Promise<string[]> {
+    const modulesDir = join(rootDir, 'node_modules');
+    relative(modulesDir, componentDir);
+    let yarnStateContent!: string;
+    try {
+      yarnStateContent = await fs.readFile(join(modulesDir, '.yarn-state.yml'), 'utf-8');
+    } catch (err: any) {
+      if (err.code === 'ENOENT') return [];
+    }
+    const yarnState = YAML.parse(yarnStateContent) as Record<string, { locations: string[] }>;
+    const injectedDirs: string[] = [];
+    for (const [key, { locations }] of Object.entries(yarnState)) {
+      if (key.startsWith(`${packageName}@`) || key.startsWith(`${packageName}__root@`)) {
+        for (const location of locations) {
+          injectedDirs.push(location);
+        }
+      }
+    }
+    return injectedDirs;
+  }
 }
 
 function convertOverridesToResolutions(
@@ -460,4 +543,39 @@ function toYarnResolutionSelector({ name, pref }: { name: string; pref?: string 
     fullName: name,
     description: pref,
   };
+}
+
+/**
+ * This function prepares the component manifests for installation inside a capsule.
+ * Inside a capsule, all peer dependencies of the component should be installed.
+ * So peer dependencies are added to the manifest as runtime dependencies.
+ * Also, the package.json files are update to contain other component dependencies
+ * in dependencies as local "file:" dependencies.
+ */
+async function updateManifestsForInstallationInWorkspaceCapsules(manifests: { [key: string]: any }) {
+  await Promise.all(
+    Object.entries(manifests).map(async ([dir, manifest]) => {
+      const pkgJsonPath = join(dir, 'package.json');
+      const pkgJson = await fs.readJson(pkgJsonPath);
+      // We need to write the package.json files because they need to contain the workspace dependencies.
+      // When packages are installed via the "file:" protocol, Yarn reads their package.json files
+      // from the file system even if they are from the workspace.
+      await fs.writeJson(
+        pkgJsonPath,
+        {
+          ...pkgJson,
+          dependencies: manifest.dependencies,
+        },
+        { spaces: 2 }
+      );
+      manifest.dependencies = {
+        ...manifest.peerDependencies,
+        ...manifest.defaultPeerDependencies,
+        ...manifest.dependencies,
+      };
+      manifest.installConfig = {
+        hoistingLimits: 'workspaces',
+      };
+    })
+  );
 }

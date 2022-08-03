@@ -1,3 +1,4 @@
+/* eslint-disable dot-notation */
 import path from 'path';
 import { getAgent } from './agent';
 

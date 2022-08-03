@@ -7,7 +7,7 @@ import { readdirSync, existsSync } from 'fs-extra';
 import { resolve, join } from 'path';
 import { AspectLoaderAspect, AspectDefinition } from '@teambit/aspect-loader';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import type { ComponentMain, ComponentMap } from '@teambit/component';
+import type { ComponentMain, ComponentMap, ResolveAspectsOptions } from '@teambit/component';
 import { Component, ComponentAspect, ComponentFactory, ComponentID, Snap, State } from '@teambit/component';
 import type { GraphqlMain } from '@teambit/graphql';
 import { GraphqlAspect } from '@teambit/graphql';
@@ -223,7 +223,7 @@ export class ScopeMain implements ComponentFactory {
     };
 
     const idsToLoad = await getAspectsByPreviouslyUsedVersion();
-    await host.loadAspects(idsToLoad, false);
+    await host.loadAspects(idsToLoad, false, 'scope.reloadAspectsWithNewVersion');
   }
 
   getManyByLegacy(components: ConsumerComponent[]): Promise<Component[]> {
@@ -367,10 +367,10 @@ export class ScopeMain implements ComponentFactory {
 
   private localAspects: string[] = [];
 
-  async loadAspects(ids: string[], throwOnError = false, neededFor?: ComponentID): Promise<string[]> {
+  async loadAspects(ids: string[], throwOnError = false, neededFor?: string): Promise<string[]> {
     this.logger.info(`loadAspects, loading ${ids.length} aspects.
 ids: ${ids.join(', ')}
-needed-for: ${neededFor?.toString() || '<unknown>'}`);
+needed-for: ${neededFor || '<unknown>'}`);
     const grouped = await this.groupAspectIdsByEnvOfTheList(ids);
     const envsManifestsIds = await this.getManifestsAndLoadAspects(grouped.envs, throwOnError);
     const otherManifestsIds = await this.getManifestsAndLoadAspects(grouped.other, throwOnError);
@@ -410,6 +410,7 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
     } = {}
   ): Promise<ManifestOrAspect[]> {
     ids = uniq(ids);
+    this.logger.debug(`getManifestsGraphRecursively, ids:\n${ids.join('\n')}`);
     const nonVisitedId = ids.filter((id) => !visited.includes(id));
     if (!nonVisitedId.length) {
       return [];
@@ -481,6 +482,7 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
           copyPeerToRuntimeOnRoot: true,
           dedupe: false,
           packageManagerConfigRootDir: opts?.packageManagerConfigRootDir,
+          useNesting: true,
         },
       },
       this.legacyScope
@@ -629,7 +631,7 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
         // "No matching version found for <some-component-on-the-workspace>"
         seedersOnly: true,
         includeFromNestedHosts: true,
-        installOptions: { copyPeerToRuntimeOnRoot: true, dedupe: false },
+        installOptions: { copyPeerToRuntimeOnRoot: true, dedupe: false, useNesting: true },
         host: this,
       },
       this.legacyScope
@@ -648,8 +650,24 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
     return aspectDefs;
   }
 
-  async resolveAspects(runtimeName?: string, componentIds?: ComponentID[]): Promise<AspectDefinition[]> {
-    const userAspectsIds = componentIds || (await this.resolveMultipleComponentIds(this.aspectLoader.getUserAspects()));
+  async resolveAspects(
+    runtimeName?: string,
+    componentIds?: ComponentID[],
+    opts?: ResolveAspectsOptions
+  ): Promise<AspectDefinition[]> {
+    const defaultOpts: ResolveAspectsOptions = {
+      excludeCore: false,
+      requestedOnly: false,
+    };
+    const mergedOpts = { ...defaultOpts, ...opts };
+    const coreAspectsIds = this.aspectLoader.getCoreAspectIds();
+    let userAspectsIds;
+    if (componentIds && componentIds.length) {
+      userAspectsIds = componentIds.filter((id) => !coreAspectsIds.includes(id.toString()));
+    } else {
+      userAspectsIds = await this.resolveMultipleComponentIds(this.aspectLoader.getUserAspects());
+    }
+
     const withoutLocalAspects = userAspectsIds.filter((aspectId) => {
       return !this.localAspects.find((localAspect) => {
         return localAspect.includes(aspectId.fullName.replace('/', '.'));
@@ -657,14 +675,36 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
     });
     const userAspectsDefs = await this.resolveUserAspects(runtimeName, withoutLocalAspects);
     const localResolved = await this.resolveLocalAspects(this.localAspects, runtimeName);
-    const coreAspects = await this.aspectLoader.getCoreAspectDefs(runtimeName);
+    const coreAspectsDefs = await this.aspectLoader.getCoreAspectDefs(runtimeName);
 
-    const allDefs = userAspectsDefs.concat(coreAspects).concat(localResolved);
-    const uniqDefs = uniqBy(allDefs, (def) => `${def.aspectPath}-${def.runtimePath}`);
+    const allDefs = userAspectsDefs.concat(coreAspectsDefs).concat(localResolved);
+    const afterExclusion = mergedOpts.excludeCore
+      ? allDefs.filter((def) => {
+          const userAspectsIdsWithoutVersion = userAspectsIds.map((aspectId) => aspectId.toStringWithoutVersion());
+          const isCore = coreAspectsDefs.find((coreId) => def.getId === coreId.getId);
+          const id = ComponentID.fromString(def.getId || '');
+          const isTarget = userAspectsIdsWithoutVersion.includes(id.toStringWithoutVersion());
+          if (isTarget) return true;
+          return !isCore;
+        })
+      : allDefs;
+
+    const uniqDefs = uniqBy(afterExclusion, (def) => `${def.aspectPath}-${def.runtimePath}`);
     let defs = uniqDefs;
     if (runtimeName) {
       defs = defs.filter((def) => def.runtimePath);
     }
+
+    if (componentIds && componentIds.length && mergedOpts.requestedOnly) {
+      const componentIdsString = componentIds.map((id) => id.toString());
+      defs = defs.filter((def) => {
+        return (
+          (def.id && componentIdsString.includes(def.id)) ||
+          (def.component && componentIdsString.includes(def.component?.id.toString()))
+        );
+      });
+    }
+
     return defs;
   }
 
@@ -932,6 +972,9 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
   // todo: move this to somewhere else (where?)
   filterIdsFromPoolIdsByPattern(pattern: string, ids: ComponentID[], throwForNoMatch = true) {
     const patterns = pattern.split(',').map((p) => p.trim());
+    if (patterns.every((p) => p.startsWith('!'))) {
+      patterns.push('**'); // otherwise it'll never match anything
+    }
     // check also as legacyId.toString, as it doesn't have the defaultScope
     const idsToCheck = (id: ComponentID) => [id.toStringWithoutVersion(), id._legacy.toStringWithoutVersion()];
     const idsFiltered = ids.filter((id) => multimatch(idsToCheck(id), patterns).length);
@@ -982,14 +1025,14 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
     if (this.aspectLoader.isAspectComponent(component)) {
       aspectIds.push(component.id.toString());
     }
-    await this.loadAspects(aspectIds, true, id);
+    await this.loadAspects(aspectIds, true, id.toString());
 
     return component;
   }
 
   async loadComponentsAspect(component: Component) {
     const aspectIds = component.state.aspects.ids;
-    await this.loadAspects(aspectIds, true, component.id);
+    await this.loadAspects(aspectIds, true, component.id.toString());
   }
 
   async isModified(): Promise<boolean> {
@@ -1077,7 +1120,7 @@ needed-for: ${neededFor?.toString() || '<unknown>'}`);
     );
     cli.registerOnStart(async (hasWorkspace: boolean) => {
       if (hasWorkspace) return;
-      await scope.loadAspects(aspectLoader.getNotLoadedConfiguredExtensions());
+      await scope.loadAspects(aspectLoader.getNotLoadedConfiguredExtensions(), undefined, 'scope.cli.registerOnStart');
     });
     cli.register(new ScopeCmd());
 

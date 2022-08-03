@@ -65,6 +65,7 @@ export class SnappingMain {
     version,
     editor = '',
     snapped = false,
+    unmerged = false,
     releaseType,
     preReleaseId,
     ignoreIssues,
@@ -82,6 +83,7 @@ export class SnappingMain {
     ids?: string[];
     all?: boolean | string;
     snapped?: boolean;
+    unmerged?: boolean;
     version?: string;
     releaseType?: ReleaseType;
     ignoreIssues?: string;
@@ -109,7 +111,14 @@ export class SnappingMain {
     const componentsList = new ComponentsList(consumer);
     loader.start('determine components to tag...');
     const newComponents = await componentsList.listNewComponents();
-    const { bitIds, warnings } = await this.getComponentsToTag(unmodified, exactVersion, persist, ids, snapped);
+    const { bitIds, warnings } = await this.getComponentsToTag(
+      unmodified,
+      exactVersion,
+      persist,
+      ids,
+      snapped,
+      unmerged
+    );
     if (R.isEmpty(bitIds)) return null;
 
     const legacyBitIds = BitIds.fromArray(bitIds);
@@ -143,7 +152,6 @@ export class SnappingMain {
       soft,
       build,
       persist,
-      resolveUnmerged: false,
       disableTagAndSnapPipelines,
       forceDeploy,
       incrementBy,
@@ -175,7 +183,7 @@ export class SnappingMain {
   async snap({
     pattern,
     legacyBitIds, // @todo: change to ComponentID[]. pass only if have the ids already parsed.
-    resolveUnmerged = false,
+    unmerged,
     message = '',
     ignoreIssues,
     skipTests = false,
@@ -187,7 +195,7 @@ export class SnappingMain {
   }: {
     pattern?: string;
     legacyBitIds?: BitIds;
-    resolveUnmerged?: boolean;
+    unmerged?: boolean;
     message?: string;
     ignoreIssues?: string;
     build: boolean;
@@ -226,7 +234,6 @@ export class SnappingMain {
       persist: true,
       soft: false,
       build,
-      resolveUnmerged,
       isSnap: true,
       disableTagAndSnapPipelines,
       forceDeploy,
@@ -243,6 +250,9 @@ export class SnappingMain {
     return snapResults;
 
     async function getIdsToSnap(workspace: Workspace): Promise<BitIds | null> {
+      if (unmerged) {
+        return componentsList.listDuringMergeStateComponents();
+      }
       const tagPendingComponents = unmodified
         ? await componentsList.listPotentialTagAllWorkspace()
         : await componentsList.listTagPendingComponents();
@@ -393,7 +403,8 @@ there are matching among unmodified components thought. consider using --unmodif
     exactVersion: string | undefined,
     persist: boolean,
     ids: string[],
-    snapped: boolean
+    snapped: boolean,
+    unmerged: boolean
   ): Promise<{ bitIds: BitId[]; warnings: string[] }> {
     const warnings: string[] = [];
     const componentsList = new ComponentsList(this.workspace.consumer);
@@ -434,6 +445,10 @@ there are matching among unmodified components thought. consider using --unmodif
       return { bitIds: snappedComponentsIds, warnings };
     }
 
+    if (unmerged) {
+      return { bitIds: componentsList.listDuringMergeStateComponents(), warnings };
+    }
+
     tagPendingBitIds.push(...snappedComponentsIds);
 
     if (includeUnmodified && exactVersion) {
@@ -462,7 +477,7 @@ there are matching among unmodified components thought. consider using --unmodif
     const logger = loggerMain.createLogger(SnappingAspect.id);
     const snapping = new SnappingMain(workspace, logger, issues, insights);
     const snapCmd = new SnapCmd(community.getBaseDomain(), snapping, logger);
-    const tagCmd = new TagCmd(community.getBaseDomain(), snapping, logger);
+    const tagCmd = new TagCmd(snapping, logger);
     const resetCmd = new ResetCmd(snapping);
     cli.register(tagCmd, snapCmd, resetCmd);
     return snapping;

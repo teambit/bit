@@ -2,7 +2,7 @@ import { Component, ComponentFS, ComponentID, Config, InvalidComponent, State, T
 import { BitId } from '@teambit/legacy-bit-id';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
 import mapSeries from 'p-map-series';
-import { compact, uniq } from 'lodash';
+import { compact, fromPairs, uniq } from 'lodash';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { MissingBitMapComponent } from '@teambit/legacy/dist/consumer/bit-map/exceptions';
 import { getLatestVersionNumber } from '@teambit/legacy/dist/utils';
@@ -15,6 +15,7 @@ import { ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config';
 import { getMaxSizeForComponents, InMemoryCache } from '@teambit/legacy/dist/cache/in-memory-cache';
 import { createInMemoryCache } from '@teambit/legacy/dist/cache/cache-factory';
 import ComponentNotFoundInPath from '@teambit/legacy/dist/consumer/component/exceptions/component-not-found-in-path';
+import { ComponentLoadOptions } from '@teambit/legacy/dist/consumer/component/component-loader';
 import { Workspace } from '../workspace';
 import { WorkspaceComponent } from './workspace-component';
 
@@ -86,24 +87,25 @@ export class WorkspaceComponentLoader {
     forCapsule = false,
     legacyComponent?: ConsumerComponent,
     useCache = true,
-    storeInCache = true
+    storeInCache = true,
+    loadOpts?: ComponentLoadOptions
   ): Promise<Component> {
     const bitIdWithVersion: BitId = getLatestVersionNumber(
       this.workspace.consumer.bitmapIdsFromCurrentLane,
       componentId._legacy
     );
     const id = bitIdWithVersion.version ? componentId.changeVersion(bitIdWithVersion.version) : componentId;
-    const fromCache = this.getFromCache(id, forCapsule);
+    const fromCache = this.getFromCache(id, forCapsule, loadOpts);
     if (fromCache && useCache) {
       return fromCache;
     }
     const consumerComponent = legacyComponent || (await this.getConsumerComponent(id, forCapsule));
     // in case of out-of-sync, the id may changed during the load process
     const updatedId = consumerComponent ? ComponentID.fromLegacy(consumerComponent.id, id.scope) : id;
-    const component = await this.loadOne(updatedId, consumerComponent);
+    const component = await this.loadOne(updatedId, consumerComponent, loadOpts);
     if (storeInCache) {
       this.addMultipleEnvsIssueIfNeeded(component); // it's in storeInCache block, otherwise, it wasn't fully loaded
-      this.saveInCache(component, forCapsule);
+      this.saveInCache(component, forCapsule, loadOpts);
     }
     return component;
   }
@@ -134,11 +136,19 @@ export class WorkspaceComponentLoader {
   }
   clearComponentCache(id: ComponentID) {
     const idStr = id.toString();
-    this.componentsCache.delete(idStr);
-    this.componentsCacheForCapsule.delete(idStr);
+    for (const cacheKey of this.componentsCache.keys()) {
+      if (cacheKey === idStr || cacheKey.startsWith(`${idStr}:`)) {
+        this.componentsCache.delete(cacheKey);
+      }
+    }
+    for (const cacheKey of this.componentsCacheForCapsule.keys()) {
+      if (cacheKey === idStr || cacheKey.startsWith(`${idStr}:`)) {
+        this.componentsCacheForCapsule.delete(cacheKey);
+      }
+    }
   }
 
-  private async loadOne(id: ComponentID, consumerComponent?: ConsumerComponent) {
+  private async loadOne(id: ComponentID, consumerComponent?: ConsumerComponent, loadOpts?: ComponentLoadOptions) {
     const componentFromScope = await this.workspace.scope.get(id);
     if (!consumerComponent) {
       if (!componentFromScope) throw new MissingBitMapComponent(id.toString());
@@ -174,16 +184,17 @@ export class WorkspaceComponentLoader {
         componentFromScope.tags,
         this.workspace
       );
-      return this.executeLoadSlot(workspaceComponent);
+      return this.executeLoadSlot(workspaceComponent, loadOpts);
     }
-    return this.executeLoadSlot(this.newComponentFromState(id, state));
+    return this.executeLoadSlot(this.newComponentFromState(id, state), loadOpts);
   }
 
-  private saveInCache(component: Component, forCapsule: boolean): void {
+  private saveInCache(component: Component, forCapsule: boolean, loadOpts?: ComponentLoadOptions): void {
+    const cacheKey = createComponentCacheKey(component.id, loadOpts);
     if (forCapsule) {
-      this.componentsCacheForCapsule.set(component.id.toString(), component);
+      this.componentsCacheForCapsule.set(cacheKey, component);
     } else {
-      this.componentsCache.set(component.id.toString(), component);
+      this.componentsCache.set(cacheKey, component);
     }
   }
 
@@ -194,10 +205,9 @@ export class WorkspaceComponentLoader {
    * as a result, when out-of-sync is happening and the id is changed to include scope-name in the
    * legacy-id, the component is the cache has the old id.
    */
-  private getFromCache(id: ComponentID, forCapsule: boolean): Component | undefined {
-    const fromCache = forCapsule
-      ? this.componentsCacheForCapsule.get(id.toString())
-      : this.componentsCache.get(id.toString());
+  private getFromCache(id: ComponentID, forCapsule: boolean, loadOpts?: ComponentLoadOptions): Component | undefined {
+    const cacheKey = createComponentCacheKey(id, loadOpts);
+    const fromCache = forCapsule ? this.componentsCacheForCapsule.get(cacheKey) : this.componentsCache.get(cacheKey);
     if (fromCache && fromCache.id._legacy.isEqual(id._legacy)) {
       return fromCache;
     }
@@ -233,10 +243,10 @@ export class WorkspaceComponentLoader {
     );
   }
 
-  private async executeLoadSlot(component: Component) {
+  private async executeLoadSlot(component: Component, loadOpts?: ComponentLoadOptions) {
     const entries = this.workspace.onComponentLoadSlot.toArray();
     const promises = entries.map(async ([extension, onLoad]) => {
-      const data = await onLoad(component);
+      const data = await onLoad(component, loadOpts);
       return this.upsertExtensionData(component, extension, data);
     });
 
@@ -282,4 +292,12 @@ export class WorkspaceComponentLoader {
     // TODO: @gilad we need to refactor the extension data entry api.
     return new ExtensionDataEntry(undefined, undefined, extension, undefined, data);
   }
+}
+
+function createComponentCacheKey(id: ComponentID, loadOpts?: ComponentLoadOptions): string {
+  return `${id.toString()}:${JSON.stringify(sortKeys(loadOpts ?? {}))}`;
+}
+
+function sortKeys(obj: Object) {
+  return fromPairs(Object.entries(obj).sort(([k1], [k2]) => k1.localeCompare(k2)));
 }

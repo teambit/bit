@@ -26,6 +26,10 @@ import { GetComponentsOptions } from './get-component-opts';
 
 export type ComponentSearchResultSlot = SlotRegistry<ComponentResultPlugin[]>;
 
+export type ComponentUIConfig = {
+  commandBar: boolean
+};
+
 export type Server = {
   env: string;
   url: string;
@@ -246,10 +250,13 @@ export class ComponentUI {
     Slot.withType<ComponentPageSlot>(),
     Slot.withType<ComponentSearchResultSlot>(),
   ];
+  static defaultConfig: ComponentUIConfig = {
+    commandBar: true
+  }
 
   static async provider(
     [pubsub, commandBarUI, reactRouterUI]: [PubsubUI, CommandBarUI, ReactRouterUI],
-    config,
+    config: ComponentUIConfig,
     [routeSlot, navSlot, consumeMethodSlot, widgetSlot, menuItemSlot, pageSlot, componentSearchResultSlot]: [
       RouteSlot,
       OrderedNavigationSlot,
@@ -278,7 +285,7 @@ export class ComponentUI {
     // @ts-ignore
     componentUI.registerSearchResultWidget({ key: 'deprecation', end: DeprecationIcon });
 
-    if (componentUI.commandBarUI) {
+    if (componentUI.commandBarUI && config.commandBar) {
       componentUI.commandBarUI.addCommand(...componentUI.keyBindings);
       commandBarUI.addSearcher(componentUI.componentSearcher);
     }
