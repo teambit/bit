@@ -1,12 +1,9 @@
 .componentTitle {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  margin-bottom: 20px;
   > h1 {
     margin: 0;
   }
 }
+
 .badgeContainer {
   display: flex;
   align-items: center;
@@ -18,4 +15,8 @@
 }
 .subTitle {
   white-space: break-spaces;
+}
+
+.titleRow {
+  margin-bottom: 20px;
 }

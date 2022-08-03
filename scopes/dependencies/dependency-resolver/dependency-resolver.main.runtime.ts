@@ -2,6 +2,7 @@ import mapSeries from 'p-map-series';
 import { MainRuntime } from '@teambit/cli';
 import ComponentAspect, { Component, ComponentMap, ComponentMain, IComponent } from '@teambit/component';
 import type { ConfigMain } from '@teambit/config';
+import { join } from 'path';
 import { get, pick, uniq } from 'lodash';
 import { ConfigAspect } from '@teambit/config';
 import { DependenciesEnv, EnvsAspect, EnvsMain } from '@teambit/envs';
@@ -14,6 +15,7 @@ import { CFG_PACKAGE_MANAGER_CACHE, CFG_USER_TOKEN_KEY } from '@teambit/legacy/d
 // TODO: it's weird we take it from here.. think about it../workspace/utils
 import { DependencyResolver } from '@teambit/legacy/dist/consumer/component/dependencies/dependency-resolver';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
+import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 import { DetectorHook } from '@teambit/legacy/dist/consumer/component/dependencies/files-dependency-builder/detector-hook';
 import { Http, ProxyConfig, NetworkConfig } from '@teambit/legacy/dist/scope/network/http';
 import {
@@ -229,6 +231,12 @@ export interface DependencyResolverWorkspaceConfig {
   sideEffectsCache?: boolean;
 
   /*
+   * The list of components that should be installed in isolation from the workspace.
+   * The component's package names should be used in this list, not their component IDs.
+   */
+  rootComponents?: boolean;
+
+  /*
    * The node version to use when checking a package's engines setting.
    */
   nodeVersion?: string;
@@ -242,6 +250,12 @@ export interface DependencyResolverWorkspaceConfig {
    * Rules to mute specific peer dependeny warnings.
    */
   peerDependencyRules?: PeerDependencyRules;
+
+  /*
+   * This setting is "true" by default and tells bit to link core aspects to the node_modules of the workspace.
+   * It only makes sense to set this to "false" in a workspace in which core aspects are actually developed.
+   */
+  linkCoreAspects?: boolean;
 }
 
 export interface DependencyResolverVariantConfig {
@@ -326,6 +340,14 @@ export class DependencyResolverMain {
 
     private postInstallSlot: PostInstallSlot
   ) {}
+
+  hasRootComponents(): boolean {
+    return Boolean(this.config.rootComponents);
+  }
+
+  linkCoreAspects(): boolean {
+    return this.config.linkCoreAspects ?? DependencyResolverMain.defaultConfig.linkCoreAspects;
+  }
 
   /**
    * register a new package manager to the dependency resolver.
@@ -482,8 +504,11 @@ export class DependencyResolverMain {
     options: CreateFromComponentsOptions = defaultCreateFromComponentsOptions
   ): Promise<WorkspaceManifest> {
     this.logger.setStatusLine('deduping dependencies for installation');
-    const concreteOpts = { ...defaultCreateFromComponentsOptions, ...options };
-    const workspaceManifestFactory = new WorkspaceManifestFactory(this);
+    const concreteOpts = {
+      ...defaultCreateFromComponentsOptions,
+      ...options,
+    };
+    const workspaceManifestFactory = new WorkspaceManifestFactory(this, this.aspectLoader);
     const res = await workspaceManifestFactory.createFromComponents(
       name,
       version,
@@ -494,6 +519,36 @@ export class DependencyResolverMain {
     );
     this.logger.consoleSuccess();
     return res;
+  }
+
+  /**
+   * get the package name of a component.
+   */
+  getPackageName(component: Component) {
+    return componentIdToPackageName(component.state._consumer);
+  }
+
+  /*
+   * Returns the location where the component is installed with its peer dependencies
+   * This is used in cases you want to actually run the components and make sure all the dependencies (especially peers) are resolved correctly
+   */
+  getRuntimeModulePath(component: Component) {
+    const modulePath = this.getModulePath(component);
+    if (!this.hasRootComponents()) {
+      return modulePath;
+    }
+    const pkgName = this.getPackageName(component);
+    return join(modulePath, 'node_modules', pkgName);
+  }
+
+  /**
+   * returns the package path in the /node_modules/ folder
+   * In case you call this in order to run the code from the path, please refer to the `getRuntimeModulePath` API
+   */
+  getModulePath(component: Component) {
+    const pkgName = this.getPackageName(component);
+    const relativePath = join('node_modules', pkgName);
+    return relativePath;
   }
 
   /**
@@ -902,7 +957,7 @@ export class DependencyResolverMain {
     return this.getComponentEnvPolicyFromEnv(env);
   }
 
-  private async getComponentEnvPolicyFromEnv(env: DependenciesEnv): Promise<EnvPolicy> {
+  async getComponentEnvPolicyFromEnv(env: DependenciesEnv): Promise<EnvPolicy> {
     if (env.getDependencies && typeof env.getDependencies === 'function') {
       const policiesFromEnvConfig = await env.getDependencies();
       if (policiesFromEnvConfig) {
@@ -1196,12 +1251,14 @@ export class DependencyResolverMain {
     Slot.withType<DependencyDetector>(),
   ];
 
-  static defaultConfig: DependencyResolverWorkspaceConfig = {
+  static defaultConfig: DependencyResolverWorkspaceConfig &
+    Required<Pick<DependencyResolverWorkspaceConfig, 'linkCoreAspects'>> = {
     /**
      * default package manager.
      */
     packageManager: 'teambit.dependencies/pnpm',
     policy: {},
+    linkCoreAspects: true,
   };
 
   static async provider(
@@ -1300,6 +1357,21 @@ export class DependencyResolverMain {
       devDependencies: {},
       peerDependencies: {},
     };
+  }
+
+  /**
+   * Returns a list of target locations where that given component was hard linked to.
+   *
+   * @param rootDir - The root directory of the workspace
+   * @param componentDir - Relative path to the component's directory
+   * @param packageName - The injected component's packageName
+   */
+  async getInjectedDirs(rootDir: string, componentDir: string, packageName: string): Promise<string[]> {
+    const packageManager = this.packageManagerSlot.get(this.config.packageManager);
+    if (typeof packageManager?.getInjectedDirs === 'function') {
+      return packageManager.getInjectedDirs(rootDir, componentDir, packageName);
+    }
+    return [];
   }
 }
 

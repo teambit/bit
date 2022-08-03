@@ -243,12 +243,15 @@ export class MergingMain {
         `component ${id.toStringWithoutVersion()} has conflicts that need to be resolved first, please use bit merge --resolve/--abort`
       );
     }
+    const repo = consumer.scope.objects;
     const version = id.version as string;
+    const otherLaneHead = modelComponent.getRef(version);
     const existingBitMapId = consumer.bitMap.getBitIdIfExist(id, { ignoreVersion: true });
     const existOnCurrentLane = existingBitMapId && consumer.bitMap.isIdAvailableOnCurrentLane(existingBitMapId);
     const componentOnLane: Version = await modelComponent.loadVersion(version, consumer.scope.objects);
     if (!existingBitMapId || !existOnCurrentLane) {
-      return { componentFromFS: null, componentFromModel: componentOnLane, id, mergeResults: null };
+      const divergeData = await getDivergeData(repo, modelComponent, otherLaneHead, null, false);
+      return { componentFromFS: null, componentFromModel: componentOnLane, id, mergeResults: null, divergeData };
     }
     const currentlyUsedVersion = existingBitMapId.version;
     if (currentlyUsedVersion === version) {
@@ -264,12 +267,10 @@ export class MergingMain {
         `unable to merge ${id.toStringWithoutVersion()}, the component is modified, please snap/tag it first`
       );
     }
-    const repo = consumer.scope.objects;
     const laneHeadIsDifferentThanCheckedOut =
       localLane && currentlyUsedVersion && modelComponent.laneHeadLocal?.toString() !== currentlyUsedVersion;
     const localHead = laneHeadIsDifferentThanCheckedOut ? Ref.from(currentlyUsedVersion) : null;
 
-    const otherLaneHead = modelComponent.getRef(version);
     if (!otherLaneHead) {
       throw new Error(`merging: unable finding a hash for the version ${version} of ${id.toString()}`);
     }

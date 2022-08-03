@@ -26,7 +26,7 @@ import ts from 'typescript';
 import { ApplicationAspect, ApplicationMain } from '@teambit/application';
 import { FormatterContext } from '@teambit/formatter';
 import { LinterContext } from '@teambit/linter';
-import { LoggerAspect, LoggerMain } from '@teambit/logger';
+import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { ESLintMain, ESLintAspect, EslintConfigTransformer } from '@teambit/eslint';
 import { PrettierMain, PrettierAspect, PrettierConfigTransformer } from '@teambit/prettier';
 import { ReactAspect } from './react.aspect';
@@ -101,13 +101,15 @@ export class ReactMain {
 
     private application: ApplicationMain,
 
-    private reactAppType: ReactAppType
+    private reactAppType: ReactAppType,
+
+    private logger?: Logger
   ) {}
 
   readonly env = this.reactEnv;
 
   getReactAppType(name: string) {
-    return new ReactAppType(name, this.reactEnv);
+    return new ReactAppType(name, this.reactEnv, this.logger);
   }
 
   /**
@@ -435,8 +437,8 @@ export class ReactMain {
       logger,
       CompilerAspect.id
     );
-    const appType = new ReactAppType('react-app', reactEnv);
-    const react = new ReactMain(reactEnv, envs, application, appType);
+    const appType = new ReactAppType('react-app', reactEnv, logger);
+    const react = new ReactMain(reactEnv, envs, application, appType, logger);
     graphql.register(reactSchema(react));
     envs.registerEnv(reactEnv);
     generator.registerComponentTemplate(componentTemplates);

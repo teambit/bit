@@ -20,35 +20,36 @@
         "@mdx-js/react": "1.6.22",
         "@monaco-editor/react": "4.4.2",
         "@pmmmwh/react-refresh-webpack-plugin": "0.5.4",
-        "@pnpm/client": "6.1.9",
+        "@pnpm/client": "7.1.11",
         "@pnpm/colorize-semver-diff": "1.0.1",
-        "@pnpm/config": "13.14.2",
-        "@pnpm/core": "2.10.0",
-        "@pnpm/default-reporter": "8.6.3",
-        "@pnpm/error": "2.1.0",
-        "@pnpm/fetch": "4.2.8",
-        "@pnpm/fetching-types": "2.2.1",
-        "@pnpm/git-resolver": "5.2.1",
-        "@pnpm/local-resolver": "7.0.9",
+        "@pnpm/config": "15.7.0",
+        "@pnpm/core": "5.8.0",
+        "@pnpm/default-reporter": "9.1.11",
+        "@pnpm/error": "3.0.1",
+        "@pnpm/fetch": "5.0.6",
+        "@pnpm/fetching-types": "3.0.0",
+        "@pnpm/git-resolver": "6.1.1",
+        "@pnpm/local-resolver": "8.0.7",
         "@pnpm/logger": "4.0.0",
-        "@pnpm/modules-yaml": "9.1.2",
+        "@pnpm/modules-yaml": "10.0.5",
         "@pnpm/network.agent": "0.0.3",
         "@pnpm/network.ca-file": "1.0.1",
-        "@pnpm/npm-resolver": "12.1.9",
-        "@pnpm/package-store": "12.2.1",
-        "@pnpm/parse-overrides": "1.0.1",
-        "@pnpm/pick-registry-for-package": "2.0.11",
+        "@pnpm/npm-resolver": "13.0.7",
+        "@pnpm/package-store": "14.0.5",
+        "@pnpm/parse-overrides": "2.0.2",
+        "@pnpm/pick-registry-for-package": "3.0.5",
         "@pnpm/registry-mock": "2.20.0",
-        "@pnpm/resolver-base": "8.1.7",
+        "@pnpm/resolver-base": "9.0.5",
         "@pnpm/semver-diff": "1.1.0",
-        "@pnpm/sort-packages": "2.1.9",
-        "@pnpm/store-connection-manager": "3.2.23",
-        "@pnpm/tarball-resolver": "5.0.12",
-        "@pnpm/types": "7.11.0",
+        "@pnpm/sort-packages": "3.0.6",
+        "@pnpm/store-connection-manager": "4.1.23",
+        "@pnpm/tarball-resolver": "6.0.5",
+        "@pnpm/types": "8.4.0",
         "@react-hook/latest": "1.0.3",
         "@stencil/core": "1.17.4",
         "@stencil/webpack": "0.0.6",
         "@teambit/any-fs": "0.0.5",
+        "@teambit/base-react.layout.row": "0.0.3",
         "@teambit/base-react.navigation.link": "2.0.27",
         "@teambit/base-ui.constants.storage": "1.0.0",
         "@teambit/base-ui.graph.tree.collapsable-tree-node": "0.0.4",
@@ -126,7 +127,7 @@
         "@teambit/evangelist.input.checkbox.label": "1.0.3",
         "@teambit/evangelist.surfaces.dropdown": "1.0.2",
         "@teambit/evangelist.surfaces.tooltip": "1.0.1",
-        "@teambit/explorer.ui.command-bar": "2.0.2",
+        "@teambit/explorer.ui.command-bar": "2.0.3",
         "@teambit/graph.cleargraph": "0.0.1",
         "@teambit/graphql.hooks.use-query-light": "1.0.0",
         "@teambit/harmony": "0.3.3",
@@ -135,6 +136,7 @@
         "@teambit/react.instructions.react-native.adding-tests": "0.0.1",
         "@teambit/react.instructions.react.adding-compositions": "0.0.6",
         "@teambit/react.instructions.react.adding-tests": "0.0.6",
+        "@teambit/react.rendering.ssr": "0.0.3",
         "@teambit/react.ui.component-highlighter": "0.2.0",
         "@teambit/scope.content.scope-overview": "1.95.0",
         "@teambit/workspace.content.variants": "1.95.9",
@@ -262,8 +264,6 @@
         "multimatch": "5.0.0",
         "nanoid": "3.1.20",
         "nerf-dart": "1.0.0",
-        // Pinning the npm version to have consistent results in e2e tests.
-        // Without npm in the dependencies, e2e tests would use the globally installed npm CLI.
         "npm": "6.14.17",
         "p-limit": "3.1.0",
         "parse-package-name": "0.1.0",
@@ -328,7 +328,7 @@
       "peerDependencies": {
         "@apollo/client": "^3.0.0",
         "@teambit/base-react.navigation.link": "2.0.27",
-        "@teambit/legacy": "1.0.315",
+        "@teambit/legacy": "1.0.320",
         "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
         "browserslist": "4.16.3",
         "core-js": "^3.10.0",
@@ -357,7 +357,8 @@
     "peerDependencyRules": {
       "allowAny": [],
       "ignoreMissing": []
-    }
+    },
+    "linkCoreAspects": false
   },
   "teambit.preview/preview": {
     "bundlingStrategy": "component"
@@ -415,7 +416,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.315"
+            "@teambit/legacy": "1.0.320"
           }
         }
       },
@@ -474,11 +475,15 @@
       "teambit.harmony/node": {}
     },
     // Special rules for all core envs
-    // "scopes/react/react, scopes/react/react-native, scopes/harmony/aspect, scopes/harmony/node, scopes/html/html": {
-    // "teambit.harmony/aspect": "-",
-    // Set the env env for all core envs
-    // "teambit.envs/env": {}
-    // },
+    // TODO: check if we can add scopes/harmony/aspect and scopes/envs/env here
+    "scopes/react/react, scopes/react/react-native, scopes/harmony/node, scopes/html/html, scopes/mdx/mdx, scopes/mdx/readme": {
+      "teambit.harmony/aspect": "-",
+      // Set the env env for all core envs
+      "teambit.envs/env": {},
+      "teambit.envs/envs": {
+        "env": "teambit.envs/env"
+      }
+    },
     "{modules/**}": {
       "teambit.envs/envs": {
         "env": "teambit.harmony/node"
@@ -572,12 +577,6 @@
     },
     "scopes/code": {
       "defaultScope": "teambit.code"
-    },
-    "scopes/mdx/readme": {
-      "teambit.envs/env": {},
-      "teambit.envs/envs": {
-        "env": "teambit.envs/env"
-      }
     },
     "scopes/component/component-id": {
       "teambit.envs/envs": {
@@ -680,7 +679,18 @@
           "peerDependencies": {
             "react": "^16.8.0 || ^17.0.0",
             "react-dom": "^16.8.0 || ^17.0.0",
-            "@teambit/legacy": "1.0.315"
+            "@teambit/legacy": "1.0.320"
+          }
+        }
+      }
+    },
+    "scopes/mdx/modules/loader": {
+      "teambit.dependencies/dependency-resolver": {
+        "policy": {
+          "devDependencies": {
+            "@babel/preset-react": "7.13.13",
+            "@babel/preset-env": "7.12.17",
+            "babel-loader": "8.2.2"
           }
         }
       }
@@ -758,7 +768,7 @@
             "@teambit/base-react.navigation.link": "2.0.27",
             "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
             "@apollo/client": "3.3.7",
-            "@teambit/legacy": "1.0.315",
+            "@teambit/legacy": "1.0.320",
             "graphql": "14.7.0",
             "browserslist": "4.16.3",
             "reflect-metadata": "0.1.13",
@@ -893,7 +903,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.315"
+            "@teambit/legacy": "1.0.320"
           }
         }
       }

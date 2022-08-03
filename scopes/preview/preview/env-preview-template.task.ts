@@ -153,6 +153,10 @@ export class EnvPreviewTemplateTask implements BuildTask {
 
     const outputPath = this.computeOutputPath(context, envComponent);
     if (!existsSync(outputPath)) mkdirpSync(outputPath);
+    const resolvedEnvAspects = await this.preview.resolveAspects(undefined, [envComponent.id], undefined, {
+      requestedOnly: true,
+    });
+    const hostRootDir = resolvedEnvAspects[0].aspectPath;
 
     return {
       peers,
@@ -162,7 +166,7 @@ export class EnvPreviewTemplateTask implements BuildTask {
       components: [envComponent],
       outputPath,
       /* It's a path to the root of the host component. */
-      // hostRootDir, handle this
+      hostRootDir,
       hostDependencies: peers,
       aliasHostDependencies: true,
     };

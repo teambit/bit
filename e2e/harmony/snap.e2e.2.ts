@@ -722,16 +722,37 @@ describe('bit snap command', function () {
       expect(output).to.have.string('bit merge');
     });
     describe('bit reset a diverge component', () => {
+      let beforeUntag: string;
+      let localHeadV3: string;
       before(() => {
-        helper.command.untagAll();
+        localHeadV3 = helper.command.getHead('comp1');
+        helper.command.tagAllWithoutBuild('-s 0.0.4');
+        beforeUntag = helper.scopeHelper.cloneLocalScope();
       });
-      it('should change the head to point to the remote head and not to the parent of the untagged version', () => {
-        const head = helper.command.getHead('comp1');
-        const remoteHead = helper.general.getRemoteHead('comp1');
-        expect(head).to.be.equal(remoteHead);
+      describe('reset all local versions', () => {
+        before(() => {
+          helper.command.untagAll();
+        });
+        it('should change the head to point to the remote head and not to the parent of the untagged version', () => {
+          const head = helper.command.getHead('comp1');
+          const remoteHead = helper.general.getRemoteHead('comp1');
+          expect(head).to.be.equal(remoteHead);
+        });
+        it('bit status after untag should show the component as modified only', () => {
+          helper.command.expectStatusToBeClean(['modifiedComponents']);
+        });
       });
-      it('bit status after untag should show the component as modified only', () => {
-        helper.command.expectStatusToBeClean(['modifiedComponents']);
+      describe('reset only head', () => {
+        before(() => {
+          helper.scopeHelper.getClonedLocalScope(beforeUntag);
+          helper.command.untagAll('--head');
+        });
+        it('should change the head to point to the parent of the head and not to the remote head', () => {
+          const head = helper.command.getHead('comp1');
+          const remoteHead = helper.general.getRemoteHead('comp1');
+          expect(head).to.not.be.equal(remoteHead);
+          expect(head).to.be.equal(localHeadV3);
+        });
       });
     });
   });
