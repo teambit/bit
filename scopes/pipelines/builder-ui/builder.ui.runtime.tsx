@@ -1,19 +1,19 @@
 import { ComponentAspect, ComponentUI } from '@teambit/component';
-import ScopeAspect from '@teambit/scope';
 import { UIRuntime } from '@teambit/ui';
-import WorkspaceAspect, { WorkspaceUI } from '@teambit/workspace';
-import { BuilderAspect } from './builder.aspect';
+import { Harmony } from '@teambit/harmony';
 import { BuilderSection } from './builder.section';
+import { BuilderUIAspect } from './builder-ui.aspect';
 
 export class BuilderUI {
-  static dependencies = [ComponentAspect, WorkspaceAspect, ScopeAspect];
+  static dependencies = [ComponentAspect];
 
   static runtime = UIRuntime;
 
-  static async provider([component, workspace]: [ComponentUI, WorkspaceUI]) {
+  static async provider([component]: [ComponentUI], _, __, harmony: Harmony) {
     const ui = new BuilderUI();
+    const { config } = harmony;
+    const host = String(config.get('teambit.harmony/bit'));
 
-    const host = workspace ? WorkspaceAspect.id : ScopeAspect.id;
     const section = new BuilderSection(host);
 
     component.registerRoute(section.route);
@@ -23,4 +23,4 @@ export class BuilderUI {
   }
 }
 
-BuilderAspect.addRuntime(BuilderUI);
+BuilderUIAspect.addRuntime(BuilderUI);

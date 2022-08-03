@@ -6,19 +6,19 @@ import isBinaryPath from 'is-binary-path';
 import { BuilderMain } from './builder.main.runtime';
 import { PipelineReport } from './build-pipeline-result-list';
 
-export type ArtifactGQLFile = {
+type ArtifactGQLFile = {
   id: string;
   name: string;
   path: string;
   content?: string;
   downloadUrl?: string;
 };
-export type ArtifactGQLData = ArtifactObject & { files: ArtifactGQLFile[]; componentId: ComponentID };
-export type TaskReport = PipelineReport & {
+type ArtifactGQLData = ArtifactObject & { files: ArtifactGQLFile[]; componentId: ComponentID };
+type TaskReport = PipelineReport & {
   artifact: ArtifactGQLData;
   componentId: ComponentID;
 };
-export const FILE_PATH_PARAM_DELIM = '~';
+const FILE_PATH_PARAM_DELIM = '~';
 
 export function builderSchema(builder: BuilderMain, scope: Scope) {
   return {

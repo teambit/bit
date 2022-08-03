@@ -87,6 +87,7 @@ import { IssuesAspect } from '@teambit/issues';
 import { RefactoringAspect } from '@teambit/refactoring';
 import { ComponentCompareAspect } from '@teambit/component-compare';
 import { ListerAspect } from '@teambit/lister';
+import { BuilderUIAspect } from '@teambit/builder-ui';
 import { BitAspect } from './bit.aspect';
 
 export const manifestsMap = {
@@ -178,6 +179,7 @@ export const manifestsMap = {
   [RefactoringAspect.id]: RefactoringAspect,
   [ComponentCompareAspect.id]: ComponentCompareAspect,
   [ListerAspect.id]: ListerAspect,
+  [BuilderUIAspect.id]: BuilderUIAspect,
 };
 
 export function isCoreAspect(id: string) {

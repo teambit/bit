@@ -6,13 +6,13 @@ export class BuilderSection implements Section {
   constructor(private host: string) {}
 
   route = {
-    path: '~component-artifact',
+    path: '~component-pipeline',
     element: <ComponentPipelinePage host={this.host} />,
   };
 
   navigationLink = {
-    href: '~component-artifact',
-    children: 'Build Artifacts',
+    href: '~component-pipeline',
+    children: 'Pipeline',
   };
 
   order = 50;
