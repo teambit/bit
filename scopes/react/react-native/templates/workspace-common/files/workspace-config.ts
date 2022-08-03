@@ -22,7 +22,7 @@ export async function workspaceConfig({ name, defaultScope, empty }: WorkspaceCo
     peerDependencies: {
       react: '17.0.2',
       'react-dom': '17.0.2',
-      'react-native': '0.66.4',
+      'react-native': '^0.69.0',
       'babel-jest': '27.4.5',
       'react-test-renderer': '17.0.2',
       '@testing-library/react-native': '9.0.0',

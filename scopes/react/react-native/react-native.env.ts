@@ -58,7 +58,7 @@ export class ReactNativeEnv implements Environment, DependenciesEnv, PreviewEnv 
       peerDependencies: {
         react: '^16.8.0 || ^17.0.0',
         'react-dom': '^16.8.0 || ^17.0.0',
-        'react-native': '^0.64.1',
+        'react-native': '^0.69.0',
         'react-native-web': '^0.16.0',
       },
     };
