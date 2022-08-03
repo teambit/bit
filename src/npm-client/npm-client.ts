@@ -4,7 +4,7 @@ import execa from 'execa';
 import fs from 'fs-extra';
 import mapSeries from 'p-map-series';
 import * as path from 'path';
-import R, { is, isNil, join, map, merge, toPairs } from 'ramda';
+import R, { is, isNil, join, map, toPairs } from 'ramda';
 import semver from 'semver';
 
 import { Analytics } from '../analytics/analytics';
