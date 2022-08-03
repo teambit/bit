@@ -71,13 +71,13 @@ export default function (isEnvProduction = false): Configuration {
       extensions: moduleFileExtensions.map((ext) => `.${ext}`),
 
       alias: {
-        [join('react', 'jsx-dev-runtime')]: require.resolve('react/jsx-dev-runtime.js'),
-        [join('react', 'jsx-runtime')]: require.resolve('react/jsx-runtime.js'),
-        [join('react-dom', 'server')]: require.resolve('react-dom/server'),
+        'react/jsx-dev-runtime': require.resolve('react/jsx-dev-runtime.js'),
+        'react/jsx-runtime': require.resolve('react/jsx-runtime.js'),
+        'react-dom/server': require.resolve('react-dom/server'),
         // Allows for better profiling with ReactDevTools
         ...(isEnvProductionProfile && {
-          'react-dom$': join('react-dom', 'profiling'),
-          [join('scheduler', 'tracing')]: join('scheduler', 'tracing-profiling'),
+          'react-dom$': 'react-dom/profiling',
+          'scheduler/tracing': 'scheduler/tracing-profiling',
         }),
       },
     },
@@ -295,7 +295,7 @@ export default function (isEnvProduction = false): Configuration {
                 },
               },
               generator: {
-                filename: join('static', 'images', '[hash][ext][query]'), // @giladshoham should filenames be os-ified or is it important to keep that specific slash?
+                filename: 'static/images/[hash][ext][query]',
               },
             },
             {
@@ -323,7 +323,7 @@ export default function (isEnvProduction = false): Configuration {
               test: /\.(woff(2)?|ttf|eot|svg)(\?v=\d+\.\d+\.\d+)?$/,
               type: 'asset',
               generator: {
-                filename: join('static', 'fonts', '[hash][ext][query]'),
+                filename: 'static/fonts/[hash][ext][query]',
               },
             },
 
@@ -339,7 +339,7 @@ export default function (isEnvProduction = false): Configuration {
               // by webpacks internal loaders.
               exclude: [/\.(js|mjs|cjs|jsx|ts|tsx)$/, /\.html$/, /\.mdx?/, /\.json$/, /\.css$/],
               generator: {
-                filename: join('static', '[hash][ext][query]'),
+                filename: 'static/[hash][ext][query]',
               },
               type: 'asset',
             },
@@ -355,8 +355,8 @@ export default function (isEnvProduction = false): Configuration {
         new MiniCssExtractPlugin({
           // Options similar to the same options in webpackOptions.output
           // both options are optional
-          filename: join('static', 'css', '[name].[contenthash:8].css'),
-          chunkFilename: join('static', 'css', '[name].[contenthash:8].chunk.css'),
+          filename: 'static/css/[name].[contenthash:8].css',
+          chunkFilename: 'static/css/[name].[contenthash:8].chunk.css',
         }),
       // Moment.js is an extremely popular library that bundles large locale files
       // by default due to how webpack interprets its code. This is a practical
