@@ -129,12 +129,15 @@ export class JestTester implements Tester {
   }
 
   async test(context: TesterContext): Promise<Tests> {
-    const envRootDir = context.envRuntime.envAspectDefinition.aspectPath;
+    // const envRootDir = context.envRuntime.envAspectDefinition.aspectPath;
 
     const config: any = {
       // Setting the rootDir to the env root dir to make sure we can resolve all the jest presets/plugins
       // from the env context
-      rootDir: envRootDir,
+      // rootDir: envRootDir,
+      // TODO: set it to envRootDir and make sure we can make the --coverage to work
+      // with the current value as context.rootPath it will probably won't work correctly when using rootComponents:true (maybe even won't work at all)
+      rootDir: context.rootPath,
       // Setting the roots (where to search for spec files) to the root path (either workspace or capsule root)
       // TODO: consider change this to be an array of the components running dir.
       // TODO: aka: in the workspace it will be something like <ws>/node_modules/<comp-package-name>/node_modules/<comp-package-name>
