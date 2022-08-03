@@ -18,6 +18,7 @@ import {
   AspectList,
   AspectData,
   InvalidComponent,
+  ResolveAspectsOptions,
 } from '@teambit/component';
 import { Importer } from '@teambit/importer';
 import { BitError } from '@teambit/bit-error';
@@ -84,6 +85,7 @@ import loader from '@teambit/legacy/dist/cli/loader';
 import { Lane } from '@teambit/legacy/dist/scope/models';
 import { LaneNotFound } from '@teambit/legacy/dist/api/scope/lib/exceptions/lane-not-found';
 import { ScopeNotFoundOrDenied } from '@teambit/legacy/dist/remotes/exceptions/scope-not-found-or-denied';
+import { ComponentLoadOptions } from '@teambit/legacy/dist/consumer/component/component-loader';
 import { ComponentConfigFile } from './component-config-file';
 import { DependencyTypeNotSupportedInPolicy } from './exceptions';
 import {
@@ -496,10 +498,18 @@ export class Workspace implements ComponentFactory {
     forCapsule = false,
     legacyComponent?: ConsumerComponent,
     useCache = true,
-    storeInCache = true
+    storeInCache = true,
+    loadOpts?: ComponentLoadOptions
   ): Promise<Component> {
     this.logger.debug(`get ${componentId.toString()}`);
-    const component = await this.componentLoader.get(componentId, forCapsule, legacyComponent, useCache, storeInCache);
+    const component = await this.componentLoader.get(
+      componentId,
+      forCapsule,
+      legacyComponent,
+      useCache,
+      storeInCache,
+      loadOpts
+    );
     // When loading a component if it's an env make sure to load it as aspect as well
     // We only want to try load it as aspect if it's the first time we load the component
     const tryLoadAsAspect = this.componentLoadedSelfAsAspects.get(component.id.toString()) === undefined;
@@ -794,10 +804,10 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     return this.componentLoader.getMany(ids, forCapsule);
   }
 
-  getManyByLegacy(components: ConsumerComponent[]): Promise<Component[]> {
+  getManyByLegacy(components: ConsumerComponent[], loadOpts?: ComponentLoadOptions): Promise<Component[]> {
     return mapSeries(components, async (component) => {
       const id = await this.resolveComponentId(component.id);
-      return this.get(id, undefined, component);
+      return this.get(id, undefined, component, true, true, loadOpts);
     });
   }
 
@@ -1069,7 +1079,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     const relativeComponentDir = this.componentDir(componentId, { ignoreVersion: true }, { relative: true });
     const variantConfig = this.variants.byRootDirAndName(relativeComponentDir, componentId.fullName);
     if (variantConfig) {
-      variantsExtensions = variantConfig.extensions;
+      variantsExtensions = variantConfig.extensions.clone();
       // Do not merge from scope when there is specific variant (which is not *) that match the component
       // if (variantConfig.maxSpecificity > 0) {
       //   mergeFromScope = false;
@@ -1505,8 +1515,13 @@ needed-for: ${neededFor || '<unknown>'}`);
   async resolveAspects(
     runtimeName?: string,
     componentIds?: ComponentID[],
-    excludeCore = false
+    opts?: ResolveAspectsOptions
   ): Promise<AspectDefinition[]> {
+    const defaultOpts: ResolveAspectsOptions = {
+      excludeCore: false,
+      requestedOnly: false,
+    };
+    const mergedOpts = { ...defaultOpts, ...opts };
     let missingPaths = false;
     const stringIds: string[] = [];
     const idsToResolve = componentIds ? componentIds.map((id) => id.toString()) : this.harmony.extensionsIds;
@@ -1517,7 +1532,7 @@ needed-for: ${neededFor || '<unknown>'}`);
     const wsComponents = await this.getMany(workspaceIds);
     const aspectDefs = await this.aspectLoader.resolveAspects(wsComponents, async (component) => {
       stringIds.push(component.id._legacy.toString());
-      const localPath = this.getComponentPackagePath(component.state._consumer);
+      const localPath = this.getComponentPackagePath(component);
       const isExist = await fs.pathExists(localPath);
       if (!isExist) {
         missingPaths = true;
@@ -1554,13 +1569,13 @@ needed-for: ${neededFor || '<unknown>'}`);
 
     const allDefs = aspectDefs.concat(coreAspectDefs).concat(scopeAspectDefs);
     const ids = idsToResolve.map((idStr) => ComponentID.fromString(idStr).toStringWithoutVersion());
-    const afterExclusion = excludeCore
+    const afterExclusion = mergedOpts.excludeCore
       ? allDefs.filter((def) => {
           const isCore = coreAspectDefs.find((coreId) => def.getId === coreId.getId);
           const id = ComponentID.fromString(def.getId || '');
           const isTarget = ids.includes(id.toStringWithoutVersion());
           if (isTarget) return true;
-          return isCore && isTarget;
+          return !isCore;
         })
       : allDefs;
 
@@ -1568,6 +1583,16 @@ needed-for: ${neededFor || '<unknown>'}`);
     let defs = uniqDefs;
     if (runtimeName) {
       defs = defs.filter((def) => def.runtimePath);
+    }
+
+    if (componentIds && componentIds.length && mergedOpts.requestedOnly) {
+      const componentIdsString = componentIds.map((id) => id.toString());
+      defs = defs.filter((def) => {
+        return (
+          (def.id && componentIdsString.includes(def.id)) ||
+          (def.component && componentIdsString.includes(def.component?.id.toString()))
+        );
+      });
     }
 
     return defs;
@@ -1871,6 +1896,18 @@ needed-for: ${neededFor || '<unknown>'}`);
       `installing dependencies in workspace using ${chalk.cyan(this.dependencyResolver.getPackageManagerName())}`
     );
     this.logger.debug(`installing dependencies in workspace with options`, options);
+    const hasRootComponents = this.dependencyResolver.hasRootComponents();
+    // TODO: this make duplicate
+    // this.logger.consoleSuccess();
+    // TODO: add the links results to the output
+    await this.link({
+      linkTeambitBit: true,
+      legacyLink: true,
+      linkCoreAspects: false,
+      linkDepsResolvedFromEnv: !hasRootComponents,
+      linkNestedDepsInNM: false,
+    });
+    this.consumer.componentLoader.clearComponentsCache();
     this.clearCache();
     // TODO: pass get install options
     const installer = this.dependencyResolver.getInstaller({});
@@ -1880,21 +1917,21 @@ needed-for: ${neededFor || '<unknown>'}`);
     const depsFilterFn = await this.generateFilterFnForDepsFromLocalRemote();
 
     const pmInstallOptions: PackageManagerInstallOptions = {
-      dedupe: options?.dedupe,
+      dedupe: !hasRootComponents && options?.dedupe,
       copyPeerToRuntimeOnRoot: options?.copyPeerToRuntimeOnRoot ?? true,
       copyPeerToRuntimeOnComponents: options?.copyPeerToRuntimeOnComponents ?? false,
       dependencyFilterFn: depsFilterFn,
       overrides: this.dependencyResolver.config.overrides,
+      packageImportMethod: this.dependencyResolver.config.packageImportMethod,
+      rootComponents: hasRootComponents,
     };
     await installer.install(this.path, mergedRootPolicy, compDirMap, { installTeambitBit: false }, pmInstallOptions);
-    // TODO: this make duplicate
-    // this.logger.consoleSuccess();
-    // TODO: add the links results to the output
     await this.link({
-      linkTeambitBit: true,
+      linkTeambitBit: false,
       legacyLink: true,
-      linkCoreAspects: true,
-      linkNestedDepsInNM: !this.isLegacy,
+      linkCoreAspects: this.dependencyResolver.linkCoreAspects(),
+      linkDepsResolvedFromEnv: !hasRootComponents,
+      linkNestedDepsInNM: !this.isLegacy && !hasRootComponents,
     });
     await this.consumer.componentFsCache.deleteAllDependenciesDataCache();
     return compDirMap;
@@ -2023,11 +2060,9 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
     this.clearCache();
   }
 
-  getComponentPackagePath(component: ConsumerComponent | Component) {
-    const packageName = componentIdToPackageName(
-      component instanceof ConsumerComponent ? component : component.state._consumer
-    );
-    return path.join(this.modulesPath, packageName);
+  getComponentPackagePath(component: Component) {
+    const relativePath = this.dependencyResolver.getRuntimeModulePath(component);
+    return path.join(this.path, relativePath);
   }
 
   // TODO: should we return here the dir as it defined (aka components) or with /{name} prefix (as it used in legacy)

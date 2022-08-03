@@ -3,7 +3,7 @@ import { ScopeMain, ScopeAspect } from '@teambit/scope';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import getRemoteByName from '@teambit/legacy/dist/remotes/get-remote-by-name';
-import { LaneDiffCmd, LaneDiffGenerator } from '@teambit/lanes.modules.diff';
+import { LaneDiffCmd, LaneDiffGenerator, LaneDiffResults } from '@teambit/lanes.modules.diff';
 import { LaneData } from '@teambit/legacy/dist/scope/lanes/lanes';
 import { LaneId, DEFAULT_LANE, LANE_REMOTE_DELIMITER } from '@teambit/lane-id';
 import { BitError } from '@teambit/bit-error';
@@ -403,9 +403,9 @@ export class LanesMain {
    * [to] => diff between the current lane (or default-lane when in scope) and "to" lane.
    * [from, to] => diff between "from" lane and "to" lane.
    */
-  public getDiff(values: string[], diffOptions: DiffOptions = {}) {
+  public async getDiff(values: string[], diffOptions: DiffOptions = {}, pattern?: string): Promise<LaneDiffResults> {
     const laneDiffGenerator = new LaneDiffGenerator(this.workspace, this.scope);
-    return laneDiffGenerator.generate(values, diffOptions);
+    return laneDiffGenerator.generate(values, diffOptions, pattern);
   }
 
   async getLaneComponentModels(lane: LaneData): Promise<Component[]> {

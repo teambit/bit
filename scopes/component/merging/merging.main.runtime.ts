@@ -154,7 +154,7 @@ export class MergingMain {
     noSnap: boolean;
     snapMessage: string;
     build: boolean;
-  }) {
+  }): Promise<ApplyVersionResults> {
     const consumer = this.workspace.consumer;
     const componentWithConflict = allComponentsStatus.find(
       (component) => component.mergeResults && component.mergeResults.hasConflicts
@@ -187,15 +187,25 @@ export class MergingMain {
       });
     });
 
+    const leftUnresolvedConflicts = componentWithConflict && mergeStrategy === 'manual';
+
     if (localLane) consumer.scope.objects.add(localLane);
 
-    await consumer.scope.objects.persist(); // persist anyway, it localLane is null it should save all main heads
+    await consumer.scope.objects.persist(); // persist anyway, if localLane is null it should save all main heads
 
     await consumer.scope.objects.unmergedComponents.write();
 
-    const mergeSnapResults = noSnap ? null : await this.snapResolvedComponents(consumer, snapMessage, build);
+    // if one of the component has conflict, don't snap-merge. otherwise, some of the components would be snap-merged
+    // and some not. except the fact that it could by mistake tag dependent, it's a confusing state. better not snap.
+    const mergeSnapResults =
+      noSnap || leftUnresolvedConflicts ? null : await this.snapResolvedComponents(consumer, snapMessage, build);
 
-    return { components: componentsResults, failedComponents, mergeSnapResults };
+    return {
+      components: componentsResults,
+      failedComponents,
+      mergeSnapResults,
+      leftUnresolvedConflicts,
+    };
   }
 
   /**
@@ -233,12 +243,15 @@ export class MergingMain {
         `component ${id.toStringWithoutVersion()} has conflicts that need to be resolved first, please use bit merge --resolve/--abort`
       );
     }
+    const repo = consumer.scope.objects;
     const version = id.version as string;
+    const otherLaneHead = modelComponent.getRef(version);
     const existingBitMapId = consumer.bitMap.getBitIdIfExist(id, { ignoreVersion: true });
     const existOnCurrentLane = existingBitMapId && consumer.bitMap.isIdAvailableOnCurrentLane(existingBitMapId);
     const componentOnLane: Version = await modelComponent.loadVersion(version, consumer.scope.objects);
     if (!existingBitMapId || !existOnCurrentLane) {
-      return { componentFromFS: null, componentFromModel: componentOnLane, id, mergeResults: null };
+      const divergeData = await getDivergeData(repo, modelComponent, otherLaneHead, null, false);
+      return { componentFromFS: null, componentFromModel: componentOnLane, id, mergeResults: null, divergeData };
     }
     const currentlyUsedVersion = existingBitMapId.version;
     if (currentlyUsedVersion === version) {
@@ -254,12 +267,10 @@ export class MergingMain {
         `unable to merge ${id.toStringWithoutVersion()}, the component is modified, please snap/tag it first`
       );
     }
-    const repo = consumer.scope.objects;
     const laneHeadIsDifferentThanCheckedOut =
       localLane && currentlyUsedVersion && modelComponent.laneHeadLocal?.toString() !== currentlyUsedVersion;
     const localHead = laneHeadIsDifferentThanCheckedOut ? Ref.from(currentlyUsedVersion) : null;
 
-    const otherLaneHead = modelComponent.getRef(version);
     if (!otherLaneHead) {
       throw new Error(`merging: unable finding a hash for the version ${version} of ${id.toString()}`);
     }
@@ -437,7 +448,6 @@ export class MergingMain {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const { snappedComponents } = await this.snapping.snap({
       legacyBitIds: BitIds.fromArray(ids),
-      resolveUnmerged: true,
       build,
       message: snapMessage,
     });

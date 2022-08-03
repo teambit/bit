@@ -67,13 +67,13 @@ describe('merge lanes', function () {
         });
       });
     });
-    describe('merging remote lane into main when components are not in workspace using --existing flag', () => {
+    describe('merging remote lane into main when components are not in workspace using --workspace flag', () => {
       let mergeOutput;
       before(() => {
         helper.scopeHelper.reInitLocalScopeHarmony();
         helper.scopeHelper.addRemoteScope();
         helper.command.fetchRemoteLane('dev');
-        mergeOutput = helper.command.mergeRemoteLane(`dev`, undefined, `--existing`);
+        mergeOutput = helper.command.mergeRemoteLane(`dev`, undefined, `--workspace`);
       });
       it('should indicate that the components were not merge because they are not in the workspace', () => {
         expect(mergeOutput).to.have.string('the merge has been canceled on the following component(s)');
@@ -350,6 +350,21 @@ describe('merge lanes', function () {
       });
       it('bit status should not show the components in pending-merge', () => {
         expect(status.mergePendingComponents).to.have.lengthOf(0);
+      });
+      describe('switching to main and merging the lane to main', () => {
+        before(() => {
+          helper.command.switchLocalLane('main');
+          helper.command.mergeLane('dev');
+        });
+        it('head should have two parents', () => {
+          const cat = helper.command.catComponent('comp1@latest');
+          expect(cat.parents).to.have.lengthOf(2);
+        });
+        // previously it was throwing:
+        // removeComponentVersions found multiple parents for a local (un-exported) version 368fb583865af40a8823d2ac1d556f4b65582ba2 of iw4j2eko-remote/comp1
+        it('bit reset should not throw', () => {
+          expect(() => helper.command.untagAll()).to.not.throw();
+        });
       });
     });
   });

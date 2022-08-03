@@ -1,17 +1,14 @@
 import { DiffEditor, DiffOnMount } from '@monaco-editor/react';
-import { useFileContent } from '@teambit/code.ui.queries.get-file-content';
-import { ComponentModel } from '@teambit/component';
 import { Toggle } from '@teambit/design.ui.input.toggle';
 import { H4 } from '@teambit/documenter.ui.heading';
 import classNames from 'classnames';
 import React, { HTMLAttributes, useMemo, useRef, useState } from 'react';
+import { useCodeCompare } from '@teambit/code.ui.code-compare';
 import { RoundLoader } from '@teambit/design.ui.round-loader';
 import { darkMode } from '@teambit/base-ui.theme.dark-theme';
 import styles from './code-compare-view.module.scss';
 
 export type CodeCompareViewProps = {
-  base?: ComponentModel;
-  compare?: ComponentModel;
   fileName: string;
 } & HTMLAttributes<HTMLDivElement>;
 
@@ -25,9 +22,9 @@ const languageOverrides = {
   md: 'markdown',
 };
 
-export function CodeCompareView({ className, base, compare, fileName }: CodeCompareViewProps) {
-  const { fileContent: originalFileContent, loading: originalLoading } = useFileContent(base?.id, fileName);
-  const { fileContent: modifiedFileContent, loading: modifiedLoading } = useFileContent(compare?.id, fileName);
+export function CodeCompareView({ className, fileName }: CodeCompareViewProps) {
+  const codeCompareContext = useCodeCompare();
+
   const [ignoreWhitespace, setIgnoreWhitespace] = useState(true);
   const monacoRef = useRef<any>();
 
@@ -39,7 +36,12 @@ export function CodeCompareView({ className, base, compare, fileName }: CodeComp
     return languageOverrides[fileEnding || ''] || fileEnding;
   }, [fileName]);
 
-  if (originalLoading || modifiedLoading) return null;
+  const codeCompareDataForFile = codeCompareContext?.fileCompareDataByName.get(fileName);
+
+  if (!codeCompareContext || codeCompareContext.loading || !codeCompareDataForFile) return null;
+
+  const originalFileContent = codeCompareDataForFile.baseContent;
+  const modifiedFileContent = codeCompareDataForFile.compareContent;
 
   const handleEditorDidMount: DiffOnMount = (_, monaco) => {
     /**

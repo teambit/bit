@@ -1,10 +1,11 @@
-import { join, basename } from 'path';
-import { Application, AppContext, AppBuildContext } from '@teambit/application';
-import { Bundler, DevServer, BundlerContext, DevServerContext, BundlerHtmlConfig } from '@teambit/bundler';
+import { join, resolve, basename } from 'path';
+import { Application, AppContext, AppBuildContext, AppResult } from '@teambit/application';
+import type { Bundler, DevServer, BundlerContext, DevServerContext, BundlerHtmlConfig } from '@teambit/bundler';
 import { Port } from '@teambit/toolbox.network.get-port';
-import { remove } from 'lodash';
-import TerserPlugin from 'terser-webpack-plugin';
+import type { Logger } from '@teambit/logger';
+import compact from 'lodash.compact';
 import { WebpackConfigTransformer } from '@teambit/webpack';
+import { BitError } from '@teambit/bit-error';
 import { ReactEnv } from '../../react.env';
 import { prerenderPlugin } from './plugins';
 import { ReactAppBuildResult } from './react-build-result';
@@ -12,52 +13,139 @@ import { ReactAppPrerenderOptions } from './react-app-options';
 import { html } from '../../webpack';
 import { ReactDeployContext } from '.';
 import { computeResults } from './compute-results';
+import { clientConfig, ssrConfig, calcOutputPath, ssrBuildConfig, buildConfig } from './webpack/webpack.app.ssr.config';
+import { addDevServer, setOutput, replaceTerserPlugin } from './webpack/mutators';
+import { createExpressSsr, loadSsrApp, parseAssets } from './ssr/ssr-express';
 
 export class ReactApp implements Application {
   constructor(
     readonly name: string,
-    readonly entry: string[] | (() => Promise<string[]>),
-    readonly portRange: number[],
+    readonly entry: string[] | ((path?: string) => Promise<string[]>),
+    readonly ssr: string | (() => Promise<string>) | undefined,
+    readonly portRange: [number, number],
     private reactEnv: ReactEnv,
     readonly prerender?: ReactAppPrerenderOptions,
     readonly bundler?: Bundler,
+    readonly ssrBundler?: Bundler,
     readonly devServer?: DevServer,
     readonly transformers: WebpackConfigTransformer[] = [],
     readonly deploy?: (context: ReactDeployContext) => Promise<void>,
-    readonly favicon?: string
+    readonly favicon?: string,
+    private logger?: Logger
   ) {}
   readonly applicationType = 'react-common-js';
   readonly dir = 'public';
+  readonly ssrDir = 'ssr';
 
   async run(context: AppContext): Promise<number> {
     const [from, to] = this.portRange;
     const port = await Port.getPort(from, to);
+
     if (this.devServer) {
       await this.devServer.listen(port);
       return port;
     }
-    const devServerContext = await this.getDevServerContext(context);
-    const devServer = this.reactEnv.getDevServer(devServerContext, [
-      (configMutator) =>
-        configMutator.addTopLevel('devServer', {
-          historyApiFallback: {
-            index: '/index.html',
-            disableDotRule: true,
-            headers: {
-              'Access-Control-Allow-Headers': '*',
-            },
-          },
-        }),
-      (configMutator) => {
-        if (!configMutator.raw.output) configMutator.raw.output = {};
-        configMutator.raw.output.publicPath = '/';
 
-        return configMutator;
-      },
-      ...this.transformers,
-    ]);
+    const devServerContext = await this.getDevServerContext(context);
+    const devServer = this.reactEnv.getDevServer(devServerContext, [addDevServer, setOutput, ...this.transformers]);
     await devServer.listen(port);
     return port;
+  }
+
+  async runSsr(context: AppContext): Promise<AppResult> {
+    const [from, to] = this.portRange;
+    const port = await Port.getPort(from, to);
+
+    // bundle client
+    const clientBundle = await this.buildClient(context);
+    if (clientBundle.errors.length > 0) return { errors: clientBundle.errors };
+    this.logger?.info('[react.application] [ssr] client bundle - complete');
+
+    // bundle server
+    const serverBundle = await this.buildSsr(context);
+    if (serverBundle.errors.length > 0) return { errors: serverBundle.errors };
+    this.logger?.info('[react.application] [ssr] server bundle - complete');
+
+    // load server-side runtime
+    const app = await loadSsrApp(context.workdir, context.appName);
+    this.logger?.info('[react.application] [ssr] bundle code - loaded');
+
+    const expressApp = createExpressSsr({
+      name: context.appName,
+      workdir: context.workdir,
+      port,
+      app,
+      assets: parseAssets(clientBundle.assets),
+      logger: this.logger,
+    });
+
+    expressApp.listen(port);
+    return { port };
+  }
+
+  private async buildClient(context: AppContext) {
+    const htmlConfig: BundlerHtmlConfig[] = [
+      {
+        title: context.appName,
+        templateContent: html(context.appName),
+        minify: false,
+        favicon: this.favicon,
+      },
+    ];
+
+    // extend, including prototype methods
+    const ctx: BundlerContext = Object.assign(Object.create(context), {
+      html: htmlConfig,
+      targets: [
+        {
+          entries: await this.getEntries(),
+          components: [context.appComponent],
+          outputPath: resolve(context.workdir, calcOutputPath(context.appName, 'browser')),
+          hostDependencies: await this.getPeers(),
+          aliasHostDependencies: true,
+        },
+      ],
+
+      // @ts-ignore
+      capsuleNetwork: undefined,
+      previousTasksResults: [],
+    });
+
+    const bundler = await this.reactEnv.getBundler(ctx, [
+      (config) => config.merge([clientConfig()]),
+      ...this.transformers,
+    ]);
+
+    const bundleResult = await bundler.run();
+    return bundleResult[0];
+  }
+
+  private async buildSsr(context: AppContext) {
+    // extend, including prototype methods
+    const ctx: BundlerContext = Object.assign(Object.create(context), {
+      ...context,
+      targets: [
+        {
+          entries: await this.getSsrEntries(),
+          components: [context.appComponent],
+          outputPath: resolve(context.workdir, calcOutputPath(context.appName, 'ssr')),
+          hostDependencies: await this.getPeers(),
+          aliasHostDependencies: true,
+        },
+      ],
+
+      // @ts-ignore
+      capsuleNetwork: undefined,
+      previousTasksResults: [],
+    });
+
+    const bundler = await this.reactEnv.getBundler(ctx, [
+      (config) => config.merge([ssrConfig()]),
+      ...this.transformers,
+    ]);
+
+    const bundleResult = await bundler.run();
+    return bundleResult[0];
   }
 
   async build(context: AppBuildContext): Promise<ReactAppBuildResult> {
@@ -76,22 +164,71 @@ export class ReactApp implements Application {
     const bundler = await this.getBundler(context);
     const bundleResult = await bundler.run();
 
-    return computeResults(bundleResult, { publicDir: `${this.getPublicDir(context.artifactsDir)}/${this.dir}` });
+    if (this.ssr) {
+      const bunlder = await this.getSsrBundler(context);
+      await bunlder.run();
+    }
+
+    return computeResults(bundleResult, {
+      publicDir: `${this.getPublicDir(context.artifactsDir)}/${this.dir}`,
+      ssrPublicDir: this.ssr ? `${this.getPublicDir(context.artifactsDir)}/${this.ssrDir}` : undefined,
+    });
   }
 
   private getBundler(context: AppBuildContext) {
     if (this.bundler) return this.bundler;
     return this.getDefaultBundler(context);
   }
+
+  private getSsrBundler(context: AppBuildContext) {
+    if (this.ssrBundler) return this.ssrBundler;
+    return this.getDefaultSsrBundler(context);
+  }
+
   private async getDefaultBundler(context: AppBuildContext) {
     const { capsule } = context;
-    const reactEnv: ReactEnv = context.env;
     const publicDir = this.getPublicDir(context.artifactsDir);
     const outputPath = join(capsule.path, publicDir);
+
+    const bundlerContext = await this.getBuildContext(context, { outputPath });
+    const transformers: WebpackConfigTransformer[] = compact([
+      (configMutator) => configMutator.merge(buildConfig({ outputPath: join(outputPath, this.dir) })),
+      (config) => {
+        if (this.prerender) config.addPlugin(prerenderPlugin(this.prerender));
+        return config;
+      },
+      replaceTerserPlugin({ prerender: !!this.prerender }),
+      ...this.transformers,
+    ]);
+
+    const reactEnv = context.env as ReactEnv;
+    const bundler: Bundler = await reactEnv.getBundler(bundlerContext, transformers);
+    return bundler;
+  }
+
+  private async getDefaultSsrBundler(context: AppBuildContext) {
+    const { capsule } = context;
+    const publicDir = this.getPublicDir(context.artifactsDir);
+    const outputPath = join(capsule.path, publicDir);
+
+    const bundlerContext = await this.getBuildContext(context, { outputPath });
+    const transformers: WebpackConfigTransformer[] = compact([
+      (configMutator) => configMutator.merge(ssrBuildConfig({ outputPath: join(outputPath, this.ssrDir) })),
+      replaceTerserPlugin({ prerender: !!this.prerender }),
+      ...this.transformers,
+    ]);
+
+    const reactEnv = context.env as ReactEnv;
+    const bundler: Bundler = await reactEnv.getBundler(bundlerContext, transformers);
+    return bundler;
+  }
+
+  private async getBuildContext(context: AppBuildContext, { outputPath }: { outputPath: string }) {
+    const { capsule } = context;
+    const reactEnv = context.env as ReactEnv;
     const { distDir } = reactEnv.getCompiler();
-    const targetEntries = Array.isArray(this.entry) ? this.entry : await this.entry();
+    const targetEntries = await this.getEntries(`${capsule.path}/${distDir}`);
     const entries = targetEntries.map((entry) => require.resolve(`${capsule.path}/${distDir}/${basename(entry)}`));
-    const staticDir = join(outputPath, this.dir);
 
     const bundlerContext: BundlerContext = Object.assign(context, {
       targets: [
@@ -99,6 +236,7 @@ export class ReactApp implements Application {
           components: [capsule?.component],
           entries,
           outputPath,
+          hostRootDir: capsule?.path,
           hostDependencies: await this.getPeers(),
           aliasHostDependencies: true,
         },
@@ -111,87 +249,22 @@ export class ReactApp implements Application {
       },
     });
 
-    const defaultTransformer: WebpackConfigTransformer = (configMutator) => {
-      const config = configMutator.addTopLevel('output', {
-        path: staticDir,
-        publicPath: `/`,
-        filename: '[name].[chunkhash].js',
-      });
-      if (this.prerender) config.addPlugin(prerenderPlugin(this.prerender));
-      if (config.raw.optimization?.minimizer) {
-        remove(config.raw.optimization?.minimizer, (minimizer) => {
-          return minimizer.constructor.name === 'TerserPlugin';
-        });
-
-        config.raw.optimization?.minimizer.push(this.getESBuildConfig());
-      }
-
-      return config;
-    };
-    const transformers = [defaultTransformer, ...this.transformers];
-    const bundler: Bundler = await reactEnv.getBundler(bundlerContext, transformers);
-    return bundler;
+    return bundlerContext;
   }
-  private getESBuildConfig = (isPrerendering = this.prerender) => {
-    // We don't want to use esbuild in case of prerendering since the headless browser puppeteer doesn't support
-    // the output of esbuild
-
-    if (isPrerendering) {
-      return new TerserPlugin({
-        extractComments: false,
-        terserOptions: {
-          parse: {
-            // We want terser to parse ecma 8 code. However, we don't want it
-            // to apply any minification steps that turns valid ecma 5 code
-            // into invalid ecma 5 code. This is why the 'compress' and 'output'
-            // sections only apply transformations that are ecma 5 safe
-            // https://github.com/facebook/create-react-app/pull/4234
-            ecma: 8,
-          },
-          compress: {
-            ecma: 5,
-            warnings: false,
-            // Disabled because of an issue with Uglify breaking seemingly valid code:
-            // https://github.com/facebook/create-react-app/issues/2376
-            // Pending further investigation:
-            // https://github.com/mishoo/UglifyJS2/issues/2011
-            comparisons: false,
-            // Disabled because of an issue with Terser breaking valid code:
-            // https://github.com/facebook/create-react-app/issues/5250
-            // Pending further investigation:
-            // https://github.com/terser-js/terser/issues/120
-            inline: 2,
-          },
-          mangle: {
-            safari10: true,
-          },
-          output: {
-            ecma: 5,
-            comments: false,
-            // Turned on because emoji and regex is not minified properly using default
-            // https://github.com/facebook/create-react-app/issues/2488
-            ascii_only: true,
-          },
-        },
-      });
-    }
-    return new TerserPlugin({
-      minify: TerserPlugin.esbuildMinify,
-      // `terserOptions` options will be passed to `esbuild`
-      // Link to options - https://esbuild.github.io/api/#minify
-      terserOptions: {
-        minify: true,
-      },
-    });
-  };
 
   private getPublicDir(artifactsDir: string) {
     return join(artifactsDir, this.applicationType, this.name);
   }
 
-  async getEntries(): Promise<string[]> {
+  async getEntries(path?: string): Promise<string[]> {
     if (Array.isArray(this.entry)) return this.entry;
-    return this.entry();
+    return this.entry(path);
+  }
+
+  async getSsrEntries(): Promise<string[]> {
+    if (!this.ssr) throw new BitError('tried to build ssr without ssr entries');
+    if (typeof this.ssr === 'string') return [this.ssr];
+    return [await this.ssr()];
   }
 
   private async getDevServerContext(context: AppContext): Promise<DevServerContext> {

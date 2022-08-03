@@ -1,18 +1,14 @@
-import { UIAspect, UIRuntime } from './ui.aspect';
+import type * as SSR from '@teambit/react.rendering.ssr';
 
-export { UIAspect, UIRuntime, UIAspect as default };
+export { UIAspect, UIRuntime, UIAspect as default } from './ui.aspect';
 
 export * from './events';
 export { UIRoot, PostStartOptions, ProxyEntry } from './ui-root';
 export type { UiMain, PreStartOpts } from './ui.main.runtime';
 export type { UiUI } from './ui.ui.runtime';
 export type { StartPlugin, StartPluginOptions } from './start-plugin';
-export type {
-  BrowserData,
-  RenderPlugins,
-  /** @deprecated - legacy name, use RenderPlugins */
-  RenderPlugins as RenderLifecycle,
-} from './react-ssr';
+export type { SSR };
+
 export type { UIRootUI, UIRootFactory } from './ui-root.ui';
 export type { UIServer } from './ui-server';
 
@@ -20,3 +16,15 @@ export type { UIServer } from './ui-server';
 export { DataQueryResult, useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
 // temporary. TODO: fix this
 export { useMutation } from '@apollo/client';
+
+// some types still used by Symphony
+export type {
+  /** @deprecated - use SSR.BrowserData */
+  BrowserData,
+  /** @deprecated - use SSR.RenderPlugin */
+  RenderPlugin,
+  /** @deprecated use SSR.RenderPlugin */
+  RenderPlugin as RenderPlugins,
+  /** @deprecated use SSR..RenderPlugin */
+  RenderPlugin as RenderLifecycle,
+} from '@teambit/react.rendering.ssr';

@@ -6,7 +6,6 @@ import { BuildStatus } from '../../constants';
 import ConsumerComponent from '../../consumer/component';
 import { ArtifactFiles, ArtifactSource, getArtifactsFiles } from '../../consumer/component/sources/artifact-files';
 import Consumer from '../../consumer/consumer';
-import GeneralError from '../../error/general-error';
 import logger from '../../logger/logger';
 import ComponentObjects from '../component-objects';
 import { getAllVersionHashes, getAllVersionsInfo, VersionInfo } from '../component-ops/traverse-versions';
@@ -266,25 +265,18 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     source,
     consumer,
     lane,
-    resolveUnmerged = false,
     shouldValidateVersion = false,
   }: {
     source: ConsumerComponent;
     consumer: Consumer;
     lane: Lane | null;
-    resolveUnmerged?: boolean;
     shouldValidateVersion?: boolean;
   }): Promise<ModelComponent> {
     const objectRepo = this.objects();
     // if a component exists in the model, add a new version. Otherwise, create a new component on the model
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const component = await this.findOrAddComponent(source);
-    const unmergedComponent = consumer.scope.objects.unmergedComponents.getEntry(component.name);
-    if (unmergedComponent && !unmergedComponent.resolved && !resolveUnmerged) {
-      throw new GeneralError(
-        `unable to snap/tag "${component.name}", it is unmerged with conflicts. please run "bit merge <id> --resolve"`
-      );
-    }
+
     const artifactFiles = getArtifactsFiles(source.extensions);
     const artifacts = this.transformArtifactsFromVinylToSource(artifactFiles);
     const { version, files } = await this.consumerComponentToVersion(source);
@@ -292,14 +284,13 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     if (!source.version) throw new Error(`addSource expects source.version to be set`);
     component.addVersion(version, source.version, lane, objectRepo);
 
+    const unmergedComponent = consumer.scope.objects.unmergedComponents.getEntry(component.name);
     if (unmergedComponent) {
       version.addParent(unmergedComponent.head);
       logger.debug(
         `sources.addSource, unmerged component "${component.name}". adding a parent ${unmergedComponent.head.hash}`
       );
-      version.log.message = version.log.message
-        ? version.log.message
-        : UnmergedComponents.buildSnapMessage(unmergedComponent);
+      version.log.message = version.log.message || UnmergedComponents.buildSnapMessage(unmergedComponent);
       consumer.scope.objects.unmergedComponents.removeComponent(component.name);
     }
     objectRepo.add(component);
@@ -351,7 +342,8 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     component: ModelComponent,
     versions: string[],
     allVersionsObjects: Version[],
-    lane: Lane | null
+    lane: Lane | null,
+    removeOnlyHead?: boolean
   ): void {
     logger.debug(`removeComponentVersion, component ${component.id()}, versions ${versions.join(', ')}`);
     const objectRepo = this.objects();
@@ -367,11 +359,20 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     });
 
     const getNewHead = () => {
-      const divergeData = component.getDivergeData();
-      if (divergeData.isDiverged()) {
-        if (!component.remoteHead) throw new Error(`remoteHead must be set when component is diverged`);
-        return component.remoteHead;
+      if (!removeOnlyHead) {
+        const divergeData = component.getDivergeData();
+        if (divergeData.isDiverged()) {
+          // if it's diverged, the Component object might have versions from the remote as part of the last import.
+          // run snap.e2e - 'bit reset a diverge component' case to understand why it's better to pick the remoteHead
+          // than the commonSnapBeforeDiverge. If it would set to commonSnapBeforeDiverge
+          if (!component.remoteHead) throw new Error(`remoteHead must be set when component is diverged`);
+          return component.remoteHead;
+        }
+        if (divergeData.commonSnapBeforeDiverge) {
+          return divergeData.commonSnapBeforeDiverge;
+        }
       }
+
       const head = component.head || laneItem?.head;
       if (!head) {
         return undefined;
