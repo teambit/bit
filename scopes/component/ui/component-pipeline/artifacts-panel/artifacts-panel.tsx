@@ -26,7 +26,8 @@ export function ArtifactPanel({ className, fileIconSlot }: ArtifactsPanelProps) 
   if (!componentPipelineContext) return null;
 
   const { pipeline, selectedPipelineId } = componentPipelineContext;
-  const { name, files } = pipeline.find((task) => task.id === selectedPipelineId)?.artifact || {};
+  const { artifact, name: taskName } = pipeline.find((task) => task.id === selectedPipelineId) || {};
+  const { name, files } = artifact || {};
   const artifactFiles = files?.map((file) => file.name) || [];
   const currentHref = location?.pathname || '';
 
@@ -35,7 +36,7 @@ export function ArtifactPanel({ className, fileIconSlot }: ArtifactsPanelProps) 
       <DrawerUI
         isOpen={drawerOpen}
         onToggle={() => onToggleDrawer((open) => !open)}
-        name={name?.toUpperCase()}
+        name={`${taskName} / ${name}`}
         contentClass={styles.artifactsPanelCodeDrawerContent}
         className={classNames(styles.artifactsPanelCodeTabDrawer)}
       >
