@@ -1,18 +1,24 @@
-import React, { HTMLAttributes, useState } from 'react';
+import React, { HTMLAttributes, useState, useMemo } from 'react';
 import classNames from 'classnames';
+import flatten from 'lodash.flatten';
 import { DrawerUI } from '@teambit/ui-foundation.ui.tree.drawer';
 import { FileTree } from '@teambit/ui-foundation.ui.tree.file-tree';
 import { useComponentPipelineContext } from '@teambit/component.ui.component-pipeline';
 import { useLocation } from '@teambit/base-react.navigation.link';
+import { getFileIcon, FileIconMatch } from '@teambit/code.ui.utils.get-file-icon';
+import type { FileIconSlot } from '@teambit/code';
 
 import styles from './artifacts-panel.module.scss';
 
-export type ArtifactsPanelProps = {} & HTMLAttributes<HTMLDivElement>;
+export type ArtifactsPanelProps = {
+  fileIconSlot?: FileIconSlot;
+} & HTMLAttributes<HTMLDivElement>;
 
-export function ArtifactPanel({ className }: ArtifactsPanelProps) {
+export function ArtifactPanel({ className, fileIconSlot }: ArtifactsPanelProps) {
   const [drawerOpen, onToggleDrawer] = useState(true);
   const componentPipelineContext = useComponentPipelineContext();
   const location = useLocation();
+  const fileIconMatchers: FileIconMatch[] = useMemo(() => flatten(fileIconSlot?.values()), [fileIconSlot]);
 
   if (!componentPipelineContext) return null;
 
@@ -53,8 +59,19 @@ export function ArtifactPanel({ className }: ArtifactsPanelProps) {
         contentClass={styles.artifactsPanelCodeDrawerContent}
         className={classNames(styles.artifactsPanelCodeTabDrawer)}
       >
-        <FileTree getHref={() => currentHref} onNodeClicked={fileNodeClicked} files={artifactFiles} />
+        <FileTree
+          getIcon={useMemo(() => generateIcon(fileIconMatchers), fileIconMatchers)}
+          getHref={() => currentHref}
+          onNodeClicked={fileNodeClicked}
+          files={artifactFiles}
+        />
       </DrawerUI>
     </div>
   );
+}
+
+function generateIcon(fileIconMatchers: FileIconMatch[]) {
+  return function Icon({ id }: TreeNode) {
+    return getFileIcon(fileIconMatchers, id);
+  };
 }

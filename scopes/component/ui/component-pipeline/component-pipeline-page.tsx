@@ -1,6 +1,7 @@
 import { ComponentContext } from '@teambit/component';
 import { H2 } from '@teambit/documenter.ui.heading';
 import React, { useContext, useMemo, useState } from 'react';
+import type { FileIconSlot } from '@teambit/code';
 import {
   useComponentPipelineQuery,
   PipelineNode,
@@ -24,9 +25,10 @@ import styles from './component-pipeline-page.module.scss';
 
 export type ComponentPipelinePageProps = {
   host: string;
+  fileIconSlot?: FileIconSlot;
 };
 
-export function ComponentPipelinePage({ host }: ComponentPipelinePageProps) {
+export function ComponentPipelinePage({ host, fileIconSlot }: ComponentPipelinePageProps) {
   const component = useContext(ComponentContext);
   const { data } = useComponentPipelineQuery(host, component.id.toString());
 
@@ -137,7 +139,7 @@ export function ComponentPipelinePage({ host }: ComponentPipelinePageProps) {
           {(selectedPipelineId && <HoverSplitter></HoverSplitter>) || <></>}
           {(selectedPipelineId && (
             <Pane>
-              <ArtifactPanel />
+              <ArtifactPanel fileIconSlot={fileIconSlot} />
             </Pane>
           )) || <></>}
         </SplitPane>

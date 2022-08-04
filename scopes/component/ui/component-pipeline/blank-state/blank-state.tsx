@@ -7,7 +7,7 @@ export function ComponentPipelineBlankState({ className }: ComponentPipelineBlan
   return (
     <EmptyBox
       className={className}
-      title="Run Tag or Snap to run view pipeline report"
+      title="Run Tag or Snap to view the pipeline report"
       linkText="Learn more about pipelines"
       link={`https://bit.dev/docs/dev-services/builder/build-pipelines`}
     />
