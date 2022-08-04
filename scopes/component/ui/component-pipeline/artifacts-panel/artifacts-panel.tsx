@@ -28,9 +28,10 @@ export function ArtifactPanel({ className }: ArtifactsPanelProps) {
         className={classNames(styles.artifactsPanelCodeTabDrawer)}
       >
         <FileTree
+          getHref={(node) => {
+            return files?.find((a) => a.name === node.id)?.downloadUrl || '';
+          }}
           files={artifactFiles}
-          // widgets={widgets}
-          // getIcon={getIcon(fileIconMatchers)}
         />
       </DrawerUI>
     </div>

@@ -8,7 +8,6 @@ export {
   BuildTaskHelper,
   CAPSULE_ARTIFACTS_DIR,
 } from './build-task';
-// export type { BuilderUI } from './builder.ui.runtime';
 export type { BuilderMain, BuilderData } from './builder.main.runtime';
 export type { PipelineReport } from './build-pipeline-result-list';
 export { WholeArtifactStorageResolver, FileStorageResolver, ArtifactStorageResolver } from './storage';
