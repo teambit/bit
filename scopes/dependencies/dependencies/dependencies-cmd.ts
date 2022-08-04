@@ -20,7 +20,7 @@ export class DependenciesGet implements Command {
   arguments = [{ name: 'component-name', description: 'component name or component id' }];
   group = 'info';
   description = 'show direct and indirect dependencies of the given component';
-  alias = 'deps';
+  alias = '';
   options = [['t', 'tree', 'EXPERIMENTAL. render dependencies as a tree, similar to "npm ls"']] as CommandOptions;
 
   async report([id]: [string], { tree = false }: DependenciesFlags) {
@@ -84,7 +84,7 @@ export class DependenciesDebug implements Command {
 
 export class DependenciesCmd implements Command {
   name = 'dependencies <sub-command>';
-  alias = '';
+  alias = 'deps';
   description = 'manage dependencies';
   options = [];
   group = 'info';
