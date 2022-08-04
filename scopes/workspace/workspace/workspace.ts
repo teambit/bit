@@ -1593,10 +1593,6 @@ needed-for: ${neededFor || '<unknown>'}`);
       defs = defs.filter((def) => def.runtimePath);
     }
 
-    if (mergedOpts.requestedOnly) {
-      // console.log('uniqDefs', uniqDefs)
-    }
-
     if (componentIds && componentIds.length && mergedOpts.requestedOnly) {
       const componentIdsString = componentIds.map((id) => id.toString());
       defs = defs.filter((def) => {
