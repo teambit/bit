@@ -66,10 +66,8 @@ export class StartCmd implements Command {
       );
     }
     const appName = this.ui.getUiName(uiRootName);
-    console.log('start cmd before pre start')
     await this.ui.invokePreStart({ skipCompilation });
-    console.log('start cmd before creawte runtime')
-    const uiServer = await this.ui.createRuntime({
+    const uiServer = this.ui.createRuntime({
       uiRootName,
       pattern: userPattern,
       dev,
@@ -78,25 +76,22 @@ export class StartCmd implements Command {
       verbose,
     });
 
-    if (!noBrowser && uiServer.buildOptions?.launchBrowserOnStart) {
-      try {
-        await uiServer.whenReady;
+    if (!noBrowser) {
+      uiServer
+        .then(async (server) => {
+          if (!server.buildOptions?.launchBrowserOnStart) return undefined;
 
-        openBrowser(this.ui.publicUrl || uiServer.fullUrl);
-      }
-      catch(error){
-        this.logger.error(error);
-      }
+          await server.whenReady;
+
+          return openBrowser(this.ui.publicUrl || server.fullUrl);
+        })
+        .catch((error) => this.logger.error(error));
     }
-
-
-
-    console.log('start cmd before invokeOnStart')
 
     // DO NOT CHANGE THIS - this meant to be an async hook.
     // eslint-disable-next-line @typescript-eslint/no-floating-promises
     this.ui.invokeOnStart();
-    // this.ui.clearConsole();
+    this.ui.clearConsole();
 
     return <UIServerConsole appName={appName} futureUiServer={uiServer} url={this.ui.publicUrl} />;
   }

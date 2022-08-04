@@ -194,8 +194,6 @@ export class JestTester implements Tester {
   }
 
   async watch(context: TesterContext): Promise<Tests> {
-    console.trace('jestwatchg');
-
     // eslint-disable-next-line
     return new Promise(async (resolve) => {
       const workerApi = this.jestWorker.initiate(
@@ -206,8 +204,10 @@ export class JestTester implements Tester {
       const jestConfig = require(this.jestConfig);
 
 
-      // const envRootDir = context.envRuntime.envAspectDefinition?.aspectPath;
-      const envRootDir = context.envRuntime.envAspectDefinition.aspectPath;
+      const envRootDir = context.envRuntime.envAspectDefinition?.aspectPath;
+      if (!envRootDir) {
+        this.logger.warn(`jest tester, envRootDir is not defined, for env ${context.envRuntime.id}`);
+      }
 
       const jestConfigWithSpecs = Object.assign(jestConfig, {
         testMatch: this.patternsToArray(context.patterns),

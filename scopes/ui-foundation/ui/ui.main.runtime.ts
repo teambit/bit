@@ -359,15 +359,12 @@ export class UiMain {
   }
 
   async invokePreStart(preStartOpts: PreStartOpts): Promise<void> {
-    // const promises = this.preStartSlot.values().map((fn) => fn(preStartOpts));
     const onPreStartFuncs = this.preStartSlot.values();
     await pMapSeries(onPreStartFuncs, async (fn) => fn(preStartOpts));
   }
 
   async invokeOnStart(): Promise<ComponentType[]> {
-    // const promises = this.onStartSlot.values().map((fn) => fn());
     const onStartFuncs = this.onStartSlot.values();
-    // const startPlugins = await Promise.all(promises);
     const startPlugins = await pMapSeries(onStartFuncs, async (fn) => fn());
     return startPlugins.filter((plugin) => !!plugin) as ComponentType[];
   }

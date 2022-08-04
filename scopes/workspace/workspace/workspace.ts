@@ -1517,10 +1517,7 @@ needed-for: ${neededFor || '<unknown>'}`);
     componentIds?: ComponentID[],
     opts?: ResolveAspectsOptions
   ): Promise<AspectDefinition[]> {
-    console.log(`workspace resolveAspects, runtimeName: ${runtimeName}, componentIds: ${componentIds}`);
-    if (runtimeName == 'preview') {
-      console.trace('workspace preview')
-    }
+    this.logger.debug(`workspace resolveAspects, runtimeName: ${runtimeName}, componentIds: ${componentIds}`);
     const defaultOpts: ResolveAspectsOptions = {
       excludeCore: false,
       requestedOnly: false,
@@ -1546,7 +1543,7 @@ needed-for: ${neededFor || '<unknown>'}`);
         ? await this.aspectLoader.getRuntimePath(component, localPath, runtimeName)
         : null;
 
-      console.log(
+      this.logger.debug(
         `workspace resolveAspects, resolving id: ${compStringId}, localPath: ${localPath}, runtimePath: ${runtimePath}`
       );
       return {
@@ -1558,10 +1555,6 @@ needed-for: ${neededFor || '<unknown>'}`);
     let scopeAspectDefs: AspectDefinition[] = [];
     if (scopeIds.length) {
       scopeAspectDefs = await this.scope.resolveAspects(runtimeName, scopeIds, mergedOpts);
-    }
-
-    if (mergedOpts.requestedOnly) {
-      console.log('scopeAspectDefs', scopeAspectDefs)
     }
 
     let coreAspectDefs = await Promise.all(
@@ -1612,10 +1605,6 @@ needed-for: ${neededFor || '<unknown>'}`);
           (def.component && componentIdsString.includes(def.component?.id.toString()))
         );
       });
-    }
-
-    if (mergedOpts.requestedOnly) {
-      console.log('defs', defs)
     }
 
     return defs;

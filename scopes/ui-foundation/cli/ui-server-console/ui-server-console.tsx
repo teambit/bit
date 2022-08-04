@@ -7,7 +7,7 @@ export type UIServerConsoleProps = {
   /**
    * future of the ui server.
    */
-  futureUiServer: UIServer;
+  futureUiServer: Promise<UIServer>;
 
   /**
    * name of the app.
@@ -23,9 +23,14 @@ export function UIServerConsole({ appName, futureUiServer, url }: UIServerConsol
   const [plugins, setPlugins] = useState<ComponentType[]>();
 
   useEffect(() => {
-    console.log('futureUiServer', futureUiServer)
-    setUiServer(futureUiServer);
-    setPlugins(futureUiServer.getPluginsComponents());
+    futureUiServer
+      .then((server) => {
+        setUiServer(server);
+        setPlugins(server.getPluginsComponents());
+      })
+      .catch((err) => {
+        throw err;
+      });
   }, []);
 
   if (!uiServer) return <UIServerLoader name={appName} />;

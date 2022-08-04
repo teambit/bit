@@ -80,7 +80,6 @@ export class EnvsMain {
    * creates a new runtime environments for a set of components.
    */
   async createEnvironment(components: Component[]): Promise<Runtime> {
-    console.trace('createEnvironment')
     return this.createRuntime(components);
   }
 
@@ -552,17 +551,11 @@ export class EnvsMain {
 
   // refactor here
   private async createRuntime(components: Component[]): Promise<Runtime> {
-    const rndNum = Math.random().toString(36).substring(7);
-
-    console.log('creating runtime', rndNum);
-    const runtime = new Runtime(await this.aggregateByDefs(components), this.logger);
-    console.log('end creating runtime', rndNum);
-    return runtime;
+    return new Runtime(await this.aggregateByDefs(components), this.logger);
   }
 
   // :TODO can be refactored to few utilities who will make repeating this very easy.
   private async aggregateByDefs(components: Component[]): Promise<EnvRuntime[]> {
-    console.log('agg by def1')
     this.throwForDuplicateComponents(components);
     const envsMap = {};
     components.forEach((component: Component) => {
@@ -577,13 +570,9 @@ export class EnvsMain {
           env,
         };
     });
-    console.log('agg by def2')
-
 
     return Promise.all(
       Object.keys(envsMap).map(async (key) => {
-    console.log('agg by def3', key)
-
         const envAspectDef = await this.getEnvAspectDef(key);
         return new EnvRuntime(key, envsMap[key].env, envsMap[key].components, envAspectDef);
       })
@@ -591,14 +580,9 @@ export class EnvsMain {
   }
 
   private async getEnvAspectDef(envId: string): Promise<AspectDefinition> {
-    console.log(`getting env aspect def for env ${envId}`);
     const host = this.componentMain.getHost();
     const id = await host.resolveComponentId(envId);
-    console.log(`getting env aspect def for env id ${id}`);
-    const resolvedAspects = await host.resolveAspects(MainRuntime.name, [id], {requestedOnly: true});
-    console.log(`getting env aspect def for env id ${id}, resolvedAspects ${resolvedAspects}`);
-    const def = resolvedAspects[0];
-    console.log(`getting env aspect def for env id ${id}, def ${def}`);
+    const def = (await host.resolveAspects(MainRuntime.name, [id], {requestedOnly: true}))[0];
     return def;
   }
 
