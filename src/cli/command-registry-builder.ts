@@ -34,7 +34,6 @@ import Remove from './commands/public-cmds/remove-cmd';
 import ScopeConfig from './commands/public-cmds/scope-config-cmd';
 import Untag from './commands/public-cmds/untag-cmd';
 import RunAction from './commands/private-cmds/run-action.cmd';
-import Dependencies from './commands/public-cmds/dependencies-cmd';
 
 export default function registerCommands(): CommandRegistry {
   return new CommandRegistry(BIT_USAGE, BIT_DESCRIPTION, BIT_VERSION, [
@@ -49,7 +48,6 @@ export default function registerCommands(): CommandRegistry {
     new CatComponent(),
     new CatLane(),
     new Dependents(),
-    new Dependencies(),
     new ScopeLog(),
     new Put(),
     new ScopeList(),

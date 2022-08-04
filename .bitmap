@@ -369,6 +369,13 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/cli-reference"
     },
+    "dependencies": {
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.dependencies",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/dependencies/dependencies"
+    },
     "dependency-resolver": {
         "scope": "teambit.dependencies",
         "version": "0.0.806",
