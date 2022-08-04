@@ -97,29 +97,31 @@ export function ComponentPipelinePage({ host }: ComponentPipelinePageProps) {
         }}
       >
         <H2 size="xs">Pipeline</H2>
-        <div className={styles.statContainer}>
-          <div className={styles.statItem}>
-            <p className={styles.statTitle}>Duration</p>
-            <p>
-              {calcSeconds(totalDurationSecs)}s {calcMilliseconds(totalDurationSecs)}ms
-            </p>
+        {!showBlankState && (
+          <div className={styles.statContainer}>
+            <div className={styles.statItem}>
+              <p className={styles.statTitle}>Duration</p>
+              <p>
+                {calcSeconds(totalDurationSecs)}s {calcMilliseconds(totalDurationSecs)}ms
+              </p>
+            </div>
+            <div className={styles.statItem}>
+              <p className={styles.statTitle}>Status</p>
+              <p>{data?.buildStatus}</p>
+            </div>
           </div>
-          <div className={styles.statItem}>
-            <p className={styles.statTitle}>Status</p>
-            <p>{data?.buildStatus}</p>
-          </div>
-        </div>
+        )}
         <SplitPane size={'75%'} className={styles.graphContainer} layout={sidebarOpenness}>
           <Pane>
             <ReactFlowProvider>
               {!showBlankState && (
                 <ReactFlow
                   draggable={false}
-                  nodesDraggable={true}
+                  nodesDraggable={false}
                   selectNodesOnDrag={false}
                   nodesConnectable={false}
                   zoomOnDoubleClick={false}
-                  elementsSelectable={false}
+                  elementsSelectable={true}
                   maxZoom={1}
                   elements={elements}
                   nodeTypes={NodeTypes}

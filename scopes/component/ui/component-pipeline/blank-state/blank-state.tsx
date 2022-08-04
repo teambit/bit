@@ -7,7 +7,7 @@ export function ComponentPipelineBlankState({ className }: ComponentPipelineBlan
   return (
     <EmptyBox
       className={className}
-      title="This component doesn't have any pipelines configured yet. Tag or Snap to run the default tasks"
+      title="Run Tag or Snap to run view pipeline report"
       linkText="Learn more about pipelines"
       link={`https://bit.dev/docs/dev-services/builder/build-pipelines`}
     />

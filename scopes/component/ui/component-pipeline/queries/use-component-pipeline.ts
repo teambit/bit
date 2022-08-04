@@ -5,7 +5,13 @@ import { TaskReport } from '@teambit/component.ui.component-pipeline';
 const PIPELINE_REPORT_QUERY = gql`
   query ComponentBuildArtifacts($id: String!, $extensionId: String!, $taskId: String) {
     getHost(id: $extensionId) {
+      id # used for GQL caching
       get(id: $id) {
+        id {
+          name
+          version
+          scope
+        }
         pipelineReport(taskId: $taskId) {
           id
           name

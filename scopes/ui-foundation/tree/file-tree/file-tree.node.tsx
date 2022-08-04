@@ -13,9 +13,12 @@ export function FileTreeNode(props: TreeNodeProps<any>) {
   const href = fileTreeContext?.getHref?.(node);
   const widgets = fileTreeContext?.widgets;
   const icon = fileTreeContext?.getIcon?.(node);
+  const onClick = fileTreeContext?.onClick;
 
   if (!node?.children) {
-    return <Node {...props} href={href} isActive={node?.id === selected} icon={icon} widgets={widgets} />;
+    return (
+      <Node {...props} href={href} isActive={node?.id === selected} icon={icon} widgets={widgets} onClick={onClick} />
+    );
   }
   return <FolderTreeNode {...props} />;
 }
