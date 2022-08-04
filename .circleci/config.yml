@@ -1101,6 +1101,7 @@ jobs:
           # command: cd bit && npm run e2e-test-circle --debug
           environment:
             MOCHA_FILE: junit/e2e-test-results.xml
+            NODE_OPTIONS: --no-warnings
           when: always
       - store_test_results:
           path: bit/junit
@@ -1427,6 +1428,7 @@ jobs:
           # command: cd bit; npm run e2e-test-circle --debug
           environment:
             MOCHA_FILE: junit\e2e-test-results.xml
+            NODE_OPTIONS: --no-warnings
           when: always
       - store_test_results:
           path: bit\junit
@@ -1488,6 +1490,7 @@ jobs:
           # command: cd bit; npm run e2e-test-circle --debug
           environment:
             MOCHA_FILE: junit\e2e-test-results.xml
+            NODE_OPTIONS: --no-warnings
           when: always
       - store_test_results:
           path: bit\junit
