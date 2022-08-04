@@ -4,7 +4,7 @@ import { TreeContextProvider } from '@teambit/base-ui.graph.tree.tree-context';
 import { indentStyle } from '@teambit/base-ui.graph.tree.indent';
 import { RootNode } from '@teambit/base-ui.graph.tree.root-node';
 import { WidgetProps } from '@teambit/ui-foundation.ui.tree.tree-node';
-import { TreeNodeContext, TreeNode as TreeNodeType } from '@teambit/base-ui.graph.tree.recursive-tree';
+import { TreeNodeContext } from '@teambit/base-ui.graph.tree.recursive-tree';
 import { TreeNode, TreeNodeRenderer } from '@teambit/design.ui.tree';
 import { FileTreeNode } from './file-tree.node';
 import { FileTreeContext } from './file-tree.context';
