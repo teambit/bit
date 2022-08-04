@@ -60,7 +60,7 @@
     "test:extensions": "mocha --require ./babel-register './scopes/**/*.spec.ts'",
     "test-circle": "mocha --require ./babel-register --reporter mocha-circleci-reporter './src/**/*.spec.ts'",
     "mocha-circleci": "registry-mock prepare && mocha --require ./babel-register --reporter mocha-circleci-reporter",
-    "e2e-test": "registry-mock prepare && mocha --require ./babel-register './e2e/**/*.e2e*.ts'",
+    "e2e-test": "registry-mock prepare && cross-env NODE_OPTIONS=--no-warnings mocha --require ./babel-register './e2e/**/*.e2e*.ts'",
     "e2e-test:debug": "npm run e2e-test --debug --keep-envs",
     "e2e-test-circle": "mocha --require ./babel-register --reporter mocha-circleci-reporter './e2e/**/*.e2e*.ts'",
     "performance-test": "mocha --require ./babel-register ./e2e/performance/*.performance*.ts",

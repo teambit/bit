@@ -2,7 +2,7 @@ version: 2.1
 
 default_image: &default_image
   docker:
-    - image: cimg/node:14.19.3
+    - image: cimg/node:16.16.0
 
 default_resource_class: &default_resource_class
   resource_class: medium
@@ -244,8 +244,8 @@ jobs:
       - attach_workspace:
           at: ./
       - docker_build_and_push:
-          docker_build_arg_value: "node:14.19.1"
-          docker_tag_suffix: "-node-14.19.1"
+          docker_build_arg_value: "node:16.16.0"
+          docker_tag_suffix: "-node-16.16.0"
 
   docker_build_node_16:
     machine:
@@ -274,10 +274,10 @@ jobs:
       - attach_workspace:
           at: ./
       - docker_build_and_push:
-          docker_build_arg_value: "node:14.19.1"
+          docker_build_arg_value: "node:16.16.0"
           image_name: "bitcli/bit-non-root"
           docker_file_name: "Dockerfile-bit-non-root"
-          docker_tag_suffix: "-node-14.19.1"
+          docker_tag_suffix: "-node-16.16.0"
 
 
   docker_non_root_build_node_16:
@@ -313,10 +313,10 @@ jobs:
           at: ./
       - docker_build_and_push:
           docker_build_arg_name: "BIT_IMAGE"
-          docker_build_arg_value: "`npm show @teambit/bit version`-node-14.19.1"
+          docker_build_arg_value: "`npm show @teambit/bit version`-node-16.16.0"
           image_name: "bitcli/bit-server"
           docker_file_name: "Dockerfile-bit-server"
-          docker_tag_suffix: "-node-14.19.1"
+          docker_tag_suffix: "-node-16.16.0"
 
   server_docker_build_node_16:
     machine:
@@ -936,7 +936,7 @@ jobs:
       PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: true
     steps:
       # - run: choco install nodejs --version 16.15.1
-      - run: cinst nodejs --version 14.19.3
+      - run: cinst nodejs --version 16.16.0
       # - run: nodejs.install v12.16.0
       - run: node -v
       - run: 'yarn -v'
@@ -1191,9 +1191,9 @@ jobs:
       # - run: node -v
       # - run: npm -v
       # - run: yarn -v
-      # # - run: choco install nodejs --version 14.19.3
+      # # - run: choco install nodejs --version 16.16.0
       # # - run: node -v
-      # - run: cinst nodejs --version 14.19.3
+      # - run: cinst nodejs --version 16.16.0
       # - run: node -v
 
   windows_checkout_code:
@@ -1325,7 +1325,7 @@ jobs:
     steps:
       - attach_workspace:
           at: .
-      - run: cinst nodejs --version 14.19.3
+      - run: cinst nodejs --version 16.16.0
       - run: node -v
       - run: npm -v
       # - run: Get-Content -Path .\version.txt
@@ -1380,7 +1380,7 @@ jobs:
     steps:
       - attach_workspace:
           at: .
-      - run: cinst nodejs --version 14.19.3
+      - run: cinst nodejs --version 16.16.0
       - run: node -v
       - run: npm -v
       # - run: Get-Content -Path .\version.txt

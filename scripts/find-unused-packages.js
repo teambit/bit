@@ -33,6 +33,7 @@ const whitelist = [
   'browserslist', // check with Uri if needed.
   'mz', // needs to check what happens if gets removed.
   'npm', // needed for e2e tests
+  'cross-env', // needed for e2e tests on Windows
 ];
 used.push(...whitelist);
 unused = unused.filter((dep) => !whitelist.includes(dep));
