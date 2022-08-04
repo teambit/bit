@@ -13,7 +13,7 @@ export type TreeNodeComponentProps<Payload = any> = {
   widgets?: ComponentType<WidgetProps<Payload>>[];
   isActive?: boolean;
   icon?: string;
-  onClick?: (e: React.MouseEvent, node: TreeNodeType<Payload>) => void;
+  onClick?: (e: React.MouseEvent) => void;
   href?: string;
 } & TreeNodeProps<Payload>;
 
@@ -32,7 +32,7 @@ export function TreeNode<T>(props: TreeNodeComponentProps<T>) {
       strict
       className={classNames(indentClass, styles.fileNode)}
       activeClassName={styles.active}
-      onClick={(event) => onClick?.(event, node)}
+      onClick={onClick}
     >
       <div className={styles.left}>
         {icon && <img className={styles.icon} src={icon} />}

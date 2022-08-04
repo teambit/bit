@@ -31,3 +31,14 @@
   font-weight: unset;
   padding: 4px;
 }
+
+.icon {
+  font-size: xx-small;
+  padding: 4px;
+  color: var(--bit-text-color-heavy);
+  pointer-events: auto;
+}
+
+.artifactsPanelTree {
+  pointer-events: none;
+}

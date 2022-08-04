@@ -16,7 +16,6 @@ type FileTreeProps = {
   widgets?: ComponentType<WidgetProps<any>>[];
   getHref?: (node: TreeNode) => string;
   getIcon?: (node: TreeNode) => string | undefined;
-  onNodeClicked?: (e: React.MouseEvent, node: TreeNodeType<any>) => void;
   TreeNode?: TreeNodeRenderer;
 } & HTMLAttributes<HTMLDivElement>;
 
@@ -30,7 +29,6 @@ export function FileTree({
   getIcon,
   getHref,
   widgets,
-  onNodeClicked,
   TreeNode: CustomTreeNode = FileTreeNode,
   ...rest
 }: FileTreeProps) {
@@ -43,7 +41,7 @@ export function FileTree({
 
   return (
     <div style={{ ...indentStyle(1), ...rest.style }} {...rest}>
-      <FileTreeContext.Provider value={{ getIcon, getHref, widgets, onClick: onNodeClicked }}>
+      <FileTreeContext.Provider value={{ getIcon, getHref, widgets }}>
         <TreeNodeContext.Provider value={CustomTreeNode}>
           <TreeContextProvider onSelect={onSelect} selected={selected}>
             <RootNode node={rootNode} depth={1} />
