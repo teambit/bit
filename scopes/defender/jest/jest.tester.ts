@@ -194,6 +194,8 @@ export class JestTester implements Tester {
   }
 
   async watch(context: TesterContext): Promise<Tests> {
+    console.trace('jestwatchg');
+
     // eslint-disable-next-line
     return new Promise(async (resolve) => {
       const workerApi = this.jestWorker.initiate(
@@ -203,6 +205,8 @@ export class JestTester implements Tester {
       // eslint-disable-next-line
       const jestConfig = require(this.jestConfig);
 
+
+      // const envRootDir = context.envRuntime.envAspectDefinition?.aspectPath;
       const envRootDir = context.envRuntime.envAspectDefinition.aspectPath;
 
       const jestConfigWithSpecs = Object.assign(jestConfig, {

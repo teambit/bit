@@ -619,9 +619,18 @@ needed-for: ${neededFor || '<unknown>'}`);
   }
 
   private async resolveUserAspects(runtimeName?: string, userAspectsIds?: ComponentID[]): Promise<AspectDefinition[]> {
+    const rndNum = Math.random().toString(36).substring(7);
+    const stringIds = userAspectsIds?.map((id) => id.toString());
+    console.log(`scope resolveUserAspects, runtimeName: ${runtimeName}, userAspectsIds: ${stringIds}`, rndNum);
     if (!userAspectsIds || !userAspectsIds.length) return [];
+    console.log(`scope resolveUserAspects 222`, rndNum);
+
     const components = await this.getMany(userAspectsIds);
-    const network = await this.isolator.isolateComponents(
+    console.log(`scope resolveUserAspects 333`, rndNum);
+    let network;
+    try {
+
+    network = await this.isolator.isolateComponents(
       userAspectsIds,
       {
         baseDir: this.getAspectCapsulePath(),
@@ -636,15 +645,29 @@ needed-for: ${neededFor || '<unknown>'}`);
       },
       this.legacyScope
     );
+  } catch (e) {
+    console.log('got an error', e)
+    throw e;
+  }
+
+    console.log(`scope resolveUserAspects 444`, rndNum);
     const capsules = network.seedersCapsules;
     const aspectDefs = await this.aspectLoader.resolveAspects(components, async (component) => {
+      console.log(`resolveUserAspects, component: ${component.id}`);
       const capsule = capsules.getCapsule(component.id);
       if (!capsule) throw new Error(`failed loading aspect: ${component.id.toString()}`);
       const localPath = capsule.path;
+      const runtimePath = runtimeName
+        ? await this.aspectLoader.getRuntimePath(component, localPath, runtimeName)
+        : null;
+      console.log(
+        `scope resolveUserAspects, resolving id: ${component.id.toString()}, localPath: ${localPath}, runtimePath: ${runtimePath}`
+      );
 
       return {
+        id: capsule.component.id,
         aspectPath: localPath,
-        runtimePath: runtimeName ? await this.aspectLoader.getRuntimePath(component, localPath, runtimeName) : null,
+        runtimePath,
       };
     });
     return aspectDefs;
@@ -655,6 +678,9 @@ needed-for: ${neededFor || '<unknown>'}`);
     componentIds?: ComponentID[],
     opts?: ResolveAspectsOptions
   ): Promise<AspectDefinition[]> {
+    const originalStringIds = componentIds?.map((id) => id.toString());
+    console.log(`scope resolveAspects, runtimeName: ${runtimeName}, componentIds: ${originalStringIds}`);
+
     const defaultOpts: ResolveAspectsOptions = {
       excludeCore: false,
       requestedOnly: false,
@@ -694,6 +720,8 @@ needed-for: ${neededFor || '<unknown>'}`);
     if (runtimeName) {
       defs = defs.filter((def) => def.runtimePath);
     }
+
+    console.log('scope uniqDefs', uniqDefs)
 
     if (componentIds && componentIds.length && mergedOpts.requestedOnly) {
       const componentIdsString = componentIds.map((id) => id.toString());

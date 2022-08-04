@@ -1517,6 +1517,10 @@ needed-for: ${neededFor || '<unknown>'}`);
     componentIds?: ComponentID[],
     opts?: ResolveAspectsOptions
   ): Promise<AspectDefinition[]> {
+    console.log(`workspace resolveAspects, runtimeName: ${runtimeName}, componentIds: ${componentIds}`);
+    if (runtimeName == 'preview') {
+      console.trace('workspace preview')
+    }
     const defaultOpts: ResolveAspectsOptions = {
       excludeCore: false,
       requestedOnly: false,
@@ -1531,22 +1535,33 @@ needed-for: ${neededFor || '<unknown>'}`);
     const { workspaceIds, scopeIds } = await this.groupIdsByWorkspaceAndScope(componentIdsToResolve);
     const wsComponents = await this.getMany(workspaceIds);
     const aspectDefs = await this.aspectLoader.resolveAspects(wsComponents, async (component) => {
-      stringIds.push(component.id._legacy.toString());
+      const compStringId = component.id._legacy.toString();
+      stringIds.push(compStringId);
       const localPath = this.getComponentPackagePath(component);
       const isExist = await fs.pathExists(localPath);
       if (!isExist) {
         missingPaths = true;
       }
+      const runtimePath = runtimeName
+        ? await this.aspectLoader.getRuntimePath(component, localPath, runtimeName)
+        : null;
 
+      console.log(
+        `workspace resolveAspects, resolving id: ${compStringId}, localPath: ${localPath}, runtimePath: ${runtimePath}`
+      );
       return {
         aspectPath: localPath,
-        runtimePath: runtimeName ? await this.aspectLoader.getRuntimePath(component, localPath, runtimeName) : null,
+        runtimePath,
       };
     });
 
     let scopeAspectDefs: AspectDefinition[] = [];
     if (scopeIds.length) {
-      scopeAspectDefs = await this.scope.resolveAspects(runtimeName, scopeIds);
+      scopeAspectDefs = await this.scope.resolveAspects(runtimeName, scopeIds, mergedOpts);
+    }
+
+    if (mergedOpts.requestedOnly) {
+      console.log('scopeAspectDefs', scopeAspectDefs)
     }
 
     let coreAspectDefs = await Promise.all(
@@ -1585,6 +1600,10 @@ needed-for: ${neededFor || '<unknown>'}`);
       defs = defs.filter((def) => def.runtimePath);
     }
 
+    if (mergedOpts.requestedOnly) {
+      // console.log('uniqDefs', uniqDefs)
+    }
+
     if (componentIds && componentIds.length && mergedOpts.requestedOnly) {
       const componentIdsString = componentIds.map((id) => id.toString());
       defs = defs.filter((def) => {
@@ -1593,6 +1612,10 @@ needed-for: ${neededFor || '<unknown>'}`);
           (def.component && componentIdsString.includes(def.component?.id.toString()))
         );
       });
+    }
+
+    if (mergedOpts.requestedOnly) {
+      console.log('defs', defs)
     }
 
     return defs;

@@ -46,6 +46,7 @@ export class Runtime {
   async runOnce<T>(service: EnvService<T>, options?: { [key: string]: any }): Promise<any> {
     if (!service.runOnce) throw new Error('a service must implement `runOnce()` in order to be executed');
     const envsExecutionContext = this.getEnvExecutionContext();
+    console.log('envsExecutionContext', envsExecutionContext)
     const serviceResult = await service.runOnce(envsExecutionContext, options);
     return serviceResult;
   }
@@ -72,6 +73,7 @@ export class Runtime {
   ): Promise<EnvsExecutionResult<T>> {
     if (!service.run) throw new Error('a service must implement `run()` in order to be executed');
     const errors: Error[] = [];
+    console.log('im running with runtimes', runtimes)
     const contexts: EnvResult<T>[] = await mapSeries(runtimes || this.runtimeEnvs, async (env) => {
       try {
         // @ts-ignore

@@ -13,6 +13,7 @@ import { Slot, SlotRegistry, Harmony } from '@teambit/harmony';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import PubsubAspect, { PubsubMain } from '@teambit/pubsub';
 import { sha1 } from '@teambit/legacy/dist/utils';
+import pMapSeries from 'p-map-series';
 import fs from 'fs-extra';
 import { Port } from '@teambit/toolbox.network.get-port';
 import { join, resolve } from 'path';
@@ -240,7 +241,7 @@ export class UiMain {
 
   private async initiatePlugins(options: StartPluginOptions) {
     const plugins = this.startPluginSlot.values();
-    await Promise.all(plugins.map((plugin) => plugin.initiate(options)));
+    await pMapSeries(plugins, (plugin) => plugin.initiate(options));
     return plugins;
   }
 
@@ -358,13 +359,16 @@ export class UiMain {
   }
 
   async invokePreStart(preStartOpts: PreStartOpts): Promise<void> {
-    const promises = this.preStartSlot.values().map((fn) => fn(preStartOpts));
-    await Promise.all(promises);
+    // const promises = this.preStartSlot.values().map((fn) => fn(preStartOpts));
+    const onPreStartFuncs = this.preStartSlot.values();
+    await pMapSeries(onPreStartFuncs, async (fn) => fn(preStartOpts));
   }
 
   async invokeOnStart(): Promise<ComponentType[]> {
-    const promises = this.onStartSlot.values().map((fn) => fn());
-    const startPlugins = await Promise.all(promises);
+    // const promises = this.onStartSlot.values().map((fn) => fn());
+    const onStartFuncs = this.onStartSlot.values();
+    // const startPlugins = await Promise.all(promises);
+    const startPlugins = await pMapSeries(onStartFuncs, async (fn) => fn());
     return startPlugins.filter((plugin) => !!plugin) as ComponentType[];
   }
 
