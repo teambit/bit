@@ -203,7 +203,11 @@ export class JestTester implements Tester {
       // eslint-disable-next-line
       const jestConfig = require(this.jestConfig);
 
-      const envRootDir = context.envRuntime.envAspectDefinition.aspectPath;
+
+      const envRootDir = context.envRuntime.envAspectDefinition?.aspectPath;
+      if (!envRootDir) {
+        this.logger.warn(`jest tester, envRootDir is not defined, for env ${context.envRuntime.id}`);
+      }
 
       const jestConfigWithSpecs = Object.assign(jestConfig, {
         testMatch: this.patternsToArray(context.patterns),

@@ -1517,6 +1517,7 @@ needed-for: ${neededFor || '<unknown>'}`);
     componentIds?: ComponentID[],
     opts?: ResolveAspectsOptions
   ): Promise<AspectDefinition[]> {
+    this.logger.debug(`workspace resolveAspects, runtimeName: ${runtimeName}, componentIds: ${componentIds}`);
     const defaultOpts: ResolveAspectsOptions = {
       excludeCore: false,
       requestedOnly: false,
@@ -1531,22 +1532,29 @@ needed-for: ${neededFor || '<unknown>'}`);
     const { workspaceIds, scopeIds } = await this.groupIdsByWorkspaceAndScope(componentIdsToResolve);
     const wsComponents = await this.getMany(workspaceIds);
     const aspectDefs = await this.aspectLoader.resolveAspects(wsComponents, async (component) => {
-      stringIds.push(component.id._legacy.toString());
+      const compStringId = component.id._legacy.toString();
+      stringIds.push(compStringId);
       const localPath = this.getComponentPackagePath(component);
       const isExist = await fs.pathExists(localPath);
       if (!isExist) {
         missingPaths = true;
       }
+      const runtimePath = runtimeName
+        ? await this.aspectLoader.getRuntimePath(component, localPath, runtimeName)
+        : null;
 
+      this.logger.debug(
+        `workspace resolveAspects, resolving id: ${compStringId}, localPath: ${localPath}, runtimePath: ${runtimePath}`
+      );
       return {
         aspectPath: localPath,
-        runtimePath: runtimeName ? await this.aspectLoader.getRuntimePath(component, localPath, runtimeName) : null,
+        runtimePath,
       };
     });
 
     let scopeAspectDefs: AspectDefinition[] = [];
     if (scopeIds.length) {
-      scopeAspectDefs = await this.scope.resolveAspects(runtimeName, scopeIds);
+      scopeAspectDefs = await this.scope.resolveAspects(runtimeName, scopeIds, mergedOpts);
     }
 
     let coreAspectDefs = await Promise.all(
