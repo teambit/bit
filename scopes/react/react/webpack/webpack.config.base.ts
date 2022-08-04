@@ -1,4 +1,5 @@
 import { merge } from 'lodash';
+import { sep } from 'path';
 import 'style-loader';
 import MiniCssExtractPlugin from 'mini-css-extract-plugin';
 import getCSSModuleLocalIdent from 'react-dev-utils/getCSSModuleLocalIdent';
@@ -363,7 +364,7 @@ export default function (isEnvProduction = false): Configuration {
       // https://github.com/jmblog/how-to-optimize-momentjs-with-webpack
       // You can remove this if you don't use Moment.js:
       new IgnorePlugin({
-        resourceRegExp: /^\.\/locale$/,
+        resourceRegExp: new RegExp(`^\\.${sep}locale$`),
         contextRegExp: /moment$/,
       }),
     ].filter(Boolean),
