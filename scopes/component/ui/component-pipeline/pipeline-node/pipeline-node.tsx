@@ -1,18 +1,19 @@
+import React from 'react';
 import { Card } from '@teambit/base-ui.surfaces.card';
 import { ellipsis } from '@teambit/design.ui.styles.ellipsis';
 import classNames from 'classnames';
-import React from 'react';
-import { useComponentPipelineContext } from '@teambit/component.ui.component-pipeline';
+import { Tooltip } from '@teambit/design.ui.tooltip';
+import { TaskReport, useComponentPipelineContext } from '@teambit/component.ui.component-pipeline';
 import { Handle, NodeProps, Position } from 'react-flow-renderer';
 import styles from './pipeline-node.module.scss';
 
-export type PipelineNodeProps = NodeProps & {};
+export type PipelineNodeProps = NodeProps<TaskReport & { durationSecs: number; durationMilliSecs: number }>;
 
 export function PipelineNode(props: PipelineNodeProps) {
   const {
     id,
     isConnectable,
-    data: { id: taskId, name: taskName, durationSecs, durationMilliSecs },
+    data: { id: taskId, name: taskName, durationSecs, durationMilliSecs, warnings, errors, artifact },
   } = props;
   const icon = 'https://static.bit.dev/extensions-icons/react.svg';
   const componentPipelineContext = useComponentPipelineContext();
@@ -21,16 +22,22 @@ export function PipelineNode(props: PipelineNodeProps) {
     const updatedId = isSelected ? undefined : id;
     componentPipelineContext?.setSelectedPipelineId(updatedId);
   };
-
-  return (
+  const showErrorStatus = errors.length > 0;
+  const showWarningStaus = !showErrorStatus && warnings.length > 0;
+  const Pipeline = (
     <div key={`artifact-node-${id}`}>
       <Handle type="target" position={Position.Left} style={{ background: '#555' }} isConnectable={isConnectable} />
       <Handle type="source" position={Position.Right} style={{ background: '#555' }} isConnectable={isConnectable} />
       <Card
-        className={classNames(styles.compNode, isSelected && styles.selected)}
+        className={classNames(
+          styles.compNode,
+          isSelected && styles.selected,
+          showWarningStaus && styles.warning,
+          showErrorStatus && styles.error
+        )}
         roundness="small"
         elevation="none"
-        onClick={onPipelineNodeClicked}
+        onClick={artifact && onPipelineNodeClicked}
       >
         <div style={{ display: 'flex' }}>
           <div className={classNames(styles.componentDetails)}>
@@ -50,6 +57,13 @@ export function PipelineNode(props: PipelineNodeProps) {
       </Card>
     </div>
   );
+  if (!artifact)
+    return (
+      <Tooltip placement="bottom" content={'no artifacts'}>
+        {Pipeline}
+      </Tooltip>
+    );
+  return Pipeline;
 }
 
 export default PipelineNode;

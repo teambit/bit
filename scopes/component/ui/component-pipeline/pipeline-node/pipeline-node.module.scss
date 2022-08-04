@@ -11,6 +11,9 @@
   &.selected {
     background: var(--bit-accent-bg, #eceaff);
   }
+  &.error {
+    background: var(--bit-error-bg, #fdedd2);
+  }
 }
 
 // component icon

@@ -5,6 +5,8 @@ import {
   useComponentPipelineQuery,
   PipelineNode,
   ComponentPipelineContext,
+  ArtifactPanel,
+  ComponentPipelineBlankState,
 } from '@teambit/component.ui.component-pipeline';
 import ReactFlow, {
   ArrowHeadType,
@@ -83,6 +85,7 @@ export function ComponentPipelinePage({ host }: ComponentPipelinePageProps) {
 
   const [selectedPipelineId, setSelectedPipelineId] = useState<string | undefined>(undefined);
   const sidebarOpenness = selectedPipelineId ? Layout.row : Layout.left;
+  const showBlankState = elements.length === 0;
 
   return (
     <div className={styles.page}>
@@ -93,7 +96,7 @@ export function ComponentPipelinePage({ host }: ComponentPipelinePageProps) {
           setSelectedPipelineId,
         }}
       >
-        <H2 size="xs">Component Artifacts</H2>
+        <H2 size="xs">Pipeline</H2>
         <div className={styles.statContainer}>
           <div className={styles.statItem}>
             <p className={styles.statTitle}>Duration</p>
@@ -106,28 +109,35 @@ export function ComponentPipelinePage({ host }: ComponentPipelinePageProps) {
             <p>{data?.buildStatus}</p>
           </div>
         </div>
-        <SplitPane className={styles.graphContainer} layout={sidebarOpenness}>
+        <SplitPane size={'75%'} className={styles.graphContainer} layout={sidebarOpenness}>
           <Pane>
             <ReactFlowProvider>
-              <ReactFlow
-                draggable={false}
-                nodesDraggable={true}
-                selectNodesOnDrag={false}
-                nodesConnectable={false}
-                zoomOnDoubleClick={false}
-                elementsSelectable={false}
-                maxZoom={1}
-                elements={elements}
-                nodeTypes={NodeTypes}
-                className={styles.graph}
-              >
-                <Background />
-                <Controls className={styles.controls} />
-              </ReactFlow>
+              {!showBlankState && (
+                <ReactFlow
+                  draggable={false}
+                  nodesDraggable={true}
+                  selectNodesOnDrag={false}
+                  nodesConnectable={false}
+                  zoomOnDoubleClick={false}
+                  elementsSelectable={false}
+                  maxZoom={1}
+                  elements={elements}
+                  nodeTypes={NodeTypes}
+                  className={styles.graph}
+                >
+                  <Background />
+                  <Controls className={styles.controls} />
+                </ReactFlow>
+              )}
+              {showBlankState && <ComponentPipelineBlankState />}
             </ReactFlowProvider>
           </Pane>
           {(selectedPipelineId && <HoverSplitter></HoverSplitter>) || <></>}
-          {(selectedPipelineId && <Pane>{'ARTIFACT DATA'}</Pane>) || <></>}
+          {(selectedPipelineId && (
+            <Pane>
+              <ArtifactPanel />
+            </Pane>
+          )) || <></>}
         </SplitPane>
       </ComponentPipelineContext.Provider>
     </div>

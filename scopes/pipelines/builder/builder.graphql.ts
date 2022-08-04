@@ -67,14 +67,14 @@ export function builderSchema(builder: BuilderMain, scope: Scope) {
         pipelineReport: async (component: Component, { taskId }: { taskId?: string }) => {
           const builderData = builder.getBuilderData(component);
 
-          const artifactsByTask = builderData?.artifacts
+          const artifactsByTask = (builderData?.artifacts || [])
             ?.filter((artifact) => !taskId || artifact.task.id === taskId)
             .reduce((accum, next) => {
               accum.set(next.task.id, next);
               return accum;
             }, new Map<string, ArtifactObject>());
 
-          const pipelineReport = builderData?.pipeline
+          const pipelineReport = (builderData?.pipeline || [])
             .filter((pipeline) => !taskId || pipeline.taskId === taskId)
             .map((pipeline) => ({
               ...pipeline,
@@ -91,8 +91,8 @@ export function builderSchema(builder: BuilderMain, scope: Scope) {
         description: (taskReport: TaskReport) => taskReport.taskDescription,
         startTime: (taskReport: TaskReport) => taskReport.startTime,
         endTime: (taskReport: TaskReport) => taskReport.endTime,
-        errors: (taskReport: TaskReport) => taskReport.errors?.map((e) => e.toString()),
-        warnings: (taskReport: TaskReport) => taskReport.warnings,
+        errors: (taskReport: TaskReport) => taskReport.errors?.map((e) => e.toString()) || [],
+        warnings: (taskReport: TaskReport) => taskReport.warnings || [],
         artifact: async (taskReport: TaskReport, { path: pathFilter }: { path?: string }) => {
           if (!taskReport.artifact) return undefined;
 

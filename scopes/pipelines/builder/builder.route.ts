@@ -74,14 +74,19 @@ export class BuilderRoute implements Route {
 
       extensionsWithArtifacts.forEach((extensionWithArtifacts) => {
         extensionWithArtifacts.files.forEach((artifact) => {
-          archive.append(artifact.contents, { name: `${extensionWithArtifacts.extensionId}-${artifact.path}` });
+          archive.append(artifact.contents, { name: `${extensionWithArtifacts.extensionId}_${artifact.path}` });
         });
       });
 
       try {
         archive.pipe(res);
-        await archive.finalize();
-        return res.attachment(`${aspectId.replace('/', '-')}.tar`);
+        /**
+         *  promise that is returned from the await zip.finalize(); is resolved before the archive is actually finalized
+         *  resolving it results in setting the headers before the stream is finished
+         */
+        // eslint-disable-next-line no-void
+        void archive.finalize();
+        return res.attachment(`${aspectId.replace('/', '_')}.tar`);
       } catch (e: any) {
         return res.send({ error: e.toString() });
       }
