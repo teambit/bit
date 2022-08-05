@@ -1286,7 +1286,12 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
   ) {
     const componentConfigFile = await this.componentConfigFile(id);
     if (componentConfigFile) {
-      await componentConfigFile.addAspect(aspectId, config, this.resolveComponentId.bind(this));
+      await componentConfigFile.addAspect(
+        aspectId,
+        config,
+        this.resolveComponentId.bind(this),
+        shouldMergeWithExisting
+      );
       await componentConfigFile.write({ override: true });
     } else {
       this.bitMap.addComponentConfig(id, aspectId, config, shouldMergeWithExisting);
