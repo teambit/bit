@@ -6,10 +6,9 @@ import { ArtifactVinyl } from '@teambit/legacy/dist/consumer/component/sources/a
 import { flatten } from 'lodash';
 import { ArtifactsStorageResolver } from '..';
 import { Artifact } from './artifact';
-import { StorageResolverNotFoundError } from './exceptions';
 import { DefaultResolver, ArtifactListStoreResult } from '../storage';
 import { FsArtifact } from '.';
-// import { FsArtifact } from './fs-artifact';
+import { StorageResolverNotFoundError } from '../exceptions';
 
 export type ResolverMap<T extends Artifact> = { [key: string]: T[] };
 type StoreResultsByResolver = { [resolverName: string]: ArtifactListStoreResult };

@@ -1,6 +1,6 @@
 import { resolve } from 'path';
 import { ExecutionContext } from '@teambit/envs';
-import { BuildContext, BuiltTaskResult, BuildTask, TaskLocation, ArtifactStorageResolver } from '@teambit/builder';
+import { BuildContext, BuiltTaskResult, BuildTask, TaskLocation, ArtifactsStorageResolver } from '@teambit/builder';
 import { CompilerAspect } from '@teambit/compiler';
 import { Bundler, BundlerContext, Target } from '@teambit/bundler';
 import { ElementsMain } from './elements.main.runtime';
@@ -20,7 +20,7 @@ export class ElementTask implements BuildTask {
      * elements extension.
      */
     private elements: ElementsMain,
-    private storageResolver?: ArtifactStorageResolver
+    private storageResolvers?: ArtifactsStorageResolver[]
   ) {}
 
   aspectId = ElementsAspect.id;
@@ -47,7 +47,7 @@ export class ElementTask implements BuildTask {
     const bundler: Bundler = await context.env.getElementsBundler(bundlerContext, []);
     const bundlerResults = await bundler.run();
 
-    return computeResults(bundlerContext, bundlerResults, outDirName, this.storageResolver);
+    return computeResults(bundlerContext, bundlerResults, outDirName, this.storageResolvers);
   }
 
   getElementsDir(context: ExecutionContext) {

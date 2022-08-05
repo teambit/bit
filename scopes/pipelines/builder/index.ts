@@ -1,4 +1,3 @@
-import { StorageResolversMap } from './builder.main.runtime';
 export { BuildPipe, TaskResults } from './build-pipe';
 export { ComponentResult, TaskMetadata } from './types';
 export {
@@ -17,7 +16,7 @@ export {
   ArtifactsStorageResolver,
   ArtifactStoreResult,
 } from './storage';
-export { Artifact, ArtifactList, ArtifactFactory, ArtifactDefinition, ArtifactModelDefinition } from './artifact';
+export { Artifact, ArtifactList, ArtifactFactory, ArtifactDefinition } from './artifact';
 export { TaskResultsList } from './task-results-list';
 export { ArtifactVinyl } from '@teambit/legacy/dist/consumer/component/sources/artifact';
 export { BuilderAspect } from './builder.aspect';
