@@ -10,12 +10,19 @@ import {
 import { generateDependenciesInfoTable } from '@teambit/legacy/dist/cli/templates/component-template';
 import { IdNotFoundInGraph } from '@teambit/legacy/dist/scope/exceptions/id-not-found-in-graph';
 import DependencyGraph from '@teambit/legacy/dist/scope/graph/scope-graph';
+import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
+import { DependenciesMain } from './dependencies.main.runtime';
 
-type DependenciesFlags = {
+type GetDependenciesFlags = {
   tree: boolean;
 };
 
-export class DependenciesGet implements Command {
+export type SetDependenciesFlags = {
+  dev?: boolean;
+  peer?: boolean;
+};
+
+export class DependenciesGetCmd implements Command {
   name = 'get <component-name>';
   arguments = [{ name: 'component-name', description: 'component name or component id' }];
   group = 'info';
@@ -23,7 +30,7 @@ export class DependenciesGet implements Command {
   alias = '';
   options = [['t', 'tree', 'EXPERIMENTAL. render dependencies as a tree, similar to "npm ls"']] as CommandOptions;
 
-  async report([id]: [string], { tree = false }: DependenciesFlags) {
+  async report([id]: [string], { tree = false }: GetDependenciesFlags) {
     const results = (await dependencies(id, false)) as DependenciesResults;
 
     if (tree) {
@@ -68,7 +75,7 @@ ${scopeTable || '<none>'}`;
   }
 }
 
-export class DependenciesDebug implements Command {
+export class DependenciesDebugCmd implements Command {
   name = 'debug <component-name>';
   arguments = [{ name: 'component-name', description: 'component name or component id' }];
   group = 'info';
@@ -79,6 +86,28 @@ export class DependenciesDebug implements Command {
   async report([id]: [string]) {
     const results = (await dependencies(id, true)) as DependenciesResultsDebug;
     return JSON.stringify(results, undefined, 4);
+  }
+}
+
+export class DependenciesSetCmd implements Command {
+  name = 'set <component-pattern> <package>';
+  arguments = [
+    { name: 'component-pattern', description: COMPONENT_PATTERN_HELP },
+    { name: 'package', description: 'package name with version, e.g. "lodash@1.0.0"' },
+  ];
+  group = 'info';
+  description = 'set a dependency to component(s)';
+  alias = '';
+  options = [
+    ['d', 'dev', 'add to the devDependencies'],
+    ['p', 'peer', 'add to the peerDependencies'],
+  ] as CommandOptions;
+
+  constructor(private deps: DependenciesMain) {}
+
+  async report([pattern, pkg]: [string, string], setDepsFlags: SetDependenciesFlags) {
+    const results = await this.deps.setDependency(pattern, pkg, setDepsFlags);
+    return chalk.green(`the following component(s) have been successfully updated:\n${results.join('\n')}`);
   }
 }
 

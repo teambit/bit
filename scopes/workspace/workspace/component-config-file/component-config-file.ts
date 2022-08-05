@@ -8,7 +8,7 @@ import fs from 'fs-extra';
 import path from 'path';
 import stringifyPackage from 'stringify-package';
 import { REMOVE_EXTENSION_SPECIAL_SIGN } from '@teambit/legacy/dist/consumer/config';
-
+import { merge } from 'lodash';
 import { AlreadyExistsError } from './exceptions';
 
 interface ComponentConfigFileOptions {
@@ -82,10 +82,24 @@ export class ComponentConfigFile {
     return fs.writeJsonSync(filePath, json, { spaces: this.options.indent, EOL: this.options.newLine });
   }
 
-  async addAspect(aspectId: string, config: any, resolveComponentId: ResolveComponentIdFunc) {
+  async addAspect(
+    aspectId: string,
+    config: any,
+    resolveComponentId: ResolveComponentIdFunc,
+    shouldMergeConfig = false
+  ) {
     const existing = this.aspects.get(aspectId);
+
     if (existing) {
-      existing.config = config;
+      const getNewConfig = () => {
+        if (!shouldMergeConfig) return config;
+        if (!config || config === '-') return config;
+        if (!existing.config) return config;
+        // @ts-ignore
+        if (existing.config === '-') return config;
+        return merge(existing.config, config);
+      };
+      existing.config = getNewConfig();
     } else {
       const aspectEntry = await this.aspectEntryFromConfigObject(aspectId, config, resolveComponentId);
       this.aspects.entries.push(aspectEntry);
