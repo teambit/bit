@@ -18,7 +18,15 @@ import { AspectEnv } from './aspect.env';
 import { CoreExporterTask } from './core-exporter.task';
 import { aspectTemplate } from './templates/aspect';
 import { babelConfig } from './babel/babel-config';
-import { AspectCmd, GetAspectCmd, ListAspectCmd, SetAspectCmd, UnsetAspectCmd, UpdateAspectCmd } from './aspect.cmd';
+import {
+  AspectCmd,
+  GetAspectCmd,
+  ListAspectCmd,
+  SetAspectCmd,
+  SetAspectOptions,
+  UnsetAspectCmd,
+  UpdateAspectCmd,
+} from './aspect.cmd';
 
 export type AspectSource = { aspectName: string; source: string; level: string };
 
@@ -83,12 +91,13 @@ export class AspectMain {
   async setAspectsToComponents(
     pattern: string,
     aspectId: string,
-    config: Record<string, any> = {}
+    config: Record<string, any> = {},
+    options: SetAspectOptions = {}
   ): Promise<ComponentID[]> {
     const componentIds = await this.workspace.idsByPattern(pattern);
     await Promise.all(
       componentIds.map(async (componentId) => {
-        await this.workspace.addSpecificComponentConfig(componentId, aspectId, config);
+        await this.workspace.addSpecificComponentConfig(componentId, aspectId, config, options.merge);
       })
     );
     await this.workspace.bitMap.write();
