@@ -770,9 +770,7 @@ export function groupByLanes(ids: BitId[], lanes: Lane[]): { [scopeName: string]
   const isLaneIncludeId = (id: BitId, laneBitIds: BitIds) => {
     if (laneBitIds.has(id)) return true;
     const foundWithoutVersion = laneBitIds.searchWithoutVersion(id);
-    if (!foundWithoutVersion) return false;
-    const shouldIgnoreVersion = !id.hasVersion();
-    return shouldIgnoreVersion;
+    return foundWithoutVersion;
   };
 
   ids.forEach((id) => {

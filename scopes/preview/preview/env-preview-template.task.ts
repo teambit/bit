@@ -6,6 +6,7 @@ import {
   ComponentResult,
   CAPSULE_ARTIFACTS_DIR,
 } from '@teambit/builder';
+import { MainRuntime } from '@teambit/cli';
 import mapSeries from 'p-map-series';
 import { Component, ComponentMap } from '@teambit/component';
 import { AspectLoaderMain } from '@teambit/aspect-loader';
@@ -153,10 +154,15 @@ export class EnvPreviewTemplateTask implements BuildTask {
 
     const outputPath = this.computeOutputPath(context, envComponent);
     if (!existsSync(outputPath)) mkdirpSync(outputPath);
-    const resolvedEnvAspects = await this.preview.resolveAspects(undefined, [envComponent.id], undefined, {
+    const resolvedEnvAspects = await this.preview.resolveAspects(MainRuntime.name, [envComponent.id], undefined, {
       requestedOnly: true,
     });
-    const hostRootDir = resolvedEnvAspects[0].aspectPath;
+    const resolvedEnv = resolvedEnvAspects[0];
+    const hostRootDir = resolvedEnv?.aspectPath;
+
+    if (!hostRootDir) {
+      this.logger.warn(`env preview template task, hostRootDir is not defined, for env ${envComponent.id.toString()}`);
+    }
 
     return {
       peers,
