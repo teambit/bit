@@ -19,6 +19,12 @@ export const TaskIdDelimiter = ':';
  */
 export const CAPSULE_ARTIFACTS_DIR = 'artifacts';
 
+export interface TaskDescriptor {
+  aspectId: string;
+  name?: string;
+  description?: string;
+}
+
 export interface BuildContext extends ExecutionContext {
   /**
    * all components about to be built/tagged.

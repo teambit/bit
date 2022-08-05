@@ -70,7 +70,6 @@ export class BuilderService implements EnvService<BuildServiceResults, BuilderDe
      * pipe name to display on the console during the execution
      */
     private displayPipeName: string,
-    private artifactFactory: ArtifactFactory,
     private scope: ScopeMain
   ) {}
 
