@@ -1,5 +1,3 @@
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-import chalk from 'chalk';
 import fs from 'fs-extra';
 import os from 'os';
 // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
