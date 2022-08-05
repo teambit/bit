@@ -2,7 +2,7 @@ import { flatten } from 'lodash';
 import { ArtifactVinyl } from '@teambit/legacy/dist/consumer/component/sources/artifact';
 import { AspectLoaderAspect, AspectLoaderMain } from '@teambit/aspect-loader';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import { Component, ComponentMap, IComponent, ComponentAspect, ComponentMain } from '@teambit/component';
+import { Component, ComponentMap, IComponent, ComponentAspect, ComponentMain, ComponentID } from '@teambit/component';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { Slot, SlotRegistry } from '@teambit/harmony';
@@ -39,6 +39,8 @@ export type BuilderData = {
   aspectsData: AspectData[];
   bitVersion?: string;
 };
+
+const FILE_PATH_PARAM_DELIM = '~';
 
 export class BuilderMain {
   constructor(
@@ -305,6 +307,10 @@ export class BuilderMain {
   registerSnapTasks(tasks: BuildTask[]) {
     this.snapTaskSlot.register(tasks);
     return this;
+  }
+
+  getDownloadUrlForArtifact(componentId: ComponentID, taskId: string, path?: string) {
+    return `/api/${componentId}/~aspect/builder/${taskId}/${path ? `${FILE_PATH_PARAM_DELIM}${path}` : ''}`;
   }
 
   static slots = [Slot.withType<BuildTask>(), Slot.withType<BuildTask>(), Slot.withType<BuildTask>()];

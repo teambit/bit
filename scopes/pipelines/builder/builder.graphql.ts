@@ -18,7 +18,6 @@ type TaskReport = PipelineReport & {
   artifact: ArtifactGQLData;
   componentId: ComponentID;
 };
-const FILE_PATH_PARAM_DELIM = '~';
 
 export function builderSchema(builder: BuilderMain, scope: Scope) {
   return {
@@ -89,8 +88,6 @@ export function builderSchema(builder: BuilderMain, scope: Scope) {
         id: (taskReport: TaskReport) => taskReport.taskId,
         name: (taskReport: TaskReport) => taskReport.taskName,
         description: (taskReport: TaskReport) => taskReport.taskDescription,
-        startTime: (taskReport: TaskReport) => taskReport.startTime,
-        endTime: (taskReport: TaskReport) => taskReport.endTime,
         errors: (taskReport: TaskReport) => taskReport.errors?.map((e) => e.toString()) || [],
         warnings: (taskReport: TaskReport) => taskReport.warnings || [],
         artifact: async (taskReport: TaskReport, { path: pathFilter }: { path?: string }) => {
@@ -105,7 +102,7 @@ export function builderSchema(builder: BuilderMain, scope: Scope) {
               const isBinary = isBinaryPath(path);
               const content = !isBinary ? contents.toString('utf-8') : undefined;
               const downloadUrl = encodeURI(
-                `/api/${taskReport.componentId}/~aspect/builder/${taskReport.taskId}/${FILE_PATH_PARAM_DELIM}${path}`
+                builder.getDownloadUrlForArtifact(taskReport.componentId, taskReport.taskId, path)
               );
               return { id: path, name: basename, path, content, downloadUrl };
             });

@@ -88,6 +88,9 @@ export function ComponentPipelinePage({ host, fileIconSlot }: ComponentPipelineP
   const [selectedPipelineId, setSelectedPipelineId] = useState<string | undefined>(undefined);
   const sidebarOpenness = selectedPipelineId ? Layout.row : Layout.left;
   const showBlankState = elements.length === 0;
+  const onPanelClicked = () => {
+    setSelectedPipelineId(undefined);
+  };
 
   return (
     <div className={styles.page}>
@@ -128,6 +131,7 @@ export function ComponentPipelinePage({ host, fileIconSlot }: ComponentPipelineP
                   elements={elements}
                   nodeTypes={NodeTypes}
                   className={styles.graph}
+                  onPaneClick={onPanelClicked}
                 >
                   <Background />
                   <Controls className={styles.controls} />
