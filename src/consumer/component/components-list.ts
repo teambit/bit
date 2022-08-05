@@ -66,7 +66,7 @@ export default class ComponentsList {
    */
   async getFromObjects(): Promise<BitId[]> {
     if (!this._fromObjectsIds) {
-      const modelComponents: ModelComponent[] = await this.getModelComponents();
+      const modelComponents = await this.getModelComponents();
       this._fromObjectsIds = modelComponents.map((componentObjects) => {
         return new BitId({
           scope: componentObjects.scope,
@@ -249,7 +249,6 @@ export default class ComponentsList {
 
   async idsFromObjects(): Promise<BitIds> {
     const fromObjects = await this.getFromObjects();
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return new BitIds(...fromObjects);
   }
 
