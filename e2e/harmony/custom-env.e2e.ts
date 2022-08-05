@@ -223,7 +223,7 @@ describe('custom env', function () {
         helper.command.setEnv('comp1', `${envId}@0.0.2`);
       });
       it('bit status should show it as modified', () => {
-        const isModified = helper.command.statusComponentIsModified('comp1@0.0.1');
+        const isModified = helper.command.statusComponentIsModified('my-scope/comp1@0.0.1');
         expect(isModified).to.be.true;
       });
     });
