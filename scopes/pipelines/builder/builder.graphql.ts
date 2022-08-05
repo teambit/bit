@@ -50,12 +50,6 @@ export function builderSchema(builder: BuilderMain, scope: Scope) {
         files: [ArtifactFile!]!
       }
 
-      type AspectData {
-        # aspectId
-        id: String!
-        data: JSONObject
-      }
-
       extend type Component {
         pipelineReport(taskId: String): [TaskReport!]!
       }
