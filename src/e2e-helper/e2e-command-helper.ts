@@ -204,8 +204,11 @@ export default class CommandHelper {
   use(aspectId: string, flags = '') {
     return this.runCmd(`bit use ${aspectId} ${flags}`);
   }
-  dependencies(values = '') {
-    return this.runCmd(`bit dependencies ${values}`);
+  dependenciesGet(values = '') {
+    return this.runCmd(`bit dependencies get ${values}`);
+  }
+  dependenciesSet(pattern: string, pkg: string, flags = '') {
+    return this.runCmd(`bit dependencies set ${pattern} ${pkg}, ${flags}`);
   }
   tagComponent(id: string, tagMsg = 'tag-message', options = '') {
     return this.runCmd(`bit tag ${id} -m ${tagMsg} ${options} --build`);

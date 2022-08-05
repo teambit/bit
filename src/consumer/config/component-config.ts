@@ -57,9 +57,7 @@ export default class ComponentConfig extends AbstractConfig {
 
   toPlainObject() {
     const superObject = super.toPlainObject();
-    const componentObject = R.merge(superObject, {
-      overrides: this.overrides,
-    });
+    const componentObject = { ...superObject, overrides: this.overrides };
     const isPropDefaultOrEmpty = (val, key) => {
       if (key === 'overrides') return !R.isEmpty(val);
       return true;

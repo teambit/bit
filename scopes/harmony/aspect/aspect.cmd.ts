@@ -39,6 +39,8 @@ export class ListAspectCmd implements Command {
   }
 }
 
+export type SetAspectOptions = { merge?: boolean };
+
 export class SetAspectCmd implements Command {
   name = 'set <pattern> <aspect-id> [config]';
   description = 'set components with an aspect to extend their development tools, metadata and (possibly) artifacts';
@@ -57,14 +59,16 @@ export class SetAspectCmd implements Command {
       description: `the aspect config. enter the config as a stringified JSON (e.g. '{"foo":"bar"}' ). when no config is provided, an aspect is set with an empty config ({}).`,
     },
   ];
-  options = [];
+  options = [
+    ['m', 'merge', 'merge with an existing config if exits. (by default, it replaces the config)'],
+  ] as CommandOptions;
   group = 'development';
 
   constructor(private aspect: AspectMain) {}
 
-  async report([pattern, aspectId, config]: [string, string, string]) {
+  async report([pattern, aspectId, config]: [string, string, string], options: SetAspectOptions) {
     const configParsed = config ? JSON.parse(config) : {};
-    const results = await this.aspect.setAspectsToComponents(pattern, aspectId, configParsed);
+    const results = await this.aspect.setAspectsToComponents(pattern, aspectId, configParsed, options);
     if (!results.length) return chalk.yellow(`unable to find any matching for ${chalk.bold(pattern)} pattern`);
     return chalk.green(`the following component(s) have been successfully updated:\n${results.join('\n')}`);
   }
