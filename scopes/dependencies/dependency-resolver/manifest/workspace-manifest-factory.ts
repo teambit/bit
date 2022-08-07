@@ -12,6 +12,7 @@ import { dedupeDependencies, DedupedDependencies, getEmptyDedupedDependencies } 
 import { ManifestToJsonOptions, ManifestDependenciesObject } from './manifest';
 import { updateDependencyVersion } from './update-dependency-version';
 import { WorkspaceManifest } from './workspace-manifest';
+import { snapToSemver } from '@teambit/component-package-version';
 
 export type DepsFilterFn = (dependencies: DependencyList) => DependencyList;
 
@@ -211,8 +212,7 @@ export class WorkspaceManifestFactory {
 
           const getVersion = (): string => {
             if (!component.id.hasVersion()) return '0.0.1-new';
-            if (component.id._legacy.isVersionSnap()) return `0.0.1-${component.id.version}`;
-            return component.id.version as string;
+            return snapToSemver(component.id.version as string);
           };
 
           const version = getVersion();
