@@ -312,8 +312,15 @@ export default class Scope {
 
   async list(): Promise<ModelComponent[]> {
     const filter = (comp: ComponentItem) => !comp.isSymlink;
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return this.objects.listObjectsFromIndex(IndexType.components, filter);
+    const results = await this.objects.listObjectsFromIndex(IndexType.components, filter);
+    results.forEach((result) => {
+      if (!(result instanceof ModelComponent)) {
+        throw new Error(
+          `fatal: wrong hash in the index.json file. make sure that ${result.hash.toString()} is a ModelComponent`
+        );
+      }
+    });
+    return results as ModelComponent[];
   }
 
   async listIncludesSymlinks(): Promise<Array<ModelComponent | Symlink>> {
@@ -324,7 +331,6 @@ export default class Scope {
   async listIncludeRemoteHead(laneId: LaneId): Promise<ModelComponent[]> {
     const components = await this.list();
     const lane = laneId.isDefault() ? null : await this.loadLane(laneId);
-    // @todo: not sure this is needed anymore. probably the heads are populated when the component was loaded
     await Promise.all(components.map((component) => component.populateLocalAndRemoteHeads(this.objects, lane)));
     return components;
   }

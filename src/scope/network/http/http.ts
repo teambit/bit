@@ -346,6 +346,8 @@ export class Http implements Network {
       const json = JSON.parse(line);
       if (json.end) results = json;
       loader.start(json.message);
+      // this logger is super important for debugging if the export fails. it shows at what step the failure occurred
+      logger.debug(`http, msg from central-hub: ${json.message}`);
     });
 
     return new Promise((resolve, reject) => {

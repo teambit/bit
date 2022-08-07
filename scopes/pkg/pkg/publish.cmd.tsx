@@ -1,14 +1,21 @@
 import { ComponentResult } from '@teambit/builder';
 import { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
+import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
 
 import { Publisher, PublisherOptions } from './publisher';
 
 type PublishArgs = [string];
 
 export class PublishCmd implements Command {
-  name = 'publish <componentId>';
+  name = 'publish <component-pattern>';
   description = 'publish components to npm (npm publish)';
+  arguments = [
+    {
+      name: 'component-pattern',
+      description: COMPONENT_PATTERN_HELP,
+    },
+  ];
   options = [
     ['d', 'dry-run', 'npm publish --dry-run'],
     ['', 'allow-staged', 'allow publish components that were not exported yet (not recommended)'],
@@ -42,12 +49,8 @@ export class PublishCmd implements Command {
     return title + output;
   }
 
-  async json(
-    [componentId]: PublishArgs,
-    options: PublisherOptions
-  ): Promise<{ data: ComponentResult[]; code: number }> {
-    const compId = typeof componentId === 'string' ? componentId : componentId[0];
-    const packResult = await this.publisher.publish([compId], options);
+  async json([pattern]: PublishArgs, options: PublisherOptions): Promise<{ data: ComponentResult[]; code: number }> {
+    const packResult = await this.publisher.publish(pattern, options);
     return {
       data: packResult,
       code: 0,

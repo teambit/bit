@@ -1278,13 +1278,23 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     await config.workspaceConfig?.write({ dir: path.dirname(config.workspaceConfig.path) });
   }
 
-  async addSpecificComponentConfig(id: ComponentID, aspectId: string, config: Record<string, any> = {}) {
+  async addSpecificComponentConfig(
+    id: ComponentID,
+    aspectId: string,
+    config: Record<string, any> = {},
+    shouldMergeWithExisting = false
+  ) {
     const componentConfigFile = await this.componentConfigFile(id);
     if (componentConfigFile) {
-      await componentConfigFile.addAspect(aspectId, config, this.resolveComponentId.bind(this));
+      await componentConfigFile.addAspect(
+        aspectId,
+        config,
+        this.resolveComponentId.bind(this),
+        shouldMergeWithExisting
+      );
       await componentConfigFile.write({ override: true });
     } else {
-      this.bitMap.addComponentConfig(id, aspectId, config);
+      this.bitMap.addComponentConfig(id, aspectId, config, shouldMergeWithExisting);
     }
   }
 

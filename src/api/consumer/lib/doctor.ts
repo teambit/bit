@@ -1,4 +1,3 @@
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import fs from 'fs-extra';
 import os from 'os';
 // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -15,7 +14,7 @@ import DoctorRegistrar from '../../../doctor/doctor-registrar';
 import registerCoreAndExtensionsDiagnoses from '../../../doctor/doctor-registrar-builder';
 import logger from '../../../logger/logger';
 import npmClient from '../../../npm-client';
-import { getExt, getWithoutExt } from '../../../utils';
+import { getExt, getWithoutExt, removeChalkCharacters } from '../../../utils';
 import DiagnosisNotFound from './exceptions/diagnosis-not-found';
 import MissingDiagnosisName from './exceptions/missing-diagnosis-name';
 import * as globalConfig from './global-config';
@@ -139,7 +138,7 @@ async function _generateExamineResultsTarFile(
   envMeta: DoctorMetaData
 ): Promise<Stream.Readable> {
   const pack = tar.pack(); // pack is a streams2 stream
-  const debugLog = await _getDebugLogAsStream();
+  const debugLog = await _getDebugLogAsBuffer();
   const consumerInfo = await _getConsumerInfo();
   let bitmap;
   if (consumerInfo && consumerInfo.path) {
@@ -188,12 +187,12 @@ function _getUserDetails(): string {
   return `${name}<${email}>`;
 }
 
-async function _getDebugLogAsStream(): Promise<Buffer | null | undefined> {
+async function _getDebugLogAsBuffer(): Promise<Buffer | null | undefined> {
   const exists = await fs.pathExists(DEBUG_LOG);
-  if (exists) {
-    return fs.readFile(DEBUG_LOG);
-  }
-  return Promise.resolve(undefined);
+  if (!exists) return null;
+  const log = await fs.readFile(DEBUG_LOG, 'utf-8');
+  const logWithoutChalk = removeChalkCharacters(log) as string;
+  return Buffer.from(logWithoutChalk);
 }
 
 async function _getConsumerInfo(): Promise<ConsumerInfo | null | undefined> {
