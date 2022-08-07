@@ -2,6 +2,7 @@ import { AspectLoaderMain } from '@teambit/aspect-loader';
 import { Component } from '@teambit/component';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 import { SemVer } from 'semver';
+import { snapToSemver } from '@teambit/component-package-version';
 import { ComponentDependency, DependencyList, PackageName } from '../dependencies';
 import { VariantPolicy, WorkspacePolicy, EnvPolicy, PeersAutoDetectPolicy } from '../policy';
 
@@ -211,8 +212,7 @@ export class WorkspaceManifestFactory {
 
           const getVersion = (): string => {
             if (!component.id.hasVersion()) return '0.0.1-new';
-            if (component.id._legacy.isVersionSnap()) return `0.0.1-${component.id.version}`;
-            return component.id.version as string;
+            return snapToSemver(component.id.version as string);
           };
 
           const version = getVersion();
