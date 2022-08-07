@@ -244,8 +244,8 @@ jobs:
       - attach_workspace:
           at: ./
       - docker_build_and_push:
-          docker_build_arg_value: "node:16.16.0"
-          docker_tag_suffix: "-node-16.16.0"
+          docker_build_arg_value: "node:14.19.1"
+          docker_tag_suffix: "-node-14.19.1"
 
   docker_build_node_16:
     machine:
@@ -313,10 +313,10 @@ jobs:
           at: ./
       - docker_build_and_push:
           docker_build_arg_name: "BIT_IMAGE"
-          docker_build_arg_value: "`npm show @teambit/bit version`-node-16.16.0"
+          docker_build_arg_value: "`npm show @teambit/bit version`-node-14.19.1"
           image_name: "bitcli/bit-server"
           docker_file_name: "Dockerfile-bit-server"
-          docker_tag_suffix: "-node-16.16.0"
+          docker_tag_suffix: "-node-14.19.1"
 
   server_docker_build_node_16:
     machine:
