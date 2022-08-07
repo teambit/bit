@@ -2,6 +2,7 @@ import { AspectLoaderMain } from '@teambit/aspect-loader';
 import { Component } from '@teambit/component';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 import { SemVer } from 'semver';
+import { snapToSemver } from '@teambit/component-package-version';
 import { ComponentDependency, DependencyList, PackageName } from '../dependencies';
 import { VariantPolicy, WorkspacePolicy, EnvPolicy, PeersAutoDetectPolicy } from '../policy';
 
@@ -12,7 +13,6 @@ import { dedupeDependencies, DedupedDependencies, getEmptyDedupedDependencies } 
 import { ManifestToJsonOptions, ManifestDependenciesObject } from './manifest';
 import { updateDependencyVersion } from './update-dependency-version';
 import { WorkspaceManifest } from './workspace-manifest';
-import { snapToSemver } from '@teambit/component-package-version';
 
 export type DepsFilterFn = (dependencies: DependencyList) => DependencyList;
 
