@@ -1,7 +1,7 @@
 import fs from 'fs-extra';
 import * as path from 'path';
 import semver from 'semver';
-import { flatten, compact } from 'lodash';
+import { flatten } from 'lodash';
 import { BitIds } from '../../bit-id';
 import { COMPONENT_ORIGINS } from '../../constants';
 import ShowDoctorError from '../../error/show-doctor-error';
@@ -224,7 +224,7 @@ export default class ComponentWriter {
         // see artifact-files.importMultipleDistsArtifacts().
 
         await artifactFiles.importMissingArtifactObjects(scope);
-        const vinylFiles = compact(artifactFiles.files.map((file) => file.vinyl));
+        const vinylFiles = artifactFiles.getExistingVinyls();
         artifactsVinylFlattened.push(...vinylFiles);
       })
     );

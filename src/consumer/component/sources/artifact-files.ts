@@ -79,7 +79,7 @@ export class ArtifactFiles {
     this.files.forEach((file) => file.populateArtifactSourceFromVinyl());
   }
   getExistingVinyls() {
-    return this.files.map((file) => file.vinyl);
+    return compact(this.files.map((file) => file.vinyl));
   }
 
   isEmpty() {
