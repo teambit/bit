@@ -73,7 +73,7 @@ describe('merge lanes', function () {
         helper.scopeHelper.reInitLocalScopeHarmony();
         helper.scopeHelper.addRemoteScope();
         helper.command.fetchRemoteLane('dev');
-        mergeOutput = helper.command.mergeRemoteLane(`dev`, undefined, `--workspace`);
+        mergeOutput = helper.command.mergeRemoteLane(`dev`, undefined, `--workspace --verbose`);
       });
       it('should indicate that the components were not merge because they are not in the workspace', () => {
         expect(mergeOutput).to.have.string('the merge has been canceled on the following component(s)');
