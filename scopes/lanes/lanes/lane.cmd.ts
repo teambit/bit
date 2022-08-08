@@ -294,6 +294,7 @@ export class LaneMergeCmd implements Command {
     ['m', 'message <message>', 'override the default message for the auto snap'],
     ['', 'keep-readme', 'skip deleting the lane readme component after merging'],
     ['', 'squash', 'EXPERIMENTAL. squash multiple snaps. keep the last one only'],
+    ['', 'verbose', 'show details of components that were not merged legitimately'],
     [
       '',
       'include-deps',
@@ -321,6 +322,7 @@ export class LaneMergeCmd implements Command {
       keepReadme = false,
       squash = false,
       includeDeps = false,
+      verbose = false,
     }: {
       ours: boolean;
       theirs: boolean;
@@ -333,6 +335,7 @@ export class LaneMergeCmd implements Command {
       keepReadme?: boolean;
       squash: boolean;
       includeDeps?: boolean;
+      verbose?: boolean;
     }
   ): Promise<string> {
     build = isFeatureEnabled(BUILD_ON_CI) ? Boolean(build) : true;
@@ -356,7 +359,7 @@ export class LaneMergeCmd implements Command {
       includeDeps,
     });
 
-    const mergeResult = `${mergeReport(mergeResults)}`;
+    const mergeResult = mergeReport({ ...mergeResults, verbose });
     const deleteResult = `${deleteResults.localResult ? paintRemoved(deleteResults.localResult, false) : ''}${(
       deleteResults.remoteResult || []
     ).map((item) => paintRemoved(item, true))}${
