@@ -168,12 +168,15 @@ export class JestTester implements Tester {
     // eslint-disable-next-line global-require,import/no-dynamic-require
     const jestConfig = require(this.jestConfig);
 
-    const moduleNameMapper = await this.calculateModuleNameMapper(
-      context.env,
-      context.rootPath,
-      context.additionalHostDependencies
-    );
-    jestConfig.moduleNameMapper = Object.assign({}, jestConfig.moduleNameMapper || {}, moduleNameMapper);
+    // TODO: rollback this for now, as it makes issues.
+    // TODO: it's mostly relevant for when the root components feature is enabled.
+    // TODO: we might want to enable it only on that case (along with setting the env root dir as the root dir, above)
+    // const moduleNameMapper = await this.calculateModuleNameMapper(
+    //   context.env,
+    //   context.rootPath,
+    //   context.additionalHostDependencies
+    // );
+    // jestConfig.moduleNameMapper = Object.assign({}, jestConfig.moduleNameMapper || {}, moduleNameMapper);
 
     const jestConfigWithSpecs = Object.assign(jestConfig, {
       testMatch: this.patternsToArray(context.patterns),
@@ -203,7 +206,11 @@ export class JestTester implements Tester {
       // eslint-disable-next-line
       const jestConfig = require(this.jestConfig);
 
-      const envRootDir = context.envRuntime.envAspectDefinition.aspectPath;
+
+      const envRootDir = context.envRuntime.envAspectDefinition?.aspectPath;
+      if (!envRootDir) {
+        this.logger.warn(`jest tester, envRootDir is not defined, for env ${context.envRuntime.id}`);
+      }
 
       const jestConfigWithSpecs = Object.assign(jestConfig, {
         testMatch: this.patternsToArray(context.patterns),

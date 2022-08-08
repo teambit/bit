@@ -35,8 +35,9 @@ describe('publish functionality', function () {
       it('should throw an error', () => {
         const output = helper.general.runWithTryCatch('bit publish comp1');
         expect(output).to.have.string(
-          'unable to publish the following component(s), please make sure they are exported: comp1'
+          'unable to publish the following component(s), please make sure they are exported'
         );
+        expect(output).to.have.string('comp1');
       });
     });
     (supportNpmCiRegistryTesting ? describe : describe.skip)('publishing the components', () => {

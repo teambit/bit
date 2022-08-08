@@ -12,7 +12,7 @@ describe('updateDependencyVersion()', function () {
     } as any; // eslint-disable-line
     const rootPolicy = {
       // @ts-ignore
-      getDepVersion: jest.fn((pkgName: string, lifecycle: DependencyLifecycleType) =>
+      getValidSemverDepVersion: jest.fn((pkgName: string, lifecycle: DependencyLifecycleType) =>
         lifecycle === 'runtime' ? '2.0.0' : undefined
       ),
     } as any; // eslint-disable-line
@@ -23,7 +23,7 @@ describe('updateDependencyVersion()', function () {
     // The lifecycle type is changed to runtime
     // root policies don't have a separate property for dev dependencies
     // both runtime and dev dependencies are specified through "dependencies"
-    expect(rootPolicy.getDepVersion).toHaveBeenCalledWith('foo', 'runtime');
+    expect(rootPolicy.getValidSemverDepVersion).toHaveBeenCalledWith('foo', 'runtime');
     expect(dependency.setVersion).toHaveBeenCalledWith('2.0.0');
   });
 });

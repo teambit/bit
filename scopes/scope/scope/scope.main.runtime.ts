@@ -641,10 +641,17 @@ needed-for: ${neededFor || '<unknown>'}`);
       const capsule = capsules.getCapsule(component.id);
       if (!capsule) throw new Error(`failed loading aspect: ${component.id.toString()}`);
       const localPath = capsule.path;
+      const runtimePath = runtimeName
+        ? await this.aspectLoader.getRuntimePath(component, localPath, runtimeName)
+        : null;
+      this.logger.debug(
+        `scope resolveUserAspects, resolving id: ${component.id.toString()}, localPath: ${localPath}, runtimePath: ${runtimePath}`
+      );
 
       return {
+        id: capsule.component.id,
         aspectPath: localPath,
-        runtimePath: runtimeName ? await this.aspectLoader.getRuntimePath(component, localPath, runtimeName) : null,
+        runtimePath,
       };
     });
     return aspectDefs;
@@ -655,6 +662,9 @@ needed-for: ${neededFor || '<unknown>'}`);
     componentIds?: ComponentID[],
     opts?: ResolveAspectsOptions
   ): Promise<AspectDefinition[]> {
+    const originalStringIds = componentIds?.map((id) => id.toString());
+    this.logger.debug(`scope resolveAspects, runtimeName: ${runtimeName}, componentIds: ${originalStringIds}`);
+
     const defaultOpts: ResolveAspectsOptions = {
       excludeCore: false,
       requestedOnly: false,
