@@ -4,7 +4,7 @@ import type { Formatter, FormatterContext } from '@teambit/formatter';
 import type { Tester } from '@teambit/tester';
 import type { Compiler } from '@teambit/compiler';
 import type { Bundler, BundlerContext, DevServer, DevServerContext } from '@teambit/bundler';
-import type { BuildTask, StorageResolversMap } from '@teambit/builder';
+import type { BuildTask } from '@teambit/builder';
 import type { SchemaExtractor } from '@teambit/schema';
 import type { WebpackConfigTransformer } from '@teambit/webpack';
 import type { PackageJsonProps } from '@teambit/pkg';
@@ -190,8 +190,6 @@ export interface BuilderEnv extends PreviewEnv {
    * Either `getBuildPipe`, `getTagPipe`, or `getSnapPipe` is required for `bit build`
    */
   getSnapPipe?: (modifiersMap?: PipeServiceModifiersMap) => BuildTask[];
-
-  getStorageResolvers?: () => StorageResolversMap;
 }
 
 export interface TesterEnv extends Environment {
