@@ -1,7 +1,6 @@
+import { ArtifactStorageResolver } from '@teambit/builder';
 import type { ArtifactFiles } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
-import type { TaskDescriptor } from '../build-task';
 import type { ArtifactDefinition } from './artifact-definition';
-import type { ArtifactsStorageResolver } from '../storage';
 import { Artifact } from './artifact';
 
 export class FsArtifact extends Artifact {
@@ -14,14 +13,9 @@ export class FsArtifact extends Artifact {
     /**
      * storage resolver. can be used to replace where artifacts are stored.
      */
-    readonly storageResolvers: ArtifactsStorageResolver[],
+    readonly storageResolvers: ArtifactStorageResolver,
 
     readonly files: ArtifactFiles,
-
-    /**
-     * the declaring task.
-     */
-    readonly task: TaskDescriptor,
 
     /**
      * timestamp of the artifact creation.
@@ -33,6 +27,6 @@ export class FsArtifact extends Artifact {
      */
     readonly rootDir: string
   ) {
-    super(def, storageResolvers, files, task);
+    super(def, storageResolvers, files, rootDir);
   }
 }

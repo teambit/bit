@@ -41,6 +41,12 @@ export interface BuildContext extends ExecutionContext {
   dev?: boolean;
 }
 
+export interface TaskDescriptor {
+  aspectId: string;
+  name?: string;
+  description?: string;
+}
+
 export interface BuildTask {
   /**
    * aspect id serialized of the creator of the task.

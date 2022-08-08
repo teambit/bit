@@ -1,6 +1,6 @@
 import { Component } from '@teambit/component';
 import type { ArtifactObject } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
-import type { Artifact } from './artifact';
+import { Artifact } from './artifact';
 import {
   ArtifactStorageResolver,
   FileStorageResolver,
@@ -8,10 +8,10 @@ import {
   DefaultResolver,
 } from '../storage';
 
-export type ResolverMap = { [key: string]: Artifact[] };
+export type ResolverMap<T extends Artifact> = { [key: string]: T[] };
 
-export class ArtifactList {
-  constructor(readonly artifacts: Artifact[]) {}
+export class ArtifactList<T extends Artifact> {
+  constructor(readonly artifacts: T[]) {}
 
   /**
    * return an array of artifact objects.
@@ -20,11 +20,19 @@ export class ArtifactList {
     return this.artifacts;
   }
 
+  static fromArtifactObjects(
+    artifactObjects: ArtifactObject[],
+    storageResolver: ArtifactStorageResolver
+  ): ArtifactList<Artifact> {
+    const artifacts = artifactObjects.map((object) => Artifact.fromArtifactObject(object, storageResolver));
+    return new ArtifactList(artifacts);
+  }
+
   /**
    * group artifacts by the storage resolver.
    */
-  groupByResolver(): ResolverMap {
-    const resolverMap: ResolverMap = {};
+  private groupByResolver(): ResolverMap<T> {
+    const resolverMap: ResolverMap<T> = {};
     this.artifacts.forEach((artifact) => {
       const storageResolver = artifact.storageResolver;
       const resolverArray = resolverMap[storageResolver.name];
@@ -61,7 +69,7 @@ export class ArtifactList {
       const artifacts = byResolvers[key];
       if (!artifacts.length) return;
       const storageResolver = artifacts[0].storageResolver;
-      const artifactList = new ArtifactList(artifacts);
+      const artifactList = new ArtifactList<T>(artifacts);
       const artifactPromises = artifactList.artifacts.map(async (artifact) => {
         return this.storeArtifact(storageResolver, artifact, component);
       });
