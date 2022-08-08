@@ -126,19 +126,17 @@ export class LanesMain {
     return lanes;
   }
 
-  getCurrentLane(): string | null {
-    if (!this.workspace?.consumer) return null;
-    return this.scope.legacyScope.lanes.getCurrentLaneName();
+  getCurrentLaneName(): string | null {
+    return this.getCurrentLaneId()?.name || null;
   }
 
   getCurrentLaneId(): LaneId | null {
     if (!this.workspace) return null;
-    return this.scope.legacyScope.lanes.getCurrentLaneId();
+    return this.workspace.consumer.getCurrentLaneId();
   }
 
   setCurrentLane(laneId: LaneId, alias?: string, exported?: boolean) {
-    this.scope.legacyScope.lanes.setCurrentLane(alias || laneId.name);
-    this.workspace?.consumer.bitMap.setCurrentLane(laneId, exported);
+    this.workspace?.consumer.setCurrentLane(laneId, exported);
   }
 
   async createLane(name: string, { remoteScope, alias }: CreateLaneOptions = {}): Promise<TrackLane> {
@@ -285,7 +283,7 @@ export class LanesMain {
     await this.scope.legacyScope.lanes.saveLane(lane);
 
     // change current-lane if needed
-    const currentLaneName = this.getCurrentLane();
+    const currentLaneName = this.getCurrentLaneName();
     if (currentLaneName === laneNameWithoutScope) {
       const newLaneId = LaneId.from(newName, lane.scope);
       const isExported = this.workspace.consumer.bitMap.isLaneExported;
@@ -439,7 +437,7 @@ export class LanesMain {
     if (!this.workspace) {
       throw new BitError('unable to remove the lane readme component outside of Bit workspace');
     }
-    const currentLaneName = this.getCurrentLane();
+    const currentLaneName = this.getCurrentLaneName();
 
     if (!laneName && !currentLaneName) {
       return {

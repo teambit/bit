@@ -167,7 +167,6 @@ export default class BitMap {
         remoteScope: laneId.scope,
         localLane: laneId.name,
       });
-      scopeJson.setCurrentLane(laneId.name);
     }
 
     BitMap.removeNonComponentFields(componentsJson);
@@ -882,6 +881,10 @@ export default class BitMap {
     return allChanges;
   }
 
+  /**
+   * avoid calling this method directly.
+   * prefer `consumer.setCurrentLane()`
+   */
   setCurrentLane(laneId: LaneId, exported = true) {
     if (laneId.isDefault()) {
       this.laneId = undefined;

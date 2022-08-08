@@ -79,7 +79,7 @@ export function lanesSchema(lanesMainRuntime: LanesMain): Schema {
           return lanes;
         },
         current: async (lanesMain: LanesMain) => {
-          const currentLaneId = lanesMain.getCurrentLane();
+          const currentLaneId = lanesMain.getCurrentLaneName();
           if (!currentLaneId) return undefined;
           const [currentLane] = await lanesMain.getLanes({ name: currentLaneId });
           return currentLane;
