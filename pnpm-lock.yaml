@@ -275,6 +275,7 @@ importers:
       core-js: 3.13.0
       cors: 2.8.5
       credentials-by-uri: 2.0.0
+      cross-env: 7.0.3
       cross-fetch: 3.0.6
       crypto-browserify: 3.12.0
       css-loader: 6.2.0
@@ -786,6 +787,7 @@ importers:
       core-js: registry.npmjs.org/core-js/3.13.0
       cors: registry.npmjs.org/cors/2.8.5
       credentials-by-uri: registry.npmjs.org/credentials-by-uri/2.0.0
+      cross-env: registry.npmjs.org/cross-env/7.0.3
       cross-fetch: registry.npmjs.org/cross-fetch/3.0.6
       crypto-browserify: registry.npmjs.org/crypto-browserify/3.12.0
       css-loader: registry.npmjs.org/css-loader/6.2.0_webpack@5.51.1
@@ -19980,6 +19982,16 @@ packages:
       nerf-dart: registry.npmjs.org/nerf-dart/1.0.0
     dev: false
 
+  registry.npmjs.org/cross-env/7.0.3:
+    resolution: {integrity: sha512-+/HKd6EgcQCJGh2PSjZuUitQBQynKor4wrFbRg4DtAgS1aWO+gU52xpH7M9ScGgXSYmAVS9bIJ8EzuaGw0oNAw==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/cross-env/-/cross-env-7.0.3.tgz}
+    name: cross-env
+    version: 7.0.3
+    engines: {node: '>=10.14', npm: '>=6', yarn: '>=1'}
+    hasBin: true
+    dependencies:
+      cross-spawn: registry.npmjs.org/cross-spawn/7.0.3
+    dev: false
+
   registry.npmjs.org/cross-fetch/3.0.6:
     resolution: {integrity: sha512-KBPUbqgFjzWlVcURG+Svp9TlhA5uliYtiNx/0r8nv0pdypeQCRJ9IaSIc3q/x3q8t3F75cHuwxVql1HFGHCNJQ==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/cross-fetch/-/cross-fetch-3.0.6.tgz}
     name: cross-fetch
@@ -38759,7 +38771,7 @@ packages:
     dev: false
 
   registry.npmjs.org/which/1.3.1:
-    resolution: {integrity: sha512-HxJdYWq1MTIQbJ3nw0cqssHoTNU267KlrDuGZ1WYlxDStUtKUhOaJmh112/TZmHxxUfuJqPXSOm7tDyas0OSIQ==, registry: https://node.bit.cloud/, tarball: https://registry.npmjs.org/which/-/which-1.3.1.tgz}
+    resolution: {integrity: sha512-HxJdYWq1MTIQbJ3nw0cqssHoTNU267KlrDuGZ1WYlxDStUtKUhOaJmh112/TZmHxxUfuJqPXSOm7tDyas0OSIQ==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/which/-/which-1.3.1.tgz}
     name: which
     version: 1.3.1
     hasBin: true
