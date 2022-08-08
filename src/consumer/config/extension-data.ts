@@ -6,11 +6,10 @@ import { sortObject } from '../../utils';
 import {
   convertBuildArtifactsFromModelObject,
   convertBuildArtifactsToModelObject,
-  cloneBuildArtifacts,
+  reStructureBuildArtifacts,
 } from '../component/sources/artifact-files';
 
 const mergeReducer = (accumulator, currentValue) => R.unionWith(ignoreVersionPredicate, accumulator, currentValue);
-
 type ExtensionConfig = { [extName: string]: any } | RemoveExtensionSpecialSign;
 type ConfigOnlyEntry = {
   id: string;
@@ -214,7 +213,7 @@ export class ExtensionDataList extends Array<ExtensionDataEntry> {
   clone(): ExtensionDataList {
     const extensionDataEntries = this.map((extensionData) => extensionData.clone());
     const extensionDataList = new ExtensionDataList(...extensionDataEntries);
-    cloneBuildArtifacts(extensionDataList);
+    reStructureBuildArtifacts(extensionDataList);
     return extensionDataList;
   }
 

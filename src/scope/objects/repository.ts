@@ -234,8 +234,7 @@ export default class Repository {
         return bitObject;
       })
     );
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return bitObjects.filter((b) => b); // remove nulls;
+    return compact(bitObjects);
   }
 
   async loadOptionallyCreateScopeIndex(): Promise<ScopeIndex> {
