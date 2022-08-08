@@ -1,7 +1,7 @@
 import fs from 'fs-extra';
 import * as path from 'path';
 import semver from 'semver';
-import { flatten } from 'lodash';
+import { flatten, compact } from 'lodash';
 import { BitIds } from '../../bit-id';
 import { COMPONENT_ORIGINS } from '../../constants';
 import ShowDoctorError from '../../error/show-doctor-error';
@@ -18,11 +18,7 @@ import DataToPersist from '../component/sources/data-to-persist';
 import RemovePath from '../component/sources/remove-path';
 import Consumer from '../consumer';
 import { ArtifactVinyl } from '../component/sources/artifact';
-import {
-  ArtifactFiles,
-  deserializeArtifactFiles,
-  getArtifactFilesByExtension,
-} from '../component/sources/artifact-files';
+import { getArtifactFilesByExtension } from '../component/sources/artifact-files';
 import { preparePackageJsonToWrite } from '../component/package-json-utils';
 
 export type ComponentWriterProps = {
@@ -220,12 +216,15 @@ export default class ComponentWriter {
     await Promise.all(
       artifactsFiles.map(async (artifactFiles) => {
         if (!artifactFiles) return;
-        if (!(artifactFiles instanceof ArtifactFiles)) {
-          artifactFiles = deserializeArtifactFiles(artifactFiles);
-        }
+        // if (!(artifactFiles instanceof ArtifactFiles)) {
+        //   artifactFiles = deserializeArtifactFiles(artifactFiles);
+        // }
+
         // fyi, if this is coming from the isolator aspect, it is optimized to import all at once.
         // see artifact-files.importMultipleDistsArtifacts().
-        const vinylFiles = await artifactFiles.getVinylsAndImportIfMissing(this.component.id, scope);
+
+        await artifactFiles.importMissingArtifactObjects(scope);
+        const vinylFiles = compact(artifactFiles.files.map((file) => file.vinyl));
         artifactsVinylFlattened.push(...vinylFiles);
       })
     );

@@ -1,7 +1,7 @@
 import { PJV } from 'package-json-validator';
 import R from 'ramda';
 import packageNameValidate from 'validate-npm-package-name';
-
+import { ArtifactFile } from '../consumer/component/sources/artifact-file';
 import { BitId, BitIds } from '../bit-id';
 import { DEPENDENCIES_FIELDS } from '../constants';
 import { SchemaName } from '../consumer/component/component-schema';
@@ -84,11 +84,24 @@ export default function validateVersionInstance(version: Version): void {
     }
   };
 
+  const _validateArtifactFile = (artifactFile: ArtifactFile) => {
+    if (artifactFile.compatibleWithBackwardModelObject()) {
+      const artifactRef = artifactFile.getArtifactRef();
+      validateFile(artifactRef, 'artifact');
+      return;
+    }
+    validateType(message, artifactFile.relativePath, 'relativePath', 'string');
+    validateType(message, artifactFile.stores, 'stores', 'array');
+    artifactFile.stores?.forEach((store) => {
+      validateType(message, store.name, 'store.name', 'string');
+    });
+  };
+
   const validateArtifacts = (extensions: ExtensionDataList) => {
     const artifactsFiles = getArtifactsFiles(extensions);
-    artifactsFiles.forEach((artifacts) => {
-      artifacts.refs.map((artifact) => validateFile(artifact, 'artifact'));
-      const filesPaths = artifacts.refs.map((artifact) => artifact.relativePath);
+    artifactsFiles.forEach((artifactFiles) => {
+      artifactFiles.files.map((artifact) => _validateArtifactFile(artifact));
+      const filesPaths = artifactFiles.getRelativePaths();
       const duplicateArtifacts = filesPaths.filter(
         (file) => filesPaths.filter((f) => file.toLowerCase() === f.toLowerCase()).length > 1
       );

@@ -1,6 +1,7 @@
 import pMap from 'p-map';
 import { BitError } from '@teambit/bit-error';
 import { isHash } from '@teambit/component-version';
+import flatten from 'lodash.flatten';
 import { BitId, BitIds } from '../../bit-id';
 import { BuildStatus } from '../../constants';
 import ConsumerComponent from '../../consumer/component';
@@ -203,13 +204,12 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
   }
 
   private transformArtifactsFromVinylToSource(artifactsFiles: ArtifactFiles[]): ArtifactSource[] {
-    const artifacts: ArtifactSource[] = [];
-    artifactsFiles.forEach((artifactFiles) => {
-      const artifactsSource = ArtifactFiles.fromVinylsToSources(artifactFiles.vinyls);
-      if (artifactsSource.length) artifactFiles.populateRefsFromSources(artifactsSource);
-      artifacts.push(...artifactsSource);
+    const artifacts = artifactsFiles.map((artifactFiles) => {
+      artifactFiles.populateArtifactSourceFromVinyl();
+      artifactFiles.populateRefsFromSources();
+      return artifactFiles.getSources();
     });
-    return artifacts;
+    return flatten(artifacts);
   }
 
   /**
