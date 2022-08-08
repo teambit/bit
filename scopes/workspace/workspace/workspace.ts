@@ -1278,13 +1278,23 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     await config.workspaceConfig?.write({ dir: path.dirname(config.workspaceConfig.path) });
   }
 
-  async addSpecificComponentConfig(id: ComponentID, aspectId: string, config: Record<string, any> = {}) {
+  async addSpecificComponentConfig(
+    id: ComponentID,
+    aspectId: string,
+    config: Record<string, any> = {},
+    shouldMergeWithExisting = false
+  ) {
     const componentConfigFile = await this.componentConfigFile(id);
     if (componentConfigFile) {
-      await componentConfigFile.addAspect(aspectId, config, this.resolveComponentId.bind(this));
+      await componentConfigFile.addAspect(
+        aspectId,
+        config,
+        this.resolveComponentId.bind(this),
+        shouldMergeWithExisting
+      );
       await componentConfigFile.write({ override: true });
     } else {
-      this.bitMap.addComponentConfig(id, aspectId, config);
+      this.bitMap.addComponentConfig(id, aspectId, config, shouldMergeWithExisting);
     }
   }
 
@@ -1517,6 +1527,7 @@ needed-for: ${neededFor || '<unknown>'}`);
     componentIds?: ComponentID[],
     opts?: ResolveAspectsOptions
   ): Promise<AspectDefinition[]> {
+    this.logger.debug(`workspace resolveAspects, runtimeName: ${runtimeName}, componentIds: ${componentIds}`);
     const defaultOpts: ResolveAspectsOptions = {
       excludeCore: false,
       requestedOnly: false,
@@ -1531,22 +1542,29 @@ needed-for: ${neededFor || '<unknown>'}`);
     const { workspaceIds, scopeIds } = await this.groupIdsByWorkspaceAndScope(componentIdsToResolve);
     const wsComponents = await this.getMany(workspaceIds);
     const aspectDefs = await this.aspectLoader.resolveAspects(wsComponents, async (component) => {
-      stringIds.push(component.id._legacy.toString());
+      const compStringId = component.id._legacy.toString();
+      stringIds.push(compStringId);
       const localPath = this.getComponentPackagePath(component);
       const isExist = await fs.pathExists(localPath);
       if (!isExist) {
         missingPaths = true;
       }
+      const runtimePath = runtimeName
+        ? await this.aspectLoader.getRuntimePath(component, localPath, runtimeName)
+        : null;
 
+      this.logger.debug(
+        `workspace resolveAspects, resolving id: ${compStringId}, localPath: ${localPath}, runtimePath: ${runtimePath}`
+      );
       return {
         aspectPath: localPath,
-        runtimePath: runtimeName ? await this.aspectLoader.getRuntimePath(component, localPath, runtimeName) : null,
+        runtimePath,
       };
     });
 
     let scopeAspectDefs: AspectDefinition[] = [];
     if (scopeIds.length) {
-      scopeAspectDefs = await this.scope.resolveAspects(runtimeName, scopeIds);
+      scopeAspectDefs = await this.scope.resolveAspects(runtimeName, scopeIds, mergedOpts);
     }
 
     let coreAspectDefs = await Promise.all(

@@ -1,4 +1,4 @@
-import { isEqual } from 'lodash';
+import { isEqual, merge } from 'lodash';
 import { ComponentID } from '@teambit/component-id';
 import LegacyBitMap from '@teambit/legacy/dist/consumer/bit-map';
 import { Consumer } from '@teambit/legacy/dist/consumer';
@@ -19,17 +19,32 @@ export class BitMap {
    * later, upon `bit tag`, the data is saved in the scope.
    * returns a boolean indicating whether a change has been made.
    */
-  addComponentConfig(id: ComponentID, aspectId: string, config: Record<string, any> = {}): boolean {
+  addComponentConfig(
+    id: ComponentID,
+    aspectId: string,
+    config: Record<string, any> = {},
+    shouldMergeConfig = false
+  ): boolean {
     if (!aspectId || typeof aspectId !== 'string') throw new Error(`expect aspectId to be string, got ${aspectId}`);
     const bitMapEntry = this.getBitmapEntry(id, { ignoreScopeAndVersion: true });
     const currentConfig = (bitMapEntry.config ||= {})[aspectId];
     if (isEqual(currentConfig, config)) {
       return false; // no changes
     }
-    if (!config) {
-      delete bitMapEntry.config[aspectId];
+    const getNewConfig = () => {
+      if (!config) return null;
+      if (!shouldMergeConfig) return config;
+      // should merge
+      if (!currentConfig) return config;
+      if (currentConfig === '-') return config;
+      // lodash merge performs a deep merge. (the native concatenation don't)
+      return merge(currentConfig, config);
+    };
+    const newConfig = getNewConfig();
+    if (newConfig) {
+      bitMapEntry.config[aspectId] = newConfig;
     } else {
-      bitMapEntry.config[aspectId] = config;
+      delete bitMapEntry.config[aspectId];
     }
     this.legacyBitMap.markAsChanged();
 
