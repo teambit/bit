@@ -1,5 +1,3 @@
-import { ArtifactStorageResolver } from '..';
-
 export type ArtifactDefinition = {
   /**
    * name of the artifact.
@@ -28,12 +26,6 @@ export type ArtifactDefinition = {
   globPatterns?: string[];
 
   /**
-   * directories of files to include upon artifact creation. minimatch is used to match the patterns.
-   * e.g. ['/tmp'] will include all files from tmp dir
-   */
-  directories?: string[];
-
-  /**
    * define the root directory for reading the artifacts from the capsule file system.
    * the rootDir must be unique per artifacts, otherwise we risk overriding data between artifacts.
    */
@@ -56,9 +48,5 @@ export type ArtifactDefinition = {
    * storage resolver. can be used to replace where artifacts are stored.
    * default resolver persists artifacts on scope. (not recommended for large files!)
    */
-  storageResolver?: ArtifactStorageResolver;
-};
-
-export type ArtifactModelDefinition = Omit<ArtifactDefinition, 'storageResolver'> & {
-  storageResolver?: string;
+  storageResolver?: string[];
 };

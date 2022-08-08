@@ -3,7 +3,14 @@ import type { BuilderMain } from '@teambit/builder';
 import { Asset, BundlerAspect, BundlerMain } from '@teambit/bundler';
 import { PubsubAspect, PubsubMain } from '@teambit/pubsub';
 import { MainRuntime } from '@teambit/cli';
-import { Component, ComponentAspect, ComponentMain, ComponentMap, ComponentID, ResolveAspectsOptions } from '@teambit/component';
+import {
+  Component,
+  ComponentAspect,
+  ComponentMain,
+  ComponentMap,
+  ComponentID,
+  ResolveAspectsOptions,
+} from '@teambit/component';
 import { EnvsAspect } from '@teambit/envs';
 import type { EnvsMain, ExecutionContext, PreviewEnv } from '@teambit/envs';
 import { Slot, SlotRegistry, Harmony } from '@teambit/harmony';
@@ -144,11 +151,7 @@ export class PreviewMain {
   }
 
   async getPreview(component: Component): Promise<PreviewArtifact | undefined> {
-    const artifacts = await this.builder.getArtifactsVinylByExtensionAndTaskName(
-      component,
-      PreviewAspect.id,
-      PREVIEW_TASK_NAME
-    );
+    const artifacts = await this.builder.getArtifactsVinylByExtension(component, PreviewAspect.id, PREVIEW_TASK_NAME);
     if (!artifacts) return undefined;
     return new PreviewArtifact(artifacts);
   }
@@ -175,7 +178,7 @@ export class PreviewMain {
    * @returns
    */
   async isBundledWithEnv(component: Component): Promise<boolean> {
-    const artifacts = await this.builder.getArtifactsVinylByExtensionAndName(
+    const artifacts = await this.builder.getArtifactsVinylByExtension(
       component,
       PreviewAspect.id,
       COMPONENT_STRATEGY_ARTIFACT_NAME
@@ -195,7 +198,7 @@ export class PreviewMain {
     // these envs had header in their docs
     const ENV_WITH_LEGACY_DOCS = ['react', 'env', 'aspect', 'lit', 'html', 'node', 'mdx', 'react-native', 'readme'];
 
-    const artifacts = await this.builder.getArtifactsVinylByExtensionAndName(
+    const artifacts = await this.builder.getArtifactsVinylByExtension(
       component,
       PreviewAspect.id,
       ENV_STRATEGY_ARTIFACT_NAME
@@ -214,7 +217,7 @@ export class PreviewMain {
    * @returns
    */
   async getEnvTemplate(component: Component): Promise<PreviewArtifact | undefined> {
-    const artifacts = await this.builder.getArtifactsVinylByExtensionAndTaskName(
+    const artifacts = await this.builder.getArtifactsVinylByExtension(
       component,
       PreviewAspect.id,
       GENERATE_ENV_TEMPLATE_TASK_NAME
@@ -233,7 +236,8 @@ export class PreviewMain {
     const coreEnvDir = getAspectDir(envId);
     // const finalDir = join(coreEnvDir, getEnvTemplateArtifactDirectory());
     const artifactDef = getEnvTemplateArtifactDef()[0];
-    const artifactFactory = new ArtifactFactory();
+    // const coreComponent =
+    const artifactFactory = new ArtifactFactory(this.builder.getStorageResolversMap());
 
     let rootDir = artifactFactory.getRootDir(coreEnvDir, artifactDef);
     if (!existsSync(rootDir)) {

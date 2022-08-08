@@ -461,11 +461,7 @@ export class PkgMain implements CloneConfig {
   }
 
   async getPackageTarFile(component: Component): Promise<AbstractVinyl> {
-    const artifacts = await this.builder.getArtifactsVinylByExtensionAndName(
-      component,
-      PkgAspect.id,
-      TAR_FILE_ARTIFACT_NAME
-    );
+    const artifacts = await this.builder.getArtifactsVinylByExtension(component, PkgAspect.id, TAR_FILE_ARTIFACT_NAME);
     if (!artifacts.length) throw new PackageTarFiletNotFound(component.id);
 
     return artifacts[0];

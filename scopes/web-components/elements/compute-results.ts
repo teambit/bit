@@ -1,11 +1,11 @@
-import { ArtifactDefinition, ArtifactStorageResolver, ComponentResult } from '@teambit/builder';
+import { ArtifactDefinition, ArtifactsStorageResolver, ComponentResult } from '@teambit/builder';
 import { BundlerContext, BundlerResult } from '@teambit/bundler';
 
 export async function computeResults(
   context: BundlerContext,
   results: BundlerResult[],
   outDirName: string,
-  storageResolver?: ArtifactStorageResolver
+  storageResolvers?: ArtifactsStorageResolver[]
 ) {
   const result = results[0];
 
@@ -19,7 +19,7 @@ export async function computeResults(
     };
   });
 
-  const artifacts = getArtifactDef(outDirName, storageResolver);
+  const artifacts = getArtifactDef(outDirName, storageResolvers);
 
   return {
     componentsResults,
@@ -27,12 +27,13 @@ export async function computeResults(
   };
 }
 
-function getArtifactDef(outDirName: string, storageResolver?: ArtifactStorageResolver): ArtifactDefinition[] {
+function getArtifactDef(outDirName: string, storageResolvers?: ArtifactsStorageResolver[]): ArtifactDefinition[] {
   return [
     {
       name: 'elements',
       globPatterns: [`${outDirName}/public/**`],
-      storageResolver,
+      // TODO: support more than one resolver
+      storageResolver: storageResolvers?.length ? storageResolvers?.map((resolver) => resolver.name) : undefined,
     },
   ];
 }

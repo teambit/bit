@@ -1,30 +1,37 @@
 import { Component } from '@teambit/component';
-import { ArtifactVinyl } from '@teambit/legacy/dist/consumer/component/sources/artifact';
-import { Artifact } from '../artifact';
+import { ArtifactList, FsArtifact } from '../artifact';
 
-export type StoreResult = {
-  [path: string]: string;
+export type ArtifactFileStoreResult = {
+  /**
+   * The path of the file - this is used as the file id
+   */
+  relativePath: string;
+  /**
+   * Returning a URL will enable the default resolver to try to fetch the artifact even if the original resolver is not loaded
+   */
+  url?: string;
+  metadata?: Object;
+};
+export type ArtifactStoreResult = {
+  /**
+   * Name of the artifact - this is used as the artifact id
+   */
+  name: string;
+  files?: ArtifactFileStoreResult[];
 };
 
-interface BaseStorageResolver {
+export type StoreResult = {
+  artifacts?: ArtifactStoreResult[];
+};
+
+export interface StorageResolver {
   /**
    * name of the storage resolver.
    */
   name: string;
-}
 
-export interface WholeArtifactStorageResolver extends BaseStorageResolver {
   /**
    * store artifacts in the storage.
    */
-  store(component: Component, artifact: Artifact): Promise<StoreResult | undefined | void>;
+  store(component: Component, artifacts: ArtifactList<FsArtifact>): Promise<StoreResult>;
 }
-
-export interface FileStorageResolver extends BaseStorageResolver {
-  /**
-   * store artifacts in the storage.
-   */
-  storeFile(component: Component, artifact: Artifact, file: ArtifactVinyl): Promise<string | undefined | void>;
-}
-
-export type ArtifactStorageResolver = FileStorageResolver | WholeArtifactStorageResolver;

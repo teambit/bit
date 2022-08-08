@@ -1,12 +1,10 @@
 import path from 'path';
-import filenamify from 'filenamify';
 import fs from 'fs-extra';
 import { ScopeMain } from '@teambit/scope';
 import { ComponentID } from '@teambit/component-id';
 import pMapSeries from 'p-map-series';
 import minimatch from 'minimatch';
-import { ArtifactFiles, ArtifactObject } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
-import { BuilderMain } from '../builder.main.runtime';
+import { BuilderMain, ArtifactList, Artifact } from '@teambit/builder';
 import { ArtifactsOpts } from './artifacts.cmd';
 
 export type ExtractorResult = {
@@ -15,7 +13,6 @@ export type ExtractorResult = {
 };
 
 export type ExtractorArtifactResult = {
-  artifactName: string;
   aspectId: string;
   taskName: string;
   files: string[];
@@ -26,32 +23,32 @@ export type ExtractorResultGrouped = {
   artifacts: { [aspectId: string]: ExtractorArtifactResult[] };
 };
 
-type ArtifactObjectsPerId = {
+type ArtifactListPerId = {
   id: ComponentID;
-  artifacts: ArtifactObject[];
+  artifacts: ArtifactList<Artifact>;
 };
 
 export class ArtifactExtractor {
   constructor(
     private scope: ScopeMain,
     private builder: BuilderMain,
-    private pattern: string,
+    private patterns: string,
     private options: ArtifactsOpts
   ) {}
 
   async list(): Promise<ExtractorResult[]> {
-    const ids = await this.scope.idsByPattern(this.pattern);
-    const components = await this.scope.loadMany(ids);
-    const artifactObjectsPerId: ArtifactObjectsPerId[] = components.map((component) => {
+    const componentIds = (await this.scope.idsByPattern(this.patterns)).map;
+
+    const artifactListPerId: ArtifactListPerId[] = components.map((component) => {
       return {
         id: component.id,
-        artifacts: this.builder.getArtifacts(component) || [],
+        artifacts: this.builder._getArtifacts(component) || [],
       };
     });
-    this.filterByOptions(artifactObjectsPerId);
-    await this.saveFilesInFileSystemIfAsked(artifactObjectsPerId);
+    this.filterByOptions(artifactListPerId);
+    await this.saveFilesInFileSystemIfAsked(artifactListPerId);
 
-    return this.artifactsObjectsToExtractorResults(artifactObjectsPerId);
+    return this.artifactsObjectsToExtractorResults(artifactListPerId);
   }
 
   groupResultsByAspect(extractorResult: ExtractorResult[]) {
@@ -64,34 +61,26 @@ export class ArtifactExtractor {
     });
   }
 
-  private async saveFilesInFileSystemIfAsked(artifactObjectsPerId: ArtifactObjectsPerId[]) {
+  private async saveFilesInFileSystemIfAsked(artifactListPerId: ArtifactListPerId[]) {
     const outDir = this.options.outDir;
     if (!outDir) {
       return;
     }
     // @todo: optimize this to first import all missing hashes.
-    await pMapSeries(artifactObjectsPerId, async ({ id, artifacts }) => {
-      const vinyls = await Promise.all(
-        artifacts.map((artifactObject) =>
-          artifactObject.files.getVinylsAndImportIfMissing(id._legacy, this.scope.legacyScope)
-        )
-      );
-      const flattenedVinyls = vinyls.flat();
-      // make sure the component-dir is just one dir. without this, every slash in the component-id will create a new dir.
-      const idAsFilename = filenamify(id.toStringWithoutVersion(), { replacement: '_' });
-      const compPath = path.join(outDir, idAsFilename);
-      await Promise.all(flattenedVinyls.map((vinyl) => fs.outputFile(path.join(compPath, vinyl.path), vinyl.contents)));
+    await pMapSeries(artifactListPerId, async ({ id, artifacts }) => {
+      const vinyls = await artifacts.getVinylsAndImportIfMissing(id.scope as string, this.scope);
+      const compPath = path.join(outDir, id.toStringWithoutVersion());
+      await Promise.all(vinyls.map((vinyl) => fs.outputFile(path.join(compPath, vinyl.path), vinyl.contents)));
     });
   }
 
-  private artifactsObjectsToExtractorResults(artifactObjectsPerId: ArtifactObjectsPerId[]): ExtractorResult[] {
-    return artifactObjectsPerId.map(({ id, artifacts }) => {
+  private artifactsObjectsToExtractorResults(artifactListPerId: ArtifactListPerId[]): ExtractorResult[] {
+    return artifactListPerId.map(({ id, artifacts }) => {
       const results: ExtractorArtifactResult[] = artifacts.map((artifact) => {
         return {
-          artifactName: artifact.name,
-          aspectId: artifact.task.id,
+          aspectId: artifact.task.aspectId,
           taskName: artifact.task.name || artifact.generatedBy,
-          files: artifact.files.refs.map((ref) => ref.relativePath),
+          files: artifact.files.map((file) => file.relativePath),
         };
       });
       return {
@@ -101,21 +90,21 @@ export class ArtifactExtractor {
     });
   }
 
-  private filterByOptions(artifactObjectsPerId: ArtifactObjectsPerId[]) {
+  private filterByOptions(artifactListPerId: ArtifactListPerId[]) {
     const { aspect, task, files } = this.options;
-    artifactObjectsPerId.forEach((item) => {
+    artifactListPerId.forEach((item) => {
       item.artifacts = item.artifacts.filter((artifact) => {
-        if (aspect && aspect !== artifact.task.id) return false;
+        if (aspect && aspect !== artifact.task.aspectId) return false;
         if (task && task !== artifact.task.name) return false;
         return true;
       });
       if (files) {
         item.artifacts.forEach((artifact) => {
-          const refs = artifact.files.refs.filter((ref) => minimatch(ref.relativePath, files));
-          artifact.files = new ArtifactFiles([], [], refs);
+          const filteredFiled = artifact.files.filter((file) => minimatch(file.relativePath, files));
+          artifact.files = filteredFiled;
         });
         // remove artifacts with no files
-        item.artifacts = item.artifacts.filter((artifact) => artifact.files.refs.length);
+        item.artifacts = item.artifacts.filter((artifact) => !artifact.isEmpty());
       }
     });
   }
