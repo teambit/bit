@@ -1,4 +1,6 @@
 import { expect } from 'chai';
+import fs from 'fs-extra';
+import path from 'path';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
 
@@ -37,8 +39,18 @@ import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
       helper.command.import(`${helper.scopes.remote}/comp2`);
     });
     it('should install dependencies from their respective models to the imported components', () => {
-      // TODO: add checks
-      expect(true).to.eq(true);
+      expect(
+        fs.readJsonSync(path.join(helper.fixtures.scopes.localPath, `node_modules/${scope}comp3/package.json`)).version
+      ).to.eq('0.0.1');
+      expect(
+        fs.readJsonSync(
+          path.join(
+            helper.fixtures.scopes.localPath,
+            helper.scopes.remote.replace(/^ci\./, ''),
+            `comp2/node_modules/${scope}comp3/package.json`
+          )
+        ).version
+      ).to.eq('0.0.2');
     });
     after(() => {
       npmCiRegistry.destroy();
