@@ -748,7 +748,7 @@ either, use the ignore file syntax or change the require statement to have a mod
         }
         return undefined;
       };
-      const existingId = version ? componentId : getExistingId();
+      const existingId = version && this.isPkgInWorkspacePolicies(compDep.name) ? componentId : getExistingId();
       if (existingId) {
         if (existingId.isEqual(this.componentId)) {
           // happens when one of the component files requires another using module path
@@ -762,6 +762,10 @@ either, use the ignore file syntax or change the require statement to have a mod
         this._pushToMissingComponentsIssues(originFile, componentId);
       }
     });
+  }
+
+  private isPkgInWorkspacePolicies(pkgName: string) {
+    return DependencyResolver.getWorkspacePolicy().dependencies?.[pkgName];
   }
 
   private addImportNonMainIssueIfNeeded(filePath: PathLinuxRelative, dependencyPkgData: ResolvedPackageData) {
