@@ -2,7 +2,7 @@ import { flatten } from 'lodash';
 import { ArtifactVinyl } from '@teambit/legacy/dist/consumer/component/sources/artifact';
 import { AspectLoaderAspect, AspectLoaderMain } from '@teambit/aspect-loader';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import { Component, ComponentMap, IComponent, ComponentAspect, ComponentMain, ComponentID } from '@teambit/component';
+import { Component, ComponentMap, IComponent } from '@teambit/component';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { Slot, SlotRegistry } from '@teambit/harmony';
@@ -14,28 +14,23 @@ import { OnTagOpts } from '@teambit/legacy/dist/scope/scope';
 import { getHarmonyVersion } from '@teambit/legacy/dist/bootstrap';
 import findDuplications from '@teambit/legacy/dist/utils/array/find-duplications';
 import { ArtifactFiles, ArtifactObject } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
-import LegacyComponent from '@teambit/legacy/dist/consumer/component/consumer-component';
-import ComponentWriter from '@teambit/legacy/dist/consumer/component-ops/component-writer';
 import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
-import { ArtifactList, Artifact, FsArtifact } from './artifact';
+import { ArtifactList } from './artifact';
+import { ArtifactFactory } from './artifact/artifact-factory'; // it gets undefined when importing it from './artifact'
 import { BuilderAspect } from './builder.aspect';
 import { builderSchema } from './builder.graphql';
-import { ArtifactsStorageResolver } from './storage';
 import { BuilderService, BuilderServiceOptions } from './builder.service';
 import { BuilderCmd } from './build.cmd';
 import { BuildTask, BuildTaskHelper } from './build-task';
 import { TaskResults } from './build-pipe';
 import { TaskResultsList } from './task-results-list';
 import { ArtifactStorageError } from './exceptions';
-import { BuildPipelineResultList } from './build-pipeline-result-list';
+import { BuildPipelineResultList, AspectData, PipelineReport } from './build-pipeline-result-list';
 import { Serializable } from './types';
 import { ArtifactsCmd } from './artifact/artifacts.cmd';
 import { buildTaskTemplate } from './templates/build-task';
-import { BuilderRoute } from './builder.route';
-import { ArtifactsToPopulate, BuilderData, StorageResolversMap, FILE_PATH_PARAM_DELIM } from './builder.model';
 
 export type TaskSlot = SlotRegistry<BuildTask[]>;
-export type ArtifactsStorageResolverSlot = SlotRegistry<ArtifactsStorageResolver>;
 
 export type BuilderData = {
   pipeline: PipelineReport[];
@@ -44,20 +39,6 @@ export type BuilderData = {
   bitVersion?: string;
 };
 
-const FILE_PATH_PARAM_DELIM = '~';
-type ArtifactPropsToPopulate = {
-  aspectName: string;
-  /**
-   * Name of the artifact to populate
-   */
-  name?: string;
-};
-
-type ArtifactsToPopulate = ArtifactPropsToPopulate[];
-
-export type StorageResolversMap = {
-  [resolverName: string]: ArtifactsStorageResolver;
-};
 export class BuilderMain {
   constructor(
     private envs: EnvsMain,
@@ -68,25 +49,18 @@ export class BuilderMain {
     private scope: ScopeMain,
     private isolator: IsolatorMain,
     private aspectLoader: AspectLoaderMain,
-    private componentAspect: ComponentMain,
     private buildTaskSlot: TaskSlot,
     private tagTaskSlot: TaskSlot,
-    private snapTaskSlot: TaskSlot,
-    private storageResolversSlot: ArtifactsStorageResolverSlot
+    private snapTaskSlot: TaskSlot
   ) {}
-
-  /**
-   * @deprecated
-   */
 
   private async storeArtifacts(tasksResults: TaskResults[]) {
     const artifacts = tasksResults.flatMap((t) => (t.artifacts ? [t.artifacts] : []));
-    const storeP = artifacts.map(async (artifactMap: ComponentMap<ArtifactList<FsArtifact>>) => {
+    const storeP = artifacts.map(async (artifactMap: ComponentMap<ArtifactList>) => {
       return Promise.all(
         artifactMap.toArray().map(async ([component, artifactList]) => {
-          const storageResolvers = this.getStorageResolversMap(component);
           try {
-            return await artifactList.store(component, storageResolvers);
+            return await artifactList.store(component);
           } catch (err: any) {
             throw new ArtifactStorageError(err, component);
           }
@@ -94,17 +68,6 @@ export class BuilderMain {
       );
     });
     await Promise.all(storeP);
-  }
-
-  getStorageResolversMap(component: Component): StorageResolversMap {
-    const environment = this.envs.getEnv(component).env;
-    const storageResolvers = environment.getStorageResolvers?.() || {};
-    return storageResolvers;
-  }
-
-  getStorageResolversArray(component: Component): ArtifactsStorageResolver[] {
-    const map = this.getStorageResolversMap(component);
-    return Object.values(map);
   }
 
   private pipelineResultsToBuilderData(
@@ -118,13 +81,6 @@ export class BuilderMain {
       const artifactsData = buildPipelineResultList.getArtifactsDataOfComponent(component.id);
       return { pipeline: pipelineReport, artifacts: artifactsData, aspectsData, bitVersion: getHarmonyVersion(true) };
     });
-  }
-  /**
-   * register a new storage resolver.
-   */
-  registerArtifactsStorageResolver(storageResolver: ArtifactsStorageResolver) {
-    this.storageResolversSlot.register(storageResolver);
-    return this;
   }
 
   async tagListener(
@@ -171,31 +127,68 @@ export class BuilderMain {
       }
     });
   }
-  async getArtifactsVinylByExtension(
+
+  // TODO: merge with getArtifactsVinylByExtensionAndName by getting aspect name and name as object with optional props
+  async getArtifactsVinylByExtension(component: Component, aspectName: string): Promise<ArtifactVinyl[]> {
+    const artifactsObjects = this.getArtifactsByExtension(component, aspectName);
+    const vinyls = await Promise.all(
+      (artifactsObjects || []).map((artifactObject) =>
+        artifactObject.files.getVinylsAndImportIfMissing(component.id._legacy, this.scope.legacyScope)
+      )
+    );
+    return flatten(vinyls);
+  }
+
+  async getArtifactsVinylByExtensionAndName(
     component: Component,
     aspectName: string,
-    name?: string
+    name: string
   ): Promise<ArtifactVinyl[]> {
-    const artifactList = name
-      ? this.getArtifactsByExtensionAndName(component, aspectName, name)
-      : this.getArtifactsByExtension(component, aspectName);
-
-    const vinyls = await artifactList.getVinylsAndImportIfMissing(component.id.scope as string, this.scope);
-    return vinyls;
+    const artifactsObjects = this.getArtifactsByExtensionAndName(component, aspectName, name);
+    const vinyls = await Promise.all(
+      (artifactsObjects || []).map((artifactObject) =>
+        artifactObject.files.getVinylsAndImportIfMissing(component.id._legacy, this.scope.legacyScope)
+      )
+    );
+    return flatten(vinyls);
   }
 
-  getArtifactsByExtensionAndName(component: Component, aspectName: string, name: string): ArtifactList<Artifact> {
-    const artifacts = this._getArtifacts(component).byAspectNameAndName(aspectName, name);
-    return artifacts;
+  async getArtifactsVinylByExtensionAndTaskName(
+    component: Component,
+    aspectName: string,
+    taskName: string
+  ): Promise<ArtifactVinyl[]> {
+    const artifactsObjects = this.getArtifactsByExtensionAndTaskName(component, aspectName, taskName);
+    const vinyls = await Promise.all(
+      (artifactsObjects || []).map((artifactObject) =>
+        artifactObject.files.getVinylsAndImportIfMissing(component.id._legacy, this.scope.legacyScope)
+      )
+    );
+    return flatten(vinyls);
   }
 
-  getArtifactsByExtension(component: Component, aspectName: string): ArtifactList<Artifact> {
-    const artifacts = this._getArtifacts(component).byAspectNameAndName(aspectName);
-    return artifacts;
+  getArtifactsByName(component: Component, name: string): ArtifactObject[] | undefined {
+    const artifacts = this.getArtifacts(component);
+    return artifacts?.filter((artifact) => artifact.name === name);
   }
-  getArtifactsByName(component: Component, name: string): ArtifactList<Artifact> {
-    const artifacts = this._getArtifacts(component).byAspectNameAndName(undefined, name);
-    return artifacts;
+
+  getArtifactsByExtension(component: Component, aspectName: string): ArtifactObject[] | undefined {
+    const artifacts = this.getArtifacts(component);
+    return artifacts?.filter((artifact) => artifact.task.id === aspectName);
+  }
+
+  getArtifactsByExtensionAndName(component: Component, aspectName: string, name: string): ArtifactObject[] | undefined {
+    const artifacts = this.getArtifacts(component);
+    return artifacts?.filter((artifact) => artifact.task.id === aspectName && artifact.name === name);
+  }
+
+  getArtifactsByExtensionAndTaskName(
+    component: Component,
+    aspectName: string,
+    taskName: string
+  ): ArtifactObject[] | undefined {
+    const artifacts = this.getArtifacts(component);
+    return artifacts?.filter((artifact) => artifact.task.id === aspectName && artifact.task.name === taskName);
   }
 
   getDataByAspect(component: IComponent, aspectName: string): Serializable | undefined {
@@ -204,23 +197,19 @@ export class BuilderMain {
     return data?.data;
   }
 
-  _getArtifacts(component: Component): ArtifactList<Artifact> {
-    const artifactObjects = this.getBuilderData(component)?.artifacts || [];
-    const storageResolvers = this.getStorageResolversArray(component);
-    const list = ArtifactList.fromArtifactObjects(artifactObjects, storageResolvers);
-    return list;
+  getArtifacts(component: Component): ArtifactObject[] | undefined {
+    return this.getBuilderData(component)?.artifacts;
   }
 
   getBuilderData(component: IComponent): BuilderData | undefined {
-    const data = component.get(BuilderAspect.id)?.data;
+    const data = component.get(BuilderAspect.id)?.data as BuilderData | undefined;
     if (!data) return undefined;
-    data?.artifacts?.forEach((artifactObj) => {
-      artifactObj.files =
-        artifactObj.files instanceof ArtifactFiles
-          ? artifactObj.files
-          : ArtifactFiles.fromModel(artifactObj.files.files);
+    data.artifacts?.forEach((artifact) => {
+      if (!(artifact.files instanceof ArtifactFiles)) {
+        artifact.files = ArtifactFiles.fromObject(artifact.files);
+      }
     });
-    return data as BuilderData;
+    return data;
   }
 
   /**
@@ -317,40 +306,7 @@ export class BuilderMain {
     return this;
   }
 
-  getDownloadUrlForArtifact(componentId: ComponentID, taskId: string, path?: string) {
-    return `/api/${componentId}/~aspect/builder/${taskId}/${path ? `${FILE_PATH_PARAM_DELIM}${path}` : ''}`;
-  }
-
-  async getArtifactsVinylByMultiExtension(
-    component: Component,
-    artifactPropsToPopulate: ArtifactsToPopulate
-  ): Promise<ArtifactVinyl[]> {
-    const vinylsP = artifactPropsToPopulate.map((props) => {
-      return this.getArtifactsVinylByExtension(component, props.aspectName, props.name);
-    });
-    const vinyls = await Promise.all(vinylsP);
-    return flatten(vinyls);
-  }
-
-  async getArtifactsVinylByMultiExtensionFromLegacyComponent(
-    legacyComponent: LegacyComponent,
-    artifactPropsToPopulate: ArtifactsToPopulate
-  ): Promise<ArtifactVinyl[]> {
-    const host = this.componentAspect.getHost();
-    const id = await host.resolveComponentId(legacyComponent.id);
-    const component = await host.get(id, undefined, legacyComponent);
-    if (!component) {
-      throw new Error(`component ${legacyComponent.id.toString()} not found when trying to fetch artifacts`);
-    }
-    return this.getArtifactsVinylByMultiExtension(component, artifactPropsToPopulate);
-  }
-
-  static slots = [
-    Slot.withType<BuildTask>(),
-    Slot.withType<ArtifactsStorageResolver>(),
-    Slot.withType<BuildTask>(),
-    Slot.withType<BuildTask>(),
-  ];
+  static slots = [Slot.withType<BuildTask>(), Slot.withType<BuildTask>(), Slot.withType<BuildTask>()];
 
   static runtime = MainRuntime;
   static dependencies = [
@@ -363,11 +319,10 @@ export class BuilderMain {
     AspectLoaderAspect,
     GraphqlAspect,
     GeneratorAspect,
-    ComponentAspect,
   ];
 
   static async provider(
-    [cli, envs, workspace, scope, isolator, loggerExt, aspectLoader, graphql, generator, component]: [
+    [cli, envs, workspace, scope, isolator, loggerExt, aspectLoader, graphql, generator]: [
       CLIMain,
       EnvsMain,
       Workspace,
@@ -376,22 +331,33 @@ export class BuilderMain {
       LoggerMain,
       AspectLoaderMain,
       GraphqlMain,
-      GeneratorMain,
-      ComponentMain
+      GeneratorMain
     ],
     config,
-    [buildTaskSlot, storageResolversSlot, tagTaskSlot, snapTaskSlot]: [
-      TaskSlot,
-      ArtifactsStorageResolverSlot,
-      TaskSlot,
-      TaskSlot
-    ]
+    [buildTaskSlot, tagTaskSlot, snapTaskSlot]: [TaskSlot, TaskSlot, TaskSlot]
   ) {
+    const artifactFactory = new ArtifactFactory();
     const logger = loggerExt.createLogger(BuilderAspect.id);
-    const buildService = new BuilderService(isolator, logger, buildTaskSlot, 'getBuildPipe', 'build', scope);
+    const buildService = new BuilderService(
+      isolator,
+      logger,
+      buildTaskSlot,
+      'getBuildPipe',
+      'build',
+      artifactFactory,
+      scope
+    );
     envs.registerService(buildService);
-    const tagService = new BuilderService(isolator, logger, tagTaskSlot, 'getTagPipe', 'tag', scope);
-    const snapService = new BuilderService(isolator, logger, snapTaskSlot, 'getSnapPipe', 'snap', scope);
+    const tagService = new BuilderService(isolator, logger, tagTaskSlot, 'getTagPipe', 'tag', artifactFactory, scope);
+    const snapService = new BuilderService(
+      isolator,
+      logger,
+      snapTaskSlot,
+      'getSnapPipe',
+      'snap',
+      artifactFactory,
+      scope
+    );
     const builder = new BuilderMain(
       envs,
       workspace,
@@ -401,16 +367,12 @@ export class BuilderMain {
       scope,
       isolator,
       aspectLoader,
-      component,
       buildTaskSlot,
       tagTaskSlot,
-      snapTaskSlot,
-      storageResolversSlot
+      snapTaskSlot
     );
-    const legacyScope = (scope && scope.legacyScope) || (workspace && workspace.scope.legacyScope);
 
-    graphql.register(builderSchema(builder, legacyScope));
-    component.registerRoute([new BuilderRoute(builder, legacyScope, logger)]);
+    graphql.register(builderSchema(builder));
     generator.registerComponentTemplate([buildTaskTemplate]);
     const func = builder.tagListener.bind(builder);
     if (scope) scope.onTag(func);
@@ -418,10 +380,6 @@ export class BuilderMain {
       const commands = [new BuilderCmd(builder, workspace, logger), new ArtifactsCmd(builder, scope)];
       cli.register(...commands);
     }
-    ComponentWriter.registerOnPopulateArtifacts(
-      BuilderAspect.id,
-      builder.getArtifactsVinylByMultiExtensionFromLegacyComponent.bind(builder)
-    );
     return builder;
   }
 }

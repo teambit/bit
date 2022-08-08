@@ -1,5 +1,5 @@
 import camelCase from 'camelcase';
-import { ArtifactsStorageResolver, BuilderAspect, BuilderMain } from '@teambit/builder';
+import { ArtifactStorageResolver, BuilderAspect, BuilderMain } from '@teambit/builder';
 import { MainRuntime } from '@teambit/cli';
 import ComponentAspect, { Component, ComponentMain } from '@teambit/component';
 import { LoggerAspect, LoggerMain } from '@teambit/logger';
@@ -19,7 +19,7 @@ export class ElementsMain {
     return '__bit__elements';
   }
 
-  createTask(storageResolver?: ArtifactsStorageResolver) {
+  createTask(storageResolver?: ArtifactStorageResolver) {
     return new ElementTask(this, storageResolver);
   }
 
@@ -47,7 +47,7 @@ export class ElementsMain {
 
   isElementsExist(component: Component): boolean {
     const artifacts = this.builder.getArtifactsByExtension(component, ElementsAspect.id);
-    return !!artifacts?.isEmpty();
+    return !!artifacts?.length;
   }
 
   async getElementUrl(component: Component): Promise<string | undefined> {

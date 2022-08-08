@@ -1,13 +1,13 @@
 import { ComponentID, ComponentMap, Component } from '@teambit/component';
 import { isEmpty, compact } from 'lodash';
 import type { ArtifactObject } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
-import { ArtifactList, FsArtifact } from './artifact';
+import { Artifact, ArtifactList } from './artifact';
 import { TaskResults } from './build-pipe';
 import { Serializable, TaskMetadata } from './types';
 
 export type PipelineReport = {
-  taskId: string;
-  taskName?: string;
+  taskId: string; // task aspect-id
+  taskName: string;
   taskDescription?: string;
   startTime?: number;
   endTime?: number;
@@ -24,15 +24,15 @@ export type AspectData = {
  * Helper to get the data and artifacts from the TasksResultsList before saving during the tag
  */
 export class BuildPipelineResultList {
-  private artifactListsMap: ComponentMap<ArtifactList<FsArtifact>>;
+  private artifactListsMap: ComponentMap<ArtifactList>;
   constructor(private tasksResults: TaskResults[], private components: Component[]) {
     this.artifactListsMap = this.getFlattenedArtifactListsMapFromAllTasks();
   }
 
-  private getFlattenedArtifactListsMapFromAllTasks(): ComponentMap<ArtifactList<FsArtifact>> {
+  private getFlattenedArtifactListsMapFromAllTasks(): ComponentMap<ArtifactList> {
     const artifactListsMaps = this.tasksResults.flatMap((t) => (t.artifacts ? [t.artifacts] : []));
-    return ComponentMap.as<ArtifactList<FsArtifact>>(this.components, (component) => {
-      const artifacts: FsArtifact[] = [];
+    return ComponentMap.as<ArtifactList>(this.components, (component) => {
+      const artifacts: Artifact[] = [];
       artifactListsMaps.forEach((artifactListMap) => {
         const artifactList = artifactListMap.getValueByComponentId(component.id);
         if (artifactList) artifacts.push(...artifactList.toArray());
