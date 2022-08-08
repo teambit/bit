@@ -9,6 +9,7 @@ import { BuildPipe, TaskResults } from './build-pipe';
 import { TaskResultsList } from './task-results-list';
 import { TaskSlot } from './builder.main.runtime';
 import { BuildContext, BuildTaskHelper } from './build-task';
+import { ArtifactFactory } from './artifact';
 import { calculatePipelineOrder } from './build-pipeline-order';
 import { BuilderAspect } from './builder.aspect';
 
@@ -69,6 +70,7 @@ export class BuilderService implements EnvService<BuildServiceResults, BuilderDe
      * pipe name to display on the console during the execution
      */
     private displayPipeName: string,
+    private artifactFactory: ArtifactFactory,
     private scope: ScopeMain
   ) {}
 
@@ -108,11 +110,18 @@ export class BuilderService implements EnvService<BuildServiceResults, BuilderDe
         const buildContext = Object.assign(executionContext, {
           capsuleNetwork,
           previousTasksResults: [],
+          dev: options.dev,
         });
         envsBuildContext[executionContext.id] = buildContext;
       })
     );
-    const buildPipe = BuildPipe.from(tasksQueue, envsBuildContext, this.logger);
+    const buildPipe = BuildPipe.from(
+      tasksQueue,
+      envsBuildContext,
+      this.logger,
+      this.artifactFactory,
+      options.previousTasksResults
+    );
     const buildResults = await buildPipe.execute();
     longProcessLogger.end();
     buildResults.hasErrors() ? this.logger.consoleFailure() : this.logger.consoleSuccess();
