@@ -19,8 +19,8 @@ export class ElementsMain {
     return '__bit__elements';
   }
 
-  createTask(storageResolvers?: ArtifactsStorageResolver[]) {
-    return new ElementTask(this, storageResolvers);
+  createTask(storageResolver?: ArtifactsStorageResolver) {
+    return new ElementTask(this, storageResolver);
   }
 
   getWebpackTransformers(): WebpackConfigTransformer[] {

@@ -32,13 +32,12 @@ export class ArtifactExtractor {
   constructor(
     private scope: ScopeMain,
     private builder: BuilderMain,
-    private patterns: string,
+    private patterns: string[],
     private options: ArtifactsOpts
   ) {}
 
   async list(): Promise<ExtractorResult[]> {
-    const componentIds = (await this.scope.idsByPattern(this.patterns)).map;
-
+    const components = await this.scope.byPattern(this.patterns);
     const artifactListPerId: ArtifactListPerId[] = components.map((component) => {
       return {
         id: component.id,

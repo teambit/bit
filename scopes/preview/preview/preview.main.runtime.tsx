@@ -151,7 +151,11 @@ export class PreviewMain {
   }
 
   async getPreview(component: Component): Promise<PreviewArtifact | undefined> {
-    const artifacts = await this.builder.getArtifactsVinylByExtension(component, PreviewAspect.id, PREVIEW_TASK_NAME);
+    const { artifacts } = await this.builder.getArtifactsByExtensionAndName(
+      component,
+      PreviewAspect.id,
+      PREVIEW_TASK_NAME
+    );
     if (!artifacts) return undefined;
     return new PreviewArtifact(artifacts);
   }
@@ -217,7 +221,7 @@ export class PreviewMain {
    * @returns
    */
   async getEnvTemplate(component: Component): Promise<PreviewArtifact | undefined> {
-    const artifacts = await this.builder.getArtifactsVinylByExtension(
+    const artifacts = await this.builder.getArtifactsVinylByExtensionAndName(
       component,
       PreviewAspect.id,
       GENERATE_ENV_TEMPLATE_TASK_NAME
@@ -236,7 +240,6 @@ export class PreviewMain {
     const coreEnvDir = getAspectDir(envId);
     // const finalDir = join(coreEnvDir, getEnvTemplateArtifactDirectory());
     const artifactDef = getEnvTemplateArtifactDef()[0];
-    // const coreComponent =
     const artifactFactory = new ArtifactFactory(this.builder.getStorageResolversMap());
 
     let rootDir = artifactFactory.getRootDir(coreEnvDir, artifactDef);

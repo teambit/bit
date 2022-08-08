@@ -13,7 +13,7 @@ import { IsolateComponentsOptions, IsolatorAspect, IsolatorMain } from '@teambit
 import { OnTagOpts } from '@teambit/legacy/dist/scope/scope';
 import { getHarmonyVersion } from '@teambit/legacy/dist/bootstrap';
 import findDuplications from '@teambit/legacy/dist/utils/array/find-duplications';
-import { ArtifactFiles } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
+import { ArtifactFiles, ArtifactObject } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
 import LegacyComponent from '@teambit/legacy/dist/consumer/component/consumer-component';
 import ComponentWriter from '@teambit/legacy/dist/consumer/component-ops/component-writer';
 import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
@@ -36,6 +36,28 @@ import { ArtifactsToPopulate, BuilderData, StorageResolversMap, FILE_PATH_PARAM_
 
 export type TaskSlot = SlotRegistry<BuildTask[]>;
 export type ArtifactsStorageResolverSlot = SlotRegistry<ArtifactsStorageResolver>;
+
+export type BuilderData = {
+  pipeline: PipelineReport[];
+  artifacts: ArtifactObject[] | undefined;
+  aspectsData: AspectData[];
+  bitVersion?: string;
+};
+
+const FILE_PATH_PARAM_DELIM = '~';
+type ArtifactPropsToPopulate = {
+  aspectName: string;
+  /**
+   * Name of the artifact to populate
+   */
+  name?: string;
+};
+
+type ArtifactsToPopulate = ArtifactPropsToPopulate[];
+
+export type StorageResolversMap = {
+  [resolverName: string]: ArtifactsStorageResolver;
+};
 export class BuilderMain {
   constructor(
     private envs: EnvsMain,

@@ -7,7 +7,7 @@ import { Serializable, TaskMetadata } from './types';
 
 export type PipelineReport = {
   taskId: string;
-  taskName: string;
+  taskName?: string;
   taskDescription?: string;
   startTime?: number;
   endTime?: number;

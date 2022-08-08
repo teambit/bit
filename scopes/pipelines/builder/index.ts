@@ -8,7 +8,7 @@ export {
   BuildTaskHelper,
   CAPSULE_ARTIFACTS_DIR,
 } from './build-task';
-export type { BuilderMain } from './builder.main.runtime';
+export type { BuilderMain, BuilderData, StorageResolversMap } from './builder.main.runtime';
 export type { PipelineReport } from './build-pipeline-result-list';
 export {
   ArtifactFileStoreResult,
