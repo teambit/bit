@@ -749,10 +749,12 @@ either, use the ignore file syntax or change the require statement to have a mod
         return undefined;
       };
       let existingId: BitId | undefined;
-      if (version) {
-        existingId = this.isPkgInWorkspacePolicies(compDep.name) ? componentId : getExistingId() ?? componentId;
-      } else {
+      if (!version) {
         existingId = getExistingId();
+      } else if (this.isPkgInWorkspacePolicies(compDep.name)) {
+        existingId = componentId;
+      } else {
+        existingId = getExistingId() ?? componentId;
       }
       if (existingId) {
         if (existingId.isEqual(this.componentId)) {
