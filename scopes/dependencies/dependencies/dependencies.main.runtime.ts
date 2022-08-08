@@ -13,22 +13,25 @@ import { DependenciesAspect } from './dependencies.aspect';
 export class DependenciesMain {
   constructor(private workspace: Workspace) {}
 
-  async setDependency(componentPattern: string, pkg: string, options: SetDependenciesFlags): Promise<string[]> {
+  async setDependency(componentPattern: string, packages: string[], options: SetDependenciesFlags): Promise<string[]> {
     const compIds = await this.workspace.idsByPattern(componentPattern);
     const getDepField = () => {
       if (options.dev) return 'devDependencies';
       if (options.peer) return 'peerDependencies';
       return 'dependencies';
     };
-    const packageSplit = pkg.split('@');
-    if (packageSplit.length !== 2) {
-      throw new Error(`invalid package "${pkg}" syntax, expected "package@version"`);
-    }
+    const packagesObj = packages.reduce((acc, pkg) => {
+      const packageSplit = pkg.split('@');
+      if (packageSplit.length !== 2) {
+        throw new Error(`invalid package "${pkg}" syntax, expected "package@version"`);
+      }
+      acc[packageSplit[0]] = packageSplit[1];
+      return acc;
+    }, {});
+
     const config = {
       policy: {
-        [getDepField()]: {
-          [packageSplit[0]]: packageSplit[1],
-        },
+        [getDepField()]: packagesObj,
       },
     };
     await Promise.all(
