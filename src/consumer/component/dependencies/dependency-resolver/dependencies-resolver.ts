@@ -748,7 +748,12 @@ either, use the ignore file syntax or change the require statement to have a mod
         }
         return undefined;
       };
-      const existingId = version && this.isPkgInWorkspacePolicies(compDep.name) ? componentId : getExistingId();
+      let existingId: BitId | undefined;
+      if (version) {
+        existingId = this.isPkgInWorkspacePolicies(compDep.name) ? componentId : getExistingId() ?? componentId;
+      } else {
+        existingId = getExistingId();
+      }
       if (existingId) {
         if (existingId.isEqual(this.componentId)) {
           // happens when one of the component files requires another using module path
