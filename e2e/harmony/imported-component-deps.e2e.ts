@@ -39,16 +39,10 @@ import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
       helper.command.import(`${helper.scopes.remote}/comp2`);
     });
     it('should install dependencies from their respective models to the imported components', () => {
+      expect(helper.fs.readJsonFile(`node_modules/${scope}comp3/package.json`).version).to.eq('0.0.1');
       expect(
-        fs.readJsonSync(path.join(helper.fixtures.scopes.localPath, `node_modules/${scope}comp3/package.json`)).version
-      ).to.eq('0.0.1');
-      expect(
-        fs.readJsonSync(
-          path.join(
-            helper.fixtures.scopes.localPath,
-            helper.scopes.remote.replace(/^ci\./, ''),
-            `comp2/node_modules/${scope}comp3/package.json`
-          )
+        helper.fs.readJsonFile(
+          path.join(helper.scopes.remoteWithoutOwner, `comp2/node_modules/${scope}comp3/package.json`)
         ).version
       ).to.eq('0.0.2');
     });
