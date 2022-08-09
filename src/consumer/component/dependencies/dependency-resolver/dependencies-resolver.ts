@@ -733,7 +733,7 @@ either, use the ignore file syntax or change the require statement to have a mod
       if (this.overridesDependencies.shouldIgnoreComponent(componentId, fileType)) {
         return;
       }
-      const getExistingId = (): BitId | undefined => {
+      const getExistingIdFromBitMapOrModel = (): BitId | undefined => {
         const existingIds = this.consumer.bitmapIdsFromCurrentLane.filterWithoutVersion(componentId);
         if (existingIds.length === 1) {
           depDebug.versionResolvedFrom = 'BitMap';
@@ -748,14 +748,20 @@ either, use the ignore file syntax or change the require statement to have a mod
         }
         return undefined;
       };
-      let existingId: BitId | undefined;
-      if (!version) {
-        existingId = getExistingId();
-      } else if (this.isPkgInWorkspacePolicies(compDep.name)) {
-        existingId = componentId;
-      } else {
-        existingId = getExistingId() ?? componentId;
-      }
+      const getExistingId = (): BitId | undefined => {
+        // Happens when the dep is not in the node_modules or it's there without a version
+        // (it's there without a version when it's in the workspace and it's linked)
+        if (!version) return getExistingIdFromBitMapOrModel();
+
+        // In case it's resolved from the node_modules, and it's also in the ws policy,
+        // use the resolved version from the node_modules / package folder
+        if (this.isPkgInWorkspacePolicies(compDep.name)) return componentId;
+
+        // If there is a version in the node_modules/package folder, but it's not in the ws policy,
+        // prefer the version from the bitmap/model over the version from the node_modules
+        return getExistingIdFromBitMapOrModel() ?? componentId;
+      };
+      const existingId = getExistingId();
       if (existingId) {
         if (existingId.isEqual(this.componentId)) {
           // happens when one of the component files requires another using module path
