@@ -939,6 +939,7 @@ jobs:
       - run: cinst nodejs --version 16.16.0
       # - run: nodejs.install v12.16.0
       - run: node -v
+      - run: npm -v
       - run: 'yarn -v'
       - run:
           name: set bit.dev registry
@@ -1532,31 +1533,31 @@ workflows:
           requires:
             - generate_and_check_types
 
-  # windows_e2e:
-  #   jobs:
-  #     - windows_approval_job:
-  #         type: approval
-  #     - windows_checkout_code:
-  #         requires:
-  #           - windows_approval_job
-  #     # - windows_set_ssh_key:
-  #     #     requires:
-  #     #       - windows_approval_job
-  #     - windows_set_npm_registries:
-  #         requires:
-  #           - windows_approval_job
-  #     - windows_install_npm_deps:
-  #         requires:
-  #           - windows_checkout_code
-  #           - windows_set_npm_registries
-  #     - windows_build:
-  #         requires:
-  #           - windows_install_npm_deps
-  #     - windows_e2e_test:
-  #         requires:
-  #           - windows_build
-  #           # - windows_set_ssh_key
-  #           - windows_set_npm_registries
+  windows_e2e:
+    jobs:
+      - windows_approval_job:
+          type: approval
+      - windows_checkout_code:
+          requires:
+            - windows_approval_job
+      # - windows_set_ssh_key:
+      #     requires:
+      #       - windows_approval_job
+      - windows_set_npm_registries:
+          requires:
+            - windows_approval_job
+      - windows_install_npm_deps:
+          requires:
+            - windows_checkout_code
+            - windows_set_npm_registries
+      - windows_build:
+          requires:
+            - windows_install_npm_deps
+      - windows_e2e_test:
+          requires:
+            - windows_build
+            # - windows_set_ssh_key
+            - windows_set_npm_registries
 
   deploy:
     jobs:
