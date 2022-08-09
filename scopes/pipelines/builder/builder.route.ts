@@ -36,8 +36,8 @@ export class BuilderRoute implements Route {
       const extensionsWithArtifacts = await Promise.all(
         artifacts.map(async (artifact) => {
           const files = await artifact.files.getVinylsAndImportIfMissing(component.id._legacy, this.scope);
-          if (!filePath) return { extensionId: artifact.task.id, files };
-          return { extensionId: artifact.task.id, files: files.filter((file) => file.path === filePath) };
+          if (!filePath) return { extensionId: artifact.task.aspectId, files };
+          return { extensionId: artifact.task.aspectId, files: files.filter((file) => file.path === filePath) };
         })
       );
 
