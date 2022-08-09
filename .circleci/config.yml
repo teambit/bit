@@ -939,6 +939,7 @@ jobs:
       # - run: cinst nodejs --version 16.15.1
       # - run: nodejs.install v12.16.0
       - run: nvm install 16.16.0
+      - run: nvm use 16.16.0
       - run: node -v
       - run: npm -v
       - run: 'yarn -v'
