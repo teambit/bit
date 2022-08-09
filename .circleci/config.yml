@@ -1533,31 +1533,31 @@ workflows:
           requires:
             - generate_and_check_types
 
-  windows_e2e:
-    jobs:
-      - windows_approval_job:
-          type: approval
-      - windows_checkout_code:
-          requires:
-            - windows_approval_job
-      # - windows_set_ssh_key:
-      #     requires:
-      #       - windows_approval_job
-      - windows_set_npm_registries:
-          requires:
-            - windows_approval_job
-      - windows_install_npm_deps:
-          requires:
-            - windows_checkout_code
-            - windows_set_npm_registries
-      - windows_build:
-          requires:
-            - windows_install_npm_deps
-      - windows_e2e_test:
-          requires:
-            - windows_build
-            # - windows_set_ssh_key
-            - windows_set_npm_registries
+  # windows_e2e:
+  #   jobs:
+  #     - windows_approval_job:
+  #         type: approval
+  #     - windows_checkout_code:
+  #         requires:
+  #           - windows_approval_job
+  #     # - windows_set_ssh_key:
+  #     #     requires:
+  #     #       - windows_approval_job
+  #     - windows_set_npm_registries:
+  #         requires:
+  #           - windows_approval_job
+  #     - windows_install_npm_deps:
+  #         requires:
+  #           - windows_checkout_code
+  #           - windows_set_npm_registries
+  #     - windows_build:
+  #         requires:
+  #           - windows_install_npm_deps
+  #     - windows_e2e_test:
+  #         requires:
+  #           - windows_build
+  #           # - windows_set_ssh_key
+  #           - windows_set_npm_registries
 
   deploy:
     jobs:
@@ -1802,22 +1802,22 @@ workflows:
             - windows_build_bvm
 
   # Uncomment in cse you want to run the windows tests
-  # build_and_test_windows:
-  #   jobs:
-  #     - windows_set_ssh_key
-  #     - windows_checkout_code
-  #     - windows_bvm_install:
-  #         requires:
-  #           - windows_checkout_code
-  #     - windows_build_bvm:
-  #         requires:
-  #           - windows_bvm_install
-  #     - windows_e2e_test_bvm:
-  #         requires:
-  #           - windows_checkout_code
-  #           - windows_set_ssh_key
-  #           - windows_bvm_install
-  #           - windows_build_bvm
+  build_and_test_windows:
+    jobs:
+      - windows_set_ssh_key
+      - windows_checkout_code
+      - windows_bvm_install:
+          requires:
+            - windows_checkout_code
+      - windows_build_bvm:
+          requires:
+            - windows_bvm_install
+      - windows_e2e_test_bvm:
+          requires:
+            - windows_checkout_code
+            - windows_set_ssh_key
+            - windows_bvm_install
+            - windows_build_bvm
   # TODO: check if we can combine it with the regular nightly somehow
   harmony_deploy:
     jobs:
