@@ -4,7 +4,6 @@ import { flatten } from 'lodash';
 import { ArtifactFiles } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
 import { Component, ComponentMap } from '@teambit/component';
 import { ArtifactDefinition } from './artifact-definition';
-import { DefaultResolver } from '../storage';
 import { ArtifactList } from './artifact-list';
 import type { BuildContext, BuildTask } from '../build-task';
 import { CapsuleNotFound } from '../exceptions';
@@ -42,18 +41,13 @@ export class ArtifactFactory {
     def: ArtifactDefinition,
     task: BuildTask
   ): FsArtifact | undefined {
-    const storageResolver = this.getStorageResolver(def);
     const contextPath = this.getArtifactContextPath(context, component, def);
     const rootDir = this.getRootDir(contextPath, def);
     const paths = this.resolvePaths(rootDir, def);
     if (!paths || !paths.length) {
       return undefined;
     }
-    return new FsArtifact(def, storageResolver, ArtifactFiles.fromPaths(paths), task, rootDir);
-  }
-
-  private getStorageResolver(def: ArtifactDefinition) {
-    return def.storageResolver || new DefaultResolver();
+    return new FsArtifact(def, ArtifactFiles.fromPaths(paths), task, rootDir);
   }
 
   private toComponentMap(context: BuildContext, artifactMap: [string, FsArtifact][]) {
@@ -83,13 +77,7 @@ export class ArtifactFactory {
         const rootDir = this.getRootDir(capsuleDir, def);
         const paths = this.resolvePaths(rootDir, def);
         if (paths && paths.length) {
-          const artifact = new FsArtifact(
-            def,
-            this.getStorageResolver(def),
-            ArtifactFiles.fromPaths(this.resolvePaths(rootDir, def)),
-            task,
-            rootDir
-          );
+          const artifact = new FsArtifact(def, ArtifactFiles.fromPaths(this.resolvePaths(rootDir, def)), task, rootDir);
 
           return context.components.forEach((component) => {
             tupleArr.push([component.id.toString(), artifact]);

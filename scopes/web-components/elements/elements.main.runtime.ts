@@ -47,7 +47,7 @@ export class ElementsMain {
 
   isElementsExist(component: Component): boolean {
     const artifacts = this.builder.getArtifactsByExtension(component, ElementsAspect.id);
-    return !!artifacts?.length;
+    return !artifacts.isEmpty();
   }
 
   async getElementUrl(component: Component): Promise<string | undefined> {

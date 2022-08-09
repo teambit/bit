@@ -29,6 +29,7 @@ import { LoggerAspect, LoggerMain, Logger } from '@teambit/logger';
 import { DependencyResolverAspect } from '@teambit/dependency-resolver';
 import type { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { ArtifactFiles } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
+import { ArtifactFile } from '@teambit/legacy/dist/consumer/component/sources/artifact-file';
 import GraphqlAspect, { GraphqlMain } from '@teambit/graphql';
 import { BundlingStrategyNotFound } from './exceptions';
 import { generateLink } from './generate-link';
@@ -255,10 +256,10 @@ export class PreviewMain {
     if (!paths || !paths.length) {
       return undefined;
     }
-    const artifactFiles = new ArtifactFiles(paths);
 
+    const artifactFiles = new ArtifactFiles(paths.map((path) => ArtifactFile.fromModel({ relativePath: path })));
     artifactFiles.populateVinylsFromPaths(rootDir);
-    return new PreviewArtifact(artifactFiles.vinyls);
+    return new PreviewArtifact(artifactFiles.getExistingVinyls());
   }
 
   /**

@@ -92,14 +92,14 @@ export class ArtifactList<T extends Artifact> {
   }
 
   /**
-   * store all artifacts using the configured storage resolvers.
+   * store all artifacts using the configured st orage resolvers.
    */
   async store(component: Component) {
     const byResolvers = this.groupByResolver();
     const promises = Object.keys(byResolvers).map(async (key) => {
       const artifacts = byResolvers[key];
       if (!artifacts.length) return;
-      const storageResolver = artifacts[0].storage;
+      const storageResolver = artifacts[0].storageResolver;
       const artifactList = new ArtifactList<T>(artifacts);
       const artifactPromises = artifactList.artifacts.map(async (artifact) => {
         return this.storeArtifact(storageResolver, artifact, component);

@@ -72,7 +72,9 @@ export class ArtifactExtractor {
     // @todo: optimize this to first import all missing hashes.
     await pMapSeries(artifactObjectsPerId, async ({ id, artifacts }) => {
       const vinyls = await Promise.all(
-        artifacts.map((artifactObject) => artifactObject.files.getVinylsAndImportIfMissing(this.scope.legacyScope))
+        artifacts.map((artifactObject) =>
+          artifactObject.files.getVinylsAndImportIfMissing(id._legacy, this.scope.legacyScope)
+        )
       );
       const flattenedVinyls = vinyls.flat();
       // make sure the component-dir is just one dir. without this, every slash in the component-id will create a new dir.
