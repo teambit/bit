@@ -1,12 +1,13 @@
 import type { ArtifactFiles, ArtifactObject } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
+import { ArtifactFile } from '@teambit/legacy/dist/consumer/component/sources/artifact-file';
 import { ArtifactVinyl } from '@teambit/legacy/dist/consumer/component/sources/artifact';
 import { ScopeMain } from '@teambit/scope';
-import { compact, flatten } from 'lodash';
+import { compact } from 'lodash';
 import Vinyl from 'vinyl';
 import { Source } from '@teambit/legacy/dist/scope/models';
 import type { TaskDescriptor } from '../build-task';
-import type { ArtifactStorageResolver } from '../storage';
 import type { ArtifactDefinition } from './artifact-definition';
+import { DefaultResolver } from '../storage/default-resolver';
 
 export class Artifact {
   constructor(
@@ -15,10 +16,10 @@ export class Artifact {
      */
     readonly def: ArtifactDefinition,
 
-    /**
-     * storage resolver. can be used to replace where artifacts are stored.
-     */
-    readonly storageResolver: ArtifactStorageResolver,
+    // // /**
+    // //  * storage resolver. can be used to replace where artifacts are stored.
+    // //  */
+    // readonly storageResolver: ArtifactStorageResolver,
 
     public files: ArtifactFiles,
 
@@ -26,22 +27,18 @@ export class Artifact {
     //  * join this with `this.paths` to get the absolute paths
     //  */
 
-    // TODO: Review this
-    // readonly rootDir: string,
-
     /**
      * the declaring task.
      */
-    readonly task: TaskDescriptor
-  ) // /**
-  //  * timestamp of the artifact creation.
+    readonly task: TaskDescriptor // /**
+  ) //  * timestamp of the artifact creation.
   //  */
   // TODO: Review this
   // readonly timestamp: number = Date.now()
   {}
 
   get storage() {
-    return this.storageResolver;
+    return this.def.storageResolver || new DefaultResolver();
   }
 
   /**
@@ -73,23 +70,22 @@ export class Artifact {
   //   // TODO: implement
   // }
 
-  static fromArtifactObject(object: ArtifactObject, storageResolver: ArtifactStorageResolver): Artifact {
+  static fromArtifactObject(object: ArtifactObject): Artifact {
     const artifactDef: ArtifactDefinition = {
       name: object.name,
       generatedBy: object.generatedBy,
       description: object.description,
-      storageResolver,
     };
     const task: TaskDescriptor = {
       aspectId: object.task.id,
       name: object.task.name,
     };
-    return new Artifact(artifactDef, storageResolver, object.files, task);
+    return new Artifact(artifactDef, object.files, task);
   }
 
-  async getVinylsAndImportIfMissing(scopeName: string, scope: ScopeMain): Promise<ArtifactVinyl[]> {
+  async getVinylsAndImportIfMissing(scope: ScopeMain): Promise<ArtifactVinyl[]> {
     const artifactFiles = this.files;
-    await artifactFiles.getVinylsAndImportIfMissing(scopeName, scope.legacyScope);
+    await artifactFiles.getVinylsAndImportIfMissing(scope.legacyScope);
     const vinyls: Vinyl[] = [];
     const vinylsFromScope: Vinyl[] = [];
     const artifactsToLoadFromOtherResolver: ArtifactFile[] = [];
@@ -109,11 +105,14 @@ export class Artifact {
 
     await Promise.all(promises);
 
-    const vinylsFromOtherStorage = await Promise.all(
-      artifactsToLoadFromOtherResolver.map(async (file) => this.populateVinylFromStorage(file))
-    );
+    // TODO - confirm with Gilad if this is required
 
-    return vinyls.concat(compact(vinylsFromScope)).concat(compact(vinylsFromOtherStorage));
+    // const vinylsFromOtherStorage = await Promise.all(
+    //   artifactsToLoadFromOtherResolver.map(async (file) => this.populateVinylFromStorage(file))
+    // );
+
+    return vinyls.concat(compact(vinylsFromScope));
+    // .concat(compact(vinylsFromOtherStorage));
   }
 
   /**
@@ -126,7 +125,7 @@ export class Artifact {
       name: this.name,
       description: this.description,
       generatedBy: this.generatedBy,
-      storage: this.storageResolver.name,
+      storage: this.storage.name,
       task: {
         id: this.task.aspectId,
         name: this.task.name,

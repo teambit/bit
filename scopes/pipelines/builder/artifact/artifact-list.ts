@@ -1,6 +1,9 @@
 import { Component } from '@teambit/component';
 import type { ArtifactObject } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
+import type { ArtifactStore } from '@teambit/legacy/dist/consumer/component/sources/artifact-file';
 import { Artifact } from './artifact';
+import { FsArtifact } from './fs-artifact';
+import { StoreResult } from '../storage/storage-resolver';
 import {
   ArtifactStorageResolver,
   FileStorageResolver,
@@ -13,6 +16,23 @@ export type ResolverMap<T extends Artifact> = { [key: string]: T[] };
 export class ArtifactList<T extends Artifact> {
   constructor(readonly artifacts: T[]) {}
 
+  map(fn: (file: T) => any): Array<any> {
+    return this.artifacts.map((artifact) => fn(artifact));
+  }
+
+  forEach(fn: (file: T) => void) {
+    return this.artifacts.forEach((artifact) => fn(artifact));
+  }
+
+  filter(fn: (file: T) => boolean): ArtifactList<T> {
+    const filtered = this.artifacts.filter((artifact) => fn(artifact));
+    return new ArtifactList(filtered);
+  }
+
+  isEmpty(): boolean {
+    return !this.artifacts.length;
+  }
+
   /**
    * return an array of artifact objects.
    */
@@ -20,11 +40,22 @@ export class ArtifactList<T extends Artifact> {
     return this.artifacts;
   }
 
-  static fromArtifactObjects(
-    artifactObjects: ArtifactObject[],
-    storageResolver: ArtifactStorageResolver
-  ): ArtifactList<Artifact> {
-    const artifacts = artifactObjects.map((object) => Artifact.fromArtifactObject(object, storageResolver));
+  byAspectNameAndName(aspectName?: string, name?: string): ArtifactList<T> {
+    const filtered = this.artifacts.filter((artifact) => {
+      let cond = true;
+      if (aspectName) {
+        cond = cond && artifact.task.aspectId === aspectName;
+      }
+      if (name) {
+        cond = cond && artifact.name === name;
+      }
+      return cond;
+    });
+    return new ArtifactList(filtered);
+  }
+
+  static fromArtifactObjects(artifactObjects: ArtifactObject[]): ArtifactList<Artifact> {
+    const artifacts = artifactObjects.map((object) => Artifact.fromArtifactObject(object));
     return new ArtifactList(artifacts);
   }
 
@@ -83,7 +114,7 @@ export class ArtifactList<T extends Artifact> {
     // For now we are always storing also using the default resolver
     if (storageResolver.name !== 'default') {
       const defaultResolver = new DefaultResolver();
-      await defaultResolver.store(component, artifact);
+      await defaultResolver.store(component, artifact as FsArtifact);
     }
     // @ts-ignore
     if (storageResolver.store && typeof storageResolver.store === 'function') {
@@ -105,10 +136,18 @@ export class ArtifactList<T extends Artifact> {
   ) {
     const results = await storageResolver.store(component, artifact);
     if (!results) return;
-    artifact.files.vinyls.map(async (file) => {
-      const url = results[file.relative];
+    artifact.files.forEach((file) => {
+      const url = (results as StoreResult)[file.relativePath];
+
       if (url) {
-        file.url = url;
+        const newStore: ArtifactStore = {
+          name: storageResolver.name,
+          url,
+        };
+        if (!file.stores) {
+          file.stores = [];
+        }
+        file.stores.push(newStore);
       }
     });
   }
@@ -120,10 +159,10 @@ export class ArtifactList<T extends Artifact> {
    * @param component
    */
   private storeArtifactFilesByResolver(storageResolver: FileStorageResolver, artifact: Artifact, component: Component) {
-    const promises = artifact.files.vinyls.map(async (file) => {
-      const url = await storageResolver.storeFile(component, artifact, file);
+    const promises = artifact.files.getExistingVinyls().map(async (artifactFile) => {
+      const url = await storageResolver.storeFile(component, artifact, artifactFile);
       if (url) {
-        file.url = url;
+        artifactFile.url = url;
       }
     });
     return Promise.all(promises);

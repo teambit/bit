@@ -15,7 +15,7 @@ import { getHarmonyVersion } from '@teambit/legacy/dist/bootstrap';
 import findDuplications from '@teambit/legacy/dist/utils/array/find-duplications';
 import { ArtifactFiles, ArtifactObject } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
 import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
-import { ArtifactList, FsArtifact } from './artifact';
+import { Artifact, ArtifactList, FsArtifact } from './artifact';
 import { ArtifactFactory } from './artifact/artifact-factory'; // it gets undefined when importing it from './artifact'
 import { BuilderAspect } from './builder.aspect';
 import { builderSchema } from './builder.graphql';
@@ -135,10 +135,7 @@ export class BuilderMain {
   async getArtifactsVinylByExtension(component: Component, aspectName: string): Promise<ArtifactVinyl[]> {
     const artifactsObjects = this.getArtifactsByExtension(component, aspectName);
     const vinyls = await Promise.all(
-      (artifactsObjects || []).map(async (artifactObject) => {
-        await artifactObject.files.importMissingArtifactObjects(this.scope.legacyScope);
-        return artifactObject.files.getExistingVinyls();
-      })
+      (artifactsObjects || []).map(async (artifactObject) => artifactObject.getVinylsAndImportIfMissing(this.scope))
     );
     return flatten(vinyls);
   }
@@ -163,7 +160,7 @@ export class BuilderMain {
     aspectName: string,
     taskName: string
   ): Promise<ArtifactVinyl[]> {
-    const artifactsObjects = this.getArtifactsByExtensionAndTaskName(component, aspectName, taskName);
+    const artifactsObjects = this.getArtifactsByExtensionAndName(component, aspectName, taskName);
     const vinyls = await Promise.all(
       (artifactsObjects || []).map(async (artifactObject) => {
         await artifactObject.files.importMissingArtifactObjects(this.scope.legacyScope);
@@ -173,28 +170,19 @@ export class BuilderMain {
     return flatten(vinyls);
   }
 
-  getArtifactsByName(component: Component, name: string): ArtifactObject[] | undefined {
-    const artifacts = this.getArtifacts(component);
-    return artifacts?.filter((artifact) => artifact.name === name);
+  getArtifactsByName(component: Component, name: string): ArtifactList<Artifact> {
+    const artifacts = this.getArtifacts(component).byAspectNameAndName(undefined, name);
+    return artifacts;
   }
 
-  getArtifactsByExtension(component: Component, aspectName: string): ArtifactObject[] | undefined {
-    const artifacts = this.getArtifacts(component);
-    return artifacts?.filter((artifact) => artifact.task.id === aspectName);
+  getArtifactsByExtension(component: Component, aspectName: string): ArtifactList<Artifact> {
+    const artifacts = this.getArtifacts(component).byAspectNameAndName(aspectName);
+    return artifacts;
   }
 
-  getArtifactsByExtensionAndName(component: Component, aspectName: string, name: string): ArtifactObject[] | undefined {
-    const artifacts = this.getArtifacts(component);
-    return artifacts?.filter((artifact) => artifact.task.id === aspectName && artifact.name === name);
-  }
-
-  getArtifactsByExtensionAndTaskName(
-    component: Component,
-    aspectName: string,
-    taskName: string
-  ): ArtifactObject[] | undefined {
-    const artifacts = this.getArtifacts(component);
-    return artifacts?.filter((artifact) => artifact.task.id === aspectName && artifact.task.name === taskName);
+  getArtifactsByExtensionAndName(component: Component, aspectName: string, name: string): ArtifactList<Artifact> {
+    const artifacts = this.getArtifacts(component).byAspectNameAndName(aspectName, name);
+    return artifacts;
   }
 
   getDataByAspect(component: IComponent, aspectName: string): Serializable | undefined {
@@ -203,19 +191,22 @@ export class BuilderMain {
     return data?.data;
   }
 
-  getArtifacts(component: Component): ArtifactObject[] | undefined {
-    return this.getBuilderData(component)?.artifacts;
+  getArtifacts(component: Component): ArtifactList<Artifact> {
+    const artifactObjects = this.getBuilderData(component)?.artifacts || [];
+    const list = ArtifactList.fromArtifactObjects(artifactObjects);
+    return list;
   }
 
   getBuilderData(component: IComponent): BuilderData | undefined {
-    const data = component.get(BuilderAspect.id)?.data as BuilderData | undefined;
+    const data = component.get(BuilderAspect.id)?.data;
     if (!data) return undefined;
-    data.artifacts?.forEach((artifact) => {
-      if (!(artifact.files instanceof ArtifactFiles)) {
-        artifact.files = ArtifactFiles.fromModel(artifact.files);
-      }
+    data?.artifacts?.forEach((artifactObj) => {
+      artifactObj.files =
+        artifactObj.files instanceof ArtifactFiles
+          ? artifactObj.files
+          : ArtifactFiles.fromModel(artifactObj.files.files);
     });
-    return data;
+    return data as BuilderData;
   }
 
   /**

@@ -1,6 +1,9 @@
 import { ArtifactObject } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
 import { AspectData, PipelineReport } from './build-pipeline-result-list';
 
+/**
+ * @deprecated
+ */
 export type BuilderData = {
   pipeline: PipelineReport[];
   artifacts: ArtifactObject[] | undefined;
