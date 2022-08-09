@@ -936,13 +936,12 @@ jobs:
       PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: true
     steps:
       # - run: choco install nodejs --version 16.15.1
-      # - run: cinst nodejs --version 16.15.1
+      # - run: cinst nodejs --version 16.16.0
       # - run: nodejs.install v12.16.0
       - run: nvm install 16.16.0
       - run: nvm use 16.16.0
       - run: node -v
       - run: corepack enable
-      - run: npm -v
       - run: 'yarn -v'
       - run:
           name: set bit.dev registry
