@@ -24,14 +24,14 @@ export type AspectData = {
  * Helper to get the data and artifacts from the TasksResultsList before saving during the tag
  */
 export class BuildPipelineResultList {
-  private artifactListsMap: ComponentMap<ArtifactList>;
+  private artifactListsMap: ComponentMap<ArtifactList<Artifact>>;
   constructor(private tasksResults: TaskResults[], private components: Component[]) {
     this.artifactListsMap = this.getFlattenedArtifactListsMapFromAllTasks();
   }
 
-  private getFlattenedArtifactListsMapFromAllTasks(): ComponentMap<ArtifactList> {
+  private getFlattenedArtifactListsMapFromAllTasks(): ComponentMap<ArtifactList<Artifact>> {
     const artifactListsMaps = this.tasksResults.flatMap((t) => (t.artifacts ? [t.artifacts] : []));
-    return ComponentMap.as<ArtifactList>(this.components, (component) => {
+    return ComponentMap.as<ArtifactList<Artifact>>(this.components, (component) => {
       const artifacts: Artifact[] = [];
       artifactListsMaps.forEach((artifactListMap) => {
         const artifactList = artifactListMap.getValueByComponentId(component.id);
