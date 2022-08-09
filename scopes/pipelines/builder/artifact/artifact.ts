@@ -5,6 +5,7 @@ import { ScopeMain } from '@teambit/scope';
 import { compact } from 'lodash';
 import Vinyl from 'vinyl';
 import { Source } from '@teambit/legacy/dist/scope/models';
+import BitId from '@teambit/legacy-bit-id/bit-id';
 import type { TaskDescriptor } from '../build-task';
 import type { ArtifactDefinition } from './artifact-definition';
 import { DefaultResolver } from '../storage/default-resolver';
@@ -30,14 +31,13 @@ export class Artifact {
     /**
      * the declaring task.
      */
-    readonly task: TaskDescriptor // /**
-  ) //  * timestamp of the artifact creation.
-  //  */
+    readonly task: TaskDescriptor // /** //  * timestamp of the artifact creation.
+  ) //  */
   // TODO: Review this
   // readonly timestamp: number = Date.now()
   {}
 
-  get storage() {
+  get storageResolver() {
     return this.def.storageResolver || new DefaultResolver();
   }
 
@@ -83,9 +83,9 @@ export class Artifact {
     return new Artifact(artifactDef, object.files, task);
   }
 
-  async getVinylsAndImportIfMissing(scope: ScopeMain): Promise<ArtifactVinyl[]> {
+  async getVinylsAndImportIfMissing(id: BitId, scope: ScopeMain): Promise<ArtifactVinyl[]> {
     const artifactFiles = this.files;
-    await artifactFiles.getVinylsAndImportIfMissing(scope.legacyScope);
+    await artifactFiles.getVinylsAndImportIfMissing(id, scope.legacyScope);
     const vinyls: Vinyl[] = [];
     const vinylsFromScope: Vinyl[] = [];
     const artifactsToLoadFromOtherResolver: ArtifactFile[] = [];
@@ -125,7 +125,7 @@ export class Artifact {
       name: this.name,
       description: this.description,
       generatedBy: this.generatedBy,
-      storage: this.storage.name,
+      storage: this.storageResolver.name,
       task: {
         id: this.task.aspectId,
         name: this.task.name,

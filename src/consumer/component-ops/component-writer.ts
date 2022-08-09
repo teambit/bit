@@ -223,7 +223,7 @@ export default class ComponentWriter {
         // fyi, if this is coming from the isolator aspect, it is optimized to import all at once.
         // see artifact-files.importMultipleDistsArtifacts().
 
-        await artifactFiles.importMissingArtifactObjects(scope);
+        await artifactFiles.importMissingArtifactObjects(this.component.id, scope);
         const vinylFiles = artifactFiles.getExistingVinyls();
         artifactsVinylFlattened.push(...vinylFiles);
       })

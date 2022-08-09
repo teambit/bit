@@ -135,7 +135,9 @@ export class BuilderMain {
   async getArtifactsVinylByExtension(component: Component, aspectName: string): Promise<ArtifactVinyl[]> {
     const artifactsObjects = this.getArtifactsByExtension(component, aspectName);
     const vinyls = await Promise.all(
-      (artifactsObjects || []).map(async (artifactObject) => artifactObject.getVinylsAndImportIfMissing(this.scope))
+      (artifactsObjects || []).map(async (artifactObject) =>
+        artifactObject.getVinylsAndImportIfMissing(component.id._legacy, this.scope)
+      )
     );
     return flatten(vinyls);
   }
@@ -145,12 +147,9 @@ export class BuilderMain {
     aspectName: string,
     name: string
   ): Promise<ArtifactVinyl[]> {
-    const artifactsObjects = this.getArtifactsByExtensionAndName(component, aspectName, name);
+    const artifacts = this.getArtifactsByExtensionAndName(component, aspectName, name);
     const vinyls = await Promise.all(
-      (artifactsObjects || []).map(async (artifactObject) => {
-        await artifactObject.files.importMissingArtifactObjects(this.scope.legacyScope);
-        return artifactObject.files.getExistingVinyls();
-      })
+      (artifacts || []).map(async (artifact) => artifact.getVinylsAndImportIfMissing(component.id._legacy, this.scope))
     );
     return flatten(vinyls);
   }
@@ -162,7 +161,9 @@ export class BuilderMain {
   ): Promise<ArtifactVinyl[]> {
     const artifactsObjects = this.getArtifactsByExtensionAndName(component, aspectName, taskName);
     const vinyls = await Promise.all(
-      (artifactsObjects || []).map(async (artifactObject) => artifactObject.getVinylsAndImportIfMissing(this.scope))
+      (artifactsObjects || []).map(async (artifactObject) =>
+        artifactObject.getVinylsAndImportIfMissing(component.id._legacy, this.scope)
+      )
     );
     return flatten(vinyls);
   }

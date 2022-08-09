@@ -1,5 +1,6 @@
 import R from 'ramda';
 import { compact } from 'lodash';
+import { BitId } from '../../../bit-id';
 import { Scope } from '../../../scope';
 import ScopeComponentsImporter from '../../../scope/component-ops/scope-components-importer';
 import { Source } from '../../../scope/models';
@@ -7,7 +8,9 @@ import { Ref } from '../../../scope/objects';
 import { ExtensionDataList } from '../../config';
 import Component from '../consumer-component';
 import { ArtifactFile, ArtifactModel, ArtifactFileObject } from './artifact-file';
+import { ArtifactVinyl } from './artifact';
 
+export type ArtifactRef = { relativePath: string; ref: Ref; url?: string };
 export type ArtifactSource = { relativePath: string; source: Source; url?: string };
 export type ArtifactObject = {
   name: string;
@@ -100,32 +103,57 @@ export class ArtifactFiles {
     return new ArtifactFiles(files);
   }
 
+  static fromPaths(paths: string[]) {
+    const files = paths.map((path) => new ArtifactFile(path));
+    return new ArtifactFiles(files);
+  }
+
   fromVinylsToSources(): ArtifactSource[] {
     const sources = this.files.map((file) => file.populateArtifactSourceFromVinyl());
     return compact(sources);
   }
+  async getVinylsAndImportIfMissing(id: BitId, scope: Scope): Promise<ArtifactVinyl[]> {
+    await this.importMissingArtifactObjects(id, scope);
+    return this.getExistingVinyls();
+  }
 
-  async importMissingArtifactObjects(scope: Scope): Promise<void> {
-    if (this.isEmpty()) return;
-    const hashes: string[] = [];
-    // TODO: review with Gilad why do we need this?
+  async importMissingArtifactObjects(id: BitId, scope: Scope): Promise<void> {
     // const artifactsToLoadFromScope: ArtifactFile[] = [];
+    const refs: ArtifactRef[] = [];
+    const hashes: string[] = [];
 
     this.files.forEach((file) => {
       if (file.vinyl) {
         return undefined;
       }
       // By default try to fetch artifact from the default resolver
-      const ref = file.getRef();
-      if (ref) {
+      const artifactRef = file.getArtifactRef();
+      if (artifactRef) {
+        // // TODO: review with Gilad why do we need this?
         // artifactsToLoadFromScope.push(file);
-        return hashes.push(ref.hash);
+        refs.push(artifactRef);
+        hashes.push(artifactRef.ref.hash);
       }
       return undefined;
     });
 
     const scopeComponentsImporter = ScopeComponentsImporter.getInstance(scope);
-    await scopeComponentsImporter.importManyObjects({ [scope.name]: hashes });
+    const lane = await scope.getCurrentLaneObject();
+    const isIdOnLane = lane?.toBitIds().hasWithoutVersion(id);
+    const scopeName = isIdOnLane ? (lane?.scope as string) : (id.scope as string);
+    await scopeComponentsImporter.importManyObjects({ [scopeName]: hashes });
+    // const getOneArtifact = async (artifact: ArtifactRef) => {
+    //   const content = (await artifact.ref.load(scope.objects)) as Source;
+    //   if (!content) throw new ShowDoctorError(`failed loading file ${artifact.relativePath} from the model`);
+    //   return new ArtifactVinyl({
+    //     base: '.',
+    //     path: artifact.relativePath,
+    //     contents: content.contents,
+    //     url: artifact.url,
+    //   });
+    // };
+    // this.vinyls = await Promise.all(refs.map((artifact) => getOneArtifact(artifact)));
+    // return this.vinyls;
   }
 }
 
