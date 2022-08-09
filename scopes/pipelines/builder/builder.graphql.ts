@@ -87,12 +87,12 @@ export function builderSchema(builder: BuilderMain, scope: Scope) {
         artifact: async (taskReport: TaskReport, { path: pathFilter }: { path?: string }) => {
           if (!taskReport.artifact) return undefined;
 
-          const files = (await taskReport.artifact.files(taskReport.componentId._legacy, scope))
-            .filter((vinyl) => !pathFilter || vinyl.path === pathFilter)
-            .map(async (vinyl) => {
-              const { basename, path, contents } = vinyl;
-              const isBinary = isBinaryPath(path);
-              const content = !isBinary ? contents.toString('utf-8') : undefined;
+          const files = await taskReport.artifact.files
+            .filter((vinyl) => !pathFilter || vinyl.relativePath === pathFilter)
+            .map(async ({ vinyl }) => {
+              const { basename, path, contents } = vinyl || {};
+              const isBinary = path && isBinaryPath(path);
+              const content = !isBinary ? contents?.toString('utf-8') : undefined;
               const downloadUrl = encodeURI(
                 builder.getDownloadUrlForArtifact(taskReport.componentId, taskReport.taskId, path)
               );
