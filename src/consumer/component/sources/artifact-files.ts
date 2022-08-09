@@ -5,6 +5,7 @@ import { Scope } from '../../../scope';
 import ScopeComponentsImporter from '../../../scope/component-ops/scope-components-importer';
 import { Source } from '../../../scope/models';
 import { Ref } from '../../../scope/objects';
+import logger from '../../../logger/logger';
 import { ExtensionDataList } from '../../config';
 import Component from '../consumer-component';
 import { ArtifactFile, ArtifactModel, ArtifactFileObject } from './artifact-file';
@@ -144,21 +145,37 @@ export class ArtifactFiles {
     await Promise.all(artifactsToLoadFromScope.map((artifact) => artifact.populateVinylFromRef(scope)));
   }
 }
-
 export async function importMultipleDistsArtifacts(scope: Scope, components: Component[]) {
+  logger.debug(
+    `importMultipleDistsArtifacts: ${components.length} components: ${components
+      .map((c) => c.id.toString())
+      .join(', ')}`
+  );
   const extensionsNamesForDistArtifacts = 'teambit.compilation/compiler';
+  const lane = await scope.getCurrentLaneObject();
+  const laneIds = lane?.toBitIds();
   const groupedHashes: { [scopeName: string]: string[] } = {};
-  components.forEach((component) => {
-    const artifactsFiles = getArtifactFilesByExtension(component.extensions, extensionsNamesForDistArtifacts);
-    artifactsFiles.forEach((artifactFiles) => {
-      if (!artifactFiles) return;
-      if (artifactFiles.isEmpty()) return;
-      const allHashes = artifactFiles.getRefs().map((ref) => ref.hash);
-      (groupedHashes[component.scope as string] ||= []).push(...allHashes);
-    });
-  });
+  await Promise.all(
+    components.map(async (component) => {
+      const artifactsFiles = getArtifactFilesByExtension(component.extensions, extensionsNamesForDistArtifacts);
+      const scopeName = (await scope.isIdOnLane(component.id, lane, laneIds))
+        ? (lane?.scope as string)
+        : (component.scope as string);
+      artifactsFiles.forEach((artifactFiles) => {
+        if (!artifactFiles) return;
+        if (!(artifactFiles instanceof ArtifactFiles)) {
+          artifactFiles = ArtifactFiles.parse(artifactFiles);
+        }
+        if (artifactFiles.isEmpty()) return;
+        if (artifactFiles.getExistingVinyls().length) return;
+        const allHashes = artifactFiles.getRefs().map((artifact) => artifact.hash);
+        (groupedHashes[scopeName] ||= []).push(...allHashes);
+      });
+    })
+  );
   const scopeComponentsImporter = ScopeComponentsImporter.getInstance(scope);
   await scopeComponentsImporter.importManyObjects(groupedHashes);
+  logger.debug(`importMultipleDistsArtifacts: ${components.length} components. completed successfully`);
 }
 
 export function getRefsFromExtensions(extensions: ExtensionDataList): Ref[] {
