@@ -940,8 +940,8 @@ jobs:
       # - run: nodejs.install v12.16.0
       - run: nvm install 16.16.0
       - run: nvm use 16.16.0
-      - run: 'npm install --location=global yarn'
       - run: node -v
+      - run: corepack enable
       - run: npm -v
       - run: 'yarn -v'
       - run:
