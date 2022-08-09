@@ -1,6 +1,5 @@
 import { Component, ComponentID } from '@teambit/component';
 import gql from 'graphql-tag';
-import { Scope } from '@teambit/legacy/dist/scope';
 import { ArtifactObject } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
 import isBinaryPath from 'is-binary-path';
 import { BuilderMain } from './builder.main.runtime';
@@ -19,7 +18,7 @@ type TaskReport = PipelineReport & {
   componentId: ComponentID;
 };
 
-export function builderSchema(builder: BuilderMain, scope: Scope) {
+export function builderSchema(builder: BuilderMain) {
   return {
     typeDefs: gql`
       type TaskReport {

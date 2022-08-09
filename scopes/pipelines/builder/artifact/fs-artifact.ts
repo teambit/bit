@@ -1,4 +1,3 @@
-import { ArtifactStorageResolver } from '@teambit/builder';
 import type { ArtifactFiles } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
 import type { ArtifactDefinition } from './artifact-definition';
 import { Artifact } from './artifact';

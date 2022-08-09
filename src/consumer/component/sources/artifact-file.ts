@@ -4,11 +4,10 @@ import { Scope } from '../../../scope';
 import { Source } from '../../../scope/models';
 import { Ref } from '../../../scope/objects';
 import { pathNormalizeToLinux } from '../../../utils';
-import { ArtifactSource } from './artifact-files';
+import { ArtifactSource, ArtifactRef } from './artifact-files';
 import { ArtifactVinyl } from './artifact';
 import ShowDoctorError from '../../../../dist/error/show-doctor-error';
 
-export type ArtifactRef = { relativePath: string; ref: Ref; url?: string };
 export type ArtifactStore = { name: string; url?: string; metadata?: Object };
 export type LegacyArtifactModel = { relativePath: string; file: string };
 export type NewArtifactModel = { relativePath: string; stores?: Array<ArtifactStore> };
