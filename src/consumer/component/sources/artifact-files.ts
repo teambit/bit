@@ -60,7 +60,7 @@ export class ArtifactFiles {
   }
 
   getRefs(): Ref[] {
-    const refs = this.files.map((file) => file.getRef());
+    const refs = this.files.map((file) => file.ref);
     return compact(refs);
   }
 

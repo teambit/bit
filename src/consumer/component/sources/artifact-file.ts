@@ -8,60 +8,33 @@ import { ArtifactSource, ArtifactRef } from './artifact-files';
 import { ArtifactVinyl } from './artifact';
 import ShowDoctorError from '../../../../dist/error/show-doctor-error';
 
-export type ArtifactStore = { name: string; url?: string; metadata?: Object };
-export type LegacyArtifactModel = { relativePath: string; file: string };
-export type NewArtifactModel = { relativePath: string; stores?: Array<ArtifactStore> };
-export type ArtifactModel = NewArtifactModel | LegacyArtifactModel;
+export type ArtifactModel = { relativePath: string; file: string };
 
 export type ArtifactFileObject = {
   relativePath: string;
   vinyl?: ArtifactVinyl;
-  stores?: Array<ArtifactStore>;
 };
 
 export class ArtifactFile {
   ref: Ref | undefined | null;
   source: ArtifactSource | undefined | null;
-  constructor(public relativePath: string, public vinyl?: ArtifactVinyl, public stores?: Array<ArtifactStore>) {}
+
+  constructor(public relativePath: string, public vinyl?: ArtifactVinyl) {}
 
   clone() {
     const vinyl = this.vinyl?.clone();
-    const stores = this.stores?.map((store) => ({ ...store }));
-    return new ArtifactFile(this.relativePath, vinyl, stores);
+    return new ArtifactFile(this.relativePath, vinyl);
   }
 
   static parse(fileObject: ArtifactFileObject): ArtifactFile {
     if (fileObject instanceof ArtifactFile) {
       return fileObject;
     }
-    return new ArtifactFile(fileObject.relativePath, fileObject.vinyl, fileObject.stores);
-  }
-
-  /**
-   * Return the ref of the default resolver if exist
-   * @returns
-   */
-  getRef(): Ref | undefined {
-    if (this.ref) return this.ref;
-    if (this.ref === null) return undefined;
-    const defaultStore = this.getDefaultStore();
-    if (!defaultStore) {
-      this.ref = null;
-      return undefined;
-    }
-
-    // @ts-ignore
-    const fileHash = defaultStore?.metadata?.file;
-    if (!fileHash) {
-      this.ref = null;
-      return undefined;
-    }
-    this.ref = new Ref(fileHash);
-    return this.ref;
+    return new ArtifactFile(fileObject.relativePath, fileObject.vinyl);
   }
 
   getArtifactRef(): ArtifactRef | undefined {
-    const ref = this.getRef();
+    const ref = this.ref;
     if (!ref) return undefined;
     return {
       ref,
@@ -87,8 +60,8 @@ export class ArtifactFile {
     }
   }
 
-  getDefaultStore(): ArtifactStore | undefined {
-    return this.stores?.find((store) => store.name === 'default');
+  populateRefFromModel({ file }: ArtifactModel) {
+    this.ref = file ? Ref.from(file) : null;
   }
 
   populateVinylFromPath(rootDir: string) {
@@ -113,46 +86,16 @@ export class ArtifactFile {
     this.vinyl = vinyl;
   }
 
-  compatibleWithBackwardModelObject(): boolean {
-    if (this.stores?.length === 1 && this.getDefaultStore()) {
-      return true;
-    }
-    return false;
-  }
-
   toModelObject() {
-    // If there is no new stores, save it in the model is it used to be saved
-    if (this.compatibleWithBackwardModelObject()) {
-      return this.toBackwardCompatibleObject();
-    }
     return {
       relativePath: this.relativePath,
-      stores: this.stores,
-    };
-  }
-
-  toBackwardCompatibleObject() {
-    return {
-      relativePath: this.relativePath,
-      file: this.getRef()?.hash,
+      file: this.ref?.hash,
     };
   }
 
   static fromModel(artifactModel: ArtifactModel) {
-    // @ts-ignore
-    if (artifactModel.file) {
-      // @ts-ignore
-      return this.fromLegacyModel(artifactModel);
-    }
-    // @ts-ignore
-    return new ArtifactFile(artifactModel.relativePath, undefined, artifactModel.stores);
-  }
-
-  static fromLegacyModel(artifactModel: LegacyArtifactModel) {
-    const store: ArtifactStore = {
-      name: 'default',
-      metadata: { file: artifactModel.file },
-    };
-    return new ArtifactFile(artifactModel.relativePath, undefined, [store]);
+    const artifactFile = new ArtifactFile(artifactModel.relativePath, undefined);
+    artifactFile.populateRefFromModel(artifactModel);
+    return artifactFile;
   }
 }
