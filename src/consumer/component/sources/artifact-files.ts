@@ -118,8 +118,7 @@ export class ArtifactFiles {
   }
 
   async importMissingArtifactObjects(id: BitId, scope: Scope): Promise<void> {
-    // const artifactsToLoadFromScope: ArtifactFile[] = [];
-    const refs: ArtifactRef[] = [];
+    const artifactsToLoadFromScope: ArtifactFile[] = [];
     const hashes: string[] = [];
 
     this.files.forEach((file) => {
@@ -129,9 +128,7 @@ export class ArtifactFiles {
       // By default try to fetch artifact from the default resolver
       const artifactRef = file.getArtifactRef();
       if (artifactRef) {
-        // // TODO: review with Gilad why do we need this?
-        // artifactsToLoadFromScope.push(file);
-        refs.push(artifactRef);
+        artifactsToLoadFromScope.push(file);
         hashes.push(artifactRef.ref.hash);
       }
       return undefined;
@@ -140,20 +137,11 @@ export class ArtifactFiles {
     const scopeComponentsImporter = ScopeComponentsImporter.getInstance(scope);
     const lane = await scope.getCurrentLaneObject();
     const isIdOnLane = lane?.toBitIds().hasWithoutVersion(id);
+
     const scopeName = isIdOnLane ? (lane?.scope as string) : (id.scope as string);
     await scopeComponentsImporter.importManyObjects({ [scopeName]: hashes });
-    // const getOneArtifact = async (artifact: ArtifactRef) => {
-    //   const content = (await artifact.ref.load(scope.objects)) as Source;
-    //   if (!content) throw new ShowDoctorError(`failed loading file ${artifact.relativePath} from the model`);
-    //   return new ArtifactVinyl({
-    //     base: '.',
-    //     path: artifact.relativePath,
-    //     contents: content.contents,
-    //     url: artifact.url,
-    //   });
-    // };
-    // this.vinyls = await Promise.all(refs.map((artifact) => getOneArtifact(artifact)));
-    // return this.vinyls;
+
+    await Promise.all(artifactsToLoadFromScope.map((artifact) => artifact.populateVinylFromRef(scope)));
   }
 }
 

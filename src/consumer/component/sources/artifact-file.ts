@@ -1,11 +1,14 @@
 import { join } from 'path';
 import fs from 'fs-extra';
+import { Scope } from '../../../scope';
+import { Source } from '../../../scope/models';
 import { Ref } from '../../../scope/objects';
 import { pathNormalizeToLinux } from '../../../utils';
-import { ArtifactVinyl } from './artifact';
 import { ArtifactSource } from './artifact-files';
+import { ArtifactVinyl } from './artifact';
+import ShowDoctorError from '../../../../dist/error/show-doctor-error';
 
-export type ArtifactRef = { relativePath: string; ref: Ref };
+export type ArtifactRef = { relativePath: string; ref: Ref; url?: string };
 export type ArtifactStore = { name: string; url?: string; metadata?: Object };
 export type LegacyArtifactModel = { relativePath: string; file: string };
 export type NewArtifactModel = { relativePath: string; stores?: Array<ArtifactStore> };
@@ -93,6 +96,20 @@ export class ArtifactFile {
     const vinyl = new ArtifactVinyl({
       path: this.relativePath,
       contents: fs.readFileSync(join(rootDir, this.relativePath)),
+    });
+    this.vinyl = vinyl;
+  }
+
+  async populateVinylFromRef(scope: Scope) {
+    const artifactRef = this.getArtifactRef();
+    if (!artifactRef) throw new ShowDoctorError(`failed loading file ${this.relativePath} from the model`);
+    const content = (await artifactRef.ref.load(scope.objects)) as Source;
+    if (!content) throw new ShowDoctorError(`failed loading file ${this.relativePath} from the model`);
+    const vinyl = new ArtifactVinyl({
+      base: '.',
+      path: this.relativePath,
+      contents: content.contents,
+      url: artifactRef.url,
     });
     this.vinyl = vinyl;
   }
