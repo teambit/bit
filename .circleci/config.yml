@@ -936,7 +936,7 @@ jobs:
       PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: true
     steps:
       # - run: choco install nodejs --version 16.15.1
-      - run: cinst nodejs --version 16.16.0
+      - run: cinst nodejs --version 16.15.1
       # - run: nodejs.install v12.16.0
       - run: node -v
       - run: npm -v
