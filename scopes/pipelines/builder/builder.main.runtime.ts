@@ -162,10 +162,7 @@ export class BuilderMain {
   ): Promise<ArtifactVinyl[]> {
     const artifactsObjects = this.getArtifactsByExtensionAndName(component, aspectName, taskName);
     const vinyls = await Promise.all(
-      (artifactsObjects || []).map(async (artifactObject) => {
-        await artifactObject.files.importMissingArtifactObjects(this.scope.legacyScope);
-        return artifactObject.files.getExistingVinyls();
-      })
+      (artifactsObjects || []).map(async (artifactObject) => artifactObject.getVinylsAndImportIfMissing(this.scope))
     );
     return flatten(vinyls);
   }
