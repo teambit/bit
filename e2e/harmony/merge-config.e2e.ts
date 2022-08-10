@@ -48,7 +48,7 @@ describe.only('merge config scenarios', function () {
       npmCiRegistry.destroy();
     });
     it('should not show the component as modified', () => {
-      helper.command.expectStatusToBeClean();
+      expect(helper.command.statusComponentIsModified('comp1')).to.be.false;
     });
     it('should be able to install the correct versions after deleting node-modules', () => {
       helper.fs.deletePath('node_modules');
