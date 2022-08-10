@@ -1,7 +1,7 @@
 import { ComponentContext } from '@teambit/component';
 import { H2 } from '@teambit/documenter.ui.heading';
 import React, { useContext, useMemo, useState } from 'react';
-import type { FileIconSlot } from '@teambit/code';
+import { FileIconMatch } from '@teambit/code.ui.utils.get-file-icon';
 import { useComponentPipelineQuery } from '@teambit/component.ui.pipelines.component-pipeline-queries';
 import { ArtifactPanel } from '@teambit/component.ui.pipelines.artifacts-panel';
 import { ComponentPipelineContext } from '@teambit/component.ui.pipelines.component-pipeline-context';
@@ -23,10 +23,10 @@ import styles from './component-pipeline-page.module.scss';
 
 export type ComponentPipelinePageProps = {
   host: string;
-  fileIconSlot?: FileIconSlot;
+  fileIconMatchers: FileIconMatch[];
 };
 
-export function ComponentPipelinePage({ host, fileIconSlot }: ComponentPipelinePageProps) {
+export function ComponentPipelinePage({ host, fileIconMatchers }: ComponentPipelinePageProps) {
   const component = useContext(ComponentContext);
   const { data } = useComponentPipelineQuery(host, component.id.toString());
 
@@ -141,7 +141,7 @@ export function ComponentPipelinePage({ host, fileIconSlot }: ComponentPipelineP
           {(selectedPipelineId && <HoverSplitter></HoverSplitter>) || <></>}
           {(selectedPipelineId && (
             <Pane>
-              <ArtifactPanel fileIconSlot={fileIconSlot} />
+              <ArtifactPanel fileIconMatchers={fileIconMatchers} />
             </Pane>
           )) || <></>}
         </SplitPane>

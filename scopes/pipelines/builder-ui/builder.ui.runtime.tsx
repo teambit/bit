@@ -2,6 +2,7 @@ import { ComponentAspect, ComponentUI } from '@teambit/component';
 import { UIRuntime } from '@teambit/ui';
 import { staticStorageUrl } from '@teambit/base-ui.constants.storage';
 import { Harmony, Slot, SlotRegistry } from '@teambit/harmony';
+import flatten from 'lodash.flatten';
 import type { FileIconMatch } from '@teambit/code.ui.utils.get-file-icon';
 import { BuilderSection } from './builder.section';
 import { BuilderUIAspect } from './builder-ui.aspect';
@@ -23,6 +24,10 @@ export class BuilderUI {
     return this;
   }
 
+  getFileIconMatchers(): FileIconMatch[] {
+    return flatten(this.fileIconSlot?.values());
+  }
+
   static dependencies = [ComponentAspect];
 
   static runtime = UIRuntime;
@@ -38,7 +43,7 @@ export class BuilderUI {
     const { config } = harmony;
     const host = String(config.get('teambit.harmony/bit'));
 
-    const section = new BuilderSection(host);
+    const section = new BuilderSection(host, ui);
 
     component.registerRoute(section.route);
     component.registerNavigation(section.navigationLink, section.order);

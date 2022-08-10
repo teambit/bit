@@ -1,7 +1,6 @@
 import React, { HTMLAttributes, useState, useMemo } from 'react';
 import classNames from 'classnames';
 import { Icon } from '@teambit/evangelist.elements.icon';
-import flatten from 'lodash.flatten';
 import { WidgetProps } from '@teambit/ui-foundation.ui.tree.tree-node';
 import { DrawerUI } from '@teambit/ui-foundation.ui.tree.drawer';
 import { FileTree } from '@teambit/ui-foundation.ui.tree.file-tree';
@@ -9,20 +8,18 @@ import { useComponentPipelineContext } from '@teambit/component.ui.pipelines.com
 import { ArtifactFile } from '@teambit/component.ui.pipelines.component-pipeline-model';
 import { useLocation } from '@teambit/base-react.navigation.link';
 import { getFileIcon, FileIconMatch } from '@teambit/code.ui.utils.get-file-icon';
-import type { FileIconSlot } from '@teambit/code';
 import { TreeNode } from '@teambit/design.ui.tree';
 
 import styles from './artifacts-panel.module.scss';
 
 export type ArtifactsPanelProps = {
-  fileIconSlot?: FileIconSlot;
+  fileIconMatchers: FileIconMatch[];
 } & HTMLAttributes<HTMLDivElement>;
 
-export function ArtifactPanel({ className, fileIconSlot }: ArtifactsPanelProps) {
+export function ArtifactPanel({ className, fileIconMatchers }: ArtifactsPanelProps) {
   const [drawerOpen, onToggleDrawer] = useState(true);
   const componentPipelineContext = useComponentPipelineContext();
   const location = useLocation();
-  const fileIconMatchers: FileIconMatch[] = useMemo(() => flatten(fileIconSlot?.values()), [fileIconSlot]);
 
   if (!componentPipelineContext) return null;
 
