@@ -3,12 +3,13 @@ import filenamify from 'filenamify';
 import fs from 'fs-extra';
 import { ScopeMain } from '@teambit/scope';
 import { ComponentID } from '@teambit/component-id';
-import { ArtifactFiles } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
 import pMapSeries from 'p-map-series';
 import minimatch from 'minimatch';
-import { Artifact, BuilderMain } from '@teambit/builder';
+import { ArtifactFiles } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
+import { BuilderMain } from '../builder.main.runtime';
 import { ArtifactsOpts } from './artifacts.cmd';
 import { ArtifactList } from './artifact-list';
+import { Artifact } from './artifact';
 
 export type ExtractorResult = {
   id: ComponentID;
@@ -65,13 +66,13 @@ export class ArtifactExtractor {
     });
   }
 
-  private async saveFilesInFileSystemIfAsked(artifactObjectsPerId: ArtifactListPerId[]) {
+  private async saveFilesInFileSystemIfAsked(artifactListPerId: ArtifactListPerId[]) {
     const outDir = this.options.outDir;
     if (!outDir) {
       return;
     }
     // @todo: optimize this to first import all missing hashes.
-    await pMapSeries(artifactObjectsPerId, async ({ id, artifacts }) => {
+    await pMapSeries(artifactListPerId, async ({ id, artifacts }) => {
       const vinyls = await Promise.all(
         artifacts.map((artifactObject) =>
           artifactObject.files.getVinylsAndImportIfMissing(id._legacy, this.scope.legacyScope)
@@ -102,9 +103,9 @@ export class ArtifactExtractor {
     });
   }
 
-  private filterByOptions(artifactObjectsPerId: ArtifactListPerId[]) {
+  private filterByOptions(artifactListPerId: ArtifactListPerId[]) {
     const { aspect, task, files } = this.options;
-    artifactObjectsPerId.forEach((item) => {
+    artifactListPerId.forEach((item) => {
       item.artifacts = item.artifacts.filter((artifact) => {
         if (aspect && aspect !== artifact.task.aspectId) return false;
         if (task && task !== artifact.task.name) return false;

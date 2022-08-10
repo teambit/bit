@@ -1,4 +1,4 @@
-import { ArtifactFiles, ArtifactObject } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
+import type { ArtifactFiles, ArtifactObject } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
 import type { TaskDescriptor } from '../build-task';
 import type { ArtifactDefinition } from './artifact-definition';
 import { DefaultResolver } from '../storage/default-resolver';
@@ -10,22 +10,22 @@ export class Artifact {
      */
     readonly def: ArtifactDefinition,
 
-    // // /**
-    // //  * storage resolver. can be used to replace where artifacts are stored.
-    // //  */
-    // readonly storageResolver: ArtifactStorageResolver,
-
     readonly files: ArtifactFiles,
-
-    // /**
-    //  * join this with `this.paths` to get the absolute paths
-    //  */
-
     /**
      * the declaring task.
+     * todo: change this to taskDescriptor that has only the metadata of the task, so it could be
+     * saved into the model.
      */
-    readonly task: TaskDescriptor // /** //  * timestamp of the artifact creation. //  */ // TODO: Review this // readonly timestamp: number = Date.now()
+    readonly task: TaskDescriptor,
+    /**
+     * timestamp of the artifact creation.
+     */
+    readonly timestamp: number = Date.now()
   ) {}
+
+  get storage() {
+    return this.storageResolver.name;
+  }
 
   get storageResolver() {
     return this.def.storageResolver || new DefaultResolver();
@@ -56,24 +56,6 @@ export class Artifact {
     return this.files.isEmpty();
   }
 
-  // populateVinylFromStorage(file: ArtifactFile): Promise<Vinyl> {
-  //   // TODO: implement
-  // }
-
-  static fromArtifactObject(object: ArtifactObject): Artifact {
-    const artifactDef: ArtifactDefinition = {
-      name: object.name,
-      generatedBy: object.generatedBy,
-      description: object.description,
-    };
-    const task: TaskDescriptor = {
-      aspectId: object.task.id,
-      name: object.task.name,
-    };
-
-    return new Artifact(artifactDef, object.files, task);
-  }
-
   /**
    * archive all artifact files into a tar.
    */
@@ -91,5 +73,20 @@ export class Artifact {
       },
       files: this.files,
     };
+  }
+
+  static fromArtifactObject(object: ArtifactObject): Artifact {
+    const artifactDef: ArtifactDefinition = {
+      name: object.name,
+      generatedBy: object.generatedBy,
+      description: object.description,
+    };
+
+    const task: TaskDescriptor = {
+      aspectId: object.task.id,
+      name: object.task.name,
+    };
+
+    return new Artifact(artifactDef, object.files, task);
   }
 }

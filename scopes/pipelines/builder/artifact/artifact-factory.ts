@@ -4,6 +4,7 @@ import { flatten } from 'lodash';
 import { ArtifactFiles } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
 import { Component, ComponentMap } from '@teambit/component';
 import { ArtifactDefinition } from './artifact-definition';
+import { DefaultResolver } from '../storage';
 import { ArtifactList } from './artifact-list';
 import type { BuildContext, BuildTask } from '../build-task';
 import { CapsuleNotFound } from '../exceptions';
@@ -48,6 +49,10 @@ export class ArtifactFactory {
       return undefined;
     }
     return new FsArtifact(def, new ArtifactFiles(paths), task, rootDir);
+  }
+
+  private getStorageResolver(def: ArtifactDefinition) {
+    return def.storageResolver || new DefaultResolver();
   }
 
   private toComponentMap(context: BuildContext, artifactMap: [string, FsArtifact][]) {

@@ -14,7 +14,7 @@ export type Artifact = {
 export type TaskReport = {
   id: string;
   name: string;
-  description: string;
+  description?: string;
   errors: Array<string>;
   warnings: Array<string>;
   startTime: number;

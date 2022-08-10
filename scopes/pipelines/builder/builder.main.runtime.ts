@@ -186,16 +186,17 @@ export class BuilderMain {
   getBuilderData(component: IComponent): BuilderData | undefined {
     const data = component.get(BuilderAspect.id)?.data;
     if (!data) return undefined;
-    const artifacts = data?.artifacts?.map((artifactObj) => {
-      const artifact = Artifact.fromArtifactObject({
-        ...artifactObj,
-        files:
-          artifactObj.files instanceof ArtifactFiles
-            ? artifactObj.files
-            : ArtifactFiles.fromModel(artifactObj.files.files),
-      });
-      return artifact;
-    });
+    const artifacts =
+      data?.artifacts?.map((artifactObj) => {
+        const artifact = Artifact.fromArtifactObject({
+          ...artifactObj,
+          files:
+            artifactObj.files instanceof ArtifactFiles
+              ? artifactObj.files
+              : ArtifactFiles.fromObject(artifactObj.files),
+        });
+        return artifact;
+      }) || [];
     data.artifacts = new ArtifactList(artifacts);
     return data as BuilderData;
   }

@@ -60,5 +60,5 @@ export type ArtifactDefinition = {
 };
 
 export type ArtifactModelDefinition = Omit<ArtifactDefinition, 'storageResolver'> & {
-  storage?: string;
+  storageResolver?: string;
 };
