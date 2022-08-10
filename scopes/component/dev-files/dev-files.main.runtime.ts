@@ -47,7 +47,7 @@ export class DevFilesMain {
     const entry = component.state.aspects.get(DevFilesAspect.id);
     const configuredPatterns = entry?.config.devFilePatterns || [];
     const envDef = this.envs.calculateEnv(component);
-    const envPatterns: DevPatterns[] = envDef.env?.getDevPatterns ? envDef.env.getDevPatterns(component) : [];
+    const envPatterns: string[] = envDef.env?.getDevPatterns ? envDef.env.getDevPatterns(component) : [];
 
     const getPatterns = (devPatterns: DevPatterns) => {
       if (isFunction(devPatterns)) {
