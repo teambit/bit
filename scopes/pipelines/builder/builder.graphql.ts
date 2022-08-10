@@ -44,8 +44,10 @@ export function builderSchema(builder: BuilderMain) {
 
       type Artifact {
         # artifact name
-        name: String
+        name: String!
         description: String
+        storage: String
+        generatedBy: String
         files: [ArtifactFile!]!
       }
 
