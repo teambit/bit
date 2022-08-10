@@ -5,8 +5,7 @@ import type { FileIconSlot } from '@teambit/code';
 import { useComponentPipelineQuery } from '@teambit/component.ui.pipelines.component-pipeline-queries';
 import { ArtifactPanel } from '@teambit/component.ui.pipelines.artifacts-panel';
 import { ComponentPipelineContext } from '@teambit/component.ui.pipelines.component-pipeline-context';
-import { PipelineNode } from './pipeline-node';
-import { ComponentPipelineBlankState } from './blank-state';
+import { SplitPane, Pane, Layout } from '@teambit/base-ui.surfaces.split-pane.split-pane';
 import ReactFlow, {
   ArrowHeadType,
   Background,
@@ -16,8 +15,9 @@ import ReactFlow, {
   NodeTypesType,
   ReactFlowProvider,
 } from 'react-flow-renderer';
-import { SplitPane, Pane, Layout } from '@teambit/base-ui.surfaces.split-pane.split-pane';
 import { HoverSplitter } from '@teambit/base-ui.surfaces.split-pane.hover-splitter';
+import { PipelineNode } from './pipeline-node';
+import { ComponentPipelineBlankState } from './blank-state';
 
 import styles from './component-pipeline-page.module.scss';
 

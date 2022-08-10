@@ -1,6 +1,6 @@
 import { Section } from '@teambit/component';
 import React from 'react';
-import { ComponentPipelinePage } from '@teambit/component.ui.component-pipeline';
+import { ComponentPipelinePage } from '@teambit/component.ui.pipelines.component-pipeline';
 
 export class BuilderSection implements Section {
   constructor(private host: string) {}
