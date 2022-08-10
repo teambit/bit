@@ -41,6 +41,7 @@
   align-items: center;
   flex-wrap: wrap;
   color: var(--bit-text-color-heavy, #2b2b2b);
+  justify-content: 'space-between';
 
   > div {
     display: flex;
@@ -77,4 +78,8 @@
 .version {
   min-width: 40px;
   text-align: center;
+}
+
+.componentDetailsContainer {
+  display: flex;
 }

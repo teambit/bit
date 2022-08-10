@@ -40,16 +40,13 @@ export function PipelineNode(props: PipelineNodeProps) {
         elevation="none"
         onClick={artifact && onPipelineNodeClicked}
       >
-        <div style={{ display: 'flex' }}>
-          <div className={classNames(styles.componentDetails)}>
-            {/* <div className={classNames(styles.status)}>{statusToDisplay}</div> */}
-            {<img src={icon} className={styles.envIcon} />}
-          </div>
+        <div className={styles.componentDetailsContainer}>
+          <div className={classNames(styles.componentDetails)}>{<img src={icon} className={styles.envIcon} />}</div>
           <div style={{ marginLeft: 5 }}>
             <div className={classNames(styles.breadcrumbs, ellipsis)}>{taskId}</div>
           </div>
         </div>
-        <div className={classNames(styles.componentName)} style={{ justifyContent: 'space-between' }}>
+        <div className={classNames(styles.componentName)}>
           <div className={classNames(styles.name, ellipsis)}>{taskName}</div>
           <div className={classNames(styles.version, ellipsis)}>
             {durationSecs}s {durationMilliSecs}ms

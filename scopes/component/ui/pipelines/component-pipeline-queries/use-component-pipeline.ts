@@ -27,7 +27,6 @@ const PIPELINE_REPORT_QUERY = gql`
               id
               name
               path
-              content
               downloadUrl
             }
           }

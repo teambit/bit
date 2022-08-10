@@ -7,7 +7,7 @@ export type ArtifactFile = {
 
 export type Artifact = {
   name: string;
-  description: string;
+  description?: string;
   files: Array<ArtifactFile>;
 };
 
@@ -17,8 +17,8 @@ export type TaskReport = {
   description?: string;
   errors: Array<string>;
   warnings: Array<string>;
-  startTime: number;
-  endTime: number;
+  startTime?: number;
+  endTime?: number;
   artifact: Artifact;
 };
 
