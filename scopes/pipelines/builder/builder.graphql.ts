@@ -62,6 +62,7 @@ export function builderSchema(builder: BuilderMain) {
           const artifacts = taskId
             ? builder.getArtifactsByExtension(component, taskId).toArray()
             : builderData?.artifacts.toArray() || [];
+
           const artifactsWithVinyl = await Promise.all(
             artifacts.map(async (artifact) => {
               const id = artifact.task.aspectId;
