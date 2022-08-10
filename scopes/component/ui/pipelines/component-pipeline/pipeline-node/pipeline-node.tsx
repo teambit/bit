@@ -4,7 +4,7 @@ import { ellipsis } from '@teambit/design.ui.styles.ellipsis';
 import classNames from 'classnames';
 import { Tooltip } from '@teambit/design.ui.tooltip';
 import { useComponentPipelineContext } from '@teambit/component.ui.pipelines.component-pipeline-context';
-import { TaskReport } from '@teambit/component.ui.pipelines.component-pipeline-model/component-pipeline.model';
+import { TaskReport } from '@teambit/component.ui.pipelines.component-pipeline-model';
 import { Handle, NodeProps, Position } from 'react-flow-renderer';
 import styles from './pipeline-node.module.scss';
 
