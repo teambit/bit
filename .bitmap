@@ -1116,12 +1116,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/ui/component-meta"
     },
-    "ui/component-pipeline": {
-        "scope": "",
-        "version": "",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/component/ui/component-pipeline"
-    },
     "ui/component-preview": {
         "scope": "teambit.preview",
         "version": "0.0.494",
@@ -1541,6 +1535,36 @@
         "version": "0.0.350",
         "mainFile": "index.ts",
         "rootDir": "scopes/design/ui/pill-label"
+    },
+    "ui/pipelines/artifacts-panel": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/component/ui/pipelines/artifacts-panel"
+    },
+    "ui/pipelines/component-pipeline": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/component/ui/pipelines/component-pipeline"
+    },
+    "ui/pipelines/component-pipeline-context": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/component/ui/pipelines/component-pipeline-context"
+    },
+    "ui/pipelines/component-pipeline-model": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/component/ui/pipelines/component-pipeline-model"
+    },
+    "ui/pipelines/component-pipeline-queries": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/component/ui/pipelines/component-pipeline-queries"
     },
     "ui/preview-placeholder": {
         "scope": "teambit.preview",

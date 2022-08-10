@@ -2,13 +2,11 @@ import { ComponentContext } from '@teambit/component';
 import { H2 } from '@teambit/documenter.ui.heading';
 import React, { useContext, useMemo, useState } from 'react';
 import type { FileIconSlot } from '@teambit/code';
-import {
-  useComponentPipelineQuery,
-  PipelineNode,
-  ComponentPipelineContext,
-  ArtifactPanel,
-  ComponentPipelineBlankState,
-} from '@teambit/component.ui.component-pipeline';
+import { useComponentPipelineQuery } from '@teambit/component.ui.pipelines.component-pipeline-queries';
+import { ArtifactPanel } from '@teambit/component.ui.pipelines.artifacts-panel';
+import { ComponentPipelineContext } from '@teambit/component.ui.pipelines.component-pipeline-context';
+import { PipelineNode } from './pipeline-node';
+import { ComponentPipelineBlankState } from './blank-state';
 import ReactFlow, {
   ArrowHeadType,
   Background,

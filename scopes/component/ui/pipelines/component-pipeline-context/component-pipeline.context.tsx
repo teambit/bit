@@ -1,5 +1,5 @@
 import { createContext, useContext } from 'react';
-import { ComponentPipelineModel } from '@teambit/component.ui.component-pipeline';
+import { ComponentPipelineModel } from '@teambit/component.ui.pipelines.component-pipeline-model';
 
 export type ComponentPipelineContextModel = ComponentPipelineModel & {
   selectedPipelineId?: string;
