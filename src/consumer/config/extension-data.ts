@@ -4,9 +4,9 @@ import { compact, isEmpty, cloneDeep } from 'lodash';
 import { BitId, BitIds } from '../../bit-id';
 import { sortObject } from '../../utils';
 import {
-  cloneBuildArtifacts,
   convertBuildArtifactsFromModelObject,
   convertBuildArtifactsToModelObject,
+  reStructureBuildArtifacts,
 } from '../component/sources/artifact-files';
 
 const mergeReducer = (accumulator, currentValue) => R.unionWith(ignoreVersionPredicate, accumulator, currentValue);
@@ -213,7 +213,7 @@ export class ExtensionDataList extends Array<ExtensionDataEntry> {
   clone(): ExtensionDataList {
     const extensionDataEntries = this.map((extensionData) => extensionData.clone());
     const extensionDataList = new ExtensionDataList(...extensionDataEntries);
-    cloneBuildArtifacts(extensionDataList);
+    reStructureBuildArtifacts(extensionDataList);
     return extensionDataList;
   }
 

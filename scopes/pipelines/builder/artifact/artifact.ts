@@ -1,11 +1,4 @@
 import type { ArtifactFiles, ArtifactObject } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
-import { ArtifactFile } from '@teambit/legacy/dist/consumer/component/sources/artifact-file';
-import { ArtifactVinyl } from '@teambit/legacy/dist/consumer/component/sources/artifact';
-import { ScopeMain } from '@teambit/scope';
-import { compact } from 'lodash';
-import Vinyl from 'vinyl';
-import { Source } from '@teambit/legacy/dist/scope/models';
-import BitId from '@teambit/legacy-bit-id/bit-id';
 import type { TaskDescriptor } from '../build-task';
 import type { ArtifactDefinition } from './artifact-definition';
 import { DefaultResolver } from '../storage/default-resolver';
@@ -22,7 +15,7 @@ export class Artifact {
     // //  */
     // readonly storageResolver: ArtifactStorageResolver,
 
-    public files: ArtifactFiles,
+    readonly files: ArtifactFiles,
 
     // /**
     //  * join this with `this.paths` to get the absolute paths
@@ -78,38 +71,6 @@ export class Artifact {
       name: object.task.name,
     };
     return new Artifact(artifactDef, object.files, task);
-  }
-
-  async getVinylsAndImportIfMissing(id: BitId, scope: ScopeMain): Promise<ArtifactVinyl[]> {
-    const artifactFiles = this.files;
-    await artifactFiles.getVinylsAndImportIfMissing(id, scope.legacyScope);
-    const vinyls: Vinyl[] = [];
-    const vinylsFromScope: Vinyl[] = [];
-    const artifactsToLoadFromOtherResolver: ArtifactFile[] = [];
-
-    const promises = artifactFiles.files.map(async (file) => {
-      const ref = file.ref;
-      if (ref) {
-        const content = (await ref.ref.load(scope.legacyScope.objects)) as Source;
-        if (!content) throw new Error(`failed loading file ${ref.relativePath} from the model`);
-        const vinyl = new ArtifactVinyl({ base: '.', path: ref.relativePath, contents: content.contents });
-        vinylsFromScope.push(vinyl);
-        return Promise.resolve();
-      }
-      artifactsToLoadFromOtherResolver.push(file);
-      return Promise.resolve();
-    });
-
-    await Promise.all(promises);
-
-    // TODO - confirm with Gilad if this is required
-
-    // const vinylsFromOtherStorage = await Promise.all(
-    //   artifactsToLoadFromOtherResolver.map(async (file) => this.populateVinylFromStorage(file))
-    // );
-
-    return vinyls.concat(compact(vinylsFromScope));
-    // .concat(compact(vinylsFromOtherStorage));
   }
 
   /**

@@ -3,6 +3,7 @@ import filenamify from 'filenamify';
 import fs from 'fs-extra';
 import { ScopeMain } from '@teambit/scope';
 import { ComponentID } from '@teambit/component-id';
+import { ArtifactFiles } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
 import pMapSeries from 'p-map-series';
 import minimatch from 'minimatch';
 import { Artifact, BuilderMain } from '@teambit/builder';
@@ -91,7 +92,7 @@ export class ArtifactExtractor {
           artifactName: artifact.name,
           aspectId: artifact.task.aspectId,
           taskName: artifact.task.name || artifact.generatedBy,
-          files: artifact.files.getRelativePaths(),
+          files: artifact.files.refs.map((ref) => ref.relativePath),
         };
       });
       return {
@@ -110,9 +111,9 @@ export class ArtifactExtractor {
         return true;
       });
       if (files) {
-        item.artifacts.forEach((artifact) => {
-          const filteredFiles = artifact.files.filter((file) => minimatch(file.path, files));
-          artifact.files = filteredFiles;
+        item.artifacts.map((artifact) => {
+          const refs = artifact.files.refs.filter((ref) => minimatch(ref.relativePath, files));
+          return new Artifact(artifact.def, new ArtifactFiles([], [], refs), artifact.task);
         });
         // remove artifacts with no files
         item.artifacts = item.artifacts.filter((artifact) => !artifact.isEmpty());

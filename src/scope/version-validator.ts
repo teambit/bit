@@ -1,7 +1,7 @@
 import { PJV } from 'package-json-validator';
 import R from 'ramda';
 import packageNameValidate from 'validate-npm-package-name';
-import logger from '../logger/logger';
+
 import { BitId, BitIds } from '../bit-id';
 import { DEPENDENCIES_FIELDS } from '../constants';
 import { SchemaName } from '../consumer/component/component-schema';
@@ -87,10 +87,8 @@ export default function validateVersionInstance(version: Version): void {
   const validateArtifacts = (extensions: ExtensionDataList) => {
     const artifactsFiles = getArtifactsFiles(extensions);
     artifactsFiles.forEach((artifacts) => {
-      logger.debug('🚀 ~ file: version-validator.ts ~ line 103 ~ artifactsFiles.forEach ~ artifacts', artifacts);
-
-      artifacts.map((artifact) => validateFile(artifact.ref, 'artifact'));
-      const filesPaths = artifacts.map((artifact) => artifact.path);
+      artifacts.refs.map((artifact) => validateFile(artifact, 'artifact'));
+      const filesPaths = artifacts.refs.map((artifact) => artifact.relativePath);
       const duplicateArtifacts = filesPaths.filter(
         (file) => filesPaths.filter((f) => file.toLowerCase() === f.toLowerCase()).length > 1
       );

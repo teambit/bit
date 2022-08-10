@@ -47,7 +47,7 @@ export class ArtifactFactory {
     if (!paths || !paths.length) {
       return undefined;
     }
-    return new FsArtifact(def, ArtifactFiles.fromPaths(paths), task, rootDir);
+    return new FsArtifact(def, new ArtifactFiles(paths), task, rootDir);
   }
 
   private toComponentMap(context: BuildContext, artifactMap: [string, FsArtifact][]) {
@@ -77,7 +77,7 @@ export class ArtifactFactory {
         const rootDir = this.getRootDir(capsuleDir, def);
         const paths = this.resolvePaths(rootDir, def);
         if (paths && paths.length) {
-          const artifact = new FsArtifact(def, ArtifactFiles.fromPaths(this.resolvePaths(rootDir, def)), task, rootDir);
+          const artifact = new FsArtifact(def, new ArtifactFiles(this.resolvePaths(rootDir, def)), task, rootDir);
 
           return context.components.forEach((component) => {
             tupleArr.push([component.id.toString(), artifact]);

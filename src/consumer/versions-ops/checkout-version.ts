@@ -316,6 +316,7 @@ export function applyModifiedVersion(
     }
   });
   mergeResults.addFiles.forEach((file) => {
+    if (modifiedFiles.find((m) => m.relative === file.filePath)) return;
     modifiedFiles.push(file.fsFile);
     filesStatus[file.filePath] = FileStatus.added;
   });

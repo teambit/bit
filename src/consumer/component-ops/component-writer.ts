@@ -18,7 +18,11 @@ import DataToPersist from '../component/sources/data-to-persist';
 import RemovePath from '../component/sources/remove-path';
 import Consumer from '../consumer';
 import { ArtifactVinyl } from '../component/sources/artifact';
-import { getArtifactFilesByExtension } from '../component/sources/artifact-files';
+import {
+  ArtifactFiles,
+  deserializeArtifactFiles,
+  getArtifactFilesByExtension,
+} from '../component/sources/artifact-files';
 import { preparePackageJsonToWrite } from '../component/package-json-utils';
 
 export type ComponentWriterProps = {
@@ -216,15 +220,12 @@ export default class ComponentWriter {
     await Promise.all(
       artifactsFiles.map(async (artifactFiles) => {
         if (!artifactFiles) return;
-        // if (!(artifactFiles instanceof ArtifactFiles)) {
-        //   artifactFiles = deserializeArtifactFiles(artifactFiles);
-        // }
-
+        if (!(artifactFiles instanceof ArtifactFiles)) {
+          artifactFiles = deserializeArtifactFiles(artifactFiles);
+        }
         // fyi, if this is coming from the isolator aspect, it is optimized to import all at once.
         // see artifact-files.importMultipleDistsArtifacts().
-
-        await artifactFiles.importMissingArtifactObjects(this.component.id, scope);
-        const vinylFiles = artifactFiles.getExistingVinyls();
+        const vinylFiles = await artifactFiles.getVinylsAndImportIfMissing(this.component.id, scope);
         artifactsVinylFlattened.push(...vinylFiles);
       })
     );
