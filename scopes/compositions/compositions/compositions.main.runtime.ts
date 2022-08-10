@@ -1,6 +1,7 @@
 import { MainRuntime } from '@teambit/cli';
 import { AspectData, Component, ComponentAspect, ComponentMap, IComponent } from '@teambit/component';
 import { DevFilesAspect, DevFilesMain } from '@teambit/dev-files';
+import EnvsAspect, { EnvsMain } from '@teambit/envs';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { ComponentLoadOptions } from '@teambit/legacy/dist/consumer/component/component-loader';
 import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
@@ -58,7 +59,9 @@ export class CompositionsMain {
      */
     private schema: SchemaMain,
 
-    private devFiles: DevFilesMain
+    private devFiles: DevFilesMain,
+
+    private envs: EnvsMain
   ) {}
 
   /**
@@ -114,6 +117,23 @@ export class CompositionsMain {
     );
   }
 
+  getCompositionFilePattern() {
+    return this.compositionFilePattern;
+  }
+
+  getComponentDevPatterns(component: Component) {
+    const env = this.envs.calculateEnv(component).env;
+    const componentEnvCompositionsDevPatterns: string[] = env.getCompositionsDevPatterns
+      ? env.getCompositionsDevPatterns(component)
+      : [];
+    const componentPatterns = componentEnvCompositionsDevPatterns.concat(this.getCompositionFilePattern());
+    return componentPatterns;
+  }
+
+  getDevPatternToRegister() {
+    return this.getComponentDevPatterns.bind(this);
+  }
+
   async onComponentLoad(component: Component, loadOpts?: ComponentLoadOptions): Promise<AspectData | undefined> {
     if (loadOpts?.loadCompositions === false) return undefined;
     const compositions = this.readCompositions(component);
@@ -145,10 +165,24 @@ export class CompositionsMain {
   };
 
   static runtime = MainRuntime;
-  static dependencies = [PreviewAspect, GraphqlAspect, WorkspaceAspect, SchemaAspect, DevFilesAspect, ComponentAspect];
+  static dependencies = [
+    PreviewAspect,
+    GraphqlAspect,
+    WorkspaceAspect,
+    SchemaAspect,
+    DevFilesAspect,
+    EnvsAspect,
+  ];
 
   static async provider(
-    [preview, graphql, workspace, schema, devFiles]: [PreviewMain, GraphqlMain, Workspace, SchemaMain, DevFilesMain],
+    [preview, graphql, workspace, schema, devFiles, envs]: [
+      PreviewMain,
+      GraphqlMain,
+      Workspace,
+      SchemaMain,
+      DevFilesMain,
+      EnvsMain
+    ],
     config: CompositionsConfig
   ) {
     const compositions = new CompositionsMain(
@@ -157,11 +191,12 @@ export class CompositionsMain {
       preview,
       workspace,
       schema,
-      devFiles
+      devFiles,
+      envs
     );
 
     // TODO: use the docs implementation to allow component specific pattern
-    devFiles.registerDevPattern(config.compositionFilePattern);
+    devFiles.registerDevPattern(compositions.getDevPatternToRegister());
 
     graphql.register(compositionsSchema(compositions));
     preview.registerDefinition(new CompositionPreviewDefinition(compositions));

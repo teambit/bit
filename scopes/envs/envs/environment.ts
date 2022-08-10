@@ -51,9 +51,20 @@ export interface Environment {
   getSchemaExtractor?: (config?: any) => SchemaExtractor;
 
   /**
-   * Returns the dev patterns to match doc file
+   * Returns the dev patterns to match doc files
    */
   getDocsDevPatterns?: (component: Component) => string[];
+
+  /**
+   * Returns the dev patterns to match composition files
+   */
+  getCompositionsDevPatterns?: (component: Component) => string[];
+
+  /**
+   * Returns additional dev patterns for the component.
+   * Patterns that were provided by getDocsDevPatterns, getTestsDevPatterns will be considered as dev files as well, without need to add them here.
+   */
+  getDevPatterns?: (component: Component) => string[];
 }
 
 export interface DependenciesEnv extends Environment {
@@ -206,6 +217,11 @@ export interface CompilerEnv {
    * Required for making and reading dists, especially for `bit compile`
    */
   getCompiler: () => Compiler;
+
+  /**
+   * Returns the dev patterns to match test files
+   */
+  getTestsDevPatterns?: (component: Component) => string[];
 }
 
 export function hasCompiler(obj: Environment): obj is CompilerEnv {
