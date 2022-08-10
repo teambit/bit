@@ -1,4 +1,4 @@
-export { ShowFragment, ShowRow } from './show-fragment';
+export { ShowFragment, ShowRow, JSONRow as ShowJSONRow } from './show-fragment';
 export { ShowCmd } from './show.cmd';
 export { MainFileFragment } from './main-file.fragment';
 export { NameFragment } from './name.fragment';

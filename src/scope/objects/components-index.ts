@@ -98,11 +98,11 @@ export default class ScopeIndex {
 
   getHashes(indexType: IndexType): string[] {
     // @ts-ignore how to tell TS that all this.index.prop are array?
-    return this.index[indexType].map((indexItem) => indexItem.hash);
+    return this.index[indexType].map((indexItem: IndexItem) => indexItem.hash);
   }
   getHashesByQuery(indexType: IndexType, filter: Function): string[] {
     // @ts-ignore how to tell TS that all this.index.prop are array?
-    return this.index[indexType].filter(filter).map((indexItem) => indexItem.hash);
+    return this.index[indexType].filter(filter).map((indexItem: IndexItem) => indexItem.hash);
   }
   getHashesIncludeSymlinks(): string[] {
     return this.index.components.map((indexItem) => indexItem.hash);

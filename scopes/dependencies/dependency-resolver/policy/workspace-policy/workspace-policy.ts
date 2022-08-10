@@ -1,5 +1,6 @@
 import { uniqWith } from 'lodash';
 import { sortObject } from '@teambit/legacy/dist/utils';
+import { snapToSemver } from '@teambit/component-package-version';
 import { Policy, SemverVersion, GitUrlVersion, FileSystemPath, PolicyConfigKeys } from '../policy';
 import { KEY_NAME_BY_LIFECYCLE_TYPE, WorkspaceDependencyLifecycleType } from '../../dependencies';
 import { EntryAlreadyExist } from './exceptions';
@@ -105,6 +106,15 @@ export class WorkspacePolicy implements Policy<WorkspacePolicyConfigObject> {
     return entry.value.version;
   }
 
+  getValidSemverDepVersion(
+    depId: string,
+    lifecycleType?: WorkspaceDependencyLifecycleType
+  ): WorkspacePolicyEntryVersion | undefined {
+    const version = this.getDepVersion(depId, lifecycleType);
+    if (!version) return undefined;
+    return snapToSemver(version);
+  }
+
   toConfigObject(): WorkspacePolicyConfigObject {
     const res: WorkspacePolicyConfigObject = {
       dependencies: {},
@@ -136,7 +146,7 @@ export class WorkspacePolicy implements Policy<WorkspacePolicyConfigObject> {
     };
     this._policiesEntries.reduce((acc, entry) => {
       const keyName = KEY_NAME_BY_LIFECYCLE_TYPE[entry.lifecycleType];
-      acc[keyName][entry.dependencyId] = entry.value.version;
+      acc[keyName][entry.dependencyId] = snapToSemver(entry.value.version);
       return acc;
     }, res);
     return res;
