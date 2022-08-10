@@ -213,10 +213,13 @@ async function filterComponentsStatus(
     const modelComponent = await workspace.consumer.scope.getModelComponent(compId._legacy);
     // optimization suggestion: if squash is given, check only the last version.
     const laneIds = lane?.toBitIds();
-    await pMapSeries(remoteVersions, async (localVersion) => {
-      const versionObj = await modelComponent.loadVersion(localVersion.toString(), workspace.consumer.scope.objects);
+    await pMapSeries(remoteVersions, async (remoteVersion) => {
+      const versionObj = await modelComponent.loadVersion(remoteVersion.toString(), workspace.consumer.scope.objects);
       const flattenedDeps = versionObj.getAllFlattenedDependencies();
-      const depsNotIncludeInPattern = bitIdsNotFromPattern.filter((id) => flattenedDeps.hasWithoutVersion(id));
+      const depsNotIncludeInPattern = flattenedDeps.filter((id) =>
+        bitIdsNotFromPattern.find((bitId) => bitId.isEqualWithoutVersion(id))
+      );
+      bitIdsNotFromPattern.filter((id) => flattenedDeps.hasWithoutVersion(id));
       if (!depsNotIncludeInPattern.length) {
         return;
       }
@@ -224,7 +227,9 @@ async function filterComponentsStatus(
       await Promise.all(
         depsNotIncludeInPattern.map(async (dep) => {
           const isOnLane = await workspace.consumer.scope.isIdOnLane(dep, lane, laneIds);
-          if (isOnLane) depsOnLane.push(dep);
+          if (isOnLane) {
+            depsOnLane.push(dep);
+          }
         })
       );
       if (!depsOnLane.length) {
@@ -232,7 +237,7 @@ async function filterComponentsStatus(
       }
       if (!includeDeps) {
         throw new BitError(`unable to merge ${compId.toString()}.
-it has the following dependencies which were not included in the pattern. consider adding "--include-deps" flag
+it has (in version ${remoteVersion.toString()}) the following dependencies which were not included in the pattern. consider adding "--include-deps" flag
 ${depsOnLane.map((d) => d.toString()).join('\n')}`);
       }
       depsToAdd.push(...depsOnLane);
