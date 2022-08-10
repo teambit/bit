@@ -368,4 +368,34 @@ describe('merge lanes', function () {
       });
     });
   });
+  describe('getting new files when lane is diverge from another lane', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.command.createLane('lane-a');
+      helper.fixtures.populateComponents(1, false, 'v2');
+      helper.command.snapComponentWithoutBuild('comp1');
+      helper.command.export();
+      helper.command.createLane('lane-b');
+      helper.fixtures.populateComponents(1, false, 'v3');
+      helper.command.snapComponentWithoutBuild('comp1');
+      helper.command.export();
+      helper.command.switchLocalLane('lane-a');
+      helper.fs.outputFile('comp1/new-file.ts');
+      helper.command.snapComponentWithoutBuild('comp1');
+      helper.command.export();
+
+      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.addRemoteScope();
+      helper.command.importLane('lane-b');
+      helper.command.fetchLane(`${helper.scopes.remote}/lane-a`);
+      helper.command.mergeLane(`${helper.scopes.remote}/lane-a`);
+    });
+    it('should add the newly added file', () => {
+      expect(path.join(helper.scopes.localPath, helper.scopes.remote, 'comp1/new-file.ts')).to.be.a.file();
+    });
+  });
 });
