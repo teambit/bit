@@ -151,7 +151,7 @@ export class PreviewMain {
   }
 
   async getPreview(component: Component): Promise<PreviewArtifact | undefined> {
-    const artifacts = await this.builder.getArtifactsVinylByExtensionAndTaskName(
+    const artifacts = await this.builder.getArtifactsVinylByExtensionAndName(
       component,
       PreviewAspect.id,
       PREVIEW_TASK_NAME
@@ -221,7 +221,7 @@ export class PreviewMain {
    * @returns
    */
   async getEnvTemplate(component: Component): Promise<PreviewArtifact | undefined> {
-    const artifacts = await this.builder.getArtifactsVinylByExtensionAndTaskName(
+    const artifacts = await this.builder.getArtifactsVinylByExtensionAndName(
       component,
       PreviewAspect.id,
       GENERATE_ENV_TEMPLATE_TASK_NAME

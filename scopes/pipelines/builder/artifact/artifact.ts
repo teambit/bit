@@ -1,4 +1,4 @@
-import type { ArtifactFiles, ArtifactObject } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
+import { ArtifactFiles, ArtifactObject } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
 import type { TaskDescriptor } from '../build-task';
 import type { ArtifactDefinition } from './artifact-definition';
 import { DefaultResolver } from '../storage/default-resolver';
@@ -70,6 +70,7 @@ export class Artifact {
       aspectId: object.task.id,
       name: object.task.name,
     };
+
     return new Artifact(artifactDef, object.files, task);
   }
 
