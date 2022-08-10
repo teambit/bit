@@ -62,25 +62,27 @@ export function builderSchema(builder: BuilderMain) {
           const artifacts = taskId
             ? builder.getArtifactsByExtension(component, taskId).toArray()
             : builderData?.artifacts.toArray() || [];
-          const artifactsByTask = artifacts.reduce((accum, next) => {
-            console.log('🚀 ~ file: builder.graphql.ts ~ line 66 ~ artifactsByTask ~ next', next);
-            const id = next.task.aspectId;
-            const artifactFiles = builder.getArtifactsVinylByExtension(component, id);
-            const artifactGQLData = { ...next.toObject(), files: artifactFiles };
-            accum[id] = artifactGQLData;
-            return accum;
-          }, {});
+          const gqlArtifactsData = await Promise.all(
+            artifacts.map(async (artifact) => {
+              const id = artifact.task.aspectId;
+              const artifactFiles = (await builder.getArtifactsVinylByExtension(component, id)).map((vinyl) => {
+                const { basename, path, contents } = vinyl || {};
+                const isBinary = path && isBinaryPath(path);
+                const content = !isBinary ? contents?.toString('utf-8') : undefined;
+                const downloadUrl = encodeURI(
+                  builder.getDownloadUrlForArtifact(component.id, artifact.task.aspectId, path)
+                );
+                return { id: path, name: basename, path, content, downloadUrl };
+              });
+              const artifactGQLData = { ...artifact.toObject(), files: artifactFiles };
+              return artifactGQLData;
+              // artifactsByTask.set(id, artifactGQLData);
+            })
+          );
 
           const result = pipeline.map(async (task) => ({
             ...task,
-            artifact: (await artifactsByTask[task.taskId]).map(({ vinyl }) => {
-              const { basename, path, contents } = vinyl || {};
-              const isBinary = path && isBinaryPath(path);
-              const content = !isBinary ? contents?.toString('utf-8') : undefined;
-              const downloadUrl = encodeURI(builder.getDownloadUrlForArtifact(component.id, task.taskId, path));
-              const artifactGqlFile: ArtifactGQLFile = { id: path, name: basename, path, content, downloadUrl };
-              return artifactGqlFile;
-            }),
+            artifact: gqlArtifactsData.find((data) => data.task.id === task.taskId),
           }));
 
           return result;
