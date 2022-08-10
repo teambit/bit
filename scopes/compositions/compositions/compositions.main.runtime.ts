@@ -1,5 +1,5 @@
 import { MainRuntime } from '@teambit/cli';
-import { AspectData, Component, ComponentAspect, ComponentMap, IComponent } from '@teambit/component';
+import { AspectData, Component, ComponentMap, IComponent } from '@teambit/component';
 import { DevFilesAspect, DevFilesMain } from '@teambit/dev-files';
 import EnvsAspect, { EnvsMain } from '@teambit/envs';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
