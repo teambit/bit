@@ -22,10 +22,14 @@ export class DependenciesMain {
     };
     const packagesObj = packages.reduce((acc, pkg) => {
       const packageSplit = pkg.split('@');
-      if (packageSplit.length !== 2) {
+      if (packageSplit.length === 2) {
+        acc[packageSplit[0]] = packageSplit[1];
+      } else if (packageSplit.length === 3 && pkg.startsWith('@')) {
+        // it's a scoped package
+        acc[`@${packageSplit[1]}`] = packageSplit[2];
+      } else {
         throw new Error(`invalid package "${pkg}" syntax, expected "package@version"`);
       }
-      acc[packageSplit[0]] = packageSplit[1];
       return acc;
     }, {});
 
