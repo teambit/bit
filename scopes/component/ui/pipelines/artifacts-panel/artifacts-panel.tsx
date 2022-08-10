@@ -7,8 +7,8 @@ import { FileTree } from '@teambit/ui-foundation.ui.tree.file-tree';
 import { useComponentPipelineContext } from '@teambit/component.ui.pipelines.component-pipeline-context';
 import { ArtifactFile } from '@teambit/component.ui.pipelines.component-pipeline-model';
 import { useLocation } from '@teambit/base-react.navigation.link';
-import { getFileIcon, FileIconMatch } from '@teambit/code.ui.utils.get-file-icon';
-import { TreeNode } from '@teambit/design.ui.tree';
+import { generateIcon } from '@teambit/code.ui.code-tab-page';
+import { FileIconMatch } from '@teambit/code.ui.utils.get-file-icon';
 
 import styles from './artifacts-panel.module.scss';
 
@@ -28,37 +28,36 @@ export function ArtifactPanel({ className, fileIconMatchers }: ArtifactsPanelPro
   const { name, files } = artifact || {};
   const artifactFiles = files?.map((file) => file.name) || [];
   const currentHref = location?.pathname || '';
+  const drawerName = `${taskName} / ${name}`;
+  const onToggle = () => onToggleDrawer((open) => !open);
+  const getIcon = useMemo(() => generateIcon(fileIconMatchers), [fileIconMatchers]);
+  const getHref = () => currentHref;
+  const widgets = useMemo(() => [generateWidget(files || [])], [files]);
 
   return (
     <div className={classNames(styles.artifactsPanel, className)}>
       <DrawerUI
         isOpen={drawerOpen}
-        onToggle={() => onToggleDrawer((open) => !open)}
-        name={`${taskName} / ${name}`}
+        onToggle={onToggle}
+        name={drawerName}
         contentClass={styles.artifactsPanelCodeDrawerContent}
         className={classNames(styles.artifactsPanelCodeTabDrawer)}
       >
         <FileTree
           className={styles.artifactsPanelTree}
-          getIcon={useMemo(() => generateIcon(fileIconMatchers), fileIconMatchers)}
-          getHref={() => currentHref}
+          getIcon={getIcon}
+          getHref={getHref}
           files={artifactFiles}
-          widgets={useMemo(() => [generateWidget(files || [])], [files])}
+          widgets={widgets}
         />
       </DrawerUI>
     </div>
   );
 }
 
-function generateIcon(fileIconMatchers: FileIconMatch[]) {
-  return function GetIcon({ id }: TreeNode) {
-    return getFileIcon(fileIconMatchers, id);
-  };
-}
-
-const fileNodeClicked = (files, opts: 'download' | 'new tab') => (_, node) => {
+const fileNodeClicked = (files: ArtifactFile[], opts: 'download' | 'new tab') => (_, node) => {
   const { id } = node;
-  const artifactFile = files?.find((file) => file.name === id);
+  const artifactFile = files.find((file) => file.name === id);
 
   if (artifactFile?.downloadUrl) {
     fetch(artifactFile.downloadUrl, { method: 'GET' })
