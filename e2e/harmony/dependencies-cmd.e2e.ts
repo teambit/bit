@@ -60,5 +60,28 @@ describe('bit dependencies command', function () {
         });
       });
     });
+    describe('adding multiple deps', () => {
+      before(() => {
+        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.fixtures.populateComponents(1);
+        helper.command.dependenciesSet('comp1', 'lodash@3.3.1 ramda@0.0.27');
+      });
+      it('should set them all', () => {
+        const show = helper.command.showComponent('comp1');
+        expect(show).to.have.string('lodash@3.3.1');
+        expect(show).to.have.string('ramda@0.0.27');
+      });
+    });
+    describe('adding scoped package', () => {
+      before(() => {
+        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.fixtures.populateComponents(1);
+        helper.command.dependenciesSet('comp1', '@scoped/button@3.3.1');
+      });
+      it('should set it correctly', () => {
+        const show = helper.command.showComponent('comp1');
+        expect(show).to.have.string('@scoped/button@3.3.1');
+      });
+    });
   });
 });
