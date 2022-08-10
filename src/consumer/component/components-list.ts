@@ -175,10 +175,15 @@ export default class ComponentsList {
     }
     const authoredAndImportedIds = this.bitMap.getAuthoredAndImportedBitIds();
 
+    const mergePendingComponents = await this.listMergePendingComponents();
+    const mergePendingComponentsIds = BitIds.fromArray(mergePendingComponents.map((c) => c.id));
+
     const componentsFromModel = await this.getModelComponents();
-    const compFromModelOnWorkspace = componentsFromModel.filter((c) =>
-      authoredAndImportedIds.hasWithoutVersion(c.toBitId())
-    );
+    const compFromModelOnWorkspace = componentsFromModel
+      .filter((c) => authoredAndImportedIds.hasWithoutVersion(c.toBitId()))
+      // if a component is merge-pending, it needs to be resolved first before getting more updates from main
+      .filter((c) => mergePendingComponentsIds.hasWithoutVersion(c.toBitId()));
+
     const results = await Promise.all(
       compFromModelOnWorkspace.map(async (modelComponent) => {
         const headOnMain = modelComponent.head;

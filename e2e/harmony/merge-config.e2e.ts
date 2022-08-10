@@ -54,5 +54,17 @@ describe.only('merge config scenarios', function () {
       helper.fs.deletePath('node_modules');
       expect(() => helper.command.install()).not.to.throw('No matching version found');
     });
+    describe('merge from main to the lane', () => {
+      before(() => {
+        helper.command.mergeLane('main', '--manual');
+      });
+      // previous bug, showed only comp1 as componentsDuringMergeState, but the rest, because they're not in the
+      // workspace, it didn't merge them correctly.
+      it('bit status should show all components as componentsDuringMergeState and not in pendingUpdatesFromMain', () => {
+        const status = helper.command.statusJson();
+        expect(status.componentsDuringMergeState).to.have.lengthOf(3);
+        expect(status.pendingUpdatesFromMain).to.have.lengthOf(0);
+      });
+    });
   });
 });

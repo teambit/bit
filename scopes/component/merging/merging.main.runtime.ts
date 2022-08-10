@@ -268,20 +268,39 @@ export class MergingMain {
     const version = id.version as string;
     const otherLaneHead = modelComponent.getRef(version);
     const existingBitMapId = consumer.bitMap.getBitIdIfExist(id, { ignoreVersion: true });
-    const existOnCurrentLane = existingBitMapId && consumer.bitMap.isIdAvailableOnCurrentLane(existingBitMapId);
     const componentOnLane: Version = await modelComponent.loadVersion(version, consumer.scope.objects);
-    if (!existingBitMapId || !existOnCurrentLane) {
+    const getCurrentId = () => {
+      if (existingBitMapId) return existingBitMapId;
+      if (localLane) {
+        const idOnLane = localLane.getComponent(id);
+        if (!idOnLane) return null;
+        return idOnLane.id.changeVersion(idOnLane.head.toString());
+      }
+      // it's on main
+      const head = modelComponent.getHeadAsTagIfExist();
+      if (head) {
+        return id.changeVersion(head);
+      }
+      return null;
+    };
+    const currentId = getCurrentId();
+    if (!currentId) {
       const divergeData = await getDivergeData(repo, modelComponent, otherLaneHead, null, false);
       return { componentFromFS: null, componentFromModel: componentOnLane, id, mergeResults: null, divergeData };
     }
-    const currentlyUsedVersion = existingBitMapId.version;
-    if (currentlyUsedVersion === version) {
-      // @todo: maybe this check is not needed as we check for diverge later on
-      if (localLane || modelComponent.hasHead()) {
-        return returnUnmerged(`component ${id.toStringWithoutVersion()} is already merged`, true);
-      }
-    }
-    const component = await consumer.loadComponent(existingBitMapId);
+
+    // const currentlyUsedVersion = existingBitMapId.version;
+    // if (currentlyUsedVersion === version) {
+    //   // @todo: maybe this check is not needed as we check for diverge later on
+    //   if (localLane || modelComponent.hasHead()) {
+    //     return returnUnmerged(`component ${id.toStringWithoutVersion()} is already merged`, true);
+    //   }
+    // }
+    const getCurrentComponent = () => {
+      if (existingBitMapId) return consumer.loadComponent(existingBitMapId);
+      return consumer.scope.getConsumerComponent(currentId);
+    };
+    const component = await getCurrentComponent();
     const componentModificationStatus = await consumer.getComponentStatusById(component.id);
     if (componentModificationStatus.modified) {
       return returnUnmerged(
@@ -289,8 +308,8 @@ export class MergingMain {
       );
     }
     const laneHeadIsDifferentThanCheckedOut =
-      localLane && currentlyUsedVersion && modelComponent.laneHeadLocal?.toString() !== currentlyUsedVersion;
-    const localHead = laneHeadIsDifferentThanCheckedOut ? Ref.from(currentlyUsedVersion) : null;
+      localLane && existingBitMapId?.version && modelComponent.laneHeadLocal?.toString() !== existingBitMapId?.version;
+    const localHead = laneHeadIsDifferentThanCheckedOut ? Ref.from(existingBitMapId.version) : null;
 
     if (!otherLaneHead) {
       throw new Error(`merging: unable finding a hash for the version ${version} of ${id.toString()}`);
@@ -320,13 +339,13 @@ export class MergingMain {
     const baseSnap = divergeData.commonSnapBeforeDiverge as Ref; // must be set when isTrueMerge
     const baseComponent: Version = await modelComponent.loadVersion(baseSnap.toString(), repo);
     const otherComponent: Version = await modelComponent.loadVersion(otherLaneHead.toString(), repo);
+    const currentLaneName = localLane?.toLaneId().toString() || 'main';
     const mergeResults = await threeWayMerge({
       consumer,
       otherComponent,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       otherLabel: `${otherLaneHead.toString()} (${otherLaneName})`,
       currentComponent: component,
-      currentLabel: `${currentlyUsedVersion} (local)`,
+      currentLabel: `${currentId.version} (${currentLaneName})`,
       baseComponent,
     });
     return { componentFromFS: component, id, mergeResults, divergeData };
@@ -379,21 +398,10 @@ export class MergingMain {
     const remoteId = id.changeVersion(remoteHead.toString());
     const idToLoad = !mergeResults || mergeStrategy === MergeOptions.theirs ? remoteId : id;
     const componentWithDependencies = await consumer.loadComponentWithDependenciesFromModel(idToLoad);
-    const componentMap = componentFromFS && componentFromFS.componentMap;
-    if (componentFromFS && !componentMap) throw new GeneralError('applyVersion: componentMap was not found');
-    if (componentMap && componentMap.origin === COMPONENT_ORIGINS.AUTHORED && !id.scope) {
+    if (!id.scope) {
       componentWithDependencies.dependencies = [];
       componentWithDependencies.devDependencies = [];
     }
-    const shouldWritePackageJson = async (): Promise<boolean> => {
-      if (!componentMap) return true;
-      const rootDir = componentMap && componentMap.rootDir;
-      if (!rootDir) return false;
-      const packageJsonPath = path.join(consumer.getPath(), rootDir, 'package.json');
-      return fs.pathExists(packageJsonPath);
-    };
-    const writePackageJson = await shouldWritePackageJson();
-
     const files = componentWithDependencies.component.files;
     files.forEach((file) => {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -418,7 +426,7 @@ export class MergingMain {
       writeConfig: false, // @todo: should write if config exists before, needs to figure out how to do it.
       verbose: false, // @todo: do we need a flag here?
       writeDists: true, // @todo: do we need a flag here?
-      writePackageJson,
+      writePackageJson: false,
     });
     await manyComponentsWriter.writeAll();
 
