@@ -47,7 +47,7 @@ export class ArtifactExtractor {
     const artifactListPerId: ArtifactListPerId[] = components.map((component) => {
       return {
         id: component.id,
-        artifacts: this.builder.getArtifacts(component) || [],
+        artifacts: this.builder.getArtifacts(component),
       };
     });
     this.filterByOptions(artifactListPerId);
