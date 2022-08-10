@@ -257,7 +257,7 @@ export class PreviewMain {
       return undefined;
     }
 
-    const artifactFiles = new ArtifactFiles(paths.map((path) => ArtifactFile.fromModel({ relativePath: path })));
+    const artifactFiles = new ArtifactFiles(paths.map((path) => new ArtifactFile(path)));
     artifactFiles.populateVinylsFromPaths(rootDir);
     return new PreviewArtifact(artifactFiles.getExistingVinyls());
   }

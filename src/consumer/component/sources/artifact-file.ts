@@ -2,44 +2,27 @@ import { join } from 'path';
 import fs from 'fs-extra';
 import { Scope } from '../../../scope';
 import { Source } from '../../../scope/models';
-import { Ref } from '../../../scope/objects';
 import { pathNormalizeToLinux } from '../../../utils';
-import { ArtifactSource, ArtifactRef } from './artifact-files';
+import { ArtifactSource, ArtifactRef, ArtifactModel, ArtifactFileObject } from './artifact-files';
 import { ArtifactVinyl } from './artifact';
+import { Ref } from '../../../scope/objects';
 import ShowDoctorError from '../../../../dist/error/show-doctor-error';
 
-export type ArtifactModel = { relativePath: string; file: string };
-
-export type ArtifactFileObject = {
-  relativePath: string;
-  vinyl?: ArtifactVinyl;
-};
-
 export class ArtifactFile {
-  ref: Ref | undefined | null;
   source: ArtifactSource | undefined | null;
 
-  constructor(public relativePath: string, public vinyl?: ArtifactVinyl) {}
+  constructor(public path: string, public vinyl?: ArtifactVinyl, public ref?: ArtifactRef | null) {}
 
   clone() {
     const vinyl = this.vinyl?.clone();
-    return new ArtifactFile(this.relativePath, vinyl);
+    return new ArtifactFile(this.path, vinyl);
   }
 
   static parse(fileObject: ArtifactFileObject): ArtifactFile {
     if (fileObject instanceof ArtifactFile) {
       return fileObject;
     }
-    return new ArtifactFile(fileObject.relativePath, fileObject.vinyl);
-  }
-
-  getArtifactRef(): ArtifactRef | undefined {
-    const ref = this.ref;
-    if (!ref) return undefined;
-    return {
-      ref,
-      relativePath: this.relativePath,
-    };
+    return new ArtifactFile(fileObject.path, fileObject.vinyl);
   }
 
   populateArtifactSourceFromVinyl(): ArtifactSource | undefined {
@@ -56,46 +39,48 @@ export class ArtifactFile {
 
   populateRefFromSource() {
     if (this.source) {
-      this.ref = this.source.source.hash();
+      this.ref = { ref: this.source.source.hash(), relativePath: this.source.relativePath, url: this.source.url };
     }
-  }
-
-  populateRefFromModel({ file }: ArtifactModel) {
-    this.ref = file ? Ref.from(file) : null;
   }
 
   populateVinylFromPath(rootDir: string) {
     const vinyl = new ArtifactVinyl({
-      path: this.relativePath,
-      contents: fs.readFileSync(join(rootDir, this.relativePath)),
+      path: this.path,
+      contents: fs.readFileSync(join(rootDir, this.path)),
     });
     this.vinyl = vinyl;
   }
 
   async populateVinylFromRef(scope: Scope) {
-    const artifactRef = this.getArtifactRef();
-    if (!artifactRef) throw new ShowDoctorError(`failed loading file ${this.relativePath} from the model`);
-    const content = (await artifactRef.ref.load(scope.objects)) as Source;
-    if (!content) throw new ShowDoctorError(`failed loading file ${this.relativePath} from the model`);
+    if (!this.ref) throw new ShowDoctorError(`failed loading file ${this.path} from the model`);
+    const content = (await this.ref.ref.load(scope.objects)) as Source;
+    if (!content) throw new ShowDoctorError(`failed loading file ${this.path} from the model`);
     const vinyl = new ArtifactVinyl({
       base: '.',
-      path: this.relativePath,
+      path: this.path,
       contents: content.contents,
-      url: artifactRef.url,
+      url: this.ref.url,
     });
     this.vinyl = vinyl;
   }
 
   toModelObject() {
     return {
-      relativePath: this.relativePath,
-      file: this.ref?.hash,
+      relativePath: this.path,
+      file: this.ref?.ref.hash,
     };
   }
 
   static fromModel(artifactModel: ArtifactModel) {
-    const artifactFile = new ArtifactFile(artifactModel.relativePath, undefined);
-    artifactFile.populateRefFromModel(artifactModel);
+    const artifactRef: ArtifactRef | undefined =
+      (artifactModel.relativePath &&
+        artifactModel.file && {
+          relativePath: artifactModel.relativePath,
+          url: artifactModel.url,
+          ref: Ref.from(artifactModel.file),
+        }) ||
+      undefined;
+    const artifactFile = new ArtifactFile(artifactModel.relativePath, undefined, artifactRef);
     return artifactFile;
   }
 }

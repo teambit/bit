@@ -87,7 +87,7 @@ export function builderSchema(builder: BuilderMain) {
           if (!taskReport.artifact) return undefined;
 
           const files = await taskReport.artifact.files
-            .filter((vinyl) => !pathFilter || vinyl.relativePath === pathFilter)
+            .filter((vinyl) => !pathFilter || vinyl.path === pathFilter)
             .map(async ({ vinyl }) => {
               const { basename, path, contents } = vinyl || {};
               const isBinary = path && isBinaryPath(path);

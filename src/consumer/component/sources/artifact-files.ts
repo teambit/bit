@@ -8,10 +8,17 @@ import { Ref } from '../../../scope/objects';
 import logger from '../../../logger/logger';
 import { ExtensionDataList } from '../../config';
 import Component from '../consumer-component';
-import { ArtifactFile, ArtifactModel, ArtifactFileObject } from './artifact-file';
+import { ArtifactFile } from './artifact-file';
 import { ArtifactVinyl } from './artifact';
 
+export type ArtifactFileObject = {
+  path: string;
+  vinyl?: ArtifactVinyl;
+  ref?: ArtifactRef | null;
+};
+
 export type ArtifactRef = { relativePath: string; ref: Ref; url?: string };
+export type ArtifactModel = { relativePath: string; file: string; url?: string };
 export type ArtifactSource = { relativePath: string; source: Source; url?: string };
 export type ArtifactObject = {
   name: string;
@@ -61,7 +68,7 @@ export class ArtifactFiles {
   }
 
   getRefs(): Ref[] {
-    const refs = this.files.map((file) => file.ref);
+    const refs = this.files.map((file) => file.ref?.ref);
     return compact(refs);
   }
 
@@ -71,7 +78,7 @@ export class ArtifactFiles {
   }
 
   getRelativePaths(): string[] {
-    const paths = this.files.map((file) => file.relativePath);
+    const paths = this.files.map((file) => file.path);
     return paths;
   }
 
@@ -127,7 +134,7 @@ export class ArtifactFiles {
         return undefined;
       }
       // By default try to fetch artifact from the default resolver
-      const artifactRef = file.getArtifactRef();
+      const artifactRef = file.ref;
       if (artifactRef) {
         artifactsToLoadFromScope.push(file);
         hashes.push(artifactRef.ref.hash);
@@ -206,8 +213,16 @@ export function convertBuildArtifactsFromModelObject(extensions: ExtensionDataLi
 }
 
 export function getArtifactsFiles(extensions: ExtensionDataList): ArtifactFiles[] {
-  const buildArtifacts = getBuildArtifacts(extensions);
-  return buildArtifacts.map((artifacts) => artifacts.files);
+  const artifactObjects = getBuildArtifacts(extensions);
+  artifactObjects.forEach((artifactObject) => {
+    // @ts-ignore
+    artifactObject.files = ArtifactFiles.parse(artifactObject.files);
+    logger.debug(
+      '🚀 ~ file: artifact-files.ts ~ line 220 ~ artifactObjects.forEach ~ artifactObject.files',
+      ArtifactFiles.parse(artifactObject.files as any)
+    );
+  });
+  return artifactObjects.map((artifacts) => artifacts.files);
 }
 
 export function cloneBuildArtifacts(extensions: ExtensionDataList) {

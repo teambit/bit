@@ -31,11 +31,8 @@ export class Artifact {
     /**
      * the declaring task.
      */
-    readonly task: TaskDescriptor // /** //  * timestamp of the artifact creation.
-  ) //  */
-  // TODO: Review this
-  // readonly timestamp: number = Date.now()
-  {}
+    readonly task: TaskDescriptor // /** //  * timestamp of the artifact creation. //  */ // TODO: Review this // readonly timestamp: number = Date.now()
+  ) {}
 
   get storageResolver() {
     return this.def.storageResolver || new DefaultResolver();
@@ -91,11 +88,11 @@ export class Artifact {
     const artifactsToLoadFromOtherResolver: ArtifactFile[] = [];
 
     const promises = artifactFiles.files.map(async (file) => {
-      const ref = file.getRef();
+      const ref = file.ref;
       if (ref) {
-        const content = (await ref.load(scope.legacyScope.objects)) as Source;
-        if (!content) throw new Error(`failed loading file ${file.relativePath} from the model`);
-        const vinyl = new ArtifactVinyl({ base: '.', path: file.relativePath, contents: content.contents });
+        const content = (await ref.ref.load(scope.legacyScope.objects)) as Source;
+        if (!content) throw new Error(`failed loading file ${ref.relativePath} from the model`);
+        const vinyl = new ArtifactVinyl({ base: '.', path: ref.relativePath, contents: content.contents });
         vinylsFromScope.push(vinyl);
         return Promise.resolve();
       }

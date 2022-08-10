@@ -1,6 +1,5 @@
 import { Component } from '@teambit/component';
 import type { ArtifactObject } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
-import type { ArtifactStore } from '@teambit/legacy/dist/consumer/component/sources/artifact-file';
 import { Artifact } from './artifact';
 import { FsArtifact } from './fs-artifact';
 import { StoreResult } from '../storage/storage-resolver';
@@ -136,18 +135,11 @@ export class ArtifactList<T extends Artifact> {
   ) {
     const results = await storageResolver.store(component, artifact);
     if (!results) return;
-    artifact.files.forEach((file) => {
-      const url = (results as StoreResult)[file.relativePath];
+    artifact.files.getExistingVinyls().forEach((artifactFile) => {
+      const url = (results as StoreResult)[artifactFile.relativePath];
 
       if (url) {
-        const newStore: ArtifactStore = {
-          name: storageResolver.name,
-          url,
-        };
-        if (!file.stores) {
-          file.stores = [];
-        }
-        file.stores.push(newStore);
+        artifactFile.url = url;
       }
     });
   }

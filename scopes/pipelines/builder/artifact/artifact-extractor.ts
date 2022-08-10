@@ -111,7 +111,7 @@ export class ArtifactExtractor {
       });
       if (files) {
         item.artifacts.forEach((artifact) => {
-          const filteredFiles = artifact.files.filter((file) => minimatch(file.relativePath, files));
+          const filteredFiles = artifact.files.filter((file) => minimatch(file.path, files));
           artifact.files = filteredFiles;
         });
         // remove artifacts with no files
