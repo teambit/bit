@@ -219,7 +219,6 @@ async function filterComponentsStatus(
       const depsNotIncludeInPattern = flattenedDeps.filter((id) =>
         bitIdsNotFromPattern.find((bitId) => bitId.isEqualWithoutVersion(id))
       );
-      bitIdsNotFromPattern.filter((id) => flattenedDeps.hasWithoutVersion(id));
       if (!depsNotIncludeInPattern.length) {
         return;
       }
