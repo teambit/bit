@@ -62,7 +62,7 @@ export function builderSchema(builder: BuilderMain) {
           const artifacts = taskId
             ? builder.getArtifactsByExtension(component, taskId).toArray()
             : builderData?.artifacts.toArray() || [];
-          const gqlArtifactsData = await Promise.all(
+          const artifactsWithVinyl = await Promise.all(
             artifacts.map(async (artifact) => {
               const id = artifact.task.aspectId;
               const artifactFiles = (await builder.getArtifactsVinylByExtension(component, id)).map((vinyl) => {
@@ -74,15 +74,14 @@ export function builderSchema(builder: BuilderMain) {
                 );
                 return { id: path, name: basename, path, content, downloadUrl };
               });
-              const artifactGQLData = { ...artifact.toObject(), files: artifactFiles };
-              return artifactGQLData;
+              const artifactObj = { ...artifact.toObject(), files: artifactFiles };
+              return artifactObj;
             })
           );
-          console.log('🚀 ~ file: builder.graphql.ts ~ line 83 ~ pipelineReport: ~ gqlArtifactsData', gqlArtifactsData);
 
           const result = pipeline.map((task) => ({
             ...task,
-            artifact: gqlArtifactsData.find((data) => data.task.id === task.taskId),
+            artifact: artifactsWithVinyl.find((data) => data.task.id === task.taskId),
           }));
 
           return result;
@@ -96,7 +95,6 @@ export function builderSchema(builder: BuilderMain) {
         warnings: (taskReport: TaskReport) => taskReport.warnings || [],
         artifact: async (taskReport: TaskReport, { path: pathFilter }: { path?: string }) => {
           if (!taskReport.artifact) return undefined;
-
           return {
             ...taskReport.artifact,
             files: taskReport.artifact.files.filter((file) => !pathFilter || file.path === pathFilter),
