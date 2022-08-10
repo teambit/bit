@@ -1,11 +1,11 @@
 .artifactsPanel {
   display: flex;
   flex-direction: column;
-  overflow: auto;
+  overflow-y: auto;
   height: 100%;
-  font-size: 14px;
   border-right: 2px solid #ededed;
   background: #fafafa;
+  font-size: var(--bit-p-xs);
 }
 
 .artifactsPanelCodeTabDrawer {
@@ -23,11 +23,11 @@
 
 .drawerIcon {
   margin-right: 8px;
-  font-size: 14px;
+  font-size: var(--bit-p-xs);
 }
 
 .label {
-  font-size: 10px;
+  font-size: var(--bit-p-xxs);
   font-weight: unset;
   padding: 4px;
 }
