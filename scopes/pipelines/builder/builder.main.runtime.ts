@@ -187,7 +187,9 @@ export class BuilderMain {
     const data = component.get(BuilderAspect.id)?.data;
     if (!data) return undefined;
     const artifacts =
-      data?.artifacts?.map((artifactObj) => {
+      data?.artifacts.map((artifactObj) => {
+        if (artifactObj instanceof Artifact) return artifactObj;
+
         const artifact = Artifact.fromArtifactObject({
           ...artifactObj,
           files:

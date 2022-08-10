@@ -76,11 +76,11 @@ export function builderSchema(builder: BuilderMain) {
               });
               const artifactGQLData = { ...artifact.toObject(), files: artifactFiles };
               return artifactGQLData;
-              // artifactsByTask.set(id, artifactGQLData);
             })
           );
+          console.log('🚀 ~ file: builder.graphql.ts ~ line 83 ~ pipelineReport: ~ gqlArtifactsData', gqlArtifactsData);
 
-          const result = pipeline.map(async (task) => ({
+          const result = pipeline.map((task) => ({
             ...task,
             artifact: gqlArtifactsData.find((data) => data.task.id === task.taskId),
           }));
