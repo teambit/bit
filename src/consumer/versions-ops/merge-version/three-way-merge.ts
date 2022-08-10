@@ -158,7 +158,17 @@ export default async function threeWayMergeVersions({
   const deletedFromFs = otherFiles.filter(
     (otherFile) => !fsFilesPaths.includes(otherFile.relativePath) && baseFilesPaths.includes(otherFile.relativePath)
   );
+  const addedOnOther = otherFiles.filter(
+    (otherFile) => !fsFilesPaths.includes(otherFile.relativePath) && !baseFilesPaths.includes(otherFile.relativePath)
+  );
   deletedFromFs.forEach((file) => results.remainDeletedFiles.push({ filePath: file.relativePath }));
+
+  await Promise.all(
+    addedOnOther.map(async (file) => {
+      const fsFile = await SourceFile.loadFromSourceFileModel(file, consumer.scope.objects);
+      results.addFiles.push({ filePath: file.relativePath, fsFile });
+    })
+  );
   if (R.isEmpty(results.modifiedFiles)) return results;
 
   const conflictResults = await getMergeResults(consumer, results.modifiedFiles);
