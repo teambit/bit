@@ -35,7 +35,7 @@
 .icon {
   font-size: var(--bit-p-xxs);
   padding: 4px;
-  color: var(--bit-text-color-heavy);
+  color: var(--bit-text-color-heavy, #2b2b2b);
   pointer-events: auto;
 }
 
