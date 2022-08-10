@@ -28,6 +28,7 @@ export async function mergeLanes({
   squash,
   pattern,
   includeDeps,
+  skipDependencyInstallation,
 }: {
   merging: MergingMain;
   workspace: Workspace;
@@ -122,6 +123,7 @@ export async function mergeLanes({
     noSnap,
     snapMessage,
     build,
+    skipDependencyInstallation,
   });
 
   const mergedSuccessfully =

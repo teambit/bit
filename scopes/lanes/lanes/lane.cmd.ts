@@ -294,6 +294,7 @@ export class LaneMergeCmd implements Command {
     ['m', 'message <message>', 'override the default message for the auto snap'],
     ['', 'keep-readme', 'skip deleting the lane readme component after merging'],
     ['', 'squash', 'EXPERIMENTAL. squash multiple snaps. keep the last one only'],
+    ['', 'skip-dependency-installation', 'do not install packages of the imported components'],
     [
       '',
       'include-deps',
@@ -320,6 +321,7 @@ export class LaneMergeCmd implements Command {
       message: snapMessage = '',
       keepReadme = false,
       squash = false,
+      skipDependencyInstallation = false,
       includeDeps = false,
     }: {
       ours: boolean;
@@ -332,6 +334,7 @@ export class LaneMergeCmd implements Command {
       message: string;
       keepReadme?: boolean;
       squash: boolean;
+      skipDependencyInstallation?: boolean;
       includeDeps?: boolean;
     }
   ): Promise<string> {
@@ -353,6 +356,7 @@ export class LaneMergeCmd implements Command {
       keepReadme,
       squash,
       pattern,
+      skipDependencyInstallation,
       includeDeps,
     });
 

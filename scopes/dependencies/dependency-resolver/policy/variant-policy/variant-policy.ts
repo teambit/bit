@@ -1,5 +1,6 @@
 import { sha1 } from '@teambit/legacy/dist/utils';
 import { sortBy, uniqWith } from 'lodash';
+import { snapToSemver } from '@teambit/component-package-version';
 import { DependenciesOverridesData } from '@teambit/legacy/dist/consumer/config/component-overrides';
 import { Policy, PolicyConfigKeys, PolicyEntry, SemverVersion } from '../policy';
 import { DependencyLifecycleType, KEY_NAME_BY_LIFECYCLE_TYPE } from '../../dependencies';
@@ -98,6 +99,15 @@ export class VariantPolicy implements Policy<VariantPolicyConfigObject> {
       return undefined;
     }
     return entry.value.version;
+  }
+
+  getValidSemverDepVersion(
+    depId: string,
+    lifecycleType?: DependencyLifecycleType
+  ): VariantPolicyEntryVersion | undefined {
+    const version = this.getDepVersion(depId, lifecycleType);
+    if (!version) return undefined;
+    return snapToSemver(version);
   }
 
   serialize(): SerializedVariantPolicy {

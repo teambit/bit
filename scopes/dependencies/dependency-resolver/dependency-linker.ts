@@ -1,6 +1,6 @@
 import isBuiltinModule from 'is-builtin-module';
 import path from 'path';
-import { uniq, compact, flatten, head } from 'lodash';
+import { uniq, compact, flatten, head, omit } from 'lodash';
 import { Stats } from 'fs';
 import fs from 'fs-extra';
 import resolveFrom from 'resolve-from';
@@ -139,7 +139,7 @@ export class DependencyLinker {
     options: LinkingOptions = {}
   ): Promise<LinkResults> {
     this.logger.setStatusLine('linking components');
-    this.logger.debug('linking components with options', options);
+    this.logger.debug('linking components with options', omit(options, ['consumer']));
     const result: LinkResults = {};
     const finalRootDir = rootDir || this.rootDir;
     const linkingOpts = Object.assign({}, DEFAULT_LINKING_OPTIONS, this.linkingOptions || {}, options || {});

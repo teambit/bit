@@ -71,7 +71,8 @@ export class MergingMain {
     resolve: boolean,
     noSnap: boolean,
     message: string,
-    build: boolean
+    build: boolean,
+    skipDependencyInstallation: boolean
   ): Promise<ApplyVersionResults> {
     if (!this.workspace) throw new ConsumerNotFound();
     const consumer: Consumer = this.workspace.consumer;
@@ -84,7 +85,15 @@ export class MergingMain {
     } else if (!BitId.isValidVersion(firstValue)) {
       const bitIds = this.getComponentsToMerge(consumer, values);
       // @todo: version could be the lane only or remote/lane
-      mergeResults = await this.mergeComponentsFromRemote(consumer, bitIds, mergeStrategy, noSnap, message, build);
+      mergeResults = await this.mergeComponentsFromRemote(
+        consumer,
+        bitIds,
+        mergeStrategy,
+        noSnap,
+        message,
+        build,
+        skipDependencyInstallation
+      );
     } else {
       const version = firstValue;
       const ids = R.tail(values);
@@ -105,7 +114,8 @@ export class MergingMain {
     mergeStrategy: MergeStrategy,
     noSnap: boolean,
     snapMessage: string,
-    build: boolean
+    build: boolean,
+    skipDependencyInstallation: boolean
   ): Promise<ApplyVersionResults> {
     const currentLaneId = consumer.getCurrentLaneId();
     const currentLaneObject = await consumer.getCurrentLaneObject();
@@ -130,6 +140,7 @@ export class MergingMain {
       noSnap,
       snapMessage,
       build,
+      skipDependencyInstallation,
     });
   }
 
@@ -145,6 +156,7 @@ export class MergingMain {
     noSnap,
     snapMessage,
     build,
+    skipDependencyInstallation,
   }: {
     mergeStrategy: MergeStrategy;
     allComponentsStatus: ComponentMergeStatus[];
@@ -154,6 +166,7 @@ export class MergingMain {
     noSnap: boolean;
     snapMessage: string;
     build: boolean;
+    skipDependencyInstallation?: boolean;
   }): Promise<ApplyVersionResults> {
     const consumer = this.workspace.consumer;
     const componentWithConflict = allComponentsStatus.find(
@@ -188,6 +201,14 @@ export class MergingMain {
     });
 
     const leftUnresolvedConflicts = componentWithConflict && mergeStrategy === 'manual';
+
+    if (!skipDependencyInstallation && !leftUnresolvedConflicts) {
+      await this.workspace.install(undefined, {
+        dedupe: true,
+        updateExisting: false,
+        import: false,
+      });
+    }
 
     if (localLane) consumer.scope.objects.add(localLane);
 
@@ -371,10 +392,6 @@ export class MergingMain {
       const packageJsonPath = path.join(consumer.getPath(), rootDir, 'package.json');
       return fs.pathExists(packageJsonPath);
     };
-    const shouldInstallNpmPackages = (): boolean => {
-      if (componentMap && componentMap.origin === COMPONENT_ORIGINS.AUTHORED) return false;
-      return true;
-    };
     const writePackageJson = await shouldWritePackageJson();
 
     const files = componentWithDependencies.component.files;
@@ -396,7 +413,7 @@ export class MergingMain {
     const manyComponentsWriter = new ManyComponentsWriter({
       consumer,
       componentsWithDependencies: [componentWithDependencies],
-      installNpmPackages: shouldInstallNpmPackages(),
+      installNpmPackages: false,
       override: true,
       writeConfig: false, // @todo: should write if config exists before, needs to figure out how to do it.
       verbose: false, // @todo: do we need a flag here?

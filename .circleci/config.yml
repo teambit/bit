@@ -2,7 +2,7 @@ version: 2.1
 
 default_image: &default_image
   docker:
-    - image: cimg/node:14.19.3
+    - image: cimg/node:16.16.0
 
 default_resource_class: &default_resource_class
   resource_class: medium
@@ -14,7 +14,7 @@ default_working_dir: &default_working_dir
   working_directory: ~/bit
 
 orbs:
-  win: circleci/windows@4.1
+  win: circleci/windows@5.0
 
 windows_default_working_dir: &windows_default_working_dir
   working_directory: C:\Users\circleci\project\bit
@@ -274,10 +274,10 @@ jobs:
       - attach_workspace:
           at: ./
       - docker_build_and_push:
-          docker_build_arg_value: "node:14.19.1"
+          docker_build_arg_value: "node:16.16.0"
           image_name: "bitcli/bit-non-root"
           docker_file_name: "Dockerfile-bit-non-root"
-          docker_tag_suffix: "-node-14.19.1"
+          docker_tag_suffix: "-node-16.16.0"
 
 
   docker_non_root_build_node_16:
@@ -936,9 +936,12 @@ jobs:
       PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: true
     steps:
       # - run: choco install nodejs --version 16.15.1
-      - run: cinst nodejs --version 14.19.3
+      # - run: cinst nodejs --version 16.16.0
       # - run: nodejs.install v12.16.0
+      - run: nvm install 16.16.0
+      - run: nvm use 16.16.0
       - run: node -v
+      - run: corepack enable
       - run: 'yarn -v'
       - run:
           name: set bit.dev registry
@@ -1101,6 +1104,7 @@ jobs:
           # command: cd bit && npm run e2e-test-circle --debug
           environment:
             MOCHA_FILE: junit/e2e-test-results.xml
+            NODE_OPTIONS: --no-warnings
           when: always
       - store_test_results:
           path: bit/junit
@@ -1191,9 +1195,9 @@ jobs:
       # - run: node -v
       # - run: npm -v
       # - run: yarn -v
-      # # - run: choco install nodejs --version 14.19.3
+      # # - run: choco install nodejs --version 16.16.0
       # # - run: node -v
-      # - run: cinst nodejs --version 14.19.3
+      # - run: cinst nodejs --version 16.16.0
       # - run: node -v
 
   windows_checkout_code:
@@ -1325,7 +1329,7 @@ jobs:
     steps:
       - attach_workspace:
           at: .
-      - run: cinst nodejs --version 14.19.3
+      - run: cinst nodejs --version 16.16.0
       - run: node -v
       - run: npm -v
       # - run: Get-Content -Path .\version.txt
@@ -1380,7 +1384,7 @@ jobs:
     steps:
       - attach_workspace:
           at: .
-      - run: cinst nodejs --version 14.19.3
+      - run: cinst nodejs --version 16.16.0
       - run: node -v
       - run: npm -v
       # - run: Get-Content -Path .\version.txt
@@ -1427,6 +1431,7 @@ jobs:
           # command: cd bit; npm run e2e-test-circle --debug
           environment:
             MOCHA_FILE: junit\e2e-test-results.xml
+            NODE_OPTIONS: --no-warnings
           when: always
       - store_test_results:
           path: bit\junit
@@ -1488,6 +1493,7 @@ jobs:
           # command: cd bit; npm run e2e-test-circle --debug
           environment:
             MOCHA_FILE: junit\e2e-test-results.xml
+            NODE_OPTIONS: --no-warnings
           when: always
       - store_test_results:
           path: bit\junit
