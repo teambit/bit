@@ -1,5 +1,4 @@
-// card
-.compNode {
+.pipelineNode {
   max-width: 300px;
   min-width: 200px;
   border-width: 2px;
@@ -14,6 +13,9 @@
   &.error {
     background: var(--bit-error-bg, #fdedd2);
   }
+}
+.taskId {
+  margin-left: 5px;
 }
 
 // component icon

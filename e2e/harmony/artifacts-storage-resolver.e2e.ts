@@ -1,4 +1,5 @@
 import chai, { expect } from 'chai';
+import { Extensions } from '../../src/constants';
 import Helper from '../../src/e2e-helper/e2e-helper';
 
 chai.use(require('chai-fs'));
@@ -66,8 +67,8 @@ describe('artifacts storage resolver', function () {
 
 type ArtifactFile = { relativePath: string; file: string; url?: string };
 function getElementsArtifactsFromModel(compModel: any): ArtifactFile[] {
-  const builderEntry = compModel.extensions.find((ext) => ext.name === 'teambit.pipelines/builder');
+  const builderEntry = compModel.extensions.find((ext) => ext.name === Extensions.builder);
   const artifacts = builderEntry.data.artifacts;
-  const elementsArtifact = artifacts.find((artifact) => artifact.name === 'elements');
+  const elementsArtifact = artifacts.find((artifact) => artifact.def.name === 'elements');
   return elementsArtifact.files;
 }

@@ -19,7 +19,7 @@
   height: 100%;
   width: 100%;
 
-  border-radius: 8px;
+  border-radius: 5px;
   border: solid 1px var(--bit-border-color-lightest, #ededed);
   background: var(--bit-bg-dent, #f6f6f6);
 }
@@ -35,6 +35,6 @@
 }
 
 .statTitle {
-  font-size: 12px;
+  font-size: var(--bit-p-xxs);
   color: #6c707c;
 }

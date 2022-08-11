@@ -12,10 +12,11 @@ import ReactFlow, {
   Controls,
   Edge,
   Node,
-  NodeTypesType,
   ReactFlowProvider,
+  NodeTypesType,
 } from 'react-flow-renderer';
 import { HoverSplitter } from '@teambit/base-ui.surfaces.split-pane.hover-splitter';
+import { calcDuration, calcMilliseconds, calcSeconds } from '@teambit/component.ui.pipelines.component-pipeline-utils';
 import { PipelineNode } from './pipeline-node';
 import { ComponentPipelineBlankState } from './blank-state';
 
@@ -41,8 +42,7 @@ export function ComponentPipelinePage({ host, fileIconMatchers }: ComponentPipel
         type: 'artifactNode',
         data: {
           ...task,
-          durationSecs: calcSeconds(duration),
-          durationMilliSecs: calcMilliseconds(duration),
+          duration,
         },
         position: { x: 50 + index * 300, y: 300 },
       } as Node;
@@ -91,32 +91,32 @@ export function ComponentPipelinePage({ host, fileIconMatchers }: ComponentPipel
   };
 
   return (
-    <div className={styles.page}>
-      <ComponentPipelineContext.Provider
-        value={{
-          pipeline: data?.tasks || [],
-          selectedPipelineId,
-          setSelectedPipelineId,
-        }}
-      >
-        <H2 size="xs">Pipeline</H2>
-        {!showBlankState && (
-          <div className={styles.statContainer}>
-            <div className={styles.statItem}>
-              <p className={styles.statTitle}>Duration</p>
-              <p>
-                {calcSeconds(totalDurationSecs)}s {calcMilliseconds(totalDurationSecs)}ms
-              </p>
+    <ComponentPipelineContext.Provider
+      value={{
+        pipeline: data?.tasks || [],
+        selectedPipelineId,
+        setSelectedPipelineId,
+      }}
+    >
+      <ReactFlowProvider>
+        <div className={styles.page}>
+          <H2 size="xs">Pipeline</H2>
+          {!showBlankState && (
+            <div className={styles.statContainer}>
+              <div className={styles.statItem}>
+                <p className={styles.statTitle}>Duration</p>
+                <p>
+                  {calcSeconds(totalDurationSecs)}s {calcMilliseconds(totalDurationSecs)}ms
+                </p>
+              </div>
+              <div className={styles.statItem}>
+                <p className={styles.statTitle}>Status</p>
+                <p>{data?.buildStatus}</p>
+              </div>
             </div>
-            <div className={styles.statItem}>
-              <p className={styles.statTitle}>Status</p>
-              <p>{data?.buildStatus}</p>
-            </div>
-          </div>
-        )}
-        <SplitPane size={'75%'} className={styles.graphContainer} layout={sidebarOpenness}>
-          <Pane>
-            <ReactFlowProvider>
+          )}
+          <SplitPane size={'75%'} className={styles.graphContainer} layout={sidebarOpenness}>
+            <Pane>
               {!showBlankState && (
                 <ReactFlow
                   draggable={false}
@@ -126,8 +126,8 @@ export function ComponentPipelinePage({ host, fileIconMatchers }: ComponentPipel
                   zoomOnDoubleClick={false}
                   elementsSelectable={true}
                   maxZoom={1}
-                  elements={elements}
                   nodeTypes={NodeTypes}
+                  elements={elements}
                   className={styles.graph}
                   onPaneClick={onPanelClicked}
                 >
@@ -136,28 +136,16 @@ export function ComponentPipelinePage({ host, fileIconMatchers }: ComponentPipel
                 </ReactFlow>
               )}
               {showBlankState && <ComponentPipelineBlankState />}
-            </ReactFlowProvider>
-          </Pane>
-          {(selectedPipelineId && <HoverSplitter></HoverSplitter>) || <></>}
-          {(selectedPipelineId && (
-            <Pane>
-              <ArtifactPanel fileIconMatchers={fileIconMatchers} />
             </Pane>
-          )) || <></>}
-        </SplitPane>
-      </ComponentPipelineContext.Provider>
-    </div>
+            {(selectedPipelineId && <HoverSplitter></HoverSplitter>) || <></>}
+            {(selectedPipelineId && (
+              <Pane>
+                <ArtifactPanel fileIconMatchers={fileIconMatchers} />
+              </Pane>
+            )) || <></>}
+          </SplitPane>
+        </div>
+      </ReactFlowProvider>
+    </ComponentPipelineContext.Provider>
   );
-}
-
-function calcDuration(startTime?: number, endTime?: number): number {
-  return (endTime || 0) - (startTime || 0);
-}
-
-function calcSeconds(duration: number): number {
-  return Math.floor(duration / 1000);
-}
-
-function calcMilliseconds(duration: number): number {
-  return duration % 1000;
 }

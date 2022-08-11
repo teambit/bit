@@ -5,16 +5,17 @@ import classNames from 'classnames';
 import { Tooltip } from '@teambit/design.ui.tooltip';
 import { useComponentPipelineContext } from '@teambit/component.ui.pipelines.component-pipeline-context';
 import { TaskReport } from '@teambit/component.ui.pipelines.component-pipeline-model';
+import { calcMilliseconds, calcSeconds } from '@teambit/component.ui.pipelines.component-pipeline-utils';
 import { Handle, NodeProps, Position } from 'react-flow-renderer';
 import styles from './pipeline-node.module.scss';
 
-export type PipelineNodeProps = NodeProps<TaskReport & { durationSecs: number; durationMilliSecs: number }>;
+export type PipelineNodeProps = NodeProps<TaskReport & { duration: number }>;
 
 export function PipelineNode(props: PipelineNodeProps) {
   const {
     id,
     isConnectable,
-    data: { id: taskId, name: taskName, durationSecs, durationMilliSecs, warnings, errors, artifact },
+    data: { id: taskId, name: taskName, duration, warnings, errors, artifact },
   } = props;
   const icon = 'https://static.bit.dev/extensions-icons/react.svg';
   const componentPipelineContext = useComponentPipelineContext();
@@ -31,7 +32,7 @@ export function PipelineNode(props: PipelineNodeProps) {
       <Handle type="source" position={Position.Right} style={{ background: '#555' }} isConnectable={isConnectable} />
       <Card
         className={classNames(
-          styles.compNode,
+          styles.pipelineNode,
           isSelected && styles.selected,
           showWarningStaus && styles.warning,
           showErrorStatus && styles.error
@@ -42,14 +43,14 @@ export function PipelineNode(props: PipelineNodeProps) {
       >
         <div className={styles.componentDetailsContainer}>
           <div className={classNames(styles.componentDetails)}>{<img src={icon} className={styles.envIcon} />}</div>
-          <div style={{ marginLeft: 5 }}>
+          <div className={styles.taskId}>
             <div className={classNames(styles.breadcrumbs, ellipsis)}>{taskId}</div>
           </div>
         </div>
         <div className={classNames(styles.componentName)}>
           <div className={classNames(styles.name, ellipsis)}>{taskName}</div>
           <div className={classNames(styles.version, ellipsis)}>
-            {durationSecs}s {durationMilliSecs}ms
+            {calcSeconds(duration)}s {calcMilliseconds(duration)}ms
           </div>
         </div>
       </Card>
