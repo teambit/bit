@@ -113,7 +113,6 @@ import { IncorrectEnvAspect } from './exceptions/incorrect-env-aspect';
 import { GraphFromFsBuilder, ShouldIgnoreFunc } from './build-graph-from-fs';
 import { BitMap } from './bit-map';
 import { WorkspaceAspect } from './workspace.aspect';
-import UnmergedComponents from '../../../src/scope/lanes/unmerged-components';
 
 export type EjectConfResult = {
   configPath: string;
