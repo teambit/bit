@@ -60,10 +60,11 @@ export class LaneListCmd implements Command {
       if (!unmergedLanes.length) return chalk.green('All lanes are merged');
       return chalk.green(unmergedLanes.map((m) => m.name).join('\n'));
     }
-    const currentLane = this.lanes.getCurrentLaneName();
-    const laneDataOfCurrentLane = currentLane ? lanes.find((l) => l.name === currentLane) : undefined;
+    const currentLane = this.lanes.getCurrentLaneId() || this.lanes.getDefaultLaneId();
+    const laneDataOfCurrentLane = currentLane ? lanes.find((l) => currentLane.isEqual(l.id)) : undefined;
+    const currentAlias = laneDataOfCurrentLane ? laneDataOfCurrentLane.alias : undefined;
     const currentLaneReadmeComponentStr = outputReadmeComponent(laneDataOfCurrentLane?.readmeComponent);
-    let currentLaneStr = currentLane ? `current lane - ${chalk.green.green(currentLane as string)}` : '';
+    let currentLaneStr = currentLane ? `current lane - ${chalk.green.green(currentAlias || currentLane.name)}` : '';
     currentLaneStr += currentLaneReadmeComponentStr;
 
     if (details) {
@@ -75,16 +76,18 @@ export class LaneListCmd implements Command {
     }
 
     const availableLanes = lanes
-      .filter((l) => l.name !== currentLane)
-      // @ts-ignore
+      .filter((l) => !currentLane.isEqual(l.id))
       .map((laneData) => {
         const readmeComponentStr = outputReadmeComponent(laneData.readmeComponent);
+        const aliasStr = laneData.alias ? ` (${laneData.alias})` : '';
         if (details) {
-          const laneTitle = `> ${chalk.bold(laneData.name)}${outputRemoteLane(laneData.remote)}\n`;
+          const laneTitle = `> ${chalk.bold(laneData.name)}${aliasStr}${outputRemoteLane(laneData.remote)}\n`;
           const components = outputComponents(laneData.components);
           return laneTitle + readmeComponentStr.concat('\n') + components;
         }
-        return `    > ${chalk.green(laneData.name)} (${laneData.components.length} components)${readmeComponentStr}`;
+        return `    > ${chalk.green(laneData.name)}${aliasStr} (${
+          laneData.components.length
+        } components)${readmeComponentStr}`;
       })
       .join('\n');
 
@@ -121,7 +124,7 @@ export class LaneListCmd implements Command {
       merged,
       notMerged,
     });
-    const currentLane = this.lanes.getCurrentLaneName();
+    const currentLane = this.lanes.getCurrentLaneNameOrAlias();
     return { lanes, currentLane };
   }
 }

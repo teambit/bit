@@ -144,10 +144,12 @@ export default class Lanes {
   async getLanesData(scope: Scope, name?: string, mergeData?: boolean): Promise<LaneData[]> {
     const getLaneDataOfLane = async (laneObject: Lane): Promise<LaneData> => {
       const laneName = laneObject.name;
-      const trackingData = this.getRemoteTrackedDataByLocalLane(laneName);
+      const alias = this.getLocalTrackedLaneByRemoteName(laneName, laneObject.scope);
       return {
         name: laneName,
-        remote: trackingData ? `${trackingData.remoteScope}${LANE_REMOTE_DELIMITER}${trackingData.remoteLane}` : null,
+        remote: laneObject.scope,
+        id: laneObject.toLaneId(),
+        alias: alias !== laneName ? alias : null,
         components: laneObject.components.map((c) => ({ id: c.id, head: c.head.toString() })),
         log: laneObject.log,
         isMerged: mergeData ? await laneObject.isFullyMerged(scope) : null,
@@ -193,9 +195,17 @@ export default class Lanes {
 }
 
 export type LaneData = {
+  /**
+   * @deprecated use id.name instead
+   */
   name: string;
-  components: Array<{ id: BitId; head: string }>;
+  /**
+   * @deprecated use id.scope instead
+   */
   remote: string | null;
+  id: LaneId;
+  alias?: string | null;
+  components: Array<{ id: BitId; head: string }>;
   isMerged: boolean | null;
   readmeComponent?: { id: BitId; head?: string };
   log?: Log;

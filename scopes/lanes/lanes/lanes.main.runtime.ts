@@ -131,9 +131,23 @@ export class LanesMain {
     return this.getCurrentLaneId()?.name || null;
   }
 
+  getCurrentLaneNameOrAlias(): string | null {
+    const currentLaneId = this.getCurrentLaneId();
+    if (!currentLaneId) return null;
+    const trackingData = this.scope.legacyScope.lanes.getLocalTrackedLaneByRemoteName(
+      currentLaneId.name,
+      currentLaneId.scope
+    );
+    return trackingData || currentLaneId.name;
+  }
+
   getCurrentLaneId(): LaneId | null {
     if (!this.workspace) return null;
     return this.workspace.consumer.getCurrentLaneId();
+  }
+
+  getDefaultLaneId(): LaneId {
+    return LaneId.from(DEFAULT_LANE, this.scope.name);
   }
 
   setCurrentLane(laneId: LaneId, alias?: string, exported?: boolean) {
@@ -537,6 +551,7 @@ export class LanesMain {
     return {
       name: DEFAULT_LANE,
       remote: null,
+      id: this.getDefaultLaneId(),
       components: bitIds.map((bitId) => ({ id: bitId, head: bitId.version as string })),
       isMerged: null,
     };
