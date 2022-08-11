@@ -156,6 +156,8 @@ export type ExtensionsOrigin =
   | 'BitmapFile'
   | 'ModelSpecific'
   | 'ModelNonSpecific'
+  | 'UnmergedSpecific'
+  | 'UnmergedNonSpecific'
   | 'WorkspaceVariants'
   | 'ComponentJsonFile'
   | 'WorkspaceDefault'
@@ -1050,6 +1052,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
    * defaults extensions from workspace config
    * extensions from the model.
    */
+  // eslint-disable-next-line complexity
   async componentExtensions(
     componentId: ComponentID,
     componentFromScope?: Component,
@@ -1066,6 +1069,23 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
 
     const bitMapEntry = this.consumer.bitMap.getComponentIfExist(componentId._legacy);
     const bitMapExtensions = bitMapEntry?.config;
+
+    const unmergedHead = this.getUnmergedHead(componentId);
+    let unmergedExtensions: ExtensionDataList | undefined;
+    let unmergedExtensionsSpecific: ExtensionDataList | undefined;
+    let unmergedExtensionsNonSpecific: ExtensionDataList | undefined;
+    if (unmergedHead) {
+      const versionInstance = await this.scope.legacyScope.getVersionInstance(
+        componentId._legacy.changeVersion(unmergedHead.toString())
+      );
+      unmergedExtensions = versionInstance.extensions;
+      const [specific, nonSpecific] = partition(
+        unmergedExtensions,
+        (entry) => entry.config[AspectSpecificField] === true
+      );
+      unmergedExtensionsSpecific = new ExtensionDataList(...specific);
+      unmergedExtensionsNonSpecific = new ExtensionDataList(...nonSpecific);
+    }
 
     const scopeExtensions = componentFromScope?.config?.extensions || new ExtensionDataList();
     const [specific, nonSpecific] = partition(scopeExtensions, (entry) => entry.config[AspectSpecificField] === true);
@@ -1143,6 +1163,9 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
       setDataListAsSpecific(configFileExtensions);
       await addAndLoadExtensions(configFileExtensions, 'ComponentJsonFile');
     }
+    if (unmergedExtensionsSpecific && !excludeOrigins.includes('UnmergedSpecific')) {
+      await addAndLoadExtensions(ExtensionDataList.fromArray(unmergedExtensionsSpecific), 'UnmergedSpecific');
+    }
     if (!excludeOrigins.includes('ModelSpecific')) {
       await addAndLoadExtensions(ExtensionDataList.fromArray(scopeExtensionsSpecific), 'ModelSpecific');
     }
@@ -1162,6 +1185,14 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     ) {
       await addAndLoadExtensions(wsDefaultExtensions, 'WorkspaceDefault');
     }
+    if (
+      unmergedExtensionsNonSpecific &&
+      mergeFromScope &&
+      continuePropagating &&
+      !excludeOrigins.includes('UnmergedNonSpecific')
+    ) {
+      await addAndLoadExtensions(unmergedExtensionsNonSpecific, 'UnmergedNonSpecific');
+    }
     if (mergeFromScope && continuePropagating && !excludeOrigins.includes('ModelNonSpecific')) {
       await addAndLoadExtensions(scopeExtensionsNonSpecific, 'ModelNonSpecific');
     }
@@ -1176,6 +1207,11 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
       extensions,
       beforeMerge: extensionsToMerge,
     };
+  }
+
+  private getUnmergedHead(componentId: ComponentID) {
+    const unmerged = this.scope.legacyScope.objects.unmergedComponents.getEntry(componentId._legacy.name);
+    return unmerged?.head;
   }
 
   private async warnAboutMisconfiguredEnv(componentId: ComponentID, extensionDataList: ExtensionDataList) {

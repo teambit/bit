@@ -68,9 +68,10 @@ export default class DuplicateDependencies implements Insight {
     return formatted;
   }
 
-  private getDependents(
-    priorVersions: VersionSubgraph[]
-  ): { totalOutdatedDependents: number; dependentsByVersion: VersionWithDependents[] } {
+  private getDependents(priorVersions: VersionSubgraph[]): {
+    totalOutdatedDependents: number;
+    dependentsByVersion: VersionWithDependents[];
+  } {
     let totalOutdatedDependents = 0;
     const dependentsByVersion: VersionWithDependents[] = [];
     priorVersions.forEach((pVersion: VersionSubgraph) => {
@@ -94,7 +95,12 @@ export default class DuplicateDependencies implements Insight {
   }
 
   revreseCompareVersions(v1: VersionWithDependents, v2: VersionWithDependents) {
-    return rcompare(v1.version, v2.version);
+    try {
+      return rcompare(v1.version, v2.version);
+    } catch (err) {
+      // in case one of them is a snap
+      return 0;
+    }
   }
 
   private stringifyDependents(dependents: Dependent[]): string {
