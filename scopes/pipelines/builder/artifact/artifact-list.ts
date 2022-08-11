@@ -36,7 +36,7 @@ export class ArtifactList<T extends Artifact> extends Array<T> {
         cond = cond && artifact.task.aspectId === aspectName;
       }
       if (name) {
-        cond = cond && artifact.name === name;
+        cond = cond && artifact.task.name === name;
       }
       return cond;
     });
