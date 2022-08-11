@@ -73,16 +73,11 @@ export class ArtifactExtractor {
     }
     // @todo: optimize this to first import all missing hashes.
     await pMapSeries(artifactListPerId, async ({ id, artifacts }) => {
-      const vinyls = await Promise.all(
-        artifacts.map((artifactObject) =>
-          artifactObject.files.getVinylsAndImportIfMissing(id._legacy, this.scope.legacyScope)
-        )
-      );
-      const flattenedVinyls = vinyls.flat();
+      const vinyls = await artifacts.getVinylsAndImportIfMissing(id._legacy, this.scope.legacyScope);
       // make sure the component-dir is just one dir. without this, every slash in the component-id will create a new dir.
       const idAsFilename = filenamify(id.toStringWithoutVersion(), { replacement: '_' });
       const compPath = path.join(outDir, idAsFilename);
-      await Promise.all(flattenedVinyls.map((vinyl) => fs.outputFile(path.join(compPath, vinyl.path), vinyl.contents)));
+      await Promise.all(vinyls.map((vinyl) => fs.outputFile(path.join(compPath, vinyl.path), vinyl.contents)));
     });
   }
 
@@ -105,20 +100,24 @@ export class ArtifactExtractor {
 
   private filterByOptions(artifactListPerId: ArtifactListPerId[]) {
     const { aspect, task, files } = this.options;
+    let filteredArtifacts: Artifact[] = [];
+
     artifactListPerId.forEach((item) => {
-      item.artifacts = item.artifacts.filter((artifact) => {
+      filteredArtifacts = item.artifacts.filter((artifact) => {
         if (aspect && aspect !== artifact.task.aspectId) return false;
         if (task && task !== artifact.task.name) return false;
         return true;
       });
       if (files) {
-        item.artifacts.map((artifact) => {
-          const refs = artifact.files.refs.filter((ref) => minimatch(ref.relativePath, files));
-          return new Artifact(artifact.def, new ArtifactFiles([], [], refs), artifact.task);
-        });
-        // remove artifacts with no files
-        item.artifacts = item.artifacts.filter((artifact) => !artifact.isEmpty());
+        filteredArtifacts = item.artifacts
+          .map((artifact) => {
+            const refs = artifact.files.refs.filter((ref) => minimatch(ref.relativePath, files));
+            return new Artifact(artifact.def, new ArtifactFiles([], [], refs), artifact.task);
+          })
+          // remove artifacts with no files
+          .filter((artifact) => !artifact.isEmpty());
       }
+      item.artifacts = ArtifactList.fromArray(filteredArtifacts);
     });
   }
 }

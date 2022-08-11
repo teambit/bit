@@ -35,9 +35,9 @@ export class BuildPipelineResultList {
       const artifacts: Artifact[] = [];
       artifactListsMaps.forEach((artifactListMap) => {
         const artifactList = artifactListMap.getValueByComponentId(component.id);
-        if (artifactList) artifacts.push(...artifactList.toArray());
+        if (artifactList) artifacts.push(...artifactList);
       });
-      return new ArtifactList(artifacts);
+      return ArtifactList.fromArray(artifacts);
     });
   }
 

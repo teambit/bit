@@ -60,7 +60,7 @@ export class ArtifactFactory {
       const id = component.id.toString();
       const artifacts = artifactMap.filter(([targetId]) => targetId === id).map(([, artifact]) => artifact);
 
-      return new ArtifactList(artifacts);
+      return ArtifactList.fromArray(artifacts);
     });
   }
 

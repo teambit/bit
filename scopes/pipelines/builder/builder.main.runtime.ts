@@ -1,5 +1,6 @@
-import { flatten } from 'lodash';
+import R from 'ramda';
 import { ArtifactVinyl } from '@teambit/legacy/dist/consumer/component/sources/artifact';
+import { ArtifactFiles } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
 import { AspectLoaderAspect, AspectLoaderMain } from '@teambit/aspect-loader';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { Component, ComponentMap, IComponent, ComponentAspect, ComponentMain, ComponentID } from '@teambit/component';
@@ -35,7 +36,7 @@ export type TaskSlot = SlotRegistry<BuildTask[]>;
 
 export type BuilderData = {
   pipeline: PipelineReport[];
-  artifacts: Artifact[];
+  artifacts: ArtifactList<Artifact>;
   aspectsData: AspectData[];
   bitVersion?: string;
 };
@@ -81,7 +82,7 @@ export class BuilderMain {
       const aspectsData = buildPipelineResultList.getDataOfComponent(component.id);
       const pipelineReport = buildPipelineResultList.getPipelineReportOfComponent(component.id);
       const artifactsData = buildPipelineResultList.getArtifactsDataOfComponent(component.id);
-      const artifacts = ArtifactList.fromArtifactObjects(artifactsData || []).artifacts;
+      const artifacts = ArtifactList.fromArtifactObjects(artifactsData || []);
       return { pipeline: pipelineReport, artifacts, aspectsData, bitVersion: getHarmonyVersion(true) };
     });
   }
@@ -132,28 +133,30 @@ export class BuilderMain {
   }
 
   // TODO: merge with getArtifactsVinylByExtensionAndName by getting aspect name and name as object with optional props
-  async getArtifactsVinylByExtension(component: Component, aspectName: string): Promise<ArtifactVinyl[]> {
-    const artifactsObjects = this.getArtifactsByExtension(component, aspectName);
-    const vinyls = await Promise.all(
-      (artifactsObjects || []).map(async (artifactObject) =>
-        artifactObject.files.getVinylsAndImportIfMissing(component.id._legacy, this.scope.legacyScope)
-      )
-    );
-    return flatten(vinyls);
+  async getArtifactsVinylByAspect(component: Component, aspectName: string): Promise<ArtifactVinyl[]> {
+    const artifacts = this.getArtifactsByAspect(component, aspectName);
+    const vinyls = await artifacts.getVinylsAndImportIfMissing(component.id._legacy, this.scope.legacyScope);
+    return vinyls;
   }
 
-  async getArtifactsVinylByExtensionAndName(
+  async getArtifactsVinylByAspectAndName(
     component: Component,
     aspectName: string,
     name: string
   ): Promise<ArtifactVinyl[]> {
-    const artifacts = this.getArtifactsByExtensionAndName(component, aspectName, name);
-    const vinyls = await Promise.all(
-      (artifacts || []).map(async (artifact) =>
-        artifact.files.getVinylsAndImportIfMissing(component.id._legacy, this.scope.legacyScope)
-      )
-    );
-    return flatten(vinyls);
+    const artifacts = this.getArtifactsByAspectAndName(component, aspectName, name);
+    const vinyls = await artifacts.getVinylsAndImportIfMissing(component.id._legacy, this.scope.legacyScope);
+    return vinyls;
+  }
+
+  async getArtifactsVinylByAspectAndTaskName(
+    component: Component,
+    aspectName: string,
+    name: string
+  ): Promise<ArtifactVinyl[]> {
+    const artifacts = this.getArtifactsbyAspectAndTaskName(component, aspectName, name);
+    const vinyls = await artifacts.getVinylsAndImportIfMissing(component.id._legacy, this.scope.legacyScope);
+    return vinyls;
   }
 
   getArtifactsByName(component: Component, name: string): ArtifactList<Artifact> {
@@ -161,13 +164,18 @@ export class BuilderMain {
     return artifacts;
   }
 
-  getArtifactsByExtension(component: Component, aspectName: string): ArtifactList<Artifact> {
+  getArtifactsByAspect(component: Component, aspectName: string): ArtifactList<Artifact> {
     const artifacts = this.getArtifacts(component).byAspectNameAndName(aspectName);
     return artifacts;
   }
 
-  getArtifactsByExtensionAndName(component: Component, aspectName: string, name: string): ArtifactList<Artifact> {
+  getArtifactsByAspectAndName(component: Component, aspectName: string, name: string): ArtifactList<Artifact> {
     const artifacts = this.getArtifacts(component).byAspectNameAndName(aspectName, name);
+    return artifacts;
+  }
+
+  getArtifactsbyAspectAndTaskName(component: Component, aspectName: string, taskName: string): ArtifactList<Artifact> {
+    const artifacts = this.getArtifacts(component).byAspectNameAndTaskName(aspectName, taskName);
     return artifacts;
   }
 
@@ -178,19 +186,28 @@ export class BuilderMain {
   }
 
   getArtifacts(component: Component): ArtifactList<Artifact> {
-    const artifacts = new ArtifactList(this.getBuilderData(component)?.artifacts || []);
+    const artifacts = this.getBuilderData(component)?.artifacts || ArtifactList.fromArray([]);
     return artifacts;
   }
 
   getBuilderData(component: IComponent): BuilderData | undefined {
-    const data = component.get(BuilderAspect.id)?.data as BuilderData | undefined;
+    const data = component.get(BuilderAspect.id)?.data;
     if (!data) return undefined;
-    data.artifacts?.forEach((artifact) => {
+    const clonedData = R.clone(data) as BuilderData;
+    let artifactFiles: ArtifactFiles;
+    clonedData.artifacts?.forEach((artifact) => {
+      if (!(artifact.files instanceof ArtifactFiles)) {
+        artifactFiles = ArtifactFiles.fromObject(artifact.files);
+      } else {
+        artifactFiles = artifact.files;
+      }
       if (!(artifact instanceof Artifact)) {
-        artifact = Artifact.fromArtifactObject(artifact);
+        Object.assign(artifact, { files: artifactFiles });
+        Object.assign(artifact, Artifact.fromArtifactObject(artifact));
       }
     });
-    return data;
+    clonedData.artifacts = ArtifactList.fromArray(clonedData.artifacts);
+    return clonedData;
   }
 
   /**

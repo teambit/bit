@@ -39,14 +39,14 @@ export class ElementsMain {
   }
 
   async getElements(component: Component): Promise<ElementsArtifact | undefined> {
-    const artifacts = await this.builder.getArtifactsVinylByExtension(component, ElementsAspect.id);
+    const artifacts = await this.builder.getArtifactsVinylByAspect(component, ElementsAspect.id);
     if (!artifacts.length) return undefined;
 
     return new ElementsArtifact(artifacts);
   }
 
   isElementsExist(component: Component): boolean {
-    const artifacts = this.builder.getArtifactsByExtension(component, ElementsAspect.id);
+    const artifacts = this.builder.getArtifactsByAspect(component, ElementsAspect.id);
     return !artifacts.isEmpty();
   }
 

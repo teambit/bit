@@ -61,14 +61,12 @@ export function builderSchema(builder: BuilderMain) {
         pipelineReport: async (component: Component, { taskId }: { taskId?: string }) => {
           const builderData = builder.getBuilderData(component);
           const pipeline = builderData?.pipeline || [];
-          const artifacts = taskId
-            ? builder.getArtifactsByExtension(component, taskId).toArray()
-            : builderData?.artifacts || [];
+          const artifacts = taskId ? builder.getArtifactsByAspect(component, taskId) : builder.getArtifacts(component);
 
           const artifactsWithVinyl = await Promise.all(
             artifacts.map(async (artifact) => {
               const id = artifact.task.aspectId;
-              const artifactFiles = (await builder.getArtifactsVinylByExtension(component, id)).map((vinyl) => {
+              const artifactFiles = (await builder.getArtifactsVinylByAspect(component, id)).map((vinyl) => {
                 const { basename, path, contents } = vinyl || {};
                 const isBinary = path && isBinaryPath(path);
                 const content = !isBinary ? contents?.toString('utf-8') : undefined;
@@ -77,14 +75,14 @@ export function builderSchema(builder: BuilderMain) {
                 );
                 return { id: path, name: basename, path, content, downloadUrl };
               });
-              const artifactObj = { ...artifact.toObject(), files: artifactFiles };
+              const artifactObj = { ...artifact, files: artifactFiles };
               return artifactObj;
             })
           );
 
           const result = pipeline.map((task) => ({
             ...task,
-            artifact: artifactsWithVinyl.find((data) => data.task.id === task.taskId),
+            artifact: artifactsWithVinyl.find((data) => data.task.aspectId === task.taskId),
           }));
 
           return result;

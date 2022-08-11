@@ -1,7 +1,10 @@
 import { Component } from '@teambit/component';
 import type { ArtifactObject } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
-import { Artifact } from './artifact';
+import { BitId } from '@teambit/legacy/dist/bit-id';
+import { Scope } from '@teambit/legacy/dist/scope';
+import { ArtifactVinyl } from '@teambit/legacy/dist/consumer/component/sources/artifact';
 import { FsArtifact } from './fs-artifact';
+import { Artifact } from './artifact';
 import {
   ArtifactStorageResolver,
   FileStorageResolver,
@@ -11,24 +14,9 @@ import {
 
 export type ResolverMap<T extends Artifact> = { [key: string]: T[] };
 
-export class ArtifactList<T extends Artifact> {
-  constructor(readonly artifacts: T[]) {}
-
-  map(fn: (file: Artifact) => any): Array<any> {
-    return this.artifacts.map((artifact) => fn(artifact));
-  }
-
-  forEach(fn: (file: T) => void) {
-    return this.artifacts.forEach((artifact) => fn(artifact));
-  }
-
-  filter(fn: (file: T) => boolean): ArtifactList<T> {
-    const filtered = this.artifacts.filter((artifact) => fn(artifact));
-    return new ArtifactList(filtered);
-  }
-
+export class ArtifactList<T extends Artifact> extends Array<T> {
   byAspectNameAndName(aspectName?: string, name?: string): ArtifactList<T> {
-    const filtered = this.artifacts.filter((artifact) => {
+    const filtered = this.filter((artifact) => {
       let cond = true;
       if (aspectName) {
         cond = cond && artifact.task.aspectId === aspectName;
@@ -38,17 +26,25 @@ export class ArtifactList<T extends Artifact> {
       }
       return cond;
     });
-    return new ArtifactList(filtered);
+    return ArtifactList.fromArray(filtered);
+  }
+
+  byAspectNameAndTaskName(aspectName?: string, name?: string): ArtifactList<T> {
+    const filtered = this.filter((artifact) => {
+      let cond = true;
+      if (aspectName) {
+        cond = cond && artifact.task.aspectId === aspectName;
+      }
+      if (name) {
+        cond = cond && artifact.name === name;
+      }
+      return cond;
+    });
+    return ArtifactList.fromArray(filtered);
   }
 
   isEmpty(): boolean {
-    return !this.artifacts.length;
-  }
-  /**
-   * return an array of artifact objects.
-   */
-  toArray() {
-    return this.artifacts;
+    return this.every((artifact) => artifact.files.isEmpty());
   }
 
   /**
@@ -56,7 +52,7 @@ export class ArtifactList<T extends Artifact> {
    */
   groupByResolver(): ResolverMap<T> {
     const resolverMap: ResolverMap<T> = {};
-    this.artifacts.forEach((artifact) => {
+    this.forEach((artifact) => {
       const storageResolver = artifact.storageResolver;
       const resolverArray = resolverMap[storageResolver.name];
       if (!resolverArray) {
@@ -72,15 +68,21 @@ export class ArtifactList<T extends Artifact> {
   }
 
   toObject(): ArtifactObject[] {
-    return this.artifacts.map((artifact) => artifact.toObject());
+    return this.map((artifact) => artifact.toObject());
   }
 
   groupByTaskId() {
-    return this.artifacts.reduce((acc: { [key: string]: T }, artifact) => {
+    return this.reduce((acc: { [key: string]: T }, artifact) => {
       const taskId = artifact.task.aspectId;
       acc[taskId] = artifact;
       return acc;
     }, {});
+  }
+
+  async getVinylsAndImportIfMissing(id: BitId, scope: Scope): Promise<ArtifactVinyl[]> {
+    if (this.isEmpty()) return [];
+    const vinyls = await Promise.all(this.map((artifact) => artifact.files.getVinylsAndImportIfMissing(id, scope)));
+    return vinyls.flat();
   }
 
   /**
@@ -92,8 +94,8 @@ export class ArtifactList<T extends Artifact> {
       const artifacts = byResolvers[key];
       if (!artifacts.length) return;
       const storageResolver = artifacts[0].storageResolver;
-      const artifactList = new ArtifactList(artifacts);
-      const artifactPromises = artifactList.artifacts.map(async (artifact) => {
+      const artifactList = ArtifactList.fromArray(artifacts);
+      const artifactPromises = artifactList.map(async (artifact) => {
         return this.storeArtifact(storageResolver, artifact, component);
       });
       await Promise.all(artifactPromises);
@@ -154,6 +156,10 @@ export class ArtifactList<T extends Artifact> {
 
   static fromArtifactObjects(artifactObjects: ArtifactObject[]): ArtifactList<Artifact> {
     const artifacts = artifactObjects.map((object) => Artifact.fromArtifactObject(object));
-    return new ArtifactList(artifacts);
+    return ArtifactList.fromArray(artifacts);
+  }
+
+  static fromArray<T extends Artifact>(artifacts: T[]) {
+    return new ArtifactList(...artifacts);
   }
 }

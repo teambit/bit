@@ -151,7 +151,7 @@ export class PreviewMain {
   }
 
   async getPreview(component: Component): Promise<PreviewArtifact | undefined> {
-    const artifacts = await this.builder.getArtifactsVinylByExtensionAndName(
+    const artifacts = await this.builder.getArtifactsVinylByAspectAndTaskName(
       component,
       PreviewAspect.id,
       PREVIEW_TASK_NAME
@@ -182,7 +182,7 @@ export class PreviewMain {
    * @returns
    */
   async isBundledWithEnv(component: Component): Promise<boolean> {
-    const artifacts = await this.builder.getArtifactsVinylByExtensionAndName(
+    const artifacts = await this.builder.getArtifactsVinylByAspectAndName(
       component,
       PreviewAspect.id,
       COMPONENT_STRATEGY_ARTIFACT_NAME
@@ -202,7 +202,7 @@ export class PreviewMain {
     // these envs had header in their docs
     const ENV_WITH_LEGACY_DOCS = ['react', 'env', 'aspect', 'lit', 'html', 'node', 'mdx', 'react-native', 'readme'];
 
-    const artifacts = await this.builder.getArtifactsVinylByExtensionAndName(
+    const artifacts = await this.builder.getArtifactsVinylByAspectAndName(
       component,
       PreviewAspect.id,
       ENV_STRATEGY_ARTIFACT_NAME
@@ -221,7 +221,7 @@ export class PreviewMain {
    * @returns
    */
   async getEnvTemplate(component: Component): Promise<PreviewArtifact | undefined> {
-    const artifacts = await this.builder.getArtifactsVinylByExtensionAndName(
+    const artifacts = await this.builder.getArtifactsVinylByAspectAndName(
       component,
       PreviewAspect.id,
       GENERATE_ENV_TEMPLATE_TASK_NAME

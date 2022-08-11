@@ -27,7 +27,7 @@ export class BuilderRoute implements Route {
       // remove trailing slash
       const aspectId = aspectIdStr.replace(/\/$/, '');
       const artifacts = aspectId
-        ? this.builder.getArtifactsByExtension(component, aspectId)
+        ? this.builder.getArtifactsByAspect(component, aspectId)
         : this.builder.getArtifacts(component);
       if (!artifacts)
         return res
