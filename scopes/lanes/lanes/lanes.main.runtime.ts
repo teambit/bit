@@ -233,6 +233,7 @@ export class LanesMain {
     }
     const remoteScopeBefore = lane.scope;
     lane.scope = remoteScope;
+    const newLaneId = LaneId.from(laneId.name, remoteScope);
     const trackData = {
       localLane: laneNameWithoutScope,
       remoteLane: laneId.name,
@@ -240,6 +241,7 @@ export class LanesMain {
     };
     this.scope.legacyScope.lanes.trackLane(trackData);
     await this.scope.legacyScope.lanes.saveLane(lane);
+    this.workspace.consumer.bitMap.setCurrentLane(newLaneId);
     await this.workspace.consumer.onDestroy();
 
     return { remoteScopeBefore };
