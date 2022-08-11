@@ -228,7 +228,7 @@ export default class EnvHelper {
   setCustomEnv(extensionsBaseFolder = 'node-env'): string {
     this.fixtures.copyFixtureExtensions(extensionsBaseFolder);
     this.command.addComponent(extensionsBaseFolder);
-    this.extensions.addExtensionToVariant(extensionsBaseFolder, 'teambit.harmony/aspect');
+    this.extensions.addExtensionToVariant(extensionsBaseFolder, 'teambit.envs/env');
     this.command.link();
     this.command.install();
     this.command.compile();
