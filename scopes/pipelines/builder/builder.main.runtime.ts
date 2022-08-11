@@ -1,4 +1,4 @@
-import R from 'ramda';
+import { cloneDeep } from 'lodash';
 import { ArtifactVinyl } from '@teambit/legacy/dist/consumer/component/sources/artifact';
 import { ArtifactFiles } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
 import { AspectLoaderAspect, AspectLoaderMain } from '@teambit/aspect-loader';
@@ -193,7 +193,7 @@ export class BuilderMain {
   getBuilderData(component: IComponent): BuilderData | undefined {
     const data = component.get(BuilderAspect.id)?.data;
     if (!data) return undefined;
-    const clonedData = R.clone(data) as BuilderData;
+    const clonedData = cloneDeep(data) as BuilderData;
     let artifactFiles: ArtifactFiles;
     clonedData.artifacts?.forEach((artifact) => {
       if (!(artifact.files instanceof ArtifactFiles)) {
