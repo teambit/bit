@@ -14,7 +14,7 @@ default_working_dir: &default_working_dir
   working_directory: ~/bit
 
 orbs:
-  win: circleci/windows@4.1
+  win: circleci/windows@5.0
 
 windows_default_working_dir: &windows_default_working_dir
   working_directory: C:\Users\circleci\project\bit
@@ -936,9 +936,12 @@ jobs:
       PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: true
     steps:
       # - run: choco install nodejs --version 16.15.1
-      - run: cinst nodejs --version 16.16.0
+      # - run: cinst nodejs --version 16.16.0
       # - run: nodejs.install v12.16.0
+      - run: nvm install 16.16.0
+      - run: nvm use 16.16.0
       - run: node -v
+      - run: corepack enable
       - run: 'yarn -v'
       - run:
           name: set bit.dev registry

@@ -65,6 +65,7 @@ export type MergeLaneOptions = {
   squash: boolean;
   pattern?: string;
   includeDeps?: boolean;
+  skipDependencyInstallation?: boolean;
 };
 
 export type CreateLaneOptions = {

@@ -90,7 +90,7 @@ export class DependenciesDebugCmd implements Command {
 }
 
 export class DependenciesSetCmd implements Command {
-  name = 'set <component-pattern> <package>';
+  name = 'set <component-pattern> <package...>';
   arguments = [
     { name: 'component-pattern', description: COMPONENT_PATTERN_HELP },
     { name: 'package', description: 'package name with version, e.g. "lodash@1.0.0"' },
@@ -105,9 +105,15 @@ export class DependenciesSetCmd implements Command {
 
   constructor(private deps: DependenciesMain) {}
 
-  async report([pattern, pkg]: [string, string], setDepsFlags: SetDependenciesFlags) {
-    const results = await this.deps.setDependency(pattern, pkg, setDepsFlags);
-    return chalk.green(`the following component(s) have been successfully updated:\n${results.join('\n')}`);
+  async report([pattern, packages]: [string, string[]], setDepsFlags: SetDependenciesFlags) {
+    const { changedComps, addedPackages } = await this.deps.setDependency(pattern, packages, setDepsFlags);
+
+    return `${chalk.green('successfully updated dependencies')}
+${chalk.bold('changed components')}
+${changedComps.join('\n')}
+
+${chalk.bold('added packages')}
+${JSON.stringify(addedPackages, undefined, 4)}`;
   }
 }
 
