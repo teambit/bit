@@ -13,6 +13,7 @@ export function WorkspaceOverview() {
     <div className={styles.container}>
       <ComponentGrid>
         {components.map((component, index) => {
+          if (component.deprecation?.isDeprecate) return null;
           return <WorkspaceComponentCard key={index} component={component} />;
         })}
       </ComponentGrid>
