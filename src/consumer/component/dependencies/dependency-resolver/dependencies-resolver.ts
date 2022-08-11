@@ -829,6 +829,13 @@ either, use the ignore file syntax or change the require statement to have a mod
 
   processPackages(originFile: PathLinuxRelative, fileType: FileType) {
     const packages = this.tree[originFile].packages;
+    const modelDeps = this.componentFromModel.getAllPackageDependencies();
+    // If a package is not in the policies, then we resolve the package from the model.
+    for (const pkgName of Object.keys(packages)) {
+      if (!this.isPkgInWorkspacePolicies(pkgName) && modelDeps[pkgName]) {
+        packages[pkgName] = modelDeps[pkgName];
+      }
+    }
     if (!packages || R.isEmpty(packages)) return;
     if (fileType.isTestFile) {
       Object.assign(this.allPackagesDependencies.devPackageDependencies, packages);
