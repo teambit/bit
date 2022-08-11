@@ -2,8 +2,8 @@ import { Request, Response, Route } from '@teambit/express';
 import { Component } from '@teambit/component';
 import archiver from 'archiver';
 import { Logger } from '@teambit/logger';
+import { ScopeMain } from '@teambit/scope';
 import mime from 'mime';
-import { Scope } from '@teambit/legacy/dist/scope';
 import { BuilderMain } from './builder.main.runtime';
 
 export const routePath = `builder`;
@@ -14,7 +14,7 @@ export type BuilderUrlParams = {
 };
 export const defaultExtension = '.tgz';
 export class BuilderRoute implements Route {
-  constructor(private builder: BuilderMain, private scope: Scope, private logger: Logger) {}
+  constructor(private builder: BuilderMain, private scope: ScopeMain, private logger: Logger) {}
   route = `/${routePath}/*`;
   method = 'get';
 
@@ -35,7 +35,7 @@ export class BuilderRoute implements Route {
           .jsonp({ error: `no artifacts found for component ${component.id} by aspect ${aspectId}` });
       const extensionsWithArtifacts = await Promise.all(
         artifacts.map(async (artifact) => {
-          const files = await artifact.files.getVinylsAndImportIfMissing(component.id._legacy, this.scope);
+          const files = await artifact.files.getVinylsAndImportIfMissing(component.id._legacy, this.scope.legacyScope);
           if (!filePath) return { extensionId: artifact.task.aspectId, files };
           return { extensionId: artifact.task.aspectId, files: files.filter((file) => file.path === filePath) };
         })

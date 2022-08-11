@@ -376,9 +376,7 @@ export class BuilderMain {
       tagTaskSlot,
       snapTaskSlot
     );
-    const legacyScope = (scope && scope.legacyScope) || (workspace && workspace.scope.legacyScope);
-
-    component.registerRoute([new BuilderRoute(builder, legacyScope, logger)]);
+    component.registerRoute([new BuilderRoute(builder, scope, logger)]);
     graphql.register(builderSchema(builder));
     generator.registerComponentTemplate([buildTaskTemplate]);
     const func = builder.tagListener.bind(builder);
