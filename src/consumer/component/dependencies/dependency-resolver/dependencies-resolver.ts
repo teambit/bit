@@ -33,9 +33,9 @@ export type AllDependencies = {
 };
 
 export type AllPackagesDependencies = {
-  packageDependencies: Record<string, any> | null | undefined;
-  devPackageDependencies: Record<string, any> | null | undefined;
-  peerPackageDependencies: Record<string, any> | null | undefined;
+  packageDependencies: Record<string, string> | null | undefined;
+  devPackageDependencies: Record<string, string> | null | undefined;
+  peerPackageDependencies: Record<string, string> | null | undefined;
 };
 
 export type FileType = {
@@ -829,11 +829,13 @@ either, use the ignore file syntax or change the require statement to have a mod
 
   processPackages(originFile: PathLinuxRelative, fileType: FileType) {
     const packages = this.tree[originFile].packages;
-    const modelDeps = this.componentFromModel.getAllPackageDependencies();
-    // If a package is not in the policies, then we resolve the package from the model.
-    for (const pkgName of Object.keys(packages)) {
-      if (!this.isPkgInWorkspacePolicies(pkgName) && modelDeps[pkgName]) {
-        packages[pkgName] = modelDeps[pkgName];
+    if (this.componentFromModel) {
+      const modelDeps = this.componentFromModel.getAllPackageDependencies();
+      // If a package is not in the policies, then we resolve the package from the model.
+      for (const pkgName of Object.keys(packages)) {
+        if (!this.isPkgInWorkspacePolicies(pkgName) && modelDeps[pkgName]) {
+          packages[pkgName] = modelDeps[pkgName];
+        }
       }
     }
     if (!packages || R.isEmpty(packages)) return;
