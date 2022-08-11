@@ -13,7 +13,6 @@ import { IsolateComponentsOptions, IsolatorAspect, IsolatorMain } from '@teambit
 import { OnTagOpts } from '@teambit/legacy/dist/scope/scope';
 import { getHarmonyVersion } from '@teambit/legacy/dist/bootstrap';
 import findDuplications from '@teambit/legacy/dist/utils/array/find-duplications';
-import { ArtifactFiles } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
 import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
 import { Artifact, ArtifactList, FsArtifact } from './artifact';
 import { ArtifactFactory } from './artifact/artifact-factory'; // it gets undefined when importing it from './artifact'
@@ -36,7 +35,7 @@ export type TaskSlot = SlotRegistry<BuildTask[]>;
 
 export type BuilderData = {
   pipeline: PipelineReport[];
-  artifacts: ArtifactList<Artifact>;
+  artifacts: Artifact[];
   aspectsData: AspectData[];
   bitVersion?: string;
 };
@@ -82,7 +81,7 @@ export class BuilderMain {
       const aspectsData = buildPipelineResultList.getDataOfComponent(component.id);
       const pipelineReport = buildPipelineResultList.getPipelineReportOfComponent(component.id);
       const artifactsData = buildPipelineResultList.getArtifactsDataOfComponent(component.id);
-      const artifacts = ArtifactList.fromArtifactObjects(artifactsData || []);
+      const artifacts = ArtifactList.fromArtifactObjects(artifactsData || []).artifacts;
       return { pipeline: pipelineReport, artifacts, aspectsData, bitVersion: getHarmonyVersion(true) };
     });
   }
@@ -179,28 +178,19 @@ export class BuilderMain {
   }
 
   getArtifacts(component: Component): ArtifactList<Artifact> {
-    const artifacts = this.getBuilderData(component)?.artifacts || new ArtifactList([]);
+    const artifacts = new ArtifactList(this.getBuilderData(component)?.artifacts || []);
     return artifacts;
   }
 
   getBuilderData(component: IComponent): BuilderData | undefined {
-    const data = component.get(BuilderAspect.id)?.data;
+    const data = component.get(BuilderAspect.id)?.data as BuilderData | undefined;
     if (!data) return undefined;
-    const artifacts =
-      data?.artifacts.map((artifactObj) => {
-        if (artifactObj instanceof Artifact) return artifactObj;
-
-        const artifact = Artifact.fromArtifactObject({
-          ...artifactObj,
-          files:
-            artifactObj.files instanceof ArtifactFiles
-              ? artifactObj.files
-              : ArtifactFiles.fromObject(artifactObj.files),
-        });
-        return artifact;
-      }) || [];
-    data.artifacts = new ArtifactList(artifacts);
-    return data as BuilderData;
+    data.artifacts?.forEach((artifact) => {
+      if (!(artifact instanceof Artifact)) {
+        artifact = Artifact.fromArtifactObject(artifact);
+      }
+    });
+    return data;
   }
 
   /**

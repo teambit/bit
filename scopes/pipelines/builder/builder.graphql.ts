@@ -63,7 +63,7 @@ export function builderSchema(builder: BuilderMain) {
           const pipeline = builderData?.pipeline || [];
           const artifacts = taskId
             ? builder.getArtifactsByExtension(component, taskId).toArray()
-            : builderData?.artifacts.toArray() || [];
+            : builderData?.artifacts || [];
 
           const artifactsWithVinyl = await Promise.all(
             artifacts.map(async (artifact) => {
