@@ -13,9 +13,7 @@ export class FsArtifact extends Artifact {
     readonly files: ArtifactFiles,
 
     readonly task: TaskDescriptor,
-    /**
-     * join this with `this.paths` to get the absolute paths
-     */
+
     readonly rootDir: string
   ) {
     super(def, files, task);
