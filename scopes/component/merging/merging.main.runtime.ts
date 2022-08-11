@@ -16,11 +16,8 @@ import {
 import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
 import SnappingAspect, { SnappingMain } from '@teambit/snapping';
 import hasWildcard from '@teambit/legacy/dist/utils/string/has-wildcard';
-import fs from 'fs-extra';
 import mapSeries from 'p-map-series';
-import path from 'path';
 import { BitId, BitIds } from '@teambit/legacy/dist/bit-id';
-import { COMPONENT_ORIGINS } from '@teambit/legacy/dist/constants';
 import { BitError } from '@teambit/bit-error';
 import GeneralError from '@teambit/legacy/dist/error/general-error';
 import { LaneId } from '@teambit/lane-id';
