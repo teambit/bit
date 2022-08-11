@@ -797,13 +797,13 @@ describe('bit lane command', function () {
         expect(bar2.scope).to.equal(anotherRemote);
       });
     });
-    describe('when artifacts from older versions are missing locally', () => {
+    describe.only('when artifacts from older versions are missing locally', () => {
       before(() => {
         helper.scopeHelper.getClonedLocalScope(localScope);
         helper.scopeHelper.getClonedRemoteScope(remoteScope);
         // delete an artifact
         const artifacts = helper.command.getArtifacts(`${anotherRemote}/bar2@0.0.1`);
-        const pkgArtifacts = artifacts.find((a) => a.generatedBy === 'teambit.pkg/pkg');
+        const pkgArtifacts = artifacts.find((a) => a.def.generatedBy === 'teambit.pkg/pkg');
         const artifactFileHash = pkgArtifacts.files[0].file;
         const hashPath = helper.general.getHashPathOfObject(artifactFileHash);
         helper.fs.deleteObject(hashPath);
