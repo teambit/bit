@@ -81,6 +81,7 @@ export class TesterMain {
   ];
 
   constructor(
+    private patterns: string[],
     /**
      * graphql extension.
      */
@@ -174,6 +175,26 @@ export class TesterMain {
   }
 
   /**
+   * Get the tests patterns from the config. (used as default patterns in case the env does not provide them via getTestsDevPatterns)
+   * @returns
+   */
+  getPatterns() {
+    return this.patterns;
+  }
+
+  getComponentDevPatterns(component: Component) {
+    const env = this.envs.calculateEnv(component).env;
+    const componentPatterns: string[] = env.getTestsDevPatterns
+      ? env.getTestsDevPatterns(component)
+      : this.getPatterns();
+    return componentPatterns;
+  }
+
+  getDevPatternToRegister() {
+    return this.getComponentDevPatterns.bind(this);
+  }
+
+  /**
    * get all test files of a component.
    */
   getTestFiles(component: Component) {
@@ -215,10 +236,10 @@ export class TesterMain {
     config: TesterExtensionConfig
   ) {
     const logger = loggerAspect.createLogger(TesterAspect.id);
-    const testerService = new TesterService(workspace, config.patterns, logger, graphql.pubsub, devFiles);
+    const testerService = new TesterService(workspace, logger, graphql.pubsub, devFiles);
     envs.registerService(testerService);
-    devFiles.registerDevPattern(config.patterns);
     const tester = new TesterMain(
+      config.patterns,
       graphql,
       envs,
       workspace,
@@ -227,6 +248,7 @@ export class TesterMain {
       devFiles,
       builder
     );
+    devFiles.registerDevPattern(tester.getDevPatternToRegister());
 
     if (workspace) {
       ui.registerOnStart(async () => {

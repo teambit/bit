@@ -46,10 +46,6 @@ export class TesterService implements EnvService<Tests, TesterDescriptor> {
 
   constructor(
     readonly workspace: Workspace,
-    /**
-     * regex used to identify which files to test.
-     */
-    readonly patterns: string[],
 
     private logger: Logger,
 

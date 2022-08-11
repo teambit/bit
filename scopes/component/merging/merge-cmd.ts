@@ -30,6 +30,7 @@ export class MergeCmd implements Command {
     ['', 'no-snap', 'EXPERIMENTAL. do not auto snap in case the merge completed without conflicts'],
     ['', 'build', 'in case of snap during the merge, run the build-pipeline (similar to bit snap --build)'],
     ['', 'verbose', 'show details of components that were not merged legitimately'],
+    ['', 'skip-dependency-installation', 'do not install packages of the imported components'],
     ['m', 'message <message>', 'EXPERIMENTAL. override the default message for the auto snap'],
   ] as CommandOptions;
   loader = true;
@@ -48,6 +49,7 @@ export class MergeCmd implements Command {
       noSnap = false,
       verbose = false,
       message,
+      skipDependencyInstallation = false,
     }: {
       ours?: boolean;
       theirs?: boolean;
@@ -58,6 +60,7 @@ export class MergeCmd implements Command {
       noSnap?: boolean;
       verbose?: boolean;
       message: string;
+      skipDependencyInstallation?: boolean;
     }
   ) {
     build = isFeatureEnabled(BUILD_ON_CI) ? Boolean(build) : true;
@@ -78,7 +81,8 @@ export class MergeCmd implements Command {
       resolve,
       noSnap,
       message,
-      build
+      build,
+      skipDependencyInstallation
     );
     if (resolvedComponents) {
       const title = 'successfully resolved component(s)\n';
@@ -119,7 +123,7 @@ export function mergeReport({
 
   const getConflictSummary = () => {
     if (!components || !components.length || !leftUnresolvedConflicts) return '';
-    const title = `files with conflicts summary\n`;
+    const title = `\nfiles with conflicts summary\n`;
     const suggestion = `\n\nthe merge process wasn't completed due to the conflicts above. fix them manually and then run "bit install".
 once ready, snap/tag the components to complete the merge.`;
     return chalk.underline(title) + conflictSummaryReport(components) + chalk.yellow(suggestion);
