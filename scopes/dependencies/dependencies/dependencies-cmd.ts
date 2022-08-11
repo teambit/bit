@@ -106,8 +106,14 @@ export class DependenciesSetCmd implements Command {
   constructor(private deps: DependenciesMain) {}
 
   async report([pattern, packages]: [string, string[]], setDepsFlags: SetDependenciesFlags) {
-    const results = await this.deps.setDependency(pattern, packages, setDepsFlags);
-    return chalk.green(`the following component(s) have been successfully updated:\n${results.join('\n')}`);
+    const { changedComps, addedPackages } = await this.deps.setDependency(pattern, packages, setDepsFlags);
+
+    return `${chalk.green('successfully updated dependencies')}
+${chalk.bold('changed components')}
+${changedComps.join('\n')}
+
+${chalk.bold('added packages')}
+${JSON.stringify(addedPackages, undefined, 4)}`;
   }
 }
 
