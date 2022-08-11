@@ -30,9 +30,9 @@ import { Serializable } from './types';
 import { ArtifactsCmd } from './artifact/artifacts.cmd';
 import { buildTaskTemplate } from './templates/build-task';
 import { BuilderRoute } from './builder.route';
-import { FILE_PATH_PARAM_DELIM } from './builder.model';
 
 export type TaskSlot = SlotRegistry<BuildTask[]>;
+export const FILE_PATH_PARAM_DELIM = '~';
 
 export type BuilderData = {
   pipeline: PipelineReport[];

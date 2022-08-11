@@ -5,10 +5,25 @@ import { BuilderMain } from './builder.main.runtime';
 import { PipelineReport } from './build-pipeline-result-list';
 
 type ArtifactGQLFile = {
+  /**
+   * same as the path - used for GQL caching
+   */
   id: string;
+  /**
+   * name of the artifact file
+   */
   name: string;
+  /**
+   * path of the artifact file
+   */
   path: string;
+  /**
+   * artifact file content (only for text files). Use /api/<component-id>/~aspect/builder/<extension-id>/~<path> to fetch binary file data
+   */
   content?: string;
+  /**
+   * REST endpoint to fetch artifact data from. /api/<component-id>/~aspect/builder/<extension-id>/~<pat
+   */
   downloadUrl?: string;
 };
 
@@ -35,10 +50,13 @@ export function builderSchema(builder: BuilderMain) {
       type ArtifactFile {
         # for GQL caching - same as the path
         id: String!
+        # name of the artifact file
         name: String
+        # path of the artifact file
         path: String!
         # artifact file content (only for text files). Use /api/<component-id>/~aspect/builder/<extension-id>/~<path> to fetch binary file data
         content: String
+        # REST endpoint to fetch artifact data from. /api/<component-id>/~aspect/builder/<extension-id>/~<pat
         downloadUrl: String
       }
 
