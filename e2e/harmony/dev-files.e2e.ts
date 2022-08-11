@@ -33,7 +33,7 @@ describe('dev files', function () {
       helper.extensions.addExtensionToVariant('*', envId);
       helper.command.compile();
       showOutput = helper.command.showComponentParsedHarmony(COMP_NAME);
-      devFiles = showOutput.find(item => item.title === 'dev files').json;
+      devFiles = showOutput.find((item) => item.title === 'dev files').json;
     });
     it('should show registered custom dev file as dev file', () => {
       const fullEnvName = `${helper.scopes.remote}/${envName}`;
