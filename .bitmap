@@ -1566,6 +1566,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/ui/pipelines/component-pipeline-queries"
     },
+    "ui/pipelines/component-pipeline-utils": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/component/ui/pipelines/component-pipeline-utils"
+    },
     "ui/preview-placeholder": {
         "scope": "teambit.preview",
         "version": "0.0.487",
