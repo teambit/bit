@@ -1,6 +1,6 @@
 import { cloneDeep } from 'lodash';
 import { ArtifactVinyl } from '@teambit/legacy/dist/consumer/component/sources/artifact';
-import { ArtifactFiles } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
+import { ArtifactFiles, ArtifactObject } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
 import { AspectLoaderAspect, AspectLoaderMain } from '@teambit/aspect-loader';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { Component, ComponentMap, IComponent, ComponentAspect, ComponentMain, ComponentID } from '@teambit/component';
@@ -36,9 +36,13 @@ export const FILE_PATH_PARAM_DELIM = '~';
 
 export type BuilderData = {
   pipeline: PipelineReport[];
-  artifacts: ArtifactList<Artifact>;
+  artifacts?: ArtifactObject[];
   aspectsData: AspectData[];
   bitVersion?: string;
+};
+
+export type ExtractedBuilderData = Omit<BuilderData, 'artifacts'> & {
+  artifacts: ArtifactList<Artifact>;
 };
 
 export class BuilderMain {
@@ -81,8 +85,7 @@ export class BuilderMain {
     return ComponentMap.as<BuilderData>(components, (component) => {
       const aspectsData = buildPipelineResultList.getDataOfComponent(component.id);
       const pipelineReport = buildPipelineResultList.getPipelineReportOfComponent(component.id);
-      const artifactsData = buildPipelineResultList.getArtifactsDataOfComponent(component.id);
-      const artifacts = ArtifactList.fromArtifactObjects(artifactsData || []);
+      const artifacts = buildPipelineResultList.getArtifactsDataOfComponent(component.id);
       return { pipeline: pipelineReport, artifacts, aspectsData, bitVersion: getHarmonyVersion(true) };
     });
   }
@@ -190,10 +193,10 @@ export class BuilderMain {
     return artifacts;
   }
 
-  getBuilderData(component: IComponent): BuilderData | undefined {
+  getBuilderData(component: IComponent): ExtractedBuilderData | undefined {
     const data = component.get(BuilderAspect.id)?.data;
     if (!data) return undefined;
-    const clonedData = cloneDeep(data) as BuilderData;
+    const clonedData = cloneDeep(data) as ExtractedBuilderData;
     let artifactFiles: ArtifactFiles;
     clonedData.artifacts?.forEach((artifact) => {
       if (!(artifact.files instanceof ArtifactFiles)) {

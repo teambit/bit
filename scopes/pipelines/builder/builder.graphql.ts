@@ -25,6 +25,10 @@ type ArtifactGQLFile = {
    * REST endpoint to fetch artifact data from. /api/<component-id>/~aspect/builder/<extension-id>/~<pat
    */
   downloadUrl?: string;
+  /**
+   * Remote storage url to resolve artifact file from
+   */
+  externalUrl?: string;
 };
 
 type ArtifactGQLData = { name: string; description?: string; files: ArtifactGQLFile[] };
@@ -58,6 +62,8 @@ export function builderSchema(builder: BuilderMain) {
         content: String
         # REST endpoint to fetch artifact data from. /api/<component-id>/~aspect/builder/<extension-id>/~<pat
         downloadUrl: String
+        # Remote storage url to resolve artifact file from
+        externalUrl: String
       }
 
       type Artifact {
@@ -91,7 +97,8 @@ export function builderSchema(builder: BuilderMain) {
                 const downloadUrl = encodeURI(
                   builder.getDownloadUrlForArtifact(component.id, artifact.task.aspectId, path)
                 );
-                return { id: path, name: basename, path, content, downloadUrl };
+                const externalUrl = vinyl.url;
+                return { id: path, name: basename, path, content, downloadUrl, externalUrl };
               });
               const artifactObj = { ...artifact, files: artifactFiles };
               return artifactObj;
