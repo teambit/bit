@@ -110,7 +110,7 @@ import {
 } from './workspace.provider';
 import { WorkspaceComponentLoader } from './workspace-component/workspace-component-loader';
 import { IncorrectEnvAspect } from './exceptions/incorrect-env-aspect';
-import { GraphFromFsBuilder, ShouldIgnoreFunc } from './build-graph-from-fs';
+import { GraphFromFsBuilder, ShouldLoadFunc } from './build-graph-from-fs';
 import { BitMap } from './bit-map';
 import { WorkspaceAspect } from './workspace.aspect';
 
@@ -1423,7 +1423,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     return componentConfigFile;
   }
 
-  async getAspectsGraphWithoutCore(components: Component[], isAspect?: ShouldIgnoreFunc) {
+  async getAspectsGraphWithoutCore(components: Component[], isAspect?: ShouldLoadFunc) {
     const ids = components.map((component) => component.id._legacy);
     const coreAspectsStringIds = this.aspectLoader.getCoreAspectIds();
     const coreAspectsComponentIds = coreAspectsStringIds.map((id) => BitId.parse(id, true));
@@ -1454,7 +1454,10 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
    * keep in mind that the graph may have circles.
    */
   async loadAspects(ids: string[] = [], throwOnError = false, neededFor?: string): Promise<string[]> {
-    this.logger.info(`loadAspects, loading ${ids.length} aspects.
+    // generate a random callId to be able to identify the call from the logs
+    const callId = Math.floor(Math.random() * 1000);
+    const loggerPrefix = `[${callId}] loadAspects,`;
+    this.logger.info(`${loggerPrefix} loading ${ids.length} aspects.
 ids: ${ids.join(', ')}
 needed-for: ${neededFor || '<unknown>'}`);
     const notLoadedIds = ids.filter((id) => !this.aspectLoader.isAspectLoaded(id));
@@ -1487,9 +1490,22 @@ needed-for: ${neededFor || '<unknown>'}`);
 
     const graph = await this.getAspectsGraphWithoutCore(components, isAspect);
     const idsStr = graph.nodes();
+    this.logger.debug(`${loggerPrefix} found ${idsStr.length} aspects in the aspects-graph`);
     const compIds = await this.resolveMultipleComponentIds(idsStr);
     const aspects = await this.getMany(compIds);
     const { workspaceComps, scopeComps } = await this.groupComponentsByWorkspaceAndScope(aspects);
+    this.logger.debug(
+      `${loggerPrefix} found ${workspaceComps.length} components in the workspace:\n${workspaceComps
+        .map((c) => c.id.toString())
+        .join('\n')}`
+    );
+    this.logger.debug(
+      `${loggerPrefix} ${
+        scopeComps.length
+      } components are not in the workspace and are loaded from the scope:\n${scopeComps
+        .map((c) => c.id.toString())
+        .join('\n')}`
+    );
     const scopeIds = scopeComps.map((aspect) => aspect.id.toString());
     const workspaceAspects = await this.requireComponents(workspaceComps);
     const workspaceManifests = await this.aspectLoader.getManifestsFromRequireableExtensions(
@@ -1540,7 +1556,7 @@ needed-for: ${neededFor || '<unknown>'}`);
       throwOnError
     );
     await this.aspectLoader.loadExtensionsByManifests(pluginsWorkspaceManifests, throwOnError);
-
+    this.logger.debug(`${loggerPrefix} finish loading aspects`);
     return compact(scopeEnvsManifestsIds.concat(scopeOtherManifestsIds).concat(workspaceManifestsIds));
   }
 
@@ -1552,9 +1568,9 @@ needed-for: ${neededFor || '<unknown>'}`);
   async buildOneGraphForComponents(
     ids: BitId[],
     ignoreIds?: BitIds,
-    shouldIgnoreFunc?: ShouldIgnoreFunc
+    shouldLoadFunc?: ShouldLoadFunc
   ): Promise<LegacyGraph> {
-    const graphFromFsBuilder = new GraphFromFsBuilder(this, this.logger, ignoreIds, shouldIgnoreFunc);
+    const graphFromFsBuilder = new GraphFromFsBuilder(this, this.logger, ignoreIds, shouldLoadFunc);
     return graphFromFsBuilder.buildGraph(ids);
   }
 
@@ -1676,18 +1692,6 @@ needed-for: ${neededFor || '<unknown>'}`);
         const existOnWorkspace = await this.hasId(component.id);
         existOnWorkspace ? workspaceComps.push(component) : scopeComps.push(component);
       })
-    );
-    this.logger.debug(
-      `loadAspects, found ${workspaceComps.length} components in the workspace:\n${workspaceComps
-        .map((c) => c.id.toString())
-        .join('\n')}`
-    );
-    this.logger.debug(
-      `loadAspects, ${
-        scopeComps.length
-      } components are not in the workspace and are loaded from the scope:\n${scopeComps
-        .map((c) => c.id.toString())
-        .join('\n')}`
     );
     return { workspaceComps, scopeComps };
   }
