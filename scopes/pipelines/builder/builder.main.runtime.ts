@@ -34,14 +34,19 @@ import { BuilderRoute } from './builder.route';
 export type TaskSlot = SlotRegistry<BuildTask[]>;
 export const FILE_PATH_PARAM_DELIM = '~';
 
-export type BuilderData = {
+/**
+ * builder data format for the bit object store
+ */
+export type RawBuilderData = {
   pipeline: PipelineReport[];
   artifacts?: ArtifactObject[];
   aspectsData: AspectData[];
   bitVersion?: string;
 };
-
-export type ExtractedBuilderData = Omit<BuilderData, 'artifacts'> & {
+/**
+ * builder data mapped to an ArtifactList instance
+ */
+export type BuilderData = Omit<RawBuilderData, 'artifacts'> & {
   artifacts: ArtifactList<Artifact>;
 };
 
@@ -80,9 +85,9 @@ export class BuilderMain {
   private pipelineResultsToBuilderData(
     components: Component[],
     buildPipelineResults: TaskResults[]
-  ): ComponentMap<BuilderData> {
+  ): ComponentMap<RawBuilderData> {
     const buildPipelineResultList = new BuildPipelineResultList(buildPipelineResults, components);
-    return ComponentMap.as<BuilderData>(components, (component) => {
+    return ComponentMap.as<RawBuilderData>(components, (component) => {
       const aspectsData = buildPipelineResultList.getDataOfComponent(component.id);
       const pipelineReport = buildPipelineResultList.getPipelineReportOfComponent(component.id);
       const artifacts = buildPipelineResultList.getArtifactsDataOfComponent(component.id);
@@ -119,8 +124,8 @@ export class BuilderMain {
     return { builderDataMap, pipeResults };
   }
 
-  private validateBuilderDataMap(builderDataMap: ComponentMap<BuilderData>) {
-    builderDataMap.forEach((buildData: BuilderData, component) => {
+  private validateBuilderDataMap(builderDataMap: ComponentMap<RawBuilderData>) {
+    builderDataMap.forEach((buildData: RawBuilderData, component) => {
       const taskSerializedIds = buildData.pipeline.map((t) =>
         BuildTaskHelper.serializeId({ aspectId: t.taskId, name: t.taskName })
       );
@@ -193,10 +198,10 @@ export class BuilderMain {
     return artifacts;
   }
 
-  getBuilderData(component: IComponent): ExtractedBuilderData | undefined {
+  getBuilderData(component: IComponent): BuilderData | undefined {
     const data = component.get(BuilderAspect.id)?.data;
     if (!data) return undefined;
-    const clonedData = cloneDeep(data) as ExtractedBuilderData;
+    const clonedData = cloneDeep(data) as BuilderData;
     let artifactFiles: ArtifactFiles;
     clonedData.artifacts?.forEach((artifact) => {
       if (!(artifact.files instanceof ArtifactFiles)) {
