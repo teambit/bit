@@ -165,14 +165,7 @@ export class CompositionsMain {
   };
 
   static runtime = MainRuntime;
-  static dependencies = [
-    PreviewAspect,
-    GraphqlAspect,
-    WorkspaceAspect,
-    SchemaAspect,
-    DevFilesAspect,
-    EnvsAspect,
-  ];
+  static dependencies = [PreviewAspect, GraphqlAspect, WorkspaceAspect, SchemaAspect, DevFilesAspect, EnvsAspect];
 
   static async provider(
     [preview, graphql, workspace, schema, devFiles, envs]: [
