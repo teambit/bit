@@ -1,8 +1,9 @@
-import { flatten } from 'lodash';
+import { cloneDeep } from 'lodash';
 import { ArtifactVinyl } from '@teambit/legacy/dist/consumer/component/sources/artifact';
+import { ArtifactFiles, ArtifactObject } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
 import { AspectLoaderAspect, AspectLoaderMain } from '@teambit/aspect-loader';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import { Component, ComponentMap, IComponent } from '@teambit/component';
+import { Component, ComponentMap, IComponent, ComponentAspect, ComponentMain, ComponentID } from '@teambit/component';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { Slot, SlotRegistry } from '@teambit/harmony';
@@ -13,9 +14,8 @@ import { IsolateComponentsOptions, IsolatorAspect, IsolatorMain } from '@teambit
 import { OnTagOpts } from '@teambit/legacy/dist/scope/scope';
 import { getHarmonyVersion } from '@teambit/legacy/dist/bootstrap';
 import findDuplications from '@teambit/legacy/dist/utils/array/find-duplications';
-import { ArtifactFiles, ArtifactObject } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
 import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
-import { ArtifactList } from './artifact';
+import { Artifact, ArtifactList, FsArtifact } from './artifact';
 import { ArtifactFactory } from './artifact/artifact-factory'; // it gets undefined when importing it from './artifact'
 import { BuilderAspect } from './builder.aspect';
 import { builderSchema } from './builder.graphql';
@@ -29,14 +29,25 @@ import { BuildPipelineResultList, AspectData, PipelineReport } from './build-pip
 import { Serializable } from './types';
 import { ArtifactsCmd } from './artifact/artifacts.cmd';
 import { buildTaskTemplate } from './templates/build-task';
+import { BuilderRoute } from './builder.route';
 
 export type TaskSlot = SlotRegistry<BuildTask[]>;
+export const FILE_PATH_PARAM_DELIM = '~';
 
-export type BuilderData = {
+/**
+ * builder data format for the bit object store
+ */
+export type RawBuilderData = {
   pipeline: PipelineReport[];
-  artifacts: ArtifactObject[] | undefined;
+  artifacts?: ArtifactObject[];
   aspectsData: AspectData[];
   bitVersion?: string;
+};
+/**
+ * builder data mapped to an ArtifactList instance
+ */
+export type BuilderData = Omit<RawBuilderData, 'artifacts'> & {
+  artifacts: ArtifactList<Artifact>;
 };
 
 export class BuilderMain {
@@ -49,6 +60,7 @@ export class BuilderMain {
     private scope: ScopeMain,
     private isolator: IsolatorMain,
     private aspectLoader: AspectLoaderMain,
+    private componentAspect: ComponentMain,
     private buildTaskSlot: TaskSlot,
     private tagTaskSlot: TaskSlot,
     private snapTaskSlot: TaskSlot
@@ -56,7 +68,7 @@ export class BuilderMain {
 
   private async storeArtifacts(tasksResults: TaskResults[]) {
     const artifacts = tasksResults.flatMap((t) => (t.artifacts ? [t.artifacts] : []));
-    const storeP = artifacts.map(async (artifactMap: ComponentMap<ArtifactList>) => {
+    const storeP = artifacts.map(async (artifactMap: ComponentMap<ArtifactList<FsArtifact>>) => {
       return Promise.all(
         artifactMap.toArray().map(async ([component, artifactList]) => {
           try {
@@ -73,13 +85,13 @@ export class BuilderMain {
   private pipelineResultsToBuilderData(
     components: Component[],
     buildPipelineResults: TaskResults[]
-  ): ComponentMap<BuilderData> {
+  ): ComponentMap<RawBuilderData> {
     const buildPipelineResultList = new BuildPipelineResultList(buildPipelineResults, components);
-    return ComponentMap.as<BuilderData>(components, (component) => {
+    return ComponentMap.as<RawBuilderData>(components, (component) => {
       const aspectsData = buildPipelineResultList.getDataOfComponent(component.id);
       const pipelineReport = buildPipelineResultList.getPipelineReportOfComponent(component.id);
-      const artifactsData = buildPipelineResultList.getArtifactsDataOfComponent(component.id);
-      return { pipeline: pipelineReport, artifacts: artifactsData, aspectsData, bitVersion: getHarmonyVersion(true) };
+      const artifacts = buildPipelineResultList.getArtifactsDataOfComponent(component.id);
+      return { pipeline: pipelineReport, artifacts, aspectsData, bitVersion: getHarmonyVersion(true) };
     });
   }
 
@@ -112,8 +124,8 @@ export class BuilderMain {
     return { builderDataMap, pipeResults };
   }
 
-  private validateBuilderDataMap(builderDataMap: ComponentMap<BuilderData>) {
-    builderDataMap.forEach((buildData: BuilderData, component) => {
+  private validateBuilderDataMap(builderDataMap: ComponentMap<RawBuilderData>) {
+    builderDataMap.forEach((buildData: RawBuilderData, component) => {
       const taskSerializedIds = buildData.pipeline.map((t) =>
         BuildTaskHelper.serializeId({ aspectId: t.taskId, name: t.taskName })
       );
@@ -129,66 +141,50 @@ export class BuilderMain {
   }
 
   // TODO: merge with getArtifactsVinylByExtensionAndName by getting aspect name and name as object with optional props
-  async getArtifactsVinylByExtension(component: Component, aspectName: string): Promise<ArtifactVinyl[]> {
-    const artifactsObjects = this.getArtifactsByExtension(component, aspectName);
-    const vinyls = await Promise.all(
-      (artifactsObjects || []).map((artifactObject) =>
-        artifactObject.files.getVinylsAndImportIfMissing(component.id._legacy, this.scope.legacyScope)
-      )
-    );
-    return flatten(vinyls);
+  async getArtifactsVinylByAspect(component: Component, aspectName: string): Promise<ArtifactVinyl[]> {
+    const artifacts = this.getArtifactsByAspect(component, aspectName);
+    const vinyls = await artifacts.getVinylsAndImportIfMissing(component.id._legacy, this.scope.legacyScope);
+    return vinyls;
   }
 
-  async getArtifactsVinylByExtensionAndName(
+  async getArtifactsVinylByAspectAndName(
     component: Component,
     aspectName: string,
     name: string
   ): Promise<ArtifactVinyl[]> {
-    const artifactsObjects = this.getArtifactsByExtensionAndName(component, aspectName, name);
-    const vinyls = await Promise.all(
-      (artifactsObjects || []).map((artifactObject) =>
-        artifactObject.files.getVinylsAndImportIfMissing(component.id._legacy, this.scope.legacyScope)
-      )
-    );
-    return flatten(vinyls);
+    const artifacts = this.getArtifactsByAspectAndName(component, aspectName, name);
+    const vinyls = await artifacts.getVinylsAndImportIfMissing(component.id._legacy, this.scope.legacyScope);
+    return vinyls;
   }
 
-  async getArtifactsVinylByExtensionAndTaskName(
+  async getArtifactsVinylByAspectAndTaskName(
     component: Component,
     aspectName: string,
-    taskName: string
+    name: string
   ): Promise<ArtifactVinyl[]> {
-    const artifactsObjects = this.getArtifactsByExtensionAndTaskName(component, aspectName, taskName);
-    const vinyls = await Promise.all(
-      (artifactsObjects || []).map((artifactObject) =>
-        artifactObject.files.getVinylsAndImportIfMissing(component.id._legacy, this.scope.legacyScope)
-      )
-    );
-    return flatten(vinyls);
+    const artifacts = this.getArtifactsbyAspectAndTaskName(component, aspectName, name);
+    const vinyls = await artifacts.getVinylsAndImportIfMissing(component.id._legacy, this.scope.legacyScope);
+    return vinyls;
   }
 
-  getArtifactsByName(component: Component, name: string): ArtifactObject[] | undefined {
-    const artifacts = this.getArtifacts(component);
-    return artifacts?.filter((artifact) => artifact.name === name);
+  getArtifactsByName(component: Component, name: string): ArtifactList<Artifact> {
+    const artifacts = this.getArtifacts(component).byAspectNameAndName(undefined, name);
+    return artifacts;
   }
 
-  getArtifactsByExtension(component: Component, aspectName: string): ArtifactObject[] | undefined {
-    const artifacts = this.getArtifacts(component);
-    return artifacts?.filter((artifact) => artifact.task.id === aspectName);
+  getArtifactsByAspect(component: Component, aspectName: string): ArtifactList<Artifact> {
+    const artifacts = this.getArtifacts(component).byAspectNameAndName(aspectName);
+    return artifacts;
   }
 
-  getArtifactsByExtensionAndName(component: Component, aspectName: string, name: string): ArtifactObject[] | undefined {
-    const artifacts = this.getArtifacts(component);
-    return artifacts?.filter((artifact) => artifact.task.id === aspectName && artifact.name === name);
+  getArtifactsByAspectAndName(component: Component, aspectName: string, name: string): ArtifactList<Artifact> {
+    const artifacts = this.getArtifacts(component).byAspectNameAndName(aspectName, name);
+    return artifacts;
   }
 
-  getArtifactsByExtensionAndTaskName(
-    component: Component,
-    aspectName: string,
-    taskName: string
-  ): ArtifactObject[] | undefined {
-    const artifacts = this.getArtifacts(component);
-    return artifacts?.filter((artifact) => artifact.task.id === aspectName && artifact.task.name === taskName);
+  getArtifactsbyAspectAndTaskName(component: Component, aspectName: string, taskName: string): ArtifactList<Artifact> {
+    const artifacts = this.getArtifacts(component).byAspectNameAndTaskName(aspectName, taskName);
+    return artifacts;
   }
 
   getDataByAspect(component: IComponent, aspectName: string): Serializable | undefined {
@@ -197,19 +193,29 @@ export class BuilderMain {
     return data?.data;
   }
 
-  getArtifacts(component: Component): ArtifactObject[] | undefined {
-    return this.getBuilderData(component)?.artifacts;
+  getArtifacts(component: Component): ArtifactList<Artifact> {
+    const artifacts = this.getBuilderData(component)?.artifacts || ArtifactList.fromArray([]);
+    return artifacts;
   }
 
   getBuilderData(component: IComponent): BuilderData | undefined {
-    const data = component.get(BuilderAspect.id)?.data as BuilderData | undefined;
+    const data = component.get(BuilderAspect.id)?.data;
     if (!data) return undefined;
-    data.artifacts?.forEach((artifact) => {
+    const clonedData = cloneDeep(data) as BuilderData;
+    let artifactFiles: ArtifactFiles;
+    clonedData.artifacts?.forEach((artifact) => {
       if (!(artifact.files instanceof ArtifactFiles)) {
-        artifact.files = ArtifactFiles.fromObject(artifact.files);
+        artifactFiles = ArtifactFiles.fromObject(artifact.files);
+      } else {
+        artifactFiles = artifact.files;
+      }
+      if (!(artifact instanceof Artifact)) {
+        Object.assign(artifact, { files: artifactFiles });
+        Object.assign(artifact, Artifact.fromArtifactObject(artifact));
       }
     });
-    return data;
+    clonedData.artifacts = ArtifactList.fromArray(clonedData.artifacts);
+    return clonedData;
   }
 
   /**
@@ -306,6 +312,10 @@ export class BuilderMain {
     return this;
   }
 
+  getDownloadUrlForArtifact(componentId: ComponentID, taskId: string, path?: string) {
+    return `/api/${componentId}/~aspect/builder/${taskId}/${path ? `${FILE_PATH_PARAM_DELIM}${path}` : ''}`;
+  }
+
   static slots = [Slot.withType<BuildTask>(), Slot.withType<BuildTask>(), Slot.withType<BuildTask>()];
 
   static runtime = MainRuntime;
@@ -319,10 +329,11 @@ export class BuilderMain {
     AspectLoaderAspect,
     GraphqlAspect,
     GeneratorAspect,
+    ComponentAspect,
   ];
 
   static async provider(
-    [cli, envs, workspace, scope, isolator, loggerExt, aspectLoader, graphql, generator]: [
+    [cli, envs, workspace, scope, isolator, loggerExt, aspectLoader, graphql, generator, component]: [
       CLIMain,
       EnvsMain,
       Workspace,
@@ -331,7 +342,8 @@ export class BuilderMain {
       LoggerMain,
       AspectLoaderMain,
       GraphqlMain,
-      GeneratorMain
+      GeneratorMain,
+      ComponentMain
     ],
     config,
     [buildTaskSlot, tagTaskSlot, snapTaskSlot]: [TaskSlot, TaskSlot, TaskSlot]
@@ -367,11 +379,12 @@ export class BuilderMain {
       scope,
       isolator,
       aspectLoader,
+      component,
       buildTaskSlot,
       tagTaskSlot,
       snapTaskSlot
     );
-
+    component.registerRoute([new BuilderRoute(builder, scope, logger)]);
     graphql.register(builderSchema(builder));
     generator.registerComponentTemplate([buildTaskTemplate]);
     const func = builder.tagListener.bind(builder);

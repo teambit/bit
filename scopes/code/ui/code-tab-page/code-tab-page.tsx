@@ -77,7 +77,7 @@ function generateWidget(mainFile?: string, devFiles?: string[]) {
   };
 }
 
-function generateIcon(fileIconMatchers: FileIconMatch[]) {
+export function generateIcon(fileIconMatchers: FileIconMatch[]) {
   return function Icon({ id }: TreeNode) {
     return getFileIcon(fileIconMatchers, id);
   };

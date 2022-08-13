@@ -85,7 +85,7 @@ export class CompilerMain {
   }
 
   async getDistsFiles(component: Component): Promise<DistArtifact> {
-    const artifacts = await this.builder.getArtifactsVinylByExtension(component, CompilerAspect.id);
+    const artifacts = await this.builder.getArtifactsVinylByAspect(component, CompilerAspect.id);
     if (!artifacts.length) throw new DistArtifactNotFound(component.id);
 
     return new DistArtifact(artifacts);

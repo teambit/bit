@@ -1,36 +1,130 @@
-import { Component } from '@teambit/component';
+import { Component, ComponentID } from '@teambit/component';
 import gql from 'graphql-tag';
-
+import isBinaryPath from 'is-binary-path';
 import { BuilderMain } from './builder.main.runtime';
+import { PipelineReport } from './build-pipeline-result-list';
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+type ArtifactGQLFile = {
+  /**
+   * same as the path - used for GQL caching
+   */
+  id: string;
+  /**
+   * name of the artifact file
+   */
+  name: string;
+  /**
+   * path of the artifact file
+   */
+  path: string;
+  /**
+   * artifact file content (only for text files). Use /api/<component-id>/~aspect/builder/<extension-id>/~<path> to fetch binary file data
+   */
+  content?: string;
+  /**
+   * REST endpoint to fetch artifact data from. /api/<component-id>/~aspect/builder/<extension-id>/~<pat
+   */
+  downloadUrl?: string;
+  /**
+   * Remote storage url to resolve artifact file from
+   */
+  externalUrl?: string;
+};
+
+type ArtifactGQLData = { name: string; description?: string; files: ArtifactGQLFile[] };
+type TaskReport = PipelineReport & {
+  artifact?: ArtifactGQLData;
+  componentId: ComponentID;
+};
+
 export function builderSchema(builder: BuilderMain) {
   return {
     typeDefs: gql`
-      type ExtensionDescriptor {
-        # extension ID.
-        id: String
-
-        # icon of the extension.
-        icon: String
+      type TaskReport {
+        id: String!
+        name: String!
+        description: String
+        startTime: String
+        endTime: String
+        errors: [String!]
+        warnings: [String!]
+        artifact(path: String): Artifact
       }
 
-      type ExtensionArtifact {
-        # descriptor of the artifact's extension
-        extensionDescriptor: ExtensionDescriptor
+      type ArtifactFile {
+        # for GQL caching - same as the path
+        id: String!
+        # name of the artifact file
+        name: String
+        # path of the artifact file
+        path: String!
+        # artifact file content (only for text files). Use /api/<component-id>/~aspect/builder/<extension-id>/~<path> to fetch binary file data
+        content: String
+        # REST endpoint to fetch artifact data from. /api/<component-id>/~aspect/builder/<extension-id>/~<pat
+        downloadUrl: String
+        # Remote storage url to resolve artifact file from
+        externalUrl: String
+      }
+
+      type Artifact {
+        # artifact name
+        name: String!
+        description: String
+        storage: String
+        generatedBy: String
+        files: [ArtifactFile!]!
       }
 
       extend type Component {
-        # list of extension artifacts.
-        getArtifacts(hash: String!): [ExtensionArtifact]
+        pipelineReport(taskId: String): [TaskReport!]!
       }
     `,
+
     resolvers: {
       Component: {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        getArtifacts: async (component: Component, { hash }: { hash: string }) => {
-          // const artifacts = await builder.getArtifacts(component.id, hash);
-          // return artifacts.map((artifact) => artifact.toObject());
+        pipelineReport: async (component: Component, { taskId }: { taskId?: string }) => {
+          const builderData = builder.getBuilderData(component);
+          const pipeline = builderData?.pipeline || [];
+          const artifacts = taskId ? builder.getArtifactsByAspect(component, taskId) : builder.getArtifacts(component);
+
+          const artifactsWithVinyl = await Promise.all(
+            artifacts.map(async (artifact) => {
+              const id = artifact.task.aspectId;
+              const artifactFiles = (await builder.getArtifactsVinylByAspect(component, id)).map((vinyl) => {
+                const { basename, path, contents } = vinyl || {};
+                const isBinary = path && isBinaryPath(path);
+                const content = !isBinary ? contents?.toString('utf-8') : undefined;
+                const downloadUrl = encodeURI(
+                  builder.getDownloadUrlForArtifact(component.id, artifact.task.aspectId, path)
+                );
+                const externalUrl = vinyl.url;
+                return { id: path, name: basename, path, content, downloadUrl, externalUrl };
+              });
+              const artifactObj = { ...artifact, files: artifactFiles };
+              return artifactObj;
+            })
+          );
+
+          const result = pipeline.map((task) => ({
+            ...task,
+            artifact: artifactsWithVinyl.find((data) => data.task.aspectId === task.taskId),
+          }));
+
+          return result;
+        },
+      },
+      TaskReport: {
+        id: (taskReport: TaskReport) => taskReport.taskId,
+        name: (taskReport: TaskReport) => taskReport.taskName,
+        description: (taskReport: TaskReport) => taskReport.taskDescription,
+        errors: (taskReport: TaskReport) => taskReport.errors?.map((e) => e.toString()) || [],
+        warnings: (taskReport: TaskReport) => taskReport.warnings || [],
+        artifact: async (taskReport: TaskReport, { path: pathFilter }: { path?: string }) => {
+          if (!taskReport.artifact) return undefined;
+          return {
+            ...taskReport.artifact,
+            files: taskReport.artifact.files.filter((file) => !pathFilter || file.path === pathFilter),
+          };
         },
       },
     },
