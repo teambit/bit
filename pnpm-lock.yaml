@@ -160,6 +160,7 @@ importers:
       '@testing-library/jest-native': 4.0.4
       '@testing-library/react': 12.1.5
       '@tippyjs/react': 4.2.0
+      '@types/archiver': 5.3.1
       '@types/bluebird': 3.5.33
       '@types/cacache': 12.0.1
       '@types/chai': 4.2.15
@@ -233,6 +234,7 @@ importers:
       apollo-server: 2.19.2
       apollo-utilities: 1.3.4
       app-module-path: 2.2.0
+      archiver: 5.3.1
       archy: 1.0.0
       array-difference: 0.0.2
       assert: 2.0.0
@@ -351,6 +353,7 @@ importers:
       ink-spinner: 4.0.3
       inquirer: 6.5.2
       inquirer-fuzzy-path: 2.3.0
+      is-binary-path: 2.1.0
       is-builtin-module: 3.1.0
       is-glob: 4.0.1
       is-primitive: 3.0.1
@@ -681,6 +684,7 @@ importers:
       '@testing-library/jest-dom': registry.npmjs.org/@testing-library/jest-dom/5.16.2
       '@testing-library/jest-native': registry.npmjs.org/@testing-library/jest-native/4.0.4
       '@tippyjs/react': registry.npmjs.org/@tippyjs/react/4.2.0_sfoxds7t5ydpegc3knd667wn6m
+      '@types/archiver': registry.npmjs.org/@types/archiver/5.3.1
       '@types/bluebird': registry.npmjs.org/@types/bluebird/3.5.33
       '@types/cacache': registry.npmjs.org/@types/cacache/12.0.1
       '@types/chai': registry.npmjs.org/@types/chai/4.2.15
@@ -746,6 +750,7 @@ importers:
       apollo-server: registry.npmjs.org/apollo-server/2.19.2_ejelnobsodxz4e5ozf4g7k4fa4
       apollo-utilities: registry.npmjs.org/apollo-utilities/1.3.4_graphql@14.7.0
       app-module-path: registry.npmjs.org/app-module-path/2.2.0
+      archiver: registry.npmjs.org/archiver/5.3.1
       archy: registry.npmjs.org/archy/1.0.0
       array-difference: registry.npmjs.org/array-difference/0.0.2
       assert: registry.npmjs.org/assert/2.0.0
@@ -863,6 +868,7 @@ importers:
       ink-spinner: registry.npmjs.org/ink-spinner/4.0.3_ink@3.2.0+react@17.0.2
       inquirer: registry.npmjs.org/inquirer/6.5.2
       inquirer-fuzzy-path: registry.npmjs.org/inquirer-fuzzy-path/2.3.0
+      is-binary-path: registry.npmjs.org/is-binary-path/2.1.0
       is-builtin-module: registry.npmjs.org/is-builtin-module/3.1.0
       is-glob: registry.npmjs.org/is-glob/4.0.1
       is-primitive: registry.npmjs.org/is-primitive/3.0.1
@@ -1277,6 +1283,24 @@ importers:
   scopes/component/ui/hooks/use-snaps:
     specifiers: {}
 
+  scopes/component/ui/pipelines/artifacts-panel:
+    specifiers: {}
+
+  scopes/component/ui/pipelines/component-pipeline:
+    specifiers: {}
+
+  scopes/component/ui/pipelines/component-pipeline-context:
+    specifiers: {}
+
+  scopes/component/ui/pipelines/component-pipeline-model:
+    specifiers: {}
+
+  scopes/component/ui/pipelines/component-pipeline-queries:
+    specifiers: {}
+
+  scopes/component/ui/pipelines/component-pipeline-utils:
+    specifiers: {}
+
   scopes/component/ui/version-block:
     specifiers: {}
 
@@ -1614,6 +1638,9 @@ importers:
     specifiers: {}
 
   scopes/pipelines/builder:
+    specifiers: {}
+
+  scopes/pipelines/builder-ui:
     specifiers: {}
 
   scopes/pipelines/modules/builder-data:
@@ -7957,7 +7984,7 @@ packages:
       '@jest/test-result': registry.npmjs.org/@jest/test-result/27.5.1
       '@jest/transform': registry.npmjs.org/@jest/transform/27.5.1
       '@jest/types': registry.npmjs.org/@jest/types/27.5.1
-      '@types/node': registry.npmjs.org/@types/node/12.20.4
+      '@types/node': registry.npmjs.org/@types/node/13.13.52
       ansi-escapes: registry.npmjs.org/ansi-escapes/4.3.2
       chalk: registry.npmjs.org/chalk/4.1.2
       emittery: registry.npmjs.org/emittery/0.8.1
@@ -13642,6 +13669,14 @@ packages:
       '@types/node': registry.npmjs.org/@types/node/13.13.52
     dev: false
 
+  registry.npmjs.org/@types/archiver/5.3.1:
+    resolution: {integrity: sha512-wKYZaSXaDvTZuInAWjCeGG7BEAgTWG2zZW0/f7IYFcoHB2X2d9lkVFnrOlXl3W6NrvO6Ml3FLLu8Uksyymcpnw==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/@types/archiver/-/archiver-5.3.1.tgz}
+    name: '@types/archiver'
+    version: 5.3.1
+    dependencies:
+      '@types/glob': registry.npmjs.org/@types/glob/7.2.0
+    dev: false
+
   registry.npmjs.org/@types/aria-query/4.2.2:
     resolution: {integrity: sha512-HnYpAE1Y6kRyKM/XkEuiRQhTHvkzMBurTHnpFLYLBGPIylZNPs9jJcuOOYWxPLJCSEtmZT0Y8rHDokKN7rRTig==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/@types/aria-query/-/aria-query-4.2.2.tgz}
     name: '@types/aria-query'
@@ -13933,6 +13968,15 @@ packages:
     name: '@types/fs-extra'
     version: 9.0.7
     dependencies:
+      '@types/node': registry.npmjs.org/@types/node/13.13.52
+    dev: false
+
+  registry.npmjs.org/@types/glob/7.2.0:
+    resolution: {integrity: sha512-ZUxbzKl0IfJILTS6t7ip5fQQM/J3TJYubDm3nMbgubNNYS62eXeUpoLUC8/7fJNiFYHTrGPQn7hspDUzIHX3UA==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/@types/glob/-/glob-7.2.0.tgz}
+    name: '@types/glob'
+    version: 7.2.0
+    dependencies:
+      '@types/minimatch': registry.npmjs.org/@types/minimatch/3.0.4
       '@types/node': registry.npmjs.org/@types/node/13.13.52
     dev: false
 
@@ -14262,7 +14306,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@types/node/10.17.60:
-    resolution: {integrity: sha512-F0KIgDJfy2nA3zMLmWGKxcH2ZVEtCZXHHdOQs2gSaQ27+lNeEfGxzkIw90aXswATX7AZ33tahPbzy6KAfUreVw==, registry: https://node.bit.cloud/, tarball: https://registry.npmjs.org/@types/node/-/node-10.17.60.tgz}
+    resolution: {integrity: sha512-F0KIgDJfy2nA3zMLmWGKxcH2ZVEtCZXHHdOQs2gSaQ27+lNeEfGxzkIw90aXswATX7AZ33tahPbzy6KAfUreVw==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/@types/node/-/node-10.17.60.tgz}
     name: '@types/node'
     version: 10.17.60
     dev: false
@@ -17022,6 +17066,39 @@ packages:
     version: 2.0.0
     dev: false
 
+  registry.npmjs.org/archiver-utils/2.1.0:
+    resolution: {integrity: sha512-bEL/yUb/fNNiNTuUz979Z0Yg5L+LzLxGJz8x79lYmR54fmTIb6ob/hNQgkQnIUDWIFjZVQwl9Xs356I6BAMHfw==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/archiver-utils/-/archiver-utils-2.1.0.tgz}
+    name: archiver-utils
+    version: 2.1.0
+    engines: {node: '>= 6'}
+    dependencies:
+      glob: registry.npmjs.org/glob/7.2.0
+      graceful-fs: registry.npmjs.org/graceful-fs/4.2.10
+      lazystream: registry.npmjs.org/lazystream/1.0.1
+      lodash.defaults: registry.npmjs.org/lodash.defaults/4.2.0
+      lodash.difference: registry.npmjs.org/lodash.difference/4.5.0
+      lodash.flatten: registry.npmjs.org/lodash.flatten/4.4.0
+      lodash.isplainobject: registry.npmjs.org/lodash.isplainobject/4.0.6
+      lodash.union: registry.npmjs.org/lodash.union/4.6.0
+      normalize-path: registry.npmjs.org/normalize-path/3.0.0
+      readable-stream: registry.npmjs.org/readable-stream/2.3.7
+    dev: false
+
+  registry.npmjs.org/archiver/5.3.1:
+    resolution: {integrity: sha512-8KyabkmbYrH+9ibcTScQ1xCJC/CGcugdVIwB+53f5sZziXgwUh3iXlAlANMxcZyDEfTHMe6+Z5FofV8nopXP7w==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/archiver/-/archiver-5.3.1.tgz}
+    name: archiver
+    version: 5.3.1
+    engines: {node: '>= 10'}
+    dependencies:
+      archiver-utils: registry.npmjs.org/archiver-utils/2.1.0
+      async: registry.npmjs.org/async/3.2.3
+      buffer-crc32: registry.npmjs.org/buffer-crc32/0.2.13
+      readable-stream: registry.npmjs.org/readable-stream/3.6.0
+      readdir-glob: registry.npmjs.org/readdir-glob/1.1.2
+      tar-stream: registry.npmjs.org/tar-stream/2.2.0
+      zip-stream: registry.npmjs.org/zip-stream/4.1.0
+    dev: false
+
   registry.npmjs.org/archy/1.0.0:
     resolution: {integrity: sha512-Xg+9RwCg/0p32teKdGMPTPnVXKD0w3DfHnFTficozsAgsvq2XenPJq/MYpzzQ/v8zrOyJn6Ds39VA4JIDwFfqw==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/archy/-/archy-1.0.0.tgz}
     name: archy
@@ -19550,6 +19627,18 @@ packages:
       json-buffer: registry.npmjs.org/json-buffer/3.0.1
     dev: false
 
+  registry.npmjs.org/compress-commons/4.1.1:
+    resolution: {integrity: sha512-QLdDLCKNV2dtoTorqgxngQCMA+gWXkM/Nwu7FpeBhk/RdkzimqC3jueb/FDmaZeXh+uby1jkBqE3xArsLBE5wQ==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/compress-commons/-/compress-commons-4.1.1.tgz}
+    name: compress-commons
+    version: 4.1.1
+    engines: {node: '>= 10'}
+    dependencies:
+      buffer-crc32: registry.npmjs.org/buffer-crc32/0.2.13
+      crc32-stream: registry.npmjs.org/crc32-stream/4.0.2
+      normalize-path: registry.npmjs.org/normalize-path/3.0.0
+      readable-stream: registry.npmjs.org/readable-stream/3.6.0
+    dev: false
+
   registry.npmjs.org/compressible/2.0.18:
     resolution: {integrity: sha512-AF3r7P5dWxL8MxyITRMlORQNaOA2IkAFaTr4k7BUumjPtRpGDTZpl0Pb1XCO6JeDCBdp126Cgs9sMxqSjgYyRg==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/compressible/-/compressible-2.0.18.tgz}
     name: compressible
@@ -19910,6 +19999,24 @@ packages:
     dependencies:
       nan: registry.npmjs.org/nan/2.15.0
     optional: true
+
+  registry.npmjs.org/crc-32/1.2.2:
+    resolution: {integrity: sha512-ROmzCKrTnOwybPcJApAA6WBWij23HVfGVNKqqrZpuyZOHqK2CwHSvpGuyt/UNNvaIjEd8X5IFGp4Mh+Ie1IHJQ==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/crc-32/-/crc-32-1.2.2.tgz}
+    name: crc-32
+    version: 1.2.2
+    engines: {node: '>=0.8'}
+    hasBin: true
+    dev: false
+
+  registry.npmjs.org/crc32-stream/4.0.2:
+    resolution: {integrity: sha512-DxFZ/Hk473b/muq1VJ///PMNLj0ZMnzye9thBpmjpJKCc5eMgB95aK8zCGrGfQ90cWo561Te6HK9D+j4KPdM6w==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/crc32-stream/-/crc32-stream-4.0.2.tgz}
+    name: crc32-stream
+    version: 4.0.2
+    engines: {node: '>= 10'}
+    dependencies:
+      crc-32: registry.npmjs.org/crc-32/1.2.2
+      readable-stream: registry.npmjs.org/readable-stream/3.6.0
+    dev: false
 
   registry.npmjs.org/create-ecdh/4.0.4:
     resolution: {integrity: sha512-mf+TCx8wWc9VpuxfP2ht0iSISLZnt0JgWlrOKZiNqyUZWnjIaCIVNQArMHnCZKfEYRg6IM7A+NeJoN8gf/Ws0A==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/create-ecdh/-/create-ecdh-4.0.4.tgz}
@@ -27982,6 +28089,15 @@ packages:
       package-json: registry.npmjs.org/package-json/4.0.1
     dev: false
 
+  registry.npmjs.org/lazystream/1.0.1:
+    resolution: {integrity: sha512-b94GiNHQNy6JNTrt5w6zNyffMrNkXZb3KTkCZJb2V1xaEGCk093vkZ2jk3tpaeP33/OiXC+WvK9AxUebnf5nbw==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/lazystream/-/lazystream-1.0.1.tgz}
+    name: lazystream
+    version: 1.0.1
+    engines: {node: '>= 0.6.3'}
+    dependencies:
+      readable-stream: registry.npmjs.org/readable-stream/2.3.7
+    dev: false
+
   registry.npmjs.org/less-loader/10.0.0_less@4.1.2+webpack@5.51.1:
     resolution: {integrity: sha512-JjioAkw9qyavL0BzMPUOHJa0a20fh+ipq/MNZH4OkU8qERsCMeZIWRE0FDBIx2O+cFguvY01vHh/lmBA9LyWDg==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/less-loader/-/less-loader-10.0.0.tgz}
     id: registry.npmjs.org/less-loader/10.0.0
@@ -28297,6 +28413,18 @@ packages:
     version: 3.0.1
     dev: false
 
+  registry.npmjs.org/lodash.defaults/4.2.0:
+    resolution: {integrity: sha512-qjxPLHd3r5DnsdGacqOMU6pb/avJzdh9tFX2ymgoZE27BmjXrNy/y4LoaiTeAb+O3gL8AfpJGtqfX/ae2leYYQ==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/lodash.defaults/-/lodash.defaults-4.2.0.tgz}
+    name: lodash.defaults
+    version: 4.2.0
+    dev: false
+
+  registry.npmjs.org/lodash.difference/4.5.0:
+    resolution: {integrity: sha512-dS2j+W26TQ7taQBGN8Lbbq04ssV3emRw4NY58WErlTO29pIqS0HmoT5aJ9+TUQ1N3G+JOZSji4eugsWwGp9yPA==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/lodash.difference/-/lodash.difference-4.5.0.tgz}
+    name: lodash.difference
+    version: 4.5.0
+    dev: false
+
   registry.npmjs.org/lodash.flatten/4.4.0:
     resolution: {integrity: sha1-8xwiIlqWMtK7+OSt2+8kCqdlph8=, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/lodash.flatten/-/lodash.flatten-4.4.0.tgz}
     name: lodash.flatten
@@ -28420,6 +28548,12 @@ packages:
     resolution: {integrity: sha512-jttmRe7bRse52OsWIMDLaXxWqRAmtIUccAQ3garviCqJjafXOfNMO0yMfNpdD6zbGaTU0P5Nz7e7gAT6cKmJRw==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/lodash.truncate/-/lodash.truncate-4.4.2.tgz}
     name: lodash.truncate
     version: 4.4.2
+    dev: false
+
+  registry.npmjs.org/lodash.union/4.6.0:
+    resolution: {integrity: sha512-c4pB2CdGrGdjMKYLA+XiRDO7Y0PRQbm/Gzg8qMj+QH+pFVAoTp5sBpO0odL3FjoPCGjK96p6qsP+yQoiLoOBcw==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/lodash.union/-/lodash.union-4.6.0.tgz}
+    name: lodash.union
+    version: 4.6.0
     dev: false
 
   registry.npmjs.org/lodash.uniq/4.5.0:
@@ -29189,6 +29323,15 @@ packages:
     resolution: {integrity: sha512-nLDxIFRyhDblz3qMuq+SoRZED4+miJ/G+tdDrjkkkRnjAsBexeGpgjLEQ0blJy7rHhR2b93rhQY4SvyWu9v03g==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/minimatch/-/minimatch-5.0.1.tgz}
     name: minimatch
     version: 5.0.1
+    engines: {node: '>=10'}
+    dependencies:
+      brace-expansion: registry.npmjs.org/brace-expansion/2.0.1
+    dev: false
+
+  registry.npmjs.org/minimatch/5.1.0:
+    resolution: {integrity: sha512-9TPBGGak4nHfGZsPBohm9AWg6NoT7QTCehS3BIJABslyZbzxfV78QM2Y6+i741OPZIafFAaiiEMh5OyIrJPgtg==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/minimatch/-/minimatch-5.1.0.tgz}
+    name: minimatch
+    version: 5.1.0
     engines: {node: '>=10'}
     dependencies:
       brace-expansion: registry.npmjs.org/brace-expansion/2.0.1
@@ -33625,7 +33768,7 @@ packages:
       mute-stream: registry.npmjs.org/mute-stream/0.0.8
 
   registry.npmjs.org/readable-stream/1.0.34:
-    resolution: {integrity: sha512-ok1qVCJuRkNmvebYikljxJA/UEsKwLl2nI1OmaqAu4/UE+h0wKCHok4XkL/gvi39OacXvw59RJUOFUkDib2rHg==, registry: https://node.bit.cloud/, tarball: https://registry.npmjs.org/readable-stream/-/readable-stream-1.0.34.tgz}
+    resolution: {integrity: sha512-ok1qVCJuRkNmvebYikljxJA/UEsKwLl2nI1OmaqAu4/UE+h0wKCHok4XkL/gvi39OacXvw59RJUOFUkDib2rHg==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/readable-stream/-/readable-stream-1.0.34.tgz}
     name: readable-stream
     version: 1.0.34
     dependencies:
@@ -33636,7 +33779,7 @@ packages:
     dev: false
 
   registry.npmjs.org/readable-stream/1.1.14:
-    resolution: {integrity: sha512-+MeVjFf4L44XUkhM1eYbD8fyEsxcV81pqMSR5gblfcLCHfZvbrqy4/qYHE+/R5HoBUT11WV5O08Cr1n3YXkWVQ==, registry: https://node.bit.cloud/, tarball: https://registry.npmjs.org/readable-stream/-/readable-stream-1.1.14.tgz}
+    resolution: {integrity: sha512-+MeVjFf4L44XUkhM1eYbD8fyEsxcV81pqMSR5gblfcLCHfZvbrqy4/qYHE+/R5HoBUT11WV5O08Cr1n3YXkWVQ==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/readable-stream/-/readable-stream-1.1.14.tgz}
     name: readable-stream
     version: 1.1.14
     dependencies:
@@ -33647,7 +33790,7 @@ packages:
     dev: false
 
   registry.npmjs.org/readable-stream/2.0.6:
-    resolution: {integrity: sha512-TXcFfb63BQe1+ySzsHZI/5v1aJPCShfqvWJ64ayNImXMsN1Cd0YGk/wm8KB7/OeessgPc9QvS9Zou8QTkFzsLw==, registry: https://node.bit.cloud/, tarball: https://registry.npmjs.org/readable-stream/-/readable-stream-2.0.6.tgz}
+    resolution: {integrity: sha512-TXcFfb63BQe1+ySzsHZI/5v1aJPCShfqvWJ64ayNImXMsN1Cd0YGk/wm8KB7/OeessgPc9QvS9Zou8QTkFzsLw==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/readable-stream/-/readable-stream-2.0.6.tgz}
     name: readable-stream
     version: 2.0.6
     dependencies:
@@ -33690,6 +33833,14 @@ packages:
       call-me-maybe: registry.npmjs.org/call-me-maybe/1.0.1
       es6-promise: registry.npmjs.org/es6-promise/4.2.8
       glob-to-regexp: registry.npmjs.org/glob-to-regexp/0.3.0
+    dev: false
+
+  registry.npmjs.org/readdir-glob/1.1.2:
+    resolution: {integrity: sha512-6RLVvwJtVwEDfPdn6X6Ille4/lxGl0ATOY4FN/B9nxQcgOazvvI0nodiD19ScKq0PvA/29VpaOQML36o5IzZWA==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/readdir-glob/-/readdir-glob-1.1.2.tgz}
+    name: readdir-glob
+    version: 1.1.2
+    dependencies:
+      minimatch: registry.npmjs.org/minimatch/5.1.0
     dev: false
 
   registry.npmjs.org/readdirp/2.2.1:
@@ -39563,6 +39714,17 @@ packages:
     resolution: {integrity: sha512-PQ2PC7R9rslx84ndNBZB/Dkv8V8fZEpk83RLgXtYd0fwUgEjseMn1Dgajh2x6S8QbZAFa9p2qVCEuYZNgve0dQ==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/zen-observable/-/zen-observable-0.8.15.tgz}
     name: zen-observable
     version: 0.8.15
+
+  registry.npmjs.org/zip-stream/4.1.0:
+    resolution: {integrity: sha512-zshzwQW7gG7hjpBlgeQP9RuyPGNxvJdzR8SUM3QhxCnLjWN2E7j3dOvpeDcQoETfHx0urRS7EtmVToql7YpU4A==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/zip-stream/-/zip-stream-4.1.0.tgz}
+    name: zip-stream
+    version: 4.1.0
+    engines: {node: '>= 10'}
+    dependencies:
+      archiver-utils: registry.npmjs.org/archiver-utils/2.1.0
+      compress-commons: registry.npmjs.org/compress-commons/4.1.1
+      readable-stream: registry.npmjs.org/readable-stream/3.6.0
+    dev: false
 
   registry.npmjs.org/zwitch/1.0.5:
     resolution: {integrity: sha512-V50KMwwzqJV0NpZIZFwfOD5/lyny3WlSzRiXgA0G7VUnRlqttta1L6UQIHzd6EuBY/cHGfwTIck7w1yH6Q5zUw==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/zwitch/-/zwitch-1.0.5.tgz}
