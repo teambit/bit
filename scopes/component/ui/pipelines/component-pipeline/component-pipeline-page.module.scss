@@ -1,0 +1,40 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 24px;
+
+  h2 {
+    margin-bottom: 24px;
+  }
+}
+.graphContainer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.graph {
+  flex-grow: 1;
+  height: 100%;
+  width: 100%;
+
+  border-radius: 5px;
+  border: solid 1px var(--bit-border-color-lightest, #ededed);
+  background: var(--bit-bg-dent, #f6f6f6);
+}
+
+.statContainer {
+  display: flex;
+  margin-bottom: 24px;
+}
+
+.statItem {
+  padding-left: 8px;
+  padding-right: 8px;
+}
+
+.statTitle {
+  font-size: var(--bit-p-xxs);
+  color: #6c707c;
+}
