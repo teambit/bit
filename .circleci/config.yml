@@ -938,8 +938,8 @@ jobs:
       # - run: choco install nodejs --version 16.15.1
       # - run: cinst nodejs --version 16.16.0
       # - run: nodejs.install v12.16.0
-      - run: nvm install 16.16.0
-      - run: nvm use 16.16.0
+      - run: nvm install 16.3.2
+      - run: nvm use 16.3.2
       - run: node -v
       - run: corepack enable
       - run: 'yarn -v'
