@@ -1,0 +1,48 @@
+.artifactsPanel {
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  height: 100%;
+  border-right: 2px solid #ededed;
+  background: #fafafa;
+  font-size: var(--bit-p-xs);
+}
+
+.artifactsPanelCodeTabDrawer {
+  // drawer name
+  > div:first-child {
+    border: none;
+    border-bottom: 1px solid var(--bit-border-color-lightest, #ededed);
+  }
+  height: 100%;
+}
+
+.artifactsPanelCodeDrawerContent {
+  overflow-y: auto;
+}
+
+.drawerIcon {
+  margin-right: 8px;
+  font-size: var(--bit-p-xs);
+}
+
+.label {
+  font-size: var(--bit-p-xxs);
+  font-weight: unset;
+  padding: 4px;
+}
+
+.icon {
+  font-size: var(--bit-p-xxs);
+  padding: 4px;
+  color: var(--bit-text-color-heavy, #2b2b2b);
+  pointer-events: auto;
+}
+
+.artifactsPanelTree {
+  pointer-events: none;
+}
+
+.artifactIconLink {
+  text-decoration: none;
+}

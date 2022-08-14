@@ -1,7 +1,7 @@
 import type { ArtifactFiles, ArtifactObject } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
-import type { BuildTask } from '../build-task';
-import type { ArtifactStorageResolver } from '../storage';
+import type { TaskDescriptor } from '../build-task';
 import type { ArtifactDefinition } from './artifact-definition';
+import { DefaultResolver } from '../storage/default-resolver';
 
 export class Artifact {
   constructor(
@@ -10,25 +10,11 @@ export class Artifact {
      */
     readonly def: ArtifactDefinition,
 
-    /**
-     * storage resolver. can be used to replace where artifacts are stored.
-     */
-    readonly storageResolver: ArtifactStorageResolver,
-
     readonly files: ArtifactFiles,
-
-    /**
-     * join this with `this.paths` to get the absolute paths
-     */
-    readonly rootDir: string,
-
     /**
      * the declaring task.
-     * todo: change this to taskDescriptor that has only the metadata of the task, so it could be
-     * saved into the model.
      */
-    readonly task: BuildTask,
-
+    readonly task: TaskDescriptor,
     /**
      * timestamp of the artifact creation.
      */
@@ -36,7 +22,11 @@ export class Artifact {
   ) {}
 
   get storage() {
-    return this.storageResolver;
+    return this.storageResolver.name;
+  }
+
+  get storageResolver() {
+    return this.def.storageResolver || new DefaultResolver();
   }
 
   /**
@@ -60,6 +50,10 @@ export class Artifact {
     return this.def.generatedBy || this.task.aspectId;
   }
 
+  isEmpty(): boolean {
+    return this.files.isEmpty();
+  }
+
   /**
    * archive all artifact files into a tar.
    */
@@ -77,5 +71,20 @@ export class Artifact {
       },
       files: this.files,
     };
+  }
+
+  static fromArtifactObject(object: ArtifactObject): Artifact {
+    const artifactDef: ArtifactDefinition = {
+      name: object.name,
+      generatedBy: object.generatedBy,
+      description: object.description,
+    };
+
+    const task: TaskDescriptor = {
+      aspectId: object.task.id,
+      name: object.task.name,
+    };
+
+    return new Artifact(artifactDef, object.files, task);
   }
 }
