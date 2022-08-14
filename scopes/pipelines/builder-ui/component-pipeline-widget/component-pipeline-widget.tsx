@@ -9,7 +9,7 @@ export function ComponentPipelineWidget({ className, ...rest }: ComponentPipelin
   return (
     <Tooltip placement="bottom" offset={[0, 15]} content={'Pipeline'}>
       <div {...rest} className={classNames(styles.widgetMenuIcon, className)}>
-        <img src={'https://static.bit.dev/bit-icons/pipe.svg'} />
+        <img src={'https://static.bit.dev/bit-icons/pipe.svg?v=0.1'} />
       </div>
     </Tooltip>
   );
