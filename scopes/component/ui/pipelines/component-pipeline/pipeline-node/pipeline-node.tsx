@@ -2,7 +2,6 @@ import React from 'react';
 import { Card } from '@teambit/base-ui.surfaces.card';
 import { ellipsis } from '@teambit/design.ui.styles.ellipsis';
 import classNames from 'classnames';
-import { Tooltip } from '@teambit/design.ui.tooltip';
 import { useComponentPipelineContext } from '@teambit/component.ui.pipelines.component-pipeline-context';
 import { TaskReport } from '@teambit/component.ui.pipelines.component-pipeline-model';
 import { calcMilliseconds, calcSeconds } from '@teambit/component.ui.pipelines.component-pipeline-utils';
@@ -15,7 +14,7 @@ export function PipelineNode(props: PipelineNodeProps) {
   const {
     id,
     isConnectable,
-    data: { id: taskId, name: taskName, duration, warnings, errors, artifact },
+    data: { taskId, taskName, duration, warnings, errors },
   } = props;
   const icon = 'https://static.bit.dev/extensions-icons/react.svg';
   const componentPipelineContext = useComponentPipelineContext();
@@ -39,7 +38,7 @@ export function PipelineNode(props: PipelineNodeProps) {
         )}
         roundness="small"
         elevation="none"
-        onClick={artifact && onPipelineNodeClicked}
+        onClick={onPipelineNodeClicked}
       >
         <div className={styles.componentDetailsContainer}>
           <div className={classNames(styles.componentDetails)}>{<img src={icon} className={styles.envIcon} />}</div>
@@ -56,12 +55,7 @@ export function PipelineNode(props: PipelineNodeProps) {
       </Card>
     </div>
   );
-  if (!artifact)
-    return (
-      <Tooltip placement="bottom" content={'no artifacts'}>
-        {Pipeline}
-      </Tooltip>
-    );
+
   return Pipeline;
 }
 

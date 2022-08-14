@@ -1,5 +1,5 @@
+import mergeDeepLeft from 'ramda/src/mergeDeepLeft';
 import { EnvPolicyConfigObject } from '@teambit/dependency-resolver';
-import { merge } from 'lodash';
 import { TsConfigSourceFile } from 'typescript';
 import { TsCompilerOptionsWithoutTsConfig, TypescriptAspect, TypescriptMain } from '@teambit/typescript';
 import { ApplicationAspect, ApplicationMain } from '@teambit/application';
@@ -136,7 +136,7 @@ export class NodeMain {
    */
   overrideDependencies(dependencyPolicy: EnvPolicyConfigObject) {
     return this.envs.override({
-      getDependencies: () => merge(dependencyPolicy, this.nodeEnv.getDependencies()),
+      getDependencies: () => mergeDeepLeft(dependencyPolicy, this.nodeEnv.getDependencies()),
     });
   }
 
