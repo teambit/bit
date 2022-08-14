@@ -31,7 +31,13 @@ type ArtifactGQLFile = {
   externalUrl?: string;
 };
 
-type ArtifactGQLData = { name: string; description?: string; files: ArtifactGQLFile[] };
+type ArtifactGQLData = {
+  name: string;
+  description?: string;
+  storage?: string;
+  generatedBy: string;
+  files: ArtifactGQLFile[];
+};
 type TaskReport = PipelineReport & {
   artifact?: ArtifactGQLData;
   componentId: ComponentID;
@@ -41,8 +47,10 @@ export function builderSchema(builder: BuilderMain) {
   return {
     typeDefs: gql`
       type TaskReport {
+        # for GQL caching - taskId + taskName
         id: String!
-        name: String!
+        taskId: String!
+        taskName: String!
         description: String
         startTime: String
         endTime: String
@@ -67,6 +75,8 @@ export function builderSchema(builder: BuilderMain) {
       }
 
       type Artifact {
+        # for GQL caching -  PipelineId + Artifact Name
+        id: String!
         # artifact name
         name: String!
         description: String
@@ -90,16 +100,19 @@ export function builderSchema(builder: BuilderMain) {
           const artifactsWithVinyl = await Promise.all(
             artifacts.map(async (artifact) => {
               const id = artifact.task.aspectId;
-              const artifactFiles = (await builder.getArtifactsVinylByAspect(component, id)).map((vinyl) => {
-                const { basename, path, contents } = vinyl || {};
-                const isBinary = path && isBinaryPath(path);
-                const content = !isBinary ? contents?.toString('utf-8') : undefined;
-                const downloadUrl = encodeURI(
-                  builder.getDownloadUrlForArtifact(component.id, artifact.task.aspectId, path)
-                );
-                const externalUrl = vinyl.url;
-                return { id: path, name: basename, path, content, downloadUrl, externalUrl };
-              });
+              const name = artifact.task.name as string;
+              const artifactFiles = (await builder.getArtifactsVinylByAspectAndTaskName(component, id, name)).map(
+                (vinyl) => {
+                  const { basename, path, contents } = vinyl || {};
+                  const isBinary = path && isBinaryPath(path);
+                  const content = !isBinary ? contents?.toString('utf-8') : undefined;
+                  const downloadUrl = encodeURI(
+                    builder.getDownloadUrlForArtifact(component.id, artifact.task.aspectId, path)
+                  );
+                  const externalUrl = vinyl.url;
+                  return { id: path, name: basename, path, content, downloadUrl, externalUrl };
+                }
+              );
               const artifactObj = { ...artifact, files: artifactFiles };
               return artifactObj;
             })
@@ -107,21 +120,23 @@ export function builderSchema(builder: BuilderMain) {
 
           const result = pipeline.map((task) => ({
             ...task,
-            artifact: artifactsWithVinyl.find((data) => data.task.aspectId === task.taskId),
+            artifact: artifactsWithVinyl.find(
+              (data) => data.task.aspectId === task.taskId && data.task.name === task.taskName
+            ),
           }));
 
           return result;
         },
       },
       TaskReport: {
-        id: (taskReport: TaskReport) => taskReport.taskId,
-        name: (taskReport: TaskReport) => taskReport.taskName,
+        id: (taskReport: TaskReport) => `${taskReport.taskId}-${taskReport.taskName}`,
         description: (taskReport: TaskReport) => taskReport.taskDescription,
         errors: (taskReport: TaskReport) => taskReport.errors?.map((e) => e.toString()) || [],
         warnings: (taskReport: TaskReport) => taskReport.warnings || [],
         artifact: async (taskReport: TaskReport, { path: pathFilter }: { path?: string }) => {
           if (!taskReport.artifact) return undefined;
           return {
+            id: `${taskReport.taskId}-${taskReport.taskName}-${taskReport.artifact?.name}`,
             ...taskReport.artifact,
             files: taskReport.artifact.files.filter((file) => !pathFilter || file.path === pathFilter),
           };

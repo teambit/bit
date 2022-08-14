@@ -1,6 +1,7 @@
 import { Section } from '@teambit/component';
 import React from 'react';
 import { ComponentPipelinePage } from '@teambit/component.ui.pipelines.component-pipeline';
+import { ComponentPipelineWidget } from './component-pipeline-widget';
 import { BuilderUI } from './builder.ui.runtime';
 
 export class BuilderSection implements Section {
@@ -13,7 +14,7 @@ export class BuilderSection implements Section {
 
   navigationLink = {
     href: '~component-pipeline',
-    children: 'Pipeline',
+    children: <ComponentPipelineWidget />,
   };
 
   order = 50;
