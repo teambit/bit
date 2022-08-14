@@ -1332,6 +1332,7 @@ jobs:
       BITSRC_ENV: stg
       SKIP_REGISTRY_TESTS: true
       SKIP_BIT_DEV_TESTS: true
+      Path: C:\Users\circleci\AppData\Local\.bvm;$ENV:PATH
     parallelism: 1
     steps:
       - attach_workspace:
