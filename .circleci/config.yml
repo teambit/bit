@@ -1342,6 +1342,7 @@ jobs:
       - run: nvm use 16.13.2
       - run: node -v
       - run: npm -v
+      - run: $ENV:PATH
       # - run: Get-Content -Path .\version.txt
       # - restore_cache:
       #     key: bvm-folder-v1
