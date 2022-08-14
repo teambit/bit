@@ -56,12 +56,7 @@ export function PipelineNode(props: PipelineNodeProps) {
       </Card>
     </div>
   );
-  // if (!artifact)
-  //   return (
-  //     <Tooltip placement="bottom" content={'no artifacts'}>
-  //       {Pipeline}
-  //     </Tooltip>
-  //   );
+
   return Pipeline;
 }
 
