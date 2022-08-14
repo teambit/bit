@@ -285,7 +285,9 @@ export class WorkspaceComponentLoader {
       Object.assign(existingExtension.data, data);
       return;
     }
-    component.state.config.extensions.push(await this.getDataEntry(extension, data));
+    if (data){
+      component.state.config.extensions.push(await this.getDataEntry(extension, data));
+    }
   }
 
   private async getDataEntry(extension: string, data: { [key: string]: any }): Promise<ExtensionDataEntry> {
