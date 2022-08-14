@@ -15,7 +15,7 @@ export function PipelineNode(props: PipelineNodeProps) {
   const {
     id,
     isConnectable,
-    data: { id: taskId, name: taskName, duration, warnings, errors, artifact },
+    data: { taskId, taskName, duration, warnings, errors, artifact },
   } = props;
   const icon = 'https://static.bit.dev/extensions-icons/react.svg';
   const componentPipelineContext = useComponentPipelineContext();
@@ -39,7 +39,7 @@ export function PipelineNode(props: PipelineNodeProps) {
         )}
         roundness="small"
         elevation="none"
-        onClick={artifact && onPipelineNodeClicked}
+        onClick={onPipelineNodeClicked}
       >
         <div className={styles.componentDetailsContainer}>
           <div className={classNames(styles.componentDetails)}>{<img src={icon} className={styles.envIcon} />}</div>
@@ -56,12 +56,12 @@ export function PipelineNode(props: PipelineNodeProps) {
       </Card>
     </div>
   );
-  if (!artifact)
-    return (
-      <Tooltip placement="bottom" content={'no artifacts'}>
-        {Pipeline}
-      </Tooltip>
-    );
+  // if (!artifact)
+  //   return (
+  //     <Tooltip placement="bottom" content={'no artifacts'}>
+  //       {Pipeline}
+  //     </Tooltip>
+  //   );
   return Pipeline;
 }
 

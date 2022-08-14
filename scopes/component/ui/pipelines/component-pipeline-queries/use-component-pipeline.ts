@@ -14,13 +14,15 @@ const PIPELINE_REPORT_QUERY = gql`
         }
         pipelineReport(taskId: $taskId) {
           id
-          name
+          taskId
+          taskName
           description
           startTime
           endTime
           errors
           warnings
           artifact {
+            id
             name
             description
             files {

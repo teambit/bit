@@ -1,5 +1,6 @@
 import React, { HTMLAttributes, useState, useMemo } from 'react';
 import classNames from 'classnames';
+import { EmptyBox } from '@teambit/design.ui.empty-box';
 import { Icon } from '@teambit/evangelist.elements.icon';
 import { WidgetProps } from '@teambit/ui-foundation.ui.tree.tree-node';
 import { DrawerUI } from '@teambit/ui-foundation.ui.tree.drawer';
@@ -24,11 +25,11 @@ export function ArtifactPanel({ className, fileIconMatchers }: ArtifactsPanelPro
   if (!componentPipelineContext) return null;
 
   const { pipeline, selectedPipelineId } = componentPipelineContext;
-  const { artifact, name: taskName } = pipeline.find((task) => task.id === selectedPipelineId) || {};
+  const { artifact, taskName } = pipeline.find((task) => task.id === selectedPipelineId) || {};
   const { name, files } = artifact || {};
   const artifactFiles = files?.map((file) => file.name) || [];
   const currentHref = location?.pathname || '';
-  const drawerName = `${taskName} / ${name}`;
+  const drawerName = `${taskName} ${name ? '/ '.concat(name) : ''}`;
   const onToggle = () => onToggleDrawer((open) => !open);
   const getIcon = useMemo(() => generateIcon(fileIconMatchers), [fileIconMatchers]);
   const getHref = () => currentHref;
@@ -43,13 +44,23 @@ export function ArtifactPanel({ className, fileIconMatchers }: ArtifactsPanelPro
         contentClass={styles.artifactsPanelCodeDrawerContent}
         className={classNames(styles.artifactsPanelCodeTabDrawer)}
       >
-        <FileTree
-          className={styles.artifactsPanelTree}
-          getIcon={getIcon}
-          getHref={getHref}
-          files={artifactFiles}
-          widgets={widgets}
-        />
+        {artifactFiles.length > 0 && (
+          <FileTree
+            className={styles.artifactsPanelTree}
+            getIcon={getIcon}
+            getHref={getHref}
+            files={artifactFiles}
+            widgets={widgets}
+          />
+        )}
+        {artifactFiles.length === 0 && (
+          <EmptyBox
+            className={className}
+            title="No Artifacts produced for this task"
+            linkText="Learn more about pipelines"
+            link={`https://bit.dev/docs/dev-services/builder/build-pipelines`}
+          />
+        )}
       </DrawerUI>
     </div>
   );
