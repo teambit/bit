@@ -1300,6 +1300,8 @@ jobs:
     steps:
       - attach_workspace:
           at: .
+      - run: nvm install 16.16.0
+      - run: nvm use 16.16.0
       - run: npm view @teambit/bit version | Out-File -FilePath .\version.txt
       - run: Get-Content -Path .\version.txt
       - restore_cache:
