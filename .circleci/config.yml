@@ -1309,7 +1309,10 @@ jobs:
       - restore_cache:
           key: v2-bvm-folder-{{ checksum "version.txt" }}
       - run: 'npm i -g @teambit/bvm'
-      - run: 'bvm upgrade'
+      - run:
+          name: 'bvm upgrade'
+          command: 'bvm upgrade'
+          no_output_timeout: 60m
       - run: 'setx path "%path%;C:\Users\circleci\AppData\Local\.bvm"'
       - run: 'bit -v'
       - run: bit -v | Out-File -FilePath .\version.txt
