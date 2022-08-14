@@ -46,7 +46,7 @@ export class BuilderUI {
     const section = new BuilderSection(host, ui);
 
     component.registerRoute(section.route);
-    component.registerNavigation(section.navigationLink, section.order);
+    // component.registerWidget(section.navigationLink, section.order);
 
     return ui;
   }
