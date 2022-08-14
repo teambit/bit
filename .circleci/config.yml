@@ -1336,7 +1336,9 @@ jobs:
     steps:
       - attach_workspace:
           at: .
-      - run: cinst nodejs --version 16.16.0
+      # We can't use Node.js newer than 16.13.2 due to this issue with npm: https://github.com/npm/cli/issues/4234
+      - run: nvm install 16.13.2
+      - run: nvm use 16.13.2
       - run: node -v
       - run: npm -v
       # - run: Get-Content -Path .\version.txt
