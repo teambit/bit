@@ -290,9 +290,10 @@ export class WorkspaceComponentLoader {
     }
   }
 
-  private async getDataEntry(extension: string, data: { [key: string]: any }): Promise<ExtensionDataEntry> {
+  private async getDataEntry(extensionId: string, data: { [key: string]: any }): Promise<ExtensionDataEntry> {
     // TODO: @gilad we need to refactor the extension data entry api.
-    return new ExtensionDataEntry(undefined, undefined, extension, undefined, data);
+    const entry = ExtensionDataEntry.create(extensionId, undefined, data);
+    return entry;
   }
 }
 
