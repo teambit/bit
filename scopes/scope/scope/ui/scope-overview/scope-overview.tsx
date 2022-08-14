@@ -32,6 +32,7 @@ export function ScopeOverview({ badgeSlot, overviewSlot }: ScopeOverviewProps) {
       />
       <ComponentGrid>
         {components.map((component, index) => {
+          if (component.deprecation?.isDeprecate) return null;
           return (
             <div key={index}>
               <ScopeComponentCard component={component} />

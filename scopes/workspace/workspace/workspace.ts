@@ -110,7 +110,7 @@ import {
 } from './workspace.provider';
 import { WorkspaceComponentLoader } from './workspace-component/workspace-component-loader';
 import { IncorrectEnvAspect } from './exceptions/incorrect-env-aspect';
-import { GraphFromFsBuilder, ShouldIgnoreFunc } from './build-graph-from-fs';
+import { GraphFromFsBuilder, ShouldLoadFunc } from './build-graph-from-fs';
 import { BitMap } from './bit-map';
 import { WorkspaceAspect } from './workspace.aspect';
 
@@ -156,6 +156,8 @@ export type ExtensionsOrigin =
   | 'BitmapFile'
   | 'ModelSpecific'
   | 'ModelNonSpecific'
+  | 'UnmergedSpecific'
+  | 'UnmergedNonSpecific'
   | 'WorkspaceVariants'
   | 'ComponentJsonFile'
   | 'WorkspaceDefault'
@@ -1050,6 +1052,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
    * defaults extensions from workspace config
    * extensions from the model.
    */
+  // eslint-disable-next-line complexity
   async componentExtensions(
     componentId: ComponentID,
     componentFromScope?: Component,
@@ -1066,6 +1069,23 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
 
     const bitMapEntry = this.consumer.bitMap.getComponentIfExist(componentId._legacy);
     const bitMapExtensions = bitMapEntry?.config;
+
+    const unmergedHead = this.getUnmergedHead(componentId);
+    let unmergedExtensions: ExtensionDataList | undefined;
+    let unmergedExtensionsSpecific: ExtensionDataList | undefined;
+    let unmergedExtensionsNonSpecific: ExtensionDataList | undefined;
+    if (unmergedHead) {
+      const versionInstance = await this.scope.legacyScope.getVersionInstance(
+        componentId._legacy.changeVersion(unmergedHead.toString())
+      );
+      unmergedExtensions = versionInstance.extensions;
+      const [specific, nonSpecific] = partition(
+        unmergedExtensions,
+        (entry) => entry.config[AspectSpecificField] === true
+      );
+      unmergedExtensionsSpecific = new ExtensionDataList(...specific);
+      unmergedExtensionsNonSpecific = new ExtensionDataList(...nonSpecific);
+    }
 
     const scopeExtensions = componentFromScope?.config?.extensions || new ExtensionDataList();
     const [specific, nonSpecific] = partition(scopeExtensions, (entry) => entry.config[AspectSpecificField] === true);
@@ -1143,6 +1163,9 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
       setDataListAsSpecific(configFileExtensions);
       await addAndLoadExtensions(configFileExtensions, 'ComponentJsonFile');
     }
+    if (unmergedExtensionsSpecific && !excludeOrigins.includes('UnmergedSpecific')) {
+      await addAndLoadExtensions(ExtensionDataList.fromArray(unmergedExtensionsSpecific), 'UnmergedSpecific');
+    }
     if (!excludeOrigins.includes('ModelSpecific')) {
       await addAndLoadExtensions(ExtensionDataList.fromArray(scopeExtensionsSpecific), 'ModelSpecific');
     }
@@ -1162,6 +1185,14 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     ) {
       await addAndLoadExtensions(wsDefaultExtensions, 'WorkspaceDefault');
     }
+    if (
+      unmergedExtensionsNonSpecific &&
+      mergeFromScope &&
+      continuePropagating &&
+      !excludeOrigins.includes('UnmergedNonSpecific')
+    ) {
+      await addAndLoadExtensions(unmergedExtensionsNonSpecific, 'UnmergedNonSpecific');
+    }
     if (mergeFromScope && continuePropagating && !excludeOrigins.includes('ModelNonSpecific')) {
       await addAndLoadExtensions(scopeExtensionsNonSpecific, 'ModelNonSpecific');
     }
@@ -1176,6 +1207,11 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
       extensions,
       beforeMerge: extensionsToMerge,
     };
+  }
+
+  private getUnmergedHead(componentId: ComponentID) {
+    const unmerged = this.scope.legacyScope.objects.unmergedComponents.getEntry(componentId._legacy.name);
+    return unmerged?.head;
   }
 
   private async warnAboutMisconfiguredEnv(componentId: ComponentID, extensionDataList: ExtensionDataList) {
@@ -1387,7 +1423,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     return componentConfigFile;
   }
 
-  async getAspectsGraphWithoutCore(components: Component[], isAspect?: ShouldIgnoreFunc) {
+  async getAspectsGraphWithoutCore(components: Component[], isAspect?: ShouldLoadFunc) {
     const ids = components.map((component) => component.id._legacy);
     const coreAspectsStringIds = this.aspectLoader.getCoreAspectIds();
     const coreAspectsComponentIds = coreAspectsStringIds.map((id) => BitId.parse(id, true));
@@ -1418,7 +1454,10 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
    * keep in mind that the graph may have circles.
    */
   async loadAspects(ids: string[] = [], throwOnError = false, neededFor?: string): Promise<string[]> {
-    this.logger.info(`loadAspects, loading ${ids.length} aspects.
+    // generate a random callId to be able to identify the call from the logs
+    const callId = Math.floor(Math.random() * 1000);
+    const loggerPrefix = `[${callId}] loadAspects,`;
+    this.logger.info(`${loggerPrefix} loading ${ids.length} aspects.
 ids: ${ids.join(', ')}
 needed-for: ${neededFor || '<unknown>'}`);
     const notLoadedIds = ids.filter((id) => !this.aspectLoader.isAspectLoaded(id));
@@ -1451,9 +1490,22 @@ needed-for: ${neededFor || '<unknown>'}`);
 
     const graph = await this.getAspectsGraphWithoutCore(components, isAspect);
     const idsStr = graph.nodes();
+    this.logger.debug(`${loggerPrefix} found ${idsStr.length} aspects in the aspects-graph`);
     const compIds = await this.resolveMultipleComponentIds(idsStr);
     const aspects = await this.getMany(compIds);
     const { workspaceComps, scopeComps } = await this.groupComponentsByWorkspaceAndScope(aspects);
+    this.logger.debug(
+      `${loggerPrefix} found ${workspaceComps.length} components in the workspace:\n${workspaceComps
+        .map((c) => c.id.toString())
+        .join('\n')}`
+    );
+    this.logger.debug(
+      `${loggerPrefix} ${
+        scopeComps.length
+      } components are not in the workspace and are loaded from the scope:\n${scopeComps
+        .map((c) => c.id.toString())
+        .join('\n')}`
+    );
     const scopeIds = scopeComps.map((aspect) => aspect.id.toString());
     const workspaceAspects = await this.requireComponents(workspaceComps);
     const workspaceManifests = await this.aspectLoader.getManifestsFromRequireableExtensions(
@@ -1504,7 +1556,7 @@ needed-for: ${neededFor || '<unknown>'}`);
       throwOnError
     );
     await this.aspectLoader.loadExtensionsByManifests(pluginsWorkspaceManifests, throwOnError);
-
+    this.logger.debug(`${loggerPrefix} finish loading aspects`);
     return compact(scopeEnvsManifestsIds.concat(scopeOtherManifestsIds).concat(workspaceManifestsIds));
   }
 
@@ -1516,9 +1568,9 @@ needed-for: ${neededFor || '<unknown>'}`);
   async buildOneGraphForComponents(
     ids: BitId[],
     ignoreIds?: BitIds,
-    shouldIgnoreFunc?: ShouldIgnoreFunc
+    shouldLoadFunc?: ShouldLoadFunc
   ): Promise<LegacyGraph> {
-    const graphFromFsBuilder = new GraphFromFsBuilder(this, this.logger, ignoreIds, shouldIgnoreFunc);
+    const graphFromFsBuilder = new GraphFromFsBuilder(this, this.logger, ignoreIds, shouldLoadFunc);
     return graphFromFsBuilder.buildGraph(ids);
   }
 
@@ -1640,18 +1692,6 @@ needed-for: ${neededFor || '<unknown>'}`);
         const existOnWorkspace = await this.hasId(component.id);
         existOnWorkspace ? workspaceComps.push(component) : scopeComps.push(component);
       })
-    );
-    this.logger.debug(
-      `loadAspects, found ${workspaceComps.length} components in the workspace:\n${workspaceComps
-        .map((c) => c.id.toString())
-        .join('\n')}`
-    );
-    this.logger.debug(
-      `loadAspects, ${
-        scopeComps.length
-      } components are not in the workspace and are loaded from the scope:\n${scopeComps
-        .map((c) => c.id.toString())
-        .join('\n')}`
     );
     return { workspaceComps, scopeComps };
   }
