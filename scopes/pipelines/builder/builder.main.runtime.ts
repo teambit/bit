@@ -214,7 +214,7 @@ export class BuilderMain {
         Object.assign(artifact, Artifact.fromArtifactObject(artifact));
       }
     });
-    clonedData.artifacts = ArtifactList.fromArray(clonedData.artifacts);
+    clonedData.artifacts = ArtifactList.fromArray(clonedData.artifacts || []);
     return clonedData;
   }
 

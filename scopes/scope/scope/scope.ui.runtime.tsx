@@ -284,7 +284,7 @@ export class ScopeUI {
         treeWidgets: this.sidebarSlot,
         filtersSlot: this.drawerComponentsFiltersSlot,
         drawerWidgetSlot: this.drawerWidgetSlot,
-        assumeScopeInUrl
+        assumeScopeInUrl,
       })
     );
   }
@@ -360,7 +360,7 @@ export class ScopeUI {
   ];
 
   static defaultConfig = {
-    showGallery: true
+    showGallery: true,
   };
 
   static async provider(
@@ -419,11 +419,12 @@ export class ScopeUI {
     if (ui) ui.registerRoot(scopeUi.uiRoot.bind(scopeUi));
     scopeUi.registerMenuItem(scopeUi.menuItems);
     scopeUi.registerMenuWidget(() => <ScopeUseBox />);
-    if (config.showGallery) scopeUi.registerSidebarLink(() => (
-      <MenuLinkItem exact href="/" icon="comps">
-        Gallery
-      </MenuLinkItem>
-    ));
+    if (config.showGallery)
+      scopeUi.registerSidebarLink(() => (
+        <MenuLinkItem exact href="/" icon="comps">
+          Gallery
+        </MenuLinkItem>
+      ));
     if (ui) scopeUi.registerExplicitRoutes();
 
     return scopeUi;
