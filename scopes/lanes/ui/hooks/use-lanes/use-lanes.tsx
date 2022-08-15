@@ -38,20 +38,26 @@ const GET_LANES = gql`
   }
 `;
 
-export function useLanes(viewedLaneId?: string): { lanesModel?: LanesModel } & Omit<QueryResult<LanesQuery>, 'data'> {
+export function useLanes(
+  getViewedLaneId?: () => string | undefined
+): { lanesModel?: LanesModel } & Omit<QueryResult<LanesQuery>, 'data'> {
   const lanesContext = useLanesContext();
-  const skip = !lanesContext;
+  const skip = !!lanesContext;
 
   const { data, ...rest } = useDataQuery(GET_LANES, { skip });
   const { scope, loading } = useScopeQuery(skip);
 
   let lanesModel: LanesModel;
   if (lanesContext) lanesModel = lanesContext;
-  else lanesModel = data && LanesModel.from({ data, host: data?.getHost?.id, scope, viewedLaneId });
+  else
+    lanesModel = data && LanesModel.from({ data, host: data?.getHost?.id, scope, viewedLaneId: getViewedLaneId?.() });
 
   useEffect(() => {
-    lanesModel?.setViewedLane(viewedLaneId);
-  }, [lanesModel, viewedLaneId]);
+    if (getViewedLaneId) {
+      const viewedLaneId = getViewedLaneId();
+      lanesModel?.setViewedLane(viewedLaneId);
+    }
+  }, [lanesModel, getViewedLaneId]);
 
   return {
     ...rest,

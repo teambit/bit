@@ -182,7 +182,6 @@ export class LanesUI {
     const drawer = new LanesDrawer({ showScope: lanesUi.lanesHost === 'workspace' });
     sidebarUi.registerDrawer(drawer);
     lanesUi.registerRoutes();
-    // lanesUi.registerMenuWidget(() => <UseLaneMenu host={lanesUi.lanesHost} />);
     lanesUi.registerMenuWidget(() => {
       const { lanesModel } = useLanes();
       if (!lanesModel?.viewedLane) return null;

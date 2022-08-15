@@ -8,6 +8,6 @@ export type LanesProviderProps = {
 };
 
 export function LanesProvider({ children, viewedLaneId }: LanesProviderProps) {
-  const { lanesModel } = useLanes(viewedLaneId);
+  const { lanesModel } = useLanes(() => viewedLaneId);
   return <LanesContext.Provider value={lanesModel}>{children}</LanesContext.Provider>;
 }
