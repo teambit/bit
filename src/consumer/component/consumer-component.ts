@@ -55,9 +55,9 @@ export type ComponentProps = {
   dependencies?: Dependency[];
   devDependencies?: Dependency[];
   flattenedDependencies?: BitIds;
-  packageDependencies?: Record<string, any>;
-  devPackageDependencies?: Record<string, any>;
-  peerPackageDependencies?: Record<string, any>;
+  packageDependencies?: Record<string, string>;
+  devPackageDependencies?: Record<string, string>;
+  peerPackageDependencies?: Record<string, string>;
   overrides: ComponentOverrides;
   defaultScope: string | null;
   packageJsonFile?: PackageJsonFile;
@@ -103,9 +103,9 @@ export default class Component {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   devDependencies: Dependencies;
   flattenedDependencies: BitIds;
-  packageDependencies: any;
-  devPackageDependencies: any;
-  peerPackageDependencies: any;
+  packageDependencies: Record<string, string>;
+  devPackageDependencies: Record<string, string>;
+  peerPackageDependencies: Record<string, string>;
   manuallyRemovedDependencies: ManuallyChangedDependencies = {};
   manuallyAddedDependencies: ManuallyChangedDependencies = {};
   overrides: ComponentOverrides;
@@ -281,6 +281,10 @@ export default class Component {
       ...this.extensionDependencies.getClone(),
     ];
     return new Dependencies(dependencies);
+  }
+
+  getAllPackageDependencies() {
+    return { ...this.packageDependencies, ...this.devPackageDependencies };
   }
 
   getAllNonEnvsDependencies(): Dependency[] {

@@ -12,7 +12,7 @@ import { ComponentNotFound } from '@teambit/scope';
 import { BitError } from '@teambit/bit-error';
 import { Workspace } from './workspace';
 
-export type ShouldIgnoreFunc = (bitId: BitId) => Promise<boolean>;
+export type ShouldLoadFunc = (bitId: BitId) => Promise<boolean>;
 
 export class GraphFromFsBuilder {
   private graph = new LegacyGraph();
@@ -24,7 +24,7 @@ export class GraphFromFsBuilder {
     private workspace: Workspace,
     private logger: Logger,
     private ignoreIds = new BitIds(),
-    private shouldLoadItsDeps?: ShouldIgnoreFunc
+    private shouldLoadItsDeps?: ShouldLoadFunc
   ) {
     this.consumer = this.workspace.consumer;
   }

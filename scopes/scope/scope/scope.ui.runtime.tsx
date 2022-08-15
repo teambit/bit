@@ -51,6 +51,10 @@ export type OverviewLine = ComponentType;
 
 export type OverviewLineSlot = SlotRegistry<OverviewLine[]>;
 
+export type ScopeUIConfig = {
+  showGallery: boolean;
+};
+
 export class ScopeUI {
   constructor(
     /**
@@ -280,7 +284,7 @@ export class ScopeUI {
         treeWidgets: this.sidebarSlot,
         filtersSlot: this.drawerComponentsFiltersSlot,
         drawerWidgetSlot: this.drawerWidgetSlot,
-        assumeScopeInUrl
+        assumeScopeInUrl,
       })
     );
   }
@@ -355,9 +359,13 @@ export class ScopeUI {
     Slot.withType<ComponentFiltersSlot>(),
   ];
 
+  static defaultConfig = {
+    showGallery: true,
+  };
+
   static async provider(
     [ui, componentUi, sidebar, commandBarUI]: [UiUI, ComponentUI, SidebarUI, CommandBarUI],
-    config,
+    config: ScopeUIConfig,
     [
       routeSlot,
       menuSlot,
@@ -411,11 +419,12 @@ export class ScopeUI {
     if (ui) ui.registerRoot(scopeUi.uiRoot.bind(scopeUi));
     scopeUi.registerMenuItem(scopeUi.menuItems);
     scopeUi.registerMenuWidget(() => <ScopeUseBox />);
-    scopeUi.registerSidebarLink(() => (
-      <MenuLinkItem exact href="/" icon="comps">
-        Gallery
-      </MenuLinkItem>
-    ));
+    if (config.showGallery)
+      scopeUi.registerSidebarLink(() => (
+        <MenuLinkItem exact href="/" icon="comps">
+          Gallery
+        </MenuLinkItem>
+      ));
     if (ui) scopeUi.registerExplicitRoutes();
 
     return scopeUi;
