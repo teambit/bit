@@ -7,10 +7,10 @@ import { EmptyBox } from '@teambit/design.ui.empty-box';
 import { MDXLayout } from '@teambit/mdx.ui.mdx-layout';
 import { AlertCard } from '@teambit/design.ui.alert-card';
 import { TestLoader } from '@teambit/defender.ui.test-loader';
+import { EmptyStateSlot } from '@teambit/tester';
 import classNames from 'classnames';
 import React, { HTMLAttributes, useContext } from 'react';
 import { TestTable } from '@teambit/defender.ui.test-table';
-import { EmptyStateSlot } from '../tester.ui.runtime';
 import styles from './tests-page.module.scss';
 
 const TESTS_SUBSCRIPTION_CHANGED = gql`
