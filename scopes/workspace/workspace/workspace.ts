@@ -1234,7 +1234,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     if (!this.envs.isUsingEnvEnv(env)) {
       this.warnedAboutMisconfiguredEnvs.push(envFromEnvsAspect);
       this.logger.consoleWarning(
-        `env "${envFromEnvsAspect}" is not of type env. (correct the env's type, or component config with "bit env set")`
+        `env "${envFromEnvsAspect}" is not of type env. (correct the env's type, or component config with "bit env set ${envFromEnvsAspect} teambit.envs/env")`
       );
     }
   }
