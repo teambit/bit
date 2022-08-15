@@ -286,7 +286,14 @@ export class WorkspaceComponentLoader {
       return;
     }
     if (data){
-      component.state.config.extensions.push(await this.getDataEntry(extension, data));
+      const dataEntry = await this.getDataEntry(extension, data);
+      const cloned = dataEntry.clone();
+      if (cloned.extensionId) {
+        const compId = await this.workspace.resolveComponentId(cloned.extensionId);
+        cloned.extensionId = compId._legacy;
+        cloned.newExtensionId = compId;
+      }
+      component.state.config.extensions.push(cloned);
     }
   }
 
