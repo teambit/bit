@@ -1295,6 +1295,8 @@ jobs:
 
   windows_bvm_install:
     <<: *windows_defaults
+    environment:
+      Path: C:\Users\circleci\.npm-global;C:\Users\circleci\AppData\Local\.bvm;$ENV:PATH
     steps:
       - attach_workspace:
           at: .
@@ -1326,11 +1328,11 @@ jobs:
       BITSRC_ENV: stg
       SKIP_REGISTRY_TESTS: true
       SKIP_BIT_DEV_TESTS: true
-      Path: C:\Users\circleci\AppData\Local\.bvm;$ENV:PATH
     parallelism: 1
     steps:
       - attach_workspace:
           at: .
+      - run: cinst nodejs --version 16.13.2
       - run: node -v
       - run: npm -v
       # - run: Get-Content -Path .\version.txt
