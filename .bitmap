@@ -1242,6 +1242,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/mdx/ui/snippet"
     },
+    "ui/drawer": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/lanes/ui/drawer"
+    },
     "ui/elements/level-icon": {
         "scope": "teambit.design",
         "version": "0.0.11",
@@ -1296,6 +1302,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/uis/full-loader"
     },
+    "ui/gallery": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/lanes/ui/gallery"
+    },
     "ui/gallery/base-component-card": {
         "scope": "teambit.explorer",
         "version": "0.0.492",
@@ -1337,6 +1349,12 @@
         "version": "0.0.21",
         "mainFile": "index.ts",
         "rootDir": "scopes/react/bit-component-meta"
+    },
+    "ui/hooks": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/lanes/ui/hooks"
     },
     "ui/hooks/scope-context": {
         "scope": "teambit.scope",
@@ -1422,12 +1440,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/design/ui/label"
     },
-    "ui/lanes": {
-        "scope": "teambit.lanes",
-        "version": "0.0.114",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/lanes/ui"
-    },
     "ui/load-preview": {
         "scope": "teambit.workspace",
         "version": "0.0.489",
@@ -1469,6 +1481,18 @@
         "version": "0.0.488",
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/menu-widget-icon"
+    },
+    "ui/menus": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/lanes/ui/menus"
+    },
+    "ui/models": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/lanes/ui/models"
     },
     "ui/notifications/notification": {
         "scope": "teambit.ui-foundation",
@@ -1607,6 +1631,12 @@
         "version": "0.0.487",
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/react-router/ui/use-query"
+    },
+    "ui/readme": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/lanes/ui/readme"
     },
     "ui/rendering/html": {
         "scope": "teambit.ui-foundation",
@@ -1829,6 +1859,12 @@
         "version": "0.0.494",
         "mainFile": "index.ts",
         "rootDir": "scopes/component/ui/version-label"
+    },
+    "ui/viewed-lane": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/lanes/ui/viewed-lane"
     },
     "ui/workspace-component-card": {
         "scope": "teambit.workspace",

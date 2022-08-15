@@ -2,7 +2,7 @@ import React, { useEffect, ReactNode, useMemo } from 'react';
 import flatten from 'lodash.flatten';
 import { RouteSlot, SlotRouter } from '@teambit/ui-foundation.ui.react-router.slot-router';
 import { SlotRegistry } from '@teambit/harmony';
-import { useLanesContext } from '@teambit/lanes.ui.lanes';
+import { useLanes } from '@teambit/lanes.ui.hooks';
 import styles from './component.module.scss';
 import { ComponentProvider, ComponentDescriptorProvider } from './context';
 import { useComponent as useComponentQuery, UseComponentType } from './use-component';
@@ -39,8 +39,8 @@ export function Component({
   const idFromLocation = useIdFromLocation();
   const componentId = componentIdStr ? ComponentID.fromString(componentIdStr) : undefined;
   const fullName = componentId?.fullName || idFromLocation;
-  const lanesContext = useLanesContext();
-  const laneComponent = fullName ? lanesContext?.resolveComponent(fullName) : undefined;
+  const { lanesModel } = useLanes();
+  const laneComponent = fullName ? lanesModel?.resolveComponent(fullName) : undefined;
   const useComponentOptions = {
     logFilters: laneComponent && { log: { logHead: laneComponent.version } },
     customUseComponent: useComponent,

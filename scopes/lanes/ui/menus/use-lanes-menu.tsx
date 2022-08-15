@@ -4,7 +4,7 @@ import { CopyBox } from '@teambit/documenter.ui.copy-box';
 import { ExpandableTabContent, TabContent } from '@teambit/ui-foundation.ui.use-box.tab-content';
 import { Ellipsis } from '@teambit/design.ui.styles.ellipsis';
 import { linkStyles } from '@teambit/ui-foundation.ui.use-box.bottom-link';
-import { LaneModel, LanesHost } from '@teambit/lanes.ui.lanes';
+import { LaneModel, LanesHost } from '@teambit/lanes.ui.models';
 import { UseBoxDropdown } from '@teambit/ui-foundation.ui.use-box.dropdown';
 import { Link } from '@teambit/base-react.navigation.link';
 import styles from './use-lanes-menu.module.scss';

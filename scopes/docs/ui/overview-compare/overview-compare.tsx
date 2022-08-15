@@ -4,8 +4,9 @@ import { Toggle } from '@teambit/design.ui.input.toggle';
 import { RoundLoader } from '@teambit/design.ui.round-loader';
 import { Overview } from '@teambit/docs';
 import type { TitleBadgeSlot } from '@teambit/docs';
-import { LanesContext, useLanesContext } from '@teambit/lanes.ui.lanes';
 import React, { UIEvent, useMemo, useRef, useState } from 'react';
+import { LanesContext, useLanes } from '@teambit/lanes.ui.hooks';
+
 import styles from './overview-compare.module.scss';
 
 export type OverviewCompareProps = {
@@ -37,7 +38,7 @@ export function OverviewCompare(props: OverviewCompareProps) {
     setIsScrollingSynced((prev) => !prev);
   }
 
-  const lanesModel = useLanesContext();
+  const { lanesModel } = useLanes();
 
   const BaseLayout = useMemo(() => {
     if (componentCompare?.base === undefined) {

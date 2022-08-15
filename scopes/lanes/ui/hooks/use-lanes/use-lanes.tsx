@@ -1,8 +1,9 @@
 import { useScopeQuery } from '@teambit/scope.ui.hooks.use-scope';
 import { useEffect } from 'react';
 import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
-import { LanesModel, LanesQuery } from '@teambit/lanes.ui.lanes';
+import { LanesModel, LanesQuery } from '@teambit/lanes.ui.models';
 import { gql, QueryResult } from '@apollo/client';
+import { useLanesContext } from '../lanes-context';
 
 const GET_LANES = gql`
   query Lanes($extensionId: String) {
@@ -37,18 +38,24 @@ const GET_LANES = gql`
   }
 `;
 
-export function useLanes(viewedLaneId?: string): { lanes?: LanesModel } & Omit<QueryResult<LanesQuery>, 'data'> {
-  const { data, ...rest } = useDataQuery(GET_LANES);
-  const { scope, loading } = useScopeQuery();
-  const lanes = data && LanesModel.from({ data, host: data?.getHost?.id, scope, viewedLaneId });
+export function useLanes(viewedLaneId?: string): { lanesModel?: LanesModel } & Omit<QueryResult<LanesQuery>, 'data'> {
+  const lanesContext = useLanesContext();
+  const skip = !lanesContext;
+
+  const { data, ...rest } = useDataQuery(GET_LANES, { skip });
+  const { scope, loading } = useScopeQuery(skip);
+
+  let lanesModel: LanesModel;
+  if (lanesContext) lanesModel = lanesContext;
+  else lanesModel = data && LanesModel.from({ data, host: data?.getHost?.id, scope, viewedLaneId });
 
   useEffect(() => {
-    lanes?.setViewedLane(viewedLaneId);
-  }, [lanes, viewedLaneId]);
+    lanesModel?.setViewedLane(viewedLaneId);
+  }, [lanesModel, viewedLaneId]);
 
   return {
     ...rest,
     loading: rest.loading || !!loading,
-    lanes,
+    lanesModel,
   };
 }

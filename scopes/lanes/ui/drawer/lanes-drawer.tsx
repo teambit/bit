@@ -4,7 +4,9 @@ import { FullLoader } from '@teambit/ui-foundation.ui.full-loader';
 import type { DrawerType } from '@teambit/ui-foundation.ui.tree.drawer';
 import { mutedItalic } from '@teambit/design.ui.styles.muted-italic';
 import { ellipsis } from '@teambit/design.ui.styles.ellipsis';
-import { LaneTree, useLanesContext, LanesModel } from '@teambit/lanes.ui.lanes';
+import { LanesModel } from '@teambit/lanes.ui.models';
+import { useLanes } from '@teambit/lanes.ui.hooks';
+import { LaneTree } from './tree';
 
 import styles from './lanes-drawer.module.scss';
 
@@ -35,14 +37,14 @@ export class LanesDrawer implements DrawerType {
   constructor(private props: LanesDrawerProps) {}
 
   isHidden = () => {
-    const lanesContext = useLanesContext();
-    const hasLanes = lanesContext?.lanes && lanesContext?.lanes.length > 0;
+    const { lanesModel: lanes } = useLanes();
+    const hasLanes = lanes && lanes.lanes.length > 0;
     return !hasLanes;
   };
 
   Context = ({ children }) => {
-    const lanesContext = useLanesContext();
-    const isCollapsed = !lanesContext?.viewedLane;
+    const { lanesModel } = useLanes();
+    const isCollapsed = !lanesModel?.viewedLane;
     const [collapsed, setCollapsed] = useState(isCollapsed);
     return (
       <LaneTreeContext.Provider value={{ collapsed, setCollapsed, canCollapse: this.props.showScope }}>
@@ -52,22 +54,21 @@ export class LanesDrawer implements DrawerType {
   };
 
   render = () => {
-    const lanesContext = useLanesContext();
+    const { lanesModel } = useLanes();
 
     const { collapsed } = useContext(LaneTreeContext);
 
-    if (!lanesContext || !lanesContext.lanes) return <FullLoader />;
+    if (!lanesModel) return <FullLoader />;
 
-    const { lanes } = lanesContext;
     const { showScope } = this.props;
 
-    if (lanes.length === 0)
+    if (lanesModel.lanes.length === 0)
       return (
         <span className={classNames(mutedItalic, ellipsis, styles.emptyScope)}>
           There are no lanes in your current workspace
         </span>
       );
-    return <LaneTree showScope={showScope} isCollapsed={collapsed}></LaneTree>;
+    return <LaneTree showScope={showScope} isCollapsed={collapsed} lanesModel={lanesModel}></LaneTree>;
   };
 }
 

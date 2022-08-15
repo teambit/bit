@@ -1,12 +1,7 @@
 import React, { useMemo } from 'react';
-import {
-  LanesProvider,
-  LaneModel,
-  LaneDetails,
-  LanesModel,
-  useLaneReadme,
-  LaneOverviewLineSlot,
-} from '@teambit/lanes.ui.lanes';
+import { LaneModel, LanesModel } from '@teambit/lanes.ui.models';
+import { LanesProvider, useLaneReadme } from '@teambit/lanes.ui.hooks';
+import { LaneDetails, LaneOverviewLineSlot } from '@teambit/lanes.ui.gallery';
 import { ComponentCard } from '@teambit/explorer.ui.gallery.component-card';
 import { ComponentPreview } from '@teambit/preview.ui.component-preview';
 import { RouteSlot, SlotRouter } from '@teambit/ui-foundation.ui.react-router.slot-router';

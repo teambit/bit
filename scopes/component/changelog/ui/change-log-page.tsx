@@ -7,17 +7,19 @@ import { MDXLayout } from '@teambit/mdx.ui.mdx-layout';
 import { ExportingComponents } from '@teambit/component.instructions.exporting-components';
 import { AlertCard } from '@teambit/design.ui.alert-card';
 import React, { HTMLAttributes, useContext } from 'react';
-import { LaneBreadcrumb, useLanesContext } from '@teambit/lanes.ui.lanes';
+import { useLanes } from '@teambit/lanes.ui.hooks';
 import { Icon } from '@teambit/evangelist.elements.icon';
 import { Ellipsis } from '@teambit/design.ui.styles.ellipsis';
+import { LaneBreadcrumb } from '@teambit/lanes.ui.gallery';
+
 import styles from './change-log-page.module.scss';
 
 type ChangeLogPageProps = {} & HTMLAttributes<HTMLDivElement>;
 
 export function ChangeLogPage({ className }: ChangeLogPageProps) {
   const component = useContext(ComponentContext);
-  const lanesContext = useLanesContext();
-  const currentLane = lanesContext?.viewedLane;
+  const { lanesModel } = useLanes();
+  const currentLane = lanesModel?.viewedLane;
   const { logs } = component;
 
   if (!logs) return null;
