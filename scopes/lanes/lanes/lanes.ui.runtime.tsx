@@ -76,10 +76,7 @@ export class LanesUI {
                   <LaneReadmeOverview host={this.host} overviewSlot={this.overviewSlot} routeSlot={this.routeSlot} />
                 }
               />
-              <Route
-                path="~gallery"
-                element={this.getLaneGallery()}
-              />
+              <Route path="~gallery" element={this.getLaneGallery()} />
               <Route path="~component/*" element={this.componentUi.getComponentUI(this.host)} />
               <Route path="*" element={<NotFoundPage />} />
             </Route>
@@ -100,10 +97,7 @@ export class LanesUI {
         path: LanesModel.lanesPrefix,
         children: (
           <Route path={`${LanesModel.lanePath}/*`}>
-            <Route
-              path="*"
-              element={this.getLanesOverviewMenu()}
-            />
+            <Route path="*" element={this.getLanesOverviewMenu()} />
             <Route path="~component/*" element={this.componentUi.getMenu(this.host)} />
           </Route>
         ),
@@ -196,7 +190,14 @@ export class LanesUI {
     const drawer = new LanesDrawer({ showScope: lanesUi.lanesHost === 'workspace' });
     sidebarUi.registerDrawer(drawer);
     lanesUi.registerRoutes();
-    lanesUi.registerMenuWidget(() => <UseLaneMenu host={lanesUi.lanesHost} />);
+    // lanesUi.registerMenuWidget(() => <UseLaneMenu host={lanesUi.lanesHost} />);
+    lanesUi.registerMenuWidget(() => {
+      const lanesContext = useLanesContext();
+      if (!lanesContext?.viewedLane) return null;
+      const { viewedLane, currentLane } = lanesContext;
+      return <UseLaneMenu host={lanesUi.lanesHost} viewedLane={viewedLane} currentLane={currentLane} />;
+    });
+
     return lanesUi;
   }
 }
