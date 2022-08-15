@@ -942,7 +942,7 @@ jobs:
       - run: nvm install 16.13.2
       - run: nvm use 16.13.2
       - run: node -v
-      - run: corepack enable
+      - run: npm install --global yarn
       - run: 'yarn -v'
       - run:
           name: set bit.dev registry
