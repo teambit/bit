@@ -2,7 +2,7 @@ import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { LaneOverviewLineSlot } from '@teambit/lanes.ui.gallery';
 import { RouteSlot } from '@teambit/ui-foundation.ui.react-router.slot-router';
-import { useLanes } from '@teambit/lanes.ui.hooks';
+import { useLanes } from '@teambit/lanes.hooks.use-lanes';
 import { LaneReadme } from './lane-readme';
 
 export type LaneReadmeOverviewProps = {

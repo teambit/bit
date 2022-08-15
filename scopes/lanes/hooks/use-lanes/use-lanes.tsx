@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
 import { LanesModel, LanesQuery } from '@teambit/lanes.ui.models';
 import { gql, QueryResult } from '@apollo/client';
-import { useLanesContext } from '../lanes-context';
+import { useLanesContext } from '@teambit/lanes.hooks.lanes-context';
 
 const GET_LANES = gql`
   query Lanes($extensionId: String) {

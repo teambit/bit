@@ -5,7 +5,7 @@ import type { DrawerType } from '@teambit/ui-foundation.ui.tree.drawer';
 import { mutedItalic } from '@teambit/design.ui.styles.muted-italic';
 import { ellipsis } from '@teambit/design.ui.styles.ellipsis';
 import { LanesModel } from '@teambit/lanes.ui.models';
-import { useLanes } from '@teambit/lanes.ui.hooks';
+import { useLanes } from '@teambit/lanes.hooks.use-lanes';
 import { LaneTree } from './tree';
 
 import styles from './lanes-drawer.module.scss';

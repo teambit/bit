@@ -6,7 +6,7 @@ import { ComponentPreview } from '@teambit/preview.ui.component-preview';
 import { StatusMessageCard } from '@teambit/design.ui.surfaces.status-message-card';
 import { ComponentOverview } from '@teambit/component.ui.component-meta';
 import { Separator } from '@teambit/design.ui.separator';
-import { useLanes } from '@teambit/lanes.ui.hooks';
+import { useLanes } from '@teambit/lanes.hooks.use-lanes';
 import { LaneBreadcrumb } from '@teambit/lanes.ui.gallery';
 
 import styles from './overview.module.scss';

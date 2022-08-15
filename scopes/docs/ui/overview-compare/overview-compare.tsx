@@ -5,7 +5,8 @@ import { RoundLoader } from '@teambit/design.ui.round-loader';
 import { Overview } from '@teambit/docs';
 import type { TitleBadgeSlot } from '@teambit/docs';
 import React, { UIEvent, useMemo, useRef, useState } from 'react';
-import { LanesContext, useLanes } from '@teambit/lanes.ui.hooks';
+import { useLanes } from '@teambit/lanes.hooks.use-lanes';
+import { LanesContext } from '@teambit/lanes.hooks.lanes-context';
 
 import styles from './overview-compare.module.scss';
 

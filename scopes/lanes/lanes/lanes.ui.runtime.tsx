@@ -14,7 +14,7 @@ import { LaneGallery, LaneOverviewLine, LaneOverviewLineSlot } from '@teambit/la
 import { LanesNavPlugin, LanesOrderedNavigationSlot, LanesOverviewMenu, UseLaneMenu } from '@teambit/lanes.ui.menus';
 import { LanesHost, LanesModel } from '@teambit/lanes.ui.models';
 import { LaneReadmeOverview } from '@teambit/lanes.ui.readme';
-import { useLanes } from '@teambit/lanes.ui.hooks';
+import { useLanes } from '@teambit/lanes.hooks.use-lanes';
 import { ViewedLaneFromUrl } from '@teambit/lanes.ui.viewed-lane';
 import { LanesDrawer } from '@teambit/lanes.ui.drawer';
 

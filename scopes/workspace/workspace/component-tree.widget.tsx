@@ -1,6 +1,6 @@
 import { ComponentTreeNode, ComponentTreeNodeProps } from '@teambit/component-tree';
 import { ComponentStatusResolver } from '@teambit/component.ui.component-status-resolver';
-import { useLanes } from '@teambit/lanes.ui.hooks';
+import { useLanes } from '@teambit/lanes.hooks.use-lanes';
 import React, { useContext, useMemo } from 'react';
 
 import { WorkspaceContext } from './ui/workspace/workspace-context';

@@ -2,7 +2,7 @@ import React, { useEffect, ReactNode, useMemo } from 'react';
 import flatten from 'lodash.flatten';
 import { RouteSlot, SlotRouter } from '@teambit/ui-foundation.ui.react-router.slot-router';
 import { SlotRegistry } from '@teambit/harmony';
-import { useLanes } from '@teambit/lanes.ui.hooks';
+import { useLanes } from '@teambit/lanes.hooks.use-lanes';
 import styles from './component.module.scss';
 import { ComponentProvider, ComponentDescriptorProvider } from './context';
 import { useComponent as useComponentQuery, UseComponentType } from './use-component';

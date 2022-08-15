@@ -1,7 +1,7 @@
 import React, { ReactNode, useMemo } from 'react';
 import { useLocation } from '@teambit/base-react.navigation.link';
 import { LanesModel } from '@teambit/lanes.ui.models';
-import { LanesProvider } from '@teambit/lanes.ui.hooks';
+import { LanesProvider } from '@teambit/lanes.hooks.lanes-provider';
 
 export type ViewedLaneFromUrlProps = {
   children: ReactNode;

@@ -525,6 +525,36 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/harmony-ui-app/harmony-ui-app"
     },
+    "hooks/lanes-context": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/lanes/hooks/lanes-context"
+    },
+    "hooks/lanes-provider": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/lanes/hooks/lanes-provider"
+    },
+    "hooks/use-lane-components": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/lanes/hooks/use-lane-components"
+    },
+    "hooks/use-lane-readme": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/lanes/hooks/use-lane-readme"
+    },
+    "hooks/use-lanes": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/lanes/hooks/use-lanes"
+    },
     "html": {
         "scope": "teambit.html",
         "version": "0.0.385",
@@ -1349,12 +1379,6 @@
         "version": "0.0.21",
         "mainFile": "index.ts",
         "rootDir": "scopes/react/bit-component-meta"
-    },
-    "ui/hooks": {
-        "scope": "",
-        "version": "",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/lanes/ui/hooks"
     },
     "ui/hooks/scope-context": {
         "scope": "teambit.scope",
