@@ -169,7 +169,7 @@ export class ExtensionDataList extends Array<ExtensionDataEntry> {
       if (ignoreScope) {
         return extEntry.extensionId?.toStringWithoutScope() === extensionId;
       }
-      return extEntry.stringId === extensionId;
+      return extEntry.stringId === extensionId || extEntry.newExtensionId?.toString() === extensionId;
     });
   }
 
