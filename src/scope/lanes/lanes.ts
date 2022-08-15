@@ -147,7 +147,7 @@ export default class Lanes {
       const alias = this.getLocalTrackedLaneByRemoteName(laneName, laneObject.scope);
       return {
         name: laneName,
-        remote: laneObject.scope,
+        remote: laneObject.toLaneId().toString(),
         id: laneObject.toLaneId(),
         alias: alias !== laneName ? alias : null,
         components: laneObject.components.map((c) => ({ id: c.id, head: c.head.toString() })),
@@ -200,7 +200,7 @@ export type LaneData = {
    */
   name: string;
   /**
-   * @deprecated use id.scope instead
+   * @deprecated use id.toString() instead
    */
   remote: string | null;
   id: LaneId;
