@@ -1752,6 +1752,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/defender/ui/test-loader"
     },
+    "ui/test-page": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/defender/ui/test-page"
+    },
     "ui/test-row": {
         "scope": "teambit.defender",
         "version": "0.0.489",
