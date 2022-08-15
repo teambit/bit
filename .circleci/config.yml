@@ -939,8 +939,7 @@ jobs:
       # - run: cinst nodejs --version 16.16.0
       # - run: nodejs.install v12.16.0
       # We can't use Node.js newer than 16.13.2 due to this issue with npm: https://github.com/npm/cli/issues/4234
-      - run: nvm install 16.13.2
-      - run: nvm use 16.13.2
+      - run: cinst nodejs --version 16.13.2
       - run: node -v
       - run: corepack enable
       - run: 'yarn -v'
@@ -1296,14 +1295,9 @@ jobs:
 
   windows_bvm_install:
     <<: *windows_defaults
-    environment:
-      Path: C:\Users\circleci\.npm-global;C:\Users\circleci\AppData\Local\.bvm;$ENV:PATH
     steps:
       - attach_workspace:
           at: .
-      # We can't use Node.js newer than 16.13.2 due to this issue with npm: https://github.com/npm/cli/issues/4234
-      - run: nvm install 16.13.2
-      - run: nvm use 16.13.2
       - run: npm view @teambit/bit version | Out-File -FilePath .\version.txt
       - run: Get-Content -Path .\version.txt
       - restore_cache:
@@ -1337,12 +1331,8 @@ jobs:
     steps:
       - attach_workspace:
           at: .
-      # We can't use Node.js newer than 16.13.2 due to this issue with npm: https://github.com/npm/cli/issues/4234
-      - run: nvm install 16.13.2
-      - run: nvm use 16.13.2
       - run: node -v
       - run: npm -v
-      - run: $ENV:PATH
       # - run: Get-Content -Path .\version.txt
       # - restore_cache:
       #     key: bvm-folder-v1
@@ -1954,39 +1944,39 @@ workflows:
   #           branches:
   #             only: circle-esbuild-cache
   # uncomment and change the filter branch name to debug the bvm bundle jobs
-  # bvm_bundle_debug:
-  #   jobs:
-  #     - checkout_code:
-  #         filters:
-  #           branches:
-  #             only: fix-circle-cache
-  #     - bundle_version_linux:
-  #         filters:
-  #           branches:
-  #             only: fix-circle-cache
-  #     - bundle_version_windows:
-  #         filters:
-  #           branches:
-  #             only: fix-circle-cache
-  #     - get_esbuild_arm64:
-  #         filters:
-  #           branches:
-  #             only: fix-circle-cache
-  #     - bundle_version_macos:
-  #         filters:
-  #           branches:
-  #             only: fix-circle-cache
-  #         requires:
-  #           - get_esbuild_arm64
-  #     - harmony_publish_to_gcloud:
-  #         filters:
-  #           branches:
-  #             only: fix-circle-cache
-  #         requires:
-  #           - bundle_version_macos
-  #           - bundle_version_linux
-  #           - bundle_version_windows
-  #           - checkout_code # This is needed to generate index.json
+  bvm_bundle_debug:
+    jobs:
+      - checkout_code:
+          filters:
+            branches:
+              only: fix-circle-cache
+      - bundle_version_linux:
+          filters:
+            branches:
+              only: fix-circle-cache
+      - bundle_version_windows:
+          filters:
+            branches:
+              only: fix-win
+      - get_esbuild_arm64:
+          filters:
+            branches:
+              only: fix-circle-cache
+      - bundle_version_macos:
+          filters:
+            branches:
+              only: fix-circle-cache
+          requires:
+            - get_esbuild_arm64
+      - harmony_publish_to_gcloud:
+          filters:
+            branches:
+              only: fix-circle-cache
+          requires:
+            - bundle_version_macos
+            - bundle_version_linux
+            - bundle_version_windows
+            - checkout_code # This is needed to generate index.json
       # - docker_build:
       #     requires:
       #       - checkout_code
