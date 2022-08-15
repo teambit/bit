@@ -87,7 +87,7 @@ async function exportComponents({ ids, includeNonStaged, originDirectly, ...para
   if (laneObject?.readmeComponent) {
     _throwForUnsnappedLaneReadme(laneObject);
   }
-
+  const isOnMain = consumer.isOnMain();
   const { exported, updatedLocally, newIdsOnRemote } = await exportMany({
     ...params,
     scope: consumer.scope,
@@ -95,6 +95,7 @@ async function exportComponents({ ids, includeNonStaged, originDirectly, ...para
     laneObject,
     originDirectly,
     idsWithFutureScope,
+    isOnMain,
   });
   if (laneObject) await updateLanesAfterExport(consumer, laneObject);
   const { updatedIds, nonExistOnBitMap } = _updateIdsOnBitMap(consumer.bitMap, updatedLocally);

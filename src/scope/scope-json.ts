@@ -39,7 +39,7 @@ export class ScopeJson {
   license: string | null | undefined;
   remotes: { [key: string]: string };
   groupName: string;
-  lanes: { current: string; tracking: TrackLane[]; new: string[] };
+  lanes: { tracking: TrackLane[]; new: string[] };
   hasChanged = false;
 
   constructor({ name, remotes, resolverPath, hooksPath, license, groupName, version, lanes }: ScopeJsonProps) {
@@ -135,12 +135,6 @@ export class ScopeJson {
   }
   private getTrackLane(localLane: string): TrackLane | undefined {
     return this.lanes.tracking.find((t) => t.localLane === localLane);
-  }
-  setCurrentLane(laneName: string): void {
-    if (this.lanes.current !== laneName) {
-      this.lanes.current = laneName;
-      this.hasChanged = true;
-    }
   }
   setLaneAsNew(laneName: string) {
     if (!this.lanes.new) this.lanes.new = [];
