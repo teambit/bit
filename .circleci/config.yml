@@ -14,7 +14,7 @@ default_working_dir: &default_working_dir
   working_directory: ~/bit
 
 orbs:
-  win: circleci/windows@5.0
+  win: circleci/windows@4.1
 
 windows_default_working_dir: &windows_default_working_dir
   working_directory: C:\Users\circleci\project\bit
@@ -938,10 +938,11 @@ jobs:
       # - run: choco install nodejs --version 16.15.1
       # - run: cinst nodejs --version 16.16.0
       # - run: nodejs.install v12.16.0
-      - run: nvm install 16.16.0
-      - run: nvm use 16.16.0
+      # We can't use Node.js newer than 16.13.2 due to this issue with npm: https://github.com/npm/cli/issues/4234
+      - run: nvm install 16.13.2
+      - run: nvm use 16.13.2
       - run: node -v
-      - run: corepack enable
+      - run: npm install --global yarn
       - run: 'yarn -v'
       - run:
           name: set bit.dev registry
@@ -1305,7 +1306,10 @@ jobs:
       - restore_cache:
           key: v2-bvm-folder-{{ checksum "version.txt" }}
       - run: 'npm i -g @teambit/bvm'
-      - run: 'bvm upgrade'
+      - run:
+          name: 'bvm upgrade'
+          command: 'bvm upgrade'
+          no_output_timeout: 60m
       - run: 'setx path "%path%;C:\Users\circleci\AppData\Local\.bvm"'
       - run: 'bit -v'
       - run: bit -v | Out-File -FilePath .\version.txt
@@ -1329,7 +1333,9 @@ jobs:
     steps:
       - attach_workspace:
           at: .
-      - run: cinst nodejs --version 16.16.0
+      # We can't use Node.js newer than 16.13.2 due to this issue with npm: https://github.com/npm/cli/issues/4234
+      - run: nvm install 16.13.2
+      - run: nvm use 16.13.2
       - run: node -v
       - run: npm -v
       # - run: Get-Content -Path .\version.txt
@@ -1384,7 +1390,9 @@ jobs:
     steps:
       - attach_workspace:
           at: .
-      - run: cinst nodejs --version 16.16.0
+      # We can't use Node.js newer than 16.13.2 due to this issue with npm: https://github.com/npm/cli/issues/4234
+      - run: nvm install 16.13.2
+      - run: nvm use 16.13.2
       - run: node -v
       - run: npm -v
       # - run: Get-Content -Path .\version.txt
