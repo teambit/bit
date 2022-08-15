@@ -13,7 +13,7 @@ export async function updateLanesAfterExport(consumer: Consumer, lane: Lane) {
       `updateLanesAfterExport should get called only with current lane, got ${lane.name}, current ${currentLane.name}`
     );
   }
-  consumer.bitMap.setCurrentLane(lane.toLaneId(), true);
+  consumer.setCurrentLane(lane.toLaneId(), true);
   consumer.scope.scopeJson.removeLaneFromNew(lane.name);
   lane.isNew = false;
 }

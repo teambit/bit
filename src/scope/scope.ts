@@ -123,7 +123,7 @@ export default class Scope {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   _dependencyGraph: DependencyGraph; // cache DependencyGraph instance
   lanes: Lanes;
-
+  currentLaneId?: LaneId;
   constructor(scopeProps: ScopeProps) {
     this.path = scopeProps.path;
     this.scopeJson = scopeProps.scopeJson;
@@ -411,8 +411,8 @@ export default class Scope {
     return this.sources.get(id);
   }
 
-  async getCurrentLaneObject() {
-    return this.loadLane(this.lanes.getCurrentLaneId());
+  async getCurrentLaneObject(): Promise<Lane | null> {
+    return this.currentLaneId ? this.loadLane(this.currentLaneId) : null;
   }
 
   /**
@@ -425,7 +425,8 @@ export default class Scope {
       'removeMany',
       `scope.removeMany ${Analytics.hashData(bitIds)} with force flag: ${force.toString()}`
     );
-    const removeComponents = new RemoveModelComponents(this, bitIds, force, consumer);
+    const currentLane = await consumer?.getCurrentLaneObject();
+    const removeComponents = new RemoveModelComponents(this, bitIds, force, consumer, currentLane);
     return removeComponents.remove();
   }
 

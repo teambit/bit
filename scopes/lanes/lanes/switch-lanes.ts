@@ -181,7 +181,7 @@ export class LaneSwitcher {
   private async saveLanesData() {
     const saveRemoteLaneToBitmap = () => {
       if (this.switchProps.remoteLane) {
-        this.consumer.bitMap.setCurrentLane(this.switchProps.remoteLane.toLaneId());
+        this.consumer.setCurrentLane(this.switchProps.remoteLane.toLaneId());
       }
     };
     const throwIfLaneExists = async () => {
@@ -206,8 +206,7 @@ export class LaneSwitcher {
     }
 
     saveRemoteLaneToBitmap();
-    this.consumer.scope.lanes.setCurrentLane(localLaneName);
-    this.consumer.bitMap.setCurrentLane(this.laneIdToSwitch, Boolean(this.switchProps.remoteLane));
+    this.consumer.setCurrentLane(this.laneIdToSwitch, Boolean(this.switchProps.remoteLane));
     this.consumer.bitMap.syncWithLanes(this.laneToSwitchTo);
   }
 }
