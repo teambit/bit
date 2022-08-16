@@ -70,7 +70,7 @@ export class GraphFromFsBuilder {
     return this.graph;
   }
 
-  private getAllDepsUnfiltered(component: Component) {
+  private getAllDepsUnfiltered(component: Component): BitIds {
     return component.getAllDependenciesIds().difference(this.ignoreIds);
   }
 
@@ -78,7 +78,7 @@ export class GraphFromFsBuilder {
     const depsWithoutIgnore = this.getAllDepsUnfiltered(component);
     const shouldLoadFunc = this.shouldLoadItsDeps;
     if (!shouldLoadFunc) return depsWithoutIgnore;
-    const deps = await mapSeries(depsWithoutIgnore, async (depId) => {
+    const deps = await mapSeries(depsWithoutIgnore, async (depId: BitId) => {
       const shouldLoad = await shouldLoadFunc(depId);
       if (!shouldLoad) this.ignoreIds.push(depId);
       return shouldLoad ? depId : null;
@@ -111,7 +111,7 @@ export class GraphFromFsBuilder {
     const allIds = await this.getAllDepsFiltered(component);
 
     const allDependencies = await this.loadManyComponents(allIds, idStr);
-    Object.entries(component.depsIdsGroupedByType).forEach(([depType, depsIds]) => {
+    Object.entries(component.depsIdsGroupedByType).forEach(([depType, depsIds]: [string, BitIds]) => {
       depsIds.forEach((depId) => {
         if (this.ignoreIds.has(depId)) return;
         if (!this.graph.hasNode(depId.toString())) {

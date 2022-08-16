@@ -1148,7 +1148,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
       extensionsToMerge.push({ origin, extensions: extensionDataListFiltered, extraData });
 
       loadedExtensionIds.push(
-        ...compact(extensionDataListFiltered.map((e) => e.extensionId?.toStringWithoutVersion()))
+        ...compact(extensionDataListFiltered.map((e: ExtensionDataEntry) => e.extensionId?.toStringWithoutVersion()))
       );
     };
     const setDataListAsSpecific = (extensions: ExtensionDataList) => {
@@ -1250,7 +1250,10 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     return componentStatus.modified === true;
   }
 
-  private filterEnvsFromExtensionsIfNeeded(extensionDataList: ExtensionDataList, envWasFoundPreviously: boolean) {
+  private filterEnvsFromExtensionsIfNeeded(
+    extensionDataList: ExtensionDataList,
+    envWasFoundPreviously: boolean
+  ): { extensionDataListFiltered: ExtensionDataList; envIsCurrentlySet: boolean } {
     const envAspect = extensionDataList.findExtension(EnvsAspect.id);
     const envFromEnvsAspect = envAspect?.config.env;
     const [envsNotFromEnvsAspect, nonEnvs] = partition(extensionDataList, (ext) =>
