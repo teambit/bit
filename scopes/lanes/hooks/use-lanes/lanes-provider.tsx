@@ -1,6 +1,6 @@
 import React, { ReactNode } from 'react';
 import { useLanes } from '@teambit/lanes.hooks.use-lanes';
-import { LanesContext } from '@teambit/lanes.hooks.lanes-context';
+import { LanesContext } from './lanes-context';
 
 export type LanesProviderProps = {
   children: ReactNode;

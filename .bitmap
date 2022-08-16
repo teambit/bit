@@ -525,18 +525,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/harmony-ui-app/harmony-ui-app"
     },
-    "hooks/lanes-context": {
-        "scope": "",
-        "version": "",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/lanes/hooks/lanes-context"
-    },
-    "hooks/lanes-provider": {
-        "scope": "",
-        "version": "",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/lanes/hooks/lanes-provider"
-    },
     "hooks/use-lane-components": {
         "scope": "",
         "version": "",
