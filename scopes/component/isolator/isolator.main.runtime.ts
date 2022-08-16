@@ -581,7 +581,6 @@ export class IsolatorMain {
   private async getCurrentPackageJson(capsule: Capsule, capsules: CapsuleList): Promise<PackageJsonFile> {
     const component: Component = capsule.component;
     const currentVersion = await this.getComponentPackageVersionWithCache(component);
-    // const newVersion = '0.0.1-new';
     const getComponentDepsManifest = async (dependencies: DependencyList) => {
       const manifest = {
         dependencies: {},
@@ -608,8 +607,7 @@ export class IsolatorMain {
     const deps = await this.dependencyResolver.getDependencies(component);
     const manifest = await getComponentDepsManifest(deps);
 
-    // unfortunately, component.packageJsonFile is not available here.
-    // the reason is that `writeComponentsToCapsules` clones the component before writing them
+    // component.packageJsonFile is not available here. we don't mutate the component object for capsules.
     // also, don't use `PackageJsonFile.createFromComponent`, as it looses the intermediate changes
     // such as postInstall scripts for custom-module-resolution.
     const packageJson = PackageJsonFile.loadFromCapsuleSync(capsule.path);

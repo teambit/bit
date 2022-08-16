@@ -133,6 +133,9 @@ export default class ComponentWriter {
     return this.component;
   }
 
+  /**
+   * @todo: move this to the isolator aspect. it's not used anywhere else.
+   */
   async populateComponentsFilesToWriteForCapsule(): Promise<DataToPersist> {
     const dataToPersist = new DataToPersist();
     const clonedFiles = this.component.files.map((file) => file.clone());
@@ -159,7 +162,7 @@ export default class ComponentWriter {
     await this._applyTransformers(this.component, packageJson);
     this._mergePackageJsonPropsFromOverrides(packageJson);
     dataToPersist.addFile(packageJson.toVinylFile());
-    const artifacts = await this.populateArtifacts();
+    const artifacts = await this.getArtifacts();
     dataToPersist.addManyFiles(artifacts);
     return dataToPersist;
   }
@@ -179,44 +182,6 @@ export default class ComponentWriter {
     this.component.files.forEach((file) => (file.override = this.override));
     this.component.files.map((file) => this.component.dataToPersist.addFile(file));
 
-    // make sure the project's package.json is not overridden by Bit
-    // If a consumer is of isolated env it's ok to override the root package.json (used by the env installation
-    // of compilers / testers / extensions)
-    // In Harmony this is happening inside a capsule, which needs a package.json file
-    if (
-      this.writePackageJson &&
-      (this.isolated || (this.consumer && this.consumer.isolated) || this.writeToPath !== '.')
-    ) {
-      const artifactsDir = this.getArtifactsDir();
-      const { packageJson, distPackageJson } = preparePackageJsonToWrite(
-        this.bitMap,
-        this.component,
-        artifactsDir || this.writeToPath,
-        this.override,
-        this.ignoreBitDependencies,
-        this.excludeRegistryPrefix,
-        undefined,
-        Boolean(this.isolated)
-      );
-
-      // @todo: temporarily this is running only when there is no version (or version is "latest")
-      // so then package.json always has a valid version. we'll need to figure out when the version
-      // needs to be incremented and when it should not.
-      if ((!this.consumer || this.consumer.isolated) && !this.component.id.hasVersion()) {
-        // this only needs to be done in an isolated
-        // or consumerless (dependency in an isolated) environment
-        packageJson.addOrUpdateProperty('version', this._getNextPatchVersion());
-      }
-      if ((!this.consumer?.isLegacy || !this.scope?.isLegacy) && this.applyPackageJsonTransformers) {
-        await this._applyTransformers(this.component, packageJson);
-      }
-
-      this._mergePackageJsonPropsFromOverrides(packageJson);
-      this.component.dataToPersist.addFile(packageJson.toVinylFile());
-      if (distPackageJson) this.component.dataToPersist.addFile(distPackageJson.toVinylFile());
-      this.component.packageJsonFile = packageJson;
-    }
-
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (this.component.license && this.component.license.contents) {
       this.component.license.updatePaths({ newBase: this.writeToPath });
@@ -233,7 +198,7 @@ export default class ComponentWriter {
    * later, this responsibility might move to pkg extension, which could write only artifacts
    * that are set in package.json.files[], to have a similar structure of a package.
    */
-  private async populateArtifacts(): Promise<AbstractVinyl[]> {
+  private async getArtifacts(): Promise<AbstractVinyl[]> {
     if (!this.scope) {
       // when capsules are written via the workspace, do not write artifacts, they get created by
       // build-pipeline. when capsules are written via the scope, we do need the dists.
