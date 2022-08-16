@@ -6,6 +6,7 @@ import Consumer from '../consumer/consumer';
 import { MissingBitMapComponent } from './bit-map/exceptions';
 
 describe('Consumer', function () {
+  // @ts-ignore
   this.timeout(0);
   let sandbox;
   const getConsumerInstance = () => {
