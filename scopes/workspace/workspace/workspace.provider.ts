@@ -148,7 +148,7 @@ export default async function provideWorkspace(
   LegacyComponentLoader.registerOnComponentLoadSubscriber(
     async (legacyComponent: ConsumerComponent, opts?: { loadDocs?: boolean }) => {
       const id = await workspace.resolveComponentId(legacyComponent.id);
-      const newComponent = await workspace.get(id, false, legacyComponent, true, true, opts);
+      const newComponent = await workspace.get(id, legacyComponent, true, true, opts);
       return newComponent.state._consumer;
     }
   );

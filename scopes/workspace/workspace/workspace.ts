@@ -497,21 +497,13 @@ export class Workspace implements ComponentFactory {
    */
   async get(
     componentId: ComponentID,
-    forCapsule = false,
     legacyComponent?: ConsumerComponent,
     useCache = true,
     storeInCache = true,
     loadOpts?: ComponentLoadOptions
   ): Promise<Component> {
     this.logger.debug(`get ${componentId.toString()}`);
-    const component = await this.componentLoader.get(
-      componentId,
-      forCapsule,
-      legacyComponent,
-      useCache,
-      storeInCache,
-      loadOpts
-    );
+    const component = await this.componentLoader.get(componentId, legacyComponent, useCache, storeInCache, loadOpts);
     // When loading a component if it's an env make sure to load it as aspect as well
     // We only want to try load it as aspect if it's the first time we load the component
     const tryLoadAsAspect = this.componentLoadedSelfAsAspects.get(component.id.toString()) === undefined;
@@ -802,14 +794,14 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     return foundEnv?.components || [];
   }
 
-  async getMany(ids: Array<ComponentID>, forCapsule = false): Promise<Component[]> {
-    return this.componentLoader.getMany(ids, forCapsule);
+  async getMany(ids: Array<ComponentID>): Promise<Component[]> {
+    return this.componentLoader.getMany(ids);
   }
 
   getManyByLegacy(components: ConsumerComponent[], loadOpts?: ComponentLoadOptions): Promise<Component[]> {
     return mapSeries(components, async (component) => {
       const id = await this.resolveComponentId(component.id);
-      return this.get(id, undefined, component, true, true, loadOpts);
+      return this.get(id, component, true, true, loadOpts);
     });
   }
 
@@ -833,12 +825,11 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
    * It will influence the performance
    * currently it used only for get many of aspects
    * @param ids
-   * @param forCapsule
    */
-  async importAndGetMany(ids: Array<ComponentID>, forCapsule = false): Promise<Component[]> {
+  async importAndGetMany(ids: Array<ComponentID>): Promise<Component[]> {
     await this.importCurrentLaneIfMissing();
     await this.scope.import(ids, { reFetchUnBuiltVersion: shouldReFetchUnBuiltVersion() });
-    return this.componentLoader.getMany(ids, forCapsule);
+    return this.componentLoader.getMany(ids);
   }
 
   async importCurrentLaneIfMissing() {
