@@ -1,6 +1,7 @@
 import { ManifestDependenciesKeysNames } from './manifest';
 import { VariantPolicyConfigObject, WorkspacePolicy } from './policy';
 import { DependencyLifecycleType } from './dependencies/dependency';
+import { KEY_NAME_BY_LIFECYCLE_TYPE } from './dependencies';
 
 type CurrentPkg = {
   name: string;
@@ -49,7 +50,7 @@ export function getAllPolicyPkgs({
         currentRange: componentDep.version,
         source: 'component-model' as const,
         componentId: componentDep.componentId,
-        targetField: componentDep.lifecycleType === 'dev' ? ('devDependencies' as const) : ('dependencies' as const),
+        targetField: KEY_NAME_BY_LIFECYCLE_TYPE[componentDep.lifecycleType],
       })),
   ];
 }
@@ -60,7 +61,7 @@ function getPkgsFromRootPolicy(rootPolicy: WorkspacePolicy): CurrentPkg[] {
     currentRange: entry.value.version,
     source: 'rootPolicy',
     variantPattern: null as string | null,
-    targetField: entry.lifecycleType === 'runtime' ? 'dependencies' : 'peerDependencies',
+    targetField: KEY_NAME_BY_LIFECYCLE_TYPE[entry.lifecycleType],
   }));
 }
 

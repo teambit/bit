@@ -102,5 +102,8 @@ describe('update command', function () {
         '2.1.0'
       );
     });
+    after(() => {
+      npmCiRegistry.destroy();
+    });
   });
 });
