@@ -28,14 +28,14 @@ describe('Snapping aspect', () => {
       const compiler: CompilerMain = await loadAspect(CompilerAspect, workspacePath);
       await compiler.compileOnWorkspace();
       snapping = await loadAspect(SnappingAspect, workspacePath);
-    }, 50000);
+    });
     it('tag should throw an ComponentsHaveIssues error', async () => {
       try {
         await snapping.tag({ ids: ['comp1'] });
       } catch (err: any) {
         expect(err.constructor.name).toEqual(ComponentsHaveIssues.name);
       }
-    }, 50000);
+    });
     // @todo: this test fails during "bit build" for some reason. It passes on "bit test";
     it.skip('should not throw an error if the config was set to ignore MissingPackagesDependenciesOnFs error', async () => {
       await setWorkspaceConfig(workspaceData.workspacePath, IssuesAspect.id, {
