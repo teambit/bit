@@ -134,22 +134,24 @@ export class DependenciesRemoveCmd implements Command {
   group = 'info';
   description = 'remove a dependency to component(s)';
   alias = '';
-  options = [
-    ['d', 'dev', 'remove from the devDependencies'],
-    ['p', 'peer', 'remove from the peerDependencies'],
-  ] as CommandOptions;
+  options = [] as CommandOptions;
 
   constructor(private deps: DependenciesMain) {}
 
-  async report([pattern, packages]: [string, string[]], setDepsFlags: SetDependenciesFlags) {
-    const { changedComps, addedPackages } = await this.deps.setDependency(pattern, packages, setDepsFlags);
+  async report([pattern, packages]: [string, string[]]) {
+    const results = await this.deps.removeDependency(pattern, packages);
+    if (!results.length) {
+      return chalk.yellow('the specified component-pattern do not use the entered packages. nothing to remove');
+    }
 
-    return `${chalk.green('successfully updated dependencies')}
-${chalk.bold('changed components')}
-${changedComps.join('\n')}
+    const output = results
+      .map(
+        ({ id, removedPackages }) =>
+          `${chalk.underline(id.toString())}\n${JSON.stringify(removedPackages, undefined, 4)}`
+      )
+      .join('\n');
 
-${chalk.bold('removed packages')}
-${JSON.stringify(addedPackages, undefined, 4)}`;
+    return `${chalk.green('successfully removed dependencies')}\n${output}`;
   }
 }
 
