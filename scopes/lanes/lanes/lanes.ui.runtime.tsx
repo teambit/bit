@@ -59,7 +59,12 @@ export class LanesUI {
 
   private registerHostAspectRoutes() {
     if (!this.hostAspect) return;
-    this.hostAspect.registerRoutes([
+    this.hostAspect.registerRoutes(this.getLaneRoutes());
+    this.hostAspect.registerMenuRoutes(this.getMenuRoutes());
+  }
+
+  getLaneRoutes() {
+    return [
       {
         path: LanesModel.lanesPrefix,
         children: (
@@ -73,9 +78,7 @@ export class LanesUI {
               />
               <Route
                 path="~gallery"
-                element={
-                  <LaneGallery routeSlot={this.routeSlot} overviewSlot={this.overviewSlot} host={this.lanesHost} />
-                }
+                element={this.getLaneGallery()}
               />
               <Route path="~component/*" element={this.componentUi.getComponentUI(this.host)} />
               <Route path="*" element={<NotFoundPage />} />
@@ -84,21 +87,32 @@ export class LanesUI {
           </>
         ),
       },
-    ]);
-    this.hostAspect.registerMenuRoutes([
+    ];
+  }
+
+  getLaneGallery() {
+    return <LaneGallery routeSlot={this.routeSlot} overviewSlot={this.overviewSlot} host={this.lanesHost} />;
+  }
+
+  getMenuRoutes() {
+    return [
       {
         path: LanesModel.lanesPrefix,
         children: (
           <Route path={`${LanesModel.lanePath}/*`}>
             <Route
               path="*"
-              element={<LanesOverviewMenu navigationSlot={this.navSlot} widgetSlot={this.menuWidgetSlot} />}
+              element={this.getLanesOverviewMenu()}
             />
             <Route path="~component/*" element={this.componentUi.getMenu(this.host)} />
           </Route>
         ),
       },
-    ]);
+    ];
+  }
+
+  getLanesOverviewMenu() {
+    return <LanesOverviewMenu navigationSlot={this.navSlot} widgetSlot={this.menuWidgetSlot} />;
   }
 
   registerMenuWidget(...menuItems: MenuWidget[]) {

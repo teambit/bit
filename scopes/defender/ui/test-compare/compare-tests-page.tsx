@@ -7,7 +7,7 @@ import { TestTable } from '@teambit/defender.ui.test-table';
 import { AlertCard } from '@teambit/design.ui.alert-card';
 import { EmptyBox } from '@teambit/design.ui.empty-box';
 import { MDXLayout } from '@teambit/mdx.ui.mdx-layout';
-import { styles } from '@teambit/tester';
+import { styles } from '@teambit/defender.ui.test-page';
 import classNames from 'classnames';
 
 export type CompareTestsPageProps = {

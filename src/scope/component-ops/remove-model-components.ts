@@ -20,22 +20,18 @@ export default class RemoveModelComponents {
   bitIds: BitIds;
   force: boolean;
   consumer: Consumer | null | undefined;
-  currentLane: Lane | null = null;
-  constructor(scope: Scope, bitIds: BitIds, force: boolean, consumer?: Consumer) {
+  currentLane?: Lane | null = null;
+  constructor(scope: Scope, bitIds: BitIds, force: boolean, consumer?: Consumer, currentLane?: Lane | null) {
     this.scope = scope;
     this.bitIds = bitIds;
     this.force = force;
     this.consumer = consumer;
-  }
-
-  private async setCurrentLane() {
-    this.currentLane = await this.scope.lanes.getCurrentLaneObject();
+    this.currentLane = currentLane;
   }
 
   async remove(): Promise<RemovedObjects> {
     const { missingComponents, foundComponents } = await this.scope.filterFoundAndMissingComponents(this.bitIds);
     logger.debug(`RemoveModelComponents.remove, found ${foundComponents.length} components to remove`);
-    await this.setCurrentLane();
     const dependentBits = await this.scope.getDependentsBitIds(foundComponents);
     logger.debug(`RemoveModelComponents.remove, found ${Object.keys(dependentBits).length} dependents`);
     if (Object.keys(dependentBits).length && !this.force) {
