@@ -5,6 +5,7 @@ import { ModelComponent } from '../../scope/models';
 import ComponentsList from './components-list';
 
 describe('ComponentList', function () {
+  // @ts-ignore
   this.timeout(0);
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const getModelComponent = () => ModelComponent.fromBitId({ name: 'myName', scope: 'scope' });
@@ -16,6 +17,7 @@ describe('ComponentList', function () {
   describe('listLocalScope', function () {
     let modelComponent;
     before(() => {
+      // @ts-ignore
       this.timeout(0);
       modelComponent = getModelComponent();
     });

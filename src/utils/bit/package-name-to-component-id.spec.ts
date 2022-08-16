@@ -5,6 +5,7 @@ import { Consumer } from '../../consumer';
 import { packageNameToComponentId } from './package-name-to-component-id';
 
 describe('packageNameToComponentId', function () {
+  // @ts-ignore
   this.timeout(0);
   let consumer: Consumer;
   before(() => {

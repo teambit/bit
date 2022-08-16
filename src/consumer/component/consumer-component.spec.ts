@@ -3,6 +3,7 @@ import Component from './consumer-component';
 import { SourceFile } from './sources';
 
 describe('ConsumerComponent', function () {
+  // @ts-ignore
   this.timeout(0);
   describe('docs', () => {
     const componentProps = {
