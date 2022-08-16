@@ -353,6 +353,9 @@ export default class ComponentMap {
     if (this.rootDir && !isValidPath(this.rootDir)) {
       throw new ValidationError(`${errorMessage} rootDir attribute ${this.rootDir} is invalid`);
     }
+    if (this.rootDir && this.rootDir === '.') {
+      throw new ValidationError(`${errorMessage} rootDir attribute ${this.rootDir} is invalid`);
+    }
     if (this.nextVersion && !this.nextVersion.version) {
       throw new ValidationError(`${errorMessage} version attribute should be set when nextVersion prop is set`);
     }
