@@ -316,7 +316,11 @@ export default class Scope {
     results.forEach((result) => {
       if (!(result instanceof ModelComponent)) {
         throw new Error(
-          `fatal: wrong hash in the index.json file. make sure that ${result.hash.toString()} is a ModelComponent`
+          `fatal: wrong hash in the index.json file. expect ${result.hash()} to be a ModelComponent, got ${
+            result.constructor.name
+          }.
+please share your "(.git/bit|.bit)/index.json" file with Bit team to investigate the issue.
+once done, to continue working, please run "bit cc"`
         );
       }
     });
