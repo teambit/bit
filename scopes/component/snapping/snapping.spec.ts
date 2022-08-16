@@ -35,7 +35,7 @@ describe('Snapping aspect', () => {
       } catch (err: any) {
         expect(err.constructor.name).toEqual(ComponentsHaveIssues.name);
       }
-    });
+    }, 50000);
     // @todo: this test fails during "bit build" for some reason. It passes on "bit test";
     it.skip('should not throw an error if the config was set to ignore MissingPackagesDependenciesOnFs error', async () => {
       await setWorkspaceConfig(workspaceData.workspacePath, IssuesAspect.id, {
@@ -48,5 +48,5 @@ describe('Snapping aspect', () => {
     afterAll(async () => {
       await destroyWorkspace(workspaceData);
     });
-  });
+  }, 50000);
 });
