@@ -93,7 +93,11 @@ export class DependenciesSetCmd implements Command {
   name = 'set <component-pattern> <package...>';
   arguments = [
     { name: 'component-pattern', description: COMPONENT_PATTERN_HELP },
-    { name: 'package', description: 'package name with version, e.g. "lodash@1.0.0"' },
+    {
+      name: 'package',
+      description:
+        'package name with or without a version, e.g. "lodash@1.0.0" or just "lodash" which will be resolved to the latest',
+    },
   ];
   group = 'info';
   description = 'set a dependency to component(s)';
@@ -113,6 +117,38 @@ ${chalk.bold('changed components')}
 ${changedComps.join('\n')}
 
 ${chalk.bold('added packages')}
+${JSON.stringify(addedPackages, undefined, 4)}`;
+  }
+}
+
+export class DependenciesRemoveCmd implements Command {
+  name = 'remove <component-pattern> <package...>';
+  arguments = [
+    { name: 'component-pattern', description: COMPONENT_PATTERN_HELP },
+    {
+      name: 'package',
+      description:
+        'package name with or without a version, e.g. "lodash@1.0.0" or just "lodash" which will remove all lodash instances of any version',
+    },
+  ];
+  group = 'info';
+  description = 'remove a dependency to component(s)';
+  alias = '';
+  options = [
+    ['d', 'dev', 'remove from the devDependencies'],
+    ['p', 'peer', 'remove from the peerDependencies'],
+  ] as CommandOptions;
+
+  constructor(private deps: DependenciesMain) {}
+
+  async report([pattern, packages]: [string, string[]], setDepsFlags: SetDependenciesFlags) {
+    const { changedComps, addedPackages } = await this.deps.setDependency(pattern, packages, setDepsFlags);
+
+    return `${chalk.green('successfully updated dependencies')}
+${chalk.bold('changed components')}
+${changedComps.join('\n')}
+
+${chalk.bold('removed packages')}
 ${JSON.stringify(addedPackages, undefined, 4)}`;
   }
 }
