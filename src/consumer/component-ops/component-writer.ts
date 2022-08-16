@@ -24,6 +24,7 @@ import {
   getArtifactFilesByExtension,
 } from '../component/sources/artifact-files';
 import { preparePackageJsonToWrite } from '../component/package-json-utils';
+import { AbstractVinyl } from '../component/sources';
 
 export type ComponentWriterProps = {
   component: Component;
@@ -115,6 +116,7 @@ export default class ComponentWriter {
   }
 
   async populateComponentsFilesToWrite(): Promise<Component> {
+    if (this.isolated) throw new Error('for isolation, please use this.populateComponentsFilesToWriteForCapsule()');
     if (!this.component.files || !this.component.files.length) {
       throw new ShowDoctorError(`Component ${this.component.id.toString()} is invalid as it has no files`);
     }
@@ -128,8 +130,38 @@ export default class ComponentWriter {
     this._updateBitMapIfNeeded();
     this._determineWhetherToWritePackageJson();
     await this.populateFilesToWriteToComponentDir();
-    if (this.isolated) await this.populateArtifacts();
     return this.component;
+  }
+
+  async populateComponentsFilesToWriteForCapsule(): Promise<DataToPersist> {
+    const dataToPersist = new DataToPersist();
+    const clonedFiles = this.component.files.map((file) => file.clone());
+    clonedFiles.forEach((file) => file.updatePaths({ newBase: this.writeToPath }));
+    this.deleteBitDirContent = true;
+    this.writeConfig = false;
+    this.writePackageJson = true;
+    this.ignoreBitDependencies = true; // todo: make sure it's fine.
+    dataToPersist.removePath(new RemovePath(this.writeToPath));
+    clonedFiles.map((file) => dataToPersist.addFile(file));
+    const { packageJson } = preparePackageJsonToWrite(
+      this.bitMap,
+      this.component,
+      this.writeToPath,
+      this.override,
+      this.ignoreBitDependencies,
+      this.excludeRegistryPrefix,
+      undefined,
+      Boolean(this.isolated)
+    );
+    if (!this.component.id.hasVersion()) {
+      packageJson.addOrUpdateProperty('version', this._getNextPatchVersion());
+    }
+    await this._applyTransformers(this.component, packageJson);
+    this._mergePackageJsonPropsFromOverrides(packageJson);
+    dataToPersist.addFile(packageJson.toVinylFile());
+    const artifacts = await this.populateArtifacts();
+    dataToPersist.addManyFiles(artifacts);
+    return dataToPersist;
   }
 
   private throwForImportingLegacyIntoHarmony() {
@@ -201,15 +233,15 @@ export default class ComponentWriter {
    * later, this responsibility might move to pkg extension, which could write only artifacts
    * that are set in package.json.files[], to have a similar structure of a package.
    */
-  private async populateArtifacts() {
+  private async populateArtifacts(): Promise<AbstractVinyl[]> {
     if (!this.scope) {
       // when capsules are written via the workspace, do not write artifacts, they get created by
       // build-pipeline. when capsules are written via the scope, we do need the dists.
-      return;
+      return [];
     }
     if (this.component.buildStatus !== 'succeed') {
       // this is important for "bit sign" when on lane to not go to the original scope
-      return;
+      return [];
     }
     const extensionsNamesForArtifacts = ['teambit.compilation/compiler'];
     const artifactsFiles = flatten(
@@ -233,7 +265,7 @@ export default class ComponentWriter {
     if (artifactsDir) {
       artifactsVinylFlattened.forEach((a) => a.updatePaths({ newBase: artifactsDir }));
     }
-    this.component.dataToPersist.addManyFiles(artifactsVinylFlattened);
+    return artifactsVinylFlattened;
   }
 
   private getArtifactsDir() {
@@ -242,10 +274,10 @@ export default class ComponentWriter {
   }
 
   addComponentToBitMap(rootDir: string | undefined): ComponentMap {
+    if (rootDir === '.') {
+      throw new Error('addComponentToBitMap: rootDir cannot be "."');
+    }
     const filesForBitMap = this.component.files.map((file) => {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       return { name: file.basename, relativePath: pathNormalizeToLinux(file.relative), test: file.test };
     });
 

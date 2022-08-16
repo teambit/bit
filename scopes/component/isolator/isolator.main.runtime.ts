@@ -448,8 +448,8 @@ export class IsolatorMain {
           delete params.scope;
         }
         const componentWriter = new ComponentWriter(params);
-        await componentWriter.populateComponentsFilesToWrite();
-        await component.state._consumer.dataToPersist.persistAllToCapsule(capsule, { keepExistingCapsule: true });
+        const dataToPersist = await componentWriter.populateComponentsFilesToWriteForCapsule();
+        await dataToPersist.persistAllToCapsule(capsule, { keepExistingCapsule: true });
       })
     );
   }
