@@ -1,5 +1,6 @@
 import { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
+import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
 
 describe('update command', function () {
   let helper: Helper;
@@ -68,6 +69,38 @@ describe('update command', function () {
       it('should update the component dependency in node_modules', function () {
         expect(helper.fixtures.fs.readJsonFile(`node_modules/is-odd/package.json`).version).not.to.equal('1.0.0');
       });
+    });
+  });
+  (supportNpmCiRegistryTesting ? describe : describe.skip)('updates dependencies from the model', () => {
+    let configFile;
+    let npmCiRegistry: NpmCiRegistry;
+    before(async () => {
+      helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.bitJsonc.setPackageManager(`teambit.dependencies/pnpm`);
+      npmCiRegistry = new NpmCiRegistry(helper);
+      await npmCiRegistry.init();
+      npmCiRegistry.configureCiInPackageJsonHarmony();
+      helper.fixtures.populateComponents(1);
+      helper.fs.outputFile(`comp1/index.js`, `const isNegative = require("is-negative");`);
+      helper.command.install('is-negative@1.0.0');
+      helper.command.compile();
+      helper.command.tagComponent('comp1');
+      helper.command.export();
+
+      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.extensions.bitJsonc.setPackageManager(`teambit.dependencies/pnpm`);
+      helper.scopeHelper.addRemoteScope();
+      helper.bitJsonc.setupDefault();
+      helper.command.import(`${helper.scopes.remote}/comp1`);
+      helper.command.update('--yes');
+      configFile = helper.bitJsonc.read(helper.scopes.localPath);
+    });
+    it('should add an update version of the dependency from the model to the workspace policies', function () {
+      expect(configFile['teambit.dependencies/dependency-resolver'].policy.dependencies['is-negative']).to.equal(
+        '2.1.0'
+      );
     });
   });
 });

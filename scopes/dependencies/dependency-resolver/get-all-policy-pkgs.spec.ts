@@ -18,6 +18,7 @@ describe('getAllPolicyPkgs()', () => {
         },
       },
       componentPoliciesById: {},
+      componentModelVersions: [],
     });
     // @ts-ignore
     expect(outdatedPkgs).toStrictEqual([

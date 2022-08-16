@@ -1,10 +1,11 @@
 import { ManifestDependenciesKeysNames } from './manifest';
 import { VariantPolicyConfigObject, WorkspacePolicy } from './policy';
+import { DependencyLifecycleType } from './dependencies/dependency';
 
 type CurrentPkg = {
   name: string;
   currentRange: string;
-  source: 'variants' | 'component' | 'rootPolicy';
+  source: 'variants' | 'component' | 'rootPolicy' | 'component-model';
   variantPattern?: string | null;
   componentId?: string;
   targetField: ManifestDependenciesKeysNames;
@@ -14,6 +15,13 @@ export type OutdatedPkg = CurrentPkg & {
   latestRange: string;
 };
 
+export type ComponentModelVersion = {
+  name: string;
+  version: string;
+  componentId: string;
+  lifecycleType: DependencyLifecycleType;
+};
+
 /**
  * Get packages from root policy, variants, and component config files (component.json files).
  */
@@ -21,15 +29,28 @@ export function getAllPolicyPkgs({
   rootPolicy,
   variantPoliciesByPatterns,
   componentPoliciesById,
+  componentModelVersions,
 }: {
   rootPolicy: WorkspacePolicy;
   variantPoliciesByPatterns: Record<string, VariantPolicyConfigObject>;
   componentPoliciesById: Record<string, VariantPolicyConfigObject>;
-}): Array<Omit<OutdatedPkg, 'latestRange'>> {
+  componentModelVersions: ComponentModelVersion[];
+}): CurrentPkg[] {
+  const pkgsFromPolicies = getPkgsFromRootPolicy(rootPolicy);
+  const pkgsNamesFromPolicies = new Set(pkgsFromPolicies.map(({ name }) => name));
   return [
-    ...getPkgsFromRootPolicy(rootPolicy),
+    ...pkgsFromPolicies,
     ...getPkgsFromVariants(variantPoliciesByPatterns),
     ...getPkgsFromComponents(componentPoliciesById),
+    ...componentModelVersions
+      .filter(({ name }) => !pkgsNamesFromPolicies.has(name))
+      .map((componentDep) => ({
+        name: componentDep.name,
+        currentRange: componentDep.version,
+        source: 'component-model' as const,
+        componentId: componentDep.componentId,
+        targetField: componentDep.lifecycleType === 'dev' ? ('devDependencies' as const) : ('dependencies' as const),
+      })),
   ];
 }
 

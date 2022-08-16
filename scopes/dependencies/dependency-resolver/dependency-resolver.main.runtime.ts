@@ -42,7 +42,7 @@ import { DependencyInstaller, PreInstallSubscriberList, PostInstallSubscriberLis
 import { DependencyResolverAspect } from './dependency-resolver.aspect';
 import { DependencyVersionResolver } from './dependency-version-resolver';
 import { DependencyLinker, LinkingOptions } from './dependency-linker';
-import { getAllPolicyPkgs, OutdatedPkg } from './get-all-policy-pkgs';
+import { ComponentModelVersion, getAllPolicyPkgs, OutdatedPkg } from './get-all-policy-pkgs';
 import { InvalidVersionWithPrefix, PackageManagerNotFound } from './exceptions';
 import {
   CreateFromComponentsOptions,
@@ -1155,19 +1155,38 @@ export class DependencyResolverMain {
   /**
    * Return a list of outdated policy dependencies.
    */
-  getOutdatedPkgsFromPolicies({
+  async getOutdatedPkgsFromPolicies({
     rootDir,
     variantPoliciesByPatterns,
     componentPoliciesById,
+    components,
   }: {
     rootDir: string;
     variantPoliciesByPatterns: Record<string, VariantPolicyConfigObject>;
     componentPoliciesById: Record<string, any>;
+    components: Component[];
   }): Promise<OutdatedPkg[]> {
+    const componentModelVersions: ComponentModelVersion[] = [];
+    await Promise.all(
+      components.map(async (component) => {
+        const depList = await this.getDependencies(component);
+        depList.forEach((dep) => {
+          if (dep.getPackageName && dep.version !== 'latest') {
+            componentModelVersions.push({
+              name: dep.getPackageName(),
+              version: dep.version,
+              componentId: component.id.toString(),
+              lifecycleType: dep.lifecycle,
+            });
+          }
+        });
+      })
+    );
     const allPkgs = getAllPolicyPkgs({
       rootPolicy: this.getWorkspacePolicyFromConfig(),
       variantPoliciesByPatterns,
       componentPoliciesById,
+      componentModelVersions,
     });
     return this.getOutdatedPkgs(rootDir, allPkgs);
   }
