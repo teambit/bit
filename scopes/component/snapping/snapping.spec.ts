@@ -48,5 +48,5 @@ describe('Snapping aspect', () => {
     afterAll(async () => {
       await destroyWorkspace(workspaceData);
     });
-  }, 50000);
+  });
 });
