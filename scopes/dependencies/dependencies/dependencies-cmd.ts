@@ -145,11 +145,8 @@ export class DependenciesRemoveCmd implements Command {
     }
 
     const output = results
-      .map(
-        ({ id, removedPackages }) =>
-          `${chalk.underline(id.toString())}\n${JSON.stringify(removedPackages, undefined, 4)}`
-      )
-      .join('\n');
+      .map(({ id, removedPackages }) => `${chalk.underline(id.toString())}\n${removedPackages.join('\n')}`)
+      .join('\n\n');
 
     return `${chalk.green('successfully removed dependencies')}\n${output}`;
   }

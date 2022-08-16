@@ -67,9 +67,23 @@ describe('bit dependencies command', function () {
         helper.command.dependenciesSet('comp1', 'lodash@3.3.1 ramda@0.0.27');
       });
       it('should set them all', () => {
-        const show = helper.command.showComponent('comp1');
-        expect(show).to.have.string('lodash@3.3.1');
-        expect(show).to.have.string('ramda@0.0.27');
+        const showConfig = helper.command.showAspectConfig('comp1', Extensions.dependencyResolver);
+        const ramdaDep = showConfig.data.dependencies.find((d) => d.id === 'ramda');
+        expect(ramdaDep.version).to.equal('0.0.27');
+        const lodashDep = showConfig.data.dependencies.find((d) => d.id === 'lodash');
+        expect(lodashDep.version).to.equal('3.3.1');
+      });
+      describe('removing them with and without version', () => {
+        before(() => {
+          helper.command.dependenciesRemove('comp1', 'lodash@3.3.1 ramda');
+        });
+        it('should remove them all', () => {
+          const showConfig = helper.command.showAspectConfig('comp1', Extensions.dependencyResolver);
+          const ramdaDep = showConfig.data.dependencies.find((d) => d.id === 'ramda');
+          expect(ramdaDep).to.be.undefined;
+          const lodashDep = showConfig.data.dependencies.find((d) => d.id === 'lodash');
+          expect(lodashDep).to.be.undefined;
+        });
       });
     });
     describe('adding scoped package', () => {

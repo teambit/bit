@@ -6,12 +6,13 @@ import {
   KEY_NAME_BY_LIFECYCLE_TYPE,
 } from '@teambit/dependency-resolver';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
-import { compact, set } from 'lodash';
+import { cloneDeep, compact, set } from 'lodash';
 import pMapSeries from 'p-map-series';
 import {
   DependenciesCmd,
   DependenciesDebugCmd,
   DependenciesGetCmd,
+  DependenciesRemoveCmd,
   DependenciesSetCmd,
   SetDependenciesFlags,
 } from './dependencies-cmd';
@@ -69,11 +70,12 @@ export class DependenciesMain {
           compId,
           DependencyResolverAspect.id
         );
-        const newDepResolverConfig = currentDepResolverConfig || {};
+        const newDepResolverConfig = cloneDeep(currentDepResolverConfig || {});
         const removedPackagesWithNulls = await pMapSeries(packages, async (pkg) => {
           const [name, version] = this.splitPkgToNameAndVer(pkg);
           const ignoreVersion = !version;
-          const dependency = depList.findDependency(pkg, { ignoreVersion });
+          const pkgToFind = ignoreVersion ? pkg : name;
+          const dependency = depList.findDependency(pkgToFind, { ignoreVersion });
           if (!dependency) return null;
           const depField = KEY_NAME_BY_LIFECYCLE_TYPE[dependency.lifecycle];
           const existsInSpecificConfig = newDepResolverConfig.policy?.[depField]?.[name];
@@ -83,7 +85,7 @@ export class DependenciesMain {
           } else {
             set(newDepResolverConfig, ['policy', depField, name], '-');
           }
-          return dependency.id;
+          return `${dependency.id}@${dependency.version}`;
         });
         const removedPackages = compact(removedPackagesWithNulls);
         if (!removedPackages.length) return null;
@@ -127,7 +129,12 @@ export class DependenciesMain {
   static async provider([cli, workspace, depsResolver]: [CLIMain, Workspace, DependencyResolverMain]) {
     const depsMain = new DependenciesMain(workspace, depsResolver);
     const depsCmd = new DependenciesCmd();
-    depsCmd.commands = [new DependenciesGetCmd(), new DependenciesDebugCmd(), new DependenciesSetCmd(depsMain)];
+    depsCmd.commands = [
+      new DependenciesGetCmd(),
+      new DependenciesRemoveCmd(depsMain),
+      new DependenciesDebugCmd(),
+      new DependenciesSetCmd(depsMain),
+    ];
     cli.register(depsCmd);
 
     return depsMain;

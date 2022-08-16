@@ -124,5 +124,6 @@ function uniqDeps(dependencies: Array<Dependency>): Array<Dependency> {
 }
 
 function removeVersion(id: string): string {
+  if (id.startsWith('@')) return id.split('@')[1]; // scoped package
   return id.split('@')[0];
 }
