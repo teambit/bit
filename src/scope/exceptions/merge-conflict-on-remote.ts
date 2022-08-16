@@ -14,9 +14,9 @@ export default class MergeConflictOnRemote extends BitError {
         .map((i) => `${chalk.bold(i.id)} (version(s): ${i.versions.join(', ')})`)
         .join(', ')} to the remote scope.
 to resolve this conflict and merge your remote and local changes, please do the following:
-1) bit reset [id] [version]
+1) bit reset [component-pattern] [--head]
 2) bit import
-3) bit checkout [version] [id]
+3) bit checkout [component-pattern] --head
 once your changes are merged with the new remote version, please tag and export a new version of the component to the remote scope.`;
     }
     if (idsNeedUpdate.length) {

@@ -32,6 +32,7 @@ const dependencyTree = dependencyTreeRewired.default;
 const fixtures = path.resolve(`${__dirname}/../../../../../../fixtures/dependency-tree`);
 
 describe('dependencyTree', function () {
+  // @ts-ignore
   this.timeout(8000);
   function testTreesForFormat(format, ext = '.js') {
     it('returns an object form of the dependency tree for a file', () => {
@@ -560,6 +561,7 @@ describe('dependencyTree', function () {
     });
 
     it('resolves unaliased modules', () => {
+      // @ts-ignore
       this.timeout(5000);
       // @ts-ignore
       this._testResolution('unaliased');

@@ -4,7 +4,7 @@ import { ComponentIssue } from '@teambit/component-issues';
 import { BitId, BitIds } from '../../bit-id';
 import { createInMemoryCache } from '../../cache/cache-factory';
 import { getMaxSizeForComponents, InMemoryCache } from '../../cache/in-memory-cache';
-import { ANGULAR_PACKAGE_IDENTIFIER, BIT_MAP } from '../../constants';
+import { BIT_MAP } from '../../constants';
 import logger from '../../logger/logger';
 import ScopeComponentsImporter from '../../scope/component-ops/scope-components-importer';
 import { ModelComponent } from '../../scope/models';
@@ -26,7 +26,6 @@ type OnComponentIssuesCalcSubscriber = (component: Component) => Promise<Compone
 
 export default class ComponentLoader {
   private componentsCache: InMemoryCache<Component>; // cache loaded components
-  private componentsCacheForCapsule: InMemoryCache<Component>; // cache loaded components for capsule, must not use the cache for the workspace
   _shouldCheckForClearingDependenciesCache = true;
   consumer: Consumer;
   cacheResolvedDependencies: Record<string, any>;
@@ -37,7 +36,6 @@ export default class ComponentLoader {
     this.cacheResolvedDependencies = {};
     this.componentFsCache = new ComponentFsCache(consumer.scope.getPath());
     this.componentsCache = createInMemoryCache({ maxSize: getMaxSizeForComponents() });
-    this.componentsCacheForCapsule = createInMemoryCache({ maxSize: getMaxSizeForComponents() });
   }
 
   static onComponentLoadSubscribers: OnComponentLoadSubscriber[] = [];
@@ -52,7 +50,6 @@ export default class ComponentLoader {
 
   clearComponentsCache() {
     this.componentsCache.deleteAll();
-    this.componentsCacheForCapsule.deleteAll();
     this.cacheResolvedDependencies = {};
     this._shouldCheckForClearingDependenciesCache = true;
   }
@@ -60,7 +57,6 @@ export default class ComponentLoader {
   clearOneComponentCache(id: BitId) {
     const idStr = id.toString();
     this.componentsCache.delete(idStr);
-    this.componentsCacheForCapsule.delete(idStr);
     this.cacheResolvedDependencies = {};
   }
 
@@ -89,24 +85,6 @@ export default class ComponentLoader {
       }
     }
     this._shouldCheckForClearingDependenciesCache = false;
-  }
-
-  async loadForCapsule(id: BitId): Promise<Component> {
-    logger.debugAndAddBreadCrumb('ComponentLoader', 'loadForCapsule, id: {id}', {
-      id: id.toString(),
-    });
-    const idWithVersion: BitId = getLatestVersionNumber(this.consumer.bitmapIdsFromCurrentLane, id);
-    const idStr = idWithVersion.toString();
-    if (!this.componentsCacheForCapsule.has(idStr)) {
-      const { components } = await this.loadMany(BitIds.fromArray([id]));
-      const component = components[0].clone();
-      this.componentsCacheForCapsule.set(idStr, component);
-    }
-
-    logger.debugAndAddBreadCrumb('ComponentLoader', 'loadForCapsule finished loading the component "{id}"', {
-      id: id.toString(),
-    });
-    return this.componentsCacheForCapsule.get(idStr) as Component;
   }
 
   async loadMany(
@@ -299,16 +277,6 @@ export default class ComponentLoader {
     const components = objectList.getComponents();
     if (!components.length) return null; // probably doesn't exist
     return components[0];
-  }
-
-  private _isAngularProject(): boolean {
-    return Boolean(
-      this.consumer.packageJson &&
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        this.consumer.packageJson.dependencies &&
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        this.consumer.packageJson.dependencies[ANGULAR_PACKAGE_IDENTIFIER]
-    );
   }
 
   static getInstance(consumer: Consumer): ComponentLoader {
