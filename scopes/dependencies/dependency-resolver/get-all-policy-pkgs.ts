@@ -50,7 +50,7 @@ export function getAllPolicyPkgs({
         currentRange: componentDep.version,
         source: 'component-model' as const,
         componentId: componentDep.componentId,
-        targetField: KEY_NAME_BY_LIFECYCLE_TYPE[componentDep.lifecycleType],
+        targetField: KEY_NAME_BY_LIFECYCLE_TYPE[componentDep.lifecycleType] as ManifestDependenciesKeysNames,
       })),
   ];
 }
@@ -61,7 +61,7 @@ function getPkgsFromRootPolicy(rootPolicy: WorkspacePolicy): CurrentPkg[] {
     currentRange: entry.value.version,
     source: 'rootPolicy',
     variantPattern: null as string | null,
-    targetField: KEY_NAME_BY_LIFECYCLE_TYPE[entry.lifecycleType],
+    targetField: KEY_NAME_BY_LIFECYCLE_TYPE[entry.lifecycleType] as ManifestDependenciesKeysNames,
   }));
 }
 
