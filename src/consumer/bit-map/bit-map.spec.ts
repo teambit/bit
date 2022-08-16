@@ -30,6 +30,7 @@ describe('BitMap', function () {
   logger.debug = () => {};
   // @ts-ignore
   logger.info = () => {};
+  // @ts-ignore
   this.timeout(0);
   describe('toObject', () => {
     let bitMap: BitMap;
