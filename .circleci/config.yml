@@ -1297,7 +1297,8 @@ jobs:
   windows_bvm_install:
     <<: *windows_defaults
     environment:
-      PATH: C:\Users\circleci\.npm-global;C:\Users\circleci\AppData\Local\.bvm;$ENV:PATH
+      PATH: C:\Users\circleci\.npm-global;C:\bvm;$ENV:PATH
+      BVM_GLOBALS_DIR: C:\bvm
     steps:
       - attach_workspace:
           at: .
@@ -1313,14 +1314,14 @@ jobs:
           name: 'bvm upgrade'
           command: 'bvm upgrade'
           no_output_timeout: 60m
-      - run: 'setx path "%path%;C:\Users\circleci\AppData\Local\.bvm"'
+      - run: 'setx path "%path%;C:\bvm"'
       - run: 'bit -v'
       - run: bit -v | Out-File -FilePath .\version.txt
       - run: Get-Content -Path .\version.txt
       - save_cache:
           key: v2-bvm-folder-{{ checksum "version.txt" }}
           paths:
-            - C:\Users\circleci\AppData\Local\.bvm
+            - C:\bvm
       - persist_to_workspace:
           root: .
           paths:
@@ -1347,7 +1348,7 @@ jobs:
       - restore_cache:
           key: v2-bvm-folder-{{ checksum "version.txt" }}
       # - run: bit -v
-      - run: 'setx path "%path%;C:\Users\circleci\AppData\Local\.bvm"'
+      - run: 'setx path "%path%;C:\bvm"'
       - run: bit -v
       # - run: 'npm i -g @teambit/bvm'
       # - run: 'bvm list'
@@ -1404,7 +1405,7 @@ jobs:
       - restore_cache:
           key: v2-bvm-folder-{{ checksum "version.txt" }}
       # - run: bit -v
-      - run: 'setx path "%path%;C:\Users\circleci\AppData\Local\.bvm"'
+      - run: 'setx path "%path%;C:\bvm"'
       - run: bit -v
       # - run: 'npm i -g @teambit/bvm'
       # - run: 'bvm list'
