@@ -63,22 +63,6 @@ ${chalk.red('Red')} - indicates a semantically breaking change`,
   ) as OutdatedPkg[];
 }
 
-function tryPickLowestRange(range1: string, range2: string) {
-  if (range1 === '*' || range2 === '*') return '*';
-  try {
-    return semver.lt(rangeToVersion(range1), rangeToVersion(range2)) ? range1 : range2;
-  } catch {
-    return '*';
-  }
-}
-
-function rangeToVersion(range: string) {
-  if (range.startsWith('~') || range.startsWith('^')) {
-    return range.substring(1);
-  }
-  return range;
-}
-
 const DEP_TYPE_PRIORITY = {
   dependencies: 0,
   devDependencies: 1,
@@ -89,28 +73,7 @@ const DEP_TYPE_PRIORITY = {
  * Groups the outdated packages and makes choices for enquirer's prompt.
  */
 export function makeOutdatedPkgChoices(outdatedPkgs: OutdatedPkg[]) {
-  const [outdatedPkgsFromComponentModel, outdatedPkgsNotFromComponentModel] = partition(
-    outdatedPkgs,
-    ({ source }) => source === 'component-model'
-  );
-  const mergedOutdatedPkgs: Record<string, OutdatedPkgToRender> = {};
-  for (const outdatedPkg of outdatedPkgsFromComponentModel) {
-    if (!mergedOutdatedPkgs[outdatedPkg.name]) {
-      mergedOutdatedPkgs[outdatedPkg.name] = outdatedPkg;
-      mergedOutdatedPkgs[outdatedPkg.name].source = 'rootPolicy';
-      mergedOutdatedPkgs[outdatedPkg.name].dependentComponents = [mergedOutdatedPkgs[outdatedPkg.name].componentId!];
-    } else {
-      mergedOutdatedPkgs[outdatedPkg.name].currentRange = tryPickLowestRange(
-        mergedOutdatedPkgs[outdatedPkg.name].currentRange,
-        outdatedPkg.currentRange
-      );
-      mergedOutdatedPkgs[outdatedPkg.name].dependentComponents!.push(outdatedPkg.componentId!);
-      if (outdatedPkg.targetField === 'dependencies') {
-        mergedOutdatedPkgs[outdatedPkg.name].targetField = outdatedPkg.targetField;
-      }
-    }
-  }
-  const outdatedPkgsToRender = [...Object.values(mergedOutdatedPkgs), ...outdatedPkgsNotFromComponentModel];
+  const outdatedPkgsToRender = mergeChoices(outdatedPkgs);
   outdatedPkgsToRender.sort((pkg1, pkg2) => {
     if (pkg1.targetField === pkg2.targetField) return pkg1.name.localeCompare(pkg2.name);
     return DEP_TYPE_PRIORITY[pkg1.targetField] - DEP_TYPE_PRIORITY[pkg2.targetField];
@@ -133,6 +96,47 @@ export function makeOutdatedPkgChoices(outdatedPkgs: OutdatedPkg[]) {
     choices: subChoices,
   }));
   return choices;
+}
+
+function mergeChoices(outdatedPkgs: OutdatedPkg[]): OutdatedPkgToRender[] {
+  const [outdatedPkgsFromComponentModel, outdatedPkgsNotFromComponentModel] = partition(
+    outdatedPkgs,
+    ({ source }) => source === 'component-model'
+  );
+  const mergedOutdatedPkgs: Record<string, OutdatedPkgToRender> = {};
+  for (const outdatedPkg of outdatedPkgsFromComponentModel) {
+    if (!mergedOutdatedPkgs[outdatedPkg.name]) {
+      mergedOutdatedPkgs[outdatedPkg.name] = outdatedPkg;
+      mergedOutdatedPkgs[outdatedPkg.name].source = 'rootPolicy';
+      mergedOutdatedPkgs[outdatedPkg.name].dependentComponents = [mergedOutdatedPkgs[outdatedPkg.name].componentId!];
+    } else {
+      mergedOutdatedPkgs[outdatedPkg.name].currentRange = tryPickLowestRange(
+        mergedOutdatedPkgs[outdatedPkg.name].currentRange,
+        outdatedPkg.currentRange
+      );
+      mergedOutdatedPkgs[outdatedPkg.name].dependentComponents!.push(outdatedPkg.componentId!);
+      if (outdatedPkg.targetField === 'dependencies') {
+        mergedOutdatedPkgs[outdatedPkg.name].targetField = outdatedPkg.targetField;
+      }
+    }
+  }
+  return [...Object.values(mergedOutdatedPkgs), ...outdatedPkgsNotFromComponentModel];
+}
+
+function tryPickLowestRange(range1: string, range2: string) {
+  if (range1 === '*' || range2 === '*') return '*';
+  try {
+    return semver.lt(rangeToVersion(range1), rangeToVersion(range2)) ? range1 : range2;
+  } catch {
+    return '*';
+  }
+}
+
+function rangeToVersion(range: string) {
+  if (range.startsWith('~') || range.startsWith('^')) {
+    return range.substring(1);
+  }
+  return range;
 }
 
 function renderContext(outdatedPkg: OutdatedPkgToRender) {
