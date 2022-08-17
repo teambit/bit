@@ -55,6 +55,9 @@ export type ScopeUIConfig = {
   showGallery: boolean;
 };
 
+export type ComponentIdsToFilter = () => string[];
+export type ComponentIdsToFilterSlot = SlotRegistry<ComponentIdsToFilter>;
+
 export class ScopeUI {
   constructor(
     /**
@@ -106,7 +109,8 @@ export class ScopeUI {
      */
     private contextSlot: ContextSlot,
     private drawerWidgetSlot: DrawerWidgetSlot,
-    private drawerComponentsFiltersSlot: ComponentFiltersSlot
+    private drawerComponentsFiltersSlot: ComponentFiltersSlot,
+    private componentIdsToFilterSlot: ComponentIdsToFilterSlot
   ) {}
 
   private setSidebarToggle: (updated: CommandHandler) => void = () => {};
@@ -274,6 +278,14 @@ export class ScopeUI {
     this.drawerComponentsFiltersSlot.register(filters);
   };
 
+  /**
+   *
+   * register component ids to filter from API
+   */
+  registerComponentIdsToFilter = (idsToFilter: ComponentIdsToFilter) => {
+    this.componentIdsToFilterSlot.register(idsToFilter);
+  };
+
   registerDrawerWidgets = (widgets: ReactNode[]) => {
     this.drawerWidgetSlot.register(widgets);
   };
@@ -357,6 +369,7 @@ export class ScopeUI {
     Slot.withType<ContextSlot>(),
     Slot.withType<DrawerWidgetSlot>(),
     Slot.withType<ComponentFiltersSlot>(),
+    Slot.withType<ComponentIdsToFilterSlot>(),
   ];
 
   static defaultConfig = {
@@ -379,6 +392,7 @@ export class ScopeUI {
       contextSlot,
       drawerWidgetSlot,
       componentFiltersSlot,
+      componentIdsToFilterSlot,
     ]: [
       RouteSlot,
       RouteSlot,
@@ -391,7 +405,8 @@ export class ScopeUI {
       OverviewLineSlot,
       ContextSlot,
       DrawerWidgetSlot,
-      ComponentFiltersSlot
+      ComponentFiltersSlot,
+      ComponentIdsToFilterSlot
     ]
   ) {
     const scopeUi = new ScopeUI(
@@ -409,7 +424,8 @@ export class ScopeUI {
       overviewSlot,
       contextSlot,
       drawerWidgetSlot,
-      componentFiltersSlot
+      componentFiltersSlot,
+      componentIdsToFilterSlot
     );
     scopeUi.registerDrawerComponentFilters([DeprecateFilter, EnvsFilter]);
     scopeUi.registerDrawerWidgets([

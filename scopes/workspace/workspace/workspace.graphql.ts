@@ -59,7 +59,7 @@ export default (workspace: Workspace, graphql: GraphqlMain) => {
         name: String
         path: String
         icon: String
-        components(offset: Int, limit: Int): [Component]
+        components(ids: [String!], offset: Int, limit: Int): [Component]
         getComponent(id: String!): Component
       }
 
@@ -112,8 +112,11 @@ export default (workspace: Workspace, graphql: GraphqlMain) => {
         path: (ws) => ws.path,
         name: (ws) => ws.name,
         icon: (ws) => ws.icon,
-        components: async (ws: Workspace, { offset, limit }: { offset: number; limit: number }) => {
-          return ws.list({ offset, limit });
+        components: async (
+          ws: Workspace,
+          { ids, offset, limit }: { ids?: string[]; offset: number; limit: number }
+        ) => {
+          return ws.list({ offset, limit, ids });
         },
         getComponent: async (ws: Workspace, { id }: { id: string }) => {
           try {

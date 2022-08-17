@@ -1,5 +1,6 @@
 import 'reset-css';
 import pluralize from 'pluralize';
+import flatten from 'lodash.flatten';
 import React, { useReducer, useMemo } from 'react';
 import { Route } from 'react-router-dom';
 import type { ComponentModel } from '@teambit/component';
@@ -16,11 +17,12 @@ import { useWorkspace } from './use-workspace';
 import { WorkspaceOverview } from './workspace-overview';
 import { WorkspaceProvider } from './workspace-provider';
 import styles from './workspace.module.scss';
-import WorkspaceUI from '../../workspace.ui.runtime';
+import WorkspaceUI, { ComponentIdsToFilterSlot } from '../../workspace.ui.runtime';
 
 export type WorkspaceProps = {
   routeSlot: RouteSlot;
   menuSlot: RouteSlot;
+  componentIdsToFilterSlot: ComponentIdsToFilterSlot;
   sidebar: JSX.Element;
   workspaceUI: WorkspaceUI;
   onSidebarTogglerChange: (callback: () => void) => void;
@@ -29,9 +31,17 @@ export type WorkspaceProps = {
 /**
  * main workspace component.
  */
-export function Workspace({ routeSlot, menuSlot, sidebar, workspaceUI, onSidebarTogglerChange }: WorkspaceProps) {
+export function Workspace({
+  routeSlot,
+  menuSlot,
+  sidebar,
+  workspaceUI,
+  onSidebarTogglerChange,
+  componentIdsToFilterSlot,
+}: WorkspaceProps) {
   const reactions = useComponentNotifications();
-  const { workspace } = useWorkspace(reactions);
+  const idsToFilter = flatten(componentIdsToFilterSlot.values().map((filterFn) => filterFn()));
+  const { workspace } = useWorkspace({ ...reactions, idsToFilter });
 
   const [isSidebarOpen, handleSidebarToggle] = useReducer((x) => !x, true);
   const sidebarOpenness = isSidebarOpen ? Layout.row : Layout.right;

@@ -16,7 +16,6 @@ import { LanesHost, LanesModel } from '@teambit/lanes.ui.models';
 import { LaneReadmeOverview } from '@teambit/lanes.ui.readme';
 import { useLanes } from '@teambit/lanes.hooks.use-lanes';
 import { ViewedLaneFromUrl } from '@teambit/lanes.ui.viewed-lane';
-import { LanesDrawer } from '@teambit/lanes.ui.drawer';
 import { LanesListDropdown } from '@teambit/lanes.ui.dropdown';
 
 export class LanesUI {
@@ -140,6 +139,13 @@ export class LanesUI {
     this.hostAspect?.registerSidebarItems(() => <LanesListDropdown />);
   }
 
+  private registerComponentIdsToFilter() {
+    this.hostAspect?.registerComponentIdsToFilter(() => {
+      const { lanesModel } = useLanes();
+      return lanesModel?.viewedLane?.components.map((c) => c.id.toString()) || [];
+    });
+  }
+
   private renderContext = ({ children }: { children: ReactNode }) => {
     return <ViewedLaneFromUrl>{children}</ViewedLaneFromUrl>;
   };
@@ -162,7 +168,7 @@ export class LanesUI {
   }
 
   static async provider(
-    [uiUi, componentUi, workspaceUi, scopeUi, sidebarUi]: [UiUI, ComponentUI, WorkspaceUI, ScopeUI, SidebarUI],
+    [uiUi, componentUi, workspaceUi, scopeUi]: [UiUI, ComponentUI, WorkspaceUI, ScopeUI, SidebarUI],
     _,
     [routeSlot, overviewSlot, navSlot, menuWidgetSlot]: [
       RouteSlot,
@@ -184,8 +190,8 @@ export class LanesUI {
     }
     const lanesUi = new LanesUI(componentUi, routeSlot, navSlot, overviewSlot, menuWidgetSlot, workspace, scope);
     if (uiUi) uiUi.registerRenderHooks({ reactContext: lanesUi.renderContext });
-    const drawer = new LanesDrawer({ showScope: lanesUi.lanesHost === 'workspace' });
-    sidebarUi.registerDrawer(drawer);
+    // const drawer = new LanesDrawer({ showScope: lanesUi.lanesHost === 'workspace' });
+    // sidebarUi.registerDrawer(drawer);
     lanesUi.registerRoutes();
     lanesUi.registerMenuWidget(() => {
       const { lanesModel } = useLanes();
@@ -194,6 +200,7 @@ export class LanesUI {
       return <UseLaneMenu host={lanesUi.lanesHost} viewedLane={viewedLane} currentLane={currentLane} />;
     });
     lanesUi.registerLanesDropdown();
+    lanesUi.registerComponentIdsToFilter();
     return lanesUi;
   }
 }

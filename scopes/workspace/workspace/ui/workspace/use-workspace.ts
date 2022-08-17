@@ -8,6 +8,7 @@ import { ComponentID, ComponentIdObj } from '@teambit/component-id';
 import { Workspace } from './workspace-model';
 
 type UseWorkspaceOptions = {
+  idsToFilter?: string[];
   onComponentAdded?: (component: ComponentModel[]) => void;
   onComponentUpdated?: (component: ComponentModel[]) => void;
   onComponentRemoved?: (compId: ComponentID[]) => void;
@@ -53,12 +54,12 @@ const wcComponentFields = gql`
 `;
 
 const WORKSPACE = gql`
-  query workspace {
+  query workspace($idsToFilter: [String!]) {
     workspace {
       name
       path
       icon
-      components {
+      components(ids: $idsToFilter) {
         ...wcComponentFields
       }
     }
@@ -101,7 +102,9 @@ const COMPONENT_SUBSCRIPTION_REMOVED = gql`
 `;
 
 export function useWorkspace(options: UseWorkspaceOptions = {}) {
-  const { data, subscribeToMore, ...rest } = useDataQuery(WORKSPACE);
+  const { data, subscribeToMore, ...rest } = useDataQuery(WORKSPACE, {
+    variables: { idsToFilter: options.idsToFilter || [] },
+  });
   const optionsRef = useLatest(options);
 
   useEffect(() => {

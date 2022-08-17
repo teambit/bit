@@ -1,9 +1,12 @@
 @import '~@teambit/ui-foundation.ui.constants.z-indexes/z-indexes.module.scss';
 
 .placeholder {
+  display: flex;
+  align-items: center;
   padding-top: 8px;
-  line-height: medium;
-  font-size: medium;
+  padding-right: 16px;
+  line-height: var(--bit-p-md, 16px);
+  font-size: var(--bit-p-md, 16px);
 }
 
 .placeholderText {
