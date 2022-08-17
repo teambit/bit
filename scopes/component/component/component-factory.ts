@@ -45,11 +45,7 @@ export interface ComponentFactory {
   /**
    * returns a component by ID.
    */
-  get(
-    id: ComponentID | string,
-    withState?: boolean,
-    consumerComponent?: ConsumerComponent
-  ): Promise<Component | undefined>;
+  get(id: ComponentID): Promise<Component | undefined>;
 
   /**
    * returns many components by ids.

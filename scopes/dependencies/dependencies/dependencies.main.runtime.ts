@@ -1,14 +1,24 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
+import { ComponentID } from '@teambit/component-id';
+import {
+  DependencyResolverAspect,
+  DependencyResolverMain,
+  KEY_NAME_BY_LIFECYCLE_TYPE,
+} from '@teambit/dependency-resolver';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
+import { cloneDeep, compact, set } from 'lodash';
+import pMapSeries from 'p-map-series';
 import {
   DependenciesCmd,
   DependenciesDebugCmd,
   DependenciesGetCmd,
+  DependenciesRemoveCmd,
   DependenciesSetCmd,
   SetDependenciesFlags,
 } from './dependencies-cmd';
 import { DependenciesAspect } from './dependencies.aspect';
+
+export type RemoveDependencyResult = { id: ComponentID; removedPackages: string[] };
 
 export class DependenciesMain {
   constructor(private workspace: Workspace, private dependencyResolver: DependencyResolverMain) {}
@@ -50,6 +60,44 @@ export class DependenciesMain {
     };
   }
 
+  async removeDependency(componentPattern: string, packages: string[]): Promise<RemoveDependencyResult[]> {
+    const compIds = await this.workspace.idsByPattern(componentPattern);
+    const results = await Promise.all(
+      compIds.map(async (compId) => {
+        const component = await this.workspace.get(compId);
+        const depList = await this.dependencyResolver.getDependencies(component);
+        const currentDepResolverConfig = await this.workspace.getSpecificComponentConfig(
+          compId,
+          DependencyResolverAspect.id
+        );
+        const newDepResolverConfig = cloneDeep(currentDepResolverConfig || {});
+        const removedPackagesWithNulls = await pMapSeries(packages, async (pkg) => {
+          const [name, version] = this.splitPkgToNameAndVer(pkg);
+          const ignoreVersion = !version;
+          const pkgToFind = ignoreVersion ? pkg : name;
+          const dependency = depList.findDependency(pkgToFind, { ignoreVersion });
+          if (!dependency) return null;
+          const depField = KEY_NAME_BY_LIFECYCLE_TYPE[dependency.lifecycle];
+          const existsInSpecificConfig = newDepResolverConfig.policy?.[depField]?.[name];
+          if (existsInSpecificConfig) {
+            if (existsInSpecificConfig === '-') return null;
+            delete newDepResolverConfig.policy[depField][name];
+          } else {
+            set(newDepResolverConfig, ['policy', depField, name], '-');
+          }
+          return `${dependency.id}@${dependency.version}`;
+        });
+        const removedPackages = compact(removedPackagesWithNulls);
+        if (!removedPackages.length) return null;
+        await this.workspace.addSpecificComponentConfig(compId, DependencyResolverAspect.id, newDepResolverConfig);
+        return { id: compId, removedPackages };
+      })
+    );
+    await this.workspace.bitMap.write();
+
+    return compact(results);
+  }
+
   private async getPackageNameAndVerResolved(pkg: string): Promise<[string, string]> {
     const resolveLatest = async (pkgName: string) => {
       const versionResolver = await this.dependencyResolver.getVersionResolver({});
@@ -81,7 +129,12 @@ export class DependenciesMain {
   static async provider([cli, workspace, depsResolver]: [CLIMain, Workspace, DependencyResolverMain]) {
     const depsMain = new DependenciesMain(workspace, depsResolver);
     const depsCmd = new DependenciesCmd();
-    depsCmd.commands = [new DependenciesGetCmd(), new DependenciesDebugCmd(), new DependenciesSetCmd(depsMain)];
+    depsCmd.commands = [
+      new DependenciesGetCmd(),
+      new DependenciesRemoveCmd(depsMain),
+      new DependenciesDebugCmd(),
+      new DependenciesSetCmd(depsMain),
+    ];
     cli.register(depsCmd);
 
     return depsMain;

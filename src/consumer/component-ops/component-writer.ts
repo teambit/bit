@@ -24,6 +24,7 @@ import {
   getArtifactFilesByExtension,
 } from '../component/sources/artifact-files';
 import { preparePackageJsonToWrite } from '../component/package-json-utils';
+import { AbstractVinyl } from '../component/sources';
 
 export type ComponentWriterProps = {
   component: Component;
@@ -115,6 +116,7 @@ export default class ComponentWriter {
   }
 
   async populateComponentsFilesToWrite(): Promise<Component> {
+    if (this.isolated) throw new Error('for isolation, please use this.populateComponentsFilesToWriteForCapsule()');
     if (!this.component.files || !this.component.files.length) {
       throw new ShowDoctorError(`Component ${this.component.id.toString()} is invalid as it has no files`);
     }
@@ -128,8 +130,41 @@ export default class ComponentWriter {
     this._updateBitMapIfNeeded();
     this._determineWhetherToWritePackageJson();
     await this.populateFilesToWriteToComponentDir();
-    if (this.isolated) await this.populateArtifacts();
     return this.component;
+  }
+
+  /**
+   * @todo: move this to the isolator aspect. it's not used anywhere else.
+   */
+  async populateComponentsFilesToWriteForCapsule(): Promise<DataToPersist> {
+    const dataToPersist = new DataToPersist();
+    const clonedFiles = this.component.files.map((file) => file.clone());
+    clonedFiles.forEach((file) => file.updatePaths({ newBase: this.writeToPath }));
+    this.deleteBitDirContent = true;
+    this.writeConfig = false;
+    this.writePackageJson = true;
+    this.ignoreBitDependencies = true; // todo: make sure it's fine.
+    dataToPersist.removePath(new RemovePath(this.writeToPath));
+    clonedFiles.map((file) => dataToPersist.addFile(file));
+    const { packageJson } = preparePackageJsonToWrite(
+      this.bitMap,
+      this.component,
+      this.writeToPath,
+      this.override,
+      this.ignoreBitDependencies,
+      this.excludeRegistryPrefix,
+      undefined,
+      Boolean(this.isolated)
+    );
+    if (!this.component.id.hasVersion()) {
+      packageJson.addOrUpdateProperty('version', this._getNextPatchVersion());
+    }
+    await this._applyTransformers(this.component, packageJson);
+    this._mergePackageJsonPropsFromOverrides(packageJson);
+    dataToPersist.addFile(packageJson.toVinylFile());
+    const artifacts = await this.getArtifacts();
+    dataToPersist.addManyFiles(artifacts);
+    return dataToPersist;
   }
 
   private throwForImportingLegacyIntoHarmony() {
@@ -147,44 +182,6 @@ export default class ComponentWriter {
     this.component.files.forEach((file) => (file.override = this.override));
     this.component.files.map((file) => this.component.dataToPersist.addFile(file));
 
-    // make sure the project's package.json is not overridden by Bit
-    // If a consumer is of isolated env it's ok to override the root package.json (used by the env installation
-    // of compilers / testers / extensions)
-    // In Harmony this is happening inside a capsule, which needs a package.json file
-    if (
-      this.writePackageJson &&
-      (this.isolated || (this.consumer && this.consumer.isolated) || this.writeToPath !== '.')
-    ) {
-      const artifactsDir = this.getArtifactsDir();
-      const { packageJson, distPackageJson } = preparePackageJsonToWrite(
-        this.bitMap,
-        this.component,
-        artifactsDir || this.writeToPath,
-        this.override,
-        this.ignoreBitDependencies,
-        this.excludeRegistryPrefix,
-        undefined,
-        Boolean(this.isolated)
-      );
-
-      // @todo: temporarily this is running only when there is no version (or version is "latest")
-      // so then package.json always has a valid version. we'll need to figure out when the version
-      // needs to be incremented and when it should not.
-      if ((!this.consumer || this.consumer.isolated) && !this.component.id.hasVersion()) {
-        // this only needs to be done in an isolated
-        // or consumerless (dependency in an isolated) environment
-        packageJson.addOrUpdateProperty('version', this._getNextPatchVersion());
-      }
-      if ((!this.consumer?.isLegacy || !this.scope?.isLegacy) && this.applyPackageJsonTransformers) {
-        await this._applyTransformers(this.component, packageJson);
-      }
-
-      this._mergePackageJsonPropsFromOverrides(packageJson);
-      this.component.dataToPersist.addFile(packageJson.toVinylFile());
-      if (distPackageJson) this.component.dataToPersist.addFile(distPackageJson.toVinylFile());
-      this.component.packageJsonFile = packageJson;
-    }
-
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (this.component.license && this.component.license.contents) {
       this.component.license.updatePaths({ newBase: this.writeToPath });
@@ -201,15 +198,15 @@ export default class ComponentWriter {
    * later, this responsibility might move to pkg extension, which could write only artifacts
    * that are set in package.json.files[], to have a similar structure of a package.
    */
-  private async populateArtifacts() {
+  private async getArtifacts(): Promise<AbstractVinyl[]> {
     if (!this.scope) {
       // when capsules are written via the workspace, do not write artifacts, they get created by
       // build-pipeline. when capsules are written via the scope, we do need the dists.
-      return;
+      return [];
     }
     if (this.component.buildStatus !== 'succeed') {
       // this is important for "bit sign" when on lane to not go to the original scope
-      return;
+      return [];
     }
     const extensionsNamesForArtifacts = ['teambit.compilation/compiler'];
     const artifactsFiles = flatten(
@@ -233,7 +230,7 @@ export default class ComponentWriter {
     if (artifactsDir) {
       artifactsVinylFlattened.forEach((a) => a.updatePaths({ newBase: artifactsDir }));
     }
-    this.component.dataToPersist.addManyFiles(artifactsVinylFlattened);
+    return artifactsVinylFlattened;
   }
 
   private getArtifactsDir() {
@@ -242,10 +239,10 @@ export default class ComponentWriter {
   }
 
   addComponentToBitMap(rootDir: string | undefined): ComponentMap {
+    if (rootDir === '.') {
+      throw new Error('addComponentToBitMap: rootDir cannot be "."');
+    }
     const filesForBitMap = this.component.files.map((file) => {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       return { name: file.basename, relativePath: pathNormalizeToLinux(file.relative), test: file.test };
     });
 

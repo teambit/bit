@@ -149,7 +149,7 @@ export class GraphFromFsBuilder {
     const componentMap = this.consumer.bitMap.getComponentIfExist(componentId);
     const isOnWorkspace = Boolean(componentMap);
     if (isOnWorkspace) {
-      return this.consumer.loadComponentForCapsule(componentId);
+      return this.consumer.loadComponent(componentId);
     }
     // a dependency might have been installed as a package in the workspace, and as such doesn't
     // have a componentMap.
