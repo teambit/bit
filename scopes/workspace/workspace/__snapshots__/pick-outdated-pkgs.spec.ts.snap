@@ -1,12 +1,39 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`makeOutdatedPkgChoices should group component model updates of the same dependency 1`] = `
+Array [
+  Object {
+    "choices": Array [
+      Object {
+        "message": "foo [90m(runtime)[39m 1.0.0 ❯ [91m[1m2.0.0[22m[39m because of comp1 and 1 other components ",
+        "name": "foo",
+        "value": Object {
+          "componentId": "comp1",
+          "currentRange": "1.0.0",
+          "dependentComponents": Array [
+            "comp1",
+            "comp2",
+          ],
+          "latestRange": "2.0.0",
+          "name": "foo",
+          "source": "rootPolicy",
+          "targetField": "dependencies",
+        },
+      },
+    ],
+    "message": "[36mRoot policies[39m",
+  },
+]
+`;
+
 exports[`makeOutdatedPkgChoices should render choices in correct order 1`] = `
 Array [
   Object {
     "choices": Array [
       Object {
-        "message": "foo [90m(runtime)[39m 1.0.0 ❯ [91m[1m2.0.0[22m[39m ",
-        "name": Object {
+        "message": "foo [90m(runtime)[39m 1.0.0 ❯ [91m[1m2.0.0[22m[39m   ",
+        "name": "foo",
+        "value": Object {
           "currentRange": "1.0.0",
           "latestRange": "2.0.0",
           "name": "foo",
@@ -15,8 +42,9 @@ Array [
         },
       },
       Object {
-        "message": "qar [90m(runtime)[39m 1.0.0 ❯ 1.[92m[1m1.0[22m[39m ",
-        "name": Object {
+        "message": "qar [90m(runtime)[39m 1.0.0 ❯ 1.[92m[1m1.0[22m[39m   ",
+        "name": "qar",
+        "value": Object {
           "currentRange": "1.0.0",
           "latestRange": "1.1.0",
           "name": "qar",
@@ -25,8 +53,9 @@ Array [
         },
       },
       Object {
-        "message": "zoo [90m(dev)[39m     1.0.0 ❯ 1.[92m[1m1.0[22m[39m ",
-        "name": Object {
+        "message": "zoo [90m(dev)[39m     1.0.0 ❯ 1.[92m[1m1.0[22m[39m   ",
+        "name": "zoo",
+        "value": Object {
           "currentRange": "1.0.0",
           "latestRange": "1.1.0",
           "name": "zoo",
@@ -35,8 +64,9 @@ Array [
         },
       },
       Object {
-        "message": "bar [90m(peer)[39m    1.0.0 ❯ 1.[92m[1m1.0[22m[39m ",
-        "name": Object {
+        "message": "bar [90m(peer)[39m    1.0.0 ❯ 1.[92m[1m1.0[22m[39m   ",
+        "name": "bar",
+        "value": Object {
           "currentRange": "1.0.0",
           "latestRange": "1.1.0",
           "name": "bar",
@@ -55,8 +85,9 @@ Array [
   Object {
     "choices": Array [
       Object {
-        "message": "foo [90m(runtime)[39m 1.0.0 ❯ [91m[1m2.0.0[22m[39m ",
-        "name": Object {
+        "message": "foo [90m(runtime)[39m 1.0.0 ❯ [91m[1m2.0.0[22m[39m   ",
+        "name": "foo",
+        "value": Object {
           "componentId": "comp1",
           "currentRange": "1.0.0",
           "latestRange": "2.0.0",
@@ -71,8 +102,9 @@ Array [
   Object {
     "choices": Array [
       Object {
-        "message": "bar [90m(peer)[39m    1.0.0 ❯ 1.[92m[1m1.0[22m[39m ",
-        "name": Object {
+        "message": "bar [90m(peer)[39m    1.0.0 ❯ 1.[92m[1m1.0[22m[39m   ",
+        "name": "bar",
+        "value": Object {
           "currentRange": "1.0.0",
           "latestRange": "1.1.0",
           "name": "bar",

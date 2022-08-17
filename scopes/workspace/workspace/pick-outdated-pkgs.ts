@@ -15,27 +15,8 @@ interface OutdatedPkgToRender extends OutdatedPkg {
  * Lets the user pick the packages that should be updated.
  */
 export async function pickOutdatedPkgs(outdatedPkgs: OutdatedPkg[]): Promise<OutdatedPkg[]> {
-  const [outdatedPkgsFromComponentModel, outdatedPkgsNotFromComponentModel] = partition(
-    outdatedPkgs,
-    ({ source }) => source === 'component-model'
-  );
-  const mergedOutdatedPkgs: Record<string, OutdatedPkgToRender> = {};
-  for (const outdatedPkg of outdatedPkgsFromComponentModel) {
-    if (!mergedOutdatedPkgs[outdatedPkg.name]) {
-      mergedOutdatedPkgs[outdatedPkg.name] = outdatedPkg;
-      mergedOutdatedPkgs[outdatedPkg.name].source = 'rootPolicy';
-      mergedOutdatedPkgs[outdatedPkg.name].dependentComponents = [mergedOutdatedPkgs[outdatedPkg.name].componentId!];
-    } else {
-      mergedOutdatedPkgs[outdatedPkg.name].currentRange = tryPickLowestRange(
-        mergedOutdatedPkgs[outdatedPkg.name].currentRange,
-        outdatedPkg.currentRange
-      );
-      mergedOutdatedPkgs[outdatedPkg.name].dependentComponents!.push(outdatedPkg.componentId!);
-    }
-  }
-  const outdatedPkgsToRender = [...Object.values(mergedOutdatedPkgs), ...outdatedPkgsNotFromComponentModel];
   const { updateDependencies } = (await prompt({
-    choices: makeOutdatedPkgChoices(outdatedPkgsToRender),
+    choices: makeOutdatedPkgChoices(outdatedPkgs),
     footer: '\nEnter to start updating. Ctrl-c to cancel.',
     indicator: (state: any, choice: any) => ` ${choice.enabled ? '●' : '○'}`,
     message:
@@ -107,14 +88,36 @@ const DEP_TYPE_PRIORITY = {
 /**
  * Groups the outdated packages and makes choices for enquirer's prompt.
  */
-export function makeOutdatedPkgChoices(outdatedPkgs: OutdatedPkgToRender[]) {
-  outdatedPkgs.sort((pkg1, pkg2) => {
+export function makeOutdatedPkgChoices(outdatedPkgs: OutdatedPkg[]) {
+  const [outdatedPkgsFromComponentModel, outdatedPkgsNotFromComponentModel] = partition(
+    outdatedPkgs,
+    ({ source }) => source === 'component-model'
+  );
+  const mergedOutdatedPkgs: Record<string, OutdatedPkgToRender> = {};
+  for (const outdatedPkg of outdatedPkgsFromComponentModel) {
+    if (!mergedOutdatedPkgs[outdatedPkg.name]) {
+      mergedOutdatedPkgs[outdatedPkg.name] = outdatedPkg;
+      mergedOutdatedPkgs[outdatedPkg.name].source = 'rootPolicy';
+      mergedOutdatedPkgs[outdatedPkg.name].dependentComponents = [mergedOutdatedPkgs[outdatedPkg.name].componentId!];
+    } else {
+      mergedOutdatedPkgs[outdatedPkg.name].currentRange = tryPickLowestRange(
+        mergedOutdatedPkgs[outdatedPkg.name].currentRange,
+        outdatedPkg.currentRange
+      );
+      mergedOutdatedPkgs[outdatedPkg.name].dependentComponents!.push(outdatedPkg.componentId!);
+      if (outdatedPkg.targetField === 'dependencies') {
+        mergedOutdatedPkgs[outdatedPkg.name].targetField = outdatedPkg.targetField;
+      }
+    }
+  }
+  const outdatedPkgsToRender = [...Object.values(mergedOutdatedPkgs), ...outdatedPkgsNotFromComponentModel];
+  outdatedPkgsToRender.sort((pkg1, pkg2) => {
     if (pkg1.targetField === pkg2.targetField) return pkg1.name.localeCompare(pkg2.name);
     return DEP_TYPE_PRIORITY[pkg1.targetField] - DEP_TYPE_PRIORITY[pkg2.targetField];
   });
-  const renderedTable = alignColumns(outdatedPkgsRows(outdatedPkgs));
+  const renderedTable = alignColumns(outdatedPkgsRows(outdatedPkgsToRender));
   const groupedChoices = {};
-  outdatedPkgs.forEach((outdatedPkg, index) => {
+  outdatedPkgsToRender.forEach((outdatedPkg, index) => {
     const context = renderContext(outdatedPkg);
     if (!groupedChoices[context]) {
       groupedChoices[context] = [];
@@ -168,7 +171,7 @@ function outdatedPkgsRows(outdatedPkgs: OutdatedPkgToRender[]) {
       outdatedPkg.currentRange,
       '❯',
       latest,
-      outdatedPkg.dependentComponents ? renderDependents(outdatedPkg.dependentComponents) : '',
+      outdatedPkg.dependentComponents ? renderDependents(outdatedPkg.dependentComponents) : ' ',
     ];
   });
 }

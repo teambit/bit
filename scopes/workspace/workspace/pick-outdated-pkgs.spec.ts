@@ -57,4 +57,26 @@ describe('makeOutdatedPkgChoices', () => {
     // @ts-ignore
     expect(choices).toMatchSnapshot();
   });
+  it('should group component model updates of the same dependency', () => {
+    const choices = makeOutdatedPkgChoices([
+      {
+        name: 'foo',
+        currentRange: '1.0.0',
+        latestRange: '2.0.0',
+        source: 'component-model',
+        componentId: 'comp1',
+        targetField: 'devDependencies',
+      },
+      {
+        name: 'foo',
+        currentRange: '1.1.0',
+        latestRange: '2.0.0',
+        source: 'component-model',
+        componentId: 'comp2',
+        targetField: 'dependencies',
+      },
+    ]);
+    // @ts-ignore
+    expect(choices).toMatchSnapshot();
+  });
 });
