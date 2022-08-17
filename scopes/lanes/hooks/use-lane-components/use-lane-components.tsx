@@ -1,6 +1,6 @@
 import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
 import { gql, QueryResult } from '@apollo/client';
-import { LaneModel, LanesQuery } from '@teambit/lanes.ui.lanes';
+import { LaneModel, LanesQuery } from '@teambit/lanes.ui.models';
 import { ComponentModel, componentOverviewFields } from '@teambit/component';
 
 const GET_LANE_COMPONENTS = gql`

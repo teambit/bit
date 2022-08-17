@@ -4,21 +4,26 @@ import { CopyBox } from '@teambit/documenter.ui.copy-box';
 import { ExpandableTabContent, TabContent } from '@teambit/ui-foundation.ui.use-box.tab-content';
 import { Ellipsis } from '@teambit/design.ui.styles.ellipsis';
 import { linkStyles } from '@teambit/ui-foundation.ui.use-box.bottom-link';
-import { LaneModel, LanesHost, useLanesContext } from '@teambit/lanes.ui.lanes';
+import { LanesHost } from '@teambit/lanes.ui.models';
 import { UseBoxDropdown } from '@teambit/ui-foundation.ui.use-box.dropdown';
 import { Link } from '@teambit/base-react.navigation.link';
 import styles from './use-lanes-menu.module.scss';
 
 export type LaneImportContentProps = {
-  currentLane: LaneModel;
+  currentLane: { name: string; id: string };
   switchedOutToCurrentLane: boolean;
   host: LanesHost;
 } & React.HTMLAttributes<HTMLDivElement>;
 
-export function UseLaneMenu({ host }: { host: LanesHost }) {
-  const lanesContext = useLanesContext();
-  if (!lanesContext?.viewedLane) return null;
-  const { viewedLane, currentLane } = lanesContext;
+export function UseLaneMenu({
+  host,
+  viewedLane,
+  currentLane,
+}: {
+  host: LanesHost;
+  viewedLane: { name: string; id: string };
+  currentLane?: { name: string; id: string };
+}) {
   const switchedOutToCurrentLane = viewedLane.id === currentLane?.id;
   const Menu = (
     <div className={styles.lanesMenu}>

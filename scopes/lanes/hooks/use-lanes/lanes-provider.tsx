@@ -1,5 +1,5 @@
 import React, { ReactNode } from 'react';
-import { useLanes } from '@teambit/lanes.ui.lanes';
+import { useLanes } from '@teambit/lanes.hooks.use-lanes';
 import { LanesContext } from './lanes-context';
 
 export type LanesProviderProps = {
@@ -8,6 +8,6 @@ export type LanesProviderProps = {
 };
 
 export function LanesProvider({ children, viewedLaneId }: LanesProviderProps) {
-  const { lanes } = useLanes(viewedLaneId);
-  return <LanesContext.Provider value={lanes}>{children}</LanesContext.Provider>;
+  const { lanesModel } = useLanes(() => viewedLaneId);
+  return <LanesContext.Provider value={lanesModel}>{children}</LanesContext.Provider>;
 }
