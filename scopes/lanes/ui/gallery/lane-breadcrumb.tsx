@@ -4,7 +4,7 @@ import { Icon } from '@teambit/evangelist.elements.icon';
 import { Ellipsis } from '@teambit/design.ui.styles.ellipsis';
 import { Link } from '@teambit/base-react.navigation.link';
 
-import { LaneModel, LanesModel } from '@teambit/lanes.ui.lanes';
+import { LaneModel, LanesModel } from '@teambit/lanes.ui.models';
 
 import styles from './lane-breadcrumb.module.scss';
 

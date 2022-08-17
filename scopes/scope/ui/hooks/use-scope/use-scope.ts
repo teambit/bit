@@ -37,8 +37,8 @@ const SCOPE = gql`
   }
 `;
 
-export function useScopeQuery(): { scope?: ScopeModel; loading?: boolean } {
-  const { data, loading } = useDataQuery(SCOPE);
+export function useScopeQuery(skip?: boolean): { scope?: ScopeModel; loading?: boolean } {
+  const { data, loading } = useDataQuery(SCOPE, { skip });
 
   if (!data || loading) {
     return { loading };
