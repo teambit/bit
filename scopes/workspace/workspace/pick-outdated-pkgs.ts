@@ -1,16 +1,41 @@
 import colorizeSemverDiff from '@pnpm/colorize-semver-diff';
 import semverDiff from '@pnpm/semver-diff';
 import { OutdatedPkg } from '@teambit/dependency-resolver';
+import { partition } from 'lodash';
 import { getBorderCharacters, table } from 'table';
 import chalk from 'chalk';
 import { prompt } from 'enquirer';
+import semver from 'semver';
+
+interface OutdatedPkgToRender extends OutdatedPkg {
+  dependentComponents?: string[];
+}
 
 /**
  * Lets the user pick the packages that should be updated.
  */
 export async function pickOutdatedPkgs(outdatedPkgs: OutdatedPkg[]): Promise<OutdatedPkg[]> {
+  const [outdatedPkgsFromComponentModel, outdatedPkgsNotFromComponentModel] = partition(
+    outdatedPkgs,
+    ({ source }) => source === 'component-model'
+  );
+  const mergedOutdatedPkgs: Record<string, OutdatedPkgToRender> = {};
+  for (const outdatedPkg of outdatedPkgsFromComponentModel) {
+    if (!mergedOutdatedPkgs[outdatedPkg.name]) {
+      mergedOutdatedPkgs[outdatedPkg.name] = outdatedPkg;
+      mergedOutdatedPkgs[outdatedPkg.name].source = 'rootPolicy';
+      mergedOutdatedPkgs[outdatedPkg.name].dependentComponents = [mergedOutdatedPkgs[outdatedPkg.name].componentId!];
+    } else {
+      mergedOutdatedPkgs[outdatedPkg.name].currentRange = tryPickLowestRange(
+        mergedOutdatedPkgs[outdatedPkg.name].currentRange,
+        outdatedPkg.currentRange
+      );
+      mergedOutdatedPkgs[outdatedPkg.name].dependentComponents!.push(outdatedPkg.componentId!);
+    }
+  }
+  const outdatedPkgsToRender = [...Object.values(mergedOutdatedPkgs), ...outdatedPkgsNotFromComponentModel];
   const { updateDependencies } = (await prompt({
-    choices: makeOutdatedPkgChoices(outdatedPkgs),
+    choices: makeOutdatedPkgChoices(outdatedPkgsToRender),
     footer: '\nEnter to start updating. Ctrl-c to cancel.',
     indicator: (state: any, choice: any) => ` ${choice.enabled ? '●' : '○'}`,
     message:
@@ -51,10 +76,26 @@ ${chalk.red('Red')} - indicates a semantically breaking change`,
       // Otherwise, Bit CLI would print an error and confuse users.
       // See related issue: https://github.com/enquirer/enquirer/issues/225
     },
-  } as any)) as { updateDependencies: Record<string, string | OutdatedPkg> };
+  } as any)) as { updateDependencies: Record<string, string | OutdatedPkgToRender> };
   return Object.values(updateDependencies ?? {}).filter(
     (updateDependency) => typeof updateDependency !== 'string'
   ) as OutdatedPkg[];
+}
+
+function tryPickLowestRange(range1: string, range2: string) {
+  if (range1 === '*' || range2 === '*') return '*';
+  try {
+    return semver.lt(rangeToVersion(range1), rangeToVersion(range2)) ? range1 : range2;
+  } catch {
+    return '*';
+  }
+}
+
+function rangeToVersion(range: string) {
+  if (range.startsWith('~') || range.startsWith('^')) {
+    return range.substring(1);
+  }
+  return range;
 }
 
 const DEP_TYPE_PRIORITY = {
@@ -66,7 +107,7 @@ const DEP_TYPE_PRIORITY = {
 /**
  * Groups the outdated packages and makes choices for enquirer's prompt.
  */
-export function makeOutdatedPkgChoices(outdatedPkgs: OutdatedPkg[]) {
+export function makeOutdatedPkgChoices(outdatedPkgs: OutdatedPkgToRender[]) {
   outdatedPkgs.sort((pkg1, pkg2) => {
     if (pkg1.targetField === pkg2.targetField) return pkg1.name.localeCompare(pkg2.name);
     return DEP_TYPE_PRIORITY[pkg1.targetField] - DEP_TYPE_PRIORITY[pkg2.targetField];
@@ -91,9 +132,12 @@ export function makeOutdatedPkgChoices(outdatedPkgs: OutdatedPkg[]) {
   return choices;
 }
 
-function renderContext(outdatedPkg: OutdatedPkg) {
+function renderContext(outdatedPkg: OutdatedPkgToRender) {
   if (outdatedPkg.variantPattern) {
     return `${outdatedPkg.variantPattern} (variant)`;
+  }
+  if (outdatedPkg.source === 'rootPolicy') {
+    return 'Root policies';
   }
   if (outdatedPkg.componentId) {
     return `${outdatedPkg.componentId} (component)`;
@@ -107,7 +151,7 @@ const TARGET_FIELD_TO_DEP_TYPE = {
   peerDependencies: 'peer',
 };
 
-function outdatedPkgsRows(outdatedPkgs: OutdatedPkg[]) {
+function outdatedPkgsRows(outdatedPkgs: OutdatedPkgToRender[]) {
   return outdatedPkgs.map((outdatedPkg) => {
     const { change, diff } = semverDiff(outdatedPkg.currentRange, outdatedPkg.latestRange);
     let colorizeChange = change ?? 'breaking';
@@ -124,8 +168,17 @@ function outdatedPkgsRows(outdatedPkgs: OutdatedPkg[]) {
       outdatedPkg.currentRange,
       '❯',
       latest,
+      outdatedPkg.dependentComponents ? renderDependents(outdatedPkg.dependentComponents) : '',
     ];
   });
+}
+
+function renderDependents(dependentComponents: string[]): string {
+  let result = `because of ${dependentComponents[0]}`;
+  if (dependentComponents.length > 1) {
+    result += ` and ${dependentComponents.length - 1} other components`;
+  }
+  return result;
 }
 
 function alignColumns(rows: string[][]) {
