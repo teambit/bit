@@ -1,7 +1,7 @@
 import colorizeSemverDiff from '@pnpm/colorize-semver-diff';
 import semverDiff from '@pnpm/semver-diff';
 import { OutdatedPkg } from '@teambit/dependency-resolver';
-import { partition } from 'lodash';
+import { omit } from 'lodash';
 import { getBorderCharacters, table } from 'table';
 import chalk from 'chalk';
 import { prompt } from 'enquirer';
@@ -105,7 +105,7 @@ function mergeOutdatedPkgs(outdatedPkgs: OutdatedPkg[]): MergedOutdatedPkg[] {
     if (outdatedPkg.source === 'component-model') {
       if (!mergedOutdatedPkgs[outdatedPkg.name]) {
         mergedOutdatedPkgs[outdatedPkg.name] = {
-          ...outdatedPkg,
+          ...omit(outdatedPkg, ['componentId']),
           source: 'rootPolicy',
           dependentComponents: [outdatedPkg.componentId!],
         };
@@ -145,9 +145,6 @@ function rangeToVersion(range: string) {
 function renderContext(outdatedPkg: OutdatedPkgToRender) {
   if (outdatedPkg.variantPattern) {
     return `${outdatedPkg.variantPattern} (variant)`;
-  }
-  if (outdatedPkg.source === 'rootPolicy') {
-    return 'Root policies';
   }
   if (outdatedPkg.componentId) {
     return `${outdatedPkg.componentId} (component)`;

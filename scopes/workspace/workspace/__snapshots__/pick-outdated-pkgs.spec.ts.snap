@@ -8,7 +8,6 @@ Array [
         "message": "foo [90m(runtime)[39m 1.0.0 ❯ [91m[1m2.0.0[22m[39m because of comp1 and 1 other components ",
         "name": "foo",
         "value": Object {
-          "componentId": "comp1",
           "currentRange": "1.0.0",
           "dependentComponents": Array [
             "comp1",
@@ -34,7 +33,6 @@ Array [
         "message": "foo [90m(runtime)[39m * ❯ [91m[1m2.0.0[22m[39m because of comp1 and 1 other components ",
         "name": "foo",
         "value": Object {
-          "componentId": "comp1",
           "currentRange": "*",
           "dependentComponents": Array [
             "comp1",
