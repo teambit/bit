@@ -5,8 +5,10 @@ import type { SlotRegistry } from '@teambit/harmony';
 import { ComponentPreview } from '@teambit/preview.ui.component-preview';
 import { StatusMessageCard } from '@teambit/design.ui.surfaces.status-message-card';
 import { ComponentOverview } from '@teambit/component.ui.component-meta';
-import { LaneBreadcrumb, useLanesContext } from '@teambit/lanes.ui.lanes';
 import { Separator } from '@teambit/design.ui.separator';
+import { useLanes } from '@teambit/lanes.hooks.use-lanes';
+import { LaneBreadcrumb } from '@teambit/lanes.ui.gallery';
+
 import styles from './overview.module.scss';
 
 export enum BadgePosition {
@@ -32,7 +34,7 @@ export type OverviewProps = {
 export function Overview({ titleBadges }: OverviewProps) {
   const component = useContext(ComponentContext);
   const componentDescriptor = useComponentDescriptor();
-  const lanesModel = useLanesContext();
+  const { lanesModel } = useLanes();
   const currentLane = lanesModel?.viewedLane;
 
   const showHeader = !component.preview?.legacyHeader;

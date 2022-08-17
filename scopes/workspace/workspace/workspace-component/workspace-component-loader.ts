@@ -21,7 +21,6 @@ import { WorkspaceComponent } from './workspace-component';
 
 export class WorkspaceComponentLoader {
   private componentsCache: InMemoryCache<Component>; // cache loaded components
-  private componentsCacheForCapsule: InMemoryCache<Component>; // cache loaded components for capsule, must not use the cache for the workspace
   constructor(
     private workspace: Workspace,
     private logger: Logger,
@@ -29,16 +28,15 @@ export class WorkspaceComponentLoader {
     private envs: EnvsMain
   ) {
     this.componentsCache = createInMemoryCache({ maxSize: getMaxSizeForComponents() });
-    this.componentsCacheForCapsule = createInMemoryCache({ maxSize: getMaxSizeForComponents() });
   }
 
-  async getMany(ids: Array<ComponentID>, forCapsule = false): Promise<Component[]> {
+  async getMany(ids: Array<ComponentID>): Promise<Component[]> {
     const idsWithoutEmpty = compact(ids);
     const errors: { id: ComponentID; err: Error }[] = [];
     const longProcessLogger = this.logger.createLongProcessLogger('loading components', ids.length);
     const componentsP = mapSeries(idsWithoutEmpty, async (id: ComponentID) => {
       longProcessLogger.logProgress(id.toString());
-      return this.get(id, forCapsule).catch((err) => {
+      return this.get(id).catch((err) => {
         if (this.isComponentNotExistsError(err)) {
           errors.push({
             id,
@@ -84,7 +82,6 @@ export class WorkspaceComponentLoader {
 
   async get(
     componentId: ComponentID,
-    forCapsule = false,
     legacyComponent?: ConsumerComponent,
     useCache = true,
     storeInCache = true,
@@ -95,17 +92,17 @@ export class WorkspaceComponentLoader {
       componentId._legacy
     );
     const id = bitIdWithVersion.version ? componentId.changeVersion(bitIdWithVersion.version) : componentId;
-    const fromCache = this.getFromCache(id, forCapsule, loadOpts);
+    const fromCache = this.getFromCache(id, loadOpts);
     if (fromCache && useCache) {
       return fromCache;
     }
-    const consumerComponent = legacyComponent || (await this.getConsumerComponent(id, forCapsule));
+    const consumerComponent = legacyComponent || (await this.getConsumerComponent(id));
     // in case of out-of-sync, the id may changed during the load process
     const updatedId = consumerComponent ? ComponentID.fromLegacy(consumerComponent.id, id.scope) : id;
     const component = await this.loadOne(updatedId, consumerComponent, loadOpts);
     if (storeInCache) {
       this.addMultipleEnvsIssueIfNeeded(component); // it's in storeInCache block, otherwise, it wasn't fully loaded
-      this.saveInCache(component, forCapsule, loadOpts);
+      this.saveInCache(component, loadOpts);
     }
     return component;
   }
@@ -132,18 +129,12 @@ export class WorkspaceComponentLoader {
 
   clearCache() {
     this.componentsCache.deleteAll();
-    this.componentsCacheForCapsule.deleteAll();
   }
   clearComponentCache(id: ComponentID) {
     const idStr = id.toString();
     for (const cacheKey of this.componentsCache.keys()) {
       if (cacheKey === idStr || cacheKey.startsWith(`${idStr}:`)) {
         this.componentsCache.delete(cacheKey);
-      }
-    }
-    for (const cacheKey of this.componentsCacheForCapsule.keys()) {
-      if (cacheKey === idStr || cacheKey.startsWith(`${idStr}:`)) {
-        this.componentsCacheForCapsule.delete(cacheKey);
       }
     }
   }
@@ -189,13 +180,9 @@ export class WorkspaceComponentLoader {
     return this.executeLoadSlot(this.newComponentFromState(id, state), loadOpts);
   }
 
-  private saveInCache(component: Component, forCapsule: boolean, loadOpts?: ComponentLoadOptions): void {
+  private saveInCache(component: Component, loadOpts?: ComponentLoadOptions): void {
     const cacheKey = createComponentCacheKey(component.id, loadOpts);
-    if (forCapsule) {
-      this.componentsCacheForCapsule.set(cacheKey, component);
-    } else {
-      this.componentsCache.set(cacheKey, component);
-    }
+    this.componentsCache.set(cacheKey, component);
   }
 
   /**
@@ -205,22 +192,18 @@ export class WorkspaceComponentLoader {
    * as a result, when out-of-sync is happening and the id is changed to include scope-name in the
    * legacy-id, the component is the cache has the old id.
    */
-  private getFromCache(id: ComponentID, forCapsule: boolean, loadOpts?: ComponentLoadOptions): Component | undefined {
+  private getFromCache(id: ComponentID, loadOpts?: ComponentLoadOptions): Component | undefined {
     const cacheKey = createComponentCacheKey(id, loadOpts);
-    const fromCache = forCapsule ? this.componentsCacheForCapsule.get(cacheKey) : this.componentsCache.get(cacheKey);
+    const fromCache = this.componentsCache.get(cacheKey);
     if (fromCache && fromCache.id._legacy.isEqual(id._legacy)) {
       return fromCache;
     }
     return undefined;
   }
 
-  private async getConsumerComponent(id: ComponentID, forCapsule = false): Promise<ConsumerComponent | undefined> {
+  private async getConsumerComponent(id: ComponentID): Promise<ConsumerComponent | undefined> {
     try {
-      return forCapsule
-        ? // eslint-disable-next-line @typescript-eslint/return-await
-          await this.workspace.consumer.loadComponentForCapsule(id._legacy)
-        : // eslint-disable-next-line @typescript-eslint/return-await
-          await this.workspace.consumer.loadComponent(id._legacy);
+      return await this.workspace.consumer.loadComponent(id._legacy);
     } catch (err: any) {
       // don't return undefined for any error. otherwise, if the component is invalid (e.g. main
       // file is missing) it returns the model component later unexpectedly, or if it's new, it
