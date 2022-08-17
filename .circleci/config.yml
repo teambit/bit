@@ -1301,6 +1301,9 @@ jobs:
     steps:
       - attach_workspace:
           at: .
+      # We can't use Node.js newer than 16.13.2 due to this issue with npm: https://github.com/npm/cli/issues/4234
+      - run: nvm install 16.13.2
+      - run: nvm use 16.13.2
       - run: npm view @teambit/bit version | Out-File -FilePath .\version.txt
       - run: Get-Content -Path .\version.txt
       - restore_cache:
