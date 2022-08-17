@@ -258,8 +258,8 @@ export class ScopeUI {
   /**
    * register a sidebar link to the section above the drawers
    */
-  registerSidebarLink = (...links: SidebarItem[]) => {
-    this.sidebarItemSlot.register(links);
+  registerSidebarItems = (...items: SidebarItem[]) => {
+    this.sidebarItemSlot.register(items);
   };
 
   registerDrawers = (...drawer: DrawerType[]) => {
@@ -420,7 +420,7 @@ export class ScopeUI {
     scopeUi.registerMenuItem(scopeUi.menuItems);
     scopeUi.registerMenuWidget(() => <ScopeUseBox />);
     if (config.showGallery)
-      scopeUi.registerSidebarLink(() => (
+      scopeUi.registerSidebarItems(() => (
         <MenuLinkItem exact href="/" icon="comps">
           Gallery
         </MenuLinkItem>

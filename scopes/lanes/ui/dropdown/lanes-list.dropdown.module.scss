@@ -1,0 +1,18 @@
+@import '~@teambit/ui-foundation.ui.constants.z-indexes/z-indexes.module.scss';
+
+.placeholder {
+  padding-top: 8px;
+  line-height: medium;
+  font-size: medium;
+}
+
+.placeholderText {
+  padding: 4px 12px;
+  font-size: small;
+}
+
+.dropdown {
+  // otherwise when the dropdown is open it clashes with the content of the tree
+  // (this is bizarre, the tree has no position absolute)
+  z-index: $nav-z-index;
+}

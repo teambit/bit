@@ -94,8 +94,8 @@ export class WorkspaceUI {
     this.componentUi.updateComponents(components);
   };
 
-  registerSidebarLink = (...links: SidebarItem[]) => {
-    this.sidebarItemSlot.register(links);
+  registerSidebarItems = (...items: SidebarItem[]) => {
+    this.sidebarItemSlot.register(items);
   };
 
   /**
@@ -218,7 +218,7 @@ export class WorkspaceUI {
     ui.registerRoot(workspaceUI.uiRoot.bind(workspaceUI));
     workspaceUI.registerMenuItem(workspaceUI.menuItems);
 
-    workspaceUI.registerSidebarLink(() => (
+    workspaceUI.registerSidebarItems(() => (
       <MenuLinkItem exact href="/" icon="comps">
         Gallery
       </MenuLinkItem>

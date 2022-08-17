@@ -17,6 +17,7 @@ import { LaneReadmeOverview } from '@teambit/lanes.ui.readme';
 import { useLanes } from '@teambit/lanes.hooks.use-lanes';
 import { ViewedLaneFromUrl } from '@teambit/lanes.ui.viewed-lane';
 import { LanesDrawer } from '@teambit/lanes.ui.drawer';
+import { LanesListDropdown } from '@teambit/lanes.ui.dropdown';
 
 export class LanesUI {
   static dependencies = [UIAspect, ComponentAspect, WorkspaceAspect, ScopeAspect, SidebarAspect];
@@ -135,6 +136,10 @@ export class LanesUI {
     this.registerLanesRoutes();
   }
 
+  private registerLanesDropdown() {
+    this.hostAspect?.registerSidebarItems(() => <LanesListDropdown />);
+  }
+
   private renderContext = ({ children }: { children: ReactNode }) => {
     return <ViewedLaneFromUrl>{children}</ViewedLaneFromUrl>;
   };
@@ -188,7 +193,7 @@ export class LanesUI {
       const { viewedLane, currentLane } = lanesModel;
       return <UseLaneMenu host={lanesUi.lanesHost} viewedLane={viewedLane} currentLane={currentLane} />;
     });
-
+    lanesUi.registerLanesDropdown();
     return lanesUi;
   }
 }

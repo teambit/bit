@@ -42,6 +42,7 @@ export type LanesQuery = {
 };
 
 export type LanesHost = 'workspace' | 'scope';
+export const DEFAULT_LANE = 'main';
 // export type LaneComponentModel = { model: ComponentModel; url: string };
 /**
  * Represents a single Lane in a Workspace/Scope

@@ -8,9 +8,9 @@ import { ExportingComponents } from '@teambit/component.instructions.exporting-c
 import { AlertCard } from '@teambit/design.ui.alert-card';
 import React, { HTMLAttributes, useContext } from 'react';
 import { useLanes } from '@teambit/lanes.hooks.use-lanes';
-import { Icon } from '@teambit/evangelist.elements.icon';
 import { Ellipsis } from '@teambit/design.ui.styles.ellipsis';
 import { LaneBreadcrumb } from '@teambit/lanes.ui.gallery';
+import { LanesIcon } from '@teambit/lanes.ui.icon';
 
 import styles from './change-log-page.module.scss';
 
@@ -30,7 +30,7 @@ export function ChangeLogPage({ className }: ChangeLogPageProps) {
         {currentLane && (
           <>
             <div className={styles.lane}>
-              <Icon of="lane"></Icon>
+              <LanesIcon />
               <Ellipsis className={styles.laneName}>{currentLane.id}</Ellipsis>
             </div>
             <Separator isPresentational className={styles.separator} />
