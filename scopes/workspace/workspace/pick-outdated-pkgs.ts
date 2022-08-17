@@ -7,10 +7,6 @@ import chalk from 'chalk';
 import { prompt } from 'enquirer';
 import semver from 'semver';
 
-interface OutdatedPkgToRender extends OutdatedPkg {
-  dependentComponents?: string[];
-}
-
 /**
  * Lets the user pick the packages that should be updated.
  */
@@ -73,14 +69,14 @@ const DEP_TYPE_PRIORITY = {
  * Groups the outdated packages and makes choices for enquirer's prompt.
  */
 export function makeOutdatedPkgChoices(outdatedPkgs: OutdatedPkg[]) {
-  const outdatedPkgsToRender = mergeChoices(outdatedPkgs);
-  outdatedPkgsToRender.sort((pkg1, pkg2) => {
+  const mergedOutdatedPkgs = mergeOutdatedPkgs(outdatedPkgs);
+  mergedOutdatedPkgs.sort((pkg1, pkg2) => {
     if (pkg1.targetField === pkg2.targetField) return pkg1.name.localeCompare(pkg2.name);
     return DEP_TYPE_PRIORITY[pkg1.targetField] - DEP_TYPE_PRIORITY[pkg2.targetField];
   });
-  const renderedTable = alignColumns(outdatedPkgsRows(outdatedPkgsToRender));
+  const renderedTable = alignColumns(outdatedPkgsRows(mergedOutdatedPkgs));
   const groupedChoices = {};
-  outdatedPkgsToRender.forEach((outdatedPkg, index) => {
+  mergedOutdatedPkgs.forEach((outdatedPkg, index) => {
     const context = renderContext(outdatedPkg);
     if (!groupedChoices[context]) {
       groupedChoices[context] = [];
@@ -98,26 +94,33 @@ export function makeOutdatedPkgChoices(outdatedPkgs: OutdatedPkg[]) {
   return choices;
 }
 
-function mergeChoices(outdatedPkgs: OutdatedPkg[]): OutdatedPkgToRender[] {
-  const [outdatedPkgsFromComponentModel, outdatedPkgsNotFromComponentModel] = partition(
-    outdatedPkgs,
-    ({ source }) => source === 'component-model'
-  );
-  const mergedOutdatedPkgs: Record<string, OutdatedPkgToRender> = {};
-  for (const outdatedPkg of outdatedPkgsFromComponentModel) {
-    if (!mergedOutdatedPkgs[outdatedPkg.name]) {
-      mergedOutdatedPkgs[outdatedPkg.name] = outdatedPkg;
-      mergedOutdatedPkgs[outdatedPkg.name].source = 'rootPolicy';
-      mergedOutdatedPkgs[outdatedPkg.name].dependentComponents = [mergedOutdatedPkgs[outdatedPkg.name].componentId!];
-    } else {
-      mergedOutdatedPkgs[outdatedPkg.name].currentRange = tryPickLowestRange(
-        mergedOutdatedPkgs[outdatedPkg.name].currentRange,
-        outdatedPkg.currentRange
-      );
-      mergedOutdatedPkgs[outdatedPkg.name].dependentComponents!.push(outdatedPkg.componentId!);
-      if (outdatedPkg.targetField === 'dependencies') {
-        mergedOutdatedPkgs[outdatedPkg.name].targetField = outdatedPkg.targetField;
+interface MergedOutdatedPkg extends OutdatedPkg {
+  dependentComponents?: string[];
+}
+
+function mergeOutdatedPkgs(outdatedPkgs: OutdatedPkg[]): MergedOutdatedPkg[] {
+  const mergedOutdatedPkgs: Record<string, MergedOutdatedPkg> = {};
+  const outdatedPkgsNotFromComponentModel: OutdatedPkg[] = [];
+  for (const outdatedPkg of outdatedPkgs) {
+    if (outdatedPkg.source === 'component-model') {
+      if (!mergedOutdatedPkgs[outdatedPkg.name]) {
+        mergedOutdatedPkgs[outdatedPkg.name] = {
+          ...outdatedPkg,
+          source: 'rootPolicy',
+          dependentComponents: [outdatedPkg.componentId!],
+        };
+      } else {
+        mergedOutdatedPkgs[outdatedPkg.name].currentRange = tryPickLowestRange(
+          mergedOutdatedPkgs[outdatedPkg.name].currentRange,
+          outdatedPkg.currentRange
+        );
+        mergedOutdatedPkgs[outdatedPkg.name].dependentComponents!.push(outdatedPkg.componentId!);
+        if (outdatedPkg.targetField === 'dependencies') {
+          mergedOutdatedPkgs[outdatedPkg.name].targetField = outdatedPkg.targetField;
+        }
       }
+    } else {
+      outdatedPkgsNotFromComponentModel.push(outdatedPkg);
     }
   }
   return [...Object.values(mergedOutdatedPkgs), ...outdatedPkgsNotFromComponentModel];
