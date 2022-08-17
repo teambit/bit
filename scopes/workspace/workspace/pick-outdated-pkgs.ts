@@ -142,7 +142,7 @@ function rangeToVersion(range: string) {
   return range;
 }
 
-function renderContext(outdatedPkg: OutdatedPkgToRender) {
+function renderContext(outdatedPkg: MergedOutdatedPkg) {
   if (outdatedPkg.variantPattern) {
     return `${outdatedPkg.variantPattern} (variant)`;
   }
@@ -158,7 +158,7 @@ const TARGET_FIELD_TO_DEP_TYPE = {
   peerDependencies: 'peer',
 };
 
-function outdatedPkgsRows(outdatedPkgs: OutdatedPkgToRender[]) {
+function outdatedPkgsRows(outdatedPkgs: MergedOutdatedPkg[]) {
   return outdatedPkgs.map((outdatedPkg) => {
     const { change, diff } = semverDiff(outdatedPkg.currentRange, outdatedPkg.latestRange);
     let colorizeChange = change ?? 'breaking';
