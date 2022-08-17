@@ -10,7 +10,7 @@ import semver from 'semver';
 /**
  * Lets the user pick the packages that should be updated.
  */
-export async function pickOutdatedPkgs(outdatedPkgs: OutdatedPkg[]): Promise<OutdatedPkg[]> {
+export async function pickOutdatedPkgs(outdatedPkgs: OutdatedPkg[]): Promise<MergedOutdatedPkg[]> {
   const { updateDependencies } = (await prompt({
     choices: makeOutdatedPkgChoices(outdatedPkgs),
     footer: '\nEnter to start updating. Ctrl-c to cancel.',
@@ -53,7 +53,7 @@ ${chalk.red('Red')} - indicates a semantically breaking change`,
       // Otherwise, Bit CLI would print an error and confuse users.
       // See related issue: https://github.com/enquirer/enquirer/issues/225
     },
-  } as any)) as { updateDependencies: Record<string, string | OutdatedPkgToRender> };
+  } as any)) as { updateDependencies: Record<string, string | MergedOutdatedPkg> };
   return Object.values(updateDependencies ?? {}).filter(
     (updateDependency) => typeof updateDependency !== 'string'
   ) as OutdatedPkg[];
@@ -94,7 +94,7 @@ export function makeOutdatedPkgChoices(outdatedPkgs: OutdatedPkg[]) {
   return choices;
 }
 
-interface MergedOutdatedPkg extends OutdatedPkg {
+export interface MergedOutdatedPkg extends OutdatedPkg {
   dependentComponents?: string[];
 }
 
