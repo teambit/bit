@@ -14,7 +14,7 @@ default_working_dir: &default_working_dir
   working_directory: ~/bit
 
 orbs:
-  win: circleci/windows@4.1
+  win: circleci/windows@5.0
 
 windows_default_working_dir: &windows_default_working_dir
   working_directory: C:\Users\circleci\project\bit
@@ -1297,7 +1297,7 @@ jobs:
   windows_bvm_install:
     <<: *windows_defaults
     environment:
-      Path: C:\Users\circleci\.npm-global;C:\Users\circleci\AppData\Local\.bvm;$ENV:PATH
+      PATH: C:\Users\circleci\.npm-global;C:\Users\circleci\AppData\Local\.bvm;$ENV:PATH
     steps:
       - attach_workspace:
           at: .
@@ -1812,22 +1812,22 @@ workflows:
             - windows_build_bvm
 
   # Uncomment in cse you want to run the windows tests
-  # build_and_test_windows:
-  #   jobs:
-  #     - windows_set_ssh_key
-  #     - windows_checkout_code
-  #     - windows_bvm_install:
-  #         requires:
-  #           - windows_checkout_code
-  #     - windows_build_bvm:
-  #         requires:
-  #           - windows_bvm_install
-  #     - windows_e2e_test_bvm:
-  #         requires:
-  #           - windows_checkout_code
-  #           - windows_set_ssh_key
-  #           - windows_bvm_install
-  #           - windows_build_bvm
+  build_and_test_windows:
+    jobs:
+      - windows_set_ssh_key
+      - windows_checkout_code
+      - windows_bvm_install:
+          requires:
+            - windows_checkout_code
+      - windows_build_bvm:
+          requires:
+            - windows_bvm_install
+      - windows_e2e_test_bvm:
+          requires:
+            - windows_checkout_code
+            - windows_set_ssh_key
+            - windows_bvm_install
+            - windows_build_bvm
   # TODO: check if we can combine it with the regular nightly somehow
   harmony_deploy:
     jobs:
@@ -1951,39 +1951,39 @@ workflows:
   #           branches:
   #             only: circle-esbuild-cache
   # uncomment and change the filter branch name to debug the bvm bundle jobs
-  # bvm_bundle_debug:
-  #   jobs:
-  #     - checkout_code:
-  #         filters:
-  #           branches:
-  #             only: fix-circle-cache
-  #     - bundle_version_linux:
-  #         filters:
-  #           branches:
-  #             only: fix-circle-cache
-  #     - bundle_version_windows:
-  #         filters:
-  #           branches:
-  #             only: fix-circle-cache
-  #     - get_esbuild_arm64:
-  #         filters:
-  #           branches:
-  #             only: fix-circle-cache
-  #     - bundle_version_macos:
-  #         filters:
-  #           branches:
-  #             only: fix-circle-cache
-  #         requires:
-  #           - get_esbuild_arm64
-  #     - harmony_publish_to_gcloud:
-  #         filters:
-  #           branches:
-  #             only: fix-circle-cache
-  #         requires:
-  #           - bundle_version_macos
-  #           - bundle_version_linux
-  #           - bundle_version_windows
-  #           - checkout_code # This is needed to generate index.json
+  bvm_bundle_debug:
+    jobs:
+      - checkout_code:
+          filters:
+            branches:
+              only: fix-circle-cache
+      - bundle_version_linux:
+          filters:
+            branches:
+              only: fix-circle-cache
+      - bundle_version_windows:
+          filters:
+            branches:
+              only: fix-win
+      - get_esbuild_arm64:
+          filters:
+            branches:
+              only: fix-circle-cache
+      - bundle_version_macos:
+          filters:
+            branches:
+              only: fix-circle-cache
+          requires:
+            - get_esbuild_arm64
+      - harmony_publish_to_gcloud:
+          filters:
+            branches:
+              only: fix-circle-cache
+          requires:
+            - bundle_version_macos
+            - bundle_version_linux
+            - bundle_version_windows
+            - checkout_code # This is needed to generate index.json
       # - docker_build:
       #     requires:
       #       - checkout_code
