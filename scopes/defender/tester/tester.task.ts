@@ -30,7 +30,7 @@ export class TesterTask implements BuildTask {
         componentsResults: [],
       };
 
-    const specFilesWithCapsule = ComponentMap.as(components, (component) => {
+    const patternsWithCapsule = ComponentMap.as(components, (component) => {
       const componentSpecFiles = componentsSpecFiles.get(component);
       if (!componentSpecFiles) throw new Error('capsule not found');
       const [, specs] = componentSpecFiles;
@@ -52,11 +52,18 @@ export class TesterTask implements BuildTask {
       }
     });
 
+    const specFilesWithCapsule = ComponentMap.as(components, (component) => {
+      const patternEntry = patternsWithCapsule.get(component);
+      // @ts-ignore
+      const [, val] = patternEntry;
+      return val.paths;
+    });
+
     const testerContext = Object.assign(context, {
       release: true,
       specFiles: specFilesWithCapsule,
       rootPath: context.capsuleNetwork.capsulesRootDir,
-      patterns: specFilesWithCapsule,
+      patterns: patternsWithCapsule,
     });
 
     // TODO: remove after fix AbstractVinyl on capsule
