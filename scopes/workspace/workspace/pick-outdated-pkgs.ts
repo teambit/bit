@@ -96,6 +96,7 @@ export function makeOutdatedPkgChoices(outdatedPkgs: OutdatedPkg[]) {
 
 export interface MergedOutdatedPkg extends OutdatedPkg {
   dependentComponents?: string[];
+  hasDifferentRanges?: boolean;
 }
 
 function mergeOutdatedPkgs(outdatedPkgs: OutdatedPkg[]): MergedOutdatedPkg[] {
@@ -110,6 +111,9 @@ function mergeOutdatedPkgs(outdatedPkgs: OutdatedPkg[]): MergedOutdatedPkg[] {
           dependentComponents: [outdatedPkg.componentId!],
         };
       } else {
+        if (mergedOutdatedPkgs[outdatedPkg.name].currentRange !== outdatedPkg.currentRange) {
+          mergedOutdatedPkgs[outdatedPkg.name].hasDifferentRanges = true;
+        }
         mergedOutdatedPkgs[outdatedPkg.name].currentRange = tryPickLowestRange(
           mergedOutdatedPkgs[outdatedPkg.name].currentRange,
           outdatedPkg.currentRange
@@ -172,7 +176,7 @@ function outdatedPkgsRows(outdatedPkgs: MergedOutdatedPkg[]) {
     return [
       outdatedPkg.name,
       chalk.grey(`(${TARGET_FIELD_TO_DEP_TYPE[outdatedPkg.targetField]})`),
-      outdatedPkg.currentRange,
+      outdatedPkg.hasDifferentRanges ? '*' : outdatedPkg.currentRange,
       '❯',
       latest,
       outdatedPkg.dependentComponents ? renderDependents(outdatedPkg.dependentComponents) : ' ',

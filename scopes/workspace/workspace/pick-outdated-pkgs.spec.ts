@@ -101,4 +101,26 @@ describe('makeOutdatedPkgChoices', () => {
     // @ts-ignore
     expect(choices).toMatchSnapshot();
   });
+  it('should group component model updates of the same dependency and display the current range when all components use the same range', () => {
+    const choices = makeOutdatedPkgChoices([
+      {
+        name: 'foo',
+        currentRange: '^1.2.3',
+        latestRange: '2.0.0',
+        source: 'component-model',
+        componentId: 'comp1',
+        targetField: 'dependencies',
+      },
+      {
+        name: 'foo',
+        currentRange: '^1.2.3',
+        latestRange: '2.0.0',
+        source: 'component-model',
+        componentId: 'comp2',
+        targetField: 'dependencies',
+      },
+    ]);
+    // @ts-ignore
+    expect(choices).toMatchSnapshot();
+  });
 });
