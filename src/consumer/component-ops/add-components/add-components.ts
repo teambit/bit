@@ -553,9 +553,13 @@ you can add the directory these files are located at and it'll change the root d
           nodir: true,
         });
 
+        if (!matches.length) throw new EmptyDirectory(componentPath);
+
         const filteredMatches = this.gitIgnore.filter(matches);
 
-        if (!filteredMatches.length) throw new EmptyDirectory(componentPath);
+        if (!filteredMatches.length) {
+          throw new NoFiles(matches);
+        }
 
         const filteredMatchedFiles = filteredMatches.map((match: PathOsBased) => {
           return { relativePath: pathNormalizeToLinux(match), test: false, name: path.basename(match) };

@@ -147,8 +147,7 @@ describe('bit add command', function () {
       expect(bitMap['bar/foo'].mainFile).to.equal('index.js');
     });
   });
-  // @TODO: FIX ON HARMONY!
-  describe.skip('add component/s with gitignore', () => {
+  describe('add component/s with gitignore', () => {
     let errorMessage;
     before(() => {
       helper.scopeHelper.reInitLocalScopeHarmony();
