@@ -2,9 +2,10 @@ import { WorkspaceContext } from '@teambit/generator';
 import { getWorkspaceConfigTemplateParsed, stringifyWorkspaceConfig } from '@teambit/config';
 import { parse, assign } from 'comment-json';
 
-export async function workspaceConfig({ name, defaultScope }: WorkspaceContext) {
+export async function workspaceConfig({ name, defaultScope, template }: WorkspaceContext) {
   const scope = defaultScope || 'my-org.my-scope';
   const configParsed = await getWorkspaceConfigTemplateParsed();
+  const isReactApp = template.name === 'react-app';
   configParsed['teambit.workspace/workspace'].name = name;
   configParsed['teambit.workspace/workspace'].defaultScope = scope;
   configParsed['teambit.dependencies/dependency-resolver'].packageManager = 'teambit.dependencies/pnpm';
@@ -30,7 +31,15 @@ export async function workspaceConfig({ name, defaultScope }: WorkspaceContext) 
     'teambit.workspace/variants': parse(`{}`),
   };
 
-  const configMerged = assign(configParsed, variants);
+  const extensions = {
+    [`${defaultScope}/apps/my-app`]: parse(`{}`),
+  };
+
+  let configMerged = assign(configParsed, variants);
+
+  if (isReactApp && defaultScope) {
+    configMerged = assign(configMerged, extensions);
+  }
 
   return stringifyWorkspaceConfig(configMerged);
 }

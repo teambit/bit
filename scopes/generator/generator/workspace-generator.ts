@@ -94,6 +94,7 @@ export class WorkspaceGenerator {
       defaultScope: this.options.defaultScope,
       empty: this.options.empty,
       aspectComponent: this.aspectComponent,
+      template: this.template,
     };
     const templateFiles = await this.template.generateFiles(workspaceContext);
     await Promise.all(

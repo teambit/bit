@@ -35,6 +35,11 @@ export interface WorkspaceContext {
    * useful to get the aspect-id and other info.
    */
   aspectComponent?: Component;
+
+  /**
+   * the template the user selected to create the workspace.
+   */
+  template: WorkspaceTemplate;
 }
 
 export interface ForkComponentInfo {
@@ -46,7 +51,7 @@ export interface ForkComponentInfo {
   /**
    * path where to write the component
    */
-  path: string;
+  path?: string;
 
   /**
    * a new component name. if not specified, use the original id (without the scope)
