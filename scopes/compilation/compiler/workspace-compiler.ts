@@ -128,7 +128,7 @@ ${this.compileErrors.map(formatError).join('\n')}`);
     const packageDir = path.join('node_modules', packageName);
     const distDirName = this.compilerInstance.getDistDir?.() || DEFAULT_DIST_DIRNAME;
     const injectedDirs = await this.getInjectedDirs(packageName);
-    return [packageDir, ...injectedDirs].map((dist) => path.join(dist,distDirName));
+    return [packageDir, ...injectedDirs].map((dist) => path.join(dist, distDirName));
   }
 
   private async getInjectedDirs(packageName: string): Promise<PathOsBasedRelative[]> {
@@ -242,7 +242,12 @@ export class WorkspaceCompiler {
   }
 
   async onAspectLoadFail(err: Error & { code?: string }, id: ComponentID): Promise<boolean> {
-    if (err.code && err.code === 'MODULE_NOT_FOUND' && this.workspace) {
+    if (
+      err.code &&
+      err.code === 'MODULE_NOT_FOUND' &&
+      this.workspace &&
+      err.message.includes("Cannot find module '/")
+    ) {
       await this.compileComponents([id.toString()], { initiator: CompilationInitiator.AspectLoadFail }, true);
       return true;
     }

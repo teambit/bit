@@ -259,7 +259,7 @@ export class AspectLoaderMain {
     return this;
   }
 
-  private failedLoadAspect: string[] = [];
+  public failedLoadAspect: string[] = [];
 
   get failedAspects() {
     return this.failedLoadAspect;
