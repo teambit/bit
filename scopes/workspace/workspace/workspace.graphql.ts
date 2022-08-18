@@ -1,5 +1,6 @@
 import { GraphqlMain } from '@teambit/graphql';
 import gql from 'graphql-tag';
+import { slice } from 'lodash';
 
 import { ComponentAdded, ComponentChanged, ComponentRemoved, Workspace } from './workspace';
 import { WorkspaceComponent } from './workspace-component';
@@ -116,7 +117,12 @@ export default (workspace: Workspace, graphql: GraphqlMain) => {
           ws: Workspace,
           { ids, offset, limit }: { ids?: string[]; offset: number; limit: number }
         ) => {
-          return ws.list({ offset, limit, ids });
+          if (ids && ids.length > 0) {
+            const componentIds = await Promise.all(ids.map((id) => ws.resolveComponentId(id)));
+            const filteredComponentIds = limit ? slice(componentIds, offset, offset + limit) : componentIds;
+            return ws.getMany(filteredComponentIds);
+          }
+          return ws.list({ offset, limit });
         },
         getComponent: async (ws: Workspace, { id }: { id: string }) => {
           try {
