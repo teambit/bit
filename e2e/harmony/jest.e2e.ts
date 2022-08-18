@@ -109,11 +109,62 @@ describe('Jest Tester', function () {
       expect(output).to.have.string('someUndefinedFunc is not defined');
     });
   });
+
+  describe('env with custom spec resolver', () => {
+    let compName;
+    before(() => {
+      helper.scopeHelper.reInitLocalScopeHarmony();
+      compName = helper.fixtures.populateComponents(1);
+      helper.fs.outputFile('comp1/comp1.spec.ts', specFilePassingFixture());
+      helper.fs.outputFile('comp1/comp1.custom-pattern.spec.ts', specFilePassingFixture('custom pattern describe text', 'custom pattern it text'));
+      helper.env.setCustomEnv('custom-jest-resolve-env');
+      helper.command.compile();
+      helper.command.install();
+      helper.command.setEnv('comp1', 'custom-jest-resolve-env');
+    });
+    describe('bit test command', () => {
+      let output;
+      before(() => {
+        output = helper.command.test('', true);
+      });
+      it('bit test should mentions the custom resolved spec file', () => {
+        expect(output).to.have.string('comp1.custom-pattern.spec');
+      });
+      it('bit test should show the passing component for resolved specs via Jest output', () => {
+        expect(output).to.have.string('✓ custom pattern it text');
+      });
+      it('bit test should not mentions the default spec file', () => {
+        expect(output).to.not.have.string('comp1.spec');
+      });
+      it('bit test should NOT show the passing component for default specs via Jest output', () => {
+        expect(output).to.not.have.string('should pass');
+      });
+    });
+    describe('bit build command', () => {
+      let output;
+      before(() => {
+        output = helper.command.build(compName, true);
+      });
+      it('bit build should mentions the custom resolved spec file', () => {
+        expect(output).to.have.string('comp1.custom-pattern.spec');
+      });
+      it('bit build should show the passing component for resolved specs via Jest output', () => {
+        expect(output).to.have.string('✓ custom pattern it text');
+      });
+      it('bit build should not mentions the default spec file', () => {
+        expect(output).to.not.have.string('comp1.spec');
+      });
+      it('bit build should NOT show the passing component for default specs via Jest output', () => {
+        expect(output).to.not.have.string('should pass');
+      });
+    });
+  });
+
 });
 
-function specFilePassingFixture() {
-  return `describe('test', () => {
-  it('should pass', () => {
+function specFilePassingFixture(describeText = 'test', itText = 'should pass') {
+  return `describe('${describeText}', () => {
+  it('${itText}', () => {
     expect(true).toBeTruthy();
   });
 });
