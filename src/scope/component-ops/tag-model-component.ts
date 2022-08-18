@@ -8,7 +8,14 @@ import * as globalConfig from '../../api/consumer/lib/global-config';
 import { Scope } from '..';
 import { BitId, BitIds } from '../../bit-id';
 import loader from '../../cli/loader';
-import { BuildStatus, CFG_USER_EMAIL_KEY, CFG_USER_NAME_KEY, CFG_USER_TOKEN_KEY, Extensions } from '../../constants';
+import {
+  BuildStatus,
+  CFG_USER_EMAIL_KEY,
+  CFG_USER_NAME_KEY,
+  CFG_USER_TOKEN_KEY,
+  BASE_CLOUD_DOMAIN,
+  Extensions,
+} from '../../constants';
 import { CURRENT_SCHEMA } from '../../consumer/component/component-schema';
 import Component from '../../consumer/component/consumer-component';
 import Consumer from '../../consumer/consumer';
@@ -301,8 +308,7 @@ async function addLogToComponents(
     const nextVersion = persist ? component.componentMap?.nextVersion : null;
     const msgFromEditor = messagePerComponent.find((item) => item.id.isEqualWithoutVersion(component.id))?.msg;
     return {
-      username: nextVersion?.username || username,
-      bitCloudUsername,
+      username: bitCloudUsername || nextVersion?.username || username,
       email: nextVersion?.email || email,
       message: nextVersion?.message || msgFromEditor || message,
       date: Date.now().toString(),
@@ -323,20 +329,23 @@ async function addLogToComponents(
   });
 }
 
-async function getBitCloudUsername(): Promise<string> {
+async function getBitCloudUsername(): Promise<string | undefined> {
   const token = await globalConfig.get(CFG_USER_TOKEN_KEY);
   if (!token) return '';
-  const res = await fetch(`https://api.bit.cloud/user`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-  });
-  const object = await res.json();
-  const user = object.payload;
-  const username = user.username;
-
-  return username;
+  try {
+    const res = await fetch(`https://api.${BASE_CLOUD_DOMAIN}/user`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+    const object = await res.json();
+    const user = object.payload;
+    const username = user.username;
+    return username;
+  } catch (error) {
+    return undefined;
+  }
 }
 
 function setCurrentSchema(components: Component[]) {

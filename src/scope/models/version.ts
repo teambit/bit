@@ -40,7 +40,6 @@ export type Log = {
   date: string;
   username: string | undefined;
   email: string | undefined;
-  bitCloudUsername?: string;
 };
 
 export type VersionProps = {
@@ -316,7 +315,6 @@ export default class Version extends BitObject {
           message: this.log.message,
           date: this.log.date,
           username: this.log.username,
-          bitCloudUsername: this.log.bitCloudUsername,
           email: this.log.email,
         },
         docs: this.docs,
@@ -461,7 +459,6 @@ export default class Version extends BitObject {
         message: log.message,
         date: log.date,
         username: log.username,
-        bitCloudUsername: log.bitCloudUsername,
         email: log.email,
       },
       docs,
