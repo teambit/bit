@@ -3,6 +3,7 @@ import classNames from 'classnames';
 import { Link } from '@teambit/base-react.navigation.link';
 import { Icon } from '@teambit/evangelist.elements.icon';
 import { textSize } from '@teambit/base-ui.text.text-sizes';
+import { links } from '@teambit/community.constants.links';
 import styles from './empty-component-gallery.module.scss';
 
 export type EmptyComponentGalleryProps = {
@@ -26,7 +27,7 @@ export function EmptyComponentGallery({ name, children }: EmptyComponentGalleryP
         <span>New to Bit?</span> &nbsp;
         <Link
           external
-          href={`https://bit.dev/docs/getting-started/installing-bit/installing-bit`}
+          href={`${links.docs}/getting-started/installing-bit/installing-bit`}
           className={styles.purpleLink}
         >
           <span className={styles.text}>Start tutorial</span>
@@ -42,10 +43,10 @@ export function EmptyComponentGallery({ name, children }: EmptyComponentGalleryP
 function IconLine() {
   return (
     <div className={styles.iconLine}>
-      <Link external href="https://join.slack.com/t/bit-dev-community/shared_invite/zt-o2tim18y-UzwOCFdTafmFKEqm2tXE4w">
+      <Link external href={links.slack}>
         <img alt="slack-logo" className={styles.logo} src="https://static.bit.dev/harmony/slack-round-icon.svg" />
       </Link>
-      <Link external href="https://github.com/teambit/bit">
+      <Link external href={links.github}>
         <img alt="github-logo" className={styles.logo} src="https://static.bit.dev/harmony/github.svg" />
       </Link>
       <Link external href="https://bit.cloud/support">
