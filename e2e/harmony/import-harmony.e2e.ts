@@ -286,7 +286,7 @@ describe('import functionality on Harmony', function () {
       expect(() => helper.command.importComponent('comp1')).to.throw();
     });
   });
-  describe.only('importing a component with @types dependency when current workspace does not have it', () => {
+  describe('importing a component with @types dependency when current workspace does not have it', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       helper.bitJsonc.setupDefault();
