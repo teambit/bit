@@ -286,4 +286,31 @@ describe('import functionality on Harmony', function () {
       expect(() => helper.command.importComponent('comp1')).to.throw();
     });
   });
+  describe.only('importing a component with @types dependency when current workspace does not have it', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fs.outputFile('bar/foo.ts', `import cors from 'cors'; console.log(cors);`);
+      helper.command.add('bar');
+      helper.command.install('cors@2.8.5 @types/cors@2.8.10');
+
+      // intermediate step, make sure the types are saved in the
+      const show = helper.command.showComponentParsed('bar');
+      expect(show.devPackageDependencies).to.include({ '@types/cors': '2.8.10' });
+
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+
+      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.addRemoteScope();
+      helper.command.importComponent('bar');
+    });
+    it('bit status should not show it as modified', () => {
+      helper.command.expectStatusToBeClean();
+    });
+    it('bit show should show the typed dependency', () => {
+      const show = helper.command.showComponentParsed('bar');
+      expect(show.devPackageDependencies).to.include({ '@types/cors': '2.8.10' });
+    });
+  });
 });
