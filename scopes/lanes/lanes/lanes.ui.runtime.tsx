@@ -136,14 +136,7 @@ export class LanesUI {
   }
 
   private registerLanesDropdown() {
-    this.hostAspect?.registerSidebarItems(() => <LanesListDropdown />);
-  }
-
-  private registerComponentIdsToFilter() {
-    this.hostAspect?.registerComponentIdsToFilter(() => {
-      const { lanesModel } = useLanes();
-      return lanesModel?.viewedLane?.components.map((c) => c.id.toString()) || [];
-    });
+    this.hostAspect?.registerSidebarLink(() => <LanesListDropdown />);
   }
 
   private renderContext = ({ children }: { children: ReactNode }) => {
@@ -200,7 +193,6 @@ export class LanesUI {
       return <UseLaneMenu host={lanesUi.lanesHost} viewedLane={viewedLane} currentLane={currentLane} />;
     });
     lanesUi.registerLanesDropdown();
-    lanesUi.registerComponentIdsToFilter();
     return lanesUi;
   }
 }
