@@ -50,8 +50,11 @@ export async function mergeLanes({
     if (isDefaultLane) {
       return undefined;
     }
+    const lane = await consumer.scope.loadLane(otherLaneId);
+    if (lane && lane.isNew) {
+      return lane;
+    }
     if (skipImport) {
-      const lane = await consumer.scope.loadLane(otherLaneId);
       if (!lane) {
         throw new BitError(`unable to merge ${otherLaneId.toString()}, the lane was not found locally`);
       }
