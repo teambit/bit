@@ -73,19 +73,18 @@ export class DependenciesMain {
         const newDepResolverConfig = cloneDeep(currentDepResolverConfig || {});
         const removedPackagesWithNulls = await pMapSeries(packages, async (pkg) => {
           const [name, version] = this.splitPkgToNameAndVer(pkg);
-          const ignoreVersion = !version;
-          const pkgToFind = ignoreVersion ? pkg : name;
-          const dependency = depList.findDependency(pkgToFind, { ignoreVersion });
+          const dependency = depList.findByPkgNameOrCompId(name, version);
           if (!dependency) return null;
           const depField = KEY_NAME_BY_LIFECYCLE_TYPE[dependency.lifecycle];
-          const existsInSpecificConfig = newDepResolverConfig.policy?.[depField]?.[name];
+          const depName = dependency.getPackageName?.() || dependency.id;
+          const existsInSpecificConfig = newDepResolverConfig.policy?.[depField]?.[depName];
           if (existsInSpecificConfig) {
             if (existsInSpecificConfig === '-') return null;
-            delete newDepResolverConfig.policy[depField][name];
+            delete newDepResolverConfig.policy[depField][depName];
           } else {
-            set(newDepResolverConfig, ['policy', depField, name], '-');
+            set(newDepResolverConfig, ['policy', depField, depName], '-');
           }
-          return `${dependency.id}@${dependency.version}`;
+          return `${depName}@${dependency.version}`;
         });
         const removedPackages = compact(removedPackagesWithNulls);
         if (!removedPackages.length) return null;
