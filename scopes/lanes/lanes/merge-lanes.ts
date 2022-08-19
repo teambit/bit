@@ -29,7 +29,7 @@ export async function mergeLanes({
   pattern,
   includeDeps,
   skipDependencyInstallation,
-  skipImport,
+  remote,
 }: {
   lanesMain: LanesMain;
   merging: MergingMain;
@@ -51,16 +51,10 @@ export async function mergeLanes({
       return undefined;
     }
     const lane = await consumer.scope.loadLane(otherLaneId);
-    if (lane && lane.isNew) {
-      return lane;
+    if (remote || !lane) {
+      return lanesMain.fetchLaneWithItsComponents(otherLaneId);
     }
-    if (skipImport) {
-      if (!lane) {
-        throw new BitError(`unable to merge ${otherLaneId.toString()}, the lane was not found locally`);
-      }
-      return lane;
-    }
-    return lanesMain.fetchLaneWithItsComponents(otherLaneId);
+    return lane;
   };
   const otherLane = await getOtherLane();
   const getBitIds = async () => {

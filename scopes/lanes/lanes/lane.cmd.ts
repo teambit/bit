@@ -275,6 +275,9 @@ export class LaneRenameCmd implements Command {
 export class LaneMergeCmd implements Command {
   name = 'merge <lane> [pattern]';
   description = `merge a local or a remote lane`;
+  extendedDescription = `if the <lane> exists locally, it will be merged from the local lane.
+otherwise, it will fetch the lane from the remote and merge it.
+in case the <lane> exists locally but you want to merge the remote version of it, use --remote flag`;
   arguments = [
     {
       name: 'lane',
@@ -298,7 +301,7 @@ export class LaneMergeCmd implements Command {
     ['', 'squash', 'EXPERIMENTAL. squash multiple snaps. keep the last one only'],
     ['', 'verbose', 'show details of components that were not merged legitimately'],
     ['', 'skip-dependency-installation', 'do not install packages of the imported components'],
-    ['', 'skip-import', 'avoid importing the target lane before merging'],
+    ['', 'remote', 'relevant when the target-lane locally is differ than the remote and you want the remote'],
     [
       '',
       'include-deps',
@@ -325,7 +328,7 @@ export class LaneMergeCmd implements Command {
       keepReadme = false,
       squash = false,
       skipDependencyInstallation = false,
-      skipImport = false,
+      remote = false,
       includeDeps = false,
       verbose = false,
     }: {
@@ -340,7 +343,7 @@ export class LaneMergeCmd implements Command {
       keepReadme?: boolean;
       squash: boolean;
       skipDependencyInstallation?: boolean;
-      skipImport: boolean;
+      remote: boolean;
       includeDeps?: boolean;
       verbose?: boolean;
     }
@@ -362,7 +365,7 @@ export class LaneMergeCmd implements Command {
       squash,
       pattern,
       skipDependencyInstallation,
-      skipImport,
+      remote,
       includeDeps,
     });
 

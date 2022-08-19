@@ -66,7 +66,7 @@ export type MergeLaneOptions = {
   pattern?: string;
   includeDeps?: boolean;
   skipDependencyInstallation?: boolean;
-  skipImport?: boolean;
+  remote?: boolean;
 };
 
 export type CreateLaneOptions = {
