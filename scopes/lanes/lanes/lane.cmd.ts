@@ -335,7 +335,6 @@ in case the <lane> exists locally but you want to merge the remote version of it
       ours: boolean;
       theirs: boolean;
       manual: boolean;
-      remote?: string;
       workspace?: boolean;
       build?: boolean;
       noSnap: boolean;
