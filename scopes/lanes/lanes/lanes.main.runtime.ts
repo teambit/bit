@@ -9,6 +9,7 @@ import { LaneId, DEFAULT_LANE, LANE_REMOTE_DELIMITER } from '@teambit/lane-id';
 import { BitError } from '@teambit/bit-error';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { DiffOptions } from '@teambit/legacy/dist/consumer/component-ops/components-diff';
+import ImportComponents, { ImportOptions } from '@teambit/legacy/dist/consumer/component-ops/import-components';
 import { exportMany } from '@teambit/legacy/dist/scope/component-ops/export-scope-components';
 import {
   MergeStrategy,
@@ -55,7 +56,6 @@ export type LaneResults = {
 };
 
 export type MergeLaneOptions = {
-  remoteName: string | null;
   mergeStrategy: MergeStrategy;
   noSnap: boolean;
   snapMessage: string;
@@ -66,6 +66,7 @@ export type MergeLaneOptions = {
   pattern?: string;
   includeDeps?: boolean;
   skipDependencyInstallation?: boolean;
+  skipImport?: boolean;
 };
 
 export type CreateLaneOptions = {
@@ -335,10 +336,37 @@ export class LanesMain {
     });
   }
 
-  async importLane(laneId: LaneId): Promise<Lane> {
+  async importLaneObject(laneId: LaneId): Promise<Lane> {
     const scopeComponentImporter = ScopeComponentsImporter.getInstance(this.scope.legacyScope);
     const results = await scopeComponentImporter.importLanes([laneId]);
     return results[0];
+  }
+
+  /**
+   * fetch the lane object and its components from the remote.
+   * save the objects to the local scope.
+   * this method doesn't change anything in the workspace.
+   */
+  async fetchLaneWithItsComponents(laneId: LaneId): Promise<Lane> {
+    this.logger.debug(`fetching lane ${laneId.toString()}`);
+    if (!this.workspace) {
+      throw new BitError('unable to fetch lanes outside of Bit workspace');
+    }
+    const lane = await this.importLaneObject(laneId);
+    if (!lane) throw new Error(`unable to import lane ${laneId.toString()} from the remote`);
+    const importOptions: ImportOptions = {
+      ids: [],
+      objectsOnly: true,
+      verbose: false,
+      writeConfig: false,
+      override: false,
+      installNpmPackages: false,
+      lanes: { laneIds: [laneId], lanes: [lane] },
+    };
+    const importComponents = new ImportComponents(this.workspace.consumer, importOptions);
+    const { dependencies } = await importComponents.importComponents();
+    this.logger.debug(`fetching lane ${laneId.toString()} done, fetched ${dependencies.length} components`);
+    return lane;
   }
 
   async removeLanes(laneNames: string[], { remote, force }: { remote: boolean; force: boolean }): Promise<string[]> {
@@ -358,12 +386,12 @@ export class LanesMain {
     const results = await mergeLanes({
       merging: this.merging,
       workspace: this.workspace,
+      lanesMain: this,
       laneName,
       ...options,
     });
 
     await this.workspace.consumer.onDestroy();
-    // this.workspace.consumer.bitMap.syncWithLanes();
     return results;
   }
 

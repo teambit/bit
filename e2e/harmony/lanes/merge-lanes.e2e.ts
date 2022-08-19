@@ -33,8 +33,7 @@ describe('merge lanes', function () {
       before(() => {
         helper.scopeHelper.reInitLocalScopeHarmony();
         helper.scopeHelper.addRemoteScope();
-        helper.command.fetchRemoteLane('dev');
-        helper.command.mergeRemoteLane(`dev`);
+        helper.command.mergeLane(`${helper.scopes.remote}/dev`);
       });
       it('should save the files to the filesystem', () => {
         helper.fs.outputFile('app.js', fixtures.appPrintComp1(helper.scopes.remote));
@@ -72,8 +71,7 @@ describe('merge lanes', function () {
       before(() => {
         helper.scopeHelper.reInitLocalScopeHarmony();
         helper.scopeHelper.addRemoteScope();
-        helper.command.fetchRemoteLane('dev');
-        mergeOutput = helper.command.mergeRemoteLane(`dev`, undefined, `--workspace --verbose`);
+        mergeOutput = helper.command.mergeLane(`${helper.scopes.remote}/dev`, `--workspace --verbose`);
       });
       it('should indicate that the components were not merge because they are not in the workspace', () => {
         expect(mergeOutput).to.have.string('the merge has been canceled on the following component(s)');
@@ -120,7 +118,7 @@ describe('merge lanes', function () {
       describe('merging the remote lane', () => {
         let mergeOutput;
         before(() => {
-          mergeOutput = helper.command.mergeRemoteLane(`dev`);
+          mergeOutput = helper.command.mergeLane(`${helper.scopes.remote}/dev`);
         });
         it('should succeed', () => {
           expect(mergeOutput).to.have.string('successfully merged components');
@@ -391,7 +389,6 @@ describe('merge lanes', function () {
       helper.scopeHelper.reInitLocalScopeHarmony();
       helper.scopeHelper.addRemoteScope();
       helper.command.importLane('lane-b');
-      helper.command.fetchLane(`${helper.scopes.remote}/lane-a`);
       helper.command.mergeLane(`${helper.scopes.remote}/lane-a`);
     });
     it('should add the newly added file', () => {

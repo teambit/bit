@@ -278,7 +278,7 @@ export class LaneMergeCmd implements Command {
   arguments = [
     {
       name: 'lane',
-      description: 'lane-name to merge to the current lane',
+      description: 'lane-name or lane-id (if not exists locally) to merge to the current lane',
     },
     {
       name: 'pattern',
@@ -287,7 +287,6 @@ export class LaneMergeCmd implements Command {
   ];
   alias = '';
   options = [
-    ['', 'remote <scope-name>', 'remote scope name'],
     ['', 'ours', 'in case of a conflict, override the used version with the current modification'],
     ['', 'theirs', 'in case of a conflict, override the current modification with the specified version'],
     ['', 'manual', 'in case of a conflict, leave the files with a conflict state to resolve them manually later'],
@@ -299,6 +298,7 @@ export class LaneMergeCmd implements Command {
     ['', 'squash', 'EXPERIMENTAL. squash multiple snaps. keep the last one only'],
     ['', 'verbose', 'show details of components that were not merged legitimately'],
     ['', 'skip-dependency-installation', 'do not install packages of the imported components'],
+    ['', 'skip-import', 'avoid importing the target lane before merging'],
     [
       '',
       'include-deps',
@@ -318,7 +318,6 @@ export class LaneMergeCmd implements Command {
       ours = false,
       theirs = false,
       manual = false,
-      remote: remoteName,
       build,
       workspace: existingOnWorkspaceOnly = false,
       noSnap = false,
@@ -326,6 +325,7 @@ export class LaneMergeCmd implements Command {
       keepReadme = false,
       squash = false,
       skipDependencyInstallation = false,
+      skipImport = false,
       includeDeps = false,
       verbose = false,
     }: {
@@ -340,6 +340,7 @@ export class LaneMergeCmd implements Command {
       keepReadme?: boolean;
       squash: boolean;
       skipDependencyInstallation?: boolean;
+      skipImport: boolean;
       includeDeps?: boolean;
       verbose?: boolean;
     }
@@ -351,8 +352,6 @@ export class LaneMergeCmd implements Command {
       throw new BitError(`"--include-deps" flag is relevant only for --workspace and --pattern flags`);
     }
     const { mergeResults, deleteResults } = await this.lanes.mergeLane(name, {
-      // @ts-ignore
-      remoteName,
       build,
       // @ts-ignore
       mergeStrategy,
@@ -363,6 +362,7 @@ export class LaneMergeCmd implements Command {
       squash,
       pattern,
       skipDependencyInstallation,
+      skipImport,
       includeDeps,
     });
 
