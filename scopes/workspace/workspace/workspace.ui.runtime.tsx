@@ -25,8 +25,6 @@ import { WorkspaceAspect } from './workspace.aspect';
 import { workspaceDrawer } from './workspace.ui.drawer';
 
 export type SidebarWidgetSlot = SlotRegistry<ComponentTreeNode>;
-export type ComponentIdsToFilter = () => string[];
-export type ComponentIdsToFilterSlot = SlotRegistry<ComponentIdsToFilter>;
 
 export class WorkspaceUI {
   constructor(
@@ -59,8 +57,6 @@ export class WorkspaceUI {
     private drawerWidgetSlot: DrawerWidgetSlot,
 
     private drawerComponentsFiltersSlot: ComponentFiltersSlot,
-
-    private componentIdsToFilterSlot: ComponentIdsToFilterSlot,
 
     private commandBarUI: CommandBarUI
   ) {}
@@ -98,8 +94,8 @@ export class WorkspaceUI {
     this.componentUi.updateComponents(components);
   };
 
-  registerSidebarItems = (...items: SidebarItem[]) => {
-    this.sidebarItemSlot.register(items);
+  registerSidebarLink = (...links: SidebarItem[]) => {
+    this.sidebarItemSlot.register(links);
   };
 
   /**
@@ -107,14 +103,6 @@ export class WorkspaceUI {
    */
   registerDrawerComponentFilters = (filters: ComponentFilters) => {
     this.drawerComponentsFiltersSlot.register(filters);
-  };
-
-  /**
-   *
-   * register component ids to filter from API
-   */
-  registerComponentIdsToFilter = (idsToFilter: ComponentIdsToFilter) => {
-    this.componentIdsToFilterSlot.register(idsToFilter);
   };
 
   registerDrawerWidgets = (widgets: ReactNode[]) => {
@@ -144,7 +132,6 @@ export class WorkspaceUI {
           path: '/*',
           element: (
             <Workspace
-              componentIdsToFilterSlot={this.componentIdsToFilterSlot}
               menuSlot={this.menuSlot}
               routeSlot={this.routeSlot}
               sidebar={<this.sidebar.render itemSlot={this.sidebarItemSlot} />}
@@ -184,7 +171,6 @@ export class WorkspaceUI {
     Slot.withType<SidebarItemSlot>(),
     Slot.withType<DrawerWidgetSlot>(),
     Slot.withType<ComponentFiltersSlot>(),
-    Slot.withType<ComponentIdsToFilterSlot>(),
   ];
 
   static async provider(
@@ -197,24 +183,14 @@ export class WorkspaceUI {
       GraphUI
     ],
     config,
-    [
-      routeSlot,
-      menuSlot,
-      menuItemSlot,
-      sidebarSlot,
-      sidebarItemSlot,
-      drawerWidgetSlot,
-      drawerComponentsFiltersSlot,
-      componentIdsToFilterSlot,
-    ]: [
+    [routeSlot, menuSlot, menuItemSlot, sidebarSlot, sidebarItemSlot, drawerWidgetSlot, drawerComponentsFiltersSlot]: [
       RouteSlot,
       RouteSlot,
       MenuItemSlot,
       SidebarWidgetSlot,
       SidebarItemSlot,
       DrawerWidgetSlot,
-      ComponentFiltersSlot,
-      ComponentIdsToFilterSlot
+      ComponentFiltersSlot
     ]
   ) {
     componentTree.registerTreeNode(new ComponentTreeWidget());
@@ -231,7 +207,6 @@ export class WorkspaceUI {
       sidebarItemSlot,
       drawerWidgetSlot,
       drawerComponentsFiltersSlot,
-      componentIdsToFilterSlot,
       commandBarUI
     );
 
@@ -243,7 +218,7 @@ export class WorkspaceUI {
     ui.registerRoot(workspaceUI.uiRoot.bind(workspaceUI));
     workspaceUI.registerMenuItem(workspaceUI.menuItems);
 
-    workspaceUI.registerSidebarItems(() => (
+    workspaceUI.registerSidebarLink(() => (
       <MenuLinkItem exact href="/" icon="comps">
         Gallery
       </MenuLinkItem>

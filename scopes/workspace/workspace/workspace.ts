@@ -361,7 +361,6 @@ export class Workspace implements ComponentFactory {
    */
   async list(filter?: { offset: number; limit: number }): Promise<Component[]> {
     const legacyIds = this.consumer.bitMap.getAllIdsAvailableOnLane();
-
     const ids = await this.resolveMultipleComponentIds(legacyIds);
     return this.getMany(filter && filter.limit ? slice(ids, filter.offset, filter.offset + filter.limit) : ids);
   }
