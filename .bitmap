@@ -1266,12 +1266,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/lanes/ui/drawer"
     },
-    "ui/dropdown": {
-        "scope": "",
-        "version": "",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/lanes/ui/dropdown"
-    },
     "ui/elements/level-icon": {
         "scope": "teambit.design",
         "version": "0.0.11",
@@ -1440,11 +1434,11 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/uis/hooks/use-user-agent"
     },
-    "ui/icon": {
+    "ui/icons/lane-icon": {
         "scope": "",
         "version": "",
         "mainFile": "index.ts",
-        "rootDir": "scopes/lanes/ui/icon"
+        "rootDir": "scopes/lanes/ui/icons/lane-icon"
     },
     "ui/is-browser": {
         "scope": "teambit.ui-foundation",
@@ -1512,11 +1506,17 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/lanes/ui/menus"
     },
-    "ui/models": {
-        "scope": "teambit.lanes",
-        "version": "0.0.2",
+    "ui/models/lanes-model": {
+        "scope": "",
+        "version": "",
         "mainFile": "index.ts",
-        "rootDir": "scopes/lanes/ui/models"
+        "rootDir": "scopes/lanes/ui/models/lanes-model"
+    },
+    "ui/navigation/lane-switcher": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/lanes/ui/navigation/lane-switcher"
     },
     "ui/notifications/notification": {
         "scope": "teambit.ui-foundation",
