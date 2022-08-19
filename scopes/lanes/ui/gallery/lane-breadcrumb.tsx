@@ -1,10 +1,10 @@
 import React from 'react';
 import classNames from 'classnames';
-import { LanesIcon } from '@teambit/lanes.ui.icon';
+import { LaneIcon } from '@teambit/lanes.ui.icons.lane-icon';
 import { Ellipsis } from '@teambit/design.ui.styles.ellipsis';
 import { Link } from '@teambit/base-react.navigation.link';
 
-import { LaneModel, LanesModel } from '@teambit/lanes.ui.models';
+import { LaneModel, LanesModel } from '@teambit/lanes.ui.models.lanes-model';
 
 import styles from './lane-breadcrumb.module.scss';
 
@@ -16,7 +16,7 @@ export function LaneBreadcrumb({ lane, className, ...rest }: LaneBreadcrumbProps
   return (
     <Link href={LanesModel.getLaneUrl(lane.id)} className={styles.laneUrl}>
       <div {...rest} className={classNames(styles.lane, className)}>
-        <LanesIcon />
+        <LaneIcon />
         <Ellipsis className={styles.laneId}>{lane.id}</Ellipsis>
       </div>
     </Link>

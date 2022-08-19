@@ -5,8 +5,8 @@ import { TreeContext } from '@teambit/base-ui.graph.tree.tree-context';
 import { indentClass } from '@teambit/base-ui.graph.tree.indent';
 import { TreeNodeProps } from '@teambit/base-ui.graph.tree.recursive-tree';
 import { PayloadType } from '@teambit/ui-foundation.ui.side-bar';
-import { LaneModel, LanesModel } from '@teambit/lanes.ui.models';
-import { LanesIcon } from '@teambit/lanes.ui.icon';
+import { LaneModel, LanesModel } from '@teambit/lanes.ui.models.lanes-model';
+import { LaneIcon } from '@teambit/lanes.ui.icons.lane-icon';
 import { Ellipsis } from '@teambit/design.ui.styles.ellipsis';
 
 import styles from './lane-tree-node.module.scss';
@@ -33,7 +33,7 @@ export function LaneTreeNode(props: LaneTreeNodeProps) {
       onClick={handleClick}
     >
       <div className={styles.left}>
-        <LanesIcon />
+        <LaneIcon />
         <Ellipsis className={styles.laneName}>{lane.name}</Ellipsis>
       </div>
     </Link>

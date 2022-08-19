@@ -1,7 +1,7 @@
 import { useScopeQuery } from '@teambit/scope.ui.hooks.use-scope';
 import { useEffect } from 'react';
 import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
-import { LanesModel, LanesQuery } from '@teambit/lanes.ui.models';
+import { LanesModel, LanesQuery } from '@teambit/lanes.ui.models.lanes-model';
 import { gql, QueryResult } from '@apollo/client';
 import { useLanesContext } from './lanes-context';
 

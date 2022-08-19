@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { LaneModel, LanesModel } from '@teambit/lanes.ui.models';
+import { LaneModel, LanesModel } from '@teambit/lanes.ui.models.lanes-model';
 import { LanesProvider } from '@teambit/lanes.hooks.use-lanes';
 import { useLaneReadme } from '@teambit/lanes.hooks.use-lane-readme';
 import { LaneDetails, LaneOverviewLineSlot } from '@teambit/lanes.ui.gallery';

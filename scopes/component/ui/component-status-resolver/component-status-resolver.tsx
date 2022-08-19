@@ -3,7 +3,7 @@ import React from 'react';
 import classNames from 'classnames';
 import { ComponentStatus } from '@teambit/component.ui.component-status';
 import { StatusTooltip } from '@teambit/component.ui.component-tooltip';
-import { LanesIcon } from '@teambit/lanes.ui.icon';
+import { LaneIcon } from '@teambit/lanes.ui.icons.lane-icon';
 import { getOverrideColor } from './color-override';
 
 import styles from './component-status-resolver.module.scss';
@@ -33,7 +33,7 @@ export function ComponentStatusResolver({ status, issuesCount = 0, isInCurrentLa
         {status.modifyInfo.hasModifiedDependencies && (
           <ComponentStatus className={styles[colorOverride]} status="dependency" />
         )}
-        {isInCurrentLane && <LanesIcon />}
+        {isInCurrentLane && <LaneIcon />}
       </div>
     </StatusTooltip>
   );

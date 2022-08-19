@@ -1,4 +1,4 @@
-import { LaneModel, LanesModel } from '@teambit/lanes.ui.models';
+import { LaneModel, LanesModel } from '@teambit/lanes.ui.models.lanes-model';
 import React from 'react';
 import { MenuLinkItem } from '@teambit/design.ui.surfaces.menu.link-item';
 import { Icon } from '@teambit/evangelist.elements.icon';

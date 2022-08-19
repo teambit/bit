@@ -1,17 +1,17 @@
 import React, { HTMLAttributes, useRef, useEffect } from 'react';
 import classnames from 'classnames';
 import { Dropdown } from '@teambit/design.inputs.dropdown';
-import { LanesIcon } from '@teambit/lanes.ui.icon';
 import { useLanes } from '@teambit/lanes.hooks.use-lanes';
-import { DEFAULT_LANE, LanesModel } from '@teambit/lanes.ui.models';
+import { DEFAULT_LANE, LanesModel } from '@teambit/lanes.ui.models.lanes-model';
+import { LaneIcon } from '@teambit/lanes.ui.icons.lane-icon';
 import { Icon } from '@teambit/evangelist.elements.icon';
 import { MenuLinkItem } from '@teambit/design.ui.surfaces.menu.link-item';
 
-import styles from './lanes-list.dropdown.module.scss';
+import styles from './lane-switcher.module.scss';
 
-export type LanesListDropdownProps = {} & HTMLAttributes<HTMLDivElement>;
+export type LaneSwitcherProps = {} & HTMLAttributes<HTMLDivElement>;
 
-export function LanesListDropdown({ className, ...rest }: LanesListDropdownProps) {
+export function LaneSwitcher({ className, ...rest }: LaneSwitcherProps) {
   const { lanesModel } = useLanes();
   const defaultLane = { id: DEFAULT_LANE, url: '/' };
   const viewedLane =
@@ -44,7 +44,7 @@ type PlaceholderProps = { viewedLaneId: string } & React.HTMLAttributes<HTMLDivE
 function Placeholder({ viewedLaneId, className, ...rest }: PlaceholderProps) {
   return (
     <div {...rest} className={classnames(styles.placeholder, className)}>
-      <LanesIcon className={styles.icon} />
+      <LaneIcon className={styles.icon} />
       <span className={styles.placeholderText}>{viewedLaneId}</span>
       <Icon of="fat-arrow-down" />
     </div>

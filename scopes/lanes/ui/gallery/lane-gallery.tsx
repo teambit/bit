@@ -1,5 +1,5 @@
 import React, { useMemo, ComponentType } from 'react';
-import { LaneModel, LanesModel, LanesHost } from '@teambit/lanes.ui.models';
+import { LaneModel, LanesModel, LanesHost } from '@teambit/lanes.ui.models.lanes-model';
 import { ComponentGrid } from '@teambit/explorer.ui.gallery.component-grid';
 import { RouteSlot, SlotRouter } from '@teambit/ui-foundation.ui.react-router.slot-router';
 import { WorkspaceComponentCard } from '@teambit/workspace.ui.workspace-component-card';

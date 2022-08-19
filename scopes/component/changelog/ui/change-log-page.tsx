@@ -10,7 +10,7 @@ import React, { HTMLAttributes, useContext } from 'react';
 import { useLanes } from '@teambit/lanes.hooks.use-lanes';
 import { Ellipsis } from '@teambit/design.ui.styles.ellipsis';
 import { LaneBreadcrumb } from '@teambit/lanes.ui.gallery';
-import { LanesIcon } from '@teambit/lanes.ui.icon';
+import { LaneIcon } from '@teambit/lanes.ui.icons.lane-icon';
 
 import styles from './change-log-page.module.scss';
 
@@ -30,7 +30,7 @@ export function ChangeLogPage({ className }: ChangeLogPageProps) {
         {currentLane && (
           <>
             <div className={styles.lane}>
-              <LanesIcon />
+              <LaneIcon />
               <Ellipsis className={styles.laneName}>{currentLane.id}</Ellipsis>
             </div>
             <Separator isPresentational className={styles.separator} />

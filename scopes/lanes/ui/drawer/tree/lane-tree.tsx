@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { indentStyle } from '@teambit/base-ui.graph.tree.indent';
 import { Tree, TreeNodeProps, TreeNode } from '@teambit/design.ui.tree';
 import { PayloadType, ScopeTreeNode } from '@teambit/ui-foundation.ui.side-bar';
-import { LanesModel } from '@teambit/lanes.ui.models';
+import { LanesModel } from '@teambit/lanes.ui.models.lanes-model';
 import { TreeContextProvider } from '@teambit/base-ui.graph.tree.tree-context';
 import { LaneTreeNode } from './lane-tree-node';
 import styles from './lane-tree.module.scss';

@@ -1,6 +1,6 @@
 import React, { ReactNode, useMemo } from 'react';
 import { useLocation } from '@teambit/base-react.navigation.link';
-import { LanesModel } from '@teambit/lanes.ui.models';
+import { LanesModel } from '@teambit/lanes.ui.models.lanes-model';
 import { LanesProvider } from '@teambit/lanes.hooks.use-lanes';
 
 export type ViewedLaneFromUrlProps = {

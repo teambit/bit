@@ -5,7 +5,7 @@ import { Tab } from '@teambit/ui-foundation.ui.use-box.tab';
 import { LegacyComponentLog } from '@teambit/legacy-component-log';
 import { UserAvatar } from '@teambit/design.ui.avatar';
 import { LineSkeleton } from '@teambit/base-ui.loaders.skeleton';
-import { LaneModel } from '@teambit/lanes.ui.models';
+import { LaneModel } from '@teambit/lanes.ui.models.lanes-model';
 import classNames from 'classnames';
 
 import styles from './version-dropdown.module.scss';
