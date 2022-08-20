@@ -66,6 +66,7 @@ export async function mergeLanes({
     return otherLane.toBitIds();
   };
   const bitIds = await getBitIds();
+  lanesMain.logger.debug(`merging the following bitIds: ${bitIds.toString()}`);
   const otherLaneName = isDefaultLane ? DEFAULT_LANE : otherLaneId.toString();
 
   let allComponentsStatus = await getAllComponentsStatus();

@@ -89,7 +89,7 @@ export class LanesMain {
     private scope: ScopeMain,
     private merging: MergingMain,
     private componentAspect: ComponentMain,
-    private logger: Logger
+    public logger: Logger
   ) {}
 
   async getLanes({

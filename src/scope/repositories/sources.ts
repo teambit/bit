@@ -614,8 +614,8 @@ otherwise, to collaborate on the same lane as the remote, you'll need to remove 
         }
         const existingComponent = existingLane ? existingLane.components.find((c) => c.id.isEqual(component.id)) : null;
         if (!existingComponent) {
-          modelComponent.laneHeadLocal = component.head;
-          const allVersions = await getAllVersionHashes(modelComponent, repo);
+          // modelComponent.laneHeadLocal = component.head;
+          const allVersions = await getAllVersionHashes(modelComponent, repo, undefined, component.head);
           if (existingLane) existingLane.addComponent(component);
           mergeResults.push({ mergedComponent: modelComponent, mergedVersions: allVersions.map((h) => h.toString()) });
           return;
