@@ -24,6 +24,7 @@ import { concurrentComponentsLimit } from '../../utils/concurrency';
 import { InMemoryCache } from '../../cache/in-memory-cache';
 import { createInMemoryCache } from '../../cache/cache-factory';
 import { pathNormalizeToLinux } from '../../utils';
+import { getDivergeData } from '../component-ops/get-diverge-data';
 
 export type ComponentTree = {
   component: ModelComponent;
@@ -582,6 +583,9 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
    *
    * in case this is a local (the incoming component comes as a result of import):
    * do not update the lane object. only save the data on the refs/remote/lane-name.
+   *
+   * keep in mind that this method may merge another non-checked out lane during "fetch" operation, so avoid mutating
+   * the ModelComponent object with data from this lane object.
    */
   async mergeLane(
     lane: Lane,
@@ -624,10 +628,7 @@ otherwise, to collaborate on the same lane as the remote, you'll need to remove 
           mergeResults.push({ mergedComponent: modelComponent, mergedVersions: [] });
           return;
         }
-        modelComponent.laneHeadRemote = component.head;
-        modelComponent.laneHeadLocal = existingComponent.head;
-        await modelComponent.setDivergeData(repo);
-        const divergeResults = modelComponent.getDivergeData();
+        const divergeResults = await getDivergeData(repo, modelComponent, component.head, existingComponent.head);
         if (divergeResults.isDiverged()) {
           if (isImport) {
             // do not update the local lane. later, suggest to snap-merge.
