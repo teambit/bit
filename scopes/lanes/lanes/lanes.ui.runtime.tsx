@@ -4,27 +4,19 @@ import { Slot, Harmony } from '@teambit/harmony';
 import { UIRuntime, UiUI, UIAspect } from '@teambit/ui';
 import { LanesAspect } from '@teambit/lanes';
 import { NavigationSlot, RouteSlot } from '@teambit/ui-foundation.ui.react-router.slot-router';
-import {
-  LanesDrawer,
-  LanesHost,
-  LaneGallery,
-  LanesOrderedNavigationSlot,
-  LanesModel,
-  LanesOverviewMenu,
-  ViewedLaneFromUrl,
-  LaneOverviewLineSlot,
-  LaneOverviewLine,
-  UseLaneMenu,
-  useLanesContext,
-  LanesNavPlugin,
-  LaneReadmeOverview,
-} from '@teambit/lanes.ui.lanes';
 import { NotFoundPage } from '@teambit/design.ui.pages.not-found';
 import ScopeAspect, { ScopeUI } from '@teambit/scope';
 import WorkspaceAspect, { WorkspaceUI } from '@teambit/workspace';
 import ComponentAspect, { ComponentUI } from '@teambit/component';
 import SidebarAspect, { SidebarUI } from '@teambit/sidebar';
 import { MenuWidget, MenuWidgetSlot } from '@teambit/ui-foundation.ui.menu';
+import { LaneGallery, LaneOverviewLine, LaneOverviewLineSlot } from '@teambit/lanes.ui.gallery';
+import { LanesNavPlugin, LanesOrderedNavigationSlot, LanesOverviewMenu, UseLaneMenu } from '@teambit/lanes.ui.menus';
+import { LanesHost, LanesModel } from '@teambit/lanes.ui.models';
+import { LaneReadmeOverview } from '@teambit/lanes.ui.readme';
+import { useLanes } from '@teambit/lanes.hooks.use-lanes';
+import { ViewedLaneFromUrl } from '@teambit/lanes.ui.viewed-lane';
+import { LanesDrawer } from '@teambit/lanes.ui.drawer';
 
 export class LanesUI {
   static dependencies = [UIAspect, ComponentAspect, WorkspaceAspect, ScopeAspect, SidebarAspect];
@@ -59,7 +51,12 @@ export class LanesUI {
 
   private registerHostAspectRoutes() {
     if (!this.hostAspect) return;
-    this.hostAspect.registerRoutes([
+    this.hostAspect.registerRoutes(this.getLaneRoutes());
+    this.hostAspect.registerMenuRoutes(this.getMenuRoutes());
+  }
+
+  getLaneRoutes() {
+    return [
       {
         path: LanesModel.lanesPrefix,
         children: (
@@ -71,12 +68,7 @@ export class LanesUI {
                   <LaneReadmeOverview host={this.host} overviewSlot={this.overviewSlot} routeSlot={this.routeSlot} />
                 }
               />
-              <Route
-                path="~gallery"
-                element={
-                  <LaneGallery routeSlot={this.routeSlot} overviewSlot={this.overviewSlot} host={this.lanesHost} />
-                }
-              />
+              <Route path="~gallery" element={this.getLaneGallery()} />
               <Route path="~component/*" element={this.componentUi.getComponentUI(this.host)} />
               <Route path="*" element={<NotFoundPage />} />
             </Route>
@@ -84,21 +76,29 @@ export class LanesUI {
           </>
         ),
       },
-    ]);
-    this.hostAspect.registerMenuRoutes([
+    ];
+  }
+
+  getLaneGallery() {
+    return <LaneGallery routeSlot={this.routeSlot} overviewSlot={this.overviewSlot} host={this.lanesHost} />;
+  }
+
+  getMenuRoutes() {
+    return [
       {
         path: LanesModel.lanesPrefix,
         children: (
           <Route path={`${LanesModel.lanePath}/*`}>
-            <Route
-              path="*"
-              element={<LanesOverviewMenu navigationSlot={this.navSlot} widgetSlot={this.menuWidgetSlot} />}
-            />
+            <Route path="*" element={this.getLanesOverviewMenu()} />
             <Route path="~component/*" element={this.componentUi.getMenu(this.host)} />
           </Route>
         ),
       },
-    ]);
+    ];
+  }
+
+  getLanesOverviewMenu() {
+    return <LanesOverviewMenu navigationSlot={this.navSlot} widgetSlot={this.menuWidgetSlot} />;
   }
 
   registerMenuWidget(...menuItems: MenuWidget[]) {
@@ -115,8 +115,8 @@ export class LanesUI {
         },
         order: 1,
         hide: () => {
-          const lanesContext = useLanesContext();
-          return !lanesContext?.viewedLane?.readmeComponent;
+          const { lanesModel } = useLanes();
+          return !lanesModel?.viewedLane?.readmeComponent;
         },
       },
       {
@@ -178,11 +178,17 @@ export class LanesUI {
       scope = scopeUi;
     }
     const lanesUi = new LanesUI(componentUi, routeSlot, navSlot, overviewSlot, menuWidgetSlot, workspace, scope);
-    uiUi.registerRenderHooks({ reactContext: lanesUi.renderContext });
+    if (uiUi) uiUi.registerRenderHooks({ reactContext: lanesUi.renderContext });
     const drawer = new LanesDrawer({ showScope: lanesUi.lanesHost === 'workspace' });
     sidebarUi.registerDrawer(drawer);
     lanesUi.registerRoutes();
-    lanesUi.registerMenuWidget(() => <UseLaneMenu host={lanesUi.lanesHost} />);
+    lanesUi.registerMenuWidget(() => {
+      const { lanesModel } = useLanes();
+      if (!lanesModel?.viewedLane) return null;
+      const { viewedLane, currentLane } = lanesModel;
+      return <UseLaneMenu host={lanesUi.lanesHost} viewedLane={viewedLane} currentLane={currentLane} />;
+    });
+
     return lanesUi;
   }
 }

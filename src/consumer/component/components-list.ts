@@ -154,7 +154,7 @@ export default class ComponentsList {
    * to show them in the "snapped" section in bit-status.
    */
   async listSnappedComponentsOnMain() {
-    if (!this.scope.lanes.isOnMain()) {
+    if (!this.consumer.isOnMain()) {
       return [];
     }
     const componentsFromModel = await this.getModelComponents();
@@ -170,15 +170,19 @@ export default class ComponentsList {
    * list components on a lane that their main got updates.
    */
   async listUpdatesFromMainPending(): Promise<DivergeDataPerId[]> {
-    if (this.scope.lanes.isOnMain()) {
+    if (this.consumer.isOnMain()) {
       return [];
     }
     const authoredAndImportedIds = this.bitMap.getAuthoredAndImportedBitIds();
 
+    const duringMergeIds = this.listDuringMergeStateComponents();
+
     const componentsFromModel = await this.getModelComponents();
-    const compFromModelOnWorkspace = componentsFromModel.filter((c) =>
-      authoredAndImportedIds.hasWithoutVersion(c.toBitId())
-    );
+    const compFromModelOnWorkspace = componentsFromModel
+      .filter((c) => authoredAndImportedIds.hasWithoutVersion(c.toBitId()))
+      // if a component is merge-pending, it needs to be resolved first before getting more updates from main
+      .filter((c) => !duringMergeIds.hasWithoutVersion(c.toBitId()));
+
     const results = await Promise.all(
       compFromModelOnWorkspace.map(async (modelComponent) => {
         const headOnMain = modelComponent.head;

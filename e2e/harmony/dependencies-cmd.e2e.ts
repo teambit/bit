@@ -60,5 +60,63 @@ describe('bit dependencies command', function () {
         });
       });
     });
+    describe('adding multiple deps', () => {
+      before(() => {
+        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.fixtures.populateComponents(1);
+        helper.command.dependenciesSet('comp1', 'lodash@3.3.1 ramda@0.0.27');
+      });
+      it('should set them all', () => {
+        const showConfig = helper.command.showAspectConfig('comp1', Extensions.dependencyResolver);
+        const ramdaDep = showConfig.data.dependencies.find((d) => d.id === 'ramda');
+        expect(ramdaDep.version).to.equal('0.0.27');
+        const lodashDep = showConfig.data.dependencies.find((d) => d.id === 'lodash');
+        expect(lodashDep.version).to.equal('3.3.1');
+      });
+      describe('removing them with and without version', () => {
+        before(() => {
+          helper.command.dependenciesRemove('comp1', 'lodash@3.3.1 ramda');
+        });
+        it('should remove them all', () => {
+          const showConfig = helper.command.showAspectConfig('comp1', Extensions.dependencyResolver);
+          const ramdaDep = showConfig.data.dependencies.find((d) => d.id === 'ramda');
+          expect(ramdaDep).to.be.undefined;
+          const lodashDep = showConfig.data.dependencies.find((d) => d.id === 'lodash');
+          expect(lodashDep).to.be.undefined;
+        });
+      });
+    });
+    describe('adding scoped package', () => {
+      before(() => {
+        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.fixtures.populateComponents(1);
+        helper.command.dependenciesSet('comp1', '@scoped/button@3.3.1');
+      });
+      it('should set it correctly', () => {
+        const show = helper.command.showComponent('comp1');
+        expect(show).to.have.string('@scoped/button@3.3.1');
+      });
+    });
+  });
+  describe('bit deps remove - removing components', () => {
+    describe('removing a component', () => {
+      let beforeRemove: string;
+      before(() => {
+        helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+        helper.fixtures.populateComponents(2);
+        beforeRemove = helper.scopeHelper.cloneLocalScope();
+      });
+      it('should support component-id syntax', () => {
+        helper.command.dependenciesRemove('comp1', 'comp2');
+        const showConfig = helper.command.showAspectConfig('comp1', Extensions.dependencyResolver);
+        expect(showConfig.config.policy.dependencies).to.deep.equal({ '@my-scope/comp2': '-' });
+      });
+      it('should support package-name syntax', () => {
+        helper.scopeHelper.getClonedLocalScope(beforeRemove);
+        helper.command.dependenciesRemove('comp1', '@my-scope/comp2');
+        const showConfig = helper.command.showAspectConfig('comp1', Extensions.dependencyResolver);
+        expect(showConfig.config.policy.dependencies).to.deep.equal({ '@my-scope/comp2': '-' });
+      });
+    });
   });
 });

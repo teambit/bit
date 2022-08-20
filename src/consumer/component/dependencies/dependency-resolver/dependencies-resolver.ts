@@ -33,9 +33,9 @@ export type AllDependencies = {
 };
 
 export type AllPackagesDependencies = {
-  packageDependencies: Record<string, any> | null | undefined;
-  devPackageDependencies: Record<string, any> | null | undefined;
-  peerPackageDependencies: Record<string, any> | null | undefined;
+  packageDependencies: Record<string, string> | null | undefined;
+  devPackageDependencies: Record<string, string> | null | undefined;
+  peerPackageDependencies: Record<string, string> | null | undefined;
 };
 
 export type FileType = {
@@ -733,7 +733,7 @@ either, use the ignore file syntax or change the require statement to have a mod
       if (this.overridesDependencies.shouldIgnoreComponent(componentId, fileType)) {
         return;
       }
-      const getExistingId = (): BitId | undefined => {
+      const getExistingIdFromBitMapOrModel = (): BitId | undefined => {
         const existingIds = this.consumer.bitmapIdsFromCurrentLane.filterWithoutVersion(componentId);
         if (existingIds.length === 1) {
           depDebug.versionResolvedFrom = 'BitMap';
@@ -748,7 +748,20 @@ either, use the ignore file syntax or change the require statement to have a mod
         }
         return undefined;
       };
-      const existingId = version ? componentId : getExistingId();
+      const getExistingId = (): BitId | undefined => {
+        // Happens when the dep is not in the node_modules or it's there without a version
+        // (it's there without a version when it's in the workspace and it's linked)
+        if (!version) return getExistingIdFromBitMapOrModel();
+
+        // In case it's resolved from the node_modules, and it's also in the ws policy,
+        // use the resolved version from the node_modules / package folder
+        if (this.isPkgInWorkspacePolicies(compDep.name)) return componentId;
+
+        // If there is a version in the node_modules/package folder, but it's not in the ws policy,
+        // prefer the version from the bitmap/model over the version from the node_modules
+        return getExistingIdFromBitMapOrModel() ?? componentId;
+      };
+      const existingId = getExistingId();
       if (existingId) {
         if (existingId.isEqual(this.componentId)) {
           // happens when one of the component files requires another using module path
@@ -762,6 +775,10 @@ either, use the ignore file syntax or change the require statement to have a mod
         this._pushToMissingComponentsIssues(originFile, componentId);
       }
     });
+  }
+
+  private isPkgInWorkspacePolicies(pkgName: string) {
+    return DependencyResolver.getWorkspacePolicy().dependencies?.[pkgName];
   }
 
   private addImportNonMainIssueIfNeeded(filePath: PathLinuxRelative, dependencyPkgData: ResolvedPackageData) {
@@ -812,6 +829,15 @@ either, use the ignore file syntax or change the require statement to have a mod
 
   processPackages(originFile: PathLinuxRelative, fileType: FileType) {
     const packages = this.tree[originFile].packages;
+    if (this.componentFromModel) {
+      const modelDeps = this.componentFromModel.getAllPackageDependencies();
+      // If a package is not in the policies, then we resolve the package from the model.
+      for (const pkgName of Object.keys(packages)) {
+        if (!this.isPkgInWorkspacePolicies(pkgName) && modelDeps[pkgName]) {
+          packages[pkgName] = modelDeps[pkgName];
+        }
+      }
+    }
     if (!packages || R.isEmpty(packages)) return;
     if (fileType.isTestFile) {
       Object.assign(this.allPackagesDependencies.devPackageDependencies, packages);
@@ -1238,17 +1264,31 @@ either, use the ignore file syntax or change the require statement to have a mod
     const isTypeScript = getExt(originFile) === 'ts' || getExt(originFile) === 'tsx';
     if (!isTypeScript) return;
     const depsHost = DependencyResolver.getWorkspacePolicy();
-    if (!depsHost) return;
-    const addIfNeeded = (depField: string, packageName: string) => {
-      if (!depsHost || !depsHost[depField]) return;
-      const typesPackage = packageToDefinetlyTyped(packageName);
-      if (!depsHost[depField][typesPackage]) return;
-      Object.assign(this.allPackagesDependencies[this._pkgFieldMapping('devDependencies')], {
-        [typesPackage]: depsHost[depField][typesPackage],
+    const addFromConfig = (packageName: string): boolean => {
+      if (!depsHost) return false;
+      return DEPENDENCIES_FIELDS.some((depField) => {
+        if (!depsHost[depField]) return false;
+        const typesPackage = packageToDefinetlyTyped(packageName);
+        if (!depsHost[depField][typesPackage]) return false;
+        Object.assign(this.allPackagesDependencies.devPackageDependencies, {
+          [typesPackage]: depsHost[depField][typesPackage],
+        });
+        return true;
       });
     };
+    const addFromModel = (packageName: string) => {
+      if (!this.componentFromModel) return;
+      const typesPackage = packageToDefinetlyTyped(packageName);
+      const typedPackageFromModel = this.componentFromModel.devPackageDependencies[typesPackage];
+      if (!typedPackageFromModel) return;
+      Object.assign(this.allPackagesDependencies.devPackageDependencies, {
+        [typesPackage]: typedPackageFromModel,
+      });
+    };
+
     Object.keys(packages).forEach((packageName) => {
-      DEPENDENCIES_FIELDS.forEach((depField) => addIfNeeded(depField, packageName));
+      const added = addFromConfig(packageName);
+      if (!added) addFromModel(packageName);
     });
   }
 

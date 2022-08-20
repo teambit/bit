@@ -60,10 +60,11 @@ export class LaneListCmd implements Command {
       if (!unmergedLanes.length) return chalk.green('All lanes are merged');
       return chalk.green(unmergedLanes.map((m) => m.name).join('\n'));
     }
-    const currentLane = this.lanes.getCurrentLane();
-    const laneDataOfCurrentLane = currentLane ? lanes.find((l) => l.name === currentLane) : undefined;
+    const currentLane = this.lanes.getCurrentLaneId() || this.lanes.getDefaultLaneId();
+    const laneDataOfCurrentLane = currentLane ? lanes.find((l) => currentLane.isEqual(l.id)) : undefined;
+    const currentAlias = laneDataOfCurrentLane ? laneDataOfCurrentLane.alias : undefined;
     const currentLaneReadmeComponentStr = outputReadmeComponent(laneDataOfCurrentLane?.readmeComponent);
-    let currentLaneStr = currentLane ? `current lane - ${chalk.green.green(currentLane as string)}` : '';
+    let currentLaneStr = currentLane ? `current lane - ${chalk.green.green(currentAlias || currentLane.name)}` : '';
     currentLaneStr += currentLaneReadmeComponentStr;
 
     if (details) {
@@ -75,16 +76,18 @@ export class LaneListCmd implements Command {
     }
 
     const availableLanes = lanes
-      .filter((l) => l.name !== currentLane)
-      // @ts-ignore
+      .filter((l) => !currentLane.isEqual(l.id))
       .map((laneData) => {
         const readmeComponentStr = outputReadmeComponent(laneData.readmeComponent);
+        const aliasStr = laneData.alias ? ` (${laneData.alias})` : '';
         if (details) {
-          const laneTitle = `> ${chalk.bold(laneData.name)}${outputRemoteLane(laneData.remote)}\n`;
+          const laneTitle = `> ${chalk.bold(laneData.name)}${aliasStr}${outputRemoteLane(laneData.remote)}\n`;
           const components = outputComponents(laneData.components);
           return laneTitle + readmeComponentStr.concat('\n') + components;
         }
-        return `    > ${chalk.green(laneData.name)} (${laneData.components.length} components)${readmeComponentStr}`;
+        return `    > ${chalk.green(laneData.name)}${aliasStr} (${
+          laneData.components.length
+        } components)${readmeComponentStr}`;
       })
       .join('\n');
 
@@ -121,7 +124,7 @@ export class LaneListCmd implements Command {
       merged,
       notMerged,
     });
-    const currentLane = this.lanes.getCurrentLane();
+    const currentLane = this.lanes.getCurrentLaneNameOrAlias();
     return { lanes, currentLane };
   }
 }
@@ -294,6 +297,8 @@ export class LaneMergeCmd implements Command {
     ['m', 'message <message>', 'override the default message for the auto snap'],
     ['', 'keep-readme', 'skip deleting the lane readme component after merging'],
     ['', 'squash', 'EXPERIMENTAL. squash multiple snaps. keep the last one only'],
+    ['', 'verbose', 'show details of components that were not merged legitimately'],
+    ['', 'skip-dependency-installation', 'do not install packages of the imported components'],
     [
       '',
       'include-deps',
@@ -320,7 +325,9 @@ export class LaneMergeCmd implements Command {
       message: snapMessage = '',
       keepReadme = false,
       squash = false,
+      skipDependencyInstallation = false,
       includeDeps = false,
+      verbose = false,
     }: {
       ours: boolean;
       theirs: boolean;
@@ -332,7 +339,9 @@ export class LaneMergeCmd implements Command {
       message: string;
       keepReadme?: boolean;
       squash: boolean;
+      skipDependencyInstallation?: boolean;
       includeDeps?: boolean;
+      verbose?: boolean;
     }
   ): Promise<string> {
     build = isFeatureEnabled(BUILD_ON_CI) ? Boolean(build) : true;
@@ -353,10 +362,11 @@ export class LaneMergeCmd implements Command {
       keepReadme,
       squash,
       pattern,
+      skipDependencyInstallation,
       includeDeps,
     });
 
-    const mergeResult = `${mergeReport(mergeResults)}`;
+    const mergeResult = mergeReport({ ...mergeResults, verbose });
     const deleteResult = `${deleteResults.localResult ? paintRemoved(deleteResults.localResult, false) : ''}${(
       deleteResults.remoteResult || []
     ).map((item) => paintRemoved(item, true))}${
@@ -475,7 +485,9 @@ export class LaneRemoveReadmeCmd implements Command {
 
     if (result) {
       return chalk.green(
-        `the readme component has been successfully removed from the lane ${laneName || this.lanes.getCurrentLane()}`
+        `the readme component has been successfully removed from the lane ${
+          laneName || this.lanes.getCurrentLaneName()
+        }`
       );
     }
 
@@ -503,13 +515,13 @@ export class LaneAddReadmeCmd implements Command {
     if (result)
       return chalk.green(
         `the component ${componentId} has been successfully added as the readme component for the lane ${
-          laneName || this.lanes.getCurrentLane()
+          laneName || this.lanes.getCurrentLaneName()
         }`
       );
 
     return chalk.red(
       `${message || ''}\nthe component ${componentId} could not be added as a readme component for the lane ${
-        laneName || this.lanes.getCurrentLane()
+        laneName || this.lanes.getCurrentLaneName()
       }`
     );
   }

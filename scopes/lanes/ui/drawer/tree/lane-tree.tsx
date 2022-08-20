@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { indentStyle } from '@teambit/base-ui.graph.tree.indent';
 import { Tree, TreeNodeProps, TreeNode } from '@teambit/design.ui.tree';
 import { PayloadType, ScopeTreeNode } from '@teambit/ui-foundation.ui.side-bar';
-import { LanesModel, useLanesContext } from '@teambit/lanes.ui.lanes';
+import { LanesModel } from '@teambit/lanes.ui.models';
 import { TreeContextProvider } from '@teambit/base-ui.graph.tree.tree-context';
 import { LaneTreeNode } from './lane-tree-node';
 import styles from './lane-tree.module.scss';
@@ -10,16 +10,16 @@ import styles from './lane-tree.module.scss';
 export type LaneTreeProps = {
   isCollapsed?: boolean;
   showScope: boolean;
+  lanesModel?: LanesModel;
 };
 
-export function LaneTree({ isCollapsed, showScope }: LaneTreeProps) {
-  const lanesContext = useLanesContext();
-  const activeLaneName = lanesContext?.viewedLane?.name;
+export function LaneTree({ isCollapsed, showScope, lanesModel }: LaneTreeProps) {
+  const activeLaneName = lanesModel?.viewedLane?.name;
 
-  const tree: TreeNode<PayloadType> = useMemo(() => laneToTree(lanesContext, { showScope }), [lanesContext?.lanes]);
+  const tree: TreeNode<PayloadType> = useMemo(() => laneToTree(lanesModel, { showScope }), [lanesModel?.lanes]);
 
   return (
-    <TreeContextProvider selected={lanesContext?.viewedLane?.id}>
+    <TreeContextProvider selected={lanesModel?.viewedLane?.id}>
       <div className={styles.laneTreeContainer} style={indentStyle(1)}>
         <Tree TreeNode={LaneTreeNodeRenderer} activePath={activeLaneName} tree={tree} isCollapsed={isCollapsed} />
       </div>

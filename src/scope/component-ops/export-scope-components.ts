@@ -79,6 +79,7 @@ export async function exportMany({
   idsWithFutureScope,
   resumeExportId,
   ignoreMissingArtifacts,
+  isOnMain = true,
 }: {
   scope: Scope;
   ids: BitIds;
@@ -89,6 +90,7 @@ export async function exportMany({
   idsWithFutureScope: BitIds;
   resumeExportId?: string | undefined;
   ignoreMissingArtifacts?: boolean;
+  isOnMain?: boolean;
 }): Promise<{ exported: BitIds; updatedLocally: BitIds; newIdsOnRemote: BitId[] }> {
   logger.debugAndAddBreadCrumb('scope.exportMany', 'ids: {ids}', { ids: ids.toString() });
   const scopeRemotes: Remotes = await getScopeRemotes(scope);
@@ -393,7 +395,7 @@ this scope already has a component with the same name. as such, it'll be impossi
         await scope.objects.remoteLanes.syncWithLaneObject(remoteNameStr, lane);
       }
 
-      if (scope.lanes.isOnMain() && !lane) {
+      if (isOnMain && !lane) {
         // all exported from main
         const remoteLaneId = LaneId.from(DEFAULT_LANE, remoteNameStr);
         await scope.objects.remoteLanes.loadRemoteLane(remoteLaneId);

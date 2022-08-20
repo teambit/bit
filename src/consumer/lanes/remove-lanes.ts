@@ -19,7 +19,7 @@ export default async function removeLanes(
     return { laneResults };
   }
   if (!consumer) throw new Error('consumer must exist for local removal');
-  await consumer.scope.lanes.removeLanes(consumer.scope, lanes, force);
+  await consumer.scope.lanes.removeLanes(consumer.scope, lanes, force, consumer.getCurrentLaneId().name);
 
   return { laneResults: lanes };
 }

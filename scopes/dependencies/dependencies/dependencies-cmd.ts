@@ -90,10 +90,14 @@ export class DependenciesDebugCmd implements Command {
 }
 
 export class DependenciesSetCmd implements Command {
-  name = 'set <component-pattern> <package>';
+  name = 'set <component-pattern> <package...>';
   arguments = [
     { name: 'component-pattern', description: COMPONENT_PATTERN_HELP },
-    { name: 'package', description: 'package name with version, e.g. "lodash@1.0.0"' },
+    {
+      name: 'package',
+      description:
+        'package name with or without a version, e.g. "lodash@1.0.0" or just "lodash" which will be resolved to the latest',
+    },
   ];
   group = 'info';
   description = 'set a dependency to component(s)';
@@ -105,9 +109,46 @@ export class DependenciesSetCmd implements Command {
 
   constructor(private deps: DependenciesMain) {}
 
-  async report([pattern, pkg]: [string, string], setDepsFlags: SetDependenciesFlags) {
-    const results = await this.deps.setDependency(pattern, pkg, setDepsFlags);
-    return chalk.green(`the following component(s) have been successfully updated:\n${results.join('\n')}`);
+  async report([pattern, packages]: [string, string[]], setDepsFlags: SetDependenciesFlags) {
+    const { changedComps, addedPackages } = await this.deps.setDependency(pattern, packages, setDepsFlags);
+
+    return `${chalk.green('successfully updated dependencies')}
+${chalk.bold('changed components')}
+${changedComps.join('\n')}
+
+${chalk.bold('added packages')}
+${JSON.stringify(addedPackages, undefined, 4)}`;
+  }
+}
+
+export class DependenciesRemoveCmd implements Command {
+  name = 'remove <component-pattern> <package...>';
+  arguments = [
+    { name: 'component-pattern', description: COMPONENT_PATTERN_HELP },
+    {
+      name: 'package',
+      description:
+        'package name with or without a version, e.g. "lodash@1.0.0" or just "lodash" which will remove all lodash instances of any version',
+    },
+  ];
+  group = 'info';
+  description = 'remove a dependency to component(s)';
+  alias = '';
+  options = [] as CommandOptions;
+
+  constructor(private deps: DependenciesMain) {}
+
+  async report([pattern, packages]: [string, string[]]) {
+    const results = await this.deps.removeDependency(pattern, packages);
+    if (!results.length) {
+      return chalk.yellow('the specified component-pattern do not use the entered packages. nothing to remove');
+    }
+
+    const output = results
+      .map(({ id, removedPackages }) => `${chalk.underline(id.toString())}\n${removedPackages.join('\n')}`)
+      .join('\n\n');
+
+    return `${chalk.green('successfully removed dependencies')}\n${output}`;
   }
 }
 

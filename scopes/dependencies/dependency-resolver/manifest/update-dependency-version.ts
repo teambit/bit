@@ -1,3 +1,4 @@
+import { snapToSemver } from '@teambit/component-package-version';
 import { Dependency } from '../dependencies';
 import { VariantPolicy, WorkspacePolicy } from '../policy';
 
@@ -34,9 +35,10 @@ export function updateDependencyVersion(
     const variantVersionWithoutMinus = variantVersion && variantVersion !== '-' ? variantVersion : undefined;
     const version =
       variantVersionWithoutMinus ||
-      rootPolicy.getDepVersion(packageName, dependency.lifecycle === 'peer' ? 'peer' : 'runtime') ||
-      dependency.version ||
+      rootPolicy.getValidSemverDepVersion(packageName, dependency.lifecycle === 'peer' ? 'peer' : 'runtime') ||
+      snapToSemver(dependency.version) ||
       '0.0.1-new';
+
     dependency.setVersion(version);
   }
 }

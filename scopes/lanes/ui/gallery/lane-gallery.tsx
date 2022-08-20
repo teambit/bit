@@ -1,19 +1,15 @@
 import React, { useMemo, ComponentType } from 'react';
-import {
-  LaneDetails,
-  useLanesContext,
-  useLaneComponents,
-  LaneModel,
-  LanesModel,
-  LanesHost,
-} from '@teambit/lanes.ui.lanes';
+import { LaneModel, LanesModel, LanesHost } from '@teambit/lanes.ui.models';
 import { ComponentGrid } from '@teambit/explorer.ui.gallery.component-grid';
 import { RouteSlot, SlotRouter } from '@teambit/ui-foundation.ui.react-router.slot-router';
 import { WorkspaceComponentCard } from '@teambit/workspace.ui.workspace-component-card';
+import { useLanes } from '@teambit/lanes.hooks.use-lanes';
+import { useLaneComponents } from '@teambit/lanes.hooks.use-lane-components';
 import flatten from 'lodash.flatten';
 import { SlotRegistry } from '@teambit/harmony';
 import { ScopeComponentCard } from '@teambit/scope';
 import { EmptyLane } from './empty-lane-overview';
+import { LaneDetails } from './lane-details';
 
 import styles from './lane-gallery.module.scss';
 
@@ -26,10 +22,10 @@ export type LaneGalleryProps = {
   host: LanesHost;
 };
 export function LaneGallery({ routeSlot, overviewSlot, host }: LaneGalleryProps) {
-  const lanesContext = useLanesContext();
+  const { lanesModel } = useLanes();
   const overviewItems = useMemo(() => flatten(overviewSlot?.values()), [overviewSlot]);
 
-  const currentLane = lanesContext?.viewedLane;
+  const currentLane = lanesModel?.viewedLane;
 
   if (!currentLane || !currentLane.id) return null;
   if (currentLane.components.length === 0) return <EmptyLane name={currentLane.name} />;

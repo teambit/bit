@@ -123,7 +123,7 @@ export default class Scope {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   _dependencyGraph: DependencyGraph; // cache DependencyGraph instance
   lanes: Lanes;
-
+  currentLaneId?: LaneId;
   constructor(scopeProps: ScopeProps) {
     this.path = scopeProps.path;
     this.scopeJson = scopeProps.scopeJson;
@@ -316,7 +316,11 @@ export default class Scope {
     results.forEach((result) => {
       if (!(result instanceof ModelComponent)) {
         throw new Error(
-          `fatal: wrong hash in the index.json file. make sure that ${result.hash.toString()} is a ModelComponent`
+          `fatal: wrong hash in the index.json file. expect ${result.hash()} to be a ModelComponent, got ${
+            result.constructor.name
+          }.
+please share your "(.git/bit|.bit)/index.json" file with Bit team to investigate the issue.
+once done, to continue working, please run "bit cc"`
         );
       }
     });
@@ -411,8 +415,8 @@ export default class Scope {
     return this.sources.get(id);
   }
 
-  async getCurrentLaneObject() {
-    return this.loadLane(this.lanes.getCurrentLaneId());
+  async getCurrentLaneObject(): Promise<Lane | null> {
+    return this.currentLaneId ? this.loadLane(this.currentLaneId) : null;
   }
 
   /**
@@ -425,7 +429,8 @@ export default class Scope {
       'removeMany',
       `scope.removeMany ${Analytics.hashData(bitIds)} with force flag: ${force.toString()}`
     );
-    const removeComponents = new RemoveModelComponents(this, bitIds, force, consumer);
+    const currentLane = await consumer?.getCurrentLaneObject();
+    const removeComponents = new RemoveModelComponents(this, bitIds, force, consumer, currentLane);
     return removeComponents.remove();
   }
 

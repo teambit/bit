@@ -1,5 +1,5 @@
+import mergeDeepLeft from 'ramda/src/mergeDeepLeft';
 import { TsConfigSourceFile } from 'typescript';
-import { merge } from 'lodash';
 import type { TsCompilerOptionsWithoutTsConfig } from '@teambit/typescript';
 import { BuildTask } from '@teambit/builder';
 import { Compiler } from '@teambit/compiler';
@@ -99,7 +99,7 @@ export class HtmlMain {
    */
   overrideDependencies(dependencyPolicy: EnvPolicyConfigObject) {
     return this.envs.override({
-      getDependencies: () => merge(dependencyPolicy, this.htmlEnv.getDependencies()),
+      getDependencies: () => mergeDeepLeft(dependencyPolicy, this.htmlEnv.getDependencies()),
     });
   }
 

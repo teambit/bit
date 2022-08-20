@@ -315,7 +315,10 @@ export function applyModifiedVersion(
       throw new GeneralError(`file ${filePath} does not have output nor conflict`);
     }
   });
+
   mergeResults.addFiles.forEach((file) => {
+    const filePath: PathOsBased = path.normalize(file.filePath);
+    if (modifiedFiles.find((m) => m.relative === filePath)) return;
     modifiedFiles.push(file.fsFile);
     filesStatus[file.filePath] = FileStatus.added;
   });

@@ -1,5 +1,6 @@
 import chalk from 'chalk';
 import { Command, CommandOptions } from '@teambit/cli';
+import { compact } from 'lodash';
 import { WILDCARD_HELP, AUTO_SNAPPED_MSG } from '@teambit/legacy/dist/constants';
 import {
   ApplyVersionResults,
@@ -28,6 +29,8 @@ export class MergeCmd implements Command {
     ['', 'resolve', 'EXPERIMENTAL. mark an unresolved merge as resolved and create a new snap with the changes'],
     ['', 'no-snap', 'EXPERIMENTAL. do not auto snap in case the merge completed without conflicts'],
     ['', 'build', 'in case of snap during the merge, run the build-pipeline (similar to bit snap --build)'],
+    ['', 'verbose', 'show details of components that were not merged legitimately'],
+    ['', 'skip-dependency-installation', 'do not install packages of the imported components'],
     ['m', 'message <message>', 'EXPERIMENTAL. override the default message for the auto snap'],
   ] as CommandOptions;
   loader = true;
@@ -44,7 +47,9 @@ export class MergeCmd implements Command {
       resolve = false,
       build = false,
       noSnap = false,
+      verbose = false,
       message,
+      skipDependencyInstallation = false,
     }: {
       ours?: boolean;
       theirs?: boolean;
@@ -53,7 +58,9 @@ export class MergeCmd implements Command {
       resolve?: boolean;
       build?: boolean;
       noSnap?: boolean;
+      verbose?: boolean;
       message: string;
+      skipDependencyInstallation?: boolean;
     }
   ) {
     build = isFeatureEnabled(BUILD_ON_CI) ? Boolean(build) : true;
@@ -74,7 +81,8 @@ export class MergeCmd implements Command {
       resolve,
       noSnap,
       message,
-      build
+      build,
+      skipDependencyInstallation
     );
     if (resolvedComponents) {
       const title = 'successfully resolved component(s)\n';
@@ -92,6 +100,7 @@ export class MergeCmd implements Command {
       failedComponents,
       version,
       mergeSnapResults,
+      verbose,
     });
   }
 }
@@ -102,6 +111,7 @@ export function mergeReport({
   version,
   mergeSnapResults,
   leftUnresolvedConflicts,
+  verbose,
 }: ApplyVersionResults): string {
   const getSuccessOutput = () => {
     if (!components || !components.length) return '';
@@ -113,7 +123,7 @@ export function mergeReport({
 
   const getConflictSummary = () => {
     if (!components || !components.length || !leftUnresolvedConflicts) return '';
-    const title = `files with conflicts summary\n`;
+    const title = `\nfiles with conflicts summary\n`;
     const suggestion = `\n\nthe merge process wasn't completed due to the conflicts above. fix them manually and then run "bit install".
 once ready, snap/tag the components to complete the merge.`;
     return chalk.underline(title) + conflictSummaryReport(components) + chalk.yellow(suggestion);
@@ -146,12 +156,17 @@ once ready, snap/tag the components to complete the merge.`;
   const getFailureOutput = () => {
     if (!failedComponents || !failedComponents.length) return '';
     const title = '\nthe merge has been canceled on the following component(s)';
-    const body = failedComponents
-      .map((failedComponent) => {
+    const body = compact(
+      failedComponents.map((failedComponent) => {
+        if (!verbose && failedComponent.unchangedLegitimately) return null;
         const color = failedComponent.unchangedLegitimately ? 'white' : 'red';
         return `${chalk.bold(failedComponent.id.toString())} - ${chalk[color](failedComponent.failureMessage)}`;
       })
-      .join('\n');
+    ).join('\n');
+    if (!body) {
+      return `${chalk.bold(`the merge has been canceled on ${failedComponents.length} component(s) legitimately`)}
+(use --verbose to list them next time)`;
+    }
     return `\n${chalk.underline(title)}\n${body}\n\n`;
   };
 

@@ -3,6 +3,7 @@ import { countBy, property, sortBy, uniq } from 'lodash';
 import semver from 'semver';
 import { parseRange } from 'semver-intersect';
 import { intersect } from 'semver-range-intersect';
+import { isHash } from '@teambit/component-version';
 
 import {
   DEV_DEP_LIFECYCLE_TYPE,
@@ -427,9 +428,12 @@ function groupByRangeOrVersion(indexItems: PackageNameIndexComponentItem[]): Ite
   };
   indexItems.forEach((item) => {
     const validRange = semver.validRange(item.range);
-    if (!validRange) {
-      throw new Error(`fatal: the version "${item.range}" originated from a dependent "${item.origin}" is invalid semver range.
-this is a temporary issue with unsupported snaps (hashes) on the registry and will be fixed very soon`);
+    if (!validRange && !isHash(item.range)) {
+      throw new Error(`fatal: the version "${item.range}" originated from a dependent "${item.origin}" is invalid semver range and not a hash`);
+    }
+    if (!validRange && isHash(item.range)) {
+      result.versions.push(item);
+      return;
     }
     // parseRange does not support `*` as version
     // `*` does not affect resulted version, it might be just ignored

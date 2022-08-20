@@ -393,7 +393,7 @@ describe('bit snap command', function () {
         });
         it('should change the files on the filesystem and mark the conflicts properly', () => {
           const content = helper.fs.readFile('bar/foo.js');
-          expect(content).to.have.string(`<<<<<<< ${localHead} (local)`);
+          expect(content).to.have.string(`<<<<<<< ${localHead} (main)`);
           expect(content).to.have.string(fixtures.fooFixtureV3);
           expect(content).to.have.string('=======');
           expect(content).to.have.string(fixtures.fooFixtureV2);

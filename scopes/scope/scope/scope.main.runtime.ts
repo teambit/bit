@@ -2,7 +2,7 @@ import mapSeries from 'p-map-series';
 import semver from 'semver';
 import multimatch from 'multimatch';
 import type { AspectLoaderMain } from '@teambit/aspect-loader';
-import { TaskResultsList, BuilderData, BuilderAspect } from '@teambit/builder';
+import { TaskResultsList, RawBuilderData, BuilderAspect } from '@teambit/builder';
 import { readdirSync, existsSync } from 'fs-extra';
 import { resolve, join } from 'path';
 import { AspectLoaderAspect, AspectDefinition } from '@teambit/aspect-loader';
@@ -58,7 +58,7 @@ type TagRegistry = SlotRegistry<OnTag>;
 
 type ManifestOrAspect = ExtensionManifest | Aspect;
 
-export type OnTagResults = { builderDataMap: ComponentMap<BuilderData>; pipeResults: TaskResultsList[] };
+export type OnTagResults = { builderDataMap: ComponentMap<RawBuilderData>; pipeResults: TaskResultsList[] };
 export type OnTag = (
   components: Component[],
   options: OnTagOpts,
@@ -236,8 +236,8 @@ export class ScopeMain implements ComponentFactory {
     this.legacyScope.objects.clearCache();
   }
 
-  builderDataMapToLegacyOnTagResults(builderDataComponentMap: ComponentMap<BuilderData>): LegacyOnTagResult[] {
-    const builderDataToLegacyExtension = (component: Component, builderData: BuilderData) => {
+  builderDataMapToLegacyOnTagResults(builderDataComponentMap: ComponentMap<RawBuilderData>): LegacyOnTagResult[] {
+    const builderDataToLegacyExtension = (component: Component, builderData: RawBuilderData) => {
       const existingBuilder = component.state.aspects.get(BuilderAspect.id)?.legacy;
       const builderExtension = existingBuilder || new ExtensionDataEntry(undefined, undefined, BuilderAspect.id);
       builderExtension.data = builderData;
@@ -983,7 +983,8 @@ needed-for: ${neededFor || '<unknown>'}`);
   filterIdsFromPoolIdsByPattern(pattern: string, ids: ComponentID[], throwForNoMatch = true) {
     const patterns = pattern.split(',').map((p) => p.trim());
     if (patterns.every((p) => p.startsWith('!'))) {
-      patterns.push('**'); // otherwise it'll never match anything
+      // otherwise it'll never match anything. don't use ".push()". it must be the first item in the array.
+      patterns.unshift('**');
     }
     // check also as legacyId.toString, as it doesn't have the defaultScope
     const idsToCheck = (id: ComponentID) => [id.toStringWithoutVersion(), id._legacy.toStringWithoutVersion()];

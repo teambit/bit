@@ -65,6 +65,7 @@ export type MergeLaneOptions = {
   squash: boolean;
   pattern?: string;
   includeDeps?: boolean;
+  skipDependencyInstallation?: boolean;
 };
 
 export type CreateLaneOptions = {
@@ -126,19 +127,31 @@ export class LanesMain {
     return lanes;
   }
 
-  getCurrentLane(): string | null {
-    if (!this.workspace?.consumer) return null;
-    return this.scope.legacyScope.lanes.getCurrentLaneName();
+  getCurrentLaneName(): string | null {
+    return this.getCurrentLaneId()?.name || null;
+  }
+
+  getCurrentLaneNameOrAlias(): string | null {
+    const currentLaneId = this.getCurrentLaneId();
+    if (!currentLaneId) return null;
+    const trackingData = this.scope.legacyScope.lanes.getLocalTrackedLaneByRemoteName(
+      currentLaneId.name,
+      currentLaneId.scope
+    );
+    return trackingData || currentLaneId.name;
   }
 
   getCurrentLaneId(): LaneId | null {
     if (!this.workspace) return null;
-    return this.scope.legacyScope.lanes.getCurrentLaneId();
+    return this.workspace.consumer.getCurrentLaneId();
+  }
+
+  getDefaultLaneId(): LaneId {
+    return LaneId.from(DEFAULT_LANE, this.scope.name);
   }
 
   setCurrentLane(laneId: LaneId, alias?: string, exported?: boolean) {
-    this.scope.legacyScope.lanes.setCurrentLane(alias || laneId.name);
-    this.workspace?.consumer.bitMap.setCurrentLane(laneId, exported);
+    this.workspace?.consumer.setCurrentLane(laneId, exported);
   }
 
   async createLane(name: string, { remoteScope, alias }: CreateLaneOptions = {}): Promise<TrackLane> {
@@ -234,6 +247,7 @@ export class LanesMain {
     }
     const remoteScopeBefore = lane.scope;
     lane.scope = remoteScope;
+    const newLaneId = LaneId.from(laneId.name, remoteScope);
     const trackData = {
       localLane: laneNameWithoutScope,
       remoteLane: laneId.name,
@@ -241,6 +255,7 @@ export class LanesMain {
     };
     this.scope.legacyScope.lanes.trackLane(trackData);
     await this.scope.legacyScope.lanes.saveLane(lane);
+    this.workspace.consumer.bitMap.setCurrentLane(newLaneId);
     await this.workspace.consumer.onDestroy();
 
     return { remoteScopeBefore };
@@ -285,7 +300,7 @@ export class LanesMain {
     await this.scope.legacyScope.lanes.saveLane(lane);
 
     // change current-lane if needed
-    const currentLaneName = this.getCurrentLane();
+    const currentLaneName = this.getCurrentLaneName();
     if (currentLaneName === laneNameWithoutScope) {
       const newLaneId = LaneId.from(newName, lane.scope);
       const isExported = this.workspace.consumer.bitMap.isLaneExported;
@@ -439,7 +454,7 @@ export class LanesMain {
     if (!this.workspace) {
       throw new BitError('unable to remove the lane readme component outside of Bit workspace');
     }
-    const currentLaneName = this.getCurrentLane();
+    const currentLaneName = this.getCurrentLaneName();
 
     if (!laneName && !currentLaneName) {
       return {
@@ -536,6 +551,7 @@ export class LanesMain {
     return {
       name: DEFAULT_LANE,
       remote: null,
+      id: this.getDefaultLaneId(),
       components: bitIds.map((bitId) => ({ id: bitId, head: bitId.version as string })),
       isMerged: null,
     };

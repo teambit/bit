@@ -8,8 +8,9 @@ import { flatten, groupBy, compact } from 'lodash';
 import classnames from 'classnames';
 import React, { useMemo } from 'react';
 import { UseBoxDropdown } from '@teambit/ui-foundation.ui.use-box.dropdown';
+import { useLanes } from '@teambit/lanes.hooks.use-lanes';
+import { LaneModel } from '@teambit/lanes.ui.models';
 import { Menu as ConsumeMethodsMenu } from '@teambit/ui-foundation.ui.use-box.menu';
-import { LaneModel, useLanesContext } from '@teambit/lanes.ui.lanes';
 import { LegacyComponentLog } from '@teambit/legacy-component-log';
 import type { ComponentModel } from '../component-model';
 import { useComponent as useComponentQuery, UseComponentType } from '../use-component';
@@ -59,8 +60,8 @@ export function ComponentMenu({
   const idFromLocation = useIdFromLocation();
   const componentId = componentIdStr ? ComponentID.fromString(componentIdStr) : undefined;
   const fullName = componentId?.fullName || idFromLocation;
-  const lanesContext = useLanesContext();
-  const laneComponent = fullName ? lanesContext?.resolveComponent(fullName) : undefined;
+  const { lanesModel } = useLanes();
+  const laneComponent = fullName ? lanesModel?.resolveComponent(fullName) : undefined;
   const useComponentOptions = {
     logFilters: laneComponent && { log: { logHead: laneComponent.version } },
     customUseComponent: useComponent,
@@ -107,8 +108,8 @@ function VersionRelatedDropdowns({
   host: string;
 }) {
   const location = useLocation();
-  const lanesContext = useLanesContext();
-  const currentLane = lanesContext?.viewedLane;
+  const { lanesModel } = useLanes();
+  const currentLane = lanesModel?.viewedLane;
   const { logs } = component;
   const isWorkspace = host === 'teambit.workspace/workspace';
 
@@ -136,7 +137,7 @@ function VersionRelatedDropdowns({
 
   const isNew = snaps.length === 0 && tags.length === 0;
 
-  const lanes = lanesContext?.getLanesByComponentId(component.id) || [];
+  const lanes = lanesModel?.getLanesByComponentId(component.id) || [];
   const localVersion = isWorkspace && !isNew && !currentLane;
 
   const currentVersion =

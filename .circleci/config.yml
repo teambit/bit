@@ -2,7 +2,7 @@ version: 2.1
 
 default_image: &default_image
   docker:
-    - image: cimg/node:14.19.3
+    - image: cimg/node:16.16.0
 
 default_resource_class: &default_resource_class
   resource_class: medium
@@ -274,10 +274,10 @@ jobs:
       - attach_workspace:
           at: ./
       - docker_build_and_push:
-          docker_build_arg_value: "node:14.19.1"
+          docker_build_arg_value: "node:16.16.0"
           image_name: "bitcli/bit-non-root"
           docker_file_name: "Dockerfile-bit-non-root"
-          docker_tag_suffix: "-node-14.19.1"
+          docker_tag_suffix: "-node-16.16.0"
 
 
   docker_non_root_build_node_16:
@@ -936,9 +936,13 @@ jobs:
       PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: true
     steps:
       # - run: choco install nodejs --version 16.15.1
-      - run: cinst nodejs --version 14.19.3
+      # - run: cinst nodejs --version 16.16.0
       # - run: nodejs.install v12.16.0
+      # We can't use Node.js newer than 16.13.2 due to this issue with npm: https://github.com/npm/cli/issues/4234
+      - run: nvm install 16.13.2
+      - run: nvm use 16.13.2
       - run: node -v
+      - run: npm install --global yarn
       - run: 'yarn -v'
       - run:
           name: set bit.dev registry
@@ -1101,6 +1105,7 @@ jobs:
           # command: cd bit && npm run e2e-test-circle --debug
           environment:
             MOCHA_FILE: junit/e2e-test-results.xml
+            NODE_OPTIONS: --no-warnings
           when: always
       - store_test_results:
           path: bit/junit
@@ -1191,9 +1196,9 @@ jobs:
       # - run: node -v
       # - run: npm -v
       # - run: yarn -v
-      # # - run: choco install nodejs --version 14.19.3
+      # # - run: choco install nodejs --version 16.16.0
       # # - run: node -v
-      # - run: cinst nodejs --version 14.19.3
+      # - run: cinst nodejs --version 16.16.0
       # - run: node -v
 
   windows_checkout_code:
@@ -1301,7 +1306,10 @@ jobs:
       - restore_cache:
           key: v2-bvm-folder-{{ checksum "version.txt" }}
       - run: 'npm i -g @teambit/bvm'
-      - run: 'bvm upgrade'
+      - run:
+          name: 'bvm upgrade'
+          command: 'bvm upgrade'
+          no_output_timeout: 60m
       - run: 'setx path "%path%;C:\Users\circleci\AppData\Local\.bvm"'
       - run: 'bit -v'
       - run: bit -v | Out-File -FilePath .\version.txt
@@ -1325,7 +1333,9 @@ jobs:
     steps:
       - attach_workspace:
           at: .
-      - run: cinst nodejs --version 14.19.3
+      # We can't use Node.js newer than 16.13.2 due to this issue with npm: https://github.com/npm/cli/issues/4234
+      - run: nvm install 16.13.2
+      - run: nvm use 16.13.2
       - run: node -v
       - run: npm -v
       # - run: Get-Content -Path .\version.txt
@@ -1380,7 +1390,9 @@ jobs:
     steps:
       - attach_workspace:
           at: .
-      - run: cinst nodejs --version 14.19.3
+      # We can't use Node.js newer than 16.13.2 due to this issue with npm: https://github.com/npm/cli/issues/4234
+      - run: nvm install 16.13.2
+      - run: nvm use 16.13.2
       - run: node -v
       - run: npm -v
       # - run: Get-Content -Path .\version.txt
@@ -1427,6 +1439,7 @@ jobs:
           # command: cd bit; npm run e2e-test-circle --debug
           environment:
             MOCHA_FILE: junit\e2e-test-results.xml
+            NODE_OPTIONS: --no-warnings
           when: always
       - store_test_results:
           path: bit\junit
@@ -1488,6 +1501,7 @@ jobs:
           # command: cd bit; npm run e2e-test-circle --debug
           environment:
             MOCHA_FILE: junit\e2e-test-results.xml
+            NODE_OPTIONS: --no-warnings
           when: always
       - store_test_results:
           path: bit\junit

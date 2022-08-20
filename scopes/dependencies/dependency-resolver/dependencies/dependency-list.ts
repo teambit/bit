@@ -49,6 +49,15 @@ export class DependencyList {
     return this.dependencies.find((dep) => removeVersion(dep.id) === componentIdStrWithoutVersion);
   }
 
+  findByPkgNameOrCompId(id: string, version?: string): Dependency | undefined {
+    const found = this.dependencies.find((dep) => dep.id === id || dep.getPackageName?.() === id);
+    if (!found) return undefined;
+    if (version) {
+      return found.version === version ? found : undefined;
+    }
+    return found;
+  }
+
   forEach(predicate: (dep: Dependency, index?: number) => void): void {
     this.dependencies.forEach(predicate);
   }
@@ -124,5 +133,6 @@ function uniqDeps(dependencies: Array<Dependency>): Array<Dependency> {
 }
 
 function removeVersion(id: string): string {
+  if (id.startsWith('@')) return id.split('@')[1]; // scoped package
   return id.split('@')[0];
 }

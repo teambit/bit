@@ -4,7 +4,7 @@ import * as path from 'path';
 import R from 'ramda';
 import semver from 'semver';
 import { partition } from 'lodash';
-import { LaneId } from '@teambit/lane-id';
+import { DEFAULT_LANE, LaneId } from '@teambit/lane-id';
 import { Analytics } from '../analytics/analytics';
 import { BitId, BitIds } from '../bit-id';
 import { BitIdStr } from '../bit-id/bit-id';
@@ -142,7 +142,11 @@ export default class Consumer {
   }
 
   getCurrentLaneId(): LaneId {
-    return this.scope.lanes.getCurrentLaneId();
+    return this.bitMap.laneId || this.getDefaultLaneId();
+  }
+
+  getDefaultLaneId() {
+    return LaneId.from(DEFAULT_LANE, this.scope.name);
   }
 
   /**
@@ -153,11 +157,20 @@ export default class Consumer {
   }
 
   isOnLane(): boolean {
-    return !this.scope.lanes.isOnMain();
+    return !this.isOnMain();
+  }
+
+  isOnMain(): boolean {
+    return this.getCurrentLaneId().isDefault();
   }
 
   async getCurrentLaneObject(): Promise<Lane | null> {
-    return this.scope.lanes.getCurrentLaneObject();
+    return this.scope.loadLane(this.getCurrentLaneId());
+  }
+
+  setCurrentLane(laneId: LaneId, exported = true) {
+    this.bitMap.setCurrentLane(laneId, exported);
+    this.scope.currentLaneId = laneId.isDefault() ? undefined : laneId;
   }
 
   async cleanTmpFolder() {
@@ -320,10 +333,6 @@ export default class Consumer {
   async loadComponent(id: BitId, loadOpts?: ComponentLoadOptions): Promise<Component> {
     const { components } = await this.loadComponents(BitIds.fromArray([id]), true, loadOpts);
     return components[0];
-  }
-
-  loadComponentForCapsule(id: BitId): Promise<Component> {
-    return this.componentLoader.loadForCapsule(id);
   }
 
   async loadComponents(
@@ -703,6 +712,7 @@ export default class Consumer {
       scope,
     });
     await consumer.setBitMap();
+    scope.currentLaneId = consumer.bitMap.laneId;
     return consumer;
   }
 
