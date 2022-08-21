@@ -71,7 +71,7 @@ describe('update command', function () {
       });
     });
   });
-  (supportNpmCiRegistryTesting ? describe.only : describe.skip)('updates dependencies from the model', () => {
+  (supportNpmCiRegistryTesting ? describe : describe.skip)('updates dependencies from the model', () => {
     let configFile;
     let npmCiRegistry: NpmCiRegistry;
     before(async () => {
