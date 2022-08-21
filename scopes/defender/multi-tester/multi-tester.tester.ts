@@ -1,4 +1,3 @@
-import { join } from 'path';
 import pMapSeries from 'p-map-series';
 import {
   Tester,
@@ -6,7 +5,8 @@ import {
   Tests,
   ComponentsResults,
 } from '@teambit/tester';
-import { TestsFiles, TestResult, TestsResult } from '@teambit/tests-results';
+import { TestsResult } from '@teambit/tests-results';
+import { compact } from 'lodash';
 
 export type MultiCompilerOptions = {
   targetExtension?: string;
@@ -37,6 +37,16 @@ export class MultiTester implements Tester {
     return merged;
   }
 
+  // TODO: not working properly yet
+  async watch(context: TesterContext): Promise<Tests> {
+    const allResults = await pMapSeries(this.testers,
+      (tester) => {
+        return tester.watch ? tester.watch(context) : tester.test(context);
+      });
+    const merged = this.mergeTests(allResults);
+    return merged;
+  }
+
   /**
    * returns the version of all testers instance (e.g. '4.0.1').
    */
@@ -51,7 +61,7 @@ export class MultiTester implements Tester {
   private mergeTests(tests: Tests[]): Tests {
     const componentResultsMap = new Map<string, ComponentsResults>();
 
-    tests.forEach((currentTests) => {
+    compact(tests).forEach((currentTests) => {
       currentTests.components.forEach(currentComponentResults => {
         const currIdStr = currentComponentResults.componentId.toString();
         const foundComponent = componentResultsMap.get(currIdStr);
