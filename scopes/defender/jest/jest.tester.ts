@@ -1,20 +1,47 @@
+import { resolve } from 'path';
 import { readFileSync } from 'fs-extra';
 import minimatch from 'minimatch';
-import { compact, flatten } from 'lodash';
+import { compact, flatten, isEmpty } from 'lodash';
 import { proxy } from 'comlink';
 import { Logger } from '@teambit/logger';
 import { HarmonyWorker } from '@teambit/worker';
-import { Tester, CallbackFn, TesterContext, Tests, ComponentPatternsMap, ComponentsResults } from '@teambit/tester';
+import {
+  Tester,
+  CallbackFn,
+  TesterContext,
+  Tests,
+  ComponentsResults,
+  ComponentPatternsEntry,
+} from '@teambit/tester';
 import { TestsFiles, TestResult, TestsResult } from '@teambit/tests-results';
 import { TestResult as JestTestResult, AggregatedResult } from '@jest/test-result';
 import { formatResultsErrors } from 'jest-message-util';
-import { ComponentMap } from '@teambit/component';
+import { Component, ComponentMap } from '@teambit/component';
 import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 import { Environment } from '@teambit/envs';
 import { EnvPolicyConfigObject, PeersAutoDetectPolicy } from '@teambit/dependency-resolver';
 import type jest from 'jest';
 import { JestError } from './error';
 import type { JestWorker } from './jest.worker';
+
+export type JestTesterOptions = {
+  /**
+   * array of patterns to test. (override the patterns provided by the context)
+   */
+  patterns?: string[];
+
+  /**
+   * add more root paths to look for tests.
+   */
+  roots?: string[];
+
+  /**
+   * A function that knows to resolve the paths of the spec files.
+   * This usually used when you want only subset of your spec files to be used
+   * (usually when you use multi tester with different specs files for each tester instance).
+   */
+  resolveSpecPaths?: (component: Component, context: TesterContext) => string[];
+};
 
 export class JestTester implements Tester {
   private readonly jestModule: typeof jest;
@@ -24,7 +51,8 @@ export class JestTester implements Tester {
     readonly jestConfig: any,
     private jestModulePath: string,
     private jestWorker: HarmonyWorker<JestWorker>,
-    private logger: Logger
+    private logger: Logger,
+    private opts: JestTesterOptions = {}
   ) {
     // eslint-disable-next-line global-require,import/no-dynamic-require
     this.jestModule = require(jestModulePath);
@@ -46,11 +74,12 @@ export class JestTester implements Tester {
 
   private attachTestsToComponent(testerContext: TesterContext, testResult: JestTestResult[]) {
     return ComponentMap.as(testerContext.components, (component) => {
-      const componentSpecFiles = testerContext.patterns.get(component);
-      if (!componentSpecFiles) return undefined;
-      const [, specs] = componentSpecFiles;
+      const componentPatternValue = testerContext.patterns.get(component);
+      if (!componentPatternValue) return undefined;
+      const [currComponent, patternEntry] = componentPatternValue;
+      const resolvedPatterns = this.resolveComponentPattern(currComponent, patternEntry, testerContext);
       return testResult.filter((test) => {
-        return specs.filter((pattern) => minimatch(test.testFilePath, pattern.path)).length > 0;
+        return resolvedPatterns.filter((resolvedPattern) => minimatch(test.testFilePath, resolvedPattern)).length > 0;
       });
     });
   }
@@ -179,7 +208,7 @@ export class JestTester implements Tester {
     // jestConfig.moduleNameMapper = Object.assign({}, jestConfig.moduleNameMapper || {}, moduleNameMapper);
 
     const jestConfigWithSpecs = Object.assign(jestConfig, {
-      testMatch: this.patternsToArray(context.patterns),
+      testMatch: this.patternsToArray(context),
     });
 
     const withEnv = Object.assign(jestConfigWithSpecs, config);
@@ -206,14 +235,13 @@ export class JestTester implements Tester {
       // eslint-disable-next-line
       const jestConfig = require(this.jestConfig);
 
-
       const envRootDir = context.envRuntime.envAspectDefinition?.aspectPath;
       if (!envRootDir) {
         this.logger.warn(`jest tester, envRootDir is not defined, for env ${context.envRuntime.id}`);
       }
 
       const jestConfigWithSpecs = Object.assign(jestConfig, {
-        testMatch: this.patternsToArray(context.patterns),
+        testMatch: this.patternsToArray(context),
       });
 
       try {
@@ -237,7 +265,7 @@ export class JestTester implements Tester {
 
         await workerApi.watch(
           this.jestConfig,
-          this.patternsToArray(context.patterns),
+          this.patternsToArray(context),
           context.rootPath,
           this.jestModulePath,
           envRootDir
@@ -274,7 +302,34 @@ export class JestTester implements Tester {
     return moduleNameMapper;
   }
 
-  private patternsToArray(patterns: ComponentPatternsMap) {
-    return flatten(patterns.toArray().map(([, pattern]) => pattern.map((p) => p.path)));
+  private patternsToArray(context: TesterContext): string[] {
+    return flatten(
+      context.patterns.toArray().map(([component, patternEntry]) => {
+        return this.resolveComponentPattern(component, patternEntry, context);
+      })
+    );
+  }
+
+  private resolveComponentPattern(
+    component: Component,
+    patternEntry: ComponentPatternsEntry,
+    context: TesterContext
+  ): string[] {
+    if (this.opts.resolveSpecPaths) {
+      return this.opts.resolveSpecPaths(component, context);
+    }
+    const customPatterns = this.opts.patterns;
+    // If pattern were provided to the specific instance of the tester, use them
+    if (customPatterns && !isEmpty(customPatterns)) {
+      customPatterns.map((customPattern) => {
+        const rootDirs = this.opts.roots || [patternEntry.componentDir];
+        return this.resolvePattern(customPattern, rootDirs);
+      });
+    }
+    return patternEntry.paths.map((p) => p.path);
+  }
+
+  private resolvePattern(pattern: string, rootDirs: string[]) {
+    return rootDirs.map((dir) => resolve(dir, pattern));
   }
 }
