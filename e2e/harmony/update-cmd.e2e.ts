@@ -84,9 +84,23 @@ describe('update command', function () {
       npmCiRegistry.configureCiInPackageJsonHarmony();
       helper.fixtures.populateComponents(1);
       helper.command.create('aspect', 'my-aspect', '--path=my-aspect');
-      helper.fs.outputFile(`comp1/index.js`, `const isNegative = require("is-negative");`);
+      helper.fs.outputFile(
+        `comp1/index.js`,
+        `const isNegative = require("is-negative");
+const isOdd = require("is-odd");`
+      );
       helper.extensions.addExtensionToVariant('comp1', `${helper.scopes.remoteWithoutOwner}/my-aspect`, {});
-      helper.command.install('is-negative@1.0.0');
+      helper.extensions.addExtensionToVariant('comp1', 'teambit.dependencies/dependency-resolver', {
+        policy: {
+          devDependencies: {
+            'is-negative': '1.0.0',
+          },
+          peerDependencies: {
+            'is-odd': '1.0.0',
+          },
+        },
+      });
+      helper.command.install();
       helper.command.compile();
       helper.command.tagAllComponents();
       helper.command.export();
@@ -116,6 +130,10 @@ describe('update command', function () {
           `@${helper.scopes.remote.replace('.', '/')}.my-aspect`
         ]
       ).to.eq(undefined);
+    });
+    it('should not update peer dependencies from the model', function () {
+      expect(configFile['teambit.dependencies/dependency-resolver'].policy.dependencies['is-odd']).to.eq(undefined);
+      expect(configFile['teambit.dependencies/dependency-resolver'].policy.peerDependencies['is-odd']).to.eq(undefined);
     });
     after(() => {
       npmCiRegistry.destroy();
