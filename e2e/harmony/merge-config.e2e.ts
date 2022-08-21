@@ -51,8 +51,7 @@ describe('merge config scenarios', function () {
     });
     describe('merging the lane to main', () => {
       before(() => {
-        helper.command.fetchLane(`${helper.scopes.remote}/dev`);
-        helper.command.mergeLane('dev', '--manual');
+        helper.command.mergeLane(`${helper.scopes.remote}/dev`, '--manual');
         // fixes the conflicts
         helper.fs.outputFile(`${helper.scopes.remote}/comp1/index.js`);
         helper.fs.outputFile(`${helper.scopes.remote}/comp2/index.js`);

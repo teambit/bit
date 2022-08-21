@@ -2,7 +2,7 @@ import { MainRuntime } from '@teambit/cli';
 import { LoggerAspect, LoggerMain, Logger } from '@teambit/logger';
 import { WorkerAspect, WorkerMain, HarmonyWorker } from '@teambit/worker';
 import { JestAspect } from './jest.aspect';
-import { JestTester } from './jest.tester';
+import { JestTester, JestTesterOptions } from './jest.tester';
 import type { JestWorker } from './jest.worker';
 
 export const WORKER_NAME = 'jest';
@@ -10,8 +10,8 @@ export const WORKER_NAME = 'jest';
 export class JestMain {
   constructor(private jestWorker: HarmonyWorker<JestWorker>, private logger: Logger) {}
 
-  createTester(jestConfig: any, jestModulePath = require.resolve('jest')) {
-    return new JestTester(JestAspect.id, jestConfig, jestModulePath, this.jestWorker, this.logger);
+  createTester(jestConfig: any, jestModulePath = require.resolve('jest'), opts?: JestTesterOptions) {
+    return new JestTester(JestAspect.id, jestConfig, jestModulePath, this.jestWorker, this.logger, opts);
   }
 
   static runtime = MainRuntime;

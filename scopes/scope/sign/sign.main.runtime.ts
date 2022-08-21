@@ -46,7 +46,7 @@ export class SignMain {
     if (isMultiple) {
       if (laneIdStr) {
         const laneId = LaneId.parse(laneIdStr);
-        lane = await this.lanes.importLane(laneId);
+        lane = await this.lanes.importLaneObject(laneId);
       }
       await this.scope.import(ids, { lane });
     }
