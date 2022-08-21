@@ -71,7 +71,7 @@ describe('update command', function () {
       });
     });
   });
-  (supportNpmCiRegistryTesting ? describe : describe.skip)('updates dependencies from the model', () => {
+  (supportNpmCiRegistryTesting ? describe.only : describe.skip)('updates dependencies from the model', () => {
     let configFile;
     let npmCiRegistry: NpmCiRegistry;
     before(async () => {
@@ -83,10 +83,18 @@ describe('update command', function () {
       await npmCiRegistry.init();
       npmCiRegistry.configureCiInPackageJsonHarmony();
       helper.fixtures.populateComponents(1);
+      helper.command.create('aspect', 'my-aspect', '--path=my-aspect');
       helper.fs.outputFile(`comp1/index.js`, `const isNegative = require("is-negative");`);
+      helper.extensions.addExtensionToVariant('comp1', `${helper.scopes.remoteWithoutOwner}/my-aspect`, {});
       helper.command.install('is-negative@1.0.0');
       helper.command.compile();
-      helper.command.tagComponent('comp1');
+      helper.command.tagAllComponents();
+      helper.command.export();
+
+      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.addRemoteScope();
+      helper.command.import(`${helper.scopes.remote}/my-aspect`);
+      helper.command.tagComponent('my-aspect', undefined, '--unmodified');
       helper.command.export();
 
       helper.scopeHelper.reInitLocalScopeHarmony();
@@ -97,10 +105,17 @@ describe('update command', function () {
       helper.command.update('--yes');
       configFile = helper.bitJsonc.read(helper.scopes.localPath);
     });
-    it('should add an update version of the dependency from the model to the workspace policies', function () {
+    it('should add an updated version of the dependency from the model to the workspace policies', function () {
       expect(configFile['teambit.dependencies/dependency-resolver'].policy.dependencies['is-negative']).to.equal(
         '2.1.0'
       );
+    });
+    it('should not update extensions from the model', function () {
+      expect(
+        configFile['teambit.dependencies/dependency-resolver'].policy.dependencies[
+          `@${helper.scopes.remote.replace('.', '/')}.my-aspect`
+        ]
+      ).to.eq(undefined);
     });
     after(() => {
       npmCiRegistry.destroy();

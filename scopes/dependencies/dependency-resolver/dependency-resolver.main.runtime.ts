@@ -1171,7 +1171,7 @@ export class DependencyResolverMain {
       components.map(async (component) => {
         const depList = await this.getDependencies(component);
         depList.forEach((dep) => {
-          if (dep.getPackageName && dep.version !== 'latest') {
+          if (dep.getPackageName && dep.version !== 'latest' && !dep['isExtension']) {
             componentModelVersions.push({
               name: dep.getPackageName(),
               version: dep.version,
