@@ -7,19 +7,19 @@ import { ApplyVersionResults } from '@teambit/legacy/dist/consumer/versions-ops/
 import { BitIds } from '@teambit/legacy/dist/bit-id';
 import { ComponentID } from '@teambit/component-id';
 import { Workspace } from '@teambit/workspace';
-import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
+import { DEFAULT_LANE } from '@teambit/lane-id';
 import { Lane } from '@teambit/legacy/dist/scope/models';
 import { Tmp } from '@teambit/legacy/dist/scope/repositories';
 import { MergingMain, ComponentMergeStatus } from '@teambit/merging';
 import { remove } from '@teambit/legacy/dist/api/consumer';
-import { MergeLaneOptions } from './lanes.main.runtime';
+import { LanesMain, MergeLaneOptions } from './lanes.main.runtime';
 
 export async function mergeLanes({
+  lanesMain,
   merging,
   workspace,
   laneName,
   mergeStrategy,
-  remoteName,
   noSnap,
   snapMessage,
   existingOnWorkspaceOnly,
@@ -29,46 +29,45 @@ export async function mergeLanes({
   pattern,
   includeDeps,
   skipDependencyInstallation,
+  remote,
 }: {
+  lanesMain: LanesMain;
   merging: MergingMain;
   workspace: Workspace;
   laneName: string;
 } & MergeLaneOptions): Promise<{ mergeResults: ApplyVersionResults; deleteResults: any }> {
   const consumer = workspace.consumer;
   const currentLaneId = consumer.getCurrentLaneId();
-  if (!remoteName && laneName === currentLaneId.name) {
+  const otherLaneId = await consumer.getParsedLaneId(laneName);
+  if (otherLaneId.isEqual(currentLaneId)) {
     throw new BitError(
-      `unable to merge lane "${laneName}", you're already at this lane. to get updates, simply run "bit checkout head"`
+      `unable to merge lane "${otherLaneId.toString()}", you're already at this lane. to get updates, simply run "bit checkout head"`
     );
   }
-  const parsedLaneId = await consumer.getParsedLaneId(laneName);
-  const localLane = currentLaneId.isDefault() ? null : await consumer.scope.loadLane(currentLaneId);
-  let bitIds: BitId[];
-  let otherLane: Lane | null | undefined;
-  let remoteLane;
-  let otherLaneName: string;
-  const isDefaultLane = laneName === DEFAULT_LANE;
-
-  if (isDefaultLane) {
-    if (!localLane) throw new Error(`unable to merge ${DEFAULT_LANE}, the current lane was not found`);
-    bitIds = await consumer.scope.getDefaultLaneIdsFromLane(localLane);
-    otherLaneName = DEFAULT_LANE;
-  } else if (remoteName) {
-    const remoteLaneId = LaneId.from(parsedLaneId.name, remoteName);
-    remoteLane = await consumer.scope.objects.remoteLanes.getRemoteLane(remoteLaneId);
-    if (!remoteLane.length) {
-      throw new BitError(
-        `unable to switch to "${laneName}" of "${remoteName}", the remote lane was not found or not fetched locally`
-      );
+  const currentLane = currentLaneId.isDefault() ? null : await consumer.scope.loadLane(currentLaneId);
+  const isDefaultLane = otherLaneId.isDefault();
+  const getOtherLane = async () => {
+    if (isDefaultLane) {
+      return undefined;
     }
-    bitIds = await consumer.scope.objects.remoteLanes.getRemoteBitIds(remoteLaneId);
-    otherLaneName = `${remoteName}/${parsedLaneId.name}`;
-  } else {
-    otherLane = await consumer.scope.loadLane(parsedLaneId);
-    if (!otherLane) throw new BitError(`unable to switch to "${laneName}", the lane was not found`);
-    bitIds = otherLane.components.map((c) => c.id.changeVersion(c.head.toString()));
-    otherLaneName = parsedLaneId.name;
-  }
+    const lane = await consumer.scope.loadLane(otherLaneId);
+    if (remote || !lane) {
+      return lanesMain.fetchLaneWithItsComponents(otherLaneId);
+    }
+    return lane;
+  };
+  const otherLane = await getOtherLane();
+  const getBitIds = async () => {
+    if (isDefaultLane) {
+      if (!currentLane) throw new Error(`unable to merge ${DEFAULT_LANE}, the current lane was not found`);
+      return consumer.scope.getDefaultLaneIdsFromLane(currentLane);
+    }
+    if (!otherLane) throw new Error(`lane must be defined for non-default`);
+    return otherLane.toBitIds();
+  };
+  const bitIds = await getBitIds();
+  lanesMain.logger.debug(`merging the following bitIds: ${bitIds.toString()}`);
+  const otherLaneName = isDefaultLane ? DEFAULT_LANE : otherLaneId.toString();
 
   let allComponentsStatus = await getAllComponentsStatus();
 
@@ -117,9 +116,9 @@ export async function mergeLanes({
   const mergeResults = await merging.mergeSnaps({
     mergeStrategy,
     allComponentsStatus,
-    remoteName,
-    laneId: parsedLaneId,
-    localLane,
+    remoteName: otherLane ? otherLane.scope : null,
+    laneId: otherLaneId,
+    localLane: currentLane,
     noSnap,
     snapMessage,
     build,
@@ -157,7 +156,7 @@ export async function mergeLanes({
     const tmp = new Tmp(consumer.scope);
     try {
       const componentsStatus = await Promise.all(
-        bitIds.map((bitId) => merging.getComponentMergeStatus(bitId, localLane, otherLaneName))
+        bitIds.map((bitId) => merging.getComponentMergeStatus(bitId, currentLane, otherLaneName))
       );
       await tmp.clear();
       return componentsStatus;

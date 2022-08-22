@@ -1264,17 +1264,31 @@ either, use the ignore file syntax or change the require statement to have a mod
     const isTypeScript = getExt(originFile) === 'ts' || getExt(originFile) === 'tsx';
     if (!isTypeScript) return;
     const depsHost = DependencyResolver.getWorkspacePolicy();
-    if (!depsHost) return;
-    const addIfNeeded = (depField: string, packageName: string) => {
-      if (!depsHost || !depsHost[depField]) return;
-      const typesPackage = packageToDefinetlyTyped(packageName);
-      if (!depsHost[depField][typesPackage]) return;
-      Object.assign(this.allPackagesDependencies[this._pkgFieldMapping('devDependencies')], {
-        [typesPackage]: depsHost[depField][typesPackage],
+    const addFromConfig = (packageName: string): boolean => {
+      if (!depsHost) return false;
+      return DEPENDENCIES_FIELDS.some((depField) => {
+        if (!depsHost[depField]) return false;
+        const typesPackage = packageToDefinetlyTyped(packageName);
+        if (!depsHost[depField][typesPackage]) return false;
+        Object.assign(this.allPackagesDependencies.devPackageDependencies, {
+          [typesPackage]: depsHost[depField][typesPackage],
+        });
+        return true;
       });
     };
+    const addFromModel = (packageName: string) => {
+      if (!this.componentFromModel) return;
+      const typesPackage = packageToDefinetlyTyped(packageName);
+      const typedPackageFromModel = this.componentFromModel.devPackageDependencies[typesPackage];
+      if (!typedPackageFromModel) return;
+      Object.assign(this.allPackagesDependencies.devPackageDependencies, {
+        [typesPackage]: typedPackageFromModel,
+      });
+    };
+
     Object.keys(packages).forEach((packageName) => {
-      DEPENDENCIES_FIELDS.forEach((depField) => addIfNeeded(depField, packageName));
+      const added = addFromConfig(packageName);
+      if (!added) addFromModel(packageName);
     });
   }
 
