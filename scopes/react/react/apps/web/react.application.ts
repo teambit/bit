@@ -1,8 +1,11 @@
+import { readFileSync } from 'fs';
 import { join, resolve, basename } from 'path';
 import { Application, AppContext, AppBuildContext, AppResult } from '@teambit/application';
 import type { Bundler, DevServer, BundlerContext, DevServerContext, BundlerHtmlConfig } from '@teambit/bundler';
 import { Port } from '@teambit/toolbox.network.get-port';
+import { ComponentMap } from '@teambit/component';
 import type { Logger } from '@teambit/logger';
+import { DependencyResolverMain, WorkspacePolicy } from '@teambit/dependency-resolver';
 import compact from 'lodash.compact';
 import { WebpackConfigTransformer } from '@teambit/webpack';
 import { BitError } from '@teambit/bit-error';
@@ -24,14 +27,15 @@ export class ReactApp implements Application {
     readonly ssr: string | (() => Promise<string>) | undefined,
     readonly portRange: [number, number],
     private reactEnv: ReactEnv,
+    private logger: Logger,
+    private dependencyResolver: DependencyResolverMain,
     readonly prerender?: ReactAppPrerenderOptions,
     readonly bundler?: Bundler,
     readonly ssrBundler?: Bundler,
     readonly devServer?: DevServer,
     readonly transformers: WebpackConfigTransformer[] = [],
     readonly deploy?: (context: ReactDeployContext) => Promise<void>,
-    readonly favicon?: string,
-    private logger?: Logger
+    readonly favicon?: string
   ) {}
   readonly applicationType = 'react-common-js';
   readonly dir = 'public';
@@ -163,16 +167,56 @@ export class ReactApp implements Application {
     });
     const bundler = await this.getBundler(context);
     const bundleResult = await bundler.run();
+    const ssrAppDir = join(this.getPublicDir(context.artifactsDir));
 
-    if (this.ssr) {
-      const bunlder = await this.getSsrBundler(context);
-      await bunlder.run();
-    }
-
+    if (this.ssr) await this.buildSsrApp(context, ssrAppDir);
     return computeResults(bundleResult, {
       publicDir: `${this.getPublicDir(context.artifactsDir)}/${this.dir}`,
-      ssrPublicDir: this.ssr ? `${this.getPublicDir(context.artifactsDir)}/${this.ssrDir}` : undefined,
+      ssrPublicDir: ssrAppDir,
     });
+  }
+
+  private async buildSsrApp(context: AppBuildContext, ssrAppDir: string) {
+    const ssrBundler = await this.getSsrBundler(context);
+    await ssrBundler.run();
+    const runner = readFileSync(join(__dirname, './ssr/app/runner')).toString();
+    context.capsule.fs.writeFileSync(join(ssrAppDir, 'runner.js'), runner);
+    const capsuleSsrDir = context.capsule.fs.getPath(ssrAppDir);
+    const installer = this.dependencyResolver.getInstaller({
+      packageManager: 'teambit.dependencies/yarn',
+      rootDir: capsuleSsrDir,
+      cacheRootDirectory: capsuleSsrDir,
+    });
+    await installer.install(capsuleSsrDir, this.getSsrPolicy(), new ComponentMap(new Map()));
+    return ssrAppDir;
+  }
+
+  private getSsrPolicy() {
+    const workspacePolicy = new WorkspacePolicy([]);
+    workspacePolicy.add({ lifecycleType: 'runtime', dependencyId: 'express', value: { version: '4.18.1' } });
+    workspacePolicy.add({
+      lifecycleType: 'runtime',
+      dependencyId: '@teambit/react.rendering.ssr',
+      value: { version: '0.0.3' },
+    });
+    workspacePolicy.add({
+      lifecycleType: 'runtime',
+      dependencyId: '@teambit/ui-foundation.ui.pages.static-error',
+      value: { version: '0.0.75' },
+    });
+
+    workspacePolicy.add({
+      lifecycleType: 'peer',
+      dependencyId: 'react',
+      value: { version: '17.0.2' },
+    });
+
+    workspacePolicy.add({
+      lifecycleType: 'peer',
+      dependencyId: 'react-dom',
+      value: { version: '17.0.2' },
+    });
+    return workspacePolicy;
   }
 
   private getBundler(context: AppBuildContext) {
