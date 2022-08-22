@@ -25,7 +25,7 @@ describe('merge lanes', function () {
       helper.bitJsonc.setupDefault();
       appOutput = helper.fixtures.populateComponents();
       helper.command.createLane('dev');
-      helper.command.snapAllComponents();
+      helper.command.snapAllComponentsWithoutBuild();
       helper.command.exportLane();
       authorScope = helper.scopeHelper.cloneLocalScope();
     });
@@ -33,8 +33,7 @@ describe('merge lanes', function () {
       before(() => {
         helper.scopeHelper.reInitLocalScopeHarmony();
         helper.scopeHelper.addRemoteScope();
-        helper.command.fetchRemoteLane('dev');
-        helper.command.mergeRemoteLane(`dev`);
+        helper.command.mergeLane(`${helper.scopes.remote}/dev`);
       });
       it('should save the files to the filesystem', () => {
         helper.fs.outputFile('app.js', fixtures.appPrintComp1(helper.scopes.remote));
@@ -72,8 +71,7 @@ describe('merge lanes', function () {
       before(() => {
         helper.scopeHelper.reInitLocalScopeHarmony();
         helper.scopeHelper.addRemoteScope();
-        helper.command.fetchRemoteLane('dev');
-        mergeOutput = helper.command.mergeRemoteLane(`dev`, undefined, `--workspace --verbose`);
+        mergeOutput = helper.command.mergeLane(`${helper.scopes.remote}/dev`, `--workspace --verbose`);
       });
       it('should indicate that the components were not merge because they are not in the workspace', () => {
         expect(mergeOutput).to.have.string('the merge has been canceled on the following component(s)');
@@ -118,17 +116,13 @@ describe('merge lanes', function () {
         expect(status.outdatedComponents).to.have.lengthOf(3);
       });
       describe('merging the remote lane', () => {
-        let mergeOutput;
         before(() => {
-          mergeOutput = helper.command.mergeRemoteLane(`dev`);
-        });
-        it('should succeed', () => {
-          expect(mergeOutput).to.have.string('successfully merged components');
+          helper.command.checkoutHead();
         });
         it('should save the latest versions from the remote into the local', () => {
           helper.fs.outputFile('app.js', fixtures.appPrintComp1(helper.scopes.remote));
           const result = helper.command.runCmd('node app.js');
-          expect(result.trim()).to.equal('comp1 and comp2 and comp3');
+          expect(result.trim()).to.equal('comp1 v2 and comp2 v2 and comp3 v2');
         });
         it('bit status should show clean state', () => {
           const output = helper.command.runCmd('bit status');
@@ -391,11 +385,36 @@ describe('merge lanes', function () {
       helper.scopeHelper.reInitLocalScopeHarmony();
       helper.scopeHelper.addRemoteScope();
       helper.command.importLane('lane-b');
-      helper.command.fetchLane(`${helper.scopes.remote}/lane-a`);
       helper.command.mergeLane(`${helper.scopes.remote}/lane-a`);
     });
     it('should add the newly added file', () => {
       expect(path.join(helper.scopes.localPath, helper.scopes.remote, 'comp1/new-file.ts')).to.be.a.file();
+    });
+  });
+  describe('merge file changes from one lane to another', () => {
+    let authorScope;
+    let appOutputV2: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents();
+      helper.command.createLane('dev');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      authorScope = helper.scopeHelper.cloneLocalScope();
+      helper.command.createLane('dev2');
+      appOutputV2 = helper.fixtures.populateComponents(undefined, undefined, ' v2');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+
+      helper.scopeHelper.getClonedLocalScope(authorScope);
+      helper.command.mergeLane(`${helper.scopes.remote}/dev2`);
+      helper.command.compile();
+    });
+    it('should save the latest versions from that lane into the local lane', () => {
+      helper.fs.outputFile('app.js', fixtures.appPrintComp1(helper.scopes.remote));
+      const result = helper.command.runCmd('node app.js');
+      expect(result.trim()).to.equal(appOutputV2);
     });
   });
 });

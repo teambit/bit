@@ -275,10 +275,13 @@ export class LaneRenameCmd implements Command {
 export class LaneMergeCmd implements Command {
   name = 'merge <lane> [pattern]';
   description = `merge a local or a remote lane`;
+  extendedDescription = `if the <lane> exists locally, it will be merged from the local lane.
+otherwise, it will fetch the lane from the remote and merge it.
+in case the <lane> exists locally but you want to merge the remote version of it, use --remote flag`;
   arguments = [
     {
       name: 'lane',
-      description: 'lane-name to merge to the current lane',
+      description: 'lane-name or lane-id (if not exists locally) to merge to the current lane',
     },
     {
       name: 'pattern',
@@ -287,7 +290,6 @@ export class LaneMergeCmd implements Command {
   ];
   alias = '';
   options = [
-    ['', 'remote <scope-name>', 'remote scope name'],
     ['', 'ours', 'in case of a conflict, override the used version with the current modification'],
     ['', 'theirs', 'in case of a conflict, override the current modification with the specified version'],
     ['', 'manual', 'in case of a conflict, leave the files with a conflict state to resolve them manually later'],
@@ -299,6 +301,7 @@ export class LaneMergeCmd implements Command {
     ['', 'squash', 'EXPERIMENTAL. squash multiple snaps. keep the last one only'],
     ['', 'verbose', 'show details of components that were not merged legitimately'],
     ['', 'skip-dependency-installation', 'do not install packages of the imported components'],
+    ['', 'remote', 'relevant when the target-lane locally is differ than the remote and you want the remote'],
     [
       '',
       'include-deps',
@@ -318,7 +321,6 @@ export class LaneMergeCmd implements Command {
       ours = false,
       theirs = false,
       manual = false,
-      remote: remoteName,
       build,
       workspace: existingOnWorkspaceOnly = false,
       noSnap = false,
@@ -326,13 +328,13 @@ export class LaneMergeCmd implements Command {
       keepReadme = false,
       squash = false,
       skipDependencyInstallation = false,
+      remote = false,
       includeDeps = false,
       verbose = false,
     }: {
       ours: boolean;
       theirs: boolean;
       manual: boolean;
-      remote?: string;
       workspace?: boolean;
       build?: boolean;
       noSnap: boolean;
@@ -340,6 +342,7 @@ export class LaneMergeCmd implements Command {
       keepReadme?: boolean;
       squash: boolean;
       skipDependencyInstallation?: boolean;
+      remote: boolean;
       includeDeps?: boolean;
       verbose?: boolean;
     }
@@ -351,8 +354,6 @@ export class LaneMergeCmd implements Command {
       throw new BitError(`"--include-deps" flag is relevant only for --workspace and --pattern flags`);
     }
     const { mergeResults, deleteResults } = await this.lanes.mergeLane(name, {
-      // @ts-ignore
-      remoteName,
       build,
       // @ts-ignore
       mergeStrategy,
@@ -363,6 +364,7 @@ export class LaneMergeCmd implements Command {
       squash,
       pattern,
       skipDependencyInstallation,
+      remote,
       includeDeps,
     });
 

@@ -587,10 +587,6 @@ export default class CommandHelper {
   mergeLane(laneName: string, options = '') {
     return this.runCmd(`bit lane merge ${laneName} ${options}`);
   }
-  mergeRemoteLane(laneName: string, remoteName = this.scopes.remote, options = '') {
-    return this.runCmd(`bit lane merge ${laneName} ${options} --remote ${remoteName}`);
-  }
-
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   diff(id? = '') {
     const output = this.runCmd(`bit diff ${id}`);
