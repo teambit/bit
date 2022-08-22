@@ -112,15 +112,30 @@ export class PreviewPreview {
     );
 
     this.reportSize();
+    this.setViewport();
     return render;
   };
 
+  setViewport() {
+    const query = this.getQuery();
+    const viewPort = this.getParam(query, 'viewport');
+    if (!viewPort) {
+      window.document.body.style.width = '100%';
+      return;
+    }
+
+    window.document.body.style.maxWidth = `${viewPort}px`;
+  }
+
   reportSize() {
     if (!window?.parent || !window?.document) return;
-    this.pubsub.pub(PreviewAspect.id, new SizeEvent({
-      width: window.document.body.offsetWidth,
-      height: window.document.body.offsetHeight
-    }));
+    // TODO: discuss with gilad for a better way to resolve page loaded here.
+    setTimeout(() => {
+      this.pubsub.pub(PreviewAspect.id, new SizeEvent({
+        width: window.document.body.offsetWidth,
+        height: window.document.body.offsetHeight
+      }));  
+    }, 200);
   }
 
   async getPreviewModule(previewName: string, id: ComponentID): Promise<PreviewModule> {
@@ -272,9 +287,15 @@ export class PreviewPreview {
     return preview;
   }
 
-  private getParam(query: string, param: string) {
+  getParam(query: string, param: string) {
     const params = new URLSearchParams(query);
     return params.get(param);
+  }
+
+  getQuery() {
+    const withoutHash = window.location.hash.substring(1);
+    const [, after] = withoutHash.split('?');
+    return after;
   }
 
   private getLocation() {

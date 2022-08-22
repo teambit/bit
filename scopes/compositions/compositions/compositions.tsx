@@ -78,7 +78,7 @@ export function Compositions({ menuBarWidgets, emptyState }: CompositionsProp) {
             emptyState={emptyState}
             component={component}
             selected={selected}
-            queryParams={queryParams}
+            queryParams={`name=${queryParams}`}
           />
         </Pane>
         <HoverSplitter className={styles.splitter}>
@@ -180,6 +180,7 @@ export function CompositionContent({ component, selected, queryParams, emptyStat
       className={styles.compositionsIframe}
       component={component}
       composition={selected}
+      fullContentHeight
       queryParams={queryParams}
     />
   );

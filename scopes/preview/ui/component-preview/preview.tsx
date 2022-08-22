@@ -3,6 +3,7 @@ import { connectToChild } from 'penpal';
 import { ComponentModel } from '@teambit/component';
 import { toPreviewUrl } from './urls';
 import { computePreviewScale } from './compute-preview-scale';
+import { compact } from 'lodash';
 
 // omitting 'referrerPolicy' because of an TS error during build. Re-include when needed
 export interface ComponentPreviewProps extends Omit<IframeHTMLAttributes<HTMLIFrameElement>, 'src' | 'referrerPolicy'> {
@@ -30,7 +31,7 @@ export interface ComponentPreviewProps extends Omit<IframeHTMLAttributes<HTMLIFr
   pubsub?: boolean;
 
   /**
-   * fit to parent view.
+   * fit the preview to a specific width.
    */
   fitView?: boolean;
 
@@ -47,7 +48,7 @@ export function ComponentPreview({
   component,
   previewName,
   queryParams,
-  pubsub = true,
+  // pubsub = true,
   fullContentHeight = false,
   style,
   ...rest
@@ -56,6 +57,7 @@ export function ComponentPreview({
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [width, setWidth] = useState(0);
   const [height, setHeight] = useState(0);
+  const containerRef = useRef<HTMLDivElement>(null);
   // @ts-ignore (https://github.com/frenic/csstype/issues/156)
   // const height = iframeHeight || style?.height;
   // usePubSubIframe(pubsub ? iframeRef : undefined);
@@ -71,19 +73,34 @@ export function ComponentPreview({
             setWidth(message.data.width);
             setHeight(message.data.height);
           }
-        }
-      }
+        },
+      },
     });
-  })
+  });
   // usePubSubIframe(iframeRef);
 
-  const url = toPreviewUrl(component, previewName, queryParams);
+  const params = Array.isArray(queryParams)
+    ? queryParams.concat('viewport=1280')
+    : compact([queryParams, 'viewport=1280']);
+  const url = toPreviewUrl(component, previewName, params);
+  // const currentHeight = fullContentHeight ? '100%' : height || 1024;
+  const containerWidth = containerRef.current?.offsetWidth || 0;
+  const currentWidth = fullContentHeight ? '100%' : width || 1280;
 
-  return <iframe {...rest} ref={iframeRef} style={{ 
-    ...style, 
-    height: height || 1024,
-    width: width !== 0 ? 1280 : width,
-    transform: computePreviewScale(width),
-    transformOrigin: 'top left'
-  }} src={url} />;
+  return (
+    <div ref={containerRef}>
+      <iframe
+        {...rest}
+        ref={iframeRef}
+        style={{
+          ...style,
+          height: height !== 0 ? height : 5000,
+          width: currentWidth < containerWidth ? containerWidth : currentWidth,
+          transform: fullContentHeight ? '' : computePreviewScale(width, containerWidth),
+          transformOrigin: 'top left',
+        }}
+        src={url}
+      />
+    </div>
+  );
 }

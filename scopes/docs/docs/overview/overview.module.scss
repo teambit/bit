@@ -1,10 +1,12 @@
 .overviewWrapper {
   overflow: auto;
   --bit-h-lg: 36px;
+  
   .componentOverviewBlock {
     padding: 50px 40px 10px 40px;
     max-width: 1440px;
-    margin: 0 auto;
     margin-bottom: 0;
+    // TODO: talk with oded.
+    // margin: 0 auto;
   }
 }

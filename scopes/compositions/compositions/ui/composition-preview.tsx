@@ -10,9 +10,10 @@ interface ComponentCompositionProps extends ComponentPreviewProps {
   composition?: Composition;
 }
 
+
 export function ComponentComposition({ composition, queryParams = [], ...rest }: ComponentCompositionProps) {
   const compositionParams = useMemo(
-    () => (composition ? [composition.identifier] : []).concat(queryParams),
+    () => (composition ? [`name=${composition.identifier}`] : []).concat(queryParams),
     [composition?.identifier, queryParams]
   );
 
