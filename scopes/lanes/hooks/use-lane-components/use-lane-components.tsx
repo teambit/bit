@@ -13,6 +13,7 @@ const GET_LANE_COMPONENTS = gql`
           name
           scope
         }
+        hash
         components {
           ...componentOverviewFields
         }

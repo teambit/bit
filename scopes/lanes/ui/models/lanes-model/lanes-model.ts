@@ -23,6 +23,7 @@ export type LaneQueryResult = {
   isMerged: boolean;
   components: ComponentModelProps[];
   readmeComponent?: ComponentModelProps;
+  hash: string;
 };
 /**
  * GQL
@@ -49,6 +50,7 @@ export const DEFAULT_LANE = 'main';
  */
 export type LaneModel = {
   id: LaneId;
+  hash: string;
   components: ComponentModel[];
   readmeComponent?: ComponentModel;
 };
@@ -99,7 +101,7 @@ export class LanesModel {
   };
 
   static mapToLaneModel(laneData: LaneQueryResult, host: string): LaneModel {
-    const { id, components, readmeComponent } = laneData;
+    const { id, components, readmeComponent, hash } = laneData;
 
     const componentModels =
       components?.map((component) => {
@@ -113,6 +115,7 @@ export class LanesModel {
       id: LaneId.from(id.name, id.scope),
       components: componentModels,
       readmeComponent: readmeComponentModel,
+      hash,
     };
   }
 

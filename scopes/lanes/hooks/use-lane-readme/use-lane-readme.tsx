@@ -21,6 +21,7 @@ const GET_LANE_README_COMPONENT = gql`
           name
           scope
         }
+        hash
         readmeComponent {
           ...componentFields
         }

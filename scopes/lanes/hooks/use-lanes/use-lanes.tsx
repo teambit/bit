@@ -14,6 +14,7 @@ const GET_LANES = gql`
           name
           scope
         }
+        hash
         readmeComponent {
           id {
             name
