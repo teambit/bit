@@ -66,6 +66,12 @@ export class PubsubUI {
     return destroy;
   };
 
+  getPubSubContext() {
+    return createProvider({
+      connect: this.connectToIframe,
+    });
+  }
+
   /**
    * publish event to all subscribers in this window
    */
@@ -86,9 +92,7 @@ export class PubsubUI {
   static async provider([uiUI]: [UiUI]) {
     const pubsubUI = new PubsubUI();
 
-    const reactContext = createProvider({
-      connect: pubsubUI.connectToIframe,
-    });
+    const reactContext = pubsubUI.getPubSubContext();
 
     if (uiUI) uiUI.registerRenderHooks({ reactContext });
 

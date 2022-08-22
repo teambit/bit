@@ -13,6 +13,7 @@ import { RenderingContext } from './rendering-context';
 import { fetchComponentAspects } from './gql/fetch-component-aspects';
 import { PREVIEW_MODULES } from './preview-modules';
 import { loadScript, loadLink } from './html-utils';
+import { SizeEvent } from './size-event';
 
 // forward linkModules() for generate-link.ts
 export { linkModules } from './preview-modules';
@@ -102,14 +103,25 @@ export class PreviewPreview {
     const includes = includesAll.filter((module) => !!module);
     // during build / tag, the component is isolated, so all aspects are relevant, and do not require filtering
     const componentAspects = this.isDev ? await this.getComponentAspects(componentId.toString()) : undefined;
-
-    return preview.render(
+    const previewModule = await this.getPreviewModule(name, componentId);
+    const render = preview.render(
       componentId,
-      await this.getPreviewModule(name, componentId),
+      previewModule,
       includes,
       this.getRenderingContext(componentAspects)
     );
+
+    this.reportSize();
+    return render;
   };
+
+  reportSize() {
+    if (!window?.parent || !window?.document) return;
+    this.pubsub.pub(PreviewAspect.id, new SizeEvent({
+      width: window.document.body.offsetWidth,
+      height: window.document.body.offsetHeight
+    }));
+  }
 
   async getPreviewModule(previewName: string, id: ComponentID): Promise<PreviewModule> {
     const compShortId = id.fullName;
