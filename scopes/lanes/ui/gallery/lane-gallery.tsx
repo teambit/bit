@@ -43,7 +43,7 @@ type LaneGalleryWithPreviewProps = {
 };
 
 function LaneGalleryWithPreview({ currentLane, overviewItems, routeSlot, host }: LaneGalleryWithPreviewProps) {
-  const { loading, components } = useLaneComponents(currentLane.id.name);
+  const { loading, components } = useLaneComponents(currentLane.id);
 
   if (loading) return null;
 

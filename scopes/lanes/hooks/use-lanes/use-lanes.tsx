@@ -1,4 +1,3 @@
-import { useScopeQuery } from '@teambit/scope.ui.hooks.use-scope';
 import { useEffect } from 'react';
 import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
 import { LanesModel, LanesQuery } from '@teambit/lanes.ui.models.lanes-model';
@@ -11,9 +10,10 @@ const GET_LANES = gql`
     lanes {
       id
       list {
-        id
-        remote
-        isMerged
+        id {
+          name
+          scope
+        }
         readmeComponent {
           id {
             name
@@ -30,7 +30,10 @@ const GET_LANES = gql`
         }
       }
       current {
-        id
+        id {
+          name
+          scope
+        }
       }
     }
     getHost(id: $extensionId) {
@@ -45,13 +48,11 @@ export function useLanes(
   const lanesContext = useLanesContext();
   const skip = !!lanesContext;
 
-  const { data, ...rest } = useDataQuery(GET_LANES, { skip });
-  const { scope, loading } = useScopeQuery(skip);
+  const { data, loading, ...rest } = useDataQuery(GET_LANES, { skip });
 
   let lanesModel: LanesModel;
   if (lanesContext) lanesModel = lanesContext;
-  else
-    lanesModel = data && LanesModel.from({ data, host: data?.getHost?.id, scope, viewedLaneId: getViewedLaneId?.() });
+  else lanesModel = data && LanesModel.from({ data, host: data?.getHost?.id, viewedLaneId: getViewedLaneId?.() });
 
   useEffect(() => {
     if (getViewedLaneId) {
@@ -62,7 +63,7 @@ export function useLanes(
 
   return {
     ...rest,
-    loading: rest.loading || !!loading,
+    loading,
     lanesModel,
   };
 }

@@ -16,9 +16,10 @@ const GET_LANE_README_COMPONENT = gql`
     lanes {
       id
       list(ids: $ids) {
-        id
-        remote
-        isMerged
+        id {
+          name
+          scope
+        }
         readmeComponent {
           ...componentFields
         }

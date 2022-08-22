@@ -1,5 +1,4 @@
 import { ComponentModel, ComponentModelProps } from '@teambit/component';
-import { ScopeModel } from '@teambit/scope.models.scope-model';
 import { LaneId } from '@teambit/lane-id';
 import { ComponentID, ComponentIdObj } from '@teambit/component-id';
 import { affix } from '@teambit/base-ui.utils.string.affix';
@@ -19,7 +18,7 @@ export type LaneComponentQueryResult = {
  * Return type of each Lane in a Scope/Workspace
  */
 export type LaneQueryResult = {
-  id: string;
+  id: { name: string; scope: string };
   remote?: string;
   isMerged: boolean;
   components: ComponentModelProps[];
@@ -99,11 +98,8 @@ export class LanesModel {
     return `${laneUrl}${LanesModel.baseLaneComponentRoute}/${componentId.fullName}${urlSearch}`;
   };
 
-  static mapToLaneModel(laneData: LaneQueryResult, host: string, currentScope?: ScopeModel): LaneModel {
-    const { id: name, remote, components, readmeComponent } = laneData;
-    const laneScope = remote?.split('/')[0] || currentScope?.name || '';
-    // const laneId = remote || `${laneScope ? laneScope.concat('/') : ''}${name}`;
-    const laneId = LaneId.from(name, laneScope);
+  static mapToLaneModel(laneData: LaneQueryResult, host: string): LaneModel {
+    const { id, components, readmeComponent } = laneData;
 
     const componentModels =
       components?.map((component) => {
@@ -114,7 +110,7 @@ export class LanesModel {
     const readmeComponentModel = readmeComponent && ComponentModel.from({ ...readmeComponent, host });
 
     return {
-      id: laneId,
+      id: LaneId.from(id.name, id.scope),
       components: componentModels,
       readmeComponent: readmeComponentModel,
     };
@@ -155,20 +151,10 @@ export class LanesModel {
     return { byHash, byId };
   }
 
-  static from({
-    data,
-    host,
-    scope,
-    viewedLaneId,
-  }: {
-    data: LanesQuery;
-    host: string;
-    scope?: ScopeModel;
-    viewedLaneId?: LaneId;
-  }): LanesModel {
-    const lanes = data?.lanes?.list?.map((lane) => LanesModel.mapToLaneModel(lane, host, scope)) || [];
+  static from({ data, host, viewedLaneId }: { data: LanesQuery; host: string; viewedLaneId?: LaneId }): LanesModel {
+    const lanes = data?.lanes?.list?.map((lane) => LanesModel.mapToLaneModel(lane, host)) || [];
     const currentLane = data.lanes?.current?.id
-      ? lanes.find((lane) => lane.id.name === data.lanes?.current?.id)
+      ? lanes.find((lane) => lane.id.isEqual(data.lanes?.current?.id as LaneId))
       : undefined;
     const lanesModel = new LanesModel({ lanes, currentLane });
     lanesModel.setViewedLane(viewedLaneId);

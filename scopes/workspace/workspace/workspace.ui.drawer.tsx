@@ -46,7 +46,7 @@ export const workspaceDrawer = ({ treeWidgets, filtersSlot, drawerWidgetSlot }: 
       const workspace = useContext(WorkspaceContext);
       const workspaceComponents = workspace.components;
       const viewedLaneId = useViewedLaneId();
-      const { components: laneComponents = [], loading: laneCompsLoading } = useLaneComponents(viewedLaneId?.name);
+      const { components: laneComponents = [], loading: laneCompsLoading } = useLaneComponents(viewedLaneId);
       const components = workspaceComponents.concat(laneComponents);
       return {
         loading: !workspace || laneCompsLoading,
