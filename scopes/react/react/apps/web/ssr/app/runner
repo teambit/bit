@@ -1,0 +1,52 @@
+const Express = require('express');
+const { readFileSync } = require('fs');
+const { browserFromExpress } = require('@teambit/react.rendering.ssr');
+const { join, resolve } = require('path');
+
+const client = './public';
+const ssrPath = './ssr';
+const mainFile = 'index.html';
+
+// eslint-disable-next-line
+const entry = require(`./${ssrPath}`);
+const manifest = JSON.parse(readFileSync(join(client, 'assets-manifest.json')).toString());
+const options = process?.argv?.slice(2)?.[0] ? JSON.parse(process?.argv?.slice(2)?.[0]) : {};
+
+const assetsArray = Object.values(manifest);
+const assets = {
+  css: assetsArray.filter((id) => id.endsWith && id.endsWith('.css')).map((name) => join(name)),
+  js: assetsArray.filter((id) => id.endsWith && id.endsWith('.js')).map((name) => join(name)),
+};
+
+const app = Express();
+const ssrApp = entry?.default;
+if (!ssrApp) throw new Error(`bundle entry file has no default export (at "${entry}")`);
+
+app.use('/', Express.static(resolve(client)));
+app.use((request, response, next) => {
+  if (request.query._rendering !== 'client') {
+    next();
+    return;
+  }
+  response.sendFile(resolve(client, mainFile));
+});
+
+const port = options?.port || 3000;
+
+app.use(async (request, response) => {
+  const browser = browserFromExpress(request, port);
+  const session = { assets, browser, request, response };
+
+  try {
+    // the app itself controls the response
+    await ssrApp(session);
+  } catch (error) {
+    // eslint-disable-next-line
+    console.log(error);
+    response.sendFile(resolve(client, mainFile));
+  }
+});
+
+app.listen(port, () => {
+  console.log(`Listening to requests on ${port}`);
+});
