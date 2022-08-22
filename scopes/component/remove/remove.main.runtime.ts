@@ -1,5 +1,5 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import { Logger, LoggerMain } from '@teambit/logger';
+import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import { BitId } from '@teambit/legacy-bit-id';
 import { BitIds } from '@teambit/legacy/dist/bit-id';
@@ -60,7 +60,7 @@ export class RemoveMain {
   }
 
   static slots = [];
-  static dependencies = [WorkspaceAspect, CLIAspect];
+  static dependencies = [WorkspaceAspect, CLIAspect, LoggerAspect];
   static runtime = MainRuntime;
 
   static async provider([workspace, cli, loggerMain]: [Workspace, CLIMain, LoggerMain]) {
