@@ -29,7 +29,7 @@ export function LaneReadme({ viewedLane, overviewSlot, routeSlot }: LaneReadmePr
       <div className={styles.readmeContainer}>
         <LaneDetails
           className={styles.laneId}
-          laneName={viewedLane.id}
+          laneName={viewedLane.id.toString()}
           componentCount={laneComponents.length || undefined}
         ></LaneDetails>
         <div className={styles.laneReadmePreviewContainer}>

@@ -31,7 +31,7 @@ export function ChangeLogPage({ className }: ChangeLogPageProps) {
           <>
             <div className={styles.lane}>
               <LaneIcon />
-              <Ellipsis className={styles.laneName}>{currentLane.id}</Ellipsis>
+              <Ellipsis className={styles.laneName}>{currentLane.id.toString()}</Ellipsis>
             </div>
             <Separator isPresentational className={styles.separator} />
           </>

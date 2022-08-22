@@ -7,10 +7,10 @@ import styles from './lane-info.module.scss';
 export type LaneInfoProps = LaneModel & { currentLane?: LaneModel };
 
 export function LaneInfo({ id, currentLane }: LaneInfoProps) {
-  const isCurrent = currentLane?.id === id;
+  const isCurrent = currentLane && id.isEqual(currentLane.id);
 
   return (
-    <div key={id}>
+    <div key={id.toString()}>
       <MenuLinkItem active={isCurrent} href={LanesModel.getLaneUrl(id)} className={styles.versionRow}>
         <span>
           <Icon className={styles.laneIcon} of="lane"></Icon>

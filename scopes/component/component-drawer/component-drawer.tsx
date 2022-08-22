@@ -130,11 +130,9 @@ export class ComponentsDrawer implements DrawerType {
     const { loading, components } = this.useComponents();
     const componentFiltersContext = useContext(ComponentFilterContext);
 
-    if (loading) return <FullLoader />;
-
     const filters = componentFiltersContext?.filters || [];
 
-    const filteredComponents = useMemo(() => runAllFilters(filters, components), [filters]);
+    const filteredComponents = useMemo(() => runAllFilters(filters, components), [filters, components]);
 
     const Filters = this.renderFilters({ components });
     const Tree = this.renderTree({ components: filteredComponents });
@@ -142,6 +140,8 @@ export class ComponentsDrawer implements DrawerType {
     const emptyDrawer = (
       <span className={classNames(mutedItalic, ellipsis, styles.emptyDrawer)}>{this.emptyMessage}</span>
     );
+
+    if (loading) return <FullLoader />;
 
     return (
       <div key={this.id} className={styles.drawerContainer}>

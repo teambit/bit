@@ -1,10 +1,11 @@
 import React, { ReactNode } from 'react';
 import { useLanes } from '@teambit/lanes.hooks.use-lanes';
+import { LaneId } from '@teambit/lane-id';
 import { LanesContext } from './lanes-context';
 
 export type LanesProviderProps = {
   children: ReactNode;
-  viewedLaneId?: string;
+  viewedLaneId?: LaneId;
 };
 
 export function LanesProvider({ children, viewedLaneId }: LanesProviderProps) {

@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
 import { LanesModel, LanesQuery } from '@teambit/lanes.ui.models.lanes-model';
 import { gql, QueryResult } from '@apollo/client';
+import { LaneId } from '@teambit/lane-id';
 import { useLanesContext } from './lanes-context';
 
 const GET_LANES = gql`
@@ -39,7 +40,7 @@ const GET_LANES = gql`
 `;
 
 export function useLanes(
-  getViewedLaneId?: () => string | undefined
+  getViewedLaneId?: () => LaneId | undefined
 ): { lanesModel?: LanesModel } & Omit<QueryResult<LanesQuery>, 'data'> {
   const lanesContext = useLanesContext();
   const skip = !!lanesContext;

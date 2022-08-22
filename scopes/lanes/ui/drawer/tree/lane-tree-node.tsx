@@ -34,7 +34,7 @@ export function LaneTreeNode(props: LaneTreeNodeProps) {
     >
       <div className={styles.left}>
         <LaneIcon />
-        <Ellipsis className={styles.laneName}>{lane.name}</Ellipsis>
+        <Ellipsis className={styles.laneName}>{lane.id.name}</Ellipsis>
       </div>
     </Link>
   );

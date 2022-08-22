@@ -16,13 +16,13 @@ export function LaneSwitcher({ className, ...rest }: LaneSwitcherProps) {
   const defaultLane = { id: DEFAULT_LANE, url: '/' };
   const viewedLane =
     (lanesModel?.viewedLane && {
-      id: lanesModel?.viewedLane.id,
+      id: lanesModel?.viewedLane.id.toString(),
       url: LanesModel.getLaneUrl(lanesModel.viewedLane.id),
     }) ||
     defaultLane;
   const availableLanes = [
     defaultLane,
-    ...(lanesModel?.lanes || []).map((lane) => ({ id: lane.id, url: LanesModel.getLaneUrl(lane.id) })),
+    ...(lanesModel?.lanes || []).map((lane) => ({ id: lane.id.toString(), url: LanesModel.getLaneUrl(lane.id) })),
   ] || [defaultLane];
 
   return (
@@ -33,7 +33,7 @@ export function LaneSwitcher({ className, ...rest }: LaneSwitcherProps) {
       className={classnames(className, styles.dropdown)}
     >
       {availableLanes.map((lane) => (
-        <MenuItem key={lane.id} selected={viewedLane} current={lane}></MenuItem>
+        <MenuItem key={lane.id.toString()} selected={viewedLane} current={lane}></MenuItem>
       ))}
     </Dropdown>
   );

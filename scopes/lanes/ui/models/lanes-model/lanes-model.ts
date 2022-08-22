@@ -1,5 +1,6 @@
 import { ComponentModel, ComponentModelProps } from '@teambit/component';
 import { ScopeModel } from '@teambit/scope.models.scope-model';
+import { LaneId } from '@teambit/lane-id';
 import { ComponentID, ComponentIdObj } from '@teambit/component-id';
 import { affix } from '@teambit/base-ui.utils.string.affix';
 import { pathToRegexp } from 'path-to-regexp';
@@ -48,10 +49,7 @@ export const DEFAULT_LANE = 'main';
  * Represents a single Lane in a Workspace/Scope
  */
 export type LaneModel = {
-  id: string;
-  scope: string;
-  name: string;
-  isMerged: boolean | null;
+  id: LaneId;
   components: ComponentModel[];
   readmeComponent?: ComponentModel;
 };
@@ -85,17 +83,16 @@ export class LanesModel {
     start: false,
   });
 
-  static getLaneIdFromPathname = (pathname: string): string | undefined => {
+  static getLaneIdFromPathname = (pathname: string): LaneId | undefined => {
     const matches = LanesModel.laneFromPathRegex.exec(pathname);
     if (!matches) return undefined;
     const [, scopeId, laneId] = matches;
-
-    return `${scopeId}/${laneId}`;
+    return LaneId.from(laneId, scopeId);
   };
 
-  static getLaneUrl = (laneId: string) => `/${LanesModel.lanesPrefix}/${laneId}`;
+  static getLaneUrl = (laneId: LaneId) => `/${LanesModel.lanesPrefix}/${laneId.toString()}`;
 
-  static getLaneComponentUrl = (componentId: ComponentID, laneId: string) => {
+  static getLaneComponentUrl = (componentId: ComponentID, laneId: LaneId) => {
     const laneUrl = LanesModel.getLaneUrl(laneId);
     const urlSearch = affix('?version=', componentId.version);
 
@@ -103,10 +100,10 @@ export class LanesModel {
   };
 
   static mapToLaneModel(laneData: LaneQueryResult, host: string, currentScope?: ScopeModel): LaneModel {
-    const { id: name, remote, isMerged, components, readmeComponent } = laneData;
-    const laneName = name;
+    const { id: name, remote, components, readmeComponent } = laneData;
     const laneScope = remote?.split('/')[0] || currentScope?.name || '';
-    const laneId = remote || `${laneScope ? laneScope.concat('/') : ''}${name}`;
+    // const laneId = remote || `${laneScope ? laneScope.concat('/') : ''}${name}`;
+    const laneId = LaneId.from(name, laneScope);
 
     const componentModels =
       components?.map((component) => {
@@ -118,9 +115,6 @@ export class LanesModel {
 
     return {
       id: laneId,
-      name: laneName,
-      scope: laneScope,
-      isMerged,
       components: componentModels,
       readmeComponent: readmeComponentModel,
     };
@@ -129,7 +123,8 @@ export class LanesModel {
   static groupByScope(lanes: LaneModel[]): Map<string, LaneModel[]> {
     const grouped = new Map<string, LaneModel[]>();
     lanes.forEach((lane) => {
-      const { scope } = lane;
+      const { id } = lane;
+      const { scope } = id;
       if (!grouped.has(scope)) {
         grouped.set(scope, [lane]);
       } else {
@@ -169,11 +164,11 @@ export class LanesModel {
     data: LanesQuery;
     host: string;
     scope?: ScopeModel;
-    viewedLaneId?: string;
+    viewedLaneId?: LaneId;
   }): LanesModel {
     const lanes = data?.lanes?.list?.map((lane) => LanesModel.mapToLaneModel(lane, host, scope)) || [];
     const currentLane = data.lanes?.current?.id
-      ? lanes.find((lane) => lane.name === data.lanes?.current?.id)
+      ? lanes.find((lane) => lane.id.name === data.lanes?.current?.id)
       : undefined;
     const lanesModel = new LanesModel({ lanes, currentLane });
     lanesModel.setViewedLane(viewedLaneId);
@@ -209,11 +204,11 @@ export class LanesModel {
   };
 
   getLanesByComponentId = (componentId: ComponentID) => this.lanesByComponentId.get(componentId.fullName);
-  setViewedLane = (viewedLaneId?: string) => {
-    this.viewedLane = this.lanes.find((lane) => lane.id === viewedLaneId);
+  setViewedLane = (viewedLaneId?: LaneId) => {
+    this.viewedLane = viewedLaneId ? this.lanes.find((lane) => lane.id.isEqual(viewedLaneId)) : undefined;
   };
   resolveComponent = (fullName: string, laneId?: string) =>
-    ((laneId && this.lanes.find((lane) => lane.id === laneId)) || this.viewedLane)?.components.find(
+    ((laneId && this.lanes.find((lane) => lane.id.toString() === laneId)) || this.viewedLane)?.components.find(
       (component) => component.id.fullName === fullName
     );
 }

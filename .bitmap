@@ -543,11 +543,11 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/lanes/hooks/use-lanes"
     },
-    "hooks/use-viewed-lane": {
+    "hooks/use-viewed-lane-id": {
         "scope": "",
         "version": "",
         "mainFile": "index.ts",
-        "rootDir": "scopes/lanes/hooks/use-viewed-lane"
+        "rootDir": "scopes/lanes/hooks/use-viewed-lane-id"
     },
     "html": {
         "scope": "teambit.html",
