@@ -11,11 +11,7 @@ import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { DiffOptions } from '@teambit/legacy/dist/consumer/component-ops/components-diff';
 import ImportComponents, { ImportOptions } from '@teambit/legacy/dist/consumer/component-ops/import-components';
 import { exportMany } from '@teambit/legacy/dist/scope/component-ops/export-scope-components';
-import {
-  MergeStrategy,
-  ApplyVersionResults,
-  MergeOptions,
-} from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
+import { MergeStrategy, MergeOptions } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
 import { TrackLane } from '@teambit/legacy/dist/scope/scope-json';
 import { CommunityAspect } from '@teambit/community';
 import type { CommunityMain } from '@teambit/community';
@@ -33,7 +29,6 @@ import {
   LaneCreateCmd,
   LaneImportCmd,
   LaneListCmd,
-  LaneMergeCmd,
   LaneRemoveCmd,
   LaneShowCmd,
   LaneChangeScopeCmd,
@@ -582,7 +577,6 @@ export class LanesMain {
       switchCmd,
       new LaneShowCmd(lanesMain, workspace, scope),
       new LaneCreateCmd(lanesMain),
-      new LaneMergeCmd(lanesMain),
       new LaneRemoveCmd(lanesMain),
       new LaneChangeScopeCmd(lanesMain),
       new LaneAliasCmd(lanesMain),
