@@ -627,6 +627,13 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/mdx/mdx"
     },
+    "merge-lanes": {
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.lanes",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/lanes/merge-lanes"
+    },
     "merging": {
         "scope": "teambit.component",
         "version": "0.0.138",
@@ -915,6 +922,13 @@
         "version": "0.0.120",
         "mainFile": "index.ts",
         "rootDir": "scopes/component/refactoring"
+    },
+    "remove": {
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.component",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/component/remove"
     },
     "renaming": {
         "scope": "teambit.component",

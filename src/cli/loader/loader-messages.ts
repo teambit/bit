@@ -3,7 +3,6 @@ export const BEFORE_IMPORT_ENVIRONMENT = 'importing environment dependencies...'
 export const BEFORE_REMOTE_LIST = 'listing remote components';
 export const BEFORE_LOCAL_LIST = 'listing components';
 export const BEFORE_MIGRATION = 'migration - upgrading working directory...';
-export const BEFORE_REMOVE = 'removing components';
 export const BEFORE_REMOTE_DEPRECATE = 'deprecating remote components';
 export const BEFORE_REMOTE_UNDEPRECATE = 'un-deprecating remote components';
 export const BEFORE_IMPORT_ACTION = 'importing components';
