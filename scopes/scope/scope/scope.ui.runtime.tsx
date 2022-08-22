@@ -422,7 +422,7 @@ export class ScopeUI {
     if (config.showGallery)
       scopeUi.registerSidebarLink(() => (
         <MenuLinkItem exact href="/" icon="comps">
-          Gallery
+          Overview
         </MenuLinkItem>
       ));
     if (ui) scopeUi.registerExplicitRoutes();
