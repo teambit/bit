@@ -17,7 +17,6 @@ import migrate from './lib/migrate';
 import move from './lib/move';
 import paintGraph from './lib/paint-graph';
 import { add as remoteAdd, list as remoteList, remove as remoteRm } from './lib/remote';
-import remove from './lib/remove';
 import show from './lib/show';
 import { clearCache } from './lib/clear-cache';
 
@@ -26,7 +25,6 @@ export {
   config,
   exportAction,
   registerDefaultScopeGetter,
-  remove,
   listScope,
   getConsumerComponent,
   getScopeComponent,
