@@ -167,52 +167,56 @@ export class ReactApp implements Application {
     });
     const bundler = await this.getBundler(context);
     const bundleResult = await bundler.run();
-
     const ssrAppDir = join(this.getPublicDir(context.artifactsDir));
-    if (this.ssr) {
-      const ssrBundler = await this.getSsrBundler(context);
-      await ssrBundler.run();
-      const runner = readFileSync(join(__dirname, './ssr/app/runner')).toString();
-      context.capsule.fs.writeFileSync(join(ssrAppDir, 'runner.js'), runner);
-      const capsuleSsrDir = context.capsule.fs.getPath(ssrAppDir);
-      const installer = this.dependencyResolver.getInstaller({
-        packageManager: 'teambit.dependencies/yarn',
-        rootDir: capsuleSsrDir,
-        cacheRootDirectory: capsuleSsrDir,
-      });
 
-      const workspacePolicy = new WorkspacePolicy([]);
-      workspacePolicy.add({ lifecycleType: 'runtime', dependencyId: 'express', value: { version: '4.18.1' } });
-      workspacePolicy.add({
-        lifecycleType: 'runtime',
-        dependencyId: '@teambit/react.rendering.ssr',
-        value: { version: '0.0.3' },
-      });
-      workspacePolicy.add({
-        lifecycleType: 'runtime',
-        dependencyId: '@teambit/ui-foundation.ui.pages.static-error',
-        value: { version: '0.0.75' },
-      });
-
-      workspacePolicy.add({
-        lifecycleType: 'peer',
-        dependencyId: 'react',
-        value: { version: '17.0.2' },
-      });
-
-      workspacePolicy.add({
-        lifecycleType: 'peer',
-        dependencyId: 'react-dom',
-        value: { version: '17.0.2' },
-      });
-
-      await installer.install(capsuleSsrDir, workspacePolicy, new ComponentMap(new Map()));
-    }
-
+    if (this.ssr) await this.buildSsrApp(context, ssrAppDir);
     return computeResults(bundleResult, {
       publicDir: `${this.getPublicDir(context.artifactsDir)}/${this.dir}`,
       ssrPublicDir: ssrAppDir,
     });
+  }
+
+  private async buildSsrApp(context: AppBuildContext, ssrAppDir: string) {
+    const ssrBundler = await this.getSsrBundler(context);
+    await ssrBundler.run();
+    const runner = readFileSync(join(__dirname, './ssr/app/runner')).toString();
+    context.capsule.fs.writeFileSync(join(ssrAppDir, 'runner.js'), runner);
+    const capsuleSsrDir = context.capsule.fs.getPath(ssrAppDir);
+    const installer = this.dependencyResolver.getInstaller({
+      packageManager: 'teambit.dependencies/yarn',
+      rootDir: capsuleSsrDir,
+      cacheRootDirectory: capsuleSsrDir,
+    });
+    await installer.install(capsuleSsrDir, this.getSsrPolicy(), new ComponentMap(new Map()));
+    return ssrAppDir;
+  }
+
+  private getSsrPolicy() {
+    const workspacePolicy = new WorkspacePolicy([]);
+    workspacePolicy.add({ lifecycleType: 'runtime', dependencyId: 'express', value: { version: '4.18.1' } });
+    workspacePolicy.add({
+      lifecycleType: 'runtime',
+      dependencyId: '@teambit/react.rendering.ssr',
+      value: { version: '0.0.3' },
+    });
+    workspacePolicy.add({
+      lifecycleType: 'runtime',
+      dependencyId: '@teambit/ui-foundation.ui.pages.static-error',
+      value: { version: '0.0.75' },
+    });
+
+    workspacePolicy.add({
+      lifecycleType: 'peer',
+      dependencyId: 'react',
+      value: { version: '17.0.2' },
+    });
+
+    workspacePolicy.add({
+      lifecycleType: 'peer',
+      dependencyId: 'react-dom',
+      value: { version: '17.0.2' },
+    });
+    return workspacePolicy;
   }
 
   private getBundler(context: AppBuildContext) {
