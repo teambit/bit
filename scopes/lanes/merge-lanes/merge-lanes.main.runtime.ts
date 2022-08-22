@@ -219,7 +219,7 @@ export class MergeLanesMain {
     RemoveMain
   ]) {
     const logger = loggerMain.createLogger(MergeLanesAspect.id);
-    const lanesCommand = cli.getCommand('lanes');
+    const lanesCommand = cli.getCommand('lane');
     const mergeLanesMain = new MergeLanesMain(workspace, merging, lanes, logger, remove);
     lanesCommand?.commands?.push(new MergeLaneCmd(mergeLanesMain));
     return mergeLanesMain;
