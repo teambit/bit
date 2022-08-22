@@ -81,6 +81,9 @@ export class PreviewPreview {
    * render the preview.
    */
   render = async (rootExt?: string) => {
+    // fit content always.
+    window.document.body.style.width = 'fit-content';
+
     const { previewName, componentId } = this.getLocation();
     const name = previewName || this.getDefault();
     if (rootExt) this.isDev = rootExt === 'teambit.workspace/workspace';

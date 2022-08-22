@@ -11,7 +11,7 @@ export function html(title: string) {
       // Allow to use react dev-tools inside the examples
       try { window.__REACT_DEVTOOLS_GLOBAL_HOOK__ = window.parent.__REACT_DEVTOOLS_GLOBAL_HOOK__; } catch {}
       </script>
-      <style> body { margin: 0; width: fit-content; } </style>
+      <style> body { margin: 0; } </style>
     </head>
     <body>
       <div id="root"></div>

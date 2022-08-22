@@ -3,13 +3,12 @@ import { ComponentPreview, ComponentPreviewProps } from '@teambit/preview.ui.com
 
 import { Composition } from '../composition';
 
-interface ComponentCompositionProps extends ComponentPreviewProps {
+export type ComponentCompositionProps = {
   /**
    * composition to use for component rendering.
    */
   composition?: Composition;
-}
-
+} & ComponentPreviewProps;
 
 export function ComponentComposition({ composition, queryParams = [], ...rest }: ComponentCompositionProps) {
   const compositionParams = useMemo(

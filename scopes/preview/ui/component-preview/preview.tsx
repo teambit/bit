@@ -1,10 +1,11 @@
 import React, { IframeHTMLAttributes, useState, useRef, useEffect } from 'react';
+import { compact } from 'lodash';
 import { connectToChild } from 'penpal';
+import { usePubSubIframe } from '@teambit/pubsub';
 import { ComponentModel } from '@teambit/component';
 import { toPreviewUrl } from './urls';
 import { computePreviewScale } from './compute-preview-scale';
-import { compact } from 'lodash';
-
+ 
 // omitting 'referrerPolicy' because of an TS error during build. Re-include when needed
 export interface ComponentPreviewProps extends Omit<IframeHTMLAttributes<HTMLIFrameElement>, 'src' | 'referrerPolicy'> {
   /**
@@ -48,7 +49,7 @@ export function ComponentPreview({
   component,
   previewName,
   queryParams,
-  // pubsub = true,
+  pubsub,
   fullContentHeight = false,
   style,
   ...rest
@@ -60,11 +61,11 @@ export function ComponentPreview({
   const containerRef = useRef<HTMLDivElement>(null);
   // @ts-ignore (https://github.com/frenic/csstype/issues/156)
   // const height = iframeHeight || style?.height;
-  // usePubSubIframe(pubsub ? iframeRef : undefined);
+  usePubSubIframe(pubsub ? iframeRef : undefined);
   // const pubsubContext = usePubSub();
   // pubsubContext?.connect(iframeHeight);
   useEffect(() => {
-    if (!iframeRef.current) return;
+    if (!iframeRef.current || pubsub) return;
     connectToChild({
       iframe: iframeRef.current,
       methods: {
@@ -77,7 +78,6 @@ export function ComponentPreview({
       },
     });
   });
-  // usePubSubIframe(iframeRef);
 
   const params = Array.isArray(queryParams)
     ? queryParams.concat('viewport=1280')
@@ -96,6 +96,7 @@ export function ComponentPreview({
           ...style,
           height: height !== 0 ? height : 5000,
           width: currentWidth < containerWidth ? containerWidth : currentWidth,
+          visibility: width === 0 && !fullContentHeight ? 'hidden' : undefined,
           transform: fullContentHeight ? '' : computePreviewScale(width, containerWidth),
           transformOrigin: 'top left',
         }}

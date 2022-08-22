@@ -68,6 +68,7 @@ export function Overview({ titleBadges }: OverviewProps) {
         component={component}
         style={{ width: '100%', height: '100%' }}
         previewName="overview"
+        pubsub={true}
         fullContentHeight
         scrolling="no"
       />

@@ -181,6 +181,7 @@ export function CompositionContent({ component, selected, queryParams, emptyStat
       component={component}
       composition={selected}
       fullContentHeight
+      pubsub={true}
       queryParams={queryParams}
     />
   );
