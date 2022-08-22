@@ -21,6 +21,8 @@ import { AlertCard } from '@teambit/design.ui.alert-card';
 import { Link } from '@teambit/base-react.navigation.link';
 import { OptionButton } from '@teambit/design.ui.input.option-button';
 import { StatusMessageCard } from '@teambit/design.ui.surfaces.status-message-card';
+import { ContentTabs } from '@teambit/design.navigation.tabs';
+import type { Content } from '@teambit/design.navigation.tabs';
 import { EmptyStateSlot } from './compositions.ui.runtime';
 import { Composition } from './composition';
 import styles from './compositions.module.scss';
@@ -65,6 +67,25 @@ export function Compositions({ menuBarWidgets, emptyState }: CompositionsProp) {
   // collapse sidebar when empty, reopen when not
   useEffect(() => setSidebarOpenness(showSidebar), [showSidebar]);
 
+  const contentTabs: Content[] = [
+    {
+      title: 'compositions',
+      content: (
+        <CompositionsPanel
+          onSelectComposition={selectComposition}
+          url={compositionUrl}
+          compositions={component.compositions}
+          active={selected}
+          className={styles.compost}
+        />
+      ),
+    },
+    {
+      title: 'properties',
+      content: properties && properties.length > 0 ? <PropTable rows={properties} showListView /> : <div />,
+    },
+  ];
+
   return (
     <CompositionContextProvider queryParams={compositionParams} setQueryParams={setCompositionParams}>
       <SplitPane layout={sidebarOpenness} size="85%" className={styles.compositionsPage}>
@@ -92,11 +113,17 @@ export function Compositions({ menuBarWidgets, emptyState }: CompositionsProp) {
           />
         </HoverSplitter>
         <Pane className={styles.right}>
-          <ThemeContext>
+          <ContentTabs
+            borderPosition="top"
+            tabs={contentTabs}
+            className={styles.tabsContainer}
+            navClassName={styles.navClassName}
+          />
+          {/* <ThemeContext>
             <TabContainer className={styles.tabsContainer}>
               <TabList className={styles.tabs}>
-                <Tab>compositions</Tab>
-                <Tab>properties</Tab>
+                <Tab>compositions !</Tab>
+                <Tab>properties !</Tab>
               </TabList>
               <TabPanel className={styles.tabContent}>
                 <CompositionsPanel
@@ -111,7 +138,7 @@ export function Compositions({ menuBarWidgets, emptyState }: CompositionsProp) {
                 {properties && properties.length > 0 ? <PropTable rows={properties} showListView /> : <div />}
               </TabPanel>
             </TabContainer>
-          </ThemeContext>
+          </ThemeContext> */}
         </Pane>
       </SplitPane>
     </CompositionContextProvider>

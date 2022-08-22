@@ -16,27 +16,30 @@
   height: 100%;
 }
 .navContainer {
-  display: flex;
-  align-items: center;
-  min-height: 48px;
+  // display: flex;
+  // align-items: center;
+  // min-height: 48px;
+  min-height: 32px;
   border-bottom: 1px solid var(--bit-border-color-lightest, #ededed);
   font-size: var(--bit-p-xs, 14px);
+  padding-bottom: 12px;
+  padding-left: 16px;
 }
 
 .navigation {
-  display: flex;
-  list-style: none;
+  // display: flex;
+  // list-style: none;
   height: 100%;
 
   @media screen and (max-width: 768px) {
     padding-left: 6px;
   }
 
-  > li {
-    display: block;
-    margin-right: 16px;
-    height: 100%;
-  }
+  // > li {
+  //   display: block;
+  //   margin-right: 16px;
+  //   height: 100%;
+  // }
 }
 
 .loader {

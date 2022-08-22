@@ -9,7 +9,7 @@ export class ComponentCompareSection implements Section {
   navigationLink = {
     href: '~compare',
     displayName: 'Compare',
-    children: <ComponentCompareMenuWidget />,
+    children: <ComponentCompareMenuWidget href="~compare" />,
   };
 
   route = {

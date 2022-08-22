@@ -82,7 +82,7 @@ export function ComponentMenu({
           <div className={classnames(styles.topBar, className)}>
             <div className={styles.leftSide}>
               <MenuNav navigationSlot={navigationSlot} />
-              <MobileMenuNav navigationSlot={navigationSlot} widgetSlot={widgetSlot} />
+              {/* <MobileMenuNav navigationSlot={navigationSlot} widgetSlot={widgetSlot} /> */}
             </div>
             <div className={styles.rightSide}>
               <div className={styles.widgets}>

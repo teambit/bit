@@ -26,8 +26,8 @@ $panelBg: #fafafa;
   background: $panelBg;
   overflow-y: auto;
   // this is to fix the right panel when it gets too big or too small
-  min-width: 200px;
-  max-width: calc(100% - 200px);
+  min-width: 230px;
+  max-width: calc(100% - 230px);
 }
 
 .menuBar {
@@ -51,12 +51,29 @@ $panelBg: #fafafa;
   display: flex;
   flex-direction: column;
   height: 100%;
+  > div {
+    flex: 1 1;
+    overflow: auto;
+    &:empty {
+      display: none;
+    }
+  }
+}
+.navClassName {
+  padding-top: 2px;
+  > div {
+    text-transform: uppercase;
+    font-weight: bold;
+    font-size: var(--bit-p-xxs, 12px);
+  }
 }
 
+// not used ?
 .tabs {
   flex: none;
 }
 
+//not used ?
 .tabContent {
   flex: 1 1;
   overflow: auto;

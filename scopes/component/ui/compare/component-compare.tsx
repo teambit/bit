@@ -1,10 +1,15 @@
-import { ComponentContext, TopBarNav, useComponent } from '@teambit/component';
+import {
+  ComponentContext,
+  // TopBarNav,
+  useComponent,
+} from '@teambit/component';
 import { ComponentCompareNav, ComponentCompareNavSlot } from '@teambit/component-compare';
 import { RouteSlot, SlotRouter } from '@teambit/ui-foundation.ui.react-router.slot-router';
 import flatten from 'lodash.flatten';
 import { useLocation } from '@teambit/base-react.navigation.link';
 import { LegacyComponentLog } from '@teambit/legacy-component-log';
 import { RoundLoader } from '@teambit/design.ui.round-loader';
+import { TabsLink } from '@teambit/design.navigation.tabs';
 import React, { HTMLAttributes, useContext, useMemo } from 'react';
 import { ComponentCompareContext, ComponentCompareModel } from './component-compare-context';
 import { ComponentCompareVersionPicker } from './version-picker/component-compare-version-picker';
@@ -107,20 +112,34 @@ export function ComponentCompare({ navSlot, host, routeSlot }: ComponentCompareP
 }
 
 function CompareMenuNav({ navSlot }: { navSlot: ComponentCompareNavSlot }) {
-  const plugins = flatten(
-    navSlot.toArray().map(([id, values]) => {
-      const flattenedValues = flatten(values).map((value) => ({ ...value, id }));
-      return flattenedValues;
-    })
-  ).sort(sortFn);
+  const plugins = useMemo(
+    () =>
+      flatten(
+        navSlot.toArray().map(([id, values]) => {
+          const flattenedValues = flatten(values).map((value) => ({ ...value, id }));
+          return flattenedValues;
+        })
+      )
+        .sort(sortFn)
+        .map((menuItem, index) => {
+          return {
+            ...menuItem.props,
+            key: `${menuItem.id}-${index}`,
+          };
+        }),
+    [navSlot]
+  );
+
+  console.log('plugins in compare', plugins);
 
   return (
     <div className={styles.navContainer}>
-      <nav className={styles.navigation}>
+      <TabsLink priority="inner" links={plugins} className={styles.navigation} />
+      {/* <nav className={styles.navigation}>
         {plugins.map((menuItem, index) => {
           return <TopBarNav key={`${menuItem.id}-${index}`} {...menuItem.props} />;
         })}
-      </nav>
+      </nav> */}
     </div>
   );
 }

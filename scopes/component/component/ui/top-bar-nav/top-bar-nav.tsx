@@ -9,7 +9,6 @@ export type TopBarNavProps = {} & LinkProps;
 
 export function TopBarNav({ href, className, activeClassName, children, ...rest }: TopBarNavProps) {
   const { search } = useLocation(); // sticky query params
-
   const target = `${href}${search}`;
 
   return (
@@ -19,7 +18,7 @@ export function TopBarNav({ href, className, activeClassName, children, ...rest 
       activeClassName={classnames(activeClassName, styles.active)}
       href={target}
     >
-      <div>{children}</div>
+      <div>{children} !</div>
     </Link>
   );
 }

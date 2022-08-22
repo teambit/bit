@@ -12,7 +12,7 @@ export const reactWorkspaceTemplate: WorkspaceTemplate = {
       {
         id: 'teambit.react/templates/react-native/envs/my-react-native',
         targetName: 'envs/my-react-native',
-        path: 'demo/envs/my-react',
+        path: 'demo/envs/my-react-native',
       },
       { id: 'teambit.react/templates/react-native/ui/text', targetName: 'ui/text', path: 'demo/ui/text' },
     ];
