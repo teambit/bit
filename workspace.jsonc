@@ -95,7 +95,7 @@
         "@teambit/design.elements.icon": "1.0.5",
         "@teambit/design.inputs.dropdown": "0.0.7",
         "@teambit/design.inputs.selectors.multi-select": "0.0.20",
-        "@teambit/design.navigation.tabs": "0.0.15",
+        "@teambit/design.navigation.tabs": "0.0.21",
         "@teambit/design.ui.avatar": "0.1.2",
         "@teambit/design.ui.brand.logo": "1.96.2",
         "@teambit/design.ui.icon-button": "1.0.16",
