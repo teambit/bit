@@ -18,7 +18,7 @@ export type LaneReadmeProps = {
 };
 
 export function LaneReadme({ viewedLane, overviewSlot, routeSlot }: LaneReadmeProps) {
-  const { component, loading } = useLaneReadme(viewedLane);
+  const { component, loading } = useLaneReadme(viewedLane.id, !viewedLane.readmeComponent);
   const laneComponents = viewedLane.components;
   const overviewItems = useMemo(() => flatten(overviewSlot?.values()), [overviewSlot]);
 

@@ -7,35 +7,40 @@ import { linkStyles } from '@teambit/ui-foundation.ui.use-box.bottom-link';
 import { LanesHost } from '@teambit/lanes.ui.models.lanes-model';
 import { UseBoxDropdown } from '@teambit/ui-foundation.ui.use-box.dropdown';
 import { Link } from '@teambit/base-react.navigation.link';
+import { LaneId } from '@teambit/lane-id';
 import styles from './use-lanes-menu.module.scss';
 
 export type LaneImportContentProps = {
-  currentLane: { name: string; id: string };
+  currentLaneId: LaneId;
   switchedOutToCurrentLane: boolean;
   host: LanesHost;
 } & React.HTMLAttributes<HTMLDivElement>;
 
 export function UseLaneMenu({
   host,
-  viewedLane,
-  currentLane,
+  viewedLaneId,
+  currentLaneId,
 }: {
   host: LanesHost;
-  viewedLane: { name: string; id: string };
-  currentLane?: { name: string; id: string };
+  viewedLaneId: LaneId;
+  currentLaneId?: LaneId;
 }) {
-  const switchedOutToCurrentLane = viewedLane.id === currentLane?.id;
+  const switchedOutToCurrentLane = !!currentLaneId && viewedLaneId.isEqual(currentLaneId);
   const Menu = (
     <div className={styles.lanesMenu}>
       <div className={styles.top}>
         <div className={styles.title}>
           <Icon className={styles.titleIcon} of="terminal" />
-          <Ellipsis className={styles.titleText}>{`Bulk import from ${viewedLane.name}`}</Ellipsis>
+          <Ellipsis className={styles.titleText}>{`Bulk import from ${viewedLaneId.name}`}</Ellipsis>
         </div>
       </div>
       <ExpandableTabContent
         content={
-          <LaneImportContent host={host} currentLane={viewedLane} switchedOutToCurrentLane={switchedOutToCurrentLane} />
+          <LaneImportContent
+            host={host}
+            currentLaneId={viewedLaneId}
+            switchedOutToCurrentLane={switchedOutToCurrentLane}
+          />
         }
         drawerTitle={<div className={styles.drawerTitle}>Learn more about Lanes</div>}
         drawerContent={<LaneInfo />}
@@ -46,8 +51,8 @@ export function UseLaneMenu({
   return <UseBoxDropdown position="bottom-end" className={styles.useBox} Menu={Menu} />;
 }
 
-function LaneImportContent({ host, currentLane, switchedOutToCurrentLane }: LaneImportContentProps) {
-  const laneId = host === 'workspace' ? currentLane.name : currentLane.id;
+function LaneImportContent({ host, currentLaneId, switchedOutToCurrentLane }: LaneImportContentProps) {
+  const laneId = host === 'workspace' ? currentLaneId.name : currentLaneId.toString();
   if (switchedOutToCurrentLane) {
     return (
       <div className={styles.importContent}>

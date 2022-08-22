@@ -183,14 +183,12 @@ export class LanesUI {
     }
     const lanesUi = new LanesUI(componentUi, routeSlot, navSlot, overviewSlot, menuWidgetSlot, workspace, scope);
     if (uiUi) uiUi.registerRenderHooks({ reactContext: lanesUi.renderContext });
-    // const drawer = new LanesDrawer({ showScope: lanesUi.lanesHost === 'workspace' });
-    // sidebarUi.registerDrawer(drawer);
     lanesUi.registerRoutes();
     lanesUi.registerMenuWidget(() => {
       const { lanesModel } = useLanes();
       if (!lanesModel?.viewedLane) return null;
       const { viewedLane, currentLane } = lanesModel;
-      return <UseLaneMenu host={lanesUi.lanesHost} viewedLane={viewedLane} currentLane={currentLane} />;
+      return <UseLaneMenu host={lanesUi.lanesHost} viewedLaneId={viewedLane.id} currentLaneId={currentLane?.id} />;
     });
     lanesUi.registerLanesDropdown();
     return lanesUi;
