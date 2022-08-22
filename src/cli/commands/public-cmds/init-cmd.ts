@@ -3,8 +3,14 @@ import * as pathlib from 'path';
 import R from 'ramda';
 
 import { init } from '../../../api/consumer';
+import { getSync } from '../../../api/consumer/lib/global-config';
 import { initScope } from '../../../api/scope';
-import { BASE_DOCS_DOMAIN, CFG_INIT_INTERACTIVE } from '../../../constants';
+import {
+  BASE_DOCS_DOMAIN,
+  CFG_INIT_INTERACTIVE,
+  CFG_INIT_DEFAULT_SCOPE,
+  CFG_INIT_DEFAULT_DIRECTORY,
+} from '../../../constants';
 import { WorkspaceConfigProps } from '../../../consumer/config/workspace-config';
 import GeneralError from '../../../error/general-error';
 import { initInteractive } from '../../../interactive';
@@ -78,7 +84,8 @@ export default class Init implements LegacyCommand {
     }
     if (reset && resetHard) throw new GeneralError('please use --reset or --reset-hard. not both');
     const workspaceConfigFileProps: WorkspaceConfigProps = {
-      componentsDefaultDirectory: defaultDirectory,
+      componentsDefaultDirectory: defaultDirectory ?? getSync(CFG_INIT_DEFAULT_DIRECTORY),
+      defaultScope: getSync(CFG_INIT_DEFAULT_SCOPE),
       packageManager,
     };
     return init(path, standalone, reset, resetNew, resetHard, resetScope, force, workspaceConfigFileProps).then(
