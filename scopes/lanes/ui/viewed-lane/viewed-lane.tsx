@@ -1,17 +1,12 @@
-import React, { ReactNode, useMemo } from 'react';
-import { useLocation } from '@teambit/base-react.navigation.link';
-import { LanesModel } from '@teambit/lanes.ui.models.lanes-model';
+import React, { ReactNode } from 'react';
 import { LanesProvider } from '@teambit/lanes.hooks.use-lanes';
+import { useViewedLane } from '@teambit/lanes.hooks.use-viewed-lane';
 
 export type ViewedLaneFromUrlProps = {
   children: ReactNode;
 };
 
 export function ViewedLaneFromUrl({ children }: ViewedLaneFromUrlProps) {
-  const location = useLocation();
-  const viewedLaneId = useMemo(
-    () => location && LanesModel.getLaneIdFromPathname(location.pathname),
-    [location?.pathname]
-  );
+  const viewedLaneId = useViewedLane();
   return <LanesProvider viewedLaneId={viewedLaneId}>{children}</LanesProvider>;
 }
