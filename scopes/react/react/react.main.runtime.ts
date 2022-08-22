@@ -103,13 +103,15 @@ export class ReactMain {
 
     private reactAppType: ReactAppType,
 
-    private logger?: Logger,
+    private dependencyResolver: DependencyResolverMain,
+
+    private logger: Logger
   ) {}
 
   readonly env = this.reactEnv;
 
   getReactAppType(name: string) {
-    return new ReactAppType(name, this.reactEnv, this.logger);
+    return new ReactAppType(name, this.reactEnv, this.logger, this.dependencyResolver);
   }
 
   /**
@@ -437,8 +439,8 @@ export class ReactMain {
       logger,
       CompilerAspect.id
     );
-    const appType = new ReactAppType('react-app', reactEnv, logger);
-    const react = new ReactMain(reactEnv, envs, application, appType, logger);
+    const appType = new ReactAppType('react-app', reactEnv, logger, dependencyResolver);
+    const react = new ReactMain(reactEnv, envs, application, appType, dependencyResolver, logger);
     graphql.register(reactSchema(react));
     envs.registerEnv(reactEnv);
     generator.registerComponentTemplate(componentTemplates);
