@@ -15,7 +15,7 @@ import {
   ComponentFilterContext,
   runAllFilters,
   ComponentFilters,
-} from '@teambit/component.ui.component-filters';
+} from '@teambit/component.ui.component-filters.use-component-filter';
 import { SlotRegistry } from '@teambit/harmony';
 import { ComponentFilterWidgetProvider, ComponentFilterWidgetContext } from './component-drawer-filter-widget.context';
 import { ComponentTreeContext, ComponentTreeProvider } from './component-drawer-tree-widget.context';
