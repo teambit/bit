@@ -12,7 +12,7 @@ import { RouteProps } from 'react-router-dom';
 import CommandBarAspect, { CommandBarUI, CommandHandler } from '@teambit/command-bar';
 import { MenuLinkItem } from '@teambit/design.ui.surfaces.menu.link-item';
 import type { DrawerType } from '@teambit/ui-foundation.ui.tree.drawer';
-import { ComponentFilters } from '@teambit/component.ui.component-filters.use-component-filter';
+import { ComponentFilters } from '@teambit/component.ui.component-filters.component-filter-context';
 import { DeprecateFilter } from '@teambit/component.ui.component-filters.deprecate-filter';
 import { EnvsFilter } from '@teambit/component.ui.component-filters.env-filter';
 

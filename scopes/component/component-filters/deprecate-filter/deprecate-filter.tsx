@@ -4,7 +4,7 @@ import { Toggle } from '@teambit/design.ui.input.toggle';
 import {
   ComponentFilterCriteria,
   useComponentFilter,
-} from '@teambit/component.ui.component-filters.use-component-filter';
+} from '@teambit/component.ui.component-filters.component-filter-context';
 import styles from './deprecate-filter.module.scss';
 
 export type DeprecateFilterCriteria = ComponentFilterCriteria<boolean>;

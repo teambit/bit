@@ -5,4 +5,4 @@ export {
   ComponentFilters,
   runAllFilters,
   useComponentFilter,
-} from './use-component-filter';
+} from './component-filter-context';

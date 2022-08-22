@@ -20,7 +20,7 @@ import {
   TreeToggleWidget,
   ComponentFiltersSlot,
 } from '@teambit/component.ui.component-drawer';
-import { ComponentFilters } from '@teambit/component.ui.component-filters.use-component-filter';
+import { ComponentFilters } from '@teambit/component.ui.component-filters.component-filter-context';
 import { DeprecateFilter } from '@teambit/component.ui.component-filters.deprecate-filter';
 import { EnvsFilter } from '@teambit/component.ui.component-filters.env-filter';
 import { ComponentUrlResolver, ComponentUrlProvider } from '@teambit/component.modules.component-url';

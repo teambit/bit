@@ -1122,6 +1122,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/component-drawer"
     },
+    "ui/component-filters/component-filter-context": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/component/component-filters/component-filter-context"
+    },
     "ui/component-filters/deprecate-filter": {
         "scope": "",
         "version": "",
@@ -1133,12 +1139,6 @@
         "version": "",
         "mainFile": "index.ts",
         "rootDir": "scopes/component/component-filters/env-filter"
-    },
-    "ui/component-filters/use-component-filter": {
-        "scope": "",
-        "version": "",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/component/component-filters/use-component-filter"
     },
     "ui/component-meta": {
         "scope": "teambit.component",

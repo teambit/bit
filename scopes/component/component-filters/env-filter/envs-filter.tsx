@@ -9,7 +9,7 @@ import { Link } from '@teambit/base-react.navigation.link';
 import {
   ComponentFilterCriteria,
   useComponentFilter,
-} from '@teambit/component.ui.component-filters.use-component-filter';
+} from '@teambit/component.ui.component-filters.component-filter-context';
 import styles from './envs-filter.module.scss';
 
 type EnvFilterEnvState = {
