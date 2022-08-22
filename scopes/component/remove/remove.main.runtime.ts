@@ -33,7 +33,7 @@ export class RemoveMain {
       ? await this.getRemoteBitIdsToRemove(componentsPattern)
       : await this.getLocalBitIdsToRemove(componentsPattern);
     this.logger.setStatusLine(BEFORE_REMOVE); // again because the loader might changed when talking to the remote
-    const consumer = this.workspace.consumer;
+    const consumer = this.workspace?.consumer;
     const removeResults = await removeComponents({
       consumer,
       ids: BitIds.fromArray(bitIds),
