@@ -1,32 +1,29 @@
 import chalk from 'chalk';
 import yn from 'yn';
-import { remove } from '../../../api/consumer';
-import { BASE_DOCS_DOMAIN, WILDCARD_HELP } from '../../../constants';
-import GeneralError from '../../../error/general-error';
-import { removePrompt } from '../../../prompts';
-import RemovedObjects from '../../../scope/removed-components';
-import RemovedLocalObjects from '../../../scope/removed-local-objects';
-import { Group } from '../../command-groups';
-import { CommandOptions, LegacyCommand } from '../../legacy-command';
-import loader from '../../loader';
-import paintRemoved from '../../templates/remove-template';
+import { Command, CommandOptions } from '@teambit/cli';
+import { BitError } from '@teambit/bit-error';
+import { removePrompt } from '@teambit/legacy/dist/prompts';
+import RemovedObjects from '@teambit/legacy/dist/scope/removed-components';
+import RemovedLocalObjects from '@teambit/legacy/dist/scope/removed-local-objects';
+import loader from '@teambit/legacy/dist/cli/loader';
+import paintRemoved from '@teambit/legacy/dist/cli/templates/remove-template';
+import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
+import { RemoveMain } from './remove.main.runtime';
 
-export default class Remove implements LegacyCommand {
-  name = 'remove <component-ids...>';
+export class RemoveCmd implements Command {
+  name = 'remove <component-pattern>';
   description = 'remove component(s) from the workspace, or a remote scope';
   arguments = [
     {
-      name: 'component-ids...',
-      description:
-        'a list of component names or IDs, separated by spaces (use component IDs to remove components from a remote scope)',
+      name: 'component-pattern',
+      description: COMPONENT_PATTERN_HELP,
     },
   ];
-  group: Group = 'collaborate';
-  extendedDescription = `https://${BASE_DOCS_DOMAIN}/components/removing-components
-${WILDCARD_HELP('remove')}`;
+  group = 'collaborate';
+  helpUrl = 'components/removing-components';
   skipWorkspace = true;
   alias = 'rm';
-  opts = [
+  options = [
     ['r', 'remote', 'remove a component from a remote scope'],
     ['t', 'track', 'keep tracking component in .bitmap (default = false), helps transform a tagged-component to new'],
     ['d', 'delete-files', 'DEPRECATED (this is now the default). delete local component files'],
@@ -42,8 +39,10 @@ ${WILDCARD_HELP('remove')}`;
   migration = true;
   remoteOp = true;
 
-  async action(
-    [ids]: [string[]],
+  constructor(private remove: RemoveMain) {}
+
+  async report(
+    [componentsPattern]: [string],
     {
       force = false,
       remote = false,
@@ -52,7 +51,7 @@ ${WILDCARD_HELP('remove')}`;
       silent = false,
       keepFiles = false,
     }: { force: boolean; remote: boolean; track: boolean; deleteFiles: boolean; silent: boolean; keepFiles: boolean }
-  ): Promise<any> {
+  ) {
     if (deleteFiles) {
       loader.stop();
       // eslint-disable-next-line no-console
@@ -67,18 +66,16 @@ ${WILDCARD_HELP('remove')}`;
       const removePromptResult = await removePrompt(willDeleteFiles)();
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       if (!yn(removePromptResult.shouldRemove)) {
-        throw new GeneralError('the operation has been canceled');
+        throw new BitError('the operation has been canceled');
       }
     }
-    return remove({ ids, remote, force, track, deleteFiles: !keepFiles });
-  }
-  report({
-    localResult,
-    remoteResult = [],
-  }: {
-    localResult: RemovedLocalObjects;
-    remoteResult: RemovedObjects[];
-  }): string {
+    const {
+      localResult,
+      remoteResult = [],
+    }: {
+      localResult: RemovedLocalObjects;
+      remoteResult: RemovedObjects[];
+    } = await this.remove.remove({ componentsPattern, remote, force, track, deleteFiles: !keepFiles });
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return paintRemoved(localResult, false) + this.paintArray(remoteResult);
   }

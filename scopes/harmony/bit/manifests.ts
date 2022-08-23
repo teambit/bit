@@ -89,6 +89,8 @@ import { ComponentCompareAspect } from '@teambit/component-compare';
 import { ListerAspect } from '@teambit/lister';
 import { BuilderUIAspect } from '@teambit/builder-ui';
 import { DependenciesAspect } from '@teambit/dependencies';
+import { RemoveAspect } from '@teambit/remove';
+import { MergeLanesAspect } from '@teambit/merge-lanes';
 import { BitAspect } from './bit.aspect';
 
 export const manifestsMap = {
@@ -182,6 +184,8 @@ export const manifestsMap = {
   [ListerAspect.id]: ListerAspect,
   [BuilderUIAspect.id]: BuilderUIAspect,
   [DependenciesAspect.id]: DependenciesAspect,
+  [RemoveAspect.id]: RemoveAspect,
+  [MergeLanesAspect.id]: MergeLanesAspect,
 };
 
 export function isCoreAspect(id: string) {
