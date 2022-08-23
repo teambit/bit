@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
 
-export default function useIframeContentHeight({
+export function useIframeContentHeight({
   interval = 250,
   skip,
 }: {

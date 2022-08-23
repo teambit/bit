@@ -5,6 +5,7 @@ import { usePubSubIframe } from '@teambit/pubsub';
 import { ComponentModel } from '@teambit/component';
 import { toPreviewUrl } from './urls';
 import { computePreviewScale } from './compute-preview-scale';
+import { useIframeContentHeight } from './use-iframe-content-height';
  
 // omitting 'referrerPolicy' because of an TS error during build. Re-include when needed
 export interface ComponentPreviewProps extends Omit<IframeHTMLAttributes<HTMLIFrameElement>, 'src' | 'referrerPolicy'> {
@@ -32,6 +33,11 @@ export interface ComponentPreviewProps extends Omit<IframeHTMLAttributes<HTMLIFr
   pubsub?: boolean;
 
   /**
+   * set specific height for the iframe.
+   */
+  forceHeight?: number|string;
+
+  /**
    * fit the preview to a specific width.
    */
   fitView?: boolean;
@@ -48,24 +54,27 @@ export interface ComponentPreviewProps extends Omit<IframeHTMLAttributes<HTMLIFr
 export function ComponentPreview({
   component,
   previewName,
+  forceHeight,
   queryParams,
   pubsub,
   fullContentHeight = false,
   style,
   ...rest
 }: ComponentPreviewProps) {
-  // const [iframeRef, iframeHeight] = useIframeContentHeight({ skip: !fullContentHeight });
+  const [heightIframeRef, iframeHeight] = useIframeContentHeight({ skip: !fullContentHeight });
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [width, setWidth] = useState(0);
   const [height, setHeight] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
+  const isScaling = component.preview?.isScaling;
+  const currentRef = isScaling ? iframeRef : heightIframeRef;
   // @ts-ignore (https://github.com/frenic/csstype/issues/156)
   // const height = iframeHeight || style?.height;
-  usePubSubIframe(pubsub ? iframeRef : undefined);
+  usePubSubIframe(pubsub ? currentRef : undefined);
   // const pubsubContext = usePubSub();
   // pubsubContext?.connect(iframeHeight);
   useEffect(() => {
-    if (!iframeRef.current || pubsub) return;
+    if (!iframeRef.current) return;
     connectToChild({
       iframe: iframeRef.current,
       methods: {
@@ -78,7 +87,6 @@ export function ComponentPreview({
       },
     });
   });
-  const isScaling = component.preview?.isScaling;
 
   const params = Array.isArray(queryParams)
     ? queryParams.concat('viewport=1280')
@@ -90,15 +98,17 @@ export function ComponentPreview({
   const currentWidth = fullContentHeight ? '100%' : width || 1280;
   const targetWidth = currentWidth < containerWidth ? containerWidth : currentWidth;
   const targetHeight = height !== 0 ? height : 5000;
+  const defaultLegacyHeight = forceHeight || 5000;
+  const legacyIframeHeight = (iframeHeight || 0) > 100 ? iframeHeight : defaultLegacyHeight;
 
   return (
     <div ref={containerRef}>
       <iframe
         {...rest}
-        ref={iframeRef}
+        ref={currentRef}
         style={{
           ...style,
-          height: isScaling ? targetHeight : 5000,
+          height: isScaling ? targetHeight : legacyIframeHeight,
           width: isScaling ? targetWidth : '100%',
           visibility: width === 0 && isScaling && !fullContentHeight ? 'hidden' : undefined,
           transform: fullContentHeight ? '' : computePreviewScale(width, containerWidth),

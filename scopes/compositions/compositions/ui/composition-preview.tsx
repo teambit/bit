@@ -10,15 +10,16 @@ export type ComponentCompositionProps = {
   composition?: Composition;
 } & ComponentPreviewProps;
 
-export function ComponentComposition({ composition, queryParams = [], ...rest }: ComponentCompositionProps) {
+export function ComponentComposition({ composition, component, queryParams = [], ...rest }: ComponentCompositionProps) {
   const compositionParams = useMemo(
-    () => (composition ? [`name=${composition.identifier}`] : []).concat(queryParams),
+    () => (composition ? [component.preview?.isScaling ? `name=${composition.identifier}` : composition.identifier] : []).concat(queryParams),
     [composition?.identifier, queryParams]
   );
 
   return (
     <ComponentPreview
       {...rest}
+      component={component}
       style={{ width: '100%', height: '100%' }}
       previewName="compositions"
       queryParams={compositionParams}

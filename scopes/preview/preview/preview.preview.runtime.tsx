@@ -133,7 +133,13 @@ export class PreviewPreview {
   reportSize() {
     if (!window?.parent || !window?.document) return;
     // TODO: discuss with gilad for a better way to resolve page loaded here.
-    setTimeout(() => {
+    let counter = 0;
+    const interval = setInterval(() => {
+      counter += 1;
+      if (counter > 10) {
+        clearInterval(interval);
+        return;
+      }
       this.pubsub.pub(PreviewAspect.id, new SizeEvent({
         width: window.document.body.offsetWidth,
         height: window.document.body.offsetHeight
