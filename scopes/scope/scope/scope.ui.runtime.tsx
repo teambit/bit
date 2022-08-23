@@ -29,6 +29,7 @@ import { ScopeAspect } from './scope.aspect';
 import { Scope } from './ui/scope';
 import { scopeDrawer } from './scope.ui.drawer';
 import { GetScopeOptions } from './get-scope-options';
+import { ScopeOverview } from './ui/scope-overview';
 
 export type ScopeBadge = ComponentType;
 
@@ -288,6 +289,10 @@ export class ScopeUI {
         assumeScopeInUrl,
       })
     );
+  }
+
+  getOverview(): React.ReactNode {
+    return <ScopeOverview badgeSlot={this.scopeBadgeSlot} overviewSlot={this.overviewSlot} />;
   }
 
   uiRoot(): UIRoot {

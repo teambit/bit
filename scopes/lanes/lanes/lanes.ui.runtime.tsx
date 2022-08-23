@@ -62,21 +62,20 @@ export class LanesUI {
         children: (
           <>
             <Route path={LanesModel.lanePath}>
-              <Route
-                index
-                element={
-                  <LaneReadmeOverview host={this.host} overviewSlot={this.overviewSlot} routeSlot={this.routeSlot} />
-                }
-              />
+              <Route path="~readme" element={this.getLaneReadme()} />
               <Route path="~gallery" element={this.getLaneGallery()} />
               <Route path="~component/*" element={this.componentUi.getComponentUI(this.host)} />
-              <Route path="*" element={<NotFoundPage />} />
+              <Route index element={this.hostAspect?.getOverview()} />
             </Route>
             <Route path="*" element={<NotFoundPage />} />
           </>
         ),
       },
     ];
+  }
+
+  getLaneReadme() {
+    return <LaneReadmeOverview host={this.host} overviewSlot={this.overviewSlot} routeSlot={this.routeSlot} />;
   }
 
   getLaneGallery() {

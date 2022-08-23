@@ -26,6 +26,7 @@ import { ComponentTreeWidget } from './component-tree.widget';
 import { Workspace } from './ui';
 import { WorkspaceAspect } from './workspace.aspect';
 import { workspaceDrawer } from './workspace.ui.drawer';
+import { WorkspaceOverview } from './ui/workspace/workspace-overview/workspace-overview';
 
 export type SidebarWidgetSlot = SlotRegistry<ComponentTreeNode>;
 
@@ -111,6 +112,10 @@ export class WorkspaceUI {
   registerDrawerWidgets = (widgets: ReactNode[]) => {
     this.drawerWidgetSlot.register(widgets);
   };
+
+  getOverview(): React.ReactNode {
+    return <WorkspaceOverview />;
+  }
 
   uiRoot(): UIRoot {
     this.registerDrawers(
