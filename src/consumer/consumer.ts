@@ -170,7 +170,7 @@ export default class Consumer {
 
   setCurrentLane(laneId: LaneId, exported = true) {
     this.bitMap.setCurrentLane(laneId, exported);
-    this.scope.currentLaneId = laneId.isDefault() ? undefined : laneId;
+    this.scope.setCurrentLaneId(laneId);
   }
 
   async cleanTmpFolder() {
@@ -712,7 +712,7 @@ export default class Consumer {
       scope,
     });
     await consumer.setBitMap();
-    scope.currentLaneId = consumer.bitMap.laneId;
+    scope.setCurrentLaneId(consumer.bitMap.laneId);
     return consumer;
   }
 
