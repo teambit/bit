@@ -47,6 +47,7 @@ export default class Init implements LegacyCommand {
       'removes local scope (.bit or .git/bit). snaps that were not exported will be lost. workspace left intact',
     ],
     ['d', 'default-directory <default-directory>', 'set up default directory to import components into'],
+    ['', 'default-scope <default-scope>', 'set up default scope for all components in the workspace'],
     ['p', 'package-manager <package-manager>', 'set up package manager (npm or yarn)'],
     ['f', 'force', 'force workspace initialization without clearing local objects'],
     ['', 'harmony', 'DEPRECATED. no need for this flag. Harmony is the default now'],
@@ -68,6 +69,7 @@ export default class Init implements LegacyCommand {
       resetScope,
       force,
       defaultDirectory,
+      defaultScope,
       packageManager,
     } = flags;
     if (path) path = pathlib.resolve(path);
@@ -85,7 +87,7 @@ export default class Init implements LegacyCommand {
     if (reset && resetHard) throw new GeneralError('please use --reset or --reset-hard. not both');
     const workspaceConfigFileProps: WorkspaceConfigProps = {
       componentsDefaultDirectory: defaultDirectory ?? getSync(CFG_INIT_DEFAULT_DIRECTORY),
-      defaultScope: getSync(CFG_INIT_DEFAULT_SCOPE),
+      defaultScope: defaultScope ?? getSync(CFG_INIT_DEFAULT_SCOPE),
       packageManager,
     };
     return init(path, standalone, reset, resetNew, resetHard, resetScope, force, workspaceConfigFileProps).then(
