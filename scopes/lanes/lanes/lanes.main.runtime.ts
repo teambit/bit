@@ -560,6 +560,7 @@ export class LanesMain {
       id: this.getDefaultLaneId(),
       components: bitIds.map((bitId) => ({ id: bitId, head: bitId.version as string })),
       isMerged: null,
+      hash: '',
     };
   }
 
