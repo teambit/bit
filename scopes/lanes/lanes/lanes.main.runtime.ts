@@ -316,10 +316,27 @@ export class LanesMain {
     });
   }
 
-  async importLaneObject(laneId: LaneId): Promise<Lane> {
-    const scopeComponentImporter = ScopeComponentsImporter.getInstance(this.scope.legacyScope);
+  /**
+   * get a Lane object from the remote.
+   * `persistIfNotExists` saves the object in the local scope only if the lane is not there yet.
+   * otherwise, it needs some merging mechanism, which is done differently whether it's export or import.
+   * see `sources.mergeLane()` for export and `import-components._saveLaneDataIfNeeded()` for import.
+   * in this case, because we only bring the lane object and not the components, it's not easy to do the merge.
+   */
+  async importLaneObject(laneId: LaneId, persistIfNotExists = true): Promise<Lane> {
+    const legacyScope = this.scope.legacyScope;
+    const scopeComponentImporter = ScopeComponentsImporter.getInstance(legacyScope);
     const results = await scopeComponentImporter.importLanes([laneId]);
-    return results[0];
+    const laneObject = results[0];
+
+    if (persistIfNotExists) {
+      const exists = await legacyScope.loadLane(laneId);
+      if (!exists) {
+        await legacyScope.lanes.saveLane(laneObject);
+      }
+    }
+
+    return laneObject;
   }
 
   /**
