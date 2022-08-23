@@ -42,12 +42,12 @@ export class CompositionsPreview {
     const query = this.preview.getQuery();
     const param = this.preview.getParam(query, 'name');
 
-    if (!param) {
-      const first = head(Object.values(module));
-      return first;
+    if (param && module[param]) {
+      return module[param];
     }
-
-    return module[param];
+    
+    const first = head(Object.values(module));
+    return first;
   }
 
   static runtime = PreviewRuntime;

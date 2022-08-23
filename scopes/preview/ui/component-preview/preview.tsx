@@ -78,14 +78,18 @@ export function ComponentPreview({
       },
     });
   });
+  const isScaling = component.preview?.isScaling;
 
   const params = Array.isArray(queryParams)
     ? queryParams.concat('viewport=1280')
     : compact([queryParams, 'viewport=1280']);
-  const url = toPreviewUrl(component, previewName, params);
+
+  const url = toPreviewUrl(component, previewName, isScaling ? params : queryParams);
   // const currentHeight = fullContentHeight ? '100%' : height || 1024;
   const containerWidth = containerRef.current?.offsetWidth || 0;
   const currentWidth = fullContentHeight ? '100%' : width || 1280;
+  const targetWidth = currentWidth < containerWidth ? containerWidth : currentWidth;
+  const targetHeight = height !== 0 ? height : 5000;
 
   return (
     <div ref={containerRef}>
@@ -94,10 +98,11 @@ export function ComponentPreview({
         ref={iframeRef}
         style={{
           ...style,
-          height: height !== 0 ? height : 5000,
-          width: currentWidth < containerWidth ? containerWidth : currentWidth,
-          visibility: width === 0 && !fullContentHeight ? 'hidden' : undefined,
+          height: isScaling ? targetHeight : '100%',
+          width: isScaling ? targetWidth : '100%',
+          visibility: width === 0 && isScaling && !fullContentHeight ? 'hidden' : undefined,
           transform: fullContentHeight ? '' : computePreviewScale(width, containerWidth),
+          border: 0,
           transformOrigin: 'top left',
         }}
         src={url}
