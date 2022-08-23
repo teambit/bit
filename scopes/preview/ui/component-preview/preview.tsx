@@ -98,7 +98,7 @@ export function ComponentPreview({
         ref={iframeRef}
         style={{
           ...style,
-          height: isScaling ? targetHeight : '100%',
+          height: isScaling ? targetHeight : 5000,
           width: isScaling ? targetWidth : '100%',
           visibility: width === 0 && isScaling && !fullContentHeight ? 'hidden' : undefined,
           transform: fullContentHeight ? '' : computePreviewScale(width, containerWidth),
