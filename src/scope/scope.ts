@@ -123,6 +123,11 @@ export default class Scope {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   _dependencyGraph: DependencyGraph; // cache DependencyGraph instance
   lanes: Lanes;
+  /**
+   * normally, the data about the current-lane is saved in .bitmap. the reason for having this prop here is that we
+   * need this data when loading model-component, which gets called in multiple places where the consumer is not passed.
+   * another instance this is needed is for bit-sign, this way when loading aspects and fetching dists, it'll go to lane-scope.
+   */
   currentLaneId?: LaneId;
   constructor(scopeProps: ScopeProps) {
     this.path = scopeProps.path;
@@ -177,6 +182,12 @@ export default class Scope {
   get isLegacy(): boolean {
     const harmonyScopeJsonPath = getHarmonyPath(this.path);
     return !fs.existsSync(harmonyScopeJsonPath);
+  }
+
+  setCurrentLaneId(laneId?: LaneId) {
+    if (!laneId) return;
+    if (laneId.isDefault()) return;
+    this.currentLaneId = laneId;
   }
 
   getPath() {
