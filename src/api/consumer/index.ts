@@ -2,7 +2,6 @@ import diff from './lib//diff';
 import { addMany, addOne as add } from './lib/add';
 import checkout from './lib/checkout';
 import dependencyStatus from './lib/dependency_status';
-import exportAction, { registerDefaultScopeGetter } from './lib/export';
 import fetch from './lib/fetch';
 import getComponentLogs from './lib/get-component-logs';
 import getConsumerComponent from './lib/get-consumer-component';
@@ -23,8 +22,6 @@ import { clearCache } from './lib/clear-cache';
 export {
   init,
   config,
-  exportAction,
-  registerDefaultScopeGetter,
   listScope,
   getConsumerComponent,
   getScopeComponent,
