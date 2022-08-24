@@ -6,6 +6,7 @@ import { ComponentModel } from '@teambit/component';
 import { toPreviewUrl } from './urls';
 import { computePreviewScale } from './compute-preview-scale';
 import { useIframeContentHeight } from './use-iframe-content-height';
+import styles from './preview.module.scss';
  
 // omitting 'referrerPolicy' because of an TS error during build. Re-include when needed
 export interface ComponentPreviewProps extends Omit<IframeHTMLAttributes<HTMLIFrameElement>, 'src' | 'referrerPolicy'> {
@@ -61,7 +62,7 @@ export function ComponentPreview({
   style,
   ...rest
 }: ComponentPreviewProps) {
-  const [heightIframeRef, iframeHeight] = useIframeContentHeight({ skip: !fullContentHeight });
+  const [heightIframeRef, iframeHeight] = useIframeContentHeight({ skip: false });
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [width, setWidth] = useState(0);
   const [height, setHeight] = useState(0);
@@ -96,23 +97,25 @@ export function ComponentPreview({
   // const currentHeight = fullContentHeight ? '100%' : height || 1024;
   const containerWidth = containerRef.current?.offsetWidth || 0;
   const currentWidth = fullContentHeight ? '100%' : width || 1280;
+  const legacyCurrentWidth = '100%';
   const targetWidth = currentWidth < containerWidth ? containerWidth : currentWidth;
   const targetHeight = height !== 0 ? height : 5000;
   const defaultLegacyHeight = forceHeight || 5000;
   const legacyIframeHeight = (iframeHeight || 0) > 100 ? iframeHeight : defaultLegacyHeight;
 
   return (
-    <div ref={containerRef}>
+    <div ref={containerRef} className={styles.preview}>
       <iframe
         {...rest}
         ref={currentRef}
         style={{
           ...style,
           height: isScaling ? targetHeight : legacyIframeHeight,
-          width: isScaling ? targetWidth : '100%',
+          width: isScaling ? targetWidth : legacyCurrentWidth,
           visibility: width === 0 && isScaling && !fullContentHeight ? 'hidden' : undefined,
           transform: fullContentHeight ? '' : computePreviewScale(width, containerWidth),
           border: 0,
+          margin: isScaling ? 5 : undefined,
           transformOrigin: 'top left',
         }}
         src={url}
