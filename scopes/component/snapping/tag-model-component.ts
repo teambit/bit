@@ -4,10 +4,10 @@ import R from 'ramda';
 import { isEmpty, compact } from 'lodash';
 import { ReleaseType } from 'semver';
 import { v4 } from 'uuid';
-import * as globalConfig from '../../api/consumer/lib/global-config';
-import { Scope } from '..';
-import { BitId, BitIds } from '../../bit-id';
-import loader from '../../cli/loader';
+import * as globalConfig from '@teambit/legacy/dist/api/consumer/lib/global-config';
+import { Scope } from '@teambit/legacy/dist/scope';
+import { BitId, BitIds } from '@teambit/legacy/dist/bit-id';
+import loader from '@teambit/legacy/dist/cli/loader';
 import {
   BuildStatus,
   CFG_USER_EMAIL_KEY,
@@ -15,32 +15,30 @@ import {
   CFG_USER_TOKEN_KEY,
   BASE_CLOUD_DOMAIN,
   Extensions,
-} from '../../constants';
-import { CURRENT_SCHEMA } from '../../consumer/component/component-schema';
-import Component from '../../consumer/component/consumer-component';
-import Consumer from '../../consumer/consumer';
-import { NewerVersionFound } from '../../consumer/exceptions';
-import ShowDoctorError from '../../error/show-doctor-error';
-import logger from '../../logger/logger';
-import { sha1 } from '../../utils';
-import { AutoTagResult, getAutoTagInfo } from './auto-tag';
-import { FlattenedDependenciesGetter } from './get-flattened-dependencies';
-import { getValidVersionOrReleaseType } from '../../utils/semver-helper';
-import { LegacyOnTagResult } from '../scope';
-import { Log } from '../models/version';
-import { BasicTagParams } from '../../api/consumer/lib/tag';
-import { MessagePerComponent, MessagePerComponentFetcher } from './message-per-component';
-import { ModelComponent } from '../models';
+} from '@teambit/legacy/dist/constants';
+import { CURRENT_SCHEMA } from '@teambit/legacy/dist/consumer/component/component-schema';
+import Component from '@teambit/legacy/dist/consumer/component/consumer-component';
+import Consumer from '@teambit/legacy/dist/consumer/consumer';
+import { NewerVersionFound } from '@teambit/legacy/dist/consumer/exceptions';
+import ShowDoctorError from '@teambit/legacy/dist/error/show-doctor-error';
+import logger from '@teambit/legacy/dist/logger/logger';
+import { sha1 } from '@teambit/legacy/dist/utils';
+import { AutoTagResult, getAutoTagInfo } from '@teambit/legacy/dist/scope/component-ops/auto-tag';
+import { FlattenedDependenciesGetter } from '@teambit/legacy/dist/scope/component-ops/get-flattened-dependencies';
+import { getValidVersionOrReleaseType } from '@teambit/legacy/dist/utils/semver-helper';
+import { LegacyOnTagResult } from '@teambit/legacy/dist/scope/scope';
+import { Log } from '@teambit/legacy/dist/scope/models/version';
+import { BasicTagParams } from '@teambit/legacy/dist/api/consumer/lib/tag';
+import {
+  MessagePerComponent,
+  MessagePerComponentFetcher,
+} from '@teambit/legacy/dist/scope/component-ops/message-per-component';
+import { ModelComponent } from '@teambit/legacy/dist/scope/models';
+import { DependencyResolverMain } from '@teambit/dependency-resolver';
 
 export type onTagIdTransformer = (id: BitId) => BitId | null;
-type UpdateDependenciesOnTagFunc = (component: Component, idTransformer: onTagIdTransformer) => Component;
 
-let updateDependenciesOnTag: UpdateDependenciesOnTagFunc;
-export function registerUpdateDependenciesOnTag(func: UpdateDependenciesOnTagFunc) {
-  updateDependenciesOnTag = func;
-}
-
-function updateDependenciesVersions(componentsToTag: Component[]): void {
+function updateDependenciesVersions(componentsToTag: Component[], dependencyResolver: DependencyResolverMain): void {
   const getNewDependencyVersion = (id: BitId): BitId | null => {
     const foundDependency = componentsToTag.find((component) => component.id.isEqualWithoutVersion(id));
     return foundDependency ? id.changeVersion(foundDependency.version) : null;
@@ -60,10 +58,8 @@ function updateDependenciesVersions(componentsToTag: Component[]): void {
       if (newDepId) dependency.id = newDepId;
     });
     changeExtensionsVersion(oneComponentToTag);
-    if (updateDependenciesOnTag && typeof updateDependenciesOnTag === 'function') {
-      // @ts-ignore
-      oneComponentToTag = updateDependenciesOnTag(oneComponentToTag, getNewDependencyVersion.bind(this));
-    }
+    // @ts-ignore
+    oneComponentToTag = dependencyResolver.updateDepsOnLegacyTag(oneComponentToTag, getNewDependencyVersion.bind(this));
   });
 }
 
@@ -130,7 +126,7 @@ function getVersionByEnteredId(
   return undefined;
 }
 
-export default async function tagModelComponent({
+export async function tagModelComponent({
   consumerComponents,
   ids,
   scope,
@@ -151,6 +147,7 @@ export default async function tagModelComponent({
   forceDeploy,
   incrementBy,
   packageManagerConfigRootDir,
+  dependencyResolver,
 }: {
   consumerComponents: Component[];
   ids: BitIds;
@@ -161,6 +158,7 @@ export default async function tagModelComponent({
   consumer: Consumer;
   isSnap?: boolean;
   packageManagerConfigRootDir?: string;
+  dependencyResolver: DependencyResolverMain;
 } & BasicTagParams): Promise<{
   taggedComponents: Component[];
   autoTaggedResults: AutoTagResult[];
@@ -234,7 +232,7 @@ export default async function tagModelComponent({
       );
   setCurrentSchema(allComponentsToTag);
   // go through all dependencies and update their versions
-  updateDependenciesVersions(allComponentsToTag);
+  updateDependenciesVersions(allComponentsToTag, dependencyResolver);
 
   await addLogToComponents(componentsToTag, autoTagComponents, persist, message, messagePerId);
 
