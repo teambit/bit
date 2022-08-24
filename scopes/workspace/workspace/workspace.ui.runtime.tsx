@@ -10,11 +10,12 @@ import { GraphAspect, GraphUI } from '@teambit/graph';
 import React, { ReactNode } from 'react';
 import { RouteProps } from 'react-router-dom';
 import CommandBarAspect, { CommandBarUI, CommandHandler } from '@teambit/command-bar';
+import { MenuLinkItem } from '@teambit/design.ui.surfaces.menu.link-item';
 import type { DrawerType } from '@teambit/ui-foundation.ui.tree.drawer';
 import { ComponentFilters } from '@teambit/component.ui.component-filters.component-filter-context';
 import { DeprecateFilter } from '@teambit/component.ui.component-filters.deprecate-filter';
 import { EnvsFilter } from '@teambit/component.ui.component-filters.env-filter';
-import { MenuLinkItem } from '@teambit/design.ui.surfaces.menu.link-item';
+
 import {
   DrawerWidgetSlot,
   FilterWidget,
@@ -25,7 +26,6 @@ import { ComponentTreeWidget } from './component-tree.widget';
 import { Workspace } from './ui';
 import { WorkspaceAspect } from './workspace.aspect';
 import { workspaceDrawer } from './workspace.ui.drawer';
-import { WorkspaceOverview } from './ui/workspace/workspace-overview/workspace-overview';
 
 export type SidebarWidgetSlot = SlotRegistry<ComponentTreeNode>;
 
@@ -97,7 +97,7 @@ export class WorkspaceUI {
     this.componentUi.updateComponents(components);
   };
 
-  registerSidebarItem = (...links: SidebarItem[]) => {
+  registerSidebarLink = (...links: SidebarItem[]) => {
     this.sidebarItemSlot.register(links);
   };
 
@@ -111,10 +111,6 @@ export class WorkspaceUI {
   registerDrawerWidgets = (widgets: ReactNode[]) => {
     this.drawerWidgetSlot.register(widgets);
   };
-
-  getOverview(): React.ReactNode {
-    return <WorkspaceOverview />;
-  }
 
   uiRoot(): UIRoot {
     this.registerDrawers(
@@ -225,7 +221,7 @@ export class WorkspaceUI {
     ui.registerRoot(workspaceUI.uiRoot.bind(workspaceUI));
     workspaceUI.registerMenuItem(workspaceUI.menuItems);
 
-    workspaceUI.registerSidebarItem(() => (
+    workspaceUI.registerSidebarLink(() => (
       <MenuLinkItem exact href="/" icon="comps">
         Gallery
       </MenuLinkItem>

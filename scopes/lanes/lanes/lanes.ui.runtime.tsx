@@ -61,10 +61,10 @@ export class LanesUI {
         children: (
           <>
             <Route path={LanesModel.lanePath}>
-              <Route path="~readme" element={this.getLaneReadme()} />
+              <Route index element={this.getLaneReadme()} />
               <Route path="~gallery" element={this.getLaneGallery()} />
               <Route path="~component/*" element={this.componentUi.getComponentUI(this.host)} />
-              <Route index element={this.hostAspect?.getOverview()} />
+              <Route path="*" element={<NotFoundPage />} />
             </Route>
             <Route path="*" element={<NotFoundPage />} />
           </>
@@ -134,7 +134,7 @@ export class LanesUI {
   }
 
   private registerLanesDropdown() {
-    this.hostAspect?.registerSidebarItem(() => <LanesListDropdown />);
+    this.hostAspect?.registerSidebarLink(() => <LanesListDropdown />);
   }
 
   private renderContext = ({ children }: { children: ReactNode }) => {

@@ -10,6 +10,7 @@ import React, { ComponentType, ReactNode } from 'react';
 import { MenuItemSlot, MenuItem } from '@teambit/ui-foundation.ui.main-dropdown';
 import { RouteProps } from 'react-router-dom';
 import { MenuWidget, MenuWidgetSlot } from '@teambit/ui-foundation.ui.menu';
+import { MenuLinkItem } from '@teambit/design.ui.surfaces.menu.link-item';
 import CommandBarAspect, { CommandBarUI, CommandHandler } from '@teambit/command-bar';
 import { ScopeModel } from '@teambit/scope.models.scope-model';
 import { DrawerType } from '@teambit/ui-foundation.ui.tree.drawer';
@@ -23,13 +24,11 @@ import { ComponentFilters } from '@teambit/component.ui.component-filters.compon
 import { DeprecateFilter } from '@teambit/component.ui.component-filters.deprecate-filter';
 import { EnvsFilter } from '@teambit/component.ui.component-filters.env-filter';
 import { ComponentUrlResolver, ComponentUrlProvider } from '@teambit/component.modules.component-url';
-import { MenuLinkItem } from '@teambit/design.ui.surfaces.menu.link-item';
 import { ScopeMenu, ScopeUseBox } from './ui/menu';
 import { ScopeAspect } from './scope.aspect';
 import { Scope } from './ui/scope';
 import { scopeDrawer } from './scope.ui.drawer';
 import { GetScopeOptions } from './get-scope-options';
-import { ScopeOverview } from './ui/scope-overview';
 
 export type ScopeBadge = ComponentType;
 
@@ -260,7 +259,7 @@ export class ScopeUI {
   /**
    * register a sidebar link to the section above the drawers
    */
-  registerSidebarItem = (...links: SidebarItem[]) => {
+  registerSidebarLink = (...links: SidebarItem[]) => {
     this.sidebarItemSlot.register(links);
   };
 
@@ -289,10 +288,6 @@ export class ScopeUI {
         assumeScopeInUrl,
       })
     );
-  }
-
-  getOverview(): React.ReactNode {
-    return <ScopeOverview badgeSlot={this.scopeBadgeSlot} overviewSlot={this.overviewSlot} />;
   }
 
   uiRoot(): UIRoot {
@@ -426,7 +421,7 @@ export class ScopeUI {
     scopeUi.registerMenuItem(scopeUi.menuItems);
     scopeUi.registerMenuWidget(() => <ScopeUseBox />);
     if (config.showGallery)
-      scopeUi.registerSidebarItem(() => (
+      scopeUi.registerSidebarLink(() => (
         <MenuLinkItem exact href="/" icon="comps">
           Gallery
         </MenuLinkItem>
