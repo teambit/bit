@@ -15,7 +15,7 @@ import { HttpHelper } from '../http-helper';
   });
 
   let httpHelper: HttpHelper;
-  describe.only('export lane', () => {
+  describe('export lane', () => {
     before(async () => {
       httpHelper = new HttpHelper(helper);
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
