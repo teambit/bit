@@ -131,7 +131,9 @@ export class SnappingMain {
     const components = await this.loadComponentsForTag(legacyBitIds);
     await this.throwForLegacyDependenciesInsideHarmony(components);
     await this.throwForComponentIssues(components, ignoreIssues);
-    const areComponentsMissingFromScope = components.some((c) => !c.componentFromModel && c.id.hasScope());
+    const areComponentsMissingFromScope = components
+      .filter((c) => !c.removed)
+      .some((c) => !c.componentFromModel && c.id.hasScope());
     if (areComponentsMissingFromScope) {
       throw new ComponentsPendingImport();
     }
@@ -347,14 +349,14 @@ there are matching among unmodified components thought. consider using --unmodif
   }
 
   private async loadComponentsForTag(ids: BitIds): Promise<ConsumerComponent[]> {
-    const { components } = await this.workspace.consumer.loadComponents(ids.toVersionLatest());
+    const { components, removedComponents } = await this.workspace.consumer.loadComponents(ids.toVersionLatest());
     components.forEach((component) => {
       const componentMap = component.componentMap as ComponentMap;
       if (!componentMap.rootDir) {
         throw new Error(`unable to tag ${component.id.toString()}, the "rootDir" is missing in the .bitmap file`);
       }
     });
-    return components;
+    return [...components, ...removedComponents];
   }
 
   private async throwForComponentIssues(legacyComponents: ConsumerComponent[], ignoreIssues?: string) {

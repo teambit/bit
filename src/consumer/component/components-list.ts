@@ -38,14 +38,11 @@ export default class ComponentsList {
   scope: Scope;
   bitMap: BitMap;
   _fromFileSystem: { [cacheKey: string]: Component[] } = {};
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   _fromObjectsIds: BitId[];
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   _modelComponents: ModelComponent[];
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   _invalidComponents: InvalidComponent[];
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   _modifiedComponents: Component[];
+  _removedComponents: Component[];
   // @ts-ignore
   private _mergePendingComponents: DivergedComponent[];
   constructor(consumer: Consumer) {
@@ -299,13 +296,19 @@ export default class ComponentsList {
    * @return {Promise<string[]>}
    */
   async listTagPendingComponents(): Promise<BitIds> {
-    const [newComponents, modifiedComponents] = await Promise.all([
+    const [newComponents, modifiedComponents, removedComponents] = await Promise.all([
       this.listNewComponents(),
       this.listModifiedComponents(),
+      this.listRemovedComponents(),
     ]);
     const duringMergeIds = this.listDuringMergeStateComponents();
 
-    return BitIds.fromArray([...(newComponents as BitId[]), ...(modifiedComponents as BitId[]), ...duringMergeIds]);
+    return BitIds.fromArray([
+      ...(newComponents as BitId[]),
+      ...(modifiedComponents as BitId[]),
+      ...removedComponents,
+      ...duringMergeIds,
+    ]);
   }
 
   async listExportPendingComponentsIds(lane?: Lane | null): Promise<BitIds> {
@@ -385,10 +388,17 @@ export default class ComponentsList {
     if (!this._fromFileSystem[cacheKeyName]) {
       const idsFromBitMap = this.idsFromBitMap(origin);
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      const { components, invalidComponents } = await this.consumer.loadComponents(idsFromBitMap, false, loadOpts);
+      const { components, invalidComponents, removedComponents } = await this.consumer.loadComponents(
+        idsFromBitMap,
+        false,
+        loadOpts
+      );
       this._fromFileSystem[cacheKeyName] = components;
       if (!this._invalidComponents && !origin) {
         this._invalidComponents = invalidComponents;
+      }
+      if (!this._removedComponents && !origin) {
+        this._removedComponents = removedComponents;
       }
     }
     return this._fromFileSystem[cacheKeyName];
@@ -402,6 +412,16 @@ export default class ComponentsList {
       await this.getFromFileSystem();
     }
     return this._invalidComponents;
+  }
+
+  /**
+   * components that were deleted by soft-delete (bit remove --soft)
+   */
+  async listRemovedComponents(): Promise<BitId[]> {
+    if (!this._removedComponents) {
+      await this.getFromFileSystem();
+    }
+    return this._removedComponents.map((c) => c.id);
   }
 
   /**

@@ -7,6 +7,9 @@ import removeComponents from '@teambit/legacy/dist/consumer/component-ops/remove
 import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
 import hasWildcard from '@teambit/legacy/dist/utils/string/has-wildcard';
 import { getRemoteBitIdsByWildcards } from '@teambit/legacy/dist/api/consumer/lib/list-scope';
+import { ComponentID } from '@teambit/component-id';
+import deleteComponentsFiles from '@teambit/legacy/dist/consumer/component-ops/delete-component-files';
+import { removeComponentsFromNodeModules } from '@teambit/legacy/dist/consumer/component/package-json-utils';
 import { RemoveCmd } from './remove-cmd';
 import { RemoveAspect } from './remove.aspect';
 
@@ -44,6 +47,28 @@ export class RemoveMain {
     });
     if (consumer) await consumer.onDestroy();
     return removeResults;
+  }
+
+  async softRemove(componentsPattern: string): Promise<ComponentID[]> {
+    if (!this.workspace) throw new ConsumerNotFound();
+    const componentIds = await this.workspace.idsByPattern(componentsPattern);
+    const components = await this.workspace.getMany(componentIds);
+    await removeComponentsFromNodeModules(
+      this.workspace.consumer,
+      components.map((c) => c.state._consumer)
+    );
+    // don't use `this.workspace.addSpecificComponentConfig`, if the component has component.json it will be deleted
+    // during this removal along with the entire component dir.
+    componentIds.map((compId) =>
+      this.workspace.bitMap.addComponentConfig(compId, RemoveAspect.id, {
+        removed: true,
+      })
+    );
+    await this.workspace.bitMap.write();
+    const bitIds = BitIds.fromArray(componentIds.map((id) => id._legacy));
+    await deleteComponentsFiles(this.workspace.consumer, bitIds);
+
+    return componentIds;
   }
 
   private async getLocalBitIdsToRemove(componentsPattern: string): Promise<BitId[]> {

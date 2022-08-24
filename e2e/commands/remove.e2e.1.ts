@@ -1,3 +1,4 @@
+import { IssuesClasses } from '@teambit/component-issues';
 import chai, { expect } from 'chai';
 import * as path from 'path';
 
@@ -214,6 +215,46 @@ describe('bit remove command', function () {
     it('expect the shared hash to not be deleted', () => {
       const hashLocation = path.join(helper.scopes.localPath, '.bit/objects/b4/17426ea2f7f0e80fa2ee2e6c825e18fcb8a897');
       expect(hashLocation).to.be.a.file();
+    });
+  });
+  describe.only('soft remove', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents(2);
+      helper.command.tagWithoutBuild();
+      helper.command.export();
+
+      helper.command.removeComponent('comp2', '--soft');
+    });
+    it('bit status should show a section of removed components', () => {
+      const status = helper.command.statusJson();
+      expect(status.removedComponents).to.have.lengthOf(1);
+    });
+    it('bit status should show the dependent component with an issue because it is now missing the dependency', () => {
+      helper.command.expectStatusToHaveIssue(IssuesClasses.MissingPackagesDependenciesOnFs.name);
+    });
+    describe('tagging the component', () => {
+      before(() => {
+        helper.fs.outputFile('comp1/index.js', '');
+        helper.command.tagAllWithoutBuild();
+      });
+      it('should tag the removed components', () => {
+        const isStaged = helper.command.statusComponentIsStaged('comp2');
+        expect(isStaged).to.be.true;
+      });
+      describe('exporting the components', () => {
+        let exportOutput: string;
+        before(() => {
+          exportOutput = helper.command.export();
+        });
+        it('should export the deleted components', () => {
+          expect(exportOutput).to.have.string('2 component');
+        });
+        it('bit status should be clean', () => {
+          helper.command.expectStatusToBeClean();
+        });
+      });
     });
   });
 });

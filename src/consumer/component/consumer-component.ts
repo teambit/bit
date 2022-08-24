@@ -121,6 +121,7 @@ export default class Component {
   componentFromModel: Component | undefined; // populated when loadedFromFileSystem is true and it exists in the model
   issues: IssuesList;
   deprecated: boolean;
+  removed?: boolean; // was it soft-removed
   defaultScope: string | null;
   origin: ComponentOrigin;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

@@ -27,6 +27,7 @@ export type StatusResult = {
   importPendingComponents: BitId[];
   autoTagPendingComponents: BitId[];
   invalidComponents: InvalidComponent[];
+  removedComponents: BitId[];
   outdatedComponents: ConsumerComponent[];
   mergePendingComponents: DivergedComponent[];
   componentsDuringMergeState: BitIds;
@@ -59,6 +60,7 @@ export class StatusMain {
     const autoTagPendingComponents = await componentsList.listAutoTagPendingComponents();
     const autoTagPendingComponentsIds = autoTagPendingComponents.map((component) => component.id);
     const allInvalidComponents = await componentsList.listInvalidComponents();
+    const removedComponents = await componentsList.listRemovedComponents();
     const importPendingComponents = allInvalidComponents
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       .filter((c) => c.error instanceof ComponentsPendingImport)
@@ -102,6 +104,7 @@ export class StatusMain {
       autoTagPendingComponents: ComponentsList.sortComponentsByName(autoTagPendingComponentsIds),
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       invalidComponents,
+      removedComponents,
       outdatedComponents,
       mergePendingComponents,
       componentsDuringMergeState,
