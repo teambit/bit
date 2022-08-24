@@ -1,9 +1,7 @@
-import { useEffect } from 'react';
 import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
 import { LanesModel, LanesQuery } from '@teambit/lanes.ui.models.lanes-model';
 import { gql, QueryResult } from '@apollo/client';
-import { LaneId } from '@teambit/lane-id';
-import { useLanesContext } from './lanes-context';
+import { LanesContextModel, useLanesContext } from './lanes-context';
 
 const GET_LANES = gql`
   query Lanes($extensionId: String) {
@@ -43,28 +41,20 @@ const GET_LANES = gql`
   }
 `;
 
-export function useLanes(
-  getViewedLaneId?: () => LaneId | undefined
-): { lanesModel?: LanesModel } & Omit<QueryResult<LanesQuery>, 'data'> {
+export function useLanes(): LanesContextModel & Omit<QueryResult<LanesQuery & { getHost: { id: string } }>, 'data'> {
   const lanesContext = useLanesContext();
   const skip = !!lanesContext;
 
-  const { data, loading, ...rest } = useDataQuery(GET_LANES, { skip });
+  const { data, loading, ...rest } = useDataQuery<LanesQuery & { getHost: { id: string } }>(GET_LANES, { skip });
 
-  let lanesModel: LanesModel;
-  if (lanesContext) lanesModel = lanesContext;
-  else lanesModel = data && LanesModel.from({ data, host: data?.getHost?.id, viewedLaneId: getViewedLaneId?.() });
-
-  useEffect(() => {
-    if (getViewedLaneId) {
-      const viewedLaneId = getViewedLaneId();
-      lanesModel?.setViewedLane(viewedLaneId);
-    }
-  }, [lanesModel, getViewedLaneId]);
+  let lanesModel: LanesModel | undefined;
+  if (lanesContext) lanesModel = lanesContext.lanesModel;
+  else lanesModel = data && LanesModel.from({ data, host: data?.getHost?.id });
 
   return {
     ...rest,
     loading,
     lanesModel,
+    updateLanesModel: lanesContext?.updateLanesModel,
   };
 }

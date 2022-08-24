@@ -14,8 +14,7 @@ import { LaneGallery, LaneOverviewLine, LaneOverviewLineSlot } from '@teambit/la
 import { LanesNavPlugin, LanesOrderedNavigationSlot, LanesOverviewMenu, UseLaneMenu } from '@teambit/lanes.ui.menus';
 import { LanesHost, LanesModel } from '@teambit/lanes.ui.models.lanes-model';
 import { LaneReadmeOverview } from '@teambit/lanes.ui.readme';
-import { useLanes } from '@teambit/lanes.hooks.use-lanes';
-import { ViewedLaneFromUrl } from '@teambit/lanes.ui.viewed-lane';
+import { LanesProvider, useLanes } from '@teambit/lanes.hooks.use-lanes';
 import { LanesListDropdown } from '@teambit/lanes.ui.navigation.lane-switcher';
 
 export class LanesUI {
@@ -139,7 +138,7 @@ export class LanesUI {
   }
 
   private renderContext = ({ children }: { children: ReactNode }) => {
-    return <ViewedLaneFromUrl>{children}</ViewedLaneFromUrl>;
+    return <LanesProvider>{children}</LanesProvider>;
   };
 
   registerRoute(route: RouteProps) {

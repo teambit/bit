@@ -7,7 +7,8 @@ import {
   ScopePayload,
   ScopeTreeNode,
 } from '@teambit/ui-foundation.ui.side-bar';
-import { useViewedLaneId } from '@teambit/lanes.hooks.use-viewed-lane-id';
+import { useLanes } from '@teambit/lanes.hooks.use-lanes';
+// import { useViewedLaneId } from '@teambit/lanes.hooks.use-viewed-lane-id';
 import { useLaneComponents } from '@teambit/lanes.hooks.use-lane-components';
 import { TreeNodeProps } from '@teambit/design.ui.tree';
 import { WorkspaceContext } from './ui/workspace/workspace-context';
@@ -44,8 +45,9 @@ export const workspaceDrawer = ({ treeWidgets, filtersSlot, drawerWidgetSlot }: 
     emptyMessage: 'Workspace is empty',
     useComponents: () => {
       const workspace = useContext(WorkspaceContext);
+      const { lanesModel } = useLanes();
       const workspaceComponents = workspace.components;
-      const viewedLaneId = useViewedLaneId();
+      const viewedLaneId = lanesModel?.viewedLane?.id;
       const { components: laneComponents = [], loading: laneCompsLoading } = useLaneComponents(viewedLaneId);
       const components = workspaceComponents.concat(laneComponents);
       return {

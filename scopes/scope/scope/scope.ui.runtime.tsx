@@ -23,13 +23,13 @@ import { ComponentFilters } from '@teambit/component.ui.component-filters.compon
 import { DeprecateFilter } from '@teambit/component.ui.component-filters.deprecate-filter';
 import { EnvsFilter } from '@teambit/component.ui.component-filters.env-filter';
 import { ComponentUrlResolver, ComponentUrlProvider } from '@teambit/component.modules.component-url';
+import { MenuLinkItem } from '@teambit/design.ui.surfaces.menu.link-item';
 import { ScopeMenu, ScopeUseBox } from './ui/menu';
 import { ScopeAspect } from './scope.aspect';
 import { Scope } from './ui/scope';
 import { scopeDrawer } from './scope.ui.drawer';
 import { GetScopeOptions } from './get-scope-options';
 import { ScopeOverview } from './ui/scope-overview';
-import { ScopeOverviewButton } from './ui/scope-overview-button';
 
 export type ScopeBadge = ComponentType;
 
@@ -425,7 +425,12 @@ export class ScopeUI {
     if (ui) ui.registerRoot(scopeUi.uiRoot.bind(scopeUi));
     scopeUi.registerMenuItem(scopeUi.menuItems);
     scopeUi.registerMenuWidget(() => <ScopeUseBox />);
-    if (config.showGallery) scopeUi.registerSidebarItem(ScopeOverviewButton);
+    if (config.showGallery)
+      scopeUi.registerSidebarItem(() => (
+        <MenuLinkItem exact href="/" icon="comps">
+          Gallery
+        </MenuLinkItem>
+      ));
     if (ui) scopeUi.registerExplicitRoutes();
 
     return scopeUi;
