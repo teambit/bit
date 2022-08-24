@@ -7,7 +7,7 @@
  * If you want to delete components you can use the "bit remove <component-id>" command.
  * See the docs (https://bit.dev/docs/components/removing-components) for more information, or use "bit remove --help".
  */
- 
+
 {
     "application": {
         "scope": "teambit.harmony",
