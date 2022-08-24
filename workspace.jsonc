@@ -331,7 +331,7 @@
         "yaml": "1.10.2"
       },
       "peerDependencies": {
-        "@apollo/client": "^3.0.0",
+        "@apollo/client": "^3.4.0",
         "@teambit/base-react.navigation.link": "2.0.27",
         "@teambit/legacy": "1.0.336",
         "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
@@ -772,7 +772,7 @@
           "dependencies": {
             "@teambit/base-react.navigation.link": "2.0.27",
             "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
-            "@apollo/client": "3.3.7",
+            "@apollo/client": "3.4.17",
             "@teambit/legacy": "1.0.336",
             "graphql": "14.7.0",
             "browserslist": "4.16.3",
