@@ -5,10 +5,7 @@ import { LoggerAspect, LoggerMain, Logger } from '@teambit/logger';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import { BuilderAspect, BuilderMain } from '@teambit/builder';
 import { Component, ComponentID } from '@teambit/component';
-import {
-  getPublishedPackages,
-  updateComponentsByTagResult,
-} from '@teambit/legacy/dist/scope/component-ops/tag-model-component';
+import { getPublishedPackages, updateComponentsByTagResult } from '@teambit/snapping';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { BuildStatus, CENTRAL_BIT_HUB_URL, CENTRAL_BIT_HUB_NAME } from '@teambit/legacy/dist/constants';
 import { getScopeRemotes } from '@teambit/legacy/dist/scope/scope-remotes';
