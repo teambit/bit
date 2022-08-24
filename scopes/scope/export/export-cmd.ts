@@ -1,10 +1,9 @@
 import { Command, CommandOptions } from '@teambit/cli';
-
-import { exportAction } from '@teambit/legacy/dist/api/consumer';
 import ejectTemplate from '@teambit/legacy/dist/cli/templates/eject-template';
 import { WILDCARD_HELP } from '@teambit/legacy/dist/constants';
 import chalk from 'chalk';
 import { isEmpty } from 'lodash';
+import { ExportMain } from './export.main.runtime';
 
 export class ExportCmd implements Command {
   name = 'export [component-patterns...]';
@@ -16,8 +15,11 @@ export class ExportCmd implements Command {
         'component IDs, component names, or component patterns (separated by space). Use patterns to export groups of components using a common scope or namespace. E.g., "utils/*" (wrap with double quotes)',
     },
   ];
-  extendedDescription: string;
+  extendedDescription = `bit export => export all staged components to their current scope, if checked out to a lane, export the lane as well
+  \`bit export [id...]\` => export the given ids to their current scope
+  ${WILDCARD_HELP('export remote-scope')}`;
   alias = 'e';
+  helpUrl = 'components/exporting-components';
   options = [
     [
       'e',
@@ -56,13 +58,7 @@ export class ExportCmd implements Command {
   group = 'collaborate';
   remoteOp = true;
 
-  constructor(docsDomain: string) {
-    this.extendedDescription = `bit export => export all staged components to their current scope, if checked out to a lane, export the lane as well
-\`bit export [id...]\` => export the given ids to their current scope
-
-https://${docsDomain}/components/exporting-components
-${WILDCARD_HELP('export remote-scope')}`;
-  }
+  constructor(private exportMain: ExportMain) {}
 
   async report(
     [ids = []]: [string[]],
@@ -75,15 +71,17 @@ ${WILDCARD_HELP('export remote-scope')}`;
       resume,
     }: any
   ): Promise<string> {
-    const { componentsIds, nonExistOnBitMap, missingScope, exportedLanes, ejectResults } = await exportAction({
-      ids,
-      eject,
-      includeNonStaged: all || allVersions,
-      allVersions: allVersions || all,
-      originDirectly,
-      resumeExportId: resume,
-      ignoreMissingArtifacts,
-    });
+    const { componentsIds, nonExistOnBitMap, missingScope, exportedLanes, ejectResults } = await this.exportMain.export(
+      {
+        ids,
+        eject,
+        includeNonStaged: all || allVersions,
+        allVersions: allVersions || all,
+        originDirectly,
+        resumeExportId: resume,
+        ignoreMissingArtifacts,
+      }
+    );
     if (isEmpty(componentsIds) && isEmpty(nonExistOnBitMap) && isEmpty(missingScope)) {
       return chalk.yellow('nothing to export');
     }
@@ -133,7 +131,7 @@ ${WILDCARD_HELP('export remote-scope')}`;
       resume,
     }: any
   ) {
-    const results = await exportAction({
+    const results = await this.exportMain.export({
       ids,
       eject,
       includeNonStaged: all || allVersions,
