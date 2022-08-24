@@ -25,7 +25,7 @@ export function UseLaneMenu({
   viewedLaneId: LaneId;
   currentLaneId?: LaneId;
 }) {
-  const switchedOutToCurrentLane = !!currentLaneId && viewedLaneId.isEqual(currentLaneId);
+  const switchedOutToCurrentLane = !!currentLaneId?.isEqual(currentLaneId);
   const Menu = (
     <div className={styles.lanesMenu}>
       <div className={styles.top}>
