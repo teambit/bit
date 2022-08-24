@@ -15,7 +15,7 @@ import { HttpHelper } from '../http-helper';
   });
 
   let httpHelper: HttpHelper;
-  describe('export lane', () => {
+  describe.only('export lane', () => {
     before(async () => {
       httpHelper = new HttpHelper(helper);
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
@@ -31,7 +31,7 @@ import { HttpHelper } from '../http-helper';
     it('lane list -r should show the remote lanes', () => {
       const output = helper.command.listRemoteLanesParsed();
       expect(output.lanes).to.have.lengthOf(1);
-      expect(output.lanes[0].name).to.have.string('dev');
+      expect(output.lanes[0].id.name).to.have.string('dev');
     });
     it('bit import on a local lane tracked to a valid remote scope should not throw an error', () => {
       helper.command.createLane('test');
