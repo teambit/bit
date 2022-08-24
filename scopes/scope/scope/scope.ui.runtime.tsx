@@ -10,7 +10,6 @@ import React, { ComponentType, ReactNode } from 'react';
 import { MenuItemSlot, MenuItem } from '@teambit/ui-foundation.ui.main-dropdown';
 import { RouteProps } from 'react-router-dom';
 import { MenuWidget, MenuWidgetSlot } from '@teambit/ui-foundation.ui.menu';
-import { MenuLinkItem } from '@teambit/design.ui.surfaces.menu.link-item';
 import CommandBarAspect, { CommandBarUI, CommandHandler } from '@teambit/command-bar';
 import { ScopeModel } from '@teambit/scope.models.scope-model';
 import { DrawerType } from '@teambit/ui-foundation.ui.tree.drawer';
@@ -30,6 +29,7 @@ import { Scope } from './ui/scope';
 import { scopeDrawer } from './scope.ui.drawer';
 import { GetScopeOptions } from './get-scope-options';
 import { ScopeOverview } from './ui/scope-overview';
+import { ScopeOverviewButton } from './ui/scope-overview-button';
 
 export type ScopeBadge = ComponentType;
 
@@ -260,7 +260,7 @@ export class ScopeUI {
   /**
    * register a sidebar link to the section above the drawers
    */
-  registerSidebarLink = (...links: SidebarItem[]) => {
+  registerSidebarItem = (...links: SidebarItem[]) => {
     this.sidebarItemSlot.register(links);
   };
 
@@ -425,12 +425,7 @@ export class ScopeUI {
     if (ui) ui.registerRoot(scopeUi.uiRoot.bind(scopeUi));
     scopeUi.registerMenuItem(scopeUi.menuItems);
     scopeUi.registerMenuWidget(() => <ScopeUseBox />);
-    if (config.showGallery)
-      scopeUi.registerSidebarLink(() => (
-        <MenuLinkItem exact href="/" icon="comps">
-          Overview
-        </MenuLinkItem>
-      ));
+    if (config.showGallery) scopeUi.registerSidebarItem(ScopeOverviewButton);
     if (ui) scopeUi.registerExplicitRoutes();
 
     return scopeUi;

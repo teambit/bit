@@ -135,7 +135,7 @@ export class LanesUI {
   }
 
   private registerLanesDropdown() {
-    this.hostAspect?.registerSidebarLink(() => <LanesListDropdown />);
+    this.hostAspect?.registerSidebarItem(() => <LanesListDropdown />);
   }
 
   private renderContext = ({ children }: { children: ReactNode }) => {

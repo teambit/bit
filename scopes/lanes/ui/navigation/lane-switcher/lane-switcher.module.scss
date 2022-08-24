@@ -11,7 +11,7 @@
 
 .placeholderText {
   padding: 4px 12px;
-  font-size: small;
+  font-size: var(--bit-p-xs, 14px);
 }
 
 .dropdown {
