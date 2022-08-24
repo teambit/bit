@@ -2,7 +2,7 @@ import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
 import { gql, QueryResult } from '@apollo/client';
 import { LanesQuery } from '@teambit/lanes.ui.models.lanes-model';
 import { ComponentModel, componentOverviewFields } from '@teambit/component';
-import { LaneId } from '@teambit/lane-id/lane-id';
+import { LaneId } from '@teambit/lane-id';
 
 const GET_LANE_COMPONENTS = gql`
   query LaneComponent($ids: [String!], $extensionId: String) {
