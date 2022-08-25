@@ -72,7 +72,7 @@ export function lanesSchema(lanesMainRuntime: LanesMain): Schema {
           let lanes: LaneData[] = [];
 
           if (!ids || ids.length === 0) {
-            lanes = await lanesMain.getLanes({});
+            lanes = await lanesMain.getLanes({ showDefaultLane: true });
           } else {
             lanes = flatten(await Promise.all(ids.map((id) => lanesMain.getLanes({ name: LaneId.parse(id).name }))));
           }

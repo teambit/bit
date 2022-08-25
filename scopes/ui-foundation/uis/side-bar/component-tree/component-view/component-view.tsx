@@ -32,7 +32,6 @@ export function ComponentView(props: ComponentViewProps<PayloadType>) {
   );
 
   if (!(component instanceof ComponentModel)) return null;
-
   const envId = ComponentID.fromString(component.environment?.id as string);
 
   const envTooltip = (

@@ -8,6 +8,7 @@ import { Tooltip } from '@teambit/design.ui.tooltip';
 import { Link } from '@teambit/base-react.navigation.link';
 import {
   ComponentFilterCriteria,
+  ComponentFilterRenderProps,
   useComponentFilter,
 } from '@teambit/component.ui.component-filters.component-filter-context';
 import styles from './envs-filter.module.scss';
@@ -28,7 +29,7 @@ export type EnvsFilterCriteria = ComponentFilterCriteria<EnvFilterState>;
 
 export const EnvsFilter: EnvsFilterCriteria = {
   id: 'envs',
-  match: (component, filter) => {
+  match: ({ component }, filter) => {
     const { envsState } = filter;
     const activeEnvs = [...envsState.values()].filter((envState) => envState.active).map((envState) => envState.id);
     // match everything when no envs are set
@@ -88,12 +89,9 @@ const getDefaultState = (components: ComponentModel[]) => {
   }, [components]);
 };
 
-function envsFilter({
-  components,
-  className,
-}: { components: ComponentModel[] } & React.HTMLAttributes<HTMLDivElement>) {
+function envsFilter({ components, className }: ComponentFilterRenderProps) {
   const defaultState = getDefaultState(components);
-  const filterContext = useComponentFilter(EnvsFilter, defaultState);
+  const filterContext = useComponentFilter(EnvsFilter.id, defaultState);
 
   if (!filterContext) return null;
 

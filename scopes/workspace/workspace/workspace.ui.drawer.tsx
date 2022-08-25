@@ -45,13 +45,13 @@ export const workspaceDrawer = ({ treeWidgets, filtersSlot, drawerWidgetSlot }: 
     emptyMessage: 'Workspace is empty',
     useComponents: () => {
       const workspace = useContext(WorkspaceContext);
-      const { lanesModel } = useLanes();
+      const { lanesModel, loading: lanesLoading } = useLanes();
       const workspaceComponents = workspace.components;
       const viewedLaneId = lanesModel?.viewedLane?.id;
       const { components: laneComponents = [], loading: laneCompsLoading } = useLaneComponents(viewedLaneId);
       const components = workspaceComponents.concat(laneComponents);
       return {
-        loading: !workspace || laneCompsLoading,
+        loading: !workspace || lanesLoading || laneCompsLoading,
         components,
       };
     },

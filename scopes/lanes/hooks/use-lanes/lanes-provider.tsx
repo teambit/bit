@@ -14,7 +14,9 @@ export function LanesProvider({ children, viewedLaneId }: LanesProviderProps) {
   const [lanesState, setLanesState] = useState<LanesModel | undefined>(undefined);
 
   useEffect(() => {
-    lanesModel?.setViewedLane(viewedLaneId || lanesModel?.currentLane?.id);
+    lanesModel?.setViewedLane(
+      viewedLaneId || lanesModel?.currentLane?.id || lanesModel.lanes.find((lane) => lane.id.isDefault())?.id
+    );
     setLanesState(lanesModel);
   }, [loading]);
 

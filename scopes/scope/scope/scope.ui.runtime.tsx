@@ -23,6 +23,7 @@ import {
 import { ComponentFilters } from '@teambit/component.ui.component-filters.component-filter-context';
 import { DeprecateFilter } from '@teambit/component.ui.component-filters.deprecate-filter';
 import { EnvsFilter } from '@teambit/component.ui.component-filters.env-filter';
+import { OnLaneFilter } from '@teambit/component.ui.component-filters.on-lane-filter';
 import { ComponentUrlResolver, ComponentUrlProvider } from '@teambit/component.modules.component-url';
 import { ScopeMenu, ScopeUseBox } from './ui/menu';
 import { ScopeAspect } from './scope.aspect';
@@ -412,7 +413,7 @@ export class ScopeUI {
       drawerWidgetSlot,
       componentFiltersSlot
     );
-    scopeUi.registerDrawerComponentFilters([DeprecateFilter, EnvsFilter]);
+    scopeUi.registerDrawerComponentFilters([DeprecateFilter, EnvsFilter, OnLaneFilter(true)]);
     scopeUi.registerDrawerWidgets([
       <FilterWidget key={'workspace-filter-widget'} />,
       <TreeToggleWidget key={'workspace-tree-toggle-widget'} />,

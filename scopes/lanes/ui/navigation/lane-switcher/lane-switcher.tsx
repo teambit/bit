@@ -2,7 +2,6 @@ import React, { HTMLAttributes, useRef, useEffect } from 'react';
 import classnames from 'classnames';
 import { Dropdown } from '@teambit/design.inputs.dropdown';
 import { useLanes } from '@teambit/lanes.hooks.use-lanes';
-import { DEFAULT_LANE } from '@teambit/lanes.ui.models.lanes-model';
 import { LaneIcon } from '@teambit/lanes.ui.icons.lane-icon';
 import { Icon } from '@teambit/evangelist.elements.icon';
 import { LaneId } from '@teambit/lane-id';
@@ -13,35 +12,18 @@ export type LaneSwitcherProps = {} & HTMLAttributes<HTMLDivElement>;
 
 export function LaneSwitcher({ className, ...rest }: LaneSwitcherProps) {
   const { lanesModel, updateLanesModel } = useLanes();
-  // const [redirectUrl, setRedirectUrl] = useState<string | undefined>(undefined);
 
-  const availableLanes: Array<LaneId | typeof DEFAULT_LANE> = [
-    DEFAULT_LANE,
-    ...(lanesModel?.lanes || []).map((lane) => lane.id),
-  ];
+  const availableLanes: Array<LaneId> = (lanesModel?.lanes || []).map((lane) => lane.id);
 
   const viewedLaneId = lanesModel?.viewedLane?.id;
-  const selectedLaneId = viewedLaneId || DEFAULT_LANE;
-
-  // useEffect(() => {
-  //   if (!lanesModel?.viewedLane && lanesModel?.currentLane) {
-  //     // redirect
-  //     setRedirectUrl(LanesModel.getLaneUrl(lanesModel.currentLane.id));
-  //   }
-  //   // clean up the redirect url after this is done
-  //   return () => {
-  //     setRedirectUrl(undefined);
-  //   };
-  // }, [lanesModel?.currentLane?.id.toString()]);
-
-  // if (!viewedLaneId && redirectUrl) {
-  //   return <Navigate to={redirectUrl} replace />;
-  // }
+  const selectedLaneId = viewedLaneId;
 
   const onLaneSelected = (laneId) => () => {
     lanesModel?.setViewedLane(laneId);
     updateLanesModel?.(lanesModel);
   };
+
+  if (!selectedLaneId) return null;
 
   return (
     <Dropdown
@@ -75,8 +57,8 @@ function Placeholder({ selectedLaneId, className, ...rest }: PlaceholderProps) {
 }
 
 type MenuItemProps = {
-  selected?: LaneId | typeof DEFAULT_LANE;
-  current: LaneId | typeof DEFAULT_LANE;
+  selected?: LaneId;
+  current: LaneId;
   onLaneSelected?: () => void;
 } & HTMLAttributes<HTMLDivElement>;
 

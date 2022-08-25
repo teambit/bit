@@ -1152,6 +1152,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/component-filters/env-filter"
     },
+    "ui/component-filters/on-lane-filter": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/component/component-filters/on-lane-filter"
+    },
     "ui/component-meta": {
         "scope": "teambit.component",
         "version": "0.0.114",

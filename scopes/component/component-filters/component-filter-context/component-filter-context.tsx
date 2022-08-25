@@ -10,13 +10,19 @@ import React, {
 } from 'react';
 import { ComponentModel } from '@teambit/component';
 import { isFunction } from 'lodash';
+import { LanesModel } from '@teambit/lanes.ui.models.lanes-model';
 
 export type ComponentFilters = Array<ComponentFilterCriteria<any>>;
+export type ComponentFilterRenderProps = {
+  components: ComponentModel[];
+  lanes?: LanesModel;
+  filteredComponents: ComponentModel[];
+} & React.HTMLAttributes<HTMLDivElement>;
 
 export type ComponentFilterCriteria<State> = {
   id: string;
-  render: ComponentType<{ components: ComponentModel[] } & React.HTMLAttributes<HTMLDivElement>>;
-  match: (component: ComponentModel, state: State) => boolean;
+  render: ComponentType<ComponentFilterRenderProps>;
+  match: (data: { component: ComponentModel; lanes?: LanesModel }, state: State) => boolean;
   state: State;
   order?: number;
 };
@@ -36,11 +42,11 @@ const updateFilter = (filterContext: ComponentFilterContextType, updatedFilter: 
   });
 };
 export function useComponentFilter<T>(
-  filter: ComponentFilterCriteria<T>,
+  filterId: string,
   defaultState?: T
 ): [ComponentFilterCriteria<T>, Dispatch<SetStateAction<ComponentFilterCriteria<T>>>] | undefined {
   const filterContext = useContext(ComponentFilterContext);
-  const filterFromContext = filterContext?.filters.find((existingFilter) => existingFilter.id === filter.id);
+  const filterFromContext = filterContext?.filters.find((existingFilter) => existingFilter.id === filterId);
 
   useEffect(() => {
     if (filterFromContext && defaultState) {
@@ -81,9 +87,9 @@ export const ComponentFiltersProvider = ({
   );
 };
 
-export const runAllFilters: (filters: ComponentFilters, components: ComponentModel[]) => ComponentModel[] = (
-  filters,
-  components
-) => {
-  return components.filter((component) => filters.every((filter) => filter.match(component, filter.state)));
+export const runAllFilters: (
+  filters: ComponentFilters,
+  data: { components: ComponentModel[]; lanes?: LanesModel }
+) => ComponentModel[] = (filters, { components, lanes }) => {
+  return components.filter((component) => filters.every((filter) => filter.match({ component, lanes }, filter.state)));
 };

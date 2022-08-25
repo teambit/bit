@@ -3,6 +3,8 @@ import { ComponentsDrawer, ComponentFiltersSlot, DrawerWidgetSlot } from '@teamb
 import { ScopeContext } from '@teambit/scope.ui.hooks.scope-context';
 import { ComponentView, NamespaceTreeNode, PayloadType, ScopePayload } from '@teambit/ui-foundation.ui.side-bar';
 import { TreeNodeProps } from '@teambit/design.ui.tree';
+import { useLanes } from '@teambit/lanes.hooks.use-lanes';
+import { useLaneComponents } from '@teambit/lanes.hooks.use-lane-components';
 import { SidebarSlot } from './scope.ui.runtime';
 
 export type ScopeDrawerProps = {
@@ -54,9 +56,15 @@ export const scopeDrawer = ({
     emptyMessage: 'Scope is empty',
     useComponents: () => {
       const scope = useContext(ScopeContext);
+      const { lanesModel, loading: lanesLoading } = useLanes();
+      const scopeComponents = scope.components;
+      const viewedLaneId = lanesModel?.viewedLane?.id;
+      const { components: laneComponents = [], loading: laneCompsLoading } = useLaneComponents(viewedLaneId);
+      const components = scopeComponents.concat(laneComponents);
+
       return {
-        loading: !scope,
-        components: scope.components || [],
+        loading: !scope || lanesLoading || laneCompsLoading,
+        components,
       };
     },
   });

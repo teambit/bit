@@ -16,6 +16,8 @@ import {
   runAllFilters,
   ComponentFilters,
 } from '@teambit/component.ui.component-filters.component-filter-context';
+import { useLanes } from '@teambit/lanes.hooks.use-lanes';
+import { LanesModel } from '@teambit/lanes.ui.models.lanes-model';
 import { SlotRegistry } from '@teambit/harmony';
 import { ComponentFilterWidgetProvider, ComponentFilterWidgetContext } from './component-drawer-filter-widget.context';
 import { ComponentTreeContext, ComponentTreeProvider } from './component-drawer-tree-widget.context';
@@ -72,7 +74,15 @@ export class ComponentsDrawer implements DrawerType {
     return <Composer components={combinedContexts}>{children}</Composer>;
   };
 
-  renderFilters = ({ components }: { components: ComponentModel[] }) => {
+  renderFilters = ({
+    components,
+    lanes,
+    filteredComponents,
+  }: {
+    components: ComponentModel[];
+    lanes?: LanesModel;
+    filteredComponents: ComponentModel[];
+  }) => {
     const { filterWidgetOpen } = useContext(ComponentFilterWidgetContext);
     const filterPlugins = this.plugins.filters;
 
@@ -94,6 +104,8 @@ export class ComponentsDrawer implements DrawerType {
           <filter.render
             key={filter.key}
             components={components}
+            filteredComponents={filteredComponents}
+            lanes={lanes}
             className={classNames(styles.filter, filterWidgetOpen && styles.open)}
           />
         ))}
@@ -128,13 +140,17 @@ export class ComponentsDrawer implements DrawerType {
 
   render = () => {
     const { loading, components } = this.useComponents();
+    const { lanesModel: lanes } = useLanes();
     const componentFiltersContext = useContext(ComponentFilterContext);
 
     const filters = componentFiltersContext?.filters || [];
 
-    const filteredComponents = useMemo(() => runAllFilters(filters, components), [filters, components]);
+    const filteredComponents = useMemo(
+      () => runAllFilters(filters, { components, lanes }),
+      [filters, components, lanes]
+    );
 
-    const Filters = this.renderFilters({ components });
+    const Filters = this.renderFilters({ components, lanes, filteredComponents });
     const Tree = this.renderTree({ components: filteredComponents });
 
     const emptyDrawer = (

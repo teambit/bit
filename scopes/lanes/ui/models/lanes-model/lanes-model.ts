@@ -43,7 +43,6 @@ export type LanesQuery = {
 };
 
 export type LanesHost = 'workspace' | 'scope';
-export const DEFAULT_LANE = 'main';
 // export type LaneComponentModel = { model: ComponentModel; url: string };
 /**
  * Represents a single Lane in a Workspace/Scope
@@ -193,6 +192,9 @@ export class LanesModel {
   };
 
   getLanesByComponentId = (componentId: ComponentID) => this.lanesByComponentId.get(componentId.fullName);
+  getLaneByComponentVersion = (componentId: ComponentID) =>
+    componentId.version ? this.lanebyComponentHash.get(componentId.version) : undefined;
+
   setViewedLane = (viewedLaneId?: LaneId) => {
     this.viewedLane = viewedLaneId ? this.lanes.find((lane) => lane.id.isEqual(viewedLaneId)) : undefined;
   };
