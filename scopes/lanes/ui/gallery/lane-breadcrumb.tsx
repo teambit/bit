@@ -17,7 +17,7 @@ export function LaneBreadcrumb({ lane, className, ...rest }: LaneBreadcrumbProps
     <Link href={LanesModel.getLaneUrl(lane.id)} className={styles.laneUrl}>
       <div {...rest} className={classNames(styles.lane, className)}>
         <LaneIcon />
-        <Ellipsis className={styles.laneId}>{lane.id}</Ellipsis>
+        <Ellipsis className={styles.laneId}>{lane.id.toString()}</Ellipsis>
       </div>
     </Link>
   );

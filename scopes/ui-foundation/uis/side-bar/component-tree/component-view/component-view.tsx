@@ -10,6 +10,7 @@ import { Tooltip } from '@teambit/design.ui.tooltip';
 import { TreeContext } from '@teambit/base-ui.graph.tree.tree-context';
 import { indentClass } from '@teambit/base-ui.graph.tree.indent';
 import { TreeNodeProps } from '@teambit/base-ui.graph.tree.recursive-tree';
+import { useLanes } from '@teambit/lanes.hooks.use-lanes';
 import { PayloadType } from '../payload-type';
 import { getName } from '../utils/get-name';
 import styles from './component-view.module.scss';
@@ -23,7 +24,7 @@ export function ComponentView(props: ComponentViewProps<PayloadType>) {
   const component = node.payload;
 
   const { onSelect } = useContext(TreeContext);
-
+  const { lanesModel } = useLanes();
   const handleClick = useCallback(
     (event: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
       onSelect && onSelect(node.id, event);
@@ -49,9 +50,14 @@ export function ComponentView(props: ComponentViewProps<PayloadType>) {
     </Link>
   );
 
+  const isViewingOnLane = !lanesModel?.viewedLane?.id.isDefault();
+  const href = !isViewingOnLane
+    ? component.id.fullName
+    : lanesModel?.getLaneComponentUrlByVersion(component.id.version) || component.id.fullName;
+
   return (
     <Link
-      href={`${component.id.fullName}`}
+      href={href}
       className={classNames(indentClass, styles.component)}
       activeClassName={styles.active}
       onClick={handleClick}

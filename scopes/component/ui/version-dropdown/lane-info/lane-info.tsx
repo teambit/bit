@@ -14,7 +14,7 @@ export function LaneInfo({ id, currentLane }: LaneInfoProps) {
       <MenuLinkItem active={isCurrent} href={LanesModel.getLaneUrl(id)} className={styles.versionRow}>
         <span>
           <Icon className={styles.laneIcon} of="lane"></Icon>
-          {id}
+          {id.toString()}
         </span>
       </MenuLinkItem>
     </div>

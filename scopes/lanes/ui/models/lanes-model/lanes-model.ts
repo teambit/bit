@@ -202,4 +202,5 @@ export class LanesModel {
     ((laneId && this.lanes.find((lane) => lane.id.toString() === laneId)) || this.viewedLane)?.components.find(
       (component) => component.id.fullName === fullName
     );
+  getDefaultLane = () => this.lanes.find((lane) => lane.id.isDefault());
 }
