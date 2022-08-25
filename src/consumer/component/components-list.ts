@@ -317,7 +317,8 @@ export default class ComponentsList {
     const pendingExportComponents = await filterAsync(modelComponents, async (component: ModelComponent) => {
       if (!fromBitMap.searchWithoutVersion(component.toBitId())) {
         // it's not on the .bitmap only in the scope, as part of the out-of-sync feature, it should
-        // be considered as staged and should be exported. notice that we use `hasLocalChanges`
+        // be considered as staged and should be exported. same for soft-removed components, which are on scope only.
+        // notice that we use `hasLocalChanges`
         // and not `isLocallyChanged` by purpose. otherwise, cached components that were not
         // updated from a remote will be calculated as remote-ahead in the setDivergeData and will
         // be exported unexpectedly.

@@ -217,7 +217,7 @@ describe('bit remove command', function () {
       expect(hashLocation).to.be.a.file();
     });
   });
-  describe.only('soft remove', () => {
+  describe('soft remove', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       helper.bitJsonc.setupDefault();
@@ -240,7 +240,7 @@ describe('bit remove command', function () {
         helper.command.tagAllWithoutBuild();
       });
       it('should tag the removed components', () => {
-        const isStaged = helper.command.statusComponentIsStaged('comp2');
+        const isStaged = helper.command.statusComponentIsStaged(`${helper.scopes.remote}/comp2`);
         expect(isStaged).to.be.true;
       });
       describe('exporting the components', () => {

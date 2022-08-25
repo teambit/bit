@@ -261,10 +261,22 @@ export async function tagModelComponent({
   }
 
   if (!soft) {
+    await removeDeletedComponentsFromBitmap(allComponentsToTag, workspace);
     await scope.objects.persist();
   }
 
   return { taggedComponents: componentsToTag, autoTaggedResults: autoTagData, publishedPackages };
+}
+
+async function removeDeletedComponentsFromBitmap(comps: Component[], workspace: Workspace) {
+  await Promise.all(
+    comps.map(async (comp) => {
+      if (comp.removed) {
+        const compId = await workspace.resolveComponentId(comp.id);
+        workspace.bitMap.removeComponent(compId);
+      }
+    })
+  );
 }
 
 async function addComponentsToScope(consumer: Consumer, components: Component[], shouldValidateVersion: boolean) {
