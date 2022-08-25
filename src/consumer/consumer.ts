@@ -531,41 +531,6 @@ export default class Consumer {
     if (componentsToTag.length) this.bitMap.markAsChanged();
   }
 
-  async updateComponentsVersions(components: Array<ModelComponent | Component>): Promise<any> {
-    const currentLane = this.getCurrentLaneId();
-    const isAvailableOnMain = async (component: ModelComponent | Component, id: BitId): Promise<boolean> => {
-      if (currentLane.isDefault()) {
-        return true;
-      }
-      if (!id.hasVersion()) {
-        // component was unsnapped on the current lane and is back to a new component
-        return true;
-      }
-      const modelComponent =
-        component instanceof ModelComponent ? component : await this.scope.getModelComponent(component.id);
-      return modelComponent.hasHead();
-    };
-
-    const updateVersions = async (unknownComponent: ModelComponent | Component) => {
-      const id: BitId =
-        unknownComponent instanceof ModelComponent
-          ? unknownComponent.toBitIdWithLatestVersionAllowNull()
-          : unknownComponent.id;
-      this.bitMap.updateComponentId(id);
-      this.bitMap.removeConfig(id);
-      const availableOnMain = await isAvailableOnMain(unknownComponent, id);
-      if (!availableOnMain) {
-        this.bitMap.setComponentProp(id, 'onLanesOnly', true);
-      }
-      const componentMap = this.bitMap.getComponent(id);
-      componentMap.clearNextVersion();
-    };
-    // important! DO NOT use Promise.all here! otherwise, you're gonna enter into a whole world of pain.
-    // imagine tagging comp1 with auto-tagged comp2, comp1 package.json is written while comp2 is
-    // trying to get the dependencies of comp1 using its package.json.
-    return mapSeries(components, updateVersions);
-  }
-
   getComponentIdFromNodeModulesPath(requirePath: string, bindingPrefix: string): BitId {
     const { packageName } = this.splitPackagePathToNameAndFile(requirePath);
     return packageNameToComponentId(this, packageName, bindingPrefix);
