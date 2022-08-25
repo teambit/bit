@@ -26,6 +26,7 @@ export type ScopeProps = {
   overviewLineSlot: OverviewLineSlot;
   cornerSlot: CornerSlot;
   context: ScopeContextType[];
+  TargetScopeOverview?: ComponentType;
   userUseScopeQuery?: () => { scope: ScopeModel | undefined };
   onSidebarTogglerChange: (callback: () => void) => void;
   TargetCorner?: ComponentType;
@@ -43,6 +44,7 @@ export function Scope({
   overviewLineSlot,
   cornerSlot,
   context = [],
+  TargetScopeOverview,
   TargetCorner,
   onSidebarTogglerChange,
   userUseScopeQuery,
@@ -85,7 +87,16 @@ export function Scope({
             </HoverSplitter>
             <Pane>
               <SlotRouter slot={routeSlot}>
-                <Route index element={<ScopeOverview badgeSlot={badgeSlot} overviewSlot={overviewLineSlot} />} />
+                <Route
+                  index
+                  element={
+                    <ScopeOverview
+                      badgeSlot={badgeSlot}
+                      overviewSlot={overviewLineSlot}
+                      TargetOverview={TargetScopeOverview}
+                    />
+                  }
+                />
               </SlotRouter>
             </Pane>
           </SplitPane>

@@ -11,18 +11,20 @@ export function useIframeContentHeight({
   const [iframeHeight, setIframeHeight] = useState(0);
   const [iframeWidth, setIframeWidth] = useState(0);
   if (skip) return [iframeRef, undefined, iframeWidth];
+  let first = true;
   useInterval(() => {
     try {
       const iframe = iframeRef.current;
       // eslint-disable-next-line
       iframe!.contentWindow!.document.body.style.width = 'fit-content';
-      if (iframe?.style.height === '5000px') {
+      if (!first && iframe?.style.height === '5000px') {
         iframe.style.height = '100%';
       }
       const newHeight = iframe!.contentWindow!.document.body.scrollHeight;
       const newWidth = iframe?.contentWindow?.document.body.offsetWidth;
       setIframeHeight(newHeight);
       setIframeWidth(newWidth || 0);
+      first = false;
     } catch (_) {
       // eslint-disable-next-line
     }

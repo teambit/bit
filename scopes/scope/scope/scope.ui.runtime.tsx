@@ -122,6 +122,7 @@ export class ScopeUI {
   getScope(options: GetScopeOptions) {
     return (
       <Scope
+        TargetScopeOverview={options.TargetScopeOverview}
         TargetCorner={options.Corner}
         routeSlot={this.routeSlot}
         menuSlot={this.menuSlot}
