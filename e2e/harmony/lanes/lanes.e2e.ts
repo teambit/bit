@@ -1211,4 +1211,21 @@ describe('bit lane command', function () {
       });
     });
   });
+  // @todo: fix!
+  describe.skip('head on the lane is not in the filesystem', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.command.createLane();
+      helper.fixtures.populateComponents(1, false);
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.fs.deletePath('.bit');
+      helper.scopeHelper.addRemoteScope();
+    });
+    it('bit status should not throw', () => {
+      expect(() => helper.command.status()).not.to.throw();
+    });
+  });
 });
