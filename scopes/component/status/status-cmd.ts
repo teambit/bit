@@ -154,7 +154,7 @@ export class StatusCmd implements Command {
 
     const outdatedTitle = chalk.underline.white('pending updates');
     const outdatedDesc =
-      '(use "bit checkout [version] [component_id]" to merge changes)\n(use "bit diff [component_id] [new_version]" to compare changes)\n(use "bit log [component_id]" to list all available versions)\n';
+      '(use "bit checkout head" to merge changes)\n(use "bit diff [component_id] [new_version]" to compare changes)\n(use "bit log [component_id]" to list all available versions)\n';
     const outdatedComps = outdatedComponents
       .map((component) => {
         return `    > ${chalk.cyan(component.id.toStringWithoutVersion())} current: ${component.id.version} latest: ${
@@ -194,7 +194,7 @@ or use "bit merge [component-id] --abort" to cancel the merge operation)\n`;
       ? [compWithConflictsTitle, compWithConflictsDesc, compWithConflictsComps].join('\n')
       : '';
 
-    const newComponentDescription = '\n(use "bit tag --all [version]" to lock a version with all your changes)\n';
+    const newComponentDescription = '\n(use "bit tag [version]" to lock a version with all your changes)\n';
     const newComponentsTitle = newComponents.length
       ? chalk.underline.white('new components') + newComponentDescription
       : '';

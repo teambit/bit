@@ -5,10 +5,7 @@ import { LoggerAspect, LoggerMain, Logger } from '@teambit/logger';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import { BuilderAspect, BuilderMain } from '@teambit/builder';
 import { Component, ComponentID } from '@teambit/component';
-import {
-  getPublishedPackages,
-  updateComponentsByTagResult,
-} from '@teambit/legacy/dist/scope/component-ops/tag-model-component';
+import { getPublishedPackages, updateComponentsByTagResult } from '@teambit/snapping';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { BuildStatus, CENTRAL_BIT_HUB_URL, CENTRAL_BIT_HUB_NAME } from '@teambit/legacy/dist/constants';
 import { getScopeRemotes } from '@teambit/legacy/dist/scope/scope-remotes';
@@ -41,12 +38,24 @@ export class SignMain {
     private lanes: LanesMain
   ) {}
 
+  /**
+   * complete the build process of a component.
+   * `isMultiple` indicates that this is running on a new bare-scope and not on the original scope.
+   * it's recommended to always use it, even when it's a single component and not multiple.
+   * (the reason for this name is that for multiple components from multiple scopes, it must be done on a new bare-scope).
+   *
+   * important! this method mutates the legacyScope. it assigns the currentLaneId according to the `bit sign --lane` flag.
+   * if for some reason you're using this API in a long-running-process, make sure to revert it.
+   */
   async sign(ids: ComponentID[], isMultiple?: boolean, push?: boolean, laneIdStr?: string): Promise<SignResult | null> {
     let lane: Lane | undefined;
     if (isMultiple) {
       if (laneIdStr) {
         const laneId = LaneId.parse(laneIdStr);
         lane = await this.lanes.importLaneObject(laneId);
+        // this is critical. otherwise, later on, when loading aspects and isolating capsules, we'll try to fetch dists
+        // from the original scope instead of the lane-scope.
+        this.scope.legacyScope.setCurrentLaneId(laneId);
       }
       await this.scope.import(ids, { lane });
     }
