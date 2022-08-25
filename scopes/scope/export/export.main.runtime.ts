@@ -113,6 +113,7 @@ export class ExportMain {
     });
     if (laneObject) await updateLanesAfterExport(consumer, laneObject);
     const { updatedIds, nonExistOnBitMap } = _updateIdsOnBitMap(consumer.bitMap, updatedLocally);
+    await this.removeFromStagedConfig(updatedIds);
     await linkComponents(updatedIds, consumer);
     Analytics.setExtraData('num_components', exported.length);
     // it is important to have consumer.onDestroy() before running the eject operation, we want the
@@ -127,6 +128,13 @@ export class ExportMain {
       newIdsOnRemote,
       exportedLanes: laneObject ? [laneObject] : [],
     };
+  }
+
+  private async removeFromStagedConfig(ids: BitId[]) {
+    const componentIds = await this.workspace.resolveMultipleComponentIds(ids);
+    const stagedConfig = await this.workspace.scope.getStagedConfig();
+    componentIds.map((compId) => stagedConfig.removeComponentConfig(compId));
+    await stagedConfig.write();
   }
 
   private async getComponentsToExport(

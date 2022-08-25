@@ -35,6 +35,7 @@ import {
 } from '@teambit/legacy/dist/scope/component-ops/message-per-component';
 import { ModelComponent } from '@teambit/legacy/dist/scope/models';
 import { DependencyResolverMain } from '@teambit/dependency-resolver';
+import { Workspace } from '@teambit/workspace';
 
 export type onTagIdTransformer = (id: BitId) => BitId | null;
 
@@ -127,15 +128,14 @@ function getVersionByEnteredId(
 }
 
 export async function tagModelComponent({
+  workspace,
   consumerComponents,
   ids,
-  scope,
   message,
   editor,
   exactVersion,
   releaseType,
   preReleaseId,
-  consumer,
   ignoreNewestVersion = false,
   skipTests = false,
   skipAutoTag,
@@ -149,13 +149,12 @@ export async function tagModelComponent({
   packageManagerConfigRootDir,
   dependencyResolver,
 }: {
+  workspace: Workspace;
   consumerComponents: Component[];
   ids: BitIds;
-  scope: Scope;
   exactVersion?: string | null | undefined;
   releaseType?: ReleaseType;
   incrementBy?: number;
-  consumer: Consumer;
   isSnap?: boolean;
   packageManagerConfigRootDir?: string;
   dependencyResolver: DependencyResolverMain;
@@ -164,6 +163,8 @@ export async function tagModelComponent({
   autoTaggedResults: AutoTagResult[];
   publishedPackages: string[];
 }> {
+  const consumer = workspace.consumer;
+  const scope = workspace.scope.legacyScope;
   const consumerComponentsIdsMap = {};
   // Concat and unique all the dependencies from all the components so we will not import
   // the same dependency more then once, it's mainly for performance purpose
@@ -243,7 +244,7 @@ export async function tagModelComponent({
     emptyBuilderData(allComponentsToTag);
     addBuildStatus(allComponentsToTag, BuildStatus.Pending);
     await addComponentsToScope(consumer, allComponentsToTag, build);
-    await consumer.updateComponentsVersions(allComponentsToTag);
+    await updateComponentsVersions(workspace, allComponentsToTag);
   }
 
   const publishedPackages: string[] = [];
@@ -383,4 +384,54 @@ function addBuildStatus(components: Component[], buildStatus: BuildStatus) {
   components.forEach((component) => {
     component.buildStatus = buildStatus;
   });
+}
+
+export async function updateComponentsVersions(
+  workspace: Workspace,
+  components: Array<ModelComponent | Component>,
+  isTag = true
+): Promise<any> {
+  const consumer = workspace.consumer;
+  const currentLane = consumer.getCurrentLaneId();
+  const stagedConfig = await workspace.scope.getStagedConfig();
+  const isAvailableOnMain = async (component: ModelComponent | Component, id: BitId): Promise<boolean> => {
+    if (currentLane.isDefault()) {
+      return true;
+    }
+    if (!id.hasVersion()) {
+      // component was unsnapped on the current lane and is back to a new component
+      return true;
+    }
+    const modelComponent =
+      component instanceof ModelComponent ? component : await consumer.scope.getModelComponent(component.id);
+    return modelComponent.hasHead();
+  };
+
+  const updateVersions = async (unknownComponent: ModelComponent | Component) => {
+    const id: BitId =
+      unknownComponent instanceof ModelComponent
+        ? unknownComponent.toBitIdWithLatestVersionAllowNull()
+        : unknownComponent.id;
+    consumer.bitMap.updateComponentId(id);
+    const availableOnMain = await isAvailableOnMain(unknownComponent, id);
+    if (!availableOnMain) {
+      consumer.bitMap.setComponentProp(id, 'onLanesOnly', true);
+    }
+    const componentMap = consumer.bitMap.getComponent(id);
+    const compId = await workspace.resolveComponentId(id);
+    // it can be either a tag/snap or reset.
+    if (isTag) {
+      const config = componentMap.config;
+      stagedConfig.addComponentConfig(compId, config);
+      consumer.bitMap.removeConfig(id);
+    } else if (!componentMap.config) {
+      componentMap.config = stagedConfig.getConfigPerId(compId);
+    }
+    componentMap.clearNextVersion();
+  };
+  // important! DO NOT use Promise.all here! otherwise, you're gonna enter into a whole world of pain.
+  // imagine tagging comp1 with auto-tagged comp2, comp1 package.json is written while comp2 is
+  // trying to get the dependencies of comp1 using its package.json.
+  await mapSeries(components, updateVersions);
+  await stagedConfig.write();
 }
