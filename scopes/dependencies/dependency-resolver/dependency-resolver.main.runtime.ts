@@ -18,10 +18,7 @@ import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extensio
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 import { DetectorHook } from '@teambit/legacy/dist/consumer/component/dependencies/files-dependency-builder/detector-hook';
 import { Http, ProxyConfig, NetworkConfig } from '@teambit/legacy/dist/scope/network/http';
-import {
-  registerUpdateDependenciesOnTag,
-  onTagIdTransformer,
-} from '@teambit/legacy/dist/scope/component-ops/tag-model-component';
+import { onTagIdTransformer } from '@teambit/snapping';
 import {
   registerUpdateDependenciesOnExport,
   OnExportIdTransformer,
@@ -1339,7 +1336,6 @@ export class DependencyResolverMain {
       if (!envPolicy) return undefined;
       return envPolicy.peersAutoDetectPolicy.toVersionManifest();
     });
-    registerUpdateDependenciesOnTag(dependencyResolver.updateDepsOnLegacyTag.bind(dependencyResolver));
     registerUpdateDependenciesOnExport(dependencyResolver.updateDepsOnLegacyExport.bind(dependencyResolver));
     aspectLoader.registerOnLoadRequireableExtensionSlot(
       dependencyResolver.onLoadRequireableExtensionSubscriber.bind(dependencyResolver)
