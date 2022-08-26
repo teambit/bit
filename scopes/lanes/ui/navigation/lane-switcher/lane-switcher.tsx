@@ -13,7 +13,10 @@ export type LaneSwitcherProps = {} & HTMLAttributes<HTMLDivElement>;
 export function LaneSwitcher({ className, ...rest }: LaneSwitcherProps) {
   const { lanesModel, updateLanesModel } = useLanes();
 
-  const availableLanes: Array<LaneId> = (lanesModel?.lanes || []).map((lane) => lane.id);
+  const mainLaneId = lanesModel?.getDefaultLane()?.id;
+  const nonMainLaneIds = lanesModel?.getNonMainLanes().map((lane) => lane.id) || [];
+
+  const availableLanes: Array<LaneId> = (mainLaneId && [mainLaneId, ...nonMainLaneIds]) || [];
 
   const viewedLaneId = lanesModel?.viewedLane?.id;
   const selectedLaneId = viewedLaneId;
@@ -29,7 +32,7 @@ export function LaneSwitcher({ className, ...rest }: LaneSwitcherProps) {
     <Dropdown
       {...rest}
       // @ts-ignore - mismatch between @types/react
-      placeholder={<Placeholder selectedLaneId={selectedLaneId.toString()} />}
+      placeholder={<Placeholder selectedLaneId={selectedLaneId} />}
       className={classnames(className, styles.dropdown)}
     >
       {availableLanes.map((lane) => (
@@ -44,13 +47,15 @@ export function LaneSwitcher({ className, ...rest }: LaneSwitcherProps) {
   );
 }
 
-type PlaceholderProps = { selectedLaneId: string } & React.HTMLAttributes<HTMLDivElement>;
+type PlaceholderProps = { selectedLaneId: LaneId } & React.HTMLAttributes<HTMLDivElement>;
 
 function Placeholder({ selectedLaneId, className, ...rest }: PlaceholderProps) {
+  const laneIdStr = selectedLaneId.isDefault() ? selectedLaneId.name : selectedLaneId.toString();
+
   return (
     <div {...rest} className={classnames(styles.placeholder, className)}>
       <LaneIcon className={styles.icon} />
-      <span className={styles.placeholderText}>{selectedLaneId}</span>
+      <span className={styles.placeholderText}>{laneIdStr}</span>
       <Icon of="fat-arrow-down" />
     </div>
   );
@@ -73,10 +78,12 @@ function MenuItem(props: MenuItemProps) {
     }
   }, [isCurrent]);
 
+  const laneIdStr = current.isDefault() ? current.name : current.toString();
+
   return (
     <div className={styles.menuItem} ref={currentVersionRef}>
       <div className={classnames(isCurrent && styles.current)} onClick={props.onLaneSelected}>
-        <div>{current.toString()}</div>
+        <div>{laneIdStr}</div>
       </div>
     </div>
   );

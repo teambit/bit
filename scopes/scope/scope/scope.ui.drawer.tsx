@@ -1,7 +1,7 @@
-import React, { useContext } from 'react';
+import React from 'react';
 import { ComponentsDrawer, ComponentFiltersSlot, DrawerWidgetSlot } from '@teambit/component.ui.component-drawer';
-import { ScopeContext } from '@teambit/scope.ui.hooks.scope-context';
 import { ComponentView, NamespaceTreeNode, PayloadType, ScopePayload } from '@teambit/ui-foundation.ui.side-bar';
+import { ComponentModel } from '@teambit/component';
 import { TreeNodeProps } from '@teambit/design.ui.tree';
 import { useLanes } from '@teambit/lanes.hooks.use-lanes';
 import { useLaneComponents } from '@teambit/lanes.hooks.use-lane-components';
@@ -55,17 +55,32 @@ export const scopeDrawer = ({
     },
     emptyMessage: 'Scope is empty',
     useComponents: () => {
-      const scope = useContext(ScopeContext);
+      // lane components + main components
       const { lanesModel, loading: lanesLoading } = useLanes();
-      const scopeComponents = scope.components;
       const viewedLaneId = lanesModel?.viewedLane?.id;
+      const defaultLane = lanesModel?.getDefaultLane();
+      const isViewingDefaultLane = viewedLaneId && defaultLane?.id.isEqual(viewedLaneId);
+
       const { components: laneComponents = [], loading: laneCompsLoading } = useLaneComponents(viewedLaneId);
-      const components = scopeComponents.concat(laneComponents);
+      const { components: mainComponents = [], loading: mainCompsLoading } = useLaneComponents(
+        !isViewingDefaultLane ? defaultLane?.id : undefined
+      );
+
+      const components = isViewingDefaultLane ? laneComponents : mergeComponents(mainComponents, laneComponents);
 
       return {
-        loading: !scope || lanesLoading || laneCompsLoading,
+        loading: lanesLoading || laneCompsLoading || mainCompsLoading,
         components,
       };
     },
   });
 };
+
+function mergeComponents(mainComponents: ComponentModel[], laneComponents: ComponentModel[]): ComponentModel[] {
+  const mainComponentsThatAreNotOnLane = mainComponents.filter((mainComponent) => {
+    return !laneComponents.find(
+      (laneComponent) => laneComponent.id.toStringWithoutVersion() === mainComponent.id.toStringWithoutVersion()
+    );
+  });
+  return laneComponents.concat(mainComponentsThatAreNotOnLane);
+}

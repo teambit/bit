@@ -207,6 +207,8 @@ export class LanesModel {
       (component) => component.id.fullName === fullName
     );
   getDefaultLane = () => this.lanes.find((lane) => lane.id.isDefault());
+  getNonMainLanes = () => this.lanes.filter((lane) => !lane.id.isDefault());
+
   isComponentOnMain = (componentId: ComponentID) => {
     const componentAndLane = this.getLaneByComponentVersion(componentId);
     return !!componentAndLane && componentAndLane.lane.id.isDefault();

@@ -16,7 +16,6 @@ export type ComponentFilters = Array<ComponentFilterCriteria<any>>;
 export type ComponentFilterRenderProps = {
   components: ComponentModel[];
   lanes?: LanesModel;
-  filteredComponents: ComponentModel[];
 } & React.HTMLAttributes<HTMLDivElement>;
 
 export type ComponentFilterCriteria<State> = {

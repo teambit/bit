@@ -74,15 +74,7 @@ export class ComponentsDrawer implements DrawerType {
     return <Composer components={combinedContexts}>{children}</Composer>;
   };
 
-  renderFilters = ({
-    components,
-    lanes,
-    filteredComponents,
-  }: {
-    components: ComponentModel[];
-    lanes?: LanesModel;
-    filteredComponents: ComponentModel[];
-  }) => {
+  renderFilters = ({ components, lanes }: { components: ComponentModel[]; lanes?: LanesModel }) => {
     const { filterWidgetOpen } = useContext(ComponentFilterWidgetContext);
     const filterPlugins = this.plugins.filters;
 
@@ -104,7 +96,6 @@ export class ComponentsDrawer implements DrawerType {
           <filter.render
             key={filter.key}
             components={components}
-            filteredComponents={filteredComponents}
             lanes={lanes}
             className={classNames(styles.filter, filterWidgetOpen && styles.open)}
           />
@@ -150,7 +141,7 @@ export class ComponentsDrawer implements DrawerType {
       [filters, components, lanes]
     );
 
-    const Filters = this.renderFilters({ components, lanes, filteredComponents });
+    const Filters = this.renderFilters({ components, lanes });
     const Tree = this.renderTree({ components: filteredComponents });
 
     const emptyDrawer = (
