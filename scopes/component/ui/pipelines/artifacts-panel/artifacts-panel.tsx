@@ -27,7 +27,7 @@ export function ArtifactPanel({ className, fileIconMatchers }: ArtifactsPanelPro
   const { pipeline, selectedPipelineId } = componentPipelineContext;
   const { artifact, taskName } = pipeline.find((task) => task.id === selectedPipelineId) || {};
   const { name, files } = artifact || {};
-  const artifactFiles = files?.map((file) => file.name) || [];
+  const artifactFiles = files?.map((file) => file.path) || [];
   const currentHref = location?.pathname || '';
   const drawerName = `${taskName} ${name ? '/ '.concat(name) : ''}`;
   const onToggle = () => onToggleDrawer((open) => !open);
@@ -68,7 +68,7 @@ export function ArtifactPanel({ className, fileIconMatchers }: ArtifactsPanelPro
 
 const fileNodeClicked = (files: ArtifactFile[], opts: 'download' | 'new tab') => (_, node) => {
   const { id } = node;
-  const artifactFile = files.find((file) => file.name === id);
+  const artifactFile = files.find((file) => file.path === id);
 
   if (artifactFile?.downloadUrl) {
     fetch(artifactFile.downloadUrl, { method: 'GET' })
@@ -93,8 +93,8 @@ const fileNodeClicked = (files: ArtifactFile[], opts: 'download' | 'new tab') =>
 
 function generateWidget(files: ArtifactFile[]) {
   return function Widget({ node }: WidgetProps<any>) {
-    const fileName = node?.id;
-    const artifactFile = files.find((file) => file.name === fileName);
+    const filePath = node?.id;
+    const artifactFile = files.find((file) => file.path === filePath);
     if (artifactFile) {
       return (
         <div className={styles.artiactWidgets}>

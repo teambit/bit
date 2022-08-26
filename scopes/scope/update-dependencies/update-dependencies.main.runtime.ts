@@ -10,7 +10,7 @@ import {
   getPublishedPackages,
   updateComponentsByTagResult,
   addFlattenedDependenciesToComponents,
-} from '@teambit/legacy/dist/scope/component-ops/tag-model-component';
+} from '@teambit/snapping';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { BuildStatus, LATEST } from '@teambit/legacy/dist/constants';
 import { BitIds } from '@teambit/legacy/dist/bit-id';

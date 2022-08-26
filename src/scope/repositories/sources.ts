@@ -355,7 +355,8 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
       const versionObject = allVersionsObjects.find((v) => v.hash().isEqual(ref));
       const refStr = ref.toString();
       if (!versionObject) throw new Error(`removeComponentVersions failed finding a version object of ${refStr}`);
-      objectRepo.removeObject(ref);
+      // avoid deleting the Version object from the filesystem. see the e2e-case: "'snapping on a lane, switching to main, snapping and running "bit reset"'"
+      // objectRepo.removeObject(ref);
       return ref;
     });
 

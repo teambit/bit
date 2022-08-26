@@ -122,4 +122,8 @@ export default class GeneralHelper {
   getExtension(component, extName: string) {
     return component.extensions.find((e) => e.name === extName);
   }
+
+  getStagedConfig(laneName = 'main') {
+    return fs.readJSONSync(path.join(this.scopes.localPath, '.bit', 'staged-config', `${laneName}.json`));
+  }
 }
