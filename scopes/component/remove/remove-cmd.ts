@@ -91,7 +91,7 @@ ${chalk.bold('to update the remote, please tag/snap and then export')}`;
     }
     if (!silent) {
       const willDeleteFiles = !remote && !keepFiles;
-      const removePromptResult = await removePrompt(willDeleteFiles)();
+      const removePromptResult = await removePrompt(willDeleteFiles, remote)();
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       if (!yn(removePromptResult.shouldRemove)) {
         throw new BitError('the operation has been canceled');
