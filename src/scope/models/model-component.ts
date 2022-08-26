@@ -740,6 +740,20 @@ if that's not the case, make sure to call "getAllIdsAvailableOnLane" and not "ge
     return deprecationAspect.config.deprecate;
   }
 
+  async isRemoved(repo: Repository): Promise<boolean> {
+    const head = this.getHeadRegardlessOfLane();
+    if (!head) {
+      // it's new or only on lane
+      return false;
+    }
+    const version = (await repo.load(head)) as Version;
+    if (!version) {
+      // the head Version doesn't exist locally, there is no way to know whether it's removed
+      return false;
+    }
+    return version.isRemoved();
+  }
+
   async isLaneReadmeOf(repo: Repository): Promise<string[]> {
     const head = this.getHeadRegardlessOfLane();
     if (!head) {

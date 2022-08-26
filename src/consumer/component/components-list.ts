@@ -28,6 +28,7 @@ export type ListScopeResult = {
   currentlyUsedVersion?: string | null | undefined;
   remoteVersion?: string;
   deprecated?: boolean;
+  removed?: boolean;
   laneReadmeOf?: string[];
 };
 
@@ -527,21 +528,28 @@ export default class ComponentsList {
   /**
    * get called from a bare-scope, shows only components of that scope
    */
-  static async listLocalScope(scope: Scope, namespacesUsingWildcards?: string): Promise<ListScopeResult[]> {
+  static async listLocalScope(
+    scope: Scope,
+    namespacesUsingWildcards?: string,
+    includeRemoved = false
+  ): Promise<ListScopeResult[]> {
     const components = await scope.listLocal();
     const componentsFilteredByWildcards = namespacesUsingWildcards
       ? ComponentsList.filterComponentsByWildcard(components, namespacesUsingWildcards)
       : components;
     const componentsSorted = ComponentsList.sortComponentsByName(componentsFilteredByWildcards);
-    return Promise.all(
+    const results = await Promise.all(
       componentsSorted.map(async (component: ModelComponent) => {
         return {
           id: component.toBitIdWithLatestVersion(),
           deprecated: await component.isDeprecated(scope.objects),
-          laneReadmeOf: await component?.isLaneReadmeOf(scope.objects),
+          removed: await component.isRemoved(scope.objects),
+          laneReadmeOf: await component.isLaneReadmeOf(scope.objects),
         };
       })
     );
+    if (includeRemoved) return results;
+    return results.filter((result) => !result.removed);
   }
 
   // components can be one of the following: Component[] | ModelComponent[] | string[] | BitId[]

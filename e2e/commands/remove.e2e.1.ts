@@ -265,6 +265,11 @@ describe('bit remove command', function () {
         it('bit status should be clean', () => {
           helper.command.expectStatusToBeClean();
         });
+        it('bit list remote should not show the removed component', () => {
+          const list = helper.command.listRemoteScopeParsed();
+          expect(list).to.have.lengthOf(1);
+          expect(list[0].id).to.not.have.string('comp2');
+        });
         describe('importing the component to a new workspace', () => {
           let importOutput: string;
           before(() => {
@@ -274,6 +279,18 @@ describe('bit remove command', function () {
           });
           it('should indicate that the component is removed', () => {
             expect(importOutput).to.have.string('removed');
+          });
+        });
+        describe('importing the entire scope to a new workspace', () => {
+          before(() => {
+            helper.scopeHelper.reInitLocalScopeHarmony();
+            helper.scopeHelper.addRemoteScope();
+            helper.command.importComponent('*');
+          });
+          it('should not import the removed component', () => {
+            const list = helper.command.listParsed();
+            expect(list).to.have.lengthOf(1);
+            expect(list[0].id).to.not.have.string('comp2');
           });
         });
       });
