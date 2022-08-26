@@ -1,6 +1,7 @@
 import { IssuesClasses } from '@teambit/component-issues';
 import chai, { expect } from 'chai';
 import * as path from 'path';
+import { Extensions } from '../../src/constants';
 
 import Helper from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../src/fixtures/fixtures';
@@ -234,6 +235,12 @@ describe('bit remove command', function () {
     it('bit status should show the dependent component with an issue because it is now missing the dependency', () => {
       helper.command.expectStatusToHaveIssue(IssuesClasses.MissingPackagesDependenciesOnFs.name);
     });
+    // @todo. not very easy to implement. coz before tag, when it's loaded from the workspace it fails and then
+    // it loads it from the scope. however, the removed data is not in the scope yet. only in the bitmap.
+    it.skip('bit show should show the component as removed', () => {
+      const removeData = helper.command.showAspectConfig('comp2', Extensions.remove);
+      expect(removeData.config.removed).to.be.true;
+    });
     describe('tagging the component', () => {
       before(() => {
         helper.fs.outputFile('comp1/index.js', '');
@@ -242,6 +249,10 @@ describe('bit remove command', function () {
       it('should tag the removed components', () => {
         const isStaged = helper.command.statusComponentIsStaged(`${helper.scopes.remote}/comp2`);
         expect(isStaged).to.be.true;
+      });
+      it('bit show should still show the component as removed', () => {
+        const removeData = helper.command.showAspectConfig('comp2', Extensions.remove);
+        expect(removeData.config.removed).to.be.true;
       });
       describe('exporting the components', () => {
         let exportOutput: string;
