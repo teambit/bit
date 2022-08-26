@@ -8,9 +8,7 @@ import { ExportingComponents } from '@teambit/component.instructions.exporting-c
 import { AlertCard } from '@teambit/design.ui.alert-card';
 import React, { HTMLAttributes, useContext } from 'react';
 import { useLanes } from '@teambit/lanes.hooks.use-lanes';
-import { Ellipsis } from '@teambit/design.ui.styles.ellipsis';
 import { LaneBreadcrumb } from '@teambit/lanes.ui.gallery';
-import { LaneIcon } from '@teambit/lanes.ui.icons.lane-icon';
 
 import styles from './change-log-page.module.scss';
 
@@ -30,10 +28,7 @@ export function ChangeLogPage({ className }: ChangeLogPageProps) {
       <>
         {isComponentOnLane && (
           <>
-            <div className={styles.lane}>
-              <LaneIcon />
-              <Ellipsis className={styles.laneName}>{lanesModel?.viewedLane?.id.toString()}</Ellipsis>
-            </div>
+            <LaneBreadcrumb lane={currentLane} />
             <Separator isPresentational className={styles.separator} />
           </>
         )}
@@ -57,7 +52,7 @@ export function ChangeLogPage({ className }: ChangeLogPageProps) {
 
   return (
     <>
-      <LaneBreadcrumb lane={currentLane} />
+      {isComponentOnLane && <LaneBreadcrumb lane={currentLane} />}
       <Separator isPresentational />
       <div className={classNames(styles.changeLogPage, className)}>
         <H1 className={styles.title}>History</H1>
