@@ -117,5 +117,17 @@ describe('bit lane command', function () {
         expect(mergeOutput).to.have.string('has been removed');
       });
     });
+    describe('importing the lane to a new workspace', () => {
+      before(() => {
+        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.scopeHelper.addRemoteScope();
+        helper.command.importLane('dev');
+      });
+      it('should not bring the removed components', () => {
+        const list = helper.command.listParsed();
+        expect(list).to.have.lengthOf(1);
+        expect(list[0].id).to.not.have.string('comp2');
+      });
+    });
   });
 });
