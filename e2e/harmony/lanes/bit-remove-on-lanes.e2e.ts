@@ -102,6 +102,20 @@ describe('bit lane command', function () {
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
     });
-    it('bit merge should not merge the removed components', () => {});
+    describe('merge a lane with removed component to main', () => {
+      let mergeOutput: string;
+      before(() => {
+        helper.command.switchLocalLane('main');
+        mergeOutput = helper.command.mergeLane('dev', '--verbose');
+      });
+      it('should not merge the removed component', () => {
+        const list = helper.command.listParsed();
+        expect(list).to.have.lengthOf(1);
+        expect(list[0].id).to.not.have.string('comp2');
+      });
+      it('should explain why it was not merged if --verbose was used', () => {
+        expect(mergeOutput).to.have.string('has been removed');
+      });
+    });
   });
 });

@@ -786,7 +786,6 @@ if that's not the case, make sure to call "getAllIdsAvailableOnLane" and not "ge
     const [files, scopeMeta] = await Promise.all([filesP, scopeMetaP]);
 
     const extensions = version.extensions.clone();
-    const removed = extensions.findCoreExtension(Extensions.remove)?.config?.removed;
     const bindingPrefix = this.bindingPrefix === 'bit' ? '@bit' : this.bindingPrefix;
     // when generating a new ConsumerComponent out of Version, it is critical to make sure that
     // all objects are cloned and not copied by reference. Otherwise, every time the
@@ -817,7 +816,7 @@ if that's not the case, make sure to call "getAllIdsAvailableOnLane" and not "ge
       overrides: ComponentOverrides.loadFromScope(version.overrides),
       packageJsonChangedProps: clone(version.packageJsonChangedProps),
       deprecated: this.deprecated,
-      removed,
+      removed: version.isRemoved(),
       scopesList: clone(this.scopesList),
       schema: version.schema,
       extensions,
