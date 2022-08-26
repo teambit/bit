@@ -116,7 +116,10 @@ describe('Jest Tester', function () {
       helper.scopeHelper.reInitLocalScopeHarmony();
       compName = helper.fixtures.populateComponents(1);
       helper.fs.outputFile('comp1/comp1.spec.ts', specFilePassingFixture());
-      helper.fs.outputFile('comp1/comp1.custom-pattern.spec.ts', specFilePassingFixture('custom pattern describe text', 'custom pattern it text'));
+      helper.fs.outputFile(
+        'comp1/comp1.custom-pattern.spec.ts',
+        specFilePassingFixture('custom pattern describe text', 'custom pattern it text')
+      );
       helper.env.setCustomEnv('custom-jest-resolve-env');
       helper.command.compile();
       helper.command.install();
@@ -130,9 +133,12 @@ describe('Jest Tester', function () {
       it('bit test should mentions the custom resolved spec file', () => {
         expect(output).to.have.string('comp1.custom-pattern.spec');
       });
-      it('bit test should show the passing component for resolved specs via Jest output', () => {
-        expect(output).to.have.string('✓ custom pattern it text');
-      });
+      (IS_WINDOWS ? it.skip : it)(
+        'bit test should show the passing component for resolved specs via Jest output',
+        () => {
+          expect(output).to.have.string('✓ custom pattern it text');
+        }
+      );
       it('bit test should not mentions the default spec file', () => {
         expect(output).to.not.have.string('comp1.spec');
       });
@@ -148,9 +154,12 @@ describe('Jest Tester', function () {
       it('bit build should mentions the custom resolved spec file', () => {
         expect(output).to.have.string('comp1.custom-pattern.spec');
       });
-      it('bit build should show the passing component for resolved specs via Jest output', () => {
-        expect(output).to.have.string('✓ custom pattern it text');
-      });
+      (IS_WINDOWS ? it.skip : it)(
+        'bit build should show the passing component for resolved specs via Jest output',
+        () => {
+          expect(output).to.have.string('✓ custom pattern it text');
+        }
+      );
       it('bit build should not mentions the default spec file', () => {
         expect(output).to.not.have.string('comp1.spec');
       });
@@ -159,7 +168,6 @@ describe('Jest Tester', function () {
       });
     });
   });
-
 });
 
 function specFilePassingFixture(describeText = 'test', itText = 'should pass') {
