@@ -188,7 +188,10 @@ export class LanesModel {
     if (!version) return undefined;
     const componentAndLane = this.lanebyComponentHash.get(version);
     if (!componentAndLane) return undefined;
-    if (componentAndLane.lane.id.isDefault()) return componentAndLane.component.id.fullName;
+    if (componentAndLane.lane.id.isDefault())
+      return `${componentAndLane.component.id.fullName}${
+        componentAndLane.component.id.version ? `?version=${componentAndLane.component.id.version}` : ''
+      }`;
     return LanesModel.getLaneComponentUrl(componentAndLane.component.id, componentAndLane.lane.id);
   };
 

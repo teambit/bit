@@ -65,7 +65,9 @@ export const workspaceDrawer = ({ treeWidgets, filtersSlot, drawerWidgetSlot }: 
 
 function mergeComponents(mainComponents: ComponentModel[], laneComponents: ComponentModel[]): ComponentModel[] {
   const mainComponentsThatAreNotOnLane = mainComponents.filter((mainComponent) => {
-    return !laneComponents.find((laneComponent) => laneComponent.id.isEqual(mainComponent.id));
+    return !laneComponents.find(
+      (laneComponent) => laneComponent.id.toStringWithoutVersion() === mainComponent.id.toStringWithoutVersion()
+    );
   });
   return laneComponents.concat(mainComponentsThatAreNotOnLane);
 }
