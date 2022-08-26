@@ -71,8 +71,8 @@ export class ExportCmd implements Command {
       resume,
     }: any
   ): Promise<string> {
-    const { componentsIds, nonExistOnBitMap, missingScope, exportedLanes, ejectResults } = await this.exportMain.export(
-      {
+    const { componentsIds, nonExistOnBitMap, removedIds, missingScope, exportedLanes, ejectResults } =
+      await this.exportMain.export({
         ids,
         eject,
         includeNonStaged: all || allVersions,
@@ -80,8 +80,7 @@ export class ExportCmd implements Command {
         originDirectly,
         resumeExportId: resume,
         ignoreMissingArtifacts,
-      }
-    );
+      });
     if (isEmpty(componentsIds) && isEmpty(nonExistOnBitMap) && isEmpty(missingScope)) {
       return chalk.yellow('nothing to export');
     }
@@ -98,10 +97,15 @@ export class ExportCmd implements Command {
       // if includeDependencies is true, the nonExistOnBitMap might be the dependencies
       if (isEmpty(nonExistOnBitMap)) return '';
       const idsStr = nonExistOnBitMap.map((id) => id.toString()).join(', ');
-      return chalk.yellow(`${idsStr}
-exported successfully. bit did not update the workspace as the component files are not tracked.
-this might happen when a component was soft-removed, in which case, all is good.
-otherwise, this might happen when a component was tracked in a different git branch. to fix it check if they where tracked in a different git branch, checkout to that branch and resync by running 'bit import'. or stay on your branch and track the components again using 'bit add'.\n`);
+      return chalk.yellow(
+        `${idsStr}\nexported successfully. bit did not update the workspace as the component files are not tracked. this might happen when a component was tracked in a different git branch. to fix it check if they where tracked in a different git branch, checkout to that branch and resync by running 'bit import'. or stay on your branch and track the components again using 'bit add'.\n`
+      );
+    };
+    const removedOutput = () => {
+      if (!removedIds.length) return '';
+      const title = chalk.bold(`\n\nthe following component(s) have been marked as removed on the remote\n`);
+      const idsStr = removedIds.join('\n');
+      return title + idsStr;
     };
     const missingScopeOutput = () => {
       if (isEmpty(missingScope)) return '';
@@ -118,7 +122,7 @@ otherwise, this might happen when a component was tracked in a different git bra
       return `\n${output}`;
     };
 
-    return nonExistOnBitMapOutput() + missingScopeOutput() + exportOutput() + ejectOutput();
+    return nonExistOnBitMapOutput() + missingScopeOutput() + exportOutput() + ejectOutput() + removedOutput();
   }
 
   async json(

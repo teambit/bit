@@ -48,12 +48,14 @@ export class ExportMain {
 
   async export(params: ExportParams) {
     HooksManagerInstance.triggerHook(PRE_EXPORT_HOOK, params);
-    const { updatedIds, nonExistOnBitMap, missingScope, exported, exportedLanes } = await this.exportComponents(params);
+    const { updatedIds, nonExistOnBitMap, missingScope, exported, removedIds, exportedLanes } =
+      await this.exportComponents(params);
     let ejectResults;
     if (params.eject) ejectResults = await ejectExportedComponents(updatedIds);
     const exportResults = {
       componentsIds: exported,
       nonExistOnBitMap,
+      removedIds,
       missingScope,
       ejectResults,
       exportedLanes,
@@ -70,6 +72,7 @@ export class ExportMain {
   private async exportComponents({ ids, includeNonStaged, originDirectly, ...params }: ExportParams): Promise<{
     updatedIds: BitId[];
     nonExistOnBitMap: BitId[];
+    removedIds: BitIds;
     missingScope: BitId[];
     exported: BitId[];
     exportedLanes: Lane[];
@@ -86,6 +89,7 @@ export class ExportMain {
       return {
         updatedIds: [],
         nonExistOnBitMap: [],
+        removedIds: new BitIds(),
         missingScope,
         exported: [],
         newIdsOnRemote: [],
@@ -108,8 +112,9 @@ export class ExportMain {
       isOnMain,
     });
     if (laneObject) await updateLanesAfterExport(consumer, laneObject);
+    const removedIds = await this.getRemovedStagedBitIds();
     const { updatedIds, nonExistOnBitMap } = _updateIdsOnBitMap(consumer.bitMap, updatedLocally);
-    await this.removeFromStagedConfig(updatedIds);
+    await this.removeFromStagedConfig([...updatedIds, ...nonExistOnBitMap]);
     await linkComponents(updatedIds, consumer);
     Analytics.setExtraData('num_components', exported.length);
     // it is important to have consumer.onDestroy() before running the eject operation, we want the
@@ -118,7 +123,8 @@ export class ExportMain {
     await consumer.onDestroy();
     return {
       updatedIds,
-      nonExistOnBitMap,
+      nonExistOnBitMap: nonExistOnBitMap.filter((id) => !removedIds.hasWithoutVersion(id)),
+      removedIds,
       missingScope,
       exported,
       newIdsOnRemote,
@@ -214,10 +220,14 @@ export class ExportMain {
     const componentsToExportWithoutRemoved = includeNonStaged
       ? await componentsList.listNonNewComponentsIds()
       : await componentsList.listExportPendingComponentsIds(laneObject);
-    const removedStaged = await this.remove.getRemovedStaged();
-    const removedStagedBitIds = removedStaged.map((r) => r._legacy).map((id) => id.changeVersion(undefined));
+    const removedStagedBitIds = await this.getRemovedStagedBitIds();
     const componentsToExport = BitIds.uniqFromArray([...componentsToExportWithoutRemoved, ...removedStagedBitIds]);
     return { componentsToExport, laneObject };
+  }
+
+  private async getRemovedStagedBitIds(): Promise<BitIds> {
+    const removedStaged = await this.remove.getRemovedStaged();
+    return BitIds.fromArray(removedStaged.map((r) => r._legacy).map((id) => id.changeVersion(undefined)));
   }
 
   static runtime = MainRuntime;
