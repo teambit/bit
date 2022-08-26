@@ -265,6 +265,17 @@ describe('bit remove command', function () {
         it('bit status should be clean', () => {
           helper.command.expectStatusToBeClean();
         });
+        describe('importing the component to a new workspace', () => {
+          let importOutput: string;
+          before(() => {
+            helper.scopeHelper.reInitLocalScopeHarmony();
+            helper.scopeHelper.addRemoteScope();
+            importOutput = helper.command.importComponent('comp2');
+          });
+          it('should indicate that the component is removed', () => {
+            expect(importOutput).to.have.string('removed');
+          });
+        });
       });
     });
   });

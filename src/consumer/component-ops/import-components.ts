@@ -68,6 +68,7 @@ export type ImportDetails = {
   filesStatus: FilesStatus | null | undefined;
   missingDeps: BitId[];
   deprecated: boolean;
+  removed?: boolean;
 };
 export type ImportResult = {
   dependencies: ComponentWithDependencies[];
@@ -442,6 +443,7 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
       };
       const filesStatus = this.mergeStatus && this.mergeStatus[idStr] ? this.mergeStatus[idStr] : null;
       const deprecated = await modelComponent.isDeprecated(this.scope.objects);
+      const removed = component.component.removed;
       const latestVersion = modelComponent.latest();
       return {
         id: idStr,
@@ -451,6 +453,7 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
         filesStatus,
         missingDeps: component.missingDependencies,
         deprecated,
+        removed,
       };
     });
     return Promise.all(detailsP);

@@ -68,6 +68,7 @@ export type ComponentProps = {
   mainDistFile?: PathLinux;
   license?: License;
   deprecated?: boolean;
+  removed?: boolean;
   origin: ComponentOrigin;
   log?: Log;
   schema?: string;
@@ -171,6 +172,7 @@ export default class Component {
     license,
     log,
     deprecated,
+    removed,
     origin,
     scopesList,
     extensions,
@@ -198,6 +200,7 @@ export default class Component {
     this.license = license;
     this.log = log;
     this.deprecated = deprecated || false;
+    this.removed = removed;
     this.origin = origin;
     this.scopesList = scopesList;
     this.extensions = extensions || [];
