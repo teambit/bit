@@ -10,6 +10,8 @@ import {
   ComponentFilterCriteria,
   ComponentFilterRenderProps,
   useComponentFilter,
+  useComponentFilters,
+  runAllFilters,
 } from '@teambit/component.ui.component-filters.component-filter-context';
 import styles from './envs-filter.module.scss';
 
@@ -47,7 +49,7 @@ export const EnvsFilter: EnvsFilterCriteria = {
   render: envsFilter,
 };
 
-const getDefaultState = (components: ComponentModel[]) => {
+const deriveEnvsFilterState = (components: ComponentModel[]) => {
   return useMemo(() => {
     const defaultState = {
       dropdownState: false,
@@ -89,24 +91,28 @@ const getDefaultState = (components: ComponentModel[]) => {
   }, [components]);
 };
 
-function envsFilter({ components, className }: ComponentFilterRenderProps) {
-  const defaultState = getDefaultState(components);
-  const filterContext = useComponentFilter(EnvsFilter.id, defaultState);
+function envsFilter({ components, className, lanes }: ComponentFilterRenderProps) {
+  const [filters = []] = useComponentFilters() || [];
+  const filtersExceptEnv = filters.filter((filter) => filter.id !== EnvsFilter.id);
+  const filteredComponents = runAllFilters(filtersExceptEnv, { components, lanes });
+
+  const envsFilterState = deriveEnvsFilterState(filteredComponents);
+  const filterContext = useComponentFilter(EnvsFilter.id, envsFilterState);
 
   if (!filterContext) return null;
 
-  const [currentFilter, updateFilter] = filterContext;
+  const envs = envsFilterState.envsState;
 
-  const currentEnvsState = currentFilter.state.envsState;
+  const [currentFilter, updateFilter] = filterContext;
 
   const selectList: ItemType[] = [];
 
-  currentFilter.state.envsState.forEach((state) => {
+  envs.forEach((state) => {
     selectList.push({
       value: state.id,
       icon: state.icon,
       description: state.description,
-      checked: !!currentEnvsState.get(state.id)?.active,
+      checked: !!currentFilter.state.envsState.get(state.id)?.active,
       element: <EnvsDropdownItem {...state} />,
     });
   });

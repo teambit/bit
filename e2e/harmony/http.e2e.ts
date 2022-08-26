@@ -30,7 +30,7 @@ import { HttpHelper } from '../http-helper';
     });
     it('lane list -r should show the remote lanes', () => {
       const output = helper.command.listRemoteLanesParsed();
-      expect(output.lanes).to.have.lengthOf(1);
+      expect(output.lanes).to.have.lengthOf(2);
       expect(output.lanes[0].id.name).to.have.string('dev');
     });
     it('bit import on a local lane tracked to a valid remote scope should not throw an error', () => {
@@ -47,7 +47,7 @@ import { HttpHelper } from '../http-helper';
     it('bit lane remove -r -f should remove the remote lane', () => {
       helper.command.removeRemoteLane('dev', '--force');
       const output = helper.command.listRemoteLanesParsed();
-      expect(output.lanes).to.have.lengthOf(0);
+      expect(output.lanes).to.have.lengthOf(1);
     });
     // previously it was throwing UnexpectedNetworkError without any message.
     it('bit lane remove -r of a non-existing lane should throw a descriptive error', () => {

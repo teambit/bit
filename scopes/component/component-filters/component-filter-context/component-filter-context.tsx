@@ -66,6 +66,13 @@ export function useComponentFilter<T>(
   return [filterFromContext, setState];
 }
 
+export function useComponentFilters():
+  | [ComponentFilters, React.Dispatch<React.SetStateAction<ComponentFilters>>]
+  | undefined {
+  const filterContext = useContext(ComponentFilterContext);
+  return filterContext ? [filterContext.filters, filterContext.setFilters] : undefined;
+}
+
 export const ComponentFiltersProvider = ({
   children,
   filters,

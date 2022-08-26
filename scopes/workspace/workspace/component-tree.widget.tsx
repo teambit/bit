@@ -8,7 +8,7 @@ export class ComponentTreeWidget implements ComponentTreeNode {
     const { lanesModel } = useLanes();
 
     const isInCurrentLane = useMemo(() => {
-      return component.id && lanesModel?.isInViewedLane(component.id);
+      return component.id && lanesModel?.isComponentOnLaneButNotOnMain(component.id);
     }, [lanesModel?.viewedLane, component.id]);
 
     return (

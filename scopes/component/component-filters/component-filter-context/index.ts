@@ -6,4 +6,5 @@ export {
   ComponentFilters,
   runAllFilters,
   useComponentFilter,
+  useComponentFilters,
 } from './component-filter-context';

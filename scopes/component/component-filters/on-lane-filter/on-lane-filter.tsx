@@ -14,7 +14,7 @@ export type OnLaneFilterCriteria = ComponentFilterCriteria<boolean>;
 export const OnLaneFilter: (defaultState?: boolean) => OnLaneFilterCriteria = (defaultState = false) => ({
   id: 'onLane',
   match: ({ component, lanes }, active) => {
-    const onLane = !lanes?.getLaneByComponentVersion(component.id)?.lane.id.isDefault();
+    const onLane = !!lanes?.isComponentOnLaneButNotOnMain(component.id);
     return !active || onLane;
   },
   state: defaultState,
