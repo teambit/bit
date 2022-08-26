@@ -11,13 +11,13 @@
 {
     "application": {
         "scope": "teambit.harmony",
-        "version": "0.0.469",
+        "version": "0.0.470",
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/application"
     },
     "aspect": {
         "scope": "teambit.harmony",
-        "version": "0.0.827",
+        "version": "0.0.828",
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/aspect"
     },
@@ -149,13 +149,13 @@
     },
     "aspect-loader": {
         "scope": "teambit.harmony",
-        "version": "0.0.827",
+        "version": "0.0.828",
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/aspect-loader"
     },
     "babel": {
         "scope": "teambit.compilation",
-        "version": "0.0.827",
+        "version": "0.0.828",
         "mainFile": "index.ts",
         "rootDir": "scopes/compilation/babel"
     },
@@ -167,13 +167,13 @@
     },
     "bit": {
         "scope": "teambit.harmony",
-        "version": "0.0.829",
+        "version": "0.0.830",
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/bit"
     },
     "bit-custom-aspect": {
         "scope": "teambit.harmony",
-        "version": "0.0.164",
+        "version": "0.0.165",
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/bit-custom-aspect"
     },
@@ -185,7 +185,7 @@
     },
     "builder": {
         "scope": "teambit.pipelines",
-        "version": "0.0.827",
+        "version": "0.0.828",
         "mainFile": "index.ts",
         "rootDir": "scopes/pipelines/builder"
     },
@@ -197,13 +197,13 @@
     },
     "builder-ui": {
         "scope": "teambit.pipelines",
-        "version": "0.0.12",
+        "version": "0.0.13",
         "mainFile": "index.ts",
         "rootDir": "scopes/pipelines/builder-ui"
     },
     "bundler": {
         "scope": "teambit.compilation",
-        "version": "0.0.827",
+        "version": "0.0.828",
         "mainFile": "index.ts",
         "rootDir": "scopes/compilation/bundler"
     },
@@ -215,7 +215,7 @@
     },
     "changelog": {
         "scope": "teambit.component",
-        "version": "0.0.827",
+        "version": "0.0.828",
         "mainFile": "index.ts",
         "rootDir": "scopes/component/changelog"
     },
@@ -275,13 +275,13 @@
     },
     "code": {
         "scope": "teambit.component",
-        "version": "0.0.827",
+        "version": "0.0.828",
         "mainFile": "index.ts",
         "rootDir": "scopes/component/code"
     },
     "command-bar": {
         "scope": "teambit.explorer",
-        "version": "0.0.827",
+        "version": "0.0.828",
         "mainFile": "index.ts",
         "rootDir": "scopes/explorer/command-bar"
     },
@@ -293,19 +293,19 @@
     },
     "compiler": {
         "scope": "teambit.compilation",
-        "version": "0.0.827",
+        "version": "0.0.828",
         "mainFile": "index.ts",
         "rootDir": "scopes/compilation/compiler"
     },
     "component": {
         "scope": "teambit.component",
-        "version": "0.0.827",
+        "version": "0.0.828",
         "mainFile": "index.ts",
         "rootDir": "scopes/component/component"
     },
     "component-compare": {
         "scope": "teambit.component",
-        "version": "0.0.75",
+        "version": "0.0.76",
         "mainFile": "index.ts",
         "rootDir": "scopes/component/component-compare"
     },
@@ -329,7 +329,7 @@
     },
     "component-log": {
         "scope": "teambit.component",
-        "version": "0.0.204",
+        "version": "0.0.205",
         "mainFile": "index.ts",
         "rootDir": "scopes/component/component-log"
     },
@@ -341,13 +341,13 @@
     },
     "component-sizer": {
         "scope": "teambit.component",
-        "version": "0.0.200",
+        "version": "0.0.201",
         "mainFile": "index.ts",
         "rootDir": "scopes/component/component-sizer"
     },
     "component-tree": {
         "scope": "teambit.component",
-        "version": "0.0.615",
+        "version": "0.0.616",
         "mainFile": "index.ts",
         "rootDir": "scopes/component/component-tree"
     },
@@ -359,7 +359,7 @@
     },
     "compositions": {
         "scope": "teambit.compositions",
-        "version": "0.0.827",
+        "version": "0.0.828",
         "mainFile": "index.ts",
         "rootDir": "scopes/compositions/compositions"
     },
@@ -377,49 +377,49 @@
     },
     "dependencies": {
         "scope": "teambit.dependencies",
-        "version": "0.0.20",
+        "version": "0.0.21",
         "mainFile": "index.ts",
         "rootDir": "scopes/dependencies/dependencies"
     },
     "dependency-resolver": {
         "scope": "teambit.dependencies",
-        "version": "0.0.827",
+        "version": "0.0.828",
         "mainFile": "index.ts",
         "rootDir": "scopes/dependencies/dependency-resolver"
     },
     "deprecation": {
         "scope": "teambit.component",
-        "version": "0.0.827",
+        "version": "0.0.828",
         "mainFile": "index.ts",
         "rootDir": "scopes/component/deprecation"
     },
     "dev-files": {
         "scope": "teambit.component",
-        "version": "0.0.827",
+        "version": "0.0.828",
         "mainFile": "index.ts",
         "rootDir": "scopes/component/dev-files"
     },
     "diagnostic": {
         "scope": "teambit.harmony",
-        "version": "0.0.120",
+        "version": "0.0.121",
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/diagnostic"
     },
     "docs": {
         "scope": "teambit.docs",
-        "version": "0.0.827",
+        "version": "0.0.828",
         "mainFile": "index.ts",
         "rootDir": "scopes/docs/docs"
     },
     "eject": {
         "scope": "teambit.workspace",
-        "version": "0.0.298",
+        "version": "0.0.299",
         "mainFile": "index.ts",
         "rootDir": "scopes/workspace/eject"
     },
     "elements": {
         "scope": "teambit.web-components",
-        "version": "0.0.280",
+        "version": "0.0.281",
         "mainFile": "index.ts",
         "rootDir": "scopes/web-components/elements"
     },
@@ -437,19 +437,19 @@
     },
     "env": {
         "scope": "teambit.envs",
-        "version": "0.0.200",
+        "version": "0.0.201",
         "mainFile": "index.ts",
         "rootDir": "scopes/envs/env"
     },
     "envs": {
         "scope": "teambit.envs",
-        "version": "0.0.827",
+        "version": "0.0.828",
         "mainFile": "index.ts",
         "rootDir": "scopes/envs/envs"
     },
     "eslint": {
         "scope": "teambit.defender",
-        "version": "0.0.827",
+        "version": "0.0.828",
         "mainFile": "index.ts",
         "rootDir": "scopes/defender/eslint"
     },
@@ -467,7 +467,7 @@
     },
     "export": {
         "scope": "teambit.scope",
-        "version": "0.0.827",
+        "version": "0.0.828",
         "mainFile": "index.ts",
         "rootDir": "scopes/scope/export"
     },
@@ -479,13 +479,13 @@
     },
     "forking": {
         "scope": "teambit.component",
-        "version": "0.0.231",
+        "version": "0.0.232",
         "mainFile": "index.ts",
         "rootDir": "scopes/component/forking"
     },
     "formatter": {
         "scope": "teambit.defender",
-        "version": "0.0.378",
+        "version": "0.0.379",
         "mainFile": "index.ts",
         "rootDir": "scopes/defender/formatter"
     },
@@ -497,7 +497,7 @@
     },
     "generator": {
         "scope": "teambit.generator",
-        "version": "0.0.827",
+        "version": "0.0.828",
         "mainFile": "index.ts",
         "rootDir": "scopes/generator/generator"
     },
@@ -509,19 +509,19 @@
     },
     "graph": {
         "scope": "teambit.component",
-        "version": "0.0.827",
+        "version": "0.0.828",
         "mainFile": "index.ts",
         "rootDir": "scopes/component/graph"
     },
     "graphql": {
         "scope": "teambit.harmony",
-        "version": "0.0.827",
+        "version": "0.0.828",
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/graphql"
     },
     "harmony-ui-app": {
         "scope": "teambit.ui-foundation",
-        "version": "0.0.469",
+        "version": "0.0.470",
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/harmony-ui-app/harmony-ui-app"
     },
@@ -545,37 +545,37 @@
     },
     "html": {
         "scope": "teambit.html",
-        "version": "0.0.395",
+        "version": "0.0.396",
         "mainFile": "index.ts",
         "rootDir": "scopes/html/html"
     },
     "importer": {
         "scope": "teambit.scope",
-        "version": "0.0.256",
+        "version": "0.0.257",
         "mainFile": "index.ts",
         "rootDir": "scopes/scope/importer"
     },
     "insights": {
         "scope": "teambit.explorer",
-        "version": "0.0.827",
+        "version": "0.0.828",
         "mainFile": "index.ts",
         "rootDir": "scopes/explorer/insights"
     },
     "isolator": {
         "scope": "teambit.component",
-        "version": "0.0.827",
+        "version": "0.0.828",
         "mainFile": "index.ts",
         "rootDir": "scopes/component/isolator"
     },
     "issues": {
         "scope": "teambit.component",
-        "version": "0.0.135",
+        "version": "0.0.136",
         "mainFile": "index.ts",
         "rootDir": "scopes/component/issues"
     },
     "jest": {
         "scope": "teambit.defender",
-        "version": "0.0.827",
+        "version": "0.0.828",
         "mainFile": "index.ts",
         "rootDir": "scopes/defender/jest"
     },
@@ -587,7 +587,7 @@
     },
     "lanes": {
         "scope": "teambit.lanes",
-        "version": "0.0.399",
+        "version": "0.0.400",
         "mainFile": "index.ts",
         "rootDir": "scopes/lanes/lanes"
     },
@@ -605,13 +605,13 @@
     },
     "linter": {
         "scope": "teambit.defender",
-        "version": "0.0.827",
+        "version": "0.0.828",
         "mainFile": "index.ts",
         "rootDir": "scopes/defender/linter"
     },
     "lister": {
         "scope": "teambit.component",
-        "version": "0.0.63",
+        "version": "0.0.64",
         "mainFile": "index.ts",
         "rootDir": "scopes/component/lister"
     },
@@ -623,26 +623,26 @@
     },
     "mdx": {
         "scope": "teambit.mdx",
-        "version": "0.0.807",
+        "version": "0.0.808",
         "mainFile": "index.ts",
         "rootDir": "scopes/mdx/mdx"
     },
     "merge-lanes": {
         "scope": "teambit.lanes",
-        "version": "0.0.4",
+        "version": "0.0.5",
         "mainFile": "index.ts",
         "rootDir": "scopes/lanes/merge-lanes"
     },
     "merging": {
         "scope": "teambit.component",
-        "version": "0.0.142",
+        "version": "0.0.143",
         "defaultScope": "teambit.component",
         "mainFile": "index.ts",
         "rootDir": "scopes/component/merging"
     },
     "mocha": {
         "scope": "teambit.defender",
-        "version": "0.0.164",
+        "version": "0.0.165",
         "mainFile": "index.ts",
         "rootDir": "scopes/defender/mocha"
     },
@@ -786,7 +786,7 @@
     },
     "multi-compiler": {
         "scope": "teambit.compilation",
-        "version": "0.0.827",
+        "version": "0.0.828",
         "mainFile": "index.ts",
         "rootDir": "scopes/compilation/multi-compiler"
     },
@@ -804,19 +804,19 @@
     },
     "new-component-helper": {
         "scope": "teambit.component",
-        "version": "0.0.231",
+        "version": "0.0.232",
         "mainFile": "index.ts",
         "rootDir": "scopes/component/new-component-helper"
     },
     "node": {
         "scope": "teambit.harmony",
-        "version": "0.0.827",
+        "version": "0.0.828",
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/node"
     },
     "notifications": {
         "scope": "teambit.ui-foundation",
-        "version": "0.0.827",
+        "version": "0.0.828",
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/notifications/aspect"
     },
@@ -852,19 +852,19 @@
     },
     "pkg": {
         "scope": "teambit.pkg",
-        "version": "0.0.827",
+        "version": "0.0.828",
         "mainFile": "index.ts",
         "rootDir": "scopes/pkg/pkg"
     },
     "pnpm": {
         "scope": "teambit.dependencies",
-        "version": "0.0.827",
+        "version": "0.0.828",
         "mainFile": "index.ts",
         "rootDir": "scopes/dependencies/pnpm"
     },
     "prettier": {
         "scope": "teambit.defender",
-        "version": "0.0.378",
+        "version": "0.0.379",
         "mainFile": "index.ts",
         "rootDir": "scopes/defender/prettier"
     },
@@ -876,98 +876,98 @@
     },
     "preview": {
         "scope": "teambit.preview",
-        "version": "0.0.827",
+        "version": "0.0.828",
         "mainFile": "index.ts",
         "rootDir": "scopes/preview/preview"
     },
     "pubsub": {
         "scope": "teambit.harmony",
-        "version": "0.0.827",
+        "version": "0.0.828",
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/pubsub"
     },
     "react": {
         "scope": "teambit.react",
-        "version": "0.0.827",
+        "version": "0.0.828",
         "mainFile": "index.ts",
         "rootDir": "scopes/react/react"
     },
     "react-elements": {
         "scope": "teambit.react",
-        "version": "0.0.280",
+        "version": "0.0.281",
         "mainFile": "index.ts",
         "rootDir": "scopes/react/react-elements"
     },
     "react-native": {
         "scope": "teambit.react",
-        "version": "0.0.827",
+        "version": "0.0.828",
         "mainFile": "index.ts",
         "rootDir": "scopes/react/react-native"
     },
     "react-router": {
         "scope": "teambit.ui-foundation",
-        "version": "0.0.827",
+        "version": "0.0.828",
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/react-router/react-router"
     },
     "readme": {
         "scope": "teambit.mdx",
-        "version": "0.0.111",
+        "version": "0.0.112",
         "mainFile": "index.ts",
         "rootDir": "scopes/mdx/readme"
     },
     "refactoring": {
         "scope": "teambit.component",
-        "version": "0.0.124",
+        "version": "0.0.125",
         "mainFile": "index.ts",
         "rootDir": "scopes/component/refactoring"
     },
     "remove": {
         "scope": "teambit.component",
-        "version": "0.0.4",
+        "version": "0.0.5",
         "mainFile": "index.ts",
         "rootDir": "scopes/component/remove"
     },
     "renaming": {
         "scope": "teambit.component",
-        "version": "0.0.231",
+        "version": "0.0.232",
         "mainFile": "index.ts",
         "rootDir": "scopes/component/renaming"
     },
     "schema": {
         "scope": "teambit.semantics",
-        "version": "0.0.827",
+        "version": "0.0.828",
         "mainFile": "index.ts",
         "rootDir": "scopes/semantics/schema"
     },
     "scope": {
         "scope": "teambit.scope",
-        "version": "0.0.827",
+        "version": "0.0.828",
         "mainFile": "index.ts",
         "rootDir": "scopes/scope/scope"
     },
     "sidebar": {
         "scope": "teambit.ui-foundation",
-        "version": "0.0.827",
+        "version": "0.0.828",
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/sidebar"
     },
     "sign": {
         "scope": "teambit.scope",
-        "version": "0.0.827",
+        "version": "0.0.828",
         "mainFile": "index.ts",
         "rootDir": "scopes/scope/sign"
     },
     "snapping": {
         "scope": "teambit.component",
-        "version": "0.0.142",
+        "version": "0.0.143",
         "defaultScope": "teambit.component",
         "mainFile": "index.ts",
         "rootDir": "scopes/component/snapping"
     },
     "status": {
         "scope": "teambit.component",
-        "version": "0.0.139",
+        "version": "0.0.140",
         "defaultScope": "teambit.component",
         "mainFile": "index.ts",
         "rootDir": "scopes/component/status"
@@ -998,7 +998,7 @@
     },
     "tester": {
         "scope": "teambit.defender",
-        "version": "0.0.827",
+        "version": "0.0.828",
         "mainFile": "index.ts",
         "rootDir": "scopes/defender/tester"
     },
@@ -1052,13 +1052,13 @@
     },
     "typescript": {
         "scope": "teambit.typescript",
-        "version": "0.0.827",
+        "version": "0.0.828",
         "mainFile": "index.ts",
         "rootDir": "scopes/typescript/typescript"
     },
     "ui": {
         "scope": "teambit.ui-foundation",
-        "version": "0.0.827",
+        "version": "0.0.828",
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/ui"
     },
@@ -1916,7 +1916,7 @@
     },
     "update-dependencies": {
         "scope": "teambit.scope",
-        "version": "0.0.827",
+        "version": "0.0.828",
         "mainFile": "index.ts",
         "rootDir": "scopes/scope/update-dependencies"
     },
@@ -1934,7 +1934,7 @@
     },
     "user-agent": {
         "scope": "teambit.ui-foundation",
-        "version": "0.0.513",
+        "version": "0.0.514",
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/user-agent"
     },
@@ -1946,25 +1946,25 @@
     },
     "webpack": {
         "scope": "teambit.webpack",
-        "version": "0.0.827",
+        "version": "0.0.828",
         "mainFile": "index.ts",
         "rootDir": "scopes/webpack/webpack"
     },
     "worker": {
         "scope": "teambit.harmony",
-        "version": "0.0.827",
+        "version": "0.0.828",
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/worker"
     },
     "workspace": {
         "scope": "teambit.workspace",
-        "version": "0.0.827",
+        "version": "0.0.828",
         "mainFile": "index.ts",
         "rootDir": "scopes/workspace/workspace"
     },
     "yarn": {
         "scope": "teambit.dependencies",
-        "version": "0.0.828",
+        "version": "0.0.829",
         "mainFile": "index.ts",
         "rootDir": "scopes/dependencies/yarn"
     },
