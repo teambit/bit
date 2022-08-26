@@ -133,12 +133,7 @@ export class SnappingMain {
     const components = await this.loadComponentsForTag(legacyBitIds);
     await this.throwForLegacyDependenciesInsideHarmony(components);
     await this.throwForComponentIssues(components, ignoreIssues);
-    const areComponentsMissingFromScope = components
-      .filter((c) => !c.removed)
-      .some((c) => !c.componentFromModel && c.id.hasScope());
-    if (areComponentsMissingFromScope) {
-      throw new ComponentsPendingImport();
-    }
+    this.throwForPendingImport(components);
 
     const { taggedComponents, autoTaggedResults, publishedPackages } = await tagModelComponent({
       workspace: this.workspace,
@@ -221,10 +216,7 @@ export class SnappingMain {
     const components = await this.loadComponentsForTag(ids);
     await this.throwForLegacyDependenciesInsideHarmony(components);
     await this.throwForComponentIssues(components, ignoreIssues);
-    const areComponentsMissingFromScope = components.some((c) => !c.componentFromModel && c.id.hasScope());
-    if (areComponentsMissingFromScope) {
-      throw new ComponentsPendingImport();
-    }
+    this.throwForPendingImport(components);
 
     const { taggedComponents, autoTaggedResults } = await tagModelComponent({
       workspace: this.workspace,
@@ -378,6 +370,15 @@ there are matching among unmodified components thought. consider using --unmodif
     const componentsWithBlockingIssues = legacyComponents.filter((component) => component.issues?.shouldBlockTagging());
     if (!R.isEmpty(componentsWithBlockingIssues)) {
       throw new ComponentsHaveIssues(componentsWithBlockingIssues);
+    }
+  }
+
+  private throwForPendingImport(components: ConsumerComponent[]) {
+    const areComponentsMissingFromScope = components
+      .filter((c) => !c.removed)
+      .some((c) => !c.componentFromModel && c.id.hasScope());
+    if (areComponentsMissingFromScope) {
+      throw new ComponentsPendingImport();
     }
   }
 

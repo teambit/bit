@@ -88,4 +88,20 @@ describe('bit lane command', function () {
       expect(bitMap).to.not.have.property('comp1');
     });
   });
+  describe('soft remove on lane', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents(2);
+      helper.command.createLane();
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+
+      helper.command.removeComponent('comp2', '--soft');
+      helper.fs.outputFile('comp1/index.js', '');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+    });
+    it('bit merge should not merge the removed components', () => {});
+  });
 });

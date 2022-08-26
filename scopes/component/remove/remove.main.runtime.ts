@@ -97,6 +97,17 @@ export class RemoveMain {
     return this.getRemoveInfo(component).removed;
   }
 
+  /**
+   * get components that were soft-removed and tagged/snapped but not exported yet.
+   */
+  async getRemovedStaged(): Promise<ComponentID[]> {
+    const stagedConfig = await this.workspace.scope.getStagedConfig();
+    return stagedConfig
+      .getAll()
+      .filter((compConfig) => compConfig.config?.[RemoveAspect.id]?.removed)
+      .map((compConfig) => compConfig.id);
+  }
+
   private async getLocalBitIdsToRemove(componentsPattern: string): Promise<BitId[]> {
     if (!this.workspace) throw new ConsumerNotFound();
     const componentIds = await this.workspace.idsByPattern(componentsPattern);
