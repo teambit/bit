@@ -1,5 +1,8 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { isFeatureEnabled, BUILD_ON_CI } from '@teambit/legacy/dist/api/consumer/lib/feature-toggle';
+import { LegacyOnTagResult } from '@teambit/legacy/dist/scope/scope';
+import { FlattenedDependenciesGetter } from '@teambit/legacy/dist/scope/component-ops/get-flattened-dependencies';
+import { Scope as LegacyScope } from '@teambit/legacy/dist/scope';
 import { IssuesClasses } from '@teambit/component-issues';
 import CommunityAspect, { CommunityMain } from '@teambit/community';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
@@ -8,7 +11,7 @@ import semver, { ReleaseType } from 'semver';
 import { compact } from 'lodash';
 import { Analytics } from '@teambit/legacy/dist/analytics/analytics';
 import { BitId, BitIds } from '@teambit/legacy/dist/bit-id';
-import { POST_TAG_ALL_HOOK, POST_TAG_HOOK } from '@teambit/legacy/dist/constants';
+import { POST_TAG_ALL_HOOK, POST_TAG_HOOK, Extensions } from '@teambit/legacy/dist/constants';
 import { Consumer } from '@teambit/legacy/dist/consumer';
 import ComponentsList from '@teambit/legacy/dist/consumer/component/components-list';
 import HooksManager from '@teambit/legacy/dist/hooks';
@@ -140,6 +143,7 @@ export class SnappingMain {
 
     const { taggedComponents, autoTaggedResults, publishedPackages } = await tagModelComponent({
       workspace: this.workspace,
+      snapping: this,
       consumerComponents: components,
       ids: legacyBitIds,
       message,
@@ -226,6 +230,7 @@ export class SnappingMain {
 
     const { taggedComponents, autoTaggedResults } = await tagModelComponent({
       workspace: this.workspace,
+      snapping: this,
       consumerComponents: components,
       ids,
       ignoreNewestVersion: false,
@@ -346,6 +351,40 @@ there are matching among unmodified components thought. consider using --unmodif
 
     await consumer.onDestroy();
     return { results, isSoftUntag: !isRealUntag };
+  }
+
+  async _addFlattenedDependenciesToComponents(scope: LegacyScope, components: ConsumerComponent[]) {
+    loader.start('importing missing dependencies...');
+    const flattenedDependenciesGetter = new FlattenedDependenciesGetter(scope, components);
+    await flattenedDependenciesGetter.populateFlattenedDependencies();
+    loader.stop();
+  }
+
+  /**
+   * @todo: currently, there is only one function registered to the OnTag, which is the builder.
+   * we set the extensions data and artifacts we got from the builder to the consumer-components.
+   * however, if there is more than one function registered to the OnTag, the data will be overridden
+   * by the last called function. when/if this happen, some kind of merge need to be done between the
+   * results.
+   */
+  _updateComponentsByTagResult(components: ConsumerComponent[], tagResult: LegacyOnTagResult[]) {
+    tagResult.forEach((result) => {
+      const matchingComponent = components.find((c) => c.id.isEqual(result.id));
+      if (matchingComponent) {
+        const existingBuilder = matchingComponent.extensions.findCoreExtension(Extensions.builder);
+        if (existingBuilder) existingBuilder.data = result.builderData.data;
+        else matchingComponent.extensions.push(result.builderData);
+      }
+    });
+  }
+
+  _getPublishedPackages(components: ConsumerComponent[]): string[] {
+    const publishedPackages = components.map((comp) => {
+      const builderExt = comp.extensions.findCoreExtension(Extensions.builder);
+      const pkgData = builderExt?.data?.aspectsData?.find((a) => a.aspectId === Extensions.pkg);
+      return pkgData?.data?.publishedPackage;
+    });
+    return compact(publishedPackages);
   }
 
   private async loadComponentsForTag(ids: BitIds): Promise<ConsumerComponent[]> {
