@@ -1,4 +1,4 @@
-export { LanesModel, DEFAULT_LANE } from './lanes-model';
+export { LanesModel } from './lanes-model';
 export type {
   LaneModel,
   LaneComponentQueryResult,

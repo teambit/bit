@@ -35,7 +35,7 @@ export function Overview({ titleBadges }: OverviewProps) {
   const component = useContext(ComponentContext);
   const componentDescriptor = useComponentDescriptor();
   const { lanesModel } = useLanes();
-  const currentLane = lanesModel?.viewedLane;
+  const isComponentOnLane = lanesModel?.isComponentOnLaneButNotOnMain(component.id);
 
   const showHeader = !component.preview?.legacyHeader;
 
@@ -51,8 +51,8 @@ export function Overview({ titleBadges }: OverviewProps) {
 
   return (
     <div className={styles.overviewWrapper}>
-      {currentLane && <LaneBreadcrumb lane={currentLane} />}
-      {currentLane && <Separator isPresentational />}
+      {isComponentOnLane && <LaneBreadcrumb lane={lanesModel?.viewedLane} />}
+      {isComponentOnLane && <Separator isPresentational />}
       {showHeader && (
         <ComponentOverview
           className={styles.componentOverviewBlock}

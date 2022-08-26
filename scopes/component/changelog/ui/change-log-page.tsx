@@ -21,17 +21,18 @@ export function ChangeLogPage({ className }: ChangeLogPageProps) {
   const { lanesModel } = useLanes();
   const currentLane = lanesModel?.viewedLane;
   const { logs } = component;
+  const isComponentOnLane = lanesModel?.isComponentOnLaneButNotOnMain(component.id);
 
   if (!logs) return null;
 
   if (logs.length === 0) {
     return (
       <>
-        {currentLane && (
+        {isComponentOnLane && (
           <>
             <div className={styles.lane}>
               <LaneIcon />
-              <Ellipsis className={styles.laneName}>{currentLane.id.toString()}</Ellipsis>
+              <Ellipsis className={styles.laneName}>{lanesModel?.viewedLane?.id.toString()}</Ellipsis>
             </div>
             <Separator isPresentational className={styles.separator} />
           </>

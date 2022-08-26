@@ -50,10 +50,7 @@ export function ComponentView(props: ComponentViewProps<PayloadType>) {
     </Link>
   );
 
-  const isViewingOnLane = !lanesModel?.viewedLane?.id.isDefault();
-  const href = !isViewingOnLane
-    ? component.id.fullName
-    : lanesModel?.getLaneComponentUrlByVersion(component.id.version) || component.id.fullName;
+  const href = lanesModel?.getLaneComponentUrlByVersion(component.id.version) || component.id.fullName;
 
   return (
     <Link
