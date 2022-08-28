@@ -7,13 +7,11 @@ export const reactWorkspaceAppTemplate: WorkspaceTemplate = {
   description: 'EXPERIMENTAL. react workspace for an app',
   hidden: true,
   generateFiles: async (context: WorkspaceContext) => {
-    if (context.defaultScope) {
-      const extensions = {
-        [`${context.defaultScope}/apps/my-app`]: parse(`{}`),
-      };
-      return generateCommonFiles(context, extensions);
-    }
-    return generateCommonFiles(context);
+    const scope = context.defaultScope || 'my-org.my-scope';
+    const extensions = {
+      [`${scope}/apps/my-app`]: parse(`{}`),
+    };
+    return generateCommonFiles(context, extensions);
   },
   fork: () => {
     return [
