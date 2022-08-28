@@ -15,7 +15,7 @@ import getGitExecutablePath from '@teambit/legacy/dist/utils/git/git-executable'
 import GitNotFound from '@teambit/legacy/dist/utils/git/exceptions/git-not-found';
 import { resolve, join } from 'path';
 import { ComponentID } from '@teambit/component-id';
-import { WorkspaceTemplate } from './workspace-template';
+import { WorkspaceTemplate, WorkspaceContext } from './workspace-template';
 import { NewOptions } from './new.cmd';
 import { GeneratorAspect } from './generator.aspect';
 
@@ -89,11 +89,12 @@ export class WorkspaceGenerator {
    * writes the generated template files to the default directory set in the workspace config
    */
   private async writeWorkspaceFiles(): Promise<void> {
-    const workspaceContext = {
+    const workspaceContext: WorkspaceContext = {
       name: this.workspaceName,
       defaultScope: this.options.defaultScope,
       empty: this.options.empty,
       aspectComponent: this.aspectComponent,
+      template: this.template,
     };
     const templateFiles = await this.template.generateFiles(workspaceContext);
     await Promise.all(
