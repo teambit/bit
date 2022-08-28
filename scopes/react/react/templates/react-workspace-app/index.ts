@@ -1,20 +1,25 @@
 import { WorkspaceContext, WorkspaceTemplate } from '@teambit/generator';
+import { parse } from 'comment-json';
 import { generateFiles as generateCommonFiles } from '../workspace-common';
+import { DEFAULT_SCOPE_NAME } from '../workspace-common/constants';
 
 export const reactWorkspaceAppTemplate: WorkspaceTemplate = {
   name: 'react-app',
   description: 'EXPERIMENTAL. react workspace for an app',
   hidden: true,
   generateFiles: async (context: WorkspaceContext) => {
-    return generateCommonFiles(context);
+    const scope = context.defaultScope || DEFAULT_SCOPE_NAME;
+    const extensions = {
+      [`${scope}/apps/my-app`]: parse(`{}`),
+    };
+    return generateCommonFiles(context, extensions);
   },
   fork: () => {
     return [
-      { id: 'teambit.react/templates/apps/my-app', path: 'apps/my-app' },
-      { id: 'teambit.react/templates/envs/my-react', path: 'envs/my-react' },
-      { id: 'teambit.react/templates/themes/theme', path: 'themes/theme' },
-      { id: 'teambit.react/templates/styles/colors', path: 'styles/colors' },
-      { id: 'teambit.react/templates/ui/heading', path: 'ui/heading' },
+      { id: 'teambit.react/templates/apps/my-app', targetName: 'apps/my-app' },
+      // { id: 'teambit.react/templates/envs/my-react', targetName: 'envs/my-react' }, // TODO: uncomment when ready
+      { id: 'teambit.react/templates/themes/theme', targetName: 'themes/theme' },
+      { id: 'teambit.react/templates/pages/home', targetName: 'pages/home' },
     ];
   },
 };
