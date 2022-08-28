@@ -7,6 +7,7 @@ export const reactWorkspaceAppTemplate: WorkspaceTemplate = {
   name: 'react-app',
   description: 'EXPERIMENTAL. react workspace for an app',
   hidden: true,
+  appName: 'my-app',
   generateFiles: async (context: WorkspaceContext) => {
     const scope = context.defaultScope || DEFAULT_SCOPE_NAME;
     const extensions = {
