@@ -6,7 +6,10 @@ import classNames from 'classnames';
 import { Ellipsis } from '@teambit/design.ui.styles.ellipsis';
 import { Tooltip } from '@teambit/design.ui.tooltip';
 import { Link } from '@teambit/base-react.navigation.link';
-import { ComponentFilterCriteria, useComponentFilter } from './component-filters.context';
+import {
+  ComponentFilterCriteria,
+  useComponentFilter,
+} from '@teambit/component.ui.component-filters.component-filter-context';
 import styles from './envs-filter.module.scss';
 
 type EnvFilterEnvState = {

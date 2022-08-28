@@ -1,5 +1,8 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { isFeatureEnabled, BUILD_ON_CI } from '@teambit/legacy/dist/api/consumer/lib/feature-toggle';
+import { LegacyOnTagResult } from '@teambit/legacy/dist/scope/scope';
+import { FlattenedDependenciesGetter } from '@teambit/legacy/dist/scope/component-ops/get-flattened-dependencies';
+import { Scope as LegacyScope } from '@teambit/legacy/dist/scope';
 import { IssuesClasses } from '@teambit/component-issues';
 import CommunityAspect, { CommunityMain } from '@teambit/community';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
@@ -8,7 +11,7 @@ import semver, { ReleaseType } from 'semver';
 import { compact } from 'lodash';
 import { Analytics } from '@teambit/legacy/dist/analytics/analytics';
 import { BitId, BitIds } from '@teambit/legacy/dist/bit-id';
-import { POST_TAG_ALL_HOOK, POST_TAG_HOOK } from '@teambit/legacy/dist/constants';
+import { POST_TAG_ALL_HOOK, POST_TAG_HOOK, Extensions } from '@teambit/legacy/dist/constants';
 import { Consumer } from '@teambit/legacy/dist/consumer';
 import ComponentsList from '@teambit/legacy/dist/consumer/component/components-list';
 import HooksManager from '@teambit/legacy/dist/hooks';
@@ -18,7 +21,6 @@ import hasWildcard from '@teambit/legacy/dist/utils/string/has-wildcard';
 import { validateVersion } from '@teambit/legacy/dist/utils/semver-helper';
 import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
 import loader from '@teambit/legacy/dist/cli/loader';
-import tagModelComponent from '@teambit/legacy/dist/scope/component-ops/tag-model-component';
 import { SnapResults } from '@teambit/legacy/dist/api/consumer/lib/snap';
 import ComponentsPendingImport from '@teambit/legacy/dist/consumer/component-ops/exceptions/components-pending-import';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
@@ -36,11 +38,13 @@ import {
 } from '@teambit/legacy/dist/scope/component-ops/untag-component';
 import { ModelComponent } from '@teambit/legacy/dist/scope/models';
 import IssuesAspect, { IssuesMain } from '@teambit/issues';
+import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { SnapCmd } from './snap-cmd';
 import { SnappingAspect } from './snapping.aspect';
 import { TagCmd } from './tag-cmd';
 import { ComponentsHaveIssues } from './components-have-issues';
 import ResetCmd from './reset-cmd';
+import { tagModelComponent, updateComponentsVersions } from './tag-model-component';
 
 const HooksManagerInstance = HooksManager.getInstance();
 
@@ -49,7 +53,8 @@ export class SnappingMain {
     private workspace: Workspace,
     private logger: Logger,
     private issues: IssuesMain,
-    private insights: InsightsMain
+    private insights: InsightsMain,
+    private dependencyResolver: DependencyResolverMain
   ) {}
 
   /**
@@ -137,15 +142,15 @@ export class SnappingMain {
     }
 
     const { taggedComponents, autoTaggedResults, publishedPackages } = await tagModelComponent({
+      workspace: this.workspace,
+      snapping: this,
       consumerComponents: components,
       ids: legacyBitIds,
-      scope: this.workspace.scope.legacyScope,
       message,
       editor,
       exactVersion: validExactVersion,
       releaseType,
       preReleaseId,
-      consumer: this.workspace.consumer,
       ignoreNewestVersion,
       skipTests,
       skipAutoTag,
@@ -156,6 +161,7 @@ export class SnappingMain {
       forceDeploy,
       incrementBy,
       packageManagerConfigRootDir: this.workspace.path,
+      dependencyResolver: this.dependencyResolver,
     });
 
     const tagResults = { taggedComponents, autoTaggedResults, isSoftTag: soft, publishedPackages };
@@ -223,12 +229,12 @@ export class SnappingMain {
     }
 
     const { taggedComponents, autoTaggedResults } = await tagModelComponent({
+      workspace: this.workspace,
+      snapping: this,
       consumerComponents: components,
       ids,
       ignoreNewestVersion: false,
-      scope: this.workspace.scope.legacyScope,
       message,
-      consumer: this.workspace.consumer,
       skipTests,
       skipAutoTag: skipAutoSnap,
       persist: true,
@@ -238,6 +244,7 @@ export class SnappingMain {
       disableTagAndSnapPipelines,
       forceDeploy,
       packageManagerConfigRootDir: this.workspace.path,
+      dependencyResolver: this.dependencyResolver,
     });
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const snapResults: SnapResults = { snappedComponents: taggedComponents, autoSnappedResults: autoTaggedResults };
@@ -336,7 +343,7 @@ there are matching among unmodified components thought. consider using --unmodif
       results = await untag();
       await consumer.scope.objects.persist();
       const components = results.map((result) => result.component);
-      await consumer.updateComponentsVersions(components as ModelComponent[]);
+      await updateComponentsVersions(this.workspace, components as ModelComponent[], false);
     } else {
       results = await softUntag();
       consumer.bitMap.markAsChanged();
@@ -344,6 +351,40 @@ there are matching among unmodified components thought. consider using --unmodif
 
     await consumer.onDestroy();
     return { results, isSoftUntag: !isRealUntag };
+  }
+
+  async _addFlattenedDependenciesToComponents(scope: LegacyScope, components: ConsumerComponent[]) {
+    loader.start('importing missing dependencies...');
+    const flattenedDependenciesGetter = new FlattenedDependenciesGetter(scope, components);
+    await flattenedDependenciesGetter.populateFlattenedDependencies();
+    loader.stop();
+  }
+
+  /**
+   * @todo: currently, there is only one function registered to the OnTag, which is the builder.
+   * we set the extensions data and artifacts we got from the builder to the consumer-components.
+   * however, if there is more than one function registered to the OnTag, the data will be overridden
+   * by the last called function. when/if this happen, some kind of merge need to be done between the
+   * results.
+   */
+  _updateComponentsByTagResult(components: ConsumerComponent[], tagResult: LegacyOnTagResult[]) {
+    tagResult.forEach((result) => {
+      const matchingComponent = components.find((c) => c.id.isEqual(result.id));
+      if (matchingComponent) {
+        const existingBuilder = matchingComponent.extensions.findCoreExtension(Extensions.builder);
+        if (existingBuilder) existingBuilder.data = result.builderData.data;
+        else matchingComponent.extensions.push(result.builderData);
+      }
+    });
+  }
+
+  _getPublishedPackages(components: ConsumerComponent[]): string[] {
+    const publishedPackages = components.map((comp) => {
+      const builderExt = comp.extensions.findCoreExtension(Extensions.builder);
+      const pkgData = builderExt?.data?.aspectsData?.find((a) => a.aspectId === Extensions.pkg);
+      return pkgData?.data?.publishedPackage;
+    });
+    return compact(publishedPackages);
   }
 
   private async loadComponentsForTag(ids: BitIds): Promise<ConsumerComponent[]> {
@@ -464,18 +505,27 @@ there are matching among unmodified components thought. consider using --unmodif
   }
 
   static slots = [];
-  static dependencies = [WorkspaceAspect, CLIAspect, CommunityAspect, LoggerAspect, IssuesAspect, InsightsAspect];
+  static dependencies = [
+    WorkspaceAspect,
+    CLIAspect,
+    CommunityAspect,
+    LoggerAspect,
+    IssuesAspect,
+    InsightsAspect,
+    DependencyResolverAspect,
+  ];
   static runtime = MainRuntime;
-  static async provider([workspace, cli, community, loggerMain, issues, insights]: [
+  static async provider([workspace, cli, community, loggerMain, issues, insights, dependencyResolver]: [
     Workspace,
     CLIMain,
     CommunityMain,
     LoggerMain,
     IssuesMain,
-    InsightsMain
+    InsightsMain,
+    DependencyResolverMain
   ]) {
     const logger = loggerMain.createLogger(SnappingAspect.id);
-    const snapping = new SnappingMain(workspace, logger, issues, insights);
+    const snapping = new SnappingMain(workspace, logger, issues, insights, dependencyResolver);
     const snapCmd = new SnapCmd(community.getBaseDomain(), snapping, logger);
     const tagCmd = new TagCmd(snapping, logger);
     const resetCmd = new ResetCmd(snapping);
