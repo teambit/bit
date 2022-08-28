@@ -9,12 +9,9 @@ import { LaneId, DEFAULT_LANE, LANE_REMOTE_DELIMITER } from '@teambit/lane-id';
 import { BitError } from '@teambit/bit-error';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { DiffOptions } from '@teambit/legacy/dist/consumer/component-ops/components-diff';
+import ImportComponents, { ImportOptions } from '@teambit/legacy/dist/consumer/component-ops/import-components';
 import { exportMany } from '@teambit/legacy/dist/scope/component-ops/export-scope-components';
-import {
-  MergeStrategy,
-  ApplyVersionResults,
-  MergeOptions,
-} from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
+import { MergeStrategy, MergeOptions } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
 import { TrackLane } from '@teambit/legacy/dist/scope/scope-json';
 import { CommunityAspect } from '@teambit/community';
 import type { CommunityMain } from '@teambit/community';
@@ -32,7 +29,6 @@ import {
   LaneCreateCmd,
   LaneImportCmd,
   LaneListCmd,
-  LaneMergeCmd,
   LaneRemoveCmd,
   LaneShowCmd,
   LaneChangeScopeCmd,
@@ -43,7 +39,6 @@ import {
 } from './lane.cmd';
 import { lanesSchema } from './lanes.graphql';
 import { SwitchCmd } from './switch.cmd';
-import { mergeLanes } from './merge-lanes';
 import { LaneSwitcher } from './switch-lanes';
 import { createLane, throwForInvalidLaneName } from './create-lane';
 
@@ -52,20 +47,6 @@ export { Lane };
 export type LaneResults = {
   lanes: LaneData[];
   currentLane?: string | null;
-};
-
-export type MergeLaneOptions = {
-  remoteName: string | null;
-  mergeStrategy: MergeStrategy;
-  noSnap: boolean;
-  snapMessage: string;
-  existingOnWorkspaceOnly: boolean;
-  build: boolean;
-  keepReadme: boolean;
-  squash: boolean;
-  pattern?: string;
-  includeDeps?: boolean;
-  skipDependencyInstallation?: boolean;
 };
 
 export type CreateLaneOptions = {
@@ -88,7 +69,7 @@ export class LanesMain {
     private scope: ScopeMain,
     private merging: MergingMain,
     private componentAspect: ComponentMain,
-    private logger: Logger
+    public logger: Logger
   ) {}
 
   async getLanes({
@@ -335,10 +316,54 @@ export class LanesMain {
     });
   }
 
-  async importLane(laneId: LaneId): Promise<Lane> {
-    const scopeComponentImporter = ScopeComponentsImporter.getInstance(this.scope.legacyScope);
+  /**
+   * get a Lane object from the remote.
+   * `persistIfNotExists` saves the object in the local scope only if the lane is not there yet.
+   * otherwise, it needs some merging mechanism, which is done differently whether it's export or import.
+   * see `sources.mergeLane()` for export and `import-components._saveLaneDataIfNeeded()` for import.
+   * in this case, because we only bring the lane object and not the components, it's not easy to do the merge.
+   */
+  async importLaneObject(laneId: LaneId, persistIfNotExists = true): Promise<Lane> {
+    const legacyScope = this.scope.legacyScope;
+    const scopeComponentImporter = ScopeComponentsImporter.getInstance(legacyScope);
     const results = await scopeComponentImporter.importLanes([laneId]);
-    return results[0];
+    const laneObject = results[0];
+
+    if (persistIfNotExists) {
+      const exists = await legacyScope.loadLane(laneId);
+      if (!exists) {
+        await legacyScope.lanes.saveLane(laneObject);
+      }
+    }
+
+    return laneObject;
+  }
+
+  /**
+   * fetch the lane object and its components from the remote.
+   * save the objects to the local scope.
+   * this method doesn't change anything in the workspace.
+   */
+  async fetchLaneWithItsComponents(laneId: LaneId): Promise<Lane> {
+    this.logger.debug(`fetching lane ${laneId.toString()}`);
+    if (!this.workspace) {
+      throw new BitError('unable to fetch lanes outside of Bit workspace');
+    }
+    const lane = await this.importLaneObject(laneId);
+    if (!lane) throw new Error(`unable to import lane ${laneId.toString()} from the remote`);
+    const importOptions: ImportOptions = {
+      ids: [],
+      objectsOnly: true,
+      verbose: false,
+      writeConfig: false,
+      override: false,
+      installNpmPackages: false,
+      lanes: { laneIds: [laneId], lanes: [lane] },
+    };
+    const importComponents = new ImportComponents(this.workspace.consumer, importOptions);
+    const { dependencies } = await importComponents.importComponents();
+    this.logger.debug(`fetching lane ${laneId.toString()} done, fetched ${dependencies.length} components`);
+    return lane;
   }
 
   async removeLanes(laneNames: string[], { remote, force }: { remote: boolean; force: boolean }): Promise<string[]> {
@@ -346,25 +371,6 @@ export class LanesMain {
     if (this.workspace) await this.workspace.consumer.onDestroy();
 
     return results.laneResults;
-  }
-
-  async mergeLane(
-    laneName: string,
-    options: MergeLaneOptions
-  ): Promise<{ mergeResults: ApplyVersionResults; deleteResults: any }> {
-    if (!this.workspace) {
-      throw new BitError(`unable to merge a lane outside of Bit workspace`);
-    }
-    const results = await mergeLanes({
-      merging: this.merging,
-      workspace: this.workspace,
-      laneName,
-      ...options,
-    });
-
-    await this.workspace.consumer.onDestroy();
-    // this.workspace.consumer.bitMap.syncWithLanes();
-    return results;
   }
 
   /**
@@ -588,7 +594,6 @@ export class LanesMain {
       switchCmd,
       new LaneShowCmd(lanesMain, workspace, scope),
       new LaneCreateCmd(lanesMain),
-      new LaneMergeCmd(lanesMain),
       new LaneRemoveCmd(lanesMain),
       new LaneChangeScopeCmd(lanesMain),
       new LaneAliasCmd(lanesMain),

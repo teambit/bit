@@ -18,7 +18,7 @@ export async function getAutoTagInfo(consumer: Consumer, changedComponents: BitI
   if (!changedComponents.length) return [];
   const potentialComponents = potentialComponentsForAutoTagging(consumer, changedComponents);
   const idsToLoad = new BitIds(...potentialComponents, ...changedComponents);
-  const { components } = await consumer.loadComponents(idsToLoad);
+  const { components } = await consumer.loadComponents(idsToLoad, false);
   const graph = buildGraph(components);
 
   const autoTagResults: AutoTagResult[] = [];

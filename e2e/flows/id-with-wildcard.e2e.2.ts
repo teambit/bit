@@ -59,8 +59,7 @@ describe('component id with wildcard', function () {
       describe('when wildcard does not match any component', () => {
         it('should throw an error saying the wildcard does not match any id', () => {
           const removeFunc = () => helper.command.removeComponent('none/*');
-          const error = new NoIdMatchWildcard(['none/*']);
-          helper.general.expectToThrow(removeFunc, error);
+          expect(removeFunc).to.throw('unable to find any matching');
         });
       });
       describe('when wildcard match some of the components', () => {
@@ -120,7 +119,7 @@ describe('component id with wildcard', function () {
         helper.scopeHelper.reInitRemoteScope();
         helper.command.tagAllWithoutBuild();
         helper.command.export();
-        helper.command.removeComponent(`${helper.scopes.remote}/*`);
+        helper.command.removeComponent(`${helper.scopes.remote}/**`);
 
         // as an intermediate step, make sure the remote scope has all components
         const ls = helper.command.listRemoteScopeParsed();

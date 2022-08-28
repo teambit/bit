@@ -1,38 +1,44 @@
 import mapSeries from 'p-map-series';
+import fetch from 'node-fetch';
 import R from 'ramda';
-import { isEmpty, compact } from 'lodash';
+import { isEmpty } from 'lodash';
 import { ReleaseType } from 'semver';
 import { v4 } from 'uuid';
-import * as globalConfig from '../../api/consumer/lib/global-config';
-import { Scope } from '..';
-import { BitId, BitIds } from '../../bit-id';
-import loader from '../../cli/loader';
-import { BuildStatus, CFG_USER_EMAIL_KEY, CFG_USER_NAME_KEY, Extensions } from '../../constants';
-import { CURRENT_SCHEMA } from '../../consumer/component/component-schema';
-import Component from '../../consumer/component/consumer-component';
-import Consumer from '../../consumer/consumer';
-import { NewerVersionFound } from '../../consumer/exceptions';
-import ShowDoctorError from '../../error/show-doctor-error';
-import logger from '../../logger/logger';
-import { sha1 } from '../../utils';
-import { AutoTagResult, getAutoTagInfo } from './auto-tag';
-import { FlattenedDependenciesGetter } from './get-flattened-dependencies';
-import { getValidVersionOrReleaseType } from '../../utils/semver-helper';
-import { LegacyOnTagResult } from '../scope';
-import { Log } from '../models/version';
-import { BasicTagParams } from '../../api/consumer/lib/tag';
-import { MessagePerComponent, MessagePerComponentFetcher } from './message-per-component';
-import { ModelComponent } from '../models';
+import * as globalConfig from '@teambit/legacy/dist/api/consumer/lib/global-config';
+import { Scope } from '@teambit/legacy/dist/scope';
+import { BitId, BitIds } from '@teambit/legacy/dist/bit-id';
+import {
+  BuildStatus,
+  CFG_USER_EMAIL_KEY,
+  CFG_USER_NAME_KEY,
+  CFG_USER_TOKEN_KEY,
+  BASE_CLOUD_DOMAIN,
+  Extensions,
+} from '@teambit/legacy/dist/constants';
+import { CURRENT_SCHEMA } from '@teambit/legacy/dist/consumer/component/component-schema';
+import Component from '@teambit/legacy/dist/consumer/component/consumer-component';
+import Consumer from '@teambit/legacy/dist/consumer/consumer';
+import { NewerVersionFound } from '@teambit/legacy/dist/consumer/exceptions';
+import ShowDoctorError from '@teambit/legacy/dist/error/show-doctor-error';
+import logger from '@teambit/legacy/dist/logger/logger';
+import { sha1 } from '@teambit/legacy/dist/utils';
+import { AutoTagResult, getAutoTagInfo } from '@teambit/legacy/dist/scope/component-ops/auto-tag';
+import { getValidVersionOrReleaseType } from '@teambit/legacy/dist/utils/semver-helper';
+import { LegacyOnTagResult } from '@teambit/legacy/dist/scope/scope';
+import { Log } from '@teambit/legacy/dist/scope/models/version';
+import { BasicTagParams } from '@teambit/legacy/dist/api/consumer/lib/tag';
+import {
+  MessagePerComponent,
+  MessagePerComponentFetcher,
+} from '@teambit/legacy/dist/scope/component-ops/message-per-component';
+import { ModelComponent } from '@teambit/legacy/dist/scope/models';
+import { DependencyResolverMain } from '@teambit/dependency-resolver';
+import { Workspace } from '@teambit/workspace';
+import { SnappingMain } from './snapping.main.runtime';
 
 export type onTagIdTransformer = (id: BitId) => BitId | null;
-type UpdateDependenciesOnTagFunc = (component: Component, idTransformer: onTagIdTransformer) => Component;
 
-let updateDependenciesOnTag: UpdateDependenciesOnTagFunc;
-export function registerUpdateDependenciesOnTag(func: UpdateDependenciesOnTagFunc) {
-  updateDependenciesOnTag = func;
-}
-
-function updateDependenciesVersions(componentsToTag: Component[]): void {
+function updateDependenciesVersions(componentsToTag: Component[], dependencyResolver: DependencyResolverMain): void {
   const getNewDependencyVersion = (id: BitId): BitId | null => {
     const foundDependency = componentsToTag.find((component) => component.id.isEqualWithoutVersion(id));
     return foundDependency ? id.changeVersion(foundDependency.version) : null;
@@ -52,10 +58,8 @@ function updateDependenciesVersions(componentsToTag: Component[]): void {
       if (newDepId) dependency.id = newDepId;
     });
     changeExtensionsVersion(oneComponentToTag);
-    if (updateDependenciesOnTag && typeof updateDependenciesOnTag === 'function') {
-      // @ts-ignore
-      oneComponentToTag = updateDependenciesOnTag(oneComponentToTag, getNewDependencyVersion.bind(this));
-    }
+    // @ts-ignore
+    oneComponentToTag = dependencyResolver.updateDepsOnLegacyTag(oneComponentToTag, getNewDependencyVersion.bind(this));
   });
 }
 
@@ -122,16 +126,16 @@ function getVersionByEnteredId(
   return undefined;
 }
 
-export default async function tagModelComponent({
+export async function tagModelComponent({
+  workspace,
+  snapping,
   consumerComponents,
   ids,
-  scope,
   message,
   editor,
   exactVersion,
   releaseType,
   preReleaseId,
-  consumer,
   ignoreNewestVersion = false,
   skipTests = false,
   skipAutoTag,
@@ -143,21 +147,25 @@ export default async function tagModelComponent({
   forceDeploy,
   incrementBy,
   packageManagerConfigRootDir,
+  dependencyResolver,
 }: {
+  workspace: Workspace;
+  snapping: SnappingMain;
   consumerComponents: Component[];
   ids: BitIds;
-  scope: Scope;
   exactVersion?: string | null | undefined;
   releaseType?: ReleaseType;
   incrementBy?: number;
-  consumer: Consumer;
   isSnap?: boolean;
   packageManagerConfigRootDir?: string;
+  dependencyResolver: DependencyResolverMain;
 } & BasicTagParams): Promise<{
   taggedComponents: Component[];
   autoTaggedResults: AutoTagResult[];
   publishedPackages: string[];
 }> {
+  const consumer = workspace.consumer;
+  const scope = workspace.scope.legacyScope;
   const consumerComponentsIdsMap = {};
   // Concat and unique all the dependencies from all the components so we will not import
   // the same dependency more then once, it's mainly for performance purpose
@@ -226,18 +234,18 @@ export default async function tagModelComponent({
       );
   setCurrentSchema(allComponentsToTag);
   // go through all dependencies and update their versions
-  updateDependenciesVersions(allComponentsToTag);
+  updateDependenciesVersions(allComponentsToTag, dependencyResolver);
 
   await addLogToComponents(componentsToTag, autoTagComponents, persist, message, messagePerId);
 
   if (soft) {
     consumer.updateNextVersionOnBitmap(allComponentsToTag, preReleaseId);
   } else {
-    await addFlattenedDependenciesToComponents(consumer.scope, allComponentsToTag);
+    await snapping._addFlattenedDependenciesToComponents(consumer.scope, allComponentsToTag);
     emptyBuilderData(allComponentsToTag);
     addBuildStatus(allComponentsToTag, BuildStatus.Pending);
     await addComponentsToScope(consumer, allComponentsToTag, build);
-    await consumer.updateComponentsVersions(allComponentsToTag);
+    await updateComponentsVersions(workspace, allComponentsToTag);
   }
 
   const publishedPackages: string[] = [];
@@ -247,8 +255,8 @@ export default async function tagModelComponent({
     const results: Array<LegacyOnTagResult[]> = await mapSeries(scope.onTag, (func) =>
       func(allComponentsToTag, onTagOpts, isolateOptions)
     );
-    results.forEach((tagResult) => updateComponentsByTagResult(allComponentsToTag, tagResult));
-    publishedPackages.push(...getPublishedPackages(allComponentsToTag));
+    results.forEach((tagResult) => snapping._updateComponentsByTagResult(allComponentsToTag, tagResult));
+    publishedPackages.push(...snapping._getPublishedPackages(allComponentsToTag));
     addBuildStatus(allComponentsToTag, BuildStatus.Succeed);
     await mapSeries(allComponentsToTag, (consumerComponent) => scope.sources.enrichSource(consumerComponent));
   }
@@ -279,13 +287,6 @@ function emptyBuilderData(components: Component[]) {
   });
 }
 
-export async function addFlattenedDependenciesToComponents(scope: Scope, components: Component[]) {
-  loader.start('importing missing dependencies...');
-  const flattenedDependenciesGetter = new FlattenedDependenciesGetter(scope, components);
-  await flattenedDependenciesGetter.populateFlattenedDependencies();
-  loader.stop();
-}
-
 async function addLogToComponents(
   components: Component[],
   autoTagComps: Component[],
@@ -294,12 +295,13 @@ async function addLogToComponents(
   messagePerComponent: MessagePerComponent[]
 ) {
   const username = await globalConfig.get(CFG_USER_NAME_KEY);
+  const bitCloudUsername = await getBitCloudUsername();
   const email = await globalConfig.get(CFG_USER_EMAIL_KEY);
   const getLog = (component: Component): Log => {
     const nextVersion = persist ? component.componentMap?.nextVersion : null;
     const msgFromEditor = messagePerComponent.find((item) => item.id.isEqualWithoutVersion(component.id))?.msg;
     return {
-      username: nextVersion?.username || username,
+      username: bitCloudUsername || nextVersion?.username || username,
       email: nextVersion?.email || email,
       message: nextVersion?.message || msgFromEditor || message,
       date: Date.now().toString(),
@@ -320,41 +322,83 @@ async function addLogToComponents(
   });
 }
 
+async function getBitCloudUsername(): Promise<string | undefined> {
+  const token = await globalConfig.get(CFG_USER_TOKEN_KEY);
+  if (!token) return '';
+  try {
+    const res = await fetch(`https://api.${BASE_CLOUD_DOMAIN}/user`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+    const object = await res.json();
+    const user = object.payload;
+    const username = user.username;
+    return username;
+  } catch (error) {
+    return undefined;
+  }
+}
+
 function setCurrentSchema(components: Component[]) {
   components.forEach((component) => {
     component.schema = CURRENT_SCHEMA;
   });
 }
 
-/**
- * @todo: currently, there is only one function registered to the OnTag, which is the builder.
- * we set the extensions data and artifacts we got from the builder to the consumer-components.
- * however, if there is more than one function registered to the OnTag, the data will be overridden
- * by the last called function. when/if this happen, some kind of merge need to be done between the
- * results.
- */
-export function updateComponentsByTagResult(components: Component[], tagResult: LegacyOnTagResult[]) {
-  tagResult.forEach((result) => {
-    const matchingComponent = components.find((c) => c.id.isEqual(result.id));
-    if (matchingComponent) {
-      const existingBuilder = matchingComponent.extensions.findCoreExtension(Extensions.builder);
-      if (existingBuilder) existingBuilder.data = result.builderData.data;
-      else matchingComponent.extensions.push(result.builderData);
-    }
-  });
-}
-
-export function getPublishedPackages(components: Component[]): string[] {
-  const publishedPackages = components.map((comp) => {
-    const builderExt = comp.extensions.findCoreExtension(Extensions.builder);
-    const pkgData = builderExt?.data?.aspectsData?.find((a) => a.aspectId === Extensions.pkg);
-    return pkgData?.data?.publishedPackage;
-  });
-  return compact(publishedPackages);
-}
-
 function addBuildStatus(components: Component[], buildStatus: BuildStatus) {
   components.forEach((component) => {
     component.buildStatus = buildStatus;
   });
+}
+
+export async function updateComponentsVersions(
+  workspace: Workspace,
+  components: Array<ModelComponent | Component>,
+  isTag = true
+): Promise<any> {
+  const consumer = workspace.consumer;
+  const currentLane = consumer.getCurrentLaneId();
+  const stagedConfig = await workspace.scope.getStagedConfig();
+  const isAvailableOnMain = async (component: ModelComponent | Component, id: BitId): Promise<boolean> => {
+    if (currentLane.isDefault()) {
+      return true;
+    }
+    if (!id.hasVersion()) {
+      // component was unsnapped on the current lane and is back to a new component
+      return true;
+    }
+    const modelComponent =
+      component instanceof ModelComponent ? component : await consumer.scope.getModelComponent(component.id);
+    return modelComponent.hasHead();
+  };
+
+  const updateVersions = async (unknownComponent: ModelComponent | Component) => {
+    const id: BitId =
+      unknownComponent instanceof ModelComponent
+        ? unknownComponent.toBitIdWithLatestVersionAllowNull()
+        : unknownComponent.id;
+    consumer.bitMap.updateComponentId(id);
+    const availableOnMain = await isAvailableOnMain(unknownComponent, id);
+    if (!availableOnMain) {
+      consumer.bitMap.setComponentProp(id, 'onLanesOnly', true);
+    }
+    const componentMap = consumer.bitMap.getComponent(id);
+    const compId = await workspace.resolveComponentId(id);
+    // it can be either a tag/snap or reset.
+    if (isTag) {
+      const config = componentMap.config;
+      stagedConfig.addComponentConfig(compId, config);
+      consumer.bitMap.removeConfig(id);
+    } else if (!componentMap.config) {
+      componentMap.config = stagedConfig.getConfigPerId(compId);
+    }
+    componentMap.clearNextVersion();
+  };
+  // important! DO NOT use Promise.all here! otherwise, you're gonna enter into a whole world of pain.
+  // imagine tagging comp1 with auto-tagged comp2, comp1 package.json is written while comp2 is
+  // trying to get the dependencies of comp1 using its package.json.
+  await mapSeries(components, updateVersions);
+  await stagedConfig.write();
 }

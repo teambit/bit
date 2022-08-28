@@ -30,7 +30,6 @@ import Login from './commands/public-cmds/login-cmd';
 import Logout from './commands/public-cmds/logout-cmd';
 import Move from './commands/public-cmds/move-cmd';
 import Remote from './commands/public-cmds/remote-cmd';
-import Remove from './commands/public-cmds/remove-cmd';
 import ScopeConfig from './commands/public-cmds/scope-config-cmd';
 import Untag from './commands/public-cmds/untag-cmd';
 import RunAction from './commands/private-cmds/run-action.cmd';
@@ -66,8 +65,6 @@ export default function registerCommands(): CommandRegistry {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     new Untag(),
     new Move(),
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    new Remove(),
     new Delete(),
     new Latest(),
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

@@ -141,12 +141,12 @@ export async function importMultipleDistsArtifacts(scope: Scope, components: Com
   const lane = await scope.getCurrentLaneObject();
   const laneIds = lane?.toBitIds();
   const groupedHashes: { [scopeName: string]: string[] } = {};
+  const debugHashesOrigin = {};
   await Promise.all(
     components.map(async (component) => {
       const artifactsFiles = getArtifactFilesByExtension(component.extensions, extensionsNamesForDistArtifacts);
-      const scopeName = (await scope.isIdOnLane(component.id, lane, laneIds))
-        ? (lane?.scope as string)
-        : (component.scope as string);
+      const isIdOnLane = await scope.isIdOnLane(component.id, lane, laneIds);
+      const scopeName = isIdOnLane ? (lane?.scope as string) : (component.scope as string);
       artifactsFiles.forEach((artifactFiles) => {
         if (!artifactFiles) return;
         if (!(artifactFiles instanceof ArtifactFiles)) {
@@ -156,11 +156,20 @@ export async function importMultipleDistsArtifacts(scope: Scope, components: Com
         if (artifactFiles.vinyls.length) return;
         const allHashes = artifactFiles.refs.map((artifact) => artifact.ref.hash);
         (groupedHashes[scopeName] ||= []).push(...allHashes);
+        allHashes.forEach(
+          (hash) => (debugHashesOrigin[hash] = `id: ${component.id.toString()}. isIdOnLane: ${isIdOnLane}`)
+        );
       });
     })
   );
   const scopeComponentsImporter = ScopeComponentsImporter.getInstance(scope);
-  await scopeComponentsImporter.importManyObjects(groupedHashes);
+  try {
+    await scopeComponentsImporter.importManyObjects(groupedHashes);
+  } catch (err) {
+    logger.error('failed fetching the following hashes', { groupedHashes, debugHashesOrigin });
+    throw err;
+  }
+
   logger.debug(`importMultipleDistsArtifacts: ${components.length} components. completed successfully`);
 }
 

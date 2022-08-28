@@ -8,7 +8,7 @@ import tar from 'tar';
 import { LANE_REMOTE_DELIMITER } from '@teambit/lane-id';
 import { BUILD_ON_CI, ENV_VAR_FEATURE_TOGGLE } from '../api/consumer/lib/feature-toggle';
 import { NOTHING_TO_TAG_MSG } from '../api/consumer/lib/tag';
-import { NOTHING_TO_SNAP_MSG } from '../constants';
+import { Extensions, NOTHING_TO_SNAP_MSG } from '../constants';
 import runInteractive, { InteractiveInputs } from '../interactive/utils/run-interactive-cmd';
 import { removeChalkCharacters } from '../utils';
 import ScopesData from './e2e-scopes';
@@ -483,6 +483,11 @@ export default class CommandHelper {
     return JSON.parse(status);
   }
 
+  isDeprecated(compName: string): boolean {
+    const deprecationData = this.showAspectConfig(compName, Extensions.deprecation);
+    return deprecationData.config.deprecate;
+  }
+
   getStagedIdsFromStatus(): string[] {
     const status = this.statusJson();
     return status.stagedComponents.map((s) => s.id);
@@ -587,10 +592,6 @@ export default class CommandHelper {
   mergeLane(laneName: string, options = '') {
     return this.runCmd(`bit lane merge ${laneName} ${options}`);
   }
-  mergeRemoteLane(laneName: string, remoteName = this.scopes.remote, options = '') {
-    return this.runCmd(`bit lane merge ${laneName} ${options} --remote ${remoteName}`);
-  }
-
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   diff(id? = '') {
     const output = this.runCmd(`bit diff ${id}`);
