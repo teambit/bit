@@ -1,4 +1,5 @@
 import { WorkspaceContext, WorkspaceTemplate } from '@teambit/generator';
+import { parse } from 'comment-json';
 import { generateFiles as generateCommonFiles } from '../workspace-common';
 
 export const reactWorkspaceAppTemplate: WorkspaceTemplate = {
@@ -6,6 +7,12 @@ export const reactWorkspaceAppTemplate: WorkspaceTemplate = {
   description: 'EXPERIMENTAL. react workspace for an app',
   hidden: true,
   generateFiles: async (context: WorkspaceContext) => {
+    if (context.defaultScope) {
+      const extensions = {
+        [`${context.defaultScope}/apps/my-app`]: parse(`{}`),
+      };
+      return generateCommonFiles(context, extensions);
+    }
     return generateCommonFiles(context);
   },
   fork: () => {
