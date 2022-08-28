@@ -6,5 +6,5 @@ export {
   ComponentConfig,
   ConfigContext,
 } from './component-template';
-export { WorkspaceContext, WorkspaceTemplate, WorkspaceFile } from './workspace-template';
+export { WorkspaceContext, WorkspaceTemplate, WorkspaceTemplate as Starter, WorkspaceFile } from './workspace-template';
 export { GeneratorAspect } from './generator.aspect';
