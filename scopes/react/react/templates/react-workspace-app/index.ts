@@ -1,13 +1,14 @@
 import { WorkspaceContext, WorkspaceTemplate } from '@teambit/generator';
 import { parse } from 'comment-json';
 import { generateFiles as generateCommonFiles } from '../workspace-common';
+import { DEFAULT_SCOPE_NAME } from '../workspace-common/constants';
 
 export const reactWorkspaceAppTemplate: WorkspaceTemplate = {
   name: 'react-app',
   description: 'EXPERIMENTAL. react workspace for an app',
   hidden: true,
   generateFiles: async (context: WorkspaceContext) => {
-    const scope = context.defaultScope || 'my-org.my-scope';
+    const scope = context.defaultScope || DEFAULT_SCOPE_NAME;
     const extensions = {
       [`${scope}/apps/my-app`]: parse(`{}`),
     };
