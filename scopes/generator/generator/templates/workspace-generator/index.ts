@@ -9,7 +9,7 @@ import { workspaceConfigTemplate } from './files/workspace-config-tpl';
 export const workspaceGeneratorTemplate: ComponentTemplate = {
   name: 'starter',
   description:
-    'create your own starter - \nDocs: https://bit.dev/docs/dev-services-overview/generator/generate-workspace',
+    'create your own starter - \nDocs: https://bit.dev/docs/dev-services/generator/generate-workspace',
   generateFiles: (context: ComponentContext) => {
     return [
       {
