@@ -83,6 +83,12 @@ export interface WorkspaceTemplate {
   name: string;
 
   /**
+   * name of an app created in the workspace. for example: `my-app`.
+   * This will be used to instruct the user to run `bit run <appName>` in the new workspace.
+   */
+  appName?: string;
+
+  /**
    * short description of the template. shown in the `bit templates` command when outside of bit-workspace.
    */
   description?: string;
