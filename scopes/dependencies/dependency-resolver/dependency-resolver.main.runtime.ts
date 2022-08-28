@@ -1166,27 +1166,27 @@ export class DependencyResolverMain {
     componentPoliciesById: Record<string, any>;
     components: Component[];
   }): Promise<OutdatedPkg[]> {
-    const componentModelVersions: ComponentModelVersion[] = [];
-    await Promise.all(
-      components.map(async (component) => {
-        const depList = await this.getDependencies(component);
-        depList.forEach((dep) => {
-          if (
-            dep.getPackageName &&
-            dep.version !== 'latest' &&
-            !dep['isExtension'] && // eslint-disable-line
-            dep.lifecycle !== 'peer'
-          ) {
-            componentModelVersions.push({
-              name: dep.getPackageName(),
+    const componentModelVersions: ComponentModelVersion[] = (
+      await Promise.all(
+        components.map(async (component) => {
+          const depList = await this.getDependencies(component);
+          return depList
+            .filter(
+              (dep) =>
+                typeof dep.getPackageName === 'function' &&
+                dep.version !== 'latest' &&
+                !dep['isExtension'] && // eslint-disable-line
+                dep.lifecycle !== 'peer'
+            )
+            .map((dep) => ({
+              name: dep.getPackageName!(), // eslint-disable-line
               version: dep.version,
               componentId: component.id.toString(),
               lifecycleType: dep.lifecycle,
-            });
-          }
-        });
-      })
-    );
+            }));
+        })
+      )
+    ).flat();
     const allPkgs = getAllPolicyPkgs({
       rootPolicy: this.getWorkspacePolicyFromConfig(),
       variantPoliciesByPatterns,
