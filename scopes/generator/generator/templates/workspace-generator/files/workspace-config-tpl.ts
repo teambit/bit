@@ -7,9 +7,7 @@ export async function workspaceConfig({ name, defaultScope }: WorkspaceContext) 
   configParsed['teambit.workspace/workspace'].name = name;
   configParsed['teambit.workspace/workspace'].defaultScope = defaultScope || 'company.scope';
   configParsed['teambit.workspace/variants'] = {
-    '*': {
-      'teambit.react/react': {},
-    },
+    '*': {},
   };
 
   return stringifyWorkspaceConfig(configParsed);

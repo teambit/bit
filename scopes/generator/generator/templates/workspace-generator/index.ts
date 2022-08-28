@@ -1,17 +1,15 @@
 import { ComponentContext, ComponentTemplate } from '@teambit/generator';
 import { indexFile } from './files/index';
-import { aspectFile } from './files/aspect-file';
+import { starterFile } from './files/starter';
 import { docsFile } from './files/docs-file';
-import { mainRuntime } from './files/main-runtime';
 import { gitIgnoreTemplate } from './files/git-ignore-tpl';
 import { readmeTemplate } from './files/readme-tpl';
-import { indexTemplate } from './files/index-tpl';
 import { workspaceConfigTemplate } from './files/workspace-config-tpl';
 
 export const workspaceGeneratorTemplate: ComponentTemplate = {
-  name: 'workspace-generator',
+  name: 'starter',
   description:
-    'create your own workspace generator - \nDocs: https://bit.dev/docs/dev-services-overview/generator/generate-workspace',
+    'create your own starter - \nDocs: https://bit.dev/docs/dev-services-overview/generator/generate-workspace',
   generateFiles: (context: ComponentContext) => {
     return [
       {
@@ -20,12 +18,8 @@ export const workspaceGeneratorTemplate: ComponentTemplate = {
         isMain: true,
       },
       {
-        relativePath: `${context.name}.aspect.ts`,
-        content: aspectFile(context),
-      },
-      {
-        relativePath: `${context.name}.main.runtime.ts`,
-        content: mainRuntime(context),
+        relativePath: `${context.name}.starter.ts`,
+        content: starterFile(),
       },
       {
         relativePath: `${context.name}.docs.mdx`,
@@ -42,10 +36,6 @@ export const workspaceGeneratorTemplate: ComponentTemplate = {
       {
         relativePath: 'template/files/workspace-config.ts',
         content: workspaceConfigTemplate(),
-      },
-      {
-        relativePath: 'template/index.ts',
-        content: indexTemplate(),
       },
     ];
   },
