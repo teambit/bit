@@ -1,13 +1,12 @@
 import mapSeries from 'p-map-series';
 import fetch from 'node-fetch';
 import R from 'ramda';
-import { isEmpty, compact } from 'lodash';
+import { isEmpty } from 'lodash';
 import { ReleaseType } from 'semver';
 import { v4 } from 'uuid';
 import * as globalConfig from '@teambit/legacy/dist/api/consumer/lib/global-config';
 import { Scope } from '@teambit/legacy/dist/scope';
 import { BitId, BitIds } from '@teambit/legacy/dist/bit-id';
-import loader from '@teambit/legacy/dist/cli/loader';
 import {
   BuildStatus,
   CFG_USER_EMAIL_KEY,
@@ -24,7 +23,6 @@ import ShowDoctorError from '@teambit/legacy/dist/error/show-doctor-error';
 import logger from '@teambit/legacy/dist/logger/logger';
 import { sha1 } from '@teambit/legacy/dist/utils';
 import { AutoTagResult, getAutoTagInfo } from '@teambit/legacy/dist/scope/component-ops/auto-tag';
-import { FlattenedDependenciesGetter } from '@teambit/legacy/dist/scope/component-ops/get-flattened-dependencies';
 import { getValidVersionOrReleaseType } from '@teambit/legacy/dist/utils/semver-helper';
 import { LegacyOnTagResult } from '@teambit/legacy/dist/scope/scope';
 import { Log } from '@teambit/legacy/dist/scope/models/version';
@@ -36,6 +34,7 @@ import {
 import { ModelComponent } from '@teambit/legacy/dist/scope/models';
 import { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { Workspace } from '@teambit/workspace';
+import { SnappingMain } from './snapping.main.runtime';
 
 export type onTagIdTransformer = (id: BitId) => BitId | null;
 
@@ -129,6 +128,7 @@ function getVersionByEnteredId(
 
 export async function tagModelComponent({
   workspace,
+  snapping,
   consumerComponents,
   ids,
   message,
@@ -150,6 +150,7 @@ export async function tagModelComponent({
   dependencyResolver,
 }: {
   workspace: Workspace;
+  snapping: SnappingMain;
   consumerComponents: Component[];
   ids: BitIds;
   exactVersion?: string | null | undefined;
@@ -240,7 +241,7 @@ export async function tagModelComponent({
   if (soft) {
     consumer.updateNextVersionOnBitmap(allComponentsToTag, preReleaseId);
   } else {
-    await addFlattenedDependenciesToComponents(consumer.scope, allComponentsToTag);
+    await snapping._addFlattenedDependenciesToComponents(consumer.scope, allComponentsToTag);
     emptyBuilderData(allComponentsToTag);
     addBuildStatus(allComponentsToTag, BuildStatus.Pending);
     await addComponentsToScope(consumer, allComponentsToTag, build);
@@ -254,17 +255,29 @@ export async function tagModelComponent({
     const results: Array<LegacyOnTagResult[]> = await mapSeries(scope.onTag, (func) =>
       func(allComponentsToTag, onTagOpts, isolateOptions)
     );
-    results.forEach((tagResult) => updateComponentsByTagResult(allComponentsToTag, tagResult));
-    publishedPackages.push(...getPublishedPackages(allComponentsToTag));
+    results.forEach((tagResult) => snapping._updateComponentsByTagResult(allComponentsToTag, tagResult));
+    publishedPackages.push(...snapping._getPublishedPackages(allComponentsToTag));
     addBuildStatus(allComponentsToTag, BuildStatus.Succeed);
     await mapSeries(allComponentsToTag, (consumerComponent) => scope.sources.enrichSource(consumerComponent));
   }
 
   if (!soft) {
+    await removeDeletedComponentsFromBitmap(allComponentsToTag, workspace);
     await scope.objects.persist();
   }
 
   return { taggedComponents: componentsToTag, autoTaggedResults: autoTagData, publishedPackages };
+}
+
+async function removeDeletedComponentsFromBitmap(comps: Component[], workspace: Workspace) {
+  await Promise.all(
+    comps.map(async (comp) => {
+      if (comp.removed) {
+        const compId = await workspace.resolveComponentId(comp.id);
+        workspace.bitMap.removeComponent(compId);
+      }
+    })
+  );
 }
 
 async function addComponentsToScope(consumer: Consumer, components: Component[], shouldValidateVersion: boolean) {
@@ -284,13 +297,6 @@ function emptyBuilderData(components: Component[]) {
     const existingBuilder = component.extensions.findCoreExtension(Extensions.builder);
     if (existingBuilder) existingBuilder.data = {};
   });
-}
-
-export async function addFlattenedDependenciesToComponents(scope: Scope, components: Component[]) {
-  loader.start('importing missing dependencies...');
-  const flattenedDependenciesGetter = new FlattenedDependenciesGetter(scope, components);
-  await flattenedDependenciesGetter.populateFlattenedDependencies();
-  loader.stop();
 }
 
 async function addLogToComponents(
@@ -351,33 +357,6 @@ function setCurrentSchema(components: Component[]) {
   components.forEach((component) => {
     component.schema = CURRENT_SCHEMA;
   });
-}
-
-/**
- * @todo: currently, there is only one function registered to the OnTag, which is the builder.
- * we set the extensions data and artifacts we got from the builder to the consumer-components.
- * however, if there is more than one function registered to the OnTag, the data will be overridden
- * by the last called function. when/if this happen, some kind of merge need to be done between the
- * results.
- */
-export function updateComponentsByTagResult(components: Component[], tagResult: LegacyOnTagResult[]) {
-  tagResult.forEach((result) => {
-    const matchingComponent = components.find((c) => c.id.isEqual(result.id));
-    if (matchingComponent) {
-      const existingBuilder = matchingComponent.extensions.findCoreExtension(Extensions.builder);
-      if (existingBuilder) existingBuilder.data = result.builderData.data;
-      else matchingComponent.extensions.push(result.builderData);
-    }
-  });
-}
-
-export function getPublishedPackages(components: Component[]): string[] {
-  const publishedPackages = components.map((comp) => {
-    const builderExt = comp.extensions.findCoreExtension(Extensions.builder);
-    const pkgData = builderExt?.data?.aspectsData?.find((a) => a.aspectId === Extensions.pkg);
-    return pkgData?.data?.publishedPackage;
-  });
-  return compact(publishedPackages);
 }
 
 function addBuildStatus(components: Component[], buildStatus: BuildStatus) {

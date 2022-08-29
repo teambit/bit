@@ -1,5 +1,7 @@
+import { IssuesClasses } from '@teambit/component-issues';
 import chai, { expect } from 'chai';
 import * as path from 'path';
+import { Extensions } from '../../src/constants';
 
 import Helper from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../src/fixtures/fixtures';
@@ -214,6 +216,84 @@ describe('bit remove command', function () {
     it('expect the shared hash to not be deleted', () => {
       const hashLocation = path.join(helper.scopes.localPath, '.bit/objects/b4/17426ea2f7f0e80fa2ee2e6c825e18fcb8a897');
       expect(hashLocation).to.be.a.file();
+    });
+  });
+  describe('soft remove', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents(2);
+      helper.command.tagWithoutBuild();
+      helper.command.export();
+
+      helper.command.removeComponent('comp2', '--soft');
+    });
+    it('bit status should show a section of removed components', () => {
+      const status = helper.command.statusJson();
+      expect(status.removedComponents).to.have.lengthOf(1);
+    });
+    it('bit status should show the dependent component with an issue because it is now missing the dependency', () => {
+      helper.command.expectStatusToHaveIssue(IssuesClasses.MissingPackagesDependenciesOnFs.name);
+    });
+    // @todo. not very easy to implement. coz before tag, when it's loaded from the workspace it fails and then
+    // it loads it from the scope. however, the removed data is not in the scope yet. only in the bitmap.
+    it.skip('bit show should show the component as removed', () => {
+      const removeData = helper.command.showAspectConfig('comp2', Extensions.remove);
+      expect(removeData.config.removed).to.be.true;
+    });
+    describe('tagging the component', () => {
+      before(() => {
+        helper.fs.outputFile('comp1/index.js', '');
+        helper.command.tagAllWithoutBuild();
+      });
+      it('should tag the removed components', () => {
+        const isStaged = helper.command.statusComponentIsStaged(`${helper.scopes.remote}/comp2`);
+        expect(isStaged).to.be.true;
+      });
+      it('bit show should still show the component as removed', () => {
+        const removeData = helper.command.showAspectConfig('comp2', Extensions.remove);
+        expect(removeData.config.removed).to.be.true;
+      });
+      describe('exporting the components', () => {
+        let exportOutput: string;
+        before(() => {
+          exportOutput = helper.command.export();
+        });
+        it('should export the deleted components', () => {
+          expect(exportOutput).to.have.string('2 component');
+        });
+        it('bit status should be clean', () => {
+          helper.command.expectStatusToBeClean();
+        });
+        it('bit list remote should not show the removed component', () => {
+          const list = helper.command.listRemoteScopeParsed();
+          expect(list).to.have.lengthOf(1);
+          expect(list[0].id).to.not.have.string('comp2');
+        });
+        describe('importing the component to a new workspace', () => {
+          let importOutput: string;
+          before(() => {
+            helper.scopeHelper.reInitLocalScopeHarmony();
+            helper.scopeHelper.addRemoteScope();
+            importOutput = helper.command.importComponent('comp2');
+          });
+          it('should indicate that the component is removed', () => {
+            expect(importOutput).to.have.string('removed');
+          });
+        });
+        describe('importing the entire scope to a new workspace', () => {
+          before(() => {
+            helper.scopeHelper.reInitLocalScopeHarmony();
+            helper.scopeHelper.addRemoteScope();
+            helper.command.importComponent('*');
+          });
+          it('should not import the removed component', () => {
+            const list = helper.command.listParsed();
+            expect(list).to.have.lengthOf(1);
+            expect(list[0].id).to.not.have.string('comp2');
+          });
+        });
+      });
     });
   });
 });

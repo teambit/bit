@@ -143,7 +143,7 @@ export class GraphFromFsBuilder {
         throw err;
       }
     });
-    return components;
+    return compact(components);
   }
   private async loadComponent(componentId: BitId): Promise<Component> {
     const compId = await this.workspace.resolveComponentId(componentId);

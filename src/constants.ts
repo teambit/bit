@@ -525,6 +525,7 @@ export enum Extensions {
   forking = 'teambit.component/forking',
   renaming = 'teambit.component/renaming',
   lanes = 'teambit.lanes/lanes',
+  remove = 'teambit.component/remove',
 }
 
 export enum BuildStatus {

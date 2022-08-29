@@ -5,7 +5,7 @@ import { LoggerAspect, LoggerMain, Logger } from '@teambit/logger';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import { BuilderAspect, BuilderMain } from '@teambit/builder';
 import { Component, ComponentID } from '@teambit/component';
-import { getPublishedPackages, updateComponentsByTagResult } from '@teambit/snapping';
+import { SnappingAspect, SnappingMain } from '@teambit/snapping';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { BuildStatus, CENTRAL_BIT_HUB_URL, CENTRAL_BIT_HUB_NAME } from '@teambit/legacy/dist/constants';
 import { getScopeRemotes } from '@teambit/legacy/dist/scope/scope-remotes';
@@ -35,7 +35,8 @@ export class SignMain {
     private logger: Logger,
     private builder: BuilderMain,
     private onPostSignSlot: OnPostSignSlot,
-    private lanes: LanesMain
+    private lanes: LanesMain,
+    private snapping: SnappingMain
   ) {}
 
   /**
@@ -80,8 +81,8 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
     );
     const legacyBuildResults = this.scope.builderDataMapToLegacyOnTagResults(builderDataMap);
     const legacyComponents = components.map((c) => c.state._consumer);
-    updateComponentsByTagResult(legacyComponents, legacyBuildResults);
-    const publishedPackages = getPublishedPackages(legacyComponents);
+    this.snapping._updateComponentsByTagResult(legacyComponents, legacyBuildResults);
+    const publishedPackages = this.snapping._getPublishedPackages(legacyComponents);
     const pipeWithError = pipeResults.find((pipe) => pipe.hasErrors());
     const buildStatus = pipeWithError ? BuildStatus.Failed : BuildStatus.Succeed;
     if (push) {
@@ -178,17 +179,24 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
 
   static runtime = MainRuntime;
 
-  static dependencies = [CLIAspect, ScopeAspect, LoggerAspect, BuilderAspect, LanesAspect];
+  static dependencies = [CLIAspect, ScopeAspect, LoggerAspect, BuilderAspect, LanesAspect, SnappingAspect];
 
   static slots = [Slot.withType<OnPostSignSlot>()];
 
   static async provider(
-    [cli, scope, loggerMain, builder, lanes]: [CLIMain, ScopeMain, LoggerMain, BuilderMain, LanesMain],
+    [cli, scope, loggerMain, builder, lanes, snapping]: [
+      CLIMain,
+      ScopeMain,
+      LoggerMain,
+      BuilderMain,
+      LanesMain,
+      SnappingMain
+    ],
     _,
     [onPostSignSlot]: [OnPostSignSlot]
   ) {
     const logger = loggerMain.createLogger(SignAspect.id);
-    const signMain = new SignMain(scope, logger, builder, onPostSignSlot, lanes);
+    const signMain = new SignMain(scope, logger, builder, onPostSignSlot, lanes, snapping);
     cli.register(new SignCmd(signMain));
     return signMain;
   }

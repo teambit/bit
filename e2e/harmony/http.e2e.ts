@@ -57,6 +57,30 @@ import { HttpHelper } from '../http-helper';
       httpHelper.killHttp();
     });
   });
+  describe('export with removed components', () => {
+    before(async () => {
+      httpHelper = new HttpHelper(helper);
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      await httpHelper.start();
+      helper.scopeHelper.addRemoteHttpScope();
+      helper.fixtures.populateComponents(2);
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      helper.command.removeComponent('comp2', '--soft');
+      helper.fs.outputFile('comp1/index.js', '');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+    });
+    it('bit list -r should show not show the removed component', () => {
+      const list = helper.command.listRemoteScopeParsed();
+      expect(list).to.have.lengthOf(1);
+      expect(list[0].id).to.not.have.string('comp2');
+    });
+    after(() => {
+      httpHelper.killHttp();
+    });
+  });
   describe('export', () => {
     let exportOutput: string;
     let scopeAfterExport: string;

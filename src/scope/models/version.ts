@@ -1,7 +1,7 @@
 import R from 'ramda';
 import { isHash } from '@teambit/component-version';
 import { BitId, BitIds } from '../../bit-id';
-import { BuildStatus, DEFAULT_BINDINGS_PREFIX, DEFAULT_BUNDLE_FILENAME } from '../../constants';
+import { BuildStatus, DEFAULT_BINDINGS_PREFIX, DEFAULT_BUNDLE_FILENAME, Extensions } from '../../constants';
 import ConsumerComponent from '../../consumer/component';
 import { isSchemaSupport, SchemaFeature, SchemaName } from '../../consumer/component/component-schema';
 import { Dependencies, Dependency } from '../../consumer/component/dependencies';
@@ -583,6 +583,11 @@ export default class Version extends BitObject {
   modelFilesToSourceFiles(repository: Repository): Promise<SourceFile[]> {
     return Promise.all(this.files.map((file) => SourceFile.loadFromSourceFileModel(file, repository)));
   }
+
+  isRemoved(): boolean {
+    return Boolean(this.extensions.findCoreExtension(Extensions.remove)?.config?.removed);
+  }
+
   /**
    * Validate the version model properties, to make sure we are not inserting something
    * in the wrong format

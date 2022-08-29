@@ -15,13 +15,9 @@ import { Consumer, loadConsumer } from '@teambit/legacy/dist/consumer';
 import BitMap from '@teambit/legacy/dist/consumer/bit-map/bit-map';
 import EjectComponents, { EjectResults } from '@teambit/legacy/dist/consumer/component-ops/eject-components';
 import ComponentsList from '@teambit/legacy/dist/consumer/component/components-list';
-import {
-  getLaneCompIdsToExport,
-  isUserTryingToExportLanes,
-  updateLanesAfterExport,
-} from '@teambit/legacy/dist/consumer/lanes/export-lanes';
 import GeneralError from '@teambit/legacy/dist/error/general-error';
 import HooksManager from '@teambit/legacy/dist/hooks';
+import { RemoveAspect, RemoveMain } from '@teambit/remove';
 import { NodeModuleLinker } from '@teambit/legacy/dist/links';
 import logger from '@teambit/legacy/dist/logger/logger';
 import { exportMany } from '@teambit/legacy/dist/scope/component-ops/export-scope-components';
@@ -48,16 +44,18 @@ type ExportParams = {
 };
 
 export class ExportMain {
-  constructor(private workspace: Workspace) {}
+  constructor(private workspace: Workspace, private remove: RemoveMain) {}
 
   async export(params: ExportParams) {
     HooksManagerInstance.triggerHook(PRE_EXPORT_HOOK, params);
-    const { updatedIds, nonExistOnBitMap, missingScope, exported, exportedLanes } = await this.exportComponents(params);
+    const { updatedIds, nonExistOnBitMap, missingScope, exported, removedIds, exportedLanes } =
+      await this.exportComponents(params);
     let ejectResults;
     if (params.eject) ejectResults = await ejectExportedComponents(updatedIds);
     const exportResults = {
       componentsIds: exported,
       nonExistOnBitMap,
+      removedIds,
       missingScope,
       ejectResults,
       exportedLanes,
@@ -74,6 +72,7 @@ export class ExportMain {
   private async exportComponents({ ids, includeNonStaged, originDirectly, ...params }: ExportParams): Promise<{
     updatedIds: BitId[];
     nonExistOnBitMap: BitId[];
+    removedIds: BitIds;
     missingScope: BitId[];
     exported: BitId[];
     exportedLanes: Lane[];
@@ -90,6 +89,7 @@ export class ExportMain {
       return {
         updatedIds: [],
         nonExistOnBitMap: [],
+        removedIds: new BitIds(),
         missingScope,
         exported: [],
         newIdsOnRemote: [],
@@ -112,8 +112,9 @@ export class ExportMain {
       isOnMain,
     });
     if (laneObject) await updateLanesAfterExport(consumer, laneObject);
+    const removedIds = await this.getRemovedStagedBitIds();
     const { updatedIds, nonExistOnBitMap } = _updateIdsOnBitMap(consumer.bitMap, updatedLocally);
-    await this.removeFromStagedConfig(updatedIds);
+    await this.removeFromStagedConfig([...updatedIds, ...nonExistOnBitMap]);
     await linkComponents(updatedIds, consumer);
     Analytics.setExtraData('num_components', exported.length);
     // it is important to have consumer.onDestroy() before running the eject operation, we want the
@@ -122,7 +123,8 @@ export class ExportMain {
     await consumer.onDestroy();
     return {
       updatedIds,
-      nonExistOnBitMap,
+      nonExistOnBitMap: nonExistOnBitMap.filter((id) => !removedIds.hasWithoutVersion(id)),
+      removedIds,
       missingScope,
       exported,
       newIdsOnRemote,
@@ -159,7 +161,7 @@ export class ExportMain {
       if (ids.length) {
         throw new GeneralError(`when checked out to a lane, all its components are exported. please omit the ids`);
       }
-      const { componentsToExport, laneObject } = await getLaneCompIdsToExport(consumer, includeNonStaged);
+      const { componentsToExport, laneObject } = await this.getLaneCompIdsToExport(consumer, includeNonStaged);
       const loaderMsg = componentsToExport.length > 1 ? BEFORE_EXPORTS : BEFORE_EXPORT;
       loader.start(loaderMsg);
       const filtered = await filterNonScopeIfNeeded(componentsToExport);
@@ -204,10 +206,34 @@ export class ExportMain {
     return BitIds.fromArray(idsArray);
   }
 
+  private async getLaneCompIdsToExport(
+    consumer: Consumer,
+    includeNonStaged: boolean
+  ): Promise<{ componentsToExport: BitIds; laneObject: Lane }> {
+    const currentLaneId = consumer.getCurrentLaneId();
+    const laneObject = await consumer.scope.loadLane(currentLaneId);
+    if (!laneObject) {
+      throw new Error(`fatal: unable to load the current lane object (${currentLaneId.toString()})`);
+    }
+    loader.start(BEFORE_LOADING_COMPONENTS);
+    const componentsList = new ComponentsList(consumer);
+    const componentsToExportWithoutRemoved = includeNonStaged
+      ? await componentsList.listNonNewComponentsIds()
+      : await componentsList.listExportPendingComponentsIds(laneObject);
+    const removedStagedBitIds = await this.getRemovedStagedBitIds();
+    const componentsToExport = BitIds.uniqFromArray([...componentsToExportWithoutRemoved, ...removedStagedBitIds]);
+    return { componentsToExport, laneObject };
+  }
+
+  private async getRemovedStagedBitIds(): Promise<BitIds> {
+    const removedStaged = await this.remove.getRemovedStaged();
+    return BitIds.fromArray(removedStaged.map((r) => r._legacy).map((id) => id.changeVersion(undefined)));
+  }
+
   static runtime = MainRuntime;
-  static dependencies = [CLIAspect, ScopeAspect, WorkspaceAspect];
-  static async provider([cli, scope, workspace]: [CLIMain, ScopeMain, Workspace]) {
-    const exportMain = new ExportMain(workspace);
+  static dependencies = [CLIAspect, ScopeAspect, WorkspaceAspect, RemoveAspect];
+  static async provider([cli, scope, workspace, remove]: [CLIMain, ScopeMain, Workspace, RemoveMain]) {
+    const exportMain = new ExportMain(workspace, remove);
     cli.register(new ResumeExportCmd(scope), new ExportCmd(exportMain));
     return exportMain;
   }
@@ -282,4 +308,21 @@ function _throwForUnsnappedLaneReadme(lane: Lane) {
       Please run either snap -a or snap ${readmeComponent.id} to snap the component on the lane before exporting it.`
     );
   }
+}
+
+async function updateLanesAfterExport(consumer: Consumer, lane: Lane) {
+  const currentLane = consumer.getCurrentLaneId();
+  const isCurrentLane = lane.name === currentLane.name;
+  if (!isCurrentLane) {
+    throw new Error(
+      `updateLanesAfterExport should get called only with current lane, got ${lane.name}, current ${currentLane.name}`
+    );
+  }
+  consumer.setCurrentLane(lane.toLaneId(), true);
+  consumer.scope.scopeJson.removeLaneFromNew(lane.name);
+  lane.isNew = false;
+}
+
+export function isUserTryingToExportLanes(consumer: Consumer) {
+  return consumer.isOnLane();
 }
