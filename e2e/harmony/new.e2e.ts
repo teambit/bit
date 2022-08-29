@@ -29,7 +29,7 @@ describe('new command', function () {
       helper.scopeHelper.reInitLocalScopeHarmony();
       helper.bitJsonc.setupDefault();
       helper.scopeHelper.addRemoteScope(undefined, undefined, true);
-      helper.command.create('workspace-generator', 'workspace-example');
+      helper.command.create('starter', 'workspace-example');
       helper.bitJsonc.addToVariant('*', 'teambit.harmony/aspect', {});
       helper.command.install();
 
