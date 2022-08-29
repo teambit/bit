@@ -20,7 +20,7 @@ import { ScopeListItem } from '../../scope/models/model-component';
 import Version, { Log } from '../../scope/models/version';
 import { pathNormalizeToLinux } from '../../utils';
 import { PathLinux, PathOsBased, PathOsBasedAbsolute, PathOsBasedRelative } from '../../utils/path';
-import ComponentMap, { ComponentOrigin } from '../bit-map/component-map';
+import ComponentMap from '../bit-map/component-map';
 import { IgnoredDirectory } from '../component-ops/add-components/exceptions/ignored-directory';
 import ComponentsPendingImport from '../component-ops/exceptions/components-pending-import';
 import { Dist, License, SourceFile } from '../component/sources';
@@ -69,7 +69,6 @@ export type ComponentProps = {
   license?: License;
   deprecated?: boolean;
   removed?: boolean;
-  origin: ComponentOrigin;
   log?: Log;
   schema?: string;
   scopesList?: ScopeListItem[];
@@ -124,7 +123,6 @@ export default class Component {
   deprecated: boolean;
   removed?: boolean; // was it soft-removed
   defaultScope: string | null;
-  origin: ComponentOrigin;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   _isModified: boolean;
   packageJsonFile: PackageJsonFile | undefined; // populated when loadedFromFileSystem or when writing the components. for author it never exists
@@ -173,7 +171,6 @@ export default class Component {
     log,
     deprecated,
     removed,
-    origin,
     scopesList,
     extensions,
     buildStatus,
@@ -201,7 +198,6 @@ export default class Component {
     this.log = log;
     this.deprecated = deprecated || false;
     this.removed = removed;
-    this.origin = origin;
     this.scopesList = scopesList;
     this.extensions = extensions || [];
     this.componentFromModel = componentFromModel;
@@ -550,7 +546,6 @@ export default class Component {
       workspaceConfig,
       overridesFromModel,
       componentConfig,
-      componentMap.origin,
       consumer.isLegacy
     );
     const packageJsonFile = (componentConfig && componentConfig.packageJsonFile) || undefined;
@@ -580,7 +575,6 @@ export default class Component {
       componentMap,
       docs: flattenedDocs,
       deprecated,
-      origin: componentMap.origin,
       overrides,
       schema: getSchema(),
       defaultScope,

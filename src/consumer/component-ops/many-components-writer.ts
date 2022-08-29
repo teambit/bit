@@ -3,7 +3,7 @@ import fs from 'fs-extra';
 import mapSeries from 'p-map-series';
 import * as path from 'path';
 import { BitId } from '../../bit-id';
-import { COMPONENT_ORIGINS, DEFAULT_DIR_DEPENDENCIES } from '../../constants';
+import { DEFAULT_DIR_DEPENDENCIES } from '../../constants';
 import GeneralError from '../../error/general-error';
 import logger from '../../logger/logger';
 import { ComponentWithDependencies } from '../../scope';
@@ -240,21 +240,14 @@ please use the '--log=error' flag for the full error.`);
       : this._getComponentRootDir(componentWithDeps.component.id);
     const getParams = () => {
       if (!this.consumer) {
-        return {
-          origin: COMPONENT_ORIGINS.IMPORTED,
-        };
+        return {};
       }
       // AUTHORED and IMPORTED components can't be saved with multiple versions, so we can ignore the version to
       // find the component in bit.map
-      const componentMap = this.bitMap.getComponentPreferNonNested(componentWithDeps.component.id);
-      const origin =
-        componentMap && componentMap.origin === COMPONENT_ORIGINS.AUTHORED
-          ? COMPONENT_ORIGINS.AUTHORED
-          : COMPONENT_ORIGINS.IMPORTED;
+      const componentMap = this.bitMap.getComponentIfExist(componentWithDeps.component.id, { ignoreVersion: true });
       // $FlowFixMe consumer is set here
       this._throwErrorWhenDirectoryNotEmpty(this.consumer.toAbsolutePath(componentRootDir), componentMap);
       return {
-        origin,
         existingComponentMap: componentMap,
       };
     };
@@ -286,7 +279,7 @@ please use the '--log=error' flag for the full error.`);
       this.componentsWithDependencies.forEach((componentWithDeps) => {
         // @ts-ignore componentWithDeps.component.componentMap is set
         const componentMap: ComponentMap = componentWithDeps.component.componentMap;
-        if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED && !componentMap.rootDir) {
+        if (!componentMap.rootDir) {
           throw new GeneralError(`unable to use "--path" flag.
 to move individual files, use bit move.
 to move all component files to a different directory, run bit remove and then bit import --path`);

@@ -4,7 +4,6 @@ import * as path from 'path';
 
 import { Consumer } from '..';
 import { BitId, BitIds } from '../../bit-id';
-import { COMPONENT_ORIGINS } from '../../constants';
 import GeneralError from '../../error/general-error';
 import { ComponentWithDependencies } from '../../scope';
 import Version from '../../scope/models/version';
@@ -256,7 +255,7 @@ export async function applyVersion(
   const componentWithDependencies = await consumer.loadComponentWithDependenciesFromModel(id);
   const componentMap = componentFromFS && componentFromFS.componentMap;
   if (componentFromFS && !componentMap) throw new GeneralError('applyVersion: componentMap was not found');
-  if (componentMap && componentMap.origin === COMPONENT_ORIGINS.AUTHORED && !id.scope) {
+  if (componentMap && !id.scope) {
     componentWithDependencies.dependencies = [];
     componentWithDependencies.devDependencies = [];
   }

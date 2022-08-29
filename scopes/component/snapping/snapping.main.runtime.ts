@@ -493,7 +493,7 @@ there are matching among unmodified components thought. consider using --unmodif
       return { bitIds: componentsList.listDuringMergeStateComponents(), warnings };
     }
 
-    tagPendingBitIds.push(...snappedComponentsIds);
+    const tagPendingBitIdsIncludeSnapped = [...tagPendingBitIds, ...snappedComponentsIds];
 
     if (includeUnmodified && exactVersion) {
       const tagPendingComponentsLatest = await this.workspace.scope.legacyScope.latestVersions(tagPendingBitIds, false);
@@ -504,7 +504,7 @@ there are matching among unmodified components thought. consider using --unmodif
       });
     }
 
-    return { bitIds: tagPendingBitIds.map((id) => id.changeVersion(undefined)), warnings };
+    return { bitIds: tagPendingBitIdsIncludeSnapped.map((id) => id.changeVersion(undefined)), warnings };
   }
 
   static slots = [];

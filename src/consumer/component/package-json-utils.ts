@@ -1,19 +1,17 @@
 import fs from 'fs-extra';
 import R from 'ramda';
 import { compact } from 'lodash';
-
 import { BitId, BitIds } from '../../bit-id';
 import logger from '../../logger/logger';
 import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
 import getNodeModulesPathOfComponent from '../../utils/bit/component-node-modules-path';
-import { PathLinux, pathNormalizeToLinux, PathOsBasedAbsolute, pathRelativeLinux } from '../../utils/path';
+import { PathLinux, pathNormalizeToLinux, PathOsBasedAbsolute } from '../../utils/path';
 import Component from '../component/consumer-component';
 import Consumer from '../consumer';
 import PackageJson from './package-json';
 import PackageJsonFile from './package-json-file';
 import BitMap from '../bit-map';
 import ComponentMap from '../bit-map/component-map';
-import { COMPONENT_ORIGINS } from '../../constants';
 
 export async function addComponentsWithVersionToRoot(consumer: Consumer, components: Component[]) {
   const componentsToAdd = R.fromPairs(
@@ -62,7 +60,7 @@ export function preparePackageJsonToWrite(
     if (ignoreBitDependencies === true) return {};
     return dependencies.reduce((acc, depId: BitId) => {
       if (Array.isArray(ignoreBitDependencies) && ignoreBitDependencies.searchWithoutVersion(depId)) return acc;
-      const packageDependency = getPackageDependency(bitMap, depId, component.id);
+      const packageDependency = getPackageDependency(bitMap, depId);
       const packageName = componentIdToPackageName({
         ...component,
         id: depId,
@@ -120,26 +118,15 @@ export function convertToValidPathForPackageManager(pathStr: PathLinux): string 
  */
 function getPackageDependencyValue(
   dependencyId: BitId,
-  parentComponentMap: ComponentMap,
   dependencyComponentMap?: ComponentMap | null | undefined
 ): string | null | undefined {
-  if (!dependencyComponentMap || dependencyComponentMap.origin === COMPONENT_ORIGINS.NESTED) {
+  if (!dependencyComponentMap) {
     return dependencyId.version;
   }
-  if (dependencyComponentMap.origin === COMPONENT_ORIGINS.AUTHORED) {
-    return null;
-  }
-  const dependencyRootDir = dependencyComponentMap.rootDir;
-  if (!dependencyRootDir) {
-    throw new Error(`rootDir is missing from an imported component ${dependencyId.toString()}`);
-  }
-  if (!parentComponentMap.rootDir) throw new Error('rootDir is missing from an imported component');
-  const rootDirRelative = pathRelativeLinux(parentComponentMap.rootDir, dependencyRootDir);
-  return convertToValidPathForPackageManager(rootDirRelative);
+  return null;
 }
 
-function getPackageDependency(bitMap: BitMap, dependencyId: BitId, parentId: BitId): string | null | undefined {
-  const parentComponentMap = bitMap.getComponent(parentId);
+function getPackageDependency(bitMap: BitMap, dependencyId: BitId): string | null | undefined {
   const dependencyComponentMap = bitMap.getComponentIfExist(dependencyId);
-  return getPackageDependencyValue(dependencyId, parentComponentMap, dependencyComponentMap);
+  return getPackageDependencyValue(dependencyId, dependencyComponentMap);
 }

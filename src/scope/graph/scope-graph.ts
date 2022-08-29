@@ -171,7 +171,7 @@ export default class DependencyGraph {
    */
   static async buildGraphFromCurrentlyUsedComponents(consumer: Consumer): Promise<Graph> {
     const componentsList = new ComponentsList(consumer);
-    const workspaceComponents: Component[] = await componentsList.getAuthoredAndImportedFromFS();
+    const workspaceComponents: Component[] = await componentsList.getComponentsFromFS();
     const graph = new Graph();
     workspaceComponents.forEach((component: Component) => {
       const id = component.id;

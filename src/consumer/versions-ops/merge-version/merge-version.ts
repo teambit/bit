@@ -168,7 +168,6 @@ async function applyVersion(
     writeConfig: false, // never override the existing bit.json
     writePackageJson: false,
     deleteBitDirContent: false,
-    origin: componentMap.origin,
     consumer,
     bitMap: consumer.bitMap,
     existingComponentMap: componentMap,
@@ -176,7 +175,6 @@ async function applyVersion(
   await componentWriter.write();
 
   consumer.bitMap.removeComponent(component.id);
-  componentWriter.origin = componentMap.origin;
   componentWriter.addComponentToBitMap(componentMap.rootDir);
 
   return { id, filesStatus: Object.assign(filesStatus, modifiedStatus) };
