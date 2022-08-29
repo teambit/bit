@@ -61,6 +61,8 @@ export default class NodeModuleLinker {
       component.componentMap = componentMap;
       switch (componentMap.origin) {
         case COMPONENT_ORIGINS.IMPORTED:
+          // todo: remove this. it's temporary for the e2e-tests.
+          throw new Error('SHOULD NEVER BE HERE');
           return this._populateImportedComponentsLinks(component);
         case COMPONENT_ORIGINS.AUTHORED:
           return this._populateAuthoredComponentsLinks(component);
