@@ -1,9 +1,10 @@
 import { WorkspaceContext } from '@teambit/generator';
 import { getWorkspaceConfigTemplateParsed, stringifyWorkspaceConfig } from '@teambit/config';
 import { parse, assign } from 'comment-json';
+import { DEFAULT_SCOPE_NAME } from '../constants';
 
-export async function workspaceConfig({ name, defaultScope }: WorkspaceContext) {
-  const scope = defaultScope || 'my-org.my-scope';
+export async function workspaceConfig({ name, defaultScope }: WorkspaceContext, extraConfig?: Record<string, any>) {
+  const scope = defaultScope || DEFAULT_SCOPE_NAME;
   const configParsed = await getWorkspaceConfigTemplateParsed();
   configParsed['teambit.workspace/workspace'].name = name;
   configParsed['teambit.workspace/workspace'].defaultScope = scope;
@@ -30,7 +31,11 @@ export async function workspaceConfig({ name, defaultScope }: WorkspaceContext) 
     'teambit.workspace/variants': parse(`{}`),
   };
 
-  const configMerged = assign(configParsed, variants);
+  let configMerged = assign(configParsed, variants);
+
+  if (extraConfig) {
+    configMerged = assign(configMerged, extraConfig);
+  }
 
   return stringifyWorkspaceConfig(configMerged);
 }

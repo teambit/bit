@@ -29,6 +29,7 @@ export type ComponentTemplateSlot = SlotRegistry<ComponentTemplate[]>;
 export type WorkspaceTemplateSlot = SlotRegistry<WorkspaceTemplate[]>;
 
 export type TemplateDescriptor = { aspectId: string; name: string; description?: string; hidden?: boolean };
+export type GenerateWorkspaceTemplateResult = { workspacePath: string; appName?: string };
 
 export type GeneratorConfig = {
   /**
@@ -222,7 +223,11 @@ export class GeneratorMain {
     return componentGenerator.generate();
   }
 
-  async generateWorkspaceTemplate(workspaceName: string, templateName: string, options: NewOptions) {
+  async generateWorkspaceTemplate(
+    workspaceName: string,
+    templateName: string,
+    options: NewOptions
+  ): Promise<GenerateWorkspaceTemplateResult> {
     if (this.workspace) {
       throw new BitError('Error: unable to generate a new workspace inside of an existing workspace');
     }
@@ -240,7 +245,7 @@ export class GeneratorMain {
     const workspaceGenerator = new WorkspaceGenerator(workspaceName, options, template, aspectComponent);
     const workspacePath = await workspaceGenerator.generate();
 
-    return workspacePath;
+    return { workspacePath, appName: template.appName };
   }
 
   private getAllComponentTemplatesFlattened(): Array<{ id: string; template: ComponentTemplate }> {
