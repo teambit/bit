@@ -1,10 +1,10 @@
 import { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
+import { BitError } from '@teambit/bit-error';
 import { ScopeMain } from '@teambit/scope';
 import { BuilderMain } from '../builder.main.runtime';
 import { ArtifactExtractor, ExtractorArtifactResult, ExtractorResultGrouped } from './artifact-extractor';
-import { BitError } from '@teambit/bit-error';
 
 const INDENT_TITLE = ' '.repeat(2);
 const INDENT_SUB_TITLE = ' '.repeat(4);
