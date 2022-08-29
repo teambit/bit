@@ -42,8 +42,7 @@ import BitMap, { CURRENT_BITMAP_SCHEMA } from './bit-map/bit-map';
 import { NextVersion } from './bit-map/component-map';
 import Component from './component';
 import { ComponentStatus, ComponentStatusLoader, ComponentStatusResult } from './component-ops/component-status-loader';
-import ComponentLoader, { ComponentLoadOptions } from './component/component-loader';
-import { InvalidComponent } from './component/consumer-component';
+import ComponentLoader, { ComponentLoadOptions, LoadManyResult } from './component/component-loader';
 import { Dependencies } from './component/dependencies';
 import PackageJsonFile from './component/package-json-file';
 import { ILegacyWorkspaceConfig } from './config';
@@ -335,11 +334,7 @@ export default class Consumer {
     return components[0];
   }
 
-  async loadComponents(
-    ids: BitIds,
-    throwOnFailure = true,
-    loadOpts?: ComponentLoadOptions
-  ): Promise<{ components: Component[]; invalidComponents: InvalidComponent[] }> {
+  async loadComponents(ids: BitIds, throwOnFailure = true, loadOpts?: ComponentLoadOptions): Promise<LoadManyResult> {
     return this.componentLoader.loadMany(ids, throwOnFailure, loadOpts);
   }
 

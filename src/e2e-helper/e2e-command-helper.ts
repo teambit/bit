@@ -525,7 +525,8 @@ export default class CommandHelper {
 
   statusComponentIsStaged(id: string): boolean {
     const status = this.statusJson();
-    return status.stagedComponents.includes(id);
+    const stagedIds = status.stagedComponents.map((s) => s.id);
+    return stagedIds.includes(id);
   }
 
   statusComponentIsModified(fullId: string): boolean {

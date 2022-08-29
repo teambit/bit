@@ -234,6 +234,9 @@ async function getComponentStatus(consumer: Consumer, id: BitId, switchProps: Sw
   }
   const existingBitMapId = consumer.bitMap.getBitIdIfExist(id, { ignoreVersion: true });
   const componentOnLane: Version = await modelComponent.loadVersion(version, consumer.scope.objects);
+  if (componentOnLane.isRemoved()) {
+    return returnFailure(`component has been removed`, true);
+  }
   if (!existingBitMapId) {
     if (switchProps.existingOnWorkspaceOnly) {
       return returnFailure(`component ${id.toStringWithoutVersion()} is not in the workspace`, true);

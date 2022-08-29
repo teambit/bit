@@ -68,6 +68,7 @@ export type ComponentProps = {
   mainDistFile?: PathLinux;
   license?: License;
   deprecated?: boolean;
+  removed?: boolean;
   origin: ComponentOrigin;
   log?: Log;
   schema?: string;
@@ -121,6 +122,7 @@ export default class Component {
   componentFromModel: Component | undefined; // populated when loadedFromFileSystem is true and it exists in the model
   issues: IssuesList;
   deprecated: boolean;
+  removed?: boolean; // was it soft-removed
   defaultScope: string | null;
   origin: ComponentOrigin;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -170,6 +172,7 @@ export default class Component {
     license,
     log,
     deprecated,
+    removed,
     origin,
     scopesList,
     extensions,
@@ -197,6 +200,7 @@ export default class Component {
     this.license = license;
     this.log = log;
     this.deprecated = deprecated || false;
+    this.removed = removed;
     this.origin = origin;
     this.scopesList = scopesList;
     this.extensions = extensions || [];

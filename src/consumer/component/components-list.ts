@@ -28,6 +28,7 @@ export type ListScopeResult = {
   currentlyUsedVersion?: string | null | undefined;
   remoteVersion?: string;
   deprecated?: boolean;
+  removed?: boolean;
   laneReadmeOf?: string[];
 };
 
@@ -38,14 +39,11 @@ export default class ComponentsList {
   scope: Scope;
   bitMap: BitMap;
   _fromFileSystem: { [cacheKey: string]: Component[] } = {};
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   _fromObjectsIds: BitId[];
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   _modelComponents: ModelComponent[];
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   _invalidComponents: InvalidComponent[];
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   _modifiedComponents: Component[];
+  _removedComponents: Component[];
   // @ts-ignore
   private _mergePendingComponents: DivergedComponent[];
   constructor(consumer: Consumer) {
@@ -299,13 +297,19 @@ export default class ComponentsList {
    * @return {Promise<string[]>}
    */
   async listTagPendingComponents(): Promise<BitIds> {
-    const [newComponents, modifiedComponents] = await Promise.all([
+    const [newComponents, modifiedComponents, removedComponents] = await Promise.all([
       this.listNewComponents(),
       this.listModifiedComponents(),
+      this.listRemovedComponents(),
     ]);
     const duringMergeIds = this.listDuringMergeStateComponents();
 
-    return BitIds.fromArray([...(newComponents as BitId[]), ...(modifiedComponents as BitId[]), ...duringMergeIds]);
+    return BitIds.fromArray([
+      ...(newComponents as BitId[]),
+      ...(modifiedComponents as BitId[]),
+      ...removedComponents,
+      ...duringMergeIds,
+    ]);
   }
 
   async listExportPendingComponentsIds(lane?: Lane | null): Promise<BitIds> {
@@ -314,7 +318,8 @@ export default class ComponentsList {
     const pendingExportComponents = await filterAsync(modelComponents, async (component: ModelComponent) => {
       if (!fromBitMap.searchWithoutVersion(component.toBitId())) {
         // it's not on the .bitmap only in the scope, as part of the out-of-sync feature, it should
-        // be considered as staged and should be exported. notice that we use `hasLocalChanges`
+        // be considered as staged and should be exported. same for soft-removed components, which are on scope only.
+        // notice that we use `hasLocalChanges`
         // and not `isLocallyChanged` by purpose. otherwise, cached components that were not
         // updated from a remote will be calculated as remote-ahead in the setDivergeData and will
         // be exported unexpectedly.
@@ -385,10 +390,17 @@ export default class ComponentsList {
     if (!this._fromFileSystem[cacheKeyName]) {
       const idsFromBitMap = this.idsFromBitMap(origin);
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      const { components, invalidComponents } = await this.consumer.loadComponents(idsFromBitMap, false, loadOpts);
+      const { components, invalidComponents, removedComponents } = await this.consumer.loadComponents(
+        idsFromBitMap,
+        false,
+        loadOpts
+      );
       this._fromFileSystem[cacheKeyName] = components;
       if (!this._invalidComponents && !origin) {
         this._invalidComponents = invalidComponents;
+      }
+      if (!this._removedComponents && !origin) {
+        this._removedComponents = removedComponents;
       }
     }
     return this._fromFileSystem[cacheKeyName];
@@ -402,6 +414,16 @@ export default class ComponentsList {
       await this.getFromFileSystem();
     }
     return this._invalidComponents;
+  }
+
+  /**
+   * components that were deleted by soft-delete (bit remove --soft)
+   */
+  async listRemovedComponents(): Promise<BitId[]> {
+    if (!this._removedComponents) {
+      await this.getFromFileSystem();
+    }
+    return this._removedComponents.map((c) => c.id);
   }
 
   /**
@@ -506,21 +528,28 @@ export default class ComponentsList {
   /**
    * get called from a bare-scope, shows only components of that scope
    */
-  static async listLocalScope(scope: Scope, namespacesUsingWildcards?: string): Promise<ListScopeResult[]> {
+  static async listLocalScope(
+    scope: Scope,
+    namespacesUsingWildcards?: string,
+    includeRemoved = false
+  ): Promise<ListScopeResult[]> {
     const components = await scope.listLocal();
     const componentsFilteredByWildcards = namespacesUsingWildcards
       ? ComponentsList.filterComponentsByWildcard(components, namespacesUsingWildcards)
       : components;
     const componentsSorted = ComponentsList.sortComponentsByName(componentsFilteredByWildcards);
-    return Promise.all(
+    const results = await Promise.all(
       componentsSorted.map(async (component: ModelComponent) => {
         return {
           id: component.toBitIdWithLatestVersion(),
           deprecated: await component.isDeprecated(scope.objects),
-          laneReadmeOf: await component?.isLaneReadmeOf(scope.objects),
+          removed: await component.isRemoved(scope.objects),
+          laneReadmeOf: await component.isLaneReadmeOf(scope.objects),
         };
       })
     );
+    if (includeRemoved) return results;
+    return results.filter((result) => !result.removed);
   }
 
   // components can be one of the following: Component[] | ModelComponent[] | string[] | BitId[]
