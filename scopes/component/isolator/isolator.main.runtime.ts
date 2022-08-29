@@ -470,7 +470,6 @@ export class IsolatorMain {
       // @ts-ignore
       bitMap: new BitMap(undefined, undefined, undefined, false),
       writeToPath: '.',
-      origin: 'IMPORTED',
       consumer: undefined,
       scope: legacyScope,
       override: false,
