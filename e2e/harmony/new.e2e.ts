@@ -33,10 +33,10 @@ describe('new command', function () {
       helper.bitJsonc.addToVariant('*', 'teambit.harmony/aspect', {});
       helper.command.install();
 
-      const indexPath = path.join(helper.scopes.remote, 'workspace-example/template/index.ts');
-      const indexContent = helper.fs.readFile(indexPath);
-      const updatedIndex = indexContent.replace('teambit.react/templates/ui/text', `${helper.scopes.remote}/comp1`);
-      helper.fs.outputFile(indexPath, updatedIndex);
+      const starterPath = path.join(helper.scopes.remote, 'workspace-example/workspace-example.starter.ts');
+      const starterContent = helper.fs.readFile(starterPath);
+      const updatedIndex = starterContent.replace('teambit.react/templates/ui/text', `${helper.scopes.remote}/comp1`);
+      helper.fs.outputFile(starterPath, updatedIndex);
 
       helper.command.tagAllComponents();
       helper.command.export();
