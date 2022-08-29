@@ -8,11 +8,13 @@ import ImportComponents, {
 } from '@teambit/legacy/dist/consumer/component-ops/import-components';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
+import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
 
 export class Importer {
   constructor(private workspace: Workspace, private depResolver: DependencyResolverMain) {}
 
   async import(importOptions: ImportOptions, packageManagerArgs: string[]): Promise<ImportResult> {
+    if (!this.workspace) throw new ConsumerNotFound();
     const consumer = this.workspace.consumer;
     consumer.packageManagerArgs = packageManagerArgs;
     if (!importOptions.ids.length) {
