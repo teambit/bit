@@ -15,7 +15,6 @@ import { getExt, pathNormalizeToLinux, pathRelativeLinux } from '../../../../uti
 import { PathLinux, PathLinuxRelative, PathOsBased } from '../../../../utils/path';
 import ComponentMap from '../../../bit-map/component-map';
 import Component from '../../../component/consumer-component';
-import PackageJsonFile from '../../package-json-file';
 import Dependencies from '../dependencies';
 import { RelativePath } from '../dependency';
 import { getDependencyTree } from '../files-dependency-builder';

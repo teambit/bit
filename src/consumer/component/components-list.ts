@@ -350,8 +350,7 @@ export default class ComponentsList {
   }
 
   idsFromBitMap(): BitIds {
-    const fromBitMap = this.getFromBitMap();
-    return fromBitMap;
+    return this.bitMap.getAllIdsAvailableOnLane();
   }
 
   async listAllIdsFromWorkspaceAndScope(): Promise<BitIds> {
@@ -416,10 +415,6 @@ export default class ComponentsList {
       if (!componentMap) throw new Error('listComponentsWithIndividualFiles componentMap is missing');
       return Boolean(!componentMap.rootDir);
     });
-  }
-
-  getFromBitMap(): BitIds {
-    return this.bitMap.getAllIdsAvailableOnLane();
   }
 
   /**

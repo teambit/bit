@@ -323,12 +323,13 @@ export default class BitMap {
   }
 
   getAllIdsAvailableOnLane(): BitIds {
-    const ids = (componentMaps: ComponentMap[]) => BitIds.fromArray(componentMaps.map((c) => c.id));
-    if (this._cacheIdsLane) return this._cacheIdsLane;
-    const components = this.components.filter((c) => c.isAvailableOnCurrentLane || !c.onLanesOnly);
-    const componentIds = ids(components);
-    this._cacheIdsLane = componentIds;
-    return componentIds;
+    if (!this._cacheIdsLane) {
+      const components = this.components.filter((c) => c.isAvailableOnCurrentLane || !c.onLanesOnly);
+      const componentIds = BitIds.fromArray(components.map((c) => c.id));
+      this._cacheIdsLane = componentIds;
+      Object.freeze(this._cacheIdsLane);
+    }
+    return this._cacheIdsLane;
   }
 
   isIdAvailableOnCurrentLane(id: BitId): boolean {
