@@ -664,7 +664,8 @@ export default class BitMap {
   _invalidateCache = () => {
     this.paths = {};
     this.pathsLowerCase = {};
-    this._cacheIds = {};
+    this._cacheIdsAll = undefined;
+    this._cacheIdsLane = undefined;
     this.allTrackDirs = undefined;
   };
 
