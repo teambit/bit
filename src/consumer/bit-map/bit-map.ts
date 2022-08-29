@@ -37,7 +37,8 @@ export default class BitMap {
   paths: { [path: string]: BitId }; // path => componentId
   pathsLowerCase: { [path: string]: BitId }; // path => componentId
   markAsChangedBinded: Function;
-  _cacheIds: { [origin: string]: BitIds | undefined };
+  _cacheIdsAll: BitIds | undefined;
+  _cacheIdsLane: BitIds | undefined;
   allTrackDirs: { [trackDir: string]: BitId } | null | undefined;
   private updatedIds: { [oldIdStr: string]: ComponentMap } = {}; // needed for out-of-sync where the id is changed during the process
   constructor(
@@ -51,7 +52,6 @@ export default class BitMap {
     this.hasChanged = false;
     this.paths = {};
     this.pathsLowerCase = {};
-    this._cacheIds = {};
     this.markAsChangedBinded = this.markAsChanged.bind(this);
   }
 
@@ -315,21 +315,19 @@ export default class BitMap {
    */
   getAllBitIdsFromAllLanes(): BitIds {
     const ids = (componentMaps: ComponentMap[]) => BitIds.fromArray(componentMaps.map((c) => c.id));
-    const cacheKey = 'all';
-    if (this._cacheIds[cacheKey]) return this._cacheIds[cacheKey];
+    if (this._cacheIdsAll) return this._cacheIdsAll;
     const components = this.components;
     const componentIds = ids(components);
-    this._cacheIds[cacheKey] = componentIds;
+    this._cacheIdsAll = componentIds;
     return componentIds;
   }
 
   getAllIdsAvailableOnLane(): BitIds {
     const ids = (componentMaps: ComponentMap[]) => BitIds.fromArray(componentMaps.map((c) => c.id));
-    const cacheKey = 'lane-all';
-    if (this._cacheIds[cacheKey]) return this._cacheIds[cacheKey];
+    if (this._cacheIdsLane) return this._cacheIdsLane;
     const components = this.components.filter((c) => c.isAvailableOnCurrentLane || !c.onLanesOnly);
     const componentIds = ids(components);
-    this._cacheIds[cacheKey] = componentIds;
+    this._cacheIdsLane = componentIds;
     return componentIds;
   }
 
