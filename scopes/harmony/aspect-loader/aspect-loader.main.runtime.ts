@@ -412,7 +412,9 @@ export class AspectLoaderMain {
    * get or create a global scope, import the non-core aspects, load bit from that scope, create
    * capsules for the aspects and load them from the capsules.
    */
-  async loadAspectsFromGlobalScope(aspectIds: string[]): Promise<Component[]> {
+  async loadAspectsFromGlobalScope(
+    aspectIds: string[]
+  ): Promise<{ components: Component[]; globalScopeHarmony: Harmony }> {
     const globalScope = await LegacyScope.ensure(GLOBAL_SCOPE, 'global-scope');
     await globalScope.ensureDir();
     const globalScopeHarmony = await loadBit(globalScope.path);
@@ -439,7 +441,7 @@ export class AspectLoaderMain {
       }
     }
 
-    return components;
+    return { components, globalScopeHarmony };
   }
 
   private prepareManifests(manifests: Array<ExtensionManifest | Aspect>): Aspect[] {

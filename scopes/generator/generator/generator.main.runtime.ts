@@ -137,10 +137,20 @@ export class GeneratorMain {
    * in the case the aspect-id is given and this aspect doesn't exist locally, import it to the
    * global scope and load it from the capsule
    */
-  async findTemplateInGlobalScope(aspectId: string, name?: string): Promise<WorkspaceTemplate | undefined> {
-    const aspects = await this.aspectLoader.loadAspectsFromGlobalScope([aspectId]);
-    const fullAspectId = aspects[0].id.toString();
-    return this.searchRegisteredWorkspaceTemplate(name, fullAspectId);
+  async findTemplateInGlobalScope(
+    aspectId: string,
+    name?: string
+  ): Promise<{ workspaceTemplate?: WorkspaceTemplate; aspect?: Component }> {
+    const { globalScopeHarmony, components } = await this.aspectLoader.loadAspectsFromGlobalScope([aspectId]);
+    const remoteGenerator = globalScopeHarmony.get<GeneratorMain>(GeneratorAspect.id);
+    const aspect = components[0];
+    const fullAspectId = aspect.id.toString();
+    const fromGlobal = await remoteGenerator.searchRegisteredWorkspaceTemplate.call(
+      remoteGenerator,
+      name,
+      fullAspectId
+    );
+    return { workspaceTemplate: fromGlobal, aspect };
   }
 
   async findTemplateInOtherWorkspace(workspacePath: string, name: string, aspectId?: string) {
@@ -176,12 +186,10 @@ export class GeneratorMain {
     if (!aspectId) {
       throw new BitError(`template "${name}" was not found, if this is a custom-template, please use --aspect flag`);
     }
-    const aspects = await this.aspectLoader.loadAspectsFromGlobalScope([aspectId]);
-    const aspect = aspects[0];
-    const fullAspectId = aspect.id.toString();
-    const fromGlobal = await this.searchRegisteredWorkspaceTemplate(name, fullAspectId);
-    if (fromGlobal) {
-      return { workspaceTemplate: fromGlobal, aspect };
+
+    const { workspaceTemplate, aspect } = await this.findTemplateInGlobalScope(aspectId, name);
+    if (workspaceTemplate) {
+      return { workspaceTemplate, aspect };
     }
     throw new BitError(`template "${name}" was not found`);
   }
@@ -321,7 +329,7 @@ export class GeneratorMain {
     ];
     cli.register(...commands);
     graphql.register(generatorSchema(generator));
-    aspectLoader.registerPlugins([new StarterPlugin(workspaceTemplateSlot)]);
+    aspectLoader.registerPlugins([new StarterPlugin(generator)]);
 
     generator.registerComponentTemplate([componentGeneratorTemplate, workspaceGeneratorTemplate]);
     return generator;

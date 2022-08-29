@@ -1,15 +1,16 @@
 import { PluginDefinition } from '@teambit/aspect-loader';
 import { MainRuntime } from '@teambit/cli';
-import { WorkspaceTemplateSlot } from './generator.main.runtime';
+import { GeneratorMain } from './generator.main.runtime';
 
 export class StarterPlugin implements PluginDefinition {
-  constructor(private workspaceTemplateSlot: WorkspaceTemplateSlot) {}
+  constructor(private generator: GeneratorMain) {}
 
   pattern = '*.starter.*';
 
   runtimes = [MainRuntime.name];
 
   async register(object: any) {
-    return this.workspaceTemplateSlot.register([object]);
+    const res = await this.generator.registerWorkspaceTemplate([object]);
+    return res;
   }
 }
