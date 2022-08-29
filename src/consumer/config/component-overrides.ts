@@ -2,14 +2,12 @@ import R from 'ramda';
 
 import { BitId } from '../../bit-id';
 import {
-  COMPONENT_ORIGINS,
   MANUALLY_ADD_DEPENDENCY,
   MANUALLY_REMOVE_DEPENDENCY,
   OVERRIDE_COMPONENT_PREFIX,
   OVERRIDE_FILE_PREFIX,
 } from '../../constants';
 import { filterObject } from '../../utils';
-import { ComponentOrigin } from '../bit-map/component-map';
 import ComponentConfig from './component-config';
 import {
   ConsumerOverridesOfComponent,
@@ -72,25 +70,23 @@ export default class ComponentOverrides {
     workspaceConfig: ILegacyWorkspaceConfig,
     overridesFromModel: ComponentOverridesData | undefined,
     componentConfig: ComponentConfig,
-    origin: ComponentOrigin,
     isLegacy: boolean
   ): Promise<ComponentOverrides> {
-    const isAuthor = origin === COMPONENT_ORIGINS.AUTHORED;
     // overrides from consumer-config is not relevant and should not affect imported
     let legacyOverridesFromConsumer = workspaceConfig?.getComponentConfig(componentId);
 
-    if (isAuthor) {
-      const plainLegacy = workspaceConfig?._legacyPlainObject();
-      if (plainLegacy && plainLegacy.env) {
-        legacyOverridesFromConsumer = legacyOverridesFromConsumer || {};
-      }
+    const plainLegacy = workspaceConfig?._legacyPlainObject();
+    if (plainLegacy && plainLegacy.env) {
+      legacyOverridesFromConsumer = legacyOverridesFromConsumer || {};
     }
 
     const getFromComponent = (): ComponentOverridesData | null | undefined => {
       if (componentConfig && componentConfig.componentHasWrittenConfig) {
         return componentConfig.overrides;
       }
-      return isAuthor ? null : overridesFromModel;
+      // @todo: we might consider using overridesFromModel here.
+      // return isAuthor ? null : overridesFromModel;
+      return null;
     };
     let extensionsAddedOverrides = {};
     // Do not run the hook for legacy projects since it will use the default env in that case for takeing dependencies and will change the main file

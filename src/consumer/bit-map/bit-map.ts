@@ -8,13 +8,13 @@ import { BitError } from '@teambit/bit-error';
 import type { Consumer } from '..';
 import { BitId, BitIds } from '../../bit-id';
 import { BitIdStr } from '../../bit-id/bit-id';
-import { BIT_MAP, COMPONENT_ORIGINS, OLD_BIT_MAP, VERSION_DELIMITER, BITMAP_PREFIX_MESSAGE } from '../../constants';
+import { BIT_MAP, OLD_BIT_MAP, VERSION_DELIMITER, BITMAP_PREFIX_MESSAGE } from '../../constants';
 import ShowDoctorError from '../../error/show-doctor-error';
 import logger from '../../logger/logger';
 import { isDir, outputFile, pathJoinLinux, pathNormalizeToLinux, sortObject } from '../../utils';
 import { PathLinux, PathOsBased, PathOsBasedAbsolute, PathOsBasedRelative, PathRelative } from '../../utils/path';
 import { getFilesByDir, getGitIgnoreHarmony } from '../component-ops/add-components/add-components';
-import ComponentMap, { ComponentMapFile, ComponentOrigin, Config, PathChange } from './component-map';
+import ComponentMap, { ComponentMapFile, Config, PathChange } from './component-map';
 import { InvalidBitMap, MissingBitMapComponent, MultipleMatches } from './exceptions';
 import { DuplicateRootDir } from './exceptions/duplicate-root-dir';
 import GeneralError from '../../error/general-error';
@@ -61,9 +61,6 @@ export default class BitMap {
   }
 
   setComponent(bitId: BitId, componentMap: ComponentMap) {
-    // for Harmony, there is no different between AUTHORED and IMPORTED. and NESTED are not saved
-    // in the .bitmap file.
-    componentMap.origin = COMPONENT_ORIGINS.AUTHORED;
     const id = bitId.toString();
     if (!bitId.hasVersion() && bitId.scope) {
       throw new ShowDoctorError(
@@ -240,7 +237,6 @@ export default class BitMap {
           rootDir: component.rootDir,
           exported: false,
           files: component.files,
-          origin: COMPONENT_ORIGINS.AUTHORED,
           onLanesOnly: false,
         })
     );
@@ -265,7 +261,6 @@ export default class BitMap {
     this.throwForDuplicateRootDirs(componentsJson);
     Object.keys(componentsJson).forEach((componentId) => {
       const componentFromJson = componentsJson[componentId];
-      componentFromJson.origin = COMPONENT_ORIGINS.AUTHORED;
       const bitId = BitMap.getBitIdFromComponentJson(componentId, componentFromJson);
       if (bitId.hasScope() && !bitId.hasVersion()) {
         throw new BitError(
@@ -293,7 +288,6 @@ export default class BitMap {
       return BitId.parse(bitId.toString(), bitId.hasScope());
     }
     const idHasScope = (): boolean => {
-      if (componentFromJson.origin && componentFromJson.origin !== COMPONENT_ORIGINS.AUTHORED) return true;
       if ('exported' in componentFromJson) {
         if (typeof componentFromJson.exported !== 'boolean') {
           throw new BitError(
@@ -310,13 +304,8 @@ export default class BitMap {
     return BitId.parse(componentId, idHasScope());
   }
 
-  getAllComponents(origin?: ComponentOrigin | ComponentOrigin[]): ComponentMap[] {
-    if (!origin) return this.components;
-    const isOriginMatch = (component) => component.origin === origin;
-    // $FlowFixMe we know origin is an array in that case
-    const isOriginMatchArray = (component) => origin.includes(component.origin);
-    const filter = Array.isArray(origin) ? isOriginMatchArray : isOriginMatch;
-    return R.filter(filter, this.components);
+  getAllComponents(): ComponentMap[] {
+    return this.components;
   }
 
   /**
@@ -324,38 +313,24 @@ export default class BitMap {
    * this method returns ids that are not available on the current lane and will throw errors when
    * trying to load them.
    */
-  getAllBitIdsFromAllLanes(origin?: ComponentOrigin[]): BitIds {
+  getAllBitIdsFromAllLanes(): BitIds {
     const ids = (componentMaps: ComponentMap[]) => BitIds.fromArray(componentMaps.map((c) => c.id));
-    const getIdsOfOrigin = (oneOrigin?: ComponentOrigin): BitIds => {
-      const cacheKey = oneOrigin || 'all';
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      if (this._cacheIds[cacheKey]) return this._cacheIds[cacheKey];
-      const allComponents = this.components;
-      const components = oneOrigin ? allComponents.filter((c) => c.origin === oneOrigin) : allComponents;
-      const componentIds = ids(components);
-      this._cacheIds[cacheKey] = componentIds;
-      return componentIds;
-    };
-
-    if (!origin) return getIdsOfOrigin();
-    return BitIds.fromArray(R.flatten(origin.map((oneOrigin) => getIdsOfOrigin(oneOrigin))));
+    const cacheKey = 'all';
+    if (this._cacheIds[cacheKey]) return this._cacheIds[cacheKey];
+    const components = this.components;
+    const componentIds = ids(components);
+    this._cacheIds[cacheKey] = componentIds;
+    return componentIds;
   }
 
-  getAllIdsAvailableOnLane(origin?: ComponentOrigin[]): BitIds {
+  getAllIdsAvailableOnLane(): BitIds {
     const ids = (componentMaps: ComponentMap[]) => BitIds.fromArray(componentMaps.map((c) => c.id));
-    const getIdsOfOrigin = (oneOrigin?: ComponentOrigin): BitIds => {
-      const cacheKey = `lane-${oneOrigin}` || 'lane-all';
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      if (this._cacheIds[cacheKey]) return this._cacheIds[cacheKey];
-      const allComponents = this.components.filter((c) => c.isAvailableOnCurrentLane || !c.onLanesOnly);
-      const components = oneOrigin ? allComponents.filter((c) => c.origin === oneOrigin) : allComponents;
-      const componentIds = ids(components);
-      this._cacheIds[cacheKey] = componentIds;
-      return componentIds;
-    };
-
-    if (!origin) return getIdsOfOrigin();
-    return BitIds.fromArray(R.flatten(origin.map((oneOrigin) => getIdsOfOrigin(oneOrigin))));
+    const cacheKey = 'lane-all';
+    if (this._cacheIds[cacheKey]) return this._cacheIds[cacheKey];
+    const components = this.components.filter((c) => c.isAvailableOnCurrentLane || !c.onLanesOnly);
+    const componentIds = ids(components);
+    this._cacheIds[cacheKey] = componentIds;
+    return componentIds;
   }
 
   isIdAvailableOnCurrentLane(id: BitId): boolean {
@@ -451,19 +426,8 @@ export default class BitMap {
     }
   }
 
-  getNonNestedComponentIfExist(bitId: BitId): ComponentMap | undefined {
-    const nonNestedIds = this.getAllBitIdsFromAllLanes([COMPONENT_ORIGINS.IMPORTED, COMPONENT_ORIGINS.AUTHORED]);
-    const id: BitId | undefined = nonNestedIds.searchWithoutScopeAndVersion(bitId);
-    if (!id) return undefined;
-    return this.getComponent(id);
-  }
-
-  getComponentPreferNonNested(bitId: BitId): ComponentMap | undefined {
-    return this.getNonNestedComponentIfExist(bitId) || this.getComponentIfExist(bitId, { ignoreVersion: true });
-  }
-
-  getAuthoredAndImportedBitIds(): BitIds {
-    return this.getAllIdsAvailableOnLane([COMPONENT_ORIGINS.AUTHORED, COMPONENT_ORIGINS.IMPORTED]);
+  getAllBitIds(): BitIds {
+    return this.getAllIdsAvailableOnLane();
   }
 
   /**
@@ -471,7 +435,7 @@ export default class BitMap {
    * instead, use `consumer.getIdsOfDefaultLane()`
    */
   getAuthoredAndImportedBitIdsOfDefaultLane(): BitIds {
-    const all = this.getAuthoredAndImportedBitIds();
+    const all = this.getAllBitIds();
     const filteredWithDefaultVersion = all.map((id) => {
       const componentMap = this.getComponent(id);
       if (componentMap.onLanesOnly) return null;
@@ -480,12 +444,12 @@ export default class BitMap {
     return BitIds.fromArray(compact(filteredWithDefaultVersion));
   }
 
-  getAuthoredExportedComponents(): BitId[] {
-    const authoredIds = this.getAllIdsAvailableOnLane([COMPONENT_ORIGINS.AUTHORED]);
+  getExportedComponents(): BitId[] {
+    const authoredIds = this.getAllIdsAvailableOnLane();
     return authoredIds.filter((id) => id.hasScope());
   }
   getAuthoredNonExportedComponents(): BitId[] {
-    const authoredIds = this.getAllIdsAvailableOnLane([COMPONENT_ORIGINS.AUTHORED]);
+    const authoredIds = this.getAllIdsAvailableOnLane();
     return authoredIds.filter((id) => !id.hasScope());
   }
 
@@ -499,7 +463,7 @@ export default class BitMap {
    * if compareWithoutScope is false, the scope should be identical in addition to the name
    */
   findSimilarIds(id: BitId, compareWithoutScope = false): BitIds {
-    const allIds = this.getAllBitIdsFromAllLanes([COMPONENT_ORIGINS.IMPORTED, COMPONENT_ORIGINS.AUTHORED]);
+    const allIds = this.getAllBitIdsFromAllLanes();
     const similarIds = allIds.filter((existingId: BitId) => {
       const isSimilar = compareWithoutScope
         ? existingId.isEqualWithoutScopeAndVersion(id)
@@ -604,7 +568,6 @@ export default class BitMap {
     files,
     defaultScope,
     mainFile,
-    origin,
     rootDir,
     onLanesOnly,
     config,
@@ -613,7 +576,6 @@ export default class BitMap {
     files: ComponentMapFile[];
     defaultScope?: string;
     mainFile: PathLinux;
-    origin: ComponentOrigin;
     rootDir?: PathOsBasedAbsolute | PathOsBasedRelative;
     onLanesOnly?: boolean;
     config?: Config;
@@ -639,7 +601,6 @@ export default class BitMap {
       // @ts-ignore not easy to fix, we can't instantiate ComponentMap with mainFile because we don't have it yet
       const newComponentMap = new ComponentMap({
         files,
-        origin,
         onLanesOnly: Boolean(this.laneId) && componentId.hasVersion(),
       });
       newComponentMap.setMarkAsChangedCb(this.markAsChangedBinded);

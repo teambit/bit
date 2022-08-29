@@ -441,7 +441,7 @@ export class Workspace implements ComponentFactory {
    * (exclude nested dependencies in case dependencies are saved as components and not packages)
    */
   getAllComponentIds(): Promise<ComponentID[]> {
-    const bitIds = this.consumer.bitMap.getAuthoredAndImportedBitIds();
+    const bitIds = this.consumer.bitMap.getAllBitIds();
     return this.resolveMultipleComponentIds(bitIds);
   }
 

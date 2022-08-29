@@ -14,7 +14,6 @@ import {
   BIT_GIT_DIR,
   BIT_HIDDEN_DIR,
   BIT_WORKSPACE_TMP_DIRNAME,
-  COMPONENT_ORIGINS,
   DEPENDENCIES_FIELDS,
   DOT_GIT_DIR,
   LATEST,
@@ -766,10 +765,7 @@ export default class Consumer {
   }
 
   async getAuthoredAndImportedDependentsIdsOf(components: Component[]): Promise<BitIds> {
-    const authoredAndImportedComponents = this.bitMap.getAllIdsAvailableOnLane([
-      COMPONENT_ORIGINS.IMPORTED,
-      COMPONENT_ORIGINS.AUTHORED,
-    ]);
+    const authoredAndImportedComponents = this.bitMap.getAllIdsAvailableOnLane();
     const componentsIds = BitIds.fromArray(components.map((c) => c.id));
     return this.scope.findDirectDependentComponents(authoredAndImportedComponents, componentsIds);
   }
