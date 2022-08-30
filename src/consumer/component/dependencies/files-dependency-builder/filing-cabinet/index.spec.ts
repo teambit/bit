@@ -56,7 +56,6 @@ describe('filing-cabinet', () => {
         '.sass',
         '.styl',
         '.less',
-        '.vue',
       ]);
     });
 
