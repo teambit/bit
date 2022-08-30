@@ -183,7 +183,7 @@ export function devConfig(workspaceDir, entryFiles, title): WebpackConfigWithDev
         fs: false,
         path: require.resolve('path-browserify'),
         stream: false,
-        process: false,
+        process: require.resolve('process/browser'),
       },
     },
 
