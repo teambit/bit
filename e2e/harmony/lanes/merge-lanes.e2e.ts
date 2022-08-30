@@ -417,4 +417,34 @@ describe('merge lanes', function () {
       expect(result.trim()).to.equal(appOutputV2);
     });
   });
+  describe('multiple scopes when a component in the origin is different than on the lane', () => {
+    let originRemote: string;
+    let afterLaneExport: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      const { scopeName, scopePath } = helper.scopeHelper.getNewBareScope();
+      originRemote = scopeName;
+      helper.scopeHelper.addRemoteScope(scopePath);
+      helper.scopeHelper.addRemoteScope(scopePath, helper.scopes.remotePath);
+      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, scopePath);
+      helper.command.createLane();
+      helper.bitJsonc.addDefaultScope(originRemote);
+      helper.fixtures.populateComponents(1, false, 'on-lane');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      afterLaneExport = helper.scopeHelper.cloneLocalScope();
+
+      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.addRemoteScope(scopePath);
+      helper.bitJsonc.addDefaultScope(originRemote);
+      helper.fixtures.populateComponents(1, false, 'on-origin');
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+
+      helper.scopeHelper.getClonedLocalScope(afterLaneExport);
+      helper.command.import();
+    });
+    it('TODO: implement', () => {});
+  });
 });

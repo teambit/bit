@@ -145,9 +145,9 @@ async function getComponentStatus(
     return returnFailure(`component ${component.id.toString()} is new, no version to checkout`, true);
   }
   const unmerged = repo.unmergedComponents.getEntry(component.name);
-  if (!reset && unmerged && unmerged.resolved === false) {
+  if (!reset && unmerged) {
     return returnFailure(
-      `component ${component.id.toStringWithoutVersion()} has conflicts that need to be resolved first, please use bit merge --resolve/--abort`
+      `component ${component.id.toStringWithoutVersion()} is in during-merge state, please snap/tag it first (or use bit merge --resolve/--abort)`
     );
   }
   const getNewVersion = async (): Promise<string> => {

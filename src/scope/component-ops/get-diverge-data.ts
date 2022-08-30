@@ -2,6 +2,7 @@ import R from 'ramda';
 
 import { ParentNotFound, VersionNotFoundOnFS } from '../exceptions';
 import { NoCommonSnap } from '../exceptions/no-common-snap';
+import { UnmergedComponent } from '../lanes/unmerged-components';
 import { ModelComponent, Version } from '../models';
 import { Ref, Repository } from '../objects';
 import { DivergeData } from './diverge-data';
@@ -21,7 +22,8 @@ export async function getDivergeData(
   modelComponent: ModelComponent,
   remoteHead: Ref | null,
   checkedOutLocalHead?: Ref | null, // in case locally on the workspace it has a different version
-  throws = true // otherwise, save the error instance in the `DivergeData` object
+  throws = true, // otherwise, save the error instance in the `DivergeData` object,
+  unmergedData?: UnmergedComponent
 ): Promise<DivergeData> {
   const isOnLane = modelComponent.laneHeadLocal || modelComponent.laneHeadLocal === null;
   const localHead = checkedOutLocalHead || (isOnLane ? modelComponent.laneHeadLocal : modelComponent.getHead());
@@ -107,6 +109,11 @@ bit import ${modelComponent.id()} --objects`);
   }
 
   if (!commonSnapBeforeDiverge) {
+    const isUnrelatedFromUnmerged = unmergedData?.unrelated && unmergedData.head.isEqual(remoteHead);
+    const isUnrelatedFromVersionObj = localVersion.unrelated?.head.isEqual(remoteHead);
+    if (isUnrelatedFromUnmerged || isUnrelatedFromVersionObj) {
+      return new DivergeData(snapsOnLocal, snapsOnRemote, undefined);
+    }
     const err = new NoCommonSnap(modelComponent.id());
     if (throws) throw err;
     return new DivergeData(snapsOnLocal, snapsOnRemote, undefined, err);
