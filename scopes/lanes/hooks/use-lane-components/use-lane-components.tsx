@@ -1,5 +1,5 @@
-import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
-import { gql, QueryResult } from '@apollo/client';
+import { useDataQuery, DataQueryResult } from '@teambit/ui-foundation.ui.hooks.use-data-query';
+import { gql } from '@apollo/client';
 import { LaneModel, LanesQuery } from '@teambit/lanes.ui.models';
 import { ComponentModel, componentOverviewFields } from '@teambit/component';
 
@@ -28,7 +28,7 @@ const GET_LANE_COMPONENTS = gql`
 
 export function useLaneComponents(lane: LaneModel): {
   components?: Array<ComponentModel>;
-} & Omit<QueryResult<LanesQuery>, 'data'> {
+} & Omit<DataQueryResult<LanesQuery, { ids: string[] }>, 'data'> {
   const { data, ...rest } = useDataQuery(GET_LANE_COMPONENTS, {
     variables: { ids: [lane.name] },
   });
