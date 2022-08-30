@@ -1,7 +1,6 @@
 import fs from 'fs-extra';
 import { ComponentFsCache } from '../consumer/component/component-fs-cache';
 import { SourceFile } from '../consumer/component/sources';
-import { getExt } from '../utils';
 import { PathOsBased } from '../utils/path';
 import jsDocParse from './jsdoc';
 import reactParse from './react';
