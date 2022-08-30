@@ -332,16 +332,9 @@ export class MergingMain {
             resolvedUnrelated: true,
           };
         }
-        // manual
-        // const mergeResults = await threeWayMerge({
-        //   consumer,
-        //   otherComponent,
-        //   otherLabel: `${otherLaneHead.toString()} (${otherLaneName})`,
-        //   currentComponent: component,
-        //   currentLabel: `${currentId.version} (${currentLaneName})`,
-        //   baseComponent,
-        // });
-        // return { componentFromFS: component, id, mergeResults, divergeData };
+        throw new Error(
+          `unsupported strategy "${options?.resolveUnrelated}" of resolve-unrelated. supported strategies are: [ours, theirs]`
+        );
       }
       return returnUnmerged(
         `unable to traverse ${currentComponent.id.toString()} history. error: ${divergeData.err.message}`

@@ -45,7 +45,7 @@ in case the <lane> exists locally but you want to merge the remote version of it
     [
       '',
       'resolve-unrelated [merge-strategy]',
-      'EXPERIMENTAL. relevant when a component on a lane and the component on main has nothing in common. default-strategy is "ours"',
+      'EXPERIMENTAL. relevant when a component on a lane and the component on main has nothing in common. merge-strategy can be "ours" (default) or "theirs"',
     ],
   ] as CommandOptions;
   loader = true;
