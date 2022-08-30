@@ -1,4 +1,4 @@
-import { Configuration } from 'webpack';
+import { Configuration, ProvidePlugin } from 'webpack';
 import TerserPlugin from 'terser-webpack-plugin';
 import CssMinimizerPlugin from 'css-minimizer-webpack-plugin';
 import path from 'path';
@@ -117,6 +117,9 @@ function createBrowserConfig(workspaceDir: string, title: string, publicDir: str
           minifyCSS: true,
           minifyURLs: true,
         },
+      }),
+      new ProvidePlugin({
+        process: require.resolve('process/browser'),
       }),
     ],
   };

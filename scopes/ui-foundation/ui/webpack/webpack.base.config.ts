@@ -111,6 +111,7 @@ export default function createWebpackConfig(
         net: false,
         tls: false,
         child_process: false,
+        process: false,
       },
     },
     module: {
