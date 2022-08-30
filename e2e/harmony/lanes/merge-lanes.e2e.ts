@@ -420,6 +420,8 @@ describe('merge lanes', function () {
   describe('multiple scopes when a component in the origin is different than on the lane', () => {
     let originRemote: string;
     let afterLaneExport: string;
+    let mainHead: string;
+    let laneScopeHead: string;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       helper.bitJsonc.setupDefault();
@@ -432,6 +434,7 @@ describe('merge lanes', function () {
       helper.bitJsonc.addDefaultScope(originRemote);
       helper.fixtures.populateComponents(1, false, 'on-lane');
       helper.command.snapAllComponentsWithoutBuild();
+      laneScopeHead = helper.command.getHeadOfLane('dev', 'comp1');
       helper.command.export();
       afterLaneExport = helper.scopeHelper.cloneLocalScope();
 
@@ -440,11 +443,43 @@ describe('merge lanes', function () {
       helper.bitJsonc.addDefaultScope(originRemote);
       helper.fixtures.populateComponents(1, false, 'on-origin');
       helper.command.tagAllWithoutBuild();
+      mainHead = helper.command.getHead('comp1');
       helper.command.export();
 
       helper.scopeHelper.getClonedLocalScope(afterLaneExport);
       helper.command.import();
+      helper.command.fetchAllComponents(); // todo: this should not be needed. "bit import" should do that
     });
-    it('TODO: implement', () => {});
+    describe('bit lane merge without --resolve-unrelated flag', () => {
+      it('should throw', () => {
+        expect(() => helper.command.mergeLane('main')).to.throw("don't have any snap in common");
+      });
+    });
+    describe('bit lane merge with --resolve-unrelated', () => {
+      let mergeOutput: string;
+      before(() => {
+        mergeOutput = helper.command.mergeLane('main', '--resolve-unrelated');
+      });
+      it('should merge successfully', () => {
+        expect(mergeOutput).to.have.string('successfully merged components');
+      });
+      it('bit status should show the component as staged and not everywhere else', () => {
+        helper.command.expectStatusToBeClean(['stagedComponents']);
+      });
+      it('head on lane should point to the main head to preserve the history of the origin', () => {
+        const laneHead = helper.command.getHeadOfLane('dev', 'comp1');
+        const catObj = helper.command.catComponent(`comp1@${laneHead}`);
+        expect(catObj.parents[0]).to.equal(mainHead);
+      });
+      it('version object should hold a reference for the abandoned component', () => {
+        const laneHead = helper.command.getHeadOfLane('dev', 'comp1');
+        const catObj = helper.command.catComponent(`comp1@${laneHead}`);
+        expect(catObj.unrelated.head).to.equal(laneScopeHead);
+      });
+      it('should export the component successfully', () => {
+        expect(() => helper.command.export()).to.not.throw();
+      });
+    });
+    describe('bit lane merge with --resolve-unrelated and --no-snap', () => {});
   });
 });

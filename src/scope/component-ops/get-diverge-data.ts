@@ -60,6 +60,16 @@ export async function getDivergeData(
       localHeadExistsRemotely = true;
       return;
     }
+    if (isLocal && version.unrelated?.head.isEqual(remoteHead)) {
+      remoteHeadExistsLocally = true;
+      snaps.push(version.hash());
+      return;
+    }
+    if (!isLocal && version.unrelated?.head.isEqual(localHead)) {
+      localHeadExistsRemotely = true;
+      snaps.push(version.hash());
+      return;
+    }
     if (!isLocal && !commonSnapBeforeDiverge) {
       const snapExistLocally = snapsOnLocal.find((snap) => snap.isEqual(version.hash()));
       if (snapExistLocally) commonSnapBeforeDiverge = snapExistLocally;
