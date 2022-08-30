@@ -790,6 +790,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/compilation/multi-compiler"
     },
+    "multi-tester": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/defender/multi-tester"
+    },
     "network/agent": {
         "scope": "teambit.toolbox",
         "version": "0.0.541",
