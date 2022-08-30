@@ -40,6 +40,7 @@ import { PubsubAspect } from '@teambit/pubsub';
 import { ScopeAspect } from '@teambit/scope';
 // import { StencilAspect } from '@teambit/stencil';
 import { TesterAspect } from '@teambit/tester';
+import { MultiTesterAspect } from '@teambit/multi-tester';
 import { TypescriptAspect } from '@teambit/typescript';
 import { BabelAspect } from '@teambit/babel';
 import { UIAspect } from '@teambit/ui';
@@ -134,6 +135,7 @@ export const manifestsMap = {
   // [StencilAspect.id]: StencilAspect,
   [ScopeAspect.id]: ScopeAspect,
   [TesterAspect.id]: TesterAspect,
+  [MultiTesterAspect.id]: MultiTesterAspect,
   [BuilderAspect.id]: BuilderAspect,
   [VariantsAspect.id]: VariantsAspect,
   [DeprecationAspect.id]: DeprecationAspect,
