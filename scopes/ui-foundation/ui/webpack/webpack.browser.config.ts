@@ -4,6 +4,7 @@ import CssMinimizerPlugin from 'css-minimizer-webpack-plugin';
 import path from 'path';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import { merge } from 'webpack-merge';
+import { fallbacksProvidePluginConfig } from '@teambit/webpack';
 
 import { html } from './html';
 import createBaseConfig from './webpack.base.config';
@@ -118,9 +119,7 @@ function createBrowserConfig(workspaceDir: string, title: string, publicDir: str
           minifyURLs: true,
         },
       }),
-      new ProvidePlugin({
-        process: require.resolve('process/browser'),
-      }),
+      new ProvidePlugin({ process: fallbacksProvidePluginConfig.process }),
     ],
   };
 

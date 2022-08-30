@@ -1,7 +1,7 @@
 import { ProvidePlugin } from 'webpack';
 import * as stylesRegexps from '@teambit/webpack.modules.style-regexps';
 import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
-import { WebpackConfigWithDevServer } from '@teambit/webpack';
+import { fallbacksProvidePluginConfig, WebpackConfigWithDevServer, fallbacks } from '@teambit/webpack';
 
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import ReactRefreshWebpackPlugin from '@pmmmwh/react-refresh-webpack-plugin';
@@ -181,9 +181,9 @@ export function devConfig(workspaceDir, entryFiles, title): WebpackConfigWithDev
       },
       fallback: {
         fs: false,
-        path: require.resolve('path-browserify'),
+        path: fallbacks.path,
         stream: false,
-        process: require.resolve('process/browser'),
+        process: fallbacks.process,
       },
     },
 
@@ -334,9 +334,7 @@ export function devConfig(workspaceDir, entryFiles, title): WebpackConfigWithDev
         chunks: ['main'],
         filename: 'index.html',
       }),
-      new ProvidePlugin({
-        process: require.resolve('process/browser'),
-      }),
+      new ProvidePlugin({ process: fallbacksProvidePluginConfig.process }),
     ],
   };
 }

@@ -7,6 +7,7 @@ import getCSSModuleLocalIdent from 'react-dev-utils/getCSSModuleLocalIdent';
 import path from 'path';
 import * as stylesRegexps from '@teambit/webpack.modules.style-regexps';
 import { generateStyleLoaders } from '@teambit/webpack.modules.generate-style-loaders';
+import { fallbacks } from '@teambit/webpack';
 import { postCssConfig } from './postcss.config';
 
 const baseStyleLoadersOptions = {
@@ -102,7 +103,7 @@ export default function createWebpackConfig(
       },
       fallback: {
         module: false,
-        path: require.resolve('path-browserify'),
+        path: fallbacks.path,
         dgram: false,
         dns: false,
         fs: false,
@@ -111,7 +112,7 @@ export default function createWebpackConfig(
         net: false,
         tls: false,
         child_process: false,
-        process: require.resolve('process/browser'),
+        process: fallbacks.process,
       },
     },
     module: {
