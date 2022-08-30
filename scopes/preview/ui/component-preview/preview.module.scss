@@ -1,4 +1,5 @@
 
 .preview {
-  z-index: 1000;
+  // preview background should always be white to avoid collisions with themes.
+  background-color: #fff;
 }

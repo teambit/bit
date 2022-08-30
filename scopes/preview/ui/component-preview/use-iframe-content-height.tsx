@@ -3,9 +3,11 @@ import React, { useRef, useState, useEffect } from 'react';
 export function useIframeContentHeight({
   interval = 250,
   skip,
+  viewport
 }: {
   interval?: number;
   skip?: boolean;
+  viewport?: number
 }): [React.MutableRefObject<HTMLIFrameElement | null>, number | undefined, number] {
   const iframeRef: React.MutableRefObject<HTMLIFrameElement | null> = useRef(null);
   const [iframeHeight, setIframeHeight] = useState(0);
@@ -16,7 +18,7 @@ export function useIframeContentHeight({
     try {
       const iframe = iframeRef.current;
       // eslint-disable-next-line
-      iframe!.contentWindow!.document.body.style.width = 'fit-content';
+      if (viewport !== null) iframe!.contentWindow!.document.body.style.width = 'fit-content';
       if (!first && iframe?.style.height === '5000px') {
         iframe.style.height = '100%';
       }

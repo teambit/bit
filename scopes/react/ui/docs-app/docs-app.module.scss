@@ -11,6 +11,8 @@
 .docsMainBlock {
   padding: 20px 40px 10px 40px;
   max-width: 1440px;
+  width: 100%;
+  box-sizing: border-box;
   margin: 0 0 150px 0;
   .heading {
     margin-bottom: unset;

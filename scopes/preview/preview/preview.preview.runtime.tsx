@@ -134,7 +134,12 @@ export class PreviewPreview {
     if (!window?.parent || !window?.document) return;
     // TODO: discuss with gilad for a better way to resolve page loaded here.
     let counter = 0;
+    document.addEventListener('resize', (event) => {
+      console.log(event);
+    });
+
     const interval = setInterval(() => {
+      // TODO: think
       counter += 1;
       if (counter > 10) {
         clearInterval(interval);

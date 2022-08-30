@@ -3,6 +3,7 @@
 }
 
 .tab {
+  cursor: pointer;
   position: relative;
   padding: 8px;
   text-transform: uppercase;
@@ -10,7 +11,7 @@
   font-weight: bold;
   outline: none;
 
-  color: #878c9a; //TODO
+  color: var(--on-background-color, #878c9a); //TODO
   transition: color 300ms ease-in-out;
   &:hover {
     color: var(--bit-text-color-heavy);

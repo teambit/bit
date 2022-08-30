@@ -44,6 +44,11 @@ export interface ComponentPreviewProps extends Omit<IframeHTMLAttributes<HTMLIFr
   fitView?: boolean;
 
   /**
+   * viewport
+   */
+  viewport?: number|null,
+
+  /**
    * is preview being rendered in full height and should fit view height to content.
    */
   fullContentHeight?: boolean;
@@ -58,11 +63,13 @@ export function ComponentPreview({
   forceHeight,
   queryParams,
   pubsub,
+  // fitView = 1280,
+  viewport = 1280,
   fullContentHeight = false,
   style,
   ...rest
 }: ComponentPreviewProps) {
-  const [heightIframeRef, iframeHeight] = useIframeContentHeight({ skip: false });
+  const [heightIframeRef, iframeHeight] = useIframeContentHeight({ skip: false, viewport });
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [width, setWidth] = useState(0);
   const [height, setHeight] = useState(0);
@@ -90,16 +97,19 @@ export function ComponentPreview({
   });
 
   const params = Array.isArray(queryParams)
-    ? queryParams.concat('viewport=1280')
-    : compact([queryParams, 'viewport=1280']);
+    ? queryParams.concat(`viewport=${viewport}`)
+    : compact([queryParams, `viewport=${viewport}`]);
 
-  const url = toPreviewUrl(component, previewName, isScaling ? params : queryParams);
+  const targetParams = viewport === null ? queryParams : params;
+  const url = toPreviewUrl(component, previewName, isScaling ? targetParams : queryParams);
   // const currentHeight = fullContentHeight ? '100%' : height || 1024;
   const containerWidth = containerRef.current?.offsetWidth || 0;
+  const containerHeight = containerRef.current?.offsetHeight || 0;
   const currentWidth = fullContentHeight ? '100%' : width || 1280;
   const legacyCurrentWidth = '100%';
   const targetWidth = currentWidth < containerWidth ? containerWidth : currentWidth;
   const targetHeight = height !== 0 ? height : 5000;
+  const finalHeight = (!fullContentHeight && targetHeight < containerHeight) ? containerHeight : targetHeight;
   const defaultLegacyHeight = forceHeight || 5000;
   const legacyIframeHeight = (iframeHeight || 0) > 100 ? iframeHeight : defaultLegacyHeight;
 
@@ -110,12 +120,12 @@ export function ComponentPreview({
         ref={currentRef}
         style={{
           ...style,
-          height: isScaling ? targetHeight : legacyIframeHeight,
+          height: isScaling ? finalHeight : legacyIframeHeight,
           width: isScaling ? targetWidth : legacyCurrentWidth,
           visibility: width === 0 && isScaling && !fullContentHeight ? 'hidden' : undefined,
           transform: fullContentHeight ? '' : computePreviewScale(width, containerWidth),
           border: 0,
-          margin: isScaling ? 5 : undefined,
+          margin: !fullContentHeight && isScaling ? 5 : undefined,
           transformOrigin: 'top left',
         }}
         src={url}
