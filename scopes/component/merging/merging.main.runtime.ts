@@ -266,6 +266,9 @@ export class MergingMain {
     const otherLaneHead = modelComponent.getRef(version);
     const existingBitMapId = consumer.bitMap.getBitIdIfExist(id, { ignoreVersion: true });
     const componentOnLane: Version = await modelComponent.loadVersion(version, consumer.scope.objects);
+    if (componentOnLane.isRemoved()) {
+      return returnUnmerged(`component has been removed`, true);
+    }
     const getCurrentId = () => {
       if (existingBitMapId) return existingBitMapId;
       if (localLane) {

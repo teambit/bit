@@ -4,7 +4,7 @@ import { ComponentIssue } from '@teambit/component-issues';
 import { BitId, BitIds } from '../../bit-id';
 import { createInMemoryCache } from '../../cache/cache-factory';
 import { getMaxSizeForComponents, InMemoryCache } from '../../cache/in-memory-cache';
-import { BIT_MAP } from '../../constants';
+import { BIT_MAP, Extensions } from '../../constants';
 import logger from '../../logger/logger';
 import ScopeComponentsImporter from '../../scope/component-ops/scope-components-importer';
 import { ModelComponent } from '../../scope/models';
@@ -21,6 +21,12 @@ export type ComponentLoadOptions = {
   loadDocs?: boolean;
   loadCompositions?: boolean;
 };
+export type LoadManyResult = {
+  components: Component[];
+  invalidComponents: InvalidComponent[];
+  removedComponents: Component[];
+};
+
 type OnComponentLoadSubscriber = (component: Component, loadOpts?: ComponentLoadOptions) => Promise<Component>;
 type OnComponentIssuesCalcSubscriber = (component: Component) => Promise<ComponentIssue[]>;
 
@@ -87,17 +93,14 @@ export default class ComponentLoader {
     this._shouldCheckForClearingDependenciesCache = false;
   }
 
-  async loadMany(
-    ids: BitIds,
-    throwOnFailure = true,
-    loadOpts?: ComponentLoadOptions
-  ): Promise<{ components: Component[]; invalidComponents: InvalidComponent[] }> {
+  async loadMany(ids: BitIds, throwOnFailure = true, loadOpts?: ComponentLoadOptions): Promise<LoadManyResult> {
     logger.debugAndAddBreadCrumb('ComponentLoader', 'loading consumer-components from the file-system, ids: {ids}', {
       ids: ids.toString(),
     });
     const alreadyLoadedComponents: Component[] = [];
     const idsToProcess: BitId[] = [];
     const invalidComponents: InvalidComponent[] = [];
+    const removedComponents: Component[] = [];
     ids.forEach((id: BitId) => {
       if (id.constructor.name !== BitId.name) {
         throw new TypeError(`consumer.loadComponents expects to get BitId instances, instead, got "${typeof id}"`);
@@ -116,11 +119,11 @@ export default class ComponentLoader {
       `the following ${alreadyLoadedComponents.length} components have been already loaded, get them from the cache. {idsStr}`,
       { idsStr: alreadyLoadedComponents.map((c) => c.id.toString()).join(', ') }
     );
-    if (!idsToProcess.length) return { components: alreadyLoadedComponents, invalidComponents };
+    if (!idsToProcess.length) return { components: alreadyLoadedComponents, invalidComponents, removedComponents };
 
     const allComponents: Component[] = [];
     await mapSeries(idsToProcess, async (id: BitId) => {
-      const component = await this.loadOne(id, throwOnFailure, invalidComponents, loadOpts);
+      const component = await this.loadOne(id, throwOnFailure, invalidComponents, removedComponents, loadOpts);
       if (component) {
         this.componentsCache.set(component.id.toString(), component);
         logger.debugAndAddBreadCrumb('ComponentLoader', 'Finished loading the component "{id}"', {
@@ -130,20 +133,36 @@ export default class ComponentLoader {
       }
     });
 
-    return { components: allComponents.concat(alreadyLoadedComponents), invalidComponents };
+    return { components: allComponents.concat(alreadyLoadedComponents), invalidComponents, removedComponents };
   }
 
   private async loadOne(
     id: BitId,
     throwOnFailure: boolean,
     invalidComponents: InvalidComponent[],
+    removedComponents: Component[],
     loadOpts?: ComponentLoadOptions
   ) {
     const componentMap = this.consumer.bitMap.getComponent(id);
-    let bitDir = this.consumer.getPath();
-    if (componentMap.rootDir) {
-      bitDir = path.join(bitDir, componentMap.rootDir);
+    // @ts-ignore it cannot be "-" here
+    if (componentMap.config?.[Extensions.remove]?.removed) {
+      const fromModel = await this.consumer.scope.getConsumerComponentIfExist(id);
+      if (!fromModel) {
+        invalidComponents.push({
+          id,
+          error: new Error(
+            `fatal: ${id.toString()} is marked as removed but its objects are missing from the local scope, try to import this component individually with --objects flag`
+          ),
+          component: undefined,
+        });
+        return null;
+      }
+      fromModel.removed = true;
+      fromModel.componentMap = componentMap;
+      removedComponents.push(fromModel);
+      return null;
     }
+    const bitDir = path.join(this.consumer.getPath(), componentMap.rootDir);
     let component: Component;
     const handleError = (error) => {
       if (throwOnFailure) throw error;

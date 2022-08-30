@@ -187,19 +187,18 @@ export default async function provideWorkspace(
     new CapsuleCreateCmd(workspace, isolator),
     new CapsuleDeleteCmd(isolator, workspace),
   ];
+  const watcher = new Watcher(workspace, pubsub);
   const commands: CommandList = [
     new InstallCmd(workspace, logger),
     new UpdateCmd(workspace),
     new UninstallCmd(workspace),
     new EjectConfCmd(workspace),
     capsuleCmd,
+    new WatchCommand(pubsub, logger, watcher),
+    new LinkCommand(workspace, logger, community.getDocsDomain()),
+    new UseCmd(workspace),
   ];
-  const watcher = new Watcher(workspace, pubsub);
-  if (workspace) {
-    commands.push(new WatchCommand(pubsub, logger, watcher));
-    commands.push(new LinkCommand(workspace, logger, community.getDocsDomain()));
-    commands.push(new UseCmd(workspace));
-  }
+
   commands.push(new PatternCommand(workspace));
   cli.register(...commands);
   component.registerHost(workspace);
