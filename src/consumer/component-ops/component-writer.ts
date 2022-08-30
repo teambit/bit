@@ -3,14 +3,13 @@ import * as path from 'path';
 import semver from 'semver';
 import { flatten } from 'lodash';
 import { BitIds } from '../../bit-id';
-import { COMPONENT_ORIGINS } from '../../constants';
 import ShowDoctorError from '../../error/show-doctor-error';
 import logger from '../../logger/logger';
 import { Scope } from '../../scope';
 import getNodeModulesPathOfComponent from '../../utils/bit/component-node-modules-path';
 import { PathLinuxRelative, pathNormalizeToLinux } from '../../utils/path';
 import BitMap from '../bit-map/bit-map';
-import ComponentMap, { ComponentOrigin } from '../bit-map/component-map';
+import ComponentMap from '../bit-map/component-map';
 import Component from '../component/consumer-component';
 import PackageJsonFile from '../component/package-json-file';
 import { PackageJsonTransformer } from '../component/package-json-transformer';
@@ -33,7 +32,6 @@ export type ComponentWriterProps = {
   writePackageJson?: boolean;
   override?: boolean;
   isolated?: boolean;
-  origin: ComponentOrigin;
   consumer: Consumer | undefined;
   scope?: Scope | undefined;
   bitMap: BitMap;
@@ -51,7 +49,6 @@ export default class ComponentWriter {
   writePackageJson: boolean;
   override: boolean;
   isolated: boolean | undefined;
-  origin: ComponentOrigin;
   consumer: Consumer | undefined; // when using capsule, the consumer is not defined
   scope?: Scope | undefined;
   bitMap: BitMap;
@@ -68,7 +65,6 @@ export default class ComponentWriter {
     writePackageJson = true,
     override = true,
     isolated = false,
-    origin,
     consumer,
     scope = consumer?.scope,
     bitMap,
@@ -84,7 +80,6 @@ export default class ComponentWriter {
     this.writePackageJson = writePackageJson;
     this.override = override;
     this.isolated = isolated;
-    this.origin = origin;
     this.consumer = consumer;
     this.scope = scope;
     this.bitMap = bitMap;
@@ -251,7 +246,6 @@ export default class ComponentWriter {
       files: filesForBitMap,
       mainFile: pathNormalizeToLinux(this.component.mainFile),
       rootDir,
-      origin: this.origin,
     });
   }
 
@@ -285,15 +279,11 @@ export default class ComponentWriter {
   }
 
   _determineWhetherToWriteConfig() {
-    // $FlowFixMe this.component.componentMap is set
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    if (this.component.componentMap.origin === COMPONENT_ORIGINS.AUTHORED) {
-      this.writeConfig = false;
-    }
+    this.writeConfig = false;
   }
 
   _determineWhetherToWritePackageJson() {
-    this.writePackageJson = this.writePackageJson && this.origin !== COMPONENT_ORIGINS.AUTHORED;
+    this.writePackageJson = false;
   }
 
   /**
@@ -303,9 +293,7 @@ export default class ComponentWriter {
    * If a user made changes to the imported component, it will show a warning and stop the process.
    */
   _determineWhetherToDeleteComponentDirContent() {
-    if (typeof this.deleteBitDirContent === 'undefined') {
-      this.deleteBitDirContent = this.origin === COMPONENT_ORIGINS.IMPORTED;
-    }
+    this.deleteBitDirContent = false;
   }
 
   _updateFilesBasePaths() {

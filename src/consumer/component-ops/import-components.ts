@@ -10,7 +10,6 @@ import { BitId, BitIds } from '../../bit-id';
 import { Consumer } from '../../consumer';
 import loader from '../../cli/loader';
 import { BEFORE_IMPORT_ACTION } from '../../cli/loader/loader-messages';
-import { COMPONENT_ORIGINS } from '../../constants';
 import GeneralError from '../../error/general-error';
 import ShowDoctorError from '../../error/show-doctor-error';
 import logger from '../../logger/logger';
@@ -370,10 +369,8 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
   }
 
   private getIdsToImportFromBitmap() {
-    const authoredExportedComponents = this.consumer.bitMap.getAuthoredExportedComponents();
-    // @todo: when .bitmap has a remote-lane, it should import the lane object as well
-    const importedComponents = this.consumer.bitMap.getAllIdsAvailableOnLane([COMPONENT_ORIGINS.IMPORTED]);
-    return BitIds.fromArray([...authoredExportedComponents, ...importedComponents]);
+    const authoredExportedComponents = this.consumer.bitMap.getExportedComponents();
+    return BitIds.fromArray(authoredExportedComponents);
   }
 
   /**

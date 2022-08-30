@@ -46,15 +46,6 @@ export const BIT_MAP = '.bitmap';
 
 export const OLD_BIT_MAP = '.bit.map.json';
 
-// Hack to prevent reference from constants to component map
-type origins = 'IMPORTED' | 'AUTHORED' | 'NESTED';
-
-export const COMPONENT_ORIGINS = {
-  IMPORTED: 'IMPORTED' as origins,
-  AUTHORED: 'AUTHORED' as origins,
-  NESTED: 'NESTED' as origins,
-};
-
 export const TESTS_FORK_LEVEL = {
   NONE: 'NONE',
   ONE: 'ONE',

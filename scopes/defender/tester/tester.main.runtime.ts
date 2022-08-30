@@ -256,9 +256,8 @@ export class TesterMain {
         await tester.uiWatch();
         return undefined;
       });
-
-      cli.register(new TestCmd(tester, workspace, logger));
     }
+    cli.register(new TestCmd(tester, workspace, logger));
 
     graphql.register(testerSchema(tester, graphql));
 

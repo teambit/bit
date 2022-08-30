@@ -4,7 +4,7 @@ import pMapSeries from 'p-map-series';
 import * as path from 'path';
 import R from 'ramda';
 import { BitId } from '../bit-id';
-import { COMPONENT_ORIGINS, IS_WINDOWS, PACKAGE_JSON, SOURCE_DIR_SYMLINK_TO_NM } from '../constants';
+import { IS_WINDOWS, PACKAGE_JSON, SOURCE_DIR_SYMLINK_TO_NM } from '../constants';
 import BitMap from '../consumer/bit-map/bit-map';
 import ComponentMap from '../consumer/bit-map/component-map';
 import ComponentsList from '../consumer/component/components-list';
@@ -59,14 +59,7 @@ export default class NodeModuleLinker {
       logger.debug(`linking component to node_modules: ${componentId}`);
       const componentMap: ComponentMap = this.bitMap.getComponent(component.id);
       component.componentMap = componentMap;
-      switch (componentMap.origin) {
-        case COMPONENT_ORIGINS.IMPORTED:
-          return this._populateImportedComponentsLinks(component);
-        case COMPONENT_ORIGINS.AUTHORED:
-          return this._populateAuthoredComponentsLinks(component);
-        default:
-          throw new Error(`ComponentMap.origin ${componentMap.origin} of ${componentId} is not recognized`);
-      }
+      return this._populateAuthoredComponentsLinks(component);
     });
 
     return this.dataToPersist;
@@ -99,40 +92,12 @@ export default class NodeModuleLinker {
     });
     return linksResults;
   }
-  async _populateImportedComponentsLinks(component: Component): Promise<void> {
-    await this._populateImportedNonLegacyComponentsLinks(component);
-  }
 
   _getDefaultScope(component?: Component): string | undefined | null {
     if (component) {
       return component.defaultScope;
     }
     return this.consumer ? this.consumer.config.defaultScope : null;
-  }
-
-  /**
-   * for Harmony version and above, instead of symlink from the component dir to node_modules,
-   * create a directory on node_modules and symlink each one of the source files, this way, the
-   * structure is exactly the same as Authored
-   */
-  async _populateImportedNonLegacyComponentsLinks(component: Component) {
-    const componentId = component.id;
-    const componentNodeModulesPath: PathOsBasedRelative = getNodeModulesPathOfComponent({
-      bindingPrefix: component.bindingPrefix,
-      id: componentId,
-      allowNonScope: true,
-      defaultScope: this._getDefaultScope(component),
-      extensions: component.extensions,
-    });
-    const componentMap = component.componentMap as ComponentMap;
-    const filesToBind = componentMap.getAllFilesPaths();
-    filesToBind.forEach((file) => {
-      const fileWithRootDir = componentMap.hasRootDir() ? path.join(componentMap.rootDir as string, file) : file;
-      const dest = path.join(componentNodeModulesPath, file);
-
-      this.dataToPersist.addSymlink(Symlink.makeInstance(fileWithRootDir, dest, componentId, true));
-    });
-    this._deleteExistingLinksRootIfSymlink(componentNodeModulesPath);
   }
 
   /**
