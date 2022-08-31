@@ -1,3 +1,4 @@
+import { BitError } from '@teambit/bit-error';
 import R from 'ramda';
 
 import { BitId } from '../../../bit-id';
@@ -33,7 +34,7 @@ async function parseValues(consumer: Consumer, values: string[], checkoutProps: 
     checkoutProps.version && (checkoutProps.version === LATEST || checkoutProps.version === HEAD)
   );
   if (checkoutProps.latestVersion && checkoutProps.version === LATEST) {
-    logger.console(`"latest" is deprecated. please use "${HEAD}" instead`);
+    throw new BitError(`"latest" is not supported. please use "${HEAD}" instead`);
   }
   if (checkoutProps.latestVersion && !ids.length) {
     if (checkoutProps.all) {
