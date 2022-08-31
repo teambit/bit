@@ -314,9 +314,10 @@ function squashSnaps(allComponentsStatus: ComponentMergeStatus[], otherLaneId: L
       throw new BitError(`unable to squash because ${id.toString()} is diverged in history.
 consider switching to "${
         otherLaneId.name
-      }" first, merging "${currentLaneName}", then switching back to "${currentLaneName}" and merging ${
+      }" first, merging "${currentLaneName}", then switching back to "${currentLaneName}" and merging "${
         otherLaneId.name
-      }`);
+      }"
+alternatively, use "--no-squash" flag to keep the entire history of "${otherLaneId.name}"`);
     }
     if (divergeData.isLocalAhead()) {
       // nothing to do. current is ahead, nothing to merge. (it was probably filtered out already as a "failedComponent")
