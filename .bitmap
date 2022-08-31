@@ -1470,6 +1470,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/lanes/ui/icons/lane-icon"
     },
+    "ui/inputs/lane-selector": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/lanes/ui/inputs/lane-selector"
+    },
     "ui/is-browser": {
         "scope": "teambit.ui-foundation",
         "version": "0.0.486",
