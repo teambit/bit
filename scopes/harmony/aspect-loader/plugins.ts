@@ -30,7 +30,7 @@ export class Plugins {
     aspect.addRuntime({
       provider: async () => {
         plugins.forEach((plugin) => {
-          plugin.register();
+          plugin.register(aspect);
         });
       },
       runtime,
