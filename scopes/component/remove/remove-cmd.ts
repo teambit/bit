@@ -24,7 +24,12 @@ export class RemoveCmd implements Command {
   skipWorkspace = true;
   alias = 'rm';
   options = [
-    ['r', 'remote', 'remove a component from a remote scope'],
+    ['', 'soft', 'EXPERIMENTAL. mark the component as deleted. after tag/snap and export the remote will be updated'],
+    [
+      'r',
+      'remote',
+      'remove a component completely from a remote scope (Careful! this is a permanent change. prefer --soft and tag+export)',
+    ],
     ['t', 'track', 'keep tracking component in .bitmap (default = false), helps transform a tagged-component to new'],
     ['d', 'delete-files', 'DEPRECATED (this is now the default). delete local component files'],
     ['', 'keep-files', 'keep component files (just untrack the component)'],
@@ -44,14 +49,37 @@ export class RemoveCmd implements Command {
   async report(
     [componentsPattern]: [string],
     {
+      soft = false,
       force = false,
       remote = false,
       track = false,
       deleteFiles = false,
       silent = false,
       keepFiles = false,
-    }: { force: boolean; remote: boolean; track: boolean; deleteFiles: boolean; silent: boolean; keepFiles: boolean }
+    }: {
+      force: boolean;
+      remote: boolean;
+      track: boolean;
+      deleteFiles: boolean;
+      silent: boolean;
+      keepFiles: boolean;
+      soft: boolean;
+    }
   ) {
+    if (soft) {
+      if (remote)
+        throw new BitError(
+          `error: --remote and --soft cannot be used together. soft delete can only be done locally, after tag/snap and export it updates the remote`
+        );
+      if (track) throw new BitError(`error: please use either --soft or --track, not both`);
+      if (keepFiles) throw new BitError(`error: please use either --soft or --keep-files, not both`);
+      const removedCompIds = await this.remove.softRemove(componentsPattern);
+      return `${chalk.green('successfully soft-removed the following components:')}
+${removedCompIds.join('\n')}
+
+${chalk.bold('to update the remote, please tag/snap and then export')}`;
+    }
+
     if (deleteFiles) {
       loader.stop();
       // eslint-disable-next-line no-console
@@ -63,7 +91,7 @@ export class RemoveCmd implements Command {
     }
     if (!silent) {
       const willDeleteFiles = !remote && !keepFiles;
-      const removePromptResult = await removePrompt(willDeleteFiles)();
+      const removePromptResult = await removePrompt(willDeleteFiles, remote)();
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       if (!yn(removePromptResult.shouldRemove)) {
         throw new BitError('the operation has been canceled');

@@ -26,9 +26,7 @@ export class ImporterMain {
     CommunityMain
   ]) {
     const importer = new Importer(workspace, depResolver);
-    if (workspace && !workspace.consumer.isLegacy) {
-      cli.register(new ImportCmd(importer, community.getDocsDomain()));
-    }
+    cli.register(new ImportCmd(importer, community.getDocsDomain()));
     return new ImporterMain(importer);
   }
 }

@@ -6,7 +6,7 @@ describe('AutoTag', () => {
   describe('getAutoTagPending', () => {
     it('should return an empty array when there are no components in the workspace', async () => {
       const consumer = {
-        bitMap: { getAuthoredAndImportedBitIds: () => [] },
+        bitMap: { getAllBitIds: () => [] },
         loadComponents: () => Promise.resolve({ components: [] }),
       };
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

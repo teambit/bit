@@ -136,10 +136,7 @@ export class SnappingMain {
     const components = await this.loadComponentsForTag(legacyBitIds);
     await this.throwForLegacyDependenciesInsideHarmony(components);
     await this.throwForComponentIssues(components, ignoreIssues);
-    const areComponentsMissingFromScope = components.some((c) => !c.componentFromModel && c.id.hasScope());
-    if (areComponentsMissingFromScope) {
-      throw new ComponentsPendingImport();
-    }
+    this.throwForPendingImport(components);
 
     const { taggedComponents, autoTaggedResults, publishedPackages } = await tagModelComponent({
       workspace: this.workspace,
@@ -223,10 +220,7 @@ export class SnappingMain {
     const components = await this.loadComponentsForTag(ids);
     await this.throwForLegacyDependenciesInsideHarmony(components);
     await this.throwForComponentIssues(components, ignoreIssues);
-    const areComponentsMissingFromScope = components.some((c) => !c.componentFromModel && c.id.hasScope());
-    if (areComponentsMissingFromScope) {
-      throw new ComponentsPendingImport();
-    }
+    this.throwForPendingImport(components);
 
     const { taggedComponents, autoTaggedResults } = await tagModelComponent({
       workspace: this.workspace,
@@ -388,14 +382,14 @@ there are matching among unmodified components thought. consider using --unmodif
   }
 
   private async loadComponentsForTag(ids: BitIds): Promise<ConsumerComponent[]> {
-    const { components } = await this.workspace.consumer.loadComponents(ids.toVersionLatest());
+    const { components, removedComponents } = await this.workspace.consumer.loadComponents(ids.toVersionLatest());
     components.forEach((component) => {
       const componentMap = component.componentMap as ComponentMap;
       if (!componentMap.rootDir) {
         throw new Error(`unable to tag ${component.id.toString()}, the "rootDir" is missing in the .bitmap file`);
       }
     });
-    return components;
+    return [...components, ...removedComponents];
   }
 
   private async throwForComponentIssues(legacyComponents: ConsumerComponent[], ignoreIssues?: string) {
@@ -415,6 +409,15 @@ there are matching among unmodified components thought. consider using --unmodif
     const componentsWithBlockingIssues = legacyComponents.filter((component) => component.issues?.shouldBlockTagging());
     if (!R.isEmpty(componentsWithBlockingIssues)) {
       throw new ComponentsHaveIssues(componentsWithBlockingIssues);
+    }
+  }
+
+  private throwForPendingImport(components: ConsumerComponent[]) {
+    const areComponentsMissingFromScope = components
+      .filter((c) => !c.removed)
+      .some((c) => !c.componentFromModel && c.id.hasScope());
+    if (areComponentsMissingFromScope) {
+      throw new ComponentsPendingImport();
     }
   }
 
@@ -490,7 +493,7 @@ there are matching among unmodified components thought. consider using --unmodif
       return { bitIds: componentsList.listDuringMergeStateComponents(), warnings };
     }
 
-    tagPendingBitIds.push(...snappedComponentsIds);
+    const tagPendingBitIdsIncludeSnapped = [...tagPendingBitIds, ...snappedComponentsIds];
 
     if (includeUnmodified && exactVersion) {
       const tagPendingComponentsLatest = await this.workspace.scope.legacyScope.latestVersions(tagPendingBitIds, false);
@@ -501,7 +504,7 @@ there are matching among unmodified components thought. consider using --unmodif
       });
     }
 
-    return { bitIds: tagPendingBitIds.map((id) => id.changeVersion(undefined)), warnings };
+    return { bitIds: tagPendingBitIdsIncludeSnapped.map((id) => id.changeVersion(undefined)), warnings };
   }
 
   static slots = [];

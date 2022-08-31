@@ -98,9 +98,9 @@ async function getComponentStatus(consumer: Consumer, component: Component, vers
     throw new GeneralError(`component ${component.id.toStringWithoutVersion()} is already at version ${version}`);
   }
   const unmerged = consumer.scope.objects.unmergedComponents.getEntry(component.name);
-  if (unmerged && unmerged.resolved === false) {
+  if (unmerged) {
     throw new GeneralError(
-      `component ${component.id.toStringWithoutVersion()} has conflicts that need to be resolved first, please use bit merge --resolve/--abort`
+      `component ${component.id.toStringWithoutVersion()} is in during-merge state, please snap/tag it first (or use bit merge --resolve/--abort)`
     );
   }
   const otherComponent: Component = await consumer.loadComponentFromModel(component.id.changeVersion(version));
@@ -168,7 +168,6 @@ async function applyVersion(
     writeConfig: false, // never override the existing bit.json
     writePackageJson: false,
     deleteBitDirContent: false,
-    origin: componentMap.origin,
     consumer,
     bitMap: consumer.bitMap,
     existingComponentMap: componentMap,
@@ -176,7 +175,6 @@ async function applyVersion(
   await componentWriter.write();
 
   consumer.bitMap.removeComponent(component.id);
-  componentWriter.origin = componentMap.origin;
   componentWriter.addComponentToBitMap(componentMap.rootDir);
 
   return { id, filesStatus: Object.assign(filesStatus, modifiedStatus) };
