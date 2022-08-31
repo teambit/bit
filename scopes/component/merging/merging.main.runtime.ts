@@ -430,6 +430,7 @@ export class MergingMain {
     }
     if (resolvedUnrelated && resolvedUnrelated === 'ours') {
       markAllFilesAsUnchanged();
+      localLane?.addComponent({ id, head: remoteHead });
       return handleResolveUnrelated();
     }
     const remoteId = id.changeVersion(remoteHead.toString());
