@@ -740,6 +740,20 @@ if that's not the case, make sure to call "getAllIdsAvailableOnLane" and not "ge
     return deprecationAspect.config.deprecate;
   }
 
+  async isRemoved(repo: Repository): Promise<boolean> {
+    const head = this.getHeadRegardlessOfLane();
+    if (!head) {
+      // it's new or only on lane
+      return false;
+    }
+    const version = (await repo.load(head)) as Version;
+    if (!version) {
+      // the head Version doesn't exist locally, there is no way to know whether it's removed
+      return false;
+    }
+    return version.isRemoved();
+  }
+
   async isLaneReadmeOf(repo: Repository): Promise<string[]> {
     const head = this.getHeadRegardlessOfLane();
     if (!head) {
@@ -786,7 +800,6 @@ if that's not the case, make sure to call "getAllIdsAvailableOnLane" and not "ge
     const [files, scopeMeta] = await Promise.all([filesP, scopeMetaP]);
 
     const extensions = version.extensions.clone();
-
     const bindingPrefix = this.bindingPrefix === 'bit' ? '@bit' : this.bindingPrefix;
     // when generating a new ConsumerComponent out of Version, it is critical to make sure that
     // all objects are cloned and not copied by reference. Otherwise, every time the
@@ -817,6 +830,7 @@ if that's not the case, make sure to call "getAllIdsAvailableOnLane" and not "ge
       overrides: ComponentOverrides.loadFromScope(version.overrides),
       packageJsonChangedProps: clone(version.packageJsonChangedProps),
       deprecated: this.deprecated,
+      removed: version.isRemoved(),
       scopesList: clone(this.scopesList),
       schema: version.schema,
       extensions,

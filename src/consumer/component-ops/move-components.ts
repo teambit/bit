@@ -2,7 +2,6 @@ import { BitError } from '@teambit/bit-error';
 import fs from 'fs-extra';
 import R from 'ramda';
 import BitIds from '../../bit-id/bit-ids';
-import { COMPONENT_ORIGINS } from '../../constants';
 import GeneralError from '../../error/general-error';
 import { NodeModuleLinker } from '../../links';
 import { isDir } from '../../utils';
@@ -63,19 +62,11 @@ export function moveExistingComponent(
   const newPathRelative = consumer.getPathRelativeToConsumer(newPath);
   componentMap.updateDirLocation(oldPathRelative, newPathRelative);
   consumer.bitMap.markAsChanged();
-  if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) {
-    component.dataToPersist.files.forEach((file) => {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      const newRelative = file.relative.replace(oldPathRelative, newPathRelative);
-      file.updatePaths({ newRelative });
-    });
-  } else {
-    component.dataToPersist.files.forEach((file) => {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      const newBase = file.base.replace(oldPathRelative, newPathRelative);
-      file.updatePaths({ newBase });
-    });
-  }
+  component.dataToPersist.files.forEach((file) => {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    const newRelative = file.relative.replace(oldPathRelative, newPathRelative);
+    file.updatePaths({ newRelative });
+  });
   component.dataToPersist.removePath(new RemovePath(oldPathRelative));
   component.writtenPath = newPathRelative;
 }

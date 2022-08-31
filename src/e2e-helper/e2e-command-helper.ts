@@ -390,6 +390,9 @@ export default class CommandHelper {
   fetchAllLanes() {
     return this.runCmd(`bit fetch --lanes`);
   }
+  fetchAllComponents() {
+    return this.runCmd(`bit fetch --components`);
+  }
   renameLane(oldName: string, newName: string) {
     return this.runCmd(`bit lane rename ${oldName} ${newName}`);
   }
@@ -525,7 +528,8 @@ export default class CommandHelper {
 
   statusComponentIsStaged(id: string): boolean {
     const status = this.statusJson();
-    return status.stagedComponents.includes(id);
+    const stagedIds = status.stagedComponents.map((s) => s.id);
+    return stagedIds.includes(id);
   }
 
   statusComponentIsModified(fullId: string): boolean {

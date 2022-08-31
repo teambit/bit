@@ -287,11 +287,18 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
 
     const unmergedComponent = consumer.scope.objects.unmergedComponents.getEntry(component.name);
     if (unmergedComponent) {
-      version.addParent(unmergedComponent.head);
-      logger.debug(
-        `sources.addSource, unmerged component "${component.name}". adding a parent ${unmergedComponent.head.hash}`
-      );
-      version.log.message = version.log.message || UnmergedComponents.buildSnapMessage(unmergedComponent);
+      if (unmergedComponent.unrelated) {
+        logger.debug(
+          `sources.addSource, unmerged component "${component.name}". adding an unrelated entry ${unmergedComponent.head.hash}`
+        );
+        version.unrelated = { head: unmergedComponent.head, laneId: unmergedComponent.laneId };
+      } else {
+        version.addParent(unmergedComponent.head);
+        logger.debug(
+          `sources.addSource, unmerged component "${component.name}". adding a parent ${unmergedComponent.head.hash}`
+        );
+        version.log.message = version.log.message || UnmergedComponents.buildSnapMessage(unmergedComponent);
+      }
       consumer.scope.objects.unmergedComponents.removeComponent(component.name);
     }
     objectRepo.add(component);

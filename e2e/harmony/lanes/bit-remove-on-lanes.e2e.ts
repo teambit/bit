@@ -88,4 +88,46 @@ describe('bit lane command', function () {
       expect(bitMap).to.not.have.property('comp1');
     });
   });
+  describe('soft remove on lane', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents(2);
+      helper.command.createLane();
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+
+      helper.command.removeComponent('comp2', '--soft');
+      helper.fs.outputFile('comp1/index.js', '');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+    });
+    describe('merge a lane with removed component to main', () => {
+      let mergeOutput: string;
+      before(() => {
+        helper.command.switchLocalLane('main');
+        mergeOutput = helper.command.mergeLane('dev', '--verbose');
+      });
+      it('should not merge the removed component', () => {
+        const list = helper.command.listParsed();
+        expect(list).to.have.lengthOf(1);
+        expect(list[0].id).to.not.have.string('comp2');
+      });
+      it('should explain why it was not merged if --verbose was used', () => {
+        expect(mergeOutput).to.have.string('has been removed');
+      });
+    });
+    describe('importing the lane to a new workspace', () => {
+      before(() => {
+        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.scopeHelper.addRemoteScope();
+        helper.command.importLane('dev');
+      });
+      it('should not bring the removed components', () => {
+        const list = helper.command.listParsed();
+        expect(list).to.have.lengthOf(1);
+        expect(list[0].id).to.not.have.string('comp2');
+      });
+    });
+  });
 });
