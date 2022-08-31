@@ -349,7 +349,6 @@ describe('merge lanes', function () {
       });
       describe('switching to main and merging the lane to main without squash', () => {
         before(() => {
-          helper.scopeHelper.getClonedLocalScope(afterMergeToMain);
           helper.command.switchLocalLane('main');
           helper.command.mergeLane('dev', '--no-squash');
         });
@@ -366,6 +365,7 @@ describe('merge lanes', function () {
       describe('switching to main and merging the lane to main (with squash)', () => {
         let beforeMergeHead: string;
         before(() => {
+          helper.scopeHelper.getClonedLocalScope(afterMergeToMain);
           helper.command.switchLocalLane('main');
           beforeMergeHead = helper.command.getHead('comp1');
           helper.command.mergeLane('dev');
