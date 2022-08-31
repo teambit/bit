@@ -48,7 +48,8 @@
           "less-loader": "10.0.0",
           "@teambit/legacy": "-",
           "@babel/runtime": "^7.12.18",
-          "react-refresh": "0.10.0"
+          "react-refresh": "0.10.0",
+          "@teambit/dependencies.modules.packages-excluder": "0.0.54"
         },
         "devDependencies": {
           "react": "-",

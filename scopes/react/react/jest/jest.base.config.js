@@ -1,3 +1,5 @@
+const packageExcluder = require('@teambit/dependencies.modules.packages-excluder');
+
 module.exports = {
   // "roots": [
   //   "<rootDir>/src"
@@ -18,7 +20,11 @@ module.exports = {
     '^(?!.*\\.(js|jsx|ts|tsx|css|json)$)': require.resolve('./transformers/file-transform.js'),
     // '^(?!.*\\.(svg|png|jpg|jpeg|gif|webp|woff|ttf|woff2)$)': require.resolve('./file-transform.js'),
   },
-  transformIgnorePatterns: ['[/\\\\]node_modules[/\\\\].+\\.(js|jsx|ts|tsx)$', '^.+\\.module\\.(css|sass|scss)$'],
+  transformIgnorePatterns: [
+    '[/\\\\]node_modules[/\\\\].+\\.(js|jsx|ts|tsx|cjs)$',
+    '^.+\\.module\\.(css|sass|scss)$',
+    packageExcluder.generateNodeModulesPattern({ packages: ['@apollo'] }),
+  ],
   modulePaths: [],
   moduleNameMapper: {
     '\\.(css|less|scss|sass)$': require.resolve('identity-obj-proxy'),
