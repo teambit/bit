@@ -24,6 +24,7 @@ import { WorkspaceTemplate } from './workspace-template';
 import { NewCmd, NewOptions } from './new.cmd';
 import { componentGeneratorTemplate } from './templates/component-generator';
 import { workspaceGeneratorTemplate } from './templates/workspace-generator';
+import { starterTemplate } from './templates/starter';
 import { StarterPlugin } from './starter.plugin';
 
 export type ComponentTemplateSlot = SlotRegistry<ComponentTemplate[]>;
@@ -331,7 +332,7 @@ export class GeneratorMain {
     graphql.register(generatorSchema(generator));
     aspectLoader.registerPlugins([new StarterPlugin(generator)]);
 
-    generator.registerComponentTemplate([componentGeneratorTemplate, workspaceGeneratorTemplate]);
+    generator.registerComponentTemplate([componentGeneratorTemplate, starterTemplate, workspaceGeneratorTemplate]);
     return generator;
   }
 }

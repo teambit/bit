@@ -1,48 +1,10 @@
-import { ComponentContext, ComponentTemplate } from '@teambit/generator';
-import { indexFile } from './files/index';
-import { starterFile } from './files/starter';
-import { docsFile } from './files/docs-file';
-import { gitIgnoreTemplate } from './files/git-ignore-tpl';
-import { readmeTemplate } from './files/readme-tpl';
-import { workspaceConfigTemplate } from './files/workspace-config-tpl';
+import { ComponentTemplate } from '@teambit/generator';
+import { starterTemplate } from '../starter';
 
+// TODO: This is deprecated and should be removed once we update the docs to use the new starter template.
 export const workspaceGeneratorTemplate: ComponentTemplate = {
-  name: 'starter',
+  ...starterTemplate,
+  name: 'workspace-generator',
   description:
-    'create your own starter - \nDocs: https://bit.dev/docs/dev-services/generator/generate-workspace',
-  generateFiles: (context: ComponentContext) => {
-    return [
-      {
-        relativePath: 'index.ts',
-        content: indexFile(context),
-        isMain: true,
-      },
-      {
-        relativePath: `${context.name}.starter.ts`,
-        content: starterFile(),
-      },
-      {
-        relativePath: `${context.name}.docs.mdx`,
-        content: docsFile(),
-      },
-      {
-        relativePath: 'template/files/git-ignore.ts',
-        content: gitIgnoreTemplate(),
-      },
-      {
-        relativePath: 'template/files/readme-file.ts',
-        content: readmeTemplate(),
-      },
-      {
-        relativePath: 'template/files/workspace-config.ts',
-        content: workspaceConfigTemplate(),
-      },
-    ];
-  },
-  config: {
-    'teambit.harmony/aspect': {},
-    'teambit.envs/envs': {
-      env: 'teambit.harmony/aspect',
-    },
-  },
+    'DEPRECATED: use "starter" instead.\ncreate your own workspace generator - \nDocs: https://bit.dev/docs/dev-services/generator/generate-workspace',
 };
