@@ -1,3 +1,4 @@
+import { Aspect } from '@teambit/harmony';
 import { PluginDefinition } from './plugin-definition';
 
 export class Plugin {
@@ -13,9 +14,9 @@ export class Plugin {
     return this.def.runtimes.includes(runtime);
   }
 
-  register() {
+  register(sourceAspect: Aspect) {
     const object = this.require();
-    this.def.register<unknown>(object);
+    this.def.register<unknown>(object, sourceAspect);
   }
 
   require() {

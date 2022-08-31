@@ -21,7 +21,7 @@ export async function getDivergeData(
   modelComponent: ModelComponent,
   remoteHead: Ref | null,
   checkedOutLocalHead?: Ref | null, // in case locally on the workspace it has a different version
-  throws = true // otherwise, save the error instance in the `DivergeData` object
+  throws = true // otherwise, save the error instance in the `DivergeData` object,
 ): Promise<DivergeData> {
   const isOnLane = modelComponent.laneHeadLocal || modelComponent.laneHeadLocal === null;
   const localHead = checkedOutLocalHead || (isOnLane ? modelComponent.laneHeadLocal : modelComponent.getHead());
@@ -56,6 +56,16 @@ export async function getDivergeData(
     }
     if (!isLocal && version.hash().isEqual(localHead)) {
       localHeadExistsRemotely = true;
+      return;
+    }
+    if (isLocal && version.unrelated?.head.isEqual(remoteHead)) {
+      remoteHeadExistsLocally = true;
+      snaps.push(version.hash());
+      return;
+    }
+    if (!isLocal && version.unrelated?.head.isEqual(localHead)) {
+      localHeadExistsRemotely = true;
+      snaps.push(version.hash());
       return;
     }
     if (!isLocal && !commonSnapBeforeDiverge) {
@@ -107,6 +117,12 @@ bit import ${modelComponent.id()} --objects`);
   }
 
   if (!commonSnapBeforeDiverge) {
+    const unmergedData = repo.unmergedComponents.getEntry(modelComponent.name);
+    const isUnrelatedFromUnmerged = unmergedData?.unrelated && unmergedData.head.isEqual(remoteHead);
+    const isUnrelatedFromVersionObj = localVersion.unrelated?.head.isEqual(remoteHead);
+    if (isUnrelatedFromUnmerged || isUnrelatedFromVersionObj) {
+      return new DivergeData(snapsOnLocal, snapsOnRemote, undefined);
+    }
     const err = new NoCommonSnap(modelComponent.id());
     if (throws) throw err;
     return new DivergeData(snapsOnLocal, snapsOnRemote, undefined, err);

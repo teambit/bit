@@ -1,3 +1,4 @@
+import { LaneId } from '@teambit/lane-id';
 import fs from 'fs-extra';
 import { compact } from 'lodash';
 import path from 'path';
@@ -12,9 +13,22 @@ export type UnmergedComponent = {
   };
   head: Ref;
   unmergedPaths?: string[];
-  resolved: boolean;
+  /**
+   * @deprecated use laneId.remote instead
+   */
   remote?: string;
+  /**
+   * @deprecated use laneId.name instead
+   */
   lane: string;
+  /**
+   * can be main as well
+   */
+  laneId: LaneId;
+  /**
+   * the head is coming from a component with the same and scope but has no snap in common
+   */
+  unrelated?: boolean;
 };
 
 const UNMERGED_FILENAME = 'unmerged.json';
@@ -32,7 +46,11 @@ export default class UnmergedComponents {
     let unmerged: UnmergedComponent[];
     try {
       const fileContent = await fs.readJson(filePath);
-      unmerged = fileContent.map((item) => ({ ...item, head: Ref.from(item.head) }));
+      unmerged = fileContent.map((item) => ({
+        ...item,
+        head: Ref.from(item.head),
+        laneId: item.laneId ? new LaneId(item.laneId) : undefined,
+      }));
     } catch (err: any) {
       if (err.code === 'ENOENT') {
         unmerged = [];
@@ -55,14 +73,6 @@ export default class UnmergedComponents {
 
   getEntry(componentName: string): UnmergedComponent | undefined {
     return this.unmerged.find((u) => u.id.name === componentName);
-  }
-
-  getResolvedComponents() {
-    return this.unmerged.filter((u) => u.resolved);
-  }
-
-  getUnresolvedComponents() {
-    return this.unmerged.filter((u) => !u.resolved);
   }
 
   getComponents() {
@@ -91,11 +101,10 @@ export default class UnmergedComponents {
   }
 
   toObject() {
-    return this.unmerged.map((item) => ({ ...item, head: item.head.toString() }));
+    return this.unmerged.map((item) => ({ ...item, head: item.head.toString(), laneId: item.laneId.toObject() }));
   }
 
   static buildSnapMessage(unmergedComponent: UnmergedComponent): string {
-    const remote = unmergedComponent.remote ? `remote ${unmergedComponent.remote}/` : '';
-    return `merge ${remote}${unmergedComponent.lane}`;
+    return `merge ${unmergedComponent.laneId.toString()}`;
   }
 }

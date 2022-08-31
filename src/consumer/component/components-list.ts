@@ -87,7 +87,7 @@ export default class ComponentsList {
   async listModifiedComponents(load = false, loadOpts?: ComponentLoadOptions): Promise<Array<BitId | Component>> {
     if (!this._modifiedComponents) {
       const fileSystemComponents = await this.getComponentsFromFS(loadOpts);
-      const componentsWithUnresolvedConflicts = this.listDuringMergeStateComponents();
+      const unmergedComponents = this.listDuringMergeStateComponents();
       const componentStatuses = await this.consumer.getManyComponentsStatuses(fileSystemComponents.map((f) => f.id));
       this._modifiedComponents = fileSystemComponents
         .filter((component) => {
@@ -95,7 +95,7 @@ export default class ComponentsList {
           if (!status) throw new Error(`listModifiedComponents unable to find status for ${component.id.toString()}`);
           return status.status.modified;
         })
-        .filter((component: Component) => !componentsWithUnresolvedConflicts.hasWithoutScopeAndVersion(component.id));
+        .filter((component: Component) => !unmergedComponents.hasWithoutScopeAndVersion(component.id));
     }
     if (load) return this._modifiedComponents;
     return this._modifiedComponents.map((component) => component.id);
@@ -104,17 +104,13 @@ export default class ComponentsList {
   async listOutdatedComponents(loadOpts?: ComponentLoadOptions): Promise<Component[]> {
     const fileSystemComponents = await this.getComponentsFromFS(loadOpts);
     const componentsFromModel = await this.getModelComponents();
-    const componentsWithUnresolvedConflicts = this.listDuringMergeStateComponents();
+    const unmergedComponents = this.listDuringMergeStateComponents();
     const mergePendingComponents = await this.listMergePendingComponents();
     const mergePendingComponentsIds = BitIds.fromArray(mergePendingComponents.map((c) => c.id));
     await Promise.all(
       fileSystemComponents.map(async (component) => {
         const modelComponent = componentsFromModel.find((c) => c.toBitId().isEqualWithoutVersion(component.id));
-        if (
-          !modelComponent ||
-          !component.id.hasVersion() ||
-          componentsWithUnresolvedConflicts.hasWithoutScopeAndVersion(component.id)
-        )
+        if (!modelComponent || !component.id.hasVersion() || unmergedComponents.hasWithoutScopeAndVersion(component.id))
           return;
         if (mergePendingComponentsIds.hasWithoutVersion(component.id)) {
           // by default, outdated include merge-pending since the remote-head and local-head are
@@ -191,13 +187,12 @@ export default class ComponentsList {
     if (!this._mergePendingComponents) {
       const componentsFromFs = await this.getComponentsFromFS(loadOpts);
       const componentsFromModel = await this.getModelComponents();
-      const componentsWithUnresolvedConflicts = this.listDuringMergeStateComponents();
+      const duringMergeComps = this.listDuringMergeStateComponents();
       this._mergePendingComponents = (
         await Promise.all(
           componentsFromFs.map(async (component: Component) => {
             const modelComponent = componentsFromModel.find((c) => c.toBitId().isEqualWithoutVersion(component.id));
-            if (!modelComponent || componentsWithUnresolvedConflicts.hasWithoutScopeAndVersion(component.id))
-              return null;
+            if (!modelComponent || duringMergeComps.hasWithoutScopeAndVersion(component.id)) return null;
             await modelComponent.setDivergeData(this.scope.objects);
             const divergedData = modelComponent.getDivergeData();
             if (!modelComponent.getDivergeData().isDiverged()) return null;
@@ -209,14 +204,9 @@ export default class ComponentsList {
     return this._mergePendingComponents;
   }
 
-  listComponentsWithUnresolvedConflicts(): BitIds {
-    const unresolvedComponents = this.scope.objects.unmergedComponents.getUnresolvedComponents();
-    return BitIds.fromArray(unresolvedComponents.map((u) => new BitId(u.id)));
-  }
-
   listDuringMergeStateComponents(): BitIds {
-    const unresolvedComponents = this.scope.objects.unmergedComponents.getComponents();
-    return BitIds.fromArray(unresolvedComponents.map((u) => new BitId(u.id)));
+    const unmergedComponents = this.scope.objects.unmergedComponents.getComponents();
+    return BitIds.fromArray(unmergedComponents.map((u) => new BitId(u.id)));
   }
 
   listSoftTaggedComponents(): BitId[] {

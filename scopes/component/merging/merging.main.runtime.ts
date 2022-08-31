@@ -31,23 +31,25 @@ import chalk from 'chalk';
 import { Tmp } from '@teambit/legacy/dist/scope/repositories';
 import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
 import ManyComponentsWriter from '@teambit/legacy/dist/consumer/component-ops/many-components-writer';
-import Component from '@teambit/legacy/dist/consumer/component/consumer-component';
+import ConsumerComponent from '@teambit/legacy/dist/consumer/component/consumer-component';
 import checkoutVersion, { applyModifiedVersion } from '@teambit/legacy/dist/consumer/versions-ops/checkout-version';
 import threeWayMerge, {
   MergeResultsThreeWay,
 } from '@teambit/legacy/dist/consumer/versions-ops/merge-version/three-way-merge';
+import { NoCommonSnap } from '@teambit/legacy/dist/scope/exceptions/no-common-snap';
 import { DivergeData } from '@teambit/legacy/dist/scope/component-ops/diverge-data';
 import { MergeCmd } from './merge-cmd';
 import { MergingAspect } from './merging.aspect';
 
 export type ComponentMergeStatus = {
-  componentFromFS?: Component | null;
+  currentComponent?: ConsumerComponent | null;
   componentFromModel?: Version;
   id: BitId;
   unmergedMessage?: string;
   unmergedLegitimately?: boolean; // failed to merge but for a legitimate reason, such as, up-to-date
   mergeResults?: MergeResultsThreeWay | null;
   divergeData?: DivergeData;
+  resolvedUnrelated?: MergeStrategy;
 };
 
 export class MergingMain {
@@ -131,7 +133,6 @@ export class MergingMain {
     return this.mergeSnaps({
       mergeStrategy,
       allComponentsStatus,
-      remoteName: currentLaneId.isDefault() ? null : currentLaneId.scope,
       laneId: currentLaneId,
       localLane: currentLaneObject,
       noSnap,
@@ -147,7 +148,6 @@ export class MergingMain {
   async mergeSnaps({
     mergeStrategy,
     allComponentsStatus,
-    remoteName,
     laneId,
     localLane,
     noSnap,
@@ -157,7 +157,6 @@ export class MergingMain {
   }: {
     mergeStrategy: MergeStrategy;
     allComponentsStatus: ComponentMergeStatus[];
-    remoteName: string | null;
     laneId: LaneId;
     localLane: Lane | null;
     noSnap: boolean;
@@ -182,20 +181,23 @@ export class MergingMain {
     const succeededComponents = allComponentsStatus.filter((componentStatus) => !componentStatus.unmergedMessage);
     // do not use Promise.all for applyVersion. otherwise, it'll write all components in parallel,
     // which can be an issue when some components are also dependencies of others
-    const componentsResults = await mapSeries(succeededComponents, async ({ componentFromFS, id, mergeResults }) => {
-      const modelComponent = await consumer.scope.getModelComponent(id);
-      return this.applyVersion({
-        consumer,
-        componentFromFS,
-        id,
-        mergeResults,
-        mergeStrategy,
-        remoteHead: modelComponent.getRef(id.version as string) as Ref,
-        remoteName: remoteName || componentFromFS?.scope || null,
-        laneId,
-        localLane,
-      });
-    });
+    const componentsResults = await mapSeries(
+      succeededComponents,
+      async ({ currentComponent, id, mergeResults, resolvedUnrelated }) => {
+        const modelComponent = await consumer.scope.getModelComponent(id);
+        const updatedLaneId = laneId.isDefault() ? LaneId.from(laneId.name, id.scope as string) : laneId;
+        return this.applyVersion({
+          currentComponent,
+          id,
+          mergeResults,
+          mergeStrategy,
+          remoteHead: modelComponent.getRef(id.version as string) as Ref,
+          laneId: updatedLaneId,
+          localLane,
+          resolvedUnrelated,
+        });
+      }
+    );
 
     const leftUnresolvedConflicts = componentWithConflict && mergeStrategy === 'manual';
 
@@ -214,7 +216,7 @@ export class MergingMain {
     await consumer.scope.objects.unmergedComponents.write();
 
     // if one of the component has conflict, don't snap-merge. otherwise, some of the components would be snap-merged
-    // and some not. except the fact that it could by mistake tag dependent, it's a confusing state. better not snap.
+    // and some not. besides the fact that it could by mistake tag dependent, it's a confusing state. better not snap.
     const mergeSnapResults =
       noSnap || leftUnresolvedConflicts ? null : await this.snapResolvedComponents(consumer, snapMessage, build);
 
@@ -240,7 +242,8 @@ export class MergingMain {
   async getComponentMergeStatus(
     id: BitId, // the id.version is the version we want to merge to the current component
     localLane: Lane | null, // currently checked out lane. if on main, then it's null.
-    otherLaneName: string // the lane name we want to merged to our lane. (can be also "main").
+    otherLaneName: string, // the lane name we want to merged to our lane. (can be also "main").
+    options?: { resolveUnrelated?: MergeStrategy }
   ): Promise<ComponentMergeStatus> {
     const consumer = this.workspace.consumer;
     const componentStatus: ComponentMergeStatus = { id };
@@ -256,9 +259,9 @@ export class MergingMain {
       );
     }
     const unmerged = consumer.scope.objects.unmergedComponents.getEntry(id.name);
-    if (unmerged && unmerged.resolved === false) {
+    if (unmerged) {
       return returnUnmerged(
-        `component ${id.toStringWithoutVersion()} has conflicts that need to be resolved first, please use bit merge --resolve/--abort`
+        `component ${id.toStringWithoutVersion()} is in during-merge state a previous merge, please snap/tag it first (or use bit merge --resolve/--abort)`
       );
     }
     const repo = consumer.scope.objects;
@@ -286,22 +289,14 @@ export class MergingMain {
     const currentId = getCurrentId();
     if (!currentId) {
       const divergeData = await getDivergeData(repo, modelComponent, otherLaneHead, null, false);
-      return { componentFromFS: null, componentFromModel: componentOnLane, id, mergeResults: null, divergeData };
+      return { currentComponent: null, componentFromModel: componentOnLane, id, mergeResults: null, divergeData };
     }
-
-    // const currentlyUsedVersion = existingBitMapId.version;
-    // if (currentlyUsedVersion === version) {
-    //   // @todo: maybe this check is not needed as we check for diverge later on
-    //   if (localLane || modelComponent.hasHead()) {
-    //     return returnUnmerged(`component ${id.toStringWithoutVersion()} is already merged`, true);
-    //   }
-    // }
     const getCurrentComponent = () => {
       if (existingBitMapId) return consumer.loadComponent(existingBitMapId);
       return consumer.scope.getConsumerComponent(currentId);
     };
-    const component = await getCurrentComponent();
-    const componentModificationStatus = await consumer.getComponentStatusById(component.id);
+    const currentComponent = await getCurrentComponent();
+    const componentModificationStatus = await consumer.getComponentStatusById(currentComponent.id);
     if (componentModificationStatus.modified) {
       return returnUnmerged(
         `unable to merge ${id.toStringWithoutVersion()}, the component is modified, please snap/tag it first`
@@ -316,17 +311,44 @@ export class MergingMain {
     }
     const divergeData = await getDivergeData(repo, modelComponent, otherLaneHead, localHead, false);
     if (divergeData.err) {
-      return returnUnmerged(`unable to traverse ${component.id.toString()} history. error: ${divergeData.err.message}`);
+      if (divergeData.err instanceof NoCommonSnap && options?.resolveUnrelated) {
+        if (options?.resolveUnrelated === 'theirs') {
+          // just override with the model data
+          return {
+            currentComponent,
+            componentFromModel: componentOnLane,
+            id,
+            mergeResults: null,
+            divergeData,
+            resolvedUnrelated: 'theirs',
+          };
+        }
+        if (options?.resolveUnrelated === 'ours') {
+          return {
+            currentComponent,
+            id,
+            mergeResults: null,
+            divergeData,
+            resolvedUnrelated: 'ours',
+          };
+        }
+        throw new Error(
+          `unsupported strategy "${options?.resolveUnrelated}" of resolve-unrelated. supported strategies are: [ours, theirs]`
+        );
+      }
+      return returnUnmerged(
+        `unable to traverse ${currentComponent.id.toString()} history. error: ${divergeData.err.message}`
+      );
     }
     if (!divergeData.isDiverged()) {
       if (divergeData.isLocalAhead()) {
         // do nothing!
-        return returnUnmerged(`component ${component.id.toString()} is ahead, nothing to merge`, true);
+        return returnUnmerged(`component ${currentComponent.id.toString()} is ahead, nothing to merge`, true);
       }
       if (divergeData.isRemoteAhead()) {
         // just override with the model data
         return {
-          componentFromFS: component,
+          currentComponent,
           componentFromModel: componentOnLane,
           id,
           mergeResults: null,
@@ -334,7 +356,7 @@ export class MergingMain {
         };
       }
       // we know that localHead and remoteHead are set, so if none of them is ahead they must be equal
-      return returnUnmerged(`component ${component.id.toString()} is already merged`, true);
+      return returnUnmerged(`component ${currentComponent.id.toString()} is already merged`, true);
     }
     const baseSnap = divergeData.commonSnapBeforeDiverge as Ref; // must be set when isTrueMerge
     const baseComponent: Version = await modelComponent.loadVersion(baseSnap.toString(), repo);
@@ -344,64 +366,76 @@ export class MergingMain {
       consumer,
       otherComponent,
       otherLabel: `${otherLaneHead.toString()} (${otherLaneName})`,
-      currentComponent: component,
+      currentComponent,
       currentLabel: `${currentId.version} (${currentLaneName})`,
       baseComponent,
     });
-    return { componentFromFS: component, id, mergeResults, divergeData };
+    return { currentComponent, id, mergeResults, divergeData };
   }
 
   private async applyVersion({
-    consumer,
-    componentFromFS,
+    currentComponent,
     id,
     mergeResults,
     mergeStrategy,
     remoteHead,
-    remoteName,
     laneId,
     localLane,
+    resolvedUnrelated,
   }: {
-    consumer: Consumer;
-    componentFromFS: Component | null | undefined;
+    currentComponent: ConsumerComponent | null | undefined;
     id: BitId;
     mergeResults: MergeResultsThreeWay | null | undefined;
     mergeStrategy: MergeStrategy;
     remoteHead: Ref;
-    remoteName: string | null;
     laneId: LaneId;
     localLane: Lane | null;
+    resolvedUnrelated?: MergeStrategy;
   }): Promise<ApplyVersionResult> {
+    const consumer = this.workspace.consumer;
     let filesStatus = {};
     const unmergedComponent: UnmergedComponent = {
       // @ts-ignore
       id: { name: id.name, scope: id.scope },
-      // @ts-ignore
       head: remoteHead,
-      // @ts-ignore
-      remote: remoteName,
-      lane: laneId.name,
-      resolved: false, // could be changed later
+      remote: laneId.scope, // @todo: remove. it has been deprecated around 0.0.832
+      lane: laneId.name, // @todo: remove. it has been deprecated around 0.0.832
+      laneId,
     };
-    id = componentFromFS ? componentFromFS.id : id;
-    if (mergeResults && mergeResults.hasConflicts && mergeStrategy === MergeOptions.ours) {
-      if (!componentFromFS) throw new Error(`applyVersion expect to get componentFromFS for ${id.toString()}`);
-      componentFromFS.files.forEach((file) => {
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    id = currentComponent ? currentComponent.id : id;
+
+    const modelComponent = await consumer.scope.getModelComponent(id);
+    const handleResolveUnrelated = () => {
+      if (!currentComponent) throw new Error('currentComponent must be defined when resolvedUnrelated');
+      if (!localLane) throw new Error('localLane must be defined when resolvedUnrelated');
+      const head = modelComponent.getRef(currentComponent.id.version as string);
+      if (!head) throw new Error(`unable to get the head for resolved-unrelated ${id.toString()}`);
+      unmergedComponent.laneId = localLane.toLaneId();
+      unmergedComponent.head = head;
+      unmergedComponent.unrelated = true;
+      consumer.scope.objects.unmergedComponents.addEntry(unmergedComponent);
+      return { id, filesStatus };
+    };
+
+    const markAllFilesAsUnchanged = () => {
+      if (!currentComponent) throw new Error(`applyVersion expect to get currentComponent for ${id.toString()}`);
+      currentComponent.files.forEach((file) => {
         filesStatus[pathNormalizeToLinux(file.relative)] = FileStatus.unchanged;
       });
-      unmergedComponent.resolved = true;
+    };
+    if (mergeResults && mergeResults.hasConflicts && mergeStrategy === MergeOptions.ours) {
+      markAllFilesAsUnchanged();
       consumer.scope.objects.unmergedComponents.addEntry(unmergedComponent);
-
       return { id, filesStatus };
+    }
+    if (resolvedUnrelated && resolvedUnrelated === 'ours') {
+      markAllFilesAsUnchanged();
+      localLane?.addComponent({ id, head: remoteHead });
+      return handleResolveUnrelated();
     }
     const remoteId = id.changeVersion(remoteHead.toString());
     const idToLoad = !mergeResults || mergeStrategy === MergeOptions.theirs ? remoteId : id;
     const componentWithDependencies = await consumer.loadComponentWithDependenciesFromModel(idToLoad);
-    if (!id.scope) {
-      componentWithDependencies.dependencies = [];
-      componentWithDependencies.devDependencies = [];
-    }
     const files = componentWithDependencies.component.files;
     files.forEach((file) => {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -414,9 +448,6 @@ export class MergingMain {
       componentWithDependencies.component.files = modifiedFiles;
       filesStatus = { ...filesStatus, ...modifiedStatus };
     }
-    const shouldDependenciesSaveAsComponents = await consumer.shouldDependenciesSavedAsComponents([id]);
-    componentWithDependencies.component.dependenciesSavedAsComponents =
-      shouldDependenciesSaveAsComponents[0].saveDependenciesAsComponents;
 
     const manyComponentsWriter = new ManyComponentsWriter({
       consumer,
@@ -434,17 +465,17 @@ export class MergingMain {
     // otherwise, update the head of the current lane or main
     if (mergeResults) {
       if (mergeResults.hasConflicts && mergeStrategy === MergeOptions.manual) {
-        unmergedComponent.resolved = false;
         unmergedComponent.unmergedPaths = mergeResults.modifiedFiles.filter((f) => f.conflict).map((f) => f.filePath);
-      } else {
-        unmergedComponent.resolved = true;
       }
       consumer.scope.objects.unmergedComponents.addEntry(unmergedComponent);
     } else if (localLane) {
       localLane.addComponent({ id, head: remoteHead });
+      if (resolvedUnrelated) {
+        // must be "theirs"
+        return handleResolveUnrelated();
+      }
     } else {
       // this is main
-      const modelComponent = await consumer.scope.getModelComponent(id);
       modelComponent.setHead(remoteHead);
       // mark it as local, otherwise, when importing this component from a remote, it'll override it.
       modelComponent.markVersionAsLocal(remoteHead.toString());
@@ -455,7 +486,7 @@ export class MergingMain {
   }
 
   private async abortMerge(consumer: Consumer, values: string[]): Promise<ApplyVersionResults> {
-    const ids = this.getIdsForUnresolved(consumer, values);
+    const ids = this.getIdsForUnmerged(consumer, values);
     // @ts-ignore not clear yet what to do with other flags
     const results = await checkoutVersion(consumer, { ids, reset: true });
     ids.forEach((id) => consumer.scope.objects.unmergedComponents.removeComponent(id.name));
@@ -469,7 +500,7 @@ export class MergingMain {
     snapMessage: string,
     build: boolean
   ): Promise<ApplyVersionResults> {
-    const ids = this.getIdsForUnresolved(consumer, values);
+    const ids = this.getIdsForUnmerged(consumer, values);
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const { snappedComponents } = await this.snapping.snap({
       legacyBitIds: BitIds.fromArray(ids),
@@ -509,11 +540,11 @@ export class MergingMain {
     consumer: Consumer,
     snapMessage: string,
     build: boolean
-  ): Promise<null | { snappedComponents: Component[]; autoSnappedResults: AutoTagResult[] }> {
-    const resolvedComponents = consumer.scope.objects.unmergedComponents.getResolvedComponents();
-    logger.debug(`merge-snaps, snapResolvedComponents, total ${resolvedComponents.length.toString()} components`);
-    if (!resolvedComponents.length) return null;
-    const ids = BitIds.fromArray(resolvedComponents.map((r) => new BitId(r.id)));
+  ): Promise<null | { snappedComponents: ConsumerComponent[]; autoSnappedResults: AutoTagResult[] }> {
+    const unmergedComponents = consumer.scope.objects.unmergedComponents.getComponents();
+    logger.debug(`merge-snaps, snapResolvedComponents, total ${unmergedComponents.length.toString()} components`);
+    if (!unmergedComponents.length) return null;
+    const ids = BitIds.fromArray(unmergedComponents.map((r) => new BitId(r.id)));
     return this.snapping.snap({
       legacyBitIds: ids,
       build,
@@ -521,7 +552,7 @@ export class MergingMain {
     });
   }
 
-  private getIdsForUnresolved(consumer: Consumer, idsStr?: string[]): BitId[] {
+  private getIdsForUnmerged(consumer: Consumer, idsStr?: string[]): BitId[] {
     if (idsStr && idsStr.length) {
       const bitIds = idsStr.map((id) => consumer.getParsedId(id));
       bitIds.forEach((id) => {
