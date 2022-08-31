@@ -33,7 +33,7 @@ in case the <lane> exists locally but you want to merge the remote version of it
     ['', 'build', 'in case of snap during the merge, run the build-pipeline (similar to bit snap --build)'],
     ['m', 'message <message>', 'override the default message for the auto snap'],
     ['', 'keep-readme', 'skip deleting the lane readme component after merging'],
-    ['', 'squash', 'EXPERIMENTAL. squash multiple snaps. keep the last one only'],
+    ['', 'no-squash', 'EXPERIMENTAL. relevant for merging lanes into main, which by default squash.'],
     ['', 'verbose', 'show details of components that were not merged legitimately'],
     ['', 'skip-dependency-installation', 'do not install packages of the imported components'],
     ['', 'remote', 'relevant when the target-lane locally is differ than the remote and you want the remote'],
@@ -66,7 +66,7 @@ in case the <lane> exists locally but you want to merge the remote version of it
       noSnap = false,
       message: snapMessage = '',
       keepReadme = false,
-      squash = false,
+      noSquash = false,
       skipDependencyInstallation = false,
       remote = false,
       includeDeps = false,
@@ -81,7 +81,7 @@ in case the <lane> exists locally but you want to merge the remote version of it
       noSnap: boolean;
       message: string;
       keepReadme?: boolean;
-      squash: boolean;
+      noSquash: boolean;
       skipDependencyInstallation?: boolean;
       remote: boolean;
       includeDeps?: boolean;
@@ -114,7 +114,7 @@ in case the <lane> exists locally but you want to merge the remote version of it
       noSnap,
       snapMessage,
       keepReadme,
-      squash,
+      noSquash,
       pattern,
       skipDependencyInstallation,
       remote,
