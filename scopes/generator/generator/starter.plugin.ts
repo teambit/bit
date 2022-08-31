@@ -10,7 +10,7 @@ export class StarterPlugin implements PluginDefinition {
   runtimes = [MainRuntime.name];
 
   async register(object: any) {
-    const res = await this.generator.registerWorkspaceTemplate([object]);
-    return res;
+    const templates = Array.isArray(object) ? object : [object];
+    return this.generator.registerWorkspaceTemplate(templates);
   }
 }
