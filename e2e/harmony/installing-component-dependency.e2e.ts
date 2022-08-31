@@ -44,7 +44,7 @@ import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
       helper.fs.exists(path.join(helper.scopes.remoteWithoutOwner, `comp1/node_modules/${scope}comp2/package.json`))
     ).to.eq(false);
   });
-  it.only('should not install the version of the component dependency from the model, when the component dependency is in the workspace policies', () => {
+  it('should not install the version of the component dependency from the model, when the component dependency is in the bitmap config', () => {
     helper.command.dependenciesSet('comp1', `${scope}comp2@0.0.2`);
     helper.command.install();
     expect(helper.fs.readJsonFile(`node_modules/${scope}comp2/package.json`).version).to.eq('0.0.2');
