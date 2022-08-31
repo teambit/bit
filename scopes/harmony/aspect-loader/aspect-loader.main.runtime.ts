@@ -419,6 +419,7 @@ export class AspectLoaderMain {
     await globalScope.ensureDir();
     const globalScopeHarmony = await loadBit(globalScope.path);
     const scope = globalScopeHarmony.get<ScopeMain>(ScopeAspect.id);
+    const aspectLoader = globalScopeHarmony.get<AspectLoaderMain>(AspectLoaderAspect.id);
     // @todo: Gilad make this work
     // const ids = await scope.resolveMultipleComponentIds(aspectIds);
     const ids = aspectIds.map((id) => ComponentID.fromLegacy(BitId.parse(id, true)));
@@ -431,11 +432,11 @@ export class AspectLoaderMain {
     // is not the same as the aspectLoader instance Scope has)
     const resolvedAspects = await scope.getResolvedAspects(components);
     try {
-      await this.loadRequireableExtensions(resolvedAspects, true);
+      await aspectLoader.loadRequireableExtensions(resolvedAspects, true);
     } catch (err: any) {
       if (err?.error.code === 'MODULE_NOT_FOUND') {
         const resolvedAspectsAgain = await scope.getResolvedAspects(components, { skipIfExists: false });
-        await this.loadRequireableExtensions(resolvedAspectsAgain, true);
+        await aspectLoader.loadRequireableExtensions(resolvedAspectsAgain, true);
       } else {
         throw err;
       }
