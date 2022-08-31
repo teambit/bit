@@ -143,17 +143,11 @@ export class GraphFromFsBuilder {
         throw err;
       }
     });
-    return components;
+    return compact(components);
   }
   private async loadComponent(componentId: BitId): Promise<Component> {
-    const componentMap = this.consumer.bitMap.getComponentIfExist(componentId);
-    const isOnWorkspace = Boolean(componentMap);
-    if (isOnWorkspace) {
-      return this.consumer.loadComponent(componentId);
-    }
-    // a dependency might have been installed as a package in the workspace, and as such doesn't
-    // have a componentMap.
-    const componentFromModel = await this.consumer.loadComponentFromModel(componentId);
-    return componentFromModel.clone();
+    const compId = await this.workspace.resolveComponentId(componentId);
+    const comp = await this.workspace.get(compId);
+    return comp.state._consumer;
   }
 }

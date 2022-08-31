@@ -291,4 +291,27 @@ describe('bit reset command', function () {
       });
     });
   });
+  describe('components with config in the .bitmap file', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents(2);
+      helper.command.tagWithoutBuild();
+      helper.command.deprecateComponent('comp1');
+      helper.command.tagWithoutBuild();
+      const isDeprecated = helper.command.isDeprecated('comp1');
+      expect(isDeprecated).to.be.true; // intermediate step.
+      helper.command.untagAll();
+    });
+    it('bit reset should leave the config as they were before the tag', () => {
+      const isDeprecated = helper.command.isDeprecated('comp1');
+      expect(isDeprecated).to.be.true;
+    });
+    it('bit export should remove the entries form the staged-config file', () => {
+      helper.command.tagWithoutBuild('--unmodified');
+      helper.command.export();
+      const stagedConfig = helper.general.getStagedConfig();
+      expect(stagedConfig).to.have.lengthOf(0);
+    });
+  });
 });

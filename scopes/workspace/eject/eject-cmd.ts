@@ -1,6 +1,7 @@
 import { Command, CommandOptions } from '@teambit/cli';
 import { Workspace } from '@teambit/workspace';
 import ejectTemplate from '@teambit/legacy/dist/cli/templates/eject-template';
+import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
 import { Logger } from '@teambit/logger';
 import { ComponentsEjector } from './components-ejector';
 
@@ -30,6 +31,7 @@ export class EjectCmd implements Command {
     [pattern]: [string],
     { force = false, json = false, keepFiles = false }: { force: boolean; json: boolean; keepFiles: boolean }
   ): Promise<string> {
+    if (!this.workspace) throw new ConsumerNotFound();
     const componentIds = await this.workspace.idsByPattern(pattern);
     const componentEjector = new ComponentsEjector(this.workspace, this.logger, componentIds, { force, keepFiles });
     const ejectResults = await componentEjector.eject();

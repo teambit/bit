@@ -17,9 +17,7 @@ import OutsideRootDir from '../consumer/bit-map/exceptions/outside-root-dir';
 import {
   DuplicateIds,
   ExcludedMainFile,
-  IncorrectIdForImportedComponent,
   MainFileIsDir,
-  MissingComponentIdForImportedComponent,
   MissingMainFileMultipleComponents,
   NoFiles,
   PathOutsideConsumer,
@@ -317,20 +315,6 @@ please use "bit remove" to delete the component or "bit add" with "--main" and "
       `component ${chalk.bold(err.id)} missing data. parent ${err.parentHash} of version ${
         err.versionHash
       } was not found.`,
-  ],
-  [
-    MissingComponentIdForImportedComponent,
-    (err) =>
-      `error: unable to add new files to the component "${chalk.bold(
-        err.id
-      )}" without specifying a component ID. please define the component ID using the --id flag.`,
-  ],
-  [
-    IncorrectIdForImportedComponent,
-    (err) =>
-      `error: trying to add a file ${chalk.bold(err.filePath)} to a component-id "${chalk.bold(
-        err.newId
-      )}", however, this file already belong to "${chalk.bold(err.importedId)}"`,
   ],
   [
     NoFiles,

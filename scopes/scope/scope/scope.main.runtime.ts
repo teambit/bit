@@ -53,6 +53,7 @@ import { ScopeUIRoot } from './scope.ui-root';
 import { PutRoute, FetchRoute, ActionRoute, DeleteRoute } from './routes';
 import { ScopeComponentLoader } from './scope-component-loader';
 import { ScopeCmd } from './scope-cmd';
+import { StagedConfig } from './staged-config';
 
 type TagRegistry = SlotRegistry<OnTag>;
 
@@ -851,7 +852,7 @@ needed-for: ${neededFor || '<unknown>'}`);
         patterns?.some((pattern) => isMatchNamespacePatternItem(id.toStringWithoutVersion(), pattern).match)
       );
     }
-    this.logger.debug(`scope listIds: componentsIds after filter scope: ${JSON.stringify(ids, undefined, 2)}`);
+    this.logger.debug(`scope listIds: total ${ids.length} components after filter scope`);
     return ids;
   }
 
@@ -922,6 +923,11 @@ needed-for: ${neededFor || '<unknown>'}`);
 
   async getLogs(id: ComponentID, shortHash = false, startsFrom?: string): Promise<ComponentLog[]> {
     return this.legacyScope.loadComponentLogs(id._legacy, shortHash, startsFrom);
+  }
+
+  async getStagedConfig() {
+    const currentLaneId = this.legacyScope.currentLaneId;
+    return StagedConfig.load(this.path, currentLaneId);
   }
 
   /**

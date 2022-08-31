@@ -231,6 +231,7 @@ function formatPlainComponentItemWithVersions(component: ConsumerComponent, impo
   };
   const conflictMessage = getConflictMessage();
   const deprecated = importDetails.deprecated ? chalk.yellow('deprecated') : '';
+  const removed = importDetails.removed ? chalk.red('removed') : '';
   const missingDeps = importDetails.missingDeps.length
     ? chalk.red(`missing dependencies: ${importDetails.missingDeps.map((d) => d.toString()).join(', ')}`)
     : '';
@@ -239,5 +240,5 @@ function formatPlainComponentItemWithVersions(component: ConsumerComponent, impo
   }
   return `- ${chalk.green(status)} ${chalk.cyan(
     id
-  )} ${versions}${usedVersion} ${conflictMessage}${deprecated} ${missingDeps}`;
+  )} ${versions}${usedVersion} ${conflictMessage}${deprecated}${removed} ${missingDeps}`;
 }

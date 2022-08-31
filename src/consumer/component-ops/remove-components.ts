@@ -135,7 +135,7 @@ async function removeLocal(
   // otherwise, components should still be in .bitmap file
   idsToCleanFromWorkspace.push(...removedComponentIds);
   if (idsToCleanFromWorkspace.length) {
-    await deleteComponentsFiles(consumer, idsToCleanFromWorkspace, deleteFiles);
+    if (deleteFiles) await deleteComponentsFiles(consumer, idsToCleanFromWorkspace);
     if (!track) {
       const invalidComponentsIds = invalidComponents.map((i) => i.id);
       const removedComponents = componentsToRemove.filter((c) => idsToCleanFromWorkspace.hasWithoutVersion(c.id));

@@ -5,6 +5,7 @@ import { Analytics } from '@teambit/legacy/dist/analytics/analytics';
 import { BitId, BitIds } from '@teambit/legacy/dist/bit-id';
 import loader from '@teambit/legacy/dist/cli/loader';
 import { BEFORE_STATUS } from '@teambit/legacy/dist/cli/loader/loader-messages';
+import { RemoveAspect, RemoveMain } from '@teambit/remove';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import ComponentsPendingImport from '@teambit/legacy/dist/consumer/component-ops/exceptions/components-pending-import';
 import ComponentsList, {
@@ -27,6 +28,7 @@ export type StatusResult = {
   importPendingComponents: BitId[];
   autoTagPendingComponents: BitId[];
   invalidComponents: InvalidComponent[];
+  removedComponents: BitId[];
   outdatedComponents: ConsumerComponent[];
   mergePendingComponents: DivergedComponent[];
   componentsDuringMergeState: BitIds;
@@ -38,7 +40,12 @@ export type StatusResult = {
 };
 
 export class StatusMain {
-  constructor(private workspace: Workspace, private issues: IssuesMain, private insights: InsightsMain) {}
+  constructor(
+    private workspace: Workspace,
+    private issues: IssuesMain,
+    private insights: InsightsMain,
+    private remove: RemoveMain
+  ) {}
 
   async status(): Promise<StatusResult> {
     if (!this.workspace) throw new ConsumerNotFound();
@@ -56,9 +63,12 @@ export class StatusMain {
     )) as ConsumerComponent[];
     const modifiedComponent = (await componentsList.listModifiedComponents(true, loadOpts)) as ConsumerComponent[];
     const stagedComponents: ModelComponent[] = await componentsList.listExportPendingComponents(laneObj);
+    await this.addRemovedStagedIfNeeded(stagedComponents);
+
     const autoTagPendingComponents = await componentsList.listAutoTagPendingComponents();
     const autoTagPendingComponentsIds = autoTagPendingComponents.map((component) => component.id);
     const allInvalidComponents = await componentsList.listInvalidComponents();
+    const removedComponents = await componentsList.listRemovedComponents();
     const importPendingComponents = allInvalidComponents
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       .filter((c) => c.error instanceof ComponentsPendingImport)
@@ -102,6 +112,7 @@ export class StatusMain {
       autoTagPendingComponents: ComponentsList.sortComponentsByName(autoTagPendingComponentsIds),
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       invalidComponents,
+      removedComponents,
       outdatedComponents,
       mergePendingComponents,
       componentsDuringMergeState,
@@ -113,11 +124,31 @@ export class StatusMain {
     };
   }
 
+  private async addRemovedStagedIfNeeded(stagedComponents: ModelComponent[]) {
+    const removedStagedIds = await this.remove.getRemovedStaged();
+    if (!removedStagedIds.length) return;
+    const removedStagedBitIds = removedStagedIds.map((id) => id._legacy);
+    const nonExistsInStaged = removedStagedBitIds.filter(
+      (id) => !stagedComponents.find((c) => c.toBitId().isEqualWithoutVersion(id))
+    );
+    if (!nonExistsInStaged.length) return;
+    const modelComps = await Promise.all(
+      nonExistsInStaged.map((id) => this.workspace.scope.legacyScope.getModelComponent(id))
+    );
+    stagedComponents.push(...modelComps);
+  }
+
   static slots = [];
-  static dependencies = [CLIAspect, WorkspaceAspect, InsightsAspect, IssuesAspect];
+  static dependencies = [CLIAspect, WorkspaceAspect, InsightsAspect, IssuesAspect, RemoveAspect];
   static runtime = MainRuntime;
-  static async provider([cli, workspace, insights, issues]: [CLIMain, Workspace, InsightsMain, IssuesMain]) {
-    const statusMain = new StatusMain(workspace, issues, insights);
+  static async provider([cli, workspace, insights, issues, remove]: [
+    CLIMain,
+    Workspace,
+    InsightsMain,
+    IssuesMain,
+    RemoveMain
+  ]) {
+    const statusMain = new StatusMain(workspace, issues, insights, remove);
     cli.register(new StatusCmd(statusMain));
     return statusMain;
   }

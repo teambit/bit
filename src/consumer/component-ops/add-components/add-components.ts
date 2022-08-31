@@ -11,7 +11,7 @@ import format from 'string-format';
 import { Analytics } from '../../../analytics/analytics';
 import { BitId, BitIds } from '../../../bit-id';
 import { BitIdStr } from '../../../bit-id/bit-id';
-import { COMPONENT_ORIGINS, PACKAGE_JSON, VERSION_DELIMITER } from '../../../constants';
+import { PACKAGE_JSON, VERSION_DELIMITER } from '../../../constants';
 import BitMap from '../../../consumer/bit-map';
 import Consumer from '../../../consumer/consumer';
 import GeneralError from '../../../error/general-error';
@@ -30,20 +30,11 @@ import {
   retrieveIgnoreList,
 } from '../../../utils';
 import { PathLinux, PathLinuxRelative, PathOsBased } from '../../../utils/path';
-import ComponentMap, { ComponentMapFile, ComponentOrigin, Config } from '../../bit-map/component-map';
+import ComponentMap, { ComponentMapFile, Config } from '../../bit-map/component-map';
 import MissingMainFile from '../../bit-map/exceptions/missing-main-file';
 import ComponentNotFoundInPath from '../../component/exceptions/component-not-found-in-path';
 import determineMainFile from './determine-main-file';
-import {
-  DuplicateIds,
-  EmptyDirectory,
-  ExcludedMainFile,
-  IncorrectIdForImportedComponent,
-  MainFileIsDir,
-  MissingComponentIdForImportedComponent,
-  NoFiles,
-  PathsNotExist,
-} from './exceptions';
+import { DuplicateIds, EmptyDirectory, ExcludedMainFile, MainFileIsDir, NoFiles, PathsNotExist } from './exceptions';
 import { AddingIndividualFiles } from './exceptions/adding-individual-files';
 import { IgnoredDirectory } from './exceptions/ignored-directory';
 import MissingMainFileMultipleComponents from './exceptions/missing-main-file-multiple-components';
@@ -85,7 +76,6 @@ export type AddProps = {
   namespace?: string;
   override: boolean;
   trackDirFeature?: boolean;
-  origin?: ComponentOrigin;
   defaultScope?: string;
   config?: Config;
   shouldHandleOutOfSync?: boolean;
@@ -113,7 +103,6 @@ export default class AddComponents {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   ignoreList: string[];
   gitIgnore: any;
-  origin: ComponentOrigin;
   alternateCwd: string | null | undefined;
   addedComponents: AddResult[];
   defaultScope?: string; // helpful for out-of-sync
@@ -129,7 +118,6 @@ export default class AddComponents {
     this.namespace = addProps.namespace;
     this.override = addProps.override;
     this.trackDirFeature = addProps.trackDirFeature;
-    this.origin = addProps.origin || COMPONENT_ORIGINS.AUTHORED;
     this.warnings = {
       alreadyUsed: {},
       emptyDirectory: [],
@@ -211,7 +199,7 @@ export default class AddComponents {
    * such, it should be ignored
    */
   _isPackageJsonOnRootDir(pathRelativeToConsumerRoot: PathLinux, componentMap: ComponentMap) {
-    if (!componentMap.rootDir || componentMap.origin !== COMPONENT_ORIGINS.IMPORTED) {
+    if (!componentMap.rootDir) {
       throw new Error('_isPackageJsonOnRootDir should not get called on non imported components');
     }
     return path.join(componentMap.rootDir, PACKAGE_JSON) === path.normalize(pathRelativeToConsumerRoot);
@@ -222,7 +210,7 @@ export default class AddComponents {
    * that wrapDir
    */
   _isOutsideOfWrapDir(pathRelativeToConsumerRoot: PathLinux, componentMap: ComponentMap) {
-    if (!componentMap.rootDir || componentMap.origin !== COMPONENT_ORIGINS.IMPORTED) {
+    if (!componentMap.rootDir) {
       throw new Error('_isOutsideOfWrapDir should not get called on non imported components');
     }
     if (!componentMap.wrapDir) return false;
@@ -255,36 +243,7 @@ export default class AddComponents {
       const caseSensitive = false;
       const existingIdOfFile = this.bitMap.getComponentIdByPath(file.relativePath, caseSensitive);
       const idOfFileIsDifferent = existingIdOfFile && !existingIdOfFile.isEqual(parsedBitId);
-      const existingComponentOfFile = existingIdOfFile ? this.bitMap.getComponent(existingIdOfFile) : undefined;
-      const isImported =
-        (foundComponentFromBitMap && foundComponentFromBitMap.origin === COMPONENT_ORIGINS.IMPORTED) ||
-        (existingComponentOfFile && existingComponentOfFile.origin === COMPONENT_ORIGINS.IMPORTED);
-      if (isImported) {
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        const idFromBitMap = foundComponentFromBitMap ? foundComponentFromBitMap.id : existingComponentOfFile.id;
-        // throw error in case user didn't add id to imported component or the id is incorrect
-        if (!this.id) throw new MissingComponentIdForImportedComponent(idFromBitMap.toStringWithoutVersion());
-        if (idOfFileIsDifferent) {
-          const existingIdWithoutVersion = existingIdOfFile.toStringWithoutVersion();
-          // $FlowFixMe $this.id is not null at this point
-          throw new IncorrectIdForImportedComponent(existingIdWithoutVersion, this.id, file.relativePath);
-        }
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        if (this._isPackageJsonOnRootDir(file.relativePath, foundComponentFromBitMap)) return null;
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        if (this._isOutsideOfWrapDir(file.relativePath, foundComponentFromBitMap)) {
-          logger.warn(`add-components: ignoring ${file.relativePath} as it is located outside of the wrapDir`);
-          return null;
-        }
-        const isGeneratedForUnsupportedFiles = await this._isGeneratedForUnsupportedFiles(
-          file.relativePath,
-          component.componentId,
-          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-          foundComponentFromBitMap
-        );
-        if (isGeneratedForUnsupportedFiles) return null;
-        delete component.trackDir;
-      } else if (idOfFileIsDifferent) {
+      if (idOfFileIsDifferent) {
         // not imported component file but exists in bitmap
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         if (this.warnings.alreadyUsed[existingIdOfFile]) {
@@ -355,7 +314,6 @@ export default class AddComponents {
         defaultScope: this.defaultScope,
         config: this.config,
         mainFile,
-        origin: COMPONENT_ORIGINS.AUTHORED,
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         override: this.override,
       });
@@ -379,7 +337,7 @@ export default class AddComponents {
     const areFilesInsideExistingRootDir = componentFiles.every((file) =>
       pathNormalizeToLinux(file.relativePath).startsWith(`${existingRootDir}/`)
     );
-    if (foundComponentFromBitMap.origin === COMPONENT_ORIGINS.IMPORTED || areFilesInsideExistingRootDir) {
+    if (areFilesInsideExistingRootDir) {
       ComponentMap.changeFilesPathAccordingToItsRootDir(existingRootDir, componentFiles);
       return;
     }
@@ -553,9 +511,13 @@ you can add the directory these files are located at and it'll change the root d
           nodir: true,
         });
 
+        if (!matches.length) throw new EmptyDirectory(componentPath);
+
         const filteredMatches = this.gitIgnore.filter(matches);
 
-        if (!filteredMatches.length) throw new EmptyDirectory(componentPath);
+        if (!filteredMatches.length) {
+          throw new NoFiles(matches);
+        }
 
         const filteredMatchedFiles = filteredMatches.map((match: PathOsBased) => {
           return { relativePath: pathNormalizeToLinux(match), test: false, name: path.basename(match) };
@@ -579,7 +541,7 @@ you can add the directory these files are located at and it'll change the root d
         }
 
         const getTrackDir = () => {
-          if (Object.keys(componentPathsStats).length === 1 && this.origin === COMPONENT_ORIGINS.AUTHORED) {
+          if (Object.keys(componentPathsStats).length === 1) {
             return relativeComponentPath;
           }
           return undefined;

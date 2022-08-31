@@ -89,4 +89,18 @@ describe('status command on Harmony', function () {
       expect(show.dependencies).to.have.lengthOf(0);
     });
   });
+  describe('deleting a dependency from the filesystem when the record is still in bitmap', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents(2);
+      helper.command.tagWithoutBuild();
+      helper.command.export();
+      helper.fs.deletePath('comp2');
+      helper.fs.appendFile('comp1/index.js');
+    });
+    it('bit status should not throw', () => {
+      expect(() => helper.command.status()).not.to.throw();
+    });
+  });
 });

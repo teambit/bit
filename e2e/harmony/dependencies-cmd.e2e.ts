@@ -98,4 +98,25 @@ describe('bit dependencies command', function () {
       });
     });
   });
+  describe('bit deps remove - removing components', () => {
+    describe('removing a component', () => {
+      let beforeRemove: string;
+      before(() => {
+        helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+        helper.fixtures.populateComponents(2);
+        beforeRemove = helper.scopeHelper.cloneLocalScope();
+      });
+      it('should support component-id syntax', () => {
+        helper.command.dependenciesRemove('comp1', 'comp2');
+        const showConfig = helper.command.showAspectConfig('comp1', Extensions.dependencyResolver);
+        expect(showConfig.config.policy.dependencies).to.deep.equal({ '@my-scope/comp2': '-' });
+      });
+      it('should support package-name syntax', () => {
+        helper.scopeHelper.getClonedLocalScope(beforeRemove);
+        helper.command.dependenciesRemove('comp1', '@my-scope/comp2');
+        const showConfig = helper.command.showAspectConfig('comp1', Extensions.dependencyResolver);
+        expect(showConfig.config.policy.dependencies).to.deep.equal({ '@my-scope/comp2': '-' });
+      });
+    });
+  });
 });

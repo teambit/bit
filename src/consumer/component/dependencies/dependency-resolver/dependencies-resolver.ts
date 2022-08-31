@@ -6,17 +6,15 @@ import { uniq, isEmpty } from 'lodash';
 import { IssuesList, IssuesClasses } from '@teambit/component-issues';
 import { Dependency } from '..';
 import { BitId, BitIds } from '../../../../bit-id';
-import { COMPONENT_ORIGINS, DEFAULT_DIST_DIRNAME, DEPENDENCIES_FIELDS } from '../../../../constants';
+import { DEFAULT_DIST_DIRNAME, DEPENDENCIES_FIELDS } from '../../../../constants';
 import Consumer from '../../../../consumer/consumer';
 import GeneralError from '../../../../error/general-error';
 import ShowDoctorError from '../../../../error/show-doctor-error';
-import { isSupportedExtension } from '../../../../links/link-content';
 import logger from '../../../../logger/logger';
 import { getExt, pathNormalizeToLinux, pathRelativeLinux } from '../../../../utils';
 import { PathLinux, PathLinuxRelative, PathOsBased } from '../../../../utils/path';
 import ComponentMap from '../../../bit-map/component-map';
 import Component from '../../../component/consumer-component';
-import PackageJsonFile from '../../package-json-file';
 import Dependencies from '../dependencies';
 import { RelativePath } from '../dependency';
 import { getDependencyTree } from '../files-dependency-builder';
@@ -388,42 +386,6 @@ export default class DependencyResolver {
 
     componentId = this.consumer.bitMap.getComponentIdByPath(depFileRelative);
     if (!componentId) componentId = this._getComponentIdFromCustomResolveToPackageWithDist(depFileRelative);
-    // if not found here, the file is not a component file. It might be a bit-auto-generated file.
-    // find the component file by the auto-generated file.
-    // We make sure also that it's not an AUTHORED component, which shouldn't have auto-generated files.
-    if (!componentId && this.componentMap.origin !== COMPONENT_ORIGINS.AUTHORED) {
-      componentId = this.traverseTreeForComponentId(depFile);
-      if (!rootDir) throw new Error('rootDir must be set for non authored components');
-      if (componentId) {
-        // it is verified now that this depFile is an auto-generated file, therefore the sourceRelativePath and the
-        // destinationRelativePath should be a partial-path and not full-relative-to-consumer path.
-        // since the dep-file is a generated file, it is safe to assume that the componentFromModel has in its
-        // dependencies array this component with the relativePaths array. Find the relativePath of this dep-file
-        // to get the correct destinationRelativePath. There is no other way to obtain this info.
-        ({ componentId, destination, depFileRelative } = this.getDependencyPathsFromModel(
-          componentId,
-          depFile,
-          rootDir
-        ));
-      } else if (!isSupportedExtension(depFile) && this.componentFromModel) {
-        // unsupported files, such as binary files, don't have link files. instead, they have a
-        // symlink (or sometimes a copy on Windows) of the dependency inside the component. to
-        // check whether a file is a symlink to a dependency we loop through the
-        // sourceRelativePaths of the dependency, if there is match, we use the data from the model
-        const dependenciesFromModel = this.componentFromModel.getAllDependenciesCloned();
-        const sourcePaths = dependenciesFromModel.getSourcesPaths();
-        if (sourcePaths.includes(depFile)) {
-          const dependencyFromModel = dependenciesFromModel.getBySourcePath(depFile);
-          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-          componentId = dependencyFromModel.id;
-          ({ componentId, destination, depFileRelative } = this.getDependencyPathsFromModel(
-            componentId,
-            depFile,
-            rootDir
-          ));
-        }
-      }
-    }
 
     return { componentId, depFileRelative, destination };
   }
@@ -591,22 +553,6 @@ either, use the ignore file syntax or change the require statement to have a mod
       depsPaths.importSource = importSource;
     }
     const currentComponentsDeps: Dependency = { id: componentId, relativePaths: [depsPaths] };
-
-    if (
-      depComponentMap &&
-      !depFileObject.isCustomResolveUsed && // for custom resolve, the link is written in node_modules, so it doesn't matter
-      ((depComponentMap.origin === COMPONENT_ORIGINS.IMPORTED &&
-        this.componentMap.origin === COMPONENT_ORIGINS.AUTHORED) ||
-        (depComponentMap.origin === COMPONENT_ORIGINS.AUTHORED &&
-          this.componentMap.origin === COMPONENT_ORIGINS.IMPORTED))
-    ) {
-      // prevent author using relative paths for IMPORTED component (to avoid long paths)
-      // also prevent adding AUTHORED component to an IMPORTED component using relative syntax. The reason is that when
-      // this component is imported somewhere else, a link-file between the IMPORTED and the AUTHORED must be written
-      // outside the component directory, which might override user files.
-      this._pushToRelativeComponentsIssues(originFile, componentId);
-      return false;
-    }
     this._pushToRelativeComponentsAuthoredIssues(originFile, componentId, importSource, depsPaths);
 
     const allDependencies: Dependency[] = [
@@ -1224,24 +1170,7 @@ either, use the ignore file syntax or change the require statement to have a mod
    * when it's authored.
    */
   _getPackageJson(): Record<string, any> | undefined {
-    const componentMap = this.component.componentMap;
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const isAuthor = componentMap.origin === COMPONENT_ORIGINS.AUTHORED;
-    if (isAuthor) {
-      return this.consumer.packageJson.packageJsonObject;
-    }
-    if (this.component.packageJsonFile && this.component.packageJsonFile.fileExist) {
-      return this.component.packageJsonFile.packageJsonObject;
-    }
-    if (this.componentFromModel) {
-      // a component is imported but the package.json file is missing or never written
-      // read the values from the model
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      const packageJson = PackageJsonFile.createFromComponent(componentMap.rootDir, this.componentFromModel);
-      return packageJson.packageJsonObject;
-    }
-    return undefined;
+    return this.consumer.packageJson.packageJsonObject;
   }
 
   private setLegacyInsideHarmonyIssue() {
@@ -1264,17 +1193,31 @@ either, use the ignore file syntax or change the require statement to have a mod
     const isTypeScript = getExt(originFile) === 'ts' || getExt(originFile) === 'tsx';
     if (!isTypeScript) return;
     const depsHost = DependencyResolver.getWorkspacePolicy();
-    if (!depsHost) return;
-    const addIfNeeded = (depField: string, packageName: string) => {
-      if (!depsHost || !depsHost[depField]) return;
-      const typesPackage = packageToDefinetlyTyped(packageName);
-      if (!depsHost[depField][typesPackage]) return;
-      Object.assign(this.allPackagesDependencies[this._pkgFieldMapping('devDependencies')], {
-        [typesPackage]: depsHost[depField][typesPackage],
+    const addFromConfig = (packageName: string): boolean => {
+      if (!depsHost) return false;
+      return DEPENDENCIES_FIELDS.some((depField) => {
+        if (!depsHost[depField]) return false;
+        const typesPackage = packageToDefinetlyTyped(packageName);
+        if (!depsHost[depField][typesPackage]) return false;
+        Object.assign(this.allPackagesDependencies.devPackageDependencies, {
+          [typesPackage]: depsHost[depField][typesPackage],
+        });
+        return true;
       });
     };
+    const addFromModel = (packageName: string) => {
+      if (!this.componentFromModel) return;
+      const typesPackage = packageToDefinetlyTyped(packageName);
+      const typedPackageFromModel = this.componentFromModel.devPackageDependencies[typesPackage];
+      if (!typedPackageFromModel) return;
+      Object.assign(this.allPackagesDependencies.devPackageDependencies, {
+        [typesPackage]: typedPackageFromModel,
+      });
+    };
+
     Object.keys(packages).forEach((packageName) => {
-      DEPENDENCIES_FIELDS.forEach((depField) => addIfNeeded(depField, packageName));
+      const added = addFromConfig(packageName);
+      if (!added) addFromModel(packageName);
     });
   }
 

@@ -154,6 +154,10 @@ export class BitMap {
     this.legacyBitMap.setComponent(bitMapEntry.id, bitMapEntry);
   }
 
+  removeComponent(id: ComponentID) {
+    this.legacyBitMap.removeComponent(id._legacy);
+  }
+
   /**
    * this is the lane-id of the recently exported lane. in case of a new lane, which was not exported yet, this will be
    * empty.

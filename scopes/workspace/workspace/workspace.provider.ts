@@ -14,8 +14,6 @@ import { UiMain } from '@teambit/ui';
 import type { VariantsMain } from '@teambit/variants';
 import { Consumer, loadConsumerIfExist } from '@teambit/legacy/dist/consumer';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
-import { registerDefaultScopeGetter } from '@teambit/legacy/dist/api/consumer';
-import { BitId } from '@teambit/legacy-bit-id';
 import ManyComponentsWriter from '@teambit/legacy/dist/consumer/component-ops/many-components-writer';
 import LegacyComponentLoader from '@teambit/legacy/dist/consumer/component/component-loader';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
@@ -180,15 +178,6 @@ export default async function provideWorkspace(
     };
   });
 
-  /**
-   * Add default scope from harmony during export.
-   */
-  registerDefaultScopeGetter(async (id: BitId) => {
-    const componentId = await workspace.resolveComponentId(id);
-    const defaultScope = await workspace.componentDefaultScope(componentId);
-    return defaultScope;
-  });
-
   const workspaceSchema = getWorkspaceSchema(workspace, graphql);
   ui.registerUiRoot(new WorkspaceUIRoot(workspace, bundler));
   graphql.register(workspaceSchema);
@@ -198,19 +187,18 @@ export default async function provideWorkspace(
     new CapsuleCreateCmd(workspace, isolator),
     new CapsuleDeleteCmd(isolator, workspace),
   ];
+  const watcher = new Watcher(workspace, pubsub);
   const commands: CommandList = [
     new InstallCmd(workspace, logger),
     new UpdateCmd(workspace),
     new UninstallCmd(workspace),
     new EjectConfCmd(workspace),
     capsuleCmd,
+    new WatchCommand(pubsub, logger, watcher),
+    new LinkCommand(workspace, logger, community.getDocsDomain()),
+    new UseCmd(workspace),
   ];
-  const watcher = new Watcher(workspace, pubsub);
-  if (workspace) {
-    commands.push(new WatchCommand(pubsub, logger, watcher));
-    commands.push(new LinkCommand(workspace, logger, community.getDocsDomain()));
-    commands.push(new UseCmd(workspace));
-  }
+
   commands.push(new PatternCommand(workspace));
   cli.register(...commands);
   component.registerHost(workspace);

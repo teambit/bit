@@ -10,7 +10,6 @@ import { BitId, BitIds } from '../../bit-id';
 import { Consumer } from '../../consumer';
 import loader from '../../cli/loader';
 import { BEFORE_IMPORT_ACTION } from '../../cli/loader/loader-messages';
-import { COMPONENT_ORIGINS } from '../../constants';
 import GeneralError from '../../error/general-error';
 import ShowDoctorError from '../../error/show-doctor-error';
 import logger from '../../logger/logger';
@@ -68,6 +67,7 @@ export type ImportDetails = {
   filesStatus: FilesStatus | null | undefined;
   missingDeps: BitId[];
   deprecated: boolean;
+  removed?: boolean;
 };
 export type ImportResult = {
   dependencies: ComponentWithDependencies[];
@@ -369,10 +369,8 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
   }
 
   private getIdsToImportFromBitmap() {
-    const authoredExportedComponents = this.consumer.bitMap.getAuthoredExportedComponents();
-    // @todo: when .bitmap has a remote-lane, it should import the lane object as well
-    const importedComponents = this.consumer.bitMap.getAllIdsAvailableOnLane([COMPONENT_ORIGINS.IMPORTED]);
-    return BitIds.fromArray([...authoredExportedComponents, ...importedComponents]);
+    const authoredExportedComponents = this.consumer.bitMap.getExportedComponents();
+    return BitIds.fromArray(authoredExportedComponents);
   }
 
   /**
@@ -442,6 +440,7 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
       };
       const filesStatus = this.mergeStatus && this.mergeStatus[idStr] ? this.mergeStatus[idStr] : null;
       const deprecated = await modelComponent.isDeprecated(this.scope.objects);
+      const removed = component.component.removed;
       const latestVersion = modelComponent.latest();
       return {
         id: idStr,
@@ -451,6 +450,7 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
         filesStatus,
         missingDeps: component.missingDependencies,
         deprecated,
+        removed,
       };
     });
     return Promise.all(detailsP);

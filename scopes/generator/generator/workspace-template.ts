@@ -35,6 +35,11 @@ export interface WorkspaceContext {
    * useful to get the aspect-id and other info.
    */
   aspectComponent?: Component;
+
+  /**
+   * the template the user selected to create the workspace.
+   */
+  template: WorkspaceTemplate;
 }
 
 export interface ForkComponentInfo {
@@ -46,7 +51,7 @@ export interface ForkComponentInfo {
   /**
    * path where to write the component
    */
-  path: string;
+  path?: string;
 
   /**
    * a new component name. if not specified, use the original id (without the scope)
@@ -76,6 +81,12 @@ export interface WorkspaceTemplate {
    * name of the workspace template. for example: `react-workspace`.
    */
   name: string;
+
+  /**
+   * name of an app created in the workspace. for example: `my-app`.
+   * This will be used to instruct the user to run `bit run <appName>` in the new workspace.
+   */
+  appName?: string;
 
   /**
    * short description of the template. shown in the `bit templates` command when outside of bit-workspace.

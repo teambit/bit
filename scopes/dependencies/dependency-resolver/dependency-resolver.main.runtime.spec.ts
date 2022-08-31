@@ -290,6 +290,7 @@ describe('DepenendencyResolverMain.getOutdatedPkgsFromPolicies()', () => {
           },
         },
       },
+      components: [],
     });
     // @ts-ignore
     expect(outdatedPkgs).toStrictEqual([

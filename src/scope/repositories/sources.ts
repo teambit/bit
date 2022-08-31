@@ -24,6 +24,7 @@ import { concurrentComponentsLimit } from '../../utils/concurrency';
 import { InMemoryCache } from '../../cache/in-memory-cache';
 import { createInMemoryCache } from '../../cache/cache-factory';
 import { pathNormalizeToLinux } from '../../utils';
+import { getDivergeData } from '../component-ops/get-diverge-data';
 
 export type ComponentTree = {
   component: ModelComponent;
@@ -286,11 +287,18 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
 
     const unmergedComponent = consumer.scope.objects.unmergedComponents.getEntry(component.name);
     if (unmergedComponent) {
-      version.addParent(unmergedComponent.head);
-      logger.debug(
-        `sources.addSource, unmerged component "${component.name}". adding a parent ${unmergedComponent.head.hash}`
-      );
-      version.log.message = version.log.message || UnmergedComponents.buildSnapMessage(unmergedComponent);
+      if (unmergedComponent.unrelated) {
+        logger.debug(
+          `sources.addSource, unmerged component "${component.name}". adding an unrelated entry ${unmergedComponent.head.hash}`
+        );
+        version.unrelated = { head: unmergedComponent.head, laneId: unmergedComponent.laneId };
+      } else {
+        version.addParent(unmergedComponent.head);
+        logger.debug(
+          `sources.addSource, unmerged component "${component.name}". adding a parent ${unmergedComponent.head.hash}`
+        );
+        version.log.message = version.log.message || UnmergedComponents.buildSnapMessage(unmergedComponent);
+      }
       consumer.scope.objects.unmergedComponents.removeComponent(component.name);
     }
     objectRepo.add(component);
@@ -354,7 +362,8 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
       const versionObject = allVersionsObjects.find((v) => v.hash().isEqual(ref));
       const refStr = ref.toString();
       if (!versionObject) throw new Error(`removeComponentVersions failed finding a version object of ${refStr}`);
-      objectRepo.removeObject(ref);
+      // avoid deleting the Version object from the filesystem. see the e2e-case: "'snapping on a lane, switching to main, snapping and running "bit reset"'"
+      // objectRepo.removeObject(ref);
       return ref;
     });
 
@@ -582,6 +591,9 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
    *
    * in case this is a local (the incoming component comes as a result of import):
    * do not update the lane object. only save the data on the refs/remote/lane-name.
+   *
+   * keep in mind that this method may merge another non-checked out lane during "fetch" operation, so avoid mutating
+   * the ModelComponent object with data from this lane object.
    */
   async mergeLane(
     lane: Lane,
@@ -614,8 +626,8 @@ otherwise, to collaborate on the same lane as the remote, you'll need to remove 
         }
         const existingComponent = existingLane ? existingLane.components.find((c) => c.id.isEqual(component.id)) : null;
         if (!existingComponent) {
-          modelComponent.laneHeadLocal = component.head;
-          const allVersions = await getAllVersionHashes(modelComponent, repo);
+          // modelComponent.laneHeadLocal = component.head;
+          const allVersions = await getAllVersionHashes(modelComponent, repo, undefined, component.head);
           if (existingLane) existingLane.addComponent(component);
           mergeResults.push({ mergedComponent: modelComponent, mergedVersions: allVersions.map((h) => h.toString()) });
           return;
@@ -624,10 +636,7 @@ otherwise, to collaborate on the same lane as the remote, you'll need to remove 
           mergeResults.push({ mergedComponent: modelComponent, mergedVersions: [] });
           return;
         }
-        modelComponent.laneHeadRemote = component.head;
-        modelComponent.laneHeadLocal = existingComponent.head;
-        await modelComponent.setDivergeData(repo);
-        const divergeResults = modelComponent.getDivergeData();
+        const divergeResults = await getDivergeData(repo, modelComponent, component.head, existingComponent.head);
         if (divergeResults.isDiverged()) {
           if (isImport) {
             // do not update the local lane. later, suggest to snap-merge.

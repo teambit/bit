@@ -441,7 +441,7 @@ export class Workspace implements ComponentFactory {
    * (exclude nested dependencies in case dependencies are saved as components and not packages)
    */
   getAllComponentIds(): Promise<ComponentID[]> {
-    const bitIds = this.consumer.bitMap.getAuthoredAndImportedBitIds();
+    const bitIds = this.consumer.bitMap.getAllBitIds();
     return this.resolveMultipleComponentIds(bitIds);
   }
 
@@ -1889,10 +1889,12 @@ needed-for: ${neededFor || '<unknown>'}`);
     const { componentConfigFiles, componentPoliciesById } = await this._getComponentsWithDependencyPolicies();
     const variantPatterns = this.variants.raw();
     const variantPoliciesByPatterns = this._variantPatternsToDepPolicesDict(variantPatterns);
+    const components = await this.list();
     const outdatedPkgs = await this.dependencyResolver.getOutdatedPkgsFromPolicies({
       rootDir: this.path,
       variantPoliciesByPatterns,
       componentPoliciesById,
+      components,
     });
     let outdatedPkgsToUpdate!: OutdatedPkg[];
     if (options.all) {

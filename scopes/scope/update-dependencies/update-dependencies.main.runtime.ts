@@ -6,11 +6,7 @@ import { LoggerAspect, LoggerMain, Logger } from '@teambit/logger';
 import { ScopeAspect, ScopeMain, ComponentNotFound } from '@teambit/scope';
 import { BuilderAspect, BuilderMain } from '@teambit/builder';
 import { Component, ComponentID } from '@teambit/component';
-import {
-  getPublishedPackages,
-  updateComponentsByTagResult,
-  addFlattenedDependenciesToComponents,
-} from '@teambit/legacy/dist/scope/component-ops/tag-model-component';
+import { SnappingAspect, SnappingMain } from '@teambit/snapping';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { BuildStatus, LATEST } from '@teambit/legacy/dist/constants';
 import { BitIds } from '@teambit/legacy/dist/bit-id';
@@ -62,7 +58,8 @@ export class UpdateDependenciesMain {
     private logger: Logger,
     private builder: BuilderMain,
     private dependencyResolver: DependencyResolverMain,
-    private onPostUpdateDependenciesSlot: OnPostUpdateDependenciesSlot
+    private onPostUpdateDependenciesSlot: OnPostUpdateDependenciesSlot,
+    private snapping: SnappingMain
   ) {}
 
   /**
@@ -84,7 +81,7 @@ export class UpdateDependenciesMain {
     await this.updateAllDeps();
     this.addLogToComponents();
     if (!updateDepsOptions.simulation) {
-      await addFlattenedDependenciesToComponents(this.scope.legacyScope, this.legacyComponents);
+      await this.snapping._addFlattenedDependenciesToComponents(this.scope.legacyScope, this.legacyComponents);
     }
     this.addBuildStatus();
     await this.addComponentsToScope();
@@ -96,8 +93,8 @@ export class UpdateDependenciesMain {
       { seedersOnly: true }
     );
     const legacyBuildResults = this.scope.builderDataMapToLegacyOnTagResults(builderDataMap);
-    updateComponentsByTagResult(this.legacyComponents, legacyBuildResults);
-    const publishedPackages = getPublishedPackages(this.legacyComponents);
+    this.snapping._updateComponentsByTagResult(this.legacyComponents, legacyBuildResults);
+    const publishedPackages = this.snapping._getPublishedPackages(this.legacyComponents);
     const pipeWithError = pipeResults.find((pipe) => pipe.hasErrors());
     const buildStatus = pipeWithError ? BuildStatus.Failed : BuildStatus.Succeed;
     await this.saveDataIntoLocalScope(buildStatus);
@@ -313,17 +310,18 @@ to bypass this error, use --skip-new-scope-validation flag (not recommended. it 
 
   static runtime = MainRuntime;
 
-  static dependencies = [CLIAspect, ScopeAspect, LoggerAspect, BuilderAspect, DependencyResolverAspect];
+  static dependencies = [CLIAspect, ScopeAspect, LoggerAspect, BuilderAspect, DependencyResolverAspect, SnappingAspect];
 
   static slots = [Slot.withType<OnPostUpdateDependenciesSlot>()];
 
   static async provider(
-    [cli, scope, loggerMain, builder, dependencyResolver]: [
+    [cli, scope, loggerMain, builder, dependencyResolver, snapping]: [
       CLIMain,
       ScopeMain,
       LoggerMain,
       BuilderMain,
-      DependencyResolverMain
+      DependencyResolverMain,
+      SnappingMain
     ],
     _,
     [onPostUpdateDependenciesSlot]: [OnPostUpdateDependenciesSlot]
@@ -334,7 +332,8 @@ to bypass this error, use --skip-new-scope-validation flag (not recommended. it 
       logger,
       builder,
       dependencyResolver,
-      onPostUpdateDependenciesSlot
+      onPostUpdateDependenciesSlot,
+      snapping
     );
     cli.register(new UpdateDependenciesCmd(updateDependenciesMain, scope, logger));
     return updateDependenciesMain;

@@ -1,7 +1,9 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
-import { LaneReadme, useLanesContext, LaneOverviewLineSlot } from '@teambit/lanes.ui.lanes';
+import { LaneOverviewLineSlot } from '@teambit/lanes.ui.gallery';
 import { RouteSlot } from '@teambit/ui-foundation.ui.react-router.slot-router';
+import { useLanes } from '@teambit/lanes.hooks.use-lanes';
+import { LaneReadme } from './lane-readme';
 
 export type LaneReadmeOverviewProps = {
   host: string;
@@ -10,8 +12,8 @@ export type LaneReadmeOverviewProps = {
 };
 
 export function LaneReadmeOverview({ host, overviewSlot, routeSlot }: LaneReadmeOverviewProps) {
-  const lanesContext = useLanesContext();
-  const viewedLane = lanesContext?.viewedLane;
+  const { lanesModel } = useLanes();
+  const viewedLane = lanesModel?.viewedLane;
   const readmeComponent = viewedLane?.readmeComponent;
 
   if (readmeComponent) {

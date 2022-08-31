@@ -46,15 +46,6 @@ export const BIT_MAP = '.bitmap';
 
 export const OLD_BIT_MAP = '.bit.map.json';
 
-// Hack to prevent reference from constants to component map
-type origins = 'IMPORTED' | 'AUTHORED' | 'NESTED';
-
-export const COMPONENT_ORIGINS = {
-  IMPORTED: 'IMPORTED' as origins,
-  AUTHORED: 'AUTHORED' as origins,
-  NESTED: 'NESTED' as origins,
-};
-
 export const TESTS_FORK_LEVEL = {
   NONE: 'NONE',
   ONE: 'ONE',
@@ -269,6 +260,8 @@ export const CFG_INTERACTIVE = 'interactive';
 export const CFG_COMMAND_INTERACTIVE_TEMPLATE = 'interactive.{commandName}';
 
 export const CFG_INIT_INTERACTIVE = format(CFG_COMMAND_INTERACTIVE_TEMPLATE, { commandName: INIT_COMMAND });
+export const CFG_INIT_DEFAULT_SCOPE = 'default_scope';
+export const CFG_INIT_DEFAULT_DIRECTORY = 'default_directory';
 
 export const CFG_SSH_NO_COMPRESS = 'ssh_no_compress';
 
@@ -523,6 +516,7 @@ export enum Extensions {
   forking = 'teambit.component/forking',
   renaming = 'teambit.component/renaming',
   lanes = 'teambit.lanes/lanes',
+  remove = 'teambit.component/remove',
 }
 
 export enum BuildStatus {
