@@ -242,7 +242,7 @@ describe('merge lanes', function () {
       expect(log).to.have.lengthOf(4);
 
       helper.command.switchLocalLane('main');
-      helper.command.mergeLane('dev', '--squash');
+      helper.command.mergeLane('dev');
     });
     it('should squash the snaps and leave only the last one', () => {
       const log = helper.command.logParsed('comp1');
