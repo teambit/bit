@@ -42,6 +42,10 @@ export class StagedConfig {
     return this.componentsConfig.find((c) => c.id.isEqual(id, { ignoreVersion: true }))?.config;
   }
 
+  getAll() {
+    return this.componentsConfig;
+  }
+
   addComponentConfig(id: ComponentID, config: Config) {
     const exists = this.componentsConfig.find((c) => c.id.isEqual(id, { ignoreVersion: true }));
     if (exists) {

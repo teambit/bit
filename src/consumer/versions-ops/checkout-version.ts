@@ -4,7 +4,6 @@ import * as path from 'path';
 
 import { Consumer } from '..';
 import { BitId, BitIds } from '../../bit-id';
-import { COMPONENT_ORIGINS } from '../../constants';
 import GeneralError from '../../error/general-error';
 import { ComponentWithDependencies } from '../../scope';
 import Version from '../../scope/models/version';
@@ -146,9 +145,9 @@ async function getComponentStatus(
     return returnFailure(`component ${component.id.toString()} is new, no version to checkout`, true);
   }
   const unmerged = repo.unmergedComponents.getEntry(component.name);
-  if (!reset && unmerged && unmerged.resolved === false) {
+  if (!reset && unmerged) {
     return returnFailure(
-      `component ${component.id.toStringWithoutVersion()} has conflicts that need to be resolved first, please use bit merge --resolve/--abort`
+      `component ${component.id.toStringWithoutVersion()} is in during-merge state, please snap/tag it first (or use bit merge --resolve/--abort)`
     );
   }
   const getNewVersion = async (): Promise<string> => {
@@ -256,7 +255,7 @@ export async function applyVersion(
   const componentWithDependencies = await consumer.loadComponentWithDependenciesFromModel(id);
   const componentMap = componentFromFS && componentFromFS.componentMap;
   if (componentFromFS && !componentMap) throw new GeneralError('applyVersion: componentMap was not found');
-  if (componentMap && componentMap.origin === COMPONENT_ORIGINS.AUTHORED && !id.scope) {
+  if (componentMap && !id.scope) {
     componentWithDependencies.dependencies = [];
     componentWithDependencies.devDependencies = [];
   }

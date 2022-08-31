@@ -26,7 +26,7 @@ export class ScopeRenameCmd implements Command {
     const renamedIdsStr = scopeRenamedComponentIds.length
       ? `\n${chalk.bold(
           'the following components were affected by this scope-name change:'
-        )}\n${scopeRenamedComponentIds.join('\n')}`
+        )}\n${scopeRenamedComponentIds.map((c) => c.changeScope(newName)).join('\n')}`
       : '';
     const refactoredStr = refactoredIds.length
       ? `\n\n${chalk.bold('the following components have been refactored:')}\n${refactoredIds.join('\n')}`

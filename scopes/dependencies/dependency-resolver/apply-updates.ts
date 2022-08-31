@@ -25,6 +25,7 @@ export function applyUpdates(
   for (const outdatedPkg of outdatedPkgs) {
     switch (outdatedPkg.source) {
       case 'rootPolicy':
+      case 'component-model':
         updatedWorkspacePolicyEntries.push({
           dependencyId: outdatedPkg.name,
           value: {

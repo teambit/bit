@@ -852,7 +852,7 @@ needed-for: ${neededFor || '<unknown>'}`);
         patterns?.some((pattern) => isMatchNamespacePatternItem(id.toStringWithoutVersion(), pattern).match)
       );
     }
-    this.logger.debug(`scope listIds: componentsIds after filter scope: ${JSON.stringify(ids, undefined, 2)}`);
+    this.logger.debug(`scope listIds: total ${ids.length} components after filter scope`);
     return ids;
   }
 

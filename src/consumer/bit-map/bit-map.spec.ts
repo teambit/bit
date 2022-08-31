@@ -2,7 +2,6 @@ import { expect } from 'chai';
 import * as path from 'path';
 
 import { BitId } from '../../bit-id';
-import { COMPONENT_ORIGINS } from '../../constants';
 import logger from '../../logger/logger';
 import BitMap from './bit-map';
 import { DuplicateRootDir } from './exceptions/duplicate-root-dir';
@@ -22,7 +21,6 @@ const addComponentParamsFixture = {
   componentId: new BitId({ name: 'is-string' }),
   files: [{ name: 'is-string.js', relativePath: 'is-string.js', test: false }],
   mainFile: 'is-string.js',
-  origin: COMPONENT_ORIGINS.AUTHORED,
 };
 
 describe('BitMap', function () {

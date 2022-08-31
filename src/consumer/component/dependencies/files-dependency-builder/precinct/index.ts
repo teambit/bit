@@ -15,7 +15,6 @@ import detectiveLess from '../detectives/detective-less';
 import detectiveSass from '../detectives/detective-sass';
 import detectiveScss from '../detectives/detective-scss';
 import detectiveTypeScript from '../detectives/detective-typescript';
-import detectiveVue from '../detectives/detective-vue';
 import { DetectorHook } from '../detector-hook';
 
 const debug = require('debug')('precinct');
@@ -107,9 +106,6 @@ function precinct(content, options) {
     case 'tsx':
       theDetective = detectiveTypeScript;
       break;
-    case 'vue':
-      theDetective = detectiveVue;
-      break;
     default:
       detector = detectorHook.getDetector(type);
       if (detector) theDetective = detector.detect.bind(detector);
@@ -117,7 +113,8 @@ function precinct(content, options) {
   }
 
   if (theDetective) {
-    dependencies = type === 'vue' ? theDetective(ast, options) : theDetective(ast, options[type] || {});
+    // dependencies = type === 'vue' ? theDetective(ast, options) : theDetective(ast, options[type] || {});
+    dependencies = theDetective(ast, options[type] || {});
   }
 
   // For non-JS files that we don't parse
