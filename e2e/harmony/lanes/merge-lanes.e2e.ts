@@ -473,6 +473,11 @@ describe('merge lanes', function () {
       it('bit status should show the component as staged and not everywhere else', () => {
         helper.command.expectStatusToBeClean(['stagedComponents']);
       });
+      it('should not change the file content because the default merge-strategy is "ours"', () => {
+        const file = helper.fs.readFile('comp1/index.js');
+        expect(file).to.have.string('on-lane');
+        expect(file).not.to.have.string('on-origin');
+      });
       it('head on lane should point to the main head to preserve the history of the origin', () => {
         const laneHead = helper.command.getHeadOfLane('dev', 'comp1');
         const catObj = helper.command.catComponent(`comp1@${laneHead}`);
@@ -517,6 +522,25 @@ describe('merge lanes', function () {
         it('should export the component successfully', () => {
           expect(() => helper.command.export()).to.not.throw();
         });
+      });
+    });
+    describe('bit lane merge with --resolve-unrelated and "theirs" merge-strategy', () => {
+      before(() => {
+        helper.scopeHelper.getClonedRemoteScope(remoteScopeAfterExport);
+        helper.scopeHelper.getClonedLocalScope(afterLaneExport);
+        helper.command.fetchAllComponents(); // todo: this should not be needed. "bit import" should do that
+        helper.command.mergeLane('main', '--resolve-unrelated theirs --no-snap');
+      });
+      it('bit status should show the component as during-merge and staged and not everywhere else', () => {
+        helper.command.expectStatusToBeClean(['componentsDuringMergeState', 'stagedComponents']);
+      });
+      it('bit import should not throw', () => {
+        expect(() => helper.command.import()).not.to.throw();
+      });
+      it('should not change the file content because the default merge-strategy is "ours"', () => {
+        const file = helper.fs.readFile('comp1/index.js');
+        expect(file).to.have.string('on-origin');
+        expect(file).not.to.have.string('on-lane');
       });
     });
   });

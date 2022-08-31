@@ -49,7 +49,7 @@ export type ComponentMergeStatus = {
   unmergedLegitimately?: boolean; // failed to merge but for a legitimate reason, such as, up-to-date
   mergeResults?: MergeResultsThreeWay | null;
   divergeData?: DivergeData;
-  resolvedUnrelated?: boolean;
+  resolvedUnrelated?: MergeStrategy;
 };
 
 export class MergingMain {
@@ -320,7 +320,7 @@ export class MergingMain {
             id,
             mergeResults: null,
             divergeData,
-            resolvedUnrelated: true,
+            resolvedUnrelated: 'theirs',
           };
         }
         if (options?.resolveUnrelated === 'ours') {
@@ -329,7 +329,7 @@ export class MergingMain {
             id,
             mergeResults: null,
             divergeData,
-            resolvedUnrelated: true,
+            resolvedUnrelated: 'ours',
           };
         }
         throw new Error(
@@ -390,7 +390,7 @@ export class MergingMain {
     remoteHead: Ref;
     laneId: LaneId;
     localLane: Lane | null;
-    resolvedUnrelated?: boolean;
+    resolvedUnrelated?: MergeStrategy;
   }): Promise<ApplyVersionResult> {
     const consumer = this.workspace.consumer;
     let filesStatus = {};
@@ -403,15 +403,34 @@ export class MergingMain {
       laneId,
     };
     id = currentComponent ? currentComponent.id : id;
-    if (mergeResults && mergeResults.hasConflicts && mergeStrategy === MergeOptions.ours) {
+
+    const modelComponent = await consumer.scope.getModelComponent(id);
+    const handleResolveUnrelated = () => {
+      if (!currentComponent) throw new Error('currentComponent must be defined when resolvedUnrelated');
+      if (!localLane) throw new Error('localLane must be defined when resolvedUnrelated');
+      const head = modelComponent.getRef(currentComponent.id.version as string);
+      if (!head) throw new Error(`unable to get the head for resolved-unrelated ${id.toString()}`);
+      unmergedComponent.laneId = localLane.toLaneId();
+      unmergedComponent.head = head;
+      unmergedComponent.unrelated = true;
+      consumer.scope.objects.unmergedComponents.addEntry(unmergedComponent);
+      return { id, filesStatus };
+    };
+
+    const markAllFilesAsUnchanged = () => {
       if (!currentComponent) throw new Error(`applyVersion expect to get currentComponent for ${id.toString()}`);
       currentComponent.files.forEach((file) => {
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         filesStatus[pathNormalizeToLinux(file.relative)] = FileStatus.unchanged;
       });
+    };
+    if (mergeResults && mergeResults.hasConflicts && mergeStrategy === MergeOptions.ours) {
+      markAllFilesAsUnchanged();
       consumer.scope.objects.unmergedComponents.addEntry(unmergedComponent);
-
       return { id, filesStatus };
+    }
+    if (resolvedUnrelated && resolvedUnrelated === 'ours') {
+      markAllFilesAsUnchanged();
+      return handleResolveUnrelated();
     }
     const remoteId = id.changeVersion(remoteHead.toString());
     const idToLoad = !mergeResults || mergeStrategy === MergeOptions.theirs ? remoteId : id;
@@ -441,7 +460,6 @@ export class MergingMain {
     });
     await manyComponentsWriter.writeAll();
 
-    const modelComponent = await consumer.scope.getModelComponent(id);
     // if mergeResults, the head snap is going to be updated on a later phase when snapping with two parents
     // otherwise, update the head of the current lane or main
     if (mergeResults) {
@@ -452,13 +470,8 @@ export class MergingMain {
     } else if (localLane) {
       localLane.addComponent({ id, head: remoteHead });
       if (resolvedUnrelated) {
-        if (!currentComponent) throw new Error('currentComponent must be defined when resolvedUnrelated');
-        const head = modelComponent.getRef(currentComponent.id.version as string);
-        if (!head) throw new Error(`unable to get the head for resolved-unrelated ${id.toString()}`);
-        unmergedComponent.laneId = localLane.toLaneId();
-        unmergedComponent.head = head;
-        unmergedComponent.unrelated = true;
-        consumer.scope.objects.unmergedComponents.addEntry(unmergedComponent);
+        // must be "theirs"
+        return handleResolveUnrelated();
       }
     } else {
       // this is main
