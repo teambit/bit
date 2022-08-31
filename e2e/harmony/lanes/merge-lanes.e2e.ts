@@ -350,8 +350,8 @@ describe('merge lanes', function () {
       describe('switching to main and merging the lane to main without squash', () => {
         before(() => {
           helper.scopeHelper.getClonedLocalScope(afterMergeToMain);
-          helper.command.switchLocalLane('main', '--no-squash');
-          helper.command.mergeLane('dev');
+          helper.command.switchLocalLane('main');
+          helper.command.mergeLane('dev', '--no-squash');
         });
         it('head should have two parents', () => {
           const cat = helper.command.catComponent('comp1@latest');
