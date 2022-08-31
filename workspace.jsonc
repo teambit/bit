@@ -405,9 +405,7 @@
             "react",
             "react-components",
             "angular",
-            "angular-components",
-            "vue",
-            "vue-components"
+            "angular-components"
           ]
         }
       },
@@ -456,9 +454,7 @@
             "react",
             "react-components",
             "angular",
-            "angular-components",
-            "vue",
-            "vue-components"
+            "angular-components"
           ]
         }
       },
@@ -761,9 +757,7 @@
             "react",
             "react-components",
             "angular",
-            "angular-components",
-            "vue",
-            "vue-components"
+            "angular-components"
           ]
         }
       },
