@@ -565,17 +565,18 @@ export class IsolatorMain {
     capsulesWithPackagesData: CapsulePackageJsonData[],
     capsules: CapsuleList
   ) {
-    // ci seems to have some inconsistencies behavior (regards to the package.json) when using Promise.all.
-    return pMapSeries(capsules, async (capsule) => {
-      const packageJson = await this.getCurrentPackageJson(capsule, capsules);
-      const found = capsulesWithPackagesData.filter((c) => c.capsule.component.id.isEqual(capsule.component.id));
-      if (!found.length) throw new Error(`updateWithCurrentPackageJsonData unable to find ${capsule.component.id}`);
-      if (found.length > 1)
-        throw new Error(
-          `updateWithCurrentPackageJsonData found duplicate capsules: ${capsule.component.id.toString()}""`
-        );
-      found[0].currentPackageJson = packageJson.packageJsonObject;
-    });
+    return Promise.all(
+      capsules.map(async (capsule) => {
+        const packageJson = await this.getCurrentPackageJson(capsule, capsules);
+        const found = capsulesWithPackagesData.filter((c) => c.capsule.component.id.isEqual(capsule.component.id));
+        if (!found.length) throw new Error(`updateWithCurrentPackageJsonData unable to find ${capsule.component.id}`);
+        if (found.length > 1)
+          throw new Error(
+            `updateWithCurrentPackageJsonData found duplicate capsules: ${capsule.component.id.toString()}""`
+          );
+        found[0].currentPackageJson = packageJson.packageJsonObject;
+      })
+    );
   }
 
   private async getCurrentPackageJson(capsule: Capsule, capsules: CapsuleList): Promise<PackageJsonFile> {
