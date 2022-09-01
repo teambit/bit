@@ -156,15 +156,22 @@ export class ExtensionDataList extends Array<ExtensionDataEntry> {
   }
 
   findExtension(extensionId: string, ignoreVersion = false, ignoreScope = false): ExtensionDataEntry | undefined {
+    const extensionIdWithoutVersion = ignoreVersion ? extensionId.split('@')[0] : extensionId;
     if (ExtensionDataList.coreExtensionsNames.has(extensionId)) {
       return this.findCoreExtension(extensionId);
     }
     return this.find((extEntry) => {
       if (ignoreVersion && ignoreScope) {
-        return extEntry.extensionId?.toStringWithoutScopeAndVersion() === extensionId;
+        return (
+          extEntry.extensionId?.toStringWithoutScopeAndVersion() === extensionId ||
+          extEntry.extensionId?.toStringWithoutScopeAndVersion() === extensionIdWithoutVersion ||
+          extEntry.newExtensionId?.toStringWithoutVersion() === extensionIdWithoutVersion
+        );
       }
       if (ignoreVersion) {
-        return extEntry.extensionId?.toStringWithoutVersion() === extensionId;
+        return extEntry.extensionId?.toStringWithoutVersion() === extensionId ||
+        extEntry.extensionId?.toStringWithoutVersion() === extensionIdWithoutVersion ||
+        extEntry.newExtensionId?.toStringWithoutVersion() === extensionIdWithoutVersion
       }
       if (ignoreScope) {
         return extEntry.extensionId?.toStringWithoutScope() === extensionId;
