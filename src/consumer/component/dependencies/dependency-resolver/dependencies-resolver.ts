@@ -699,9 +699,11 @@ either, use the ignore file syntax or change the require statement to have a mod
         // (it's there without a version when it's in the workspace and it's linked)
         if (!version) return getExistingIdFromBitMapOrModel();
 
-        // In case it's resolved from the node_modules, and it's also in the ws policy,
+        // In case it's resolved from the node_modules, and it's also in the ws policy or variants,
         // use the resolved version from the node_modules / package folder
-        if (this.isPkgInWorkspacePolicies(compDep.name)) return componentId;
+        if (this.isPkgInWorkspacePolicies(compDep.name) || this.isPkgInVariants(compDep.name)) {
+          return componentId;
+        }
 
         // If there is a version in the node_modules/package folder, but it's not in the ws policy,
         // prefer the version from the bitmap/model over the version from the node_modules
@@ -725,6 +727,14 @@ either, use the ignore file syntax or change the require statement to have a mod
 
   private isPkgInWorkspacePolicies(pkgName: string) {
     return DependencyResolver.getWorkspacePolicy().dependencies?.[pkgName];
+  }
+  private isPkgInVariants(pkgName: string): boolean {
+    const dependencies = this.overridesDependencies.getDependenciesToAddManually(undefined, this.allDependencies);
+    if (!dependencies) return false;
+    const { components } = dependencies;
+    return DEPENDENCIES_FIELDS.some(
+      (depField) => components[depField] && components[depField].some((depData) => depData.packageName === pkgName)
+    );
   }
 
   private addImportNonMainIssueIfNeeded(filePath: PathLinuxRelative, dependencyPkgData: ResolvedPackageData) {
