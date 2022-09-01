@@ -3,6 +3,7 @@ import React from 'react';
 import { Toggle } from '@teambit/design.ui.input.toggle';
 import {
   ComponentFilterCriteria,
+  ComponentFilterRenderProps,
   useComponentFilter,
 } from '@teambit/component.ui.component-filters.component-filter-context';
 import { LaneIcon } from '@teambit/lanes.ui.icons.lane-icon';
@@ -14,18 +15,22 @@ export type OnLaneFilterCriteria = ComponentFilterCriteria<boolean>;
 export const OnLaneFilter: (defaultState?: boolean) => OnLaneFilterCriteria = (defaultState = false) => ({
   id: 'onLane',
   match: ({ component, lanes }, active) => {
+    const onMain = !!lanes?.isComponentOnMain(component.id);
+    if (onMain || !active) return true;
     const onLane = !!lanes?.isComponentOnLaneButNotOnMain(component.id);
-    return !active || onLane;
+    return onLane;
   },
   state: defaultState,
   order: 2,
   render: onLaneFilter,
 });
 
-function onLaneFilter({ className }: React.HTMLAttributes<HTMLDivElement>) {
+function onLaneFilter({ className, lanes }: ComponentFilterRenderProps) {
+  const isOnMain = lanes?.viewedLane?.id.isDefault();
+
   const filterContext = useComponentFilter<boolean>(OnLaneFilter().id);
 
-  if (!filterContext) return null;
+  if (isOnMain || !filterContext) return null;
 
   const [filter, updateFilter] = filterContext;
 
