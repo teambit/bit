@@ -51,7 +51,7 @@ import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
     const show = helper.command.showAspectConfig('comp1', Extensions.dependencyResolver);
     const ids: string[] = show.data.dependencies.map((dep) => dep.id);
     const comp2 = ids.find((id) => id.includes('comp2'));
-    expect(comp2).to.endsWith('0.0.2');
+    expect(comp2?.endsWith('0.0.2')).to.be.true;
   });
   after(() => {
     npmCiRegistry.destroy();
