@@ -1,13 +1,20 @@
 .placeholder {
   display: flex;
   align-items: center;
-  padding-top: 8px;
-  padding-right: 16px;
+  padding: 4px 8px 4px 0px;
   line-height: var(--bit-p-md, 16px);
   font-size: var(--bit-p-md, 16px);
+  border-radius: 6px;
+  border: 1px solid var(--bit-border-color-light, #cccfd4);
+  background-color: var(--bit-border-color-lightest, #ededed);
 }
 
 .placeholderText {
   padding: 4px 12px;
   font-size: var(--bit-p-xs, 14px);
+  flex: 1;
+}
+
+.icon {
+  padding-left: 8px;
 }

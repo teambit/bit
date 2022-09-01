@@ -1,5 +1,7 @@
 import React, { createRef, useEffect, ChangeEventHandler } from 'react';
 
+import styles from './lane-search.module.scss';
+
 export type LaneSearchProps = {
   onChange: ChangeEventHandler<HTMLInputElement>;
   focus: boolean;
@@ -17,5 +19,14 @@ export function LaneSearch({ onChange, focus }: LaneSearchProps) {
     e.stopPropagation();
   };
 
-  return <input autoFocus onClick={handleOnClicked} ref={inputRef} onChange={onChange}></input>;
+  return (
+    <input
+      className={styles.search}
+      placeholder={'Search'}
+      autoFocus
+      onClick={handleOnClicked}
+      ref={inputRef}
+      onChange={onChange}
+    ></input>
+  );
 }

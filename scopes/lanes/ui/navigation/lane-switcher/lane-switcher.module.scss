@@ -1,3 +1,26 @@
 .laneSwitcherContainer {
   display: flex;
+  width: calc(100% - 24px);
+  // override menu section's padding left which is set to 30px
+  padding-left: 16px !important;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-right: 8px;
+  border-top: 1px solid var(--bit-border-color-lightest, #ededed);
+  border-bottom: 1px solid var(--bit-border-color-lightest, #ededed);
+}
+
+.laneGalleryIcon {
+  display: flex;
+  flex: 0;
+
+  > span:first-child {
+    margin-right: 0px;
+  }
+}
+
+.laneSelector {
+  flex: 1;
+  width: 100%;
+  padding-right: 8px;
 }

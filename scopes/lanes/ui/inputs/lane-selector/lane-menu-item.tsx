@@ -1,6 +1,9 @@
 import React, { HTMLAttributes, useRef, useEffect } from 'react';
 import classnames from 'classnames';
 import { LaneId } from '@teambit/lane-id';
+import { useNavigate } from 'react-router-dom';
+import { classes } from '@teambit/design.ui.surfaces.menu.item';
+import { LanesModel } from '@teambit/lanes.ui.models.lanes-model';
 
 import styles from './lane-menu-item.module.scss';
 
@@ -20,12 +23,19 @@ export function LaneMenuItem({ selected, current, onLaneSelected, className, ...
     }
   }, [isCurrent]);
 
+  const navigate = useNavigate();
+
+  const onLaneClicked = () => {
+    onLaneSelected?.();
+    navigate(LanesModel.getLaneUrl(current));
+  };
+
   return (
     <div
       {...rest}
-      className={classnames(styles.menuItem, className, isCurrent && styles.current)}
+      className={classnames(styles.menuItem, className, isCurrent && classes.active)}
       ref={currentVersionRef}
-      onClick={onLaneSelected}
+      onClick={onLaneClicked}
     >
       <div className={styles.laneName}>{current.name}</div>
     </div>

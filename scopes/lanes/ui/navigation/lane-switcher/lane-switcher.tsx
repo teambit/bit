@@ -4,6 +4,7 @@ import { LaneId } from '@teambit/lane-id';
 import { LaneSelector } from '@teambit/lanes.ui.inputs.lane-selector';
 import { LanesModel } from '@teambit/lanes.ui.models.lanes-model';
 import { MenuLinkItem } from '@teambit/design.ui.surfaces.menu.link-item';
+import classnames from 'classnames';
 
 import styles from './lane-switcher.module.scss';
 
@@ -29,16 +30,20 @@ export function LaneSwitcher({ className, groupByScope = true, ...rest }: LaneSw
   if (!selectedLaneId) return null;
 
   return (
-    <div className={styles.laneSwitcherContainer}>
+    <div className={classnames(styles.laneSwitcherContainer, className)}>
       <LaneSelector
         selectedLaneId={selectedLaneId}
-        className={className}
+        className={styles.laneSelector}
         lanes={lanes}
         onLaneSelected={onLaneSelected}
         groupByScope={groupByScope}
         {...rest}
       />
-      <MenuLinkItem icon="comps" href={LanesModel.getLaneUrl(selectedLaneId)}></MenuLinkItem>
+      <MenuLinkItem
+        className={styles.laneGalleryIcon}
+        icon="comps"
+        href={LanesModel.getLaneUrl(selectedLaneId)}
+      ></MenuLinkItem>
     </div>
   );
 }
