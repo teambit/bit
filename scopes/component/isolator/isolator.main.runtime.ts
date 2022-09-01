@@ -18,7 +18,6 @@ import {
   PackageManagerInstallOptions,
 } from '@teambit/dependency-resolver';
 import legacyLogger from '@teambit/legacy/dist/logger/logger';
-import pMapSeries from 'p-map-series';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { BitIds } from '@teambit/legacy/dist/bit-id';
 import LegacyScope from '@teambit/legacy/dist/scope/scope';
