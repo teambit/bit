@@ -3,6 +3,7 @@ import { Slot, SlotRegistry } from '@teambit/harmony';
 import { ComponentID } from '@teambit/component-id';
 import crossFetch from 'cross-fetch';
 import memoize from 'memoizee';
+import { debounce } from 'lodash';
 
 import { PreviewNotFound } from './exceptions';
 import { PreviewType } from './preview-type';
@@ -133,13 +134,16 @@ export class PreviewPreview {
   reportSize() {
     if (!window?.parent || !window?.document) return;
     // TODO: discuss with gilad for a better way to resolve page loaded here.
-    window.addEventListener('resize', () => {
+
+    const sendPubsubEvent = () => {
       this.pubsub.pub(PreviewAspect.id, new SizeEvent({
         width: window.document.body.offsetWidth,
         height: window.document.body.offsetHeight
       }));  
-    });
+    }
 
+    window.addEventListener('resize', debounce(sendPubsubEvent, 150));
+      
     let counter = 0;
     const interval = setInterval(() => {
       // TODO: think
