@@ -268,11 +268,9 @@ export default class ComponentsList {
    * @return {Promise<string[]>}
    */
   async listTagPendingComponents(): Promise<BitIds> {
-    const [newComponents, modifiedComponents, removedComponents] = await Promise.all([
-      this.listNewComponents(),
-      this.listModifiedComponents(),
-      this.listRemovedComponents(),
-    ]);
+    const newComponents = await this.listNewComponents();
+    const modifiedComponents = await this.listModifiedComponents();
+    const removedComponents = await this.listRemovedComponents();
     const duringMergeIds = this.listDuringMergeStateComponents();
 
     return BitIds.fromArray([
