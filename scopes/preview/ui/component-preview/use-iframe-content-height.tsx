@@ -7,7 +7,7 @@ export function useIframeContentHeight({
 }: {
   interval?: number;
   skip?: boolean;
-  viewport?: number
+  viewport?: number|null
 }): [React.MutableRefObject<HTMLIFrameElement | null>, number | undefined, number] {
   const iframeRef: React.MutableRefObject<HTMLIFrameElement | null> = useRef(null);
   const [iframeHeight, setIframeHeight] = useState(0);

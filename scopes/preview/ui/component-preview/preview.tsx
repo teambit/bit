@@ -120,7 +120,7 @@ export function ComponentPreview({
         ref={currentRef}
         style={{
           ...style,
-          height: isScaling && finalHeight < legacyIframeHeight ? finalHeight : legacyIframeHeight,
+          height: isScaling ? finalHeight : legacyIframeHeight,
           width: isScaling ? targetWidth : legacyCurrentWidth,
           visibility: width === 0 && isScaling && !fullContentHeight ? 'hidden' : undefined,
           transform: fullContentHeight ? '' : computePreviewScale(width, containerWidth),
