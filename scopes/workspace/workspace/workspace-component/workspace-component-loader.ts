@@ -230,7 +230,12 @@ export class WorkspaceComponentLoader {
     const entries = this.workspace.onComponentLoadSlot.toArray();
     const promises = entries.map(async ([extension, onLoad]) => {
       const data = await onLoad(component, loadOpts);
-      return this.upsertExtensionData(component, extension, data);
+      const compId = component.id.toString();
+      const compIdWithoutVersion = component.id.toStringWithoutVersion();
+      if (compId !== extension && compIdWithoutVersion !== extension) {
+        return this.upsertExtensionData(component, extension, data);
+      }
+      return undefined;
     });
 
     // Special load events which runs from the workspace but should run from the correct aspect
