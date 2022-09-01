@@ -18,7 +18,6 @@ import CatScope from './commands/private-cmds/cat-scope-cmd';
 import DependencyStatus from './commands/private-cmds/dependency-status-cmd';
 import Migrate from './commands/private-cmds/migrate-cmd';
 import Add from './commands/public-cmds/add-cmd';
-import Checkout from './commands/public-cmds/checkout-cmd';
 import Config from './commands/public-cmds/config-cmd';
 import Diff from './commands/public-cmds/diff-cmd';
 import Doctor from './commands/public-cmds/doctor-cmd';
@@ -67,8 +66,6 @@ export default function registerCommands(): CommandRegistry {
     new Move(),
     new Delete(),
     new Latest(),
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    new Checkout(),
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     new Diff(),
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

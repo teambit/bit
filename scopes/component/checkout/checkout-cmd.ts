@@ -1,21 +1,19 @@
 import chalk from 'chalk';
-
-import { checkout } from '../../../api/consumer';
-import { LATEST, WILDCARD_HELP } from '../../../constants';
-import { CheckoutProps } from '../../../consumer/versions-ops/checkout-version';
+import { Command, CommandOptions } from '@teambit/cli';
+import { LATEST, WILDCARD_HELP } from '@teambit/legacy/dist/constants';
+import { CheckoutProps } from '@teambit/legacy/dist/consumer/versions-ops/checkout-version';
 import {
   ApplyVersionResults,
   getMergeStrategy,
   applyVersionReport,
   conflictSummaryReport,
-} from '../../../consumer/versions-ops/merge-version';
-import { Group } from '../../command-groups';
-import { CommandOptions, LegacyCommand } from '../../legacy-command';
+} from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
+import { CheckoutMain } from './checkout.main.runtime';
 
-export default class Checkout implements LegacyCommand {
+export class CheckoutCmd implements Command {
   name = 'checkout [values...]';
   description = 'switch between component versions or remove local changes';
-  group: Group = 'development';
+  group = 'development';
   extendedDescription = `
   \`bit checkout <version> [ids...]\` => checkout the specified ids (or all components when --all is used) to the specified version
   \`bit checkout head\` => checkout all components to their latest versions
@@ -23,7 +21,7 @@ export default class Checkout implements LegacyCommand {
   \`bit checkout [ids...] --reset\` => remove local modifications from the specified ids (or all components when --all is used)
   ${WILDCARD_HELP('checkout 0.0.1')}`;
   alias = 'U';
-  opts = [
+  options = [
     [
       'i',
       'interactive-merge',
@@ -51,7 +49,9 @@ export default class Checkout implements LegacyCommand {
   ] as CommandOptions;
   loader = true;
 
-  action(
+  constructor(private checkout: CheckoutMain) {}
+
+  async report(
     [values = []]: [string[]],
     {
       interactiveMerge = false,
@@ -80,7 +80,7 @@ export default class Checkout implements LegacyCommand {
       conf?: string;
       ignoreDist?: boolean;
     }
-  ): Promise<ApplyVersionResults> {
+  ) {
     if (skipNpmInstall) {
       // eslint-disable-next-line no-console
       console.log(
@@ -100,14 +100,8 @@ export default class Checkout implements LegacyCommand {
       ignorePackageJson,
       writeConfig: !!conf,
     };
-    return checkout(values, checkoutProps);
-  }
-
-  report(
-    { components, version, failedComponents, leftUnresolvedConflicts }: ApplyVersionResults,
-    _,
-    { verbose, all }: { verbose: boolean; all: boolean }
-  ): string {
+    const { components, version, failedComponents, leftUnresolvedConflicts }: ApplyVersionResults =
+      await this.checkout.checkout(values, checkoutProps);
     const isLatest = Boolean(version && version === LATEST);
     const isReset = !version;
     const getFailureOutput = () => {
