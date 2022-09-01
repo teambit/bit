@@ -267,7 +267,7 @@ export class WorkspaceComponentLoader {
   }
 
   private async upsertExtensionData(component: Component, extension: string, data: any) {
-    const existingExtension = component.state.config.extensions.findExtension(extension);
+    const existingExtension = component.state.config.extensions.findExtension(extension, true);
     if (existingExtension && data) {
       // Only merge top level of extension data
       Object.assign(existingExtension.data, data);
