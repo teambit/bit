@@ -58,7 +58,7 @@ export default async function checkoutVersion(
 ): Promise<ApplyVersionResults> {
   const { version, ids, promptMergeOptions } = checkoutProps;
   const bitIds = BitIds.fromArray(ids || []);
-  await consumer.scope.import(bitIds);
+  await consumer.scope.import(bitIds, false);
   const { components } = await consumer.loadComponents(bitIds);
   const allComponentsStatus: ComponentStatus[] = await getAllComponentsStatus();
   const componentWithConflict = allComponentsStatus.find(

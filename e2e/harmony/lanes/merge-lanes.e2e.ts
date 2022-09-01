@@ -242,7 +242,7 @@ describe('merge lanes', function () {
       expect(log).to.have.lengthOf(4);
 
       helper.command.switchLocalLane('main');
-      helper.command.mergeLane('dev', '--squash');
+      helper.command.mergeLane('dev');
     });
     it('should squash the snaps and leave only the last one', () => {
       const log = helper.command.logParsed('comp1');
@@ -330,11 +330,13 @@ describe('merge lanes', function () {
       const status = helper.command.status();
       expect(status).to.have.string(`${helper.scopes.remote}/comp1 ... main is ahead by 1 snaps`);
     });
+    let afterMergeToMain: string;
     describe('merging the lane', () => {
       let status;
       before(() => {
         helper.command.mergeLane('main', '--theirs');
         status = helper.command.statusJson();
+        afterMergeToMain = helper.scopeHelper.cloneLocalScope();
       });
       it('bit status should show two staging versions, the main-head and merge-snap', () => {
         const stagedVersions = status.stagedComponents.find((c) => c.id === `${helper.scopes.remote}/comp2`);
@@ -345,10 +347,10 @@ describe('merge lanes', function () {
       it('bit status should not show the components in pending-merge', () => {
         expect(status.mergePendingComponents).to.have.lengthOf(0);
       });
-      describe('switching to main and merging the lane to main', () => {
+      describe('switching to main and merging the lane to main without squash', () => {
         before(() => {
           helper.command.switchLocalLane('main');
-          helper.command.mergeLane('dev');
+          helper.command.mergeLane('dev', '--no-squash');
         });
         it('head should have two parents', () => {
           const cat = helper.command.catComponent('comp1@latest');
@@ -358,6 +360,20 @@ describe('merge lanes', function () {
         // removeComponentVersions found multiple parents for a local (un-exported) version 368fb583865af40a8823d2ac1d556f4b65582ba2 of iw4j2eko-remote/comp1
         it('bit reset should not throw', () => {
           expect(() => helper.command.untagAll()).to.not.throw();
+        });
+      });
+      describe('switching to main and merging the lane to main (with squash)', () => {
+        let beforeMergeHead: string;
+        before(() => {
+          helper.scopeHelper.getClonedLocalScope(afterMergeToMain);
+          helper.command.switchLocalLane('main');
+          beforeMergeHead = helper.command.getHead('comp1');
+          helper.command.mergeLane('dev');
+        });
+        it('head should have one parents, which is the previous main head', () => {
+          const cat = helper.command.catComponent('comp1@latest');
+          expect(cat.parents).to.have.lengthOf(1);
+          expect(cat.parents[0]).to.equal(beforeMergeHead);
         });
       });
     });

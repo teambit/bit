@@ -1,5 +1,5 @@
-import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
-import { gql, QueryResult } from '@apollo/client';
+import { useDataQuery, DataQueryResult } from '@teambit/ui-foundation.ui.hooks.use-data-query';
+import { gql } from '@apollo/client';
 import { LanesQuery } from '@teambit/lanes.ui.models.lanes-model';
 import { componentFields, ComponentModel } from '@teambit/component';
 import { LaneId } from '@teambit/lane-id';
@@ -39,7 +39,7 @@ export function useLaneReadme(
   skip?: boolean
 ): {
   component: ComponentModel;
-} & Omit<QueryResult<LanesQuery>, 'data'> {
+} & Omit<DataQueryResult<LanesQuery, { ids: string[] }>, 'data'> {
   const { data, ...rest } = useDataQuery(GET_LANE_README_COMPONENT, {
     variables: { ids: [laneId.name] },
     skip,
