@@ -1,0 +1,13 @@
+.placeholder {
+  display: flex;
+  align-items: center;
+  padding-top: 8px;
+  padding-right: 16px;
+  line-height: var(--bit-p-md, 16px);
+  font-size: var(--bit-p-md, 16px);
+}
+
+.placeholderText {
+  padding: 4px 12px;
+  font-size: var(--bit-p-xs, 14px);
+}

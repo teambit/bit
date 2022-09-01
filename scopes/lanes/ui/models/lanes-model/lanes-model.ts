@@ -118,16 +118,15 @@ export class LanesModel {
     };
   }
 
-  static groupByScope(lanes: LaneModel[]): Map<string, LaneModel[]> {
-    const grouped = new Map<string, LaneModel[]>();
-    lanes.forEach((lane) => {
-      const { id } = lane;
-      const { scope } = id;
+  static groupByScope(laneIds: LaneId[]): Map<string, LaneId[]> {
+    const grouped = new Map<string, LaneId[]>();
+    laneIds.forEach((laneId) => {
+      const { scope } = laneId;
       if (!grouped.has(scope)) {
-        grouped.set(scope, [lane]);
+        grouped.set(scope, [laneId]);
       } else {
-        const existing = grouped.get(scope) as LaneModel[];
-        grouped.set(scope, [...existing, lane]);
+        const existing = grouped.get(scope) as LaneId[];
+        grouped.set(scope, [...existing, laneId]);
       }
     });
     return grouped;
@@ -167,13 +166,13 @@ export class LanesModel {
     this.viewedLane = viewedLane;
     this.currentLane = currentLane;
     this.lanes = lanes || [];
-    this.lanesByScope = LanesModel.groupByScope(this.lanes);
+    this.laneIdsByScope = LanesModel.groupByScope(this.lanes.map((lane) => lane.id));
     const { byHash, byId } = LanesModel.groupByComponentHashAndId(this.lanes);
     this.lanebyComponentHash = byHash;
     this.lanesByComponentId = byId;
   }
 
-  readonly lanesByScope: Map<string, LaneModel[]>;
+  readonly laneIdsByScope: Map<string, LaneId[]>;
   readonly lanebyComponentHash: Map<string, { lane: LaneModel; component: ComponentModel }>;
   readonly lanesByComponentId: Map<string, LaneModel[]>;
 

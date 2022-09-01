@@ -1,1 +1,1 @@
-export { LaneSwitcher as LanesListDropdown, LaneSwitcherProps as LanesListDropdownProps } from './lane-switcher';
+export { LaneSwitcher, LaneSwitcherProps } from './lane-switcher';

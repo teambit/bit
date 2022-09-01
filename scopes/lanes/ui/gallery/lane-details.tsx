@@ -3,15 +3,18 @@ import { ScopeTitle } from '@teambit/scope.ui.scope-title';
 import classNames from 'classnames';
 import React from 'react';
 import { ComponentCount } from '@teambit/component.ui.badges.component-count';
+import { LaneId } from '@teambit/lane-id';
 import styles from './lane-details.module.scss';
 
 export type LaneDetailsProps = {
-  laneName: string;
+  laneId: LaneId;
   description?: string;
   componentCount?: number;
 } & React.HTMLAttributes<HTMLDivElement>;
 
-export function LaneDetails({ description, componentCount, className, laneName, ...rest }: LaneDetailsProps) {
+export function LaneDetails({ description, componentCount, className, laneId, ...rest }: LaneDetailsProps) {
+  const laneName = laneId.isDefault() ? laneId.name : laneId.toString();
+
   return (
     <div {...rest} className={classNames(styles.laneTitle, className)}>
       <div className={styles.titleRow}>

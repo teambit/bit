@@ -15,7 +15,7 @@ import { LanesNavPlugin, LanesOrderedNavigationSlot, LanesOverviewMenu, UseLaneM
 import { LanesHost, LanesModel } from '@teambit/lanes.ui.models.lanes-model';
 import { LaneReadmeOverview } from '@teambit/lanes.ui.readme';
 import { LanesProvider, useLanes } from '@teambit/lanes.hooks.use-lanes';
-import { LanesListDropdown } from '@teambit/lanes.ui.navigation.lane-switcher';
+import { LaneSwitcher } from '@teambit/lanes.ui.navigation.lane-switcher';
 
 export class LanesUI {
   static dependencies = [UIAspect, ComponentAspect, WorkspaceAspect, ScopeAspect, SidebarAspect];
@@ -134,7 +134,7 @@ export class LanesUI {
   }
 
   private registerLanesDropdown() {
-    this.hostAspect?.registerSidebarLink(() => <LanesListDropdown />);
+    this.hostAspect?.registerSidebarLink(() => <LaneSwitcher groupByScope={this.lanesHost === 'workspace'} />);
   }
 
   private renderContext = ({ children }: { children: ReactNode }) => {

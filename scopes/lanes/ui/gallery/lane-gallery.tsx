@@ -66,7 +66,7 @@ function LaneGalleryWithPreview({ currentLane, overviewItems, routeSlot, host }:
     <div className={styles.container}>
       <LaneDetails
         className={styles.laneDetails}
-        laneName={currentLane.id.toString()}
+        laneId={currentLane.id}
         description={''}
         componentCount={currentLane.components.length}
       ></LaneDetails>

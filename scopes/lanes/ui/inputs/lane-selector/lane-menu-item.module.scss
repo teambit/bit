@@ -1,0 +1,7 @@
+.menuItem {
+  display: flex;
+  flex-direction: row;
+  padding: 8px 16px;
+  min-width: 120px;
+  border-bottom: 1px solid var(--bit-border-color-lightest, #ededed);
+}

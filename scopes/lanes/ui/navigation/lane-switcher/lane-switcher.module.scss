@@ -1,21 +1,3 @@
-@import '~@teambit/ui-foundation.ui.constants.z-indexes/z-indexes.module.scss';
-
-.placeholder {
+.laneSwitcherContainer {
   display: flex;
-  align-items: center;
-  padding-top: 8px;
-  padding-right: 16px;
-  line-height: var(--bit-p-md, 16px);
-  font-size: var(--bit-p-md, 16px);
-}
-
-.placeholderText {
-  padding: 4px 12px;
-  font-size: var(--bit-p-xs, 14px);
-}
-
-.dropdown {
-  // otherwise when the dropdown is open it clashes with the content of the tree
-  // (this is bizarre, the tree has no position absolute)
-  z-index: $nav-z-index;
 }

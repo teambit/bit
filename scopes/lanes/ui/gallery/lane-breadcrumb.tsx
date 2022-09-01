@@ -13,11 +13,13 @@ export type LaneBreadcrumbProps = { lane?: LaneModel } & React.HTMLAttributes<HT
 export function LaneBreadcrumb({ lane, className, ...rest }: LaneBreadcrumbProps) {
   if (!lane) return null;
 
+  const displayId = lane.id.isDefault() ? lane.id.name : lane.id.toString();
+
   return (
     <Link href={LanesModel.getLaneUrl(lane.id)} className={styles.laneUrl}>
       <div {...rest} className={classNames(styles.lane, className)}>
         <LaneIcon />
-        <Ellipsis className={styles.laneId}>{lane.id.toString()}</Ellipsis>
+        <Ellipsis className={styles.laneId}>{displayId}</Ellipsis>
       </div>
     </Link>
   );

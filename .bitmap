@@ -1296,12 +1296,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/mdx/ui/snippet"
     },
-    "ui/drawer": {
-        "scope": "teambit.lanes",
-        "version": "0.0.10",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/lanes/ui/drawer"
-    },
     "ui/elements/level-icon": {
         "scope": "teambit.design",
         "version": "0.0.11",
