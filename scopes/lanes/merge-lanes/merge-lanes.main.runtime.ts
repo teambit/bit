@@ -10,7 +10,7 @@ import { Consumer } from '@teambit/legacy/dist/consumer';
 import { MergeStrategy, ApplyVersionResults } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
 import { BitIds } from '@teambit/legacy/dist/bit-id';
 import { ComponentID } from '@teambit/component-id';
-import { DEFAULT_LANE } from '@teambit/lane-id';
+import { DEFAULT_LANE, LaneId } from '@teambit/lane-id';
 import { Lane } from '@teambit/legacy/dist/scope/models';
 import { Tmp } from '@teambit/legacy/dist/scope/repositories';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
@@ -25,7 +25,7 @@ export type MergeLaneOptions = {
   existingOnWorkspaceOnly: boolean;
   build: boolean;
   keepReadme: boolean;
-  squash: boolean;
+  noSquash: boolean;
   pattern?: string;
   includeDeps?: boolean;
   skipDependencyInstallation?: boolean;
@@ -58,7 +58,7 @@ export class MergeLanesMain {
       existingOnWorkspaceOnly,
       build,
       keepReadme,
-      squash,
+      noSquash,
       pattern,
       includeDeps,
       skipDependencyInstallation,
@@ -153,8 +153,8 @@ export class MergeLanesMain {
 
     throwForFailures();
 
-    if (squash) {
-      squashSnaps(allComponentsStatus, laneName, consumer);
+    if (currentLaneId.isDefault() && !noSquash) {
+      squashSnaps(allComponentsStatus, otherLaneId, consumer);
     }
 
     const mergeResults = await this.merging.mergeSnaps({
@@ -303,7 +303,8 @@ ${depsOnLane.map((d) => d.toString()).join('\n')}`);
   return filteredComponentStatus;
 }
 
-function squashSnaps(allComponentsStatus: ComponentMergeStatus[], laneName: string, consumer: Consumer) {
+function squashSnaps(allComponentsStatus: ComponentMergeStatus[], otherLaneId: LaneId, consumer: Consumer) {
+  const currentLaneName = consumer.getCurrentLaneId().name;
   const succeededComponents = allComponentsStatus.filter((c) => !c.unmergedMessage);
   succeededComponents.forEach(({ id, divergeData, componentFromModel }) => {
     if (!divergeData) {
@@ -311,7 +312,12 @@ function squashSnaps(allComponentsStatus: ComponentMergeStatus[], laneName: stri
     }
     if (divergeData.isDiverged()) {
       throw new BitError(`unable to squash because ${id.toString()} is diverged in history.
-consider switching to ${laneName} first, merging this lane, then switching back to this lane and merging ${laneName}`);
+consider switching to "${
+        otherLaneId.name
+      }" first, merging "${currentLaneName}", then switching back to "${currentLaneName}" and merging "${
+        otherLaneId.name
+      }"
+alternatively, use "--no-squash" flag to keep the entire history of "${otherLaneId.name}"`);
     }
     if (divergeData.isLocalAhead()) {
       // nothing to do. current is ahead, nothing to merge. (it was probably filtered out already as a "failedComponent")
@@ -326,13 +332,15 @@ consider switching to ${laneName} first, merging this lane, then switching back 
     if (remoteSnaps.length === 0) {
       throw new Error(`remote is ahead but it has no snaps. it's impossible`);
     }
-    if (remoteSnaps.length === 1) {
-      // nothing to squash. it has only one commit.
-      return;
-    }
+    // if (remoteSnaps.length === 1) {
+    //   // nothing to squash. it has only one commit.
+    //   return;
+    // }
     if (!componentFromModel) {
       throw new Error('unable to squash, the componentFromModel is missing');
     }
+
+    const currentParents = componentFromModel.parents;
 
     // do the squash.
     if (divergeData.commonSnapBeforeDiverge) {
@@ -341,8 +349,7 @@ consider switching to ${laneName} first, merging this lane, then switching back 
       // there is no commonSnapBeforeDiverge. the local has no snaps, all are remote, no need for parents. keep only head.
       componentFromModel.parents.forEach((ref) => componentFromModel.removeParent(ref));
     }
-    const squashedSnaps = remoteSnaps.filter((snap) => !snap.isEqual(componentFromModel.hash()));
-    componentFromModel.setSquashed(squashedSnaps);
+    componentFromModel.setSquashed({ previousParents: currentParents, laneId: otherLaneId });
     consumer.scope.objects.add(componentFromModel);
   });
 }

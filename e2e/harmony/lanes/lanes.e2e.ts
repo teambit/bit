@@ -688,7 +688,7 @@ describe('bit lane command', function () {
           helper.scopeHelper.getClonedRemoteScope(afterSwitchingRemote);
           helper.fixtures.populateComponents(2, undefined, 'v3');
           helper.command.snapAllComponentsWithoutBuild();
-          helper.command.mergeLane('dev', '--ours');
+          helper.command.mergeLane('dev', '--ours --no-squash');
         });
         it('should merge the lane', () => {
           const mergedLanes = helper.command.listLanes('--merged');

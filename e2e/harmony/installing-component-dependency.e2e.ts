@@ -1,5 +1,6 @@
 import { expect } from 'chai';
 import path from 'path';
+import { Extensions } from '../../src/constants';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
 
@@ -42,6 +43,15 @@ import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
     expect(
       helper.fs.exists(path.join(helper.scopes.remoteWithoutOwner, `comp1/node_modules/${scope}comp2/package.json`))
     ).to.eq(false);
+  });
+  it('should not install the version of the component dependency from the model, when the component dependency is in the bitmap config', () => {
+    helper.command.dependenciesSet('comp1', `${scope}comp2@0.0.2`);
+    helper.command.install();
+    expect(helper.fs.readJsonFile(`node_modules/${scope}comp2/package.json`).version).to.eq('0.0.2');
+    const show = helper.command.showAspectConfig('comp1', Extensions.dependencyResolver);
+    const ids: string[] = show.data.dependencies.map((dep) => dep.id);
+    const comp2 = ids.find((id) => id.includes('comp2'));
+    expect(comp2?.endsWith('0.0.2')).to.be.true;
   });
   after(() => {
     npmCiRegistry.destroy();
