@@ -1,10 +1,10 @@
-export function indexTemplate() {
-  return `import { WorkspaceContext, WorkspaceTemplate } from '@teambit/generator';
-import { workspaceConfig } from './files/workspace-config';
-import { readme } from './files/readme-file';
-import { gitIgnore } from './files/git-ignore';
+export function starterFile() {
+  return `import { WorkspaceContext, Starter } from '@teambit/generator';
+import { workspaceConfig } from './template/files/workspace-config';
+import { readme } from './template/files/readme-file';
+import { gitIgnore } from './template/files/git-ignore';
 
-export const workspaceTemplate: WorkspaceTemplate = {
+export const starter: Starter = {
   name: 'template-example',
   description: 'demonstration of a workspace template',
   generateFiles: async (context: WorkspaceContext) => [
@@ -25,5 +25,8 @@ export const workspaceTemplate: WorkspaceTemplate = {
     { id: 'teambit.react/templates/ui/text', path: 'ui/text' },
   ],
 };
+
+export default starter;
 `;
 }
+

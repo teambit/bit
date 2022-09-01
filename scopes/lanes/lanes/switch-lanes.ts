@@ -223,9 +223,9 @@ async function getComponentStatus(consumer: Consumer, id: BitId, switchProps: Sw
     return returnFailure(`component ${id.toString()} had never imported`, true);
   }
   const unmerged = consumer.scope.objects.unmergedComponents.getEntry(id.name);
-  if (unmerged && unmerged.resolved === false) {
+  if (unmerged) {
     return returnFailure(
-      `component ${id.toStringWithoutVersion()} has conflicts that need to be resolved first, please use bit merge --resolve/--abort`
+      `component ${id.toStringWithoutVersion()} is in during-merge state, please snap/tag it first (or use bit merge --resolve/--abort)`
     );
   }
   const version = id.version;

@@ -229,8 +229,7 @@ export default class ComponentLoader {
 
   private async _handleOutOfSyncScenarios(component: Component) {
     const { componentFromModel, componentMap } = component;
-    // $FlowFixMe componentMap is set here
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore componentMap is set here
     const currentId: BitId = componentMap.id;
     let newId: BitId | null | undefined;
     if (componentFromModel && !currentId.hasVersion()) {

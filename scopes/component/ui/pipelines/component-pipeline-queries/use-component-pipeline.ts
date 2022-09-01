@@ -1,5 +1,5 @@
-import { gql, QueryResult } from '@apollo/client';
-import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
+import { gql } from '@apollo/client';
+import { useDataQuery, DataQueryResult } from '@teambit/ui-foundation.ui.hooks.use-data-query';
 import { TaskReport } from '@teambit/component.ui.pipelines.component-pipeline-model';
 
 const PIPELINE_REPORT_QUERY = gql`
@@ -42,7 +42,7 @@ const PIPELINE_REPORT_QUERY = gql`
 export function useComponentPipelineQuery(
   host: string,
   componentId: string
-): QueryResult<{ tasks: TaskReport[]; buildStatus?: string }> {
+): DataQueryResult<{ tasks: TaskReport[]; buildStatus?: string }, { id: string; extensionId: string }> {
   const { data, ...rest } = useDataQuery(PIPELINE_REPORT_QUERY, {
     variables: { id: componentId, extensionId: host },
   });

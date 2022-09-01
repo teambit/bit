@@ -9,7 +9,6 @@ const LINKS_CONTENT_TEMPLATES = {
   scss: "@import '{filePath}.scss';",
   sass: "@import '{filePath}.sass';",
   less: "@import '{filePath}.less';",
-  vue: "<script>\nmodule.exports = require('{filePath}.vue');\n</script>",
 };
 
 export const JAVASCRIPT_FLAVORS_EXTENSIONS = ['js', 'ts', 'jsx', 'tsx'];

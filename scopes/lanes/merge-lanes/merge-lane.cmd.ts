@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import { Command, CommandOptions } from '@teambit/cli';
-import { getMergeStrategy } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
+import { getMergeStrategy, MergeStrategy } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
 import { mergeReport } from '@teambit/merging';
 import { BUILD_ON_CI, isFeatureEnabled } from '@teambit/legacy/dist/api/consumer/lib/feature-toggle';
 import { BitError } from '@teambit/bit-error';
@@ -33,7 +33,7 @@ in case the <lane> exists locally but you want to merge the remote version of it
     ['', 'build', 'in case of snap during the merge, run the build-pipeline (similar to bit snap --build)'],
     ['m', 'message <message>', 'override the default message for the auto snap'],
     ['', 'keep-readme', 'skip deleting the lane readme component after merging'],
-    ['', 'squash', 'EXPERIMENTAL. squash multiple snaps. keep the last one only'],
+    ['', 'no-squash', 'EXPERIMENTAL. relevant for merging lanes into main, which by default squash.'],
     ['', 'verbose', 'show details of components that were not merged legitimately'],
     ['', 'skip-dependency-installation', 'do not install packages of the imported components'],
     ['', 'remote', 'relevant when the target-lane locally is differ than the remote and you want the remote'],
@@ -41,6 +41,11 @@ in case the <lane> exists locally but you want to merge the remote version of it
       '',
       'include-deps',
       'EXPERIMENTAL. relevant for "--pattern" and "--workspace". merge also dependencies of the given components',
+    ],
+    [
+      '',
+      'resolve-unrelated [merge-strategy]',
+      'EXPERIMENTAL. relevant when a component on a lane and the component on main has nothing in common. merge-strategy can be "ours" (default) or "theirs"',
     ],
   ] as CommandOptions;
   loader = true;
@@ -61,10 +66,11 @@ in case the <lane> exists locally but you want to merge the remote version of it
       noSnap = false,
       message: snapMessage = '',
       keepReadme = false,
-      squash = false,
+      noSquash = false,
       skipDependencyInstallation = false,
       remote = false,
       includeDeps = false,
+      resolveUnrelated,
       verbose = false,
     }: {
       ours: boolean;
@@ -75,10 +81,11 @@ in case the <lane> exists locally but you want to merge the remote version of it
       noSnap: boolean;
       message: string;
       keepReadme?: boolean;
-      squash: boolean;
+      noSquash: boolean;
       skipDependencyInstallation?: boolean;
       remote: boolean;
       includeDeps?: boolean;
+      resolveUnrelated?: string | boolean;
       verbose?: boolean;
     }
   ): Promise<string> {
@@ -88,6 +95,17 @@ in case the <lane> exists locally but you want to merge the remote version of it
     if (includeDeps && !pattern && !existingOnWorkspaceOnly) {
       throw new BitError(`"--include-deps" flag is relevant only for --workspace and --pattern flags`);
     }
+    const getResolveUnrelated = (): MergeStrategy | undefined => {
+      if (!resolveUnrelated) return undefined;
+      if (typeof resolveUnrelated === 'boolean') return 'ours';
+      if (resolveUnrelated !== 'ours' && resolveUnrelated !== 'theirs' && resolveUnrelated !== 'manual') {
+        throw new Error('--resolve-unrelated must be one of the following: [ours, theirs, manual]');
+      }
+      return resolveUnrelated;
+    };
+    if (resolveUnrelated && typeof resolveUnrelated === 'boolean') {
+      resolveUnrelated = 'ours';
+    }
     const { mergeResults, deleteResults } = await this.mergeLanes.mergeLane(name, {
       build,
       // @ts-ignore
@@ -96,10 +114,11 @@ in case the <lane> exists locally but you want to merge the remote version of it
       noSnap,
       snapMessage,
       keepReadme,
-      squash,
+      noSquash,
       pattern,
       skipDependencyInstallation,
       remote,
+      resolveUnrelated: getResolveUnrelated(),
       includeDeps,
     });
 

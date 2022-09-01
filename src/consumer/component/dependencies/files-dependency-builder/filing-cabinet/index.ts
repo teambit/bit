@@ -16,8 +16,6 @@ import stylusLookup from 'stylus-lookup';
 import ts from 'typescript';
 
 import { isRelativeImport } from '../../../../../utils';
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-import vueLookUp from '../lookups/vue-lookup';
 import { DetectorHook } from '../detector-hook';
 
 const debug = require('debug')('cabinet');
@@ -31,7 +29,6 @@ const defaultLookups = {
   '.sass': cssPreprocessorLookup,
   '.styl': stylusLookup,
   '.less': cssPreprocessorLookup,
-  '.vue': vueLookUp,
 };
 
 // for some reason, .ts is not sufficient, .d.ts is needed as well
