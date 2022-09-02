@@ -11,7 +11,6 @@ import { TreeContext } from '@teambit/base-ui.graph.tree.tree-context';
 import { indentClass } from '@teambit/base-ui.graph.tree.indent';
 import { TreeNodeProps } from '@teambit/base-ui.graph.tree.recursive-tree';
 import { useLanes } from '@teambit/lanes.hooks.use-lanes';
-import { LanesModel } from '@teambit/lanes.ui.models.lanes-model';
 import { PayloadType } from '../payload-type';
 import { getName } from '../utils/get-name';
 import styles from './component-view.module.scss';
@@ -52,7 +51,7 @@ export function ComponentView(props: ComponentViewProps<PayloadType>) {
   );
 
   const href = lanesModel?.getLaneComponentUrlByVersion(component.id.version) || component.id.fullName;
-  const viewingMainCompOnLane = !lanesModel?.viewedLane?.id.isDefault() && !href.includes(LanesModel.lanesPrefix);
+  const viewingMainCompOnLane = !lanesModel?.viewedLane?.id.isDefault() && lanesModel?.isComponentOnMain(component.id);
 
   return (
     <Link

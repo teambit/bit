@@ -40,7 +40,7 @@ export function LaneSelector({
     if (!searchTerm || searchTerm === '') {
       setFilteredLanes(lanes);
     } else {
-      setFilteredLanes((value) => value.filter((laneId) => laneId.toString().includes(searchTerm)));
+      setFilteredLanes((value) => value.filter((laneId) => laneId.name.includes(searchTerm)));
     }
   };
 
