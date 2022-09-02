@@ -1,3 +1,4 @@
+import { NoIdMatchPattern } from '@teambit/scope';
 import { expect } from 'chai';
 
 import NoIdMatchWildcard from '../../src/api/consumer/lib/exceptions/no-id-match-wildcard';
@@ -227,7 +228,7 @@ describe('component id with wildcard', function () {
       describe('when wildcard does not match any component', () => {
         it('should throw an error saying the wildcard does not match any id', () => {
           const checkoutFunc = () => helper.command.checkout('0.0.1 "none/*"');
-          const error = new NoIdMatchWildcard(['none/*']);
+          const error = new NoIdMatchPattern('none/*');
           helper.general.expectToThrow(checkoutFunc, error);
         });
       });

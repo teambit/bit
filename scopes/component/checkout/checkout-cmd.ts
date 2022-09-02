@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import { Command, CommandOptions } from '@teambit/cli';
-import { COMPONENT_PATTERN_HELP, LATEST } from '@teambit/legacy/dist/constants';
+import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
 import {
   ApplyVersionResults,
   getMergeStrategy,
@@ -90,8 +90,8 @@ export class CheckoutCmd implements Command {
     };
     const { components, version, failedComponents, leftUnresolvedConflicts }: ApplyVersionResults =
       await this.checkout.checkoutByCLIValues(to, componentPattern || '', checkoutProps);
-    const isLatest = Boolean(version && version === LATEST);
-    const isReset = !version;
+    const isLatest = to === 'head';
+    const isReset = to === 'reset';
     const getFailureOutput = () => {
       // components that failed for no legitimate reason. e.g. merge-conflict.
       const realFailedComponents = failedComponents?.filter((f) => !f.unchangedLegitimately);

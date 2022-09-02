@@ -54,6 +54,7 @@ import { PutRoute, FetchRoute, ActionRoute, DeleteRoute } from './routes';
 import { ScopeComponentLoader } from './scope-component-loader';
 import { ScopeCmd } from './scope-cmd';
 import { StagedConfig } from './staged-config';
+import { NoIdMatchPattern } from './exceptions/no-id-match-pattern';
 
 type TagRegistry = SlotRegistry<OnTag>;
 
@@ -996,7 +997,7 @@ needed-for: ${neededFor || '<unknown>'}`);
     const idsToCheck = (id: ComponentID) => [id.toStringWithoutVersion(), id._legacy.toStringWithoutVersion()];
     const idsFiltered = ids.filter((id) => multimatch(idsToCheck(id), patterns).length);
     if (throwForNoMatch && !idsFiltered.length) {
-      throw new BitError(`unable to find any matching for "${pattern}" pattern`);
+      throw new NoIdMatchPattern(pattern);
     }
     return idsFiltered;
   }
