@@ -1,25 +1,33 @@
 import chalk from 'chalk';
 import { Command, CommandOptions } from '@teambit/cli';
-import { LATEST, WILDCARD_HELP } from '@teambit/legacy/dist/constants';
-import { CheckoutProps } from '@teambit/legacy/dist/consumer/versions-ops/checkout-version';
+import { COMPONENT_PATTERN_HELP, LATEST } from '@teambit/legacy/dist/constants';
 import {
   ApplyVersionResults,
   getMergeStrategy,
   applyVersionReport,
   conflictSummaryReport,
 } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
-import { CheckoutMain } from './checkout.main.runtime';
+import { CheckoutMain, CheckoutProps } from './checkout.main.runtime';
 
 export class CheckoutCmd implements Command {
-  name = 'checkout [values...]';
+  name = 'checkout <to> [component-pattern]';
+  arguments = [
+    {
+      name: 'to',
+      description:
+        "permitted values: [head, reset, specific-version]. 'head' - last snap/tag. 'reset' - removes local changes",
+    },
+    {
+      name: 'component-pattern',
+      description: COMPONENT_PATTERN_HELP,
+    },
+  ];
   description = 'switch between component versions or remove local changes';
   group = 'development';
   extendedDescription = `
-  \`bit checkout <version> [ids...]\` => checkout the specified ids (or all components when --all is used) to the specified version
-  \`bit checkout head\` => checkout all components to their latest versions
-  \`bit checkout head [ids...]\` => checkout the specified ids to their latest versions
-  \`bit checkout [ids...] --reset\` => remove local modifications from the specified ids (or all components when --all is used)
-  ${WILDCARD_HELP('checkout 0.0.1')}`;
+  \`bit checkout <version> [component-pattern]\` => checkout the specified ids (or all components when --all is used) to the specified version
+  \`bit checkout head [component-pattern]\` => checkout to the last snap/tag, omit [component-pattern] to checkout head for all
+  \`bit checkout reset [component-pattern]\` => remove local modifications from the specified ids (or all components when --all is used)`;
   alias = 'U';
   options = [
     [
@@ -35,24 +43,13 @@ export class CheckoutCmd implements Command {
     ['v', 'verbose', 'showing verbose output for inspection'],
     ['', 'skip-npm-install', 'DEPRECATED. use "--skip-dependency-installation" instead'],
     ['', 'skip-dependency-installation', 'do not install packages of the imported components'],
-    [
-      '',
-      'ignore-package-json',
-      'do not generate package.json for the imported component(s). (it automatically enables skip-npm-install and save-dependencies-as-components flags)',
-    ],
-    [
-      '',
-      'conf [path]',
-      'write the configuration file (bit.json) and the envs configuration files (use --conf without path to write to the default dir)',
-    ],
-    ['', 'ignore-dist', 'do not write dist files (when exist)'],
   ] as CommandOptions;
   loader = true;
 
   constructor(private checkout: CheckoutMain) {}
 
   async report(
-    [values = []]: [string[]],
+    [to, componentPattern]: [string, string],
     {
       interactiveMerge = false,
       ours = false,
@@ -63,9 +60,6 @@ export class CheckoutCmd implements Command {
       verbose = false,
       skipNpmInstall = false,
       skipDependencyInstallation = false,
-      ignorePackageJson = false,
-      conf,
-      ignoreDist = false,
     }: {
       interactiveMerge?: boolean;
       ours?: boolean;
@@ -76,9 +70,6 @@ export class CheckoutCmd implements Command {
       verbose?: boolean;
       skipNpmInstall?: boolean;
       skipDependencyInstallation?: boolean;
-      ignorePackageJson?: boolean;
-      conf?: string;
-      ignoreDist?: boolean;
     }
   ) {
     if (skipNpmInstall) {
@@ -96,12 +87,9 @@ export class CheckoutCmd implements Command {
       verbose,
       isLane: false,
       skipNpmInstall: skipDependencyInstallation,
-      ignoreDist,
-      ignorePackageJson,
-      writeConfig: !!conf,
     };
     const { components, version, failedComponents, leftUnresolvedConflicts }: ApplyVersionResults =
-      await this.checkout.checkout(values, checkoutProps);
+      await this.checkout.checkoutByCLIValues(to, componentPattern || '', checkoutProps);
     const isLatest = Boolean(version && version === LATEST);
     const isReset = !version;
     const getFailureOutput = () => {
