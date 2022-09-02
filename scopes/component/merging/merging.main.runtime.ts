@@ -245,7 +245,7 @@ export class MergingMain {
     id: BitId, // the id.version is the version we want to merge to the current component
     localLane: Lane | null, // currently checked out lane. if on main, then it's null.
     otherLaneName: string, // the lane name we want to merged to our lane. (can be also "main").
-    options?: { resolveUnrelated?: MergeStrategy }
+    options?: { resolveUnrelated?: MergeStrategy; ignoreConfigChanges?: boolean }
   ): Promise<ComponentMergeStatus> {
     const consumer = this.workspace.consumer;
     const componentStatus: ComponentMergeStatus = { id };
@@ -298,11 +298,23 @@ export class MergingMain {
       return consumer.scope.getConsumerComponent(currentId);
     };
     const currentComponent = await getCurrentComponent();
-    const componentModificationStatus = await consumer.getComponentStatusById(currentComponent.id);
-    if (componentModificationStatus.modified) {
-      return returnUnmerged(
-        `unable to merge ${id.toStringWithoutVersion()}, the component is modified, please snap/tag it first`
+    const isModified = async () => {
+      const componentModificationStatus = await consumer.getComponentStatusById(currentComponent.id);
+      if (!componentModificationStatus.modified) return false;
+      if (!existingBitMapId) return false;
+      const baseComponent = await modelComponent.loadVersion(
+        existingBitMapId.version as string,
+        consumer.scope.objects
       );
+      return options?.ignoreConfigChanges
+        ? consumer.isComponentSourceCodeModified(baseComponent, currentComponent)
+        : true;
+    };
+
+    const isComponentModified = await isModified();
+
+    if (isComponentModified) {
+      return returnUnmerged(`component is modified, please snap/tag it first`);
     }
     const laneHeadIsDifferentThanCheckedOut =
       localLane && existingBitMapId?.version && modelComponent.laneHeadLocal?.toString() !== existingBitMapId?.version;
