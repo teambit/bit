@@ -4,6 +4,11 @@
   // otherwise when the dropdown is open it clashes with the content of the tree
   // (this is bizarre, the tree has no position absolute)
   z-index: $nav-z-index;
+  &.disabled {
+    > div {
+      cursor: unset;
+    }
+  }
 }
 
 .header {

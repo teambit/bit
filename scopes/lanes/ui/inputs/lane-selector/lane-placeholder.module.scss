@@ -7,6 +7,9 @@
   border-radius: 6px;
   border: 1px solid var(--bit-border-color-light, #cccfd4);
   background-color: var(--bit-border-color-lightest, #ededed);
+  &.disabled {
+    border: unset;
+  }
 }
 
 .placeholderText {

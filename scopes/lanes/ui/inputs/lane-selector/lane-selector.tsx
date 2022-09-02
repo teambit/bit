@@ -29,7 +29,7 @@ export function LaneSelector({
 }: LaneSelectorProps) {
   const [filteredLanes, setFilteredLanes] = useState<LaneId[]>(lanes);
   const [focus, setFocus] = useState<boolean>(false);
-
+  const multipleLanes = lanes.length > 1;
   const laneDropdownItems: LaneDropdownItems = groupByScope
     ? Array.from(LanesModel.groupByScope(filteredLanes).entries())
     : filteredLanes;
@@ -51,33 +51,39 @@ export function LaneSelector({
   return (
     <Dropdown
       {...rest}
-      onChange={onDropdownToggled}
+      open={!multipleLanes ? false : undefined}
+      onChange={multipleLanes ? onDropdownToggled : undefined}
       // @ts-ignore - mismatch between @types/react
-      placeholder={<LanePlaceholder selectedLaneId={selectedLaneId} />}
-      className={classnames(className, styles.dropdown)}
+      placeholder={<LanePlaceholder disabled={!multipleLanes} selectedLaneId={selectedLaneId} />}
+      className={classnames(className, styles.dropdown, !multipleLanes && styles.disabled)}
     >
-      <div className={styles.header}>Switch lane</div>
-      <div className={styles.search}>
-        <LaneSearch focus={focus} onChange={handleOnChange} />
-      </div>
-      {groupByScope
-        ? (laneDropdownItems as Array<[scope: string, lanes: LaneId[]]>).map(([scope, lanesByScope]) => (
-            <LaneGroupedMenuItem
-              key={scope}
-              scope={scope}
-              onLaneSelected={onLaneSelected}
-              selected={selectedLaneId}
-              current={lanesByScope}
-            />
-          ))
-        : (laneDropdownItems as LaneId[]).map((lane) => (
-            <LaneMenuItem
-              onLaneSelected={onLaneSelected(lane)}
-              key={lane.toString()}
-              selected={selectedLaneId}
-              current={lane}
-            ></LaneMenuItem>
-          ))}
+      {multipleLanes && <div className={styles.header}>Switch lane</div>}
+      {multipleLanes && (
+        <div className={styles.search}>
+          <LaneSearch focus={focus} onChange={handleOnChange} />
+        </div>
+      )}
+      {multipleLanes &&
+        groupByScope &&
+        (laneDropdownItems as Array<[scope: string, lanes: LaneId[]]>).map(([scope, lanesByScope]) => (
+          <LaneGroupedMenuItem
+            key={scope}
+            scope={scope}
+            onLaneSelected={onLaneSelected}
+            selected={selectedLaneId}
+            current={lanesByScope}
+          />
+        ))}
+      {multipleLanes &&
+        !groupByScope &&
+        (laneDropdownItems as LaneId[]).map((lane) => (
+          <LaneMenuItem
+            onLaneSelected={onLaneSelected(lane)}
+            key={lane.toString()}
+            selected={selectedLaneId}
+            current={lane}
+          ></LaneMenuItem>
+        ))}
     </Dropdown>
   );
 }

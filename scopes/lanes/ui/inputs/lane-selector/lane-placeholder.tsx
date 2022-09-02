@@ -6,16 +6,16 @@ import classnames from 'classnames';
 
 import styles from './lane-placeholder.module.scss';
 
-export type LanePlaceholderProps = { selectedLaneId: LaneId } & HTMLAttributes<HTMLDivElement>;
+export type LanePlaceholderProps = { selectedLaneId: LaneId; disabled?: boolean } & HTMLAttributes<HTMLDivElement>;
 
-export function LanePlaceholder({ selectedLaneId, className, ...rest }: LanePlaceholderProps) {
+export function LanePlaceholder({ selectedLaneId, disabled, className, ...rest }: LanePlaceholderProps) {
   const laneIdStr = selectedLaneId?.isDefault() ? selectedLaneId.name : selectedLaneId?.toString();
 
   return (
-    <div {...rest} className={classnames(styles.placeholder, className)}>
+    <div {...rest} className={classnames(styles.placeholder, className, disabled && styles.disabled)}>
       <LaneIcon className={styles.icon} />
       <span className={styles.placeholderText}>{laneIdStr}</span>
-      <Icon of="fat-arrow-down" />
+      {!disabled && <Icon of="fat-arrow-down" />}
     </div>
   );
 }
