@@ -27,7 +27,7 @@ import Version from '@teambit/legacy/dist/scope/models/version';
 import { Tmp } from '@teambit/legacy/dist/scope/repositories';
 import ManyComponentsWriter from '@teambit/legacy/dist/consumer/component-ops/many-components-writer';
 import { MergeResultsThreeWay } from '@teambit/legacy/dist/consumer/versions-ops/merge-version/three-way-merge';
-import ConsumerComponent from '@teambit/legacy/dist/src/consumer/component';
+import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { ComponentID } from '@teambit/component-id';
 import { CheckoutCmd } from './checkout-cmd';
 import { CheckoutAspect } from './checkout.aspect';
