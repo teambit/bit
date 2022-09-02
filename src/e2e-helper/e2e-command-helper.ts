@@ -579,6 +579,9 @@ export default class CommandHelper {
   checkoutHead(values = '') {
     return this.runCmd(`bit checkout head ${values}`);
   }
+  checkoutReset(values = '') {
+    return this.runCmd(`bit checkout reset ${values}`);
+  }
   switchLocalLane(lane: string, flags?: string) {
     return this.runCmd(`bit switch ${lane} ${flags || ''}`);
   }

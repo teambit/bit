@@ -1,4 +1,5 @@
 import { expect } from 'chai';
+import { MissingBitMapComponent } from '../../src/consumer/bit-map/exceptions';
 import Helper from '../../src/e2e-helper/e2e-helper';
 
 describe('bit reset command', function () {
@@ -106,16 +107,10 @@ describe('bit reset command', function () {
       });
     });
     describe('when tagging non-existing component', () => {
-      let output;
-      before(() => {
-        try {
-          helper.command.untag('non-exist-scope/non-exist-comp');
-        } catch (err: any) {
-          output = err.message;
-        }
-      });
       it('should show an descriptive error', () => {
-        expect(output).to.have.string('unable to find "non-exist-scope/non-exist-comp" in the workspace');
+        const resetFunc = () => helper.command.untag('non-exist-scope/non-exist-comp');
+        const error = new MissingBitMapComponent('non-exist-scope/non-exist-comp');
+        helper.general.expectToThrow(resetFunc, error);
       });
     });
   });

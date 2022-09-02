@@ -237,10 +237,10 @@ describe('bit checkout command', function () {
         expect(deletedFile).to.not.be.a.path();
       });
     });
-    describe('bit checkout --reset', () => {
+    describe('bit checkout reset', () => {
       before(() => {
         helper.scopeHelper.getClonedLocalScope(scopeBeforeCheckout);
-        helper.command.checkout('comp1 --skip-npm-install --reset');
+        helper.command.checkoutReset('comp1 --skip-npm-install');
       });
       it('should re-create the file', () => {
         const deletedFile = path.join(helper.scopes.localPath, 'comp1/foo.ts');
