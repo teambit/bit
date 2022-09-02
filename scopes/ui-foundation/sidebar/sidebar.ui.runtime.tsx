@@ -11,7 +11,10 @@ export type ComponentTypeProps = {
   component: ComponentModel;
 };
 
-export type SidebarItem = ComponentType;
+export type SidebarItem = {
+  weight?: number,
+  component?: ComponentType
+};
 
 export type SidebarItemSlot = SlotRegistry<SidebarItem[]>;
 

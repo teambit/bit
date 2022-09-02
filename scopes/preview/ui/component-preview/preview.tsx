@@ -111,7 +111,7 @@ export function ComponentPreview({
   const targetHeight = height !== 0 ? height : 5000;
   const finalHeight = (!fullContentHeight && targetHeight < containerHeight) ? containerHeight : targetHeight;
   const defaultLegacyHeight = forceHeight || 5000;
-  const legacyIframeHeight = (iframeHeight || 0) > 100 ? iframeHeight : defaultLegacyHeight;
+  const legacyIframeHeight = (iframeHeight || 0) > 400 ? iframeHeight : defaultLegacyHeight;
 
   return (
     <div ref={containerRef} className={styles.preview} style={{ height: forceHeight }}>

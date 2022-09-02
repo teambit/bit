@@ -30,6 +30,7 @@ export type ScopeProps = {
   userUseScopeQuery?: () => { scope: ScopeModel | undefined };
   onSidebarTogglerChange: (callback: () => void) => void;
   TargetCorner?: ComponentType;
+  paneClassName?: string;
 };
 
 /**
@@ -44,7 +45,8 @@ export function Scope({
   overviewLineSlot,
   cornerSlot,
   context = [],
-  TargetScopeOverview,
+  paneClassName,
+TargetScopeOverview,
   TargetCorner,
   onSidebarTogglerChange,
   userUseScopeQuery,
@@ -85,7 +87,7 @@ export function Scope({
                 tooltipContent={`${isSidebarOpen ? 'Hide' : 'Show'} side panel`}
               />
             </HoverSplitter>
-            <Pane>
+            <Pane className={paneClassName}>
               <SlotRouter slot={routeSlot}>
                 <Route
                   index
