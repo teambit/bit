@@ -123,6 +123,12 @@ export default class Consumer {
     return this.bitMap.getAllIdsAvailableOnLane();
   }
 
+  get bitmapIdsFromCurrentLaneIncludeRemoved(): BitIds {
+    const idsFromBitMap = this.bitMap.getAllIdsAvailableOnLane();
+    const removedIds = this.bitMap.getRemoved();
+    return BitIds.fromArray([...idsFromBitMap, ...removedIds]);
+  }
+
   get bitMapIdsFromAllLanes(): BitIds {
     return this.bitMap.getAllBitIdsFromAllLanes();
   }

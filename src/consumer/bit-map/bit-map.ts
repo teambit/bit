@@ -324,12 +324,21 @@ export default class BitMap {
 
   getAllIdsAvailableOnLane(): BitIds {
     if (!this._cacheIdsLane) {
-      const components = this.components.filter((c) => c.isAvailableOnCurrentLane || !c.onLanesOnly);
+      const components = this.components
+        .filter((c) => !c.isRemoved())
+        .filter((c) => c.isAvailableOnCurrentLane || !c.onLanesOnly);
       const componentIds = BitIds.fromArray(components.map((c) => c.id));
       this._cacheIdsLane = componentIds;
       Object.freeze(this._cacheIdsLane);
     }
     return this._cacheIdsLane;
+  }
+
+  getRemoved(): BitIds {
+    const components = this.components
+      .filter((c) => c.isRemoved())
+      .filter((c) => c.isAvailableOnCurrentLane || !c.onLanesOnly);
+    return BitIds.fromArray(components.map((c) => c.id));
   }
 
   isIdAvailableOnCurrentLane(id: BitId): boolean {
@@ -363,7 +372,6 @@ export default class BitMap {
     if (this.updatedIds[bitId.toString()]) {
       return this.updatedIds[bitId.toString()].id;
     }
-
     throw new MissingBitMapComponent(bitId.toString());
   }
 
