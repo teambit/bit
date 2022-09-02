@@ -87,6 +87,11 @@
   }
 }
 
+.onMainTooltip {
+  max-width: unset !important; // override tippy's default max-width: 350px
+  font-size: var(--bit-p-xxs);
+}
+
 .envLink {
   color: white;
   text-decoration: none;
