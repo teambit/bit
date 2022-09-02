@@ -1,7 +1,7 @@
 import * as path from 'path';
 import R from 'ramda';
 import { BitId } from '../../bit-id';
-import { BIT_MAP } from '../../constants';
+import { BIT_MAP, Extensions } from '../../constants';
 import ValidationError from '../../error/validation-error';
 import logger from '../../logger/logger';
 import { isValidPath, pathJoinLinux, pathNormalizeToLinux, pathRelativeLinux } from '../../utils';
@@ -322,6 +322,12 @@ export default class ComponentMap {
       return relativePaths.includes(file.relativePath) ? accumulator : accumulator.concat(file);
     }, []);
     this.validate();
+  }
+
+  isRemoved() {
+    const removeAspectConf = this.config?.[Extensions.remove];
+    if (!removeAspectConf) return false;
+    return removeAspectConf !== '-' && removeAspectConf.removed;
   }
 
   sort() {
