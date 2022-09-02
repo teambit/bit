@@ -4,6 +4,7 @@ import { LaneId } from '@teambit/lane-id';
 import { useNavigate } from 'react-router-dom';
 import { classes } from '@teambit/design.ui.surfaces.menu.item';
 import { LanesModel } from '@teambit/lanes.ui.models.lanes-model';
+import { PillLabel } from '@teambit/design.ui.pill-label';
 
 import styles from './lane-menu-item.module.scss';
 
@@ -38,6 +39,11 @@ export function LaneMenuItem({ selected, current, onLaneSelected, className, ...
       onClick={onLaneClicked}
     >
       <div className={styles.laneName}>{current.name}</div>
+      {current.isDefault() && (
+        <PillLabel className={styles.defaultLanePill}>
+          <span>default</span>
+        </PillLabel>
+      )}
     </div>
   );
 }
