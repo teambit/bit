@@ -454,4 +454,27 @@ describe('bit checkout command', function () {
       expect(bitMap.comp1.version).to.equal('0.0.3');
     });
   });
+  describe('sync new components', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents(2);
+      const scopeBeforeTag = helper.scopeHelper.cloneLocalScope();
+      helper.command.tagWithoutBuild('comp2');
+      helper.command.export();
+      helper.scopeHelper.getClonedLocalScope(scopeBeforeTag);
+
+      // intermediate step, make sure they're both new.
+      const status = helper.command.statusJson();
+      expect(status.newComponents).to.have.lengthOf(2);
+    });
+    it('bit checkout head should sync the exported components', () => {
+      helper.command.checkoutHead();
+      const status = helper.command.statusJson();
+      expect(status.newComponents).to.have.lengthOf(1);
+
+      const bitMap = helper.bitMap.read();
+      expect(bitMap.comp2.scope).to.equal(helper.scopes.remote);
+    });
+  });
 });
