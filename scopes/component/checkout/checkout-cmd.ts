@@ -1,4 +1,5 @@
 import chalk from 'chalk';
+import { BitError } from '@teambit/bit-error';
 import { Command, CommandOptions } from '@teambit/cli';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
 import {
@@ -41,6 +42,7 @@ export class CheckoutCmd implements Command {
     ['r', 'reset', 'revert changes that were not snapped/tagged'],
     ['a', 'all', 'all components'],
     ['v', 'verbose', 'showing verbose output for inspection'],
+    ['', 'reset', 'DEPRECATED. run "bit checkout reset" instead'],
     ['', 'skip-npm-install', 'DEPRECATED. use "--skip-dependency-installation" instead'],
     ['', 'skip-dependency-installation', 'do not install packages of the imported components'],
   ] as CommandOptions;
@@ -72,6 +74,9 @@ export class CheckoutCmd implements Command {
       skipDependencyInstallation?: boolean;
     }
   ) {
+    if (reset) {
+      throw new BitError(`--reset flag has been removed. please run "bit checkout reset" instead`);
+    }
     if (skipNpmInstall) {
       // eslint-disable-next-line no-console
       console.log(
@@ -82,7 +87,6 @@ export class CheckoutCmd implements Command {
     const checkoutProps: CheckoutProps = {
       promptMergeOptions: interactiveMerge,
       mergeStrategy: getMergeStrategy(ours, theirs, manual),
-      reset,
       all,
       verbose,
       isLane: false,
