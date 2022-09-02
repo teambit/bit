@@ -1,4 +1,4 @@
-import { Aspect } from '@teambit/harmony';
+import { Aspect } from "@teambit/harmony";
 
 export interface PluginDefinition {
   /**
@@ -14,6 +14,7 @@ export interface PluginDefinition {
   /**
    * register the plugin to its slot registry.
    */
+
 
   /**
    * Plugin implementation.
