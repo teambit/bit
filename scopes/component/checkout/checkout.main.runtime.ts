@@ -228,7 +228,7 @@ export class CheckoutMain {
     let mergeResults: MergeResultsThreeWay | null | undefined;
     // if the component is not modified, no need to try merge the files, they will be written later on according to the
     // checked out version. same thing when no version is specified, it'll be reset to the model-version later.
-    if (version && isModified) {
+    if (!reset && isModified) {
       const otherComponent: Version = await componentModel.loadVersion(newVersion, repo);
       mergeResults = await threeWayMerge({
         consumer,
