@@ -123,6 +123,12 @@ export default class Consumer {
     return this.bitMap.getAllIdsAvailableOnLane();
   }
 
+  get bitmapIdsFromCurrentLaneIncludeRemoved(): BitIds {
+    const idsFromBitMap = this.bitMap.getAllIdsAvailableOnLane();
+    const removedIds = this.bitMap.getRemoved();
+    return BitIds.fromArray([...idsFromBitMap, ...removedIds]);
+  }
+
   get bitMapIdsFromAllLanes(): BitIds {
     return this.bitMap.getAllBitIdsFromAllLanes();
   }
@@ -654,6 +660,11 @@ export default class Consumer {
     const consumerInfo = await getConsumerInfo(currentPath);
     if (!consumerInfo) {
       return Promise.reject(new ConsumerNotFound());
+    }
+    if (!consumerInfo.hasBitMap && !consumerInfo.hasScope && consumerInfo.hasConsumerConfig) {
+      throw new Error(
+        `fatal: unable to load the workspace. workspace.jsonc exists, but the .bitmap and local-scope are missing. run "bit init" to generate the missing files`
+      );
     }
     let consumer: Consumer | undefined;
 

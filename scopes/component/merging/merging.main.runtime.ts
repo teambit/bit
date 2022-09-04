@@ -32,11 +32,13 @@ import { Tmp } from '@teambit/legacy/dist/scope/repositories';
 import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
 import ManyComponentsWriter from '@teambit/legacy/dist/consumer/component-ops/many-components-writer';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component/consumer-component';
-import checkoutVersion, { applyModifiedVersion } from '@teambit/legacy/dist/consumer/versions-ops/checkout-version';
+import { applyModifiedVersion } from '@teambit/legacy/dist/consumer/versions-ops/checkout-version';
 import threeWayMerge, {
   MergeResultsThreeWay,
 } from '@teambit/legacy/dist/consumer/versions-ops/merge-version/three-way-merge';
 import { NoCommonSnap } from '@teambit/legacy/dist/scope/exceptions/no-common-snap';
+import { CheckoutAspect, CheckoutMain } from '@teambit/checkout';
+import { ComponentID } from '@teambit/component-id';
 import { DivergeData } from '@teambit/legacy/dist/scope/component-ops/diverge-data';
 import { MergeCmd } from './merge-cmd';
 import { MergingAspect } from './merging.aspect';
@@ -54,7 +56,7 @@ export type ComponentMergeStatus = {
 
 export class MergingMain {
   private consumer: Consumer;
-  constructor(private workspace: Workspace, private snapping: SnappingMain) {
+  constructor(private workspace: Workspace, private snapping: SnappingMain, private checkout: CheckoutMain) {
     this.consumer = this.workspace?.consumer;
   }
 
@@ -78,9 +80,9 @@ export class MergingMain {
     let mergeResults;
     const firstValue = R.head(values);
     if (resolve) {
-      mergeResults = await this.resolveMerge(consumer, values, message, build);
+      mergeResults = await this.resolveMerge(values, message, build);
     } else if (abort) {
-      mergeResults = await this.abortMerge(consumer, values);
+      mergeResults = await this.abortMerge(values);
     } else if (!BitId.isValidVersion(firstValue)) {
       const bitIds = this.getComponentsToMerge(consumer, values);
       // @todo: version could be the lane only or remote/lane
@@ -243,7 +245,7 @@ export class MergingMain {
     id: BitId, // the id.version is the version we want to merge to the current component
     localLane: Lane | null, // currently checked out lane. if on main, then it's null.
     otherLaneName: string, // the lane name we want to merged to our lane. (can be also "main").
-    options?: { resolveUnrelated?: MergeStrategy }
+    options?: { resolveUnrelated?: MergeStrategy; ignoreConfigChanges?: boolean }
   ): Promise<ComponentMergeStatus> {
     const consumer = this.workspace.consumer;
     const componentStatus: ComponentMergeStatus = { id };
@@ -296,11 +298,23 @@ export class MergingMain {
       return consumer.scope.getConsumerComponent(currentId);
     };
     const currentComponent = await getCurrentComponent();
-    const componentModificationStatus = await consumer.getComponentStatusById(currentComponent.id);
-    if (componentModificationStatus.modified) {
-      return returnUnmerged(
-        `unable to merge ${id.toStringWithoutVersion()}, the component is modified, please snap/tag it first`
+    const isModified = async () => {
+      const componentModificationStatus = await consumer.getComponentStatusById(currentComponent.id);
+      if (!componentModificationStatus.modified) return false;
+      if (!existingBitMapId) return false;
+      const baseComponent = await modelComponent.loadVersion(
+        existingBitMapId.version as string,
+        consumer.scope.objects
       );
+      return options?.ignoreConfigChanges
+        ? consumer.isComponentSourceCodeModified(baseComponent, currentComponent)
+        : true;
+    };
+
+    const isComponentModified = await isModified();
+
+    if (isComponentModified) {
+      return returnUnmerged(`component is modified, please snap/tag it first`);
     }
     const laneHeadIsDifferentThanCheckedOut =
       localLane && existingBitMapId?.version && modelComponent.laneHeadLocal?.toString() !== existingBitMapId?.version;
@@ -485,25 +499,20 @@ export class MergingMain {
     return { id, filesStatus };
   }
 
-  private async abortMerge(consumer: Consumer, values: string[]): Promise<ApplyVersionResults> {
-    const ids = this.getIdsForUnmerged(consumer, values);
-    // @ts-ignore not clear yet what to do with other flags
-    const results = await checkoutVersion(consumer, { ids, reset: true });
-    ids.forEach((id) => consumer.scope.objects.unmergedComponents.removeComponent(id.name));
+  private async abortMerge(values: string[]): Promise<ApplyVersionResults> {
+    const consumer = this.workspace.consumer;
+    const ids = await this.getIdsForUnmerged(values);
+    const results = await this.checkout.checkout({ ids, reset: true });
+    ids.forEach((id) => consumer.scope.objects.unmergedComponents.removeComponent(id.fullName));
     await consumer.scope.objects.unmergedComponents.write();
     return { abortedComponents: results.components };
   }
 
-  private async resolveMerge(
-    consumer: Consumer,
-    values: string[],
-    snapMessage: string,
-    build: boolean
-  ): Promise<ApplyVersionResults> {
-    const ids = this.getIdsForUnmerged(consumer, values);
+  private async resolveMerge(values: string[], snapMessage: string, build: boolean): Promise<ApplyVersionResults> {
+    const ids = await this.getIdsForUnmerged(values);
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const { snappedComponents } = await this.snapping.snap({
-      legacyBitIds: BitIds.fromArray(ids),
+      legacyBitIds: BitIds.fromArray(ids.map((id) => id._legacy)),
       build,
       message: snapMessage,
     });
@@ -552,20 +561,20 @@ export class MergingMain {
     });
   }
 
-  private getIdsForUnmerged(consumer: Consumer, idsStr?: string[]): BitId[] {
+  private async getIdsForUnmerged(idsStr?: string[]): Promise<ComponentID[]> {
     if (idsStr && idsStr.length) {
-      const bitIds = idsStr.map((id) => consumer.getParsedId(id));
-      bitIds.forEach((id) => {
-        const entry = consumer.scope.objects.unmergedComponents.getEntry(id.name);
+      const componentIds = await this.workspace.resolveMultipleComponentIds(idsStr);
+      componentIds.forEach((id) => {
+        const entry = this.workspace.consumer.scope.objects.unmergedComponents.getEntry(id.fullName);
         if (!entry) {
           throw new GeneralError(`unable to merge-resolve ${id.toString()}, it is not marked as unresolved`);
         }
       });
-      return bitIds;
+      return componentIds;
     }
-    const unresolvedComponents = consumer.scope.objects.unmergedComponents.getComponents();
+    const unresolvedComponents = this.workspace.consumer.scope.objects.unmergedComponents.getComponents();
     if (!unresolvedComponents.length) throw new GeneralError(`all components are resolved already, nothing to do`);
-    return unresolvedComponents.map((u) => new BitId(u.id));
+    return unresolvedComponents.map((u) => ComponentID.fromLegacy(new BitId(u.id)));
   }
 
   private getComponentsToMerge(consumer: Consumer, ids: string[]): BitId[] {
@@ -577,10 +586,10 @@ export class MergingMain {
   }
 
   static slots = [];
-  static dependencies = [CLIAspect, WorkspaceAspect, SnappingAspect];
+  static dependencies = [CLIAspect, WorkspaceAspect, SnappingAspect, CheckoutAspect];
   static runtime = MainRuntime;
-  static async provider([cli, workspace, snapping]: [CLIMain, Workspace, SnappingMain]) {
-    const merging = new MergingMain(workspace, snapping);
+  static async provider([cli, workspace, snapping, checkout]: [CLIMain, Workspace, SnappingMain, CheckoutMain]) {
+    const merging = new MergingMain(workspace, snapping, checkout);
     cli.register(new MergeCmd(merging));
     return merging;
   }

@@ -54,6 +54,7 @@ import { PutRoute, FetchRoute, ActionRoute, DeleteRoute } from './routes';
 import { ScopeComponentLoader } from './scope-component-loader';
 import { ScopeCmd } from './scope-cmd';
 import { StagedConfig } from './staged-config';
+import { NoIdMatchPattern } from './exceptions/no-id-match-pattern';
 
 type TagRegistry = SlotRegistry<OnTag>;
 
@@ -369,12 +370,20 @@ export class ScopeMain implements ComponentFactory {
   private localAspects: string[] = [];
 
   async loadAspects(ids: string[], throwOnError = false, neededFor?: string): Promise<string[]> {
-    this.logger.info(`loadAspects, loading ${ids.length} aspects.
+    // generate a random callId to be able to identify the call from the logs
+    const callId = Math.floor(Math.random() * 1000);
+    const loggerPrefix = `[${callId}] loadAspects,`;
+    this.logger.info(`${loggerPrefix} loading ${ids.length} aspects.
 ids: ${ids.join(', ')}
 needed-for: ${neededFor || '<unknown>'}`);
     const grouped = await this.groupAspectIdsByEnvOfTheList(ids);
+    this.logger.info(`${loggerPrefix} getManifestsAndLoadAspects for grouped.envs, total ${grouped.envs?.length || 0}`);
     const envsManifestsIds = await this.getManifestsAndLoadAspects(grouped.envs, throwOnError);
+    this.logger.info(
+      `${loggerPrefix} getManifestsAndLoadAspects for grouped.other, total ${grouped.other?.length || 0}`
+    );
     const otherManifestsIds = await this.getManifestsAndLoadAspects(grouped.other, throwOnError);
+    this.logger.debug(`${loggerPrefix} finish loading aspects`);
     return envsManifestsIds.concat(otherManifestsIds);
   }
 
@@ -382,7 +391,7 @@ needed-for: ${neededFor || '<unknown>'}`);
    * This function get's a list of aspect ids and return them grouped by whether any of them is the env of other from the list
    * @param ids
    */
-  async groupAspectIdsByEnvOfTheList(ids: string[]): Promise<{ envs: string[]; other: string[] }> {
+  async groupAspectIdsByEnvOfTheList(ids: string[]): Promise<{ envs?: string[]; other?: string[] }> {
     const components = await this.getNonLoadedAspects(ids);
     const envsIds = uniq(
       components
@@ -396,7 +405,7 @@ needed-for: ${neededFor || '<unknown>'}`);
     return grouped as { envs: string[]; other: string[] };
   }
 
-  private async getManifestsAndLoadAspects(ids: string[], throwOnError = false): Promise<string[]> {
+  private async getManifestsAndLoadAspects(ids: string[] = [], throwOnError = false): Promise<string[]> {
     const scopeManifests = await this.getManifestsGraphRecursively(ids, [], throwOnError);
     await this.aspectLoader.loadExtensionsByManifests(scopeManifests);
     return compact(scopeManifests.map((manifest) => manifest.id));
@@ -427,6 +436,9 @@ needed-for: ${neededFor || '<unknown>'}`);
         depsToLoad.push(...(runtime.dependencies || []));
       });
       const depIds = depsToLoad.map((d) => d.id).filter((id) => id) as string[];
+      this.logger.debug(
+        `getManifestsGraphRecursively, id: ${manifest.id || '<unknown>'}, found ${depIds.length}: ${depIds.join(', ')}`
+      );
       const loaded = await this.getManifestsGraphRecursively(depIds, visited, throwOnError);
       manifests.push(...loaded);
     });
@@ -996,7 +1008,7 @@ needed-for: ${neededFor || '<unknown>'}`);
     const idsToCheck = (id: ComponentID) => [id.toStringWithoutVersion(), id._legacy.toStringWithoutVersion()];
     const idsFiltered = ids.filter((id) => multimatch(idsToCheck(id), patterns).length);
     if (throwForNoMatch && !idsFiltered.length) {
-      throw new BitError(`unable to find any matching for "${pattern}" pattern`);
+      throw new NoIdMatchPattern(pattern);
     }
     return idsFiltered;
   }

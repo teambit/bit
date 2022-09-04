@@ -81,6 +81,7 @@ import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import type { ComponentLog } from '@teambit/legacy/dist/scope/models/model-component';
 import { CompilationInitiator } from '@teambit/compiler';
 import ScopeComponentsImporter from '@teambit/legacy/dist/scope/component-ops/scope-components-importer';
+import { MissingBitMapComponent } from '@teambit/legacy/dist/consumer/bit-map/exceptions';
 import loader from '@teambit/legacy/dist/cli/loader';
 import { Lane } from '@teambit/legacy/dist/scope/models';
 import { LaneNotFound } from '@teambit/legacy/dist/api/scope/lib/exceptions/lane-not-found';
@@ -745,7 +746,7 @@ export class Workspace implements ComponentFactory {
       // if it's not a pattern but just id, resolve it without multimatch to support specifying id without scope-name
       const id = await this.resolveComponentId(pattern);
       if (this.exists(id)) return [id];
-      if (throwForNoMatch) throw new BitError(`unable to find "${pattern}" in the workspace`);
+      if (throwForNoMatch) throw new MissingBitMapComponent(pattern);
       return [];
     }
     const ids = await this.listIds();

@@ -1,6 +1,5 @@
 import diff from './lib//diff';
 import { addMany, addOne as add } from './lib/add';
-import checkout from './lib/checkout';
 import dependencyStatus from './lib/dependency_status';
 import fetch from './lib/fetch';
 import getComponentLogs from './lib/get-component-logs';
@@ -34,7 +33,6 @@ export {
   dependencyStatus,
   move,
   linkAction as link,
-  checkout,
   diff,
   migrate,
   login,
