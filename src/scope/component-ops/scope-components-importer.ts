@@ -496,7 +496,9 @@ export default class ScopeComponentsImporter {
         const versionComp: ComponentVersion = component.toComponentVersion(id.version);
         const version = await this.getVersionFromComponentDef(component, id);
         if (!version) {
-          throw new Error(`ScopeComponentImporter, expect ${id.toString()} to have a Version object`);
+          throw new Error(
+            `ScopeComponentImporter, expect ${id.toString()} to have a Version object of "${versionComp.version}"`
+          );
         }
         if (onlyIfBuilt && version.buildStatus !== BuildStatus.Succeed) {
           logger.debug(

@@ -34,6 +34,11 @@ in case the <lane> exists locally but you want to merge the remote version of it
     ['m', 'message <message>', 'override the default message for the auto snap'],
     ['', 'keep-readme', 'skip deleting the lane readme component after merging'],
     ['', 'no-squash', 'EXPERIMENTAL. relevant for merging lanes into main, which by default squash.'],
+    [
+      '',
+      'ignore-config-changes',
+      'allow merging when component are modified due to config changes (such as dependencies) only and not files',
+    ],
     ['', 'verbose', 'show details of components that were not merged legitimately'],
     ['', 'skip-dependency-installation', 'do not install packages of the imported components'],
     ['', 'remote', 'relevant when the target-lane locally is differ than the remote and you want the remote'],
@@ -71,6 +76,7 @@ in case the <lane> exists locally but you want to merge the remote version of it
       remote = false,
       includeDeps = false,
       resolveUnrelated,
+      ignoreConfigChanges,
       verbose = false,
     }: {
       ours: boolean;
@@ -86,6 +92,7 @@ in case the <lane> exists locally but you want to merge the remote version of it
       remote: boolean;
       includeDeps?: boolean;
       resolveUnrelated?: string | boolean;
+      ignoreConfigChanges?: boolean;
       verbose?: boolean;
     }
   ): Promise<string> {
@@ -119,6 +126,7 @@ in case the <lane> exists locally but you want to merge the remote version of it
       skipDependencyInstallation,
       remote,
       resolveUnrelated: getResolveUnrelated(),
+      ignoreConfigChanges,
       includeDeps,
     });
 
