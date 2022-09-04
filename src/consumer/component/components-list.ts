@@ -268,11 +268,9 @@ export default class ComponentsList {
    * @return {Promise<string[]>}
    */
   async listTagPendingComponents(): Promise<BitIds> {
-    const [newComponents, modifiedComponents, removedComponents] = await Promise.all([
-      this.listNewComponents(),
-      this.listModifiedComponents(),
-      this.listRemovedComponents(),
-    ]);
+    const newComponents = await this.listNewComponents();
+    const modifiedComponents = await this.listModifiedComponents();
+    const removedComponents = await this.listRemovedComponents();
     const duringMergeIds = this.listDuringMergeStateComponents();
 
     return BitIds.fromArray([
@@ -358,7 +356,7 @@ export default class ComponentsList {
   async getFromFileSystem(loadOpts?: ComponentLoadOptions): Promise<Component[]> {
     const cacheKeyName = 'all';
     if (!this._fromFileSystem[cacheKeyName]) {
-      const idsFromBitMap = this.idsFromBitMap();
+      const idsFromBitMap = this.consumer.bitmapIdsFromCurrentLaneIncludeRemoved;
       const { components, invalidComponents, removedComponents } = await this.consumer.loadComponents(
         idsFromBitMap,
         false,
@@ -461,6 +459,7 @@ export default class ComponentsList {
     }
     const currentLane = await this.consumer.getCurrentLaneObject();
     const isIdOnCurrentLane = (componentMap: ComponentMap): boolean => {
+      if (componentMap.isRemoved()) return false;
       if (!componentMap.onLanesOnly) return true; // component is on main, always show it
       if (!currentLane) return false; // if !currentLane the user is on main, don't show it.
       return Boolean(currentLane.getComponent(componentMap.id));

@@ -30,6 +30,7 @@ export type MergeLaneOptions = {
   includeDeps?: boolean;
   skipDependencyInstallation?: boolean;
   resolveUnrelated?: MergeStrategy;
+  ignoreConfigChanges?: boolean;
   remote?: boolean;
 };
 
@@ -63,6 +64,7 @@ export class MergeLanesMain {
       includeDeps,
       skipDependencyInstallation,
       resolveUnrelated,
+      ignoreConfigChanges,
       remote,
     } = options;
 
@@ -103,7 +105,10 @@ export class MergeLanesMain {
       try {
         const componentsStatus = await Promise.all(
           bitIds.map((bitId) =>
-            this.merging.getComponentMergeStatus(bitId, currentLane, otherLaneName, { resolveUnrelated })
+            this.merging.getComponentMergeStatus(bitId, currentLane, otherLaneName, {
+              resolveUnrelated,
+              ignoreConfigChanges,
+            })
           )
         );
         await tmp.clear();

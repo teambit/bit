@@ -4,7 +4,7 @@ import { ComponentIssue } from '@teambit/component-issues';
 import { BitId, BitIds } from '../../bit-id';
 import { createInMemoryCache } from '../../cache/cache-factory';
 import { getMaxSizeForComponents, InMemoryCache } from '../../cache/in-memory-cache';
-import { BIT_MAP, Extensions } from '../../constants';
+import { BIT_MAP } from '../../constants';
 import logger from '../../logger/logger';
 import ScopeComponentsImporter from '../../scope/component-ops/scope-components-importer';
 import { ModelComponent } from '../../scope/models';
@@ -105,7 +105,7 @@ export default class ComponentLoader {
       if (id.constructor.name !== BitId.name) {
         throw new TypeError(`consumer.loadComponents expects to get BitId instances, instead, got "${typeof id}"`);
       }
-      const idWithVersion: BitId = getLatestVersionNumber(this.consumer.bitmapIdsFromCurrentLane, id);
+      const idWithVersion: BitId = getLatestVersionNumber(this.consumer.bitmapIdsFromCurrentLaneIncludeRemoved, id);
       const idStr = idWithVersion.toString();
       const fromCache = this.componentsCache.get(idStr);
       if (fromCache) {
@@ -144,8 +144,7 @@ export default class ComponentLoader {
     loadOpts?: ComponentLoadOptions
   ) {
     const componentMap = this.consumer.bitMap.getComponent(id);
-    // @ts-ignore it cannot be "-" here
-    if (componentMap.config?.[Extensions.remove]?.removed) {
+    if (componentMap.isRemoved()) {
       const fromModel = await this.consumer.scope.getConsumerComponentIfExist(id);
       if (!fromModel) {
         invalidComponents.push({

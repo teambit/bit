@@ -1,45 +1,32 @@
 import { compact } from 'lodash';
-import mapSeries from 'p-map-series';
 import * as path from 'path';
-
 import { Consumer } from '..';
-import { BitId, BitIds } from '../../bit-id';
+import { BitId } from '../../bit-id';
 import GeneralError from '../../error/general-error';
 import { ComponentWithDependencies } from '../../scope';
 import Version from '../../scope/models/version';
-import { Tmp } from '../../scope/repositories';
 import { pathNormalizeToLinux, PathOsBased } from '../../utils/path';
 import ConsumerComponent from '../component';
-import ManyComponentsWriter from '../component-ops/many-components-writer';
 import { SourceFile } from '../component/sources';
 import DataToPersist from '../component/sources/data-to-persist';
 import RemovePath from '../component/sources/remove-path';
-import {
-  ApplyVersionResult,
-  ApplyVersionResults,
-  FailedComponents,
-  FileStatus,
-  getMergeStrategyInteractive,
-  MergeOptions,
-  MergeStrategy,
-  threeWayMerge,
-} from './merge-version';
+import { ApplyVersionResult, FileStatus, MergeOptions, MergeStrategy } from './merge-version';
 import { MergeResultsThreeWay } from './merge-version/three-way-merge';
 
 export type CheckoutProps = {
   version?: string; // if reset is true, the version is undefined
   ids?: BitId[];
   latestVersion?: boolean;
-  promptMergeOptions: boolean;
-  mergeStrategy: MergeStrategy | null | undefined;
-  verbose: boolean;
-  skipNpmInstall: boolean;
-  ignorePackageJson: boolean;
-  writeConfig: boolean;
-  reset: boolean; // remove local changes. if set, the version is undefined.
-  all: boolean; // checkout all ids
-  ignoreDist: boolean;
-  isLane: boolean;
+  promptMergeOptions?: boolean;
+  mergeStrategy?: MergeStrategy | null;
+  verbose?: boolean;
+  skipNpmInstall?: boolean;
+  ignorePackageJson?: boolean;
+  writeConfig?: boolean;
+  reset?: boolean; // remove local changes. if set, the version is undefined.
+  all?: boolean; // checkout all ids
+  ignoreDist?: boolean;
+  isLane?: boolean;
 };
 export type ComponentStatus = {
   componentFromFS?: ConsumerComponent;
@@ -51,168 +38,6 @@ export type ComponentStatus = {
 };
 
 type ApplyVersionWithComps = { applyVersionResult: ApplyVersionResult; component?: ComponentWithDependencies };
-
-export default async function checkoutVersion(
-  consumer: Consumer,
-  checkoutProps: CheckoutProps
-): Promise<ApplyVersionResults> {
-  const { version, ids, promptMergeOptions } = checkoutProps;
-  const bitIds = BitIds.fromArray(ids || []);
-  await consumer.scope.import(bitIds, false);
-  const { components } = await consumer.loadComponents(bitIds);
-  const allComponentsStatus: ComponentStatus[] = await getAllComponentsStatus();
-  const componentWithConflict = allComponentsStatus.find(
-    (component) => component.mergeResults && component.mergeResults.hasConflicts
-  );
-  if (componentWithConflict) {
-    if (!promptMergeOptions && !checkoutProps.mergeStrategy) {
-      throw new GeneralError(
-        `automatic merge has failed for component ${componentWithConflict.id.toStringWithoutVersion()}.\nplease use "--manual" to manually merge changes or use "--theirs / --ours" to choose one of the conflicted versions`
-      );
-    }
-    if (!checkoutProps.mergeStrategy) checkoutProps.mergeStrategy = await getMergeStrategyInteractive();
-  }
-  const failedComponents: FailedComponents[] = allComponentsStatus
-    .filter((componentStatus) => componentStatus.failureMessage)
-    .map((componentStatus) => ({
-      id: componentStatus.id,
-      failureMessage: componentStatus.failureMessage as string,
-      unchangedLegitimately: componentStatus.unchangedLegitimately,
-    }));
-
-  const succeededComponents = allComponentsStatus.filter((componentStatus) => !componentStatus.failureMessage);
-  // do not use Promise.all for applyVersion. otherwise, it'll write all components in parallel,
-  // which can be an issue when some components are also dependencies of others
-  const componentsResults = await mapSeries(succeededComponents, ({ id, componentFromFS, mergeResults }) => {
-    return applyVersion(consumer, id, componentFromFS, mergeResults, checkoutProps);
-  });
-
-  markFilesToBeRemovedIfNeeded(succeededComponents, componentsResults);
-
-  const componentsWithDependencies = componentsResults
-    .map((c) => c.component)
-    .filter((c) => c) as ComponentWithDependencies[];
-  const leftUnresolvedConflicts = componentWithConflict && checkoutProps.mergeStrategy === 'manual';
-  if (componentsWithDependencies.length) {
-    const manyComponentsWriter = new ManyComponentsWriter({
-      consumer,
-      componentsWithDependencies,
-      installNpmPackages: !checkoutProps.skipNpmInstall && !leftUnresolvedConflicts,
-      override: true,
-      verbose: checkoutProps.verbose,
-      writeDists: !checkoutProps.ignoreDist,
-      writeConfig: checkoutProps.writeConfig,
-      writePackageJson: !checkoutProps.ignorePackageJson,
-      resetConfig: checkoutProps.reset,
-    });
-    await manyComponentsWriter.writeAll();
-    await deleteFilesIfNeeded(componentsResults, consumer);
-  }
-
-  const appliedVersionComponents = componentsResults.map((c) => c.applyVersionResult);
-
-  return { components: appliedVersionComponents, version, failedComponents, leftUnresolvedConflicts };
-
-  async function getAllComponentsStatus(): Promise<ComponentStatus[]> {
-    const tmp = new Tmp(consumer.scope);
-    try {
-      const componentsStatusP = components.map((component) => getComponentStatus(consumer, component, checkoutProps));
-      const componentsStatus = await Promise.all(componentsStatusP);
-      await tmp.clear();
-      return componentsStatus;
-    } catch (err: any) {
-      await tmp.clear();
-      throw err;
-    }
-  }
-}
-
-async function getComponentStatus(
-  consumer: Consumer,
-  component: ConsumerComponent,
-  checkoutProps: CheckoutProps
-): Promise<ComponentStatus> {
-  const { version, latestVersion, reset } = checkoutProps;
-  const repo = consumer.scope.objects;
-  const componentModel = await consumer.scope.getModelComponentIfExist(component.id);
-  const componentStatus: ComponentStatus = { id: component.id };
-  const returnFailure = (msg: string, unchangedLegitimately = false) => {
-    componentStatus.failureMessage = msg;
-    componentStatus.unchangedLegitimately = unchangedLegitimately;
-    return componentStatus;
-  };
-  if (!componentModel) {
-    return returnFailure(`component ${component.id.toString()} is new, no version to checkout`, true);
-  }
-  const unmerged = repo.unmergedComponents.getEntry(component.name);
-  if (!reset && unmerged) {
-    return returnFailure(
-      `component ${component.id.toStringWithoutVersion()} is in during-merge state, please snap/tag it first (or use bit merge --resolve/--abort)`
-    );
-  }
-  const getNewVersion = async (): Promise<string> => {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    if (reset) return component.id.version;
-    // @ts-ignore if !reset the version is defined
-    return latestVersion ? componentModel.latestIncludeRemote(repo) : version;
-  };
-  const newVersion = await getNewVersion();
-  if (version && !latestVersion) {
-    const hasVersion = await componentModel.hasVersion(version, repo);
-    if (!hasVersion)
-      return returnFailure(`component ${component.id.toStringWithoutVersion()} doesn't have version ${version}`);
-  }
-  const existingBitMapId = consumer.bitMap.getBitId(component.id, { ignoreVersion: true });
-  const currentlyUsedVersion = existingBitMapId.version;
-  if (!currentlyUsedVersion) {
-    return returnFailure(`component ${component.id.toStringWithoutVersion()} is new`);
-  }
-  if (version && currentlyUsedVersion === version) {
-    // it won't be relevant for 'reset' as it doesn't have a version
-    return returnFailure(`component ${component.id.toStringWithoutVersion()} is already at version ${version}`);
-  }
-  if (latestVersion && currentlyUsedVersion === newVersion) {
-    return returnFailure(
-      `component ${component.id.toStringWithoutVersion()} is already at the latest version, which is ${newVersion}`,
-      true
-    );
-  }
-  const currentVersionObject: Version = await componentModel.loadVersion(currentlyUsedVersion, repo);
-  const isModified = await consumer.isComponentModified(currentVersionObject, component);
-  if (!isModified && reset) {
-    return returnFailure(`component ${component.id.toStringWithoutVersion()} is not modified`);
-  }
-  // this is tricky. imagine the user is 0.0.2+modification and wants to checkout to 0.0.1.
-  // the base is 0.0.1, as it's the common version for 0.0.1 and 0.0.2. however, if we let git merge-file use the 0.0.1
-  // as the base, then, it'll get the changes done since 0.0.1 to 0.0.1, which is nothing, and put them on top of
-  // 0.0.2+modification. in other words, it won't make any change.
-  // this scenario of checking out while there are modified files, is forbidden in Git. here, we want to simulate a similar
-  // experience of "git stash", then "git checkout", then "git stash pop". practically, we want the changes done on 0.0.2
-  // to be added to 0.0.1
-  // if there is no modification, it doesn't go the threeWayMerge anyway, so it doesn't matter what the base is.
-  const baseVersion = currentlyUsedVersion;
-  const baseComponent: Version = await componentModel.loadVersion(baseVersion, repo);
-  let mergeResults: MergeResultsThreeWay | null | undefined;
-  // if the component is not modified, no need to try merge the files, they will be written later on according to the
-  // checked out version. same thing when no version is specified, it'll be reset to the model-version later.
-  if (version && isModified) {
-    const otherComponent: Version = await componentModel.loadVersion(newVersion, repo);
-    mergeResults = await threeWayMerge({
-      consumer,
-      otherComponent,
-      otherLabel: newVersion,
-      currentComponent: component,
-      currentLabel: `${currentlyUsedVersion} modified`,
-      baseComponent,
-    });
-  }
-  const versionRef = componentModel.getRef(newVersion);
-  // @ts-ignore
-  const componentVersion = await consumer.scope.getObject(versionRef.hash);
-  const newId = component.id.changeVersion(newVersion);
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  return { componentFromFS: component, componentFromModel: componentVersion, id: newId, mergeResults };
-}
 
 /**
  * 1) when the files are modified with conflicts and the strategy is "ours", leave the FS as is
