@@ -92,6 +92,7 @@ import { BuilderUIAspect } from '@teambit/builder-ui';
 import { DependenciesAspect } from '@teambit/dependencies';
 import { RemoveAspect } from '@teambit/remove';
 import { MergeLanesAspect } from '@teambit/merge-lanes';
+import { CheckoutAspect } from '@teambit/checkout';
 import { BitAspect } from './bit.aspect';
 
 export const manifestsMap = {
@@ -188,6 +189,7 @@ export const manifestsMap = {
   [DependenciesAspect.id]: DependenciesAspect,
   [RemoveAspect.id]: RemoveAspect,
   [MergeLanesAspect.id]: MergeLanesAspect,
+  [CheckoutAspect.id]: CheckoutAspect,
 };
 
 export function isCoreAspect(id: string) {

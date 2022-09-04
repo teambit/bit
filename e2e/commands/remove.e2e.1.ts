@@ -235,6 +235,11 @@ describe('bit remove command', function () {
     it('bit status should show the dependent component with an issue because it is now missing the dependency', () => {
       helper.command.expectStatusToHaveIssue(IssuesClasses.MissingPackagesDependenciesOnFs.name);
     });
+    it('bit list should not show the removed component', () => {
+      const list = helper.command.listParsed();
+      expect(list).to.have.lengthOf(1);
+      expect(list[0].id).to.not.have.string('comp2');
+    });
     // @todo. not very easy to implement. coz before tag, when it's loaded from the workspace it fails and then
     // it loads it from the scope. however, the removed data is not in the scope yet. only in the bitmap.
     it.skip('bit show should show the component as removed', () => {

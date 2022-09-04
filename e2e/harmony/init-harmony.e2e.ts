@@ -54,4 +54,15 @@ describe('init command on Harmony', function () {
       expect(() => helper.command.status()).to.not.throw();
     });
   });
+  describe('when workspace.jsonc exist, but not .bitmap nor .bit', () => {
+    before(() => {
+      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.fs.deletePath('.bit');
+      helper.fs.deletePath('.bitmap');
+    });
+    // previously, it was throwing command-not-found
+    it('should show a descriptive error', () => {
+      expect(() => helper.command.install()).to.throw(`fatal: unable to load the workspace`);
+    });
+  });
 });

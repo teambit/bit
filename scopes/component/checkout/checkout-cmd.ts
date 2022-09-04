@@ -1,29 +1,36 @@
 import chalk from 'chalk';
-
-import { checkout } from '../../../api/consumer';
-import { LATEST, WILDCARD_HELP } from '../../../constants';
-import { CheckoutProps } from '../../../consumer/versions-ops/checkout-version';
+import { BitError } from '@teambit/bit-error';
+import { Command, CommandOptions } from '@teambit/cli';
+import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
 import {
   ApplyVersionResults,
   getMergeStrategy,
   applyVersionReport,
   conflictSummaryReport,
-} from '../../../consumer/versions-ops/merge-version';
-import { Group } from '../../command-groups';
-import { CommandOptions, LegacyCommand } from '../../legacy-command';
+} from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
+import { CheckoutMain, CheckoutProps } from './checkout.main.runtime';
 
-export default class Checkout implements LegacyCommand {
-  name = 'checkout [values...]';
+export class CheckoutCmd implements Command {
+  name = 'checkout <to> [component-pattern]';
+  arguments = [
+    {
+      name: 'to',
+      description:
+        "permitted values: [head, reset, specific-version]. 'head' - last snap/tag. 'reset' - removes local changes",
+    },
+    {
+      name: 'component-pattern',
+      description: COMPONENT_PATTERN_HELP,
+    },
+  ];
   description = 'switch between component versions or remove local changes';
-  group: Group = 'development';
+  group = 'development';
   extendedDescription = `
-  \`bit checkout <version> [ids...]\` => checkout the specified ids (or all components when --all is used) to the specified version
-  \`bit checkout head\` => checkout all components to their latest versions
-  \`bit checkout head [ids...]\` => checkout the specified ids to their latest versions
-  \`bit checkout [ids...] --reset\` => remove local modifications from the specified ids (or all components when --all is used)
-  ${WILDCARD_HELP('checkout 0.0.1')}`;
+  \`bit checkout <version> [component-pattern]\` => checkout the specified ids (or all components when --all is used) to the specified version
+  \`bit checkout head [component-pattern]\` => checkout to the last snap/tag, omit [component-pattern] to checkout head for all
+  \`bit checkout reset [component-pattern]\` => remove local modifications from the specified ids (or all components when --all is used)`;
   alias = 'U';
-  opts = [
+  options = [
     [
       'i',
       'interactive-merge',
@@ -35,24 +42,16 @@ export default class Checkout implements LegacyCommand {
     ['r', 'reset', 'revert changes that were not snapped/tagged'],
     ['a', 'all', 'all components'],
     ['v', 'verbose', 'showing verbose output for inspection'],
+    ['', 'reset', 'DEPRECATED. run "bit checkout reset" instead'],
     ['', 'skip-npm-install', 'DEPRECATED. use "--skip-dependency-installation" instead'],
     ['', 'skip-dependency-installation', 'do not install packages of the imported components'],
-    [
-      '',
-      'ignore-package-json',
-      'do not generate package.json for the imported component(s). (it automatically enables skip-npm-install and save-dependencies-as-components flags)',
-    ],
-    [
-      '',
-      'conf [path]',
-      'write the configuration file (bit.json) and the envs configuration files (use --conf without path to write to the default dir)',
-    ],
-    ['', 'ignore-dist', 'do not write dist files (when exist)'],
   ] as CommandOptions;
   loader = true;
 
-  action(
-    [values = []]: [string[]],
+  constructor(private checkout: CheckoutMain) {}
+
+  async report(
+    [to, componentPattern]: [string, string],
     {
       interactiveMerge = false,
       ours = false,
@@ -63,9 +62,6 @@ export default class Checkout implements LegacyCommand {
       verbose = false,
       skipNpmInstall = false,
       skipDependencyInstallation = false,
-      ignorePackageJson = false,
-      conf,
-      ignoreDist = false,
     }: {
       interactiveMerge?: boolean;
       ours?: boolean;
@@ -76,11 +72,11 @@ export default class Checkout implements LegacyCommand {
       verbose?: boolean;
       skipNpmInstall?: boolean;
       skipDependencyInstallation?: boolean;
-      ignorePackageJson?: boolean;
-      conf?: string;
-      ignoreDist?: boolean;
     }
-  ): Promise<ApplyVersionResults> {
+  ) {
+    if (reset) {
+      throw new BitError(`--reset flag has been removed. please run "bit checkout reset" instead`);
+    }
     if (skipNpmInstall) {
       // eslint-disable-next-line no-console
       console.log(
@@ -91,25 +87,15 @@ export default class Checkout implements LegacyCommand {
     const checkoutProps: CheckoutProps = {
       promptMergeOptions: interactiveMerge,
       mergeStrategy: getMergeStrategy(ours, theirs, manual),
-      reset,
       all,
       verbose,
       isLane: false,
       skipNpmInstall: skipDependencyInstallation,
-      ignoreDist,
-      ignorePackageJson,
-      writeConfig: !!conf,
     };
-    return checkout(values, checkoutProps);
-  }
-
-  report(
-    { components, version, failedComponents, leftUnresolvedConflicts }: ApplyVersionResults,
-    _,
-    { verbose, all }: { verbose: boolean; all: boolean }
-  ): string {
-    const isLatest = Boolean(version && version === LATEST);
-    const isReset = !version;
+    const { components, version, failedComponents, leftUnresolvedConflicts }: ApplyVersionResults =
+      await this.checkout.checkoutByCLIValues(to, componentPattern || '', checkoutProps);
+    const isLatest = to === 'head';
+    const isReset = to === 'reset';
     const getFailureOutput = () => {
       // components that failed for no legitimate reason. e.g. merge-conflict.
       const realFailedComponents = failedComponents?.filter((f) => !f.unchangedLegitimately);
