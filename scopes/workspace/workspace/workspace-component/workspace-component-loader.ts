@@ -5,6 +5,7 @@ import mapSeries from 'p-map-series';
 import { compact, fromPairs, uniq } from 'lodash';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { MissingBitMapComponent } from '@teambit/legacy/dist/consumer/bit-map/exceptions';
+import { AspectLoaderMain } from '@teambit/aspect-loader';
 import { getLatestVersionNumber } from '@teambit/legacy/dist/utils';
 import { IssuesClasses } from '@teambit/component-issues';
 import { ComponentNotFound } from '@teambit/legacy/dist/scope/exceptions';
@@ -25,7 +26,8 @@ export class WorkspaceComponentLoader {
     private workspace: Workspace,
     private logger: Logger,
     private dependencyResolver: DependencyResolverMain,
-    private envs: EnvsMain
+    private envs: EnvsMain,
+    private aspectLoader: AspectLoaderMain
   ) {
     this.componentsCache = createInMemoryCache({ maxSize: getMaxSizeForComponents() });
   }
@@ -232,7 +234,7 @@ export class WorkspaceComponentLoader {
       const data = await onLoad(component, loadOpts);
       const compId = component.id.toString();
       const compIdWithoutVersion = component.id.toStringWithoutVersion();
-      if (compId !== extension && compIdWithoutVersion !== extension) {
+      if ((compId !== extension && compIdWithoutVersion !== extension) || (this.aspectLoader.isCoreAspect(extension))) {
         return this.upsertExtensionData(component, extension, data);
       }
       return undefined;

@@ -245,7 +245,7 @@ export class Workspace implements ComponentFactory {
 
     // TODO: refactor - prefer to avoid code inside the constructor.
     this.owner = this.config?.defaultOwner;
-    this.componentLoader = new WorkspaceComponentLoader(this, logger, dependencyResolver, envs);
+    this.componentLoader = new WorkspaceComponentLoader(this, logger, dependencyResolver, envs, aspectLoader);
     this.validateConfig();
     this.bitMap = new BitMap(this.consumer.bitMap, this.consumer);
     // memoize this method to improve performance.
