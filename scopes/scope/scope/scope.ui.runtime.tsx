@@ -1,5 +1,5 @@
-import flatten from 'lodash.flatten';
 import type { ComponentUI, ComponentModel } from '@teambit/component';
+import { compact, flatten } from 'lodash';
 import { ComponentAspect } from '@teambit/component';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { RouteSlot } from '@teambit/ui-foundation.ui.react-router.slot-router';
@@ -123,10 +123,11 @@ export class ScopeUI {
   getScope(options: GetScopeOptions) {
     return (
       <Scope
+        TargetScopeOverview={options.TargetScopeOverview}
         TargetCorner={options.Corner}
         routeSlot={this.routeSlot}
         menuSlot={this.menuSlot}
-        sidebar={<this.sidebar.render itemSlot={this.sidebarItemSlot} />}
+        sidebar={<this.sidebar.render items={this.listSidebarLinks()} />}
         scopeUi={this}
         userUseScopeQuery={options.useScope}
         badgeSlot={this.scopeBadgeSlot}
@@ -134,6 +135,7 @@ export class ScopeUI {
         context={this.getContext()}
         onSidebarTogglerChange={this.setSidebarToggle}
         cornerSlot={this.cornerSlot}
+        paneClassName={options.paneClassName}
       />
     );
   }
@@ -308,7 +310,7 @@ export class ScopeUI {
             <Scope
               routeSlot={this.routeSlot}
               menuSlot={this.menuSlot}
-              sidebar={<this.sidebar.render itemSlot={this.sidebarItemSlot} />}
+              sidebar={<this.sidebar.render items={this.listSidebarLinks()} />}
               scopeUi={this}
               badgeSlot={this.scopeBadgeSlot}
               overviewLineSlot={this.overviewSlot}
@@ -320,6 +322,19 @@ export class ScopeUI {
         },
       ],
     };
+  }
+
+  listSidebarLinks() {
+    const links = flatten(this.sidebarItemSlot.values());
+    const sorted = links.sort((a, b) => {
+      const aWeight = a?.weight || 0;
+      const bWeight = b?.weight || 0;
+      return aWeight - bWeight;
+    });
+
+    return compact(sorted.map((link) => {
+      return link.component;
+    }));
   }
 
   /** registers available components */
@@ -421,11 +436,15 @@ export class ScopeUI {
     scopeUi.registerMenuItem(scopeUi.menuItems);
     scopeUi.registerMenuWidget(() => <ScopeUseBox />);
     if (config.showGallery)
-      scopeUi.registerSidebarLink(() => (
-        <MenuLinkItem exact href="/" icon="comps">
-          Gallery
-        </MenuLinkItem>
-      ));
+      scopeUi.registerSidebarLink({
+        component: function Gallery() {
+          return (
+            <MenuLinkItem exact href="/" icon="comps">
+              Gallery
+            </MenuLinkItem>
+          );
+        },
+      });
     if (ui) scopeUi.registerExplicitRoutes();
 
     return scopeUi;

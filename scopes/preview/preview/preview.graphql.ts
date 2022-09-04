@@ -8,6 +8,7 @@ export function previewSchema(previewExtension: PreviewMain) {
     typeDefs: gql`
       type Preview {
         # url: String!
+        isScaling: Boolean
         includesEnvTemplate: Boolean
         legacyHeader: Boolean
       }
@@ -26,6 +27,9 @@ export function previewSchema(previewExtension: PreviewMain) {
       Preview: {
         includesEnvTemplate: ({ component }) => {
           return previewExtension.isBundledWithEnv(component);
+        },
+        isScaling: ({ component }) => {
+          return previewExtension.isScaling(component);
         },
         legacyHeader: ({ component }) => {
           return previewExtension.isLegacyHeader(component);

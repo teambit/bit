@@ -38,14 +38,16 @@ export class CompositionsPreview {
   }
 
   private getActiveComposition(module: ModuleFile) {
-    const chosen = window.location.hash.split('&')[1];
+    // const chosen = window.location.hash.split('&')[1];
+    const query = this.preview.getQuery();
+    const param = this.preview.getParam(query, 'name');
 
-    if (!chosen) {
-      const first = head(Object.values(module));
-      return first;
+    if (param && module[param]) {
+      return module[param];
     }
-
-    return module[chosen];
+    
+    const first = head(Object.values(module));
+    return first;
   }
 
   static runtime = PreviewRuntime;

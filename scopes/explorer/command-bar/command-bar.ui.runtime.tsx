@@ -132,7 +132,7 @@ export class CommandBarUI {
   /**
    * Opens and closes the command bar UI.
    */
-  private setVisibility?: (visible: boolean) => void;
+  setVisibility?: (visible: boolean) => void;
 
   /**
    * generate the ui for command bar

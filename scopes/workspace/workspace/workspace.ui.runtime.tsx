@@ -1,4 +1,5 @@
 import { ComponentAspect, ComponentUI, ComponentModel } from '@teambit/component';
+import { compact, flatten } from 'lodash';
 import { ComponentTreeAspect, ComponentTreeUI, ComponentTreeNode } from '@teambit/component-tree';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { RouteSlot } from '@teambit/ui-foundation.ui.react-router.slot-router';
@@ -137,7 +138,7 @@ export class WorkspaceUI {
             <Workspace
               menuSlot={this.menuSlot}
               routeSlot={this.routeSlot}
-              sidebar={<this.sidebar.render itemSlot={this.sidebarItemSlot} />}
+              sidebar={<this.sidebar.render items={this.listSidebarItems()} />}
               workspaceUI={this}
               onSidebarTogglerChange={this.setKeyBindHandler}
             />
@@ -145,6 +146,13 @@ export class WorkspaceUI {
         },
       ],
     };
+  }
+
+  listSidebarItems() {
+    const items = flatten(this.sidebarItemSlot.values());
+    return compact(items.map((item) => {
+      return item.component;
+    }));
   }
 
   private menuItems: MenuItem[] = [
@@ -221,11 +229,13 @@ export class WorkspaceUI {
     ui.registerRoot(workspaceUI.uiRoot.bind(workspaceUI));
     workspaceUI.registerMenuItem(workspaceUI.menuItems);
 
-    workspaceUI.registerSidebarLink(() => (
-      <MenuLinkItem exact href="/" icon="comps">
-        Gallery
-      </MenuLinkItem>
-    ));
+    workspaceUI.registerSidebarLink({
+      component: function Gallery() {
+        return <MenuLinkItem exact href="/" icon="comps">
+          Gallery
+        </MenuLinkItem>;
+      },
+    });
 
     workspaceUI.registerMenuRoutes([
       {

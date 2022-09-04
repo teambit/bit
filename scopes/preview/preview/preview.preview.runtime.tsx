@@ -3,6 +3,7 @@ import { Slot, SlotRegistry } from '@teambit/harmony';
 import { ComponentID } from '@teambit/component-id';
 import crossFetch from 'cross-fetch';
 import memoize from 'memoizee';
+import { debounce } from 'lodash';
 
 import { PreviewNotFound } from './exceptions';
 import { PreviewType } from './preview-type';
@@ -13,6 +14,7 @@ import { RenderingContext } from './rendering-context';
 import { fetchComponentAspects } from './gql/fetch-component-aspects';
 import { PREVIEW_MODULES } from './preview-modules';
 import { loadScript, loadLink } from './html-utils';
+import { SizeEvent } from './size-event';
 
 // forward linkModules() for generate-link.ts
 export { linkModules } from './preview-modules';
@@ -80,6 +82,9 @@ export class PreviewPreview {
    * render the preview.
    */
   render = async (rootExt?: string) => {
+    // fit content always.
+    window.document.body.style.width = 'fit-content';
+
     const { previewName, componentId } = this.getLocation();
     const name = previewName || this.getDefault();
     if (rootExt) this.isDev = rootExt === 'teambit.workspace/workspace';
@@ -102,14 +107,57 @@ export class PreviewPreview {
     const includes = includesAll.filter((module) => !!module);
     // during build / tag, the component is isolated, so all aspects are relevant, and do not require filtering
     const componentAspects = this.isDev ? await this.getComponentAspects(componentId.toString()) : undefined;
-
-    return preview.render(
+    const previewModule = await this.getPreviewModule(name, componentId);
+    const render = preview.render(
       componentId,
-      await this.getPreviewModule(name, componentId),
+      previewModule,
       includes,
       this.getRenderingContext(componentAspects)
     );
+
+    this.reportSize();
+    this.setViewport();
+    return render;
   };
+
+  setViewport() {
+    const query = this.getQuery();
+    const viewPort = this.getParam(query, 'viewport');
+    if (!viewPort) {
+      window.document.body.style.width = '100%';
+      return;
+    }
+
+    window.document.body.style.maxWidth = `${viewPort}px`;
+  }
+
+  reportSize() {
+    if (!window?.parent || !window?.document) return;
+    // TODO: discuss with gilad for a better way to resolve page loaded here.
+
+    const sendPubsubEvent = () => {
+      this.pubsub.pub(PreviewAspect.id, new SizeEvent({
+        width: window.document.body.offsetWidth,
+        height: window.document.body.offsetHeight
+      }));  
+    }
+
+    window.addEventListener('resize', debounce(sendPubsubEvent, 150));
+      
+    let counter = 0;
+    const interval = setInterval(() => {
+      // TODO: think
+      counter += 1;
+      if (counter > 10) {
+        clearInterval(interval);
+        return;
+      }
+      this.pubsub.pub(PreviewAspect.id, new SizeEvent({
+        width: window.document.body.offsetWidth,
+        height: window.document.body.offsetHeight
+      }));  
+    }, 200);
+  }
 
   async getPreviewModule(previewName: string, id: ComponentID): Promise<PreviewModule> {
     const compShortId = id.fullName;
@@ -260,9 +308,15 @@ export class PreviewPreview {
     return preview;
   }
 
-  private getParam(query: string, param: string) {
+  getParam(query: string, param: string) {
     const params = new URLSearchParams(query);
     return params.get(param);
+  }
+
+  getQuery() {
+    const withoutHash = window.location.hash.substring(1);
+    const [, after] = withoutHash.split('?');
+    return after;
   }
 
   private getLocation() {

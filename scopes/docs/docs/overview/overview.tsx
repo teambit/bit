@@ -1,4 +1,5 @@
 import React, { useContext, ComponentType } from 'react';
+import classNames from 'classnames';
 import { flatten } from 'lodash';
 import { ComponentContext, useComponentDescriptor } from '@teambit/component';
 import type { SlotRegistry } from '@teambit/harmony';
@@ -48,6 +49,7 @@ export function Overview({ titleBadges }: OverviewProps) {
 
   if (component?.buildStatus === 'failed' && component?.host === 'teambit.scope/scope')
     return <StatusMessageCard style={{ margin: 'auto' }} status="FAILURE" title="failed to get component preview " />;
+  const isScaling = component.preview?.isScaling;
 
   return (
     <div className={styles.overviewWrapper}>
@@ -55,7 +57,7 @@ export function Overview({ titleBadges }: OverviewProps) {
       {currentLane && <Separator isPresentational />}
       {showHeader && (
         <ComponentOverview
-          className={styles.componentOverviewBlock}
+          className={classNames(styles.componentOverviewBlock, !isScaling && styles.legacyPreview)}
           displayName={component.displayName}
           version={component.version}
           abstract={component.description}
@@ -70,6 +72,8 @@ export function Overview({ titleBadges }: OverviewProps) {
         component={component}
         style={{ width: '100%', height: '100%' }}
         previewName="overview"
+        pubsub={true}
+        viewport={null}
         fullContentHeight
         scrolling="no"
       />
