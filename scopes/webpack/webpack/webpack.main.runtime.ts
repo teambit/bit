@@ -12,7 +12,7 @@ import {
 import { MainRuntime } from '@teambit/cli';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
-import { GeneratorMain } from '@teambit/generator';
+import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
 import { merge } from 'webpack-merge';
 import WsDevServer from 'webpack-dev-server';
 import { WebpackConfigMutator } from '@teambit/webpack.modules.config-mutator';
@@ -176,7 +176,7 @@ export class WebpackMain {
   static slots = [];
 
   static runtime = MainRuntime;
-  static dependencies = [PubsubAspect, WorkspaceAspect, BundlerAspect, LoggerAspect];
+  static dependencies = [PubsubAspect, WorkspaceAspect, BundlerAspect, LoggerAspect, GeneratorAspect];
 
   static async provider([pubsub, workspace, bundler, logger, generator]: [
     PubsubMain,

@@ -12,7 +12,7 @@ import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/depen
 import pMapSeries from 'p-map-series';
 import { TsserverClient, TsserverClientOpts } from '@teambit/ts-server';
 import AspectLoaderAspect, { AspectLoaderMain } from '@teambit/aspect-loader';
-import { GeneratorMain } from '@teambit/generator';
+import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
 import type { Component } from '@teambit/component';
 import { TypeScriptExtractor } from './typescript.extractor';
 import { TypeScriptCompilerOptions } from './compiler-options';
@@ -235,6 +235,7 @@ export class TypescriptMain {
     WorkspaceAspect,
     CLIAspect,
     DependencyResolverAspect,
+    GeneratorAspect,
   ];
   static slots = [Slot.withType<SchemaTransformer[]>()];
 
