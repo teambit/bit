@@ -12,6 +12,7 @@ import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/depen
 import pMapSeries from 'p-map-series';
 import { TsserverClient, TsserverClientOpts } from '@teambit/ts-server';
 import AspectLoaderAspect, { AspectLoaderMain } from '@teambit/aspect-loader';
+import { GeneratorMain } from '@teambit/generator';
 import type { Component } from '@teambit/component';
 import { TypeScriptExtractor } from './typescript.extractor';
 import { TypeScriptCompilerOptions } from './compiler-options';
@@ -33,6 +34,7 @@ import {
   BindingElementTransformer,
 } from './transformers';
 import { CheckTypesCmd } from './cmds/check-types.cmd';
+import { typescriptTransformerTemplate } from './templates';
 
 export type TsMode = 'build' | 'dev';
 
@@ -237,13 +239,14 @@ export class TypescriptMain {
   static slots = [Slot.withType<SchemaTransformer[]>()];
 
   static async provider(
-    [schema, loggerExt, aspectLoader, workspace, cli, depResolver]: [
+    [schema, loggerExt, aspectLoader, workspace, cli, depResolver, generator]: [
       SchemaMain,
       LoggerMain,
       AspectLoaderMain,
       Workspace,
       CLIMain,
-      DependencyResolverMain
+      DependencyResolverMain,
+      GeneratorMain
     ],
     config,
     [schemaTransformerSlot]: [SchemaTransformerSlot]
@@ -273,6 +276,7 @@ export class TypescriptMain {
 
     const checkTypesCmd = new CheckTypesCmd(tsMain, workspace, logger);
     cli.register(checkTypesCmd);
+    generator.registerComponentTemplate([typescriptTransformerTemplate]);
 
     return tsMain;
   }
