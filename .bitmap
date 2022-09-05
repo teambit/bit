@@ -567,6 +567,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/explorer/insights"
     },
+    "install": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/workspace/install"
+    },
     "isolator": {
         "scope": "teambit.component",
         "version": "0.0.844",
