@@ -196,7 +196,7 @@ export class CommandBarUI {
     }
 
     if (uiUi) {
-      uiUi.registerHudItem(<commandBar.CommandBar />);
+      uiUi.registerHudItem(<commandBar.CommandBar key="commandBar" />);
     }
 
     return commandBar;
