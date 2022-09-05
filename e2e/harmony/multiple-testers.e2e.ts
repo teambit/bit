@@ -1,5 +1,5 @@
 import chai, { expect } from 'chai';
-// import { IS_WINDOWS } from '../../src/constants';
+import { IS_WINDOWS } from '../../src/constants';
 import Helper from '../../src/e2e-helper/e2e-helper';
 
 chai.use(require('chai-fs'));
@@ -14,7 +14,7 @@ describe('multi testers', function () {
     helper.scopeHelper.destroy();
   });
 
-  describe('2 jest testers with different resolve pattern', () => {
+  (IS_WINDOWS ? describe.skip : describe)('2 jest testers with different resolve pattern', function () {
     let compName;
     before(() => {
       helper.scopeHelper.reInitLocalScopeHarmony();
