@@ -6,6 +6,7 @@ import { webpackTransformerFile } from './files/webpack-transformer';
 export const webpackTransformerTemplate: ComponentTemplate = {
   name: 'webpack-transformer',
   description: "create a shareable webpack transformation to customise an env's webpack configuration",
+  hidden: true,
   generateFiles: (context: ComponentContext) => {
     return [
       {

@@ -8,6 +8,7 @@ import { typescriptConfigFile } from './files/typescript.config';
 export const typescriptTransformerTemplate: ComponentTemplate = {
   name: 'typescript-transformer',
   description: "create a shareable typescript transformation to customise an env's typescript configuration",
+  hidden: true,
   generateFiles: (context: ComponentContext) => {
     return [
       {
