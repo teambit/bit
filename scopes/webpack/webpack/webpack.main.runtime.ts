@@ -12,9 +12,12 @@ import {
 import { MainRuntime } from '@teambit/cli';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
+import { GeneratorMain } from '@teambit/generator';
 import { merge } from 'webpack-merge';
 import WsDevServer from 'webpack-dev-server';
 import { WebpackConfigMutator } from '@teambit/webpack.modules.config-mutator';
+
+import { webpackTransformerTemplate } from './templates';
 
 import { generateAddAliasesFromPeersTransformer, generateExternalsTransformer } from './transformers';
 import { configFactory as devServerConfigFactory } from './config/webpack.dev.config';
@@ -175,8 +178,15 @@ export class WebpackMain {
   static runtime = MainRuntime;
   static dependencies = [PubsubAspect, WorkspaceAspect, BundlerAspect, LoggerAspect];
 
-  static async provider([pubsub, workspace, bundler, logger]: [PubsubMain, Workspace, BundlerMain, LoggerMain]) {
+  static async provider([pubsub, workspace, bundler, logger, generator]: [
+    PubsubMain,
+    Workspace,
+    BundlerMain,
+    LoggerMain,
+    GeneratorMain
+  ]) {
     const logPublisher = logger.createLogger(WebpackAspect.id);
+    generator.registerComponentTemplate([webpackTransformerTemplate]);
     return new WebpackMain(pubsub, workspace, bundler, logPublisher);
   }
 }
