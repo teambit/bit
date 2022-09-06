@@ -586,7 +586,7 @@ export class IsolatorMain {
 
   private async getCurrentPackageJson(capsule: Capsule, capsules: CapsuleList): Promise<PackageJsonFile> {
     const component: Component = capsule.component;
-    const currentVersion = await this.getComponentPackageVersionWithCache(component);
+    const currentVersion = getComponentPackageVersion(component);
     const getComponentDepsManifest = async (dependencies: DependencyList) => {
       const manifest = {
         dependencies: {},
@@ -597,7 +597,7 @@ export class IsolatorMain {
         const depCapsule = capsules.getCapsule(dep.componentId);
         let version = dep.version;
         if (depCapsule) {
-          version = await this.getComponentPackageVersionWithCache(depCapsule?.component);
+          version = getComponentPackageVersion(depCapsule?.component);
         } else {
           version = snapToSemver(version);
         }
@@ -629,10 +629,8 @@ export class IsolatorMain {
 
   private async getComponentPackageVersionWithCache(component: Component): Promise<string> {
     const idStr = component.id.toString();
-    if (this._componentsPackagesVersionCache[idStr]) {
-      return this._componentsPackagesVersionCache[idStr];
-    }
-    const version = await getComponentPackageVersion(component);
+
+    const version = getComponentPackageVersion(component);
     this._componentsPackagesVersionCache[idStr] = version;
     return version;
   }

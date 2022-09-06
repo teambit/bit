@@ -542,6 +542,7 @@ export default class ScopeComponentsImporter {
     lanes: Lane[] = []
   ): Promise<VersionDependencies[]> {
     if (!ids.length) return [];
+    if (lanes.length > 1) throw new Error(`getExternalMany support only one lane`);
     logger.debugAndAddBreadCrumb(
       'ScopeComponentsImporter.getExternalMany',
       `fetching from remote scope. Ids: {ids}, Lanes: {lanes}`,
@@ -565,6 +566,7 @@ export default class ScopeComponentsImporter {
       {
         withoutDependencies: false,
         onlyIfBuilt,
+        laneId: lanes.length ? lanes[0].id() : undefined,
       },
       ids,
       lanes,

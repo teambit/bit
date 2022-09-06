@@ -196,6 +196,8 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
   }
 
   findOrAddComponent(props: ComponentProps): Promise<ModelComponent> {
+    // @ts-ignore normally "props" is a consumerComponent, and when loaded from FS, it has modelComponent
+    if (props.modelComponent) return props.modelComponent;
     const comp = ModelComponent.from(props);
     return this._findComponent(comp).then((component) => {
       if (!component) return comp;
@@ -252,8 +254,8 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
   }
 
   async getObjectsToEnrichSource(consumerComponent: ConsumerComponent): Promise<BitObject[]> {
-    const component = await this.findOrAddComponent(consumerComponent);
-    const version = await component.loadVersion(consumerComponent.id.version as string, this.objects());
+    const component = consumerComponent.modelComponent || (await this.findOrAddComponent(consumerComponent));
+    const version = await component.loadVersion(consumerComponent.id.version as string, this.objects(), true, true);
     const artifactFiles = getArtifactsFiles(consumerComponent.extensions);
     const artifacts = this.transformArtifactsFromVinylToSource(artifactFiles);
     version.extensions = consumerComponent.extensions;
@@ -309,7 +311,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     return component;
   }
 
-  async addSourceFromScope(source: ConsumerComponent): Promise<ModelComponent> {
+  async addSourceFromScope(source: ConsumerComponent, lane: Lane | null): Promise<ModelComponent> {
     const objectRepo = this.objects();
     // if a component exists in the model, add a new version. Otherwise, create a new component on the model
     const component = await this.findOrAddComponent(source);
@@ -318,7 +320,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     const { version, files } = await this.consumerComponentToVersion(source);
     objectRepo.add(version);
     if (!source.version) throw new Error(`addSource expects source.version to be set`);
-    component.addVersion(version, source.version, null, objectRepo);
+    component.addVersion(version, source.version, lane, objectRepo);
     objectRepo.add(component);
     files.forEach((file) => objectRepo.add(file.file));
     if (artifacts) artifacts.forEach((file) => objectRepo.add(file.source));
