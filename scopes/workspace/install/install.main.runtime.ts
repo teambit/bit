@@ -1,4 +1,8 @@
 import path from 'path';
+import InstallCmd from './install.cmd';
+import UninstallCmd from './uninstall.cmd';
+import UpdateCmd from './update.cmd';
+import { CLIMain, CommandList, CLIAspect } from '@teambit/cli';
 import chalk from 'chalk';
 import { WorkspaceAspect, Workspace, ComponentConfigFile } from '@teambit/workspace';
 import { slice, uniqBy, difference, compact, pick, partition, isEmpty } from 'lodash';
@@ -390,18 +394,26 @@ export class InstallMain {
   static slots = [];
   // define your aspect dependencies here.
   // in case you need to use another aspect API.
-  static dependencies = [DependencyResolverAspect, WorkspaceAspect, LoggerAspect, VariantsAspect];
+  static dependencies = [DependencyResolverAspect, WorkspaceAspect, LoggerAspect, VariantsAspect, CLIAspect];
 
   static runtime = MainRuntime;
 
-  static async provider([dependencyResolver, workspace, loggerExt, variants]: [
+  static async provider([dependencyResolver, workspace, loggerExt, variants, cli]: [
     DependencyResolverMain,
     Workspace,
     LoggerMain,
-    VariantsMain
+    VariantsMain,
+    CLIMain
   ]) {
     const logger = loggerExt.createLogger('teambit.bit/install');
-    return new InstallMain(dependencyResolver, logger, workspace, variants);
+    const installExt = new InstallMain(dependencyResolver, logger, workspace, variants);
+    const commands: CommandList = [
+      new InstallCmd(installExt, workspace, logger),
+      new UninstallCmd(installExt),
+      new UpdateCmd(installExt),
+    ];
+    cli.register(...commands);
+    return installExt;
   }
 }
 

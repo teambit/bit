@@ -1,6 +1,6 @@
 import { Command, CommandOptions } from '@teambit/cli';
 
-import { Workspace } from './workspace';
+import { InstallMain } from './install.main.runtime';
 
 type UpdateCmdOptions = {
   yes?: boolean;
@@ -13,15 +13,10 @@ export default class UpdateCmd implements Command {
   group = 'development';
   options = [['y', 'yes', 'automatically update all outdated packages']] as CommandOptions;
 
-  constructor(
-    /**
-     * workspace extension.
-     */
-    private workspace: Workspace
-  ) {}
+  constructor(private install: InstallMain) {}
 
   async report(args: [string[]], options: UpdateCmdOptions) {
-    await this.workspace.updateDependencies({
+    await this.install.updateDependencies({
       all: options.yes === true,
     });
     return '';
