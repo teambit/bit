@@ -24,6 +24,7 @@ import { ResolvedPackageData } from '../../../../utils/packages';
 import { DependenciesData } from './dependencies-data';
 import { packageToDefinetlyTyped } from './package-to-definetly-typed';
 import { ExtensionDataList } from '../../../config';
+import PackageJsonFile from '../../../../consumer/component/package-json-file';
 
 export type AllDependencies = {
   dependencies: Dependency[];
@@ -229,7 +230,8 @@ export default class DependencyResolver {
     this.removeIgnoredPackagesByOverrides();
     this.removeDevAndEnvDepsIfTheyAlsoRegulars();
     this.addCustomResolvedIssues();
-    this.populatePeerPackageDependencies();
+    this.applyPeersFromComponentModel();
+    this.applyPackageJson();
     this.applyWorkspacePolicy();
     await this.applyAutoDetectedPeersFromEnvOnComponent();
     this.manuallyAddDependencies();
@@ -1076,17 +1078,9 @@ either, use the ignore file syntax or change the require statement to have a mod
     return R.differenceWith(cmp, targetSpecifiers, originSpecifiers);
   }
 
-  /**
-   * For author, the peer-dependencies are set in the root package.json
-   * For imported components, we don't want to change the peerDependencies of the author, unless
-   * we're certain the user intent to do so. Therefore, we ignore the root package.json and look for
-   * the package.json in the component's directory.
-   */
-  populatePeerPackageDependencies(): void {
+  applyPeersFromComponentModel(): void {
     const getPeerDependencies = (): Record<string, any> => {
-      const packageJson = this._getPackageJson();
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      const packageJson = this._getPackageJsonFromComponentModel();
       if (packageJson && packageJson.peerDependencies) return packageJson.peerDependencies;
       return {};
     };
@@ -1109,6 +1103,28 @@ either, use the ignore file syntax or change the require statement to have a mod
     this.allPackagesDependencies.peerPackageDependencies = peerPackages;
   }
 
+  applyPackageJson(): void {
+    const packageJson = this._getPackageJson();
+    if (!packageJson) return;
+    const pkgJsonPeer = packageJson.peerDependencies || {};
+    const pkgJsonRegularDeps = packageJson.dependencies || {};
+    const peerDeps = this.allPackagesDependencies.peerPackageDependencies || {};
+    ['packageDependencies', 'devPackageDependencies', 'peerPackageDependencies'].forEach((field) => {
+      R.forEachObjIndexed((_pkgVal, pkgName) => {
+        const peerVersionFromPkgJson = pkgJsonPeer[pkgName];
+        const regularVersionFromPkgJson = pkgJsonRegularDeps[pkgName];
+        if (peerVersionFromPkgJson) {
+          delete this.allPackagesDependencies[field][pkgName];
+          peerDeps[pkgName] = peerVersionFromPkgJson;
+        } else if (regularVersionFromPkgJson) {
+          delete this.allPackagesDependencies.peerPackageDependencies?.[pkgName];
+          this.allPackagesDependencies[field][pkgName] = regularVersionFromPkgJson;
+        }
+      }, this.allPackagesDependencies[field]);
+    });
+    this.allPackagesDependencies.peerPackageDependencies = peerDeps;
+  }
+
   applyWorkspacePolicy(): void {
     const wsPolicy = DependencyResolver.getWorkspacePolicy();
     if (!wsPolicy) return;
@@ -1125,6 +1141,7 @@ either, use the ignore file syntax or change the require statement to have a mod
           delete this.allPackagesDependencies[field][pkgName];
           peerDeps[pkgName] = peerVersionFromWsPolicy;
         } else if (regularVersionFromWsPolicy) {
+          delete this.allPackagesDependencies.peerPackageDependencies?.[pkgName];
           this.allPackagesDependencies[field][pkgName] = regularVersionFromWsPolicy;
         }
       }, this.allPackagesDependencies[field]);
@@ -1181,6 +1198,19 @@ either, use the ignore file syntax or change the require statement to have a mod
    */
   _getPackageJson(): Record<string, any> | undefined {
     return this.consumer.packageJson.packageJsonObject;
+  }
+
+  _getPackageJsonFromComponentModel(): Record<string, any> | undefined {
+    if (this.componentFromModel && this.component.componentMap) {
+      // a component is imported but the package.json file is missing or never written
+      // read the values from the model
+      const packageJson = PackageJsonFile.createFromComponent(
+        this.component.componentMap.rootDir,
+        this.componentFromModel
+      );
+      return packageJson.packageJsonObject;
+    }
+    return undefined;
   }
 
   private setLegacyInsideHarmonyIssue() {
