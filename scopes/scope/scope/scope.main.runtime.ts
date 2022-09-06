@@ -437,6 +437,12 @@ needed-for: ${neededFor || '<unknown>'}`);
       return { manifests: [], potentialPluginsIds: [] };
     }
     const components = await this.getNonLoadedAspects(nonVisitedId);
+    // Adding all the envs ids to the array to support case when one (or more) of the aspects has custom aspect env
+    const customEnvsIds = components
+      .map((component) => this.envs.getEnvId(component))
+      .filter((envId) => !this.aspectLoader.isCoreEnv(envId));
+    // In case there is custom env we need to load it right away, otherwise we will fail during the require aspects
+    await this.getManifestsAndLoadAspects(customEnvsIds);
     visited.push(...nonVisitedId);
     const manifests = await this.requireAspects(components, throwOnError, opts);
     const potentialPluginsIds = compact(
