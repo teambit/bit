@@ -7,7 +7,7 @@ import { toPreviewUrl } from './urls';
 import { computePreviewScale } from './compute-preview-scale';
 import { useIframeContentHeight } from './use-iframe-content-height';
 import styles from './preview.module.scss';
-
+ 
 // omitting 'referrerPolicy' because of an TS error during build. Re-include when needed
 export interface ComponentPreviewProps extends Omit<IframeHTMLAttributes<HTMLIFrameElement>, 'src' | 'referrerPolicy'> {
   /**
@@ -36,7 +36,7 @@ export interface ComponentPreviewProps extends Omit<IframeHTMLAttributes<HTMLIFr
   /**
    * set specific height for the iframe.
    */
-  forceHeight?: number | string;
+  forceHeight?: number|string;
 
   /**
    * fit the preview to a specific width.
@@ -46,7 +46,7 @@ export interface ComponentPreviewProps extends Omit<IframeHTMLAttributes<HTMLIFr
   /**
    * viewport
    */
-  viewport?: number | null;
+  viewport?: number|null,
 
   /**
    * is preview being rendered in full height and should fit view height to content.
@@ -109,7 +109,7 @@ export function ComponentPreview({
   const legacyCurrentWidth = '100%';
   const targetWidth = currentWidth < containerWidth ? containerWidth : currentWidth;
   const targetHeight = height !== 0 ? height : 5000;
-  const finalHeight = !fullContentHeight && targetHeight < containerHeight ? containerHeight : targetHeight;
+  const finalHeight = (!fullContentHeight && targetHeight < containerHeight) ? containerHeight : targetHeight;
   const defaultLegacyHeight = forceHeight || 5000;
   const legacyIframeHeight = (iframeHeight || 0) > 400 ? iframeHeight : defaultLegacyHeight;
 

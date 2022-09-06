@@ -12,11 +12,7 @@ export type ComponentCompositionProps = {
 
 export function ComponentComposition({ composition, component, queryParams = [], ...rest }: ComponentCompositionProps) {
   const compositionParams = useMemo(
-    () =>
-      (composition
-        ? [component.preview?.isScaling ? `name=${composition.identifier}` : composition.identifier]
-        : []
-      ).concat(queryParams),
+    () => (composition ? [component.preview?.isScaling ? `name=${composition.identifier}` : composition.identifier] : []).concat(queryParams),
     [composition?.identifier, queryParams]
   );
 

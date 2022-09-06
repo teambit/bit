@@ -624,7 +624,7 @@ export class PreviewMain {
       workspace.onComponentLoad(async () => {
         return {
           // used for backward compatibility. can be removed in the future.
-          scaling: true,
+          scaling: true
         };
       });
       workspace.registerOnComponentChange((c) =>

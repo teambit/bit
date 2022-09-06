@@ -45,7 +45,7 @@ export class CompositionsPreview {
     if (param && module[param]) {
       return module[param];
     }
-
+    
     const first = head(Object.values(module));
     return first;
   }

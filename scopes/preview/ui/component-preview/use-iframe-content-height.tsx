@@ -3,11 +3,11 @@ import React, { useRef, useState, useEffect } from 'react';
 export function useIframeContentHeight({
   interval = 250,
   skip,
-  viewport,
+  viewport
 }: {
   interval?: number;
   skip?: boolean;
-  viewport?: number | null;
+  viewport?: number|null
 }): [React.MutableRefObject<HTMLIFrameElement | null>, number | undefined, number] {
   const iframeRef: React.MutableRefObject<HTMLIFrameElement | null> = useRef(null);
   const [iframeHeight, setIframeHeight] = useState(0);

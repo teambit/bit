@@ -30,7 +30,7 @@ export function DocsApp({ componentId, docs = defaultDocs, compositions }: React
   return (
     <DocsTheme>
       <>
-        {/* <ApplyProviders renderingContext={context}> */}
+      {/* <ApplyProviders renderingContext={context}> */}
         <DocsContent docs={docs} className={styles.mdx} />
 
         <CompositionsCarousel
@@ -40,7 +40,7 @@ export function DocsApp({ componentId, docs = defaultDocs, compositions }: React
         />
         <PropertiesTable componentId={componentId} />
         <ExamplesOverview examples={Content.examples || examples} />
-        {/* </ApplyProviders> */}
+      {/* </ApplyProviders> */}
       </>
     </DocsTheme>
   );
