@@ -54,7 +54,9 @@ export function LaneSelector({
       open={!multipleLanes ? false : undefined}
       onChange={multipleLanes ? onDropdownToggled : undefined}
       // @ts-ignore - mismatch between @types/react
-      placeholder={<LanePlaceholder disabled={!multipleLanes} selectedLaneId={selectedLaneId} />}
+      placeholder={
+        <LanePlaceholder disabled={!multipleLanes} selectedLaneId={selectedLaneId} showScope={groupByScope} />
+      }
       className={classnames(className, styles.dropdown, !multipleLanes && styles.disabled)}
     >
       {multipleLanes && <div className={styles.header}>Switch lane</div>}

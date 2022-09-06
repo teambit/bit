@@ -6,10 +6,22 @@ import classnames from 'classnames';
 
 import styles from './lane-placeholder.module.scss';
 
-export type LanePlaceholderProps = { selectedLaneId: LaneId; disabled?: boolean } & HTMLAttributes<HTMLDivElement>;
+export type LanePlaceholderProps = {
+  selectedLaneId?: LaneId;
+  disabled?: boolean;
+  showScope?: boolean;
+} & HTMLAttributes<HTMLDivElement>;
 
-export function LanePlaceholder({ selectedLaneId, disabled, className, ...rest }: LanePlaceholderProps) {
-  const laneIdStr = selectedLaneId?.isDefault() ? selectedLaneId.name : selectedLaneId?.toString();
+export function LanePlaceholder({
+  selectedLaneId,
+  disabled,
+  className,
+  showScope = true,
+  ...rest
+}: LanePlaceholderProps) {
+  const laneIdStr = selectedLaneId?.isDefault()
+    ? selectedLaneId.name
+    : (showScope && selectedLaneId?.toString()) || selectedLaneId?.name;
 
   return (
     <div {...rest} className={classnames(styles.placeholder, className, disabled && styles.disabled)}>
