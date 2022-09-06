@@ -202,7 +202,7 @@ describe('update-dependencies command', function () {
       let updateRemotePath: string;
       before(() => {
         // helper.scopeHelper.getClonedScope(secondScopeBeforeUpdate, secondRemotePath);
-        // headBefore = helper.command.getHead(`${secondRemoteName}/comp-b`, secondRemotePath);
+        headBefore = helper.command.getHeadOfLane('dev', `comp1`);
         const updateRemote = helper.scopeHelper.getNewBareScope('-remote-update');
         updateRemotePath = updateRemote.scopePath;
         helper.scopeHelper.addRemoteScope(secondRemotePath, updateRemotePath);
@@ -223,12 +223,49 @@ describe('update-dependencies command', function () {
         expect(updateDepsOutput).to.have.string('the following 1 component(s) were updated');
       });
       it('should save the data locally as a new snap', () => {
-        const currentHeadLocally = helper.command.getHead(`${secondRemoteName}/comp-b`, updateRemotePath);
+        const currentHeadLocally = helper.command.getHeadOfLane('dev', `comp1`, updateRemotePath);
         expect(headBefore).to.not.equal(currentHeadLocally);
       });
       it('should not export the results to the remote scope', () => {
-        const currentHeadOnRemote = helper.command.getHead(`${secondRemoteName}/comp-b`, secondRemotePath);
+        const currentHeadOnRemote = helper.command.getHeadOfLane('dev', `comp1`, helper.scopes.remotePath);
         expect(headBefore).to.equal(currentHeadOnRemote);
+      });
+    });
+    describe('running from a new bare scope using --push flags', () => {
+      let updateDepsOutput: string;
+      let updateRemotePath: string;
+      let headBefore: string;
+      before(() => {
+        headBefore = helper.command.getHeadOfLane('dev', `comp1`);
+        const updateRemote = helper.scopeHelper.getNewBareScope('-remote-update');
+        updateRemotePath = updateRemote.scopePath;
+        helper.scopeHelper.addRemoteScope(secondRemotePath, updateRemotePath);
+        helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, updateRemotePath);
+        const data = [
+          {
+            componentId: `${secondRemoteName}/comp1`,
+            dependencies: [`${secondRemoteName}/comp2@${headSnapComp2}`],
+          },
+        ];
+        updateDepsOutput = helper.command.updateDependencies(
+          data,
+          `--lane ${helper.scopes.remote}/dev --push`,
+          updateRemote.scopePath
+        );
+      });
+      it('should succeed', () => {
+        expect(updateDepsOutput).to.have.string('the following 1 component(s) were updated');
+      });
+      it('should export the results to the remote lane-scope', () => {
+        const currentHeadOnRemote = helper.command.getHeadOfLane('dev', `comp1`, helper.scopes.remotePath);
+        const currentHeadLocally = helper.command.getHeadOfLane('dev', `comp1`, updateRemotePath);
+        expect(currentHeadOnRemote).to.equal(currentHeadLocally);
+        expect(currentHeadOnRemote).to.not.equal(headBefore);
+      });
+      it('should not export the results to the origin scope', () => {
+        const currentHeadOnRemote = helper.command.getHead(`${secondRemoteName}/comp1`, secondRemotePath);
+        const currentHeadLocally = helper.command.getHeadOfLane('dev', `comp1`, updateRemotePath);
+        expect(currentHeadOnRemote).to.not.equal(currentHeadLocally);
       });
     });
   });

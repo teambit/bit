@@ -326,6 +326,7 @@ to bypass this error, use --skip-new-scope-validation flag (not recommended. it 
       scope: this.scope.legacyScope,
       ids,
       idsWithFutureScope: ids,
+      laneObject: this.laneObj,
       allVersions: false,
     });
   }
