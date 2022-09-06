@@ -134,7 +134,13 @@ export class LanesUI {
   }
 
   private registerLanesDropdown() {
-    this.hostAspect?.registerSidebarLink(() => <LaneSwitcher groupByScope={this.lanesHost === 'workspace'} />);
+    const LanesGallery = <LaneSwitcher groupByScope={this.lanesHost === 'workspace'} />;
+    this.hostAspect?.registerSidebarLink({
+      component: function Gallery() {
+        return LanesGallery;
+      },
+      weight: 3,
+    });
   }
 
   private renderContext = ({ children }: { children: ReactNode }) => {

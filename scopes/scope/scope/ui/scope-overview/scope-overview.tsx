@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React, { useContext, ComponentType } from 'react';
 import { ComponentCard } from '@teambit/explorer.ui.gallery.component-card';
 import { ComponentGrid } from '@teambit/explorer.ui.gallery.component-grid';
 import { ScopeDetails } from '@teambit/scope.ui.scope-details';
@@ -12,9 +12,10 @@ import type { ScopeBadgeSlot, OverviewLineSlot } from '../../scope.ui.runtime';
 export type ScopeOverviewProps = {
   badgeSlot: ScopeBadgeSlot;
   overviewSlot: OverviewLineSlot;
+  TargetOverview?: ComponentType;
 };
 
-export function ScopeOverview({ badgeSlot, overviewSlot }: ScopeOverviewProps) {
+export function ScopeOverview({ badgeSlot, overviewSlot, TargetOverview }: ScopeOverviewProps) {
   const scope = useContext(ScopeContext);
   const { components } = scope;
   if (!components || components.length === 0) return <EmptyScope name={scope.name} />;
@@ -30,16 +31,20 @@ export function ScopeOverview({ badgeSlot, overviewSlot }: ScopeOverviewProps) {
         description={scope.description}
         componentCount={scope.components.length}
       />
-      <ComponentGrid>
-        {components.map((component, index) => {
-          if (component.deprecation?.isDeprecate) return null;
-          return (
-            <div key={index}>
-              <ScopeComponentCard component={component} />
-            </div>
-          );
-        })}
-      </ComponentGrid>
+      {TargetOverview ? (
+        <TargetOverview />
+      ) : (
+        <ComponentGrid>
+          {components.map((component, index) => {
+            if (component.deprecation?.isDeprecate) return null;
+            return (
+              <div key={index}>
+                <ScopeComponentCard component={component} />
+              </div>
+            );
+          })}
+        </ComponentGrid>
+      )}
     </div>
   );
 }

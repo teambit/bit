@@ -22,7 +22,7 @@ type SearcherSlot = SlotRegistry<SearchProvider[]>;
 type CommandSlot = SlotRegistry<CommandEntry[]>;
 
 export type CommandBarConfig = {
-  debounce?: number
+  debounce?: number;
 };
 
 export type CommandEntry = {
@@ -132,7 +132,7 @@ export class CommandBarUI {
   /**
    * Opens and closes the command bar UI.
    */
-  private setVisibility?: (visible: boolean) => void;
+  setVisibility?: (visible: boolean) => void;
 
   /**
    * generate the ui for command bar
@@ -142,7 +142,7 @@ export class CommandBarUI {
     this.setVisibility = setVisibility;
 
     const results = useSearcher(this.search, {
-      debounce: this.config.debounce
+      debounce: this.config.debounce,
     });
 
     return (
@@ -159,20 +159,16 @@ export class CommandBarUI {
     );
   };
 
-  constructor(
-    private searcherSlot: SearcherSlot, 
-    private commandSlot: CommandSlot,
-    private config: CommandBarConfig
-  ) {}
+  constructor(private searcherSlot: SearcherSlot, private commandSlot: CommandSlot, private config: CommandBarConfig) {}
 
   static dependencies = [UIAspect, PubsubAspect, ReactRouterAspect];
   static slots = [Slot.withType<SearchProvider>(), Slot.withType<CommandEntry[]>()];
   static defaultConfig: CommandBarConfig = {
-    debounce: undefined
+    debounce: undefined,
   };
 
   static runtime = UIRuntime;
-  
+
   static async provider(
     [uiUi, pubsubUI]: [UiUI | undefined, PubsubUI | undefined],
     config: CommandBarConfig,
@@ -196,7 +192,7 @@ export class CommandBarUI {
     }
 
     if (uiUi) {
-      uiUi.registerHudItem(<commandBar.CommandBar />);
+      uiUi.registerHudItem(<commandBar.CommandBar key="commandBar" />);
     }
 
     return commandBar;

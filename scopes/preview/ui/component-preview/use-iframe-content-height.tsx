@@ -1,27 +1,38 @@
 import React, { useRef, useState, useEffect } from 'react';
 
-export default function useIframeContentHeight({
+export function useIframeContentHeight({
   interval = 250,
   skip,
+  viewport,
 }: {
   interval?: number;
   skip?: boolean;
-}): [React.MutableRefObject<HTMLIFrameElement | null>, number | undefined] {
+  viewport?: number | null;
+}): [React.MutableRefObject<HTMLIFrameElement | null>, number | undefined, number] {
   const iframeRef: React.MutableRefObject<HTMLIFrameElement | null> = useRef(null);
   const [iframeHeight, setIframeHeight] = useState(0);
-  if (skip) return [iframeRef, undefined];
+  const [iframeWidth, setIframeWidth] = useState(0);
+  if (skip) return [iframeRef, undefined, iframeWidth];
+  let first = true;
   useInterval(() => {
     try {
       const iframe = iframeRef.current;
       // eslint-disable-next-line
+      if (viewport !== null) iframe!.contentWindow!.document.body.style.width = 'fit-content';
+      if (!first && iframe?.style.height === '5000px') {
+        iframe.style.height = '100%';
+      }
       const newHeight = iframe!.contentWindow!.document.body.scrollHeight;
+      const newWidth = iframe?.contentWindow?.document.body.offsetWidth;
       setIframeHeight(newHeight);
+      setIframeWidth(newWidth || 0);
+      first = false;
     } catch (_) {
       // eslint-disable-next-line
     }
   }, interval);
 
-  return [iframeRef, iframeHeight];
+  return [iframeRef, iframeHeight, iframeWidth];
 }
 
 type CallbackFn = () => void;

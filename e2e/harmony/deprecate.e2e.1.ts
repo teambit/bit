@@ -94,7 +94,7 @@ describe('bit deprecate and undeprecate commands', function () {
       });
     });
   });
-  describe('reverting the deprecation by "bit checkout --reset"', () => {
+  describe('reverting the deprecation by "bit checkout reset"', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       helper.fixtures.populateComponents(1);
@@ -104,7 +104,7 @@ describe('bit deprecate and undeprecate commands', function () {
       const deprecationData = helper.command.showAspectConfig('comp1', Extensions.deprecation);
       expect(deprecationData.config.deprecate).to.be.true;
 
-      helper.command.checkout('comp1 --reset');
+      helper.command.checkoutReset('comp1');
     });
     it('should remove the deprecation config', () => {
       const deprecationData = helper.command.showAspectConfig('comp1', Extensions.deprecation);

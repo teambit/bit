@@ -193,6 +193,14 @@ export class PreviewMain {
   }
 
   /**
+   * can the current component preview scale in size for different preview sizes.
+   */
+  async isScaling(component: Component): Promise<boolean> {
+    const previewData = component.state.aspects.get(PreviewAspect.id)?.data;
+    return previewData?.scaling;
+  }
+
+  /**
    * Check if the component preview bundle contain the header inside of it (legacy)
    * today we are not including the header inside anymore
    * @param component
@@ -613,6 +621,12 @@ export class PreviewMain {
       workspace.registerOnComponentAdd((c) =>
         preview.handleComponentChange(c, (currentComponents) => currentComponents.add(c))
       );
+      workspace.onComponentLoad(async () => {
+        return {
+          // used for backward compatibility. can be removed in the future.
+          scaling: true,
+        };
+      });
       workspace.registerOnComponentChange((c) =>
         preview.handleComponentChange(c, (currentComponents) => currentComponents.update(c))
       );

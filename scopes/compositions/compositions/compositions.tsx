@@ -78,7 +78,7 @@ export function Compositions({ menuBarWidgets, emptyState }: CompositionsProp) {
             emptyState={emptyState}
             component={component}
             selected={selected}
-            queryParams={queryParams}
+            queryParams={component.preview?.isScaling ? `name=${queryParams}` : queryParams}
           />
         </Pane>
         <HoverSplitter className={styles.splitter}>
@@ -178,8 +178,13 @@ export function CompositionContent({ component, selected, queryParams, emptyStat
   return (
     <ComponentComposition
       className={styles.compositionsIframe}
+      // TODO: Oded to add control for viewport.
+      viewport={null}
       component={component}
+      forceHeight="100%"
       composition={selected}
+      fullContentHeight
+      pubsub={true}
       queryParams={queryParams}
     />
   );
