@@ -1,4 +1,7 @@
 import path from 'path';
+import { CommunityMain, CommunityAspect } from '@teambit/community';
+import { LinkCommand } from './link';
+import ManyComponentsWriter from '@teambit/legacy/dist/consumer/component-ops/many-components-writer';
 import InstallCmd from './install.cmd';
 import UninstallCmd from './uninstall.cmd';
 import UpdateCmd from './update.cmd';
@@ -34,7 +37,6 @@ import {
   DependencyList,
   OutdatedPkg,
 } from '@teambit/dependency-resolver';
-import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils/path';
 import { Importer } from '@teambit/importer';
 import { ImportOptions } from '@teambit/legacy/dist/consumer/component-ops/import-components';
 import { PathOsBased, PathOsBasedRelative, PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
@@ -315,21 +317,6 @@ export class InstallMain {
     return res;
   }
 
-  /**
-   * @param componentPath can be relative or absolute. supports Linux and Windows
-   */
-  async getComponentIdByPath(componentPath: PathOsBased): Promise<ComponentID | undefined> {
-    const relativePath = path.isAbsolute(componentPath)
-      ? path.relative(this.workspace.path, componentPath)
-      : componentPath;
-    const linuxPath = pathNormalizeToLinux(relativePath);
-    const bitId = this.workspace.consumer.bitMap.getComponentIdByPath(linuxPath);
-    if (bitId) {
-      return this.workspace.resolveComponentId(bitId);
-    }
-    return undefined;
-  }
-
   // TODO: replace with a proper import API on the workspace
   private async importObjects() {
     const importOptions: ImportOptions = {
@@ -394,23 +381,43 @@ export class InstallMain {
   static slots = [];
   // define your aspect dependencies here.
   // in case you need to use another aspect API.
-  static dependencies = [DependencyResolverAspect, WorkspaceAspect, LoggerAspect, VariantsAspect, CLIAspect];
+  static dependencies = [
+    DependencyResolverAspect,
+    WorkspaceAspect,
+    LoggerAspect,
+    VariantsAspect,
+    CLIAspect,
+    CommunityAspect,
+  ];
 
   static runtime = MainRuntime;
 
-  static async provider([dependencyResolver, workspace, loggerExt, variants, cli]: [
+  static async provider([dependencyResolver, workspace, loggerExt, variants, cli, community]: [
     DependencyResolverMain,
     Workspace,
     LoggerMain,
     VariantsMain,
-    CLIMain
+    CLIMain,
+    CommunityMain
   ]) {
     const logger = loggerExt.createLogger('teambit.bit/install');
     const installExt = new InstallMain(dependencyResolver, logger, workspace, variants);
+    ManyComponentsWriter.registerExternalInstaller({
+      install: async () => {
+        // TODO: think how we should pass this options
+        const installOpts: WorkspaceInstallOptions = {
+          dedupe: true,
+          updateExisting: false,
+          import: false,
+        };
+        return installExt.install(undefined, installOpts);
+      },
+    });
     const commands: CommandList = [
       new InstallCmd(installExt, workspace, logger),
       new UninstallCmd(installExt),
       new UpdateCmd(installExt),
+      new LinkCommand(installExt, workspace, logger, community.getDocsDomain()),
     ];
     cli.register(...commands);
     return installExt;

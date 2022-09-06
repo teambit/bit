@@ -1,5 +1,6 @@
 /* eslint-disable max-lines */
 import memoize from 'memoizee';
+import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils/path';
 import mapSeries from 'p-map-series';
 import type { PubsubMain } from '@teambit/pubsub';
 import { IssuesList } from '@teambit/component-issues';
@@ -1365,6 +1366,19 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
   public async componentConfigFile(id: ComponentID): Promise<ComponentConfigFile | undefined> {
     const relativeComponentDir = this.componentDir(id, { ignoreVersion: true }, { relative: true });
     return this.componentConfigFileFromComponentDirAndName(relativeComponentDir, id.fullName);
+  }
+
+  /**
+   * @param componentPath can be relative or absolute. supports Linux and Windows
+   */
+  async getComponentIdByPath(componentPath: PathOsBased): Promise<ComponentID | undefined> {
+    const relativePath = path.isAbsolute(componentPath) ? path.relative(this.path, componentPath) : componentPath;
+    const linuxPath = pathNormalizeToLinux(relativePath);
+    const bitId = this.consumer.bitMap.getComponentIdByPath(linuxPath);
+    if (bitId) {
+      return this.resolveComponentId(bitId);
+    }
+    return undefined;
   }
 
   private async componentConfigFileFromComponentDirAndName(
