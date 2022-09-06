@@ -50,7 +50,7 @@ export function ComponentView(props: ComponentViewProps<PayloadType>) {
     </Link>
   );
 
-  const href = lanesModel?.getLaneComponentUrlByVersion(component.id.version) || component.id.fullName;
+  const href = lanesModel?.getLaneComponentUrlByVersion(component.id);
   const viewingMainCompOnLane = !lanesModel?.viewedLane?.id.isDefault() && lanesModel?.isComponentOnMain(component.id);
   const Name = viewingMainCompOnLane ? (
     <Tooltip className={styles.onMainTooltip} placement="right" content={'On Main'}>

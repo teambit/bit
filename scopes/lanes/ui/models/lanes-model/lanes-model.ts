@@ -183,9 +183,10 @@ export class LanesModel {
   isInViewedLane = (componentId: ComponentID) =>
     this.viewedLane?.components.some((comp) => comp.id.name === componentId.name);
 
-  getLaneComponentUrlByVersion = (version?: string) => {
-    if (!version) return undefined;
-    const componentAndLane = this.lanebyComponentHash.get(version);
+  getLaneComponentUrlByVersion = (componentId: ComponentID) => {
+    // if there is no version, the component is new and is on main
+    if (!componentId.version) return componentId.fullName;
+    const componentAndLane = this.lanebyComponentHash.get(componentId.version);
     if (!componentAndLane) return undefined;
     if (componentAndLane.lane.id.isDefault())
       return `${componentAndLane.component.id.fullName}${
@@ -195,9 +196,13 @@ export class LanesModel {
   };
 
   getLanesByComponentId = (componentId: ComponentID) => this.lanesByComponentId.get(componentId.fullName);
-  getLaneByComponentVersion = (componentId: ComponentID) =>
-    componentId.version ? this.lanebyComponentHash.get(componentId.version) : undefined;
-
+  getLaneByComponentVersion = (componentId: ComponentID) => {
+    if (componentId.version) return this.lanebyComponentHash.get(componentId.version);
+    // if there is no version, the component is new and is on main
+    const defaultLane = this.getDefaultLane();
+    const component = defaultLane?.components.find((c) => c.id.isEqual(componentId, { ignoreVersion: true }));
+    return defaultLane && component ? { lane: defaultLane, component } : undefined;
+  };
   setViewedLane = (viewedLaneId?: LaneId) => {
     this.viewedLane = viewedLaneId ? this.lanes.find((lane) => lane.id.isEqual(viewedLaneId)) : undefined;
   };
