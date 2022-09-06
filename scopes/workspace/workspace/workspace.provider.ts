@@ -16,7 +16,6 @@ import { Consumer, loadConsumerIfExist } from '@teambit/legacy/dist/consumer';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import LegacyComponentLoader from '@teambit/legacy/dist/consumer/component/component-loader';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
-import { CommunityMain } from '@teambit/community';
 import { EXT_NAME } from './constants';
 import EjectConfCmd from './eject-conf.cmd';
 import { OnComponentLoad, OnComponentAdd, OnComponentChange, OnComponentRemove } from './on-component-events';
@@ -47,8 +46,7 @@ export type WorkspaceDeps = [
   UiMain,
   BundlerMain,
   AspectLoaderMain,
-  EnvsMain,
-  CommunityMain
+  EnvsMain
 ];
 
 export type OnComponentLoadSlot = SlotRegistry<OnComponentLoad>;
@@ -77,7 +75,6 @@ export default async function provideWorkspace(
     bundler,
     aspectLoader,
     envs,
-    community,
   ]: WorkspaceDeps,
   config: WorkspaceExtConfig,
   [onComponentLoadSlot, onComponentChangeSlot, onComponentAddSlot, onComponentRemoveSlot, onPreWatchSlot]: [
