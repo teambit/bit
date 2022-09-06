@@ -196,6 +196,8 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
   }
 
   findOrAddComponent(props: ComponentProps): Promise<ModelComponent> {
+    // @ts-ignore normally "props" is a consumerComponent, and when loaded from FS, it has modelComponent
+    if (props.modelComponent) return props.modelComponent;
     const comp = ModelComponent.from(props);
     return this._findComponent(comp).then((component) => {
       if (!component) return comp;
@@ -252,8 +254,8 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
   }
 
   async getObjectsToEnrichSource(consumerComponent: ConsumerComponent): Promise<BitObject[]> {
-    const component = await this.findOrAddComponent(consumerComponent);
-    const version = await component.loadVersion(consumerComponent.id.version as string, this.objects());
+    const component = consumerComponent.modelComponent || (await this.findOrAddComponent(consumerComponent));
+    const version = await component.loadVersion(consumerComponent.id.version as string, this.objects(), true, true);
     const artifactFiles = getArtifactsFiles(consumerComponent.extensions);
     const artifacts = this.transformArtifactsFromVinylToSource(artifactFiles);
     version.extensions = consumerComponent.extensions;
