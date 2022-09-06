@@ -212,9 +212,15 @@ export class IsolatorMain {
     const componentsToIsolate = opts.seedersOnly
       ? await host.getMany(seeders)
       : await this.createGraph(seeders, createGraphOpts);
+    const seedersWithVersions = seeders.map((seeder) => {
+      if (seeder._legacy.hasVersion()) return seeder;
+      const comp = componentsToIsolate.find((component) => component.id.isEqual(seeder, { ignoreVersion: true }));
+      if (!comp) throw new Error(`unable to find seeder ${seeder.toString()} in componentsToIsolate`);
+      return comp.id;
+    });
     opts.baseDir = opts.baseDir || host.path;
     const capsuleList = await this.createCapsules(componentsToIsolate, opts, legacyScope);
-    return new Network(capsuleList, seeders, this.getCapsulesRootDir(opts.baseDir, opts.rootBaseDir));
+    return new Network(capsuleList, seedersWithVersions, this.getCapsulesRootDir(opts.baseDir, opts.rootBaseDir));
   }
 
   private async createGraph(seeders: ComponentID[], opts: CreateGraphOptions = {}): Promise<Component[]> {
