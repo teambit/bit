@@ -31,6 +31,7 @@ an example of the final data: '[{"componentId":"ci.remote2/comp-b","dependencies
     ['', 'message <string>', 'message to be saved as part of the version log'],
     ['', 'username <string>', 'username to be saved as part of the version log'],
     ['', 'email <string>', 'email to be saved as part of the version log'],
+    ['', 'lane <lane-id>', 'helps to fetch the components from the lane scope (relevant for --multiple)'],
     ['', 'skip-new-scope-validation', 'avoid throwing an error when running on a non-new scope'],
   ] as CommandOptions;
 

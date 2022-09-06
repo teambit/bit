@@ -21,7 +21,7 @@ export type FETCH_OPTIONS = {
   withoutDependencies: boolean; // default - true
   includeArtifacts: boolean; // default - false
   allowExternal: boolean; // allow fetching components of other scope from this scope. needed for lanes.
-  laneId?: string; // relevant for "component-delta" type to know where to find the component latest
+  laneId?: string; // mandatory when fetching "latest" from lane. otherwise, we don't know where to find the latest
   onlyIfBuilt?: boolean; // relevant when fetching with deps. if true, and the component wasn't built successfully, don't fetch it.
   ignoreMissingHead?: boolean; // if asking for id without version and the component has no head, don't throw, just ignore
 };
@@ -57,10 +57,26 @@ export default async function fetch(
       const { withoutDependencies, includeArtifacts, allowExternal, onlyIfBuilt } = fetchOptions;
       const collectParents = !withoutDependencies;
       const scopeComponentsImporter = ScopeComponentsImporter.getInstance(scope);
+
+      const laneId = fetchOptions.laneId ? LaneId.parse(fetchOptions.laneId) : null;
+      const lane = laneId ? await scope.loadLane(laneId) : null;
+
+      const getBitIds = () => {
+        if (!lane) return bitIds;
+        const laneIds = lane.toBitIds();
+        return BitIds.fromArray(
+          bitIds.map((bitId) => {
+            const inLane = laneIds.searchWithoutVersion(bitId);
+            return inLane || bitId;
+          })
+        );
+      };
+      const bitIdsToFetch = getBitIds();
+
       const getComponentsWithOptions = async (): Promise<ComponentWithCollectOptions[]> => {
         if (withoutDependencies) {
           const componentsVersions = await scopeComponentsImporter.fetchWithoutDeps(
-            bitIds,
+            bitIdsToFetch,
             allowExternal,
             fetchOptions.ignoreMissingHead
           );
@@ -71,7 +87,11 @@ export default async function fetch(
             collectParents,
           }));
         }
-        const versionsDependencies = await scopeComponentsImporter.fetchWithDeps(bitIds, allowExternal, onlyIfBuilt);
+        const versionsDependencies = await scopeComponentsImporter.fetchWithDeps(
+          bitIdsToFetch,
+          allowExternal,
+          onlyIfBuilt
+        );
         return versionsDependencies
           .map((versionDep) => [
             {

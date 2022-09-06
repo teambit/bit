@@ -7,12 +7,15 @@ import { ScopeAspect, ScopeMain, ComponentNotFound } from '@teambit/scope';
 import { BuilderAspect, BuilderMain } from '@teambit/builder';
 import { Component, ComponentID } from '@teambit/component';
 import { SnappingAspect, SnappingMain } from '@teambit/snapping';
+import { isHash } from '@teambit/component-version';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { BuildStatus, LATEST } from '@teambit/legacy/dist/constants';
 import { BitIds } from '@teambit/legacy/dist/bit-id';
+import { LaneId } from '@teambit/lane-id';
 import { BitId } from '@teambit/legacy-bit-id';
 import { getValidVersionOrReleaseType } from '@teambit/legacy/dist/utils/semver-helper';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
+import { LanesAspect, Lane, LanesMain } from '@teambit/lanes';
 import { exportMany } from '@teambit/legacy/dist/scope/component-ops/export-scope-components';
 import { ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config';
 import { UpdateDependenciesCmd } from './update-dependencies.cmd';
@@ -26,6 +29,7 @@ export type UpdateDepsOptions = {
   username?: string;
   email?: string;
   push?: boolean;
+  lane?: string;
   skipNewScopeValidation?: boolean;
 };
 
@@ -53,13 +57,15 @@ type OnPostUpdateDependenciesSlot = SlotRegistry<OnPostUpdateDependencies>;
 export class UpdateDependenciesMain {
   private depsUpdateItems: DepUpdateItem[];
   private updateDepsOptions: UpdateDepsOptions;
+  private laneObj?: Lane;
   constructor(
     private scope: ScopeMain,
     private logger: Logger,
     private builder: BuilderMain,
     private dependencyResolver: DependencyResolverMain,
     private onPostUpdateDependenciesSlot: OnPostUpdateDependenciesSlot,
-    private snapping: SnappingMain
+    private snapping: SnappingMain,
+    private lanes: LanesMain
   ) {}
 
   /**
@@ -75,6 +81,7 @@ export class UpdateDependenciesMain {
   ): Promise<UpdateDepsResult> {
     this.updateDepsOptions = updateDepsOptions;
     await this.validateScopeIsNew();
+    await this.setLaneObject();
     await this.importAllMissing(depsUpdateItemsRaw);
     this.depsUpdateItems = await this.parseDevUpdatesItems(depsUpdateItemsRaw);
     await this.updateFutureVersion();
@@ -119,6 +126,16 @@ export class UpdateDependenciesMain {
     this.onPostUpdateDependenciesSlot.register(fn);
   }
 
+  private async setLaneObject() {
+    if (this.updateDepsOptions.lane) {
+      const laneId = LaneId.parse(this.updateDepsOptions.lane);
+      this.laneObj = await this.lanes.importLaneObject(laneId);
+      // this is critical. otherwise, later on, when loading aspects and isolating capsules, we'll try to fetch dists
+      // from the original scope instead of the lane-scope.
+      this.scope.legacyScope.setCurrentLaneId(laneId);
+    }
+  }
+
   private async validateScopeIsNew() {
     if (this.updateDepsOptions.skipNewScopeValidation) {
       return;
@@ -149,11 +166,13 @@ to bypass this error, use --skip-new-scope-validation flag (not recommended. it 
     }
     // do not use cache. for dependencies we must fetch the latest ModelComponent from the remote
     // in order to match the semver later.
-    await this.scope.import(idsToImport, { useCache: false });
+    await this.scope.import(idsToImport, { useCache: false, lane: this.laneObj });
   }
 
   private async addComponentsToScope() {
-    await mapSeries(this.legacyComponents, (component) => this.scope.legacyScope.sources.addSourceFromScope(component));
+    await mapSeries(this.legacyComponents, (component) =>
+      this.scope.legacyScope.sources.addSourceFromScope(component, this.laneObj || null)
+    );
   }
 
   private async updateComponents() {
@@ -210,6 +229,9 @@ to bypass this error, use --skip-new-scope-validation flag (not recommended. it 
     if (this.updateDepsOptions.simulation) {
       // for simulation, we don't have the objects of the dependencies, so don't try to find the
       // exact version, expect the entered version to be okay.
+      return compId;
+    }
+    if (isHash(compId.version)) {
       return compId;
     }
     const range = compId.version || '*'; // if not version specified, assume the latest
@@ -310,18 +332,27 @@ to bypass this error, use --skip-new-scope-validation flag (not recommended. it 
 
   static runtime = MainRuntime;
 
-  static dependencies = [CLIAspect, ScopeAspect, LoggerAspect, BuilderAspect, DependencyResolverAspect, SnappingAspect];
+  static dependencies = [
+    CLIAspect,
+    ScopeAspect,
+    LoggerAspect,
+    BuilderAspect,
+    DependencyResolverAspect,
+    SnappingAspect,
+    LanesAspect,
+  ];
 
   static slots = [Slot.withType<OnPostUpdateDependenciesSlot>()];
 
   static async provider(
-    [cli, scope, loggerMain, builder, dependencyResolver, snapping]: [
+    [cli, scope, loggerMain, builder, dependencyResolver, snapping, lanes]: [
       CLIMain,
       ScopeMain,
       LoggerMain,
       BuilderMain,
       DependencyResolverMain,
-      SnappingMain
+      SnappingMain,
+      LanesMain
     ],
     _,
     [onPostUpdateDependenciesSlot]: [OnPostUpdateDependenciesSlot]
@@ -333,7 +364,8 @@ to bypass this error, use --skip-new-scope-validation flag (not recommended. it 
       builder,
       dependencyResolver,
       onPostUpdateDependenciesSlot,
-      snapping
+      snapping,
+      lanes
     );
     cli.register(new UpdateDependenciesCmd(updateDependenciesMain, scope, logger));
     return updateDependenciesMain;
