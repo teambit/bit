@@ -1,7 +1,9 @@
+import path from 'path';
 import chalk from 'chalk';
+import { WorkspaceAspect, Workspace, ComponentConfigFile } from '@teambit/workspace';
 import { slice, uniqBy, difference, compact, pick, partition, isEmpty } from 'lodash';
 import { NothingToImport } from '@teambit/legacy/dist/consumer/exceptions';
-import type { VariantsMain, Patterns } from '@teambit/variants';
+import { VariantsMain, Patterns, VariantsAspect } from '@teambit/variants';
 import {
   AspectEntry,
   ComponentMain,
@@ -32,7 +34,7 @@ import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils/path';
 import { Importer } from '@teambit/importer';
 import { ImportOptions } from '@teambit/legacy/dist/consumer/component-ops/import-components';
 import { PathOsBased, PathOsBasedRelative, PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
-import { Logger } from '@teambit/logger';
+import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { DependencyTypeNotSupportedInPolicy } from './exceptions';
 import { InstallAspect } from './install.aspect';
 import { pickOutdatedPkgs } from './pick-outdated-pkgs';
@@ -57,7 +59,11 @@ export class InstallMain {
   constructor(
     private dependencyResolver: DependencyResolverMain,
 
-    private logger: Logger
+    private logger: Logger,
+
+    private workspace: Workspace,
+
+    private variants: VariantsMain
   ) {}
   /**
    * Install dependencies for all components in the workspace
@@ -82,7 +88,7 @@ export class InstallMain {
         packageImportMethod: this.dependencyResolver.config.packageImportMethod,
       };
       const missingPeers = await this.dependencyResolver.getMissingPeerDependencies(
-        this.path,
+        this.workspace.path,
         mergedRootPolicy,
         compDirMap,
         pmInstallOptions
@@ -110,7 +116,7 @@ export class InstallMain {
     const resolver = await this.dependencyResolver.getVersionResolver();
     const resolvedPackagesP = packages.map((packageName) =>
       resolver.resolveRemoteVersion(packageName, {
-        rootDir: this.path,
+        rootDir: this.workspace.path,
       })
     );
     const resolvedPackages = await Promise.all(resolvedPackagesP);
@@ -137,7 +143,7 @@ export class InstallMain {
     } else {
       // TODO: implement
     }
-    await this.dependencyResolver.persistConfig(this.path);
+    await this.dependencyResolver.persistConfig(this.workspace.path);
   }
 
   private async _installModules(options?: ModulesInstallOptions): Promise<ComponentMap<string>> {
@@ -156,8 +162,8 @@ export class InstallMain {
       linkDepsResolvedFromEnv: !hasRootComponents,
       linkNestedDepsInNM: false,
     });
-    this.consumer.componentLoader.clearComponentsCache();
-    this.clearCache();
+    this.workspace.consumer.componentLoader.clearComponentsCache();
+    this.workspace.clearCache();
     // TODO: pass get install options
     const installer = this.dependencyResolver.getInstaller({});
     const compDirMap = await this.getComponentsDirectory([]);
@@ -174,15 +180,21 @@ export class InstallMain {
       packageImportMethod: this.dependencyResolver.config.packageImportMethod,
       rootComponents: hasRootComponents,
     };
-    await installer.install(this.path, mergedRootPolicy, compDirMap, { installTeambitBit: false }, pmInstallOptions);
+    await installer.install(
+      this.workspace.path,
+      mergedRootPolicy,
+      compDirMap,
+      { installTeambitBit: false },
+      pmInstallOptions
+    );
     await this.link({
       linkTeambitBit: false,
       legacyLink: true,
       linkCoreAspects: this.dependencyResolver.linkCoreAspects(),
       linkDepsResolvedFromEnv: !hasRootComponents,
-      linkNestedDepsInNM: !this.isLegacy && !hasRootComponents,
+      linkNestedDepsInNM: !this.workspace.isLegacy && !hasRootComponents,
     });
-    await this.consumer.componentFsCache.deleteAllDependenciesDataCache();
+    await this.workspace.consumer.componentFsCache.deleteAllDependenciesDataCache();
     return compDirMap;
   }
 
@@ -195,9 +207,9 @@ export class InstallMain {
     const { componentConfigFiles, componentPoliciesById } = await this._getComponentsWithDependencyPolicies();
     const variantPatterns = this.variants.raw();
     const variantPoliciesByPatterns = this._variantPatternsToDepPolicesDict(variantPatterns);
-    const components = await this.list();
+    const components = await this.workspace.list();
     const outdatedPkgs = await this.dependencyResolver.getOutdatedPkgsFromPolicies({
-      rootDir: this.path,
+      rootDir: this.workspace.path,
       variantPoliciesByPatterns,
       componentPoliciesById,
       components,
@@ -217,17 +229,17 @@ export class InstallMain {
     await this._updateVariantsPolicies(variantPatterns, updatedVariants);
     const updatedComponentConfigFiles = Object.values(pick(componentConfigFiles, updatedComponents));
     await this._saveManyComponentConfigFiles(updatedComponentConfigFiles);
-    await this._reloadConsumer();
+    await this.workspace._reloadConsumer();
     return this._installModules({ dedupe: true });
   }
 
   private async _getComponentsWithDependencyPolicies() {
-    const allComponentIds = await this.listIds();
+    const allComponentIds = await this.workspace.listIds();
     const componentConfigFiles: Record<string, ComponentConfigFile> = {};
     const componentPoliciesById: Record<string, any> = {};
     (
       await Promise.all<ComponentConfigFile | undefined>(
-        allComponentIds.map((componentId) => this.componentConfigFile(componentId))
+        allComponentIds.map((componentId) => this.workspace.componentConfigFile(componentId))
       )
     ).forEach((componentConfigFile, index) => {
       if (!componentConfigFile) return;
@@ -262,7 +274,7 @@ export class InstallMain {
         { overrideExisting: true }
       );
     }
-    return this.dependencyResolver.persistConfig(this.path);
+    return this.dependencyResolver.persistConfig(this.workspace.path);
   }
 
   private async _saveManyComponentConfigFiles(componentConfigFiles: ComponentConfigFile[]) {
@@ -280,7 +292,7 @@ export class InstallMain {
    */
   async uninstallDependencies(packages: string[]) {
     this.dependencyResolver.removeFromRootPolicy(packages);
-    await this.dependencyResolver.persistConfig(this.path);
+    await this.dependencyResolver.persistConfig(this.workspace.path);
     return this._installModules({ dedupe: true });
   }
 
@@ -288,14 +300,14 @@ export class InstallMain {
     if (options.fetchObject) {
       await this.importObjects();
     }
-    options.consumer = this.consumer;
+    options.consumer = this.workspace.consumer;
     const compDirMap = await this.getComponentsDirectory([]);
     const mergedRootPolicy = this.dependencyResolver.getWorkspacePolicy();
     const linker = this.dependencyResolver.getLinker({
-      rootDir: this.path,
+      rootDir: this.workspace.path,
       linkingOptions: options,
     });
-    const res = await linker.link(this.path, mergedRootPolicy, compDirMap, options);
+    const res = await linker.link(this.workspace.path, mergedRootPolicy, compDirMap, options);
     return res;
   }
 
@@ -303,11 +315,13 @@ export class InstallMain {
    * @param componentPath can be relative or absolute. supports Linux and Windows
    */
   async getComponentIdByPath(componentPath: PathOsBased): Promise<ComponentID | undefined> {
-    const relativePath = path.isAbsolute(componentPath) ? path.relative(this.path, componentPath) : componentPath;
+    const relativePath = path.isAbsolute(componentPath)
+      ? path.relative(this.workspace.path, componentPath)
+      : componentPath;
     const linuxPath = pathNormalizeToLinux(relativePath);
-    const bitId = this.consumer.bitMap.getComponentIdByPath(linuxPath);
+    const bitId = this.workspace.consumer.bitMap.getComponentIdByPath(linuxPath);
     if (bitId) {
-      return this.resolveComponentId(bitId);
+      return this.workspace.resolveComponentId(bitId);
     }
     return undefined;
   }
@@ -326,7 +340,7 @@ export class InstallMain {
       importDependenciesDirectly: false,
       importDependents: false,
     };
-    const importer = new Importer(this, this.dependencyResolver);
+    const importer = new Importer(this.workspace, this.dependencyResolver);
     try {
       const res = await importer.import(importOptions, []);
       return res;
@@ -348,7 +362,7 @@ export class InstallMain {
    */
   private async generateFilterFnForDepsFromLocalRemote() {
     // TODO: once scope create a new API for this, replace it with the new one
-    const remotes = await this.scope._legacyRemotes();
+    const remotes = await this.workspace.scope._legacyRemotes();
     const reg = await this.dependencyResolver.getRegistries();
     const packageScopes = Object.keys(reg.scopes);
     return (dependencyList: DependencyList): DependencyList => {
@@ -369,19 +383,25 @@ export class InstallMain {
   }
 
   private async getComponentsDirectory(ids: ComponentID[]): Promise<ComponentMap<string>> {
-    const components = ids.length ? await this.getMany(ids) : await this.list();
-    return ComponentMap.as<string>(components, (component) => this.componentDir(component.id));
+    const components = ids.length ? await this.workspace.getMany(ids) : await this.workspace.list();
+    return ComponentMap.as<string>(components, (component) => this.workspace.componentDir(component.id));
   }
 
   static slots = [];
   // define your aspect dependencies here.
   // in case you need to use another aspect API.
-  static dependencies = [];
+  static dependencies = [DependencyResolverAspect, WorkspaceAspect, LoggerAspect, VariantsAspect];
 
   static runtime = MainRuntime;
 
-  static async provider() {
-    return new InstallMain();
+  static async provider([dependencyResolver, workspace, loggerExt, variants]: [
+    DependencyResolverMain,
+    Workspace,
+    LoggerMain,
+    VariantsMain
+  ]) {
+    const logger = loggerExt.createLogger('teambit.bit/install');
+    return new InstallMain(dependencyResolver, logger, workspace, variants);
   }
 }
 

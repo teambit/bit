@@ -1362,7 +1362,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
    * return the component config from its folder (component.json)
    * @param componentId
    */
-  private async componentConfigFile(id: ComponentID): Promise<ComponentConfigFile | undefined> {
+  public async componentConfigFile(id: ComponentID): Promise<ComponentConfigFile | undefined> {
     const relativeComponentDir = this.componentDir(id, { ignoreVersion: true }, { relative: true });
     return this.componentConfigFileFromComponentDirAndName(relativeComponentDir, id.fullName);
   }
