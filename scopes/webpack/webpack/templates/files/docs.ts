@@ -10,6 +10,6 @@ Insert content here
 
 ### Usage
 
-See [our docs](https://bit.dev/docs/frameworks/react/config-react-tools#webpack-(bundler/-devserver)) for how to apply a webpack transformer to your custom env
+See [our docs](https://bit.dev/docs/react/config-react-tools#webpack-(bundler/-devserver)) for how to apply a webpack transformer to your custom env
 `;
 }
