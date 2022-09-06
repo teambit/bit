@@ -1,6 +1,5 @@
 /* eslint-disable max-lines */
 import memoize from 'memoizee';
-import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils/path';
 import mapSeries from 'p-map-series';
 import type { PubsubMain } from '@teambit/pubsub';
 import { IssuesList } from '@teambit/component-issues';
@@ -14,7 +13,6 @@ import {
   Component,
   ComponentFactory,
   ComponentID,
-  ComponentMap,
   AspectList,
   AspectData,
   InvalidComponent,
@@ -23,19 +21,7 @@ import {
 import { BitError } from '@teambit/bit-error';
 import { REMOVE_EXTENSION_SPECIAL_SIGN } from '@teambit/legacy/dist/consumer/config';
 import { ComponentScopeDirMap, ConfigMain } from '@teambit/config';
-import {
-  WorkspaceDependencyLifecycleType,
-  DependencyResolverMain,
-  DependencyResolverAspect,
-  PackageManagerInstallOptions,
-  ComponentDependency,
-  VariantPolicyConfigObject,
-  WorkspacePolicyEntry,
-  LinkingOptions,
-  LinkResults,
-  DependencyList,
-  OutdatedPkg,
-} from '@teambit/dependency-resolver';
+import { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { EnvsMain, EnvsAspect, EnvServiceList, DEFAULT_ENV } from '@teambit/envs';
 import { GraphqlMain } from '@teambit/graphql';
 import { Harmony } from '@teambit/harmony';
@@ -44,7 +30,7 @@ import { Logger } from '@teambit/logger';
 import type { ScopeMain } from '@teambit/scope';
 import { isMatchNamespacePatternItem } from '@teambit/workspace.modules.match-pattern';
 import { RequireableComponent } from '@teambit/harmony.modules.requireable-component';
-import type { VariantsMain, Patterns } from '@teambit/variants';
+import type { VariantsMain } from '@teambit/variants';
 import { link } from '@teambit/legacy/dist/api/consumer';
 import LegacyGraph from '@teambit/legacy/dist/scope/graph/graph';
 import { BitIds } from '@teambit/legacy/dist/bit-id';
@@ -65,9 +51,14 @@ import { NoComponentDir } from '@teambit/legacy/dist/consumer/component/exceptio
 import { ExtensionDataList, ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config/extension-data';
 import { pathIsInside } from '@teambit/legacy/dist/utils';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
-import { PathOsBased, PathOsBasedRelative, PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
+import {
+  PathOsBased,
+  PathOsBasedRelative,
+  PathOsBasedAbsolute,
+  pathNormalizeToLinux,
+} from '@teambit/legacy/dist/utils/path';
 import fs from 'fs-extra';
-import { slice, uniqBy, difference, compact, pick, partition, isEmpty } from 'lodash';
+import { slice, uniqBy, difference, compact, partition, isEmpty } from 'lodash';
 import path from 'path';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import type { ComponentLog } from '@teambit/legacy/dist/scope/models/model-component';

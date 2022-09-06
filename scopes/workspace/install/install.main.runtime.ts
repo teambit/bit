@@ -1,29 +1,12 @@
-import path from 'path';
 import { CommunityMain, CommunityAspect } from '@teambit/community';
-import { LinkCommand } from './link';
 import ManyComponentsWriter from '@teambit/legacy/dist/consumer/component-ops/many-components-writer';
-import InstallCmd from './install.cmd';
-import UninstallCmd from './uninstall.cmd';
-import UpdateCmd from './update.cmd';
-import { CLIMain, CommandList, CLIAspect } from '@teambit/cli';
+import { CLIMain, CommandList, CLIAspect, MainRuntime } from '@teambit/cli';
 import chalk from 'chalk';
 import { WorkspaceAspect, Workspace, ComponentConfigFile } from '@teambit/workspace';
-import { slice, uniqBy, difference, compact, pick, partition, isEmpty } from 'lodash';
+import { pick } from 'lodash';
 import { NothingToImport } from '@teambit/legacy/dist/consumer/exceptions';
 import { VariantsMain, Patterns, VariantsAspect } from '@teambit/variants';
-import {
-  AspectEntry,
-  ComponentMain,
-  Component,
-  ComponentFactory,
-  ComponentID,
-  ComponentMap,
-  AspectList,
-  AspectData,
-  InvalidComponent,
-  ResolveAspectsOptions,
-} from '@teambit/component';
-import { MainRuntime } from '@teambit/cli';
+import { ComponentID, ComponentMap } from '@teambit/component';
 import {
   WorkspaceDependencyLifecycleType,
   DependencyResolverMain,
@@ -39,11 +22,15 @@ import {
 } from '@teambit/dependency-resolver';
 import { Importer } from '@teambit/importer';
 import { ImportOptions } from '@teambit/legacy/dist/consumer/component-ops/import-components';
-import { PathOsBased, PathOsBasedRelative, PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
+
 import { DependencyTypeNotSupportedInPolicy } from './exceptions';
 import { InstallAspect } from './install.aspect';
 import { pickOutdatedPkgs } from './pick-outdated-pkgs';
+import { LinkCommand } from './link';
+import InstallCmd from './install.cmd';
+import UninstallCmd from './uninstall.cmd';
+import UpdateCmd from './update.cmd';
 
 export type WorkspaceLinkOptions = LinkingOptions;
 
