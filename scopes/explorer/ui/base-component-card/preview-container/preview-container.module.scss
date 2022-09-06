@@ -13,7 +13,7 @@
   right: 0;
   overflow: hidden;
   border-bottom: 1px solid var(--bit-border-color-light, #cccfd4);
-  > iframe {
+  > div > iframe {
     pointer-events: none;
   }
 }
