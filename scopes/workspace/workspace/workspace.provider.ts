@@ -7,7 +7,6 @@ import { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { EnvsMain } from '@teambit/envs';
 import { GraphqlMain } from '@teambit/graphql';
 import { Harmony, SlotRegistry } from '@teambit/harmony';
-import { IsolatorMain } from '@teambit/isolator';
 import { LoggerMain } from '@teambit/logger';
 import type { ScopeMain } from '@teambit/scope';
 import { UiMain } from '@teambit/ui';
@@ -38,7 +37,6 @@ export type WorkspaceDeps = [
   CLIMain,
   ScopeMain,
   ComponentMain,
-  IsolatorMain,
   DependencyResolverMain,
   VariantsMain,
   LoggerMain,
@@ -66,7 +64,6 @@ export default async function provideWorkspace(
     cli,
     scope,
     component,
-    isolator,
     dependencyResolver,
     variants,
     loggerExt,
@@ -97,7 +94,6 @@ export default async function provideWorkspace(
     consumer,
     scope,
     component,
-    isolator,
     dependencyResolver,
     variants,
     aspectLoader,
