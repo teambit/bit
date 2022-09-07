@@ -3,7 +3,8 @@ import { WorkspaceDependencyLifecycleType } from '@teambit/dependency-resolver';
 import { Logger } from '@teambit/logger';
 import chalk from 'chalk';
 
-import { Workspace, WorkspaceInstallOptions } from './workspace';
+import { Workspace } from '@teambit/workspace';
+import { InstallMain, WorkspaceInstallOptions } from './install.main.runtime';
 
 type InstallCmdOptions = {
   variants: string;
@@ -34,6 +35,7 @@ export default class InstallCmd implements Command {
   ] as CommandOptions;
 
   constructor(
+    private install: InstallMain,
     /**
      * workspace extension.
      */
@@ -57,7 +59,7 @@ export default class InstallCmd implements Command {
       savePrefix: options.savePrefix,
       addMissingPeers: options.addMissingPeers,
     };
-    const components = await this.workspace.install(packages, installOpts);
+    const components = await this.install.install(packages, installOpts);
     const endTime = Date.now();
     const executionTime = calculateTime(startTime, endTime);
     return `Successfully resolved dependencies for ${chalk.cyan(

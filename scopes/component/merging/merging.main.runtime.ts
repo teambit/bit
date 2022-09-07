@@ -40,6 +40,7 @@ import { NoCommonSnap } from '@teambit/legacy/dist/scope/exceptions/no-common-sn
 import { CheckoutAspect, CheckoutMain } from '@teambit/checkout';
 import { ComponentID } from '@teambit/component-id';
 import { DivergeData } from '@teambit/legacy/dist/scope/component-ops/diverge-data';
+import { InstallMain, InstallAspect } from '@teambit/install';
 import { MergeCmd } from './merge-cmd';
 import { MergingAspect } from './merging.aspect';
 
@@ -56,7 +57,12 @@ export type ComponentMergeStatus = {
 
 export class MergingMain {
   private consumer: Consumer;
-  constructor(private workspace: Workspace, private snapping: SnappingMain, private checkout: CheckoutMain) {
+  constructor(
+    private workspace: Workspace,
+    private install: InstallMain,
+    private snapping: SnappingMain,
+    private checkout: CheckoutMain
+  ) {
     this.consumer = this.workspace?.consumer;
   }
 
@@ -204,7 +210,7 @@ export class MergingMain {
     const leftUnresolvedConflicts = componentWithConflict && mergeStrategy === 'manual';
 
     if (!skipDependencyInstallation && !leftUnresolvedConflicts) {
-      await this.workspace.install(undefined, {
+      await this.install.install(undefined, {
         dedupe: true,
         updateExisting: false,
         import: false,
@@ -586,10 +592,16 @@ export class MergingMain {
   }
 
   static slots = [];
-  static dependencies = [CLIAspect, WorkspaceAspect, SnappingAspect, CheckoutAspect];
+  static dependencies = [CLIAspect, WorkspaceAspect, SnappingAspect, CheckoutAspect, InstallAspect];
   static runtime = MainRuntime;
-  static async provider([cli, workspace, snapping, checkout]: [CLIMain, Workspace, SnappingMain, CheckoutMain]) {
-    const merging = new MergingMain(workspace, snapping, checkout);
+  static async provider([cli, workspace, snapping, checkout, install]: [
+    CLIMain,
+    Workspace,
+    SnappingMain,
+    CheckoutMain,
+    InstallMain
+  ]) {
+    const merging = new MergingMain(workspace, install, snapping, checkout);
     cli.register(new MergeCmd(merging));
     return merging;
   }
