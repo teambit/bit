@@ -208,7 +208,7 @@ export class Workspace implements ComponentFactory {
 
     // TODO: refactor - prefer to avoid code inside the constructor.
     this.owner = this.config?.defaultOwner;
-    this.componentLoader = new WorkspaceComponentLoader(this, logger, dependencyResolver, envs);
+    this.componentLoader = new WorkspaceComponentLoader(this, logger, dependencyResolver, envs, aspectLoader);
     this.validateConfig();
     this.bitMap = new BitMap(this.consumer.bitMap, this.consumer);
     // memoize this method to improve performance.
@@ -1102,7 +1102,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
       extensionsToMerge.push({ origin, extensions: extensionDataListFiltered, extraData });
 
       loadedExtensionIds.push(
-        ...compact(extensionDataListFiltered.map((e) => e.extensionId?.toStringWithoutVersion()))
+        ...compact(extensionDataListFiltered.map((e: ExtensionDataEntry) => e.extensionId?.toStringWithoutVersion()))
       );
     };
     const setDataListAsSpecific = (extensions: ExtensionDataList) => {
@@ -1204,7 +1204,10 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     return componentStatus.modified === true;
   }
 
-  private filterEnvsFromExtensionsIfNeeded(extensionDataList: ExtensionDataList, envWasFoundPreviously: boolean) {
+  private filterEnvsFromExtensionsIfNeeded(
+    extensionDataList: ExtensionDataList,
+    envWasFoundPreviously: boolean
+  ): { extensionDataListFiltered: ExtensionDataList; envIsCurrentlySet: boolean } {
     const envAspect = extensionDataList.findExtension(EnvsAspect.id);
     const envFromEnvsAspect = envAspect?.config.env;
     const [envsNotFromEnvsAspect, nonEnvs] = partition(extensionDataList, (ext) =>

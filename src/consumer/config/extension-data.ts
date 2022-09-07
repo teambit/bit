@@ -99,6 +99,16 @@ export class ExtensionDataEntry {
       R.clone(this.data)
     );
   }
+
+  static create(extensionId: string, config?: any, data?: any): ExtensionDataEntry {
+    // eslint-disable-next-line @typescript-eslint/no-use-before-define
+    const isCore = ExtensionDataList.coreExtensionsNames.has(extensionId);
+    if (!isCore) {
+      const parsedId = BitId.parse(extensionId, true);
+      return new ExtensionDataEntry(undefined, parsedId, undefined, config, data);
+    }
+    return new ExtensionDataEntry(undefined, undefined, extensionId, config, data);
+  }
 }
 
 export class ExtensionDataList extends Array<ExtensionDataEntry> {
@@ -146,20 +156,27 @@ export class ExtensionDataList extends Array<ExtensionDataEntry> {
   }
 
   findExtension(extensionId: string, ignoreVersion = false, ignoreScope = false): ExtensionDataEntry | undefined {
+    const extensionIdWithoutVersion = ignoreVersion ? extensionId.split('@')[0] : extensionId;
     if (ExtensionDataList.coreExtensionsNames.has(extensionId)) {
       return this.findCoreExtension(extensionId);
     }
     return this.find((extEntry) => {
       if (ignoreVersion && ignoreScope) {
-        return extEntry.extensionId?.toStringWithoutScopeAndVersion() === extensionId;
+        return (
+          extEntry.extensionId?.toStringWithoutScopeAndVersion() === extensionId ||
+          extEntry.extensionId?.toStringWithoutScopeAndVersion() === extensionIdWithoutVersion ||
+          extEntry.newExtensionId?.toStringWithoutVersion() === extensionIdWithoutVersion
+        );
       }
       if (ignoreVersion) {
-        return extEntry.extensionId?.toStringWithoutVersion() === extensionId;
+        return extEntry.extensionId?.toStringWithoutVersion() === extensionId ||
+        extEntry.extensionId?.toStringWithoutVersion() === extensionIdWithoutVersion ||
+        extEntry.newExtensionId?.toStringWithoutVersion() === extensionIdWithoutVersion
       }
       if (ignoreScope) {
         return extEntry.extensionId?.toStringWithoutScope() === extensionId;
       }
-      return extEntry.stringId === extensionId;
+      return extEntry.stringId === extensionId || extEntry.newExtensionId?.toString() === extensionId;
     });
   }
 

@@ -26,6 +26,6 @@ module.exports = {
     '^.+\\.module\\.(css|sass|scss)$': require.resolve('identity-obj-proxy'),
   },
   moduleFileExtensions: ['web.js', 'js', 'web.ts', 'ts', 'web.tsx', 'tsx', 'json', 'web.jsx', 'jsx', 'node'],
-  testTimeout: 30000, // @todo remove this once mocha-tester is ready and aspect-api testing are using it.
+  testTimeout: 100000, // @todo remove this once mocha-tester is ready and aspect-api testing are using it.
   // watchPlugins: [require.resolve('jest-watch-typeahead/filename'), require.resolve('jest-watch-typeahead/testname')],
 };
