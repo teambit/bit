@@ -32,6 +32,19 @@ export type OverviewProps = {
   titleBadges: TitleBadgeSlot;
 };
 
+// used to determine if the component got the preview scaling update,
+// which happens automatically on core envs
+const CORE_ENV_IDS = [
+  'teambit.harmony/aspect',
+  'teambit.react/react',
+  'teambit.harmony/node',
+  'teambit.react/react-native',
+  'teambit.html/html',
+  'teambit.mdx/mdx',
+  'teambit.envs/env',
+  'teambit.mdx/readme'
+]
+
 export function Overview({ titleBadges }: OverviewProps) {
   const component = useContext(ComponentContext);
   const componentDescriptor = useComponentDescriptor();
@@ -40,16 +53,18 @@ export function Overview({ titleBadges }: OverviewProps) {
 
   const showHeader = !component.preview?.legacyHeader;
 
+  const isCoreEnv = component?.environment?.id && CORE_ENV_IDS.includes(component?.environment?.id)
+
   if (component?.buildStatus === 'pending' && component?.host === 'teambit.scope/scope')
     return (
       <StatusMessageCard style={{ margin: 'auto' }} status="PROCESSING" title="component preview pending">
         this might take some time
       </StatusMessageCard>
     );
-
+      
   if (component?.buildStatus === 'failed' && component?.host === 'teambit.scope/scope')
     return <StatusMessageCard style={{ margin: 'auto' }} status="FAILURE" title="failed to get component preview " />;
-  const isScaling = component.preview?.isScaling;
+  const isScaling = component.preview?.isScaling || isCoreEnv;
 
   return (
     <div className={styles.overviewWrapper}>
@@ -57,7 +72,7 @@ export function Overview({ titleBadges }: OverviewProps) {
       {currentLane && <Separator isPresentational />}
       {showHeader && (
         <ComponentOverview
-          className={classNames(styles.componentOverviewBlock, !isScaling && styles.legacyPreview)}
+          className={classNames(styles.componentOverviewBlock, !isScaling && styles.previewNotScaling)}
           displayName={component.displayName}
           version={component.version}
           abstract={component.description}
