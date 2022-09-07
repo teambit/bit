@@ -416,7 +416,7 @@ needed-for: ${neededFor || '<unknown>'}`);
       potentialPluginsIds,
       [],
       throwOnError
-      );
+    );
     await this.aspectLoader.loadExtensionsByManifests(scopePluginsManifests);
     const allManifests = scopeManifests.concat(scopePluginsManifests);
     return compact(allManifests.map((manifest) => manifest.id));
