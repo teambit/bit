@@ -1,6 +1,6 @@
 import { Command, CommandOptions } from '@teambit/cli';
 
-import { Workspace } from './workspace';
+import { InstallMain } from './install.main.runtime';
 
 export default class UninstallCmd implements Command {
   name = 'uninstall [packages...]';
@@ -9,15 +9,10 @@ export default class UninstallCmd implements Command {
   group = 'development';
   options = [] as CommandOptions;
 
-  constructor(
-    /**
-     * workspace extension.
-     */
-    private workspace: Workspace
-  ) {}
+  constructor(private install: InstallMain) {}
 
   async report([packages = []]: [string[]]) {
-    await this.workspace.uninstallDependencies(packages);
+    await this.install.uninstallDependencies(packages);
     return '';
   }
 }

@@ -14,6 +14,7 @@ export { ComponentStatus } from './workspace-component';
 export { WorkspaceModelComponent } from './ui/workspace/workspace-model';
 export { WorkspaceContext } from './ui/workspace/workspace-context';
 export type { WorkspaceComponent } from './workspace-component';
+export type { ComponentConfigFile } from './component-config-file';
 
 export { WorkspaceAspect };
 export default WorkspaceAspect;

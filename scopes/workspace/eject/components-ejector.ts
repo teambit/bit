@@ -20,6 +20,7 @@ import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-
 import RemovePath from '@teambit/legacy/dist/consumer/component/sources/remove-path';
 import { Logger } from '@teambit/logger';
 import { ComponentID } from '@teambit/component-id';
+import { InstallMain } from '@teambit/install';
 
 export type EjectResults = {
   ejectedComponents: BitIds;
@@ -49,6 +50,7 @@ export class ComponentsEjector {
   packageJsonFilesBeforeChanges: PackageJsonFile[]; // for rollback in case of errors
   constructor(
     private workspace: Workspace,
+    private install: InstallMain,
     private logger: Logger,
     private componentsIds: ComponentID[],
     private ejectOptions: EjectOptions
@@ -132,7 +134,7 @@ export class ComponentsEjector {
   async installPackages() {
     this.logger.setStatusLine('Eject: installing packages using the package-manager');
     const packages = this.getPackagesToInstall();
-    await this.workspace.install(packages);
+    await this.install.install(packages);
   }
 
   getPackagesToInstall(): string[] {
