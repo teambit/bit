@@ -874,6 +874,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/pkg/pkg"
     },
+    "plugins/inject-head-webpack-plugin": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/webpack/plugins/inject-head-webpack-plugin"
+    },
     "pnpm": {
         "scope": "teambit.dependencies",
         "version": "0.0.845",

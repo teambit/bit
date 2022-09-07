@@ -244,6 +244,8 @@
         "humanize-string": "2.1.0",
         "ini": "2.0.0",
         "inject-body-webpack-plugin": "1.3.0",
+        "insert-string-after": "1.0.0",
+        "insert-string-before": "1.0.0",
         "is-binary-path": "2.1.0",
         "is-builtin-module": "3.1.0",
         "is-primitive": "3.0.1",
@@ -904,6 +906,18 @@
           },
           "peerDependencies": {
             "@teambit/legacy": "1.0.345"
+          }
+        }
+      }
+    },
+    "scopes/webpack/plugins/inject-head-webpack-plugin": {
+      "teambit.dependencies/dependency-resolver": {
+        "policy": {
+          "dependencies": {
+            "html-webpack-plugin": "-"
+          },
+          "peerDependencies": {
+            "html-webpack-plugin": "^5.3.1"
           }
         }
       }
