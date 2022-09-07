@@ -596,10 +596,15 @@ export default class Component extends BitObject {
     return componentObject;
   }
 
-  async loadVersion(versionStr: string, repository: Repository, throws = true): Promise<Version> {
+  async loadVersion(
+    versionStr: string,
+    repository: Repository,
+    throws = true,
+    preferInMemoryObjects = false
+  ): Promise<Version> {
     const versionRef = this.getRef(versionStr);
     if (!versionRef) throw new VersionNotFound(versionStr, this.id());
-    const version = await versionRef.load(repository);
+    const version = await repository.load(versionRef, false, preferInMemoryObjects);
     if (!version && throws) throw new VersionNotFoundOnFS(versionStr, this.id());
     return version as Version;
   }

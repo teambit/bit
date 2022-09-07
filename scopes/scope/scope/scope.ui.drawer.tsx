@@ -1,7 +1,6 @@
 import React from 'react';
 import { ComponentsDrawer, ComponentFiltersSlot, DrawerWidgetSlot } from '@teambit/component.ui.component-drawer';
 import { ComponentView, NamespaceTreeNode, PayloadType, ScopePayload } from '@teambit/ui-foundation.ui.side-bar';
-import { ComponentModel } from '@teambit/component';
 import { TreeNodeProps } from '@teambit/design.ui.tree';
 import { useLanes } from '@teambit/lanes.hooks.use-lanes';
 import { useLaneComponents } from '@teambit/lanes.hooks.use-lane-components';
