@@ -236,7 +236,7 @@ export class LanesMain {
     };
     this.scope.legacyScope.lanes.trackLane(trackData);
     await this.scope.legacyScope.lanes.saveLane(lane);
-    this.workspace.consumer.bitMap.setCurrentLane(newLaneId);
+    this.workspace.consumer.bitMap.setCurrentLane(newLaneId, false);
     await this.workspace.consumer.onDestroy();
 
     return { remoteScopeBefore };
