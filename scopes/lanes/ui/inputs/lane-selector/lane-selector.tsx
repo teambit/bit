@@ -2,6 +2,7 @@ import React, { HTMLAttributes, useState, ChangeEventHandler } from 'react';
 import classnames from 'classnames';
 import { LaneId } from '@teambit/lane-id';
 import { Dropdown } from '@teambit/evangelist.surfaces.dropdown';
+
 import { LanesModel } from '@teambit/lanes.ui.models.lanes-model';
 import { LaneMenuItem } from './lane-menu-item';
 import { LanePlaceholder } from './lane-placeholder';
@@ -52,6 +53,7 @@ export function LaneSelector({
     <Dropdown
       {...rest}
       open={!multipleLanes ? false : undefined}
+      dropClass={styles.menu}
       onChange={multipleLanes ? onDropdownToggled : undefined}
       // @ts-ignore - mismatch between @types/react
       placeholder={

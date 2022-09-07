@@ -20,3 +20,7 @@
   margin: 8px 0px 0px 0px;
   border-bottom: 1px solid var(--bit-border-color-lightest, #ededed);
 }
+
+.menu {
+  width: calc(100% - 24px);
+}

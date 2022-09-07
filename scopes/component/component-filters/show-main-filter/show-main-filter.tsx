@@ -8,27 +8,27 @@ import {
 } from '@teambit/component.ui.component-filters.component-filter-context';
 import { LaneIcon } from '@teambit/lanes.ui.icons.lane-icon';
 
-import styles from './on-lane-filter.module.scss';
+import styles from './show-main-filter.module.scss';
 
-export type OnLaneFilterCriteria = ComponentFilterCriteria<boolean>;
+export type ShowMainFilterCriteria = ComponentFilterCriteria<boolean>;
 
-export const OnLaneFilter: (defaultState?: boolean) => OnLaneFilterCriteria = (defaultState = false) => ({
+export const ShowMainFilter: (defaultState?: boolean) => ShowMainFilterCriteria = (defaultState = false) => ({
   id: 'onLane',
   match: ({ component, lanes }, active) => {
     const onMain = lanes?.viewedLane?.id.isDefault();
-    if (onMain || !active) return true;
+    if (onMain || active) return true;
     const onLane = !!lanes?.isComponentOnLaneButNotOnMain(component.id);
     return onLane;
   },
   state: defaultState,
   order: 2,
-  render: onLaneFilter,
+  render: showMainFilter,
 });
 
-function onLaneFilter({ className, lanes }: ComponentFilterRenderProps) {
+function showMainFilter({ className, lanes }: ComponentFilterRenderProps) {
   const isOnMain = lanes?.viewedLane?.id.isDefault();
 
-  const filterContext = useComponentFilter<boolean>(OnLaneFilter().id);
+  const filterContext = useComponentFilter<boolean>(ShowMainFilter().id);
 
   if (isOnMain || !filterContext) return null;
 
@@ -40,7 +40,7 @@ function onLaneFilter({ className, lanes }: ComponentFilterRenderProps) {
     <div className={classNames(styles.onLaneFilter, isActive && styles.active, className)}>
       <div className={styles.filterIcon}>
         <LaneIcon />
-        <span className={styles.filterIconLabel}>On Lane</span>
+        <span className={styles.filterIconLabel}>Show Main</span>
       </div>
       <div>
         <Toggle

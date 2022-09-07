@@ -58,29 +58,13 @@ export const scopeDrawer = ({
       // lane components + main components
       const { lanesModel, loading: lanesLoading } = useLanes();
       const viewedLaneId = lanesModel?.viewedLane?.id;
-      const defaultLane = lanesModel?.getDefaultLane();
-      const isViewingDefaultLane = viewedLaneId && defaultLane?.id.isEqual(viewedLaneId);
 
-      const { components: laneComponents = [], loading: laneCompsLoading } = useLaneComponents(viewedLaneId);
-      const { components: mainComponents = [], loading: mainCompsLoading } = useLaneComponents(
-        !isViewingDefaultLane ? defaultLane?.id : undefined
-      );
-
-      const components = isViewingDefaultLane ? laneComponents : mergeComponents(mainComponents, laneComponents);
+      const { components = [], loading: laneCompsLoading } = useLaneComponents(viewedLaneId);
 
       return {
-        loading: lanesLoading || laneCompsLoading || mainCompsLoading,
+        loading: lanesLoading || laneCompsLoading,
         components,
       };
     },
   });
 };
-
-function mergeComponents(mainComponents: ComponentModel[], laneComponents: ComponentModel[]): ComponentModel[] {
-  const mainComponentsThatAreNotOnLane = mainComponents.filter((mainComponent) => {
-    return !laneComponents.find(
-      (laneComponent) => laneComponent.id.toStringWithoutVersion() === mainComponent.id.toStringWithoutVersion()
-    );
-  });
-  return laneComponents.concat(mainComponentsThatAreNotOnLane);
-}
