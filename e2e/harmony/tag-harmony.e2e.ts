@@ -406,4 +406,21 @@ describe('tag components on Harmony', function () {
       expect(bitMap.comp1.nextVersion.version).equal('patch');
     });
   });
+  describe('with tiny cache', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.fixtures.populateComponents(1, false);
+      helper.command.tagAllWithoutBuild();
+      helper.fixtures.populateComponents(1, false, 'v2');
+      helper.command.runCmd('bit config set cache.max.objects 1');
+    });
+    after(() => {
+      helper.command.runCmd('bit config del cache.max.objects');
+    });
+    // previously, it was throwing "VersionNotFound" and "VersionNotFoundOnFS".
+    it('should not throw', () => {
+      // don't skip the build here. otherwise, you won't be able to reproduce.
+      expect(() => helper.command.tagAllComponents()).not.to.throw();
+    });
+  });
 });
