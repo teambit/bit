@@ -25,7 +25,6 @@ import { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { EnvsMain, EnvsAspect, EnvServiceList, DEFAULT_ENV } from '@teambit/envs';
 import { GraphqlMain } from '@teambit/graphql';
 import { Harmony } from '@teambit/harmony';
-import { IsolatorMain } from '@teambit/isolator';
 import { Logger } from '@teambit/logger';
 import type { ScopeMain } from '@teambit/scope';
 import { isMatchNamespacePatternItem } from '@teambit/workspace.modules.match-pattern';
@@ -166,8 +165,6 @@ export class Workspace implements ComponentFactory {
      * access to the `ComponentProvider` instance
      */
     private componentAspect: ComponentMain,
-
-    private isolator: IsolatorMain,
 
     private dependencyResolver: DependencyResolverMain,
 
@@ -1501,7 +1498,7 @@ needed-for: ${neededFor || '<unknown>'}`);
             'workspace.loadAspects loading scope aspects'
           )
         : [];
-    const {manifests: scopeOtherManifests} =
+    const { manifests: scopeOtherManifests } =
       scopeIdsGrouped.other && scopeIdsGrouped.other.length
         ? await this.scope.getManifestsGraphRecursively(
             scopeIdsGrouped.other,
@@ -1511,7 +1508,7 @@ needed-for: ${neededFor || '<unknown>'}`);
               packageManagerConfigRootDir: this.path,
             }
           )
-        : {manifests: []};
+        : { manifests: [] };
     const scopeOtherManifestsIds = compact(scopeOtherManifests.map((m) => m.id));
 
     await this.aspectLoader.loadExtensionsByManifests([...scopeOtherManifests, ...workspaceManifests], throwOnError);

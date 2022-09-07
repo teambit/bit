@@ -97,7 +97,6 @@ export default async function provideWorkspace(
     consumer,
     scope,
     component,
-    isolator,
     dependencyResolver,
     variants,
     aspectLoader,
