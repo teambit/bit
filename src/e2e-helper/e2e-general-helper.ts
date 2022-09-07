@@ -74,8 +74,8 @@ export default class GeneralHelper {
     return tar.x({ file: filePath, C: dir, sync });
   }
 
-  runWithTryCatch(cmd: string, cwd: string = this.scopes.localPath, overrideFeatures?: string) {
-    let output;
+  runWithTryCatch(cmd: string, cwd: string = this.scopes.localPath, overrideFeatures?: string): string {
+    let output: string;
     try {
       output = this.command.runCmd(cmd, cwd, undefined, overrideFeatures);
     } catch (err: any) {

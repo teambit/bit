@@ -11,7 +11,7 @@ import { isHash } from '@teambit/component-version';
  * {closestTagSemver}
  * @param component
  */
-export async function getComponentPackageVersion(component: Component, snapId?: string): Promise<string> {
+export function getComponentPackageVersion(component: Component, snapId?: string): string {
   const actualSnapId = snapId || component.head?.hash;
   if (!actualSnapId) {
     return '0.0.0';

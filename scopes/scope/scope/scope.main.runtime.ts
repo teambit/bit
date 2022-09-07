@@ -406,9 +406,20 @@ needed-for: ${neededFor || '<unknown>'}`);
   }
 
   private async getManifestsAndLoadAspects(ids: string[] = [], throwOnError = false): Promise<string[]> {
-    const scopeManifests = await this.getManifestsGraphRecursively(ids, [], throwOnError);
+    const { manifests: scopeManifests, potentialPluginsIds } = await this.getManifestsGraphRecursively(
+      ids,
+      [],
+      throwOnError
+    );
     await this.aspectLoader.loadExtensionsByManifests(scopeManifests);
-    return compact(scopeManifests.map((manifest) => manifest.id));
+    const { manifests: scopePluginsManifests } = await this.getManifestsGraphRecursively(
+      potentialPluginsIds,
+      [],
+      throwOnError
+      );
+    await this.aspectLoader.loadExtensionsByManifests(scopePluginsManifests);
+    const allManifests = scopeManifests.concat(scopePluginsManifests);
+    return compact(allManifests.map((manifest) => manifest.id));
   }
 
   async getManifestsGraphRecursively(
@@ -418,16 +429,30 @@ needed-for: ${neededFor || '<unknown>'}`);
     opts: {
       packageManagerConfigRootDir?: string;
     } = {}
-  ): Promise<ManifestOrAspect[]> {
+  ): Promise<{ manifests: ManifestOrAspect[]; potentialPluginsIds: string[] }> {
     ids = uniq(ids);
     this.logger.debug(`getManifestsGraphRecursively, ids:\n${ids.join('\n')}`);
     const nonVisitedId = ids.filter((id) => !visited.includes(id));
     if (!nonVisitedId.length) {
-      return [];
+      return { manifests: [], potentialPluginsIds: [] };
     }
     const components = await this.getNonLoadedAspects(nonVisitedId);
+    // Adding all the envs ids to the array to support case when one (or more) of the aspects has custom aspect env
+    const customEnvsIds = components
+      .map((component) => this.envs.getEnvId(component))
+      .filter((envId) => !this.aspectLoader.isCoreEnv(envId));
+    // In case there is custom env we need to load it right away, otherwise we will fail during the require aspects
+    await this.getManifestsAndLoadAspects(customEnvsIds);
     visited.push(...nonVisitedId);
     const manifests = await this.requireAspects(components, throwOnError, opts);
+    const potentialPluginsIds = compact(
+      manifests.map((manifest, index) => {
+        if (this.aspectLoader.isValidAspect(manifest)) return undefined;
+        // return index;
+        return components[index].id.toString();
+      })
+    );
+
     const depsToLoad: Array<ExtensionManifest | Aspect> = [];
     await mapSeries(manifests, async (manifest) => {
       depsToLoad.push(...(manifest.dependencies || []));
@@ -439,10 +464,11 @@ needed-for: ${neededFor || '<unknown>'}`);
       this.logger.debug(
         `getManifestsGraphRecursively, id: ${manifest.id || '<unknown>'}, found ${depIds.length}: ${depIds.join(', ')}`
       );
-      const loaded = await this.getManifestsGraphRecursively(depIds, visited, throwOnError);
+      const { manifests: loaded } = await this.getManifestsGraphRecursively(depIds, visited, throwOnError);
       manifests.push(...loaded);
     });
-    return manifests;
+
+    return { manifests, potentialPluginsIds };
   }
 
   private async getNonLoadedAspects(ids: string[]): Promise<Component[]> {
@@ -649,6 +675,8 @@ needed-for: ${neededFor || '<unknown>'}`);
       },
       this.legacyScope
     );
+    // @ts-ignore
+
     const capsules = network.seedersCapsules;
     const aspectDefs = await this.aspectLoader.resolveAspects(components, async (component) => {
       const capsule = capsules.getCapsule(component.id);
