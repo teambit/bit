@@ -19,7 +19,6 @@ module.exports = () => 'comp${index}${additionalStr} and ' + ${nextComp}();`;
   };
 
   const workspace: Workspace = await loadAspect(WorkspaceAspect, workspacePath);
-  const install: InstallMain = await loadAspect(InstallAspect, workspacePath);
   const numOfComponentsArr = Array(numOfComponents).fill(null);
   await pMapSeries(numOfComponentsArr, async (val, key) => {
     const i = key + 1;
@@ -28,6 +27,7 @@ module.exports = () => 'comp${index}${additionalStr} and ' + ${nextComp}();`;
     await workspace.track({ rootDir: compDir });
   });
   await workspace.bitMap.write();
+  const install: InstallMain = await loadAspect(InstallAspect, workspacePath);
   await install.link({ rewire: true });
 
   const compiler: CompilerMain = await loadAspect(CompilerAspect, workspacePath);
