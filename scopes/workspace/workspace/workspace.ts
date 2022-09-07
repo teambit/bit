@@ -1523,7 +1523,7 @@ needed-for: ${neededFor || '<unknown>'}`);
             'workspace.loadAspects loading scope aspects'
           )
         : [];
-    const scopeOtherManifests =
+    const { manifests: scopeOtherManifests } =
       scopeIdsGrouped.other && scopeIdsGrouped.other.length
         ? await this.scope.getManifestsGraphRecursively(
             scopeIdsGrouped.other,
@@ -1533,7 +1533,7 @@ needed-for: ${neededFor || '<unknown>'}`);
               packageManagerConfigRootDir: this.path,
             }
           )
-        : [];
+        : { manifests: [] };
     const scopeOtherManifestsIds = compact(scopeOtherManifests.map((m) => m.id));
 
     await this.aspectLoader.loadExtensionsByManifests([...scopeOtherManifests, ...workspaceManifests], throwOnError);
