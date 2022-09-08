@@ -220,7 +220,9 @@ export class IsolatorMain {
     });
     opts.baseDir = opts.baseDir || host.path;
     const capsuleList = await this.createCapsules(componentsToIsolate, opts, legacyScope);
-    return new Network(capsuleList, seedersWithVersions, this.getCapsulesRootDir(opts.baseDir, opts.rootBaseDir));
+    const capsuleDir = this.getCapsulesRootDir(opts.baseDir, opts.rootBaseDir);
+    this.logger.debug(`isolatorExt, creating network with base dir: ${opts.baseDir} rootBaseDir: ${opts.rootBaseDir} on final dir: ${capsuleDir}`);
+    return new Network(capsuleList, seedersWithVersions, capsuleDir);
   }
 
   private async createGraph(seeders: ComponentID[], opts: CreateGraphOptions = {}): Promise<Component[]> {
