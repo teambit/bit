@@ -164,7 +164,7 @@ once ready, snap/tag the components to complete the merge.`;
       })
     ).join('\n');
     if (!body) {
-      return `${chalk.bold(`the merge has been canceled on ${failedComponents.length} component(s) legitimately`)}
+      return `${chalk.bold(`\nthe merge has been canceled on ${failedComponents.length} component(s) legitimately`)}
 (use --verbose to list them next time)`;
     }
     return `\n${chalk.underline(title)}\n${body}\n\n`;
