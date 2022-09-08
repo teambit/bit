@@ -133,13 +133,19 @@ export class LanesUI {
     this.registerLanesRoutes();
   }
 
+  getLanesSwitcher() {
+    const LanesSwitcher = <LaneSwitcher groupByScope={this.lanesHost === 'workspace'} />;
+    return LanesSwitcher;
+  }
+
   private registerLanesDropdown() {
-    const LanesGallery = <LaneSwitcher groupByScope={this.lanesHost === 'workspace'} />;
+    const LanesSwitcher = this.getLanesSwitcher();
+
     this.hostAspect?.registerSidebarLink({
       component: function Gallery() {
-        return LanesGallery;
+        return LanesSwitcher;
       },
-      weight: 3,
+      weight: 1000,
     });
   }
 
