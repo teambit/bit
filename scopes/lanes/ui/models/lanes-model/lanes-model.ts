@@ -21,7 +21,7 @@ export type LaneQueryResult = {
   id: { name: string; scope: string };
   remote?: string;
   isMerged: boolean;
-  components: ComponentModelProps[];
+  components: Array<{ id: ComponentIdObj }>;
   readmeComponent?: ComponentModelProps;
   hash: string;
 };
