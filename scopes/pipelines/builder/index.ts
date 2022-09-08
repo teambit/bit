@@ -8,6 +8,7 @@ export {
   BuildTaskHelper,
   CAPSULE_ARTIFACTS_DIR,
 } from './build-task';
+export type { PipeName } from './builder.service';
 export type { BuilderMain, RawBuilderData, BuilderData } from './builder.main.runtime';
 export type { PipelineReport } from './build-pipeline-result-list';
 export { BuilderAspect } from './builder.aspect';
