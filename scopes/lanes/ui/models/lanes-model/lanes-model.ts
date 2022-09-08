@@ -90,7 +90,8 @@ export class LanesModel {
     return LaneId.from(laneId, scopeId);
   };
 
-  static getLaneUrl = (laneId: LaneId) => `/${LanesModel.lanesPrefix}/${laneId.toString()}`;
+  static getLaneUrl = (laneId: LaneId, relative?: boolean) =>
+    `${relative ? '' : '/'}${LanesModel.lanesPrefix}/${laneId.toString()}`;
 
   static getLaneComponentUrl = (componentId: ComponentID, laneId: LaneId) => {
     const laneUrl = LanesModel.getLaneUrl(laneId);
