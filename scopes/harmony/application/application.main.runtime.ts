@@ -278,14 +278,16 @@ export class ApplicationMain {
     builder.registerTagTasks([new DeployTask(application, builder)]);
     cli.registerGroup('apps', 'Applications');
     cli.register(new RunCmd(application, logger), new AppListCmdDeprecated(application), appCmd);
-    workspace.onComponentLoad(async (loadedComponent) => {
-      const app = application.getAppById(loadedComponent.id);
-      if (!app) return {};
-      return {
-        appName: app?.name,
-        type: app?.applicationType,
-      };
-    });
+    if (workspace) {
+      workspace.onComponentLoad(async (loadedComponent) => {
+        const app = application.getAppById(loadedComponent.id);
+        if (!app) return {};
+        return {
+          appName: app?.name,
+          type: app?.applicationType,
+        };
+      });  
+    }
 
     return application;
   }
