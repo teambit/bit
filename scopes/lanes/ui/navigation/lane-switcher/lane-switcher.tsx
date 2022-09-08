@@ -18,7 +18,7 @@ export function LaneSwitcher({ className, groupByScope = true, ...rest }: LaneSw
   const mainLaneId = lanesModel?.getDefaultLane()?.id;
   const nonMainLaneIds = lanesModel?.getNonMainLanes().map((lane) => lane.id) || [];
 
-  const lanes: Array<LaneId> = (mainLaneId && [mainLaneId, ...nonMainLaneIds]) || [];
+  const lanes: Array<LaneId> = (mainLaneId && [mainLaneId, ...nonMainLaneIds]) || nonMainLaneIds;
 
   const selectedLaneId = lanesModel?.viewedLane?.id;
 
