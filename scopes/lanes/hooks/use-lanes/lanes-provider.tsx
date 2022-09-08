@@ -1,6 +1,7 @@
 import React, { ReactNode, useState, useEffect } from 'react';
 import { useLanes } from '@teambit/lanes.hooks.use-lanes';
 import { LanesModel } from '@teambit/lanes.ui.models.lanes-model';
+import { useLocation } from '@teambit/base-react.navigation.link';
 import { LaneId } from '@teambit/lane-id';
 import { LanesContext, LanesContextModel } from './lanes-context';
 
@@ -12,13 +13,19 @@ export type LanesProviderProps = {
 export function LanesProvider({ children, viewedLaneId }: LanesProviderProps) {
   const { lanesModel, loading } = useLanes();
   const [lanesState, setLanesState] = useState<LanesModel | undefined>(undefined);
+  const location = useLocation();
 
   useEffect(() => {
+    const viewedLaneFromUrl = (location?.pathname && LanesModel.getLaneIdFromPathname(location?.pathname)) || undefined;
+
     lanesModel?.setViewedLane(
-      viewedLaneId || lanesModel?.currentLane?.id || lanesModel.lanes.find((lane) => lane.id.isDefault())?.id
+      viewedLaneId ||
+        viewedLaneFromUrl ||
+        lanesModel?.currentLane?.id ||
+        lanesModel.lanes.find((lane) => lane.id.isDefault())?.id
     );
     setLanesState(lanesModel);
-  }, [loading]);
+  }, [loading, location?.pathname]);
 
   const updateLanesModel = (updatedLanes?: LanesModel) => {
     setLanesState(
