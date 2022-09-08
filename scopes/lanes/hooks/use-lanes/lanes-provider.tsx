@@ -17,13 +17,13 @@ export function LanesProvider({ children, viewedLaneId }: LanesProviderProps) {
 
   useEffect(() => {
     const viewedLaneFromUrl = (location?.pathname && LanesModel.getLaneIdFromPathname(location?.pathname)) || undefined;
-
-    lanesModel?.setViewedLane(
+    const viewedLaneIdToSet =
       viewedLaneId ||
-        viewedLaneFromUrl ||
-        lanesModel?.currentLane?.id ||
-        lanesModel.lanes.find((lane) => lane.id.isDefault())?.id
-    );
+      viewedLaneFromUrl ||
+      lanesModel?.currentLane?.id ||
+      lanesModel?.lanes.find((lane) => lane.id.isDefault())?.id;
+
+    lanesModel?.setViewedLane(viewedLaneIdToSet);
     setLanesState(lanesModel);
   }, [loading, location?.pathname]);
 
