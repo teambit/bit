@@ -5,6 +5,7 @@ import type { ComponentResult } from './types';
 import type { ArtifactDefinition } from './artifact';
 import { TaskResultsList } from './task-results-list';
 import { TaskResults } from './build-pipe';
+import { PipeName } from './builder.service';
 
 export type TaskLocation = 'start' | 'end';
 
@@ -39,6 +40,12 @@ export interface BuildContext extends ExecutionContext {
    * Run the build pipeline in dev mode
    */
   dev?: boolean;
+
+  /**
+   * pipe name such as "build", "tas", "snap".
+   * an example usage is "deploy" task which is running in snap and tag pipeline and has different needs in each one.
+   */
+  pipeName: PipeName;
 }
 
 export interface TaskDescriptor {

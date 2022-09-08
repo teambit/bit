@@ -26,7 +26,7 @@ export type UnmergedComponent = {
    */
   laneId: LaneId;
   /**
-   * the head is coming from a component with the same and scope but has no snap in common
+   * the head is coming from a component with the same name and scope but has no snap in common
    */
   unrelated?: boolean;
 };
