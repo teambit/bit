@@ -4,6 +4,7 @@ import { ComponentView, NamespaceTreeNode, PayloadType, ScopePayload } from '@te
 import { TreeNodeProps } from '@teambit/design.ui.tree';
 import { useLanes } from '@teambit/lanes.hooks.use-lanes';
 import { useLaneComponents } from '@teambit/lanes.hooks.use-lane-components';
+import { ComponentModel } from '@teambit/component';
 import { SidebarSlot } from './scope.ui.runtime';
 
 export type ScopeDrawerProps = {
@@ -11,6 +12,7 @@ export type ScopeDrawerProps = {
   filtersSlot: ComponentFiltersSlot;
   drawerWidgetSlot: DrawerWidgetSlot;
   assumeScopeInUrl?: boolean;
+  overrideUseComponents?: () => { components: ComponentModel[] };
 };
 
 export const scopeDrawer = ({
@@ -18,6 +20,7 @@ export const scopeDrawer = ({
   filtersSlot,
   drawerWidgetSlot,
   assumeScopeInUrl = false,
+  overrideUseComponents,
 }: ScopeDrawerProps) => {
   const customScopeTreeNodeRenderer = (treeNodeSlot) =>
     function TreeNode(props: TreeNodeProps<PayloadType>) {
@@ -53,17 +56,19 @@ export const scopeDrawer = ({
       drawerWidgets: drawerWidgetSlot,
     },
     emptyMessage: 'Scope is empty',
-    useComponents: () => {
-      // lane components + main components
-      const { lanesModel, loading: lanesLoading } = useLanes();
-      const viewedLaneId = lanesModel?.viewedLane?.id;
+    useComponents:
+      overrideUseComponents ||
+      (() => {
+        // lane components + main components
+        const { lanesModel, loading: lanesLoading } = useLanes();
+        const viewedLaneId = lanesModel?.viewedLane?.id;
 
-      const { components = [], loading: laneCompsLoading } = useLaneComponents(viewedLaneId);
+        const { components = [], loading: laneCompsLoading } = useLaneComponents(viewedLaneId);
 
-      return {
-        loading: lanesLoading || laneCompsLoading,
-        components,
-      };
-    },
+        return {
+          loading: lanesLoading || laneCompsLoading,
+          components,
+        };
+      }),
   });
 };

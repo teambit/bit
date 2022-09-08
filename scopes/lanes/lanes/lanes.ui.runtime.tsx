@@ -133,6 +133,10 @@ export class LanesUI {
     this.registerLanesRoutes();
   }
 
+  getLanesDropDown() {
+    return <LaneSwitcher groupByScope={this.lanesHost === 'workspace'} />;
+  }
+
   private registerLanesDropdown() {
     const LanesGallery = <LaneSwitcher groupByScope={this.lanesHost === 'workspace'} />;
     this.hostAspect?.registerSidebarLink({
