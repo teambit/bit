@@ -48,7 +48,7 @@ export function Component({
 
   const { component, componentDescriptor, error } = useComponentQuery(
     host,
-    laneComponent?.id.toString() || componentId?.toString() || idFromLocation,
+    laneComponent?.toString() || componentId?.toString() || idFromLocation,
     useComponentOptions
   );
   // trigger onComponentChange when component changes

@@ -50,7 +50,7 @@ export type LanesHost = 'workspace' | 'scope';
 export type LaneModel = {
   id: LaneId;
   hash: string;
-  components: ComponentModel[];
+  components: ComponentID[];
   readmeComponent?: ComponentModel;
 };
 /**
@@ -102,9 +102,9 @@ export class LanesModel {
   static mapToLaneModel(laneData: LaneQueryResult, host: string): LaneModel {
     const { id, components, readmeComponent, hash } = laneData;
 
-    const componentModels =
+    const componentIds =
       components?.map((component) => {
-        const componentModel = ComponentModel.from({ ...component, host });
+        const componentModel = ComponentID.fromObject(component.id);
         return componentModel;
       }) || [];
 
@@ -112,7 +112,7 @@ export class LanesModel {
 
     return {
       id: LaneId.from(id.name, id.scope),
-      components: componentModels,
+      components: componentIds,
       readmeComponent: readmeComponentModel,
       hash,
     };
@@ -133,16 +133,16 @@ export class LanesModel {
   }
 
   static groupByComponentHashAndId(lanes: LaneModel[]): {
-    byHash: Map<string, { lane: LaneModel; component: ComponentModel }>;
+    byHash: Map<string, { lane: LaneModel; component: ComponentID }>;
     byId: Map<string, LaneModel[]>;
   } {
-    const byHash = new Map<string, { lane: LaneModel; component: ComponentModel }>();
+    const byHash = new Map<string, { lane: LaneModel; component: ComponentID }>();
     const byId = new Map<string, LaneModel[]>();
     lanes.forEach((lane) => {
       const { components } = lane;
       components.forEach((component) => {
-        const id = component.id.fullName;
-        const version = component.id.version as string;
+        const id = component.fullName;
+        const version = component.version as string;
         byHash.set(version, { lane, component });
         const existing = byId.get(id) || [];
         existing.push(lane);
@@ -173,7 +173,7 @@ export class LanesModel {
   }
 
   readonly laneIdsByScope: Map<string, LaneId[]>;
-  readonly lanebyComponentHash: Map<string, { lane: LaneModel; component: ComponentModel }>;
+  readonly lanebyComponentHash: Map<string, { lane: LaneModel; component: ComponentID }>;
   readonly lanesByComponentId: Map<string, LaneModel[]>;
 
   viewedLane?: LaneModel;
@@ -181,7 +181,7 @@ export class LanesModel {
   readonly lanes: LaneModel[];
 
   isInViewedLane = (componentId: ComponentID) =>
-    this.viewedLane?.components.some((comp) => comp.id.name === componentId.name);
+    this.viewedLane?.components.some((comp) => comp.name === componentId.name);
 
   getLaneComponentUrlByVersion = (componentId: ComponentID) => {
     // if there is no version, the component is new and is on main
@@ -189,10 +189,10 @@ export class LanesModel {
     const componentAndLane = this.lanebyComponentHash.get(componentId.version);
     if (!componentAndLane) return undefined;
     if (componentAndLane.lane.id.isDefault())
-      return `${componentAndLane.component.id.fullName}${
-        componentAndLane.component.id.version ? `?version=${componentAndLane.component.id.version}` : ''
+      return `${componentAndLane.component.fullName}${
+        componentAndLane.component.version ? `?version=${componentAndLane.component.version}` : ''
       }`;
-    return LanesModel.getLaneComponentUrl(componentAndLane.component.id, componentAndLane.lane.id);
+    return LanesModel.getLaneComponentUrl(componentAndLane.component, componentAndLane.lane.id);
   };
 
   getLanesByComponentId = (componentId: ComponentID) => this.lanesByComponentId.get(componentId.fullName);
@@ -200,7 +200,7 @@ export class LanesModel {
     if (componentId.version) return this.lanebyComponentHash.get(componentId.version);
     // if there is no version, the component is new and is on main
     const defaultLane = this.getDefaultLane();
-    const component = defaultLane?.components.find((c) => c.id.isEqual(componentId, { ignoreVersion: true }));
+    const component = defaultLane?.components.find((c) => c.isEqual(componentId, { ignoreVersion: true }));
     return defaultLane && component ? { lane: defaultLane, component } : undefined;
   };
   setViewedLane = (viewedLaneId?: LaneId) => {
@@ -208,7 +208,7 @@ export class LanesModel {
   };
   resolveComponent = (fullName: string, laneId?: string) =>
     ((laneId && this.lanes.find((lane) => lane.id.toString() === laneId)) || this.viewedLane)?.components.find(
-      (component) => component.id.fullName === fullName
+      (component) => component.fullName === fullName
     );
   getDefaultLane = () => this.lanes.find((lane) => lane.id.isDefault());
   getNonMainLanes = () => this.lanes.filter((lane) => !lane.id.isDefault());

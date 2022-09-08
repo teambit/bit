@@ -54,7 +54,6 @@ export const scopeDrawer = ({
     },
     emptyMessage: 'Scope is empty',
     useComponents: () => {
-      // lane components + main components
       const { lanesModel, loading: lanesLoading } = useLanes();
       const viewedLaneId = lanesModel?.viewedLane?.id;
 

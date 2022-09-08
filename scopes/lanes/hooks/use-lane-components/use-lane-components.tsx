@@ -32,6 +32,10 @@ const GET_LANE_COMPONENTS = gql`
 export function useLaneComponents(laneId?: LaneId): {
   components?: Array<ComponentModel>;
 } & Omit<DataQueryResult<LanesQuery, { ids: (string | undefined)[] }>, 'data'> {
+  /**
+   * query from context if exists
+   */
+
   const { data, ...rest } = useDataQuery(GET_LANE_COMPONENTS, {
     variables: { ids: [laneId?.toString()] },
     skip: !laneId,
