@@ -107,6 +107,7 @@ export class PnpmPackageManager implements PackageManager {
       componentDirectoryMap,
       installOptions
     );
+    this.logger.debug(`running installation in root dir ${rootDir}`);
     this.logger.debug('root manifest for installation', rootManifest);
     this.logger.debug('components manifests for installation', componentsManifests);
     this.logger.setStatusLine('installing dependencies using pnpm');
