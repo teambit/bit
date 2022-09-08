@@ -522,6 +522,8 @@ needed-for: ${neededFor || '<unknown>'}`);
           dedupe: false,
           packageManagerConfigRootDir: opts?.packageManagerConfigRootDir,
           useNesting: true,
+          copyPeerToRuntimeOnComponents: true,
+          installPeersFromEnvs: true
         },
       },
       this.legacyScope
