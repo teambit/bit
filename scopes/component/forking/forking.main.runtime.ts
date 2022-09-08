@@ -95,7 +95,7 @@ export class ForkingMain {
       const { targetCompId, component } = await this.forkRemoteComponent(sourceIdWithScope, targetId, { scope, path });
       return { targetCompId, sourceId, component };
     });
-    await this.refactorMultipleAndInstall(results);
+    await this.refactorMultipleAndInstall(results, options);
   }
 
   private async refactorMultipleAndInstall(results: MultipleForkInfo[], options: MultipleForkOptions = {}) {
