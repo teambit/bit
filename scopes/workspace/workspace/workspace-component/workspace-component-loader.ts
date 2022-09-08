@@ -227,6 +227,11 @@ export class WorkspaceComponentLoader {
   }
 
   private async executeLoadSlot(component: Component, loadOpts?: ComponentLoadOptions) {
+    if (component.state._consumer.removed) {
+      // if it was soft-removed now, the component is not in the FS. loading aspects such as composition ends up with
+      // errors as they try to read component files from the filesystem.
+      return component;
+    }
     const entries = this.workspace.onComponentLoadSlot.toArray();
     const promises = entries.map(async ([extension, onLoad]) => {
       const data = await onLoad(component, loadOpts);
