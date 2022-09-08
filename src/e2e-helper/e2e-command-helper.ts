@@ -273,8 +273,8 @@ export default class CommandHelper {
     if (assertSnapped) expect(result).to.not.have.string(NOTHING_TO_SNAP_MSG);
     return result;
   }
-  createLane(laneName = 'dev') {
-    return this.runCmd(`bit lane create ${laneName}`);
+  createLane(laneName = 'dev', options = '') {
+    return this.runCmd(`bit lane create ${laneName} ${options}`);
   }
   changeLaneScope(laneName: string, newScope: string) {
     return this.runCmd(`bit lane change-scope ${laneName} ${newScope}`);
