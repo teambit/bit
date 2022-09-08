@@ -1,5 +1,5 @@
 import { MainRuntime, CLIMain, CLIAspect } from '@teambit/cli';
-import { flatten, cloneDeep } from 'lodash';
+import { flatten, cloneDeep, head } from 'lodash';
 import { AspectLoaderMain, AspectLoaderAspect } from '@teambit/aspect-loader';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
@@ -95,6 +95,15 @@ export class ApplicationMain {
   listAppsById(id?: ComponentID): Application[] | undefined {
     if (!id) return undefined;
     return this.appSlot.get(id.toString());
+  }
+
+  /**
+   * get an application by a component id.
+   */
+  getAppById(id: ComponentID) {
+    const apps = this.listAppsById(id);
+    if (!apps) return undefined;
+    return head(apps);
   }
 
   /**
@@ -255,6 +264,14 @@ export class ApplicationMain {
     builder.registerTagTasks([new DeployTask(application, builder)]);
     cli.registerGroup('apps', 'Applications');
     cli.register(new RunCmd(application, logger), new AppListCmdDeprecated(application), appCmd);
+    workspace.onComponentLoad(async (loadedComponent) => {
+      const app = application.getAppById(loadedComponent.id);
+      if (!app) return {};
+      return {
+        appName: app?.name,
+        type: app?.applicationType,
+      };
+    });
 
     return application;
   }
