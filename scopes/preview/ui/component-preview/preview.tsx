@@ -94,7 +94,7 @@ export function ComponentPreview({
         },
       },
     });
-  });
+  }, [iframeRef?.current]);
 
   const params = Array.isArray(queryParams)
     ? queryParams.concat(`viewport=${viewport}`)
@@ -105,7 +105,7 @@ export function ComponentPreview({
   // const currentHeight = fullContentHeight ? '100%' : height || 1024;
   const containerWidth = containerRef.current?.offsetWidth || 0;
   const containerHeight = containerRef.current?.offsetHeight || 0;
-  const currentWidth = fullContentHeight ? '100%' : width || 1280;
+  const currentWidth = fullContentHeight ? '100%' : (width || 1280) + 10;
   const legacyCurrentWidth = '100%';
   const targetWidth = currentWidth < containerWidth ? containerWidth : currentWidth;
   const targetHeight = height !== 0 ? height : 5000;
@@ -125,7 +125,6 @@ export function ComponentPreview({
           visibility: width === 0 && isScaling && !fullContentHeight ? 'hidden' : undefined,
           transform: fullContentHeight ? '' : computePreviewScale(width, containerWidth),
           border: 0,
-          margin: !fullContentHeight && isScaling ? 5 : undefined,
           transformOrigin: 'top left',
         }}
         src={url}

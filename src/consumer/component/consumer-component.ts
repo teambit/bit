@@ -39,6 +39,7 @@ import MissingFilesFromComponent from './exceptions/missing-files-from-component
 import { NoComponentDir } from './exceptions/no-component-dir';
 import PackageJsonFile from './package-json-file';
 import DataToPersist from './sources/data-to-persist';
+import { ModelComponent } from '../../scope/models';
 
 export type CustomResolvedPath = { destinationPath: PathLinux; importSource: string };
 
@@ -74,6 +75,7 @@ export type ComponentProps = {
   scopesList?: ScopeListItem[];
   extensions: ExtensionDataList;
   componentFromModel?: Component;
+  modelComponent?: ModelComponent;
   buildStatus?: BuildStatus;
 };
 
@@ -119,6 +121,7 @@ export default class Component {
   schema?: string;
   componentMap: ComponentMap | undefined; // always populated when the loadedFromFileSystem is true
   componentFromModel: Component | undefined; // populated when loadedFromFileSystem is true and it exists in the model
+  modelComponent?: ModelComponent; // populated when loadedFromFileSystem is true and it exists in the model
   issues: IssuesList;
   deprecated: boolean;
   removed?: boolean; // was it soft-removed
@@ -161,6 +164,7 @@ export default class Component {
     devPackageDependencies,
     peerPackageDependencies,
     componentFromModel,
+    modelComponent,
     overrides,
     schema,
     defaultScope,
@@ -201,6 +205,7 @@ export default class Component {
     this.scopesList = scopesList;
     this.extensions = extensions || [];
     this.componentFromModel = componentFromModel;
+    this.modelComponent = modelComponent;
     this.schema = schema;
     this.buildStatus = buildStatus;
     this.issues = new IssuesList();
@@ -505,6 +510,7 @@ export default class Component {
   }): Promise<Component> {
     const consumerPath = consumer.getPath();
     const workspaceConfig: ILegacyWorkspaceConfig = consumer.config;
+    const modelComponent = await consumer.scope.getModelComponentIfExist(id);
     const componentFromModel = await consumer.loadComponentFromModelIfExist(id);
     if (!componentFromModel && id.scope) {
       const inScopeWithAnyVersion = await consumer.scope.getModelComponentIfExist(id.changeVersion(undefined));
@@ -572,6 +578,7 @@ export default class Component {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       loadedFromFileSystem: true,
       componentFromModel,
+      modelComponent,
       componentMap,
       docs: flattenedDocs,
       deprecated,

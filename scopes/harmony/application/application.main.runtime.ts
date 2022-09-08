@@ -3,6 +3,7 @@ import { flatten, cloneDeep, head } from 'lodash';
 import { AspectLoaderMain, AspectLoaderAspect } from '@teambit/aspect-loader';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
+import { BitError } from '@teambit/bit-error';
 import { BuilderAspect, BuilderMain } from '@teambit/builder';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
@@ -114,6 +115,19 @@ export class ApplicationMain {
     return apps.find((app) => app.name === appName);
   }
 
+  getAppByNameOrId(appNameOrId: string): Application | undefined {
+    const byName = this.getApp(appNameOrId);
+    if (byName) return byName;
+    const byId = this.appSlot.get(appNameOrId);
+    if (!byId || !byId.length) return undefined;
+    if (byId.length > 1) {
+      throw new BitError(
+        `unable to figure out what app to retrieve. the id "${appNameOrId}" has more than one app. please use the app-name`
+      );
+    }
+    return byId[0];
+  }
+
   /**
    * registers a new app and sets a plugin for it.
    */
@@ -135,7 +149,7 @@ export class ApplicationMain {
    * get app to throw.
    */
   getAppOrThrow(appName: string) {
-    const app = this.getApp(appName);
+    const app = this.getAppByNameOrId(appName);
     if (!app) throw new AppNotFound(appName);
     return app;
   }
@@ -156,7 +170,7 @@ export class ApplicationMain {
   async runApp(appName: string, options?: ServeAppOptions) {
     options = this.computeOptions(options);
     const app = this.getAppOrThrow(appName);
-    const context = await this.createAppContext(appName);
+    const context = await this.createAppContext(app.name);
     if (!context) throw new AppNotFound(appName);
 
     if (options.ssr) {

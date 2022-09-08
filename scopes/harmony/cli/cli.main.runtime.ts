@@ -6,9 +6,9 @@ import type { CommunityMain } from '@teambit/community';
 
 import { groups, GroupsType } from '@teambit/legacy/dist/cli/command-groups';
 import { loadConsumerIfExist } from '@teambit/legacy/dist/consumer';
+import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { clone } from 'lodash';
 import { CLIAspect, MainRuntime } from './cli.aspect';
-import { AlreadyExistsError } from './exceptions/already-exists';
 import { getCommandId } from './get-command-id';
 import { LegacyCommandAdapter } from './legacy-command-adapter';
 import { CLIParser } from './cli-parser';
@@ -24,8 +24,12 @@ export type CommandsSlot = SlotRegistry<CommandList>;
 
 export class CLIMain {
   public groups: GroupsType = clone(groups); // if it's not cloned, it is cached across loadBit() instances
-
-  constructor(private commandsSlot: CommandsSlot, private onStartSlot: OnStartSlot, private community: CommunityMain) {}
+  constructor(
+    private commandsSlot: CommandsSlot,
+    private onStartSlot: OnStartSlot,
+    private community: CommunityMain,
+    private logger: Logger
+  ) {}
 
   /**
    * registers a new command in to the CLI.
@@ -74,9 +78,10 @@ export class CLIMain {
    */
   registerGroup(name: string, description: string) {
     if (this.groups[name]) {
-      throw new AlreadyExistsError('group', name);
+      this.logger.consoleWarning(`CLI group "${name}" is already registered`);
+    } else {
+      this.groups[name] = description;
     }
-    this.groups[name] = description;
   }
 
   registerOnStart(onStartFn: OnStart) {
@@ -119,16 +124,17 @@ export class CLIMain {
     }
   }
 
-  static dependencies = [CommunityAspect];
+  static dependencies = [CommunityAspect, LoggerAspect];
   static runtime = MainRuntime;
   static slots = [Slot.withType<CommandList>(), Slot.withType<OnStart>()];
 
   static async provider(
-    [community]: [CommunityMain],
+    [community, loggerMain]: [CommunityMain, LoggerMain],
     config,
     [commandsSlot, onStartSlot]: [CommandsSlot, OnStartSlot]
   ) {
-    const cliMain = new CLIMain(commandsSlot, onStartSlot, community);
+    const logger = loggerMain.createLogger(CLIAspect.id);
+    const cliMain = new CLIMain(commandsSlot, onStartSlot, community, logger);
     const legacyRegistry = buildRegistry();
     await ensureWorkspaceAndScope();
     const legacyCommands = legacyRegistry.commands;

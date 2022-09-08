@@ -3,7 +3,8 @@ import { LinkResults } from '@teambit/dependency-resolver';
 import { Logger } from '@teambit/logger';
 import { timeFormat } from '@teambit/toolbox.time.time-format';
 import chalk from 'chalk';
-import { Workspace, WorkspaceLinkOptions } from '../workspace';
+import { Workspace } from '@teambit/workspace';
+import { InstallMain, WorkspaceLinkOptions } from '../install.main.runtime';
 import { ComponentListLinks } from './component-list-links';
 import { CoreAspectsLinks } from './core-aspects-links';
 import { NestedComponentLinksLinks } from './nested-deps-in-nm-links';
@@ -37,6 +38,7 @@ export class LinkCommand implements Command {
   ] as CommandOptions;
 
   constructor(
+    private install: InstallMain,
     /**
      * workspace extension.
      */
@@ -94,7 +96,7 @@ export class LinkCommand implements Command {
       linkToDir: opts.target,
       fetchObject: !opts.skipFetchingObjects,
     };
-    const linkResults = await this.workspace.link(linkOpts);
+    const linkResults = await this.install.link(linkOpts);
     return linkResults;
   }
 }

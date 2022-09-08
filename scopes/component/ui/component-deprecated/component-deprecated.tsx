@@ -64,7 +64,14 @@ export function ComponentDeprecated({ deprecation, className, ...rest }: Compone
             <span>Deprecated</span>
           </div>
           <div>
-            <img className={styles.arrowImage} src="https://static.bit.dev/bit-icons/arrow-up-right-black.svg" />
+            {isLink && (
+              <Link external href={newComponentUrl} className={styles.link}>
+                <img className={styles.arrowImage} src="https://static.bit.dev/bit-icons/arrow-up-right-black.svg" />
+              </Link>
+            )}
+            {!isLink && (
+              <img className={styles.arrowImage} src="https://static.bit.dev/bit-icons/arrow-up-right-black.svg" />
+            )}
           </div>
         </PillLabel>
       </div>

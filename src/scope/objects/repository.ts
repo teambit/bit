@@ -110,7 +110,14 @@ export default class Repository {
     return fs.pathExists(objectPath);
   }
 
-  async load(ref: Ref, throws = false): Promise<BitObject> {
+  async load(ref: Ref, throws = false, preferInMemoryObjects = false): Promise<BitObject> {
+    if (preferInMemoryObjects) {
+      // during tag, the updated objects are in `this.objects`.
+      // `this.cache` is less reliable, because if it reaches its max, then it loads from the filesystem, which may not
+      // be there yet (in case of "version" object), or may be out-of-date (in case of "component" object).
+      const inMemoryObjects = this.objects[ref.hash.toString()];
+      if (inMemoryObjects) return inMemoryObjects;
+    }
     const cached = this.getCache(ref);
     if (cached) {
       return cached;
