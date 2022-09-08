@@ -14,21 +14,15 @@ import { UiMain } from '@teambit/ui';
 import type { VariantsMain } from '@teambit/variants';
 import { Consumer, loadConsumerIfExist } from '@teambit/legacy/dist/consumer';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
-import ManyComponentsWriter from '@teambit/legacy/dist/consumer/component-ops/many-components-writer';
 import LegacyComponentLoader from '@teambit/legacy/dist/consumer/component/component-loader';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
-import { CommunityMain } from '@teambit/community';
 import { EXT_NAME } from './constants';
 import EjectConfCmd from './eject-conf.cmd';
-import InstallCmd from './install.cmd';
-import UninstallCmd from './uninstall.cmd';
-import UpdateCmd from './update.cmd';
 import { OnComponentLoad, OnComponentAdd, OnComponentChange, OnComponentRemove } from './on-component-events';
 import { WorkspaceExtConfig } from './types';
 import { WatchCommand } from './watch/watch.cmd';
-import { LinkCommand } from './link';
 import { Watcher, WatchOptions } from './watch/watcher';
-import { Workspace, WorkspaceInstallOptions } from './workspace';
+import { Workspace } from './workspace';
 import getWorkspaceSchema from './workspace.graphql';
 import { WorkspaceUIRoot } from './workspace.ui-root';
 import { CapsuleCmd, CapsuleCreateCmd, CapsuleDeleteCmd, CapsuleListCmd } from './capsule.cmd';
@@ -52,8 +46,7 @@ export type WorkspaceDeps = [
   UiMain,
   BundlerMain,
   AspectLoaderMain,
-  EnvsMain,
-  CommunityMain
+  EnvsMain
 ];
 
 export type OnComponentLoadSlot = SlotRegistry<OnComponentLoad>;
@@ -82,7 +75,6 @@ export default async function provideWorkspace(
     bundler,
     aspectLoader,
     envs,
-    community,
   ]: WorkspaceDeps,
   config: WorkspaceExtConfig,
   [onComponentLoadSlot, onComponentChangeSlot, onComponentAddSlot, onComponentRemoveSlot, onPreWatchSlot]: [
@@ -105,7 +97,6 @@ export default async function provideWorkspace(
     consumer,
     scope,
     component,
-    isolator,
     dependencyResolver,
     variants,
     aspectLoader,
@@ -128,18 +119,6 @@ export default async function provideWorkspace(
   };
 
   dependencyResolver.registerRootPolicy(getWorkspacePolicyFromPackageJson());
-
-  ManyComponentsWriter.registerExternalInstaller({
-    install: async () => {
-      // TODO: think how we should pass this options
-      const installOpts: WorkspaceInstallOptions = {
-        dedupe: true,
-        updateExisting: false,
-        import: false,
-      };
-      return workspace.install(undefined, installOpts);
-    },
-  });
 
   consumer.onCacheClear.push(() => workspace.clearCache());
 
@@ -189,13 +168,9 @@ export default async function provideWorkspace(
   ];
   const watcher = new Watcher(workspace, pubsub);
   const commands: CommandList = [
-    new InstallCmd(workspace, logger),
-    new UpdateCmd(workspace),
-    new UninstallCmd(workspace),
     new EjectConfCmd(workspace),
     capsuleCmd,
     new WatchCommand(pubsub, logger, watcher),
-    new LinkCommand(workspace, logger, community.getDocsDomain()),
     new UseCmd(workspace),
   ];
 

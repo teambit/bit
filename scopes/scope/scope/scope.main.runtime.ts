@@ -416,7 +416,7 @@ needed-for: ${neededFor || '<unknown>'}`);
       potentialPluginsIds,
       [],
       throwOnError
-      );
+    );
     await this.aspectLoader.loadExtensionsByManifests(scopePluginsManifests);
     const allManifests = scopeManifests.concat(scopePluginsManifests);
     return compact(allManifests.map((manifest) => manifest.id));
@@ -522,6 +522,8 @@ needed-for: ${neededFor || '<unknown>'}`);
           dedupe: false,
           packageManagerConfigRootDir: opts?.packageManagerConfigRootDir,
           useNesting: true,
+          copyPeerToRuntimeOnComponents: true,
+          installPeersFromEnvs: true
         },
       },
       this.legacyScope
@@ -670,7 +672,13 @@ needed-for: ${neededFor || '<unknown>'}`);
         // "No matching version found for <some-component-on-the-workspace>"
         seedersOnly: true,
         includeFromNestedHosts: true,
-        installOptions: { copyPeerToRuntimeOnRoot: true, dedupe: false, useNesting: true },
+        installOptions: {
+          copyPeerToRuntimeOnRoot: true,
+          dedupe: false,
+          useNesting: true,
+          copyPeerToRuntimeOnComponents: true,
+          installPeersFromEnvs: true
+        },
         host: this,
       },
       this.legacyScope
