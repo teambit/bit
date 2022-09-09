@@ -30,6 +30,7 @@ export class RemoveCmd implements Command {
       'remote',
       'remove a component completely from a remote scope (Careful! this is a permanent change. prefer --soft and tag+export)',
     ],
+    ['', 'from-lane', 'revert to main if exists on currently checked out lane, otherwise, remove it'],
     ['t', 'track', 'keep tracking component in .bitmap (default = false), helps transform a tagged-component to new'],
     ['d', 'delete-files', 'DEPRECATED (this is now the default). delete local component files'],
     ['', 'keep-files', 'keep component files (just untrack the component)'],
@@ -52,6 +53,7 @@ export class RemoveCmd implements Command {
       soft = false,
       force = false,
       remote = false,
+      fromLane = false,
       track = false,
       deleteFiles = false,
       silent = false,
@@ -60,6 +62,7 @@ export class RemoveCmd implements Command {
       force: boolean;
       remote: boolean;
       track: boolean;
+      fromLane: boolean;
       deleteFiles: boolean;
       silent: boolean;
       keepFiles: boolean;
@@ -73,6 +76,7 @@ export class RemoveCmd implements Command {
         );
       if (track) throw new BitError(`error: please use either --soft or --track, not both`);
       if (keepFiles) throw new BitError(`error: please use either --soft or --keep-files, not both`);
+      if (fromLane) throw new BitError(`error: please use either --soft or --from-lane, not both`);
       const removedCompIds = await this.remove.softRemove(componentsPattern);
       return `${chalk.green('successfully soft-removed the following components:')}
 ${removedCompIds.join('\n')}
@@ -103,7 +107,7 @@ ${chalk.bold('to update the remote, please tag/snap and then export')}`;
     }: {
       localResult: RemovedLocalObjects;
       remoteResult: RemovedObjects[];
-    } = await this.remove.remove({ componentsPattern, remote, force, track, deleteFiles: !keepFiles });
+    } = await this.remove.remove({ componentsPattern, remote, force, track, deleteFiles: !keepFiles, fromLane });
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return paintRemoved(localResult, false) + this.paintArray(remoteResult);
   }
