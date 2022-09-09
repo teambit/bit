@@ -50,7 +50,8 @@ export class StatusCmd implements Command {
       importPendingComponents,
       autoTagPendingComponents,
       invalidComponents,
-      removedComponents,
+      locallySoftRemoved,
+      remotelySoftRemoved,
       outdatedComponents,
       mergePendingComponents,
       componentsDuringMergeState,
@@ -70,7 +71,8 @@ export class StatusCmd implements Command {
       importPendingComponents: importPendingComponents.map((id) => id.toString()),
       autoTagPendingComponents: autoTagPendingComponents.map((s) => s.toString()),
       invalidComponents,
-      removedComponents: removedComponents.map((id) => id.toString()),
+      locallySoftRemoved: locallySoftRemoved.map((id) => id.toString()),
+      remotelySoftRemoved: remotelySoftRemoved.map((id) => id.toString()),
       outdatedComponents: outdatedComponents.map((c) => c.id.toString()),
       mergePendingComponents: mergePendingComponents.map((c) => c.id.toString()),
       componentsDuringMergeState: componentsDuringMergeState.map((id) => id.toString()),
@@ -90,7 +92,8 @@ export class StatusCmd implements Command {
       importPendingComponents,
       autoTagPendingComponents,
       invalidComponents,
-      removedComponents,
+      locallySoftRemoved,
+      remotelySoftRemoved,
       outdatedComponents,
       mergePendingComponents,
       componentsDuringMergeState,
@@ -222,10 +225,18 @@ or use "bit merge [component-id] --abort" to cancel the merge operation)\n`;
       invalidComponents.length ? chalk.underline.white(statusInvalidComponentsMsg) + invalidDesc : ''
     ).join('\n');
 
-    const removedDesc = '\nthese components were soft-removed.\n';
-    const removedComponentOutput = immutableUnshift(
-      removedComponents.map((c) => format(c)).sort(),
-      removedComponents.length ? chalk.underline.white('removed components') + removedDesc : ''
+    const locallySoftRemovedDesc = '\n(tag/snap and export them to update the remote)\n';
+    const locallySoftRemovedOutput = immutableUnshift(
+      locallySoftRemoved.map((c) => format(c)).sort(),
+      locallySoftRemoved.length ? chalk.underline.white('soft-removed components locally') + locallySoftRemovedDesc : ''
+    ).join('\n');
+
+    const remotelySoftRemovedDesc = '\n(use "bit remove" to remove them from the workspace)\n';
+    const remotelySoftRemovedOutput = immutableUnshift(
+      remotelySoftRemoved.map((c) => format(c)).sort(),
+      remotelySoftRemoved.length
+        ? chalk.underline.white('soft-removed components on the remote') + remotelySoftRemovedDesc
+        : ''
     ).join('\n');
 
     const individualFilesOutput = immutableUnshift(
@@ -283,7 +294,8 @@ or use "bit merge [component-id] --abort" to cancel the merge operation)\n`;
         stagedComponentsOutput,
         autoTagPendingOutput,
         invalidComponentOutput,
-        removedComponentOutput,
+        locallySoftRemovedOutput,
+        remotelySoftRemovedOutput,
         individualFilesOutput,
       ]
         .filter((x) => x)
