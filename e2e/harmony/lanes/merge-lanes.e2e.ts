@@ -1,5 +1,6 @@
 import chai, { expect } from 'chai';
 import path from 'path';
+import { uniq } from 'lodash';
 import { DEFAULT_LANE } from '@teambit/lane-id';
 import { statusWorkspaceIsCleanMsg } from '../../../src/constants';
 import Helper from '../../../src/e2e-helper/e2e-helper';
@@ -584,6 +585,62 @@ describe('merge lanes', function () {
         const status = helper.command.statusJson();
         expect(status.pendingUpdatesFromMain).to.have.lengthOf(0);
       });
+    });
+  });
+  describe('merge lanes when local-lane has soft-removed components and the other lane is behind', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents(2);
+      helper.command.createLane();
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      helper.command.createLane('dev2');
+      helper.command.snapComponentWithoutBuild('comp1', '--unmodified');
+      helper.command.export();
+      helper.command.switchLocalLane('dev');
+      helper.command.removeComponent('comp2', '--soft');
+      helper.fs.outputFile('comp1/index.js', '');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      helper.command.mergeLane('dev2');
+    });
+    it('should not bring the removed components', () => {
+      const bitMap = helper.bitMap.read();
+      expect(bitMap).to.not.have.property('comp2');
+    });
+  });
+  describe('merge lanes when local-lane has soft-removed components and the other lane is diverge', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents(2);
+      helper.command.createLane();
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      helper.command.createLane('dev2');
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.export();
+      helper.command.switchLocalLane('dev');
+      helper.command.removeComponent('comp2', '--soft');
+      helper.fs.outputFile('comp1/index.js', '');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      helper.command.mergeLane('dev2');
+    });
+    it('should bring the removed component because it may have changed and these changes are needed for other components', () => {
+      const bitMap = helper.bitMap.read();
+      expect(bitMap).to.have.property('comp2');
+    });
+    it('should show the removed components as remotelySoftRemoved because of the merge-config mechanism', () => {
+      const status = helper.command.statusJson();
+      expect(status.remotelySoftRemoved).to.have.lengthOf(1);
+      expect(status.remotelySoftRemoved[0]).to.include('comp2');
+    });
+    it('bit log should not show duplications', () => {
+      const log = helper.command.logParsed('comp2');
+      const hashes = log.map((logEntry) => logEntry.hash);
+      expect(hashes.length).to.equal(uniq(hashes).length);
     });
   });
 });

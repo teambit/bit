@@ -28,6 +28,7 @@ export default class LogCmd implements Command {
       return logs.join('\n');
     }
     const logs = await this.componentLog.getLogs(id, remote);
+    // reverse to show from the latest to earliest
     return logs.reverse().map(paintLog).join('\n');
   }
 
