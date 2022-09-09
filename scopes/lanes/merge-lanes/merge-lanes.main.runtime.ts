@@ -191,6 +191,7 @@ export class MergeLanesMain {
         remote: false,
         track: false,
         deleteFiles: true,
+        fromLane: false,
       });
     } else if (otherLane && !otherLane.readmeComponent) {
       deleteResults = { readmeResult: `\nlane ${otherLane.name} doesn't have a readme component` };
