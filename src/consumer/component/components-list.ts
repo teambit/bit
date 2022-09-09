@@ -7,7 +7,6 @@ import { DivergeData } from '../../scope/component-ops/diverge-data';
 import { getDivergeData } from '../../scope/component-ops/get-diverge-data';
 import { Lane } from '../../scope/models';
 import ModelComponent from '../../scope/models/model-component';
-import Version from '../../scope/models/version';
 import Scope from '../../scope/scope';
 import { fetchRemoteVersions } from '../../scope/scope-remotes';
 import { filterAsync } from '../../utils';
@@ -19,7 +18,6 @@ import { InvalidComponent } from '../component/consumer-component';
 import Consumer from '../consumer';
 import { ComponentLoadOptions } from './component-loader';
 
-export type ObjectsList = Promise<{ [componentId: string]: Version }>;
 export type DivergeDataPerId = { id: BitId; divergeData: DivergeData };
 export type ListScopeResult = {
   id: BitId;
@@ -272,7 +270,7 @@ export default class ComponentsList {
   async listTagPendingComponents(): Promise<BitIds> {
     const newComponents = await this.listNewComponents();
     const modifiedComponents = await this.listModifiedComponents();
-    const removedComponents = await this.listRemovedComponents();
+    const removedComponents = await this.listLocallySoftRemoved();
     const duringMergeIds = this.listDuringMergeStateComponents();
 
     return BitIds.fromArray([
@@ -386,13 +384,25 @@ export default class ComponentsList {
   }
 
   /**
-   * components that were deleted by soft-delete (bit remove --soft)
+   * components that were deleted by soft-remove (bit remove --soft) and were not tagged/snapped after this change.
+   * practically, their bitmap record has the config or "removed: true" and the component has deleted from the filesystem
+   * in bit-status, we suggest to snap+export.
    */
-  async listRemovedComponents(): Promise<BitId[]> {
+  async listLocallySoftRemoved(): Promise<BitId[]> {
     if (!this._removedComponents) {
       await this.getFromFileSystem();
     }
     return this._removedComponents.map((c) => c.id);
+  }
+
+  /**
+   * components that were soft-removed previously (probably in another workspace), exported and re-introduced here.
+   * practically, the current `Version` object has a config with "removed: true", and the component exists in the filesystem
+   * in bit-status we suggest to "bit remove".
+   */
+  async listRemotelySoftRemoved(): Promise<Component[]> {
+    const fromFs = await this.getFromFileSystem();
+    return fromFs.filter((comp) => comp.componentFromModel?.removed);
   }
 
   /**
