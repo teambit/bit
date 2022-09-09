@@ -434,14 +434,14 @@ once done, to continue working, please run "bit cc"`
    * Remove components from scope
    * @force Boolean - remove component from scope even if other components use it
    */
-  async removeMany(bitIds: BitIds, force: boolean, consumer?: Consumer): Promise<RemovedObjects> {
+  async removeMany(bitIds: BitIds, force: boolean, consumer?: Consumer, fromLane?: boolean): Promise<RemovedObjects> {
     logger.debug(`scope.removeMany ${bitIds.toString()} with force flag: ${force.toString()}`);
     Analytics.addBreadCrumb(
       'removeMany',
       `scope.removeMany ${Analytics.hashData(bitIds)} with force flag: ${force.toString()}`
     );
     const currentLane = await consumer?.getCurrentLaneObject();
-    const removeComponents = new RemoveModelComponents(this, bitIds, force, consumer, currentLane);
+    const removeComponents = new RemoveModelComponents(this, bitIds, force, consumer, currentLane, fromLane);
     return removeComponents.remove();
   }
 
