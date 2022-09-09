@@ -31,12 +31,14 @@ export class RemoveMain {
     remote,
     track,
     deleteFiles,
+    fromLane,
   }: {
     componentsPattern: string;
     force: boolean;
     remote: boolean;
     track: boolean;
     deleteFiles: boolean;
+    fromLane: boolean;
   }): Promise<any> {
     this.logger.setStatusLine(BEFORE_REMOVE);
     const bitIds = remote
@@ -51,6 +53,7 @@ export class RemoveMain {
       remote,
       track,
       deleteFiles,
+      fromLane,
     });
     if (consumer) await consumer.onDestroy();
     return removeResults;
