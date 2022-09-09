@@ -3,6 +3,7 @@ import { Icon } from '@teambit/evangelist.elements.icon';
 import { LaneIcon } from '@teambit/lanes.ui.icons.lane-icon';
 import { LaneId } from '@teambit/lane-id';
 import classnames from 'classnames';
+import { Ellipsis } from '@teambit/design.ui.styles.ellipsis';
 
 import styles from './lane-placeholder.module.scss';
 
@@ -26,7 +27,7 @@ export function LanePlaceholder({
   return (
     <div {...rest} className={classnames(styles.placeholder, className, disabled && styles.disabled)}>
       <LaneIcon className={styles.icon} />
-      <span className={styles.placeholderText}>{laneIdStr}</span>
+      <Ellipsis className={styles.placeholderText}>{laneIdStr}</Ellipsis>
       {!disabled && <Icon of="fat-arrow-down" />}
     </div>
   );
