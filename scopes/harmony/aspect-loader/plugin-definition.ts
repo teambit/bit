@@ -1,4 +1,4 @@
-import { Aspect } from "@teambit/harmony";
+import { Aspect } from '@teambit/harmony';
 
 export interface PluginDefinition {
   /**
@@ -15,11 +15,10 @@ export interface PluginDefinition {
    * register the plugin to its slot registry.
    */
 
-
   /**
    * Plugin implementation.
    * @param object The object that was exported as default by the *.plugin-pattern file.
    * @param sourceAspect Pointer to the aspect that is using the plugin (the aspect that contain the *.plugin-pattern file).
    */
-  register<T>(object: T, sourceAspect: Aspect): void;
+  register<T>(object: T, sourceAspect: Aspect): Promise<void>;
 }
