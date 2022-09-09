@@ -72,12 +72,6 @@ export class LanesModel {
   static baseLaneComponentRoute = '/~component';
   static lanePath = ':scopeId/:laneId';
 
-  static drawer = {
-    id: 'LANES',
-    name: 'LANES',
-    order: 100,
-  };
-
   private static laneFromPathRegex = pathToRegexp(`${LanesModel.lanesPrefix}/${LanesModel.lanePath}`, undefined, {
     end: false,
     start: false,

@@ -7,7 +7,7 @@ import { NavigationSlot, RouteSlot } from '@teambit/ui-foundation.ui.react-route
 import { NotFoundPage } from '@teambit/design.ui.pages.not-found';
 import ScopeAspect, { ScopeUI } from '@teambit/scope';
 import WorkspaceAspect, { WorkspaceUI } from '@teambit/workspace';
-import ComponentAspect, { ComponentUI } from '@teambit/component';
+import ComponentAspect, { ComponentID, ComponentUI } from '@teambit/component';
 import SidebarAspect, { SidebarUI } from '@teambit/sidebar';
 import { MenuWidget, MenuWidgetSlot } from '@teambit/ui-foundation.ui.menu';
 import { LaneGallery, LaneOverviewLine, LaneOverviewLineSlot } from '@teambit/lanes.ui.gallery';
@@ -16,6 +16,7 @@ import { LanesHost, LanesModel } from '@teambit/lanes.ui.models.lanes-model';
 import { LaneReadmeOverview } from '@teambit/lanes.ui.readme';
 import { LanesProvider, useLanes } from '@teambit/lanes.hooks.use-lanes';
 import { LaneSwitcher } from '@teambit/lanes.ui.navigation.lane-switcher';
+import { LaneId } from '@teambit/lane-id';
 
 export class LanesUI {
   static dependencies = [UIAspect, ComponentAspect, WorkspaceAspect, ScopeAspect, SidebarAspect];
@@ -71,6 +72,23 @@ export class LanesUI {
         ),
       },
     ];
+  }
+
+  overrideComputeLaneUrl(
+    fn: () => {
+      prefix: string;
+      path: string;
+      getLaneIdFromPathname: (pathname: string) => LaneId | undefined;
+      getLaneUrl: (laneId: LaneId, relative?: boolean) => string;
+      getLaneComponentUrl: (componentId: ComponentID, laneId: LaneId) => string;
+    }
+  ) {
+    const { prefix, path, getLaneComponentUrl, getLaneIdFromPathname, getLaneUrl } = fn();
+    LanesModel.lanesPrefix = prefix;
+    LanesModel.lanePath = path;
+    LanesModel.getLaneComponentUrl = getLaneComponentUrl;
+    LanesModel.getLaneUrl = getLaneUrl;
+    LanesModel.getLaneIdFromPathname = getLaneIdFromPathname;
   }
 
   getLaneReadme() {
