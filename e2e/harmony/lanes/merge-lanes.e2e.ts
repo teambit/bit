@@ -249,9 +249,9 @@ describe('merge lanes', function () {
       const log = helper.command.logParsed('comp1');
       expect(log).to.have.lengthOf(2);
 
-      expect(log[0].hash).to.equal(headOnLane);
-      expect(log[0].parents[0]).to.equal(headOnMain);
-      expect(log[1].hash).to.equal(headOnMain);
+      expect(log[0].hash).to.equal(headOnMain);
+      expect(log[1].hash).to.equal(headOnLane);
+      expect(log[1].parents[0]).to.equal(headOnMain);
     });
   });
   describe('partial merge', () => {
