@@ -313,7 +313,7 @@ async function addLogToComponents(
     const nextVersion = persist ? component.componentMap?.nextVersion : null;
     const msgFromEditor = messagePerComponent.find((item) => item.id.isEqualWithoutVersion(component.id))?.msg;
     return {
-      username: bitCloudUsername || nextVersion?.username || username,
+      username: nextVersion?.username || bitCloudUsername || username,
       email: nextVersion?.email || email,
       message: nextVersion?.message || msgFromEditor || message,
       date: Date.now().toString(),

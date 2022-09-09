@@ -397,10 +397,13 @@ export default class Component extends BitObject {
     return versionStr || VERSION_ZERO;
   }
 
+  /**
+   * get component log and sort by the timestamp in ascending order (from the earliest to the latest)
+   */
   async collectLogs(repo: Repository, shortHash = false, startFrom?: Ref): Promise<ComponentLog[]> {
     const versionsInfo = await getAllVersionsInfo({ modelComponent: this, repo, throws: false, startFrom });
     const getRef = (ref: Ref) => (shortHash ? ref.toShortString() : ref.toString());
-    return versionsInfo.map((versionInfo) => {
+    const results = versionsInfo.map((versionInfo) => {
       const log = versionInfo.version ? versionInfo.version.log : { message: '<no-data-available>' };
       return {
         ...log, // @ts-ignore
@@ -413,6 +416,13 @@ export default class Component extends BitObject {
         onLane: versionInfo.onLane,
       };
     });
+    // sort from earliest to latest
+    const sorted = results.sort((a: ComponentLog, b: ComponentLog) => {
+      // @ts-ignore
+      if (a.date && b.date) return a.date - b.date;
+      return 0;
+    });
+    return sorted;
   }
 
   collectVersions(repo: Repository): Promise<ConsumerComponent[]> {

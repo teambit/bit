@@ -128,7 +128,7 @@ export function applyModifiedVersion(
     if (file.conflict) {
       foundFile.contents = Buffer.from(file.conflict);
       filesStatus[file.filePath] = FileStatus.manual;
-    } else if (file.output) {
+    } else if (typeof file.output === 'string') {
       foundFile.contents = Buffer.from(file.output);
       filesStatus[file.filePath] = FileStatus.merged;
     } else if (file.isBinaryConflict) {
