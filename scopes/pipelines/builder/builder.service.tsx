@@ -37,7 +37,7 @@ const pipeNames = {
   getSnapPipe: 'snap',
 };
 
-type PipeName = 'build' | 'tag' | 'snap';
+export type PipeName = 'build' | 'tag' | 'snap';
 
 export type BuilderDescriptor = Array<{ pipeName: PipeName; tasks: string[] }>;
 
@@ -69,7 +69,7 @@ export class BuilderService implements EnvService<BuildServiceResults, BuilderDe
     /**
      * pipe name to display on the console during the execution
      */
-    private displayPipeName: string,
+    private displayPipeName: PipeName,
     private artifactFactory: ArtifactFactory,
     private scope: ScopeMain
   ) {}
@@ -110,12 +110,13 @@ export class BuilderService implements EnvService<BuildServiceResults, BuilderDe
         const buildContext = Object.assign(executionContext, {
           capsuleNetwork,
           previousTasksResults: [],
+          pipeName: this.displayPipeName,
           dev: options.dev,
         });
         envsBuildContext[executionContext.id] = buildContext;
       })
     );
-    const buildPipe = BuildPipe.from(
+    const buildPipe = new BuildPipe(
       tasksQueue,
       envsBuildContext,
       this.logger,

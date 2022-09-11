@@ -113,7 +113,7 @@ export class ArtifactFiles {
     const allHashes = this.refs.map((artifact) => artifact.ref.hash);
     const scopeComponentsImporter = ScopeComponentsImporter.getInstance(scope);
     const lane = await scope.getCurrentLaneObject();
-    const isIdOnLane = lane?.toBitIds().hasWithoutVersion(id);
+    const isIdOnLane = await scope.isIdOnLane(id, lane);
     const scopeName = isIdOnLane ? (lane?.scope as string) : (id.scope as string);
     await scopeComponentsImporter.importManyObjects({ [scopeName]: allHashes });
     const getOneArtifact = async (artifact: ArtifactRef) => {

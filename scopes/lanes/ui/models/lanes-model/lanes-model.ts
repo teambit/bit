@@ -72,12 +72,6 @@ export class LanesModel {
   static baseLaneComponentRoute = '/~component';
   static lanePath = ':scopeId/:laneId';
 
-  static drawer = {
-    id: 'LANES',
-    name: 'LANES',
-    order: 100,
-  };
-
   private static laneFromPathRegex = pathToRegexp(`${LanesModel.lanesPrefix}/${LanesModel.lanePath}`, undefined, {
     end: false,
     start: false,
@@ -90,7 +84,8 @@ export class LanesModel {
     return LaneId.from(laneId, scopeId);
   };
 
-  static getLaneUrl = (laneId: LaneId) => `/${LanesModel.lanesPrefix}/${laneId.toString()}`;
+  static getLaneUrl = (laneId: LaneId, relative?: boolean) =>
+    `${relative ? '' : '/'}${LanesModel.lanesPrefix}/${laneId.toString()}`;
 
   static getLaneComponentUrl = (componentId: ComponentID, laneId: LaneId) => {
     const laneUrl = LanesModel.getLaneUrl(laneId);

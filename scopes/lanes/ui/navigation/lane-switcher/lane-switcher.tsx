@@ -13,7 +13,7 @@ export type LaneSwitcherProps = {
 } & HTMLAttributes<HTMLDivElement>;
 
 export function LaneSwitcher({ className, groupByScope = true, ...rest }: LaneSwitcherProps) {
-  const { lanesModel, updateLanesModel } = useLanes();
+  const { lanesModel } = useLanes();
 
   const mainLaneId = lanesModel?.getDefaultLane()?.id;
   const nonMainLaneIds = lanesModel?.getNonMainLanes().map((lane) => lane.id) || [];
@@ -24,7 +24,6 @@ export function LaneSwitcher({ className, groupByScope = true, ...rest }: LaneSw
 
   const onLaneSelected = (laneId) => () => {
     lanesModel?.setViewedLane(laneId);
-    updateLanesModel?.(lanesModel);
   };
 
   if (!selectedLaneId) return null;

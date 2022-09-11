@@ -23,7 +23,6 @@ export function LaneSearch({ onChange, focus }: LaneSearchProps) {
     <input
       className={styles.search}
       placeholder={'Search'}
-      autoFocus
       onClick={handleOnClicked}
       ref={inputRef}
       onChange={onChange}

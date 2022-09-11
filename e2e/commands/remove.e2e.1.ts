@@ -230,7 +230,7 @@ describe('bit remove command', function () {
     });
     it('bit status should show a section of removed components', () => {
       const status = helper.command.statusJson();
-      expect(status.removedComponents).to.have.lengthOf(1);
+      expect(status.locallySoftRemoved).to.have.lengthOf(1);
     });
     it('bit status should show the dependent component with an issue because it is now missing the dependency', () => {
       helper.command.expectStatusToHaveIssue(IssuesClasses.MissingPackagesDependenciesOnFs.name);
@@ -284,6 +284,10 @@ describe('bit remove command', function () {
           });
           it('should indicate that the component is removed', () => {
             expect(importOutput).to.have.string('removed');
+          });
+          it('bit status should show them as remotelySoftRemoved', () => {
+            const status = helper.command.statusJson();
+            expect(status.remotelySoftRemoved).to.have.lengthOf(1);
           });
         });
         describe('importing the entire scope to a new workspace', () => {

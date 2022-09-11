@@ -40,8 +40,11 @@ import { NoCommonSnap } from '@teambit/legacy/dist/scope/exceptions/no-common-sn
 import { CheckoutAspect, CheckoutMain } from '@teambit/checkout';
 import { ComponentID } from '@teambit/component-id';
 import { DivergeData } from '@teambit/legacy/dist/scope/component-ops/diverge-data';
+import { InstallMain, InstallAspect } from '@teambit/install';
 import { MergeCmd } from './merge-cmd';
 import { MergingAspect } from './merging.aspect';
+
+type ResolveUnrelatedData = { strategy: MergeStrategy; head: Ref };
 
 export type ComponentMergeStatus = {
   currentComponent?: ConsumerComponent | null;
@@ -51,12 +54,17 @@ export type ComponentMergeStatus = {
   unmergedLegitimately?: boolean; // failed to merge but for a legitimate reason, such as, up-to-date
   mergeResults?: MergeResultsThreeWay | null;
   divergeData?: DivergeData;
-  resolvedUnrelated?: MergeStrategy;
+  resolvedUnrelated?: ResolveUnrelatedData;
 };
 
 export class MergingMain {
   private consumer: Consumer;
-  constructor(private workspace: Workspace, private snapping: SnappingMain, private checkout: CheckoutMain) {
+  constructor(
+    private workspace: Workspace,
+    private install: InstallMain,
+    private snapping: SnappingMain,
+    private checkout: CheckoutMain
+  ) {
     this.consumer = this.workspace?.consumer;
   }
 
@@ -204,7 +212,7 @@ export class MergingMain {
     const leftUnresolvedConflicts = componentWithConflict && mergeStrategy === 'manual';
 
     if (!skipDependencyInstallation && !leftUnresolvedConflicts) {
-      await this.workspace.install(undefined, {
+      await this.install.install(undefined, {
         dedupe: true,
         updateExisting: false,
         import: false,
@@ -325,7 +333,18 @@ export class MergingMain {
     }
     const divergeData = await getDivergeData(repo, modelComponent, otherLaneHead, localHead, false);
     if (divergeData.err) {
-      if (divergeData.err instanceof NoCommonSnap && options?.resolveUnrelated) {
+      const mainHead = modelComponent.head;
+      if (divergeData.err instanceof NoCommonSnap && options?.resolveUnrelated && mainHead) {
+        const hasResolvedLocally = divergeData.snapsOnLocalOnly.find((snap) => mainHead.isEqual(snap));
+        const hasResolvedRemotely = divergeData.snapsOnRemoteOnly.find((snap) => mainHead.isEqual(snap));
+        if (!hasResolvedLocally && !hasResolvedRemotely) {
+          return returnUnmerged(
+            `unable to traverse ${currentComponent.id.toString()} history. the main-head ${mainHead.toString()} doesn't appear in both lanes, it was probably created in each lane separately`
+          );
+        }
+        const versionToSaveInLane = hasResolvedLocally ? currentComponent.id.version : id.version;
+        const resolvedRef = modelComponent.getRef(versionToSaveInLane as string);
+        if (!resolvedRef) throw new Error(`unable to get ref of "${versionToSaveInLane}" for "${id.toString()}"`);
         if (options?.resolveUnrelated === 'theirs') {
           // just override with the model data
           return {
@@ -334,7 +353,7 @@ export class MergingMain {
             id,
             mergeResults: null,
             divergeData,
-            resolvedUnrelated: 'theirs',
+            resolvedUnrelated: { strategy: 'theirs', head: resolvedRef },
           };
         }
         if (options?.resolveUnrelated === 'ours') {
@@ -343,7 +362,7 @@ export class MergingMain {
             id,
             mergeResults: null,
             divergeData,
-            resolvedUnrelated: 'ours',
+            resolvedUnrelated: { strategy: 'ours', head: resolvedRef },
           };
         }
         throw new Error(
@@ -404,7 +423,7 @@ export class MergingMain {
     remoteHead: Ref;
     laneId: LaneId;
     localLane: Lane | null;
-    resolvedUnrelated?: MergeStrategy;
+    resolvedUnrelated?: ResolveUnrelatedData;
   }): Promise<ApplyVersionResult> {
     const consumer = this.workspace.consumer;
     let filesStatus = {};
@@ -422,6 +441,8 @@ export class MergingMain {
     const handleResolveUnrelated = () => {
       if (!currentComponent) throw new Error('currentComponent must be defined when resolvedUnrelated');
       if (!localLane) throw new Error('localLane must be defined when resolvedUnrelated');
+      if (!resolvedUnrelated?.head) throw new Error('resolvedUnrelated must have head prop');
+      localLane.addComponent({ id, head: resolvedUnrelated.head });
       const head = modelComponent.getRef(currentComponent.id.version as string);
       if (!head) throw new Error(`unable to get the head for resolved-unrelated ${id.toString()}`);
       unmergedComponent.laneId = localLane.toLaneId();
@@ -442,9 +463,8 @@ export class MergingMain {
       consumer.scope.objects.unmergedComponents.addEntry(unmergedComponent);
       return { id, filesStatus };
     }
-    if (resolvedUnrelated && resolvedUnrelated === 'ours') {
+    if (resolvedUnrelated?.strategy === 'ours') {
       markAllFilesAsUnchanged();
-      localLane?.addComponent({ id, head: remoteHead });
       return handleResolveUnrelated();
     }
     const remoteId = id.changeVersion(remoteHead.toString());
@@ -483,11 +503,11 @@ export class MergingMain {
       }
       consumer.scope.objects.unmergedComponents.addEntry(unmergedComponent);
     } else if (localLane) {
-      localLane.addComponent({ id, head: remoteHead });
       if (resolvedUnrelated) {
         // must be "theirs"
         return handleResolveUnrelated();
       }
+      localLane.addComponent({ id, head: remoteHead });
     } else {
       // this is main
       modelComponent.setHead(remoteHead);
@@ -586,10 +606,16 @@ export class MergingMain {
   }
 
   static slots = [];
-  static dependencies = [CLIAspect, WorkspaceAspect, SnappingAspect, CheckoutAspect];
+  static dependencies = [CLIAspect, WorkspaceAspect, SnappingAspect, CheckoutAspect, InstallAspect];
   static runtime = MainRuntime;
-  static async provider([cli, workspace, snapping, checkout]: [CLIMain, Workspace, SnappingMain, CheckoutMain]) {
-    const merging = new MergingMain(workspace, snapping, checkout);
+  static async provider([cli, workspace, snapping, checkout, install]: [
+    CLIMain,
+    Workspace,
+    SnappingMain,
+    CheckoutMain,
+    InstallMain
+  ]) {
+    const merging = new MergingMain(workspace, install, snapping, checkout);
     cli.register(new MergeCmd(merging));
     return merging;
   }

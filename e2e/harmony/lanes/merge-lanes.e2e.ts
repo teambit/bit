@@ -559,5 +559,31 @@ describe('merge lanes', function () {
         expect(file).not.to.have.string('on-lane');
       });
     });
+    describe('bit lane merge of another lane that was not resolved yet', () => {
+      let laneHeadAfterMerge: string;
+      before(() => {
+        helper.scopeHelper.getClonedRemoteScope(remoteScopeAfterExport);
+        helper.scopeHelper.getClonedLocalScope(afterLaneExport);
+        helper.command.createLane('dev2', `--remote-scope ${helper.scopes.remote}`);
+        helper.command.snapAllComponentsWithoutBuild('--unmodified');
+        helper.command.export();
+        helper.command.switchLocalLane('dev');
+        helper.command.fetchAllComponents(); // todo: this should not be needed. "bit import" should do that
+        helper.command.mergeLane('main', '--resolve-unrelated');
+        laneHeadAfterMerge = helper.command.getHeadOfLane('dev', 'comp1');
+        helper.command.export();
+        helper.command.mergeLane('dev2', '--resolve-unrelated');
+      });
+      it('should keep the local history and not the dev2 history because the current history has been already resolved', () => {
+        const log = helper.command.logParsed('comp1');
+        const hashesInHistory = log.map((item) => item.hash);
+        expect(hashesInHistory).to.include(mainHead);
+        expect(hashesInHistory).to.include(laneHeadAfterMerge);
+      });
+      it('bit status should not show components as pendingUpdatesFromMain', () => {
+        const status = helper.command.statusJson();
+        expect(status.pendingUpdatesFromMain).to.have.lengthOf(0);
+      });
+    });
   });
 });
