@@ -197,7 +197,8 @@ export class PreviewMain {
    */
   async isScaling(component: Component): Promise<boolean> {
     const previewData = component.state.aspects.get(PreviewAspect.id)?.data;
-    return previewData?.isScaling;
+    // Core envs are always scaling (their template bundle containing the scaling logic)
+    return previewData?.isScaling ?? this.envs.isUsingCoreEnv(component);
   }
 
   /**
