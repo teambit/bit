@@ -371,6 +371,7 @@ export class ReactEnv
     return {
       strategyName: 'component',
       splitComponentBundle: true,
+      isScaling: true,
     };
   }
 

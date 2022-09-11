@@ -197,7 +197,20 @@ export class PreviewMain {
    */
   async isScaling(component: Component): Promise<boolean> {
     const previewData = component.state.aspects.get(PreviewAspect.id)?.data;
-    return previewData?.scaling;
+    return previewData?.isScaling;
+  }
+
+  /**
+   * This function is calculate the isScaling flag for the component preview.
+   * It should be only used during the component on load.
+   * Once the component load, you should only use the `isScaling` to fetch it from the calculated data.
+   * @param component
+   * @returns
+   */
+  private async calculateIsScaling(component: Component): Promise<boolean> {
+    const env = this.envs.getEnv(component);
+    const previewConfig = env?.env?.getPreviewConfig();
+    return previewConfig?.isScaling;
   }
 
   /**
@@ -621,10 +634,10 @@ export class PreviewMain {
       workspace.registerOnComponentAdd((c) =>
         preview.handleComponentChange(c, (currentComponents) => currentComponents.add(c))
       );
-      workspace.onComponentLoad(async () => {
+      workspace.onComponentLoad(async (component) => {
+        const isScaling = await  preview.calculateIsScaling(component);
         return {
-          // used for backward compatibility. can be removed in the future.
-          scaling: true
+          isScaling
         };
       });
       workspace.registerOnComponentChange((c) =>
