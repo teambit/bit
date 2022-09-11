@@ -138,6 +138,14 @@ export class LanesUI {
     return LanesSwitcher;
   }
 
+  getLanesProvider() {
+    return LanesProvider;
+  }
+
+  getUseLanes() {
+    return useLanes;
+  }
+
   private registerLanesDropdown() {
     const LanesSwitcher = this.getLanesSwitcher();
 

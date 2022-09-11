@@ -41,15 +41,19 @@ const GET_LANES = gql`
   }
 `;
 
-export function useLanes(): LanesContextModel & Omit<QueryResult<LanesQuery & { getHost: { id: string } }>, 'data'> {
+export function useLanes(
+  targetLanes?: LanesModel
+): LanesContextModel & Omit<QueryResult<LanesQuery & { getHost: { id: string } }>, 'data'> {
   const lanesContext = useLanesContext();
-  const skip = !!lanesContext;
+  const shouldSkip = !!targetLanes || !!lanesContext;
 
-  const { data, loading, ...rest } = useDataQuery<LanesQuery & { getHost: { id: string } }>(GET_LANES, { skip });
+  const { data, loading, ...rest } = useDataQuery<LanesQuery & { getHost: { id: string } }>(GET_LANES, {
+    skip: shouldSkip,
+  });
 
   let lanesModel: LanesModel | undefined;
   if (lanesContext) lanesModel = lanesContext.lanesModel;
-  else lanesModel = data && LanesModel.from({ data, host: data?.getHost?.id });
+  else lanesModel = data && LanesModel.from({ data, host: data?.getHost?.id }) || targetLanes;
 
   return {
     ...rest,

@@ -8,10 +8,11 @@ import { LanesContext, LanesContextModel } from './lanes-context';
 export type LanesProviderProps = {
   children: ReactNode;
   viewedLaneId?: LaneId;
+  targetLanes?: LanesModel
 };
 
-export function LanesProvider({ children, viewedLaneId }: LanesProviderProps) {
-  const { lanesModel, loading } = useLanes();
+export function LanesProvider({ children, viewedLaneId, targetLanes }: LanesProviderProps) {
+  const { lanesModel, loading } = useLanes(targetLanes);
   const [lanesState, setLanesState] = useState<LanesModel | undefined>(undefined);
   const location = useLocation();
 
@@ -25,7 +26,7 @@ export function LanesProvider({ children, viewedLaneId }: LanesProviderProps) {
 
     lanesModel?.setViewedLane(viewedLaneIdToSet);
     setLanesState(lanesModel);
-  }, [loading, location?.pathname]);
+  }, [loading, location?.pathname, targetLanes]);
 
   const updateLanesModel = (updatedLanes?: LanesModel) => {
     setLanesState(
