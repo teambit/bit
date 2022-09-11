@@ -20,7 +20,7 @@ export function LaneSwitcher({ className, groupByScope = true, ...rest }: LaneSw
 
   const lanes: Array<LaneId> = (mainLaneId && [mainLaneId, ...nonMainLaneIds]) || nonMainLaneIds;
 
-  const selectedLaneId = lanesModel?.viewedLane?.id;
+  const selectedLaneId = lanesModel?.viewedLane?.id || mainLaneId;
 
   const onLaneSelected = (laneId) => () => {
     lanesModel?.setViewedLane(laneId);
