@@ -232,11 +232,6 @@ export class WorkspaceComponentLoader {
       // errors as they try to read component files from the filesystem.
       return component;
     }
-    const entries = this.workspace.onComponentLoadSlot.toArray();
-    const promises = entries.map(async ([extension, onLoad]) => {
-      const data = await onLoad(component, loadOpts);
-      return this.upsertExtensionData(component, extension, data);
-    });
 
     // Special load events which runs from the workspace but should run from the correct aspect
     // TODO: remove this once those extensions dependent on workspace
@@ -251,8 +246,17 @@ export class WorkspaceComponentLoader {
       policy: policy.serialize(),
     };
 
-    promises.push(this.upsertExtensionData(component, EnvsAspect.id, envsData));
-    promises.push(this.upsertExtensionData(component, DependencyResolverAspect.id, depResolverData));
+    // Make sure we are adding the envs / deps data first because other on load events might depend on it
+    await Promise.all([
+      this.upsertExtensionData(component, EnvsAspect.id, envsData),
+      this.upsertExtensionData(component, DependencyResolverAspect.id, depResolverData)
+    ]);
+
+    const entries = this.workspace.onComponentLoadSlot.toArray();
+    const promises = entries.map(async ([extension, onLoad]) => {
+      const data = await onLoad(component, loadOpts);
+      return this.upsertExtensionData(component, extension, data);
+    });
 
     await Promise.all(promises);
 
