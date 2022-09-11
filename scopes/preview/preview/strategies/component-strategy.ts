@@ -364,6 +364,7 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
       );
     const moduleMapsPromise = defs.map(async (previewDef) => {
       const moduleMap = await previewDef.getModuleMap([component]);
+      const metadata = previewDef.getMetadata ? await previewDef.getMetadata(component) : undefined;
       const maybeFiles = moduleMap.get(component);
       if (!maybeFiles || !capsule) return { prefix: previewDef.prefix, paths: [] };
 
@@ -373,6 +374,7 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
       return {
         prefix: previewDef.prefix,
         paths: compiledPaths,
+        metadata
       };
     });
 

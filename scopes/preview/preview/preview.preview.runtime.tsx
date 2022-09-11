@@ -139,11 +139,11 @@ export class PreviewPreview {
       this.pubsub.pub(PreviewAspect.id, new SizeEvent({
         width: window.document.body.offsetWidth,
         height: window.document.body.offsetHeight
-      }));  
+      }));
     }
 
     window.addEventListener('resize', debounce(sendPubsubEvent, 150));
-      
+
     let counter = 0;
     const interval = setInterval(() => {
       // TODO: think
@@ -155,7 +155,7 @@ export class PreviewPreview {
       this.pubsub.pub(PreviewAspect.id, new SizeEvent({
         width: window.document.body.offsetWidth,
         height: window.document.body.offsetHeight
-      }));  
+      }));
     }, 200);
   }
 
@@ -170,11 +170,15 @@ export class PreviewPreview {
     PREVIEW_MODULES.loadComponentPreviews(compShortId, componentPreviews);
 
     const component = componentPreviews[previewName];
+    const metadata = componentPreviews[`${previewName}_metadata`];
 
     return {
       mainModule: relevantModel.mainModule,
       componentMap: {
         [id.fullName]: component,
+      },
+      componentMapMetadata: {
+        [id.fullName]: metadata,
       },
     };
   }

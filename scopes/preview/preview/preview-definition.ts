@@ -33,4 +33,9 @@ export interface PreviewDefinition {
    * Whether to include the peers chunk in the output html
    */
   includePeers?: boolean;
+
+  /**
+   * Get metadata for the preview
+   */
+  getMetadata?: (component: Component) => Promise<unknown>;
 }
