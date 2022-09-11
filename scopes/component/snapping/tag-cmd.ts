@@ -173,6 +173,11 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       );
       if (patterns.length) unmodified = true;
     }
+    if (prereleaseId && (!increment || increment === 'major' || increment === 'minor' || increment === 'patch')) {
+      throw new BitError(
+        `--prerelease-id should be entered along with --increment flag, while --increment must be one of the following: [prepatch, prerelease, preminor, premajor]`
+      );
+    }
 
     const releaseFlags = [patch, minor, major, preRelease].filter((x) => x);
     if (releaseFlags.length > 1) {

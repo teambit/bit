@@ -128,13 +128,13 @@ export class Component implements IComponent {
     };
 
     let filteredLogs = (type && allLogs.filter(typeFilter)) || allLogs;
+    if (sort !== 'asc') filteredLogs = filteredLogs.reverse();
+
     if (limit) {
       filteredLogs = slice(filteredLogs, offset, limit + (offset || 0));
     }
 
-    if (sort && sort === 'asc') return filteredLogs;
-
-    return filteredLogs.reverse();
+    return filteredLogs;
   }
 
   stringify(): string {
