@@ -6,6 +6,15 @@ export type CompositionProps = {
   displayName?: string;
 };
 
+export type CompositionBrowserMetadata = {
+  displayName?: string;
+  identifier: string;
+}
+
+export type CompositionBrowserMetadataObject = {
+  compositions: CompositionBrowserMetadata[]
+}
+
 export class Composition {
   constructor(
     /**
@@ -32,6 +41,13 @@ export class Composition {
     return {
       identifier: this.identifier,
       filepath: this.filepath,
+      displayName: this._displayName,
+    };
+  }
+
+  toBrowserMetaDataObject(): CompositionBrowserMetadata {
+    return {
+      identifier: this.identifier,
       displayName: this._displayName,
     };
   }
