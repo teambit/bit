@@ -211,7 +211,8 @@ export class PreviewMain {
   private async calculateIsScaling(component: Component): Promise<boolean> {
     const env = this.envs.getEnv(component);
     const previewConfig = env?.env?.getPreviewConfig();
-    return previewConfig?.isScaling;
+    // default to true if the env doesn't have a preview config
+    return previewConfig?.isScaling ?? true;
   }
 
   /**
