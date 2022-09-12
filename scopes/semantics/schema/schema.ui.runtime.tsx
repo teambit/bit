@@ -8,10 +8,6 @@ export class SchemaUI {
   static slots = [];
   static async provider([]: []) {}
 
-  getSchemaRoutes() {}
-
-  registerSchemaRoutes() {}
-
   registerSchemaNodeRenderer() {}
 
   constructor() {}
