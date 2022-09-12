@@ -92,8 +92,25 @@ export function componentSchema(componentExtension: ComponentMain) {
         # list of component releases.
         tags: [Tag]!
 
-        # component logs
-        logs(type: String, offset: Int, limit: Int, head: String, sort: String): [LogEntry]!
+        """
+        component logs
+        """
+        logs(
+          """
+          type of logs to show (tag or snap)
+          """
+          type: String,
+          offset: Int,
+          limit: Int,
+          """
+          head to start traversing logs from
+          """
+          head: String,
+          sort: String,
+          """
+          start traversing logs from the fetched component's head
+          """
+          takeHeadFromComponent: Boolean): [LogEntry]!
 
         aspects(include: [String]): [Aspect]
       }
@@ -161,13 +178,20 @@ export function componentSchema(componentExtension: ComponentMain) {
         },
         logs: async (
           component: Component,
-          filter?: { type?: string; offset?: number; limit?: number; head?: string; sort?: string }
+          filter?: {
+            type?: string;
+            offset?: number;
+            limit?: number;
+            head?: string;
+            sort?: string;
+            takeHeadFromComponent: boolean;
+          }
         ) => {
           let head = filter?.head;
-          if (!head && component.id._legacy.isVersionSnap()){
+          if (!head && filter?.takeHeadFromComponent) {
             head = component.id.version;
           }
-          const finalFilter = {...filter, ...{head}};
+          const finalFilter = { ...filter, ...{ head } };
           return (await component.getLogs(finalFilter)).map((log) => ({ ...log, id: log.hash }));
         },
       },
