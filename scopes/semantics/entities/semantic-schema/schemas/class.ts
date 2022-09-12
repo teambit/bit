@@ -11,7 +11,7 @@ export class ClassSchema extends SchemaNode {
   @Transform(schemaObjToInstance)
   readonly doc?: DocSchema;
 
-  constructor(readonly className: string, members: SchemaNode[], readonly location: Location, doc?: DocSchema) {
+  constructor(readonly name: string, members: SchemaNode[], readonly location: Location, doc?: DocSchema) {
     super();
     this.members = members;
     this.doc = doc;
@@ -19,6 +19,6 @@ export class ClassSchema extends SchemaNode {
 
   toString() {
     const membersStr = this.members.map((m) => `* ${m.toString()}`).join('\n');
-    return `${chalk.bold.underline(this.className)}\n${membersStr}`;
+    return `${chalk.bold.underline(this.name)}\n${membersStr}`;
   }
 }
