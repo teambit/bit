@@ -3,6 +3,7 @@ import { toWindowsCompatiblePath } from '@teambit/toolbox.path.to-windows-compat
 export type ModuleVar = {
   prefix: string;
   paths: string[];
+  metadata?: unknown;
 };
 
 export function generateComponentLink(modules: ModuleVar[]): string {
@@ -24,8 +25,12 @@ export function generateComponentLink(modules: ModuleVar[]): string {
     .map(({ name, entries }) => `export const ${name} = [${entries.map((entry) => entry.linkName).join(', ')}]`)
     .join(';\n');
 
+  const exportsMetadataString: string = modules.filter(mod => mod.metadata).map(mod => `export const ${mod.prefix}_metadata = ${JSON.stringify(mod.metadata)}`).join(';\n');
+
   return `${importStr};
 
 ${exportsString};
+
+${exportsMetadataString};
 `;
 }
