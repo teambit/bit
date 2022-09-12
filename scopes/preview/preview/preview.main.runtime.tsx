@@ -197,7 +197,24 @@ export class PreviewMain {
    */
   async isScaling(component: Component): Promise<boolean> {
     const previewData = component.state.aspects.get(PreviewAspect.id)?.data;
-    return previewData?.scaling;
+    // Core envs are always scaling (their template bundle containing the scaling logic)
+    return previewData?.isScaling ?? this.envs.isUsingCoreEnv(component);
+  }
+
+  /**
+   * This function is calculate the isScaling flag for the component preview.
+   * It should be only used during the component on load.
+   * Once the component load, you should only use the `isScaling` to fetch it from the calculated data.
+   * @param component
+   * @returns
+   */
+  private async calculateIsScaling(component: Component): Promise<boolean> {
+    // It's important to use getOrCalculateEnv here and not just getEnv as it's running during on load
+    // so the envs data is not on the component aspects yet.
+    const env = this.envs.getOrCalculateEnv(component);
+    const previewConfig = env?.env?.getPreviewConfig();
+    // default to true if the env doesn't have a preview config
+    return previewConfig?.isScaling ?? true;
   }
 
   /**
@@ -621,10 +638,10 @@ export class PreviewMain {
       workspace.registerOnComponentAdd((c) =>
         preview.handleComponentChange(c, (currentComponents) => currentComponents.add(c))
       );
-      workspace.onComponentLoad(async () => {
+      workspace.onComponentLoad(async (component) => {
+        const isScaling = await  preview.calculateIsScaling(component);
         return {
-          // used for backward compatibility. can be removed in the future.
-          scaling: true
+          isScaling
         };
       });
       workspace.registerOnComponentChange((c) =>

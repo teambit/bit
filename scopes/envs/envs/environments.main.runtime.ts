@@ -207,6 +207,11 @@ export class EnvsMain {
     return withVersion.toString();
   }
 
+  isUsingCoreEnv(component: Component): boolean {
+    const envId = this.getEnvId(component);
+    return this.getCoreEnvsIds().includes(envId);
+  }
+
   /**
    * get the env of the given component.
    * In case you are asking for the env during on load you should use calculateEnv instead
