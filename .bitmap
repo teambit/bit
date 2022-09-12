@@ -549,6 +549,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/lanes/hooks/use-lanes"
     },
+    "hooks/use-schema": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/semantics/schema/hooks/use-schema"
+    },
     "html": {
         "scope": "teambit.html",
         "version": "0.0.418",
@@ -962,7 +968,7 @@
         "scope": "teambit.semantics",
         "version": "0.0.850",
         "mainFile": "index.ts",
-        "rootDir": "scopes/semantics/schema"
+        "rootDir": "scopes/semantics/schema/schema"
     },
     "scope": {
         "scope": "teambit.scope",
@@ -1554,6 +1560,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/lanes/ui/models"
     },
+    "ui/models/schema-types": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/semantics/schema/ui/models/schema-types"
+    },
     "ui/notifications/notification": {
         "scope": "teambit.ui-foundation",
         "version": "0.0.501",
@@ -1595,6 +1607,12 @@
         "version": "0.0.76",
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/uis/pages/preview-not-found"
+    },
+    "ui/pages/schema-page": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/semantics/schema/ui/pages/schema-page"
     },
     "ui/pages/server-error": {
         "scope": "teambit.design",
@@ -1709,6 +1727,12 @@
         "version": "0.0.352",
         "mainFile": "index.ts",
         "rootDir": "scopes/design/ui/round-loader"
+    },
+    "ui/schema-section": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/semantics/schema/ui/schema-section"
     },
     "ui/scope-details": {
         "scope": "teambit.scope",

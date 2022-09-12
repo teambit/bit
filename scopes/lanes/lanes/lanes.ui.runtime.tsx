@@ -20,7 +20,7 @@ import { LanesDrawer } from '@teambit/lanes.ui.drawer';
 
 export class LanesUI {
   static dependencies = [UIAspect, ComponentAspect, WorkspaceAspect, ScopeAspect, SidebarAspect];
-static runtime = UIRuntime;
+  static runtime = UIRuntime;
   static slots = [
     Slot.withType<RouteProps>(),
     Slot.withType<LaneOverviewLineSlot>(),
