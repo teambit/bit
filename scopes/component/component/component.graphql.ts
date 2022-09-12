@@ -163,7 +163,12 @@ export function componentSchema(componentExtension: ComponentMain) {
           component: Component,
           filter?: { type?: string; offset?: number; limit?: number; head?: string; sort?: string }
         ) => {
-          return (await component.getLogs(filter)).map((log) => ({ ...log, id: log.hash }));
+          let head = filter?.head;
+          if (!head && component.id._legacy.isVersionSnap()){
+            head = component.id.version;
+          }
+          const finalFilter = {...filter, ...{head}};
+          return (await component.getLogs(finalFilter)).map((log) => ({ ...log, id: log.hash }));
         },
       },
       ComponentHost: {
