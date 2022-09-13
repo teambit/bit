@@ -57,14 +57,15 @@ export function Compositions({ menuBarWidgets, emptyState }: CompositionsProp) {
   const sidebarOpenness = isSidebarOpen ? Layout.row : Layout.left;
 
   const compositionUrl = toPreviewUrl(component, 'compositions');  
-  const currentCompositionFullUrl = toPreviewUrl(component, 'compositions', `name=${selected?.identifier}`);
+  const isScaling = component?.preview?.isScaling;
+  const compositionIdentifierParam = isScaling ? `name=${selected?.identifier}` : selected?.identifier;
+  const currentCompositionFullUrl = toPreviewUrl(component, 'compositions', compositionIdentifierParam);
 
   const [compositionParams, setCompositionParams] = useState<Record<string, any>>({});
   const queryParams = useMemo(() => queryString.stringify(compositionParams), [compositionParams]);
 
   // collapse sidebar when empty, reopen when not
   useEffect(() => setSidebarOpenness(showSidebar), [showSidebar]);
-
   return (
     <CompositionContextProvider queryParams={compositionParams} setQueryParams={setCompositionParams}>
       <SplitPane layout={sidebarOpenness} size="85%" className={styles.compositionsPage}>
@@ -100,6 +101,7 @@ export function Compositions({ menuBarWidgets, emptyState }: CompositionsProp) {
               </TabList>
               <TabPanel className={styles.tabContent}>
                 <CompositionsPanel
+                  isScaling={isScaling}
                   onSelectComposition={selectComposition}
                   url={compositionUrl}
                   compositions={component.compositions}
