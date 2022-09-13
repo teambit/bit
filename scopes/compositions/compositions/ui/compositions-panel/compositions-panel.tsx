@@ -45,7 +45,7 @@ export function CompositionsPanel({
                 className={styles.panelLink}
                 target="_blank"
                 rel="noopener noreferrer"
-                href={`${url}&${composition.identifier}`}
+                href={`${url}&name=${composition.identifier}`}
               >
                 <Icon className={styles.icon} of="open-tab" />
               </a>

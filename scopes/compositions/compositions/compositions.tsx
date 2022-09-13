@@ -56,8 +56,8 @@ export function Compositions({ menuBarWidgets, emptyState }: CompositionsProp) {
 
   const sidebarOpenness = isSidebarOpen ? Layout.row : Layout.left;
 
-  const compositionUrl = toPreviewUrl(component, 'compositions');
-  const currentCompositionUrl = toPreviewUrl(component, 'compositions', selected?.identifier);
+  const compositionUrl = toPreviewUrl(component, 'compositions');  
+  const currentCompositionFullUrl = toPreviewUrl(component, 'compositions', `name=${selected?.identifier}`);
 
   const [compositionParams, setCompositionParams] = useState<Record<string, any>>({});
   const queryParams = useMemo(() => queryString.stringify(compositionParams), [compositionParams]);
@@ -70,7 +70,7 @@ export function Compositions({ menuBarWidgets, emptyState }: CompositionsProp) {
       <SplitPane layout={sidebarOpenness} size="85%" className={styles.compositionsPage}>
         <Pane className={styles.left}>
           <CompositionsMenuBar menuBarWidgets={menuBarWidgets} className={styles.menuBar}>
-            <Link external href={currentCompositionUrl} className={styles.openInNewTab}>
+            <Link external href={currentCompositionFullUrl} className={styles.openInNewTab}>
               <OptionButton icon="open-tab" />
             </Link>
           </CompositionsMenuBar>
