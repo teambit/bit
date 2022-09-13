@@ -463,7 +463,6 @@ export class AspectLoaderMain {
    */
   registerPlugins(pluginDefs: PluginDefinition[]) {
     this.pluginSlot.register(pluginDefs);
-    return this;
   }
 
   // TODO: change to use the new logger, see more info at loadExtensions function in the workspace
