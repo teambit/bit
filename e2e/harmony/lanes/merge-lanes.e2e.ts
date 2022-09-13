@@ -643,4 +643,25 @@ describe('merge lanes', function () {
       expect(hashes.length).to.equal(uniq(hashes).length);
     });
   });
+  describe('merge a diverged lane into main with --tag', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild();
+      helper.command.createLane();
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.switchLocalLane('main');
+      helper.command.tagAllWithoutBuild('--unmodified');
+      helper.command.mergeLane('dev', '--no-squash --tag');
+    });
+    it('should merge-tag instead of merge-snap', () => {
+      const cmp = helper.command.catComponent('comp1');
+      expect(cmp.versions).to.have.property('0.0.3');
+      expect(cmp.versions['0.0.3']).to.equal(cmp.head);
+    });
+    it('expect head to have two parents', () => {
+      const headVer = helper.command.catComponent('comp1@latest');
+      expect(headVer.parents).to.have.lengthOf(2);
+    });
+  });
 });

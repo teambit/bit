@@ -26,6 +26,7 @@ export type MergeLaneOptions = {
   build: boolean;
   keepReadme: boolean;
   noSquash: boolean;
+  tag?: boolean;
   pattern?: string;
   includeDeps?: boolean;
   skipDependencyInstallation?: boolean;
@@ -55,6 +56,7 @@ export class MergeLanesMain {
     const {
       mergeStrategy,
       noSnap,
+      tag,
       snapMessage,
       existingOnWorkspaceOnly,
       build,
@@ -69,6 +71,9 @@ export class MergeLanesMain {
     } = options;
 
     const currentLaneId = consumer.getCurrentLaneId();
+    if (tag && !currentLaneId.isDefault()) {
+      throw new BitError(`--tag only possible when on main. currently checked out to ${currentLaneId.toString()}`);
+    }
     const otherLaneId = await consumer.getParsedLaneId(laneName);
     if (otherLaneId.isEqual(currentLaneId)) {
       throw new BitError(
@@ -168,6 +173,7 @@ export class MergeLanesMain {
       laneId: otherLaneId,
       localLane: currentLane,
       noSnap,
+      tag,
       snapMessage,
       build,
       skipDependencyInstallation,

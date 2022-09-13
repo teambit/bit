@@ -40,6 +40,7 @@ import { NoCommonSnap } from '@teambit/legacy/dist/scope/exceptions/no-common-sn
 import { CheckoutAspect, CheckoutMain } from '@teambit/checkout';
 import { ComponentID } from '@teambit/component-id';
 import { DivergeData } from '@teambit/legacy/dist/scope/component-ops/diverge-data';
+import { TagResults } from '@teambit/legacy/dist/api/consumer/lib/tag';
 import { InstallMain, InstallAspect } from '@teambit/install';
 import { MergeCmd } from './merge-cmd';
 import { MergingAspect } from './merging.aspect';
@@ -161,6 +162,7 @@ export class MergingMain {
     laneId,
     localLane,
     noSnap,
+    tag,
     snapMessage,
     build,
     skipDependencyInstallation,
@@ -170,6 +172,7 @@ export class MergingMain {
     laneId: LaneId;
     localLane: Lane | null;
     noSnap: boolean;
+    tag?: boolean;
     snapMessage: string;
     build: boolean;
     skipDependencyInstallation?: boolean;
@@ -225,10 +228,22 @@ export class MergingMain {
 
     await consumer.scope.objects.unmergedComponents.write();
 
-    // if one of the component has conflict, don't snap-merge. otherwise, some of the components would be snap-merged
-    // and some not. besides the fact that it could by mistake tag dependent, it's a confusing state. better not snap.
-    const mergeSnapResults =
-      noSnap || leftUnresolvedConflicts ? null : await this.snapResolvedComponents(consumer, snapMessage, build);
+    const getSnapOrTagResults = async () => {
+      // if one of the component has conflict, don't snap-merge. otherwise, some of the components would be snap-merged
+      // and some not. besides the fact that it could by mistake tag dependent, it's a confusing state. better not snap.
+      if (noSnap || leftUnresolvedConflicts) {
+        return null;
+      }
+      if (tag) {
+        const idsToTag = allComponentsStatus.map((c) => c.id);
+        const results = await this.tagAllLaneComponent(idsToTag, snapMessage, build);
+        if (!results) return null;
+        const { taggedComponents, autoTaggedResults } = results;
+        return { snappedComponents: taggedComponents, autoSnappedResults: autoTaggedResults };
+      }
+      return this.snapResolvedComponents(consumer, snapMessage, build);
+    };
+    const mergeSnapResults = await getSnapOrTagResults();
 
     return {
       components: componentsResults,
@@ -578,6 +593,19 @@ export class MergingMain {
       legacyBitIds: ids,
       build,
       message: snapMessage,
+    });
+  }
+
+  private async tagAllLaneComponent(idsToTag: BitId[], tagMessage: string, build: boolean): Promise<TagResults | null> {
+    const ids = idsToTag.map((id) => {
+      return id.toStringWithoutVersion();
+    });
+    logger.debug(`merge-snaps, tagResolvedComponents, total ${idsToTag.length.toString()} components`);
+    return this.snapping.tag({
+      ids,
+      build,
+      message: tagMessage,
+      unmodified: true,
     });
   }
 
