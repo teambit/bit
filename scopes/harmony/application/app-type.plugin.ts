@@ -10,8 +10,8 @@ export class AppTypePlugin implements PluginDefinition {
 
   runtimes = [MainRuntime.name];
 
-  async register(object: any) {
-    const app = await this.appType.createApp(object);
+  register(object: any) {
+    const app = this.appType.createApp(object);
     this.validateApp(app);
     this.appSlot.register([app]);
   }
