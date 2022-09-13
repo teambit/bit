@@ -1,7 +1,5 @@
 import React, { HTMLAttributes, useRef, useEffect } from 'react';
-import classnames from 'classnames';
 import { LaneId } from '@teambit/lane-id';
-import { classes } from '@teambit/design.ui.surfaces.menu.item';
 import { LanesModel } from '@teambit/lanes.ui.models.lanes-model';
 import { PillLabel } from '@teambit/design.ui.pill-label';
 import { MenuLinkItem } from '@teambit/design.ui.surfaces.menu.link-item';
