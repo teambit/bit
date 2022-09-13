@@ -22,10 +22,6 @@ export function LaneSwitcher({ className, groupByScope = true, ...rest }: LaneSw
 
   const selectedLaneId = lanesModel?.viewedLane?.id || mainLaneId;
 
-  const onLaneSelected = (laneId) => () => {
-    lanesModel?.setViewedLane(laneId);
-  };
-
   if (!selectedLaneId) return null;
 
   return (
@@ -34,7 +30,6 @@ export function LaneSwitcher({ className, groupByScope = true, ...rest }: LaneSw
         selectedLaneId={selectedLaneId}
         className={styles.laneSelector}
         lanes={lanes}
-        onLaneSelected={onLaneSelected}
         groupByScope={groupByScope}
         {...rest}
       />
