@@ -9,29 +9,14 @@ export type LaneGroupedMenuItemProps = {
   selected?: LaneId;
   current: LaneId[];
   scope: string;
-  onLaneSelected?: (lane: LaneId) => () => void;
 } & HTMLAttributes<HTMLDivElement>;
 
-export function LaneGroupedMenuItem({
-  selected,
-  current,
-  onLaneSelected,
-  className,
-  scope,
-  ...rest
-}: LaneGroupedMenuItemProps) {
+export function LaneGroupedMenuItem({ selected, current, className, scope, ...rest }: LaneGroupedMenuItemProps) {
   if (current.length === 0) return null;
 
   if (current[0].isDefault()) {
     const defaultLane = current[0] as LaneId;
-    return (
-      <LaneMenuItem
-        key={defaultLane.toString()}
-        selected={selected}
-        current={defaultLane}
-        onLaneSelected={onLaneSelected?.(defaultLane)}
-      />
-    );
+    return <LaneMenuItem key={defaultLane.toString()} selected={selected} current={defaultLane} />;
   }
 
   const onClickStopPropagation = (e) => e.stopPropagation();
@@ -42,12 +27,7 @@ export function LaneGroupedMenuItem({
         {scope}
       </div>
       {current.map((lane) => (
-        <LaneMenuItem
-          key={lane.toString()}
-          selected={selected}
-          current={lane}
-          onLaneSelected={onLaneSelected?.(lane)}
-        />
+        <LaneMenuItem key={lane.toString()} selected={selected} current={lane} />
       ))}
     </div>
   );

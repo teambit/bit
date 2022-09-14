@@ -20,16 +20,14 @@ export type LaneSelectorProps = {
 
 type LaneDropdownItems = Array<LaneId> | Array<[scope: string, lanes: LaneId[]]>;
 
-export function LaneSelector({
-  className,
-  lanes,
-  selectedLaneId,
-  onLaneSelected,
-  groupByScope = true,
-  ...rest
-}: LaneSelectorProps) {
+export function LaneSelector({ className, lanes, selectedLaneId, groupByScope = true, ...rest }: LaneSelectorProps) {
   const [filteredLanes, setFilteredLanes] = useState<LaneId[]>(lanes);
   const [focus, setFocus] = useState<boolean>(false);
+
+  useEffect(() => {
+    setFilteredLanes(lanes);
+  }, [lanes]);
+
   const multipleLanes = lanes.length > 1;
   const laneDropdownItems: LaneDropdownItems = groupByScope
     ? Array.from(LanesModel.groupByScope(filteredLanes).entries())
@@ -74,23 +72,12 @@ export function LaneSelector({
       {multipleLanes &&
         groupByScope &&
         (laneDropdownItems as Array<[scope: string, lanes: LaneId[]]>).map(([scope, lanesByScope]) => (
-          <LaneGroupedMenuItem
-            key={scope}
-            scope={scope}
-            onLaneSelected={onLaneSelected}
-            selected={selectedLaneId}
-            current={lanesByScope}
-          />
+          <LaneGroupedMenuItem key={scope} scope={scope} selected={selectedLaneId} current={lanesByScope} />
         ))}
       {multipleLanes &&
         !groupByScope &&
         (laneDropdownItems as LaneId[]).map((lane) => (
-          <LaneMenuItem
-            onLaneSelected={onLaneSelected && onLaneSelected(lane)}
-            key={lane.toString()}
-            selected={selectedLaneId}
-            current={lane}
-          ></LaneMenuItem>
+          <LaneMenuItem key={lane.toString()} selected={selectedLaneId} current={lane}></LaneMenuItem>
         ))}
     </Dropdown>
   );

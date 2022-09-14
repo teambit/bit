@@ -1,20 +1,17 @@
 import React, { HTMLAttributes, useRef, useEffect } from 'react';
-import classnames from 'classnames';
 import { LaneId } from '@teambit/lane-id';
-import { useNavigate } from 'react-router-dom';
-import { classes } from '@teambit/design.ui.surfaces.menu.item';
 import { LanesModel } from '@teambit/lanes.ui.models.lanes-model';
 import { PillLabel } from '@teambit/design.ui.pill-label';
+import { MenuLinkItem } from '@teambit/design.ui.surfaces.menu.link-item';
 
 import styles from './lane-menu-item.module.scss';
 
 export type LaneMenuItemProps = {
   selected?: LaneId;
   current: LaneId;
-  onLaneSelected?: () => void;
 } & HTMLAttributes<HTMLDivElement>;
 
-export function LaneMenuItem({ selected, current, onLaneSelected, className, ...rest }: LaneMenuItemProps) {
+export function LaneMenuItem({ selected, current, className, ...rest }: LaneMenuItemProps) {
   const isCurrent = selected?.toString() === current.toString();
 
   const currentVersionRef = useRef<HTMLDivElement>(null);
@@ -24,26 +21,18 @@ export function LaneMenuItem({ selected, current, onLaneSelected, className, ...
     }
   }, [isCurrent]);
 
-  const navigate = useNavigate();
-
-  const onLaneClicked = () => {
-    onLaneSelected?.();
-    navigate(LanesModel.getLaneUrl(current));
-  };
+  const href = LanesModel.getLaneUrl(current);
 
   return (
-    <div
-      {...rest}
-      className={classnames(styles.menuItem, className, isCurrent && classes.active)}
-      ref={currentVersionRef}
-      onClick={onLaneClicked}
-    >
-      <div className={styles.laneName}>{current.name}</div>
-      {current.isDefault() && (
-        <PillLabel className={styles.defaultLanePill}>
-          <span>default</span>
-        </PillLabel>
-      )}
+    <div {...rest} className={className} ref={currentVersionRef}>
+      <MenuLinkItem active={isCurrent} href={href} className={styles.menuItem}>
+        <div className={styles.laneName}>{current.name}</div>
+        {current.isDefault() && (
+          <PillLabel className={styles.defaultLanePill}>
+            <span>default</span>
+          </PillLabel>
+        )}
+      </MenuLinkItem>
     </div>
   );
 }

@@ -1,10 +1,19 @@
 import React from 'react';
 import { ComponentsDrawer, ComponentFiltersSlot, DrawerWidgetSlot } from '@teambit/component.ui.component-drawer';
-import { ComponentView, NamespaceTreeNode, PayloadType, ScopePayload } from '@teambit/ui-foundation.ui.side-bar';
+import {
+  ComponentView,
+  NamespaceTreeNode,
+  PayloadType,
+  ScopePayload,
+  ScopeTreeNode,
+} from '@teambit/ui-foundation.ui.side-bar';
 import { TreeNodeProps } from '@teambit/design.ui.tree';
 import { useLanes } from '@teambit/lanes.hooks.use-lanes';
 import { useLaneComponents } from '@teambit/lanes.hooks.use-lane-components';
 import { ComponentModel } from '@teambit/component';
+import { ScopeModel } from '@teambit/scope.models.scope-model';
+import { useScope } from '@teambit/scope.ui.hooks.scope-context';
+import { WorkspaceModel } from '@teambit/workspace';
 import { SidebarSlot } from './scope.ui.runtime';
 
 export type ScopeDrawerProps = {
@@ -22,7 +31,7 @@ export const scopeDrawer = ({
   assumeScopeInUrl = false,
   overrideUseComponents,
 }: ScopeDrawerProps) => {
-  const customScopeTreeNodeRenderer = (treeNodeSlot) =>
+  const customScopeTreeNodeRenderer = (treeNodeSlot, host?: ScopeModel | WorkspaceModel) =>
     function TreeNode(props: TreeNodeProps<PayloadType>) {
       const children = props.node.children;
 
@@ -30,6 +39,18 @@ export const scopeDrawer = ({
 
       // skip over scope node and render only children
       if (props.node.payload instanceof ScopePayload) {
+        const scopeNameFromNode = props.node.id.slice(0, -1);
+        const scope = host?.name;
+
+        /**
+         * this is only valid when viewing component from a lane
+         * if the lane component is from a different scope than the current scope
+         * show the scope node
+         */
+        if (scopeNameFromNode !== scope) {
+          return <ScopeTreeNode {...props} />;
+        }
+
         return (
           <>
             {children.map((childNode) => (
@@ -55,11 +76,11 @@ export const scopeDrawer = ({
       filters: filtersSlot,
       drawerWidgets: drawerWidgetSlot,
     },
+    useHost: () => useScope(),
     emptyMessage: 'Scope is empty',
     useComponents:
       overrideUseComponents ||
       (() => {
-        // lane components + main components
         const { lanesModel, loading: lanesLoading } = useLanes();
         const viewedLaneId = lanesModel?.viewedLane?.id;
 
