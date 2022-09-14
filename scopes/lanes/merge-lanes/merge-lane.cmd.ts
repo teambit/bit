@@ -12,7 +12,9 @@ export class MergeLaneCmd implements Command {
   description = `merge a local or a remote lane`;
   extendedDescription = `if the <lane> exists locally, it will be merged from the local lane.
 otherwise, it will fetch the lane from the remote and merge it.
-in case the <lane> exists locally but you want to merge the remote version of it, use --remote flag`;
+in case the <lane> exists locally but you want to merge the remote version of it, use --remote flag.
+when the current and the other lanes are diverged in history and the files could be merged with no conflicts,
+it will snap-merge these components to complete the merge. use "no-snap" to opt-out, or "tag" to tag instead`;
   arguments = [
     {
       name: 'lane',
@@ -30,6 +32,7 @@ in case the <lane> exists locally but you want to merge the remote version of it
     ['', 'manual', 'in case of a conflict, leave the files with a conflict state to resolve them manually later'],
     ['', 'workspace', 'merge only components in a lane that exist in the workspace'],
     ['', 'no-snap', 'do not auto snap in case the merge completed without conflicts'],
+    ['', 'tag', 'tag all lane components after merging into main (also tag-merge in case of snap-merge)'],
     ['', 'build', 'in case of snap during the merge, run the build-pipeline (similar to bit snap --build)'],
     ['m', 'message <message>', 'override the default message for the auto snap'],
     ['', 'keep-readme', 'skip deleting the lane readme component after merging'],
@@ -69,6 +72,7 @@ in case the <lane> exists locally but you want to merge the remote version of it
       build,
       workspace: existingOnWorkspaceOnly = false,
       noSnap = false,
+      tag = false,
       message: snapMessage = '',
       keepReadme = false,
       noSquash = false,
@@ -85,6 +89,7 @@ in case the <lane> exists locally but you want to merge the remote version of it
       workspace?: boolean;
       build?: boolean;
       noSnap: boolean;
+      tag: boolean;
       message: string;
       keepReadme?: boolean;
       noSquash: boolean;
@@ -122,6 +127,7 @@ in case the <lane> exists locally but you want to merge the remote version of it
       snapMessage,
       keepReadme,
       noSquash,
+      tag,
       pattern,
       skipDependencyInstallation,
       remote,
