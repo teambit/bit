@@ -13,6 +13,7 @@ import styles from './lane-selector.module.scss';
 
 export type LaneSelectorProps = {
   lanes: Array<LaneId>;
+  onLaneSelected?: (selectedLaneId: LaneId) => () => void;
   selectedLaneId?: LaneId;
   groupByScope?: boolean;
 } & HTMLAttributes<HTMLDivElement>;
@@ -31,6 +32,10 @@ export function LaneSelector({ className, lanes, selectedLaneId, groupByScope = 
   const laneDropdownItems: LaneDropdownItems = groupByScope
     ? Array.from(LanesModel.groupByScope(filteredLanes).entries())
     : filteredLanes;
+
+  useEffect(() => {
+    setFilteredLanes(lanes);
+  }, [lanes]);
 
   const handleOnChange: ChangeEventHandler<HTMLInputElement> = (e) => {
     e.stopPropagation();

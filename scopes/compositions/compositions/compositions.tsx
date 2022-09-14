@@ -78,7 +78,7 @@ export function Compositions({ menuBarWidgets, emptyState }: CompositionsProp) {
             emptyState={emptyState}
             component={component}
             selected={selected}
-            queryParams={component.preview?.isScaling ? `name=${queryParams}`: queryParams}
+            queryParams={queryParams}
           />
         </Pane>
         <HoverSplitter className={styles.splitter}>

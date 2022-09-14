@@ -8,6 +8,7 @@ import {
   ModuleFile,
 } from '@teambit/preview';
 import head from 'lodash.head';
+import { CompositionBrowserMetadataObject } from './composition';
 
 import { CompositionsAspect } from './compositions.aspect';
 
@@ -22,22 +23,34 @@ export class CompositionsPreview {
   render(componentId: ComponentID, modules: PreviewModule, otherPreviewDefs, context: RenderingContext) {
     if (!modules.componentMap[componentId.fullName]) return;
 
+
     const compositions = this.selectPreviewModel(componentId.fullName, modules);
-    const active = this.getActiveComposition(compositions);
+    const metadata = this.getMetadata(componentId.fullName, modules);
+    const active = this.getActiveComposition(compositions, metadata);
 
     modules.mainModule.default(active, context);
   }
 
   /** gets relevant information for this preview to render */
-  selectPreviewModel(componentId: string, previewModule: PreviewModule) {
-    const files = previewModule.componentMap[componentId] || [];
+  selectPreviewModel(componentFullName: string, previewModule: PreviewModule) {
+    const files = previewModule.componentMap[componentFullName] || [];
 
     // allow compositions to come from many files. It is assumed they will have unique named
     const combined = Object.assign({}, ...files);
     return combined;
   }
 
-  private getActiveComposition(module: ModuleFile) {
+  getMetadata(componentFullName: string, previewModule: PreviewModule): CompositionBrowserMetadataObject | undefined {
+    const metadata = previewModule?.componentMapMetadata
+      ? previewModule.componentMapMetadata[componentFullName]
+      : undefined;
+    if (metadata){
+      return metadata as CompositionBrowserMetadataObject
+    }
+    return undefined;
+  }
+
+  private getActiveComposition(module: ModuleFile, metadata?: CompositionBrowserMetadataObject) {
     // const chosen = window.location.hash.split('&')[1];
     const query = this.preview.getQuery();
     const param = this.preview.getParam(query, 'name');
@@ -45,7 +58,15 @@ export class CompositionsPreview {
     if (param && module[param]) {
       return module[param];
     }
-    
+
+    if (metadata && metadata.compositions) {
+      const first = head(metadata.compositions);
+      const firstId = first?.identifier;
+      if (firstId && module[firstId]) {
+        return module[firstId];
+      }
+    }
+
     const first = head(Object.values(module));
     return first;
   }
