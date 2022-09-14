@@ -7,7 +7,7 @@ export class SchemaSection implements Section {
   order = 100;
 
   route = {
-    path: '~dependencies',
+    path: '~apireference',
     element: this.schemaUi.getSchemaPage(),
   };
 

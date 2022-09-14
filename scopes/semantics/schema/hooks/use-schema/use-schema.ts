@@ -19,5 +19,5 @@ export function useSchema(host: string, componentId: string) {
     },
   });
 
-  console.dir(APISchema.fromObject(data.getHost.getSchema));
+  console.dir(data?.getHost?.getSchema && APISchema.fromObject(data.getHost.getSchema));
 }
