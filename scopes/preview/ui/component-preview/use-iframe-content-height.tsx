@@ -22,6 +22,7 @@ export function useIframeContentHeight({
       if (!first && iframe?.style.height === '5000px') {
         iframe.style.height = '100%';
       }
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const newHeight = iframe!.contentWindow!.document.body.scrollHeight;
       const newWidth = iframe?.contentWindow?.document.body.offsetWidth;
       setIframeHeight(newHeight);
