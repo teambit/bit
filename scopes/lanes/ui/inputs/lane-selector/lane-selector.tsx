@@ -1,4 +1,4 @@
-import React, { HTMLAttributes, useState, ChangeEventHandler } from 'react';
+import React, { HTMLAttributes, useState, ChangeEventHandler, useEffect } from 'react';
 import classnames from 'classnames';
 import { LaneId } from '@teambit/lane-id';
 import { Dropdown } from '@teambit/evangelist.surfaces.dropdown';
@@ -13,7 +13,7 @@ import styles from './lane-selector.module.scss';
 
 export type LaneSelectorProps = {
   lanes: Array<LaneId>;
-  onLaneSelected: (selectedLaneId: LaneId) => () => void;
+  onLaneSelected?: (selectedLaneId: LaneId) => () => void;
   selectedLaneId?: LaneId;
   groupByScope?: boolean;
 } & HTMLAttributes<HTMLDivElement>;
@@ -34,6 +34,10 @@ export function LaneSelector({
   const laneDropdownItems: LaneDropdownItems = groupByScope
     ? Array.from(LanesModel.groupByScope(filteredLanes).entries())
     : filteredLanes;
+
+  useEffect(() => {
+    setFilteredLanes(lanes);
+  }, [lanes]);
 
   const handleOnChange: ChangeEventHandler<HTMLInputElement> = (e) => {
     e.stopPropagation();
@@ -82,7 +86,7 @@ export function LaneSelector({
         !groupByScope &&
         (laneDropdownItems as LaneId[]).map((lane) => (
           <LaneMenuItem
-            onLaneSelected={onLaneSelected(lane)}
+            onLaneSelected={onLaneSelected && onLaneSelected(lane)}
             key={lane.toString()}
             selected={selectedLaneId}
             current={lane}
