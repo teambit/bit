@@ -1,8 +1,10 @@
 import chalk from 'chalk';
 import R from 'ramda';
 import { Command, CommandOptions } from '@teambit/cli';
-import { formatPlainComponentItemWithVersions } from '@teambit/legacy/dist/cli/chalk-box';
+import Component from '@teambit/legacy/dist/consumer/component/consumer-component';
+import { FileStatus } from '@teambit/legacy/dist/consumer/versions-ops/merge-version/merge-version';
 import { ImporterMain } from './importer.main.runtime';
+import { ImportDetails, ImportStatus } from './import-components';
 
 export class FetchCmd implements Command {
   name = 'fetch [ids...]';
@@ -66,4 +68,29 @@ export class FetchCmd implements Command {
     }
     return chalk.yellow('nothing to import');
   }
+}
+
+function formatPlainComponentItemWithVersions(component: Component, importDetails: ImportDetails) {
+  const status: ImportStatus = importDetails.status;
+  const id = component.id.toStringWithoutVersion();
+  const versions = importDetails.versions.length ? `new versions: ${importDetails.versions.join(', ')}` : '';
+  // $FlowFixMe component.version should be set here
+  const usedVersion = status === 'added' ? `, currently used version ${component.version}` : '';
+  const getConflictMessage = () => {
+    if (!importDetails.filesStatus) return '';
+    const conflictedFiles = Object.keys(importDetails.filesStatus) // $FlowFixMe file is set
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      .filter((file) => importDetails.filesStatus[file] === FileStatus.manual);
+    if (!conflictedFiles.length) return '';
+    return `(the following files were saved with conflicts ${conflictedFiles
+      .map((file) => chalk.bold(file))
+      .join(', ')}) `;
+  };
+  const deprecated = importDetails.deprecated ? chalk.yellow('deprecated') : '';
+  const missingDeps = importDetails.missingDeps.length
+    ? chalk.red(`missing dependencies: ${importDetails.missingDeps.map((d) => d.toString()).join(', ')}`)
+    : '';
+  return `- ${chalk.green(status)} ${chalk.cyan(
+    id
+  )} ${versions}${usedVersion} ${getConflictMessage()}${deprecated} ${missingDeps}`;
 }

@@ -5,10 +5,6 @@ import { CommunityAspect } from '@teambit/community';
 import type { CommunityMain } from '@teambit/community';
 import R from 'ramda';
 import { Analytics } from '@teambit/legacy/dist/analytics/analytics';
-import ImportComponents, {
-  ImportOptions,
-  ImportResult,
-} from '@teambit/legacy/dist/consumer/component-ops/import-components';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
@@ -25,6 +21,7 @@ import { BitError } from '@teambit/bit-error';
 import { ImportCmd } from './import.cmd';
 import { ImporterAspect } from './importer.aspect';
 import { FetchCmd } from './fetch-cmd';
+import ImportComponents, { ImportOptions, ImportResult } from './import-components';
 
 export class ImporterMain {
   constructor(private workspace: Workspace, private depResolver: DependencyResolverMain) {}
@@ -58,6 +55,16 @@ export class ImporterMain {
     }
     await consumer.onDestroy();
     return { dependencies, importDetails };
+  }
+
+  /**
+   * @todo: combine with this.import()
+   */
+  async importWithOptions(importOptions: ImportOptions) {
+    if (!this.workspace) throw new ConsumerNotFound();
+    const consumer = this.workspace.consumer;
+    const importComponents = new ImportComponents(consumer, importOptions);
+    return importComponents.importComponents();
   }
 
   async fetch(ids: string[], lanes: boolean, components: boolean, fromOriginalScope: boolean) {
