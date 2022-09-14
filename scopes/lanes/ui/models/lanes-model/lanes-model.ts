@@ -137,7 +137,7 @@ export class LanesModel {
       const { components } = lane;
       components.forEach((component) => {
         const id = component.fullName;
-        const version = component.version as string;
+        const version = component.toString();
         byHash.set(version, { lane, component });
         const existing = byId.get(id) || [];
         existing.push(lane);
@@ -181,7 +181,7 @@ export class LanesModel {
   getLaneComponentUrlByVersion = (componentId: ComponentID) => {
     // if there is no version, the component is new and is on main
     if (!componentId.version) return componentId.fullName;
-    const componentAndLane = this.lanebyComponentHash.get(componentId.version);
+    const componentAndLane = this.lanebyComponentHash.get(componentId.toString());
     if (!componentAndLane) return undefined;
     if (componentAndLane.lane.id.isDefault())
       return `${componentAndLane.component.fullName}${
