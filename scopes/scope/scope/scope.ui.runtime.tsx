@@ -124,6 +124,7 @@ export class ScopeUI {
     return (
       <Scope
         TargetScopeOverview={options.TargetScopeOverview}
+        scopeClassName={options.scopeClassName}
         TargetCorner={options.Corner}
         routeSlot={this.routeSlot}
         menuSlot={this.menuSlot}

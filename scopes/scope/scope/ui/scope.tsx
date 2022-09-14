@@ -1,4 +1,5 @@
 import 'reset-css';
+import classNames from 'classnames';
 import { SplitPane, Pane, Layout } from '@teambit/base-ui.surfaces.split-pane.split-pane';
 import { RouteSlot, SlotRouter } from '@teambit/ui-foundation.ui.react-router.slot-router';
 import { Corner } from '@teambit/ui-foundation.ui.corner';
@@ -31,6 +32,7 @@ export type ScopeProps = {
   onSidebarTogglerChange: (callback: () => void) => void;
   TargetCorner?: ComponentType;
   paneClassName?: string;
+  scopeClassName?: string;
 };
 
 /**
@@ -50,6 +52,7 @@ export function Scope({
   TargetCorner,
   onSidebarTogglerChange,
   userUseScopeQuery,
+  scopeClassName
 }: ScopeProps) {
   const { scope } = userUseScopeQuery ? userUseScopeQuery() : useScopeQuery();
   const isMobile = useIsMobile();
@@ -67,7 +70,7 @@ export function Scope({
   return (
     <ScopeProvider scope={scope}>
       <Composer components={Context}>
-        <div className={styles.scope}>
+        <div className={classNames(styles.scope, scopeClassName)}>
           <TopBar
             className={styles.topbar}
             Corner={() => {

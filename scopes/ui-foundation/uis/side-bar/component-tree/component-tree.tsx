@@ -3,7 +3,7 @@ import React, { useMemo } from 'react';
 import { useLocation } from '@teambit/base-react.navigation.link';
 import { indentStyle } from '@teambit/base-ui.graph.tree.indent';
 import { inflateToTree, attachPayload } from '@teambit/base-ui.graph.tree.inflate-paths';
-import { Tree, TreeNodeRenderer } from '@teambit/design.ui.tree';
+import { Tree, TreeNodeRenderer, TreeNode as TreeNodeType } from '@teambit/design.ui.tree';
 import { TreeContextProvider } from '@teambit/base-ui.graph.tree.tree-context';
 import { PayloadType, ScopePayload } from './payload-type';
 import { DefaultTreeNodeRenderer } from './default-tree-node-renderer';
@@ -12,6 +12,7 @@ const componentIdUrlRegex = '[\\w\\/-]*[\\w-]';
 
 type ComponentTreeProps = {
   components: ComponentModel[];
+  transformTree?: (rootNode: TreeNodeType) => TreeNodeType
   TreeNode?: TreeNodeRenderer<PayloadType>;
   isCollapsed?: boolean;
   assumeScopeInUrl?: boolean;
@@ -21,6 +22,7 @@ export function ComponentTree({
   components,
   isCollapsed,
   className,
+  transformTree,
   assumeScopeInUrl = false,
   TreeNode = DefaultTreeNodeRenderer,
 }: ComponentTreeProps) {
@@ -44,6 +46,7 @@ export function ComponentTree({
 
     attachPayload(tree, payloadMap);
 
+    if (transformTree) return transformTree(tree);
     return tree;
   }, [components]);
 

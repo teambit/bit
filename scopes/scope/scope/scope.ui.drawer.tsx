@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { ComponentsDrawer, ComponentFiltersSlot, DrawerWidgetSlot } from '@teambit/component.ui.component-drawer';
 import {
   ComponentView,
@@ -7,13 +7,12 @@ import {
   ScopePayload,
   ScopeTreeNode,
 } from '@teambit/ui-foundation.ui.side-bar';
-import { TreeNodeProps } from '@teambit/design.ui.tree';
+import { TreeNode as TreeNodeType, TreeNodeProps } from '@teambit/design.ui.tree';
 import { useLanes } from '@teambit/lanes.hooks.use-lanes';
 import { useLaneComponents } from '@teambit/lanes.hooks.use-lane-components';
 import { ComponentModel } from '@teambit/component';
-import { ScopeModel } from '@teambit/scope.models.scope-model';
-import { useScope } from '@teambit/scope.ui.hooks.scope-context';
-import { WorkspaceModel } from '@teambit/workspace';
+import { useScope, ScopeContext } from '@teambit/scope.ui.hooks.scope-context';
+// import { WorkspaceModel } from '@teambit/workspace';
 import { SidebarSlot } from './scope.ui.runtime';
 
 export type ScopeDrawerProps = {
@@ -31,7 +30,7 @@ export const scopeDrawer = ({
   assumeScopeInUrl = false,
   overrideUseComponents,
 }: ScopeDrawerProps) => {
-  const customScopeTreeNodeRenderer = (treeNodeSlot, host?: ScopeModel | WorkspaceModel) =>
+  const customScopeTreeNodeRenderer = (treeNodeSlot, host?: any) =>
     function TreeNode(props: TreeNodeProps<PayloadType>) {
       const children = props.node.children;
 
@@ -78,14 +77,39 @@ export const scopeDrawer = ({
     },
     useHost: () => useScope(),
     emptyMessage: 'Scope is empty',
+    // TODO: create an interface for Component host.
+    transformTree: (host?: any) => {
+      return (rootNode: TreeNodeType) => {
+        // const scope = useScope();
+        // console.log(rootNode);
+        const thisScopeIndex = rootNode.children?.findIndex((node) => {
+          if (!(node.payload instanceof ScopePayload)) return undefined;
+          const scopeNameFromNode = node.id.slice(0, -1);
+          return scopeNameFromNode === host?.name;
+        });
+
+        const thisScope = rootNode.children ? rootNode.children[thisScopeIndex || ''] : undefined;
+
+        if (thisScopeIndex && thisScopeIndex !== -1 && rootNode.children) {
+          delete rootNode.children[thisScopeIndex];
+          const children = rootNode.children.concat(thisScope.children);
+          rootNode.children = children;
+        }
+
+        return rootNode;
+      };
+    },
     useComponents:
       overrideUseComponents ||
       (() => {
         const { lanesModel, loading: lanesLoading } = useLanes();
         const viewedLaneId = lanesModel?.viewedLane?.id;
 
-        const { components = [], loading: laneCompsLoading } = useLaneComponents(viewedLaneId);
-
+        const { components: laneComponents = [], loading: laneCompsLoading } = useLaneComponents(
+          viewedLaneId?.isDefault() ? undefined : viewedLaneId
+        );
+        const { components: mainComponents } = useContext(ScopeContext);
+        const components = viewedLaneId?.isDefault() ? mainComponents : laneComponents;
         return {
           loading: lanesLoading || laneCompsLoading,
           components,

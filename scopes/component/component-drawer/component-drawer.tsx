@@ -7,7 +7,7 @@ import type { DrawerType } from '@teambit/ui-foundation.ui.tree.drawer';
 import { mutedItalic } from '@teambit/design.ui.styles.muted-italic';
 import { ellipsis } from '@teambit/design.ui.styles.ellipsis';
 import { ComponentModel } from '@teambit/component';
-import { TreeNodeRenderer } from '@teambit/design.ui.tree';
+import { TreeNode as TreeNodeType, TreeNodeRenderer } from '@teambit/design.ui.tree';
 import { Composer, ComponentTuple } from '@teambit/base-ui.utils.composer';
 import flatten from 'lodash.flatten';
 import {
@@ -28,11 +28,14 @@ import styles from './component-drawer.module.scss';
 
 export type ComponentFiltersSlot = SlotRegistry<ComponentFilters>;
 export type DrawerWidgetSlot = SlotRegistry<ReactNode[]>;
+export type TransformTreeFn = (host?: WorkspaceModel | ScopeModel) => (rootNode: TreeNodeType) => TreeNodeType;
+
 
 export type ComponentsDrawerProps = Omit<DrawerType, 'render'> & {
   useComponents: () => { components: ComponentModel[]; loading?: boolean };
   emptyMessage?: ReactNode;
   plugins?: ComponentsDrawerPlugins;
+  transformTree?: TransformTreeFn;
   assumeScopeInUrl?: boolean;
   useHost?: () => ScopeModel | WorkspaceModel;
 };
@@ -61,6 +64,7 @@ export class ComponentsDrawer implements DrawerType {
   plugins: ComponentsDrawerPlugins;
   assumeScopeInUrl: boolean;
   useHost?: () => ScopeModel | WorkspaceModel;
+  transformTree?: TransformTreeFn
 
   constructor(props: ComponentsDrawerProps) {
     Object.assign(this, props);
@@ -70,6 +74,7 @@ export class ComponentsDrawer implements DrawerType {
     this.setWidgets(props.plugins?.drawerWidgets);
     this.assumeScopeInUrl = props.assumeScopeInUrl || false;
     this.useHost = props.useHost;
+    this.transformTree = props.transformTree;
   }
 
   Context = ({ children }) => {
@@ -124,6 +129,7 @@ export class ComponentsDrawer implements DrawerType {
     return (
       <div className={styles.drawerTreeContainer}>
         <ComponentTree
+          transformTree={this.transformTree ? this.transformTree(host): undefined}
           components={components}
           isCollapsed={collapsed}
           assumeScopeInUrl={this.assumeScopeInUrl}

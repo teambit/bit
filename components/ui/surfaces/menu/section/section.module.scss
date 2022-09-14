@@ -1,0 +1,12 @@
+.menuSection {
+  // padding: 16px 0;
+  // border-bottom: 1px solid var(--bit-border-color-lightest, #ededed);
+  margin: 12px 0;
+  font-size: var(--bit-p-xs);
+}
+
+// `> *` doesn't add specificity, so adding 'div' instead
+// could use a --menu-indention variable instead
+div.menuSection > * {
+  padding-left: 30px;
+}
