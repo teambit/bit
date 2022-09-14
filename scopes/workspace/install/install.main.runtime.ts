@@ -20,8 +20,7 @@ import {
   DependencyList,
   OutdatedPkg,
 } from '@teambit/dependency-resolver';
-import { ImporterAspect, ImporterMain } from '@teambit/importer';
-import { ImportOptions } from '@teambit/legacy/dist/consumer/component-ops/import-components';
+import { ImporterAspect, ImporterMain, ImportOptions } from '@teambit/importer';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 
 import { DependencyTypeNotSupportedInPolicy } from './exceptions';
