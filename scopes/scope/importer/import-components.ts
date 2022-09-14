@@ -5,29 +5,34 @@ import { BitError } from '@teambit/bit-error';
 import { LaneId } from '@teambit/lane-id';
 import pMapSeries from 'p-map-series';
 import { isTag } from '@teambit/component-version';
-import { getRemoteBitIdsByWildcards } from '../../api/consumer/lib/list-scope';
-import { BitId, BitIds } from '../../bit-id';
-import { Consumer } from '../../consumer';
-import loader from '../../cli/loader';
-import { BEFORE_IMPORT_ACTION } from '../../cli/loader/loader-messages';
-import GeneralError from '../../error/general-error';
-import ShowDoctorError from '../../error/show-doctor-error';
-import logger from '../../logger/logger';
-import Remotes from '../../remotes/remotes';
-import { ComponentWithDependencies, Scope } from '../../scope';
-import DependencyGraph from '../../scope/graph/scope-graph';
-import { Lane, ModelComponent, Version } from '../../scope/models';
-import { getScopeRemotes } from '../../scope/scope-remotes';
-import { pathNormalizeToLinux } from '../../utils';
-import hasWildcard from '../../utils/string/has-wildcard';
-import Component from '../component';
-import { NothingToImport } from '../exceptions';
-import { applyModifiedVersion } from '../versions-ops/checkout-version';
-import { FileStatus, getMergeStrategyInteractive, MergeOptions, threeWayMerge } from '../versions-ops/merge-version';
-import { FilesStatus, MergeStrategy } from '../versions-ops/merge-version/merge-version';
-import { MergeResultsThreeWay } from '../versions-ops/merge-version/three-way-merge';
-import ComponentsPendingMerge from './exceptions/components-pending-merge';
-import ManyComponentsWriter from './many-components-writer';
+import { getRemoteBitIdsByWildcards } from '@teambit/legacy/dist/api/consumer/lib/list-scope';
+import { BitId, BitIds } from '@teambit/legacy/dist/bit-id';
+import { Consumer } from '@teambit/legacy/dist/consumer';
+import loader from '@teambit/legacy/dist/cli/loader';
+import { BEFORE_IMPORT_ACTION } from '@teambit/legacy/dist/cli/loader/loader-messages';
+import GeneralError from '@teambit/legacy/dist/error/general-error';
+import ShowDoctorError from '@teambit/legacy/dist/error/show-doctor-error';
+import logger from '@teambit/legacy/dist/logger/logger';
+import Remotes from '@teambit/legacy/dist/remotes/remotes';
+import { ComponentWithDependencies, Scope } from '@teambit/legacy/dist/scope';
+import DependencyGraph from '@teambit/legacy/dist/scope/graph/scope-graph';
+import { Lane, ModelComponent, Version } from '@teambit/legacy/dist/scope/models';
+import { getScopeRemotes } from '@teambit/legacy/dist/scope/scope-remotes';
+import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
+import hasWildcard from '@teambit/legacy/dist/utils/string/has-wildcard';
+import Component from '@teambit/legacy/dist/consumer/component';
+import { NothingToImport } from '@teambit/legacy/dist/consumer/exceptions';
+import { applyModifiedVersion } from '@teambit/legacy/dist/consumer/versions-ops/checkout-version';
+import {
+  FileStatus,
+  getMergeStrategyInteractive,
+  MergeOptions,
+  threeWayMerge,
+} from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
+import { FilesStatus, MergeStrategy } from '@teambit/legacy/dist/consumer/versions-ops/merge-version/merge-version';
+import { MergeResultsThreeWay } from '@teambit/legacy/dist/consumer/versions-ops/merge-version/three-way-merge';
+import ComponentsPendingMerge from '@teambit/legacy/dist/consumer/component-ops/exceptions/components-pending-merge';
+import ManyComponentsWriter from '@teambit/legacy/dist/consumer/component-ops/many-components-writer';
 
 export type ImportOptions = {
   ids: string[]; // array might be empty
