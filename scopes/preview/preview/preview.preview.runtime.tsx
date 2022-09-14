@@ -142,7 +142,7 @@ export class PreviewPreview {
       }));
     }
 
-    window.addEventListener('resize', debounce(sendPubsubEvent, 300));
+    window.document.body.addEventListener('resize', debounce(sendPubsubEvent, 300));
 
     let counter = 0;
     const interval = setInterval(() => {
