@@ -19,7 +19,7 @@ import { immutableUnshift } from '@teambit/legacy/dist/utils';
 import { formatPlainComponentItem } from '@teambit/legacy/dist/cli/chalk-box';
 import { ImporterMain } from './importer.main.runtime';
 
-export default class ImportCmd implements Command {
+export class ImportCmd implements Command {
   name = 'import [component-patterns...]';
   description = 'import components from their remote scopes to the local workspace';
   arguments = [

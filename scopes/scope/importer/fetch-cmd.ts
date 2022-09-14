@@ -1,17 +1,16 @@
 import chalk from 'chalk';
 import R from 'ramda';
-import { ImportDetails } from '../../../consumer/component-ops/import-components';
-import { ComponentWithDependencies } from '../../../scope';
-import { formatPlainComponentItemWithVersions } from '../../chalk-box';
-import { CommandOptions, LegacyCommand } from '../../legacy-command';
+import { Command, CommandOptions } from '@teambit/cli';
+import { formatPlainComponentItemWithVersions } from '@teambit/legacy/dist/cli/chalk-box';
+import { ImporterMain } from './importer.main.runtime';
 
-export default class Fetch implements LegacyCommand {
+export class FetchCmd implements Command {
   name = 'fetch [ids...]';
   description = `fetch remote objects and store locally`;
   extendedDescription = `for lanes, use "/" as a separator between the remote and the lane name, e.g. teambit.ui/fix-button`;
   alias = '';
   private = true;
-  opts = [
+  options = [
     [
       'l',
       'lanes',
@@ -27,7 +26,9 @@ export default class Fetch implements LegacyCommand {
   ] as CommandOptions;
   loader = true;
 
-  action(
+  constructor(private importer: ImporterMain) {}
+
+  async report(
     [ids = []]: [string[]],
     {
       lanes = false,
@@ -40,29 +41,18 @@ export default class Fetch implements LegacyCommand {
       json?: boolean;
       fromOriginalScope?: boolean;
     }
-  ): Promise<{}> {
-    return fetch(ids, lanes, components, fromOriginalScope).then((results) => ({ ...results, json }));
-  }
-
-  report({
-    dependencies,
-    importDetails,
-    json,
-  }: {
-    dependencies?: ComponentWithDependencies[];
-    importDetails: ImportDetails[];
-    json: boolean;
-  }): string {
+  ) {
+    const { dependencies, importDetails } = await this.importer.fetch(ids, lanes, components, fromOriginalScope);
     if (json) {
       return JSON.stringify({ importDetails }, null, 4);
     }
     if (dependencies && !R.isEmpty(dependencies)) {
-      const components = dependencies.map(R.prop('component'));
+      const componentsObj = dependencies.map(R.prop('component'));
       const title =
-        components.length === 1
+        componentsObj.length === 1
           ? 'successfully fetched one component'
-          : `successfully fetched ${components.length} components`;
-      const componentDependencies = components.map((component) => {
+          : `successfully fetched ${componentsObj.length} components`;
+      const componentDependencies = componentsObj.map((component) => {
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         const details = importDetails.find((c) => c.id === component.id.toStringWithoutVersion());
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
