@@ -1554,11 +1554,17 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/menu-widget-icon"
     },
-    "ui/menus": {
-        "scope": "teambit.lanes",
-        "version": "0.0.26",
+    "ui/menus/lanes-overview-menu": {
+        "scope": "",
+        "version": "",
         "mainFile": "index.ts",
-        "rootDir": "scopes/lanes/ui/menus"
+        "rootDir": "scopes/lanes/ui/menus/lanes-overview-menu"
+    },
+    "ui/menus/use-lanes-menu": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/lanes/ui/menus/use-lanes-menu"
     },
     "ui/models/lanes-model": {
         "scope": "",

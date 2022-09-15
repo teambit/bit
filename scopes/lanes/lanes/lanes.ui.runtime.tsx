@@ -11,7 +11,12 @@ import ComponentAspect, { ComponentID, ComponentUI } from '@teambit/component';
 import SidebarAspect, { SidebarUI } from '@teambit/sidebar';
 import { MenuWidget, MenuWidgetSlot } from '@teambit/ui-foundation.ui.menu';
 import { LaneGallery, LaneOverviewLine, LaneOverviewLineSlot } from '@teambit/lanes.ui.gallery';
-import { LanesNavPlugin, LanesOrderedNavigationSlot, LanesOverviewMenu, UseLaneMenu } from '@teambit/lanes.ui.menus';
+import {
+  LanesNavPlugin,
+  LanesOrderedNavigationSlot,
+  LanesOverviewMenu,
+} from '@teambit/lanes.ui.menus.lanes-overview-menu';
+import { UseLaneMenu } from '@teambit/lanes.ui.menus.use-lanes-menu';
 import { LanesHost, LanesModel } from '@teambit/lanes.ui.models.lanes-model';
 import { LaneReadmeOverview } from '@teambit/lanes.ui.readme';
 import { LanesProvider, useLanes } from '@teambit/lanes.hooks.use-lanes';
