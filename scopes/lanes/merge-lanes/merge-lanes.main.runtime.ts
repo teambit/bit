@@ -272,7 +272,6 @@ async function filterComponentsStatus(
     }
     const modelComponent = await workspace.consumer.scope.getModelComponent(compId._legacy);
     // optimization suggestion: if squash is given, check only the last version.
-    const laneIds = lane?.toBitIds();
     await pMapSeries(remoteVersions, async (remoteVersion) => {
       const versionObj = await modelComponent.loadVersion(remoteVersion.toString(), workspace.consumer.scope.objects);
       const flattenedDeps = versionObj.getAllFlattenedDependencies();
@@ -285,7 +284,7 @@ async function filterComponentsStatus(
       const depsOnLane: BitId[] = [];
       await Promise.all(
         depsNotIncludeInPattern.map(async (dep) => {
-          const isOnLane = await workspace.consumer.scope.isIdOnLane(dep, lane, laneIds);
+          const isOnLane = await workspace.consumer.scope.isIdOnLane(dep, lane);
           if (isOnLane) {
             depsOnLane.push(dep);
           }

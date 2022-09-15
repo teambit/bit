@@ -51,6 +51,7 @@ import VersionDependencies from './version-dependencies';
 import { ObjectItem, ObjectList } from './objects/object-list';
 import ClientIdInUse from './exceptions/client-id-in-use';
 import { UnexpectedPackageName } from '../consumer/exceptions/unexpected-package-name';
+import { getDivergeData } from './component-ops/get-diverge-data';
 
 const removeNils = R.reject(R.isNil);
 const pathHasScope = pathHasAll([OBJECTS_DIR, SCOPE_JSON]);
@@ -368,16 +369,32 @@ once done, to continue working, please run "bit cc"`
     return lane;
   }
 
-  async isIdOnLane(id: BitId, lane?: Lane | null, laneIds?: BitIds): Promise<boolean> {
+  /**
+   * sadly, there are not good tests for this. it pretty complex to create them as it involves multiple scopes and
+   * packages installations. be careful when changing this.
+   * the goal is to check whether a given id with the given version exits on the given lane or it's on main.
+   * it's needed for importing artifacts to know whether the artifact could be found on the origin scope or on the
+   * lane-scope
+   */
+  async isIdOnLane(id: BitId, lane?: Lane | null): Promise<boolean> {
     if (!lane) return false;
-    if (laneIds?.has(id)) return true; // in the lane with the same version
-    if (!laneIds?.hasWithoutVersion(id)) return false; // not in the lane at all
+    const laneIds = lane.toBitIds();
+    if (laneIds.has(id)) return true; // in the lane with the same version
+    const laneIdWithDifferentVersion = laneIds.searchWithoutVersion(id);
+    if (!laneIdWithDifferentVersion) return false; // not in the lane at all
     // component is in the lane object but with a different version.
     // we have to figure out whether the current version exists on the lane or not.
     const component = await this.getModelComponent(id);
-    if (component.head?.toString() === id.version) return false; // it's on main
-    await component.setDivergeData(this.objects, false);
-    const divergeData = component.getDivergeData();
+    if (!component.head) return true; // it's not on main. must be on a lane. (even if it was forked from another lane, current lane must have all objects)
+    if (component.head.toString() === id.version) return false; // it's on main
+    // get the diverge between main and the lane. (in this context, main is "remote", lane is "local").
+    const divergeData = await getDivergeData(
+      this.objects,
+      component,
+      component.head,
+      Ref.from(laneIdWithDifferentVersion.version as string)
+    );
+    // if the snap found "locally", then it's on the lane.
     return Boolean(divergeData.snapsOnLocalOnly.find((snap) => snap.toString() === id.version));
   }
 
