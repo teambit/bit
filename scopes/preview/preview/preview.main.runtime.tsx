@@ -197,8 +197,11 @@ export class PreviewMain {
    */
   async isScaling(component: Component): Promise<boolean> {
     const previewData = component.state.aspects.get(PreviewAspect.id)?.data;
-    // Core envs are always scaling (their template bundle containing the scaling logic)
-    return previewData?.isScaling ?? this.envs.isUsingCoreEnv(component);
+    // if it's a core env and the env template is apart from the component it means the template bundle already contain the scaling functionality
+    return (
+      previewData?.isScaling ??
+      (this.envs.isUsingCoreEnv(component) && (await this.isBundledWithEnv(component)) === false)
+    );
   }
 
   /**
@@ -639,9 +642,9 @@ export class PreviewMain {
         preview.handleComponentChange(c, (currentComponents) => currentComponents.add(c))
       );
       workspace.onComponentLoad(async (component) => {
-        const isScaling = await  preview.calculateIsScaling(component);
+        const isScaling = await preview.calculateIsScaling(component);
         return {
-          isScaling
+          isScaling,
         };
       });
       workspace.registerOnComponentChange((c) =>
