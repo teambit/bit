@@ -68,7 +68,7 @@ export class LanesUI {
           <>
             <Route path={LanesModel.lanePath}>
               <Route index element={this.getLaneReadme()} />
-              <Route path="~gallery" element={this.getLaneGallery()} />
+              <Route path="~gallery/*" element={this.getLaneGallery()} />
               <Route path="~component/*" element={this.componentUi.getComponentUI(this.host)} />
               <Route path="*" element={<NotFoundPage />} />
             </Route>
