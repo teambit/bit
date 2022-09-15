@@ -44,7 +44,7 @@ export function lanesSchema(lanesMainRuntime: LanesMain): Schema {
 
       type Lane {
         id: LaneId!
-        hash: String!
+        hash: String
         components(offset: Int, limit: Int): [Component!]!
         readmeComponent: Component
       }

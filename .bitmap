@@ -1764,6 +1764,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/uis/side-bar"
     },
+    "ui/skeletons/sidebar-loader": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/design/ui/skeletons/sidebar-loader"
+    },
     "ui/status": {
         "scope": "teambit.workspace",
         "version": "0.0.495",

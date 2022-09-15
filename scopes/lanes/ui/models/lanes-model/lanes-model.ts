@@ -192,7 +192,7 @@ export class LanesModel {
 
   getLanesByComponentId = (componentId: ComponentID) => this.lanesByComponentId.get(componentId.fullName);
   getLaneByComponentVersion = (componentId: ComponentID) => {
-    if (componentId.version) return this.lanebyComponentHash.get(componentId.version);
+    if (componentId.version) return this.lanebyComponentHash.get(componentId.toString());
     // if there is no version, the component is new and is on main
     const defaultLane = this.getDefaultLane();
     const component = defaultLane?.components.find((c) => c.isEqual(componentId, { ignoreVersion: true }));

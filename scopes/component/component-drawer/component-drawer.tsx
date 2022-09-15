@@ -1,7 +1,6 @@
 import React, { useCallback, useContext, ReactNode, useMemo } from 'react';
 import classNames from 'classnames';
 import { ComponentTree, PayloadType } from '@teambit/ui-foundation.ui.side-bar';
-import { FullLoader } from '@teambit/ui-foundation.ui.full-loader';
 import { ComponentTreeSlot } from '@teambit/component-tree';
 import type { DrawerType } from '@teambit/ui-foundation.ui.tree.drawer';
 import { mutedItalic } from '@teambit/design.ui.styles.muted-italic';
@@ -21,6 +20,7 @@ import { LanesModel } from '@teambit/lanes.ui.models.lanes-model';
 import { SlotRegistry } from '@teambit/harmony';
 import { ScopeModel } from '@teambit/scope.models.scope-model';
 import { WorkspaceModel } from '@teambit/workspace';
+import { ComponentTreeLoader } from '@teambit/design.ui.skeletons.sidebar-loader';
 import { ComponentFilterWidgetProvider, ComponentFilterWidgetContext } from './component-drawer-filter-widget.context';
 import { ComponentTreeContext, ComponentTreeProvider } from './component-drawer-tree-widget.context';
 
@@ -29,7 +29,6 @@ import styles from './component-drawer.module.scss';
 export type ComponentFiltersSlot = SlotRegistry<ComponentFilters>;
 export type DrawerWidgetSlot = SlotRegistry<ReactNode[]>;
 export type TransformTreeFn = (host?: WorkspaceModel | ScopeModel) => (rootNode: TreeNodeType) => TreeNodeType;
-
 
 export type ComponentsDrawerProps = Omit<DrawerType, 'render'> & {
   useComponents: () => { components: ComponentModel[]; loading?: boolean };
@@ -64,7 +63,7 @@ export class ComponentsDrawer implements DrawerType {
   plugins: ComponentsDrawerPlugins;
   assumeScopeInUrl: boolean;
   useHost?: () => ScopeModel | WorkspaceModel;
-  transformTree?: TransformTreeFn
+  transformTree?: TransformTreeFn;
 
   constructor(props: ComponentsDrawerProps) {
     Object.assign(this, props);
@@ -129,7 +128,7 @@ export class ComponentsDrawer implements DrawerType {
     return (
       <div className={styles.drawerTreeContainer}>
         <ComponentTree
-          transformTree={this.transformTree ? this.transformTree(host): undefined}
+          transformTree={this.transformTree ? this.transformTree(host) : undefined}
           components={components}
           isCollapsed={collapsed}
           assumeScopeInUrl={this.assumeScopeInUrl}
@@ -164,7 +163,7 @@ export class ComponentsDrawer implements DrawerType {
       <span className={classNames(mutedItalic, ellipsis, styles.emptyDrawer)}>{this.emptyMessage}</span>
     );
 
-    if (loading) return <FullLoader />;
+    if (loading) return <ComponentTreeLoader />;
 
     return (
       <div key={this.id} className={styles.drawerContainer}>
