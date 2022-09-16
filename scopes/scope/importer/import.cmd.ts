@@ -4,11 +4,6 @@ import { compact } from 'lodash';
 import R from 'ramda';
 import { WILDCARD_HELP } from '@teambit/legacy/dist/constants';
 import {
-  ImportOptions,
-  ImportDetails,
-  ImportStatus,
-} from '@teambit/legacy/dist/consumer/component-ops/import-components';
-import {
   FileStatus,
   MergeOptions,
   MergeStrategy,
@@ -17,9 +12,10 @@ import ConsumerComponent from '@teambit/legacy/dist/consumer/component/consumer-
 import GeneralError from '@teambit/legacy/dist/error/general-error';
 import { immutableUnshift } from '@teambit/legacy/dist/utils';
 import { formatPlainComponentItem } from '@teambit/legacy/dist/cli/chalk-box';
-import { Importer } from './importer';
+import { ImporterMain } from './importer.main.runtime';
+import { ImportOptions, ImportDetails, ImportStatus } from './import-components';
 
-export default class ImportCmd implements Command {
+export class ImportCmd implements Command {
   name = 'import [component-patterns...]';
   description = 'import components from their remote scopes to the local workspace';
   arguments = [
@@ -73,7 +69,7 @@ export default class ImportCmd implements Command {
   remoteOp = true;
   _packageManagerArgs: string[]; // gets populated by yargs-adapter.handler().
 
-  constructor(private importer: Importer, private docsDomain: string) {
+  constructor(private importer: ImporterMain, private docsDomain: string) {
     this.extendedDescription = `https://${docsDomain}/components/importing-components
 ${WILDCARD_HELP('import')}`;
   }

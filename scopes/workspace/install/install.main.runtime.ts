@@ -20,8 +20,7 @@ import {
   DependencyList,
   OutdatedPkg,
 } from '@teambit/dependency-resolver';
-import { Importer } from '@teambit/importer';
-import { ImportOptions } from '@teambit/legacy/dist/consumer/component-ops/import-components';
+import { ImporterAspect, ImporterMain, ImportOptions } from '@teambit/importer';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 
 import { DependencyTypeNotSupportedInPolicy } from './exceptions';
@@ -56,7 +55,9 @@ export class InstallMain {
 
     private workspace: Workspace,
 
-    private variants: VariantsMain
+    private variants: VariantsMain,
+
+    private importer: ImporterMain
   ) {}
   /**
    * Install dependencies for all components in the workspace
@@ -318,9 +319,8 @@ export class InstallMain {
       importDependenciesDirectly: false,
       importDependents: false,
     };
-    const importer = new Importer(this.workspace, this.dependencyResolver);
     try {
-      const res = await importer.import(importOptions, []);
+      const res = await this.importer.import(importOptions, []);
       return res;
     } catch (err: any) {
       // TODO: this is a hack since the legacy throw an error, we should provide a way to not throw this error from the legacy
@@ -366,8 +366,6 @@ export class InstallMain {
   }
 
   static slots = [];
-  // define your aspect dependencies here.
-  // in case you need to use another aspect API.
   static dependencies = [
     DependencyResolverAspect,
     WorkspaceAspect,
@@ -375,20 +373,22 @@ export class InstallMain {
     VariantsAspect,
     CLIAspect,
     CommunityAspect,
+    ImporterAspect,
   ];
 
   static runtime = MainRuntime;
 
-  static async provider([dependencyResolver, workspace, loggerExt, variants, cli, community]: [
+  static async provider([dependencyResolver, workspace, loggerExt, variants, cli, community, importer]: [
     DependencyResolverMain,
     Workspace,
     LoggerMain,
     VariantsMain,
     CLIMain,
-    CommunityMain
+    CommunityMain,
+    ImporterMain
   ]) {
     const logger = loggerExt.createLogger('teambit.bit/install');
-    const installExt = new InstallMain(dependencyResolver, logger, workspace, variants);
+    const installExt = new InstallMain(dependencyResolver, logger, workspace, variants, importer);
     ManyComponentsWriter.registerExternalInstaller({
       install: async () => {
         // TODO: think how we should pass this options

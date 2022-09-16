@@ -1,7 +1,4 @@
 import c from 'chalk';
-import { ImportDetails, ImportStatus } from '../consumer/component-ops/import-components';
-import Component from '../consumer/component/consumer-component';
-import { FileStatus } from '../consumer/versions-ops/merge-version/merge-version';
 import { ComponentLog } from '../scope/models/model-component';
 
 export const formatNewBit = ({ name }: any): string => c.white('     > ') + c.cyan(name);
@@ -15,29 +12,6 @@ export const formatPlainComponentItem = ({ scope, name, version, deprecated }: a
       deprecated ? c.yellow('[deprecated]') : ''
     }`
   );
-
-export const formatPlainComponentItemWithVersions = (component: Component, importDetails: ImportDetails) => {
-  const status: ImportStatus = importDetails.status;
-  const id = component.id.toStringWithoutVersion();
-  const versions = importDetails.versions.length ? `new versions: ${importDetails.versions.join(', ')}` : '';
-  // $FlowFixMe component.version should be set here
-  const usedVersion = status === 'added' ? `, currently used version ${component.version}` : '';
-  const getConflictMessage = () => {
-    if (!importDetails.filesStatus) return '';
-    const conflictedFiles = Object.keys(importDetails.filesStatus) // $FlowFixMe file is set
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      .filter((file) => importDetails.filesStatus[file] === FileStatus.manual);
-    if (!conflictedFiles.length) return '';
-    return `(the following files were saved with conflicts ${conflictedFiles.map((file) => c.bold(file)).join(', ')}) `;
-  };
-  const deprecated = importDetails.deprecated ? c.yellow('deprecated') : '';
-  const missingDeps = importDetails.missingDeps.length
-    ? c.red(`missing dependencies: ${importDetails.missingDeps.map((d) => d.toString()).join(', ')}`)
-    : '';
-  return `- ${c.green(status)} ${c.cyan(
-    id
-  )} ${versions}${usedVersion} ${getConflictMessage()}${deprecated} ${missingDeps}`;
-};
 
 export const formatBitString = (bit: string): string => c.white('     > ') + c.cyan(`${bit}`);
 
