@@ -94,6 +94,7 @@ import { DependenciesAspect } from '@teambit/dependencies';
 import { RemoveAspect } from '@teambit/remove';
 import { MergeLanesAspect } from '@teambit/merge-lanes';
 import { CheckoutAspect } from '@teambit/checkout';
+import { APIReferenceAspect } from '@teambit/api-reference';
 import { BitAspect } from './bit.aspect';
 
 export const manifestsMap = {
@@ -192,6 +193,7 @@ export const manifestsMap = {
   [RemoveAspect.id]: RemoveAspect,
   [MergeLanesAspect.id]: MergeLanesAspect,
   [CheckoutAspect.id]: CheckoutAspect,
+  [APIReferenceAspect.id]: APIReferenceAspect,
 };
 
 export function isCoreAspect(id: string) {

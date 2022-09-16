@@ -9,6 +9,13 @@
  */
 
 {
+    "api-reference": {
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.api-reference",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/api-reference/api-reference"
+    },
     "application": {
         "scope": "teambit.harmony",
         "version": "0.0.492",
@@ -549,6 +556,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/lanes/hooks/use-lanes"
     },
+    "hooks/use-schema": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/api-reference/hooks/use-schema"
+    },
     "html": {
         "scope": "teambit.html",
         "version": "0.0.418",
@@ -669,6 +682,18 @@
         "version": "0.0.495",
         "mainFile": "index.ts",
         "rootDir": "scopes/compositions/model/composition-type"
+    },
+    "models/api-reference-model": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/api-reference/models/api-reference-model"
+    },
+    "models/api-reference-renderer": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/api-reference/models/api-reference-renderer"
     },
     "models/scope-model": {
         "scope": "teambit.scope",
@@ -962,43 +987,25 @@
         "scope": "teambit.semantics",
         "version": "0.0.850",
         "mainFile": "index.ts",
-        "rootDir": "scopes/semantics/schema/schema"
-    },
-    "schema/hooks/use-schema": {
-        "scope": "",
-        "version": "",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/semantics/schema/hooks/use-schema"
-    },
-    "schema/ui/models/schema-renderer": {
-        "scope": "",
-        "version": "",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/semantics/schema/ui/models/schema-renderer"
-    },
-    "schema/ui/models/schema-types": {
-        "scope": "",
-        "version": "",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/semantics/schema/ui/models/schema-types"
-    },
-    "schema/ui/schema-page": {
-        "scope": "",
-        "version": "",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/semantics/schema/ui/schema-page"
-    },
-    "schema/ui/schema-section": {
-        "scope": "",
-        "version": "",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/semantics/schema/ui/schema-section"
+        "rootDir": "scopes/semantics/schema"
     },
     "scope": {
         "scope": "teambit.scope",
         "version": "0.0.850",
         "mainFile": "index.ts",
         "rootDir": "scopes/scope/scope"
+    },
+    "sections/api-reference-page": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/api-reference/sections/api-reference-page"
+    },
+    "sections/api-reference-section": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/api-reference/sections/api-reference-section"
     },
     "sidebar": {
         "scope": "teambit.ui-foundation",

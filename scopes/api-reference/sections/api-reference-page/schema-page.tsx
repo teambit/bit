@@ -1,6 +1,6 @@
 import React, { useContext } from 'react';
 import { ComponentContext } from '@teambit/component';
-import { useSchema } from '@teambit/semantics.schema.hooks.use-schema';
+import { useSchema } from '@teambit/api-reference.hooks.use-schema';
 
 export type SchemaPageProps = {
   host: string;

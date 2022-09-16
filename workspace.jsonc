@@ -711,12 +711,15 @@
     "scopes/semantics": {
       "defaultScope": "teambit.semantics"
     },
-    "scopes/semantics/schema/ui": {
+    "scopes/api-reference": {
+      "defaultScope": "teambit.api-reference"
+    },
+    "scopes/api-reference/api-reference": {
       "teambit.envs/envs": {
-        "env": "teambit.react/react"
+        "env": "teambit.harmony/node"
       }
     },
-    "scopes/semantics/schema/hooks": {
+    "{scopes/api-reference/**}": {
       "teambit.envs/envs": {
         "env": "teambit.react/react"
       }

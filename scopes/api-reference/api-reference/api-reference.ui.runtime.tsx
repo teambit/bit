@@ -1,31 +1,31 @@
 import React from 'react';
 import ComponentAspect, { ComponentUI } from '@teambit/component';
 import { UIRuntime } from '@teambit/ui';
-import { SchemaPage } from '@teambit/semantics.schema.ui.schema-page';
-import { SchemaSection } from '@teambit/semantics.schema.ui.schema-section';
+import { SchemaPage } from '@teambit/api-reference.sections.api-reference-page';
+import { SchemaSection } from '@teambit/api-reference.sections.api-reference-section';
 import { Harmony, Slot, SlotRegistry } from '@teambit/harmony';
-import { SchemaNodeRenderer } from '@teambit/semantics.schema.ui.models.schema-renderer';
-import { SchemaAspect } from './schema.aspect';
+import { SchemaNodeRenderer } from '@teambit/api-reference.models.api-reference-renderer';
+import { APIReferenceAspect } from './api-reference.aspect';
 
-export type SchemaNodeRendererSlot = SlotRegistry<SchemaNodeRenderer[]>;
-export class SchemaUI {
+export type APINodeRendererSlot = SlotRegistry<SchemaNodeRenderer[]>;
+export class APIReferenceUI {
   static dependencies = [ComponentAspect];
   static runtime = UIRuntime;
   static slots = [Slot.withType<SchemaNodeRenderer>()];
 
-  getSchemaPage() {
+  getAPIPage() {
     return <SchemaPage host={this.host} />;
   }
 
   static async provider(
     [componentUI]: [ComponentUI],
     _,
-    [schemaNodeRendererSlot]: [SchemaNodeRendererSlot],
+    [apiNodeRendererSlot]: [APINodeRendererSlot],
     harmony: Harmony
   ) {
     const { config } = harmony;
     const host = String(config.get('teambit.harmony/bit'));
-    const schemaUI = new SchemaUI(host, schemaNodeRendererSlot);
+    const schemaUI = new APIReferenceUI(host, apiNodeRendererSlot);
     // schemaUI.registerSchemaNodeRenderer(schemaUI.schemas)
     const schemaSection = new SchemaSection(schemaUI);
     componentUI.registerNavigation(schemaSection.navigationLink, schemaSection.order);
@@ -33,13 +33,13 @@ export class SchemaUI {
     return schemaUI;
   }
 
-  registerSchemaNodeRenderer(schemaNodeRenderers: SchemaNodeRenderer[]) {
-    this.schemaNodeRendererSlot.register(schemaNodeRenderers);
+  registerAPINodeRenderer(apiNodeRenderers: SchemaNodeRenderer[]) {
+    this.schemaNodeRendererSlot.register(apiNodeRenderers);
   }
 
-  constructor(private host: string, private schemaNodeRendererSlot: SchemaNodeRendererSlot) {}
+  constructor(private host: string, private schemaNodeRendererSlot: APINodeRendererSlot) {}
 }
 
-export default SchemaUI;
+export default APIReferenceUI;
 
-SchemaAspect.addRuntime(SchemaUI);
+APIReferenceAspect.addRuntime(APIReferenceUI);
