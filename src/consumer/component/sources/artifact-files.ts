@@ -139,13 +139,12 @@ export async function importMultipleDistsArtifacts(scope: Scope, components: Com
   );
   const extensionsNamesForDistArtifacts = 'teambit.compilation/compiler';
   const lane = await scope.getCurrentLaneObject();
-  const laneIds = lane?.toBitIds();
   const groupedHashes: { [scopeName: string]: string[] } = {};
   const debugHashesOrigin = {};
   await Promise.all(
     components.map(async (component) => {
       const artifactsFiles = getArtifactFilesByExtension(component.extensions, extensionsNamesForDistArtifacts);
-      const isIdOnLane = await scope.isIdOnLane(component.id, lane, laneIds);
+      const isIdOnLane = await scope.isIdOnLane(component.id, lane);
       const scopeName = isIdOnLane ? (lane?.scope as string) : (component.scope as string);
       artifactsFiles.forEach((artifactFiles) => {
         if (!artifactFiles) return;
