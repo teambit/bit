@@ -340,7 +340,7 @@ export class SchemaExtractorContext {
 
   async getTypeRefForExternalNode(node: Node): Promise<TypeRefSchema> {
     const info = await this.getQuickInfo(node);
-    const typeStr = info ? parseTypeFromQuickInfo(info) : 'any';
+    const typeStr = parseTypeFromQuickInfo(info);
     const location = this.getLocation(node);
     const filePath = this.getPath(node);
     return this.getTypeRefForExternalPath(typeStr, filePath, location);
