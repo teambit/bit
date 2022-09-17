@@ -10,7 +10,7 @@ export class AppPlugin implements PluginDefinition {
 
   runtimes = [MainRuntime.name];
 
-  async register(object: any) {
+  register(object: any) {
     return this.appSlot.register([object]);
   }
 }
