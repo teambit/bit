@@ -94,9 +94,7 @@ export class LaneSwitcher {
       installNpmPackages: !this.checkoutProps.skipNpmInstall,
       override: true,
       verbose: this.checkoutProps.verbose,
-      writeDists: !this.checkoutProps.ignoreDist,
       writeConfig: this.checkoutProps.writeConfig,
-      writePackageJson: !this.checkoutProps.ignorePackageJson,
     });
     await manyComponentsWriter.writeAll();
     await deleteFilesIfNeeded(componentsResults, this.consumer);
