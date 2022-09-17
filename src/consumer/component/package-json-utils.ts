@@ -51,8 +51,6 @@ export function preparePackageJsonToWrite(
   bitDir: string,
   override = true,
   ignoreBitDependencies: BitIds | boolean = true,
-  excludeRegistryPrefix?: boolean,
-  packageManager?: string,
   isIsolated?: boolean
 ): { packageJson: PackageJsonFile; distPackageJson: PackageJsonFile | null | undefined } {
   logger.debug(`package-json.preparePackageJsonToWrite. bitDir ${bitDir}. override ${override.toString()}`);
@@ -73,7 +71,7 @@ export function preparePackageJsonToWrite(
   const bitDependencies = getBitDependencies(component.dependencies.getAllIds());
   const bitDevDependencies = getBitDependencies(component.devDependencies.getAllIds());
   const bitExtensionDependencies = getBitDependencies(component.extensions.extensionsBitIds);
-  const packageJson = PackageJsonFile.createFromComponent(bitDir, component, excludeRegistryPrefix, isIsolated);
+  const packageJson = PackageJsonFile.createFromComponent(bitDir, component, isIsolated);
   const main = pathNormalizeToLinux(component.mainFile);
   packageJson.addOrUpdateProperty('main', main);
   const addDependencies = (packageJsonFile: PackageJsonFile) => {

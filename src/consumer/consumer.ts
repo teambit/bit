@@ -399,14 +399,6 @@ export default class Consumer {
     return shouldDependenciesSavedAsComponents;
   }
 
-  /**
-   * By default, the dists paths are inside the component.
-   * If dist attribute is populated in bit.json, the paths are in consumer-root/dist-target.
-   */
-  shouldDistsBeInsideTheComponent(): boolean {
-    return true;
-  }
-
   async listComponentsForAutoTagging(modifiedComponents: BitIds): Promise<Component[]> {
     return getAutoTagPending(this, modifiedComponents);
   }

@@ -121,13 +121,11 @@ export default class PackageJsonFile {
   static createFromComponent(
     componentDir: PathRelative,
     component: Component,
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    excludeRegistryPrefix? = false,
-    addDefaultScopeToCompId? = false, // for the capsule, we want the default-scope because it gets published
-    addExportProperty? = false
+    addDefaultScopeToCompId = false, // for the capsule, we want the default-scope because it gets published
+    addExportProperty = false
   ): PackageJsonFile {
     const filePath = composePath(componentDir);
-    const name = componentIdToPackageName({ withPrefix: !excludeRegistryPrefix, ...component, id: component.id });
+    const name = componentIdToPackageName({ withPrefix: true, ...component, id: component.id });
     const componentIdWithDefaultScope =
       component.id.hasScope() || !addDefaultScopeToCompId
         ? component.id

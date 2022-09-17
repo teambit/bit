@@ -505,8 +505,6 @@ export class MergingMain {
       override: true,
       writeConfig: false, // @todo: should write if config exists before, needs to figure out how to do it.
       verbose: false, // @todo: do we need a flag here?
-      writeDists: true, // @todo: do we need a flag here?
-      writePackageJson: false,
     });
     await manyComponentsWriter.writeAll();
 

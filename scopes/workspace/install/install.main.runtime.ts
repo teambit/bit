@@ -309,15 +309,8 @@ export class InstallMain {
   private async importObjects() {
     const importOptions: ImportOptions = {
       ids: [],
-      verbose: false,
-      merge: false,
       objectsOnly: true,
-      override: false,
-      writeDists: false,
-      writeConfig: false,
       installNpmPackages: false,
-      importDependenciesDirectly: false,
-      importDependents: false,
     };
     try {
       const res = await this.importer.import(importOptions, []);
