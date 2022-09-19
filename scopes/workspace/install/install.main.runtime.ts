@@ -4,14 +4,15 @@ import ManyComponentsWriter from '@teambit/legacy/dist/consumer/component-ops/ma
 import { CLIMain, CommandList, CLIAspect, MainRuntime } from '@teambit/cli';
 import chalk from 'chalk';
 import { WorkspaceAspect, Workspace, ComponentConfigFile } from '@teambit/workspace';
-import { fromPairs, pick, isEqual } from 'lodash';
+import { pick, isEqual } from 'lodash';
+import { ProjectManifest } from '@pnpm/types';
 import { NothingToImport } from '@teambit/legacy/dist/consumer/exceptions';
 import { VariantsMain, Patterns, VariantsAspect } from '@teambit/variants';
 import { ComponentID, ComponentMap } from '@teambit/component';
 import {
-  ComponentManifest,
   WorkspaceDependencyLifecycleType,
   DependencyResolverMain,
+  DependencyInstaller,
   DependencyResolverAspect,
   PackageManagerInstallOptions,
   ComponentDependency,
@@ -163,7 +164,9 @@ export class InstallMain {
       packageImportMethod: this.dependencyResolver.config.packageImportMethod,
       rootComponents: hasRootComponents,
     };
-    let current = await this._getComponentsManifests(mergedRootPolicy);
+    // TODO: pass get install options
+    const installer = this.dependencyResolver.getInstaller({});
+    let current = await this._getComponentsManifests(installer, mergedRootPolicy, pmInstallOptions);
     let prev: typeof current;
     // TODO: this make duplicate
     // this.logger.consoleSuccess();
@@ -182,14 +185,14 @@ export class InstallMain {
       linkDepsResolvedFromEnv: !hasRootComponents,
       linkNestedDepsInNM: !this.workspace.isLegacy && !hasRootComponents,
     };
-    // TODO: pass get install options
-    const installer = this.dependencyResolver.getInstaller({});
     /* eslint-disable no-await-in-loop */
     do {
       this.workspace.consumer.componentLoader.clearComponentsCache();
       this.workspace.clearCache();
-      await installer.install(
+      await installer.installComponents(
         this.workspace.path,
+        current.workspaceManifest,
+        current.componentsManifests,
         mergedRootPolicy,
         current.componentDirectoryMap,
         { installTeambitBit: false },
@@ -204,42 +207,34 @@ export class InstallMain {
       await this.compiler.compileOnWorkspace([], { initiator: CompilationInitiator.Install });
       await this.link(linkOpts);
       prev = current;
-      current = await this._getComponentsManifests(mergedRootPolicy);
+      current = await this._getComponentsManifests(installer, mergedRootPolicy, pmInstallOptions);
     } while (!isManifestsEqual(prev, current));
     /* eslint-enable no-await-in-loop */
     return current.componentDirectoryMap;
   }
 
-  private async _getComponentsManifests(mergedRootPolicy: WorkspacePolicy): Promise<{
+  private async _getComponentsManifests(
+    dependencyInstaller: DependencyInstaller,
+    mergedRootPolicy: WorkspacePolicy,
+    installOptions: Pick<
+      PackageManagerInstallOptions,
+      'dedupe' | 'dependencyFilterFn' | 'copyPeerToRuntimeOnComponents'
+    >
+  ): Promise<{
     componentDirectoryMap: ComponentMap<string>;
-    componentsManifests: Record<'string', ComponentManifest>;
+    componentsManifests: Record<string, ProjectManifest>;
     workspaceManifest: WorkspaceManifest;
   }> {
     const componentDirectoryMap = await this.getComponentsDirectory([]);
-    const workspaceManifest = await this.dependencyResolver.getWorkspaceManifest(
-      undefined,
-      undefined,
-      mergedRootPolicy,
-      this.workspace.path,
-      componentDirectoryMap.components
-    );
-    const componentsManifests: Record<string, ComponentManifest> = componentDirectoryMap
-      .toArray()
-      .reduce((acc, [component, dir]) => {
-        const packageName = this.dependencyResolver.getPackageName(component);
-        const manifest = workspaceManifest.componentsManifestsMap.get(packageName);
-        if (manifest) {
-          acc[dir] = manifest.toJson({ copyPeerToRuntime: false });
-          acc[dir].defaultPeerDependencies = fromPairs(
-            manifest.envPolicy.peersAutoDetectPolicy.entries.map(({ name, version }) => [name, version])
-          );
-        }
-        return acc;
-      }, {});
     return {
       componentDirectoryMap,
-      workspaceManifest,
-      componentsManifests,
+      ...(await dependencyInstaller.getComponentManifests(
+        componentDirectoryMap,
+        mergedRootPolicy,
+        this.workspace.path,
+        installOptions,
+        installOptions.copyPeerToRuntimeOnComponents
+      )),
     };
   }
 
@@ -468,7 +463,7 @@ export class InstallMain {
 }
 
 interface AllWorkspaceManifests {
-  componentsManifests: Record<string, ComponentManifest>;
+  componentsManifests: Record<string, ProjectManifest>;
   workspaceManifest: WorkspaceManifest;
 }
 

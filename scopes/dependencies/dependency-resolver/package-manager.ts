@@ -1,9 +1,8 @@
 import { PeerDependencyIssuesByProjects } from '@pnpm/core';
-import { PeerDependencyRules } from '@pnpm/types';
+import { PeerDependencyRules, ProjectManifest } from '@pnpm/types';
 import { ComponentMap } from '@teambit/component';
 import { Registries } from './registry';
-import { DepsFilterFn } from './manifest';
-import { WorkspacePolicy } from './policy';
+import { DepsFilterFn, WorkspaceManifest } from './manifest';
 import { NetworkConfig, ProxyConfig } from './dependency-resolver.main.runtime';
 
 export { PeerDependencyIssuesByProjects };
@@ -74,7 +73,8 @@ export interface PackageManager {
    */
   install(
     rootDir: string,
-    rootPolicy: WorkspacePolicy,
+    componentsManifests: Record<string, ProjectManifest>,
+    workspaceManifest: WorkspaceManifest,
     componentDirectoryMap: ComponentMap<string>,
     options: PackageManagerInstallOptions
   ): Promise<void>;
@@ -85,9 +85,8 @@ export interface PackageManager {
   ): Promise<ResolvedPackageVersion>;
 
   getPeerDependencyIssues?(
-    rootDir: string,
-    rootPolicy: WorkspacePolicy,
-    componentDirectoryMap: ComponentMap<string>,
+    componentsManifests: Record<string, ProjectManifest>,
+    workspaceManifest: WorkspaceManifest,
     options: PackageManagerGetPeerDependencyIssuesOptions
   ): Promise<PeerDependencyIssuesByProjects>;
 

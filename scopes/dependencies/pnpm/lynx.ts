@@ -202,7 +202,10 @@ export async function install(
     readPackage = readPackageHookForCapsules;
   }
   if (!manifestsByPaths[rootManifest.rootDir]) {
-    manifestsByPaths[rootManifest.rootDir] = rootManifest.manifest;
+    manifestsByPaths = {
+      ...manifestsByPaths,
+      [rootManifest.rootDir]: rootManifest.manifest,
+    };
   }
   const { packagesToBuild, workspacePackages } = groupPkgs(manifestsByPaths);
   const registriesMap = getRegistriesMap(registries);
