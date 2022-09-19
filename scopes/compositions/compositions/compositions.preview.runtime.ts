@@ -51,6 +51,8 @@ export class CompositionsPreview {
   }
 
   private getActiveComposition(module: ModuleFile, metadata?: CompositionBrowserMetadataObject) {
+    // TODO: when we want to support disabling scaling for env, we need to get the isScaling here and
+    // use this chosen strategy in the preview
     // const chosen = window.location.hash.split('&')[1];
     const query = this.preview.getQuery();
     const param = this.preview.getParam(query, 'name');
