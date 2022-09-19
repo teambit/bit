@@ -29,6 +29,7 @@ import { BitObjectList } from '../objects/bit-object-list';
 import { ObjectFetcher } from '../objects-fetcher/objects-fetcher';
 import { concurrentComponentsLimit } from '../../utils/concurrency';
 import { BuildStatus } from '../../constants';
+import { NoHeadNoVersion } from '../exceptions/no-head-no-version';
 
 const removeNils = R.reject(R.isNil);
 
@@ -74,12 +75,14 @@ export default class ScopeComponentsImporter {
     throwForDependencyNotFound = false,
     reFetchUnBuiltVersion = true,
     lanes = [],
+    ignoreMissingHead = false,
   }: {
     ids: BitIds;
     cache?: boolean;
     throwForDependencyNotFound?: boolean;
     reFetchUnBuiltVersion?: boolean;
     lanes?: Lane[]; // if ids coming from a lane, add the lane object so we could fetch these ids from the lane's remote
+    ignoreMissingHead?: boolean; // needed when fetching "main" objects when on a lane
   }): Promise<VersionDependencies[]> {
     logger.debugAndAddBreadCrumb(
       'importMany',
@@ -107,7 +110,7 @@ export default class ScopeComponentsImporter {
       externalsToFetch.push(id);
       return false;
     });
-    await this.findMissingExternalsRecursively(existingDefs, externalsToFetch);
+    await this.findMissingExternalsRecursively(existingDefs, externalsToFetch, ignoreMissingHead);
     const uniqExternals = BitIds.uniqFromArray(externalsToFetch);
     logger.debug('importMany', `total missing externals: ${uniqExternals.length}`);
     const remotes = await getScopeRemotes(this.scope);
@@ -649,6 +652,7 @@ export default class ScopeComponentsImporter {
   private async findMissingExternalsRecursively(
     compDefs: ComponentDef[],
     externalsToFetch: BitId[],
+    ignoreMissingHead: boolean,
     visited: string[] = [],
     existingCache = new BitIds()
   ): Promise<void> {
@@ -665,7 +669,18 @@ export default class ScopeComponentsImporter {
         externalsToFetch.push(id);
         return;
       }
-      const version = await this.getVersionFromComponentDef(component, id);
+      let version: Version | null | undefined;
+      try {
+        version = await this.getVersionFromComponentDef(component, id);
+      } catch (err) {
+        if (err instanceof NoHeadNoVersion && ignoreMissingHead) {
+          logger.debug(
+            `findMissingExternalsRecursively, ignoring ${idStr} because it has no head and no version and "ignoreMissingHead" was set to true`
+          );
+          return;
+        }
+        throw err;
+      }
       if (!version) {
         // it must be external. otherwise, getVersionFromComponentDef would throw
         externalsToFetch.push(id);
@@ -691,7 +706,13 @@ export default class ScopeComponentsImporter {
       compDefsForNextIteration.push(...directDepsDefs);
     });
 
-    await this.findMissingExternalsRecursively(compDefsForNextIteration, externalsToFetch, visited, existingCache);
+    await this.findMissingExternalsRecursively(
+      compDefsForNextIteration,
+      externalsToFetch,
+      ignoreMissingHead,
+      visited,
+      existingCache
+    );
   }
 
   /**
