@@ -1,5 +1,6 @@
 import { MainRuntime } from '@teambit/cli';
-import { compact, pick } from 'lodash';
+import semver from 'semver';
+import { compact, flatten, pick } from 'lodash';
 import { AspectLoaderMain, AspectLoaderAspect } from '@teambit/aspect-loader';
 import { Component, ComponentMap, ComponentAspect, ComponentID } from '@teambit/component';
 import type { ComponentMain, ComponentFactory } from '@teambit/component';
@@ -25,7 +26,12 @@ import GlobalConfigAspect, { GlobalConfigMain } from '@teambit/global-config';
 import { DEPENDENCIES_FIELDS, PACKAGE_JSON } from '@teambit/legacy/dist/constants';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import PackageJsonFile from '@teambit/legacy/dist/consumer/component/package-json-file';
-import { importMultipleDistsArtifacts } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
+import {
+  ArtifactFiles,
+  deserializeArtifactFiles,
+  getArtifactFilesByExtension,
+  importMultipleDistsArtifacts,
+} from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
 import { PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
 import { Scope } from '@teambit/legacy/dist/scope';
 import fs from 'fs-extra';
@@ -33,7 +39,12 @@ import hash from 'object-hash';
 import path from 'path';
 import equals from 'ramda/src/equals';
 import BitMap from '@teambit/legacy/dist/consumer/bit-map';
-import ComponentWriter, { ComponentWriterProps } from '@teambit/legacy/dist/consumer/component-ops/component-writer';
+import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-to-persist';
+import RemovePath from '@teambit/legacy/dist/consumer/component/sources/remove-path';
+import { preparePackageJsonToWrite } from '@teambit/legacy/dist/consumer/component/package-json-utils';
+import { PackageJsonTransformer } from '@teambit/legacy/dist/consumer/component/package-json-transformer';
+import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
+import { ArtifactVinyl } from '@teambit/legacy/dist/consumer/component/sources/artifact';
 import { Capsule } from './capsule';
 import CapsuleList from './capsule-list';
 import { IsolatorAspect } from './isolator.aspect';
@@ -453,12 +464,12 @@ export class IsolatorMain {
       components.map(async (component) => {
         const capsule = capsuleList.getCapsule(component.id);
         if (!capsule) return;
-        const params = this.getComponentWriteParams(component.state._consumer, allIds, legacyScope);
-        if (await component.isModified()) {
-          delete params.scope;
-        }
-        const componentWriter = new ComponentWriter(params);
-        const dataToPersist = await componentWriter.populateComponentsFilesToWriteForCapsule();
+        const scope = (await component.isModified()) ? undefined : legacyScope;
+        const dataToPersist = await this.populateComponentsFilesToWriteForCapsule(
+          component.state._consumer,
+          allIds,
+          scope
+        );
         await dataToPersist.persistAllToCapsule(capsule, { keepExistingCapsule: true });
       })
     );
@@ -468,27 +479,6 @@ export class IsolatorMain {
     const workspacePolicy = this.dependencyResolver.getWorkspacePolicy();
     const peerOnlyPolicy = workspacePolicy.byLifecycleType('peer');
     return peerOnlyPolicy;
-  }
-
-  private getComponentWriteParams(
-    component: ConsumerComponent,
-    ids: BitIds,
-    legacyScope?: Scope
-  ): ComponentWriterProps {
-    return {
-      component,
-      // @ts-ignore
-      bitMap: new BitMap(undefined, undefined, undefined, false),
-      writeToPath: '.',
-      consumer: undefined,
-      scope: legacyScope,
-      override: false,
-      writePackageJson: true,
-      writeConfig: false,
-      ignoreBitDependencies: ids,
-      excludeRegistryPrefix: false,
-      isolated: true,
-    };
   }
 
   private toComponentMap(capsuleList: CapsuleList): ComponentMap<string> {
@@ -631,12 +621,76 @@ export class IsolatorMain {
     return packageJson;
   }
 
-  private async getComponentPackageVersionWithCache(component: Component): Promise<string> {
-    const idStr = component.id.toString();
+  async populateComponentsFilesToWriteForCapsule(
+    component: ConsumerComponent,
+    ids: BitIds,
+    legacyScope?: Scope
+  ): Promise<DataToPersist> {
+    const dataToPersist = new DataToPersist();
+    const clonedFiles = component.files.map((file) => file.clone());
+    const writeToPath = '.';
+    clonedFiles.forEach((file) => file.updatePaths({ newBase: writeToPath }));
+    dataToPersist.removePath(new RemovePath(writeToPath));
+    clonedFiles.map((file) => dataToPersist.addFile(file));
+    const { packageJson } = preparePackageJsonToWrite(
+      // @ts-ignore
+      new BitMap(undefined, undefined, undefined, false),
+      component,
+      writeToPath,
+      false, // override
+      ids, // this.ignoreBitDependencies,
+      true // isolated
+    );
+    if (!component.id.hasVersion()) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      packageJson.addOrUpdateProperty('version', semver.inc(component.version!, 'prerelease') || '0.0.1-0');
+    }
+    await PackageJsonTransformer.applyTransformers(component, packageJson);
+    const valuesToMerge = component.overrides.componentOverridesPackageJsonData;
+    packageJson.mergePackageJsonObject(valuesToMerge);
+    dataToPersist.addFile(packageJson.toVinylFile());
+    const artifacts = await this.getArtifacts(component, legacyScope);
+    dataToPersist.addManyFiles(artifacts);
+    return dataToPersist;
+  }
 
-    const version = getComponentPackageVersion(component);
-    this._componentsPackagesVersionCache[idStr] = version;
-    return version;
+  /**
+   * currently, it writes all artifacts.
+   * later, this responsibility might move to pkg extension, which could write only artifacts
+   * that are set in package.json.files[], to have a similar structure of a package.
+   */
+  private async getArtifacts(component: ConsumerComponent, legacyScope?: Scope): Promise<AbstractVinyl[]> {
+    if (!legacyScope) {
+      // when capsules are written via the workspace, do not write artifacts, they get created by
+      // build-pipeline. when capsules are written via the scope, we do need the dists.
+      return [];
+    }
+    if (component.buildStatus !== 'succeed') {
+      // this is important for "bit sign" when on lane to not go to the original scope
+      return [];
+    }
+    const extensionsNamesForArtifacts = ['teambit.compilation/compiler'];
+    const artifactsFiles = flatten(
+      extensionsNamesForArtifacts.map((extName) => getArtifactFilesByExtension(component.extensions, extName))
+    );
+    const artifactsVinylFlattened: ArtifactVinyl[] = [];
+    await Promise.all(
+      artifactsFiles.map(async (artifactFiles) => {
+        if (!artifactFiles) return;
+        if (!(artifactFiles instanceof ArtifactFiles)) {
+          artifactFiles = deserializeArtifactFiles(artifactFiles);
+        }
+        // fyi, if this is coming from the isolator aspect, it is optimized to import all at once.
+        // see artifact-files.importMultipleDistsArtifacts().
+        const vinylFiles = await artifactFiles.getVinylsAndImportIfMissing(component.id, legacyScope);
+        artifactsVinylFlattened.push(...vinylFiles);
+      })
+    );
+    const artifactsDir = component.writtenPath;
+    if (artifactsDir) {
+      artifactsVinylFlattened.forEach((a) => a.updatePaths({ newBase: artifactsDir }));
+    }
+    return artifactsVinylFlattened;
   }
 }
 

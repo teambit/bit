@@ -21,7 +21,7 @@ export class Plugins {
     });
   }
 
-  load(runtime: string) {
+  async load(runtime: string) {
     const plugins = this.getByRuntime(runtime);
     const aspect = Aspect.create({
       id: this.component.id.toString(),

@@ -99,7 +99,9 @@ describe('load extensions', function () {
           expect(output).to.have.string('new components');
         });
         it('should show a warning about the problematic extension', () => {
-          expect(output).to.have.string(UNABLE_TO_LOAD_EXTENSION_FROM_LIST(['my-scope/extension-provider-error']));
+          expect(output).to.have.string(
+            UNABLE_TO_LOAD_EXTENSION_FROM_LIST(['my-scope/extension-provider-error'], 'error in provider')
+          );
         });
       });
     });

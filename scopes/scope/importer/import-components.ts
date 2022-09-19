@@ -36,20 +36,17 @@ import ManyComponentsWriter from '@teambit/legacy/dist/consumer/component-ops/ma
 
 export type ImportOptions = {
   ids: string[]; // array might be empty
-  verbose: boolean; // default: false
-  merge?: boolean; // default: false
+  verbose?: boolean;
+  merge?: boolean;
   mergeStrategy?: MergeStrategy;
-  withEnvironments?: boolean; // default: false. Ignored by Harmony - always false.
   writeToPath?: string;
-  writePackageJson?: boolean; // default: true. Ignored by Harmony - always false.
-  writeConfig: boolean; // default: false
-  writeDists?: boolean; // default: true. Ignored by Harmony - always true, as they're inside node_modules.
-  override: boolean; // default: false
+  writeConfig?: boolean;
+  override?: boolean;
   installNpmPackages: boolean; // default: true
-  objectsOnly: boolean; // default: false
-  saveDependenciesAsComponents?: boolean; // default: false,
+  objectsOnly?: boolean;
+  saveDependenciesAsComponents?: boolean;
   importDependenciesDirectly?: boolean; // default: false, normally it imports them as packages or nested, not as imported
-  importDependents?: boolean; // default: false,
+  importDependents?: boolean;
   fromOriginalScope?: boolean; // default: false, otherwise, it fetches flattened dependencies from their dependents
   saveInLane?: boolean; // save the imported component on the current lane (won't be available on main)
   lanes?: {
@@ -348,9 +345,7 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
     const componentsIdsToImport = this.getIdsToImportFromBitmap();
 
     if (R.isEmpty(componentsIdsToImport)) {
-      if (!this.options.withEnvironments) {
-        throw new NothingToImport();
-      }
+      throw new NothingToImport();
     }
     await this._throwForModifiedOrNewComponents(componentsIdsToImport);
     const beforeImportVersions = await this._getCurrentVersions(componentsIdsToImport);
@@ -654,10 +649,7 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
       consumer: this.consumer,
       componentsWithDependencies: componentsToWrite,
       writeToPath: this.options.writeToPath,
-      writePackageJson: this.options.writePackageJson,
-      addToRootPackageJson: this.options.writePackageJson, // no point to add to root if it doesn't have package.json
       writeConfig: this.options.writeConfig,
-      writeDists: this.options.writeDists,
       installNpmPackages: this.options.installNpmPackages,
       verbose: this.options.verbose,
       override: this.options.override,

@@ -68,11 +68,15 @@ export class ExportDeclaration implements SchemaTransformer {
 async function namedExport(exportClause: NamedExports, context: SchemaExtractorContext): Promise<SchemaNode[]> {
   const schemas = await Promise.all(
     exportClause.elements.map(async (element) => {
-      const definitionNode = await context.definition(element.name);
-      if (!definitionNode) {
+      const definitionInfo = await context.definitionInfo(element);
+      if (!definitionInfo) {
         // happens for example when the main index.ts file exports variable from an mdx file.
         // tsserver is unable to get the definition node because it doesn't know to parse mdx files.
         return new UnresolvedSchema(context.getLocation(element.name), element.name.getText());
+      }
+      const definitionNode = await context.definition(definitionInfo);
+      if (!definitionNode) {
+        return context.getTypeRefForExternalNode(element);
       }
       if (definitionNode.parent.kind === SyntaxKind.ExportSpecifier) {
         // the definition node is the same node as element.name. tsserver wasn't able to find the source for it

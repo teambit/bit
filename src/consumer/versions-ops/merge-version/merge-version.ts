@@ -161,7 +161,7 @@ async function applyVersion(
 
   // update files according to the merge results
   const modifiedStatus = applyModifiedVersion(consumer, files, mergeResults, mergeStrategy);
-  const componentWriter = ComponentWriter.getInstance({
+  const componentWriter = new ComponentWriter({
     component,
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     writeToPath: pathNormalizeToLinux(component.files[0].base), // find the current path from the files. (we use the first one but it's the same for all)

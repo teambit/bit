@@ -230,7 +230,7 @@ export default class NodeModuleLinker {
         allowNonScope: true,
       })
     );
-    const packageJson = PackageJsonFile.createFromComponent(dest, component, undefined, true, true);
+    const packageJson = PackageJsonFile.createFromComponent(dest, component, true, true);
     await this._applyTransformers(component, packageJson);
     if (IS_WINDOWS) {
       // in the workspace, override the "types" and add the "src" prefix.
