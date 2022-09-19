@@ -1,7 +1,7 @@
 import { Section } from '@teambit/component';
 import { SchemaUI } from '@teambit/schema';
 
-export class SchemaSection implements Section {
+export class APIRefSection implements Section {
   constructor(private schemaUi: SchemaUI) {}
 
   order = 100;

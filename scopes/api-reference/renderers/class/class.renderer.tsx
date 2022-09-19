@@ -1,12 +1,19 @@
 import React from 'react';
-import { SchemaNode } from '@teambit/semantics.entities.semantic-schema';
-// import { ClassSchema } from '../../../../entities/semantic-schema/schemas/class';
+import { ClassSchema } from '@teambit/semantics.entities.semantic-schema';
+import { APINodeRenderProps, APINodeRenderer } from '@teambit/api-reference.models.api-node-renderer';
 
-// export const classSchemaRenderer = () => ({
-//     predicate: (node: SchemaNode) => {
-//         return node.__schema === 'ClassLike';
-//     }
-//     componentToRender: (node: ClassSchema) => {
-//         return () => <>Class Schema Render</>
-//     }
-// })
+export const classRenderer: APINodeRenderer = {
+  predicate: (node) => node.__schema === ClassSchema.name,
+  Component: ClassComponent,
+  displayName: 'Classes',
+  icon: { name: 'Class', Component: ClassIcon },
+};
+
+function ClassComponent({ /* name, */ displayName }: APINodeRenderProps) {
+  // const classNode = node as ClassSchema;
+  return <>{displayName}</>;
+}
+
+function ClassIcon() {
+  return <></>;
+}

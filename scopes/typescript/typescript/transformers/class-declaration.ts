@@ -8,7 +8,7 @@ import { ExportIdentifier } from '../export-identifier';
 import { jsDocToDocSchema } from './utils/jsdoc-to-doc-schema';
 import { classElementToSchema } from './utils/class-element-to-schema';
 
-export class ClassDecelerationTransformer implements SchemaTransformer {
+export class ClassDeclarationTransformer implements SchemaTransformer {
   predicate(node: Node) {
     return node.kind === ts.SyntaxKind.ClassDeclaration;
   }

@@ -1,1 +1,1 @@
-export { SchemaSection } from './schema.section';
+export { APIRefSection } from './api-reference.section';

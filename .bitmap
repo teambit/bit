@@ -683,17 +683,17 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/compositions/model/composition-type"
     },
+    "models/api-node-renderer": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/api-reference/models/api-node-renderer"
+    },
     "models/api-reference-model": {
         "scope": "",
         "version": "",
         "mainFile": "index.ts",
         "rootDir": "scopes/api-reference/models/api-reference-model"
-    },
-    "models/api-reference-renderer": {
-        "scope": "",
-        "version": "",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/api-reference/models/api-reference-renderer"
     },
     "models/scope-model": {
         "scope": "teambit.scope",
@@ -982,6 +982,42 @@
         "version": "0.0.254",
         "mainFile": "index.ts",
         "rootDir": "scopes/component/renaming"
+    },
+    "renderers/class": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/api-reference/renderers/class"
+    },
+    "renderers/enum": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/api-reference/renderers/enum"
+    },
+    "renderers/function": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/api-reference/renderers/function"
+    },
+    "renderers/interface": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/api-reference/renderers/interface"
+    },
+    "renderers/type": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/api-reference/renderers/type"
+    },
+    "renderers/variable": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/api-reference/renderers/variable"
     },
     "schema": {
         "scope": "teambit.semantics",
