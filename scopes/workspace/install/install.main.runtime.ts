@@ -20,6 +20,7 @@ import {
   LinkResults,
   DependencyList,
   OutdatedPkg,
+  WorkspacePolicy,
 } from '@teambit/dependency-resolver';
 import { ImporterAspect, ImporterMain, ImportOptions } from '@teambit/importer';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
@@ -149,9 +150,7 @@ export class InstallMain {
       `installing dependencies in workspace using ${chalk.cyan(this.dependencyResolver.getPackageManagerName())}`
     );
     this.logger.debug(`installing dependencies in workspace with options`, options);
-    let mergedRootPolicy = this.dependencyResolver.getWorkspacePolicy();
-    let compDirMap = await this.getComponentsDirectory([]);
-    let components = compDirMap.toArray().map(([component]) => component);
+    const mergedRootPolicy = this.dependencyResolver.getWorkspacePolicy();
     const depsFilterFn = await this.generateFilterFnForDepsFromLocalRemote();
     const hasRootComponents = this.dependencyResolver.hasRootComponents();
     const pmInstallOptions: PackageManagerInstallOptions = {
@@ -163,24 +162,7 @@ export class InstallMain {
       packageImportMethod: this.dependencyResolver.config.packageImportMethod,
       rootComponents: hasRootComponents,
     };
-    let prevWorkspaceManifest = await this.dependencyResolver.getWorkspaceManifest(
-      undefined,
-      undefined,
-      mergedRootPolicy,
-      this.workspace.path,
-      components
-    );
-    let prevComponentsManifests = compDirMap.toArray().reduce((acc, [component, dir]) => {
-      const packageName = this.dependencyResolver.getPackageName(component);
-      const manifest = prevWorkspaceManifest.componentsManifestsMap.get(packageName);
-      if (manifest) {
-        acc[dir] = manifest.toJson({ copyPeerToRuntime: false });
-        acc[dir].defaultPeerDependencies = fromPairs(
-          manifest.envPolicy.peersAutoDetectPolicy.entries.map(({ name, version }) => [name, version])
-        );
-      }
-      return acc;
-    }, {});
+    let prev = await this._getComponentsManifests({ mergedRootPolicy });
     // TODO: this make duplicate
     // this.logger.consoleSuccess();
     // TODO: add the links results to the output
@@ -200,7 +182,7 @@ export class InstallMain {
       await installer.install(
         this.workspace.path,
         mergedRootPolicy,
-        compDirMap,
+        prev.compDirMap,
         { installTeambitBit: false },
         pmInstallOptions
       );
@@ -209,9 +191,6 @@ export class InstallMain {
         linkCoreAspects: this.dependencyResolver.linkCoreAspects(),
       });
       await this.compiler.compileOnWorkspace([], { initiator: CompilationInitiator.Install });
-      compDirMap = await this.getComponentsDirectory([]);
-      components = compDirMap.toArray().map(([component]) => component);
-      mergedRootPolicy = this.dependencyResolver.getWorkspacePolicy(); /// maybe not needed
       await this.link({
         linkTeambitBit: false,
         legacyLink: true,
@@ -219,36 +198,45 @@ export class InstallMain {
         linkDepsResolvedFromEnv: !hasRootComponents,
         linkNestedDepsInNM: !this.workspace.isLegacy && !hasRootComponents,
       });
-      const nextWorkspaceManifest = await this.dependencyResolver.getWorkspaceManifest(
-        undefined,
-        undefined,
-        mergedRootPolicy,
-        this.workspace.path,
-        components
-      );
-      const nextComponentsManifests = compDirMap.toArray().reduce((acc, [component, dir]) => {
-        const packageName = this.dependencyResolver.getPackageName(component);
-        const manifest = nextWorkspaceManifest.componentsManifestsMap.get(packageName);
-        if (manifest) {
-          acc[dir] = manifest.toJson({ copyPeerToRuntime: false });
-          acc[dir].defaultPeerDependencies = fromPairs(
-            manifest.envPolicy.peersAutoDetectPolicy.entries.map(({ name, version }) => [name, version])
-          );
-        }
-        return acc;
-      }, {});
+      const next = await this._getComponentsManifests({ mergedRootPolicy });
       if (
-        isEqual(prevComponentsManifests, nextComponentsManifests) &&
-        JSON.stringify(prevWorkspaceManifest) === JSON.stringify(nextWorkspaceManifest)
+        isEqual(prev.componentsManifests, next.componentsManifests) &&
+        JSON.stringify(prev.workspaceManifest) === JSON.stringify(next.workspaceManifest)
       ) {
         break;
       }
-      prevComponentsManifests = nextComponentsManifests;
-      prevWorkspaceManifest = nextWorkspaceManifest;
+      prev = next;
     } while (true); // eslint-disable-line no-constant-condition
-    return compDirMap;
+    return prev.compDirMap;
   }
   /* eslint-enable no-await-in-loop */
+
+  private async _getComponentsManifests({ mergedRootPolicy }: { mergedRootPolicy: WorkspacePolicy }) {
+    const compDirMap = await this.getComponentsDirectory([]);
+    const workspaceManifest = await this.dependencyResolver.getWorkspaceManifest(
+      undefined,
+      undefined,
+      mergedRootPolicy,
+      this.workspace.path,
+      compDirMap.components
+    );
+    const componentsManifests = compDirMap.toArray().reduce((acc, [component, dir]) => {
+      const packageName = this.dependencyResolver.getPackageName(component);
+      const manifest = workspaceManifest.componentsManifestsMap.get(packageName);
+      if (manifest) {
+        acc[dir] = manifest.toJson({ copyPeerToRuntime: false });
+        acc[dir].defaultPeerDependencies = fromPairs(
+          manifest.envPolicy.peersAutoDetectPolicy.entries.map(({ name, version }) => [name, version])
+        );
+      }
+      return acc;
+    }, {});
+    return {
+      compDirMap,
+      workspaceManifest,
+      componentsManifests,
+    };
+  }
 
   /**
    * Updates out-of-date dependencies in the workspace.
