@@ -94,6 +94,10 @@ export class LanesModel {
     return `${laneUrl}${LanesModel.baseLaneComponentRoute}/${componentId.fullName}${urlSearch}`;
   };
 
+  static getMainComponentUrl = (componentId: ComponentID) => {
+    return `${componentId.fullName}${componentId.version ? `?version=${componentId.version}` : ''}`;
+  };
+
   static mapToLaneModel(laneData: LaneQueryResult, host: string): LaneModel {
     const { id, components, readmeComponent, hash } = laneData;
 
@@ -127,24 +131,18 @@ export class LanesModel {
     return grouped;
   }
 
-  static groupByComponentHashAndId(lanes: LaneModel[]): {
-    byHash: Map<string, { lane: LaneModel; component: ComponentID }>;
-    byId: Map<string, LaneModel[]>;
-  } {
-    const byHash = new Map<string, { lane: LaneModel; component: ComponentID }>();
+  static groupByComponentId(lanes: LaneModel[]): Map<string, LaneModel[]> {
     const byId = new Map<string, LaneModel[]>();
     lanes.forEach((lane) => {
       const { components } = lane;
       components.forEach((component) => {
         const id = component.fullName;
-        const version = component.toString();
-        byHash.set(version, { lane, component });
         const existing = byId.get(id) || [];
         existing.push(lane);
         byId.set(id, existing);
       });
     });
-    return { byHash, byId };
+    return byId;
   }
 
   static from({ data, host, viewedLaneId }: { data: LanesQuery; host: string; viewedLaneId?: LaneId }): LanesModel {
@@ -162,42 +160,36 @@ export class LanesModel {
     this.currentLane = currentLane;
     this.lanes = lanes || [];
     this.laneIdsByScope = LanesModel.groupByScope(this.lanes.map((lane) => lane.id));
-    const { byHash, byId } = LanesModel.groupByComponentHashAndId(this.lanes);
-    this.lanebyComponentHash = byHash;
-    this.lanesByComponentId = byId;
+    this.lanesByComponentId = LanesModel.groupByComponentId(this.lanes);
   }
 
   readonly laneIdsByScope: Map<string, LaneId[]>;
-  readonly lanebyComponentHash: Map<string, { lane: LaneModel; component: ComponentID }>;
   readonly lanesByComponentId: Map<string, LaneModel[]>;
 
   viewedLane?: LaneModel;
   currentLane?: LaneModel;
   readonly lanes: LaneModel[];
 
+  getLaneComponentUrlByVersion = (componentId: ComponentID, laneId?: LaneId) => {
+    // if there is no version, the component is new and is on main
+    const defaultLane = this.getDefaultLane();
+    if (!componentId.version || !laneId || !defaultLane) return LanesModel.getMainComponentUrl(componentId);
+    const lane = this.getLanesByComponentId(componentId)?.find((l) => l.id.isEqual(laneId));
+    if (!lane) {
+      // return url from main if it exits
+      return defaultLane.components.find((c) => c.isEqual(componentId))
+        ? LanesModel.getMainComponentUrl(componentId)
+        : undefined;
+    }
+    if (lane.id.isDefault()) return LanesModel.getMainComponentUrl(componentId);
+    return LanesModel.getLaneComponentUrl(componentId, lane.id);
+  };
+
   isInViewedLane = (componentId: ComponentID) =>
     this.viewedLane?.components.some((comp) => comp.name === componentId.name);
 
-  getLaneComponentUrlByVersion = (componentId: ComponentID) => {
-    // if there is no version, the component is new and is on main
-    if (!componentId.version) return componentId.fullName;
-    const componentAndLane = this.lanebyComponentHash.get(componentId.toString());
-    if (!componentAndLane) return undefined;
-    if (componentAndLane.lane.id.isDefault())
-      return `${componentAndLane.component.fullName}${
-        componentAndLane.component.version ? `?version=${componentAndLane.component.version}` : ''
-      }`;
-    return LanesModel.getLaneComponentUrl(componentAndLane.component, componentAndLane.lane.id);
-  };
-
   getLanesByComponentId = (componentId: ComponentID) => this.lanesByComponentId.get(componentId.fullName);
-  getLaneByComponentVersion = (componentId: ComponentID) => {
-    if (componentId.version) return this.lanebyComponentHash.get(componentId.toString());
-    // if there is no version, the component is new and is on main
-    const defaultLane = this.getDefaultLane();
-    const component = defaultLane?.components.find((c) => c.isEqual(componentId, { ignoreVersion: true }));
-    return defaultLane && component ? { lane: defaultLane, component } : undefined;
-  };
+
   setViewedLane = (viewedLaneId?: LaneId) => {
     this.viewedLane = viewedLaneId ? this.lanes.find((lane) => lane.id.isEqual(viewedLaneId)) : undefined;
   };
@@ -209,11 +201,18 @@ export class LanesModel {
   getNonMainLanes = () => this.lanes.filter((lane) => !lane.id.isDefault());
 
   isComponentOnMain = (componentId: ComponentID) => {
-    const componentAndLane = this.getLaneByComponentVersion(componentId);
-    return !!componentAndLane && componentAndLane.lane.id.isDefault();
+    return this.getLanesByComponentId(componentId)?.some((lane) => lane.id.isDefault());
+  };
+  isComponentOnMainButNotOnLane = (componentId: ComponentID) => {
+    return (
+      this.isComponentOnMain(componentId) &&
+      this.getLanesByComponentId(componentId)?.filter((lane) => !lane.id.isDefault()).length === 0
+    );
   };
   isComponentOnLaneButNotOnMain = (componentId: ComponentID) => {
-    const componentAndLane = this.getLaneByComponentVersion(componentId);
-    return !!componentAndLane && !componentAndLane.lane.id.isDefault();
+    return (
+      !this.isComponentOnMain(componentId) &&
+      this.getLanesByComponentId(componentId)?.some((lane) => !lane.id.isDefault())
+    );
   };
 }
