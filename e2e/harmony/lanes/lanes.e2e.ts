@@ -960,6 +960,26 @@ describe('bit lane command', function () {
       expect(() => helper.command.export()).to.throw('cannot find scope');
     });
   });
+  describe('multiple scopes when the origin-scope exits but does not have the component. only lane-scope has it', () => {
+    let anotherRemote: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      const { scopeName, scopePath } = helper.scopeHelper.getNewBareScope();
+      anotherRemote = scopeName;
+      helper.scopeHelper.addRemoteScope(scopePath);
+      helper.scopeHelper.addRemoteScope(scopePath, helper.scopes.remotePath);
+      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, scopePath);
+      helper.fixtures.populateComponents(1);
+      helper.command.setScope(anotherRemote, 'comp1');
+      helper.command.createLane();
+      helper.command.snapAllComponentsWithoutBuild();
+    });
+    // should not throw an error "the component {component-name} has no versions and the head is empty."
+    it('bit import should not throw an error', () => {
+      expect(() => helper.command.import()).to.not.throw();
+    });
+  });
   describe('snapping and un-tagging on a lane', () => {
     let afterFirstSnap: string;
     before(() => {

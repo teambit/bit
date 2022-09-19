@@ -124,13 +124,15 @@ export default class ImportComponents {
       lane,
     });
 
-    // import lane components from their original scope, this way, it's possible to run diff/merge on them
+    // import lane components from their original scope, this way, it's possible to run diff/merge on them.
+    // don't use `scope.getDefaultLaneIdsFromLane()`. we need all components, because it's possible that a component
+    // does't have "head" locally although it exits in the origin-scope. it happens when the component was created on
+    // the origin-scope after a component with the same-name was created on the lane
     if (lane) {
-      const mainIds = await this.scope.getDefaultLaneIdsFromLane(lane);
-      const mainIdsLatest = BitIds.fromArray(mainIds.map((m) => m.changeVersion(undefined)));
       // @todo: optimize this maybe. currently, it imports twice.
       // try to make the previous `importComponentsObjectsHarmony` import the same component once from the original
       // scope and once from the lane-scope.
+      const mainIdsLatest = BitIds.fromArray(lane.toBitIds().map((m) => m.changeVersion(undefined)));
       await this.consumer.importComponentsObjects(mainIdsLatest, {
         allHistory: this.options.allHistory,
         ignoreMissingHead: true,

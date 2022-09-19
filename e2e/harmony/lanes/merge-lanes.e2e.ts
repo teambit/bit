@@ -467,7 +467,6 @@ describe('merge lanes', function () {
 
       helper.scopeHelper.getClonedLocalScope(afterLaneExport);
       helper.command.import();
-      helper.command.fetchAllComponents(); // todo: this should not be needed. "bit import" should do that
     });
     it('bit status should have the component as pendingUpdatesFromMain with an noCommonSnap error', () => {
       const status = helper.command.statusJson();
@@ -513,7 +512,6 @@ describe('merge lanes', function () {
       before(() => {
         helper.scopeHelper.getClonedRemoteScope(remoteScopeAfterExport);
         helper.scopeHelper.getClonedLocalScope(afterLaneExport);
-        helper.command.fetchAllComponents(); // todo: this should not be needed. "bit import" should do that
         helper.command.mergeLane('main', '--resolve-unrelated --no-snap');
       });
       it('bit status should show the component as during-merge and staged and not everywhere else', () => {
@@ -545,7 +543,6 @@ describe('merge lanes', function () {
       before(() => {
         helper.scopeHelper.getClonedRemoteScope(remoteScopeAfterExport);
         helper.scopeHelper.getClonedLocalScope(afterLaneExport);
-        helper.command.fetchAllComponents(); // todo: this should not be needed. "bit import" should do that
         helper.command.mergeLane('main', '--resolve-unrelated theirs --no-snap');
       });
       it('bit status should show the component as during-merge and staged and not everywhere else', () => {
@@ -569,7 +566,6 @@ describe('merge lanes', function () {
         helper.command.snapAllComponentsWithoutBuild('--unmodified');
         helper.command.export();
         helper.command.switchLocalLane('dev');
-        helper.command.fetchAllComponents(); // todo: this should not be needed. "bit import" should do that
         helper.command.mergeLane('main', '--resolve-unrelated');
         laneHeadAfterMerge = helper.command.getHeadOfLane('dev', 'comp1');
         helper.command.export();
