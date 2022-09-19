@@ -436,6 +436,7 @@ describe('merge lanes', function () {
   });
   describe('multiple scopes when a component in the origin is different than on the lane', () => {
     let originRemote: string;
+    let originPath: string;
     let afterLaneExport: string;
     let mainHead: string;
     let laneScopeHead: string;
@@ -445,6 +446,7 @@ describe('merge lanes', function () {
       helper.bitJsonc.setupDefault();
       const { scopeName, scopePath } = helper.scopeHelper.getNewBareScope();
       originRemote = scopeName;
+      originPath = scopePath;
       helper.scopeHelper.addRemoteScope(scopePath);
       helper.scopeHelper.addRemoteScope(scopePath, helper.scopes.remotePath);
       helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, scopePath);
@@ -512,6 +514,7 @@ describe('merge lanes', function () {
       before(() => {
         helper.scopeHelper.getClonedRemoteScope(remoteScopeAfterExport);
         helper.scopeHelper.getClonedLocalScope(afterLaneExport);
+        helper.command.import();
         helper.command.mergeLane('main', '--resolve-unrelated --no-snap');
       });
       it('bit status should show the component as during-merge and staged and not everywhere else', () => {
@@ -543,6 +546,7 @@ describe('merge lanes', function () {
       before(() => {
         helper.scopeHelper.getClonedRemoteScope(remoteScopeAfterExport);
         helper.scopeHelper.getClonedLocalScope(afterLaneExport);
+        helper.command.import();
         helper.command.mergeLane('main', '--resolve-unrelated theirs --no-snap');
       });
       it('bit status should show the component as during-merge and staged and not everywhere else', () => {
@@ -559,6 +563,7 @@ describe('merge lanes', function () {
     });
     describe('bit lane merge of another lane that was not resolved yet', () => {
       let laneHeadAfterMerge: string;
+      let beforeMergingSecondLane: string;
       before(() => {
         helper.scopeHelper.getClonedRemoteScope(remoteScopeAfterExport);
         helper.scopeHelper.getClonedLocalScope(afterLaneExport);
@@ -566,9 +571,11 @@ describe('merge lanes', function () {
         helper.command.snapAllComponentsWithoutBuild('--unmodified');
         helper.command.export();
         helper.command.switchLocalLane('dev');
+        helper.command.import();
         helper.command.mergeLane('main', '--resolve-unrelated');
         laneHeadAfterMerge = helper.command.getHeadOfLane('dev', 'comp1');
         helper.command.export();
+        beforeMergingSecondLane = helper.scopeHelper.cloneLocalScope();
         helper.command.mergeLane('dev2', '--resolve-unrelated');
       });
       it('should keep the local history and not the dev2 history because the current history has been already resolved', () => {
@@ -580,6 +587,25 @@ describe('merge lanes', function () {
       it('bit status should not show components as pendingUpdatesFromMain', () => {
         const status = helper.command.statusJson();
         expect(status.pendingUpdatesFromMain).to.have.lengthOf(0);
+      });
+      // it's a complex scenario. in short:
+      // main has 0.0.1 and 0.0.2
+      // dev lane resolved unrelated when main was on 0.0.1
+      // now when merging dev to dev2, the component-head (0.0.2) can't be found in the local-snaps of dev
+      describe('when main got another tag meanwhile', () => {
+        before(() => {
+          helper.scopeHelper.reInitLocalScopeHarmony();
+          helper.scopeHelper.addRemoteScope(originPath);
+          helper.command.import(`${originRemote}/comp1`);
+          helper.command.tagAllWithoutBuild('--unmodified');
+          helper.command.export();
+
+          helper.scopeHelper.getClonedLocalScope(beforeMergingSecondLane);
+          helper.command.import();
+        });
+        it('should be able to merge with no errors', () => {
+          expect(() => helper.command.mergeLane('dev2', '--resolve-unrelated')).to.not.throw();
+        });
       });
     });
   });
