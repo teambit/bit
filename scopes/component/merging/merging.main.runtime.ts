@@ -350,8 +350,13 @@ export class MergingMain {
     if (divergeData.err) {
       const mainHead = modelComponent.head;
       if (divergeData.err instanceof NoCommonSnap && options?.resolveUnrelated && mainHead) {
-        const hasResolvedLocally = divergeData.snapsOnLocalOnly.find((snap) => mainHead.isEqual(snap));
-        const hasResolvedRemotely = divergeData.snapsOnRemoteOnly.find((snap) => mainHead.isEqual(snap));
+        const hasResolvedFromMain = async (hashToCompare: Ref | null) => {
+          const divergeDataFromMain = await getDivergeData(repo, modelComponent, mainHead, hashToCompare, false);
+          if (!divergeDataFromMain.err) return true;
+          return !(divergeDataFromMain.err instanceof NoCommonSnap);
+        };
+        const hasResolvedLocally = await hasResolvedFromMain(localHead);
+        const hasResolvedRemotely = await hasResolvedFromMain(otherLaneHead);
         if (!hasResolvedLocally && !hasResolvedRemotely) {
           return returnUnmerged(
             `unable to traverse ${currentComponent.id.toString()} history. the main-head ${mainHead.toString()} doesn't appear in both lanes, it was probably created in each lane separately`

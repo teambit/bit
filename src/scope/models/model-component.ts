@@ -38,6 +38,7 @@ import { getLatestVersion } from '../../utils/semver-helper';
 import { ObjectItem } from '../objects/object-list';
 import { getRefsFromExtensions } from '../../consumer/component/sources/artifact-files';
 import { SchemaName } from '../../consumer/component/component-schema';
+import { NoHeadNoVersion } from '../exceptions/no-head-no-version';
 
 type State = {
   versions?: {
@@ -715,10 +716,7 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
     const versionNum = versionParsed.latest ? this.latest() : versionParsed.resolve(this.listVersionsIncludeOrphaned());
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     if (versionNum === VERSION_ZERO) {
-      throw new Error(`the component ${this.id()} has no versions and the head is empty.
-this is probably a component from another lane which should not be loaded in this lane (or main).
-if this component is on a lane, make sure to ask for it with a version.
-if that's not the case, make sure to call "getAllIdsAvailableOnLane" and not "getAllBitIdsFromAllLanes"`);
+      throw new NoHeadNoVersion(this.id());
     }
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     if (isTag(versionNum) && !this.hasTagIncludeOrphaned(versionNum!)) {
