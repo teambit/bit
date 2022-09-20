@@ -35,8 +35,7 @@ export class ReactApp implements Application {
     readonly devServer?: DevServer,
     readonly transformers: WebpackConfigTransformer[] = [],
     readonly deploy?: (context: ReactDeployContext) => Promise<void>,
-    readonly favicon?: string,
-    readonly dependencies?: WorkspacePolicy
+    readonly favicon?: string
   ) {}
   readonly applicationType = 'react-common-js';
   readonly dir = 'public';
@@ -193,34 +192,30 @@ export class ReactApp implements Application {
   }
 
   private getSsrPolicy() {
-    const defaultWorkspacePolicy = new WorkspacePolicy([]);
-    defaultWorkspacePolicy.add({ lifecycleType: 'runtime', dependencyId: 'express', value: { version: '4.18.1' } });
-    defaultWorkspacePolicy.add({
+    const workspacePolicy = new WorkspacePolicy([]);
+    workspacePolicy.add({ lifecycleType: 'runtime', dependencyId: 'express', value: { version: '4.18.1' } });
+    workspacePolicy.add({
       lifecycleType: 'runtime',
       dependencyId: '@teambit/react.rendering.ssr',
       value: { version: '0.0.3' },
     });
-    defaultWorkspacePolicy.add({
+    workspacePolicy.add({
       lifecycleType: 'runtime',
       dependencyId: '@teambit/ui-foundation.ui.pages.static-error',
       value: { version: '0.0.75' },
     });
 
-    defaultWorkspacePolicy.add({
+    workspacePolicy.add({
       lifecycleType: 'peer',
       dependencyId: 'react',
       value: { version: '17.0.2' },
     });
 
-    defaultWorkspacePolicy.add({
+    workspacePolicy.add({
       lifecycleType: 'peer',
       dependencyId: 'react-dom',
       value: { version: '17.0.2' },
     });
-
-    const workspacePolicy = this.dependencies
-      ? WorkspacePolicy.mergePolices([defaultWorkspacePolicy, this.dependencies])
-      : defaultWorkspacePolicy;
     return workspacePolicy;
   }
 

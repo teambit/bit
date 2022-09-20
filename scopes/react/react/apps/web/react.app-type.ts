@@ -1,5 +1,5 @@
 import type { Logger } from '@teambit/logger';
-import { DependencyResolverMain, WorkspacePolicy } from '@teambit/dependency-resolver';
+import type { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { ApplicationType } from '@teambit/application';
 import { ReactAppOptions } from './react-app-options';
 import { ReactApp } from './react.application';
@@ -10,16 +10,10 @@ export class ReactAppType implements ApplicationType<ReactAppOptions> {
     readonly name: string,
     private reactEnv: ReactEnv,
     private logger: Logger,
-    private dependencyResolver: DependencyResolverMain,
-    readonly reactVersionDependencies?: WorkspacePolicy
+    private dependencyResolver: DependencyResolverMain
   ) {}
 
   createApp(options: ReactAppOptions) {
-    const dependencyPolicy = WorkspacePolicy.mergePolices([
-      this.reactVersionDependencies || new WorkspacePolicy([]),
-      options.dependencies || new WorkspacePolicy([]),
-    ]);
-
     return new ReactApp(
       options.name,
       options.entry,
@@ -34,8 +28,7 @@ export class ReactAppType implements ApplicationType<ReactAppOptions> {
       options.devServer,
       options.webpackTransformers,
       options.deploy,
-      options.favicon,
-      dependencyPolicy
+      options.favicon
     );
   }
 }

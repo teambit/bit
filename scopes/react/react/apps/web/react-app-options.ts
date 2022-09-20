@@ -1,5 +1,4 @@
 import { Bundler, DevServer } from '@teambit/bundler';
-import { WorkspacePolicy } from '@teambit/dependency-resolver';
 import { WebpackConfigTransformer } from '@teambit/webpack';
 
 import { ReactDeployContext } from './deploy-context';
@@ -120,10 +119,4 @@ export type ReactAppOptions = {
    * favicon for the app. You can pass an abs path (using require.resolve()) or a url.
    */
   favicon?: string;
-
-  /**
-   * dependencies to be configured for the application - e.g. version of react
-   * items here will override any defaults that are already configured for a package+dependencyType
-   */
-  dependencies?: WorkspacePolicy;
 };
