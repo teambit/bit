@@ -7,7 +7,10 @@ export class LintTask implements BuildTask {
 
   async execute(context: BuildContext): Promise<BuiltTaskResult> {
     const linter: Linter = context.env.getLinter();
-    const linterContext: LinterContext = Object.assign(
+    const linterContext: LinterContext = {
+      rootDir: context.capsuleNetwork.capsulesRootDir,
+      ...context,
+    }
       {},
       {
         rootDir: context.capsuleNetwork.capsulesRootDir,
