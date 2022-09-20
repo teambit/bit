@@ -210,6 +210,10 @@ export class EnvsMain {
 
   isUsingCoreEnv(component: Component): boolean {
     const envId = this.getEnvId(component);
+    return this.isCoreEnv(envId);
+  }
+
+  isCoreEnv(envId: string): boolean {
     return this.getCoreEnvsIds().includes(envId);
   }
 
@@ -232,11 +236,18 @@ export class EnvsMain {
    */
   async getEnvComponent(component: Component): Promise<Component> {
     const envId = this.getEnvId(component);
+    return this.getEnvComponentByEnvId(envId, component.id.toString());
+  }
+
+  /**
+   * get the env component by the env id.
+   */
+  async getEnvComponentByEnvId(envId: string, requesting: string): Promise<Component> {
     const host = this.componentMain.getHost();
     const newId = await host.resolveComponentId(envId);
     const envComponent = await host.get(newId);
     if (!envComponent) {
-      throw new BitError(`can't load env. env id is ${envId} used by component ${component.id.toString()}`);
+      throw new BitError(`can't load env. env id is ${envId} used by component ${requesting}`);
     }
     return envComponent;
   }
