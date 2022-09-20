@@ -41,7 +41,6 @@ export class ESLintLinter implements Linter {
         // TODO: now that we moved to lint files, maybe it's not required anymore
         // The eslint api will not ignore extensions by default when using lintText, so we do it manually
         if (!this.options.extensions?.includes(file.extname)) return undefined;
-        // const sourceCode = file.contents.toString('utf8');
         return file.path;
       });
 
@@ -51,8 +50,6 @@ export class ESLintLinter implements Linter {
       if (eslint && this.options.config.fix && lintResults) {
         await ESLintLib.outputFixes(lintResults);
       }
-
-      // return lintResults;
 
       const results: ESLintLib.LintResult[] = compact(flatten(lintResults));
       const formatter = await eslint.loadFormatter(this.options.formatter || 'stylish');
@@ -120,8 +117,6 @@ export class ESLintLinter implements Linter {
     }
     const cacheDir = getCacheDir(rootDir);
     const hash = objectHash(newTsConfig);
-    // const tempTsConfigPath = path.join(cacheDir, `bit.tsconfig.eslint.${envId.replaceAll('/', '__')}.json`);
-
     // We save the tsconfig with hash here to avoid creating unnecessary tsconfig files
     // this is very important as eslint will be able to cache the tsconfig file and will not need to create another program
     // this affects performance dramatically
