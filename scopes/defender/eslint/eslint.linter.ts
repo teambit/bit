@@ -85,6 +85,11 @@ export class ESLintLinter implements Linter {
       totalFixableErrorCount,
       totalFixableWarningCount,
       totalWarningCount,
+      totalComponentsWithErrorCount,
+      totalComponentsWithFatalErrorCount,
+      totalComponentsWithFixableErrorCount,
+      totalComponentsWithFixableWarningCount,
+      totalComponentsWithWarningCount
     } = this.computeManyComponentsTotals(results);
 
     return {
@@ -93,6 +98,11 @@ export class ESLintLinter implements Linter {
       totalFixableErrorCount,
       totalFixableWarningCount,
       totalWarningCount,
+      totalComponentsWithErrorCount,
+      totalComponentsWithFatalErrorCount,
+      totalComponentsWithFixableErrorCount,
+      totalComponentsWithFixableWarningCount,
+      totalComponentsWithWarningCount,
       results,
       errors: [],
     };
@@ -163,13 +173,34 @@ export class ESLintLinter implements Linter {
     let totalFixableErrorCount = 0;
     let totalFixableWarningCount = 0;
     let totalWarningCount = 0;
+    let totalComponentsWithErrorCount = 0
+    let totalComponentsWithFatalErrorCount = 0
+    let totalComponentsWithFixableErrorCount = 0
+    let totalComponentsWithFixableWarningCount = 0
+    let totalComponentsWithWarningCount = 0
+
     componentsResults.forEach((result) => {
-      totalErrorCount += result.totalErrorCount ?? 0;
+      if (result.totalErrorCount){
+        totalErrorCount += result.totalErrorCount ?? 0;
+        totalComponentsWithErrorCount += 1;
+      }
       // @ts-ignore - missing from the @types/eslint lib
-      totalFatalErrorCount += result.totalFatalErrorCount ?? 0;
-      totalFixableErrorCount += result.totalFixableErrorCount ?? 0;
-      totalFixableWarningCount += result.totalFixableWarningCount ?? 0;
-      totalWarningCount += result.totalWarningCount ?? 0;
+      if (result.totalFatalErrorCount){
+        totalFatalErrorCount += result.totalFatalErrorCount ?? 0;
+        totalComponentsWithFatalErrorCount += 1;
+      }
+      if (result.totalFixableErrorCount){
+        totalFixableErrorCount += result.totalFixableErrorCount ?? 0;
+        totalComponentsWithFixableErrorCount += 1;
+      }
+      if (result.totalFixableWarningCount){
+        totalFixableWarningCount += result.totalFixableWarningCount ?? 0;
+        totalComponentsWithFixableWarningCount += 1;
+      }
+      if (result.totalWarningCount){
+        totalWarningCount += result.totalWarningCount ?? 0;
+        totalComponentsWithWarningCount += 1;
+      }
     });
     return {
       totalErrorCount,
@@ -178,6 +209,11 @@ export class ESLintLinter implements Linter {
       totalFixableWarningCount,
       totalWarningCount,
       componentsResults,
+      totalComponentsWithErrorCount,
+      totalComponentsWithFatalErrorCount,
+      totalComponentsWithFixableErrorCount,
+      totalComponentsWithFixableWarningCount,
+      totalComponentsWithWarningCount,
     };
   }
 
