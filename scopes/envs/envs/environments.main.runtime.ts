@@ -5,6 +5,7 @@ import { Harmony, Slot, SlotRegistry } from '@teambit/harmony';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import type { AspectDefinition } from '@teambit/aspect-loader';
 import { ExtensionDataList, ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config/extension-data';
+import { BitError } from '@teambit/bit-error';
 import findDuplications from '@teambit/legacy/dist/utils/array/find-duplications';
 import { BitId } from '@teambit/legacy-bit-id';
 import { EnvService } from './services';
@@ -209,6 +210,10 @@ export class EnvsMain {
 
   isUsingCoreEnv(component: Component): boolean {
     const envId = this.getEnvId(component);
+    return this.isCoreEnv(envId);
+  }
+
+  isCoreEnv(envId: string): boolean {
     return this.getCoreEnvsIds().includes(envId);
   }
 
@@ -224,6 +229,27 @@ export class EnvsMain {
     }
     // Do not allow a non existing env
     throw new EnvNotFound(id, component.id.toString());
+  }
+
+  /**
+   * get the env component of the given component.
+   */
+  async getEnvComponent(component: Component): Promise<Component> {
+    const envId = this.getEnvId(component);
+    return this.getEnvComponentByEnvId(envId, component.id.toString());
+  }
+
+  /**
+   * get the env component by the env id.
+   */
+  async getEnvComponentByEnvId(envId: string, requesting: string): Promise<Component> {
+    const host = this.componentMain.getHost();
+    const newId = await host.resolveComponentId(envId);
+    const envComponent = await host.get(newId);
+    if (!envComponent) {
+      throw new BitError(`can't load env. env id is ${envId} used by component ${requesting}`);
+    }
+    return envComponent;
   }
 
   /**
@@ -478,7 +504,7 @@ export class EnvsMain {
     return undefined;
   }
 
-  getEnvFromComponent(envComponent: Component) {
+  getEnvFromComponent(envComponent: Component): EnvDefinition | undefined {
     const env = this.getEnvDefinitionById(envComponent.id);
     return env;
   }
@@ -515,6 +541,15 @@ export class EnvsMain {
     const data = this.getEnvData(component);
     if (!data) return false;
     return data.type === 'env';
+  }
+
+  /**
+   * Check if the given component is an env component.
+   * @param component
+   * @returns
+   */
+  isEnv(component: Component): boolean {
+    return this.isUsingEnvEnv(component) || this.isEnvRegistered(component.id.toString());
   }
 
   /**

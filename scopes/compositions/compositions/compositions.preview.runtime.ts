@@ -51,12 +51,12 @@ export class CompositionsPreview {
   }
 
   private getActiveComposition(module: ModuleFile, metadata?: CompositionBrowserMetadataObject) {
-    // const chosen = window.location.hash.split('&')[1];
+    const firstQueryParam = window.location.hash.split('&')[1];
     const query = this.preview.getQuery();
-    const param = this.preview.getParam(query, 'name');
+    const compositionId = this.preview.getParam(query, 'name') || firstQueryParam;
 
-    if (param && module[param]) {
-      return module[param];
+    if (compositionId && module[compositionId]) {
+      return module[compositionId];
     }
 
     if (metadata && metadata.compositions) {
