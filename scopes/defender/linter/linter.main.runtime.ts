@@ -52,7 +52,7 @@ export class LinterMain {
   ) {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const logger = loggerAspect.createLogger(LinterAspect.id);
-    const linterService = new LinterService(config, workspace.path);
+    const linterService = new LinterService(config, workspace?.path);
     const linterAspect = new LinterMain(envs, linterService);
     envs.registerService(linterService);
     cli.register(new LintCmd(linterAspect, component.getHost(), workspace));

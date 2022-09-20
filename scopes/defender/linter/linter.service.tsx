@@ -10,7 +10,7 @@ import { LinterConfig } from './linter.main.runtime';
 export class LinterService implements EnvService<LintResults> {
   name = 'linter';
 
-  constructor(private linterConfig: LinterConfig, private rootDir: string) {}
+  constructor(private linterConfig: LinterConfig, private rootDir?: string) {}
 
   async run(context: ExecutionContext, options: LinterOptions): Promise<LintResults> {
     const mergedOpts = this.optionsWithDefaults(options);
