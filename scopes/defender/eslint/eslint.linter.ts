@@ -1,3 +1,5 @@
+import fs from 'fs-extra';
+import path from 'path';
 import { flatten, compact } from 'lodash';
 import { Linter, LinterContext, LintResults, ComponentLintResult } from '@teambit/linter';
 import { ESLint as ESLintLib } from 'eslint';
@@ -25,9 +27,15 @@ export class ESLintLinter implements Linter {
 
   async lint(context: LinterContext): Promise<LintResults> {
     const longProcessLogger = this.logger.createLongProcessLogger('linting components', context.components.length);
+    const eslint = this.createEslint(this.options.config, this.ESLint);
+    if (this.options.tsConfig && context.rootDir){
+      const tsConfigPath = this.createTempTsConfigFile(context.rootDir, context.envRuntime.id, this.options.tsConfig);
+      if (this.options?.config?.overrideConfig?.parserOptions){
+        this.options.config.overrideConfig.parserOptions.project = tsConfigPath;
+      }
+    }
     const resultsP = mapSeries(context.components, async (component) => {
       longProcessLogger.logProgress(component.id.toString());
-      const eslint = this.createEslint(this.options.config, this.ESLint);
       const filesP = component.filesystem.files.map(async (file) => {
         // The eslint api ignore extensions by default when using lintText, so we do it manually
         if (!this.options.extensions?.includes(file.extname)) return undefined;
@@ -88,6 +96,24 @@ export class ESLintLinter implements Linter {
       results,
       errors: [],
     };
+  }
+
+  private createTempTsConfigFile(rootDir: string, envId: string, tsConfig: Record<string,any>): string {
+    const newInclude = tsConfig.include?.map(includedPath => `../../${includedPath}`);
+    const newExclude = tsConfig.exclude?.map(excludedPath => `../../${excludedPath}`);
+    const newTsConfig = {
+      ...tsConfig,
+    }
+    if (newInclude) {
+      newTsConfig.include = newInclude;
+    }
+    if (newExclude){
+      newTsConfig.exclude = newExclude;
+    }
+    const cacheDir = getCacheDir(rootDir);
+    const tempTsConfigPath = path.join(cacheDir, `bit.tsconfig.eslint.${envId.replaceAll('/', '_')}.json`);
+    fs.outputJSONSync(tempTsConfigPath, newTsConfig, {spaces: 2});
+    return tempTsConfigPath;
   }
 
   private computeComponentResultsWithTotals(results: ESLintLib.LintResult[]) {
@@ -165,4 +191,8 @@ export class ESLintLinter implements Linter {
     if (this.ESLint) return this.ESLint.version;
     return ESLintLib.version;
   }
+}
+
+function getCacheDir(rootDir): string {
+  return path.join(rootDir, 'node_modules', '.cache');
 }

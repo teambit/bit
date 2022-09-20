@@ -249,12 +249,15 @@ export class ReactEnv
 
     const allTransformers = [defaultTransformer, ...transformers];
 
+    const tsConfig = this.createTsCompilerOptions('dev').tsconfig;
+
     return this.eslint.createLinter(
       context,
       {
         config: eslintConfig,
         // resolve all plugins from the react environment.
         pluginPath: __dirname,
+        tsConfig
       },
       allTransformers
     );
