@@ -68,14 +68,14 @@ export class LintCmd implements Command {
       })
       .join('\n');
 
-    const summery = this.getSummarySection(data);
-    return { code, data: `${title}\n\n${componentsOutputs}\n\n${summery}` };
+    const summary = this.getSummarySection(data);
+    return { code, data: `${title}\n\n${componentsOutputs}\n\n${summary}` };
   }
 
   private getSummarySection(data: JsonLintResultsData){
     const { duration, lintResults, componentsIdsToLint } = data;
     const { seconds } = duration;
-    const summeryTitle = `linted ${chalk.cyan(componentsIdsToLint.length.toString())} components in ${chalk.cyan(
+    const summaryTitle = `linted ${chalk.cyan(componentsIdsToLint.length.toString())} components in ${chalk.cyan(
       seconds.toString()
     )} seconds`;
 
@@ -89,7 +89,7 @@ export class LintCmd implements Command {
     ];
 
     const summaryTotals = totalFieldsMap.map(item => this.getTotalLine(lintResults[item.componentsDataField], lintResults[item.itemsDataField], item.label)).filter(Boolean).join('\n');
-    const summary = `${summeryTitle}\n${summaryTotals}`;
+    const summary = `${summaryTitle}\n${summaryTotals}`;
     return summary;
   }
 
