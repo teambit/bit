@@ -1230,6 +1230,15 @@ describe('bit lane command', function () {
         expect(lane.forkedFrom.name).to.equal('lane-a');
       });
     });
+    describe('switching back to lane-a', () => {
+      before(() => {
+        helper.command.switchLocalLane('lane-a');
+      });
+      it('bitmap should show the lane as exported', () => {
+        const bitMap = helper.bitMap.read();
+        expect(bitMap[LANE_KEY].exported).to.be.true;
+      });
+    });
   });
   // @todo: fix!
   describe.skip('head on the lane is not in the filesystem', () => {
