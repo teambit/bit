@@ -683,7 +683,6 @@ needed-for: ${neededFor || '<unknown>'}`);
       },
       this.legacyScope
     );
-    // @ts-ignore
 
     const capsules = network.seedersCapsules;
     const aspectDefs = await this.aspectLoader.resolveAspects(components, async (component) => {

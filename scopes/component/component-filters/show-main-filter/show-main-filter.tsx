@@ -40,7 +40,7 @@ function showMainFilter({ className, lanes }: ComponentFilterRenderProps) {
     <div className={classNames(styles.onLaneFilter, isActive && styles.active, className)}>
       <div className={styles.filterIcon}>
         <LaneIcon />
-        <span className={styles.filterIconLabel}>Show Main</span>
+        <span className={styles.filterIconLabel}>Show main</span>
       </div>
       <div>
         <Toggle

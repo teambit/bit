@@ -13,7 +13,7 @@ export type LanesProviderProps = {
 
 export function LanesProvider({ children, viewedLaneId, targetLanes }: LanesProviderProps) {
   const { lanesModel, loading } = useLanes(targetLanes);
-  const [lanesState, setLanesState] = useState<LanesModel | undefined>(undefined);
+  const [lanesState, setLanesState] = useState<LanesModel | undefined>(lanesModel);
   const location = useLocation();
 
   useEffect(() => {
