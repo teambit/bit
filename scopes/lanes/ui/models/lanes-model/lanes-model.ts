@@ -220,12 +220,10 @@ export class LanesModel {
 
   isComponentOnMain = (componentId: ComponentID, includeVersion?: boolean) => {
     if (includeVersion) {
-      const result = this.getLanesByComponentId(componentId)?.some((lane) => lane.id.isDefault());
-      return !!result;
+      return !!this.getLanesByComponentId(componentId)?.some((lane) => lane.id.isDefault());
     }
 
-    const result = !!this.getLanesByComponentName(componentId)?.some((lane) => lane.id.isDefault());
-    return result;
+    return !!this.getLanesByComponentName(componentId)?.some((lane) => lane.id.isDefault());
   };
 
   isComponentOnMainButNotOnLane = (componentId: ComponentID, includeVersion?: boolean) => {
@@ -236,10 +234,8 @@ export class LanesModel {
   };
   isComponentOnNonDefaultLanes = (componentId: ComponentID, includeVersion?: boolean) => {
     if (includeVersion) {
-      const result = this.getLanesByComponentId(componentId)?.some((lane) => !lane.id.isDefault());
-      return !!result;
+      return !!this.getLanesByComponentId(componentId)?.some((lane) => !lane.id.isDefault());
     }
-    const result = !!this.getLanesByComponentName(componentId)?.some((lane) => !lane.id.isDefault());
-    return result;
+    return !!this.getLanesByComponentName(componentId)?.some((lane) => !lane.id.isDefault());
   };
 }
