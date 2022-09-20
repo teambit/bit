@@ -242,8 +242,11 @@ export class ReactEnv
    * returns and configures the component linter.
    */
   getLinter(context: LinterContext, transformers: EslintConfigTransformer[] = []): Linter {
+    const tsConfig = this.createTsCompilerOptions('dev').tsconfig;
+
     const defaultTransformer: EslintConfigTransformer = (configMutator) => {
       configMutator.addExtensionTypes(['.md', '.mdx']);
+      configMutator.setTsConfig(tsConfig);
       return configMutator;
     };
 

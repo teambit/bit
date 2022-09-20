@@ -32,10 +32,10 @@ module.exports = {
       jsx: true,
     },
     parser: require.resolve('@typescript-eslint/parser'),
-    createDefaultProgram: true,
+    extraFileExtensions: ['.md', '.mdx'],
+    // createDefaultProgram: true,
     // Should be provided by the extender eslint
     // we can't calculate the tsconfig path here
-    // createDefaultProgram: true,
     // project: `${tsconfigPath}`,
   },
   settings: {
