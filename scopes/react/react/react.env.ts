@@ -67,7 +67,7 @@ const prettierConfig = require('./prettier/prettier.config.js');
 type CompilerMode = 'build' | 'dev';
 
 type GetBuildPipeModifiers = PipeServiceModifiersMap & {
-  compilerModifier?: PipeServiceModifier;
+  tsModifier?: PipeServiceModifier;
 };
 
 /**
@@ -486,8 +486,8 @@ export class ReactEnv
    * returns the component build pipeline.
    */
   getBuildPipe(modifiers: GetBuildPipeModifiers = {}): BuildTask[] {
-    const transformers: Function[] = modifiers?.compilerModifier?.transformers || [];
-    return [this.createCjsCompilerTask(transformers, modifiers?.compilerModifier?.module || ts), this.tester.task];
+    const transformers: Function[] = modifiers?.tsModifier?.transformers || [];
+    return [this.createCjsCompilerTask(transformers, modifiers?.tsModifier?.module || ts), this.tester.task];
   }
 
   /**
