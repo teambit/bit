@@ -88,14 +88,14 @@ export class LintCmd implements Command {
       {itemsDataField: 'totalWarningCount', componentsDataField: 'totalComponentsWithWarningCount', label: 'Warnings'},
     ];
 
-    const summaryTotals = totalFieldsMap.map(item => this.getTotalLine(lintResults[item.componentsDataField], lintResults[item.itemsDataField], item.label)).filter(Boolean).join('\n');
+    const summaryTotals = totalFieldsMap.map(item => this.renderTotalLine(lintResults[item.componentsDataField], lintResults[item.itemsDataField], item.label)).filter(Boolean).join('\n');
     const summary = `${summaryTitle}\n${summaryTotals}`;
     return summary;
   }
 
-  private getTotalLine(componentsCount: number, itemsCount:number, fieldLabe: string): string | undefined {
+  private renderTotalLine(componentsCount: number, itemsCount:number, fieldLabel: string): string | undefined {
     if (itemsCount === 0) return undefined;
-    return `total of ${chalk.green(itemsCount.toString())} ${chalk.cyan(fieldLabe)} (from ${chalk.green(componentsCount.toString())} components)`;
+    return `total of ${chalk.green(itemsCount.toString())} ${chalk.cyan(fieldLabel)} (from ${chalk.green(componentsCount.toString())} components)`;
   }
 
   async json([components = []]: [string[]], linterOptions: LintCmdOptions): Promise<JsonLintResults> {
@@ -154,24 +154,23 @@ function toJsonLintResults(results: EnvsExecutionResult<LintResults>): JsonLintD
 
     if (res.data) {
       if (res.data.totalErrorCount){
-        totalErrorCount += res.data.totalErrorCount ?? 0;
+        totalErrorCount += res.data.totalErrorCount;
         totalComponentsWithErrorCount += res.data.totalComponentsWithErrorCount ?? 0;
       }
-      // @ts-ignore - missing from the @types/eslint lib
       if (res.data.totalFatalErrorCount){
-        totalFatalErrorCount += res.data.totalFatalErrorCount ?? 0;
+        totalFatalErrorCount += res.data.totalFatalErrorCount;
         totalComponentsWithFatalErrorCount += res.data.totalComponentsWithFatalErrorCount ?? 0;
       }
       if (res.data.totalFixableErrorCount){
-        totalFixableErrorCount += res.data.totalFixableErrorCount ?? 0;
+        totalFixableErrorCount += res.data.totalFixableErrorCount;
         totalComponentsWithFixableErrorCount += res.data.totalComponentsWithFixableErrorCount ?? 0;
       }
       if (res.data.totalFixableWarningCount){
-        totalFixableWarningCount += res.data.totalFixableWarningCount ?? 0;
+        totalFixableWarningCount += res.data.totalFixableWarningCount;
         totalComponentsWithFixableWarningCount += res.data.totalComponentsWithFixableWarningCount ?? 0;
       }
       if (res.data.totalWarningCount){
-        totalWarningCount += res.data.totalWarningCount ?? 0;
+        totalWarningCount += res.data.totalWarningCount;
         totalComponentsWithWarningCount += res.data.totalComponentsWithWarningCount ?? 0;
       }
     }
