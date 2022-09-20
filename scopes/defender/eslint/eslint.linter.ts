@@ -1,7 +1,10 @@
+import fs from 'fs-extra';
+import path from 'path';
 import { flatten, compact } from 'lodash';
 import { Linter, LinterContext, LintResults, ComponentLintResult } from '@teambit/linter';
 import { ESLint as ESLintLib } from 'eslint';
 import mapSeries from 'p-map-series';
+import objectHash from 'object-hash';
 import { Logger } from '@teambit/logger';
 import { ESLintOptions } from './eslint.main.runtime';
 
@@ -25,28 +28,30 @@ export class ESLintLinter implements Linter {
 
   async lint(context: LinterContext): Promise<LintResults> {
     const longProcessLogger = this.logger.createLongProcessLogger('linting components', context.components.length);
+    const eslint = this.createEslint(this.options.config, this.ESLint);
+    if (this.options.tsConfig && context.rootDir){
+      const tsConfigPath = this.createTempTsConfigFile(context.rootDir, context.envRuntime.id, this.options.tsConfig);
+      if (this.options?.config?.overrideConfig?.parserOptions){
+        this.options.config.overrideConfig.parserOptions.project = tsConfigPath;
+      }
+    }
     const resultsP = mapSeries(context.components, async (component) => {
       longProcessLogger.logProgress(component.id.toString());
-      const eslint = this.createEslint(this.options.config, this.ESLint);
       const filesP = component.filesystem.files.map(async (file) => {
-        // The eslint api ignore extensions by default when using lintText, so we do it manually
+        // TODO: now that we moved to lint files, maybe it's not required anymore
+        // The eslint api will not ignore extensions by default when using lintText, so we do it manually
         if (!this.options.extensions?.includes(file.extname)) return undefined;
-        const sourceCode = file.contents.toString('utf8');
-        const lintResults = await eslint.lintText(sourceCode, {
-          filePath: file.path,
-          warnIgnored: true,
-        });
-
-        if (eslint && this.options.config.fix && lintResults) {
-          await ESLintLib.outputFixes(lintResults);
-        }
-
-        return lintResults;
+        return file.path;
       });
 
-      const files = await Promise.all(filesP);
+      const files = compact(await Promise.all(filesP));
+      const lintResults = await eslint.lintFiles(files);
 
-      const results: ESLintLib.LintResult[] = compact(flatten(files));
+      if (eslint && this.options.config.fix && lintResults) {
+        await ESLintLib.outputFixes(lintResults);
+      }
+
+      const results: ESLintLib.LintResult[] = compact(flatten(lintResults));
       const formatter = await eslint.loadFormatter(this.options.formatter || 'stylish');
       const output = formatter.format(results);
       const {
@@ -77,6 +82,11 @@ export class ESLintLinter implements Linter {
       totalFixableErrorCount,
       totalFixableWarningCount,
       totalWarningCount,
+      totalComponentsWithErrorCount,
+      totalComponentsWithFatalErrorCount,
+      totalComponentsWithFixableErrorCount,
+      totalComponentsWithFixableWarningCount,
+      totalComponentsWithWarningCount
     } = this.computeManyComponentsTotals(results);
 
     return {
@@ -85,9 +95,36 @@ export class ESLintLinter implements Linter {
       totalFixableErrorCount,
       totalFixableWarningCount,
       totalWarningCount,
+      totalComponentsWithErrorCount,
+      totalComponentsWithFatalErrorCount,
+      totalComponentsWithFixableErrorCount,
+      totalComponentsWithFixableWarningCount,
+      totalComponentsWithWarningCount,
       results,
       errors: [],
     };
+  }
+
+  private createTempTsConfigFile(rootDir: string, envId: string, tsConfig: Record<string,any>): string {
+    const newTsConfig = {
+      ...tsConfig,
+    }
+    if (tsConfig.include) {
+      newTsConfig.include = tsConfig.include.map(includedPath => `../../${includedPath}`);;
+    }
+    if (tsConfig.exclude){
+      newTsConfig.exclude = tsConfig.exclude.map(excludedPath => `../../${excludedPath}`);;
+    }
+    const cacheDir = getCacheDir(rootDir);
+    const hash = objectHash(newTsConfig);
+    // We save the tsconfig with hash here to avoid creating unnecessary tsconfig files
+    // this is very important as eslint will be able to cache the tsconfig file and will not need to create another program
+    // this affects performance dramatically
+    const tempTsConfigPath = path.join(cacheDir, `bit.tsconfig.eslint.${hash}.json`);
+    if (!fs.existsSync(tempTsConfigPath)) {
+      fs.outputJSONSync(tempTsConfigPath, newTsConfig, {spaces: 2});
+    }
+    return tempTsConfigPath;
   }
 
   private computeComponentResultsWithTotals(results: ESLintLib.LintResult[]) {
@@ -131,13 +168,34 @@ export class ESLintLinter implements Linter {
     let totalFixableErrorCount = 0;
     let totalFixableWarningCount = 0;
     let totalWarningCount = 0;
+    let totalComponentsWithErrorCount = 0
+    let totalComponentsWithFatalErrorCount = 0
+    let totalComponentsWithFixableErrorCount = 0
+    let totalComponentsWithFixableWarningCount = 0
+    let totalComponentsWithWarningCount = 0
+
     componentsResults.forEach((result) => {
-      totalErrorCount += result.totalErrorCount ?? 0;
+      if (result.totalErrorCount){
+        totalErrorCount += result.totalErrorCount;
+        totalComponentsWithErrorCount += 1;
+      }
       // @ts-ignore - missing from the @types/eslint lib
-      totalFatalErrorCount += result.totalFatalErrorCount ?? 0;
-      totalFixableErrorCount += result.totalFixableErrorCount ?? 0;
-      totalFixableWarningCount += result.totalFixableWarningCount ?? 0;
-      totalWarningCount += result.totalWarningCount ?? 0;
+      if (result.totalFatalErrorCount){
+        totalFatalErrorCount += result.totalFatalErrorCount;
+        totalComponentsWithFatalErrorCount += 1;
+      }
+      if (result.totalFixableErrorCount){
+        totalFixableErrorCount += result.totalFixableErrorCount;
+        totalComponentsWithFixableErrorCount += 1;
+      }
+      if (result.totalFixableWarningCount){
+        totalFixableWarningCount += result.totalFixableWarningCount;
+        totalComponentsWithFixableWarningCount += 1;
+      }
+      if (result.totalWarningCount){
+        totalWarningCount += result.totalWarningCount;
+        totalComponentsWithWarningCount += 1;
+      }
     });
     return {
       totalErrorCount,
@@ -146,6 +204,11 @@ export class ESLintLinter implements Linter {
       totalFixableWarningCount,
       totalWarningCount,
       componentsResults,
+      totalComponentsWithErrorCount,
+      totalComponentsWithFatalErrorCount,
+      totalComponentsWithFixableErrorCount,
+      totalComponentsWithFixableWarningCount,
+      totalComponentsWithWarningCount,
     };
   }
 
@@ -165,4 +228,8 @@ export class ESLintLinter implements Linter {
     if (this.ESLint) return this.ESLint.version;
     return ESLintLib.version;
   }
+}
+
+function getCacheDir(rootDir): string {
+  return path.join(rootDir, 'node_modules', '.cache');
 }
