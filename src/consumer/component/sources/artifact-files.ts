@@ -145,8 +145,10 @@ export async function importMultipleDistsArtifacts(scope: Scope, components: Com
     // as a result, the following "scope.isIdOnLane" fails to traverse the history.
     // in terms of performance it's not ideal. once we have the lane-history, it'll be faster to get this data.
     const compsIds = BitIds.fromArray(components.map((c) => c.id));
-    const compsToImport = BitIds.uniqFromArray(lane?.toBitIds().filter((id) => compsIds.hasWithoutVersion(id)) || []);
+    const compsToImport = BitIds.uniqFromArray(lane.toBitIds().filter((id) => compsIds.hasWithoutVersion(id)));
     await scopeComponentsImporter.importManyDeltaWithoutDeps(compsToImport, true, lane, true);
+    // fetch also the components from main, otherwise, in some cases, you'll get an error: "error: version "some-snap" of component some-comp was not found on the filesystem."
+    await scopeComponentsImporter.importManyDeltaWithoutDeps(compsToImport.toVersionLatest(), true, undefined, true);
   }
   const groupedHashes: { [scopeName: string]: string[] } = {};
   const debugHashesOrigin = {};
