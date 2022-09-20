@@ -8,7 +8,7 @@ import { StatusMessageCard } from '@teambit/design.ui.surfaces.status-message-ca
 import { ComponentOverview } from '@teambit/component.ui.component-meta';
 import { Separator } from '@teambit/design.ui.separator';
 import { useLanes } from '@teambit/lanes.hooks.use-lanes';
-import { LaneBreadcrumb } from '@teambit/lanes.ui.gallery';
+import { LaneBreadcrumb } from '@teambit/lanes.ui.lane-breadcrumb';
 
 import styles from './overview.module.scss';
 

@@ -8,7 +8,7 @@ import { ExportingComponents } from '@teambit/component.instructions.exporting-c
 import { AlertCard } from '@teambit/design.ui.alert-card';
 import React, { HTMLAttributes, useContext } from 'react';
 import { useLanes } from '@teambit/lanes.hooks.use-lanes';
-import { LaneBreadcrumb } from '@teambit/lanes.ui.gallery';
+import { LaneBreadcrumb } from '@teambit/lanes.ui.lane-breadcrumb';
 
 import styles from './change-log-page.module.scss';
 

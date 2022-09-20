@@ -1368,12 +1368,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/uis/full-loader"
     },
-    "ui/gallery": {
-        "scope": "teambit.lanes",
-        "version": "0.0.29",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/lanes/ui/gallery"
-    },
     "ui/gallery/base-component-card": {
         "scope": "teambit.explorer",
         "version": "0.0.499",
@@ -1511,6 +1505,30 @@
         "version": "0.0.354",
         "mainFile": "index.ts",
         "rootDir": "scopes/design/ui/label"
+    },
+    "ui/lane-breadcrumb": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/lanes/ui/lane-breadcrumb"
+    },
+    "ui/lane-details": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/lanes/ui/lane-details"
+    },
+    "ui/lane-overview": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/lanes/ui/lane-overview"
+    },
+    "ui/lane-readme": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/lanes/ui/lane-readme"
     },
     "ui/load-preview": {
         "scope": "teambit.workspace",
@@ -1715,12 +1733,6 @@
         "version": "0.0.493",
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/react-router/ui/use-query"
-    },
-    "ui/readme": {
-        "scope": "teambit.lanes",
-        "version": "0.0.30",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/lanes/ui/readme"
     },
     "ui/rendering/html": {
         "scope": "teambit.ui-foundation",

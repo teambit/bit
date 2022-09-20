@@ -10,7 +10,7 @@ import WorkspaceAspect, { WorkspaceUI } from '@teambit/workspace';
 import ComponentAspect, { ComponentID, ComponentUI } from '@teambit/component';
 import SidebarAspect, { SidebarUI } from '@teambit/sidebar';
 import { MenuWidget, MenuWidgetSlot } from '@teambit/ui-foundation.ui.menu';
-import { LaneGallery, LaneOverviewLine, LaneOverviewLineSlot } from '@teambit/lanes.ui.gallery';
+import { LaneOverview, LaneOverviewLine, LaneOverviewLineSlot } from '@teambit/lanes.ui.lane-overview';
 import {
   LanesNavPlugin,
   LanesOrderedNavigationSlot,
@@ -18,7 +18,6 @@ import {
 } from '@teambit/lanes.ui.menus.lanes-overview-menu';
 import { UseLaneMenu } from '@teambit/lanes.ui.menus.use-lanes-menu';
 import { LanesHost, LanesModel } from '@teambit/lanes.ui.models.lanes-model';
-import { LaneReadmeOverview } from '@teambit/lanes.ui.readme';
 import { LanesProvider, useLanes } from '@teambit/lanes.hooks.use-lanes';
 import { LaneSwitcher } from '@teambit/lanes.ui.navigation.lane-switcher';
 import { LaneId } from '@teambit/lane-id';
@@ -67,8 +66,7 @@ export class LanesUI {
         children: (
           <>
             <Route path={LanesModel.lanePath}>
-              <Route index element={this.getLaneReadme()} />
-              <Route path="~gallery/*" element={this.getLaneGallery()} />
+              <Route index element={this.getLaneOverview()} />
               <Route path="~component/*" element={this.componentUi.getComponentUI(this.host)} />
               <Route path="*" element={<NotFoundPage />} />
             </Route>
@@ -96,12 +94,12 @@ export class LanesUI {
     LanesModel.getLaneIdFromPathname = getLaneIdFromPathname;
   }
 
-  getLaneReadme() {
-    return <LaneReadmeOverview host={this.host} overviewSlot={this.overviewSlot} routeSlot={this.routeSlot} />;
-  }
+  // getLaneReadme() {
+  //   return <LaneReadmeOverview host={this.host} overviewSlot={this.overviewSlot} routeSlot={this.routeSlot} />;
+  // }
 
-  getLaneGallery() {
-    return <LaneGallery routeSlot={this.routeSlot} overviewSlot={this.overviewSlot} host={this.lanesHost} />;
+  getLaneOverview() {
+    return <LaneOverview routeSlot={this.routeSlot} overviewSlot={this.overviewSlot} host={this.lanesHost} />;
   }
 
   getMenuRoutes() {
@@ -128,23 +126,23 @@ export class LanesUI {
 
   private registerLanesRoutes() {
     this.registerNavigation([
+      // {
+      //   props: {
+      //     href: '.',
+      //     exact: true,
+      //     children: 'README',
+      //   },
+      //   order: 1,
+      //   hide: () => {
+      //     const { lanesModel } = useLanes();
+      //     return !lanesModel?.viewedLane?.readmeComponent;
+      //   },
+      // },
       {
         props: {
           href: '.',
           exact: true,
-          children: 'README',
-        },
-        order: 1,
-        hide: () => {
-          const { lanesModel } = useLanes();
-          return !lanesModel?.viewedLane?.readmeComponent;
-        },
-      },
-      {
-        props: {
-          href: '~gallery',
-          children: 'Gallery',
-          exact: true,
+          children: 'Overview',
         },
         order: 1,
       },

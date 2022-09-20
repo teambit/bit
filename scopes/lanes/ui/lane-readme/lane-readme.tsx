@@ -2,11 +2,12 @@ import React, { useMemo } from 'react';
 import { LaneModel, LanesModel } from '@teambit/lanes.ui.models.lanes-model';
 import { LanesProvider } from '@teambit/lanes.hooks.use-lanes';
 import { useLaneReadme } from '@teambit/lanes.hooks.use-lane-readme';
-import { LaneDetails, LaneOverviewLineSlot } from '@teambit/lanes.ui.gallery';
+import { LaneOverviewLineSlot } from '@teambit/lanes.ui.lane-overview';
 import { ComponentCard } from '@teambit/explorer.ui.gallery.component-card';
 import { ComponentPreview } from '@teambit/preview.ui.component-preview';
 import { RouteSlot, SlotRouter } from '@teambit/ui-foundation.ui.react-router.slot-router';
 import { PreviewPlaceholder } from '@teambit/preview.ui.preview-placeholder';
+import { LaneDetails } from '@teambit/lanes.ui.lane-details';
 import flatten from 'lodash.flatten';
 import styles from './lane-readme.module.scss';
 
