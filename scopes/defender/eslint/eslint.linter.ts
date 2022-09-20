@@ -181,24 +181,24 @@ export class ESLintLinter implements Linter {
 
     componentsResults.forEach((result) => {
       if (result.totalErrorCount){
-        totalErrorCount += result.totalErrorCount ?? 0;
+        totalErrorCount += result.totalErrorCount;
         totalComponentsWithErrorCount += 1;
       }
       // @ts-ignore - missing from the @types/eslint lib
       if (result.totalFatalErrorCount){
-        totalFatalErrorCount += result.totalFatalErrorCount ?? 0;
+        totalFatalErrorCount += result.totalFatalErrorCount;
         totalComponentsWithFatalErrorCount += 1;
       }
       if (result.totalFixableErrorCount){
-        totalFixableErrorCount += result.totalFixableErrorCount ?? 0;
+        totalFixableErrorCount += result.totalFixableErrorCount;
         totalComponentsWithFixableErrorCount += 1;
       }
       if (result.totalFixableWarningCount){
-        totalFixableWarningCount += result.totalFixableWarningCount ?? 0;
+        totalFixableWarningCount += result.totalFixableWarningCount;
         totalComponentsWithFixableWarningCount += 1;
       }
       if (result.totalWarningCount){
-        totalWarningCount += result.totalWarningCount ?? 0;
+        totalWarningCount += result.totalWarningCount;
         totalComponentsWithWarningCount += 1;
       }
     });
