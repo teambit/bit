@@ -77,7 +77,7 @@ export class LintCmd implements Command {
     const { seconds } = duration;
     const summeryTitle = `linted ${chalk.cyan(componentsIdsToLint.length.toString())} components in ${chalk.cyan(
       seconds.toString()
-    )}.`;
+    )} seconds`;
 
 
     const totalFieldsMap = [
