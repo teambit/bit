@@ -2,14 +2,14 @@ import React, { useEffect, ReactNode, useMemo } from 'react';
 import flatten from 'lodash.flatten';
 import { RouteSlot, SlotRouter } from '@teambit/ui-foundation.ui.react-router.slot-router';
 import { SlotRegistry } from '@teambit/harmony';
-import { useLanes } from '@teambit/lanes.hooks.use-lanes';
-import { useViewedLaneFromUrl } from '@teambit/lanes.hooks.use-viewed-lane-from-url';
+import { isFunction } from 'lodash';
 import styles from './component.module.scss';
 import { ComponentProvider, ComponentDescriptorProvider } from './context';
 import { useComponent as useComponentQuery, UseComponentType } from './use-component';
 import { ComponentModel } from './component-model';
 import { useIdFromLocation } from './use-component-from-location';
 import { ComponentID } from '..';
+import { Filters } from './use-component-query';
 
 export type ComponentPageSlot = SlotRegistry<ComponentPageElement[]>;
 export type ComponentPageElement = {
@@ -23,8 +23,14 @@ export type ComponentProps = {
   host: string;
   onComponentChange?: (activeComponent?: ComponentModel) => void;
   useComponent?: UseComponentType;
-  componentIdStr?: string;
+  useComponentFilters?: (componentId?: ComponentID) => Filters;
+  componentIdStr?: string | (() => string | undefined);
 };
+
+function getComponentIdStr(componentIdStr?: string | (() => string | undefined)): string | undefined {
+  if (isFunction(componentIdStr)) return componentIdStr();
+  return componentIdStr;
+}
 
 /**
  * main UI component of the Component extension.
@@ -36,23 +42,20 @@ export function Component({
   onComponentChange,
   componentIdStr,
   useComponent,
+  useComponentFilters,
 }: ComponentProps) {
   const idFromLocation = useIdFromLocation();
-  const componentId = componentIdStr ? ComponentID.fromString(componentIdStr) : undefined;
+  const _componentIdStr = getComponentIdStr(componentIdStr);
+  const componentId = _componentIdStr ? ComponentID.fromString(_componentIdStr) : undefined;
   const resolvedComponentIdStr = componentId?.toStringWithoutVersion() || idFromLocation;
-  const { lanesModel } = useLanes();
-  const laneFromUrl = useViewedLaneFromUrl(true);
-  const laneComponent = resolvedComponentIdStr
-    ? lanesModel?.resolveComponent(resolvedComponentIdStr, laneFromUrl)
-    : undefined;
   const useComponentOptions = {
-    logFilters: laneComponent && { log: { logHead: laneComponent.version } },
+    logFilters: useComponentFilters?.(componentId),
     customUseComponent: useComponent,
   };
 
   const { component, componentDescriptor, error } = useComponentQuery(
     host,
-    laneComponent?.toString() || componentId?.toString() || idFromLocation,
+    componentId?.toString() || idFromLocation,
     useComponentOptions
   );
   // trigger onComponentChange when component changes

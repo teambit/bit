@@ -35,7 +35,7 @@ export { ComponentModel, ComponentModelProps } from './ui/component-model';
 export { TopBarNav } from './ui/top-bar-nav';
 export type { ShowFragment, ShowRow, ShowJSONRow } from './show';
 export { default as Config } from './config';
-export { useComponent } from './ui';
+export { useComponent, useIdFromLocation } from './ui';
 
 // export { AspectList } from './aspect-list';
 // export { AspectEntry } from './aspect-entry';

@@ -7,7 +7,7 @@ import { NavigationSlot, RouteSlot } from '@teambit/ui-foundation.ui.react-route
 import { NotFoundPage } from '@teambit/design.ui.pages.not-found';
 import ScopeAspect, { ScopeUI } from '@teambit/scope';
 import WorkspaceAspect, { WorkspaceUI } from '@teambit/workspace';
-import ComponentAspect, { ComponentID, ComponentUI } from '@teambit/component';
+import ComponentAspect, { ComponentID, ComponentUI, useIdFromLocation } from '@teambit/component';
 import SidebarAspect, { SidebarUI } from '@teambit/sidebar';
 import { MenuWidget, MenuWidgetSlot } from '@teambit/ui-foundation.ui.menu';
 import { LaneOverview, LaneOverviewLine, LaneOverviewLineSlot } from '@teambit/lanes.ui.lane-overview';
@@ -21,6 +21,7 @@ import { LanesHost, LanesModel } from '@teambit/lanes.ui.models.lanes-model';
 import { LanesProvider, useLanes } from '@teambit/lanes.hooks.use-lanes';
 import { LaneSwitcher } from '@teambit/lanes.ui.navigation.lane-switcher';
 import { LaneId } from '@teambit/lane-id';
+import { useViewedLaneFromUrl } from '@teambit/lanes.hooks.use-viewed-lane-from-url';
 
 export class LanesUI {
   static dependencies = [UIAspect, ComponentAspect, WorkspaceAspect, ScopeAspect, SidebarAspect];
@@ -67,7 +68,7 @@ export class LanesUI {
           <>
             <Route path={LanesModel.lanePath}>
               <Route index element={this.getLaneOverview()} />
-              <Route path="~component/*" element={this.componentUi.getComponentUI(this.host)} />
+              <Route path="~component/*" element={this.getLaneComponent()} />
               <Route path="*" element={<NotFoundPage />} />
             </Route>
             <Route path="*" element={<NotFoundPage />} />
@@ -98,6 +99,39 @@ export class LanesUI {
   //   return <LaneReadmeOverview host={this.host} overviewSlot={this.overviewSlot} routeSlot={this.routeSlot} />;
   // }
 
+  useComponentId = () => {
+    const idFromLocation = useIdFromLocation();
+    const { lanesModel } = useLanes();
+    const laneFromUrl = useViewedLaneFromUrl(true);
+    const laneComponentId =
+      idFromLocation && !laneFromUrl?.isDefault()
+        ? lanesModel?.resolveComponent(idFromLocation, laneFromUrl)
+        : undefined;
+    return laneComponentId?.toString();
+  };
+
+  useComponentFilters = (_componentId?: ComponentID) => {
+    return {
+      log: _componentId && {
+        logHead: _componentId.version,
+      },
+    };
+  };
+
+  getLaneComponent() {
+    return this.componentUi.getComponentUI(this.host, {
+      componentId: this.useComponentId,
+      useComponentFilters: this.useComponentFilters,
+    });
+  }
+
+  getLaneComponentMenu() {
+    return this.componentUi.getMenu(this.host, {
+      componentId: this.useComponentId,
+      useComponentFilters: this.useComponentFilters,
+    });
+  }
+
   getLaneOverview() {
     return <LaneOverview routeSlot={this.routeSlot} overviewSlot={this.overviewSlot} host={this.lanesHost} />;
   }
@@ -109,7 +143,7 @@ export class LanesUI {
         children: (
           <Route path={`${LanesModel.lanePath}/*`}>
             <Route path="*" element={this.getLanesOverviewMenu()} />
-            <Route path="~component/*" element={this.componentUi.getMenu(this.host)} />
+            <Route path="~component/*" element={this.getLaneComponentMenu()} />
           </Route>
         ),
       },

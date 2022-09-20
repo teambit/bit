@@ -4,7 +4,7 @@ import { VersionDropdown } from '@teambit/component.ui.version-dropdown';
 import { FullLoader } from '@teambit/ui-foundation.ui.full-loader';
 import type { ConsumeMethod } from '@teambit/ui-foundation.ui.use-box.menu';
 import { useLocation } from '@teambit/base-react.navigation.link';
-import { flatten, groupBy, compact } from 'lodash';
+import { flatten, groupBy, compact, isFunction } from 'lodash';
 import classnames from 'classnames';
 import React, { useMemo } from 'react';
 import { UseBoxDropdown } from '@teambit/ui-foundation.ui.use-box.dropdown';
@@ -20,6 +20,7 @@ import styles from './menu.module.scss';
 import { OrderedNavigationSlot, ConsumeMethodSlot } from './nav-plugin';
 import { useIdFromLocation } from '../use-component-from-location';
 import { ComponentID } from '../..';
+import { Filters } from '../use-component-query';
 
 export type MenuProps = {
   className?: string;
@@ -39,11 +40,16 @@ export type MenuProps = {
 
   consumeMethodSlot: ConsumeMethodSlot;
 
-  componentIdStr?: string;
+  componentIdStr?: string | (() => string | undefined);
 
   useComponent?: UseComponentType;
-};
 
+  useComponentFilters?: (componentId?: ComponentID) => Filters;
+};
+function getComponentIdStr(componentIdStr?: string | (() => string | undefined)): string | undefined {
+  if (isFunction(componentIdStr)) return componentIdStr();
+  return componentIdStr;
+}
 /**
  * top bar menu.
  */
@@ -56,28 +62,25 @@ export function ComponentMenu({
   consumeMethodSlot,
   componentIdStr,
   useComponent,
+  useComponentFilters,
 }: MenuProps) {
   const idFromLocation = useIdFromLocation();
-  const componentId = componentIdStr ? ComponentID.fromString(componentIdStr) : undefined;
-  const fullName = componentId?.fullName || idFromLocation;
-  const { lanesModel } = useLanes();
-  const laneComponent = fullName ? lanesModel?.resolveComponent(fullName) : undefined;
+  const _componentIdStr = getComponentIdStr(componentIdStr);
+  const componentId = _componentIdStr ? ComponentID.fromString(_componentIdStr) : undefined;
+  const resolvedComponentIdStr = componentId?.toStringWithoutVersion() || idFromLocation;
+
   const useComponentOptions = {
-    logFilters: laneComponent && { log: { logHead: laneComponent.version } },
+    logFilters: useComponentFilters?.(componentId),
     customUseComponent: useComponent,
   };
 
-  const { component } = useComponentQuery(
-    host,
-    laneComponent?.toString() || componentId?.toStringWithoutVersion() || fullName,
-    useComponentOptions
-  );
+  const { component } = useComponentQuery(host, componentId?.toString() || idFromLocation, useComponentOptions);
   const mainMenuItems = useMemo(() => groupBy(flatten(menuItemSlot.values()), 'category'), [menuItemSlot]);
   if (!component) return <FullLoader />;
   return (
     <Routes>
       <Route
-        path={`${fullName}/*`}
+        path={`${resolvedComponentIdStr}/*`}
         element={
           <div className={classnames(styles.topBar, className)}>
             <div className={styles.leftSide}>

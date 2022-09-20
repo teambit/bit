@@ -7,15 +7,13 @@ export function useIdFromLocation(): string | undefined {
   const params = useParams();
   const splat = params['*'];
   if (!splat) return undefined;
-  const [maybeOrg, maybeScopeAndFullName] = splat.split('.');
-  let fullNameFromUrl = splat;
+  const [maybeOrgWithScope, ...maybeFullName] = splat.split('/');
+  const hasScope = maybeOrgWithScope.split('.').length > 1;
+  const fullNameFromUrl = hasScope ? maybeFullName.join('/') : splat;
   let scope: string | undefined;
-  if (maybeScopeAndFullName) {
-    const [scopeFromUrl, fullName] = maybeScopeAndFullName.split('/');
-    fullNameFromUrl = fullName;
-    scope = `${maybeOrg}.${scopeFromUrl}`;
+  if (hasScope) {
+    scope = maybeOrgWithScope;
   }
-
   const match = componentRegex.exec(fullNameFromUrl);
   if (!match?.[0]) return undefined;
   if (scope) return `${scope}/${match[0]}`;

@@ -13,7 +13,6 @@ import styles from './lane-selector.module.scss';
 
 export type LaneSelectorProps = {
   lanes: Array<LaneId>;
-  onLaneSelected?: (selectedLaneId: LaneId) => () => void;
   selectedLaneId?: LaneId;
   groupByScope?: boolean;
 } & HTMLAttributes<HTMLDivElement>;
