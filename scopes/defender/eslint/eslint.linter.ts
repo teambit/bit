@@ -4,6 +4,7 @@ import { flatten, compact } from 'lodash';
 import { Linter, LinterContext, LintResults, ComponentLintResult } from '@teambit/linter';
 import { ESLint as ESLintLib } from 'eslint';
 import mapSeries from 'p-map-series';
+import objectHash from 'object-hash';
 import { Logger } from '@teambit/logger';
 import { ESLintOptions } from './eslint.main.runtime';
 
@@ -37,24 +38,23 @@ export class ESLintLinter implements Linter {
     const resultsP = mapSeries(context.components, async (component) => {
       longProcessLogger.logProgress(component.id.toString());
       const filesP = component.filesystem.files.map(async (file) => {
-        // The eslint api ignore extensions by default when using lintText, so we do it manually
+        // TODO: now that we moved to lint files, maybe it's not required anymore
+        // The eslint api will not ignore extensions by default when using lintText, so we do it manually
         if (!this.options.extensions?.includes(file.extname)) return undefined;
-        const sourceCode = file.contents.toString('utf8');
-        const lintResults = await eslint.lintText(sourceCode, {
-          filePath: file.path,
-          warnIgnored: true,
-        });
-
-        if (eslint && this.options.config.fix && lintResults) {
-          await ESLintLib.outputFixes(lintResults);
-        }
-
-        return lintResults;
+        // const sourceCode = file.contents.toString('utf8');
+        return file.path;
       });
 
-      const files = await Promise.all(filesP);
+      const files = compact(await Promise.all(filesP));
+      const lintResults = await eslint.lintFiles(files);
 
-      const results: ESLintLib.LintResult[] = compact(flatten(files));
+      if (eslint && this.options.config.fix && lintResults) {
+        await ESLintLib.outputFixes(lintResults);
+      }
+
+      // return lintResults;
+
+      const results: ESLintLib.LintResult[] = compact(flatten(lintResults));
       const formatter = await eslint.loadFormatter(this.options.formatter || 'stylish');
       const output = formatter.format(results);
       const {
@@ -109,8 +109,16 @@ export class ESLintLinter implements Linter {
       newTsConfig.exclude = tsConfig.exclude.map(excludedPath => `../../${excludedPath}`);;
     }
     const cacheDir = getCacheDir(rootDir);
-    const tempTsConfigPath = path.join(cacheDir, `bit.tsconfig.eslint.${envId.replaceAll('/', '__')}.json`);
-    fs.outputJSONSync(tempTsConfigPath, newTsConfig, {spaces: 2});
+    const hash = objectHash(newTsConfig);
+    // const tempTsConfigPath = path.join(cacheDir, `bit.tsconfig.eslint.${envId.replaceAll('/', '__')}.json`);
+
+    // We save the tsconfig with hash here to avoid creating unnecessary tsconfig files
+    // this is very important as eslint will be able to cache the tsconfig file and will not need to create another program
+    // this affects performance dramatically
+    const tempTsConfigPath = path.join(cacheDir, `bit.tsconfig.eslint.${hash}.json`);
+    if (!fs.existsSync(tempTsConfigPath)) {
+      fs.outputJSONSync(tempTsConfigPath, newTsConfig, {spaces: 2});
+    }
     return tempTsConfigPath;
   }
 
