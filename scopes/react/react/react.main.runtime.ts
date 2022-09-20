@@ -134,7 +134,7 @@ export class ReactMain {
     const buildTransformers = modifiers?.buildConfig;
     if (buildTransformers) {
       const buildPipeModifiers = {
-        tsModifier: {
+        compilerModifier: {
           transformers: buildTransformers,
           module: tsModule,
         },
