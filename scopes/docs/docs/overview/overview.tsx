@@ -6,8 +6,6 @@ import type { SlotRegistry } from '@teambit/harmony';
 import { ComponentPreview } from '@teambit/preview.ui.component-preview';
 import { StatusMessageCard } from '@teambit/design.ui.surfaces.status-message-card';
 import { ComponentOverview } from '@teambit/component.ui.component-meta';
-import { Separator } from '@teambit/design.ui.separator';
-import { useLanes } from '@teambit/lanes.hooks.use-lanes';
 import { LaneBreadcrumb } from '@teambit/lanes.ui.lane-breadcrumb';
 
 import styles from './overview.module.scss';
@@ -35,8 +33,6 @@ export type OverviewProps = {
 export function Overview({ titleBadges }: OverviewProps) {
   const component = useContext(ComponentContext);
   const componentDescriptor = useComponentDescriptor();
-  const { lanesModel } = useLanes();
-  const isComponentOnLane = lanesModel?.isComponentOnNonDefaultLanes(component.id, true);
 
   const showHeader = !component.preview?.legacyHeader;
 
@@ -53,8 +49,7 @@ export function Overview({ titleBadges }: OverviewProps) {
 
   return (
     <div className={styles.overviewWrapper}>
-      {isComponentOnLane && <LaneBreadcrumb lane={lanesModel?.viewedLane} />}
-      {isComponentOnLane && <Separator isPresentational />}
+      <LaneBreadcrumb withSeparator={true} />
       {showHeader && (
         <ComponentOverview
           className={classNames(styles.componentOverviewBlock, !isScaling && styles.legacyPreview)}

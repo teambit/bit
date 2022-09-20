@@ -13,7 +13,7 @@ export type LaneSwitcherProps = {
 } & HTMLAttributes<HTMLDivElement>;
 
 export function LaneSwitcher({ className, groupByScope = true, ...rest }: LaneSwitcherProps) {
-  const { lanesModel } = useLanes();
+  const { lanesModel, updateViewedLane } = useLanes();
 
   const mainLaneId = lanesModel?.getDefaultLane()?.id;
   const nonMainLaneIds = lanesModel?.getNonMainLanes().map((lane) => lane.id) || [];
@@ -22,6 +22,9 @@ export function LaneSwitcher({ className, groupByScope = true, ...rest }: LaneSw
 
   const selectedLaneId = lanesModel?.viewedLane?.id || mainLaneId;
   const selectedLaneGalleryHref = selectedLaneId && LanesModel.getLaneUrl(selectedLaneId);
+  const onLaneSelected = (_selectedLaneId: LaneId) => () => {
+    updateViewedLane?.(_selectedLaneId);
+  };
 
   return (
     <div className={classnames(styles.laneSwitcherContainer, className)}>
@@ -30,6 +33,7 @@ export function LaneSwitcher({ className, groupByScope = true, ...rest }: LaneSw
         className={styles.laneSelector}
         lanes={lanes}
         groupByScope={groupByScope}
+        onLaneSelected={onLaneSelected}
         {...rest}
       />
       <MenuLinkItem

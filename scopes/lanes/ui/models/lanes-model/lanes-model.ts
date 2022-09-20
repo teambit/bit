@@ -77,7 +77,8 @@ export class LanesModel {
     start: false,
   });
 
-  static getLaneIdFromPathname = (pathname: string): LaneId | undefined => {
+  static getLaneIdFromPathname = (pathname: string, matchLaneComponentRoute?: boolean): LaneId | undefined => {
+    if (!matchLaneComponentRoute && pathname.includes(this.baseLaneComponentRoute)) return undefined;
     const matches = LanesModel.laneFromPathRegex.exec(pathname);
     if (!matches) return undefined;
     const [, scopeId, laneId] = matches;
@@ -218,10 +219,13 @@ export class LanesModel {
   getLanesByComponentId = (componentId: ComponentID) => this.lanesByComponentId.get(componentId.toString());
 
   isComponentOnMain = (componentId: ComponentID, includeVersion?: boolean) => {
-    return !!(
-      (includeVersion && this.getLanesByComponentId(componentId)) ||
-      this.getLanesByComponentName(componentId)
-    )?.some((lane) => lane.id.isDefault());
+    if (includeVersion) {
+      const result = this.getLanesByComponentId(componentId)?.some((lane) => lane.id.isDefault());
+      return !!result;
+    }
+
+    const result = !!this.getLanesByComponentName(componentId)?.some((lane) => lane.id.isDefault());
+    return result;
   };
 
   isComponentOnMainButNotOnLane = (componentId: ComponentID, includeVersion?: boolean) => {
@@ -231,9 +235,11 @@ export class LanesModel {
     return !this.isComponentOnMain(componentId, includeVersion) && this.isComponentOnNonDefaultLanes(componentId);
   };
   isComponentOnNonDefaultLanes = (componentId: ComponentID, includeVersion?: boolean) => {
-    return !!(
-      (includeVersion && this.getLanesByComponentId(componentId)) ||
-      this.getLanesByComponentName(componentId)
-    )?.some((lane) => !lane.id.isDefault());
+    if (includeVersion) {
+      const result = this.getLanesByComponentId(componentId)?.some((lane) => !lane.id.isDefault());
+      return !!result;
+    }
+    const result = !!this.getLanesByComponentName(componentId)?.some((lane) => !lane.id.isDefault());
+    return result;
   };
 }

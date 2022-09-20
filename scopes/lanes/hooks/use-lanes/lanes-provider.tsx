@@ -8,7 +8,7 @@ import { LanesContext, LanesContextModel } from './lanes-context';
 export type LanesProviderProps = {
   children: ReactNode;
   viewedLaneId?: LaneId;
-  targetLanes?: LanesModel
+  targetLanes?: LanesModel;
 };
 
 export function LanesProvider({ children, viewedLaneId, targetLanes }: LanesProviderProps) {
@@ -21,6 +21,7 @@ export function LanesProvider({ children, viewedLaneId, targetLanes }: LanesProv
     const viewedLaneIdToSet =
       viewedLaneId ||
       viewedLaneFromUrl ||
+      lanesState?.viewedLane?.id ||
       lanesModel?.currentLane?.id ||
       lanesModel?.lanes.find((lane) => lane.id.isDefault())?.id;
 
@@ -38,9 +39,15 @@ export function LanesProvider({ children, viewedLaneId, targetLanes }: LanesProv
     );
   };
 
+  const updateViewedLane = (_viewedLaneId?: LaneId) => {
+    lanesState?.setViewedLane(_viewedLaneId);
+    setLanesState(lanesState);
+  };
+
   const lanesContextModel: LanesContextModel = {
     lanesModel: lanesState,
     updateLanesModel,
+    updateViewedLane,
   };
 
   return <LanesContext.Provider value={lanesContextModel}>{children}</LanesContext.Provider>;

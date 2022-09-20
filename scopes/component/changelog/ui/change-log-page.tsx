@@ -7,7 +7,6 @@ import { MDXLayout } from '@teambit/mdx.ui.mdx-layout';
 import { ExportingComponents } from '@teambit/component.instructions.exporting-components';
 import { AlertCard } from '@teambit/design.ui.alert-card';
 import React, { HTMLAttributes, useContext } from 'react';
-import { useLanes } from '@teambit/lanes.hooks.use-lanes';
 import { LaneBreadcrumb } from '@teambit/lanes.ui.lane-breadcrumb';
 
 import styles from './change-log-page.module.scss';
@@ -16,22 +15,14 @@ type ChangeLogPageProps = {} & HTMLAttributes<HTMLDivElement>;
 
 export function ChangeLogPage({ className }: ChangeLogPageProps) {
   const component = useContext(ComponentContext);
-  const { lanesModel } = useLanes();
-  const currentLane = lanesModel?.viewedLane;
   const { logs } = component;
-  const isComponentOnLane = lanesModel?.isComponentOnNonDefaultLanes(component.id, true);
 
   if (!logs) return null;
 
   if (logs.length === 0) {
     return (
       <>
-        {isComponentOnLane && (
-          <>
-            <LaneBreadcrumb lane={currentLane} />
-            <Separator isPresentational className={styles.separator} />
-          </>
-        )}
+        <LaneBreadcrumb withSeparator={true} separatorClassName={styles.separator} />
         <div className={classNames(styles.changeLogPage, className)}>
           <H1 className={styles.title}>History</H1>
           <Separator isPresentational className={styles.separatorNoChangeLog} />
@@ -52,8 +43,7 @@ export function ChangeLogPage({ className }: ChangeLogPageProps) {
 
   return (
     <>
-      {isComponentOnLane && <LaneBreadcrumb lane={currentLane} />}
-      <Separator isPresentational />
+      <LaneBreadcrumb withSeparator={true} />
       <div className={classNames(styles.changeLogPage, className)}>
         <H1 className={styles.title}>History</H1>
         <Separator isPresentational className={styles.separator} />
