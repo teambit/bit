@@ -95,7 +95,7 @@ export class LintCmd implements Command {
 
   private getTotalLine(componentsCount: number, itemsCount:number, fieldLabe: string): string | undefined {
     if (itemsCount === 0) return undefined;
-    return `total of ${chalk.green(itemsCount.toString())} ${chalk.cyan(fieldLabe)} by ${chalk.green(componentsCount.toString())} components`;
+    return `total of ${chalk.green(itemsCount.toString())} ${chalk.cyan(fieldLabe)} (from ${chalk.green(componentsCount.toString())} components)`;
   }
 
   async json([components = []]: [string[]], linterOptions: LintCmdOptions): Promise<JsonLintResults> {
