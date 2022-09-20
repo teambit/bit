@@ -215,7 +215,7 @@ export class InstallMain {
 
   private async _getComponentsManifests(
     dependencyInstaller: DependencyInstaller,
-    mergedRootPolicy: WorkspacePolicy,
+    rootPolicy: WorkspacePolicy,
     installOptions: Pick<
       PackageManagerInstallOptions,
       'dedupe' | 'dependencyFilterFn' | 'copyPeerToRuntimeOnComponents'
@@ -228,13 +228,12 @@ export class InstallMain {
     const componentDirectoryMap = await this.getComponentsDirectory([]);
     return {
       componentDirectoryMap,
-      ...(await dependencyInstaller.getComponentManifests(
+      ...(await dependencyInstaller.getComponentManifests({
+        ...installOptions,
         componentDirectoryMap,
-        mergedRootPolicy,
-        this.workspace.path,
-        installOptions,
-        installOptions.copyPeerToRuntimeOnComponents
-      )),
+        rootPolicy,
+        rootDir: this.workspace.path,
+      })),
     };
   }
 

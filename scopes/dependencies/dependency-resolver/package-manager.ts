@@ -66,18 +66,19 @@ export type PackageManagerResolveRemoteVersionOptions = {
   // update?: boolean;
 };
 
+export interface InstallationContext {
+  rootDir: string;
+  componentsManifests: Record<string, ProjectManifest>;
+  workspaceManifest: WorkspaceManifest;
+  componentDirectoryMap: ComponentMap<string>;
+}
+
 export interface PackageManager {
   /**
    * install dependencies
    * @param componentDirectoryMap
    */
-  install(
-    rootDir: string,
-    componentsManifests: Record<string, ProjectManifest>,
-    workspaceManifest: WorkspaceManifest,
-    componentDirectoryMap: ComponentMap<string>,
-    options: PackageManagerInstallOptions
-  ): Promise<void>;
+  install(context: InstallationContext, options: PackageManagerInstallOptions): Promise<void>;
 
   resolveRemoteVersion(
     packageName: string,

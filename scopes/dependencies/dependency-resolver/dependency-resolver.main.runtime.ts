@@ -772,12 +772,12 @@ export class DependencyResolverMain {
     const packageManager = this.packageManagerSlot.get(this.config.packageManager);
     let peerDependencyIssues!: PeerDependencyIssuesByProjects;
     const installer = this.getInstaller();
-    const { componentsManifests, workspaceManifest } = await installer.getComponentManifests(
+    const { componentsManifests, workspaceManifest } = await installer.getComponentManifests({
+      ...options,
       componentDirectoryMap,
       rootPolicy,
       rootDir,
-      options
-    );
+    });
     if (packageManager?.getPeerDependencyIssues && typeof packageManager?.getPeerDependencyIssues === 'function') {
       peerDependencyIssues = await packageManager?.getPeerDependencyIssues(
         componentsManifests,

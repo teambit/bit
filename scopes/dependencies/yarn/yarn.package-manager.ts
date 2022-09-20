@@ -1,7 +1,7 @@
 import parsePackageName from 'parse-package-name';
 import {
   extendWithComponentsFromDir,
-  WorkspaceManifest,
+  InstallationContext,
   DependencyResolverMain,
   PackageManager,
   PackageManagerInstallOptions,
@@ -31,7 +31,6 @@ import { npath, PortablePath } from '@yarnpkg/fslib';
 import { Resolution } from '@yarnpkg/parsers';
 import npmPlugin from '@yarnpkg/plugin-npm';
 import parseOverrides from '@pnpm/parse-overrides';
-import { ProjectManifest } from '@pnpm/types';
 import userHome from 'user-home';
 import { Logger } from '@teambit/logger';
 import versionSelectorType from 'version-selector-type';
@@ -46,10 +45,7 @@ export class YarnPackageManager implements PackageManager {
   constructor(private depResolver: DependencyResolverMain, private logger: Logger) {}
 
   async install(
-    rootDir: string,
-    componentsManifests: Record<string, ProjectManifest>,
-    workspaceManifest: WorkspaceManifest,
-    componentDirectoryMap: ComponentMap<string>,
+    { rootDir, componentsManifests, workspaceManifest, componentDirectoryMap }: InstallationContext,
     installOptions: PackageManagerInstallOptions = {}
   ): Promise<void> {
     this.logger.setStatusLine('installing dependencies');

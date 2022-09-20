@@ -36,6 +36,12 @@ export type InstallOptions = {
   packageManagerConfigRootDir?: string;
 };
 
+export type GetComponentManifestsOptions = {
+  componentDirectoryMap: ComponentMap<string>;
+  rootPolicy: WorkspacePolicy;
+  rootDir: string;
+} & Pick<PackageManagerInstallOptions, 'dedupe' | 'dependencyFilterFn' | 'copyPeerToRuntimeOnComponents'>;
+
 export type PreInstallSubscriber = (installer: DependencyInstaller, installArgs: InstallArgs) => Promise<void>;
 export type PreInstallSubscriberList = Array<PreInstallSubscriber>;
 
@@ -87,13 +93,12 @@ export class DependencyInstaller {
     if (!finalRootDir) {
       throw new RootDirNotDefined();
     }
-    const { workspaceManifest, componentsManifests } = await this.getComponentManifests(
+    const { workspaceManifest, componentsManifests } = await this.getComponentManifests({
+      ...packageManagerOptions,
       componentDirectoryMap,
       rootPolicy,
-      finalRootDir,
-      packageManagerOptions,
-      packageManagerOptions.copyPeerToRuntimeOnComponents
-    );
+      rootDir: finalRootDir,
+    });
     return this.installComponents(
       finalRootDir,
       workspaceManifest,
@@ -165,28 +170,31 @@ export class DependencyInstaller {
 
     // TODO: the cache should be probably passed to the package manager constructor not to the install function
     await this.packageManager.install(
-      finalRootDir,
-      componentsManifests,
-      workspaceManifest,
-      componentDirectoryMap,
+      {
+        rootDir: finalRootDir,
+        componentsManifests,
+        workspaceManifest,
+        componentDirectoryMap,
+      },
       calculatedPmOpts
     );
     await this.runPrePostSubscribers(this.postInstallSubscriberList, 'post', args);
     return componentDirectoryMap;
   }
 
-  public async getComponentManifests(
-    componentDirectoryMap: ComponentMap<string>,
-    rootPolicy: WorkspacePolicy,
-    rootDir: string,
-    installOptions: Pick<PackageManagerInstallOptions, 'dedupe' | 'dependencyFilterFn'>,
-    copyPeerToRuntime = false
-  ) {
+  public async getComponentManifests({
+    componentDirectoryMap,
+    rootPolicy,
+    rootDir,
+    dedupe,
+    dependencyFilterFn,
+    copyPeerToRuntimeOnComponents,
+  }: GetComponentManifestsOptions) {
     const options: CreateFromComponentsOptions = {
       filterComponentsFromManifests: true,
       createManifestForComponentsWithoutDependencies: true,
-      dedupe: installOptions.dedupe,
-      dependencyFilterFn: installOptions.dependencyFilterFn,
+      dedupe,
+      dependencyFilterFn,
     };
     const workspaceManifest = await this.dependencyResolver.getWorkspaceManifest(
       undefined,
@@ -202,7 +210,7 @@ export class DependencyInstaller {
         const packageName = this.dependencyResolver.getPackageName(component);
         const manifest = workspaceManifest.componentsManifestsMap.get(packageName);
         if (manifest) {
-          acc[dir] = manifest.toJson({ copyPeerToRuntime });
+          acc[dir] = manifest.toJson({ copyPeerToRuntime: copyPeerToRuntimeOnComponents });
           acc[dir].defaultPeerDependencies = fromPairs(
             manifest.envPolicy.peersAutoDetectPolicy.entries.map(({ name, version }) => [name, version])
           );

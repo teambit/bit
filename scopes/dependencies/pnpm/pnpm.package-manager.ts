@@ -1,8 +1,8 @@
-import { ComponentMap } from '@teambit/component';
 import {
   WorkspaceManifest,
   DependencyResolverMain,
   extendWithComponentsFromDir,
+  InstallationContext,
   PackageManager,
   PackageManagerInstallOptions,
   PackageManagerResolveRemoteVersionOptions,
@@ -42,10 +42,7 @@ export class PnpmPackageManager implements PackageManager {
   }
 
   async install(
-    rootDir: string,
-    componentsManifests: Record<string, ProjectManifest>,
-    workspaceManifest: WorkspaceManifest,
-    componentDirectoryMap: ComponentMap<string>,
+    { rootDir, componentsManifests, workspaceManifest }: InstallationContext,
     installOptions: PackageManagerInstallOptions = {}
   ): Promise<void> {
     // require it dynamically for performance purpose. the pnpm package require many files - do not move to static import
