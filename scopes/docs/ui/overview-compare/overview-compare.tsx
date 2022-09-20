@@ -49,7 +49,7 @@ export function OverviewCompare(props: OverviewCompareProps) {
     const baseId = componentCompare?.base.model.id;
 
     // const isBaseOnLane = !!lanesModel?.lanebyComponentHash.get(baseVersion);
-    const isBaseOnLane = !!lanesModel?.isComponentOnLaneButNotOnMain(baseId);
+    const isBaseOnLane = !!lanesModel?.isComponentOnNonDefaultLanes(baseId, true);
 
     const lanesContext: LanesContextModel | undefined = isBaseOnLane ? { lanesModel, updateLanesModel } : undefined;
 
@@ -72,7 +72,7 @@ export function OverviewCompare(props: OverviewCompareProps) {
     // const compareVersion = componentCompare?.compare.model.version;
     const compareId = componentCompare?.compare.model.id;
 
-    const isCompareOnLane = !!lanesModel?.isComponentOnLaneButNotOnMain(compareId);
+    const isCompareOnLane = !!lanesModel?.isComponentOnNonDefaultLanes(compareId, true);
     const lanesContext: LanesContextModel | undefined = isCompareOnLane ? { lanesModel, updateLanesModel } : undefined;
 
     return (

@@ -131,18 +131,27 @@ export class LanesModel {
     return grouped;
   }
 
-  static groupByComponentId(lanes: LaneModel[]): Map<string, LaneModel[]> {
+  static groupByComponentNameAndId(lanes: LaneModel[]): {
+    byName: Map<string, LaneModel[]>;
+    byId: Map<string, LaneModel[]>;
+  } {
+    const byName = new Map<string, LaneModel[]>();
     const byId = new Map<string, LaneModel[]>();
+
     lanes.forEach((lane) => {
       const { components } = lane;
       components.forEach((component) => {
-        const id = component.fullName;
-        const existing = byId.get(id) || [];
-        existing.push(lane);
-        byId.set(id, existing);
+        const name = component.fullName;
+        const id = component.toString();
+        const existingByName = byName.get(name) || [];
+        const existingById = byId.get(id) || [];
+        existingByName.push(lane);
+        existingById.push(lane);
+        byName.set(name, existingByName);
+        byId.set(id, existingById);
       });
     });
-    return byId;
+    return { byName, byId };
   }
 
   static from({ data, host, viewedLaneId }: { data: LanesQuery; host: string; viewedLaneId?: LaneId }): LanesModel {
@@ -160,10 +169,13 @@ export class LanesModel {
     this.currentLane = currentLane;
     this.lanes = lanes || [];
     this.laneIdsByScope = LanesModel.groupByScope(this.lanes.map((lane) => lane.id));
-    this.lanesByComponentId = LanesModel.groupByComponentId(this.lanes);
+    const { byId, byName } = LanesModel.groupByComponentNameAndId(this.lanes);
+    this.lanesByComponentId = byId;
+    this.lanesByComponentName = byName;
   }
 
   readonly laneIdsByScope: Map<string, LaneId[]>;
+  readonly lanesByComponentName: Map<string, LaneModel[]>;
   readonly lanesByComponentId: Map<string, LaneModel[]>;
 
   viewedLane?: LaneModel;
@@ -185,34 +197,43 @@ export class LanesModel {
     return LanesModel.getLaneComponentUrl(componentId, lane.id);
   };
 
-  isInViewedLane = (componentId: ComponentID) =>
-    this.viewedLane?.components.some((comp) => comp.name === componentId.name);
-
-  getLanesByComponentId = (componentId: ComponentID) => this.lanesByComponentId.get(componentId.fullName);
-
   setViewedLane = (viewedLaneId?: LaneId) => {
     this.viewedLane = viewedLaneId ? this.lanes.find((lane) => lane.id.isEqual(viewedLaneId)) : undefined;
   };
+
   resolveComponent = (fullName: string, laneId?: string) =>
     ((laneId && this.lanes.find((lane) => lane.id.toString() === laneId)) || this.viewedLane)?.components.find(
       (component) => component.fullName === fullName
     );
+
   getDefaultLane = () => this.lanes.find((lane) => lane.id.isDefault());
   getNonMainLanes = () => this.lanes.filter((lane) => !lane.id.isDefault());
 
-  isComponentOnMain = (componentId: ComponentID) => {
-    return this.getLanesByComponentId(componentId)?.some((lane) => lane.id.isDefault());
-  };
-  isComponentOnMainButNotOnLane = (componentId: ComponentID) => {
-    return (
-      this.isComponentOnMain(componentId) &&
-      this.getLanesByComponentId(componentId)?.filter((lane) => !lane.id.isDefault()).length === 0
+  isInViewedLane = (componentId: ComponentID, includeVersion?: boolean) =>
+    this.viewedLane?.components.some(
+      (comp) => (includeVersion && comp.isEqual(componentId)) || comp.name === componentId.name
     );
+
+  getLanesByComponentName = (componentId: ComponentID) => this.lanesByComponentName.get(componentId.fullName);
+  getLanesByComponentId = (componentId: ComponentID) => this.lanesByComponentId.get(componentId.toString());
+
+  isComponentOnMain = (componentId: ComponentID, includeVersion?: boolean) => {
+    return !!(
+      (includeVersion && this.getLanesByComponentId(componentId)) ||
+      this.getLanesByComponentName(componentId)
+    )?.some((lane) => lane.id.isDefault());
   };
-  isComponentOnLaneButNotOnMain = (componentId: ComponentID) => {
-    return (
-      !this.isComponentOnMain(componentId) &&
-      this.getLanesByComponentId(componentId)?.some((lane) => !lane.id.isDefault())
-    );
+
+  isComponentOnMainButNotOnLane = (componentId: ComponentID, includeVersion?: boolean) => {
+    return this.isComponentOnMain(componentId, includeVersion) && !this.isComponentOnNonDefaultLanes(componentId);
+  };
+  isComponentOnLaneButNotOnMain = (componentId: ComponentID, includeVersion?: boolean) => {
+    return !this.isComponentOnMain(componentId, includeVersion) && this.isComponentOnNonDefaultLanes(componentId);
+  };
+  isComponentOnNonDefaultLanes = (componentId: ComponentID, includeVersion?: boolean) => {
+    return !!(
+      (includeVersion && this.getLanesByComponentId(componentId)) ||
+      this.getLanesByComponentName(componentId)
+    )?.some((lane) => !lane.id.isDefault());
   };
 }

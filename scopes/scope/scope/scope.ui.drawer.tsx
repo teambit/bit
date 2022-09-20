@@ -80,8 +80,6 @@ export const scopeDrawer = ({
     // TODO: create an interface for Component host.
     transformTree: (host?: any) => {
       return (rootNode: TreeNodeType) => {
-        // const scope = useScope();
-        // console.log(rootNode);
         const thisScopeIndex = rootNode.children?.findIndex((node) => {
           if (!(node.payload instanceof ScopePayload)) return undefined;
           const scopeNameFromNode = node.id.slice(0, -1);
@@ -109,7 +107,9 @@ export const scopeDrawer = ({
           viewedLaneId?.isDefault() ? undefined : viewedLaneId
         );
         const { components: mainComponents } = useContext(ScopeContext);
-        const components = viewedLaneId?.isDefault() ? mainComponents : laneComponents;
+        // lane components + main components
+        const components = mergeComponents(mainComponents, laneComponents);
+
         return {
           loading: lanesLoading || laneCompsLoading,
           components,
@@ -117,3 +117,12 @@ export const scopeDrawer = ({
       }),
   });
 };
+
+function mergeComponents(mainComponents: ComponentModel[], laneComponents: ComponentModel[]): ComponentModel[] {
+  const mainComponentsThatAreNotOnLane = mainComponents.filter((mainComponent) => {
+    return !laneComponents.find(
+      (laneComponent) => laneComponent.id.toStringWithoutVersion() === mainComponent.id.toStringWithoutVersion()
+    );
+  });
+  return laneComponents.concat(mainComponentsThatAreNotOnLane);
+}

@@ -144,7 +144,8 @@ function VersionMenu({
   }).filter((tab) => tab.payload.length > 0);
 
   const getActiveTabIndex = () => {
-    if (currentLane) return tabs.findIndex((tab) => tab.name === 'LANE');
+    if (currentLane?.components.some((c) => c.version === currentVersion))
+      return tabs.findIndex((tab) => tab.name === 'LANE');
     if ((snaps || []).some((snap) => snap.version === currentVersion))
       return tabs.findIndex((tab) => tab.name === 'SNAP');
     return 0;

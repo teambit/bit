@@ -43,7 +43,6 @@ export const workspaceDrawer = ({ treeWidgets, filtersSlot, drawerWidgetSlot }: 
     },
     emptyMessage: 'Workspace is empty',
     useComponents: () => {
-      // lane components + main components
       const { lanesModel, loading: lanesLoading } = useLanes();
       const viewedLaneId = lanesModel?.viewedLane?.id;
       const defaultLane = lanesModel?.getDefaultLane();
@@ -54,6 +53,7 @@ export const workspaceDrawer = ({ treeWidgets, filtersSlot, drawerWidgetSlot }: 
         !isViewingDefaultLane ? defaultLane?.id : undefined
       );
 
+      // lane components + main components
       const components = isViewingDefaultLane ? laneComponents : mergeComponents(mainComponents, laneComponents);
 
       return {

@@ -24,6 +24,7 @@ import { ComponentFilters } from '@teambit/component.ui.component-filters.compon
 import { DeprecateFilter } from '@teambit/component.ui.component-filters.deprecate-filter';
 import { EnvsFilter } from '@teambit/component.ui.component-filters.env-filter';
 import { ComponentUrlResolver, ComponentUrlProvider } from '@teambit/component.modules.component-url';
+import { ShowMainFilter } from '@teambit/component.ui.component-filters.show-main-filter';
 import { ScopeMenu, ScopeUseBox } from './ui/menu';
 import { ScopeAspect } from './scope.aspect';
 import { Scope } from './ui/scope';
@@ -282,14 +283,14 @@ export class ScopeUI {
     this.drawerWidgetSlot.register(widgets);
   };
 
-  registerDefaultDrawers(assumeScopeInUrl = false, overrideUseComponents?: () => {components: ComponentModel[]}) {
+  registerDefaultDrawers(assumeScopeInUrl = false, overrideUseComponents?: () => { components: ComponentModel[] }) {
     this.sidebar.registerDrawer(
       scopeDrawer({
         treeWidgets: this.sidebarSlot,
         filtersSlot: this.drawerComponentsFiltersSlot,
         drawerWidgetSlot: this.drawerWidgetSlot,
         assumeScopeInUrl,
-        overrideUseComponents
+        overrideUseComponents,
       })
     );
   }
@@ -431,7 +432,7 @@ export class ScopeUI {
       drawerWidgetSlot,
       componentFiltersSlot
     );
-    scopeUi.registerDrawerComponentFilters([DeprecateFilter, EnvsFilter]);
+    scopeUi.registerDrawerComponentFilters([DeprecateFilter, EnvsFilter, ShowMainFilter(false)]);
     scopeUi.registerDrawerWidgets([
       <FilterWidget key={'workspace-filter-widget'} />,
       <TreeToggleWidget key={'workspace-tree-toggle-widget'} />,

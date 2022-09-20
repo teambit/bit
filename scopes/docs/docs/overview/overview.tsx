@@ -36,7 +36,7 @@ export function Overview({ titleBadges }: OverviewProps) {
   const component = useContext(ComponentContext);
   const componentDescriptor = useComponentDescriptor();
   const { lanesModel } = useLanes();
-  const isComponentOnLane = lanesModel?.isComponentOnLaneButNotOnMain(component.id);
+  const isComponentOnLane = lanesModel?.isComponentOnNonDefaultLanes(component.id, true);
 
   const showHeader = !component.preview?.legacyHeader;
 

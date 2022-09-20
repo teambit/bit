@@ -19,7 +19,7 @@ export function ChangeLogPage({ className }: ChangeLogPageProps) {
   const { lanesModel } = useLanes();
   const currentLane = lanesModel?.viewedLane;
   const { logs } = component;
-  const isComponentOnLane = lanesModel?.isComponentOnLaneButNotOnMain(component.id);
+  const isComponentOnLane = lanesModel?.isComponentOnNonDefaultLanes(component.id, true);
 
   if (!logs) return null;
 
