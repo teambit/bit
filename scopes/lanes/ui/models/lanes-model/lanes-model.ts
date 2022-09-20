@@ -89,10 +89,16 @@ export class LanesModel {
     `${relative ? '' : '/'}${LanesModel.lanesPrefix}/${laneId.toString()}`;
 
   static getLaneComponentUrl = (componentId: ComponentID, laneId: LaneId) => {
+    const isExternalComponent = componentId.scope !== laneId.scope;
+
     const laneUrl = LanesModel.getLaneUrl(laneId);
     const urlSearch = affix('?version=', componentId.version);
 
-    return `${laneUrl}${LanesModel.baseLaneComponentRoute}/${componentId.fullName}${urlSearch}`;
+    if (!isExternalComponent) {
+      return `${laneUrl}${LanesModel.baseLaneComponentRoute}/${componentId.fullName}${urlSearch}`;
+    }
+
+    return `${laneUrl}${LanesModel.baseLaneComponentRoute}/${componentId.toStringWithoutVersion()}${urlSearch}`;
   };
 
   static getMainComponentUrl = (componentId: ComponentID) => {
@@ -202,9 +208,9 @@ export class LanesModel {
     this.viewedLane = viewedLaneId ? this.lanes.find((lane) => lane.id.isEqual(viewedLaneId)) : undefined;
   };
 
-  resolveComponent = (fullName: string, laneId?: string) =>
-    ((laneId && this.lanes.find((lane) => lane.id.toString() === laneId)) || this.viewedLane)?.components.find(
-      (component) => component.fullName === fullName
+  resolveComponent = (idStrWithoutVersion: string, laneId?: LaneId) =>
+    ((laneId && this.lanes.find((lane) => lane.id.isEqual(laneId))) || this.viewedLane)?.components.find(
+      (component) => component.toStringWithoutVersion() === idStrWithoutVersion
     );
 
   getDefaultLane = () => this.lanes.find((lane) => lane.id.isDefault());

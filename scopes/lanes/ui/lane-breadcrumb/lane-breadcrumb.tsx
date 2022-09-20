@@ -30,12 +30,12 @@ export function LaneBreadcrumb({ withSeparator, separatorClassName, className, .
 
   return (
     <>
-      <Link href={href} className={styles.laneUrl}>
-        <div {...rest} className={classNames(styles.lane, className)}>
-          <LaneIcon />
+      <div {...rest} className={classNames(styles.lane, className)}>
+        <LaneIcon />
+        <Link href={href} className={styles.laneUrl}>
           <Ellipsis className={styles.laneId}>{displayId}</Ellipsis>
-        </div>
-      </Link>
+        </Link>
+      </div>
       {withSeparator && <Separator isPresentational className={separatorClassName} />}
     </>
   );
