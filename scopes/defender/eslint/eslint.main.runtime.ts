@@ -28,6 +28,15 @@ export type ESLintOptions = {
    * file types to lint.
    */
   extensions?: string[];
+
+  // TODO: improve type
+  /**
+   * typescript config for eslint.
+   * If you pass this, bit will auto generate a temp config file in `node_modules/.cache` and pass it to eslint.
+   * In case you have include/exclude props in the tsconfig, they will be changed to handle the fact that they are inside the node_modules/.cache folder.
+   * a `../../` will be added to the beginning of the path.
+   */
+  tsConfig?: Record<string, any>;
 };
 
 export type EslintConfigTransformContext = {
