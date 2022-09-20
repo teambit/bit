@@ -99,19 +99,17 @@ export class ESLintLinter implements Linter {
   }
 
   private createTempTsConfigFile(rootDir: string, envId: string, tsConfig: Record<string,any>): string {
-    const newInclude = tsConfig.include?.map(includedPath => `../../${includedPath}`);
-    const newExclude = tsConfig.exclude?.map(excludedPath => `../../${excludedPath}`);
     const newTsConfig = {
       ...tsConfig,
     }
-    if (newInclude) {
-      newTsConfig.include = newInclude;
+    if (tsConfig.include) {
+      newTsConfig.include = tsConfig.include.map(includedPath => `../../${includedPath}`);;
     }
-    if (newExclude){
-      newTsConfig.exclude = newExclude;
+    if (tsConfig.exclude){
+      newTsConfig.exclude = tsConfig.exclude.map(excludedPath => `../../${excludedPath}`);;
     }
     const cacheDir = getCacheDir(rootDir);
-    const tempTsConfigPath = path.join(cacheDir, `bit.tsconfig.eslint.${envId.replaceAll('/', '_')}.json`);
+    const tempTsConfigPath = path.join(cacheDir, `bit.tsconfig.eslint.${envId.replaceAll('/', '__')}.json`);
     fs.outputJSONSync(tempTsConfigPath, newTsConfig, {spaces: 2});
     return tempTsConfigPath;
   }
