@@ -419,7 +419,6 @@ function squashOneComp(
   divergeData: DivergeData,
   componentFromModel?: Version
 ): Version | undefined {
-  console.log('id', id.toString(), divergeData);
   if (divergeData.isDiverged()) {
     throw new BitError(`unable to squash because ${id.toString()} is diverged in history.
 consider switching to "${
