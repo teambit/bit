@@ -10,7 +10,12 @@ import {
   BEFORE_EXPORTS,
   BEFORE_LOADING_COMPONENTS,
 } from '@teambit/legacy/dist/cli/loader/loader-messages';
-import { POST_EXPORT_HOOK, PRE_EXPORT_HOOK } from '@teambit/legacy/dist/constants';
+import {
+  CENTRAL_BIT_HUB_NAME,
+  CENTRAL_BIT_HUB_URL,
+  POST_EXPORT_HOOK,
+  PRE_EXPORT_HOOK,
+} from '@teambit/legacy/dist/constants';
 import { Consumer, loadConsumer } from '@teambit/legacy/dist/consumer';
 import BitMap from '@teambit/legacy/dist/consumer/bit-map/bit-map';
 import EjectComponents, { EjectResults } from '@teambit/legacy/dist/consumer/component-ops/eject-components';
@@ -27,6 +32,8 @@ import { Scope } from '@teambit/legacy/dist/scope';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
 import { LaneReadmeComponent } from '@teambit/legacy/dist/scope/models/lane';
+import { Http } from '@teambit/legacy/dist/scope/network/http';
+import { ObjectList } from '@teambit/legacy/dist/scope/objects/object-list';
 import { ExportAspect } from './export.aspect';
 import { ExportCmd } from './export-cmd';
 import { ResumeExportCmd } from './resume-export-cmd';
@@ -67,6 +74,11 @@ export class ExportMain {
       });
     }
     return exportResults;
+  }
+
+  async exportObjectList(objectList: ObjectList, centralHubOptions?: Record<string, any>) {
+    const http = await Http.connect(CENTRAL_BIT_HUB_URL, CENTRAL_BIT_HUB_NAME);
+    await http.pushToCentralHub(objectList, centralHubOptions);
   }
 
   private async exportComponents({ ids, includeNonStaged, originDirectly, ...params }: ExportParams): Promise<{

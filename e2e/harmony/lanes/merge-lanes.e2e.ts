@@ -686,4 +686,39 @@ describe('merge lanes', function () {
       expect(headVer.parents).to.have.lengthOf(2);
     });
   });
+  describe('merge from scope', () => {
+    let bareMerge;
+    let comp1HeadOnLane: string;
+    let comp2HeadOnLane: string;
+    let comp2PreviousHeadOnLane: string;
+    let comp2HeadOnMain: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents(2);
+      helper.command.tagWithoutBuild('comp2');
+      comp2HeadOnMain = helper.command.getHead('comp2');
+      helper.command.createLane();
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      comp2PreviousHeadOnLane = helper.command.getHeadOfLane('dev', 'comp2');
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      comp1HeadOnLane = helper.command.getHeadOfLane('dev', 'comp1');
+      comp2HeadOnLane = helper.command.getHeadOfLane('dev', 'comp2');
+      helper.command.export();
+      bareMerge = helper.scopeHelper.getNewBareScope('-bare-merge');
+      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, bareMerge.scopePath);
+      helper.command.mergeLaneFromScope(bareMerge.scopePath, `${helper.scopes.remote}/dev`);
+    });
+    it('should merge to main', () => {
+      expect(helper.command.getHead(`${helper.scopes.remote}/comp1`, bareMerge.scopePath)).to.equal(comp1HeadOnLane);
+      expect(helper.command.getHead(`${helper.scopes.remote}/comp2`, bareMerge.scopePath)).to.equal(comp2HeadOnLane);
+    });
+    it('should squash by default', () => {
+      const cat = helper.command.catComponent(`${helper.scopes.remote}/comp2@latest`, bareMerge.scopePath);
+      expect(cat.parents).to.have.lengthOf(1);
+      const parent = cat.parents[0];
+      expect(parent).to.not.equal(comp2PreviousHeadOnLane);
+      expect(parent).to.equal(comp2HeadOnMain);
+    });
+  });
 });

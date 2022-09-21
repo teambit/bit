@@ -375,33 +375,6 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
     return BitIds.fromArray(authoredExportedComponents);
   }
 
-  /**
-   * author might require bit-components that were installed via a package-manager. in that case,
-   * the objects are not imported until bit build or bit tag was running. this makes sure to get
-   * the objects on 'bit import', so then in the UI, they'll be shown nicely.
-   */
-  async getIdsOfDepsInstalledAsPackages() {
-    if (!this.options.objectsOnly) {
-      // this is needed only when importing objects. we don't want these components to be written to the fs
-      return [];
-    }
-    const authoredNonExportedComponentsIds = this.consumer.bitMap.getAuthoredNonExportedComponents();
-    const { components: authoredNonExportedComponents } = await this.consumer.loadComponents(
-      BitIds.fromArray(authoredNonExportedComponentsIds),
-      false
-    );
-    const dependencies: BitId[] = R.flatten(authoredNonExportedComponents.map((c) => c.getAllDependenciesIds()));
-    const missingDeps: BitId[] = [];
-    await Promise.all(
-      dependencies.map(async (dep) => {
-        if (!dep.hasScope()) return;
-        const isInScope = await this.scope.isComponentInScope(dep);
-        if (!isInScope) missingDeps.push(dep);
-      })
-    );
-    return missingDeps;
-  }
-
   async _getCurrentVersions(ids: BitIds): Promise<ImportedVersions> {
     const versionsP = ids.map(async (id) => {
       const modelComponent = await this.consumer.scope.getModelComponentIfExist(id.changeVersion(undefined));
