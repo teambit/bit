@@ -7,7 +7,6 @@ import { MDXLayout } from '@teambit/mdx.ui.mdx-layout';
 import { ExportingComponents } from '@teambit/component.instructions.exporting-components';
 import { AlertCard } from '@teambit/design.ui.alert-card';
 import React, { HTMLAttributes, useContext } from 'react';
-import { LaneBreadcrumb } from '@teambit/lanes.ui.lane-breadcrumb';
 
 import styles from './change-log-page.module.scss';
 
@@ -21,48 +20,42 @@ export function ChangeLogPage({ className }: ChangeLogPageProps) {
 
   if (logs.length === 0) {
     return (
-      <>
-        <LaneBreadcrumb withSeparator={true} separatorClassName={styles.separator} />
-        <div className={classNames(styles.changeLogPage, className)}>
-          <H1 className={styles.title}>History</H1>
-          <Separator isPresentational className={styles.separatorNoChangeLog} />
-          <AlertCard
-            level="info"
-            title="There is no change log as this component has not been exported yet.
+      <div className={classNames(styles.changeLogPage, className)}>
+        <H1 className={styles.title}>History</H1>
+        <Separator isPresentational className={styles.separatorNoChangeLog} />
+        <AlertCard
+          level="info"
+          title="There is no change log as this component has not been exported yet.
           Learn how to export components:"
-            className={styles.changeLogCard}
-          >
-            <MDXLayout>
-              <ExportingComponents />
-            </MDXLayout>
-          </AlertCard>
-        </div>
-      </>
+          className={styles.changeLogCard}
+        >
+          <MDXLayout>
+            <ExportingComponents />
+          </MDXLayout>
+        </AlertCard>
+      </div>
     );
   }
 
   return (
-    <>
-      <LaneBreadcrumb withSeparator={true} />
-      <div className={classNames(styles.changeLogPage, className)}>
-        <H1 className={styles.title}>History</H1>
-        <Separator isPresentational className={styles.separator} />
-        <div className={styles.logContainer}>
-          {logs.map((snap, index) => {
-            const isLatest = component.latest === snap.tag || component.latest === snap.hash;
-            const isCurrent = component.version === snap.tag || component.version === snap.hash;
-            return (
-              <VersionBlock
-                key={index}
-                componentId={component.id.fullName}
-                isLatest={isLatest}
-                snap={snap}
-                isCurrent={isCurrent}
-              />
-            );
-          })}
-        </div>
+    <div className={classNames(styles.changeLogPage, className)}>
+      <H1 className={styles.title}>History</H1>
+      <Separator isPresentational className={styles.separator} />
+      <div className={styles.logContainer}>
+        {logs.map((snap, index) => {
+          const isLatest = component.latest === snap.tag || component.latest === snap.hash;
+          const isCurrent = component.version === snap.tag || component.version === snap.hash;
+          return (
+            <VersionBlock
+              key={index}
+              componentId={component.id.fullName}
+              isLatest={isLatest}
+              snap={snap}
+              isCurrent={isCurrent}
+            />
+          );
+        })}
       </div>
-    </>
+    </div>
   );
 }

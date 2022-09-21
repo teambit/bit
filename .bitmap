@@ -1512,12 +1512,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/design/ui/label"
     },
-    "ui/lane-breadcrumb": {
-        "scope": "",
-        "version": "",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/lanes/ui/lane-breadcrumb"
-    },
     "ui/lane-details": {
         "scope": "",
         "version": "",

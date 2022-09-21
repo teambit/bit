@@ -6,7 +6,6 @@ import type { SlotRegistry } from '@teambit/harmony';
 import { ComponentPreview } from '@teambit/preview.ui.component-preview';
 import { StatusMessageCard } from '@teambit/design.ui.surfaces.status-message-card';
 import { ComponentOverview } from '@teambit/component.ui.component-meta';
-import { LaneBreadcrumb } from '@teambit/lanes.ui.lane-breadcrumb';
 
 import styles from './overview.module.scss';
 
@@ -45,11 +44,11 @@ export function Overview({ titleBadges }: OverviewProps) {
 
   if (component?.buildStatus === 'failed' && component?.host === 'teambit.scope/scope')
     return <StatusMessageCard style={{ margin: 'auto' }} status="FAILURE" title="failed to get component preview " />;
+
   const isScaling = component.preview?.isScaling;
 
   return (
     <div className={styles.overviewWrapper}>
-      <LaneBreadcrumb withSeparator={true} />
       {showHeader && (
         <ComponentOverview
           className={classNames(styles.componentOverviewBlock, !isScaling && styles.legacyPreview)}
