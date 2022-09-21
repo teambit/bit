@@ -1,4 +1,4 @@
-import { ComponentModel } from '@teambit/component';
+import { ComponentModel, useIdFromLocation } from '@teambit/component';
 import React, { useMemo } from 'react';
 import { useLocation } from '@teambit/base-react.navigation.link';
 import { indentStyle } from '@teambit/base-ui.graph.tree.indent';
@@ -8,11 +8,9 @@ import { TreeContextProvider } from '@teambit/base-ui.graph.tree.tree-context';
 import { PayloadType, ScopePayload } from './payload-type';
 import { DefaultTreeNodeRenderer } from './default-tree-node-renderer';
 
-const componentIdUrlRegex = '[\\w\\/-]*[\\w-]';
-
 type ComponentTreeProps = {
   components: ComponentModel[];
-  transformTree?: (rootNode: TreeNodeType) => TreeNodeType
+  transformTree?: (rootNode: TreeNodeType) => TreeNodeType;
   TreeNode?: TreeNodeRenderer<PayloadType>;
   isCollapsed?: boolean;
   assumeScopeInUrl?: boolean;
@@ -23,18 +21,16 @@ export function ComponentTree({
   isCollapsed,
   className,
   transformTree,
-  assumeScopeInUrl = false,
+  // assumeScopeInUrl = false,
   TreeNode = DefaultTreeNodeRenderer,
 }: ComponentTreeProps) {
   const { pathname = '/' } = useLocation() || {};
 
   const activeComponent = useMemo(() => {
-    const componentUrlRegex = new RegExp(componentIdUrlRegex);
-    const path = pathname?.startsWith('/') ? pathname.substring(1) : pathname;
-    const rawMatcher = path.match(componentUrlRegex)?.[0]; // returns just the part that matches the componentId section without /~compositions etc.
-    const matcher = assumeScopeInUrl ? rawMatcher?.split('/').slice(2).join('/'): rawMatcher;
+    const idFromLocation = useIdFromLocation();
+
     const active = components.find((x) => {
-      return matcher && matcher === x.id.fullName;
+      return idFromLocation && (idFromLocation === x.id.fullName || idFromLocation === x.id.toStringWithoutVersion());
     });
     return active?.id.toString({ ignoreVersion: true });
   }, [components, pathname]);
