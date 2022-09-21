@@ -1,10 +1,12 @@
 import parsePackageName from 'parse-package-name';
 import {
   extendWithComponentsFromDir,
-  InstallationContext,
+  WorkspacePolicy,
   DependencyResolverMain,
   PackageManager,
   PackageManagerInstallOptions,
+  ComponentsManifestsMap,
+  CreateFromComponentsOptions,
   Registries,
   Registry,
   PackageManagerResolveRemoteVersionOptions,
@@ -31,6 +33,7 @@ import { npath, PortablePath } from '@yarnpkg/fslib';
 import { Resolution } from '@yarnpkg/parsers';
 import npmPlugin from '@yarnpkg/plugin-npm';
 import parseOverrides from '@pnpm/parse-overrides';
+import { PkgMain } from '@teambit/pkg';
 import userHome from 'user-home';
 import { Logger } from '@teambit/logger';
 import versionSelectorType from 'version-selector-type';
@@ -42,13 +45,30 @@ type BackupJsons = {
 };
 
 export class YarnPackageManager implements PackageManager {
-  constructor(private depResolver: DependencyResolverMain, private logger: Logger) {}
+  constructor(private depResolver: DependencyResolverMain, private pkg: PkgMain, private logger: Logger) {}
 
   async install(
-    { rootDir, componentsManifests, workspaceManifest, componentDirectoryMap }: InstallationContext,
+    rootDir: string,
+    rootPolicy: WorkspacePolicy,
+    componentDirectoryMap: ComponentMap<string>,
     installOptions: PackageManagerInstallOptions = {}
   ): Promise<void> {
     this.logger.setStatusLine('installing dependencies');
+    const options: CreateFromComponentsOptions = {
+      filterComponentsFromManifests: true,
+      createManifestForComponentsWithoutDependencies: true,
+      dedupe: !installOptions.rootComponentsForCapsules,
+      dependencyFilterFn: installOptions.dependencyFilterFn,
+    };
+    const components = componentDirectoryMap.components;
+    const workspaceManifest = await this.depResolver.getWorkspaceManifest(
+      undefined,
+      undefined,
+      rootPolicy,
+      rootDir,
+      components,
+      options
+    );
 
     const rootDirPath = npath.toPortablePath(rootDir);
     const cacheDir = this.getCacheFolder(installOptions.cacheRootDir);
@@ -59,6 +79,11 @@ export class YarnPackageManager implements PackageManager {
 
     const project = new Project(rootDirPath, { configuration: config });
 
+    const rootManifest = workspaceManifest.toJsonWithDir({
+      copyPeerToRuntime: installOptions.copyPeerToRuntimeOnRoot,
+      installPeersFromEnvs: installOptions.installPeersFromEnvs,
+    }).manifest;
+
     // @ts-ignore
     project.setupResolutions();
     if (installOptions.rootComponentsForCapsules && !installOptions.useNesting) {
@@ -67,45 +92,51 @@ export class YarnPackageManager implements PackageManager {
         ...this._createLocalDirectoryOverrides(rootDir, componentDirectoryMap),
       };
     }
-    const rootWs = await this.createWorkspace(rootDir, project, workspaceManifest, installOptions.overrides);
+    const rootWs = await this.createWorkspace(rootDir, project, rootManifest, installOptions.overrides);
     if (installOptions.rootComponents) {
       rootWs.manifest.installConfig = {
         hoistingLimits: 'dependencies',
       };
     }
 
+    // const manifests = Array.from(workspaceManifest.componentsManifestsMap.entries());
+    let manifests = this.computeComponents(
+      workspaceManifest.componentsManifestsMap,
+      componentDirectoryMap,
+      installOptions.copyPeerToRuntimeOnComponents
+    );
     if (installOptions.rootComponents) {
       // Manifests are extended with "wrapper components"
       // that group all workspace components with their dependencies and peer dependencies.
-      componentsManifests = {
+      manifests = {
         ...(await createRootComponentsDir({
           depResolver: this.depResolver,
           rootDir,
           componentDirectoryMap,
         })),
-        ...componentsManifests,
+        ...manifests,
       };
     } else if (installOptions.useNesting) {
       // Nesting is used for scope aspect capsules.
       // In a capsule, all peer dependencies should be installed,
       // so we make runtime dependencies from peer dependencies.
-      componentsManifests[rootDir].dependencies = {
-        ...componentsManifests[rootDir].peerDependencies,
-        ...componentsManifests[rootDir]['defaultPeerDependencies'], // eslint-disable-line
-        ...componentsManifests[rootDir].dependencies,
+      manifests[rootDir].dependencies = {
+        ...manifests[rootDir].peerDependencies,
+        ...manifests[rootDir].defaultPeerDependencies,
+        ...manifests[rootDir].dependencies,
       };
     } else if (installOptions.rootComponentsForCapsules) {
-      await updateManifestsForInstallationInWorkspaceCapsules(componentsManifests);
+      await updateManifestsForInstallationInWorkspaceCapsules(manifests);
     } else {
-      await extendWithComponentsFromDir(rootDir, componentsManifests);
+      await extendWithComponentsFromDir(rootDir, manifests);
     }
 
     this.logger.debug(`running installation in root dir ${rootDir}`);
-    this.logger.debug('root manifest for installation', workspaceManifest);
-    this.logger.debug('components manifests for installation', componentsManifests);
+    this.logger.debug('root manifest for installation', rootManifest);
+    this.logger.debug('components manifests for installation', manifests);
 
-    const workspacesP = Object.keys(componentsManifests).map(async (path) => {
-      const manifest = componentsManifests[path];
+    const workspacesP = Object.keys(manifests).map(async (path) => {
+      const manifest = manifests[path];
       const workspace = await this.createWorkspace(path, project, manifest);
       return workspace;
     });
@@ -126,7 +157,7 @@ export class YarnPackageManager implements PackageManager {
       }
     }
 
-    if (!componentsManifests[rootDir]) {
+    if (!manifests[rootDir]) {
       workspaces.push(rootWs);
     }
     this.setupWorkspaces(project, workspaces);
@@ -387,6 +418,21 @@ export class YarnPackageManager implements PackageManager {
     config.use('<bit>', data, rootDirPath, {});
 
     return config;
+  }
+
+  private computeComponents(
+    componentManifests: ComponentsManifestsMap,
+    componentsDirMap: ComponentMap<string>,
+    copyPeer = false
+  ): { [key: string]: any } {
+    return componentsDirMap.toArray().reduce((acc, [component, dir]) => {
+      const packageName = this.pkg.getPackageName(component);
+      if (componentManifests.has(packageName)) {
+        acc[dir] = componentManifests.get(packageName)?.toJson({ copyPeerToRuntime: copyPeer });
+      }
+
+      return acc;
+    }, {});
   }
 
   private computeDeps(rawDeps?: { [key: string]: string }): Map<IdentHash, Descriptor> {

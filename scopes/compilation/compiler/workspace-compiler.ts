@@ -128,7 +128,7 @@ ${this.compileErrors.map(formatError).join('\n')}`);
     const packageDir = path.join('node_modules', packageName);
     const distDirName = this.compilerInstance.getDistDir?.() || DEFAULT_DIST_DIRNAME;
     const injectedDirs = await this.getInjectedDirs(packageName);
-    return [packageDir, ...injectedDirs].map((dist) => path.join(dist, distDirName));
+    return [packageDir, ...injectedDirs].map((dist) => path.join(dist,distDirName));
   }
 
   private async getInjectedDirs(packageName: string): Promise<PathOsBasedRelative[]> {
