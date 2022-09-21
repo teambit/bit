@@ -1742,7 +1742,7 @@
     },
     "ui/status": {
         "scope": "teambit.workspace",
-        "version": "0.0.494",
+        "version": "0.0.495",
         "mainFile": "index.ts",
         "rootDir": "scopes/workspace/ui/status"
     },
