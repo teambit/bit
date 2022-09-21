@@ -1952,72 +1952,75 @@ workflows:
   #           branches:
   #             only: circle-esbuild-cache
   # uncomment and change the filter branch name to debug the bvm bundle jobs
-  # bvm_bundle_debug:
-  #   jobs:
-  #     - checkout_code:
-  #         filters:
-  #           branches:
-  #             only: fix-circle-cache
-  #     - bundle_version_linux:
-  #         filters:
-  #           branches:
-  #             only: fix-circle-cache
-  #     - bundle_version_windows:
-  #         filters:
-  #           branches:
-  #             only: fix-circle-cache
-  #     - get_esbuild_arm64:
-  #         filters:
-  #           branches:
-  #             only: fix-circle-cache
-  #     - bundle_version_macos:
-  #         filters:
-  #           branches:
-  #             only: fix-circle-cache
-  #         requires:
-  #           - get_esbuild_arm64
-  #     - harmony_publish_to_gcloud:
-  #         filters:
-  #           branches:
-  #             only: fix-circle-cache
-  #         requires:
-  #           - bundle_version_macos
-  #           - bundle_version_linux
-  #           - bundle_version_windows
-  #           - checkout_code # This is needed to generate index.json
-      # - docker_build:
-      #     requires:
-      #       - checkout_code
-      #       # - harmony_publish_to_gcloud
-      # - docker_build_node_14:
-      #     requires:
-      #       - checkout_code
-      #       # - harmony_publish_to_gcloud
-      # - docker_build_node_16:
-      #     requires:
-      #       - checkout_code
-      #       # - harmony_publish_to_gcloud
-      # - docker_non_root_build:
-      #     requires:
-      #       - checkout_code
-      #       # - harmony_publish_to_gcloud
-      # - docker_non_root_build_node_14:
-      #     requires:
-      #       - checkout_code
-      #       # - harmony_publish_to_gcloud
-      # - docker_non_root_build_node_16:
-      #     requires:
-      #       - checkout_code
-      #       # - harmony_publish_to_gcloud
-      # - server_docker_build:
-      #     requires:
-      #       - docker_build
-      # - server_docker_build_node_14:
-      #     requires:
-      #       - docker_build_node_14
-      # - server_docker_build_node_16:
-      #     requires:
-      #       - docker_build_node_16
+  bvm_bundle_debug:
+    jobs:
+      - checkout_code:
+          filters:
+            branches:
+              only: manul-bvm
+      - bundle_version_linux:
+          filters:
+            branches:
+              only: manul-bvm
+      - bundle_version_windows:
+          filters:
+            branches:
+              only: manul-bvm
+      - get_esbuild_arm64:
+          filters:
+            branches:
+              only: manul-bvm
+      - bundle_version_macos:
+          filters:
+            branches:
+              only: manul-bvm
+          requires:
+            - get_esbuild_arm64
+      - harmony_publish_to_gcloud:
+          filters:
+            branches:
+              only: manul-bvm
+          requires:
+            - bundle_version_macos
+            - bundle_version_linux
+            - bundle_version_windows
+            - checkout_code # This is needed to generate index.json
+      - docker_build:
+          requires:
+            - checkout_code
+            - harmony_publish_to_gcloud
+      - docker_build_node_14:
+          requires:
+            - checkout_code
+            - harmony_publish_to_gcloud
+      - docker_build_node_16:
+          requires:
+            - checkout_code
+            - harmony_publish_to_gcloud
+      - docker_non_root_build:
+          requires:
+            - checkout_code
+            - harmony_publish_to_gcloud
+      - docker_non_root_build_node_14:
+          requires:
+            - checkout_code
+            - harmony_publish_to_gcloud
+      - docker_non_root_build_node_16:
+          requires:
+            - checkout_code
+            - harmony_publish_to_gcloud
+      - server_docker_build:
+          requires:
+            - docker_build
+      - server_docker_build_node_14:
+          requires:
+            - docker_build_node_14
+      - server_docker_build_node_16:
+          requires:
+            - docker_build_node_16
+      - symphony_docker_build:
+          branches:
+              only: manual-bvm
   # uncomment to print node version on windows default orb
   # windows_print_node_version_workflow:
   #   jobs:
