@@ -66,8 +66,8 @@ const prettierConfig = require('./prettier/prettier.config.js');
 // TODO: move to be taken from the key mode of compiler context
 type CompilerMode = 'build' | 'dev';
 
-export type GetBuildPipeModifiers = PipeServiceModifiersMap & {
-  compilerModifier?: PipeServiceModifier;
+type GetBuildPipeModifiers = PipeServiceModifiersMap & {
+  tsModifier?: PipeServiceModifier;
 };
 
 /**
@@ -242,8 +242,11 @@ export class ReactEnv
    * returns and configures the component linter.
    */
   getLinter(context: LinterContext, transformers: EslintConfigTransformer[] = []): Linter {
+    const tsConfig = this.createTsCompilerOptions('dev').tsconfig;
+
     const defaultTransformer: EslintConfigTransformer = (configMutator) => {
       configMutator.addExtensionTypes(['.md', '.mdx']);
+      configMutator.setTsConfig(tsConfig);
       return configMutator;
     };
 
@@ -483,11 +486,8 @@ export class ReactEnv
    * returns the component build pipeline.
    */
   getBuildPipe(modifiers: GetBuildPipeModifiers = {}): BuildTask[] {
-    const transformers: Function[] = modifiers?.compilerModifier?.transformers || [];
-    return [
-      this.createCjsTsCompilerTask(transformers as TsConfigTransformer[], modifiers?.compilerModifier?.module || ts),
-      this.tester.task,
-    ];
+    const transformers: Function[] = modifiers?.tsModifier?.transformers || [];
+    return [this.createCjsCompilerTask(transformers, modifiers?.tsModifier?.module || ts), this.tester.task];
   }
 
   /**
@@ -511,7 +511,7 @@ export class ReactEnv
    * @deprecated use createEsmCompilerTask()
    */
   getEsmCompilerTask(transformers: TsConfigTransformer[] = [], tsModule = ts) {
-    return this.createEsmTsCompilerTask(transformers, tsModule);
+    return this.createEsmCompilerTask(transformers as PipeServiceModifier[], tsModule);
   }
 
   /**
@@ -520,8 +520,8 @@ export class ReactEnv
    * @param tsModule
    * @returns
    */
-  createEsmTsCompilerTask(transformers: TsConfigTransformer[] = [], tsModule = ts) {
-    const tsCompiler = this.createTsEsmCompiler('build', transformers, tsModule);
+  createEsmCompilerTask(transformers: PipeServiceModifier[] = [], tsModule = ts) {
+    const tsCompiler = this.createTsEsmCompiler('build', transformers as TsConfigTransformer[], tsModule);
     return this.compiler.createTask('TSCompiler', tsCompiler);
   }
 
@@ -529,7 +529,7 @@ export class ReactEnv
    * @deprecated use createCjsCompilerTask()
    * */
   getCjsCompilerTask(transformers: TsConfigTransformer[] = [], tsModule = ts) {
-    return this.createCjsTsCompilerTask(transformers, tsModule);
+    return this.createCjsCompilerTask(transformers as Function[], tsModule);
   }
 
   /**
@@ -538,8 +538,8 @@ export class ReactEnv
    * @param tsModule
    * @returns
    */
-  createCjsTsCompilerTask(transformers: TsConfigTransformer[] = [], tsModule = ts) {
-    const tsCompiler = this.createTsCjsCompiler('build', transformers, tsModule);
+  createCjsCompilerTask(transformers: Function[] = [], tsModule = ts) {
+    const tsCompiler = this.createTsCjsCompiler('build', transformers as TsConfigTransformer[], tsModule);
     return this.compiler.createTask('TSCompiler', tsCompiler);
   }
 
