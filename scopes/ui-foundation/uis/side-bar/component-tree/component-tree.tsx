@@ -25,10 +25,9 @@ export function ComponentTree({
   TreeNode = DefaultTreeNodeRenderer,
 }: ComponentTreeProps) {
   const { pathname = '/' } = useLocation() || {};
+  const idFromLocation = useIdFromLocation();
 
   const activeComponent = useMemo(() => {
-    const idFromLocation = useIdFromLocation();
-
     const active = components.find((x) => {
       return idFromLocation && (idFromLocation === x.id.fullName || idFromLocation === x.id.toStringWithoutVersion());
     });
