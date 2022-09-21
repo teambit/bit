@@ -1,15 +1,18 @@
 import { CommunityMain, CommunityAspect } from '@teambit/community';
+import { CompilerMain, CompilerAspect, CompilationInitiator } from '@teambit/compiler';
 import ManyComponentsWriter from '@teambit/legacy/dist/consumer/component-ops/many-components-writer';
 import { CLIMain, CommandList, CLIAspect, MainRuntime } from '@teambit/cli';
 import chalk from 'chalk';
 import { WorkspaceAspect, Workspace, ComponentConfigFile } from '@teambit/workspace';
-import { pick } from 'lodash';
+import { pick, isEqual } from 'lodash';
+import { ProjectManifest } from '@pnpm/types';
 import { NothingToImport } from '@teambit/legacy/dist/consumer/exceptions';
 import { VariantsMain, Patterns, VariantsAspect } from '@teambit/variants';
 import { ComponentID, ComponentMap } from '@teambit/component';
 import {
   WorkspaceDependencyLifecycleType,
   DependencyResolverMain,
+  DependencyInstaller,
   DependencyResolverAspect,
   PackageManagerInstallOptions,
   ComponentDependency,
@@ -19,6 +22,7 @@ import {
   LinkResults,
   DependencyList,
   OutdatedPkg,
+  WorkspacePolicy,
 } from '@teambit/dependency-resolver';
 import { ImporterAspect, ImporterMain, ImportOptions } from '@teambit/importer';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
@@ -57,7 +61,9 @@ export class InstallMain {
 
     private variants: VariantsMain,
 
-    private importer: ImporterMain
+    private importer: ImporterMain,
+
+    private compiler: CompilerMain
   ) {}
   /**
    * Install dependencies for all components in the workspace
@@ -145,26 +151,9 @@ export class InstallMain {
       `installing dependencies in workspace using ${chalk.cyan(this.dependencyResolver.getPackageManagerName())}`
     );
     this.logger.debug(`installing dependencies in workspace with options`, options);
-    const hasRootComponents = this.dependencyResolver.hasRootComponents();
-    // TODO: this make duplicate
-    // this.logger.consoleSuccess();
-    // TODO: add the links results to the output
-    await this.link({
-      linkTeambitBit: true,
-      legacyLink: true,
-      linkCoreAspects: false,
-      linkDepsResolvedFromEnv: !hasRootComponents,
-      linkNestedDepsInNM: false,
-    });
-    this.workspace.consumer.componentLoader.clearComponentsCache();
-    this.workspace.clearCache();
-    // TODO: pass get install options
-    const installer = this.dependencyResolver.getInstaller({});
-    const compDirMap = await this.getComponentsDirectory([]);
     const mergedRootPolicy = this.dependencyResolver.getWorkspacePolicy();
-
     const depsFilterFn = await this.generateFilterFnForDepsFromLocalRemote();
-
+    const hasRootComponents = this.dependencyResolver.hasRootComponents();
     const pmInstallOptions: PackageManagerInstallOptions = {
       dedupe: !hasRootComponents && options?.dedupe,
       copyPeerToRuntimeOnRoot: options?.copyPeerToRuntimeOnRoot ?? true,
@@ -174,22 +163,79 @@ export class InstallMain {
       packageImportMethod: this.dependencyResolver.config.packageImportMethod,
       rootComponents: hasRootComponents,
     };
-    await installer.install(
-      this.workspace.path,
-      mergedRootPolicy,
-      compDirMap,
-      { installTeambitBit: false },
-      pmInstallOptions
-    );
+    // TODO: pass get install options
+    const installer = this.dependencyResolver.getInstaller({});
+    let current = await this._getComponentsManifests(installer, mergedRootPolicy, pmInstallOptions);
+    let prev: typeof current;
+    // TODO: this make duplicate
+    // this.logger.consoleSuccess();
+    // TODO: add the links results to the output
     await this.link({
-      linkTeambitBit: false,
+      linkTeambitBit: true,
       legacyLink: true,
       linkCoreAspects: this.dependencyResolver.linkCoreAspects(),
       linkDepsResolvedFromEnv: !hasRootComponents,
-      linkNestedDepsInNM: !this.workspace.isLegacy && !hasRootComponents,
+      linkNestedDepsInNM: false,
     });
-    await this.workspace.consumer.componentFsCache.deleteAllDependenciesDataCache();
-    return compDirMap;
+    const linkOpts = {
+      linkTeambitBit: false,
+      legacyLink: true,
+      linkCoreAspects: false,
+      linkDepsResolvedFromEnv: !hasRootComponents,
+      linkNestedDepsInNM: !this.workspace.isLegacy && !hasRootComponents,
+    };
+    /* eslint-disable no-await-in-loop */
+    do {
+      this.workspace.consumer.componentLoader.clearComponentsCache();
+      this.workspace.clearCache();
+      await installer.installComponents(
+        this.workspace.path,
+        current.workspaceManifest,
+        current.componentsManifests,
+        mergedRootPolicy,
+        current.componentDirectoryMap,
+        { installTeambitBit: false },
+        pmInstallOptions
+      );
+      // Core aspects should be relinked after installation because Yarn removes all symlinks created not by Yarn.
+      // If we don't link the core aspects immediately, the components will fail during load.
+      await this.linkCoreAspectsAndLegacy({
+        linkTeambitBit: false,
+        linkCoreAspects: this.dependencyResolver.linkCoreAspects(),
+      });
+      await this.compiler.compileOnWorkspace([], { initiator: CompilationInitiator.Install });
+      await this.link(linkOpts);
+      prev = current;
+      current = await this._getComponentsManifests(installer, mergedRootPolicy, pmInstallOptions);
+    } while (!isManifestsEqual(prev, current));
+    /* eslint-enable no-await-in-loop */
+    return current.componentDirectoryMap;
+  }
+
+  private async _getComponentsManifests(
+    dependencyInstaller: DependencyInstaller,
+    rootPolicy: WorkspacePolicy,
+    installOptions: Pick<
+      PackageManagerInstallOptions,
+      'dedupe' | 'dependencyFilterFn' | 'copyPeerToRuntimeOnComponents'
+    >
+  ): Promise<{
+    componentDirectoryMap: ComponentMap<string>;
+    componentsManifests: Record<string, ProjectManifest>;
+    workspaceManifest: ProjectManifest;
+  }> {
+    const componentDirectoryMap = await this.getComponentsDirectory([]);
+    const { componentsManifests, workspaceManifest } = await dependencyInstaller.getComponentManifests({
+      ...installOptions,
+      componentDirectoryMap,
+      rootPolicy,
+      rootDir: this.workspace.path,
+    });
+    return {
+      componentDirectoryMap,
+      componentsManifests,
+      workspaceManifest,
+    };
   }
 
   /**
@@ -290,6 +336,16 @@ export class InstallMain {
     return this._installModules({ dedupe: true });
   }
 
+  async linkCoreAspectsAndLegacy(options: WorkspaceLinkOptions = {}) {
+    const linker = this.dependencyResolver.getLinker({
+      rootDir: this.workspace.path,
+      linkingOptions: options,
+    });
+    const compIds = await this.workspace.listIds();
+    const res = await linker.linkCoreAspectsAndLegacy(this.workspace.path, compIds, options);
+    return res;
+  }
+
   async link(options: WorkspaceLinkOptions = {}): Promise<LinkResults> {
     if (options.fetchObject) {
       await this.importObjects();
@@ -367,21 +423,23 @@ export class InstallMain {
     CLIAspect,
     CommunityAspect,
     ImporterAspect,
+    CompilerAspect,
   ];
 
   static runtime = MainRuntime;
 
-  static async provider([dependencyResolver, workspace, loggerExt, variants, cli, community, importer]: [
+  static async provider([dependencyResolver, workspace, loggerExt, variants, cli, community, importer, compiler]: [
     DependencyResolverMain,
     Workspace,
     LoggerMain,
     VariantsMain,
     CLIMain,
     CommunityMain,
-    ImporterMain
+    ImporterMain,
+    CompilerMain
   ]) {
     const logger = loggerExt.createLogger('teambit.bit/install');
-    const installExt = new InstallMain(dependencyResolver, logger, workspace, variants, importer);
+    const installExt = new InstallMain(dependencyResolver, logger, workspace, variants, importer, compiler);
     ManyComponentsWriter.registerExternalInstaller({
       install: async () => {
         // TODO: think how we should pass this options
@@ -402,6 +460,18 @@ export class InstallMain {
     cli.register(...commands);
     return installExt;
   }
+}
+
+interface AllWorkspaceManifests {
+  componentsManifests: Record<string, ProjectManifest>;
+  workspaceManifest: ProjectManifest;
+}
+
+function isManifestsEqual(prev: AllWorkspaceManifests, next: AllWorkspaceManifests): boolean {
+  return (
+    isEqual(prev.componentsManifests, next.componentsManifests) &&
+    JSON.stringify(prev.workspaceManifest) === JSON.stringify(next.workspaceManifest)
+  );
 }
 
 InstallAspect.addRuntime(InstallMain);
