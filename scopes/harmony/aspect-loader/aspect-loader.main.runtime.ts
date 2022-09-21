@@ -265,10 +265,6 @@ export class AspectLoaderMain {
     return this.failedLoadAspect;
   }
 
-  public resetFailedLoadAspects() {
-    this.failedLoadAspect = [];
-  }
-
   private addFailure(id: string): void {
     if (this.failedAspects.includes(id)) return;
     this.failedLoadAspect.push(id);

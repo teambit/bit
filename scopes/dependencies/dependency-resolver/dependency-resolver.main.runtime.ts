@@ -571,7 +571,6 @@ export class DependencyResolverMain {
       packageManager,
       this.aspectLoader,
       this.logger,
-      this,
       options.rootDir,
       cacheRootDir,
       preInstallSubscribers,
@@ -771,24 +770,23 @@ export class DependencyResolverMain {
     this.logger.setStatusLine('finding missing peer dependencies');
     const packageManager = this.packageManagerSlot.get(this.config.packageManager);
     let peerDependencyIssues!: PeerDependencyIssuesByProjects;
-    const installer = this.getInstaller();
-    const { componentsManifests, workspaceManifest } = await installer.getComponentManifests({
-      ...options,
-      componentDirectoryMap,
-      rootPolicy,
-      rootDir,
-    });
     if (packageManager?.getPeerDependencyIssues && typeof packageManager?.getPeerDependencyIssues === 'function') {
       peerDependencyIssues = await packageManager?.getPeerDependencyIssues(
-        componentsManifests,
-        workspaceManifest,
+        rootDir,
+        rootPolicy,
+        componentDirectoryMap,
         options
       );
     } else {
       const systemPm = this.getSystemPackageManager();
       if (!systemPm.getPeerDependencyIssues)
         throw new Error('system package manager must implement `getPeerDependencyIssues()`');
-      peerDependencyIssues = await systemPm?.getPeerDependencyIssues(componentsManifests, workspaceManifest, options);
+      peerDependencyIssues = await systemPm?.getPeerDependencyIssues(
+        rootDir,
+        rootPolicy,
+        componentDirectoryMap,
+        options
+      );
     }
     this.logger.consoleSuccess();
     return peerDependencyIssues['.']?.intersections;

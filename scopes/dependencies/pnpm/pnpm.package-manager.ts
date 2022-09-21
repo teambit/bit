@@ -1,7 +1,10 @@
+import { ComponentMap } from '@teambit/component';
 import {
+  ComponentsManifestsMap,
+  CreateFromComponentsOptions,
+  WorkspacePolicy,
   DependencyResolverMain,
   extendWithComponentsFromDir,
-  InstallationContext,
   PackageManager,
   PackageManagerInstallOptions,
   PackageManagerResolveRemoteVersionOptions,
@@ -13,7 +16,8 @@ import {
   PackageManagerNetworkConfig,
 } from '@teambit/dependency-resolver';
 import { Logger } from '@teambit/logger';
-import { memoize, omit } from 'lodash';
+import { memoize, omit, fromPairs } from 'lodash';
+import { PkgMain } from '@teambit/pkg';
 import { PeerDependencyIssuesByProjects } from '@pnpm/core';
 import { read as readModulesState } from '@pnpm/modules-yaml';
 import { ProjectManifest } from '@pnpm/types';
@@ -24,9 +28,56 @@ import { readConfig } from './read-config';
 const defaultStoreDir = join(userHome, '.pnpm-store');
 const defaultCacheDir = join(userHome, '.pnpm-cache');
 
+interface Manifests {
+  componentsManifests: Record<string, ProjectManifest>;
+  rootManifest: {
+    rootDir: string;
+    manifest: ProjectManifest;
+  };
+}
+
 export class PnpmPackageManager implements PackageManager {
   private readConfig = memoize(readConfig);
-  constructor(private depResolver: DependencyResolverMain, private logger: Logger) {}
+  constructor(private depResolver: DependencyResolverMain, private pkg: PkgMain, private logger: Logger) {}
+
+  private async _componentsToPnpmWorkspaceProjects(
+    rootDir: string,
+    rootPolicy: WorkspacePolicy,
+    componentDirectoryMap: ComponentMap<string>,
+    installOptions: PackageManagerInstallOptions = {}
+  ): Promise<Manifests> {
+    const components = componentDirectoryMap.toArray().map(([component]) => component);
+    const options: CreateFromComponentsOptions = {
+      filterComponentsFromManifests: true,
+      createManifestForComponentsWithoutDependencies: true,
+      dedupe: installOptions.dedupe,
+      dependencyFilterFn: installOptions.dependencyFilterFn,
+    };
+    const workspaceManifest = await this.depResolver.getWorkspaceManifest(
+      undefined,
+      undefined,
+      rootPolicy,
+      rootDir,
+      components,
+      options
+    );
+    const rootManifest = workspaceManifest.toJsonWithDir({
+      copyPeerToRuntime: installOptions.copyPeerToRuntimeOnRoot,
+      installPeersFromEnvs: installOptions.installPeersFromEnvs,
+    });
+
+    const componentsManifests = this.computeComponentsManifests(
+      componentDirectoryMap,
+      workspaceManifest.componentsManifestsMap,
+      // In case of not deduping we want to install peers inside the components
+      // !options.dedupe
+      installOptions.copyPeerToRuntimeOnComponents
+    );
+    return {
+      componentsManifests,
+      rootManifest,
+    };
+  }
 
   async _getGlobalPnpmDirs(
     opts: {
@@ -41,14 +92,23 @@ export class PnpmPackageManager implements PackageManager {
   }
 
   async install(
-    { rootDir, componentsManifests, workspaceManifest }: InstallationContext,
+    rootDir: string,
+    rootPolicy: WorkspacePolicy,
+    componentDirectoryMap: ComponentMap<string>,
     installOptions: PackageManagerInstallOptions = {}
   ): Promise<void> {
     // require it dynamically for performance purpose. the pnpm package require many files - do not move to static import
     // eslint-disable-next-line global-require, import/no-dynamic-require
     const { install } = require('./lynx');
 
+    const { componentsManifests, rootManifest } = await this._componentsToPnpmWorkspaceProjects(
+      rootDir,
+      rootPolicy,
+      componentDirectoryMap,
+      installOptions
+    );
     this.logger.debug(`running installation in root dir ${rootDir}`);
+    this.logger.debug('root manifest for installation', rootManifest);
     this.logger.debug('components manifests for installation', componentsManifests);
     this.logger.setStatusLine('installing dependencies using pnpm');
     // turn off the logger because it interrupts the pnpm output
@@ -59,11 +119,10 @@ export class PnpmPackageManager implements PackageManager {
     const { storeDir, cacheDir } = await this._getGlobalPnpmDirs(installOptions);
     const { config } = await this.readConfig(installOptions.packageManagerConfigRootDir);
     if (!installOptions.useNesting) {
-      await extendWithComponentsFromDir(rootDir, componentsManifests);
+      await extendWithComponentsFromDir(rootManifest.rootDir, componentsManifests);
     }
     await install(
-      rootDir,
-      workspaceManifest,
+      rootManifest,
       componentsManifests,
       storeDir,
       cacheDir,
@@ -93,8 +152,9 @@ export class PnpmPackageManager implements PackageManager {
   }
 
   async getPeerDependencyIssues(
-    componentsManifests: Record<string, ProjectManifest>,
-    workspaceManifest: ProjectManifest,
+    rootDir: string,
+    rootPolicy: WorkspacePolicy,
+    componentDirectoryMap: ComponentMap<string>,
     installOptions: PackageManagerInstallOptions = {}
   ): Promise<PeerDependencyIssuesByProjects> {
     const { storeDir, cacheDir } = await this._getGlobalPnpmDirs(installOptions);
@@ -104,8 +164,14 @@ export class PnpmPackageManager implements PackageManager {
     // require it dynamically for performance purpose. the pnpm package require many files - do not move to static import
     // eslint-disable-next-line global-require, import/no-dynamic-require
     const lynx = require('./lynx');
+    const { componentsManifests, rootManifest } = await this._componentsToPnpmWorkspaceProjects(
+      rootDir,
+      rootPolicy,
+      componentDirectoryMap,
+      installOptions
+    );
     const { config } = await this.readConfig();
-    return lynx.getPeerDependencyIssues(workspaceManifest, componentsManifests, {
+    return lynx.getPeerDependencyIssues(rootManifest, componentsManifests, {
       storeDir,
       cacheDir,
       proxyConfig,
@@ -114,6 +180,24 @@ export class PnpmPackageManager implements PackageManager {
       overrides: installOptions.overrides,
       packageImportMethod: installOptions.packageImportMethod ?? config.packageImportMethod,
     });
+  }
+
+  private computeComponentsManifests(
+    componentDirectoryMap: ComponentMap<string>,
+    componentsManifestsFromWorkspace: ComponentsManifestsMap,
+    copyPeerToRuntime = false
+  ): Record<string, ProjectManifest> {
+    return componentDirectoryMap.toArray().reduce((acc, [component, dir]) => {
+      const packageName = this.pkg.getPackageName(component);
+      const manifest = componentsManifestsFromWorkspace.get(packageName);
+      if (manifest) {
+        acc[dir] = manifest.toJson({ copyPeerToRuntime });
+        acc[dir].defaultPeerDependencies = fromPairs(
+          manifest.envPolicy.peersAutoDetectPolicy.entries.map(({ name, version }) => [name, version])
+        );
+      }
+      return acc;
+    }, {});
   }
 
   async resolveRemoteVersion(

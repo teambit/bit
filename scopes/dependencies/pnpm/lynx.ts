@@ -161,8 +161,7 @@ export async function getPeerDependencyIssues(
 }
 
 export async function install(
-  rootDir: string,
-  rootManifest: ProjectManifest,
+  rootManifest,
   manifestsByPaths: Record<string, ProjectManifest>,
   storeDir: string,
   cacheDir: string,
@@ -182,16 +181,16 @@ export async function install(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   logger?: Logger
 ) {
-  if (!rootManifest.dependenciesMeta) {
-    rootManifest = {
-      ...rootManifest,
-      dependenciesMeta: {},
-    };
+  if (!rootManifest.manifest.dependenciesMeta) {
+    rootManifest.manifest.dependenciesMeta = {};
   }
   let readPackage: any;
   let hoistingLimits = new Map();
   if (options?.rootComponents) {
-    const { rootComponentWrappers, rootComponents } = createRootComponentWrapperManifests(rootDir, manifestsByPaths);
+    const { rootComponentWrappers, rootComponents } = createRootComponentWrapperManifests(
+      rootManifest.rootDir,
+      manifestsByPaths
+    );
     manifestsByPaths = {
       ...rootComponentWrappers,
       ...manifestsByPaths,
@@ -202,17 +201,14 @@ export async function install(
   } else if (options?.rootComponentsForCapsules) {
     readPackage = readPackageHookForCapsules;
   }
-  if (!manifestsByPaths[rootDir]) {
-    manifestsByPaths = {
-      ...manifestsByPaths,
-      [rootDir]: rootManifest,
-    };
+  if (!manifestsByPaths[rootManifest.rootDir]) {
+    manifestsByPaths[rootManifest.rootDir] = rootManifest.manifest;
   }
   const { packagesToBuild, workspacePackages } = groupPkgs(manifestsByPaths);
   const registriesMap = getRegistriesMap(registries);
   const authConfig = getAuthConfig(registries);
   const storeController = await createStoreController({
-    rootDir,
+    rootDir: rootManifest.rootDir,
     storeDir,
     cacheDir,
     registries,
@@ -222,7 +218,7 @@ export async function install(
   });
   const opts: InstallOptions = {
     storeDir: storeController.dir,
-    dir: rootDir,
+    dir: rootManifest.rootDir,
     storeController: storeController.ctrl,
     workspacePackages,
     preferFrozenLockfile: true,
@@ -252,22 +248,22 @@ export async function install(
     streamParser,
   });
   try {
-    await installsRunning[rootDir];
-    installsRunning[rootDir] = mutateModules(packagesToBuild, opts);
-    await installsRunning[rootDir];
-    delete installsRunning[rootDir];
+    await installsRunning[rootManifest.rootDir];
+    installsRunning[rootManifest.rootDir] = mutateModules(packagesToBuild, opts);
+    await installsRunning[rootManifest.rootDir];
+    delete installsRunning[rootManifest.rootDir];
   } catch (err: any) {
     throw pnpmErrorToBitError(err);
   } finally {
     stopReporting();
   }
   if (options.rootComponents) {
-    const modulesState = await readModulesState(path.join(rootDir, 'node_modules'));
+    const modulesState = await readModulesState(path.join(rootManifest.rootDir, 'node_modules'));
     if (modulesState?.injectedDeps) {
       await linkManifestsToInjectedDeps({
         injectedDeps: modulesState.injectedDeps,
         manifestsByPaths,
-        rootDir,
+        rootDir: rootManifest.rootDir,
       });
     }
   }
