@@ -2019,8 +2019,9 @@ workflows:
           requires:
             - docker_build_node_16
       - symphony_docker_build:
-          branches:
-              only: manual-bvm
+          filters:
+            branches:
+                only: manual-bvm
   # uncomment to print node version on windows default orb
   # windows_print_node_version_workflow:
   #   jobs:
