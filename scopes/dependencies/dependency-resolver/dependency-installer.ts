@@ -3,7 +3,7 @@ import path from 'path';
 import fs from 'fs-extra';
 import { MainAspect, AspectLoaderMain } from '@teambit/aspect-loader';
 import { ComponentMap } from '@teambit/component';
-import { WorkspaceManifest, CreateFromComponentsOptions, DependencyResolverMain } from '@teambit/dependency-resolver';
+import { CreateFromComponentsOptions, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { Logger } from '@teambit/logger';
 import { PathAbsolute } from '@teambit/legacy/dist/utils/path';
 import { PeerDependencyRules, ProjectManifest } from '@pnpm/types';
@@ -40,7 +40,10 @@ export type GetComponentManifestsOptions = {
   componentDirectoryMap: ComponentMap<string>;
   rootPolicy: WorkspacePolicy;
   rootDir: string;
-} & Pick<PackageManagerInstallOptions, 'dedupe' | 'dependencyFilterFn' | 'copyPeerToRuntimeOnComponents'>;
+} & Pick<
+  PackageManagerInstallOptions,
+  'dedupe' | 'dependencyFilterFn' | 'copyPeerToRuntimeOnComponents' | 'copyPeerToRuntimeOnRoot' | 'installPeersFromEnvs'
+>;
 
 export type PreInstallSubscriber = (installer: DependencyInstaller, installArgs: InstallArgs) => Promise<void>;
 export type PreInstallSubscriberList = Array<PreInstallSubscriber>;
@@ -112,7 +115,7 @@ export class DependencyInstaller {
 
   async installComponents(
     rootDir: string | undefined,
-    workspaceManifest: WorkspaceManifest,
+    workspaceManifest: ProjectManifest,
     componentsManifests: Record<string, ProjectManifest>,
     rootPolicy: WorkspacePolicy,
     componentDirectoryMap: ComponentMap<string>,
@@ -182,6 +185,10 @@ export class DependencyInstaller {
     return componentDirectoryMap;
   }
 
+  /**
+   * Compute all the component manifests (a.k.a. package.json files) that should be passed to the package manager
+   * in order to install the dependencies.
+   */
   public async getComponentManifests({
     componentDirectoryMap,
     rootPolicy,
@@ -189,6 +196,8 @@ export class DependencyInstaller {
     dedupe,
     dependencyFilterFn,
     copyPeerToRuntimeOnComponents,
+    copyPeerToRuntimeOnRoot,
+    installPeersFromEnvs,
   }: GetComponentManifestsOptions) {
     const options: CreateFromComponentsOptions = {
       filterComponentsFromManifests: true,
@@ -218,7 +227,10 @@ export class DependencyInstaller {
         return acc;
       }, {});
     return {
-      workspaceManifest,
+      workspaceManifest: workspaceManifest.toJson({
+        copyPeerToRuntime: copyPeerToRuntimeOnRoot,
+        installPeersFromEnvs,
+      }),
       componentsManifests,
     };
   }

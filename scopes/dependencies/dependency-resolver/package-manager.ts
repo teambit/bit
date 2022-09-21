@@ -2,7 +2,7 @@ import { PeerDependencyIssuesByProjects } from '@pnpm/core';
 import { PeerDependencyRules, ProjectManifest } from '@pnpm/types';
 import { ComponentMap } from '@teambit/component';
 import { Registries } from './registry';
-import { DepsFilterFn, WorkspaceManifest } from './manifest';
+import { DepsFilterFn } from './manifest';
 import { NetworkConfig, ProxyConfig } from './dependency-resolver.main.runtime';
 
 export { PeerDependencyIssuesByProjects };
@@ -69,7 +69,7 @@ export type PackageManagerResolveRemoteVersionOptions = {
 export interface InstallationContext {
   rootDir: string;
   componentsManifests: Record<string, ProjectManifest>;
-  workspaceManifest: WorkspaceManifest;
+  workspaceManifest: ProjectManifest;
   componentDirectoryMap: ComponentMap<string>;
 }
 
@@ -87,7 +87,7 @@ export interface PackageManager {
 
   getPeerDependencyIssues?(
     componentsManifests: Record<string, ProjectManifest>,
-    workspaceManifest: WorkspaceManifest,
+    workspaceManifest: ProjectManifest,
     options: PackageManagerGetPeerDependencyIssuesOptions
   ): Promise<PeerDependencyIssuesByProjects>;
 

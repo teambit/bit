@@ -242,12 +242,7 @@ export class WorkspaceCompiler {
   }
 
   async onAspectLoadFail(err: Error & { code?: string }, id: ComponentID): Promise<boolean> {
-    if (
-      err.code &&
-      err.code === 'MODULE_NOT_FOUND' &&
-      this.workspace &&
-      err.message.includes("Cannot find module '/")
-    ) {
+    if (err.code && err.code === 'MODULE_NOT_FOUND' && this.workspace) {
       await this.compileComponents([id.toString()], { initiator: CompilationInitiator.AspectLoadFail }, true);
       return true;
     }

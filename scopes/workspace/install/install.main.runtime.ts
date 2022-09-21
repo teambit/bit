@@ -23,7 +23,6 @@ import {
   DependencyList,
   OutdatedPkg,
   WorkspacePolicy,
-  WorkspaceManifest,
 } from '@teambit/dependency-resolver';
 import { ImporterAspect, ImporterMain, ImportOptions } from '@teambit/importer';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
@@ -223,17 +222,19 @@ export class InstallMain {
   ): Promise<{
     componentDirectoryMap: ComponentMap<string>;
     componentsManifests: Record<string, ProjectManifest>;
-    workspaceManifest: WorkspaceManifest;
+    workspaceManifest: ProjectManifest;
   }> {
     const componentDirectoryMap = await this.getComponentsDirectory([]);
+    const { componentsManifests, workspaceManifest } = await dependencyInstaller.getComponentManifests({
+      ...installOptions,
+      componentDirectoryMap,
+      rootPolicy,
+      rootDir: this.workspace.path,
+    });
     return {
       componentDirectoryMap,
-      ...(await dependencyInstaller.getComponentManifests({
-        ...installOptions,
-        componentDirectoryMap,
-        rootPolicy,
-        rootDir: this.workspace.path,
-      })),
+      componentsManifests,
+      workspaceManifest,
     };
   }
 
@@ -463,7 +464,7 @@ export class InstallMain {
 
 interface AllWorkspaceManifests {
   componentsManifests: Record<string, ProjectManifest>;
-  workspaceManifest: WorkspaceManifest;
+  workspaceManifest: ProjectManifest;
 }
 
 function isManifestsEqual(prev: AllWorkspaceManifests, next: AllWorkspaceManifests): boolean {

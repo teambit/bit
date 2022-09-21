@@ -259,10 +259,14 @@ export class AspectLoaderMain {
     return this;
   }
 
-  public failedLoadAspect: string[] = [];
+  private failedLoadAspect: string[] = [];
 
   get failedAspects() {
     return this.failedLoadAspect;
+  }
+
+  public resetFailedLoadAspects() {
+    this.failedLoadAspect = [];
   }
 
   private addFailure(id: string): void {

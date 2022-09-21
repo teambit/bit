@@ -59,11 +59,6 @@ export class YarnPackageManager implements PackageManager {
 
     const project = new Project(rootDirPath, { configuration: config });
 
-    const rootManifest = workspaceManifest.toJsonWithDir({
-      copyPeerToRuntime: installOptions.copyPeerToRuntimeOnRoot,
-      installPeersFromEnvs: installOptions.installPeersFromEnvs,
-    }).manifest;
-
     // @ts-ignore
     project.setupResolutions();
     if (installOptions.rootComponentsForCapsules && !installOptions.useNesting) {
@@ -72,47 +67,45 @@ export class YarnPackageManager implements PackageManager {
         ...this._createLocalDirectoryOverrides(rootDir, componentDirectoryMap),
       };
     }
-    const rootWs = await this.createWorkspace(rootDir, project, rootManifest, installOptions.overrides);
+    const rootWs = await this.createWorkspace(rootDir, project, workspaceManifest, installOptions.overrides);
     if (installOptions.rootComponents) {
       rootWs.manifest.installConfig = {
         hoistingLimits: 'dependencies',
       };
     }
 
-    // const manifests = Array.from(workspaceManifest.componentsManifestsMap.entries());
-    let manifests = componentsManifests;
     if (installOptions.rootComponents) {
       // Manifests are extended with "wrapper components"
       // that group all workspace components with their dependencies and peer dependencies.
-      manifests = {
+      componentsManifests = {
         ...(await createRootComponentsDir({
           depResolver: this.depResolver,
           rootDir,
           componentDirectoryMap,
         })),
-        ...manifests,
+        ...componentsManifests,
       };
     } else if (installOptions.useNesting) {
       // Nesting is used for scope aspect capsules.
       // In a capsule, all peer dependencies should be installed,
       // so we make runtime dependencies from peer dependencies.
-      manifests[rootDir].dependencies = {
-        ...manifests[rootDir].peerDependencies,
-        ...manifests[rootDir]['defaultPeerDependencies'], // eslint-disable-line
-        ...manifests[rootDir].dependencies,
+      componentsManifests[rootDir].dependencies = {
+        ...componentsManifests[rootDir].peerDependencies,
+        ...componentsManifests[rootDir]['defaultPeerDependencies'], // eslint-disable-line
+        ...componentsManifests[rootDir].dependencies,
       };
     } else if (installOptions.rootComponentsForCapsules) {
-      await updateManifestsForInstallationInWorkspaceCapsules(manifests);
+      await updateManifestsForInstallationInWorkspaceCapsules(componentsManifests);
     } else {
-      await extendWithComponentsFromDir(rootDir, manifests);
+      await extendWithComponentsFromDir(rootDir, componentsManifests);
     }
 
     this.logger.debug(`running installation in root dir ${rootDir}`);
-    this.logger.debug('root manifest for installation', rootManifest);
-    this.logger.debug('components manifests for installation', manifests);
+    this.logger.debug('root manifest for installation', workspaceManifest);
+    this.logger.debug('components manifests for installation', componentsManifests);
 
-    const workspacesP = Object.keys(manifests).map(async (path) => {
-      const manifest = manifests[path];
+    const workspacesP = Object.keys(componentsManifests).map(async (path) => {
+      const manifest = componentsManifests[path];
       const workspace = await this.createWorkspace(path, project, manifest);
       return workspace;
     });
@@ -133,7 +126,7 @@ export class YarnPackageManager implements PackageManager {
       }
     }
 
-    if (!manifests[rootDir]) {
+    if (!componentsManifests[rootDir]) {
       workspaces.push(rootWs);
     }
     this.setupWorkspaces(project, workspaces);

@@ -1,5 +1,4 @@
 import {
-  WorkspaceManifest,
   DependencyResolverMain,
   extendWithComponentsFromDir,
   InstallationContext,
@@ -49,12 +48,7 @@ export class PnpmPackageManager implements PackageManager {
     // eslint-disable-next-line global-require, import/no-dynamic-require
     const { install } = require('./lynx');
 
-    const rootManifest = workspaceManifest.toJsonWithDir({
-      copyPeerToRuntime: installOptions.copyPeerToRuntimeOnRoot,
-      installPeersFromEnvs: installOptions.installPeersFromEnvs,
-    });
     this.logger.debug(`running installation in root dir ${rootDir}`);
-    this.logger.debug('root manifest for installation', rootManifest);
     this.logger.debug('components manifests for installation', componentsManifests);
     this.logger.setStatusLine('installing dependencies using pnpm');
     // turn off the logger because it interrupts the pnpm output
@@ -65,10 +59,11 @@ export class PnpmPackageManager implements PackageManager {
     const { storeDir, cacheDir } = await this._getGlobalPnpmDirs(installOptions);
     const { config } = await this.readConfig(installOptions.packageManagerConfigRootDir);
     if (!installOptions.useNesting) {
-      await extendWithComponentsFromDir(rootManifest.rootDir, componentsManifests);
+      await extendWithComponentsFromDir(rootDir, componentsManifests);
     }
     await install(
-      rootManifest,
+      rootDir,
+      workspaceManifest,
       componentsManifests,
       storeDir,
       cacheDir,
@@ -99,7 +94,7 @@ export class PnpmPackageManager implements PackageManager {
 
   async getPeerDependencyIssues(
     componentsManifests: Record<string, ProjectManifest>,
-    workspaceManifest: WorkspaceManifest,
+    workspaceManifest: ProjectManifest,
     installOptions: PackageManagerInstallOptions = {}
   ): Promise<PeerDependencyIssuesByProjects> {
     const { storeDir, cacheDir } = await this._getGlobalPnpmDirs(installOptions);
@@ -109,12 +104,8 @@ export class PnpmPackageManager implements PackageManager {
     // require it dynamically for performance purpose. the pnpm package require many files - do not move to static import
     // eslint-disable-next-line global-require, import/no-dynamic-require
     const lynx = require('./lynx');
-    const rootManifest = workspaceManifest.toJsonWithDir({
-      copyPeerToRuntime: installOptions.copyPeerToRuntimeOnRoot,
-      installPeersFromEnvs: installOptions.installPeersFromEnvs,
-    });
     const { config } = await this.readConfig();
-    return lynx.getPeerDependencyIssues(rootManifest, componentsManifests, {
+    return lynx.getPeerDependencyIssues(workspaceManifest, componentsManifests, {
       storeDir,
       cacheDir,
       proxyConfig,

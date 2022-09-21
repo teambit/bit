@@ -461,7 +461,7 @@ export class DependencyLinker {
     });
   }
 
-  async linkNonExistingCoreAspects(
+  private async linkNonExistingCoreAspects(
     dir: string,
     componentIds: string[],
     hasLocalInstallation = false
