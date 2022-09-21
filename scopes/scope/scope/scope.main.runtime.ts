@@ -721,8 +721,11 @@ needed-for: ${neededFor || '<unknown>'}`);
     const mergedOpts = { ...defaultOpts, ...opts };
     const coreAspectsIds = this.aspectLoader.getCoreAspectIds();
     let userAspectsIds;
+    let requestedCoreStringIds;
     if (componentIds && componentIds.length) {
-      userAspectsIds = componentIds.filter((id) => !coreAspectsIds.includes(id.toString()));
+      const groupedByIsCore = groupBy(componentIds, (id) => coreAspectsIds.includes(id.toString()));
+      userAspectsIds = groupedByIsCore.false || [];
+      requestedCoreStringIds = groupedByIsCore.true?.map(id => id.toStringWithoutVersion()) || [];
     } else {
       userAspectsIds = await this.resolveMultipleComponentIds(this.aspectLoader.getUserAspects());
     }
@@ -737,16 +740,19 @@ needed-for: ${neededFor || '<unknown>'}`);
     const coreAspectsDefs = await this.aspectLoader.getCoreAspectDefs(runtimeName);
 
     const allDefs = userAspectsDefs.concat(coreAspectsDefs).concat(localResolved);
-    const afterExclusion = mergedOpts.excludeCore
-      ? allDefs.filter((def) => {
-          const userAspectsIdsWithoutVersion = userAspectsIds.map((aspectId) => aspectId.toStringWithoutVersion());
-          const isCore = coreAspectsDefs.find((coreId) => def.getId === coreId.getId);
+    let afterExclusion = allDefs;
+    if (mergedOpts.excludeCore) {
+      const userAspectsIdsWithoutVersion = userAspectsIds.map((aspectId) => aspectId.toStringWithoutVersion());
+      const userAspectsIdsWithoutVersionAndCoreRequested = userAspectsIdsWithoutVersion.concat(requestedCoreStringIds);
+      afterExclusion = allDefs.filter((def) => {
           const id = ComponentID.fromString(def.getId || '');
-          const isTarget = userAspectsIdsWithoutVersion.includes(id.toStringWithoutVersion());
+          const isTarget = userAspectsIdsWithoutVersionAndCoreRequested.includes(id.toStringWithoutVersion());
+          // If it's core, but requested explicitly, keep it
           if (isTarget) return true;
+          const isCore = coreAspectsDefs.find((coreId) => def.getId === coreId.getId);
           return !isCore;
-        })
-      : allDefs;
+      });
+    }
 
     const uniqDefs = uniqBy(afterExclusion, (def) => `${def.aspectPath}-${def.runtimePath}`);
     let defs = uniqDefs;
