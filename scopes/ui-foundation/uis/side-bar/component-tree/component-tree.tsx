@@ -4,6 +4,7 @@ import { useLocation } from '@teambit/base-react.navigation.link';
 import { indentStyle } from '@teambit/base-ui.graph.tree.indent';
 import { inflateToTree, attachPayload } from '@teambit/base-ui.graph.tree.inflate-paths';
 import { Tree, TreeNodeRenderer, TreeNode as TreeNodeType } from '@teambit/design.ui.tree';
+import { LanesModel } from '@teambit/lanes.ui.models.lanes-model';
 import { TreeContextProvider } from '@teambit/base-ui.graph.tree.tree-context';
 import { PayloadType, ScopePayload } from './payload-type';
 import { DefaultTreeNodeRenderer } from './default-tree-node-renderer';
@@ -25,8 +26,9 @@ export function ComponentTree({
   TreeNode = DefaultTreeNodeRenderer,
 }: ComponentTreeProps) {
   const { pathname = '/' } = useLocation() || {};
-  const idFromLocation = useIdFromLocation();
-
+  // override default splat from location when viewing a lane component
+  const laneCompUrl = pathname.split(LanesModel.baseLaneComponentRoute.concat('/'))[1];
+  const idFromLocation = useIdFromLocation(laneCompUrl);
   const activeComponent = useMemo(() => {
     const active = components.find((x) => {
       return idFromLocation && (idFromLocation === x.id.fullName || idFromLocation === x.id.toStringWithoutVersion());

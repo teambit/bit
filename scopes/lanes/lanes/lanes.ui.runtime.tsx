@@ -102,7 +102,7 @@ export class LanesUI {
   useComponentId = () => {
     const idFromLocation = useIdFromLocation();
     const { lanesModel } = useLanes();
-    const laneFromUrl = useViewedLaneFromUrl(true);
+    const laneFromUrl = useViewedLaneFromUrl();
     const laneComponentId =
       idFromLocation && !laneFromUrl?.isDefault()
         ? lanesModel?.resolveComponent(idFromLocation, laneFromUrl)

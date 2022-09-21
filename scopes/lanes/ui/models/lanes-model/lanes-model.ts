@@ -71,18 +71,25 @@ export class LanesModel {
   static lanesPrefix = '~lane';
   static baseLaneComponentRoute = '/~component';
   static lanePath = ':scopeId/:laneId';
+  static laneUrlParamsKey = 'lane';
 
   private static laneFromPathRegex = pathToRegexp(`${LanesModel.lanesPrefix}/${LanesModel.lanePath}`, undefined, {
     end: false,
     start: false,
   });
 
-  static getLaneIdFromPathname = (pathname: string, matchLaneComponentRoute?: boolean): LaneId | undefined => {
-    if (!matchLaneComponentRoute && pathname.includes(this.baseLaneComponentRoute)) return undefined;
+  static getLaneIdFromPathname = (pathname: string, urlSearchParams?: URLSearchParams): LaneId | undefined => {
     const matches = LanesModel.laneFromPathRegex.exec(pathname);
-    if (!matches) return undefined;
-    const [, scopeId, laneId] = matches;
-    return LaneId.from(laneId, scopeId);
+    if (matches) {
+      const [, scopeId, laneId] = matches;
+      return LaneId.from(laneId, scopeId);
+    }
+    if (urlSearchParams) {
+      const laneIdQueryParam = urlSearchParams.get(LanesModel.laneUrlParamsKey);
+      return laneIdQueryParam ? LaneId.parse(laneIdQueryParam) : undefined;
+    }
+
+    return undefined;
   };
 
   static getLaneUrl = (laneId: LaneId, relative?: boolean) =>
@@ -101,8 +108,10 @@ export class LanesModel {
     return `${laneUrl}${LanesModel.baseLaneComponentRoute}/${componentId.toStringWithoutVersion()}${urlSearch}`;
   };
 
-  static getMainComponentUrl = (componentId: ComponentID) => {
-    return `${componentId.fullName}${componentId.version ? `?version=${componentId.version}` : ''}`;
+  static getMainComponentUrl = (componentId: ComponentID, laneId?: LaneId) => {
+    const componentUrl = componentId.fullName;
+    const urlSearch = affix(`?${LanesModel.laneUrlParamsKey}=`, laneId?.toString());
+    return `${componentUrl}${urlSearch}`;
   };
 
   static mapToLaneModel(laneData: LaneQueryResult, host: string): LaneModel {
@@ -197,7 +206,7 @@ export class LanesModel {
     if (!lane) {
       // return url from main if it exits
       return defaultLane.components.find((c) => c.isEqual(componentId))
-        ? LanesModel.getMainComponentUrl(componentId)
+        ? LanesModel.getMainComponentUrl(componentId, laneId)
         : undefined;
     }
     if (lane.id.isDefault()) return LanesModel.getMainComponentUrl(componentId);

@@ -3,10 +3,11 @@ import { useParams } from 'react-router-dom';
 /** component url is comprised of letters, numbers, "_", "-", "/" but should not include trailing "/", and should not include "~" */
 const componentRegex = /^[\w/-]*[\w-]/;
 
-export function useIdFromLocation(): string | undefined {
+export function useIdFromLocation(url?: string): string | undefined {
   const params = useParams();
-  const splat = params['*'];
+  const splat = url || params['*'];
   if (!splat) return undefined;
+
   const [maybeOrgWithScope, ...maybeFullName] = splat.split('/');
   const hasScope = maybeOrgWithScope.split('.').length > 1;
   const fullNameFromUrl = hasScope ? maybeFullName.join('/') : splat;

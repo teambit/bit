@@ -32,10 +32,6 @@ export function LaneSelector({ className, lanes, selectedLaneId, groupByScope = 
     ? Array.from(LanesModel.groupByScope(filteredLanes).entries())
     : filteredLanes;
 
-  useEffect(() => {
-    setFilteredLanes(lanes);
-  }, [lanes]);
-
   const handleOnChange: ChangeEventHandler<HTMLInputElement> = (e) => {
     e.stopPropagation();
     const searchTerm = e.target.value;
