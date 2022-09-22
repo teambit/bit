@@ -470,7 +470,7 @@ interface AllWorkspaceManifests {
 function isManifestsEqual(prev: AllWorkspaceManifests, next: AllWorkspaceManifests): boolean {
   return (
     isEqual(prev.componentsManifests, next.componentsManifests) &&
-    JSON.stringify(prev.workspaceManifest) === JSON.stringify(next.workspaceManifest)
+    isEqual(prev.workspaceManifest, next.workspaceManifest)
   );
 }
 
