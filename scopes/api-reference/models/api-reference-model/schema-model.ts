@@ -2,7 +2,7 @@
 // import { APISchema, SchemaNode } from "@teambit/semantics.entities.semantic-schema";
 // import { SchemaTypes } from '@teambit/semantics.schema.ui.models.schema-types';
 
-export type SchemaGQLResponse = {
+export type SchemaQueryResult = {
   getHost: {
     getSchema: JSON;
   };

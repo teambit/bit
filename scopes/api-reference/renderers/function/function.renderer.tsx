@@ -7,6 +7,7 @@ export const functionRenderer: APINodeRenderer = {
   Component: FunctionComponent,
   displayName: 'Functions',
   icon: { name: 'Function', Component: FunctionIcon },
+  default: true,
 };
 
 function FunctionComponent(node: APINodeRenderProps) {

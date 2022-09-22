@@ -1,1 +1,1 @@
-export { SchemaPage } from './schema-page';
+export { APIRefPage, APIRefPageProps } from './api-reference-page';

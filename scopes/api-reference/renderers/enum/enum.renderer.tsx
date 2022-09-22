@@ -7,6 +7,7 @@ export const enumRenderer: APINodeRenderer = {
   Component: EnumComponent,
   displayName: 'Enums',
   icon: { name: 'Enum', Component: EnumIcon },
+  default: true,
 };
 
 function EnumComponent(node: APINodeRenderProps) {

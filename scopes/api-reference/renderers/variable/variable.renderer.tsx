@@ -7,6 +7,7 @@ export const variableRenderer: APINodeRenderer = {
   Component: VariableComponent,
   displayName: 'Types',
   icon: { name: 'Type', Component: VariableIcon },
+  default: true,
 };
 
 function VariableComponent(node: APINodeRenderProps) {

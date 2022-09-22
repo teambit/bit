@@ -7,6 +7,7 @@ export const typeRenderer: APINodeRenderer = {
   Component: TypeComponent,
   displayName: 'Types',
   icon: { name: 'Type', Component: TypeIcon },
+  default: true,
 };
 
 function TypeComponent(node: APINodeRenderProps) {

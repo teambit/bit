@@ -538,6 +538,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/harmony-ui-app/harmony-ui-app"
     },
+    "hooks/use-api-ref-url": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/api-reference/hooks/use-api-ref-url"
+    },
     "hooks/use-lane-components": {
         "scope": "teambit.lanes",
         "version": "0.0.26",

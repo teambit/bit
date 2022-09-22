@@ -1,7 +1,7 @@
 import React from 'react';
 import ComponentAspect, { ComponentUI } from '@teambit/component';
 import { UIRuntime } from '@teambit/ui';
-import { SchemaPage } from '@teambit/api-reference.sections.api-reference-page';
+import { APIRefPage } from '@teambit/api-reference.sections.api-reference-page';
 import { APIRefSection } from '@teambit/api-reference.sections.api-reference-section';
 import { Harmony, Slot, SlotRegistry } from '@teambit/harmony';
 import { APINodeRenderer } from '@teambit/api-reference.models.api-node-renderer';
@@ -21,7 +21,7 @@ export class APIReferenceUI {
   static slots = [Slot.withType<APINodeRenderer[]>()];
 
   getAPIPage() {
-    return <SchemaPage host={this.host} />;
+    return <APIRefPage host={this.host} rendererSlot={this.apiNodeRendererSlot} />;
   }
 
   apiNodeRenderers: APINodeRenderer[] = [
@@ -41,19 +41,19 @@ export class APIReferenceUI {
   ) {
     const { config } = harmony;
     const host = String(config.get('teambit.harmony/bit'));
-    const schemaUI = new APIReferenceUI(host, apiNodeRendererSlot);
-    schemaUI.registerAPINodeRenderer(schemaUI.apiNodeRenderers);
-    const schemaSection = new APIRefSection(schemaUI);
-    componentUI.registerNavigation(schemaSection.navigationLink, schemaSection.order);
-    componentUI.registerRoute(schemaSection.route);
-    return schemaUI;
+    const apiReferenceUI = new APIReferenceUI(host, apiNodeRendererSlot);
+    apiReferenceUI.registerAPINodeRenderer(apiReferenceUI.apiNodeRenderers);
+    const apiReferenceSection = new APIRefSection(apiReferenceUI);
+    componentUI.registerNavigation(apiReferenceSection.navigationLink, apiReferenceSection.order);
+    componentUI.registerRoute(apiReferenceSection.route);
+    return apiReferenceUI;
   }
 
   registerAPINodeRenderer(apiNodeRenderers: APINodeRenderer[]) {
-    this.schemaNodeRendererSlot.register(apiNodeRenderers);
+    this.apiNodeRendererSlot.register(apiNodeRenderers);
   }
 
-  constructor(private host: string, private schemaNodeRendererSlot: APINodeRendererSlot) {}
+  constructor(private host: string, private apiNodeRendererSlot: APINodeRendererSlot) {}
 }
 
 export default APIReferenceUI;

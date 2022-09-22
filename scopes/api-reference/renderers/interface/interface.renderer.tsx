@@ -7,6 +7,7 @@ export const interfaceRenderer: APINodeRenderer = {
   Component: InterfaceComponent,
   displayName: 'Interfaces',
   icon: { name: 'Interface', Component: InterfaceIcon },
+  default: true,
 };
 
 function InterfaceComponent(node: APINodeRenderProps) {

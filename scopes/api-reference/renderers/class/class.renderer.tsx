@@ -7,6 +7,7 @@ export const classRenderer: APINodeRenderer = {
   Component: ClassComponent,
   displayName: 'Classes',
   icon: { name: 'Class', Component: ClassIcon },
+  default: true,
 };
 
 function ClassComponent({ /* name, */ displayName }: APINodeRenderProps) {

@@ -1,14 +1,14 @@
 import { Section } from '@teambit/component';
-import { SchemaUI } from '@teambit/schema';
+import { APIReferenceUI } from '@teambit/api-reference';
 
 export class APIRefSection implements Section {
-  constructor(private schemaUi: SchemaUI) {}
+  constructor(private apiReferenceUI: APIReferenceUI) {}
 
   order = 100;
 
   route = {
     path: '~apireference',
-    element: this.schemaUi.getSchemaPage(),
+    element: this.apiReferenceUI.getAPIPage(),
   };
 
   navigationLink = {
