@@ -19,10 +19,6 @@ import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-i
 import { DetectorHook } from '@teambit/legacy/dist/consumer/component/dependencies/files-dependency-builder/detector-hook';
 import { Http, ProxyConfig, NetworkConfig } from '@teambit/legacy/dist/scope/network/http';
 import { onTagIdTransformer } from '@teambit/snapping';
-import {
-  registerUpdateDependenciesOnExport,
-  OnExportIdTransformer,
-} from '@teambit/legacy/dist/scope/component-ops/export-scope-components';
 import { Version as VersionModel } from '@teambit/legacy/dist/scope/models';
 import LegacyComponent from '@teambit/legacy/dist/consumer/component';
 import fs from 'fs-extra';
@@ -282,6 +278,8 @@ export type GetLinkerOptions = {
 export type GetVersionResolverOptions = {
   cacheRootDirectory?: string;
 };
+
+type OnExportIdTransformer = (id: BitId) => BitId;
 
 const defaultLinkingOptions: LinkingOptions = {
   legacyLink: true,
@@ -1360,7 +1358,6 @@ export class DependencyResolverMain {
       if (!envPolicy) return undefined;
       return envPolicy.peersAutoDetectPolicy.toVersionManifest();
     });
-    registerUpdateDependenciesOnExport(dependencyResolver.updateDepsOnLegacyExport.bind(dependencyResolver));
     aspectLoader.registerOnLoadRequireableExtensionSlot(
       dependencyResolver.onLoadRequireableExtensionSubscriber.bind(dependencyResolver)
     );
