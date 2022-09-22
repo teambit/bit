@@ -692,6 +692,7 @@ describe('merge lanes', function () {
     let comp2HeadOnLane: string;
     let comp2PreviousHeadOnLane: string;
     let comp2HeadOnMain: string;
+    let beforeMerging: string;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       helper.bitJsonc.setupDefault();
@@ -707,6 +708,7 @@ describe('merge lanes', function () {
       helper.command.export();
       bareMerge = helper.scopeHelper.getNewBareScope('-bare-merge');
       helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, bareMerge.scopePath);
+      beforeMerging = helper.scopeHelper.cloneScope(bareMerge.scopePath);
       helper.command.mergeLaneFromScope(bareMerge.scopePath, `${helper.scopes.remote}/dev`);
     });
     it('should merge to main', () => {
@@ -719,6 +721,30 @@ describe('merge lanes', function () {
       const parent = cat.parents[0];
       expect(parent).to.not.equal(comp2PreviousHeadOnLane);
       expect(parent).to.equal(comp2HeadOnMain);
+    });
+    it('should not export by default', () => {
+      const comp1OnBare = helper.command.catComponent(`${helper.scopes.remote}/comp1`, bareMerge.scopePath);
+      const comp1OnRemote = helper.command.catComponent(`${helper.scopes.remote}/comp1`, helper.scopes.remotePath);
+      expect(comp1OnBare.head).to.not.equal(comp1OnRemote.head);
+
+      const comp2OnBare = helper.command.catComponent(`${helper.scopes.remote}/comp2`, bareMerge.scopePath);
+      const comp2OnRemote = helper.command.catComponent(`${helper.scopes.remote}/comp2`, helper.scopes.remotePath);
+      expect(comp2OnBare.head).to.not.equal(comp2OnRemote.head);
+    });
+    describe('running with --push flag', () => {
+      before(() => {
+        helper.scopeHelper.getClonedScope(beforeMerging, bareMerge.scopePath);
+        helper.command.mergeLaneFromScope(bareMerge.scopePath, `${helper.scopes.remote}/dev`, '--push');
+      });
+      it('should export the modified components to the remote', () => {
+        const comp1OnBare = helper.command.catComponent(`${helper.scopes.remote}/comp1`, bareMerge.scopePath);
+        const comp1OnRemote = helper.command.catComponent(`${helper.scopes.remote}/comp1`, helper.scopes.remotePath);
+        expect(comp1OnBare.head).to.equal(comp1OnRemote.head);
+
+        const comp2OnBare = helper.command.catComponent(`${helper.scopes.remote}/comp2`, bareMerge.scopePath);
+        const comp2OnRemote = helper.command.catComponent(`${helper.scopes.remote}/comp2`, helper.scopes.remotePath);
+        expect(comp2OnBare.head).to.equal(comp2OnRemote.head);
+      });
     });
   });
 });

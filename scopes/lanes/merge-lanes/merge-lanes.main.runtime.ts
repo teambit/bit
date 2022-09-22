@@ -253,7 +253,6 @@ export class MergeLanesMain {
     // loop through all components, make sure they're all ahead of main (it might not be on main yet).
     // then, change the version object to include an extra parent to point to the main.
     // then, change the component object head to point to this changed version
-    const objectList = new ObjectList();
     const mergedPreviously: BitId[] = [];
     const mergedNow: BitId[] = [];
     const bitObjectsPerComp = await pMapSeries(laneIds, async (id) => {
@@ -264,26 +263,34 @@ export class MergeLanesMain {
       const mainHead = modelComponent.head || null;
       if (mainHead?.isEqual(laneHead)) {
         mergedPreviously.push(id);
-        return [];
+        return undefined;
       }
       const divergeData = await getDivergeData(repo, modelComponent, laneHead, mainHead);
       const modifiedVersion = squashOneComp(DEFAULT_LANE, laneId, id, divergeData, versionObj);
       modelComponent.setHead(laneHead);
       const objects = [modelComponent, modifiedVersion];
-      if (options.push) {
-        const scopeName = modelComponent.scope as string;
-        const objectToMerge = await ObjectList.fromBitObjects(objects as BitObject[]);
-        objectToMerge.addScopeName(scopeName);
-        objectList.mergeObjectList(objectToMerge);
-      }
       mergedNow.push(id);
-      return objects;
+      return { id, objects };
     });
-    const bitObjectsFlat = compact(bitObjectsPerComp.flat());
-    await repo.writeObjectsToTheFS(bitObjectsFlat);
+    const bitObjects = compact(bitObjectsPerComp).map((b) => b.objects);
+    await repo.writeObjectsToTheFS(bitObjects.flat() as BitObject[]);
 
     if (options.push) {
-      await this.exporter.exportObjectList(objectList);
+      const scopeRemotes = await this.scope._legacyRemotes();
+      const grouped: { [scopeName: string]: BitObject[] } = compact(bitObjectsPerComp).reduce((acc, current) => {
+        const scopeName = current.id.scope;
+        if (!scopeName) throw new Error(`${current.id.toString()} has no scope-name`);
+        (acc[scopeName] ||= []).push(...current.objects);
+        return acc;
+      }, {});
+      const manyObjectsPerRemote = await Promise.all(
+        Object.keys(grouped).map(async (scopeName) => {
+          const remote = await scopeRemotes.resolve(scopeName, this.scope.legacyScope);
+          const objectList = await ObjectList.fromBitObjects(grouped[scopeName]);
+          return { remote, objectList };
+        })
+      );
+      await this.exporter.exportObjectList(manyObjectsPerRemote, scopeRemotes);
     }
 
     return {
