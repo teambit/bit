@@ -436,6 +436,7 @@ describe('merge lanes', function () {
   });
   describe('multiple scopes when a component in the origin is different than on the lane', () => {
     let originRemote: string;
+    let originPath: string;
     let afterLaneExport: string;
     let mainHead: string;
     let laneScopeHead: string;
@@ -445,6 +446,7 @@ describe('merge lanes', function () {
       helper.bitJsonc.setupDefault();
       const { scopeName, scopePath } = helper.scopeHelper.getNewBareScope();
       originRemote = scopeName;
+      originPath = scopePath;
       helper.scopeHelper.addRemoteScope(scopePath);
       helper.scopeHelper.addRemoteScope(scopePath, helper.scopes.remotePath);
       helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, scopePath);
@@ -467,7 +469,6 @@ describe('merge lanes', function () {
 
       helper.scopeHelper.getClonedLocalScope(afterLaneExport);
       helper.command.import();
-      helper.command.fetchAllComponents(); // todo: this should not be needed. "bit import" should do that
     });
     it('bit status should have the component as pendingUpdatesFromMain with an noCommonSnap error', () => {
       const status = helper.command.statusJson();
@@ -513,7 +514,7 @@ describe('merge lanes', function () {
       before(() => {
         helper.scopeHelper.getClonedRemoteScope(remoteScopeAfterExport);
         helper.scopeHelper.getClonedLocalScope(afterLaneExport);
-        helper.command.fetchAllComponents(); // todo: this should not be needed. "bit import" should do that
+        helper.command.import();
         helper.command.mergeLane('main', '--resolve-unrelated --no-snap');
       });
       it('bit status should show the component as during-merge and staged and not everywhere else', () => {
@@ -545,7 +546,7 @@ describe('merge lanes', function () {
       before(() => {
         helper.scopeHelper.getClonedRemoteScope(remoteScopeAfterExport);
         helper.scopeHelper.getClonedLocalScope(afterLaneExport);
-        helper.command.fetchAllComponents(); // todo: this should not be needed. "bit import" should do that
+        helper.command.import();
         helper.command.mergeLane('main', '--resolve-unrelated theirs --no-snap');
       });
       it('bit status should show the component as during-merge and staged and not everywhere else', () => {
@@ -562,6 +563,7 @@ describe('merge lanes', function () {
     });
     describe('bit lane merge of another lane that was not resolved yet', () => {
       let laneHeadAfterMerge: string;
+      let beforeMergingSecondLane: string;
       before(() => {
         helper.scopeHelper.getClonedRemoteScope(remoteScopeAfterExport);
         helper.scopeHelper.getClonedLocalScope(afterLaneExport);
@@ -569,10 +571,11 @@ describe('merge lanes', function () {
         helper.command.snapAllComponentsWithoutBuild('--unmodified');
         helper.command.export();
         helper.command.switchLocalLane('dev');
-        helper.command.fetchAllComponents(); // todo: this should not be needed. "bit import" should do that
+        helper.command.import();
         helper.command.mergeLane('main', '--resolve-unrelated');
         laneHeadAfterMerge = helper.command.getHeadOfLane('dev', 'comp1');
         helper.command.export();
+        beforeMergingSecondLane = helper.scopeHelper.cloneLocalScope();
         helper.command.mergeLane('dev2', '--resolve-unrelated');
       });
       it('should keep the local history and not the dev2 history because the current history has been already resolved', () => {
@@ -584,6 +587,25 @@ describe('merge lanes', function () {
       it('bit status should not show components as pendingUpdatesFromMain', () => {
         const status = helper.command.statusJson();
         expect(status.pendingUpdatesFromMain).to.have.lengthOf(0);
+      });
+      // it's a complex scenario. in short:
+      // main has 0.0.1 and 0.0.2
+      // dev lane resolved unrelated when main was on 0.0.1
+      // now when merging dev to dev2, the component-head (0.0.2) can't be found in the local-snaps of dev
+      describe('when main got another tag meanwhile', () => {
+        before(() => {
+          helper.scopeHelper.reInitLocalScopeHarmony();
+          helper.scopeHelper.addRemoteScope(originPath);
+          helper.command.import(`${originRemote}/comp1`);
+          helper.command.tagAllWithoutBuild('--unmodified');
+          helper.command.export();
+
+          helper.scopeHelper.getClonedLocalScope(beforeMergingSecondLane);
+          helper.command.import();
+        });
+        it('should be able to merge with no errors', () => {
+          expect(() => helper.command.mergeLane('dev2', '--resolve-unrelated')).to.not.throw();
+        });
       });
     });
   });
@@ -662,6 +684,41 @@ describe('merge lanes', function () {
     it('expect head to have two parents', () => {
       const headVer = helper.command.catComponent('comp1@latest');
       expect(headVer.parents).to.have.lengthOf(2);
+    });
+  });
+  describe('merge from scope', () => {
+    let bareMerge;
+    let comp1HeadOnLane: string;
+    let comp2HeadOnLane: string;
+    let comp2PreviousHeadOnLane: string;
+    let comp2HeadOnMain: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents(2);
+      helper.command.tagWithoutBuild('comp2');
+      comp2HeadOnMain = helper.command.getHead('comp2');
+      helper.command.createLane();
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      comp2PreviousHeadOnLane = helper.command.getHeadOfLane('dev', 'comp2');
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      comp1HeadOnLane = helper.command.getHeadOfLane('dev', 'comp1');
+      comp2HeadOnLane = helper.command.getHeadOfLane('dev', 'comp2');
+      helper.command.export();
+      bareMerge = helper.scopeHelper.getNewBareScope('-bare-merge');
+      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, bareMerge.scopePath);
+      helper.command.mergeLaneFromScope(bareMerge.scopePath, `${helper.scopes.remote}/dev`);
+    });
+    it('should merge to main', () => {
+      expect(helper.command.getHead(`${helper.scopes.remote}/comp1`, bareMerge.scopePath)).to.equal(comp1HeadOnLane);
+      expect(helper.command.getHead(`${helper.scopes.remote}/comp2`, bareMerge.scopePath)).to.equal(comp2HeadOnLane);
+    });
+    it('should squash by default', () => {
+      const cat = helper.command.catComponent(`${helper.scopes.remote}/comp2@latest`, bareMerge.scopePath);
+      expect(cat.parents).to.have.lengthOf(1);
+      const parent = cat.parents[0];
+      expect(parent).to.not.equal(comp2PreviousHeadOnLane);
+      expect(parent).to.equal(comp2HeadOnMain);
     });
   });
 });

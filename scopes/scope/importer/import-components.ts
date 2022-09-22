@@ -124,13 +124,15 @@ export default class ImportComponents {
       lane,
     });
 
-    // import lane components from their original scope, this way, it's possible to run diff/merge on them
+    // import lane components from their original scope, this way, it's possible to run diff/merge on them.
+    // don't use `scope.getDefaultLaneIdsFromLane()`. we need all components, because it's possible that a component
+    // does't have "head" locally although it exits in the origin-scope. it happens when the component was created on
+    // the origin-scope after a component with the same-name was created on the lane
     if (lane) {
-      const mainIds = await this.scope.getDefaultLaneIdsFromLane(lane);
-      const mainIdsLatest = BitIds.fromArray(mainIds.map((m) => m.changeVersion(undefined)));
       // @todo: optimize this maybe. currently, it imports twice.
       // try to make the previous `importComponentsObjectsHarmony` import the same component once from the original
       // scope and once from the lane-scope.
+      const mainIdsLatest = BitIds.fromArray(lane.toBitIds().map((m) => m.changeVersion(undefined)));
       await this.consumer.importComponentsObjects(mainIdsLatest, {
         allHistory: this.options.allHistory,
         ignoreMissingHead: true,
@@ -371,33 +373,6 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
   private getIdsToImportFromBitmap() {
     const authoredExportedComponents = this.consumer.bitMap.getExportedComponents();
     return BitIds.fromArray(authoredExportedComponents);
-  }
-
-  /**
-   * author might require bit-components that were installed via a package-manager. in that case,
-   * the objects are not imported until bit build or bit tag was running. this makes sure to get
-   * the objects on 'bit import', so then in the UI, they'll be shown nicely.
-   */
-  async getIdsOfDepsInstalledAsPackages() {
-    if (!this.options.objectsOnly) {
-      // this is needed only when importing objects. we don't want these components to be written to the fs
-      return [];
-    }
-    const authoredNonExportedComponentsIds = this.consumer.bitMap.getAuthoredNonExportedComponents();
-    const { components: authoredNonExportedComponents } = await this.consumer.loadComponents(
-      BitIds.fromArray(authoredNonExportedComponentsIds),
-      false
-    );
-    const dependencies: BitId[] = R.flatten(authoredNonExportedComponents.map((c) => c.getAllDependenciesIds()));
-    const missingDeps: BitId[] = [];
-    await Promise.all(
-      dependencies.map(async (dep) => {
-        if (!dep.hasScope()) return;
-        const isInScope = await this.scope.isComponentInScope(dep);
-        if (!isInScope) missingDeps.push(dep);
-      })
-    );
-    return missingDeps;
   }
 
   async _getCurrentVersions(ids: BitIds): Promise<ImportedVersions> {

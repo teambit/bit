@@ -275,11 +275,7 @@ export class LaneRemoveCmd implements Command {
   alias = '';
   options = [
     ['r', 'remote', 'remove a remote lane (in the lane arg, use remote/lane-id syntax)'],
-    [
-      'f',
-      'force',
-      'removes the component from the scope, even if used as a dependency. WARNING: components that depend on this component will corrupt',
-    ],
+    ['f', 'force', 'removes the lane even when the lane was not merged yet'],
     ['s', 'silent', 'skip confirmation'],
   ] as CommandOptions;
   loader = true;
