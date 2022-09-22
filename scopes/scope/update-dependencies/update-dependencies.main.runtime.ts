@@ -15,8 +15,8 @@ import { LaneId } from '@teambit/lane-id';
 import { BitId } from '@teambit/legacy-bit-id';
 import { getValidVersionOrReleaseType } from '@teambit/legacy/dist/utils/semver-helper';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
+import { ExportAspect, ExportMain } from '@teambit/export';
 import { LanesAspect, Lane, LanesMain } from '@teambit/lanes';
-import { exportMany } from '@teambit/legacy/dist/scope/component-ops/export-scope-components';
 import { ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config';
 import { UpdateDependenciesCmd } from './update-dependencies.cmd';
 import { UpdateDependenciesAspect } from './update-dependencies.aspect';
@@ -65,7 +65,8 @@ export class UpdateDependenciesMain {
     private dependencyResolver: DependencyResolverMain,
     private onPostUpdateDependenciesSlot: OnPostUpdateDependenciesSlot,
     private snapping: SnappingMain,
-    private lanes: LanesMain
+    private lanes: LanesMain,
+    private exporter: ExportMain
   ) {}
 
   /**
@@ -322,7 +323,7 @@ to bypass this error, use --skip-new-scope-validation flag (not recommended. it 
     const shouldExport = this.updateDepsOptions.push;
     if (!shouldExport) return;
     const ids = BitIds.fromArray(this.legacyComponents.map((c) => c.id));
-    await exportMany({
+    await this.exporter.exportMany({
       scope: this.scope.legacyScope,
       ids,
       idsWithFutureScope: ids,
@@ -341,19 +342,21 @@ to bypass this error, use --skip-new-scope-validation flag (not recommended. it 
     DependencyResolverAspect,
     SnappingAspect,
     LanesAspect,
+    ExportAspect,
   ];
 
   static slots = [Slot.withType<OnPostUpdateDependenciesSlot>()];
 
   static async provider(
-    [cli, scope, loggerMain, builder, dependencyResolver, snapping, lanes]: [
+    [cli, scope, loggerMain, builder, dependencyResolver, snapping, lanes, exporter]: [
       CLIMain,
       ScopeMain,
       LoggerMain,
       BuilderMain,
       DependencyResolverMain,
       SnappingMain,
-      LanesMain
+      LanesMain,
+      ExportMain
     ],
     _,
     [onPostUpdateDependenciesSlot]: [OnPostUpdateDependenciesSlot]
@@ -366,7 +369,8 @@ to bypass this error, use --skip-new-scope-validation flag (not recommended. it 
       dependencyResolver,
       onPostUpdateDependenciesSlot,
       snapping,
-      lanes
+      lanes,
+      exporter
     );
     cli.register(new UpdateDependenciesCmd(updateDependenciesMain, scope, logger));
     return updateDependenciesMain;
