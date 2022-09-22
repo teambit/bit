@@ -16,10 +16,10 @@ const orderByDate: (
   const { date: dateStrB } = logB || {};
   const { date: dateStrA } = logA || {};
 
-  const dateA = useMemo(() => (dateStrA ? new Date(parseInt(dateStrA)) : new Date()), [dateStrA]);
-  const dateB = useMemo(() => (dateStrB ? new Date(parseInt(dateStrB)) : new Date()), [dateStrB]);
+  const dateA = dateStrA ? new Date(parseInt(dateStrA)) : new Date();
+  const dateB = dateStrB ? new Date(parseInt(dateStrB)) : new Date();
 
-  if (dateA < dateB) return [logA, logB];
+  if (dateA > dateB) return [logA, logB];
   return [logB, logA];
 };
 
@@ -46,7 +46,7 @@ export function ComponentCompareChangelog({ className }: ComponentCompareChangel
   const component = useContext(ComponentContext);
   const componentCompareContext = useComponentCompare();
   const { base, compare, logsByVersion } = componentCompareContext || {};
-  const ref = useRef<HTMLDivElement>(null);
+  // const ref = useRef<HTMLDivElement>(null);
 
   const allLogs = compare?.model.logs || [];
   const baseVersionInfo = base?.model.version ? logsByVersion?.get(base?.model.version) : undefined;
@@ -57,18 +57,18 @@ export function ComponentCompareChangelog({ className }: ComponentCompareChangel
     [baseVersionInfo, compareVersionInfo]
   );
 
-  useEffect(
-    () =>
-      /**
-       * @HACK
-       * For some reason this always scroll to the earliest version
-       * We always want it to stay scrolled to the top when it renders
-       * The empty div in the bottom, gets moved to the top because of css; flex-direction: column-reverse
-       * which we use as a ref to scroll to the top
-       * */
-      ref.current?.scrollIntoView(false),
-    [baseVersionInfo, compareVersionInfo]
-  );
+  // useEffect(
+  //   () =>
+  //     /**
+  //      * @HACK
+  //      * For some reason this always scroll to the earliest version
+  //      * We always want it to stay scrolled to the top when it renders
+  //      * The empty div in the bottom, gets moved to the top because of css; flex-direction: column-reverse
+  //      * which we use as a ref to scroll to the top
+  //      * */
+  //     ref.current?.scrollIntoView(false),
+  //   [baseVersionInfo, compareVersionInfo]
+  // );
 
   return (
     <div className={classNames(styles.changeLogPage, className)}>
@@ -85,7 +85,6 @@ export function ComponentCompareChangelog({ className }: ComponentCompareChangel
           />
         );
       })}
-      <div ref={ref}></div>
     </div>
   );
 }

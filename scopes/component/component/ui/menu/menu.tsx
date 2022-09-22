@@ -112,7 +112,9 @@ function VersionRelatedDropdowns({
 }) {
   const location = useLocation();
   const { lanesModel } = useLanes();
-  const currentLane = lanesModel?.viewedLane;
+  const currentLane =
+    lanesModel?.viewedLane?.id && !lanesModel?.viewedLane?.id.isDefault() ? lanesModel.viewedLane : undefined;
+
   const { logs } = component;
   const isWorkspace = host === 'teambit.workspace/workspace';
 
@@ -140,7 +142,7 @@ function VersionRelatedDropdowns({
 
   const isNew = snaps.length === 0 && tags.length === 0;
 
-  const lanes = lanesModel?.getLanesByComponentId(component.id) || [];
+  const lanes = lanesModel?.getLanesByComponentId(component.id)?.filter((lane) => !lane.id.isDefault()) || [];
   const localVersion = isWorkspace && !isNew && !currentLane;
 
   const currentVersion =

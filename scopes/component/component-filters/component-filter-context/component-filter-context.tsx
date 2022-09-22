@@ -52,7 +52,7 @@ export function useComponentFilter<T>(
       const initialFilterState = { ...filterFromContext, state: defaultState };
       updateFilter(filterContext as ComponentFilterContextType, initialFilterState);
     }
-  }, []);
+  }, [filterId]);
 
   if (!filterContext || !filterFromContext) return undefined;
   type Setter = Dispatch<SetStateAction<ComponentFilterCriteria<any>>>;
