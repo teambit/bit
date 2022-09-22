@@ -60,10 +60,12 @@ type ObjectListPerName = { [name: string]: ObjectList };
 type ObjectsPerRemote = {
   remote: Remote;
   objectList: ObjectList;
+  exportedIds?: string[];
+};
+type ObjectsPerRemoteExtended = ObjectsPerRemote & {
   objectListPerName: ObjectListPerName;
   idsToChangeLocally: BitIds;
   componentsAndObjects: ModelComponentAndObjects[];
-  exportedIds?: string[];
 };
 
 type ExportParams = {
@@ -102,9 +104,18 @@ export class ExportMain {
     return exportResults;
   }
 
-  async exportObjectList(objectList: ObjectList, centralHubOptions?: Record<string, any>) {
+  async exportObjectList(
+    manyObjectsPerRemote: ObjectsPerRemote[],
+    scopeRemotes: Remotes,
+    centralHubOptions?: Record<string, any>
+  ) {
     const http = await Http.connect(CENTRAL_BIT_HUB_URL, CENTRAL_BIT_HUB_NAME);
-    await http.pushToCentralHub(objectList, centralHubOptions);
+    if (this.shouldPushToCentralHub(manyObjectsPerRemote, scopeRemotes)) {
+      const objectList = this.transformToOneObjectListWithScopeData(manyObjectsPerRemote);
+      await http.pushToCentralHub(objectList, centralHubOptions);
+    } else {
+      await this.pushToRemotesCarefully(manyObjectsPerRemote);
+    }
   }
 
   private async exportComponents({ ids, includeNonStaged, originDirectly, ...params }: ExportParams): Promise<{
@@ -176,7 +187,6 @@ export class ExportMain {
   async exportMany({
     scope,
     ids, // when exporting a lane, the ids are the lane component ids
-    context = {},
     laneObject,
     allVersions,
     originDirectly,
@@ -187,7 +197,6 @@ export class ExportMain {
   }: {
     scope: Scope;
     ids: BitIds;
-    context?: Record<string, any>;
     laneObject?: Lane;
     allVersions: boolean;
     originDirectly?: boolean;
@@ -277,7 +286,7 @@ export class ExportMain {
       remoteNameStr: string,
       bitIds: BitIds,
       lane?: Lane
-    ): Promise<ObjectsPerRemote> => {
+    ): Promise<ObjectsPerRemoteExtended> => {
       bitIds.throwForDuplicationIgnoreVersion();
       const remote: Remote = await scopeRemotes.resolve(remoteNameStr, scope);
       const idsToChangeLocally = BitIds.fromArray(bitIds.filter((id) => !id.scope || id.scope === remoteNameStr));
@@ -341,26 +350,6 @@ export class ExportMain {
           getUpdatedObjectsToExport(scopeName, idsGroupedByScope[scopeName], laneObject)
         );
 
-    const transformToOneObjectListWithScopeData = (objectsPerRemote: ObjectsPerRemote[]): ObjectList => {
-      const objectList = new ObjectList();
-      objectsPerRemote.forEach((objPerRemote) => {
-        objPerRemote.objectList.addScopeName(objPerRemote.remote.name);
-        objectList.mergeObjectList(objPerRemote.objectList);
-      });
-      return objectList;
-    };
-
-    const shouldPushToCentralHub = (): boolean => {
-      if (originDirectly) return false;
-      const hubRemotes = manyObjectsPerRemote.filter((m) => scopeRemotes.isHub(m.remote.name));
-      if (!hubRemotes.length) return false;
-      if (hubRemotes.length === manyObjectsPerRemote.length) return true; // all are hub
-      // @todo: maybe create a flag "no-central" to support this workflow
-      throw new Error(
-        `some of your components are configured to be exported to a local scope and some to the bit.cloud hub. this is not supported`
-      );
-    };
-
     const getExportMetadata = async (): Promise<ObjectItem> => {
       const exportMetadata = new ExportMetadata({ exportVersions });
       const exportMetadataObj = await exportMetadata.compress();
@@ -373,7 +362,7 @@ export class ExportMain {
     };
 
     const pushAllToCentralHub = async () => {
-      const objectList = transformToOneObjectListWithScopeData(manyObjectsPerRemote);
+      const objectList = this.transformToOneObjectListWithScopeData(manyObjectsPerRemote);
       objectList.addIfNotExist([await getExportMetadata()]);
       const http = await Http.connect(CENTRAL_BIT_HUB_URL, CENTRAL_BIT_HUB_NAME);
       const pushResults = await http.pushToCentralHub(objectList);
@@ -395,45 +384,10 @@ export class ExportMain {
       }
     };
 
-    const pushRemotesPendingDir = async (clientId: string): Promise<void> => {
-      if (resumeExportId) {
-        logger.debug('pushRemotesPendingDir - skip as the resumeClientId was passed');
-        // no need to transfer the objects, they're already on the server. also, since this clientId
-        // exists already on the remote pending-dir, it'll cause a collision.
-        return;
-      }
-      const pushOptions = { clientId };
-      const pushedRemotes: Remote[] = [];
-      await mapSeries(manyObjectsPerRemote, async (objectsPerRemote: ObjectsPerRemote) => {
-        const { remote, objectList } = objectsPerRemote;
-        loader.start(`transferring ${objectList.count()} objects to the remote "${remote.name}"...`);
-        try {
-          await remote.pushMany(objectList, pushOptions, context);
-          logger.debugAndAddBreadCrumb(
-            'export-scope-components.pushRemotesPendingDir',
-            'successfully pushed all objects to the pending-dir directory on the remote'
-          );
-          pushedRemotes.push(remote);
-        } catch (err: any) {
-          logger.warnAndAddBreadCrumb('exportMany', 'failed pushing objects to the remote');
-          await removePendingDirs(pushedRemotes, clientId);
-          throw err;
-        }
-      });
-    };
-
-    const pushToRemotesCarefully = async () => {
-      const remotes = manyObjectsPerRemote.map((o) => o.remote);
-      const clientId = resumeExportId || Date.now().toString();
-      await pushRemotesPendingDir(clientId);
-      await validateRemotes(remotes, clientId, Boolean(resumeExportId));
-      await persistRemotes(manyObjectsPerRemote, clientId);
-    };
-
     const updateLocalObjects = async (
       lane?: Lane
     ): Promise<Array<{ exported: BitIds; updatedLocally: BitIds; newIdsOnRemote: BitId[] }>> => {
-      return mapSeries(manyObjectsPerRemote, async (objectsPerRemote: ObjectsPerRemote) => {
+      return mapSeries(manyObjectsPerRemote, async (objectsPerRemote: ObjectsPerRemoteExtended) => {
         const { remote, idsToChangeLocally, componentsAndObjects, exportedIds } = objectsPerRemote;
         const remoteNameStr = remote.name;
         // on Harmony, version hashes don't change, the new versions will replace the old ones.
@@ -490,11 +444,11 @@ export class ExportMain {
       const remotes = manyObjectsPerRemote.map((o) => o.remote);
       await validateRemotes(remotes, resumeExportId);
       await persistRemotes(manyObjectsPerRemote, resumeExportId);
-    } else if (shouldPushToCentralHub()) {
+    } else if (this.shouldPushToCentralHub(manyObjectsPerRemote, scopeRemotes, originDirectly)) {
       await pushAllToCentralHub();
     } else {
       // await pushToRemotes();
-      await pushToRemotesCarefully();
+      await this.pushToRemotesCarefully(manyObjectsPerRemote, resumeExportId);
     }
 
     loader.start('updating data locally...');
@@ -504,6 +458,69 @@ export class ExportMain {
       exported: BitIds.uniqFromArray(R.flatten(results.map((r) => r.exported))),
       updatedLocally: BitIds.uniqFromArray(R.flatten(results.map((r) => r.updatedLocally))),
     };
+  }
+
+  private transformToOneObjectListWithScopeData(objectsPerRemote: ObjectsPerRemote[]): ObjectList {
+    const objectList = new ObjectList();
+    objectsPerRemote.forEach((objPerRemote) => {
+      objPerRemote.objectList.addScopeName(objPerRemote.remote.name);
+      objectList.mergeObjectList(objPerRemote.objectList);
+    });
+    return objectList;
+  }
+
+  private async pushToRemotesCarefully(manyObjectsPerRemote: ObjectsPerRemote[], resumeExportId?: string) {
+    const remotes = manyObjectsPerRemote.map((o) => o.remote);
+    const clientId = resumeExportId || Date.now().toString();
+    await this.pushRemotesPendingDir(clientId, manyObjectsPerRemote, resumeExportId);
+    await validateRemotes(remotes, clientId, Boolean(resumeExportId));
+    await persistRemotes(manyObjectsPerRemote, clientId);
+  }
+
+  private async pushRemotesPendingDir(
+    clientId: string,
+    manyObjectsPerRemote: ObjectsPerRemote[],
+    resumeExportId?: string
+  ): Promise<void> {
+    if (resumeExportId) {
+      logger.debug('pushRemotesPendingDir - skip as the resumeExportId was passed');
+      // no need to transfer the objects, they're already on the server. also, since this clientId
+      // exists already on the remote pending-dir, it'll cause a collision.
+      return;
+    }
+    const pushOptions = { clientId };
+    const pushedRemotes: Remote[] = [];
+    await mapSeries(manyObjectsPerRemote, async (objectsPerRemote: ObjectsPerRemote) => {
+      const { remote, objectList } = objectsPerRemote;
+      loader.start(`transferring ${objectList.count()} objects to the remote "${remote.name}"...`);
+      try {
+        await remote.pushMany(objectList, pushOptions, {});
+        logger.debugAndAddBreadCrumb(
+          'export-scope-components.pushRemotesPendingDir',
+          'successfully pushed all objects to the pending-dir directory on the remote'
+        );
+        pushedRemotes.push(remote);
+      } catch (err: any) {
+        logger.warnAndAddBreadCrumb('exportMany', 'failed pushing objects to the remote');
+        await removePendingDirs(pushedRemotes, clientId);
+        throw err;
+      }
+    });
+  }
+
+  private shouldPushToCentralHub(
+    manyObjectsPerRemote: ObjectsPerRemote[],
+    scopeRemotes: Remotes,
+    originDirectly = false
+  ): boolean {
+    if (originDirectly) return false;
+    const hubRemotes = manyObjectsPerRemote.filter((m) => scopeRemotes.isHub(m.remote.name));
+    if (!hubRemotes.length) return false;
+    if (hubRemotes.length === manyObjectsPerRemote.length) return true; // all are hub
+    // @todo: maybe create a flag "no-central" to support this workflow
+    throw new BitError(
+      `some of your components are configured to be exported to a local scope and some to the bit.cloud hub. this is not supported`
+    );
   }
 
   /**
