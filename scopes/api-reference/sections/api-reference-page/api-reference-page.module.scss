@@ -1,2 +1,9 @@
 .apiRefPageContainer {
+  min-height: 100%;
+  display: flex;
+  width: 100%;
+}
+
+.selectedAPIDetailsContainer {
+  padding: 24px 40px;
 }

@@ -47,9 +47,9 @@ export function APIRefPage({ host, rendererSlot, className }: APIRefPageProps) {
   // console.log('🚀 ~ file: api-reference-page.tsx ~ line 17 ~ APIRefPage ~ apiModel', apiModel);
 
   return (
-    <SplitPane layout={sidebarOpenness} size="85%" className={className}>
+    <SplitPane layout={sidebarOpenness} size="85%" className={classNames(className, styles.apiRefPageContainer)}>
       <Pane className={styles.left}>
-        <div className={styles.apiRefPageContainer}>
+        <div className={styles.selectedAPIDetailsContainer}>
           <H1 className={styles.title}>API Reference</H1>
           <Separator isPresentational className={styles.separator} />
         </div>
