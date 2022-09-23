@@ -602,8 +602,10 @@ export default class CommandHelper {
   mergeLaneFromScope(cwd: string, laneName: string, options = '') {
     return this.runCmd(`bit _merge-lane ${laneName} ${options}`, cwd);
   }
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  diff(id? = '') {
+  tagFromScope(cwd: string, ids: string, options = '') {
+    return this.runCmd(`bit _tag ${ids} ${options} -m msg`, cwd);
+  }
+  diff(id = '') {
     const output = this.runCmd(`bit diff ${id}`);
     return removeChalkCharacters(output);
   }

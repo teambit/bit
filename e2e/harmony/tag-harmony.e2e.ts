@@ -423,4 +423,24 @@ describe('tag components on Harmony', function () {
       expect(() => helper.command.tagAllComponents()).not.to.throw();
     });
   });
+  describe('tag from scope', () => {
+    let bareTag;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents(3);
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+
+      bareTag = helper.scopeHelper.getNewBareScope('-bare-merge');
+      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, bareTag.scopePath);
+      helper.command.tagFromScope(bareTag.scopePath, `${helper.scopes.remote}/comp1 ${helper.scopes.remote}/comp2`);
+    });
+    it('should tag them successfully', () => {
+      const comp1OnBare = helper.command.catComponent(`${helper.scopes.remote}/comp1`, bareTag.scopePath);
+      expect(comp1OnBare.versions).to.have.property('0.0.1');
+      const comp2OnBare = helper.command.catComponent(`${helper.scopes.remote}/comp2`, bareTag.scopePath);
+      expect(comp2OnBare.versions).to.have.property('0.0.1');
+    });
+  });
 });
