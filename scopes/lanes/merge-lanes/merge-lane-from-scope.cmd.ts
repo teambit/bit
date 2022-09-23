@@ -56,7 +56,7 @@ the lane must be up-to-date with main, otherwise, conflicts might occur which ar
     if (includeDeps && !pattern) {
       throw new BitError(`"--include-deps" flag is relevant only for --pattern flag`);
     }
-    const { mergedNow, mergedPreviously } = await this.mergeLanes.mergeFromScope(name, {
+    const { mergedNow, mergedPreviously, exportedIds } = await this.mergeLanes.mergeFromScope(name, {
       push,
       keepReadme,
       noSquash,
@@ -70,8 +70,11 @@ the lane must be up-to-date with main, otherwise, conflicts might occur which ar
     const nonMergedTitle = chalk.bold(
       `the following ${mergedPreviously.length} components were already merged before, they were left intact`
     );
-    const nonMergedOutput = mergedPreviously.length ? `${nonMergedTitle}\n${mergedPreviously.join('\n')}` : '';
+    const nonMergedOutput = mergedPreviously.length ? `\n${nonMergedTitle}\n${mergedPreviously.join('\n')}` : '';
 
-    return `${mergedOutput}\n${nonMergedOutput}`;
+    const exportedTitle = chalk.green(`successfully exported ${exportedIds.length} components`);
+    const exportedOutput = exportedIds.length ? `\n${exportedTitle}\n${exportedIds.join('\n')}` : '';
+
+    return mergedOutput + nonMergedOutput + exportedOutput;
   }
 }
