@@ -425,6 +425,7 @@ describe('tag components on Harmony', function () {
   });
   describe('tag from scope', () => {
     let bareTag;
+    let beforeTagging;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       helper.bitJsonc.setupDefault();
@@ -434,13 +435,33 @@ describe('tag components on Harmony', function () {
 
       bareTag = helper.scopeHelper.getNewBareScope('-bare-merge');
       helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, bareTag.scopePath);
-      helper.command.tagFromScope(bareTag.scopePath, `${helper.scopes.remote}/comp1 ${helper.scopes.remote}/comp2`);
+      beforeTagging = helper.scopeHelper.cloneScope(bareTag.scopePath);
+      helper.command.tagFromScope(bareTag.scopePath, `${helper.scopes.remote}/comp2 ${helper.scopes.remote}/comp3`);
     });
     it('should tag them successfully', () => {
-      const comp1OnBare = helper.command.catComponent(`${helper.scopes.remote}/comp1`, bareTag.scopePath);
-      expect(comp1OnBare.versions).to.have.property('0.0.1');
       const comp2OnBare = helper.command.catComponent(`${helper.scopes.remote}/comp2`, bareTag.scopePath);
       expect(comp2OnBare.versions).to.have.property('0.0.1');
+      const comp3OnBare = helper.command.catComponent(`${helper.scopes.remote}/comp3`, bareTag.scopePath);
+      expect(comp3OnBare.versions).to.have.property('0.0.1');
+    });
+    describe('running with --push flag', () => {
+      before(() => {
+        helper.scopeHelper.getClonedScope(beforeTagging, bareTag.scopePath);
+        helper.command.tagFromScope(
+          bareTag.scopePath,
+          `${helper.scopes.remote}/comp2 ${helper.scopes.remote}/comp3`,
+          '--push'
+        );
+      });
+      it('should export the modified components to the remote', () => {
+        const comp2OnBare = helper.command.catComponent(`${helper.scopes.remote}/comp2`, bareTag.scopePath);
+        const comp1OnRemote = helper.command.catComponent(`${helper.scopes.remote}/comp2`, helper.scopes.remotePath);
+        expect(comp2OnBare.head).to.equal(comp1OnRemote.head);
+
+        const comp3OnBare = helper.command.catComponent(`${helper.scopes.remote}/comp3`, bareTag.scopePath);
+        const comp2OnRemote = helper.command.catComponent(`${helper.scopes.remote}/comp3`, helper.scopes.remotePath);
+        expect(comp3OnBare.head).to.equal(comp2OnRemote.head);
+      });
     });
   });
 });
