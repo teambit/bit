@@ -20,8 +20,14 @@ describe('multi testers', function () {
       helper.scopeHelper.reInitLocalScopeHarmony();
       compName = helper.fixtures.populateComponents(1);
       helper.fs.outputFile('comp1/comp1.spec.ts', specFilePassingFixture());
-      helper.fs.outputFile('comp1/comp1.custom-pattern-1.spec.ts', specFilePassingFixture('custom-pattern-1 describe text', 'custom-pattern-1 it text'));
-      helper.fs.outputFile('comp1/comp1.custom-pattern-2.spec.ts', specFilePassingFixture('custom-pattern-2 describe text', 'custom-pattern-2 it text'));
+      helper.fs.outputFile(
+        'comp1/comp1.custom-pattern-1.spec.ts',
+        specFilePassingFixture('custom-pattern-1 describe text', 'custom-pattern-1 it text')
+      );
+      helper.fs.outputFile(
+        'comp1/comp1.custom-pattern-2.spec.ts',
+        specFilePassingFixture('custom-pattern-2 describe text', 'custom-pattern-2 it text')
+      );
       helper.env.setCustomEnv('multi-jest-testers-env');
       helper.command.compile();
       helper.command.install();
@@ -53,7 +59,7 @@ describe('multi testers', function () {
     describe('bit build command', () => {
       let output;
       before(() => {
-        output = helper.command.build(compName, true);
+        output = helper.command.build(compName, undefined, true);
       });
       it('bit test should run spec files in separate runs', () => {
         const matches = Array.from(output.matchAll(/Test Suites: 1 passed/g));
@@ -74,7 +80,6 @@ describe('multi testers', function () {
       });
     });
   });
-
 });
 
 function specFilePassingFixture(describeText = 'test', itText = 'should pass') {
@@ -85,4 +90,3 @@ function specFilePassingFixture(describeText = 'test', itText = 'should pass') {
 });
 `;
 }
-

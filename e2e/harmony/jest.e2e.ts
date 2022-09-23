@@ -45,7 +45,7 @@ describe('Jest Tester', function () {
       expect(output).to.have.string('✓ should pass');
     });
     it('bit build should show the passing component via Jest output', () => {
-      const output = helper.command.build('', true);
+      const output = helper.command.build('', undefined, true);
       expect(output).to.have.string('✓ should pass');
     });
   });
@@ -65,6 +65,11 @@ describe('Jest Tester', function () {
     it('bit build should show the failing component via Jest output', () => {
       const output = helper.general.runWithTryCatch('bit build');
       expect(output).to.have.string('✕ should fail');
+    });
+    it('bit build should not show the failing component if --skip-tests was entered', () => {
+      const output = helper.command.build(undefined, '--skip-tests');
+      expect(output).to.not.have.string('should fail');
+      expect(output).to.have.string('the build has been completed');
     });
   });
   describe('component with an errored test', () => {
@@ -149,7 +154,7 @@ describe('Jest Tester', function () {
     describe('bit build command', () => {
       let output;
       before(() => {
-        output = helper.command.build(compName, true);
+        output = helper.command.build(compName, undefined, true);
       });
       it('bit build should mentions the custom resolved spec file', () => {
         expect(output).to.have.string('comp1.custom-pattern.spec');
