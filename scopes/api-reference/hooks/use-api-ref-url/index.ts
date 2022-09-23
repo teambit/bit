@@ -1,1 +1,1 @@
-export { useAPIRefParam, APIRefQueryParams } from './use-api-ref-url';
+export { useAPIRefParam, APIRefQueryParams, useUpdatedUrlFromQuery } from './use-api-ref-url';

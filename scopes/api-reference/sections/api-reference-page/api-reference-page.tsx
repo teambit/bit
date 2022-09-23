@@ -9,6 +9,8 @@ import { Collapser } from '@teambit/ui-foundation.ui.buttons.collapser';
 import { HoverSplitter } from '@teambit/base-ui.surfaces.split-pane.hover-splitter';
 import { SplitPane, Pane, Layout } from '@teambit/base-ui.surfaces.split-pane.split-pane';
 import { useSchema } from '@teambit/api-reference.hooks.use-schema';
+import { APIReferenceExplorer } from '@teambit/api-reference.explorer.api-reference-explorer';
+import { useAPIRefParam } from '@teambit/api-reference.hooks.use-api-ref-url';
 import { APINodeRendererSlot } from '@teambit/api-reference';
 import styles from './api-reference-page.module.scss';
 
@@ -24,7 +26,14 @@ export function APIRefPage({ host, rendererSlot, className }: APIRefPageProps) {
   const isMobile = useIsMobile();
   const [isSidebarOpen, setSidebarOpenness] = useState(!isMobile);
   const sidebarOpenness = isSidebarOpen ? Layout.row : Layout.left;
-
+  const selectedAPI = useAPIRefParam('selectedAPI');
+  const [selectedAPIType, selectedAPINodeName] = selectedAPI?.split('/') || [];
+  const selectedAPINode =
+    selectedAPIType && selectedAPINodeName
+      ? apiModel
+          ?.getByType(selectedAPIType)
+          ?.find((apiNode) => apiNode.renderer.getName(apiNode.api) === selectedAPINodeName)
+      : undefined;
   // TODO: add loading screen
   if (loading) {
     return <>loading</>;
@@ -56,7 +65,7 @@ export function APIRefPage({ host, rendererSlot, className }: APIRefPageProps) {
         />
       </HoverSplitter>
       <Pane className={classNames(styles.right, styles.dark)}>
-        <>Explorer</>
+        <APIReferenceExplorer selectedAPINode={selectedAPINode} apiReferenceModel={apiModel} />
       </Pane>
     </SplitPane>
   );

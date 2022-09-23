@@ -5,9 +5,13 @@ import { APINodeRenderProps, APINodeRenderer } from '@teambit/api-reference.mode
 export const enumRenderer: APINodeRenderer = {
   predicate: (node) => node.__schema === EnumSchema.name,
   Component: EnumComponent,
-  displayName: 'Enums',
+  nodeType: 'Enums',
   icon: { name: 'Enum', Component: EnumIcon },
   default: true,
+  getName: (node) => {
+    const classNode = node as EnumSchema;
+    return classNode.name;
+  },
 };
 
 function EnumComponent(node: APINodeRenderProps) {

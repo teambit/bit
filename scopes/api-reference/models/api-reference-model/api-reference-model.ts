@@ -10,7 +10,7 @@ export type SchemaQueryResult = {
 
 export type APINode = {
   api: SchemaNode;
-  renderer?: APINodeRenderer;
+  renderer: APINodeRenderer;
 };
 
 export class APIReferenceModel {
@@ -18,18 +18,20 @@ export class APIReferenceModel {
   apiNodes: APINode[];
   componentId: ComponentID;
 
-  constructor(_api: APISchema, _renderers?: APINodeRenderer[]) {
+  constructor(_api: APISchema, _renderers: APINodeRenderer[]) {
     this.apiNodes = this.mapToAPINode(_api, _renderers);
     this.apiByType = this.groupByType(this.apiNodes);
     this.componentId = _api.componentId;
   }
 
-  mapToAPINode(api: APISchema, renderers?: APINodeRenderer[]): APINode[] {
+  mapToAPINode(api: APISchema, renderers: APINodeRenderer[]): APINode[] {
     const { exports: schemaNodes } = api.module;
-    return schemaNodes.map((schemaNode) => ({
-      api: schemaNode,
-      renderer: renderers && renderers.find((renderer) => renderer.predicate(schemaNode)),
-    }));
+    return schemaNodes
+      .map((schemaNode) => ({
+        api: schemaNode,
+        renderer: renderers && renderers.find((renderer) => renderer.predicate(schemaNode)),
+      }))
+      .filter((schemaNode) => schemaNode.renderer) as APINode[];
   }
 
   getByType(type: string) {
@@ -38,13 +40,13 @@ export class APIReferenceModel {
 
   groupByType(apiNodes: APINode[]): Map<string, APINode[]> {
     return apiNodes.reduce((accum, next) => {
-      const existing = accum.get(next.api.__schema) || [];
-      accum.set(next.api.__schema, existing.concat(next));
+      const existing = accum.get(next.renderer.nodeType) || [];
+      accum.set(next.renderer.nodeType, existing.concat(next));
       return accum;
     }, new Map<string, APINode[]>());
   }
 
-  static from(result: SchemaQueryResult, renderers?: APINodeRenderer[]): APIReferenceModel {
+  static from(result: SchemaQueryResult, renderers: APINodeRenderer[]): APIReferenceModel {
     const apiSchema = APISchema.fromObject(result.getHost.getSchema);
     return new APIReferenceModel(apiSchema, renderers);
   }

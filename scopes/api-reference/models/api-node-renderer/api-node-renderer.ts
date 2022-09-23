@@ -10,7 +10,8 @@ export type APINodeRenderProps = {
 export type APINodeRenderer = {
   predicate: (node: SchemaNode) => boolean;
   Component: ComponentType<APINodeRenderProps>;
-  displayName: string;
+  nodeType: string;
+  getName: (node: SchemaNode) => string;
   icon: { Component: ReactNode; name: string };
   default?: boolean;
 };

@@ -15,7 +15,7 @@ const GET_SCHEMA = gql`
 export function useSchema(
   host: string,
   componentId: string,
-  apiNodeRenderers?: APINodeRenderer[]
+  apiNodeRenderers: APINodeRenderer[]
 ): { apiModel?: APIReferenceModel } & Omit<
   DataQueryResult<SchemaQueryResult, { extensionId: string; componentId: string }>,
   'data'

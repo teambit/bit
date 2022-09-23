@@ -5,9 +5,13 @@ import { APINodeRenderProps, APINodeRenderer } from '@teambit/api-reference.mode
 export const variableRenderer: APINodeRenderer = {
   predicate: (node) => node.__schema === VariableLikeSchema.name,
   Component: VariableComponent,
-  displayName: 'Types',
+  nodeType: 'Types',
   icon: { name: 'Type', Component: VariableIcon },
   default: true,
+  getName: (node) => {
+    const classNode = node as VariableLikeSchema;
+    return classNode.name;
+  },
 };
 
 function VariableComponent(node: APINodeRenderProps) {

@@ -5,9 +5,13 @@ import { APINodeRenderProps, APINodeRenderer } from '@teambit/api-reference.mode
 export const functionRenderer: APINodeRenderer = {
   predicate: (node) => node.__schema === FunctionLikeSchema.name,
   Component: FunctionComponent,
-  displayName: 'Functions',
+  nodeType: 'Functions',
   icon: { name: 'Function', Component: FunctionIcon },
   default: true,
+  getName: (node) => {
+    const classNode = node as FunctionLikeSchema;
+    return classNode.name;
+  },
 };
 
 function FunctionComponent(node: APINodeRenderProps) {

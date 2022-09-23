@@ -5,9 +5,13 @@ import { APINodeRenderProps, APINodeRenderer } from '@teambit/api-reference.mode
 export const typeRenderer: APINodeRenderer = {
   predicate: (node) => node.__schema === TypeSchema.name,
   Component: TypeComponent,
-  displayName: 'Types',
+  nodeType: 'Types',
   icon: { name: 'Type', Component: TypeIcon },
   default: true,
+  getName: (node) => {
+    const classNode = node as TypeSchema;
+    return classNode.name;
+  },
 };
 
 function TypeComponent(node: APINodeRenderProps) {

@@ -478,6 +478,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/defender/eslint-config-mutator"
     },
+    "explorer/api-reference-explorer": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/api-reference/explorer/api-reference-explorer"
+    },
     "export": {
         "scope": "teambit.scope",
         "version": "0.0.850",

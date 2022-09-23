@@ -5,9 +5,13 @@ import { APINodeRenderProps, APINodeRenderer } from '@teambit/api-reference.mode
 export const interfaceRenderer: APINodeRenderer = {
   predicate: (node) => node.__schema === InterfaceSchema.name,
   Component: InterfaceComponent,
-  displayName: 'Interfaces',
+  nodeType: 'Interfaces',
   icon: { name: 'Interface', Component: InterfaceIcon },
   default: true,
+  getName: (node) => {
+    const classNode = node as InterfaceSchema;
+    return classNode.name;
+  },
 };
 
 function InterfaceComponent(node: APINodeRenderProps) {
