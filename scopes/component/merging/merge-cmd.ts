@@ -74,6 +74,7 @@ export class MergeCmd implements Command {
       resolvedComponents,
       abortedComponents,
       mergeSnapResults,
+      mergeSnapError,
     }: ApplyVersionResults = await this.merging.merge(
       values,
       mergeStrategy as any,
@@ -100,6 +101,7 @@ export class MergeCmd implements Command {
       failedComponents,
       version,
       mergeSnapResults,
+      mergeSnapError,
       verbose,
     });
   }
@@ -110,6 +112,7 @@ export function mergeReport({
   failedComponents,
   version,
   mergeSnapResults,
+  mergeSnapError,
   leftUnresolvedConflicts,
   verbose,
 }: ApplyVersionResults): string {
@@ -130,6 +133,14 @@ once ready, snap/tag the components to complete the merge.`;
   };
 
   const getSnapsOutput = () => {
+    if (mergeSnapError) {
+      return `
+${chalk.bold(
+  'snapping the merged components had failed with the following error, please fix the issues and snap manually'
+)}
+${mergeSnapError.message}
+`;
+    }
     if (!mergeSnapResults || !mergeSnapResults.snappedComponents) return '';
     const { snappedComponents, autoSnappedResults } = mergeSnapResults;
     const outputComponents = (comps) => {
