@@ -228,6 +228,8 @@ export class MergingMain {
 
     await consumer.scope.objects.unmergedComponents.write();
 
+    await consumer.writeBitMap();
+
     const getSnapOrTagResults = async () => {
       // if one of the component has conflict, don't snap-merge. otherwise, some of the components would be snap-merged
       // and some not. besides the fact that it could by mistake tag dependent, it's a confusing state. better not snap.
@@ -243,12 +245,19 @@ export class MergingMain {
       }
       return this.snapResolvedComponents(consumer, snapMessage, build);
     };
-    const mergeSnapResults = await getSnapOrTagResults();
+    let mergeSnapResults: ApplyVersionResults['mergeSnapResults'] = null;
+    let mergeSnapError: Error | undefined;
+    try {
+      mergeSnapResults = await getSnapOrTagResults();
+    } catch (err: any) {
+      mergeSnapError = err;
+    }
 
     return {
       components: componentsResults,
       failedComponents,
       mergeSnapResults,
+      mergeSnapError,
       leftUnresolvedConflicts,
     };
   }
