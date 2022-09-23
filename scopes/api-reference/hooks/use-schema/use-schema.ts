@@ -1,7 +1,7 @@
 import { DataQueryResult, useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
 import { gql } from '@apollo/client';
-import { APISchema } from '@teambit/semantics.entities.semantic-schema';
-import { SchemaQueryResult } from '@teambit/api-reference.models.api-reference-model';
+import { SchemaQueryResult, APIReferenceModel } from '@teambit/api-reference.models.api-reference-model';
+import { APINodeRenderer } from '@teambit/api-reference.models.api-node-renderer';
 
 const GET_SCHEMA = gql`
   query Schema($extensionId: String!, $componentId: String!) {
@@ -14,8 +14,9 @@ const GET_SCHEMA = gql`
 
 export function useSchema(
   host: string,
-  componentId: string
-): { api?: APISchema } & Omit<
+  componentId: string,
+  apiNodeRenderers?: APINodeRenderer[]
+): { apiModel?: APIReferenceModel } & Omit<
   DataQueryResult<SchemaQueryResult, { extensionId: string; componentId: string }>,
   'data'
 > {
@@ -26,8 +27,10 @@ export function useSchema(
     },
   });
 
+  const apiModel = data?.getHost?.getSchema ? APIReferenceModel.from(data, apiNodeRenderers) : undefined;
+
   return {
     ...rest,
-    api: data?.getHost?.getSchema && APISchema.fromObject(data.getHost.getSchema),
+    apiModel,
   };
 }

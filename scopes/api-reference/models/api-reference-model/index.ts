@@ -1,1 +1,1 @@
-export { SchemaQueryResult } from './schema-model';
+export { SchemaQueryResult, APIReferenceModel, APINode } from './api-reference-model';
