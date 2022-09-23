@@ -40,6 +40,7 @@ import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import { ModelComponent } from '@teambit/legacy/dist/scope/models';
 import IssuesAspect, { IssuesMain } from '@teambit/issues';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
+import { BuilderAspect, BuilderMain } from '@teambit/builder';
 import { ExportAspect, ExportMain } from '@teambit/export';
 import { SnapCmd } from './snap-cmd';
 import { SnappingAspect } from './snapping.aspect';
@@ -59,7 +60,8 @@ export class SnappingMain {
     private insights: InsightsMain,
     private dependencyResolver: DependencyResolverMain,
     private scope: ScopeMain,
-    private exporter: ExportMain
+    private exporter: ExportMain,
+    private builder: BuilderMain
   ) {}
 
   /**
@@ -147,6 +149,7 @@ export class SnappingMain {
       workspace: this.workspace,
       scope: this.scope,
       snapping: this,
+      builder: this.builder,
       consumerComponents: components,
       ids: legacyBitIds,
       message,
@@ -210,6 +213,7 @@ export class SnappingMain {
       scope: this.scope,
       consumerComponents,
       snapping: this,
+      builder: this.builder,
       dependencyResolver: this.dependencyResolver,
       skipAutoTag: false,
       persist: true,
@@ -285,6 +289,7 @@ export class SnappingMain {
       workspace: this.workspace,
       scope: this.scope,
       snapping: this,
+      builder: this.builder,
       consumerComponents: components,
       ids,
       ignoreNewestVersion: false,
@@ -414,13 +419,6 @@ there are matching among unmodified components thought. consider using --unmodif
     loader.stop();
   }
 
-  /**
-   * @todo: currently, there is only one function registered to the OnTag, which is the builder.
-   * we set the extensions data and artifacts we got from the builder to the consumer-components.
-   * however, if there is more than one function registered to the OnTag, the data will be overridden
-   * by the last called function. when/if this happen, some kind of merge need to be done between the
-   * results.
-   */
   _updateComponentsByTagResult(components: ConsumerComponent[], tagResult: LegacyOnTagResult[]) {
     tagResult.forEach((result) => {
       const matchingComponent = components.find((c) => c.id.isEqual(result.id));
@@ -578,6 +576,7 @@ there are matching among unmodified components thought. consider using --unmodif
     DependencyResolverAspect,
     ScopeAspect,
     ExportAspect,
+    BuilderAspect,
   ];
   static runtime = MainRuntime;
   static async provider([
@@ -590,6 +589,7 @@ there are matching among unmodified components thought. consider using --unmodif
     dependencyResolver,
     scope,
     exporter,
+    builder,
   ]: [
     Workspace,
     CLIMain,
@@ -599,10 +599,20 @@ there are matching among unmodified components thought. consider using --unmodif
     InsightsMain,
     DependencyResolverMain,
     ScopeMain,
-    ExportMain
+    ExportMain,
+    BuilderMain
   ]) {
     const logger = loggerMain.createLogger(SnappingAspect.id);
-    const snapping = new SnappingMain(workspace, logger, issues, insights, dependencyResolver, scope, exporter);
+    const snapping = new SnappingMain(
+      workspace,
+      logger,
+      issues,
+      insights,
+      dependencyResolver,
+      scope,
+      exporter,
+      builder
+    );
     const snapCmd = new SnapCmd(community.getBaseDomain(), snapping, logger);
     const tagCmd = new TagCmd(snapping, logger);
     const tagFromScopeCmd = new TagFromScopeCmd(snapping, logger);

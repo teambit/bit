@@ -8,10 +8,9 @@ import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { LoggerAspect, LoggerMain } from '@teambit/logger';
-import { ScopeAspect, ScopeMain, OnTagResults } from '@teambit/scope';
+import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { IsolateComponentsOptions, IsolatorAspect, IsolatorMain } from '@teambit/isolator';
-import { OnTagOpts } from '@teambit/legacy/dist/scope/scope';
 import { getHarmonyVersion } from '@teambit/legacy/dist/bootstrap';
 import findDuplications from '@teambit/legacy/dist/utils/array/find-duplications';
 import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
@@ -32,6 +31,14 @@ import { buildTaskTemplate } from './templates/build-task';
 import { BuilderRoute } from './builder.route';
 
 export type TaskSlot = SlotRegistry<BuildTask[]>;
+export type OnTagResults = { builderDataMap: ComponentMap<RawBuilderData>; pipeResults: TaskResultsList[] };
+export type OnTagOpts = {
+  disableTagAndSnapPipelines?: boolean;
+  throwOnError?: boolean; // on the CI it helps to save the results on failure so this is set to false
+  forceDeploy?: boolean; // whether run the deploy-pipeline although the build-pipeline has failed
+  skipTests?: boolean;
+  isSnap?: boolean;
+};
 export const FILE_PATH_PARAM_DELIM = '~';
 
 /**
@@ -387,8 +394,6 @@ export class BuilderMain {
     component.registerRoute([new BuilderRoute(builder, scope, logger)]);
     graphql.register(builderSchema(builder));
     generator.registerComponentTemplate([buildTaskTemplate]);
-    const func = builder.tagListener.bind(builder);
-    if (scope) scope.onTag(func);
     const commands = [new BuilderCmd(builder, workspace, logger), new ArtifactsCmd(builder, scope)];
     cli.register(...commands);
 
