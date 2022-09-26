@@ -747,4 +747,45 @@ describe('merge lanes', function () {
       });
     });
   });
+  describe('merge from scope with multiple scopes and --push flag', () => {
+    let bareMerge;
+    let scope2Name;
+    let scope2Path;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents(2);
+      helper.command.tagWithoutBuild('comp2');
+      helper.command.createLane();
+
+      const { scopeName, scopePath } = helper.scopeHelper.getNewBareScope();
+      scope2Name = scopeName;
+      scope2Path = scopePath;
+      helper.scopeHelper.addRemoteScope(scope2Path);
+      helper.command.setScope(scope2Name, 'comp1');
+
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.export();
+      bareMerge = helper.scopeHelper.getNewBareScope('-bare-merge');
+      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, bareMerge.scopePath);
+      helper.scopeHelper.addRemoteScope(scope2Path, bareMerge.scopePath);
+      helper.command.mergeLaneFromScope(bareMerge.scopePath, `${helper.scopes.remote}/dev`, '--push');
+    });
+    it('should export the modified components to the remote', () => {
+      const comp1OnBare = helper.command.catComponent(`${scope2Name}/comp1`, bareMerge.scopePath);
+      const comp1OnRemote = helper.command.catComponent(`${scope2Name}/comp1`, scope2Path);
+      expect(comp1OnBare.head).to.equal(comp1OnRemote.head);
+
+      const comp2OnBare = helper.command.catComponent(`${helper.scopes.remote}/comp2`, bareMerge.scopePath);
+      const comp2OnRemote = helper.command.catComponent(`${helper.scopes.remote}/comp2`, helper.scopes.remotePath);
+      expect(comp2OnBare.head).to.equal(comp2OnRemote.head);
+    });
+    it('bit import from the second scope should not throw', () => {
+      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.addRemoteScope();
+      helper.scopeHelper.addRemoteScope(scope2Path);
+      expect(() => helper.command.import(`${scope2Name}/comp1`)).to.not.throw();
+    });
+  });
 });

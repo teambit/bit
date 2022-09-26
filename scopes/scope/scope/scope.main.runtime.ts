@@ -2,7 +2,7 @@ import mapSeries from 'p-map-series';
 import semver from 'semver';
 import multimatch from 'multimatch';
 import type { AspectLoaderMain } from '@teambit/aspect-loader';
-import { TaskResultsList, RawBuilderData, BuilderAspect } from '@teambit/builder';
+import { RawBuilderData, BuilderAspect } from '@teambit/builder';
 import { readdirSync, existsSync } from 'fs-extra';
 import { resolve, join } from 'path';
 import { AspectLoaderAspect, AspectDefinition } from '@teambit/aspect-loader';
@@ -12,7 +12,7 @@ import { Component, ComponentAspect, ComponentFactory, ComponentID, Snap, State 
 import type { GraphqlMain } from '@teambit/graphql';
 import { GraphqlAspect } from '@teambit/graphql';
 import { Harmony, Slot, SlotRegistry, ExtensionManifest, Aspect } from '@teambit/harmony';
-import { Capsule, IsolatorAspect, IsolatorMain, IsolateComponentsOptions } from '@teambit/isolator';
+import { Capsule, IsolatorAspect, IsolatorMain } from '@teambit/isolator';
 import { LoggerAspect, LoggerMain, Logger } from '@teambit/logger';
 import { ExpressAspect, ExpressMain } from '@teambit/express';
 import type { UiMain } from '@teambit/ui';
@@ -22,7 +22,7 @@ import { BitId } from '@teambit/legacy-bit-id';
 import { BitIds as ComponentsIds } from '@teambit/legacy/dist/bit-id';
 import { ModelComponent, Lane } from '@teambit/legacy/dist/scope/models';
 import { Repository } from '@teambit/legacy/dist/scope/objects';
-import LegacyScope, { LegacyOnTagResult, OnTagFunc, OnTagOpts } from '@teambit/legacy/dist/scope/scope';
+import LegacyScope, { LegacyOnTagResult } from '@teambit/legacy/dist/scope/scope';
 import { ComponentLog } from '@teambit/legacy/dist/scope/models/model-component';
 import { loadScopeIfExist } from '@teambit/legacy/dist/scope/scope-loader';
 import { PersistOptions } from '@teambit/legacy/dist/scope/types';
@@ -56,16 +56,7 @@ import { ScopeCmd } from './scope-cmd';
 import { StagedConfig } from './staged-config';
 import { NoIdMatchPattern } from './exceptions/no-id-match-pattern';
 
-type TagRegistry = SlotRegistry<OnTag>;
-
 type ManifestOrAspect = ExtensionManifest | Aspect;
-
-export type OnTagResults = { builderDataMap: ComponentMap<RawBuilderData>; pipeResults: TaskResultsList[] };
-export type OnTag = (
-  components: Component[],
-  options: OnTagOpts,
-  isolateOptions?: IsolateComponentsOptions
-) => Promise<OnTagResults>;
 
 type RemoteEventMetadata = { auth?: AuthData; headers?: {} };
 type RemoteEvent<Data> = (data: Data, metadata: RemoteEventMetadata, errors?: Array<string | Error>) => Promise<void>;
@@ -115,8 +106,6 @@ export class ScopeMain implements ComponentFactory {
 
     readonly config: ScopeConfig,
 
-    private tagRegistry: TagRegistry,
-
     private postPutSlot: OnPostPutSlot,
 
     private postDeleteSlot: OnPostDeleteSlot,
@@ -163,26 +152,6 @@ export class ScopeMain implements ComponentFactory {
 
   get isLegacy(): boolean {
     return this.legacyScope.isLegacy;
-  }
-
-  /**
-   * register to the tag slot.
-   */
-  onTag(tagFn: OnTag) {
-    const host = this.componentExtension.getHost();
-    const legacyOnTagFunc: OnTagFunc = async (
-      legacyComponents: ConsumerComponent[],
-      options: OnTagOpts,
-      isolateOptions?: IsolateComponentsOptions
-    ): Promise<LegacyOnTagResult[]> => {
-      // Reload the aspects with their new version
-      await this.reloadAspectsWithNewVersion(legacyComponents);
-      const components = await host.getManyByLegacy(legacyComponents);
-      const { builderDataMap } = await tagFn(components, options, isolateOptions);
-      return this.builderDataMapToLegacyOnTagResults(builderDataMap);
-    };
-    this.legacyScope.onTag.push(legacyOnTagFunc);
-    this.tagRegistry.register(tagFn);
   }
 
   // We need to reload the aspects with their new version since:
@@ -523,7 +492,7 @@ needed-for: ${neededFor || '<unknown>'}`);
           packageManagerConfigRootDir: opts?.packageManagerConfigRootDir,
           useNesting: true,
           copyPeerToRuntimeOnComponents: true,
-          installPeersFromEnvs: true
+          installPeersFromEnvs: true,
         },
       },
       this.legacyScope
@@ -677,7 +646,7 @@ needed-for: ${neededFor || '<unknown>'}`);
           dedupe: false,
           useNesting: true,
           copyPeerToRuntimeOnComponents: true,
-          installPeersFromEnvs: true
+          installPeersFromEnvs: true,
         },
         host: this,
       },
@@ -725,7 +694,7 @@ needed-for: ${neededFor || '<unknown>'}`);
     if (componentIds && componentIds.length) {
       const groupedByIsCore = groupBy(componentIds, (id) => coreAspectsIds.includes(id.toString()));
       userAspectsIds = groupedByIsCore.false || [];
-      requestedCoreStringIds = groupedByIsCore.true?.map(id => id.toStringWithoutVersion()) || [];
+      requestedCoreStringIds = groupedByIsCore.true?.map((id) => id.toStringWithoutVersion()) || [];
     } else {
       userAspectsIds = await this.resolveMultipleComponentIds(this.aspectLoader.getUserAspects());
     }
@@ -745,12 +714,12 @@ needed-for: ${neededFor || '<unknown>'}`);
       const userAspectsIdsWithoutVersion = userAspectsIds.map((aspectId) => aspectId.toStringWithoutVersion());
       const userAspectsIdsWithoutVersionAndCoreRequested = userAspectsIdsWithoutVersion.concat(requestedCoreStringIds);
       afterExclusion = allDefs.filter((def) => {
-          const id = ComponentID.fromString(def.getId || '');
-          const isTarget = userAspectsIdsWithoutVersionAndCoreRequested.includes(id.toStringWithoutVersion());
-          // If it's core, but requested explicitly, keep it
-          if (isTarget) return true;
-          const isCore = coreAspectsDefs.find((coreId) => def.getId === coreId.getId);
-          return !isCore;
+        const id = ComponentID.fromString(def.getId || '');
+        const isTarget = userAspectsIdsWithoutVersionAndCoreRequested.includes(id.toStringWithoutVersion());
+        // If it's core, but requested explicitly, keep it
+        if (isTarget) return true;
+        const isCore = coreAspectsDefs.find((coreId) => def.getId === coreId.getId);
+        return !isCore;
       });
     }
 
@@ -1118,7 +1087,6 @@ needed-for: ${neededFor || '<unknown>'}`);
    * declare the slots of scope extension.
    */
   static slots = [
-    Slot.withType<OnTag>(),
     Slot.withType<OnPostPut>(),
     Slot.withType<OnPostDelete>(),
     Slot.withType<OnPostExport>(),
@@ -1156,8 +1124,7 @@ needed-for: ${neededFor || '<unknown>'}`);
       EnvsMain
     ],
     config: ScopeConfig,
-    [tagSlot, postPutSlot, postDeleteSlot, postExportSlot, postObjectsPersistSlot, preFetchObjectsSlot]: [
-      TagRegistry,
+    [postPutSlot, postDeleteSlot, postExportSlot, postObjectsPersistSlot, preFetchObjectsSlot]: [
       OnPostPutSlot,
       OnPostDeleteSlot,
       OnPostExportSlot,
@@ -1178,7 +1145,6 @@ needed-for: ${neededFor || '<unknown>'}`);
       legacyScope,
       componentExt,
       config,
-      tagSlot,
       postPutSlot,
       postDeleteSlot,
       postExportSlot,

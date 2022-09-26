@@ -24,7 +24,7 @@ import logger from '@teambit/legacy/dist/logger/logger';
 import { sha1 } from '@teambit/legacy/dist/utils';
 import { AutoTagResult, getAutoTagInfo } from '@teambit/legacy/dist/scope/component-ops/auto-tag';
 import { getValidVersionOrReleaseType } from '@teambit/legacy/dist/utils/semver-helper';
-import { LegacyOnTagResult } from '@teambit/legacy/dist/scope/scope';
+import { BuilderMain } from '@teambit/builder';
 import { Log } from '@teambit/legacy/dist/scope/models/version';
 import {
   MessagePerComponent,
@@ -145,6 +145,7 @@ export async function tagModelComponent({
   workspace,
   scope,
   snapping,
+  builder,
   consumerComponents,
   ids,
   message,
@@ -168,6 +169,7 @@ export async function tagModelComponent({
   workspace?: Workspace;
   scope: ScopeMain;
   snapping: SnappingMain;
+  builder: BuilderMain;
   consumerComponents: Component[];
   ids: BitIds;
   exactVersion?: string | null | undefined;
@@ -271,10 +273,13 @@ export async function tagModelComponent({
     const onTagOpts = { disableTagAndSnapPipelines, throwOnError: true, forceDeploy, skipTests, isSnap };
     const seedersOnly = !workspace; // if tag from scope, build only the given components
     const isolateOptions = { packageManagerConfigRootDir, seedersOnly };
-    const results: Array<LegacyOnTagResult[]> = await mapSeries(legacyScope.onTag, (func) =>
-      func(allComponentsToTag, onTagOpts, isolateOptions)
-    );
-    results.forEach((tagResult) => snapping._updateComponentsByTagResult(allComponentsToTag, tagResult));
+
+    await scope.reloadAspectsWithNewVersion(allComponentsToTag);
+    const harmonyComps = await (workspace || scope).getManyByLegacy(allComponentsToTag);
+    const { builderDataMap } = await builder.tagListener(harmonyComps, onTagOpts, isolateOptions);
+    const buildResult = scope.builderDataMapToLegacyOnTagResults(builderDataMap);
+
+    snapping._updateComponentsByTagResult(allComponentsToTag, buildResult);
     publishedPackages.push(...snapping._getPublishedPackages(allComponentsToTag));
     addBuildStatus(allComponentsToTag, BuildStatus.Succeed);
     await mapSeries(allComponentsToTag, (consumerComponent) => legacyScope.sources.enrichSource(consumerComponent));
