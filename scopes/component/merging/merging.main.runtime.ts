@@ -21,7 +21,6 @@ import { BitId, BitIds } from '@teambit/legacy/dist/bit-id';
 import { BitError } from '@teambit/bit-error';
 import GeneralError from '@teambit/legacy/dist/error/general-error';
 import { LaneId } from '@teambit/lane-id';
-import logger from '@teambit/legacy/dist/logger/logger';
 import { AutoTagResult } from '@teambit/legacy/dist/scope/component-ops/auto-tag';
 import { getDivergeData } from '@teambit/legacy/dist/scope/component-ops/get-diverge-data';
 import { UnmergedComponent } from '@teambit/legacy/dist/scope/lanes/unmerged-components';
@@ -32,6 +31,7 @@ import { Tmp } from '@teambit/legacy/dist/scope/repositories';
 import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
 import ManyComponentsWriter from '@teambit/legacy/dist/consumer/component-ops/many-components-writer';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component/consumer-component';
+import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { applyModifiedVersion } from '@teambit/legacy/dist/consumer/versions-ops/checkout-version';
 import threeWayMerge, {
   MergeResultsThreeWay,
@@ -64,7 +64,8 @@ export class MergingMain {
     private workspace: Workspace,
     private install: InstallMain,
     private snapping: SnappingMain,
-    private checkout: CheckoutMain
+    private checkout: CheckoutMain,
+    private logger: Logger
   ) {
     this.consumer = this.workspace?.consumer;
   }
@@ -212,16 +213,6 @@ export class MergingMain {
       }
     );
 
-    const leftUnresolvedConflicts = componentWithConflict && mergeStrategy === 'manual';
-
-    if (!skipDependencyInstallation && !leftUnresolvedConflicts) {
-      await this.install.install(undefined, {
-        dedupe: true,
-        updateExisting: false,
-        import: false,
-      });
-    }
-
     if (localLane) consumer.scope.objects.add(localLane);
 
     await consumer.scope.objects.persist(); // persist anyway, if localLane is null it should save all main heads
@@ -229,6 +220,20 @@ export class MergingMain {
     await consumer.scope.objects.unmergedComponents.write();
 
     await consumer.writeBitMap();
+
+    const leftUnresolvedConflicts = componentWithConflict && mergeStrategy === 'manual';
+    if (!skipDependencyInstallation && !leftUnresolvedConflicts) {
+      try {
+        await this.install.install(undefined, {
+          dedupe: true,
+          updateExisting: false,
+          import: false,
+        });
+      } catch (err: any) {
+        this.logger.error(`failed installing packages`, err);
+        this.logger.consoleError(`failed installing packages, see the log for full stacktrace. error: ${err.message}`);
+      }
+    }
 
     const getSnapOrTagResults = async () => {
       // if one of the component has conflict, don't snap-merge. otherwise, some of the components would be snap-merged
@@ -598,7 +603,7 @@ export class MergingMain {
     build: boolean
   ): Promise<null | { snappedComponents: ConsumerComponent[]; autoSnappedResults: AutoTagResult[] }> {
     const unmergedComponents = consumer.scope.objects.unmergedComponents.getComponents();
-    logger.debug(`merge-snaps, snapResolvedComponents, total ${unmergedComponents.length.toString()} components`);
+    this.logger.debug(`merge-snaps, snapResolvedComponents, total ${unmergedComponents.length.toString()} components`);
     if (!unmergedComponents.length) return null;
     const ids = BitIds.fromArray(unmergedComponents.map((r) => new BitId(r.id)));
     return this.snapping.snap({
@@ -612,7 +617,7 @@ export class MergingMain {
     const ids = idsToTag.map((id) => {
       return id.toStringWithoutVersion();
     });
-    logger.debug(`merge-snaps, tagResolvedComponents, total ${idsToTag.length.toString()} components`);
+    this.logger.debug(`merge-snaps, tagResolvedComponents, total ${idsToTag.length.toString()} components`);
     return this.snapping.tag({
       ids,
       build,
@@ -646,16 +651,18 @@ export class MergingMain {
   }
 
   static slots = [];
-  static dependencies = [CLIAspect, WorkspaceAspect, SnappingAspect, CheckoutAspect, InstallAspect];
+  static dependencies = [CLIAspect, WorkspaceAspect, SnappingAspect, CheckoutAspect, InstallAspect, LoggerAspect];
   static runtime = MainRuntime;
-  static async provider([cli, workspace, snapping, checkout, install]: [
+  static async provider([cli, workspace, snapping, checkout, install, loggerMain]: [
     CLIMain,
     Workspace,
     SnappingMain,
     CheckoutMain,
-    InstallMain
+    InstallMain,
+    LoggerMain
   ]) {
-    const merging = new MergingMain(workspace, install, snapping, checkout);
+    const logger = loggerMain.createLogger(MergingAspect.id);
+    const merging = new MergingMain(workspace, install, snapping, checkout, logger);
     cli.register(new MergeCmd(merging));
     return merging;
   }
