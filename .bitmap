@@ -2047,6 +2047,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/user-agent"
     },
+    "utils/sort-api-nodes": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/api-reference/utils/sort-api-nodes"
+    },
     "variants": {
         "scope": "teambit.workspace",
         "version": "0.0.669",
