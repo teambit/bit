@@ -18,13 +18,13 @@ export class GraphFromFsBuilder {
   private graph = new LegacyGraph();
   private completed: string[] = [];
   private depth = 1;
-  private shouldThrowOnMissingDep = true;
   private consumer: Consumer;
   constructor(
     private workspace: Workspace,
     private logger: Logger,
     private ignoreIds = new BitIds(),
-    private shouldLoadItsDeps?: ShouldLoadFunc
+    private shouldLoadItsDeps?: ShouldLoadFunc,
+    private shouldThrowOnMissingDep = true
   ) {
     this.consumer = this.workspace.consumer;
   }
