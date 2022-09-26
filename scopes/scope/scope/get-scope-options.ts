@@ -1,4 +1,4 @@
-import { ComponentType } from 'react';
+import { ComponentType, ReactNode } from 'react';
 import { ScopeModel } from '.';
 
 export type GetScopeOptions = {
@@ -7,4 +7,5 @@ export type GetScopeOptions = {
   paneClassName?: string;
   scopeClassName?: string;
   TargetScopeOverview?: ComponentType
+  PaneWrapper?: ComponentType<{ children: ReactNode }>
 };

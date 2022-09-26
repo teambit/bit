@@ -219,12 +219,8 @@ export class ApplicationMain {
     const context = res.results[0].data;
     if (!context) throw new AppNotFound(appName);
     const hostRootDir = this.workspace.getComponentPackagePath(component);
-    return Object.assign(cloneDeep(context), {
-      appName,
-      appComponent: component,
-      hostRootDir,
-      workdir: this.workspace.path,
-    });
+    const appContext = new AppContext(appName, context.dev, component, this.workspace.path, context, hostRootDir);
+    return appContext;
   }
 
   static runtime = MainRuntime;

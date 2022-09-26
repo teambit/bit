@@ -177,6 +177,7 @@ export class ComponentUI {
         containerSlot={this.pageItemSlot}
         onComponentChange={this.handleComponentChange}
         host={host}
+        path={options.path}
         useComponent={options.useComponent}
         componentIdStr={options.componentId}
         useComponentFilters={options.useComponentFilters}
@@ -193,6 +194,7 @@ export class ComponentUI {
         host={host}
         menuItemSlot={this.menuItemSlot}
         useComponent={options.useComponent}
+        path={options.path}
         componentIdStr={options.componentId}
         useComponentFilters={options.useComponentFilters}
       />

@@ -44,6 +44,8 @@ export type MenuProps = {
 
   useComponent?: UseComponentType;
 
+  path?: string,
+
   useComponentFilters?: (componentId?: ComponentID) => Filters;
 };
 function getComponentIdStr(componentIdStr?: string | (() => string | undefined)): string | undefined {
@@ -62,12 +64,13 @@ export function ComponentMenu({
   consumeMethodSlot,
   componentIdStr,
   useComponent,
+  path,
   useComponentFilters,
 }: MenuProps) {
   const idFromLocation = useIdFromLocation();
   const _componentIdStr = getComponentIdStr(componentIdStr);
   const componentId = _componentIdStr ? ComponentID.fromString(_componentIdStr) : undefined;
-  const resolvedComponentIdStr = componentId?.toStringWithoutVersion() || idFromLocation;
+  const resolvedComponentIdStr = path || componentId?.toStringWithoutVersion() || idFromLocation;
 
   const useComponentOptions = {
     logFilters: useComponentFilters?.(componentId),

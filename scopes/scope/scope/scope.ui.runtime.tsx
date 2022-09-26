@@ -138,6 +138,7 @@ export class ScopeUI {
         onSidebarTogglerChange={this.setSidebarToggle}
         cornerSlot={this.cornerSlot}
         paneClassName={options.paneClassName}
+        PaneWrapper={options.PaneWrapper}
       />
     );
   }

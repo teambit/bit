@@ -5,4 +5,5 @@ export type GetComponentsOptions = {
   useComponent?: UseComponentType;
   componentId?: string | (() => string | undefined);
   useComponentFilters?: () => Filters;
+  path?: string;
 };

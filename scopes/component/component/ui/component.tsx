@@ -24,6 +24,7 @@ export type ComponentProps = {
   onComponentChange?: (activeComponent?: ComponentModel) => void;
   useComponent?: UseComponentType;
   useComponentFilters?: (componentId?: ComponentID) => Filters;
+  path?: string;
   componentIdStr?: string | (() => string | undefined);
 };
 
@@ -42,12 +43,13 @@ export function Component({
   onComponentChange,
   componentIdStr,
   useComponent,
+  path,
   useComponentFilters,
 }: ComponentProps) {
   const idFromLocation = useIdFromLocation();
   const _componentIdStr = getComponentIdStr(componentIdStr);
   const componentId = _componentIdStr ? ComponentID.fromString(_componentIdStr) : undefined;
-  const resolvedComponentIdStr = componentId?.toStringWithoutVersion() || idFromLocation;
+  const resolvedComponentIdStr = path || componentId?.toStringWithoutVersion() || idFromLocation;
   const useComponentOptions = {
     logFilters: useComponentFilters?.(componentId),
     customUseComponent: useComponent,
