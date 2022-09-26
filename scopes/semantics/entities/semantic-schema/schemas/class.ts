@@ -11,7 +11,15 @@ export class ClassSchema extends SchemaNode {
   @Transform(schemaObjToInstance)
   readonly doc?: DocSchema;
 
-  constructor(readonly name: string, members: SchemaNode[], readonly location: Location, doc?: DocSchema) {
+  constructor(
+    readonly name: string,
+    readonly signature: string,
+    readonly extendsNodes: SchemaNode[],
+    readonly implementNodes: SchemaNode[],
+    members: SchemaNode[],
+    readonly location: Location,
+    doc?: DocSchema
+  ) {
     super();
     this.members = members;
     this.doc = doc;
