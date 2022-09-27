@@ -73,6 +73,7 @@ export default class ScopeComponentsImporter {
     ids,
     cache = true,
     throwForDependencyNotFound = false,
+    throwForSeederNotFound = true,
     reFetchUnBuiltVersion = true,
     lanes = [],
     ignoreMissingHead = false,
@@ -80,6 +81,7 @@ export default class ScopeComponentsImporter {
     ids: BitIds;
     cache?: boolean;
     throwForDependencyNotFound?: boolean;
+    throwForSeederNotFound?: boolean; // in some cases, the "ids" params are not seeders but deps, e.g. in buildGraphFromFS.
     reFetchUnBuiltVersion?: boolean;
     lanes?: Lane[]; // if ids coming from a lane, add the lane object so we could fetch these ids from the lane's remote
     ignoreMissingHead?: boolean; // needed when fetching "main" objects when on a lane
@@ -116,7 +118,7 @@ export default class ScopeComponentsImporter {
     const remotes = await getScopeRemotes(this.scope);
     // we don't care about the VersionDeps returned here as it may belong to the dependencies
     await this.getExternalMany(uniqExternals, remotes, throwForDependencyNotFound, lanes);
-    const versionDeps = await this.bitIdsToVersionDeps(idsToImport);
+    const versionDeps = await this.bitIdsToVersionDeps(idsToImport, throwForSeederNotFound);
     logger.debug('importMany, completed!');
     return versionDeps;
   }
@@ -719,11 +721,15 @@ export default class ScopeComponentsImporter {
    * convert ids to VersionDependencies with performance in mind.
    * it doesn't go to any remote and it fetches each component only once.
    */
-  private async bitIdsToVersionDeps(ids: BitId[]): Promise<VersionDependencies[]> {
+  private async bitIdsToVersionDeps(ids: BitId[], throwForSeederNotFound = true): Promise<VersionDependencies[]> {
     logger.debug(`bitIdsToVersionDeps, ${ids.length} ids`);
     const compDefs = await this.sources.getMany(ids);
     const versionDepsWithNulls = await mapSeries(compDefs, async ({ component, id }) => {
-      if (!component) throw new ComponentNotFound(id.toString());
+      if (!component) {
+        if (throwForSeederNotFound) throw new ComponentNotFound(id.toString());
+        logger.warn(`bitIdsToVersionDeps failed finding a component ${id.toString()}`);
+        return null;
+      }
       if (component.isEmpty() && !id.hasVersion() && !component.laneHeadLocal) {
         // this happens for example when importing a remote lane and then running "bit fetch --components"
         // the head is empty because it exists on the lane only, it was never tagged and
