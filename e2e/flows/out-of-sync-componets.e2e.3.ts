@@ -287,8 +287,7 @@ describe('components that are not synced between the scope and the consumer', fu
         });
       });
     });
-    // @TODO: FIX ON HARMONY!
-    describe.skip('when the remote component does not exist or does not have this missing version', () => {
+    describe('when the remote component does not exist or does not have this missing version', () => {
       let scopeAfterV1;
       let scopeOutOfSync;
       before(() => {
