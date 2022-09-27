@@ -117,7 +117,7 @@ export default class ScopeComponentsImporter {
     logger.debug('importMany', `total missing externals: ${uniqExternals.length}`);
     const remotes = await getScopeRemotes(this.scope);
     // we don't care about the VersionDeps returned here as it may belong to the dependencies
-    await this.getExternalMany(uniqExternals, remotes, throwForDependencyNotFound, lanes);
+    await this.getExternalMany(uniqExternals, remotes, throwForDependencyNotFound, lanes, throwForSeederNotFound);
     const versionDeps = await this.bitIdsToVersionDeps(idsToImport, throwForSeederNotFound);
     logger.debug('importMany, completed!');
     return versionDeps;
@@ -544,7 +544,8 @@ export default class ScopeComponentsImporter {
     ids: BitId[],
     remotes: Remotes,
     throwForDependencyNotFound = false,
-    lanes: Lane[] = []
+    lanes: Lane[] = [],
+    throwOnUnavailableScope = true
   ): Promise<VersionDependencies[]> {
     if (!ids.length) return [];
     if (lanes.length > 1) throw new Error(`getExternalMany support only one lane`);
@@ -575,7 +576,8 @@ export default class ScopeComponentsImporter {
       },
       ids,
       lanes,
-      context
+      context,
+      throwOnUnavailableScope
     ).fetchFromRemoteAndWrite();
     const componentDefs = await this.sources.getMany(ids);
     const versionDeps = await this.multipleCompsDefsToVersionDeps(componentDefs, lanes);

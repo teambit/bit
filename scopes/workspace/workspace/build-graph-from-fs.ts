@@ -5,7 +5,7 @@ import BitIds from '@teambit/legacy/dist/bit-id/bit-ids';
 import Component from '@teambit/legacy/dist/consumer/component/consumer-component';
 import LegacyGraph from '@teambit/legacy/dist/scope/graph/graph';
 import ScopeComponentsImporter from '@teambit/legacy/dist/scope/component-ops/scope-components-importer';
-import { ComponentNotFound } from '@teambit/legacy/dist/scope/exceptions';
+import { ComponentNotFound, ScopeNotFound } from '@teambit/legacy/dist/scope/exceptions';
 import { ComponentNotFound as ComponentNotFoundInScope } from '@teambit/scope';
 import compact from 'lodash.compact';
 import { BitId } from '@teambit/legacy-bit-id';
@@ -140,7 +140,11 @@ export class GraphFromFsBuilder {
         this.graph.setNode(idStr, component);
         return component;
       } catch (err: any) {
-        if (err instanceof ComponentNotFound || err instanceof ComponentNotFoundInScope) {
+        if (
+          err instanceof ComponentNotFound ||
+          err instanceof ComponentNotFoundInScope ||
+          err instanceof ScopeNotFound
+        ) {
           if (dependenciesOf && !this.shouldThrowOnMissingDep) {
             this.logger.warn(
               `component ${idStr}, dependency of ${dependenciesOf} was not found. continuing without it`
