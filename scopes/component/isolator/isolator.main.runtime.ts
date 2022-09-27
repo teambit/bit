@@ -18,7 +18,6 @@ import {
   KEY_NAME_BY_LIFECYCLE_TYPE,
   PackageManagerInstallOptions,
 } from '@teambit/dependency-resolver';
-import legacyLogger from '@teambit/legacy/dist/logger/logger';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { BitId, BitIds } from '@teambit/legacy/dist/bit-id';
 import LegacyScope from '@teambit/legacy/dist/scope/scope';
@@ -213,8 +212,8 @@ export class IsolatorMain {
     legacyScope?: LegacyScope
   ): Promise<Network> {
     const host = this.componentAspect.getHost();
-    legacyLogger.debug(
-      `isolatorExt, createNetwork ${seeders.join(', ')}. opts: ${JSON.stringify(
+    this.logger.debug(
+      `isolateComponents, ${seeders.join(', ')}. opts: ${JSON.stringify(
         Object.assign({}, opts, { host: opts.host?.name })
       )}`
     );
@@ -222,6 +221,7 @@ export class IsolatorMain {
     const componentsToIsolate = opts.seedersOnly
       ? await host.getMany(seeders)
       : await this.createGraph(seeders, createGraphOpts);
+    this.logger.debug(`isolateComponents, total componentsToIsolate: ${componentsToIsolate.length}`);
     const seedersWithVersions = seeders.map((seeder) => {
       if (seeder._legacy.hasVersion()) return seeder;
       const comp = componentsToIsolate.find((component) => component.id.isEqual(seeder, { ignoreVersion: true }));
@@ -232,7 +232,7 @@ export class IsolatorMain {
     const capsuleList = await this.createCapsules(componentsToIsolate, opts, legacyScope);
     const capsuleDir = this.getCapsulesRootDir(opts.baseDir, opts.rootBaseDir);
     this.logger.debug(
-      `isolatorExt, creating network with base dir: ${opts.baseDir} rootBaseDir: ${opts.rootBaseDir} on final dir: ${capsuleDir}`
+      `creating network with base dir: ${opts.baseDir}, rootBaseDir: ${opts.rootBaseDir}. final capsule-dir: ${capsuleDir}. capsuleList: ${capsuleList.length}`
     );
     return new Network(capsuleList, seedersWithVersions, capsuleDir);
   }
@@ -285,6 +285,7 @@ export class IsolatorMain {
     opts: IsolateComponentsOptions,
     legacyScope?: Scope
   ): Promise<CapsuleList> {
+    this.logger.debug(`createCapsules, ${components.length} components`);
     const installOptions = {
       ...DEFAULT_ISOLATE_INSTALL_OPTIONS,
       ...opts.installOptions,
@@ -517,6 +518,7 @@ export class IsolatorMain {
     baseDir: string,
     opts: IsolateComponentsOptions
   ): Promise<Capsule[]> {
+    this.logger.debug(`createCapsulesFromComponents: ${components.length} components`);
     const capsules: Capsule[] = await Promise.all(
       components.map((component: Component) => {
         return Capsule.createFromComponent(component, baseDir, opts);

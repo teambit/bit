@@ -447,8 +447,8 @@ export default class CommandHelper {
     return this.runCmd(`bit import ${id} --extension`);
   }
 
-  build(id = '', getStderrAsPartOfTheOutput = false) {
-    return this.runCmd(`bit build ${id}`, undefined, undefined, undefined, getStderrAsPartOfTheOutput);
+  build(id = '', flags = '', getStderrAsPartOfTheOutput = false) {
+    return this.runCmd(`bit build ${id} ${flags}`, undefined, undefined, undefined, getStderrAsPartOfTheOutput);
   }
 
   buildComponentWithOptions(id = '', options: Record<string, any>, cwd: string = this.scopes.localPath) {
@@ -602,8 +602,10 @@ export default class CommandHelper {
   mergeLaneFromScope(cwd: string, laneName: string, options = '') {
     return this.runCmd(`bit _merge-lane ${laneName} ${options}`, cwd);
   }
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  diff(id? = '') {
+  tagFromScope(cwd: string, ids: string, options = '') {
+    return this.runCmd(`bit _tag ${ids} ${options} -m msg`, cwd);
+  }
+  diff(id = '') {
     const output = this.runCmd(`bit diff ${id}`);
     return removeChalkCharacters(output);
   }

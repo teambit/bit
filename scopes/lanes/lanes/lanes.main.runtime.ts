@@ -17,6 +17,7 @@ import type { CommunityMain } from '@teambit/community';
 import ComponentAspect, { Component, ComponentMain } from '@teambit/component';
 import removeLanes from '@teambit/legacy/dist/consumer/lanes/remove-lanes';
 import { Lane } from '@teambit/legacy/dist/scope/models';
+import { LaneNotFound } from '@teambit/legacy/dist/api/scope/lib/exceptions/lane-not-found';
 import ScopeComponentsImporter from '@teambit/legacy/dist/scope/component-ops/scope-components-importer';
 import { Scope as LegacyScope } from '@teambit/legacy/dist/scope';
 import { BitId } from '@teambit/legacy-bit-id';
@@ -330,6 +331,7 @@ export class LanesMain {
     const scopeComponentImporter = ScopeComponentsImporter.getInstance(legacyScope);
     const results = await scopeComponentImporter.importLanes([laneId]);
     const laneObject = results[0];
+    if (!laneObject) throw new LaneNotFound(laneId.scope, laneId.name);
 
     if (persistIfNotExists) {
       const exists = await legacyScope.loadLane(laneId);

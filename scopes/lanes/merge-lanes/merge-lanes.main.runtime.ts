@@ -19,7 +19,7 @@ import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { DivergeData } from '@teambit/legacy/dist/scope/component-ops/diverge-data';
 import { RemoveAspect, RemoveMain } from '@teambit/remove';
 import { compact } from 'lodash';
-import { ExportAspect, ExportMain, ObjectList } from '@teambit/export';
+import { ExportAspect, ExportMain } from '@teambit/export';
 import { BitObject } from '@teambit/legacy/dist/scope/objects';
 import { getDivergeData } from '@teambit/legacy/dist/scope/component-ops/get-diverge-data';
 import { MergeLanesAspect } from './merge-lanes.aspect';
@@ -237,6 +237,7 @@ export class MergeLanesMain {
   ): Promise<{
     mergedPreviously: string[];
     mergedNow: string[];
+    exportedIds: string[];
   }> {
     if (this.workspace)
       throw new BitError(
@@ -274,28 +275,23 @@ export class MergeLanesMain {
     });
     const bitObjects = compact(bitObjectsPerComp).map((b) => b.objects);
     await repo.writeObjectsToTheFS(bitObjects.flat() as BitObject[]);
-
+    let exportedIds: string[] = [];
     if (options.push) {
-      const scopeRemotes = await this.scope._legacyRemotes();
-      const grouped: { [scopeName: string]: BitObject[] } = compact(bitObjectsPerComp).reduce((acc, current) => {
-        const scopeName = current.id.scope;
-        if (!scopeName) throw new Error(`${current.id.toString()} has no scope-name`);
-        (acc[scopeName] ||= []).push(...current.objects);
-        return acc;
-      }, {});
-      const manyObjectsPerRemote = await Promise.all(
-        Object.keys(grouped).map(async (scopeName) => {
-          const remote = await scopeRemotes.resolve(scopeName, this.scope.legacyScope);
-          const objectList = await ObjectList.fromBitObjects(grouped[scopeName]);
-          return { remote, objectList };
-        })
-      );
-      await this.exporter.exportObjectList(manyObjectsPerRemote, scopeRemotes);
+      const ids = compact(bitObjectsPerComp).map((b) => b.id);
+      const bitIds = BitIds.fromArray(ids);
+      const { exported } = await this.exporter.exportMany({
+        scope: this.scope.legacyScope,
+        ids: bitIds,
+        idsWithFutureScope: bitIds,
+        allVersions: false,
+      });
+      exportedIds = exported.map((id) => id.toString());
     }
 
     return {
       mergedPreviously: mergedPreviously.map((id) => id.toString()),
       mergedNow: mergedNow.map((id) => id.toString()),
+      exportedIds,
     };
   }
 

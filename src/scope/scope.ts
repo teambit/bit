@@ -96,21 +96,10 @@ export type LegacyOnTagResult = {
   id: BitId;
   builderData: ExtensionDataEntry;
 };
-export type OnTagOpts = {
-  disableTagAndSnapPipelines?: boolean;
-  throwOnError?: boolean; // on the CI it helps to save the results on failure so this is set to false
-  forceDeploy?: boolean; // whether run the deploy-pipeline although the build-pipeline has failed
-  skipTests?: boolean;
-  isSnap?: boolean;
-};
+
 export type IsolateComponentsOptions = {
   packageManagerConfigRootDir?: string;
 };
-export type OnTagFunc = (
-  components: Component[],
-  options: OnTagOpts,
-  isolateOptions: IsolateComponentsOptions
-) => Promise<LegacyOnTagResult[]>;
 
 export default class Scope {
   created = false;
@@ -142,7 +131,6 @@ export default class Scope {
     this.scopeImporter = ScopeComponentsImporter.getInstance(this);
   }
 
-  public onTag: OnTagFunc[] = []; // enable extensions to hook during the tag process
   static onPostExport: (ids: BitId[], lanes: Lane[]) => Promise<void>; // enable extensions to hook after the export process
 
   /**

@@ -24,19 +24,34 @@ import logger from '@teambit/legacy/dist/logger/logger';
 import { sha1 } from '@teambit/legacy/dist/utils';
 import { AutoTagResult, getAutoTagInfo } from '@teambit/legacy/dist/scope/component-ops/auto-tag';
 import { getValidVersionOrReleaseType } from '@teambit/legacy/dist/utils/semver-helper';
-import { LegacyOnTagResult } from '@teambit/legacy/dist/scope/scope';
+import { BuilderMain } from '@teambit/builder';
 import { Log } from '@teambit/legacy/dist/scope/models/version';
-import { BasicTagParams } from '@teambit/legacy/dist/api/consumer/lib/tag';
 import {
   MessagePerComponent,
   MessagePerComponentFetcher,
 } from '@teambit/legacy/dist/scope/component-ops/message-per-component';
 import { ModelComponent } from '@teambit/legacy/dist/scope/models';
 import { DependencyResolverMain } from '@teambit/dependency-resolver';
+import { ScopeMain } from '@teambit/scope';
 import { Workspace } from '@teambit/workspace';
 import { SnappingMain } from './snapping.main.runtime';
 
 export type onTagIdTransformer = (id: BitId) => BitId | null;
+
+export type BasicTagParams = {
+  message: string;
+  ignoreNewestVersion?: boolean;
+  skipTests?: boolean;
+  skipAutoTag?: boolean;
+  build?: boolean;
+  soft?: boolean;
+  persist: boolean;
+  disableTagAndSnapPipelines?: boolean;
+  forceDeploy?: boolean;
+  preReleaseId?: string;
+  editor?: string;
+  unmodified?: boolean;
+};
 
 function updateDependenciesVersions(componentsToTag: Component[], dependencyResolver: DependencyResolverMain): void {
   const getNewDependencyVersion = (id: BitId): BitId | null => {
@@ -128,7 +143,9 @@ function getVersionByEnteredId(
 
 export async function tagModelComponent({
   workspace,
+  scope,
   snapping,
+  builder,
   consumerComponents,
   ids,
   message,
@@ -149,8 +166,10 @@ export async function tagModelComponent({
   packageManagerConfigRootDir,
   dependencyResolver,
 }: {
-  workspace: Workspace;
+  workspace?: Workspace;
+  scope: ScopeMain;
   snapping: SnappingMain;
+  builder: BuilderMain;
   consumerComponents: Component[];
   ids: BitIds;
   exactVersion?: string | null | undefined;
@@ -164,8 +183,8 @@ export async function tagModelComponent({
   autoTaggedResults: AutoTagResult[];
   publishedPackages: string[];
 }> {
-  const consumer = workspace.consumer;
-  const scope = workspace.scope.legacyScope;
+  const consumer = workspace?.consumer;
+  const legacyScope = scope.legacyScope;
   const consumerComponentsIdsMap = {};
   // Concat and unique all the dependencies from all the components so we will not import
   // the same dependency more then once, it's mainly for performance purpose
@@ -179,22 +198,22 @@ export async function tagModelComponent({
   // ids without versions are new. it's impossible that tagged (and not-modified) components has
   // them as dependencies.
   const idsToTriggerAutoTag = idsToTag.filter((id) => id.hasVersion());
-
-  const autoTagData = skipAutoTag ? [] : await getAutoTagInfo(consumer, BitIds.fromArray(idsToTriggerAutoTag));
+  const autoTagData =
+    skipAutoTag || !consumer ? [] : await getAutoTagInfo(consumer, BitIds.fromArray(idsToTriggerAutoTag));
   const autoTagComponents = autoTagData.map((autoTagItem) => autoTagItem.component);
   const autoTagComponentsFiltered = autoTagComponents.filter((c) => !idsToTag.has(c.id));
   const autoTagIds = BitIds.fromArray(autoTagComponentsFiltered.map((autoTag) => autoTag.id));
   const allComponentsToTag = [...componentsToTag, ...autoTagComponentsFiltered];
 
   const messagesFromEditorFetcher = new MessagePerComponentFetcher(idsToTag, autoTagIds);
-  const messagePerId = editor ? await messagesFromEditorFetcher.getMessagesFromEditor(scope.tmp, editor) : [];
+  const messagePerId = editor ? await messagesFromEditorFetcher.getMessagesFromEditor(legacyScope.tmp, editor) : [];
 
   // check for each one of the components whether it is using an old version
   if (!ignoreNewestVersion && !isSnap) {
     const newestVersionsP = allComponentsToTag.map(async (component) => {
       if (component.componentFromModel) {
         // otherwise it's a new component, so this check is irrelevant
-        const modelComponent = await scope.getModelComponentIfExist(component.id);
+        const modelComponent = await legacyScope.getModelComponentIfExist(component.id);
         if (!modelComponent) throw new ShowDoctorError(`component ${component.id} was not found in the model`);
         if (!modelComponent.listVersions().length) return null; // no versions yet, no issues.
         const latest = modelComponent.latest();
@@ -222,7 +241,7 @@ export async function tagModelComponent({
     ? setHashes(allComponentsToTag)
     : await setFutureVersions(
         allComponentsToTag,
-        scope,
+        legacyScope,
         releaseType,
         exactVersion,
         persist,
@@ -239,37 +258,45 @@ export async function tagModelComponent({
   await addLogToComponents(componentsToTag, autoTagComponents, persist, message, messagePerId);
 
   if (soft) {
+    if (!consumer) throw new Error(`unable to soft-tag without consumer`);
     consumer.updateNextVersionOnBitmap(allComponentsToTag, preReleaseId);
   } else {
-    await snapping._addFlattenedDependenciesToComponents(consumer.scope, allComponentsToTag);
+    await snapping._addFlattenedDependenciesToComponents(legacyScope, allComponentsToTag);
     emptyBuilderData(allComponentsToTag);
     addBuildStatus(allComponentsToTag, BuildStatus.Pending);
-    await addComponentsToScope(consumer, allComponentsToTag, build);
-    await updateComponentsVersions(workspace, allComponentsToTag);
+    await addComponentsToScope(legacyScope, allComponentsToTag, Boolean(build), consumer);
+    if (workspace) await updateComponentsVersions(workspace, allComponentsToTag);
   }
 
   const publishedPackages: string[] = [];
   if (build) {
     const onTagOpts = { disableTagAndSnapPipelines, throwOnError: true, forceDeploy, skipTests, isSnap };
-    const isolateOptions = { packageManagerConfigRootDir };
-    const results: Array<LegacyOnTagResult[]> = await mapSeries(scope.onTag, (func) =>
-      func(allComponentsToTag, onTagOpts, isolateOptions)
-    );
-    results.forEach((tagResult) => snapping._updateComponentsByTagResult(allComponentsToTag, tagResult));
+    const seedersOnly = !workspace; // if tag from scope, build only the given components
+    const isolateOptions = { packageManagerConfigRootDir, seedersOnly };
+
+    await scope.reloadAspectsWithNewVersion(allComponentsToTag);
+    const harmonyComps = await (workspace || scope).getManyByLegacy(allComponentsToTag);
+    const { builderDataMap } = await builder.tagListener(harmonyComps, onTagOpts, isolateOptions);
+    const buildResult = scope.builderDataMapToLegacyOnTagResults(builderDataMap);
+
+    snapping._updateComponentsByTagResult(allComponentsToTag, buildResult);
     publishedPackages.push(...snapping._getPublishedPackages(allComponentsToTag));
     addBuildStatus(allComponentsToTag, BuildStatus.Succeed);
-    await mapSeries(allComponentsToTag, (consumerComponent) => scope.sources.enrichSource(consumerComponent));
+    await mapSeries(allComponentsToTag, (consumerComponent) => legacyScope.sources.enrichSource(consumerComponent));
   }
 
   if (!soft) {
     await removeDeletedComponentsFromBitmap(allComponentsToTag, workspace);
-    await scope.objects.persist();
+    await legacyScope.objects.persist();
   }
 
   return { taggedComponents: componentsToTag, autoTaggedResults: autoTagData, publishedPackages };
 }
 
-async function removeDeletedComponentsFromBitmap(comps: Component[], workspace: Workspace) {
+async function removeDeletedComponentsFromBitmap(comps: Component[], workspace?: Workspace) {
+  if (!workspace) {
+    return;
+  }
   await Promise.all(
     comps.map(async (comp) => {
       if (comp.removed) {
@@ -280,16 +307,27 @@ async function removeDeletedComponentsFromBitmap(comps: Component[], workspace: 
   );
 }
 
-async function addComponentsToScope(consumer: Consumer, components: Component[], shouldValidateVersion: boolean) {
-  const lane = await consumer.getCurrentLaneObject();
-  await mapSeries(components, async (component) => {
-    await consumer.scope.sources.addSource({
-      source: component,
-      consumer,
-      lane,
-      shouldValidateVersion,
+async function addComponentsToScope(
+  scope: Scope,
+  components: Component[],
+  shouldValidateVersion: boolean,
+  consumer?: Consumer
+) {
+  const lane = await scope.getCurrentLaneObject();
+  if (consumer) {
+    await mapSeries(components, async (component) => {
+      await scope.sources.addSource({
+        source: component,
+        consumer,
+        lane,
+        shouldValidateVersion,
+      });
     });
-  });
+  } else {
+    await mapSeries(components, async (component) => {
+      await scope.sources.addSourceFromScope(component, lane);
+    });
+  }
 }
 
 function emptyBuilderData(components: Component[]) {
