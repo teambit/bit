@@ -96,7 +96,7 @@ export class DependencyInstaller {
     if (!finalRootDir) {
       throw new RootDirNotDefined();
     }
-    const { workspaceManifest, componentsManifests } = await this.getComponentManifests({
+    const manifests = await this.getComponentManifests({
       ...packageManagerOptions,
       componentDirectoryMap,
       rootPolicy,
@@ -104,8 +104,7 @@ export class DependencyInstaller {
     });
     return this.installComponents(
       finalRootDir,
-      workspaceManifest,
-      componentsManifests,
+      manifests,
       rootPolicy,
       componentDirectoryMap,
       options,
@@ -115,8 +114,7 @@ export class DependencyInstaller {
 
   async installComponents(
     rootDir: string | undefined,
-    workspaceManifest: ProjectManifest,
-    componentsManifests: Record<string, ProjectManifest>,
+    manifests: Record<string, ProjectManifest>,
     rootPolicy: WorkspacePolicy,
     componentDirectoryMap: ComponentMap<string>,
     options: InstallOptions = DEFAULT_INSTALL_OPTIONS,
@@ -175,8 +173,7 @@ export class DependencyInstaller {
     await this.packageManager.install(
       {
         rootDir: finalRootDir,
-        componentsManifests,
-        workspaceManifest,
+        manifests,
         componentDirectoryMap,
       },
       calculatedPmOpts
@@ -213,7 +210,7 @@ export class DependencyInstaller {
       componentDirectoryMap.components,
       options
     );
-    const componentsManifests: Record<string, ProjectManifest> = componentDirectoryMap
+    const manifests: Record<string, ProjectManifest> = componentDirectoryMap
       .toArray()
       .reduce((acc, [component, dir]) => {
         const packageName = this.dependencyResolver.getPackageName(component);
@@ -226,13 +223,13 @@ export class DependencyInstaller {
         }
         return acc;
       }, {});
-    return {
-      workspaceManifest: workspaceManifest.toJson({
+    if (!manifests[rootDir]) {
+      manifests[rootDir] = workspaceManifest.toJson({
         copyPeerToRuntime: copyPeerToRuntimeOnRoot,
         installPeersFromEnvs,
-      }),
-      componentsManifests,
-    };
+      });
+    }
+    return manifests;
   }
 
   private async cleanCompsNodeModules(componentDirectoryMap: ComponentMap<string>) {

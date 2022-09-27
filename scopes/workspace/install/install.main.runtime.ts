@@ -190,8 +190,7 @@ export class InstallMain {
       this.workspace.clearCache();
       await installer.installComponents(
         this.workspace.path,
-        current.workspaceManifest,
-        current.componentsManifests,
+        current.manifests,
         mergedRootPolicy,
         current.componentDirectoryMap,
         { installTeambitBit: false },
@@ -207,7 +206,7 @@ export class InstallMain {
       await this.link(linkOpts);
       prev = current;
       current = await this._getComponentsManifests(installer, mergedRootPolicy, pmInstallOptions);
-    } while (!isManifestsEqual(prev, current));
+    } while (!isEqual(prev.manifests, current.manifests));
     /* eslint-enable no-await-in-loop */
     return current.componentDirectoryMap;
   }
@@ -221,11 +220,10 @@ export class InstallMain {
     >
   ): Promise<{
     componentDirectoryMap: ComponentMap<string>;
-    componentsManifests: Record<string, ProjectManifest>;
-    workspaceManifest: ProjectManifest;
+    manifests: Record<string, ProjectManifest>;
   }> {
     const componentDirectoryMap = await this.getComponentsDirectory([]);
-    const { componentsManifests, workspaceManifest } = await dependencyInstaller.getComponentManifests({
+    const manifests = await dependencyInstaller.getComponentManifests({
       ...installOptions,
       componentDirectoryMap,
       rootPolicy,
@@ -233,8 +231,7 @@ export class InstallMain {
     });
     return {
       componentDirectoryMap,
-      componentsManifests,
-      workspaceManifest,
+      manifests,
     };
   }
 
@@ -460,18 +457,6 @@ export class InstallMain {
     cli.register(...commands);
     return installExt;
   }
-}
-
-interface AllWorkspaceManifests {
-  componentsManifests: Record<string, ProjectManifest>;
-  workspaceManifest: ProjectManifest;
-}
-
-function isManifestsEqual(prev: AllWorkspaceManifests, next: AllWorkspaceManifests): boolean {
-  return (
-    isEqual(prev.componentsManifests, next.componentsManifests) &&
-    isEqual(prev.workspaceManifest, next.workspaceManifest)
-  );
 }
 
 InstallAspect.addRuntime(InstallMain);

@@ -118,15 +118,12 @@ async function generateResolverAndFetcher(
 }
 
 export async function getPeerDependencyIssues(
-  rootManifest: {
-    rootDir: string;
-    manifest: ProjectManifest;
-  },
   manifestsByPaths: Record<string, any>,
   opts: {
     storeDir: string;
     cacheDir: string;
     registries: Registries;
+    rootDir: string;
     proxyConfig: PackageManagerProxyConfig;
     networkConfig: PackageManagerNetworkConfig;
     overrides?: Record<string, string>;
@@ -142,14 +139,10 @@ export async function getPeerDependencyIssues(
     workspacePackages[manifest.name] = workspacePackages[manifest.name] || {};
     workspacePackages[manifest.name][manifest.version] = { dir: rootDir, manifest };
   }
-  projects.push({
-    manifest: rootManifest.manifest,
-    rootDir: rootManifest.rootDir,
-  });
   const registriesMap = getRegistriesMap(opts.registries);
   const storeController = await createStoreController({
     ...opts,
-    rootDir: rootManifest.rootDir,
+    rootDir: opts.rootDir,
   });
   return pnpm.getPeerDependencyIssues(projects, {
     storeController: storeController.ctrl,
@@ -162,7 +155,6 @@ export async function getPeerDependencyIssues(
 
 export async function install(
   rootDir: string,
-  rootManifest: ProjectManifest,
   manifestsByPaths: Record<string, ProjectManifest>,
   storeDir: string,
   cacheDir: string,
@@ -182,10 +174,13 @@ export async function install(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   logger?: Logger
 ) {
-  if (!rootManifest.dependenciesMeta) {
-    rootManifest = {
-      ...rootManifest,
-      dependenciesMeta: {},
+  if (!manifestsByPaths[rootDir].dependenciesMeta) {
+    manifestsByPaths = {
+      ...manifestsByPaths,
+      [rootDir]: {
+        ...manifestsByPaths[rootDir],
+        dependenciesMeta: {},
+      },
     };
   }
   let readPackage: any;
@@ -201,12 +196,6 @@ export async function install(
     hoistingLimits.set('.@', new Set(rootComponents));
   } else if (options?.rootComponentsForCapsules) {
     readPackage = readPackageHookForCapsules;
-  }
-  if (!manifestsByPaths[rootDir]) {
-    manifestsByPaths = {
-      ...manifestsByPaths,
-      [rootDir]: rootManifest,
-    };
   }
   const { packagesToBuild, workspacePackages } = groupPkgs(manifestsByPaths);
   const registriesMap = getRegistriesMap(registries);

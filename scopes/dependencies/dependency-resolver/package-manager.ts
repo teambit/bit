@@ -68,8 +68,7 @@ export type PackageManagerResolveRemoteVersionOptions = {
 
 export interface InstallationContext {
   rootDir: string;
-  componentsManifests: Record<string, ProjectManifest>;
-  workspaceManifest: ProjectManifest;
+  manifests: Record<string, ProjectManifest>;
   componentDirectoryMap: ComponentMap<string>;
 }
 
@@ -86,8 +85,8 @@ export interface PackageManager {
   ): Promise<ResolvedPackageVersion>;
 
   getPeerDependencyIssues?(
-    componentsManifests: Record<string, ProjectManifest>,
-    workspaceManifest: ProjectManifest,
+    rootDir: string,
+    manifests: Record<string, ProjectManifest>,
     options: PackageManagerGetPeerDependencyIssuesOptions
   ): Promise<PeerDependencyIssuesByProjects>;
 
