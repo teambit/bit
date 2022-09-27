@@ -3,6 +3,7 @@ import chalk from 'chalk';
 import { Location, SchemaNode } from '../schema-node';
 import { schemaObjArrayToInstances, schemaObjToInstance } from '../class-transformers';
 import { DocSchema } from './docs';
+import { ExpressionWithTypeArgumentsSchema } from './expression-with-arguments';
 
 export class ClassSchema extends SchemaNode {
   @Transform(schemaObjArrayToInstances)
@@ -13,12 +14,13 @@ export class ClassSchema extends SchemaNode {
 
   constructor(
     readonly name: string,
-    readonly signature: string,
-    readonly extendsNodes: SchemaNode[],
-    readonly implementNodes: SchemaNode[],
     members: SchemaNode[],
     readonly location: Location,
-    doc?: DocSchema
+    readonly signature: string,
+    doc?: DocSchema,
+    readonly typeParams?: string[],
+    readonly extendsNodes?: ExpressionWithTypeArgumentsSchema[],
+    readonly implementNodes?: ExpressionWithTypeArgumentsSchema[]
   ) {
     super();
     this.members = members;

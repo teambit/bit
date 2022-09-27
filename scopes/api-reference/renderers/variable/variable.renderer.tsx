@@ -9,13 +9,15 @@ export const variableRenderer: APINodeRenderer = {
   icon: { name: 'Type', Component: VariableIcon },
   default: true,
   getName: (node) => {
-    const classNode = node as VariableLikeSchema;
-    return classNode.name;
+    const variableNode = node as VariableLikeSchema;
+    return variableNode.name;
   },
 };
 
-function VariableComponent(node: APINodeRenderProps) {
-  return <>{node.displayName}</>;
+function VariableComponent({ node }: APINodeRenderProps) {
+  const variableNode = node as VariableLikeSchema;
+
+  return <>{variableNode.name}</>;
 }
 
 function VariableIcon() {

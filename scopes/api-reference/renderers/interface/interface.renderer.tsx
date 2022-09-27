@@ -9,13 +9,14 @@ export const interfaceRenderer: APINodeRenderer = {
   icon: { name: 'Interface', Component: InterfaceIcon },
   default: true,
   getName: (node) => {
-    const classNode = node as InterfaceSchema;
-    return classNode.name;
+    const interfaceNode = node as InterfaceSchema;
+    return interfaceNode.name;
   },
 };
 
-function InterfaceComponent(node: APINodeRenderProps) {
-  return <>{node.displayName}</>;
+function InterfaceComponent({ node }: APINodeRenderProps) {
+  const interfaceNode = node as InterfaceSchema;
+  return <>{interfaceNode.name}</>;
 }
 
 function InterfaceIcon() {

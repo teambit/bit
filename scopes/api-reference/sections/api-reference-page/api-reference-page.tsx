@@ -51,6 +51,8 @@ export function APIRefPage({ host, rendererSlot, className }: APIRefPageProps) {
       `${selectedAPINode?.renderer?.nodeType}/${selectedAPINode?.renderer?.getName(selectedAPINode.api)}`) ||
     apiTree[0];
 
+  const SelectedAPIComponent = selectedAPINode && selectedAPINode.renderer.Component;
+
   // TODO: add loading screen
   if (loading) {
     return <>loading</>;
@@ -67,6 +69,7 @@ export function APIRefPage({ host, rendererSlot, className }: APIRefPageProps) {
         <div className={styles.selectedAPIDetailsContainer}>
           <H1 className={styles.title}>API Reference</H1>
           <Separator isPresentational className={styles.separator} />
+          {SelectedAPIComponent && <SelectedAPIComponent node={selectedAPINode.api} />}
         </div>
       </Pane>
       <HoverSplitter className={styles.splitter}>

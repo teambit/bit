@@ -4,7 +4,6 @@ import { ComponentType, ReactNode } from 'react';
 
 export type APINodeRenderProps = {
   node: SchemaNode;
-  displayName: string;
 };
 
 export type APINodeRenderer = {

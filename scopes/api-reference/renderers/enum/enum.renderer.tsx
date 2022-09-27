@@ -9,13 +9,14 @@ export const enumRenderer: APINodeRenderer = {
   icon: { name: 'Enum', Component: EnumIcon },
   default: true,
   getName: (node) => {
-    const classNode = node as EnumSchema;
-    return classNode.name;
+    const enumNode = node as EnumSchema;
+    return enumNode.name;
   },
 };
 
-function EnumComponent(node: APINodeRenderProps) {
-  return <>{node.displayName}</>;
+function EnumComponent({ node }: APINodeRenderProps) {
+  const enumNode = node as EnumSchema;
+  return <>{enumNode.name}</>;
 }
 
 function EnumIcon() {

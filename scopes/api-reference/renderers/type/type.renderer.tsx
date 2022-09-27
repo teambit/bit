@@ -9,13 +9,15 @@ export const typeRenderer: APINodeRenderer = {
   icon: { name: 'Type', Component: TypeIcon },
   default: true,
   getName: (node) => {
-    const classNode = node as TypeSchema;
-    return classNode.name;
+    const typeNode = node as TypeSchema;
+    return typeNode.name;
   },
 };
 
-function TypeComponent(node: APINodeRenderProps) {
-  return <>{node.displayName}</>;
+function TypeComponent({ node }: APINodeRenderProps) {
+  const typeNode = node as TypeSchema;
+
+  return <>{typeNode.name}</>;
 }
 
 function TypeIcon() {
