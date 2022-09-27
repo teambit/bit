@@ -14,6 +14,7 @@ import { ExportPersist, ExportValidate, RemovePendingDir } from '../actions';
 import loader from '../../cli/loader';
 import { PersistFailed } from '../exceptions/persist-failed';
 import { MergeResult } from '../repositories/sources';
+import { Ref } from '../objects';
 
 /**
  * ** Legacy and "bit sign" Only **
@@ -134,28 +135,40 @@ async function throwForMissingLocalDependencies(
   components: ModelComponent[],
   lanes: Lane[]
 ) {
-  const compsWithHeads = lanes
+  const compsWithHeads = lanes.length
     ? lanes.map((lane) => lane.toBitIds()).flat()
     : components.map((c) => c.toBitIdWithHead());
+
   await Promise.all(
     versions.map(async (version) => {
-      const originComp = compsWithHeads.find((id) => version.hash.toString() === id.version);
+      const originComp = compsWithHeads.find((id) => version.hash().toString() === id.version);
       if (!originComp) {
         // coz if an older version has a missing dep, then, it's fine. (it can easily happen when exporting lane, which
         // all old versions are exported)
         return;
       }
+      const getOriginCompWithVer = () => {
+        const compObj = components.find((c) => c.toBitId().isEqualWithoutVersion(originComp));
+        if (!compObj) return originComp;
+        const tag = compObj.getTagOfRefIfExists(Ref.from(originComp.version as string));
+        if (tag) return originComp.changeVersion(tag);
+        return originComp;
+      };
       const depsIds = version.getAllFlattenedDependencies();
       await Promise.all(
         depsIds.map(async (depId) => {
           if (depId.scope !== scope.name) return;
-          const existingModelComponent = await scope.getModelComponent(depId);
+          const existingModelComponent = await scope.getModelComponentIfExist(depId);
+          if (!existingModelComponent) {
+            scope.objects.clearCache(); // just in case this error is caught. we don't want to persist anything by mistake.
+            throw new ComponentNotFound(depId.toString(), getOriginCompWithVer().toString());
+          }
           const versionRef = existingModelComponent.getRef(depId.version as string);
           if (!versionRef) throw new Error(`unable to find Ref/Hash of ${depId.toString()}`);
           const objectExist = scope.objects.getCache(versionRef) || (await scope.objects.has(versionRef));
           if (!objectExist) {
             scope.objects.clearCache(); // just in case this error is caught. we don't want to persist anything by mistake.
-            throw new ComponentNotFound(depId.toString(), originComp.toString());
+            throw new ComponentNotFound(depId.toString(), getOriginCompWithVer().toString());
           }
         })
       );
