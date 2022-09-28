@@ -181,5 +181,22 @@ ${mergeSnapError.message}
     return `\n${chalk.underline(title)}\n${body}\n\n`;
   };
 
-  return getSuccessOutput() + getFailureOutput() + getSnapsOutput() + getConflictSummary();
+  const getSummary = () => {
+    const merged = components?.length || 0;
+    const unchangedLegitimately = failedComponents?.filter((f) => f.unchangedLegitimately).length || 0;
+    const failedToMerge = failedComponents?.filter((f) => !f.unchangedLegitimately).length || 0;
+    const autoSnapped =
+      (mergeSnapResults?.snappedComponents.length || 0) + (mergeSnapResults?.autoSnappedResults.length || 0);
+
+    const newLines = '\n\n';
+    const title = chalk.bold.underline('Merge Summary');
+    const mergedStr = `\nTotal Merged: ${chalk.bold(merged.toString())}`;
+    const unchangedLegitimatelyStr = `\nTotal Unchanged: ${chalk.bold(unchangedLegitimately.toString())}`;
+    const failedToMergeStr = `\nTotal Failed: ${chalk.bold(failedToMerge.toString())}`;
+    const autoSnappedStr = `\nTotal Snapped: ${chalk.bold(autoSnapped.toString())}`;
+
+    return newLines + title + mergedStr + unchangedLegitimatelyStr + failedToMergeStr + autoSnappedStr;
+  };
+
+  return getSuccessOutput() + getFailureOutput() + getSnapsOutput() + getConflictSummary() + getSummary();
 }
