@@ -65,6 +65,12 @@ export class SchemaExtractorContext {
    * get the position for the tsserver.
    */
   getPosition(sourceFile: ts.SourceFile, line: number, offset: number): number {
+    console.log(
+      '🚀 ~ file: schema-extractor-context.ts ~ line 68 ~ SchemaExtractorContext ~ getPosition ~ sourceFile',
+      sourceFile,
+      line,
+      offset
+    );
     return sourceFile.getPositionOfLineAndCharacter(line - 1, offset - 1);
   }
 

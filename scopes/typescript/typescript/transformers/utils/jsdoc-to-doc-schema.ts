@@ -84,6 +84,11 @@ async function tagParser(tag: JSDocTag, context: SchemaExtractorContext): Promis
       return simpleTag(tag, TagName.implements, context);
     default: {
       const tagName: TagName | string = tag.tagName.getText(tag.getSourceFile());
+      console.log(tagName);
+      console.log(
+        '🚀 ~ file: jsdoc-to-doc-schema.ts ~ line 95 ~ simpleTag ~ getTextOfJSDocComment(tag.comment)',
+        getTextOfJSDocComment(tag.comment)
+      );
       return simpleTag(tag, tagName, context);
     }
   }

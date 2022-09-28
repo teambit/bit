@@ -83,6 +83,7 @@
         "@teambit/bit.content.what-is-bit": "1.96.2",
         "@teambit/bvm.config": "0.0.26",
         "@teambit/capsule": "0.0.12",
+        "@teambit/code.monaco.code-editor": "0.0.4",
         "@teambit/code.ui.object-formatter": "0.0.1",
         "@teambit/community.constants.links": "0.0.2",
         "@teambit/compilation.content.compiler-overview": "1.95.0",
