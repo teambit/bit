@@ -1,5 +1,5 @@
 import { MainRuntime, CLIMain, CLIAspect } from '@teambit/cli';
-import { flatten, cloneDeep, head } from 'lodash';
+import { flatten, head } from 'lodash';
 import { AspectLoaderMain, AspectLoaderAspect } from '@teambit/aspect-loader';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
