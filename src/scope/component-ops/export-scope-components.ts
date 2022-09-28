@@ -5,7 +5,7 @@ import logger from '../../logger/logger';
 import { Remote, Remotes } from '../../remotes';
 import { ComponentNotFound, MergeConflict, MergeConflictOnRemote } from '../exceptions';
 import ComponentNeedsUpdate from '../exceptions/component-needs-update';
-import { Lane, Version } from '../models';
+import { Lane, Version, ModelComponent } from '../models';
 import Scope from '../scope';
 import { getScopeRemotes } from '../scope-remotes';
 import ScopeComponentsImporter from './scope-components-importer';
@@ -14,6 +14,7 @@ import { ExportPersist, ExportValidate, RemovePendingDir } from '../actions';
 import loader from '../../cli/loader';
 import { PersistFailed } from '../exceptions/persist-failed';
 import { MergeResult } from '../repositories/sources';
+import { Ref } from '../objects';
 
 /**
  * ** Legacy and "bit sign" Only **
@@ -106,7 +107,7 @@ export async function mergeObjects(
     scope.objects.clearCache(); // just in case this error is caught. we don't want to persist anything by mistake.
     throw new MergeConflictOnRemote(idsAndVersionsWithConflicts, idsOfNeedUpdateComps);
   }
-  if (throwForMissingDeps) await throwForMissingLocalDependencies(scope, versions);
+  if (throwForMissingDeps) await throwForMissingLocalDependencies(scope, versions, components, lanesObjects);
   const mergedComponents = mergeResults.filter(({ mergedVersions }) => mergedVersions.length);
   const mergedLanesComponents = mergeAllLanesResults
     .map((r) => r.mergeResults)
@@ -128,20 +129,46 @@ export async function mergeObjects(
  * we can't wait for that step to validate local dependencies because it happens after persisting,
  * and we don't want to persist when local dependencies were not exported.
  */
-async function throwForMissingLocalDependencies(scope: Scope, versions: Version[]) {
+async function throwForMissingLocalDependencies(
+  scope: Scope,
+  versions: Version[],
+  components: ModelComponent[],
+  lanes: Lane[]
+) {
+  const compsWithHeads = lanes.length
+    ? lanes.map((lane) => lane.toBitIds()).flat()
+    : components.map((c) => c.toBitIdWithHead());
+
   await Promise.all(
     versions.map(async (version) => {
+      const originComp = compsWithHeads.find((id) => version.hash().toString() === id.version);
+      if (!originComp) {
+        // coz if an older version has a missing dep, then, it's fine. (it can easily happen when exporting lane, which
+        // all old versions are exported)
+        return;
+      }
+      const getOriginCompWithVer = () => {
+        const compObj = components.find((c) => c.toBitId().isEqualWithoutVersion(originComp));
+        if (!compObj) return originComp;
+        const tag = compObj.getTagOfRefIfExists(Ref.from(originComp.version as string));
+        if (tag) return originComp.changeVersion(tag);
+        return originComp;
+      };
       const depsIds = version.getAllFlattenedDependencies();
       await Promise.all(
         depsIds.map(async (depId) => {
           if (depId.scope !== scope.name) return;
-          const existingModelComponent = await scope.getModelComponent(depId);
+          const existingModelComponent = await scope.getModelComponentIfExist(depId);
+          if (!existingModelComponent) {
+            scope.objects.clearCache(); // just in case this error is caught. we don't want to persist anything by mistake.
+            throw new ComponentNotFound(depId.toString(), getOriginCompWithVer().toString());
+          }
           const versionRef = existingModelComponent.getRef(depId.version as string);
           if (!versionRef) throw new Error(`unable to find Ref/Hash of ${depId.toString()}`);
           const objectExist = scope.objects.getCache(versionRef) || (await scope.objects.has(versionRef));
           if (!objectExist) {
             scope.objects.clearCache(); // just in case this error is caught. we don't want to persist anything by mistake.
-            throw new ComponentNotFound(depId.toString());
+            throw new ComponentNotFound(depId.toString(), getOriginCompWithVer().toString());
           }
         })
       );
