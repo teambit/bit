@@ -112,6 +112,7 @@ export class BuilderService implements EnvService<BuildServiceResults, BuilderDe
           previousTasksResults: [],
           pipeName: this.displayPipeName,
           dev: options.dev,
+          laneId: this.scope.legacyScope.currentLaneId,
         });
         envsBuildContext[executionContext.id] = buildContext;
       })
