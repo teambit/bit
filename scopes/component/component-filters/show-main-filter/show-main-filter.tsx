@@ -17,7 +17,7 @@ export const ShowMainFilter: (defaultState?: boolean) => ShowMainFilterCriteria 
   match: ({ component, lanes }, active) => {
     const onMain = lanes?.viewedLane?.id.isDefault();
     if (onMain || active) return true;
-    const onLane = !!lanes?.isComponentOnNonDefaultLanes(component.id);
+    const onLane = !!lanes?.isComponentOnNonDefaultLanes(component.id, true);
     return onLane;
   },
   state: defaultState,
