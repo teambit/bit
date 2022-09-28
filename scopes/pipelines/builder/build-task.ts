@@ -1,4 +1,5 @@
 import type { Component } from '@teambit/component';
+import { LaneId } from '@teambit/lane-id';
 import { ExecutionContext } from '@teambit/envs';
 import type { Network } from '@teambit/isolator';
 import type { ComponentResult } from './types';
@@ -46,6 +47,11 @@ export interface BuildContext extends ExecutionContext {
    * an example usage is "deploy" task which is running in snap and tag pipeline and has different needs in each one.
    */
   pipeName: PipeName;
+
+  /**
+   * current lane-id if exists. empty when on main.
+   */
+  laneId?: LaneId;
 }
 
 export interface TaskDescriptor {
