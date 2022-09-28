@@ -25,7 +25,7 @@ export class GraphBuilder {
   async getGraph(ids?: ComponentID[], opts: GetGraphOpts = {}): Promise<ComponentGraph> {
     const componentHost = opts.host || this.componentAspect.getHost();
 
-    const legacyGraph = await componentHost.getLegacyGraph(ids);
+    const legacyGraph = await componentHost.getLegacyGraph(ids, false);
     const graph = await this.buildFromLegacy(legacyGraph, { host: opts.host });
     this._graph = graph;
     this._initialized = true;

@@ -1,6 +1,7 @@
 import chai, { expect } from 'chai';
 
 import Helper from '../../src/e2e-helper/e2e-helper';
+import { ComponentNotFound } from '../../src/scope/exceptions';
 
 chai.use(require('chai-fs'));
 
@@ -152,8 +153,11 @@ describe('harmony extension config', function () {
             remoteBeforeExport = helper.scopeHelper.cloneRemoteScope();
           });
           it('should block exporting component without exporting the extension', () => {
-            output = helper.general.runWithTryCatch(`bit export bar/foo`);
-            expect(output).to.have.string(`"${helper.scopes.remote}/dummy-extension-without-logs@0.0.1" was not found`);
+            const err = new ComponentNotFound(
+              `${helper.scopes.remote}/dummy-extension-without-logs@0.0.1`,
+              `${helper.scopes.remote}/bar/foo@0.0.1`
+            );
+            helper.general.expectToThrow(() => helper.command.export('bar/foo'), err);
           });
           describe('exporting extension and component together', () => {
             before(() => {

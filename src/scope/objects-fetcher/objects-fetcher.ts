@@ -40,7 +40,8 @@ export class ObjectFetcher {
     private fetchOptions: Partial<FETCH_OPTIONS>,
     private ids: BitId[],
     private lanes: Lane[] = [],
-    private context = {}
+    private context = {},
+    private throwOnUnavailableScope = true
   ) {}
 
   public async fetchFromRemoteAndWrite() {
@@ -88,7 +89,7 @@ ${failedScopesErr.join('\n')}`);
   private async fetchFromSingleRemote(scopeName: string, ids: string[]): Promise<ObjectItemsStream | null> {
     // when importing directly from a remote scope, throw for ScopeNotFound. otherwise, when
     // fetching flattened dependencies (withoutDependencies=true), ignore this error
-    const shouldThrowOnUnavailableScope = !this.fetchOptions.withoutDependencies;
+    const shouldThrowOnUnavailableScope = this.throwOnUnavailableScope && !this.fetchOptions.withoutDependencies;
     let remote: Remote;
     try {
       remote = await this.remotes.resolve(scopeName, this.scope);
