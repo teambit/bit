@@ -225,10 +225,14 @@ export class LanesModel {
   getDefaultLane = () => this.lanes.find((lane) => lane.id.isDefault());
   getNonMainLanes = () => this.lanes.filter((lane) => !lane.id.isDefault());
 
-  isInViewedLane = (componentId: ComponentID, includeVersion?: boolean) =>
-    this.viewedLane?.components.some(
-      (comp) => (includeVersion && comp.isEqual(componentId)) || comp.name === componentId.name
+  isInViewedLane = (componentId: ComponentID, includeVersion?: boolean) => {
+    if (includeVersion) {
+      return this.viewedLane?.components.some((comp) => includeVersion && comp.isEqual(componentId));
+    }
+    return this.viewedLane?.components.some(
+      (comp) => includeVersion && comp.isEqual(componentId, { ignoreVersion: true })
     );
+  };
 
   getLanesByComponentName = (componentId: ComponentID) => this.lanesByComponentName.get(componentId.fullName);
   getLanesByComponentId = (componentId: ComponentID) => this.lanesByComponentId.get(componentId.toString());
@@ -241,16 +245,26 @@ export class LanesModel {
     return !!this.getLanesByComponentName(componentId)?.some((lane) => lane.id.isDefault());
   };
 
-  isComponentOnMainButNotOnLane = (componentId: ComponentID, includeVersion?: boolean) => {
-    return this.isComponentOnMain(componentId, includeVersion) && !this.isComponentOnNonDefaultLanes(componentId);
+  isComponentOnMainButNotOnLane = (componentId: ComponentID, includeVersion?: boolean, laneId?: LaneId) => {
+    return (
+      this.isComponentOnMain(componentId, includeVersion) &&
+      !this.isComponentOnNonDefaultLanes(componentId, includeVersion, laneId)
+    );
   };
-  isComponentOnLaneButNotOnMain = (componentId: ComponentID, includeVersion?: boolean) => {
-    return !this.isComponentOnMain(componentId, includeVersion) && this.isComponentOnNonDefaultLanes(componentId);
+  isComponentOnLaneButNotOnMain = (componentId: ComponentID, includeVersion?: boolean, laneId?: LaneId) => {
+    return (
+      !this.isComponentOnMain(componentId, includeVersion) &&
+      this.isComponentOnNonDefaultLanes(componentId, includeVersion, laneId)
+    );
   };
-  isComponentOnNonDefaultLanes = (componentId: ComponentID, includeVersion?: boolean) => {
+  isComponentOnNonDefaultLanes = (componentId: ComponentID, includeVersion?: boolean, laneId?: LaneId) => {
     if (includeVersion) {
-      return !!this.getLanesByComponentId(componentId)?.some((lane) => !lane.id.isDefault());
+      return !!this.getLanesByComponentId(componentId)?.some(
+        (lane) => !lane.id.isDefault() && (!laneId || lane.id.isEqual(laneId))
+      );
     }
-    return !!this.getLanesByComponentName(componentId)?.some((lane) => !lane.id.isDefault());
+    return !!this.getLanesByComponentName(componentId)?.some(
+      (lane) => !lane.id.isDefault() && (!laneId || lane.id.isEqual(laneId))
+    );
   };
 }
