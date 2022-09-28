@@ -1257,4 +1257,22 @@ describe('bit lane command', function () {
       expect(() => helper.command.status()).not.to.throw();
     });
   });
+  describe('export when previous versions have deleted dependencies', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents(3);
+      helper.command.tagWithoutBuild();
+      helper.command.export();
+      helper.command.removeComponent(`${helper.scopes.remote}/comp3`, '--remote --force');
+      helper.command.removeComponent('comp3', '--force');
+      helper.fs.outputFile('comp2/index.js', ''); // remove the dependency from the code
+      helper.command.tagWithoutBuild();
+      helper.command.createLane();
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+    });
+    it('should not throw ComponentNotFound on export', () => {
+      expect(() => helper.command.export()).to.not.throw();
+    });
+  });
 });
