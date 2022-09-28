@@ -1,7 +1,8 @@
 import React from 'react';
 import { ClassSchema } from '@teambit/semantics.entities.semantic-schema';
 import { APINodeRenderProps, APINodeRenderer } from '@teambit/api-reference.models.api-node-renderer';
-import { H4, H6 } from '@teambit/documenter.ui.heading';
+import { H5 } from '@teambit/documenter.ui.heading';
+import { CopyBox } from '@teambit/documenter.ui.copy-box';
 
 import styles from './class.renderer.module.scss';
 
@@ -20,16 +21,18 @@ export const classRenderer: APINodeRenderer = {
 function ClassComponent({ node }: APINodeRenderProps) {
   const classNode = node as ClassSchema;
   // console.log('🚀 ~ file: class.renderer.tsx ~ line 19 ~ ClassComponent ~ classNode', classNode);
-  const { name, doc } = classNode;
+  const { name, doc, extendsNodes, implementNodes, signature } = classNode;
   const classComment = doc?.comment;
+  const extendsSignature = extendsNodes?.[0]?.name;
+  const implementsDefiniton = implementNodes?.[0]?.name;
+  const fullSignature = `${signature} ${extendsSignature || ''} ${implementsDefiniton || ''}`;
 
   return (
     <div className={styles.classComponentContainer}>
-      <H4>{name}</H4>
-      <div className={styles.classComment}>{classComment}</div>
-      <div className={styles.classDefinitionContainer}>
-        <H6>Definiton</H6>
-        <div className={styles.classDefintion}></div>
+      <H5 className={styles.className}>{name}</H5>
+      {classComment && <div className={styles.classComment}>{classComment}</div>}
+      <div className={styles.classSignatureContainer}>
+        <CopyBox>{fullSignature}</CopyBox>
       </div>
     </div>
   );

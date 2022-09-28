@@ -1,11 +1,15 @@
 .classComponentContainer {
   padding: 24px 0px;
 }
-.classComment {
-  padding: 24px 0px;
-  font-size: var(--bit-p-xs);
+.className {
+  padding-bottom: 24px;
 }
-.classDefinitionContainer {
+.classComment {
+  font-size: var(--bit-p-xs);
+  padding-bottom: 24px;
+}
+.classSignatureContainer {
   display: flex;
   flex-direction: column;
+  padding-bottom: 24px;
 }
