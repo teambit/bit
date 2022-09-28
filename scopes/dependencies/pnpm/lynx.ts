@@ -118,15 +118,12 @@ async function generateResolverAndFetcher(
 }
 
 export async function getPeerDependencyIssues(
-  rootManifest: {
-    rootDir: string;
-    manifest: ProjectManifest;
-  },
   manifestsByPaths: Record<string, any>,
   opts: {
     storeDir: string;
     cacheDir: string;
     registries: Registries;
+    rootDir: string;
     proxyConfig: PackageManagerProxyConfig;
     networkConfig: PackageManagerNetworkConfig;
     overrides?: Record<string, string>;
@@ -142,14 +139,10 @@ export async function getPeerDependencyIssues(
     workspacePackages[manifest.name] = workspacePackages[manifest.name] || {};
     workspacePackages[manifest.name][manifest.version] = { dir: rootDir, manifest };
   }
-  projects.push({
-    manifest: rootManifest.manifest,
-    rootDir: rootManifest.rootDir,
-  });
   const registriesMap = getRegistriesMap(opts.registries);
   const storeController = await createStoreController({
     ...opts,
-    rootDir: rootManifest.rootDir,
+    rootDir: opts.rootDir,
   });
   return pnpm.getPeerDependencyIssues(projects, {
     storeController: storeController.ctrl,
@@ -161,7 +154,7 @@ export async function getPeerDependencyIssues(
 }
 
 export async function install(
-  rootManifest,
+  rootDir: string,
   manifestsByPaths: Record<string, ProjectManifest>,
   storeDir: string,
   cacheDir: string,
@@ -181,16 +174,19 @@ export async function install(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   logger?: Logger
 ) {
-  if (!rootManifest.manifest.dependenciesMeta) {
-    rootManifest.manifest.dependenciesMeta = {};
+  if (!manifestsByPaths[rootDir].dependenciesMeta) {
+    manifestsByPaths = {
+      ...manifestsByPaths,
+      [rootDir]: {
+        ...manifestsByPaths[rootDir],
+        dependenciesMeta: {},
+      },
+    };
   }
   let readPackage: any;
   let hoistingLimits = new Map();
   if (options?.rootComponents) {
-    const { rootComponentWrappers, rootComponents } = createRootComponentWrapperManifests(
-      rootManifest.rootDir,
-      manifestsByPaths
-    );
+    const { rootComponentWrappers, rootComponents } = createRootComponentWrapperManifests(rootDir, manifestsByPaths);
     manifestsByPaths = {
       ...rootComponentWrappers,
       ...manifestsByPaths,
@@ -201,14 +197,11 @@ export async function install(
   } else if (options?.rootComponentsForCapsules) {
     readPackage = readPackageHookForCapsules;
   }
-  if (!manifestsByPaths[rootManifest.rootDir]) {
-    manifestsByPaths[rootManifest.rootDir] = rootManifest.manifest;
-  }
   const { packagesToBuild, workspacePackages } = groupPkgs(manifestsByPaths);
   const registriesMap = getRegistriesMap(registries);
   const authConfig = getAuthConfig(registries);
   const storeController = await createStoreController({
-    rootDir: rootManifest.rootDir,
+    rootDir,
     storeDir,
     cacheDir,
     registries,
@@ -218,7 +211,7 @@ export async function install(
   });
   const opts: InstallOptions = {
     storeDir: storeController.dir,
-    dir: rootManifest.rootDir,
+    dir: rootDir,
     storeController: storeController.ctrl,
     workspacePackages,
     preferFrozenLockfile: true,
@@ -248,22 +241,22 @@ export async function install(
     streamParser,
   });
   try {
-    await installsRunning[rootManifest.rootDir];
-    installsRunning[rootManifest.rootDir] = mutateModules(packagesToBuild, opts);
-    await installsRunning[rootManifest.rootDir];
-    delete installsRunning[rootManifest.rootDir];
+    await installsRunning[rootDir];
+    installsRunning[rootDir] = mutateModules(packagesToBuild, opts);
+    await installsRunning[rootDir];
+    delete installsRunning[rootDir];
   } catch (err: any) {
     throw pnpmErrorToBitError(err);
   } finally {
     stopReporting();
   }
   if (options.rootComponents) {
-    const modulesState = await readModulesState(path.join(rootManifest.rootDir, 'node_modules'));
+    const modulesState = await readModulesState(path.join(rootDir, 'node_modules'));
     if (modulesState?.injectedDeps) {
       await linkManifestsToInjectedDeps({
         injectedDeps: modulesState.injectedDeps,
         manifestsByPaths,
-        rootDir: rootManifest.rootDir,
+        rootDir,
       });
     }
   }
