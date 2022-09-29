@@ -1,5 +1,8 @@
 .classComponentContainer {
   padding: 24px 0px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 .className {
   padding-bottom: 24px;
@@ -14,5 +17,15 @@
   padding-bottom: 24px;
 }
 .classExample {
-  height: 250px;
+  padding-bottom: 24px;
+}
+.classExampleTitle {
+  padding: 16px 0px;
+}
+.classLocation {
+  padding-bottom: 24px;
+}
+.classLocationLink {
+  max-width: fit-content;
+  font-size: var(--bit-p-xs);
 }

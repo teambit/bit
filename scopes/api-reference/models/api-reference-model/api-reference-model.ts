@@ -11,6 +11,7 @@ export type SchemaQueryResult = {
 export type APINode = {
   api: SchemaNode;
   renderer: APINodeRenderer;
+  componentId: ComponentID;
 };
 
 export class APIReferenceModel {
@@ -19,17 +20,18 @@ export class APIReferenceModel {
   componentId: ComponentID;
 
   constructor(_api: APISchema, _renderers: APINodeRenderer[]) {
-    this.apiNodes = this.mapToAPINode(_api, _renderers);
-    this.apiByType = this.groupByType(this.apiNodes);
     this.componentId = _api.componentId;
+    this.apiNodes = this.mapToAPINode(_api, _renderers, this.componentId);
+    this.apiByType = this.groupByType(this.apiNodes);
   }
 
-  mapToAPINode(api: APISchema, renderers: APINodeRenderer[]): APINode[] {
+  mapToAPINode(api: APISchema, renderers: APINodeRenderer[], componentId: ComponentID): APINode[] {
     const { exports: schemaNodes } = api.module;
     return schemaNodes
       .map((schemaNode) => ({
         api: schemaNode,
         renderer: renderers && renderers.find((renderer) => renderer.predicate(schemaNode)),
+        componentId,
       }))
       .filter((schemaNode) => schemaNode.renderer) as APINode[];
   }

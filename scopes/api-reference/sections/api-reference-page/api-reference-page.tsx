@@ -72,7 +72,9 @@ export function APIRefPage({ host, rendererSlot, className }: APIRefPageProps) {
             API Reference
           </H1>
           <Separator isPresentational className={styles.separator} />
-          {SelectedAPIComponent && <SelectedAPIComponent node={selectedAPINode.api} />}
+          {SelectedAPIComponent && (
+            <SelectedAPIComponent node={selectedAPINode.api} componentId={selectedAPINode.componentId} />
+          )}
         </div>
       </Pane>
       <HoverSplitter className={styles.splitter}>

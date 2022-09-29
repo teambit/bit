@@ -1,9 +1,11 @@
 import React from 'react';
 import { ClassSchema } from '@teambit/semantics.entities.semantic-schema';
 import { APINodeRenderProps, APINodeRenderer } from '@teambit/api-reference.models.api-node-renderer';
-import { H5 } from '@teambit/documenter.ui.heading';
+import { H5, H6 } from '@teambit/documenter.ui.heading';
 import { CopyBox } from '@teambit/documenter.ui.copy-box';
 import { CodeEditor } from '@teambit/code.monaco.code-editor';
+import { ComponentUrl } from '@teambit/component.modules.component-url';
+import { Link } from '@teambit/base-react.navigation.link';
 
 import styles from './class.renderer.module.scss';
 
@@ -19,7 +21,7 @@ export const classRenderer: APINodeRenderer = {
   },
 };
 
-function ClassComponent({ node }: APINodeRenderProps) {
+function ClassComponent({ node, componentId }: APINodeRenderProps) {
   const classNode = node as ClassSchema;
   // console.log('🚀 ~ file: class.renderer.tsx ~ line 19 ~ ClassComponent ~ classNode', classNode);
   const {
@@ -28,7 +30,7 @@ function ClassComponent({ node }: APINodeRenderProps) {
     extendsNodes,
     implementNodes,
     signature,
-    location: { filePath },
+    location: { filePath, line, character },
   } = classNode;
   const comment = doc?.comment;
   const tags = doc?.tags || [];
@@ -44,7 +46,12 @@ function ClassComponent({ node }: APINodeRenderProps) {
   const height = (example?.split('\n').length || 0) * 18 + 25;
   const extendsSignature = extendsNodes?.[0]?.name;
   const implementsDefiniton = implementNodes?.[0]?.name;
-  const fullSignature = `${signature} ${extendsSignature || ''} ${implementsDefiniton || ''}`;
+  const fullSignature = `${signature}${(extendsSignature && ' '.concat(extendsSignature)) || ''} ${
+    implementsDefiniton || ''
+  }`;
+  const componentIdUrl = ComponentUrl.toUrl(componentId, { includeVersion: false });
+  const locationUrl = `${componentIdUrl}/~code/${filePath.split('.')[0]}?version=${componentId.version}`;
+  const locationLabel = `${filePath}:${line}:${character}`;
 
   return (
     <div className={styles.classComponentContainer}>
@@ -54,14 +61,21 @@ function ClassComponent({ node }: APINodeRenderProps) {
         <CopyBox>{fullSignature}</CopyBox>
       </div>
       {example && (
-        <div className={styles.classExample} style={{ height: `${height}px` }}>
+        <div className={styles.classExample}>
+          <H6 className={styles.classExampleTitle}>Example</H6>
           <CodeEditor
             options={{ minimap: { enabled: false }, scrollbar: { vertical: 'hidden' }, scrollBeyondLastLine: false }}
             value={example}
             path={filePath}
+            height={`${height}px`}
           />
         </div>
       )}
+      <div className={styles.classLocation}>
+        <Link href={locationUrl} className={styles.classLocationLink}>
+          {locationLabel}
+        </Link>
+      </div>
     </div>
   );
 }
