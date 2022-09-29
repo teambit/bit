@@ -18,19 +18,15 @@ type BuildFromLegacyGraphOpts = {
  * which makes the _graph prop and other props unpredictable.
  */
 export class GraphBuilder {
-  _graph?: ComponentGraph;
-  _initialized = false;
   constructor(private componentAspect: ComponentMain) {}
 
   async getGraph(ids?: ComponentID[], opts: GetGraphOpts = {}): Promise<ComponentGraph> {
     const componentHost = opts.host || this.componentAspect.getHost();
 
-    const legacyGraph = await componentHost.getLegacyGraph(ids);
+    const legacyGraph = await componentHost.getLegacyGraph(ids, false);
     const graph = await this.buildFromLegacy(legacyGraph, { host: opts.host });
-    this._graph = graph;
-    this._initialized = true;
     graph.seederIds = ids || (await componentHost.listIds());
-    return this._graph;
+    return graph;
   }
 
   private async buildFromLegacy(

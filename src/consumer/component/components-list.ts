@@ -491,9 +491,10 @@ export default class ComponentsList {
     includeRemoved = false
   ): Promise<ListScopeResult[]> {
     const components = await scope.listLocal();
+    const componentsOnMain = components.filter((comp) => comp.head);
     const componentsFilteredByWildcards = namespacesUsingWildcards
-      ? ComponentsList.filterComponentsByWildcard(components, namespacesUsingWildcards)
-      : components;
+      ? ComponentsList.filterComponentsByWildcard(componentsOnMain, namespacesUsingWildcards)
+      : componentsOnMain;
     const componentsSorted = ComponentsList.sortComponentsByName(componentsFilteredByWildcards);
     const results = await Promise.all(
       componentsSorted.map(async (component: ModelComponent) => {

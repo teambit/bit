@@ -422,12 +422,12 @@ export class Workspace implements ComponentFactory {
     return this.scope.getLogs(id, shortHash, startsFrom);
   }
 
-  async getLegacyGraph(ids?: ComponentID[]): Promise<LegacyGraph> {
+  async getLegacyGraph(ids?: ComponentID[], shouldThrowOnMissingDep = true): Promise<LegacyGraph> {
     if (!ids || ids.length < 1) ids = await this.listIds();
 
     const legacyIds = ids.map((id) => id._legacy);
 
-    const legacyGraph = await this.buildOneGraphForComponents(legacyIds);
+    const legacyGraph = await this.buildOneGraphForComponents(legacyIds, undefined, undefined, shouldThrowOnMissingDep);
     return legacyGraph;
   }
 
@@ -527,6 +527,7 @@ export class Workspace implements ComponentFactory {
   }
 
   clearCache() {
+    this.aspectLoader.resetFailedLoadAspects();
     this.logger.debug('clearing the workspace and scope caches');
     delete this._cachedListIds;
     this.componentLoader.clearCache();
@@ -1536,9 +1537,16 @@ needed-for: ${neededFor || '<unknown>'}`);
   async buildOneGraphForComponents(
     ids: BitId[],
     ignoreIds?: BitIds,
-    shouldLoadFunc?: ShouldLoadFunc
+    shouldLoadFunc?: ShouldLoadFunc,
+    shouldThrowOnMissingDep = true
   ): Promise<LegacyGraph> {
-    const graphFromFsBuilder = new GraphFromFsBuilder(this, this.logger, ignoreIds, shouldLoadFunc);
+    const graphFromFsBuilder = new GraphFromFsBuilder(
+      this,
+      this.logger,
+      ignoreIds,
+      shouldLoadFunc,
+      shouldThrowOnMissingDep
+    );
     return graphFromFsBuilder.buildGraph(ids);
   }
 

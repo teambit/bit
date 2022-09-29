@@ -10,7 +10,7 @@ export default class ComponentNotFound extends BitError {
     const baseMsg = dependentId
       ? `error: the component dependency "${chalk.bold(id)}" required by "${chalk.bold(dependentId)}" was not found`
       : `error: component "${chalk.bold(id)}" was not found`;
-    super(`${baseMsg}\nconsider running "bit dependents ${id}" to understand why this component was needed`);
+    super(baseMsg);
     this.code = 127;
     this.id = id;
     this.dependentId = dependentId;
