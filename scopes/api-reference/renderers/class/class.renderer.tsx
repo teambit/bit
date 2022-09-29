@@ -1,5 +1,5 @@
 import React, { HTMLAttributes } from 'react';
-import { ClassSchema, SchemaNode } from '@teambit/semantics.entities.semantic-schema';
+import { ClassSchema, ConstructorSchema, SchemaNode } from '@teambit/semantics.entities.semantic-schema';
 import { APINodeRenderProps, APINodeRenderer } from '@teambit/api-reference.models.api-node-renderer';
 import { H5, H6 } from '@teambit/documenter.ui.heading';
 import { CopyBox } from '@teambit/documenter.ui.copy-box';
@@ -29,7 +29,6 @@ function ClassComponent({ node, componentId }: APINodeRenderProps) {
     location: { filePath, line, character },
     members,
   } = classNode;
-  console.log('🚀 ~ file: class.renderer.tsx ~ line 32 ~ ClassComponent ~ members', members);
   const comment = doc?.comment;
   const tags = doc?.tags || [];
 
@@ -91,11 +90,13 @@ function ClassComponent({ node, componentId }: APINodeRenderProps) {
 
 type ClassMemberProps = { member: SchemaNode } & HTMLAttributes<HTMLDivElement>;
 function ClassMember({ member }: ClassMemberProps) {
-  const { signature, name } = member;
+  const { signature, name, __schema } = member;
+  const displayName = name || (__schema === ConstructorSchema.name && 'constructor') || undefined;
+  // todo fix signature styles + add member location url
   return (
     <div className={styles.classMember}>
-      <div className={styles.classMemberName}>{name}</div>
-      <div className={styles.classMemberSignature}>{signature}</div>
+      {displayName && <div className={styles.classMemberName}>{displayName}</div>}
+      {signature && <CopyBox className={styles.classMemberSignature}>{signature}</CopyBox>}
     </div>
   );
 }
