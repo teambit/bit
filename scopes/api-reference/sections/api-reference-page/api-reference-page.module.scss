@@ -1,14 +1,41 @@
+@import '~@teambit/ui-foundation.ui.constants.z-indexes/z-indexes.module.scss';
+$panelBg: #fafafa;
+
 .apiRefPageContainer {
   min-height: 100%;
   display: flex;
   flex-direction: column;
   width: 100%;
 }
-
 .selectedAPIDetailsContainer {
   padding: 24px 40px;
   display: flex;
   flex-direction: column;
   height: calc(100% - 48px);
   overflow-y: auto;
+}
+.splitter {
+  position: relative;
+
+  > :first-child {
+    z-index: $pane-splitter-zIndex;
+    position: absolute;
+  }
+}
+.collapser {
+  right: 1px;
+}
+.right {
+  position: relative;
+  background: $panelBg;
+  overflow-y: auto;
+  // this is to fix the right panel when it gets too big or too small
+  min-width: 200px;
+  max-width: calc(100% - 200px);
+}
+.left {
+  min-width: 200px;
+  //cannot assign max-width directly to right side
+  max-width: calc(100% - 200px);
+  display: flex;
 }
