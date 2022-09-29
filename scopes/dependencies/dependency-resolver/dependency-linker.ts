@@ -5,7 +5,7 @@ import { Stats } from 'fs';
 import fs from 'fs-extra';
 import resolveFrom from 'resolve-from';
 import { link as legacyLink } from '@teambit/legacy/dist/api/consumer/lib/link';
-import { ComponentMap, Component, ComponentMain } from '@teambit/component';
+import { ComponentMap, Component, ComponentID, ComponentMain } from '@teambit/component';
 import { Logger } from '@teambit/logger';
 import { PathAbsolute } from '@teambit/legacy/dist/utils/path';
 import { BitError } from '@teambit/bit-error';
@@ -140,7 +140,7 @@ export class DependencyLinker {
   ): Promise<LinkResults> {
     this.logger.setStatusLine('linking components');
     this.logger.debug('linking components with options', omit(options, ['consumer']));
-    const result: LinkResults = {};
+    let result: LinkResults = {};
     const finalRootDir = rootDir || this.rootDir;
     const linkingOpts = Object.assign({}, DEFAULT_LINKING_OPTIONS, this.linkingOptions || {}, options || {});
     if (!finalRootDir) {
@@ -172,11 +172,35 @@ export class DependencyLinker {
     }
 
     // We remove the version since it used in order to check if it's core aspects, and the core aspects arrived from aspect loader without versions
-    const componentIdsWithoutVersions: string[] = [];
+    const componentIds: ComponentID[] = [];
     componentDirectoryMap.map((_dir, comp) => {
-      componentIdsWithoutVersions.push(comp.id.toString({ ignoreVersion: true }));
+      componentIds.push(comp.id);
       return undefined;
     });
+    result = {
+      ...result,
+      ...(await this.linkCoreAspectsAndLegacy(rootDir, componentIds, linkingOpts)),
+    };
+    this.logger.consoleSuccess('linking components');
+    return result;
+  }
+
+  public async linkCoreAspectsAndLegacy(
+    rootDir: string | undefined,
+    componentIds: ComponentID[] = [],
+    options: Pick<LinkingOptions, 'linkTeambitBit' | 'linkCoreAspects'> = {}
+  ) {
+    const result: LinkResults = {};
+    const componentIdsWithoutVersions: string[] = [];
+    componentIds.map((id) => {
+      componentIdsWithoutVersions.push(id.toString({ ignoreVersion: true }));
+      return undefined;
+    });
+    const finalRootDir = rootDir || this.rootDir;
+    if (!finalRootDir) {
+      throw new RootDirNotDefined();
+    }
+    const linkingOpts = Object.assign({}, DEFAULT_LINKING_OPTIONS, this.linkingOptions || {}, options || {});
     if (linkingOpts.linkTeambitBit && !this.isBitRepoWorkspace(finalRootDir)) {
       const bitLink = await this.linkBitAspectIfNotExist(
         path.join(finalRootDir, 'node_modules'),
@@ -195,11 +219,10 @@ export class DependencyLinker {
       result.coreAspectsLinks = coreAspectsLinks;
     }
 
-    const teambitLegacyLink = this.linkTeambitLegacy(componentDirectoryMap, finalRootDir);
+    const teambitLegacyLink = this.linkTeambitLegacy(finalRootDir);
     result.teambitLegacyLink = teambitLegacyLink;
-    const harmonyLink = this.linkHarmony(componentDirectoryMap, finalRootDir);
+    const harmonyLink = this.linkHarmony(finalRootDir);
     result.harmonyLink = harmonyLink;
-    this.logger.consoleSuccess('linking components');
     return result;
   }
 
@@ -587,12 +610,12 @@ export class DependencyLinker {
     }
   }
 
-  private linkHarmony(dirMap: ComponentMap<string>, rootDir: string): LinkDetail | undefined {
+  private linkHarmony(rootDir: string): LinkDetail | undefined {
     const name = 'harmony';
     return this.linkNonAspectCorePackages(rootDir, name);
   }
 
-  private linkTeambitLegacy(dirMap: ComponentMap<string>, rootDir: string): LinkDetail | undefined {
+  private linkTeambitLegacy(rootDir: string): LinkDetail | undefined {
     const name = 'legacy';
     return this.linkNonAspectCorePackages(rootDir, name);
   }

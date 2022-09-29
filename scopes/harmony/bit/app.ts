@@ -8,6 +8,10 @@ process.on('uncaughtException', (err) => {
 
 import { nativeCompileCache } from '@teambit/toolbox.performance.v8-cache';
 
+// to activate this on demand, run in the terminal "kill -USR2 <pid>".
+// eslint-disable-next-line @typescript-eslint/no-unused-vars, import/order
+const heapdump = require('heapdump');
+
 // Enable v8 compile cache, keep this before other imports
 nativeCompileCache?.install();
 
