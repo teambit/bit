@@ -272,15 +272,13 @@ describe('components that are not synced between the scope and the consumer', fu
           helper.general.expectToThrow(() => helper.command.status(), err);
         });
       });
-      // @TODO: FIX ON HARMONY!
-      describe.skip('bit show', () => {
+      describe('bit show', () => {
         it('should throw an error suggesting to import the components', () => {
           const err = new ComponentsPendingImport();
           helper.general.expectToThrow(() => helper.command.showComponent('bar/foo'), err);
         });
       });
-      // @TODO: FIX ON HARMONY!
-      describe.skip('bit tag', () => {
+      describe('bit tag', () => {
         it('should throw an error suggesting to import the components', () => {
           const err = new ComponentsPendingImport();
           helper.general.expectToThrow(() => helper.command.tagAllWithoutBuild(), err);
@@ -312,9 +310,7 @@ describe('components that are not synced between the scope and the consumer', fu
         });
         it('should sync .bitmap according to the latest version of the scope', () => {
           helper.command.expectStatusToBeClean();
-          const bitMap = helper.bitMap.read();
-          const newId = `${helper.scopes.remote}/bar/foo@0.0.1`;
-          expect(bitMap).to.have.property(newId);
+          helper.bitMap.expectToHaveIdHarmony('bar/foo', '0.0.1', helper.scopes.remote);
         });
       });
       describe('bit tag', () => {
