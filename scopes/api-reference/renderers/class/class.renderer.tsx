@@ -19,7 +19,6 @@ export const classRenderer: APINodeRenderer = {
 
 function ClassComponent({ node, componentId }: APINodeRenderProps) {
   const classNode = node as ClassSchema;
-  // console.log('🚀 ~ file: class.renderer.tsx ~ line 19 ~ ClassComponent ~ classNode', classNode);
   const {
     name,
     doc,
@@ -92,11 +91,16 @@ type ClassMemberProps = { member: SchemaNode } & HTMLAttributes<HTMLDivElement>;
 function ClassMember({ member }: ClassMemberProps) {
   const { signature, name, __schema } = member;
   const displayName = name || (__schema === ConstructorSchema.name && 'constructor') || undefined;
-  // todo fix signature styles + add member location url
+  const signatureLength = signature?.split('\n').length || 0;
+  const signatureHeight = 40 + (signatureLength - 1) * 14;
   return (
     <div className={styles.classMember}>
       {displayName && <div className={styles.classMemberName}>{displayName}</div>}
-      {signature && <CopyBox className={styles.classMemberSignature}>{signature}</CopyBox>}
+      {signature && (
+        <CopyBox className={styles.classMemberSignature} style={{ height: signatureHeight }}>
+          {signature}
+        </CopyBox>
+      )}
     </div>
   );
 }
