@@ -20,7 +20,7 @@ export class TypePredicateSchema extends SchemaNode {
   readonly type?: SchemaNode;
   constructor(
     readonly location: Location,
-    readonly parameterName: string,
+    readonly name: string,
     type?: SchemaNode,
     readonly hasAssertsModifier = false
   ) {
@@ -31,6 +31,6 @@ export class TypePredicateSchema extends SchemaNode {
   toString() {
     const assertsKeyword = this.hasAssertsModifier ? 'asserts ' : '';
     const typeStr = this.type ? ` is ${this.type.toString()}` : '';
-    return assertsKeyword + this.parameterName + typeStr;
+    return assertsKeyword + this.name + typeStr;
   }
 }

@@ -1,5 +1,5 @@
-import React from 'react';
-import { ClassSchema } from '@teambit/semantics.entities.semantic-schema';
+import React, { HTMLAttributes } from 'react';
+import { ClassSchema, SchemaNode } from '@teambit/semantics.entities.semantic-schema';
 import { APINodeRenderProps, APINodeRenderer } from '@teambit/api-reference.models.api-node-renderer';
 import { H5, H6 } from '@teambit/documenter.ui.heading';
 import { CopyBox } from '@teambit/documenter.ui.copy-box';
@@ -15,10 +15,6 @@ export const classRenderer: APINodeRenderer = {
   nodeType: 'Classes',
   icon: { name: 'Class', Component: ClassIcon },
   default: true,
-  getName: (node) => {
-    const classNode = node as ClassSchema;
-    return classNode.name;
-  },
 };
 
 function ClassComponent({ node, componentId }: APINodeRenderProps) {
@@ -31,7 +27,9 @@ function ClassComponent({ node, componentId }: APINodeRenderProps) {
     implementNodes,
     signature,
     location: { filePath, line, character },
+    members,
   } = classNode;
+  console.log('🚀 ~ file: class.renderer.tsx ~ line 32 ~ ClassComponent ~ members', members);
   const comment = doc?.comment;
   const tags = doc?.tags || [];
 
@@ -52,6 +50,7 @@ function ClassComponent({ node, componentId }: APINodeRenderProps) {
   const componentIdUrl = ComponentUrl.toUrl(componentId, { includeVersion: false });
   const locationUrl = `${componentIdUrl}/~code/${filePath.split('.')[0]}?version=${componentId.version}`;
   const locationLabel = `${filePath}:${line}:${character}`;
+  const hasMembers = members.length > 0;
 
   return (
     <div className={styles.classComponentContainer}>
@@ -76,6 +75,27 @@ function ClassComponent({ node, componentId }: APINodeRenderProps) {
           {locationLabel}
         </Link>
       </div>
+      {hasMembers && (
+        <div className={styles.classMembersContainer}>
+          <H6 className={styles.classMembersTitle}>Members</H6>
+          <div className={styles.classMembersDetailsContainer}>
+            {members.map((member, index) => (
+              <ClassMember key={index} member={member} />
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+type ClassMemberProps = { member: SchemaNode } & HTMLAttributes<HTMLDivElement>;
+function ClassMember({ member }: ClassMemberProps) {
+  const { signature, name } = member;
+  return (
+    <div className={styles.classMember}>
+      <div className={styles.classMemberName}>{name}</div>
+      <div className={styles.classMemberSignature}>{signature}</div>
     </div>
   );
 }

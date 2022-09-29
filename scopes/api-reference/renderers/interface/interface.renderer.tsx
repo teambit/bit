@@ -8,10 +8,6 @@ export const interfaceRenderer: APINodeRenderer = {
   nodeType: 'Interfaces',
   icon: { name: 'Interface', Component: InterfaceIcon },
   default: true,
-  getName: (node) => {
-    const interfaceNode = node as InterfaceSchema;
-    return interfaceNode.name;
-  },
 };
 
 function InterfaceComponent({ node }: APINodeRenderProps) {

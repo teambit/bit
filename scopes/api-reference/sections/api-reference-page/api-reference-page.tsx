@@ -34,22 +34,18 @@ export function APIRefPage({ host, rendererSlot, className }: APIRefPageProps) {
   const apiNodes = (apiModel && flatten(Array.from(apiModel.apiByType.values())).sort(sortAPINodes)) || [];
   const apiTree: string[] = useMemo(() => {
     return apiNodes.map((apiNode) => {
-      return `${apiNode.renderer?.nodeType}/${apiNode.renderer?.getName(apiNode.api)}`;
+      return `${apiNode.renderer?.nodeType}/${apiNode.api.name}`;
     });
   }, [apiNodes]);
 
   const selectedAPINode =
     (selectedAPIType &&
       selectedAPINodeName &&
-      apiModel
-        ?.getByType(selectedAPIType)
-        ?.find((apiNode) => apiNode.renderer.getName(apiNode.api) === selectedAPINodeName)) ||
+      apiModel?.getByType(selectedAPIType)?.find((apiNode) => apiNode.api.name === selectedAPINodeName)) ||
     apiNodes[0];
 
   const selectedAPIName =
-    (selectedAPINode &&
-      `${selectedAPINode?.renderer?.nodeType}/${selectedAPINode?.renderer?.getName(selectedAPINode.api)}`) ||
-    apiTree[0];
+    (selectedAPINode && `${selectedAPINode?.renderer?.nodeType}/${selectedAPINode?.api.name}`) || apiTree[0];
 
   const SelectedAPIComponent = selectedAPINode && selectedAPINode.renderer.Component;
 

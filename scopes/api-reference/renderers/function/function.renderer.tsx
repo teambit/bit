@@ -8,10 +8,6 @@ export const functionRenderer: APINodeRenderer = {
   nodeType: 'Functions',
   icon: { name: 'Function', Component: FunctionIcon },
   default: true,
-  getName: (node) => {
-    const functioNode = node as FunctionLikeSchema;
-    return functioNode.name;
-  },
 };
 
 function FunctionComponent({ node }: APINodeRenderProps) {

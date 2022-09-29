@@ -8,10 +8,6 @@ export const enumRenderer: APINodeRenderer = {
   nodeType: 'Enums',
   icon: { name: 'Enum', Component: EnumIcon },
   default: true,
-  getName: (node) => {
-    const enumNode = node as EnumSchema;
-    return enumNode.name;
-  },
 };
 
 function EnumComponent({ node }: APINodeRenderProps) {

@@ -7,8 +7,8 @@ export function sortAPINodes(apiNodeA: APINode, apiNodeB: APINode): 1 | -1 | 0 {
   if (aNodeType < bNodeType) return -1;
   if (aNodeType > bNodeType) return 1;
 
-  const aNodeName = apiNodeA.renderer.getName(apiNodeA.api);
-  const bNodeName = apiNodeB.renderer.getName(apiNodeB.api);
+  const aNodeName = apiNodeA.api.name || '';
+  const bNodeName = apiNodeB.api.name || '';
 
   if (aNodeName < bNodeName) return -1;
   if (aNodeName > bNodeName) return 1;

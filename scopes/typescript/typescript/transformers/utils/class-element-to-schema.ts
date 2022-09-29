@@ -44,7 +44,9 @@ export async function classElementToSchema(
 
 async function constructor(node: ConstructorDeclaration, context: SchemaExtractorContext) {
   const args = await getParams(node.parameters, context);
-  return new ConstructorSchema(context.getLocation(node), args);
+  const info = await context.getQuickInfo(node);
+  const displaySig = info?.body?.displayString;
+  return new ConstructorSchema(context.getLocation(node), args, displaySig);
 }
 
 async function propertyDeclaration(node: PropertyDeclaration, context: SchemaExtractorContext) {
