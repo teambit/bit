@@ -41,13 +41,13 @@ export class TsconfigWriter {
     const tsconfigFiles = dirsWithTsconfig.map((dir) => path.join(dir, 'tsconfig.json'));
     if (dryRun) return tsconfigFiles;
     if (!dirsWithTsconfig.length) return [];
-    this.logger.clearStatusLine();
     if (!silent) await this.promptForCleaning(tsconfigFiles);
     await this.deleteFiles(tsconfigFiles);
     return tsconfigFiles;
   }
 
   private async promptForWriting(dirs: string[]) {
+    this.logger.clearStatusLine();
     const tsconfigFiles = dirs.map((dir) => path.join(dir, 'tsconfig.json'));
     const ok = await yesno({
       question: `${chalk.underline('The following paths will be written:')}
@@ -60,6 +60,7 @@ ${chalk.bold('Do you want to continue? [yes(y)/no(n)]')}`,
   }
 
   private async promptForCleaning(tsconfigFiles: string[]) {
+    this.logger.clearStatusLine();
     const ok = await yesno({
       question: `${chalk.underline('The following paths will be deleted:')}
 ${tsconfigFiles.join('\n')}
@@ -208,7 +209,7 @@ export function dedupePaths(pathsPerEnvId: PathsPerEnvId[]): PathsPerEnvId[] {
     return acc;
   }, {});
   // rootDir parent is always rootDir, so leave it as is.
-  dedupedPathsPerEnvId[rootDir] = allPathsPerEnvId[rootDir];
+  if (allPathsPerEnvId[rootDir]) dedupedPathsPerEnvId[rootDir] = allPathsPerEnvId[rootDir];
 
   const envIdPerDedupedPaths = invertBy(dedupedPathsPerEnvId);
 
