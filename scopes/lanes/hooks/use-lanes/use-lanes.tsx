@@ -53,12 +53,12 @@ export function useLanes(
 
   let lanesModel: LanesModel | undefined;
   if (lanesContext) lanesModel = lanesContext.lanesModel;
-  else lanesModel = data && LanesModel.from({ data, host: data?.getHost?.id }) || targetLanes;
+  else lanesModel = (data && LanesModel.from({ data, host: data?.getHost?.id })) || targetLanes;
 
   return {
     ...rest,
+    ...(lanesContext || {}),
     loading,
     lanesModel,
-    updateLanesModel: lanesContext?.updateLanesModel,
   };
 }
