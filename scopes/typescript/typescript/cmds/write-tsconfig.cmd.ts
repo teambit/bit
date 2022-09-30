@@ -21,27 +21,37 @@ export default class WriteTsconfigCmd implements Command {
   async report(
     [arg],
     {
+      clean,
+      silent,
       dryRun,
       noDedupe,
       dryRunWithTsconfig,
-      clean,
-    }: { dryRun?: boolean; noDedupe?: boolean; dryRunWithTsconfig?: boolean; clean?: boolean }
+    }: { dryRun?: boolean; noDedupe?: boolean; dryRunWithTsconfig?: boolean; clean?: boolean; silent?: boolean }
   ) {
-    const results = await this.tsMain.writeTsconfigJson({ clean, dedupe: !noDedupe, dryRun, dryRunWithTsconfig });
+    const { writeResults, cleanResults } = await this.tsMain.writeTsconfigJson({
+      clean,
+      dedupe: !noDedupe,
+      dryRun,
+      dryRunWithTsconfig,
+      silent,
+    });
+    const cleanResultsOutput = cleanResults
+      ? `${chalk.green(`the following paths were deleted`)}\n${cleanResults.join('\n')}\n\n`
+      : '';
     if (dryRun) {
-      return JSON.stringify(results, undefined, 2);
+      return JSON.stringify(writeResults, undefined, 2);
     }
-    const totalFiles = results.map((r) => r.paths.length).reduce((acc, current) => acc + current);
-    const title = chalk.green(`${totalFiles} files have been written successfully`);
-    const content = results
+    const totalFiles = writeResults.map((r) => r.paths.length).reduce((acc, current) => acc + current);
+    const writeTitle = chalk.green(`${totalFiles} files have been written successfully`);
+    const writeOutput = writeResults
       .map((result) => {
         const paths = result.paths
           .map((p) => path.join(p, 'tsconfig.json'))
           .map((str) => `  ${str}`)
           .join('\n');
-        return `The following paths were written for according to env ${chalk.bold(result.envId)}\n${paths}`;
+        return `The following paths were written according to env ${chalk.bold(result.envId)}\n${paths}`;
       })
       .join('\n\n');
-    return `${title}\n${content}`;
+    return `${cleanResultsOutput}${writeTitle}\n${writeOutput}`;
   }
 }
