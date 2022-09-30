@@ -13,6 +13,7 @@ import pMapSeries from 'p-map-series';
 import { TsserverClient, TsserverClientOpts } from '@teambit/ts-server';
 import AspectLoaderAspect, { AspectLoaderMain } from '@teambit/aspect-loader';
 import type { Component } from '@teambit/component';
+import EnvsAspect, { EnvsMain } from '@teambit/envs';
 import { TypeScriptExtractor } from './typescript.extractor';
 import { TypeScriptCompilerOptions } from './compiler-options';
 import { TypescriptAspect } from './typescript.aspect';
@@ -33,6 +34,8 @@ import {
   BindingElementTransformer,
 } from './transformers';
 import { CheckTypesCmd } from './cmds/check-types.cmd';
+import { TsconfigWriter } from './tsconfig-writer';
+import WriteTsconfigCmd from './cmds/write-tsconfig.cmd';
 
 export type TsMode = 'build' | 'dev';
 
@@ -40,6 +43,11 @@ export type SchemaTransformerSlot = SlotRegistry<SchemaTransformer[]>;
 
 export type TsConfigTransformContext = {
   // mode: TsMode;
+};
+
+export type TsconfigWriterOptions = {
+  dedupe?: boolean;
+  dryRun?: boolean;
 };
 
 export type TsConfigTransformer = (
@@ -52,7 +60,8 @@ export class TypescriptMain {
     private logger: Logger,
     private schemaTransformerSlot: SchemaTransformerSlot,
     private workspace: Workspace,
-    private depResolver: DependencyResolverMain
+    private depResolver: DependencyResolverMain,
+    private envs: EnvsMain
   ) {}
 
   private tsServer: TsserverClient;
@@ -194,12 +203,32 @@ export class TypescriptMain {
     };
   }
 
-  public getSupportedFilesForTsserver(components: Component[]): string[] {
+  getSupportedFilesForTsserver(components: Component[]): string[] {
     const files = components
       .map((c) => c.filesystem.files)
       .flat()
       .map((f) => f.path);
     return files.filter((f) => f.endsWith('.ts') || f.endsWith('.tsx'));
+  }
+
+  async cleanTsconfigJson() {
+    const components = await this.workspace.list();
+    const runtime = await this.envs.createEnvironment(components);
+    const execContext = runtime.getEnvExecutionContext();
+
+    const results = await new TsconfigWriter(this.workspace).clean(execContext);
+
+    return results;
+  }
+
+  async writeTsconfigJson(options: TsconfigWriterOptions = {}) {
+    const components = await this.workspace.list();
+    const runtime = await this.envs.createEnvironment(components);
+    const execContext = runtime.getEnvExecutionContext();
+
+    const results = await new TsconfigWriter(this.workspace).write(execContext, options);
+
+    return results;
   }
 
   private async onPreWatch(components: Component[], watchOpts: WatchOptions) {
@@ -233,17 +262,19 @@ export class TypescriptMain {
     WorkspaceAspect,
     CLIAspect,
     DependencyResolverAspect,
+    EnvsAspect,
   ];
   static slots = [Slot.withType<SchemaTransformer[]>()];
 
   static async provider(
-    [schema, loggerExt, aspectLoader, workspace, cli, depResolver]: [
+    [schema, loggerExt, aspectLoader, workspace, cli, depResolver, envs]: [
       SchemaMain,
       LoggerMain,
       AspectLoaderMain,
       Workspace,
       CLIMain,
-      DependencyResolverMain
+      DependencyResolverMain,
+      EnvsMain
     ],
     config,
     [schemaTransformerSlot]: [SchemaTransformerSlot]
@@ -251,7 +282,7 @@ export class TypescriptMain {
     schema.registerParser(new TypeScriptParser());
     const logger = loggerExt.createLogger(TypescriptAspect.id);
     aspectLoader.registerPlugins([new SchemaTransformerPlugin(schemaTransformerSlot)]);
-    const tsMain = new TypescriptMain(logger, schemaTransformerSlot, workspace, depResolver);
+    const tsMain = new TypescriptMain(logger, schemaTransformerSlot, workspace, depResolver, envs);
     schemaTransformerSlot.register([
       new ExportDeclaration(),
       new FunctionDeclaration(),
@@ -272,7 +303,8 @@ export class TypescriptMain {
     }
 
     const checkTypesCmd = new CheckTypesCmd(tsMain, workspace, logger);
-    cli.register(checkTypesCmd);
+    const writeTsconfigCmd = new WriteTsconfigCmd(tsMain);
+    cli.register(checkTypesCmd, writeTsconfigCmd);
 
     return tsMain;
   }
