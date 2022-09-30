@@ -5,6 +5,7 @@ import { useQuery } from '@teambit/ui-foundation.ui.react-router.use-query';
 import { useLocation } from '@teambit/base-react.navigation.link';
 import { LaneId } from '@teambit/lane-id';
 import { LanesContext, LanesContextModel } from './lanes-context';
+import { VirtualFile } from '../../../toolbox/fs/virtual-file/virtual-file';
 
 export type LanesProviderProps = {
   children: ReactNode;
@@ -45,7 +46,13 @@ export function LanesProvider({ children, viewedLaneId, targetLanes }: LanesProv
 
   const updateViewedLane = (_viewedLaneId?: LaneId) => {
     lanesState?.setViewedLane(_viewedLaneId);
-    setLanesState(lanesState);
+    setLanesState(
+      new LanesModel({
+        lanes: lanesState?.lanes,
+        viewedLane: lanesState?.viewedLane,
+        currentLane: lanesState?.currentLane,
+      })
+    );
   };
 
   const lanesContextModel: LanesContextModel = {
