@@ -9,10 +9,11 @@ export default class WriteTsconfigCmd implements Command {
   alias = '';
   group = 'development';
   options = [
+    ['c', 'clean', 'delete tsconfig files from the workspace. highly recommended to run it with "--dry-run" first'],
+    ['s', 'silent', 'do not prompt for confirmation'],
+    ['', 'no-dedupe', "write tsconfig.json inside each one of the component's dir, avoid deduping"],
     ['', 'dry-run', 'show the paths that tsconfig will be written per env'],
     ['', 'dry-run-with-tsconfig', 'show the tsconfig.json content and the paths it will be written per env'],
-    ['', 'no-dedupe', "write tsconfig.json inside each one of the component's dir, avoid deduping"],
-    ['', 'clean', 'delete tsconfig files from the workspace. highly recommended to run it with "--dry-run" first'],
   ] as CommandOptions;
 
   constructor(private tsMain: TypescriptMain) {}
@@ -26,7 +27,7 @@ export default class WriteTsconfigCmd implements Command {
       clean,
     }: { dryRun?: boolean; noDedupe?: boolean; dryRunWithTsconfig?: boolean; clean?: boolean }
   ) {
-    const results = await this.tsMain.writeTsconfigJson({ dryRun, dedupe: !noDedupe });
+    const results = await this.tsMain.writeTsconfigJson({ clean, dedupe: !noDedupe, dryRun, dryRunWithTsconfig });
     if (dryRun) {
       return JSON.stringify(results, undefined, 2);
     }

@@ -34,7 +34,7 @@ import {
   BindingElementTransformer,
 } from './transformers';
 import { CheckTypesCmd } from './cmds/check-types.cmd';
-import { TsconfigWriter } from './tsconfig-writer';
+import { TsconfigPathsPerEnv, TsconfigWriter } from './tsconfig-writer';
 import WriteTsconfigCmd from './cmds/write-tsconfig.cmd';
 
 export type TsMode = 'build' | 'dev';
@@ -46,8 +46,11 @@ export type TsConfigTransformContext = {
 };
 
 export type TsconfigWriterOptions = {
+  clean?: boolean;
+  silent?: boolean; // no prompt
   dedupe?: boolean;
   dryRun?: boolean;
+  dryRunWithTsconfig?: boolean;
 };
 
 export type TsConfigTransformer = (
@@ -61,7 +64,8 @@ export class TypescriptMain {
     private schemaTransformerSlot: SchemaTransformerSlot,
     private workspace: Workspace,
     private depResolver: DependencyResolverMain,
-    private envs: EnvsMain
+    private envs: EnvsMain,
+    private tsConfigWriter: TsconfigWriter
   ) {}
 
   private tsServer: TsserverClient;
@@ -211,24 +215,32 @@ export class TypescriptMain {
     return files.filter((f) => f.endsWith('.ts') || f.endsWith('.tsx'));
   }
 
-  async cleanTsconfigJson() {
+  async cleanTsconfigJson(options: TsconfigWriterOptions = {}) {
     const components = await this.workspace.list();
     const runtime = await this.envs.createEnvironment(components);
     const execContext = runtime.getEnvExecutionContext();
 
-    const results = await new TsconfigWriter(this.workspace).clean(execContext);
+    const results = await new TsconfigWriter(this.workspace, this.logger).clean(execContext, options);
 
     return results;
   }
 
-  async writeTsconfigJson(options: TsconfigWriterOptions = {}) {
+  async writeTsconfigJson(options: TsconfigWriterOptions = {}): Promise<{
+    cleanResults?: string[];
+    writeResults: TsconfigPathsPerEnv[];
+  }> {
     const components = await this.workspace.list();
     const runtime = await this.envs.createEnvironment(components);
     const execContext = runtime.getEnvExecutionContext();
 
-    const results = await new TsconfigWriter(this.workspace).write(execContext, options);
+    let cleanResults: string[] | undefined;
+    if (options.clean) {
+      cleanResults = await this.tsConfigWriter.clean(execContext, options);
+    }
 
-    return results;
+    const writeResults = await this.tsConfigWriter.write(execContext, options);
+
+    return { writeResults, cleanResults };
   }
 
   private async onPreWatch(components: Component[], watchOpts: WatchOptions) {
@@ -282,7 +294,8 @@ export class TypescriptMain {
     schema.registerParser(new TypeScriptParser());
     const logger = loggerExt.createLogger(TypescriptAspect.id);
     aspectLoader.registerPlugins([new SchemaTransformerPlugin(schemaTransformerSlot)]);
-    const tsMain = new TypescriptMain(logger, schemaTransformerSlot, workspace, depResolver, envs);
+    const tsconfigWriter = new TsconfigWriter(workspace, logger);
+    const tsMain = new TypescriptMain(logger, schemaTransformerSlot, workspace, depResolver, envs, tsconfigWriter);
     schemaTransformerSlot.register([
       new ExportDeclaration(),
       new FunctionDeclaration(),

@@ -1,16 +1,21 @@
 import fs from 'fs-extra';
 import path from 'path';
-import { invertBy } from 'lodash';
+import yesno from 'yesno';
+import { PathLinuxRelative } from '@teambit/legacy/dist/utils/path';
+import { compact, invertBy, uniq } from 'lodash';
+import { PromptCanceled } from '@teambit/legacy/dist/prompts/exceptions';
 import { Environment, ExecutionContext } from '@teambit/envs';
 import { Workspace } from '@teambit/workspace';
+import { Logger } from '@teambit/logger';
+import chalk from 'chalk';
 import { TsconfigWriterOptions } from './typescript.main.runtime';
 
-type TsconfigPathsPerEnv = { envId: string; tsconfig: Record<string, any>; paths: string[] };
+export type TsconfigPathsPerEnv = { envId: string; tsconfig: Record<string, any>; paths: string[] };
 
 type PathsPerEnv = { env: Environment; id: string; paths: string[] };
 
 export class TsconfigWriter {
-  constructor(private workspace: Workspace) {}
+  constructor(private workspace: Workspace, private logger: Logger) {}
 
   async write(
     envsExecutionContext: ExecutionContext[],
@@ -23,12 +28,50 @@ export class TsconfigWriter {
       paths: pathsPerEnv.paths,
     }));
     if (options.dryRun) return tsconfigPathsPerEnv;
+    if (!options.silent) await this.promptForWriting(tsconfigPathsPerEnv.map((p) => p.paths).flat());
     await this.writeFiles(tsconfigPathsPerEnv);
     return tsconfigPathsPerEnv;
   }
 
-  async clean(envsExecutionContext: ExecutionContext[]) {
-    // const pathsPerEnvs = this.getPathsPerEnv(envsExecutionContext, { dedupe: false }); // don't dedupe, get everything.
+  async clean(envsExecutionContext: ExecutionContext[], { dryRun, silent }: TsconfigWriterOptions): Promise<string[]> {
+    const pathsPerEnvs = this.getPathsPerEnv(envsExecutionContext, { dedupe: false });
+    const componentPaths = pathsPerEnvs.map((p) => p.paths).flat();
+    const allPossibleDirs = getAllPossibleDirsFromPaths(componentPaths);
+    const dirsWithTsconfig = await filterDirsWithTsconfigFile(allPossibleDirs);
+    const tsconfigFiles = dirsWithTsconfig.map((dir) => path.join(dir, 'tsconfig.json'));
+    if (dryRun) return tsconfigFiles;
+    if (!dirsWithTsconfig.length) return [];
+    this.logger.clearStatusLine();
+    if (!silent) await this.promptForCleaning(tsconfigFiles);
+    await this.deleteFiles(tsconfigFiles);
+    return tsconfigFiles;
+  }
+
+  private async promptForWriting(dirs: string[]) {
+    const tsconfigFiles = dirs.map((dir) => path.join(dir, 'tsconfig.json'));
+    const ok = await yesno({
+      question: `${chalk.underline('The following paths will be written:')}
+${tsconfigFiles.join('\n')}
+${chalk.bold('Do you want to continue? [yes(y)/no(n)]')}`,
+    });
+    if (!ok) {
+      throw new PromptCanceled();
+    }
+  }
+
+  private async promptForCleaning(tsconfigFiles: string[]) {
+    const ok = await yesno({
+      question: `${chalk.underline('The following paths will be deleted:')}
+${tsconfigFiles.join('\n')}
+${chalk.bold('Do you want to continue? [yes(y)/no(n)]')}`,
+    });
+    if (!ok) {
+      throw new PromptCanceled();
+    }
+  }
+
+  private async deleteFiles(tsconfigFiles: string[]) {
+    await Promise.all(tsconfigFiles.map((f) => fs.remove(f)));
   }
 
   private async writeFiles(tsconfigPathsPerEnvs: TsconfigPathsPerEnv[]) {
@@ -71,6 +114,32 @@ export class TsconfigWriter {
 
 type PathsPerEnvId = { id: string; paths: string[] };
 
+async function filterDirsWithTsconfigFile(dirs: string[]): Promise<string[]> {
+  const dirsWithTsconfig = await Promise.all(
+    dirs.map(async (dir) => {
+      const hasTsconfig = await fs.pathExists(path.join(dir, 'tsconfig.json'));
+      return hasTsconfig ? dir : undefined;
+    })
+  );
+  return compact(dirsWithTsconfig);
+}
+
+function getAllPossibleDirsFromPaths(paths: PathLinuxRelative[]): PathLinuxRelative[] {
+  const dirs = paths.map((p) => getAllParentsDirOfPath(p)).flat();
+  dirs.push('.'); // add the root dir
+  return uniq(dirs);
+}
+
+function getAllParentsDirOfPath(p: PathLinuxRelative): PathLinuxRelative[] {
+  const all: string[] = [];
+  let current = p;
+  while (current !== '.') {
+    all.push(current);
+    current = path.dirname(current);
+  }
+  return all;
+}
+
 /**
  * easier to understand by an example:
  * input:
@@ -101,39 +170,40 @@ export function dedupePaths(pathsPerEnvId: PathsPerEnvId[]): PathsPerEnvId[] {
     return acc;
   }, {});
   const allPaths = Object.keys(individualPathPerEnvId);
+  const allPossibleDirs = getAllPossibleDirsFromPaths(allPaths);
 
-  const parentPathsPerEnvId: { [path: string]: string | null } = {}; // null when parent-dir has same amount of comps per env.
+  const allPathsPerEnvId: { [path: string]: string | null } = {}; // null when parent-dir has same amount of comps per env.
 
-  const parseDirRecursively = (dir: string) => {
-    if (!(dir in parentPathsPerEnvId)) {
-      const allPathsShareRootDir = dir === rootDir ? allPaths : allPaths.filter((p) => p.startsWith(`${dir}/`));
-      const countPerEnv: { [env: string]: number } = {};
-      allPathsShareRootDir.forEach((p) => {
-        const envIdStr = individualPathPerEnvId[p];
-        if (countPerEnv[envIdStr]) countPerEnv[envIdStr] += 1;
-        else countPerEnv[envIdStr] = 1;
-      });
-      const max = Math.max(...Object.values(countPerEnv));
-      const envWithMax = Object.keys(countPerEnv).filter((env) => countPerEnv[env] === max);
-      if (!envWithMax.length) throw new Error(`must be at least one env related to path "${dir}"`);
-      if (envWithMax.length > 1) parentPathsPerEnvId[dir] = null;
-      else parentPathsPerEnvId[dir] = envWithMax[0];
+  const calculateBestEnvForDir = (dir: string) => {
+    if (individualPathPerEnvId[dir]) {
+      // it's the component dir, so it's the best env
+      allPathsPerEnvId[dir] = individualPathPerEnvId[dir];
+      return;
     }
-
-    // recursive stops when reached root-dir.
-    if (dir !== rootDir) parseDirRecursively(path.dirname(dir));
+    const allPathsShareSameDir = dir === rootDir ? allPaths : allPaths.filter((p) => p.startsWith(`${dir}/`));
+    const countPerEnv: { [env: string]: number } = {};
+    allPathsShareSameDir.forEach((p) => {
+      const envIdStr = individualPathPerEnvId[p];
+      if (countPerEnv[envIdStr]) countPerEnv[envIdStr] += 1;
+      else countPerEnv[envIdStr] = 1;
+    });
+    const max = Math.max(...Object.values(countPerEnv));
+    const envWithMax = Object.keys(countPerEnv).filter((env) => countPerEnv[env] === max);
+    if (!envWithMax.length) throw new Error(`must be at least one env related to path "${dir}"`);
+    if (envWithMax.length > 1) allPathsPerEnvId[dir] = null;
+    else allPathsPerEnvId[dir] = envWithMax[0];
   };
 
-  allPaths.forEach((dirPath) => {
-    parseDirRecursively(path.dirname(dirPath));
+  allPossibleDirs.forEach((dirPath) => {
+    calculateBestEnvForDir(dirPath);
   });
 
-  const allPathsPerEnvId = { ...parentPathsPerEnvId, ...individualPathPerEnvId };
   // this is the actual deduping. if found a shorter path with the same env, then no need for this path.
-  // return only the paths that their parent is null or has a different env.
+  // in other words, return only the paths that their parent is null or has a different env.
   const dedupedPathsPerEnvId = Object.keys(allPathsPerEnvId).reduce((acc, current) => {
-    if (allPathsPerEnvId[current] && allPathsPerEnvId[path.dirname(current)] !== allPathsPerEnvId[current])
+    if (allPathsPerEnvId[current] && allPathsPerEnvId[path.dirname(current)] !== allPathsPerEnvId[current]) {
       acc[current] = allPathsPerEnvId[current];
+    }
 
     return acc;
   }, {});
@@ -141,9 +211,6 @@ export function dedupePaths(pathsPerEnvId: PathsPerEnvId[]): PathsPerEnvId[] {
   dedupedPathsPerEnvId[rootDir] = allPathsPerEnvId[rootDir];
 
   const envIdPerDedupedPaths = invertBy(dedupedPathsPerEnvId);
-  console.log(
-    'OUTPUT',
-    Object.keys(envIdPerDedupedPaths).map((envIdStr) => ({ id: envIdStr, paths: envIdPerDedupedPaths[envIdStr] }))
-  );
+
   return Object.keys(envIdPerDedupedPaths).map((envIdStr) => ({ id: envIdStr, paths: envIdPerDedupedPaths[envIdStr] }));
 }
