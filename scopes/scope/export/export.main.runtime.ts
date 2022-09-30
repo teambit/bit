@@ -47,6 +47,7 @@ import {
 import { BitObject, Ref } from '@teambit/legacy/dist/scope/objects';
 import { PersistFailed } from '@teambit/legacy/dist/scope/exceptions/persist-failed';
 import { getAllVersionHashes } from '@teambit/legacy/dist/scope/component-ops/traverse-versions';
+import ScopeComponentsImporter from '@teambit/legacy/dist/scope/component-ops/scope-components-importer';
 import { ExportAspect } from './export.aspect';
 import { ExportCmd } from './export-cmd';
 import { ResumeExportCmd } from './resume-export-cmd';
@@ -257,7 +258,15 @@ export class ExportMain {
         // if lane is exported, components from other remotes may be exported to this remote. we need their history.
         return localTagsOrHashes;
       }
-      const allHashes = await getAllVersionHashes(modelComponent, scope.objects, true);
+      let stopAt: Ref | undefined;
+      if (lane && !lane.isNew) {
+        const scopeComponentImporter = new ScopeComponentsImporter(scope);
+        const remoteLanes = await scopeComponentImporter.importLanes([lane.toLaneId()]);
+        const remoteLane = remoteLanes[0];
+        const headOnRemote = remoteLane?.getComponentByName(modelComponent.toBitId())?.head;
+        stopAt = headOnRemote;
+      }
+      const allHashes = await getAllVersionHashes({ modelComponent, repo: scope.objects, stopAt });
       await addMainHeadIfPossible(allHashes, modelComponent);
       return modelComponent.switchHashesWithTagsIfExist(allHashes);
     };

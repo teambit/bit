@@ -84,12 +84,8 @@ export async function mergeObjects(
     ? { mergeResults: [], errors: [] } // for lanes, no need to merge component objects, the lane is merged later.
     : await scope.sources.mergeComponents(components, versions);
 
-  // add all objects to the cache, it is needed for lanes later on. also it might be
-  // good regardless to update the cache with the new data.
-  [...components, ...versions].forEach((bitObject) => scope.objects.setCache(bitObject));
-
   const mergeAllLanesResults = await mapSeries(lanesObjects, (laneObject) =>
-    scope.sources.mergeLane(laneObject, false)
+    scope.sources.mergeLane(laneObject, false, versions, components)
   );
   const lanesErrors = mergeAllLanesResults.map((r) => r.mergeErrors).flat();
   const componentsNeedUpdate = [

@@ -16,24 +16,38 @@ import { getAllVersionHashes } from './traverse-versions';
  * the remote head, all the snaps from this parent will be considered local incorrectly. we need to traverse also the
  * remote to be able to do the diff between the local snaps and the remote snaps.
  */
-export async function getDivergeData(
-  repo: Repository,
-  modelComponent: ModelComponent,
-  remoteHead: Ref | null,
-  checkedOutLocalHead?: Ref | null, // in case locally on the workspace it has a different version
-  throws = true // otherwise, save the error instance in the `DivergeData` object,
-): Promise<DivergeData> {
+export async function getDivergeData({
+  repo,
+  modelComponent,
+  remoteHead,
+  checkedOutLocalHead, // in case locally on the workspace it has a different version
+  throws = true, // otherwise, save the error instance in the `DivergeData` object,
+  versionObjects, // relevant for remote-scope where during export the data is not in the repo yet.
+}: {
+  repo: Repository;
+  modelComponent: ModelComponent;
+  remoteHead: Ref | null;
+  checkedOutLocalHead?: Ref | null;
+  throws?: boolean;
+  versionObjects?: Version[];
+}): Promise<DivergeData> {
   const isOnLane = modelComponent.laneHeadLocal || modelComponent.laneHeadLocal === null;
   const localHead = checkedOutLocalHead || (isOnLane ? modelComponent.laneHeadLocal : modelComponent.getHead());
   if (!remoteHead) {
     if (localHead) {
-      const allLocalHashes = await getAllVersionHashes(modelComponent, repo, false);
+      const allLocalHashes = await getAllVersionHashes({ modelComponent, repo, throws: false, versionObjects });
       return new DivergeData(allLocalHashes);
     }
     return new DivergeData();
   }
   if (!localHead) {
-    const allRemoteHashes = await getAllVersionHashes(modelComponent, repo, false, remoteHead);
+    const allRemoteHashes = await getAllVersionHashes({
+      modelComponent,
+      repo,
+      throws: false,
+      startFrom: remoteHead,
+      versionObjects,
+    });
     return new DivergeData([], allRemoteHashes);
   }
 
