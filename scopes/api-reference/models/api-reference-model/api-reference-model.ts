@@ -27,11 +27,16 @@ export class APIReferenceModel {
 
   mapToAPINode(api: APISchema, renderers: APINodeRenderer[], componentId: ComponentID): APINode[] {
     const { exports: schemaNodes } = api.module;
+    const defaultRenderers = renderers.filter((renderer) => renderer.default);
+    const nonDefaultRenderers = renderers.filter((renderer) => !renderer.default);
+
     return schemaNodes
       .map((schemaNode) => ({
-        api: schemaNode,
-        renderer: renderers && renderers.find((renderer) => renderer.predicate(schemaNode)),
         componentId,
+        api: schemaNode,
+        renderer:
+          nonDefaultRenderers.find((renderer) => renderer.predicate(schemaNode)) ||
+          defaultRenderers.find((renderer) => renderer.predicate(schemaNode)),
       }))
       .filter((schemaNode) => schemaNode.renderer) as APINode[];
   }
