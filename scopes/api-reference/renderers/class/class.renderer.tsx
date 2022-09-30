@@ -46,7 +46,7 @@ function ClassComponent({ node, componentId }: APINodeRenderProps) {
     implementsDefiniton || ''
   }`;
   const componentIdUrl = ComponentUrl.toUrl(componentId, { includeVersion: false });
-  const locationUrl = `${componentIdUrl}/~code/${filePath.split('.')[0]}?version=${componentId.version}`;
+  const locationUrl = `${componentIdUrl}/~code/${filePath}?version=${componentId.version}`;
   const locationLabel = `${filePath}:${line}:${character}`;
   const hasMembers = members.length > 0;
 
@@ -69,7 +69,7 @@ function ClassComponent({ node, componentId }: APINodeRenderProps) {
         </div>
       )}
       <div className={styles.classLocation}>
-        <Link href={locationUrl} className={styles.classLocationLink}>
+        <Link external={true} href={locationUrl} className={styles.classLocationLink}>
           {locationLabel}
         </Link>
       </div>

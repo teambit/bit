@@ -11,6 +11,7 @@ import { typeRenderer } from '@teambit/api-reference.renderers.type';
 import { functionRenderer } from '@teambit/api-reference.renderers.function';
 import { enumRenderer } from '@teambit/api-reference.renderers.enum';
 import { variableRenderer } from '@teambit/api-reference.renderers.variable';
+import { unresolvedRenderer } from '@teambit/api-reference.renderers.unresolved';
 
 import { APIReferenceAspect } from './api-reference.aspect';
 
@@ -31,6 +32,7 @@ export class APIReferenceUI {
     variableRenderer,
     functionRenderer,
     enumRenderer,
+    unresolvedRenderer,
   ];
 
   static async provider(

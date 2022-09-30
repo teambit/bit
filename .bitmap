@@ -1025,6 +1025,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/api-reference/renderers/type"
     },
+    "renderers/unresolved": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/api-reference/renderers/unresolved"
+    },
     "renderers/variable": {
         "scope": "",
         "version": "",
