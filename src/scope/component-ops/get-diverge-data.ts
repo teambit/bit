@@ -114,7 +114,8 @@ bit import ${modelComponent.id()} --objects`);
   if (remoteHeadExistsLocally && !hasMultipleParents) {
     return new DivergeData(snapsOnLocal, [], remoteHead, error);
   }
-  const remoteVersion = (await repo.load(remoteHead)) as Version | undefined;
+  const remoteVersion =
+    ((await repo.load(remoteHead)) as Version | undefined) || versionObjects?.find((v) => v.hash().isEqual(remoteHead));
   if (!remoteVersion) {
     const err = new VersionNotFoundOnFS(remoteHead.toString(), modelComponent.id());
     if (throws) throw err;
