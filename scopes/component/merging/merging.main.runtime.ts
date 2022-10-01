@@ -327,7 +327,7 @@ export class MergingMain {
     };
     const currentId = getCurrentId();
     if (!currentId) {
-      const divergeData = await getDivergeData(repo, modelComponent, otherLaneHead, null, false);
+      const divergeData = await getDivergeData({ repo, modelComponent, remoteHead: otherLaneHead, throws: false });
       return { currentComponent: null, componentFromModel: componentOnLane, id, mergeResults: null, divergeData };
     }
     const getCurrentComponent = () => {
@@ -360,12 +360,24 @@ export class MergingMain {
     if (!otherLaneHead) {
       throw new Error(`merging: unable finding a hash for the version ${version} of ${id.toString()}`);
     }
-    const divergeData = await getDivergeData(repo, modelComponent, otherLaneHead, localHead, false);
+    const divergeData = await getDivergeData({
+      repo,
+      modelComponent,
+      remoteHead: otherLaneHead,
+      checkedOutLocalHead: localHead,
+      throws: false,
+    });
     if (divergeData.err) {
       const mainHead = modelComponent.head;
       if (divergeData.err instanceof NoCommonSnap && options?.resolveUnrelated && mainHead) {
         const hasResolvedFromMain = async (hashToCompare: Ref | null) => {
-          const divergeDataFromMain = await getDivergeData(repo, modelComponent, mainHead, hashToCompare, false);
+          const divergeDataFromMain = await getDivergeData({
+            repo,
+            modelComponent,
+            remoteHead: mainHead,
+            checkedOutLocalHead: hashToCompare,
+            throws: false,
+          });
           if (!divergeDataFromMain.err) return true;
           return !(divergeDataFromMain.err instanceof NoCommonSnap);
         };

@@ -205,7 +205,7 @@ export default class Component extends BitObject {
     if (isTag(version)) {
       return includeOrphaned ? this.hasTagIncludeOrphaned(version) : this.hasTag(version);
     }
-    const allHashes = await getAllVersionHashes(this, repo, false);
+    const allHashes = await getAllVersionHashes({ modelComponent: this, repo, throws: false });
     return allHashes.some((hash) => hash.toString() === version);
   }
 
@@ -248,7 +248,7 @@ export default class Component extends BitObject {
   async setDivergeData(repo: Repository, throws = true, fromCache = true): Promise<void> {
     if (!this.divergeData || !fromCache) {
       const remoteHead = this.laneHeadRemote || this.remoteHead || null;
-      this.divergeData = await getDivergeData(repo, this, remoteHead, undefined, throws);
+      this.divergeData = await getDivergeData({ repo, modelComponent: this, remoteHead, throws });
     }
   }
 
