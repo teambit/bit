@@ -19,7 +19,7 @@ export default class WriteTsconfigCmd implements Command {
   constructor(private tsMain: TypescriptMain) {}
 
   async report(
-    [arg],
+    _args,
     {
       clean,
       silent,
