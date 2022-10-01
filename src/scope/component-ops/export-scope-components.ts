@@ -154,14 +154,19 @@ async function throwForMissingLocalDependencies(
       await Promise.all(
         depsIds.map(async (depId) => {
           if (depId.scope !== scope.name) return;
-          const existingModelComponent = await scope.getModelComponentIfExist(depId);
+          const existingModelComponent =
+            (await scope.getModelComponentIfExist(depId)) ||
+            components.find((c) => c.toBitId().isEqualWithoutVersion(depId));
           if (!existingModelComponent) {
             scope.objects.clearCache(); // just in case this error is caught. we don't want to persist anything by mistake.
             throw new ComponentNotFound(depId.toString(), getOriginCompWithVer().toString());
           }
           const versionRef = existingModelComponent.getRef(depId.version as string);
           if (!versionRef) throw new Error(`unable to find Ref/Hash of ${depId.toString()}`);
-          const objectExist = scope.objects.getCache(versionRef) || (await scope.objects.has(versionRef));
+          const objectExist =
+            scope.objects.getCache(versionRef) ||
+            (await scope.objects.has(versionRef)) ||
+            versions.find((v) => v.hash().isEqual(versionRef));
           if (!objectExist) {
             scope.objects.clearCache(); // just in case this error is caught. we don't want to persist anything by mistake.
             throw new ComponentNotFound(depId.toString(), getOriginCompWithVer().toString());
