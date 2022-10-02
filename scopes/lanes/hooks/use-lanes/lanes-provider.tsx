@@ -5,7 +5,6 @@ import { useQuery } from '@teambit/ui-foundation.ui.react-router.use-query';
 import { useLocation } from '@teambit/base-react.navigation.link';
 import { LaneId } from '@teambit/lane-id';
 import { LanesContext, LanesContextModel } from './lanes-context';
-import { VirtualFile } from '../../../toolbox/fs/virtual-file/virtual-file';
 
 export type LanesProviderProps = {
   children: ReactNode;
