@@ -84,12 +84,8 @@ export async function mergeObjects(
     ? { mergeResults: [], errors: [] } // for lanes, no need to merge component objects, the lane is merged later.
     : await scope.sources.mergeComponents(components, versions);
 
-  // add all objects to the cache, it is needed for lanes later on. also it might be
-  // good regardless to update the cache with the new data.
-  [...components, ...versions].forEach((bitObject) => scope.objects.setCache(bitObject));
-
   const mergeAllLanesResults = await mapSeries(lanesObjects, (laneObject) =>
-    scope.sources.mergeLane(laneObject, false)
+    scope.sources.mergeLane(laneObject, false, versions, components)
   );
   const lanesErrors = mergeAllLanesResults.map((r) => r.mergeErrors).flat();
   const componentsNeedUpdate = [
@@ -158,14 +154,19 @@ async function throwForMissingLocalDependencies(
       await Promise.all(
         depsIds.map(async (depId) => {
           if (depId.scope !== scope.name) return;
-          const existingModelComponent = await scope.getModelComponentIfExist(depId);
+          const existingModelComponent =
+            (await scope.getModelComponentIfExist(depId)) ||
+            components.find((c) => c.toBitId().isEqualWithoutVersion(depId));
           if (!existingModelComponent) {
             scope.objects.clearCache(); // just in case this error is caught. we don't want to persist anything by mistake.
             throw new ComponentNotFound(depId.toString(), getOriginCompWithVer().toString());
           }
           const versionRef = existingModelComponent.getRef(depId.version as string);
           if (!versionRef) throw new Error(`unable to find Ref/Hash of ${depId.toString()}`);
-          const objectExist = scope.objects.getCache(versionRef) || (await scope.objects.has(versionRef));
+          const objectExist =
+            scope.objects.getCache(versionRef) ||
+            (await scope.objects.has(versionRef)) ||
+            versions.find((v) => v.hash().isEqual(versionRef));
           if (!objectExist) {
             scope.objects.clearCache(); // just in case this error is caught. we don't want to persist anything by mistake.
             throw new ComponentNotFound(depId.toString(), getOriginCompWithVer().toString());

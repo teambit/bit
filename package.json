@@ -1,6 +1,6 @@
 {
   "name": "@teambit/legacy",
-  "version": "1.0.357",
+  "version": "1.0.358",
   "license": "Apache-2.0",
   "main": "./dist/api.js",
   "preferGlobal": true,
@@ -141,6 +141,7 @@
     "graphql-request": "3.4.0",
     "graphviz": "0.0.9",
     "group-array": "1.0.0",
+    "heapdump": "0.3.15",
     "ignore": "3.3.10",
     "ini-builder": "1.1.1",
     "ink": "3.2.0",

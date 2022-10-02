@@ -15,11 +15,9 @@ describe('ComponentList', function () {
     },
   });
   describe('listLocalScope', function () {
-    let modelComponent;
     before(() => {
       // @ts-ignore
       this.timeout(0);
-      modelComponent = getModelComponent();
     });
     it('should return an empty array when there are no components in the scope', async () => {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -27,23 +25,6 @@ describe('ComponentList', function () {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const results = await ComponentsList.listLocalScope(scope);
       expect(results).to.deep.equal([]);
-    });
-    it('should return results with the correct id', async () => {
-      const scope = getScope(modelComponent);
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      const results = await ComponentsList.listLocalScope(scope);
-      const result = results[0];
-      expect(result).to.have.property('id');
-      expect(result.id).to.be.an.instanceOf(BitId);
-    });
-    it('should return results with the correct deprecated status', async () => {
-      modelComponent.deprecated = true;
-      const scope = getScope(modelComponent);
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      const results = await ComponentsList.listLocalScope(scope);
-      const result = results[0];
-      expect(result).to.have.property('deprecated');
-      expect(result.deprecated).to.be.true;
     });
   });
   describe('listScope', () => {

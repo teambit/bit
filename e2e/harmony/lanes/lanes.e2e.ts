@@ -1275,4 +1275,44 @@ describe('bit lane command', function () {
       expect(() => helper.command.export()).to.not.throw();
     });
   });
+  describe('some components are on a lane some are not', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents(3);
+      helper.command.tagWithoutBuild('comp3');
+      helper.command.export();
+      helper.command.createLane();
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+
+      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.addRemoteScope();
+    });
+    it('bit list should not show components from the lanes', () => {
+      const list = helper.command.listRemoteScopeParsed();
+      expect(list).to.have.lengthOf(1);
+    });
+    it('bit import should not throw', () => {
+      expect(() => helper.command.importComponent('*')).to.not.throw();
+    });
+  });
+  describe('export on lane with tiny cache', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents(1, false);
+      helper.command.createLane();
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.runCmd('bit config set cache.max.objects 1');
+    });
+    after(() => {
+      helper.command.runCmd('bit config del cache.max.objects');
+    });
+    // previously, it was throwing "HeadNotFound"/"ComponentNotFound" when there were many objects in the cache
+    it('should not throw', () => {
+      expect(() => helper.command.export()).not.to.throw();
+    });
+  });
 });
