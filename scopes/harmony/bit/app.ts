@@ -20,6 +20,12 @@ import { bootstrap } from '@teambit/legacy/dist/bootstrap';
 import { handleErrorAndExit } from '@teambit/legacy/dist/cli/handle-errors';
 import { runCLI } from './load-bit';
 
+if (!/nosignal/.test(process.env.NODE_HEAPDUMP_OPTIONS)) {
+  process.on('SIGUSR2', function () {
+    heapdump.writeSnapshot(`${process.env.HEAPDUMP_PATH}/${process.env.SCOPE_NAME}` + Date.now() + '.heapsnapshot');
+  });
+}
+
 // eslint-disable-next-line @typescript-eslint/no-floating-promises
 initApp();
 
