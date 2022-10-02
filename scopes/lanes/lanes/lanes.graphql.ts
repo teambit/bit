@@ -1,4 +1,5 @@
 import { Schema } from '@teambit/graphql';
+import { LaneId } from '@teambit/lane-id';
 import { LaneData } from '@teambit/legacy/dist/scope/lanes/lanes';
 import gql from 'graphql-tag';
 import { flatten, slice } from 'lodash';
@@ -36,10 +37,14 @@ export function lanesSchema(lanesMainRuntime: LanesMain): Schema {
         color: Boolean
       }
 
+      type LaneId {
+        name: String!
+        scope: String!
+      }
+
       type Lane {
-        id: String!
-        isMerged: Boolean
-        remote: String
+        id: LaneId!
+        hash: String
         components(offset: Int, limit: Int): [Component!]!
         readmeComponent: Component
       }
@@ -67,9 +72,9 @@ export function lanesSchema(lanesMainRuntime: LanesMain): Schema {
           let lanes: LaneData[] = [];
 
           if (!ids || ids.length === 0) {
-            lanes = await lanesMain.getLanes({});
+            lanes = await lanesMain.getLanes({ showDefaultLane: true });
           } else {
-            lanes = flatten(await Promise.all(ids.map((id) => lanesMain.getLanes({ name: id }))));
+            lanes = flatten(await Promise.all(ids.map((id) => lanesMain.getLanes({ name: LaneId.parse(id).name }))));
           }
 
           if (limit || offset) {
@@ -79,9 +84,9 @@ export function lanesSchema(lanesMainRuntime: LanesMain): Schema {
           return lanes;
         },
         current: async (lanesMain: LanesMain) => {
-          const currentLaneId = lanesMain.getCurrentLaneName();
-          if (!currentLaneId) return undefined;
-          const [currentLane] = await lanesMain.getLanes({ name: currentLaneId });
+          const currentLaneName = lanesMain.getCurrentLaneName();
+          if (!currentLaneName) return undefined;
+          const [currentLane] = await lanesMain.getLanes({ name: currentLaneName });
           return currentLane;
         },
         diff: async (
@@ -96,9 +101,7 @@ export function lanesSchema(lanesMainRuntime: LanesMain): Schema {
         },
       },
       Lane: {
-        id: (lane: LaneData) => lane.name,
-        isMerged: (lane: LaneData) => lane.isMerged,
-        remote: (lane: LaneData) => lane.remote,
+        id: (lane: LaneData) => lane.id.toObject(),
         components: async (lane: LaneData) => {
           const laneComponents = await lanesMainRuntime.getLaneComponentModels(lane);
           return laneComponents;

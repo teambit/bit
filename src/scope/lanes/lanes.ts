@@ -157,6 +157,7 @@ export default class Lanes {
           id: laneObject.readmeComponent.id,
           head: laneObject.readmeComponent.head?.toString(),
         },
+        hash: laneObject.hash().toString(),
       };
     };
     if (name) {
@@ -209,4 +210,5 @@ export type LaneData = {
   isMerged: boolean | null;
   readmeComponent?: { id: BitId; head?: string };
   log?: Log;
+  hash: string;
 };

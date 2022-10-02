@@ -41,7 +41,7 @@ export function ComponentCompare({ navSlot, host, routeSlot }: ComponentCompareP
   const location = useLocation();
 
   const isWorkspace = host === 'teambit.workspace/workspace';
-  const allVersionInfo = component.logs?.slice().reverse() || [];
+  const allVersionInfo = component.logs?.slice() || [];
   const isNew = allVersionInfo.length === 0;
   const compareVersion =
     isWorkspace && !isNew && !location?.search.includes('version') ? 'workspace' : component.id.version;
