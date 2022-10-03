@@ -6,39 +6,23 @@ import {
   JSDocPropertyTag,
   JSDocReturnTag,
   JSDocTag,
-  Node,
   SyntaxKind,
 } from 'typescript';
-import { getJsDoc, canHaveJsDoc } from 'tsutils';
-import pMapSeries from 'p-map-series';
 import {
-  DocSchema,
   PropertyLikeTagSchema,
   ReturnTagSchema,
   TagName,
   TagSchema,
 } from '@teambit/semantics.entities.semantic-schema';
+import { Formatter } from '@teambit/formatter';
 import { SchemaExtractorContext } from '../../schema-extractor-context';
 import { typeNodeToSchema } from './type-node-to-schema';
 
-export async function jsDocToDocSchema(node: Node, context: SchemaExtractorContext): Promise<DocSchema | undefined> {
-  if (!canHaveJsDoc(node)) {
-    return undefined;
-  }
-  const jsDocs = getJsDoc(node);
-  if (!jsDocs.length) {
-    return undefined;
-  }
-  // not sure how common it is to have multiple JSDocs. never seen it before.
-  // regardless, in typescript implementation of methods like `getJSDocDeprecatedTag()`, they use the first one. (`getFirstJSDocTag()`)
-  const jsDoc = jsDocs[0];
-  const location = context.getLocation(jsDoc);
-  const comment = getTextOfJSDocComment(jsDoc.comment);
-  const tags = jsDoc.tags ? await pMapSeries(jsDoc.tags, (tag) => tagParser(tag, context)) : undefined;
-  return new DocSchema(location, jsDoc.getText(), comment, tags);
-}
-
-async function tagParser(tag: JSDocTag, context: SchemaExtractorContext): Promise<TagSchema> {
+export async function tagParser(
+  tag: JSDocTag,
+  context: SchemaExtractorContext,
+  formatter: Formatter
+): Promise<TagSchema> {
   // for some reason, in some cases, if `tag.getSourceFile()` is not provided to the `getText()`, it throws "Cannot read property 'text' of undefined"
 
   switch (tag.kind) {
@@ -84,9 +68,15 @@ async function tagParser(tag: JSDocTag, context: SchemaExtractorContext): Promis
       return simpleTag(tag, TagName.implements, context);
     default: {
       const tagName: TagName | string = tag.tagName.getText(tag.getSourceFile());
-      // if(tagName === 'example') {
-      //   const formattedComment =  getTextOfJSDocComment(tag.comment) // run thru prettier
-      // }
+      if (tagName === 'example') {
+        const comment = getTextOfJSDocComment(tag.comment);
+        try {
+          const formattedComment = comment && (await formatter.formatSnippet(comment)); // run thru prettier
+          return new TagSchema(context.getLocation(tag), tagName, formattedComment);
+        } catch (e) {
+          return simpleTag(tag, tagName, context);
+        }
+      }
       return simpleTag(tag, tagName, context);
     }
   }

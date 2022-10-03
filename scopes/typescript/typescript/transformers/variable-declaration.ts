@@ -10,7 +10,6 @@ import { SchemaExtractorContext } from '../schema-extractor-context';
 import { ExportIdentifier } from '../export-identifier';
 import { getParams } from './utils/get-params';
 import { parseReturnTypeFromQuickInfo, parseTypeFromQuickInfo } from './utils/parse-type-from-quick-info';
-import { jsDocToDocSchema } from './utils/jsdoc-to-doc-schema';
 
 export class VariableDeclaration implements SchemaTransformer {
   predicate(node: Node) {
@@ -30,7 +29,7 @@ export class VariableDeclaration implements SchemaTransformer {
     const info = await context.getQuickInfo(varDec.name);
     const displaySig = info?.body?.displayString || '';
     const location = context.getLocation(varDec);
-    const doc = await jsDocToDocSchema(varDec, context);
+    const doc = await context.jsDocToDocSchema(varDec, context);
     if (varDec.initializer?.kind === ts.SyntaxKind.ArrowFunction) {
       const args = await getParams((varDec.initializer as ArrowFunction).parameters, context);
       const typeStr = parseReturnTypeFromQuickInfo(info);

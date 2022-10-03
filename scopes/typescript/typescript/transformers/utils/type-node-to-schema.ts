@@ -46,7 +46,6 @@ import pMapSeries from 'p-map-series';
 import { SchemaExtractorContext } from '../../schema-extractor-context';
 import { getParams } from './get-params';
 import { typeElementToSchema } from './type-element-to-schema';
-import { jsDocToDocSchema } from './jsdoc-to-doc-schema';
 
 // eslint-disable-next-line complexity
 export async function typeNodeToSchema(node: TypeNode, context: SchemaExtractorContext): Promise<SchemaNode> {
@@ -190,7 +189,7 @@ async function functionType(node: FunctionTypeNode, context: SchemaExtractorCont
   const returnType = await typeNodeToSchema(node.type, context);
   const location = context.getLocation(node);
   const modifiers = node.modifiers?.map((modifier) => modifier.getText()) || [];
-  const doc = await jsDocToDocSchema(node, context);
+  const doc = await context.jsDocToDocSchema(node, context);
   return new FunctionLikeSchema(location, name, params, returnType, '', modifiers as Modifier[], doc);
 }
 

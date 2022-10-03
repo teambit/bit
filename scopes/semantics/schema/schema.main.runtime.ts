@@ -4,7 +4,7 @@ import { Slot, SlotRegistry } from '@teambit/harmony';
 import GraphqlAspect, { GraphqlMain } from '@teambit/graphql';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
-import { PrettierAspect, PrettierMain } from '@teambit/prettier';
+import { PrettierConfigMutator } from '@teambit/defender.prettier.config-mutator';
 import { APISchema, Export } from '@teambit/semantics.entities.semantic-schema';
 import { Parser } from './parser';
 import { SchemaAspect } from './schema.aspect';
@@ -79,11 +79,18 @@ export class SchemaMain {
   async getSchema(component: Component): Promise<APISchema> {
     this.logger.debug(`getSchema of ${component.id.toString()}`);
     const env = this.envs.getEnv(component).env;
+    // types need to be fixed
+    const formatter = env.getFormatter(null, [
+      (config: PrettierConfigMutator) => {
+        config.setKey('parser', 'typescript');
+        return config;
+      },
+    ]);
     if (typeof env.getSchemaExtractor === 'undefined') {
       throw new Error(`No SchemaExtractor defined for ${env.name}`);
     }
     const schemaExtractor: SchemaExtractor = env.getSchemaExtractor();
-    return schemaExtractor.extract(component);
+    return schemaExtractor.extract(component, formatter);
   }
 
   getSchemaFromObject(obj: Record<string, any>): APISchema {

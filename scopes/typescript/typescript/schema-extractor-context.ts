@@ -1,26 +1,36 @@
 import { TsserverClient } from '@teambit/ts-server';
-import ts, { ExportDeclaration, Node, TypeNode } from 'typescript';
-import { getTokenAtPosition } from 'tsutils';
+import ts, { ExportDeclaration, getTextOfJSDocComment, Node, TypeNode } from 'typescript';
+import { getTokenAtPosition, canHaveJsDoc, getJsDoc } from 'tsutils';
 import { head } from 'lodash';
 // @ts-ignore david we should figure fix this.
 import type { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
 import { resolve, sep, relative } from 'path';
 import { Component, ComponentID } from '@teambit/component';
-import { TypeRefSchema, SchemaNode, InferenceTypeSchema, Location } from '@teambit/semantics.entities.semantic-schema';
+import {
+  TypeRefSchema,
+  SchemaNode,
+  InferenceTypeSchema,
+  Location,
+  DocSchema,
+} from '@teambit/semantics.entities.semantic-schema';
 import { ComponentDependency } from '@teambit/dependency-resolver';
+import { Formatter } from '@teambit/formatter';
+import pMapSeries from 'p-map-series';
 import { TypeScriptExtractor } from './typescript.extractor';
 import { ExportList } from './export-list';
 import { typeNodeToSchema } from './transformers/utils/type-node-to-schema';
 import { TransformerNotFound } from './exceptions';
 import { parseTypeFromQuickInfo } from './transformers/utils/parse-type-from-quick-info';
+import { tagParser } from './transformers/utils/jsdoc-to-doc-schema';
 
 export class SchemaExtractorContext {
   constructor(
     readonly tsserver: TsserverClient,
     readonly component: Component,
     readonly extractor: TypeScriptExtractor,
-    readonly componentDeps: ComponentDependency[]
+    readonly componentDeps: ComponentDependency[],
+    readonly formatter: Formatter
   ) {}
 
   computeSchema(node: Node) {
@@ -336,5 +346,24 @@ export class SchemaExtractorContext {
       return new TypeRefSchema(location, typeStr, compIdByPkg);
     }
     return new TypeRefSchema(location, typeStr, undefined, pkgName);
+  }
+
+  async jsDocToDocSchema(node: Node, context: SchemaExtractorContext): Promise<DocSchema | undefined> {
+    if (!canHaveJsDoc(node)) {
+      return undefined;
+    }
+    const jsDocs = getJsDoc(node);
+    if (!jsDocs.length) {
+      return undefined;
+    }
+    // not sure how common it is to have multiple JSDocs. never seen it before.
+    // regardless, in typescript implementation of methods like `getJSDocDeprecatedTag()`, they use the first one. (`getFirstJSDocTag()`)
+    const jsDoc = jsDocs[0];
+    const location = context.getLocation(jsDoc);
+    const comment = getTextOfJSDocComment(jsDoc.comment);
+    const tags = jsDoc.tags
+      ? await pMapSeries(jsDoc.tags, (tag) => tagParser(tag, context, this.formatter))
+      : undefined;
+    return new DocSchema(location, jsDoc.getText(), comment, tags);
   }
 }

@@ -9,7 +9,6 @@ import { SchemaTransformer } from '../schema-transformer';
 import { SchemaExtractorContext } from '../schema-extractor-context';
 import { ExportIdentifier } from '../export-identifier';
 import { typeElementToSchema } from './utils/type-element-to-schema';
-import { jsDocToDocSchema } from './utils/jsdoc-to-doc-schema';
 import { typeNodeToSchema } from './utils/type-node-to-schema';
 
 export class InterfaceDeclarationTransformer implements SchemaTransformer {
@@ -43,7 +42,7 @@ export class InterfaceDeclarationTransformer implements SchemaTransformer {
 
   async transform(interfaceDec: InterfaceDeclaration, context: SchemaExtractorContext) {
     const members = await pMapSeries(interfaceDec.members, (member) => typeElementToSchema(member, context));
-    const doc = await jsDocToDocSchema(interfaceDec, context);
+    const doc = await context.jsDocToDocSchema(interfaceDec, context);
     const signature = interfaceDec.name ? await context.getQuickInfoDisplayString(interfaceDec.name) : undefined;
     const extendsNodes = await this.getExpressionWithTypeArgs(interfaceDec, context);
     const typeParameters = interfaceDec.typeParameters?.map((typeParam) => {

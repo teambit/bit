@@ -9,7 +9,6 @@ import ts, { Node, ClassDeclaration } from 'typescript';
 import { SchemaTransformer } from '../schema-transformer';
 import { SchemaExtractorContext } from '../schema-extractor-context';
 import { ExportIdentifier } from '../export-identifier';
-import { jsDocToDocSchema } from './utils/jsdoc-to-doc-schema';
 import { classElementToSchema } from './utils/class-element-to-schema';
 import { typeNodeToSchema } from './utils/type-node-to-schema';
 
@@ -76,7 +75,7 @@ export class ClassDeclarationTransformer implements SchemaTransformer {
       }
       return classElementToSchema(member, context);
     });
-    const doc = await jsDocToDocSchema(node, context);
+    const doc = await context.jsDocToDocSchema(node, context);
 
     if (!signature) {
       throw Error(`Missing signature for class ${className} declaration`);

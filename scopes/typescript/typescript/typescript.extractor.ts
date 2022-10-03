@@ -6,6 +6,7 @@ import { ComponentDependency, DependencyResolverMain } from '@teambit/dependency
 import { SchemaNode, APISchema, Module } from '@teambit/semantics.entities.semantic-schema';
 import { Component } from '@teambit/component';
 import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
+import { Formatter } from '@teambit/formatter';
 import { flatten } from 'lodash';
 import { TypescriptMain, SchemaTransformerSlot } from './typescript.main.runtime';
 import { TransformerNotFound } from './exceptions';
@@ -38,11 +39,11 @@ export class TypeScriptExtractor implements SchemaExtractor {
   /**
    * extract a component schema.
    */
-  async extract(component: Component): Promise<APISchema> {
+  async extract(component: Component, formatter: Formatter): Promise<APISchema> {
     const tsserver = await this.getTsServer();
     const mainFile = component.mainFile;
     const mainAst = this.parseSourceFile(mainFile);
-    const context = await this.createContext(tsserver, component);
+    const context = await this.createContext(tsserver, component, formatter);
     const exportNames = await this.computeExportedIdentifiers(mainAst, context);
     context.setExports(new ExportList(exportNames));
     const moduleSchema = (await this.computeSchema(mainAst, context)) as Module;
@@ -61,9 +62,13 @@ export class TypeScriptExtractor implements SchemaExtractor {
     return transformer.getIdentifiers(node, context);
   }
 
-  private async createContext(tsserver: TsserverClient, component: Component): Promise<SchemaExtractorContext> {
+  private async createContext(
+    tsserver: TsserverClient,
+    component: Component,
+    formatter: Formatter
+  ): Promise<SchemaExtractorContext> {
     const componentDeps = await this.getComponentDeps(component);
-    return new SchemaExtractorContext(tsserver, component, this, componentDeps);
+    return new SchemaExtractorContext(tsserver, component, this, componentDeps, formatter);
   }
 
   private async getComponentDeps(component: Component): Promise<ComponentDependency[]> {

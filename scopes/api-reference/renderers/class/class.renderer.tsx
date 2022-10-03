@@ -2,7 +2,7 @@ import React from 'react';
 import { ClassSchema } from '@teambit/semantics.entities.semantic-schema';
 import { APINodeRenderProps, APINodeRenderer } from '@teambit/api-reference.models.api-node-renderer';
 import { H5, H6 } from '@teambit/documenter.ui.heading';
-import { CopyBox } from '@teambit/documenter.ui.copy-box';
+// import { CopyBox } from '@teambit/documenter.ui.copy-box';
 import { CodeEditor } from '@teambit/code.monaco.code-editor';
 import { ComponentUrl } from '@teambit/component.modules.component-url';
 import { Link } from '@teambit/base-react.navigation.link';

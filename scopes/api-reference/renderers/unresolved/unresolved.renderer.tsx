@@ -11,9 +11,9 @@ export const unresolvedRenderer: APINodeRenderer = {
   default: true,
 };
 
-function UnresolvedComponent({ node, componentId }: APINodeRenderProps) {
+function UnresolvedComponent({ node }: APINodeRenderProps) {
   const unresolvedNode = node as UnresolvedSchema;
-  return <></>;
+  return <>{unresolvedNode.name}</>;
 }
 
 function UnresolvedIcon() {
