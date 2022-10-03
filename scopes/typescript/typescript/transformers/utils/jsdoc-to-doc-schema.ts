@@ -84,6 +84,9 @@ async function tagParser(tag: JSDocTag, context: SchemaExtractorContext): Promis
       return simpleTag(tag, TagName.implements, context);
     default: {
       const tagName: TagName | string = tag.tagName.getText(tag.getSourceFile());
+      // if(tagName === 'example') {
+      //   const formattedComment =  getTextOfJSDocComment(tag.comment) // run thru prettier
+      // }
       return simpleTag(tag, tagName, context);
     }
   }

@@ -6,7 +6,10 @@ import { CodeEditor } from '@teambit/code.monaco.code-editor';
 import styles from './schema-node-summary.module.scss';
 
 export type SchemaNodeSummaryProps = { node: SchemaNode } & HTMLAttributes<HTMLDivElement>;
-
+/**
+ * @todo
+ * find a better way to render all doc tags
+ */
 export function SchemaNodeSumary({ node }: SchemaNodeSummaryProps) {
   const { signature, name, __schema, doc, location } = node;
   const displayName = name || (__schema === ConstructorSchema.name && 'constructor') || undefined;
@@ -15,7 +18,7 @@ export function SchemaNodeSumary({ node }: SchemaNodeSummaryProps) {
   // Remove node type from the signature. i.e (method), (getter), (setter), (property)
   const displaySignature = __schema === ConstructorSchema.name && 'constructor' ? signature : signature?.split(') ')[1];
   // Monaco requires a unique path that ends with the file extension
-  const path = `${location.line}:${location.character}:${location.filePath}`;
+  const path = `${location.line}:${location.filePath}`;
   return (
     <div className={styles.schemaNodeSummary}>
       {displayName && <div className={styles.schemaNodeSummaryName}>{displayName}</div>}

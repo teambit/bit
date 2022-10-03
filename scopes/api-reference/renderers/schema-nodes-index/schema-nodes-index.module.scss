@@ -1,0 +1,41 @@
+.schemaNodeIndexContainer {
+  display: flex;
+  padding-bottom: 16px;
+  flex-direction: column;
+}
+.title {
+  font-size: var(--bit-p-lg);
+  font-weight: 700;
+  padding-top: 8px;
+  padding-bottom: 24px;
+}
+.groupName {
+  display: flex;
+  font-weight: 500;
+  padding-bottom: 16px;
+  font-size: var(--bit-p-md);
+  text-transform: capitalize;
+}
+
+.groupedNodesContainer {
+  display: flex;
+  flex-direction: row;
+  padding-bottom: 16px;
+  width: 100%;
+  flex-wrap: wrap;
+}
+
+.group {
+  padding-right: 16px;
+  display: flex;
+  flex-direction: column;
+}
+
+.groupedNode {
+  display: flex;
+  flex-direction: row;
+  padding-bottom: 8px;
+  font-size: var(--bit-p-xs);
+  flex-grow: 1;
+  flex-basis: 50%;
+}

@@ -1025,6 +1025,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/api-reference/renderers/schema-node-summary"
     },
+    "renderers/schema-nodes-index": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/api-reference/renderers/schema-nodes-index"
+    },
     "renderers/type": {
         "scope": "",
         "version": "",

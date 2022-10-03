@@ -32,6 +32,11 @@ export class PrettierFormatter implements Formatter {
   async format(context: FormatterContext): Promise<FormatResults> {
     return this.run(context);
   }
+
+  async formatSnippet(snippet: string): Promise<string> {
+    return this.prettierModule.format(snippet, this.options);
+  }
+
   async check(context: FormatterContext): Promise<FormatResults> {
     return this.run(context);
   }

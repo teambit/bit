@@ -7,6 +7,7 @@ import { CodeEditor } from '@teambit/code.monaco.code-editor';
 import { ComponentUrl } from '@teambit/component.modules.component-url';
 import { Link } from '@teambit/base-react.navigation.link';
 import { SchemaNodeSumary } from '@teambit/api-reference.renderers.schema-node-summary';
+import { SchemaNodesIndex } from '@teambit/api-reference.renderers.schema-nodes-index';
 
 import styles from './class.renderer.module.scss';
 
@@ -26,7 +27,7 @@ function ClassComponent({ node, componentId }: APINodeRenderProps) {
     extendsNodes,
     implementNodes,
     signature,
-    location: { filePath, line, character },
+    location: { filePath, line },
     members,
   } = classNode;
   const comment = doc?.comment;
@@ -48,7 +49,7 @@ function ClassComponent({ node, componentId }: APINodeRenderProps) {
   }`;
   const componentIdUrl = ComponentUrl.toUrl(componentId, { includeVersion: false });
   const locationUrl = `${componentIdUrl}/~code/${filePath}?version=${componentId.version}`;
-  const locationLabel = `${filePath}:${line}:${character}`;
+  const locationLabel = `${filePath}:${line}`;
   const hasMembers = members.length > 0;
 
   return (
@@ -79,15 +80,19 @@ function ClassComponent({ node, componentId }: APINodeRenderProps) {
           {locationLabel}
         </Link>
       </div>
+
       {hasMembers && (
-        <div className={styles.classMembersContainer}>
-          <H6 className={styles.classMembersTitle}>Members</H6>
-          <div className={styles.classMembersDetailsContainer}>
-            {members.map((member, index) => (
-              <SchemaNodeSumary key={index} node={member} />
-            ))}
+        <>
+          <SchemaNodesIndex title={'Index'} nodes={members} />
+          <div className={styles.classMembersContainer}>
+            <H6 className={styles.classMembersTitle}>Members</H6>
+            <div className={styles.classMembersDetailsContainer}>
+              {members.map((member, index) => (
+                <SchemaNodeSumary key={index} node={member} />
+              ))}
+            </div>
           </div>
-        </div>
+        </>
       )}
     </div>
   );
