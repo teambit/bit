@@ -687,10 +687,14 @@ export class DependencyResolverMain {
       ...this.getNetworkConfigFromDepResolverConfig(),
     };
     this.logger.debug(
-      `the next network configuration is used in dependency-resolver: ${{
-        ...networkConfig,
-        key: networkConfig.key ? 'set' : 'not set', // this is sensitive information, we should not log it
-      }}`
+      `the next network configuration is used in dependency-resolver: ${JSON.stringify(
+        {
+          ...networkConfig,
+          key: networkConfig.key ? 'set' : 'not set', // this is sensitive information, we should not log it
+        },
+        null,
+        2
+      )}`
     );
     return networkConfig;
   }
