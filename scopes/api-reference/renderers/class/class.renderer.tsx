@@ -32,6 +32,7 @@ function ClassComponent({ node, componentId }: APINodeRenderProps) {
   } = classNode;
   const comment = doc?.comment;
   const tags = doc?.tags || [];
+  const docPath = `${doc?.location.line}:${doc?.location.filePath}`;
 
   const example = tags.find((tag) => tag.tagName === 'example')?.comment;
   /**
@@ -57,7 +58,20 @@ function ClassComponent({ node, componentId }: APINodeRenderProps) {
       <H5 className={styles.className}>{name}</H5>
       {comment && <div className={styles.classComment}>{comment}</div>}
       <div className={styles.classSignatureContainer}>
-        <CopyBox>{fullSignature}</CopyBox>
+        <CodeEditor
+          options={{
+            minimap: { enabled: false },
+            scrollbar: { vertical: 'hidden' },
+            scrollBeyondLastLine: false,
+            readOnly: true,
+            language: 'typescript',
+            lineNumbers: 'off',
+            folding: false,
+          }}
+          value={fullSignature}
+          height={30}
+          path={filePath}
+        />
       </div>
       {example && (
         <div className={styles.classExample}>
@@ -70,7 +84,7 @@ function ClassComponent({ node, componentId }: APINodeRenderProps) {
               readOnly: true,
             }}
             value={example}
-            path={filePath}
+            path={docPath}
             height={height}
           />
         </div>
