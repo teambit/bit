@@ -303,7 +303,7 @@ export class ExportMain {
       const objectList = new ObjectList();
       const objectListPerName: ObjectListPerName = {};
       const processModelComponent = async (modelComponent: ModelComponent) => {
-        const versionToExport = await getVersionsToExport(modelComponent);
+        const versionToExport = await getVersionsToExport(modelComponent, lane);
         modelComponent.clearStateData();
         const objectItems = await modelComponent.collectVersionsObjects(
           scope.objects,
