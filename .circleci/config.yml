@@ -1724,81 +1724,81 @@ workflows:
             - set_npm_registries
             - build
 
-  # nightly:
-  #   triggers:
-  #     - schedule: # every day at 3AM UTC (= 11PM EST = 6AM IST)
-  #         cron: '0 3 * * *'
-  #         filters:
-  #           branches:
-  #             only:
-  #               - master
-  #   jobs:
-  #     - checkout_code
-  #     - set_ssh_key
-  #     - set_npm_registries
-  #     - get_arm64_packages
-  #     - setup_harmony:
-  #         requires:
-  #           - set_npm_registries
-  #           - checkout_code
-  #     - bit_tag:
-  #         <<: *master_only_filter
-  #         requires:
-  #           - setup_harmony
-  #     - bundle_version_linux:
-  #         <<: *master_only_filter
-  #         requires:
-  #           - bit_tag
-  #     - bundle_version_windows:
-  #         <<: *master_only_filter
-  #         requires:
-  #           - bit_tag
-  #     - bundle_version_macos:
-  #         <<: *master_only_filter
-  #         requires:
-  #           - bit_tag
-  #           - get_arm64_packages
-  #     - harmony_publish_to_gcloud:
-  #         <<: *master_only_filter
-  #         requires:
-  #           - bundle_version_linux
-  #           - bundle_version_windows
-  #           - bundle_version_macos
-  #           - checkout_code # This is needed to generate index.json
-  #     - bit_export:
-  #         <<: *master_only_filter
-  #         requires:
-  #           - bit_tag
-  #     - symphony_docker_build:
-  #         requires:
-  #           - bit_tag
-  #     - docker_build:
-  #         requires:
-  #           - harmony_publish_to_gcloud
-  #     - docker_non_root_build:
-  #         requires:
-  #           - harmony_publish_to_gcloud
-  #     - server_docker_build:
-  #         requires:
-  #           - docker_build
-  #     - docker_build_node_14:
-  #         requires:
-  #           - harmony_publish_to_gcloud
-  #     - docker_non_root_build_node_14:
-  #         requires:
-  #           - harmony_publish_to_gcloud
-  #     - server_docker_build_node_14:
-  #         requires:
-  #           - docker_build_node_14
-  #     - docker_build_node_16:
-  #         requires:
-  #           - harmony_publish_to_gcloud
-  #     - docker_non_root_build_node_16:
-  #         requires:
-  #           - harmony_publish_to_gcloud
-  #     - server_docker_build_node_16:
-  #         requires:
-  #           - docker_build_node_16
+  nightly:
+    triggers:
+      - schedule: # every day at 3AM UTC (= 11PM EST = 6AM IST)
+          cron: '0 3 * * *'
+          filters:
+            branches:
+              only:
+                - master
+    jobs:
+      - checkout_code
+      - set_ssh_key
+      - set_npm_registries
+      - get_arm64_packages
+      - setup_harmony:
+          requires:
+            - set_npm_registries
+            - checkout_code
+      - bit_tag:
+          <<: *master_only_filter
+          requires:
+            - setup_harmony
+      - bundle_version_linux:
+          <<: *master_only_filter
+          requires:
+            - bit_tag
+      - bundle_version_windows:
+          <<: *master_only_filter
+          requires:
+            - bit_tag
+      - bundle_version_macos:
+          <<: *master_only_filter
+          requires:
+            - bit_tag
+            - get_arm64_packages
+      - harmony_publish_to_gcloud:
+          <<: *master_only_filter
+          requires:
+            - bundle_version_linux
+            - bundle_version_windows
+            - bundle_version_macos
+            - checkout_code # This is needed to generate index.json
+      - bit_export:
+          <<: *master_only_filter
+          requires:
+            - bit_tag
+      - symphony_docker_build:
+          requires:
+            - bit_tag
+      - docker_build:
+          requires:
+            - harmony_publish_to_gcloud
+      - docker_non_root_build:
+          requires:
+            - harmony_publish_to_gcloud
+      - server_docker_build:
+          requires:
+            - docker_build
+      - docker_build_node_14:
+          requires:
+            - harmony_publish_to_gcloud
+      - docker_non_root_build_node_14:
+          requires:
+            - harmony_publish_to_gcloud
+      - server_docker_build_node_14:
+          requires:
+            - docker_build_node_14
+      - docker_build_node_16:
+          requires:
+            - harmony_publish_to_gcloud
+      - docker_non_root_build_node_16:
+          requires:
+            - harmony_publish_to_gcloud
+      - server_docker_build_node_16:
+          requires:
+            - docker_build_node_16
 
   windows-nightly:
     triggers:
