@@ -1,11 +1,12 @@
-import React, { HTMLAttributes } from 'react';
-import { ClassSchema, ConstructorSchema, SchemaNode } from '@teambit/semantics.entities.semantic-schema';
+import React from 'react';
+import { ClassSchema } from '@teambit/semantics.entities.semantic-schema';
 import { APINodeRenderProps, APINodeRenderer } from '@teambit/api-reference.models.api-node-renderer';
 import { H5, H6 } from '@teambit/documenter.ui.heading';
 import { CopyBox } from '@teambit/documenter.ui.copy-box';
 import { CodeEditor } from '@teambit/code.monaco.code-editor';
 import { ComponentUrl } from '@teambit/component.modules.component-url';
 import { Link } from '@teambit/base-react.navigation.link';
+import { SchemaNodeSumary } from '@teambit/api-reference.renderers.schema-node-summary';
 
 import styles from './class.renderer.module.scss';
 
@@ -37,9 +38,9 @@ function ClassComponent({ node, componentId }: APINodeRenderProps) {
    * Make Monaco responsive
    * default line height: 18px;
    * base height: 25px;
-   * totalHeight: no of lines * default line height + base height
+   * totalHeight: base height + (no of lines * default line height)
    */
-  const height = (example?.split('\n').length || 0) * 18 + 25;
+  const height = 30 + (example?.split('\n').length || 0) * 18;
   const extendsSignature = extendsNodes?.[0]?.name;
   const implementsDefiniton = implementNodes?.[0]?.name;
   const fullSignature = `${signature}${(extendsSignature && ' '.concat(extendsSignature)) || ''} ${
@@ -61,10 +62,15 @@ function ClassComponent({ node, componentId }: APINodeRenderProps) {
         <div className={styles.classExample}>
           <H6 className={styles.classExampleTitle}>Example</H6>
           <CodeEditor
-            options={{ minimap: { enabled: false }, scrollbar: { vertical: 'hidden' }, scrollBeyondLastLine: false }}
+            options={{
+              minimap: { enabled: false },
+              scrollbar: { vertical: 'hidden' },
+              scrollBeyondLastLine: false,
+              readOnly: true,
+            }}
             value={example}
             path={filePath}
-            height={`${height}px`}
+            height={height}
           />
         </div>
       )}
@@ -78,28 +84,10 @@ function ClassComponent({ node, componentId }: APINodeRenderProps) {
           <H6 className={styles.classMembersTitle}>Members</H6>
           <div className={styles.classMembersDetailsContainer}>
             {members.map((member, index) => (
-              <ClassMember key={index} member={member} />
+              <SchemaNodeSumary key={index} node={member} />
             ))}
           </div>
         </div>
-      )}
-    </div>
-  );
-}
-
-type ClassMemberProps = { member: SchemaNode } & HTMLAttributes<HTMLDivElement>;
-function ClassMember({ member }: ClassMemberProps) {
-  const { signature, name, __schema } = member;
-  const displayName = name || (__schema === ConstructorSchema.name && 'constructor') || undefined;
-  const signatureLength = signature?.split('\n').length || 0;
-  const signatureHeight = 40 + (signatureLength - 1) * 14;
-  return (
-    <div className={styles.classMember}>
-      {displayName && <div className={styles.classMemberName}>{displayName}</div>}
-      {signature && (
-        <CopyBox className={styles.classMemberSignature} style={{ height: signatureHeight }}>
-          {signature}
-        </CopyBox>
       )}
     </div>
   );

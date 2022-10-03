@@ -1,0 +1,20 @@
+.schemaNodeSummary {
+  padding-bottom: 32px;
+}
+.schemaNodeSummaryName {
+  padding-bottom: 16px;
+  font-size: var(--bit-p-xs);
+}
+.schemaNodeSummarySignature {
+  min-height: 40px;
+}
+.schemaNodeDoc {
+  display: flex;
+  flex-direction: row;
+  flex: 1;
+  padding-right: 16px;
+}
+.docComment {
+  font-size: var(--bit-p-xxs);
+  padding-bottom: 16px;
+}
