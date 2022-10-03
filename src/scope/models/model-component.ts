@@ -250,8 +250,11 @@ export default class Component extends BitObject {
 
   async setDivergeData(repo: Repository, throws = true, fromCache = true): Promise<void> {
     if (!this.divergeData || !fromCache) {
-      const isOnLane = this.laneHeadRemote || this.laneHeadRemote === null;
-      const remoteHead = (isOnLane ? this.laneHeadRemote : this.remoteHead) || null;
+      // const isOnLane = this.laneHeadRemote || this.laneHeadRemote === null;
+      // const remoteHead = (isOnLane ? this.laneHeadRemote : this.remoteHead) || null;
+      // this is tricky. in case the remote-lane doesn't exist, we can't just use the remote-head.
+      // maybe it should check forkedFrom, and if not exists, then use remote-head. or just leave it as null.
+      const remoteHead = this.laneHeadRemote || this.remoteHead || null;
       this.divergeData = await getDivergeData({ repo, modelComponent: this, remoteHead, throws });
     }
   }

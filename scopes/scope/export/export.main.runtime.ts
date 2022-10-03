@@ -38,6 +38,7 @@ import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
 import { Remote, Remotes } from '@teambit/legacy/dist/remotes';
 import { getScopeRemotes } from '@teambit/legacy/dist/scope/scope-remotes';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
+import ScopeComponentsImporter from '@teambit/legacy/dist/scope/component-ops/scope-components-importer';
 import { ExportVersions } from '@teambit/legacy/dist/scope/models/export-metadata';
 import {
   persistRemotes,
@@ -250,14 +251,22 @@ export class ExportMain {
       allHashes.push(head);
     };
 
-    const getVersionsToExport = async (modelComponent: ModelComponent): Promise<string[]> => {
+    const getVersionsToExport = async (modelComponent: ModelComponent, lane?: Lane): Promise<string[]> => {
       await modelComponent.setDivergeData(scope.objects);
       const localTagsOrHashes = modelComponent.getLocalTagsOrHashes();
-      if (!allVersions) {
+      if (!allVersions && !lane) {
         // if lane is exported, components from other remotes may be exported to this remote. we need their history.
         return localTagsOrHashes;
       }
-      const allHashes = await getAllVersionHashes({ modelComponent, repo: scope.objects });
+      let stopAt: Ref | undefined;
+      if (lane && !lane.isNew) {
+        const scopeComponentImporter = new ScopeComponentsImporter(scope);
+        const remoteLanes = await scopeComponentImporter.importLanes([lane.toLaneId()]);
+        const remoteLane = remoteLanes[0];
+        const headOnRemote = remoteLane?.getComponentByName(modelComponent.toBitId())?.head;
+        stopAt = headOnRemote;
+      }
+      const allHashes = await getAllVersionHashes({ modelComponent, repo: scope.objects, stopAt });
       await addMainHeadIfPossible(allHashes, modelComponent);
       return modelComponent.switchHashesWithTagsIfExist(allHashes);
     };
