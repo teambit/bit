@@ -50,7 +50,7 @@ import { ComponentNotFound } from './exceptions';
 import { ScopeAspect } from './scope.aspect';
 import { scopeSchema } from './scope.graphql';
 import { ScopeUIRoot } from './scope.ui-root';
-import { PutRoute, FetchRoute, ActionRoute, DeleteRoute } from './routes';
+import { HeapdumpRoute, PutRoute, FetchRoute, ActionRoute, DeleteRoute } from './routes';
 import { ScopeComponentLoader } from './scope-component-loader';
 import { ScopeCmd } from './scope-cmd';
 import { StagedConfig } from './staged-config';
@@ -1210,6 +1210,7 @@ needed-for: ${neededFor || '<unknown>'}`);
       new FetchRoute(scope, logger),
       new ActionRoute(scope),
       new DeleteRoute(scope),
+      new HeapdumpRoute(),
     ]);
     // @ts-ignore - @ran to implement the missing functions and remove it
     ui.registerUiRoot(new ScopeUIRoot(scope));
