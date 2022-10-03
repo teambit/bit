@@ -23,11 +23,11 @@ export function CompositionCard({ Composition, name, link, className, ...rest }:
 
   return (
     <Card elevation="low" className={classNames(className, styles.compositionCard)} {...rest}>
-      <ErrorBoundary FallbackComponent={CompositionErrorFallback}>
+      {/* <ErrorBoundary FallbackComponent={CompositionErrorFallback}> */}
         <div style={canvas} className={styles.compositionContainer}>
           <Composition />
         </div>
-      </ErrorBoundary>
+      {/* </ErrorBoundary> */}
       <div className={classNames(styles.title, colorPalette.neutralHeavy, themedText)}>
         <span>{humanizedName}</span>
         {link && (

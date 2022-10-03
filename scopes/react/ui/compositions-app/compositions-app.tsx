@@ -21,11 +21,11 @@ export function CompositionsApp({
   const safeComposition = useFallback(Composition && <Composition />, <StandaloneNotFoundPage />);
 
   return (
-    <ErrorBoundary FallbackComponent={ErrorFallback} resetKeys={[Composition]}>
+    // <ErrorBoundary FallbackComponent={ErrorFallback} resetKeys={[Composition]}>
       <Composer components={providers}>
         <style>{hideScrollbars}</style>
         {safeComposition}
       </Composer>
-    </ErrorBoundary>
+    // </ErrorBoundary>
   );
 }

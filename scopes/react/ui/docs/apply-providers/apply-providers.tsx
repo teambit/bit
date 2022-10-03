@@ -19,9 +19,9 @@ export function ApplyProviders({ renderingContext, children, ...rest }: ApplyPro
 
   return (
     <div {...rest}>
-      <ErrorBoundary FallbackComponent={ErrorFallback}>
+      {/* <ErrorBoundary FallbackComponent={ErrorFallback}> */}
         <Composer components={providers}>{children}</Composer>
-      </ErrorBoundary>
+      {/* </ErrorBoundary> */}
     </div>
   );
 }
