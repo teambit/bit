@@ -929,11 +929,10 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
   }
 
   getLocalTagsOrHashes(): string[] {
-    const localVersions = this.getLocalVersions();
-    if (!this.divergeData) return localVersions;
+    if (!this.divergeData) throw new Error('getLocalTagsOrHashes is missing divergeData');
     const divergeData = this.getDivergeData();
     const localHashes = divergeData.snapsOnLocalOnly;
-    if (!localHashes.length) return localVersions;
+    if (!localHashes.length) return [];
     return this.switchHashesWithTagsIfExist(localHashes).reverse(); // reverse to get the older first
   }
 
