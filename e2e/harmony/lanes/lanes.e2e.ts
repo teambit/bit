@@ -618,7 +618,7 @@ describe('bit lane command', function () {
       // another bug was that it had all versions included exported.
       const status = helper.command.status('--verbose');
       const hash = helper.command.getHeadOfLane('dev', 'comp1');
-      expect(status).to.have.string(`versions: 0.0.1, ${hash} ...`);
+      expect(status).to.have.string(`versions: ${hash} ...`);
     });
     describe('export the lane, then switch back to main', () => {
       let afterSwitchingLocal: string;
