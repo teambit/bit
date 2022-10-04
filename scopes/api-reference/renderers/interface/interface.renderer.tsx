@@ -30,7 +30,9 @@ function InterfaceComponent({ node, componentId }: APINodeRenderProps) {
   const extendsSignature = extendsNodes?.[0]?.name;
   const fullSignature = `${signature}${(extendsSignature && ' '.concat(extendsSignature)) || ''}`;
   const componentIdUrl = ComponentUrl.toUrl(componentId, { includeVersion: false });
-  const locationUrl = `${componentIdUrl}/~code/${filePath}?version=${componentId.version}`;
+  const locationUrl = `${componentIdUrl}/~code/${filePath}${
+    componentId.version ? `?version=${componentId.version}` : ''
+  }`;
   const locationLabel = `${filePath}:${line}`;
 
   return (

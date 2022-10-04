@@ -27,7 +27,9 @@ function VariableComponent({ node, componentId }: APINodeRenderProps) {
   const example = tags.find((tag) => tag.tagName === 'example')?.comment;
 
   const componentIdUrl = ComponentUrl.toUrl(componentId, { includeVersion: false });
-  const locationUrl = `${componentIdUrl}/~code/${filePath}?version=${componentId.version}`;
+  const locationUrl = `${componentIdUrl}/~code/${filePath}${
+    componentId.version ? `?version=${componentId.version}` : ''
+  }`;
   const locationLabel = `${filePath}:${line}`;
 
   return (
