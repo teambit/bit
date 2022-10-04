@@ -11,20 +11,18 @@ export class LintTask implements BuildTask {
     const linterContext: LinterContext = {
       rootDir: context.capsuleNetwork.capsulesRootDir,
       ...context,
-    }
+    };
     const results = await linter.lint(linterContext);
-    const componentsResults = results.results.map(
-      (lintResult): ComponentResult => {
-        return {
-          component: lintResult.component,
-          metadata: {
-            output: lintResult.output,
-            results: lintResult.results,
-          },
-          errors: [],
-        };
-      }
-    );
+    const componentsResults = results.results.map((lintResult): ComponentResult => {
+      return {
+        component: lintResult.component,
+        metadata: {
+          output: lintResult.output,
+          results: lintResult.results,
+        },
+        errors: [],
+      };
+    });
 
     return {
       componentsResults,

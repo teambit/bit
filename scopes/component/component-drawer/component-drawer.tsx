@@ -1,13 +1,12 @@
 import React, { useCallback, useContext, ReactNode, useMemo } from 'react';
 import classNames from 'classnames';
 import { ComponentTree, PayloadType } from '@teambit/ui-foundation.ui.side-bar';
-import { FullLoader } from '@teambit/ui-foundation.ui.full-loader';
 import { ComponentTreeSlot } from '@teambit/component-tree';
 import type { DrawerType } from '@teambit/ui-foundation.ui.tree.drawer';
 import { mutedItalic } from '@teambit/design.ui.styles.muted-italic';
 import { ellipsis } from '@teambit/design.ui.styles.ellipsis';
 import { ComponentModel } from '@teambit/component';
-import { TreeNodeRenderer } from '@teambit/design.ui.tree';
+import { TreeNode as TreeNodeType, TreeNodeRenderer } from '@teambit/design.ui.tree';
 import { Composer, ComponentTuple } from '@teambit/base-ui.utils.composer';
 import flatten from 'lodash.flatten';
 import {
@@ -16,7 +15,12 @@ import {
   runAllFilters,
   ComponentFilters,
 } from '@teambit/component.ui.component-filters.component-filter-context';
+import { useLanes } from '@teambit/lanes.hooks.use-lanes';
+import { LanesModel } from '@teambit/lanes.ui.models.lanes-model';
 import { SlotRegistry } from '@teambit/harmony';
+import { ScopeModel } from '@teambit/scope.models.scope-model';
+import { WorkspaceModel } from '@teambit/workspace';
+import { ComponentTreeLoader } from '@teambit/design.ui.skeletons.sidebar-loader';
 import { ComponentFilterWidgetProvider, ComponentFilterWidgetContext } from './component-drawer-filter-widget.context';
 import { ComponentTreeContext, ComponentTreeProvider } from './component-drawer-tree-widget.context';
 
@@ -24,17 +28,23 @@ import styles from './component-drawer.module.scss';
 
 export type ComponentFiltersSlot = SlotRegistry<ComponentFilters>;
 export type DrawerWidgetSlot = SlotRegistry<ReactNode[]>;
+export type TransformTreeFn = (host?: WorkspaceModel | ScopeModel) => (rootNode: TreeNodeType) => TreeNodeType;
 
 export type ComponentsDrawerProps = Omit<DrawerType, 'render'> & {
   useComponents: () => { components: ComponentModel[]; loading?: boolean };
   emptyMessage?: ReactNode;
   plugins?: ComponentsDrawerPlugins;
+  transformTree?: TransformTreeFn;
   assumeScopeInUrl?: boolean;
+  useHost?: () => ScopeModel | WorkspaceModel;
 };
 
 export type ComponentsDrawerPlugins = {
   tree?: {
-    customRenderer?: (treeNodeSlot?: ComponentTreeSlot) => TreeNodeRenderer<PayloadType>;
+    customRenderer?: (
+      treeNodeSlot?: ComponentTreeSlot,
+      host?: ScopeModel | WorkspaceModel
+    ) => TreeNodeRenderer<PayloadType>;
     widgets: ComponentTreeSlot;
   };
   filters?: ComponentFiltersSlot;
@@ -52,6 +62,8 @@ export class ComponentsDrawer implements DrawerType {
   widgets: ReactNode[];
   plugins: ComponentsDrawerPlugins;
   assumeScopeInUrl: boolean;
+  useHost?: () => ScopeModel | WorkspaceModel;
+  transformTree?: TransformTreeFn;
 
   constructor(props: ComponentsDrawerProps) {
     Object.assign(this, props);
@@ -60,6 +72,8 @@ export class ComponentsDrawer implements DrawerType {
     this.plugins = props.plugins || {};
     this.setWidgets(props.plugins?.drawerWidgets);
     this.assumeScopeInUrl = props.assumeScopeInUrl || false;
+    this.useHost = props.useHost;
+    this.transformTree = props.transformTree;
   }
 
   Context = ({ children }) => {
@@ -72,7 +86,7 @@ export class ComponentsDrawer implements DrawerType {
     return <Composer components={combinedContexts}>{children}</Composer>;
   };
 
-  renderFilters = ({ components }: { components: ComponentModel[] }) => {
+  renderFilters = ({ components, lanes }: { components: ComponentModel[]; lanes?: LanesModel }) => {
     const { filterWidgetOpen } = useContext(ComponentFilterWidgetContext);
     const filterPlugins = this.plugins.filters;
 
@@ -94,6 +108,7 @@ export class ComponentsDrawer implements DrawerType {
           <filter.render
             key={filter.key}
             components={components}
+            lanes={lanes}
             className={classNames(styles.filter, filterWidgetOpen && styles.open)}
           />
         ))}
@@ -101,11 +116,11 @@ export class ComponentsDrawer implements DrawerType {
     );
   };
 
-  renderTree = ({ components }: { components: ComponentModel[] }) => {
+  renderTree = ({ components, host }: { components: ComponentModel[]; host?: ScopeModel | WorkspaceModel }) => {
     const { collapsed } = useContext(ComponentTreeContext);
     const { tree } = this.plugins;
 
-    const TreeNode = tree?.customRenderer && useCallback(tree.customRenderer(tree.widgets), [tree.widgets]);
+    const TreeNode = tree?.customRenderer && useCallback(tree.customRenderer(tree.widgets, host), [tree.widgets]);
     const isVisible = components.length > 0;
 
     if (!isVisible) return null;
@@ -113,6 +128,7 @@ export class ComponentsDrawer implements DrawerType {
     return (
       <div className={styles.drawerTreeContainer}>
         <ComponentTree
+          transformTree={this.transformTree ? this.transformTree(host) : undefined}
           components={components}
           isCollapsed={collapsed}
           assumeScopeInUrl={this.assumeScopeInUrl}
@@ -128,20 +144,26 @@ export class ComponentsDrawer implements DrawerType {
 
   render = () => {
     const { loading, components } = this.useComponents();
+    const { lanesModel: lanes } = useLanes();
     const componentFiltersContext = useContext(ComponentFilterContext);
-
-    if (loading) return <FullLoader />;
 
     const filters = componentFiltersContext?.filters || [];
 
-    const filteredComponents = useMemo(() => runAllFilters(filters, components), [filters]);
+    const filteredComponents = useMemo(
+      () => runAllFilters(filters, { components, lanes }),
+      [filters, components, lanes]
+    );
 
-    const Filters = this.renderFilters({ components });
-    const Tree = this.renderTree({ components: filteredComponents });
+    const Filters = this.renderFilters({ components, lanes });
+    const host = this.useHost?.();
+
+    const Tree = this.renderTree({ components: filteredComponents, host });
 
     const emptyDrawer = (
       <span className={classNames(mutedItalic, ellipsis, styles.emptyDrawer)}>{this.emptyMessage}</span>
     );
+
+    if (loading) return <ComponentTreeLoader />;
 
     return (
       <div key={this.id} className={styles.drawerContainer}>

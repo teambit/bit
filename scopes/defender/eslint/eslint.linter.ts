@@ -29,9 +29,9 @@ export class ESLintLinter implements Linter {
   async lint(context: LinterContext): Promise<LintResults> {
     const longProcessLogger = this.logger.createLongProcessLogger('linting components', context.components.length);
     const eslint = this.createEslint(this.options.config, this.ESLint);
-    if (this.options.tsConfig && context.rootDir){
+    if (this.options.tsConfig && context.rootDir) {
       const tsConfigPath = this.createTempTsConfigFile(context.rootDir, context.envRuntime.id, this.options.tsConfig);
-      if (this.options?.config?.overrideConfig?.parserOptions){
+      if (this.options?.config?.overrideConfig?.parserOptions) {
         this.options.config.overrideConfig.parserOptions.project = tsConfigPath;
       }
     }
@@ -86,7 +86,7 @@ export class ESLintLinter implements Linter {
       totalComponentsWithFatalErrorCount,
       totalComponentsWithFixableErrorCount,
       totalComponentsWithFixableWarningCount,
-      totalComponentsWithWarningCount
+      totalComponentsWithWarningCount,
     } = this.computeManyComponentsTotals(results);
 
     return {
@@ -105,15 +105,15 @@ export class ESLintLinter implements Linter {
     };
   }
 
-  private createTempTsConfigFile(rootDir: string, envId: string, tsConfig: Record<string,any>): string {
+  private createTempTsConfigFile(rootDir: string, envId: string, tsConfig: Record<string, any>): string {
     const newTsConfig = {
       ...tsConfig,
-    }
+    };
     if (tsConfig.include) {
-      newTsConfig.include = tsConfig.include.map(includedPath => `../../${includedPath}`);;
+      newTsConfig.include = tsConfig.include.map((includedPath) => `../../${includedPath}`);
     }
-    if (tsConfig.exclude){
-      newTsConfig.exclude = tsConfig.exclude.map(excludedPath => `../../${excludedPath}`);;
+    if (tsConfig.exclude) {
+      newTsConfig.exclude = tsConfig.exclude.map((excludedPath) => `../../${excludedPath}`);
     }
     const cacheDir = getCacheDir(rootDir);
     const hash = objectHash(newTsConfig);
@@ -122,7 +122,7 @@ export class ESLintLinter implements Linter {
     // this affects performance dramatically
     const tempTsConfigPath = path.join(cacheDir, `bit.tsconfig.eslint.${hash}.json`);
     if (!fs.existsSync(tempTsConfigPath)) {
-      fs.outputJSONSync(tempTsConfigPath, newTsConfig, {spaces: 2});
+      fs.outputJSONSync(tempTsConfigPath, newTsConfig, { spaces: 2 });
     }
     return tempTsConfigPath;
   }
@@ -168,31 +168,31 @@ export class ESLintLinter implements Linter {
     let totalFixableErrorCount = 0;
     let totalFixableWarningCount = 0;
     let totalWarningCount = 0;
-    let totalComponentsWithErrorCount = 0
-    let totalComponentsWithFatalErrorCount = 0
-    let totalComponentsWithFixableErrorCount = 0
-    let totalComponentsWithFixableWarningCount = 0
-    let totalComponentsWithWarningCount = 0
+    let totalComponentsWithErrorCount = 0;
+    let totalComponentsWithFatalErrorCount = 0;
+    let totalComponentsWithFixableErrorCount = 0;
+    let totalComponentsWithFixableWarningCount = 0;
+    let totalComponentsWithWarningCount = 0;
 
     componentsResults.forEach((result) => {
-      if (result.totalErrorCount){
+      if (result.totalErrorCount) {
         totalErrorCount += result.totalErrorCount;
         totalComponentsWithErrorCount += 1;
       }
       // @ts-ignore - missing from the @types/eslint lib
-      if (result.totalFatalErrorCount){
+      if (result.totalFatalErrorCount) {
         totalFatalErrorCount += result.totalFatalErrorCount;
         totalComponentsWithFatalErrorCount += 1;
       }
-      if (result.totalFixableErrorCount){
+      if (result.totalFixableErrorCount) {
         totalFixableErrorCount += result.totalFixableErrorCount;
         totalComponentsWithFixableErrorCount += 1;
       }
-      if (result.totalFixableWarningCount){
+      if (result.totalFixableWarningCount) {
         totalFixableWarningCount += result.totalFixableWarningCount;
         totalComponentsWithFixableWarningCount += 1;
       }
-      if (result.totalWarningCount){
+      if (result.totalWarningCount) {
         totalWarningCount += result.totalWarningCount;
         totalComponentsWithWarningCount += 1;
       }

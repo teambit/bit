@@ -622,7 +622,7 @@ export class EnvsMain {
   private async getEnvAspectDef(envId: string): Promise<AspectDefinition> {
     const host = this.componentMain.getHost();
     const id = await host.resolveComponentId(envId);
-    const def = (await host.resolveAspects(MainRuntime.name, [id], {requestedOnly: true}))[0];
+    const def = (await host.resolveAspects(MainRuntime.name, [id], { requestedOnly: true }))[0];
     return def;
   }
 

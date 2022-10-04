@@ -1,5 +1,7 @@
 import { ComponentAspect } from './component.aspect';
 
+export type { GetComponentsOptions } from './get-component-opts';
+export type { UseComponentType } from './ui/use-component';
 export { useComponentHost } from './host';
 export { Component, InvalidComponent } from './component';
 export { ComponentID } from '@teambit/component-id';
@@ -33,7 +35,7 @@ export { ComponentModel, ComponentModelProps } from './ui/component-model';
 export { TopBarNav } from './ui/top-bar-nav';
 export type { ShowFragment, ShowRow, ShowJSONRow } from './show';
 export { default as Config } from './config';
-export { useComponent } from './ui';
+export { useComponent, useIdFromLocation } from './ui';
 
 // export { AspectList } from './aspect-list';
 // export { AspectEntry } from './aspect-entry';
