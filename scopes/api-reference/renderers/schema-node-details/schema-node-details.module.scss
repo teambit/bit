@@ -1,0 +1,35 @@
+.schemaNodeDetailsContainer {
+  padding: 24px 0px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+.schemaNodeDetailsName {
+  padding-bottom: 24px;
+}
+.schemaNodeDetailsComment {
+  font-size: var(--bit-p-xs);
+  padding-bottom: 24px;
+}
+.schemaNodeDetailsSignatureContainer {
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 24px;
+}
+.schemaNodeDetailsExample {
+  padding-bottom: 24px;
+}
+.schemaNodeDetailsExampleTitle {
+  padding: 16px 0px;
+}
+.schemaNodeDetailsLocation {
+  padding-bottom: 24px;
+}
+.schemaNodeDetailsLocationLink {
+  max-width: fit-content;
+  font-size: var(--bit-p-xs);
+}
+
+.schemaNodeDetailsMembersTitle {
+  padding-bottom: 16px;
+}

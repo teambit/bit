@@ -1,0 +1,75 @@
+import React, { HTMLAttributes } from 'react';
+import { SchemaNode } from '@teambit/semantics.entities.semantic-schema';
+import { H5, H6 } from '@teambit/documenter.ui.heading';
+import { CodeEditor } from '@teambit/code.monaco.code-editor';
+import { ComponentUrl } from '@teambit/component.modules.component-url';
+import { ComponentID } from '@teambit/component-id';
+import { Link } from '@teambit/base-react.navigation.link';
+import { SchemaNodeSumary } from '@teambit/api-reference.renderers.schema-node-summary';
+import { SchemaNodesIndex } from '@teambit/api-reference.renderers.schema-nodes-index';
+import { defaultCodeEditorOptions } from '@teambit/api-reference.utils.code-editor-options';
+
+import styles from './schema-node-details.module.scss';
+
+export type SchemaNodeDetailsProps = {
+  name: string;
+  signature: string;
+  example?: { content: string; path: string };
+  members?: SchemaNode[];
+  comment?: string;
+  location: { url: string; label: string; path: string };
+} & HTMLAttributes<HTMLDivElement>;
+
+export function SchemaNodeDetails({ name, signature, example, members, comment, location }: SchemaNodeDetailsProps) {
+  /**
+   * @HACK
+   * Make Monaco responsive
+   * default line height: 18px;
+   * totalHeight: (no of lines * default line height)
+   */
+  const exampleHeight = (example?.content.split('\n').length || 0) * 18;
+  const signatureHeight = 30 + (signature.split('\n').length - 1) * 18;
+  const locationUrl = location.url;
+  const locationLabel = location.label;
+  const hasMembers = members && members.length > 0;
+  const filePath = location.path;
+
+  return (
+    <div className={styles.schemaNodeDetailsContainer}>
+      <H5 className={styles.schemaNodeDetailsName}>{name}</H5>
+      {comment && <div className={styles.schemaNodeDetailsComment}>{comment}</div>}
+      <div className={styles.schemaNodeDetailsSignatureContainer}>
+        <CodeEditor options={defaultCodeEditorOptions} value={signature} height={signatureHeight} path={filePath} />
+      </div>
+      {example && (
+        <div className={styles.schemaNodeDetailsExample}>
+          <H6 className={styles.schemaNodeDetailsExampleTitle}>Example</H6>
+          <CodeEditor
+            options={defaultCodeEditorOptions}
+            value={example.content}
+            path={example.path}
+            height={exampleHeight}
+          />
+        </div>
+      )}
+      <div className={styles.schemaNodeDetailsLocation}>
+        <Link external={true} href={locationUrl} className={styles.schemaNodeDetailsLocationLink}>
+          {locationLabel}
+        </Link>
+      </div>
+      {hasMembers && (
+        <>
+          <SchemaNodesIndex title={'Index'} nodes={members} />
+          <div className={styles.schemaNodeDetailsMembersContainer}>
+            <H6 className={styles.schemaNodeDetailsMembersTitle}>Members</H6>
+            <div className={styles.schemaNodeDetailsMembersDetailsContainer}>
+              {members.map((member, index) => (
+                <SchemaNodeSumary key={index} node={member} />
+              ))}
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
