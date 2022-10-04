@@ -14,6 +14,7 @@ describe('dedupePath', () => {
     const output = dedupePaths(input);
     // @ts-ignore
     expect(output).toEqual(
+      // @ts-ignore
       expect.arrayContaining([
         { id: 'env1', paths: ['.'] },
         { id: 'env2', paths: ['p1/e3'] },
