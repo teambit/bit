@@ -1,0 +1,35 @@
+.variableComponentContainer {
+  padding: 24px 0px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+.variableName {
+  padding-bottom: 24px;
+}
+.variableComment {
+  font-size: var(--bit-p-xs);
+  padding-bottom: 24px;
+}
+.variableSignatureContainer {
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 24px;
+}
+.variableExample {
+  padding-bottom: 24px;
+}
+.variableExampleTitle {
+  padding: 16px 0px;
+}
+.variableLocation {
+  padding-bottom: 24px;
+}
+.variableLocationLink {
+  max-width: fit-content;
+  font-size: var(--bit-p-xs);
+}
+
+.variableMembersTitle {
+  padding-bottom: 16px;
+}

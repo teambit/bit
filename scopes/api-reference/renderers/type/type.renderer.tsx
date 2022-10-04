@@ -19,6 +19,9 @@ export const typeRenderer: APINodeRenderer = {
   default: true,
 };
 
+/**
+ * @todo - handle intersection types
+ */
 function TypeComponent({ node, componentId }: APINodeRenderProps) {
   const typeNode = node as TypeSchema;
   const {
