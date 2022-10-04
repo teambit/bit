@@ -1,0 +1,35 @@
+.interfaceComponentContainer {
+  padding: 24px 0px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+.interfaceName {
+  padding-bottom: 24px;
+}
+.interfaceComment {
+  font-size: var(--bit-p-xs);
+  padding-bottom: 24px;
+}
+.interfaceSignatureContainer {
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 24px;
+}
+.interfaceExample {
+  padding-bottom: 24px;
+}
+.interfaceExampleTitle {
+  padding: 16px 0px;
+}
+.interfaceLocation {
+  padding-bottom: 24px;
+}
+.interfaceLocationLink {
+  max-width: fit-content;
+  font-size: var(--bit-p-xs);
+}
+
+.interfaceMembersTitle {
+  padding-bottom: 16px;
+}
