@@ -249,6 +249,17 @@ export default class Component extends BitObject {
     }
   }
 
+  /**
+   * on main - it checks local-head vs remote-head.
+   * on lane - it checks local-head on lane vs remote-head on lane.
+   * however, to get an accurate `divergeData.snapsOnLocalOnly`, the above is not enough.
+   * for example, comp-a@snap-x from lane-a is merged into lane-b. we don't want this snap-x to be "local", because
+   * then, bit-status will show it as "staged" and bit-reset will remove it unexpectedly.
+   * if we only check by the local-head and remote-head on lane, it'll be local because the remote-head of lane-b is empty.
+   * to address this, we search all remote-refs files for this bit-id and during the local history traversal, if a hash
+   * is found there, it'll stop the traversal and not mark it as remote.
+   * in this example, during the merge, lane-a was fetched, and the remote-ref of this lane has snap-x as the head.
+   */
   async setDivergeData(repo: Repository, throws = true, fromCache = true): Promise<void> {
     if (!this.divergeData || !fromCache) {
       const remoteHead = (this.laneId ? this.laneHeadRemote : this.remoteHead) || null;
