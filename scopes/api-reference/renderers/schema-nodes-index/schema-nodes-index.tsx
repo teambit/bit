@@ -20,12 +20,17 @@ export function SchemaNodesIndex({ title, nodes, className }: SchemaNodesIndexPr
         <div key={`${group}-${groupedIndex}`} className={styles.group}>
           <div className={styles.groupName}>{group}</div>
           <div className={styles.groupedNodesContainer}>
-            {groupedNodes.map((node, nodeIndex) => (
-              <div key={`${displayName(node)}-${nodeIndex}`} className={styles.groupedNode}>
-                <div className={styles.groupedNodeIcon}></div>
-                <div className={styles.groupedNodeName}>{displayName(node)}</div>
-              </div>
-            ))}
+            {groupedNodes.map((node, nodeIndex) => {
+              const nodeDisplayName = displayName(node);
+              return (
+                <div key={`${nodeDisplayName}-${nodeIndex}`} className={styles.groupedNode}>
+                  <div className={styles.groupedNodeIcon}></div>
+                  <a href={`#${nodeDisplayName}`} className={styles.groupedNodeName}>
+                    {nodeDisplayName}
+                  </a>
+                </div>
+              );
+            })}
           </div>
         </div>
       ))}
@@ -33,7 +38,7 @@ export function SchemaNodesIndex({ title, nodes, className }: SchemaNodesIndexPr
   );
 }
 function displayName(node: SchemaNode) {
-  if (node.__schema === ConstructorSchema.name) return 'contructor';
+  if (node.__schema === ConstructorSchema.name) return 'constructor';
   return node.name;
 }
 

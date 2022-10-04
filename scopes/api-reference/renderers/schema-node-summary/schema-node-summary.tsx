@@ -21,7 +21,11 @@ export function SchemaNodeSumary({ node }: SchemaNodeSummaryProps) {
   const path = `${location.line}:${location.filePath}`;
   return (
     <div className={styles.schemaNodeSummary}>
-      {displayName && <div className={styles.schemaNodeSummaryName}>{displayName}</div>}
+      {displayName && (
+        <div id={displayName} className={styles.schemaNodeSummaryName}>
+          {displayName}
+        </div>
+      )}
       {doc && (
         <div className={styles.schemaNodeDoc}>
           {doc.comment && <div className={styles.docComment}>{doc.comment}</div>}
