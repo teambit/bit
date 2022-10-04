@@ -203,8 +203,10 @@ describe('hoistDependencies', () => {
     });
   });
 
-  describe('dependency that appears only as peer (in many components)', () => {
+  describe('dependency that appears only as peer (in many components) with same version', () => {
     const dependencyName = 'package-dependency';
+    const depKeyName = KEY_NAME_BY_LIFECYCLE_TYPE[PEER_DEP_LIFECYCLE_TYPE];
+
     describe('when there are no conflicts between versions', () => {
       beforeEach(() => {
         index = new Map();
@@ -213,10 +215,10 @@ describe('hoistDependencies', () => {
         dedupedDependencies = hoistDependencies(index);
       });
       it('should have the peers in each component', () => {
-        expect(dedupedDependencies.componentDependenciesMap.size).to.equal(3);
+        expect(dedupedDependencies.componentDependenciesMap.size).to.equal(0);
       });
       it('should not hoist the dependency to the root', () => {
-        expectRootToNotHaveDependency(dedupedDependencies, dependencyName);
+        expectRootToHave(dedupedDependencies, depKeyName, dependencyName, '1.0.0');
       });
       it('should not report about peer conflicts', () => {
         expectPeerIssuesToBeEmpty(dedupedDependencies);

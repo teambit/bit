@@ -17,7 +17,7 @@ export function pnpmErrorToBitError(err: PnpmError): BitError {
 }
 
 function renderErrorMessage(err: PnpmError): string {
-  if (err.code.startsWith('ERR_PNPM_FETCH_')) {
+  if (err.code?.startsWith('ERR_PNPM_FETCH_')) {
     // On fetching errors, pnpm adds information to the error object about the used auth headers.
     // This information is safe to print as the tokens are obfuscated.
     return `${err.message}

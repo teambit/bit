@@ -249,7 +249,7 @@ export class WorkspaceComponentLoader {
     // Make sure we are adding the envs / deps data first because other on load events might depend on it
     await Promise.all([
       this.upsertExtensionData(component, EnvsAspect.id, envsData),
-      this.upsertExtensionData(component, DependencyResolverAspect.id, depResolverData)
+      this.upsertExtensionData(component, DependencyResolverAspect.id, depResolverData),
     ]);
 
     // We are updating the component state with the envs and deps data here, so in case we have other slots that depend on this data

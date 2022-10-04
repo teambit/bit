@@ -844,7 +844,7 @@ jobs:
       - store_artifacts:
           path: linux
 
-  get_esbuild_arm64:
+  get_arm64_packages:
     <<: *defaults
     resource_class: small
     steps:
@@ -852,6 +852,12 @@ jobs:
       # in order to bring new version of esbuild, you need to install it on m1, tar it, and upload to the bucket
       # then you can download it here and change the cache name (don't forget to change both save_cache and restore_cache key)
       - run: cd esbuild-arm && wget https://storage.googleapis.com/bvm.bit.dev/external-assets/esbuild-0.14.29-darwin-arm64.tar.gz
+
+      - run: mkdir heapdump
+      - run: cd heapdump && wget https://storage.googleapis.com/bvm.bit.dev/external-assets/heapdump-0.3.15-darwin-arm64.tar.gz
+      # TODO: for debug only - remove this ls command
+      - run: ls -la heapdump
+
       # - save_cache:
       #     key: esbuild-0.14.29-darwin-arm64-v1
       #     paths:
@@ -860,6 +866,7 @@ jobs:
           root: .
           paths:
             - esbuild-arm
+            - heapdump
 
   bundle_version_macos:
     <<: *mac_defaults
@@ -879,6 +886,11 @@ jobs:
       # - restore_cache:
       #     key: esbuild-0.14.29-darwin-arm64-v1
       - run: cd esbuild-arm && tar -xvf esbuild-0.14.29-darwin-arm64.tar.gz
+      - run: cd heapdump && tar -xvf heapdump-0.3.15-darwin-arm64.tar.gz
+      # TODO: for debug only - remove this 2 ls commands
+      - run: ls -la heapdump
+      - run: ls -la heapdump/node_modules
+
       - run:
           name: set bit.dev registry
           command: npm config set @teambit:registry https://node.bit.dev
@@ -912,6 +924,9 @@ jobs:
       - run: rm -rf bit-${BIT_VERSION}/node_modules/esbuild
       - run: rm -rf bit-${BIT_VERSION}/node_modules/esbuild-darwin-64
       - run: cp -r esbuild-arm/node_modules/* bit-${BIT_VERSION}/node_modules
+      - run: rm -rf bit-${BIT_VERSION}/node_modules/heapdump
+      - run: rm -rf bit-${BIT_VERSION}/node_modules/nan
+      - run: cp -r heapdump/node_modules/* bit-${BIT_VERSION}/node_modules
       - run:
           name: compress bit arm64
           command: tar -cvf bit-${BIT_VERSION}.tar.gz bit-${BIT_VERSION}
@@ -1005,18 +1020,18 @@ jobs:
       - run:
           name: Configure gcloud auth
           command: echo "${COMMAND_GCLOUD_AUTHENTICATE}" > /tmp/gcloud-service-key.json && gcloud auth activate-service-account --key-file=/tmp/gcloud-service-key.json
-      - run:
-          name: Upload tar file (Linux) to old location
-          command: gsutil cp linux/bit-${BIT_VERSION}.tar.gz gs://bvm.bit.dev/versions/dev/Linux/${BIT_VERSION}/bit-${BIT_VERSION}.tar.gz
-      - run:
-          name: Upload tar file (Windows) to old location
-          command: gsutil cp windows/bit-${BIT_VERSION}.tar.gz gs://bvm.bit.dev/versions/dev/Windows_NT/${BIT_VERSION}/bit-${BIT_VERSION}.tar.gz
-      - run:
-          name: Upload tar file (OSX) to old location
-          command: gsutil cp macos/bit-${BIT_VERSION}.tar.gz gs://bvm.bit.dev/versions/dev/Darwin/${BIT_VERSION}/bit-${BIT_VERSION}.tar.gz
-      - run:
-          name: Upload tar file (OSX-arm64) to old location
-          command: gsutil cp macos-arm64/bit-${BIT_VERSION}.tar.gz gs://bvm.bit.dev/versions/dev/Darwin-arm64/${BIT_VERSION}/bit-${BIT_VERSION}.tar.gz
+      # - run:
+      #     name: Upload tar file (Linux) to old location
+      #     command: gsutil cp linux/bit-${BIT_VERSION}.tar.gz gs://bvm.bit.dev/versions/dev/Linux/${BIT_VERSION}/bit-${BIT_VERSION}.tar.gz
+      # - run:
+      #     name: Upload tar file (Windows) to old location
+      #     command: gsutil cp windows/bit-${BIT_VERSION}.tar.gz gs://bvm.bit.dev/versions/dev/Windows_NT/${BIT_VERSION}/bit-${BIT_VERSION}.tar.gz
+      # - run:
+      #     name: Upload tar file (OSX) to old location
+      #     command: gsutil cp macos/bit-${BIT_VERSION}.tar.gz gs://bvm.bit.dev/versions/dev/Darwin/${BIT_VERSION}/bit-${BIT_VERSION}.tar.gz
+      # - run:
+      #     name: Upload tar file (OSX-arm64) to old location
+      #     command: gsutil cp macos-arm64/bit-${BIT_VERSION}.tar.gz gs://bvm.bit.dev/versions/dev/Darwin-arm64/${BIT_VERSION}/bit-${BIT_VERSION}.tar.gz
       - run:
           name: Upload tar file (Linux)
           command: gsutil cp linux/bit-${BIT_VERSION}.tar.gz gs://bvm.bit.dev/bit/versions/${BIT_VERSION}/bit-${BIT_VERSION}-linux-x64.tar.gz && mv linux/bit-${BIT_VERSION}.tar.gz bit-${BIT_VERSION}-linux-x64.tar.gz && sha256sum bit-${BIT_VERSION}-linux-x64.tar.gz > checksum.txt && gsutil cp checksum.txt gs://bvm.bit.dev/bit/versions/${BIT_VERSION}/bit-${BIT_VERSION}-linux-x64.checksum.txt
@@ -1709,81 +1724,81 @@ workflows:
             - set_npm_registries
             - build
 
-  # nightly:
-  #   triggers:
-  #     - schedule: # every day at 3AM UTC (= 11PM EST = 6AM IST)
-  #         cron: '0 3 * * *'
-  #         filters:
-  #           branches:
-  #             only:
-  #               - master
-  #   jobs:
-  #     - checkout_code
-  #     - set_ssh_key
-  #     - set_npm_registries
-  #     - get_esbuild_arm64
-  #     - setup_harmony:
-  #         requires:
-  #           - set_npm_registries
-  #           - checkout_code
-  #     - bit_tag:
-  #         <<: *master_only_filter
-  #         requires:
-  #           - setup_harmony
-  #     - bundle_version_linux:
-  #         <<: *master_only_filter
-  #         requires:
-  #           - bit_tag
-  #     - bundle_version_windows:
-  #         <<: *master_only_filter
-  #         requires:
-  #           - bit_tag
-  #     - bundle_version_macos:
-  #         <<: *master_only_filter
-  #         requires:
-  #           - bit_tag
-  #           - get_esbuild_arm64
-  #     - harmony_publish_to_gcloud:
-  #         <<: *master_only_filter
-  #         requires:
-  #           - bundle_version_linux
-  #           - bundle_version_windows
-  #           - bundle_version_macos
-  #           - checkout_code # This is needed to generate index.json
-  #     - bit_export:
-  #         <<: *master_only_filter
-  #         requires:
-  #           - bit_tag
-  #     - symphony_docker_build:
-  #         requires:
-  #           - bit_tag
-  #     - docker_build:
-  #         requires:
-  #           - harmony_publish_to_gcloud
-  #     - docker_non_root_build:
-  #         requires:
-  #           - harmony_publish_to_gcloud
-  #     - server_docker_build:
-  #         requires:
-  #           - docker_build
-  #     - docker_build_node_14:
-  #         requires:
-  #           - harmony_publish_to_gcloud
-  #     - docker_non_root_build_node_14:
-  #         requires:
-  #           - harmony_publish_to_gcloud
-  #     - server_docker_build_node_14:
-  #         requires:
-  #           - docker_build_node_14
-  #     - docker_build_node_16:
-  #         requires:
-  #           - harmony_publish_to_gcloud
-  #     - docker_non_root_build_node_16:
-  #         requires:
-  #           - harmony_publish_to_gcloud
-  #     - server_docker_build_node_16:
-  #         requires:
-  #           - docker_build_node_16
+  nightly:
+    triggers:
+      - schedule: # every day at 3AM UTC (= 11PM EST = 6AM IST)
+          cron: '0 3 * * *'
+          filters:
+            branches:
+              only:
+                - master
+    jobs:
+      - checkout_code
+      - set_ssh_key
+      - set_npm_registries
+      - get_arm64_packages
+      - setup_harmony:
+          requires:
+            - set_npm_registries
+            - checkout_code
+      - bit_tag:
+          <<: *master_only_filter
+          requires:
+            - setup_harmony
+      - bundle_version_linux:
+          <<: *master_only_filter
+          requires:
+            - bit_tag
+      - bundle_version_windows:
+          <<: *master_only_filter
+          requires:
+            - bit_tag
+      - bundle_version_macos:
+          <<: *master_only_filter
+          requires:
+            - bit_tag
+            - get_arm64_packages
+      - harmony_publish_to_gcloud:
+          <<: *master_only_filter
+          requires:
+            - bundle_version_linux
+            - bundle_version_windows
+            - bundle_version_macos
+            - checkout_code # This is needed to generate index.json
+      - bit_export:
+          <<: *master_only_filter
+          requires:
+            - bit_tag
+      - symphony_docker_build:
+          requires:
+            - bit_tag
+      - docker_build:
+          requires:
+            - harmony_publish_to_gcloud
+      - docker_non_root_build:
+          requires:
+            - harmony_publish_to_gcloud
+      - server_docker_build:
+          requires:
+            - docker_build
+      - docker_build_node_14:
+          requires:
+            - harmony_publish_to_gcloud
+      - docker_non_root_build_node_14:
+          requires:
+            - harmony_publish_to_gcloud
+      - server_docker_build_node_14:
+          requires:
+            - docker_build_node_14
+      - docker_build_node_16:
+          requires:
+            - harmony_publish_to_gcloud
+      - docker_non_root_build_node_16:
+          requires:
+            - harmony_publish_to_gcloud
+      - server_docker_build_node_16:
+          requires:
+            - docker_build_node_16
 
   windows-nightly:
     triggers:
@@ -1839,7 +1854,7 @@ workflows:
           <<: *master_only_filter
           requires:
             - harmony_deploy_approval_job
-      - get_esbuild_arm64:
+      - get_arm64_packages:
           <<: *master_only_filter
           requires:
             - harmony_deploy_approval_job
@@ -1877,7 +1892,7 @@ workflows:
           requires:
             - harmony_deploy_approval_job
             - bit_tag
-            - get_esbuild_arm64
+            - get_arm64_packages
       - harmony_publish_to_gcloud:
           <<: *master_only_filter
           requires:
@@ -1945,9 +1960,9 @@ workflows:
   #         requires:
   #           - checkout_code
   # uncomment to update esbuild arm64 cache
-  # get_esbuild_arm64_workflow:
+  # get_arm64_workflow_packages:
   #   jobs:
-  #     - get_esbuild_arm64:
+  #     - get_arm64_packages:
   #         filters:
   #           branches:
   #             only: circle-esbuild-cache
@@ -1966,7 +1981,7 @@ workflows:
   #         filters:
   #           branches:
   #             only: fix-circle-cache
-  #     - get_esbuild_arm64:
+  #     - get_arm64_packages:
   #         filters:
   #           branches:
   #             only: fix-circle-cache
@@ -1975,7 +1990,7 @@ workflows:
   #           branches:
   #             only: fix-circle-cache
   #         requires:
-  #           - get_esbuild_arm64
+  #           - get_arm64_packages
   #     - harmony_publish_to_gcloud:
   #         filters:
   #           branches:

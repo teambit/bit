@@ -31,11 +31,11 @@ export type JsonLintResultsData = {
   duration: TimerResponse;
   lintResults: JsonLintDataResults;
   componentsIdsToLint: string[];
-}
+};
 
 export type JsonLintResults = {
   code: number;
-  data: JsonLintResultsData
+  data: JsonLintResultsData;
 };
 
 export class LintCmd implements Command {
@@ -72,30 +72,52 @@ export class LintCmd implements Command {
     return { code, data: `${title}\n\n${componentsOutputs}\n\n${summary}` };
   }
 
-  private getSummarySection(data: JsonLintResultsData){
+  private getSummarySection(data: JsonLintResultsData) {
     const { duration, lintResults, componentsIdsToLint } = data;
     const { seconds } = duration;
     const summaryTitle = `linted ${chalk.cyan(componentsIdsToLint.length.toString())} components in ${chalk.cyan(
       seconds.toString()
     )} seconds`;
 
-
     const totalFieldsMap = [
-      {itemsDataField: 'totalErrorCount', componentsDataField: 'totalComponentsWithErrorCount', label: 'Errors'},
-      {itemsDataField: 'totalFatalErrorCount', componentsDataField: 'totalComponentsWithFatalErrorCount', label: 'FatalErrors'},
-      {itemsDataField: 'totalFixableErrorCount', componentsDataField: 'totalComponentsWithFixableErrorCount', label: 'FixableErrors'},
-      {itemsDataField: 'totalFixableWarningCount', componentsDataField: 'totalComponentsWithFixableWarningCount', label: 'FixableWarnings'},
-      {itemsDataField: 'totalWarningCount', componentsDataField: 'totalComponentsWithWarningCount', label: 'Warnings'},
+      { itemsDataField: 'totalErrorCount', componentsDataField: 'totalComponentsWithErrorCount', label: 'Errors' },
+      {
+        itemsDataField: 'totalFatalErrorCount',
+        componentsDataField: 'totalComponentsWithFatalErrorCount',
+        label: 'FatalErrors',
+      },
+      {
+        itemsDataField: 'totalFixableErrorCount',
+        componentsDataField: 'totalComponentsWithFixableErrorCount',
+        label: 'FixableErrors',
+      },
+      {
+        itemsDataField: 'totalFixableWarningCount',
+        componentsDataField: 'totalComponentsWithFixableWarningCount',
+        label: 'FixableWarnings',
+      },
+      {
+        itemsDataField: 'totalWarningCount',
+        componentsDataField: 'totalComponentsWithWarningCount',
+        label: 'Warnings',
+      },
     ];
 
-    const summaryTotals = totalFieldsMap.map(item => this.renderTotalLine(lintResults[item.componentsDataField], lintResults[item.itemsDataField], item.label)).filter(Boolean).join('\n');
+    const summaryTotals = totalFieldsMap
+      .map((item) =>
+        this.renderTotalLine(lintResults[item.componentsDataField], lintResults[item.itemsDataField], item.label)
+      )
+      .filter(Boolean)
+      .join('\n');
     const summary = `${summaryTitle}\n${summaryTotals}`;
     return summary;
   }
 
-  private renderTotalLine(componentsCount: number, itemsCount:number, fieldLabel: string): string | undefined {
+  private renderTotalLine(componentsCount: number, itemsCount: number, fieldLabel: string): string | undefined {
     if (itemsCount === 0) return undefined;
-    return `total of ${chalk.green(itemsCount.toString())} ${chalk.cyan(fieldLabel)} (from ${chalk.green(componentsCount.toString())} components)`;
+    return `total of ${chalk.green(itemsCount.toString())} ${chalk.cyan(fieldLabel)} (from ${chalk.green(
+      componentsCount.toString()
+    )} components)`;
   }
 
   async json([components = []]: [string[]], linterOptions: LintCmdOptions): Promise<JsonLintResults> {
@@ -153,23 +175,23 @@ function toJsonLintResults(results: EnvsExecutionResult<LintResults>): JsonLintD
     });
 
     if (res.data) {
-      if (res.data.totalErrorCount){
+      if (res.data.totalErrorCount) {
         totalErrorCount += res.data.totalErrorCount;
         totalComponentsWithErrorCount += res.data.totalComponentsWithErrorCount ?? 0;
       }
-      if (res.data.totalFatalErrorCount){
+      if (res.data.totalFatalErrorCount) {
         totalFatalErrorCount += res.data.totalFatalErrorCount;
         totalComponentsWithFatalErrorCount += res.data.totalComponentsWithFatalErrorCount ?? 0;
       }
-      if (res.data.totalFixableErrorCount){
+      if (res.data.totalFixableErrorCount) {
         totalFixableErrorCount += res.data.totalFixableErrorCount;
         totalComponentsWithFixableErrorCount += res.data.totalComponentsWithFixableErrorCount ?? 0;
       }
-      if (res.data.totalFixableWarningCount){
+      if (res.data.totalFixableWarningCount) {
         totalFixableWarningCount += res.data.totalFixableWarningCount;
         totalComponentsWithFixableWarningCount += res.data.totalComponentsWithFixableWarningCount ?? 0;
       }
-      if (res.data.totalWarningCount){
+      if (res.data.totalWarningCount) {
         totalWarningCount += res.data.totalWarningCount;
         totalComponentsWithWarningCount += res.data.totalComponentsWithWarningCount ?? 0;
       }
