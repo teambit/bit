@@ -1,4 +1,5 @@
 import path from 'path';
+import { omit } from 'lodash';
 import { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
 import { TypescriptMain } from '../typescript.main.runtime';
@@ -31,15 +32,19 @@ export default class WriteTsconfigCmd implements Command {
     const { writeResults, cleanResults } = await this.tsMain.writeTsconfigJson({
       clean,
       dedupe: !noDedupe,
-      dryRun,
+      dryRun: dryRun || dryRunWithTsconfig,
       dryRunWithTsconfig,
       silent,
     });
     const cleanResultsOutput = cleanResults
       ? `${chalk.green(`the following paths were deleted`)}\n${cleanResults.join('\n')}\n\n`
       : '';
-    if (dryRun) {
+    if (dryRunWithTsconfig) {
       return JSON.stringify(writeResults, undefined, 2);
+    }
+    if (dryRun) {
+      const withoutTsconfig = writeResults.map((s) => omit(s, ['tsconfig']));
+      return JSON.stringify(withoutTsconfig, undefined, 2);
     }
     const totalFiles = writeResults.map((r) => r.paths.length).reduce((acc, current) => acc + current);
     const writeTitle = chalk.green(`${totalFiles} files have been written successfully`);
