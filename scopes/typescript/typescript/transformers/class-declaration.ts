@@ -31,8 +31,10 @@ export class ClassDeclarationTransformer implements SchemaTransformer {
     context: SchemaExtractorContext,
     token: ts.SyntaxKind.ExtendsKeyword | ts.SyntaxKind.ImplementsKeyword
   ) {
+    if (!node.heritageClauses) return [];
+
     return pMapSeries(
-      (node.heritageClauses || [])
+      node.heritageClauses
         .filter((heritageClause: ts.HeritageClause) => heritageClause.token === token)
         .flatMap((h: ts.HeritageClause) => {
           const { types } = h;

@@ -21,8 +21,10 @@ export class InterfaceDeclarationTransformer implements SchemaTransformer {
   }
 
   private async getExpressionWithTypeArgs(node: InterfaceDeclaration, context: SchemaExtractorContext) {
+    if (!node.heritageClauses) return [];
+
     return pMapSeries(
-      (node.heritageClauses || [])
+      node.heritageClauses
         .filter((heritageClause: ts.HeritageClause) => heritageClause.token === SyntaxKind.ExtendsKeyword)
         .flatMap((h: ts.HeritageClause) => {
           const { types } = h;

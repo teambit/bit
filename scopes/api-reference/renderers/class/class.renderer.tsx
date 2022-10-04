@@ -40,10 +40,9 @@ function ClassComponent({ node, componentId }: APINodeRenderProps) {
    * @HACK
    * Make Monaco responsive
    * default line height: 18px;
-   * base height: 25px;
-   * totalHeight: base height + (no of lines * default line height)
+   * totalHeight: (no of lines * default line height)
    */
-  const height = 30 + (example?.split('\n').length || 0) * 18;
+  const height = (example?.split('\n').length || 0) * 18;
   const extendsSignature = extendsNodes?.[0]?.name;
   const implementsDefiniton = implementNodes?.[0]?.name;
   const fullSignature = `${signature}${(extendsSignature && ' '.concat(extendsSignature)) || ''} ${
