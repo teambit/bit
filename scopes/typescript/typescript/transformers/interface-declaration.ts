@@ -1,4 +1,4 @@
-import { Node, InterfaceDeclaration, SyntaxKind } from 'typescript';
+import ts, { Node, InterfaceDeclaration, SyntaxKind } from 'typescript';
 import pMapSeries from 'p-map-series';
 import {
   ExpressionWithTypeArgumentsSchema,
@@ -23,13 +23,13 @@ export class InterfaceDeclarationTransformer implements SchemaTransformer {
   private async getExpressionWithTypeArgs(node: InterfaceDeclaration, context: SchemaExtractorContext) {
     return pMapSeries(
       (node.heritageClauses || [])
-        .filter((heritageClause) => heritageClause.token === SyntaxKind.ExtendsKeyword)
-        .flatMap((h) => {
+        .filter((heritageClause: ts.HeritageClause) => heritageClause.token === SyntaxKind.ExtendsKeyword)
+        .flatMap((h: ts.HeritageClause) => {
           const { types } = h;
           const name = h.getText();
           return types.map((type) => ({ ...type, name }));
         }),
-      async (expressionWithTypeArgs) => {
+      async (expressionWithTypeArgs: ts.ExpressionWithTypeArguments & { name: string }) => {
         const { typeArguments, expression, name } = expressionWithTypeArgs;
         const typeArgsNodes = typeArguments ? await pMapSeries(typeArguments, (t) => typeNodeToSchema(t, context)) : [];
         const location = context.getLocation(expression);
