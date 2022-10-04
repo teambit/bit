@@ -82,6 +82,9 @@ function ClassComponent({ node, componentId }: APINodeRenderProps) {
               scrollbar: { vertical: 'hidden' },
               scrollBeyondLastLine: false,
               readOnly: true,
+              language: 'typescript',
+              lineNumbers: 'off',
+              folding: false,
             }}
             value={example}
             path={docPath}
