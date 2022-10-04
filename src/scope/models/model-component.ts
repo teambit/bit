@@ -253,7 +253,7 @@ export default class Component extends BitObject {
     if (!this.divergeData || !fromCache) {
       const remoteHead = (this.laneId ? this.laneHeadRemote : this.remoteHead) || null;
       let otherRemoteHeads: Ref[] | undefined;
-      if (this.laneId && !this.laneHeadRemote) {
+      if (this.laneId) {
         otherRemoteHeads = await repo.remoteLanes.getRefsFromAllLanes(this.toBitId());
         if (this.remoteHead) otherRemoteHeads.push(this.remoteHead);
       }

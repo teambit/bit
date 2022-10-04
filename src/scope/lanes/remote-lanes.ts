@@ -116,9 +116,7 @@ export default class RemoteLanes {
 
   async getAllRemoteLaneIdsOfScope(scopeName: string): Promise<LaneId[]> {
     const matches = await glob(path.join('*'), { cwd: path.join(this.basePath, scopeName) });
-    // in the future, lane-name might have slashes, so until the first slash is the scope.
-    // the rest are the name
-    return matches.map((match) => LaneId.from(scopeName, match));
+    return matches.map((match) => LaneId.from(match, scopeName));
   }
 
   async syncWithLaneObject(remoteName: string, lane: Lane) {

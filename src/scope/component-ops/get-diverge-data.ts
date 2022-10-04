@@ -64,6 +64,8 @@ export async function getDivergeData({
     return new DivergeData();
   }
 
+  const existOnRemote = (ref: Ref) => [remoteHead, ...(otherRemoteHeads || [])].find((r) => r.isEqual(ref));
+
   const snapsOnLocal: Ref[] = [];
   const snapsOnRemote: Ref[] = [];
   let remoteHeadExistsLocally = false;
@@ -72,7 +74,7 @@ export async function getDivergeData({
   let hasMultipleParents = false;
   let error: Error | undefined;
   const addParentsRecursively = async (version: Version, snaps: Ref[], isLocal: boolean) => {
-    if (isLocal && version.hash().isEqual(remoteHead)) {
+    if (isLocal && existOnRemote(version.hash())) {
       remoteHeadExistsLocally = true;
       return;
     }
