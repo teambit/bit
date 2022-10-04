@@ -111,7 +111,7 @@ export class ObjectsReadableGenerator {
           modelComponent: component,
           repo: this.repo,
           startFrom: version.hash(),
-          stopAt: collectParentsUntil,
+          stopAt: collectParentsUntil ? [collectParentsUntil] : undefined,
         });
         const missingParentsHashes = allParentsHashes.filter((h) => !h.isEqual(version.hash()));
         await Promise.all(

@@ -109,6 +109,7 @@ export default class Component extends BitObject {
    * when checked out to a lane, this prop is either Ref or null. otherwise (when on main), this prop is undefined.
    */
   laneHeadRemote?: Ref | null;
+  laneId?: LaneId; // doesn't get saved in the scope.
   laneDataIsPopulated = false; // doesn't get saved in the scope, used to improve performance of loading the lane data
   schema: string | undefined;
   private divergeData?: DivergeData;
@@ -250,12 +251,13 @@ export default class Component extends BitObject {
 
   async setDivergeData(repo: Repository, throws = true, fromCache = true): Promise<void> {
     if (!this.divergeData || !fromCache) {
-      // const isOnLane = this.laneHeadRemote || this.laneHeadRemote === null;
-      // const remoteHead = (isOnLane ? this.laneHeadRemote : this.remoteHead) || null;
-      // this is tricky. in case the remote-lane doesn't exist, we can't just use the remote-head.
-      // maybe it should check forkedFrom, and if not exists, then use remote-head. or just leave it as null.
-      const remoteHead = this.laneHeadRemote || this.remoteHead || null;
-      this.divergeData = await getDivergeData({ repo, modelComponent: this, remoteHead, throws });
+      const remoteHead = (this.laneId ? this.laneHeadRemote : this.remoteHead) || null;
+      let otherRemoteHeads: Ref[] | undefined;
+      if (this.laneId && !this.laneHeadRemote) {
+        otherRemoteHeads = await repo.remoteLanes.getRefsFromAllLanes(this.toBitId());
+        if (this.remoteHead) otherRemoteHeads.push(this.remoteHead);
+      }
+      this.divergeData = await getDivergeData({ repo, modelComponent: this, remoteHead, throws, otherRemoteHeads });
     }
   }
 
@@ -269,10 +271,12 @@ export default class Component extends BitObject {
 
   async populateLocalAndRemoteHeads(repo: Repository, lane: Lane | null) {
     this.setLaneHeadLocal(lane);
+    if (lane) this.laneId = lane.toLaneId();
     if (this.scope) {
       if (lane) {
-        const remoteToCheck = lane.isNew && lane.forkedFrom ? lane.forkedFrom : lane.toLaneId();
-        this.laneHeadRemote = await repo.remoteLanes.getRef(remoteToCheck, this.toBitId());
+        // const remoteToCheck = lane.isNew && lane.forkedFrom ? lane.forkedFrom : lane.toLaneId();
+        // this.laneHeadRemote = await repo.remoteLanes.getRef(remoteToCheck, this.toBitId());
+        this.laneHeadRemote = await repo.remoteLanes.getRef(lane.toLaneId(), this.toBitId());
       }
       // we need also the remote head of main, otherwise, the diverge-data assumes all versions are local
       this.remoteHead = await repo.remoteLanes.getRef(LaneId.from(DEFAULT_LANE, this.scope), this.toBitId());

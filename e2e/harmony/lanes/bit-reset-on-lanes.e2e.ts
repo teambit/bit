@@ -51,4 +51,37 @@ describe('bit reset when on lane', function () {
       expect(() => helper.command.untagAll()).to.not.throw();
     });
   });
+  describe('reset on lane after fork from another lane', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents(1, false);
+      helper.command.createLane();
+      helper.command.snapAllComponentsWithoutBuild();
+      // helper.command.export(); // todo: try with and without export
+      helper.command.createLane('dev2');
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+    });
+    it('bit reset should not throw', () => {
+      expect(() => helper.command.untagAll()).to.not.throw();
+    });
+  });
+  describe('reset on lane after merging from another lane', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents(1, false);
+      helper.command.createLane();
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.addRemoteScope();
+      helper.command.createLane('dev2');
+      helper.command.mergeLane(`${helper.scopes.remote}/dev`);
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+    });
+    it('bit reset should not throw', () => {
+      expect(() => helper.command.untagAll()).to.not.throw();
+    });
+  });
 });
