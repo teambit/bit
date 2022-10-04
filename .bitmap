@@ -2065,6 +2065,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/user-agent"
     },
+    "utils/code-editor-options": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/api-reference/utils/code-editor-options"
+    },
     "utils/sort-api-nodes": {
         "scope": "",
         "version": "",

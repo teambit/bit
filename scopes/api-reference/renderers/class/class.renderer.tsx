@@ -8,6 +8,7 @@ import { ComponentUrl } from '@teambit/component.modules.component-url';
 import { Link } from '@teambit/base-react.navigation.link';
 import { SchemaNodeSumary } from '@teambit/api-reference.renderers.schema-node-summary';
 import { SchemaNodesIndex } from '@teambit/api-reference.renderers.schema-nodes-index';
+import { defaultCodeEditorOptions } from '@teambit/api-reference.utils.code-editor-options';
 
 import styles from './class.renderer.module.scss';
 
@@ -58,38 +59,12 @@ function ClassComponent({ node, componentId }: APINodeRenderProps) {
       <H5 className={styles.className}>{name}</H5>
       {comment && <div className={styles.classComment}>{comment}</div>}
       <div className={styles.classSignatureContainer}>
-        <CodeEditor
-          options={{
-            minimap: { enabled: false },
-            scrollbar: { vertical: 'hidden' },
-            scrollBeyondLastLine: false,
-            readOnly: true,
-            language: 'typescript',
-            lineNumbers: 'off',
-            folding: false,
-          }}
-          value={fullSignature}
-          height={30}
-          path={filePath}
-        />
+        <CodeEditor options={defaultCodeEditorOptions} value={fullSignature} height={30} path={filePath} />
       </div>
       {example && (
         <div className={styles.classExample}>
           <H6 className={styles.classExampleTitle}>Example</H6>
-          <CodeEditor
-            options={{
-              minimap: { enabled: false },
-              scrollbar: { vertical: 'hidden' },
-              scrollBeyondLastLine: false,
-              readOnly: true,
-              language: 'typescript',
-              lineNumbers: 'off',
-              folding: false,
-            }}
-            value={example}
-            path={docPath}
-            height={height}
-          />
+          <CodeEditor options={defaultCodeEditorOptions} value={example} path={docPath} height={height} />
         </div>
       )}
       <div className={styles.classLocation}>

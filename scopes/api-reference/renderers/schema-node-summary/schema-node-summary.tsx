@@ -1,7 +1,7 @@
 import React, { HTMLAttributes } from 'react';
 import { ConstructorSchema, SchemaNode } from '@teambit/semantics.entities.semantic-schema';
 import { CodeEditor } from '@teambit/code.monaco.code-editor';
-// import { CopyBox } from '@teambit/documenter.ui.copy-box';
+import { defaultCodeEditorOptions } from '@teambit/api-reference.utils.code-editor-options';
 
 import styles from './schema-node-summary.module.scss';
 
@@ -41,23 +41,7 @@ export function SchemaNodeSumary({ node }: SchemaNodeSummaryProps) {
         </div>
       )}
       {signature && (
-        // <CopyBox className={styles.schemaNodeSummarySignature} style={{ height: signatureHeight }}>
-        //   {signature}
-        // </CopyBox>
-        <CodeEditor
-          options={{
-            minimap: { enabled: false },
-            scrollbar: { vertical: 'hidden' },
-            scrollBeyondLastLine: false,
-            readOnly: true,
-            language: 'typescript',
-            lineNumbers: 'off',
-            folding: false,
-          }}
-          value={displaySignature}
-          height={signatureHeight}
-          path={path}
-        />
+        <CodeEditor options={defaultCodeEditorOptions} value={displaySignature} height={signatureHeight} path={path} />
       )}
     </div>
   );
