@@ -101,11 +101,14 @@ export default class Component extends BitObject {
   remoteHead?: Ref | null; // doesn't get saved in the scope, used to easier access the remote main head
   /**
    * doesn't get saved in the scope, used to easier access the local snap head data
-   * when checked out to a lane, this prop is either Ref or null. otherwise (when on main), this
-   * prop is undefined.
+   * when checked out to a lane, this prop is either Ref or null. otherwise (when on main), this prop is undefined.
    */
   laneHeadLocal?: Ref | null;
-  laneHeadRemote?: Ref | null; // doesn't get saved in the scope, used to easier access the remote snap head data
+  /**
+   * doesn't get saved in the scope, used to easier access the remote snap head data
+   * when checked out to a lane, this prop is either Ref or null. otherwise (when on main), this prop is undefined.
+   */
+  laneHeadRemote?: Ref | null;
   laneDataIsPopulated = false; // doesn't get saved in the scope, used to improve performance of loading the lane data
   schema: string | undefined;
   private divergeData?: DivergeData;
@@ -247,6 +250,10 @@ export default class Component extends BitObject {
 
   async setDivergeData(repo: Repository, throws = true, fromCache = true): Promise<void> {
     if (!this.divergeData || !fromCache) {
+      // const isOnLane = this.laneHeadRemote || this.laneHeadRemote === null;
+      // const remoteHead = (isOnLane ? this.laneHeadRemote : this.remoteHead) || null;
+      // this is tricky. in case the remote-lane doesn't exist, we can't just use the remote-head.
+      // maybe it should check forkedFrom, and if not exists, then use remote-head. or just leave it as null.
       const remoteHead = this.laneHeadRemote || this.remoteHead || null;
       this.divergeData = await getDivergeData({ repo, modelComponent: this, remoteHead, throws });
     }

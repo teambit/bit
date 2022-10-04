@@ -1,5 +1,5 @@
 import { MainRuntime, CLIMain, CLIAspect } from '@teambit/cli';
-import { flatten, cloneDeep, head } from 'lodash';
+import { flatten, head } from 'lodash';
 import { AspectLoaderMain, AspectLoaderAspect } from '@teambit/aspect-loader';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
@@ -219,12 +219,8 @@ export class ApplicationMain {
     const context = res.results[0].data;
     if (!context) throw new AppNotFound(appName);
     const hostRootDir = this.workspace.getComponentPackagePath(component);
-    return Object.assign(cloneDeep(context), {
-      appName,
-      appComponent: component,
-      hostRootDir,
-      workdir: this.workspace.path,
-    });
+    const appContext = new AppContext(appName, context.dev, component, this.workspace.path, context, hostRootDir);
+    return appContext;
   }
 
   static runtime = MainRuntime;
@@ -286,7 +282,7 @@ export class ApplicationMain {
           appName: app?.name,
           type: app?.applicationType,
         };
-      });  
+      });
     }
 
     return application;

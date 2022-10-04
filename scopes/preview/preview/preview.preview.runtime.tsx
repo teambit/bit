@@ -108,12 +108,7 @@ export class PreviewPreview {
     // during build / tag, the component is isolated, so all aspects are relevant, and do not require filtering
     const componentAspects = this.isDev ? await this.getComponentAspects(componentId.toString()) : undefined;
     const previewModule = await this.getPreviewModule(name, componentId);
-    const render = preview.render(
-      componentId,
-      previewModule,
-      includes,
-      this.getRenderingContext(componentAspects)
-    );
+    const render = preview.render(componentId, previewModule, includes, this.getRenderingContext(componentAspects));
 
     this.reportSize();
     this.setViewport();
@@ -136,11 +131,14 @@ export class PreviewPreview {
     // TODO: discuss with gilad for a better way to resolve page loaded here.
 
     const sendPubsubEvent = () => {
-      this.pubsub.pub(PreviewAspect.id, new SizeEvent({
-        width: window.document.body.offsetWidth,
-        height: window.document.body.offsetHeight
-      }));
-    }
+      this.pubsub.pub(
+        PreviewAspect.id,
+        new SizeEvent({
+          width: window.document.body.offsetWidth,
+          height: window.document.body.offsetHeight,
+        })
+      );
+    };
 
     window.document.body.addEventListener('resize', debounce(sendPubsubEvent, 300));
 
@@ -152,10 +150,13 @@ export class PreviewPreview {
         clearInterval(interval);
         return;
       }
-      this.pubsub.pub(PreviewAspect.id, new SizeEvent({
-        width: window.document.body.offsetWidth,
-        height: window.document.body.offsetHeight
-      }));
+      this.pubsub.pub(
+        PreviewAspect.id,
+        new SizeEvent({
+          width: window.document.body.offsetWidth,
+          height: window.document.body.offsetHeight,
+        })
+      );
     }, 200);
   }
 

@@ -1,0 +1,22 @@
+.onLaneFilter {
+  align-items: center;
+
+  > div {
+    line-height: 16px;
+    display: flex;
+  }
+
+  .filterIcon {
+    display: flex;
+    padding: 8px;
+
+    img {
+      width: 16px;
+    }
+
+    .filterIconLabel {
+      margin: 0px 8px;
+      font-size: 14px;
+    }
+  }
+}

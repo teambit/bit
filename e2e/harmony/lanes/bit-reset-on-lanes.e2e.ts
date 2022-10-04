@@ -37,4 +37,18 @@ describe('bit reset when on lane', function () {
       expect(() => helper.command.status()).not.to.throw();
     });
   });
+  describe('reset on lane after export from main', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents(1, false);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.command.createLane();
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+    });
+    it('bit reset should not throw', () => {
+      expect(() => helper.command.untagAll()).to.not.throw();
+    });
+  });
 });

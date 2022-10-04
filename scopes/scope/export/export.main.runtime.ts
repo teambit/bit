@@ -38,6 +38,7 @@ import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
 import { Remote, Remotes } from '@teambit/legacy/dist/remotes';
 import { getScopeRemotes } from '@teambit/legacy/dist/scope/scope-remotes';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
+import ScopeComponentsImporter from '@teambit/legacy/dist/scope/component-ops/scope-components-importer';
 import { ExportVersions } from '@teambit/legacy/dist/scope/models/export-metadata';
 import {
   persistRemotes,
@@ -47,7 +48,6 @@ import {
 import { BitObject, Ref } from '@teambit/legacy/dist/scope/objects';
 import { PersistFailed } from '@teambit/legacy/dist/scope/exceptions/persist-failed';
 import { getAllVersionHashes } from '@teambit/legacy/dist/scope/component-ops/traverse-versions';
-import ScopeComponentsImporter from '@teambit/legacy/dist/scope/component-ops/scope-components-importer';
 import { ExportAspect } from './export.aspect';
 import { ExportCmd } from './export-cmd';
 import { ResumeExportCmd } from './resume-export-cmd';
