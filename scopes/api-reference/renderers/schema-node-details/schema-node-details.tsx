@@ -2,8 +2,6 @@ import React, { HTMLAttributes } from 'react';
 import { SchemaNode } from '@teambit/semantics.entities.semantic-schema';
 import { H5, H6 } from '@teambit/documenter.ui.heading';
 import { CodeEditor } from '@teambit/code.monaco.code-editor';
-import { ComponentUrl } from '@teambit/component.modules.component-url';
-import { ComponentID } from '@teambit/component-id';
 import { Link } from '@teambit/base-react.navigation.link';
 import { SchemaNodeSumary } from '@teambit/api-reference.renderers.schema-node-summary';
 import { SchemaNodesIndex } from '@teambit/api-reference.renderers.schema-nodes-index';
