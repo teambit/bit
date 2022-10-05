@@ -532,7 +532,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
       modelComponent: incomingComp,
       throws: false,
       versionObjects,
-      stopAt: existingHead,
+      stopAt: existingHead ? [existingHead] : undefined,
     });
     const hashesOnly = allIncomingVersionsInfoUntilExistingHead
       .filter((v) => !v.tag) // only non-tag, the tagged are already part of the mergedVersion
