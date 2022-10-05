@@ -1142,10 +1142,38 @@
           "character": 1
         },
         "name": "Food",
+        "signature": "enum Food",
         "members": [
-          "Falafel",
-          "Hummus",
-          "Tahini"
+          {
+            "__schema": "EnumMemberSchema",
+            "location": {
+              "filePath": "index.ts",
+              "line": 74,
+              "character": 3
+            },
+            "name": "Falafel",
+            "signature": "(enum member) Food.Falafel = 0"
+          },
+          {
+            "__schema": "EnumMemberSchema",
+            "location": {
+              "filePath": "index.ts",
+              "line": 75,
+              "character": 3
+            },
+            "name": "Hummus",
+            "signature": "(enum member) Food.Hummus = 1"
+          },
+          {
+            "__schema": "EnumMemberSchema",
+            "location": {
+              "filePath": "index.ts",
+              "line": 76,
+              "character": 3
+            },
+            "name": "Tahini",
+            "signature": "(enum member) Food.Tahini = 2"
+          }
         ]
       },
       {
@@ -1728,7 +1756,7 @@
               "line": 127,
               "character": 30
             },
-            "type": "(type parameter) T in type If<T, U, Y, N>",
+            "type": "T",
             "name": "T"
           },
           "extendsType": {
@@ -1738,7 +1766,7 @@
               "line": 127,
               "character": 40
             },
-            "type": "(type parameter) U in type If<T, U, Y, N>",
+            "type": "U",
             "name": "U"
           },
           "trueType": {
@@ -1748,7 +1776,7 @@
               "line": 127,
               "character": 44
             },
-            "type": "(type parameter) Y in type If<T, U, Y, N>",
+            "type": "Y",
             "name": "Y"
           },
           "falseType": {
@@ -1758,7 +1786,7 @@
               "line": 127,
               "character": 48
             },
-            "type": "(type parameter) N in type If<T, U, Y, N>",
+            "type": "N",
             "name": "N"
           }
         },
@@ -1805,7 +1833,7 @@
                 "line": 129,
                 "character": 39
               },
-              "type": "T) => void",
+              "type": "T",
               "name": "T"
             }
           }
