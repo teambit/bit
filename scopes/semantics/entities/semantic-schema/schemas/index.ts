@@ -21,6 +21,7 @@ export { TypeOperatorSchema } from './type-operator';
 export { TupleTypeSchema } from './tuple-type';
 export { ParameterSchema } from './parameter';
 export { EnumSchema } from './enum';
+export { EnumMemberSchema } from './enum-member';
 export { ParenthesizedTypeSchema } from './parenthesized-type';
 export { TypePredicateSchema } from './type-predicate';
 export { IndexedAccessSchema } from './indexed-access-type';

@@ -189,7 +189,7 @@ async function functionType(node: FunctionTypeNode, context: SchemaExtractorCont
   const returnType = await typeNodeToSchema(node.type, context);
   const location = context.getLocation(node);
   const modifiers = node.modifiers?.map((modifier) => modifier.getText()) || [];
-  const doc = await context.jsDocToDocSchema(node, context);
+  const doc = await context.jsDocToDocSchema(node);
   return new FunctionLikeSchema(location, name, params, returnType, '', modifiers as Modifier[], doc);
 }
 

@@ -29,9 +29,9 @@ function ClassComponent({ node, componentId }: APINodeRenderProps) {
 
   const example = tags.find((tag) => tag.tagName === 'example')?.comment;
   const extendsSignature = extendsNodes?.[0]?.name;
-  const implementsDefiniton = implementNodes?.[0]?.name;
+  const implementsDefinition = implementNodes?.[0]?.name;
   const fullSignature = `${signature}${(extendsSignature && ' '.concat(extendsSignature)) || ''} ${
-    implementsDefiniton || ''
+    implementsDefinition || ''
   }`;
   const componentIdUrl = ComponentUrl.toUrl(componentId, { includeVersion: false });
   const locationUrl = `${componentIdUrl}/~code/${filePath}${

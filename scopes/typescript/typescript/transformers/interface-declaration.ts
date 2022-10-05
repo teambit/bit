@@ -44,7 +44,7 @@ export class InterfaceDeclarationTransformer implements SchemaTransformer {
 
   async transform(interfaceDec: InterfaceDeclaration, context: SchemaExtractorContext) {
     const members = await pMapSeries(interfaceDec.members, (member) => typeElementToSchema(member, context));
-    const doc = await context.jsDocToDocSchema(interfaceDec, context);
+    const doc = await context.jsDocToDocSchema(interfaceDec);
     const signature = interfaceDec.name ? await context.getQuickInfoDisplayString(interfaceDec.name) : undefined;
     const extendsNodes = await this.getExpressionWithTypeArgs(interfaceDec, context);
     const typeParameters = interfaceDec.typeParameters?.map((typeParam) => {

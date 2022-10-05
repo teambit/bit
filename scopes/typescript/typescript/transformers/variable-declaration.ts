@@ -29,7 +29,7 @@ export class VariableDeclaration implements SchemaTransformer {
     const info = await context.getQuickInfo(varDec.name);
     const displaySig = info?.body?.displayString || '';
     const location = context.getLocation(varDec);
-    const doc = await context.jsDocToDocSchema(varDec, context);
+    const doc = await context.jsDocToDocSchema(varDec);
     if (varDec.initializer?.kind === ts.SyntaxKind.ArrowFunction) {
       const args = await getParams((varDec.initializer as ArrowFunction).parameters, context);
       const typeStr = parseReturnTypeFromQuickInfo(info);

@@ -3,17 +3,12 @@
   padding-bottom: 16px;
   flex-direction: column;
 }
-.title {
-  font-size: var(--bit-p-lg);
-  font-weight: 700;
-  padding-top: 8px;
-  padding-bottom: 24px;
-}
+
 .groupName {
   display: flex;
   font-weight: 500;
   padding-bottom: 16px;
-  font-size: var(--bit-p-md);
+  font-size: var(--bit-p-sm);
   text-transform: capitalize;
 }
 
@@ -30,7 +25,9 @@
   display: flex;
   flex-direction: column;
 }
-
+.paddingTop {
+  padding-top: 16px;
+}
 .groupedNode {
   display: flex;
   flex-direction: row;
@@ -42,4 +39,15 @@
 
 .groupedNodeName {
   text-decoration: none;
+}
+.schemaNodeIndexDrawer {
+  // drawer name
+  > div:first-child {
+    border: none;
+    border-bottom: 1px solid var(--bit-border-color-lightest, #ededed);
+  }
+  height: 100%;
+  &.noBorder {
+    border-bottom: none;
+  }
 }

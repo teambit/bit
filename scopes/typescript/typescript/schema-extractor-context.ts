@@ -348,7 +348,7 @@ export class SchemaExtractorContext {
     return new TypeRefSchema(location, typeStr, undefined, pkgName);
   }
 
-  async jsDocToDocSchema(node: Node, context: SchemaExtractorContext): Promise<DocSchema | undefined> {
+  async jsDocToDocSchema(node: Node): Promise<DocSchema | undefined> {
     if (!canHaveJsDoc(node)) {
       return undefined;
     }
@@ -359,11 +359,9 @@ export class SchemaExtractorContext {
     // not sure how common it is to have multiple JSDocs. never seen it before.
     // regardless, in typescript implementation of methods like `getJSDocDeprecatedTag()`, they use the first one. (`getFirstJSDocTag()`)
     const jsDoc = jsDocs[0];
-    const location = context.getLocation(jsDoc);
+    const location = this.getLocation(jsDoc);
     const comment = getTextOfJSDocComment(jsDoc.comment);
-    const tags = jsDoc.tags
-      ? await pMapSeries(jsDoc.tags, (tag) => tagParser(tag, context, this.formatter))
-      : undefined;
+    const tags = jsDoc.tags ? await pMapSeries(jsDoc.tags, (tag) => tagParser(tag, this, this.formatter)) : undefined;
     return new DocSchema(location, jsDoc.getText(), comment, tags);
   }
 }

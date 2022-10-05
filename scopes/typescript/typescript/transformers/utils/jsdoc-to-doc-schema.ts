@@ -71,7 +71,7 @@ export async function tagParser(
       if (tagName === 'example') {
         const comment = getTextOfJSDocComment(tag.comment);
         try {
-          const formattedComment = comment && (await formatter.formatSnippet(comment)); // run thru prettier
+          const formattedComment = comment && (await formatter.formatSnippet(comment));
           return new TagSchema(context.getLocation(tag), tagName, formattedComment);
         } catch (e) {
           return simpleTag(tag, tagName, context);

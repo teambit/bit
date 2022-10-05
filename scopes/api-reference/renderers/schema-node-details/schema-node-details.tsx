@@ -3,9 +3,13 @@ import { SchemaNode } from '@teambit/semantics.entities.semantic-schema';
 import { H5, H6 } from '@teambit/documenter.ui.heading';
 import { CodeEditor } from '@teambit/code.monaco.code-editor';
 import { Link } from '@teambit/base-react.navigation.link';
-import { SchemaNodeSumary } from '@teambit/api-reference.renderers.schema-node-summary';
+import { SchemaNodeSummary } from '@teambit/api-reference.renderers.schema-node-summary';
 import { SchemaNodesIndex } from '@teambit/api-reference.renderers.schema-nodes-index';
 import { defaultCodeEditorOptions } from '@teambit/api-reference.utils.code-editor-options';
+import {
+  groupByNodeSignatureType,
+  sortSignatureType,
+} from '@teambit/api-reference.utils.group-schema-node-by-signature';
 
 import styles from './schema-node-details.module.scss';
 
@@ -31,6 +35,7 @@ export function SchemaNodeDetails({ name, signature, example, members, comment, 
   const locationLabel = location.label;
   const hasMembers = members && members.length > 0;
   const filePath = location.path;
+  const groupedMembers = members ? Array.from(groupByNodeSignatureType(members).entries()).sort(sortSignatureType) : [];
 
   return (
     <div className={styles.schemaNodeDetailsContainer}>
@@ -59,12 +64,16 @@ export function SchemaNodeDetails({ name, signature, example, members, comment, 
         <>
           <SchemaNodesIndex title={'Index'} nodes={members} />
           <div className={styles.schemaNodeDetailsMembersContainer}>
-            <H6 className={styles.schemaNodeDetailsMembersTitle}>Members</H6>
-            <div className={styles.schemaNodeDetailsMembersDetailsContainer}>
-              {members.map((member, index) => (
-                <SchemaNodeSumary key={index} node={member} />
-              ))}
-            </div>
+            {groupedMembers.map(([type, groupedMembersByType], index) => {
+              return (
+                <div key={index} className={styles.groupedMemberContainer}>
+                  <div className={styles.groupName}>{type}</div>
+                  {groupedMembersByType.map((member) => (
+                    <SchemaNodeSummary key={index} node={member} />
+                  ))}
+                </div>
+              );
+            })}
           </div>
         </>
       )}

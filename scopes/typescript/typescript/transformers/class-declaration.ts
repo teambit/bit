@@ -77,7 +77,7 @@ export class ClassDeclarationTransformer implements SchemaTransformer {
       }
       return classElementToSchema(member, context);
     });
-    const doc = await context.jsDocToDocSchema(node, context);
+    const doc = await context.jsDocToDocSchema(node);
 
     if (!signature) {
       throw Error(`Missing signature for class ${className} declaration`);

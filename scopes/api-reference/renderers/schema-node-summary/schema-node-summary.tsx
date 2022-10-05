@@ -10,7 +10,7 @@ export type SchemaNodeSummaryProps = { node: SchemaNode } & HTMLAttributes<HTMLD
  * @todo
  * find a better way to render all doc tags
  */
-export function SchemaNodeSumary({ node }: SchemaNodeSummaryProps) {
+export function SchemaNodeSummary({ node }: SchemaNodeSummaryProps) {
   const { signature, name, __schema, doc, location } = node;
   const displayName = name || (__schema === ConstructorSchema.name && 'constructor') || undefined;
   const signatureLength = signature?.split('\n').length || 0;
