@@ -808,11 +808,12 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     if (!lane) {
       return;
     }
-    this.logger.debug(`current lane ${laneId.toString()} is missing, importing it`);
+    this.logger.info(`current lane ${laneId.toString()} is missing, importing it`);
+    await this.scope.legacyScope.objects.writeObjectsToTheFS([lane]);
     const scopeComponentsImporter = ScopeComponentsImporter.getInstance(this.scope.legacyScope);
     const ids = BitIds.fromArray(lane.toBitIds().filter((id) => id.hasScope()));
     await scopeComponentsImporter.importManyDeltaWithoutDeps(ids, true, lane);
-    await scopeComponentsImporter.importMany({ ids, lanes: lane ? [lane] : undefined });
+    await scopeComponentsImporter.importMany({ ids, lanes: [lane] });
   }
 
   /**
@@ -916,7 +917,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
   }
 
   /**
-   * Get the component root dir in the file system (relative to workspace or full)
+   * Get the component root dir in the file system (relative to workspace or full) in Linux format
    * @param componentId
    * @param relative return the path relative to the workspace or full path
    */
