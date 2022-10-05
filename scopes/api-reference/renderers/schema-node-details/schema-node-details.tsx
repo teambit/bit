@@ -15,7 +15,7 @@ import styles from './schema-node-details.module.scss';
 
 export type SchemaNodeDetailsProps = {
   name: string;
-  signature: string;
+  signature?: string;
   example?: { content: string; path: string };
   members?: SchemaNode[];
   comment?: string;
@@ -30,7 +30,7 @@ export function SchemaNodeDetails({ name, signature, example, members, comment, 
    * totalHeight: (no of lines * default line height)
    */
   const exampleHeight = (example?.content.split('\n').length || 0) * 18;
-  const signatureHeight = 30 + (signature.split('\n').length - 1) * 18;
+  const signatureHeight = 30 + ((signature?.split('\n').length || 0) - 1) * 18;
   const locationUrl = location.url;
   const locationLabel = location.label;
   const hasMembers = members && members.length > 0;
@@ -41,9 +41,11 @@ export function SchemaNodeDetails({ name, signature, example, members, comment, 
     <div className={styles.schemaNodeDetailsContainer}>
       <H5 className={styles.schemaNodeDetailsName}>{name}</H5>
       {comment && <div className={styles.schemaNodeDetailsComment}>{comment}</div>}
-      <div className={styles.schemaNodeDetailsSignatureContainer}>
-        <CodeEditor options={defaultCodeEditorOptions} value={signature} height={signatureHeight} path={filePath} />
-      </div>
+      {signature && (
+        <div className={styles.schemaNodeDetailsSignatureContainer}>
+          <CodeEditor options={defaultCodeEditorOptions} value={signature} height={signatureHeight} path={filePath} />
+        </div>
+      )}
       {example && (
         <div className={styles.schemaNodeDetailsExample}>
           <H6 className={styles.schemaNodeDetailsExampleTitle}>Example</H6>
