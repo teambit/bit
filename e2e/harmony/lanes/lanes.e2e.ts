@@ -1240,8 +1240,7 @@ describe('bit lane command', function () {
       });
     });
   });
-  // @todo: fix!
-  describe.skip('head on the lane is not in the filesystem', () => {
+  describe('head on the lane is not in the filesystem', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       helper.bitJsonc.setupDefault();
