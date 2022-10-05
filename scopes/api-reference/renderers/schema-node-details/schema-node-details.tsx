@@ -22,7 +22,15 @@ export type SchemaNodeDetailsProps = {
   location: { url: string; label: string; path: string };
 } & HTMLAttributes<HTMLDivElement>;
 
-export function SchemaNodeDetails({ name, signature, example, members, comment, location }: SchemaNodeDetailsProps) {
+export function SchemaNodeDetails({
+  name,
+  signature,
+  example,
+  members,
+  comment,
+  location,
+  children,
+}: SchemaNodeDetailsProps) {
   /**
    * @HACK
    * Make Monaco responsive
@@ -79,6 +87,7 @@ export function SchemaNodeDetails({ name, signature, example, members, comment, 
           </div>
         </>
       )}
+      {children}
     </div>
   );
 }

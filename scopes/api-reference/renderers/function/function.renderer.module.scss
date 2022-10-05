@@ -1,0 +1,36 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 16px;
+}
+
+.title {
+  padding-bottom: 16px;
+  font-size: var(--bit-p-md);
+  font-weight: 500;
+}
+
+.value {
+  font-size: var(--bit-p-sm);
+}
+
+.typeParams {
+  padding-top: 16px;
+}
+
+.params {
+  display: flex;
+  padding-bottom: 8px;
+}
+
+.paramName {
+  padding-right: 2px;
+}
+
+.paramType {
+  padding-left: 2px;
+}
+
+.bold {
+  font-weight: 500;
+}
