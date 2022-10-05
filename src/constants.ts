@@ -182,6 +182,7 @@ export const IGNORE_LIST = [
   '**/package-lock.json',
   '**/yarn.lock',
   '**/LICENSE',
+  '*/tsconfig.json',
 ];
 
 export const AUTO_GENERATED_STAMP = 'BIT-AUTO-GENERATED';
