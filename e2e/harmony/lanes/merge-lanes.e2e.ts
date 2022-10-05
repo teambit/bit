@@ -75,7 +75,7 @@ describe('merge lanes', function () {
         mergeOutput = helper.command.mergeLane(`${helper.scopes.remote}/dev`, `--workspace --verbose`);
       });
       it('should indicate that the components were not merge because they are not in the workspace', () => {
-        expect(mergeOutput).to.have.string('the merge has been canceled on the following component(s)');
+        expect(mergeOutput).to.have.string('the merge has been skipped on the following component(s)');
         expect(mergeOutput).to.have.string('not in the workspace');
       });
       it('bitmap should not save any component', () => {
@@ -785,6 +785,23 @@ describe('merge lanes', function () {
       helper.scopeHelper.addRemoteScope();
       helper.scopeHelper.addRemoteScope(scope2Path);
       expect(() => helper.command.import(`${scope2Name}/comp1`)).to.not.throw();
+    });
+  });
+  describe('merge lane with comp-1 to an empty lane with .bitmap has the component', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents(1, false);
+      helper.command.createLane();
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      helper.command.switchLocalLane('main');
+      helper.command.createLane('dev2');
+      helper.command.mergeLane('dev');
+    });
+    it('should merge', () => {
+      const list = helper.command.listParsed();
+      expect(list).to.have.lengthOf(1);
     });
   });
 });
