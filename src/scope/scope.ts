@@ -376,12 +376,12 @@ once done, to continue working, please run "bit cc"`
     if (!component.head) return true; // it's not on main. must be on a lane. (even if it was forked from another lane, current lane must have all objects)
     if (component.head.toString() === id.version) return false; // it's on main
     // get the diverge between main and the lane. (in this context, main is "remote", lane is "local").
-    const divergeData = await getDivergeData(
-      this.objects,
-      component,
-      component.head,
-      Ref.from(laneIdWithDifferentVersion.version as string)
-    );
+    const divergeData = await getDivergeData({
+      repo: this.objects,
+      modelComponent: component,
+      remoteHead: component.head,
+      checkedOutLocalHead: Ref.from(laneIdWithDifferentVersion.version as string),
+    });
     // if the snap found "locally", then it's on the lane.
     return Boolean(divergeData.snapsOnLocalOnly.find((snap) => snap.toString() === id.version));
   }

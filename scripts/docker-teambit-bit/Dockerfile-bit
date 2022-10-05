@@ -3,6 +3,7 @@ FROM $BASE_IMAGE
 USER root
 
 RUN npm i @teambit/bvm -g
+RUN bvm config set RELEASE_TYPE nightly
 RUN bvm upgrade
 ENV PATH=$PATH:/root/bin
 

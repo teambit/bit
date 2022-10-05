@@ -86,7 +86,7 @@ export type ComponentPreviewMetaData = {
 
 export type PreviewVariantConfig = {
   isScaling?: boolean;
-}
+};
 
 /**
  * Preview data that stored on the component on load
@@ -94,7 +94,7 @@ export type PreviewVariantConfig = {
 export type PreviewComponentData = {
   doesScaling?: boolean;
   isScaling?: boolean;
-}
+};
 
 export type PreviewConfig = {
   bundlingStrategy?: string;
@@ -204,8 +204,6 @@ export class PreviewMain {
     return false;
   }
 
-
-
   // This used on component load to calc the final result of support is scaling for a given component
   // This calc based on the env, env data, env preview config and more
   // if you want to get the final result use the `doesScaling` method below
@@ -213,21 +211,21 @@ export class PreviewMain {
   private async calcDoesScalingForComponent(component: Component): Promise<boolean> {
     const isBundledWithEnv = await this.isBundledWithEnv(component);
     // if it's a core env and the env template is apart from the component it means the template bundle already contain the scaling functionality
-    if (this.envs.isUsingCoreEnv(component)){
+    if (this.envs.isUsingCoreEnv(component)) {
       // If the component is new, no point to check the is bundle with env (there is no artifacts so it will for sure return false)
       // If it's new, and we are here, it means that we already use a version of the env that support scaling
       const isNew = await component.isNew();
-      if (isNew){
+      if (isNew) {
         return true;
       }
-      return isBundledWithEnv === false
+      return isBundledWithEnv === false;
     }
     // For envs that bundled with the env return true always
-    if (isBundledWithEnv){
+    if (isBundledWithEnv) {
       return true;
     }
     const envComponent = await this.envs.getEnvComponent(component);
-    return this.isEnvSupportScaling(envComponent)
+    return this.isEnvSupportScaling(envComponent);
   }
 
   /**
@@ -265,7 +263,7 @@ export class PreviewMain {
    */
   isEnvSupportScaling(envComponent: Component): boolean {
     const previewData = envComponent.state.aspects.get(PreviewAspect.id)?.data;
-    return (!!previewData?.isScaling);
+    return !!previewData?.isScaling;
   }
 
   /**
@@ -722,10 +720,10 @@ export class PreviewMain {
         const isScaling = await preview.calculateIsEnvSupportScaling(component);
         const data: PreviewComponentData = {
           doesScaling,
-        }
+        };
         // If there is no isScaling result at all, it's probably not an env. don't store any data.
-        if (isScaling !== undefined){
-          data.isScaling = isScaling
+        if (isScaling !== undefined) {
+          data.isScaling = isScaling;
         }
         return data;
       });

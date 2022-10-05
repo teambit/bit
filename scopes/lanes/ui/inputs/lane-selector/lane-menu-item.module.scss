@@ -1,0 +1,14 @@
+.menuItem {
+  display: flex;
+  flex-direction: row;
+  padding: 8px 16px;
+  min-width: 120px;
+  cursor: pointer;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--bit-border-color-lightest, #ededed);
+}
+
+.defaultLanePill {
+  font-size: var(--bit-p-xxs, 12px);
+  text-transform: lowercase;
+}

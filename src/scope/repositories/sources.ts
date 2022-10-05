@@ -532,7 +532,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
       modelComponent: incomingComp,
       throws: false,
       versionObjects,
-      stopAt: existingHead,
+      stopAt: existingHead ? [existingHead] : undefined,
     });
     const hashesOnly = allIncomingVersionsInfoUntilExistingHead
       .filter((v) => !v.tag) // only non-tag, the tagged are already part of the mergedVersion
@@ -599,7 +599,9 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
    */
   async mergeLane(
     lane: Lane,
-    isImport: boolean // otherwise, it's coming from export
+    isImport: boolean, // otherwise, it's coming from export
+    versionObjects?: Version[], // for export, some versions don't exist locally yet.
+    componentObjects?: ModelComponent[] // for export, some model-components don't exist locally yet.
   ): Promise<{ mergeResults: MergeResult[]; mergeErrors: ComponentNeedsUpdate[]; mergeLane: Lane }> {
     logger.debug(`sources.mergeLane, lane: ${lane.toLaneId()}`);
     const repo = this.objects();
@@ -622,14 +624,20 @@ otherwise, to collaborate on the same lane as the remote, you'll need to remove 
     const mergeErrors: ComponentNeedsUpdate[] = [];
     await Promise.all(
       lane.components.map(async (component) => {
-        const modelComponent = await this.get(component.id);
+        const modelComponent =
+          (await this.get(component.id)) ||
+          componentObjects?.find((c) => c.toBitId().isEqualWithoutVersion(component.id));
         if (!modelComponent) {
           throw new Error(`unable to merge lane ${lane.name}, the component ${component.id.toString()} was not found`);
         }
         const existingComponent = existingLane ? existingLane.components.find((c) => c.id.isEqual(component.id)) : null;
         if (!existingComponent) {
-          // modelComponent.laneHeadLocal = component.head;
-          const allVersions = await getAllVersionHashes(modelComponent, repo, undefined, component.head);
+          const allVersions = await getAllVersionHashes({
+            modelComponent,
+            repo,
+            startFrom: component.head,
+            versionObjects,
+          });
           if (existingLane) existingLane.addComponent(component);
           mergeResults.push({ mergedComponent: modelComponent, mergedVersions: allVersions.map((h) => h.toString()) });
           return;
@@ -638,7 +646,13 @@ otherwise, to collaborate on the same lane as the remote, you'll need to remove 
           mergeResults.push({ mergedComponent: modelComponent, mergedVersions: [] });
           return;
         }
-        const divergeResults = await getDivergeData(repo, modelComponent, component.head, existingComponent.head);
+        const divergeResults = await getDivergeData({
+          repo,
+          modelComponent,
+          remoteHead: component.head,
+          checkedOutLocalHead: existingComponent.head,
+          versionObjects,
+        });
         if (divergeResults.isDiverged()) {
           if (isImport) {
             // do not update the local lane. later, suggest to snap-merge.

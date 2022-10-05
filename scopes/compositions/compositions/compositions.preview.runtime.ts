@@ -23,7 +23,6 @@ export class CompositionsPreview {
   render(componentId: ComponentID, modules: PreviewModule, otherPreviewDefs, context: RenderingContext) {
     if (!modules.componentMap[componentId.fullName]) return;
 
-
     const compositions = this.selectPreviewModel(componentId.fullName, modules);
     const metadata = this.getMetadata(componentId.fullName, modules);
     const active = this.getActiveComposition(compositions, metadata);
@@ -44,8 +43,8 @@ export class CompositionsPreview {
     const metadata = previewModule?.componentMapMetadata
       ? previewModule.componentMapMetadata[componentFullName]
       : undefined;
-    if (metadata){
-      return metadata as CompositionBrowserMetadataObject
+    if (metadata) {
+      return metadata as CompositionBrowserMetadataObject;
     }
     return undefined;
   }

@@ -1296,4 +1296,22 @@ describe('bit lane command', function () {
       expect(() => helper.command.importComponent('*')).to.not.throw();
     });
   });
+  describe('export on lane with tiny cache', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents(1, false);
+      helper.command.createLane();
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.runCmd('bit config set cache.max.objects 1');
+    });
+    after(() => {
+      helper.command.runCmd('bit config del cache.max.objects');
+    });
+    // previously, it was throwing "HeadNotFound"/"ComponentNotFound" when there were many objects in the cache
+    it('should not throw', () => {
+      expect(() => helper.command.export()).not.to.throw();
+    });
+  });
 });

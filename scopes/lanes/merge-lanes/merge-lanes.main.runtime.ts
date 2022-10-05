@@ -266,7 +266,12 @@ export class MergeLanesMain {
         mergedPreviously.push(id);
         return undefined;
       }
-      const divergeData = await getDivergeData(repo, modelComponent, laneHead, mainHead);
+      const divergeData = await getDivergeData({
+        repo,
+        modelComponent,
+        remoteHead: laneHead,
+        checkedOutLocalHead: mainHead,
+      });
       const modifiedVersion = squashOneComp(DEFAULT_LANE, laneId, id, divergeData, versionObj);
       modelComponent.setHead(laneHead);
       const objects = [modelComponent, modifiedVersion];

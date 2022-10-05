@@ -515,7 +515,9 @@ export class Workspace implements ComponentFactory {
 
       return {
         type: systemDescriptor.type,
-        id: env.id,
+        // Make sure to store the env id in the data without the version
+        // The version should always come from the aspect id configured on the component
+        id: env.id.split('@')[0],
         name: env.name,
         icon,
         description: env.description,
@@ -915,7 +917,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
   }
 
   /**
-   * Get the component root dir in the file system (relative to workspace or full)
+   * Get the component root dir in the file system (relative to workspace or full) in Linux format
    * @param componentId
    * @param relative return the path relative to the workspace or full path
    */

@@ -508,7 +508,10 @@ export class Http implements Network {
       query Lanes {
         lanes {
           list {
-            name: id
+            id {
+              name
+              scope
+            }
             components {
               id {
                 name
@@ -516,7 +519,6 @@ export class Http implements Network {
                 version
               }
             }
-            isMerged
           }
         }
       }

@@ -5,7 +5,7 @@ import { RoundLoader } from '@teambit/design.ui.round-loader';
 import { Overview } from '@teambit/docs';
 import type { TitleBadgeSlot } from '@teambit/docs';
 import React, { UIEvent, useMemo, useRef, useState } from 'react';
-import { useLanes, LanesContext } from '@teambit/lanes.hooks.use-lanes';
+import { useLanes, LanesContext, LanesContextModel } from '@teambit/lanes.hooks.use-lanes';
 
 import styles from './overview-compare.module.scss';
 
@@ -38,17 +38,20 @@ export function OverviewCompare(props: OverviewCompareProps) {
     setIsScrollingSynced((prev) => !prev);
   }
 
-  const { lanesModel } = useLanes();
+  const { lanesModel, updateLanesModel } = useLanes();
 
   const BaseLayout = useMemo(() => {
     if (componentCompare?.base === undefined) {
       return <></>;
     }
 
-    const baseVersion = componentCompare?.base.model.version;
+    // const baseVersion = componentCompare?.base.model.version;
+    const baseId = componentCompare?.base.model.id;
 
-    const isBaseOnLane = !!lanesModel?.lanebyComponentHash.get(baseVersion);
-    const lanesContext = isBaseOnLane ? lanesModel : undefined;
+    // const isBaseOnLane = !!lanesModel?.lanebyComponentHash.get(baseVersion);
+    const isBaseOnLane = !!lanesModel?.isComponentOnNonDefaultLanes(baseId, true);
+
+    const lanesContext: LanesContextModel | undefined = isBaseOnLane ? { lanesModel, updateLanesModel } : undefined;
 
     return (
       <div className={styles.subView} ref={leftPanelRef} onScroll={handleLeftPanelScroll}>
@@ -66,10 +69,11 @@ export function OverviewCompare(props: OverviewCompareProps) {
       return <></>;
     }
 
-    const compareVersion = componentCompare?.compare.model.version;
+    // const compareVersion = componentCompare?.compare.model.version;
+    const compareId = componentCompare?.compare.model.id;
 
-    const isCompareOnLane = !!lanesModel?.lanebyComponentHash.get(compareVersion);
-    const lanesContext = isCompareOnLane ? lanesModel : undefined;
+    const isCompareOnLane = !!lanesModel?.isComponentOnNonDefaultLanes(compareId, true);
+    const lanesContext: LanesContextModel | undefined = isCompareOnLane ? { lanesModel, updateLanesModel } : undefined;
 
     return (
       <div className={styles.subView} ref={rightPanelRef} onScroll={handleRightPanelScroll}>

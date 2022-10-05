@@ -107,13 +107,12 @@ export class ObjectsReadableGenerator {
       };
       if (collectParents) {
         const parentsObjects: ObjectItem[] = [];
-        const allParentsHashes = await getAllVersionHashes(
-          component,
-          this.repo,
-          true,
-          version.hash(),
-          collectParentsUntil
-        );
+        const allParentsHashes = await getAllVersionHashes({
+          modelComponent: component,
+          repo: this.repo,
+          startFrom: version.hash(),
+          stopAt: collectParentsUntil ? [collectParentsUntil] : undefined,
+        });
         const missingParentsHashes = allParentsHashes.filter((h) => !h.isEqual(version.hash()));
         await Promise.all(
           missingParentsHashes.map(async (parentHash) => {

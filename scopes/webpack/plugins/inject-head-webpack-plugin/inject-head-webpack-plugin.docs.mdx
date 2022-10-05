@@ -5,7 +5,6 @@ description: 'Webpack plugin that injects a custom string into the head of the h
 
 # inject-head-webpack-plugin
 
-
 **Webpack plugin that injects a custom string into the head of the html-webpack-plugin output.**
 
 ## Example
@@ -13,47 +12,55 @@ description: 'Webpack plugin that injects a custom string into the head of the h
 #### Input
 
 ```js
-import HtmlWebpackPlugin from "html-webpack-plugin"
-import {InjectHeadPlugin} from '@teambit/webpack.plugins.inject-head-webpack-plugin';
+import HtmlWebpackPlugin from 'html-webpack-plugin';
+import { InjectHeadPlugin } from '@teambit/webpack.plugins.inject-head-webpack-plugin';
 
 export default {
   plugins: [
     new HtmlWebpackPlugin({
-      templateContent: "<html><head></head></html>"
+      templateContent: '<html><head></head></html>',
     }),
     new InjectHeadPlugin({
-      content: '<main id=root>Hi!</main>'
+      content: '<main id=root>Hi!</main>',
     }),
   ],
-}
+};
 ```
 
 #### Output
 
 index.html
+
 ```html
-<html><head><main id=root>Hi!</main></head></html>
+<html>
+  <head>
+    <main id="root">Hi!</main>
+  </head>
+</html>
 ```
 
 ## Options
 
 <table>
-<tr>
-<th></th>
-<th>Type</th>
-<th>Default</th>
-<th>Info</th>
-</tr>
-<tr>
-<td>content</td>
-<td>string</td>
-<td>&lt;div id=root/></td>
-<td>The text that will be injected into the final HTML output.</td>
-</tr>
-<tr>
-<td>position</td>
-<td>string</td>
-<td>start</td>
-<td>If “start”, the content will be injected as close to the head opening tag as possible. If “end”, the content will be injected as close to the head ending tag as possible.</td>
-</tr>
+  <tr>
+    <th></th>
+    <th>Type</th>
+    <th>Default</th>
+    <th>Info</th>
+  </tr>
+  <tr>
+    <td>content</td>
+    <td>string</td>
+    <td>&lt;div id=root/></td>
+    <td>The text that will be injected into the final HTML output.</td>
+  </tr>
+  <tr>
+    <td>position</td>
+    <td>string</td>
+    <td>start</td>
+    <td>
+      If “start”, the content will be injected as close to the head opening tag as possible. If “end”, the content will
+      be injected as close to the head ending tag as possible.
+    </td>
+  </tr>
 </table>
