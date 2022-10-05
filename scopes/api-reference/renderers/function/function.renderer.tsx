@@ -14,12 +14,13 @@ export const functionRenderer: APINodeRenderer = {
 
 function FunctionComponent({ node, componentId }: APINodeRenderProps) {
   const functionNode = node as FunctionLikeSchema;
-  console.log('🚀 ~ file: function.renderer.tsx ~ line 17 ~ FunctionComponent ~ functionNode', functionNode);
   const {
     name,
     location: { filePath, line },
     doc,
     signature,
+    // returnType,
+    // params,
   } = functionNode;
 
   const comment = doc?.comment;

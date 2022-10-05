@@ -266,9 +266,9 @@ export class TypescriptMain {
     ]);
 
     if (workspace) {
-      workspace.registerOnPreWatch(tsMain.onPreWatch.bind(this));
-      workspace.registerOnComponentChange(tsMain.onComponentChange.bind(this));
-      workspace.registerOnComponentAdd(tsMain.onComponentChange.bind(this));
+      workspace.registerOnPreWatch(tsMain.onPreWatch.bind(tsMain));
+      workspace.registerOnComponentChange(tsMain.onComponentChange.bind(tsMain));
+      workspace.registerOnComponentAdd(tsMain.onComponentChange.bind(tsMain));
     }
 
     const checkTypesCmd = new CheckTypesCmd(tsMain, workspace, logger);

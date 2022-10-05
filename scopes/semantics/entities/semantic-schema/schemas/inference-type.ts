@@ -9,7 +9,7 @@ export class InferenceTypeSchema extends SchemaNode {
   }
 
   toString() {
-    if (this.name) {
+    if (this.name !== this.type) {
       return `${this.name}: ${this.type}`;
     }
     return this.type;

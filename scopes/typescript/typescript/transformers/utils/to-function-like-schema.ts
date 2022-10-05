@@ -14,6 +14,7 @@ export async function toFunctionLikeSchema(
   const returnTypeStr = info ? parseTypeFromQuickInfo(info) : 'any';
   const displaySig = info?.body?.displayString || '';
   const args = await getParams(node.parameters, context);
+
   const returnType = await context.resolveType(node, returnTypeStr, Boolean(info));
   const modifiers = node.modifiers?.map((modifier) => modifier.getText()) || [];
   const typeParameters = node.typeParameters?.map((typeParam) => typeParam.name.getText());
