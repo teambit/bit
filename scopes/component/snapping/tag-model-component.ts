@@ -67,12 +67,27 @@ function updateDependenciesVersions(componentsToTag: Component[], dependencyReso
     });
   };
 
+  // TODO: remove this after getting everything to support envId without version in the envsData?.id.
+  const updateEnvId = (component: Component) => {
+    const envExtension = component.extensions.find((ext: any) => {
+      return ext.stringId === 'teambit.envs/envs';
+    });
+    const envIdWithoutVersion = envExtension.data.id.split('@')[0];
+    const envAspect = component.extensions.find((ext) => {
+      const [idWithoutVersion] = ext.stringId.split('@');
+      return envIdWithoutVersion === idWithoutVersion;
+    });
+    if (!envAspect) return;
+    envExtension.data.id = envAspect.stringId;
+  };
+  
   componentsToTag.forEach((oneComponentToTag) => {
     oneComponentToTag.getAllDependencies().forEach((dependency) => {
       const newDepId = getNewDependencyVersion(dependency.id);
       if (newDepId) dependency.id = newDepId;
     });
     changeExtensionsVersion(oneComponentToTag);
+    updateEnvId(oneComponentToTag);
     // @ts-ignore
     oneComponentToTag = dependencyResolver.updateDepsOnLegacyTag(oneComponentToTag, getNewDependencyVersion.bind(this));
   });
