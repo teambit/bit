@@ -279,7 +279,7 @@ export async function tagModelComponent({
     await snapping._addFlattenedDependenciesToComponents(legacyScope, allComponentsToTag);
     emptyBuilderData(allComponentsToTag);
     addBuildStatus(allComponentsToTag, BuildStatus.Pending);
-    await addComponentsToScope(legacyScope, allComponentsToTag, Boolean(build), consumer);
+    await addComponentsToScope(legacyScope, snapping, allComponentsToTag, Boolean(build), consumer);
     if (workspace) await updateComponentsVersions(workspace, allComponentsToTag);
   }
 
@@ -297,7 +297,7 @@ export async function tagModelComponent({
     snapping._updateComponentsByTagResult(allComponentsToTag, buildResult);
     publishedPackages.push(...snapping._getPublishedPackages(allComponentsToTag));
     addBuildStatus(allComponentsToTag, BuildStatus.Succeed);
-    await mapSeries(allComponentsToTag, (consumerComponent) => legacyScope.sources.enrichSource(consumerComponent));
+    await mapSeries(allComponentsToTag, (consumerComponent) => snapping._enrichComp(consumerComponent));
   }
 
   if (!soft) {
@@ -324,6 +324,7 @@ async function removeDeletedComponentsFromBitmap(comps: Component[], workspace?:
 
 async function addComponentsToScope(
   scope: Scope,
+  snapping: SnappingMain,
   components: Component[],
   shouldValidateVersion: boolean,
   consumer?: Consumer
@@ -331,7 +332,7 @@ async function addComponentsToScope(
   const lane = await scope.getCurrentLaneObject();
   if (consumer) {
     await mapSeries(components, async (component) => {
-      await scope.sources.addSource({
+      await snapping._addCompToObjects({
         source: component,
         consumer,
         lane,
@@ -340,7 +341,7 @@ async function addComponentsToScope(
     });
   } else {
     await mapSeries(components, async (component) => {
-      await scope.sources.addSourceFromScope(component, lane);
+      await snapping._addCompFromScopeToObjects(component, lane);
     });
   }
 }

@@ -166,7 +166,7 @@ ${mergeSnapError.message}
 
   const getFailureOutput = () => {
     if (!failedComponents || !failedComponents.length) return '';
-    const title = '\nthe merge has been canceled on the following component(s)';
+    const title = '\nthe merge has been skipped on the following component(s)';
     const body = compact(
       failedComponents.map((failedComponent) => {
         if (!verbose && failedComponent.unchangedLegitimately) return null;
@@ -175,7 +175,7 @@ ${mergeSnapError.message}
       })
     ).join('\n');
     if (!body) {
-      return `${chalk.bold(`\nthe merge has been canceled on ${failedComponents.length} component(s) legitimately`)}
+      return `${chalk.bold(`\nthe merge has been skipped on ${failedComponents.length} component(s) legitimately`)}
 (use --verbose to list them next time)`;
     }
     return `\n${chalk.underline(title)}\n${body}\n\n`;

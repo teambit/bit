@@ -2,6 +2,7 @@ import fs from 'fs';
 import chai, { expect } from 'chai';
 import path from 'path';
 import Helper from '../../src/e2e-helper/e2e-helper';
+import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
 
 chai.use(require('chai-fs'));
 
@@ -128,3 +129,78 @@ export function comp() {
     });
   });
 });
+
+(supportNpmCiRegistryTesting ? describe : describe.skip)(
+  'environment adding a peer dependency should not cause an infinite lop of install compile install',
+  function () {
+    this.timeout(0);
+    let helper: Helper;
+    let npmCiRegistry: NpmCiRegistry;
+    before(async () => {
+      helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.bitJsonc.setPackageManager(`teambit.dependencies/pnpm`);
+      npmCiRegistry = new NpmCiRegistry(helper);
+      await npmCiRegistry.init();
+      npmCiRegistry.configureCiInPackageJsonHarmony();
+      helper.command.create('react-env', 'custom-react/env1', '-p custom-react/env1');
+      helper.fs.outputFile(
+        `custom-react/env1/env1.main.runtime.ts`,
+        `
+import { MainRuntime } from '@teambit/cli';
+import { ReactAspect, ReactMain } from '@teambit/react';
+import { EnvsAspect, EnvsMain } from '@teambit/envs';
+import { Env1Aspect } from './env1.aspect';
+
+export class Env1Main {
+  static slots = [];
+
+  static dependencies = [ReactAspect, EnvsAspect];
+
+  static runtime = MainRuntime;
+
+  static async provider([react, envs]: [ReactMain, EnvsMain]) {
+    const templatesReactEnv = envs.compose(react.reactEnv, [
+      envs.override({
+        getDependencies: () => ({
+          dependencies: {},
+          devDependencies: {
+          },
+          peers: [
+            {
+              name: 'react',
+              supportedRange: '^16.8.0',
+              version: '16.14.0',
+            },
+          ],
+        })
+      })
+    ]);
+    envs.registerEnv(templatesReactEnv);
+    return new Env1Main();
+  }
+}
+
+Env1Aspect.addRuntime(Env1Main);
+`
+      );
+      helper.command.install();
+      helper.command.tagAllComponents();
+      helper.command.export();
+
+      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.addRemoteScope();
+      helper.bitJsonc.setupDefault();
+      helper.command.create('react', 'comp1');
+      helper.command.create('react', 'comp2');
+      helper.command.setEnv('comp1', `${helper.scopes.remote}/custom-react/env1`);
+    });
+    it('should not run install indefinitely', () => {
+      helper.command.install();
+    });
+    after(() => {
+      npmCiRegistry.destroy();
+    });
+  }
+);

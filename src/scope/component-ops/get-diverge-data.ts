@@ -20,6 +20,7 @@ export async function getDivergeData({
   repo,
   modelComponent,
   remoteHead,
+  otherRemoteHeads, // when remoteHead empty, instead of returning all local snaps, stop if found one of these snaps
   checkedOutLocalHead, // in case locally on the workspace it has a different version
   throws = true, // otherwise, save the error instance in the `DivergeData` object,
   versionObjects, // relevant for remote-scope where during export the data is not in the repo yet.
@@ -27,6 +28,7 @@ export async function getDivergeData({
   repo: Repository;
   modelComponent: ModelComponent;
   remoteHead: Ref | null;
+  otherRemoteHeads?: Ref[];
   checkedOutLocalHead?: Ref | null;
   throws?: boolean;
   versionObjects?: Version[];
@@ -35,7 +37,13 @@ export async function getDivergeData({
   const localHead = checkedOutLocalHead || (isOnLane ? modelComponent.laneHeadLocal : modelComponent.getHead());
   if (!remoteHead) {
     if (localHead) {
-      const allLocalHashes = await getAllVersionHashes({ modelComponent, repo, throws: false, versionObjects });
+      const allLocalHashes = await getAllVersionHashes({
+        modelComponent,
+        repo,
+        throws: false,
+        versionObjects,
+        stopAt: otherRemoteHeads,
+      });
       return new DivergeData(allLocalHashes);
     }
     return new DivergeData();
@@ -56,6 +64,8 @@ export async function getDivergeData({
     return new DivergeData();
   }
 
+  const existOnRemote = (ref: Ref) => [remoteHead, ...(otherRemoteHeads || [])].find((r) => r.isEqual(ref));
+
   const snapsOnLocal: Ref[] = [];
   const snapsOnRemote: Ref[] = [];
   let remoteHeadExistsLocally = false;
@@ -64,7 +74,7 @@ export async function getDivergeData({
   let hasMultipleParents = false;
   let error: Error | undefined;
   const addParentsRecursively = async (version: Version, snaps: Ref[], isLocal: boolean) => {
-    if (isLocal && version.hash().isEqual(remoteHead)) {
+    if (isLocal && existOnRemote(version.hash())) {
       remoteHeadExistsLocally = true;
       return;
     }

@@ -250,14 +250,21 @@ export class ExportMain {
       allHashes.push(head);
     };
 
-    const getVersionsToExport = async (modelComponent: ModelComponent): Promise<string[]> => {
+    const getVersionsToExport = async (modelComponent: ModelComponent, lane?: Lane): Promise<string[]> => {
       await modelComponent.setDivergeData(scope.objects);
       const localTagsOrHashes = modelComponent.getLocalTagsOrHashes();
-      if (!allVersions) {
-        // if lane is exported, components from other remotes may be exported to this remote. we need their history.
+      if (!allVersions && !lane) {
         return localTagsOrHashes;
       }
-      const allHashes = await getAllVersionHashes({ modelComponent, repo: scope.objects });
+      let stopAt: Ref[] | undefined;
+      if (lane && !allVersions) {
+        // if lane is exported, components from other remotes may be part of this lane. we need their history.
+        // because their history could already exist on the remote from previous exports, we search this id in all
+        // remote-refs files of this lane-scope. while traversing the local history, stop when finding one of the remotes.
+        stopAt = await scope.objects.remoteLanes.getRefsFromAllLanesOnScope(lane.scope, modelComponent.toBitId());
+        if (modelComponent.laneHeadRemote) stopAt.push(modelComponent.laneHeadRemote);
+      }
+      const allHashes = await getAllVersionHashes({ modelComponent, repo: scope.objects, stopAt });
       await addMainHeadIfPossible(allHashes, modelComponent);
       return modelComponent.switchHashesWithTagsIfExist(allHashes);
     };
@@ -294,7 +301,7 @@ export class ExportMain {
       const objectList = new ObjectList();
       const objectListPerName: ObjectListPerName = {};
       const processModelComponent = async (modelComponent: ModelComponent) => {
-        const versionToExport = await getVersionsToExport(modelComponent);
+        const versionToExport = await getVersionsToExport(modelComponent, lane);
         modelComponent.clearStateData();
         const objectItems = await modelComponent.collectVersionsObjects(
           scope.objects,

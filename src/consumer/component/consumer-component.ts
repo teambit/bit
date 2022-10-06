@@ -19,7 +19,7 @@ import ComponentWithDependencies from '../../scope/component-dependencies';
 import { ScopeListItem } from '../../scope/models/model-component';
 import Version, { Log } from '../../scope/models/version';
 import { pathNormalizeToLinux } from '../../utils';
-import { PathLinux, PathOsBased, PathOsBasedAbsolute, PathOsBasedRelative } from '../../utils/path';
+import { PathLinux, PathOsBased, PathOsBasedRelative } from '../../utils/path';
 import ComponentMap from '../bit-map/component-map';
 import { IgnoredDirectory } from '../component-ops/add-components/exceptions/ignored-directory';
 import ComponentsPendingImport from '../component-ops/exceptions/components-pending-import';
@@ -496,19 +496,15 @@ export default class Component {
     return this.fromObject(object);
   }
 
-  // eslint-disable-next-line complexity
   static async loadFromFileSystem({
-    bitDir,
     componentMap,
     id,
     consumer,
   }: {
-    bitDir: PathOsBasedAbsolute;
     componentMap: ComponentMap;
     id: BitId;
     consumer: Consumer;
   }): Promise<Component> {
-    const consumerPath = consumer.getPath();
     const workspaceConfig: ILegacyWorkspaceConfig = consumer.config;
     const modelComponent = await consumer.scope.getModelComponentIfExist(id);
     const componentFromModel = await consumer.loadComponentFromModelIfExist(id);
@@ -518,8 +514,8 @@ export default class Component {
       if (!inScopeWithAnyVersion) throw new ComponentsPendingImport();
     }
     const deprecated = componentFromModel ? componentFromModel.deprecated : false;
-    const componentDir = componentMap.getComponentDir();
-    if (!fs.existsSync(bitDir)) throw new ComponentNotFoundInPath(bitDir);
+    const compDirAbs = path.join(consumer.getPath(), componentMap.getComponentDir());
+    if (!fs.existsSync(compDirAbs)) throw new ComponentNotFoundInPath(compDirAbs);
 
     // Load the base entry from the root dir in map file in case it was imported using -path
     // Or created using bit create so we don't want all the path but only the relative one
@@ -527,11 +523,7 @@ export default class Component {
     // (like dependencies)
     logger.trace(`consumer-component.loadFromFileSystem, start loading config ${id.toString()}`);
     const componentConfig = await ComponentConfig.load({
-      consumer,
       componentId: id,
-      componentDir,
-      workspaceDir: consumerPath,
-      workspaceConfig,
     });
     logger.trace(`consumer-component.loadFromFileSystem, finish loading config ${id.toString()}`);
     // by default, imported components are not written with bit.json file.
@@ -556,7 +548,7 @@ export default class Component {
     );
     const packageJsonFile = (componentConfig && componentConfig.packageJsonFile) || undefined;
     const packageJsonChangedProps = componentFromModel ? componentFromModel.packageJsonChangedProps : undefined;
-    const files = await getLoadedFilesHarmony(consumer, componentMap, id, bitDir);
+    const files = await getLoadedFiles(consumer, componentMap, id, compDirAbs);
     const docsP = _getDocsForFiles(files, consumer.componentFsCache);
     const docs = await Promise.all(docsP);
     const flattenedDocs = docs ? R.flatten(docs) : [];
@@ -593,7 +585,7 @@ export default class Component {
   }
 }
 
-async function getLoadedFilesHarmony(
+async function getLoadedFiles(
   consumer: Consumer,
   componentMap: ComponentMap,
   id: BitId,
