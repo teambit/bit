@@ -462,7 +462,7 @@ there are matching among unmodified components thought. consider using --unmodif
   }): Promise<ModelComponent> {
     // if a component exists in the model, add a new version. Otherwise, create a new component on the model
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const component: ModelComponent = await this.findOrAddComponent(source);
+    const component: ModelComponent = await this.scope.legacyScope.sources.findOrAddComponent(source);
 
     const artifactFiles = getArtifactsFiles(source.extensions);
     const artifacts = this.transformArtifactsFromVinylToSource(artifactFiles);
