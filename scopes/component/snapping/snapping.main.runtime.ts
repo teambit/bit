@@ -71,7 +71,7 @@ export class SnappingMain {
     private exporter: ExportMain,
     private builder: BuilderMain
   ) {
-    this.objectsRepo = this.scope.legacyScope.objects;
+    this.objectsRepo = this.scope?.legacyScope?.objects;
   }
 
   /**
