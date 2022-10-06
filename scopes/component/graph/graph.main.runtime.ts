@@ -1,15 +1,40 @@
-import { MainRuntime } from '@teambit/cli';
-import GraphqlAspect from '@teambit/graphql';
-import { ComponentAspect } from '@teambit/component';
-
+import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
+import { ComponentMain, ComponentAspect, ComponentID } from '@teambit/component';
+import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
+import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
+import { GetGraphOpts, GraphBuilder } from './graph-builder';
+import { graphSchema } from './graph.graphql';
 import { GraphAspect } from './graph.aspect';
-import { provide } from './graph.provider';
+import { GraphCmd } from './graph-cmd';
+import { ComponentGraph } from './component-graph';
 
-export const GraphMain = {
-  name: 'graph',
-  runtime: MainRuntime,
-  dependencies: [GraphqlAspect, ComponentAspect],
-  provider: provide,
-};
+export class GraphMain {
+  constructor(private componentAspect: ComponentMain, private logger: Logger) {}
+
+  async getGraph(ids?: ComponentID[], opts: GetGraphOpts = {}): Promise<ComponentGraph> {
+    const graphBuilder = new GraphBuilder(this.componentAspect);
+    return graphBuilder.getGraph(ids, opts);
+  }
+
+  static slots = [];
+  static dependencies = [GraphqlAspect, ComponentAspect, CLIAspect, LoggerAspect];
+  static runtime = MainRuntime;
+  static async provider([graphql, componentAspect, cli, loggerMain]: [
+    GraphqlMain,
+    ComponentMain,
+    CLIMain,
+    LoggerMain
+  ]) {
+    const logger = loggerMain.createLogger(GraphAspect.id);
+
+    const graphBuilder = new GraphBuilder(componentAspect);
+    graphql.register(graphSchema(graphBuilder, componentAspect));
+
+    const graphMain = new GraphMain(componentAspect, logger);
+    cli.register(new GraphCmd());
+
+    return graphMain;
+  }
+}
 
 GraphAspect.addRuntime(GraphMain);

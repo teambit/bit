@@ -47,7 +47,7 @@ export async function getAllVersionsInfo({
   throws?: boolean; // in case objects are missing
   versionObjects?: Version[];
   startFrom?: Ref | null; // by default, start from the head
-  stopAt?: Ref | null; // by default, stop when the parents is empty
+  stopAt?: Ref[] | null; // by default, stop when the parents is empty
 }): Promise<VersionInfo[]> {
   const results: VersionInfo[] = [];
   const isAlreadyProcessed = (ref: Ref): boolean => {
@@ -79,9 +79,10 @@ export async function getAllVersionsInfo({
     parents: [],
     onLane: !foundOnMain,
   };
+  const shouldStop = (ref: Ref): boolean => Boolean(stopAt?.find((r) => r.isEqual(ref)));
   const head = await getVersionObj(laneHead);
   if (head) {
-    if (stopAt && stopAt.isEqual(head.hash())) {
+    if (shouldStop(head.hash())) {
       return [];
     }
     headInfo.version = head;
@@ -93,7 +94,7 @@ export async function getAllVersionsInfo({
   results.push(headInfo);
   const addParentsRecursively = async (version: Version) => {
     await pMapSeries(version.parents, async (parent) => {
-      if (stopAt && stopAt.isEqual(parent)) {
+      if (shouldStop(parent)) {
         return;
       }
       if (isAlreadyProcessed(parent)) {
@@ -149,7 +150,7 @@ export async function getAllVersionHashes(options: {
   throws?: boolean; // in case objects are missing. by default, it's true
   versionObjects?: Version[];
   startFrom?: Ref | null; // by default, start from the head
-  stopAt?: Ref | null; // by default, stop when the parents is empty
+  stopAt?: Ref[] | null; // by default, stop when the parents is empty
 }): Promise<Ref[]> {
   const allVersionsInfo = await getAllVersionsInfo(options);
   return allVersionsInfo.map((v) => v.ref).filter((ref) => ref) as Ref[];
