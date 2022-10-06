@@ -99,21 +99,27 @@ export class LanesUI {
   //   return <LaneReadmeOverview host={this.host} overviewSlot={this.overviewSlot} routeSlot={this.routeSlot} />;
   // }
 
-  useComponentId = () => {
+  getLaneComponentIdFromUrl = () => {
     const idFromLocation = useIdFromLocation();
     const { lanesModel } = useLanes();
     const laneFromUrl = useViewedLaneFromUrl();
     const laneComponentId =
       idFromLocation && !laneFromUrl?.isDefault()
-        ? lanesModel?.resolveComponent(idFromLocation, laneFromUrl)
+        ? lanesModel?.resolveComponentByFullName(idFromLocation, laneFromUrl)
         : undefined;
-    return laneComponentId?.toString();
+    return laneComponentId;
   };
 
-  useComponentFilters = (_componentId?: ComponentID) => {
+  useComponentId = () => {
+    return this.getLaneComponentIdFromUrl()?.toString();
+  };
+
+  useComponentFilters = () => {
+    const laneComponentId = this.getLaneComponentIdFromUrl();
+
     return {
-      log: _componentId && {
-        logHead: _componentId.version,
+      log: laneComponentId && {
+        logHead: laneComponentId.version,
       },
     };
   };
