@@ -389,8 +389,8 @@ describe('DepenendencyResolverMain.getComponentEnvPolicyFromEnv()', () => {
               version: '',
             },
           ],
-        }), // @ts-ignore
-      })
+        }),
+      }) // @ts-ignore
     ).rejects.toThrowError('Peer "@teambit/community.ui.bit-cli.commands-provider" has an empty supportedRange');
   });
 });
