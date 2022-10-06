@@ -172,7 +172,7 @@ to bypass this error, use --skip-new-scope-validation flag (not recommended. it 
 
   private async addComponentsToScope() {
     await mapSeries(this.legacyComponents, (component) =>
-      this.scope.legacyScope.sources.addSourceFromScope(component, this.laneObj || null)
+      this.snapping._addCompFromScopeToObjects(component, this.laneObj || null)
     );
   }
 
@@ -314,7 +314,7 @@ to bypass this error, use --skip-new-scope-validation flag (not recommended. it 
   private async saveDataIntoLocalScope(buildStatus: BuildStatus) {
     await mapSeries(this.legacyComponents, async (component) => {
       component.buildStatus = buildStatus;
-      await this.scope.legacyScope.sources.enrichSource(component);
+      await this.snapping._enrichComp(component);
     });
     await this.scope.legacyScope.objects.persist();
   }
