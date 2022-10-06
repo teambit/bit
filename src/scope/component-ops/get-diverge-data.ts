@@ -59,6 +59,10 @@ export async function getDivergeData({
     return new DivergeData([], allRemoteHashes);
   }
 
+  const getVersionObj = async (ref: Ref): Promise<Version | undefined> => {
+    return versionObjects?.find((v) => v.hash().isEqual(ref)) || ((await repo.load(ref)) as Version | undefined);
+  };
+
   if (remoteHead.isEqual(localHead)) {
     // no diverge they're the same
     return new DivergeData();
@@ -100,7 +104,7 @@ export async function getDivergeData({
     if (version.parents.length > 1) hasMultipleParents = true;
     await Promise.all(
       version.parents.map(async (parent) => {
-        const parentVersion = (await parent.load(repo)) as Version;
+        const parentVersion = await getVersionObj(parent);
         if (parentVersion) {
           await addParentsRecursively(parentVersion, snaps, isLocal);
         } else {
@@ -124,8 +128,7 @@ bit import ${modelComponent.id()} --objects`);
   if (remoteHeadExistsLocally && !hasMultipleParents) {
     return new DivergeData(snapsOnLocal, [], remoteHead, error);
   }
-  const remoteVersion =
-    ((await repo.load(remoteHead)) as Version | undefined) || versionObjects?.find((v) => v.hash().isEqual(remoteHead));
+  const remoteVersion = await getVersionObj(remoteHead);
   if (!remoteVersion) {
     const err = new VersionNotFoundOnFS(remoteHead.toString(), modelComponent.id());
     if (throws) throw err;
