@@ -361,3 +361,36 @@ describe('DepenendencyResolverMain.getOutdatedPkgsFromPolicies()', () => {
     ]);
   });
 });
+
+describe('DepenendencyResolverMain.getComponentEnvPolicyFromEnv()', () => {
+  it('should throw an error if the env policy has a peer with an empty string set for the supportedRange', async () => {
+    const depResolver = new DependencyResolverMain(
+      {} as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      {} as any
+    );
+    await expect(
+      depResolver.getComponentEnvPolicyFromEnv({
+        getDependencies: () => ({
+          peers: [
+            {
+              name: '@teambit/community.ui.bit-cli.commands-provider',
+              supportedRange: '',
+              version: '',
+            },
+          ],
+        }), // @ts-ignore
+      })
+    ).rejects.toThrowError('Peer "@teambit/community.ui.bit-cli.commands-provider" has an empty supportedRange');
+  });
+});
