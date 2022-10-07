@@ -18,7 +18,7 @@ describe('write-tsconfig command', function () {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponentsTS();
-      helper.command.setEnv('comp3', 'teambit.react/react');
+      helper.command.setEnv('comp3', 'teambit.harmony/aspect');
       helper.command.writeTsconfig();
     });
     it('should generate tsconfig.json file in the root-dir, and in the specific comp with the special env', () => {
