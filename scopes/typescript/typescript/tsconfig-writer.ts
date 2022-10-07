@@ -2,7 +2,7 @@ import fs from 'fs-extra';
 import path from 'path';
 import yesno from 'yesno';
 import { PathLinuxRelative } from '@teambit/legacy/dist/utils/path';
-import { compact, invertBy, uniq } from 'lodash';
+import { compact, invertBy, isEqual, uniq } from 'lodash';
 import { PromptCanceled } from '@teambit/legacy/dist/prompts/exceptions';
 import { Environment, ExecutionContext } from '@teambit/envs';
 import { Workspace } from '@teambit/workspace';
@@ -10,9 +10,9 @@ import { Logger } from '@teambit/logger';
 import chalk from 'chalk';
 import { TsconfigWriterOptions } from './typescript.main.runtime';
 
-export type TsconfigPathsPerEnv = { envId: string; tsconfig: Record<string, any>; paths: string[] };
+export type TsconfigPathsPerEnv = { envIds: string[]; tsconfig: Record<string, any>; paths: string[] };
 
-type PathsPerEnv = { env: Environment; id: string; paths: string[] };
+type PathsPerEnv = { env: Environment; ids: string[]; paths: string[] };
 
 export class TsconfigWriter {
   constructor(private workspace: Workspace, private logger: Logger) {}
@@ -23,7 +23,7 @@ export class TsconfigWriter {
   ): Promise<TsconfigPathsPerEnv[]> {
     const pathsPerEnvs = this.getPathsPerEnv(envsExecutionContext, options);
     const tsconfigPathsPerEnv = pathsPerEnvs.map((pathsPerEnv) => ({
-      envId: pathsPerEnv.id,
+      envIds: pathsPerEnv.ids,
       tsconfig: pathsPerEnv.env.getTsConfig(),
       paths: pathsPerEnv.paths,
     }));
@@ -94,17 +94,36 @@ ${chalk.bold('Do you want to continue? [yes(y)/no(n)]')}`,
       };
     });
     if (!dedupe) {
-      return pathsPerEnvs;
+      return pathsPerEnvs.map(({ id, env, paths }) => ({ ids: [id], env, paths }));
     }
 
-    const pathsPerEnvId = pathsPerEnvs.map((p) => ({ id: p.id, paths: p.paths }));
-    const envsPerDedupedPaths = dedupePaths(pathsPerEnvId);
+    const envsWithFiles = envsExecutionContext.map((e) => ({
+      id: e.id,
+      file: e.env.getTsConfig(),
+    }));
+    const envsPerFile: { envIds: string[]; fileContent: Record<string, any> }[] = [];
+    const isEnvProcessed = (envId: string) =>
+      envsPerFile
+        .map((e) => e.envIds)
+        .flat()
+        .find((e) => e === envId);
+    envsWithFiles.forEach(({ id, file }) => {
+      if (isEnvProcessed(id)) return;
+      const foundSameFile = envsWithFiles.filter((e) => isEqual(file, e.file));
+      envsPerFile.push({ envIds: foundSameFile.map((f) => f.id), fileContent: file });
+    });
+    const pathsPerEnvIds = envsPerFile.map((e) => ({
+      ids: e.envIds,
+      paths: compact(e.envIds.map((envId) => pathsPerEnvs.find((p) => p.id === envId)?.paths).flat()),
+    }));
+    // const pathsPerEnvIds = pathsPerEnvs.map((p) => ({ ids: p.ids, paths: p.paths }));
+    const envsPerDedupedPaths = dedupePaths(pathsPerEnvIds);
     const dedupedPathsPerEnvs: PathsPerEnv[] = envsPerDedupedPaths.map((envWithDedupePaths) => {
-      const found = pathsPerEnvs.find((p) => p.id === envWithDedupePaths.id);
-      if (!found) throw new Error(`dedupedPathsPerEnvs, unable to find ${envWithDedupePaths.id}`);
+      const found = pathsPerEnvs.find((p) => envWithDedupePaths.ids.includes(p.id));
+      if (!found) throw new Error(`dedupedPathsPerEnvs, unable to find ${envWithDedupePaths.ids}`);
       return {
         env: found.env,
-        id: found.id,
+        ids: envWithDedupePaths.ids,
         paths: envWithDedupePaths.paths,
       };
     });
@@ -113,7 +132,7 @@ ${chalk.bold('Do you want to continue? [yes(y)/no(n)]')}`,
   }
 }
 
-type PathsPerEnvId = { id: string; paths: string[] };
+type PathsPerEnvIds = { ids: string[]; paths: string[] };
 
 async function filterDirsWithTsconfigFile(dirs: string[]): Promise<string[]> {
   const dirsWithTsconfig = await Promise.all(
@@ -162,29 +181,29 @@ function getAllParentsDirOfPath(p: PathLinuxRelative): PathLinuxRelative[] {
  * if in a shared-dir, some components using env1 and some env2, it finds the env that has the max number of
  * components, this env will be optimized. other components, will have the files written inside their dirs.
  */
-export function dedupePaths(pathsPerEnvId: PathsPerEnvId[]): PathsPerEnvId[] {
+export function dedupePaths(pathsPerEnvId: PathsPerEnvIds[]): PathsPerEnvIds[] {
   const rootDir = '.';
-  const individualPathPerEnvId: { [path: string]: string } = pathsPerEnvId.reduce((acc, current) => {
+  const individualPathPerConcatenatedEnvIds: { [path: string]: string } = pathsPerEnvId.reduce((acc, current) => {
     current.paths.forEach((p) => {
-      acc[p] = current.id;
+      acc[p] = current.ids.join(',');
     });
     return acc;
   }, {});
-  const allPaths = Object.keys(individualPathPerEnvId);
+  const allPaths = Object.keys(individualPathPerConcatenatedEnvIds);
   const allPossibleDirs = getAllPossibleDirsFromPaths(allPaths);
 
   const allPathsPerEnvId: { [path: string]: string | null } = {}; // null when parent-dir has same amount of comps per env.
 
   const calculateBestEnvForDir = (dir: string) => {
-    if (individualPathPerEnvId[dir]) {
+    if (individualPathPerConcatenatedEnvIds[dir]) {
       // it's the component dir, so it's the best env
-      allPathsPerEnvId[dir] = individualPathPerEnvId[dir];
+      allPathsPerEnvId[dir] = individualPathPerConcatenatedEnvIds[dir];
       return;
     }
     const allPathsShareSameDir = dir === rootDir ? allPaths : allPaths.filter((p) => p.startsWith(`${dir}/`));
     const countPerEnv: { [env: string]: number } = {};
     allPathsShareSameDir.forEach((p) => {
-      const envIdStr = individualPathPerEnvId[p];
+      const envIdStr = individualPathPerConcatenatedEnvIds[p];
       if (countPerEnv[envIdStr]) countPerEnv[envIdStr] += 1;
       else countPerEnv[envIdStr] = 1;
     });
@@ -201,7 +220,7 @@ export function dedupePaths(pathsPerEnvId: PathsPerEnvId[]): PathsPerEnvId[] {
 
   // this is the actual deduping. if found a shorter path with the same env, then no need for this path.
   // in other words, return only the paths that their parent is null or has a different env.
-  const dedupedPathsPerEnvId = Object.keys(allPathsPerEnvId).reduce((acc, current) => {
+  const dedupedPathsPerEnvIds = Object.keys(allPathsPerEnvId).reduce((acc, current) => {
     if (allPathsPerEnvId[current] && allPathsPerEnvId[path.dirname(current)] !== allPathsPerEnvId[current]) {
       acc[current] = allPathsPerEnvId[current];
     }
@@ -209,9 +228,12 @@ export function dedupePaths(pathsPerEnvId: PathsPerEnvId[]): PathsPerEnvId[] {
     return acc;
   }, {});
   // rootDir parent is always rootDir, so leave it as is.
-  if (allPathsPerEnvId[rootDir]) dedupedPathsPerEnvId[rootDir] = allPathsPerEnvId[rootDir];
+  if (allPathsPerEnvId[rootDir]) dedupedPathsPerEnvIds[rootDir] = allPathsPerEnvId[rootDir];
 
-  const envIdPerDedupedPaths = invertBy(dedupedPathsPerEnvId);
+  const envIdsPerDedupedPaths = invertBy(dedupedPathsPerEnvIds);
 
-  return Object.keys(envIdPerDedupedPaths).map((envIdStr) => ({ id: envIdStr, paths: envIdPerDedupedPaths[envIdStr] }));
+  return Object.keys(envIdsPerDedupedPaths).map((envIdStr) => ({
+    ids: envIdStr.split(','),
+    paths: envIdsPerDedupedPaths[envIdStr],
+  }));
 }
