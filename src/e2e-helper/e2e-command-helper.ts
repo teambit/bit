@@ -291,6 +291,10 @@ export default class CommandHelper {
   writeTsconfig(flags = '') {
     return this.runCmd(`bit write-tsconfig ${flags} --silent`);
   }
+  writeTsconfigDryRun(flags = '') {
+    const results = this.runCmd(`bit write-tsconfig  --dry-run ${flags} --json`);
+    return JSON.parse(results);
+  }
   showOneLane(name: string) {
     return this.runCmd(`bit lane show ${name}`);
   }
