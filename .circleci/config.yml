@@ -853,11 +853,6 @@ jobs:
       # then you can download it here and change the cache name (don't forget to change both save_cache and restore_cache key)
       - run: cd esbuild-arm && wget https://storage.googleapis.com/bvm.bit.dev/external-assets/esbuild-0.14.29-darwin-arm64.tar.gz
 
-      - run: mkdir heapdump
-      - run: cd heapdump && wget https://storage.googleapis.com/bvm.bit.dev/external-assets/heapdump-0.3.15-darwin-arm64.tar.gz
-      # TODO: for debug only - remove this ls command
-      - run: ls -la heapdump
-
       # - save_cache:
       #     key: esbuild-0.14.29-darwin-arm64-v1
       #     paths:
@@ -866,7 +861,6 @@ jobs:
           root: .
           paths:
             - esbuild-arm
-            - heapdump
 
   bundle_version_macos:
     <<: *mac_defaults
