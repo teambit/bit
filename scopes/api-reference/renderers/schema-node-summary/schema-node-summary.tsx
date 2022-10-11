@@ -12,10 +12,7 @@ import classnames from 'classnames';
 import styles from './schema-node-summary.module.scss';
 
 export type SchemaNodeSummaryProps = { node: SchemaNode } & HTMLAttributes<HTMLDivElement>;
-/**
- * @todo
- * find a better way to render all doc tags
- */
+
 export function SchemaNodeSummary({ node }: SchemaNodeSummaryProps) {
   const { signature, name, __schema, doc, location } = node;
   const displayName = name || (__schema === ConstructorSchema.name && 'constructor') || undefined;

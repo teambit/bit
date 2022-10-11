@@ -6,6 +6,7 @@ import {
   groupByNodeSignatureType,
   sortSignatureType,
 } from '@teambit/api-reference.utils.group-schema-node-by-signature';
+import flatten from 'lodash.flatten';
 
 import styles from './schema-nodes-index.module.scss';
 
@@ -16,7 +17,11 @@ export type SchemaNodesIndexProps = {
 
 export function SchemaNodesIndex({ title, nodes, className }: SchemaNodesIndexProps) {
   const grouped = Array.from(groupByNodeSignatureType(nodes).entries()).sort(sortSignatureType);
+  const hasGroupedElements = flatten(grouped).length > 0;
+
   const [drawerOpen, onToggleDrawer] = useState(true);
+
+  if (!hasGroupedElements) return null;
 
   return (
     <div className={classnames(styles.schemaNodeIndexContainer, className)}>
