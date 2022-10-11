@@ -77,12 +77,12 @@ export function SchemaNodeDetails({
         <>
           <SchemaNodesIndex title={'Index'} nodes={members} />
           <div className={styles.schemaNodeDetailsMembersContainer}>
-            {groupedMembers.map(([type, groupedMembersByType], index) => {
+            {groupedMembers.map(([type, groupedMembersByType]) => {
               return (
-                <div key={index} className={styles.groupedMemberContainer}>
+                <div key={`${type}`} className={styles.groupedMemberContainer}>
                   <div className={styles.groupName}>{type}</div>
                   {groupedMembersByType.map((member) => (
-                    <SchemaNodeSummary key={index} node={member} />
+                    <SchemaNodeSummary key={`${type}-${member.__schema}-${member.name}`} node={member} />
                   ))}
                 </div>
               );

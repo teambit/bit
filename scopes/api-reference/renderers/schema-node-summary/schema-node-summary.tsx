@@ -1,7 +1,13 @@
 import React, { HTMLAttributes } from 'react';
-import { ConstructorSchema, SchemaNode } from '@teambit/semantics.entities.semantic-schema';
+import {
+  ConstructorSchema,
+  ParameterSchema,
+  SchemaNode,
+  VariableLikeSchema,
+} from '@teambit/semantics.entities.semantic-schema';
 import { CodeEditor } from '@teambit/code.monaco.code-editor';
 import { defaultCodeEditorOptions } from '@teambit/api-reference.utils.code-editor-options';
+import classnames from 'classnames';
 
 import styles from './schema-node-summary.module.scss';
 
@@ -19,6 +25,9 @@ export function SchemaNodeSummary({ node }: SchemaNodeSummaryProps) {
   const displaySignature = __schema === ConstructorSchema.name && 'constructor' ? signature : signature?.split(') ')[1];
   // Monaco requires a unique path that ends with the file extension
   const path = `${location.line}:${location.filePath}`;
+  const tags = getTags(node);
+  const showDocs = doc?.comment || tags.length > 0;
+
   return (
     <div className={styles.schemaNodeSummary}>
       {displayName && (
@@ -26,18 +35,18 @@ export function SchemaNodeSummary({ node }: SchemaNodeSummaryProps) {
           {displayName}
         </div>
       )}
-      {doc && (
-        <div className={styles.schemaNodeDoc}>
-          {doc.comment && <div className={styles.docComment}>{doc.comment}</div>}
-          {/* {doc.tags && doc.tags.length > 0 && (
+      {showDocs && (
+        <div className={classnames(styles.schemaNodeDoc, !doc?.comment && styles.tagsOnly)}>
+          {doc?.comment && <div className={styles.docComment}>{doc?.comment}</div>}
+          {tags?.length > 0 && (
             <div className={styles.docTags}>
-              {doc.tags.map((tag, index) => (
-                <div key={index} className={styles.docTag}>
-                  {tag.tagName}
+              {tags.map((tag) => (
+                <div key={tag} className={styles.tag}>
+                  {tag}
                 </div>
               ))}
             </div>
-          )} */}
+          )}
         </div>
       )}
       {signature && (
@@ -52,4 +61,13 @@ export function SchemaNodeSummary({ node }: SchemaNodeSummaryProps) {
       )}
     </div>
   );
+}
+
+function getTags(node: SchemaNode): string[] {
+  /**
+   * @todo handle node.doc.tags
+   */
+  if (!(node.__schema === VariableLikeSchema.name || node.__schema === ParameterSchema.name)) return [];
+  const typedNode = node as VariableLikeSchema | ParameterSchema;
+  return typedNode.isOptional ? ['optional'] : [];
 }

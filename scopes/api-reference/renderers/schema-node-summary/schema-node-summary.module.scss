@@ -3,7 +3,7 @@
 }
 .schemaNodeSummaryName {
   padding-bottom: 16px;
-  font-size: var(--bit-p-xs);
+  font-size: var(--bit-p-sm);
 }
 .schemaNodeSummarySignature {
   min-height: 40px;
@@ -11,19 +11,35 @@
 .schemaNodeDoc {
   display: flex;
   flex-direction: row;
-  flex: 1;
-  padding-right: 16px;
+  font-size: var(--bit-p-xs);
+  justify-content: space-between;
+  padding-bottom: 16px;
+}
+.tagsOnly {
+  flex-direction: row-reverse;
 }
 .docComment {
+  display: flex;
+  align-self: center;
+}
+
+.docTags {
+  display: flex;
+  justify-self: flex-end;
+}
+
+.tag {
+  display: flex;
+  justify-self: flex-end;
+  background: var(--bit-accent-bg, #eceaff);
+  color: var(--bit-accent-color);
+  padding: 4px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  font-weight: 500;
   font-size: var(--bit-p-xxs);
-  padding-bottom: 16px;
 }
-.schemaNodeSummaryType {
-  padding-bottom: 16px;
-  font-size: var(--bit-p-sm);
-  font-weight: 600;
-  text-transform: capitalize;
-}
+
 .codeEditorContainer {
   > section {
     overflow: hidden;
