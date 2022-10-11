@@ -8,4 +8,6 @@ export const defaultCodeEditorOptions: monaco.editor.IStandaloneEditorConstructi
   language: 'typescript',
   lineNumbers: 'off',
   folding: false,
+  overviewRulerLanes: 0,
+  overviewRulerBorder: false,
 };

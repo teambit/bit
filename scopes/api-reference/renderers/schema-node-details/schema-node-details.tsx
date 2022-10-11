@@ -6,6 +6,7 @@ import { Link } from '@teambit/base-react.navigation.link';
 import { SchemaNodeSummary } from '@teambit/api-reference.renderers.schema-node-summary';
 import { SchemaNodesIndex } from '@teambit/api-reference.renderers.schema-nodes-index';
 import { defaultCodeEditorOptions } from '@teambit/api-reference.utils.code-editor-options';
+import classnames from 'classnames';
 import {
   groupByNodeSignatureType,
   sortSignatureType,
@@ -38,7 +39,7 @@ export function SchemaNodeDetails({
    * totalHeight: (no of lines * default line height)
    */
   const exampleHeight = (example?.content.split('\n').length || 0) * 18;
-  const signatureHeight = 30 + ((signature?.split('\n').length || 0) - 1) * 18;
+  const signatureHeight = 36 + ((signature?.split('\n').length || 0) - 1) * 18;
   const locationUrl = location.url;
   const locationLabel = location.label;
   const hasMembers = members && members.length > 0;
@@ -50,19 +51,21 @@ export function SchemaNodeDetails({
       <H5 className={styles.schemaNodeDetailsName}>{name}</H5>
       {comment && <div className={styles.schemaNodeDetailsComment}>{comment}</div>}
       {signature && (
-        <div className={styles.schemaNodeDetailsSignatureContainer}>
+        <div className={classnames(styles.schemaNodeDetailsSignatureContainer, styles.codeEditorContainer)}>
           <CodeEditor options={defaultCodeEditorOptions} value={signature} height={signatureHeight} path={filePath} />
         </div>
       )}
       {example && (
         <div className={styles.schemaNodeDetailsExample}>
           <H6 className={styles.schemaNodeDetailsExampleTitle}>Example</H6>
-          <CodeEditor
-            options={defaultCodeEditorOptions}
-            value={example.content}
-            path={example.path}
-            height={exampleHeight}
-          />
+          <div className={styles.codeEditorContainer}>
+            <CodeEditor
+              options={defaultCodeEditorOptions}
+              value={example.content}
+              path={example.path}
+              height={exampleHeight}
+            />
+          </div>
         </div>
       )}
       <div className={styles.schemaNodeDetailsLocation}>

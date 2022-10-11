@@ -7,6 +7,12 @@
 .schemaNodeDetailsName {
   padding-bottom: 24px;
 }
+.codeEditorContainer {
+  > section {
+    overflow: hidden;
+    border-radius: 8px;
+  }
+}
 .schemaNodeDetailsComment {
   font-size: var(--bit-p-xs);
   padding-bottom: 24px;

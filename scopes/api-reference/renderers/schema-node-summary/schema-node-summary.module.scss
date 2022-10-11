@@ -24,3 +24,9 @@
   font-weight: 600;
   text-transform: capitalize;
 }
+.codeEditorContainer {
+  > section {
+    overflow: hidden;
+    border-radius: 8px;
+  }
+}

@@ -14,7 +14,7 @@ export function SchemaNodeSummary({ node }: SchemaNodeSummaryProps) {
   const { signature, name, __schema, doc, location } = node;
   const displayName = name || (__schema === ConstructorSchema.name && 'constructor') || undefined;
   const signatureLength = signature?.split('\n').length || 0;
-  const signatureHeight = 30 + (signatureLength - 1) * 18;
+  const signatureHeight = 36 + (signatureLength - 1) * 18;
   // Remove node type from the signature. i.e (method), (getter), (setter), (property)
   const displaySignature = __schema === ConstructorSchema.name && 'constructor' ? signature : signature?.split(') ')[1];
   // Monaco requires a unique path that ends with the file extension
@@ -41,7 +41,14 @@ export function SchemaNodeSummary({ node }: SchemaNodeSummaryProps) {
         </div>
       )}
       {signature && (
-        <CodeEditor options={defaultCodeEditorOptions} value={displaySignature} height={signatureHeight} path={path} />
+        <div className={styles.codeEditorContainer}>
+          <CodeEditor
+            options={defaultCodeEditorOptions}
+            value={displaySignature}
+            height={signatureHeight}
+            path={path}
+          />
+        </div>
       )}
     </div>
   );

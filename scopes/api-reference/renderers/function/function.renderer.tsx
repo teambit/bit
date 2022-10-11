@@ -40,6 +40,7 @@ function FunctionComponent({ node, componentId }: APINodeRenderProps) {
   }`;
   const locationLabel = `${filePath}:${line}`;
   const hasParams = params.length > 0;
+
   return (
     <SchemaNodeDetails
       name={name}
