@@ -1314,4 +1314,21 @@ describe('bit lane command', function () {
       expect(() => helper.command.export()).not.to.throw();
     });
   });
+  describe('export multiple snaps on lane when the remote has it already', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents(1, false);
+      helper.command.createLane();
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      // the second snap is mandatory, don't skip it.
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+    });
+    // previously, it was throwing ParentNotFound
+    it('bit export should not throw ParentNotFound', () => {
+      expect(() => helper.command.export()).not.to.throw();
+    });
+  });
 });
