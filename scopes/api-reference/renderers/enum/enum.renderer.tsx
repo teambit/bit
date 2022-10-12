@@ -8,7 +8,7 @@ export const enumRenderer: APINodeRenderer = {
   predicate: (node) => node.__schema === EnumSchema.name,
   Component: EnumComponent,
   nodeType: 'Enums',
-  icon: { name: 'Enum', Component: EnumIcon },
+  icon: { name: 'Enum', url: 'https://static.bit.dev/api-reference/array.svg' },
   default: true,
 };
 
@@ -43,8 +43,4 @@ function EnumComponent({ node, componentId }: APINodeRenderProps) {
       comment={comment}
     />
   );
-}
-
-function EnumIcon() {
-  return <></>;
 }

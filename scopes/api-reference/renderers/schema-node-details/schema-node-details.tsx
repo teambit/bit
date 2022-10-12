@@ -63,11 +63,18 @@ export function SchemaNodeDetails({
             // beforeMount={(monaco) => {
             //   monaco.languages.registerHoverProvider('typescript', {
             //     provideHover: (model, position) => {
-            //       console.log('🚀 ~ file: schema-node-details.tsx ~ line 64 ~ position', position);
-            //       console.log(model.getWordAtPosition(position));
-
+            //       const word = model.getWordAtPosition(position);
+            //       console.log('🚀 ~ file: schema-node-details.tsx ~ line 67 ~ word', word);
             //       return {
-            //         contents: [{ value: '**SOURCE**' }, { value: 'Hello World' }],
+            //         contents: [
+            //           {
+            //             isTrusted: true,
+            //             supportHtml: true,
+            //             value:
+            //               "<div style=''></div>"
+            //             ,
+            //           },
+            //         ],
             //       };
             //     },
             //   });

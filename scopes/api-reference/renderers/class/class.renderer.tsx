@@ -8,7 +8,7 @@ export const classRenderer: APINodeRenderer = {
   predicate: (node) => node.__schema === ClassSchema.name,
   Component: ClassComponent,
   nodeType: 'Classes',
-  icon: { name: 'Class', Component: ClassIcon },
+  icon: { name: 'Class', url: 'https://static.bit.dev/api-reference/class.svg' },
   default: true,
 };
 
@@ -49,8 +49,4 @@ function ClassComponent({ node, componentId }: APINodeRenderProps) {
       comment={comment}
     />
   );
-}
-
-function ClassIcon() {
-  return <></>;
 }

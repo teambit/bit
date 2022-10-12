@@ -8,7 +8,7 @@ export const unresolvedRenderer: APINodeRenderer = {
   predicate: (node) => node.__schema === UnresolvedSchema.name,
   Component: UnresolvedComponent,
   nodeType: 'Unresolved',
-  icon: { name: 'Unresolved', Component: UnresolvedIcon },
+  icon: { name: 'Unresolved', url: '' },
   default: true,
 };
 
@@ -25,8 +25,4 @@ function UnresolvedComponent({ node, componentId }: APINodeRenderProps) {
   const locationLabel = `${filePath}:${line}`;
 
   return <SchemaNodeDetails name={name} location={{ url: locationUrl, path: filePath, label: locationLabel }} />;
-}
-
-function UnresolvedIcon() {
-  return <></>;
 }

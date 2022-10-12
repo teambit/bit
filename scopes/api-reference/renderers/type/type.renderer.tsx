@@ -8,7 +8,7 @@ export const typeRenderer: APINodeRenderer = {
   predicate: (node) => node.__schema === TypeSchema.name,
   Component: TypeComponent,
   nodeType: 'Types',
-  icon: { name: 'Type', Component: TypeIcon },
+  icon: { name: 'Type', url: 'https://static.bit.dev/api-reference/type.svg' },
   default: true,
 };
 
@@ -48,8 +48,4 @@ function TypeComponent({ node, componentId }: APINodeRenderProps) {
       comment={comment}
     />
   );
-}
-
-function TypeIcon() {
-  return <></>;
 }

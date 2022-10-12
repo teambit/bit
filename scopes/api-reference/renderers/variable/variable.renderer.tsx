@@ -8,7 +8,7 @@ export const variableRenderer: APINodeRenderer = {
   predicate: (node) => node.__schema === VariableLikeSchema.name,
   Component: VariableComponent,
   nodeType: 'Variables',
-  icon: { name: 'Variable', Component: VariableIcon },
+  icon: { name: 'Variable', url: 'https://static.bit.dev/api-reference/variable.svg' },
   default: true,
 };
 
@@ -41,8 +41,4 @@ function VariableComponent({ node, componentId }: APINodeRenderProps) {
       comment={comment}
     />
   );
-}
-
-function VariableIcon() {
-  return <></>;
 }

@@ -1,6 +1,6 @@
 import { ComponentID } from '@teambit/component-id';
 import { SchemaNode } from '@teambit/semantics.entities.semantic-schema';
-import { ComponentType, ReactNode } from 'react';
+import { ComponentType } from 'react';
 import { APIReferenceModel } from '@teambit/api-reference.models.api-reference-model';
 
 export type APINodeRenderProps = {
@@ -13,6 +13,6 @@ export type APINodeRenderer = {
   predicate: (node: SchemaNode) => boolean;
   Component: ComponentType<APINodeRenderProps>;
   nodeType: string;
-  icon: { Component: ReactNode; name: string };
+  icon: { url: string; name: string };
   default?: boolean;
 };

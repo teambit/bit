@@ -13,6 +13,7 @@ import { APIReferenceExplorer } from '@teambit/api-reference.explorer.api-refere
 import { useAPIRefParam } from '@teambit/api-reference.hooks.use-api-ref-url';
 import { APINodeRendererSlot } from '@teambit/api-reference';
 import { sortAPINodes } from '@teambit/api-reference.utils.sort-api-nodes';
+import { TreeNode } from '@teambit/design.ui.tree';
 import styles from './api-reference-page.module.scss';
 
 export type APIRefPageProps = {
@@ -37,6 +38,12 @@ export function APIRefPage({ host, rendererSlot, className }: APIRefPageProps) {
       return `${apiNode.renderer?.nodeType}/${apiNode.api.name}`;
     });
   }, [apiNodes]);
+  const getIcon = (node: TreeNode) => {
+    const nodeType = node.id.split('/')[0];
+    const icon = apiModel?.apiByType.get(nodeType)?.[0].renderer.icon.url;
+    console.log('🚀 ~ file: api-reference-page.tsx ~ line 44 ~ getIcon ~ icon', icon);
+    return icon;
+  };
 
   const selectedAPINode =
     (selectedAPIType &&
@@ -88,7 +95,7 @@ export function APIRefPage({ host, rendererSlot, className }: APIRefPageProps) {
         />
       </HoverSplitter>
       <Pane className={classNames(styles.right, styles.dark)}>
-        <APIReferenceExplorer selectedAPIName={selectedAPIName} apiTree={apiTree} />
+        <APIReferenceExplorer selectedAPIName={selectedAPIName} apiTree={apiTree} getIcon={getIcon} />
       </Pane>
     </SplitPane>
   );

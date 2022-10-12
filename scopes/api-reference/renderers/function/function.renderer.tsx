@@ -14,7 +14,7 @@ export const functionRenderer: APINodeRenderer = {
   predicate: (node) => node.__schema === FunctionLikeSchema.name,
   Component: FunctionComponent,
   nodeType: 'Functions',
-  icon: { name: 'Function', Component: FunctionIcon },
+  icon: { name: 'Function', url: 'https://static.bit.dev/api-reference/function.svg' },
   default: true,
 };
 
@@ -120,8 +120,4 @@ function displayReturnType(returnType: SchemaNode, apiRefModel: APIReferenceMode
     )) ||
     returnTypeName
   );
-}
-
-function FunctionIcon() {
-  return <></>;
 }

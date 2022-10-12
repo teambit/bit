@@ -8,7 +8,7 @@ export const interfaceRenderer: APINodeRenderer = {
   predicate: (node) => node.__schema === InterfaceSchema.name,
   Component: InterfaceComponent,
   nodeType: 'Interfaces',
-  icon: { name: 'Interface', Component: InterfaceIcon },
+  icon: { name: 'Interface', url: 'https://static.bit.dev/api-reference/interface.svg' },
   default: true,
 };
 
@@ -45,8 +45,4 @@ function InterfaceComponent({ node, componentId }: APINodeRenderProps) {
       comment={comment}
     />
   );
-}
-
-function InterfaceIcon() {
-  return <></>;
 }
