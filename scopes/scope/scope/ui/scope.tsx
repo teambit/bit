@@ -92,22 +92,46 @@ export function Scope({
                 tooltipContent={`${isSidebarOpen ? 'Hide' : 'Show'} side panel`}
               />
             </HoverSplitter>
-            <PaneContainer Wrapper={PaneWrapper}>
-              <Pane className={classNames(paneClassName, styles.pane)}>
-                <SlotRouter slot={routeSlot}>
-                  <Route
-                    index
-                    element={
-                      <ScopeOverview
-                        badgeSlot={badgeSlot}
-                        overviewSlot={overviewLineSlot}
-                        TargetOverview={TargetScopeOverview}
+
+            {
+              /**
+               * @hack - discuss with Ran why we need a PaneWrapper as a parent of the Pane
+               * conditionally rendering it makes sure that it doesn't break the code tab layout
+               */
+              (PaneWrapper && (
+                <PaneContainer Wrapper={PaneWrapper}>
+                  <Pane className={classNames(paneClassName, styles.pane)}>
+                    <SlotRouter slot={routeSlot}>
+                      <Route
+                        index
+                        element={
+                          <ScopeOverview
+                            badgeSlot={badgeSlot}
+                            overviewSlot={overviewLineSlot}
+                            TargetOverview={TargetScopeOverview}
+                          />
+                        }
                       />
-                    }
-                  />
-                </SlotRouter>
-              </Pane>
-            </PaneContainer>
+                    </SlotRouter>
+                  </Pane>
+                </PaneContainer>
+              )) || (
+                <Pane className={classNames(paneClassName, styles.pane)}>
+                  <SlotRouter slot={routeSlot}>
+                    <Route
+                      index
+                      element={
+                        <ScopeOverview
+                          badgeSlot={badgeSlot}
+                          overviewSlot={overviewLineSlot}
+                          TargetOverview={TargetScopeOverview}
+                        />
+                      }
+                    />
+                  </SlotRouter>
+                </Pane>
+              )
+            }
           </SplitPane>
         </div>
       </Composer>
@@ -120,8 +144,7 @@ function PaneContainer({
   Wrapper,
 }: {
   children: ReactNode;
-  Wrapper?: ComponentType<{ children: ReactNode }>;
+  Wrapper: ComponentType<{ children: ReactNode }>;
 }) {
-  if (!Wrapper) return <>{children}</>;
   return <Wrapper>{children}</Wrapper>;
 }
