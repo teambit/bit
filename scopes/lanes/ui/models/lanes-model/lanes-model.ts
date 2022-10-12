@@ -217,9 +217,9 @@ export class LanesModel {
     this.viewedLane = viewedLaneId ? this.lanes.find((lane) => lane.id.isEqual(viewedLaneId)) : undefined;
   };
 
-  resolveComponent = (idStrWithoutVersion: string, laneId?: LaneId) =>
+  resolveComponentByFullName = (fullName: string, laneId?: LaneId) =>
     ((laneId && this.lanes.find((lane) => lane.id.isEqual(laneId))) || this.viewedLane)?.components.find(
-      (component) => component.toStringWithoutVersion() === idStrWithoutVersion
+      (component) => component.fullName === fullName
     );
 
   getDefaultLane = () => this.lanes.find((lane) => lane.id.isDefault());
