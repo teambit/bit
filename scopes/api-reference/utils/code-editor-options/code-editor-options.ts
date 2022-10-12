@@ -10,4 +10,7 @@ export const defaultCodeEditorOptions: monaco.editor.IStandaloneEditorConstructi
   folding: false,
   overviewRulerLanes: 0,
   overviewRulerBorder: false,
+  wordWrap: 'on',
+  automaticLayout: true,
+  wrappingStrategy: 'advanced',
 };

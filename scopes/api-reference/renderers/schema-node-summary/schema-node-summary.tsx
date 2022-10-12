@@ -1,4 +1,4 @@
-import React, { HTMLAttributes } from 'react';
+import React, { HTMLAttributes, useState } from 'react';
 import {
   ConstructorSchema,
   ParameterSchema,
@@ -17,7 +17,8 @@ export function SchemaNodeSummary({ node }: SchemaNodeSummaryProps) {
   const { signature, name, __schema, doc, location } = node;
   const displayName = name || (__schema === ConstructorSchema.name && 'constructor') || undefined;
   const signatureLength = signature?.split('\n').length || 0;
-  const signatureHeight = 36 + (signatureLength - 1) * 18;
+  const defaultSignatureHeight = 36 + (signatureLength - 1) * 18;
+  const [signatureHeight, setSignatureHeight] = useState<number>(defaultSignatureHeight);
   // Remove node type from the signature. i.e (method), (getter), (setter), (property)
   const displaySignature = __schema === ConstructorSchema.name && 'constructor' ? signature : signature?.split(') ')[1];
   // Monaco requires a unique path that ends with the file extension
@@ -53,6 +54,15 @@ export function SchemaNodeSummary({ node }: SchemaNodeSummaryProps) {
             value={displaySignature}
             height={signatureHeight}
             path={path}
+            onMount={(editor) => {
+              const container = editor.getDomNode();
+              editor.onDidContentSizeChange(() => {
+                if (container) {
+                  const contentHeight = Math.min(1000, editor.getContentHeight() + 18);
+                  setSignatureHeight(contentHeight);
+                }
+              });
+            }}
           />
         </div>
       )}

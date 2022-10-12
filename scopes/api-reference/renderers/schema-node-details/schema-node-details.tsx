@@ -1,4 +1,4 @@
-import React, { HTMLAttributes } from 'react';
+import React, { HTMLAttributes, useState } from 'react';
 import { SchemaNode } from '@teambit/semantics.entities.semantic-schema';
 import { H5, H6 } from '@teambit/documenter.ui.heading';
 import { CodeEditor } from '@teambit/code.monaco.code-editor';
@@ -11,6 +11,7 @@ import {
   groupByNodeSignatureType,
   sortSignatureType,
 } from '@teambit/api-reference.utils.group-schema-node-by-signature';
+// import { CodePage } from '@teambit/code.ui.code-tab-page';
 
 import styles from './schema-node-details.module.scss';
 
@@ -39,7 +40,8 @@ export function SchemaNodeDetails({
    * totalHeight: (no of lines * default line height)
    */
   const exampleHeight = (example?.content.split('\n').length || 0) * 18;
-  const signatureHeight = 36 + ((signature?.split('\n').length || 0) - 1) * 18;
+  const defaultSignatureHeight = 36 + ((signature?.split('\n').length || 0) - 1) * 18;
+  const [signatureHeight, setSignatureHeight] = useState<number>(defaultSignatureHeight);
   const locationUrl = location.url;
   const locationLabel = location.label;
   const hasMembers = members && members.length > 0;
@@ -52,7 +54,34 @@ export function SchemaNodeDetails({
       {comment && <div className={styles.schemaNodeDetailsComment}>{comment}</div>}
       {signature && (
         <div className={classnames(styles.schemaNodeDetailsSignatureContainer, styles.codeEditorContainer)}>
-          <CodeEditor options={defaultCodeEditorOptions} value={signature} height={signatureHeight} path={filePath} />
+          <CodeEditor
+            options={defaultCodeEditorOptions}
+            value={signature}
+            height={signatureHeight}
+            path={filePath}
+            className={styles.editor}
+            // beforeMount={(monaco) => {
+            //   monaco.languages.registerHoverProvider('typescript', {
+            //     provideHover: (model, position) => {
+            //       console.log('🚀 ~ file: schema-node-details.tsx ~ line 64 ~ position', position);
+            //       console.log(model.getWordAtPosition(position));
+
+            //       return {
+            //         contents: [{ value: '**SOURCE**' }, { value: 'Hello World' }],
+            //       };
+            //     },
+            //   });
+            // }}
+            onMount={(editor) => {
+              const container = editor.getDomNode();
+              editor.onDidContentSizeChange(() => {
+                if (container) {
+                  const contentHeight = Math.min(1000, editor.getContentHeight() + 18);
+                  setSignatureHeight(contentHeight);
+                }
+              });
+            }}
+          />
         </div>
       )}
       {example && (
