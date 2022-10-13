@@ -6,15 +6,14 @@ labels: ['string', 'utility']
 import { humanizeCompositionId } from './humanize'
 
 ```jsx live=true
-
 () => {
-    return(
-        <>
-            <p>{humanizeCompositionId('PrimaryButton')}</p>
-            <p>{humanizeCompositionId('primaryButton')}</p>
-            <p>{humanizeCompositionId('primary_button')}</p>
-            <p>{humanizeCompositionId('primary-button')}</p>
-        </>
-    )
-}
+  return (
+    <>
+      <p>{humanizeCompositionId('PrimaryButton')}</p>
+      <p>{humanizeCompositionId('primaryButton')}</p>
+      <p>{humanizeCompositionId('primary_button')}</p>
+      <p>{humanizeCompositionId('primary-button')}</p>
+    </>
+  );
+};
 ```

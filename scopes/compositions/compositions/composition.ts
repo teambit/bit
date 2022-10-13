@@ -9,11 +9,11 @@ export type CompositionProps = {
 export type CompositionBrowserMetadata = {
   displayName?: string;
   identifier: string;
-}
+};
 
 export type CompositionBrowserMetadataObject = {
-  compositions: CompositionBrowserMetadata[]
-}
+  compositions: CompositionBrowserMetadata[];
+};
 
 export class Composition {
   constructor(
