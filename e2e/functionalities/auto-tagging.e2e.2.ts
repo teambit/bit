@@ -58,7 +58,7 @@ describe('auto tagging functionality', function () {
     });
     it('bit-status should show them all as staged and not modified', () => {
       const status = helper.command.statusJson();
-      expect(status.modifiedComponent).to.be.empty;
+      expect(status.modifiedComponents).to.be.empty;
       const staged = helper.command.getStagedIdsFromStatus();
       expect(staged).to.include('comp1');
       expect(staged).to.include('comp2');
