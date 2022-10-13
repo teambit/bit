@@ -18,14 +18,7 @@ import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extensio
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 import { DetectorHook } from '@teambit/legacy/dist/consumer/component/dependencies/files-dependency-builder/detector-hook';
 import { Http, ProxyConfig, NetworkConfig } from '@teambit/legacy/dist/scope/network/http';
-import {
-  registerUpdateDependenciesOnTag,
-  onTagIdTransformer,
-} from '@teambit/legacy/dist/scope/component-ops/tag-model-component';
-import {
-  registerUpdateDependenciesOnExport,
-  OnExportIdTransformer,
-} from '@teambit/legacy/dist/scope/component-ops/export-scope-components';
+import { onTagIdTransformer } from '@teambit/snapping';
 import { Version as VersionModel } from '@teambit/legacy/dist/scope/models';
 import LegacyComponent from '@teambit/legacy/dist/consumer/component';
 import fs from 'fs-extra';
@@ -42,7 +35,7 @@ import { DependencyInstaller, PreInstallSubscriberList, PostInstallSubscriberLis
 import { DependencyResolverAspect } from './dependency-resolver.aspect';
 import { DependencyVersionResolver } from './dependency-version-resolver';
 import { DependencyLinker, LinkingOptions } from './dependency-linker';
-import { getAllPolicyPkgs, OutdatedPkg } from './get-all-policy-pkgs';
+import { ComponentModelVersion, getAllPolicyPkgs, OutdatedPkg } from './get-all-policy-pkgs';
 import { InvalidVersionWithPrefix, PackageManagerNotFound } from './exceptions';
 import {
   CreateFromComponentsOptions,
@@ -285,6 +278,8 @@ export type GetLinkerOptions = {
 export type GetVersionResolverOptions = {
   cacheRootDirectory?: string;
 };
+
+type OnExportIdTransformer = (id: BitId) => BitId;
 
 const defaultLinkingOptions: LinkingOptions = {
   legacyLink: true,
@@ -574,6 +569,7 @@ export class DependencyResolverMain {
       packageManager,
       this.aspectLoader,
       this.logger,
+      this,
       options.rootDir,
       cacheRootDir,
       preInstallSubscribers,
@@ -691,10 +687,14 @@ export class DependencyResolverMain {
       ...this.getNetworkConfigFromDepResolverConfig(),
     };
     this.logger.debug(
-      `the next network configuration is used in dependency-resolver: ${{
-        ...networkConfig,
-        key: networkConfig.key ? 'set' : 'not set', // this is sensitive information, we should not log it
-      }}`
+      `the next network configuration is used in dependency-resolver: ${JSON.stringify(
+        {
+          ...networkConfig,
+          key: networkConfig.key ? 'set' : 'not set', // this is sensitive information, we should not log it
+        },
+        null,
+        2
+      )}`
     );
     return networkConfig;
   }
@@ -773,23 +773,20 @@ export class DependencyResolverMain {
     this.logger.setStatusLine('finding missing peer dependencies');
     const packageManager = this.packageManagerSlot.get(this.config.packageManager);
     let peerDependencyIssues!: PeerDependencyIssuesByProjects;
+    const installer = this.getInstaller();
+    const manifests = await installer.getComponentManifests({
+      ...options,
+      componentDirectoryMap,
+      rootPolicy,
+      rootDir,
+    });
     if (packageManager?.getPeerDependencyIssues && typeof packageManager?.getPeerDependencyIssues === 'function') {
-      peerDependencyIssues = await packageManager?.getPeerDependencyIssues(
-        rootDir,
-        rootPolicy,
-        componentDirectoryMap,
-        options
-      );
+      peerDependencyIssues = await packageManager?.getPeerDependencyIssues(rootDir, manifests, options);
     } else {
       const systemPm = this.getSystemPackageManager();
       if (!systemPm.getPeerDependencyIssues)
         throw new Error('system package manager must implement `getPeerDependencyIssues()`');
-      peerDependencyIssues = await systemPm?.getPeerDependencyIssues(
-        rootDir,
-        rootPolicy,
-        componentDirectoryMap,
-        options
-      );
+      peerDependencyIssues = await systemPm?.getPeerDependencyIssues(rootDir, manifests, options);
     }
     this.logger.consoleSuccess();
     return peerDependencyIssues['.']?.intersections;
@@ -1155,19 +1152,43 @@ export class DependencyResolverMain {
   /**
    * Return a list of outdated policy dependencies.
    */
-  getOutdatedPkgsFromPolicies({
+  async getOutdatedPkgsFromPolicies({
     rootDir,
     variantPoliciesByPatterns,
     componentPoliciesById,
+    components,
   }: {
     rootDir: string;
     variantPoliciesByPatterns: Record<string, VariantPolicyConfigObject>;
     componentPoliciesById: Record<string, any>;
+    components: Component[];
   }): Promise<OutdatedPkg[]> {
+    const componentModelVersions: ComponentModelVersion[] = (
+      await Promise.all(
+        components.map(async (component) => {
+          const depList = await this.getDependencies(component);
+          return depList
+            .filter(
+              (dep) =>
+                typeof dep.getPackageName === 'function' &&
+                dep.version !== 'latest' &&
+                !dep['isExtension'] && // eslint-disable-line
+                dep.lifecycle !== 'peer'
+            )
+            .map((dep) => ({
+              name: dep.getPackageName!(), // eslint-disable-line
+              version: dep.version,
+              componentId: component.id.toString(),
+              lifecycleType: dep.lifecycle,
+            }));
+        })
+      )
+    ).flat();
     const allPkgs = getAllPolicyPkgs({
       rootPolicy: this.getWorkspacePolicyFromConfig(),
       variantPoliciesByPatterns,
       componentPoliciesById,
+      componentModelVersions,
     });
     return this.getOutdatedPkgs(rootDir, allPkgs);
   }
@@ -1339,8 +1360,6 @@ export class DependencyResolverMain {
       if (!envPolicy) return undefined;
       return envPolicy.peersAutoDetectPolicy.toVersionManifest();
     });
-    registerUpdateDependenciesOnTag(dependencyResolver.updateDepsOnLegacyTag.bind(dependencyResolver));
-    registerUpdateDependenciesOnExport(dependencyResolver.updateDepsOnLegacyExport.bind(dependencyResolver));
     aspectLoader.registerOnLoadRequireableExtensionSlot(
       dependencyResolver.onLoadRequireableExtensionSubscriber.bind(dependencyResolver)
     );

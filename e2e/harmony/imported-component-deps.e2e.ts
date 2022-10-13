@@ -62,3 +62,44 @@ const isPositive = require('is-positive');
     });
   }
 );
+
+(supportNpmCiRegistryTesting ? describe : describe.skip)(
+  'importing a component that has peer a peer dependency',
+  function () {
+    this.timeout(0);
+    let helper: Helper;
+    let npmCiRegistry: NpmCiRegistry;
+    before(async () => {
+      helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.bitJsonc.setPackageManager(`teambit.dependencies/pnpm`);
+      helper.bitJsonc.addKeyValToDependencyResolver('policy', {
+        peerDependencies: {
+          'is-positive': '1.0.0',
+        },
+      });
+      npmCiRegistry = new NpmCiRegistry(helper);
+      await npmCiRegistry.init();
+      npmCiRegistry.configureCiInPackageJsonHarmony();
+      helper.fixtures.populateComponents(1);
+      helper.fs.outputFile(`comp1/index.js`, `const isPositive = require('is-positive');`);
+      helper.command.install();
+      helper.command.compile();
+      helper.command.tagAllComponents();
+      helper.command.export();
+
+      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.extensions.bitJsonc.setPackageManager(`teambit.dependencies/pnpm`);
+      helper.scopeHelper.addRemoteScope();
+      helper.bitJsonc.setupDefault();
+      helper.command.import(`${helper.scopes.remote}/comp1`);
+    });
+    it('should install component dependencies from their respective models to the imported components', () => {
+      expect(() => helper.command.diff()).to.throw('there are no modified components to diff');
+    });
+    after(() => {
+      npmCiRegistry.destroy();
+    });
+  }
+);

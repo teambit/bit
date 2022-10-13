@@ -7,6 +7,7 @@ export {
 } from './manifest';
 export { Registries, Registry } from './registry';
 export {
+  InstallationContext,
   PackageManager,
   PackageManagerInstallOptions,
   PackageManagerResolveRemoteVersionOptions,

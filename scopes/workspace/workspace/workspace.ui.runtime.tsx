@@ -1,4 +1,5 @@
 import { ComponentAspect, ComponentUI, ComponentModel } from '@teambit/component';
+import { compact, flatten } from 'lodash';
 import { ComponentTreeAspect, ComponentTreeUI, ComponentTreeNode } from '@teambit/component-tree';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { RouteSlot } from '@teambit/ui-foundation.ui.react-router.slot-router';
@@ -12,7 +13,10 @@ import { RouteProps } from 'react-router-dom';
 import CommandBarAspect, { CommandBarUI, CommandHandler } from '@teambit/command-bar';
 import { MenuLinkItem } from '@teambit/design.ui.surfaces.menu.link-item';
 import type { DrawerType } from '@teambit/ui-foundation.ui.tree.drawer';
-import { ComponentFilters, DeprecateFilter, EnvsFilter } from '@teambit/component.ui.component-filters';
+import { ComponentFilters } from '@teambit/component.ui.component-filters.component-filter-context';
+import { DeprecateFilter } from '@teambit/component.ui.component-filters.deprecate-filter';
+import { EnvsFilter } from '@teambit/component.ui.component-filters.env-filter';
+import { ShowMainFilter } from '@teambit/component.ui.component-filters.show-main-filter';
 import {
   DrawerWidgetSlot,
   FilterWidget,
@@ -134,7 +138,7 @@ export class WorkspaceUI {
             <Workspace
               menuSlot={this.menuSlot}
               routeSlot={this.routeSlot}
-              sidebar={<this.sidebar.render itemSlot={this.sidebarItemSlot} />}
+              sidebar={<this.sidebar.render items={this.listSidebarItems()} />}
               workspaceUI={this}
               onSidebarTogglerChange={this.setKeyBindHandler}
             />
@@ -142,6 +146,15 @@ export class WorkspaceUI {
         },
       ],
     };
+  }
+
+  listSidebarItems() {
+    const items = flatten(this.sidebarItemSlot.values());
+    return compact(
+      items.map((item) => {
+        return item.component;
+      })
+    );
   }
 
   private menuItems: MenuItem[] = [
@@ -210,7 +223,7 @@ export class WorkspaceUI {
       commandBarUI
     );
 
-    workspaceUI.registerDrawerComponentFilters([DeprecateFilter, EnvsFilter]);
+    workspaceUI.registerDrawerComponentFilters([DeprecateFilter, EnvsFilter, ShowMainFilter(true)]);
     workspaceUI.registerDrawerWidgets([
       <FilterWidget key={'workspace-filter-widget'} />,
       <TreeToggleWidget key={'workspace-tree-toggle-widget'} />,
@@ -218,11 +231,15 @@ export class WorkspaceUI {
     ui.registerRoot(workspaceUI.uiRoot.bind(workspaceUI));
     workspaceUI.registerMenuItem(workspaceUI.menuItems);
 
-    workspaceUI.registerSidebarLink(() => (
-      <MenuLinkItem exact href="/" icon="comps">
-        Gallery
-      </MenuLinkItem>
-    ));
+    workspaceUI.registerSidebarLink({
+      component: function Gallery() {
+        return (
+          <MenuLinkItem exact href="/" icon="comps">
+            Workspace Overview
+          </MenuLinkItem>
+        );
+      },
+    });
 
     workspaceUI.registerMenuRoutes([
       {

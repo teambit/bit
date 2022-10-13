@@ -41,7 +41,7 @@ describe('Mocha Tester', function () {
         shouldOutputTestPassed(output);
       });
       it('bit build should show the passing component via Mocha output', () => {
-        const output = helper.command.build('', true);
+        const output = helper.command.build('', undefined, true);
         shouldOutputTestPassed(output);
       });
     });

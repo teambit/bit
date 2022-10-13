@@ -40,12 +40,14 @@ import { PubsubAspect } from '@teambit/pubsub';
 import { ScopeAspect } from '@teambit/scope';
 // import { StencilAspect } from '@teambit/stencil';
 import { TesterAspect } from '@teambit/tester';
+import { MultiTesterAspect } from '@teambit/multi-tester';
 import { TypescriptAspect } from '@teambit/typescript';
 import { BabelAspect } from '@teambit/babel';
 import { UIAspect } from '@teambit/ui';
 import { VariantsAspect } from '@teambit/variants';
 import { WebpackAspect } from '@teambit/webpack';
 import { WorkspaceAspect } from '@teambit/workspace';
+import { InstallAspect } from '@teambit/install';
 import { LinterAspect } from '@teambit/linter';
 import { FormatterAspect } from '@teambit/formatter';
 import { ChangelogAspect } from '@teambit/changelog';
@@ -89,6 +91,9 @@ import { ComponentCompareAspect } from '@teambit/component-compare';
 import { ListerAspect } from '@teambit/lister';
 import { BuilderUIAspect } from '@teambit/builder-ui';
 import { DependenciesAspect } from '@teambit/dependencies';
+import { RemoveAspect } from '@teambit/remove';
+import { MergeLanesAspect } from '@teambit/merge-lanes';
+import { CheckoutAspect } from '@teambit/checkout';
 import { BitAspect } from './bit.aspect';
 
 export const manifestsMap = {
@@ -96,6 +101,7 @@ export const manifestsMap = {
   [CLIAspect.id]: CLIAspect,
   [DevFilesAspect.id]: DevFilesAspect,
   [WorkspaceAspect.id]: WorkspaceAspect,
+  [InstallAspect.id]: InstallAspect,
   [ESLintAspect.id]: ESLintAspect,
   [PrettierAspect.id]: PrettierAspect,
   [CompilerAspect.id]: CompilerAspect,
@@ -132,6 +138,7 @@ export const manifestsMap = {
   // [StencilAspect.id]: StencilAspect,
   [ScopeAspect.id]: ScopeAspect,
   [TesterAspect.id]: TesterAspect,
+  [MultiTesterAspect.id]: MultiTesterAspect,
   [BuilderAspect.id]: BuilderAspect,
   [VariantsAspect.id]: VariantsAspect,
   [DeprecationAspect.id]: DeprecationAspect,
@@ -182,6 +189,9 @@ export const manifestsMap = {
   [ListerAspect.id]: ListerAspect,
   [BuilderUIAspect.id]: BuilderUIAspect,
   [DependenciesAspect.id]: DependenciesAspect,
+  [RemoveAspect.id]: RemoveAspect,
+  [MergeLanesAspect.id]: MergeLanesAspect,
+  [CheckoutAspect.id]: CheckoutAspect,
 };
 
 export function isCoreAspect(id: string) {

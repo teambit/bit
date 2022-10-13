@@ -5,10 +5,11 @@ import BitIds from '@teambit/legacy/dist/bit-id/bit-ids';
 import Component from '@teambit/legacy/dist/consumer/component/consumer-component';
 import LegacyGraph from '@teambit/legacy/dist/scope/graph/graph';
 import ScopeComponentsImporter from '@teambit/legacy/dist/scope/component-ops/scope-components-importer';
+import { ComponentNotFound, ScopeNotFound } from '@teambit/legacy/dist/scope/exceptions';
+import { ComponentNotFound as ComponentNotFoundInScope } from '@teambit/scope';
 import compact from 'lodash.compact';
 import { BitId } from '@teambit/legacy-bit-id';
 import { Logger } from '@teambit/logger';
-import { ComponentNotFound } from '@teambit/scope';
 import { BitError } from '@teambit/bit-error';
 import { Workspace } from './workspace';
 
@@ -18,13 +19,13 @@ export class GraphFromFsBuilder {
   private graph = new LegacyGraph();
   private completed: string[] = [];
   private depth = 1;
-  private shouldThrowOnMissingDep = true;
   private consumer: Consumer;
   constructor(
     private workspace: Workspace,
     private logger: Logger,
     private ignoreIds = new BitIds(),
-    private shouldLoadItsDeps?: ShouldLoadFunc
+    private shouldLoadItsDeps?: ShouldLoadFunc,
+    private shouldThrowOnMissingDep = true
   ) {
     this.consumer = this.workspace.consumer;
   }
@@ -62,7 +63,7 @@ export class GraphFromFsBuilder {
   async buildGraph(ids: BitId[]): Promise<LegacyGraph> {
     this.logger.debug(`GraphFromFsBuilder, buildGraph with ${ids.length} seeders`);
     const start = Date.now();
-    const components = await this.loadManyComponents(ids, '<none>');
+    const components = await this.loadManyComponents(ids);
     await this.processManyComponents(components);
     this.logger.debug(
       `GraphFromFsBuilder, buildGraph with ${ids.length} seeders completed (${(Date.now() - start) / 1000} sec)`
@@ -102,6 +103,7 @@ export class GraphFromFsBuilder {
     await scopeComponentsImporter.importMany({
       ids: BitIds.uniqFromArray(allDepsWithScope),
       throwForDependencyNotFound: this.shouldThrowOnMissingDep,
+      throwForSeederNotFound: this.shouldThrowOnMissingDep,
     });
   }
 
@@ -115,7 +117,11 @@ export class GraphFromFsBuilder {
       depsIds.forEach((depId) => {
         if (this.ignoreIds.has(depId)) return;
         if (!this.graph.hasNode(depId.toString())) {
-          throw new Error(`buildOneComponent: missing node of ${depId.toString()}`);
+          if (this.shouldThrowOnMissingDep) {
+            throw new Error(`buildOneComponent: missing node of ${depId.toString()}`);
+          }
+          this.logger.warn(`ignoring missing ${depId.toString()}`);
+          return;
         }
         this.graph.setEdge(idStr, depId.toString(), depType);
       });
@@ -124,7 +130,7 @@ export class GraphFromFsBuilder {
     return allDependencies;
   }
 
-  private async loadManyComponents(componentsIds: BitId[], dependenciesOf: string): Promise<Component[]> {
+  private async loadManyComponents(componentsIds: BitId[], dependenciesOf?: string): Promise<Component[]> {
     const components = await mapSeries(componentsIds, async (comp: BitId) => {
       const idStr = comp.toString();
       const fromGraph = this.graph.node(idStr);
@@ -134,26 +140,32 @@ export class GraphFromFsBuilder {
         this.graph.setNode(idStr, component);
         return component;
       } catch (err: any) {
-        if (err instanceof ComponentNotFound) {
+        if (
+          err instanceof ComponentNotFound ||
+          err instanceof ComponentNotFoundInScope ||
+          err instanceof ScopeNotFound
+        ) {
+          if (dependenciesOf && !this.shouldThrowOnMissingDep) {
+            this.logger.warn(
+              `component ${idStr}, dependency of ${dependenciesOf} was not found. continuing without it`
+            );
+            return null;
+          }
           throw new BitError(
-            `error: component "${idStr}" was not found.\nthis component is a dependency of "${dependenciesOf}" and is needed as part of the graph generation`
+            `error: component "${idStr}" was not found.\nthis component is a dependency of "${
+              dependenciesOf || '<none>'
+            }" and is needed as part of the graph generation`
           );
         }
-        this.logger.error(`failed loading dependencies of ${dependenciesOf}`);
+        if (dependenciesOf) this.logger.error(`failed loading dependencies of ${dependenciesOf}`);
         throw err;
       }
     });
-    return components;
+    return compact(components);
   }
   private async loadComponent(componentId: BitId): Promise<Component> {
-    const componentMap = this.consumer.bitMap.getComponentIfExist(componentId);
-    const isOnWorkspace = Boolean(componentMap);
-    if (isOnWorkspace) {
-      return this.consumer.loadComponent(componentId);
-    }
-    // a dependency might have been installed as a package in the workspace, and as such doesn't
-    // have a componentMap.
-    const componentFromModel = await this.consumer.loadComponentFromModel(componentId);
-    return componentFromModel.clone();
+    const compId = await this.workspace.resolveComponentId(componentId);
+    const comp = await this.workspace.get(compId);
+    return comp.state._consumer;
   }
 }

@@ -1,9 +1,9 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, ComponentType } from 'react';
 import { flatten } from 'lodash';
 import classNames from 'classnames';
 import { MenuSection } from '@teambit/design.ui.surfaces.menu.section';
 import { DrawerType, DrawerUI } from '@teambit/ui-foundation.ui.tree.drawer';
-import { DrawerSlot, SidebarItemSlot } from '../../sidebar.ui.runtime';
+import { DrawerSlot } from '../../sidebar.ui.runtime';
 import styles from './side-bar.module.scss';
 
 export type SideBarProps = {
@@ -14,19 +14,18 @@ export type SideBarProps = {
   /**
    * slot of registered items to the main section at the top.
    */
-  itemSlot?: SidebarItemSlot;
+  items?: ComponentType[];
 } & React.HTMLAttributes<HTMLDivElement>;
 
 /**
  * side bar component.
  */
-export function SideBar({ drawerSlot, itemSlot, ...rest }: SideBarProps) {
+export function SideBar({ drawerSlot, items = [], ...rest }: SideBarProps) {
   const drawers = flatten(drawerSlot.values())
     .filter((drawer) => !drawer?.isHidden?.())
     .sort(sortFn);
 
   const [openDrawerList, onToggleDrawer] = useState<(string | undefined)[]>(drawers.map((drawer) => drawer.id));
-  const items = useMemo(() => flatten(itemSlot?.values()), [itemSlot]);
 
   const handleDrawerToggle = (id: string) => {
     const isDrawerOpen = openDrawerList.includes(id);

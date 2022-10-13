@@ -18,19 +18,15 @@ import CatScope from './commands/private-cmds/cat-scope-cmd';
 import DependencyStatus from './commands/private-cmds/dependency-status-cmd';
 import Migrate from './commands/private-cmds/migrate-cmd';
 import Add from './commands/public-cmds/add-cmd';
-import Checkout from './commands/public-cmds/checkout-cmd';
 import Config from './commands/public-cmds/config-cmd';
 import Diff from './commands/public-cmds/diff-cmd';
 import Doctor from './commands/public-cmds/doctor-cmd';
-import Fetch from './commands/public-cmds/fetch-cmd';
-import Graph from './commands/public-cmds/graph-cmd';
 import Init from './commands/public-cmds/init-cmd';
 import Dependents from './commands/public-cmds/dependents-cmd';
 import Login from './commands/public-cmds/login-cmd';
 import Logout from './commands/public-cmds/logout-cmd';
 import Move from './commands/public-cmds/move-cmd';
 import Remote from './commands/public-cmds/remote-cmd';
-import Remove from './commands/public-cmds/remove-cmd';
 import ScopeConfig from './commands/public-cmds/scope-config-cmd';
 import Untag from './commands/public-cmds/untag-cmd';
 import RunAction from './commands/private-cmds/run-action.cmd';
@@ -66,12 +62,8 @@ export default function registerCommands(): CommandRegistry {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     new Untag(),
     new Move(),
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    new Remove(),
     new Delete(),
     new Latest(),
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    new Checkout(),
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     new Diff(),
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -81,10 +73,6 @@ export default function registerCommands(): CommandRegistry {
     new Migrate(),
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     new Doctor(),
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    new Graph(),
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    new Fetch(),
     new RunAction(),
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     new ScopeLanesList(),

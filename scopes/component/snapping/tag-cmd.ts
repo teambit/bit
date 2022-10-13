@@ -1,17 +1,13 @@
 import chalk from 'chalk';
 import { Command, CommandOptions } from '@teambit/cli';
-import {
-  TagResults,
-  NOTHING_TO_TAG_MSG,
-  AUTO_TAGGED_MSG,
-  BasicTagParams,
-} from '@teambit/legacy/dist/api/consumer/lib/tag';
+import { TagResults, NOTHING_TO_TAG_MSG, AUTO_TAGGED_MSG } from '@teambit/legacy/dist/api/consumer/lib/tag';
 import { DEFAULT_BIT_RELEASE_TYPE } from '@teambit/legacy/dist/constants';
 import { IssuesClasses } from '@teambit/component-issues';
 import { ReleaseType } from 'semver';
 import { BitError } from '@teambit/bit-error';
 import { Logger } from '@teambit/logger';
 import { SnappingMain } from './snapping.main.runtime';
+import { BasicTagParams } from './tag-model-component';
 
 const RELEASE_TYPES = ['major', 'premajor', 'minor', 'preminor', 'patch', 'prepatch', 'prerelease'];
 
@@ -172,6 +168,11 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
         `--force is deprecated, use either --skip-tests or --unmodified depending on the use case`
       );
       if (patterns.length) unmodified = true;
+    }
+    if (prereleaseId && (!increment || increment === 'major' || increment === 'minor' || increment === 'patch')) {
+      throw new BitError(
+        `--prerelease-id should be entered along with --increment flag, while --increment must be one of the following: [prepatch, prerelease, preminor, premajor]`
+      );
     }
 
     const releaseFlags = [patch, minor, major, preRelease].filter((x) => x);

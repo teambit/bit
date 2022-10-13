@@ -1,16 +1,19 @@
-import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
-import { gql, QueryResult } from '@apollo/client';
-import { LaneModel, LanesQuery } from '@teambit/lanes.ui.models';
+import { useDataQuery, DataQueryResult } from '@teambit/ui-foundation.ui.hooks.use-data-query';
+import { gql } from '@apollo/client';
+import { LanesQuery } from '@teambit/lanes.ui.models.lanes-model';
 import { ComponentModel, componentOverviewFields } from '@teambit/component';
+import { LaneId } from '@teambit/lane-id';
 
 const GET_LANE_COMPONENTS = gql`
   query LaneComponent($ids: [String!], $extensionId: String) {
     lanes {
       id
       list(ids: $ids) {
-        id
-        remote
-        isMerged
+        id {
+          name
+          scope
+        }
+        hash
         components {
           ...componentOverviewFields
         }
@@ -26,11 +29,16 @@ const GET_LANE_COMPONENTS = gql`
   ${componentOverviewFields}
 `;
 
-export function useLaneComponents(lane: LaneModel): {
+export function useLaneComponents(laneId?: LaneId): {
   components?: Array<ComponentModel>;
-} & Omit<QueryResult<LanesQuery>, 'data'> {
+} & Omit<DataQueryResult<LanesQuery, { ids: (string | undefined)[] }>, 'data'> {
+  /**
+   * query from context if exists
+   */
+
   const { data, ...rest } = useDataQuery(GET_LANE_COMPONENTS, {
-    variables: { ids: [lane.name] },
+    variables: { ids: [laneId?.toString()] },
+    skip: !laneId,
   });
 
   const components = data?.lanes.list[0].components.map((component) => {

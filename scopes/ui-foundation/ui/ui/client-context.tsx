@@ -1,5 +1,6 @@
 import React, { ReactNode } from 'react';
-import { Theme } from '@teambit/base-ui.theme.theme-provider';
+// import { Theme } from '@teambit/base-ui.theme.theme-provider';
+import { ThemeSwitcher } from '@teambit/design.themes.theme-toggler';
 import { IconFont } from '@teambit/design.theme.icons-font';
 import { LoaderRibbon } from '@teambit/base-ui.loaders.loader-ribbon';
 import { Roboto } from '@teambit/base-ui.theme.fonts.roboto';
@@ -16,12 +17,12 @@ export function ClientContext({ children }: { children: ReactNode }) {
       {/* TODO - try moving LoaderContext to contextSlot, and LoaderRibbon to hudSlot */}
       <LoaderContext.Provider value={loaderApi}>
         <IconFont query="q76y7n" />
-        <Theme>
+        <ThemeSwitcher>
           <Roboto />
           <LoaderRibbon active={isLoading} className={styles.loader} />
           {children}
           <TooltipMountPoint />
-        </Theme>
+        </ThemeSwitcher>
       </LoaderContext.Provider>
     </React.StrictMode>
   );

@@ -737,15 +737,16 @@ jobs:
       - run: cd bit && npm run generate-cli-reference
       - run: cd bit && npm run generate-cli-reference-json
       - run: cd bit && bit status # just to make sure that the new cli-reference.mdx file is valid
-      - run: cd bit && bit checkout latest teambit.harmony/content/cli-reference --ours --skip-dependency-installation
-      - run: cd bit && bit checkout latest --skip-dependency-installation
+      - run: cd bit && bit checkout head teambit.harmony/content/cli-reference --ours --skip-dependency-installation
+      - run: cd bit && bit checkout head --skip-dependency-installation
       # - run: cd bit && rm -rf node_modules/@teambit/legacy
-      # - run: cd bit && bbit checkout latest
+      # - run: cd bit && bbit checkout head
       # - run: cd bit && npm run link-bit-legacy
       # since we removed the node_modules we need to make sure we compile, install and link everything again
       - run: cd bit && bbit install --skip-import
       - run: cd bit && bbit compile
       - run: cd bit && npm run link-bit-legacy
+      - run: cd bit && bit config set cache.max.objects 100000
       # - run: cd bit && node scripts/soft-tag-scope-teambit.js
       - run:
           name: tag persist
@@ -843,7 +844,7 @@ jobs:
       - store_artifacts:
           path: linux
 
-  get_esbuild_arm64:
+  get_arm64_packages:
     <<: *defaults
     resource_class: small
     steps:
@@ -851,6 +852,7 @@ jobs:
       # in order to bring new version of esbuild, you need to install it on m1, tar it, and upload to the bucket
       # then you can download it here and change the cache name (don't forget to change both save_cache and restore_cache key)
       - run: cd esbuild-arm && wget https://storage.googleapis.com/bvm.bit.dev/external-assets/esbuild-0.14.29-darwin-arm64.tar.gz
+
       # - save_cache:
       #     key: esbuild-0.14.29-darwin-arm64-v1
       #     paths:
@@ -911,6 +913,7 @@ jobs:
       - run: rm -rf bit-${BIT_VERSION}/node_modules/esbuild
       - run: rm -rf bit-${BIT_VERSION}/node_modules/esbuild-darwin-64
       - run: cp -r esbuild-arm/node_modules/* bit-${BIT_VERSION}/node_modules
+      - run: rm -rf bit-${BIT_VERSION}/node_modules/nan
       - run:
           name: compress bit arm64
           command: tar -cvf bit-${BIT_VERSION}.tar.gz bit-${BIT_VERSION}
@@ -1004,18 +1007,18 @@ jobs:
       - run:
           name: Configure gcloud auth
           command: echo "${COMMAND_GCLOUD_AUTHENTICATE}" > /tmp/gcloud-service-key.json && gcloud auth activate-service-account --key-file=/tmp/gcloud-service-key.json
-      - run:
-          name: Upload tar file (Linux) to old location
-          command: gsutil cp linux/bit-${BIT_VERSION}.tar.gz gs://bvm.bit.dev/versions/dev/Linux/${BIT_VERSION}/bit-${BIT_VERSION}.tar.gz
-      - run:
-          name: Upload tar file (Windows) to old location
-          command: gsutil cp windows/bit-${BIT_VERSION}.tar.gz gs://bvm.bit.dev/versions/dev/Windows_NT/${BIT_VERSION}/bit-${BIT_VERSION}.tar.gz
-      - run:
-          name: Upload tar file (OSX) to old location
-          command: gsutil cp macos/bit-${BIT_VERSION}.tar.gz gs://bvm.bit.dev/versions/dev/Darwin/${BIT_VERSION}/bit-${BIT_VERSION}.tar.gz
-      - run:
-          name: Upload tar file (OSX-arm64) to old location
-          command: gsutil cp macos-arm64/bit-${BIT_VERSION}.tar.gz gs://bvm.bit.dev/versions/dev/Darwin-arm64/${BIT_VERSION}/bit-${BIT_VERSION}.tar.gz
+      # - run:
+      #     name: Upload tar file (Linux) to old location
+      #     command: gsutil cp linux/bit-${BIT_VERSION}.tar.gz gs://bvm.bit.dev/versions/dev/Linux/${BIT_VERSION}/bit-${BIT_VERSION}.tar.gz
+      # - run:
+      #     name: Upload tar file (Windows) to old location
+      #     command: gsutil cp windows/bit-${BIT_VERSION}.tar.gz gs://bvm.bit.dev/versions/dev/Windows_NT/${BIT_VERSION}/bit-${BIT_VERSION}.tar.gz
+      # - run:
+      #     name: Upload tar file (OSX) to old location
+      #     command: gsutil cp macos/bit-${BIT_VERSION}.tar.gz gs://bvm.bit.dev/versions/dev/Darwin/${BIT_VERSION}/bit-${BIT_VERSION}.tar.gz
+      # - run:
+      #     name: Upload tar file (OSX-arm64) to old location
+      #     command: gsutil cp macos-arm64/bit-${BIT_VERSION}.tar.gz gs://bvm.bit.dev/versions/dev/Darwin-arm64/${BIT_VERSION}/bit-${BIT_VERSION}.tar.gz
       - run:
           name: Upload tar file (Linux)
           command: gsutil cp linux/bit-${BIT_VERSION}.tar.gz gs://bvm.bit.dev/bit/versions/${BIT_VERSION}/bit-${BIT_VERSION}-linux-x64.tar.gz && mv linux/bit-${BIT_VERSION}.tar.gz bit-${BIT_VERSION}-linux-x64.tar.gz && sha256sum bit-${BIT_VERSION}-linux-x64.tar.gz > checksum.txt && gsutil cp checksum.txt gs://bvm.bit.dev/bit/versions/${BIT_VERSION}/bit-${BIT_VERSION}-linux-x64.checksum.txt
@@ -1720,7 +1723,7 @@ workflows:
       - checkout_code
       - set_ssh_key
       - set_npm_registries
-      - get_esbuild_arm64
+      - get_arm64_packages
       - setup_harmony:
           requires:
             - set_npm_registries
@@ -1741,7 +1744,7 @@ workflows:
           <<: *master_only_filter
           requires:
             - bit_tag
-            - get_esbuild_arm64
+            - get_arm64_packages
       - harmony_publish_to_gcloud:
           <<: *master_only_filter
           requires:
@@ -1838,7 +1841,7 @@ workflows:
           <<: *master_only_filter
           requires:
             - harmony_deploy_approval_job
-      - get_esbuild_arm64:
+      - get_arm64_packages:
           <<: *master_only_filter
           requires:
             - harmony_deploy_approval_job
@@ -1876,7 +1879,7 @@ workflows:
           requires:
             - harmony_deploy_approval_job
             - bit_tag
-            - get_esbuild_arm64
+            - get_arm64_packages
       - harmony_publish_to_gcloud:
           <<: *master_only_filter
           requires:
@@ -1944,9 +1947,9 @@ workflows:
   #         requires:
   #           - checkout_code
   # uncomment to update esbuild arm64 cache
-  # get_esbuild_arm64_workflow:
+  # get_arm64_workflow_packages:
   #   jobs:
-  #     - get_esbuild_arm64:
+  #     - get_arm64_packages:
   #         filters:
   #           branches:
   #             only: circle-esbuild-cache
@@ -1965,7 +1968,7 @@ workflows:
   #         filters:
   #           branches:
   #             only: fix-circle-cache
-  #     - get_esbuild_arm64:
+  #     - get_arm64_packages:
   #         filters:
   #           branches:
   #             only: fix-circle-cache
@@ -1974,7 +1977,7 @@ workflows:
   #           branches:
   #             only: fix-circle-cache
   #         requires:
-  #           - get_esbuild_arm64
+  #           - get_arm64_packages
   #     - harmony_publish_to_gcloud:
   #         filters:
   #           branches:

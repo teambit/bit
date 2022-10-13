@@ -100,7 +100,11 @@ function handlePreserved(
 }
 
 /**
- * In case there is only one component with a specific dependency, add it to the root if it's not peer
+ * In case there is only one component with a specific dependency,
+ * OR
+ * all the components have the same version of the dependency
+ * add it to the root
+ * (it used to check also if it's not peer, but we remove it for bit sign support)
  *
  * @param {DedupedDependencies} dedupedDependencies
  * @param {PackageName} packageName
@@ -112,7 +116,10 @@ function addOneOccurrenceToRoot(
   indexItems: PackageNameIndexComponentItem[]
 ): boolean {
   if (indexItems.length > 1) {
-    return true;
+    const uniqVersions = uniq(indexItems.map((item) => item.range));
+    if (uniqVersions.length > 1) {
+      return true;
+    }
   }
   const indexItem = indexItems[0];
   // if (indexItem.lifecycleType !== PEER_DEP_LIFECYCLE_TYPE) {
@@ -429,7 +436,9 @@ function groupByRangeOrVersion(indexItems: PackageNameIndexComponentItem[]): Ite
   indexItems.forEach((item) => {
     const validRange = semver.validRange(item.range);
     if (!validRange && !isHash(item.range)) {
-      throw new Error(`fatal: the version "${item.range}" originated from a dependent "${item.origin}" is invalid semver range and not a hash`);
+      throw new Error(
+        `fatal: the version "${item.range}" originated from a dependent "${item.origin}" is invalid semver range and not a hash`
+      );
     }
     if (!validRange && isHash(item.range)) {
       result.versions.push(item);

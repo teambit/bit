@@ -1,7 +1,7 @@
 import * as path from 'path';
 import R from 'ramda';
 import { BitId } from '../../bit-id';
-import { BIT_MAP, COMPONENT_ORIGINS } from '../../constants';
+import { BIT_MAP, Extensions } from '../../constants';
 import ValidationError from '../../error/validation-error';
 import logger from '../../logger/logger';
 import { isValidPath, pathJoinLinux, pathNormalizeToLinux, pathRelativeLinux } from '../../utils';
@@ -11,9 +11,6 @@ import { getFilesByDir, getGitIgnoreHarmony } from '../component-ops/add-compone
 import { removeInternalConfigFields } from '../config/extension-data';
 import Consumer from '../consumer';
 import OutsideRootDir from './exceptions/outside-root-dir';
-
-// TODO: should be better defined
-export type ComponentOrigin = keyof typeof COMPONENT_ORIGINS;
 
 export type Config = { [aspectId: string]: Record<string, any> | '-' };
 
@@ -38,7 +35,6 @@ export type ComponentMapData = {
   mainFile: PathLinux;
   rootDir: PathLinux;
   trackDir?: PathLinux;
-  origin: ComponentOrigin;
   wrapDir?: PathLinux;
   exported?: boolean;
   onLanesOnly: boolean;
@@ -60,7 +56,6 @@ export default class ComponentMap {
   // be relative to consumer-root. (we can't save in the model relative to rootDir, otherwise the
   // dependencies paths won't work).
   trackDir: PathLinux | undefined; // relevant for AUTHORED only when a component was added as a directory, used for tracking changes in that dir
-  origin: ComponentOrigin;
   wrapDir: PathLinux | undefined; // a wrapper directory needed when a user adds a package.json file to the component root so then it won't collide with Bit generated one
   // wether the compiler / tester are detached from the workspace global configuration
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -81,7 +76,6 @@ export default class ComponentMap {
     mainFile,
     rootDir,
     trackDir,
-    origin,
     wrapDir,
     onLanesOnly,
     isAvailableOnCurrentLane,
@@ -94,7 +88,6 @@ export default class ComponentMap {
     this.mainFile = mainFile;
     this.rootDir = rootDir;
     this.trackDir = trackDir;
-    this.origin = origin;
     this.wrapDir = wrapDir;
     this.onLanesOnly = onLanesOnly;
     this.isAvailableOnCurrentLane = typeof isAvailableOnCurrentLane === 'undefined' ? true : isAvailableOnCurrentLane;
@@ -115,7 +108,6 @@ export default class ComponentMap {
       mainFile: this.mainFile,
       rootDir: this.rootDir,
       trackDir: this.trackDir,
-      origin: undefined,
       wrapDir: this.wrapDir,
       exported: this.exported,
       onLanesOnly: this.onLanesOnly || null, // if false, change to null so it won't be written
@@ -243,9 +235,6 @@ export default class ComponentMap {
         file.relativePath = newLocation;
       }
     });
-    if (this.origin === COMPONENT_ORIGINS.AUTHORED && this.trackDir && this.trackDir === dirFrom) {
-      this.trackDir = dirTo;
-    }
     this.validate();
     return changes;
   }
@@ -292,7 +281,7 @@ export default class ComponentMap {
   }
 
   doesAuthorHaveRootDir(): boolean {
-    return Boolean(this.origin === COMPONENT_ORIGINS.AUTHORED && this.rootDir);
+    return Boolean(this.rootDir);
   }
 
   /**
@@ -333,6 +322,12 @@ export default class ComponentMap {
       return relativePaths.includes(file.relativePath) ? accumulator : accumulator.concat(file);
     }, []);
     this.validate();
+  }
+
+  isRemoved() {
+    const removeAspectConf = this.config?.[Extensions.remove];
+    if (!removeAspectConf) return false;
+    return removeAspectConf !== '-' && removeAspectConf.removed;
   }
 
   sort() {

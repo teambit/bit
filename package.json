@@ -1,6 +1,6 @@
 {
   "name": "@teambit/legacy",
-  "version": "1.0.332",
+  "version": "1.0.368",
   "license": "Apache-2.0",
   "main": "./dist/api.js",
   "preferGlobal": true,
@@ -39,9 +39,7 @@
     "react",
     "react-components",
     "angular",
-    "angular-components",
-    "vue",
-    "vue-components"
+    "angular-components"
   ],
   "scripts": {
     "dev-link": "node ./scripts/establish-dev-link.js $1",
@@ -106,12 +104,12 @@
   },
   "dependencies": {
     "@teambit/defender.fs.global-bit-temp-dir": "0.0.1",
+    "@teambit/component-issues": "0.0.72",
     "@teambit/toolbox.network.agent": "0.0.116",
     "@babel/core": "7.12.17",
     "@babel/runtime": "7.12.18",
     "@teambit/component-version": "0.0.395",
     "@teambit/bvm.list": "0.0.33",
-    "@vuedoc/parser": "3.4.0",
     "app-module-path": "2.2.0",
     "archy": "1.0.0",
     "array-difference": "0.0.2",
@@ -212,7 +210,6 @@
     "validate-npm-package-name": "3.0.0",
     "vinyl": "2.2.1",
     "vinyl-file": "3.0.0",
-    "vue-template-compiler": "2.6.12",
     "winston": "3.3.3",
     "yargs": "17.0.1",
     "yn": "2.0.0"

@@ -177,13 +177,15 @@ export class ComponentUI {
         containerSlot={this.pageItemSlot}
         onComponentChange={this.handleComponentChange}
         host={host}
+        path={options.path}
         useComponent={options.useComponent}
         componentIdStr={options.componentId}
+        useComponentFilters={options.useComponentFilters}
       />
     );
   }
 
-  getMenu(host: string, opts: GetComponentsOptions = {}) {
+  getMenu(host: string, options: GetComponentsOptions = {}) {
     return (
       <ComponentMenu
         navigationSlot={this.navSlot}
@@ -191,8 +193,10 @@ export class ComponentUI {
         widgetSlot={this.widgetSlot}
         host={host}
         menuItemSlot={this.menuItemSlot}
-        useComponent={opts.useComponent}
-        componentIdStr={opts.componentId}
+        useComponent={options.useComponent}
+        path={options.path}
+        componentIdStr={options.componentId}
+        useComponentFilters={options.useComponentFilters}
       />
     );
   }

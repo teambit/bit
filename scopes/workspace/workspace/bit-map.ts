@@ -149,9 +149,21 @@ export class BitMap {
     if (bitMapEntry.id.hasVersion()) {
       throw new Error(`unable to rename tagged or exported component: ${bitMapEntry.id.toString()}`);
     }
-    this.legacyBitMap.removeComponent(bitMapEntry.id);
-    bitMapEntry.id = targetId._legacy;
-    this.legacyBitMap.setComponent(bitMapEntry.id, bitMapEntry);
+    if (sourceId.isEqual(targetId)) {
+      throw new Error(`source-id and target-id are equal: "${sourceId.toString()}"`);
+    }
+    if (sourceId.fullName !== targetId.fullName) {
+      this.legacyBitMap.removeComponent(bitMapEntry.id);
+      bitMapEntry.id = targetId._legacy;
+      this.legacyBitMap.setComponent(bitMapEntry.id, bitMapEntry);
+    }
+    if (sourceId.scope !== targetId.scope) {
+      this.setDefaultScope(targetId, targetId.scope);
+    }
+  }
+
+  removeComponent(id: ComponentID) {
+    this.legacyBitMap.removeComponent(id._legacy);
   }
 
   /**

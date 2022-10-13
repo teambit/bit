@@ -29,6 +29,7 @@ import { BitObjectList } from '../objects/bit-object-list';
 import { ObjectFetcher } from '../objects-fetcher/objects-fetcher';
 import { concurrentComponentsLimit } from '../../utils/concurrency';
 import { BuildStatus } from '../../constants';
+import { NoHeadNoVersion } from '../exceptions/no-head-no-version';
 
 const removeNils = R.reject(R.isNil);
 
@@ -72,14 +73,18 @@ export default class ScopeComponentsImporter {
     ids,
     cache = true,
     throwForDependencyNotFound = false,
+    throwForSeederNotFound = true,
     reFetchUnBuiltVersion = true,
     lanes = [],
+    ignoreMissingHead = false,
   }: {
     ids: BitIds;
     cache?: boolean;
     throwForDependencyNotFound?: boolean;
+    throwForSeederNotFound?: boolean; // in some cases, the "ids" params are not seeders but deps, e.g. in buildGraphFromFS.
     reFetchUnBuiltVersion?: boolean;
     lanes?: Lane[]; // if ids coming from a lane, add the lane object so we could fetch these ids from the lane's remote
+    ignoreMissingHead?: boolean; // needed when fetching "main" objects when on a lane
   }): Promise<VersionDependencies[]> {
     logger.debugAndAddBreadCrumb(
       'importMany',
@@ -107,13 +112,13 @@ export default class ScopeComponentsImporter {
       externalsToFetch.push(id);
       return false;
     });
-    await this.findMissingExternalsRecursively(existingDefs, externalsToFetch);
+    await this.findMissingExternalsRecursively(existingDefs, externalsToFetch, ignoreMissingHead);
     const uniqExternals = BitIds.uniqFromArray(externalsToFetch);
     logger.debug('importMany', `total missing externals: ${uniqExternals.length}`);
     const remotes = await getScopeRemotes(this.scope);
     // we don't care about the VersionDeps returned here as it may belong to the dependencies
-    await this.getExternalMany(uniqExternals, remotes, throwForDependencyNotFound, lanes);
-    const versionDeps = await this.bitIdsToVersionDeps(idsToImport);
+    await this.getExternalMany(uniqExternals, remotes, throwForDependencyNotFound, lanes, throwForSeederNotFound);
+    const versionDeps = await this.bitIdsToVersionDeps(idsToImport, throwForSeederNotFound);
     logger.debug('importMany, completed!');
     return versionDeps;
   }
@@ -353,6 +358,7 @@ export default class ScopeComponentsImporter {
   async fetchWithDeps(ids: BitIds, allowExternal: boolean, onlyIfBuild = false): Promise<VersionDependencies[]> {
     logger.debugAndAddBreadCrumb('fetchWithDeps', `ids: {ids}`, { ids: ids.toString() });
     if (!allowExternal) this.throwIfExternalFound(ids);
+    logger.debug(`fetchWithDeps, is locked? ${this.fetchWithDepsMutex.isLocked()}`);
     // avoid race condition of getting multiple "fetch" requests, which later translates into
     // multiple getExternalMany calls, which saves objects and write refs files at the same time
     return this.fetchWithDepsMutex.runExclusive(async () => {
@@ -496,7 +502,9 @@ export default class ScopeComponentsImporter {
         const versionComp: ComponentVersion = component.toComponentVersion(id.version);
         const version = await this.getVersionFromComponentDef(component, id);
         if (!version) {
-          throw new Error(`ScopeComponentImporter, expect ${id.toString()} to have a Version object`);
+          throw new Error(
+            `ScopeComponentImporter, expect ${id.toString()} to have a Version object of "${versionComp.version}"`
+          );
         }
         if (onlyIfBuilt && version.buildStatus !== BuildStatus.Succeed) {
           logger.debug(
@@ -537,9 +545,11 @@ export default class ScopeComponentsImporter {
     ids: BitId[],
     remotes: Remotes,
     throwForDependencyNotFound = false,
-    lanes: Lane[] = []
+    lanes: Lane[] = [],
+    throwOnUnavailableScope = true
   ): Promise<VersionDependencies[]> {
     if (!ids.length) return [];
+    if (lanes.length > 1) throw new Error(`getExternalMany support only one lane`);
     logger.debugAndAddBreadCrumb(
       'ScopeComponentsImporter.getExternalMany',
       `fetching from remote scope. Ids: {ids}, Lanes: {lanes}`,
@@ -563,10 +573,12 @@ export default class ScopeComponentsImporter {
       {
         withoutDependencies: false,
         onlyIfBuilt,
+        laneId: lanes.length ? lanes[0].id() : undefined,
       },
       ids,
       lanes,
-      context
+      context,
+      throwOnUnavailableScope
     ).fetchFromRemoteAndWrite();
     const componentDefs = await this.sources.getMany(ids);
     const versionDeps = await this.multipleCompsDefsToVersionDeps(componentDefs, lanes);
@@ -645,6 +657,7 @@ export default class ScopeComponentsImporter {
   private async findMissingExternalsRecursively(
     compDefs: ComponentDef[],
     externalsToFetch: BitId[],
+    ignoreMissingHead: boolean,
     visited: string[] = [],
     existingCache = new BitIds()
   ): Promise<void> {
@@ -661,7 +674,18 @@ export default class ScopeComponentsImporter {
         externalsToFetch.push(id);
         return;
       }
-      const version = await this.getVersionFromComponentDef(component, id);
+      let version: Version | null | undefined;
+      try {
+        version = await this.getVersionFromComponentDef(component, id);
+      } catch (err) {
+        if (err instanceof NoHeadNoVersion && ignoreMissingHead) {
+          logger.debug(
+            `findMissingExternalsRecursively, ignoring ${idStr} because it has no head and no version and "ignoreMissingHead" was set to true`
+          );
+          return;
+        }
+        throw err;
+      }
       if (!version) {
         // it must be external. otherwise, getVersionFromComponentDef would throw
         externalsToFetch.push(id);
@@ -687,18 +711,28 @@ export default class ScopeComponentsImporter {
       compDefsForNextIteration.push(...directDepsDefs);
     });
 
-    await this.findMissingExternalsRecursively(compDefsForNextIteration, externalsToFetch, visited, existingCache);
+    await this.findMissingExternalsRecursively(
+      compDefsForNextIteration,
+      externalsToFetch,
+      ignoreMissingHead,
+      visited,
+      existingCache
+    );
   }
 
   /**
    * convert ids to VersionDependencies with performance in mind.
    * it doesn't go to any remote and it fetches each component only once.
    */
-  private async bitIdsToVersionDeps(ids: BitId[]): Promise<VersionDependencies[]> {
+  private async bitIdsToVersionDeps(ids: BitId[], throwForSeederNotFound = true): Promise<VersionDependencies[]> {
     logger.debug(`bitIdsToVersionDeps, ${ids.length} ids`);
     const compDefs = await this.sources.getMany(ids);
     const versionDepsWithNulls = await mapSeries(compDefs, async ({ component, id }) => {
-      if (!component) throw new ComponentNotFound(id.toString());
+      if (!component) {
+        if (throwForSeederNotFound) throw new ComponentNotFound(id.toString());
+        logger.warn(`bitIdsToVersionDeps failed finding a component ${id.toString()}`);
+        return null;
+      }
       if (component.isEmpty() && !id.hasVersion() && !component.laneHeadLocal) {
         // this happens for example when importing a remote lane and then running "bit fetch --components"
         // the head is empty because it exists on the lane only, it was never tagged and

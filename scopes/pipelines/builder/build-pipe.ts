@@ -4,7 +4,7 @@ import { Logger, LongProcessLogger } from '@teambit/logger';
 import mapSeries from 'p-map-series';
 import prettyTime from 'pretty-time';
 import { ArtifactFactory, ArtifactList, FsArtifact } from './artifact';
-import { BuildTask, BuildTaskHelper, BuiltTaskResult } from './build-task';
+import { BuildContext, BuildTask, BuildTaskHelper, BuiltTaskResult } from './build-task';
 import { ComponentResult } from './types';
 import { TasksQueue } from './tasks-queue';
 import { EnvsBuildContext } from './builder.service';
@@ -172,23 +172,10 @@ export class BuildPipe {
     return true;
   }
 
-  private getBuildContext(envId: string) {
+  private getBuildContext(envId: string): BuildContext {
     const buildContext = this.envsBuildContext[envId];
     if (!buildContext) throw new Error(`unable to find buildContext for ${envId}`);
     buildContext.previousTasksResults = this.allTasksResults;
     return buildContext;
-  }
-
-  /**
-   * create a build pipe from an array of tasks.
-   */
-  static from(
-    tasksQueue: TasksQueue,
-    envsBuildContext: EnvsBuildContext,
-    logger: Logger,
-    artifactFactory: ArtifactFactory,
-    previousTaskResults?: TaskResults[]
-  ) {
-    return new BuildPipe(tasksQueue, envsBuildContext, logger, artifactFactory, previousTaskResults);
   }
 }

@@ -2,7 +2,7 @@ import mapSeries from 'p-map-series';
 import semver from 'semver';
 import multimatch from 'multimatch';
 import type { AspectLoaderMain } from '@teambit/aspect-loader';
-import { TaskResultsList, RawBuilderData, BuilderAspect } from '@teambit/builder';
+import { RawBuilderData, BuilderAspect } from '@teambit/builder';
 import { readdirSync, existsSync } from 'fs-extra';
 import { resolve, join } from 'path';
 import { AspectLoaderAspect, AspectDefinition } from '@teambit/aspect-loader';
@@ -12,7 +12,7 @@ import { Component, ComponentAspect, ComponentFactory, ComponentID, Snap, State 
 import type { GraphqlMain } from '@teambit/graphql';
 import { GraphqlAspect } from '@teambit/graphql';
 import { Harmony, Slot, SlotRegistry, ExtensionManifest, Aspect } from '@teambit/harmony';
-import { Capsule, IsolatorAspect, IsolatorMain, IsolateComponentsOptions } from '@teambit/isolator';
+import { Capsule, IsolatorAspect, IsolatorMain } from '@teambit/isolator';
 import { LoggerAspect, LoggerMain, Logger } from '@teambit/logger';
 import { ExpressAspect, ExpressMain } from '@teambit/express';
 import type { UiMain } from '@teambit/ui';
@@ -22,7 +22,7 @@ import { BitId } from '@teambit/legacy-bit-id';
 import { BitIds as ComponentsIds } from '@teambit/legacy/dist/bit-id';
 import { ModelComponent, Lane } from '@teambit/legacy/dist/scope/models';
 import { Repository } from '@teambit/legacy/dist/scope/objects';
-import LegacyScope, { LegacyOnTagResult, OnTagFunc, OnTagOpts } from '@teambit/legacy/dist/scope/scope';
+import LegacyScope, { LegacyOnTagResult } from '@teambit/legacy/dist/scope/scope';
 import { ComponentLog } from '@teambit/legacy/dist/scope/models/model-component';
 import { loadScopeIfExist } from '@teambit/legacy/dist/scope/scope-loader';
 import { PersistOptions } from '@teambit/legacy/dist/scope/types';
@@ -53,17 +53,10 @@ import { ScopeUIRoot } from './scope.ui-root';
 import { PutRoute, FetchRoute, ActionRoute, DeleteRoute } from './routes';
 import { ScopeComponentLoader } from './scope-component-loader';
 import { ScopeCmd } from './scope-cmd';
-
-type TagRegistry = SlotRegistry<OnTag>;
+import { StagedConfig } from './staged-config';
+import { NoIdMatchPattern } from './exceptions/no-id-match-pattern';
 
 type ManifestOrAspect = ExtensionManifest | Aspect;
-
-export type OnTagResults = { builderDataMap: ComponentMap<RawBuilderData>; pipeResults: TaskResultsList[] };
-export type OnTag = (
-  components: Component[],
-  options: OnTagOpts,
-  isolateOptions?: IsolateComponentsOptions
-) => Promise<OnTagResults>;
 
 type RemoteEventMetadata = { auth?: AuthData; headers?: {} };
 type RemoteEvent<Data> = (data: Data, metadata: RemoteEventMetadata, errors?: Array<string | Error>) => Promise<void>;
@@ -113,8 +106,6 @@ export class ScopeMain implements ComponentFactory {
 
     readonly config: ScopeConfig,
 
-    private tagRegistry: TagRegistry,
-
     private postPutSlot: OnPostPutSlot,
 
     private postDeleteSlot: OnPostDeleteSlot,
@@ -161,26 +152,6 @@ export class ScopeMain implements ComponentFactory {
 
   get isLegacy(): boolean {
     return this.legacyScope.isLegacy;
-  }
-
-  /**
-   * register to the tag slot.
-   */
-  onTag(tagFn: OnTag) {
-    const host = this.componentExtension.getHost();
-    const legacyOnTagFunc: OnTagFunc = async (
-      legacyComponents: ConsumerComponent[],
-      options: OnTagOpts,
-      isolateOptions?: IsolateComponentsOptions
-    ): Promise<LegacyOnTagResult[]> => {
-      // Reload the aspects with their new version
-      await this.reloadAspectsWithNewVersion(legacyComponents);
-      const components = await host.getManyByLegacy(legacyComponents);
-      const { builderDataMap } = await tagFn(components, options, isolateOptions);
-      return this.builderDataMapToLegacyOnTagResults(builderDataMap);
-    };
-    this.legacyScope.onTag.push(legacyOnTagFunc);
-    this.tagRegistry.register(tagFn);
   }
 
   // We need to reload the aspects with their new version since:
@@ -368,12 +339,20 @@ export class ScopeMain implements ComponentFactory {
   private localAspects: string[] = [];
 
   async loadAspects(ids: string[], throwOnError = false, neededFor?: string): Promise<string[]> {
-    this.logger.info(`loadAspects, loading ${ids.length} aspects.
+    // generate a random callId to be able to identify the call from the logs
+    const callId = Math.floor(Math.random() * 1000);
+    const loggerPrefix = `[${callId}] loadAspects,`;
+    this.logger.info(`${loggerPrefix} loading ${ids.length} aspects.
 ids: ${ids.join(', ')}
 needed-for: ${neededFor || '<unknown>'}`);
     const grouped = await this.groupAspectIdsByEnvOfTheList(ids);
+    this.logger.info(`${loggerPrefix} getManifestsAndLoadAspects for grouped.envs, total ${grouped.envs?.length || 0}`);
     const envsManifestsIds = await this.getManifestsAndLoadAspects(grouped.envs, throwOnError);
+    this.logger.info(
+      `${loggerPrefix} getManifestsAndLoadAspects for grouped.other, total ${grouped.other?.length || 0}`
+    );
     const otherManifestsIds = await this.getManifestsAndLoadAspects(grouped.other, throwOnError);
+    this.logger.debug(`${loggerPrefix} finish loading aspects`);
     return envsManifestsIds.concat(otherManifestsIds);
   }
 
@@ -381,7 +360,7 @@ needed-for: ${neededFor || '<unknown>'}`);
    * This function get's a list of aspect ids and return them grouped by whether any of them is the env of other from the list
    * @param ids
    */
-  async groupAspectIdsByEnvOfTheList(ids: string[]): Promise<{ envs: string[]; other: string[] }> {
+  async groupAspectIdsByEnvOfTheList(ids: string[]): Promise<{ envs?: string[]; other?: string[] }> {
     const components = await this.getNonLoadedAspects(ids);
     const envsIds = uniq(
       components
@@ -395,10 +374,21 @@ needed-for: ${neededFor || '<unknown>'}`);
     return grouped as { envs: string[]; other: string[] };
   }
 
-  private async getManifestsAndLoadAspects(ids: string[], throwOnError = false): Promise<string[]> {
-    const scopeManifests = await this.getManifestsGraphRecursively(ids, [], throwOnError);
+  private async getManifestsAndLoadAspects(ids: string[] = [], throwOnError = false): Promise<string[]> {
+    const { manifests: scopeManifests, potentialPluginsIds } = await this.getManifestsGraphRecursively(
+      ids,
+      [],
+      throwOnError
+    );
     await this.aspectLoader.loadExtensionsByManifests(scopeManifests);
-    return compact(scopeManifests.map((manifest) => manifest.id));
+    const { manifests: scopePluginsManifests } = await this.getManifestsGraphRecursively(
+      potentialPluginsIds,
+      [],
+      throwOnError
+    );
+    await this.aspectLoader.loadExtensionsByManifests(scopePluginsManifests);
+    const allManifests = scopeManifests.concat(scopePluginsManifests);
+    return compact(allManifests.map((manifest) => manifest.id));
   }
 
   async getManifestsGraphRecursively(
@@ -408,16 +398,30 @@ needed-for: ${neededFor || '<unknown>'}`);
     opts: {
       packageManagerConfigRootDir?: string;
     } = {}
-  ): Promise<ManifestOrAspect[]> {
+  ): Promise<{ manifests: ManifestOrAspect[]; potentialPluginsIds: string[] }> {
     ids = uniq(ids);
     this.logger.debug(`getManifestsGraphRecursively, ids:\n${ids.join('\n')}`);
     const nonVisitedId = ids.filter((id) => !visited.includes(id));
     if (!nonVisitedId.length) {
-      return [];
+      return { manifests: [], potentialPluginsIds: [] };
     }
     const components = await this.getNonLoadedAspects(nonVisitedId);
+    // Adding all the envs ids to the array to support case when one (or more) of the aspects has custom aspect env
+    const customEnvsIds = components
+      .map((component) => this.envs.getEnvId(component))
+      .filter((envId) => !this.aspectLoader.isCoreEnv(envId));
+    // In case there is custom env we need to load it right away, otherwise we will fail during the require aspects
+    await this.getManifestsAndLoadAspects(customEnvsIds);
     visited.push(...nonVisitedId);
     const manifests = await this.requireAspects(components, throwOnError, opts);
+    const potentialPluginsIds = compact(
+      manifests.map((manifest, index) => {
+        if (this.aspectLoader.isValidAspect(manifest)) return undefined;
+        // return index;
+        return components[index].id.toString();
+      })
+    );
+
     const depsToLoad: Array<ExtensionManifest | Aspect> = [];
     await mapSeries(manifests, async (manifest) => {
       depsToLoad.push(...(manifest.dependencies || []));
@@ -426,10 +430,14 @@ needed-for: ${neededFor || '<unknown>'}`);
         depsToLoad.push(...(runtime.dependencies || []));
       });
       const depIds = depsToLoad.map((d) => d.id).filter((id) => id) as string[];
-      const loaded = await this.getManifestsGraphRecursively(depIds, visited, throwOnError);
+      this.logger.debug(
+        `getManifestsGraphRecursively, id: ${manifest.id || '<unknown>'}, found ${depIds.length}: ${depIds.join(', ')}`
+      );
+      const { manifests: loaded } = await this.getManifestsGraphRecursively(depIds, visited, throwOnError);
       manifests.push(...loaded);
     });
-    return manifests;
+
+    return { manifests, potentialPluginsIds };
   }
 
   private async getNonLoadedAspects(ids: string[]): Promise<Component[]> {
@@ -483,6 +491,8 @@ needed-for: ${neededFor || '<unknown>'}`);
           dedupe: false,
           packageManagerConfigRootDir: opts?.packageManagerConfigRootDir,
           useNesting: true,
+          copyPeerToRuntimeOnComponents: true,
+          installPeersFromEnvs: true,
         },
       },
       this.legacyScope
@@ -631,11 +641,18 @@ needed-for: ${neededFor || '<unknown>'}`);
         // "No matching version found for <some-component-on-the-workspace>"
         seedersOnly: true,
         includeFromNestedHosts: true,
-        installOptions: { copyPeerToRuntimeOnRoot: true, dedupe: false, useNesting: true },
+        installOptions: {
+          copyPeerToRuntimeOnRoot: true,
+          dedupe: false,
+          useNesting: true,
+          copyPeerToRuntimeOnComponents: true,
+          installPeersFromEnvs: true,
+        },
         host: this,
       },
       this.legacyScope
     );
+
     const capsules = network.seedersCapsules;
     const aspectDefs = await this.aspectLoader.resolveAspects(components, async (component) => {
       const capsule = capsules.getCapsule(component.id);
@@ -672,8 +689,11 @@ needed-for: ${neededFor || '<unknown>'}`);
     const mergedOpts = { ...defaultOpts, ...opts };
     const coreAspectsIds = this.aspectLoader.getCoreAspectIds();
     let userAspectsIds;
+    let requestedCoreStringIds;
     if (componentIds && componentIds.length) {
-      userAspectsIds = componentIds.filter((id) => !coreAspectsIds.includes(id.toString()));
+      const groupedByIsCore = groupBy(componentIds, (id) => coreAspectsIds.includes(id.toString()));
+      userAspectsIds = groupedByIsCore.false || [];
+      requestedCoreStringIds = groupedByIsCore.true?.map((id) => id.toStringWithoutVersion()) || [];
     } else {
       userAspectsIds = await this.resolveMultipleComponentIds(this.aspectLoader.getUserAspects());
     }
@@ -688,16 +708,19 @@ needed-for: ${neededFor || '<unknown>'}`);
     const coreAspectsDefs = await this.aspectLoader.getCoreAspectDefs(runtimeName);
 
     const allDefs = userAspectsDefs.concat(coreAspectsDefs).concat(localResolved);
-    const afterExclusion = mergedOpts.excludeCore
-      ? allDefs.filter((def) => {
-          const userAspectsIdsWithoutVersion = userAspectsIds.map((aspectId) => aspectId.toStringWithoutVersion());
-          const isCore = coreAspectsDefs.find((coreId) => def.getId === coreId.getId);
-          const id = ComponentID.fromString(def.getId || '');
-          const isTarget = userAspectsIdsWithoutVersion.includes(id.toStringWithoutVersion());
-          if (isTarget) return true;
-          return !isCore;
-        })
-      : allDefs;
+    let afterExclusion = allDefs;
+    if (mergedOpts.excludeCore) {
+      const userAspectsIdsWithoutVersion = userAspectsIds.map((aspectId) => aspectId.toStringWithoutVersion());
+      const userAspectsIdsWithoutVersionAndCoreRequested = userAspectsIdsWithoutVersion.concat(requestedCoreStringIds);
+      afterExclusion = allDefs.filter((def) => {
+        const id = ComponentID.fromString(def.getId || '');
+        const isTarget = userAspectsIdsWithoutVersionAndCoreRequested.includes(id.toStringWithoutVersion());
+        // If it's core, but requested explicitly, keep it
+        if (isTarget) return true;
+        const isCore = coreAspectsDefs.find((coreId) => def.getId === coreId.getId);
+        return !isCore;
+      });
+    }
 
     const uniqDefs = uniqBy(afterExclusion, (def) => `${def.aspectPath}-${def.runtimePath}`);
     let defs = uniqDefs;
@@ -851,7 +874,7 @@ needed-for: ${neededFor || '<unknown>'}`);
         patterns?.some((pattern) => isMatchNamespacePatternItem(id.toStringWithoutVersion(), pattern).match)
       );
     }
-    this.logger.debug(`scope listIds: componentsIds after filter scope: ${JSON.stringify(ids, undefined, 2)}`);
+    this.logger.debug(`scope listIds: total ${ids.length} components after filter scope`);
     return ids;
   }
 
@@ -924,6 +947,11 @@ needed-for: ${neededFor || '<unknown>'}`);
     return this.legacyScope.loadComponentLogs(id._legacy, shortHash, startsFrom);
   }
 
+  async getStagedConfig() {
+    const currentLaneId = this.legacyScope.currentLaneId;
+    return StagedConfig.load(this.path, currentLaneId);
+  }
+
   /**
    * resolve a component ID.
    * @param id component ID.
@@ -990,7 +1018,7 @@ needed-for: ${neededFor || '<unknown>'}`);
     const idsToCheck = (id: ComponentID) => [id.toStringWithoutVersion(), id._legacy.toStringWithoutVersion()];
     const idsFiltered = ids.filter((id) => multimatch(idsToCheck(id), patterns).length);
     if (throwForNoMatch && !idsFiltered.length) {
-      throw new BitError(`unable to find any matching for "${pattern}" pattern`);
+      throw new NoIdMatchPattern(pattern);
     }
     return idsFiltered;
   }
@@ -1058,7 +1086,6 @@ needed-for: ${neededFor || '<unknown>'}`);
    * declare the slots of scope extension.
    */
   static slots = [
-    Slot.withType<OnTag>(),
     Slot.withType<OnPostPut>(),
     Slot.withType<OnPostDelete>(),
     Slot.withType<OnPostExport>(),
@@ -1096,8 +1123,7 @@ needed-for: ${neededFor || '<unknown>'}`);
       EnvsMain
     ],
     config: ScopeConfig,
-    [tagSlot, postPutSlot, postDeleteSlot, postExportSlot, postObjectsPersistSlot, preFetchObjectsSlot]: [
-      TagRegistry,
+    [postPutSlot, postDeleteSlot, postExportSlot, postObjectsPersistSlot, preFetchObjectsSlot]: [
       OnPostPutSlot,
       OnPostDeleteSlot,
       OnPostExportSlot,
@@ -1118,7 +1144,6 @@ needed-for: ${neededFor || '<unknown>'}`);
       legacyScope,
       componentExt,
       config,
-      tagSlot,
       postPutSlot,
       postDeleteSlot,
       postExportSlot,

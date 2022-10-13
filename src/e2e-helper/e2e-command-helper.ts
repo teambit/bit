@@ -8,7 +8,7 @@ import tar from 'tar';
 import { LANE_REMOTE_DELIMITER } from '@teambit/lane-id';
 import { BUILD_ON_CI, ENV_VAR_FEATURE_TOGGLE } from '../api/consumer/lib/feature-toggle';
 import { NOTHING_TO_TAG_MSG } from '../api/consumer/lib/tag';
-import { NOTHING_TO_SNAP_MSG } from '../constants';
+import { Extensions, NOTHING_TO_SNAP_MSG } from '../constants';
 import runInteractive, { InteractiveInputs } from '../interactive/utils/run-interactive-cmd';
 import { removeChalkCharacters } from '../utils';
 import ScopesData from './e2e-scopes';
@@ -273,8 +273,8 @@ export default class CommandHelper {
     if (assertSnapped) expect(result).to.not.have.string(NOTHING_TO_SNAP_MSG);
     return result;
   }
-  createLane(laneName = 'dev') {
-    return this.runCmd(`bit lane create ${laneName}`);
+  createLane(laneName = 'dev', options = '') {
+    return this.runCmd(`bit lane create ${laneName} ${options}`);
   }
   changeLaneScope(laneName: string, newScope: string) {
     return this.runCmd(`bit lane change-scope ${laneName} ${newScope}`);
@@ -287,6 +287,13 @@ export default class CommandHelper {
   }
   removeRemoteLane(laneName = 'dev', options = '') {
     return this.runCmd(`bit lane remove ${this.scopes.remote}/${laneName} ${options} --remote --silent`);
+  }
+  writeTsconfig(flags = '') {
+    return this.runCmd(`bit write-tsconfig ${flags} --silent`);
+  }
+  writeTsconfigDryRun(flags = '') {
+    const results = this.runCmd(`bit write-tsconfig  --dry-run ${flags} --json`);
+    return JSON.parse(results);
   }
   showOneLane(name: string) {
     return this.runCmd(`bit lane show ${name}`);
@@ -390,6 +397,9 @@ export default class CommandHelper {
   fetchAllLanes() {
     return this.runCmd(`bit fetch --lanes`);
   }
+  fetchAllComponents() {
+    return this.runCmd(`bit fetch --components`);
+  }
   renameLane(oldName: string, newName: string) {
     return this.runCmd(`bit lane rename ${oldName} ${newName}`);
   }
@@ -444,8 +454,8 @@ export default class CommandHelper {
     return this.runCmd(`bit import ${id} --extension`);
   }
 
-  build(id = '', getStderrAsPartOfTheOutput = false) {
-    return this.runCmd(`bit build ${id}`, undefined, undefined, undefined, getStderrAsPartOfTheOutput);
+  build(id = '', flags = '', getStderrAsPartOfTheOutput = false) {
+    return this.runCmd(`bit build ${id} ${flags}`, undefined, undefined, undefined, getStderrAsPartOfTheOutput);
   }
 
   buildComponentWithOptions(id = '', options: Record<string, any>, cwd: string = this.scopes.localPath) {
@@ -481,6 +491,11 @@ export default class CommandHelper {
   statusJson(cwd = this.scopes.localPath) {
     const status = this.runCmd('bit status --json', cwd);
     return JSON.parse(status);
+  }
+
+  isDeprecated(compName: string): boolean {
+    const deprecationData = this.showAspectConfig(compName, Extensions.deprecation);
+    return deprecationData.config.deprecate;
   }
 
   getStagedIdsFromStatus(stripScopeName = true): string[] {
@@ -572,6 +587,9 @@ export default class CommandHelper {
   checkoutHead(values = '') {
     return this.runCmd(`bit checkout head ${values}`);
   }
+  checkoutReset(values = '') {
+    return this.runCmd(`bit checkout reset ${values}`);
+  }
   switchLocalLane(lane: string, flags?: string) {
     return this.runCmd(`bit switch ${lane} ${flags || ''}`);
   }
@@ -589,12 +607,13 @@ export default class CommandHelper {
   mergeLane(laneName: string, options = '') {
     return this.runCmd(`bit lane merge ${laneName} ${options}`);
   }
-  mergeRemoteLane(laneName: string, remoteName = this.scopes.remote, options = '') {
-    return this.runCmd(`bit lane merge ${laneName} ${options} --remote ${remoteName}`);
+  mergeLaneFromScope(cwd: string, laneName: string, options = '') {
+    return this.runCmd(`bit _merge-lane ${laneName} ${options}`, cwd);
   }
-
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  diff(id? = '') {
+  tagFromScope(cwd: string, ids: string, options = '') {
+    return this.runCmd(`bit _tag ${ids} ${options} -m msg`, cwd);
+  }
+  diff(id = '') {
     const output = this.runCmd(`bit diff ${id}`);
     return removeChalkCharacters(output);
   }
@@ -616,6 +635,9 @@ export default class CommandHelper {
   }
   new(templateName: string, flags = '', workspaceName = 'my-workspace', cwd = this.scopes.localPath) {
     return this.runCmd(`bit new ${templateName} ${workspaceName} ${flags}`, cwd);
+  }
+  runApp(name: string) {
+    return this.runCmd(`bit app run ${name}`);
   }
   link(flags?: string) {
     return this.runCmd(`bit link ${flags || ''}`);

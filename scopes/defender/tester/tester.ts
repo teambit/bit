@@ -31,7 +31,8 @@ export type ComponentsResults = {
 };
 
 export type SpecFiles = ComponentMap<AbstractVinyl[]>;
-export type ComponentPatternsMap = ComponentMap<{ path: string; relative: string }[]>;
+export type ComponentPatternsEntry = { componentDir: string; paths: { path: string; relative: string }[] };
+export type ComponentPatternsMap = ComponentMap<ComponentPatternsEntry>;
 
 export interface TesterContext extends ExecutionContext {
   /**

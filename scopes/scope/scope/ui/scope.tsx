@@ -1,4 +1,6 @@
+import React, { useReducer, ComponentType, ReactNode } from 'react';
 import 'reset-css';
+import classNames from 'classnames';
 import { SplitPane, Pane, Layout } from '@teambit/base-ui.surfaces.split-pane.split-pane';
 import { RouteSlot, SlotRouter } from '@teambit/ui-foundation.ui.react-router.slot-router';
 import { Corner } from '@teambit/ui-foundation.ui.corner';
@@ -7,7 +9,6 @@ import { HoverSplitter } from '@teambit/base-ui.surfaces.split-pane.hover-splitt
 import { TopBar } from '@teambit/ui-foundation.ui.top-bar';
 import { Composer, ComponentTuple } from '@teambit/base-ui.utils.composer';
 import { FullLoader } from '@teambit/ui-foundation.ui.full-loader';
-import React, { useReducer, ComponentType } from 'react';
 import { Route } from 'react-router-dom';
 import { useIsMobile } from '@teambit/ui-foundation.ui.hooks.use-is-mobile';
 import { ScopeProvider } from '@teambit/scope.ui.hooks.scope-context';
@@ -26,9 +27,13 @@ export type ScopeProps = {
   overviewLineSlot: OverviewLineSlot;
   cornerSlot: CornerSlot;
   context: ScopeContextType[];
+  TargetScopeOverview?: ComponentType;
   userUseScopeQuery?: () => { scope: ScopeModel | undefined };
   onSidebarTogglerChange: (callback: () => void) => void;
   TargetCorner?: ComponentType;
+  paneClassName?: string;
+  scopeClassName?: string;
+  PaneWrapper?: ComponentType<{ children: ReactNode }>;
 };
 
 /**
@@ -42,10 +47,14 @@ export function Scope({
   badgeSlot,
   overviewLineSlot,
   cornerSlot,
+  PaneWrapper,
   context = [],
+  paneClassName,
+  TargetScopeOverview,
   TargetCorner,
   onSidebarTogglerChange,
   userUseScopeQuery,
+  scopeClassName,
 }: ScopeProps) {
   const { scope } = userUseScopeQuery ? userUseScopeQuery() : useScopeQuery();
   const isMobile = useIsMobile();
@@ -63,7 +72,7 @@ export function Scope({
   return (
     <ScopeProvider scope={scope}>
       <Composer components={Context}>
-        <div className={styles.scope}>
+        <div className={classNames(styles.scope, scopeClassName)}>
           <TopBar
             className={styles.topbar}
             Corner={() => {
@@ -83,14 +92,59 @@ export function Scope({
                 tooltipContent={`${isSidebarOpen ? 'Hide' : 'Show'} side panel`}
               />
             </HoverSplitter>
-            <Pane>
-              <SlotRouter slot={routeSlot}>
-                <Route index element={<ScopeOverview badgeSlot={badgeSlot} overviewSlot={overviewLineSlot} />} />
-              </SlotRouter>
-            </Pane>
+
+            {
+              /**
+               * @hack - discuss with Ran why we need a PaneWrapper as a parent of the Pane
+               * conditionally rendering it makes sure that it doesn't break the code tab layout
+               */
+              (PaneWrapper && (
+                <PaneContainer Wrapper={PaneWrapper}>
+                  <Pane className={classNames(paneClassName, styles.pane)}>
+                    <SlotRouter slot={routeSlot}>
+                      <Route
+                        index
+                        element={
+                          <ScopeOverview
+                            badgeSlot={badgeSlot}
+                            overviewSlot={overviewLineSlot}
+                            TargetOverview={TargetScopeOverview}
+                          />
+                        }
+                      />
+                    </SlotRouter>
+                  </Pane>
+                </PaneContainer>
+              )) || (
+                <Pane className={classNames(paneClassName, styles.pane)}>
+                  <SlotRouter slot={routeSlot}>
+                    <Route
+                      index
+                      element={
+                        <ScopeOverview
+                          badgeSlot={badgeSlot}
+                          overviewSlot={overviewLineSlot}
+                          TargetOverview={TargetScopeOverview}
+                        />
+                      }
+                    />
+                  </SlotRouter>
+                </Pane>
+              )
+            }
           </SplitPane>
         </div>
       </Composer>
     </ScopeProvider>
   );
+}
+
+function PaneContainer({
+  children,
+  Wrapper,
+}: {
+  children: ReactNode;
+  Wrapper: ComponentType<{ children: ReactNode }>;
+}) {
+  return <Wrapper>{children}</Wrapper>;
 }

@@ -7,6 +7,6 @@ If this component was exported before, it might happen when the objects were mis
 In this case, the suggested solution is to reset the local tags, run "bit import" to fetch all objects and then tag and export.
 Another case of this error is when locally this component was created for the first time and the remote already has a component with the same name.
 In this case, you might want to remove the local component and import the remote.
-Another case of this error is when a lane has a component and the remote of that component has also a component with the same name. (suggestion: TBD)`);
+Another case of this error is when a lane has a component and the remote of that component has also a component with the same name. to fix this, use "--resolve-unrelated" flag for "bit lane merge" command`);
   }
 }

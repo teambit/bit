@@ -74,6 +74,7 @@ export class MergeCmd implements Command {
       resolvedComponents,
       abortedComponents,
       mergeSnapResults,
+      mergeSnapError,
     }: ApplyVersionResults = await this.merging.merge(
       values,
       mergeStrategy as any,
@@ -100,6 +101,7 @@ export class MergeCmd implements Command {
       failedComponents,
       version,
       mergeSnapResults,
+      mergeSnapError,
       verbose,
     });
   }
@@ -110,6 +112,7 @@ export function mergeReport({
   failedComponents,
   version,
   mergeSnapResults,
+  mergeSnapError,
   leftUnresolvedConflicts,
   verbose,
 }: ApplyVersionResults): string {
@@ -130,6 +133,14 @@ once ready, snap/tag the components to complete the merge.`;
   };
 
   const getSnapsOutput = () => {
+    if (mergeSnapError) {
+      return `
+${chalk.bold(
+  'snapping the merged components had failed with the following error, please fix the issues and snap manually'
+)}
+${mergeSnapError.message}
+`;
+    }
     if (!mergeSnapResults || !mergeSnapResults.snappedComponents) return '';
     const { snappedComponents, autoSnappedResults } = mergeSnapResults;
     const outputComponents = (comps) => {
@@ -155,7 +166,7 @@ once ready, snap/tag the components to complete the merge.`;
 
   const getFailureOutput = () => {
     if (!failedComponents || !failedComponents.length) return '';
-    const title = '\nthe merge has been canceled on the following component(s)';
+    const title = '\nthe merge has been skipped on the following component(s)';
     const body = compact(
       failedComponents.map((failedComponent) => {
         if (!verbose && failedComponent.unchangedLegitimately) return null;
@@ -164,11 +175,28 @@ once ready, snap/tag the components to complete the merge.`;
       })
     ).join('\n');
     if (!body) {
-      return `${chalk.bold(`the merge has been canceled on ${failedComponents.length} component(s) legitimately`)}
+      return `${chalk.bold(`\nthe merge has been skipped on ${failedComponents.length} component(s) legitimately`)}
 (use --verbose to list them next time)`;
     }
     return `\n${chalk.underline(title)}\n${body}\n\n`;
   };
 
-  return getSuccessOutput() + getFailureOutput() + getSnapsOutput() + getConflictSummary();
+  const getSummary = () => {
+    const merged = components?.length || 0;
+    const unchangedLegitimately = failedComponents?.filter((f) => f.unchangedLegitimately).length || 0;
+    const failedToMerge = failedComponents?.filter((f) => !f.unchangedLegitimately).length || 0;
+    const autoSnapped =
+      (mergeSnapResults?.snappedComponents.length || 0) + (mergeSnapResults?.autoSnappedResults.length || 0);
+
+    const newLines = '\n\n';
+    const title = chalk.bold.underline('Merge Summary');
+    const mergedStr = `\nTotal Merged: ${chalk.bold(merged.toString())}`;
+    const unchangedLegitimatelyStr = `\nTotal Unchanged: ${chalk.bold(unchangedLegitimately.toString())}`;
+    const failedToMergeStr = `\nTotal Failed: ${chalk.bold(failedToMerge.toString())}`;
+    const autoSnappedStr = `\nTotal Snapped: ${chalk.bold(autoSnapped.toString())}`;
+
+    return newLines + title + mergedStr + unchangedLegitimatelyStr + failedToMergeStr + autoSnappedStr;
+  };
+
+  return getSuccessOutput() + getFailureOutput() + getSnapsOutput() + getConflictSummary() + getSummary();
 }

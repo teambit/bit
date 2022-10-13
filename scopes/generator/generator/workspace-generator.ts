@@ -15,7 +15,8 @@ import getGitExecutablePath from '@teambit/legacy/dist/utils/git/git-executable'
 import GitNotFound from '@teambit/legacy/dist/utils/git/exceptions/git-not-found';
 import { resolve, join } from 'path';
 import { ComponentID } from '@teambit/component-id';
-import { WorkspaceTemplate } from './workspace-template';
+import { InstallAspect, InstallMain } from '@teambit/install';
+import { WorkspaceTemplate, WorkspaceContext } from './workspace-template';
 import { NewOptions } from './new.cmd';
 import { GeneratorAspect } from './generator.aspect';
 
@@ -25,6 +26,7 @@ export class WorkspaceGenerator {
   private workspacePath: string;
   private harmony: Harmony;
   private workspace: Workspace;
+  private install: InstallMain;
   private importer: ImporterMain;
   private logger: Logger;
   private forking: ForkingMain;
@@ -50,7 +52,7 @@ export class WorkspaceGenerator {
       await this.reloadBitInWorkspaceDir();
       await this.forkComponentsFromRemote();
       await this.importComponentsFromRemote();
-      await this.workspace.install(undefined, {
+      await this.install.install(undefined, {
         dedupe: true,
         import: false,
         copyPeerToRuntimeOnRoot: true,
@@ -89,11 +91,12 @@ export class WorkspaceGenerator {
    * writes the generated template files to the default directory set in the workspace config
    */
   private async writeWorkspaceFiles(): Promise<void> {
-    const workspaceContext = {
+    const workspaceContext: WorkspaceContext = {
       name: this.workspaceName,
       defaultScope: this.options.defaultScope,
       empty: this.options.empty,
       aspectComponent: this.aspectComponent,
+      template: this.template,
     };
     const templateFiles = await this.template.generateFiles(workspaceContext);
     await Promise.all(
@@ -106,6 +109,7 @@ export class WorkspaceGenerator {
   private async reloadBitInWorkspaceDir() {
     this.harmony = await loadBit(this.workspacePath);
     this.workspace = this.harmony.get<Workspace>(WorkspaceAspect.id);
+    this.install = this.harmony.get<InstallMain>(InstallAspect.id);
     const loggerMain = this.harmony.get<LoggerMain>(LoggerAspect.id);
     this.logger = loggerMain.createLogger(GeneratorAspect.id);
     this.importer = this.harmony.get<ImporterMain>(ImporterAspect.id);
@@ -140,11 +144,6 @@ export class WorkspaceGenerator {
       await this.importer.import(
         {
           ids: [componentToImport.id],
-          verbose: false,
-          objectsOnly: false,
-          override: false,
-          writeDists: false,
-          writeConfig: false,
           installNpmPackages: false,
           writeToPath: componentToImport.path,
         },

@@ -5,12 +5,8 @@ import { ScopeMain } from '@teambit/scope';
 import { Workspace } from '@teambit/workspace';
 import { Command, CommandOptions } from '@teambit/cli';
 import { LaneData } from '@teambit/legacy/dist/scope/lanes/lanes';
-import { getMergeStrategy } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
-import { mergeReport } from '@teambit/merging';
-import { BUILD_ON_CI, isFeatureEnabled } from '@teambit/legacy/dist/api/consumer/lib/feature-toggle';
 import { BitError } from '@teambit/bit-error';
 import { approveOperation } from '@teambit/legacy/dist/prompts';
-import paintRemoved from '@teambit/legacy/dist/cli/templates/remove-template';
 import { CreateLaneOptions, LanesMain } from './lanes.main.runtime';
 import { SwitchCmd } from './switch.cmd';
 
@@ -205,7 +201,7 @@ a lane created from another lane has all the components of the original lane.`;
     const result = await this.lanes.createLane(name, createLaneOptions);
     const remoteScopeOrDefaultScope = createLaneOptions.remoteScope
       ? `the remote scope ${chalk.bold(createLaneOptions.remoteScope)}`
-      : `the default-scope ${chalk.bold(result.remoteScope)}. to change it, please run "bit lane track" command`;
+      : `the default-scope ${chalk.bold(result.remoteScope)}. to change it, please run "bit lane change-scope" command`;
     const title = chalk.green(`successfully added and checked out to a new lane ${chalk.bold(result.localLane)}`);
     const remoteScopeOutput = `this lane will be exported to ${remoteScopeOrDefaultScope}`;
     return `${title}\n${remoteScopeOutput}`;
@@ -272,110 +268,6 @@ export class LaneRenameCmd implements Command {
   }
 }
 
-export class LaneMergeCmd implements Command {
-  name = 'merge <lane> [pattern]';
-  description = `merge a local or a remote lane`;
-  arguments = [
-    {
-      name: 'lane',
-      description: 'lane-name to merge to the current lane',
-    },
-    {
-      name: 'pattern',
-      description: 'EXPERIMENTAL. partially merge the lane with the specified component-pattern',
-    },
-  ];
-  alias = '';
-  options = [
-    ['', 'remote <scope-name>', 'remote scope name'],
-    ['', 'ours', 'in case of a conflict, override the used version with the current modification'],
-    ['', 'theirs', 'in case of a conflict, override the current modification with the specified version'],
-    ['', 'manual', 'in case of a conflict, leave the files with a conflict state to resolve them manually later'],
-    ['', 'workspace', 'merge only components in a lane that exist in the workspace'],
-    ['', 'no-snap', 'do not auto snap in case the merge completed without conflicts'],
-    ['', 'build', 'in case of snap during the merge, run the build-pipeline (similar to bit snap --build)'],
-    ['m', 'message <message>', 'override the default message for the auto snap'],
-    ['', 'keep-readme', 'skip deleting the lane readme component after merging'],
-    ['', 'squash', 'EXPERIMENTAL. squash multiple snaps. keep the last one only'],
-    ['', 'verbose', 'show details of components that were not merged legitimately'],
-    ['', 'skip-dependency-installation', 'do not install packages of the imported components'],
-    [
-      '',
-      'include-deps',
-      'EXPERIMENTAL. relevant for "--pattern" and "--workspace". merge also dependencies of the given components',
-    ],
-  ] as CommandOptions;
-  loader = true;
-  private = true;
-  migration = true;
-  remoteOp = true;
-
-  constructor(private lanes: LanesMain) {}
-
-  async report(
-    [name, pattern]: [string, string],
-    {
-      ours = false,
-      theirs = false,
-      manual = false,
-      remote: remoteName,
-      build,
-      workspace: existingOnWorkspaceOnly = false,
-      noSnap = false,
-      message: snapMessage = '',
-      keepReadme = false,
-      squash = false,
-      skipDependencyInstallation = false,
-      includeDeps = false,
-      verbose = false,
-    }: {
-      ours: boolean;
-      theirs: boolean;
-      manual: boolean;
-      remote?: string;
-      workspace?: boolean;
-      build?: boolean;
-      noSnap: boolean;
-      message: string;
-      keepReadme?: boolean;
-      squash: boolean;
-      skipDependencyInstallation?: boolean;
-      includeDeps?: boolean;
-      verbose?: boolean;
-    }
-  ): Promise<string> {
-    build = isFeatureEnabled(BUILD_ON_CI) ? Boolean(build) : true;
-    const mergeStrategy = getMergeStrategy(ours, theirs, manual);
-    if (noSnap && snapMessage) throw new BitError('unable to use "noSnap" and "message" flags together');
-    if (includeDeps && !pattern && !existingOnWorkspaceOnly) {
-      throw new BitError(`"--include-deps" flag is relevant only for --workspace and --pattern flags`);
-    }
-    const { mergeResults, deleteResults } = await this.lanes.mergeLane(name, {
-      // @ts-ignore
-      remoteName,
-      build,
-      // @ts-ignore
-      mergeStrategy,
-      existingOnWorkspaceOnly,
-      noSnap,
-      snapMessage,
-      keepReadme,
-      squash,
-      pattern,
-      skipDependencyInstallation,
-      includeDeps,
-    });
-
-    const mergeResult = mergeReport({ ...mergeResults, verbose });
-    const deleteResult = `${deleteResults.localResult ? paintRemoved(deleteResults.localResult, false) : ''}${(
-      deleteResults.remoteResult || []
-    ).map((item) => paintRemoved(item, true))}${
-      (deleteResults.readmeResult && chalk.yellow(deleteResults.readmeResult)) || ''
-    }\n`;
-    return mergeResult + deleteResult;
-  }
-}
-
 export class LaneRemoveCmd implements Command {
   name = 'remove <lanes...>';
   arguments = [{ name: 'lanes...', description: 'A list of lane names, separated by spaces' }];
@@ -383,11 +275,7 @@ export class LaneRemoveCmd implements Command {
   alias = '';
   options = [
     ['r', 'remote', 'remove a remote lane (in the lane arg, use remote/lane-id syntax)'],
-    [
-      'f',
-      'force',
-      'removes the component from the scope, even if used as a dependency. WARNING: components that depend on this component will corrupt',
-    ],
+    ['f', 'force', 'removes the lane even when the lane was not merged yet'],
     ['s', 'silent', 'skip confirmation'],
   ] as CommandOptions;
   loader = true;

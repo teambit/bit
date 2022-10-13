@@ -51,6 +51,7 @@ import VersionDependencies from './version-dependencies';
 import { ObjectItem, ObjectList } from './objects/object-list';
 import ClientIdInUse from './exceptions/client-id-in-use';
 import { UnexpectedPackageName } from '../consumer/exceptions/unexpected-package-name';
+import { getDivergeData } from './component-ops/get-diverge-data';
 
 const removeNils = R.reject(R.isNil);
 const pathHasScope = pathHasAll([OBJECTS_DIR, SCOPE_JSON]);
@@ -95,21 +96,10 @@ export type LegacyOnTagResult = {
   id: BitId;
   builderData: ExtensionDataEntry;
 };
-export type OnTagOpts = {
-  disableTagAndSnapPipelines?: boolean;
-  throwOnError?: boolean; // on the CI it helps to save the results on failure so this is set to false
-  forceDeploy?: boolean; // whether run the deploy-pipeline although the build-pipeline has failed
-  skipTests?: boolean;
-  isSnap?: boolean;
-};
+
 export type IsolateComponentsOptions = {
   packageManagerConfigRootDir?: string;
 };
-export type OnTagFunc = (
-  components: Component[],
-  options: OnTagOpts,
-  isolateOptions: IsolateComponentsOptions
-) => Promise<LegacyOnTagResult[]>;
 
 export default class Scope {
   created = false;
@@ -123,6 +113,11 @@ export default class Scope {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   _dependencyGraph: DependencyGraph; // cache DependencyGraph instance
   lanes: Lanes;
+  /**
+   * normally, the data about the current-lane is saved in .bitmap. the reason for having this prop here is that we
+   * need this data when loading model-component, which gets called in multiple places where the consumer is not passed.
+   * another instance this is needed is for bit-sign, this way when loading aspects and fetching dists, it'll go to lane-scope.
+   */
   currentLaneId?: LaneId;
   constructor(scopeProps: ScopeProps) {
     this.path = scopeProps.path;
@@ -136,7 +131,6 @@ export default class Scope {
     this.scopeImporter = ScopeComponentsImporter.getInstance(this);
   }
 
-  public onTag: OnTagFunc[] = []; // enable extensions to hook during the tag process
   static onPostExport: (ids: BitId[], lanes: Lane[]) => Promise<void>; // enable extensions to hook after the export process
 
   /**
@@ -177,6 +171,12 @@ export default class Scope {
   get isLegacy(): boolean {
     const harmonyScopeJsonPath = getHarmonyPath(this.path);
     return !fs.existsSync(harmonyScopeJsonPath);
+  }
+
+  setCurrentLaneId(laneId?: LaneId) {
+    if (!laneId) return;
+    if (laneId.isDefault()) return;
+    this.currentLaneId = laneId;
   }
 
   getPath() {
@@ -357,16 +357,32 @@ once done, to continue working, please run "bit cc"`
     return lane;
   }
 
-  async isIdOnLane(id: BitId, lane?: Lane | null, laneIds?: BitIds): Promise<boolean> {
+  /**
+   * sadly, there are not good tests for this. it pretty complex to create them as it involves multiple scopes and
+   * packages installations. be careful when changing this.
+   * the goal is to check whether a given id with the given version exits on the given lane or it's on main.
+   * it's needed for importing artifacts to know whether the artifact could be found on the origin scope or on the
+   * lane-scope
+   */
+  async isIdOnLane(id: BitId, lane?: Lane | null): Promise<boolean> {
     if (!lane) return false;
-    if (laneIds?.has(id)) return true; // in the lane with the same version
-    if (!laneIds?.hasWithoutVersion(id)) return false; // not in the lane at all
+    const laneIds = lane.toBitIds();
+    if (laneIds.has(id)) return true; // in the lane with the same version
+    const laneIdWithDifferentVersion = laneIds.searchWithoutVersion(id);
+    if (!laneIdWithDifferentVersion) return false; // not in the lane at all
     // component is in the lane object but with a different version.
     // we have to figure out whether the current version exists on the lane or not.
     const component = await this.getModelComponent(id);
-    if (component.head?.toString() === id.version) return false; // it's on main
-    await component.setDivergeData(this.objects, false);
-    const divergeData = component.getDivergeData();
+    if (!component.head) return true; // it's not on main. must be on a lane. (even if it was forked from another lane, current lane must have all objects)
+    if (component.head.toString() === id.version) return false; // it's on main
+    // get the diverge between main and the lane. (in this context, main is "remote", lane is "local").
+    const divergeData = await getDivergeData({
+      repo: this.objects,
+      modelComponent: component,
+      remoteHead: component.head,
+      checkedOutLocalHead: Ref.from(laneIdWithDifferentVersion.version as string),
+    });
+    // if the snap found "locally", then it's on the lane.
     return Boolean(divergeData.snapsOnLocalOnly.find((snap) => snap.toString() === id.version));
   }
 
@@ -423,14 +439,14 @@ once done, to continue working, please run "bit cc"`
    * Remove components from scope
    * @force Boolean - remove component from scope even if other components use it
    */
-  async removeMany(bitIds: BitIds, force: boolean, consumer?: Consumer): Promise<RemovedObjects> {
+  async removeMany(bitIds: BitIds, force: boolean, consumer?: Consumer, fromLane?: boolean): Promise<RemovedObjects> {
     logger.debug(`scope.removeMany ${bitIds.toString()} with force flag: ${force.toString()}`);
     Analytics.addBreadCrumb(
       'removeMany',
       `scope.removeMany ${Analytics.hashData(bitIds)} with force flag: ${force.toString()}`
     );
     const currentLane = await consumer?.getCurrentLaneObject();
-    const removeComponents = new RemoveModelComponents(this, bitIds, force, consumer, currentLane);
+    const removeComponents = new RemoveModelComponents(this, bitIds, force, consumer, currentLane, fromLane);
     return removeComponents.remove();
   }
 

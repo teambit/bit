@@ -237,10 +237,10 @@ describe('bit checkout command', function () {
         expect(deletedFile).to.not.be.a.path();
       });
     });
-    describe('bit checkout --reset', () => {
+    describe('bit checkout reset', () => {
       before(() => {
         helper.scopeHelper.getClonedLocalScope(scopeBeforeCheckout);
-        helper.command.checkout('comp1 --skip-npm-install --reset');
+        helper.command.checkoutReset('comp1 --skip-npm-install');
       });
       it('should re-create the file', () => {
         const deletedFile = path.join(helper.scopes.localPath, 'comp1/foo.ts');
@@ -429,6 +429,52 @@ describe('bit checkout command', function () {
           expect(path.join(helper.scopes.localPath, 'bar/foo2.js')).to.be.a.file();
         });
       });
+    });
+  });
+  describe('checkout-head when the local head is not up to date', () => {
+    let localHeadScope: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents(1, false);
+      helper.command.tagAllWithoutBuild();
+      helper.fixtures.populateComponents(1, false, 'v2');
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      localHeadScope = helper.scopeHelper.cloneLocalScope();
+      helper.fixtures.populateComponents(1, false, 'v3');
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.scopeHelper.getClonedLocalScope(localHeadScope);
+      helper.command.checkout('0.0.1 --all');
+      helper.command.checkoutHead();
+    });
+    it('should checkout to the remote head and not to the local head', () => {
+      const bitMap = helper.bitMap.read();
+      expect(bitMap.comp1.version).to.equal('0.0.3');
+    });
+  });
+  describe('sync new components', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents(2);
+      const scopeBeforeTag = helper.scopeHelper.cloneLocalScope();
+      helper.command.tagWithoutBuild('comp2');
+      helper.command.export();
+      helper.scopeHelper.getClonedLocalScope(scopeBeforeTag);
+
+      // intermediate step, make sure they're both new.
+      const status = helper.command.statusJson();
+      expect(status.newComponents).to.have.lengthOf(2);
+    });
+    it('bit checkout head should sync the exported components', () => {
+      helper.command.checkoutHead();
+      const status = helper.command.statusJson();
+      expect(status.newComponents).to.have.lengthOf(1);
+
+      const bitMap = helper.bitMap.read();
+      expect(bitMap.comp2.scope).to.equal(helper.scopes.remote);
     });
   });
 });

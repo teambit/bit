@@ -6,8 +6,6 @@ import { RenderingContext } from '@teambit/preview';
 import { PropertiesTable } from '@teambit/react.ui.docs.properties-table';
 import { CompositionsCarousel } from '@teambit/react.ui.docs.compositions-carousel';
 import { DocsContent } from '@teambit/react.ui.docs.docs-content';
-import { ApplyProviders } from '@teambit/react.ui.docs.apply-providers';
-
 import { DocsTheme } from './docs-theme';
 import { ExamplesOverview } from './examples-overview';
 import styles from './docs-app.module.scss';
@@ -26,17 +24,17 @@ export function DocsApp({ componentId, docs = defaultDocs, compositions, context
 
   return (
     <DocsTheme>
-      <ApplyProviders renderingContext={context}>
+      <>
         <DocsContent docs={docs} className={styles.mdx} />
-
         <CompositionsCarousel
+          renderingContext={context}
           compositions={compositions}
           className={styles.compositionSection}
           compositionCardClass={styles.compositionCard}
         />
         <PropertiesTable componentId={componentId} />
         <ExamplesOverview examples={Content.examples || examples} />
-      </ApplyProviders>
+      </>
     </DocsTheme>
   );
 }

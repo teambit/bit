@@ -70,8 +70,14 @@ export class CLIParser {
         throw err;
       }
       yargs.showHelp(this.logCommandHelp.bind(this));
-      // eslint-disable-next-line no-console
-      console.log(`\n${chalk.yellow(msg)}`);
+      const args = process.argv.slice(2);
+      const isHelpFlagEntered = args.includes('--help') || args.includes('-h');
+      const isMsgAboutMissingArgs = msg.startsWith('Not enough non-option arguments');
+      // avoid showing the "Not enough non-option arguments" message when the user is trying to get the command help
+      if (!isMsgAboutMissingArgs || !isHelpFlagEntered) {
+        // eslint-disable-next-line no-console
+        console.log(`\n${chalk.yellow(msg)}`);
+      }
       if (!logger.isDaemon) process.exit(1);
     });
   }
@@ -243,8 +249,8 @@ export class CLIParser {
     const argumentsStr = args.length ? `\nArguments:\n${argsColored.join('\n')}\n` : '';
     const examplesStr = examples.length ? `\nExamples:\n${examples.join('\n')}\n` : '';
     const subCommandsStr = subCommands.length ? `\n${'Commands:'}\n${subCommands.join('\n')}\n` : '';
-    // show the description in yellow
-    const descriptionColored = description.map((desc) => chalk.yellow(desc));
+    // show the description in bold
+    const descriptionColored = description.map((desc) => chalk.bold(desc));
     if (command?.extendedDescription) {
       descriptionColored.push(command?.extendedDescription);
     }

@@ -688,7 +688,7 @@ describe('bit lane command', function () {
           helper.scopeHelper.getClonedRemoteScope(afterSwitchingRemote);
           helper.fixtures.populateComponents(2, undefined, 'v3');
           helper.command.snapAllComponentsWithoutBuild();
-          helper.command.mergeLane('dev', '--ours');
+          helper.command.mergeLane('dev', '--ours --no-squash');
         });
         it('should merge the lane', () => {
           const mergedLanes = helper.command.listLanes('--merged');
@@ -960,6 +960,26 @@ describe('bit lane command', function () {
       expect(() => helper.command.export()).to.throw('cannot find scope');
     });
   });
+  describe('multiple scopes when the origin-scope exits but does not have the component. only lane-scope has it', () => {
+    let anotherRemote: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      const { scopeName, scopePath } = helper.scopeHelper.getNewBareScope();
+      anotherRemote = scopeName;
+      helper.scopeHelper.addRemoteScope(scopePath);
+      helper.scopeHelper.addRemoteScope(scopePath, helper.scopes.remotePath);
+      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, scopePath);
+      helper.fixtures.populateComponents(1);
+      helper.command.setScope(anotherRemote, 'comp1');
+      helper.command.createLane();
+      helper.command.snapAllComponentsWithoutBuild();
+    });
+    // should not throw an error "the component {component-name} has no versions and the head is empty."
+    it('bit import should not throw an error', () => {
+      expect(() => helper.command.import()).to.not.throw();
+    });
+  });
   describe('snapping and un-tagging on a lane', () => {
     let afterFirstSnap: string;
     before(() => {
@@ -1209,6 +1229,106 @@ describe('bit lane command', function () {
         const lane = helper.command.catLane('lane-c');
         expect(lane.forkedFrom.name).to.equal('lane-a');
       });
+    });
+    describe('switching back to lane-a', () => {
+      before(() => {
+        helper.command.switchLocalLane('lane-a');
+      });
+      it('bitmap should show the lane as exported', () => {
+        const bitMap = helper.bitMap.read();
+        expect(bitMap[LANE_KEY].exported).to.be.true;
+      });
+    });
+  });
+  describe('head on the lane is not in the filesystem', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.command.createLane();
+      helper.fixtures.populateComponents(1, false);
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.fs.deletePath('.bit');
+      helper.scopeHelper.addRemoteScope();
+    });
+    it('bit status should not throw', () => {
+      expect(() => helper.command.status()).not.to.throw();
+    });
+  });
+  describe('export when previous versions have deleted dependencies', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents(3);
+      helper.command.tagWithoutBuild();
+      helper.command.export();
+      helper.command.removeComponent(`${helper.scopes.remote}/comp3`, '--remote --force');
+      helper.command.removeComponent('comp3', '--force');
+      helper.fs.outputFile('comp2/index.js', ''); // remove the dependency from the code
+      helper.command.tagWithoutBuild();
+      helper.command.createLane();
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+    });
+    it('should not throw ComponentNotFound on export', () => {
+      expect(() => helper.command.export()).to.not.throw();
+    });
+  });
+  describe('some components are on a lane some are not', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents(3);
+      helper.command.tagWithoutBuild('comp3');
+      helper.command.export();
+      helper.command.createLane();
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+
+      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.addRemoteScope();
+    });
+    it('bit list should not show components from the lanes', () => {
+      const list = helper.command.listRemoteScopeParsed();
+      expect(list).to.have.lengthOf(1);
+    });
+    it('bit import should not throw', () => {
+      expect(() => helper.command.importComponent('*')).to.not.throw();
+    });
+  });
+  describe('export on lane with tiny cache', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents(1, false);
+      helper.command.createLane();
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.runCmd('bit config set cache.max.objects 1');
+    });
+    after(() => {
+      helper.command.runCmd('bit config del cache.max.objects');
+    });
+    // previously, it was throwing "HeadNotFound"/"ComponentNotFound" when there were many objects in the cache
+    it('should not throw', () => {
+      expect(() => helper.command.export()).not.to.throw();
+    });
+  });
+  describe('export multiple snaps on lane when the remote has it already', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents(1, false);
+      helper.command.createLane();
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      // the second snap is mandatory, don't skip it.
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+    });
+    // previously, it was throwing ParentNotFound
+    it('bit export should not throw ParentNotFound', () => {
+      expect(() => helper.command.export()).not.to.throw();
     });
   });
 });

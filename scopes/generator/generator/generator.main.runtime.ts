@@ -24,11 +24,14 @@ import { WorkspaceTemplate } from './workspace-template';
 import { NewCmd, NewOptions } from './new.cmd';
 import { componentGeneratorTemplate } from './templates/component-generator';
 import { workspaceGeneratorTemplate } from './templates/workspace-generator';
+import { starterTemplate } from './templates/starter';
+import { StarterPlugin } from './starter.plugin';
 
 export type ComponentTemplateSlot = SlotRegistry<ComponentTemplate[]>;
 export type WorkspaceTemplateSlot = SlotRegistry<WorkspaceTemplate[]>;
 
 export type TemplateDescriptor = { aspectId: string; name: string; description?: string; hidden?: boolean };
+export type GenerateWorkspaceTemplateResult = { workspacePath: string; appName?: string };
 
 export type GeneratorConfig = {
   /**
@@ -135,10 +138,20 @@ export class GeneratorMain {
    * in the case the aspect-id is given and this aspect doesn't exist locally, import it to the
    * global scope and load it from the capsule
    */
-  async findTemplateInGlobalScope(aspectId: string, name?: string): Promise<WorkspaceTemplate | undefined> {
-    const aspects = await this.aspectLoader.loadAspectsFromGlobalScope([aspectId]);
-    const fullAspectId = aspects[0].id.toString();
-    return this.searchRegisteredWorkspaceTemplate(name, fullAspectId);
+  async findTemplateInGlobalScope(
+    aspectId: string,
+    name?: string
+  ): Promise<{ workspaceTemplate?: WorkspaceTemplate; aspect?: Component }> {
+    const { globalScopeHarmony, components } = await this.aspectLoader.loadAspectsFromGlobalScope([aspectId]);
+    const remoteGenerator = globalScopeHarmony.get<GeneratorMain>(GeneratorAspect.id);
+    const aspect = components[0];
+    const fullAspectId = aspect.id.toString();
+    const fromGlobal = await remoteGenerator.searchRegisteredWorkspaceTemplate.call(
+      remoteGenerator,
+      name,
+      fullAspectId
+    );
+    return { workspaceTemplate: fromGlobal, aspect };
   }
 
   async findTemplateInOtherWorkspace(workspacePath: string, name: string, aspectId?: string) {
@@ -174,12 +187,10 @@ export class GeneratorMain {
     if (!aspectId) {
       throw new BitError(`template "${name}" was not found, if this is a custom-template, please use --aspect flag`);
     }
-    const aspects = await this.aspectLoader.loadAspectsFromGlobalScope([aspectId]);
-    const aspect = aspects[0];
-    const fullAspectId = aspect.id.toString();
-    const fromGlobal = await this.searchRegisteredWorkspaceTemplate(name, fullAspectId);
-    if (fromGlobal) {
-      return { workspaceTemplate: fromGlobal, aspect };
+
+    const { workspaceTemplate, aspect } = await this.findTemplateInGlobalScope(aspectId, name);
+    if (workspaceTemplate) {
+      return { workspaceTemplate, aspect };
     }
     throw new BitError(`template "${name}" was not found`);
   }
@@ -222,7 +233,11 @@ export class GeneratorMain {
     return componentGenerator.generate();
   }
 
-  async generateWorkspaceTemplate(workspaceName: string, templateName: string, options: NewOptions) {
+  async generateWorkspaceTemplate(
+    workspaceName: string,
+    templateName: string,
+    options: NewOptions
+  ): Promise<GenerateWorkspaceTemplateResult> {
     if (this.workspace) {
       throw new BitError('Error: unable to generate a new workspace inside of an existing workspace');
     }
@@ -240,7 +255,7 @@ export class GeneratorMain {
     const workspaceGenerator = new WorkspaceGenerator(workspaceName, options, template, aspectComponent);
     const workspacePath = await workspaceGenerator.generate();
 
-    return workspacePath;
+    return { workspacePath, appName: template.appName };
   }
 
   private getAllComponentTemplatesFlattened(): Array<{ id: string; template: ComponentTemplate }> {
@@ -315,7 +330,9 @@ export class GeneratorMain {
     ];
     cli.register(...commands);
     graphql.register(generatorSchema(generator));
-    generator.registerComponentTemplate([componentGeneratorTemplate, workspaceGeneratorTemplate]);
+    aspectLoader.registerPlugins([new StarterPlugin(generator)]);
+
+    generator.registerComponentTemplate([componentGeneratorTemplate, starterTemplate, workspaceGeneratorTemplate]);
     return generator;
   }
 }

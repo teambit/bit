@@ -21,7 +21,7 @@ export class Plugins {
     });
   }
 
-  load(runtime: string) {
+  async load(runtime: string) {
     const plugins = this.getByRuntime(runtime);
     const aspect = Aspect.create({
       id: this.component.id.toString(),
@@ -30,7 +30,7 @@ export class Plugins {
     aspect.addRuntime({
       provider: async () => {
         plugins.forEach((plugin) => {
-          plugin.register();
+          plugin.register(aspect);
         });
       },
       runtime,

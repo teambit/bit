@@ -4,7 +4,7 @@ import { difference } from 'lodash';
 import { ComponentID } from '@teambit/component';
 import { BitId } from '@teambit/legacy-bit-id';
 import loader from '@teambit/legacy/dist/cli/loader';
-import { BIT_MAP, COMPONENT_ORIGINS } from '@teambit/legacy/dist/constants';
+import { BIT_MAP } from '@teambit/legacy/dist/constants';
 import { Consumer } from '@teambit/legacy/dist/consumer';
 import logger from '@teambit/legacy/dist/logger/logger';
 import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
@@ -366,10 +366,7 @@ export class Watcher {
 
   async setTrackDirs() {
     this.trackDirs = {};
-    const componentsFromBitMap = this.consumer.bitMap.getAllComponents([
-      COMPONENT_ORIGINS.AUTHORED,
-      COMPONENT_ORIGINS.IMPORTED,
-    ]);
+    const componentsFromBitMap = this.consumer.bitMap.getAllComponents();
     await Promise.all(
       componentsFromBitMap.map(async (componentMap) => {
         const bitId = componentMap.id;

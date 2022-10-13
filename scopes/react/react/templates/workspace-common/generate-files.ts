@@ -14,11 +14,14 @@ type GeneratedFile = {
   content: string;
 };
 
-export async function generateFiles(context: WorkspaceContext): Promise<GeneratedFile[]> {
+export async function generateFiles(
+  context: WorkspaceContext,
+  extraConfig?: Record<string, any>
+): Promise<GeneratedFile[]> {
   return [
     {
       relativePath: 'workspace.jsonc',
-      content: await workspaceConfig(context),
+      content: await workspaceConfig(context, extraConfig),
     },
     {
       relativePath: `.gitignore`,

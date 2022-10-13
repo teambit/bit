@@ -18,7 +18,7 @@ export async function getAutoTagInfo(consumer: Consumer, changedComponents: BitI
   if (!changedComponents.length) return [];
   const potentialComponents = potentialComponentsForAutoTagging(consumer, changedComponents);
   const idsToLoad = new BitIds(...potentialComponents, ...changedComponents);
-  const { components } = await consumer.loadComponents(idsToLoad);
+  const { components } = await consumer.loadComponents(idsToLoad, false);
   const graph = buildGraph(components);
 
   const autoTagResults: AutoTagResult[] = [];
@@ -84,7 +84,7 @@ function buildGraph(components: Component[]): Graph {
 }
 
 function potentialComponentsForAutoTagging(consumer: Consumer, modifiedComponents: BitIds): BitIds {
-  const candidateComponentsIds = consumer.bitMap.getAuthoredAndImportedBitIds();
+  const candidateComponentsIds = consumer.bitMap.getAllBitIds();
   // if a modified component is in candidates array, remove it from the array as it will be already
   // tagged with the correct version
   const idsWithoutModified = candidateComponentsIds.filter(

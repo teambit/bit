@@ -5,10 +5,7 @@ import { LoggerAspect, LoggerMain, Logger } from '@teambit/logger';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import { BuilderAspect, BuilderMain } from '@teambit/builder';
 import { Component, ComponentID } from '@teambit/component';
-import {
-  getPublishedPackages,
-  updateComponentsByTagResult,
-} from '@teambit/legacy/dist/scope/component-ops/tag-model-component';
+import { SnappingAspect, SnappingMain } from '@teambit/snapping';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { BuildStatus, CENTRAL_BIT_HUB_URL, CENTRAL_BIT_HUB_NAME } from '@teambit/legacy/dist/constants';
 import { getScopeRemotes } from '@teambit/legacy/dist/scope/scope-remotes';
@@ -38,15 +35,28 @@ export class SignMain {
     private logger: Logger,
     private builder: BuilderMain,
     private onPostSignSlot: OnPostSignSlot,
-    private lanes: LanesMain
+    private lanes: LanesMain,
+    private snapping: SnappingMain
   ) {}
 
+  /**
+   * complete the build process of a component.
+   * `isMultiple` indicates that this is running on a new bare-scope and not on the original scope.
+   * it's recommended to always use it, even when it's a single component and not multiple.
+   * (the reason for this name is that for multiple components from multiple scopes, it must be done on a new bare-scope).
+   *
+   * important! this method mutates the legacyScope. it assigns the currentLaneId according to the `bit sign --lane` flag.
+   * if for some reason you're using this API in a long-running-process, make sure to revert it.
+   */
   async sign(ids: ComponentID[], isMultiple?: boolean, push?: boolean, laneIdStr?: string): Promise<SignResult | null> {
     let lane: Lane | undefined;
     if (isMultiple) {
       if (laneIdStr) {
         const laneId = LaneId.parse(laneIdStr);
-        lane = await this.lanes.importLane(laneId);
+        lane = await this.lanes.importLaneObject(laneId);
+        // this is critical. otherwise, later on, when loading aspects and isolating capsules, we'll try to fetch dists
+        // from the original scope instead of the lane-scope.
+        this.scope.legacyScope.setCurrentLaneId(laneId);
       }
       await this.scope.import(ids, { lane });
     }
@@ -71,8 +81,8 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
     );
     const legacyBuildResults = this.scope.builderDataMapToLegacyOnTagResults(builderDataMap);
     const legacyComponents = components.map((c) => c.state._consumer);
-    updateComponentsByTagResult(legacyComponents, legacyBuildResults);
-    const publishedPackages = getPublishedPackages(legacyComponents);
+    this.snapping._updateComponentsByTagResult(legacyComponents, legacyBuildResults);
+    const publishedPackages = this.snapping._getPublishedPackages(legacyComponents);
     const pipeWithError = pipeResults.find((pipe) => pipe.hasErrors());
     const buildStatus = pipeWithError ? BuildStatus.Failed : BuildStatus.Succeed;
     if (push) {
@@ -117,7 +127,7 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
   private async saveExtensionsDataIntoScope(components: ConsumerComponent[], buildStatus: BuildStatus) {
     await mapSeries(components, async (component) => {
       component.buildStatus = buildStatus;
-      await this.scope.legacyScope.sources.enrichSource(component);
+      await this.snapping._enrichComp(component);
     });
     await this.scope.legacyScope.objects.persist();
   }
@@ -126,7 +136,7 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
     const objectList = new ObjectList();
     const signComponents = await mapSeries(components, async (component) => {
       component.buildStatus = buildStatus;
-      const objects = await this.scope.legacyScope.sources.getObjectsToEnrichSource(component);
+      const objects = await this.snapping._getObjectsToEnrichComp(component);
       const scopeName = component.scope as string;
       const objectToMerge = await ObjectList.fromBitObjects(objects);
       objectToMerge.addScopeName(scopeName);
@@ -169,17 +179,24 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
 
   static runtime = MainRuntime;
 
-  static dependencies = [CLIAspect, ScopeAspect, LoggerAspect, BuilderAspect, LanesAspect];
+  static dependencies = [CLIAspect, ScopeAspect, LoggerAspect, BuilderAspect, LanesAspect, SnappingAspect];
 
   static slots = [Slot.withType<OnPostSignSlot>()];
 
   static async provider(
-    [cli, scope, loggerMain, builder, lanes]: [CLIMain, ScopeMain, LoggerMain, BuilderMain, LanesMain],
+    [cli, scope, loggerMain, builder, lanes, snapping]: [
+      CLIMain,
+      ScopeMain,
+      LoggerMain,
+      BuilderMain,
+      LanesMain,
+      SnappingMain
+    ],
     _,
     [onPostSignSlot]: [OnPostSignSlot]
   ) {
     const logger = loggerMain.createLogger(SignAspect.id);
-    const signMain = new SignMain(scope, logger, builder, onPostSignSlot, lanes);
+    const signMain = new SignMain(scope, logger, builder, onPostSignSlot, lanes, snapping);
     cli.register(new SignCmd(signMain));
     return signMain;
   }

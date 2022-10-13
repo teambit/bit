@@ -1,5 +1,5 @@
-import flatten from 'lodash.flatten';
 import type { ComponentUI, ComponentModel } from '@teambit/component';
+import { compact, flatten } from 'lodash';
 import { ComponentAspect } from '@teambit/component';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { RouteSlot } from '@teambit/ui-foundation.ui.react-router.slot-router';
@@ -20,9 +20,11 @@ import {
   TreeToggleWidget,
   ComponentFiltersSlot,
 } from '@teambit/component.ui.component-drawer';
-import { ComponentFilters, DeprecateFilter, EnvsFilter } from '@teambit/component.ui.component-filters';
+import { ComponentFilters } from '@teambit/component.ui.component-filters.component-filter-context';
+import { DeprecateFilter } from '@teambit/component.ui.component-filters.deprecate-filter';
+import { EnvsFilter } from '@teambit/component.ui.component-filters.env-filter';
 import { ComponentUrlResolver, ComponentUrlProvider } from '@teambit/component.modules.component-url';
-
+import { ShowMainFilter } from '@teambit/component.ui.component-filters.show-main-filter';
 import { ScopeMenu, ScopeUseBox } from './ui/menu';
 import { ScopeAspect } from './scope.aspect';
 import { Scope } from './ui/scope';
@@ -122,10 +124,12 @@ export class ScopeUI {
   getScope(options: GetScopeOptions) {
     return (
       <Scope
+        TargetScopeOverview={options.TargetScopeOverview}
+        scopeClassName={options.scopeClassName}
         TargetCorner={options.Corner}
         routeSlot={this.routeSlot}
         menuSlot={this.menuSlot}
-        sidebar={<this.sidebar.render itemSlot={this.sidebarItemSlot} />}
+        sidebar={<this.sidebar.render items={this.listSidebarLinks()} />}
         scopeUi={this}
         userUseScopeQuery={options.useScope}
         badgeSlot={this.scopeBadgeSlot}
@@ -133,6 +137,8 @@ export class ScopeUI {
         context={this.getContext()}
         onSidebarTogglerChange={this.setSidebarToggle}
         cornerSlot={this.cornerSlot}
+        paneClassName={options.paneClassName}
+        PaneWrapper={options.PaneWrapper}
       />
     );
   }
@@ -278,13 +284,14 @@ export class ScopeUI {
     this.drawerWidgetSlot.register(widgets);
   };
 
-  registerDefaultDrawers(assumeScopeInUrl = false) {
+  registerDefaultDrawers(assumeScopeInUrl = false, overrideUseComponents?: () => { components: ComponentModel[] }) {
     this.sidebar.registerDrawer(
       scopeDrawer({
         treeWidgets: this.sidebarSlot,
         filtersSlot: this.drawerComponentsFiltersSlot,
         drawerWidgetSlot: this.drawerWidgetSlot,
         assumeScopeInUrl,
+        overrideUseComponents,
       })
     );
   }
@@ -307,7 +314,7 @@ export class ScopeUI {
             <Scope
               routeSlot={this.routeSlot}
               menuSlot={this.menuSlot}
-              sidebar={<this.sidebar.render itemSlot={this.sidebarItemSlot} />}
+              sidebar={<this.sidebar.render items={this.listSidebarLinks()} />}
               scopeUi={this}
               badgeSlot={this.scopeBadgeSlot}
               overviewLineSlot={this.overviewSlot}
@@ -319,6 +326,21 @@ export class ScopeUI {
         },
       ],
     };
+  }
+
+  listSidebarLinks() {
+    const links = flatten(this.sidebarItemSlot.values());
+    const sorted = links.sort((a, b) => {
+      const aWeight = a?.weight || 0;
+      const bWeight = b?.weight || 0;
+      return aWeight - bWeight;
+    });
+
+    return compact(
+      sorted.map((link) => {
+        return link.component;
+      })
+    );
   }
 
   /** registers available components */
@@ -411,7 +433,7 @@ export class ScopeUI {
       drawerWidgetSlot,
       componentFiltersSlot
     );
-    scopeUi.registerDrawerComponentFilters([DeprecateFilter, EnvsFilter]);
+    scopeUi.registerDrawerComponentFilters([DeprecateFilter, EnvsFilter, ShowMainFilter(false)]);
     scopeUi.registerDrawerWidgets([
       <FilterWidget key={'workspace-filter-widget'} />,
       <TreeToggleWidget key={'workspace-tree-toggle-widget'} />,
@@ -420,11 +442,15 @@ export class ScopeUI {
     scopeUi.registerMenuItem(scopeUi.menuItems);
     scopeUi.registerMenuWidget(() => <ScopeUseBox />);
     if (config.showGallery)
-      scopeUi.registerSidebarLink(() => (
-        <MenuLinkItem exact href="/" icon="comps">
-          Gallery
-        </MenuLinkItem>
-      ));
+      scopeUi.registerSidebarLink({
+        component: function Gallery() {
+          return (
+            <MenuLinkItem exact href="/" icon="comps">
+              Overview
+            </MenuLinkItem>
+          );
+        },
+      });
     if (ui) scopeUi.registerExplicitRoutes();
 
     return scopeUi;

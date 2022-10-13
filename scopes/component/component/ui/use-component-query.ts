@@ -50,6 +50,7 @@ export const componentOverviewFields = gql`
     preview {
       includesEnvTemplate
       legacyHeader
+      isScaling
     }
     compositions {
       identifier

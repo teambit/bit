@@ -94,9 +94,7 @@ export class LaneSwitcher {
       installNpmPackages: !this.checkoutProps.skipNpmInstall,
       override: true,
       verbose: this.checkoutProps.verbose,
-      writeDists: !this.checkoutProps.ignoreDist,
       writeConfig: this.checkoutProps.writeConfig,
-      writePackageJson: !this.checkoutProps.ignorePackageJson,
     });
     await manyComponentsWriter.writeAll();
     await deleteFilesIfNeeded(componentsResults, this.consumer);
@@ -179,11 +177,6 @@ export class LaneSwitcher {
   }
 
   private async saveLanesData() {
-    const saveRemoteLaneToBitmap = () => {
-      if (this.switchProps.remoteLane) {
-        this.consumer.setCurrentLane(this.switchProps.remoteLane.toLaneId());
-      }
-    };
     const throwIfLaneExists = async () => {
       const allLanes = await this.consumer.scope.listLanes();
       if (allLanes.find((l) => l.toLaneId().isEqual(this.laneIdToSwitch))) {
@@ -205,8 +198,7 @@ export class LaneSwitcher {
       }
     }
 
-    saveRemoteLaneToBitmap();
-    this.consumer.setCurrentLane(this.laneIdToSwitch, Boolean(this.switchProps.remoteLane));
+    this.consumer.setCurrentLane(this.laneIdToSwitch, !this.laneToSwitchTo?.isNew);
     this.consumer.bitMap.syncWithLanes(this.laneToSwitchTo);
   }
 }
@@ -223,9 +215,9 @@ async function getComponentStatus(consumer: Consumer, id: BitId, switchProps: Sw
     return returnFailure(`component ${id.toString()} had never imported`, true);
   }
   const unmerged = consumer.scope.objects.unmergedComponents.getEntry(id.name);
-  if (unmerged && unmerged.resolved === false) {
+  if (unmerged) {
     return returnFailure(
-      `component ${id.toStringWithoutVersion()} has conflicts that need to be resolved first, please use bit merge --resolve/--abort`
+      `component ${id.toStringWithoutVersion()} is in during-merge state, please snap/tag it first (or use bit merge --resolve/--abort)`
     );
   }
   const version = id.version;
@@ -234,6 +226,9 @@ async function getComponentStatus(consumer: Consumer, id: BitId, switchProps: Sw
   }
   const existingBitMapId = consumer.bitMap.getBitIdIfExist(id, { ignoreVersion: true });
   const componentOnLane: Version = await modelComponent.loadVersion(version, consumer.scope.objects);
+  if (componentOnLane.isRemoved()) {
+    return returnFailure(`component has been removed`, true);
+  }
   if (!existingBitMapId) {
     if (switchProps.existingOnWorkspaceOnly) {
       return returnFailure(`component ${id.toStringWithoutVersion()} is not in the workspace`, true);

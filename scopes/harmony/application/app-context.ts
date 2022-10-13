@@ -1,23 +1,32 @@
 import { ExecutionContext } from '@teambit/envs';
 import { Component } from '@teambit/component';
 
-export interface AppContext extends ExecutionContext {
-  /**
-   * determine whether to serve the application in dev mode.
-   */
-  dev: boolean;
+export class AppContext extends ExecutionContext {
+  constructor(
+    readonly appName: string,
 
-  appName: string;
+    /**
+     * determine whether to serve the application in dev mode.
+     */
+    readonly dev: boolean,
 
-  appComponent: Component;
+    readonly appComponent: Component,
 
-  workdir: string;
+    readonly workdir: string,
 
-  /**
-   * A path for the host root dir
-   * Host root dir is the dir where we run the app from
-   * This can be used in different bundle options which run require.resolve
-   * for example when configuring webpack aliases or webpack expose loader on the peers deps
-   */
-  hostRootDir?: string;
+    execContext: ExecutionContext,
+
+    /**
+     * A path for the host root dir
+     * Host root dir is the dir where we run the app from
+     * This can be used in different bundle options which run require.resolve
+     * for example when configuring webpack aliases or webpack expose loader on the peers deps
+     */
+    readonly hostRootDir?: string
+  ) {
+    super(execContext.upper, execContext.envRuntime, execContext.components);
+  }
+  // static fromExecContext() {
+  // return new AppContext();
+  // }
 }

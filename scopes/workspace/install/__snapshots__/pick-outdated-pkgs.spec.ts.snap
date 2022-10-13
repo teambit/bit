@@ -1,0 +1,171 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`makeOutdatedPkgChoices should group component model updates of the same dependency 1`] = `
+Array [
+  Object {
+    "choices": Array [
+      Object {
+        "message": "foo [90m(runtime)[39m * ❯ [91m[1m2.0.0[22m[39m because of comp1 and 1 other components ",
+        "name": "foo",
+        "value": Object {
+          "currentRange": "1.0.0",
+          "dependentComponents": Array [
+            "comp1",
+            "comp2",
+          ],
+          "hasDifferentRanges": true,
+          "latestRange": "2.0.0",
+          "name": "foo",
+          "source": "rootPolicy",
+          "targetField": "dependencies",
+        },
+      },
+    ],
+    "message": "[36mRoot policies[39m",
+  },
+]
+`;
+
+exports[`makeOutdatedPkgChoices should group component model updates of the same dependency and display the current range when all components use the same range 1`] = `
+Array [
+  Object {
+    "choices": Array [
+      Object {
+        "message": "foo [90m(runtime)[39m ^1.2.3 ❯ [91m[1m2.0.0[22m[39m because of comp1 and 1 other components ",
+        "name": "foo",
+        "value": Object {
+          "currentRange": "^1.2.3",
+          "dependentComponents": Array [
+            "comp1",
+            "comp2",
+          ],
+          "latestRange": "2.0.0",
+          "name": "foo",
+          "source": "rootPolicy",
+          "targetField": "dependencies",
+        },
+      },
+    ],
+    "message": "[36mRoot policies[39m",
+  },
+]
+`;
+
+exports[`makeOutdatedPkgChoices should group component model updates of the same dependency and use * as current range when can't compare ranges 1`] = `
+Array [
+  Object {
+    "choices": Array [
+      Object {
+        "message": "foo [90m(runtime)[39m * ❯ [91m[1m2.0.0[22m[39m because of comp1 and 1 other components ",
+        "name": "foo",
+        "value": Object {
+          "currentRange": "*",
+          "dependentComponents": Array [
+            "comp1",
+            "comp2",
+          ],
+          "hasDifferentRanges": true,
+          "latestRange": "2.0.0",
+          "name": "foo",
+          "source": "rootPolicy",
+          "targetField": "dependencies",
+        },
+      },
+    ],
+    "message": "[36mRoot policies[39m",
+  },
+]
+`;
+
+exports[`makeOutdatedPkgChoices should render choices in correct order 1`] = `
+Array [
+  Object {
+    "choices": Array [
+      Object {
+        "message": "foo [90m(runtime)[39m 1.0.0 ❯ [91m[1m2.0.0[22m[39m   ",
+        "name": "foo",
+        "value": Object {
+          "currentRange": "1.0.0",
+          "latestRange": "2.0.0",
+          "name": "foo",
+          "source": "rootPolicy",
+          "targetField": "dependencies",
+        },
+      },
+      Object {
+        "message": "qar [90m(runtime)[39m 1.0.0 ❯ 1.[92m[1m1.0[22m[39m   ",
+        "name": "qar",
+        "value": Object {
+          "currentRange": "1.0.0",
+          "latestRange": "1.1.0",
+          "name": "qar",
+          "source": "rootPolicy",
+          "targetField": "dependencies",
+        },
+      },
+      Object {
+        "message": "zoo [90m(dev)[39m     1.0.0 ❯ 1.[92m[1m1.0[22m[39m   ",
+        "name": "zoo",
+        "value": Object {
+          "currentRange": "1.0.0",
+          "latestRange": "1.1.0",
+          "name": "zoo",
+          "source": "rootPolicy",
+          "targetField": "devDependencies",
+        },
+      },
+      Object {
+        "message": "bar [90m(peer)[39m    1.0.0 ❯ 1.[92m[1m1.0[22m[39m   ",
+        "name": "bar",
+        "value": Object {
+          "currentRange": "1.0.0",
+          "latestRange": "1.1.0",
+          "name": "bar",
+          "source": "rootPolicy",
+          "targetField": "peerDependencies",
+        },
+      },
+    ],
+    "message": "[36mRoot policies[39m",
+  },
+]
+`;
+
+exports[`makeOutdatedPkgChoices should render choices with context information 1`] = `
+Array [
+  Object {
+    "choices": Array [
+      Object {
+        "message": "foo [90m(runtime)[39m 1.0.0 ❯ [91m[1m2.0.0[22m[39m   ",
+        "name": "foo",
+        "value": Object {
+          "componentId": "comp1",
+          "currentRange": "1.0.0",
+          "latestRange": "2.0.0",
+          "name": "foo",
+          "source": "component",
+          "targetField": "dependencies",
+        },
+      },
+    ],
+    "message": "[36mcomp1 (component)[39m",
+  },
+  Object {
+    "choices": Array [
+      Object {
+        "message": "bar [90m(peer)[39m    1.0.0 ❯ 1.[92m[1m1.0[22m[39m   ",
+        "name": "bar",
+        "value": Object {
+          "currentRange": "1.0.0",
+          "latestRange": "1.1.0",
+          "name": "bar",
+          "source": "variants",
+          "targetField": "peerDependencies",
+          "variantPattern": "{comp2}",
+        },
+      },
+    ],
+    "message": "[36m{comp2} (variant)[39m",
+  },
+]
+`;

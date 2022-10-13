@@ -47,6 +47,8 @@ export class StatusCmd implements Command {
       importPendingComponents,
       autoTagPendingComponents,
       invalidComponents,
+      locallySoftRemoved,
+      remotelySoftRemoved,
       outdatedComponents,
       mergePendingComponents,
       componentsDuringMergeState,
@@ -65,6 +67,8 @@ export class StatusCmd implements Command {
       importPendingComponents: importPendingComponents.map((id) => id.toString()),
       autoTagPendingComponents: autoTagPendingComponents.map((s) => s.toString()),
       invalidComponents,
+      locallySoftRemoved: locallySoftRemoved.map((id) => id.toString()),
+      remotelySoftRemoved: remotelySoftRemoved.map((id) => id.toString()),
       outdatedComponents: outdatedComponents.map((c) => c.id.toString()),
       mergePendingComponents: mergePendingComponents.map((c) => c.id.toString()),
       componentsDuringMergeState: componentsDuringMergeState.map((id) => id.toString()),
@@ -83,6 +87,8 @@ export class StatusCmd implements Command {
       importPendingComponents,
       autoTagPendingComponents,
       invalidComponents,
+      locallySoftRemoved,
+      remotelySoftRemoved,
       outdatedComponents,
       mergePendingComponents,
       componentsDuringMergeState,
@@ -135,7 +141,7 @@ export class StatusCmd implements Command {
 
     const outdatedTitle = chalk.underline.white('pending updates');
     const outdatedDesc =
-      '(use "bit checkout [version] [component_id]" to merge changes)\n(use "bit diff [component_id] [new_version]" to compare changes)\n(use "bit log [component_id]" to list all available versions)\n';
+      '(use "bit checkout head" to merge changes)\n(use "bit diff [component_id] [new_version]" to compare changes)\n(use "bit log [component_id]" to list all available versions)\n';
     const outdatedComps = outdatedComponents
       .map((component) => {
         return `    > ${chalk.cyan(component.id.toStringWithoutVersion())} current: ${component.id.version} latest: ${
@@ -175,7 +181,7 @@ or use "bit merge [component-id] --abort" to cancel the merge operation)\n`;
       ? [compWithConflictsTitle, compWithConflictsDesc, compWithConflictsComps].join('\n')
       : '';
 
-    const newComponentDescription = '\n(use "bit tag --all [version]" to lock a version with all your changes)\n';
+    const newComponentDescription = '\n(use "bit tag [version]" to lock a version with all your changes)\n';
     const newComponentsTitle = newComponents.length
       ? chalk.underline.white('new components') + newComponentDescription
       : '';
@@ -201,6 +207,20 @@ or use "bit merge [component-id] --abort" to cancel the merge operation)\n`;
     const invalidComponentOutput = immutableUnshift(
       invalidComponents.map((c) => format(c.id, false, getInvalidComponentLabel(c.error))).sort(),
       invalidComponents.length ? chalk.underline.white(statusInvalidComponentsMsg) + invalidDesc : ''
+    ).join('\n');
+
+    const locallySoftRemovedDesc = '\n(tag/snap and export them to update the remote)\n';
+    const locallySoftRemovedOutput = immutableUnshift(
+      locallySoftRemoved.map((c) => format(c)).sort(),
+      locallySoftRemoved.length ? chalk.underline.white('soft-removed components locally') + locallySoftRemovedDesc : ''
+    ).join('\n');
+
+    const remotelySoftRemovedDesc = '\n(use "bit remove" to remove them from the workspace)\n';
+    const remotelySoftRemovedOutput = immutableUnshift(
+      remotelySoftRemoved.map((c) => format(c)).sort(),
+      remotelySoftRemoved.length
+        ? chalk.underline.white('soft-removed components on the remote') + remotelySoftRemovedDesc
+        : ''
     ).join('\n');
 
     const stagedDesc = '\n(use "bit export" to push these components to a remote scope)\n';
@@ -249,6 +269,8 @@ or use "bit merge [component-id] --abort" to cancel the merge operation)\n`;
         stagedComponentsOutput,
         autoTagPendingOutput,
         invalidComponentOutput,
+        locallySoftRemovedOutput,
+        remotelySoftRemovedOutput,
       ]
         .filter((x) => x)
         .join(chalk.underline('\n                         \n') + chalk.white('\n')) +

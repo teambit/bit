@@ -31,6 +31,7 @@ const SCOPE = gql`
         }
         preview {
           includesEnvTemplate
+          isScaling
         }
       }
     }

@@ -1,7 +1,8 @@
-import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
-import { gql, QueryResult } from '@apollo/client';
-import { LaneModel, LanesQuery } from '@teambit/lanes.ui.models';
+import { useDataQuery, DataQueryResult } from '@teambit/ui-foundation.ui.hooks.use-data-query';
+import { gql } from '@apollo/client';
+import { LanesQuery } from '@teambit/lanes.ui.models.lanes-model';
 import { componentFields, ComponentModel } from '@teambit/component';
+import { LaneId } from '@teambit/lane-id';
 
 const GET_LANE_README_COMPONENT = gql`
   query LaneReadmeComponent(
@@ -16,9 +17,11 @@ const GET_LANE_README_COMPONENT = gql`
     lanes {
       id
       list(ids: $ids) {
-        id
-        remote
-        isMerged
+        id {
+          name
+          scope
+        }
+        hash
         readmeComponent {
           ...componentFields
         }
@@ -31,12 +34,15 @@ const GET_LANE_README_COMPONENT = gql`
   ${componentFields}
 `;
 
-export function useLaneReadme(lane: LaneModel): {
+export function useLaneReadme(
+  laneId: LaneId,
+  skip?: boolean
+): {
   component: ComponentModel;
-} & Omit<QueryResult<LanesQuery>, 'data'> {
+} & Omit<DataQueryResult<LanesQuery, { ids: string[] }>, 'data'> {
   const { data, ...rest } = useDataQuery(GET_LANE_README_COMPONENT, {
-    variables: { ids: [lane.name] },
-    skip: !lane.readmeComponent,
+    variables: { ids: [laneId.name] },
+    skip,
   });
 
   const readmeComponentFromQuery = data?.lanes.list[0]?.readmeComponent;

@@ -3,14 +3,12 @@ import fs from 'fs-extra';
 import mapSeries from 'p-map-series';
 import * as path from 'path';
 import { BitId } from '../../bit-id';
-import { COMPONENT_ORIGINS, DEFAULT_DIR_DEPENDENCIES } from '../../constants';
 import GeneralError from '../../error/general-error';
 import logger from '../../logger/logger';
 import { ComponentWithDependencies } from '../../scope';
 import { isDir, isDirEmptySync } from '../../utils';
-import { composeComponentPath, composeDependencyPathForIsolated } from '../../utils/bit/compose-component-path';
+import { composeComponentPath } from '../../utils/bit/compose-component-path';
 import { PathLinuxRelative, pathNormalizeToLinux, PathOsBasedAbsolute, PathOsBasedRelative } from '../../utils/path';
-import BitMap from '../bit-map';
 import ComponentMap from '../bit-map/component-map';
 import Component from '../component/consumer-component';
 import DataToPersist from '../component/sources/data-to-persist';
@@ -22,27 +20,14 @@ interface ExternalPackageInstaller {
   install: () => Promise<any>;
 }
 
-export interface ManyComponentsWriterParams {
-  packageManager?: string;
-  consumer?: Consumer;
-  silentPackageManagerResult?: boolean;
+interface ManyComponentsWriterParams {
+  consumer: Consumer;
   componentsWithDependencies: ComponentWithDependencies[];
   writeToPath?: string;
   override?: boolean;
-  isolated?: boolean;
-  writePackageJson?: boolean;
-  saveDependenciesAsComponents?: boolean;
   writeConfig?: boolean;
-  ignoreBitDependencies?: boolean;
-  createNpmLinkFiles?: boolean;
-  writeDists?: boolean;
   installNpmPackages?: boolean;
-  installPeerDependencies?: boolean;
-  addToRootPackageJson?: boolean;
   verbose?: boolean;
-  installProdPackagesOnly?: boolean;
-  excludeRegistryPrefix?: boolean;
-  applyPackageJsonTransformers?: boolean;
   resetConfig?: boolean;
 }
 
@@ -57,60 +42,32 @@ export interface ManyComponentsWriterParams {
  * write them only once.
  */
 export default class ManyComponentsWriter {
-  consumer?: Consumer;
-  silentPackageManagerResult?: boolean;
+  consumer: Consumer;
   componentsWithDependencies: ComponentWithDependencies[];
   writeToPath?: string;
   override: boolean;
-  writePackageJson: boolean;
   writeConfig: boolean;
-  ignoreBitDependencies: boolean | undefined;
-  createNpmLinkFiles: boolean;
-  writeDists: boolean;
   installNpmPackages: boolean;
-  installPeerDependencies: boolean;
-  addToRootPackageJson: boolean;
   verbose: boolean; // prints npm results
-  excludeRegistryPrefix: boolean;
-  installProdPackagesOnly?: boolean;
   dependenciesIdsCache: Record<string, any>;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   writtenComponents: Component[];
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   writtenDependencies: Component[];
-  isolated: boolean; // a preparation for the capsule feature
-  bitMap: BitMap;
   basePath?: string;
-  packageManager?: string;
-  applyPackageJsonTransformers?: boolean;
   resetConfig?: boolean;
-  // Apply config added by extensions
 
   constructor(params: ManyComponentsWriterParams) {
     this.consumer = params.consumer;
-    this.silentPackageManagerResult = params.silentPackageManagerResult;
     this.componentsWithDependencies = params.componentsWithDependencies;
     this.writeToPath = params.writeToPath;
     this.override = this._setBooleanDefault(params.override, true);
-    this.isolated = this._setBooleanDefault(params.isolated, false);
-    this.writePackageJson = this._setBooleanDefault(params.writePackageJson, true);
     this.writeConfig = this._setBooleanDefault(params.writeConfig, false);
-    this.ignoreBitDependencies = params.ignoreBitDependencies;
-    this.createNpmLinkFiles = this._setBooleanDefault(params.createNpmLinkFiles, false);
-    this.writeDists = this._setBooleanDefault(params.writeDists, true);
-    this.installPeerDependencies = this._setBooleanDefault(params.installPeerDependencies, false);
     this.installNpmPackages = this._setBooleanDefault(params.installNpmPackages, true);
-    this.addToRootPackageJson = this._setBooleanDefault(params.addToRootPackageJson, true);
     this.verbose = this._setBooleanDefault(params.verbose, false);
-    this.installProdPackagesOnly = this._setBooleanDefault(params.installProdPackagesOnly, false);
-    this.excludeRegistryPrefix = this._setBooleanDefault(params.excludeRegistryPrefix, false);
     this.dependenciesIdsCache = {};
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    this.bitMap = this.consumer ? this.consumer.bitMap : new BitMap();
-    this.packageManager = params.packageManager;
-    this.applyPackageJsonTransformers = params.applyPackageJsonTransformers ?? true;
     this.resetConfig = params.resetConfig;
-    if (this.consumer && !this.isolated) this.basePath = this.consumer.getPath();
+    this.basePath = this.consumer.getPath();
   }
 
   static externalInstaller: ExternalPackageInstaller;
@@ -171,9 +128,7 @@ please use the '--log=error' flag for the full error.`);
 
   async _populateComponentsFilesToWrite() {
     const writeComponentsParams = this._getWriteComponentsParams();
-    const componentWriterInstances = writeComponentsParams.map((writeParams) =>
-      ComponentWriter.getInstance(writeParams)
-    );
+    const componentWriterInstances = writeComponentsParams.map((writeParams) => new ComponentWriter(writeParams));
     this.fixDirsIfNested(componentWriterInstances);
     // add componentMap entries into .bitmap before starting the process because steps like writing package-json
     // rely on .bitmap to determine whether a dependency exists and what's its origin
@@ -209,7 +164,7 @@ please use the '--log=error' flag for the full error.`);
     const parentsOfOthersCompsDirs = parentsOfOthersComps.map((c) => c.writeToPath);
 
     const incrementPath = (p: string, number: number) => `${p}_${number}`;
-    const existingRootDirs = Object.keys(this.bitMap.getAllTrackDirs());
+    const existingRootDirs = Object.keys(this.consumer.bitMap.getAllTrackDirs());
     const allPaths: PathLinuxRelative[] = [...existingRootDirs, ...parentsOfOthersCompsDirs];
     const incrementRecursively = (p: string) => {
       let num = 1;
@@ -235,26 +190,19 @@ please use the '--log=error' flag for the full error.`);
   }
   _getWriteParamsOfOneComponent(componentWithDeps: ComponentWithDependencies): ComponentWriterProps {
     // for isolated components, the component files should be on the root. see #1758
-    const componentRootDir: PathLinuxRelative = this.isolated
-      ? '.'
-      : this._getComponentRootDir(componentWithDeps.component.id);
+    const componentRootDir: PathLinuxRelative = this._getComponentRootDir(componentWithDeps.component.id);
     const getParams = () => {
       if (!this.consumer) {
-        return {
-          origin: COMPONENT_ORIGINS.IMPORTED,
-        };
+        return {};
       }
       // AUTHORED and IMPORTED components can't be saved with multiple versions, so we can ignore the version to
       // find the component in bit.map
-      const componentMap = this.bitMap.getComponentPreferNonNested(componentWithDeps.component.id);
-      const origin =
-        componentMap && componentMap.origin === COMPONENT_ORIGINS.AUTHORED
-          ? COMPONENT_ORIGINS.AUTHORED
-          : COMPONENT_ORIGINS.IMPORTED;
+      const componentMap = this.consumer.bitMap.getComponentIfExist(componentWithDeps.component.id, {
+        ignoreVersion: true,
+      });
       // $FlowFixMe consumer is set here
       this._throwErrorWhenDirectoryNotEmpty(this.consumer.toAbsolutePath(componentRootDir), componentMap);
       return {
-        origin,
         existingComponentMap: componentMap,
       };
     };
@@ -264,21 +212,13 @@ please use the '--log=error' flag for the full error.`);
       component: componentWithDeps.component,
       writeToPath: componentRootDir,
       writeConfig: this.writeConfig,
-      ignoreBitDependencies:
-        typeof this.ignoreBitDependencies === 'boolean'
-          ? this.ignoreBitDependencies
-          : componentWithDeps.component.dependenciesSavedAsComponents, // when dependencies are written as npm packages, they must be written in package.json
       ...getParams(),
     };
   }
   _getDefaultWriteParams(): Record<string, any> {
     return {
-      writePackageJson: this.writePackageJson,
-      applyPackageJsonTransformers: this.applyPackageJsonTransformers,
       consumer: this.consumer,
-      bitMap: this.bitMap,
-      isolated: this.isolated,
-      excludeRegistryPrefix: this.excludeRegistryPrefix,
+      bitMap: this.consumer.bitMap,
     };
   }
   _moveComponentsIfNeeded() {
@@ -286,7 +226,7 @@ please use the '--log=error' flag for the full error.`);
       this.componentsWithDependencies.forEach((componentWithDeps) => {
         // @ts-ignore componentWithDeps.component.componentMap is set
         const componentMap: ComponentMap = componentWithDeps.component.componentMap;
-        if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED && !componentMap.rootDir) {
+        if (!componentMap.rootDir) {
           throw new GeneralError(`unable to use "--path" flag.
 to move individual files, use bit move.
 to move all component files to a different directory, run bit remove and then bit import --path`);
@@ -313,10 +253,6 @@ to move all component files to a different directory, run bit remove and then bi
     return composeComponentPath(bitId);
   }
   _getDependencyRootDir(bitId: BitId): PathOsBasedRelative {
-    if (this.isolated) {
-      return composeDependencyPathForIsolated(bitId, DEFAULT_DIR_DEPENDENCIES);
-    }
-    // @ts-ignore consumer is set here
     return this.consumer.composeRelativeDependencyPath(bitId);
   }
   _throwErrorWhenDirectoryNotEmpty(componentDir: PathOsBasedAbsolute, componentMap: ComponentMap | null | undefined) {

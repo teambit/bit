@@ -14,7 +14,6 @@ import {
   BIT_GIT_DIR,
   BIT_HIDDEN_DIR,
   BIT_WORKSPACE_TMP_DIRNAME,
-  COMPONENT_ORIGINS,
   DEPENDENCIES_FIELDS,
   DOT_GIT_DIR,
   LATEST,
@@ -42,8 +41,7 @@ import BitMap, { CURRENT_BITMAP_SCHEMA } from './bit-map/bit-map';
 import { NextVersion } from './bit-map/component-map';
 import Component from './component';
 import { ComponentStatus, ComponentStatusLoader, ComponentStatusResult } from './component-ops/component-status-loader';
-import ComponentLoader, { ComponentLoadOptions } from './component/component-loader';
-import { InvalidComponent } from './component/consumer-component';
+import ComponentLoader, { ComponentLoadOptions, LoadManyResult } from './component/component-loader';
 import { Dependencies } from './component/dependencies';
 import PackageJsonFile from './component/package-json-file';
 import { ILegacyWorkspaceConfig } from './config';
@@ -125,6 +123,12 @@ export default class Consumer {
     return this.bitMap.getAllIdsAvailableOnLane();
   }
 
+  get bitmapIdsFromCurrentLaneIncludeRemoved(): BitIds {
+    const idsFromBitMap = this.bitMap.getAllIdsAvailableOnLane();
+    const removedIds = this.bitMap.getRemoved();
+    return BitIds.fromArray([...idsFromBitMap, ...removedIds]);
+  }
+
   get bitMapIdsFromAllLanes(): BitIds {
     return this.bitMap.getAllBitIdsFromAllLanes();
   }
@@ -170,7 +174,7 @@ export default class Consumer {
 
   setCurrentLane(laneId: LaneId, exported = true) {
     this.bitMap.setCurrentLane(laneId, exported);
-    this.scope.currentLaneId = laneId.isDefault() ? undefined : laneId;
+    this.scope.setCurrentLaneId(laneId);
   }
 
   async cleanTmpFolder() {
@@ -335,11 +339,7 @@ export default class Consumer {
     return components[0];
   }
 
-  async loadComponents(
-    ids: BitIds,
-    throwOnFailure = true,
-    loadOpts?: ComponentLoadOptions
-  ): Promise<{ components: Component[]; invalidComponents: InvalidComponent[] }> {
+  async loadComponents(ids: BitIds, throwOnFailure = true, loadOpts?: ComponentLoadOptions): Promise<LoadManyResult> {
     return this.componentLoader.loadMany(ids, throwOnFailure, loadOpts);
   }
 
@@ -377,7 +377,7 @@ export default class Consumer {
     loader.start(`import ${ids.length} components with their dependencies (if missing)`);
     const versionDependenciesArr: VersionDependencies[] = fromOriginalScope
       ? await scopeComponentsImporter.importManyFromOriginalScopes(ids)
-      : await scopeComponentsImporter.importMany({ ids, lanes: lane ? [lane] : undefined });
+      : await scopeComponentsImporter.importMany({ ids, ignoreMissingHead, lanes: lane ? [lane] : undefined });
     const componentWithDependencies = await multipleVersionDependenciesToConsumer(
       versionDependenciesArr,
       this.scope.objects
@@ -397,14 +397,6 @@ export default class Consumer {
       };
     });
     return shouldDependenciesSavedAsComponents;
-  }
-
-  /**
-   * By default, the dists paths are inside the component.
-   * If dist attribute is populated in bit.json, the paths are in consumer-root/dist-target.
-   */
-  shouldDistsBeInsideTheComponent(): boolean {
-    return true;
   }
 
   async listComponentsForAutoTagging(modifiedComponents: BitIds): Promise<Component[]> {
@@ -529,41 +521,6 @@ export default class Consumer {
     });
 
     if (componentsToTag.length) this.bitMap.markAsChanged();
-  }
-
-  async updateComponentsVersions(components: Array<ModelComponent | Component>): Promise<any> {
-    const currentLane = this.getCurrentLaneId();
-    const isAvailableOnMain = async (component: ModelComponent | Component, id: BitId): Promise<boolean> => {
-      if (currentLane.isDefault()) {
-        return true;
-      }
-      if (!id.hasVersion()) {
-        // component was unsnapped on the current lane and is back to a new component
-        return true;
-      }
-      const modelComponent =
-        component instanceof ModelComponent ? component : await this.scope.getModelComponent(component.id);
-      return modelComponent.hasHead();
-    };
-
-    const updateVersions = async (unknownComponent: ModelComponent | Component) => {
-      const id: BitId =
-        unknownComponent instanceof ModelComponent
-          ? unknownComponent.toBitIdWithLatestVersionAllowNull()
-          : unknownComponent.id;
-      this.bitMap.updateComponentId(id);
-      this.bitMap.removeConfig(id);
-      const availableOnMain = await isAvailableOnMain(unknownComponent, id);
-      if (!availableOnMain) {
-        this.bitMap.setComponentProp(id, 'onLanesOnly', true);
-      }
-      const componentMap = this.bitMap.getComponent(id);
-      componentMap.clearNextVersion();
-    };
-    // important! DO NOT use Promise.all here! otherwise, you're gonna enter into a whole world of pain.
-    // imagine tagging comp1 with auto-tagged comp2, comp1 package.json is written while comp2 is
-    // trying to get the dependencies of comp1 using its package.json.
-    return mapSeries(components, updateVersions);
   }
 
   getComponentIdFromNodeModulesPath(requirePath: string, bindingPrefix: string): BitId {
@@ -696,6 +653,11 @@ export default class Consumer {
     if (!consumerInfo) {
       return Promise.reject(new ConsumerNotFound());
     }
+    if (!consumerInfo.hasBitMap && !consumerInfo.hasScope && consumerInfo.hasConsumerConfig) {
+      throw new Error(
+        `fatal: unable to load the workspace. workspace.jsonc exists, but the .bitmap and local-scope are missing. run "bit init" to generate the missing files`
+      );
+    }
     let consumer: Consumer | undefined;
 
     if ((!consumerInfo.hasConsumerConfig || !consumerInfo.hasScope) && consumerInfo.hasBitMap) {
@@ -712,7 +674,7 @@ export default class Consumer {
       scope,
     });
     await consumer.setBitMap();
-    scope.currentLaneId = consumer.bitMap.laneId;
+    scope.setCurrentLaneId(consumer.bitMap.laneId);
     return consumer;
   }
 
@@ -806,10 +768,7 @@ export default class Consumer {
   }
 
   async getAuthoredAndImportedDependentsIdsOf(components: Component[]): Promise<BitIds> {
-    const authoredAndImportedComponents = this.bitMap.getAllIdsAvailableOnLane([
-      COMPONENT_ORIGINS.IMPORTED,
-      COMPONENT_ORIGINS.AUTHORED,
-    ]);
+    const authoredAndImportedComponents = this.bitMap.getAllIdsAvailableOnLane();
     const componentsIds = BitIds.fromArray(components.map((c) => c.id));
     return this.scope.findDirectDependentComponents(authoredAndImportedComponents, componentsIds);
   }

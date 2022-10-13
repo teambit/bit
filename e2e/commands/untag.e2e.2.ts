@@ -1,4 +1,5 @@
 import { expect } from 'chai';
+import { MissingBitMapComponent } from '../../src/consumer/bit-map/exceptions';
 import Helper from '../../src/e2e-helper/e2e-helper';
 
 describe('bit reset command', function () {
@@ -106,16 +107,10 @@ describe('bit reset command', function () {
       });
     });
     describe('when tagging non-existing component', () => {
-      let output;
-      before(() => {
-        try {
-          helper.command.untag('non-exist-scope/non-exist-comp');
-        } catch (err: any) {
-          output = err.message;
-        }
-      });
       it('should show an descriptive error', () => {
-        expect(output).to.have.string('unable to find "non-exist-scope/non-exist-comp" in the workspace');
+        const resetFunc = () => helper.command.untag('non-exist-scope/non-exist-comp');
+        const error = new MissingBitMapComponent('non-exist-scope/non-exist-comp');
+        helper.general.expectToThrow(resetFunc, error);
       });
     });
   });
@@ -289,6 +284,29 @@ describe('bit reset command', function () {
           expect(output).to.have.string('utils/is-string');
         });
       });
+    });
+  });
+  describe('components with config in the .bitmap file', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents(2);
+      helper.command.tagWithoutBuild();
+      helper.command.deprecateComponent('comp1');
+      helper.command.tagWithoutBuild();
+      const isDeprecated = helper.command.isDeprecated('comp1');
+      expect(isDeprecated).to.be.true; // intermediate step.
+      helper.command.untagAll();
+    });
+    it('bit reset should leave the config as they were before the tag', () => {
+      const isDeprecated = helper.command.isDeprecated('comp1');
+      expect(isDeprecated).to.be.true;
+    });
+    it('bit export should remove the entries form the staged-config file', () => {
+      helper.command.tagWithoutBuild('--unmodified');
+      helper.command.export();
+      const stagedConfig = helper.general.getStagedConfig();
+      expect(stagedConfig).to.have.lengthOf(0);
     });
   });
 });

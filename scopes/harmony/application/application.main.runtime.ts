@@ -1,8 +1,9 @@
 import { MainRuntime, CLIMain, CLIAspect } from '@teambit/cli';
-import { flatten, cloneDeep } from 'lodash';
+import { flatten, head } from 'lodash';
 import { AspectLoaderMain, AspectLoaderAspect } from '@teambit/aspect-loader';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
+import { BitError } from '@teambit/bit-error';
 import { BuilderAspect, BuilderMain } from '@teambit/builder';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
@@ -98,11 +99,33 @@ export class ApplicationMain {
   }
 
   /**
+   * get an application by a component id.
+   */
+  getAppById(id: ComponentID) {
+    const apps = this.listAppsById(id);
+    if (!apps) return undefined;
+    return head(apps);
+  }
+
+  /**
    * get an app.
    */
   getApp(appName: string, id?: ComponentID): Application | undefined {
     const apps = this.listAppsById(id) || this.listApps();
     return apps.find((app) => app.name === appName);
+  }
+
+  getAppByNameOrId(appNameOrId: string): Application | undefined {
+    const byName = this.getApp(appNameOrId);
+    if (byName) return byName;
+    const byId = this.appSlot.get(appNameOrId);
+    if (!byId || !byId.length) return undefined;
+    if (byId.length > 1) {
+      throw new BitError(
+        `unable to figure out what app to retrieve. the id "${appNameOrId}" has more than one app. please use the app-name`
+      );
+    }
+    return byId[0];
   }
 
   /**
@@ -126,7 +149,7 @@ export class ApplicationMain {
    * get app to throw.
    */
   getAppOrThrow(appName: string) {
-    const app = this.getApp(appName);
+    const app = this.getAppByNameOrId(appName);
     if (!app) throw new AppNotFound(appName);
     return app;
   }
@@ -147,7 +170,7 @@ export class ApplicationMain {
   async runApp(appName: string, options?: ServeAppOptions) {
     options = this.computeOptions(options);
     const app = this.getAppOrThrow(appName);
-    const context = await this.createAppContext(appName);
+    const context = await this.createAppContext(app.name);
     if (!context) throw new AppNotFound(appName);
 
     if (options.ssr) {
@@ -196,12 +219,8 @@ export class ApplicationMain {
     const context = res.results[0].data;
     if (!context) throw new AppNotFound(appName);
     const hostRootDir = this.workspace.getComponentPackagePath(component);
-    return Object.assign(cloneDeep(context), {
-      appName,
-      appComponent: component,
-      hostRootDir,
-      workdir: this.workspace.path,
-    });
+    const appContext = new AppContext(appName, context.dev, component, this.workspace.path, context, hostRootDir);
+    return appContext;
   }
 
   static runtime = MainRuntime;
@@ -255,6 +274,16 @@ export class ApplicationMain {
     builder.registerTagTasks([new DeployTask(application, builder)]);
     cli.registerGroup('apps', 'Applications');
     cli.register(new RunCmd(application, logger), new AppListCmdDeprecated(application), appCmd);
+    if (workspace) {
+      workspace.onComponentLoad(async (loadedComponent) => {
+        const app = application.getAppById(loadedComponent.id);
+        if (!app) return {};
+        return {
+          appName: app?.name,
+          type: app?.applicationType,
+        };
+      });
+    }
 
     return application;
   }

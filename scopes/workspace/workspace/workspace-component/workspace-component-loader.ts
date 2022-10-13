@@ -227,11 +227,11 @@ export class WorkspaceComponentLoader {
   }
 
   private async executeLoadSlot(component: Component, loadOpts?: ComponentLoadOptions) {
-    const entries = this.workspace.onComponentLoadSlot.toArray();
-    const promises = entries.map(async ([extension, onLoad]) => {
-      const data = await onLoad(component, loadOpts);
-      return this.upsertExtensionData(component, extension, data);
-    });
+    if (component.state._consumer.removed) {
+      // if it was soft-removed now, the component is not in the FS. loading aspects such as composition ends up with
+      // errors as they try to read component files from the filesystem.
+      return component;
+    }
 
     // Special load events which runs from the workspace but should run from the correct aspect
     // TODO: remove this once those extensions dependent on workspace
@@ -246,8 +246,22 @@ export class WorkspaceComponentLoader {
       policy: policy.serialize(),
     };
 
-    promises.push(this.upsertExtensionData(component, EnvsAspect.id, envsData));
-    promises.push(this.upsertExtensionData(component, DependencyResolverAspect.id, depResolverData));
+    // Make sure we are adding the envs / deps data first because other on load events might depend on it
+    await Promise.all([
+      this.upsertExtensionData(component, EnvsAspect.id, envsData),
+      this.upsertExtensionData(component, DependencyResolverAspect.id, depResolverData),
+    ]);
+
+    // We are updating the component state with the envs and deps data here, so in case we have other slots that depend on this data
+    // they will be able to get it, as it's very common use case that during on load someone want to access to the component env for example
+    const aspectListWithEnvsAndDeps = await this.workspace.createAspectList(component.state.config.extensions);
+    component.state.aspects = aspectListWithEnvsAndDeps;
+
+    const entries = this.workspace.onComponentLoadSlot.toArray();
+    const promises = entries.map(async ([extension, onLoad]) => {
+      const data = await onLoad(component, loadOpts);
+      return this.upsertExtensionData(component, extension, data);
+    });
 
     await Promise.all(promises);
 

@@ -285,7 +285,7 @@ describe('bit snap command', function () {
           });
           it('should add a descriptive message about the merge', () => {
             const lastVersion = helper.command.catComponent(`${helper.scopes.remote}/bar/foo@latest`);
-            expect(lastVersion.log.message).to.have.string('merge remote');
+            expect(lastVersion.log.message).to.have.string(`merge ${helper.scopes.remote}/main`);
             expect(lastVersion.log.message).to.have.string('main');
           });
           it('should update bitmap snap', () => {
@@ -371,7 +371,7 @@ describe('bit snap command', function () {
         });
         it('should add a descriptive message about the merge', () => {
           const lastVersion = helper.command.catComponent(`${helper.scopes.remote}/bar/foo@latest`);
-          expect(lastVersion.log.message).to.have.string('merge remote');
+          expect(lastVersion.log.message).to.have.string(`merge ${helper.scopes.remote}/main`);
           expect(lastVersion.log.message).to.have.string('main');
         });
         it('should update bitmap snap', () => {
@@ -415,11 +415,11 @@ describe('bit snap command', function () {
         });
         it('should block checking out the component', () => {
           const output = helper.command.checkoutVersion(firstSnap, 'bar/foo', '--manual');
-          expect(output).to.have.string('has conflicts that need to be resolved first');
+          expect(output).to.have.string('is in during-merge state');
         });
         it('should block merging a different version into current version', () => {
           const output = helper.general.runWithTryCatch(`bit merge ${firstSnap} bar/foo --manual`);
-          expect(output).to.have.string('has conflicts that need to be resolved first');
+          expect(output).to.have.string('is in during-merge state');
         });
         describe('tagging or snapping the component', () => {
           beforeEach(() => {
