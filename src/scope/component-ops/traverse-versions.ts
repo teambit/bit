@@ -10,6 +10,7 @@
  * methods here.
  */
 
+import memoize from 'memoizee';
 import pMapSeries from 'p-map-series';
 import { HeadNotFound, ParentNotFound, VersionNotFound } from '../exceptions';
 import { ModelComponent, Version } from '../models';
@@ -144,17 +145,25 @@ export async function getAllVersionHashesByVersionsObjects(
   return allVersionsInfo.map((v) => v.ref).filter((ref) => ref) as Ref[];
 }
 
-export async function getAllVersionHashes(options: {
+export type GetAllVersionHashesParams = {
   modelComponent: ModelComponent;
   repo: Repository;
   throws?: boolean; // in case objects are missing. by default, it's true
   versionObjects?: Version[];
   startFrom?: Ref | null; // by default, start from the head
   stopAt?: Ref[] | null; // by default, stop when the parents is empty
-}): Promise<Ref[]> {
+};
+
+export async function getAllVersionHashes(options: GetAllVersionHashesParams): Promise<Ref[]> {
   const allVersionsInfo = await getAllVersionsInfo(options);
   return allVersionsInfo.map((v) => v.ref).filter((ref) => ref) as Ref[];
 }
+
+export const getAllVersionHashesMemoized = memoize(getAllVersionHashes, {
+  normalizer: (args) => JSON.stringify(args[0]),
+  promise: true,
+  maxAge: 1, // 1ms is good. it's only for consecutive calls while this function is still in process. we don't want to cache the results.
+});
 
 export async function hasVersionByRef(
   modelComponent: ModelComponent,
