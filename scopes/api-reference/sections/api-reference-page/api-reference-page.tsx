@@ -41,7 +41,6 @@ export function APIRefPage({ host, rendererSlot, className }: APIRefPageProps) {
   const getIcon = (node: TreeNode) => {
     const nodeType = node.id.split('/')[0];
     const icon = apiModel?.apiByType.get(nodeType)?.[0].renderer.icon.url;
-    console.log('🚀 ~ file: api-reference-page.tsx ~ line 44 ~ getIcon ~ icon', icon);
     return icon;
   };
 
@@ -75,13 +74,7 @@ export function APIRefPage({ host, rendererSlot, className }: APIRefPageProps) {
             API Reference
           </H1>
           <Separator isPresentational className={styles.separator} />
-          {SelectedAPIComponent && (
-            <SelectedAPIComponent
-              node={selectedAPINode.api}
-              componentId={selectedAPINode.componentId}
-              apiRefModel={apiModel}
-            />
-          )}
+          {SelectedAPIComponent && <SelectedAPIComponent apiNode={selectedAPINode} apiRefModel={apiModel} />}
         </div>
       </Pane>
       <HoverSplitter className={styles.splitter}>

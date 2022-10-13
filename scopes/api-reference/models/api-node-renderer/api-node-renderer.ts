@@ -1,11 +1,9 @@
-import { ComponentID } from '@teambit/component-id';
 import { SchemaNode } from '@teambit/semantics.entities.semantic-schema';
 import { ComponentType } from 'react';
-import { APIReferenceModel } from '@teambit/api-reference.models.api-reference-model';
+import { APINode, APIReferenceModel } from '@teambit/api-reference.models.api-reference-model';
 
 export type APINodeRenderProps = {
-  node: SchemaNode;
-  componentId: ComponentID;
+  apiNode: APINode;
   apiRefModel: APIReferenceModel;
 };
 

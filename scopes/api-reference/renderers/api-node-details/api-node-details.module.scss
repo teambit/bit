@@ -1,11 +1,26 @@
-.schemaNodeDetailsContainer {
+.apiNodeDetailsContainer {
   padding: 24px 0px;
   display: flex;
   flex-direction: column;
   height: 100%;
 }
-.schemaNodeDetailsName {
+.apiNodeDetailsNameContainer {
+  display: flex;
+  flex-direction: row;
   padding-bottom: 24px;
+  align-items: center;
+}
+.apiNodeDetailsName {
+  padding-right: 8px;
+}
+.apiTypeIcon {
+  img {
+    height: 16px;
+  }
+  padding-right: 8px;
+}
+.apiTypeIconName {
+  font-size: var(--bit-p-xs);
 }
 .codeEditorContainer {
   > section {
@@ -13,29 +28,29 @@
     border-radius: 8px;
   }
 }
-.schemaNodeDetailsComment {
+.apiNodeDetailsComment {
   font-size: var(--bit-p-xs);
   padding-bottom: 24px;
 }
-.schemaNodeDetailsSignatureContainer {
+.apiNodeDetailsSignatureContainer {
   display: flex;
   flex-direction: column;
   padding-bottom: 24px;
 }
-.schemaNodeDetailsExample {
+.apiNodeDetailsExample {
   padding-bottom: 24px;
 }
-.schemaNodeDetailsExampleTitle {
+.apiNodeDetailsExampleTitle {
   padding: 16px 0px;
 }
-.schemaNodeDetailsLocation {
+.apiNodeDetailsLocation {
   padding-bottom: 24px;
 }
-.schemaNodeDetailsLocationLink {
+.apiNodeDetailsLocationLink {
   max-width: fit-content;
   font-size: var(--bit-p-xs);
 }
-.schemaNodeDetailsMembersContainer {
+.apiNodeDetailsMembersContainer {
   display: flex;
   padding-bottom: 16px;
   flex-direction: column;

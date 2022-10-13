@@ -2,7 +2,7 @@ import React, { HTMLAttributes, useState } from 'react';
 import { SchemaNode } from '@teambit/semantics.entities.semantic-schema';
 import { H5, H6 } from '@teambit/documenter.ui.heading';
 import { CodeEditor } from '@teambit/code.monaco.code-editor';
-import { Link } from '@teambit/base-react.navigation.link';
+import { Link, useLocation } from '@teambit/base-react.navigation.link';
 import { SchemaNodeSummary } from '@teambit/api-reference.renderers.schema-node-summary';
 import { SchemaNodesIndex } from '@teambit/api-reference.renderers.schema-nodes-index';
 import { defaultCodeEditorOptions } from '@teambit/api-reference.utils.code-editor-options';
@@ -11,49 +11,82 @@ import {
   groupByNodeSignatureType,
   sortSignatureType,
 } from '@teambit/api-reference.utils.group-schema-node-by-signature';
+import { APINodeRenderProps } from '@teambit/api-reference.models.api-node-renderer';
+import { useQuery } from '@teambit/ui-foundation.ui.react-router.use-query';
+
 // import { CodePage } from '@teambit/code.ui.code-tab-page';
 
-import styles from './schema-node-details.module.scss';
+import styles from './api-node-details.module.scss';
 
-export type SchemaNodeDetailsProps = {
-  name: string;
-  signature?: string;
-  example?: { content: string; path: string };
+// export type SchemaNodeDetailsProps = {
+//   name: string;
+//   signature?: string;
+//   example?: { content: string; path: string };
+//   members?: SchemaNode[];
+//   comment?: string;
+//   location: { url: string; label: string; path: string };
+//   icon: { name: string; url: string };
+// } & HTMLAttributes<HTMLDivElement>;
+
+export type APINodeDetailsProps = APINodeRenderProps & {
   members?: SchemaNode[];
-  comment?: string;
-  location: { url: string; label: string; path: string };
+  displaySignature?: string;
 } & HTMLAttributes<HTMLDivElement>;
 
-export function SchemaNodeDetails({
-  name,
-  signature,
-  example,
+export function APINodeDetails({
+  apiNode: {
+    api: {
+      name,
+      signature: defaultSignature,
+      doc,
+      location: { filePath, line },
+    },
+    renderer: {
+      icon: { url },
+    },
+  },
   members,
-  comment,
-  location,
+  displaySignature,
   children,
-}: SchemaNodeDetailsProps) {
+}: APINodeDetailsProps) {
+  const routerLocation = useLocation();
+  const query = useQuery();
+  const componentVersionFromUrl = query.get('version');
+  const pathname = routerLocation?.pathname;
+  const componentUrlWithoutVersion = pathname?.split('~')[0];
+
+  const example = (doc?.tags || []).find((tag) => tag.tagName === 'example');
+  const comment = doc?.comment;
+  const signature = displaySignature || defaultSignature;
   /**
    * @HACK
    * Make Monaco responsive
    * default line height: 18px;
    * totalHeight: (no of lines * default line height)
    */
-  const exampleHeight = (example?.content.split('\n').length || 0) * 18;
+
+  const exampleHeight = (example?.comment?.split('\n').length || 0) * 18;
   const defaultSignatureHeight = 36 + ((signature?.split('\n').length || 0) - 1) * 18;
   const [signatureHeight, setSignatureHeight] = useState<number>(defaultSignatureHeight);
-  const locationUrl = location.url;
-  const locationLabel = location.label;
+  const locationUrl = `${componentUrlWithoutVersion}~code/${filePath}${
+    componentVersionFromUrl ? `?version=${componentVersionFromUrl}` : ''
+  }`;
+
+  const locationLabel = `${filePath}:${line}`;
   const hasMembers = members && members.length > 0;
-  const filePath = location.path;
   const groupedMembers = members ? Array.from(groupByNodeSignatureType(members).entries()).sort(sortSignatureType) : [];
 
   return (
-    <div className={styles.schemaNodeDetailsContainer}>
-      <H5 className={styles.schemaNodeDetailsName}>{name}</H5>
-      {comment && <div className={styles.schemaNodeDetailsComment}>{comment}</div>}
+    <div className={styles.apiNodeDetailsContainer}>
+      <div className={styles.apiNodeDetailsNameContainer}>
+        <div className={styles.apiTypeIcon}>
+          <img src={url} />
+        </div>
+        <H5 className={styles.apiNodeDetailsName}>{name}</H5>
+      </div>
+      {comment && <div className={styles.apiNodeDetailsComment}>{comment}</div>}
       {signature && (
-        <div className={classnames(styles.schemaNodeDetailsSignatureContainer, styles.codeEditorContainer)}>
+        <div className={classnames(styles.apiNodeDetailsSignatureContainer, styles.codeEditorContainer)}>
           <CodeEditor
             options={defaultCodeEditorOptions}
             value={signature}
@@ -91,28 +124,28 @@ export function SchemaNodeDetails({
           />
         </div>
       )}
-      {example && (
-        <div className={styles.schemaNodeDetailsExample}>
-          <H6 className={styles.schemaNodeDetailsExampleTitle}>Example</H6>
+      {example && example.comment && (
+        <div className={styles.apiNodeDetailsExample}>
+          <H6 className={styles.apiNodeDetailsExampleTitle}>Example</H6>
           <div className={styles.codeEditorContainer}>
             <CodeEditor
               options={defaultCodeEditorOptions}
-              value={example.content}
-              path={example.path}
+              value={example.comment}
+              path={`${example?.location.line}:${example?.location.filePath}`}
               height={exampleHeight}
             />
           </div>
         </div>
       )}
-      <div className={styles.schemaNodeDetailsLocation}>
-        <Link external={true} href={locationUrl} className={styles.schemaNodeDetailsLocationLink}>
+      <div className={styles.apiNodeDetailsLocation}>
+        <Link external={true} href={locationUrl} className={styles.apiNodeDetailsLocationLink}>
           {locationLabel}
         </Link>
       </div>
       {hasMembers && (
         <>
           <SchemaNodesIndex title={'Index'} nodes={members} />
-          <div className={styles.schemaNodeDetailsMembersContainer}>
+          <div className={styles.apiNodeDetailsMembersContainer}>
             {groupedMembers.map(([type, groupedMembersByType]) => {
               return (
                 <div key={`${type}`} className={styles.groupedMemberContainer}>

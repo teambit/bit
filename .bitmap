@@ -995,6 +995,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/renaming"
     },
+    "renderers/api-node-details": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/api-reference/renderers/api-node-details"
+    },
     "renderers/class": {
         "scope": "",
         "version": "",
@@ -1018,12 +1024,6 @@
         "version": "",
         "mainFile": "index.ts",
         "rootDir": "scopes/api-reference/renderers/interface"
-    },
-    "renderers/schema-node-details": {
-        "scope": "",
-        "version": "",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/api-reference/renderers/schema-node-details"
     },
     "renderers/schema-node-summary": {
         "scope": "",

@@ -1,8 +1,7 @@
 import React from 'react';
 import { FunctionLikeSchema, SchemaNode, TypeRefSchema } from '@teambit/semantics.entities.semantic-schema';
 import { APINodeRenderProps, APINodeRenderer } from '@teambit/api-reference.models.api-node-renderer';
-import { SchemaNodeDetails } from '@teambit/api-reference.renderers.schema-node-details';
-import { ComponentUrl } from '@teambit/component.modules.component-url';
+import { APINodeDetails } from '@teambit/api-reference.renderers.api-node-details';
 import classnames from 'classnames';
 import { APIReferenceModel } from '@teambit/api-reference.models.api-reference-model';
 import { Link } from '@teambit/base-react.navigation.link';
@@ -18,37 +17,17 @@ export const functionRenderer: APINodeRenderer = {
   default: true,
 };
 
-function FunctionComponent({ node, componentId, apiRefModel }: APINodeRenderProps) {
-  const functionNode = node as FunctionLikeSchema;
+function FunctionComponent(props: APINodeRenderProps) {
   const {
-    name,
-    location: { filePath, line },
-    doc,
-    signature,
-    returnType,
-    params,
-    typeParams,
-  } = functionNode;
-  const comment = doc?.comment;
-  const tags = doc?.tags || [];
-  const docPath = `${doc?.location.line}:${doc?.location.filePath}`;
-
-  const example = tags.find((tag) => tag.tagName === 'example')?.comment;
-  const componentIdUrl = ComponentUrl.toUrl(componentId, { includeVersion: false });
-  const locationUrl = `${componentIdUrl}/~code/${filePath}${
-    componentId.version ? `?version=${componentId.version}` : ''
-  }`;
-  const locationLabel = `${filePath}:${line}`;
+    apiNode: { api },
+    apiRefModel,
+  } = props;
+  const functionNode = api as FunctionLikeSchema;
+  const { returnType, params, typeParams } = functionNode;
   const hasParams = params.length > 0;
 
   return (
-    <SchemaNodeDetails
-      name={name}
-      location={{ url: locationUrl, path: filePath, label: locationLabel }}
-      signature={signature}
-      example={example ? { content: example, path: docPath } : undefined}
-      comment={comment}
-    >
+    <APINodeDetails {...props}>
       {typeParams && (
         <div className={classnames(styles.container, styles.typeParams)}>
           <div className={styles.title}>Type Parameters</div>
@@ -96,7 +75,7 @@ function FunctionComponent({ node, componentId, apiRefModel }: APINodeRenderProp
         <div className={styles.title}>Returns</div>
         <div className={styles.value}>{displayReturnType(returnType, apiRefModel)}</div>
       </div>
-    </SchemaNodeDetails>
+    </APINodeDetails>
   );
 }
 
