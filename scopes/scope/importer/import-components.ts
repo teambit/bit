@@ -123,7 +123,7 @@ export default class ImportComponents {
       ? logger.debug(`importObjectsOnLane, Lane: ${lane.id()}, Ids: ${bitIds.toString()}`)
       : logger.debug(`importObjectsOnLane, the lane does not exist on the remote. importing only the main components`);
     const beforeImportVersions = await this._getCurrentVersions(bitIds);
-    const componentsWithDependencies = await this.consumer.importComponentsObjects(bitIds, {
+    const componentsWithDependencies = await this._importComponentsObjects(bitIds, {
       allHistory: this.options.allHistory,
       lane,
     });
@@ -137,7 +137,7 @@ export default class ImportComponents {
       // try to make the previous `importComponentsObjectsHarmony` import the same component once from the original
       // scope and once from the lane-scope.
       const mainIdsLatest = BitIds.fromArray(lane.toBitIds().map((m) => m.changeVersion(undefined)));
-      await this.consumer.importComponentsObjects(mainIdsLatest, {
+      await this._importComponentsObjects(mainIdsLatest, {
         allHistory: this.options.allHistory,
         ignoreMissingHead: true,
       });
