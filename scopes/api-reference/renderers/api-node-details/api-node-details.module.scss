@@ -15,11 +15,10 @@
 }
 .apiTypeIcon {
   img {
-    height: 16px;
+    height: 18px;
   }
   padding-right: 8px;
 }
-
 .codeEditorContainer {
   > section {
     overflow: hidden;
@@ -41,8 +40,22 @@
 .apiNodeDetailsExampleTitle {
   padding: 16px 0px;
 }
-.apiNodeDetailsLocation {
+.apiNodeDetailsLocationContainer {
+  display: flex;
+  flex-direction: row;
   padding-bottom: 24px;
+  align-items: center;
+}
+.apiNodeDetailsLocation {
+  display: flex;
+  width: 100%;
+}
+.apiNodeDetailsLocationIcon {
+  display: flex;
+  padding-right: 8px;
+  img {
+    height: 14px;
+  }
 }
 .apiNodeDetailsLocationLink {
   max-width: fit-content;

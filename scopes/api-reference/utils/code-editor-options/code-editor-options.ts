@@ -13,4 +13,5 @@ export const defaultCodeEditorOptions: monaco.editor.IStandaloneEditorConstructi
   wordWrap: 'on',
   automaticLayout: true,
   wrappingStrategy: 'advanced',
+  fixedOverflowWidgets: true,
 };

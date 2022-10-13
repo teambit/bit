@@ -1,4 +1,4 @@
-import React, { HTMLAttributes, useState, useRef, useEffect } from 'react';
+import React, { HTMLAttributes, useState, useRef, useEffect, useCallback } from 'react';
 import { SchemaNode } from '@teambit/semantics.entities.semantic-schema';
 import { H5, H6 } from '@teambit/documenter.ui.heading';
 import { CodeEditor } from '@teambit/code.monaco.code-editor';
@@ -13,20 +13,10 @@ import {
 } from '@teambit/api-reference.utils.group-schema-node-by-signature';
 import { APINodeRenderProps } from '@teambit/api-reference.models.api-node-renderer';
 import { useQuery } from '@teambit/ui-foundation.ui.react-router.use-query';
-
-// import { CodePage } from '@teambit/code.ui.code-tab-page';
+import { APIRefQueryParams } from '@teambit/api-reference.hooks.use-api-ref-url';
+import { useNavigate } from 'react-router-dom';
 
 import styles from './api-node-details.module.scss';
-
-// export type SchemaNodeDetailsProps = {
-//   name: string;
-//   signature?: string;
-//   example?: { content: string; path: string };
-//   members?: SchemaNode[];
-//   comment?: string;
-//   location: { url: string; label: string; path: string };
-//   icon: { name: string; url: string };
-// } & HTMLAttributes<HTMLDivElement>;
 
 export type APINodeDetailsProps = APINodeRenderProps & {
   members?: SchemaNode[];
@@ -39,7 +29,7 @@ export function APINodeDetails({
       name,
       signature: defaultSignature,
       doc,
-      location: { filePath, line },
+      location: { filePath, line, character },
     },
     renderer: {
       icon: { url },
@@ -48,10 +38,15 @@ export function APINodeDetails({
   members,
   displaySignature,
   children,
+  apiRefModel,
 }: APINodeDetailsProps) {
   const routerLocation = useLocation();
   const query = useQuery();
+  const navigate = useNavigate();
   const editorRef = useRef<any>();
+  const monacoRef = useRef<any>();
+  const routeToAPICmdId = useRef<string | null>(null);
+  const apiUrlToRoute = useRef<string | null>(null);
 
   const componentVersionFromUrl = query.get('version');
   const pathname = routerLocation?.pathname;
@@ -81,6 +76,13 @@ export function APINodeDetails({
   const hasMembers = members && members.length > 0;
   const groupedMembers = members ? Array.from(groupByNodeSignatureType(members).entries()).sort(sortSignatureType) : [];
 
+  const getAPINodeUrl = useCallback((queryParams: APIRefQueryParams) => {
+    const queryObj = Object.fromEntries(query.entries());
+    const updatedObj = { ...queryObj, ...queryParams };
+    const queryString = new URLSearchParams(updatedObj).toString();
+    return `${routerLocation?.pathname || '/'}?${queryString}`;
+  }, []);
+
   useEffect(() => {
     if (isMounted) {
       const container = editorRef.current.getDomNode();
@@ -89,6 +91,9 @@ export function APINodeDetails({
           const contentHeight = Math.min(1000, editorRef.current.getContentHeight() + 18);
           setSignatureHeight(contentHeight);
         }
+      });
+      routeToAPICmdId.current = editorRef.current.addCommand(0, () => {
+        apiUrlToRoute.current && navigate(apiUrlToRoute.current);
       });
     }
   }, [isMounted]);
@@ -114,27 +119,31 @@ export function APINodeDetails({
             options={defaultCodeEditorOptions}
             value={signature}
             height={signatureHeight}
-            path={filePath}
+            path={`${line}:${character}:${filePath}`}
             className={styles.editor}
-            // beforeMount={(monaco) => {
-            //   monaco.languages.registerHoverProvider('typescript', {
-            //     provideHover: (model, position) => {
-            //       const word = model.getWordAtPosition(position);
-            //       console.log('🚀 ~ file: schema-node-details.tsx ~ line 67 ~ word', word);
-            //       return {
-            //         contents: [
-            //           {
-            //             isTrusted: true,
-            //             supportHtml: true,
-            //             value:
-            //               "<div style=''></div>"
-            //             ,
-            //           },
-            //         ],
-            //       };
-            //     },
-            //   });
-            // }}
+            beforeMount={(monaco) => {
+              monacoRef.current = monaco;
+              monacoRef.current.languages.registerHoverProvider('typescript', {
+                provideHover: (model, position) => {
+                  const word = model.getWordAtPosition(position);
+                  const wordApiNode = word && apiRefModel.apiByName.get(word.word);
+                  const wordApiUrl =
+                    wordApiNode &&
+                    getAPINodeUrl({ selectedAPI: `${wordApiNode.renderer.nodeType}/${wordApiNode.api.name}` });
+                  apiUrlToRoute.current = wordApiUrl;
+                  return {
+                    contents: wordApiUrl
+                      ? [
+                          {
+                            value: `[View ${word.word} API](command:${routeToAPICmdId.current})`,
+                            isTrusted: true,
+                          },
+                        ]
+                      : [],
+                  };
+                },
+              });
+            }}
             onMount={(editor) => {
               editorRef.current = editor;
               setIsMounted(true);
@@ -155,10 +164,15 @@ export function APINodeDetails({
           </div>
         </div>
       )}
-      <div className={styles.apiNodeDetailsLocation}>
-        <Link external={true} href={locationUrl} className={styles.apiNodeDetailsLocationLink}>
-          {locationLabel}
-        </Link>
+      <div className={styles.apiNodeDetailsLocationContainer}>
+        <div className={styles.apiNodeDetailsLocationIcon}>
+          <img src="https://static.bit.dev/design-system-assets/Icons/external-link.svg"></img>
+        </div>
+        <div className={styles.apiNodeDetailsLocation}>
+          <Link external={true} href={locationUrl} className={styles.apiNodeDetailsLocationLink}>
+            {locationLabel}
+          </Link>
+        </div>
       </div>
       {hasMembers && (
         <>
