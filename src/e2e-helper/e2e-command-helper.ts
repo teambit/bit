@@ -540,6 +540,12 @@ export default class CommandHelper {
     return status.modifiedComponents.includes(fullIdWithVersion);
   }
 
+  statusComponentIsStaged(id: string): boolean {
+    const status = this.statusJson();
+    const stagedIds = status.stagedComponents.map((s) => s.id);
+    return stagedIds.includes(id);
+  }
+
   statusComponentHasIssues(id: string): boolean {
     const status = this.statusJson();
     return status.componentsWithIssues.includes(`${this.scopes.remote}/${id}`);

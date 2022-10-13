@@ -28,8 +28,8 @@ export type StatusResult = {
   importPendingComponents: ComponentID[];
   autoTagPendingComponents: ComponentID[];
   invalidComponents: { id: ComponentID; error: Error }[];
-  locallySoftRemoved: BitId[];
-  remotelySoftRemoved: BitId[];
+  locallySoftRemoved: ComponentID[];
+  remotelySoftRemoved: ComponentID[];
   outdatedComponents: { id: ComponentID; latestVersion: string }[];
   mergePendingComponents: DivergeDataPerId[];
   componentsDuringMergeState: ComponentID[];
@@ -136,8 +136,8 @@ export class StatusMain {
       invalidComponents: await convertObjToComponentIdsAndSort(
         invalidComponents.map((c) => ({ id: c.id, error: c.error }))
       ),
-      locallySoftRemoved,
-      remotelySoftRemoved: remotelySoftRemoved.map((c) => c.id),
+      locallySoftRemoved: await convertBitIdToComponentIdsAndSort(locallySoftRemoved),
+      remotelySoftRemoved: await convertBitIdToComponentIdsAndSort(remotelySoftRemoved.map((c) => c.id)),
       outdatedComponents: await convertObjToComponentIdsAndSort(
         outdatedComponents.map((c) => ({
           id: c.id, // @ts-ignore
