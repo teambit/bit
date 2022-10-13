@@ -358,6 +358,7 @@ export default class ScopeComponentsImporter {
   async fetchWithDeps(ids: BitIds, allowExternal: boolean, onlyIfBuild = false): Promise<VersionDependencies[]> {
     logger.debugAndAddBreadCrumb('fetchWithDeps', `ids: {ids}`, { ids: ids.toString() });
     if (!allowExternal) this.throwIfExternalFound(ids);
+    logger.debug(`fetchWithDeps, is locked? ${this.fetchWithDepsMutex.isLocked()}`);
     // avoid race condition of getting multiple "fetch" requests, which later translates into
     // multiple getExternalMany calls, which saves objects and write refs files at the same time
     return this.fetchWithDepsMutex.runExclusive(async () => {

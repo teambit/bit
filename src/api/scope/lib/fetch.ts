@@ -56,7 +56,10 @@ export default async function fetch(
       const bitIds: BitIds = BitIds.deserialize(ids);
       const { withoutDependencies, includeArtifacts, allowExternal, onlyIfBuilt } = fetchOptions;
       const collectParents = !withoutDependencies;
-      const scopeComponentsImporter = ScopeComponentsImporter.getInstance(scope);
+
+      // important! don't create a new instance of ScopeComponentImporter. Otherwise, the Mutex will be created
+      // every request, and won't do anything.
+      const scopeComponentsImporter = scope.scopeImporter;
 
       const laneId = fetchOptions.laneId ? LaneId.parse(fetchOptions.laneId) : null;
       const lane = laneId ? await scope.loadLane(laneId) : null;

@@ -20,6 +20,7 @@ export async function getDivergeData({
   repo,
   modelComponent,
   remoteHead,
+  otherRemoteHeads, // when remoteHead empty, instead of returning all local snaps, stop if found one of these snaps
   checkedOutLocalHead, // in case locally on the workspace it has a different version
   throws = true, // otherwise, save the error instance in the `DivergeData` object,
   versionObjects, // relevant for remote-scope where during export the data is not in the repo yet.
@@ -27,6 +28,7 @@ export async function getDivergeData({
   repo: Repository;
   modelComponent: ModelComponent;
   remoteHead: Ref | null;
+  otherRemoteHeads?: Ref[];
   checkedOutLocalHead?: Ref | null;
   throws?: boolean;
   versionObjects?: Version[];
@@ -35,7 +37,13 @@ export async function getDivergeData({
   const localHead = checkedOutLocalHead || (isOnLane ? modelComponent.laneHeadLocal : modelComponent.getHead());
   if (!remoteHead) {
     if (localHead) {
-      const allLocalHashes = await getAllVersionHashes({ modelComponent, repo, throws: false, versionObjects });
+      const allLocalHashes = await getAllVersionHashes({
+        modelComponent,
+        repo,
+        throws: false,
+        versionObjects,
+        stopAt: otherRemoteHeads,
+      });
       return new DivergeData(allLocalHashes);
     }
     return new DivergeData();
@@ -51,10 +59,16 @@ export async function getDivergeData({
     return new DivergeData([], allRemoteHashes);
   }
 
+  const getVersionObj = async (ref: Ref): Promise<Version | undefined> => {
+    return versionObjects?.find((v) => v.hash().isEqual(ref)) || ((await repo.load(ref)) as Version | undefined);
+  };
+
   if (remoteHead.isEqual(localHead)) {
     // no diverge they're the same
     return new DivergeData();
   }
+
+  const existOnRemote = (ref: Ref) => [remoteHead, ...(otherRemoteHeads || [])].find((r) => r.isEqual(ref));
 
   const snapsOnLocal: Ref[] = [];
   const snapsOnRemote: Ref[] = [];
@@ -64,7 +78,7 @@ export async function getDivergeData({
   let hasMultipleParents = false;
   let error: Error | undefined;
   const addParentsRecursively = async (version: Version, snaps: Ref[], isLocal: boolean) => {
-    if (isLocal && version.hash().isEqual(remoteHead)) {
+    if (isLocal && existOnRemote(version.hash())) {
       remoteHeadExistsLocally = true;
       return;
     }
@@ -90,7 +104,7 @@ export async function getDivergeData({
     if (version.parents.length > 1) hasMultipleParents = true;
     await Promise.all(
       version.parents.map(async (parent) => {
-        const parentVersion = (await parent.load(repo)) as Version;
+        const parentVersion = await getVersionObj(parent);
         if (parentVersion) {
           await addParentsRecursively(parentVersion, snaps, isLocal);
         } else {
@@ -114,8 +128,7 @@ bit import ${modelComponent.id()} --objects`);
   if (remoteHeadExistsLocally && !hasMultipleParents) {
     return new DivergeData(snapsOnLocal, [], remoteHead, error);
   }
-  const remoteVersion =
-    ((await repo.load(remoteHead)) as Version | undefined) || versionObjects?.find((v) => v.hash().isEqual(remoteHead));
+  const remoteVersion = await getVersionObj(remoteHead);
   if (!remoteVersion) {
     const err = new VersionNotFoundOnFS(remoteHead.toString(), modelComponent.id());
     if (throws) throw err;

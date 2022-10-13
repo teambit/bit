@@ -15,3 +15,8 @@ dsffsdf is not in the npm registry, or you have no permission to fetch it.
 
 An authorization header was used: Bearer df96[hidden]`);
 });
+
+test('a regular error object is reported', () => {
+  const bitError = pnpmErrorToBitError(new Error('some error') as any);
+  expect(bitError.report()).toEqual('some error');
+});

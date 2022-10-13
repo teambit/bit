@@ -353,9 +353,10 @@ export class MergingMain {
     if (isComponentModified) {
       return returnUnmerged(`component is modified, please snap/tag it first`);
     }
-    const laneHeadIsDifferentThanCheckedOut =
-      localLane && existingBitMapId?.version && modelComponent.laneHeadLocal?.toString() !== existingBitMapId?.version;
-    const localHead = laneHeadIsDifferentThanCheckedOut ? Ref.from(existingBitMapId.version) : null;
+    // @todo: is it needed?
+    // const laneHeadIsDifferentThanCheckedOut =
+    //   localLane && existingBitMapId?.version && modelComponent.laneHeadLocal?.toString() !== existingBitMapId?.version;
+    // const localHead = laneHeadIsDifferentThanCheckedOut ? Ref.from(existingBitMapId.version) : null;
 
     if (!otherLaneHead) {
       throw new Error(`merging: unable finding a hash for the version ${version} of ${id.toString()}`);
@@ -364,7 +365,7 @@ export class MergingMain {
       repo,
       modelComponent,
       remoteHead: otherLaneHead,
-      checkedOutLocalHead: localHead,
+      // checkedOutLocalHead: localHead,
       throws: false,
     });
     if (divergeData.err) {
@@ -381,7 +382,7 @@ export class MergingMain {
           if (!divergeDataFromMain.err) return true;
           return !(divergeDataFromMain.err instanceof NoCommonSnap);
         };
-        const hasResolvedLocally = await hasResolvedFromMain(localHead);
+        const hasResolvedLocally = await hasResolvedFromMain(modelComponent.getHeadRegardlessOfLane() as Ref);
         const hasResolvedRemotely = await hasResolvedFromMain(otherLaneHead);
         if (!hasResolvedLocally && !hasResolvedRemotely) {
           return returnUnmerged(

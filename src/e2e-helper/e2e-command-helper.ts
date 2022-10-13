@@ -288,6 +288,13 @@ export default class CommandHelper {
   removeRemoteLane(laneName = 'dev', options = '') {
     return this.runCmd(`bit lane remove ${this.scopes.remote}/${laneName} ${options} --remote --silent`);
   }
+  writeTsconfig(flags = '') {
+    return this.runCmd(`bit write-tsconfig ${flags} --silent`);
+  }
+  writeTsconfigDryRun(flags = '') {
+    const results = this.runCmd(`bit write-tsconfig  --dry-run ${flags} --json`);
+    return JSON.parse(results);
+  }
   showOneLane(name: string) {
     return this.runCmd(`bit lane show ${name}`);
   }

@@ -618,7 +618,7 @@ describe('bit lane command', function () {
       // another bug was that it had all versions included exported.
       const status = helper.command.status('--verbose');
       const hash = helper.command.getHeadOfLane('dev', 'comp1');
-      expect(status).to.have.string(`versions: 0.0.1, ${hash} ...`);
+      expect(status).to.have.string(`versions: ${hash} ...`);
     });
     describe('export the lane, then switch back to main', () => {
       let afterSwitchingLocal: string;
@@ -1240,8 +1240,7 @@ describe('bit lane command', function () {
       });
     });
   });
-  // @todo: fix!
-  describe.skip('head on the lane is not in the filesystem', () => {
+  describe('head on the lane is not in the filesystem', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       helper.bitJsonc.setupDefault();
@@ -1312,6 +1311,23 @@ describe('bit lane command', function () {
     });
     // previously, it was throwing "HeadNotFound"/"ComponentNotFound" when there were many objects in the cache
     it('should not throw', () => {
+      expect(() => helper.command.export()).not.to.throw();
+    });
+  });
+  describe('export multiple snaps on lane when the remote has it already', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents(1, false);
+      helper.command.createLane();
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      // the second snap is mandatory, don't skip it.
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+    });
+    // previously, it was throwing ParentNotFound
+    it('bit export should not throw ParentNotFound', () => {
       expect(() => helper.command.export()).not.to.throw();
     });
   });

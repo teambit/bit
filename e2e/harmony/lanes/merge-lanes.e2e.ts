@@ -75,7 +75,7 @@ describe('merge lanes', function () {
         mergeOutput = helper.command.mergeLane(`${helper.scopes.remote}/dev`, `--workspace --verbose`);
       });
       it('should indicate that the components were not merge because they are not in the workspace', () => {
-        expect(mergeOutput).to.have.string('the merge has been canceled on the following component(s)');
+        expect(mergeOutput).to.have.string('the merge has been skipped on the following component(s)');
         expect(mergeOutput).to.have.string('not in the workspace');
       });
       it('bitmap should not save any component', () => {
@@ -339,10 +339,9 @@ describe('merge lanes', function () {
         status = helper.command.statusJson();
         afterMergeToMain = helper.scopeHelper.cloneLocalScope();
       });
-      it('bit status should show two staging versions, the main-head and merge-snap', () => {
+      it('bit status should show one staging versions, the merge-snap', () => {
         const stagedVersions = status.stagedComponents.find((c) => c.id === `${helper.scopes.remote}/comp2`);
-        expect(stagedVersions.versions).to.have.lengthOf(2);
-        expect(stagedVersions.versions).to.include(comp2HeadOnMain);
+        expect(stagedVersions.versions).to.have.lengthOf(1);
         expect(stagedVersions.versions).to.include(helper.command.getHeadOfLane('dev', 'comp2'));
       });
       it('bit status should not show the components in pending-merge', () => {
@@ -786,6 +785,23 @@ describe('merge lanes', function () {
       helper.scopeHelper.addRemoteScope();
       helper.scopeHelper.addRemoteScope(scope2Path);
       expect(() => helper.command.import(`${scope2Name}/comp1`)).to.not.throw();
+    });
+  });
+  describe('merge lane with comp-1 to an empty lane with .bitmap has the component', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents(1, false);
+      helper.command.createLane();
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      helper.command.switchLocalLane('main');
+      helper.command.createLane('dev2');
+      helper.command.mergeLane('dev');
+    });
+    it('should merge', () => {
+      const list = helper.command.listParsed();
+      expect(list).to.have.lengthOf(1);
     });
   });
 });

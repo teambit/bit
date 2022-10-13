@@ -23,7 +23,7 @@ export type ComponentProps = {
   host: string;
   onComponentChange?: (activeComponent?: ComponentModel) => void;
   useComponent?: UseComponentType;
-  useComponentFilters?: (componentId?: ComponentID) => Filters;
+  useComponentFilters?: () => Filters;
   path?: string;
   componentIdStr?: string | (() => string | undefined);
 };
@@ -49,9 +49,9 @@ export function Component({
   const idFromLocation = useIdFromLocation();
   const _componentIdStr = getComponentIdStr(componentIdStr);
   const componentId = _componentIdStr ? ComponentID.fromString(_componentIdStr) : undefined;
-  const resolvedComponentIdStr = path || componentId?.toStringWithoutVersion() || idFromLocation;
+  const resolvedComponentIdStr = path || idFromLocation;
   const useComponentOptions = {
-    logFilters: useComponentFilters?.(componentId),
+    logFilters: useComponentFilters?.(),
     customUseComponent: useComponent,
   };
 
