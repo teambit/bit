@@ -101,22 +101,22 @@ export default class SourceRepository {
     }
     if (!bitId.hasVersion()) return component;
 
-    const returnComponent = (version: Version): ModelComponent | undefined => {
-      if (
-        versionShouldBeBuilt &&
-        !bitId.isLocal(this.scope.name) &&
-        !component.hasLocalVersion(bitId.version as string) && // e.g. during tag
-        (version.buildStatus === BuildStatus.Pending || version.buildStatus === BuildStatus.Failed)
-      ) {
-        const bitIdStr = bitId.toString();
-        const fromCache = this.cacheUnBuiltIds.get(bitIdStr);
-        if (fromCache) {
-          return fromCache;
-        }
-        this.cacheUnBuiltIds.set(bitIdStr, component);
-        return undefined;
+    const returnComponent = async (version: Version): Promise<ModelComponent | undefined> => {
+      if (bitId.isLocal(this.scope.name) || version.buildStatus === BuildStatus.Succeed || !versionShouldBeBuilt) {
+        return component;
       }
-      return component;
+      await component.setDivergeData(this.scope.objects);
+      if (component.hasLocalVersion(bitId.version as string)) {
+        // e.g. during tag
+        return component;
+      }
+      const bitIdStr = bitId.toString();
+      const fromCache = this.cacheUnBuiltIds.get(bitIdStr);
+      if (fromCache) {
+        return fromCache;
+      }
+      this.cacheUnBuiltIds.set(bitIdStr, component);
+      return undefined;
     };
 
     // @ts-ignore
