@@ -1,4 +1,4 @@
-import React, { HTMLAttributes, useState } from 'react';
+import React, { HTMLAttributes, useState, useRef, useEffect } from 'react';
 import {
   ConstructorSchema,
   ParameterSchema,
@@ -14,17 +14,40 @@ import styles from './schema-node-summary.module.scss';
 export type SchemaNodeSummaryProps = { node: SchemaNode } & HTMLAttributes<HTMLDivElement>;
 
 export function SchemaNodeSummary({ node }: SchemaNodeSummaryProps) {
+  const editorRef = useRef<any>();
+
   const { signature, name, __schema, doc, location } = node;
   const displayName = name || (__schema === ConstructorSchema.name && 'constructor') || undefined;
   const signatureLength = signature?.split('\n').length || 0;
   const defaultSignatureHeight = 36 + (signatureLength - 1) * 18;
+
   const [signatureHeight, setSignatureHeight] = useState<number>(defaultSignatureHeight);
+  const [isMounted, setIsMounted] = useState(false);
+
   // Remove node type from the signature. i.e (method), (getter), (setter), (property)
   const displaySignature = __schema === ConstructorSchema.name && 'constructor' ? signature : signature?.split(') ')[1];
   // Monaco requires a unique path that ends with the file extension
-  const path = `${location.line}:${location.filePath}`;
+  const path = `${location.line}:${location.character}:${location.filePath}`;
   const tags = getTags(node);
   const showDocs = doc?.comment || tags.length > 0;
+
+  useEffect(() => {
+    if (isMounted) {
+      const container = editorRef.current.getDomNode();
+      editorRef.current.onDidContentSizeChange(() => {
+        if (container) {
+          const contentHeight = Math.min(1000, editorRef.current.getContentHeight() + 18);
+          setSignatureHeight(contentHeight);
+        }
+      });
+    }
+  }, [isMounted]);
+
+  useEffect(() => {
+    return () => {
+      setIsMounted(false);
+    };
+  }, []);
 
   return (
     <div className={styles.schemaNodeSummary}>
@@ -55,13 +78,8 @@ export function SchemaNodeSummary({ node }: SchemaNodeSummaryProps) {
             height={signatureHeight}
             path={path}
             onMount={(editor) => {
-              const container = editor.getDomNode();
-              editor.onDidContentSizeChange(() => {
-                if (container) {
-                  const contentHeight = Math.min(1000, editor.getContentHeight() + 18);
-                  setSignatureHeight(contentHeight);
-                }
-              });
+              editorRef.current = editor;
+              setIsMounted(true);
             }}
           />
         </div>

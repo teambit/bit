@@ -1,4 +1,4 @@
-import React, { HTMLAttributes, useState } from 'react';
+import React, { HTMLAttributes, useState, useRef, useEffect } from 'react';
 import { SchemaNode } from '@teambit/semantics.entities.semantic-schema';
 import { H5, H6 } from '@teambit/documenter.ui.heading';
 import { CodeEditor } from '@teambit/code.monaco.code-editor';
@@ -51,6 +51,8 @@ export function APINodeDetails({
 }: APINodeDetailsProps) {
   const routerLocation = useLocation();
   const query = useQuery();
+  const editorRef = useRef<any>();
+
   const componentVersionFromUrl = query.get('version');
   const pathname = routerLocation?.pathname;
   const componentUrlWithoutVersion = pathname?.split('~')[0];
@@ -67,7 +69,10 @@ export function APINodeDetails({
 
   const exampleHeight = (example?.comment?.split('\n').length || 0) * 18;
   const defaultSignatureHeight = 36 + ((signature?.split('\n').length || 0) - 1) * 18;
+
   const [signatureHeight, setSignatureHeight] = useState<number>(defaultSignatureHeight);
+  const [isMounted, setIsMounted] = useState(false);
+
   const locationUrl = `${componentUrlWithoutVersion}~code/${filePath}${
     componentVersionFromUrl ? `?version=${componentVersionFromUrl}` : ''
   }`;
@@ -75,6 +80,24 @@ export function APINodeDetails({
   const locationLabel = `${filePath}:${line}`;
   const hasMembers = members && members.length > 0;
   const groupedMembers = members ? Array.from(groupByNodeSignatureType(members).entries()).sort(sortSignatureType) : [];
+
+  useEffect(() => {
+    if (isMounted) {
+      const container = editorRef.current.getDomNode();
+      editorRef.current.onDidContentSizeChange(() => {
+        if (container) {
+          const contentHeight = Math.min(1000, editorRef.current.getContentHeight() + 18);
+          setSignatureHeight(contentHeight);
+        }
+      });
+    }
+  }, [isMounted]);
+
+  useEffect(() => {
+    return () => {
+      setIsMounted(false);
+    };
+  }, []);
 
   return (
     <div className={styles.apiNodeDetailsContainer}>
@@ -113,13 +136,8 @@ export function APINodeDetails({
             //   });
             // }}
             onMount={(editor) => {
-              const container = editor.getDomNode();
-              editor.onDidContentSizeChange(() => {
-                if (container) {
-                  const contentHeight = Math.min(1000, editor.getContentHeight() + 18);
-                  setSignatureHeight(contentHeight);
-                }
-              });
+              editorRef.current = editor;
+              setIsMounted(true);
             }}
           />
         </div>
