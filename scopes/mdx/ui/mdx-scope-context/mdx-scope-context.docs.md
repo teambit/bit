@@ -1,6 +1,6 @@
 ---
 description: Provides access to a Bit-flavoured MDX import references through React context.
-labels: ["mdx", "bit-flavoured", "import", "references"]
+labels: ['mdx', 'bit-flavoured', 'import', 'references']
 ---
 
 The mdx-scope-context makes all modules used (and imported) by the MDX file, available to the live playground.

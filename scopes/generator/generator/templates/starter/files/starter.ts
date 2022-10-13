@@ -29,4 +29,3 @@ export const starter: Starter = {
 export default starter;
 `;
 }
-

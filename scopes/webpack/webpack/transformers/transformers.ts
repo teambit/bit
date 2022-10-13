@@ -22,8 +22,8 @@ export function generateAddAliasesFromPeersTransformer(peers: string[], logger: 
       // so they can't be resolved.
       // in such cases do not add them to the aliases.
       // We already log that cases in the resolvePeerToDirOrFile function.
-      if (resolved){
-        acc[peerName] = resolved
+      if (resolved) {
+        acc[peerName] = resolved;
       }
       return acc;
     }, {});

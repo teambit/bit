@@ -374,7 +374,7 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
       return {
         prefix: previewDef.prefix,
         paths: compiledPaths,
-        metadata
+        metadata,
       };
     });
 
