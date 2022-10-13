@@ -6,7 +6,6 @@ import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 import { CompositionsMain } from './compositions.main.runtime';
 import { CompositionBrowserMetadataObject } from './composition';
 
-
 export class CompositionPreviewDefinition implements PreviewDefinition {
   readonly prefix = 'compositions';
   readonly includePeers = true;
@@ -29,7 +28,7 @@ export class CompositionPreviewDefinition implements PreviewDefinition {
   async getMetadata(component: Component): Promise<CompositionBrowserMetadataObject> {
     const compositions = this.compositions
       .getCompositions(component)
-      .map((composition) => ({displayName: composition.displayName, identifier: composition.identifier}));
+      .map((composition) => ({ displayName: composition.displayName, identifier: composition.identifier }));
     return {
       compositions,
     };
