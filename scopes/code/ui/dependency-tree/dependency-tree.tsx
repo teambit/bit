@@ -5,9 +5,10 @@ import { DependencyDrawer } from './dependency-drawer/dependency-drawer'; // TOD
 
 export function DependencyTree({ dependenciesArray }: { dependenciesArray?: DependencyType[] }) {
   if (!dependenciesArray) return null;
-  const { dependencies, devDependencies, peerDependencies } = useMemo(() => buildDependencyTree(dependenciesArray), [
-    dependenciesArray,
-  ]);
+  const { dependencies, devDependencies, peerDependencies } = useMemo(
+    () => buildDependencyTree(dependenciesArray),
+    [dependenciesArray]
+  );
 
   const [isDependenciesOpen, toggleDependencies] = useState(true);
   const [isDevDependenciesOpen, toggleDevDependencies] = useState(true);

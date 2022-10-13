@@ -57,11 +57,11 @@ export class ComponentDependency extends BaseDependency {
 
   // eslint-disable-next-line @typescript-eslint/no-shadow
   serialize<SerializedComponentDependency>(): SerializedComponentDependency {
-    const serialized = (Object.assign({}, super.serialize(), {
+    const serialized = Object.assign({}, super.serialize(), {
       componentId: this.componentId._legacy.serialize(),
       isExtension: this.isExtension,
       packageName: this.packageName,
-    }) as unknown) as SerializedComponentDependency;
+    }) as unknown as SerializedComponentDependency;
     return serialized;
   }
 
