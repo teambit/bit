@@ -130,6 +130,7 @@ export class StatusMain {
           versions: c.getLocalTagsOrHashes(),
         }))
       ),
+      // @ts-ignore - not clear why, it fails the "bit build" without it
       componentsWithIssues: await convertObjToComponentIdsAndSort(
         componentsWithIssues.map((c) => ({ id: c.id, issues: c.issues }))
       ), // no need to sort, we don't print it as is
