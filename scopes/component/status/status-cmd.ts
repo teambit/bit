@@ -102,9 +102,8 @@ export class StatusCmd implements Command {
     let showTroubleshootingLink = false;
 
     function format(id: ComponentID, showIssues = false, message?: string, localVersions?: string[]): string {
-      const bitId = id;
-      const idWithIssues = componentsWithIssues.find((c) => c.id.isEqual(bitId));
-      const softTagged = softTaggedComponents.find((softTaggedId) => softTaggedId.isEqual(bitId));
+      const idWithIssues = componentsWithIssues.find((c) => c.id.isEqual(id));
+      const softTagged = softTaggedComponents.find((softTaggedId) => softTaggedId.isEqual(id));
 
       const messageStatusText = message || 'ok';
       const messageStatusTextWithSoftTag = softTagged ? `${messageStatusText} (soft-tagged)` : messageStatusText;

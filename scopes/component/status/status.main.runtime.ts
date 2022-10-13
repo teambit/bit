@@ -106,7 +106,9 @@ export class StatusMain {
     const convertBitIdToComponentIdsAndSort = async (ids: BitId[]) =>
       ComponentID.sortIds(await this.workspace.resolveMultipleComponentIds(ids));
 
-    const convertObjToComponentIdsAndSort = async <T extends { id: BitId }>(objectsWithId: T[]) => {
+    const convertObjToComponentIdsAndSort = async <T>(
+      objectsWithId: Array<T & { id: BitId }>
+    ): Promise<Array<T & { id: ComponentID }>> => {
       const results = await Promise.all(
         objectsWithId.map(async (obj) => {
           return {
