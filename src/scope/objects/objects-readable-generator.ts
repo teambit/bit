@@ -4,7 +4,7 @@ import { Ref, Repository } from '.';
 import { Scope } from '..';
 import ShowDoctorError from '../../error/show-doctor-error';
 import logger from '../../logger/logger';
-import { getAllVersionHashes } from '../component-ops/traverse-versions';
+import { getAllVersionHashesMemoized } from '../component-ops/traverse-versions';
 import { CollectObjectsOpts } from '../component-version';
 import { HashMismatch } from '../exceptions';
 import { Lane, ModelComponent, Version } from '../models';
@@ -109,22 +109,18 @@ export class ObjectsReadableGenerator {
         type: component.getType(),
       };
       if (collectParents) {
-        const parentsObjects: ObjectItem[] = [];
-        const allParentsHashes = await getAllVersionHashes({
+        const allParentsHashes = await getAllVersionHashesMemoized({
           modelComponent: component,
           repo: this.repo,
           startFrom: version.hash(),
           stopAt: collectParentsUntil ? [collectParentsUntil] : undefined,
         });
         const missingParentsHashes = allParentsHashes.filter((h) => !h.isEqual(version.hash()));
-        await Promise.all(
-          missingParentsHashes.map(async (parentHash) => {
-            const parentVersion = (await parentHash.load(this.repo)) as Version;
-            const parentsObj = await collectVersionObjects(parentVersion);
-            parentsObjects.push(...parentsObj);
-          })
-        );
-        this.pushManyObjects(parentsObjects);
+        await pMapSeries(missingParentsHashes, async (parentHash) => {
+          const parentVersion = (await parentHash.load(this.repo)) as Version;
+          const parentsObj = await collectVersionObjects(parentVersion);
+          this.pushManyObjects(parentsObj);
+        });
       }
       const versionObjects = await collectVersionObjects(version);
       this.pushManyObjects(versionObjects);
