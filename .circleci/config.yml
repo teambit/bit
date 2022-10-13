@@ -665,6 +665,12 @@ jobs:
       - run: cd bit && bbit install
       - run: cd bit && npm run link-bit-legacy
       - run: cd bit && bbit compile
+
+      # the following 3 commands should help debugging a random error on Circle: "sh: 1: babel: not found"
+      - run: cd bit && ls -l node_modules/@babel
+      - run: cd bit && ls -l node_modules/@babel/cli/bin
+      - run: cd bit && ls -l node_modules/.bin
+
       - run:
           name: 'Build bit source code'
           command: 'cd bit && npm run build'
