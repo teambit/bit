@@ -85,7 +85,7 @@ export function APINodeDetails({
     if (isMounted) {
       const container = editorRef.current.getDomNode();
       editorRef.current.onDidContentSizeChange(() => {
-        if (container) {
+        if (container && isMounted) {
           const contentHeight = Math.min(1000, editorRef.current.getContentHeight() + 18);
           setSignatureHeight(contentHeight);
         }
