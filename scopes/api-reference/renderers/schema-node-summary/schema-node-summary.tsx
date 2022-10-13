@@ -11,7 +11,9 @@ import classnames from 'classnames';
 
 import styles from './schema-node-summary.module.scss';
 
-export type SchemaNodeSummaryProps = { node: SchemaNode } & HTMLAttributes<HTMLDivElement>;
+export type SchemaNodeSummaryProps = {
+  node: SchemaNode;
+} & HTMLAttributes<HTMLDivElement>;
 
 export function SchemaNodeSummary({ node }: SchemaNodeSummaryProps) {
   const editorRef = useRef<any>();
@@ -25,7 +27,13 @@ export function SchemaNodeSummary({ node }: SchemaNodeSummaryProps) {
   const [isMounted, setIsMounted] = useState(false);
 
   // Remove node type from the signature. i.e (method), (getter), (setter), (property)
-  const displaySignature = __schema === ConstructorSchema.name && 'constructor' ? signature : signature?.split(') ')[1];
+  let displaySignature: string | undefined;
+  if (!signature) displaySignature = undefined;
+  else if (__schema === ConstructorSchema.name && 'constructor') displaySignature = signature;
+  else {
+    const displaySignatureIndex = signature.indexOf(') ') + 1;
+    displaySignature = signature?.slice(displaySignatureIndex).trim();
+  }
   // Monaco requires a unique path that ends with the file extension
   const path = `${location.line}:${location.character}:${location.filePath}`;
   const tags = getTags(node);
@@ -57,8 +65,12 @@ export function SchemaNodeSummary({ node }: SchemaNodeSummaryProps) {
         </div>
       )}
       {showDocs && (
-        <div className={classnames(styles.schemaNodeDoc, !doc?.comment && styles.tagsOnly)}>
-          {doc?.comment && <div className={styles.docComment}>{doc?.comment}</div>}
+        <div className={classnames(styles.schemaNodeDoc)}>
+          {
+            <div className={classnames(styles.docComment, !doc?.comment && styles.placeholderComment)}>
+              {doc?.comment || 'add comment using @jsdoc'}
+            </div>
+          }
           {tags?.length > 0 && (
             <div className={styles.docTags}>
               {tags.map((tag) => (

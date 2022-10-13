@@ -15,8 +15,9 @@
   justify-content: space-between;
   padding-bottom: 16px;
 }
-.tagsOnly {
-  flex-direction: row-reverse;
+.placeholderComment {
+  font-style: italic;
+  color: var(--bit-text-color-light, #707279);
 }
 .docComment {
   display: flex;

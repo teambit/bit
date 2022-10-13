@@ -64,7 +64,6 @@ export function APIRefPage({ host, rendererSlot, className }: APIRefPageProps) {
   if (!apiModel) {
     return <>missing schema</>;
   }
-  // console.log("🚀 ~ file: api-reference-page.tsx ~ line 42 ~ APIRefPage ~ selectedAPINode", selectedAPINode)
 
   return (
     <SplitPane layout={sidebarOpenness} size="85%" className={classNames(className, styles.apiRefPageContainer)}>

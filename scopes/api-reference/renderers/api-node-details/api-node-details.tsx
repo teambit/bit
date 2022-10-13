@@ -47,6 +47,7 @@ export function APINodeDetails({
   const monacoRef = useRef<any>();
   const routeToAPICmdId = useRef<string | null>(null);
   const apiUrlToRoute = useRef<string | null>(null);
+  const hoverProviderDispose = useRef<any>();
 
   const componentVersionFromUrl = query.get('version');
   const pathname = routerLocation?.pathname;
@@ -83,6 +84,25 @@ export function APINodeDetails({
     return `${routerLocation?.pathname || '/'}?${queryString}`;
   }, []);
 
+  const hoverProvider = useCallback((model, position) => {
+    const word = model.getWordAtPosition(position);
+    const wordApiNode = word && apiRefModel.apiByName.get(word.word);
+    const wordApiUrl =
+      wordApiNode && getAPINodeUrl({ selectedAPI: `${wordApiNode.renderer.nodeType}/${wordApiNode.api.name}` });
+    apiUrlToRoute.current = wordApiUrl;
+    const contents = wordApiUrl
+      ? [
+          {
+            value: `[View ${word.word} API](command:${routeToAPICmdId.current})`,
+            isTrusted: true,
+          },
+        ]
+      : [];
+    return {
+      contents,
+    };
+  }, []);
+
   useEffect(() => {
     if (isMounted) {
       const container = editorRef.current.getDomNode();
@@ -100,6 +120,7 @@ export function APINodeDetails({
 
   useEffect(() => {
     return () => {
+      hoverProviderDispose.current?.dispose();
       setIsMounted(false);
     };
   }, []);
@@ -123,25 +144,8 @@ export function APINodeDetails({
             className={styles.editor}
             beforeMount={(monaco) => {
               monacoRef.current = monaco;
-              monacoRef.current.languages.registerHoverProvider('typescript', {
-                provideHover: (model, position) => {
-                  const word = model.getWordAtPosition(position);
-                  const wordApiNode = word && apiRefModel.apiByName.get(word.word);
-                  const wordApiUrl =
-                    wordApiNode &&
-                    getAPINodeUrl({ selectedAPI: `${wordApiNode.renderer.nodeType}/${wordApiNode.api.name}` });
-                  apiUrlToRoute.current = wordApiUrl;
-                  return {
-                    contents: wordApiUrl
-                      ? [
-                          {
-                            value: `[View ${word.word} API](command:${routeToAPICmdId.current})`,
-                            isTrusted: true,
-                          },
-                        ]
-                      : [],
-                  };
-                },
+              hoverProviderDispose.current = monacoRef.current.languages.registerHoverProvider('typescript', {
+                provideHover: hoverProvider,
               });
             }}
             onMount={(editor) => {
