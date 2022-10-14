@@ -718,12 +718,14 @@
     "scopes/api-reference/api-reference": {
       "teambit.envs/envs": {
         "env": "teambit.harmony/node"
-      }
+      },
+      "teambit.harmony/node": {}
     },
     "{scopes/api-reference/**}": {
       "teambit.envs/envs": {
         "env": "teambit.react/react"
-      }
+      },
+      "teambit.react/react": {}
     },
     "scopes/harmony/testing/load-aspect": {
       "teambit.component/issues": {
