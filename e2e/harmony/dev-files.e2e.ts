@@ -21,7 +21,7 @@ describe('dev files', function () {
     const ENV_NAME = 'dev-files-env';
     const COMP_NAME = 'custom-dev-files';
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.bitJsonc.setPackageManager();
       envName = helper.env.setCustomEnv(ENV_NAME);

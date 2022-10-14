@@ -16,7 +16,7 @@ describe('aspect', function () {
   });
   describe('run bit aspect set then generate component.json', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(1);
       helper.command.setAspect('comp1', Extensions.forking, { configKey: 'configVal' });
@@ -42,7 +42,7 @@ describe('aspect', function () {
   });
   describe('aspect loading failures', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.command.create('aspect', 'my-aspect');
       helper.bitJsonc.addKeyVal('my-scope/my-aspect', {});
     });
@@ -64,7 +64,7 @@ describe('aspect', function () {
   describe('bit aspect update command', () => {
     let output: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.command.create('aspect', 'my-aspect');
       helper.command.compile();
@@ -76,7 +76,7 @@ describe('aspect', function () {
       helper.command.tagWithoutBuild('my-aspect', '--unmodified --skip-auto-tag');
       helper.command.export();
 
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
       helper.command.importComponent('comp1');
 

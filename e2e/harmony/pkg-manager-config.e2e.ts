@@ -18,7 +18,7 @@ chai.use(require('chai-string'));
     let npmCiRegistry: NpmCiRegistry;
     before(async () => {
       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.bitJsonc.setPackageManager();
       npmCiRegistry = new NpmCiRegistry(helper);
@@ -31,13 +31,13 @@ chai.use(require('chai-string'));
       helper.command.tagAllComponents();
       helper.command.export();
 
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
       helper.bitJsonc.setupDefault();
     });
     describe('using Yarn', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScopeHarmony({
+        helper.scopeHelper.reInitLocalScope({
           yarnRCConfig: {
             packageExtensions: {
               'lodash.get@*': {
@@ -63,7 +63,7 @@ chai.use(require('chai-string'));
     });
     describe('using pnpm', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScopeHarmony({
+        helper.scopeHelper.reInitLocalScope({
           npmrcConfig: {
             'hoist-pattern[]': 'foo',
           },

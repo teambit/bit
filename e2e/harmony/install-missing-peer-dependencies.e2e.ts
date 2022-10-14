@@ -21,7 +21,7 @@ chai.use(require('chai-fs'));
   });
   describe(`using pnpm as a package manager`, () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScopeHarmony({ registry: npmCiRegistry.ciRegistry });
+      helper.scopeHelper.reInitLocalScope({ registry: npmCiRegistry.ciRegistry });
       helper.extensions.bitJsonc.addKeyValToDependencyResolver('packageManager', `teambit.dependencies/pnpm`);
       helper.command.install('has-foo100-peer@1.0.0 has-foo101-peer@1.0.0 abc@1.0.0');
       helper.command.install('--add-missing-peers');
@@ -53,7 +53,7 @@ chai.use(require('chai-fs'));
   });
   describe('installing new packages and missing peer dependencies at the same time', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScopeHarmony({ registry: npmCiRegistry.ciRegistry });
+      helper.scopeHelper.reInitLocalScope({ registry: npmCiRegistry.ciRegistry });
       helper.extensions.bitJsonc.addKeyValToDependencyResolver('packageManager', `teambit.dependencies/pnpm`);
       helper.command.install('abc@1.0.0 --add-missing-peers');
     });
@@ -79,7 +79,7 @@ chai.use(require('chai-fs'));
   });
   describe(`using Yarn as a package manager`, () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScopeHarmony({ registry: npmCiRegistry.ciRegistry });
+      helper.scopeHelper.reInitLocalScope({ registry: npmCiRegistry.ciRegistry });
       helper.extensions.bitJsonc.addKeyValToDependencyResolver('packageManager', `teambit.dependencies/yarn`);
       helper.command.install('has-foo100-peer@1.0.0 has-foo101-peer@1.0.0 abc@1.0.0');
       helper.command.install('--add-missing-peers');

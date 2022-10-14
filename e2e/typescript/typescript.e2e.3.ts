@@ -20,7 +20,7 @@ describe('typescript', function () {
       this.skip;
     } else {
       before(() => {
-        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.scopeHelper.reInitLocalScope();
         const listFixture = `import {Item} from '../item/item';
 /**
  * Awesome List React component.
@@ -52,7 +52,7 @@ export class List extends React.Component {
   });
   describe('auto recognizing @types packages', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.npm.initNpm();
       helper.fs.outputFile(
         path.join('bar', 'index.ts'),

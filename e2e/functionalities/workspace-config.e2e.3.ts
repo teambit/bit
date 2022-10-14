@@ -21,7 +21,7 @@ describe('workspace config', function () {
     // on harmony, when both components in the workspace, it doesn't really override.
     describe.skip('changing component dependencies versions', () => {
       before(() => {
-        helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+        helper.scopeHelper.setNewLocalAndRemoteScopes();
         helper.bitJsonc.setupDefault();
         helper.fs.createFile('foo', 'foo.js');
         helper.fs.createFile('bar', 'bar.js', "require('../foo/foo');");
@@ -63,7 +63,7 @@ describe('workspace config', function () {
     describe('ignoring components dependencies', () => {
       let scopeAfterAdding;
       before(() => {
-        helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+        helper.scopeHelper.setNewLocalAndRemoteScopes();
         helper.bitJsonc.setupDefault();
         helper.fs.createFile('foo1', 'foo1.js');
         helper.fs.createFile('foo2', 'foo2.js');
@@ -116,7 +116,7 @@ describe('workspace config', function () {
     describe('ignoring packages dependencies', () => {
       describe('ignoring a missing package', () => {
         before(() => {
-          helper.scopeHelper.reInitLocalScopeHarmony();
+          helper.scopeHelper.reInitLocalScope();
           helper.fs.createFile('bar', 'bar.js', "require('non-exist-package')");
           helper.command.addComponent('bar');
           helper.command.compile();
@@ -139,7 +139,7 @@ describe('workspace config', function () {
       describe('ignoring an existing package', () => {
         let showBar;
         before(() => {
-          helper.scopeHelper.reInitLocalScopeHarmony();
+          helper.scopeHelper.reInitLocalScope();
           helper.npm.addFakeNpmPackage('existing-package');
           helper.npm.addFakeNpmPackage('another-existing-package');
           helper.fs.createFile('bar', 'bar.js', "require('existing-package'); require('another-existing-package');");
@@ -166,7 +166,7 @@ describe('workspace config', function () {
       describe('ignoring an existing devDependency package', () => {
         let showBar;
         before(() => {
-          helper.scopeHelper.reInitLocalScopeHarmony();
+          helper.scopeHelper.reInitLocalScope();
           helper.npm.addFakeNpmPackage('existing-package');
           helper.npm.addFakeNpmPackage('another-existing-package');
           helper.fs.createFile('bar', 'bar.js');
@@ -206,7 +206,7 @@ describe('workspace config', function () {
         before(() => {
           // keep in mind that the 'chai' dependency is a regular package dependency, which
           // also saved as a peerDependency
-          helper.scopeHelper.reInitLocalScopeHarmony();
+          helper.scopeHelper.reInitLocalScope();
           helper.fixtures.createComponentBarFoo("import chai from 'chai';");
           helper.npm.addFakeNpmPackage('chai', '2.2.0');
           helper.packageJson.create({ peerDependencies: { chai: '>= 2.1.2 < 5' } });
@@ -238,7 +238,7 @@ describe('workspace config', function () {
     });
     describe('ignoring dependencies components entire flow', () => {
       before(() => {
-        helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+        helper.scopeHelper.setNewLocalAndRemoteScopes();
         helper.bitJsonc.setupDefault();
         helper.fs.createFile('foo1', 'foo1.js');
         helper.fs.createFile('foo2', 'foo2.js');
@@ -282,7 +282,7 @@ describe('workspace config', function () {
         describe('importing the component', () => {
           before(() => {
             helper.command.export();
-            helper.scopeHelper.reInitLocalScopeHarmony();
+            helper.scopeHelper.reInitLocalScope();
             helper.scopeHelper.addRemoteScope();
             helper.command.importComponent('*');
           });
@@ -319,7 +319,7 @@ describe('workspace config', function () {
       describe('moving a package from dependencies to peerDependencies', () => {
         let showBar;
         before(() => {
-          helper.scopeHelper.reInitLocalScopeHarmony();
+          helper.scopeHelper.reInitLocalScope();
           helper.fixtures.createComponentBarFoo("import chai from 'chai';");
           helper.npm.addFakeNpmPackage('chai', '2.2.0');
           helper.packageJson.create({ dependencies: { chai: '2.2.0' } });
@@ -356,7 +356,7 @@ describe('workspace config', function () {
       describe('adding a package with version that does not exist in package.json', () => {
         let showBar;
         before(() => {
-          helper.scopeHelper.reInitLocalScopeHarmony();
+          helper.scopeHelper.reInitLocalScope();
           helper.fixtures.createComponentBarFoo("import chai from 'chai';");
           helper.fixtures.addComponentBarFooAsDir();
           const policy = {
@@ -379,7 +379,7 @@ describe('workspace config', function () {
       });
       describe('adding a package without version that does not exist in package.json', () => {
         before(() => {
-          helper.scopeHelper.reInitLocalScopeHarmony();
+          helper.scopeHelper.reInitLocalScope();
           helper.fixtures.createComponentBarFoo("import chai from 'chai';");
           helper.fixtures.addComponentBarFooAsDir();
           const policy = {
@@ -406,7 +406,7 @@ describe('workspace config', function () {
       describe.skip('adding a component with a version', () => {
         let showBar;
         before(() => {
-          helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+          helper.scopeHelper.setNewLocalAndRemoteScopes();
           helper.bitJsonc.setupDefault();
           helper.fs.createFile('', 'bar.js');
           helper.fs.createFile('', 'foo.js');
@@ -457,7 +457,7 @@ describe('workspace config', function () {
             before(() => {
               helper.command.export();
               originalAuthorScope = helper.scopeHelper.cloneLocalScope();
-              helper.scopeHelper.reInitLocalScopeHarmony();
+              helper.scopeHelper.reInitLocalScope();
               helper.scopeHelper.addRemoteScope();
               helper.command.importComponent('bar');
               afterImport = helper.scopeHelper.cloneLocalScope();
@@ -511,7 +511,7 @@ describe('workspace config', function () {
                 before(() => {
                   helper.command.tagAllWithoutBuild();
                   helper.command.export();
-                  helper.scopeHelper.reInitLocalScopeHarmony();
+                  helper.scopeHelper.reInitLocalScope();
                   helper.scopeHelper.getClonedLocalScope(originalAuthorScope);
                   helper.command.importComponent('bar');
                 });
@@ -540,7 +540,7 @@ describe('workspace config', function () {
       describe.skip('adding a component without a version', () => {
         let showBar;
         before(() => {
-          helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+          helper.scopeHelper.setNewLocalAndRemoteScopes();
           helper.bitJsonc.setupDefault();
           helper.fs.createFile('', 'bar.js');
           helper.fs.createFile('', 'foo.js');
@@ -586,7 +586,7 @@ describe('workspace config', function () {
         describe('importing the component', () => {
           before(() => {
             helper.command.export();
-            helper.scopeHelper.reInitLocalScopeHarmony();
+            helper.scopeHelper.reInitLocalScope();
             helper.scopeHelper.addRemoteScope();
             helper.command.importComponent('bar');
           });

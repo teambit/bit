@@ -15,7 +15,7 @@ describe('merge functionality', function () {
   });
   describe('re-exporting/importing an existing version', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
@@ -27,7 +27,7 @@ describe('merge functionality', function () {
 
       helper.command.export();
 
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
       helper.command.importComponent('bar/foo');
       helper.command.importComponent('bar2/foo2');
@@ -59,7 +59,7 @@ describe('merge functionality', function () {
   describe('importing a component with --merge flag', () => {
     let beforeImport;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(2);
       helper.fs.outputFile('comp2/is-type.js', fixtures.isType);
@@ -68,7 +68,7 @@ describe('merge functionality', function () {
       helper.command.tagAllWithoutBuild();
       helper.command.export();
 
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
       beforeImport = helper.scopeHelper.cloneLocalScope();
       helper.command.importComponent('comp2@0.0.1', '--path components/comp2');

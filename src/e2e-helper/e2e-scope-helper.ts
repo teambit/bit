@@ -66,15 +66,10 @@ export default class ScopeHelper {
   usePackageManager(packageManager: string) {
     this.packageManager = packageManager;
   }
-
-  reInitLocalScope() {
-    this.cleanLocalScope();
-    this.initLocalScope();
-  }
-  reInitLocalScopeHarmony(opts?: { registry?: string; initGit?: boolean; yarnRCConfig?: any; npmrcConfig?: any }) {
+  reInitLocalScope(opts?: { registry?: string; initGit?: boolean; yarnRCConfig?: any; npmrcConfig?: any }) {
     this.cleanLocalScope();
     if (opts?.initGit) this.command.runCmd('git init');
-    this.initHarmonyWorkspace();
+    this.initWorkspace();
     if (opts?.registry) {
       this._writeNpmrc({
         registry: opts.registry,
@@ -101,17 +96,9 @@ export default class ScopeHelper {
     this.fs.writeFile('.npmrc', ini.stringify(config));
   }
 
-  newLocalScopeHarmony(templateName: string, flags?: string) {
+  newLocalScope(templateName: string, flags?: string) {
     fs.removeSync(this.scopes.localPath);
     this.command.new(templateName, flags, this.scopes.local, this.scopes.e2eDir);
-  }
-
-  initHarmonyWorkspace() {
-    this.command.runCmd('bit init');
-  }
-
-  initLocalScope() {
-    return this.initWorkspace();
   }
 
   initWorkspace(workspacePath?: string) {
@@ -136,13 +123,8 @@ export default class ScopeHelper {
       .join(' ');
     return this.command.runCmd(`bit init ${value}`);
   }
-  setNewLocalAndRemoteScopes() {
-    this.reInitLocalScope();
-    this.reInitRemoteScope();
-    this.addRemoteScope();
-  }
-  setNewLocalAndRemoteScopesHarmony(opts?: { yarnRCConfig?: any }) {
-    this.reInitLocalScopeHarmony(opts);
+  setNewLocalAndRemoteScopes(opts?: { yarnRCConfig?: any }) {
+    this.reInitLocalScope(opts);
     this.reInitRemoteScope();
     this.addRemoteScope();
   }
@@ -153,7 +135,7 @@ export default class ScopeHelper {
     }
     this.scopes.setLocalScope();
     fs.ensureDirSync(this.scopes.localPath);
-    return this.initLocalScope();
+    return this.initWorkspace();
   }
   addRemoteScope(
     remoteScopePath: string = this.scopes.remotePath,
@@ -192,8 +174,7 @@ export default class ScopeHelper {
     return this.removeRemoteScope(this.scopes.env, isGlobal);
   }
 
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  reInitRemoteScope(scopePath?: string = this.scopes.remotePath) {
+  reInitRemoteScope(scopePath = this.scopes.remotePath) {
     fs.emptyDirSync(scopePath);
     return this.command.runCmd('bit init --bare', scopePath);
   }
@@ -281,11 +262,6 @@ export default class ScopeHelper {
 
   getClonedRemoteScope(clonedScopePath: string) {
     return this.getClonedScope(clonedScopePath, this.scopes.remotePath);
-  }
-
-  switchFromLegacyToHarmony() {
-    fs.removeSync(path.join(this.scopes.localPath, 'bit.json'));
-    this.initHarmonyWorkspace();
   }
 
   linkCoreAspects() {

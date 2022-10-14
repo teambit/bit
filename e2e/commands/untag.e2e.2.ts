@@ -14,7 +14,7 @@ describe('bit reset command', function () {
   describe('untag single component', () => {
     let localScope;
     before(() => {
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.bitJsonc.setupDefault();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
@@ -117,7 +117,7 @@ describe('bit reset command', function () {
   describe('untag multiple components (--all flag)', () => {
     let localScope;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
@@ -166,7 +166,7 @@ describe('bit reset command', function () {
   describe('components with dependencies', () => {
     let localScope;
     before(() => {
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.bitJsonc.setupDefault();
       helper.fixtures.createComponentIsType();
       helper.fixtures.addComponentUtilsIsTypeAsDir();
@@ -254,7 +254,7 @@ describe('bit reset command', function () {
         helper.scopeHelper.reInitRemoteScope();
         helper.scopeHelper.addRemoteScope();
         helper.command.export();
-        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.scopeHelper.reInitLocalScope();
         helper.scopeHelper.addRemoteScope();
         helper.command.importComponent('utils/is-string --path components/utils/is-string');
         scopeAfterImport = helper.scopeHelper.cloneLocalScope();
@@ -288,7 +288,7 @@ describe('bit reset command', function () {
   });
   describe('components with config in the .bitmap file', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(2);
       helper.command.tagWithoutBuild();

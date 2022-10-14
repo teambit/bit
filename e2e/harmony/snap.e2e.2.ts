@@ -21,7 +21,7 @@ describe('bit snap command', function () {
   describe('snap before tag', () => {
     let output;
     before(() => {
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
       output = helper.command.snapComponent('bar/foo');
@@ -77,7 +77,7 @@ describe('bit snap command', function () {
   });
   describe('components with dependencies', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents();
       helper.command.snapAllComponents();
@@ -110,7 +110,7 @@ describe('bit snap command', function () {
   describe('untag a snap', () => {
     let firstSnap: string;
     before(() => {
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
       helper.command.snapComponent('bar/foo');
@@ -138,7 +138,7 @@ describe('bit snap command', function () {
     let firstSnap: string;
     let secondSnap: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
@@ -543,7 +543,7 @@ describe('bit snap command', function () {
       let secondSnap: string;
       let localScope;
       before(() => {
-        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.scopeHelper.reInitLocalScope();
         helper.fixtures.createComponentBarFoo();
         helper.fixtures.addComponentBarFooAsDir();
         helper.command.snapAllComponents();
@@ -608,7 +608,7 @@ describe('bit snap command', function () {
     let snapOutput;
     let isTypeHead;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents();
       helper.command.snapAllComponents();
@@ -652,7 +652,7 @@ describe('bit snap command', function () {
       before(() => {
         helper.command.export();
 
-        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.scopeHelper.reInitLocalScope();
         helper.scopeHelper.addRemoteScope();
         // @todo: change to "helper.command.importComponent('comp1');". once the nested are working
         helper.command.importComponent('*');
@@ -671,14 +671,14 @@ describe('bit snap command', function () {
   });
   describe('tag after tag', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllComponents();
       helper.fixtures.populateComponents(1, undefined, ' v2');
       helper.command.tagAllComponents();
       helper.command.export();
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
       helper.command.importComponent('comp1');
     });
@@ -691,7 +691,7 @@ describe('bit snap command', function () {
   describe('merge tags', () => {
     let authorFirstTag;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllWithoutBuild();

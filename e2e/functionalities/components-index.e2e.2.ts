@@ -16,7 +16,7 @@ describe('scope components index mechanism', function () {
   });
   describe('after tagging a component', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
@@ -68,7 +68,7 @@ describe('scope components index mechanism', function () {
       });
       describe('importing the component to a new scope', () => {
         before(() => {
-          helper.scopeHelper.reInitLocalScopeHarmony();
+          helper.scopeHelper.reInitLocalScope();
           helper.scopeHelper.addRemoteScope();
           helper.command.importComponent('bar/foo');
         });
@@ -94,7 +94,7 @@ describe('scope components index mechanism', function () {
   });
   describe('changing the index.json file manually to be empty', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
       helper.fixtures.tagComponentBarFoo();
@@ -130,7 +130,7 @@ describe('scope components index mechanism', function () {
   describe('outdated / out-of-sync index.json', () => {
     describe('adding a non-exist component to index.json', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.scopeHelper.reInitLocalScope();
         helper.fixtures.createComponentBarFoo();
         helper.fixtures.addComponentBarFooAsDir();
         helper.command.tagAllWithoutBuild();

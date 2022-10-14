@@ -16,12 +16,12 @@ describe('bit scope command', function () {
   describe('bit scope fork', () => {
     let output: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(3);
       helper.command.tagAllWithoutBuild();
       helper.command.export();
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
       output = helper.command.forkScope(helper.scopes.remote, 'org.scope');
     });

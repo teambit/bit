@@ -16,7 +16,7 @@ describe('export functionality on Harmony', function () {
   });
   describe('export, re-init the remote scope, tag and export', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllWithoutBuild();
@@ -36,7 +36,7 @@ describe('export functionality on Harmony', function () {
   });
   describe('export, tag and export', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllWithoutBuild();
@@ -59,7 +59,7 @@ describe('export functionality on Harmony', function () {
     let anotherRemote;
     let exportOutput;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       const { scopeName, scopePath } = helper.scopeHelper.getNewBareScope();
       anotherRemote = scopeName;
@@ -137,7 +137,7 @@ describe('export functionality on Harmony', function () {
       let beforeExportClone;
       before(() => {
         // simulate the same workspace the persist failed.
-        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.scopeHelper.reInitLocalScope();
         helper.scopeHelper.addRemoteScope(remote1Path);
         helper.scopeHelper.addRemoteScope(remote2Path);
 
@@ -196,7 +196,7 @@ describe('export functionality on Harmony', function () {
     });
     describe('from different workspace, by running bit resume-export <export-id> <remotes...>', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.scopeHelper.reInitLocalScope();
         helper.scopeHelper.getClonedScope(remote1Clone, remote1Path);
         helper.scopeHelper.getClonedScope(remote2Clone, remote2Path);
         helper.scopeHelper.addRemoteScope(remote1Path);

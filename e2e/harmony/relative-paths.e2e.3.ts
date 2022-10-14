@@ -17,7 +17,7 @@ describe('relative paths flow (components requiring each other by relative paths
   describe('adding directories and using relative-paths', () => {
     let appOutput;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.addDefaultScope(helper.scopes.remote);
       appOutput = helper.fixtures.populateComponents(2, false);
     });
@@ -66,7 +66,7 @@ describe('relative paths flow (components requiring each other by relative paths
         describe('should work after importing to another workspace', () => {
           before(() => {
             helper.command.export();
-            helper.scopeHelper.reInitLocalScopeHarmony();
+            helper.scopeHelper.reInitLocalScope();
             helper.scopeHelper.addRemoteScope();
             helper.command.importComponent('*');
           });

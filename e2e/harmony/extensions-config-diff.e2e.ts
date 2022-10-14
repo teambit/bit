@@ -14,7 +14,7 @@ describe('extensions config diff', function () {
   let beforeEject: string;
   before(() => {
     helper = new Helper();
-    helper.scopeHelper.reInitLocalScopeHarmony();
+    helper.scopeHelper.reInitLocalScope();
     helper.bitJsonc.disablePreview();
     helper.fixtures.populateExtensions(4);
     helper.fixtures.createComponentBarFoo();
