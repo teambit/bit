@@ -8,7 +8,6 @@ import R from 'ramda';
 import { compact, flatten } from 'lodash';
 import loader from '../../cli/loader';
 import { Scope } from '..';
-import { Analytics } from '../../analytics/analytics';
 import { BitId, BitIds } from '../../bit-id';
 import ConsumerComponent from '../../consumer/component';
 import GeneralError from '../../error/general-error';
@@ -119,8 +118,28 @@ export default class ScopeComponentsImporter {
     // we don't care about the VersionDeps returned here as it may belong to the dependencies
     await this.getExternalMany(uniqExternals, remotes, throwForDependencyNotFound, lanes, throwForSeederNotFound);
     const versionDeps = await this.bitIdsToVersionDeps(idsToImport, throwForSeederNotFound);
+    await this.temporarilyFetchHeadsIfNeeded(ids, versionDeps, lanes);
     logger.debug('importMany, completed!');
     return versionDeps;
+  }
+
+  /**
+   * a temporarily fetch of the heads until the all remotes have a version >= 0.0.881
+   * in this version 0.0.881, the remote-fetch already send the head in the first fetch.
+   *
+   * this is only needed when users ask importMany for ids with specific version.
+   * otherwise, the fetch sends the head even with the old version.
+   */
+  private async temporarilyFetchHeadsIfNeeded(ids: BitIds, versionDeps: VersionDependencies[], lanes?: Lane[]) {
+    if (ids.every((id) => !id.hasVersion())) return; // importMany already got the head.
+    const idsWithHead = versionDeps.map((v) => {
+      const head = v.component.component.head;
+      if (!head) return null;
+      if (head.isEqual(v.version.hash())) return null;
+      return v.component.id.changeVersion(head.toString());
+    });
+    const bitIds = BitIds.fromArray(compact(idsWithHead));
+    await this.importWithoutDeps(bitIds, true, lanes);
   }
 
   /**
@@ -183,57 +202,39 @@ export default class ScopeComponentsImporter {
     return [...compact(componentVersionArr), ...externalDeps];
   }
 
-  async importManyWithAllVersions(
-    ids: BitIds,
-    cache = true,
-    allDepsVersions = false, // by default, only dependencies of the latest version are imported
-    lanes: Lane[] = []
-  ): Promise<VersionDependencies[]> {
-    logger.debug(`scope.getManyWithAllVersions, Ids: ${ids.join(', ')}`);
-    Analytics.addBreadCrumb('getManyWithAllVersions', `scope.getManyWithAllVersions, Ids: ${Analytics.hashData(ids)}`);
-    const idsWithoutNils = removeNils(ids);
-    if (R.isEmpty(idsWithoutNils)) return Promise.resolve([]);
-    const versionDependenciesArr: VersionDependencies[] = await this.importMany({
-      ids: idsWithoutNils,
-      cache,
-      lanes,
-    });
-    const allIdsWithAllVersions = new BitIds();
-    versionDependenciesArr.forEach((versionDependencies) => {
-      const versions = versionDependencies.component.component.listVersions();
-      const versionId = versionDependencies.component.id;
-      const idsWithAllVersions = versions.map((version) => {
-        if (version === versionDependencies.component.version) return null; // imported already
-        return versionId.changeVersion(version);
-      });
-      allIdsWithAllVersions.push(...removeNils(idsWithAllVersions));
-      const head = versionDependencies.component.component.getHead();
-      if (head) {
-        allIdsWithAllVersions.push(versionId.changeVersion(head.toString()));
-      }
-    });
-    if (allDepsVersions) {
-      const verDepsOfOlderVersions = await this.importMany({
-        ids: allIdsWithAllVersions,
-        cache,
-        lanes,
-      });
-      versionDependenciesArr.push(...verDepsOfOlderVersions);
-      const allFlattenDepsIds = versionDependenciesArr.map((v) => v.allDependencies.map((d) => d.id));
-      const dependenciesOnly = R.flatten(allFlattenDepsIds).filter((id: BitId) => !ids.hasWithoutVersion(id));
-      const verDepsOfAllFlattenDeps = await this.importManyWithAllVersions(
-        BitIds.uniqFromArray(dependenciesOnly),
-        undefined,
-        undefined,
-        lanes
-      );
-      versionDependenciesArr.push(...verDepsOfAllFlattenDeps);
-    } else {
-      await this.importWithoutDeps(allIdsWithAllVersions, undefined, lanes);
-    }
+  // // probably not needed. leaving it here temporarily as it was slightly changed before removal.
+  // async importManyWithAllVersions(
+  //   ids: BitIds,
+  //   cache = true,
+  //   lanes: Lane[] = []
+  // ): Promise<VersionDependencies[]> {
+  //   logger.debug(`scope.getManyWithAllVersions, Ids: ${ids.join(', ')}`);
+  //   Analytics.addBreadCrumb('getManyWithAllVersions', `scope.getManyWithAllVersions, Ids: ${Analytics.hashData(ids)}`);
+  //   const idsWithoutNils = removeNils(ids);
+  //   if (R.isEmpty(idsWithoutNils)) return Promise.resolve([]);
+  //   const versionDependenciesArr: VersionDependencies[] = await this.importMany({
+  //     ids: idsWithoutNils,
+  //     cache,
+  //     lanes,
+  //   });
+  //   const allIdsWithAllVersions = new BitIds();
+  //   versionDependenciesArr.forEach((versionDependencies) => {
+  //     const versions = versionDependencies.component.component.listVersions();
+  //     const versionId = versionDependencies.component.id;
+  //     const idsWithAllVersions = versions.map((version) => {
+  //       if (version === versionDependencies.component.version) return null; // imported already
+  //       return versionId.changeVersion(version);
+  //     });
+  //     allIdsWithAllVersions.push(...removeNils(idsWithAllVersions));
+  //     const head = versionDependencies.component.component.getHead();
+  //     if (head) {
+  //       allIdsWithAllVersions.push(versionId.changeVersion(head.toString()));
+  //     }
+  //   });
+  //   await this.importWithoutDeps(allIdsWithAllVersions, undefined, lanes);
 
-    return versionDependenciesArr;
-  }
+  //   return versionDependenciesArr;
+  // }
 
   /**
    * delta between the local head and the remote head. mainly to improve performance
@@ -296,7 +297,7 @@ export default class ScopeComponentsImporter {
     const lanes = await this.importLanes(remoteLaneIds);
     const ids = lanes.map((lane) => lane.toBitIds());
     const bitIds = BitIds.uniqFromArray(R.flatten(ids));
-    await this.importManyWithAllVersions(bitIds, false, undefined, lanes);
+    await this.importMany({ ids: bitIds, cache: false, lanes });
     return lanes;
   }
 
@@ -368,31 +369,6 @@ export default class ScopeComponentsImporter {
       logger.debug('fetchWithDeps, releasing the lock');
       return versionDeps;
     });
-  }
-
-  async componentToVersionDependencies(component: ModelComponent, id: BitId): Promise<VersionDependencies | null> {
-    const versionComp: ComponentVersion = component.toComponentVersion(id.version);
-
-    const version = await this.getVersionFromComponentDef(component, id);
-    if (!version) {
-      // must be external, otherwise, it'd be thrown at getVersionFromComponentDef
-      logger.debug(
-        `toVersionDependencies, component ${component.id().toString()}, version ${
-          versionComp.version
-        } not found, going to fetch from a remote`
-      );
-      const remotes = await getScopeRemotes(this.scope);
-      const versionDeps = await this.getExternalMany([id], remotes);
-      return versionDeps.length ? versionDeps[0] : null;
-    }
-
-    logger.debug(
-      `toVersionDependencies, component ${component.id().toString()}, version ${
-        versionComp.version
-      } found, going to collect its dependencies`
-    );
-    const dependencies = await this.importWithoutDeps(version.flattenedDependencies);
-    return new VersionDependencies(versionComp, dependencies, version);
   }
 
   /**

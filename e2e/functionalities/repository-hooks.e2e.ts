@@ -48,11 +48,15 @@ describe('repository-hooks', function () {
         const regex = new RegExp('on read run', 'g');
         const count = importOutput.match(regex);
         // total 3 objects - component, version and file
-        // The read happen twice. via repository.load (component, version),
-        // and via repository.loadRaw (component, version, file). total 5 reads.
-        // TODO: check why we read them twice.. it create performance issue
-        // TODO2: on Harmony it became 8 instead of 5. why?
-        expect(count).to.have.lengthOf(8);
+        // the reason for the 5 reading is that it happens in two places.
+        // 1. repository.load(), it reads 2 files, the component and the version objects.
+        // 2. repository.loadRaw(), it reads 3 files, component, version and file.
+        // ideally, loadRaw could use the cached file from load. but it might be safer to not use the cache,
+        // so we make sure the client get the exact file saved in the filesystem on the remote. need to think about it.
+
+        // if this test fails, and the number is bigger than 5. this could indicate a serious performance issue,
+        // because for components with large amount of versions, this could become a huge number.
+        expect(count).to.have.lengthOf(5);
       });
       it('should be able to import the component as usual', () => {
         expect(importOutput).to.have.string('successfully imported one component');

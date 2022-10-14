@@ -1,5 +1,6 @@
 import chalk from 'chalk';
 import { compact } from 'lodash';
+import pMapSeries from 'p-map-series';
 import * as path from 'path';
 
 import { BitId, BitIds } from '../../../bit-id';
@@ -62,10 +63,11 @@ export async function mergeVersion(
   if (componentWithConflict && !mergeStrategy) {
     mergeStrategy = await getMergeStrategyInteractive();
   }
-  const mergedComponentsP = allComponentsStatus.map(({ id, componentFromFS, mergeResults }) => {
+
+  // don't use Promise.all to not call importMany multiple times in parallel.
+  const mergedComponents = await pMapSeries(allComponentsStatus, ({ id, componentFromFS, mergeResults }) => {
     return applyVersion(consumer, id, componentFromFS, mergeResults, mergeStrategy);
   });
-  const mergedComponents = await Promise.all(mergedComponentsP);
 
   return { components: mergedComponents, version };
 
