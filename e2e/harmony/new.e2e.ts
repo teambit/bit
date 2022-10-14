@@ -20,13 +20,13 @@ describe('new command', function () {
   });
   describe('export a workspace-template aspect', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllWithoutBuild();
       helper.command.export();
 
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.bitJsonc.setupDefault();
       helper.scopeHelper.addRemoteScope(undefined, undefined, true);
       helper.command.create('starter', 'workspace-example');
@@ -65,7 +65,7 @@ describe('new command', function () {
   });
   describe('running inside workspace', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
     });
     it('should throw an error', () => {
       expect(() => helper.command.new('react')).to.throw();
@@ -73,7 +73,7 @@ describe('new command', function () {
   });
   describe('creating a new react workspace', () => {
     before(() => {
-      helper.scopeHelper.newLocalScopeHarmony('react');
+      helper.scopeHelper.newLocalScope('react');
     });
     it('bit status should be clean', () => {
       helper.command.expectStatusToNotHaveIssues();

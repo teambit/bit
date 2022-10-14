@@ -15,7 +15,7 @@ describe('write-tsconfig command', function () {
   });
   describe('multiple components, most using one env', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponentsTS();
       helper.command.setEnv('comp3', 'teambit.harmony/aspect');
@@ -34,7 +34,7 @@ describe('write-tsconfig command', function () {
     let envName;
     let dryRunResults: Record<string, any>;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponentsTS();
       envName = helper.env.setCustomEnv();
@@ -55,7 +55,7 @@ describe('write-tsconfig command', function () {
   });
   describe('adding tsconfig.json manually in an inner directory', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.fixtures.populateComponents(1, false);
       helper.fs.outputFile('comp1/inner/tsconfig.json');
     });

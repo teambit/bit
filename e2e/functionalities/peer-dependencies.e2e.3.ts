@@ -13,7 +13,7 @@ describe('peer-dependencies functionality', function () {
   describe('when a package is a regular dependency and a peer dependency', () => {
     let catComponent;
     before(() => {
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.bitJsonc.addPolicyToDependencyResolver({ peerDependencies: { chai: '>= 2.1.2 < 5' } });
       helper.npm.addFakeNpmPackage('chai', '2.4');
       helper.fixtures.createComponentBarFoo("import chai from 'chai';");
@@ -45,7 +45,7 @@ describe('peer-dependencies functionality', function () {
         helper.bitJsonc.setupDefault();
         helper.command.export();
 
-        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.scopeHelper.reInitLocalScope();
         helper.scopeHelper.addRemoteScope();
         helper.command.importComponent('bar/foo');
         // const output = helper.command.importComponent('bar/foo');
@@ -60,7 +60,7 @@ describe('peer-dependencies functionality', function () {
 
   describe('when a package is only a peer dependency but not required in the code', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.bitJsonc.addPolicyToDependencyResolver({ peerDependencies: { chai: '>= 2.1.2 < 5' } });
       helper.npm.addFakeNpmPackage('chai', '2.4');
       helper.fixtures.createComponentBarFoo();

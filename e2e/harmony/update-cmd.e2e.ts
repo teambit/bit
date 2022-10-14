@@ -16,7 +16,7 @@ describe('update command', function () {
       let configFile;
       let componentJson;
       before(() => {
-        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.scopeHelper.reInitLocalScope();
         helper.fixtures.populateComponents(2);
         helper.extensions.addExtensionToVariant('comp1', 'teambit.dependencies/dependency-resolver', {
           policy: {
@@ -76,7 +76,7 @@ describe('update command', function () {
     let npmCiRegistry: NpmCiRegistry;
     before(async () => {
       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.bitJsonc.setPackageManager(`teambit.dependencies/pnpm`);
       npmCiRegistry = new NpmCiRegistry(helper);
@@ -105,13 +105,13 @@ const isOdd = require("is-odd");`
       helper.command.tagAllComponents();
       helper.command.export();
 
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
       helper.command.import(`${helper.scopes.remote}/my-aspect`);
       helper.command.tagComponent('my-aspect', undefined, '--unmodified');
       helper.command.export();
 
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.extensions.bitJsonc.setPackageManager(`teambit.dependencies/pnpm`);
       helper.scopeHelper.addRemoteScope();
       helper.bitJsonc.setupDefault();

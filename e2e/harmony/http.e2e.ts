@@ -18,7 +18,7 @@ import { HttpHelper } from '../http-helper';
   describe('export lane', () => {
     before(async () => {
       httpHelper = new HttpHelper(helper);
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.addDefaultScope();
       helper.bitJsonc.disablePreview();
       await httpHelper.start();
@@ -60,7 +60,7 @@ import { HttpHelper } from '../http-helper';
   describe('export with removed components', () => {
     before(async () => {
       httpHelper = new HttpHelper(helper);
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       await httpHelper.start();
       helper.scopeHelper.addRemoteHttpScope();
@@ -86,7 +86,7 @@ import { HttpHelper } from '../http-helper';
     let scopeAfterExport: string;
     before(async () => {
       httpHelper = new HttpHelper(helper);
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.addDefaultScope();
       helper.bitJsonc.disablePreview();
       helper.extensions.addExtensionToVariant('*', 'teambit.react/react', {});
@@ -117,7 +117,7 @@ import { HttpHelper } from '../http-helper';
     describe('bit import', () => {
       let importOutput;
       before(() => {
-        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.scopeHelper.reInitLocalScope();
         helper.scopeHelper.addRemoteHttpScope();
         importOutput = helper.command.importComponent('comp1');
       });
@@ -128,7 +128,7 @@ import { HttpHelper } from '../http-helper';
     describe('bit import --dependents', () => {
       let importOutput;
       before(() => {
-        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.scopeHelper.reInitLocalScope();
         helper.scopeHelper.addRemoteHttpScope();
         importOutput = helper.command.importComponent('comp3', '--dependents');
       });

@@ -26,7 +26,7 @@ describe('harmony extension config', function () {
       let devDeps;
       let scopeExtensionEntry;
       before(() => {
-        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.scopeHelper.reInitLocalScope();
         helper.fixtures.createComponentBarFoo();
         helper.fixtures.addComponentBarFooAsDir();
         helper.extensions.addExtensionToVariant('*', 'teambit.scope/scope', config);
@@ -54,7 +54,7 @@ describe('harmony extension config', function () {
 
       before(() => {
         const EXTENSION_FOLDER = 'dummy-extension-without-logs';
-        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.scopeHelper.reInitLocalScope();
         helper.fixtures.createComponentBarFoo();
         helper.fixtures.addComponentBarFooAsDir();
         helper.bitJsonc.addDefaultScope();
@@ -199,7 +199,7 @@ describe('harmony extension config', function () {
           helper.bitJsonc.disablePreview();
           helper.command.tagAllComponents();
           helper.command.export();
-          helper.scopeHelper.reInitLocalScopeHarmony();
+          helper.scopeHelper.reInitLocalScope();
           helper.scopeHelper.addRemoteScope();
           helper.command.importComponent('bar/foo');
         });
@@ -236,7 +236,7 @@ describe('harmony extension config', function () {
   });
   describe('changing config after the component had been cached', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
       const depResolverConfig = {

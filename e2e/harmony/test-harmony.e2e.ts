@@ -14,7 +14,7 @@ describe('test command on Harmony', function () {
   });
   describe('component with an empty test file', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.fixtures.populateComponents(1);
       helper.fs.outputFile('comp1/comp1.spec.js');
     });

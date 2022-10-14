@@ -20,7 +20,7 @@ describe('bit lane command', function () {
     describe('importing the lane objects and switching to that lane', () => {
       let beforeLaneSwitch;
       before(() => {
-        helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+        helper.scopeHelper.setNewLocalAndRemoteScopes();
         helper.bitJsonc.setupDefault();
         helper.fixtures.createComponentBarFoo();
         helper.fixtures.addComponentBarFooAsDir();
@@ -30,7 +30,7 @@ describe('bit lane command', function () {
         helper.command.snapAllComponents();
         helper.command.exportLane();
 
-        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.scopeHelper.reInitLocalScope();
         helper.scopeHelper.addRemoteScope();
         beforeLaneSwitch = helper.scopeHelper.cloneLocalScope();
         helper.command.switchRemoteLane('dev');
@@ -124,7 +124,7 @@ describe('bit lane command', function () {
   });
   describe('switching lanes with deleted files', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllWithoutBuild();
@@ -144,7 +144,7 @@ describe('bit lane command', function () {
     let mainScope;
     let laneScope;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
 
       mainScope = helper.scopeHelper.cloneLocalScope();
@@ -191,7 +191,7 @@ describe('bit lane command', function () {
   });
   describe('switch to main after importing a lane', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllWithoutBuild(); // main has 0.0.1
@@ -202,7 +202,7 @@ describe('bit lane command', function () {
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
 
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
       helper.bitJsonc.setupDefault();
       helper.command.importComponent('comp1');

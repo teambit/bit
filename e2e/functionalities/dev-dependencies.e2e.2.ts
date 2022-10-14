@@ -16,7 +16,7 @@ describe('dev-dependencies functionality', function () {
     describe('with dev-dependencies same as dependencies', () => {
       let comp1;
       before(() => {
-        helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+        helper.scopeHelper.setNewLocalAndRemoteScopes();
         helper.bitJsonc.setupDefault();
         helper.fixtures.populateComponents();
         helper.fs.outputFile('comp1/foo.spec.js', 'require("chai");');
@@ -47,7 +47,7 @@ describe('dev-dependencies functionality', function () {
     describe('without dependencies and with dev-dependencies', () => {
       let comp1;
       before(() => {
-        helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+        helper.scopeHelper.setNewLocalAndRemoteScopes();
         helper.bitJsonc.setupDefault();
         // foo.js doesn't have any dependencies. foo.spec.js does have dependencies.
         helper.fixtures.populateComponents();
@@ -88,7 +88,7 @@ describe('dev-dependencies functionality', function () {
   describe('dev-dependency of a nested component that originated from a prod dep', () => {
     let output;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(4);
       helper.fs.moveSync('comp2/index.js', 'comp2/foo.spec.js');
@@ -96,7 +96,7 @@ describe('dev-dependencies functionality', function () {
       helper.command.tagAllWithoutBuild();
       helper.command.export();
 
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
       output = helper.command.importComponent('*');
     });
@@ -116,7 +116,7 @@ describe('dev-dependencies functionality', function () {
   // (comp1 ->(dev)-> comp2 ->(dev)->comp3
   describe('dev-dependency of a nested component that originated from a dev dep', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(3);
 
@@ -140,7 +140,7 @@ describe('dev-dependencies functionality', function () {
   describe('dev-dependency that requires prod-dependency', () => {
     let barFoo;
     before(() => {
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.fixtures.populateComponents(3);
 
       helper.fs.moveSync('comp1/index.js', 'comp1/foo.spec.js');

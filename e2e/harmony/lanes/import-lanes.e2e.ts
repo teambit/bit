@@ -21,7 +21,7 @@ describe('import lanes', function () {
     let appOutput: string;
     let laneHash: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       appOutput = helper.fixtures.populateComponents();
       helper.command.createLane('dev');
@@ -33,7 +33,7 @@ describe('import lanes', function () {
     });
     describe('fetching lanes objects', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.scopeHelper.reInitLocalScope();
         helper.scopeHelper.addRemoteScope();
         helper.command.fetchRemoteLane('dev');
       });
@@ -59,7 +59,7 @@ describe('import lanes', function () {
     });
     describe('importing the lane and checking out by bit switch', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.scopeHelper.reInitLocalScope();
         helper.scopeHelper.addRemoteScope();
         helper.command.switchRemoteLane('dev');
       });
@@ -109,7 +109,7 @@ describe('import lanes', function () {
     });
     describe('importing the lane and checking out with a different local lane-name', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.scopeHelper.reInitLocalScope();
         helper.scopeHelper.addRemoteScope();
         helper.command.switchRemoteLane('dev', '--alias my-new-lane');
       });

@@ -19,7 +19,7 @@ describe('bit config', function () {
     let delOutput;
 
     before(() => {
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       setOutput = helper.command.runCmd('bit config set conf.key conf.value');
       getOutput = helper.command.runCmd('bit config get conf.key');
       delOutput = helper.command.runCmd('bit config del conf.key');
@@ -42,7 +42,7 @@ describe('bit config', function () {
 
   describe('git propagation', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.git.initNewGitRepo();
       helper.command.runCmd('bit config set conf.key bit-value');
       // Commented because of permission issue
