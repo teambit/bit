@@ -6,9 +6,7 @@ REFACTOR GUIDE FOR WATCHER EXTENSION.
 - workspace graphql should emit an event through subscription (onComponentChange) after reloading all changed components.
 - hook should be exposed from components on load in which extension can register to add data.
 
-
 - more important events
   - apply onComponentChange
   - Scope
     - onComponentChange
-

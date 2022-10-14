@@ -21,12 +21,12 @@ export class PackageDependencyFactory implements DependencyFactory {
 
   async parse<PackageDependency, S extends SerializedDependency>(serialized: S): Promise<PackageDependency> {
     // return new PackageDependency(serialized.id, serialized.version, serialized.type, serialized.lifecycle as DependencyLifecycleType) as unknown as PackageDependency;
-    return (new PackageDependency(
+    return new PackageDependency(
       serialized.id,
       serialized.version,
       serialized.lifecycle as DependencyLifecycleType,
       serialized.source
-    ) as unknown) as PackageDependency;
+    ) as unknown as PackageDependency;
   }
 
   async fromLegacyComponent(legacyComponent: LegacyComponent): Promise<DependencyList> {
