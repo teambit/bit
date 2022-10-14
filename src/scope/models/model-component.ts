@@ -974,17 +974,9 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
    * components from different lanes.
    */
   async isLocallyChanged(repo: Repository, lane?: Lane | null): Promise<boolean> {
-    if (lane) {
-      await this.populateLocalAndRemoteHeads(repo, lane);
-      await this.setDivergeData(repo);
-      return this.getDivergeData().isLocalAhead();
-    }
-    const localVersions = await this.getLocalTagsOrHashes(repo);
-    if (localVersions.length) return true;
-    // @todo: why this is needed? on main, the localVersion must be populated if changed locally
-    // regardless the laneHeadLocal/laneHeadRemote.
-    if (this.laneHeadLocal && !this.laneHeadRemote) return true;
-    return false;
+    if (lane) await this.populateLocalAndRemoteHeads(repo, lane);
+    await this.setDivergeData(repo);
+    return this.getDivergeData().isLocalAhead();
   }
 
   static parse(contents: string): Component {
