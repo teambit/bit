@@ -113,13 +113,10 @@ describe('build command', function () {
       errorOutput = helper.general.runWithTryCatch('bit build comp1');
     });
     it('the error should mention the remote where the error is coming from', () => {
-      expect(errorOutput).to.have.string(`the remote "${helper.scopes.remote}" threw an error`);
+      expect(errorOutput).to.have.string(helper.scopes.remote);
     });
     it('the error should explain the issue', () => {
-      expect(errorOutput).to.have.string(`failed retrieving an object`);
-    });
-    it('the error should print the original error', () => {
-      expect(errorOutput).to.have.string(`ENOENT: no such file or directory`);
+      expect(errorOutput).to.have.string(`unable to get the following objects`);
     });
   });
 });
