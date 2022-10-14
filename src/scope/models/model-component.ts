@@ -661,7 +661,7 @@ export default class Component extends BitObject {
     const refsWithoutArtifacts: Ref[] = [];
     const artifactsRefs: Ref[] = [];
     const artifactsRefsFromExportedVersions: Ref[] = [];
-    const locallyChangedVersions = this.getLocalTagsOrHashes();
+    const locallyChangedVersions = await this.getLocalTagsOrHashes(repo);
     const locallyChangedHashes = locallyChangedVersions.map((v) =>
       isTag(v) ? this.versionsIncludeOrphaned[v].hash : v
     );
@@ -941,13 +941,13 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
     return localVersions.includes(tag);
   }
 
-  hasLocalVersion(version: string): boolean {
-    const localVersions = this.getLocalTagsOrHashes();
+  async hasLocalVersion(repo: Repository, version: string): Promise<boolean> {
+    const localVersions = await this.getLocalTagsOrHashes(repo);
     return localVersions.includes(version);
   }
 
-  getLocalTagsOrHashes(): string[] {
-    if (!this.divergeData) throw new Error('getLocalTagsOrHashes is missing divergeData');
+  async getLocalTagsOrHashes(repo: Repository): Promise<string[]> {
+    await this.setDivergeData(repo);
     const divergeData = this.getDivergeData();
     const localHashes = divergeData.snapsOnLocalOnly;
     if (!localHashes.length) return [];
@@ -972,25 +972,14 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
   /**
    * whether the component was locally changed, either by adding a new snap/tag or by merging
    * components from different lanes.
-   * if no lanes provided, make sure to run `this.setDivergeData` before calling this method.
-   * (it'll throw otherwise).
    */
-  async isLocallyChanged(lane?: Lane | null, repo?: Repository): Promise<boolean> {
+  async isLocallyChanged(repo: Repository, lane?: Lane | null): Promise<boolean> {
     if (lane) {
-      if (!repo) throw new Error('isLocallyChanged expects to get repo when lane was provided');
       await this.populateLocalAndRemoteHeads(repo, lane);
       await this.setDivergeData(repo);
       return this.getDivergeData().isLocalAhead();
     }
-    // when on main, no need to traverse the parents because local snaps/tags are saved in the
-    // component object and retrieved by `this.getLocalVersions()`.
-    if (this.local) return true; // backward compatibility for components created before 0.12.6
-    if (!this.divergeData) {
-      throw new Error(
-        'isLocallyChanged - this.divergeData is missing, please run this.setDivergeData() before calling this method'
-      );
-    }
-    const localVersions = this.getLocalTagsOrHashes();
+    const localVersions = await this.getLocalTagsOrHashes(repo);
     if (localVersions.length) return true;
     // @todo: why this is needed? on main, the localVersion must be populated if changed locally
     // regardless the laneHeadLocal/laneHeadRemote.

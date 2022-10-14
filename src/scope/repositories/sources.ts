@@ -105,8 +105,8 @@ export default class SourceRepository {
       if (bitId.isLocal(this.scope.name) || version.buildStatus === BuildStatus.Succeed || !versionShouldBeBuilt) {
         return component;
       }
-      await component.setDivergeData(this.scope.objects);
-      if (component.hasLocalVersion(bitId.version as string)) {
+      const hasLocalVersion = await component.hasLocalVersion(this.scope.objects, bitId.version as string);
+      if (hasLocalVersion) {
         // e.g. during tag
         return component;
       }
