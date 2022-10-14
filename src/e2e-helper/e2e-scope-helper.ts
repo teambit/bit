@@ -102,14 +102,7 @@ export default class ScopeHelper {
   }
 
   initWorkspace(workspacePath?: string) {
-    // return this.command.runCmd('bit init -N', workspacePath);
-    return this.command.runCmd(`bit init -p ${this.packageManager}`, workspacePath);
-  }
-
-  initWorkspaceAndRemoteScope(workspacePath?: string) {
-    this.initWorkspace(workspacePath);
-    this.reInitRemoteScope();
-    this.addRemoteScope();
+    return this.command.runCmd(`bit init`, workspacePath);
   }
 
   async initInteractive(inputs: InteractiveInputs) {
