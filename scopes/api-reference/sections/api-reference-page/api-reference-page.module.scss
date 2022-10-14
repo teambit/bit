@@ -40,3 +40,11 @@ $panelBg: #fafafa;
   max-width: calc(100% - 200px);
   display: flex;
 }
+
+.loader {
+  display: flex;
+  align-items: center;
+  justify-items: center;
+  height: 100%;
+  width: 100%;
+}

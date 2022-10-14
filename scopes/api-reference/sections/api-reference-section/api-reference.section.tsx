@@ -7,12 +7,12 @@ export class APIRefSection implements Section {
   order = 100;
 
   route = {
-    path: '~apireference',
+    path: '~api-reference',
     element: this.apiReferenceUI.getAPIPage(),
   };
 
   navigationLink = {
-    href: '~apireference',
+    href: '~api-reference',
     children: 'API Reference',
   };
 }

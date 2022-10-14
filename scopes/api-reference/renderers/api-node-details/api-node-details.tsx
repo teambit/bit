@@ -1,7 +1,7 @@
 import React, { HTMLAttributes, useState, useRef, useEffect, useCallback } from 'react';
 import { SchemaNode } from '@teambit/semantics.entities.semantic-schema';
 import { H5, H6 } from '@teambit/documenter.ui.heading';
-import { CodeEditor } from '@teambit/code.monaco.code-editor';
+import Editor from '@monaco-editor/react';
 import { Link, useLocation } from '@teambit/base-react.navigation.link';
 import { SchemaNodeSummary } from '@teambit/api-reference.renderers.schema-node-summary';
 import { SchemaNodesIndex } from '@teambit/api-reference.renderers.schema-nodes-index';
@@ -72,7 +72,7 @@ export function APINodeDetails({
 
   const [signatureHeight, setSignatureHeight] = useState<number>(defaultSignatureHeight);
   const [isMounted, setIsMounted] = useState(false);
-  const [drawerOpen, onToggleDrawer] = useState(true);
+  const [drawerOpen, onToggleDrawer] = useState(false);
 
   const locationUrl = `${componentUrlWithoutVersion}~code/${filePath}${
     componentVersionFromUrl ? `?version=${componentVersionFromUrl}` : ''
@@ -110,6 +110,15 @@ export function APINodeDetails({
 
   useEffect(() => {
     if (isMounted) {
+      monacoRef.current.languages.typescript.typescriptDefaults.setCompilerOptions({
+        jsx: monacoRef.current.languages.typescript.JsxEmit.Preserve,
+        target: monacoRef.current.languages.typescript.ScriptTarget.ES2020,
+        esModuleInterop: true,
+      });
+      monacoRef.current.languages.typescript.typescriptDefaults.setDiagnosticsOptions({
+        noSemanticValidation: true,
+        noSyntaxValidation: true,
+      });
       const container = editorRef.current.getDomNode();
       editorRef.current.onDidContentSizeChange(() => {
         if (container && isMounted) {
@@ -146,7 +155,7 @@ export function APINodeDetails({
       {comment && <div className={styles.apiNodeDetailsComment}>{comment}</div>}
       {signature && (
         <div className={classnames(styles.apiNodeDetailsSignatureContainer, styles.codeEditorContainer)}>
-          <CodeEditor
+          <Editor
             options={defaultCodeEditorOptions}
             value={signature}
             height={signatureHeight}
@@ -159,6 +168,7 @@ export function APINodeDetails({
               editorRef.current = editor;
               setIsMounted(true);
             }}
+            theme={'vs-dark'}
           />
         </div>
       )}
@@ -166,7 +176,7 @@ export function APINodeDetails({
         <div className={styles.apiNodeDetailsExample}>
           <H6 className={styles.apiNodeDetailsExampleTitle}>Example</H6>
           <div className={styles.codeEditorContainer}>
-            <CodeEditor
+            <Editor
               options={defaultCodeEditorOptions}
               value={example.comment}
               path={`${example?.location.line}:${example?.location.filePath}`}

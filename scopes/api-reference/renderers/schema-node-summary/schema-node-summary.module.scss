@@ -29,6 +29,13 @@
   justify-self: flex-end;
 }
 
+.editor {
+  padding-top: 10px;
+  background-color: var(--editor-bg-color, #1e1e1e);
+  height: 100%;
+  width: 100%;
+}
+
 .tag {
   display: flex;
   justify-self: flex-end;

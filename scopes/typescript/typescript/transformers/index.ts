@@ -4,7 +4,7 @@ export { VariableStatementTransformer } from './variable-statement';
 export { VariableDeclaration } from './variable-declaration';
 export { SourceFileTransformer } from './source-file-transformer';
 export { TypeAliasTransformer } from './type-alias';
-export { ClassDeclarationTransformer as ClassDecelerationTransformer } from './class-declaration';
+export { ClassDeclarationTransformer } from './class-declaration';
 export { InterfaceDeclarationTransformer } from './interface-declaration';
 export { EnumDeclarationTransformer } from './enum-declaration';
 export { BindingElementTransformer } from './binding-element';

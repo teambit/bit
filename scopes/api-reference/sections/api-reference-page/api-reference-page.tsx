@@ -14,6 +14,8 @@ import { useAPIRefParam } from '@teambit/api-reference.hooks.use-api-ref-url';
 import { APINodeRendererSlot } from '@teambit/api-reference';
 import { sortAPINodes } from '@teambit/api-reference.utils.sort-api-nodes';
 import { TreeNode } from '@teambit/design.ui.tree';
+import { RoundLoader } from '@teambit/design.ui.round-loader';
+
 import styles from './api-reference-page.module.scss';
 
 export type APIRefPageProps = {
@@ -55,9 +57,12 @@ export function APIRefPage({ host, rendererSlot, className }: APIRefPageProps) {
 
   const SelectedAPIComponent = selectedAPINode && selectedAPINode.renderer.Component;
 
-  // TODO: add loading screen
   if (loading) {
-    return <>loading</>;
+    return (
+      <div className={styles.loader}>
+        <RoundLoader />
+      </div>
+    );
   }
 
   // TODO: dont think this will be a valid state - see if we need a blank state

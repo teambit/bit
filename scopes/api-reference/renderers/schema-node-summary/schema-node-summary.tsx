@@ -5,7 +5,7 @@ import {
   SchemaNode,
   VariableLikeSchema,
 } from '@teambit/semantics.entities.semantic-schema';
-import { CodeEditor } from '@teambit/code.monaco.code-editor';
+import Editor from '@monaco-editor/react';
 import { defaultCodeEditorOptions } from '@teambit/api-reference.utils.code-editor-options';
 import classnames from 'classnames';
 
@@ -17,6 +17,7 @@ export type SchemaNodeSummaryProps = {
 
 export function SchemaNodeSummary({ node }: SchemaNodeSummaryProps) {
   const editorRef = useRef<any>();
+  const monacoRef = useRef<any>();
 
   const { signature, name, __schema, doc, location } = node;
   const displayName = name || (__schema === ConstructorSchema.name && 'constructor') || undefined;
@@ -41,6 +42,15 @@ export function SchemaNodeSummary({ node }: SchemaNodeSummaryProps) {
 
   useEffect(() => {
     if (isMounted) {
+      monacoRef.current.languages.typescript.typescriptDefaults.setCompilerOptions({
+        jsx: monacoRef.current.languages.typescript.JsxEmit.Preserve,
+        target: monacoRef.current.languages.typescript.ScriptTarget.ES2020,
+        esModuleInterop: true,
+      });
+      monacoRef.current.languages.typescript.typescriptDefaults.setDiagnosticsOptions({
+        noSemanticValidation: true,
+        noSyntaxValidation: true,
+      });
       const container = editorRef.current.getDomNode();
       editorRef.current.onDidContentSizeChange(() => {
         if (container && isMounted) {
@@ -84,15 +94,20 @@ export function SchemaNodeSummary({ node }: SchemaNodeSummaryProps) {
       )}
       {signature && (
         <div className={styles.codeEditorContainer}>
-          <CodeEditor
+          <Editor
             options={defaultCodeEditorOptions}
             value={displaySignature}
             height={signatureHeight}
             path={path}
+            className={styles.editor}
+            beforeMount={(monaco) => {
+              monacoRef.current = monaco;
+            }}
             onMount={(editor) => {
               editorRef.current = editor;
               setIsMounted(true);
             }}
+            theme={'vs-dark'}
           />
         </div>
       )}

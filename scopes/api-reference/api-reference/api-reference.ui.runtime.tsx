@@ -12,6 +12,7 @@ import { functionRenderer } from '@teambit/api-reference.renderers.function';
 import { enumRenderer } from '@teambit/api-reference.renderers.enum';
 import { variableRenderer } from '@teambit/api-reference.renderers.variable';
 import { unresolvedRenderer } from '@teambit/api-reference.renderers.unresolved';
+import WorkspaceAspect from '@teambit/workspace';
 
 import { APIReferenceAspect } from './api-reference.aspect';
 
@@ -44,10 +45,12 @@ export class APIReferenceUI {
     const { config } = harmony;
     const host = String(config.get('teambit.harmony/bit'));
     const apiReferenceUI = new APIReferenceUI(host, apiNodeRendererSlot);
-    apiReferenceUI.registerAPINodeRenderer(apiReferenceUI.apiNodeRenderers);
-    const apiReferenceSection = new APIRefSection(apiReferenceUI);
-    componentUI.registerNavigation(apiReferenceSection.navigationLink, apiReferenceSection.order);
-    componentUI.registerRoute(apiReferenceSection.route);
+    if (host === WorkspaceAspect.id) {
+      apiReferenceUI.registerAPINodeRenderer(apiReferenceUI.apiNodeRenderers);
+      const apiReferenceSection = new APIRefSection(apiReferenceUI);
+      componentUI.registerNavigation(apiReferenceSection.navigationLink, apiReferenceSection.order);
+      componentUI.registerRoute(apiReferenceSection.route);
+    }
     return apiReferenceUI;
   }
 

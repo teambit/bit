@@ -25,6 +25,12 @@
     border-radius: 8px;
   }
 }
+.editor {
+  padding-top: 10px;
+  background-color: var(--editor-bg-color, #1e1e1e);
+  height: 100%;
+  width: 100%;
+}
 .apiNodeDetailsComment {
   font-size: var(--bit-p-xs);
   padding-bottom: 24px;
