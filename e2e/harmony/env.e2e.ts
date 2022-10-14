@@ -25,7 +25,7 @@ describe('env', function () {
     });
     it('should not be modified', () => {
       const status = helper.command.statusJson();
-      expect(status.modifiedComponent).to.have.lengthOf(0);
+      expect(status.modifiedComponents).to.have.lengthOf(0);
     });
     it('should not change the env to the variants one', () => {
       const env = helper.env.getComponentEnv('comp1');

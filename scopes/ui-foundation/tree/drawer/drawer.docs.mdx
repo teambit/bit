@@ -16,7 +16,7 @@ Drawer example:
 function DrawerExample() {
   const [isOpen, onToggle] = useState(false);
   return (
-    <div style={{display: 'flex'}}>
+    <div style={{ display: 'flex' }}>
       <DrawerUI name="drawer example" isOpen={isOpen} onToggle={() => onToggle(!isOpen)}>
         items to be shown
       </DrawerUI>

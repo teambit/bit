@@ -1,10 +1,5 @@
 import pMapSeries from 'p-map-series';
-import {
-  Tester,
-  TesterContext,
-  Tests,
-  ComponentsResults,
-} from '@teambit/tester';
+import { Tester, TesterContext, Tests, ComponentsResults } from '@teambit/tester';
 import { TestsResult } from '@teambit/tests-results';
 import { compact } from 'lodash';
 
@@ -15,10 +10,7 @@ export type MultiCompilerOptions = {
 export class MultiTester implements Tester {
   displayName = 'Multi tester';
 
-  constructor(
-    readonly id: string,
-    readonly testers: Tester[],
-  ) {}
+  constructor(readonly id: string, readonly testers: Tester[]) {}
 
   displayConfig() {
     return this.testers
@@ -29,20 +21,18 @@ export class MultiTester implements Tester {
   }
 
   async test(context: TesterContext): Promise<Tests> {
-    const allResults = await pMapSeries(this.testers,
-      (tester) => {
-        return tester.test(context);
-      });
+    const allResults = await pMapSeries(this.testers, (tester) => {
+      return tester.test(context);
+    });
     const merged = this.mergeTests(allResults);
     return merged;
   }
 
   // TODO: not working properly yet
   async watch(context: TesterContext): Promise<Tests> {
-    const allResults = await pMapSeries(this.testers,
-      (tester) => {
-        return tester.watch ? tester.watch(context) : tester.test(context);
-      });
+    const allResults = await pMapSeries(this.testers, (tester) => {
+      return tester.watch ? tester.watch(context) : tester.test(context);
+    });
     const merged = this.mergeTests(allResults);
     return merged;
   }
@@ -62,15 +52,15 @@ export class MultiTester implements Tester {
     const componentResultsMap = new Map<string, ComponentsResults>();
 
     compact(tests).forEach((currentTests) => {
-      currentTests.components.forEach(currentComponentResults => {
+      currentTests.components.forEach((currentComponentResults) => {
         const currIdStr = currentComponentResults.componentId.toString();
         const foundComponent = componentResultsMap.get(currIdStr);
-        if (foundComponent){
+        if (foundComponent) {
           componentResultsMap.set(currIdStr, this.mergeComponentResults(foundComponent, currentComponentResults));
         } else {
           componentResultsMap.set(currIdStr, currentComponentResults);
         }
-      })
+      });
     });
 
     return new Tests(Array.from(componentResultsMap.values()));
@@ -78,12 +68,12 @@ export class MultiTester implements Tester {
 
   private mergeComponentResults(results1: ComponentsResults, results2: ComponentsResults): ComponentsResults {
     const merged: ComponentsResults = {
-      componentId: results1.componentId
+      componentId: results1.componentId,
     };
     let start;
-    if (!results1.results?.start){
+    if (!results1.results?.start) {
       start = results2.results?.start;
-    } else if (!results2.results?.start){
+    } else if (!results2.results?.start) {
       start = results1.results?.start;
     } else {
       // Take sooner start
