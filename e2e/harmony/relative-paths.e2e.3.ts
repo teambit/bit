@@ -24,7 +24,7 @@ describe('relative paths flow (components requiring each other by relative paths
     it('bit status should show it as an invalid component', () => {
       const status = helper.command.statusJson();
       expect(status.componentsWithIssues).to.have.lengthOf(1);
-      expect(status.componentsWithIssues[0].id).to.equal('comp1');
+      helper.command.statusComponentHasIssues('comp1');
     });
     it('should block bit tag', () => {
       const output = helper.general.runWithTryCatch('bit tag -a');
