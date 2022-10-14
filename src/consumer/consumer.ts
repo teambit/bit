@@ -1,5 +1,4 @@
 import fs from 'fs-extra';
-import mapSeries from 'p-map-series';
 import * as path from 'path';
 import R from 'ramda';
 import semver from 'semver';
@@ -25,7 +24,6 @@ import { getAutoTagPending } from '../scope/component-ops/auto-tag';
 import ScopeComponentsImporter from '../scope/component-ops/scope-components-importer';
 import { ComponentNotFound } from '../scope/exceptions';
 import { Lane, ModelComponent, Version } from '../scope/models';
-import VersionDependencies, { multipleVersionDependenciesToConsumer } from '../scope/version-dependencies';
 import { pathNormalizeToLinux, sortObject } from '../utils';
 import { composeComponentPath, composeDependencyPath } from '../utils/bit/compose-component-path';
 import { packageNameToComponentId } from '../utils/bit/package-name-to-component-id';
@@ -341,49 +339,6 @@ export default class Consumer {
 
   async loadComponents(ids: BitIds, throwOnFailure = true, loadOpts?: ComponentLoadOptions): Promise<LoadManyResult> {
     return this.componentLoader.loadMany(ids, throwOnFailure, loadOpts);
-  }
-
-  async importComponentsHarmony(
-    ids: BitIds,
-    withAllVersions: boolean,
-    lanes: Lane[] = []
-  ): Promise<ComponentWithDependencies[]> {
-    const scopeComponentsImporter = ScopeComponentsImporter.getInstance(this.scope);
-    const versionDependenciesArr: VersionDependencies[] = withAllVersions
-      ? await scopeComponentsImporter.importManyWithAllVersions(ids, false, undefined, lanes)
-      : await scopeComponentsImporter.importMany({ ids, lanes });
-    const componentWithDependencies = await mapSeries(versionDependenciesArr, (versionDependencies) =>
-      versionDependencies.toConsumer(this.scope.objects)
-    );
-    return componentWithDependencies;
-  }
-
-  async importComponentsObjects(
-    ids: BitIds,
-    {
-      fromOriginalScope = false,
-      allHistory = false,
-      lane,
-      ignoreMissingHead = false,
-    }: {
-      fromOriginalScope?: boolean;
-      allHistory?: boolean;
-      lane?: Lane;
-      ignoreMissingHead?: boolean;
-    }
-  ): Promise<ComponentWithDependencies[]> {
-    const scopeComponentsImporter = ScopeComponentsImporter.getInstance(this.scope);
-    await scopeComponentsImporter.importManyDeltaWithoutDeps(ids, allHistory, lane, ignoreMissingHead);
-    loader.start(`import ${ids.length} components with their dependencies (if missing)`);
-    const versionDependenciesArr: VersionDependencies[] = fromOriginalScope
-      ? await scopeComponentsImporter.importManyFromOriginalScopes(ids)
-      : await scopeComponentsImporter.importMany({ ids, ignoreMissingHead, lanes: lane ? [lane] : undefined });
-    const componentWithDependencies = await multipleVersionDependenciesToConsumer(
-      versionDependenciesArr,
-      this.scope.objects
-    );
-
-    return componentWithDependencies;
   }
 
   async shouldDependenciesSavedAsComponents(bitIds: BitId[], saveDependenciesAsComponents?: boolean) {
