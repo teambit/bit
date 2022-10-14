@@ -5,7 +5,7 @@ import mapSeries from 'p-map-series';
 import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
 import groupArray from 'group-array';
 import R from 'ramda';
-import { compact, flatten } from 'lodash';
+import { compact, flatten, uniq } from 'lodash';
 import loader from '../../cli/loader';
 import { Scope } from '..';
 import { BitId, BitIds } from '../../bit-id';
@@ -19,7 +19,7 @@ import { splitBy } from '../../utils';
 import ComponentVersion from '../component-version';
 import { ComponentNotFound } from '../exceptions';
 import { Lane, ModelComponent, Version } from '../models';
-import { Ref, Repository } from '../objects';
+import { BitObject, Ref, Repository } from '../objects';
 import { ObjectItemsStream, ObjectList } from '../objects/object-list';
 import SourcesRepository, { ComponentDef } from '../repositories/sources';
 import { getScopeRemotes } from '../scope-remotes';
@@ -29,8 +29,11 @@ import { ObjectFetcher } from '../objects-fetcher/objects-fetcher';
 import { concurrentComponentsLimit } from '../../utils/concurrency';
 import { BuildStatus } from '../../constants';
 import { NoHeadNoVersion } from '../exceptions/no-head-no-version';
+import { HashesPerRemotes, MissingObjects } from '../exceptions/missing-objects';
 
 const removeNils = R.reject(R.isNil);
+
+type HashesPerRemote = { [remoteName: string]: string[] };
 
 export default class ScopeComponentsImporter {
   scope: Scope;
@@ -317,7 +320,7 @@ export default class ScopeComponentsImporter {
    * just make sure not to use it for components/lanes, as they require a proper "merge" before
    * persisting them to the filesystem. this method is good for immutable objects.
    */
-  async importManyObjects(groupedHashes: { [scopeName: string]: string[] }) {
+  async importManyObjects(groupedHashes: HashesPerRemote) {
     const groupedHashedMissing = {};
     await Promise.all(
       Object.keys(groupedHashes).map(async (scopeName) => {
@@ -331,9 +334,25 @@ export default class ScopeComponentsImporter {
     if (R.isEmpty(groupedHashedMissing)) return;
     const remotes = await getScopeRemotes(this.scope);
     const multipleStreams = await remotes.fetch(groupedHashedMissing, this.scope, { type: 'object' });
-
     const bitObjectsList = await this.multipleStreamsToBitObjects(multipleStreams);
-    await this.repo.writeObjectsToTheFS(bitObjectsList.getAll());
+    const allObjects = bitObjectsList.getAll();
+    await this.repo.writeObjectsToTheFS(allObjects);
+    this.throwForMissingObjects(groupedHashedMissing, allObjects);
+  }
+
+  private throwForMissingObjects(groupedHashes: HashesPerRemote, receivedObjects: BitObject[]) {
+    const allRequestedHashes = uniq(Object.values(groupedHashes).flat());
+    const allReceivedHashes = uniq(receivedObjects.map((o) => o.hash().toString()));
+    const missingHashes = allRequestedHashes.filter((hash) => !allReceivedHashes.includes(hash));
+    if (!missingHashes.length) {
+      return; // all good, nothing is missing
+    }
+    const missingPerRemotes: HashesPerRemotes = {};
+    missingHashes.forEach((hash) => {
+      const remotes = Object.keys(groupedHashes).filter((remoteName) => groupedHashes[remoteName].includes(hash));
+      missingPerRemotes[hash] = remotes;
+    });
+    throw new MissingObjects(missingPerRemotes);
   }
 
   async fetchWithoutDeps(ids: BitIds, allowExternal: boolean, ignoreMissingHead = false): Promise<ComponentVersion[]> {
