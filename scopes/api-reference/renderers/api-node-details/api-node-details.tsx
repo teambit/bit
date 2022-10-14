@@ -6,6 +6,7 @@ import { Link, useLocation } from '@teambit/base-react.navigation.link';
 import { SchemaNodeSummary } from '@teambit/api-reference.renderers.schema-node-summary';
 import { SchemaNodesIndex } from '@teambit/api-reference.renderers.schema-nodes-index';
 import { defaultCodeEditorOptions } from '@teambit/api-reference.utils.code-editor-options';
+import { DrawerUI } from '@teambit/ui-foundation.ui.tree.drawer';
 import classnames from 'classnames';
 import {
   groupByNodeSignatureType,
@@ -15,6 +16,8 @@ import { APINodeRenderProps } from '@teambit/api-reference.models.api-node-rende
 import { useQuery } from '@teambit/ui-foundation.ui.react-router.use-query';
 import { APIRefQueryParams } from '@teambit/api-reference.hooks.use-api-ref-url';
 import { useNavigate } from 'react-router-dom';
+import { APINode } from '@teambit/api-reference.models.api-reference-model';
+import { CodeView } from '@teambit/code.ui.code-view';
 
 import styles from './api-node-details.module.scss';
 
@@ -34,6 +37,7 @@ export function APINodeDetails({
     renderer: {
       icon: { url },
     },
+    componentId,
   },
   members,
   displaySignature,
@@ -68,6 +72,7 @@ export function APINodeDetails({
 
   const [signatureHeight, setSignatureHeight] = useState<number>(defaultSignatureHeight);
   const [isMounted, setIsMounted] = useState(false);
+  const [drawerOpen, onToggleDrawer] = useState(true);
 
   const locationUrl = `${componentUrlWithoutVersion}~code/${filePath}${
     componentVersionFromUrl ? `?version=${componentVersionFromUrl}` : ''
@@ -86,18 +91,18 @@ export function APINodeDetails({
 
   const hoverProvider = useCallback((model, position) => {
     const word = model.getWordAtPosition(position);
-    const wordApiNode = word && apiRefModel.apiByName.get(word.word);
-    const wordApiUrl =
-      wordApiNode && getAPINodeUrl({ selectedAPI: `${wordApiNode.renderer.nodeType}/${wordApiNode.api.name}` });
+    const wordApiNode: APINode | undefined = word ? apiRefModel.apiByName.get(word.word as string) : undefined;
+    const wordApiUrl = wordApiNode
+      ? getAPINodeUrl({ selectedAPI: `${wordApiNode.renderer.nodeType}/${wordApiNode.api.name}` })
+      : null;
     apiUrlToRoute.current = wordApiUrl;
-    const contents = wordApiUrl
-      ? [
-          {
-            value: `[View ${word.word} API](command:${routeToAPICmdId.current})`,
-            isTrusted: true,
-          },
-        ]
-      : [];
+    if (!wordApiUrl || wordApiNode?.api.name === name) return undefined;
+    const contents = [
+      {
+        value: `[View ${word.word} API](command:${routeToAPICmdId.current})`,
+        isTrusted: true,
+      },
+    ];
     return {
       contents,
     };
@@ -115,6 +120,11 @@ export function APINodeDetails({
       routeToAPICmdId.current = editorRef.current.addCommand(0, () => {
         apiUrlToRoute.current && navigate(apiUrlToRoute.current);
       });
+      if (!hoverProviderDispose.current) {
+        hoverProviderDispose.current = monacoRef.current.languages.registerHoverProvider('typescript', {
+          provideHover: hoverProvider,
+        });
+      }
     }
   }, [isMounted]);
 
@@ -144,9 +154,6 @@ export function APINodeDetails({
             className={styles.editor}
             beforeMount={(monaco) => {
               monacoRef.current = monaco;
-              hoverProviderDispose.current = monacoRef.current.languages.registerHoverProvider('typescript', {
-                provideHover: hoverProvider,
-              });
             }}
             onMount={(editor) => {
               editorRef.current = editor;
@@ -168,16 +175,29 @@ export function APINodeDetails({
           </div>
         </div>
       )}
-      <div className={styles.apiNodeDetailsLocationContainer}>
-        <div className={styles.apiNodeDetailsLocationIcon}>
-          <img src="https://static.bit.dev/design-system-assets/Icons/external-link.svg"></img>
-        </div>
-        <div className={styles.apiNodeDetailsLocation}>
-          <Link external={true} href={locationUrl} className={styles.apiNodeDetailsLocationLink}>
-            {locationLabel}
-          </Link>
-        </div>
+      <div className={styles.apiNodeImplementationDrawerContainer}>
+        <DrawerUI
+          isOpen={drawerOpen}
+          onToggle={() => onToggleDrawer((open) => !open)}
+          contentClass={styles.apiNodeImplementationDrawerContent}
+          className={styles.apiNodeImplementationDrawer}
+          name={
+            <div className={styles.apiNodeDetailsLocationContainer}>
+              <div className={styles.apiNodeDetailsLocationIcon}>
+                <img src="https://static.bit.dev/design-system-assets/Icons/external-link.svg"></img>
+              </div>
+              <div className={styles.apiNodeDetailsLocation}>
+                <Link external={true} href={locationUrl} className={styles.apiNodeDetailsLocationLink}>
+                  {locationLabel}
+                </Link>
+              </div>
+            </div>
+          }
+        >
+          <CodeView componentId={componentId} currentFile={filePath} className={styles.apiNodeImplementationCodeView} />
+        </DrawerUI>
       </div>
+
       {hasMembers && (
         <>
           <SchemaNodesIndex title={'Index'} nodes={members} />

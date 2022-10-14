@@ -40,11 +40,25 @@
 .apiNodeDetailsExampleTitle {
   padding: 16px 0px;
 }
+.apiNodeImplementationDrawer {
+  width: 100%;
+}
 .apiNodeDetailsLocationContainer {
   display: flex;
   flex-direction: row;
-  padding-bottom: 24px;
   align-items: center;
+  line-height: 16px;
+}
+.apiNodeImplementationDrawerContainer {
+  display: flex;
+  flex-direction: row;
+  padding-bottom: 24px;
+}
+.apiNodeImplementationCodeView {
+  padding: 16px 0px;
+  > h1 {
+    display: none !important;
+  }
 }
 .apiNodeDetailsLocation {
   display: flex;
@@ -71,7 +85,4 @@
   font-size: var(--bit-p-md);
   font-weight: 500;
   text-transform: capitalize;
-}
-
-.codeTooltip {
 }

@@ -14,4 +14,10 @@ export const defaultCodeEditorOptions: monaco.editor.IStandaloneEditorConstructi
   automaticLayout: true,
   wrappingStrategy: 'advanced',
   fixedOverflowWidgets: true,
+  hover: {
+    delay: 150,
+  },
+  parameterHints: {
+    enabled: false,
+  },
 };
