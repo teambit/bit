@@ -56,7 +56,10 @@ export default async function fetch(
       const bitIds: BitIds = BitIds.deserialize(ids);
       const { withoutDependencies, includeArtifacts, allowExternal, onlyIfBuilt } = fetchOptions;
       const collectParents = !withoutDependencies;
-      const scopeComponentsImporter = ScopeComponentsImporter.getInstance(scope);
+
+      // important! don't create a new instance of ScopeComponentImporter. Otherwise, the Mutex will be created
+      // every request, and won't do anything.
+      const scopeComponentsImporter = scope.scopeImporter;
 
       const laneId = fetchOptions.laneId ? LaneId.parse(fetchOptions.laneId) : null;
       const lane = laneId ? await scope.loadLane(laneId) : null;
@@ -92,7 +95,7 @@ export default async function fetch(
           allowExternal,
           onlyIfBuilt
         );
-        return versionsDependencies
+        const flatDeps = versionsDependencies
           .map((versionDep) => [
             {
               component: versionDep.component.component,
@@ -107,7 +110,15 @@ export default async function fetch(
               collectParents: false, // for dependencies, no need to traverse the entire history
             })),
           ])
-          .flat();
+          .flat()
+          .reduce((uniqueDeps, dep) => {
+            const key = `${dep.component.id()}@${dep.version}`;
+            if (!uniqueDeps[key] || (!uniqueDeps[key].collectParents && dep.collectParents)) {
+              uniqueDeps[key] = dep;
+            }
+            return uniqueDeps;
+          }, {});
+        return Object.values(flatDeps);
       };
       const componentsWithOptions = await getComponentsWithOptions();
       // eslint-disable-next-line @typescript-eslint/no-floating-promises

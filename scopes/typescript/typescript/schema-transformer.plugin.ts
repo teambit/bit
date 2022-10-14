@@ -8,7 +8,7 @@ export class SchemaTransformerPlugin implements PluginDefinition {
 
   runtimes = ['main'];
 
-  async register(object: any) {
+  register(object: any) {
     return this.schemaTransformerSlot.register([object]);
   }
 }

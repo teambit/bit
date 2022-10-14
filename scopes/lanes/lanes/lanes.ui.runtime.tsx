@@ -7,16 +7,21 @@ import { NavigationSlot, RouteSlot } from '@teambit/ui-foundation.ui.react-route
 import { NotFoundPage } from '@teambit/design.ui.pages.not-found';
 import ScopeAspect, { ScopeUI } from '@teambit/scope';
 import WorkspaceAspect, { WorkspaceUI } from '@teambit/workspace';
-import ComponentAspect, { ComponentUI } from '@teambit/component';
+import ComponentAspect, { ComponentID, ComponentUI, useIdFromLocation } from '@teambit/component';
 import SidebarAspect, { SidebarUI } from '@teambit/sidebar';
 import { MenuWidget, MenuWidgetSlot } from '@teambit/ui-foundation.ui.menu';
-import { LaneGallery, LaneOverviewLine, LaneOverviewLineSlot } from '@teambit/lanes.ui.gallery';
-import { LanesNavPlugin, LanesOrderedNavigationSlot, LanesOverviewMenu, UseLaneMenu } from '@teambit/lanes.ui.menus';
-import { LanesHost, LanesModel } from '@teambit/lanes.ui.models';
-import { LaneReadmeOverview } from '@teambit/lanes.ui.readme';
-import { useLanes } from '@teambit/lanes.hooks.use-lanes';
-import { ViewedLaneFromUrl } from '@teambit/lanes.ui.viewed-lane';
-import { LanesDrawer } from '@teambit/lanes.ui.drawer';
+import { LaneOverview, LaneOverviewLine, LaneOverviewLineSlot } from '@teambit/lanes.ui.lane-overview';
+import {
+  LanesNavPlugin,
+  LanesOrderedNavigationSlot,
+  LanesOverviewMenu,
+} from '@teambit/lanes.ui.menus.lanes-overview-menu';
+import { UseLaneMenu } from '@teambit/lanes.ui.menus.use-lanes-menu';
+import { LanesHost, LanesModel } from '@teambit/lanes.ui.models.lanes-model';
+import { LanesProvider, useLanes } from '@teambit/lanes.hooks.use-lanes';
+import { LaneSwitcher } from '@teambit/lanes.ui.navigation.lane-switcher';
+import { LaneId } from '@teambit/lane-id';
+import { useViewedLaneFromUrl } from '@teambit/lanes.hooks.use-viewed-lane-from-url';
 
 export class LanesUI {
   static dependencies = [UIAspect, ComponentAspect, WorkspaceAspect, ScopeAspect, SidebarAspect];
@@ -62,14 +67,8 @@ export class LanesUI {
         children: (
           <>
             <Route path={LanesModel.lanePath}>
-              <Route
-                index
-                element={
-                  <LaneReadmeOverview host={this.host} overviewSlot={this.overviewSlot} routeSlot={this.routeSlot} />
-                }
-              />
-              <Route path="~gallery" element={this.getLaneGallery()} />
-              <Route path="~component/*" element={this.componentUi.getComponentUI(this.host)} />
+              <Route index element={this.getLaneOverview()} />
+              <Route path="~component/*" element={this.getLaneComponent()} />
               <Route path="*" element={<NotFoundPage />} />
             </Route>
             <Route path="*" element={<NotFoundPage />} />
@@ -79,8 +78,68 @@ export class LanesUI {
     ];
   }
 
-  getLaneGallery() {
-    return <LaneGallery routeSlot={this.routeSlot} overviewSlot={this.overviewSlot} host={this.lanesHost} />;
+  overrideComputeLaneUrl(
+    fn: () => {
+      prefix: string;
+      path: string;
+      getLaneIdFromPathname: (pathname: string) => LaneId | undefined;
+      getLaneUrl: (laneId: LaneId, relative?: boolean) => string;
+      getLaneComponentUrl: (componentId: ComponentID, laneId: LaneId) => string;
+    }
+  ) {
+    const { prefix, path, getLaneComponentUrl, getLaneIdFromPathname, getLaneUrl } = fn();
+    LanesModel.lanesPrefix = prefix;
+    LanesModel.lanePath = path;
+    LanesModel.getLaneComponentUrl = getLaneComponentUrl;
+    LanesModel.getLaneUrl = getLaneUrl;
+    LanesModel.getLaneIdFromPathname = getLaneIdFromPathname;
+  }
+
+  // getLaneReadme() {
+  //   return <LaneReadmeOverview host={this.host} overviewSlot={this.overviewSlot} routeSlot={this.routeSlot} />;
+  // }
+
+  getLaneComponentIdFromUrl = () => {
+    const idFromLocation = useIdFromLocation();
+    const { lanesModel } = useLanes();
+    const laneFromUrl = useViewedLaneFromUrl();
+    const laneComponentId =
+      idFromLocation && !laneFromUrl?.isDefault()
+        ? lanesModel?.resolveComponentByFullName(idFromLocation, laneFromUrl)
+        : undefined;
+    return laneComponentId;
+  };
+
+  useComponentId = () => {
+    return this.getLaneComponentIdFromUrl()?.toString();
+  };
+
+  useComponentFilters = () => {
+    const laneComponentId = this.getLaneComponentIdFromUrl();
+
+    return {
+      log: laneComponentId && {
+        logHead: laneComponentId.version,
+      },
+    };
+  };
+
+  getLaneComponent() {
+    return this.componentUi.getComponentUI(this.host, {
+      componentId: this.useComponentId,
+      useComponentFilters: this.useComponentFilters,
+    });
+  }
+
+  getLaneComponentMenu() {
+    return this.componentUi.getMenu(this.host, {
+      componentId: this.useComponentId,
+      useComponentFilters: this.useComponentFilters,
+    });
+  }
+
+  getLaneOverview() {
+    return <LaneOverview routeSlot={this.routeSlot} overviewSlot={this.overviewSlot} host={this.lanesHost} />;
   }
 
   getMenuRoutes() {
@@ -90,7 +149,7 @@ export class LanesUI {
         children: (
           <Route path={`${LanesModel.lanePath}/*`}>
             <Route path="*" element={this.getLanesOverviewMenu()} />
-            <Route path="~component/*" element={this.componentUi.getMenu(this.host)} />
+            <Route path="~component/*" element={this.getLaneComponentMenu()} />
           </Route>
         ),
       },
@@ -107,23 +166,23 @@ export class LanesUI {
 
   private registerLanesRoutes() {
     this.registerNavigation([
+      // {
+      //   props: {
+      //     href: '.',
+      //     exact: true,
+      //     children: 'README',
+      //   },
+      //   order: 1,
+      //   hide: () => {
+      //     const { lanesModel } = useLanes();
+      //     return !lanesModel?.viewedLane?.readmeComponent;
+      //   },
+      // },
       {
         props: {
           href: '.',
           exact: true,
-          children: 'README',
-        },
-        order: 1,
-        hide: () => {
-          const { lanesModel } = useLanes();
-          return !lanesModel?.viewedLane?.readmeComponent;
-        },
-      },
-      {
-        props: {
-          href: '~gallery',
-          children: 'Gallery',
-          exact: true,
+          children: 'Overview',
         },
         order: 1,
       },
@@ -135,8 +194,32 @@ export class LanesUI {
     this.registerLanesRoutes();
   }
 
+  getLanesSwitcher() {
+    const LanesSwitcher = <LaneSwitcher groupByScope={this.lanesHost === 'workspace'} />;
+    return LanesSwitcher;
+  }
+
+  getLanesProvider() {
+    return LanesProvider;
+  }
+
+  getUseLanes() {
+    return useLanes;
+  }
+
+  private registerLanesDropdown() {
+    const LanesSwitcher = this.getLanesSwitcher();
+
+    this.hostAspect?.registerSidebarLink({
+      component: function Gallery() {
+        return LanesSwitcher;
+      },
+      weight: 1000,
+    });
+  }
+
   private renderContext = ({ children }: { children: ReactNode }) => {
-    return <ViewedLaneFromUrl>{children}</ViewedLaneFromUrl>;
+    return <LanesProvider>{children}</LanesProvider>;
   };
 
   registerRoute(route: RouteProps) {
@@ -157,7 +240,7 @@ export class LanesUI {
   }
 
   static async provider(
-    [uiUi, componentUi, workspaceUi, scopeUi, sidebarUi]: [UiUI, ComponentUI, WorkspaceUI, ScopeUI, SidebarUI],
+    [uiUi, componentUi, workspaceUi, scopeUi]: [UiUI, ComponentUI, WorkspaceUI, ScopeUI, SidebarUI],
     _,
     [routeSlot, overviewSlot, navSlot, menuWidgetSlot]: [
       RouteSlot,
@@ -179,16 +262,14 @@ export class LanesUI {
     }
     const lanesUi = new LanesUI(componentUi, routeSlot, navSlot, overviewSlot, menuWidgetSlot, workspace, scope);
     if (uiUi) uiUi.registerRenderHooks({ reactContext: lanesUi.renderContext });
-    const drawer = new LanesDrawer({ showScope: lanesUi.lanesHost === 'workspace' });
-    sidebarUi.registerDrawer(drawer);
     lanesUi.registerRoutes();
     lanesUi.registerMenuWidget(() => {
       const { lanesModel } = useLanes();
       if (!lanesModel?.viewedLane) return null;
       const { viewedLane, currentLane } = lanesModel;
-      return <UseLaneMenu host={lanesUi.lanesHost} viewedLane={viewedLane} currentLane={currentLane} />;
+      return <UseLaneMenu host={lanesUi.lanesHost} viewedLaneId={viewedLane.id} currentLaneId={currentLane?.id} />;
     });
-
+    lanesUi.registerLanesDropdown();
     return lanesUi;
   }
 }

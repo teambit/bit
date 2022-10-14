@@ -1,41 +1,40 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import { IssuesClasses } from '@teambit/component-issues';
+import { IssuesClasses, IssuesList } from '@teambit/component-issues';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
+import { ComponentID } from '@teambit/component-id';
 import { Analytics } from '@teambit/legacy/dist/analytics/analytics';
-import { BitId, BitIds } from '@teambit/legacy/dist/bit-id';
 import loader from '@teambit/legacy/dist/cli/loader';
 import { BEFORE_STATUS } from '@teambit/legacy/dist/cli/loader/loader-messages';
 import { RemoveAspect, RemoveMain } from '@teambit/remove';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import ComponentsPendingImport from '@teambit/legacy/dist/consumer/component-ops/exceptions/components-pending-import';
-import ComponentsList, {
-  DivergeDataPerId,
-  DivergedComponent,
-} from '@teambit/legacy/dist/consumer/component/components-list';
-import { InvalidComponent } from '@teambit/legacy/dist/consumer/component/consumer-component';
+import { BitId } from '@teambit/legacy-bit-id';
+import ComponentsList from '@teambit/legacy/dist/consumer/component/components-list';
 import { ModelComponent } from '@teambit/legacy/dist/scope/models';
 import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
 import { InsightsAspect, InsightsMain } from '@teambit/insights';
+import { DivergeData } from '@teambit/legacy/dist/scope/component-ops/diverge-data';
 import IssuesAspect, { IssuesMain } from '@teambit/issues';
 import { StatusCmd } from './status-cmd';
 import { StatusAspect } from './status.aspect';
 
+type DivergeDataPerId = { id: ComponentID; divergeData: DivergeData };
+
 export type StatusResult = {
-  newComponents: ConsumerComponent[];
-  modifiedComponent: ConsumerComponent[];
-  stagedComponents: ModelComponent[];
-  componentsWithIssues: ConsumerComponent[];
-  importPendingComponents: BitId[];
-  autoTagPendingComponents: BitId[];
-  invalidComponents: InvalidComponent[];
-  locallySoftRemoved: BitId[];
-  remotelySoftRemoved: BitId[];
-  outdatedComponents: ConsumerComponent[];
-  mergePendingComponents: DivergedComponent[];
-  componentsDuringMergeState: BitIds;
-  componentsWithIndividualFiles: ConsumerComponent[];
-  softTaggedComponents: BitId[];
-  snappedComponents: BitId[];
+  newComponents: ComponentID[];
+  modifiedComponent: ComponentID[];
+  stagedComponents: { id: ComponentID; versions: string[] }[];
+  componentsWithIssues: { id: ComponentID; issues: IssuesList }[];
+  importPendingComponents: ComponentID[];
+  autoTagPendingComponents: ComponentID[];
+  invalidComponents: { id: ComponentID; error: Error }[];
+  locallySoftRemoved: ComponentID[];
+  remotelySoftRemoved: ComponentID[];
+  outdatedComponents: { id: ComponentID; latestVersion: string }[];
+  mergePendingComponents: DivergeDataPerId[];
+  componentsDuringMergeState: ComponentID[];
+  softTaggedComponents: ComponentID[];
+  snappedComponents: ComponentID[];
   pendingUpdatesFromMain: DivergeDataPerId[];
   laneName: string | null; // null if default
 };
@@ -103,26 +102,58 @@ export class StatusMain {
     Analytics.setExtraData('num_components_with_missing_dependencies', componentsWithIssues.length);
     Analytics.setExtraData('autoTagPendingComponents', autoTagPendingComponents.length);
     Analytics.setExtraData('deleted', invalidComponents.length);
+
+    const convertBitIdToComponentIdsAndSort = async (ids: BitId[]) =>
+      ComponentID.sortIds(await this.workspace.resolveMultipleComponentIds(ids));
+
+    const convertObjToComponentIdsAndSort = async <T>(
+      objectsWithId: Array<T & { id: BitId }>
+    ): Promise<Array<T & { id: ComponentID }>> => {
+      const results = await Promise.all(
+        objectsWithId.map(async (obj) => {
+          return {
+            ...obj,
+            id: await this.workspace.resolveComponentId(obj.id),
+          };
+        })
+      );
+      return results.sort((a, b) => a.id.toString().localeCompare(b.id.toString()));
+    };
+
     await consumer.onDestroy();
     return {
-      newComponents: ComponentsList.sortComponentsByName(newComponents),
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      modifiedComponent: ComponentsList.sortComponentsByName(modifiedComponent),
-      stagedComponents: ComponentsList.sortComponentsByName(stagedComponents),
-      componentsWithIssues, // no need to sort, we don't print it as is
-      importPendingComponents, // no need to sort, we use only its length
-      autoTagPendingComponents: ComponentsList.sortComponentsByName(autoTagPendingComponentsIds),
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      invalidComponents,
-      locallySoftRemoved,
-      remotelySoftRemoved: remotelySoftRemoved.map((c) => c.id),
-      outdatedComponents,
-      mergePendingComponents,
-      componentsDuringMergeState,
-      componentsWithIndividualFiles: await componentsList.listComponentsWithIndividualFiles(),
-      softTaggedComponents,
-      snappedComponents,
-      pendingUpdatesFromMain,
+      newComponents: await convertBitIdToComponentIdsAndSort(newComponents.map((c) => c.id)),
+      modifiedComponent: await convertBitIdToComponentIdsAndSort(modifiedComponent.map((c) => c.id)),
+      stagedComponents: await convertObjToComponentIdsAndSort(
+        stagedComponents.map((c) => ({
+          id: c.toBitId(),
+          versions: c.getLocalTagsOrHashes(),
+        }))
+      ),
+      // @ts-ignore - not clear why, it fails the "bit build" without it
+      componentsWithIssues: await convertObjToComponentIdsAndSort(
+        componentsWithIssues.map((c) => ({ id: c.id, issues: c.issues }))
+      ), // no need to sort, we don't print it as is
+      importPendingComponents: await convertBitIdToComponentIdsAndSort(importPendingComponents), // no need to sort, we use only its length
+      autoTagPendingComponents: await convertBitIdToComponentIdsAndSort(autoTagPendingComponentsIds),
+      invalidComponents: await convertObjToComponentIdsAndSort(
+        invalidComponents.map((c) => ({ id: c.id, error: c.error }))
+      ),
+      locallySoftRemoved: await convertBitIdToComponentIdsAndSort(locallySoftRemoved),
+      remotelySoftRemoved: await convertBitIdToComponentIdsAndSort(remotelySoftRemoved.map((c) => c.id)),
+      outdatedComponents: await convertObjToComponentIdsAndSort(
+        outdatedComponents.map((c) => ({
+          id: c.id, // @ts-ignore
+          latestVersion: c.latestVersion,
+        }))
+      ),
+      mergePendingComponents: await convertObjToComponentIdsAndSort(
+        mergePendingComponents.map((c) => ({ id: c.id, divergeData: c.diverge }))
+      ),
+      componentsDuringMergeState: await convertBitIdToComponentIdsAndSort(componentsDuringMergeState),
+      softTaggedComponents: await convertBitIdToComponentIdsAndSort(softTaggedComponents),
+      snappedComponents: await convertBitIdToComponentIdsAndSort(snappedComponents),
+      pendingUpdatesFromMain: await convertObjToComponentIdsAndSort(pendingUpdatesFromMain),
       laneName,
     };
   }

@@ -39,7 +39,7 @@ describe('ts config mutator test', () => {
     config.addExclude(['dist']);
     expect(config.raw.tsconfig.exclude).toContain('dist');
   });
-  
+
   it('add multiple excludes', () => {
     const config = new TypescriptConfigMutator(baseTypescriptConfig);
     config.addExclude(['dist', 'public']);

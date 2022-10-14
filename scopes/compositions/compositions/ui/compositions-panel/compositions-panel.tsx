@@ -6,15 +6,32 @@ import { Composition } from '../../composition';
 import styles from './compositions-panel.module.scss';
 
 export type CompositionsPanelProps = {
+  /**
+   * list of compositions
+   */
   compositions: Composition[];
+  /**
+   * select composition to display
+   */
   onSelectComposition: (composition: Composition) => void;
+  /**
+   * the currently active composition
+   */
   active?: Composition;
+  /**
+   * the url to the base composition. doesntc contain the current composition params
+   */
   url: string;
+  /**
+   * checks if a component is using the new preview api. if false, doesnt scale to support new preview
+   */
+  isScaling?: boolean;
 } & React.HTMLAttributes<HTMLUListElement>;
 
 export function CompositionsPanel({
   url,
   compositions,
+  isScaling,
   onSelectComposition: onSelect,
   active,
   className,
@@ -30,6 +47,8 @@ export function CompositionsPanel({
   return (
     <ul {...rest} className={classNames(className)}>
       {compositions.map((composition) => {
+        const href = isScaling ? `${url}&name=${composition.identifier}` : `${url}&${composition.identifier}`;
+
         // TODO - move to composition panel node
         return (
           <li
@@ -41,12 +60,7 @@ export function CompositionsPanel({
               <span className={styles.name}>{composition.displayName}</span>
             </a>
             <div className={styles.right}>
-              <a
-                className={styles.panelLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                href={`${url}&${composition.identifier}`}
-              >
+              <a className={styles.panelLink} target="_blank" rel="noopener noreferrer" href={href}>
                 <Icon className={styles.icon} of="open-tab" />
               </a>
             </div>

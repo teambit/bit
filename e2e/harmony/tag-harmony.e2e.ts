@@ -34,7 +34,7 @@ describe('tag components on Harmony', function () {
     });
     it('bit status should work and not show modified', () => {
       const status = helper.command.statusJson();
-      expect(status.modifiedComponent).to.be.empty;
+      expect(status.modifiedComponents).to.be.empty;
     });
     describe('tag without build after full tag', () => {
       before(() => {
@@ -62,7 +62,7 @@ describe('tag components on Harmony', function () {
     });
     it('should not show the component as modified', () => {
       const status = helper.command.statusJson();
-      expect(status.modifiedComponent).to.be.empty;
+      expect(status.modifiedComponents).to.be.empty;
     });
     // this happens as a result of package.json in the node_modules for author point to the wrong
     // version. currently, the version is removed.
@@ -421,6 +421,47 @@ describe('tag components on Harmony', function () {
     it('should not throw', () => {
       // don't skip the build here. otherwise, you won't be able to reproduce.
       expect(() => helper.command.tagAllComponents()).not.to.throw();
+    });
+  });
+  describe('tag from scope', () => {
+    let bareTag;
+    let beforeTagging;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents(3);
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+
+      bareTag = helper.scopeHelper.getNewBareScope('-bare-merge');
+      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, bareTag.scopePath);
+      beforeTagging = helper.scopeHelper.cloneScope(bareTag.scopePath);
+      helper.command.tagFromScope(bareTag.scopePath, `${helper.scopes.remote}/comp2 ${helper.scopes.remote}/comp3`);
+    });
+    it('should tag them successfully', () => {
+      const comp2OnBare = helper.command.catComponent(`${helper.scopes.remote}/comp2`, bareTag.scopePath);
+      expect(comp2OnBare.versions).to.have.property('0.0.1');
+      const comp3OnBare = helper.command.catComponent(`${helper.scopes.remote}/comp3`, bareTag.scopePath);
+      expect(comp3OnBare.versions).to.have.property('0.0.1');
+    });
+    describe('running with --push flag', () => {
+      before(() => {
+        helper.scopeHelper.getClonedScope(beforeTagging, bareTag.scopePath);
+        helper.command.tagFromScope(
+          bareTag.scopePath,
+          `${helper.scopes.remote}/comp2 ${helper.scopes.remote}/comp3`,
+          '--push'
+        );
+      });
+      it('should export the modified components to the remote', () => {
+        const comp2OnBare = helper.command.catComponent(`${helper.scopes.remote}/comp2`, bareTag.scopePath);
+        const comp1OnRemote = helper.command.catComponent(`${helper.scopes.remote}/comp2`, helper.scopes.remotePath);
+        expect(comp2OnBare.head).to.equal(comp1OnRemote.head);
+
+        const comp3OnBare = helper.command.catComponent(`${helper.scopes.remote}/comp3`, bareTag.scopePath);
+        const comp2OnRemote = helper.command.catComponent(`${helper.scopes.remote}/comp3`, helper.scopes.remotePath);
+        expect(comp3OnBare.head).to.equal(comp2OnRemote.head);
+      });
     });
   });
 });

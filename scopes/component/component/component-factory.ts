@@ -62,7 +62,7 @@ export interface ComponentFactory {
    */
   getRemoteComponent?: (id: ComponentID) => Promise<Component>;
 
-  getLegacyGraph(ids?: ComponentID[]): Promise<LegacyGraph>;
+  getLegacyGraph(ids?: ComponentID[], shouldThrowOnMissingDep?: boolean): Promise<LegacyGraph>;
 
   getLogs(id: ComponentID, shortHash?: boolean, startsFrom?: string): Promise<ComponentLog[]>;
 

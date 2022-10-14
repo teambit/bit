@@ -46,5 +46,5 @@ export const buildConfigTransformer: TsConfigTransformer = (
   return newConfig;
 };
 
-`
+`;
 }

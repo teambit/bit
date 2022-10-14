@@ -127,7 +127,7 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
   private async saveExtensionsDataIntoScope(components: ConsumerComponent[], buildStatus: BuildStatus) {
     await mapSeries(components, async (component) => {
       component.buildStatus = buildStatus;
-      await this.scope.legacyScope.sources.enrichSource(component);
+      await this.snapping._enrichComp(component);
     });
     await this.scope.legacyScope.objects.persist();
   }
@@ -136,7 +136,7 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
     const objectList = new ObjectList();
     const signComponents = await mapSeries(components, async (component) => {
       component.buildStatus = buildStatus;
-      const objects = await this.scope.legacyScope.sources.getObjectsToEnrichSource(component);
+      const objects = await this.snapping._getObjectsToEnrichComp(component);
       const scopeName = component.scope as string;
       const objectToMerge = await ObjectList.fromBitObjects(objects);
       objectToMerge.addScopeName(scopeName);

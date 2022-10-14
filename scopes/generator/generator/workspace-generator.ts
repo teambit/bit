@@ -144,11 +144,6 @@ export class WorkspaceGenerator {
       await this.importer.import(
         {
           ids: [componentToImport.id],
-          verbose: false,
-          objectsOnly: false,
-          override: false,
-          writeDists: false,
-          writeConfig: false,
           installNpmPackages: false,
           writeToPath: componentToImport.path,
         },

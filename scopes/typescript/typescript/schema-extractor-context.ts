@@ -2,6 +2,8 @@ import { TsserverClient } from '@teambit/ts-server';
 import ts, { ExportDeclaration, getTextOfJSDocComment, Node, TypeNode } from 'typescript';
 import { getTokenAtPosition, canHaveJsDoc, getJsDoc } from 'tsutils';
 import { head } from 'lodash';
+// eslint-disable-next-line import/no-unresolved
+import protocol from 'typescript/lib/protocol';
 // @ts-ignore david we should figure fix this.
 import type { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
@@ -174,21 +176,26 @@ export class SchemaExtractorContext {
     return firstDef?.file;
   }
 
+  async definitionInfo(node: Node): Promise<protocol.DefinitionInfo | undefined> {
+    const location = this.getLocation(node);
+    const filePath = this.getPath(node);
+
+    const def = await this.tsserver.getDefinition(filePath, location);
+
+    const firstDef = head(def.body);
+
+    return firstDef;
+  }
+
   /**
    * get a definition for a given node.
    */
-  async definition(node: Node): Promise<Node | undefined> {
-    const def = await this.tsserver.getDefinition(this.getPath(node), this.getLocation(node));
-
-    const firstDef = head(def.body);
-    if (!firstDef) {
-      return undefined;
-    }
-
-    const startPosition = firstDef.start;
-    const sourceFile = this.getSourceFileInsideComponent(firstDef.file);
+  async definition(definitonInfo: protocol.DefinitionInfo): Promise<Node | undefined> {
+    const startPosition = definitonInfo.start;
+    const sourceFile = this.getSourceFileInsideComponent(definitonInfo.file);
     if (!sourceFile) {
-      return undefined; // learn how to return a reference to a different component here.
+      // it might be an external reference, cant get the node
+      return undefined;
     }
     const pos = this.getPosition(sourceFile, startPosition.line, startPosition.offset);
     const nodeAtPos = getTokenAtPosition(sourceFile, pos);
@@ -199,10 +206,16 @@ export class SchemaExtractorContext {
    * visit a definition for node - e.g. return it's schema.
    */
   async visitDefinition(node: Node): Promise<SchemaNode | undefined> {
-    const definition = await this.definition(node);
-    if (!definition) {
+    const definitionInfo = await this.definitionInfo(node);
+    if (!definitionInfo) {
       return undefined;
     }
+
+    const definition = await this.definition(definitionInfo);
+    if (!definition) {
+      return this.getTypeRefForExternalNode(node);
+    }
+
     return this.visit(definition.parent);
   }
 
@@ -333,6 +346,14 @@ export class SchemaExtractorContext {
 
   private getCompIdByPkgName(pkgName: string): ComponentID | undefined {
     return this.componentDeps.find((dep) => dep.packageName === pkgName)?.componentId;
+  }
+
+  async getTypeRefForExternalNode(node: Node): Promise<TypeRefSchema> {
+    const info = await this.getQuickInfo(node);
+    const typeStr = parseTypeFromQuickInfo(info);
+    const location = this.getLocation(node);
+    const filePath = this.getPath(node);
+    return this.getTypeRefForExternalPath(typeStr, filePath, location);
   }
 
   async getTypeRefForExternalPath(typeStr: string, filePath: string, location: Location): Promise<TypeRefSchema> {

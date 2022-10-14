@@ -1,6 +1,8 @@
 import fs from 'fs-extra';
 import path from 'path';
+import pMapSeries from 'p-map-series';
 import { LaneId } from '@teambit/lane-id';
+import { compact } from 'lodash';
 import { Mutex } from 'async-mutex';
 import { BitId } from '../../bit-id';
 import { PREVIOUS_DEFAULT_LANE, REMOTE_REFS_DIR } from '../../constants';
@@ -64,6 +66,19 @@ export default class RemoteLanes {
     return this.remotes[remoteLaneId.scope][remoteLaneId.name];
   }
 
+  async getRefsFromAllLanesOnScope(scopeName: string, bitId: BitId): Promise<Ref[]> {
+    const allLaneIdOfScope = await this.getAllRemoteLaneIdsOfScope(scopeName);
+    const results = await pMapSeries(allLaneIdOfScope, (laneId) => this.getRef(laneId, bitId));
+
+    return compact(results);
+  }
+
+  async getRefsFromAllLanes(bitId: BitId): Promise<Ref[]> {
+    const allLaneIds = await this.getAllRemoteLaneIds();
+    const results = await pMapSeries(allLaneIds, (laneId) => this.getRef(laneId, bitId));
+    return compact(results);
+  }
+
   async getRemoteBitIds(remoteLaneId: LaneId): Promise<BitId[]> {
     const remoteLane = await this.getRemoteLane(remoteLaneId);
     return remoteLane.map((item) => item.id.changeVersion(item.head.toString()));
@@ -98,6 +113,11 @@ export default class RemoteLanes {
       .map((match) => match.split(path.sep))
       .map(([head, ...tail]) => LaneId.from(tail.join('/'), head))
       .filter((remoteLaneId) => !remoteLaneId.isDefault() && remoteLaneId.name !== PREVIOUS_DEFAULT_LANE);
+  }
+
+  async getAllRemoteLaneIdsOfScope(scopeName: string): Promise<LaneId[]> {
+    const matches = await glob(path.join('*'), { cwd: path.join(this.basePath, scopeName) });
+    return matches.map((match) => LaneId.from(match, scopeName)).filter((laneId) => !laneId.isDefault());
   }
 
   async syncWithLaneObject(remoteName: string, lane: Lane) {

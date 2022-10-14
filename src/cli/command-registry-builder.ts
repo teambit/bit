@@ -21,8 +21,6 @@ import Add from './commands/public-cmds/add-cmd';
 import Config from './commands/public-cmds/config-cmd';
 import Diff from './commands/public-cmds/diff-cmd';
 import Doctor from './commands/public-cmds/doctor-cmd';
-import Fetch from './commands/public-cmds/fetch-cmd';
-import Graph from './commands/public-cmds/graph-cmd';
 import Init from './commands/public-cmds/init-cmd';
 import Dependents from './commands/public-cmds/dependents-cmd';
 import Login from './commands/public-cmds/login-cmd';
@@ -75,10 +73,6 @@ export default function registerCommands(): CommandRegistry {
     new Migrate(),
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     new Doctor(),
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    new Graph(),
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    new Fetch(),
     new RunAction(),
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     new ScopeLanesList(),

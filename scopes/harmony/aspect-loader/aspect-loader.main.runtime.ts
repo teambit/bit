@@ -265,6 +265,10 @@ export class AspectLoaderMain {
     return this.failedLoadAspect;
   }
 
+  public resetFailedLoadAspects() {
+    this.failedLoadAspect = [];
+  }
+
   private addFailure(id: string): void {
     if (this.failedAspects.includes(id)) return;
     this.failedLoadAspect.push(id);
@@ -463,7 +467,6 @@ export class AspectLoaderMain {
    */
   registerPlugins(pluginDefs: PluginDefinition[]) {
     this.pluginSlot.register(pluginDefs);
-    return this;
   }
 
   // TODO: change to use the new logger, see more info at loadExtensions function in the workspace
@@ -480,7 +483,8 @@ export class AspectLoaderMain {
     } catch (e: any) {
       const ids = extensionsManifests.map((manifest) => manifest.id || 'unknown');
       // TODO: improve texts
-      const warning = UNABLE_TO_LOAD_EXTENSION_FROM_LIST(ids);
+      const errorMsg = e.message.split('\n')[0];
+      const warning = UNABLE_TO_LOAD_EXTENSION_FROM_LIST(ids, errorMsg);
       this.logger.error(warning, e);
       if (this.logger.isLoaderStarted) {
         this.logger.consoleFailure(warning);

@@ -1,6 +1,6 @@
 import { ImporterAspect } from './importer.aspect';
 
+export type { ImportOptions } from './import-components';
 export type { ImporterMain } from './importer.main.runtime';
-export { Importer } from './importer';
 export default ImporterAspect;
 export { ImporterAspect };

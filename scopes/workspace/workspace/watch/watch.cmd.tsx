@@ -41,7 +41,7 @@ export class WatchCommand implements Command {
       failureMsg?: string
     ) => {
       const files = filePaths.join(', ');
-      clearOutdatedData();
+      // clearOutdatedData();
       if (!buildResults.length) {
         failureMsg = failureMsg || `The files ${files} have been changed, but nothing to compile`;
         this.logger.console(`${failureMsg}\n\n`);
@@ -60,7 +60,7 @@ export class WatchCommand implements Command {
       failureMsg?: string
     ) => {
       const files = filePaths.join(', ');
-      clearOutdatedData();
+      // clearOutdatedData();
       if (!buildResults.length) {
         failureMsg = failureMsg || `The files ${files} have been added, but nothing to compile`;
         this.logger.console(`${failureMsg}\n\n`);

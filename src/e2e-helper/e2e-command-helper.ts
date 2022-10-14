@@ -288,6 +288,13 @@ export default class CommandHelper {
   removeRemoteLane(laneName = 'dev', options = '') {
     return this.runCmd(`bit lane remove ${this.scopes.remote}/${laneName} ${options} --remote --silent`);
   }
+  writeTsconfig(flags = '') {
+    return this.runCmd(`bit write-tsconfig ${flags} --silent`);
+  }
+  writeTsconfigDryRun(flags = '') {
+    const results = this.runCmd(`bit write-tsconfig  --dry-run ${flags} --json`);
+    return JSON.parse(results);
+  }
   showOneLane(name: string) {
     return this.runCmd(`bit lane show ${name}`);
   }
@@ -447,8 +454,8 @@ export default class CommandHelper {
     return this.runCmd(`bit import ${id} --extension`);
   }
 
-  build(id = '', getStderrAsPartOfTheOutput = false) {
-    return this.runCmd(`bit build ${id}`, undefined, undefined, undefined, getStderrAsPartOfTheOutput);
+  build(id = '', flags = '', getStderrAsPartOfTheOutput = false) {
+    return this.runCmd(`bit build ${id} ${flags}`, undefined, undefined, undefined, getStderrAsPartOfTheOutput);
   }
 
   buildComponentWithOptions(id = '', options: Record<string, any>, cwd: string = this.scopes.localPath) {
@@ -491,9 +498,11 @@ export default class CommandHelper {
     return deprecationData.config.deprecate;
   }
 
-  getStagedIdsFromStatus(): string[] {
+  getStagedIdsFromStatus(stripScopeName = true): string[] {
     const status = this.statusJson();
-    return status.stagedComponents.map((s) => s.id);
+    return status.stagedComponents
+      .map((s) => s.id)
+      .map((id) => (stripScopeName ? id.replace(`${this.scopes.remote}/`, '') : id));
   }
 
   expectStatusToBeClean(exclude: string[] = []) {
@@ -526,15 +535,20 @@ export default class CommandHelper {
     });
   }
 
+  statusComponentIsModified(fullIdWithVersion: string): boolean {
+    const status = this.statusJson();
+    return status.modifiedComponents.includes(fullIdWithVersion);
+  }
+
   statusComponentIsStaged(id: string): boolean {
     const status = this.statusJson();
     const stagedIds = status.stagedComponents.map((s) => s.id);
     return stagedIds.includes(id);
   }
 
-  statusComponentIsModified(fullId: string): boolean {
+  statusComponentHasIssues(id: string): boolean {
     const status = this.statusJson();
-    return status.modifiedComponent.includes(fullId);
+    return status.componentsWithIssues.includes(`${this.scopes.remote}/${id}`);
   }
 
   showComponent(id = 'bar/foo') {
@@ -599,8 +613,13 @@ export default class CommandHelper {
   mergeLane(laneName: string, options = '') {
     return this.runCmd(`bit lane merge ${laneName} ${options}`);
   }
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  diff(id? = '') {
+  mergeLaneFromScope(cwd: string, laneName: string, options = '') {
+    return this.runCmd(`bit _merge-lane ${laneName} ${options}`, cwd);
+  }
+  tagFromScope(cwd: string, ids: string, options = '') {
+    return this.runCmd(`bit _tag ${ids} ${options} -m msg`, cwd);
+  }
+  diff(id = '') {
     const output = this.runCmd(`bit diff ${id}`);
     return removeChalkCharacters(output);
   }

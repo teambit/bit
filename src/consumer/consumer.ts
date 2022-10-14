@@ -377,7 +377,7 @@ export default class Consumer {
     loader.start(`import ${ids.length} components with their dependencies (if missing)`);
     const versionDependenciesArr: VersionDependencies[] = fromOriginalScope
       ? await scopeComponentsImporter.importManyFromOriginalScopes(ids)
-      : await scopeComponentsImporter.importMany({ ids, lanes: lane ? [lane] : undefined });
+      : await scopeComponentsImporter.importMany({ ids, ignoreMissingHead, lanes: lane ? [lane] : undefined });
     const componentWithDependencies = await multipleVersionDependenciesToConsumer(
       versionDependenciesArr,
       this.scope.objects
@@ -397,14 +397,6 @@ export default class Consumer {
       };
     });
     return shouldDependenciesSavedAsComponents;
-  }
-
-  /**
-   * By default, the dists paths are inside the component.
-   * If dist attribute is populated in bit.json, the paths are in consumer-root/dist-target.
-   */
-  shouldDistsBeInsideTheComponent(): boolean {
-    return true;
   }
 
   async listComponentsForAutoTagging(modifiedComponents: BitIds): Promise<Component[]> {

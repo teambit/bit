@@ -25,6 +25,8 @@ export class NodeApp implements Application {
     const port = await Port.getPort(from, to);
     const child = execFile('node', [this.entry, port.toString()], (error) => {
       if (error) {
+        // @todo: this is causing uncaughtException in the main process. a better way to handle this would be to use promise.
+        // however, since it expects to return a number, it would require a bigger refactor.
         throw error;
       }
     });

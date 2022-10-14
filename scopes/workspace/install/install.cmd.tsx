@@ -1,4 +1,5 @@
 import { Command, CommandOptions } from '@teambit/cli';
+import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
 import { WorkspaceDependencyLifecycleType } from '@teambit/dependency-resolver';
 import { Logger } from '@teambit/logger';
 import chalk from 'chalk';
@@ -49,6 +50,7 @@ export default class InstallCmd implements Command {
 
   async report([packages = []]: [string[]], options: InstallCmdOptions) {
     const startTime = Date.now();
+    if (!this.workspace) throw new ConsumerNotFound();
     this.logger.console(`Resolving component dependencies for workspace: '${chalk.cyan(this.workspace.name)}'`);
     const installOpts: WorkspaceInstallOptions = {
       variants: options.variants,

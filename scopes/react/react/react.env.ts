@@ -134,16 +134,30 @@ export class ReactEnv
   }
 
   /**
+   * @deprecated use createCjsJestTester()
+   */
+  getCjsJestTester(jestConfigPath?: string, jestModulePath?: string): Tester {
+    return this.createCjsJestTester(jestConfigPath, jestModulePath);
+  }
+
+  /**
    * Get a jest tester instance with react config and cjs configs
    * @param jestConfigPath
    * @param jestModulePath
    * @returns
    */
-  getCjsJestTester(jestConfigPath?: string, jestModulePath?: string): Tester {
+  createCjsJestTester(jestConfigPath?: string, jestModulePath?: string): Tester {
     const pathToSource = pathNormalizeToLinux(__dirname).replace('/dist', '');
     const defaultConfig = join(pathToSource, './jest/jest.cjs.config.js');
     const config = jestConfigPath || defaultConfig;
     return this.jestAspect.createTester(config, jestModulePath || require.resolve('jest'));
+  }
+
+  /**
+   * @deprecated use createEsmJestTester()
+   */
+  getEsmJestTester(jestConfigPath?: string, jestModulePath?: string): Tester {
+    return this.createEsmJestTester(jestConfigPath, jestModulePath);
   }
 
   /**
@@ -152,7 +166,7 @@ export class ReactEnv
    * @param jestModulePath
    * @returns
    */
-  getEsmJestTester(jestConfigPath?: string, jestModulePath?: string): Tester {
+  createEsmJestTester(jestConfigPath?: string, jestModulePath?: string): Tester {
     const pathToSource = pathNormalizeToLinux(__dirname).replace('/dist', '');
     const defaultConfig = join(pathToSource, './jest/jest.esm.config.js');
     const config = jestConfigPath || defaultConfig;
@@ -163,11 +177,11 @@ export class ReactEnv
    * returns a component tester.
    */
   getTester(jestConfigPath: string, jestModulePath?: string): Tester {
-    // return this.getEsmJestTester(jestConfigPath, jestModulePath);
-    return this.getCjsJestTester(jestConfigPath, jestModulePath);
+    // return this.createEsmJestTester(jestConfigPath, jestModulePath);
+    return this.createCjsJestTester(jestConfigPath, jestModulePath);
   }
 
-  private getTsCompilerOptions(mode: CompilerMode = 'dev'): TypeScriptCompilerOptions {
+  private createTsCompilerOptions(mode: CompilerMode = 'dev'): TypeScriptCompilerOptions {
     const tsconfig = mode === 'dev' ? cloneDeep(defaultTsConfig) : cloneDeep(buildTsConfig);
     const pathToSource = pathNormalizeToLinux(__dirname).replace('/dist/', '/src/');
     const compileJs = true;
@@ -182,15 +196,29 @@ export class ReactEnv
   }
 
   /**
+   * @deprecated use createTsCjsCompiler()
+   */
+  getTsCjsCompiler(mode: CompilerMode = 'dev', transformers: TsConfigTransformer[] = [], tsModule = ts) {
+    return this.createTsCjsCompiler(mode, transformers, tsModule);
+  }
+
+  /**
    * Get a compiler instance with react config and set it to cjs module
    * @param mode
    * @param transformers
    * @param tsModule
    * @returns
    */
-  getTsCjsCompiler(mode: CompilerMode = 'dev', transformers: TsConfigTransformer[] = [], tsModule = ts) {
-    const tsCompileOptions = this.getTsCompilerOptions(mode);
+  createTsCjsCompiler(mode: CompilerMode = 'dev', transformers: TsConfigTransformer[] = [], tsModule = ts) {
+    const tsCompileOptions = this.createTsCompilerOptions(mode);
     return this.tsAspect.createCjsCompiler(tsCompileOptions, transformers, tsModule);
+  }
+
+  /**
+   * @deprecated use createTsEsmCompiler()
+   */
+  getTsEsmCompiler(mode: CompilerMode = 'dev', transformers: TsConfigTransformer[] = [], tsModule = ts) {
+    this.createTsEsmCompiler(mode, transformers, tsModule);
   }
 
   /**
@@ -200,22 +228,25 @@ export class ReactEnv
    * @param tsModule
    * @returns
    */
-  getTsEsmCompiler(mode: CompilerMode = 'dev', transformers: TsConfigTransformer[] = [], tsModule = ts) {
-    const tsCompileOptions = this.getTsCompilerOptions(mode);
+  createTsEsmCompiler(mode: CompilerMode = 'dev', transformers: TsConfigTransformer[] = [], tsModule = ts) {
+    const tsCompileOptions = this.createTsCompilerOptions(mode);
     return this.tsAspect.createEsmCompiler(tsCompileOptions, transformers, tsModule);
   }
 
   getCompiler(transformers: TsConfigTransformer[] = [], tsModule = ts) {
     // return this.getTsEsmCompiler('dev', transformers, tsModule);
-    return this.getTsCjsCompiler('dev', transformers, tsModule);
+    return this.createTsCjsCompiler('dev', transformers, tsModule);
   }
 
   /**
    * returns and configures the component linter.
    */
   getLinter(context: LinterContext, transformers: EslintConfigTransformer[] = []): Linter {
+    const tsConfig = this.createTsCompilerOptions('dev').tsconfig;
+
     const defaultTransformer: EslintConfigTransformer = (configMutator) => {
       configMutator.addExtensionTypes(['.md', '.mdx']);
+      configMutator.setTsConfig(tsConfig);
       return configMutator;
     };
 
@@ -385,18 +416,32 @@ export class ReactEnv
   }
 
   /**
+   * @deprecated use createCjsPackageJsonProps()
+   */
+  getCjsPackageJsonProps(): PackageJsonProps {
+    return this.createCjsPackageJsonProps();
+  }
+
+  /**
    * Get the default package.json props for a cjs component
    * @returns
    */
-  getCjsPackageJsonProps(): PackageJsonProps {
+  createCjsPackageJsonProps(): PackageJsonProps {
     return this.tsAspect.getCjsPackageJsonProps();
+  }
+
+  /**
+   * @deprecated use createEsmPackageJsonProps()
+   */
+  getEsmPackageJsonProps(): PackageJsonProps {
+    return this.createEsmPackageJsonProps();
   }
 
   /**
    * Get the default package.json props for an esm component
    * @returns
    */
-  getEsmPackageJsonProps(): PackageJsonProps {
+  createEsmPackageJsonProps(): PackageJsonProps {
     return this.tsAspect.getEsmPackageJsonProps();
   }
 
@@ -441,9 +486,15 @@ export class ReactEnv
    * returns the component build pipeline.
    */
   getBuildPipe(modifiers: GetBuildPipeModifiers = {}): BuildTask[] {
-    const transformers: TsConfigTransformer[] =
-      (modifiers?.tsModifier?.transformers as any as TsConfigTransformer[]) || [];
-    return [this.getCompilerTask(transformers, modifiers?.tsModifier?.module || ts), this.tester.task];
+    const transformers: Function[] = modifiers?.tsModifier?.transformers || [];
+    return [this.createCjsCompilerTask(transformers, modifiers?.tsModifier?.module || ts), this.tester.task];
+  }
+
+  /**
+   * @deprecated use createBuildPipeWithoutCompiler()
+   */
+  getBuildPipeWithoutCompiler(): BuildTask[] {
+    return this.createBuildPipeWithoutCompiler();
   }
 
   /**
@@ -451,9 +502,16 @@ export class ReactEnv
    * This help in cases you want to only replace the compilation task with something else
    * @returns
    */
-  getBuildPipeWithoutCompiler(): BuildTask[] {
+  createBuildPipeWithoutCompiler(): BuildTask[] {
     const pipeWithoutCompiler = this.getBuildPipe().filter((task) => task.aspectId !== this.compilerAspectId);
     return pipeWithoutCompiler;
+  }
+
+  /**
+   * @deprecated use createEsmCompilerTask()
+   */
+  getEsmCompilerTask(transformers: TsConfigTransformer[] = [], tsModule = ts) {
+    return this.createEsmCompilerTask(transformers as PipeServiceModifier[], tsModule);
   }
 
   /**
@@ -462,9 +520,16 @@ export class ReactEnv
    * @param tsModule
    * @returns
    */
-  getEsmCompilerTask(transformers: TsConfigTransformer[] = [], tsModule = ts) {
-    const tsCompiler = this.getTsEsmCompiler('build', transformers, tsModule);
+  createEsmCompilerTask(transformers: PipeServiceModifier[] = [], tsModule = ts) {
+    const tsCompiler = this.createTsEsmCompiler('build', transformers as TsConfigTransformer[], tsModule);
     return this.compiler.createTask('TSCompiler', tsCompiler);
+  }
+
+  /**
+   * @deprecated use createCjsCompilerTask()
+   * */
+  getCjsCompilerTask(transformers: TsConfigTransformer[] = [], tsModule = ts) {
+    return this.createCjsCompilerTask(transformers as Function[], tsModule);
   }
 
   /**
@@ -473,13 +538,9 @@ export class ReactEnv
    * @param tsModule
    * @returns
    */
-  getCjsCompilerTask(transformers: TsConfigTransformer[] = [], tsModule = ts) {
-    const tsCompiler = this.getTsCjsCompiler('build', transformers, tsModule);
+  createCjsCompilerTask(transformers: Function[] = [], tsModule = ts) {
+    const tsCompiler = this.createTsCjsCompiler('build', transformers as TsConfigTransformer[], tsModule);
     return this.compiler.createTask('TSCompiler', tsCompiler);
-  }
-
-  private getCompilerTask(transformers: TsConfigTransformer[] = [], tsModule = ts) {
-    return this.getCjsCompilerTask(transformers, tsModule);
   }
 
   async __getDescriptor() {

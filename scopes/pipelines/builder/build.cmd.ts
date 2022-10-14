@@ -15,6 +15,7 @@ type BuildOpts = {
   reuseCapsules: boolean;
   tasks: string;
   listTasks?: string;
+  skipTests?: boolean;
 };
 
 export class BuilderCmd implements Command {
@@ -40,6 +41,7 @@ specify the task-name (e.g. "TypescriptCompiler") or the task-aspect-id (e.g. te
       'list-tasks <string>',
       'list tasks of an env or a component-id for each one of the pipelines: build, tag and snap',
     ],
+    ['', 'skip-tests', 'skip running component tests during tag process'],
   ] as CommandOptions;
 
   constructor(private builder: BuilderMain, private workspace: Workspace, private logger: Logger) {}
@@ -54,6 +56,7 @@ specify the task-name (e.g. "TypescriptCompiler") or the task-aspect-id (e.g. te
       reuseCapsules = false,
       tasks,
       listTasks,
+      skipTests,
     }: BuildOpts
   ): Promise<string> {
     if (!this.workspace) throw new ConsumerNotFound();
@@ -85,6 +88,7 @@ specify the task-name (e.g. "TypescriptCompiler") or the task-aspect-id (e.g. te
       {
         dev,
         tasks: tasks ? tasks.split(',').map((task) => task.trim()) : [],
+        skipTests,
       }
     );
     longProcessLogger.end();
