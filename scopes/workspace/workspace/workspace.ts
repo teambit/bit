@@ -322,10 +322,11 @@ export class Workspace implements ComponentFactory {
   /**
    * list all workspace components.
    */
-  async list(filter?: { offset: number; limit: number }): Promise<Component[]> {
+  async list(filter?: { offset: number; limit: number }, loadOpts?: ComponentLoadOptions): Promise<Component[]> {
     const legacyIds = this.consumer.bitMap.getAllIdsAvailableOnLane();
     const ids = await this.resolveMultipleComponentIds(legacyIds);
-    return this.getMany(filter && filter.limit ? slice(ids, filter.offset, filter.offset + filter.limit) : ids);
+    const idsToGet = filter && filter.limit ? slice(ids, filter.offset, filter.offset + filter.limit) : ids;
+    return this.getMany(idsToGet, loadOpts);
   }
 
   /**
@@ -760,8 +761,8 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     return foundEnv?.components || [];
   }
 
-  async getMany(ids: Array<ComponentID>): Promise<Component[]> {
-    return this.componentLoader.getMany(ids);
+  async getMany(ids: Array<ComponentID>, loadOpts?: ComponentLoadOptions): Promise<Component[]> {
+    return this.componentLoader.getMany(ids, loadOpts);
   }
 
   getManyByLegacy(components: ConsumerComponent[], loadOpts?: ComponentLoadOptions): Promise<Component[]> {
