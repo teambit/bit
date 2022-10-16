@@ -3,6 +3,7 @@ import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
 
 import { Dependency } from '../model/dependency';
 import { DuplicateDependency, VersionSubgraph } from '../duplicate-dependency';
+import { compact, uniq } from 'lodash';
 
 export const DEPENDENCIES_TYPES = ['dependencies', 'devDependencies'];
 
@@ -17,6 +18,34 @@ export class ComponentGraph extends Graph<Component, Dependency> {
 
   protected create(nodes: ComponentNode[] = [], edges: DependencyEdge[] = []): this {
     return new ComponentGraph(nodes, edges) as this;
+  }
+
+  findIdsFromSourcesToTarget(sources: ComponentID[], target: ComponentID[]): ComponentID[] {
+    const allFlattened = sources.map((source) => this.successors(source.toString())).flat();
+    const allFlattenedIds = uniq(allFlattened.map((f) => f.id));
+    const idsToCheck = allFlattenedIds.filter((id) => !sources.includes(id.toString()) && id !== target);
+    const results: string[] = [];
+    idsToCheck.forEach((id) => {
+      const allSuccessors = this.successors(id);
+      // if (allSuccessors.find(s => s.id === target)) results.push(id);
+      if (allSuccessors.find((s) => s.id === target)) results.push(id);
+    });
+    console.log('done', results);
+    const components = this.getNodes(results).map((n) => n.attr);
+
+    return components.map((c) => c.id);
+    throw new Error('stop ehre');
+    // // If current node is not target, recur for all its succesors
+    // const successors = [...this._successors(source).keys()] || [];
+    // successors.forEach((nodeId) => {
+    //   // if (!visited[nodeId] && !currPath.includes(nodeId)) {
+    //   if (nodeId === target) return;
+    //   const flatten = this.successors(nodeId);
+    // });
+    // // // Remove current node from currentPath[] and mark it as unvisited
+
+    // visited[source] = false;
+    // return paths;
   }
 
   /**

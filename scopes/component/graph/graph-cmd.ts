@@ -10,6 +10,7 @@ import { Consumer, loadConsumerIfExist } from '@teambit/legacy/dist/consumer';
 import DependencyGraph from '@teambit/legacy/dist/scope/graph/scope-graph';
 import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
 import getRemoteByName from '@teambit/legacy/dist/remotes/get-remote-by-name';
+import { GraphMain } from './graph.main.runtime';
 
 type GraphOpt = {
   image?: string;
@@ -37,7 +38,26 @@ export class GraphCmd implements Command {
   ] as CommandOptions;
   remoteOp = true;
 
+  constructor(private graphMain: GraphMain) {}
+
   async report([id]: [string], { remote, allVersions, layout, image }: GraphOpt): Promise<string> {
+    const graphNew = await this.graphMain.getGraph();
+
+    // const isCycl = graphNew.successorsLayers('my-scope/bar');
+    // console.log("🚀 ~ file: graph-cmd.ts ~ line 48 ~ GraphCmd ~ report ~ isCycl", isCycl)
+    // console.log("🚀 ~ file: graph-cmd.ts ~ line 46 ~ GraphCmd ~ report ~ graphNew", graphNew)
+    console.log(
+      '🚀 ~ file: graph-cmd.ts ',
+      graphNew.findIdsFromSourcesToTarget(
+        ['teambit.dot-bit/segments/system@44ba2535d86674f7587f8533967cfa1d8db00e58'],
+        'teambit.blog-content/serverless-components@0.0.11'
+      )
+    );
+    // console.log("🚀 ~ file: graph-cmd.ts ", graphNew.findAllPaths('teambit.workspace/workspace@0.0.873', 'teambit.workspace/install@0.0.20', [], []))
+    // console.log("🚀 ~ file: graph-cmd.ts ", graphNew.findAllPaths('my-scope/bar', 'my-scope/bar4', [], []))
+
+    throw new Error('stop');
+
     const consumer = await loadConsumerIfExist();
     if (!consumer && !remote) throw new ConsumerNotFound();
 

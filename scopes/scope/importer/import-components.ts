@@ -37,6 +37,8 @@ import ScopeComponentsImporter from '@teambit/legacy/dist/scope/component-ops/sc
 import VersionDependencies, {
   multipleVersionDependenciesToConsumer,
 } from '@teambit/legacy/dist/scope/version-dependencies';
+import { GraphMain } from '@teambit/graph';
+import { Workspace } from '@teambit/workspace';
 
 export type ImportOptions = {
   ids: string[]; // array might be empty
@@ -85,16 +87,12 @@ export type ImportResult = {
 export default class ImportComponents {
   consumer: Consumer;
   scope: Scope;
-  options: ImportOptions;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   mergeStatus: { [id: string]: FilesStatus };
   private laneObjects: Lane[];
   private divergeData: Array<ModelComponent> = [];
-  // @ts-ignore
-  constructor(consumer: Consumer, options: ImportOptions) {
-    this.consumer = consumer;
-    this.scope = consumer.scope;
-    this.options = options;
+  constructor(private workspace: Workspace, private graph: GraphMain, public options: ImportOptions) {
+    this.consumer = this.workspace.consumer;
+    this.scope = this.consumer.scope;
     this.laneObjects = this.options.lanes ? (this.options.lanes.lanes as Lane[]) : [];
   }
 
@@ -354,7 +352,16 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
         bitIds.push(...dependenciesIds);
       }
       if (this.options.importDependents) {
+        const graph = await this.graph.getGraph();
+        const targetCompIds = await this.workspace.resolveMultipleComponentIds(bitIds);
+        const sourceIds = await this.workspace.listIds();
+        const ids = graph.findIdsFromSourcesToTarget(sourceIds, targetCompIds[0]);
         const dependentsIds = this._getDependentsFromGraph(bitIds, graphs);
+        console.log(
+          '🚀 ~ file: import-components.ts ~ line 310 ~ ImportComponents ~ getBitIds ~ dependentsIds',
+          dependentsIds
+        );
+        throw new Error('stop here');
         bitIds.push(...dependentsIds);
       }
     }

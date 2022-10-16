@@ -1,5 +1,6 @@
 /* eslint-disable max-lines */
 import memoize from 'memoizee';
+import graphlib from 'graphlib';
 import mapSeries from 'p-map-series';
 import type { PubsubMain } from '@teambit/pubsub';
 import { IssuesList } from '@teambit/component-issues';
