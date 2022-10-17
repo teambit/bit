@@ -28,7 +28,7 @@ import {
 } from '@teambit/dependency-resolver';
 import { ImporterAspect, ImporterMain, ImportOptions } from '@teambit/importer';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
-
+import { IssuesAspect, IssuesMain } from '@teambit/issues';
 import { DependencyTypeNotSupportedInPolicy } from './exceptions';
 import { InstallAspect } from './install.aspect';
 import { pickOutdatedPkgs } from './pick-outdated-pkgs';
@@ -272,15 +272,15 @@ export class InstallMain {
     return this._installModules({ dedupe: true });
   }
 
-  async addDuplicateComponentAndPackageIssue(component: Component) {
-    const pkgName = componentIdToPackageName(component.state._consumer);
+  async addDuplicateComponentAndPackageIssue(components: Component[]) {
     const workspacePolicy = this.dependencyResolver.getWorkspacePolicy();
-    const found = workspacePolicy.find(pkgName);
-    if (found) {
-      component.state.issues.getOrCreate(IssuesClasses.DuplicateComponentAndPackage).data = found.dependencyId;
-    }
-    // we don't want to add any data to the aspect
-    return undefined;
+    components.forEach((component) => {
+      const pkgName = componentIdToPackageName(component.state._consumer);
+      const found = workspacePolicy.find(pkgName);
+      if (found) {
+        component.state.issues.getOrCreate(IssuesClasses.DuplicateComponentAndPackage).data = found.dependencyId;
+      }
+    });
   }
 
   private async _getComponentsWithDependencyPolicies() {
@@ -434,11 +434,22 @@ export class InstallMain {
     CommunityAspect,
     ImporterAspect,
     CompilerAspect,
+    IssuesAspect,
   ];
 
   static runtime = MainRuntime;
 
-  static async provider([dependencyResolver, workspace, loggerExt, variants, cli, community, importer, compiler]: [
+  static async provider([
+    dependencyResolver,
+    workspace,
+    loggerExt,
+    variants,
+    cli,
+    community,
+    importer,
+    compiler,
+    issues,
+  ]: [
     DependencyResolverMain,
     Workspace,
     LoggerMain,
@@ -446,7 +457,8 @@ export class InstallMain {
     CLIMain,
     CommunityMain,
     ImporterMain,
-    CompilerMain
+    CompilerMain,
+    IssuesMain
   ]) {
     const logger = loggerExt.createLogger('teambit.bit/install');
     const installExt = new InstallMain(dependencyResolver, logger, workspace, variants, importer, compiler);
@@ -461,8 +473,8 @@ export class InstallMain {
         return installExt.install(undefined, installOpts);
       },
     });
-    if (workspace) {
-      workspace.onComponentLoad(installExt.addDuplicateComponentAndPackageIssue.bind(installExt));
+    if (issues) {
+      issues.registerAddComponentsIssues(installExt.addDuplicateComponentAndPackageIssue.bind(installExt));
     }
     const commands: CommandList = [
       new InstallCmd(installExt, workspace, logger),
