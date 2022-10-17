@@ -121,7 +121,7 @@ export default class ScopeComponentsImporter {
     // we don't care about the VersionDeps returned here as it may belong to the dependencies
     await this.getExternalMany(uniqExternals, remotes, throwForDependencyNotFound, lanes, throwForSeederNotFound);
     const versionDeps = await this.bitIdsToVersionDeps(idsToImport, throwForSeederNotFound);
-    await this.temporarilyFetchHeadsIfNeeded(ids, versionDeps, lanes);
+    // await this.temporarilyFetchHeadsIfNeeded(ids, versionDeps, lanes);
     logger.debug('importMany, completed!');
     return versionDeps;
   }
@@ -133,17 +133,17 @@ export default class ScopeComponentsImporter {
    * this is only needed when users ask importMany for ids with specific version.
    * otherwise, the fetch sends the head even with the old version.
    */
-  private async temporarilyFetchHeadsIfNeeded(ids: BitIds, versionDeps: VersionDependencies[], lanes?: Lane[]) {
-    if (ids.every((id) => !id.hasVersion())) return; // importMany already got the head.
-    const idsWithHead = versionDeps.map((v) => {
-      const head = v.component.component.head;
-      if (!head) return null;
-      if (head.isEqual(v.version.hash())) return null;
-      return v.component.id.changeVersion(head.toString());
-    });
-    const bitIds = BitIds.fromArray(compact(idsWithHead));
-    await this.importWithoutDeps(bitIds, true, lanes);
-  }
+  // private async temporarilyFetchHeadsIfNeeded(ids: BitIds, versionDeps: VersionDependencies[], lanes?: Lane[]) {
+  //   if (ids.every((id) => !id.hasVersion())) return; // importMany already got the head.
+  //   const idsWithHead = versionDeps.map((v) => {
+  //     const head = v.component.component.head;
+  //     if (!head) return null;
+  //     if (head.isEqual(v.version.hash())) return null;
+  //     return v.component.id.changeVersion(head.toString());
+  //   });
+  //   const bitIds = BitIds.fromArray(compact(idsWithHead));
+  //   await this.importWithoutDeps(bitIds, true, lanes);
+  // }
 
   /**
    * as opposed to importMany, which imports from dependents only.
