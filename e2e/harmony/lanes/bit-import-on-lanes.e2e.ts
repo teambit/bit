@@ -185,5 +185,33 @@ describe('bit lane command', function () {
         expect(() => helper.command.import()).to.not.throw();
       });
     });
+    describe('when the components on the lane have history other than head on main', () => {
+      before(() => {
+        helper.scopeHelper.setNewLocalAndRemoteScopes();
+        helper.bitJsonc.setupDefault();
+        helper.fixtures.populateComponents(1);
+        helper.command.tagAllWithoutBuild(); // 0.0.1
+        helper.command.export();
+        helper.command.createLane();
+        helper.command.snapAllComponentsWithoutBuild('--unmodified');
+        helper.command.export();
+        helper.command.switchLocalLane('main', '--skip-dependency-installation');
+        helper.command.tagAllWithoutBuild('--unmodified'); // 0.0.2
+        helper.command.tagAllWithoutBuild('--unmodified'); // 0.0.3
+        helper.command.export();
+        helper.command.switchLocalLane('dev', '--skip-dependency-installation');
+        helper.fs.deletePath('.bit');
+        helper.scopeHelper.addRemoteScope();
+        helper.command.import();
+      });
+      // previously, it wasn't importing 0.0.2, because it's not part of the lane history and it's not the head.
+      it('should bring all history of main', () => {
+        const comp = helper.command.catComponent(`${helper.scopes.remote}/comp1`);
+        const v2Hash = comp.versions['0.0.2'];
+        const v3Hash = comp.versions['0.0.3'];
+        expect(() => helper.command.catObject(v2Hash)).to.not.throw();
+        expect(() => helper.command.catObject(v3Hash)).to.not.throw();
+      });
+    });
   });
 });
