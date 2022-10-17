@@ -356,10 +356,11 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
         const targetCompIds = await this.workspace.resolveMultipleComponentIds(bitIds);
         const sourceIds = await this.workspace.listIds();
         const ids = graph.findIdsFromSourcesToTargets(sourceIds, targetCompIds);
-        // const dependentsIds = this._getDependentsFromGraph(bitIds, graphs);
-        console.log('🚀 ~ file: import-components.ts ~ line 310 ~ ImportComponents ~ getBitIds ~ dependentsIds', ids);
-        throw new Error('stop here');
-        bitIds.push(...dependentsIds);
+        logger.debug(
+          `found ${ids.length} component for --dependents flag`,
+          ids.map((id) => id.toString())
+        );
+        bitIds.push(...ids.map((id) => id._legacy));
       }
     }
     return BitIds.uniqFromArray(bitIds);

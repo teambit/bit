@@ -21,21 +21,22 @@ export class ComponentGraph extends Graph<Component, Dependency> {
   }
 
   findIdsFromSourcesToTargets(sources: ComponentID[], targets: ComponentID[]): ComponentID[] {
+    const removeVerFromIdStr = (idStr: string) => idStr.split('@')[0];
     const sourcesStr = sources.map((s) => s.toStringWithoutVersion());
     const targetsStr = targets.map((t) => t.toStringWithoutVersion());
     const allFlattened = sources.map((source) => this.successors(source.toString())).flat();
     const allFlattenedIds = uniq(allFlattened.map((f) => f.id));
-    const idsToCheck = allFlattenedIds.filter((id) => !sourcesStr.includes(id) && !targetsStr.includes(id));
     const results: string[] = [];
-    idsToCheck.forEach((id) => {
+    allFlattenedIds.forEach((id) => {
+      const idWithNoVer = removeVerFromIdStr(id);
+      if (sourcesStr.includes(idWithNoVer) || targetsStr.includes(idWithNoVer)) return;
       const allSuccessors = this.successors(id);
-      if (allSuccessors.find((s) => targetsStr.includes(s.id))) results.push(id);
+      const allSuccessorsWithNoVersion = allSuccessors.map((s) => removeVerFromIdStr(s.id));
+      if (allSuccessorsWithNoVersion.find((s) => targetsStr.includes(s))) results.push(id);
     });
-    console.log('done', results);
     const components = this.getNodes(results).map((n) => n.attr);
 
     return components.map((c) => c.id);
-    throw new Error('stop ehre');
   }
 
   /**
