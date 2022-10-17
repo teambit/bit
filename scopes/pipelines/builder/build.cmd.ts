@@ -25,7 +25,8 @@ export class BuilderCmd implements Command {
   alias = '';
   group = 'development';
   options = [
-    ['a', 'all', 'build all components, not only modified and new'],
+    ['a', 'all', 'DEPRECATED. use --unmodified'],
+    ['u', 'unmodified', 'include unmodified components (by default, only new and modified components are built)'],
     ['d', 'dev', 'run the pipeline in dev mode'],
     ['', 'install', 'install core aspects in capsules'],
     ['', 'reuse-capsules', 'avoid deleting the capsules root-dir before starting the build'],
@@ -50,6 +51,7 @@ specify the task-name (e.g. "TypescriptCompiler") or the task-aspect-id (e.g. te
     [pattern]: [string],
     {
       all = false,
+      unmodified = false,
       dev = false,
       install = false,
       cachePackagesOnCapsulesRoot = false,
@@ -60,15 +62,19 @@ specify the task-name (e.g. "TypescriptCompiler") or the task-aspect-id (e.g. te
     }: BuildOpts
   ): Promise<string> {
     if (!this.workspace) throw new ConsumerNotFound();
+    if (all) {
+      this.logger.consoleWarning(`--all is deprecated, please use --unmodified instead`);
+      unmodified = true;
+    }
     if (listTasks) {
       return this.getListTasks(listTasks);
     }
 
     const longProcessLogger = this.logger.createLongProcessLogger('build');
-    const components = await this.workspace.getComponentsByUserInput(all, pattern, true);
+    const components = await this.workspace.getComponentsByUserInput(unmodified, pattern, true);
     if (!components.length) {
       return chalk.bold(
-        `no components found to build. use "--all" flag to build all components or specify the ids to build, otherwise, only new and modified components will be built`
+        `no components found to build. use "--unmodified" flag to build all components or specify the ids to build, otherwise, only new and modified components will be built`
       );
     }
     this.logger.consoleSuccess(`found ${components.length} components to build`);
