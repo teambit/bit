@@ -1,4 +1,4 @@
-import React, { HTMLAttributes, useMemo } from 'react';
+import React, { HTMLAttributes, useMemo, useState } from 'react';
 import classNames from 'classnames';
 import { Icon } from '@teambit/evangelist.elements.icon';
 import { WidgetProps } from '@teambit/ui-foundation.ui.tree.tree-node';
@@ -30,6 +30,7 @@ export function ArtifactsTree({
   drawerOpen,
   onToggleDrawer,
 }: ArtifactsTreeProps) {
+  const [selected, setSelected] = useState<string | undefined>();
   const location = useLocation();
   const { data: artifacts = [], loading } = useComponentArtifacts(host, componentId.toString());
   const hasArtifacts = artifacts.length > 0;
@@ -46,6 +47,15 @@ export function ArtifactsTree({
         artifact.files.map((file) => ({ ...file, id: `${artifact.taskName}/${artifact.name}/${file.path}` }))
       )) ||
     [];
+
+  const payloadMap =
+    (hasArtifacts &&
+      artifacts.reduce((accum, next) => {
+        if (!accum.has(next.taskName)) accum.set(`${next.taskName}/`, { open: false });
+        return accum;
+      }, new Map<string, { open?: false }>())) ||
+    new Map<string, { open?: false }>();
+
   const currentHref = location?.pathname || '';
   const getHref = () => currentHref;
   const widgets = useMemo(() => [generateWidget(files || [])], [files]);
@@ -59,7 +69,7 @@ export function ArtifactsTree({
       onToggle={onToggleDrawer}
       name={drawerName}
       contentClass={styles.artifactsPanelCodeDrawerContent}
-      className={classNames(styles.artifactsPanelCodeTabDrawer)}
+      className={classNames(styles.artifactsPanelCodeTabDrawer, drawerOpen && styles.openDrawer)}
     >
       <FileTree
         className={styles.artifactsPanelTree}
@@ -67,6 +77,11 @@ export function ArtifactsTree({
         getHref={getHref}
         files={artifactFilesTree}
         widgets={widgets}
+        payloadMap={payloadMap}
+        selected={selected}
+        onTreeNodeSelected={(id: string) => {
+          setSelected(id);
+        }}
       />
     </DrawerUI>
   );
@@ -74,7 +89,7 @@ export function ArtifactsTree({
 
 const fileNodeClicked = (files: ArtifactFile[], opts: 'download' | 'new tab') => (_, node) => {
   const { id } = node;
-  const artifactFile = files.find((file) => file.path === id);
+  const artifactFile = files.find((file) => file.id === id);
 
   if (artifactFile?.downloadUrl) {
     fetch(artifactFile.downloadUrl, { method: 'GET' })
@@ -103,7 +118,7 @@ function generateWidget(files: ArtifactFile[]) {
     const artifactFile = files.find((file) => file.id === id);
     if (artifactFile) {
       return (
-        <div className={styles.artiactWidgets}>
+        <div className={styles.artifactWidgets}>
           <Icon className={styles.icon} of="open-tab" onClick={(e) => fileNodeClicked(files, 'new tab')(e, node)} />
           <Icon className={styles.icon} of="download" onClick={(e) => fileNodeClicked(files, 'download')(e, node)} />
         </div>

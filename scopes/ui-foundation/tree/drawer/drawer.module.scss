@@ -18,8 +18,9 @@
   user-select: none;
   font-weight: bold;
   padding: 0 8px;
-
+  line-height: 16px;
   transition: background-color 300ms, border-color 300ms ease-in-out;
+
   &:hover {
     border-color: var(--bit-bg-heavy, #f6f6f6);
     background: var(--bit-bg-heavy, #f6f6f6);
