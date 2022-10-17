@@ -31,7 +31,7 @@ export class GraphMain {
     graphql.register(graphSchema(graphBuilder, componentAspect));
 
     const graphMain = new GraphMain(componentAspect, logger);
-    cli.register(new GraphCmd(graphMain));
+    cli.register(new GraphCmd());
 
     return graphMain;
   }

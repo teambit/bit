@@ -355,12 +355,9 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
         const graph = await this.graph.getGraph();
         const targetCompIds = await this.workspace.resolveMultipleComponentIds(bitIds);
         const sourceIds = await this.workspace.listIds();
-        const ids = graph.findIdsFromSourcesToTarget(sourceIds, targetCompIds[0]);
-        const dependentsIds = this._getDependentsFromGraph(bitIds, graphs);
-        console.log(
-          '🚀 ~ file: import-components.ts ~ line 310 ~ ImportComponents ~ getBitIds ~ dependentsIds',
-          dependentsIds
-        );
+        const ids = graph.findIdsFromSourcesToTargets(sourceIds, targetCompIds);
+        // const dependentsIds = this._getDependentsFromGraph(bitIds, graphs);
+        console.log('🚀 ~ file: import-components.ts ~ line 310 ~ ImportComponents ~ getBitIds ~ dependentsIds', ids);
         throw new Error('stop here');
         bitIds.push(...dependentsIds);
       }

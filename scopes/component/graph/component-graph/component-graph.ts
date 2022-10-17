@@ -1,9 +1,9 @@
 import { Component, ComponentID } from '@teambit/component';
 import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
+import { uniq } from 'lodash';
 
 import { Dependency } from '../model/dependency';
 import { DuplicateDependency, VersionSubgraph } from '../duplicate-dependency';
-import { compact, uniq } from 'lodash';
 
 export const DEPENDENCIES_TYPES = ['dependencies', 'devDependencies'];
 
@@ -20,32 +20,22 @@ export class ComponentGraph extends Graph<Component, Dependency> {
     return new ComponentGraph(nodes, edges) as this;
   }
 
-  findIdsFromSourcesToTarget(sources: ComponentID[], target: ComponentID[]): ComponentID[] {
+  findIdsFromSourcesToTargets(sources: ComponentID[], targets: ComponentID[]): ComponentID[] {
+    const sourcesStr = sources.map((s) => s.toStringWithoutVersion());
+    const targetsStr = targets.map((t) => t.toStringWithoutVersion());
     const allFlattened = sources.map((source) => this.successors(source.toString())).flat();
     const allFlattenedIds = uniq(allFlattened.map((f) => f.id));
-    const idsToCheck = allFlattenedIds.filter((id) => !sources.includes(id.toString()) && id !== target);
+    const idsToCheck = allFlattenedIds.filter((id) => !sourcesStr.includes(id) && !targetsStr.includes(id));
     const results: string[] = [];
     idsToCheck.forEach((id) => {
       const allSuccessors = this.successors(id);
-      // if (allSuccessors.find(s => s.id === target)) results.push(id);
-      if (allSuccessors.find((s) => s.id === target)) results.push(id);
+      if (allSuccessors.find((s) => targetsStr.includes(s.id))) results.push(id);
     });
     console.log('done', results);
     const components = this.getNodes(results).map((n) => n.attr);
 
     return components.map((c) => c.id);
     throw new Error('stop ehre');
-    // // If current node is not target, recur for all its succesors
-    // const successors = [...this._successors(source).keys()] || [];
-    // successors.forEach((nodeId) => {
-    //   // if (!visited[nodeId] && !currPath.includes(nodeId)) {
-    //   if (nodeId === target) return;
-    //   const flatten = this.successors(nodeId);
-    // });
-    // // // Remove current node from currentPath[] and mark it as unvisited
-
-    // visited[source] = false;
-    // return paths;
   }
 
   /**

@@ -46,7 +46,7 @@ export class ImporterMain {
         importOptions.lanes = { laneIds: [currentLaneId], lanes: [] };
       }
     }
-    const importComponents = new ImportComponents(consumer, this.graph, importOptions);
+    const importComponents = new ImportComponents(this.workspace, this.graph, importOptions);
     const { dependencies, importDetails } = await importComponents.importComponents();
     const bitIds = dependencies.map(R.path(['component', 'id']));
     Analytics.setExtraData('num_components', bitIds.length);
@@ -63,8 +63,7 @@ export class ImporterMain {
    */
   async importWithOptions(importOptions: ImportOptions) {
     if (!this.workspace) throw new ConsumerNotFound();
-    const consumer = this.workspace.consumer;
-    const importComponents = new ImportComponents(consumer, this.graph, importOptions);
+    const importComponents = new ImportComponents(this.workspace, this.graph, importOptions);
     return importComponents.importComponents();
   }
 
@@ -90,7 +89,7 @@ export class ImporterMain {
       importOptions.lanes = await getLanes();
       importOptions.ids = [];
     }
-    const importComponents = new ImportComponents(consumer, this.graph, importOptions);
+    const importComponents = new ImportComponents(this.workspace, this.graph, importOptions);
     const { dependencies, envComponents, importDetails } = await importComponents.importComponents();
     const bitIds = dependencies.map(R.path(['component', 'id']));
     Analytics.setExtraData('num_components', bitIds.length);
