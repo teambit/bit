@@ -1,7 +1,7 @@
 import { ComponentAspect, ComponentUI } from '@teambit/component';
 import { UIRuntime } from '@teambit/ui';
 import React from 'react';
-import { SlotRegistry, Slot } from '@teambit/harmony';
+import { Harmony, SlotRegistry, Slot } from '@teambit/harmony';
 import type { FileIconMatch } from '@teambit/code.ui.utils.get-file-icon';
 import { staticStorageUrl } from '@teambit/base-ui.constants.storage';
 import { CodePage } from '@teambit/code.ui.code-tab-page';
@@ -23,11 +23,12 @@ export class CodeUI {
     /**
      * register an icon for a specific file type. pass icon and a match method/regexp
      */
+    private host: string,
     private fileIconSlot?: FileIconSlot
   ) {}
 
   getCodePage = () => {
-    return <CodePage fileIconSlot={this.fileIconSlot} />;
+    return <CodePage fileIconSlot={this.fileIconSlot} host={this.host} />;
   };
 
   registerEnvFileIcon(icons: FileIconMatch[]) {
@@ -42,10 +43,13 @@ export class CodeUI {
 
   static async provider(
     [component, componentCompare]: [ComponentUI, ComponentCompareUI],
-    config,
-    [fileIconSlot]: [FileIconSlot]
+    _,
+    [fileIconSlot]: [FileIconSlot],
+    harmony: Harmony
   ) {
-    const ui = new CodeUI(fileIconSlot);
+    const { config } = harmony;
+    const host = String(config.get('teambit.harmony/bit'));
+    const ui = new CodeUI(host, fileIconSlot);
     const section = new CodeSection(ui);
     // overrides the default tsx react icon with the typescript icon
     ui.registerEnvFileIcon([
