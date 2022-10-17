@@ -28,9 +28,3 @@ export function mapToArtifacts(gqlResponse: ComponentArtifactsGQLResponse): Arti
       taskName: task.taskName,
     }));
 }
-
-// export function mapToArtifactTree(artifacts: Artifact[]): string[] {
-//   return artifacts.flatMap((artifact) =>
-//     artifact.files.map((artifactFile) => `${artifact.taskName}/${artifact.name}/${artifactFile.path}`)
-//   );
-// }
