@@ -3,6 +3,8 @@ import { Component } from '@teambit/component';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 import { SemVer } from 'semver';
 import { snapToSemver } from '@teambit/component-package-version';
+import { BitError } from '@teambit/bit-error';
+import { intersection } from 'lodash';
 import { ComponentDependency, DependencyList, PackageName } from '../dependencies';
 import { VariantPolicy, WorkspacePolicy, EnvPolicy, PeersAutoDetectPolicy } from '../policy';
 
@@ -79,6 +81,7 @@ export class WorkspaceManifestFactory {
       components,
       optsWithDefaults.createManifestForComponentsWithoutDependencies
     );
+    checkForConflicts(componentsManifestsMap, dedupedDependencies.rootDependencies);
     const envPeers = this.getEnvsPeersPolicy(componentsManifestsMap);
     const workspaceManifest = new WorkspaceManifest(
       name,
@@ -271,4 +274,25 @@ function filterResolvedFromEnv(dependencyList: DependencyList, componentPolicy: 
     return true;
   });
   return filtered;
+}
+
+/**
+ * The same package may not be both a workspace component and a root dependency.
+ */
+function checkForConflicts(
+  componentsManifestsMap: ComponentsManifestsMap,
+  rootDependencies: ManifestDependenciesObject
+) {
+  const allPkgDeps = {
+    ...rootDependencies.devDependencies,
+    ...rootDependencies.dependencies,
+  };
+  const allComponentPkgNames = Array.from(componentsManifestsMap.keys());
+  const conflictingPkgNames = intersection(Object.keys(allPkgDeps), allComponentPkgNames);
+  if (conflictingPkgNames.length) {
+    throw new BitError(`The following packages are conflicting with components in the workspace: ${conflictingPkgNames.join(
+      ', '
+    )}.
+You should either remove the packages from dependencies or remove the components from the workspace.`);
+  }
 }
