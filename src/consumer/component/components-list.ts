@@ -301,7 +301,7 @@ export default class ComponentsList {
         return component.isLocallyChangedRegardlessOfLanes();
       }
       await component.setDivergeData(this.scope.objects);
-      return component.isLocallyChanged(lane, this.scope.objects);
+      return component.isLocallyChanged(this.scope.objects, lane);
     });
     const ids = BitIds.fromArray(pendingExportComponents.map((c) => c.toBitId()));
     return this.updateIdsFromModelIfTheyOutOfSync(ids);

@@ -43,7 +43,7 @@ describe('bit status command', function () {
   describe('when a component is created and added but not tagged', () => {
     let output;
     before(() => {
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
       output = helper.command.runCmd('bit status');
@@ -62,7 +62,7 @@ describe('bit status command', function () {
   describe('when a component is created and added without its dependencies', () => {
     let output;
     before(() => {
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.fs.createFile(
         'comp1',
         'comp1.js',
@@ -91,7 +91,7 @@ describe('bit status command', function () {
   describe('when a component is created, added and tagged', () => {
     let output;
     before(() => {
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
       helper.fixtures.tagComponentBarFoo();
@@ -113,7 +113,7 @@ describe('bit status command', function () {
   describe('when a component is modified after tag', () => {
     let output;
     before(() => {
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
       helper.fixtures.tagComponentBarFoo();
@@ -142,7 +142,7 @@ describe('bit status command', function () {
   describe('when a component is created, added, tagged and exported', () => {
     let output;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
@@ -163,7 +163,7 @@ describe('bit status command', function () {
   describe('when a component is modified after export', () => {
     let output;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
@@ -189,7 +189,7 @@ describe('bit status command', function () {
   describe('when a component is exported, modified and then tagged', () => {
     let output;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
@@ -214,7 +214,7 @@ describe('bit status command', function () {
   describe('when a component is exported, modified, tagged and then exported again', () => {
     let output;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
@@ -238,13 +238,13 @@ describe('bit status command', function () {
   describe('when a component is imported', () => {
     let output;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
       helper.fixtures.tagComponentBarFoo();
       helper.command.exportIds('bar/foo');
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
       helper.command.importComponent('bar/foo');
       output = helper.command.runCmd('bit status');
@@ -273,7 +273,7 @@ describe('bit status command', function () {
   describe.skip('when a component is exported, modified and the project cloned somewhere else', () => {
     let output;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
@@ -319,7 +319,7 @@ describe('bit status command', function () {
       });
       describe('when mainFile is deleted', () => {
         before(() => {
-          helper.scopeHelper.reInitLocalScopeHarmony();
+          helper.scopeHelper.reInitLocalScope();
           helper.fs.createFile('bar', 'index.js');
           helper.fs.createFile('bar', 'foo.js');
           helper.command.addComponent('bar/', { i: 'bar/foo' });
@@ -397,7 +397,7 @@ describe('bit status command', function () {
   describe('when a component requires a missing component with absolute syntax (require bit/component-name)', () => {
     let output;
     before(() => {
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       const fooFixture = "require ('@bit/scope.bar.baz');";
       helper.fixtures.createComponentBarFoo(fooFixture);
       helper.fixtures.addComponentBarFooAsDir();
@@ -410,7 +410,7 @@ describe('bit status command', function () {
   });
   describe('when a component requires a missing bit component that exists on package.json', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       const fooFixture = "require ('@bit/scope.bar.baz');";
       helper.fixtures.createComponentBarFoo(fooFixture);
       helper.fixtures.addComponentBarFooAsDir();
@@ -433,7 +433,7 @@ describe('bit status command', function () {
   describe('when a component has missing files and its dependencies are resolved from the cache', () => {
     let output;
     before(() => {
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentUtilsIsString();
       helper.fixtures.createComponentBarFoo(fixtures.barFooFixture);
       helper.fixtures.addComponentBarFooAsDir();
@@ -456,7 +456,7 @@ describe('bit status command', function () {
   });
   describe('dynamic import', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo('const a = "./b"; import(a); require(a);');
       helper.fixtures.addComponentBarFooAsDir();
       helper.command.compile();

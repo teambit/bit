@@ -22,7 +22,7 @@ describe('babel compiler', function () {
     describe('compile simple javascript component', () => {
       let distDir;
       before(() => {
-        helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+        helper.scopeHelper.setNewLocalAndRemoteScopes();
         helper.bitJsonc.addDefaultScope();
         helper.bitJsonc.disablePreview();
 

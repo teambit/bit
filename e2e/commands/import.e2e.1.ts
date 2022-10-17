@@ -22,7 +22,7 @@ describe('bit import', function () {
   describe('stand alone component (without dependencies)', () => {
     let importOutput;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       // export a new simple component
       helper.fs.createFile('global', 'simple.js');
@@ -30,7 +30,7 @@ describe('bit import', function () {
       helper.command.tagWithoutBuild('global/simple');
       helper.command.exportIds('global/simple');
 
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.bitJsonc.setupDefault();
       helper.scopeHelper.addRemoteScope();
       importOutput = helper.command.importComponent('global/simple');
@@ -59,7 +59,7 @@ describe('bit import', function () {
         });
         helper.command.tagWithoutBuild('imprel/imprel');
         helper.command.exportIds('imprel/imprel');
-        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.scopeHelper.reInitLocalScope();
         helper.scopeHelper.addRemoteScope();
         const output = helper.command.importComponent('imprel/imprel');
         expect(output.includes('successfully imported one component')).to.be.true;
@@ -85,7 +85,7 @@ describe('bit import', function () {
       });
       describe('when the destination is an existing empty directory', () => {
         before(() => {
-          helper.scopeHelper.reInitLocalScopeHarmony();
+          helper.scopeHelper.reInitLocalScope();
           helper.scopeHelper.addRemoteScope();
           fs.ensureDirSync(componentDir);
           helper.command.runCmd(`bit import ${helper.scopes.remote}/global/simple`);
@@ -99,7 +99,7 @@ describe('bit import', function () {
         let existingFile: string;
         before(() => {
           existingFile = path.join(componentDir, 'my-file.js');
-          helper.scopeHelper.reInitLocalScopeHarmony();
+          helper.scopeHelper.reInitLocalScope();
           helper.scopeHelper.addRemoteScope();
           fs.outputFileSync(existingFile, 'console.log()');
           output = helper.general.runWithTryCatch(`bit import ${helper.scopes.remote}/global/simple`);
@@ -122,7 +122,7 @@ describe('bit import', function () {
       describe('when the destination is a file', () => {
         let output;
         before(() => {
-          helper.scopeHelper.reInitLocalScopeHarmony();
+          helper.scopeHelper.reInitLocalScope();
           helper.scopeHelper.addRemoteScope();
           fs.outputFileSync(componentDir, 'console.log()');
           output = helper.general.runWithTryCatch(`bit import ${helper.scopes.remote}/global/simple`);
@@ -149,7 +149,7 @@ describe('bit import', function () {
         let componentFileLocation;
         before(() => {
           componentFileLocation = path.join(helper.scopes.localPath, 'my-custom-location/simple.js');
-          helper.scopeHelper.reInitLocalScopeHarmony();
+          helper.scopeHelper.reInitLocalScope();
           helper.scopeHelper.addRemoteScope();
         });
         describe('when the destination is a non-exist directory', () => {
@@ -162,7 +162,7 @@ describe('bit import', function () {
         });
         describe('when the destination is an existing empty directory', () => {
           before(() => {
-            helper.scopeHelper.reInitLocalScopeHarmony();
+            helper.scopeHelper.reInitLocalScope();
             helper.scopeHelper.addRemoteScope();
             fs.ensureDirSync(path.join(helper.scopes.localPath, 'my-custom-location'));
             helper.command.runCmd(`bit import ${helper.scopes.remote}/global/simple -p my-custom-location`);
@@ -176,7 +176,7 @@ describe('bit import', function () {
           let existingFile;
           before(() => {
             existingFile = path.join(helper.scopes.localPath, 'my-custom-location/my-file.js');
-            helper.scopeHelper.reInitLocalScopeHarmony();
+            helper.scopeHelper.reInitLocalScope();
             helper.scopeHelper.addRemoteScope();
             fs.ensureDirSync(path.join(helper.scopes.localPath, 'my-custom-location'));
             fs.outputFileSync(existingFile, 'console.log()');
@@ -202,7 +202,7 @@ describe('bit import', function () {
         describe('when the destination is a file', () => {
           let output;
           before(() => {
-            helper.scopeHelper.reInitLocalScopeHarmony();
+            helper.scopeHelper.reInitLocalScope();
             helper.scopeHelper.addRemoteScope();
             fs.outputFileSync(path.join(helper.scopes.localPath, 'my-custom-location'), 'console.log()');
             output = helper.general.runWithTryCatch(
@@ -231,7 +231,7 @@ describe('bit import', function () {
     describe('re-import after deleting the component physically', () => {
       let output;
       before(() => {
-        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.scopeHelper.reInitLocalScope();
         helper.scopeHelper.addRemoteScope();
         helper.command.importComponent('global/simple');
         fs.removeSync(path.join(helper.scopes.localPath, 'components'));
@@ -245,7 +245,7 @@ describe('bit import', function () {
       describe('when the DSL is valid', () => {
         let output;
         before(() => {
-          helper.scopeHelper.reInitLocalScopeHarmony();
+          helper.scopeHelper.reInitLocalScope();
           helper.bitJsonc.setComponentsDir('{scope}/-{name}-');
           helper.scopeHelper.addRemoteScope();
           helper.command.importComponent('global/simple');
@@ -269,7 +269,7 @@ describe('bit import', function () {
       describe('when the DSL has invalid parameters', () => {
         let output;
         before(() => {
-          helper.scopeHelper.reInitLocalScopeHarmony();
+          helper.scopeHelper.reInitLocalScope();
           helper.bitJsonc.setComponentsDir('{non-exist-param}/{name}');
           helper.scopeHelper.addRemoteScope();
           output = helper.general.runWithTryCatch(`bit import ${helper.scopes.remote}/global/simple`);
@@ -286,14 +286,14 @@ describe('bit import', function () {
   describe.skip('with an existing component in bit.map (as author)', () => {
     let localConsumerFiles;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
       helper.command.tagAllComponents();
       helper.command.exportIds('bar/foo');
       const bitMap = helper.bitMap.read();
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
       helper.bitMap.write(bitMap);
       helper.command.importComponent('bar/foo');
@@ -328,13 +328,13 @@ describe('bit import', function () {
   describe('import a component when the local version is modified', () => {
     let localScope;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
       helper.command.tagAllWithoutBuild();
       helper.command.export();
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
       helper.command.importComponent('bar/foo');
       const barFooFixtureV2 = "module.exports = function foo() { return 'got foo v2'; };";
@@ -389,7 +389,7 @@ describe('bit import', function () {
   });
   describe('importing a component when it has a local tag', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
@@ -398,7 +398,7 @@ describe('bit import', function () {
     });
     describe('as imported', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.scopeHelper.reInitLocalScope();
         helper.scopeHelper.addRemoteScope();
         helper.command.importComponent('bar/foo', '--path components/bar/foo');
         helper.fs.createFile('components/bar/foo', 'foo.js', 'v2');
@@ -436,12 +436,12 @@ describe('bit import', function () {
   });
   describe('import with wildcards', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents();
       helper.command.tagAllWithoutBuild();
       helper.command.export();
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
     });
     describe('import the entire scope', () => {

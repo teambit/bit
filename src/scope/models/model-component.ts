@@ -661,7 +661,7 @@ export default class Component extends BitObject {
     const refsWithoutArtifacts: Ref[] = [];
     const artifactsRefs: Ref[] = [];
     const artifactsRefsFromExportedVersions: Ref[] = [];
-    const locallyChangedVersions = this.getLocalTagsOrHashes();
+    const locallyChangedVersions = await this.getLocalTagsOrHashes(repo);
     const locallyChangedHashes = locallyChangedVersions.map((v) =>
       isTag(v) ? this.versionsIncludeOrphaned[v].hash : v
     );
@@ -819,7 +819,7 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
    * @see sources.consumerComponentToVersion() for the opposite action.
    */
   async toConsumerComponent(versionStr: string, scopeName: string, repository: Repository): Promise<ConsumerComponent> {
-    logger.debug(`model-component, converting ${this.id()}, version: ${versionStr} to ConsumerComponent`);
+    logger.trace(`model-component, converting ${this.id()}, version: ${versionStr} to ConsumerComponent`);
     const componentVersion = this.toComponentVersion(versionStr);
     const version: Version = await componentVersion.getVersion(repository);
     const loadFileInstance = (ClassName) => async (file) => {
@@ -941,17 +941,16 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
     return localVersions.includes(tag);
   }
 
-  hasLocalVersion(version: string): boolean {
-    const localVersions = this.getLocalTagsOrHashes();
+  async hasLocalVersion(repo: Repository, version: string): Promise<boolean> {
+    const localVersions = await this.getLocalTagsOrHashes(repo);
     return localVersions.includes(version);
   }
 
-  getLocalTagsOrHashes(): string[] {
-    const localVersions = this.getLocalVersions();
-    if (!this.divergeData) return localVersions;
+  async getLocalTagsOrHashes(repo: Repository): Promise<string[]> {
+    await this.setDivergeData(repo);
     const divergeData = this.getDivergeData();
     const localHashes = divergeData.snapsOnLocalOnly;
-    if (!localHashes.length) return localVersions;
+    if (!localHashes.length) return [];
     return this.switchHashesWithTagsIfExist(localHashes).reverse(); // reverse to get the older first
   }
 
@@ -973,30 +972,11 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
   /**
    * whether the component was locally changed, either by adding a new snap/tag or by merging
    * components from different lanes.
-   * if no lanes provided, make sure to run `this.setDivergeData` before calling this method.
-   * (it'll throw otherwise).
    */
-  async isLocallyChanged(lane?: Lane | null, repo?: Repository): Promise<boolean> {
-    if (lane) {
-      if (!repo) throw new Error('isLocallyChanged expects to get repo when lane was provided');
-      await this.populateLocalAndRemoteHeads(repo, lane);
-      await this.setDivergeData(repo);
-      return this.getDivergeData().isLocalAhead();
-    }
-    // when on main, no need to traverse the parents because local snaps/tags are saved in the
-    // component object and retrieved by `this.getLocalVersions()`.
-    if (this.local) return true; // backward compatibility for components created before 0.12.6
-    if (!this.divergeData) {
-      throw new Error(
-        'isLocallyChanged - this.divergeData is missing, please run this.setDivergeData() before calling this method'
-      );
-    }
-    const localVersions = this.getLocalTagsOrHashes();
-    if (localVersions.length) return true;
-    // @todo: why this is needed? on main, the localVersion must be populated if changed locally
-    // regardless the laneHeadLocal/laneHeadRemote.
-    if (this.laneHeadLocal && !this.laneHeadRemote) return true;
-    return false;
+  async isLocallyChanged(repo: Repository, lane?: Lane | null): Promise<boolean> {
+    if (lane) await this.populateLocalAndRemoteHeads(repo, lane);
+    await this.setDivergeData(repo);
+    return this.getDivergeData().isLocalAhead();
   }
 
   static parse(contents: string): Component {

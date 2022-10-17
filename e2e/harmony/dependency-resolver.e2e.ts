@@ -27,7 +27,7 @@ describe('dependency-resolver extension', function () {
       let isTypeOutput;
 
       before(() => {
-        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.scopeHelper.reInitLocalScope();
         helper.fixtures.createComponentBarFoo();
         helper.fixtures.addComponentBarFooAsDir();
         helper.fixtures.createComponentUtilsIsType();
@@ -67,7 +67,7 @@ describe('dependency-resolver extension', function () {
       let barFooOutput;
       describe('policies added core env', function () {
         before(() => {
-          helper.scopeHelper.reInitLocalScopeHarmony();
+          helper.scopeHelper.reInitLocalScope();
           helper.fixtures.createComponentBarFoo();
           helper.fixtures.addComponentBarFooAsDir();
           // TODO: use custom env with versions provided from outside in the config by the user
@@ -82,7 +82,7 @@ describe('dependency-resolver extension', function () {
       describe('policies added by custom env', function () {
         let utilsIsTypeOutput;
         before(() => {
-          helper.scopeHelper.reInitLocalScopeHarmony();
+          helper.scopeHelper.reInitLocalScope();
           helper.fixtures.createComponentBarFoo('import "lodash.zip"');
           helper.fixtures.addComponentBarFooAsDir();
           helper.fixtures.createComponentUtilsIsType();
@@ -115,7 +115,7 @@ describe('dependency-resolver extension', function () {
       const EXTENSIONS_BASE_FOLDER = 'extension-add-dependencies';
       const config = {};
       before(() => {
-        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.scopeHelper.reInitLocalScope();
         helper.fixtures.createComponentBarFoo();
         helper.fixtures.addComponentBarFooAsDir();
         helper.fixtures.createComponentUtilsIsType();
@@ -161,7 +161,7 @@ describe('dependency-resolver extension', function () {
     let npmCiRegistry: NpmCiRegistry;
     let randomStr;
     before(async () => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
 
       npmCiRegistry = new NpmCiRegistry(helper);
@@ -225,7 +225,7 @@ describe('dependency-resolver extension', function () {
     //   └── path-is-absolute 1.0.1
     describe('using Yarn as a package manager', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.scopeHelper.reInitLocalScope();
         helper.extensions.bitJsonc.addKeyValToDependencyResolver('packageManager', 'teambit.dependencies/yarn');
         helper.extensions.bitJsonc.addKeyValToDependencyResolver('overrides', {
           'is-odd': '1.0.0',
@@ -253,7 +253,7 @@ describe('dependency-resolver extension', function () {
     });
     describe('using pnpm as a package manager', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.scopeHelper.reInitLocalScope();
         helper.extensions.bitJsonc.addKeyValToDependencyResolver('packageManager', 'teambit.dependencies/pnpm');
         helper.extensions.bitJsonc.addKeyValToDependencyResolver('overrides', {
           'is-odd': '1.0.0',

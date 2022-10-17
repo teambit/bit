@@ -14,7 +14,7 @@ describe('bit remote command', function () {
   });
   describe('exporting a component to a global remote', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.reInitRemoteScope();
       helper.bitJsonc.setupDefault();
       helper.command.runCmd(`bit remote add file://${helper.scopes.remotePath} --global`);

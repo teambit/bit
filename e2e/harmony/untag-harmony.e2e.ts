@@ -35,7 +35,7 @@ describe('untag components on Harmony', function () {
   });
   describe('untagging multiple versions', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateComponents(1);
       helper.command.tagIncludeUnmodifiedWithoutBuild(); // 0.0.1
       helper.command.tagIncludeUnmodifiedWithoutBuild(); // 0.0.2
@@ -48,7 +48,7 @@ describe('untag components on Harmony', function () {
   });
   describe('untagging multiple versions when the new head is exported', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(1);
       helper.command.tagIncludeUnmodifiedWithoutBuild(); // 0.0.1

@@ -21,7 +21,7 @@ describe('bit diff command', function () {
   });
   const barFooFile = 'foo.js';
   before(() => {
-    helper.scopeHelper.reInitLocalScopeHarmony();
+    helper.scopeHelper.reInitLocalScope();
   });
   after(() => {
     helper.scopeHelper.destroy();
@@ -100,7 +100,7 @@ describe('bit diff command', function () {
   });
   describe('when there are several modified components and non modified components', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo(barFooV1);
       helper.fixtures.addComponentBarFooAsDir();
       helper.fixtures.createComponentIsType();
@@ -145,7 +145,7 @@ describe('bit diff command', function () {
   describe('when a file is deleted and another is added', () => {
     let output;
     before(() => {
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo(barFooV1);
       helper.fixtures.addComponentBarFooAsDir();
       helper.command.tagAllComponents();
@@ -255,7 +255,7 @@ describe('bit diff command', function () {
   });
   describe('component with multiple versions', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo(barFooV1);
       helper.fixtures.addComponentBarFooAsDir();
       helper.fixtures.tagComponentBarFoo(); // 0.0.1

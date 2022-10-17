@@ -8,8 +8,7 @@ import { workspaceConfigTemplate } from './files/workspace-config-tpl';
 
 export const starterTemplate: ComponentTemplate = {
   name: 'starter',
-  description:
-    'create your own starter - \nDocs: https://bit.dev/docs/dev-services/generator/generate-workspace',
+  description: 'create your own starter - \nDocs: https://bit.dev/docs/dev-services/generator/generate-workspace',
   generateFiles: (context: ComponentContext) => {
     return [
       {

@@ -4,7 +4,6 @@ about: Report an issue with bit.dev/docs
 title: ''
 labels: ''
 assignees: ''
-
 ---
 
 <!--

@@ -15,7 +15,7 @@ describe('bit doctor - git exec validation', function () {
   });
 
   before(() => {
-    helper.scopeHelper.reInitLocalScopeHarmony();
+    helper.scopeHelper.reInitLocalScope();
   });
 
   // This test case assume you have proper configuration of git executable

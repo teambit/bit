@@ -15,7 +15,7 @@ describe('mix use of Legacy and Harmony', function () {
   });
   describe('legacy component into Harmony workspace', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       const remoteName = '14epy6hr-remote';
       const remotePath = helper.scopeHelper.getNewBareScopeWithSpecificName(remoteName);
       helper.scopeHelper.addRemoteScope(remotePath);

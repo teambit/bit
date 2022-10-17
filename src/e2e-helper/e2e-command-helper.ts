@@ -291,6 +291,10 @@ export default class CommandHelper {
   writeTsconfig(flags = '') {
     return this.runCmd(`bit write-tsconfig ${flags} --silent`);
   }
+  writeTsconfigDryRun(flags = '') {
+    const results = this.runCmd(`bit write-tsconfig  --dry-run ${flags} --json`);
+    return JSON.parse(results);
+  }
   showOneLane(name: string) {
     return this.runCmd(`bit lane show ${name}`);
   }
@@ -494,9 +498,11 @@ export default class CommandHelper {
     return deprecationData.config.deprecate;
   }
 
-  getStagedIdsFromStatus(): string[] {
+  getStagedIdsFromStatus(stripScopeName = true): string[] {
     const status = this.statusJson();
-    return status.stagedComponents.map((s) => s.id);
+    return status.stagedComponents
+      .map((s) => s.id)
+      .map((id) => (stripScopeName ? id.replace(`${this.scopes.remote}/`, '') : id));
   }
 
   expectStatusToBeClean(exclude: string[] = []) {
@@ -529,15 +535,20 @@ export default class CommandHelper {
     });
   }
 
+  statusComponentIsModified(fullIdWithVersion: string): boolean {
+    const status = this.statusJson();
+    return status.modifiedComponents.includes(fullIdWithVersion);
+  }
+
   statusComponentIsStaged(id: string): boolean {
     const status = this.statusJson();
     const stagedIds = status.stagedComponents.map((s) => s.id);
     return stagedIds.includes(id);
   }
 
-  statusComponentIsModified(fullId: string): boolean {
+  statusComponentHasIssues(id: string): boolean {
     const status = this.statusJson();
-    return status.modifiedComponent.includes(fullId);
+    return status.componentsWithIssues.includes(`${this.scopes.remote}/${id}`);
   }
 
   showComponent(id = 'bar/foo') {

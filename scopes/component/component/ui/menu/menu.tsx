@@ -44,9 +44,9 @@ export type MenuProps = {
 
   useComponent?: UseComponentType;
 
-  path?: string,
+  path?: string;
 
-  useComponentFilters?: (componentId?: ComponentID) => Filters;
+  useComponentFilters?: () => Filters;
 };
 function getComponentIdStr(componentIdStr?: string | (() => string | undefined)): string | undefined {
   if (isFunction(componentIdStr)) return componentIdStr();
@@ -70,10 +70,10 @@ export function ComponentMenu({
   const idFromLocation = useIdFromLocation();
   const _componentIdStr = getComponentIdStr(componentIdStr);
   const componentId = _componentIdStr ? ComponentID.fromString(_componentIdStr) : undefined;
-  const resolvedComponentIdStr = path || componentId?.toStringWithoutVersion() || idFromLocation;
+  const resolvedComponentIdStr = path || idFromLocation;
 
   const useComponentOptions = {
-    logFilters: useComponentFilters?.(componentId),
+    logFilters: useComponentFilters?.(),
     customUseComponent: useComponent,
   };
 
@@ -122,10 +122,7 @@ function VersionRelatedDropdowns({
   const isWorkspace = host === 'teambit.workspace/workspace';
 
   const snaps = useMemo(() => {
-    return (logs || [])
-      .filter((log) => !log.tag)
-      .map((snap) => ({ ...snap, version: snap.hash }))
-      .reverse();
+    return (logs || []).filter((log) => !log.tag).map((snap) => ({ ...snap, version: snap.hash }));
   }, [logs]);
 
   const tags = useMemo(() => {

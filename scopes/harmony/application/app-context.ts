@@ -22,12 +22,11 @@ export class AppContext extends ExecutionContext {
      * This can be used in different bundle options which run require.resolve
      * for example when configuring webpack aliases or webpack expose loader on the peers deps
      */
-    readonly hostRootDir?: string,
-
+    readonly hostRootDir?: string
   ) {
     super(execContext.upper, execContext.envRuntime, execContext.components);
   }
   // static fromExecContext() {
-    // return new AppContext();
+  // return new AppContext();
   // }
 }
