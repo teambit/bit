@@ -30,7 +30,7 @@ import { getPluginConfiguration } from '@yarnpkg/cli';
 import { npath, PortablePath } from '@yarnpkg/fslib';
 import { Resolution } from '@yarnpkg/parsers';
 import npmPlugin from '@yarnpkg/plugin-npm';
-import parseOverrides from '@pnpm/parse-overrides';
+import { parseOverrides } from '@pnpm/parse-overrides';
 import { omit } from 'lodash';
 import userHome from 'user-home';
 import { Logger } from '@teambit/logger';

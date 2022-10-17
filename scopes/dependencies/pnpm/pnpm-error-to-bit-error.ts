@@ -1,4 +1,4 @@
-import PnpmError from '@pnpm/error';
+import { PnpmError } from '@pnpm/error';
 import { BitError } from '@teambit/bit-error';
 
 export class BitErrorWithRichMessage extends BitError {
