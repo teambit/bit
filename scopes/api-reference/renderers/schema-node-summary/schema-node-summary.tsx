@@ -78,7 +78,7 @@ export function SchemaNodeSummary({ node }: SchemaNodeSummaryProps) {
         <div className={classnames(styles.schemaNodeDoc)}>
           {
             <div className={classnames(styles.docComment, !doc?.comment && styles.placeholderComment)}>
-              {doc?.comment || 'add comment using @jsdoc'}
+              {doc?.comment || 'add comment using JSDoc'}
             </div>
           }
           {tags?.length > 0 && (
