@@ -51,7 +51,7 @@ export class ImportCmd implements Command {
     [
       '',
       'dependents',
-      "EXPERIMENTAL. import the components' dependents. this enables changes to propagate from (modified) components to their dependents",
+      'EXPERIMENTAL. import components found while traversing from the given ids upwards to the workspace components',
     ],
     [
       '',

@@ -7,8 +7,10 @@ import { WorkspaceAspect, Workspace, ComponentConfigFile } from '@teambit/worksp
 import { pick, isEqual } from 'lodash';
 import { ProjectManifest } from '@pnpm/types';
 import { NothingToImport } from '@teambit/legacy/dist/consumer/exceptions';
+import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 import { VariantsMain, Patterns, VariantsAspect } from '@teambit/variants';
-import { ComponentID, ComponentMap } from '@teambit/component';
+import { Component, ComponentID, ComponentMap } from '@teambit/component';
+import { IssuesClasses } from '@teambit/component-issues';
 import {
   WorkspaceDependencyLifecycleType,
   DependencyResolverMain,
@@ -26,7 +28,7 @@ import {
 } from '@teambit/dependency-resolver';
 import { ImporterAspect, ImporterMain, ImportOptions } from '@teambit/importer';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
-
+import { IssuesAspect, IssuesMain } from '@teambit/issues';
 import { DependencyTypeNotSupportedInPolicy } from './exceptions';
 import { InstallAspect } from './install.aspect';
 import { pickOutdatedPkgs } from './pick-outdated-pkgs';
@@ -270,6 +272,17 @@ export class InstallMain {
     return this._installModules({ dedupe: true });
   }
 
+  async addDuplicateComponentAndPackageIssue(components: Component[]) {
+    const workspacePolicy = this.dependencyResolver.getWorkspacePolicy();
+    components.forEach((component) => {
+      const pkgName = componentIdToPackageName(component.state._consumer);
+      const found = workspacePolicy.find(pkgName);
+      if (found) {
+        component.state.issues.getOrCreate(IssuesClasses.DuplicateComponentAndPackage).data = found.dependencyId;
+      }
+    });
+  }
+
   private async _getComponentsWithDependencyPolicies() {
     const allComponentIds = await this.workspace.listIds();
     const componentConfigFiles: Record<string, ComponentConfigFile> = {};
@@ -421,11 +434,22 @@ export class InstallMain {
     CommunityAspect,
     ImporterAspect,
     CompilerAspect,
+    IssuesAspect,
   ];
 
   static runtime = MainRuntime;
 
-  static async provider([dependencyResolver, workspace, loggerExt, variants, cli, community, importer, compiler]: [
+  static async provider([
+    dependencyResolver,
+    workspace,
+    loggerExt,
+    variants,
+    cli,
+    community,
+    importer,
+    compiler,
+    issues,
+  ]: [
     DependencyResolverMain,
     Workspace,
     LoggerMain,
@@ -433,7 +457,8 @@ export class InstallMain {
     CLIMain,
     CommunityMain,
     ImporterMain,
-    CompilerMain
+    CompilerMain,
+    IssuesMain
   ]) {
     const logger = loggerExt.createLogger('teambit.bit/install');
     const installExt = new InstallMain(dependencyResolver, logger, workspace, variants, importer, compiler);
@@ -448,6 +473,9 @@ export class InstallMain {
         return installExt.install(undefined, installOpts);
       },
     });
+    if (issues) {
+      issues.registerAddComponentsIssues(installExt.addDuplicateComponentAndPackageIssue.bind(installExt));
+    }
     const commands: CommandList = [
       new InstallCmd(installExt, workspace, logger),
       new UninstallCmd(installExt),

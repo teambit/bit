@@ -378,7 +378,8 @@
   },
   "teambit.component/issues": {
     "ignoreIssues": [
-      "CircularDependencies"
+      "CircularDependencies",
+      "DuplicateComponentAndPackage"
     ]
   },
   "teambit.workspace/variants": {
