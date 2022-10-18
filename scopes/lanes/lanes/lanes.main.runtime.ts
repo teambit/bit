@@ -418,7 +418,7 @@ export class LanesMain {
       reset: false,
       all: false,
     };
-    return new LaneSwitcher(this.workspace, this.logger, switchProps, checkoutProps).switch();
+    return new LaneSwitcher(this.workspace, this.logger, switchProps, checkoutProps, this).switch();
   }
 
   /**

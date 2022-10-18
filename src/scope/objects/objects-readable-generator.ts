@@ -122,12 +122,9 @@ export class ObjectsReadableGenerator {
           stopAt: collectParentsUntil ? [collectParentsUntil] : undefined,
         });
         const missingParentsHashes = allParentsHashes.filter((h) => !h.isEqual(version.hash()));
-        // don't bring the head. otherwise, component-delta of the head won't bring all history of this comp.
-        // if (component.head && !component.head.isEqual(version.hash())) {
-        //   missingParentsHashes.push(component.head); // always add the head
-        // }
         const parentVersions = await pMapSeries(missingParentsHashes, (parentHash) => parentHash.load(this.repo));
         allVersions.push(...(parentVersions as Version[]));
+        // note: don't bring the head. otherwise, component-delta of the head won't bring all history of this comp.
       }
       await pMapSeries(allVersions, async (ver) => {
         const versionObjects = await collectVersionObjects(ver);
