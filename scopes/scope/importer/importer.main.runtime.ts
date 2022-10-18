@@ -3,7 +3,6 @@ import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/depen
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import { CommunityAspect } from '@teambit/community';
 import type { CommunityMain } from '@teambit/community';
-import R from 'ramda';
 import { Analytics } from '@teambit/legacy/dist/analytics/analytics';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
@@ -47,15 +46,13 @@ export class ImporterMain {
       }
     }
     const importComponents = new ImportComponents(this.workspace, this.graph, importOptions);
-    const { dependencies, importDetails } = await importComponents.importComponents();
-    const bitIds = dependencies.map(R.path(['component', 'id']));
-    Analytics.setExtraData('num_components', bitIds.length);
-    if (importOptions.ids.length) {
-      const importedComponents = dependencies.map((d) => d.component);
-      await this.removeFromWorkspaceConfig(importedComponents);
+    const results = await importComponents.importComponents();
+    Analytics.setExtraData('num_components', results.importedIds.length);
+    if (results.writtenComponents && results.writtenComponents.length) {
+      await this.removeFromWorkspaceConfig(results.writtenComponents);
     }
     await consumer.onDestroy();
-    return { dependencies, importDetails };
+    return results;
   }
 
   /**
@@ -90,11 +87,10 @@ export class ImporterMain {
       importOptions.ids = [];
     }
     const importComponents = new ImportComponents(this.workspace, this.graph, importOptions);
-    const { dependencies, envComponents, importDetails } = await importComponents.importComponents();
-    const bitIds = dependencies.map(R.path(['component', 'id']));
-    Analytics.setExtraData('num_components', bitIds.length);
+    const { importedIds, importDetails } = await importComponents.importComponents();
+    Analytics.setExtraData('num_components', importedIds.length);
     await consumer.onDestroy();
-    return { dependencies, envComponents, importDetails };
+    return { importedIds, importDetails };
 
     async function getLanes(): Promise<{ laneIds: LaneId[]; lanes: Lane[] }> {
       const result: { laneIds: LaneId[]; lanes: Lane[] } = { laneIds: [], lanes: [] };
