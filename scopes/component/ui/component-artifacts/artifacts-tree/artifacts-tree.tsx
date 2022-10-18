@@ -5,8 +5,8 @@ import { WidgetProps } from '@teambit/ui-foundation.ui.tree.tree-node';
 import { DrawerUI } from '@teambit/ui-foundation.ui.tree.drawer';
 import { FileTree } from '@teambit/ui-foundation.ui.tree.file-tree';
 import { useComponentArtifacts } from '@teambit/component.ui.artifacts.queries.use-component-artifacts';
-import { ArtifactFile } from '@teambit/component.ui.pipelines.component-pipeline-model';
 import { useLocation } from '@teambit/base-react.navigation.link';
+import { ArtifactFile } from '@teambit/component.ui.artifacts.models.component-artifacts-model';
 import { TreeNode } from '@teambit/design.ui.tree';
 import { ComponentTreeLoader } from '@teambit/design.ui.skeletons.sidebar-loader';
 import { ComponentID } from '@teambit/component-id';
@@ -87,7 +87,7 @@ export function ArtifactsTree({
   );
 }
 
-const fileNodeClicked = (files: ArtifactFile[], opts: 'download' | 'new tab') => (_, node) => {
+const fileNodeClicked = (files: (ArtifactFile & { id: string })[], opts: 'download' | 'new tab') => (_, node) => {
   const { id } = node;
   const artifactFile = files.find((file) => file.id === id);
 
@@ -112,7 +112,7 @@ const fileNodeClicked = (files: ArtifactFile[], opts: 'download' | 'new tab') =>
   }
 };
 
-function generateWidget(files: ArtifactFile[]) {
+function generateWidget(files: (ArtifactFile & { id: string })[]) {
   return function Widget({ node }: WidgetProps<any>) {
     const id = node?.id;
     const artifactFile = files.find((file) => file.id === id);
