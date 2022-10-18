@@ -11,25 +11,15 @@
 }
 
 .value {
-  font-size: var(--bit-p-sm);
+  font-size: var(--bit-p-xs);
+  background: var(--bit-bg-dent);
+  padding: 16px;
+  border-radius: 6px;
+  font-family: monospace;
 }
 
 .typeParams {
   padding-top: 16px;
-}
-
-.params {
-  display: flex;
-  padding-bottom: 8px;
-  flex-wrap: wrap;
-}
-
-.paramName {
-  padding-right: 2px;
-}
-
-.paramType {
-  padding-left: 2px;
 }
 
 .bold {

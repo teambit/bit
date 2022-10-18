@@ -181,6 +181,8 @@ export function APINodeDetails({
               value={example.comment}
               path={`${example?.location.line}:${example?.location.filePath}`}
               height={exampleHeight}
+              theme={'vs-dark'}
+              className={styles.editor}
             />
           </div>
         </div>
