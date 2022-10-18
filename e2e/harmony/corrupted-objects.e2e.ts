@@ -28,8 +28,8 @@ describe('objects in scope are corrupted', function () {
       const objectPath = helper.general.getHashPathOfObject(fileHash, true);
       helper.fs.outputFile(objectPath, '');
     });
-    it('should throw', () => {
-      expect(() => helper.command.status()).to.throw();
+    it('bit status should throw an error with a suggestion how to fix', () => {
+      expect(() => helper.command.status()).to.throw('bit import --all-history');
     });
     it('bit import --all-history should fix it', () => {
       helper.command.import('--all-history');
