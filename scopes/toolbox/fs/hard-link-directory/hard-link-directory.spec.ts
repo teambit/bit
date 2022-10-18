@@ -32,4 +32,4 @@ test('hardLinkDirectory()', async () => {
   // It should not link files from node_modules
   expect(fs.existsSync(path.join(dest1Dir, 'node_modules/file.txt'))).toBe(false);
   expect(fs.existsSync(path.join(dest2Dir, 'node_modules/file.txt'))).toBe(false);
-})
+});

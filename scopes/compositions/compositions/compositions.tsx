@@ -56,7 +56,7 @@ export function Compositions({ menuBarWidgets, emptyState }: CompositionsProp) {
 
   const sidebarOpenness = isSidebarOpen ? Layout.row : Layout.left;
 
-  const compositionUrl = toPreviewUrl(component, 'compositions');  
+  const compositionUrl = toPreviewUrl(component, 'compositions');
   const isScaling = component?.preview?.isScaling;
   const compositionIdentifierParam = isScaling ? `name=${selected?.identifier}` : selected?.identifier;
   const currentCompositionFullUrl = toPreviewUrl(component, 'compositions', compositionIdentifierParam);

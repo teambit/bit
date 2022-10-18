@@ -18,7 +18,7 @@ describe('user deleted only .bitmap file leaving the objects in place', function
   describe('tagging a component, then, deleting .bitmap file', () => {
     let scopeAfterDeletion;
     before(() => {
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
       helper.fixtures.tagComponentBarFoo();

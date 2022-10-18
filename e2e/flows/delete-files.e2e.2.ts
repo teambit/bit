@@ -14,7 +14,7 @@ describe('delete files from a component', function () {
   describe('after adding it', () => {
     let statusOutput;
     before(() => {
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo();
       helper.fs.createFile('bar', 'baz.js');
       helper.command.addComponent('bar -i bar/foo -m bar/foo.js');
@@ -28,7 +28,7 @@ describe('delete files from a component', function () {
   });
   describe('tag and then delete a file', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo();
       helper.fs.createFile('bar', 'baz.js');
       helper.command.addComponent('bar -i bar/foo -m bar/foo.js');
@@ -43,7 +43,7 @@ describe('delete files from a component', function () {
   });
   describe('adding a file, tagging it, deleting it and then tagging again', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo();
       helper.fs.createFile('bar', 'baz.js');
       helper.command.addComponent('bar -i bar/foo -m bar/foo.js');

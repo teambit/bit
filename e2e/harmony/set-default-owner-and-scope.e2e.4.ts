@@ -24,7 +24,7 @@ describe('set default owner and scope', function () {
     let componentId;
     let componentPackageName;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.disablePreview();
       scopeWithoutOwner = helper.scopes.remoteWithoutOwner;
       defaultScope = helper.scopes.remote;
@@ -74,7 +74,7 @@ describe('set default owner and scope', function () {
       });
       describe('post import', () => {
         before(() => {
-          helper.scopeHelper.reInitLocalScopeHarmony();
+          helper.scopeHelper.reInitLocalScope();
           helper.scopeHelper.addRemoteScope();
           helper.command.importComponent('utils/is-type');
         });

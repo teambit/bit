@@ -69,6 +69,7 @@ export default class RemoteLanes {
   async getRefsFromAllLanesOnScope(scopeName: string, bitId: BitId): Promise<Ref[]> {
     const allLaneIdOfScope = await this.getAllRemoteLaneIdsOfScope(scopeName);
     const results = await pMapSeries(allLaneIdOfScope, (laneId) => this.getRef(laneId, bitId));
+
     return compact(results);
   }
 
@@ -116,7 +117,7 @@ export default class RemoteLanes {
 
   async getAllRemoteLaneIdsOfScope(scopeName: string): Promise<LaneId[]> {
     const matches = await glob(path.join('*'), { cwd: path.join(this.basePath, scopeName) });
-    return matches.map((match) => LaneId.from(match, scopeName));
+    return matches.map((match) => LaneId.from(match, scopeName)).filter((laneId) => !laneId.isDefault());
   }
 
   async syncWithLaneObject(remoteName: string, lane: Lane) {

@@ -30,7 +30,7 @@ describe('app root components', function () {
     let numberOfFilesInVirtualStore!: number;
     before(() => {
       helper = new Helper();
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(4);
       helper.extensions.bitJsonc.addKeyValToDependencyResolver('rootComponents', true);
@@ -100,9 +100,6 @@ module.exports.default = {
           react: '17',
         },
       });
-      helper.command.install();
-      // Only after the second install is bit able to detect apps
-      helper.command.compile();
       helper.command.install();
       virtualStoreDir = path.join(helper.fixtures.scopes.localPath, 'node_modules/.pnpm');
       numberOfFilesInVirtualStore = fs.readdirSync(virtualStoreDir).length;
@@ -424,7 +421,7 @@ module.exports.default = {
   describe('pnpm hoisted linker', function () {
     before(() => {
       helper = new Helper();
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(4);
       helper.extensions.bitJsonc.addKeyValToDependencyResolver('nodeLinker', 'hoisted');
@@ -495,9 +492,6 @@ module.exports.default = {
           react: '17',
         },
       });
-      helper.command.install();
-      // Only after the second install is bit able to detect apps
-      helper.command.compile();
       helper.command.install();
     });
     after(() => {
@@ -826,7 +820,7 @@ module.exports.default = {
   describe('yarn hoisted linker', function () {
     before(() => {
       helper = new Helper();
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(4);
       helper.extensions.bitJsonc.setPackageManager('teambit.dependencies/yarn');
@@ -1169,7 +1163,7 @@ describe('env root components', function () {
   describe('pnpm isolated linker', function () {
     before(() => {
       helper = new Helper();
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.command.create('react-env', 'custom-react/env1', '-p custom-react/env1');
       helper.fs.outputFile(
@@ -1295,7 +1289,6 @@ module.exports.default = {
         },
       });
       helper.command.install();
-      helper.command.install();
     });
     after(() => {
       helper.scopeHelper.destroy();
@@ -1333,7 +1326,7 @@ module.exports.default = {
   let npmCiRegistry: NpmCiRegistry;
   before(async () => {
     helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
-    helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+    helper.scopeHelper.setNewLocalAndRemoteScopes();
     helper.bitJsonc.setupDefault();
     helper.bitJsonc.setPackageManager(`teambit.dependencies/pnpm`);
     npmCiRegistry = new NpmCiRegistry(helper);
@@ -1369,7 +1362,6 @@ module.exports.default = {
         },
       },
     });
-    helper.command.compile();
     helper.command.install('react@16.6.3');
     helper.command.tagAllComponents();
     helper.command.export();
@@ -1387,7 +1379,7 @@ module.exports.default = {
     helper.command.tagAllComponents();
     helper.command.export();
 
-    helper.scopeHelper.reInitLocalScopeHarmony({
+    helper.scopeHelper.reInitLocalScope({
       yarnRCConfig: {
         unsafeHttpWhitelist: ['localhost'],
       },
@@ -1529,7 +1521,7 @@ describe('env peer dependencies hoisting', function () {
   describe('pnpm isolated linker', function () {
     before(() => {
       helper = new Helper();
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.extensions.bitJsonc.addKeyValToDependencyResolver('rootComponents', true);
       helper.command.create('react', 'my-button', '-p my-button');

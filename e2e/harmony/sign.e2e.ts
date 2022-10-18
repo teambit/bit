@@ -17,7 +17,7 @@ describe('sign command', function () {
   describe('simple case with one scope with --push flag', () => {
     let signOutput: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(2);
       helper.command.tagAllWithoutBuild();
@@ -54,7 +54,7 @@ describe('sign command', function () {
   describe('simple case with one scope without --push flag', () => {
     let signOutput: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(2);
       helper.command.tagAllWithoutBuild();
@@ -74,7 +74,7 @@ describe('sign command', function () {
   describe('without specifying the ids', () => {
     let signOutput: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(2);
       helper.command.tagAllWithoutBuild();
@@ -89,7 +89,7 @@ describe('sign command', function () {
   describe('failure case', () => {
     let signOutput: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fs.outputFile('bar/index.js');
       helper.fs.outputFile('bar/foo.spec.js'); // it will fail as it doesn't have any test
@@ -132,7 +132,7 @@ describe('sign command', function () {
     let firstSnapHash: string;
     let signRemote;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
 
       const secondRemote = helper.scopeHelper.getNewBareScope();
@@ -172,7 +172,7 @@ describe('sign command', function () {
   describe.skip('circular dependencies between two scopes', () => {
     let signOutput: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       const secondRemote = helper.scopeHelper.getNewBareScope();
       helper.scopeHelper.addRemoteScope(secondRemote.scopePath);

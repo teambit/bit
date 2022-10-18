@@ -120,11 +120,12 @@ export class TesterService implements EnvService<Tests, TesterDescriptor> {
       const componentPatterns = this.devFiles.getDevPatterns(component, TesterAspect.id);
       return {
         componentDir,
-        paths: componentPatterns.map((pattern: string) => ({
-          path: resolve(componentDir, pattern),
-          relative: pattern,
-        })) || [],
-      }
+        paths:
+          componentPatterns.map((pattern: string) => ({
+            path: resolve(componentDir, pattern),
+            relative: pattern,
+          })) || [],
+      };
     });
 
     let additionalHostDependencies = [];

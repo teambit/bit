@@ -47,7 +47,6 @@ export function CompositionsPanel({
   return (
     <ul {...rest} className={classNames(className)}>
       {compositions.map((composition) => {
-
         const href = isScaling ? `${url}&name=${composition.identifier}` : `${url}&${composition.identifier}`;
 
         // TODO - move to composition panel node
@@ -61,12 +60,7 @@ export function CompositionsPanel({
               <span className={styles.name}>{composition.displayName}</span>
             </a>
             <div className={styles.right}>
-              <a
-                className={styles.panelLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                href={href}
-              >
+              <a className={styles.panelLink} target="_blank" rel="noopener noreferrer" href={href}>
                 <Icon className={styles.icon} of="open-tab" />
               </a>
             </div>

@@ -50,18 +50,18 @@ describe('bit list command', function () {
     describe('when a remote component has a higher version than the local component', () => {
       let output;
       before(() => {
-        helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+        helper.scopeHelper.setNewLocalAndRemoteScopes();
         helper.bitJsonc.setupDefault();
         helper.fixtures.createComponentBarFoo();
         helper.fixtures.addComponentBarFooAsDir();
         helper.fixtures.tagComponentBarFoo();
         helper.command.export();
-        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.scopeHelper.reInitLocalScope();
         helper.scopeHelper.addRemoteScope();
         helper.command.importComponent('bar/foo@0.0.1');
         const clonedScopePath = helper.scopeHelper.cloneLocalScope();
 
-        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.scopeHelper.reInitLocalScope();
         helper.scopeHelper.addRemoteScope();
         helper.command.importComponent('bar/foo@0.0.1');
         helper.command.tagComponent('bar/foo', 'msg', '-f');
@@ -79,13 +79,13 @@ describe('bit list command', function () {
     describe('when a remote component has the same version as the local component', () => {
       let output;
       before(() => {
-        helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+        helper.scopeHelper.setNewLocalAndRemoteScopes();
         helper.bitJsonc.setupDefault();
         helper.fs.createFile('bar', 'baz.js');
         helper.command.addComponent('bar', { i: 'bar/baz' });
         helper.command.tagWithoutBuild('bar/baz');
         helper.command.export();
-        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.scopeHelper.reInitLocalScope();
         helper.scopeHelper.addRemoteScope();
         helper.command.importComponent('bar/baz@0.0.1');
         output = helper.command.listLocalScopeParsed('-o');
@@ -98,7 +98,7 @@ describe('bit list command', function () {
     describe('when a component is local only (never exported)', () => {
       let output;
       before(() => {
-        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.scopeHelper.reInitLocalScope();
         helper.fs.createFile('bar', 'local');
         helper.command.addComponent('bar', { i: 'bar/local' });
         helper.command.tagWithoutBuild('bar/local');

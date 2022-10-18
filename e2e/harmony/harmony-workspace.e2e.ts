@@ -20,7 +20,7 @@ describe('workspace aspect', function () {
   describe('tag a component twice', () => {
     before(() => {
       helper = new Helper();
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllWithoutBuild(); // 0.0.1
       helper.fixtures.populateComponents(1, undefined, 'v2');

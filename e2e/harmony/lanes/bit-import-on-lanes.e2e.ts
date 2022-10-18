@@ -15,13 +15,13 @@ describe('bit lane command', function () {
   describe('importing a component when checked out to a lane', () => {
     let beforeImport;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
       helper.command.tagAllComponents();
       helper.command.export();
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
       helper.command.createLane();
       beforeImport = helper.scopeHelper.cloneLocalScope();
@@ -71,7 +71,7 @@ describe('bit lane command', function () {
   describe('importing a (non-lane) component from another scope when checked out to a lane', () => {
     let anotherRemote: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       const { scopeName, scopePath } = helper.scopeHelper.getNewBareScope();
       anotherRemote = scopeName;
@@ -92,7 +92,7 @@ describe('bit lane command', function () {
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
 
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
       helper.scopeHelper.addRemoteScope(scopePath);
 
@@ -107,13 +107,13 @@ describe('bit lane command', function () {
   });
   describe('import a non-lane component that has dependencies into a lane', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents();
       helper.command.tagAllWithoutBuild();
       helper.command.export();
 
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
       helper.command.createLane();
       helper.command.importComponent('comp1 --save-in-lane');
@@ -127,7 +127,7 @@ describe('bit lane command', function () {
     describe('when the lane is new', () => {
       let importOutput: string;
       before(() => {
-        helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+        helper.scopeHelper.setNewLocalAndRemoteScopes();
         helper.bitJsonc.setupDefault();
         helper.command.createLane('dev');
         helper.fixtures.populateComponents(1);
@@ -141,14 +141,14 @@ describe('bit lane command', function () {
     describe('when the lane is exported', () => {
       let importOutput: string;
       before(() => {
-        helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+        helper.scopeHelper.setNewLocalAndRemoteScopes();
         helper.bitJsonc.setupDefault();
         helper.command.createLane('dev');
         helper.fixtures.populateComponents();
         helper.command.snapAllComponents();
         helper.command.exportLane();
 
-        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.scopeHelper.reInitLocalScope();
         helper.scopeHelper.addRemoteScope();
         helper.command.switchRemoteLane('dev');
 
@@ -161,7 +161,7 @@ describe('bit lane command', function () {
     });
     describe('when the objects were deleted and a workspace has an aspect with deps', () => {
       before(() => {
-        helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+        helper.scopeHelper.setNewLocalAndRemoteScopes();
         helper.bitJsonc.setupDefault();
         helper.command.createLane();
         helper.command.create('aspect', 'my-aspect');
@@ -183,6 +183,34 @@ describe('bit lane command', function () {
       // component bwkyh1me-remote/comp1 missing data. parent 0a27abfb2cab6ed73a36323216a5e95cba98ede0 of version 9e2e99134fa0465c4efa7c8f089fe33cf61e4c1a was not found.
       it('bit import should not throw', () => {
         expect(() => helper.command.import()).to.not.throw();
+      });
+    });
+    describe('when the components on the lane have history other than head on main', () => {
+      before(() => {
+        helper.scopeHelper.setNewLocalAndRemoteScopes();
+        helper.bitJsonc.setupDefault();
+        helper.fixtures.populateComponents(1);
+        helper.command.tagAllWithoutBuild(); // 0.0.1
+        helper.command.export();
+        helper.command.createLane();
+        helper.command.snapAllComponentsWithoutBuild('--unmodified');
+        helper.command.export();
+        helper.command.switchLocalLane('main', '--skip-dependency-installation');
+        helper.command.tagAllWithoutBuild('--unmodified'); // 0.0.2
+        helper.command.tagAllWithoutBuild('--unmodified'); // 0.0.3
+        helper.command.export();
+        helper.command.switchLocalLane('dev', '--skip-dependency-installation');
+        helper.fs.deletePath('.bit');
+        helper.scopeHelper.addRemoteScope();
+        helper.command.import();
+      });
+      // previously, it wasn't importing 0.0.2, because it's not part of the lane history and it's not the head.
+      it('should bring all history of main', () => {
+        const comp = helper.command.catComponent(`${helper.scopes.remote}/comp1`);
+        const v2Hash = comp.versions['0.0.2'];
+        const v3Hash = comp.versions['0.0.3'];
+        expect(() => helper.command.catObject(v2Hash)).to.not.throw();
+        expect(() => helper.command.catObject(v3Hash)).to.not.throw();
       });
     });
   });

@@ -5,7 +5,7 @@ export function addAvatarQueryParams(url: string, size: string | number, default
   const isQuestionExisting = url.indexOf('?') > -1;
   const controlChar = isQuestionExisting ? '&' : '?';
   const gravatarParams: string[] = [`size=${size}`];
-  const imgixParams = [`w=${intSize*2}`, `h=${intSize*2}`, `crop=faces`, `fit=crop`, `bg=${defaultAvatarBgColor}`];
+  const imgixParams = [`w=${intSize * 2}`, `h=${intSize * 2}`, `crop=faces`, `fit=crop`, `bg=${defaultAvatarBgColor}`];
 
   const e: string[] = [];
 

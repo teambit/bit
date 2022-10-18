@@ -6,6 +6,6 @@ export type GetScopeOptions = {
   Corner?: ComponentType;
   paneClassName?: string;
   scopeClassName?: string;
-  TargetScopeOverview?: ComponentType
-  PaneWrapper?: ComponentType<{ children: ReactNode }>
+  TargetScopeOverview?: ComponentType;
+  PaneWrapper?: ComponentType<{ children: ReactNode }>;
 };

@@ -17,7 +17,7 @@ describe('multi testers', function () {
   (IS_WINDOWS ? describe.skip : describe)('2 jest testers with different resolve pattern', function () {
     let compName;
     before(() => {
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       compName = helper.fixtures.populateComponents(1);
       helper.fs.outputFile('comp1/comp1.spec.ts', specFilePassingFixture());
       helper.fs.outputFile(

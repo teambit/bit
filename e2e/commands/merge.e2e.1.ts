@@ -20,7 +20,7 @@ describe('bit merge command', function () {
     helper = new Helper();
   });
   before(() => {
-    helper.scopeHelper.reInitLocalScopeHarmony();
+    helper.scopeHelper.reInitLocalScope();
   });
   after(() => {
     helper.scopeHelper.destroy();
@@ -66,7 +66,7 @@ describe('bit merge command', function () {
   describe('component with conflicts', () => {
     let localScope;
     before(() => {
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo(barFooV1);
       helper.fixtures.addComponentBarFooAsDir();
       helper.fixtures.tagComponentBarFoo();
@@ -276,7 +276,7 @@ describe('bit merge command', function () {
   describe('modified component with conflicts', () => {
     let localScope;
     before(() => {
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo(barFooV1);
       helper.fixtures.addComponentBarFooAsDir();
       helper.fixtures.tagComponentBarFoo();
@@ -373,7 +373,7 @@ describe('bit merge command', function () {
     describe('when the modified file is the same as the specified version', () => {
       let output;
       before(() => {
-        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.scopeHelper.reInitLocalScope();
         helper.fixtures.createComponentBarFoo(barFooV1);
         helper.fixtures.addComponentBarFooAsDir();
         helper.fixtures.tagComponentBarFoo();

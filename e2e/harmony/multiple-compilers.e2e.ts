@@ -20,7 +20,7 @@ describe('multiple compilers - babel and typescript', function () {
     describe('compile simple ts component', () => {
       let distDir;
       before(() => {
-        helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+        helper.scopeHelper.setNewLocalAndRemoteScopes();
         helper.bitJsonc.addDefaultScope();
         helper.bitJsonc.disablePreview();
 
@@ -88,7 +88,7 @@ describe('multiple compilers - babel and typescript', function () {
   describe('different envs in the dependency graph', () => {
     let buildOutput;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.disablePreview();
       helper.bitJsonc.addDefaultScope();
       helper.fixtures.populateComponentsTS(4);
