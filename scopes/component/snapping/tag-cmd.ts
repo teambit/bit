@@ -29,7 +29,7 @@ if patterns are entered, you can specify a version per pattern using "@" sign, e
   loader = true;
   options = [
     ['m', 'message <message>', 'a log message describing latest changes'],
-    ['', 'unmodified', 'include unmodified components (by default, only new and modified components are tagged)'],
+    ['u', 'unmodified', 'include unmodified components (by default, only new and modified components are tagged)'],
     [
       '',
       'editor [editor]',
