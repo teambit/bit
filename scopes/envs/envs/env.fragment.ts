@@ -21,8 +21,9 @@ export class EnvFragment implements ShowFragment {
   }
 
   private getEnvId(component: Component) {
-    const env = this.envs.getEnv(component);
-    return env.id;
+    // don't use this.envs.getEnv(). otherwise, it'll throw an error when running bit-show on a remote component
+    // where the env can't register to the slot.
+    return this.envs.getEnvId(component);
   }
 
   weight = 3;
