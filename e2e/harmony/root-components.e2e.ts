@@ -101,9 +101,6 @@ module.exports.default = {
         },
       });
       helper.command.install();
-      // Only after the second install is bit able to detect apps
-      helper.command.compile();
-      helper.command.install();
       virtualStoreDir = path.join(helper.fixtures.scopes.localPath, 'node_modules/.pnpm');
       numberOfFilesInVirtualStore = fs.readdirSync(virtualStoreDir).length;
     });
@@ -495,9 +492,6 @@ module.exports.default = {
           react: '17',
         },
       });
-      helper.command.install();
-      // Only after the second install is bit able to detect apps
-      helper.command.compile();
       helper.command.install();
     });
     after(() => {
@@ -1295,7 +1289,6 @@ module.exports.default = {
         },
       });
       helper.command.install();
-      helper.command.install();
     });
     after(() => {
       helper.scopeHelper.destroy();
@@ -1369,7 +1362,6 @@ module.exports.default = {
         },
       },
     });
-    helper.command.compile();
     helper.command.install('react@16.6.3');
     helper.command.tagAllComponents();
     helper.command.export();
