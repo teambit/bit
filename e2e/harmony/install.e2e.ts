@@ -27,6 +27,9 @@ describe('install command', function () {
       helper.command.install(pkg);
       helper.fs.appendFile('comp1/index.js');
     });
+    after(() => {
+      npmCiRegistry.destroy();
+    });
     it('bit status should show it with DuplicateComponentAndPackage issue', () => {
       helper.command.expectStatusToHaveIssue(IssuesClasses.DuplicateComponentAndPackage.name);
     });
