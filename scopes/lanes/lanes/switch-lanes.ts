@@ -26,7 +26,6 @@ import { Workspace } from '@teambit/workspace';
 import { Logger } from '@teambit/logger';
 import { BitError } from '@teambit/bit-error';
 import { LanesMain } from './lanes.main.runtime';
-import { createLane } from './create-lane';
 
 export type SwitchProps = {
   laneName: string;
@@ -168,18 +167,8 @@ export class LaneSwitcher {
   }
 
   private async saveLanesData() {
-    const throwIfLaneExists = async () => {
-      const allLanes = await this.consumer.scope.listLanes();
-      if (allLanes.find((l) => l.toLaneId().isEqual(this.laneIdToSwitch))) {
-        throw new BitError(`unable to checkout to lane "${this.laneIdToSwitch.toString()}".
-  the lane already exists. please switch to the lane and merge`);
-      }
-    };
-
     const localLaneName = this.switchProps.alias || this.laneIdToSwitch.name;
     if (this.switchProps.remoteLane) {
-      await throwIfLaneExists();
-      await createLane(this.consumer, this.laneIdToSwitch.name, this.laneIdToSwitch.scope, this.switchProps.remoteLane);
       if (!this.switchProps.localTrackedLane) {
         this.consumer.scope.lanes.trackLane({
           localLane: localLaneName,
