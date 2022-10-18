@@ -30,13 +30,13 @@ export class WorkspaceComponentLoader {
     this.componentsCache = createInMemoryCache({ maxSize: getMaxSizeForComponents() });
   }
 
-  async getMany(ids: Array<ComponentID>): Promise<Component[]> {
+  async getMany(ids: Array<ComponentID>, loadOpts?: ComponentLoadOptions): Promise<Component[]> {
     const idsWithoutEmpty = compact(ids);
     const errors: { id: ComponentID; err: Error }[] = [];
     const longProcessLogger = this.logger.createLongProcessLogger('loading components', ids.length);
     const componentsP = mapSeries(idsWithoutEmpty, async (id: ComponentID) => {
       longProcessLogger.logProgress(id.toString());
-      return this.get(id).catch((err) => {
+      return this.get(id, undefined, undefined, undefined, loadOpts).catch((err) => {
         if (this.isComponentNotExistsError(err)) {
           errors.push({
             id,
@@ -175,7 +175,8 @@ export class WorkspaceComponentLoader {
         componentFromScope.tags,
         this.workspace
       );
-      return this.executeLoadSlot(workspaceComponent, loadOpts);
+      const updatedComp = await this.executeLoadSlot(workspaceComponent, loadOpts);
+      return updatedComp;
     }
     return this.executeLoadSlot(this.newComponentFromState(id, state), loadOpts);
   }

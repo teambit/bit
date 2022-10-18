@@ -9,7 +9,7 @@ import { generateRandomStr, removeChalkCharacters } from '../utils';
 import CommandHelper from './e2e-command-helper';
 import { ensureAndWriteJson } from './e2e-helper';
 import NpmHelper from './e2e-npm-helper';
-import ScopesData from './e2e-scopes';
+import ScopesData, { DEFAULT_OWNER } from './e2e-scopes';
 
 export default class GeneralHelper {
   scopes: ScopesData;
@@ -125,5 +125,9 @@ export default class GeneralHelper {
 
   getStagedConfig(laneName = 'main') {
     return fs.readJSONSync(path.join(this.scopes.localPath, '.bit', 'staged-config', `${laneName}.json`));
+  }
+
+  getPackageNameByCompName(compName: string) {
+    return `@${DEFAULT_OWNER}/${this.scopes.remoteWithoutOwner}.${compName}`;
   }
 }
