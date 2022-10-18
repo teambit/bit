@@ -19,7 +19,7 @@ describe('bit checkout command', function () {
   let helper: Helper;
   before(() => {
     helper = new Helper();
-    helper.scopeHelper.reInitLocalScopeHarmony();
+    helper.scopeHelper.reInitLocalScope();
   });
   after(() => {
     helper.scopeHelper.destroy();
@@ -38,7 +38,7 @@ describe('bit checkout command', function () {
     });
     it('before tagging it should show an error saying the component was not tagged yet', () => {
       const output = helper.general.runWithTryCatch('bit checkout 1.0.0 bar/foo');
-      expect(output).to.have.string("component bar/foo doesn't have any version yet");
+      expect(output).to.have.string('component bar/foo is new, no version to checkout');
     });
     describe('after the component was tagged', () => {
       before(() => {
@@ -113,7 +113,7 @@ describe('bit checkout command', function () {
     let outputV2: string;
     let localScope: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(3);
       helper.command.tagAllWithoutBuild();
@@ -173,13 +173,13 @@ describe('bit checkout command', function () {
       // previously, it was throwing an error:
       // error: version "0.0.2" of component tpkb99cd-remote/comp1 was not found on the filesystem.
       it('should not throw an error', () => {
-        expect(() => helper.command.checkout('latest --all')).to.not.throw();
+        expect(() => helper.command.checkoutHead('--all')).to.not.throw();
       });
     });
   });
   describe('when the current version has new files', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
       helper.command.tagAllWithoutBuild();
@@ -195,7 +195,7 @@ describe('bit checkout command', function () {
   });
   describe('when the component is modified and a file was changed in the checked out version', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.fs.outputFile('bar/index.js', "console.log('v1');");
       helper.fs.outputFile('bar/foo.txt', 'v1');
       helper.command.addComponent('bar');
@@ -214,7 +214,7 @@ describe('bit checkout command', function () {
     let scopeAfterFirstVersion: string;
     let scopeBeforeCheckout: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(1);
       helper.fs.outputFile('comp1/foo.ts');
@@ -228,19 +228,19 @@ describe('bit checkout command', function () {
       helper.fs.deletePath('comp1/foo.ts');
       scopeBeforeCheckout = helper.scopeHelper.cloneLocalScope();
     });
-    describe('bit checkout latest', () => {
+    describe('bit checkout head', () => {
       before(() => {
-        helper.command.checkout('latest comp1 --skip-npm-install');
+        helper.command.checkoutHead('comp1 --skip-npm-install');
       });
       it('should leave the file deleted', () => {
         const deletedFile = path.join(helper.scopes.localPath, 'comp1/foo.ts');
         expect(deletedFile).to.not.be.a.path();
       });
     });
-    describe('bit checkout --reset', () => {
+    describe('bit checkout reset', () => {
       before(() => {
         helper.scopeHelper.getClonedLocalScope(scopeBeforeCheckout);
-        helper.command.checkout('comp1 --skip-npm-install --reset');
+        helper.command.checkoutReset('comp1 --skip-npm-install');
       });
       it('should re-create the file', () => {
         const deletedFile = path.join(helper.scopes.localPath, 'comp1/foo.ts');
@@ -251,7 +251,7 @@ describe('bit checkout command', function () {
   describe('when a file was added in the new version (and not exists locally)', () => {
     let afterFirstExport: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllWithoutBuild();
@@ -263,7 +263,7 @@ describe('bit checkout command', function () {
       helper.command.export();
       helper.scopeHelper.getClonedLocalScope(afterFirstExport);
       helper.command.import();
-      helper.command.checkout('latest --all');
+      helper.command.checkoutHead('--all');
     });
     it('should write the new files', () => {
       const newFilePath = path.join(helper.scopes.localPath, 'comp1/foo.ts');
@@ -273,7 +273,7 @@ describe('bit checkout command', function () {
   describe('modified component with conflicts', () => {
     let localScope;
     before(() => {
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo(`${barFooV1}\n`);
       helper.fixtures.addComponentBarFooAsDir();
       helper.fixtures.tagComponentBarFoo();
@@ -316,6 +316,15 @@ describe('bit checkout command', function () {
       it('should show the component as modified', () => {
         const statusOutput = helper.command.runCmd('bit status');
         expect(statusOutput).to.have.string('modified components');
+      });
+      it('should not try to compile the files', () => {
+        expect(output).not.to.have.string('compilation failed');
+        expect(output).not.to.have.string('Merge conflict marker encountered');
+      });
+      it('should not run the package installation', () => {
+        expect(output).not.to.have.string('installing dependencies');
+        expect(output).not.to.have.string('pnpm');
+        expect(output).not.to.have.string('yarn');
       });
     });
     describe('using theirs strategy', () => {
@@ -420,6 +429,52 @@ describe('bit checkout command', function () {
           expect(path.join(helper.scopes.localPath, 'bar/foo2.js')).to.be.a.file();
         });
       });
+    });
+  });
+  describe('checkout-head when the local head is not up to date', () => {
+    let localHeadScope: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents(1, false);
+      helper.command.tagAllWithoutBuild();
+      helper.fixtures.populateComponents(1, false, 'v2');
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      localHeadScope = helper.scopeHelper.cloneLocalScope();
+      helper.fixtures.populateComponents(1, false, 'v3');
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.scopeHelper.getClonedLocalScope(localHeadScope);
+      helper.command.checkout('0.0.1 --all');
+      helper.command.checkoutHead();
+    });
+    it('should checkout to the remote head and not to the local head', () => {
+      const bitMap = helper.bitMap.read();
+      expect(bitMap.comp1.version).to.equal('0.0.3');
+    });
+  });
+  describe('sync new components', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents(2);
+      const scopeBeforeTag = helper.scopeHelper.cloneLocalScope();
+      helper.command.tagWithoutBuild('comp2');
+      helper.command.export();
+      helper.scopeHelper.getClonedLocalScope(scopeBeforeTag);
+
+      // intermediate step, make sure they're both new.
+      const status = helper.command.statusJson();
+      expect(status.newComponents).to.have.lengthOf(2);
+    });
+    it('bit checkout head should sync the exported components', () => {
+      helper.command.checkoutHead();
+      const status = helper.command.statusJson();
+      expect(status.newComponents).to.have.lengthOf(1);
+
+      const bitMap = helper.bitMap.read();
+      expect(bitMap.comp2.scope).to.equal(helper.scopes.remote);
     });
   });
 });

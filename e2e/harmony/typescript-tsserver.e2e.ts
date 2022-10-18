@@ -18,7 +18,7 @@ describe('TsServer component', function () {
   describe('tsserver', () => {
     let tsServer: TsserverClient;
     before(async () => {
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.fixtures.populateComponentsTS(1);
       helper.fs.outputFile(
         'comp1/index.ts',

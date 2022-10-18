@@ -16,7 +16,7 @@ describe('aspect', function () {
   });
   describe('run bit aspect set then generate component.json', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(1);
       helper.command.setAspect('comp1', Extensions.forking, { configKey: 'configVal' });
@@ -42,7 +42,7 @@ describe('aspect', function () {
   });
   describe('aspect loading failures', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.command.create('aspect', 'my-aspect');
       helper.bitJsonc.addKeyVal('my-scope/my-aspect', {});
     });
@@ -59,6 +59,53 @@ describe('aspect', function () {
     it('using --log=error it should show the stacktrace', () => {
       const output = helper.command.list('--log=error');
       expect(output).to.have.string('Require stack');
+    });
+  });
+  describe('bit aspect update command', () => {
+    let output: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.bitJsonc.setupDefault();
+      helper.command.create('aspect', 'my-aspect');
+      helper.command.compile();
+      helper.command.install();
+      helper.command.tagAllWithoutBuild();
+      helper.fixtures.populateComponents(1);
+      helper.command.setAspect('comp1', `${helper.scopes.remote}/my-aspect`);
+      helper.command.tagWithoutBuild('comp1');
+      helper.command.tagWithoutBuild('my-aspect', '--unmodified --skip-auto-tag');
+      helper.command.export();
+
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
+      helper.command.importComponent('comp1');
+
+      // intermediate step. make sure comp1 has my-aspect with the first version.
+      const show = helper.command.showComponent('comp1');
+      expect(show).to.have.string(`${helper.scopes.remote}/my-aspect@0.0.1`);
+      expect(show).not.to.have.string(`${helper.scopes.remote}/my-aspect@0.0.2`);
+
+      output = helper.command.updateAspect(`${helper.scopes.remote}/my-aspect`);
+    });
+    it('should output the affected components', () => {
+      expect(output).to.have.string(`${helper.scopes.remote}/comp1@0.0.1`);
+    });
+    it('should not add the previous aspect with minus to .bitmap file', () => {
+      const bitMap = helper.bitMap.read();
+      expect(bitMap.comp1.config).to.not.have.property(`${helper.scopes.remote}/my-aspect@0.0.1`);
+      expect(bitMap.comp1.config).to.have.property(`${helper.scopes.remote}/my-aspect@0.0.2`);
+    });
+    it('bit show should show the new aspect', () => {
+      const show = helper.command.showComponent('comp1');
+      expect(show).to.have.string(`${helper.scopes.remote}/my-aspect@0.0.2`);
+      expect(show).not.to.have.string(`${helper.scopes.remote}/my-aspect@0.0.1`);
+    });
+    it('bit tag should save only the updated aspect and not the old one', () => {
+      helper.command.importComponent('my-aspect'); // otherwise, the tag will try to get it as a package
+      helper.command.tagAllComponents();
+      const cmp = helper.command.catComponent(`${helper.scopes.remote}/comp1@latest`, undefined, false);
+      expect(cmp).to.have.string(`${helper.scopes.remote}/my-aspect@0.0.2`);
+      expect(cmp).not.to.have.string(`${helper.scopes.remote}/my-aspect@0.0.1`);
     });
   });
 });

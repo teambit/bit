@@ -46,15 +46,6 @@ export const BIT_MAP = '.bitmap';
 
 export const OLD_BIT_MAP = '.bit.map.json';
 
-// Hack to prevent reference from constants to component map
-type origins = 'IMPORTED' | 'AUTHORED' | 'NESTED';
-
-export const COMPONENT_ORIGINS = {
-  IMPORTED: 'IMPORTED' as origins,
-  AUTHORED: 'AUTHORED' as origins,
-  NESTED: 'NESTED' as origins,
-};
-
 export const TESTS_FORK_LEVEL = {
   NONE: 'NONE',
   ONE: 'ONE',
@@ -70,10 +61,6 @@ export const DEFAULT_INDEX_EXTS = ['js', 'ts', 'jsx', 'tsx', 'css', 'scss', 'les
 export const SUPPORTED_EXTENSIONS = ['.js', '.ts', '.jsx', '.tsx', '.css', '.scss', '.less', '.sass', '.vue', '.styl'];
 
 export const NO_PLUGIN_TYPE = 'none';
-
-export const DEFAULT_COMPILER_ID = NO_PLUGIN_TYPE;
-
-export const DEFAULT_TESTER_ID = NO_PLUGIN_TYPE;
 
 export const DEFAULT_PACKAGE_MANAGER = 'npm';
 
@@ -195,6 +182,7 @@ export const IGNORE_LIST = [
   '**/package-lock.json',
   '**/yarn.lock',
   '**/LICENSE',
+  '*/tsconfig.json',
 ];
 
 export const AUTO_GENERATED_STAMP = 'BIT-AUTO-GENERATED';
@@ -273,6 +261,8 @@ export const CFG_INTERACTIVE = 'interactive';
 export const CFG_COMMAND_INTERACTIVE_TEMPLATE = 'interactive.{commandName}';
 
 export const CFG_INIT_INTERACTIVE = format(CFG_COMMAND_INTERACTIVE_TEMPLATE, { commandName: INIT_COMMAND });
+export const CFG_INIT_DEFAULT_SCOPE = 'default_scope';
+export const CFG_INIT_DEFAULT_DIRECTORY = 'default_directory';
 
 export const CFG_SSH_NO_COMPRESS = 'ssh_no_compress';
 
@@ -284,12 +274,13 @@ export const CFG_CAPSULES_ROOT_BASE_DIR = 'capsules_root_base_dir';
 
 export const CFG_PROXY = 'proxy';
 export const CFG_HTTPS_PROXY = 'https_proxy';
+export const CFG_PROXY_NO_PROXY = 'proxy.no_proxy';
+// These are for backward compatibility
 export const CFG_PROXY_CA = 'proxy.ca';
 export const CFG_PROXY_CA_FILE = 'proxy.cafile';
 export const CFG_PROXY_STRICT_SSL = 'proxy.strict_ssl';
 export const CFG_PROXY_CERT = 'proxy.cert';
 export const CFG_PROXY_KEY = 'proxy.key';
-export const CFG_PROXY_NO_PROXY = 'proxy.no_proxy';
 
 export const CFG_FETCH_RETRIES = 'network.fetch_retries';
 export const CFG_FETCH_RETRY_FACTOR = 'network.fetch_retry_factor';
@@ -299,6 +290,11 @@ export const CFG_FETCH_TIMEOUT = 'network.fetch_timeout';
 export const CFG_LOCAL_ADDRESS = 'network.local_address';
 export const CFG_MAX_SOCKETS = 'network.max_sockets';
 export const CFG_NETWORK_CONCURRENCY = 'network.concurrency';
+export const CFG_NETWORK_CA = 'network.ca';
+export const CFG_NETWORK_CA_FILE = 'network.cafile';
+export const CFG_NETWORK_STRICT_SSL = 'network.strict-ssl';
+export const CFG_NETWORK_CERT = 'network.cert';
+export const CFG_NETWORK_KEY = 'network.key';
 
 export const CFG_CONCURRENCY_IO = 'concurrency.io';
 export const CFG_CONCURRENCY_COMPONENTS = 'concurrency.components';
@@ -412,6 +408,8 @@ export const BIT_REGISTRY = '';
 
 export const LATEST = 'latest';
 
+export const HEAD = 'head';
+
 export const DEPENDENCY_DELIMITER = '/';
 
 export const BIT_SOURCES_DIRNAME = 'source';
@@ -451,10 +449,6 @@ export const WRAPPER_DIR = 'bit_wrapper_dir';
 export const PACKAGE_JSON = 'package.json';
 
 export const COMPONENT_CONFIG_FILE_NAME = 'component.json';
-
-export const COMPILER_ENV_TYPE = 'compiler';
-
-export const TESTER_ENV_TYPE = 'tester';
 
 export const DEBUG_LOG: PathOsBased = path.join(GLOBAL_LOGS, 'debug.log');
 
@@ -523,6 +517,7 @@ export enum Extensions {
   forking = 'teambit.component/forking',
   renaming = 'teambit.component/renaming',
   lanes = 'teambit.lanes/lanes',
+  remove = 'teambit.component/remove',
 }
 
 export enum BuildStatus {

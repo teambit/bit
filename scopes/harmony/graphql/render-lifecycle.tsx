@@ -1,13 +1,18 @@
 import React, { ReactNode } from 'react';
-import { getDataFromTree } from '@apollo/client/react/ssr';
+// Calling getMarkupFromTree instead of getDataFromTree so we can control the render function
+// This is required since upgrade to @apollo/client v3.6.9 because otherwise the ssr is not working since
+// webpack is not bundling the react-dom/server
+import { getMarkupFromTree } from '@apollo/client/react/ssr';
+import ReactDOMServer from 'react-dom/server';
 import type { ApolloClient, NormalizedCacheObject } from '@apollo/client';
 import pick from 'lodash.pick';
 
 import { isBrowser } from '@teambit/ui-foundation.ui.is-browser';
-import type { BrowserData, RenderPlugins } from '@teambit/ui';
+import type { SSR } from '@teambit/ui';
 
 import type { GraphqlUI, GraphQLClient } from './graphql.ui.runtime';
 import { GraphQLProvider } from './graphql-provider';
+import { GraphqlAspect } from './graphql.aspect';
 
 type RenderContext = {
   client: GraphQLClient<any>;
@@ -15,18 +20,18 @@ type RenderContext = {
 
 const ALLOWED_HEADERS = ['cookie'];
 
-export class GraphqlRenderPlugins implements RenderPlugins<RenderContext, { state?: NormalizedCacheObject }> {
+export class GraphqlRenderPlugins implements SSR.RenderPlugin<RenderContext, { state?: NormalizedCacheObject }> {
   constructor(private graphqlUI: GraphqlUI) {}
 
-  serverInit = ({ browser, server }: { browser?: BrowserData; server?: { port: number } } = {}) => {
-    if (!browser) return undefined;
+  key = GraphqlAspect.id;
 
-    const port = server?.port || 3000;
+  serverInit = ({ browser }: SSR.SsrSession) => {
+    const port = browser?.location.port || 3000;
     const serverUrl = `http://localhost:${port}/graphql`;
 
     const client = this.graphqlUI.createSsrClient({
       serverUrl,
-      headers: pick(browser.connection.headers, ALLOWED_HEADERS),
+      headers: pick(browser?.headers, ALLOWED_HEADERS),
     });
 
     const ctx: RenderContext = { client };
@@ -38,7 +43,7 @@ export class GraphqlRenderPlugins implements RenderPlugins<RenderContext, { stat
    * Data will be available in gqlClient.extract()
    */
   onBeforeRender = async (ctx: RenderContext, app: ReactNode) => {
-    await getDataFromTree(app);
+    await getMarkupFromTree({ tree: app, renderFunction: ReactDOMServer.renderToStaticMarkup });
   };
 
   serialize = (ctx?: RenderContext) => {

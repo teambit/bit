@@ -1,4 +1,4 @@
-import chai, { expect } from 'chai';
+import chai from 'chai';
 import path from 'path';
 import { AddingIndividualFiles } from '../../src/consumer/component-ops/add-components/exceptions/adding-individual-files';
 import { ParentDirTracked } from '../../src/consumer/component-ops/add-components/exceptions/parent-dir-tracked';
@@ -17,7 +17,7 @@ describe('add command on Harmony', function () {
   });
   describe('adding files when workspace is new', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.createComponentBarFoo();
     });
     it('should throw an error AddingIndividualFiles', () => {
@@ -25,15 +25,10 @@ describe('add command on Harmony', function () {
       const error = new AddingIndividualFiles(path.normalize('bar/foo.js'));
       helper.general.expectToThrow(addFunc, error);
     });
-    it('when excluding a file, should throw an error', () => {
-      helper.fs.outputFile('bar/foo1.js');
-      const cmd = () => helper.command.addComponent('bar', { e: 'bar/foo1.js' });
-      expect(cmd).to.throw('--exclude flag is used for legacy only');
-    });
   });
   describe('add a directory inside an existing component', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.fixtures.populateComponents(1);
       helper.fs.outputFile('comp1/foo/foo.ts');
     });

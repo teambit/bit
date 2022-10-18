@@ -32,6 +32,7 @@ export default async function removeComponents({
   remote,
   track,
   deleteFiles,
+  fromLane,
 }: {
   consumer: Consumer | null | undefined; // when remote is false, it's always set
   ids: BitIds;
@@ -39,6 +40,7 @@ export default async function removeComponents({
   remote: boolean;
   track: boolean;
   deleteFiles: boolean;
+  fromLane: boolean;
 }): Promise<{ localResult: RemovedLocalObjects; remoteResult: Record<string, any>[] }> {
   logger.debugAndAddBreadCrumb('removeComponents', `{ids}. force: ${force.toString()}`, { ids: ids.toString() });
   // added this to remove support for remove only one version from a component
@@ -55,7 +57,7 @@ export default async function removeComponents({
   }
   const remoteResult = remote && !R.isEmpty(remoteIds) ? await removeRemote(consumer, remoteIds, force) : [];
   const localResult = !remote
-    ? await removeLocal(consumer as Consumer, bitIdsLatest, force, track, deleteFiles)
+    ? await removeLocal(consumer as Consumer, bitIdsLatest, force, track, deleteFiles, fromLane)
     : new RemovedLocalObjects();
 
   return { localResult, remoteResult };
@@ -92,7 +94,8 @@ async function removeLocal(
   bitIds: BitIds,
   force: boolean,
   track: boolean,
-  deleteFiles: boolean
+  deleteFiles: boolean,
+  fromLane: boolean
 ): Promise<RemovedLocalObjects> {
   // local remove in case user wants to delete tagged components
   const modifiedComponents = new BitIds();
@@ -130,14 +133,13 @@ async function removeLocal(
   const { removedComponentIds, missingComponents, dependentBits, removedFromLane } = await consumer.scope.removeMany(
     idsToRemoveFromScope,
     force,
-    consumer
+    consumer,
+    fromLane
   );
-  if (!removedFromLane) {
-    // otherwise, components should still be in .bitmap file
-    idsToCleanFromWorkspace.push(...removedComponentIds);
-  }
+  // otherwise, components should still be in .bitmap file
+  idsToCleanFromWorkspace.push(...removedComponentIds);
   if (idsToCleanFromWorkspace.length) {
-    await deleteComponentsFiles(consumer, idsToCleanFromWorkspace, deleteFiles);
+    if (deleteFiles) await deleteComponentsFiles(consumer, idsToCleanFromWorkspace);
     if (!track) {
       const invalidComponentsIds = invalidComponents.map((i) => i.id);
       const removedComponents = componentsToRemove.filter((c) => idsToCleanFromWorkspace.hasWithoutVersion(c.id));
@@ -148,6 +150,9 @@ async function removeLocal(
       );
       await consumer.cleanFromBitMap(idsToCleanFromWorkspace);
     }
+  }
+  if (removedFromLane.length) {
+    await consumer.cleanOrRevertFromBitMapWhenOnLane(removedFromLane);
   }
   return new RemovedLocalObjects(
     BitIds.uniqFromArray([...idsToCleanFromWorkspace, ...removedComponentIds]),

@@ -2,7 +2,7 @@ import { Component, ComponentFS, ComponentID, Config, InvalidComponent, State, T
 import { BitId } from '@teambit/legacy-bit-id';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
 import mapSeries from 'p-map-series';
-import { compact, uniq } from 'lodash';
+import { compact, fromPairs, uniq } from 'lodash';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { MissingBitMapComponent } from '@teambit/legacy/dist/consumer/bit-map/exceptions';
 import { getLatestVersionNumber } from '@teambit/legacy/dist/utils';
@@ -15,12 +15,12 @@ import { ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config';
 import { getMaxSizeForComponents, InMemoryCache } from '@teambit/legacy/dist/cache/in-memory-cache';
 import { createInMemoryCache } from '@teambit/legacy/dist/cache/cache-factory';
 import ComponentNotFoundInPath from '@teambit/legacy/dist/consumer/component/exceptions/component-not-found-in-path';
+import { ComponentLoadOptions } from '@teambit/legacy/dist/consumer/component/component-loader';
 import { Workspace } from '../workspace';
 import { WorkspaceComponent } from './workspace-component';
 
 export class WorkspaceComponentLoader {
   private componentsCache: InMemoryCache<Component>; // cache loaded components
-  private componentsCacheForCapsule: InMemoryCache<Component>; // cache loaded components for capsule, must not use the cache for the workspace
   constructor(
     private workspace: Workspace,
     private logger: Logger,
@@ -28,16 +28,15 @@ export class WorkspaceComponentLoader {
     private envs: EnvsMain
   ) {
     this.componentsCache = createInMemoryCache({ maxSize: getMaxSizeForComponents() });
-    this.componentsCacheForCapsule = createInMemoryCache({ maxSize: getMaxSizeForComponents() });
   }
 
-  async getMany(ids: Array<ComponentID>, forCapsule = false): Promise<Component[]> {
+  async getMany(ids: Array<ComponentID>): Promise<Component[]> {
     const idsWithoutEmpty = compact(ids);
     const errors: { id: ComponentID; err: Error }[] = [];
     const longProcessLogger = this.logger.createLongProcessLogger('loading components', ids.length);
     const componentsP = mapSeries(idsWithoutEmpty, async (id: ComponentID) => {
       longProcessLogger.logProgress(id.toString());
-      return this.get(id, forCapsule).catch((err) => {
+      return this.get(id).catch((err) => {
         if (this.isComponentNotExistsError(err)) {
           errors.push({
             id,
@@ -50,9 +49,7 @@ export class WorkspaceComponentLoader {
     });
     const components = await componentsP;
     errors.forEach((err) => {
-      if (!this.workspace.consumer.isLegacy) {
-        this.logger.console(`failed loading component ${err.id.toString()}, see full error in debug.log file`);
-      }
+      this.logger.console(`failed loading component ${err.id.toString()}, see full error in debug.log file`);
       this.logger.warn(`failed loading component ${err.id.toString()}`, err.err);
     });
     // remove errored components
@@ -85,27 +82,27 @@ export class WorkspaceComponentLoader {
 
   async get(
     componentId: ComponentID,
-    forCapsule = false,
     legacyComponent?: ConsumerComponent,
     useCache = true,
-    storeInCache = true
+    storeInCache = true,
+    loadOpts?: ComponentLoadOptions
   ): Promise<Component> {
     const bitIdWithVersion: BitId = getLatestVersionNumber(
       this.workspace.consumer.bitmapIdsFromCurrentLane,
       componentId._legacy
     );
     const id = bitIdWithVersion.version ? componentId.changeVersion(bitIdWithVersion.version) : componentId;
-    const fromCache = this.getFromCache(id, forCapsule);
+    const fromCache = this.getFromCache(id, loadOpts);
     if (fromCache && useCache) {
       return fromCache;
     }
-    const consumerComponent = legacyComponent || (await this.getConsumerComponent(id, forCapsule));
+    const consumerComponent = legacyComponent || (await this.getConsumerComponent(id));
     // in case of out-of-sync, the id may changed during the load process
     const updatedId = consumerComponent ? ComponentID.fromLegacy(consumerComponent.id, id.scope) : id;
-    const component = await this.loadOne(updatedId, consumerComponent);
+    const component = await this.loadOne(updatedId, consumerComponent, loadOpts);
     if (storeInCache) {
       this.addMultipleEnvsIssueIfNeeded(component); // it's in storeInCache block, otherwise, it wasn't fully loaded
-      this.saveInCache(component, forCapsule);
+      this.saveInCache(component, loadOpts);
     }
     return component;
   }
@@ -132,15 +129,17 @@ export class WorkspaceComponentLoader {
 
   clearCache() {
     this.componentsCache.deleteAll();
-    this.componentsCacheForCapsule.deleteAll();
   }
   clearComponentCache(id: ComponentID) {
     const idStr = id.toString();
-    this.componentsCache.delete(idStr);
-    this.componentsCacheForCapsule.delete(idStr);
+    for (const cacheKey of this.componentsCache.keys()) {
+      if (cacheKey === idStr || cacheKey.startsWith(`${idStr}:`)) {
+        this.componentsCache.delete(cacheKey);
+      }
+    }
   }
 
-  private async loadOne(id: ComponentID, consumerComponent?: ConsumerComponent) {
+  private async loadOne(id: ComponentID, consumerComponent?: ConsumerComponent, loadOpts?: ComponentLoadOptions) {
     const componentFromScope = await this.workspace.scope.get(id);
     if (!consumerComponent) {
       if (!componentFromScope) throw new MissingBitMapComponent(id.toString());
@@ -176,17 +175,14 @@ export class WorkspaceComponentLoader {
         componentFromScope.tags,
         this.workspace
       );
-      return this.executeLoadSlot(workspaceComponent);
+      return this.executeLoadSlot(workspaceComponent, loadOpts);
     }
-    return this.executeLoadSlot(this.newComponentFromState(id, state));
+    return this.executeLoadSlot(this.newComponentFromState(id, state), loadOpts);
   }
 
-  private saveInCache(component: Component, forCapsule: boolean): void {
-    if (forCapsule) {
-      this.componentsCacheForCapsule.set(component.id.toString(), component);
-    } else {
-      this.componentsCache.set(component.id.toString(), component);
-    }
+  private saveInCache(component: Component, loadOpts?: ComponentLoadOptions): void {
+    const cacheKey = createComponentCacheKey(component.id, loadOpts);
+    this.componentsCache.set(cacheKey, component);
   }
 
   /**
@@ -196,23 +192,18 @@ export class WorkspaceComponentLoader {
    * as a result, when out-of-sync is happening and the id is changed to include scope-name in the
    * legacy-id, the component is the cache has the old id.
    */
-  private getFromCache(id: ComponentID, forCapsule: boolean): Component | undefined {
-    const fromCache = forCapsule
-      ? this.componentsCacheForCapsule.get(id.toString())
-      : this.componentsCache.get(id.toString());
+  private getFromCache(id: ComponentID, loadOpts?: ComponentLoadOptions): Component | undefined {
+    const cacheKey = createComponentCacheKey(id, loadOpts);
+    const fromCache = this.componentsCache.get(cacheKey);
     if (fromCache && fromCache.id._legacy.isEqual(id._legacy)) {
       return fromCache;
     }
     return undefined;
   }
 
-  private async getConsumerComponent(id: ComponentID, forCapsule = false): Promise<ConsumerComponent | undefined> {
+  private async getConsumerComponent(id: ComponentID): Promise<ConsumerComponent | undefined> {
     try {
-      return forCapsule
-        ? // eslint-disable-next-line @typescript-eslint/return-await
-          await this.workspace.consumer.loadComponentForCapsule(id._legacy)
-        : // eslint-disable-next-line @typescript-eslint/return-await
-          await this.workspace.consumer.loadComponent(id._legacy);
+      return await this.workspace.consumer.loadComponent(id._legacy);
     } catch (err: any) {
       // don't return undefined for any error. otherwise, if the component is invalid (e.g. main
       // file is missing) it returns the model component later unexpectedly, or if it's new, it
@@ -235,12 +226,12 @@ export class WorkspaceComponentLoader {
     );
   }
 
-  private async executeLoadSlot(component: Component) {
-    const entries = this.workspace.onComponentLoadSlot.toArray();
-    const promises = entries.map(async ([extension, onLoad]) => {
-      const data = await onLoad(component);
-      return this.upsertExtensionData(component, extension, data);
-    });
+  private async executeLoadSlot(component: Component, loadOpts?: ComponentLoadOptions) {
+    if (component.state._consumer.removed) {
+      // if it was soft-removed now, the component is not in the FS. loading aspects such as composition ends up with
+      // errors as they try to read component files from the filesystem.
+      return component;
+    }
 
     // Special load events which runs from the workspace but should run from the correct aspect
     // TODO: remove this once those extensions dependent on workspace
@@ -255,8 +246,22 @@ export class WorkspaceComponentLoader {
       policy: policy.serialize(),
     };
 
-    promises.push(this.upsertExtensionData(component, EnvsAspect.id, envsData));
-    promises.push(this.upsertExtensionData(component, DependencyResolverAspect.id, depResolverData));
+    // Make sure we are adding the envs / deps data first because other on load events might depend on it
+    await Promise.all([
+      this.upsertExtensionData(component, EnvsAspect.id, envsData),
+      this.upsertExtensionData(component, DependencyResolverAspect.id, depResolverData),
+    ]);
+
+    // We are updating the component state with the envs and deps data here, so in case we have other slots that depend on this data
+    // they will be able to get it, as it's very common use case that during on load someone want to access to the component env for example
+    const aspectListWithEnvsAndDeps = await this.workspace.createAspectList(component.state.config.extensions);
+    component.state.aspects = aspectListWithEnvsAndDeps;
+
+    const entries = this.workspace.onComponentLoadSlot.toArray();
+    const promises = entries.map(async ([extension, onLoad]) => {
+      const data = await onLoad(component, loadOpts);
+      return this.upsertExtensionData(component, extension, data);
+    });
 
     await Promise.all(promises);
 
@@ -284,4 +289,12 @@ export class WorkspaceComponentLoader {
     // TODO: @gilad we need to refactor the extension data entry api.
     return new ExtensionDataEntry(undefined, undefined, extension, undefined, data);
   }
+}
+
+function createComponentCacheKey(id: ComponentID, loadOpts?: ComponentLoadOptions): string {
+  return `${id.toString()}:${JSON.stringify(sortKeys(loadOpts ?? {}))}`;
+}
+
+function sortKeys(obj: Object) {
+  return fromPairs(Object.entries(obj).sort(([k1], [k2]) => k1.localeCompare(k2)));
 }

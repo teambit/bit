@@ -11,7 +11,7 @@ import approveOperationSchema from './schemas/approve-operation';
 const passphrase = prompt(passphraseSchema);
 const userpass = prompt(userpassSchema);
 const approveOperation = prompt(approveOperationSchema);
-const removePrompt = (deleteFiles: boolean) => prompt(removeSchema(deleteFiles));
+const removePrompt = (deleteFiles: boolean, remote: boolean) => prompt(removeSchema(deleteFiles, remote));
 const resolveConflictPrompt = prompt(resolveConflictSchema);
 const analyticsPrompt = prompt(analyticsSchema);
 const errorReportingPrompt = prompt(errorReportingSchema);

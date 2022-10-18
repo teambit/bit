@@ -1,4 +1,5 @@
 import { merge } from 'lodash';
+import { sep } from 'path';
 import 'style-loader';
 import MiniCssExtractPlugin from 'mini-css-extract-plugin';
 import getCSSModuleLocalIdent from 'react-dev-utils/getCSSModuleLocalIdent';
@@ -72,10 +73,6 @@ export default function (isEnvProduction = false): Configuration {
       alias: {
         'react/jsx-dev-runtime': require.resolve('react/jsx-dev-runtime.js'),
         'react/jsx-runtime': require.resolve('react/jsx-runtime.js'),
-        // Support React Native Web
-        // https://www.smashingmagazine.com/2016/08/a-glimpse-into-the-future-with-react-native-for-web/
-        // TODO: @uri please remember to remove after publishing evangelist and base-ui
-
         'react-dom/server': require.resolve('react-dom/server'),
         // Allows for better profiling with ReactDevTools
         ...(isEnvProductionProfile && {
@@ -367,7 +364,7 @@ export default function (isEnvProduction = false): Configuration {
       // https://github.com/jmblog/how-to-optimize-momentjs-with-webpack
       // You can remove this if you don't use Moment.js:
       new IgnorePlugin({
-        resourceRegExp: /^\.\/locale$/,
+        resourceRegExp: new RegExp(`^\\.${sep}locale$`),
         contextRegExp: /moment$/,
       }),
     ].filter(Boolean),

@@ -2,7 +2,7 @@ import { Slot, SlotRegistry } from '@teambit/harmony';
 import { MainRuntime } from '@teambit/cli';
 import { LoggerAspect, LoggerMain, Logger } from '@teambit/logger';
 import { CompilerAspect, CompilerMain } from '@teambit/compiler';
-import { Component, ComponentMap } from '@teambit/component';
+import { Component, ComponentMap, IComponent } from '@teambit/component';
 import { PkgAspect, PkgMain } from '@teambit/pkg';
 import type { Environment } from '@teambit/envs';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
@@ -117,7 +117,8 @@ export class DocsMain {
         const doc = await docReader.read(docFile.relative, docFile.contents, component);
         return doc;
       } catch (err: any) {
-        this.logger.error('docs.main.runtime.computeDoc caught an error', err);
+        // it's ok to fail here.
+        this.logger.debug(`docs.main.runtime.computeDoc caught an error: ${err.message}`);
         return null;
       }
     }
@@ -125,8 +126,8 @@ export class DocsMain {
     return null;
   }
 
-  getDoc(component: Component) {
-    const docData = component.state.aspects.get(DocsAspect.id)?.data?.doc;
+  getDoc(component: IComponent) {
+    const docData = component.get(DocsAspect.id)?.data?.doc;
     if (!docData) return null;
     return new Doc(docData.filePath, new DocPropList(docData.props));
   }
@@ -212,7 +213,8 @@ export class DocsMain {
     devFiles.registerDevPattern(docs.getDevPatternToRegister());
 
     if (workspace) {
-      workspace.onComponentLoad(async (component) => {
+      workspace.onComponentLoad(async (component, opts) => {
+        if (opts?.loadDocs === false) return undefined;
         const doc = await docs.computeDoc(component);
 
         return {

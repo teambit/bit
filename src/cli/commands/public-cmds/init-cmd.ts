@@ -3,8 +3,14 @@ import * as pathlib from 'path';
 import R from 'ramda';
 
 import { init } from '../../../api/consumer';
+import { getSync } from '../../../api/consumer/lib/global-config';
 import { initScope } from '../../../api/scope';
-import { BASE_DOCS_DOMAIN, CFG_INIT_INTERACTIVE } from '../../../constants';
+import {
+  BASE_DOCS_DOMAIN,
+  CFG_INIT_INTERACTIVE,
+  CFG_INIT_DEFAULT_SCOPE,
+  CFG_INIT_DEFAULT_DIRECTORY,
+} from '../../../constants';
 import { WorkspaceConfigProps } from '../../../consumer/config/workspace-config';
 import GeneralError from '../../../error/general-error';
 import { initInteractive } from '../../../interactive';
@@ -35,10 +41,13 @@ export default class Init implements LegacyCommand {
       'reset-hard',
       'delete all Bit files and directories, including Bit configuration, tracking and model data. Useful for re-start using Bit from scratch',
     ],
-    // Disabled until supported by the new config
-    // ['c', 'compiler <compiler>', 'set up compiler'],
-    // ['t', 'tester <tester>', 'set up tester'],
+    [
+      '',
+      'reset-scope',
+      'removes local scope (.bit or .git/bit). snaps that were not exported will be lost. workspace left intact',
+    ],
     ['d', 'default-directory <default-directory>', 'set up default directory to import components into'],
+    ['', 'default-scope <default-scope>', 'set up default scope for all components in the workspace'],
     ['p', 'package-manager <package-manager>', 'set up package manager (npm or yarn)'],
     ['f', 'force', 'force workspace initialization without clearing local objects'],
     ['', 'harmony', 'DEPRECATED. no need for this flag. Harmony is the default now'],
@@ -57,12 +66,10 @@ export default class Init implements LegacyCommand {
       reset,
       resetNew,
       resetHard,
+      resetScope,
       force,
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      compiler,
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      tester,
       defaultDirectory,
+      defaultScope,
       packageManager,
     } = flags;
     if (path) path = pathlib.resolve(path);
@@ -79,10 +86,11 @@ export default class Init implements LegacyCommand {
     }
     if (reset && resetHard) throw new GeneralError('please use --reset or --reset-hard. not both');
     const workspaceConfigFileProps: WorkspaceConfigProps = {
-      componentsDefaultDirectory: defaultDirectory,
+      componentsDefaultDirectory: defaultDirectory ?? getSync(CFG_INIT_DEFAULT_DIRECTORY),
+      defaultScope: defaultScope ?? getSync(CFG_INIT_DEFAULT_SCOPE),
       packageManager,
     };
-    return init(path, standalone, reset, resetNew, resetHard, force, workspaceConfigFileProps).then(
+    return init(path, standalone, reset, resetNew, resetHard, resetScope, force, workspaceConfigFileProps).then(
       ({ created, addedGitHooks, existingGitHooks }) => {
         return {
           created,
@@ -90,12 +98,13 @@ export default class Init implements LegacyCommand {
           existingGitHooks,
           reset,
           resetHard,
+          resetScope,
         };
       }
     );
   }
 
-  report({ created, bare, reset, resetHard }: any): string {
+  report({ created, bare, reset, resetHard, resetScope }: any): string {
     if (bare) {
       // if (!created) return `${chalk.grey('successfully reinitialized a bare bit scope.')}`;
       // @TODO - a case that you already have a bit scope
@@ -107,6 +116,7 @@ export default class Init implements LegacyCommand {
     if (!created) initMessage = `${chalk.grey('successfully reinitialized a bit workspace.')}`;
     if (reset) initMessage = `${chalk.grey('your bit workspace has been reset successfully.')}`;
     if (resetHard) initMessage = `${chalk.grey('your bit workspace has been hard-reset successfully.')}`;
+    if (resetScope) initMessage = `${chalk.grey('your local scope has been reset successfully.')}`;
     // const addedGitHooksTemplate = _generateAddedGitHooksTemplate(addedGitHooks);
     // const existingGitHooksTemplate = _generateExistingGitHooksTemplate(existingGitHooks);
     // return `${initMessage}\n${addedGitHooksTemplate}\n${existingGitHooksTemplate}`;

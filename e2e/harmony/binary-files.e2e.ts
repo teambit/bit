@@ -14,7 +14,7 @@ describe('handling binary files in Bit', function () {
   describe('checkout with a binary file', () => {
     let afterFirstTag: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(1);
       helper.fixtures.copyFixtureFile('png/png-fixture1.png', 'comp1/icon.png');
@@ -31,7 +31,7 @@ describe('handling binary files in Bit', function () {
         helper.scopeHelper.getClonedLocalScope(afterFirstTag);
         helper.fixtures.copyFixtureFile('png/png-fixture3.png', 'comp1/icon.png');
         helper.command.import();
-        checkoutOutput = helper.command.checkout('latest --all --manual');
+        checkoutOutput = helper.command.checkoutHead('--all --manual');
       });
       it('should checkout with no errors and leave the file as is indicating there was a conflict', () => {
         expect(checkoutOutput).to.include(FileStatusWithoutChalk.binaryConflict);
@@ -42,7 +42,7 @@ describe('handling binary files in Bit', function () {
       before(() => {
         helper.scopeHelper.getClonedLocalScope(afterFirstTag);
         helper.command.import();
-        checkoutOutput = helper.command.checkout('latest --all');
+        checkoutOutput = helper.command.checkoutHead('--all');
       });
       it('should checkout with no errors and show the binary file as updated', () => {
         expect(checkoutOutput).to.not.include(FileStatusWithoutChalk.binaryConflict);

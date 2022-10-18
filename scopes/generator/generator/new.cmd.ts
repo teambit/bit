@@ -45,11 +45,15 @@ export class NewCmd implements Command {
 
   async report([templateName, workspaceName]: [string, string], options: NewOptions & { standalone: boolean }) {
     options.skipGit = options.skipGit ?? options.standalone;
-    const results = await this.generator.generateWorkspaceTemplate(workspaceName, templateName, options);
+    const { workspacePath, appName } = await this.generator.generateWorkspaceTemplate(
+      workspaceName,
+      templateName,
+      options
+    );
     return chalk.white(
       `${chalk.green(`
 
-Congrats! A new workspace has been created successfully at '${results}'`)}
+Congrats! A new workspace has been created successfully at '${workspacePath}'`)}
 
 Inside the directory '${workspaceName}' you can run various commands including:
 
@@ -77,10 +81,18 @@ Inside the directory '${workspaceName}' you can run various commands including:
 
 ${chalk.green.bold("Let's get started!")}
 
-      ${chalk.yellow(`cd ${workspaceName}`)}
-      ${chalk.yellow(`bit start`)}
-
+      ${getBottomSection(workspaceName, appName)}
       `
     );
   }
+}
+
+function getBottomSection(workspaceName: string, appName: string | undefined) {
+  const cdLine = chalk.yellow(`cd ${workspaceName}`);
+  const parts = [cdLine];
+  if (appName) {
+    parts.push(chalk.yellow(`      bit run ${appName}`));
+  }
+  parts.push(chalk.yellow(`      bit start`));
+  return parts.join('\n');
 }

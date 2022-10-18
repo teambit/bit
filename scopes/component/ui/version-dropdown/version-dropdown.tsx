@@ -5,7 +5,7 @@ import { Tab } from '@teambit/ui-foundation.ui.use-box.tab';
 import { LegacyComponentLog } from '@teambit/legacy-component-log';
 import { UserAvatar } from '@teambit/design.ui.avatar';
 import { LineSkeleton } from '@teambit/base-ui.loaders.skeleton';
-import { LaneModel } from '@teambit/lanes.ui.lanes';
+import { LaneModel } from '@teambit/lanes.ui.models.lanes-model';
 import classNames from 'classnames';
 
 import styles from './version-dropdown.module.scss';
@@ -144,7 +144,8 @@ function VersionMenu({
   }).filter((tab) => tab.payload.length > 0);
 
   const getActiveTabIndex = () => {
-    if (currentLane) return tabs.findIndex((tab) => tab.name === 'LANE');
+    if (currentLane?.components.some((c) => c.version === currentVersion))
+      return tabs.findIndex((tab) => tab.name === 'LANE');
     if ((snaps || []).some((snap) => snap.version === currentVersion))
       return tabs.findIndex((tab) => tab.name === 'SNAP');
     return 0;

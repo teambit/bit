@@ -1,11 +1,11 @@
 import isBuiltinModule from 'is-builtin-module';
 import path from 'path';
-import { uniq, compact, flatten, head } from 'lodash';
+import { uniq, compact, flatten, head, omit } from 'lodash';
 import { Stats } from 'fs';
 import fs from 'fs-extra';
 import resolveFrom from 'resolve-from';
 import { link as legacyLink } from '@teambit/legacy/dist/api/consumer/lib/link';
-import { ComponentMap, Component, ComponentMain } from '@teambit/component';
+import { ComponentMap, Component, ComponentID, ComponentMain } from '@teambit/component';
 import { Logger } from '@teambit/logger';
 import { PathAbsolute } from '@teambit/legacy/dist/utils/path';
 import { BitError } from '@teambit/bit-error';
@@ -59,6 +59,11 @@ export type LinkingOptions = {
    * consumer is required for the legacyLink
    */
   consumer?: Consumer;
+
+  /**
+   * Link deps which should be linked to the env
+   */
+  linkDepsResolvedFromEnv?: boolean;
 };
 
 const DEFAULT_LINKING_OPTIONS: LinkingOptions = {
@@ -66,6 +71,7 @@ const DEFAULT_LINKING_OPTIONS: LinkingOptions = {
   rewire: false,
   linkTeambitBit: true,
   linkCoreAspects: true,
+  linkDepsResolvedFromEnv: true,
   linkNestedDepsInNM: true,
 };
 
@@ -133,8 +139,8 @@ export class DependencyLinker {
     options: LinkingOptions = {}
   ): Promise<LinkResults> {
     this.logger.setStatusLine('linking components');
-    this.logger.debug('linking components with options', options);
-    const result: LinkResults = {};
+    this.logger.debug('linking components with options', omit(options, ['consumer']));
+    let result: LinkResults = {};
     const finalRootDir = rootDir || this.rootDir;
     const linkingOpts = Object.assign({}, DEFAULT_LINKING_OPTIONS, this.linkingOptions || {}, options || {});
     if (!finalRootDir) {
@@ -155,20 +161,46 @@ export class DependencyLinker {
     }
 
     // Link deps which should be linked to the env
-    result.resolvedFromEnvLinks = await this.linkDepsResolvedFromEnv(componentDirectoryMap);
+    if (linkingOpts.linkDepsResolvedFromEnv) {
+      result.resolvedFromEnvLinks = await this.linkDepsResolvedFromEnv(componentDirectoryMap);
+    }
     if (linkingOpts.linkNestedDepsInNM) {
-      result.nestedDepsInNmLinks = await this.addSymlinkFromComponentDirNMToWorkspaceDirNM(
+      result.nestedDepsInNmLinks = this.addSymlinkFromComponentDirNMToWorkspaceDirNM(
         finalRootDir,
         componentDirectoryMap
       );
     }
 
     // We remove the version since it used in order to check if it's core aspects, and the core aspects arrived from aspect loader without versions
-    const componentIdsWithoutVersions: string[] = [];
+    const componentIds: ComponentID[] = [];
     componentDirectoryMap.map((_dir, comp) => {
-      componentIdsWithoutVersions.push(comp.id.toString({ ignoreVersion: true }));
+      componentIds.push(comp.id);
       return undefined;
     });
+    result = {
+      ...result,
+      ...(await this.linkCoreAspectsAndLegacy(rootDir, componentIds, linkingOpts)),
+    };
+    this.logger.consoleSuccess('linking components');
+    return result;
+  }
+
+  public async linkCoreAspectsAndLegacy(
+    rootDir: string | undefined,
+    componentIds: ComponentID[] = [],
+    options: Pick<LinkingOptions, 'linkTeambitBit' | 'linkCoreAspects'> = {}
+  ) {
+    const result: LinkResults = {};
+    const componentIdsWithoutVersions: string[] = [];
+    componentIds.map((id) => {
+      componentIdsWithoutVersions.push(id.toString({ ignoreVersion: true }));
+      return undefined;
+    });
+    const finalRootDir = rootDir || this.rootDir;
+    if (!finalRootDir) {
+      throw new RootDirNotDefined();
+    }
+    const linkingOpts = Object.assign({}, DEFAULT_LINKING_OPTIONS, this.linkingOptions || {}, options || {});
     if (linkingOpts.linkTeambitBit && !this.isBitRepoWorkspace(finalRootDir)) {
       const bitLink = await this.linkBitAspectIfNotExist(
         path.join(finalRootDir, 'node_modules'),
@@ -187,11 +219,10 @@ export class DependencyLinker {
       result.coreAspectsLinks = coreAspectsLinks;
     }
 
-    const teambitLegacyLink = this.linkTeambitLegacy(componentDirectoryMap, finalRootDir);
+    const teambitLegacyLink = this.linkTeambitLegacy(finalRootDir);
     result.teambitLegacyLink = teambitLegacyLink;
-    const harmonyLink = this.linkHarmony(componentDirectoryMap, finalRootDir);
+    const harmonyLink = this.linkHarmony(finalRootDir);
     result.harmonyLink = harmonyLink;
-    this.logger.consoleSuccess('linking components');
     return result;
   }
 
@@ -214,9 +245,11 @@ export class DependencyLinker {
   }
 
   /**
-   * add symlink from the node_modules in the component's root-dir to the workspace node-modules
+   * Add symlinks from the node_modules in the component's root-dir to the workspace node_modules
    * of the component. e.g.
-   * ws-root/node_modules/comp1/node_modules -> ws-root/components/comp1/node_modules
+   * <ws-root>/node_modules/comp1/node_modules/<dep> -> <ws-root>/components/comp1/node_modules/<dep>
+   * This is needed because the component is compiled into the dist folder at <ws-root>/node_modules/comp1/dist,
+   * so the files in the dist folder need to find the right dependencies of comp1.
    */
   private addSymlinkFromComponentDirNMToWorkspaceDirNM(
     rootDir: string,
@@ -577,12 +610,12 @@ export class DependencyLinker {
     }
   }
 
-  private linkHarmony(dirMap: ComponentMap<string>, rootDir: string): LinkDetail | undefined {
+  private linkHarmony(rootDir: string): LinkDetail | undefined {
     const name = 'harmony';
     return this.linkNonAspectCorePackages(rootDir, name);
   }
 
-  private linkTeambitLegacy(dirMap: ComponentMap<string>, rootDir: string): LinkDetail | undefined {
+  private linkTeambitLegacy(rootDir: string): LinkDetail | undefined {
     const name = 'legacy';
     return this.linkNonAspectCorePackages(rootDir, name);
   }
@@ -625,6 +658,7 @@ function resolveModuleDirFromFile(resolvedModulePath: string, moduleId: string):
   }
 
   const [start, end] = resolvedModulePath.split('@');
+  if (!end) return path.basename(resolvedModulePath);
   const versionStr = head(end.split('/'));
   return `${start}@${versionStr}`;
 }

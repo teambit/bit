@@ -1,17 +1,13 @@
 import chalk from 'chalk';
 import { Command, CommandOptions } from '@teambit/cli';
-import {
-  TagResults,
-  NOTHING_TO_TAG_MSG,
-  AUTO_TAGGED_MSG,
-  BasicTagParams,
-} from '@teambit/legacy/dist/api/consumer/lib/tag';
+import { TagResults, NOTHING_TO_TAG_MSG, AUTO_TAGGED_MSG } from '@teambit/legacy/dist/api/consumer/lib/tag';
 import { DEFAULT_BIT_RELEASE_TYPE } from '@teambit/legacy/dist/constants';
 import { IssuesClasses } from '@teambit/component-issues';
 import { ReleaseType } from 'semver';
 import { BitError } from '@teambit/bit-error';
 import { Logger } from '@teambit/logger';
 import { SnappingMain } from './snapping.main.runtime';
+import { BasicTagParams } from './tag-model-component';
 
 const RELEASE_TYPES = ['major', 'premajor', 'minor', 'preminor', 'patch', 'prepatch', 'prerelease'];
 
@@ -19,6 +15,8 @@ export class TagCmd implements Command {
   name = 'tag [component-patterns...]';
   group = 'development';
   description = 'create an immutable and exportable component snapshot, tagged with a release version.';
+  extendedDescription = `if no patterns are provided, it will tag all new and modified components.
+if patterns are entered, you can specify a version per pattern using "@" sign, e.g. bit tag foo@1.0.0 bar@minor baz@major`;
   arguments = [
     {
       name: 'component-patterns...',
@@ -26,7 +24,7 @@ export class TagCmd implements Command {
         'a list of component names, IDs or patterns (separated by space). run "bit pattern --help" to get more data about patterns. By default, all modified are tagged.',
     },
   ];
-  extendedDescription: string;
+  helpUrl = 'components/tags';
   alias = 't';
   loader = true;
   options = [
@@ -43,8 +41,9 @@ export class TagCmd implements Command {
     ['p', 'patch', 'syntactic sugar for "--increment patch"'],
     ['', 'minor', 'syntactic sugar for "--increment minor"'],
     ['', 'major', 'syntactic sugar for "--increment major"'],
+    ['', 'pre-release [identifier]', 'syntactic sugar for "--increment prerelease" and `--prerelease-id <identifier>`'],
     ['', 'snapped', 'EXPERIMENTAL. tag components that their head is a snap (not a tag)'],
-    ['', 'pre-release [identifier]', 'DEPRECATED. use "-l prerelease" (and --prerelease-id) instead'],
+    ['', 'unmerged', 'EXPERIMENTAL. complete a merge process by tagging the unmerged components'],
     ['', 'skip-tests', 'skip running component tests during tag process'],
     ['', 'skip-auto-tag', 'skip auto tagging dependents'],
     ['', 'soft', 'do not persist. only keep note of the changes to be made'],
@@ -82,11 +81,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
   remoteOp = true; // In case a compiler / tester is not installed
   examples = [{ cmd: 'tag --ver 1.0.0', description: 'tag all components to version 1.0.0' }];
 
-  constructor(docsDomain: string, private snapping: SnappingMain, private logger: Logger) {
-    this.extendedDescription = `if no patterns are provided, it will tag all new and modified components.
-if patterns are entered, you can specify a version per pattern using "@" sign, e.g. bit tag foo@1.0.0 bar@minor baz@major
-https://${docsDomain}/components/tags`;
-  }
+  constructor(private snapping: SnappingMain, private logger: Logger) {}
 
   // eslint-disable-next-line complexity
   async report(
@@ -97,6 +92,7 @@ https://${docsDomain}/components/tags`;
       all = false,
       editor = '',
       snapped = false,
+      unmerged = false,
       patch,
       minor,
       major,
@@ -121,6 +117,7 @@ https://${docsDomain}/components/tags`;
     }: {
       all?: boolean | string;
       snapped?: boolean;
+      unmerged?: boolean;
       ver?: string;
       force?: boolean;
       patch?: boolean;
@@ -143,8 +140,8 @@ https://${docsDomain}/components/tags`;
     if (ignoreIssues && typeof ignoreIssues === 'boolean') {
       throw new BitError(`--ignore-issues expects issues to be ignored, please run "bit tag -h" for the issues list`);
     }
-    if (disableTagPipeline) {
-      this.logger.consoleWarning(`--disable-tag-pipeline is deprecated, please use --disable-deploy-pipeline instead`);
+    if (disableDeployPipeline) {
+      this.logger.consoleWarning(`--disable-deploy-pipeline is deprecated, please use --disable-tag-pipeline instead`);
     }
     if (!message && !persist) {
       this.logger.consoleWarning(
@@ -172,6 +169,11 @@ https://${docsDomain}/components/tags`;
       );
       if (patterns.length) unmodified = true;
     }
+    if (prereleaseId && (!increment || increment === 'major' || increment === 'minor' || increment === 'patch')) {
+      throw new BitError(
+        `--prerelease-id should be entered along with --increment flag, while --increment must be one of the following: [prepatch, prerelease, preminor, premajor]`
+      );
+    }
 
     const releaseFlags = [patch, minor, major, preRelease].filter((x) => x);
     if (releaseFlags.length > 1) {
@@ -192,16 +194,26 @@ https://${docsDomain}/components/tags`;
       if (preRelease) return 'prerelease';
       return DEFAULT_BIT_RELEASE_TYPE;
     };
+    const getPreReleaseId = (): string | undefined => {
+      if (prereleaseId) {
+        return prereleaseId;
+      }
+      if (preRelease && typeof preRelease === 'string') {
+        return preRelease;
+      }
+      return undefined;
+    };
 
     const disableTagAndSnapPipelines = disableTagPipeline || disableDeployPipeline;
 
     const params = {
       ids: patterns,
       snapped,
+      unmerged,
       editor,
       message,
       releaseType: getReleaseType(),
-      preReleaseId: prereleaseId || preRelease || undefined,
+      preReleaseId: getPreReleaseId(),
       ignoreIssues,
       ignoreNewestVersion,
       skipTests,
@@ -225,9 +237,9 @@ https://${docsDomain}/components/tags`;
 
     const warningsOutput = warnings && warnings.length ? `${chalk.yellow(warnings.join('\n'))}\n\n` : '';
     const tagExplanationPersist = `\n(use "bit export [collection]" to push these components to a remote")
-(use "bit untag" to unstage versions)\n`;
+(use "bit reset" to unstage versions)\n`;
     const tagExplanationSoft = `\n(use "bit tag --persist" to persist the changes")
-(use "bit untag --soft" to remove the soft-tags)\n`;
+(use "bit reset --soft" to remove the soft-tags)\n`;
 
     const tagExplanation = results.isSoftTag ? tagExplanationSoft : tagExplanationPersist;
 

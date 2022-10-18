@@ -139,6 +139,13 @@ export type LintResults = {
    * total warning count of the component (from all of the components).
    */
   totalWarningCount: number;
+
+  totalComponentsWithErrorCount: number;
+  totalComponentsWithFatalErrorCount?: number;
+  totalComponentsWithFixableErrorCount?: number;
+  totalComponentsWithFixableWarningCount?: number;
+  totalComponentsWithWarningCount: number;
+
   errors: Error[];
 };
 

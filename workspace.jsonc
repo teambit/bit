@@ -14,72 +14,59 @@
         "@babel/preset-react": "7.13.13",
         "@babel/preset-typescript": "7.12.7",
         "@babel/types": "^7.13.12",
-        "@floating-ui/react-dom": "0.6.0",
         "@graphql-modules/core": "0.7.17",
         "@jest/test-result": "26.6.2",
-        "@mdx-js/loader": "1.6.21",
         "@mdx-js/mdx": "1.6.21",
         "@mdx-js/react": "1.6.22",
         "@monaco-editor/react": "4.4.2",
         "@pmmmwh/react-refresh-webpack-plugin": "0.5.4",
-        "@pnpm/client": "6.1.6",
+        "@pnpm/client": "7.2.5",
         "@pnpm/colorize-semver-diff": "1.0.1",
-        "@pnpm/config": "13.14.1",
-        "@pnpm/core": "2.9.8",
-        "@pnpm/default-reporter": "8.4.2",
-        "@pnpm/default-resolver": "14.0.14",
-        "@pnpm/error": "2.1.0",
-        "@pnpm/fetch": "4.2.6",
-        "@pnpm/fetching-types": "2.2.1",
-        "@pnpm/git-resolver": "5.1.19",
-        "@pnpm/local-resolver": "7.0.8",
+        "@pnpm/config": "15.10.5",
+        "@pnpm/core": "5.11.5",
+        "@pnpm/default-reporter": "9.1.25",
+        "@pnpm/error": "3.0.1",
+        "@pnpm/fetch": "5.0.7",
+        "@pnpm/fetching-types": "3.0.0",
+        "@pnpm/git-resolver": "6.1.4",
+        "@pnpm/local-resolver": "8.0.11",
         "@pnpm/logger": "4.0.0",
-        "@pnpm/modules-yaml": "9.1.1",
+        "@pnpm/modules-yaml": "10.0.6",
         "@pnpm/network.agent": "0.0.3",
         "@pnpm/network.ca-file": "1.0.1",
-        "@pnpm/npm-resolver": "12.1.8",
-        "@pnpm/package-store": "12.1.16",
-        "@pnpm/parse-overrides": "1.0.1",
-        "@pnpm/pick-registry-for-package": "2.0.11",
-        "@pnpm/registry-mock": "2.14.0",
-        "@pnpm/resolver-base": "8.1.6",
+        "@pnpm/npm-resolver": "13.1.7",
+        "@pnpm/package-store": "14.2.3",
+        "@pnpm/parse-overrides": "2.0.3",
+        "@pnpm/pick-registry-for-package": "3.0.6",
+        "@pnpm/registry-mock": "2.20.0",
+        "@pnpm/resolver-base": "9.1.0",
         "@pnpm/semver-diff": "1.1.0",
-        "@pnpm/sort-packages": "2.1.7",
-        "@pnpm/store-connection-manager": "3.2.20",
-        "@pnpm/tarball-fetcher": "9.3.18",
-        "@pnpm/tarball-resolver": "5.0.11",
-        "@pnpm/types": "7.10.0",
+        "@pnpm/sort-packages": "3.0.7",
+        "@pnpm/store-connection-manager": "4.3.9",
+        "@pnpm/tarball-resolver": "6.0.7",
+        "@pnpm/types": "8.5.0",
         "@react-hook/latest": "1.0.3",
         "@stencil/core": "1.17.4",
         "@stencil/webpack": "0.0.6",
         "@teambit/any-fs": "0.0.5",
+        "@teambit/base-react.layout.row": "0.0.3",
         "@teambit/base-react.navigation.link": "2.0.27",
         "@teambit/base-ui.constants.storage": "1.0.0",
-        "@teambit/base-ui.css-components.pill": "1.0.0",
-        "@teambit/base-ui.css-components.roundness": "1.0.0",
-        "@teambit/base-ui.elements.dots-loader": "1.0.1",
-        "@teambit/base-ui.elements.image": "1.0.0",
-        "@teambit/base-ui.elements.label": "1.0.0",
-        "@teambit/base-ui.elements.separator": "1.0.0",
         "@teambit/base-ui.graph.tree.collapsable-tree-node": "0.0.4",
         "@teambit/base-ui.graph.tree.indent": "1.0.0",
         "@teambit/base-ui.graph.tree.inflate-paths": "1.0.0",
         "@teambit/base-ui.graph.tree.recursive-tree": "1.0.0",
         "@teambit/base-ui.graph.tree.root-node": "1.0.0",
         "@teambit/base-ui.graph.tree.tree-context": "1.0.0",
-        "@teambit/base-ui.input.error": "1.0.1",
         "@teambit/base-ui.layout.breakpoints": "1.0.0",
-        "@teambit/base-ui.layout.grid-component": "1.0.0",
         "@teambit/base-ui.layout.page-frame": "1.0.0",
         "@teambit/base-ui.loaders.loader-ribbon": "1.0.0",
         "@teambit/base-ui.loaders.skeleton": "1.0.1",
-        "@teambit/base-ui.routing.native-nav-link": "1.0.0",
         "@teambit/base-ui.styles.flex-center": "1.0.0",
         "@teambit/base-ui.surfaces.background": "1.0.1",
         "@teambit/base-ui.surfaces.card": "1.0.1",
         "@teambit/base-ui.surfaces.split-pane.hover-splitter": "1.0.0",
         "@teambit/base-ui.surfaces.split-pane.split-pane": "1.0.0",
-        "@teambit/base-ui.text.heading": "1.0.1",
         "@teambit/base-ui.text.muted-text": "1.0.1",
         "@teambit/base-ui.text.paragraph": "1.0.1",
         "@teambit/base-ui.text.text-sizes": "1.0.0",
@@ -89,35 +76,33 @@
         "@teambit/base-ui.theme.dark-theme": "1.0.2",
         "@teambit/base-ui.theme.fonts.book": "1.0.2",
         "@teambit/base-ui.theme.fonts.roboto": "1.0.0",
-        "@teambit/base-ui.theme.sizes": "1.0.0",
         "@teambit/base-ui.theme.theme-provider": "1.0.1",
         "@teambit/base-ui.utils.composer": "1.0.0",
         "@teambit/base-ui.utils.string.affix": "1.0.0",
-        "@teambit/base-ui.utils.sub-paths": "1.0.0",
         "@teambit/base-ui.utils.time-ago": "1.0.1",
-        "@teambit/bit.content.what-is-bit": "1.95.0",
+        "@teambit/bit.content.what-is-bit": "1.96.2",
         "@teambit/bvm.config": "0.0.26",
         "@teambit/capsule": "0.0.12",
         "@teambit/code.ui.object-formatter": "0.0.1",
+        "@teambit/community.constants.links": "0.0.2",
         "@teambit/compilation.content.compiler-overview": "1.95.0",
         "@teambit/component.content.component-overview": "1.95.0",
         "@teambit/component.content.dev-files": "1.95.9",
         "@teambit/component.instructions.exporting-components": "0.0.6",
-        "@teambit/defender.content.formatter-overview": "1.95.9",
+        "@teambit/defender.content.formatter-overview": "1.96.1",
         "@teambit/defender.content.linter-overview": "1.95.0",
         "@teambit/defender.content.tester-overview": "1.95.0",
         "@teambit/design.elements.icon": "1.0.5",
         "@teambit/design.inputs.dropdown": "0.0.7",
         "@teambit/design.inputs.selectors.multi-select": "0.0.20",
+        "@teambit/design.themes.theme-toggler": "0.1.3",
         "@teambit/design.ui.avatar": "0.1.2",
-        "@teambit/design.ui.brand.logo": "1.95.0",
+        "@teambit/design.ui.brand.logo": "1.96.2",
         "@teambit/design.ui.icon-button": "1.0.16",
         "@teambit/design.ui.input.option-button": "1.0.0",
         "@teambit/design.ui.input.toggle": "1.0.12",
         "@teambit/design.ui.separator": "0.0.354",
-        "@teambit/design.ui.surfaces.menu.item": "0.0.354",
         "@teambit/design.ui.surfaces.menu.link-item": "1.0.0",
-        "@teambit/design.ui.surfaces.menu.section": "0.0.347",
         "@teambit/docs.content.docs-overview": "1.95.9",
         "@teambit/documenter.code.react-playground": "4.0.1",
         "@teambit/documenter.content.documentation-links": "4.1.3",
@@ -125,40 +110,25 @@
         "@teambit/documenter.markdown.mdx": "0.1.11",
         "@teambit/documenter.theme.theme-compositions": "4.1.1",
         "@teambit/documenter.theme.theme-context": "4.0.3",
-        "@teambit/documenter.types.docs-file": "4.0.10",
-        "@teambit/documenter.ui.block-quote": "4.0.3",
-        "@teambit/documenter.ui.bold": "4.0.3",
         "@teambit/documenter.ui.code-snippet": "4.2.2",
         "@teambit/documenter.ui.consumable-link": "4.0.3",
         "@teambit/documenter.ui.heading": "4.1.1",
         "@teambit/documenter.ui.highlighted-text": "4.1.1",
-        "@teambit/documenter.ui.image": "4.0.0",
-        "@teambit/documenter.ui.import-action": "4.1.9",
-        "@teambit/documenter.ui.italic": "4.0.3",
         "@teambit/documenter.ui.label": "4.0.3",
         "@teambit/documenter.ui.label-list": "4.0.3",
         "@teambit/documenter.ui.linked-heading": "4.1.6",
-        "@teambit/documenter.ui.ol": "4.1.1",
         "@teambit/documenter.ui.paragraph": "4.1.1",
         "@teambit/documenter.ui.property-table": "4.1.3",
         "@teambit/documenter.ui.section": "4.1.1",
         "@teambit/documenter.ui.separator": "4.1.1",
         "@teambit/documenter.ui.sub-title": "4.1.1",
-        "@teambit/documenter.ui.sup": "4.0.3",
-        "@teambit/documenter.ui.table.base-table": "4.1.1",
-        "@teambit/documenter.ui.table.td": "4.1.1",
-        "@teambit/documenter.ui.table.tr": "4.1.1",
-        "@teambit/documenter.ui.ul": "4.1.1",
         "@teambit/evangelist.elements.button": "1.0.6",
-        "@teambit/evangelist.elements.heading": "1.0.2",
         "@teambit/evangelist.elements.icon": "1.0.2",
-        "@teambit/evangelist.elements.image": "1.0.2",
         "@teambit/evangelist.elements.x-button": "1.0.7",
         "@teambit/evangelist.input.checkbox.label": "1.0.3",
-        "@teambit/evangelist.input.input": "1.0.2",
         "@teambit/evangelist.surfaces.dropdown": "1.0.2",
         "@teambit/evangelist.surfaces.tooltip": "1.0.1",
-        "@teambit/explorer.ui.command-bar": "1.2.0",
+        "@teambit/explorer.ui.command-bar": "2.0.3",
         "@teambit/graph.cleargraph": "0.0.1",
         "@teambit/graphql.hooks.use-query-light": "1.0.0",
         "@teambit/harmony": "0.3.3",
@@ -167,28 +137,24 @@
         "@teambit/react.instructions.react-native.adding-tests": "0.0.1",
         "@teambit/react.instructions.react.adding-compositions": "0.0.6",
         "@teambit/react.instructions.react.adding-tests": "0.0.6",
-        "@teambit/react.modules.dom-to-react": "0.1.0",
-        "@teambit/react.ui.component-highlighter": "0.1.0",
-        "@teambit/react.ui.hover-selector": "0.1.0",
+        "@teambit/react.rendering.ssr": "0.0.3",
+        "@teambit/react.ui.component-highlighter": "0.2.0",
         "@teambit/scope.content.scope-overview": "1.95.0",
-        "@teambit/string.ellipsis": "0.0.7",
-        "@teambit/ui.composition-card": "0.0.259",
         "@teambit/workspace.content.variants": "1.95.9",
         "@teambit/workspace.content.workspace-overview": "1.95.0",
         "@testing-library/jest-dom": "5.16.2",
         "@testing-library/jest-native": "4.0.4",
-        "@testing-library/react": "11.2.6",
+        "@testing-library/react": "12.1.5",
         "@tippyjs/react": "4.2.0",
+        "@types/archiver": "5.3.1",
         "@types/classnames": "2.2.11",
         "@types/cors": "2.8.10",
         "@types/dagre": "0.7.44",
         "@types/didyoumean": "1.2.0",
         "@types/eslint": "7.28.0",
-        "@types/express": "4.17.9",
+        "@types/express": "4.17.13",
         "@types/find-root": "1.1.2",
-        "@types/get-port": "4.2.0",
         "@types/http-proxy-agent": "2.0.2",
-        "@types/json-schema": "7.0.9",
         "@types/lodash": "4.14.165",
         "@types/lodash.compact": "3.0.6",
         "@types/lodash.flatten": "4.4.6",
@@ -213,11 +179,11 @@
         "@types/url-parse": "1.4.3",
         "@types/webpack": "5.28.0",
         "@types/webpack-dev-server": "4.0.3",
-        "@yarnpkg/cli": "3.2.0-rc.7",
-        "@yarnpkg/core": "^3.2.0-rc.7",
-        "@yarnpkg/fslib": "2.6.1-rc.2",
-        "@yarnpkg/parsers": "2.5.0-rc.5",
-        "@yarnpkg/plugin-npm": "2.6.1-rc.6",
+        "@yarnpkg/cli": "3.2.1",
+        "@yarnpkg/core": "^3.2.2",
+        "@yarnpkg/fslib": "2.6.2",
+        "@yarnpkg/parsers": "2.5.1",
+        "@yarnpkg/plugin-npm": "2.7.1",
         "@yarnpkg/plugin-pack": "3.1.0",
         "agentkeepalive": "4.1.4",
         "ansi-to-html": "0.6.14",
@@ -226,6 +192,7 @@
         "apollo-link-ws": "1.0.20",
         "apollo-server": "2.19.2",
         "apollo-utilities": "1.3.4",
+        "archiver": "5.3.1",
         "aws-sdk": "2.756.0",
         "babel-jest": "27.5.1",
         "babel-plugin-named-asset-import": "0.3.7",
@@ -233,7 +200,6 @@
         "body-parser": "1.19.0",
         "buffer": "6.0.3",
         "camelcase": "6.2.0",
-        "case-sensitive-paths-webpack-plugin": "2.3.0",
         "class-transformer": "0.5.1",
         "classnames": "2.2.6",
         "cli-highlight": "2.1.9",
@@ -243,6 +209,7 @@
         "copy-to-clipboard": "3.3.1",
         "cors": "2.8.5",
         "credentials-by-uri": "2.0.0",
+        "cross-env": "7.0.3",
         "cross-fetch": "3.0.6",
         "css-minimizer-webpack-plugin": "3.0.2",
         "dagre": "0.8.5",
@@ -261,9 +228,6 @@
         "filenamify": "4.2.0",
         "find-root": "1.1.0",
         "flatted": "3.1.0",
-        "fuse.js": "6.4.6",
-        "get-port": "5.1.1",
-        "get-xpath": "3.0.1",
         "graceful-fs": "4.2.10",
         "graphql-subscriptions": "1.2.0",
         "graphql-tag": "2.12.1",
@@ -279,12 +243,14 @@
         "humanize-string": "2.1.0",
         "ini": "2.0.0",
         "inject-body-webpack-plugin": "1.3.0",
+        "insert-string-after": "1.0.0",
+        "insert-string-before": "1.0.0",
+        "is-binary-path": "2.1.0",
         "is-builtin-module": "3.1.0",
         "is-primitive": "3.0.1",
         "jest": "27.5.1",
         "jest-message-util": "27.5.1",
         "jest-watcher": "27.5.1",
-        "join-path": "1.1.1",
         "json-formatter-js": "2.3.4",
         "jsx-to-string": "1.4.0",
         "junit-report-builder": "3.0.0",
@@ -296,7 +262,6 @@
         "lodash.orderby": "4.6.0",
         "lodash.pick": "4.4.0",
         "map-obj": "4.2.1",
-        "memoize-one": "5.1.1",
         "memoizee": "0.4.15",
         "memory-fs": "0.5.0",
         "mime": "2.5.2",
@@ -306,8 +271,8 @@
         "multimatch": "5.0.0",
         "nanoid": "3.1.20",
         "nerf-dart": "1.0.0",
+        "npm": "6.14.17",
         "p-limit": "3.1.0",
-        "parallel-webpack": "2.6.0",
         "parse-package-name": "0.1.0",
         "path-to-regexp": "6.2.0",
         "penpal": "6.2.2",
@@ -317,8 +282,6 @@
         "postcss-flexbugs-fixes": "5.0.2",
         "postcss-loader": "6.1.1",
         "postcss-preset-env": "6.7.0",
-        "postcss-safe-parser": "5.0.2",
-        "prerender-loader": "1.3.0",
         "prerender-spa-plugin-next": "4.2.0",
         "pretty-bytes": "5.6.0",
         "pretty-time": "1.1.0",
@@ -332,7 +295,7 @@
         "react-flow-renderer": "8.3.7",
         "react-syntax-highlighter": "15.4.3",
         "react-tabs": "3.2.0",
-        "react-test-renderer": "16.14.0",
+        "react-test-renderer": "17.0.2",
         "react-tooltip": "3.11.6",
         "remark-admonitions": "1.2.1",
         "remark-frontmatter": "2.0.0",
@@ -342,8 +305,6 @@
         "semver": "7.3.4",
         "semver-intersect": "1.4.0",
         "semver-range-intersect": "0.3.1",
-        "singleton-tsserver": "1.0.1",
-        "socket.io": "2.4.1",
         "socket.io-client": "2.4.0",
         "socks-proxy-agent": "5.0.0",
         "strip-ansi": "6.0.0",
@@ -352,13 +313,11 @@
         "tempy": "1.0.1",
         "terser-webpack-plugin": "5.2.0",
         "tippy.js": "6.2.7",
-        "typedoc": "0.22.5",
         "ua-parser-js": "0.7.24",
         "unist-util-remove": "2.0.1",
         "unist-util-visit": "2.0.3",
         "url-join": "4.0.1",
         "url-parse": "1.4.7",
-        "use-debounce": "6.0.1",
         "version-selector-type": "3.0.0",
         "vfile": "4.2.0",
         "vscode-icons-js": "11.0.0",
@@ -371,12 +330,13 @@
         "webpack-merge": "5.8.0",
         "workbox-webpack-plugin": "6.2.4",
         "ws": "7.4.2",
-        "yaml": "1.10.2"
+        "yaml": "1.10.2",
+        "yesno": "0.4.0"
       },
       "peerDependencies": {
-        "@apollo/client": "^3.0.0",
+        "@apollo/client": "^3.6.0",
         "@teambit/base-react.navigation.link": "2.0.27",
-        "@teambit/legacy": "1.0.287",
+        "@teambit/legacy": "1.0.370",
         "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
         "browserslist": "4.16.3",
         "core-js": "^3.10.0",
@@ -387,8 +347,9 @@
         "react-router-dom": "^6.0.0"
       }
     },
+    "linkCoreAspects": false,
     "nodeLinker": "hoisted",
-    "nodeVersion": "12.22.0",
+    "nodeVersion": "14.19.3",
     "engineStrict": true,
     // This is a temporary workaround to fix "bit compile" on macOS and Windows.
     // "bit compile" breaks node_modules when hard links are used.
@@ -401,7 +362,11 @@
     // Setting this to false, to make sure we are not consuming anything that exists only on the bit.dev registry
     // "installFromBitDevRegistry": false,
     "savePrefix": "",
-    "extraArgs": []
+    "extraArgs": [],
+    "peerDependencyRules": {
+      "allowAny": [],
+      "ignoreMissing": []
+    }
   },
   "teambit.preview/preview": {
     "bundlingStrategy": "component"
@@ -443,9 +408,7 @@
             "react",
             "react-components",
             "angular",
-            "angular-components",
-            "vue",
-            "vue-components"
+            "angular-components"
           ]
         }
       },
@@ -459,7 +422,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.287"
+            "@teambit/legacy": "1.0.370"
           }
         }
       },
@@ -494,9 +457,7 @@
             "react",
             "react-components",
             "angular",
-            "angular-components",
-            "vue",
-            "vue-components"
+            "angular-components"
           ]
         }
       },
@@ -518,11 +479,15 @@
       "teambit.harmony/node": {}
     },
     // Special rules for all core envs
-    // "scopes/react/react, scopes/react/react-native, scopes/harmony/aspect, scopes/harmony/node, scopes/html/html": {
-    // "teambit.harmony/aspect": "-",
-    // Set the env env for all core envs
-    // "teambit.envs/env": {}
-    // },
+    // TODO: check if we can add scopes/harmony/aspect and scopes/envs/env here
+    "scopes/react/react, scopes/react/react-native, scopes/harmony/node, scopes/html/html, scopes/mdx/mdx, scopes/mdx/readme": {
+      "teambit.harmony/aspect": "-",
+      // Set the env env for all core envs
+      "teambit.envs/env": {},
+      "teambit.envs/envs": {
+        "env": "teambit.envs/env"
+      }
+    },
     "{modules/**}": {
       "teambit.envs/envs": {
         "env": "teambit.harmony/node"
@@ -616,12 +581,6 @@
     },
     "scopes/code": {
       "defaultScope": "teambit.code"
-    },
-    "scopes/mdx/readme": {
-      "teambit.envs/env": {},
-      "teambit.envs/envs": {
-        "env": "teambit.envs/env"
-      }
     },
     "scopes/component/component-id": {
       "teambit.envs/envs": {
@@ -724,7 +683,18 @@
           "peerDependencies": {
             "react": "^16.8.0 || ^17.0.0",
             "react-dom": "^16.8.0 || ^17.0.0",
-            "@teambit/legacy": "1.0.287"
+            "@teambit/legacy": "1.0.370"
+          }
+        }
+      }
+    },
+    "scopes/mdx/modules/loader": {
+      "teambit.dependencies/dependency-resolver": {
+        "policy": {
+          "devDependencies": {
+            "@babel/preset-react": "7.13.13",
+            "@babel/preset-env": "7.12.17",
+            "babel-loader": "8.2.2"
           }
         }
       }
@@ -768,6 +738,9 @@
           "name": "@teambit/{name}", // @teambit/discovery.ui.sidebar
           "private": false,
           // Change back to "bin": "bin/bit" once released to prod
+          "bvm": {
+            "node": "16.16.0"
+          },
           "bin": {
             "bbit": "bin/bit"
           },
@@ -787,9 +760,7 @@
             "react",
             "react-components",
             "angular",
-            "angular-components",
-            "vue",
-            "vue-components"
+            "angular-components"
           ]
         }
       },
@@ -798,11 +769,12 @@
           "dependencies": {
             "@teambit/base-react.navigation.link": "2.0.27",
             "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
-            "@apollo/client": "3.3.6",
-            "@teambit/legacy": "1.0.287",
+            "@apollo/client": "3.6.9",
+            "@teambit/legacy": "1.0.370",
             "graphql": "14.7.0",
             "browserslist": "4.16.3",
             "reflect-metadata": "0.1.13",
+            "monaco-editor": "0.33.0",
             "mz": "2.7.0",
             // make sure the package manager installs an instance of react (and other peers)
             "react-native-web": "0.14.13",
@@ -933,7 +905,19 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.287"
+            "@teambit/legacy": "1.0.370"
+          }
+        }
+      }
+    },
+    "scopes/webpack/plugins/inject-head-webpack-plugin": {
+      "teambit.dependencies/dependency-resolver": {
+        "policy": {
+          "dependencies": {
+            "html-webpack-plugin": "-"
+          },
+          "peerDependencies": {
+            "html-webpack-plugin": "^5.3.1"
           }
         }
       }

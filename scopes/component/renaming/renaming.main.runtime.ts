@@ -8,6 +8,7 @@ import NewComponentHelperAspect, { NewComponentHelperMain } from '@teambit/new-c
 import RefactoringAspect, { MultipleStringsReplacement, RefactoringMain } from '@teambit/refactoring';
 import { getBindingPrefixByDefaultScope } from '@teambit/legacy/dist/consumer/config/component-config';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
+import { InstallMain, InstallAspect } from '@teambit/install';
 import { RenameCmd, RenameOptions } from './rename.cmd';
 import { RenamingAspect } from './renaming.aspect';
 import { RenamingFragment } from './renaming.fragment';
@@ -17,6 +18,7 @@ import { ScopeRenameCmd } from './scope-rename.cmd';
 export class RenamingMain {
   constructor(
     private workspace: Workspace,
+    private install: InstallMain,
     private newComponentHelper: NewComponentHelperMain,
     private deprecation: DeprecationMain,
     private refactoring: RefactoringMain
@@ -41,7 +43,7 @@ export class RenamingMain {
       await Promise.all(changedComponents.map((comp) => this.workspace.write(comp)));
     }
 
-    await this.workspace.link();
+    await this.install.link();
 
     return {
       sourceId,
@@ -85,7 +87,7 @@ once they are not in the workspace, you can fork them ("bit fork") with the new 
       const idsStr = tagged.map((comp) => comp.id.toString()).join(', ');
       throw new BitError(`unable to rename the scope for the following tagged components:\n${idsStr}
 because these components were tagged, the objects have the dependencies data of the old-scope.
-to be able to rename the scope, please untag the components first (using "bit untag" command)`);
+to be able to rename the scope, please untag the components first (using "bit reset" command)`);
     }
     if (this.workspace.defaultScope === oldScope) {
       await this.workspace.setDefaultScope(newScope);
@@ -135,18 +137,29 @@ to be able to rename the scope, please untag the components first (using "bit un
     ComponentAspect,
     GraphqlAspect,
     RefactoringAspect,
+    InstallAspect,
   ];
   static runtime = MainRuntime;
-  static async provider([cli, workspace, deprecation, newComponentHelper, componentMain, graphql, refactoring]: [
+  static async provider([
+    cli,
+    workspace,
+    deprecation,
+    newComponentHelper,
+    componentMain,
+    graphql,
+    refactoring,
+    install,
+  ]: [
     CLIMain,
     Workspace,
     DeprecationMain,
     NewComponentHelperMain,
     ComponentMain,
     GraphqlMain,
-    RefactoringMain
+    RefactoringMain,
+    InstallMain
   ]) {
-    const renaming = new RenamingMain(workspace, newComponentHelper, deprecation, refactoring);
+    const renaming = new RenamingMain(workspace, install, newComponentHelper, deprecation, refactoring);
     cli.register(new RenameCmd(renaming));
 
     const scopeCommand = cli.getCommand('scope');

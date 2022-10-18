@@ -4,20 +4,23 @@ import { VersionDropdown } from '@teambit/component.ui.version-dropdown';
 import { FullLoader } from '@teambit/ui-foundation.ui.full-loader';
 import type { ConsumeMethod } from '@teambit/ui-foundation.ui.use-box.menu';
 import { useLocation } from '@teambit/base-react.navigation.link';
-import { flatten, groupBy, compact } from 'lodash';
+import { flatten, groupBy, compact, isFunction } from 'lodash';
 import classnames from 'classnames';
 import React, { useMemo } from 'react';
 import { UseBoxDropdown } from '@teambit/ui-foundation.ui.use-box.dropdown';
+import { useLanes } from '@teambit/lanes.hooks.use-lanes';
+import { LaneModel } from '@teambit/lanes.ui.models.lanes-model';
 import { Menu as ConsumeMethodsMenu } from '@teambit/ui-foundation.ui.use-box.menu';
-import { LaneModel, useLanesContext } from '@teambit/lanes.ui.lanes';
 import { LegacyComponentLog } from '@teambit/legacy-component-log';
 import type { ComponentModel } from '../component-model';
-import { useComponent } from '../use-component';
+import { useComponent as useComponentQuery, UseComponentType } from '../use-component';
 import { MenuNav } from './menu-nav';
 import { MobileMenuNav } from './mobile-menu-nav';
 import styles from './menu.module.scss';
 import { OrderedNavigationSlot, ConsumeMethodSlot } from './nav-plugin';
 import { useIdFromLocation } from '../use-component-from-location';
+import { ComponentID } from '../..';
+import { Filters } from '../use-component-query';
 
 export type MenuProps = {
   className?: string;
@@ -36,8 +39,19 @@ export type MenuProps = {
   menuItemSlot: MenuItemSlot;
 
   consumeMethodSlot: ConsumeMethodSlot;
-};
 
+  componentIdStr?: string | (() => string | undefined);
+
+  useComponent?: UseComponentType;
+
+  path?: string;
+
+  useComponentFilters?: () => Filters;
+};
+function getComponentIdStr(componentIdStr?: string | (() => string | undefined)): string | undefined {
+  if (isFunction(componentIdStr)) return componentIdStr();
+  return componentIdStr;
+}
 /**
  * top bar menu.
  */
@@ -48,21 +62,28 @@ export function ComponentMenu({
   host,
   menuItemSlot,
   consumeMethodSlot,
+  componentIdStr,
+  useComponent,
+  path,
+  useComponentFilters,
 }: MenuProps) {
-  const componentId = useIdFromLocation();
-  const lanesContext = useLanesContext();
-  const laneComponent = componentId ? lanesContext?.resolveComponent(componentId) : undefined;
-  const useComponentOptions = laneComponent && {
-    logFilters: { log: { logHead: laneComponent.version } },
+  const idFromLocation = useIdFromLocation();
+  const _componentIdStr = getComponentIdStr(componentIdStr);
+  const componentId = _componentIdStr ? ComponentID.fromString(_componentIdStr) : undefined;
+  const resolvedComponentIdStr = path || idFromLocation;
+
+  const useComponentOptions = {
+    logFilters: useComponentFilters?.(),
+    customUseComponent: useComponent,
   };
 
-  const { component } = useComponent(host, laneComponent?.id.toString() || componentId, useComponentOptions);
+  const { component } = useComponentQuery(host, componentId?.toString() || idFromLocation, useComponentOptions);
   const mainMenuItems = useMemo(() => groupBy(flatten(menuItemSlot.values()), 'category'), [menuItemSlot]);
   if (!component) return <FullLoader />;
   return (
     <Routes>
       <Route
-        path={`${componentId}/*`}
+        path={`${resolvedComponentIdStr}/*`}
         element={
           <div className={classnames(styles.topBar, className)}>
             <div className={styles.leftSide}>
@@ -93,16 +114,15 @@ function VersionRelatedDropdowns({
   host: string;
 }) {
   const location = useLocation();
-  const lanesContext = useLanesContext();
-  const currentLane = lanesContext?.viewedLane;
+  const { lanesModel } = useLanes();
+  const currentLane =
+    lanesModel?.viewedLane?.id && !lanesModel?.viewedLane?.id.isDefault() ? lanesModel.viewedLane : undefined;
+
   const { logs } = component;
   const isWorkspace = host === 'teambit.workspace/workspace';
 
   const snaps = useMemo(() => {
-    return (logs || [])
-      .filter((log) => !log.tag)
-      .map((snap) => ({ ...snap, version: snap.hash }))
-      .reverse();
+    return (logs || []).filter((log) => !log.tag).map((snap) => ({ ...snap, version: snap.hash }));
   }, [logs]);
 
   const tags = useMemo(() => {
@@ -122,7 +142,7 @@ function VersionRelatedDropdowns({
 
   const isNew = snaps.length === 0 && tags.length === 0;
 
-  const lanes = lanesContext?.getLanesByComponentId(component.id) || [];
+  const lanes = lanesModel?.getLanesByComponentId(component.id)?.filter((lane) => !lane.id.isDefault()) || [];
   const localVersion = isWorkspace && !isNew && !currentLane;
 
   const currentVersion =

@@ -1,5 +1,6 @@
 import chai, { expect } from 'chai';
 import path from 'path';
+import fs from 'fs-extra';
 import { loadBit } from '@teambit/bit';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { BuilderMain, BuilderAspect } from '@teambit/builder';
@@ -22,7 +23,7 @@ describe('build command', function () {
   // the second by the mdx-env.
   describe('an mdx dependency of a react env', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.bitJsonc.setupDefault();
       helper.command.create('mdx-component', 'my-mdx');
       helper.command.create('react-env', 'my-env');
@@ -50,7 +51,7 @@ describe('build command', function () {
   describe('list tasks', () => {
     before(() => {
       helper = new Helper();
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateComponents(1);
     });
     it('should list the publish task in the tagPipeline but not in the snapPipeline', async () => {
@@ -67,7 +68,7 @@ describe('build command', function () {
 
   describe('registering the publish task for the snap pipeline in a new-custom env', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.command.create('node-env', 'my-env');
       helper.fixtures.populateComponents(1);
       helper.fs.outputFile('my-scope/my-env/my-env.main.runtime.ts', getMyEnvMainRuntime());
@@ -84,6 +85,38 @@ describe('build command', function () {
       const builder = harmony.get<BuilderMain>(BuilderAspect.id);
       const tasks = builder.listTasks(component);
       expect(tasks.snapTasks).to.include('teambit.pkg/pkg:PublishComponents');
+    });
+  });
+
+  describe('dist file is deleted from the remote', () => {
+    let errorOutput: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllComponents();
+      helper.command.export();
+
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
+      helper.command.importComponent('comp1');
+
+      const artifacts = helper.command.getArtifacts(`${helper.scopes.remote}/comp1`);
+      const artifactDist = artifacts.find((a) => a.name === 'dist');
+      const artifactDistFile = artifactDist.files[0].file;
+      const artifactPath = path.join(
+        helper.scopes.remotePath,
+        'objects',
+        helper.general.getHashPathOfObject(artifactDistFile)
+      );
+      fs.removeSync(artifactPath);
+      errorOutput = helper.general.runWithTryCatch('bit build comp1');
+    });
+    it('the error should mention the remote where the error is coming from', () => {
+      expect(errorOutput).to.have.string(helper.scopes.remote);
+    });
+    it('the error should explain the issue', () => {
+      expect(errorOutput).to.have.string(`unable to get the following objects`);
     });
   });
 });

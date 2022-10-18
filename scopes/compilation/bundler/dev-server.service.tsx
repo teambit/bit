@@ -107,7 +107,7 @@ export class DevServerService implements EnvService<ComponentServer, DevServerDe
     contexts: ExecutionContext[],
     { dedicatedEnvDevServers }: DevServerServiceOptions
   ): Promise<ComponentServer[]> {
-    const groupedEnvs = dedupEnvs(contexts, dedicatedEnvDevServers);
+    const groupedEnvs = await dedupEnvs(contexts, this.dependencyResolver, dedicatedEnvDevServers);
 
     const servers = await Promise.all(
       Object.entries(groupedEnvs).map(async ([id, contextList]) => {
@@ -144,12 +144,14 @@ export class DevServerService implements EnvService<ComponentServer, DevServerDe
     context.relatedContexts = additionalContexts.map((ctx) => ctx.envDefinition.id);
     context.components = context.components.concat(this.getComponentsFromContexts(additionalContexts));
     const peers = await this.dependencyResolver.getPeerDependenciesListFromEnv(context.env);
+    const hostRootDir = context.envRuntime.envAspectDefinition?.aspectPath;
 
     return Object.assign(context, {
       entry: await getEntry(context, this.runtimeSlot),
       // don't start with a leading "/" because it generates errors on Windows
       rootPath: `preview/${context.envRuntime.id}`,
       publicPath: `${sep}public`,
+      hostRootDir,
       hostDependencies: peers,
       aliasHostDependencies: true,
     });

@@ -24,7 +24,10 @@ function registerRoutes(app: Application.Application) {
   })
 }
 
-expressApp();
+expressApp().catch(err => {
+  console.log('error from express', err);
+  process.exit(1);
+});
 `,
   };
 }

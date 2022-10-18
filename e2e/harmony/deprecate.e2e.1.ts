@@ -13,7 +13,7 @@ describe('bit deprecate and undeprecate commands', function () {
   });
   describe('deprecate tagged component', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents();
       helper.command.tagAllWithoutBuild();
@@ -25,8 +25,8 @@ describe('bit deprecate and undeprecate commands', function () {
     });
     it('bit status should show the component as modified', () => {
       const status = helper.command.statusJson();
-      expect(status.modifiedComponent).to.have.lengthOf(1);
-      expect(status.modifiedComponent[0]).to.include('comp2');
+      expect(status.modifiedComponents).to.have.lengthOf(1);
+      expect(status.modifiedComponents[0]).to.include('comp2');
     });
     describe('tagging the component', () => {
       before(() => {
@@ -34,7 +34,7 @@ describe('bit deprecate and undeprecate commands', function () {
       });
       it('the component should not be modified', () => {
         const status = helper.command.statusJson();
-        expect(status.modifiedComponent).to.have.lengthOf(0);
+        expect(status.modifiedComponents).to.have.lengthOf(0);
       });
       it('bit show should show the component as deprecated', () => {
         const deprecationData = helper.command.showAspectConfig('comp2', Extensions.deprecation);
@@ -72,7 +72,7 @@ describe('bit deprecate and undeprecate commands', function () {
         describe('importing a deprecated component', () => {
           let importOutput: string;
           before(() => {
-            helper.scopeHelper.reInitLocalScopeHarmony();
+            helper.scopeHelper.reInitLocalScope();
             helper.scopeHelper.addRemoteScope();
             importOutput = helper.command.importComponent('comp2');
           });
@@ -82,7 +82,7 @@ describe('bit deprecate and undeprecate commands', function () {
         });
         describe('bit list of a remote deprecated component', () => {
           before(() => {
-            helper.scopeHelper.reInitLocalScopeHarmony();
+            helper.scopeHelper.reInitLocalScope();
             helper.scopeHelper.addRemoteScope();
           });
           it('should indicate that the component is deprecated', () => {
@@ -94,9 +94,9 @@ describe('bit deprecate and undeprecate commands', function () {
       });
     });
   });
-  describe('reverting the deprecation by "bit checkout --reset"', () => {
+  describe('reverting the deprecation by "bit checkout reset"', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllWithoutBuild();
       helper.command.deprecateComponent('comp1');
@@ -104,7 +104,7 @@ describe('bit deprecate and undeprecate commands', function () {
       const deprecationData = helper.command.showAspectConfig('comp1', Extensions.deprecation);
       expect(deprecationData.config.deprecate).to.be.true;
 
-      helper.command.checkout('comp1 --reset');
+      helper.command.checkoutReset('comp1');
     });
     it('should remove the deprecation config', () => {
       const deprecationData = helper.command.showAspectConfig('comp1', Extensions.deprecation);

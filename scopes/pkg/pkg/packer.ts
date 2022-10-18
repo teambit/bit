@@ -45,16 +45,6 @@ export class Packer {
     if (!legacyScope) {
       throw new ScopeNotFound(scopePath);
     }
-    // Or the scope we are operate on is legacy, or the host (workspace) is legacy
-    const isLegacyScope = (scopePath && legacyScope.isLegacy) || this.host.isLegacy;
-
-    // Handle legacy
-    if (isLegacyScope) {
-      const res = await this.legacyPacker.pack(componentId, legacyScope, options);
-      // @ts-ignore
-      return Object.assign({}, res, { id: componentId });
-    }
-
     const capsule = await this.getCapsule(componentId, legacyScope);
     const res = await this.packCapsule(capsule, options.writeOptions, options.dryRun);
 

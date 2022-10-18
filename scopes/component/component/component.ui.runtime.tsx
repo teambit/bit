@@ -22,8 +22,13 @@ import { ComponentModel } from './ui';
 import { Component, ComponentPageElement, ComponentPageSlot } from './ui/component';
 import { ComponentResultPlugin, ComponentSearcher } from './ui/component-searcher';
 import { ConsumeMethodSlot, ConsumePlugin, ComponentMenu, NavPlugin, OrderedNavigationSlot } from './ui/menu';
+import { GetComponentsOptions } from './get-component-opts';
 
 export type ComponentSearchResultSlot = SlotRegistry<ComponentResultPlugin[]>;
+
+export type ComponentUIConfig = {
+  commandBar: boolean;
+};
 
 export type Server = {
   env: string;
@@ -165,18 +170,22 @@ export class ComponentUI {
     this.activeComponent = activeComponent;
   };
 
-  getComponentUI(host: string) {
+  getComponentUI(host: string, options: GetComponentsOptions = {}) {
     return (
       <Component
         routeSlot={this.routeSlot}
         containerSlot={this.pageItemSlot}
         onComponentChange={this.handleComponentChange}
         host={host}
+        path={options.path}
+        useComponent={options.useComponent}
+        componentIdStr={options.componentId}
+        useComponentFilters={options.useComponentFilters}
       />
     );
   }
 
-  getMenu(host: string) {
+  getMenu(host: string, options: GetComponentsOptions = {}) {
     return (
       <ComponentMenu
         navigationSlot={this.navSlot}
@@ -184,6 +193,10 @@ export class ComponentUI {
         widgetSlot={this.widgetSlot}
         host={host}
         menuItemSlot={this.menuItemSlot}
+        useComponent={options.useComponent}
+        path={options.path}
+        componentIdStr={options.componentId}
+        useComponentFilters={options.useComponentFilters}
       />
     );
   }
@@ -225,7 +238,7 @@ export class ComponentUI {
   };
 
   updateComponents = (components: ComponentModel[]) => {
-    this.componentSearcher.update(components);
+    this.componentSearcher.update(components || []);
   };
 
   static dependencies = [PubsubAspect, CommandBarAspect, ReactRouterAspect];
@@ -241,10 +254,13 @@ export class ComponentUI {
     Slot.withType<ComponentPageSlot>(),
     Slot.withType<ComponentSearchResultSlot>(),
   ];
+  static defaultConfig: ComponentUIConfig = {
+    commandBar: true,
+  };
 
   static async provider(
     [pubsub, commandBarUI, reactRouterUI]: [PubsubUI, CommandBarUI, ReactRouterUI],
-    config,
+    config: ComponentUIConfig,
     [routeSlot, navSlot, consumeMethodSlot, widgetSlot, menuItemSlot, pageSlot, componentSearchResultSlot]: [
       RouteSlot,
       OrderedNavigationSlot,
@@ -272,8 +288,12 @@ export class ComponentUI {
     const aspectSection = new AspectSection();
     // @ts-ignore
     componentUI.registerSearchResultWidget({ key: 'deprecation', end: DeprecationIcon });
-    componentUI.commandBarUI.addCommand(...componentUI.keyBindings);
-    commandBarUI.addSearcher(componentUI.componentSearcher);
+
+    if (componentUI.commandBarUI && config.commandBar) {
+      componentUI.commandBarUI.addCommand(...componentUI.keyBindings);
+      commandBarUI.addSearcher(componentUI.componentSearcher);
+    }
+
     componentUI.registerMenuItem(componentUI.menuItems);
     componentUI.registerRoute(aspectSection.route);
     componentUI.registerWidget(aspectSection.navigationLink, aspectSection.order);

@@ -4,7 +4,7 @@ import type LegacyGraph from '@teambit/legacy/dist/scope/graph/graph';
 import { ComponentGraph } from './component-graph';
 import { Dependency } from './model/dependency';
 
-type GetGraphOpts = {
+export type GetGraphOpts = {
   host?: ComponentFactory;
 };
 
@@ -12,25 +12,16 @@ type BuildFromLegacyGraphOpts = {
   host?: ComponentFactory;
 };
 
-/**
- * @todo: potential issues with the current way the class is built.
- * it's possible to call `getGraph` multiple times and at the same time (Promise.all).
- * which makes the _graph prop and other props unpredictable.
- */
 export class GraphBuilder {
-  _graph?: ComponentGraph;
-  _initialized = false;
   constructor(private componentAspect: ComponentMain) {}
 
   async getGraph(ids?: ComponentID[], opts: GetGraphOpts = {}): Promise<ComponentGraph> {
     const componentHost = opts.host || this.componentAspect.getHost();
 
-    const legacyGraph = await componentHost.getLegacyGraph(ids);
+    const legacyGraph = await componentHost.getLegacyGraph(ids, false);
     const graph = await this.buildFromLegacy(legacyGraph, { host: opts.host });
-    this._graph = graph;
-    this._initialized = true;
     graph.seederIds = ids || (await componentHost.listIds());
-    return this._graph;
+    return graph;
   }
 
   private async buildFromLegacy(
@@ -58,7 +49,6 @@ export class GraphBuilder {
     });
     await Promise.all(setEdgePromise);
 
-    newGraph.versionMap = newGraph._calculateVersionMap();
     return newGraph;
   }
 }

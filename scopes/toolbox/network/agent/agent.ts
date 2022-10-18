@@ -17,7 +17,6 @@ export function getAgent(uri: string, opts: AgentOptions): any {
     };
   }
   return getPnpmAgent(uri, {
-    maxSockets: 15,
     strictSsl: opts.strictSSL,
     ...opts,
   }) as any;

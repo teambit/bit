@@ -13,7 +13,7 @@ describe('status command on Harmony', function () {
   });
   describe('main filename is not index and dists are missing', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.fs.outputFile('comp1/comp1.ts', "require('@my-scope/comp2');");
       helper.fs.outputFile('comp2/comp2.ts');
       helper.command.addComponent('comp1');
@@ -26,7 +26,7 @@ describe('status command on Harmony', function () {
   });
   describe('dists dir is deleted after caching the components', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.fixtures.populateComponents(1);
       helper.command.status(); // to populate the cache
       // as an intermediate step, make sure the missing-dist is not an issue.
@@ -49,7 +49,7 @@ describe('status command on Harmony', function () {
   });
   describe('package dir is deleted from node-modules', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.fixtures.populateComponents(1);
       helper.command.status(); // to populate the cache
       // as an intermediate step, make sure the missing-links is not an issue.
@@ -63,7 +63,7 @@ describe('status command on Harmony', function () {
   });
   describe('components that are both: new and auto-tag-pending', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.fixtures.populateComponents(3);
       helper.command.tagWithoutBuild('comp3');
       helper.fixtures.populateComponents(3, undefined, 'v2');
@@ -72,6 +72,35 @@ describe('status command on Harmony', function () {
       const status = helper.command.statusJson();
       expect(status.autoTagPendingComponents).to.have.lengthOf(0);
       expect(status.newComponents).to.have.lengthOf(2);
+    });
+  });
+  describe('components that imports itself', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.bitJsonc.setupDefault();
+      helper.fs.outputFile('bar/index.js', 'export const a = "b";');
+      helper.fs.outputFile('bar/foo.js', `import { a } from '@${helper.scopes.remote}/bar';`);
+      helper.command.add('bar');
+      helper.command.link();
+    });
+    // @todo: maybe we should show a component-issue suggesting to fix the import statement
+    it('should not add itself as a dependency', () => {
+      const show = helper.command.showComponentParsed('bar');
+      expect(show.dependencies).to.have.lengthOf(0);
+    });
+  });
+  describe('deleting a dependency from the filesystem when the record is still in bitmap', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents(2);
+      helper.command.tagWithoutBuild();
+      helper.command.export();
+      helper.fs.deletePath('comp2');
+      helper.fs.appendFile('comp1/index.js');
+    });
+    it('bit status should not throw', () => {
+      expect(() => helper.command.status()).not.to.throw();
     });
   });
 });

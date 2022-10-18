@@ -139,7 +139,7 @@ export function configFactory(
     },
 
     resolve: {
-      extensions: ['.ts', '.tsx', '.js', '.mdx', '.md'],
+      // TODO - check - we shoult not need both fallbacks and alias and provider plugin
       alias: fallbacksAliases,
 
       fallback: fallbacks as any,

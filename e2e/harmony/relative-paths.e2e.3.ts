@@ -17,14 +17,14 @@ describe('relative paths flow (components requiring each other by relative paths
   describe('adding directories and using relative-paths', () => {
     let appOutput;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.addDefaultScope(helper.scopes.remote);
       appOutput = helper.fixtures.populateComponents(2, false);
     });
     it('bit status should show it as an invalid component', () => {
       const status = helper.command.statusJson();
       expect(status.componentsWithIssues).to.have.lengthOf(1);
-      expect(status.componentsWithIssues[0].id).to.equal('comp1');
+      helper.command.statusComponentHasIssues('comp1');
     });
     it('should block bit tag', () => {
       const output = helper.general.runWithTryCatch('bit tag -a');
@@ -65,8 +65,8 @@ describe('relative paths flow (components requiring each other by relative paths
         });
         describe('should work after importing to another workspace', () => {
           before(() => {
-            helper.command.exportToDefaultAndRewire();
-            helper.scopeHelper.reInitLocalScopeHarmony();
+            helper.command.export();
+            helper.scopeHelper.reInitLocalScope();
             helper.scopeHelper.addRemoteScope();
             helper.command.importComponent('*');
           });

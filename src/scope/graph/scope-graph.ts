@@ -32,6 +32,10 @@ export default class DependencyGraph {
     this.scopeName = scopeName;
   }
 
+  hasCircular(): boolean {
+    return !GraphLib.alg.isAcyclic(this.graph);
+  }
+
   static async loadAllVersions(scope: Scope): Promise<DependencyGraph> {
     const graph = await DependencyGraph.buildGraphWithAllVersions(scope);
     return new DependencyGraph(graph);
@@ -167,7 +171,7 @@ export default class DependencyGraph {
    */
   static async buildGraphFromCurrentlyUsedComponents(consumer: Consumer): Promise<Graph> {
     const componentsList = new ComponentsList(consumer);
-    const workspaceComponents: Component[] = await componentsList.getAuthoredAndImportedFromFS();
+    const workspaceComponents: Component[] = await componentsList.getComponentsFromFS();
     const graph = new Graph();
     workspaceComponents.forEach((component: Component) => {
       const id = component.id;
@@ -240,6 +244,16 @@ export default class DependencyGraph {
     });
     dependencies.sort((a, b) => a.depth - b.depth);
     return dependencies;
+  }
+
+  getDependenciesAsObjectTree(id: string): Record<string, any> {
+    const label = id;
+    const children = this.graph.outEdges(id);
+    if (!children || children.length === 0) {
+      return { label };
+    }
+    const nodes = children.map((child) => this.getDependenciesAsObjectTree(child.w));
+    return { label, nodes };
   }
 
   getDependentsInfo(id: BitId): DependenciesInfo[] {

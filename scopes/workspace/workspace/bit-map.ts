@@ -1,4 +1,4 @@
-import { isEqual } from 'lodash';
+import { isEqual, merge } from 'lodash';
 import { ComponentID } from '@teambit/component-id';
 import LegacyBitMap from '@teambit/legacy/dist/consumer/bit-map';
 import { Consumer } from '@teambit/legacy/dist/consumer';
@@ -6,6 +6,7 @@ import { GetBitMapComponentOptions } from '@teambit/legacy/dist/consumer/bit-map
 import ComponentMap from '@teambit/legacy/dist/consumer/bit-map/component-map';
 import { REMOVE_EXTENSION_SPECIAL_SIGN } from '@teambit/legacy/dist/consumer/config';
 import { BitError } from '@teambit/bit-error';
+import { LaneId } from '@teambit/lane-id';
 /**
  * consider extracting to a new component.
  * (pro: making Workspace aspect smaller. con: it's an implementation details of the workspace)
@@ -18,17 +19,32 @@ export class BitMap {
    * later, upon `bit tag`, the data is saved in the scope.
    * returns a boolean indicating whether a change has been made.
    */
-  addComponentConfig(id: ComponentID, aspectId: string, config: Record<string, any> = {}): boolean {
+  addComponentConfig(
+    id: ComponentID,
+    aspectId: string,
+    config: Record<string, any> = {},
+    shouldMergeConfig = false
+  ): boolean {
     if (!aspectId || typeof aspectId !== 'string') throw new Error(`expect aspectId to be string, got ${aspectId}`);
     const bitMapEntry = this.getBitmapEntry(id, { ignoreScopeAndVersion: true });
     const currentConfig = (bitMapEntry.config ||= {})[aspectId];
     if (isEqual(currentConfig, config)) {
       return false; // no changes
     }
-    if (!config) {
-      delete bitMapEntry.config[aspectId];
+    const getNewConfig = () => {
+      if (!config) return null;
+      if (!shouldMergeConfig) return config;
+      // should merge
+      if (!currentConfig) return config;
+      if (currentConfig === '-') return config;
+      // lodash merge performs a deep merge. (the native concatenation don't)
+      return merge(currentConfig, config);
+    };
+    const newConfig = getNewConfig();
+    if (newConfig) {
+      bitMapEntry.config[aspectId] = newConfig;
     } else {
-      bitMapEntry.config[aspectId] = config;
+      delete bitMapEntry.config[aspectId];
     }
     this.legacyBitMap.markAsChanged();
 
@@ -133,16 +149,35 @@ export class BitMap {
     if (bitMapEntry.id.hasVersion()) {
       throw new Error(`unable to rename tagged or exported component: ${bitMapEntry.id.toString()}`);
     }
-    this.legacyBitMap.removeComponent(bitMapEntry.id);
-    bitMapEntry.id = targetId._legacy;
-    this.legacyBitMap.setComponent(bitMapEntry.id, bitMapEntry);
+    if (sourceId.isEqual(targetId)) {
+      throw new Error(`source-id and target-id are equal: "${sourceId.toString()}"`);
+    }
+    if (sourceId.fullName !== targetId.fullName) {
+      this.legacyBitMap.removeComponent(bitMapEntry.id);
+      bitMapEntry.id = targetId._legacy;
+      this.legacyBitMap.setComponent(bitMapEntry.id, bitMapEntry);
+    }
+    if (sourceId.scope !== targetId.scope) {
+      this.setDefaultScope(targetId, targetId.scope);
+    }
+  }
+
+  removeComponent(id: ComponentID) {
+    this.legacyBitMap.removeComponent(id._legacy);
   }
 
   /**
    * this is the lane-id of the recently exported lane. in case of a new lane, which was not exported yet, this will be
    * empty.
    */
-  getExportedLaneId() {
-    return this.legacyBitMap.remoteLaneId;
+  getExportedLaneId(): LaneId | undefined {
+    return this.legacyBitMap.isLaneExported ? this.legacyBitMap.laneId : undefined;
+  }
+
+  /**
+   * whether .bitmap file has changed in-memory
+   */
+  hasChanged(): boolean {
+    return this.legacyBitMap.hasChanged;
   }
 }

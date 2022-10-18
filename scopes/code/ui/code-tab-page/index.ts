@@ -1,1 +1,1 @@
-export { CodePage } from './code-tab-page';
+export { CodePage, generateIcon } from './code-tab-page';

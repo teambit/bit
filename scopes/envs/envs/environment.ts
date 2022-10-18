@@ -51,9 +51,20 @@ export interface Environment {
   getSchemaExtractor?: (config?: any) => SchemaExtractor;
 
   /**
-   * Returns the dev patterns to match doc file
+   * Returns the dev patterns to match doc files
    */
   getDocsDevPatterns?: (component: Component) => string[];
+
+  /**
+   * Returns the dev patterns to match composition files
+   */
+  getCompositionsDevPatterns?: (component: Component) => string[];
+
+  /**
+   * Returns additional dev patterns for the component.
+   * Patterns that were provided by getDocsDevPatterns, getTestsDevPatterns will be considered as dev files as well, without need to add them here.
+   */
+  getDevPatterns?: (component: Component) => string[];
 }
 
 export interface DependenciesEnv extends Environment {
@@ -62,6 +73,16 @@ export interface DependenciesEnv extends Environment {
    * Required for any task
    */
   getDependencies?: () => EnvPolicyConfigObject | Promise<EnvPolicyConfigObject>;
+
+  /**
+   * Returns a list of additional test host dependencies
+   * this will be added to the tester context
+   * This can be used in cases when you want specific dependencies to be resolved from the env during testing
+   * but you don't want these dependencies as peer dependencies of the component (as they are not used during runtime)
+   * An example for this is @angular/compiler, which during running tests you want to resolve from the env, but you don't
+   * need it during component runtime.
+   */
+  getAdditionalTestHostDependencies?: () => string[] | Promise<string[]>;
 
   /**
    * Returns a list of additional host dependencies
@@ -188,6 +209,11 @@ export interface TesterEnv extends Environment {
    * Required for `bit start` & `bit test`
    */
   getTester?: (path: string, tester: any) => Tester;
+
+  /**
+   * Returns the dev patterns to match test files
+   */
+  getTestsDevPatterns?: (component: Component) => string[];
 }
 
 export interface CompilerEnv {

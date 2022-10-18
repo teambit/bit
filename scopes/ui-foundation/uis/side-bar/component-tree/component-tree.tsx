@@ -1,35 +1,37 @@
-import { ComponentModel } from '@teambit/component';
+import { ComponentModel, useIdFromLocation } from '@teambit/component';
 import React, { useMemo } from 'react';
 import { useLocation } from '@teambit/base-react.navigation.link';
 import { indentStyle } from '@teambit/base-ui.graph.tree.indent';
 import { inflateToTree, attachPayload } from '@teambit/base-ui.graph.tree.inflate-paths';
-import { Tree, TreeNodeRenderer } from '@teambit/design.ui.tree';
+import { Tree, TreeNodeRenderer, TreeNode as TreeNodeType } from '@teambit/design.ui.tree';
+import { LanesModel } from '@teambit/lanes.ui.models.lanes-model';
 import { TreeContextProvider } from '@teambit/base-ui.graph.tree.tree-context';
 import { PayloadType, ScopePayload } from './payload-type';
 import { DefaultTreeNodeRenderer } from './default-tree-node-renderer';
 
-const componentIdUrlRegex = '[\\w\\/-]*[\\w-]';
-
 type ComponentTreeProps = {
   components: ComponentModel[];
+  transformTree?: (rootNode: TreeNodeType) => TreeNodeType;
   TreeNode?: TreeNodeRenderer<PayloadType>;
   isCollapsed?: boolean;
+  assumeScopeInUrl?: boolean;
 } & React.HTMLAttributes<HTMLDivElement>;
 
 export function ComponentTree({
   components,
   isCollapsed,
   className,
+  transformTree,
+  // assumeScopeInUrl = false,
   TreeNode = DefaultTreeNodeRenderer,
 }: ComponentTreeProps) {
   const { pathname = '/' } = useLocation() || {};
-
+  // override default splat from location when viewing a lane component
+  const laneCompUrl = pathname.split(LanesModel.baseLaneComponentRoute.concat('/'))[1];
+  const idFromLocation = useIdFromLocation(laneCompUrl);
   const activeComponent = useMemo(() => {
-    const componentUrlRegex = new RegExp(componentIdUrlRegex);
-    const path = pathname?.startsWith('/') ? pathname.substring(1) : pathname;
-    const matcher = path.match(componentUrlRegex)?.[0]; // returns just the part that matches the componentId section without /~compositions etc.
     const active = components.find((x) => {
-      return matcher && matcher === x.id.fullName;
+      return idFromLocation && (idFromLocation === x.id.fullName || idFromLocation === x.id.toStringWithoutVersion());
     });
     return active?.id.toString({ ignoreVersion: true });
   }, [components, pathname]);
@@ -41,6 +43,7 @@ export function ComponentTree({
 
     attachPayload(tree, payloadMap);
 
+    if (transformTree) return transformTree(tree);
     return tree;
   }, [components]);
 

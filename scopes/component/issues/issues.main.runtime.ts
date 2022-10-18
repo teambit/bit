@@ -37,8 +37,8 @@ export class IssuesMain {
   listIssues() {
     const instances = Object.keys(IssuesClasses).map((issueClass) => new IssuesClasses[issueClass]());
     const issuesList = new IssuesList(instances);
-    const nonLegacyIssues = issuesList.getHarmonyIssues();
-    return nonLegacyIssues.map((issueInstance) => {
+    const allIssues = issuesList.getAllIssues();
+    return allIssues.map((issueInstance) => {
       return {
         name: issueInstance.constructor.name,
         description: issueInstance.description,

@@ -20,7 +20,7 @@ describe('graph aspect', function () {
   describe('tag a few components', () => {
     before(() => {
       helper = new Helper();
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateComponents(3);
       helper.command.tagAllWithoutBuild();
     });
@@ -37,8 +37,11 @@ describe('graph aspect', function () {
         const jsonGraph = graph.toJson();
         expect(jsonGraph.nodes).to.have.lengthOf(3);
         expect(jsonGraph.edges).to.have.lengthOf(2);
-        expect(jsonGraph.edges[0]).to.deep.include({ sourceId: 'comp1@0.0.1', targetId: 'comp2@0.0.1' });
-        expect(jsonGraph.edges[1]).to.deep.include({ sourceId: 'comp2@0.0.1', targetId: 'comp3@0.0.1' });
+        const edges = jsonGraph.edges.map((edge) => ({ sourceId: edge.sourceId, targetId: edge.targetId }));
+        expect(edges).to.include.deep.members([
+          { sourceId: 'comp1@0.0.1', targetId: 'comp2@0.0.1' },
+          { sourceId: 'comp2@0.0.1', targetId: 'comp3@0.0.1' },
+        ]);
       });
     });
   });

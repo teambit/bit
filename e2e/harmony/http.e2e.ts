@@ -18,7 +18,7 @@ import { HttpHelper } from '../http-helper';
   describe('export lane', () => {
     before(async () => {
       httpHelper = new HttpHelper(helper);
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.addDefaultScope();
       helper.bitJsonc.disablePreview();
       await httpHelper.start();
@@ -30,8 +30,8 @@ import { HttpHelper } from '../http-helper';
     });
     it('lane list -r should show the remote lanes', () => {
       const output = helper.command.listRemoteLanesParsed();
-      expect(output.lanes).to.have.lengthOf(1);
-      expect(output.lanes[0].name).to.have.string('dev');
+      expect(output.lanes).to.have.lengthOf(2);
+      expect(output.lanes[0].id.name).to.have.string('dev');
     });
     it('bit import on a local lane tracked to a valid remote scope should not throw an error', () => {
       helper.command.createLane('test');
@@ -47,11 +47,35 @@ import { HttpHelper } from '../http-helper';
     it('bit lane remove -r -f should remove the remote lane', () => {
       helper.command.removeRemoteLane('dev', '--force');
       const output = helper.command.listRemoteLanesParsed();
-      expect(output.lanes).to.have.lengthOf(0);
+      expect(output.lanes).to.have.lengthOf(1);
     });
     // previously it was throwing UnexpectedNetworkError without any message.
     it('bit lane remove -r of a non-existing lane should throw a descriptive error', () => {
       expect(() => helper.command.removeRemoteLane('non-exist')).to.throw('lane "non-exist" was not found');
+    });
+    after(() => {
+      httpHelper.killHttp();
+    });
+  });
+  describe('export with removed components', () => {
+    before(async () => {
+      httpHelper = new HttpHelper(helper);
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.bitJsonc.setupDefault();
+      await httpHelper.start();
+      helper.scopeHelper.addRemoteHttpScope();
+      helper.fixtures.populateComponents(2);
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      helper.command.removeComponent('comp2', '--soft');
+      helper.fs.outputFile('comp1/index.js', '');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+    });
+    it('bit list -r should show not show the removed component', () => {
+      const list = helper.command.listRemoteScopeParsed();
+      expect(list).to.have.lengthOf(1);
+      expect(list[0].id).to.not.have.string('comp2');
     });
     after(() => {
       httpHelper.killHttp();
@@ -62,7 +86,7 @@ import { HttpHelper } from '../http-helper';
     let scopeAfterExport: string;
     before(async () => {
       httpHelper = new HttpHelper(helper);
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.addDefaultScope();
       helper.bitJsonc.disablePreview();
       helper.extensions.addExtensionToVariant('*', 'teambit.react/react', {});
@@ -93,7 +117,7 @@ import { HttpHelper } from '../http-helper';
     describe('bit import', () => {
       let importOutput;
       before(() => {
-        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.scopeHelper.reInitLocalScope();
         helper.scopeHelper.addRemoteHttpScope();
         importOutput = helper.command.importComponent('comp1');
       });
@@ -104,7 +128,7 @@ import { HttpHelper } from '../http-helper';
     describe('bit import --dependents', () => {
       let importOutput;
       before(() => {
-        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.scopeHelper.reInitLocalScope();
         helper.scopeHelper.addRemoteHttpScope();
         importOutput = helper.command.importComponent('comp3', '--dependents');
       });

@@ -46,10 +46,6 @@ export class TesterService implements EnvService<Tests, TesterDescriptor> {
 
   constructor(
     readonly workspace: Workspace,
-    /**
-     * regex used to identify which files to test.
-     */
-    readonly patterns: string[],
 
     private logger: Logger,
 
@@ -120,10 +116,25 @@ export class TesterService implements EnvService<Tests, TesterDescriptor> {
       this.logger.console(`testing ${componentWithTests} components with environment ${chalk.cyan(context.id)}\n`);
 
     const patterns = ComponentMap.as(context.components, (component) => {
-      const dir = this.workspace.componentDir(component.id);
+      const componentDir = this.workspace.componentDir(component.id);
       const componentPatterns = this.devFiles.getDevPatterns(component, TesterAspect.id);
-      return componentPatterns.map((pattern: string) => ({ path: resolve(dir, pattern), relative: pattern }));
+      return {
+        componentDir,
+        paths:
+          componentPatterns.map((pattern: string) => ({
+            path: resolve(componentDir, pattern),
+            relative: pattern,
+          })) || [],
+      };
     });
+
+    let additionalHostDependencies = [];
+    if (
+      context.env.getAdditionalTestHostDependencies &&
+      typeof context.env.getAdditionalTestHostDependencies === 'function'
+    ) {
+      additionalHostDependencies = await context.env.getAdditionalTestHostDependencies();
+    }
 
     const testerContext = Object.assign(context, {
       release: false,
@@ -135,6 +146,7 @@ export class TesterService implements EnvService<Tests, TesterDescriptor> {
       watch: options.watch,
       ui: options.ui,
       coverage: options.coverage,
+      additionalHostDependencies,
     });
 
     if (options.watch && options.ui && tester.watch) {

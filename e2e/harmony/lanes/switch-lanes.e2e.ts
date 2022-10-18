@@ -20,7 +20,7 @@ describe('bit lane command', function () {
     describe('importing the lane objects and switching to that lane', () => {
       let beforeLaneSwitch;
       before(() => {
-        helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+        helper.scopeHelper.setNewLocalAndRemoteScopes();
         helper.bitJsonc.setupDefault();
         helper.fixtures.createComponentBarFoo();
         helper.fixtures.addComponentBarFooAsDir();
@@ -30,7 +30,7 @@ describe('bit lane command', function () {
         helper.command.snapAllComponents();
         helper.command.exportLane();
 
-        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.scopeHelper.reInitLocalScope();
         helper.scopeHelper.addRemoteScope();
         beforeLaneSwitch = helper.scopeHelper.cloneLocalScope();
         helper.command.switchRemoteLane('dev');
@@ -41,7 +41,7 @@ describe('bit lane command', function () {
       });
       it('.bitmap should save the remote lane', () => {
         const bitMap = helper.bitMap.read();
-        expect(bitMap[LANE_KEY]).to.deep.equal({ name: 'dev', scope: helper.scopes.remote });
+        expect(bitMap[LANE_KEY].id).to.deep.equal({ name: 'dev', scope: helper.scopes.remote });
       });
       it('bit lane should show the component in the checked out lane', () => {
         const lanes = helper.command.showOneLaneParsed('dev');
@@ -83,8 +83,8 @@ describe('bit lane command', function () {
           const status = helper.command.statusJson();
           expect(status.stagedComponents).to.have.lengthOf(1);
         });
-        it('bit status should show the staged hash', () => {
-          const status = helper.command.status();
+        it('bit status --verbose should show the staged hash', () => {
+          const status = helper.command.status('--verbose');
           const localSnap = helper.command.getHeadOfLane('dev', 'bar/foo');
           expect(status).to.have.string(localSnap);
         });
@@ -109,13 +109,12 @@ describe('bit lane command', function () {
           helper.command.switchLocalLane('main');
           helper.command.switchLocalLane('int');
         });
+        it('should switch successfully', () => {
+          helper.command.expectCurrentLaneToBe('int');
+        });
         it('should not save the local lane in bitmap', () => {
           const bitMap = helper.bitMap.read();
           expect(bitMap[LANE_KEY]).to.not.deep.equal({ name: 'int', scope: helper.scopes.remote });
-        });
-        it('should have the last exported lane in bitmap', () => {
-          const bitMap = helper.bitMap.read();
-          expect(bitMap[LANE_KEY]).to.deep.equal({ name: 'dev', scope: helper.scopes.remote });
         });
         it('should not throw an error on bit install', () => {
           expect(() => helper.command.install()).not.to.throw();
@@ -125,7 +124,7 @@ describe('bit lane command', function () {
   });
   describe('switching lanes with deleted files', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllWithoutBuild();
@@ -145,7 +144,7 @@ describe('bit lane command', function () {
     let mainScope;
     let laneScope;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
 
       mainScope = helper.scopeHelper.cloneLocalScope();
@@ -192,7 +191,7 @@ describe('bit lane command', function () {
   });
   describe('switch to main after importing a lane', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllWithoutBuild(); // main has 0.0.1
@@ -203,7 +202,7 @@ describe('bit lane command', function () {
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
 
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
       helper.bitJsonc.setupDefault();
       helper.command.importComponent('comp1');

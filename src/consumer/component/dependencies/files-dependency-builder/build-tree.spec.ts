@@ -16,7 +16,6 @@ describe('buildTree', () => {
       workspacePath: __dirname,
       filePaths,
       bindingPrefix: '@bit',
-      isLegacyProject: true,
       visited,
       resolveModulesConfig: undefined,
     };

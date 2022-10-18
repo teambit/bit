@@ -10,7 +10,6 @@ describe('scope components index mechanism', function () {
   let helper: Helper;
   before(() => {
     helper = new Helper();
-    helper.command.setFeatures('legacy-workspace-config');
   });
   after(() => {
     helper.scopeHelper.destroy();
@@ -18,8 +17,9 @@ describe('scope components index mechanism', function () {
   describe('after tagging a component', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.bitJsonc.setupDefault();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFoo();
+      helper.fixtures.addComponentBarFooAsDir();
       helper.fixtures.tagComponentBarFoo();
     });
     it('should save the component in the index.json file', () => {
@@ -35,7 +35,7 @@ describe('scope components index mechanism', function () {
     });
     describe('after exporting the component', () => {
       before(() => {
-        helper.command.exportAllComponents();
+        helper.command.export();
       });
       it('should create a new record with the new scope', () => {
         const indexJson = helper.general.getComponentsFromIndexJson();
@@ -96,7 +96,7 @@ describe('scope components index mechanism', function () {
     before(() => {
       helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFoo();
+      helper.fixtures.addComponentBarFooAsDir();
       helper.fixtures.tagComponentBarFoo();
 
       // as an intermediate step, make sure bit list shows one component
@@ -132,8 +132,8 @@ describe('scope components index mechanism', function () {
       before(() => {
         helper.scopeHelper.reInitLocalScope();
         helper.fixtures.createComponentBarFoo();
-        helper.fixtures.addComponentBarFoo();
-        helper.command.tagAllComponents();
+        helper.fixtures.addComponentBarFooAsDir();
+        helper.command.tagAllWithoutBuild();
         const indexJsonWithBarFoo = helper.general.getComponentsFromIndexJson();
         helper.command.untag('bar/foo');
         helper.general.writeIndexJson(indexJsonWithBarFoo);

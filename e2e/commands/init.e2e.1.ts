@@ -32,13 +32,13 @@ describe('run bit init', function () {
   });
   describe('automatic bit init when .bit.map.json already exists', () => {
     beforeEach(() => {
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
     });
     before(() => {
       helper.bitMap.createHarmony();
     });
     it('should not tell you there is already a scope when running "bit init"', () => {
-      const init = helper.scopeHelper.initLocalScope();
+      const init = helper.scopeHelper.initWorkspace();
       expect(init).to.have.string('successfully initialized a bit workspace.');
     });
     it('should create bitmap"', () => {
@@ -54,7 +54,7 @@ describe('run bit init', function () {
   describe('init .bit ', () => {
     describe('when .git exists and bit already initialized with .bit ', () => {
       it('should not create bit inside .git', () => {
-        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.scopeHelper.reInitLocalScope();
         helper.git.initNewGitRepo();
         helper.scopeHelper.initWorkspace();
         expect(path.join(helper.scopes.local, '.git', 'bit')).to.not.be.a.path('bit dir is missing');
@@ -68,7 +68,7 @@ describe('run bit init', function () {
       before(() => {
         helper.scopeHelper.cleanLocalScope();
         helper.git.initNewGitRepo();
-        helper.scopeHelper.initLocalScope();
+        helper.scopeHelper.initWorkspace();
         gitFolder = path.join(helper.scopes.localPath, '.git');
         // gitHooksFolder = path.join(gitFolder, 'hooks');
       });
@@ -95,14 +95,14 @@ describe('run bit init', function () {
   describe('when scope.json is missing', () => {
     let scopeJsonPath;
     before(() => {
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       scopeJsonPath = path.join(helper.scopes.localPath, '.bit/scope.json');
       fs.removeSync(scopeJsonPath);
     });
     describe('running bit init', () => {
       let output;
       before(() => {
-        output = helper.scopeHelper.initLocalScope();
+        output = helper.scopeHelper.initWorkspace();
       });
       it('should show a success message', () => {
         expect(output).to.have.string('successfully initialized');
@@ -116,7 +116,7 @@ describe('run bit init', function () {
     describe('when bitMap file is invalid', () => {
       let bitMapPath;
       before(() => {
-        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.scopeHelper.reInitLocalScope();
         const invalidBitMap = 'this is an invalid json';
         bitMapPath = path.join(helper.scopes.localPath, BIT_MAP);
         fs.outputFileSync(bitMapPath, invalidBitMap);
@@ -134,7 +134,7 @@ describe('run bit init', function () {
     });
     describe('when workspace.jsonc file is invalid', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.scopeHelper.reInitLocalScope();
         helper.bitJsonc.corrupt();
       });
       it('bit status should throw an exception InvalidBitJson', () => {
@@ -149,7 +149,7 @@ describe('run bit init', function () {
     let bitJson;
     let localConsumerFiles;
     before(() => {
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir(); // this modifies bitMap
       helper.command.tagAllWithoutBuild(); // this creates objects in .bit dir
@@ -160,7 +160,7 @@ describe('run bit init', function () {
       helper.bitJson.write(bitJson);
 
       bitMap = helper.bitMap.read();
-      localConsumerFiles = helper.fs.getConsumerFiles('*', true);
+      localConsumerFiles = helper.fs.getConsumerFiles('*', true).filter((file) => !file.includes('bitmap-history'));
       localScope = helper.scopeHelper.cloneLocalScope();
     });
     describe('bit init', () => {
@@ -178,7 +178,7 @@ describe('run bit init', function () {
         expect(currentBitJson.packageManager).to.be.equal('yarn');
       });
       it('should not change .bit directory', () => {
-        const currentFiles = helper.fs.getConsumerFiles('*', true);
+        const currentFiles = helper.fs.getConsumerFiles('*', true).filter((file) => !file.includes('bitmap-history'));
         expect(currentFiles).to.be.deep.equal(localConsumerFiles);
       });
     });
@@ -198,7 +198,7 @@ describe('run bit init', function () {
         expect(currentBitJson.packageManager).to.be.equal('yarn');
       });
       it('should not change .bit directory', () => {
-        const currentFiles = helper.fs.getConsumerFiles('*', true);
+        const currentFiles = helper.fs.getConsumerFiles('*', true).filter((file) => !file.includes('bitmap-history'));
         expect(currentFiles).to.be.deep.equal(localConsumerFiles);
       });
     });
@@ -238,7 +238,7 @@ describe('run bit init', function () {
       before(() => {
         helper.scopeHelper.cleanLocalScope();
         helper.npm.initNpm();
-        helper.scopeHelper.initLocalScope();
+        helper.scopeHelper.initWorkspace();
       });
       it('should preserve the default npm indentation of 2', () => {
         const packageJson = helper.fs.readFile('package.json');
@@ -281,7 +281,7 @@ describe('run bit init', function () {
   describe('when there is .bitmap, bit.json but not .bit dir', () => {
     describe('when .bit located directly on workspace root', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.scopeHelper.reInitLocalScope();
         helper.bitMap.createHarmony();
         helper.fs.deletePath('.bit');
       });
@@ -295,7 +295,7 @@ describe('run bit init', function () {
       before(() => {
         helper.scopeHelper.cleanLocalScope();
         helper.git.initNewGitRepo();
-        helper.scopeHelper.initLocalScope();
+        helper.scopeHelper.initWorkspace();
         helper.bitMap.createHarmony();
         helper.fs.deletePath('.git/bit');
       });
@@ -308,7 +308,7 @@ describe('run bit init', function () {
     describe('when running from an inner directory that has also .bitmap', () => {
       let innerDir;
       before(() => {
-        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.scopeHelper.reInitLocalScope();
         helper.bitMap.createHarmony();
         innerDir = path.join(helper.scopes.localPath, 'inner');
         fs.mkdirSync(innerDir);

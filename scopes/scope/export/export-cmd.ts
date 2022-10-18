@@ -1,49 +1,41 @@
 import { Command, CommandOptions } from '@teambit/cli';
-
-import { exportAction } from '@teambit/legacy/dist/api/consumer';
 import ejectTemplate from '@teambit/legacy/dist/cli/templates/eject-template';
-import { CURRENT_UPSTREAM, WILDCARD_HELP } from '@teambit/legacy/dist/constants';
-import GeneralError from '@teambit/legacy/dist/error/general-error';
+import { WILDCARD_HELP } from '@teambit/legacy/dist/constants';
 import chalk from 'chalk';
 import { isEmpty } from 'lodash';
+import { ExportMain } from './export.main.runtime';
 
 export class ExportCmd implements Command {
-  name = 'export [remote] [component-names...]';
+  name = 'export [component-patterns...]';
   description = 'export components from the workspace to remote scopes';
   arguments = [
-    { name: 'remote', description: 'LEGACY ONLY.' },
     {
-      name: 'component-names...',
+      name: 'component-patterns...',
       description:
-        'a list of component names or component IDs (separated by space). By default, all new component versions are exported.',
+        'component IDs, component names, or component patterns (separated by space). Use patterns to export groups of components using a common scope or namespace. E.g., "utils/*" (wrap with double quotes)',
     },
   ];
-  extendedDescription: string;
+  extendedDescription = `bit export => export all staged components to their current scope, if checked out to a lane, export the lane as well
+  \`bit export [id...]\` => export the given ids to their current scope
+  ${WILDCARD_HELP('export remote-scope')}`;
   alias = 'e';
+  helpUrl = 'components/exporting-components';
   options = [
     [
       'e',
       'eject',
       'replace the exported components with their corresponding packages (to use these components without further maintaining them)',
     ],
-    ['a', 'all', 'export all components, including non-staged'],
     [
-      'd',
-      'include-dependencies',
-      "LEGACY ONLY. include the component's dependencies as part of the export to the remote scope",
+      'a',
+      'all',
+      'export all components, including non-staged (useful when components in the remote scope are corrupted or missing)',
     ],
     [
-      's',
-      'set-current-scope',
-      "LEGACY ONLY. ensure the component's remote scope is set according to the target location",
+      '',
+      'all-versions',
+      'export not only staged versions but all of them (useful when versions in the remote scope are corrupted or missing)',
     ],
-    [
-      'r',
-      'rewire',
-      'LEGACY ONLY. when exporting to a different or new scope, replace import/require statements in the source code to match the new scope',
-    ],
-    ['f', 'force', 'force changing a component remote without asking for a confirmation'],
-    ['', 'all-versions', 'export not only staged versions but all of them'],
     [
       '',
       'origin-directly',
@@ -66,60 +58,35 @@ export class ExportCmd implements Command {
   group = 'collaborate';
   remoteOp = true;
 
-  constructor(docsDomain: string) {
-    this.extendedDescription = `bit export => export all staged components to their current scope, if checked out to a lane, export the lane as well
-\`bit export [id...]\` => export the given ids to their current scope
-
-https://${docsDomain}/components/exporting-components
-${WILDCARD_HELP('export remote-scope')}`;
-  }
+  constructor(private exportMain: ExportMain) {}
 
   async report(
-    [remote, ids = []]: [string, string[]],
+    [ids = []]: [string[]],
     {
       eject = false,
-      includeDependencies = false,
-      setCurrentScope = false,
       all = false,
       allVersions = false,
       originDirectly = false,
-      force = false,
-      rewire = false,
       ignoreMissingArtifacts = false,
       resume,
     }: any
   ): Promise<string> {
-    const currentScope = !remote || remote === CURRENT_UPSTREAM;
-    if (currentScope && remote) {
-      remote = '';
-    }
-    if (includeDependencies && !remote) {
-      throw new GeneralError(
-        'to use --includeDependencies, please specify a remote (the default remote gets already the dependencies)'
-      );
-    }
-    const { componentsIds, nonExistOnBitMap, missingScope, exportedLanes, ejectResults } = await exportAction({
-      ids,
-      remote,
-      eject,
-      includeDependencies,
-      setCurrentScope,
-      includeNonStaged: all || allVersions,
-      allVersions: allVersions || all,
-      originDirectly,
-      codemod: rewire,
-      force,
-      resumeExportId: resume,
-      ignoreMissingArtifacts,
-    });
+    const { componentsIds, nonExistOnBitMap, removedIds, missingScope, exportedLanes, ejectResults } =
+      await this.exportMain.export({
+        ids,
+        eject,
+        includeNonStaged: all || allVersions,
+        allVersions: allVersions || all,
+        originDirectly,
+        resumeExportId: resume,
+        ignoreMissingArtifacts,
+      });
     if (isEmpty(componentsIds) && isEmpty(nonExistOnBitMap) && isEmpty(missingScope)) {
       return chalk.yellow('nothing to export');
     }
     const exportOutput = () => {
       if (isEmpty(componentsIds)) return '';
       const lanesOutput = exportedLanes.length ? ` from lane ${chalk.bold(exportedLanes[0].name)}` : '';
-      if (remote)
-        return chalk.green(`exported ${componentsIds.length} components${lanesOutput} to scope ${chalk.bold(remote)}`);
       return chalk.green(
         `exported the following ${componentsIds.length} component(s)${lanesOutput}:\n${chalk.bold(
           componentsIds.join('\n')
@@ -128,11 +95,17 @@ ${WILDCARD_HELP('export remote-scope')}`;
     };
     const nonExistOnBitMapOutput = () => {
       // if includeDependencies is true, the nonExistOnBitMap might be the dependencies
-      if (isEmpty(nonExistOnBitMap) || includeDependencies) return '';
+      if (isEmpty(nonExistOnBitMap)) return '';
       const idsStr = nonExistOnBitMap.map((id) => id.toString()).join(', ');
       return chalk.yellow(
         `${idsStr}\nexported successfully. bit did not update the workspace as the component files are not tracked. this might happen when a component was tracked in a different git branch. to fix it check if they where tracked in a different git branch, checkout to that branch and resync by running 'bit import'. or stay on your branch and track the components again using 'bit add'.\n`
       );
+    };
+    const removedOutput = () => {
+      if (!removedIds.length) return '';
+      const title = chalk.bold(`\n\nthe following component(s) have been marked as removed on the remote\n`);
+      const idsStr = removedIds.join('\n');
+      return title + idsStr;
     };
     const missingScopeOutput = () => {
       if (isEmpty(missingScope)) return '';
@@ -149,44 +122,26 @@ ${WILDCARD_HELP('export remote-scope')}`;
       return `\n${output}`;
     };
 
-    return nonExistOnBitMapOutput() + missingScopeOutput() + exportOutput() + ejectOutput();
+    return nonExistOnBitMapOutput() + missingScopeOutput() + exportOutput() + ejectOutput() + removedOutput();
   }
 
   async json(
-    [remote, ids = []]: [string, string[]],
+    [ids = []]: [string[]],
     {
       eject = false,
-      includeDependencies = false,
-      setCurrentScope = false,
       all = false,
       allVersions = false,
       originDirectly = false,
-      force = false,
-      rewire = false,
       ignoreMissingArtifacts = false,
       resume,
     }: any
   ) {
-    const currentScope = !remote || remote === CURRENT_UPSTREAM;
-    if (currentScope && remote) {
-      remote = '';
-    }
-    if (includeDependencies && !remote) {
-      throw new GeneralError(
-        'to use --includeDependencies, please specify a remote (the default remote gets already the dependencies)'
-      );
-    }
-    const results = await exportAction({
+    const results = await this.exportMain.export({
       ids,
-      remote,
       eject,
-      includeDependencies,
-      setCurrentScope,
       includeNonStaged: all || allVersions,
       allVersions: allVersions || all,
       originDirectly,
-      codemod: rewire,
-      force,
       resumeExportId: resume,
       ignoreMissingArtifacts,
     });

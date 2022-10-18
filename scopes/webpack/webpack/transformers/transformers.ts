@@ -7,6 +7,7 @@ import { getExternals } from './get-externals';
 
 export function generateAddAliasesFromPeersTransformer(peers: string[], logger: Logger) {
   return (config: WebpackConfigMutator, context: WebpackConfigTransformContext): WebpackConfigMutator => {
+    const hostRootDir = context.target?.hostRootDir || context.hostRootDir;
     const peerAliases = peers.reduce((acc, peerName) => {
       // gets the correct module folder of the package.
       // this allows us to resolve internal files, for example:
@@ -16,7 +17,14 @@ export function generateAddAliasesFromPeersTransformer(peers: string[], logger: 
       // for example, if we used "react-dom": require.resolve("react-dom"),
       // it would try to resolve "react-dom/test-utils" as:
       // node_modules/react-dom/index.js/test-utils
-      acc[peerName] = resolvePeerToDirOrFile(peerName, logger, context.target?.hostRootDir);
+      const resolved = resolvePeerToDirOrFile(peerName, logger, hostRootDir);
+      // Sometime there are packages that only hold icons for example, so there is no main property in their package.json
+      // so they can't be resolved.
+      // in such cases do not add them to the aliases.
+      // We already log that cases in the resolvePeerToDirOrFile function.
+      if (resolved) {
+        acc[peerName] = resolved;
+      }
       return acc;
     }, {});
 
@@ -25,6 +33,7 @@ export function generateAddAliasesFromPeersTransformer(peers: string[], logger: 
   };
 }
 
+// [dead code] - no longer used
 /**
  * Generate a transformer that expose all the peers as global via the expose loader
  * @param peers
@@ -32,7 +41,8 @@ export function generateAddAliasesFromPeersTransformer(peers: string[], logger: 
  */
 export function generateExposePeersTransformer(peers: string[], logger: Logger) {
   return (config: WebpackConfigMutator, context: WebpackConfigTransformContext): WebpackConfigMutator => {
-    const exposedRules = getExposedRules(peers, logger, context.target?.hostRootDir);
+    const hostRootDir = context.target?.hostRootDir || context.hostRootDir;
+    const exposedRules = getExposedRules(peers, logger, hostRootDir);
     config.addModuleRules(exposedRules);
     return config;
   };

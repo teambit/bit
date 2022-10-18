@@ -10,7 +10,6 @@ import { Slot } from '@teambit/harmony';
 import { IsolatorAspect } from '@teambit/isolator';
 import { LoggerAspect } from '@teambit/logger';
 import { ScopeAspect } from '@teambit/scope';
-import CommunityAspect from '@teambit/community';
 import { UIAspect } from '@teambit/ui';
 import { VariantsAspect } from '@teambit/variants';
 
@@ -36,7 +35,6 @@ export const WorkspaceMain = {
     BundlerAspect,
     AspectLoaderAspect,
     EnvsAspect,
-    CommunityAspect,
   ],
   slots: [
     Slot.withType<OnComponentLoad>(),
@@ -50,3 +48,5 @@ export const WorkspaceMain = {
 };
 
 WorkspaceAspect.addRuntime(WorkspaceMain);
+
+export default WorkspaceMain;

@@ -19,7 +19,7 @@ describe('components that are not synced between the scope and the consumer', fu
   describe('consumer with a new component and scope with the same component as staged', () => {
     let scopeOutOfSync;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
@@ -54,7 +54,7 @@ describe('components that are not synced between the scope and the consumer', fu
         output = helper.command.exportIds('bar/foo');
       });
       it('should export the component successfully', () => {
-        expect(output).to.have.string('exported 1 components');
+        expect(output).to.have.string('exported the following 1 component(s)');
       });
     });
     describe('bit export all', () => {
@@ -72,7 +72,7 @@ describe('components that are not synced between the scope and the consumer', fu
   describe('consumer with a tagged component and scope with the same component as exported', () => {
     let scopeOutOfSync;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
@@ -104,7 +104,7 @@ describe('components that are not synced between the scope and the consumer', fu
   describe('consumer with no components and scope with staged components', () => {
     let scopeOutOfSync;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
@@ -165,7 +165,7 @@ describe('components that are not synced between the scope and the consumer', fu
   describe('consumer with no components and scope with exported components', () => {
     let scopeOutOfSync;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
@@ -190,7 +190,7 @@ describe('components that are not synced between the scope and the consumer', fu
   describe('consumer has exported components and scope is empty', () => {
     let scopeOutOfSync;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
@@ -219,14 +219,14 @@ describe('components that are not synced between the scope and the consumer', fu
   describe('consumer has tagged component with a version that not exist in the scope', () => {
     let scopeOutOfSync;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
       helper.fixtures.tagComponentBarFoo();
       helper.command.tagIncludeUnmodified('2.0.0');
       const bitMap = helper.bitMap.read();
-      helper.command.untag('bar/foo@2.0.0');
+      helper.command.untag('bar/foo', true);
       helper.bitMap.write(bitMap);
       scopeOutOfSync = helper.scopeHelper.cloneLocalScope();
     });
@@ -253,7 +253,7 @@ describe('components that are not synced between the scope and the consumer', fu
     describe('when the remote component has this missing version', () => {
       let scopeAfterV1;
       before(() => {
-        helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+        helper.scopeHelper.setNewLocalAndRemoteScopes();
         helper.bitJsonc.setupDefault();
         helper.fixtures.createComponentBarFoo();
         helper.fixtures.addComponentBarFooAsDir();
@@ -272,27 +272,24 @@ describe('components that are not synced between the scope and the consumer', fu
           helper.general.expectToThrow(() => helper.command.status(), err);
         });
       });
-      // @TODO: FIX ON HARMONY!
-      describe.skip('bit show', () => {
+      describe('bit show', () => {
         it('should throw an error suggesting to import the components', () => {
           const err = new ComponentsPendingImport();
           helper.general.expectToThrow(() => helper.command.showComponent('bar/foo'), err);
         });
       });
-      // @TODO: FIX ON HARMONY!
-      describe.skip('bit tag', () => {
+      describe('bit tag', () => {
         it('should throw an error suggesting to import the components', () => {
           const err = new ComponentsPendingImport();
           helper.general.expectToThrow(() => helper.command.tagAllWithoutBuild(), err);
         });
       });
     });
-    // @TODO: FIX ON HARMONY!
-    describe.skip('when the remote component does not exist or does not have this missing version', () => {
+    describe('when the remote component does not exist or does not have this missing version', () => {
       let scopeAfterV1;
       let scopeOutOfSync;
       before(() => {
-        helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+        helper.scopeHelper.setNewLocalAndRemoteScopes();
         helper.bitJsonc.setupDefault();
         helper.fixtures.createComponentBarFoo();
         helper.fixtures.addComponentBarFooAsDir();
@@ -313,9 +310,7 @@ describe('components that are not synced between the scope and the consumer', fu
         });
         it('should sync .bitmap according to the latest version of the scope', () => {
           helper.command.expectStatusToBeClean();
-          const bitMap = helper.bitMap.read();
-          const newId = `${helper.scopes.remote}/bar/foo@0.0.1`;
-          expect(bitMap).to.have.property(newId);
+          helper.bitMap.expectToHaveIdHarmony('bar/foo', '0.0.1', helper.scopes.remote);
         });
       });
       describe('bit tag', () => {

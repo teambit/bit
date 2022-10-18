@@ -7,23 +7,18 @@ import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
 import { LegacyComponentLog } from '@teambit/legacy-component-log';
 import { BitId } from '../../bit-id';
 import {
-  COMPILER_ENV_TYPE,
   DEFAULT_BINDINGS_PREFIX,
   DEFAULT_BIT_RELEASE_TYPE,
   DEFAULT_BIT_VERSION,
   DEFAULT_LANGUAGE,
   Extensions,
-  TESTER_ENV_TYPE,
 } from '../../constants';
 import ConsumerComponent from '../../consumer/component';
-import { ManipulateDirItem } from '../../consumer/component-ops/manipulate-dir';
-import { Dist, License, SourceFile } from '../../consumer/component/sources';
+import { License, SourceFile } from '../../consumer/component/sources';
 import ComponentOverrides from '../../consumer/config/component-overrides';
-import SpecsResults from '../../consumer/specs-results';
 import GeneralError from '../../error/general-error';
 import ShowDoctorError from '../../error/show-doctor-error';
 import ValidationError from '../../error/validation-error';
-import { makeEnvFromModel } from '../../legacy-extensions/env-factory';
 import logger from '../../logger/logger';
 import { empty, filterObject, forEach, getStringifyArgs, mapObject, sha1 } from '../../utils';
 import findDuplications from '../../utils/array/find-duplications';
@@ -32,7 +27,7 @@ import { DivergeData } from '../component-ops/diverge-data';
 import { getDivergeData } from '../component-ops/get-diverge-data';
 import { getAllVersionHashes, getAllVersionsInfo } from '../component-ops/traverse-versions';
 import ComponentVersion from '../component-version';
-import { VersionAlreadyExists, VersionNotFound } from '../exceptions';
+import { VersionAlreadyExists, VersionNotFound, VersionNotFoundOnFS } from '../exceptions';
 import { BitObject, Ref } from '../objects';
 import Repository from '../objects/repository';
 import { Lane } from '.';
@@ -43,6 +38,7 @@ import { getLatestVersion } from '../../utils/semver-helper';
 import { ObjectItem } from '../objects/object-list';
 import { getRefsFromExtensions } from '../../consumer/component/sources/artifact-files';
 import { SchemaName } from '../../consumer/component/component-schema';
+import { NoHeadNoVersion } from '../exceptions/no-head-no-version';
 
 type State = {
   versions?: {
@@ -105,11 +101,15 @@ export default class Component extends BitObject {
   remoteHead?: Ref | null; // doesn't get saved in the scope, used to easier access the remote main head
   /**
    * doesn't get saved in the scope, used to easier access the local snap head data
-   * when checked out to a lane, this prop is either Ref or null. otherwise (when on main), this
-   * prop is undefined.
+   * when checked out to a lane, this prop is either Ref or null. otherwise (when on main), this prop is undefined.
    */
   laneHeadLocal?: Ref | null;
-  laneHeadRemote?: Ref | null; // doesn't get saved in the scope, used to easier access the remote snap head data
+  /**
+   * doesn't get saved in the scope, used to easier access the remote snap head data
+   * when checked out to a lane, this prop is either Ref or null. otherwise (when on main), this prop is undefined.
+   */
+  laneHeadRemote?: Ref | null;
+  laneId?: LaneId; // doesn't get saved in the scope.
   laneDataIsPopulated = false; // doesn't get saved in the scope, used to improve performance of loading the lane data
   schema: string | undefined;
   private divergeData?: DivergeData;
@@ -209,7 +209,7 @@ export default class Component extends BitObject {
     if (isTag(version)) {
       return includeOrphaned ? this.hasTagIncludeOrphaned(version) : this.hasTag(version);
     }
-    const allHashes = await getAllVersionHashes(this, repo, false);
+    const allHashes = await getAllVersionHashes({ modelComponent: this, repo, throws: false });
     return allHashes.some((hash) => hash.toString() === version);
   }
 
@@ -249,23 +249,44 @@ export default class Component extends BitObject {
     }
   }
 
+  /**
+   * on main - it checks local-head vs remote-head.
+   * on lane - it checks local-head on lane vs remote-head on lane.
+   * however, to get an accurate `divergeData.snapsOnLocalOnly`, the above is not enough.
+   * for example, comp-a@snap-x from lane-a is merged into lane-b. we don't want this snap-x to be "local", because
+   * then, bit-status will show it as "staged" and bit-reset will remove it unexpectedly.
+   * if we only check by the local-head and remote-head on lane, it'll be local because the remote-head of lane-b is empty.
+   * to address this, we search all remote-refs files for this bit-id and during the local history traversal, if a hash
+   * is found there, it'll stop the traversal and not mark it as remote.
+   * in this example, during the merge, lane-a was fetched, and the remote-ref of this lane has snap-x as the head.
+   */
   async setDivergeData(repo: Repository, throws = true, fromCache = true): Promise<void> {
     if (!this.divergeData || !fromCache) {
-      const remoteHead = this.laneHeadRemote || this.remoteHead || null;
-      this.divergeData = await getDivergeData(repo, this, remoteHead, undefined, throws);
+      const remoteHead = (this.laneId ? this.laneHeadRemote : this.remoteHead) || null;
+      let otherRemoteHeads: Ref[] | undefined;
+      if (this.laneId) {
+        otherRemoteHeads = await repo.remoteLanes.getRefsFromAllLanes(this.toBitId());
+        if (this.remoteHead) otherRemoteHeads.push(this.remoteHead);
+      }
+      this.divergeData = await getDivergeData({ repo, modelComponent: this, remoteHead, throws, otherRemoteHeads });
     }
   }
 
   getDivergeData(): DivergeData {
     if (!this.divergeData)
-      throw new Error(`getDivergeData() expects divergeData to be populate, please use this.setDivergeData()`);
+      throw new Error(
+        `getDivergeData() expects divergeData to be populate, please use this.setDivergeData() for id: ${this.id()}`
+      );
     return this.divergeData;
   }
 
   async populateLocalAndRemoteHeads(repo: Repository, lane: Lane | null) {
     this.setLaneHeadLocal(lane);
+    if (lane) this.laneId = lane.toLaneId();
     if (this.scope) {
       if (lane) {
+        // const remoteToCheck = lane.isNew && lane.forkedFrom ? lane.forkedFrom : lane.toLaneId();
+        // this.laneHeadRemote = await repo.remoteLanes.getRef(remoteToCheck, this.toBitId());
         this.laneHeadRemote = await repo.remoteLanes.getRef(lane.toLaneId(), this.toBitId());
       }
       // we need also the remote head of main, otherwise, the diverge-data assumes all versions are local
@@ -399,10 +420,13 @@ export default class Component extends BitObject {
     return versionStr || VERSION_ZERO;
   }
 
+  /**
+   * get component log and sort by the timestamp in ascending order (from the earliest to the latest)
+   */
   async collectLogs(repo: Repository, shortHash = false, startFrom?: Ref): Promise<ComponentLog[]> {
     const versionsInfo = await getAllVersionsInfo({ modelComponent: this, repo, throws: false, startFrom });
     const getRef = (ref: Ref) => (shortHash ? ref.toShortString() : ref.toString());
-    return versionsInfo.map((versionInfo) => {
+    const results = versionsInfo.map((versionInfo) => {
       const log = versionInfo.version ? versionInfo.version.log : { message: '<no-data-available>' };
       return {
         ...log, // @ts-ignore
@@ -415,6 +439,13 @@ export default class Component extends BitObject {
         onLane: versionInfo.onLane,
       };
     });
+    // sort from earliest to latest
+    const sorted = results.sort((a: ComponentLog, b: ComponentLog) => {
+      // @ts-ignore
+      if (a.date && b.date) return a.date - b.date;
+      return 0;
+    });
+    return sorted;
   }
 
   collectVersions(repo: Repository): Promise<ConsumerComponent[]> {
@@ -561,6 +592,10 @@ export default class Component extends BitObject {
     return new BitId({ scope: this.scope, name: this.name, version: this.latest() });
   }
 
+  toBitIdWithHead(): BitId {
+    return new BitId({ scope: this.scope, name: this.name, version: this.head?.toString() });
+  }
+
   toBitIdWithLatestVersionAllowNull(): BitId {
     const id = this.toBitIdWithLatestVersion();
     return id.version === VERSION_ZERO ? id.changeVersion(undefined) : id;
@@ -598,11 +633,16 @@ export default class Component extends BitObject {
     return componentObject;
   }
 
-  async loadVersion(versionStr: string, repository: Repository, throws = true): Promise<Version> {
+  async loadVersion(
+    versionStr: string,
+    repository: Repository,
+    throws = true,
+    preferInMemoryObjects = false
+  ): Promise<Version> {
     const versionRef = this.getRef(versionStr);
     if (!versionRef) throw new VersionNotFound(versionStr, this.id());
-    const version = await versionRef.load(repository);
-    if (!version && throws) throw new VersionNotFound(versionStr, this.id(), true);
+    const version = await repository.load(versionRef, false, preferInMemoryObjects);
+    if (!version && throws) throw new VersionNotFoundOnFS(versionStr, this.id());
     return version as Version;
   }
 
@@ -621,7 +661,7 @@ export default class Component extends BitObject {
     const refsWithoutArtifacts: Ref[] = [];
     const artifactsRefs: Ref[] = [];
     const artifactsRefsFromExportedVersions: Ref[] = [];
-    const locallyChangedVersions = this.getLocalTagsOrHashes();
+    const locallyChangedVersions = await this.getLocalTagsOrHashes(repo);
     const locallyChangedHashes = locallyChangedVersions.map((v) =>
       isTag(v) ? this.versionsIncludeOrphaned[v].hash : v
     );
@@ -702,10 +742,7 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
     const versionNum = versionParsed.latest ? this.latest() : versionParsed.resolve(this.listVersionsIncludeOrphaned());
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     if (versionNum === VERSION_ZERO) {
-      throw new Error(`the component ${this.id()} has no versions and the head is empty.
-this is probably a component from another lane which should not be loaded in this lane (or main).
-if this component is on a lane, make sure to ask for it with a version.
-if that's not the case, make sure to call "getAllIdsAvailableOnLane" and not "getAllBitIdsFromAllLanes"`);
+      throw new NoHeadNoVersion(this.id());
     }
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     if (isTag(versionNum) && !this.hasTagIncludeOrphaned(versionNum!)) {
@@ -742,6 +779,20 @@ if that's not the case, make sure to call "getAllIdsAvailableOnLane" and not "ge
     return deprecationAspect.config.deprecate;
   }
 
+  async isRemoved(repo: Repository): Promise<boolean> {
+    const head = this.getHeadRegardlessOfLane();
+    if (!head) {
+      // it's new or only on lane
+      return false;
+    }
+    const version = (await repo.load(head)) as Version;
+    if (!version) {
+      // the head Version doesn't exist locally, there is no way to know whether it's removed
+      return false;
+    }
+    return version.isRemoved();
+  }
+
   async isLaneReadmeOf(repo: Repository): Promise<string[]> {
     const head = this.getHeadRegardlessOfLane();
     if (!head) {
@@ -767,13 +818,8 @@ if that's not the case, make sure to call "getAllIdsAvailableOnLane" and not "ge
    *
    * @see sources.consumerComponentToVersion() for the opposite action.
    */
-  async toConsumerComponent(
-    versionStr: string,
-    scopeName: string,
-    repository: Repository,
-    manipulateDirData?: ManipulateDirItem[] | null
-  ): Promise<ConsumerComponent> {
-    logger.debug(`model-component, converting ${this.id()}, version: ${versionStr} to ConsumerComponent`);
+  async toConsumerComponent(versionStr: string, scopeName: string, repository: Repository): Promise<ConsumerComponent> {
+    logger.trace(`model-component, converting ${this.id()}, version: ${versionStr} to ConsumerComponent`);
     const componentVersion = this.toComponentVersion(versionStr);
     const version: Version = await componentVersion.getVersion(repository);
     const loadFileInstance = (ClassName) => async (file) => {
@@ -786,25 +832,13 @@ if that's not the case, make sure to call "getAllIdsAvailableOnLane" and not "ge
       return new ClassName({ base: '.', path: file.relativePath, contents: content.contents, test: file.test });
     };
     const filesP = version.files ? Promise.all(version.files.map(loadFileInstance(SourceFile))) : null;
-    const distsP = version.dists ? Promise.all(version.dists.map(loadFileInstance(Dist))) : null;
     // @todo: this is weird. why the scopeMeta would be taken from the current scope and not he component scope?
     const scopeMetaP = scopeName ? ScopeMeta.fromScopeName(scopeName).load(repository) : Promise.resolve();
     const log = version.log || null;
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const compilerP = makeEnvFromModel(COMPILER_ENV_TYPE, version.compiler, repository);
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const testerP = makeEnvFromModel(TESTER_ENV_TYPE, version.tester, repository);
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const [files, dists, scopeMeta, compiler, tester] = await Promise.all([
-      filesP,
-      distsP,
-      scopeMetaP,
-      compilerP,
-      testerP,
-    ]);
+    // @ts-ignore
+    const [files, scopeMeta] = await Promise.all([filesP, scopeMetaP]);
 
     const extensions = version.extensions.clone();
-
     const bindingPrefix = this.bindingPrefix === 'bit' ? '@bit' : this.bindingPrefix;
     // when generating a new ConsumerComponent out of Version, it is critical to make sure that
     // all objects are cloned and not copied by reference. Otherwise, every time the
@@ -820,42 +854,27 @@ if that's not the case, make sure to call "getAllIdsAvailableOnLane" and not "ge
       bindingPrefix,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       mainFile: version.mainFile || null,
-      // @ts-ignore
-      compiler,
-      // @ts-ignore
-      tester,
       dependencies: version.dependencies.getClone(),
       devDependencies: version.devDependencies.getClone(),
       flattenedDependencies: version.flattenedDependencies.clone(),
       packageDependencies: clone(version.packageDependencies),
       devPackageDependencies: clone(version.devPackageDependencies),
       peerPackageDependencies: clone(version.peerPackageDependencies),
-      compilerPackageDependencies: clone(version.compilerPackageDependencies),
-      testerPackageDependencies: clone(version.testerPackageDependencies),
       // @ts-ignore
       files,
-      // @ts-ignore
-      dists,
-      mainDistFile: version.mainDistFile,
       docs: version.docs,
       // @ts-ignore
       license: scopeMeta ? License.deserialize(scopeMeta.license) : undefined, // todo: make sure we have license in case of local scope
-      // @ts-ignore
-      specsResults: version.specsResults ? version.specsResults.map((res) => SpecsResults.deserialize(res)) : null,
       log,
-      customResolvedPaths: clone(version.customResolvedPaths),
       overrides: ComponentOverrides.loadFromScope(version.overrides),
       packageJsonChangedProps: clone(version.packageJsonChangedProps),
       deprecated: this.deprecated,
+      removed: version.isRemoved(),
       scopesList: clone(this.scopesList),
       schema: version.schema,
       extensions,
       buildStatus: version.buildStatus,
     });
-    if (manipulateDirData) {
-      consumerComponent.stripOriginallySharedDir(manipulateDirData);
-      consumerComponent.addWrapperDir(manipulateDirData);
-    }
 
     return consumerComponent;
   }
@@ -922,18 +941,24 @@ if that's not the case, make sure to call "getAllIdsAvailableOnLane" and not "ge
     return localVersions.includes(tag);
   }
 
-  hasLocalVersion(version: string): boolean {
-    const localVersions = this.getLocalTagsOrHashes();
+  async hasLocalVersion(repo: Repository, version: string): Promise<boolean> {
+    const localVersions = await this.getLocalTagsOrHashes(repo);
     return localVersions.includes(version);
   }
 
-  getLocalTagsOrHashes(): string[] {
-    const localVersions = this.getLocalVersions();
-    if (!this.divergeData) return localVersions;
+  async getLocalTagsOrHashes(repo: Repository): Promise<string[]> {
+    await this.setDivergeData(repo);
     const divergeData = this.getDivergeData();
     const localHashes = divergeData.snapsOnLocalOnly;
-    if (!localHashes.length) return localVersions;
+    if (!localHashes.length) return [];
     return this.switchHashesWithTagsIfExist(localHashes).reverse(); // reverse to get the older first
+  }
+
+  getLocalHashes(): Ref[] {
+    const divergeData = this.getDivergeData();
+    const localHashes = divergeData.snapsOnLocalOnly;
+    if (!localHashes.length) return [];
+    return localHashes.reverse(); // reverse to get the older first
   }
 
   /**
@@ -947,30 +972,11 @@ if that's not the case, make sure to call "getAllIdsAvailableOnLane" and not "ge
   /**
    * whether the component was locally changed, either by adding a new snap/tag or by merging
    * components from different lanes.
-   * if no lanes provided, make sure to run `this.setDivergeData` before calling this method.
-   * (it'll throw otherwise).
    */
-  async isLocallyChanged(lane?: Lane | null, repo?: Repository): Promise<boolean> {
-    if (lane) {
-      if (!repo) throw new Error('isLocallyChanged expects to get repo when lane was provided');
-      await this.populateLocalAndRemoteHeads(repo, lane);
-      await this.setDivergeData(repo);
-      return this.getDivergeData().isLocalAhead();
-    }
-    // when on main, no need to traverse the parents because local snaps/tags are saved in the
-    // component object and retrieved by `this.getLocalVersions()`.
-    if (this.local) return true; // backward compatibility for components created before 0.12.6
-    if (!this.divergeData) {
-      throw new Error(
-        'isLocallyChanged - this.divergeData is missing, please run this.setDivergeData() before calling this method'
-      );
-    }
-    const localVersions = this.getLocalTagsOrHashes();
-    if (localVersions.length) return true;
-    // @todo: why this is needed? on main, the localVersion must be populated if changed locally
-    // regardless the laneHeadLocal/laneHeadRemote.
-    if (this.laneHeadLocal && !this.laneHeadRemote) return true;
-    return false;
+  async isLocallyChanged(repo: Repository, lane?: Lane | null): Promise<boolean> {
+    if (lane) await this.populateLocalAndRemoteHeads(repo, lane);
+    await this.setDivergeData(repo);
+    return this.getDivergeData().isLocalAhead();
   }
 
   static parse(contents: string): Component {

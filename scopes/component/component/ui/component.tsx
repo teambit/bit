@@ -2,13 +2,14 @@ import React, { useEffect, ReactNode, useMemo } from 'react';
 import flatten from 'lodash.flatten';
 import { RouteSlot, SlotRouter } from '@teambit/ui-foundation.ui.react-router.slot-router';
 import { SlotRegistry } from '@teambit/harmony';
-import { useLanesContext } from '@teambit/lanes.ui.lanes';
-
+import { isFunction } from 'lodash';
 import styles from './component.module.scss';
 import { ComponentProvider, ComponentDescriptorProvider } from './context';
-import { useComponent } from './use-component';
+import { useComponent as useComponentQuery, UseComponentType } from './use-component';
 import { ComponentModel } from './component-model';
 import { useIdFromLocation } from './use-component-from-location';
+import { ComponentID } from '..';
+import { Filters } from './use-component-query';
 
 export type ComponentPageSlot = SlotRegistry<ComponentPageElement[]>;
 export type ComponentPageElement = {
@@ -21,22 +22,42 @@ export type ComponentProps = {
   routeSlot: RouteSlot;
   host: string;
   onComponentChange?: (activeComponent?: ComponentModel) => void;
+  useComponent?: UseComponentType;
+  useComponentFilters?: () => Filters;
+  path?: string;
+  componentIdStr?: string | (() => string | undefined);
 };
+
+function getComponentIdStr(componentIdStr?: string | (() => string | undefined)): string | undefined {
+  if (isFunction(componentIdStr)) return componentIdStr();
+  return componentIdStr;
+}
 
 /**
  * main UI component of the Component extension.
  */
-export function Component({ routeSlot, containerSlot, host, onComponentChange }: ComponentProps) {
-  const componentId = useIdFromLocation();
-  const lanesContext = useLanesContext();
-  const laneComponent = componentId ? lanesContext?.resolveComponent(componentId) : undefined;
-  const useComponentOptions = laneComponent && {
-    logFilters: { log: { logHead: laneComponent.version } },
+export function Component({
+  routeSlot,
+  containerSlot,
+  host,
+  onComponentChange,
+  componentIdStr,
+  useComponent,
+  path,
+  useComponentFilters,
+}: ComponentProps) {
+  const idFromLocation = useIdFromLocation();
+  const _componentIdStr = getComponentIdStr(componentIdStr);
+  const componentId = _componentIdStr ? ComponentID.fromString(_componentIdStr) : undefined;
+  const resolvedComponentIdStr = path || idFromLocation;
+  const useComponentOptions = {
+    logFilters: useComponentFilters?.(),
+    customUseComponent: useComponent,
   };
 
-  const { component, componentDescriptor, error } = useComponent(
+  const { component, componentDescriptor, error } = useComponentQuery(
     host,
-    laneComponent?.id.toString() || componentId,
+    componentId?.toString() || idFromLocation,
     useComponentOptions
   );
   // trigger onComponentChange when component changes
@@ -56,7 +77,7 @@ export function Component({ routeSlot, containerSlot, host, onComponentChange }:
       <ComponentProvider component={component}>
         {before}
         <div className={styles.container}>
-          {routeSlot && <SlotRouter parentPath={`${componentId}/*`} slot={routeSlot} />}
+          {routeSlot && <SlotRouter parentPath={`${resolvedComponentIdStr}/*`} slot={routeSlot} />}
         </div>
         {after}
       </ComponentProvider>

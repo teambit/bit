@@ -1,7 +1,8 @@
 import mapSeries from 'p-map-series';
 import { MainRuntime } from '@teambit/cli';
-import ComponentAspect, { Component, ComponentMap, ComponentMain } from '@teambit/component';
+import ComponentAspect, { Component, ComponentMap, ComponentMain, IComponent } from '@teambit/component';
 import type { ConfigMain } from '@teambit/config';
+import { join } from 'path';
 import { get, pick, uniq } from 'lodash';
 import { ConfigAspect } from '@teambit/config';
 import { DependenciesEnv, EnvsAspect, EnvsMain } from '@teambit/envs';
@@ -14,21 +15,16 @@ import { CFG_PACKAGE_MANAGER_CACHE, CFG_USER_TOKEN_KEY } from '@teambit/legacy/d
 // TODO: it's weird we take it from here.. think about it../workspace/utils
 import { DependencyResolver } from '@teambit/legacy/dist/consumer/component/dependencies/dependency-resolver';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
+import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 import { DetectorHook } from '@teambit/legacy/dist/consumer/component/dependencies/files-dependency-builder/detector-hook';
 import { Http, ProxyConfig, NetworkConfig } from '@teambit/legacy/dist/scope/network/http';
-import {
-  registerUpdateDependenciesOnTag,
-  onTagIdTransformer,
-} from '@teambit/legacy/dist/scope/component-ops/tag-model-component';
-import {
-  registerUpdateDependenciesOnExport,
-  OnExportIdTransformer,
-} from '@teambit/legacy/dist/scope/component-ops/export-scope-components';
+import { onTagIdTransformer } from '@teambit/snapping';
 import { Version as VersionModel } from '@teambit/legacy/dist/scope/models';
 import LegacyComponent from '@teambit/legacy/dist/consumer/component';
 import fs from 'fs-extra';
 import { BitId } from '@teambit/legacy-bit-id';
 import { readCAFileSync } from '@pnpm/network.ca-file';
+import { PeerDependencyRules } from '@pnpm/types';
 import semver, { SemVer } from 'semver';
 import AspectLoaderAspect, { AspectLoaderMain } from '@teambit/aspect-loader';
 import GlobalConfigAspect, { GlobalConfigMain } from '@teambit/global-config';
@@ -39,7 +35,7 @@ import { DependencyInstaller, PreInstallSubscriberList, PostInstallSubscriberLis
 import { DependencyResolverAspect } from './dependency-resolver.aspect';
 import { DependencyVersionResolver } from './dependency-version-resolver';
 import { DependencyLinker, LinkingOptions } from './dependency-linker';
-import { getAllPolicyPkgs, OutdatedPkg } from './get-all-policy-pkgs';
+import { ComponentModelVersion, getAllPolicyPkgs, OutdatedPkg } from './get-all-policy-pkgs';
 import { InvalidVersionWithPrefix, PackageManagerNotFound } from './exceptions';
 import {
   CreateFromComponentsOptions,
@@ -228,6 +224,12 @@ export interface DependencyResolverWorkspaceConfig {
   sideEffectsCache?: boolean;
 
   /*
+   * The list of components that should be installed in isolation from the workspace.
+   * The component's package names should be used in this list, not their component IDs.
+   */
+  rootComponents?: boolean;
+
+  /*
    * The node version to use when checking a package's engines setting.
    */
   nodeVersion?: string;
@@ -236,6 +238,17 @@ export interface DependencyResolverWorkspaceConfig {
    * Refuse to install any package that claims to not be compatible with the current Node.js version.
    */
   engineStrict?: boolean;
+
+  /*
+   * Rules to mute specific peer dependeny warnings.
+   */
+  peerDependencyRules?: PeerDependencyRules;
+
+  /*
+   * This setting is "true" by default and tells bit to link core aspects to the node_modules of the workspace.
+   * It only makes sense to set this to "false" in a workspace in which core aspects are actually developed.
+   */
+  linkCoreAspects?: boolean;
 }
 
 export interface DependencyResolverVariantConfig {
@@ -265,6 +278,8 @@ export type GetLinkerOptions = {
 export type GetVersionResolverOptions = {
   cacheRootDirectory?: string;
 };
+
+type OnExportIdTransformer = (id: BitId) => BitId;
 
 const defaultLinkingOptions: LinkingOptions = {
   legacyLink: true,
@@ -320,6 +335,14 @@ export class DependencyResolverMain {
 
     private postInstallSlot: PostInstallSlot
   ) {}
+
+  hasRootComponents(): boolean {
+    return Boolean(this.config.rootComponents);
+  }
+
+  linkCoreAspects(): boolean {
+    return this.config.linkCoreAspects ?? DependencyResolverMain.defaultConfig.linkCoreAspects;
+  }
 
   /**
    * register a new package manager to the dependency resolver.
@@ -399,8 +422,8 @@ export class DependencyResolverMain {
    * Main function to get the dependency list of a given component
    * @param component
    */
-  async getDependencies(component: Component): Promise<DependencyList> {
-    const entry = component.state.aspects.get(DependencyResolverAspect.id);
+  async getDependencies(component: IComponent): Promise<DependencyList> {
+    const entry = component.get(DependencyResolverAspect.id);
     if (!entry) {
       return DependencyList.fromArray([]);
     }
@@ -476,8 +499,11 @@ export class DependencyResolverMain {
     options: CreateFromComponentsOptions = defaultCreateFromComponentsOptions
   ): Promise<WorkspaceManifest> {
     this.logger.setStatusLine('deduping dependencies for installation');
-    const concreteOpts = { ...defaultCreateFromComponentsOptions, ...options };
-    const workspaceManifestFactory = new WorkspaceManifestFactory(this);
+    const concreteOpts = {
+      ...defaultCreateFromComponentsOptions,
+      ...options,
+    };
+    const workspaceManifestFactory = new WorkspaceManifestFactory(this, this.aspectLoader);
     const res = await workspaceManifestFactory.createFromComponents(
       name,
       version,
@@ -488,6 +514,36 @@ export class DependencyResolverMain {
     );
     this.logger.consoleSuccess();
     return res;
+  }
+
+  /**
+   * get the package name of a component.
+   */
+  getPackageName(component: Component) {
+    return componentIdToPackageName(component.state._consumer);
+  }
+
+  /*
+   * Returns the location where the component is installed with its peer dependencies
+   * This is used in cases you want to actually run the components and make sure all the dependencies (especially peers) are resolved correctly
+   */
+  getRuntimeModulePath(component: Component) {
+    const modulePath = this.getModulePath(component);
+    if (!this.hasRootComponents()) {
+      return modulePath;
+    }
+    const pkgName = this.getPackageName(component);
+    return join(modulePath, 'node_modules', pkgName);
+  }
+
+  /**
+   * returns the package path in the /node_modules/ folder
+   * In case you call this in order to run the code from the path, please refer to the `getRuntimeModulePath` API
+   */
+  getModulePath(component: Component) {
+    const pkgName = this.getPackageName(component);
+    const relativePath = join('node_modules', pkgName);
+    return relativePath;
   }
 
   /**
@@ -513,6 +569,7 @@ export class DependencyResolverMain {
       packageManager,
       this.aspectLoader,
       this.logger,
+      this,
       options.rootDir,
       cacheRootDir,
       preInstallSubscribers,
@@ -522,6 +579,7 @@ export class DependencyResolverMain {
       this.config.sideEffectsCache,
       this.config.nodeVersion,
       this.config.engineStrict,
+      this.config.peerDependencyRules
     );
   }
 
@@ -616,30 +674,41 @@ export class DependencyResolverMain {
 
   private getProxyConfigFromDepResolverConfig(): ProxyConfig {
     return {
-      ca: this.config.ca,
-      cert: this.config.cert,
       httpProxy: this.config.proxy,
       httpsProxy: this.config.httpsProxy || this.config.proxy,
-      key: this.config.key,
       noProxy: this.config.noProxy,
-      strictSSL: this.config.strictSsl?.toLowerCase() === 'true',
     };
   }
 
   async getNetworkConfig(): Promise<NetworkConfig> {
-    return {
+    const networkConfig = {
       ...(await this.getNetworkConfigFromGlobalConfig()),
       ...(await this.getNetworkConfigFromPackageManager()),
       ...this.getNetworkConfigFromDepResolverConfig(),
     };
+    this.logger.debug(
+      `the next network configuration is used in dependency-resolver: ${JSON.stringify(
+        {
+          ...networkConfig,
+          key: networkConfig.key ? 'set' : 'not set', // this is sensitive information, we should not log it
+        },
+        null,
+        2
+      )}`
+    );
+    return networkConfig;
   }
 
   private async getNetworkConfigFromGlobalConfig(): Promise<NetworkConfig> {
-    return Http.getNetworkConfig();
+    const globalNetworkConfig = await Http.getNetworkConfig();
+    if (!globalNetworkConfig.ca && globalNetworkConfig.cafile) {
+      globalNetworkConfig.ca = readCAFileSync(globalNetworkConfig.cafile);
+    }
+    return globalNetworkConfig;
   }
 
   private getNetworkConfigFromDepResolverConfig(): NetworkConfig {
-    return pick(this.config, [
+    const config: NetworkConfig = pick(this.config, [
       'fetchTimeout',
       'fetchRetries',
       'fetchRetryFactor',
@@ -647,18 +716,31 @@ export class DependencyResolverMain {
       'fetchRetryMaxtimeout',
       'maxSockets',
       'networkConcurrency',
+      'key',
+      'cert',
+      'ca',
+      'cafile',
     ]);
+    if (this.config.strictSsl != null) {
+      config.strictSSL =
+        typeof this.config.strictSsl === 'string'
+          ? this.config.strictSsl.toLowerCase() === 'true'
+          : this.config.strictSsl;
+    }
+    return config;
   }
 
   private async getNetworkConfigFromPackageManager(): Promise<NetworkConfig> {
-    const packageManager = this.getPackageManager();
-    if (typeof packageManager?.getNetworkConfig !== 'function') return {};
-    return packageManager.getNetworkConfig();
-  }
-
-  private getPackageManager() {
     const packageManager = this.packageManagerSlot.get(this.config.packageManager);
-    return packageManager ?? this.getSystemPackageManager();
+    let networkConfigFromPackageManager: NetworkConfig = {};
+    if (typeof packageManager?.getNetworkConfig === 'function') {
+      networkConfigFromPackageManager = await packageManager?.getNetworkConfig();
+    } else {
+      const systemPm = this.getSystemPackageManager();
+      if (!systemPm.getNetworkConfig) throw new Error('system package manager must implement `getNetworkConfig()`');
+      networkConfigFromPackageManager = await systemPm.getNetworkConfig();
+    }
+    return networkConfigFromPackageManager;
   }
 
   private async getProxyConfigFromPackageManager(): Promise<ProxyConfig> {
@@ -674,12 +756,8 @@ export class DependencyResolverMain {
     return proxyConfigFromPackageManager;
   }
 
-  private async getProxyConfigFromGlobalConfig(): Promise<ProxyConfig> {
-    const globalProxyConfig = await Http.getProxyConfig();
-    if (!globalProxyConfig.ca && globalProxyConfig.cafile) {
-      globalProxyConfig.ca = readCAFileSync(globalProxyConfig.cafile);
-    }
-    return globalProxyConfig;
+  private getProxyConfigFromGlobalConfig(): Promise<ProxyConfig> {
+    return Http.getProxyConfig();
   }
 
   /**
@@ -695,23 +773,20 @@ export class DependencyResolverMain {
     this.logger.setStatusLine('finding missing peer dependencies');
     const packageManager = this.packageManagerSlot.get(this.config.packageManager);
     let peerDependencyIssues!: PeerDependencyIssuesByProjects;
+    const installer = this.getInstaller();
+    const manifests = await installer.getComponentManifests({
+      ...options,
+      componentDirectoryMap,
+      rootPolicy,
+      rootDir,
+    });
     if (packageManager?.getPeerDependencyIssues && typeof packageManager?.getPeerDependencyIssues === 'function') {
-      peerDependencyIssues = await packageManager?.getPeerDependencyIssues(
-        rootDir,
-        rootPolicy,
-        componentDirectoryMap,
-        options
-      );
+      peerDependencyIssues = await packageManager?.getPeerDependencyIssues(rootDir, manifests, options);
     } else {
       const systemPm = this.getSystemPackageManager();
       if (!systemPm.getPeerDependencyIssues)
         throw new Error('system package manager must implement `getPeerDependencyIssues()`');
-      peerDependencyIssues = await systemPm?.getPeerDependencyIssues(
-        rootDir,
-        rootPolicy,
-        componentDirectoryMap,
-        options
-      );
+      peerDependencyIssues = await systemPm?.getPeerDependencyIssues(rootDir, manifests, options);
     }
     this.logger.consoleSuccess();
     return peerDependencyIssues['.']?.intersections;
@@ -879,7 +954,7 @@ export class DependencyResolverMain {
     return this.getComponentEnvPolicyFromEnv(env);
   }
 
-  private async getComponentEnvPolicyFromEnv(env: DependenciesEnv): Promise<EnvPolicy> {
+  async getComponentEnvPolicyFromEnv(env: DependenciesEnv): Promise<EnvPolicy> {
     if (env.getDependencies && typeof env.getDependencies === 'function') {
       const policiesFromEnvConfig = await env.getDependencies();
       if (policiesFromEnvConfig) {
@@ -1077,19 +1152,43 @@ export class DependencyResolverMain {
   /**
    * Return a list of outdated policy dependencies.
    */
-  getOutdatedPkgsFromPolicies({
+  async getOutdatedPkgsFromPolicies({
     rootDir,
     variantPoliciesByPatterns,
     componentPoliciesById,
+    components,
   }: {
     rootDir: string;
     variantPoliciesByPatterns: Record<string, VariantPolicyConfigObject>;
     componentPoliciesById: Record<string, any>;
+    components: Component[];
   }): Promise<OutdatedPkg[]> {
+    const componentModelVersions: ComponentModelVersion[] = (
+      await Promise.all(
+        components.map(async (component) => {
+          const depList = await this.getDependencies(component);
+          return depList
+            .filter(
+              (dep) =>
+                typeof dep.getPackageName === 'function' &&
+                dep.version !== 'latest' &&
+                !dep['isExtension'] && // eslint-disable-line
+                dep.lifecycle !== 'peer'
+            )
+            .map((dep) => ({
+              name: dep.getPackageName!(), // eslint-disable-line
+              version: dep.version,
+              componentId: component.id.toString(),
+              lifecycleType: dep.lifecycle,
+            }));
+        })
+      )
+    ).flat();
     const allPkgs = getAllPolicyPkgs({
       rootPolicy: this.getWorkspacePolicyFromConfig(),
       variantPoliciesByPatterns,
       componentPoliciesById,
+      componentModelVersions,
     });
     return this.getOutdatedPkgs(rootDir, allPkgs);
   }
@@ -1173,12 +1272,14 @@ export class DependencyResolverMain {
     Slot.withType<DependencyDetector>(),
   ];
 
-  static defaultConfig: DependencyResolverWorkspaceConfig = {
+  static defaultConfig: DependencyResolverWorkspaceConfig &
+    Required<Pick<DependencyResolverWorkspaceConfig, 'linkCoreAspects'>> = {
     /**
      * default package manager.
      */
     packageManager: 'teambit.dependencies/pnpm',
     policy: {},
+    linkCoreAspects: true,
   };
 
   static async provider(
@@ -1259,8 +1360,6 @@ export class DependencyResolverMain {
       if (!envPolicy) return undefined;
       return envPolicy.peersAutoDetectPolicy.toVersionManifest();
     });
-    registerUpdateDependenciesOnTag(dependencyResolver.updateDepsOnLegacyTag.bind(dependencyResolver));
-    registerUpdateDependenciesOnExport(dependencyResolver.updateDepsOnLegacyExport.bind(dependencyResolver));
     aspectLoader.registerOnLoadRequireableExtensionSlot(
       dependencyResolver.onLoadRequireableExtensionSubscriber.bind(dependencyResolver)
     );
@@ -1277,6 +1376,21 @@ export class DependencyResolverMain {
       devDependencies: {},
       peerDependencies: {},
     };
+  }
+
+  /**
+   * Returns a list of target locations where that given component was hard linked to.
+   *
+   * @param rootDir - The root directory of the workspace
+   * @param componentDir - Relative path to the component's directory
+   * @param packageName - The injected component's packageName
+   */
+  async getInjectedDirs(rootDir: string, componentDir: string, packageName: string): Promise<string[]> {
+    const packageManager = this.packageManagerSlot.get(this.config.packageManager);
+    if (typeof packageManager?.getInjectedDirs === 'function') {
+      return packageManager.getInjectedDirs(rootDir, componentDir, packageName);
+    }
+    return [];
   }
 }
 

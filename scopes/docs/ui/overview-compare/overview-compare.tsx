@@ -2,8 +2,11 @@ import { ComponentProvider } from '@teambit/component';
 import { CompareSplitLayoutPreset, useComponentCompare } from '@teambit/component.ui.compare';
 import { Toggle } from '@teambit/design.ui.input.toggle';
 import { RoundLoader } from '@teambit/design.ui.round-loader';
-import { Overview, TitleBadgeSlot } from '@teambit/docs';
+import { Overview } from '@teambit/docs';
+import type { TitleBadgeSlot } from '@teambit/docs';
 import React, { UIEvent, useMemo, useRef, useState } from 'react';
+import { useLanes, LanesContext, LanesContextModel } from '@teambit/lanes.hooks.use-lanes';
+
 import styles from './overview-compare.module.scss';
 
 export type OverviewCompareProps = {
@@ -35,16 +38,28 @@ export function OverviewCompare(props: OverviewCompareProps) {
     setIsScrollingSynced((prev) => !prev);
   }
 
+  const { lanesModel, updateLanesModel } = useLanes();
+
   const BaseLayout = useMemo(() => {
     if (componentCompare?.base === undefined) {
       return <></>;
     }
 
+    // const baseVersion = componentCompare?.base.model.version;
+    const baseId = componentCompare?.base.model.id;
+
+    // const isBaseOnLane = !!lanesModel?.lanebyComponentHash.get(baseVersion);
+    const isBaseOnLane = !!lanesModel?.isComponentOnNonDefaultLanes(baseId, true);
+
+    const lanesContext: LanesContextModel | undefined = isBaseOnLane ? { lanesModel, updateLanesModel } : undefined;
+
     return (
       <div className={styles.subView} ref={leftPanelRef} onScroll={handleLeftPanelScroll}>
-        <ComponentProvider component={componentCompare.base.model}>
-          <Overview titleBadges={titleBadges} />
-        </ComponentProvider>
+        <LanesContext.Provider value={lanesContext}>
+          <ComponentProvider component={componentCompare.base.model}>
+            <Overview titleBadges={titleBadges} />
+          </ComponentProvider>
+        </LanesContext.Provider>
       </div>
     );
   }, [componentCompare?.base, isScrollingSynced]);
@@ -54,11 +69,19 @@ export function OverviewCompare(props: OverviewCompareProps) {
       return <></>;
     }
 
+    // const compareVersion = componentCompare?.compare.model.version;
+    const compareId = componentCompare?.compare.model.id;
+
+    const isCompareOnLane = !!lanesModel?.isComponentOnNonDefaultLanes(compareId, true);
+    const lanesContext: LanesContextModel | undefined = isCompareOnLane ? { lanesModel, updateLanesModel } : undefined;
+
     return (
       <div className={styles.subView} ref={rightPanelRef} onScroll={handleRightPanelScroll}>
-        <ComponentProvider component={componentCompare.compare.model}>
-          <Overview titleBadges={titleBadges} />
-        </ComponentProvider>
+        <LanesContext.Provider value={lanesContext}>
+          <ComponentProvider component={componentCompare.compare.model}>
+            <Overview titleBadges={titleBadges} />
+          </ComponentProvider>
+        </LanesContext.Provider>
       </div>
     );
   }, [componentCompare?.compare, isScrollingSynced]);

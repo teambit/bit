@@ -26,7 +26,7 @@ import ts from 'typescript';
 import { ApplicationAspect, ApplicationMain } from '@teambit/application';
 import { FormatterContext } from '@teambit/formatter';
 import { LinterContext } from '@teambit/linter';
-import { LoggerAspect, LoggerMain } from '@teambit/logger';
+import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { ESLintMain, ESLintAspect, EslintConfigTransformer } from '@teambit/eslint';
 import { PrettierMain, PrettierAspect, PrettierConfigTransformer } from '@teambit/prettier';
 import { ReactAspect } from './react.aspect';
@@ -101,20 +101,24 @@ export class ReactMain {
 
     private application: ApplicationMain,
 
-    private reactAppType: ReactAppType
+    private reactAppType: ReactAppType,
+
+    private dependencyResolver: DependencyResolverMain,
+
+    private logger: Logger
   ) {}
 
   readonly env = this.reactEnv;
 
   getReactAppType(name: string) {
-    return new ReactAppType(name, this.reactEnv);
+    return new ReactAppType(name, this.reactEnv, this.logger, this.dependencyResolver);
   }
 
   /**
    * use this to register apps programmatically.
    */
   async registerApp(reactApp: ReactAppOptions) {
-    return this.application.registerApp(await this.reactAppType.createApp(reactApp));
+    return this.application.registerApp(this.reactAppType.createApp(reactApp));
   }
 
   /**
@@ -172,6 +176,7 @@ export class ReactMain {
    */
   overrideDocsTemplate(templatePath: string) {
     return this.envs.override({
+      getDevEnvId: (context: DevServerContext) => this.reactEnv.getDevEnvId(context.envDefinition.id),
       getDocsTemplate: () => templatePath,
     });
   }
@@ -434,8 +439,8 @@ export class ReactMain {
       logger,
       CompilerAspect.id
     );
-    const appType = new ReactAppType('react-app', reactEnv);
-    const react = new ReactMain(reactEnv, envs, application, appType);
+    const appType = new ReactAppType('react-app', reactEnv, logger, dependencyResolver);
+    const react = new ReactMain(reactEnv, envs, application, appType, dependencyResolver, logger);
     graphql.register(reactSchema(react));
     envs.registerEnv(reactEnv);
     generator.registerComponentTemplate(componentTemplates);

@@ -1,7 +1,7 @@
 import mapSeries from 'p-map-series';
 import { Consumer } from '..';
 import { BitId } from '../../bit-id';
-import { COMPONENT_ORIGINS, LATEST } from '../../constants';
+import { LATEST } from '../../constants';
 import ShowDoctorError from '../../error/show-doctor-error';
 import { ModelComponent } from '../../scope/models';
 import { MissingBitMapComponent } from '../bit-map/exceptions';
@@ -82,11 +82,6 @@ export class ComponentStatusLoader {
       }
       throw err;
     }
-
-    if (this.consumer.isLegacy && componentFromFileSystem.componentMap.origin === COMPONENT_ORIGINS.NESTED) {
-      status.nested = true;
-      return status;
-    }
     if (!componentFromModel) {
       status.newlyCreated = true;
       return status;
@@ -94,7 +89,7 @@ export class ComponentStatusLoader {
 
     const lane = await this.consumer.getCurrentLaneObject();
     await componentFromModel.setDivergeData(this.consumer.scope.objects);
-    status.staged = await componentFromModel.isLocallyChanged(lane, this.consumer.scope.objects);
+    status.staged = await componentFromModel.isLocallyChanged(this.consumer.scope.objects, lane);
     const versionFromFs = componentFromFileSystem.id.version;
     const idStr = id.toString();
     if (!componentFromFileSystem.id.hasVersion()) {

@@ -17,7 +17,7 @@ describe('bit rename command', function () {
   describe('rename an exported component', () => {
     let scopeAfterExport: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllWithoutBuild();
@@ -84,7 +84,7 @@ describe('bit rename command', function () {
   });
   describe('rename a new component', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(1);
       helper.command.rename('comp1', 'comp2');
@@ -100,6 +100,17 @@ describe('bit rename command', function () {
     it('workspace should have one component only', () => {
       const list = helper.command.listParsed();
       expect(list).to.have.lengthOf(1);
+    });
+  });
+  describe('rename a new component scope-name', () => {
+    before(() => {
+      helper.scopeHelper.reInitLocalScope();
+      helper.fixtures.populateComponents(1);
+      helper.command.rename('comp1', 'comp1', '--scope scope2');
+    });
+    it('should change the defaultScope of the component', () => {
+      const bitmap = helper.bitMap.read();
+      expect(bitmap.comp1.defaultScope).to.equal('scope2');
     });
   });
 });

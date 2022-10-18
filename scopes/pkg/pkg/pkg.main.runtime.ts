@@ -2,7 +2,7 @@ import { compact, omit } from 'lodash';
 import { join } from 'path';
 import fs from 'fs-extra';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import ComponentAspect, { Component, ComponentMain, Snap } from '@teambit/component';
+import ComponentAspect, { Component, ComponentMain, IComponent, Snap } from '@teambit/component';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { IsolatorAspect, IsolatorMain } from '@teambit/isolator';
@@ -11,10 +11,10 @@ import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { PackageJsonTransformer } from '@teambit/legacy/dist/consumer/component/package-json-transformer';
 import LegacyComponent from '@teambit/legacy/dist/consumer/component';
-import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 import { BuilderMain, BuilderAspect } from '@teambit/builder';
 import { CloneConfig } from '@teambit/new-component-helper';
 import { BitError } from '@teambit/bit-error';
+import { snapToSemver } from '@teambit/component-package-version';
 import { IssuesClasses } from '@teambit/component-issues';
 import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 import { GraphqlMain, GraphqlAspect } from '@teambit/graphql';
@@ -45,6 +45,8 @@ export interface PackageJsonProps {
 export type PackageJsonPropsRegistry = SlotRegistry<PackageJsonProps>;
 
 export type PkgExtensionConfig = {};
+
+type GetModulePathOptions = { absPath?: boolean };
 
 /**
  * Config for variants
@@ -140,7 +142,8 @@ export class PkgMain implements CloneConfig {
       packer,
       envs,
       componentAspect,
-      publishTask
+      publishTask,
+      dependencyResolver
     );
 
     componentAspect.registerShowFragments([new PackageFragment(pkg)]);
@@ -183,15 +186,30 @@ export class PkgMain implements CloneConfig {
    * get the package name of a component.
    */
   getPackageName(component: Component) {
-    return componentIdToPackageName(component.state._consumer);
+    return this.dependencyResolver.getPackageName(component);
+  }
+
+  /*
+   * Returns the location where the component is installed with its peer dependencies
+   * This is used in cases you want to actually run the components and make sure all the dependencies (especially peers) are resolved correctly
+   */
+  getRuntimeModulePath(component: Component, options: GetModulePathOptions = {}) {
+    const relativePath = this.dependencyResolver.getRuntimeModulePath(component);
+    if (options?.absPath) {
+      if (this.workspace) {
+        return join(this.workspace.path, relativePath);
+      }
+      throw new Error('getModulePath with abs path option is not implemented for scope');
+    }
+    return relativePath;
   }
 
   /**
    * returns the package path in the /node_modules/ folder
+   * In case you call this in order to run the code from the path, please refer to the `getRuntimeModulePath` API
    */
-  getModulePath(component: Component, options: { absPath?: boolean } = {}) {
-    const pkgName = this.getPackageName(component);
-    const relativePath = join('node_modules', pkgName);
+  getModulePath(component: Component, options: GetModulePathOptions = {}) {
+    const relativePath = this.dependencyResolver.getModulePath(component);
     if (options?.absPath) {
       if (this.workspace) {
         return join(this.workspace.path, relativePath);
@@ -250,7 +268,9 @@ export class PkgMain implements CloneConfig {
     /**
      * keep it as public. external env might want to register it to the snap pipeline
      */
-    public publishTask: PublishTask
+    public publishTask: PublishTask,
+
+    private dependencyResolver: DependencyResolverMain
   ) {
     this.manifestCache = createInMemoryCache({ maxSize: getMaxSizeForComponents() });
   }
@@ -324,7 +344,7 @@ export class PkgMain implements CloneConfig {
   }
 
   async getPkgArtifact(component: Component): Promise<PkgArtifact> {
-    const artifacts = await this.builder.getArtifactsVinylByExtension(component, PkgAspect.id);
+    const artifacts = await this.builder.getArtifactsVinylByAspect(component, PkgAspect.id);
     if (!artifacts.length) throw new PkgArtifactNotFound(component.id);
 
     return new PkgArtifact(artifacts);
@@ -337,8 +357,9 @@ export class PkgMain implements CloneConfig {
       throw new BitError('can not get manifest for component without versions');
     }
     const preReleaseLatestTags = component.tags.getPreReleaseLatestTags();
+    const latest = snapToSemver(latestVersion);
     const distTags = {
-      latest: latestVersion,
+      latest,
       ...preReleaseLatestTags,
     };
     const versionsFromCache = this.manifestCache.get(name);
@@ -384,8 +405,8 @@ export class PkgMain implements CloneConfig {
    * This will usually determined by the latest version of the component
    * @param component
    */
-  isPublishedToExternalRegistry(component: Component): boolean {
-    const pkgExt = component.state.aspects.get(PkgAspect.id);
+  isPublishedToExternalRegistry(component: IComponent): boolean {
+    const pkgExt = component.get(PkgAspect.id);
     // By default publish to bit registry
     if (!pkgExt) return false;
     return !!(pkgExt.config?.packageJson?.name || pkgExt.config?.packageJson?.publishConfig);
@@ -440,7 +461,7 @@ export class PkgMain implements CloneConfig {
   }
 
   async getPackageTarFile(component: Component): Promise<AbstractVinyl> {
-    const artifacts = await this.builder.getArtifactsVinylByExtensionAndName(
+    const artifacts = await this.builder.getArtifactsVinylByAspectAndName(
       component,
       PkgAspect.id,
       TAR_FILE_ARTIFACT_NAME

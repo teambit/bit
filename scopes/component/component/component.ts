@@ -16,6 +16,7 @@ import { State } from './state';
 import { TagMap } from './tag-map';
 import { Tag } from './tag';
 import { CouldNotFindLatest } from './exceptions';
+import { IComponent, RawComponentMetadata } from './component-interface';
 // import { Author } from './types';
 
 type SnapsIterableOpts = {
@@ -28,7 +29,7 @@ export type InvalidComponent = { id: ComponentID; err: Error };
 /**
  * in-memory representation of a component.
  */
-export class Component {
+export class Component implements IComponent {
   constructor(
     /**
      * component ID represented by the `ComponentId` type.
@@ -106,6 +107,13 @@ export class Component {
     }
   }
 
+  /**
+   * get aspect data from current state.
+   */
+  get(id: string): RawComponentMetadata | undefined {
+    return this.state.aspects.get(id)?.serialize();
+  }
+
   async getLogs(filter?: { type?: string; offset?: number; limit?: number; head?: string; sort?: string }) {
     const allLogs = await this.factory.getLogs(this.id, false, filter?.head);
 
@@ -120,13 +128,13 @@ export class Component {
     };
 
     let filteredLogs = (type && allLogs.filter(typeFilter)) || allLogs;
+    if (sort !== 'asc') filteredLogs = filteredLogs.reverse();
+
     if (limit) {
       filteredLogs = slice(filteredLogs, offset, limit + (offset || 0));
     }
 
-    if (sort && sort === 'asc') return filteredLogs;
-
-    return filteredLogs.reverse();
+    return filteredLogs;
   }
 
   stringify(): string {

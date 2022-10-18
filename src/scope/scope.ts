@@ -1,35 +1,30 @@
 import fs from 'fs-extra';
-import mapSeries from 'p-map-series';
 import * as pathLib from 'path';
 import R from 'ramda';
+import { compact } from 'lodash';
 import { LaneId } from '@teambit/lane-id';
 import semver from 'semver';
 import { Analytics } from '../analytics/analytics';
 import { BitId, BitIds } from '../bit-id';
 import { BitIdStr } from '../bit-id/bit-id';
 import loader from '../cli/loader';
-import { BEFORE_MIGRATION, BEFORE_RUNNING_BUILD, BEFORE_RUNNING_SPECS } from '../cli/loader/loader-messages';
+import { BEFORE_MIGRATION } from '../cli/loader/loader-messages';
 import {
   BIT_GIT_DIR,
   BIT_HIDDEN_DIR,
   BIT_VERSION,
   BITS_DIRNAME,
-  COMPONENT_ORIGINS,
   CURRENT_UPSTREAM,
   DEFAULT_BIT_VERSION,
   DOT_GIT_DIR,
   LATEST,
-  NODE_PATH_SEPARATOR,
   OBJECTS_DIR,
   SCOPE_JSON,
   PENDING_OBJECTS_DIR,
 } from '../constants';
 import Component from '../consumer/component/consumer-component';
-import Dists from '../consumer/component/sources/dists';
 import { ExtensionDataEntry } from '../consumer/config';
 import Consumer from '../consumer/consumer';
-import SpecsResults from '../consumer/specs-results';
-import { SpecsResultsWithComponentId } from '../consumer/specs-results/specs-results';
 import GeneralError from '../error/general-error';
 import logger from '../logger/logger';
 import getMigrationVersions, { MigrationResult } from '../migration/migration-helper';
@@ -56,6 +51,7 @@ import VersionDependencies from './version-dependencies';
 import { ObjectItem, ObjectList } from './objects/object-list';
 import ClientIdInUse from './exceptions/client-id-in-use';
 import { UnexpectedPackageName } from '../consumer/exceptions/unexpected-package-name';
+import { getDivergeData } from './component-ops/get-diverge-data';
 
 const removeNils = R.reject(R.isNil);
 const pathHasScope = pathHasAll([OBJECTS_DIR, SCOPE_JSON]);
@@ -100,21 +96,10 @@ export type LegacyOnTagResult = {
   id: BitId;
   builderData: ExtensionDataEntry;
 };
-export type OnTagOpts = {
-  disableTagAndSnapPipelines?: boolean;
-  throwOnError?: boolean; // on the CI it helps to save the results on failure so this is set to false
-  forceDeploy?: boolean; // whether run the deploy-pipeline although the build-pipeline has failed
-  skipTests?: boolean;
-  isSnap?: boolean;
-};
+
 export type IsolateComponentsOptions = {
   packageManagerConfigRootDir?: string;
 };
-export type OnTagFunc = (
-  components: Component[],
-  options: OnTagOpts,
-  isolateOptions: IsolateComponentsOptions
-) => Promise<LegacyOnTagResult[]>;
 
 export default class Scope {
   created = false;
@@ -128,7 +113,12 @@ export default class Scope {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   _dependencyGraph: DependencyGraph; // cache DependencyGraph instance
   lanes: Lanes;
-
+  /**
+   * normally, the data about the current-lane is saved in .bitmap. the reason for having this prop here is that we
+   * need this data when loading model-component, which gets called in multiple places where the consumer is not passed.
+   * another instance this is needed is for bit-sign, this way when loading aspects and fetching dists, it'll go to lane-scope.
+   */
+  currentLaneId?: LaneId;
   constructor(scopeProps: ScopeProps) {
     this.path = scopeProps.path;
     this.scopeJson = scopeProps.scopeJson;
@@ -141,7 +131,6 @@ export default class Scope {
     this.scopeImporter = ScopeComponentsImporter.getInstance(this);
   }
 
-  public onTag: OnTagFunc[] = []; // enable extensions to hook during the tag process
   static onPostExport: (ids: BitId[], lanes: Lane[]) => Promise<void>; // enable extensions to hook after the export process
 
   /**
@@ -182,6 +171,12 @@ export default class Scope {
   get isLegacy(): boolean {
     const harmonyScopeJsonPath = getHarmonyPath(this.path);
     return !fs.existsSync(harmonyScopeJsonPath);
+  }
+
+  setCurrentLaneId(laneId?: LaneId) {
+    if (!laneId) return;
+    if (laneId.isDefault()) return;
+    this.currentLaneId = laneId;
   }
 
   getPath() {
@@ -317,8 +312,19 @@ export default class Scope {
 
   async list(): Promise<ModelComponent[]> {
     const filter = (comp: ComponentItem) => !comp.isSymlink;
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return this.objects.listObjectsFromIndex(IndexType.components, filter);
+    const results = await this.objects.listObjectsFromIndex(IndexType.components, filter);
+    results.forEach((result) => {
+      if (!(result instanceof ModelComponent)) {
+        throw new Error(
+          `fatal: wrong hash in the index.json file. expect ${result.hash()} to be a ModelComponent, got ${
+            result.constructor.name
+          }.
+please share your "(.git/bit|.bit)/index.json" file with Bit team to investigate the issue.
+once done, to continue working, please run "bit cc"`
+        );
+      }
+    });
+    return results as ModelComponent[];
   }
 
   async listIncludesSymlinks(): Promise<Array<ModelComponent | Symlink>> {
@@ -329,7 +335,6 @@ export default class Scope {
   async listIncludeRemoteHead(laneId: LaneId): Promise<ModelComponent[]> {
     const components = await this.list();
     const lane = laneId.isDefault() ? null : await this.loadLane(laneId);
-    // @todo: not sure this is needed anymore. probably the heads are populated when the component was loaded
     await Promise.all(components.map((component) => component.populateLocalAndRemoteHeads(this.objects, lane)));
     return components;
   }
@@ -352,6 +357,35 @@ export default class Scope {
     return lane;
   }
 
+  /**
+   * sadly, there are not good tests for this. it pretty complex to create them as it involves multiple scopes and
+   * packages installations. be careful when changing this.
+   * the goal is to check whether a given id with the given version exits on the given lane or it's on main.
+   * it's needed for importing artifacts to know whether the artifact could be found on the origin scope or on the
+   * lane-scope
+   */
+  async isIdOnLane(id: BitId, lane?: Lane | null): Promise<boolean> {
+    if (!lane) return false;
+    const laneIds = lane.toBitIds();
+    if (laneIds.has(id)) return true; // in the lane with the same version
+    const laneIdWithDifferentVersion = laneIds.searchWithoutVersion(id);
+    if (!laneIdWithDifferentVersion) return false; // not in the lane at all
+    // component is in the lane object but with a different version.
+    // we have to figure out whether the current version exists on the lane or not.
+    const component = await this.getModelComponent(id);
+    if (!component.head) return true; // it's not on main. must be on a lane. (even if it was forked from another lane, current lane must have all objects)
+    if (component.head.toString() === id.version) return false; // it's on main
+    // get the diverge between main and the lane. (in this context, main is "remote", lane is "local").
+    const divergeData = await getDivergeData({
+      repo: this.objects,
+      modelComponent: component,
+      remoteHead: component.head,
+      checkedOutLocalHead: Ref.from(laneIdWithDifferentVersion.version as string),
+    });
+    // if the snap found "locally", then it's on the lane.
+    return Boolean(divergeData.snapsOnLocalOnly.find((snap) => snap.toString() === id.version));
+  }
+
   async latestVersions(componentIds: BitId[], throwOnFailure = true): Promise<BitIds> {
     componentIds = componentIds.map((componentId) => componentId.changeVersion(undefined));
     const components = await this.sources.getMany(componentIds);
@@ -367,118 +401,6 @@ export default class Scope {
       return component.id.changeVersion(version);
     });
     return BitIds.fromArray(ids);
-  }
-
-  /**
-   * Build multiple components sequentially, not in parallel.
-   *
-   * Two reasons why not running them in parallel:
-   * 1) when several components have the same environment, it'll try to install them multiple times.
-   * 2) npm throws errors when running 'npm install' from several directories
-   *
-   * Also, make sure to first build and write dists files of all components, and only then, write
-   * the links inside the dists. otherwise, you it could fail when writing links of one component
-   * needs another component dists files. (see 'importing all components and then deleting the dist
-   * directory' test case)
-   */
-  async buildMultiple(
-    components: Component[],
-    consumer: Consumer,
-    noCache: boolean,
-    verbose: boolean,
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    dontPrintEnvMsg? = false
-  ): Promise<{ component: string; buildResults: string[] | null | undefined }[]> {
-    logger.debugAndAddBreadCrumb('scope.buildMultiple', 'scope.buildMultiple: sequentially build multiple components');
-    // Make sure to not start the loader if there are no components to build
-    if (components && components.length) {
-      loader.start(BEFORE_RUNNING_BUILD);
-      if (components.length > 1) loader.stopAndPersist({ text: `${BEFORE_RUNNING_BUILD}...` });
-    }
-    logger.debugAndAddBreadCrumb('scope.buildMultiple', 'using the legacy build mechanism');
-    const build = async (component: Component) => {
-      if (component.compiler) loader.start(`building component - ${component.id}`);
-      await component.build({ scope: this, consumer, noCache, verbose, dontPrintEnvMsg });
-      const buildResults = await component.dists.writeDists(component, consumer, false);
-      if (component.compiler) loader.succeed();
-      return { component: component.id.toString(), buildResults };
-    };
-    const writeLinks = async (component: Component) => component.dists.writeDistsLinks(component, consumer);
-
-    const buildResults = await mapSeries(components, build);
-    await mapSeries(components, writeLinks);
-    return buildResults;
-  }
-
-  /**
-   * when custom-module-resolution is used, the test process needs to set the custom module
-   * directory to the dist directory
-   */
-  injectNodePathIfNeeded(consumer: Consumer, components: Component[]) {
-    const nodePathDirDist = Dists.getNodePathDir(consumer);
-    // only author components need this injection. for imported the links are built on node_modules
-    const isNodePathNeeded =
-      nodePathDirDist &&
-      components.some(
-        (component) =>
-          (component.dependencies.isCustomResolvedUsed() || component.devDependencies.isCustomResolvedUsed()) &&
-          component.componentMap &&
-          component.componentMap.origin === COMPONENT_ORIGINS.AUTHORED &&
-          !component.dists.isEmpty()
-      );
-    if (isNodePathNeeded) {
-      const getCurrentNodePathWithDirDist = () => {
-        if (!process.env.NODE_PATH) return nodePathDirDist;
-        const separator = process.env.NODE_PATH.endsWith(NODE_PATH_SEPARATOR) ? '' : NODE_PATH_SEPARATOR;
-        return process.env.NODE_PATH + separator + nodePathDirDist;
-      };
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      process.env.NODE_PATH = getCurrentNodePathWithDirDist();
-      require('module').Module._initPaths(); // eslint-disable-line
-    }
-  }
-
-  /**
-   * Test multiple components sequentially, not in parallel.
-   *
-   * See the reason not to run them in parallel at @buildMultiple()
-   */
-  async testMultiple({
-    components,
-    consumer,
-    verbose,
-    dontPrintEnvMsg = false,
-    rejectOnFailure = false,
-  }: {
-    components: Component[];
-    consumer: Consumer;
-    verbose: boolean;
-    dontPrintEnvMsg?: boolean;
-    rejectOnFailure?: boolean;
-  }): Promise<SpecsResultsWithComponentId> {
-    logger.debugAndAddBreadCrumb('scope.testMultiple', 'scope.testMultiple: sequentially test multiple components');
-    // Make sure not starting the loader when there is nothing to test
-    if (components && components.length) {
-      loader.start(BEFORE_RUNNING_SPECS);
-    }
-    this.injectNodePathIfNeeded(consumer, components);
-    const test = async (component: Component) => {
-      if (!component.tester) {
-        return { componentId: component.id, missingTester: true, pass: true };
-      }
-      const specs = await component.runSpecs({
-        scope: this,
-        rejectOnFailure,
-        consumer,
-        verbose,
-        dontPrintEnvMsg,
-      });
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      const pass = specs ? specs.every((spec) => spec.pass) : true;
-      const missingDistSpecs = specs && R.isEmpty(specs);
-      return { componentId: component.id, missingDistSpecs, specs, pass };
-    };
-    return (await mapSeries(components, test)) as SpecsResultsWithComponentId;
   }
 
   getObject(hash: string): Promise<BitObject> {
@@ -509,21 +431,22 @@ export default class Scope {
     return this.sources.get(id);
   }
 
-  async getCurrentLaneObject() {
-    return this.loadLane(this.lanes.getCurrentLaneId());
+  async getCurrentLaneObject(): Promise<Lane | null> {
+    return this.currentLaneId ? this.loadLane(this.currentLaneId) : null;
   }
 
   /**
    * Remove components from scope
    * @force Boolean - remove component from scope even if other components use it
    */
-  async removeMany(bitIds: BitIds, force: boolean, consumer?: Consumer): Promise<RemovedObjects> {
+  async removeMany(bitIds: BitIds, force: boolean, consumer?: Consumer, fromLane?: boolean): Promise<RemovedObjects> {
     logger.debug(`scope.removeMany ${bitIds.toString()} with force flag: ${force.toString()}`);
     Analytics.addBreadCrumb(
       'removeMany',
       `scope.removeMany ${Analytics.hashData(bitIds)} with force flag: ${force.toString()}`
     );
-    const removeComponents = new RemoveModelComponents(this, bitIds, force, consumer);
+    const currentLane = await consumer?.getCurrentLaneObject();
+    const removeComponents = new RemoveModelComponents(this, bitIds, force, consumer, currentLane, fromLane);
     return removeComponents.remove();
   }
 
@@ -686,23 +609,6 @@ export default class Scope {
     return Boolean(comp);
   }
 
-  async getComponentsAndAllLocalUnexportedVersions(ids: BitIds): Promise<ComponentsAndVersions[]> {
-    const componentsObjects = await this.sources.getMany(ids);
-    const componentsAndVersionsP = componentsObjects.map(async (componentObjects) => {
-      if (!componentObjects.component) return null;
-      const component: ModelComponent = componentObjects.component;
-      const localVersions = component.getLocalVersions();
-      return Promise.all(
-        localVersions.map(async (versionStr) => {
-          const version: Version = await component.loadVersion(versionStr, this.objects);
-          return { component, version, versionStr };
-        })
-      );
-    });
-    const componentsAndVersions = await Promise.all(componentsAndVersionsP);
-    return removeNils(R.flatten(componentsAndVersions));
-  }
-
   /**
    * Creates a symlink object with the local-scope which links to the real-object of the remote-scope
    * This way, local components that have dependencies to the exported component won't break.
@@ -743,71 +649,6 @@ export default class Scope {
     return BitIds.fromArray(dependentsWithoutNull.map((c) => c.id));
   }
 
-  async runComponentSpecs({
-    bitId,
-    consumer,
-    save,
-    verbose,
-    isolated,
-    directory,
-    keep,
-  }: {
-    bitId: BitId;
-    consumer?: Consumer;
-    save?: boolean;
-    verbose?: boolean;
-    isolated?: boolean;
-    directory?: string;
-    keep?: boolean;
-  }): Promise<SpecsResults | undefined> {
-    if (!bitId.isLocal(this.name)) {
-      throw new GeneralError('cannot run specs on remote component');
-    }
-
-    const component = await this.getConsumerComponent(bitId);
-    return component.runSpecs({
-      scope: this,
-      consumer,
-      save,
-      verbose,
-      isolated,
-      directory,
-      keep,
-    });
-  }
-
-  async build({
-    bitId,
-    save,
-    consumer,
-    verbose,
-    directory,
-    keep,
-    noCache,
-  }: {
-    bitId: BitId;
-    save?: boolean;
-    consumer?: Consumer;
-    verbose?: boolean;
-    directory?: string;
-    keep?: boolean;
-    noCache?: boolean;
-  }): Promise<Dists | undefined> {
-    if (!bitId.isLocal(this.name)) {
-      throw new GeneralError('cannot run build on remote component');
-    }
-    const component: Component = await this.getConsumerComponent(bitId);
-    return component.build({
-      scope: this,
-      save,
-      consumer,
-      verbose,
-      directory,
-      keep,
-      noCache,
-    });
-  }
-
   async loadModelComponentByIdStr(id: string): Promise<ModelComponent> {
     // Remove the version before hashing since hashing with the version number will result a wrong hash
     const idWithoutVersion = BitId.getStringWithoutVersion(id);
@@ -844,6 +685,20 @@ export default class Scope {
     }
     // it's probably new, we assume it doesn't have scope.
     return BitId.parse(id, false);
+  }
+
+  /**
+   * returns the main ids of the given lane
+   */
+  async getDefaultLaneIdsFromLane(lane: Lane): Promise<BitId[]> {
+    const laneIds = lane.toBitIds();
+    const modelComponents = await Promise.all(laneIds.map((id) => this.getModelComponent(id)));
+    return compact(
+      modelComponents.map((c) => {
+        if (!c.head) return null; // probably the component was never merged to main
+        return c.toBitId().changeVersion(c.head.toString());
+      })
+    );
   }
 
   async writeObjectsToPendingDir(objectList: ObjectList, clientId: string): Promise<void> {

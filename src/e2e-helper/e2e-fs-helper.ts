@@ -53,6 +53,10 @@ export default class FsHelper {
     return fs.readJsonSync(path.join(this.scopes.localPath, filePathRelativeToLocalScope));
   }
 
+  exists(filePathRelativeToLocalScope: string): boolean {
+    return fs.existsSync(path.join(this.scopes.localPath, filePathRelativeToLocalScope));
+  }
+
   outputFile(filePathRelativeToLocalScope: string, data = ''): void {
     return fs.outputFileSync(path.join(this.scopes.localPath, filePathRelativeToLocalScope), data);
   }
@@ -94,6 +98,11 @@ export default class FsHelper {
   deleteObject(objectPath: string) {
     // general-helper can be helpful with getting the path
     return fs.removeSync(path.join(this.scopes.localPath, '.bit/objects', objectPath));
+  }
+
+  deleteRemoteObject(objectPath: string) {
+    // general-helper can be helpful with getting the path
+    return fs.removeSync(path.join(this.scopes.remotePath, 'objects', objectPath));
   }
 
   createNewDirectory() {

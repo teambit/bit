@@ -16,11 +16,7 @@ import { merge } from 'webpack-merge';
 import WsDevServer from 'webpack-dev-server';
 import { WebpackConfigMutator } from '@teambit/webpack.modules.config-mutator';
 
-import {
-  generateAddAliasesFromPeersTransformer,
-  generateExposePeersTransformer,
-  generateExternalsTransformer,
-} from './transformers';
+import { generateAddAliasesFromPeersTransformer, generateExternalsTransformer } from './transformers';
 import { configFactory as devServerConfigFactory } from './config/webpack.dev.config';
 import { configFactory as baseConfigFactory } from './config/webpack.config';
 
@@ -36,6 +32,13 @@ export type WebpackConfigDevServerTransformContext = GlobalWebpackConfigTransfor
 
 export type GlobalWebpackConfigTransformContext = {
   mode: BundlerMode;
+  /**
+   * A path for the host root dir
+   * Host root dir is usually the env root dir
+   * This can be used in different bundle options which run require.resolve
+   * for example when configuring webpack aliases or webpack expose loader on the peers deps
+   */
+  hostRootDir?: string;
 };
 
 export type WebpackConfigTransformer = (
@@ -147,10 +150,6 @@ export class WebpackMain {
       if (target?.aliasHostDependencies || devServerContext?.aliasHostDependencies) {
         const peerAliasesTransformer = generateAddAliasesFromPeersTransformer(hostDeps, this.logger);
         transformers.push(peerAliasesTransformer);
-      }
-      if (target?.exposeHostDependencies || devServerContext?.exposeHostDependencies) {
-        const exposePeersTransformer = generateExposePeersTransformer(hostDeps, this.logger);
-        transformers.push(exposePeersTransformer);
       }
       if (target?.externalizeHostDependencies || devServerContext?.externalizeHostDependencies) {
         const externalsTransformer = generateExternalsTransformer(hostDeps);

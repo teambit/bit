@@ -23,7 +23,7 @@ $panelBg: #fafafa;
 }
 
 .right {
-  background: $panelBg;
+  background: var(--background-color, $panelBg);
   overflow-y: auto;
   // this is to fix the right panel when it gets too big or too small
   min-width: 200px;

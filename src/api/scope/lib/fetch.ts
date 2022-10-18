@@ -21,8 +21,9 @@ export type FETCH_OPTIONS = {
   withoutDependencies: boolean; // default - true
   includeArtifacts: boolean; // default - false
   allowExternal: boolean; // allow fetching components of other scope from this scope. needed for lanes.
-  laneId?: string; // relevant for "component-delta" type to know where to find the component latest
+  laneId?: string; // mandatory when fetching "latest" from lane. otherwise, we don't know where to find the latest
   onlyIfBuilt?: boolean; // relevant when fetching with deps. if true, and the component wasn't built successfully, don't fetch it.
+  ignoreMissingHead?: boolean; // if asking for id without version and the component has no head, don't throw, just ignore
 };
 
 const HooksManagerInstance = HooksManager.getInstance();
@@ -55,10 +56,33 @@ export default async function fetch(
       const bitIds: BitIds = BitIds.deserialize(ids);
       const { withoutDependencies, includeArtifacts, allowExternal, onlyIfBuilt } = fetchOptions;
       const collectParents = !withoutDependencies;
-      const scopeComponentsImporter = ScopeComponentsImporter.getInstance(scope);
+
+      // important! don't create a new instance of ScopeComponentImporter. Otherwise, the Mutex will be created
+      // every request, and won't do anything.
+      const scopeComponentsImporter = scope.scopeImporter;
+
+      const laneId = fetchOptions.laneId ? LaneId.parse(fetchOptions.laneId) : null;
+      const lane = laneId ? await scope.loadLane(laneId) : null;
+
+      const getBitIds = () => {
+        if (!lane) return bitIds;
+        const laneIds = lane.toBitIds();
+        return BitIds.fromArray(
+          bitIds.map((bitId) => {
+            const inLane = laneIds.searchWithoutVersion(bitId);
+            return inLane || bitId;
+          })
+        );
+      };
+      const bitIdsToFetch = getBitIds();
+
       const getComponentsWithOptions = async (): Promise<ComponentWithCollectOptions[]> => {
         if (withoutDependencies) {
-          const componentsVersions = await scopeComponentsImporter.fetchWithoutDeps(bitIds, allowExternal);
+          const componentsVersions = await scopeComponentsImporter.fetchWithoutDeps(
+            bitIdsToFetch,
+            allowExternal,
+            fetchOptions.ignoreMissingHead
+          );
           return componentsVersions.map((compVersion) => ({
             component: compVersion.component,
             version: compVersion.version,
@@ -66,8 +90,12 @@ export default async function fetch(
             collectParents,
           }));
         }
-        const versionsDependencies = await scopeComponentsImporter.fetchWithDeps(bitIds, allowExternal, onlyIfBuilt);
-        return versionsDependencies
+        const versionsDependencies = await scopeComponentsImporter.fetchWithDeps(
+          bitIdsToFetch,
+          allowExternal,
+          onlyIfBuilt
+        );
+        const flatDeps = versionsDependencies
           .map((versionDep) => [
             {
               component: versionDep.component.component,
@@ -82,7 +110,15 @@ export default async function fetch(
               collectParents: false, // for dependencies, no need to traverse the entire history
             })),
           ])
-          .flat();
+          .flat()
+          .reduce((uniqueDeps, dep) => {
+            const key = `${dep.component.id()}@${dep.version}`;
+            if (!uniqueDeps[key] || (!uniqueDeps[key].collectParents && dep.collectParents)) {
+              uniqueDeps[key] = dep;
+            }
+            return uniqueDeps;
+          }, {});
+        return Object.values(flatDeps);
       };
       const componentsWithOptions = await getComponentsWithOptions();
       // eslint-disable-next-line @typescript-eslint/no-floating-promises
@@ -97,7 +133,8 @@ export default async function fetch(
       const bitIdsLatest = bitIdsToLatest(bitIdsWithHashToStop, lane);
       const importedComponents = await scopeComponentsImporter.fetchWithoutDeps(
         bitIdsLatest,
-        fetchOptions.allowExternal
+        fetchOptions.allowExternal,
+        fetchOptions.ignoreMissingHead
       );
       const componentsWithOptions: ComponentWithCollectOptions[] = importedComponents.map((compVersion) => {
         const hashToStop = bitIdsWithHashToStop.searchWithoutVersion(compVersion.id)?.version;

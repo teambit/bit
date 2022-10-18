@@ -24,13 +24,14 @@ export const componentOverviewFields = gql`
       # 'id' property in gql refers to a *global* identifier and used for caching.
       # this makes aspect data cache under the same key, even when they are under different components.
       # renaming the property fixes that.
-      aspectId: id
-      aspectData: data
+      id
+      data
     }
     elementsUrl
     description
     deprecation {
       isDeprecate
+      newId
     }
     labels
     displayName
@@ -49,6 +50,7 @@ export const componentOverviewFields = gql`
     preview {
       includesEnvTemplate
       legacyHeader
+      isScaling
     }
     compositions {
       identifier
@@ -243,7 +245,13 @@ export function useComponentQuery(componentId: string, host: string, filters?: F
   const rawComponent = data?.getHost?.get;
   return useMemo(() => {
     const aspectList = {
-      entries: rawComponent?.aspects,
+      entries: rawComponent?.aspects.map((aspectObject) => {
+        return {
+          ...aspectObject,
+          aspectId: aspectObject.id,
+          aspectData: aspectObject.data,
+        };
+      }),
     };
     const id = rawComponent && ComponentID.fromObject(rawComponent.id);
     return {

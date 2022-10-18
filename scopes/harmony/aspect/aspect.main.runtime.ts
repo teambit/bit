@@ -18,7 +18,15 @@ import { AspectEnv } from './aspect.env';
 import { CoreExporterTask } from './core-exporter.task';
 import { aspectTemplate } from './templates/aspect';
 import { babelConfig } from './babel/babel-config';
-import { AspectCmd, GetAspectCmd, ListAspectCmd, SetAspectCmd, UnsetAspectCmd, UpdateAspectCmd } from './aspect.cmd';
+import {
+  AspectCmd,
+  GetAspectCmd,
+  ListAspectCmd,
+  SetAspectCmd,
+  SetAspectOptions,
+  UnsetAspectCmd,
+  UpdateAspectCmd,
+} from './aspect.cmd';
 
 export type AspectSource = { aspectName: string; source: string; level: string };
 
@@ -83,12 +91,13 @@ export class AspectMain {
   async setAspectsToComponents(
     pattern: string,
     aspectId: string,
-    config: Record<string, any> = {}
+    config: Record<string, any> = {},
+    options: SetAspectOptions = {}
   ): Promise<ComponentID[]> {
     const componentIds = await this.workspace.idsByPattern(pattern);
     await Promise.all(
       componentIds.map(async (componentId) => {
-        await this.workspace.addSpecificComponentConfig(componentId, aspectId, config);
+        await this.workspace.addSpecificComponentConfig(componentId, aspectId, config, options.merge);
       })
     );
     await this.workspace.bitMap.write();
@@ -155,7 +164,9 @@ export class AspectMain {
         const aspect = comp.state.aspects.get(aspectCompId.toStringWithoutVersion());
         if (!aspect) return undefined;
         if (aspect.id.version === aspectCompId.version) return undefined; // nothing to update
-        await this.workspace.removeSpecificComponentConfig(comp.id, aspect.id.toString(), true);
+        // don't mark with minus if not exist in .bitmap. it's not needed. when the component is loaded, the
+        // merge-operation of the aspects removes duplicate aspect-id with different versions.
+        await this.workspace.removeSpecificComponentConfig(comp.id, aspect.id.toString(), false);
         await this.workspace.addSpecificComponentConfig(comp.id, aspectCompId.toString(), aspect.config);
         return comp.id;
       })

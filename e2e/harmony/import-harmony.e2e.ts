@@ -19,7 +19,7 @@ describe('import functionality on Harmony', function () {
   describe('workspace with TS components', () => {
     let scopeWithoutOwner: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       scopeWithoutOwner = helper.scopes.remoteWithoutOwner;
       helper.fixtures.populateComponentsTS(3);
@@ -38,7 +38,7 @@ describe('import functionality on Harmony', function () {
       describe('installing dependencies as packages, requiring them and then running build-one-graph', () => {
         // let importOutput;
         before(() => {
-          helper.scopeHelper.reInitLocalScopeHarmony();
+          helper.scopeHelper.reInitLocalScope();
           helper.scopeHelper.addRemoteScope();
           helper.npm.initNpm();
           helper.npm.installNpmPackage(`@${DEFAULT_OWNER}/${scopeWithoutOwner}.comp1`, '0.0.1');
@@ -64,7 +64,7 @@ describe('import functionality on Harmony', function () {
       });
       describe('importing the components', () => {
         before(() => {
-          helper.scopeHelper.reInitLocalScopeHarmony();
+          helper.scopeHelper.reInitLocalScope();
           npmCiRegistry.setResolver();
           helper.command.importComponent('comp1');
         });
@@ -80,7 +80,7 @@ describe('import functionality on Harmony', function () {
       });
       describe('import with --path flag', () => {
         before(() => {
-          helper.scopeHelper.reInitLocalScopeHarmony();
+          helper.scopeHelper.reInitLocalScope();
           npmCiRegistry.setResolver();
           helper.command.importComponentWithOptions('comp1', { p: 'src' });
         });
@@ -93,7 +93,7 @@ describe('import functionality on Harmony', function () {
       });
       describe('installing a component as a package and then importing it directly', () => {
         before(() => {
-          helper.scopeHelper.reInitLocalScopeHarmony();
+          helper.scopeHelper.reInitLocalScope();
           const comp1Pkg = `@${DEFAULT_OWNER}/${scopeWithoutOwner}.comp1`;
           helper.command.install(comp1Pkg);
           npmCiRegistry.setResolver();
@@ -112,7 +112,7 @@ describe('import functionality on Harmony', function () {
       describe('importing a component, modify it and then importing its dependent', () => {
         let output;
         before(() => {
-          helper.scopeHelper.reInitLocalScopeHarmony();
+          helper.scopeHelper.reInitLocalScope();
           npmCiRegistry.setResolver();
           helper.command.importComponent('comp2');
           helper.fs.appendFile(`${scopeWithoutOwner}/comp2/index.ts`);
@@ -126,7 +126,7 @@ describe('import functionality on Harmony', function () {
   });
   describe('tag, export, clean scope objects, tag and export', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllComponents();
@@ -144,7 +144,7 @@ describe('import functionality on Harmony', function () {
   describe('import delta (bit import without ids) when local is behind', () => {
     let afterFirstExport: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllWithoutBuild();
@@ -169,7 +169,7 @@ describe('import functionality on Harmony', function () {
   describe('multiple components some are directory of others', () => {
     let scopeBeforeImport: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fs.outputFile('foo/index.js');
       helper.fs.outputFile('bar/index.js');
@@ -178,7 +178,7 @@ describe('import functionality on Harmony', function () {
       helper.command.tagAllWithoutBuild();
       helper.command.export();
 
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
       scopeBeforeImport = helper.scopeHelper.cloneLocalScope();
     });
@@ -211,6 +211,106 @@ describe('import functionality on Harmony', function () {
       it('should throw when importing the child', () => {
         expect(() => helper.command.importComponent('foo -O')).to.throw('unable to add');
       });
+    });
+  });
+  (supportNpmCiRegistryTesting ? describe : describe.skip)(
+    'import and install components with pre-release versions',
+    () => {
+      let scopeWithoutOwner: string;
+      before(async () => {
+        helper.scopeHelper.setNewLocalAndRemoteScopes();
+        helper.bitJsonc.setupDefault();
+        scopeWithoutOwner = helper.scopes.remoteWithoutOwner;
+        helper.fixtures.populateComponents(3);
+        npmCiRegistry = new NpmCiRegistry(helper);
+        npmCiRegistry.configureCiInPackageJsonHarmony();
+        await npmCiRegistry.init();
+        helper.command.tagAllComponents('--increment prerelease --prerelease-id beta');
+        helper.command.export();
+      });
+      after(() => {
+        npmCiRegistry.destroy();
+      });
+      describe('install as packages', () => {
+        before(() => {
+          helper.scopeHelper.reInitLocalScope();
+          helper.scopeHelper.addRemoteScope();
+          helper.npm.initNpm();
+        });
+        it('should be able to install the package with no errors', () => {
+          const installFunc = () =>
+            helper.npm.installNpmPackage(`@${DEFAULT_OWNER}/${scopeWithoutOwner}.comp1`, '0.0.1-beta.0');
+          expect(installFunc).to.not.throw();
+        });
+      });
+      describe('importing the components', () => {
+        before(() => {
+          helper.scopeHelper.reInitLocalScope();
+          npmCiRegistry.setResolver();
+          helper.command.importComponent('comp1');
+        });
+        it('should import the component with the pre-release correctly', () => {
+          helper.bitMap.expectToHaveIdHarmony('comp1', '0.0.1-beta.0', helper.scopes.remote);
+        });
+        // previously, it threw an error: "error: version 0.0.1.0 is not a valid semantic version. learn more: https://semver.org"
+        it('bit status should be clean with no errors', () => {
+          helper.command.expectStatusToBeClean();
+        });
+      });
+    }
+  );
+  describe('changing the component default directory', () => {
+    let beforeImport: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
+      beforeImport = helper.scopeHelper.cloneLocalScope();
+    });
+    it('should import with no errors when defaultDirectory has "{owner}" placeholder', () => {
+      helper.bitJsonc.setComponentsDir('{owner}/{name}');
+      expect(() => helper.command.importComponent('comp1')).to.not.throw();
+    });
+    it('should import with no errors when defaultDirectory has "{scope-id}" placeholder', () => {
+      helper.scopeHelper.getClonedLocalScope(beforeImport);
+      helper.bitJsonc.setComponentsDir('{scopeId}/{name}');
+      expect(() => helper.command.importComponent('comp1')).to.not.throw();
+    });
+    it('should throw an error when the placeholder is not supported', () => {
+      helper.scopeHelper.getClonedLocalScope(beforeImport);
+      helper.bitJsonc.setComponentsDir('{hello}/{name}');
+      expect(() => helper.command.importComponent('comp1')).to.throw();
+    });
+  });
+  describe('importing a component with @types dependency when current workspace does not have it', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.bitJsonc.setupDefault();
+      helper.fs.outputFile('bar/foo.ts', `import cors from 'cors'; console.log(cors);`);
+      helper.command.add('bar');
+      helper.command.install('cors@2.8.5 @types/cors@2.8.10');
+
+      // intermediate step, make sure the types are saved in the
+      const show = helper.command.showComponentParsed('bar');
+      expect(show.devPackageDependencies).to.include({ '@types/cors': '2.8.10' });
+
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
+      helper.command.importComponent('bar');
+    });
+    it('bit status should not show it as modified', () => {
+      helper.command.expectStatusToBeClean();
+    });
+    it('bit show should show the typed dependency', () => {
+      const show = helper.command.showComponentParsed('bar');
+      expect(show.devPackageDependencies).to.include({ '@types/cors': '2.8.10' });
     });
   });
 });

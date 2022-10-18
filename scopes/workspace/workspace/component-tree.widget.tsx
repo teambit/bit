@@ -1,26 +1,20 @@
 import { ComponentTreeNode, ComponentTreeNodeProps } from '@teambit/component-tree';
 import { ComponentStatusResolver } from '@teambit/component.ui.component-status-resolver';
-import React, { useContext, useMemo } from 'react';
-
-import { useLanesContext } from '@teambit/lanes.ui.lanes';
-import { WorkspaceContext } from './ui/workspace/workspace-context';
+import { useLanes } from '@teambit/lanes.hooks.use-lanes';
+import React, { useMemo } from 'react';
 
 export class ComponentTreeWidget implements ComponentTreeNode {
   widget = ({ component }: ComponentTreeNodeProps) => {
-    const workspace = useContext(WorkspaceContext);
-    const workspaceComponent = workspace.getComponent(component.id);
-    const lanes = useLanesContext();
+    const { lanesModel } = useLanes();
 
     const isInCurrentLane = useMemo(() => {
-      return workspaceComponent?.id && lanes?.isInViewedLane(workspaceComponent.id);
-    }, [lanes?.viewedLane, workspaceComponent?.id]);
-
-    if (!workspaceComponent) return null;
+      return component.id && lanesModel?.isComponentOnLaneButNotOnMain(component.id);
+    }, [lanesModel?.viewedLane, component.id]);
 
     return (
       <ComponentStatusResolver
-        status={workspaceComponent.status}
-        issuesCount={workspaceComponent.issuesCount}
+        status={component.status}
+        issuesCount={component.issuesCount}
         isInCurrentLane={isInCurrentLane}
       />
     );

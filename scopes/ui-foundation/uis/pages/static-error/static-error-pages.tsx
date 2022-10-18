@@ -21,6 +21,8 @@ const sizing = `
   body {
     font-size: 18px;
     color: #878c9a;
+    width: 100% !important;
+    height: 500px;
   }
 
   @media screen and (max-width: 250px) {

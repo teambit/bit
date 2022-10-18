@@ -91,9 +91,9 @@ export default class FixtureHelper {
     fs.copySync(sourceDir, dest);
   }
 
-  copyFixtureComponents(dir = '', cwd: string = this.scopes.localPath) {
+  copyFixtureComponents(dir = '', dest: string = path.join(this.scopes.localPath, dir)) {
     const sourceDir = path.join(this.getFixturesDir(), 'components', dir);
-    fs.copySync(sourceDir, cwd);
+    fs.copySync(sourceDir, dest);
   }
 
   copyFixtureExtensions(dir = '', cwd: string = this.scopes.localPath) {
@@ -335,28 +335,6 @@ export default () => 'comp${index} and ' + ${nextComp}();`;
     this.addComponentUtilsIsString();
     this.createComponentBarFoo(fixtures.barFooFixture);
     this.addComponentBarFoo();
-  }
-
-  addExtensionTS() {
-    const extensionsDir = path.join(__dirname, '..', 'extensions');
-    const extDestination = path.join(this.scopes.localPath, 'extensions');
-    fs.copySync(path.join(extensionsDir, 'typescript'), path.join(extDestination, 'typescript'));
-
-    this.command.addComponent('extensions/typescript', { i: 'extensions/typescript' });
-
-    this.npm.initNpm();
-    const dependencies = {
-      typescript: '^3.8',
-    };
-
-    this.packageJson.addKeyValue({ dependencies });
-    this.command.link();
-
-    // @todo: currently, the defaultScope is not enforced, so unless the extension is exported
-    // first, the full-id won't be recognized when loading the extension.
-    // once defaultScope is mandatory, make sure this is working without the next two lines
-    this.command.tagComponent('extensions/typescript');
-    this.command.exportComponent('extensions/typescript');
   }
 
   /**

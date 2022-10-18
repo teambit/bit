@@ -56,6 +56,6 @@ export default class GitHelper {
         fs.removeSync(path.join(this.scopes.localPath, dir));
       }
     });
-    this.scopeHelper.initHarmonyWorkspace();
+    this.scopeHelper.initWorkspace();
   }
 }

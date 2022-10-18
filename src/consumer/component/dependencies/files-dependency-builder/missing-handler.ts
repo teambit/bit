@@ -1,6 +1,4 @@
 import R from 'ramda';
-
-import { DEFAULT_BINDINGS_PREFIX } from '../../../../constants';
 import {
   ResolvedPackageData,
   resolvePackageData,
@@ -20,8 +18,7 @@ export class MissingHandler {
     private missing: Missing,
     private componentDir: string,
     private workspacePath: string,
-    private bindingPrefix: string,
-    private isLegacyProject: boolean
+    private bindingPrefix: string
   ) {}
 
   /**
@@ -82,12 +79,6 @@ export class MissingHandler {
    */
   private groupMissingByType(): MissingGroupItem[] {
     const byPathType = R.groupBy((item) => {
-      if (
-        this.isLegacyProject &&
-        (item.startsWith(`${this.bindingPrefix}/`) || item.startsWith(`${DEFAULT_BINDINGS_PREFIX}/`))
-      ) {
-        return 'components';
-      }
       return item.startsWith('.') ? 'files' : 'packages';
     });
     return Object.keys(this.missing).map((key) =>

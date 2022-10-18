@@ -14,23 +14,15 @@ import { UiMain } from '@teambit/ui';
 import type { VariantsMain } from '@teambit/variants';
 import { Consumer, loadConsumerIfExist } from '@teambit/legacy/dist/consumer';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
-import { registerDefaultScopeGetter } from '@teambit/legacy/dist/api/consumer';
-import { BitId } from '@teambit/legacy-bit-id';
-import ManyComponentsWriter from '@teambit/legacy/dist/consumer/component-ops/many-components-writer';
 import LegacyComponentLoader from '@teambit/legacy/dist/consumer/component/component-loader';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
-import { CommunityMain } from '@teambit/community';
 import { EXT_NAME } from './constants';
 import EjectConfCmd from './eject-conf.cmd';
-import InstallCmd from './install.cmd';
-import UninstallCmd from './uninstall.cmd';
-import UpdateCmd from './update.cmd';
 import { OnComponentLoad, OnComponentAdd, OnComponentChange, OnComponentRemove } from './on-component-events';
 import { WorkspaceExtConfig } from './types';
 import { WatchCommand } from './watch/watch.cmd';
-import { LinkCommand } from './link';
 import { Watcher, WatchOptions } from './watch/watcher';
-import { Workspace, WorkspaceInstallOptions } from './workspace';
+import { Workspace } from './workspace';
 import getWorkspaceSchema from './workspace.graphql';
 import { WorkspaceUIRoot } from './workspace.ui-root';
 import { CapsuleCmd, CapsuleCreateCmd, CapsuleDeleteCmd, CapsuleListCmd } from './capsule.cmd';
@@ -39,6 +31,7 @@ import { EnvsUnsetCmd } from './envs-subcommands/envs-unset.cmd';
 import { PatternCommand } from './pattern.cmd';
 import { EnvsReplaceCmd } from './envs-subcommands/envs-replace.cmd';
 import { ScopeSetCmd } from './scope-subcommands/scope-set.cmd';
+import { UseCmd } from './use.cmd';
 
 export type WorkspaceDeps = [
   PubsubMain,
@@ -53,8 +46,7 @@ export type WorkspaceDeps = [
   UiMain,
   BundlerMain,
   AspectLoaderMain,
-  EnvsMain,
-  CommunityMain
+  EnvsMain
 ];
 
 export type OnComponentLoadSlot = SlotRegistry<OnComponentLoad>;
@@ -83,7 +75,6 @@ export default async function provideWorkspace(
     bundler,
     aspectLoader,
     envs,
-    community,
   ]: WorkspaceDeps,
   config: WorkspaceExtConfig,
   [onComponentLoadSlot, onComponentChangeSlot, onComponentAddSlot, onComponentRemoveSlot, onPreWatchSlot]: [
@@ -106,7 +97,6 @@ export default async function provideWorkspace(
     consumer,
     scope,
     component,
-    isolator,
     dependencyResolver,
     variants,
     aspectLoader,
@@ -130,27 +120,15 @@ export default async function provideWorkspace(
 
   dependencyResolver.registerRootPolicy(getWorkspacePolicyFromPackageJson());
 
-  ManyComponentsWriter.registerExternalInstaller({
-    install: async () => {
-      // TODO: think how we should pass this options
-      const installOpts: WorkspaceInstallOptions = {
-        dedupe: true,
-        updateExisting: false,
-        import: false,
-      };
-      return workspace.install(undefined, installOpts);
-    },
-  });
-
   consumer.onCacheClear.push(() => workspace.clearCache());
 
-  if (!workspace.isLegacy) {
-    LegacyComponentLoader.registerOnComponentLoadSubscriber(async (legacyComponent: ConsumerComponent) => {
+  LegacyComponentLoader.registerOnComponentLoadSubscriber(
+    async (legacyComponent: ConsumerComponent, opts?: { loadDocs?: boolean }) => {
       const id = await workspace.resolveComponentId(legacyComponent.id);
-      const newComponent = await workspace.get(id, false, legacyComponent);
+      const newComponent = await workspace.get(id, legacyComponent, true, true, opts);
       return newComponent.state._consumer;
-    });
-  }
+    }
+  );
 
   ConsumerComponent.registerOnComponentConfigLoading(EXT_NAME, async (id) => {
     const componentId = await workspace.resolveComponentId(id);
@@ -179,15 +157,6 @@ export default async function provideWorkspace(
     };
   });
 
-  /**
-   * Add default scope from harmony during export.
-   */
-  registerDefaultScopeGetter(async (id: BitId) => {
-    const componentId = await workspace.resolveComponentId(id);
-    const defaultScope = await workspace.componentDefaultScope(componentId);
-    return defaultScope;
-  });
-
   const workspaceSchema = getWorkspaceSchema(workspace, graphql);
   ui.registerUiRoot(new WorkspaceUIRoot(workspace, bundler));
   graphql.register(workspaceSchema);
@@ -197,26 +166,25 @@ export default async function provideWorkspace(
     new CapsuleCreateCmd(workspace, isolator),
     new CapsuleDeleteCmd(isolator, workspace),
   ];
+  const watcher = new Watcher(workspace, pubsub);
   const commands: CommandList = [
-    new InstallCmd(workspace, logger),
-    new UpdateCmd(workspace),
-    new UninstallCmd(workspace),
     new EjectConfCmd(workspace),
     capsuleCmd,
+    new WatchCommand(pubsub, logger, watcher),
+    new UseCmd(workspace),
   ];
-  const watcher = new Watcher(workspace, pubsub);
-  if (workspace && !workspace.consumer.isLegacy) {
-    cli.unregister('watch');
-    commands.push(new WatchCommand(pubsub, logger, watcher));
-    cli.unregister('link');
-    commands.push(new LinkCommand(workspace, logger, community.getDocsDomain()));
-  }
+
   commands.push(new PatternCommand(workspace));
   cli.register(...commands);
   component.registerHost(workspace);
 
   cli.registerOnStart(async () => {
-    await workspace.loadAspects(aspectLoader.getNotLoadedConfiguredExtensions());
+    await workspace.importCurrentLaneIfMissing();
+    await workspace.loadAspects(
+      aspectLoader.getNotLoadedConfiguredExtensions(),
+      undefined,
+      'workspace.cli.registerOnStart'
+    );
   });
 
   // add sub-commands "set" and "unset" to envs command.

@@ -17,7 +17,7 @@ describe('sign command', function () {
   describe('simple case with one scope with --push flag', () => {
     let signOutput: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(2);
       helper.command.tagAllWithoutBuild();
@@ -54,7 +54,7 @@ describe('sign command', function () {
   describe('simple case with one scope without --push flag', () => {
     let signOutput: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(2);
       helper.command.tagAllWithoutBuild();
@@ -74,7 +74,7 @@ describe('sign command', function () {
   describe('without specifying the ids', () => {
     let signOutput: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(2);
       helper.command.tagAllWithoutBuild();
@@ -89,7 +89,7 @@ describe('sign command', function () {
   describe('failure case', () => {
     let signOutput: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fs.outputFile('bar/index.js');
       helper.fs.outputFile('bar/foo.spec.js'); // it will fail as it doesn't have any test
@@ -129,8 +129,10 @@ describe('sign command', function () {
     let signOutput: string;
     let secondScopeName: string;
     let snapHash: string;
+    let firstSnapHash: string;
+    let signRemote;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
 
       const secondRemote = helper.scopeHelper.getNewBareScope();
@@ -142,25 +144,35 @@ describe('sign command', function () {
       helper.fixtures.populateComponents(1);
       helper.command.setScope(secondScopeName, 'comp1');
       helper.command.snapAllComponentsWithoutBuild();
+      firstSnapHash = helper.command.getHeadOfLane('dev', 'comp1');
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
       snapHash = helper.command.getHeadOfLane('dev', 'comp1');
       helper.command.export();
-
-      const signRemote = helper.scopeHelper.getNewBareScope('-remote-sign');
+      signRemote = helper.scopeHelper.getNewBareScope('-remote-sign');
+    });
+    it('should sign the last successfully', () => {
       helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, signRemote.scopePath);
       signOutput = helper.command.sign(
         [`${secondScopeName}/comp1@${snapHash}`],
         `--multiple --lane ${helper.scopes.remote}/dev`,
         signRemote.scopePath
       );
+      expect(signOutput).to.include('the following 1 component(s) were signed with build-status "succeed"');
     });
-    it('should sign successfully', () => {
+    it('should be able to sign previous snaps on this lane successfully', () => {
+      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, signRemote.scopePath);
+      signOutput = helper.command.sign(
+        [`${secondScopeName}/comp1@${firstSnapHash}`],
+        `--multiple --lane ${helper.scopes.remote}/dev`,
+        signRemote.scopePath
+      );
       expect(signOutput).to.include('the following 1 component(s) were signed with build-status "succeed"');
     });
   });
   describe.skip('circular dependencies between two scopes', () => {
     let signOutput: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       const secondRemote = helper.scopeHelper.getNewBareScope();
       helper.scopeHelper.addRemoteScope(secondRemote.scopePath);

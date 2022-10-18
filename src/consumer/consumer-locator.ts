@@ -53,7 +53,7 @@ export async function getConsumerInfo(absPath: string): Promise<ConsumerInfo | u
     const hasScope = await pathHasScopeDir(path); // eslint-disable-line no-await-in-loop
     const hasConsumerConfig = await pathHasConsumerConfig(path); // eslint-disable-line no-await-in-loop
     const hasBitMap = await pathHasBitMap(path); // eslint-disable-line no-await-in-loop
-    const consumerExists = (hasScope && hasConsumerConfig) || hasBitMap;
+    const consumerExists = hasConsumerConfig || hasBitMap;
     if (consumerExists) {
       return {
         path,

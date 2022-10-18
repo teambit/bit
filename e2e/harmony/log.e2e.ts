@@ -12,7 +12,7 @@ describe('log', function () {
   });
   describe('logging with global --log flag', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
     });
     it('should log successfully', () => {
       const output = helper.command.runCmd('bit status --log');

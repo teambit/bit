@@ -6,6 +6,6 @@ export default class MissingBitMapComponent extends BitError {
 
   constructor(id: string) {
     super(`error: component "${chalk.bold(id)}" was not found on your local workspace.
-please specify a valid component ID or track the component using 'bit add' (see 'bit add --help' for more information)`);
+please specify a valid component ID or track the component using 'bit create' (see 'bit create --help' for more information)`);
   }
 }

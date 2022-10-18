@@ -3,6 +3,7 @@ import { countBy, property, sortBy, uniq } from 'lodash';
 import semver from 'semver';
 import { parseRange } from 'semver-intersect';
 import { intersect } from 'semver-range-intersect';
+import { isHash } from '@teambit/component-version';
 
 import {
   DEV_DEP_LIFECYCLE_TYPE,
@@ -10,7 +11,6 @@ import {
   PEER_DEP_LIFECYCLE_TYPE,
   RUNTIME_DEP_LIFECYCLE_TYPE,
 } from '../../dependencies/constants';
-import { ManifestDependenciesObject } from '../manifest';
 import { DependencyLifecycleType, SemverVersion, PackageName } from '../../dependencies';
 import { DedupedDependencies, DedupedDependenciesPeerConflicts } from './dedupe-dependencies';
 import { PackageNameIndex, PackageNameIndexItem, PackageNameIndexComponentItem } from './index-by-dep-id';
@@ -100,7 +100,11 @@ function handlePreserved(
 }
 
 /**
- * In case there is only one component with a specific dependency, add it to the root if it's not peer
+ * In case there is only one component with a specific dependency,
+ * OR
+ * all the components have the same version of the dependency
+ * add it to the root
+ * (it used to check also if it's not peer, but we remove it for bit sign support)
  *
  * @param {DedupedDependencies} dedupedDependencies
  * @param {PackageName} packageName
@@ -112,7 +116,10 @@ function addOneOccurrenceToRoot(
   indexItems: PackageNameIndexComponentItem[]
 ): boolean {
   if (indexItems.length > 1) {
-    return true;
+    const uniqVersions = uniq(indexItems.map((item) => item.range));
+    if (uniqVersions.length > 1) {
+      return true;
+    }
   }
   const indexItem = indexItems[0];
   // if (indexItem.lifecycleType !== PEER_DEP_LIFECYCLE_TYPE) {
@@ -407,7 +414,10 @@ function addToComponentDependenciesMapInDeduped(
         peerDependencies: {},
       };
     }
-    compEntry[depKeyName] = Object.assign({}, compEntry[depKeyName], { [packageName]: indexItem.range });
+    compEntry[depKeyName] = {
+      ...compEntry[depKeyName],
+      [packageName]: indexItem.range,
+    };
     dedupedDependencies.componentDependenciesMap.set(indexItem.origin, compEntry);
   };
 }
@@ -425,9 +435,14 @@ function groupByRangeOrVersion(indexItems: PackageNameIndexComponentItem[]): Ite
   };
   indexItems.forEach((item) => {
     const validRange = semver.validRange(item.range);
-    if (!validRange) {
-      throw new Error(`fatal: the version "${item.range}" originated from a dependent "${item.origin}" is invalid semver range.
-this is a temporary issue with unsupported snaps (hashes) on the registry and will be fixed very soon`);
+    if (!validRange && !isHash(item.range)) {
+      throw new Error(
+        `fatal: the version "${item.range}" originated from a dependent "${item.origin}" is invalid semver range and not a hash`
+      );
+    }
+    if (!validRange && isHash(item.range)) {
+      result.versions.push(item);
+      return;
     }
     // parseRange does not support `*` as version
     // `*` does not affect resulted version, it might be just ignored
@@ -483,7 +498,7 @@ export function getEmptyDedupedDependencies(): DedupedDependencies {
       devDependencies: {},
       peerDependencies: {},
     },
-    componentDependenciesMap: new Map<PackageName, ManifestDependenciesObject>(),
+    componentDependenciesMap: new Map(),
     issus: {
       peerConflicts: [],
     },

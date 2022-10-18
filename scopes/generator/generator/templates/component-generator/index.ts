@@ -7,7 +7,7 @@ import { mainRuntime } from './files/main-runtime';
 export const componentGeneratorTemplate: ComponentTemplate = {
   name: 'component-generator',
   description:
-    'create your own component generator \nDocs: https://bit.dev/docs/dev-services-overview/generator/generate-component',
+    'create your own component generator \nDocs: https://bit.dev/docs/dev-services/generator/generate-component',
   generateFiles: (context: ComponentContext) => {
     return [
       {

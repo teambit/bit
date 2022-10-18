@@ -22,7 +22,7 @@ describe('publish functionality', function () {
     let scopeBeforeTag: string;
     let scopeWithoutOwner: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.bitJsonc.setPackageManager();
       scopeWithoutOwner = helper.scopes.remoteWithoutOwner;
@@ -35,8 +35,9 @@ describe('publish functionality', function () {
       it('should throw an error', () => {
         const output = helper.general.runWithTryCatch('bit publish comp1');
         expect(output).to.have.string(
-          'unable to publish the following component(s), please make sure they are exported: comp1'
+          'unable to publish the following component(s), please make sure they are exported'
         );
+        expect(output).to.have.string('comp1');
       });
     });
     (supportNpmCiRegistryTesting ? describe : describe.skip)('publishing the components', () => {
@@ -52,7 +53,7 @@ describe('publish functionality', function () {
           helper.command.tagAllComponents();
         });
         it('should publish them successfully and be able to consume them by installing the packages', () => {
-          helper.scopeHelper.reInitLocalScopeHarmony();
+          helper.scopeHelper.reInitLocalScope();
           helper.npm.initNpm();
           helper.npm.installNpmPackage(`@${DEFAULT_OWNER}/${scopeWithoutOwner}.comp1`, '0.0.1');
           helper.fs.outputFile(
@@ -73,7 +74,7 @@ describe('publish functionality', function () {
         });
         // this also makes sure that the main of package.json points to the dist file correctly
         it('should publish them successfully and be able to consume them by installing the packages', () => {
-          helper.scopeHelper.reInitLocalScopeHarmony();
+          helper.scopeHelper.reInitLocalScope();
           helper.npm.initNpm();
           helper.npm.installNpmPackage(`@${DEFAULT_OWNER}/${scopeWithoutOwner}.comp1`, '2.0.0');
           helper.fs.outputFile(
@@ -90,7 +91,7 @@ describe('publish functionality', function () {
           helper.command.tagIncludeUnmodified('3.0.0-dev.1');
         });
         it('should publish with the tag flag and be able to npm install them by the tag name', () => {
-          helper.scopeHelper.reInitLocalScopeHarmony();
+          helper.scopeHelper.reInitLocalScope();
           helper.npm.initNpm();
           helper.npm.installNpmPackage(`@${DEFAULT_OWNER}/${scopeWithoutOwner}.comp1`, 'dev');
           helper.fs.outputFile(
@@ -109,7 +110,7 @@ describe('publish functionality', function () {
     let pkgName: string;
     before(async function () {
       npmCiRegistry = new NpmCiRegistry(helper);
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.disablePreview();
       helper.fs.outputFile('ui/button.js', 'console.log("hello button");');
       helper.command.addComponent('ui', { i: 'ui/button' });
@@ -130,7 +131,7 @@ describe('publish functionality', function () {
     });
     describe('installing the component as a package', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.scopeHelper.reInitLocalScope();
         helper.npm.initNpm();
         npmCiRegistry.installPackage(pkgName);
       });
@@ -155,7 +156,7 @@ describe('publish functionality', function () {
   // we ended up not running the publish dry-run tasks
   describe.skip('with invalid package name', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       npmCiRegistry = new NpmCiRegistry(helper);
       helper.fixtures.populateComponentsTS(1);
       npmCiRegistry.configureCustomNameInPackageJsonHarmony('invalid/name/{name}');

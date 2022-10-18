@@ -33,27 +33,9 @@ describe('untag components on Harmony', function () {
       expect(() => helper.command.untagAll()).not.to.throw();
     });
   });
-  describe('un-tagging a non-head version', () => {
-    before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
-      helper.fixtures.populateComponents(1);
-      helper.command.tagAllWithoutBuild();
-      helper.fixtures.populateComponents(1, undefined, 'v2');
-      helper.command.tagAllWithoutBuild();
-      helper.fixtures.populateComponents(1, undefined, 'v3');
-      helper.command.tagAllWithoutBuild();
-    });
-    // before, it was removing the parents from 0.0.3
-    it('should block the untag process', () => {
-      expect(() => helper.command.untag('comp1', '0.0.2')).to.throw(
-        'unable to untag "comp1", the version "0.0.2" is not the head'
-      );
-    });
-  });
   describe('untagging multiple versions', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateComponents(1);
       helper.command.tagIncludeUnmodifiedWithoutBuild(); // 0.0.1
       helper.command.tagIncludeUnmodifiedWithoutBuild(); // 0.0.2
@@ -66,7 +48,7 @@ describe('untag components on Harmony', function () {
   });
   describe('untagging multiple versions when the new head is exported', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(1);
       helper.command.tagIncludeUnmodifiedWithoutBuild(); // 0.0.1

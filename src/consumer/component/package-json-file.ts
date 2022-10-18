@@ -121,13 +121,11 @@ export default class PackageJsonFile {
   static createFromComponent(
     componentDir: PathRelative,
     component: Component,
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    excludeRegistryPrefix? = false,
-    addDefaultScopeToCompId? = false, // for the capsule, we want the default-scope because it gets published
-    addExportProperty? = false
+    addDefaultScopeToCompId = false, // for the capsule, we want the default-scope because it gets published
+    addExportProperty = false
   ): PackageJsonFile {
     const filePath = composePath(componentDir);
-    const name = componentIdToPackageName({ withPrefix: !excludeRegistryPrefix, ...component, id: component.id });
+    const name = componentIdToPackageName({ withPrefix: true, ...component, id: component.id });
     const componentIdWithDefaultScope =
       component.id.hasScope() || !addDefaultScopeToCompId
         ? component.id
@@ -144,24 +142,12 @@ export default class PackageJsonFile {
       componentId: componentIdWithDefaultScope.serialize(),
       dependencies: {
         ...component.packageDependencies,
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        ...component.compilerPackageDependencies.dependencies,
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        ...component.testerPackageDependencies.dependencies,
       },
       devDependencies: {
         ...component.devPackageDependencies,
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        ...component.compilerPackageDependencies.devDependencies,
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        ...component.testerPackageDependencies.devDependencies,
       },
       peerDependencies: {
         ...component.peerPackageDependencies,
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        ...component.compilerPackageDependencies.peerDependencies,
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        ...component.testerPackageDependencies.peerDependencies,
       },
       license: `SEE LICENSE IN ${!R.isEmpty(component.license) ? 'LICENSE' : 'UNLICENSED'}`,
     };

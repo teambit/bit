@@ -43,13 +43,13 @@ describe('bit add command', function () {
   });
   describe('bit add without bitmap and .git/bit initialized', () => {
     it('Should find local scope inside .git/bit and add component', () => {
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.git.initNewGitRepo();
       helper.bitMap.delete();
       helper.fs.deletePath('.bit');
       helper.fs.deletePath('bit.json');
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      helper.scopeHelper.initLocalScope();
+      helper.scopeHelper.initWorkspace();
       helper.fixtures.createComponentBarFoo();
       const addCmd = () => helper.fixtures.addComponentBarFooAsDir();
       expect(addCmd).to.not.throw();
@@ -58,7 +58,7 @@ describe('bit add command', function () {
   describe('add one component', () => {
     let output;
     beforeEach(() => {
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
     });
     it('Should print tracking component: id', () => {
       helper.fixtures.createComponentBarFoo();
@@ -135,7 +135,7 @@ describe('bit add command', function () {
   });
   describe('with multiple index files', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.fs.createFile('bar', 'index.js');
       helper.fs.createFile('bar', 'foo.js');
       helper.fs.createFile(path.join('bar', 'exceptions'), 'some-exception.js');
@@ -147,11 +147,10 @@ describe('bit add command', function () {
       expect(bitMap['bar/foo'].mainFile).to.equal('index.js');
     });
   });
-  // @TODO: FIX ON HARMONY!
-  describe.skip('add component/s with gitignore', () => {
+  describe('add component/s with gitignore', () => {
     let errorMessage;
     before(() => {
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
     });
     it('Should show warning msg in case there are no files to add because of gitignore', () => {
       helper.fs.createFile('bar', 'foo2.js');
@@ -169,7 +168,7 @@ describe('bit add command', function () {
   describe('ignore specific files inside component', () => {
     let output;
     before(() => {
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.fs.createFile('bar', 'foo.js');
       helper.fs.createFile('bar', 'foo3.js');
       helper.fs.createFile('bar', 'boo.js');
@@ -193,7 +192,7 @@ describe('bit add command', function () {
   });
   describe('add component when id includes a version', () => {
     before(() => {
-      helper.scopeHelper.initLocalScope();
+      helper.scopeHelper.initWorkspace();
       helper.fixtures.createComponentBarFoo();
     });
     it('should throw an VersionShouldBeRemoved exception', () => {
@@ -204,11 +203,11 @@ describe('bit add command', function () {
   });
   describe('add component when the main file is a directory', () => {
     before(() => {
-      helper.scopeHelper.initLocalScope();
+      helper.scopeHelper.initWorkspace();
       helper.fixtures.createComponentBarFoo();
       helper.fs.createFile('mainDir', 'mainFile.js');
     });
-    it('should throw an exception TestIsDirectory', () => {
+    it('should throw an exception MainFileIsDir', () => {
       const addFunc = () => helper.command.addComponent('bar', { i: 'bar/foo', m: 'mainDir' });
       const mainPath = path.join(helper.scopes.localPath, 'mainDir');
       const error = new MainFileIsDir(mainPath);
@@ -218,7 +217,7 @@ describe('bit add command', function () {
   // @TODO: FIX ON HARMONY!
   describe.skip('add file as lowercase and then re-add it as CamelCase', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo();
       helper.command.addComponent('bar', { i: 'bar/foo' });
       fs.removeSync(path.join(helper.scopes.localPath, 'bar'));
@@ -237,7 +236,7 @@ describe('bit add command', function () {
   describe('add the main file when it was removed before', () => {
     let output;
     before(() => {
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.fs.createFile('bar', 'foo.js');
       helper.fs.createFile('bar', 'foo-main.js');
       helper.command.addComponent('bar', { m: 'foo-main.js', i: 'bar/foo' });
@@ -255,7 +254,7 @@ describe('bit add command', function () {
   describe('directory is with upper case and test/main flags are written with lower case', () => {
     let addOutput;
     before(() => {
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.fs.createFile('Bar', 'foo.js');
       addOutput = helper.general.runWithTryCatch('bit add Bar -i bar -m bar/foo.js');
     });
@@ -291,7 +290,7 @@ describe('bit add command', function () {
   });
   describe('no mainFile and one of the files has the same name as the directory', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.fs.createFile('bar', 'bar.js');
       helper.fs.createFile('bar', 'foo.js');
       helper.command.addComponent('bar');
@@ -304,7 +303,7 @@ describe('bit add command', function () {
   });
   describe('sort .bitmap components', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.fs.createFileOnRootLevel('aaa/aaa.js');
       helper.fs.createFileOnRootLevel('bbb/bbb.js');
       helper.fs.createFileOnRootLevel('ccc/ccc.js');

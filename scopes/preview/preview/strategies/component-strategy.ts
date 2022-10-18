@@ -119,12 +119,16 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
     component: Component,
     context: ComputeTargetsContext
   ): Promise<ComponentEntry> {
-    const path = await this.computePaths(previewDefs, context, component);
+    const componentPreviewPath = await this.computePaths(previewDefs, context, component);
     const [componentPath] = this.getPaths(context, component, [component.mainFile]);
-    const componentPreviewChunkId = this.getComponentChunkId(component.id, 'preview');
+
+    const chunks = {
+      componentPreview: this.getComponentChunkId(component.id, 'preview'),
+      component: context.splitComponentBundle ? component.id.toStringWithoutVersion() : undefined,
+    };
 
     const entries = {
-      [componentPreviewChunkId]: {
+      [chunks.componentPreview]: {
         filename: this.getComponentChunkFileName(
           component.id.toString({
             fsCompatible: true,
@@ -132,17 +136,14 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
           }),
           'preview'
         ),
-        import: path,
-        // dependOn: component.id.toStringWithoutVersion(),
-        library: {
-          name: componentPreviewChunkId,
-          type: 'umd',
-        },
+        import: componentPreviewPath,
+        dependOn: chunks.component,
+        library: { name: chunks.componentPreview, type: 'umd' },
       },
     };
-    if (context.splitComponentBundle) {
-      const componentChunkId = component.id.toStringWithoutVersion();
-      entries[componentChunkId] = {
+
+    if (chunks.component) {
+      entries[chunks.component] = {
         filename: this.getComponentChunkFileName(
           component.id.toString({
             fsCompatible: true,
@@ -150,13 +151,12 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
           }),
           'component'
         ),
+        dependOn: undefined,
         import: componentPath,
-        library: {
-          name: componentChunkId,
-          type: 'umd',
-        },
+        library: { name: chunks.component, type: 'umd' },
       };
     }
+
     return { component, entries };
   }
 
@@ -364,19 +364,21 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
       );
     const moduleMapsPromise = defs.map(async (previewDef) => {
       const moduleMap = await previewDef.getModuleMap([component]);
+      const metadata = previewDef.getMetadata ? await previewDef.getMetadata(component) : undefined;
       const maybeFiles = moduleMap.get(component);
-      if (!maybeFiles || !capsule) return [];
+      if (!maybeFiles || !capsule) return { prefix: previewDef.prefix, paths: [] };
+
       const [, files] = maybeFiles;
       const compiledPaths = this.getPaths(context, component, files);
-      // const files = flatten(paths.toArray().map(([, file]) => file));
 
       return {
         prefix: previewDef.prefix,
         paths: compiledPaths,
+        metadata,
       };
     });
 
-    const moduleMaps = flatten(await Promise.all(moduleMapsPromise));
+    const moduleMaps = await Promise.all(moduleMapsPromise);
 
     const contents = generateComponentLink(moduleMaps);
     return this.preview.writeLinkContents(contents, this.getComponentOutputPath(capsule), 'preview');

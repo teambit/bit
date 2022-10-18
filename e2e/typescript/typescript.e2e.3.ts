@@ -10,7 +10,6 @@ describe('typescript', function () {
   let helper: Helper;
   before(() => {
     helper = new Helper();
-    helper.command.setFeatures('legacy-workspace-config');
   });
   after(() => {
     helper.scopeHelper.destroy();
@@ -41,12 +40,11 @@ export class List extends React.Component {
         const itemFixture = '';
         helper.fs.createFile('list', 'list.tsx', listFixture);
         helper.fs.createFile('item', 'item.tsx', itemFixture);
-        helper.command.addComponent('list/list.tsx', { i: 'list/list' });
-        helper.command.addComponent('item/item.tsx', { i: 'item/item' });
+        helper.command.addComponent('list', { i: 'list/list' });
+        helper.command.addComponent('item', { i: 'item/item' });
       });
       it('should be able to parse .tsx syntax successfully and recognize the dependencies', () => {
-        const output = helper.command.showComponent('list/list --json');
-        const outputParsed = JSON.parse(output);
+        const outputParsed = helper.command.showComponentParsed('list/list');
         expect(outputParsed.dependencies).to.have.lengthOf(1);
         expect(outputParsed.dependencies[0].id).to.equal('item/item');
       });
@@ -63,10 +61,10 @@ export class List extends React.Component {
         export {};`
       );
 
-      helper.npm.addNpmPackage('ninja', '13.0.0');
-      helper.npm.addNpmPackage('@types/ninja', '1.0.0');
-      helper.npm.addNpmPackage('@scoped/ninja', '11.5.0');
-      helper.npm.addNpmPackage('@types/scoped__ninja', '1.0.5');
+      helper.npm.addFakeNpmPackage('ninja', '13.0.0');
+      helper.npm.addFakeNpmPackage('@types/ninja', '1.0.0');
+      helper.npm.addFakeNpmPackage('@scoped/ninja', '11.5.0');
+      helper.npm.addFakeNpmPackage('@types/scoped__ninja', '1.0.5');
       helper.packageJson.addKeyValue({ dependencies: { ninja: '13.0.0', '@scoped/ninja': '11.5.0' } });
       helper.packageJson.addKeyValue({ devDependencies: { '@types/ninja': '1.0.0', '@types/scoped__ninja': '1.0.5' } });
 
@@ -78,20 +76,16 @@ export class List extends React.Component {
       expect(show.devPackageDependencies).to.include({ '@types/ninja': '1.0.0' });
       // scoped @types/xxx__pkg
       expect(show.devPackageDependencies).to.include({ '@types/scoped__ninja': '1.0.5' });
-      // not expecting to include other packages:
-      expect(show.devPackageDependencies).to.deep.equal({ '@types/ninja': '1.0.0', '@types/scoped__ninja': '1.0.5' });
     });
 
     describe('when the types package set to be ignored in the overrides', () => {
       before(() => {
-        const overrides = {
-          'bar/foo': {
-            devDependencies: {
-              '@types/ninja': '-',
-            },
+        const policy = {
+          devDependencies: {
+            '@types/ninja': '-',
           },
         };
-        helper.bitJson.addOverrides(overrides);
+        helper.bitJsonc.setPolicyToVariant('bar', policy);
       });
       it('should not show the @types package anymore', () => {
         const show = helper.command.showComponentParsed();

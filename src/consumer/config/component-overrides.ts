@@ -2,15 +2,12 @@ import R from 'ramda';
 
 import { BitId } from '../../bit-id';
 import {
-  COMPONENT_ORIGINS,
-  DEPENDENCIES_FIELDS,
   MANUALLY_ADD_DEPENDENCY,
   MANUALLY_REMOVE_DEPENDENCY,
   OVERRIDE_COMPONENT_PREFIX,
   OVERRIDE_FILE_PREFIX,
 } from '../../constants';
 import { filterObject } from '../../utils';
-import { ComponentOrigin } from '../bit-map/component-map';
 import ComponentConfig from './component-config';
 import {
   ConsumerOverridesOfComponent,
@@ -73,29 +70,23 @@ export default class ComponentOverrides {
     workspaceConfig: ILegacyWorkspaceConfig,
     overridesFromModel: ComponentOverridesData | undefined,
     componentConfig: ComponentConfig,
-    origin: ComponentOrigin,
     isLegacy: boolean
   ): Promise<ComponentOverrides> {
-    const isAuthor = origin === COMPONENT_ORIGINS.AUTHORED;
-    const isNotNested = origin !== COMPONENT_ORIGINS.NESTED;
     // overrides from consumer-config is not relevant and should not affect imported
-    let legacyOverridesFromConsumer = isNotNested ? workspaceConfig?.getComponentConfig(componentId) : null;
+    let legacyOverridesFromConsumer = workspaceConfig?.getComponentConfig(componentId);
 
-    if (isAuthor) {
-      const plainLegacy = workspaceConfig?._legacyPlainObject();
-      if (plainLegacy && plainLegacy.env) {
-        legacyOverridesFromConsumer = legacyOverridesFromConsumer || {};
-        legacyOverridesFromConsumer.env = {};
-        legacyOverridesFromConsumer.env.compiler = plainLegacy.env.compiler;
-        legacyOverridesFromConsumer.env.tester = plainLegacy.env.tester;
-      }
+    const plainLegacy = workspaceConfig?._legacyPlainObject();
+    if (plainLegacy && plainLegacy.env) {
+      legacyOverridesFromConsumer = legacyOverridesFromConsumer || {};
     }
 
     const getFromComponent = (): ComponentOverridesData | null | undefined => {
       if (componentConfig && componentConfig.componentHasWrittenConfig) {
         return componentConfig.overrides;
       }
-      return isAuthor ? null : overridesFromModel;
+      // @todo: we might consider using overridesFromModel here.
+      // return isAuthor ? null : overridesFromModel;
+      return null;
     };
     let extensionsAddedOverrides = {};
     // Do not run the hook for legacy projects since it will use the default env in that case for takeing dependencies and will change the main file
@@ -177,35 +168,6 @@ export default class ComponentOverrides {
   getIgnoredPackages(field: string): string[] {
     const ignoredRules = this.getIgnored(field);
     return ignoredRules.filter((rule) => !rule.startsWith(OVERRIDE_FILE_PREFIX));
-  }
-
-  stripOriginallySharedDir(sharedDir: string | null | undefined) {
-    if (!sharedDir) return;
-    DEPENDENCIES_FIELDS.forEach((field) => {
-      if (!this.overrides[field]) return;
-      Object.keys(this.overrides[field]).forEach((rule) => {
-        if (!rule.startsWith(OVERRIDE_FILE_PREFIX)) return;
-        const fileWithSharedDir = rule.replace(OVERRIDE_FILE_PREFIX, '');
-        const fileWithoutSharedDir = fileWithSharedDir.replace(`${sharedDir}/`, '');
-        const value = this.overrides[field][rule];
-        delete this.overrides[field][rule];
-        this.overrides[field][`${OVERRIDE_FILE_PREFIX}${fileWithoutSharedDir}`] = value;
-      });
-    });
-  }
-  addOriginallySharedDir(sharedDir: string | null | undefined) {
-    if (!sharedDir) return;
-    DEPENDENCIES_FIELDS.forEach((field) => {
-      if (!this.overrides[field]) return;
-      Object.keys(this.overrides[field]).forEach((rule) => {
-        if (!rule.startsWith(OVERRIDE_FILE_PREFIX)) return;
-        const fileWithoutSharedDir = rule.replace(OVERRIDE_FILE_PREFIX, '');
-        const fileWithSharedDir = `${sharedDir}/${fileWithoutSharedDir}`;
-        const value = this.overrides[field][rule];
-        delete this.overrides[field][rule];
-        this.overrides[field][`${OVERRIDE_FILE_PREFIX}${fileWithSharedDir}`] = value;
-      });
-    });
   }
   static getAllFilesPaths(overrides: Record<string, any>): string[] {
     if (!overrides) return [];

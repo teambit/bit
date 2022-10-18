@@ -4,7 +4,7 @@ import { ComponentIssue } from '@teambit/component-issues';
 import { BitId, BitIds } from '../../bit-id';
 import { createInMemoryCache } from '../../cache/cache-factory';
 import { getMaxSizeForComponents, InMemoryCache } from '../../cache/in-memory-cache';
-import { ANGULAR_PACKAGE_IDENTIFIER, BIT_MAP } from '../../constants';
+import { BIT_MAP } from '../../constants';
 import logger from '../../logger/logger';
 import ScopeComponentsImporter from '../../scope/component-ops/scope-components-importer';
 import { ModelComponent } from '../../scope/models';
@@ -16,13 +16,23 @@ import Consumer from '../consumer';
 import { ComponentFsCache } from './component-fs-cache';
 import { updateDependenciesVersions } from './dependencies/dependency-resolver';
 import { DependenciesLoader } from './dependencies/dependency-resolver/dependencies-loader';
+import ComponentMap from '../bit-map/component-map';
 
-type OnComponentLoadSubscriber = (component: Component) => Promise<Component>;
+export type ComponentLoadOptions = {
+  loadDocs?: boolean;
+  loadCompositions?: boolean;
+};
+export type LoadManyResult = {
+  components: Component[];
+  invalidComponents: InvalidComponent[];
+  removedComponents: Component[];
+};
+
+type OnComponentLoadSubscriber = (component: Component, loadOpts?: ComponentLoadOptions) => Promise<Component>;
 type OnComponentIssuesCalcSubscriber = (component: Component) => Promise<ComponentIssue[]>;
 
 export default class ComponentLoader {
   private componentsCache: InMemoryCache<Component>; // cache loaded components
-  private componentsCacheForCapsule: InMemoryCache<Component>; // cache loaded components for capsule, must not use the cache for the workspace
   _shouldCheckForClearingDependenciesCache = true;
   consumer: Consumer;
   cacheResolvedDependencies: Record<string, any>;
@@ -33,7 +43,6 @@ export default class ComponentLoader {
     this.cacheResolvedDependencies = {};
     this.componentFsCache = new ComponentFsCache(consumer.scope.getPath());
     this.componentsCache = createInMemoryCache({ maxSize: getMaxSizeForComponents() });
-    this.componentsCacheForCapsule = createInMemoryCache({ maxSize: getMaxSizeForComponents() });
   }
 
   static onComponentLoadSubscribers: OnComponentLoadSubscriber[] = [];
@@ -48,7 +57,6 @@ export default class ComponentLoader {
 
   clearComponentsCache() {
     this.componentsCache.deleteAll();
-    this.componentsCacheForCapsule.deleteAll();
     this.cacheResolvedDependencies = {};
     this._shouldCheckForClearingDependenciesCache = true;
   }
@@ -56,7 +64,6 @@ export default class ComponentLoader {
   clearOneComponentCache(id: BitId) {
     const idStr = id.toString();
     this.componentsCache.delete(idStr);
-    this.componentsCacheForCapsule.delete(idStr);
     this.cacheResolvedDependencies = {};
   }
 
@@ -87,39 +94,19 @@ export default class ComponentLoader {
     this._shouldCheckForClearingDependenciesCache = false;
   }
 
-  async loadForCapsule(id: BitId): Promise<Component> {
-    logger.debugAndAddBreadCrumb('ComponentLoader', 'loadForCapsule, id: {id}', {
-      id: id.toString(),
-    });
-    const idWithVersion: BitId = getLatestVersionNumber(this.consumer.bitmapIdsFromCurrentLane, id);
-    const idStr = idWithVersion.toString();
-    if (!this.componentsCacheForCapsule.has(idStr)) {
-      const { components } = await this.loadMany(BitIds.fromArray([id]));
-      const component = components[0].clone();
-      this.componentsCacheForCapsule.set(idStr, component);
-    }
-
-    logger.debugAndAddBreadCrumb('ComponentLoader', 'loadForCapsule finished loading the component "{id}"', {
-      id: id.toString(),
-    });
-    return this.componentsCacheForCapsule.get(idStr) as Component;
-  }
-
-  async loadMany(
-    ids: BitIds,
-    throwOnFailure = true
-  ): Promise<{ components: Component[]; invalidComponents: InvalidComponent[] }> {
+  async loadMany(ids: BitIds, throwOnFailure = true, loadOpts?: ComponentLoadOptions): Promise<LoadManyResult> {
     logger.debugAndAddBreadCrumb('ComponentLoader', 'loading consumer-components from the file-system, ids: {ids}', {
       ids: ids.toString(),
     });
     const alreadyLoadedComponents: Component[] = [];
     const idsToProcess: BitId[] = [];
     const invalidComponents: InvalidComponent[] = [];
+    const removedComponents: Component[] = [];
     ids.forEach((id: BitId) => {
       if (id.constructor.name !== BitId.name) {
         throw new TypeError(`consumer.loadComponents expects to get BitId instances, instead, got "${typeof id}"`);
       }
-      const idWithVersion: BitId = getLatestVersionNumber(this.consumer.bitmapIdsFromCurrentLane, id);
+      const idWithVersion: BitId = getLatestVersionNumber(this.consumer.bitmapIdsFromCurrentLaneIncludeRemoved, id);
       const idStr = idWithVersion.toString();
       const fromCache = this.componentsCache.get(idStr);
       if (fromCache) {
@@ -133,11 +120,11 @@ export default class ComponentLoader {
       `the following ${alreadyLoadedComponents.length} components have been already loaded, get them from the cache. {idsStr}`,
       { idsStr: alreadyLoadedComponents.map((c) => c.id.toString()).join(', ') }
     );
-    if (!idsToProcess.length) return { components: alreadyLoadedComponents, invalidComponents };
+    if (!idsToProcess.length) return { components: alreadyLoadedComponents, invalidComponents, removedComponents };
 
     const allComponents: Component[] = [];
     await mapSeries(idsToProcess, async (id: BitId) => {
-      const component = await this.loadOne(id, throwOnFailure, invalidComponents);
+      const component = await this.loadOne(id, throwOnFailure, invalidComponents, removedComponents, loadOpts);
       if (component) {
         this.componentsCache.set(component.id.toString(), component);
         logger.debugAndAddBreadCrumb('ComponentLoader', 'Finished loading the component "{id}"', {
@@ -147,14 +134,33 @@ export default class ComponentLoader {
       }
     });
 
-    return { components: allComponents.concat(alreadyLoadedComponents), invalidComponents };
+    return { components: allComponents.concat(alreadyLoadedComponents), invalidComponents, removedComponents };
   }
 
-  private async loadOne(id: BitId, throwOnFailure: boolean, invalidComponents: InvalidComponent[]) {
-    const componentMap = this.consumer.bitMap.getComponent(id);
-    let bitDir = this.consumer.getPath();
-    if (componentMap.rootDir) {
-      bitDir = path.join(bitDir, componentMap.rootDir);
+  private async loadOne(
+    id: BitId,
+    throwOnFailure: boolean,
+    invalidComponents: InvalidComponent[],
+    removedComponents: Component[],
+    loadOpts?: ComponentLoadOptions
+  ) {
+    let componentMap = this.consumer.bitMap.getComponent(id);
+    if (componentMap.isRemoved()) {
+      const fromModel = await this.consumer.scope.getConsumerComponentIfExist(id);
+      if (!fromModel) {
+        invalidComponents.push({
+          id,
+          error: new Error(
+            `fatal: ${id.toString()} is marked as removed but its objects are missing from the local scope, try to import this component individually with --objects flag`
+          ),
+          component: undefined,
+        });
+        return null;
+      }
+      fromModel.removed = true;
+      fromModel.componentMap = componentMap;
+      removedComponents.push(fromModel);
+      return null;
     }
     let component: Component;
     const handleError = (error) => {
@@ -169,22 +175,25 @@ export default class ComponentLoader {
       }
       throw error;
     };
+    const newId = await this._handleOutOfSyncScenarios(componentMap);
+    if (newId) {
+      componentMap = this.consumer.bitMap.getComponent(newId);
+    }
+    const updatedId = newId || id;
+
     try {
       component = await Component.loadFromFileSystem({
-        bitDir,
         componentMap,
-        id,
+        id: updatedId,
         consumer: this.consumer,
       });
     } catch (err: any) {
       return handleError(err);
     }
     component.loadedFromFileSystem = true;
-    component.originallySharedDir = componentMap.originallySharedDir || undefined;
-    component.wrapDir = componentMap.wrapDir || undefined;
     // reload component map as it may be changed after calling Component.loadFromFileSystem()
-    component.componentMap = this.consumer.bitMap.getComponent(id);
-    await this._handleOutOfSyncScenarios(component);
+    component.componentMap = this.consumer.bitMap.getComponent(updatedId);
+    await this._handleOutOfSyncWithDefaultScope(component);
 
     const loadDependencies = async () => {
       await this.invalidateDependenciesCacheIfNeeded();
@@ -199,7 +208,7 @@ export default class ComponentLoader {
 
     const runOnComponentLoadEvent = async () => {
       return mapSeries(ComponentLoader.onComponentLoadSubscribers, async (subscriber) => {
-        component = await subscriber(component);
+        component = await subscriber(component, loadOpts);
       });
     };
 
@@ -222,12 +231,10 @@ export default class ComponentLoader {
     });
   }
 
-  private async _handleOutOfSyncScenarios(component: Component) {
-    const { componentFromModel, componentMap } = component;
-    // $FlowFixMe componentMap is set here
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  private async _handleOutOfSyncScenarios(componentMap: ComponentMap): Promise<BitId | undefined> {
     const currentId: BitId = componentMap.id;
-    let newId: BitId | null | undefined;
+    const componentFromModel = await this.consumer.loadComponentFromModelIfExist(currentId);
+    let newId: BitId | undefined;
     if (componentFromModel && !currentId.hasVersion()) {
       // component is in the scope but .bitmap doesn't have version, sync .bitmap with the scope data
       newId = currentId.changeVersion(componentFromModel.version);
@@ -245,13 +252,23 @@ export default class ComponentLoader {
         // latest version from the scope
         await this._throwPendingImportIfNeeded(currentId);
         newId = currentId.changeVersion(modelComponent.latest());
-        component.componentFromModel = await this.consumer.loadComponentFromModelIfExist(newId);
       } else if (!currentId.hasScope()) {
         // the scope doesn't have this component and .bitmap doesn't have scope, assume it's new
         newId = currentId.changeVersion(undefined);
       }
     }
-    if (!componentFromModel && !currentId.hasVersion() && component.defaultScope) {
+
+    if (newId) {
+      this.consumer.bitMap.updateComponentId(newId);
+    }
+    return newId;
+  }
+
+  private async _handleOutOfSyncWithDefaultScope(component: Component) {
+    const { componentFromModel, componentMap } = component;
+    // @ts-ignore componentMap is set here
+    const currentId: BitId = componentMap.id;
+    if (!componentFromModel && !currentId.hasVersion()) {
       // for Harmony, we know ahead the defaultScope, so even then .bitmap shows it as new and
       // there is nothing in the scope, we can check if there is a component with the same
       // default-scope in the objects
@@ -259,16 +276,14 @@ export default class ComponentLoader {
         currentId.changeScope(component.defaultScope)
       );
       if (modelComponent) {
-        newId = currentId.changeVersion(modelComponent.latest()).changeScope(modelComponent.scope);
+        const newId = currentId.changeVersion(modelComponent.latest()).changeScope(modelComponent.scope);
         component.componentFromModel = await this.consumer.loadComponentFromModelIfExist(newId);
-      }
-    }
 
-    if (newId) {
-      component.version = newId.version;
-      component.scope = newId.scope;
-      this.consumer.bitMap.updateComponentId(newId);
-      component.componentMap = this.consumer.bitMap.getComponent(newId);
+        component.version = newId.version;
+        component.scope = newId.scope;
+        this.consumer.bitMap.updateComponentId(newId);
+        component.componentMap = this.consumer.bitMap.getComponent(newId);
+      }
     }
   }
 
@@ -291,16 +306,6 @@ export default class ComponentLoader {
     const components = objectList.getComponents();
     if (!components.length) return null; // probably doesn't exist
     return components[0];
-  }
-
-  private _isAngularProject(): boolean {
-    return Boolean(
-      this.consumer.packageJson &&
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        this.consumer.packageJson.dependencies &&
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        this.consumer.packageJson.dependencies[ANGULAR_PACKAGE_IDENTIFIER]
-    );
   }
 
   static getInstance(consumer: Consumer): ComponentLoader {

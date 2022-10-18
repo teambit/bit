@@ -70,17 +70,22 @@ export type ReactAppOptions = {
   /**
    * path to entry files of the application.
    */
-  entry: string[];
+  entry: string[] | ((path?: string) => Promise<string[]>);
 
   /**
-   * use server-side rendering for the app.
+   * path to server-rendered entrypoint of the app
    */
-  ssr?: boolean;
+  ssr?: string | (() => Promise<string>);
 
   /**
    * instance of bundler to use. default is Webpack.
    */
   bundler?: Bundler;
+
+  /**
+   * instance of serverside bundler to use. default is Webpack.
+   */
+  ssrBundler?: Bundler;
 
   /**
    * instance of dev server to use. default is Webpack.
@@ -108,7 +113,7 @@ export type ReactAppOptions = {
   /**
    * ranges of ports to use to run the app server.
    */
-  portRange?: number[];
+  portRange?: [start: number, end: number];
 
   /**
    * favicon for the app. You can pass an abs path (using require.resolve()) or a url.

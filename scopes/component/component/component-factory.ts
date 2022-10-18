@@ -8,6 +8,17 @@ import { Component, InvalidComponent } from './component';
 import { State } from './state';
 import { Snap } from './snap';
 
+export type ResolveAspectsOptions = {
+  /**
+   * Do not return results for the core aspects
+   */
+  excludeCore?: boolean;
+  /**
+   * Only return results for the provided list of ids
+   */
+  requestedOnly?: boolean;
+};
+
 export interface ComponentFactory {
   /**
    * name of the component host.
@@ -34,11 +45,7 @@ export interface ComponentFactory {
   /**
    * returns a component by ID.
    */
-  get(
-    id: ComponentID | string,
-    withState?: boolean,
-    consumerComponent?: ConsumerComponent
-  ): Promise<Component | undefined>;
+  get(id: ComponentID): Promise<Component | undefined>;
 
   /**
    * returns many components by ids.
@@ -55,7 +62,7 @@ export interface ComponentFactory {
    */
   getRemoteComponent?: (id: ComponentID) => Promise<Component>;
 
-  getLegacyGraph(ids?: ComponentID[]): Promise<LegacyGraph>;
+  getLegacyGraph(ids?: ComponentID[], shouldThrowOnMissingDep?: boolean): Promise<LegacyGraph>;
 
   getLogs(id: ComponentID, shortHash?: boolean, startsFrom?: string): Promise<ComponentLog[]>;
 
@@ -73,12 +80,16 @@ export interface ComponentFactory {
    * load aspects.
    * returns the loaded aspect ids including the loaded versions.
    */
-  loadAspects: (ids: string[], throwOnError?: boolean, neededFor?: ComponentID) => Promise<string[]>;
+  loadAspects: (ids: string[], throwOnError?: boolean, neededFor?: string) => Promise<string[]>;
 
   /**
    * Resolve dirs for aspects
    */
-  resolveAspects: (runtimeName?: string, componentIds?: ComponentID[]) => Promise<AspectDefinition[]>;
+  resolveAspects: (
+    runtimeName?: string,
+    componentIds?: ComponentID[],
+    opts?: ResolveAspectsOptions
+  ) => Promise<AspectDefinition[]>;
 
   /**
    * list all components in the host.

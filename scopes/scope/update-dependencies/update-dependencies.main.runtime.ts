@@ -6,18 +6,17 @@ import { LoggerAspect, LoggerMain, Logger } from '@teambit/logger';
 import { ScopeAspect, ScopeMain, ComponentNotFound } from '@teambit/scope';
 import { BuilderAspect, BuilderMain } from '@teambit/builder';
 import { Component, ComponentID } from '@teambit/component';
-import {
-  getPublishedPackages,
-  updateComponentsByTagResult,
-  addFlattenedDependenciesToComponents,
-} from '@teambit/legacy/dist/scope/component-ops/tag-model-component';
+import { SnappingAspect, SnappingMain } from '@teambit/snapping';
+import { isHash } from '@teambit/component-version';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { BuildStatus, LATEST } from '@teambit/legacy/dist/constants';
 import { BitIds } from '@teambit/legacy/dist/bit-id';
+import { LaneId } from '@teambit/lane-id';
 import { BitId } from '@teambit/legacy-bit-id';
 import { getValidVersionOrReleaseType } from '@teambit/legacy/dist/utils/semver-helper';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
-import { exportMany } from '@teambit/legacy/dist/scope/component-ops/export-scope-components';
+import { ExportAspect, ExportMain } from '@teambit/export';
+import { LanesAspect, Lane, LanesMain } from '@teambit/lanes';
 import { ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config';
 import { UpdateDependenciesCmd } from './update-dependencies.cmd';
 import { UpdateDependenciesAspect } from './update-dependencies.aspect';
@@ -30,6 +29,7 @@ export type UpdateDepsOptions = {
   username?: string;
   email?: string;
   push?: boolean;
+  lane?: string;
   skipNewScopeValidation?: boolean;
 };
 
@@ -57,12 +57,16 @@ type OnPostUpdateDependenciesSlot = SlotRegistry<OnPostUpdateDependencies>;
 export class UpdateDependenciesMain {
   private depsUpdateItems: DepUpdateItem[];
   private updateDepsOptions: UpdateDepsOptions;
+  private laneObj?: Lane;
   constructor(
     private scope: ScopeMain,
     private logger: Logger,
     private builder: BuilderMain,
     private dependencyResolver: DependencyResolverMain,
-    private onPostUpdateDependenciesSlot: OnPostUpdateDependenciesSlot
+    private onPostUpdateDependenciesSlot: OnPostUpdateDependenciesSlot,
+    private snapping: SnappingMain,
+    private lanes: LanesMain,
+    private exporter: ExportMain
   ) {}
 
   /**
@@ -78,13 +82,14 @@ export class UpdateDependenciesMain {
   ): Promise<UpdateDepsResult> {
     this.updateDepsOptions = updateDepsOptions;
     await this.validateScopeIsNew();
+    await this.setLaneObject();
     await this.importAllMissing(depsUpdateItemsRaw);
     this.depsUpdateItems = await this.parseDevUpdatesItems(depsUpdateItemsRaw);
     await this.updateFutureVersion();
     await this.updateAllDeps();
     this.addLogToComponents();
     if (!updateDepsOptions.simulation) {
-      await addFlattenedDependenciesToComponents(this.scope.legacyScope, this.legacyComponents);
+      await this.snapping._addFlattenedDependenciesToComponents(this.scope.legacyScope, this.legacyComponents);
     }
     this.addBuildStatus();
     await this.addComponentsToScope();
@@ -96,8 +101,8 @@ export class UpdateDependenciesMain {
       { seedersOnly: true }
     );
     const legacyBuildResults = this.scope.builderDataMapToLegacyOnTagResults(builderDataMap);
-    updateComponentsByTagResult(this.legacyComponents, legacyBuildResults);
-    const publishedPackages = getPublishedPackages(this.legacyComponents);
+    this.snapping._updateComponentsByTagResult(this.legacyComponents, legacyBuildResults);
+    const publishedPackages = this.snapping._getPublishedPackages(this.legacyComponents);
     const pipeWithError = pipeResults.find((pipe) => pipe.hasErrors());
     const buildStatus = pipeWithError ? BuildStatus.Failed : BuildStatus.Succeed;
     await this.saveDataIntoLocalScope(buildStatus);
@@ -120,6 +125,16 @@ export class UpdateDependenciesMain {
 
   registerOnPostUpdateDependencies(fn: OnPostUpdateDependencies) {
     this.onPostUpdateDependenciesSlot.register(fn);
+  }
+
+  private async setLaneObject() {
+    if (this.updateDepsOptions.lane) {
+      const laneId = LaneId.parse(this.updateDepsOptions.lane);
+      this.laneObj = await this.lanes.importLaneObject(laneId);
+      // this is critical. otherwise, later on, when loading aspects and isolating capsules, we'll try to fetch dists
+      // from the original scope instead of the lane-scope.
+      this.scope.legacyScope.setCurrentLaneId(laneId);
+    }
   }
 
   private async validateScopeIsNew() {
@@ -152,11 +167,13 @@ to bypass this error, use --skip-new-scope-validation flag (not recommended. it 
     }
     // do not use cache. for dependencies we must fetch the latest ModelComponent from the remote
     // in order to match the semver later.
-    await this.scope.import(idsToImport, { useCache: false });
+    await this.scope.import(idsToImport, { useCache: false, lane: this.laneObj });
   }
 
   private async addComponentsToScope() {
-    await mapSeries(this.legacyComponents, (component) => this.scope.legacyScope.sources.addSourceFromScope(component));
+    await mapSeries(this.legacyComponents, (component) =>
+      this.snapping._addCompFromScopeToObjects(component, this.laneObj || null)
+    );
   }
 
   private async updateComponents() {
@@ -213,6 +230,9 @@ to bypass this error, use --skip-new-scope-validation flag (not recommended. it 
     if (this.updateDepsOptions.simulation) {
       // for simulation, we don't have the objects of the dependencies, so don't try to find the
       // exact version, expect the entered version to be okay.
+      return compId;
+    }
+    if (isHash(compId.version)) {
       return compId;
     }
     const range = compId.version || '*'; // if not version specified, assume the latest
@@ -294,7 +314,7 @@ to bypass this error, use --skip-new-scope-validation flag (not recommended. it 
   private async saveDataIntoLocalScope(buildStatus: BuildStatus) {
     await mapSeries(this.legacyComponents, async (component) => {
       component.buildStatus = buildStatus;
-      await this.scope.legacyScope.sources.enrichSource(component);
+      await this.snapping._enrichComp(component);
     });
     await this.scope.legacyScope.objects.persist();
   }
@@ -303,32 +323,40 @@ to bypass this error, use --skip-new-scope-validation flag (not recommended. it 
     const shouldExport = this.updateDepsOptions.push;
     if (!shouldExport) return;
     const ids = BitIds.fromArray(this.legacyComponents.map((c) => c.id));
-    await exportMany({
+    await this.exporter.exportMany({
       scope: this.scope.legacyScope,
-      isLegacy: false,
       ids,
-      codemod: false,
-      changeLocallyAlthoughRemoteIsDifferent: false,
-      includeDependencies: false,
-      remoteName: null,
       idsWithFutureScope: ids,
+      laneObject: this.laneObj,
       allVersions: false,
     });
   }
 
   static runtime = MainRuntime;
 
-  static dependencies = [CLIAspect, ScopeAspect, LoggerAspect, BuilderAspect, DependencyResolverAspect];
+  static dependencies = [
+    CLIAspect,
+    ScopeAspect,
+    LoggerAspect,
+    BuilderAspect,
+    DependencyResolverAspect,
+    SnappingAspect,
+    LanesAspect,
+    ExportAspect,
+  ];
 
   static slots = [Slot.withType<OnPostUpdateDependenciesSlot>()];
 
   static async provider(
-    [cli, scope, loggerMain, builder, dependencyResolver]: [
+    [cli, scope, loggerMain, builder, dependencyResolver, snapping, lanes, exporter]: [
       CLIMain,
       ScopeMain,
       LoggerMain,
       BuilderMain,
-      DependencyResolverMain
+      DependencyResolverMain,
+      SnappingMain,
+      LanesMain,
+      ExportMain
     ],
     _,
     [onPostUpdateDependenciesSlot]: [OnPostUpdateDependenciesSlot]
@@ -339,7 +367,10 @@ to bypass this error, use --skip-new-scope-validation flag (not recommended. it 
       logger,
       builder,
       dependencyResolver,
-      onPostUpdateDependenciesSlot
+      onPostUpdateDependenciesSlot,
+      snapping,
+      lanes,
+      exporter
     );
     cli.register(new UpdateDependenciesCmd(updateDependenciesMain, scope, logger));
     return updateDependenciesMain;

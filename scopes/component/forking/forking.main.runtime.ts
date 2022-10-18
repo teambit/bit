@@ -13,6 +13,7 @@ import pMapSeries from 'p-map-series';
 import PkgAspect, { PkgMain } from '@teambit/pkg';
 import { BitError } from '@teambit/bit-error';
 import NewComponentHelperAspect, { NewComponentHelperMain } from '@teambit/new-component-helper';
+import { InstallMain, InstallAspect } from '@teambit/install';
 import { ForkCmd, ForkOptions } from './fork.cmd';
 import { ForkingAspect } from './forking.aspect';
 import { ForkingFragment } from './forking.fragment';
@@ -44,6 +45,7 @@ type MultipleForkOptions = {
 export class ForkingMain {
   constructor(
     private workspace: Workspace,
+    private install: InstallMain,
     private dependencyResolver: DependencyResolverMain,
     private newComponentHelper: NewComponentHelperMain,
     private refactoring: RefactoringMain,
@@ -68,7 +70,7 @@ export class ForkingMain {
       : ComponentID.fromLegacy(BitId.parse(sourceId, true));
     const { targetCompId, component } = await this.forkRemoteComponent(sourceIdWithScope, targetId, options);
     await this.saveDeps(component);
-    await this.installDeps();
+    if (!options?.skipDependencyInstallation) await this.installDeps();
     return targetCompId;
   }
 
@@ -93,7 +95,7 @@ export class ForkingMain {
       const { targetCompId, component } = await this.forkRemoteComponent(sourceIdWithScope, targetId, { scope, path });
       return { targetCompId, sourceId, component };
     });
-    await this.refactorMultipleAndInstall(results);
+    await this.refactorMultipleAndInstall(results, options);
   }
 
   private async refactorMultipleAndInstall(results: MultipleForkInfo[], options: MultipleForkOptions = {}) {
@@ -211,7 +213,7 @@ the reason is that the refactor changes the components using ${sourceId.toString
   }
 
   private async installDeps() {
-    await this.workspace.install(undefined, {
+    await this.install.install(undefined, {
       dedupe: true,
       import: false,
       copyPeerToRuntimeOnRoot: true,
@@ -253,6 +255,7 @@ the reason is that the refactor changes the components using ${sourceId.toString
     GraphqlAspect,
     RefactoringAspect,
     PkgAspect,
+    InstallAspect,
   ];
   static runtime = MainRuntime;
   static async provider([
@@ -264,6 +267,7 @@ the reason is that the refactor changes the components using ${sourceId.toString
     graphql,
     refactoring,
     pkg,
+    install,
   ]: [
     CLIMain,
     Workspace,
@@ -272,9 +276,10 @@ the reason is that the refactor changes the components using ${sourceId.toString
     NewComponentHelperMain,
     GraphqlMain,
     RefactoringMain,
-    PkgMain
+    PkgMain,
+    InstallMain
   ]) {
-    const forkingMain = new ForkingMain(workspace, dependencyResolver, newComponentHelper, refactoring, pkg);
+    const forkingMain = new ForkingMain(workspace, install, dependencyResolver, newComponentHelper, refactoring, pkg);
     cli.register(new ForkCmd(forkingMain));
     graphql.register(forkingSchema(forkingMain));
     componentMain.registerShowFragments([new ForkingFragment(forkingMain)]);

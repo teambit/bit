@@ -4,11 +4,6 @@ import { compact } from 'lodash';
 import R from 'ramda';
 import { WILDCARD_HELP } from '@teambit/legacy/dist/constants';
 import {
-  ImportOptions,
-  ImportDetails,
-  ImportStatus,
-} from '@teambit/legacy/dist/consumer/component-ops/import-components';
-import {
   FileStatus,
   MergeOptions,
   MergeStrategy,
@@ -17,12 +12,19 @@ import ConsumerComponent from '@teambit/legacy/dist/consumer/component/consumer-
 import GeneralError from '@teambit/legacy/dist/error/general-error';
 import { immutableUnshift } from '@teambit/legacy/dist/utils';
 import { formatPlainComponentItem } from '@teambit/legacy/dist/cli/chalk-box';
-import { Importer } from './importer';
+import { ImporterMain } from './importer.main.runtime';
+import { ImportOptions, ImportDetails, ImportStatus } from './import-components';
 
-export default class ImportCmd implements Command {
-  name = 'import [component-ids...]';
-  description = 'import components from remote scopes to the local workspace';
-  arguments = [{ name: 'component-ids...', description: 'a list of component IDs (separated by space) to import' }];
+export class ImportCmd implements Command {
+  name = 'import [component-patterns...]';
+  description = 'import components from their remote scopes to the local workspace';
+  arguments = [
+    {
+      name: 'component-patterns...',
+      description:
+        'component IDs or component patterns (separated by space). Use patterns to import groups of components using a common scope or namespace. E.g., "utils/*" (wrap with double quotes)',
+    },
+  ];
   extendedDescription: string;
   group = 'collaborate';
   alias = '';
@@ -37,7 +39,7 @@ export default class ImportCmd implements Command {
     ['O', 'override', 'override local changes'],
     ['v', 'verbose', 'show verbose output for inspection'],
     ['j', 'json', 'return the output as JSON'],
-    ['', 'conf', 'write the configuration file (component.json) of the component'],
+    // ['', 'conf', 'write the configuration file (component.json) of the component'], // not working. need to fix once ComponentWriter is moved to Harmony
     ['', 'skip-npm-install', 'DEPRECATED. use "--skip-dependency-installation" instead'],
     ['', 'skip-dependency-installation', 'do not install packages of the imported components'],
     [
@@ -46,7 +48,11 @@ export default class ImportCmd implements Command {
       'merge local changes with the imported version. strategy should be "theirs", "ours" or "manual"',
     ],
     ['', 'dependencies', 'EXPERIMENTAL. import all dependencies and write them to the workspace'],
-    ['', 'dependents', 'EXPERIMENTAL. import component dependents to allow auto-tag updating them upon tag'],
+    [
+      '',
+      'dependents',
+      "EXPERIMENTAL. import the components' dependents. this enables changes to propagate from (modified) components to their dependents",
+    ],
     [
       '',
       'save-in-lane',
@@ -63,7 +69,7 @@ export default class ImportCmd implements Command {
   remoteOp = true;
   _packageManagerArgs: string[]; // gets populated by yargs-adapter.handler().
 
-  constructor(private importer: Importer, private docsDomain: string) {
+  constructor(private importer: ImporterMain, private docsDomain: string) {
     this.extendedDescription = `https://${docsDomain}/components/importing-components
 ${WILDCARD_HELP('import')}`;
   }
@@ -221,6 +227,7 @@ function formatPlainComponentItemWithVersions(component: ConsumerComponent, impo
   };
   const conflictMessage = getConflictMessage();
   const deprecated = importDetails.deprecated ? chalk.yellow('deprecated') : '';
+  const removed = importDetails.removed ? chalk.red('removed') : '';
   const missingDeps = importDetails.missingDeps.length
     ? chalk.red(`missing dependencies: ${importDetails.missingDeps.map((d) => d.toString()).join(', ')}`)
     : '';
@@ -229,5 +236,5 @@ function formatPlainComponentItemWithVersions(component: ConsumerComponent, impo
   }
   return `- ${chalk.green(status)} ${chalk.cyan(
     id
-  )} ${versions}${usedVersion} ${conflictMessage}${deprecated} ${missingDeps}`;
+  )} ${versions}${usedVersion} ${conflictMessage}${deprecated}${removed} ${missingDeps}`;
 }

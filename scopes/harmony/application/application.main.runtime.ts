@@ -1,8 +1,9 @@
 import { MainRuntime, CLIMain, CLIAspect } from '@teambit/cli';
-import { flatten, cloneDeep } from 'lodash';
+import { flatten, head } from 'lodash';
 import { AspectLoaderMain, AspectLoaderAspect } from '@teambit/aspect-loader';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
+import { BitError } from '@teambit/bit-error';
 import { BuilderAspect, BuilderMain } from '@teambit/builder';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
@@ -21,6 +22,7 @@ import { AppPlugin } from './app.plugin';
 import { AppTypePlugin } from './app-type.plugin';
 import { AppContext } from './app-context';
 import { DeployTask } from './deploy.task';
+import { AppNoSsr } from './exceptions/app-no-ssr';
 
 export type ApplicationTypeSlot = SlotRegistry<ApplicationType<unknown>[]>;
 export type ApplicationSlot = SlotRegistry<Application[]>;
@@ -32,17 +34,30 @@ export type ServeAppOptions = {
   /**
    * default port range used to serve applications.
    */
-  defaultPortRange?: number[];
+  defaultPortRange?: [start: number, end: number];
 
   /**
    * determine whether to start the application in dev mode.
    */
   dev: boolean;
+
+  /**
+   * actively watch and compile the workspace (like the bit watch command)
+   * @default true
+   */
+  watch?: boolean;
+
+  /**
+   * determine whether to start the application in server side mode.
+   * @default false
+   */
+  ssr?: boolean;
 };
 
 export class ApplicationMain {
   constructor(
     private appSlot: ApplicationSlot,
+    // TODO unused
     private appTypeSlot: ApplicationTypeSlot,
     private deploymentProviderSlot: DeploymentProviderSlot,
     private envs: EnvsMain,
@@ -84,11 +99,33 @@ export class ApplicationMain {
   }
 
   /**
+   * get an application by a component id.
+   */
+  getAppById(id: ComponentID) {
+    const apps = this.listAppsById(id);
+    if (!apps) return undefined;
+    return head(apps);
+  }
+
+  /**
    * get an app.
    */
   getApp(appName: string, id?: ComponentID): Application | undefined {
     const apps = this.listAppsById(id) || this.listApps();
     return apps.find((app) => app.name === appName);
+  }
+
+  getAppByNameOrId(appNameOrId: string): Application | undefined {
+    const byName = this.getApp(appNameOrId);
+    if (byName) return byName;
+    const byId = this.appSlot.get(appNameOrId);
+    if (!byId || !byId.length) return undefined;
+    if (byId.length > 1) {
+      throw new BitError(
+        `unable to figure out what app to retrieve. the id "${appNameOrId}" has more than one app. please use the app-name`
+      );
+    }
+    return byId[0];
   }
 
   /**
@@ -112,30 +149,39 @@ export class ApplicationMain {
    * get app to throw.
    */
   getAppOrThrow(appName: string) {
-    const app = this.getApp(appName);
+    const app = this.getAppByNameOrId(appName);
     if (!app) throw new AppNotFound(appName);
     return app;
   }
 
-  private computeOptions(opts: Partial<ServeAppOptions>) {
-    const defaultOpts: ServeAppOptions = {
-      dev: false,
-      defaultPortRange: [3100, 3500],
-    };
-
+  defaultOpts: ServeAppOptions = {
+    dev: false,
+    ssr: false,
+    watch: true,
+    defaultPortRange: [3100, 3500],
+  };
+  private computeOptions(opts: Partial<ServeAppOptions> = {}) {
     return {
-      defaultOpts,
+      ...this.defaultOpts,
       ...opts,
     };
   }
 
-  async runApp(appName: string, options: Partial<ServeAppOptions> & { skipWatch?: boolean } = {}) {
+  async runApp(appName: string, options?: ServeAppOptions) {
+    options = this.computeOptions(options);
     const app = this.getAppOrThrow(appName);
-    this.computeOptions(options);
-    const context = await this.createAppContext(appName);
+    const context = await this.createAppContext(app.name);
     if (!context) throw new AppNotFound(appName);
+
+    if (options.ssr) {
+      if (!app.runSsr) throw new AppNoSsr(appName);
+
+      const result = await app.runSsr(context);
+      return { app, ...result };
+    }
+
     const port = await app.run(context);
-    if (!options.skipWatch) {
+    if (options.watch) {
       this.workspace.watcher
         .watchAll({
           preCompile: false,
@@ -145,7 +191,7 @@ export class ApplicationMain {
           this.logger.error(`compilation failed`, err);
         });
     }
-    return { app, port };
+    return { app, port, errors: undefined };
   }
 
   /**
@@ -172,10 +218,9 @@ export class ApplicationMain {
     const res = await env.run(this.appService);
     const context = res.results[0].data;
     if (!context) throw new AppNotFound(appName);
-    return Object.assign(cloneDeep(context), {
-      appName,
-      appComponent: component,
-    });
+    const hostRootDir = this.workspace.getComponentPackagePath(component);
+    const appContext = new AppContext(appName, context.dev, component, this.workspace.path, context, hostRootDir);
+    return appContext;
   }
 
   static runtime = MainRuntime;
@@ -222,13 +267,23 @@ export class ApplicationMain {
       logger
     );
     const appCmd = new AppCmd();
-    appCmd.commands = [new AppListCmd(application)];
+    appCmd.commands = [new AppListCmd(application), new RunCmd(application, logger)];
     aspectLoader.registerPlugins([new AppPlugin(appSlot)]);
     builder.registerBuildTasks([new AppsBuildTask(application)]);
     builder.registerSnapTasks([new DeployTask(application, builder)]);
     builder.registerTagTasks([new DeployTask(application, builder)]);
     cli.registerGroup('apps', 'Applications');
     cli.register(new RunCmd(application, logger), new AppListCmdDeprecated(application), appCmd);
+    if (workspace) {
+      workspace.onComponentLoad(async (loadedComponent) => {
+        const app = application.getAppById(loadedComponent.id);
+        if (!app) return {};
+        return {
+          appName: app?.name,
+          type: app?.applicationType,
+        };
+      });
+    }
 
     return application;
   }

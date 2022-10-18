@@ -39,18 +39,3 @@ export function composeDependencyPath(
 ): PathOsBased {
   return path.join(dependenciesDir, bitId.toFullPath());
 }
-
-export function composeDependencyPathForIsolated(
-  bitId: BitId,
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  dependenciesDir?: string = DEFAULT_DEPENDENCIES_DIR_PATH
-): PathOsBased {
-  const getIdPath = () => {
-    try {
-      return bitId.toFullPath();
-    } catch (err: any) {
-      return bitId.name;
-    }
-  };
-  return path.join(dependenciesDir, getIdPath());
-}

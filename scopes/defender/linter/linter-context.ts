@@ -21,4 +21,9 @@ export interface LinterOptions {
 }
 export interface LinterContext extends ExecutionContext, LinterOptions {
   quiet?: boolean;
+  /**
+   * Root dir that contains all the components in the fs that are about to be linted
+   * Usually it's the workspace root dir or the capsule root dir
+   */
+  rootDir?: string;
 }

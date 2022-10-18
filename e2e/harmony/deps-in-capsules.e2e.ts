@@ -18,7 +18,7 @@ chai.use(require('chai-string'));
   let npmCiRegistry: NpmCiRegistry;
   before(async () => {
     helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
-    helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+    helper.scopeHelper.setNewLocalAndRemoteScopes();
     helper.bitJsonc.setupDefault();
     helper.bitJsonc.setPackageManager();
     npmCiRegistry = new NpmCiRegistry(helper);
@@ -33,13 +33,13 @@ chai.use(require('chai-string'));
     helper.command.tagAllComponents();
     helper.command.export();
 
-    helper.scopeHelper.reInitLocalScopeHarmony();
+    helper.scopeHelper.reInitLocalScope();
     helper.scopeHelper.addRemoteScope();
     helper.bitJsonc.setupDefault();
   });
   describe('using pnpm', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.extensions.bitJsonc.addKeyValToDependencyResolver('packageManager', `teambit.dependencies/pnpm`);
       helper.scopeHelper.addRemoteScope();
       helper.bitJsonc.setupDefault();
@@ -62,11 +62,13 @@ chai.use(require('chai-string'));
       const capsuleDirs = fs.readdirSync(scopeAspectsCapsulesRootDir);
       const nodeEnv1CapsuleDir = path.join(
         scopeAspectsCapsulesRootDir,
-        capsuleDirs.find((dir) => dir.includes('node-env-1')) as string
+        // eslint-disable-next-line
+        capsuleDirs.find((dir) => dir.includes('node-env-1'))!
       );
       const nodeEnv2CapsuleDir = path.join(
         scopeAspectsCapsulesRootDir,
-        capsuleDirs.find((dir) => dir.includes('node-env-2')) as string
+        // eslint-disable-next-line
+        capsuleDirs.find((dir) => dir.includes('node-env-2'))!
       );
       expect(path.join(nodeEnv1CapsuleDir, 'node_modules/lodash.get')).to.be.a.path();
       expect(path.join(nodeEnv2CapsuleDir, 'node_modules/lodash.flatten')).to.be.a.path();
@@ -74,7 +76,7 @@ chai.use(require('chai-string'));
   });
   describe('using Yarn', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.extensions.bitJsonc.addKeyValToDependencyResolver('packageManager', `teambit.dependencies/yarn`);
       helper.scopeHelper.addRemoteScope();
       helper.bitJsonc.setupDefault();

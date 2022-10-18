@@ -1,6 +1,7 @@
 import { CompilerAspect, CompilerMain } from '@teambit/compiler';
 import { loadAspect } from '@teambit/harmony.testing.load-aspect';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
+import { InstallMain, InstallAspect } from '@teambit/install';
 import fs from 'fs-extra';
 import pMapSeries from 'p-map-series';
 import path from 'path';
@@ -26,7 +27,8 @@ module.exports = () => 'comp${index}${additionalStr} and ' + ${nextComp}();`;
     await workspace.track({ rootDir: compDir });
   });
   await workspace.bitMap.write();
-  await workspace.link({ rewire: true });
+  const install: InstallMain = await loadAspect(InstallAspect, workspacePath);
+  await install.link({ rewire: true });
 
   const compiler: CompilerMain = await loadAspect(CompilerAspect, workspacePath);
   await compiler.compileOnWorkspace();

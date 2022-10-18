@@ -3,18 +3,23 @@ import { Slot, SlotRegistry } from '@teambit/harmony';
 import { ComponentID } from '@teambit/component-id';
 import crossFetch from 'cross-fetch';
 import memoize from 'memoizee';
+import { debounce } from 'lodash';
 
 import { PreviewNotFound } from './exceptions';
 import { PreviewType } from './preview-type';
 import { PreviewAspect, PreviewRuntime } from './preview.aspect';
 import { ClickInsideAnIframeEvent } from './events';
-import { PreviewModule } from './types/preview-module';
+import { ModuleFile, PreviewModule } from './types/preview-module';
 import { RenderingContext } from './rendering-context';
 import { fetchComponentAspects } from './gql/fetch-component-aspects';
+import { PREVIEW_MODULES } from './preview-modules';
+import { loadScript, loadLink } from './html-utils';
+import { SizeEvent } from './size-event';
+
+// forward linkModules() for generate-link.ts
+export { linkModules } from './preview-modules';
 
 export type PreviewSlot = SlotRegistry<PreviewType>;
-
-const PREVIEW_MODULES: Record<string, PreviewModule> = {};
 
 export type RenderingContextOptions = { aspectsFilter?: string[] };
 export type RenderingContextProvider = (options: RenderingContextOptions) => { [key: string]: any };
@@ -47,10 +52,39 @@ export class PreviewPreview {
 
   private isDev = false;
 
+  private isReady() {
+    const { previewName } = this.getLocation();
+    const name = previewName || this.getDefault();
+
+    if (!PREVIEW_MODULES.has(name)) return false;
+    const preview = this.getPreview(name);
+    if (!preview) return false;
+    const includedReady = preview.include?.every((included) => PREVIEW_MODULES.has(included)) ?? true;
+    if (!includedReady) return false;
+
+    return true;
+  }
+
+  private _setupPromise?: Promise<void>;
+  setup = () => {
+    if (this.isReady()) return Promise.resolve();
+
+    this._setupPromise ??= new Promise((resolve) => {
+      PREVIEW_MODULES.onSet.add(() => {
+        if (this.isReady()) resolve();
+      });
+    });
+
+    return this._setupPromise;
+  };
+
   /**
    * render the preview.
    */
   render = async (rootExt?: string) => {
+    // fit content always.
+    window.document.body.style.width = 'fit-content';
+
     const { previewName, componentId } = this.getLocation();
     const name = previewName || this.getDefault();
     if (rootExt) this.isDev = rootExt === 'teambit.workspace/workspace';
@@ -61,76 +95,132 @@ export class PreviewPreview {
     }
 
     const includesAll = await Promise.all(
-      (preview.include || []).map(async (prevName) => {
-        const includedPreview = this.getPreview(prevName);
+      (preview.include || []).map(async (inclPreviewName) => {
+        const includedPreview = this.getPreview(inclPreviewName);
         if (!includedPreview) return undefined;
 
-        return includedPreview.selectPreviewModel?.(
-          componentId.fullName,
-          await this.getPreviewModule(prevName, componentId, name)
-        );
+        const inclPreviewModule = await this.getPreviewModule(inclPreviewName, componentId);
+        return includedPreview.selectPreviewModel?.(componentId.fullName, inclPreviewModule);
       })
     );
 
     const includes = includesAll.filter((module) => !!module);
     // during build / tag, the component is isolated, so all aspects are relevant, and do not require filtering
     const componentAspects = this.isDev ? await this.getComponentAspects(componentId.toString()) : undefined;
+    const previewModule = await this.getPreviewModule(name, componentId);
+    const render = preview.render(componentId, previewModule, includes, this.getRenderingContext(componentAspects));
 
-    return preview.render(
-      componentId,
-      await this.getPreviewModule(name, componentId),
-      includes,
-      this.getRenderingContext(componentAspects)
-    );
+    this.reportSize();
+    this.setViewport();
+    return render;
   };
 
-  async getPreviewModule(name: string, id: ComponentID, parentPreviewName?: string): Promise<PreviewModule> {
-    const relevantModel = PREVIEW_MODULES[name];
-    if (relevantModel.componentMap[id.fullName]) return relevantModel;
-
-    let component;
-    // Handle case when there is overview but no composition on the workspace dev server
-    if (!parentPreviewName || !PREVIEW_MODULES[parentPreviewName].componentMap[id.fullName]) {
-      // if (!window[name]) throw new PreviewNotFound(name);
-      // const isSplitComponentBundle = relevantModel.isSplitComponentBundle ?? false;
-      // const component = window[id.toStringWithoutVersion()];
-      component = await this.fetchComponentPreview(id, name);
+  setViewport() {
+    const query = this.getQuery();
+    const viewPort = this.getParam(query, 'viewport');
+    if (!viewPort) {
+      window.document.body.style.width = '100%';
+      return;
     }
+
+    window.document.body.style.maxWidth = `${viewPort}px`;
+  }
+
+  reportSize() {
+    if (!window?.parent || !window?.document) return;
+    // TODO: discuss with gilad for a better way to resolve page loaded here.
+
+    const sendPubsubEvent = () => {
+      this.pubsub.pub(
+        PreviewAspect.id,
+        new SizeEvent({
+          width: window.document.body.offsetWidth,
+          height: window.document.body.offsetHeight,
+        })
+      );
+    };
+
+    window.document.body.addEventListener('resize', debounce(sendPubsubEvent, 300));
+
+    let counter = 0;
+    const interval = setInterval(() => {
+      // TODO: think
+      counter += 1;
+      if (counter > 10) {
+        clearInterval(interval);
+        return;
+      }
+      this.pubsub.pub(
+        PreviewAspect.id,
+        new SizeEvent({
+          width: window.document.body.offsetWidth,
+          height: window.document.body.offsetHeight,
+        })
+      );
+    }, 200);
+  }
+
+  async getPreviewModule(previewName: string, id: ComponentID): Promise<PreviewModule> {
+    const compShortId = id.fullName;
+
+    const relevantModel = PREVIEW_MODULES.get(previewName);
+    if (!relevantModel) throw new Error(`[preview.preview] missing preview "${previewName}"`);
+    if (relevantModel.componentMap[compShortId]) return relevantModel;
+
+    const componentPreviews = await this.fetchComponentPreview(id, previewName);
+    PREVIEW_MODULES.loadComponentPreviews(compShortId, componentPreviews);
+
+    const component = componentPreviews[previewName];
+    const metadata = componentPreviews[`${previewName}_metadata`];
 
     return {
       mainModule: relevantModel.mainModule,
       componentMap: {
         [id.fullName]: component,
       },
+      componentMapMetadata: {
+        [id.fullName]: metadata,
+      },
     };
   }
 
-  async fetchComponentPreview(id: ComponentID, name: string) {
-    let previewFile;
+  async fetchComponentPreview(id: ComponentID, name: string): Promise<Record<string, ModuleFile[]>> {
+    let previewFile: string | undefined;
     const allFiles = await this.fetchComponentPreviewFiles(id, name);
     // It's a component bundled with the env
-    if (allFiles === null) {
-      return Promise.resolve(undefined);
-    }
-    allFiles.forEach((file) => {
-      // We want to run the preview file always last
-      if (file.endsWith('-preview.js')) {
-        previewFile = file;
-      } else {
-        this.addComponentFileElement(id, file);
-      }
-    });
-    return new Promise((resolve, reject) => {
-      const previewScriptElement = this.getPreviewScriptElement(id, name, previewFile, resolve, reject);
-      document.head.appendChild(previewScriptElement);
-    });
+    if (allFiles === null) return {};
+
+    await Promise.all(
+      allFiles.map((file) => {
+        // We want to run the preview file always last
+        if (file.endsWith('-preview.js')) {
+          previewFile = file;
+          return undefined;
+        }
+
+        return this.addComponentFileElement(id, file);
+      })
+    );
+
+    if (!previewFile) return {};
+    return this.loadPreviewScript(id, name, previewFile);
   }
 
   private addComponentFileElement(id: ComponentID, previewBundleFileName: string) {
     if (previewBundleFileName.endsWith('.js')) {
       return this.addComponentFileScriptElement(id, previewBundleFileName);
     }
-    return this.addComponentFileLinkElement(id, previewBundleFileName);
+
+    // TODO - should we load assets other than .css / .js?
+    // if (previewBundleFileName.endsWith('.css')) {
+    this.addComponentFileLinkElement(id, previewBundleFileName).catch((err) => {
+      throw new Error(
+        `[preview.preview] failed loading asset "${previewBundleFileName}". Error - "${err?.toString()}"`
+      );
+    });
+
+    // do NOT await non js assets, as they might never load (like images), and not critical for rendering.
+    return undefined;
   }
 
   private async fetchComponentPreviewFiles(id: ComponentID, previewName: string): Promise<string[] | null> {
@@ -154,46 +244,30 @@ export class PreviewPreview {
   }
 
   private addComponentFileScriptElement(id: ComponentID, previewBundleFileName: string) {
-    const script = document.createElement('script');
-    script.setAttribute('defer', 'defer');
-    const stringId = id.toString();
     const previewRoute = `~aspect/component-preview`;
+    const stringId = id.toString();
     const src = `/api/${stringId}/${previewRoute}/${previewBundleFileName}`;
-    script.src = src;
-    document.head.appendChild(script);
-    return script;
+    return loadScript({ src });
   }
 
   private addComponentFileLinkElement(id: ComponentID, previewBundleFileName: string) {
-    const link = document.createElement('link');
     const stringId = id.toString();
     const previewRoute = `~aspect/component-preview`;
     const href = `/api/${stringId}/${previewRoute}/${previewBundleFileName}`;
-    link.setAttribute('href', href);
-    if (previewBundleFileName.endsWith('.css')) {
-      link.setAttribute('rel', 'stylesheet');
-    }
-    document.head.appendChild(link);
-    return link;
+    return loadLink({ href });
   }
 
-  private getPreviewScriptElement(id: ComponentID, name: string, previewBundleFileName: string, resolve, reject) {
-    const script = document.createElement('script');
-    script.setAttribute('defer', 'defer');
-    const stringId = id.toString();
-    // const previewRoute = `~aspect/preview`;
+  private async loadPreviewScript(id: ComponentID, previewName: string, previewBundleFileName: string) {
     const previewRoute = `~aspect/component-preview`;
-    const src = `/api/${stringId}/${previewRoute}/${previewBundleFileName}`;
-    script.src = src; // generate path to remote scope. [scope url]/
-    script.onload = () => {
-      const componentPreview = window[`${id.toStringWithoutVersion()}-preview`];
-      if (!componentPreview) return reject(new PreviewNotFound(name));
-      const targetPreview = componentPreview[name];
-      if (!targetPreview) return resolve(undefined);
+    const src = `/api/${id.toString()}/${previewRoute}/${previewBundleFileName}`;
+    await loadScript({ src });
 
-      return resolve(targetPreview);
-    };
-    return script;
+    // TODO - replace with jsonp
+    const globalId = `${id.toStringWithoutVersion()}-preview`;
+    const componentPreview = window[globalId];
+    if (!componentPreview) throw new PreviewNotFound(previewName);
+
+    return componentPreview as Record<string, ModuleFile[]>;
   }
 
   private getComponentAspects = memoize(fetchComponentAspects, {
@@ -239,9 +313,15 @@ export class PreviewPreview {
     return preview;
   }
 
-  private getParam(query: string, param: string) {
+  getParam(query: string, param: string) {
     const params = new URLSearchParams(query);
     return params.get(param);
+  }
+
+  getQuery() {
+    const withoutHash = window.location.hash.substring(1);
+    const [, after] = withoutHash.split('?');
+    return after;
   }
 
   private getLocation() {
@@ -274,10 +354,6 @@ export class PreviewPreview {
 
     return preview;
   }
-}
-
-export function linkModules(previewName: string, previewModule: PreviewModule) {
-  PREVIEW_MODULES[previewName] = previewModule;
 }
 
 PreviewAspect.addRuntime(PreviewPreview);

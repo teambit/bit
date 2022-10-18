@@ -12,7 +12,7 @@ import { isValidPath } from '../../utils';
 import filterObject from '../../utils/filter-object';
 import { PathOsBased, PathOsBasedAbsolute } from '../../utils/path';
 import { ResolveModulesConfig } from '../component/dependencies/files-dependency-builder/types/dependency-tree-type';
-import AbstractConfig, { Compilers, Testers } from './abstract-config';
+import AbstractConfig from './abstract-config';
 import ConsumerOverrides from './consumer-overrides';
 import { BitConfigNotFound, InvalidBitJson, InvalidPackageJson } from './exceptions';
 import InvalidConfigPropPath from './exceptions/invalid-config-prop-path';
@@ -38,12 +38,8 @@ export type WorkspaceConfigEnsureFunction = (
 export type WorkspaceConfigResetFunction = (dirPath: PathOsBasedAbsolute, resetHard: boolean) => Promise<void>;
 
 export type WorkspaceConfigProps = {
-  compiler?: string | Compilers;
-  tester?: string | Testers;
   saveDependenciesAsComponents?: boolean;
   lang?: string;
-  distTarget?: string | undefined;
-  distEntry?: string | undefined;
   componentsDefaultDirectory?: string;
   dependenciesDirectory?: string;
   bindingPrefix?: string;
@@ -59,10 +55,6 @@ export type WorkspaceConfigProps = {
 };
 
 export default class WorkspaceConfig extends AbstractConfig {
-  distTarget: string | undefined; // path where to store build artifacts
-  // path to remove while storing build artifacts. If, for example the code is in 'src' directory, and the component
-  // is-string is in src/components/is-string, the dists files will be in dists/component/is-string (without the 'src')
-  distEntry: string | undefined;
   componentsDefaultDirectory: string;
   dependenciesDirectory: string;
   saveDependenciesAsComponents: boolean; // save hub dependencies as bit components rather than npm packages
@@ -95,12 +87,8 @@ export default class WorkspaceConfig extends AbstractConfig {
   }
 
   constructor({
-    compiler,
-    tester,
     saveDependenciesAsComponents = DEFAULT_SAVE_DEPENDENCIES_AS_COMPONENTS,
     lang,
-    distTarget,
-    distEntry,
     componentsDefaultDirectory = DEFAULT_COMPONENTS_DIR_PATH,
     dependenciesDirectory = DEFAULT_DEPENDENCIES_DIR_PATH,
     bindingPrefix,
@@ -114,13 +102,10 @@ export default class WorkspaceConfig extends AbstractConfig {
     defaultScope,
     overrides = ConsumerOverrides.load(),
   }: WorkspaceConfigProps) {
-    super({ compiler, tester, lang, bindingPrefix, extensions });
+    super({ lang, bindingPrefix, extensions });
     if (packageManager !== 'npm' && packageManager !== 'yarn') {
       throw new InvalidPackageManager(packageManager);
     }
-    this.distTarget = distTarget;
-    this.distEntry = distEntry;
-
     this.componentsDefaultDirectory = componentsDefaultDirectory;
     // Make sure we have the component name in the path. otherwise components will be imported to the same dir.
     if (!componentsDefaultDirectory.includes('{name}')) {
@@ -140,7 +125,8 @@ export default class WorkspaceConfig extends AbstractConfig {
 
   toPlainObject() {
     const superObject = super.toPlainObject();
-    let consumerObject = R.merge(superObject, {
+    const consumerObject = {
+      ...superObject,
       componentsDefaultDirectory: this.componentsDefaultDirectory,
       dependenciesDirectory: this.dependenciesDirectory,
       saveDependenciesAsComponents: this.saveDependenciesAsComponents,
@@ -152,15 +138,7 @@ export default class WorkspaceConfig extends AbstractConfig {
       resolveModules: this.resolveModules,
       defaultScope: this.defaultScope,
       overrides: this.overrides.overrides,
-    });
-    if (this.distEntry || this.distTarget) {
-      const dist = {};
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      if (this.distEntry) dist.entry = this.distEntry;
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      if (this.distTarget) dist.target = this.distTarget;
-      consumerObject = R.merge(consumerObject, { dist });
-    }
+    };
 
     const isPropDefault = (val, key) => {
       if (key === 'dependenciesDirectory') return val !== DEFAULT_DEPENDENCIES_DIR_PATH;
@@ -230,15 +208,11 @@ export default class WorkspaceConfig extends AbstractConfig {
     this.validate(object);
     const {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      env,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       lang,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       componentsDefaultDirectory,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       dependenciesDirectory,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      dist,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       bindingPrefix,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -264,8 +238,6 @@ export default class WorkspaceConfig extends AbstractConfig {
     } = object;
 
     return new WorkspaceConfig({
-      compiler: R.propOr(undefined, 'compiler', env),
-      tester: R.propOr(undefined, 'tester', env),
       lang,
       bindingPrefix,
       extensions,
@@ -278,8 +250,6 @@ export default class WorkspaceConfig extends AbstractConfig {
       useWorkspaces,
       manageWorkspaces,
       resolveModules,
-      distTarget: R.propOr(undefined, 'target', dist),
-      distEntry: R.propOr(undefined, 'entry', dist),
       defaultScope,
       overrides: ConsumerOverrides.load(overrides),
     });

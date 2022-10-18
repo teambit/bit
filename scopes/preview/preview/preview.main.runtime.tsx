@@ -3,11 +3,18 @@ import type { BuilderMain } from '@teambit/builder';
 import { Asset, BundlerAspect, BundlerMain } from '@teambit/bundler';
 import { PubsubAspect, PubsubMain } from '@teambit/pubsub';
 import { MainRuntime } from '@teambit/cli';
-import { Component, ComponentAspect, ComponentMain, ComponentMap, ComponentID } from '@teambit/component';
+import {
+  Component,
+  ComponentAspect,
+  ComponentMain,
+  ComponentMap,
+  ComponentID,
+  ResolveAspectsOptions,
+} from '@teambit/component';
 import { EnvsAspect } from '@teambit/envs';
 import type { EnvsMain, ExecutionContext, PreviewEnv } from '@teambit/envs';
 import { Slot, SlotRegistry, Harmony } from '@teambit/harmony';
-import { UIAspect, UiMain } from '@teambit/ui';
+import { UIAspect, UiMain, UIRoot } from '@teambit/ui';
 import { CACHE_ROOT } from '@teambit/legacy/dist/constants';
 import { BitError } from '@teambit/bit-error';
 import objectHash from 'object-hash';
@@ -77,6 +84,18 @@ export type ComponentPreviewMetaData = {
   size?: ComponentPreviewSize;
 };
 
+export type PreviewVariantConfig = {
+  isScaling?: boolean;
+};
+
+/**
+ * Preview data that stored on the component on load
+ */
+export type PreviewComponentData = {
+  doesScaling?: boolean;
+  isScaling?: boolean;
+};
+
 export type PreviewConfig = {
   bundlingStrategy?: string;
   disabled: boolean;
@@ -144,7 +163,7 @@ export class PreviewMain {
   }
 
   async getPreview(component: Component): Promise<PreviewArtifact | undefined> {
-    const artifacts = await this.builder.getArtifactsVinylByExtensionAndTaskName(
+    const artifacts = await this.builder.getArtifactsVinylByAspectAndTaskName(
       component,
       PreviewAspect.id,
       PREVIEW_TASK_NAME
@@ -175,7 +194,7 @@ export class PreviewMain {
    * @returns
    */
   async isBundledWithEnv(component: Component): Promise<boolean> {
-    const artifacts = await this.builder.getArtifactsVinylByExtensionAndName(
+    const artifacts = await this.builder.getArtifactsVinylByAspectAndName(
       component,
       PreviewAspect.id,
       COMPONENT_STRATEGY_ARTIFACT_NAME
@@ -183,6 +202,96 @@ export class PreviewMain {
     if (!artifacts || !artifacts.length) return true;
 
     return false;
+  }
+
+  // This used on component load to calc the final result of support is scaling for a given component
+  // This calc based on the env, env data, env preview config and more
+  // if you want to get the final result use the `doesScaling` method below
+  // This should be used only for component load
+  private async calcDoesScalingForComponent(component: Component): Promise<boolean> {
+    const isBundledWithEnv = await this.isBundledWithEnv(component);
+    // if it's a core env and the env template is apart from the component it means the template bundle already contain the scaling functionality
+    if (this.envs.isUsingCoreEnv(component)) {
+      // If the component is new, no point to check the is bundle with env (there is no artifacts so it will for sure return false)
+      // If it's new, and we are here, it means that we already use a version of the env that support scaling
+      const isNew = await component.isNew();
+      if (isNew) {
+        return true;
+      }
+      return isBundledWithEnv === false;
+    }
+    // For envs that bundled with the env return true always
+    if (isBundledWithEnv) {
+      return true;
+    }
+    const envComponent = await this.envs.getEnvComponent(component);
+    return this.isEnvSupportScaling(envComponent);
+  }
+
+  /**
+   * can the current component preview scale in size for different preview sizes.
+   * this calculation is based on the env of the component and if the env of the component support it.
+   */
+  async doesScaling(component: Component): Promise<boolean> {
+    const inWorkspace = await this.workspace?.hasId(component.id);
+    // Support case when we have the dev server for the env, in that case we calc the data of the env as we can't rely on the env data from the scope
+    // since we bundle it for the dev server again
+    if (inWorkspace) {
+      const envComponent = await this.envs.getEnvComponent(component);
+      const envSupportScaling = await this.calculateIsEnvSupportScaling(envComponent);
+      return envSupportScaling ?? true;
+    }
+    const previewData = component.state.aspects.get(PreviewAspect.id)?.data;
+    if (!previewData) return false;
+    // Get the does scaling (the new calculation) or the old calc used in isScaling (between versions (about) 848 and 860)
+    if (previewData.doesScaling !== undefined) return previewData.doesScaling;
+    // in case this component were tagged with versions between 848 and 860 we need to use the old calculation
+    // together with the env calculation
+    // In that case it means the component already tagged, so we take the env calc from the env data and not re-calc it
+    if (previewData.isScaling) {
+      const envComponent = await this.envs.getEnvComponent(component);
+      const envSupportScaling = this.isEnvSupportScaling(envComponent);
+      return !!envSupportScaling;
+    }
+    return false;
+  }
+
+  /**
+   * Check if the current version of the env support scaling
+   * @param envComponent
+   * @returns
+   */
+  isEnvSupportScaling(envComponent: Component): boolean {
+    const previewData = envComponent.state.aspects.get(PreviewAspect.id)?.data;
+    return !!previewData?.isScaling;
+  }
+
+  /**
+   * This function is calculate the isScaling support flag for the component preview.
+   * This is calculated only for the env component and not for the component itself.
+   * It should be only used during the (env) component on load.
+   * Once the component load, you should only use the `isEnvSupportScaling` to fetch it from the calculated data.
+   * If you want to check if an env for a given component support scaling, use the `isScaling` function.
+   * @param component
+   * @returns
+   */
+  private async calculateIsEnvSupportScaling(envComponent: Component): Promise<boolean | undefined> {
+    const isEnv = this.envs.isEnv(envComponent);
+    // If the component is not an env, we don't want to store anything in the data
+    if (!isEnv) return undefined;
+    const previewAspectConfig = this.getPreviewConfig(envComponent);
+    // default to true if the env doesn't have a preview config
+    return previewAspectConfig?.isScaling ?? true;
+  }
+
+  /**
+   * Get the preview config of the component.
+   * (config that was set by variants or on bitmap)
+   * @param component
+   * @returns
+   */
+  getPreviewConfig(component: Component): PreviewVariantConfig | undefined {
+    return component.state.aspects.get(PreviewAspect.id)?.config;
   }
 
   /**
@@ -195,7 +304,7 @@ export class PreviewMain {
     // these envs had header in their docs
     const ENV_WITH_LEGACY_DOCS = ['react', 'env', 'aspect', 'lit', 'html', 'node', 'mdx', 'react-native', 'readme'];
 
-    const artifacts = await this.builder.getArtifactsVinylByExtensionAndName(
+    const artifacts = await this.builder.getArtifactsVinylByAspectAndName(
       component,
       PreviewAspect.id,
       ENV_STRATEGY_ARTIFACT_NAME
@@ -214,7 +323,7 @@ export class PreviewMain {
    * @returns
    */
   async getEnvTemplate(component: Component): Promise<PreviewArtifact | undefined> {
-    const artifacts = await this.builder.getArtifactsVinylByExtensionAndTaskName(
+    const artifacts = await this.builder.getArtifactsVinylByAspectAndTaskName(
       component,
       PreviewAspect.id,
       GENERATE_ENV_TEMPLATE_TASK_NAME
@@ -348,7 +457,7 @@ export class PreviewMain {
         const environment = this.envs.getEnv(component).env;
         const compilerInstance = environment.getCompiler?.();
         const modulePath =
-          compilerInstance?.getPreviewComponentRootPath?.(component) || this.pkg.getModulePath(component);
+          compilerInstance?.getPreviewComponentRootPath?.(component) || this.pkg.getRuntimeModulePath(component);
         return files.map((file) => {
           if (!this.workspace || !compilerInstance) {
             return file.path;
@@ -370,13 +479,29 @@ export class PreviewMain {
   }
 
   async writePreviewRuntime(context: { components: Component[] }, aspectsIdsToNotFilterOut: string[] = []) {
-    const ui = this.ui.getUi();
-    if (!ui) throw new Error('ui not found');
-    const [name, uiRoot] = ui;
-    const resolvedAspects = await uiRoot.resolveAspects(PreviewRuntime.name);
+    const [name, uiRoot] = this.getUi();
+    const resolvedAspects = await this.resolveAspects(PreviewRuntime.name, undefined, uiRoot);
     const filteredAspects = this.filterAspectsByExecutionContext(resolvedAspects, context, aspectsIdsToNotFilterOut);
     const filePath = await this.ui.generateRoot(filteredAspects, name, 'preview', PreviewAspect.id);
     return filePath;
+  }
+
+  async resolveAspects(
+    runtimeName?: string,
+    componentIds?: ComponentID[],
+    uiRoot?: UIRoot,
+    opts?: ResolveAspectsOptions
+  ): Promise<AspectDefinition[]> {
+    const root = uiRoot || this.getUi()[1];
+    runtimeName = runtimeName || MainRuntime.name;
+    const resolvedAspects = await root.resolveAspects(runtimeName, componentIds, opts);
+    return resolvedAspects;
+  }
+
+  private getUi() {
+    const ui = this.ui.getUi();
+    if (!ui) throw new Error('ui not found');
+    return ui;
   }
 
   /**
@@ -590,6 +715,18 @@ export class PreviewMain {
       workspace.registerOnComponentAdd((c) =>
         preview.handleComponentChange(c, (currentComponents) => currentComponents.add(c))
       );
+      workspace.onComponentLoad(async (component) => {
+        const doesScaling = await preview.calcDoesScalingForComponent(component);
+        const isScaling = await preview.calculateIsEnvSupportScaling(component);
+        const data: PreviewComponentData = {
+          doesScaling,
+        };
+        // If there is no isScaling result at all, it's probably not an env. don't store any data.
+        if (isScaling !== undefined) {
+          data.isScaling = isScaling;
+        }
+        return data;
+      });
       workspace.registerOnComponentChange((c) =>
         preview.handleComponentChange(c, (currentComponents) => currentComponents.update(c))
       );

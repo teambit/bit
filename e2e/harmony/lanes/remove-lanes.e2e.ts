@@ -16,14 +16,14 @@ describe('remove lanes', function () {
   });
   describe('switching to a new lane and snapping', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents();
       helper.command.snapAllComponents();
       helper.command.export();
 
       helper.command.createLane();
-      helper.command.snapComponent('comp1 -f');
+      helper.command.snapComponent(`comp1 --unmodified`);
     });
     it('as an intermediate step, make sure the snapped components are part of the lane', () => {
       const lane = helper.command.showOneLaneParsed('dev');
@@ -80,7 +80,7 @@ describe('remove lanes', function () {
   });
   describe('removing a remote lane', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.command.createLane();
       helper.fixtures.populateComponents();
