@@ -508,13 +508,20 @@ export class ReactEnv
   }
 
   /**
+   * @deprecated use createEsmCompilerTask()
+   */
+  getEsmCompilerTask(transformers: TsConfigTransformer[] = [], tsModule = ts) {
+    return this.createEsmCompilerTask(transformers as Function[], tsModule);
+  }
+
+  /**
    * Get a compiler task with react config and set to esm module
    * @param transformers
    * @param tsModule
    * @returns
    */
-  getEsmCompilerTask(transformers: TsConfigTransformer[] = [], tsModule = ts) {
-    const tsCompiler = this.getTsEsmCompiler('build', transformers, tsModule);
+  createEsmCompilerTask(transformers: Function[] = [], tsModule = ts) {
+    const tsCompiler = this.createTsEsmCompiler('build', transformers as TsConfigTransformer[], tsModule);
     return this.compiler.createTask('TSCompiler', tsCompiler);
   }
 
