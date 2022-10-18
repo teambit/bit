@@ -20,6 +20,14 @@ export class ComponentGraph extends Graph<Component, Dependency> {
     return new ComponentGraph(nodes, edges) as this;
   }
 
+  /**
+   * check all the routes from the sources to targets and return the components found during this traversal.
+   * e.g.
+   * A -> B -> C -> N.
+   * A -> E -> N.
+   * B -> F -> G.
+   * given source: A, targets: N. The results will be: B, C, E
+   */
   findIdsFromSourcesToTargets(sources: ComponentID[], targets: ComponentID[]): ComponentID[] {
     const removeVerFromIdStr = (idStr: string) => idStr.split('@')[0];
     const sourcesStr = sources.map((s) => s.toStringWithoutVersion());
