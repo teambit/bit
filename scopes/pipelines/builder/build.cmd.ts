@@ -7,7 +7,8 @@ import chalk from 'chalk';
 import { BuilderMain } from './builder.main.runtime';
 
 type BuildOpts = {
-  all: boolean;
+  all: boolean; // deprecated. use unmodified
+  unmodified?: boolean;
   dev: boolean;
   rebuild: boolean;
   install: boolean;
