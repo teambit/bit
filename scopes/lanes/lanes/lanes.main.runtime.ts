@@ -9,7 +9,6 @@ import { LaneId, DEFAULT_LANE, LANE_REMOTE_DELIMITER } from '@teambit/lane-id';
 import { BitError } from '@teambit/bit-error';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { DiffOptions } from '@teambit/legacy/dist/consumer/component-ops/components-diff';
-import { exportMany } from '@teambit/legacy/dist/scope/component-ops/export-scope-components';
 import { MergeStrategy, MergeOptions } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
 import { TrackLane } from '@teambit/legacy/dist/scope/scope-json';
 import { ImporterAspect, ImporterMain, ImportOptions } from '@teambit/importer';
@@ -18,9 +17,11 @@ import type { CommunityMain } from '@teambit/community';
 import ComponentAspect, { Component, ComponentMain } from '@teambit/component';
 import removeLanes from '@teambit/legacy/dist/consumer/lanes/remove-lanes';
 import { Lane } from '@teambit/legacy/dist/scope/models';
+import { LaneNotFound } from '@teambit/legacy/dist/api/scope/lib/exceptions/lane-not-found';
 import ScopeComponentsImporter from '@teambit/legacy/dist/scope/component-ops/scope-components-importer';
 import { Scope as LegacyScope } from '@teambit/legacy/dist/scope';
 import { BitId } from '@teambit/legacy-bit-id';
+import { ExportAspect, ExportMain } from '@teambit/export';
 import { BitIds } from '@teambit/legacy/dist/bit-id';
 import { MergingMain, MergingAspect } from '@teambit/merging';
 import { LanesAspect } from './lanes.aspect';
@@ -70,7 +71,8 @@ export class LanesMain {
     private merging: MergingMain,
     private componentAspect: ComponentMain,
     public logger: Logger,
-    private importer: ImporterMain
+    private importer: ImporterMain,
+    private exporter: ExportMain
   ) {}
 
   async getLanes({
@@ -308,7 +310,7 @@ export class LanesMain {
   }
 
   async exportLane(lane: Lane) {
-    await exportMany({
+    await this.exporter.exportMany({
       scope: this.scope.legacyScope,
       laneObject: lane,
       ids: new BitIds(),
@@ -329,6 +331,7 @@ export class LanesMain {
     const scopeComponentImporter = ScopeComponentsImporter.getInstance(legacyScope);
     const results = await scopeComponentImporter.importLanes([laneId]);
     const laneObject = results[0];
+    if (!laneObject) throw new LaneNotFound(laneId.scope, laneId.name);
 
     if (persistIfNotExists) {
       const exists = await legacyScope.loadLane(laneId);
@@ -560,6 +563,7 @@ export class LanesMain {
       id: this.getDefaultLaneId(),
       components: bitIds.map((bitId) => ({ id: bitId, head: bitId.version as string })),
       isMerged: null,
+      hash: '',
     };
   }
 
@@ -574,9 +578,21 @@ export class LanesMain {
     ComponentAspect,
     LoggerAspect,
     ImporterAspect,
+    ExportAspect,
   ];
   static runtime = MainRuntime;
-  static async provider([cli, scope, workspace, graphql, community, merging, component, loggerMain, importer]: [
+  static async provider([
+    cli,
+    scope,
+    workspace,
+    graphql,
+    community,
+    merging,
+    component,
+    loggerMain,
+    importer,
+    exporter,
+  ]: [
     CLIMain,
     ScopeMain,
     Workspace,
@@ -585,10 +601,11 @@ export class LanesMain {
     MergingMain,
     ComponentMain,
     LoggerMain,
-    ImporterMain
+    ImporterMain,
+    ExportMain
   ]) {
     const logger = loggerMain.createLogger(LanesAspect.id);
-    const lanesMain = new LanesMain(workspace, scope, merging, component, logger, importer);
+    const lanesMain = new LanesMain(workspace, scope, merging, component, logger, importer, exporter);
     const switchCmd = new SwitchCmd(lanesMain);
     const laneCmd = new LaneCmd(lanesMain, workspace, scope, community.getDocsDomain());
     laneCmd.commands = [

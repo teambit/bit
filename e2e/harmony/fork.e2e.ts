@@ -7,7 +7,7 @@ describe('bit fork command', function () {
   let helper: Helper;
   before(() => {
     helper = new Helper();
-    helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+    helper.scopeHelper.setNewLocalAndRemoteScopes();
     helper.bitJsonc.setupDefault();
     helper.fixtures.populateComponents(1);
     helper.command.tagAllWithoutBuild();
@@ -36,7 +36,7 @@ describe('bit fork command', function () {
   });
   describe('fork a remote component with no --target-id flag', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
       helper.command.fork(`${helper.scopes.remote}/comp1`);
     });

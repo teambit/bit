@@ -18,7 +18,7 @@ describe('bit doctor infra', function () {
   });
 
   before(() => {
-    helper.scopeHelper.reInitLocalScopeHarmony();
+    helper.scopeHelper.reInitLocalScope();
   });
 
   describe('run all diagnoses', () => {

@@ -96,21 +96,10 @@ export type LegacyOnTagResult = {
   id: BitId;
   builderData: ExtensionDataEntry;
 };
-export type OnTagOpts = {
-  disableTagAndSnapPipelines?: boolean;
-  throwOnError?: boolean; // on the CI it helps to save the results on failure so this is set to false
-  forceDeploy?: boolean; // whether run the deploy-pipeline although the build-pipeline has failed
-  skipTests?: boolean;
-  isSnap?: boolean;
-};
+
 export type IsolateComponentsOptions = {
   packageManagerConfigRootDir?: string;
 };
-export type OnTagFunc = (
-  components: Component[],
-  options: OnTagOpts,
-  isolateOptions: IsolateComponentsOptions
-) => Promise<LegacyOnTagResult[]>;
 
 export default class Scope {
   created = false;
@@ -142,7 +131,6 @@ export default class Scope {
     this.scopeImporter = ScopeComponentsImporter.getInstance(this);
   }
 
-  public onTag: OnTagFunc[] = []; // enable extensions to hook during the tag process
   static onPostExport: (ids: BitId[], lanes: Lane[]) => Promise<void>; // enable extensions to hook after the export process
 
   /**
@@ -388,12 +376,12 @@ once done, to continue working, please run "bit cc"`
     if (!component.head) return true; // it's not on main. must be on a lane. (even if it was forked from another lane, current lane must have all objects)
     if (component.head.toString() === id.version) return false; // it's on main
     // get the diverge between main and the lane. (in this context, main is "remote", lane is "local").
-    const divergeData = await getDivergeData(
-      this.objects,
-      component,
-      component.head,
-      Ref.from(laneIdWithDifferentVersion.version as string)
-    );
+    const divergeData = await getDivergeData({
+      repo: this.objects,
+      modelComponent: component,
+      remoteHead: component.head,
+      checkedOutLocalHead: Ref.from(laneIdWithDifferentVersion.version as string),
+    });
     // if the snap found "locally", then it's on the lane.
     return Boolean(divergeData.snapsOnLocalOnly.find((snap) => snap.toString() === id.version));
   }
@@ -619,23 +607,6 @@ once done, to continue working, please run "bit cc"`
   async isComponentInScope(id: BitId): Promise<boolean> {
     const comp = await this.sources.get(id);
     return Boolean(comp);
-  }
-
-  async getComponentsAndAllLocalUnexportedVersions(ids: BitIds): Promise<ComponentsAndVersions[]> {
-    const componentsObjects = await this.sources.getMany(ids);
-    const componentsAndVersionsP = componentsObjects.map(async (componentObjects) => {
-      if (!componentObjects.component) return null;
-      const component: ModelComponent = componentObjects.component;
-      const localVersions = component.getLocalVersions();
-      return Promise.all(
-        localVersions.map(async (versionStr) => {
-          const version: Version = await component.loadVersion(versionStr, this.objects);
-          return { component, version, versionStr };
-        })
-      );
-    });
-    const componentsAndVersions = await Promise.all(componentsAndVersionsP);
-    return removeNils(R.flatten(componentsAndVersions));
   }
 
   /**

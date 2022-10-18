@@ -15,7 +15,7 @@ describe('Jest Tester', function () {
   });
   describe('component without any test file', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.fixtures.populateComponents(1);
     });
     it('bit test should not throw any error', () => {
@@ -36,7 +36,7 @@ describe('Jest Tester', function () {
   // #2. C:\\Users\\Administrator\\AppData\\Local\\Temp\\2\\bit\\e2e\\2zmx1543-local\\comp1\\comp1.spec.ts
   (IS_WINDOWS ? describe.skip : describe)('component with a passing test', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.fixtures.populateComponents(1);
       helper.fs.outputFile('comp1/comp1.spec.ts', specFilePassingFixture());
     });
@@ -45,13 +45,13 @@ describe('Jest Tester', function () {
       expect(output).to.have.string('✓ should pass');
     });
     it('bit build should show the passing component via Jest output', () => {
-      const output = helper.command.build('', true);
+      const output = helper.command.build('', undefined, true);
       expect(output).to.have.string('✓ should pass');
     });
   });
   (IS_WINDOWS ? describe.skip : describe)('component with a failing test', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.fixtures.populateComponents(1);
       helper.fs.outputFile('comp1/comp1.spec.ts', specFileFailingFixture());
     });
@@ -66,10 +66,15 @@ describe('Jest Tester', function () {
       const output = helper.general.runWithTryCatch('bit build');
       expect(output).to.have.string('✕ should fail');
     });
+    it('bit build should not show the failing component if --skip-tests was entered', () => {
+      const output = helper.command.build(undefined, '--skip-tests');
+      expect(output).to.not.have.string('should fail');
+      expect(output).to.have.string('the build has been completed');
+    });
   });
   describe('component with an errored test', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.fixtures.populateComponents(1);
       helper.fs.outputFile('comp1/comp1.spec.ts', specFileErroringFixture());
     });
@@ -88,7 +93,7 @@ describe('Jest Tester', function () {
   });
   describe('env with an incorrect Jest config', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.fixtures.populateComponents(1);
       helper.fs.outputFile('comp1/comp1.spec.ts', specFilePassingFixture());
       helper.env.setCustomEnv('custom-react-env');
@@ -113,7 +118,7 @@ describe('Jest Tester', function () {
   describe('env with custom spec resolver', () => {
     let compName;
     before(() => {
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       compName = helper.fixtures.populateComponents(1);
       helper.fs.outputFile('comp1/comp1.spec.ts', specFilePassingFixture());
       helper.fs.outputFile(
@@ -149,7 +154,7 @@ describe('Jest Tester', function () {
     describe('bit build command', () => {
       let output;
       before(() => {
-        output = helper.command.build(compName, true);
+        output = helper.command.build(compName, undefined, true);
       });
       it('bit build should mentions the custom resolved spec file', () => {
         expect(output).to.have.string('comp1.custom-pattern.spec');

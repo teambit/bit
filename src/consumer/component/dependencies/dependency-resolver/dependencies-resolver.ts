@@ -2,7 +2,7 @@ import * as path from 'path';
 import fs from 'fs-extra';
 import R from 'ramda';
 import semver from 'semver';
-import { uniq, isEmpty } from 'lodash';
+import { uniq, isEmpty, union } from 'lodash';
 import { IssuesList, IssuesClasses } from '@teambit/component-issues';
 import { Dependency } from '..';
 import { BitId, BitIds } from '../../../../bit-id';
@@ -1167,6 +1167,23 @@ either, use the ignore file syntax or change the require statement to have a mod
         }
       }, this.allPackagesDependencies[field]);
     });
+    // We want to also add missing packages to the peer list as we know to resolve the version from the env anyway
+    // @ts-ignore
+    const missingsData = this.issues.getIssueByName<IssuesClasses.MissingPackagesDependenciesOnFs>(
+      'MissingPackagesDependenciesOnFs'
+    )?.data;
+    if (missingsData) {
+      // @ts-ignore
+      const missingPackages: string[] = union(...(Object.values(missingsData) || []));
+
+      missingPackages.forEach((pkgName) => {
+        const peerVersionFromEnvPolicy = envPolicy[pkgName];
+        if (peerVersionFromEnvPolicy) {
+          peerDeps[pkgName] = peerVersionFromEnvPolicy;
+        }
+      });
+    }
+
     // TODO: handle component deps once we support peers between components
     this.allPackagesDependencies.peerPackageDependencies = peerDeps;
   }

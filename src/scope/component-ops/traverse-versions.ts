@@ -10,6 +10,7 @@
  * methods here.
  */
 
+import memoize from 'memoizee';
 import pMapSeries from 'p-map-series';
 import { HeadNotFound, ParentNotFound, VersionNotFound } from '../exceptions';
 import { ModelComponent, Version } from '../models';
@@ -47,16 +48,20 @@ export async function getAllVersionsInfo({
   throws?: boolean; // in case objects are missing
   versionObjects?: Version[];
   startFrom?: Ref | null; // by default, start from the head
-  stopAt?: Ref | null; // by default, stop when the parents is empty
+  stopAt?: Ref[] | null; // by default, stop when the parents is empty
 }): Promise<VersionInfo[]> {
   const results: VersionInfo[] = [];
   const isAlreadyProcessed = (ref: Ref): boolean => {
     return Boolean(results.find((result) => result.ref.isEqual(ref)));
   };
   const getVersionObj = async (ref: Ref): Promise<Version | undefined> => {
-    if (versionObjects) return versionObjects.find((v) => v.hash().isEqual(ref));
+    if (!versionObjects && !repo) {
+      throw new TypeError('getAllVersionsInfo expect to get either repo or versionObjects');
+    }
+    const foundInVersionObjects = versionObjects?.find((v) => v.hash().isEqual(ref));
+    if (foundInVersionObjects) return foundInVersionObjects;
     if (repo) return (await ref.load(repo)) as Version;
-    throw new TypeError('getAllVersionsInfo expect to get either repo or versionObjects');
+    return undefined;
   };
   const getRefToStartFrom = () => {
     if (typeof startFrom !== 'undefined') return startFrom;
@@ -75,9 +80,10 @@ export async function getAllVersionsInfo({
     parents: [],
     onLane: !foundOnMain,
   };
+  const shouldStop = (ref: Ref): boolean => Boolean(stopAt?.find((r) => r.isEqual(ref)));
   const head = await getVersionObj(laneHead);
   if (head) {
-    if (stopAt && stopAt.isEqual(head.hash())) {
+    if (shouldStop(head.hash())) {
       return [];
     }
     headInfo.version = head;
@@ -89,7 +95,7 @@ export async function getAllVersionsInfo({
   results.push(headInfo);
   const addParentsRecursively = async (version: Version) => {
     await pMapSeries(version.parents, async (parent) => {
-      if (stopAt && stopAt.isEqual(parent)) {
+      if (shouldStop(parent)) {
         return;
       }
       if (isAlreadyProcessed(parent)) {
@@ -139,16 +145,25 @@ export async function getAllVersionHashesByVersionsObjects(
   return allVersionsInfo.map((v) => v.ref).filter((ref) => ref) as Ref[];
 }
 
-export async function getAllVersionHashes(
-  modelComponent: ModelComponent,
-  repo: Repository,
-  throws = true,
-  startFrom?: Ref | null,
-  stopAt?: Ref | null
-): Promise<Ref[]> {
-  const allVersionsInfo = await getAllVersionsInfo({ modelComponent, repo, throws, startFrom, stopAt });
+export type GetAllVersionHashesParams = {
+  modelComponent: ModelComponent;
+  repo: Repository;
+  throws?: boolean; // in case objects are missing. by default, it's true
+  versionObjects?: Version[];
+  startFrom?: Ref | null; // by default, start from the head
+  stopAt?: Ref[] | null; // by default, stop when the parents is empty
+};
+
+export async function getAllVersionHashes(options: GetAllVersionHashesParams): Promise<Ref[]> {
+  const allVersionsInfo = await getAllVersionsInfo(options);
   return allVersionsInfo.map((v) => v.ref).filter((ref) => ref) as Ref[];
 }
+
+export const getAllVersionHashesMemoized = memoize(getAllVersionHashes, {
+  normalizer: (args) => JSON.stringify(args[0]),
+  promise: true,
+  maxAge: 1, // 1ms is good. it's only for consecutive calls while this function is still in process. we don't want to cache the results.
+});
 
 export async function hasVersionByRef(
   modelComponent: ModelComponent,
@@ -156,6 +171,6 @@ export async function hasVersionByRef(
   repo: Repository,
   startFrom?: Ref | null
 ): Promise<boolean> {
-  const allVersionHashes = await getAllVersionHashes(modelComponent, repo, true, startFrom);
+  const allVersionHashes = await getAllVersionHashes({ modelComponent, repo, startFrom });
   return allVersionHashes.some((hash) => hash.isEqual(ref));
 }

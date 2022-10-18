@@ -20,7 +20,7 @@ describe('custom env', function () {
   });
   describe('non existing env', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(1);
       helper.extensions.addExtensionToVariant('*', 'company.scope/envs/fake-env');
@@ -37,7 +37,7 @@ describe('custom env', function () {
     let envId;
     let envName;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.bitJsonc.setPackageManager();
       envName = helper.env.setCustomEnv();
@@ -64,7 +64,7 @@ describe('custom env', function () {
         it('should have the correct env in the envs aspect data after additional tag', () => {
           const comp1 = helper.command.catComponent('comp1@latest');
           const envIdFromModel = getEnvIdFromModel(comp1);
-          expect(envIdFromModel).to.equal(`${envId}@0.0.2`);
+          expect(envIdFromModel).to.equal(`${envId}`);
         });
       });
     });
@@ -93,7 +93,7 @@ describe('custom env', function () {
   });
   describe('change an env after tag', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.bitJsonc.setPackageManager();
       const envName = helper.env.setCustomEnv();
@@ -115,7 +115,7 @@ describe('custom env', function () {
     let npmCiRegistry: NpmCiRegistry;
     before(async () => {
       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.bitJsonc.setPackageManager();
       npmCiRegistry = new NpmCiRegistry(helper);
@@ -128,7 +128,7 @@ describe('custom env', function () {
       helper.command.tagAllComponents('--unmodified');
       helper.command.export();
 
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
       helper.bitJsonc.setupDefault();
     });
@@ -149,7 +149,7 @@ describe('custom env', function () {
     });
     describe('set up the env using bit env set without a version', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.scopeHelper.reInitLocalScope();
         helper.scopeHelper.addRemoteScope();
         helper.fixtures.populateComponents(1);
         helper.command.setEnv('comp1', envId);
@@ -161,7 +161,7 @@ describe('custom env', function () {
     });
     describe('set up the env using bit env set with a version', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.scopeHelper.reInitLocalScope();
         helper.scopeHelper.addRemoteScope();
         helper.fixtures.populateComponents(1);
         helper.command.setEnv('comp1', `${envId}@0.0.2`);
@@ -174,7 +174,7 @@ describe('custom env', function () {
     });
     describe('set up the env using bit create --env with a version', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.scopeHelper.reInitLocalScope();
         helper.scopeHelper.addRemoteScope();
         helper.command.create('aspect', 'comp1', `--env ${envId}@0.0.1`);
       });
@@ -186,7 +186,7 @@ describe('custom env', function () {
     });
     describe('set up the env and then unset it', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.scopeHelper.reInitLocalScope();
         helper.scopeHelper.addRemoteScope();
         helper.fixtures.populateComponents(1);
         helper.command.setEnv('comp1', `${envId}@0.0.1`);
@@ -200,7 +200,7 @@ describe('custom env', function () {
     });
     describe('set up the env and then replace it with another env without mentioning the version', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.scopeHelper.reInitLocalScope();
         helper.scopeHelper.addRemoteScope();
         helper.fixtures.populateComponents(1);
         helper.command.setEnv('comp1', `${envId}@0.0.1`);
@@ -215,7 +215,7 @@ describe('custom env', function () {
     });
     describe('tag and change the env version', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.scopeHelper.reInitLocalScope();
         helper.scopeHelper.addRemoteScope();
         helper.fixtures.populateComponents(1);
         helper.command.setEnv('comp1', `${envId}@0.0.1`);
@@ -223,14 +223,14 @@ describe('custom env', function () {
         helper.command.setEnv('comp1', `${envId}@0.0.2`);
       });
       it('bit status should show it as modified', () => {
-        const isModified = helper.command.statusComponentIsModified('comp1@0.0.1');
+        const isModified = helper.command.statusComponentIsModified('my-scope/comp1@0.0.1');
         expect(isModified).to.be.true;
       });
     });
 
     describe('missing modules in the env capsule', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.scopeHelper.reInitLocalScope();
         helper.scopeHelper.addRemoteScope();
         helper.bitJsonc.setupDefault();
         helper.fixtures.populateComponents(1);
@@ -255,7 +255,7 @@ describe('custom env', function () {
   });
   describe('when the env is tagged and set in workspace.jsonc without exporting it', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       // important! don't disable the preview.
       helper.bitJsonc.addDefaultScope();
       const envName = helper.env.setCustomEnv();
@@ -272,14 +272,14 @@ describe('custom env', function () {
   describe('when the env is exported to a remote scope and is not exist locally', () => {
     let envId: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       const envName = helper.env.setCustomEnv();
       envId = `${helper.scopes.remote}/${envName}`;
       helper.command.tagAllWithoutBuild();
       helper.command.export();
 
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
       helper.fixtures.populateComponents(1);
     });

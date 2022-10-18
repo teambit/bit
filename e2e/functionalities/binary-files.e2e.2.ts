@@ -18,7 +18,7 @@ describe('binary files', function () {
     let pngSize;
     let destPngFile;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.createComponentBarFoo();
       const sourcePngFile = path.join(__dirname, '..', 'fixtures', 'png_fixture.png');
@@ -52,7 +52,7 @@ describe('binary files', function () {
     let pngSize;
     let destPngFile;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       const sourcePngFile = path.join(__dirname, '..', 'fixtures', 'png_fixture.png');
       destPngFile = path.join(helper.scopes.localPath, 'bar', 'png_fixture.png');
@@ -73,7 +73,7 @@ describe('binary files', function () {
     });
     describe('after importing the file', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.scopeHelper.reInitLocalScope();
         helper.scopeHelper.addRemoteScope();
         helper.command.importComponent('bar/foo', '--path components/bar/foo');
       });

@@ -25,5 +25,5 @@ export {
   generateExposePeersTransformer,
   generateExternalsTransformer,
   GenerateHeadInjectionTransformer,
-  HeadInjectionOptions
+  HeadInjectionOptions,
 } from './transformers';

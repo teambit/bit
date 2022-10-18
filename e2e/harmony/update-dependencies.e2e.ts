@@ -22,7 +22,7 @@ describe('update-dependencies command', function () {
     let secondRemoteName: string;
     let secondScopeBeforeUpdate: string;
     before(async () => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.addDefaultScope();
       helper.bitJsonc.disablePreview();
       scopeWithoutOwner = helper.scopes.remoteWithoutOwner;
@@ -162,7 +162,7 @@ describe('update-dependencies command', function () {
     let secondRemoteName: string;
     let headSnapComp2: string;
     before(async () => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.disablePreview();
       // original scope
       const secondRemote = helper.scopeHelper.getNewBareScope(undefined, true);

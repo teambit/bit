@@ -21,7 +21,7 @@ describe('bit snap command', function () {
   describe('snap before tag', () => {
     let output;
     before(() => {
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
       output = helper.command.snapComponent('bar/foo');
@@ -77,7 +77,7 @@ describe('bit snap command', function () {
   });
   describe('components with dependencies', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents();
       helper.command.snapAllComponents();
@@ -110,7 +110,7 @@ describe('bit snap command', function () {
   describe('untag a snap', () => {
     let firstSnap: string;
     before(() => {
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
       helper.command.snapComponent('bar/foo');
@@ -138,7 +138,7 @@ describe('bit snap command', function () {
     let firstSnap: string;
     let secondSnap: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
@@ -237,7 +237,7 @@ describe('bit snap command', function () {
           expect(status.mergePendingComponents).to.have.lengthOf(1);
           expect(status.outdatedComponents).to.have.lengthOf(0);
           expect(status.newComponents).to.have.lengthOf(0);
-          expect(status.modifiedComponent).to.have.lengthOf(0);
+          expect(status.modifiedComponents).to.have.lengthOf(0);
           expect(status.invalidComponents).to.have.lengthOf(0);
         });
       });
@@ -333,7 +333,7 @@ describe('bit snap command', function () {
             it('bit status should not show the component as during merge state', () => {
               const status = helper.command.statusJson();
               expect(status.componentsDuringMergeState).to.have.lengthOf(0);
-              expect(status.modifiedComponent).to.have.lengthOf(0);
+              expect(status.modifiedComponents).to.have.lengthOf(0);
               expect(status.outdatedComponents).to.have.lengthOf(0);
               expect(status.mergePendingComponents).to.have.lengthOf(0);
               expect(status.stagedComponents).to.have.lengthOf(1);
@@ -409,7 +409,7 @@ describe('bit snap command', function () {
         it('bit status should show it as component with conflict and not as pending update or modified', () => {
           const status = helper.command.statusJson();
           expect(status.componentsDuringMergeState).to.have.lengthOf(1);
-          expect(status.modifiedComponent).to.have.lengthOf(0);
+          expect(status.modifiedComponents).to.have.lengthOf(0);
           expect(status.outdatedComponents).to.have.lengthOf(0);
           expect(status.mergePendingComponents).to.have.lengthOf(0);
         });
@@ -475,7 +475,7 @@ describe('bit snap command', function () {
           it('bit status should not show the component as a component with conflicts but as modified', () => {
             const status = helper.command.statusJson();
             expect(status.componentsDuringMergeState).to.have.lengthOf(0);
-            expect(status.modifiedComponent).to.have.lengthOf(1);
+            expect(status.modifiedComponents).to.have.lengthOf(1);
             expect(status.mergePendingComponents).to.have.lengthOf(0);
             expect(status.stagedComponents).to.have.lengthOf(0);
           });
@@ -493,7 +493,7 @@ describe('bit snap command', function () {
           it('bit status should not show the component as if it has conflicts', () => {
             const status = helper.command.statusJson();
             expect(status.componentsDuringMergeState).to.have.lengthOf(0);
-            expect(status.modifiedComponent).to.have.lengthOf(0);
+            expect(status.modifiedComponents).to.have.lengthOf(0);
             expect(status.outdatedComponents).to.have.lengthOf(0);
             expect(status.mergePendingComponents).to.have.lengthOf(0);
             expect(status.stagedComponents).to.have.lengthOf(1);
@@ -522,7 +522,7 @@ describe('bit snap command', function () {
             const status = helper.command.statusJson();
             expect(status.mergePendingComponents).to.have.lengthOf(1);
             expect(status.componentsDuringMergeState).to.have.lengthOf(0);
-            expect(status.modifiedComponent).to.have.lengthOf(0);
+            expect(status.modifiedComponents).to.have.lengthOf(0);
             expect(status.outdatedComponents).to.have.lengthOf(0);
             expect(status.stagedComponents).to.have.lengthOf(1);
           });
@@ -543,7 +543,7 @@ describe('bit snap command', function () {
       let secondSnap: string;
       let localScope;
       before(() => {
-        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.scopeHelper.reInitLocalScope();
         helper.fixtures.createComponentBarFoo();
         helper.fixtures.addComponentBarFooAsDir();
         helper.command.snapAllComponents();
@@ -608,7 +608,7 @@ describe('bit snap command', function () {
     let snapOutput;
     let isTypeHead;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents();
       helper.command.snapAllComponents();
@@ -642,7 +642,7 @@ describe('bit snap command', function () {
     });
     it('bit-status should show them all as staged and not modified', () => {
       const status = helper.command.statusJson();
-      expect(status.modifiedComponent).to.be.empty;
+      expect(status.modifiedComponents).to.be.empty;
       const staged = helper.command.getStagedIdsFromStatus();
       expect(staged).to.include('comp1');
       expect(staged).to.include('comp2');
@@ -652,7 +652,7 @@ describe('bit snap command', function () {
       before(() => {
         helper.command.export();
 
-        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.scopeHelper.reInitLocalScope();
         helper.scopeHelper.addRemoteScope();
         // @todo: change to "helper.command.importComponent('comp1');". once the nested are working
         helper.command.importComponent('*');
@@ -671,14 +671,14 @@ describe('bit snap command', function () {
   });
   describe('tag after tag', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllComponents();
       helper.fixtures.populateComponents(1, undefined, ' v2');
       helper.command.tagAllComponents();
       helper.command.export();
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
       helper.command.importComponent('comp1');
     });
@@ -691,7 +691,7 @@ describe('bit snap command', function () {
   describe('merge tags', () => {
     let authorFirstTag;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllWithoutBuild();
@@ -739,7 +739,7 @@ describe('bit snap command', function () {
           expect(head).to.be.equal(remoteHead);
         });
         it('bit status after untag should show the component as modified only', () => {
-          helper.command.expectStatusToBeClean(['modifiedComponent']);
+          helper.command.expectStatusToBeClean(['modifiedComponents']);
         });
       });
       describe('reset only head', () => {

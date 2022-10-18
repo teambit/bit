@@ -40,7 +40,7 @@ export class ComponentDependencyFactory implements DependencyFactory {
       id = await this.componentAspect.getHost().resolveComponentId(serialized.id);
     }
 
-    return (new ComponentDependency(
+    return new ComponentDependency(
       id,
       serialized.isExtension,
       serialized.packageName,
@@ -48,7 +48,7 @@ export class ComponentDependencyFactory implements DependencyFactory {
       serialized.version,
       serialized.lifecycle as DependencyLifecycleType,
       serialized.source
-    ) as unknown) as ComponentDependency;
+    ) as unknown as ComponentDependency;
   }
 
   async fromLegacyComponent(legacyComponent: LegacyComponent): Promise<DependencyList> {

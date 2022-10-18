@@ -16,12 +16,12 @@ describe('bit tag command', function () {
     helper.scopeHelper.destroy();
   });
   before(() => {
-    helper.scopeHelper.reInitLocalScopeHarmony();
+    helper.scopeHelper.reInitLocalScope();
   });
   describe('tag component with invalid mainFile in bitmap', () => {
     let output;
     before(() => {
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
       const bitMap = helper.bitMap.read();
@@ -42,7 +42,7 @@ describe('bit tag command', function () {
     let output;
     describe('tag specific component', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.scopeHelper.reInitLocalScope();
         helper.fs.createFile('components/patch', 'patch.js');
         helper.fs.createFile('components/minor', 'minor.js');
         helper.fs.createFile('components/major', 'major.js');
@@ -142,7 +142,7 @@ describe('bit tag command', function () {
   });
   describe('with Windows end-of-line characters', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       const impl = 'hello\r\n world\r\n';
       helper.fixtures.createComponentBarFoo(impl);
       helper.fixtures.addComponentBarFooAsDir();
@@ -160,7 +160,7 @@ describe('bit tag command', function () {
   describe('tag a component without its dependencies', () => {
     let output;
     before(() => {
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.fixtures.populateComponents(2);
       output = helper.general.runWithTryCatch('bit tag comp1');
     });

@@ -24,6 +24,11 @@ export class EslintConfigMutator {
     return this;
   }
 
+  setTsConfig(tsconfig: Record<string, any>): EslintConfigMutator {
+    this.raw.tsConfig = tsconfig;
+    return this;
+  }
+
   setPluginPath(newPath: string): EslintConfigMutator {
     this.raw.pluginPath = newPath;
     return this;

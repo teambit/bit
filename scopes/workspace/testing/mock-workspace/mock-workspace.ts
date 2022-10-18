@@ -12,7 +12,7 @@ export type WorkspaceData = { workspacePath: string; remoteScopePath: string; re
  */
 export function mockWorkspace(): WorkspaceData {
   const legacyHelper = new LegacyHelper();
-  legacyHelper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+  legacyHelper.scopeHelper.setNewLocalAndRemoteScopes();
   legacyHelper.bitJsonc.setupDefault();
 
   return {

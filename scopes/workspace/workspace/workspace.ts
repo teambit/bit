@@ -422,12 +422,12 @@ export class Workspace implements ComponentFactory {
     return this.scope.getLogs(id, shortHash, startsFrom);
   }
 
-  async getLegacyGraph(ids?: ComponentID[]): Promise<LegacyGraph> {
+  async getLegacyGraph(ids?: ComponentID[], shouldThrowOnMissingDep = true): Promise<LegacyGraph> {
     if (!ids || ids.length < 1) ids = await this.listIds();
 
     const legacyIds = ids.map((id) => id._legacy);
 
-    const legacyGraph = await this.buildOneGraphForComponents(legacyIds);
+    const legacyGraph = await this.buildOneGraphForComponents(legacyIds, undefined, undefined, shouldThrowOnMissingDep);
     return legacyGraph;
   }
 
@@ -515,7 +515,9 @@ export class Workspace implements ComponentFactory {
 
       return {
         type: systemDescriptor.type,
-        id: env.id,
+        // Make sure to store the env id in the data without the version
+        // The version should always come from the aspect id configured on the component
+        id: env.id.split('@')[0],
         name: env.name,
         icon,
         description: env.description,
@@ -527,6 +529,7 @@ export class Workspace implements ComponentFactory {
   }
 
   clearCache() {
+    this.aspectLoader.resetFailedLoadAspects();
     this.logger.debug('clearing the workspace and scope caches');
     delete this._cachedListIds;
     this.componentLoader.clearCache();
@@ -805,11 +808,12 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     if (!lane) {
       return;
     }
-    this.logger.debug(`current lane ${laneId.toString()} is missing, importing it`);
+    this.logger.info(`current lane ${laneId.toString()} is missing, importing it`);
+    await this.scope.legacyScope.objects.writeObjectsToTheFS([lane]);
     const scopeComponentsImporter = ScopeComponentsImporter.getInstance(this.scope.legacyScope);
     const ids = BitIds.fromArray(lane.toBitIds().filter((id) => id.hasScope()));
     await scopeComponentsImporter.importManyDeltaWithoutDeps(ids, true, lane);
-    await scopeComponentsImporter.importMany({ ids, lanes: lane ? [lane] : undefined });
+    await scopeComponentsImporter.importMany({ ids, lanes: [lane] });
   }
 
   /**
@@ -913,7 +917,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
   }
 
   /**
-   * Get the component root dir in the file system (relative to workspace or full)
+   * Get the component root dir in the file system (relative to workspace or full) in Linux format
    * @param componentId
    * @param relative return the path relative to the workspace or full path
    */
@@ -1535,9 +1539,16 @@ needed-for: ${neededFor || '<unknown>'}`);
   async buildOneGraphForComponents(
     ids: BitId[],
     ignoreIds?: BitIds,
-    shouldLoadFunc?: ShouldLoadFunc
+    shouldLoadFunc?: ShouldLoadFunc,
+    shouldThrowOnMissingDep = true
   ): Promise<LegacyGraph> {
-    const graphFromFsBuilder = new GraphFromFsBuilder(this, this.logger, ignoreIds, shouldLoadFunc);
+    const graphFromFsBuilder = new GraphFromFsBuilder(
+      this,
+      this.logger,
+      ignoreIds,
+      shouldLoadFunc,
+      shouldThrowOnMissingDep
+    );
     return graphFromFsBuilder.buildGraph(ids);
   }
 

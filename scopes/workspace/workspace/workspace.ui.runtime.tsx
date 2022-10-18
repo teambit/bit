@@ -16,7 +16,7 @@ import type { DrawerType } from '@teambit/ui-foundation.ui.tree.drawer';
 import { ComponentFilters } from '@teambit/component.ui.component-filters.component-filter-context';
 import { DeprecateFilter } from '@teambit/component.ui.component-filters.deprecate-filter';
 import { EnvsFilter } from '@teambit/component.ui.component-filters.env-filter';
-
+import { ShowMainFilter } from '@teambit/component.ui.component-filters.show-main-filter';
 import {
   DrawerWidgetSlot,
   FilterWidget,
@@ -150,9 +150,11 @@ export class WorkspaceUI {
 
   listSidebarItems() {
     const items = flatten(this.sidebarItemSlot.values());
-    return compact(items.map((item) => {
-      return item.component;
-    }));
+    return compact(
+      items.map((item) => {
+        return item.component;
+      })
+    );
   }
 
   private menuItems: MenuItem[] = [
@@ -221,7 +223,7 @@ export class WorkspaceUI {
       commandBarUI
     );
 
-    workspaceUI.registerDrawerComponentFilters([DeprecateFilter, EnvsFilter]);
+    workspaceUI.registerDrawerComponentFilters([DeprecateFilter, EnvsFilter, ShowMainFilter(true)]);
     workspaceUI.registerDrawerWidgets([
       <FilterWidget key={'workspace-filter-widget'} />,
       <TreeToggleWidget key={'workspace-tree-toggle-widget'} />,
@@ -231,9 +233,11 @@ export class WorkspaceUI {
 
     workspaceUI.registerSidebarLink({
       component: function Gallery() {
-        return <MenuLinkItem exact href="/" icon="comps">
-          Gallery
-        </MenuLinkItem>;
+        return (
+          <MenuLinkItem exact href="/" icon="comps">
+            Workspace Overview
+          </MenuLinkItem>
+        );
       },
     });
 

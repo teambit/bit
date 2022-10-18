@@ -17,7 +17,7 @@ describe('track directories functionality', function () {
   describe('add a directory as authored', () => {
     let localScope;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fs.createFile('utils/bar', 'foo.js');
       helper.command.addComponent('utils/bar', { i: 'utils/bar' });
       localScope = helper.scopeHelper.cloneLocalScope();
@@ -167,7 +167,7 @@ describe('track directories functionality', function () {
   });
   describe('add multiple directories', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.fs.createFile('utils/foo', 'index.js');
       helper.fs.createFile('utils/bar', 'index.js');
       helper.fs.createFile('utils/baz', 'index.js');
@@ -187,7 +187,7 @@ describe('track directories functionality', function () {
   });
   describe('adding files to sub-directories', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.fs.outputFile('bar/foo.ts');
       helper.command.addComponent('bar');
       helper.fs.outputFile('bar/baz/index.ts');

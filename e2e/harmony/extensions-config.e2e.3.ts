@@ -1,6 +1,7 @@
 import chai, { expect } from 'chai';
 
 import Helper from '../../src/e2e-helper/e2e-helper';
+import { ComponentNotFound } from '../../src/scope/exceptions';
 
 chai.use(require('chai-fs'));
 
@@ -25,7 +26,7 @@ describe('harmony extension config', function () {
       let devDeps;
       let scopeExtensionEntry;
       before(() => {
-        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.scopeHelper.reInitLocalScope();
         helper.fixtures.createComponentBarFoo();
         helper.fixtures.addComponentBarFooAsDir();
         helper.extensions.addExtensionToVariant('*', 'teambit.scope/scope', config);
@@ -53,7 +54,7 @@ describe('harmony extension config', function () {
 
       before(() => {
         const EXTENSION_FOLDER = 'dummy-extension-without-logs';
-        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.scopeHelper.reInitLocalScope();
         helper.fixtures.createComponentBarFoo();
         helper.fixtures.addComponentBarFooAsDir();
         helper.bitJsonc.addDefaultScope();
@@ -152,8 +153,11 @@ describe('harmony extension config', function () {
             remoteBeforeExport = helper.scopeHelper.cloneRemoteScope();
           });
           it('should block exporting component without exporting the extension', () => {
-            output = helper.general.runWithTryCatch(`bit export bar/foo`);
-            expect(output).to.have.string(`"${helper.scopes.remote}/dummy-extension-without-logs@0.0.1" was not found`);
+            const err = new ComponentNotFound(
+              `${helper.scopes.remote}/dummy-extension-without-logs@0.0.1`,
+              `${helper.scopes.remote}/bar/foo@0.0.1`
+            );
+            helper.general.expectToThrow(() => helper.command.export('bar/foo'), err);
           });
           describe('exporting extension and component together', () => {
             before(() => {
@@ -195,7 +199,7 @@ describe('harmony extension config', function () {
           helper.bitJsonc.disablePreview();
           helper.command.tagAllComponents();
           helper.command.export();
-          helper.scopeHelper.reInitLocalScopeHarmony();
+          helper.scopeHelper.reInitLocalScope();
           helper.scopeHelper.addRemoteScope();
           helper.command.importComponent('bar/foo');
         });
@@ -232,7 +236,7 @@ describe('harmony extension config', function () {
   });
   describe('changing config after the component had been cached', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
       const depResolverConfig = {

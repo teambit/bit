@@ -20,7 +20,7 @@ describe('merge config scenarios', function () {
     let beforeMerges: string;
     before(async () => {
       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(3);
       npmCiRegistry = new NpmCiRegistry(helper);
@@ -41,7 +41,7 @@ describe('merge config scenarios', function () {
       helper.command.tagAllComponents();
       helper.command.export();
 
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       npmCiRegistry.setResolver();
       helper.command.importComponent('comp1');
       beforeMerges = helper.scopeHelper.cloneLocalScope();

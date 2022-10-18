@@ -1,18 +1,18 @@
-import { useScopeQuery } from '@teambit/scope.ui.hooks.use-scope';
-import { useEffect } from 'react';
 import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
-import { LanesModel, LanesQuery } from '@teambit/lanes.ui.models';
+import { LanesModel, LanesQuery } from '@teambit/lanes.ui.models.lanes-model';
 import { gql, QueryResult } from '@apollo/client';
-import { useLanesContext } from './lanes-context';
+import { LanesContextModel, useLanesContext } from './lanes-context';
 
 const GET_LANES = gql`
   query Lanes($extensionId: String) {
     lanes {
       id
       list {
-        id
-        remote
-        isMerged
+        id {
+          name
+          scope
+        }
+        hash
         readmeComponent {
           id {
             name
@@ -29,7 +29,10 @@ const GET_LANES = gql`
         }
       }
       current {
-        id
+        id {
+          name
+          scope
+        }
       }
     }
     getHost(id: $extensionId) {
@@ -39,29 +42,23 @@ const GET_LANES = gql`
 `;
 
 export function useLanes(
-  getViewedLaneId?: () => string | undefined
-): { lanesModel?: LanesModel } & Omit<QueryResult<LanesQuery>, 'data'> {
+  targetLanes?: LanesModel
+): LanesContextModel & Omit<QueryResult<LanesQuery & { getHost: { id: string } }>, 'data'> {
   const lanesContext = useLanesContext();
-  const skip = !!lanesContext;
+  const shouldSkip = !!targetLanes || !!lanesContext;
 
-  const { data, ...rest } = useDataQuery(GET_LANES, { skip });
-  const { scope, loading } = useScopeQuery(skip);
+  const { data, loading, ...rest } = useDataQuery<LanesQuery & { getHost: { id: string } }>(GET_LANES, {
+    skip: shouldSkip,
+  });
 
-  let lanesModel: LanesModel;
-  if (lanesContext) lanesModel = lanesContext;
-  else
-    lanesModel = data && LanesModel.from({ data, host: data?.getHost?.id, scope, viewedLaneId: getViewedLaneId?.() });
-
-  useEffect(() => {
-    if (getViewedLaneId) {
-      const viewedLaneId = getViewedLaneId();
-      lanesModel?.setViewedLane(viewedLaneId);
-    }
-  }, [lanesModel, getViewedLaneId]);
+  let lanesModel: LanesModel | undefined;
+  if (lanesContext) lanesModel = lanesContext.lanesModel;
+  else lanesModel = (data && LanesModel.from({ data, host: data?.getHost?.id })) || targetLanes;
 
   return {
     ...rest,
-    loading: rest.loading || !!loading,
+    ...(lanesContext || {}),
+    loading,
     lanesModel,
   };
 }

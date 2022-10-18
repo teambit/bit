@@ -1,7 +1,7 @@
 import fs from 'fs-extra';
 import path from 'path';
 import R from 'ramda';
-import { BitId } from '../../../bit-id';
+import { BitId, BitIds } from '../../../bit-id';
 import ShowDoctorError from '../../../error/show-doctor-error';
 import logger from '../../../logger/logger';
 import { Scope } from '../../../scope';
@@ -113,9 +113,32 @@ export class ArtifactFiles {
     const allHashes = this.refs.map((artifact) => artifact.ref.hash);
     const scopeComponentsImporter = ScopeComponentsImporter.getInstance(scope);
     const lane = await scope.getCurrentLaneObject();
+    const unmergedEntry = scope.objects.unmergedComponents.getEntry(id.name);
+    let errorFromUnmergedLaneScope: Error | undefined;
+    if (unmergedEntry?.laneId) {
+      try {
+        logger.debug(
+          `getVinylsAndImportIfMissing, trying to get artifacts for ${id.toString()} from unmerged-lane-id: ${unmergedEntry.laneId.toString()}`
+        );
+        await scopeComponentsImporter.importManyObjects({ [unmergedEntry.laneId.scope]: allHashes });
+      } catch (err: any) {
+        logger.debug(
+          `getVinylsAndImportIfMissing, unable to get artifacts for ${id.toString()} from ${unmergedEntry.laneId.toString()}`
+        );
+        errorFromUnmergedLaneScope = err;
+      }
+    }
     const isIdOnLane = await scope.isIdOnLane(id, lane);
     const scopeName = isIdOnLane ? (lane?.scope as string) : (id.scope as string);
-    await scopeComponentsImporter.importManyObjects({ [scopeName]: allHashes });
+    try {
+      await scopeComponentsImporter.importManyObjects({ [scopeName]: allHashes });
+    } catch (err) {
+      if (!unmergedEntry || errorFromUnmergedLaneScope) {
+        logger.error('failed fetching the following hashes', { id, isIdOnLane, scopeName, allHashes });
+        throw err;
+      }
+      // unmergedEntry is set, and it was able to fetch from the unmerged-lane-id scope. all is good.
+    }
     const getOneArtifact = async (artifact: ArtifactRef) => {
       const content = (await artifact.ref.load(scope.objects)) as Source;
       if (!content) throw new ShowDoctorError(`failed loading file ${artifact.relativePath} from the model`);
@@ -139,6 +162,17 @@ export async function importMultipleDistsArtifacts(scope: Scope, components: Com
   );
   const extensionsNamesForDistArtifacts = 'teambit.compilation/compiler';
   const lane = await scope.getCurrentLaneObject();
+  const scopeComponentsImporter = ScopeComponentsImporter.getInstance(scope);
+  if (lane) {
+    // when on lane, locally, it's possible that not all components have their entire history (e.g. during "bit sign").
+    // as a result, the following "scope.isIdOnLane" fails to traverse the history.
+    // in terms of performance it's not ideal. once we have the lane-history, it'll be faster to get this data.
+    const compsIds = BitIds.fromArray(components.map((c) => c.id));
+    const compsToImport = BitIds.uniqFromArray(lane.toBitIds().filter((id) => compsIds.hasWithoutVersion(id)));
+    await scopeComponentsImporter.importManyDeltaWithoutDeps(compsToImport, true, lane, true);
+    // fetch also the components from main, otherwise, in some cases, you'll get an error: "error: version "some-snap" of component some-comp was not found on the filesystem."
+    await scopeComponentsImporter.importManyDeltaWithoutDeps(compsToImport.toVersionLatest(), true, undefined, true);
+  }
   const groupedHashes: { [scopeName: string]: string[] } = {};
   const debugHashesOrigin = {};
   await Promise.all(
@@ -161,7 +195,6 @@ export async function importMultipleDistsArtifacts(scope: Scope, components: Com
       });
     })
   );
-  const scopeComponentsImporter = ScopeComponentsImporter.getInstance(scope);
   try {
     await scopeComponentsImporter.importManyObjects(groupedHashes);
   } catch (err) {

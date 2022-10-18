@@ -13,12 +13,12 @@ describe('bit show command', function () {
   describe('running bit show --remote on an empty workspace', () => {
     let showOutput: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllWithoutBuild();
       helper.command.export();
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
       showOutput = helper.command.showComponent(`${helper.scopes.remote}/comp1 --remote`);
     });

@@ -249,8 +249,13 @@ export class WorkspaceComponentLoader {
     // Make sure we are adding the envs / deps data first because other on load events might depend on it
     await Promise.all([
       this.upsertExtensionData(component, EnvsAspect.id, envsData),
-      this.upsertExtensionData(component, DependencyResolverAspect.id, depResolverData)
+      this.upsertExtensionData(component, DependencyResolverAspect.id, depResolverData),
     ]);
+
+    // We are updating the component state with the envs and deps data here, so in case we have other slots that depend on this data
+    // they will be able to get it, as it's very common use case that during on load someone want to access to the component env for example
+    const aspectListWithEnvsAndDeps = await this.workspace.createAspectList(component.state.config.extensions);
+    component.state.aspects = aspectListWithEnvsAndDeps;
 
     const entries = this.workspace.onComponentLoadSlot.toArray();
     const promises = entries.map(async ([extension, onLoad]) => {

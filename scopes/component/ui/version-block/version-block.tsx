@@ -7,7 +7,7 @@ import React, { HTMLAttributes, useMemo } from 'react';
 import { LegacyComponentLog } from '@teambit/legacy-component-log';
 import { Tooltip } from '@teambit/design.ui.tooltip';
 import { useLanes } from '@teambit/lanes.hooks.use-lanes';
-import { LanesModel } from '@teambit/lanes.ui.models';
+import { LanesModel } from '@teambit/lanes.ui.models.lanes-model';
 
 import styles from './version-block.module.scss';
 

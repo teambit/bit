@@ -18,7 +18,7 @@ describe('auto tagging functionality', function () {
     let tagOutput;
     let beforeSecondTag: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents();
       helper.command.tagAllWithoutBuild();
@@ -58,7 +58,7 @@ describe('auto tagging functionality', function () {
     });
     it('bit-status should show them all as staged and not modified', () => {
       const status = helper.command.statusJson();
-      expect(status.modifiedComponent).to.be.empty;
+      expect(status.modifiedComponents).to.be.empty;
       const staged = helper.command.getStagedIdsFromStatus();
       expect(staged).to.include('comp1');
       expect(staged).to.include('comp2');
@@ -86,7 +86,7 @@ describe('auto tagging functionality', function () {
   describe.skip('with cyclic dependencies', () => {
     let scopeBeforeTag;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.bitJson.addKeyVal('packageManager', 'yarn');
       helper.fs.createFile('bar/a', 'a.js', 'require("../b/b")');
@@ -202,7 +202,7 @@ describe('auto tagging functionality', function () {
   });
   describe('with same component as direct and indirect dependent (A in: A => B => C, A => C)', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fs.createFile('bar/a', 'a.js', 'require("../b/b"); require("../c/c");');
       helper.fs.createFile('bar/b', 'b.js', 'require("../c/c")');
@@ -212,7 +212,7 @@ describe('auto tagging functionality', function () {
       helper.command.tagAllWithoutBuild();
       helper.command.export();
 
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
       helper.command.importComponent('"bar/*"');
 

@@ -94,7 +94,7 @@ export class DependenciesSetCmd implements Command {
   arguments = [
     { name: 'component-pattern', description: COMPONENT_PATTERN_HELP },
     {
-      name: 'package',
+      name: 'package...',
       description:
         'package name with or without a version, e.g. "lodash@1.0.0" or just "lodash" which will be resolved to the latest',
     },
@@ -126,7 +126,7 @@ export class DependenciesRemoveCmd implements Command {
   arguments = [
     { name: 'component-pattern', description: COMPONENT_PATTERN_HELP },
     {
-      name: 'package',
+      name: 'package...',
       description:
         'package name with or without a version, e.g. "lodash@1.0.0" or just "lodash" which will remove all lodash instances of any version',
     },
@@ -153,8 +153,8 @@ export class DependenciesRemoveCmd implements Command {
 }
 
 export class DependenciesCmd implements Command {
-  name = 'dependencies <sub-command>';
-  alias = 'deps';
+  name = 'deps <sub-command>';
+  alias = 'dependencies';
   description = 'manage dependencies';
   options = [];
   group = 'info';

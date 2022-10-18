@@ -14,7 +14,7 @@ describe('Mocha Tester', function () {
   });
   describe('component that use Mocha as a tester', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(1);
       helper.command.setEnv('comp1', 'teambit.harmony/bit-custom-aspect');
@@ -41,7 +41,7 @@ describe('Mocha Tester', function () {
         shouldOutputTestPassed(output);
       });
       it('bit build should show the passing component via Mocha output', () => {
-        const output = helper.command.build('', true);
+        const output = helper.command.build('', undefined, true);
         shouldOutputTestPassed(output);
       });
     });
