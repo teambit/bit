@@ -125,17 +125,6 @@ import { HttpHelper } from '../http-helper';
         expect(importOutput).to.have.string('successfully imported one component');
       });
     });
-    describe('bit import --dependents', () => {
-      let importOutput;
-      before(() => {
-        helper.scopeHelper.reInitLocalScope();
-        helper.scopeHelper.addRemoteHttpScope();
-        importOutput = helper.command.importComponent('comp3', '--dependents');
-      });
-      it('should import all dependents successfully', () => {
-        expect(importOutput).to.have.string('successfully imported 3 components');
-      });
-    });
     describe('bit remove --remote', () => {
       before(() => {
         helper.scopeHelper.getClonedLocalScope(scopeAfterExport);
