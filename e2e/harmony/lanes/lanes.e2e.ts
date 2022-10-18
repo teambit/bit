@@ -835,11 +835,13 @@ describe('bit lane command', function () {
   });
   describe('multiple scopes when the components are new', () => {
     let anotherRemote: string;
+    let anotherRemotePath: string;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       const { scopeName, scopePath } = helper.scopeHelper.getNewBareScope();
       anotherRemote = scopeName;
+      anotherRemotePath = scopePath;
       helper.scopeHelper.addRemoteScope(scopePath);
       helper.scopeHelper.addRemoteScope(scopePath, helper.scopes.remotePath);
       helper.fs.outputFile('bar1/index.js', 'const bar2 = require("../bar2"); console.log(bar2);');
@@ -875,6 +877,7 @@ describe('bit lane command', function () {
         before(() => {
           helper.scopeHelper.reInitLocalScope();
           helper.scopeHelper.addRemoteScope();
+          helper.scopeHelper.addRemoteScope(anotherRemotePath); // needed to fetch the head from the original scope.
           helper.command.switchRemoteLane('dev');
         });
         it('should not show the component as staged', () => {

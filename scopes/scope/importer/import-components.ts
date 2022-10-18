@@ -166,7 +166,6 @@ export default class ImportComponents {
     await this._throwForPotentialIssues(bitIds);
     const componentsWithDependencies = await this._importComponentsObjects(bitIds, {
       lane: this.laneObjects?.[0],
-      cache: false,
     });
     if (this.laneObjects && this.options.objectsOnly) {
       // merge the lane objects
@@ -258,13 +257,11 @@ export default class ImportComponents {
       allHistory = false,
       lane,
       ignoreMissingHead = false,
-      cache = true,
     }: {
       fromOriginalScope?: boolean;
       allHistory?: boolean;
       lane?: Lane;
       ignoreMissingHead?: boolean;
-      cache?: boolean;
     }
   ): Promise<ComponentWithDependencies[]> {
     const scopeComponentsImporter = ScopeComponentsImporter.getInstance(this.scope);
@@ -272,7 +269,7 @@ export default class ImportComponents {
     loader.start(`import ${ids.length} components with their dependencies (if missing)`);
     const versionDependenciesArr: VersionDependencies[] = fromOriginalScope
       ? await scopeComponentsImporter.importManyFromOriginalScopes(ids)
-      : await scopeComponentsImporter.importMany({ ids, ignoreMissingHead, lanes: lane ? [lane] : undefined, cache });
+      : await scopeComponentsImporter.importMany({ ids, ignoreMissingHead, lanes: lane ? [lane] : undefined });
     const componentWithDependencies = await multipleVersionDependenciesToConsumer(
       versionDependenciesArr,
       this.scope.objects

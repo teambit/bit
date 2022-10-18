@@ -187,7 +187,6 @@ export default class ScopeComponentsImporter {
 
   /**
    * delta between the local head and the remote head. mainly to improve performance
-   * not applicable and won't work for legacy. for legacy, refer to importManyWithAllVersions
    */
   async importManyDeltaWithoutDeps(
     ids: BitIds,
