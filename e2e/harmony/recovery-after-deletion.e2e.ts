@@ -61,7 +61,11 @@ describe('recovery after component/scope deletion', function () {
         helper.command.linkAndCompile();
         helper.command.tagAllComponents();
         helper.command.export();
-        helper.command.runCmd(`bit import ${helper.scopes.remote}/* ${remote2Name}/* --objects`);
+        runFetchMissingDepsAction(helper.scopes.remote, [
+          `${helper.scopes.remote}/comp1@0.0.1`,
+          `${helper.scopes.remote}/comp2@0.0.1`,
+        ]);
+        // helper.command.runCmd(`bit import ${helper.scopes.remote}/* ${remote2Name}/* --objects`);
         localClone = helper.scopeHelper.cloneLocalScope();
         helper.scopeHelper.reInitRemoteScope(remote2Path);
         remote2Clone = helper.scopeHelper.cloneScope(remote2Path);
