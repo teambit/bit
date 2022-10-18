@@ -1,6 +1,6 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import pMapSeries from 'p-map-series';
-import { IssuesClasses, IssuesList } from '@teambit/component-issues';
+import { IssuesList } from '@teambit/component-issues';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import { ComponentID } from '@teambit/component-id';
 import { Analytics } from '@teambit/legacy/dist/analytics/analytics';
@@ -91,9 +91,7 @@ export class StatusMain {
     const issuesToIgnore = this.issues.getIssuesToIgnoreGlobally();
     if (newAndModifiedLegacy.length) {
       const newAndModified = await this.workspace.getManyByLegacy(newAndModifiedLegacy, loadOpts);
-      if (!issuesToIgnore.includes(IssuesClasses.CircularDependencies.name)) {
-        await this.insights.addInsightsAsComponentIssues(newAndModified);
-      }
+      await this.issues.triggerAddComponentIssues(newAndModified, issuesToIgnore);
       this.issues.removeIgnoredIssuesFromComponents(newAndModified);
     }
     const componentsWithIssues = newAndModifiedLegacy.filter((component: ConsumerComponent) => {
