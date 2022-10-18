@@ -4,6 +4,7 @@ export function mainRuntimeFile({ namePascalCase: Name, name }: ComponentContext
   return `import { MainRuntime } from '@teambit/cli';
 import { NodeAspect, NodeMain } from '@teambit/node'
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
+import type { UseTypescriptModifiers, UseWebpackModifiers } from '@teambit/react';
 import { ${Name}Aspect } from './${name}.aspect';
 //import {
 //  previewConfigTransformer,
@@ -12,7 +13,7 @@ import { ${Name}Aspect } from './${name}.aspect';
 //import {
 //  devConfigTransformer,
 //  buildConfigTransformer,
-//} from "./typescript/ts-transformers";
+//} from "./typescript/ts-transformer";
 
 export class ${Name}Main {
   static slots = [];
@@ -21,17 +22,18 @@ export class ${Name}Main {
 
   static runtime = MainRuntime;
 
-  //const webpackModifiers: UseWebpackModifiers = {
-  //  previewConfig: [previewConfigTransformer],
-  //  devServerConfig: [devServerConfigTransformer],
-  //};
-
-  //const tsModifiers: UseTypescriptModifiers = {
-  //  devConfig: [devConfigTransformer],
-  //  buildConfig: [buildConfigTransformer],
-  //};
-
   static async provider([node, envs]: [NodeMain, EnvsMain]) {
+
+    //const webpackModifiers: UseWebpackModifiers = {
+      //  previewConfig: [previewConfigTransformer],
+      //  devServerConfig: [devServerConfigTransformer],
+    //};
+
+    //const tsModifiers: UseTypescriptModifiers = {
+      //  devConfig: [devConfigTransformer],
+      //  buildConfig: [buildConfigTransformer],
+    //};
+
     const ${Name}Env = node.compose([
       /**
        * Uncomment to override the config files for TypeScript, Webpack or Jest
