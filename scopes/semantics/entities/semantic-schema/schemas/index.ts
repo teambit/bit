@@ -1,4 +1,9 @@
-export { Module } from './module';
+/**
+ * Ensure that any new Schema class ends with the word 'Schema'
+ * This will make sure that the Class Name is not minimized during prod bundling process
+ * and the schemaObjToClass can match and instantiate the Schema Class correctly
+ */
+export { ModuleSchema } from './module';
 export { FunctionLikeSchema, Modifier } from './function-like';
 export { TypeRefSchema } from './type-ref';
 export { VariableLikeSchema } from './variable-like';

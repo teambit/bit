@@ -3,7 +3,7 @@ import { SchemaExtractor } from '@teambit/schema';
 import { TsserverClient } from '@teambit/ts-server';
 import type { Workspace } from '@teambit/workspace';
 import { ComponentDependency, DependencyResolverMain } from '@teambit/dependency-resolver';
-import { SchemaNode, APISchema, Module } from '@teambit/semantics.entities.semantic-schema';
+import { SchemaNode, APISchema, ModuleSchema } from '@teambit/semantics.entities.semantic-schema';
 import { Component } from '@teambit/component';
 import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 import { Formatter } from '@teambit/formatter';
@@ -46,7 +46,7 @@ export class TypeScriptExtractor implements SchemaExtractor {
     const context = await this.createContext(tsserver, component, formatter);
     const exportNames = await this.computeExportedIdentifiers(mainAst, context);
     context.setExports(new ExportList(exportNames));
-    const moduleSchema = (await this.computeSchema(mainAst, context)) as Module;
+    const moduleSchema = (await this.computeSchema(mainAst, context)) as ModuleSchema;
     moduleSchema.flatExportsRecursively();
     const apiScheme = moduleSchema;
     const location = context.getLocation(mainAst);
