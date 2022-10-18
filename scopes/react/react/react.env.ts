@@ -511,7 +511,7 @@ export class ReactEnv
    * @deprecated use createEsmCompilerTask()
    */
   getEsmCompilerTask(transformers: TsConfigTransformer[] = [], tsModule = ts) {
-    return this.createEsmCompilerTask(transformers as PipeServiceModifier[], tsModule);
+    return this.createEsmCompilerTask(transformers as Function[], tsModule);
   }
 
   /**
@@ -520,7 +520,7 @@ export class ReactEnv
    * @param tsModule
    * @returns
    */
-  createEsmCompilerTask(transformers: PipeServiceModifier[] = [], tsModule = ts) {
+  createEsmCompilerTask(transformers: Function[] = [], tsModule = ts) {
     const tsCompiler = this.createTsEsmCompiler('build', transformers as TsConfigTransformer[], tsModule);
     return this.compiler.createTask('TSCompiler', tsCompiler);
   }

@@ -11,7 +11,7 @@ describe('artifacts storage resolver', function () {
   let envName;
   before(() => {
     helper = new Helper();
-    helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+    helper.scopeHelper.setNewLocalAndRemoteScopes();
     helper.bitJsonc.setupDefault();
     // helper.bitJsonc.setPackageManager();
     envName = helper.env.setCustomEnv('elements-storage-resolver-env');
@@ -48,7 +48,7 @@ describe('artifacts storage resolver', function () {
     });
     describe('store url from storage resolver after import', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.scopeHelper.reInitLocalScope();
         helper.scopeHelper.addRemoteScope();
         helper.command.importComponent('comp1');
       });

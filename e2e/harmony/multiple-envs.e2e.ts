@@ -17,7 +17,7 @@ describe('multiple envs', function () {
   });
   describe('env in the variants and env in the .bitmap', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(1);
       const reactEnv = 'teambit.react/react';
@@ -38,7 +38,7 @@ describe('multiple envs', function () {
   });
   describe('env in the variants global (*) and env in the variants more specific', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(1);
       const reactEnv = 'teambit.react/react';

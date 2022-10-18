@@ -19,7 +19,7 @@ describe('bit checkout command', function () {
   let helper: Helper;
   before(() => {
     helper = new Helper();
-    helper.scopeHelper.reInitLocalScopeHarmony();
+    helper.scopeHelper.reInitLocalScope();
   });
   after(() => {
     helper.scopeHelper.destroy();
@@ -113,7 +113,7 @@ describe('bit checkout command', function () {
     let outputV2: string;
     let localScope: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(3);
       helper.command.tagAllWithoutBuild();
@@ -179,7 +179,7 @@ describe('bit checkout command', function () {
   });
   describe('when the current version has new files', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
       helper.command.tagAllWithoutBuild();
@@ -195,7 +195,7 @@ describe('bit checkout command', function () {
   });
   describe('when the component is modified and a file was changed in the checked out version', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.fs.outputFile('bar/index.js', "console.log('v1');");
       helper.fs.outputFile('bar/foo.txt', 'v1');
       helper.command.addComponent('bar');
@@ -214,7 +214,7 @@ describe('bit checkout command', function () {
     let scopeAfterFirstVersion: string;
     let scopeBeforeCheckout: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(1);
       helper.fs.outputFile('comp1/foo.ts');
@@ -251,7 +251,7 @@ describe('bit checkout command', function () {
   describe('when a file was added in the new version (and not exists locally)', () => {
     let afterFirstExport: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllWithoutBuild();
@@ -273,7 +273,7 @@ describe('bit checkout command', function () {
   describe('modified component with conflicts', () => {
     let localScope;
     before(() => {
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo(`${barFooV1}\n`);
       helper.fixtures.addComponentBarFooAsDir();
       helper.fixtures.tagComponentBarFoo();
@@ -434,7 +434,7 @@ describe('bit checkout command', function () {
   describe('checkout-head when the local head is not up to date', () => {
     let localHeadScope: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(1, false);
       helper.command.tagAllWithoutBuild();
@@ -456,7 +456,7 @@ describe('bit checkout command', function () {
   });
   describe('sync new components', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(2);
       const scopeBeforeTag = helper.scopeHelper.cloneLocalScope();

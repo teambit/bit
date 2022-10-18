@@ -16,7 +16,7 @@ describe('bit export command', function () {
   });
   describe('with no components to export', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
     });
     it('should print nothing to export', () => {
@@ -26,7 +26,7 @@ describe('bit export command', function () {
   });
   describe('with multiple versions', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
@@ -44,14 +44,14 @@ describe('bit export command', function () {
   });
   describe('imported (v1), exported (v2) and then exported again (v3)', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
       helper.fixtures.tagComponentBarFoo();
       helper.command.exportIds('bar/foo'); // v1
 
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
       helper.command.importComponent('bar/foo', '--path components/bar/foo');
 
@@ -73,7 +73,7 @@ describe('bit export command', function () {
     let pngSize;
     let destPngFile;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.createComponentBarFoo();
       const sourcePngFile = path.join(__dirname, '..', 'fixtures', 'png_fixture.png');
@@ -105,7 +105,7 @@ describe('bit export command', function () {
   describe('export a component, do not modify it and export again to the same scope', () => {
     let output;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
@@ -119,7 +119,7 @@ describe('bit export command', function () {
   });
   describe('export a component when the checked out version is not the latest', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.createComponentBarFoo('// v2');
       helper.fixtures.addComponentBarFooAsDir();
@@ -147,7 +147,7 @@ describe('bit export command', function () {
     const isWin = process.platform === 'win32';
     let scopeBeforeExport;
     before(() => {
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       fs.emptyDirSync(helper.scopes.remotePath);
       helper.command.runCmd('bit init --bare --shared nonExistGroup', helper.scopes.remotePath);
       helper.scopeHelper.addRemoteScope();
@@ -193,7 +193,7 @@ describe('bit export command', function () {
   });
   describe('export after re-creating the remote', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllComponents();
@@ -230,7 +230,7 @@ describe('bit export command', function () {
   describe('re-export using the component name without the scope name', () => {
     let output;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();

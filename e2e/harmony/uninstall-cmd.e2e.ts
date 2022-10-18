@@ -15,7 +15,7 @@ describe('uninstall command', function () {
   });
   describe('root policies removed', function () {
     before(() => {
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.command.install('is-positive@1.0.0 is-negative@1.0.0 is-odd@1.0.0');
       helper.command.uninstall('is-positive is-negative');
     });

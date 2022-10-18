@@ -1,4 +1,5 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
+import pMapSeries from 'p-map-series';
 import { IssuesClasses, IssuesList } from '@teambit/component-issues';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import { ComponentID } from '@teambit/component-id';
@@ -64,6 +65,13 @@ export class StatusMain {
     const modifiedComponent = (await componentsList.listModifiedComponents(true, loadOpts)) as ConsumerComponent[];
     const stagedComponents: ModelComponent[] = await componentsList.listExportPendingComponents(laneObj);
     await this.addRemovedStagedIfNeeded(stagedComponents);
+    const stagedComponentsWithVersions = await pMapSeries(stagedComponents, async (stagedComp) => {
+      const versions = await stagedComp.getLocalTagsOrHashes(consumer.scope.objects);
+      return {
+        id: stagedComp.toBitId(),
+        versions,
+      };
+    });
 
     const autoTagPendingComponents = await componentsList.listAutoTagPendingComponents();
     const autoTagPendingComponentsIds = autoTagPendingComponents.map((component) => component.id);
@@ -124,12 +132,7 @@ export class StatusMain {
     return {
       newComponents: await convertBitIdToComponentIdsAndSort(newComponents.map((c) => c.id)),
       modifiedComponent: await convertBitIdToComponentIdsAndSort(modifiedComponent.map((c) => c.id)),
-      stagedComponents: await convertObjToComponentIdsAndSort(
-        stagedComponents.map((c) => ({
-          id: c.toBitId(),
-          versions: c.getLocalTagsOrHashes(),
-        }))
-      ),
+      stagedComponents: await convertObjToComponentIdsAndSort(stagedComponentsWithVersions),
       // @ts-ignore - not clear why, it fails the "bit build" without it
       componentsWithIssues: await convertObjToComponentIdsAndSort(
         componentsWithIssues.map((c) => ({ id: c.id, issues: c.issues }))

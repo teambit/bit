@@ -14,7 +14,7 @@ describe('bit dependencies command', function () {
   describe('bit deps get', () => {
     describe('running the command on a new component', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.scopeHelper.reInitLocalScope();
         helper.fixtures.populateComponents(1);
       });
       it('should not throw an error saying the id is missing from the graph', () => {
@@ -25,7 +25,7 @@ describe('bit dependencies command', function () {
   describe('bit deps set', () => {
     describe('adding prod dep', () => {
       before(() => {
-        helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+        helper.scopeHelper.setNewLocalAndRemoteScopes();
         helper.fixtures.populateComponents(3);
         helper.command.dependenciesSet('comp1', 'lodash@3.3.1');
       });
@@ -62,7 +62,7 @@ describe('bit dependencies command', function () {
     });
     describe('adding multiple deps', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.scopeHelper.reInitLocalScope();
         helper.fixtures.populateComponents(1);
         helper.command.dependenciesSet('comp1', 'lodash@3.3.1 ramda@0.0.27');
       });
@@ -88,7 +88,7 @@ describe('bit dependencies command', function () {
     });
     describe('adding scoped package', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.scopeHelper.reInitLocalScope();
         helper.fixtures.populateComponents(1);
         helper.command.dependenciesSet('comp1', '@scoped/button@3.3.1');
       });
@@ -102,7 +102,7 @@ describe('bit dependencies command', function () {
     describe('removing a component', () => {
       let beforeRemove: string;
       before(() => {
-        helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+        helper.scopeHelper.setNewLocalAndRemoteScopes();
         helper.fixtures.populateComponents(2);
         beforeRemove = helper.scopeHelper.cloneLocalScope();
       });

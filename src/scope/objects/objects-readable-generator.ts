@@ -27,6 +27,7 @@ export class ObjectsReadableGenerator {
       await pMapSeries(componentsWithOptions, async (componentWithOptions) =>
         this.pushComponentObjects(componentWithOptions)
       );
+      logger.debug(`pushObjectsToReadable, pushed ${this.pushed.length} objects`);
       this.readable.push(null);
     } catch (err: any) {
       this.readable.destroy(err);
@@ -50,8 +51,8 @@ export class ObjectsReadableGenerator {
   async pushObjects(refs: Ref[], scope: Scope) {
     try {
       await pMapSeries(refs, async (ref) => {
-        const objectItem = await this.getObject(ref, scope);
-        this.push(objectItem);
+        const objectItem = await this.getObjectGracefully(ref, scope);
+        if (objectItem) this.push(objectItem);
       });
       this.readable.push(null);
     } catch (err: any) {
@@ -59,11 +60,14 @@ export class ObjectsReadableGenerator {
     }
   }
 
-  private async getObject(ref: Ref, scope: Scope) {
+  private async getObjectGracefully(ref: Ref, scope: Scope) {
     try {
       return await scope.getObjectItem(ref);
     } catch (err: any) {
-      throw new Error(`failed retrieving an object ${ref.toString()} from the filesystem.\n${err.message}`);
+      logger.warn(
+        `getObjectGracefully: failed retrieving an object ${ref.toString()} from the filesystem.\n${err.message}`
+      );
+      return null;
     }
   }
 
@@ -94,17 +98,22 @@ export class ObjectsReadableGenerator {
       return;
     }
     const collectVersionObjects = async (ver: Version): Promise<ObjectItem[]> => {
-      const versionRefs = ver.refsWithOptions(collectParents, collectArtifacts);
-      const versionObjects = await ver.collectManyObjects(this.repo, versionRefs);
+      const versionRefs = ver.refsWithOptions(false, collectArtifacts);
+      const missingVersionRefs = versionRefs.filter((ref) => !this.pushed.includes(ref.toString()));
+      const versionObjects = await ver.collectManyObjects(this.repo, missingVersionRefs);
       const versionData = { ref: ver.hash(), buffer: await ver.asRaw(this.repo), type: ver.getType() };
       return [...versionObjects, versionData];
     };
     try {
-      const componentData = {
-        ref: component.hash(),
-        buffer: await component.asRaw(this.repo),
-        type: component.getType(),
-      };
+      if (!this.pushed.includes(component.hash().toString())) {
+        const componentData = {
+          ref: component.hash(),
+          buffer: await component.asRaw(this.repo),
+          type: component.getType(),
+        };
+        this.push(componentData);
+      }
+      const allVersions: Version[] = [version];
       if (collectParents) {
         const allParentsHashes = await getAllVersionHashesMemoized({
           modelComponent: component,
@@ -113,15 +122,16 @@ export class ObjectsReadableGenerator {
           stopAt: collectParentsUntil ? [collectParentsUntil] : undefined,
         });
         const missingParentsHashes = allParentsHashes.filter((h) => !h.isEqual(version.hash()));
-        await pMapSeries(missingParentsHashes, async (parentHash) => {
-          const parentVersion = (await parentHash.load(this.repo)) as Version;
-          const parentsObj = await collectVersionObjects(parentVersion);
-          this.pushManyObjects(parentsObj);
-        });
+        if (component.head && !component.head.isEqual(version.hash())) {
+          missingParentsHashes.push(component.head); // always add the head
+        }
+        const parentVersions = await pMapSeries(missingParentsHashes, (parentHash) => parentHash.load(this.repo));
+        allVersions.push(...(parentVersions as Version[]));
       }
-      const versionObjects = await collectVersionObjects(version);
-      this.pushManyObjects(versionObjects);
-      this.push(componentData);
+      await pMapSeries(allVersions, async (ver) => {
+        const versionObjects = await collectVersionObjects(ver);
+        this.pushManyObjects(versionObjects);
+      });
     } catch (err: any) {
       logger.error(`component-version.toObjects ${componentWithOptions.component.id()} got an error`, err);
       // @ts-ignore

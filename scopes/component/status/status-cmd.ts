@@ -167,17 +167,17 @@ alternatively, to keep local tags/snaps history, use "bit merge <remote-name>/<l
       ? [pendingMergeTitle, pendingMergeDesc, pendingMergeComps].join('\n')
       : '';
 
-    const compWithConflictsTitle = chalk.underline.white('components during merge state');
-    const compWithConflictsDesc = `(use "bit snap/tag [--unmerged]" to complete the merge process
+    const compDuringMergeTitle = chalk.underline.white('components during merge state');
+    const compDuringMergeDesc = `(use "bit snap/tag [--unmerged]" to complete the merge process
 or use "bit merge [component-id] --abort" to cancel the merge operation)\n`;
-    const compWithConflictsComps = componentsDuringMergeState
+    const compDuringMergeComps = componentsDuringMergeState
       .map((id) => {
         return `    > ${chalk.cyan(id.toString())}`;
       })
       .join('\n');
 
-    const compWithConflictsStr = compWithConflictsComps.length
-      ? [compWithConflictsTitle, compWithConflictsDesc, compWithConflictsComps].join('\n')
+    const compDuringMergeStr = compDuringMergeComps.length
+      ? [compDuringMergeTitle, compDuringMergeDesc, compDuringMergeComps].join('\n')
       : '';
 
     const newComponentDescription = '\n(use "bit tag [version]" to lock a version with all your changes)\n';
@@ -261,7 +261,7 @@ or use "bit merge [component-id] --abort" to cancel the merge operation)\n`;
         outdatedStr,
         pendingMergeStr,
         updatesFromMainOutput,
-        compWithConflictsStr,
+        compDuringMergeStr,
         newComponentsOutput,
         modifiedComponentOutput,
         snappedComponentsOutput,
