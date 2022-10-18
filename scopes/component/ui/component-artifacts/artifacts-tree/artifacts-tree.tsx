@@ -60,7 +60,6 @@ export function ArtifactsTree({
   const getHref = () => currentHref;
   const widgets = useMemo(() => [generateWidget(files || [])], [files]);
 
-  if (loading) return <ComponentTreeLoader />;
   if (!hasArtifacts) return null;
 
   return (
@@ -71,18 +70,21 @@ export function ArtifactsTree({
       contentClass={styles.artifactsPanelCodeDrawerContent}
       className={classNames(styles.artifactsPanelCodeTabDrawer, drawerOpen && styles.openDrawer)}
     >
-      <FileTree
-        className={styles.artifactsPanelTree}
-        getIcon={getIcon}
-        getHref={getHref}
-        files={artifactFilesTree}
-        widgets={widgets}
-        payloadMap={payloadMap}
-        selected={selected}
-        onTreeNodeSelected={(id: string) => {
-          setSelected(id);
-        }}
-      />
+      {loading && <ComponentTreeLoader />}
+      {loading || (
+        <FileTree
+          className={styles.artifactsPanelTree}
+          getIcon={getIcon}
+          getHref={getHref}
+          files={artifactFilesTree}
+          widgets={widgets}
+          payloadMap={payloadMap}
+          selected={selected}
+          onTreeNodeSelected={(id: string) => {
+            setSelected(id);
+          }}
+        />
+      )}
     </DrawerUI>
   );
 }
