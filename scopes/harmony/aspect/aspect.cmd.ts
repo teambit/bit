@@ -105,9 +105,16 @@ export class UpdateAspectCmd implements Command {
   constructor(private aspect: AspectMain) {}
 
   async report([aspectId, pattern]: [string, string]) {
-    const results = await this.aspect.updateAspectsToComponents(aspectId, pattern);
-    if (!results.length) return chalk.yellow(`unable to find any component that use ${chalk.bold(aspectId)}`);
-    return chalk.green(`the following component(s) have been successfully updated:\n${results.join('\n')}`);
+    const { updated, alreadyUpToDate } = await this.aspect.updateAspectsToComponents(aspectId, pattern);
+    if (updated.length) {
+      return chalk.green(`the following component(s) have been successfully updated:\n${updated.join('\n')}`);
+    }
+    if (alreadyUpToDate.length) {
+      return chalk.green(
+        `all ${alreadyUpToDate.length} component(s) that use this aspect are already up to date. nothing to update`
+      );
+    }
+    return chalk.yellow(`unable to find any component that use ${chalk.bold(aspectId)}`);
   }
 }
 
