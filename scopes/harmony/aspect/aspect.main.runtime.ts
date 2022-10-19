@@ -145,7 +145,10 @@ export class AspectMain {
     };
   }
 
-  async updateAspectsToComponents(aspectId: string, pattern?: string): Promise<ComponentID[]> {
+  async updateAspectsToComponents(
+    aspectId: string,
+    pattern?: string
+  ): Promise<{ updated: ComponentID[]; alreadyUpToDate: ComponentID[] }> {
     let aspectCompId = await this.workspace.resolveComponentId(aspectId);
     if (!aspectCompId.hasVersion()) {
       try {
@@ -159,11 +162,16 @@ export class AspectMain {
     }
     const allCompIds = pattern ? await this.workspace.idsByPattern(pattern) : await this.workspace.listIds();
     const allComps = await this.workspace.getMany(allCompIds);
+    const alreadyUpToDate: ComponentID[] = [];
     const updatedComponentIds = await Promise.all(
       allComps.map(async (comp) => {
         const aspect = comp.state.aspects.get(aspectCompId.toStringWithoutVersion());
         if (!aspect) return undefined;
-        if (aspect.id.version === aspectCompId.version) return undefined; // nothing to update
+        if (aspect.id.version === aspectCompId.version) {
+          // nothing to update
+          alreadyUpToDate.push(comp.id);
+          return undefined;
+        }
         // don't mark with minus if not exist in .bitmap. it's not needed. when the component is loaded, the
         // merge-operation of the aspects removes duplicate aspect-id with different versions.
         await this.workspace.removeSpecificComponentConfig(comp.id, aspect.id.toString(), false);
@@ -172,7 +180,7 @@ export class AspectMain {
       })
     );
     await this.workspace.bitMap.write();
-    return compact(updatedComponentIds);
+    return { updated: compact(updatedComponentIds), alreadyUpToDate };
   }
 
   /**
