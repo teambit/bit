@@ -6,7 +6,7 @@
     "character": 1
   },
   "module": {
-    "__schema": "Module",
+    "__schema": "ModuleSchema",
     "location": {
       "filePath": "index.ts",
       "line": 15,
@@ -458,7 +458,7 @@
         }
       },
       {
-        "__schema": "Module",
+        "__schema": "ModuleSchema",
         "location": {
           "filePath": "button.composition.tsx",
           "line": 3,
