@@ -125,7 +125,7 @@ describe('bit lane command', function () {
       output = helper.command.listLanes();
     });
     it('bit lane should show the active lane', () => {
-      expect(output).to.have.string('current lane - dev');
+      expect(output).to.have.string(`current lane - my-scope/dev`);
       expect(output).to.have.string('main');
     });
   });
@@ -167,7 +167,7 @@ describe('bit lane command', function () {
         output = helper.command.listLanes('--details');
       });
       it('should show all lanes and mark the current one', () => {
-        expect(output).to.have.string('current lane - dev');
+        expect(output).to.have.string(`current lane - ${helper.scopes.remote}/dev`);
       });
     });
     describe('exporting the lane', () => {
