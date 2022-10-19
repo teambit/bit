@@ -105,10 +105,10 @@ export class EnvsCmd implements Command {
 
   private getTable(components: Component[]) {
     const tableData = components.map((component) => {
-      const env = this.envs.getDescriptor(component);
+      const envId = this.envs.getEnvId(component);
       return {
         component: component.id.toString(),
-        env: env ? env.id : 'N/A',
+        env: envId,
       };
     });
 
