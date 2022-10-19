@@ -100,7 +100,6 @@ export default function validateVersionInstance(version: Version): void {
     });
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const validateNoDuplicateExtensionEntry = (extensions: ExtensionDataList) => {
     const existingMap = new Map();
     const duplications: string[] = [];
@@ -122,7 +121,7 @@ export default function validateVersionInstance(version: Version): void {
 
   const _validateExtensions = (extensions: ExtensionDataList) => {
     if (extensions) {
-      // validateNoDuplicateExtensionEntry(extensions);
+      validateNoDuplicateExtensionEntry(extensions);
       extensions.map(_validateExtension);
       validateArtifacts(extensions);
     }
