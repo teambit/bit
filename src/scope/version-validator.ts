@@ -1,5 +1,6 @@
 import { PJV } from 'package-json-validator';
 import R from 'ramda';
+import { lt } from 'semver';
 import packageNameValidate from 'validate-npm-package-name';
 
 import { BitId, BitIds } from '../bit-id';
@@ -115,6 +116,11 @@ export default function validateVersionInstance(version: Version): void {
       }
     });
     if (duplications.length) {
+      // a bug causing duplicate aspects was fixed in https://github.com/teambit/bit/pull/6567
+      // all Version objects snapped before 0.0.882 might have this bug. ignore them.
+      if (!version.bitVersion || lt(version.bitVersion, '0.0.882')) {
+        return;
+      }
       throw new VersionInvalid(`${message} the following extensions entries are duplicated ${duplications.join(', ')}`);
     }
   };
