@@ -30,7 +30,7 @@ export function AspectBox({ icon, name, config, data, className, ...rest }: Aspe
     setTimeout(() => {
       if (dataOrConfig === 'data') setIsCopiedData(false);
       else setIsCopiedConfig(false);
-    }, 20000);
+    }, 2000);
     copy(JSON.stringify(dataToCopy, null, 2));
   };
 
