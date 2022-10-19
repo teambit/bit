@@ -336,7 +336,7 @@
       "peerDependencies": {
         "@apollo/client": "^3.6.0",
         "@teambit/base-react.navigation.link": "2.0.27",
-        "@teambit/legacy": "1.0.370",
+        "@teambit/legacy": "1.0.371",
         "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
         "browserslist": "4.16.3",
         "core-js": "^3.10.0",
@@ -378,7 +378,8 @@
   },
   "teambit.component/issues": {
     "ignoreIssues": [
-      "CircularDependencies"
+      "CircularDependencies",
+      "DuplicateComponentAndPackage"
     ]
   },
   "teambit.workspace/variants": {
@@ -422,7 +423,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.370"
+            "@teambit/legacy": "1.0.371"
           }
         }
       },
@@ -683,7 +684,7 @@
           "peerDependencies": {
             "react": "^16.8.0 || ^17.0.0",
             "react-dom": "^16.8.0 || ^17.0.0",
-            "@teambit/legacy": "1.0.370"
+            "@teambit/legacy": "1.0.371"
           }
         }
       }
@@ -770,7 +771,7 @@
             "@teambit/base-react.navigation.link": "2.0.27",
             "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
             "@apollo/client": "3.6.9",
-            "@teambit/legacy": "1.0.370",
+            "@teambit/legacy": "1.0.371",
             "graphql": "14.7.0",
             "browserslist": "4.16.3",
             "reflect-metadata": "0.1.13",
@@ -905,7 +906,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.370"
+            "@teambit/legacy": "1.0.371"
           }
         }
       }

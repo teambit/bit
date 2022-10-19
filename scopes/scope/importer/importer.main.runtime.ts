@@ -3,7 +3,6 @@ import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/depen
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import { CommunityAspect } from '@teambit/community';
 import type { CommunityMain } from '@teambit/community';
-import R from 'ramda';
 import { Analytics } from '@teambit/legacy/dist/analytics/analytics';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
@@ -16,6 +15,7 @@ import ScopeComponentsImporter from '@teambit/legacy/dist/scope/component-ops/sc
 import loader from '@teambit/legacy/dist/cli/loader';
 import { Lane } from '@teambit/legacy/dist/scope/models';
 import { ScopeNotFoundOrDenied } from '@teambit/legacy/dist/remotes/exceptions/scope-not-found-or-denied';
+import GraphAspect, { GraphMain } from '@teambit/graph';
 import { LaneNotFound } from '@teambit/legacy/dist/api/scope/lib/exceptions/lane-not-found';
 import { BitError } from '@teambit/bit-error';
 import { ImportCmd } from './import.cmd';
@@ -24,7 +24,7 @@ import { FetchCmd } from './fetch-cmd';
 import ImportComponents, { ImportOptions, ImportResult } from './import-components';
 
 export class ImporterMain {
-  constructor(private workspace: Workspace, private depResolver: DependencyResolverMain) {}
+  constructor(private workspace: Workspace, private depResolver: DependencyResolverMain, private graph: GraphMain) {}
 
   async import(importOptions: ImportOptions, packageManagerArgs: string[]): Promise<ImportResult> {
     if (!this.workspace) throw new ConsumerNotFound();
@@ -45,16 +45,14 @@ export class ImporterMain {
         importOptions.lanes = { laneIds: [currentLaneId], lanes: [] };
       }
     }
-    const importComponents = new ImportComponents(consumer, importOptions);
-    const { dependencies, importDetails } = await importComponents.importComponents();
-    const bitIds = dependencies.map(R.path(['component', 'id']));
-    Analytics.setExtraData('num_components', bitIds.length);
-    if (importOptions.ids.length) {
-      const importedComponents = dependencies.map((d) => d.component);
-      await this.removeFromWorkspaceConfig(importedComponents);
+    const importComponents = new ImportComponents(this.workspace, this.graph, importOptions);
+    const results = await importComponents.importComponents();
+    Analytics.setExtraData('num_components', results.importedIds.length);
+    if (results.writtenComponents && results.writtenComponents.length) {
+      await this.removeFromWorkspaceConfig(results.writtenComponents);
     }
     await consumer.onDestroy();
-    return { dependencies, importDetails };
+    return results;
   }
 
   /**
@@ -62,8 +60,7 @@ export class ImporterMain {
    */
   async importWithOptions(importOptions: ImportOptions) {
     if (!this.workspace) throw new ConsumerNotFound();
-    const consumer = this.workspace.consumer;
-    const importComponents = new ImportComponents(consumer, importOptions);
+    const importComponents = new ImportComponents(this.workspace, this.graph, importOptions);
     return importComponents.importComponents();
   }
 
@@ -89,12 +86,11 @@ export class ImporterMain {
       importOptions.lanes = await getLanes();
       importOptions.ids = [];
     }
-    const importComponents = new ImportComponents(consumer, importOptions);
-    const { dependencies, envComponents, importDetails } = await importComponents.importComponents();
-    const bitIds = dependencies.map(R.path(['component', 'id']));
-    Analytics.setExtraData('num_components', bitIds.length);
+    const importComponents = new ImportComponents(this.workspace, this.graph, importOptions);
+    const { importedIds, importDetails } = await importComponents.importComponents();
+    Analytics.setExtraData('num_components', importedIds.length);
     await consumer.onDestroy();
-    return { dependencies, envComponents, importDetails };
+    return { importedIds, importDetails };
 
     async function getLanes(): Promise<{ laneIds: LaneId[]; lanes: Lane[] }> {
       const result: { laneIds: LaneId[]; lanes: Lane[] } = { laneIds: [], lanes: [] };
@@ -143,15 +139,16 @@ export class ImporterMain {
   }
 
   static slots = [];
-  static dependencies = [CLIAspect, WorkspaceAspect, DependencyResolverAspect, CommunityAspect];
+  static dependencies = [CLIAspect, WorkspaceAspect, DependencyResolverAspect, CommunityAspect, GraphAspect];
   static runtime = MainRuntime;
-  static async provider([cli, workspace, depResolver, community]: [
+  static async provider([cli, workspace, depResolver, community, graph]: [
     CLIMain,
     Workspace,
     DependencyResolverMain,
-    CommunityMain
+    CommunityMain,
+    GraphMain
   ]) {
-    const importerMain = new ImporterMain(workspace, depResolver);
+    const importerMain = new ImporterMain(workspace, depResolver, graph);
     cli.register(new ImportCmd(importerMain, community.getDocsDomain()), new FetchCmd(importerMain));
     return importerMain;
   }
