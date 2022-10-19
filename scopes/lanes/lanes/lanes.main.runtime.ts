@@ -364,8 +364,8 @@ export class LanesMain {
       installNpmPackages: false,
       lanes: { laneIds: [laneId], lanes: [lane] },
     };
-    const { dependencies } = await this.importer.importWithOptions(importOptions);
-    this.logger.debug(`fetching lane ${laneId.toString()} done, fetched ${dependencies.length} components`);
+    const { importedIds } = await this.importer.importWithOptions(importOptions);
+    this.logger.debug(`fetching lane ${laneId.toString()} done, fetched ${importedIds.length} components`);
     return lane;
   }
 
