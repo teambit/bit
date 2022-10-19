@@ -100,7 +100,6 @@ export function ArtifactsTree({
       {loading && <ComponentTreeLoader />}
       {loading || (
         <FileTree
-          className={styles.artifactsPanelTree}
           getIcon={getIcon}
           getHref={getHref}
           files={artifactFilesTree}
