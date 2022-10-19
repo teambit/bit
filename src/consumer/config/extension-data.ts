@@ -125,6 +125,11 @@ export class ExtensionDataList extends Array<ExtensionDataEntry> {
     return BitIds.fromArray(bitIds);
   }
 
+  /**
+   * this is how it gets saved in the objects during tag/snap.
+   * do not remove aspects with empty config/data. they might be needed.
+   * for example, a user can add "teambit.react/react" without config/data. this is how the env is set.
+   */
   toModelObjects() {
     const extensionsClone = this.clone();
     extensionsClone.forEach((ext) => {
@@ -198,11 +203,9 @@ export class ExtensionDataList extends Array<ExtensionDataEntry> {
 
   toConfigArray(): ConfigOnlyEntry[] {
     const arr = this.map((entry) => {
-      // Remove extensions without config
       const clonedEntry = entry.clone();
       if (clonedEntry.rawConfig && !isEmpty(clonedEntry.rawConfig)) {
         removeInternalConfigFieldsWithMutation(clonedEntry.rawConfig);
-        if (isEmpty(clonedEntry.rawConfig)) return undefined;
         return { id: clonedEntry.stringId, config: clonedEntry.config };
       }
       return undefined;
