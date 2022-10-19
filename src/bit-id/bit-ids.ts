@@ -168,9 +168,11 @@ export default class BitIds extends Array<BitId> {
     return new BitIds(...array);
   }
 
-  static fromArray(bitIds: BitId[]): BitIds {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return new BitIds(...bitIds);
+  static fromArray(ids: BitId[]): BitIds {
+    // don't do `new BitIds(...ids);`, it'll throw "Maximum call stack size exceeded" for large number if ids.
+    const bitIds = new BitIds();
+    ids.forEach((id) => bitIds.push(id));
+    return bitIds;
   }
 
   static uniqFromArray(bitIds: BitId[]): BitIds {
@@ -194,7 +196,6 @@ ${found.map((id) => id.toString()).join('\n')}`);
 
   clone(): BitIds {
     const cloneIds = this.map((id) => id.clone());
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return new BitIds(...cloneIds);
   }
 }

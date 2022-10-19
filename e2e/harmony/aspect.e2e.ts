@@ -100,6 +100,11 @@ describe('aspect', function () {
       expect(show).to.have.string(`${helper.scopes.remote}/my-aspect@0.0.2`);
       expect(show).not.to.have.string(`${helper.scopes.remote}/my-aspect@0.0.1`);
     });
+    it('running the same command again, should not show a message that no component is using this aspect', () => {
+      const secondRun = helper.command.updateAspect(`${helper.scopes.remote}/my-aspect`);
+      expect(secondRun).to.have.string('are already up to date');
+      expect(secondRun).to.not.have.string('unable to find any component');
+    });
     it('bit tag should save only the updated aspect and not the old one', () => {
       helper.command.importComponent('my-aspect'); // otherwise, the tag will try to get it as a package
       helper.command.tagAllComponents();
