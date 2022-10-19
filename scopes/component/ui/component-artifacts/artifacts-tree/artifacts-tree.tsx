@@ -37,19 +37,18 @@ export function ArtifactsTree({
   const location = useLocation();
   const { data: artifacts = [], loading } = useComponentArtifacts(host, componentId.toString());
   const hasArtifacts = artifacts.length > 0;
-  const artifactFilesTree =
-    (hasArtifacts &&
-      artifacts?.flatMap((artifact) =>
-        (artifact.files || []).map((artifactFile) => `${artifact.taskName}/${artifact.name}/${artifactFile.path}`)
-      )) ||
-    [];
 
-  const files =
-    (hasArtifacts &&
-      artifacts.flatMap((artifact) =>
-        artifact.files.map((file) => ({ ...file, id: `${artifact.taskName}/${artifact.name}/${file.path}` }))
-      )) ||
-    [];
+  const [files, artifactFilesTree] = useMemo(() => {
+    const _files =
+      (hasArtifacts &&
+        artifacts.flatMap((artifact) =>
+          artifact.files.map((file) => ({ ...file, id: `${artifact.taskName}/${artifact.name}/${file.path}` }))
+        )) ||
+      [];
+
+    const _artifactFilesTree = _files.map((file) => file.id);
+    return [_files, _artifactFilesTree];
+  }, [artifacts]);
 
   const payloadMap =
     (hasArtifacts &&
