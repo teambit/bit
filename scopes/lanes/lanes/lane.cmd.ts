@@ -2,6 +2,7 @@
 import chalk from 'chalk';
 import yn from 'yn';
 import { ScopeMain } from '@teambit/scope';
+import { LaneId } from '@teambit/lane-id';
 import { Workspace } from '@teambit/workspace';
 import { Command, CommandOptions } from '@teambit/cli';
 import { LaneData } from '@teambit/legacy/dist/scope/lanes/lanes';
@@ -39,7 +40,11 @@ export class LaneListCmd implements Command {
 
   async report(args, laneOptions: LaneOptions): Promise<string> {
     const { details, remote, merged, notMerged } = laneOptions;
-
+    const laneIdStr = (laneId: LaneId, alias?: string | null) => {
+      if (laneId.isDefault()) return laneId.name;
+      if (alias) return `${laneId.toString()} (${alias})`;
+      return laneId.toString();
+    };
     const lanes = await this.lanes.getLanes({
       remote,
       merged,
@@ -60,14 +65,13 @@ export class LaneListCmd implements Command {
     const laneDataOfCurrentLane = currentLane ? lanes.find((l) => currentLane.isEqual(l.id)) : undefined;
     const currentAlias = laneDataOfCurrentLane ? laneDataOfCurrentLane.alias : undefined;
     const currentLaneReadmeComponentStr = outputReadmeComponent(laneDataOfCurrentLane?.readmeComponent);
-    let currentLaneStr = currentLane ? `current lane - ${chalk.green.green(currentAlias || currentLane.name)}` : '';
+    let currentLaneStr = `current lane - ${chalk.green.green(laneIdStr(currentLane, currentAlias))}`;
     currentLaneStr += currentLaneReadmeComponentStr;
 
     if (details) {
-      const remoteOfCurrentLane = laneDataOfCurrentLane ? laneDataOfCurrentLane.remote : null;
       const currentLaneComponents = laneDataOfCurrentLane ? outputComponents(laneDataOfCurrentLane.components) : '';
       if (currentLaneStr) {
-        currentLaneStr += `${outputRemoteLane(remoteOfCurrentLane)}\n${currentLaneComponents}`;
+        currentLaneStr += `\n${currentLaneComponents}`;
       }
     }
 
@@ -75,13 +79,12 @@ export class LaneListCmd implements Command {
       .filter((l) => !currentLane.isEqual(l.id))
       .map((laneData) => {
         const readmeComponentStr = outputReadmeComponent(laneData.readmeComponent);
-        const aliasStr = laneData.alias ? ` (${laneData.alias})` : '';
         if (details) {
-          const laneTitle = `> ${chalk.bold(laneData.name)}${aliasStr}${outputRemoteLane(laneData.remote)}\n`;
+          const laneTitle = `> ${chalk.bold(laneIdStr(laneData.id, laneData.alias))}\n`;
           const components = outputComponents(laneData.components);
           return laneTitle + readmeComponentStr.concat('\n') + components;
         }
-        return `    > ${chalk.green(laneData.name)}${aliasStr} (${
+        return `    > ${chalk.green(laneIdStr(laneData.id, laneData.alias))} (${
           laneData.components.length
         } components)${readmeComponentStr}`;
       })
@@ -150,7 +153,7 @@ export class LaneShowCmd implements Command {
     });
 
     const onlyLane = lanes[0];
-    const title = `showing information for ${chalk.bold(name)}${outputRemoteLane(onlyLane.remote)}\n`;
+    const title = `showing information for ${chalk.bold(onlyLane.id.toString())}\n`;
     const author = `author: ${onlyLane.log?.username || 'N/A'} <${onlyLane.log?.email || 'N/A'}>\n`;
     const date = onlyLane.log?.date ? `${new Date(parseInt(onlyLane.log.date)).toLocaleString()}\n` : undefined;
     return title + author + date + outputComponents(onlyLane.components);
@@ -427,9 +430,4 @@ function outputReadmeComponent(component: LaneData['readmeComponent']): string {
     component.head ||
     `(unsnapped)\n\t("use bit snap ${component.id.name}" to snap the readme component on the lane before exporting)`
   }`}\n`;
-}
-
-function outputRemoteLane(remoteLane: string | null | undefined): string {
-  if (!remoteLane) return '';
-  return ` - (remote lane - ${remoteLane})`;
 }
