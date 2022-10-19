@@ -11,4 +11,14 @@ describe('validateEnvPolicy', () => {
       'Peer "peer" has no supportedRange set'
     );
   });
+  it('should throw an exception if peer version is empty', () => {
+    expect(() =>
+      validateEnvPolicy({ peers: [{ name: 'peer', supportedRange: '1', version: '' }] } as any)
+    ).toThrowError('Peer "peer" has an empty version');
+  });
+  it('should throw an exception if peer version is null', () => {
+    expect(() =>
+      validateEnvPolicy({ peers: [{ name: 'peer', supportedRange: '1', version: null }] } as any)
+    ).toThrowError('Peer "peer" has no version set');
+  });
 });

@@ -60,7 +60,6 @@ import {
   PeerDependencyIssuesByProjects,
   PackageManagerGetPeerDependencyIssuesOptions,
 } from './package-manager';
-import { validateEnvPolicy } from './validate-env-policy';
 
 import {
   SerializedDependency,
@@ -958,7 +957,6 @@ export class DependencyResolverMain {
   async getComponentEnvPolicyFromEnv(env: DependenciesEnv): Promise<EnvPolicy> {
     if (env.getDependencies && typeof env.getDependencies === 'function') {
       const policiesFromEnvConfig = await env.getDependencies();
-      validateEnvPolicy(policiesFromEnvConfig);
       if (policiesFromEnvConfig) {
         const allPoliciesFromEnv = new EnvPolicyFactory().fromConfigObject(policiesFromEnvConfig);
         return allPoliciesFromEnv;
