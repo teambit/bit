@@ -124,6 +124,15 @@ export class WorkspaceConfig implements HostConfig {
     this.loadExtensions();
   }
 
+  renameExtensionInRaw(oldExtId: string, newExtId: string): boolean {
+    if (this.raw[oldExtId]) {
+      this.raw[newExtId] = this.raw[oldExtId];
+      delete this.raw[oldExtId];
+      return true;
+    }
+    return false;
+  }
+
   /**
    * Create an instance of the WorkspaceConfig by an instance of the legacy config
    *
@@ -287,11 +296,13 @@ export class WorkspaceConfig implements HostConfig {
     return WorkspaceConfig.fromObject(parsed);
   }
 
-  async write({ dir }: { dir?: PathOsBasedAbsolute }): Promise<void> {
-    const calculatedDir = dir || this._path;
-    if (!calculatedDir) {
+  async write({ dir }: { dir?: PathOsBasedAbsolute } = {}): Promise<void> {
+    const getCalculatedDir = () => {
+      if (dir) return dir;
+      if (this._path) return path.dirname(this._path);
       throw new ConfigDirNotDefined();
-    }
+    };
+    const calculatedDir = getCalculatedDir();
     if (this.data) {
       const files = await this.toVinyl(calculatedDir);
       const dataToPersist = new DataToPersist();
