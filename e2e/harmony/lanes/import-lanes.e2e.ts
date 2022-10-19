@@ -83,7 +83,7 @@ describe('import lanes', function () {
       });
       it('bit lane should show the checked out lane as the active one', () => {
         const lanes = helper.command.listLanes();
-        expect(lanes).to.have.string('current lane - dev');
+        expect(lanes).to.have.string(`current lane - ${helper.scopes.remote}/dev`);
       });
       it('.bitmap should save the component as belong to the lane', () => {
         const bitMap = helper.bitMap.read();
