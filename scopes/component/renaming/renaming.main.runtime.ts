@@ -1,5 +1,6 @@
 import { BitError } from '@teambit/bit-error';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
+import { ConfigAspect, ConfigMain } from '@teambit/config';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import ComponentAspect, { Component, ComponentID, ComponentMain } from '@teambit/component';
 import { DeprecationAspect, DeprecationMain } from '@teambit/deprecation';
@@ -21,7 +22,8 @@ export class RenamingMain {
     private install: InstallMain,
     private newComponentHelper: NewComponentHelperMain,
     private deprecation: DeprecationMain,
-    private refactoring: RefactoringMain
+    private refactoring: RefactoringMain,
+    private config: ConfigMain
   ) {}
 
   async rename(sourceIdStr: string, targetIdStr: string, options: RenameOptions): Promise<RenameDependencyNameResult> {
@@ -111,11 +113,29 @@ to be able to rename the scope, please untag the components first (using "bit re
         };
       });
       const { changedComponents } = await this.refactoring.replaceMultipleStrings(allComponents, packagesToReplace);
+      await this.renameScopeOfAspectIdsInWorkspaceConfig(
+        componentsUsingOldScope.map((c) => c.id),
+        newScope
+      );
       await Promise.all(changedComponents.map((comp) => this.workspace.write(comp)));
       refactoredIds.push(...changedComponents.map((c) => c.id));
     }
 
     return { scopeRenamedComponentIds: componentsUsingOldScope.map((comp) => comp.id), refactoredIds };
+  }
+
+  private async renameScopeOfAspectIdsInWorkspaceConfig(ids: ComponentID[], newScope: string) {
+    const config = this.config.workspaceConfig;
+    if (!config) throw new Error('unable to get workspace config');
+    let hasChanged = false;
+    ids.forEach((id) => {
+      const changed = config.renameExtensionInRaw(
+        id.toStringWithoutVersion(),
+        id._legacy.changeScope(newScope).toStringWithoutVersion()
+      );
+      if (changed) hasChanged = true;
+    });
+    if (hasChanged) await config.write();
   }
 
   private async getConfig(comp: Component) {
@@ -138,6 +158,7 @@ to be able to rename the scope, please untag the components first (using "bit re
     GraphqlAspect,
     RefactoringAspect,
     InstallAspect,
+    ConfigAspect,
   ];
   static runtime = MainRuntime;
   static async provider([
@@ -149,6 +170,7 @@ to be able to rename the scope, please untag the components first (using "bit re
     graphql,
     refactoring,
     install,
+    config,
   ]: [
     CLIMain,
     Workspace,
@@ -157,9 +179,10 @@ to be able to rename the scope, please untag the components first (using "bit re
     ComponentMain,
     GraphqlMain,
     RefactoringMain,
-    InstallMain
+    InstallMain,
+    ConfigMain
   ]) {
-    const renaming = new RenamingMain(workspace, install, newComponentHelper, deprecation, refactoring);
+    const renaming = new RenamingMain(workspace, install, newComponentHelper, deprecation, refactoring, config);
     cli.register(new RenameCmd(renaming));
 
     const scopeCommand = cli.getCommand('scope');
