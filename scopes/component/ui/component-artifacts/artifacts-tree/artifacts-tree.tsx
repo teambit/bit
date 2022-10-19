@@ -12,9 +12,9 @@ import { TreeContext } from '@teambit/base-ui.graph.tree.tree-context';
 import { ComponentTreeLoader } from '@teambit/design.ui.skeletons.sidebar-loader';
 import { ComponentID } from '@teambit/component-id';
 import { FolderTreeNode } from '@teambit/ui-foundation.ui.tree.folder-tree-node';
+import { fileNodeClicked } from './artifact-file-node-clicked';
 
 import styles from './artifacts-tree.module.scss';
-import { fileNodeClicked } from './artifact-file-node-clicked';
 
 export type ArtifactsTreeProps = {
   getIcon?: (node: TreeNode) => string | undefined;
