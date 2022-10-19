@@ -368,7 +368,11 @@ function readWorkspacePackageHook(pkg: PackageManifest): PackageManifest {
   }
   return {
     ...pkg,
-    dependencies: newDeps,
+    dependencies: {
+      ...pkg.peerDependencies,
+      ...pkg['defaultPeerDependencies'], // eslint-disable-line
+      ...newDeps,
+    },
   };
 }
 
