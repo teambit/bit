@@ -40,6 +40,7 @@ export default class Graph extends GraphLib {
         newGraph.setEdge(edge.v, edge.w, edgeType);
       }
     });
+
     return newGraph;
   }
 

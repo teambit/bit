@@ -14,6 +14,7 @@ import { LegacyInsideHarmony } from './legacy-inside-harmony';
 import { MultipleEnvs } from './multiple-envs';
 import { MissingLinksFromNodeModulesToSrc } from './missing-links-from-nm-to-src';
 import { CircularDependencies } from './circular-dependencies';
+import { DuplicateComponentAndPackage } from './duplicate-component-and-package';
 
 export const IssuesClasses = {
   MissingPackagesDependenciesOnFs,
@@ -31,6 +32,7 @@ export const IssuesClasses = {
   MultipleEnvs,
   MissingLinksFromNodeModulesToSrc,
   CircularDependencies,
+  DuplicateComponentAndPackage,
 };
 export type IssuesNames = keyof typeof IssuesClasses;
 

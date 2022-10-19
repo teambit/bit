@@ -3,7 +3,6 @@ import { isFeatureEnabled, BUILD_ON_CI } from '@teambit/legacy/dist/api/consumer
 import { LegacyOnTagResult } from '@teambit/legacy/dist/scope/scope';
 import { FlattenedDependenciesGetter } from '@teambit/legacy/dist/scope/component-ops/get-flattened-dependencies';
 import { Scope as LegacyScope } from '@teambit/legacy/dist/scope';
-import { IssuesClasses } from '@teambit/component-issues';
 import CommunityAspect, { CommunityMain } from '@teambit/community';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import R from 'ramda';
@@ -559,9 +558,7 @@ there are matching among unmodified components thought. consider using --unmodif
     const issuesToIgnoreFromConfig = this.issues.getIssuesToIgnoreGlobally();
     const issuesToIgnore = [...issuesToIgnoreFromFlag, ...issuesToIgnoreFromConfig];
     const components = await this.workspace.getManyByLegacy(legacyComponents);
-    if (!issuesToIgnore.includes(IssuesClasses.CircularDependencies.name)) {
-      await this.insights.addInsightsAsComponentIssues(components);
-    }
+    await this.issues.triggerAddComponentIssues(components, issuesToIgnore);
     this.issues.removeIgnoredIssuesFromComponents(components);
 
     const componentsWithBlockingIssues = legacyComponents.filter((component) => component.issues?.shouldBlockTagging());

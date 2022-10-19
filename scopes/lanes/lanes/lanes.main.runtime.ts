@@ -364,8 +364,8 @@ export class LanesMain {
       installNpmPackages: false,
       lanes: { laneIds: [laneId], lanes: [lane] },
     };
-    const { dependencies } = await this.importer.importWithOptions(importOptions);
-    this.logger.debug(`fetching lane ${laneId.toString()} done, fetched ${dependencies.length} components`);
+    const { importedIds } = await this.importer.importWithOptions(importOptions);
+    this.logger.debug(`fetching lane ${laneId.toString()} done, fetched ${importedIds.length} components`);
     return lane;
   }
 
@@ -418,7 +418,7 @@ export class LanesMain {
       reset: false,
       all: false,
     };
-    return new LaneSwitcher(this.workspace, this.logger, switchProps, checkoutProps).switch();
+    return new LaneSwitcher(this.workspace, this.logger, switchProps, checkoutProps, this).switch();
   }
 
   /**
