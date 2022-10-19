@@ -73,6 +73,7 @@
   flex: 1 1;
   transition: max-height 300ms ease-in-out;
   max-height: 0;
+  line-height: 16px;
 
   &.open {
     max-height: calc(100% - 32px);

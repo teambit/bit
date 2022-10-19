@@ -99,3 +99,6 @@ package-lock.json
 !.yarn/plugins
 !.yarn/sdks
 !.yarn/versions
+
+# component issues
+scopes/component/component-issues/dist/
