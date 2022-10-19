@@ -458,13 +458,6 @@ export default class CommandHelper {
     return this.runCmd(`bit build ${id} ${flags}`, undefined, undefined, undefined, getStderrAsPartOfTheOutput);
   }
 
-  buildComponentWithOptions(id = '', options: Record<string, any>, cwd: string = this.scopes.localPath) {
-    const value = Object.keys(options)
-      .map((key) => `-${key} ${options[key]}`)
-      .join(' ');
-    return this.runCmd(`bit build ${id} ${value}`, cwd);
-  }
-
   test(flags = '', getStderrAsPartOfTheOutput = false) {
     return this.runCmd(`bit test ${flags}`, undefined, undefined, undefined, getStderrAsPartOfTheOutput);
   }
@@ -475,13 +468,6 @@ export default class CommandHelper {
 
   testAllWithJunit() {
     return this.testComponent(undefined, '--junit junit.xml');
-  }
-
-  testComponentWithOptions(id = '', options: Record<string, any>, cwd: string = this.scopes.localPath) {
-    const value = Object.keys(options)
-      .map((key) => `-${key} ${options[key]}`)
-      .join(' ');
-    return this.runCmd(`bit test ${id} ${value}`, cwd);
   }
 
   status(flags = '') {
