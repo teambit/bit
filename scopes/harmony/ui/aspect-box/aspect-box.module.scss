@@ -52,6 +52,31 @@
     }
   }
 }
+.copyMessage {
+  position: unset;
+  transform: unset;
+  display: flex;
+}
+
+.toolbar {
+  align-items: center;
+}
+.toolbar {
+  flex-direction: row;
+  display: flex;
+}
+.copyIcon {
+  display: flex;
+  font-size: var(--bit-p-xs);
+}
+.copyButton {
+  cursor: pointer;
+  box-sizing: border-box;
+  border: none;
+  background-color: var(--bit-bg-color-highlight);
+  color: var(--bit-accent-color);
+  outline: none;
+}
 .sectionTitle {
   display: flex;
   margin-bottom: 16px;
