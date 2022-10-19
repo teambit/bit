@@ -59,11 +59,9 @@
 }
 
 .toolbar {
-  align-items: center;
-}
-.toolbar {
   flex-direction: row;
   display: flex;
+  align-items: flex-start;
 }
 .copyIcon {
   display: flex;
