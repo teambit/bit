@@ -14,9 +14,11 @@
     border: none;
     border-bottom: 1px solid var(--bit-border-color-lightest, #ededed);
   }
+}
+.openDrawer {
+  flex: 1;
   height: 100%;
 }
-
 .artifactsPanelCodeDrawerContent {
   overflow-y: auto;
 }
@@ -39,10 +41,10 @@
   pointer-events: auto;
 }
 
-.artifactsPanelTree {
-  pointer-events: none;
-}
-
 .artifactIconLink {
   text-decoration: none;
+}
+
+.link {
+  color: var(--bit-accent-color, #6c5ce7);
 }

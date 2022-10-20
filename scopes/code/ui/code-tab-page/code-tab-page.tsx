@@ -21,9 +21,10 @@ import styles from './code-tab-page.module.scss';
 
 type CodePageProps = {
   fileIconSlot?: FileIconSlot;
+  host: string;
 } & HTMLAttributes<HTMLDivElement>;
 
-export function CodePage({ className, fileIconSlot }: CodePageProps) {
+export function CodePage({ className, fileIconSlot, host }: CodePageProps) {
   const urlParams = useCodeParams();
   const component = useContext(ComponentContext);
   const { mainFile, fileTree = [], dependencies, devFiles } = useCode(component.id);
@@ -52,6 +53,8 @@ export function CodePage({ className, fileIconSlot }: CodePageProps) {
       </HoverSplitter>
       <Pane className={styles.right}>
         <CodeTabTree
+          host={host}
+          componentId={component.id}
           currentFile={currentFile}
           dependencies={dependencies}
           fileTree={fileTree}
