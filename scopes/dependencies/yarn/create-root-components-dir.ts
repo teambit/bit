@@ -2,7 +2,7 @@ import fs from 'fs-extra';
 import path from 'path';
 import { ComponentDependency, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { ComponentMap } from '@teambit/component';
-import PackageJsonFile from '@teambit/legacy/dist/consumer/component/package-json-file';
+import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 
 /**
  * All components are copied to a temporary folder (`<workspace-root>/.bit_components`).
@@ -88,8 +88,8 @@ async function pickComponentsAndAllDeps(
         dependencies.push(component[1]);
         let packageJsonObject = pickedComponents.get(component[1]);
         if (!packageJsonObject) {
-          const pkgName = PackageJsonFile.createFromComponent(component[1], component[0].state._consumer)
-            .packageJsonObject.name;
+          const comp = component[0].state._consumer;
+          const pkgName = componentIdToPackageName({ withPrefix: true, ...comp, id: comp.id });
           packageJsonObject = JSON.parse(
             await fs.readFile(path.join(rootDir, 'node_modules', pkgName, 'package.json'), 'utf-8')
           ) as Record<string, any>;
