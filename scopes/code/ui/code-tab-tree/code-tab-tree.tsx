@@ -6,11 +6,15 @@ import type { DependencyType } from '@teambit/code.ui.queries.get-component-code
 import { DependencyTree } from '@teambit/code.ui.dependency-tree';
 import { TreeNode } from '@teambit/design.ui.tree';
 import { WidgetProps } from '@teambit/ui-foundation.ui.tree.tree-node';
+import { ComponentID } from '@teambit/component-id';
+import { ArtifactsTree } from '@teambit/component.ui.artifacts.artifacts-tree';
 
 import styles from './code-tab-tree.module.scss';
 
 export type CodeTabTreeProps = {
   fileTree: any[];
+  host: string;
+  componentId: ComponentID;
   dependencies?: DependencyType[];
   currentFile?: string;
   widgets?: ComponentType<WidgetProps<any>>[];
@@ -26,6 +30,8 @@ export function CodeTabTree({
   widgets,
   getHref,
   getIcon,
+  host,
+  componentId,
 }: CodeTabTreeProps) {
   const [openDrawerList, onToggleDrawer] = useState(['FILES']);
 
@@ -45,7 +51,7 @@ export function CodeTabTree({
         onToggle={() => handleDrawerToggle('FILES')}
         name="FILES"
         contentClass={styles.codeDrawerContent}
-        className={classNames(styles.codeTabDrawer)}
+        className={classNames(styles.codeTabDrawer, openDrawerList.includes('FILES') && styles.openDrawer)}
       >
         <FileTree
           files={fileTree || ['']}
@@ -58,12 +64,20 @@ export function CodeTabTree({
       <DrawerUI
         isOpen={openDrawerList.includes('DEPENDENCIES')}
         onToggle={() => handleDrawerToggle('DEPENDENCIES')}
-        className={classNames(styles.codeTabDrawer)}
+        className={classNames(styles.codeTabDrawer, openDrawerList.includes('DEPENDENCIES') && styles.openDrawer)}
         contentClass={styles.codeDrawerContent}
         name="DEPENDENCIES"
       >
         <DependencyTree dependenciesArray={dependencies} />
       </DrawerUI>
+      <ArtifactsTree
+        drawerName="ARTIFACTS"
+        host={host}
+        componentId={componentId}
+        getIcon={getIcon}
+        drawerOpen={openDrawerList.includes('ARTIFACTS')}
+        onToggleDrawer={() => handleDrawerToggle('ARTIFACTS')}
+      />
     </div>
   );
 }
