@@ -86,7 +86,17 @@ export class YarnPackageManager implements PackageManager {
           rootDir,
           componentDirectoryMap,
         })),
-        ...manifests,
+        ...Object.entries(manifests).reduce((acc, [dir, manifest]) => {
+          acc[dir] = {
+            ...manifest,
+            dependencies: {
+              ...manifest.peerDependencies,
+              ...manifest['defaultPeerDependencies'], // eslint-disable-line
+              ...manifest.dependencies,
+            },
+          };
+          return acc;
+        }, {}),
       };
     } else if (installOptions.useNesting) {
       manifests[rootDir] = workspaceManifest;

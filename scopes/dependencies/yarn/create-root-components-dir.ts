@@ -28,7 +28,8 @@ export async function createRootComponentsDir({
     depResolver,
     Array.from(componentDirectoryMap.hashMap.keys()),
     componentDirectoryMap,
-    pickedComponents
+    pickedComponents,
+    rootDir
   );
   const copiesDir = path.join(rootDir, 'node_modules/.bit_components');
   await Promise.all(
@@ -76,7 +77,8 @@ async function pickComponentsAndAllDeps(
   depResolver: DependencyResolverMain,
   rootComponentIds: string[],
   componentDirectoryMap: ComponentMap<string>,
-  pickedComponents: Map<string, Record<string, any>>
+  pickedComponents: Map<string, Record<string, any>>,
+  rootDir: string
 ) {
   const dependencies: string[] = [];
   await Promise.all(
@@ -86,10 +88,11 @@ async function pickComponentsAndAllDeps(
         dependencies.push(component[1]);
         let packageJsonObject = pickedComponents.get(component[1]);
         if (!packageJsonObject) {
-          packageJsonObject = PackageJsonFile.createFromComponent(
-            component[1],
-            component[0].state._consumer
-          ).packageJsonObject;
+          const pkgName = PackageJsonFile.createFromComponent(component[1], component[0].state._consumer)
+            .packageJsonObject.name;
+          packageJsonObject = JSON.parse(
+            await fs.readFile(path.join(rootDir, 'node_modules', pkgName, 'package.json'), 'utf-8')
+          ) as Record<string, any>;
           pickedComponents.set(component[1], packageJsonObject);
         }
         const depsList = await depResolver.getDependencies(component[0]);
@@ -99,7 +102,8 @@ async function pickComponentsAndAllDeps(
             .filter((dep) => dep instanceof ComponentDependency)
             .map((dep: any) => dep.componentId.toString()),
           componentDirectoryMap,
-          pickedComponents
+          pickedComponents,
+          rootDir
         );
         for (const dep of deps) {
           const pkgJson = pickedComponents.get(dep);
