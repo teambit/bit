@@ -19,6 +19,7 @@ import {
   TemplateLiteralTypeSpan,
   ThisTypeNode,
   ConditionalTypeNode,
+  NamedTupleMember,
 } from 'typescript';
 import {
   SchemaNode,
@@ -41,8 +42,10 @@ import {
   ThisTypeSchema,
   Modifier,
   ConditionalTypeSchema,
+  NamedTupleSchema,
 } from '@teambit/semantics.entities.semantic-schema';
 import pMapSeries from 'p-map-series';
+
 import { SchemaExtractorContext } from '../../schema-extractor-context';
 import { getParams } from './get-params';
 import { typeElementToSchema } from './type-element-to-schema';
@@ -88,8 +91,9 @@ export async function typeNodeToSchema(node: TypeNode, context: SchemaExtractorC
       return thisType(node as ThisTypeNode, context);
     case SyntaxKind.ConditionalType:
       return conditionalType(node as ConditionalTypeNode, context);
-    case SyntaxKind.ConstructorType:
     case SyntaxKind.NamedTupleMember:
+      return namedTupleType(node as NamedTupleMember, context);
+    case SyntaxKind.ConstructorType:
     case SyntaxKind.OptionalType:
     case SyntaxKind.RestType:
     case SyntaxKind.InferType:
@@ -279,4 +283,11 @@ async function conditionalType(node: ConditionalTypeNode, context: SchemaExtract
   const trueType = await typeNodeToSchema(node.trueType, context);
   const falseType = await typeNodeToSchema(node.falseType, context);
   return new ConditionalTypeSchema(context.getLocation(node), checkType, extendsType, trueType, falseType);
+}
+
+async function namedTupleType(node: NamedTupleMember, context: SchemaExtractorContext) {
+  const name = node.name.getText();
+  const location = context.getLocation(node);
+  const type = await typeNodeToSchema(node.type, context);
+  return new NamedTupleSchema(location, type, name);
 }
