@@ -114,7 +114,12 @@ export default class ScopeComponentsImporter {
       externalsToFetch.push(id);
       return false;
     });
-    await this.findMissingExternalsRecursively(existingDefs, externalsToFetch, ignoreMissingHead);
+    await this.findMissingExternalsRecursively(
+      existingDefs,
+      externalsToFetch,
+      ignoreMissingHead,
+      reFetchUnBuiltVersion
+    );
     const uniqExternals = BitIds.uniqFromArray(externalsToFetch);
     logger.debug('importMany', `total missing externals: ${uniqExternals.length}`);
     const remotes = await getScopeRemotes(this.scope);
@@ -590,6 +595,7 @@ export default class ScopeComponentsImporter {
     compDefs: ComponentDef[],
     externalsToFetch: BitId[],
     ignoreMissingHead: boolean,
+    reFetchUnBuiltVersion = true,
     visited: string[] = [],
     existingCache = new BitIds()
   ): Promise<void> {
@@ -624,7 +630,7 @@ export default class ScopeComponentsImporter {
         return;
       }
       const flattenedDepsToLocate = version.flattenedDependencies.filter((dep) => !existingCache.has(dep));
-      const flattenedDepsDefs = await this.sources.getMany(flattenedDepsToLocate, true);
+      const flattenedDepsDefs = await this.sources.getMany(flattenedDepsToLocate, reFetchUnBuiltVersion);
       const allFlattenedExist = flattenedDepsDefs.every((def) => {
         if (!def.component) return false;
         existingCache.push(def.id);
@@ -639,7 +645,7 @@ export default class ScopeComponentsImporter {
         return;
       }
       // it's local and some flattened are missing, check the direct dependencies
-      const directDepsDefs = await this.sources.getMany(version.getAllDependenciesIds(), true);
+      const directDepsDefs = await this.sources.getMany(version.getAllDependenciesIds(), reFetchUnBuiltVersion);
       compDefsForNextIteration.push(...directDepsDefs);
     });
 
@@ -647,6 +653,7 @@ export default class ScopeComponentsImporter {
       compDefsForNextIteration,
       externalsToFetch,
       ignoreMissingHead,
+      reFetchUnBuiltVersion,
       visited,
       existingCache
     );

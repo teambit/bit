@@ -5,7 +5,9 @@
     padding-left: 16px;
   }
 }
-
+.dependencyDrawerContent {
+  overflow-y: auto;
+}
 .dependencyLink {
   height: 32px;
   display: flex;
