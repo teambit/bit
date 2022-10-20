@@ -1,5 +1,5 @@
 import React, { useMemo, HTMLAttributes, ComponentType } from 'react';
-import { inflateToTree } from '@teambit/base-ui.graph.tree.inflate-paths';
+import { inflateToTree, attachPayload } from '@teambit/base-ui.graph.tree.inflate-paths';
 import { TreeContextProvider } from '@teambit/base-ui.graph.tree.tree-context';
 import { indentStyle } from '@teambit/base-ui.graph.tree.indent';
 import { RootNode } from '@teambit/base-ui.graph.tree.root-node';
@@ -10,9 +10,10 @@ import { FileTreeNode } from './file-tree.node';
 import { FileTreeContext } from './file-tree.context';
 
 type FileTreeProps = {
-  onSelect?: (id: string, event?: React.MouseEvent) => void;
+  onTreeNodeSelected?: (id: string, event?: React.MouseEvent) => void;
   selected?: string;
   files: string[];
+  payloadMap?: Map<string, { open?: boolean } | undefined>;
   widgets?: ComponentType<WidgetProps<any>>[];
   getHref?: (node: TreeNode) => string;
   getIcon?: (node: TreeNode) => string | undefined;
@@ -24,11 +25,12 @@ type FileTreeProps = {
  */
 export function FileTree({
   files,
-  onSelect,
+  onTreeNodeSelected,
   selected,
   getIcon,
   getHref,
   widgets,
+  payloadMap,
   TreeNode: CustomTreeNode = FileTreeNode,
   ...rest
 }: FileTreeProps) {
@@ -36,6 +38,7 @@ export function FileTree({
     // make sure that Windows paths are converted to posix
     const filePaths = files.map((f) => f.replace(/\\/g, '/'));
     const tree = inflateToTree(filePaths, (c) => c);
+    payloadMap && attachPayload(tree, payloadMap);
     return tree;
   }, [files]);
 
@@ -43,7 +46,7 @@ export function FileTree({
     <div style={{ ...indentStyle(1), ...rest.style }} {...rest}>
       <FileTreeContext.Provider value={{ getIcon, getHref, widgets }}>
         <TreeNodeContext.Provider value={CustomTreeNode}>
-          <TreeContextProvider onSelect={onSelect} selected={selected}>
+          <TreeContextProvider onSelect={onTreeNodeSelected} selected={selected}>
             <RootNode node={rootNode} depth={1} />
           </TreeContextProvider>
         </TreeNodeContext.Provider>
