@@ -1,7 +1,6 @@
 import chalk from 'chalk';
-import R from 'ramda';
 import { Command, CommandOptions } from '@teambit/cli';
-import Component from '@teambit/legacy/dist/consumer/component/consumer-component';
+import { BitId } from '@teambit/legacy-bit-id';
 import { FileStatus } from '@teambit/legacy/dist/consumer/versions-ops/merge-version/merge-version';
 import { ImporterMain } from './importer.main.runtime';
 import { ImportDetails, ImportStatus } from './import-components';
@@ -44,23 +43,19 @@ export class FetchCmd implements Command {
       fromOriginalScope?: boolean;
     }
   ) {
-    const { dependencies, importDetails } = await this.importer.fetch(ids, lanes, components, fromOriginalScope);
+    const { importedIds, importDetails } = await this.importer.fetch(ids, lanes, components, fromOriginalScope);
     if (json) {
       return JSON.stringify({ importDetails }, null, 4);
     }
-    if (dependencies && !R.isEmpty(dependencies)) {
-      const componentsObj = dependencies.map(R.prop('component'));
+    if (importedIds.length) {
       const title =
-        componentsObj.length === 1
+        importedIds.length === 1
           ? 'successfully fetched one component'
-          : `successfully fetched ${componentsObj.length} components`;
-      const componentDependencies = componentsObj.map((component) => {
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        const details = importDetails.find((c) => c.id === component.id.toStringWithoutVersion());
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        if (!details) throw new Error(`missing details of component ${component.id.toString()}`);
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        return formatPlainComponentItemWithVersions(component, details);
+          : `successfully fetched ${importedIds.length} components`;
+      const componentDependencies = importedIds.map((id) => {
+        const details = importDetails.find((c) => c.id === id.toStringWithoutVersion());
+        if (!details) throw new Error(`missing details of component ${id.toString()}`);
+        return formatPlainComponentItemWithVersions(id, details);
       });
       const componentDependenciesOutput = [chalk.green(title)].concat(componentDependencies).join('\n');
 
@@ -70,12 +65,11 @@ export class FetchCmd implements Command {
   }
 }
 
-function formatPlainComponentItemWithVersions(component: Component, importDetails: ImportDetails) {
+function formatPlainComponentItemWithVersions(bitId: BitId, importDetails: ImportDetails) {
   const status: ImportStatus = importDetails.status;
-  const id = component.id.toStringWithoutVersion();
+  const id = bitId.toStringWithoutVersion();
   const versions = importDetails.versions.length ? `new versions: ${importDetails.versions.join(', ')}` : '';
-  // $FlowFixMe component.version should be set here
-  const usedVersion = status === 'added' ? `, currently used version ${component.version}` : '';
+  const usedVersion = status === 'added' ? `, currently used version ${bitId.version}` : '';
   const getConflictMessage = () => {
     if (!importDetails.filesStatus) return '';
     const conflictedFiles = Object.keys(importDetails.filesStatus) // $FlowFixMe file is set

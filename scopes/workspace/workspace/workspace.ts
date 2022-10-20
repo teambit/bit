@@ -859,7 +859,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
         ignoreVersion: false,
       }
     );
-    await config.write({ dir: path.dirname(config.path) });
+    await config.write();
     return aspectIdToAdd;
   }
 

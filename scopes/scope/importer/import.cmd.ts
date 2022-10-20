@@ -8,7 +8,7 @@ import {
   MergeOptions,
   MergeStrategy,
 } from '@teambit/legacy/dist/consumer/versions-ops/merge-version/merge-version';
-import ConsumerComponent from '@teambit/legacy/dist/consumer/component/consumer-component';
+import { BitId } from '@teambit/legacy-bit-id';
 import GeneralError from '@teambit/legacy/dist/error/general-error';
 import { immutableUnshift } from '@teambit/legacy/dist/utils';
 import { formatPlainComponentItem } from '@teambit/legacy/dist/cli/chalk-box';
@@ -152,60 +152,50 @@ ${WILDCARD_HELP('import')}`;
       allHistory,
     };
     const importResults = await this.importer.import(importOptions, this._packageManagerArgs);
-    const { importDetails } = importResults;
+    const { importDetails, importedIds, importedDeps } = importResults;
 
     if (json) {
       return JSON.stringify({ importDetails }, null, 4);
     }
-    let dependenciesOutput;
 
-    if (importResults.dependencies && !R.isEmpty(importResults.dependencies)) {
-      const components = importResults.dependencies.map((d) => d.component);
-      const peerDependencies = R.flatten(
-        importResults.dependencies.map(R.prop('dependencies')),
-        importResults.dependencies.map(R.prop('devDependencies'))
-      );
-
-      const titlePrefix =
-        components.length === 1
-          ? 'successfully imported one component'
-          : `successfully imported ${components.length} components`;
-
-      let upToDateCount = 0;
-      const componentDependencies = components.map((component) => {
-        const details = importDetails.find((c) => c.id === component.id.toStringWithoutVersion());
-        if (!details) throw new Error(`missing details of component ${component.id.toString()}`);
-        if (details.status === 'up to date') {
-          upToDateCount += 1;
-        }
-        return formatPlainComponentItemWithVersions(component, details);
-      });
-      const upToDateStr = upToDateCount === 0 ? '' : `, ${upToDateCount} components are up to date`;
-      const title = `${titlePrefix}${upToDateStr}`;
-      const componentDependenciesOutput = [chalk.green(title), ...compact(componentDependencies)].join('\n');
-      const peerDependenciesOutput =
-        peerDependencies && !R.isEmpty(peerDependencies) && displayDependencies
-          ? immutableUnshift(
-              R.uniq(peerDependencies.map(formatPlainComponentItem)),
-              chalk.green(`\n\nsuccessfully imported ${components.length} component dependencies`)
-            ).join('\n')
-          : '';
-
-      dependenciesOutput = componentDependenciesOutput + peerDependenciesOutput;
+    if (!importedIds.length) {
+      return chalk.yellow(importResults.cancellationMessage || 'nothing to import');
     }
 
-    const getImportOutput = () => {
-      if (dependenciesOutput) return dependenciesOutput;
-      return chalk.yellow(importResults.cancellationMessage || 'nothing to import');
-    };
+    const titlePrefix =
+      importedIds.length === 1
+        ? 'successfully imported one component'
+        : `successfully imported ${importedIds.length} components`;
 
-    return getImportOutput();
+    let upToDateCount = 0;
+    const importedComponents = importedIds.map((bitId) => {
+      const details = importDetails.find((c) => c.id === bitId.toStringWithoutVersion());
+      if (!details) throw new Error(`missing details of component ${bitId.toString()}`);
+      if (details.status === 'up to date') {
+        upToDateCount += 1;
+      }
+      return formatPlainComponentItemWithVersions(bitId, details);
+    });
+    const upToDateStr = upToDateCount === 0 ? '' : `, ${upToDateCount} components are up to date`;
+    const title = `${titlePrefix}${upToDateStr}`;
+    const componentDependenciesOutput = [chalk.green(title), ...compact(importedComponents)].join('\n');
+    const importedDepsOutput =
+      displayDependencies && importedDeps.length
+        ? immutableUnshift(
+            R.uniq(importedDeps.map(formatPlainComponentItem)),
+            chalk.green(`\n\nsuccessfully imported ${importedDeps.length} component dependencies`)
+          ).join('\n')
+        : '';
+
+    const dependenciesOutput = componentDependenciesOutput + importedDepsOutput;
+
+    return dependenciesOutput;
   }
 }
 
-function formatPlainComponentItemWithVersions(component: ConsumerComponent, importDetails: ImportDetails) {
+function formatPlainComponentItemWithVersions(bitId: BitId, importDetails: ImportDetails) {
   const status: ImportStatus = importDetails.status;
-  const id = component.id.toStringWithoutVersion();
+  const id = bitId.toStringWithoutVersion();
   const getVersionsOutput = () => {
     if (!importDetails.versions.length) return '';
     if (importDetails.latestVersion) {
@@ -214,7 +204,7 @@ function formatPlainComponentItemWithVersions(component: ConsumerComponent, impo
     return `new versions: ${importDetails.versions.join(', ')}`;
   };
   const versions = getVersionsOutput();
-  const usedVersion = status === 'added' ? `, currently used version ${component.version}` : '';
+  const usedVersion = status === 'added' ? `, currently used version ${bitId.version}` : '';
   const getConflictMessage = () => {
     if (!importDetails.filesStatus) return '';
     const conflictedFiles = Object.keys(importDetails.filesStatus)

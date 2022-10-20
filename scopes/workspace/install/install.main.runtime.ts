@@ -371,7 +371,6 @@ export class InstallMain {
     return res;
   }
 
-  // TODO: replace with a proper import API on the workspace
   private async importObjects() {
     const importOptions: ImportOptions = {
       ids: [],
@@ -379,13 +378,12 @@ export class InstallMain {
       installNpmPackages: false,
     };
     try {
-      const res = await this.importer.import(importOptions, []);
-      return res;
+      await this.importer.import(importOptions, []);
     } catch (err: any) {
       // TODO: this is a hack since the legacy throw an error, we should provide a way to not throw this error from the legacy
       if (err instanceof NothingToImport) {
         // Do not write nothing to import warning
-        return undefined;
+        return;
       }
       throw err;
     }
