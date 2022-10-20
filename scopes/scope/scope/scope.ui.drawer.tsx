@@ -86,10 +86,11 @@ export const scopeDrawer = ({
           return scopeNameFromNode === host?.name;
         });
 
-        const thisScope = rootNode.children ? rootNode.children[thisScopeIndex || ''] : undefined;
+        const thisScope =
+          rootNode.children && thisScopeIndex !== undefined ? rootNode.children[thisScopeIndex] : undefined;
 
-        if (thisScopeIndex && thisScopeIndex !== -1 && rootNode.children) {
-          delete rootNode.children[thisScopeIndex];
+        if (thisScope && thisScope.children && rootNode.children) {
+          delete rootNode.children[thisScopeIndex as number];
           const children = rootNode.children.concat(thisScope.children);
           rootNode.children = children;
         }
