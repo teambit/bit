@@ -16,8 +16,8 @@ export async function dedupEnvs(
   dedicatedEnvDevServers?: string[]
 ) {
   const idsGroups = groupByEnvId(contexts, dedicatedEnvDevServers);
-  const finalGroups = await splitByPeers(idsGroups, dependencyResolver);
-  return finalGroups;
+  // const finalGroups = await splitByPeers(idsGroups, dependencyResolver);
+  return idsGroups;
 }
 
 function groupByEnvId(contexts: ExecutionContext[], dedicatedEnvDevServers?: string[]) {
@@ -50,7 +50,6 @@ function getEnvId(context: ExecutionContext, dedicatedServers?: string[]): strin
   if (dedicatedServers?.includes(id)) {
     return context.id;
   }
-
   return context.env?.getDevEnvId(context);
 }
 

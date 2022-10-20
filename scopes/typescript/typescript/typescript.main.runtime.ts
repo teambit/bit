@@ -163,7 +163,9 @@ export class TypescriptMain {
    */
   getEsmTransformer(): TsConfigTransformer {
     const esmTransformer = (config: TypescriptConfigMutator) => {
-      config.setModule('ES2020');
+      config.setTarget('ES2017');
+      config.raw.tsconfig.compilerOptions.module = 'es2020';
+      config.raw.tsconfig.compilerOptions.lib = ['es2021', 'dom', 'ESNext.String', 'dom.Iterable'];
       return config;
     };
     return esmTransformer;
