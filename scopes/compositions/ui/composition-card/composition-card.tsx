@@ -1,10 +1,8 @@
 import React, { useMemo } from 'react';
 import classNames from 'classnames';
-import { ErrorBoundary } from 'react-error-boundary';
 import { Card, CardProps } from '@teambit/base-ui.surfaces.card';
 import { colorPalette } from '@teambit/base-ui.theme.accent-color';
 import { CompositionType } from '@teambit/compositions.model.composition-type';
-import { ErrorFallback, ErrorFallbackProps } from '@teambit/react.ui.error-fallback';
 import { humanizeCompositionId } from '@teambit/compositions.model.composition-id';
 import { Icon } from '@teambit/evangelist.elements.icon';
 import { themedText } from '@teambit/base-ui.text.themed-text';
@@ -23,11 +21,9 @@ export function CompositionCard({ Composition, name, link, className, ...rest }:
 
   return (
     <Card elevation="low" className={classNames(className, styles.compositionCard)} {...rest}>
-      {/* <ErrorBoundary FallbackComponent={CompositionErrorFallback}> */}
-        <div style={canvas} className={styles.compositionContainer}>
-          <Composition />
-        </div>
-      {/* </ErrorBoundary> */}
+      <div style={canvas} className={styles.compositionContainer}>
+        <Composition />
+      </div>
       <div className={classNames(styles.title, colorPalette.neutralHeavy, themedText)}>
         <span>{humanizedName}</span>
         {link && (
@@ -38,8 +34,4 @@ export function CompositionCard({ Composition, name, link, className, ...rest }:
       </div>
     </Card>
   );
-}
-
-export function CompositionErrorFallback(props: ErrorFallbackProps) {
-  return <ErrorFallback {...props} className={classNames(props.className, styles.compositionCardError)} />;
 }

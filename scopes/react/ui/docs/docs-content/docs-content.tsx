@@ -16,8 +16,14 @@ export function DocsContent({ docs = defaultDocs, ...rest }: DocsContentProps) {
   const Content: any = isFunction(docs.default) ? docs.default : () => null;
 
   return (
-    <MDXLayout {...rest}>
-      <Content />
-    </MDXLayout>
+    <ErrorBoundary FallbackComponent={ErrorFallback}>
+      {Content.isMDXComponent ? (
+        <MDXLayout {...rest}>
+          <Content />
+        </MDXLayout>
+      ) : (
+        <Content />
+      )}
+    </ErrorBoundary>
   );
 }

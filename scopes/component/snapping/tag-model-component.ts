@@ -72,6 +72,7 @@ function updateDependenciesVersions(componentsToTag: Component[], dependencyReso
     const envExtension = component.extensions.find((ext: any) => {
       return ext.stringId === 'teambit.envs/envs';
     });
+    if (!envExtension) return;
     const envIdWithoutVersion = envExtension.data.id.split('@')[0];
     const envAspect = component.extensions.find((ext) => {
       const [idWithoutVersion] = ext.stringId.split('@');
@@ -80,7 +81,7 @@ function updateDependenciesVersions(componentsToTag: Component[], dependencyReso
     if (!envAspect) return;
     envExtension.data.id = envAspect.stringId;
   };
-  
+
   componentsToTag.forEach((oneComponentToTag) => {
     oneComponentToTag.getAllDependencies().forEach((dependency) => {
       const newDepId = getNewDependencyVersion(dependency.id);

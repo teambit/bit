@@ -3,9 +3,9 @@ import { compact } from 'lodash';
 import { connectToChild } from 'penpal';
 import { usePubSubIframe } from '@teambit/pubsub';
 import { ComponentModel } from '@teambit/component';
+import { toPreviewUrl } from './urls';
 import { computePreviewScale } from './compute-preview-scale';
 import { useIframeContentHeight } from './use-iframe-content-height';
-import { toPreviewUrl } from './urls';
 import styles from './preview.module.scss';
 
 // omitting 'referrerPolicy' because of an TS error during build. Re-include when needed
