@@ -2060,7 +2060,7 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
  * instead, long-running commands and those that need the artifacts from the Version objects, should try to re-fetch.
  */
 function shouldReFetchUnBuiltVersion() {
-  const commandsToReFetch = ['build', 'show', 'start', 'tag', 'install', 'link', 'import'];
+  const commandsToReFetch = ['import'];
   return commandsToReFetch.includes(process.argv[2]);
 }
 

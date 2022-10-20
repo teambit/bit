@@ -347,6 +347,9 @@
         "react-router-dom": "^6.0.0"
       }
     },
+    "overrides": {
+      "@types/fs-capacitor": "2.0.0"
+    },
     "linkCoreAspects": false,
     "nodeLinker": "hoisted",
     "nodeVersion": "14.19.3",

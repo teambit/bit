@@ -18,8 +18,9 @@
   user-select: none;
   font-weight: bold;
   padding: 0 8px;
-
+  line-height: 1.2em;
   transition: background-color 300ms, border-color 300ms ease-in-out;
+
   &:hover {
     border-color: var(--bit-bg-heavy, #f6f6f6);
     background: var(--bit-bg-heavy, #f6f6f6);
@@ -72,6 +73,7 @@
   flex: 1 1;
   transition: max-height 300ms ease-in-out;
   max-height: 0;
+  line-height: 1.2em;
 
   &.open {
     max-height: calc(100% - 32px);

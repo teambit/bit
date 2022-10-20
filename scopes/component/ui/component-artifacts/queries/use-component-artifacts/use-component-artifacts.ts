@@ -1,9 +1,9 @@
 import { gql } from '@apollo/client';
 import { useDataQuery, DataQueryResult } from '@teambit/ui-foundation.ui.hooks.use-data-query';
-import { TaskReport } from '@teambit/component.ui.pipelines.component-pipeline-model';
+import { mapToArtifacts, Artifact } from '@teambit/component.ui.artifacts.models.component-artifacts-model';
 
-const PIPELINE_REPORT_QUERY = gql`
-  query ComponentPipeline($id: String!, $extensionId: String!, $taskId: String) {
+const ARTIFACTS_QUERY = gql`
+  query ComponentArtifacts($id: String!, $extensionId: String!) {
     getHost(id: $extensionId) {
       id # used for GQL caching
       get(id: $id) {
@@ -12,15 +12,10 @@ const PIPELINE_REPORT_QUERY = gql`
           version
           scope
         }
-        pipelineReport(taskId: $taskId) {
+        pipelineReport {
           id
           taskId
           taskName
-          description
-          startTime
-          endTime
-          errors
-          warnings
           artifact {
             id
             name
@@ -33,22 +28,23 @@ const PIPELINE_REPORT_QUERY = gql`
             }
           }
         }
-        buildStatus
       }
     }
   }
 `;
 
-export function useComponentPipelineQuery(
+export function useComponentArtifacts(
   host: string,
   componentId: string
-): DataQueryResult<{ tasks: TaskReport[]; buildStatus?: string }, { id: string; extensionId: string }> {
-  const { data, ...rest } = useDataQuery(PIPELINE_REPORT_QUERY, {
+): DataQueryResult<Artifact[], { id: string; extensionId: string }> {
+  const { data, ...rest } = useDataQuery(ARTIFACTS_QUERY, {
     variables: { id: componentId, extensionId: host },
   });
 
+  const artifacts = mapToArtifacts(data?.getHost?.get?.pipelineReport || []);
+
   return {
     ...rest,
-    data: { tasks: data?.getHost?.get?.pipelineReport || [], buildStatus: data?.getHost?.get?.buildStatus },
+    data: artifacts,
   };
 }
