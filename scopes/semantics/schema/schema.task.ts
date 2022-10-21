@@ -33,16 +33,29 @@ export class SchemaTask implements BuildTask {
     // persist schema json
     await pMapSeries(capsules, async (capsule) => {
       const component = capsule.component;
-      const schema = await this.schema.getSchema(component);
-      const schemaObj = schema.toObject();
-      await fs.outputFile(join(capsule.path, getSchemaArtifactPath()), JSON.stringify(schemaObj, null, 2));
-      schemaResult.push({
-        component,
-        startTime,
-        endTime: Date.now(),
-      });
+      try {
+        const schema = await this.schema.getSchema(component);
+        const schemaObj = schema.toObject();
+        await fs.outputFile(join(capsule.path, getSchemaArtifactPath()), JSON.stringify(schemaObj, null, 2));
+        schemaResult.push({
+          component,
+          startTime,
+          endTime: Date.now(),
+        });
+      } catch (e: any) {
+        /**
+         * @todo once schema extractor is more stable change this to an error
+         */
+        if (e instanceof Error) {
+          schemaResult.push({
+            component,
+            startTime,
+            endTime: Date.now(),
+            warnings: [e.message],
+          });
+        }
+      }
     });
-
     return {
       artifacts: [getSchemaArtifactDef()],
       componentsResults: schemaResult,
