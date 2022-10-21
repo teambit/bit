@@ -5,11 +5,13 @@ import GraphqlAspect, { GraphqlMain } from '@teambit/graphql';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { APISchema, Export } from '@teambit/semantics.entities.semantic-schema';
+import { BuilderMain, BuilderAspect } from '@teambit/builder';
 import { Parser } from './parser';
 import { SchemaAspect } from './schema.aspect';
 import { SchemaExtractor } from './schema-extractor';
 import { SchemaCommand } from './schema.cmd';
 import { schemaSchema } from './schema.graphql';
+import { SchemaTask } from './schema.task';
 
 export type ParserSlot = SlotRegistry<Parser>;
 
@@ -77,6 +79,8 @@ export class SchemaMain {
    */
   async getSchema(component: Component): Promise<APISchema> {
     this.logger.debug(`getSchema of ${component.id.toString()}`);
+    // component.state.aspects.get(SchemaAspect.id)
+
     const env = this.envs.getEnv(component).env;
     if (typeof env.getSchemaExtractor === 'undefined') {
       throw new Error(`No SchemaExtractor defined for ${env.name}`);
@@ -98,7 +102,7 @@ export class SchemaMain {
   }
 
   static runtime = MainRuntime;
-  static dependencies = [EnvsAspect, CLIAspect, ComponentAspect, GraphqlAspect, LoggerAspect];
+  static dependencies = [EnvsAspect, CLIAspect, ComponentAspect, GraphqlAspect, LoggerAspect, BuilderAspect];
   static slots = [Slot.withType<Parser>()];
 
   static defaultConfig = {
@@ -106,12 +110,21 @@ export class SchemaMain {
   };
 
   static async provider(
-    [envs, cli, component, graphql, loggerMain]: [EnvsMain, CLIMain, ComponentMain, GraphqlMain, LoggerMain],
+    [envs, cli, component, graphql, loggerMain, builder]: [
+      EnvsMain,
+      CLIMain,
+      ComponentMain,
+      GraphqlMain,
+      LoggerMain,
+      BuilderMain
+    ],
     config: SchemaConfig,
     [parserSlot]: [ParserSlot]
   ) {
     const logger = loggerMain.createLogger(SchemaAspect.id);
     const schema = new SchemaMain(parserSlot, envs, config, logger);
+    const schemaTask = new SchemaTask(SchemaAspect.id, schema, logger);
+    builder.registerBuildTasks([schemaTask]);
     cli.register(new SchemaCommand(schema, component, logger));
     graphql.register(schemaSchema(schema));
 
