@@ -752,7 +752,7 @@ jobs:
       - run: cd bit && bbit install --skip-import
       - run: cd bit && bbit compile
       - run: cd bit && npm run link-bit-legacy
-      - run: cd bit && bit config set cache.max.objects 100000
+      # - run: cd bit && bit config set cache.max.objects 100000
       # - run: cd bit && node scripts/soft-tag-scope-teambit.js
       - run:
           name: tag persist

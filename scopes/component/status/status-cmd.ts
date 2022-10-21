@@ -14,7 +14,7 @@ import {
   statusInvalidComponentsMsg,
   statusWorkspaceIsCleanMsg,
 } from '@teambit/legacy/dist/constants';
-import { partition } from 'lodash';
+import { compact, partition } from 'lodash';
 import { isHash } from '@teambit/component-version';
 import { StatusMain, StatusResult } from './status.main.runtime';
 
@@ -30,7 +30,11 @@ export class StatusCmd implements Command {
   alias = 's';
   options = [
     ['j', 'json', 'return a json version of the component'],
-    ['', 'verbose', 'show full snap hashes'],
+    [
+      '',
+      'verbose',
+      'show extra data: full snap hashes for staged, divergence point for lanes and updates-from-main for forked lanes',
+    ],
     ['', 'strict', 'in case issues found, exit with code 1'],
   ] as CommandOptions;
   loader = true;
@@ -41,7 +45,7 @@ export class StatusCmd implements Command {
   async json() {
     const {
       newComponents,
-      modifiedComponent,
+      modifiedComponents,
       stagedComponents,
       componentsWithIssues,
       importPendingComponents,
@@ -55,10 +59,13 @@ export class StatusCmd implements Command {
       softTaggedComponents,
       snappedComponents,
       pendingUpdatesFromMain,
+      updatesFromForked,
+      currentLaneId,
+      forkedLaneId,
     }: StatusResult = await this.status.status();
     return {
       newComponents: newComponents.map((c) => c.toStringWithoutVersion()),
-      modifiedComponents: modifiedComponent.map((c) => c.toString()),
+      modifiedComponents: modifiedComponents.map((c) => c.toString()),
       stagedComponents: stagedComponents.map((c) => ({ id: c.id.toStringWithoutVersion(), versions: c.versions })),
       componentsWithIssues: componentsWithIssues.map((c) => ({
         id: c.id.toString(),
@@ -75,13 +82,19 @@ export class StatusCmd implements Command {
       softTaggedComponents: softTaggedComponents.map((s) => s.toString()),
       snappedComponents: snappedComponents.map((s) => s.toString()),
       pendingUpdatesFromMain: pendingUpdatesFromMain.map((p) => ({ id: p.id.toString(), divergeData: p.divergeData })),
+      updatesFromForked: updatesFromForked.map((p) => ({
+        id: p.id.toString(),
+        divergeData: p.divergeData,
+      })),
+      currentLaneId,
+      forkedLaneId,
     };
   }
 
   async report(_args, { strict, verbose }: { strict?: boolean; verbose?: boolean }) {
     const {
       newComponents,
-      modifiedComponent,
+      modifiedComponents,
       stagedComponents,
       componentsWithIssues,
       importPendingComponents,
@@ -95,7 +108,9 @@ export class StatusCmd implements Command {
       softTaggedComponents,
       snappedComponents,
       pendingUpdatesFromMain,
-      laneName,
+      updatesFromForked,
+      currentLaneId,
+      forkedLaneId,
     }: StatusResult = await this.status.status();
     // If there is problem with at least one component we want to show a link to the
     // troubleshooting doc
@@ -189,8 +204,8 @@ or use "bit merge [component-id] --abort" to cancel the merge operation)\n`;
 
     const modifiedDesc = '(use "bit diff" to compare changes)\n';
     const modifiedComponentOutput = immutableUnshift(
-      modifiedComponent.map((c) => format(c, true)),
-      modifiedComponent.length
+      modifiedComponents.map((c) => format(c, true)),
+      modifiedComponents.length
         ? chalk.underline.white('modified components') + newComponentDescription + modifiedDesc
         : ''
     ).join('\n');
@@ -234,33 +249,53 @@ or use "bit merge [component-id] --abort" to cancel the merge operation)\n`;
       snappedComponents.length ? chalk.underline.white('snapped components') + snappedDesc : ''
     ).join('\n');
 
-    const getUpdateFromMainMsg = (divergeData: DivergeData): string => {
+    const getUpdateFromMsg = (divergeData: DivergeData, from = 'main'): string => {
       if (divergeData.err) return divergeData.err.message;
-      let msg = `main is ahead by ${divergeData.snapsOnRemoteOnly.length || 0} snaps`;
+      let msg = `${from} is ahead by ${divergeData.snapsOnRemoteOnly.length || 0} snaps`;
       if (divergeData.snapsOnLocalOnly && verbose) {
         msg += ` (diverged since ${divergeData.commonSnapBeforeDiverge?.toShortString()})`;
       }
       return msg;
     };
-    const updatesFromMainDesc = '\n(EXPERIMENTAL. use "bit lane merge main" to merge the changes)\n';
-    const pendingUpdatesFromMainIds = pendingUpdatesFromMain.map((c) =>
-      format(c.id, false, getUpdateFromMainMsg(c.divergeData))
-    );
-    const updatesFromMainOutput = immutableUnshift(
-      pendingUpdatesFromMainIds,
-      pendingUpdatesFromMain.length ? chalk.underline.white('pending updates from main') + updatesFromMainDesc : ''
-    ).join('\n');
 
-    const laneStr = laneName ? `\non ${chalk.bold(laneName)} lane` : '';
+    let updatesFromMainOutput = '';
+    if (!forkedLaneId || verbose) {
+      const updatesFromMainDesc = '\n(use "bit lane merge main" to merge the changes)\n';
+      const pendingUpdatesFromMainIds = pendingUpdatesFromMain.map((c) =>
+        format(c.id, false, getUpdateFromMsg(c.divergeData))
+      );
+      updatesFromMainOutput = [
+        pendingUpdatesFromMain.length ? chalk.underline.white('pending updates from main') + updatesFromMainDesc : '',
+        ...pendingUpdatesFromMainIds,
+      ].join('\n');
+    }
+
+    let updatesFromForkedOutput = '';
+    if (forkedLaneId) {
+      const updatesFromForkedDesc = `\n(use "bit lane merge ${forkedLaneId.toString()}" to merge the changes
+use "bit fetch ${forkedLaneId.toString()} --lanes" to update ${forkedLaneId.name} locally)\n`;
+      const pendingUpdatesFromForkedIds = updatesFromForked.map((c) =>
+        format(c.id, false, getUpdateFromMsg(c.divergeData, forkedLaneId.name))
+      );
+      updatesFromForkedOutput = [
+        updatesFromForked.length
+          ? chalk.underline.white(`updates from ${forkedLaneId.name}`) + updatesFromForkedDesc
+          : '',
+        ...pendingUpdatesFromForkedIds,
+      ].join('\n');
+    }
+
+    const laneStr = currentLaneId.isDefault() ? '' : `\non ${chalk.bold(currentLaneId.toString())} lane`;
 
     const troubleshootingStr = showTroubleshootingLink ? `\n${TROUBLESHOOTING_MESSAGE}` : '';
 
     const statusMsg =
       importPendingWarning +
-      [
+      compact([
         outdatedStr,
         pendingMergeStr,
         updatesFromMainOutput,
+        updatesFromForkedOutput,
         compDuringMergeStr,
         newComponentsOutput,
         modifiedComponentOutput,
@@ -270,9 +305,7 @@ or use "bit merge [component-id] --abort" to cancel the merge operation)\n`;
         invalidComponentOutput,
         locallySoftRemovedOutput,
         remotelySoftRemovedOutput,
-      ]
-        .filter((x) => x)
-        .join(chalk.underline('\n                         \n') + chalk.white('\n')) +
+      ]).join(chalk.underline('\n                         \n') + chalk.white('\n')) +
       troubleshootingStr;
 
     const results = (statusMsg || chalk.yellow(statusWorkspaceIsCleanMsg)) + laneStr;
