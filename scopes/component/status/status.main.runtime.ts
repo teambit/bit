@@ -1,5 +1,6 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import pMapSeries from 'p-map-series';
+import { LaneId } from '@teambit/lane-id';
 import { IssuesList } from '@teambit/component-issues';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import { ComponentID } from '@teambit/component-id';
@@ -23,7 +24,7 @@ type DivergeDataPerId = { id: ComponentID; divergeData: DivergeData };
 
 export type StatusResult = {
   newComponents: ComponentID[];
-  modifiedComponent: ComponentID[];
+  modifiedComponents: ComponentID[];
   stagedComponents: { id: ComponentID; versions: string[] }[];
   componentsWithIssues: { id: ComponentID; issues: IssuesList }[];
   importPendingComponents: ComponentID[];
@@ -37,7 +38,9 @@ export type StatusResult = {
   softTaggedComponents: ComponentID[];
   snappedComponents: ComponentID[];
   pendingUpdatesFromMain: DivergeDataPerId[];
-  laneName: string | null; // null if default
+  updatesFromForked: DivergeDataPerId[];
+  currentLaneId: LaneId;
+  forkedLaneId?: LaneId;
 };
 
 export class StatusMain {
@@ -62,7 +65,7 @@ export class StatusMain {
       true,
       loadOpts
     )) as ConsumerComponent[];
-    const modifiedComponent = (await componentsList.listModifiedComponents(true, loadOpts)) as ConsumerComponent[];
+    const modifiedComponents = (await componentsList.listModifiedComponents(true, loadOpts)) as ConsumerComponent[];
     const stagedComponents: ModelComponent[] = await componentsList.listExportPendingComponents(laneObj);
     await this.addRemovedStagedIfNeeded(stagedComponents);
     const stagedComponentsWithVersions = await pMapSeries(stagedComponents, async (stagedComp) => {
@@ -87,7 +90,7 @@ export class StatusMain {
     const invalidComponents = allInvalidComponents.filter((c) => !(c.error instanceof ComponentsPendingImport));
     const outdatedComponents = await componentsList.listOutdatedComponents();
     const mergePendingComponents = await componentsList.listMergePendingComponents();
-    const newAndModifiedLegacy: ConsumerComponent[] = newComponents.concat(modifiedComponent);
+    const newAndModifiedLegacy: ConsumerComponent[] = newComponents.concat(modifiedComponents);
     const issuesToIgnore = this.issues.getIssuesToIgnoreGlobally();
     if (newAndModifiedLegacy.length) {
       const newAndModified = await this.workspace.getManyByLegacy(newAndModifiedLegacy, loadOpts);
@@ -101,8 +104,10 @@ export class StatusMain {
     const softTaggedComponents = componentsList.listSoftTaggedComponents();
     const snappedComponents = (await componentsList.listSnappedComponentsOnMain()).map((c) => c.toBitId());
     const pendingUpdatesFromMain = await componentsList.listUpdatesFromMainPending();
-    const currentLane = consumer.getCurrentLaneId();
-    const laneName = currentLane.isDefault() ? null : currentLane.name;
+    const updatesFromForked = await componentsList.listUpdatesFromForked();
+    const currentLaneId = consumer.getCurrentLaneId();
+    const currentLane = await consumer.getCurrentLaneObject();
+    const forkedLaneId = currentLane?.forkedFrom;
     Analytics.setExtraData('new_components', newComponents.length);
     Analytics.setExtraData('staged_components', stagedComponents.length);
     Analytics.setExtraData('num_components_with_missing_dependencies', componentsWithIssues.length);
@@ -129,7 +134,7 @@ export class StatusMain {
     await consumer.onDestroy();
     return {
       newComponents: await convertBitIdToComponentIdsAndSort(newComponents.map((c) => c.id)),
-      modifiedComponent: await convertBitIdToComponentIdsAndSort(modifiedComponent.map((c) => c.id)),
+      modifiedComponents: await convertBitIdToComponentIdsAndSort(modifiedComponents.map((c) => c.id)),
       stagedComponents: await convertObjToComponentIdsAndSort(stagedComponentsWithVersions),
       // @ts-ignore - not clear why, it fails the "bit build" without it
       componentsWithIssues: await convertObjToComponentIdsAndSort(
@@ -155,7 +160,9 @@ export class StatusMain {
       softTaggedComponents: await convertBitIdToComponentIdsAndSort(softTaggedComponents),
       snappedComponents: await convertBitIdToComponentIdsAndSort(snappedComponents),
       pendingUpdatesFromMain: await convertObjToComponentIdsAndSort(pendingUpdatesFromMain),
-      laneName,
+      updatesFromForked: await convertObjToComponentIdsAndSort(updatesFromForked),
+      currentLaneId,
+      forkedLaneId,
     };
   }
 
