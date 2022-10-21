@@ -1,6 +1,7 @@
 import { EnvDefinition, EnvService, ExecutionContext } from '@teambit/envs';
 import React from 'react';
 import { ScopeMain } from '@teambit/scope';
+import pMapSeries from 'p-map-series';
 import { Text, Newline } from 'ink';
 import { Logger } from '@teambit/logger';
 import { IsolatorMain } from '@teambit/isolator';
@@ -92,31 +93,29 @@ export class BuilderService implements EnvService<BuildServiceResults, BuilderDe
     const longProcessLogger = this.logger.createLongProcessLogger(title);
     this.logger.consoleTitle(title);
     const envsBuildContext: EnvsBuildContext = {};
-    await Promise.all(
-      envsExecutionContext.map(async (executionContext) => {
-        const componentIds = executionContext.components.map((component) => component.id);
-        const { originalSeeders } = options;
-        const originalSeedersOfThisEnv = componentIds.filter((compId) =>
-          originalSeeders ? originalSeeders.find((seeder) => compId.isEqual(seeder)) : true
-        );
-        const capsuleNetwork = await this.isolator.isolateComponents(componentIds, {
-          getExistingAsIs: true,
-          seedersOnly: options.seedersOnly,
-        });
-        capsuleNetwork._originalSeeders = originalSeedersOfThisEnv;
-        this.logger.console(
-          `generated graph for env "${executionContext.id}", originalSeedersOfThisEnv: ${originalSeedersOfThisEnv.length}, graphOfThisEnv: ${capsuleNetwork.seedersCapsules.length}, graph total: ${capsuleNetwork.graphCapsules.length}`
-        );
-        const buildContext = Object.assign(executionContext, {
-          capsuleNetwork,
-          previousTasksResults: [],
-          pipeName: this.displayPipeName,
-          dev: options.dev,
-          laneId: this.scope.legacyScope.currentLaneId,
-        });
-        envsBuildContext[executionContext.id] = buildContext;
-      })
-    );
+    await pMapSeries(envsExecutionContext, async (executionContext) => {
+      const componentIds = executionContext.components.map((component) => component.id);
+      const { originalSeeders } = options;
+      const originalSeedersOfThisEnv = componentIds.filter((compId) =>
+        originalSeeders ? originalSeeders.find((seeder) => compId.isEqual(seeder)) : true
+      );
+      const capsuleNetwork = await this.isolator.isolateComponents(componentIds, {
+        getExistingAsIs: true,
+        seedersOnly: options.seedersOnly,
+      });
+      capsuleNetwork._originalSeeders = originalSeedersOfThisEnv;
+      this.logger.console(
+        `generated graph for env "${executionContext.id}", originalSeedersOfThisEnv: ${originalSeedersOfThisEnv.length}, graphOfThisEnv: ${capsuleNetwork.seedersCapsules.length}, graph total: ${capsuleNetwork.graphCapsules.length}`
+      );
+      const buildContext = Object.assign(executionContext, {
+        capsuleNetwork,
+        previousTasksResults: [],
+        pipeName: this.displayPipeName,
+        dev: options.dev,
+        laneId: this.scope.legacyScope.currentLaneId,
+      });
+      envsBuildContext[executionContext.id] = buildContext;
+    });
     const buildPipe = new BuildPipe(
       tasksQueue,
       envsBuildContext,
