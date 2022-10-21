@@ -6,12 +6,13 @@ import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { APISchema, Export } from '@teambit/semantics.entities.semantic-schema';
 import { BuilderMain, BuilderAspect } from '@teambit/builder';
+import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { Parser } from './parser';
 import { SchemaAspect } from './schema.aspect';
 import { SchemaExtractor } from './schema-extractor';
 import { SchemaCommand } from './schema.cmd';
 import { schemaSchema } from './schema.graphql';
-import { SchemaTask } from './schema.task';
+import { SchemaTask, SCHEMA_TASK_NAME } from './schema.task';
 
 export type ParserSlot = SlotRegistry<Parser>;
 
@@ -35,6 +36,10 @@ export class SchemaMain {
     private envs: EnvsMain,
 
     private config: SchemaConfig,
+
+    private builder: BuilderMain,
+
+    private workspace: Workspace,
 
     private logger: Logger
   ) {}
@@ -79,14 +84,39 @@ export class SchemaMain {
    */
   async getSchema(component: Component): Promise<APISchema> {
     this.logger.debug(`getSchema of ${component.id.toString()}`);
-    // component.state.aspects.get(SchemaAspect.id)
 
-    const env = this.envs.getEnv(component).env;
-    if (typeof env.getSchemaExtractor === 'undefined') {
-      throw new Error(`No SchemaExtractor defined for ${env.name}`);
+    // if on workspace get schema from ts server
+    if (this.workspace) {
+      const env = this.envs.getEnv(component).env;
+      if (typeof env.getSchemaExtractor === 'undefined') {
+        throw new Error(`No SchemaExtractor defined for ${env.name}`);
+      }
+      const schemaExtractor: SchemaExtractor = env.getSchemaExtractor();
+      return schemaExtractor.extract(component);
     }
-    const schemaExtractor: SchemaExtractor = env.getSchemaExtractor();
-    return schemaExtractor.extract(component);
+
+    // on scope get schema from builder api
+    const schemaArtifact = await this.builder.getArtifactsVinylByAspectAndTaskName(
+      component,
+      SchemaAspect.id,
+      SCHEMA_TASK_NAME
+    );
+
+    if (schemaArtifact.length === 0) {
+      throw new Error(`Cannot find schema.json for ${component.id}`);
+    }
+
+    const schemaJsonStr = schemaArtifact[0].contents.toString('utf-8');
+
+    try {
+      const schemaJson = JSON.parse(schemaJsonStr);
+      return this.getSchemaFromObject(schemaJson);
+    } catch (e) {
+      if (e instanceof SyntaxError) {
+        throw new Error(`Invalid schema.json for ${component.id}`);
+      }
+      throw e;
+    }
   }
 
   getSchemaFromObject(obj: Record<string, any>): APISchema {
@@ -102,7 +132,15 @@ export class SchemaMain {
   }
 
   static runtime = MainRuntime;
-  static dependencies = [EnvsAspect, CLIAspect, ComponentAspect, GraphqlAspect, LoggerAspect, BuilderAspect];
+  static dependencies = [
+    EnvsAspect,
+    CLIAspect,
+    ComponentAspect,
+    GraphqlAspect,
+    LoggerAspect,
+    BuilderAspect,
+    WorkspaceAspect,
+  ];
   static slots = [Slot.withType<Parser>()];
 
   static defaultConfig = {
@@ -110,19 +148,20 @@ export class SchemaMain {
   };
 
   static async provider(
-    [envs, cli, component, graphql, loggerMain, builder]: [
+    [envs, cli, component, graphql, loggerMain, builder, workspace]: [
       EnvsMain,
       CLIMain,
       ComponentMain,
       GraphqlMain,
       LoggerMain,
-      BuilderMain
+      BuilderMain,
+      Workspace
     ],
     config: SchemaConfig,
     [parserSlot]: [ParserSlot]
   ) {
     const logger = loggerMain.createLogger(SchemaAspect.id);
-    const schema = new SchemaMain(parserSlot, envs, config, logger);
+    const schema = new SchemaMain(parserSlot, envs, config, builder, workspace, logger);
     const schemaTask = new SchemaTask(SchemaAspect.id, schema, logger);
     builder.registerBuildTasks([schemaTask]);
     cli.register(new SchemaCommand(schema, component, logger));
