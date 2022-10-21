@@ -195,12 +195,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/pipelines/modules/builder-data"
     },
-    "builder-ui": {
-        "scope": "teambit.pipelines",
-        "version": "0.0.64",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/pipelines/builder-ui"
-    },
     "bundler": {
         "scope": "teambit.compilation",
         "version": "0.0.879",
@@ -1098,6 +1092,24 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/design/ui/alert-card"
     },
+    "ui/artifacts/artifacts-tree": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/component/ui/component-artifacts/artifacts-tree"
+    },
+    "ui/artifacts/models/component-artifacts-model": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/component/ui/component-artifacts/models/component-artifacts-model"
+    },
+    "ui/artifacts/queries/use-component-artifacts": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/component/ui/component-artifacts/queries/use-component-artifacts"
+    },
     "ui/aspect-box": {
         "scope": "teambit.harmony",
         "version": "0.0.492",
@@ -1661,42 +1673,6 @@
         "version": "0.0.356",
         "mainFile": "index.ts",
         "rootDir": "scopes/design/ui/pill-label"
-    },
-    "ui/pipelines/artifacts-panel": {
-        "scope": "teambit.component",
-        "version": "0.0.19",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/component/ui/pipelines/artifacts-panel"
-    },
-    "ui/pipelines/component-pipeline": {
-        "scope": "teambit.component",
-        "version": "0.0.19",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/component/ui/pipelines/component-pipeline"
-    },
-    "ui/pipelines/component-pipeline-context": {
-        "scope": "teambit.component",
-        "version": "0.0.8",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/component/ui/pipelines/component-pipeline-context"
-    },
-    "ui/pipelines/component-pipeline-model": {
-        "scope": "teambit.component",
-        "version": "0.0.8",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/component/ui/pipelines/component-pipeline-model"
-    },
-    "ui/pipelines/component-pipeline-queries": {
-        "scope": "teambit.component",
-        "version": "0.0.10",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/component/ui/pipelines/component-pipeline-queries"
-    },
-    "ui/pipelines/component-pipeline-utils": {
-        "scope": "teambit.component",
-        "version": "0.0.7",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/component/ui/pipelines/component-pipeline-utils"
     },
     "ui/preview-placeholder": {
         "scope": "teambit.preview",

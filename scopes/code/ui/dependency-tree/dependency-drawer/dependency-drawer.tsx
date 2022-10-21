@@ -13,7 +13,13 @@ export type DependencyDrawerProps = {
 export function DependencyDrawer({ name, isOpen, onToggle, dependencies }: DependencyDrawerProps) {
   if (!dependencies || dependencies.length === 0) return null;
   return (
-    <DrawerUI isOpen={isOpen} onToggle={onToggle} name={name} className={styles.dependencyDrawer}>
+    <DrawerUI
+      isOpen={isOpen}
+      onToggle={onToggle}
+      name={name}
+      className={styles.dependencyDrawer}
+      contentClass={styles.dependencyDrawerContent}
+    >
       <DependencyList deps={dependencies} />
     </DrawerUI>
   );
