@@ -1,4 +1,4 @@
-import { SignatureDeclaration } from 'typescript';
+import { SignatureDeclaration, SyntaxKind } from 'typescript';
 import { FunctionLikeSchema, Modifier } from '@teambit/semantics.entities.semantic-schema';
 import { SchemaExtractorContext } from '../../schema-extractor-context';
 import { getParams } from './get-params';
@@ -11,7 +11,12 @@ export async function toFunctionLikeSchema(
   funcName?: string
 ) {
   const name = funcName || node.name?.getText() || '';
-  const info = node.name ? await context.getQuickInfo(node.name) : null;
+  const getQuickInfoFromDefaultModifier = async () => {
+    const defaultModifier = node.modifiers?.find((modifier) => modifier.kind === SyntaxKind.DefaultKeyword);
+    if (!defaultModifier) return null;
+    return context.getQuickInfo(defaultModifier);
+  };
+  const info = node.name ? await context.getQuickInfo(node.name) : await getQuickInfoFromDefaultModifier();
   const returnTypeStr = info ? parseTypeFromQuickInfo(info) : 'any';
   const displaySig = info?.body?.displayString || '';
   const args = await getParams(node.parameters, context);

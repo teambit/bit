@@ -4,7 +4,7 @@ import { Slot, SlotRegistry } from '@teambit/harmony';
 import GraphqlAspect, { GraphqlMain } from '@teambit/graphql';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
-import { APISchema, Export } from '@teambit/semantics.entities.semantic-schema';
+import { APISchema, Export, Module } from '@teambit/semantics.entities.semantic-schema';
 import { BuilderMain, BuilderAspect } from '@teambit/builder';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { Parser } from './parser';
@@ -103,7 +103,16 @@ export class SchemaMain {
     );
 
     if (schemaArtifact.length === 0) {
-      throw new Error(`Cannot find schema.json for ${component.id}`);
+      /**
+       * return empty schema
+       * when tag/snap without build
+       * or backwards compatibility
+       */
+      return new APISchema(
+        { filePath: '', line: 0, character: 0 },
+        new Module({ filePath: '', line: 0, character: 0 }, []),
+        component.id
+      );
     }
 
     const schemaJsonStr = schemaArtifact[0].contents.toString('utf-8');
