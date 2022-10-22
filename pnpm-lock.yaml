@@ -98,7 +98,6 @@ importers:
       '@teambit/code.ui.object-formatter': 0.0.1
       '@teambit/community.constants.links': 0.0.2
       '@teambit/compilation.content.compiler-overview': 1.95.0
-      '@teambit/component-issues': 0.0.72
       '@teambit/component-version': 0.0.395
       '@teambit/component.content.component-overview': 1.95.0
       '@teambit/component.content.dev-files': 1.95.9
@@ -127,6 +126,7 @@ importers:
       '@teambit/documenter.theme.theme-context': 4.0.3
       '@teambit/documenter.ui.code-snippet': 4.2.2
       '@teambit/documenter.ui.consumable-link': 4.0.3
+      '@teambit/documenter.ui.copied-message': 4.1.6
       '@teambit/documenter.ui.copy-box': 4.0.1
       '@teambit/documenter.ui.heading': 4.1.1
       '@teambit/documenter.ui.highlighted-text': 4.1.1
@@ -640,7 +640,6 @@ importers:
       '@teambit/bvm.list': registry.npmjs.org/@teambit/bvm.list/0.0.33_@teambit+legacy@1.0.373
       '@teambit/capsule': registry.npmjs.org/@teambit/capsule/0.0.12
       '@teambit/community.constants.links': 0.0.2
-      '@teambit/component-issues': link:scopes/component/component-issues
       '@teambit/component-version': registry.npmjs.org/@teambit/component-version/0.0.395
       '@teambit/component.instructions.exporting-components': registry.npmjs.org/@teambit/component.instructions.exporting-components/0.0.6_kf5y4reisbvicqriwosjh5ykju
       '@teambit/design.elements.icon': registry.npmjs.org/@teambit/design.elements.icon/1.0.5_sfoxds7t5ydpegc3knd667wn6m
@@ -660,6 +659,7 @@ importers:
       '@teambit/documenter.theme.theme-context': registry.npmjs.org/@teambit/documenter.theme.theme-context/4.0.3_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/documenter.ui.code-snippet': registry.npmjs.org/@teambit/documenter.ui.code-snippet/4.2.2_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/documenter.ui.consumable-link': registry.npmjs.org/@teambit/documenter.ui.consumable-link/4.0.3_sfoxds7t5ydpegc3knd667wn6m
+      '@teambit/documenter.ui.copied-message': registry.npmjs.org/@teambit/documenter.ui.copied-message/4.1.6_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/documenter.ui.copy-box': registry.npmjs.org/@teambit/documenter.ui.copy-box/4.0.1_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/documenter.ui.heading': registry.npmjs.org/@teambit/documenter.ui.heading/4.1.1_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/documenter.ui.highlighted-text': registry.npmjs.org/@teambit/documenter.ui.highlighted-text/4.1.1_sfoxds7t5ydpegc3knd667wn6m
@@ -12563,7 +12563,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/documenter.ui.copied-message/4.0.1_sfoxds7t5ydpegc3knd667wn6m:
-    resolution: {integrity: sha512-gbfQTP1HRL5bkg1+mc94UTrGgI6tFkR4h7fkgQuxH+53JOLF6odEwLYhfJ2qZFju5dtL1Ag0rsCIGdeM9fP04A==, registry: https://node.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/documenter.ui.copied-message/-/documenter.ui.copied-message-4.0.1.tgz}
+    resolution: {integrity: sha512-gbfQTP1HRL5bkg1+mc94UTrGgI6tFkR4h7fkgQuxH+53JOLF6odEwLYhfJ2qZFju5dtL1Ag0rsCIGdeM9fP04A==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/@teambit/documenter.ui.copied-message/-/documenter.ui.copied-message-4.0.1.tgz}
     id: registry.npmjs.org/@teambit/documenter.ui.copied-message/4.0.1
     name: '@teambit/documenter.ui.copied-message'
     version: 4.0.1
@@ -12578,7 +12578,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/documenter.ui.copied-message/4.1.1_sfoxds7t5ydpegc3knd667wn6m:
-    resolution: {integrity: sha512-PbXQD3l6iydMLDoWtOTNj9HBpgUMK2melalxXRAAudCwG5Tk0cdWMAgKOLIa8lT7ObMBUcdy9Ed7LCcIWEOIQg==, registry: https://node.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/documenter.ui.copied-message/-/documenter.ui.copied-message-4.1.1.tgz}
+    resolution: {integrity: sha512-PbXQD3l6iydMLDoWtOTNj9HBpgUMK2melalxXRAAudCwG5Tk0cdWMAgKOLIa8lT7ObMBUcdy9Ed7LCcIWEOIQg==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/@teambit/documenter.ui.copied-message/-/documenter.ui.copied-message-4.1.1.tgz}
     id: registry.npmjs.org/@teambit/documenter.ui.copied-message/4.1.1
     name: '@teambit/documenter.ui.copied-message'
     version: 4.1.1
@@ -12593,7 +12593,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/documenter.ui.copied-message/4.1.6_sfoxds7t5ydpegc3knd667wn6m:
-    resolution: {integrity: sha512-bYWITFQtwU3NXptAIDttbsg7M1K13/jm3SPnoDbzQWxZqlmToL50Tfhi1MgTLRfz8aFezVzXgdpBryFtN1juzA==, registry: https://node.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/documenter.ui.copied-message/-/documenter.ui.copied-message-4.1.6.tgz}
+    resolution: {integrity: sha512-bYWITFQtwU3NXptAIDttbsg7M1K13/jm3SPnoDbzQWxZqlmToL50Tfhi1MgTLRfz8aFezVzXgdpBryFtN1juzA==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/@teambit/documenter.ui.copied-message/-/documenter.ui.copied-message-4.1.6.tgz}
     id: registry.npmjs.org/@teambit/documenter.ui.copied-message/4.1.6
     name: '@teambit/documenter.ui.copied-message'
     version: 4.1.6
@@ -12602,7 +12602,7 @@ packages:
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       classnames: registry.npmjs.org/classnames/2.3.1
-      core-js: registry.npmjs.org/core-js/3.13.0
+      core-js: registry.npmjs.org/core-js/3.25.0
       react: registry.npmjs.org/react/17.0.2
       react-dom: registry.npmjs.org/react-dom/17.0.2_react@17.0.2
     dev: false
@@ -21998,7 +21998,7 @@ packages:
     dev: false
 
   registry.npmjs.org/errno/0.1.8:
-    resolution: {integrity: sha512-dJ6oBr5SQ1VSd9qkk7ByRgb/1SH4JZjCHSW/mr63/QcXO9zLVxvJ6Oy13nio03rxpSnVDDjFor75SjVeZWPW/A==, registry: https://node.bit.cloud/, tarball: https://registry.npmjs.org/errno/-/errno-0.1.8.tgz}
+    resolution: {integrity: sha512-dJ6oBr5SQ1VSd9qkk7ByRgb/1SH4JZjCHSW/mr63/QcXO9zLVxvJ6Oy13nio03rxpSnVDDjFor75SjVeZWPW/A==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/errno/-/errno-0.1.8.tgz}
     name: errno
     version: 0.1.8
     hasBin: true
@@ -35829,7 +35829,7 @@ packages:
     engines: {node: '>=0.10.0'}
 
   registry.npmjs.org/source-map/0.6.1:
-    resolution: {integrity: sha512-UjgapumWlbMhkBgzT7Ykc5YXUT46F0iKu8SGXq0bcwP5dz/h0Plj6enJqjz1Zbq2l5WaqYnrVbwWOWMyF3F47g==, registry: https://node.bit.cloud/, tarball: https://registry.npmjs.org/source-map/-/source-map-0.6.1.tgz}
+    resolution: {integrity: sha512-UjgapumWlbMhkBgzT7Ykc5YXUT46F0iKu8SGXq0bcwP5dz/h0Plj6enJqjz1Zbq2l5WaqYnrVbwWOWMyF3F47g==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/source-map/-/source-map-0.6.1.tgz}
     name: source-map
     version: 0.6.1
     engines: {node: '>=0.10.0'}
