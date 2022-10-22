@@ -42,7 +42,7 @@ export class SchemaTask implements BuildTask {
           startTime,
           endTime: Date.now(),
         });
-      } catch (e: any) {
+      } catch (e) {
         /**
          * @todo once schema extractor is more stable change this to an error
          */
@@ -71,7 +71,7 @@ export function getSchemaArtifactDef() {
   const def: ArtifactDefinition = {
     name: SCHEMA_ARTIFACT_NAME,
     rootDir: CAPSULE_ARTIFACTS_DIR,
-    globPatterns: ['*.json'],
+    globPatterns: ['schema.json'],
   };
 
   return def;
