@@ -1260,6 +1260,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/compositions/ui/compositions-menu-bar"
     },
+    "ui/compositions-overview": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/compositions/ui/compositions-overview"
+    },
     "ui/constants/z-indexes": {
         "scope": "teambit.ui-foundation",
         "version": "0.0.494",
