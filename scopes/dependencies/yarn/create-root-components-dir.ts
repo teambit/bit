@@ -88,8 +88,7 @@ async function pickComponentsAndAllDeps(
         dependencies.push(component[1]);
         let packageJsonObject = pickedComponents.get(component[1]);
         if (!packageJsonObject) {
-          const comp = component[0].state._consumer;
-          const pkgName = componentIdToPackageName({ withPrefix: true, ...comp, id: comp.id });
+          const pkgName = depResolver.getPackageName(component[0]);
           packageJsonObject = JSON.parse(
             await fs.readFile(path.join(rootDir, 'node_modules', pkgName, 'package.json'), 'utf-8')
           ) as Record<string, any>;
