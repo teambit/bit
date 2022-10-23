@@ -1173,6 +1173,14 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     return unmerged?.head;
   }
 
+  async getUnmergedComponent(componentId: ComponentID): Promise<Component | undefined> {
+    const unmerged = this.scope.legacyScope.objects.unmergedComponents.getEntry(componentId._legacy.name);
+    if (unmerged?.head){
+      return this.scope.get(componentId.changeVersion(unmerged?.head.toString()))
+    }
+    return undefined;
+  }
+
   private async warnAboutMisconfiguredEnv(componentId: ComponentID, extensionDataList: ExtensionDataList) {
     if (!(await this.hasId(componentId))) {
       // if this is a dependency and not belong to the workspace, don't show the warning
