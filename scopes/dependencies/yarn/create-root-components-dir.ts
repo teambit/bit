@@ -2,7 +2,6 @@ import fs from 'fs-extra';
 import path from 'path';
 import { ComponentDependency, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { ComponentMap } from '@teambit/component';
-import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 
 /**
  * All components are copied to a temporary folder (`<workspace-root>/.bit_components`).
