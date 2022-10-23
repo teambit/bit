@@ -2,12 +2,12 @@ import fs from 'graceful-fs';
 import path from 'path';
 import semver from 'semver';
 import parsePackageName from 'parse-package-name';
-import defaultReporter from '@pnpm/default-reporter';
+import { initDefaultReporter } from '@pnpm/default-reporter';
 import { streamParser } from '@pnpm/logger';
-import { read as readModulesState } from '@pnpm/modules-yaml';
+import { readModulesManifest } from '@pnpm/modules-yaml';
 import { StoreController, WantedDependency } from '@pnpm/package-store';
 import { createOrConnectStoreController, CreateStoreControllerOptions } from '@pnpm/store-connection-manager';
-import sortPackages from '@pnpm/sort-packages';
+import { sortPackages } from '@pnpm/sort-packages';
 import {
   ResolvedPackageVersion,
   Registries,
@@ -16,6 +16,7 @@ import {
   PackageManagerProxyConfig,
   PackageManagerNetworkConfig,
 } from '@teambit/dependency-resolver';
+import { BitError } from '@teambit/bit-error';
 import {
   MutatedProject,
   mutateModules,
@@ -24,13 +25,13 @@ import {
   ProjectOptions,
 } from '@pnpm/core';
 import * as pnpm from '@pnpm/core';
-import createResolverAndFetcher, { ClientOptions } from '@pnpm/client';
-import pickRegistryForPackage from '@pnpm/pick-registry-for-package';
-import { PackageManifest, ProjectManifest } from '@pnpm/types';
+import { createClient, ClientOptions } from '@pnpm/client';
+import { pickRegistryForPackage } from '@pnpm/pick-registry-for-package';
+import { PackageManifest, ProjectManifest, ReadPackageHook } from '@pnpm/types';
 import { Logger } from '@teambit/logger';
 import toNerfDart from 'nerf-dart';
 import { promisify } from 'util';
-import pkgsGraph from 'pkgs-graph';
+import { createPkgGraph } from 'pkgs-graph';
 import userHome from 'user-home';
 import { pnpmErrorToBitError } from './pnpm-error-to-bit-error';
 import { readConfig } from './read-config';
@@ -113,7 +114,7 @@ async function generateResolverAndFetcher(
       retries: networkConfig.fetchRetries,
     },
   };
-  const result = createResolverAndFetcher(opts);
+  const result = createClient(opts);
   return result;
 }
 
@@ -133,6 +134,7 @@ export async function getPeerDependencyIssues(
   const workspacePackages = {};
   for (const [rootDir, manifest] of Object.entries(manifestsByPaths)) {
     projects.push({
+      buildIndex: 0, // this is not used while searching for peer issues anyway
       manifest,
       rootDir,
     });
@@ -183,7 +185,7 @@ export async function install(
       },
     };
   }
-  let readPackage: any;
+  const readPackage: ReadPackageHook[] = [];
   let hoistingLimits = new Map();
   if (options?.rootComponents) {
     const { rootComponentWrappers, rootComponents } = createRootComponentWrapperManifests(rootDir, manifestsByPaths);
@@ -191,13 +193,13 @@ export async function install(
       ...rootComponentWrappers,
       ...manifestsByPaths,
     };
-    readPackage = readPackageHook;
+    readPackage.push(readPackageHook as ReadPackageHook);
     hoistingLimits = new Map();
     hoistingLimits.set('.@', new Set(rootComponents));
   } else if (options?.rootComponentsForCapsules) {
-    readPackage = readPackageHookForCapsules;
+    readPackage.push(readPackageHookForCapsules as ReadPackageHook);
   }
-  const { packagesToBuild, workspacePackages } = groupPkgs(manifestsByPaths);
+  const { allProjects, packagesToBuild, workspacePackages } = groupPkgs(manifestsByPaths);
   const registriesMap = getRegistriesMap(registries);
   const authConfig = getAuthConfig(registries);
   const storeController = await createStoreController({
@@ -210,6 +212,7 @@ export async function install(
     packageImportMethod: options?.packageImportMethod,
   });
   const opts: InstallOptions = {
+    allProjects,
     storeDir: storeController.dir,
     dir: rootDir,
     storeController: storeController.ctrl,
@@ -230,7 +233,7 @@ export async function install(
     },
   };
 
-  const stopReporting = defaultReporter({
+  const stopReporting = initDefaultReporter({
     context: {
       argv: [],
     },
@@ -251,7 +254,7 @@ export async function install(
     stopReporting();
   }
   if (options.rootComponents) {
-    const modulesState = await readModulesState(path.join(rootDir, 'node_modules'));
+    const modulesState = await readModulesManifest(path.join(rootDir, 'node_modules'));
     if (modulesState?.injectedDeps) {
       await linkManifestsToInjectedDeps({
         injectedDeps: modulesState.injectedDeps,
@@ -403,7 +406,7 @@ async function linkManifestsToInjectedDeps({
 
 function groupPkgs(manifestsByPaths: Record<string, ProjectManifest>) {
   const pkgs = Object.entries(manifestsByPaths).map(([dir, manifest]) => ({ dir, manifest }));
-  const { graph } = pkgsGraph(pkgs);
+  const { graph } = createPkgGraph(pkgs);
   const chunks = sortPackages(graph as any);
 
   // This will create local link by pnpm to a component exists in the ws.
@@ -418,14 +421,18 @@ function groupPkgs(manifestsByPaths: Record<string, ProjectManifest>) {
   // then when overriding the link, A will still works
   // This is the rational behind not deleting this completely, but need further check that it really works
   const packagesToBuild: MutatedProject[] = []; // @pnpm/core will use this to install the packages
+  const allProjects: ProjectOptions[] = [];
   const workspacePackages = {}; // @pnpm/core will use this to link packages to each other
 
   chunks.forEach((dirs, buildIndex) => {
     for (const rootDir of dirs) {
       const manifest = manifestsByPaths[rootDir];
-      packagesToBuild.push({
+      allProjects.push({
         buildIndex,
         manifest,
+        rootDir,
+      });
+      packagesToBuild.push({
         rootDir,
         mutation: 'install',
       });
@@ -435,7 +442,7 @@ function groupPkgs(manifestsByPaths: Record<string, ProjectManifest>) {
       }
     }
   });
-  return { packagesToBuild, workspacePackages };
+  return { packagesToBuild, allProjects, workspacePackages };
 }
 
 export async function resolveRemoteVersion(
@@ -448,6 +455,8 @@ export async function resolveRemoteVersion(
 ): Promise<ResolvedPackageVersion> {
   const { resolve } = await generateResolverAndFetcher(cacheDir, registries, proxyConfig, networkConfig);
   const resolveOpts = {
+    lockfileDir: rootDir,
+    preferredVersions: {},
     projectDir: rootDir,
     registry: '',
   };
@@ -462,6 +471,9 @@ export async function resolveRemoteVersion(
     const isValidRange = parsedPackage.version ? !!semver.validRange(parsedPackage.version) : false;
     resolveOpts.registry = registry;
     const val = await resolve(wantedDep, resolveOpts);
+    if (!val.manifest) {
+      throw new BitError('The resolved package has no manifest');
+    }
     const version = isValidRange ? parsedPackage.version : val.manifest.version;
 
     return {
@@ -480,6 +492,12 @@ export async function resolveRemoteVersion(
       pref: packageName,
     };
     const val = await resolve(wantedDep, resolveOpts);
+    if (!val.manifest) {
+      throw new BitError('The resolved package has no manifest');
+    }
+    if (!val.normalizedPref) {
+      throw new BitError('The resolved package has no version');
+    }
     return {
       packageName: val.manifest.name,
       version: val.normalizedPref,

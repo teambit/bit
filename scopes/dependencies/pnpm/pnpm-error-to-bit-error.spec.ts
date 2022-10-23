@@ -1,4 +1,4 @@
-import PnpmError from '@pnpm/error';
+import { PnpmError } from '@pnpm/error';
 import { pnpmErrorToBitError } from './pnpm-error-to-bit-error';
 
 test('the hint from the fetch error is used', () => {
