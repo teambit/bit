@@ -34,7 +34,7 @@ function deprecateFilter({ className }: React.HTMLAttributes<HTMLDivElement>) {
       </div>
       <div>
         <Toggle
-          checked={isActive}
+          defaultChecked={isActive}
           onInputChanged={() => updateFilter((currentState) => ({ ...currentState, state: !isActive }))}
         />
       </div>

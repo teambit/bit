@@ -44,7 +44,7 @@ function showMainFilter({ className, lanes }: ComponentFilterRenderProps) {
       </div>
       <div>
         <Toggle
-          checked={isActive}
+          defaultChecked={isActive}
           onInputChanged={() => updateFilter((currentState) => ({ ...currentState, state: !isActive }))}
         />
       </div>
