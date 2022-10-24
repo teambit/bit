@@ -13,8 +13,9 @@ export async function toFunctionLikeSchema(
   const name = funcName || node.name?.getText() || '';
   const getQuickInfoFromDefaultModifier = async () => {
     const defaultModifier = node.modifiers?.find((modifier) => modifier.kind === SyntaxKind.DefaultKeyword);
-    if (!defaultModifier) return null;
-    return context.getQuickInfo(defaultModifier);
+    if (defaultModifier) return context.getQuickInfo(defaultModifier);
+    if (node.kind === SyntaxKind.ArrowFunction) return context.getQuickInfo(node.equalsGreaterThanToken);
+    return null;
   };
   const info = node.name ? await context.getQuickInfo(node.name) : await getQuickInfoFromDefaultModifier();
   const returnTypeStr = info ? parseTypeFromQuickInfo(info) : 'any';
