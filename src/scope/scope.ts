@@ -717,7 +717,19 @@ once done, to continue working, please run "bit cc"`
 
   async removePendingDir(clientId: string) {
     const pendingDir = pathLib.join(this.path, PENDING_OBJECTS_DIR, clientId);
-    return fs.remove(pendingDir); // no error is thrown if not exists
+    try {
+      await fs.remove(pendingDir); // no error is thrown if not exists
+    } catch (err: any) {
+      if (err.code === 'ENOTEMPTY') {
+        // it rarely happens, but when it does, the export gets stuck. it's probably a bug with fs-extra.
+        // a workaround is to try again after a second.
+        // see this: https://github.com/jprichardson/node-fs-extra/issues/532
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        await fs.remove(pendingDir);
+      } else {
+        throw err;
+      }
+    }
   }
 
   static ensure(path: PathOsBasedAbsolute, name?: string | null, groupName?: string | null): Promise<Scope> {
