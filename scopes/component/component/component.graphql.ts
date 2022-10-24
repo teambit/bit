@@ -46,6 +46,7 @@ export function componentSchema(componentExtension: ComponentMain) {
       type LogEntry {
         message: String!
         username: String
+        parents: [String]!
         email: String
         date: String
         hash: String!
