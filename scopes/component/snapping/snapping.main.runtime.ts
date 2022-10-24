@@ -42,6 +42,7 @@ import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/depen
 import { BuilderAspect, BuilderMain } from '@teambit/builder';
 import { ExportAspect, ExportMain } from '@teambit/export';
 import UnmergedComponents from '@teambit/legacy/dist/scope/lanes/unmerged-components';
+import { ComponentID } from '@teambit/component-id';
 import { BitObject, Repository } from '@teambit/legacy/dist/scope/objects';
 import {
   ArtifactFiles,
@@ -54,9 +55,17 @@ import { TagCmd } from './tag-cmd';
 import { ComponentsHaveIssues } from './components-have-issues';
 import ResetCmd from './reset-cmd';
 import { tagModelComponent, updateComponentsVersions, BasicTagParams } from './tag-model-component';
-import { TagFromScopeCmd } from './tag-from-scope.cmd';
+import { TagDataPerCompRaw, TagFromScopeCmd } from './tag-from-scope.cmd';
 
 const HooksManagerInstance = HooksManager.getInstance();
+
+export type TagDataPerComp = {
+  componentId: ComponentID;
+  dependencies: ComponentID[];
+  versionToTag: string;
+  prereleaseId?: string;
+  message?: string;
+};
 
 export class SnappingMain {
   private objectsRepo: Repository;
@@ -198,8 +207,8 @@ export class SnappingMain {
   }
 
   async tagFromScope(
+    tagDataPerCompRaw: TagDataPerCompRaw[],
     params: {
-      ids: string[];
       push?: boolean;
       version?: string;
       releaseType?: ReleaseType;
@@ -212,7 +221,18 @@ export class SnappingMain {
         `unable to run this command from a workspace, please create a new bare-scope and run it from there`
       );
     }
-    const componentIds = await this.scope.resolveMultipleComponentIds(params.ids);
+    const tagDataPerComp = await Promise.all(
+      tagDataPerCompRaw.map(async (tagData) => {
+        return {
+          componentId: await this.scope.resolveComponentId(tagData.componentId),
+          dependencies: tagData.dependencies ? await this.scope.resolveMultipleComponentIds(tagData.dependencies) : [],
+          versionToTag: tagData.versionToTag || 'patch',
+          prereleaseId: tagData.prereleaseId,
+          message: tagData.message,
+        };
+      })
+    );
+    const componentIds = tagDataPerComp.map((t) => t.componentId);
     const componentIdsLatest = componentIds.map((id) => id.changeVersion(LATEST));
     const components = await this.scope.import(componentIdsLatest);
     const consumerComponents = components.map((c) => c.state._consumer);
@@ -221,6 +241,8 @@ export class SnappingMain {
       ...params,
       scope: this.scope,
       consumerComponents,
+      tagDataPerComp,
+      skipBuildPipeline: true,
       snapping: this,
       builder: this.builder,
       dependencyResolver: this.dependencyResolver,

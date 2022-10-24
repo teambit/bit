@@ -11,13 +11,30 @@ import { BasicTagParams } from './tag-model-component';
 
 const RELEASE_TYPES = ['major', 'premajor', 'minor', 'preminor', 'patch', 'prepatch', 'prerelease'];
 
+export type TagDataPerCompRaw = {
+  componentId: string;
+  dependencies?: string[];
+  versionToTag?: string;
+  prereleaseId?: string;
+  message?: string;
+};
+
 export class TagFromScopeCmd implements Command {
-  name = '_tag <component-id...>';
+  name = '_tag <data>';
   group = 'development';
   private = true;
   description = 'create an immutable and exportable component snapshot, tagged with a release version.';
-  extendedDescription = `you can specify a version per id using "@" sign, e.g. bit tag foo@1.0.0 bar@minor baz@major`;
-  helpUrl = 'components/tags';
+  extendedDescription = `this command should be running from a new bare scope, it first imports the components it needs and then processes the tag.
+the input data is a stringified JSON of an array of the following object.
+{
+  componentId: string;    // ids always have scope, so it's safe to parse them from string
+  dependencies: string[]; // e.g. [teambit/compiler@1.0.0, teambit/tester@1.0.0]
+  versionToTag?: string;  // specific version (e.g. '1.0.0') or semver (e.g. 'minor', 'patch')
+  prereleaseId?: string;  // applicable when versionToTag is a pre-release. (e.g. "dev", for 1.0.0-dev.1)
+  message?: string;       // tag-message.
+}
+an example of the final data: '[{"componentId":"ci.remote2/comp-b","dependencies":["ci.remote/comp1@0.0.2"]}]'
+`;
   alias = '';
   loader = true;
   options = [
@@ -54,7 +71,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
 
   // eslint-disable-next-line complexity
   async report(
-    [patterns = []]: [string[]],
+    [data]: [string],
     {
       push,
       message = '',
@@ -88,9 +105,6 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
   ): Promise<string> {
     if (ignoreIssues && typeof ignoreIssues === 'boolean') {
       throw new BitError(`--ignore-issues expects issues to be ignored, please run "bit tag -h" for the issues list`);
-    }
-    if (!message) {
-      throw new Error('message is mandatory');
     }
     if (prereleaseId && (!increment || increment === 'major' || increment === 'minor' || increment === 'patch')) {
       throw new BitError(
@@ -128,7 +142,6 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
     };
 
     const params = {
-      ids: patterns,
       push,
       message,
       releaseType: getReleaseType(),
@@ -143,7 +156,9 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       version: ver,
     };
 
-    const results = await this.snapping.tagFromScope(params);
+    const tagDataPerCompRaw = this.parseData(data);
+
+    const results = await this.snapping.tagFromScope(tagDataPerCompRaw, params);
     if (!results) return chalk.yellow(NOTHING_TO_TAG_MSG);
     const { taggedComponents, autoTaggedResults, warnings, newComponents }: TagResults = results;
     const changedComponents = taggedComponents.filter((component) => !newComponents.searchWithoutVersion(component.id));
@@ -214,5 +229,20 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       publishOutput() +
       softTagClarification
     );
+  }
+  private parseData(data: string): TagDataPerCompRaw[] {
+    let dataParsed: unknown;
+    try {
+      dataParsed = JSON.parse(data);
+    } catch (err: any) {
+      throw new Error(`failed parsing the data entered as JSON. err ${err.message}`);
+    }
+    if (!Array.isArray(dataParsed)) {
+      throw new Error('expect data to be an array');
+    }
+    dataParsed.forEach((dataItem) => {
+      if (!dataItem.componentId) throw new Error('expect data item to have "componentId" prop');
+    });
+    return dataParsed;
   }
 }

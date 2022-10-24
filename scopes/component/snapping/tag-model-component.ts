@@ -21,6 +21,7 @@ import Consumer from '@teambit/legacy/dist/consumer/consumer';
 import { NewerVersionFound } from '@teambit/legacy/dist/consumer/exceptions';
 import ShowDoctorError from '@teambit/legacy/dist/error/show-doctor-error';
 import logger from '@teambit/legacy/dist/logger/logger';
+import { OnTagOpts } from '@teambit/builder/builder.main.runtime';
 import { sha1 } from '@teambit/legacy/dist/utils';
 import { AutoTagResult, getAutoTagInfo } from '@teambit/legacy/dist/scope/component-ops/auto-tag';
 import { getValidVersionOrReleaseType } from '@teambit/legacy/dist/utils/semver-helper';
@@ -34,7 +35,7 @@ import { ModelComponent } from '@teambit/legacy/dist/scope/models';
 import { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { ScopeMain } from '@teambit/scope';
 import { Workspace } from '@teambit/workspace';
-import { SnappingMain } from './snapping.main.runtime';
+import { SnappingMain, TagDataPerComp } from './snapping.main.runtime';
 
 export type onTagIdTransformer = (id: BitId) => BitId | null;
 
@@ -94,7 +95,8 @@ async function setFutureVersions(
   ids: BitIds,
   incrementBy?: number,
   preRelease?: string,
-  soft?: boolean
+  soft?: boolean,
+  tagDataPerComp?: TagDataPerComp[]
 ): Promise<void> {
   await Promise.all(
     componentsToTag.map(async (componentToTag) => {
@@ -102,7 +104,17 @@ async function setFutureVersions(
       const modelComponent = await scope.sources.findOrAddComponent(componentToTag);
       const nextVersion = componentToTag.componentMap?.nextVersion?.version;
       componentToTag.previouslyUsedVersion = componentToTag.version;
-      if (nextVersion && persist) {
+      if (tagDataPerComp) {
+        const tagData = tagDataPerComp.find((t) => t.componentId._legacy.isEqualWithoutVersion(componentToTag.id));
+        if (!tagData) throw new Error(`tag-data is missing for ${componentToTag.id.toStringWithoutVersion()}`);
+        const exactVersionOrReleaseType = getValidVersionOrReleaseType(tagData.versionToTag);
+        componentToTag.version = modelComponent.getVersionToAdd(
+          exactVersionOrReleaseType.releaseType,
+          exactVersionOrReleaseType.exactVersion,
+          undefined,
+          tagData.prereleaseId
+        );
+      } else if (nextVersion && persist) {
         const exactVersionOrReleaseType = getValidVersionOrReleaseType(nextVersion);
         componentToTag.version = modelComponent.getVersionToAdd(
           exactVersionOrReleaseType.releaseType,
@@ -148,6 +160,8 @@ export async function tagModelComponent({
   builder,
   consumerComponents,
   ids,
+  tagDataPerComp,
+  skipBuildPipeline = false,
   message,
   editor,
   exactVersion,
@@ -172,6 +186,8 @@ export async function tagModelComponent({
   builder: BuilderMain;
   consumerComponents: Component[];
   ids: BitIds;
+  tagDataPerComp?: TagDataPerComp[];
+  skipBuildPipeline?: boolean;
   exactVersion?: string | null | undefined;
   releaseType?: ReleaseType;
   incrementBy?: number;
@@ -206,7 +222,12 @@ export async function tagModelComponent({
   const allComponentsToTag = [...componentsToTag, ...autoTagComponentsFiltered];
 
   const messagesFromEditorFetcher = new MessagePerComponentFetcher(idsToTag, autoTagIds);
-  const messagePerId = editor ? await messagesFromEditorFetcher.getMessagesFromEditor(legacyScope.tmp, editor) : [];
+  const getMessagePerId = async () => {
+    if (editor) return messagesFromEditorFetcher.getMessagesFromEditor(legacyScope.tmp, editor);
+    if (tagDataPerComp) return tagDataPerComp.map((t) => ({ id: t.componentId._legacy, msg: t.message || message }));
+    return [];
+  };
+  const messagePerId = await getMessagePerId();
 
   // check for each one of the components whether it is using an old version
   if (!ignoreNewestVersion && !isSnap) {
@@ -249,7 +270,8 @@ export async function tagModelComponent({
         ids,
         incrementBy,
         preReleaseId,
-        soft
+        soft,
+        tagDataPerComp
       );
   setCurrentSchema(allComponentsToTag);
   // go through all dependencies and update their versions
@@ -270,7 +292,14 @@ export async function tagModelComponent({
 
   const publishedPackages: string[] = [];
   if (build) {
-    const onTagOpts = { disableTagAndSnapPipelines, throwOnError: true, forceDeploy, skipTests, isSnap };
+    const onTagOpts: OnTagOpts = {
+      disableTagAndSnapPipelines,
+      throwOnError: true,
+      forceDeploy,
+      skipTests,
+      isSnap,
+      skipBuildPipeline,
+    };
     const seedersOnly = !workspace; // if tag from scope, build only the given components
     const isolateOptions = { packageManagerConfigRootDir, seedersOnly };
 

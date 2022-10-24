@@ -36,6 +36,7 @@ export type OnTagOpts = {
   disableTagAndSnapPipelines?: boolean;
   throwOnError?: boolean; // on the CI it helps to save the results on failure so this is set to false
   forceDeploy?: boolean; // whether run the deploy-pipeline although the build-pipeline has failed
+  skipBuildPipeline?: boolean; // helpful for tagging from scope where we want to use the build-artifacts of previous snap.
   skipTests?: boolean;
   isSnap?: boolean;
 };
@@ -108,19 +109,30 @@ export class BuilderMain {
     isolateOptions: IsolateComponentsOptions = {}
   ): Promise<OnTagResults> {
     const pipeResults: TaskResultsList[] = [];
-    const { throwOnError, forceDeploy, disableTagAndSnapPipelines, isSnap } = options;
-    const envsExecutionResults = await this.build(
-      components,
-      { emptyRootDir: true, ...isolateOptions },
-      { skipTests: options.skipTests }
+    const allTasksResults: TaskResults[] = [];
+    const { throwOnError, forceDeploy, disableTagAndSnapPipelines, isSnap, skipBuildPipeline } = options;
+    const ids = components.map((c) => c.id);
+    if (options.skipBuildPipeline) isolateOptions.populateArtifactsFromParent = true;
+    const network = await this.isolator.isolateComponents(
+      ids,
+      { ...isolateOptions, emptyRootDir: true },
+      this.scope.legacyScope
     );
-    if (throwOnError && !forceDeploy) envsExecutionResults.throwErrorsIfExist();
-    const allTasksResults = [...envsExecutionResults.tasksResults];
-    pipeResults.push(envsExecutionResults);
-    if (forceDeploy || (!disableTagAndSnapPipelines && !envsExecutionResults.hasErrors())) {
+
+    let buildEnvsExecutionResults: TaskResultsList | undefined;
+    if (!skipBuildPipeline) {
+      buildEnvsExecutionResults = await this.build(network.graphCapsules.getAllComponents(), ids, isolateOptions, {
+        skipTests: options.skipTests,
+      });
+      if (throwOnError && !forceDeploy) buildEnvsExecutionResults.throwErrorsIfExist();
+      allTasksResults.push(...buildEnvsExecutionResults.tasksResults);
+      pipeResults.push(buildEnvsExecutionResults);
+    }
+
+    if (forceDeploy || (!disableTagAndSnapPipelines && !buildEnvsExecutionResults?.hasErrors())) {
       const deployEnvsExecutionResults = isSnap
-        ? await this.runSnapTasks(components, isolateOptions, envsExecutionResults.tasksResults)
-        : await this.runTagTasks(components, isolateOptions, envsExecutionResults.tasksResults);
+        ? await this.runSnapTasks(components, isolateOptions, buildEnvsExecutionResults?.tasksResults)
+        : await this.runTagTasks(components, isolateOptions, buildEnvsExecutionResults?.tasksResults);
       if (throwOnError && !forceDeploy) deployEnvsExecutionResults.throwErrorsIfExist();
       allTasksResults.push(...deployEnvsExecutionResults.tasksResults);
       pipeResults.push(deployEnvsExecutionResults);
@@ -233,15 +245,14 @@ export class BuilderMain {
    */
   async build(
     components: Component[],
+    originalSeeders: ComponentID[],
     isolateOptions?: IsolateComponentsOptions,
     builderOptions?: BuilderServiceOptions
   ): Promise<TaskResultsList> {
-    const ids = components.map((c) => c.id);
-    const network = await this.isolator.isolateComponents(ids, isolateOptions, this.scope.legacyScope);
-    const envs = await this.envs.createEnvironment(network.graphCapsules.getAllComponents());
+    const envs = await this.envs.createEnvironment(components);
     const builderServiceOptions = {
       seedersOnly: isolateOptions?.seedersOnly,
-      originalSeeders: ids,
+      originalSeeders,
       ...(builderOptions || {}),
     };
     const buildResult = await envs.runOnce(this.buildService, builderServiceOptions);

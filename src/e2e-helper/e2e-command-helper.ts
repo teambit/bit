@@ -606,8 +606,8 @@ export default class CommandHelper {
   mergeLaneFromScope(cwd: string, laneName: string, options = '') {
     return this.runCmd(`bit _merge-lane ${laneName} ${options}`, cwd);
   }
-  tagFromScope(cwd: string, ids: string, options = '') {
-    return this.runCmd(`bit _tag ${ids} ${options} -m msg`, cwd);
+  tagFromScope(cwd: string, data: Record<string, any>, options = '') {
+    return this.runCmd(`bit _tag '${JSON.stringify(data)}' ${options}`, cwd);
   }
   diff(id = '') {
     const output = this.runCmd(`bit diff ${id}`);

@@ -226,6 +226,16 @@ export function getArtifactFilesByExtension(extensions: ExtensionDataList, exten
   return buildArtifacts.filter((artifact) => artifact.task.id === extensionName).map((artifact) => artifact.files);
 }
 
+export function getArtifactFilesExcludeExtension(
+  extensions: ExtensionDataList,
+  extensionNameToExclude: string
+): ArtifactFiles[] {
+  const buildArtifacts = getBuildArtifacts(extensions);
+  return buildArtifacts
+    .filter((artifact) => artifact.task.id !== extensionNameToExclude)
+    .map((artifact) => artifact.files);
+}
+
 export function convertBuildArtifactsToModelObject(extensions: ExtensionDataList) {
   const buildArtifacts = getBuildArtifacts(extensions);
   buildArtifacts.forEach((artifact) => {
