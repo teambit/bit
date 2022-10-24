@@ -95,6 +95,7 @@
         "@teambit/design.ui.icon-button": "1.0.16",
         "@teambit/design.ui.input.option-button": "1.0.0",
         "@teambit/design.ui.input.toggle": "1.0.12",
+        "@teambit/design.ui.pill-label": "0.0.356",
         "@teambit/design.ui.separator": "0.0.354",
         "@teambit/design.ui.surfaces.menu.link-item": "1.0.0",
         "@teambit/docs.content.docs-overview": "1.95.9",
@@ -341,10 +342,10 @@
         "react-router-dom": "^6.0.0"
       }
     },
+    "linkCoreAspects": false,
     "overrides": {
       "@types/fs-capacitor": "2.0.0"
     },
-    "linkCoreAspects": false,
     "nodeLinker": "hoisted",
     "nodeVersion": "14.19.3",
     "engineStrict": true,
