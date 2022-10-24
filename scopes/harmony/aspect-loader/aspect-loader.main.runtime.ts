@@ -469,8 +469,11 @@ export class AspectLoaderMain {
     this.pluginSlot.register(pluginDefs);
   }
 
-  // TODO: change to use the new logger, see more info at loadExtensions function in the workspace
-  async loadExtensionsByManifests(extensionsManifests: Array<ExtensionManifest | Aspect>, throwOnError = true) {
+  async loadExtensionsByManifests(
+    extensionsManifests: Array<ExtensionManifest | Aspect>,
+    throwOnError = true,
+    seeders: string[] = []
+  ) {
     try {
       const manifests = extensionsManifests.filter((manifest) => {
         const isValid = this.isValidAspect(manifest);
@@ -478,8 +481,37 @@ export class AspectLoaderMain {
         return isValid;
       });
       const preparedManifests = this.prepareManifests(manifests);
+      // don't let harmony load all aspects. if seeders were sent, find their manifests, check for their static
+      // dependencies, and load only them.
+      const getOnlyDeclaredDependenciesManifests = () => {
+        if (!seeders.length || seeders.length === preparedManifests.length) {
+          return preparedManifests;
+        }
+        const seedersManifests = preparedManifests.filter((p) => seeders.includes(p.id));
+        const getAllDepsIds = () => {
+          const runtimes = compact(
+            seedersManifests.map((seederManifest) => {
+              if (!seederManifest.getRuntimes) return undefined;
+              return seederManifest.getRuntimes();
+            })
+          ).flat();
+          const deps = compact(runtimes.map((runtime) => runtime.dependencies)).flat();
+          return deps.map((dep) => dep.id);
+        };
+        const allDepsIds = getAllDepsIds();
+        const allIds = [...allDepsIds, ...seeders];
+        const filtered = preparedManifests.filter((m) => allIds.includes(m.id));
+        const filteredOut = preparedManifests.map((p) => p.id).filter((id) => !allIds.includes(id));
+        this.logger.debug(
+          `loadExtensionsByManifests, seeders: ${seeders.join(
+            ', '
+          )}, filtered out the following manifests: ${filteredOut.join('\n')}`
+        );
+        return filtered;
+      };
+      const relevantManifests = getOnlyDeclaredDependenciesManifests();
       // @ts-ignore TODO: fix this
-      await this.harmony.load(preparedManifests);
+      await this.harmony.load(relevantManifests);
     } catch (e: any) {
       const ids = extensionsManifests.map((manifest) => manifest.id || 'unknown');
       // TODO: improve texts
