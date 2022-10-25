@@ -336,6 +336,20 @@ export class DependencyResolverMain {
     private postInstallSlot: PostInstallSlot
   ) {}
 
+  /**
+   * This function is a temporary workaround for installation in capsules with pnpm.
+   * Currently pnpm breaks the root node_modules inside the capsule because it removes deps from it.
+   * Install runs several times in the same capsule and pnpm removes deps from the previous runs.
+   *
+   * This workaround unfortunately also breaks pnpm on angular projects. Because dedupe doesn't work properly.
+   * To fix this issue we'll either have to switch to root components or try to change pnpm code.
+   *
+   * Here is the PR where initially dedupe was turned off for pnpm: https://github.com/teambit/bit/pull/5410
+   */
+  useDedupeInCapsules(): boolean {
+    return this.config.packageManager !== 'teambit.dependencies/pnpm' && !this.hasRootComponents();
+  }
+
   hasRootComponents(): boolean {
     return Boolean(this.config.rootComponents);
   }

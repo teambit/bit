@@ -367,7 +367,7 @@ export class IsolatorMain {
     };
 
     const packageManagerInstallOptions: PackageManagerInstallOptions = {
-      dedupe: isolateInstallOptions.dedupe || !this.dependencyResolver.hasRootComponents(),
+      dedupe: isolateInstallOptions.dedupe || this.dependencyResolver.useDedupeInCapsules(),
       copyPeerToRuntimeOnComponents: isolateInstallOptions.copyPeerToRuntimeOnComponents,
       copyPeerToRuntimeOnRoot: isolateInstallOptions.copyPeerToRuntimeOnRoot,
       installPeersFromEnvs: isolateInstallOptions.installPeersFromEnvs,
