@@ -246,13 +246,13 @@ export class SnappingMain {
       snapping: this,
       builder: this.builder,
       dependencyResolver: this.dependencyResolver,
-      skipAutoTag: false,
+      skipAutoTag: true,
       persist: true,
       ids: legacyIds,
       message: params.message as string,
     });
 
-    const { taggedComponents, autoTaggedResults, publishedPackages } = results;
+    const { taggedComponents, publishedPackages } = results;
 
     if (params.push) {
       await this.exporter.exportMany({
@@ -265,7 +265,7 @@ export class SnappingMain {
 
     return {
       taggedComponents,
-      autoTaggedResults,
+      autoTaggedResults: [],
       isSoftTag: false,
       publishedPackages,
       warnings: [],

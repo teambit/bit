@@ -299,6 +299,7 @@ export async function tagModelComponent({
       skipTests,
       isSnap,
       skipBuildPipeline,
+      combineBuildDataFromParent: skipBuildPipeline,
     };
     const seedersOnly = !workspace; // if tag from scope, build only the given components
     const isolateOptions = { packageManagerConfigRootDir, seedersOnly };
