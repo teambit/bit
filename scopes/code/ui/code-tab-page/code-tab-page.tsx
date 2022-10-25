@@ -16,6 +16,8 @@ import { getFileIcon, FileIconMatch } from '@teambit/code.ui.utils.get-file-icon
 import { useCodeParams } from '@teambit/code.ui.hooks.use-code-params';
 import { TreeNode } from '@teambit/design.ui.tree';
 import { affix } from '@teambit/base-ui.utils.string.affix';
+import { useComponentArtifacts } from '@teambit/component.ui.artifacts.queries.use-component-artifacts';
+import { getArtifactFileDetailsFromUrl } from '@teambit/component.ui.artifacts.models.component-artifacts-model';
 
 import styles from './code-tab-page.module.scss';
 
@@ -28,8 +30,23 @@ export function CodePage({ className, fileIconSlot, host }: CodePageProps) {
   const urlParams = useCodeParams();
   const component = useContext(ComponentContext);
   const { mainFile, fileTree = [], dependencies, devFiles } = useCode(component.id);
+  const { data: artifacts = [], loading: loadingArtifacts } = useComponentArtifacts(host, component.id.toString());
+
+  const [artifactFiles, artifactFilesTree] = useMemo(() => {
+    const files =
+      (artifacts.length > 0 &&
+        artifacts.flatMap((artifact) =>
+          artifact.files.map((file) => ({ ...file, id: `${artifact.taskName}/${artifact.name}/${file.path}` }))
+        )) ||
+      [];
+
+    const _artifactFilesTree = files.map((file) => file.id);
+    return [files, _artifactFilesTree];
+  }, [artifacts]);
 
   const currentFile = urlParams.file || mainFile;
+  const currentFileContent = getArtifactFileDetailsFromUrl(artifacts, currentFile)?.artifactFile.content;
+
   const isMobile = useIsMobile();
   const [isSidebarOpen, setSidebarOpenness] = useState(!isMobile);
   const sidebarOpenness = isSidebarOpen ? Layout.row : Layout.left;
@@ -39,7 +56,14 @@ export function CodePage({ className, fileIconSlot, host }: CodePageProps) {
   return (
     <SplitPane layout={sidebarOpenness} size="85%" className={classNames(styles.codePage, className)}>
       <Pane className={styles.left}>
-        <CodeView componentId={component.id} currentFile={currentFile} icon={icon} />
+        {loadingArtifacts || (
+          <CodeView
+            componentId={component.id}
+            currentFile={currentFile}
+            icon={icon}
+            currentFileContent={currentFileContent}
+          />
+        )}
       </Pane>
       <HoverSplitter className={styles.splitter}>
         <Collapser
@@ -54,7 +78,10 @@ export function CodePage({ className, fileIconSlot, host }: CodePageProps) {
       <Pane className={styles.right}>
         <CodeTabTree
           host={host}
-          componentId={component.id}
+          artifacts={artifacts}
+          artifactFiles={artifactFiles}
+          artifactsTree={artifactFilesTree}
+          loadingArtifacts={loadingArtifacts}
           currentFile={currentFile}
           dependencies={dependencies}
           fileTree={fileTree}

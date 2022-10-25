@@ -4,14 +4,19 @@ import { Icon } from '@teambit/evangelist.elements.icon';
 import { WidgetProps, TreeNode as Node } from '@teambit/ui-foundation.ui.tree.tree-node';
 import { DrawerUI } from '@teambit/ui-foundation.ui.tree.drawer';
 import { FileTree, useFileTreeContext } from '@teambit/ui-foundation.ui.tree.file-tree';
-import { useComponentArtifacts } from '@teambit/component.ui.artifacts.queries.use-component-artifacts';
 import { useLocation } from '@teambit/base-react.navigation.link';
-import { ArtifactFile } from '@teambit/component.ui.artifacts.models.component-artifacts-model';
+import {
+  Artifact,
+  ArtifactFile,
+  getArtifactFileDetailsFromUrl,
+} from '@teambit/component.ui.artifacts.models.component-artifacts-model';
 import { TreeNode, TreeNodeProps } from '@teambit/design.ui.tree';
 import { TreeContext } from '@teambit/base-ui.graph.tree.tree-context';
 import { ComponentTreeLoader } from '@teambit/design.ui.skeletons.sidebar-loader';
-import { ComponentID } from '@teambit/component-id';
+import isBinaryPath from 'is-binary-path';
 import { FolderTreeNode } from '@teambit/ui-foundation.ui.tree.folder-tree-node';
+import { useCodeParams } from '@teambit/code.ui.hooks.use-code-params';
+import { affix } from '@teambit/base-ui.utils.string.affix';
 import { fileNodeClicked } from './artifact-file-node-clicked';
 
 import styles from './artifacts-tree.module.scss';
@@ -21,46 +26,62 @@ export type ArtifactsTreeProps = {
   drawerOpen: boolean;
   onToggleDrawer: () => void;
   host: string;
-  componentId: ComponentID;
   drawerName: string;
+  fileTree: string[];
+  artifacts: Array<Artifact>;
+  artifactFiles: Array<ArtifactFile & { id: string }>;
+  loading?: boolean;
 } & HTMLAttributes<HTMLDivElement>;
 
 export function ArtifactsTree({
   getIcon,
   host,
-  componentId,
   drawerName,
   drawerOpen,
   onToggleDrawer,
+  fileTree,
+  artifacts,
+  artifactFiles,
+  loading,
 }: ArtifactsTreeProps) {
-  const [selected, setSelected] = useState<string | undefined>();
+  const urlParams = useCodeParams();
   const location = useLocation();
-  const { data: artifacts = [], loading } = useComponentArtifacts(host, componentId.toString());
   const hasArtifacts = artifacts.length > 0;
-
-  const [files, artifactFilesTree] = useMemo(() => {
-    const _files =
-      (hasArtifacts &&
-        artifacts.flatMap((artifact) =>
-          artifact.files.map((file) => ({ ...file, id: `${artifact.taskName}/${artifact.name}/${file.path}` }))
-        )) ||
-      [];
-
-    const _artifactFilesTree = _files.map((file) => file.id);
-    return [_files, _artifactFilesTree];
-  }, [artifacts]);
+  const artifactDetailsFromUrl = getArtifactFileDetailsFromUrl(artifacts, urlParams.file);
+  const selected =
+    artifactDetailsFromUrl &&
+    `${artifactDetailsFromUrl.taskName}/${artifactDetailsFromUrl.artifactName}/${artifactDetailsFromUrl.artifactFile.path}`;
 
   const payloadMap =
     (hasArtifacts &&
       artifacts.reduce((accum, next) => {
         if (!accum.has(next.taskName)) accum.set(`${next.taskName}/`, { open: false });
         return accum;
-      }, new Map<string, { open?: false }>())) ||
-    new Map<string, { open?: false }>();
+      }, new Map<string, { open?: boolean }>())) ||
+    new Map<string, { open?: boolean }>();
+
+  if (artifactDetailsFromUrl) {
+    payloadMap.set(`${artifactDetailsFromUrl.taskName}/`, { open: true });
+    payloadMap.set(`${artifactDetailsFromUrl.taskName}/${artifactDetailsFromUrl.artifactName}/`, { open: true });
+    payloadMap.set(
+      `${artifactDetailsFromUrl.taskName}/${artifactDetailsFromUrl.artifactName}/${artifactDetailsFromUrl.artifactFile.path}`,
+      { open: true }
+    );
+  }
 
   const currentHref = location?.pathname || '';
-  const getHref = () => currentHref;
-  const widgets = useMemo(() => [generateWidget(files || [])], [files]);
+
+  const getHref = useMemo(
+    () => (node) => {
+      const path = getPathFromNode(node.id);
+      const isBinary = isBinaryPath(path);
+      if (isBinary) return currentHref;
+      return `~artifact/${node.id}${affix('?version=', urlParams.version)}`;
+    },
+    [urlParams.version]
+  );
+
+  const widgets = useMemo(() => [generateWidget(artifactFiles || [])], [artifactFiles]);
 
   if (!hasArtifacts) return null;
 
@@ -77,14 +98,14 @@ export function ArtifactsTree({
         <FileTree
           getIcon={getIcon}
           getHref={getHref}
-          files={artifactFilesTree}
+          files={fileTree}
           widgets={widgets}
           payloadMap={payloadMap}
           TreeNode={FileTreeNode}
           selected={selected}
           onTreeNodeSelected={(id: string, e) => {
-            setSelected(id);
-            fileNodeClicked(files, 'new tab')(e, { id });
+            const path = getPathFromNode(id);
+            if (isBinaryPath(path)) fileNodeClicked(artifactFiles, 'download')(e, { id });
           }}
         />
       )}
@@ -92,14 +113,24 @@ export function ArtifactsTree({
   );
 }
 
+function getPathFromNode(node: string) {
+  const lastIndex = node.lastIndexOf('/');
+  return node.slice(lastIndex + 1);
+}
+
 function generateWidget(files: (ArtifactFile & { id: string })[]) {
   return function Widget({ node }: WidgetProps<any>) {
-    const id = node?.id;
+    const id = node.id;
     const artifactFile = files.find((file) => file.id === id);
+    const path = getPathFromNode(id);
+    const isBinary = isBinaryPath(path);
+
     if (artifactFile) {
       return (
         <div className={styles.artifactWidgets}>
-          {/* <Icon className={styles.icon} of="open-tab" onClick={(e) => fileNodeClicked(files, 'new tab')(e, node)} /> */}
+          {!isBinary && (
+            <Icon className={styles.icon} of="open-tab" onClick={(e) => fileNodeClicked(files, 'new tab')(e, node)} />
+          )}
           <Icon
             className={styles.icon}
             of="download"
@@ -116,18 +147,21 @@ function generateWidget(files: (ArtifactFile & { id: string })[]) {
 
 function FileTreeNode(props: TreeNodeProps<any>) {
   const { node } = props;
+  const { id } = node;
   const fileTreeContext = useFileTreeContext();
   const { selected, onSelect } = useContext(TreeContext);
 
   const href = fileTreeContext?.getHref?.(node);
   const widgets = fileTreeContext?.widgets;
   const icon = fileTreeContext?.getIcon?.(node);
+  const path = getPathFromNode(id);
+  const isBinary = isBinaryPath(path);
 
   if (!node?.children) {
     return (
       <Node
         {...props}
-        className={styles.link}
+        className={isBinary && styles.link}
         onClick={onSelect && ((e) => onSelect(node.id, e))}
         href={href}
         isActive={node?.id === selected}

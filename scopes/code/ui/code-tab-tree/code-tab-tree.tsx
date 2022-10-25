@@ -6,16 +6,19 @@ import type { DependencyType } from '@teambit/code.ui.queries.get-component-code
 import { DependencyTree } from '@teambit/code.ui.dependency-tree';
 import { TreeNode } from '@teambit/design.ui.tree';
 import { WidgetProps } from '@teambit/ui-foundation.ui.tree.tree-node';
-import { ComponentID } from '@teambit/component-id';
 import { ArtifactsTree } from '@teambit/component.ui.artifacts.artifacts-tree';
+import { Artifact, ArtifactFile } from '@teambit/component.ui.artifacts.models.component-artifacts-model';
 
 import styles from './code-tab-tree.module.scss';
 
 export type CodeTabTreeProps = {
   fileTree: any[];
   host: string;
-  componentId: ComponentID;
   dependencies?: DependencyType[];
+  artifactsTree: string[];
+  artifacts: Array<Artifact>;
+  artifactFiles: Array<ArtifactFile & { id: string }>;
+  loadingArtifacts?: boolean;
   currentFile?: string;
   widgets?: ComponentType<WidgetProps<any>>[];
   getHref?: (node: TreeNode) => string;
@@ -27,13 +30,20 @@ export function CodeTabTree({
   fileTree,
   dependencies,
   currentFile = '',
+  artifactFiles,
+  artifactsTree,
+  artifacts,
+  loadingArtifacts,
   widgets,
   getHref,
   getIcon,
   host,
-  componentId,
 }: CodeTabTreeProps) {
-  const [openDrawerList, onToggleDrawer] = useState(['FILES']);
+  const defaultDrawer = () => {
+    if (currentFile.startsWith('~artifact')) return ['ARTIFACTS'];
+    return ['FILES'];
+  };
+  const [openDrawerList, onToggleDrawer] = useState(defaultDrawer);
 
   const handleDrawerToggle = (id: string) => {
     const isDrawerOpen = openDrawerList.includes(id);
@@ -73,7 +83,10 @@ export function CodeTabTree({
       <ArtifactsTree
         drawerName="ARTIFACTS"
         host={host}
-        componentId={componentId}
+        artifacts={artifacts}
+        artifactFiles={artifactFiles}
+        fileTree={artifactsTree}
+        loading={loadingArtifacts}
         getIcon={getIcon}
         drawerOpen={openDrawerList.includes('ARTIFACTS')}
         onToggleDrawer={() => handleDrawerToggle('ARTIFACTS')}
