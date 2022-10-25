@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect } from 'react';
 import { MultiSelect, ItemType } from '@teambit/design.inputs.selectors.multi-select';
 import { ComponentID, ComponentModel } from '@teambit/component';
 import { ComponentUrl } from '@teambit/component.modules.component-url';
@@ -13,6 +13,7 @@ import {
   useComponentFilters,
   runAllFilters,
 } from '@teambit/component.ui.component-filters.component-filter-context';
+
 import styles from './envs-filter.module.scss';
 
 type EnvFilterEnvState = {
@@ -94,16 +95,29 @@ const deriveEnvsFilterState = (components: ComponentModel[]) => {
 function envsFilter({ components, className, lanes }: ComponentFilterRenderProps) {
   const [filters = []] = useComponentFilters() || [];
   const filtersExceptEnv = filters.filter((filter) => filter.id !== EnvsFilter.id);
-  const filteredComponents = runAllFilters(filtersExceptEnv, { components, lanes });
+  const filteredComponents = useMemo(
+    () => runAllFilters(filtersExceptEnv, { components, lanes }),
+    [filtersExceptEnv, lanes?.viewedLane?.id.toString()]
+  );
 
   const envsFilterState = deriveEnvsFilterState(filteredComponents);
-  const filterContext = useComponentFilter(EnvsFilter.id, envsFilterState);
 
-  if (!filterContext) return null;
+  const filterContext = useComponentFilter(EnvsFilter.id, envsFilterState);
 
   const envs = envsFilterState.envsState;
 
-  const [currentFilter, updateFilter] = filterContext;
+  const [currentFilter, updateFilter] = filterContext || [];
+
+  /**
+   * this will not work if other filters in a single re-render
+   * result in the same number of components with different ids
+   */
+  useEffect(() => {
+    updateFilter?.((currentState) => {
+      currentState.state = envsFilterState;
+      return currentState;
+    });
+  }, [filteredComponents.length, lanes?.viewedLane?.id.toString()]);
 
   const selectList: ItemType[] = [];
 
@@ -112,7 +126,7 @@ function envsFilter({ components, className, lanes }: ComponentFilterRenderProps
       value: state.id,
       icon: state.icon,
       description: state.description,
-      checked: !!currentFilter.state.envsState.get(state.id)?.active,
+      checked: !!currentFilter?.state.envsState.get(state.id)?.active,
       element: <EnvsDropdownItem {...state} />,
     });
   });
@@ -120,7 +134,7 @@ function envsFilter({ components, className, lanes }: ComponentFilterRenderProps
   const onCheck = (value: string, e: React.ChangeEvent<HTMLInputElement>) => {
     const checked = e.target.checked;
 
-    updateFilter((currentState) => {
+    updateFilter?.((currentState) => {
       if (checked && !currentState.state.dropdownState) {
         currentState.state.dropdownState = true;
       }
@@ -135,7 +149,7 @@ function envsFilter({ components, className, lanes }: ComponentFilterRenderProps
   };
 
   const onClear = () => {
-    updateFilter((currentState) => {
+    updateFilter?.((currentState) => {
       currentState.state.envsState.forEach((value, key) => {
         currentState.state.envsState.set(key, { ...value, active: false });
       });
@@ -144,14 +158,14 @@ function envsFilter({ components, className, lanes }: ComponentFilterRenderProps
   };
 
   const onSubmit = () => {
-    updateFilter((currentState) => {
+    updateFilter?.((currentState) => {
       currentState.state.dropdownState = false;
       return currentState;
     });
   };
 
   const onDropdownToggled = (event, open) => {
-    updateFilter((currentState) => {
+    updateFilter?.((currentState) => {
       currentState.state.dropdownState = open;
       return currentState;
     });
@@ -166,7 +180,7 @@ function envsFilter({ components, className, lanes }: ComponentFilterRenderProps
         onCheck={onCheck}
         onClear={onClear}
         onChange={onDropdownToggled}
-        open={currentFilter.state.dropdownState}
+        open={!!currentFilter?.state.dropdownState}
         dropdownBorder={false}
         className={styles.envFilterDropdownContainer}
         dropClass={styles.envFilterDropdown}
