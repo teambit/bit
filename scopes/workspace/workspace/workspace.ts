@@ -1527,7 +1527,7 @@ needed-for: ${neededFor || '<unknown>'}`);
     await this.aspectLoader.loadExtensionsByManifests(
       [...scopeOtherManifests, ...workspaceManifests],
       throwOnError,
-      ids
+      idsWithoutCore
     );
     // Try require components for potential plugins
     const pluginsWorkspaceComps = potentialPluginsIndexes.map((index) => {

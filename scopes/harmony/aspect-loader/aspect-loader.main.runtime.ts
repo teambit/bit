@@ -1,4 +1,5 @@
 import { join } from 'path';
+import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
 import { BitId } from '@teambit/legacy-bit-id';
 import LegacyScope from '@teambit/legacy/dist/scope/scope';
 import { GLOBAL_SCOPE, DEFAULT_DIST_DIRNAME } from '@teambit/legacy/dist/constants';
@@ -13,7 +14,7 @@ import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { loadBit } from '@teambit/bit';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import mapSeries from 'p-map-series';
-import { difference, compact, flatten, intersection } from 'lodash';
+import { difference, compact, flatten, intersection, uniqBy, uniq } from 'lodash';
 import { AspectDefinition, AspectDefinitionProps } from './aspect-definition';
 import { PluginDefinition } from './plugin-definition';
 import { AspectLoaderAspect } from './aspect-loader.aspect';
@@ -487,27 +488,12 @@ export class AspectLoaderMain {
         if (!seeders.length || seeders.length === preparedManifests.length) {
           return preparedManifests;
         }
-        const seedersManifests = preparedManifests.filter((p) => seeders.includes(p.id));
-        const getAllDepsIds = () => {
-          const runtimes = compact(
-            seedersManifests.map((seederManifest) => {
-              if (!seederManifest.getRuntimes) return undefined;
-              return seederManifest.getRuntimes();
-            })
-          ).flat();
-          const deps = compact(runtimes.map((runtime) => runtime.dependencies)).flat();
-          return deps.map((dep) => dep.id);
-        };
-        const allDepsIds = getAllDepsIds();
-        const allIds = [...allDepsIds, ...seeders];
-        const filtered = preparedManifests.filter((m) => allIds.includes(m.id));
-        const filteredOut = preparedManifests.map((p) => p.id).filter((id) => !allIds.includes(id));
-        this.logger.debug(
-          `loadExtensionsByManifests, seeders: ${seeders.join(
-            ', '
-          )}, filtered out the following manifests: ${filteredOut.join('\n')}`
-        );
-        return filtered;
+        const manifestGraph = this.generateManifestGraph(preparedManifests);
+        const nodes = seeders.map((seeder) => manifestGraph.successors(seeder)).flat();
+        const seederNodes = compact(seeders.map((seeder) => manifestGraph.node(seeder)));
+        const allNodes = [...nodes, ...seederNodes];
+        const nodesUniq = uniqBy(allNodes, 'id');
+        return nodesUniq.map((n) => n.attr);
       };
       const relevantManifests = getOnlyDeclaredDependenciesManifests();
       // @ts-ignore TODO: fix this
@@ -528,6 +514,20 @@ export class AspectLoaderMain {
         throw e;
       }
     }
+  }
+
+  private generateManifestGraph(manifests: Aspect[]) {
+    const graph = new Graph<Aspect, string>();
+    manifests.forEach((manifest) => graph.setNode(new Node(manifest.id, manifest)));
+    manifests.forEach((manifest) => {
+      const deps = manifest.getRuntime(MainRuntime)?.dependencies?.map((dep) => dep.id);
+      deps?.forEach((dep) => {
+        if (graph.node(dep)) {
+          graph.setEdge(new Edge(manifest.id, dep, 'dep'));
+        }
+      });
+    });
+    return graph;
   }
 
   static runtime = MainRuntime;
