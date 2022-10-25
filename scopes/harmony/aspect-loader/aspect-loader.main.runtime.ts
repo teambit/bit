@@ -14,7 +14,7 @@ import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { loadBit } from '@teambit/bit';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import mapSeries from 'p-map-series';
-import { difference, compact, flatten, intersection, uniqBy, uniq } from 'lodash';
+import { difference, compact, flatten, intersection, uniqBy } from 'lodash';
 import { AspectDefinition, AspectDefinitionProps } from './aspect-definition';
 import { PluginDefinition } from './plugin-definition';
 import { AspectLoaderAspect } from './aspect-loader.aspect';
