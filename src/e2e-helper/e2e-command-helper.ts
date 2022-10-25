@@ -626,8 +626,8 @@ export default class CommandHelper {
   runTask(taskName: string) {
     return this.runCmd(`bit run ${taskName}`);
   }
-  create(templateName: string, componentName: string, flags = '') {
-    return this.runCmd(`bit create ${templateName} ${componentName} ${flags}`);
+  create(templateName: string, componentName: string, flags = '', cwd = this.scopes.localPath) {
+    return this.runCmd(`bit create ${templateName} ${componentName} ${flags}`, cwd);
   }
   new(templateName: string, flags = '', workspaceName = 'my-workspace', cwd = this.scopes.localPath) {
     return this.runCmd(`bit new ${templateName} ${workspaceName} ${flags}`, cwd);
@@ -711,7 +711,9 @@ export default class CommandHelper {
     const parsedOpts = this.parseOptions(options);
     return this.runCmd(`bit eject-conf ${id} ${parsedOpts}`);
   }
-
+  runAction(actionName: string, remote: string, options: Record<string, any>) {
+    return this.runCmd(`bit run-action ${actionName} ${remote} '${JSON.stringify(options)}'`);
+  }
   compile(id = '', options?: Record<string, any>) {
     const parsedOpts = this.parseOptions(options);
     return this.runCmd(`bit compile ${id} ${parsedOpts}`);
