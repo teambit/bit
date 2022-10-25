@@ -15,7 +15,7 @@ import {
 import { Logger } from '@teambit/logger';
 import { memoize, omit } from 'lodash';
 import { PeerDependencyIssuesByProjects } from '@pnpm/core';
-import { read as readModulesState } from '@pnpm/modules-yaml';
+import { readModulesManifest } from '@pnpm/modules-yaml';
 import { ProjectManifest } from '@pnpm/types';
 import { join } from 'path';
 import userHome from 'user-home';
@@ -193,7 +193,7 @@ export class PnpmPackageManager implements PackageManager {
   }
 
   async getInjectedDirs(rootDir: string, componentDir: string): Promise<string[]> {
-    const modulesState = await readModulesState(join(rootDir, 'node_modules'));
+    const modulesState = await readModulesManifest(join(rootDir, 'node_modules'));
     return modulesState?.injectedDeps?.[componentDir] ?? [];
   }
 }
