@@ -1,7 +1,7 @@
 /* eslint no-console: 0 */
 import { addUser, REGISTRY_MOCK_PORT, start as startRegistryMock } from '@pnpm/registry-mock';
 import { ChildProcess } from 'child_process';
-import fetch from '@pnpm/fetch';
+import { fetch } from '@pnpm/fetch';
 import execa from 'execa';
 import * as path from 'path';
 

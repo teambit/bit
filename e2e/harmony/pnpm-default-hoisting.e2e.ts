@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import path from 'path';
-import { Modules, read as readModulesState } from '@pnpm/modules-yaml';
+import { Modules, readModulesManifest } from '@pnpm/modules-yaml';
 import Helper from '../../src/e2e-helper/e2e-helper';
 
 describe('pnpm install with default settings', function () {
@@ -12,7 +12,7 @@ describe('pnpm install with default settings', function () {
     helper.scopeHelper.reInitLocalScope();
     helper.extensions.bitJsonc.addKeyValToDependencyResolver('packageManager', `teambit.dependencies/pnpm`);
     helper.command.install('is-positive');
-    modulesState = await readModulesState(path.join(helper.fixtures.scopes.localPath, 'node_modules'));
+    modulesState = await readModulesManifest(path.join(helper.fixtures.scopes.localPath, 'node_modules'));
   });
   after(() => {
     helper.scopeHelper.destroy();
