@@ -1175,8 +1175,8 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
 
   async getUnmergedComponent(componentId: ComponentID): Promise<Component | undefined> {
     const unmerged = this.scope.legacyScope.objects.unmergedComponents.getEntry(componentId._legacy.name);
-    if (unmerged?.head){
-      return this.scope.get(componentId.changeVersion(unmerged?.head.toString()))
+    if (unmerged?.head) {
+      return this.scope.get(componentId.changeVersion(unmerged?.head.toString()));
     }
     return undefined;
   }
@@ -1524,7 +1524,11 @@ needed-for: ${neededFor || '<unknown>'}`);
         : { manifests: [] };
     const scopeOtherManifestsIds = compact(scopeOtherManifests.map((m) => m.id));
 
-    await this.aspectLoader.loadExtensionsByManifests([...scopeOtherManifests, ...workspaceManifests], throwOnError);
+    await this.aspectLoader.loadExtensionsByManifests(
+      [...scopeOtherManifests, ...workspaceManifests],
+      throwOnError,
+      idsWithoutCore
+    );
     // Try require components for potential plugins
     const pluginsWorkspaceComps = potentialPluginsIndexes.map((index) => {
       return workspaceComps[index];
