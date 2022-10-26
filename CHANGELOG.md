@@ -5,6 +5,86 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [[0.0.884] - 2022-10-23](https://github.com/teambit/bit/releases/tag/v0.0.884)
+
+### Changes
+- improvement(bit-build): replace "--all" flag with "--unmodified" (#6553)
+- improve status API to return ComponentIDs and not legacy IDs. (#6201)
+- improve `bit status --json` to return component-ids and not the whole component objects. (#6201)
+- breaking: change `modifiedComponent` to `modifiedComponents` in the status json output. (#6201)
+- switch cmd alias with cmd name. (#6508)
+- do not store env version in the envs data in model (#6511)
+
+### New
+- add artifacts drawer to code tab (#6550)
+- Lanes: Lane Switcher: Switch between all available lanes in Workspace and Scope (#6330)
+- feat: introduce a new command "bit write-tsconfig" to write tsconfig files in the components directories (#6506)
+- feat: all custom envs are compiled during installation (#6480)
+- improvement(bit-status): add a new section showing updates from forked lane (#6575)
+- Aspects Page: Expand/Collapse nested objects + Copy JSON (#6563)
+- improvement(bit-scope-rename): improve --refactor flag to also rename aspect-ids in workspace.jsonc (#6564)
+- improvement(bit-lane): show the full lane-id (#6561)
+- feat: add a new component-issue: duplicate component and package (#6546)
+- show a component-issue during bit-status and bit-tag when a tracked component exists as a package in workspace.jsonc. (#6546)
+- introduce a new slot for aspects to register for adding new component-issues. (#6546)
+- feat(bit-import): re-implement bit import --dependents With this PR, it builds a graph of all components in the workspace, searches for all paths from them to the target component-id(s) given in the command and imports them.(#6552)
+- improve status to always show the full-id (#6201)
+- improvement(write-tsconfig): group envs that use the same tsconfig.json file (#6531)
+- feat(bit-graph): introduce "--json" flag, also, move the command from legacy to Graph aspect (#6497)
+- improvement(bit-lane-merge): show a nice summary of the components state merged/unchanged/failed/snapped (#6500)
+
+### Bug Fixes
+- fix scope ui drawer (#6574)
+- make dependency drawer scrollable (#6550)
+- fix(bit-tag-snap): avoid saving duplicate aspects to the model (#6567)
+- fix(bit-aspect-update): indicate in the output when components are up to date (#6566)
+- fix(bit-remove): fix "Maximum call stack size exceeded" error when the graph deps is huge (#6565)
+- fix: validate env policy configs before proceeding with installation (#6525)
+- allow recovering when objects are corrupted (#6559)
+- fix missing head history when on a lane (#6549)
+- fix(bit-show): avoid throwing EnvNotFound when running bit-show on a remote component (#6556)
+- fix node env template (#6555)
+- Fix react env minor (#6526)
+- fix createEsmCompilerTask signature
+- fix: make finding local-tags more consistent by always checking diverge-data (#6517)
+- fix: avoid throwing from remotes when fetch-object fails (#6539)
+- fix scope pane layout (#6540)
+- fix: download artifacts from unmerged-lane-id when applicable (#6537)
+- fix snap order + lane component - useComponentFilters (#6527)
+- fix export on lane when a non-lane-scope has some history on the main-ref (#6530)
+- fix(bit-export): fix parent-not-found error when sending multiple snaps to a remote (#6528)
+- fix(bit-lane-merge): merge components that exist on a local-lane and in .bitmap with isAvailableOnCurrentLane=false (#6521)
+- avoid clearing the screen during bit-watch (#6503)
+- fix: avoid throwing ComponentNotFound when .bitmap has a non-exist version on the scope (#6496)
+- fix(bit-install): show a clear error when running outside a workspace (#6522)
+- fix finding local-versions when on a lane (#6519)
+- fix: don't fail when error from pnpm doesn't have a code (#6520)
+- fix(bit-reset): make local-versions on lane be aware of main to not reset it (#6516)
+- dep install fixes (#6512)
+  - add missing packages to component if they were specified by its env
+  - install peers on root if all components use the same range
+- fix(bit-export): send only objects needed when exporting on lane and do not rely on the cache (#6504)
+- fix(bit-import): exclude lane-only components when importing entire scope (#6499)
+
+### Performance
+- perf: avoid refetching unbuilt versions when building a graph (#6579)
+- perf: improve loading performance when some dependencies in the graph are build pending (#6568)
+- perf: fetch unbuilt Version objects only during bit import (#6572)
+- fix: keep memory consumption sane when traversing history during fetch (#6541)
+- fix high memory consumption of fetchWithDeps (#6534)
+- improvement(bit-export): improve lane-export performance (#6507)
+
+### Internal
+- Update pnpm dependencies (#6547)
+- fix(build): avoid building the graphs for multiple envs in parallel (#6577)
+- remove importManyWithAllVersions, refactor some import methods (#6542)
+- move some import methods from legacy to Importer aspect. (#6542)
+- change `applyVersion` of the merge command to not run in parallel, so then it won't run `importMany` in parallel. (#6542)
+- avoid reading the same files from the filesystem if they already sent to the client in the previous versions (#6542)
+- refactor: move some functions from sources to Snapping aspect (#6523)
+- fix: logging network configuration settings (#6513)
+- fix: avoid caching the component-graph (#6501)
+
 ## [14.8.9-dev.1] - 2020-07-30
 
 - first version for harmony beta

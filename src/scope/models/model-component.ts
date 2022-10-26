@@ -740,20 +740,17 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
   toComponentVersion(versionStr?: string): ComponentVersion {
     const versionParsed = versionParser(versionStr);
     const versionNum = versionParsed.latest ? this.latest() : versionParsed.resolve(this.listVersionsIncludeOrphaned());
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     if (versionNum === VERSION_ZERO) {
       throw new NoHeadNoVersion(this.id());
     }
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    if (isTag(versionNum) && !this.hasTagIncludeOrphaned(versionNum!)) {
+    if (isTag(versionNum) && !this.hasTagIncludeOrphaned(versionNum)) {
       throw new ShowDoctorError(
         `the version ${versionNum} of "${this.id()}" does not exist in ${this.listVersionsIncludeOrphaned().join(
           '\n'
         )}, versions array.`
       );
     }
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    return new ComponentVersion(this, versionNum!);
+    return new ComponentVersion(this, versionNum);
   }
 
   async isDeprecated(repo: Repository) {

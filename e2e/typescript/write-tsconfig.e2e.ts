@@ -61,7 +61,7 @@ describe('write-tsconfig command', function () {
     });
     it('should not be ignored', () => {
       const files = helper.command.getComponentFiles('comp1');
-      expect(files).to.include('inner/tsconfig.json');
+      expect(files).to.include(path.join('inner', 'tsconfig.json'));
     });
   });
 });

@@ -17,7 +17,7 @@ import logger from '../../logger/logger';
 import { Remotes } from '../../remotes';
 import { splitBy } from '../../utils';
 import ComponentVersion from '../component-version';
-import { ComponentNotFound } from '../exceptions';
+import { ComponentNotFound, ParentNotFound, VersionNotFound } from '../exceptions';
 import { Lane, ModelComponent, Version } from '../models';
 import { BitObject, Ref, Repository } from '../objects';
 import { ObjectItemsStream, ObjectList } from '../objects/object-list';
@@ -30,6 +30,7 @@ import { concurrentComponentsLimit } from '../../utils/concurrency';
 import { BuildStatus } from '../../constants';
 import { NoHeadNoVersion } from '../exceptions/no-head-no-version';
 import { HashesPerRemotes, MissingObjects } from '../exceptions/missing-objects';
+import { getAllVersionHashes } from './traverse-versions';
 
 const removeNils = R.reject(R.isNil);
 
@@ -90,7 +91,7 @@ export default class ScopeComponentsImporter {
   }): Promise<VersionDependencies[]> {
     logger.debugAndAddBreadCrumb(
       'importMany',
-      `cache ${cache}, throwForDependencyNotFound: ${throwForDependencyNotFound}. ids: {ids}, lanes: {lanes}`,
+      `cache ${cache}, reFetchUnBuiltVersion: ${reFetchUnBuiltVersion}, throwForDependencyNotFound: ${throwForDependencyNotFound}. ids: {ids}, lanes: {lanes}`,
       {
         ids: ids.toString(),
         lanes: lanes ? lanes.map((lane) => lane.id()).join(', ') : undefined,
@@ -162,10 +163,40 @@ export default class ScopeComponentsImporter {
     return [...versionDeps, ...externalDeps];
   }
 
+  /**
+   * checks whether the given components has all history.
+   * if not, it fetches the history from their remotes without deps.
+   */
+  async importMissingHistory(bitIds: BitIds) {
+    const externals = bitIds.filter((bitId) => !bitId.isLocal(this.scope.name));
+    if (!externals.length) {
+      return;
+    }
+    const missingHistoryWithNulls = await mapSeries(externals, async (id) => {
+      const modelComponent = await this.scope.getModelComponent(id);
+      if (!modelComponent.head) return null; // doesn't exist on the remote.
+      try {
+        await getAllVersionHashes({ modelComponent, repo: this.repo });
+      } catch (err: any) {
+        if (err instanceof ParentNotFound || err instanceof VersionNotFound) {
+          return id;
+        }
+        // we don't care much about other errors here. but it's good to know about them.
+        logger.warn(`importMissingHistory, failed traversing ${id.toString()}, err: ${err.message}`, err);
+        return null;
+      }
+      return null;
+    });
+    const missingHistory = compact(missingHistoryWithNulls);
+    if (!missingHistory.length) return;
+    logger.debug(`importMissingHistory, total ${missingHistory.length} component has history missing`);
+    await this.importManyDeltaWithoutDeps(BitIds.fromArray(missingHistory), true);
+  }
+
   async importWithoutDeps(ids: BitIds, cache = true, lanes: Lane[] = []): Promise<ComponentVersion[]> {
     if (!ids.length) return [];
-    logger.debugAndAddBreadCrumb('importWithoutDeps', `ids: {ids}`, {
-      ids: ids.toString(),
+    logger.debugAndAddBreadCrumb('importWithoutDeps', `total ids: {ids}`, {
+      ids: ids.length,
     });
 
     const idsWithoutNils = removeNils(ids);
@@ -174,17 +205,15 @@ export default class ScopeComponentsImporter {
     const [externals, locals] = splitBy(idsWithoutNils, (id) => id.isLocal(this.scope.name));
 
     const localDefs: ComponentDef[] = await this.sources.getMany(locals);
-    const componentVersionArr = await Promise.all(
-      localDefs.map((def) => {
-        if (!def.component) {
-          logger.warn(
-            `importWithoutDeps failed to find a local component ${def.id.toString()}. continuing without this component`
-          );
-          return null;
-        }
-        return def.component.toComponentVersion(def.id.version as string);
-      })
-    );
+    const componentVersionArr = localDefs.map((def) => {
+      if (!def.component) {
+        logger.warn(
+          `importWithoutDeps failed to find a local component ${def.id.toString()}. continuing without this component`
+        );
+        return null;
+      }
+      return def.component.toComponentVersion(def.id.version as string);
+    });
     const remotes = await getScopeRemotes(this.scope);
     const externalDeps = await this.getExternalManyWithoutDeps(externals, remotes, cache, undefined, lanes);
     return [...compact(componentVersionArr), ...externalDeps];
@@ -298,22 +327,20 @@ export default class ScopeComponentsImporter {
   }
 
   async fetchWithoutDeps(ids: BitIds, allowExternal: boolean, ignoreMissingHead = false): Promise<ComponentVersion[]> {
-    logger.debugAndAddBreadCrumb('fetchWithoutDeps', `ids: {ids}`, { ids: ids.toString() });
+    logger.debugAndAddBreadCrumb('fetchWithoutDeps', `total ids: {ids}`, { ids: ids.length });
     if (!allowExternal) this.throwIfExternalFound(ids);
     const localDefs: ComponentDef[] = await this.sources.getMany(ids);
-    const componentVersionArr = await Promise.all(
-      localDefs.map(({ id, component }) => {
-        if (!component) {
-          logger.warn(`fetchWithoutDeps, failed finding a local component ${id.toString()}`);
-          return null;
-        }
-        if (ignoreMissingHead && !component.head && !id.hasVersion()) {
-          logger.debug(`fetchWithoutDeps, ignored missing head ${id.toString()}`);
-          return null;
-        }
-        return component.toComponentVersion(id.version as string);
-      })
-    );
+    const componentVersionArr = localDefs.map(({ id, component }) => {
+      if (!component) {
+        logger.warn(`fetchWithoutDeps, failed finding a local component ${id.toString()}`);
+        return null;
+      }
+      if (ignoreMissingHead && !component.head && !id.hasVersion()) {
+        logger.debug(`fetchWithoutDeps, ignored missing head ${id.toString()}`);
+        return null;
+      }
+      return component.toComponentVersion(id.version as string);
+    });
     return compact(componentVersionArr);
   }
 
@@ -533,17 +560,27 @@ export default class ScopeComponentsImporter {
     lanes: Lane[] = []
   ): Promise<ComponentVersion[]> {
     if (!ids.length) return [];
-    logger.debugAndAddBreadCrumb('getExternalManyWithoutDeps', `ids: {ids}, localFetch: ${localFetch.toString()}`, {
-      ids: ids.join(', '),
-    });
+    logger.debugAndAddBreadCrumb(
+      'getExternalManyWithoutDeps',
+      `total ids: {ids}, localFetch: ${localFetch.toString()}`,
+      {
+        ids: ids.length,
+      }
+    );
     const defs: ComponentDef[] = await this.sources.getMany(ids, true);
     const left = defs.filter((def) => !localFetch || !def.component);
     if (left.length === 0) {
       logger.debugAndAddBreadCrumb('getExternalManyWithoutDeps', 'no more ids left, all found locally');
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      return Promise.all(defs.map((def) => def.component.toComponentVersion(def.id.version)));
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      return defs.map((def) => def.component!.toComponentVersion(def.id.version));
     }
-    logger.debugAndAddBreadCrumb('getExternalManyWithoutDeps', `${left.length} left. Fetching them from a remote`);
+    logger.debugAndAddBreadCrumb(
+      'getExternalManyWithoutDeps',
+      `${left.length} left. Fetching them from a remote. ids: {ids}`,
+      {
+        ids: ids.join(', '),
+      }
+    );
     enrichContextFromGlobal(Object.assign(context, { requestedBitIds: ids.map((id) => id.toString()) }));
     await new ObjectFetcher(
       this.repo,
@@ -559,12 +596,8 @@ export default class ScopeComponentsImporter {
 
     const finalDefs: ComponentDef[] = await this.sources.getMany(ids);
 
-    return Promise.all(
-      finalDefs
-        .filter((def) => def.component) // @todo: should we warn about the non-missing?
-        // @ts-ignore
-        .map((def) => def.component.toComponentVersion(def.id.version))
-    );
+    // @todo: should we warn about the non-missing?
+    return compact(finalDefs.map((def) => def.component?.toComponentVersion(def.id.version)));
   }
 
   private async _getComponentVersion(id: BitId): Promise<ComponentVersion> {
@@ -577,8 +610,6 @@ export default class ScopeComponentsImporter {
 
     return this.sources.get(id).then((component) => {
       if (!component) throw new ComponentNotFound(id.toString());
-      // $FlowFixMe version is set
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       return component.toComponentVersion(id.version);
     });
   }

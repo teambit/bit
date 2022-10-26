@@ -1,6 +1,6 @@
 import path from 'path';
 import chai, { expect } from 'chai';
-import * as modulesYaml from '@pnpm/modules-yaml';
+import { readModulesManifest } from '@pnpm/modules-yaml';
 
 import Helper from '../../src/e2e-helper/e2e-helper';
 import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
@@ -78,7 +78,7 @@ chai.use(require('chai-string'));
       });
       it('workspace .npmrc is taken into account when running install in the capsule', async () => {
         const { scopeAspectsCapsulesRootDir } = helper.command.capsuleListParsed();
-        const modulesState = await modulesYaml.read(path.join(scopeAspectsCapsulesRootDir, 'node_modules'));
+        const modulesState = await readModulesManifest(path.join(scopeAspectsCapsulesRootDir, 'node_modules'));
         expect(modulesState?.hoistPattern?.[0]).to.eq('foo');
       });
     });
