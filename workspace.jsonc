@@ -275,7 +275,7 @@
         "pluralize": "8.0.0",
         "postcss": "8.4.18",
         "postcss-flexbugs-fixes": "5.0.2",
-        "postcss-loader": "6.1.1",
+        "postcss-loader": "7.0.1",
         "postcss-preset-env": "7.8.2",
         "prerender-spa-plugin-next": "4.2.0",
         "pretty-bytes": "5.6.0",
@@ -656,8 +656,8 @@
             "react": "-",
             "react-dom": "-",
             "css-loader": "6.2.0",
-            "postcss": "8.2.9",
-            "postcss-loader": "6.1.1",
+            "postcss": "8.4.18",
+            "postcss-loader": "7.0.1",
             "babel-loader": "8.2.2",
             "@babel/preset-react": "7.13.13",
             "@babel/preset-env": "7.12.17",
@@ -781,7 +781,7 @@
             "react-dom": "17.0.2",
             "core-js": "3.13.0",
             // Those are here to make sure we have them in the root with specific versions when installing with bvm
-            "postcss": "8.2.9",
+            "postcss": "8.4.18",
             "buffer": "6.0.3",
             "process": "0.11.10",
             "react-router-dom": "6.3.0"
