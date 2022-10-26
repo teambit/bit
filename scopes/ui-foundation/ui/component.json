@@ -11,7 +11,7 @@
           "source-map-loader": "3.0.0",
           "babel-loader": "8.2.2",
           "babel-preset-react-app": "10.0.0",
-          "resolve-url-loader": "3.1.2",
+          "resolve-url-loader": "5.0.0",
           "babel-plugin-named-asset-import": "0.3.7",
           "style-loader": "^2.0.0",
           "css-loader": "5.2.0",
