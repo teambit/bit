@@ -29,7 +29,6 @@ import {
   deserializeArtifactFiles,
   getArtifactFilesByExtension,
   getArtifactFilesExcludeExtension,
-  getArtifactsFiles,
   importMultipleDistsArtifacts,
 } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
 import { pathNormalizeToLinux, PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';

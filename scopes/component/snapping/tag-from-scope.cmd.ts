@@ -63,7 +63,6 @@ an example of the final data: '[{"componentId":"ci.remote2/comp-b","dependencies
 to ignore multiple issues, separate them by a comma and wrap with quotes. to ignore all issues, specify "*".`,
     ],
     ['I', 'ignore-newest-version', 'ignore existing of newer versions (default = false)'],
-    ['b', 'build', 'EXPERIMENTAL. not needed for now. run the pipeline build and complete the tag'],
   ] as CommandOptions;
   remoteOp = true; // In case a compiler / tester is not installed
 
@@ -85,7 +84,6 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       ignoreIssues,
       ignoreNewestVersion = false,
       skipTests = false,
-      build,
       disableTagPipeline = false,
       forceDeploy = false,
       incrementBy = 1,
@@ -149,7 +147,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       ignoreIssues,
       ignoreNewestVersion,
       skipTests,
-      build,
+      build: true,
       disableTagAndSnapPipelines: disableTagPipeline,
       forceDeploy,
       incrementBy,

@@ -207,7 +207,7 @@ to bypass this error, use --skip-new-scope-validation flag (not recommended. it 
     // tagged/snapped component.
     const currentBitIds = components.map((c) => c.id._legacy);
     await mapSeries(this.depsUpdateItems, async ({ component, dependencies }) => {
-      await this.updateDependenciesVersionsOfComponent(component, dependencies, currentBitIds);
+      await this.snapping.updateDependenciesVersionsOfComponent(component, dependencies, currentBitIds);
       await this.updateDependencyResolver(component);
     });
   }
@@ -272,44 +272,6 @@ to bypass this error, use --skip-new-scope-validation flag (not recommended. it 
     }
     const extension = new ExtensionDataEntry(undefined, undefined, extId, undefined, data);
     component.state._consumer.extensions.push(extension);
-  }
-
-  private async updateDependenciesVersionsOfComponent(
-    component: Component,
-    dependencies: ComponentID[],
-    currentBitIds: BitId[]
-  ) {
-    const depsBitIds = dependencies.map((d) => d._legacy);
-    const updatedIds = BitIds.fromArray([...currentBitIds, ...depsBitIds]);
-    const componentIdStr = component.id.toString();
-    const legacyComponent: ConsumerComponent = component.state._consumer;
-    const deps = [...legacyComponent.dependencies.get(), ...legacyComponent.devDependencies.get()];
-    const dependenciesList = await this.dependencyResolver.getDependencies(component);
-    deps.forEach((dep) => {
-      const updatedBitId = updatedIds.searchWithoutVersion(dep.id);
-      if (updatedBitId) {
-        const depIdStr = dep.id.toString();
-        const packageName = dependenciesList.findDependency(depIdStr)?.getPackageName?.();
-        if (!packageName) {
-          throw new Error(
-            `unable to find the package-name of "${depIdStr}" dependency inside the dependency-resolver data of "${componentIdStr}"`
-          );
-        }
-        this.logger.debug(`updating "${componentIdStr}", dependency ${depIdStr} to version ${updatedBitId.version}}`);
-        dep.id = updatedBitId;
-        dep.packageName = packageName;
-      }
-    });
-    legacyComponent.extensions.forEach((ext) => {
-      if (!ext.extensionId) return;
-      const updatedBitId = updatedIds.searchWithoutVersion(ext.extensionId);
-      if (updatedBitId) {
-        this.logger.debug(
-          `updating "${componentIdStr}", extension ${ext.extensionId.toString()} to version ${updatedBitId.version}}`
-        );
-        ext.extensionId = updatedBitId;
-      }
-    });
   }
 
   private async saveDataIntoLocalScope(buildStatus: BuildStatus) {
