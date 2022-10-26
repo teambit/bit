@@ -24,6 +24,7 @@ export class CheckoutCmd implements Command {
     },
   ];
   description = 'switch between component versions or remove local changes';
+  helpUrl = 'docs/components/merging-changes#checkout-snaps-to-the-working-directory';
   group = 'development';
   extendedDescription = `
   \`bit checkout <version> [component-pattern]\` => checkout the specified ids (or all components when --all is used) to the specified version

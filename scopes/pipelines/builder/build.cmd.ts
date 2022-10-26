@@ -23,6 +23,7 @@ export class BuilderCmd implements Command {
   name = 'build [component-pattern]';
   description = 'run set of tasks for build';
   arguments = [{ name: 'component-pattern', description: COMPONENT_PATTERN_HELP }];
+  helpUrl = 'reference/build-pipeline/builder-overview';
   alias = '';
   group = 'development';
   options = [
