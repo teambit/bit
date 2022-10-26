@@ -346,7 +346,7 @@ export class DependencyResolverMain {
    *
    * Here is the PR where initially dedupe was turned off for pnpm: https://github.com/teambit/bit/pull/5410
    */
-  useDedupeInCapsules(): boolean {
+  supportsDedupingOnExistingRoot(): boolean {
     const packageManager = this.packageManagerSlot.get(this.config.packageManager);
     return packageManager?.supportsDedupingOnExistingRoot?.() === true && !this.hasRootComponents();
   }

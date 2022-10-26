@@ -488,7 +488,6 @@ needed-for: ${neededFor || '<unknown>'}`);
         includeFromNestedHosts: true,
         installOptions: {
           copyPeerToRuntimeOnRoot: true,
-          dedupe: false,
           packageManagerConfigRootDir: opts?.packageManagerConfigRootDir,
           useNesting: true,
           copyPeerToRuntimeOnComponents: true,
@@ -643,7 +642,6 @@ needed-for: ${neededFor || '<unknown>'}`);
         includeFromNestedHosts: true,
         installOptions: {
           copyPeerToRuntimeOnRoot: true,
-          dedupe: false,
           useNesting: true,
           copyPeerToRuntimeOnComponents: true,
           installPeersFromEnvs: true,

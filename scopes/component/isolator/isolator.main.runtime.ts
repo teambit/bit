@@ -283,6 +283,9 @@ export class IsolatorMain {
       ...opts.installOptions,
       useNesting: this.dependencyResolver.hasRootComponents() && opts.installOptions?.useNesting,
     };
+    if (!opts.emptyRootDir) {
+      installOptions.dedupe = installOptions.dedupe && this.dependencyResolver.supportsDedupingOnExistingRoot();
+    }
     const config = { installPackages: true, ...opts };
     const capsulesDir = this.getCapsulesRootDir(opts.baseDir as string, opts.rootBaseDir);
     if (opts.emptyRootDir) {
@@ -367,7 +370,7 @@ export class IsolatorMain {
     };
 
     const packageManagerInstallOptions: PackageManagerInstallOptions = {
-      dedupe: this.dependencyResolver.useDedupeInCapsules() || isolateInstallOptions.dedupe,
+      dedupe: isolateInstallOptions.dedupe,
       copyPeerToRuntimeOnComponents: isolateInstallOptions.copyPeerToRuntimeOnComponents,
       copyPeerToRuntimeOnRoot: isolateInstallOptions.copyPeerToRuntimeOnRoot,
       installPeersFromEnvs: isolateInstallOptions.installPeersFromEnvs,
