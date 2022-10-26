@@ -285,6 +285,10 @@ export class EnvsMain {
     return matchedEntry?.id;
   }
 
+  createEnv(component: Component) {
+    
+  }
+
   /**
    * This used to calculate the actual env during the component load.
    * Do not use it to get the env (use getEnv instead)

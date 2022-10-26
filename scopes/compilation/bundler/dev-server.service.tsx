@@ -153,7 +153,7 @@ export class DevServerService implements EnvService<ComponentServer, DevServerDe
       publicPath: `${sep}public`,
       hostRootDir,
       hostDependencies: peers,
-      aliasHostDependencies: true,
+      // aliasHostDependencies: true,
     });
   }
 }
