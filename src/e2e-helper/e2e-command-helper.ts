@@ -14,6 +14,10 @@ import { removeChalkCharacters } from '../utils';
 import ScopesData from './e2e-scopes';
 
 const DEFAULT_DEFAULT_INTERVAL_BETWEEN_INPUTS = 200;
+// The default value of maxBuffer is 1024*1024, which is not enough for some of the tests.
+// If a command has a lot of output, it will throw this error:
+// Error: spawnSync /bin/sh ENOBUFS
+const EXEC_SYNC_MAX_BUFFER = 1024 * 1024 * 10; // 10MB
 
 /**
  * to enable a feature for Helper instance, in the e2e-test file add `helper.command.setFeatures('your-feature');`
@@ -57,7 +61,7 @@ export default class CommandHelper {
       ? childProcess
           .spawnSync(cmd.split(' ')[0], cmd.split(' ').slice(1), { cwd, stdio, shell: true })
           .output.toString()
-      : childProcess.execSync(cmdWithFeatures, { cwd, stdio });
+      : childProcess.execSync(cmdWithFeatures, { cwd, stdio, maxBuffer: EXEC_SYNC_MAX_BUFFER });
     if (this.debugMode) console.log(rightpad(chalk.green('output: '), 20, ' '), chalk.cyan(cmdOutput.toString())); // eslint-disable-line no-console
     return cmdOutput.toString();
   }
@@ -638,9 +642,9 @@ export default class CommandHelper {
   link(flags?: string) {
     return this.runCmd(`bit link ${flags || ''}`);
   }
-  install(packages = '', options?: Record<string, any>) {
+  install(packages = '', options?: Record<string, any>, cwd = this.scopes.localPath) {
     const parsedOpts = this.parseOptions(options);
-    return this.runCmd(`bit install ${packages} ${parsedOpts}`);
+    return this.runCmd(`bit install ${packages} ${parsedOpts}`, cwd);
   }
   update(flags?: string) {
     return this.runCmd(`bit update ${flags || ''}`);
