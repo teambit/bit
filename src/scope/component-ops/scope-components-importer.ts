@@ -17,7 +17,7 @@ import logger from '../../logger/logger';
 import { Remotes } from '../../remotes';
 import { splitBy } from '../../utils';
 import ComponentVersion from '../component-version';
-import { ComponentNotFound } from '../exceptions';
+import { ComponentNotFound, ParentNotFound, VersionNotFound } from '../exceptions';
 import { Lane, ModelComponent, Version } from '../models';
 import { BitObject, Ref, Repository } from '../objects';
 import { ObjectItemsStream, ObjectList } from '../objects/object-list';
@@ -30,6 +30,7 @@ import { concurrentComponentsLimit } from '../../utils/concurrency';
 import { BuildStatus } from '../../constants';
 import { NoHeadNoVersion } from '../exceptions/no-head-no-version';
 import { HashesPerRemotes, MissingObjects } from '../exceptions/missing-objects';
+import { getAllVersionHashes } from './traverse-versions';
 
 const removeNils = R.reject(R.isNil);
 
@@ -160,6 +161,36 @@ export default class ScopeComponentsImporter {
     );
     const externalDeps = await this.getExternalMany(externalsToFetch, remotes);
     return [...versionDeps, ...externalDeps];
+  }
+
+  /**
+   * checks whether the given components has all history.
+   * if not, it fetches the history from their remotes without deps.
+   */
+  async importMissingHistory(bitIds: BitIds) {
+    const externals = bitIds.filter((bitId) => !bitId.isLocal(this.scope.name));
+    if (!externals.length) {
+      return;
+    }
+    const missingHistoryWithNulls = await mapSeries(externals, async (id) => {
+      const modelComponent = await this.scope.getModelComponent(id);
+      if (!modelComponent.head) return null; // doesn't exist on the remote.
+      try {
+        await getAllVersionHashes({ modelComponent, repo: this.repo });
+      } catch (err: any) {
+        if (err instanceof ParentNotFound || err instanceof VersionNotFound) {
+          return id;
+        }
+        // we don't care much about other errors here. but it's good to know about them.
+        logger.warn(`importMissingHistory, failed traversing ${id.toString()}, err: ${err.message}`, err);
+        return null;
+      }
+      return null;
+    });
+    const missingHistory = compact(missingHistoryWithNulls);
+    if (!missingHistory.length) return;
+    logger.debug(`importMissingHistory, total ${missingHistory.length} component has history missing`);
+    await this.importManyDeltaWithoutDeps(BitIds.fromArray(missingHistory), true);
   }
 
   async importWithoutDeps(ids: BitIds, cache = true, lanes: Lane[] = []): Promise<ComponentVersion[]> {

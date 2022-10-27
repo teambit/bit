@@ -273,10 +273,10 @@
         "penpal": "6.2.2",
         "pkgs-graph": "8.0.0",
         "pluralize": "8.0.0",
-        "postcss": "8.2.9",
+        "postcss": "8.4.18",
         "postcss-flexbugs-fixes": "5.0.2",
-        "postcss-loader": "6.1.1",
-        "postcss-preset-env": "6.7.0",
+        "postcss-loader": "7.0.1",
+        "postcss-preset-env": "7.8.2",
         "prerender-spa-plugin-next": "4.2.0",
         "pretty-bytes": "5.6.0",
         "pretty-time": "1.1.0",
@@ -296,7 +296,7 @@
         "remark-frontmatter": "2.0.0",
         "reset-css": "5.0.1",
         "resolve-from": "5.0.0",
-        "resolve-url-loader": "4.0.0",
+        "resolve-url-loader": "5.0.0",
         "semver": "7.3.4",
         "semver-intersect": "1.4.0",
         "semver-range-intersect": "0.3.1",
@@ -331,7 +331,7 @@
       "peerDependencies": {
         "@apollo/client": "^3.6.0",
         "@teambit/base-react.navigation.link": "2.0.27",
-        "@teambit/legacy": "1.0.375",
+        "@teambit/legacy": "1.0.377",
         "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
         "browserslist": "4.16.3",
         "core-js": "^3.10.0",
@@ -421,7 +421,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.375"
+            "@teambit/legacy": "1.0.377"
           }
         }
       },
@@ -656,12 +656,12 @@
             "react": "-",
             "react-dom": "-",
             "css-loader": "6.2.0",
-            "postcss": "8.2.9",
-            "postcss-loader": "6.1.1",
+            "postcss": "8.4.18",
+            "postcss-loader": "7.0.1",
             "babel-loader": "8.2.2",
             "@babel/preset-react": "7.13.13",
             "@babel/preset-env": "7.12.17",
-            "resolve-url-loader": "3.1.2",
+            "resolve-url-loader": "5.0.0",
             "sass-loader": "12.1.0",
             "@svgr/webpack": "5.5.0",
             "new-url-loader": "0.1.1",
@@ -670,7 +670,7 @@
             "less-loader": "10.0.0",
             "babel-preset-react-app": "^10.0.0",
             "postcss-normalize": "10.0.0",
-            "postcss-preset-env": "6.7.0",
+            "postcss-preset-env": "7.8.2",
             "postcss-flexbugs-fixes": "5.0.2"
           },
           "devDependencies": {
@@ -682,7 +682,7 @@
           "peerDependencies": {
             "react": "^16.8.0 || ^17.0.0",
             "react-dom": "^16.8.0 || ^17.0.0",
-            "@teambit/legacy": "1.0.375"
+            "@teambit/legacy": "1.0.377"
           }
         }
       }
@@ -769,7 +769,7 @@
             "@teambit/base-react.navigation.link": "2.0.27",
             "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
             "@apollo/client": "3.6.9",
-            "@teambit/legacy": "1.0.375",
+            "@teambit/legacy": "1.0.377",
             "graphql": "14.7.0",
             "browserslist": "4.16.3",
             "reflect-metadata": "0.1.13",
@@ -781,7 +781,7 @@
             "react-dom": "17.0.2",
             "core-js": "3.13.0",
             // Those are here to make sure we have them in the root with specific versions when installing with bvm
-            "postcss": "8.2.9",
+            "postcss": "8.4.18",
             "buffer": "6.0.3",
             "process": "0.11.10",
             "react-router-dom": "6.3.0"
@@ -904,7 +904,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.375"
+            "@teambit/legacy": "1.0.377"
           }
         }
       }

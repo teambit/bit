@@ -97,4 +97,11 @@ export interface PackageManager {
   getProxyConfig?(): Promise<ProxyConfig>;
 
   getNetworkConfig?(): Promise<NetworkConfig>;
+
+  /**
+   * Specify if the package manager can be run with deduping on existing worksapce (which already contains root dependencies)
+   * again, with a different context.
+   * If the package manager is not capable of doing so, we want to disable the deduping.
+   */
+  supportsDedupingOnExistingRoot?: () => boolean;
 }

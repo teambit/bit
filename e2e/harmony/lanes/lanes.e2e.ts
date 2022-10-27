@@ -8,6 +8,7 @@ import Helper from '../../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../../src/fixtures/fixtures';
 import { removeChalkCharacters } from '../../../src/utils';
 import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../../npm-ci-registry';
+import { FetchMissingHistory } from '../../../src/scope/actions';
 
 chai.use(require('chai-fs'));
 
@@ -984,6 +985,41 @@ describe('bit lane command', function () {
     // should not throw an error "the component {component-name} has no versions and the head is empty."
     it('bit import should not throw an error', () => {
       expect(() => helper.command.import()).to.not.throw();
+    });
+  });
+  describe('multiple scopes - using FetchMissingHistory action', () => {
+    let anotherRemote: string;
+    const getFirstTagFromRemote = () =>
+      helper.command.catComponent(`${anotherRemote}/comp1@0.0.1`, helper.scopes.remotePath);
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.bitJsonc.setupDefault();
+      const { scopeName, scopePath } = helper.scopeHelper.getNewBareScope();
+      anotherRemote = scopeName;
+      helper.scopeHelper.addRemoteScope(scopePath);
+      helper.scopeHelper.addRemoteScope(scopePath, helper.scopes.remotePath);
+      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, scopePath);
+      helper.fixtures.populateComponents(1);
+      helper.command.setScope(anotherRemote, 'comp1');
+      helper.command.tagAllWithoutBuild();
+      helper.command.tagAllWithoutBuild('--unmodified');
+      helper.command.export();
+      helper.command.createLane();
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.export();
+
+      // currently, the objects from remote2 are in remote. so simulate a case where it's missing.
+      const firstTagHash = helper.command.catComponent('comp1').versions['0.0.1'];
+      const objectPath = helper.general.getHashPathOfObject(firstTagHash);
+      helper.fs.deleteRemoteObject(objectPath);
+
+      // an intermediate step. make sure the object is missing.
+      expect(getFirstTagFromRemote).to.throw();
+
+      helper.command.runAction(FetchMissingHistory.name, helper.scopes.remote, { ids: [`${anotherRemote}/comp1`] });
+    });
+    it('the remote should have the history of a component from the other remote', () => {
+      expect(getFirstTagFromRemote).to.not.throw();
     });
   });
   describe('snapping and un-tagging on a lane', () => {
