@@ -4,7 +4,7 @@ import { Slot, SlotRegistry } from '@teambit/harmony';
 import GraphqlAspect, { GraphqlMain } from '@teambit/graphql';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
-import { APISchema, Export, Module } from '@teambit/semantics.entities.semantic-schema';
+import { APISchema, Export } from '@teambit/semantics.entities.semantic-schema';
 import { BuilderMain, BuilderAspect } from '@teambit/builder';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { Parser } from './parser';
