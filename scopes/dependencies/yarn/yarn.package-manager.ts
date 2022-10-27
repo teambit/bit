@@ -492,6 +492,10 @@ export class YarnPackageManager implements PackageManager {
     }
     return injectedDirs;
   }
+
+  supportsDedupingOnExistingRoot(): boolean {
+    return true;
+  }
 }
 
 function convertOverridesToResolutions(
