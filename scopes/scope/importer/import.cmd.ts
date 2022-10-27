@@ -18,6 +18,7 @@ import { ImportOptions, ImportDetails, ImportStatus } from './import-components'
 export class ImportCmd implements Command {
   name = 'import [component-patterns...]';
   description = 'import components from their remote scopes to the local workspace';
+  helpUrl = 'docs/components/importing-components';
   arguments = [
     {
       name: 'component-patterns...',

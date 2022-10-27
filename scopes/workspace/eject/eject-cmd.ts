@@ -9,6 +9,7 @@ import { ComponentsEjector } from './components-ejector';
 export class EjectCmd implements Command {
   name = 'eject <component-pattern>';
   description = 'replace components maintained in the workspace with their corresponding packages';
+  helpUrl = 'docs/components/exporting-components#ejecting-components';
   arguments = [
     {
       name: 'component-pattern',
