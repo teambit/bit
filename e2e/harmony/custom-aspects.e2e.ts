@@ -83,7 +83,7 @@ describe('custom aspects', function () {
     const LOADING_MSG = 'loading ext2';
     before(() => {
       helper = new Helper();
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.bitJsonc.setPackageManager();
       helper.fixtures.populateExtensions(2, true);
