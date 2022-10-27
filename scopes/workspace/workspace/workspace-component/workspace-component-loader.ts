@@ -8,7 +8,7 @@ import { MissingBitMapComponent } from '@teambit/legacy/dist/consumer/bit-map/ex
 import { getLatestVersionNumber } from '@teambit/legacy/dist/utils';
 import { IssuesClasses } from '@teambit/component-issues';
 import { ComponentNotFound } from '@teambit/legacy/dist/scope/exceptions';
-import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
+import { DependencyList, DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { Logger } from '@teambit/logger';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config';
@@ -30,13 +30,13 @@ export class WorkspaceComponentLoader {
     this.componentsCache = createInMemoryCache({ maxSize: getMaxSizeForComponents() });
   }
 
-  async getMany(ids: Array<ComponentID>): Promise<Component[]> {
+  async getMany(ids: Array<ComponentID>, loadOpts?: ComponentLoadOptions): Promise<Component[]> {
     const idsWithoutEmpty = compact(ids);
     const errors: { id: ComponentID; err: Error }[] = [];
     const longProcessLogger = this.logger.createLongProcessLogger('loading components', ids.length);
     const componentsP = mapSeries(idsWithoutEmpty, async (id: ComponentID) => {
       longProcessLogger.logProgress(id.toString());
-      return this.get(id).catch((err) => {
+      return this.get(id, undefined, undefined, undefined, loadOpts).catch((err) => {
         if (this.isComponentNotExistsError(err)) {
           errors.push({
             id,
@@ -175,7 +175,8 @@ export class WorkspaceComponentLoader {
         componentFromScope.tags,
         this.workspace
       );
-      return this.executeLoadSlot(workspaceComponent, loadOpts);
+      const updatedComp = await this.executeLoadSlot(workspaceComponent, loadOpts);
+      return updatedComp;
     }
     return this.executeLoadSlot(this.newComponentFromState(id, state), loadOpts);
   }
@@ -239,10 +240,20 @@ export class WorkspaceComponentLoader {
 
     // Move to deps resolver main runtime once we switch ws<> deps resolver direction
     const policy = await this.dependencyResolver.mergeVariantPolicies(component.config.extensions);
-    const dependencies = await this.dependencyResolver.extractDepsFromLegacy(component, policy);
+    const dependenciesList = await this.dependencyResolver.extractDepsFromLegacy(component, policy);
+    let dependenciesFromUnmergedHead;
+    // Get dependencies from unmerged head if needed
+    // we take it from there, as they might not be installed yet and we need to get their versions from the model
+    const unmergedComponent = await this.workspace.getUnmergedComponent(component.id);
+    if (unmergedComponent) {
+      dependenciesFromUnmergedHead = await this.dependencyResolver.extractDepsFromLegacy(unmergedComponent, policy);
+    }
+    const mergedDependencies = dependenciesFromUnmergedHead
+      ? DependencyList.merge([dependenciesList, dependenciesFromUnmergedHead])
+      : dependenciesList;
 
     const depResolverData = {
-      dependencies,
+      dependencies: mergedDependencies.serialize(),
       policy: policy.serialize(),
     };
 
@@ -276,8 +287,9 @@ export class WorkspaceComponentLoader {
   }
 
   private async upsertExtensionData(component: Component, extension: string, data: any) {
+    if (!data) return;
     const existingExtension = component.state.config.extensions.findExtension(extension);
-    if (existingExtension && data) {
+    if (existingExtension) {
       // Only merge top level of extension data
       Object.assign(existingExtension.data, data);
       return;

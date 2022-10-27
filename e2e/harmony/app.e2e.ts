@@ -14,7 +14,7 @@ describe('app command', function () {
   });
   describe('app run', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.command.create('express-app', 'my-app');
       helper.command.compile();
       helper.command.install();

@@ -113,9 +113,32 @@ export class ArtifactFiles {
     const allHashes = this.refs.map((artifact) => artifact.ref.hash);
     const scopeComponentsImporter = ScopeComponentsImporter.getInstance(scope);
     const lane = await scope.getCurrentLaneObject();
+    const unmergedEntry = scope.objects.unmergedComponents.getEntry(id.name);
+    let errorFromUnmergedLaneScope: Error | undefined;
+    if (unmergedEntry?.laneId) {
+      try {
+        logger.debug(
+          `getVinylsAndImportIfMissing, trying to get artifacts for ${id.toString()} from unmerged-lane-id: ${unmergedEntry.laneId.toString()}`
+        );
+        await scopeComponentsImporter.importManyObjects({ [unmergedEntry.laneId.scope]: allHashes });
+      } catch (err: any) {
+        logger.debug(
+          `getVinylsAndImportIfMissing, unable to get artifacts for ${id.toString()} from ${unmergedEntry.laneId.toString()}`
+        );
+        errorFromUnmergedLaneScope = err;
+      }
+    }
     const isIdOnLane = await scope.isIdOnLane(id, lane);
     const scopeName = isIdOnLane ? (lane?.scope as string) : (id.scope as string);
-    await scopeComponentsImporter.importManyObjects({ [scopeName]: allHashes });
+    try {
+      await scopeComponentsImporter.importManyObjects({ [scopeName]: allHashes });
+    } catch (err) {
+      if (!unmergedEntry || errorFromUnmergedLaneScope) {
+        logger.error('failed fetching the following hashes', { id, isIdOnLane, scopeName, allHashes });
+        throw err;
+      }
+      // unmergedEntry is set, and it was able to fetch from the unmerged-lane-id scope. all is good.
+    }
     const getOneArtifact = async (artifact: ArtifactRef) => {
       const content = (await artifact.ref.load(scope.objects)) as Source;
       if (!content) throw new ShowDoctorError(`failed loading file ${artifact.relativePath} from the model`);

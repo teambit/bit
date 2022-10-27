@@ -16,7 +16,7 @@ describe('env', function () {
   });
   describe('run bit env set and then tag when the variants points to another env', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.extensions.addExtensionToVariant('*', 'teambit.react/react', undefined, true);
       helper.fixtures.populateComponents(1);
@@ -25,7 +25,7 @@ describe('env', function () {
     });
     it('should not be modified', () => {
       const status = helper.command.statusJson();
-      expect(status.modifiedComponent).to.have.lengthOf(0);
+      expect(status.modifiedComponents).to.have.lengthOf(0);
     });
     it('should not change the env to the variants one', () => {
       const env = helper.env.getComponentEnv('comp1');
@@ -39,7 +39,7 @@ describe('env', function () {
   });
   describe('run bit env set X and then bit env set Y', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(1);
       helper.command.setEnv('comp1', 'teambit.harmony/aspect');
@@ -52,7 +52,7 @@ describe('env', function () {
   });
   describe('run bit env set when there is a component.json', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(1);
       helper.command.ejectConf('comp1');

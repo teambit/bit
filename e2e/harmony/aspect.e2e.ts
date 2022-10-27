@@ -16,7 +16,7 @@ describe('aspect', function () {
   });
   describe('run bit aspect set then generate component.json', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(1);
       helper.command.setAspect('comp1', Extensions.forking, { configKey: 'configVal' });
@@ -42,7 +42,7 @@ describe('aspect', function () {
   });
   describe('aspect loading failures', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.command.create('aspect', 'my-aspect');
       helper.bitJsonc.addKeyVal('my-scope/my-aspect', {});
     });
@@ -64,7 +64,7 @@ describe('aspect', function () {
   describe('bit aspect update command', () => {
     let output: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.command.create('aspect', 'my-aspect');
       helper.command.compile();
@@ -76,7 +76,7 @@ describe('aspect', function () {
       helper.command.tagWithoutBuild('my-aspect', '--unmodified --skip-auto-tag');
       helper.command.export();
 
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
       helper.command.importComponent('comp1');
 
@@ -99,6 +99,11 @@ describe('aspect', function () {
       const show = helper.command.showComponent('comp1');
       expect(show).to.have.string(`${helper.scopes.remote}/my-aspect@0.0.2`);
       expect(show).not.to.have.string(`${helper.scopes.remote}/my-aspect@0.0.1`);
+    });
+    it('running the same command again, should not show a message that no component is using this aspect', () => {
+      const secondRun = helper.command.updateAspect(`${helper.scopes.remote}/my-aspect`);
+      expect(secondRun).to.have.string('are already up to date');
+      expect(secondRun).to.not.have.string('unable to find any component');
     });
     it('bit tag should save only the updated aspect and not the old one', () => {
       helper.command.importComponent('my-aspect'); // otherwise, the tag will try to get it as a package

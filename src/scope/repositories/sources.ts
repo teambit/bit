@@ -4,14 +4,11 @@ import { isHash } from '@teambit/component-version';
 import { BitId, BitIds } from '../../bit-id';
 import { BuildStatus } from '../../constants';
 import ConsumerComponent from '../../consumer/component';
-import { ArtifactFiles, ArtifactSource, getArtifactsFiles } from '../../consumer/component/sources/artifact-files';
-import Consumer from '../../consumer/consumer';
 import logger from '../../logger/logger';
 import ComponentObjects from '../component-objects';
 import { getAllVersionHashes, getAllVersionsInfo, VersionInfo } from '../component-ops/traverse-versions';
 import { ComponentNotFound, MergeConflict } from '../exceptions';
 import ComponentNeedsUpdate from '../exceptions/component-needs-update';
-import UnmergedComponents from '../lanes/unmerged-components';
 import { ModelComponent, Symlink, Version } from '../models';
 import Lane from '../models/lane';
 import { ComponentProps } from '../models/model-component';
@@ -104,22 +101,22 @@ export default class SourceRepository {
     }
     if (!bitId.hasVersion()) return component;
 
-    const returnComponent = (version: Version): ModelComponent | undefined => {
-      if (
-        versionShouldBeBuilt &&
-        !bitId.isLocal(this.scope.name) &&
-        !component.hasLocalVersion(bitId.version as string) && // e.g. during tag
-        (version.buildStatus === BuildStatus.Pending || version.buildStatus === BuildStatus.Failed)
-      ) {
-        const bitIdStr = bitId.toString();
-        const fromCache = this.cacheUnBuiltIds.get(bitIdStr);
-        if (fromCache) {
-          return fromCache;
-        }
-        this.cacheUnBuiltIds.set(bitIdStr, component);
-        return undefined;
+    const returnComponent = async (version: Version): Promise<ModelComponent | undefined> => {
+      if (bitId.isLocal(this.scope.name) || version.buildStatus === BuildStatus.Succeed || !versionShouldBeBuilt) {
+        return component;
       }
-      return component;
+      const hasLocalVersion = await component.hasLocalVersion(this.scope.objects, bitId.version as string);
+      if (hasLocalVersion) {
+        // e.g. during tag
+        return component;
+      }
+      const bitIdStr = bitId.toString();
+      const fromCache = this.cacheUnBuiltIds.get(bitIdStr);
+      if (fromCache) {
+        return fromCache;
+      }
+      this.cacheUnBuiltIds.set(bitIdStr, component);
+      return undefined;
     };
 
     // @ts-ignore
@@ -205,16 +202,6 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     });
   }
 
-  private transformArtifactsFromVinylToSource(artifactsFiles: ArtifactFiles[]): ArtifactSource[] {
-    const artifacts: ArtifactSource[] = [];
-    artifactsFiles.forEach((artifactFiles) => {
-      const artifactsSource = ArtifactFiles.fromVinylsToSources(artifactFiles.vinyls);
-      if (artifactsSource.length) artifactFiles.populateRefsFromSources(artifactsSource);
-      artifacts.push(...artifactsSource);
-    });
-    return artifacts;
-  }
-
   /**
    * given a consumer-component object, returns the Version representation.
    * useful for saving into the model or calculation the hash for comparing with other Version object.
@@ -244,87 +231,6 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     consumerComponent.pendingVersion = version as any; // helps to validate the version against the consumer-component
 
     return { version, files };
-  }
-
-  async enrichSource(consumerComponent: ConsumerComponent) {
-    const objectRepo = this.objects();
-    const objects = await this.getObjectsToEnrichSource(consumerComponent);
-    objects.forEach((obj) => objectRepo.add(obj));
-    return consumerComponent;
-  }
-
-  async getObjectsToEnrichSource(consumerComponent: ConsumerComponent): Promise<BitObject[]> {
-    const component = consumerComponent.modelComponent || (await this.findOrAddComponent(consumerComponent));
-    const version = await component.loadVersion(consumerComponent.id.version as string, this.objects(), true, true);
-    const artifactFiles = getArtifactsFiles(consumerComponent.extensions);
-    const artifacts = this.transformArtifactsFromVinylToSource(artifactFiles);
-    version.extensions = consumerComponent.extensions;
-    version.buildStatus = consumerComponent.buildStatus;
-    const artifactObjects = artifacts.map((file) => file.source);
-    return [version, ...artifactObjects];
-  }
-
-  async addSource({
-    source,
-    consumer,
-    lane,
-    shouldValidateVersion = false,
-  }: {
-    source: ConsumerComponent;
-    consumer: Consumer;
-    lane: Lane | null;
-    shouldValidateVersion?: boolean;
-  }): Promise<ModelComponent> {
-    const objectRepo = this.objects();
-    // if a component exists in the model, add a new version. Otherwise, create a new component on the model
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const component = await this.findOrAddComponent(source);
-
-    const artifactFiles = getArtifactsFiles(source.extensions);
-    const artifacts = this.transformArtifactsFromVinylToSource(artifactFiles);
-    const { version, files } = await this.consumerComponentToVersion(source);
-    objectRepo.add(version);
-    if (!source.version) throw new Error(`addSource expects source.version to be set`);
-    component.addVersion(version, source.version, lane, objectRepo);
-
-    const unmergedComponent = consumer.scope.objects.unmergedComponents.getEntry(component.name);
-    if (unmergedComponent) {
-      if (unmergedComponent.unrelated) {
-        logger.debug(
-          `sources.addSource, unmerged component "${component.name}". adding an unrelated entry ${unmergedComponent.head.hash}`
-        );
-        version.unrelated = { head: unmergedComponent.head, laneId: unmergedComponent.laneId };
-      } else {
-        version.addParent(unmergedComponent.head);
-        logger.debug(
-          `sources.addSource, unmerged component "${component.name}". adding a parent ${unmergedComponent.head.hash}`
-        );
-        version.log.message = version.log.message || UnmergedComponents.buildSnapMessage(unmergedComponent);
-      }
-      consumer.scope.objects.unmergedComponents.removeComponent(component.name);
-    }
-    objectRepo.add(component);
-
-    files.forEach((file) => objectRepo.add(file.file));
-    if (artifacts) artifacts.forEach((file) => objectRepo.add(file.source));
-    if (shouldValidateVersion) version.validate();
-    return component;
-  }
-
-  async addSourceFromScope(source: ConsumerComponent, lane: Lane | null): Promise<ModelComponent> {
-    const objectRepo = this.objects();
-    // if a component exists in the model, add a new version. Otherwise, create a new component on the model
-    const component = await this.findOrAddComponent(source);
-    const artifactFiles = getArtifactsFiles(source.extensions);
-    const artifacts = this.transformArtifactsFromVinylToSource(artifactFiles);
-    const { version, files } = await this.consumerComponentToVersion(source);
-    objectRepo.add(version);
-    if (!source.version) throw new Error(`addSource expects source.version to be set`);
-    component.addVersion(version, source.version, lane, objectRepo);
-    objectRepo.add(component);
-    files.forEach((file) => objectRepo.add(file.file));
-    if (artifacts) artifacts.forEach((file) => objectRepo.add(file.source));
-    return component;
   }
 
   put({ component, objects }: ComponentTree): ModelComponent {
@@ -532,7 +438,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
       modelComponent: incomingComp,
       throws: false,
       versionObjects,
-      stopAt: existingHead,
+      stopAt: existingHead ? [existingHead] : undefined,
     });
     const hashesOnly = allIncomingVersionsInfoUntilExistingHead
       .filter((v) => !v.tag) // only non-tag, the tagged are already part of the mergedVersion

@@ -39,7 +39,7 @@ describe('recovery after component/scope deletion', function () {
         return helper.command.runCmd(`bit run-action FetchMissingDeps ${remote} '${JSON.stringify(options)}'`);
       }
       before(async () => {
-        helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+        helper.scopeHelper.setNewLocalAndRemoteScopes();
         helper.bitJsonc.setupDefault();
         scopeWithoutOwner = helper.scopes.remoteWithoutOwner;
         npmCiRegistry = new NpmCiRegistry(helper);
@@ -61,7 +61,11 @@ describe('recovery after component/scope deletion', function () {
         helper.command.linkAndCompile();
         helper.command.tagAllComponents();
         helper.command.export();
-        helper.command.runCmd(`bit import ${helper.scopes.remote}/* ${remote2Name}/* --objects`);
+        runFetchMissingDepsAction(helper.scopes.remote, [
+          `${helper.scopes.remote}/comp1@0.0.1`,
+          `${helper.scopes.remote}/comp2@0.0.1`,
+        ]);
+        // helper.command.runCmd(`bit import ${helper.scopes.remote}/* ${remote2Name}/* --objects`);
         localClone = helper.scopeHelper.cloneLocalScope();
         helper.scopeHelper.reInitRemoteScope(remote2Path);
         remote2Clone = helper.scopeHelper.cloneScope(remote2Path);
@@ -73,7 +77,7 @@ describe('recovery after component/scope deletion', function () {
       describe('indirect dependency is missing (import comp1 while comp3 is missing)', () => {
         let scopeWithMissingDep: string;
         before(() => {
-          helper.scopeHelper.reInitLocalScopeHarmony();
+          helper.scopeHelper.reInitLocalScope();
           helper.scopeHelper.addRemoteScope(remote2Path);
           helper.bitJsonc.disablePreview();
           npmCiRegistry.setResolver();
@@ -178,7 +182,7 @@ describe('recovery after component/scope deletion', function () {
         let scopeWithMissingDep: string;
         before(() => {
           helper.scopeHelper.getClonedRemoteScope(remoteScopeClone);
-          helper.scopeHelper.reInitLocalScopeHarmony();
+          helper.scopeHelper.reInitLocalScope();
           helper.scopeHelper.addRemoteScope(remote2Path);
           helper.bitJsonc.disablePreview();
           npmCiRegistry.setResolver();
@@ -261,7 +265,7 @@ describe('recovery after component/scope deletion', function () {
         before(() => {
           helper.scopeHelper.getClonedRemoteScope(remoteScopeClone);
           helper.scopeHelper.reInitRemoteScope(remote2Path);
-          helper.scopeHelper.reInitLocalScopeHarmony();
+          helper.scopeHelper.reInitLocalScope();
           helper.bitJsonc.setupDefault();
           npmCiRegistry.setResolver({ [remote2Name]: remote2Path });
           helper.command.importComponent('comp2');
@@ -350,7 +354,7 @@ describe('recovery after component/scope deletion', function () {
         let beforeImportScope: string;
         before(() => {
           helper.scopeHelper.getClonedRemoteScope(remoteScopeClone);
-          helper.scopeHelper.reInitLocalScopeHarmony();
+          helper.scopeHelper.reInitLocalScope();
           helper.bitJsonc.disablePreview();
           helper.scopeHelper.addRemoteScope(remote2Path);
           helper.scopeHelper.addRemoteScope();
@@ -363,7 +367,7 @@ describe('recovery after component/scope deletion', function () {
           helper.bitJsonc.addToVariant('comp3', 'defaultScope', remote2Name);
           helper.command.tagAllComponents('', '0.0.2');
           helper.command.export();
-          helper.scopeHelper.reInitLocalScopeHarmony();
+          helper.scopeHelper.reInitLocalScope();
           helper.scopeHelper.addRemoteScope(remote2Path);
           helper.bitJsonc.disablePreview();
           npmCiRegistry.setResolver();
@@ -482,6 +486,7 @@ describe('recovery after component/scope deletion', function () {
             helper.command.import(`${helper.scopes.remote}/comp2 ${remote2Name}/comp3`);
             helper.command.tagAllComponents('', '0.0.7'); // tag comp2 with the updated comp3 version - 0.0.7
             helper.command.export('--origin-directly');
+            runFetchMissingDepsAction(helper.scopes.remote, [`${helper.scopes.remote}/comp2@0.0.7`]);
             helper.command.runCmd(`bit import ${helper.scopes.remote}/* ${remote2Name}/* --objects`);
           });
           it('comp3: should save 0.0.1 of in the orphanedVersions prop on the remote', () => {
@@ -554,7 +559,7 @@ describe('recovery after component/scope deletion', function () {
           helper.command.export('--all-versions');
           helper.scopeHelper.reInitRemoteScope(remote2Path);
 
-          helper.scopeHelper.reInitLocalScopeHarmony();
+          helper.scopeHelper.reInitLocalScope();
           helper.bitJsonc.disablePreview();
           helper.scopeHelper.addRemoteScope(remote2Path);
           helper.fs.outputFile('comp3/index.js', '');
@@ -564,7 +569,7 @@ describe('recovery after component/scope deletion', function () {
 
           helper.command.export();
           helper.command.runCmd(`bit import ${helper.scopes.remote}/* ${remote2Name}/* --objects`);
-          helper.scopeHelper.reInitLocalScopeHarmony();
+          helper.scopeHelper.reInitLocalScope();
           helper.scopeHelper.addRemoteScope(remote2Path);
           helper.bitJsonc.disablePreview();
           npmCiRegistry.setResolver();

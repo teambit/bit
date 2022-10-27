@@ -12,7 +12,7 @@ describe('workspace config (workspace.jsonc)', function () {
   });
   describe('adding a non-component key', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.addKeyVal('non-comp', {});
     });
     it('any command should throw a descriptive error', () => {
@@ -23,7 +23,7 @@ describe('workspace config (workspace.jsonc)', function () {
   });
   describe('adding a non-existing component to a variant', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.fixtures.populateComponents(1);
       helper.bitJsonc.addToVariant('*', 'teambit.harmony/non-exist', {});
     });

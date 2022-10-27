@@ -16,6 +16,7 @@ import Consumer from '../consumer';
 import { ComponentFsCache } from './component-fs-cache';
 import { updateDependenciesVersions } from './dependencies/dependency-resolver';
 import { DependenciesLoader } from './dependencies/dependency-resolver/dependencies-loader';
+import ComponentMap from '../bit-map/component-map';
 
 export type ComponentLoadOptions = {
   loadDocs?: boolean;
@@ -143,7 +144,7 @@ export default class ComponentLoader {
     removedComponents: Component[],
     loadOpts?: ComponentLoadOptions
   ) {
-    const componentMap = this.consumer.bitMap.getComponent(id);
+    let componentMap = this.consumer.bitMap.getComponent(id);
     if (componentMap.isRemoved()) {
       const fromModel = await this.consumer.scope.getConsumerComponentIfExist(id);
       if (!fromModel) {
@@ -161,7 +162,6 @@ export default class ComponentLoader {
       removedComponents.push(fromModel);
       return null;
     }
-    const bitDir = path.join(this.consumer.getPath(), componentMap.rootDir);
     let component: Component;
     const handleError = (error) => {
       if (throwOnFailure) throw error;
@@ -175,11 +175,16 @@ export default class ComponentLoader {
       }
       throw error;
     };
+    const newId = await this._handleOutOfSyncScenarios(componentMap);
+    if (newId) {
+      componentMap = this.consumer.bitMap.getComponent(newId);
+    }
+    const updatedId = newId || id;
+
     try {
       component = await Component.loadFromFileSystem({
-        bitDir,
         componentMap,
-        id,
+        id: updatedId,
         consumer: this.consumer,
       });
     } catch (err: any) {
@@ -187,8 +192,8 @@ export default class ComponentLoader {
     }
     component.loadedFromFileSystem = true;
     // reload component map as it may be changed after calling Component.loadFromFileSystem()
-    component.componentMap = this.consumer.bitMap.getComponent(id);
-    await this._handleOutOfSyncScenarios(component);
+    component.componentMap = this.consumer.bitMap.getComponent(updatedId);
+    await this._handleOutOfSyncWithDefaultScope(component);
 
     const loadDependencies = async () => {
       await this.invalidateDependenciesCacheIfNeeded();
@@ -226,11 +231,10 @@ export default class ComponentLoader {
     });
   }
 
-  private async _handleOutOfSyncScenarios(component: Component) {
-    const { componentFromModel, componentMap } = component;
-    // @ts-ignore componentMap is set here
+  private async _handleOutOfSyncScenarios(componentMap: ComponentMap): Promise<BitId | undefined> {
     const currentId: BitId = componentMap.id;
-    let newId: BitId | null | undefined;
+    const componentFromModel = await this.consumer.loadComponentFromModelIfExist(currentId);
+    let newId: BitId | undefined;
     if (componentFromModel && !currentId.hasVersion()) {
       // component is in the scope but .bitmap doesn't have version, sync .bitmap with the scope data
       newId = currentId.changeVersion(componentFromModel.version);
@@ -248,13 +252,23 @@ export default class ComponentLoader {
         // latest version from the scope
         await this._throwPendingImportIfNeeded(currentId);
         newId = currentId.changeVersion(modelComponent.latest());
-        component.componentFromModel = await this.consumer.loadComponentFromModelIfExist(newId);
       } else if (!currentId.hasScope()) {
         // the scope doesn't have this component and .bitmap doesn't have scope, assume it's new
         newId = currentId.changeVersion(undefined);
       }
     }
-    if (!componentFromModel && !currentId.hasVersion() && component.defaultScope) {
+
+    if (newId) {
+      this.consumer.bitMap.updateComponentId(newId);
+    }
+    return newId;
+  }
+
+  private async _handleOutOfSyncWithDefaultScope(component: Component) {
+    const { componentFromModel, componentMap } = component;
+    // @ts-ignore componentMap is set here
+    const currentId: BitId = componentMap.id;
+    if (!componentFromModel && !currentId.hasVersion()) {
       // for Harmony, we know ahead the defaultScope, so even then .bitmap shows it as new and
       // there is nothing in the scope, we can check if there is a component with the same
       // default-scope in the objects
@@ -262,16 +276,14 @@ export default class ComponentLoader {
         currentId.changeScope(component.defaultScope)
       );
       if (modelComponent) {
-        newId = currentId.changeVersion(modelComponent.latest()).changeScope(modelComponent.scope);
+        const newId = currentId.changeVersion(modelComponent.latest()).changeScope(modelComponent.scope);
         component.componentFromModel = await this.consumer.loadComponentFromModelIfExist(newId);
-      }
-    }
 
-    if (newId) {
-      component.version = newId.version;
-      component.scope = newId.scope;
-      this.consumer.bitMap.updateComponentId(newId);
-      component.componentMap = this.consumer.bitMap.getComponent(newId);
+        component.version = newId.version;
+        component.scope = newId.scope;
+        this.consumer.bitMap.updateComponentId(newId);
+        component.componentMap = this.consumer.bitMap.getComponent(newId);
+      }
     }
   }
 

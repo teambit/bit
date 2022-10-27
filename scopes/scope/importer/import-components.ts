@@ -1,10 +1,8 @@
 import chalk from 'chalk';
 import R from 'ramda';
-import semver from 'semver';
 import { BitError } from '@teambit/bit-error';
 import { LaneId } from '@teambit/lane-id';
 import pMapSeries from 'p-map-series';
-import { isTag } from '@teambit/component-version';
 import { getRemoteBitIdsByWildcards } from '@teambit/legacy/dist/api/consumer/lib/list-scope';
 import { BitId, BitIds } from '@teambit/legacy/dist/bit-id';
 import { Consumer } from '@teambit/legacy/dist/consumer';
@@ -33,6 +31,12 @@ import { FilesStatus, MergeStrategy } from '@teambit/legacy/dist/consumer/versio
 import { MergeResultsThreeWay } from '@teambit/legacy/dist/consumer/versions-ops/merge-version/three-way-merge';
 import ComponentsPendingMerge from '@teambit/legacy/dist/consumer/component-ops/exceptions/components-pending-merge';
 import ManyComponentsWriter from '@teambit/legacy/dist/consumer/component-ops/many-components-writer';
+import ScopeComponentsImporter from '@teambit/legacy/dist/scope/component-ops/scope-components-importer';
+import VersionDependencies, {
+  multipleVersionDependenciesToConsumer,
+} from '@teambit/legacy/dist/scope/version-dependencies';
+import { GraphMain } from '@teambit/graph';
+import { Workspace } from '@teambit/workspace';
 
 export type ImportOptions = {
   ids: string[]; // array might be empty
@@ -72,8 +76,9 @@ export type ImportDetails = {
   removed?: boolean;
 };
 export type ImportResult = {
-  dependencies: ComponentWithDependencies[];
-  envComponents?: Component[];
+  importedIds: BitId[];
+  importedDeps: BitId[];
+  writtenComponents?: Component[];
   importDetails: ImportDetails[];
   cancellationMessage?: string;
 };
@@ -81,16 +86,12 @@ export type ImportResult = {
 export default class ImportComponents {
   consumer: Consumer;
   scope: Scope;
-  options: ImportOptions;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   mergeStatus: { [id: string]: FilesStatus };
   private laneObjects: Lane[];
   private divergeData: Array<ModelComponent> = [];
-  // @ts-ignore
-  constructor(consumer: Consumer, options: ImportOptions) {
-    this.consumer = consumer;
-    this.scope = consumer.scope;
-    this.options = options;
+  constructor(private workspace: Workspace, private graph: GraphMain, public options: ImportOptions) {
+    this.consumer = this.workspace.consumer;
+    this.scope = this.consumer.scope;
     this.laneObjects = this.options.lanes ? (this.options.lanes.lanes as Lane[]) : [];
   }
 
@@ -119,7 +120,7 @@ export default class ImportComponents {
       ? logger.debug(`importObjectsOnLane, Lane: ${lane.id()}, Ids: ${bitIds.toString()}`)
       : logger.debug(`importObjectsOnLane, the lane does not exist on the remote. importing only the main components`);
     const beforeImportVersions = await this._getCurrentVersions(bitIds);
-    const componentsWithDependencies = await this.consumer.importComponentsObjects(bitIds, {
+    const versionDependenciesArr = await this._importComponentsObjects(bitIds, {
       allHistory: this.options.allHistory,
       lane,
     });
@@ -133,7 +134,7 @@ export default class ImportComponents {
       // try to make the previous `importComponentsObjectsHarmony` import the same component once from the original
       // scope and once from the lane-scope.
       const mainIdsLatest = BitIds.fromArray(lane.toBitIds().map((m) => m.changeVersion(undefined)));
-      await this.consumer.importComponentsObjects(mainIdsLatest, {
+      await this._importComponentsObjects(mainIdsLatest, {
         allHistory: this.options.allHistory,
         ignoreMissingHead: true,
       });
@@ -146,13 +147,12 @@ export default class ImportComponents {
     const mergedLanes = mergeAllLanesResults.map((result) => result.mergeLane);
     await Promise.all(mergedLanes.map((mergedLane) => this.scope.lanes.saveLane(mergedLane)));
 
-    const componentsWithDependenciesFiltered = this._filterComponentsWithLowerVersions(componentsWithDependencies);
-    await this._fetchDivergeData(componentsWithDependenciesFiltered);
-    this._throwForDivergedHistory();
-    await this._writeToFileSystem(componentsWithDependenciesFiltered);
-    await this._saveLaneDataIfNeeded(componentsWithDependenciesFiltered);
-    const importDetails = await this._getImportDetails(beforeImportVersions, componentsWithDependencies);
-    return { dependencies: componentsWithDependenciesFiltered, importDetails };
+    const importDetails = await this._getImportDetails(beforeImportVersions, versionDependenciesArr);
+    return {
+      importedIds: versionDependenciesArr.map((v) => v.component.id).flat(),
+      importedDeps: versionDependenciesArr.map((v) => v.allDependenciesIds).flat(),
+      importDetails,
+    };
   }
 
   async importSpecificComponents(): Promise<ImportResult> {
@@ -160,7 +160,9 @@ export default class ImportComponents {
     const bitIds: BitIds = await this.getBitIds();
     const beforeImportVersions = await this._getCurrentVersions(bitIds);
     await this._throwForPotentialIssues(bitIds);
-    const componentsWithDependencies = await this.consumer.importComponentsHarmony(bitIds, true, this.laneObjects);
+    const versionDependenciesArr = await this._importComponentsObjects(bitIds, {
+      lane: this.laneObjects?.[0],
+    });
     if (this.laneObjects && this.options.objectsOnly) {
       // merge the lane objects
       const mergeAllLanesResults = await pMapSeries(this.laneObjects, (laneObject) =>
@@ -169,13 +171,26 @@ export default class ImportComponents {
       const mergedLanes = mergeAllLanesResults.map((result) => result.mergeLane);
       await Promise.all(mergedLanes.map((mergedLane) => this.scope.lanes.saveLane(mergedLane)));
     }
-    const componentsWithDependenciesFiltered = this._filterComponentsWithLowerVersions(componentsWithDependencies);
-    await this._fetchDivergeData(componentsWithDependenciesFiltered);
-    this._throwForDivergedHistory();
-    await this._writeToFileSystem(componentsWithDependenciesFiltered);
-    await this._saveLaneDataIfNeeded(componentsWithDependenciesFiltered);
-    const importDetails = await this._getImportDetails(beforeImportVersions, componentsWithDependencies);
-    return { dependencies: componentsWithDependenciesFiltered, importDetails };
+    let writtenComponents: Component[] = [];
+    if (!this.options.objectsOnly) {
+      const componentsWithDependencies = await multipleVersionDependenciesToConsumer(
+        versionDependenciesArr,
+        this.scope.objects
+      );
+      await this._fetchDivergeData(componentsWithDependencies);
+      this._throwForDivergedHistory();
+      await this._writeToFileSystem(componentsWithDependencies);
+      await this._saveLaneDataIfNeeded(componentsWithDependencies);
+      writtenComponents = componentsWithDependencies.map((c) => c.component);
+    }
+
+    const importDetails = await this._getImportDetails(beforeImportVersions, versionDependenciesArr);
+    return {
+      importedIds: versionDependenciesArr.map((v) => v.component.id).flat(),
+      importedDeps: versionDependenciesArr.map((v) => v.allDependenciesIds).flat(),
+      writtenComponents,
+      importDetails,
+    };
   }
 
   async _fetchDivergeData(componentsWithDependencies: ComponentWithDependencies[]) {
@@ -208,24 +223,28 @@ export default class ImportComponents {
     }
   }
 
-  /**
-   * it can happen for example when importing a component with `--dependent` flag and the component has
-   * the same dependent with different versions. we only want the one with the higher version
-   */
-  _filterComponentsWithLowerVersions(
-    componentsWithDependencies: ComponentWithDependencies[]
-  ): ComponentWithDependencies[] {
-    return componentsWithDependencies.filter((comp) => {
-      const sameIdHigherVersion = componentsWithDependencies.find(
-        (c) =>
-          !c.component.id.isEqual(comp.component.id) &&
-          c.component.id.isEqualWithoutVersion(comp.component.id) &&
-          isTag(c.component.id.version) &&
-          isTag(comp.component.id.version) &&
-          semver.gt(c.component.id.version as string, comp.component.id.version as string)
-      );
-      return !sameIdHigherVersion;
-    });
+  private async _importComponentsObjects(
+    ids: BitIds,
+    {
+      fromOriginalScope = false,
+      allHistory = false,
+      lane,
+      ignoreMissingHead = false,
+    }: {
+      fromOriginalScope?: boolean;
+      allHistory?: boolean;
+      lane?: Lane;
+      ignoreMissingHead?: boolean;
+    }
+  ): Promise<VersionDependencies[]> {
+    const scopeComponentsImporter = ScopeComponentsImporter.getInstance(this.scope);
+    await scopeComponentsImporter.importManyDeltaWithoutDeps(ids, allHistory, lane, ignoreMissingHead);
+    loader.start(`import ${ids.length} components with their dependencies (if missing)`);
+    const results = fromOriginalScope
+      ? await scopeComponentsImporter.importManyFromOriginalScopes(ids)
+      : await scopeComponentsImporter.importMany({ ids, ignoreMissingHead, lanes: lane ? [lane] : undefined });
+
+    return results;
   }
 
   /**
@@ -306,8 +325,15 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
         bitIds.push(...dependenciesIds);
       }
       if (this.options.importDependents) {
-        const dependentsIds = this._getDependentsFromGraph(bitIds, graphs);
-        bitIds.push(...dependentsIds);
+        const graph = await this.graph.getGraph();
+        const targetCompIds = await this.workspace.resolveMultipleComponentIds(bitIds);
+        const sourceIds = await this.workspace.listIds();
+        const ids = graph.findIdsFromSourcesToTargets(sourceIds, targetCompIds);
+        logger.debug(
+          `found ${ids.length} component for --dependents flag`,
+          ids.map((id) => id.toString())
+        );
+        bitIds.push(...ids.map((id) => id._legacy));
       }
     }
     return BitIds.uniqFromArray(bitIds);
@@ -351,23 +377,38 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
     }
     await this._throwForModifiedOrNewComponents(componentsIdsToImport);
     const beforeImportVersions = await this._getCurrentVersions(componentsIdsToImport);
-
-    let componentsAndDependencies: ComponentWithDependencies[] = [];
-    if (componentsIdsToImport.length) {
-      // change all ids version to 'latest'. otherwise, it tries to import local tags/snaps from a remote
-      // const idsWithLatestVersion = componentsIdsToImport.toVersionLatest();
-      if (!this.options.objectsOnly) {
-        throw new Error(`bit import with no ids and --merge flag was not implemented yet`);
-      }
-      componentsAndDependencies = await this.consumer.importComponentsObjects(componentsIdsToImport, {
-        fromOriginalScope: this.options.fromOriginalScope,
-        allHistory: this.options.allHistory,
-      });
-      await this._writeToFileSystem(componentsAndDependencies);
+    if (!componentsIdsToImport.length) {
+      return {
+        importedIds: [],
+        importedDeps: [],
+        importDetails: [],
+      };
     }
-    const importDetails = await this._getImportDetails(beforeImportVersions, componentsAndDependencies);
+    if (!this.options.objectsOnly) {
+      throw new Error(`bit import with no ids and --merge flag was not implemented yet`);
+    }
+    const versionDependenciesArr = await this._importComponentsObjects(componentsIdsToImport, {
+      fromOriginalScope: this.options.fromOriginalScope,
+      allHistory: this.options.allHistory,
+    });
+    let writtenComponents: Component[] = [];
+    if (!this.options.objectsOnly) {
+      const componentWithDependencies = await multipleVersionDependenciesToConsumer(
+        versionDependenciesArr,
+        this.scope.objects
+      );
+      await this._writeToFileSystem(componentWithDependencies);
+      writtenComponents = componentWithDependencies.map((c) => c.component);
+    }
 
-    return { dependencies: componentsAndDependencies, importDetails };
+    const importDetails = await this._getImportDetails(beforeImportVersions, versionDependenciesArr);
+
+    return {
+      importedIds: versionDependenciesArr.map((v) => v.component.id).flat(),
+      importedDeps: versionDependenciesArr.map((v) => v.allDependenciesIds).flat(),
+      writtenComponents,
+      importDetails,
+    };
   }
 
   private getIdsToImportFromBitmap() {
@@ -391,7 +432,7 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
    */
   async _getImportDetails(
     currentVersions: ImportedVersions,
-    components: ComponentWithDependencies[]
+    components: VersionDependencies[]
   ): Promise<ImportDetails[]> {
     const detailsP = components.map(async (component) => {
       const id = component.component.id;
@@ -415,7 +456,7 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
       };
       const filesStatus = this.mergeStatus && this.mergeStatus[idStr] ? this.mergeStatus[idStr] : null;
       const deprecated = await modelComponent.isDeprecated(this.scope.objects);
-      const removed = component.component.removed;
+      const removed = await component.component.component.isRemoved(this.scope.objects);
       const latestVersion = modelComponent.latest();
       return {
         id: idStr,
@@ -423,7 +464,7 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
         latestVersion: versionDifference.includes(latestVersion) ? latestVersion : null,
         status: getStatus(),
         filesStatus,
-        missingDeps: component.missingDependencies,
+        missingDeps: component.getMissingDependencies(),
         deprecated,
         removed,
       };

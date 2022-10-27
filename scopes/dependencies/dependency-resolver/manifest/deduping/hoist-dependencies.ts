@@ -436,7 +436,9 @@ function groupByRangeOrVersion(indexItems: PackageNameIndexComponentItem[]): Ite
   indexItems.forEach((item) => {
     const validRange = semver.validRange(item.range);
     if (!validRange && !isHash(item.range)) {
-      throw new Error(`fatal: the version "${item.range}" originated from a dependent "${item.origin}" is invalid semver range and not a hash`);
+      throw new Error(
+        `fatal: the version "${item.range}" originated from a dependent "${item.origin}" is invalid semver range and not a hash`
+      );
     }
     if (!validRange && isHash(item.range)) {
       result.versions.push(item);

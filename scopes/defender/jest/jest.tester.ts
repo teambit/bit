@@ -5,14 +5,7 @@ import { compact, flatten, isEmpty } from 'lodash';
 import { proxy } from 'comlink';
 import { Logger } from '@teambit/logger';
 import { HarmonyWorker } from '@teambit/worker';
-import {
-  Tester,
-  CallbackFn,
-  TesterContext,
-  Tests,
-  ComponentsResults,
-  ComponentPatternsEntry,
-} from '@teambit/tester';
+import { Tester, CallbackFn, TesterContext, Tests, ComponentsResults, ComponentPatternsEntry } from '@teambit/tester';
 import { TestsFiles, TestResult, TestsResult } from '@teambit/tests-results';
 import { TestResult as JestTestResult, AggregatedResult } from '@jest/test-result';
 import { formatResultsErrors } from 'jest-message-util';

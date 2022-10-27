@@ -1,13 +1,12 @@
 import chalk from 'chalk';
 import R from 'ramda';
 import { Command, CommandOptions } from '@teambit/cli';
-import { BitId } from '@teambit/legacy-bit-id';
-import Component from '@teambit/legacy/dist/consumer/component';
+import { ComponentID } from '@teambit/component-id';
 import { DivergeData } from '@teambit/legacy/dist/scope/component-ops/diverge-data';
 import { immutableUnshift } from '@teambit/legacy/dist/utils';
-import { formatBitString, formatNewBit } from '@teambit/legacy/dist/cli/chalk-box';
-import { getInvalidComponentLabel, formatIssues } from '@teambit/legacy/dist/cli/templates/component-issues-template';
-import { ModelComponent } from '@teambit/legacy/dist/scope/models';
+import { IssuesList } from '@teambit/component-issues';
+import { formatBitString } from '@teambit/legacy/dist/cli/chalk-box';
+import { getInvalidComponentLabel } from '@teambit/legacy/dist/cli/templates/component-issues-template';
 import {
   BASE_DOCS_DOMAIN,
   IMPORT_PENDING_MSG,
@@ -15,12 +14,10 @@ import {
   statusInvalidComponentsMsg,
   statusWorkspaceIsCleanMsg,
 } from '@teambit/legacy/dist/constants';
-import { partition } from 'lodash';
+import { compact, partition } from 'lodash';
 import { isHash } from '@teambit/component-version';
 import { StatusMain, StatusResult } from './status.main.runtime';
 
-const individualFilesDesc = `these components were added as individual files and not as directories, which are invalid in Harmony
-please make sure each component has its own directory and re-add it. alternatively, use "bit move --component" to help with the move.`;
 const TROUBLESHOOTING_MESSAGE = `${chalk.yellow(
   `learn more at https://${BASE_DOCS_DOMAIN}/components/adding-components`
 )}`;
@@ -33,7 +30,11 @@ export class StatusCmd implements Command {
   alias = 's';
   options = [
     ['j', 'json', 'return a json version of the component'],
-    ['', 'verbose', 'show full snap hashes'],
+    [
+      '',
+      'verbose',
+      'show extra data: full snap hashes for staged, divergence point for lanes and updates-from-main for forked lanes',
+    ],
     ['', 'strict', 'in case issues found, exit with code 1'],
   ] as CommandOptions;
   loader = true;
@@ -44,7 +45,7 @@ export class StatusCmd implements Command {
   async json() {
     const {
       newComponents,
-      modifiedComponent,
+      modifiedComponents,
       stagedComponents,
       componentsWithIssues,
       importPendingComponents,
@@ -55,15 +56,17 @@ export class StatusCmd implements Command {
       outdatedComponents,
       mergePendingComponents,
       componentsDuringMergeState,
-      componentsWithIndividualFiles,
       softTaggedComponents,
       snappedComponents,
       pendingUpdatesFromMain,
+      updatesFromForked,
+      currentLaneId,
+      forkedLaneId,
     }: StatusResult = await this.status.status();
     return {
-      newComponents,
-      modifiedComponent: modifiedComponent.map((c) => c.id.toString()),
-      stagedComponents: stagedComponents.map((c) => ({ id: c.id(), versions: c.getLocalTagsOrHashes() })),
+      newComponents: newComponents.map((c) => c.toStringWithoutVersion()),
+      modifiedComponents: modifiedComponents.map((c) => c.toString()),
+      stagedComponents: stagedComponents.map((c) => ({ id: c.id.toStringWithoutVersion(), versions: c.versions })),
       componentsWithIssues: componentsWithIssues.map((c) => ({
         id: c.id.toString(),
         issues: c.issues?.toObject(),
@@ -76,17 +79,22 @@ export class StatusCmd implements Command {
       outdatedComponents: outdatedComponents.map((c) => c.id.toString()),
       mergePendingComponents: mergePendingComponents.map((c) => c.id.toString()),
       componentsDuringMergeState: componentsDuringMergeState.map((id) => id.toString()),
-      componentsWithIndividualFiles: componentsWithIndividualFiles.map((c) => c.id.toString()),
       softTaggedComponents: softTaggedComponents.map((s) => s.toString()),
       snappedComponents: snappedComponents.map((s) => s.toString()),
       pendingUpdatesFromMain: pendingUpdatesFromMain.map((p) => ({ id: p.id.toString(), divergeData: p.divergeData })),
+      updatesFromForked: updatesFromForked.map((p) => ({
+        id: p.id.toString(),
+        divergeData: p.divergeData,
+      })),
+      currentLaneId,
+      forkedLaneId,
     };
   }
 
   async report(_args, { strict, verbose }: { strict?: boolean; verbose?: boolean }) {
     const {
       newComponents,
-      modifiedComponent,
+      modifiedComponents,
       stagedComponents,
       componentsWithIssues,
       importPendingComponents,
@@ -97,41 +105,31 @@ export class StatusCmd implements Command {
       outdatedComponents,
       mergePendingComponents,
       componentsDuringMergeState,
-      componentsWithIndividualFiles,
       softTaggedComponents,
       snappedComponents,
       pendingUpdatesFromMain,
-      laneName,
+      updatesFromForked,
+      currentLaneId,
+      forkedLaneId,
     }: StatusResult = await this.status.status();
     // If there is problem with at least one component we want to show a link to the
     // troubleshooting doc
     let showTroubleshootingLink = false;
 
-    function format(component: BitId | Component | ModelComponent, showVersions = false, message?: string): string {
-      const getBitId = () => {
-        if (component instanceof BitId) return component;
-        if (component instanceof Component) return component.id;
-        if (component instanceof ModelComponent) return component.toBitId();
-        throw new Error(`type of component ${component} is not supported`);
-      };
-      const bitId = getBitId();
-      const issues = componentsWithIssues.find((compWithIssue: Component) => compWithIssue.id.isEqual(bitId));
-      const softTagged = softTaggedComponents.find((softTaggedId) => softTaggedId.isEqual(bitId));
+    function format(id: ComponentID, showIssues = false, message?: string, localVersions?: string[]): string {
+      const idWithIssues = componentsWithIssues.find((c) => c.id.isEqual(id));
+      const softTagged = softTaggedComponents.find((softTaggedId) => softTaggedId.isEqual(id));
 
       const messageStatusText = message || 'ok';
       const messageStatusTextWithSoftTag = softTagged ? `${messageStatusText} (soft-tagged)` : messageStatusText;
       const color = message ? 'yellow' : 'green';
       const messageStatus = chalk[color](messageStatusTextWithSoftTag);
 
-      if (component instanceof BitId) {
-        return `${formatBitString(component.toStringWithoutVersion())} ... ${messageStatus}`;
+      if (!showIssues) {
+        return `${formatBitString(id.toStringWithoutVersion())} ... ${messageStatus}`;
       }
-      let bitFormatted = `${formatNewBit(component)}`;
-      if (showVersions) {
-        if (!(component instanceof ModelComponent)) {
-          throw new Error(`expect "${component}" to be instance of ModelComponent`);
-        }
-        const localVersions = component.getLocalTagsOrHashes();
+      let bitFormatted = `${formatBitString(id.toStringWithoutVersion())}`;
+      if (localVersions) {
         if (verbose) {
           bitFormatted += `. versions: ${localVersions.join(', ')}`;
         } else {
@@ -143,9 +141,9 @@ export class StatusCmd implements Command {
         }
       }
       bitFormatted += ' ... ';
-      if (!issues) return `${bitFormatted}${messageStatus}`;
+      if (!idWithIssues) return `${bitFormatted}${messageStatus}`;
       showTroubleshootingLink = true;
-      return `${bitFormatted} ${chalk.red(statusFailureMsg)}${formatIssues(issues)}`;
+      return `${bitFormatted} ${chalk.red(statusFailureMsg)}${formatIssues(idWithIssues.issues)}`;
     }
 
     const importPendingWarning = importPendingComponents.length ? chalk.yellow(`${IMPORT_PENDING_MSG}.\n`) : '';
@@ -153,7 +151,7 @@ export class StatusCmd implements Command {
     const splitByMissing = R.groupBy((component) => {
       return component.includes(statusFailureMsg) ? 'missing' : 'nonMissing';
     });
-    const { missing, nonMissing } = splitByMissing(newComponents.map((c) => format(c)));
+    const { missing, nonMissing } = splitByMissing(newComponents.map((c) => format(c, true)));
 
     const outdatedTitle = chalk.underline.white('pending updates');
     const outdatedDesc =
@@ -175,8 +173,8 @@ alternatively, to keep local tags/snaps history, use "bit merge <remote-name>/<l
     const pendingMergeComps = mergePendingComponents
       .map((component) => {
         return `    > ${chalk.cyan(component.id.toString())} local and remote have diverged and have ${
-          component.diverge.snapsOnLocalOnly.length
-        } and ${component.diverge.snapsOnRemoteOnly.length} different snaps each, respectively\n`;
+          component.divergeData.snapsOnLocalOnly.length
+        } and ${component.divergeData.snapsOnRemoteOnly.length} different snaps each, respectively\n`;
       })
       .join('');
 
@@ -184,17 +182,17 @@ alternatively, to keep local tags/snaps history, use "bit merge <remote-name>/<l
       ? [pendingMergeTitle, pendingMergeDesc, pendingMergeComps].join('\n')
       : '';
 
-    const compWithConflictsTitle = chalk.underline.white('components during merge state');
-    const compWithConflictsDesc = `(use "bit snap/tag [--unmerged]" to complete the merge process
+    const compDuringMergeTitle = chalk.underline.white('components during merge state');
+    const compDuringMergeDesc = `(use "bit snap/tag [--unmerged]" to complete the merge process
 or use "bit merge [component-id] --abort" to cancel the merge operation)\n`;
-    const compWithConflictsComps = componentsDuringMergeState
+    const compDuringMergeComps = componentsDuringMergeState
       .map((id) => {
         return `    > ${chalk.cyan(id.toString())}`;
       })
       .join('\n');
 
-    const compWithConflictsStr = compWithConflictsComps.length
-      ? [compWithConflictsTitle, compWithConflictsDesc, compWithConflictsComps].join('\n')
+    const compDuringMergeStr = compDuringMergeComps.length
+      ? [compDuringMergeTitle, compDuringMergeDesc, compDuringMergeComps].join('\n')
       : '';
 
     const newComponentDescription = '\n(use "bit tag [version]" to lock a version with all your changes)\n';
@@ -206,8 +204,8 @@ or use "bit merge [component-id] --abort" to cancel the merge operation)\n`;
 
     const modifiedDesc = '(use "bit diff" to compare changes)\n';
     const modifiedComponentOutput = immutableUnshift(
-      modifiedComponent.map((c) => format(c)),
-      modifiedComponent.length
+      modifiedComponents.map((c) => format(c, true)),
+      modifiedComponents.length
         ? chalk.underline.white('modified components') + newComponentDescription + modifiedDesc
         : ''
     ).join('\n');
@@ -221,7 +219,7 @@ or use "bit merge [component-id] --abort" to cancel the merge operation)\n`;
 
     const invalidDesc = '\nthese components were failed to load.\n';
     const invalidComponentOutput = immutableUnshift(
-      invalidComponents.map((c) => format(c.id, true, getInvalidComponentLabel(c.error))).sort(),
+      invalidComponents.map((c) => format(c.id, false, getInvalidComponentLabel(c.error))).sort(),
       invalidComponents.length ? chalk.underline.white(statusInvalidComponentsMsg) + invalidDesc : ''
     ).join('\n');
 
@@ -239,55 +237,66 @@ or use "bit merge [component-id] --abort" to cancel the merge operation)\n`;
         : ''
     ).join('\n');
 
-    const individualFilesOutput = immutableUnshift(
-      componentsWithIndividualFiles.map((c) => format(c.id, false, 'individual files')).sort(),
-      componentsWithIndividualFiles.length
-        ? `${chalk.underline.white('components with individual files')}\n${individualFilesDesc}\n`
-        : ''
-    ).join('\n');
-
     const stagedDesc = '\n(use "bit export" to push these components to a remote scope)\n';
     const stagedComponentsOutput = immutableUnshift(
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      stagedComponents.map((c) => format(c, true)),
+      stagedComponents.map((c) => format(c.id, true, undefined, c.versions)),
       stagedComponents.length ? chalk.underline.white('staged components') + stagedDesc : ''
     ).join('\n');
 
     const snappedDesc = '\n(use "bit tag [version]" or "bit tag --snapped [version]" to lock a version)\n';
     const snappedComponentsOutput = immutableUnshift(
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      snappedComponents.map((c) => format(c, true)),
+      snappedComponents.map((c) => format(c)),
       snappedComponents.length ? chalk.underline.white('snapped components') + snappedDesc : ''
     ).join('\n');
 
-    const getUpdateFromMainMsg = (divergeData: DivergeData): string => {
+    const getUpdateFromMsg = (divergeData: DivergeData, from = 'main'): string => {
       if (divergeData.err) return divergeData.err.message;
-      let msg = `main is ahead by ${divergeData.snapsOnRemoteOnly.length || 0} snaps`;
+      let msg = `${from} is ahead by ${divergeData.snapsOnRemoteOnly.length || 0} snaps`;
       if (divergeData.snapsOnLocalOnly && verbose) {
         msg += ` (diverged since ${divergeData.commonSnapBeforeDiverge?.toShortString()})`;
       }
       return msg;
     };
-    const updatesFromMainDesc = '\n(EXPERIMENTAL. use "bit lane merge main" to merge the changes)\n';
-    const pendingUpdatesFromMainIds = pendingUpdatesFromMain.map((c) =>
-      format(c.id, true, getUpdateFromMainMsg(c.divergeData))
-    );
-    const updatesFromMainOutput = immutableUnshift(
-      pendingUpdatesFromMainIds,
-      pendingUpdatesFromMain.length ? chalk.underline.white('pending updates from main') + updatesFromMainDesc : ''
-    ).join('\n');
 
-    const laneStr = laneName ? `\non ${chalk.bold(laneName)} lane` : '';
+    let updatesFromMainOutput = '';
+    if (!forkedLaneId || verbose) {
+      const updatesFromMainDesc = '\n(use "bit lane merge main" to merge the changes)\n';
+      const pendingUpdatesFromMainIds = pendingUpdatesFromMain.map((c) =>
+        format(c.id, false, getUpdateFromMsg(c.divergeData))
+      );
+      updatesFromMainOutput = [
+        pendingUpdatesFromMain.length ? chalk.underline.white('pending updates from main') + updatesFromMainDesc : '',
+        ...pendingUpdatesFromMainIds,
+      ].join('\n');
+    }
+
+    let updatesFromForkedOutput = '';
+    if (forkedLaneId) {
+      const updatesFromForkedDesc = `\n(use "bit lane merge ${forkedLaneId.toString()}" to merge the changes
+use "bit fetch ${forkedLaneId.toString()} --lanes" to update ${forkedLaneId.name} locally)\n`;
+      const pendingUpdatesFromForkedIds = updatesFromForked.map((c) =>
+        format(c.id, false, getUpdateFromMsg(c.divergeData, forkedLaneId.name))
+      );
+      updatesFromForkedOutput = [
+        updatesFromForked.length
+          ? chalk.underline.white(`updates from ${forkedLaneId.name}`) + updatesFromForkedDesc
+          : '',
+        ...pendingUpdatesFromForkedIds,
+      ].join('\n');
+    }
+
+    const laneStr = currentLaneId.isDefault() ? '' : `\non ${chalk.bold(currentLaneId.toString())} lane`;
 
     const troubleshootingStr = showTroubleshootingLink ? `\n${TROUBLESHOOTING_MESSAGE}` : '';
 
     const statusMsg =
       importPendingWarning +
-      [
+      compact([
         outdatedStr,
         pendingMergeStr,
         updatesFromMainOutput,
-        compWithConflictsStr,
+        updatesFromForkedOutput,
+        compDuringMergeStr,
         newComponentsOutput,
         modifiedComponentOutput,
         snappedComponentsOutput,
@@ -296,10 +305,7 @@ or use "bit merge [component-id] --abort" to cancel the merge operation)\n`;
         invalidComponentOutput,
         locallySoftRemovedOutput,
         remotelySoftRemovedOutput,
-        individualFilesOutput,
-      ]
-        .filter((x) => x)
-        .join(chalk.underline('\n                         \n') + chalk.white('\n')) +
+      ]).join(chalk.underline('\n                         \n') + chalk.white('\n')) +
       troubleshootingStr;
 
     const results = (statusMsg || chalk.yellow(statusWorkspaceIsCleanMsg)) + laneStr;
@@ -311,4 +317,8 @@ or use "bit merge [component-id] --abort" to cancel the merge operation)\n`;
       code: exitCode,
     };
   }
+}
+
+export function formatIssues(issues: IssuesList) {
+  return `       ${issues?.outputForCLI()}\n`;
 }

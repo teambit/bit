@@ -37,7 +37,7 @@ export class TesterTask implements BuildTask {
       const capsule = context.capsuleNetwork.graphCapsules.getCapsule(component.id);
       if (!capsule) throw new Error('capsule not found');
       const compiler: Compiler = context.env.getCompiler();
-      if (!compiler){
+      if (!compiler) {
         throw new Error(`compiler not found for ${component.id.toString()}`);
       }
       // @ts-ignore. not sure why ts complain that compiler might be undefined, when we check it above.
@@ -47,9 +47,9 @@ export class TesterTask implements BuildTask {
         paths: specs.map((specFile) => {
           const distPath = compiler.getDistPathBySrcPath(specFile.relative);
           // TODO: fix spec type file need to capsule will return files with type AbstractVinyl
-          return { path: join(capsule.path, distPath), relative: distPath,  };
-        })
-      }
+          return { path: join(capsule.path, distPath), relative: distPath };
+        }),
+      };
     });
 
     const specFilesWithCapsule = ComponentMap.as(components, (component) => {

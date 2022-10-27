@@ -18,7 +18,7 @@ describe('big text file', function () {
   describe('Windows format (\\r\\n)', () => {
     let tagOutput;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       const bigFilePath = path.join(__dirname, '..', 'fixtures', 'big-text-file-fixture.txt');
       const bigFileContent = fs.readFileSync(bigFilePath).toString();
@@ -35,7 +35,7 @@ describe('big text file', function () {
       let importOutput;
       before(() => {
         helper.command.export();
-        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.scopeHelper.reInitLocalScope();
         helper.scopeHelper.addRemoteScope();
         importOutput = helper.command.importComponent('bar/text');
       });

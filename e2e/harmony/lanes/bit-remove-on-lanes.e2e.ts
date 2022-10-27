@@ -16,7 +16,7 @@ describe('bit lane command', function () {
   describe('remove components when on a lane', () => {
     let beforeRemoval: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents();
       helper.command.snapAllComponentsWithoutBuild();
@@ -79,7 +79,7 @@ describe('bit lane command', function () {
   });
   describe('remove a new component when on a lane with --from-lane flag', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.fixtures.populateComponents(1);
       helper.command.createLane();
       helper.command.removeComponent('comp1', '--from-lane');
@@ -91,7 +91,7 @@ describe('bit lane command', function () {
   });
   describe('remove a non-lane component when on a lane with --from-lane flag', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(1);
       helper.command.tagWithoutBuild();
@@ -106,7 +106,7 @@ describe('bit lane command', function () {
   });
   describe('soft remove on lane', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(2);
       helper.command.createLane();
@@ -135,7 +135,7 @@ describe('bit lane command', function () {
     });
     describe('importing the lane to a new workspace', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.scopeHelper.reInitLocalScope();
         helper.scopeHelper.addRemoteScope();
         helper.command.importLane('dev');
       });

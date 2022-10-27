@@ -14,7 +14,7 @@ describe('extensions config diff', function () {
   let beforeEject: string;
   before(() => {
     helper = new Helper();
-    helper.scopeHelper.reInitLocalScopeHarmony();
+    helper.scopeHelper.reInitLocalScope();
     helper.bitJsonc.disablePreview();
     helper.fixtures.populateExtensions(4);
     helper.fixtures.createComponentBarFoo();
@@ -39,7 +39,7 @@ describe('extensions config diff', function () {
         helper.componentJson.setExtension('my-scope/ext4', { key: 'val-component-json' });
       });
       it('should make the component modified', () => {
-        output = helper.command.statusComponentIsModified('bar/foo@0.0.1');
+        output = helper.command.statusComponentIsModified('my-scope/bar/foo@0.0.1');
         expect(output).to.be.true;
       });
       it('should show it in bit diff', () => {
@@ -64,7 +64,7 @@ describe('extensions config diff', function () {
         helper.componentJson.removeExtension('my-scope/ext3@0.0.1');
       });
       it('should make the component modified', () => {
-        output = helper.command.statusComponentIsModified('bar/foo@0.0.1');
+        output = helper.command.statusComponentIsModified('my-scope/bar/foo@0.0.1');
         expect(output).to.be.true;
       });
       it('should show it in bit diff', () => {
@@ -84,7 +84,7 @@ describe('extensions config diff', function () {
         helper.componentJson.setExtension('my-scope/ext2@0.0.1', { newKey: 'newVal' });
       });
       it('should make the component modified', () => {
-        output = helper.command.statusComponentIsModified('bar/foo@0.0.1');
+        output = helper.command.statusComponentIsModified('my-scope/bar/foo@0.0.1');
         expect(output).to.be.true;
       });
       it('should show it in bit diff', () => {
@@ -105,7 +105,7 @@ describe('extensions config diff', function () {
         helper.componentJson.setExtension('my-scope/ext1@0.0.2', { key: 'val' });
       });
       it('should make the component modified', () => {
-        output = helper.command.statusComponentIsModified('bar/foo@0.0.1');
+        output = helper.command.statusComponentIsModified('my-scope/bar/foo@0.0.1');
         expect(output).to.be.true;
       });
       it('should show it in bit diff', () => {

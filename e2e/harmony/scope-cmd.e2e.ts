@@ -16,12 +16,12 @@ describe('bit scope command', function () {
   describe('bit scope fork', () => {
     let output: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(3);
       helper.command.tagAllWithoutBuild();
       helper.command.export();
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
       output = helper.command.forkScope(helper.scopes.remote, 'org.scope');
     });
@@ -35,6 +35,24 @@ describe('bit scope command', function () {
       expect(showFork.config).to.have.property('forkedFrom');
       expect(showFork.config.forkedFrom.scope).to.equal(helper.scopes.remote);
       expect(showFork.config.forkedFrom.name).to.equal('comp1');
+    });
+  });
+  describe('bit scope rename --refactor', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(3);
+      helper.bitJsonc.addKeyVal('my-scope/comp2', {});
+      helper.command.renameScope('my-scope', helper.scopes.remote, '--refactor');
+    });
+    it('should change the package name in the component files', () => {
+      const comp2Content = helper.fs.readFile('comp2/index.js');
+      expect(comp2Content).to.not.include('my-scope');
+      expect(comp2Content).to.include(helper.scopes.remote);
+    });
+    it('should also change the aspect-id in the workspace.jsonc', () => {
+      const workspaceJsonc = helper.bitJsonc.read();
+      expect(workspaceJsonc).to.have.property(`${helper.scopes.remote}/comp2`);
+      expect(workspaceJsonc).not.to.have.property(`my-scope/comp2`);
     });
   });
 });

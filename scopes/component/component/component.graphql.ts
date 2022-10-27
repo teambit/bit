@@ -46,6 +46,7 @@ export function componentSchema(componentExtension: ComponentMain) {
       type LogEntry {
         message: String!
         username: String
+        parents: [String]!
         email: String
         date: String
         hash: String!
@@ -99,18 +100,19 @@ export function componentSchema(componentExtension: ComponentMain) {
           """
           type of logs to show (tag or snap)
           """
-          type: String,
-          offset: Int,
-          limit: Int,
+          type: String
+          offset: Int
+          limit: Int
           """
           head to start traversing logs from
           """
-          head: String,
-          sort: String,
+          head: String
+          sort: String
           """
           start traversing logs from the fetched component's head
           """
-          takeHeadFromComponent: Boolean): [LogEntry]!
+          takeHeadFromComponent: Boolean
+        ): [LogEntry]!
 
         aspects(include: [String]): [Aspect]
       }

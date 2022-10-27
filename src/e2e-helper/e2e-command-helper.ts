@@ -14,6 +14,10 @@ import { removeChalkCharacters } from '../utils';
 import ScopesData from './e2e-scopes';
 
 const DEFAULT_DEFAULT_INTERVAL_BETWEEN_INPUTS = 200;
+// The default value of maxBuffer is 1024*1024, which is not enough for some of the tests.
+// If a command has a lot of output, it will throw this error:
+// Error: spawnSync /bin/sh ENOBUFS
+const EXEC_SYNC_MAX_BUFFER = 1024 * 1024 * 10; // 10MB
 
 /**
  * to enable a feature for Helper instance, in the e2e-test file add `helper.command.setFeatures('your-feature');`
@@ -57,7 +61,7 @@ export default class CommandHelper {
       ? childProcess
           .spawnSync(cmd.split(' ')[0], cmd.split(' ').slice(1), { cwd, stdio, shell: true })
           .output.toString()
-      : childProcess.execSync(cmdWithFeatures, { cwd, stdio });
+      : childProcess.execSync(cmdWithFeatures, { cwd, stdio, maxBuffer: EXEC_SYNC_MAX_BUFFER });
     if (this.debugMode) console.log(rightpad(chalk.green('output: '), 20, ' '), chalk.cyan(cmdOutput.toString())); // eslint-disable-line no-console
     return cmdOutput.toString();
   }
@@ -160,6 +164,9 @@ export default class CommandHelper {
   }
   setScope(scopeName: string, component: string) {
     return this.runCmd(`bit scope set ${scopeName} ${component}`);
+  }
+  renameScope(oldScope: string, newScope: string, flags = '') {
+    return this.runCmd(`bit scope rename ${oldScope} ${newScope} ${flags}`);
   }
   setEnv(compId: string, envId: string) {
     return this.runCmd(`bit envs set ${compId} ${envId}`);
@@ -287,6 +294,13 @@ export default class CommandHelper {
   }
   removeRemoteLane(laneName = 'dev', options = '') {
     return this.runCmd(`bit lane remove ${this.scopes.remote}/${laneName} ${options} --remote --silent`);
+  }
+  writeTsconfig(flags = '') {
+    return this.runCmd(`bit write-tsconfig ${flags} --silent`);
+  }
+  writeTsconfigDryRun(flags = '') {
+    const results = this.runCmd(`bit write-tsconfig  --dry-run ${flags} --json`);
+    return JSON.parse(results);
   }
   showOneLane(name: string) {
     return this.runCmd(`bit lane show ${name}`);
@@ -451,13 +465,6 @@ export default class CommandHelper {
     return this.runCmd(`bit build ${id} ${flags}`, undefined, undefined, undefined, getStderrAsPartOfTheOutput);
   }
 
-  buildComponentWithOptions(id = '', options: Record<string, any>, cwd: string = this.scopes.localPath) {
-    const value = Object.keys(options)
-      .map((key) => `-${key} ${options[key]}`)
-      .join(' ');
-    return this.runCmd(`bit build ${id} ${value}`, cwd);
-  }
-
   test(flags = '', getStderrAsPartOfTheOutput = false) {
     return this.runCmd(`bit test ${flags}`, undefined, undefined, undefined, getStderrAsPartOfTheOutput);
   }
@@ -468,13 +475,6 @@ export default class CommandHelper {
 
   testAllWithJunit() {
     return this.testComponent(undefined, '--junit junit.xml');
-  }
-
-  testComponentWithOptions(id = '', options: Record<string, any>, cwd: string = this.scopes.localPath) {
-    const value = Object.keys(options)
-      .map((key) => `-${key} ${options[key]}`)
-      .join(' ');
-    return this.runCmd(`bit test ${id} ${value}`, cwd);
   }
 
   status(flags = '') {
@@ -491,15 +491,18 @@ export default class CommandHelper {
     return deprecationData.config.deprecate;
   }
 
-  getStagedIdsFromStatus(): string[] {
+  getStagedIdsFromStatus(stripScopeName = true): string[] {
     const status = this.statusJson();
-    return status.stagedComponents.map((s) => s.id);
+    return status.stagedComponents
+      .map((s) => s.id)
+      .map((id) => (stripScopeName ? id.replace(`${this.scopes.remote}/`, '') : id));
   }
 
   expectStatusToBeClean(exclude: string[] = []) {
     const statusJson = this.statusJson();
     Object.keys(statusJson).forEach((key) => {
       if (exclude.includes(key)) return;
+      if (key === 'currentLaneId' || key === 'forkedLaneId') return;
       expect(statusJson[key], `status.${key} should be empty`).to.have.lengthOf(0);
     });
   }
@@ -526,15 +529,20 @@ export default class CommandHelper {
     });
   }
 
+  statusComponentIsModified(fullIdWithVersion: string): boolean {
+    const status = this.statusJson();
+    return status.modifiedComponents.includes(fullIdWithVersion);
+  }
+
   statusComponentIsStaged(id: string): boolean {
     const status = this.statusJson();
     const stagedIds = status.stagedComponents.map((s) => s.id);
     return stagedIds.includes(id);
   }
 
-  statusComponentIsModified(fullId: string): boolean {
+  statusComponentHasIssues(id: string): boolean {
     const status = this.statusJson();
-    return status.modifiedComponent.includes(fullId);
+    return status.componentsWithIssues.includes(`${this.scopes.remote}/${id}`);
   }
 
   showComponent(id = 'bar/foo') {
@@ -622,8 +630,8 @@ export default class CommandHelper {
   runTask(taskName: string) {
     return this.runCmd(`bit run ${taskName}`);
   }
-  create(templateName: string, componentName: string, flags = '') {
-    return this.runCmd(`bit create ${templateName} ${componentName} ${flags}`);
+  create(templateName: string, componentName: string, flags = '', cwd = this.scopes.localPath) {
+    return this.runCmd(`bit create ${templateName} ${componentName} ${flags}`, cwd);
   }
   new(templateName: string, flags = '', workspaceName = 'my-workspace', cwd = this.scopes.localPath) {
     return this.runCmd(`bit new ${templateName} ${workspaceName} ${flags}`, cwd);
@@ -634,9 +642,9 @@ export default class CommandHelper {
   link(flags?: string) {
     return this.runCmd(`bit link ${flags || ''}`);
   }
-  install(packages = '', options?: Record<string, any>) {
+  install(packages = '', options?: Record<string, any>, cwd = this.scopes.localPath) {
     const parsedOpts = this.parseOptions(options);
-    return this.runCmd(`bit install ${packages} ${parsedOpts}`);
+    return this.runCmd(`bit install ${packages} ${parsedOpts}`, cwd);
   }
   update(flags?: string) {
     return this.runCmd(`bit update ${flags || ''}`);
@@ -707,7 +715,9 @@ export default class CommandHelper {
     const parsedOpts = this.parseOptions(options);
     return this.runCmd(`bit eject-conf ${id} ${parsedOpts}`);
   }
-
+  runAction(actionName: string, remote: string, options: Record<string, any>) {
+    return this.runCmd(`bit run-action ${actionName} ${remote} '${JSON.stringify(options)}'`);
+  }
   compile(id = '', options?: Record<string, any>) {
     const parsedOpts = this.parseOptions(options);
     return this.runCmd(`bit compile ${id} ${parsedOpts}`);

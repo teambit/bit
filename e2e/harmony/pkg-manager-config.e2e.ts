@@ -1,6 +1,6 @@
 import path from 'path';
 import chai, { expect } from 'chai';
-import * as modulesYaml from '@pnpm/modules-yaml';
+import { readModulesManifest } from '@pnpm/modules-yaml';
 
 import Helper from '../../src/e2e-helper/e2e-helper';
 import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
@@ -18,7 +18,7 @@ chai.use(require('chai-string'));
     let npmCiRegistry: NpmCiRegistry;
     before(async () => {
       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.bitJsonc.setPackageManager();
       npmCiRegistry = new NpmCiRegistry(helper);
@@ -31,13 +31,13 @@ chai.use(require('chai-string'));
       helper.command.tagAllComponents();
       helper.command.export();
 
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
       helper.bitJsonc.setupDefault();
     });
     describe('using Yarn', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScopeHarmony({
+        helper.scopeHelper.reInitLocalScope({
           yarnRCConfig: {
             packageExtensions: {
               'lodash.get@*': {
@@ -63,7 +63,7 @@ chai.use(require('chai-string'));
     });
     describe('using pnpm', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScopeHarmony({
+        helper.scopeHelper.reInitLocalScope({
           npmrcConfig: {
             'hoist-pattern[]': 'foo',
           },
@@ -78,7 +78,7 @@ chai.use(require('chai-string'));
       });
       it('workspace .npmrc is taken into account when running install in the capsule', async () => {
         const { scopeAspectsCapsulesRootDir } = helper.command.capsuleListParsed();
-        const modulesState = await modulesYaml.read(path.join(scopeAspectsCapsulesRootDir, 'node_modules'));
+        const modulesState = await readModulesManifest(path.join(scopeAspectsCapsulesRootDir, 'node_modules'));
         expect(modulesState?.hoistPattern?.[0]).to.eq('foo');
       });
     });

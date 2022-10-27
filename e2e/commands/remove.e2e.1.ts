@@ -20,7 +20,7 @@ describe('bit remove command', function () {
   describe('with tagged components and --track=false ', () => {
     let output;
     before(() => {
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
       helper.fixtures.tagComponentBarFoo();
@@ -43,7 +43,7 @@ describe('bit remove command', function () {
   });
   describe('with tagged components and -t=true', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
       helper.fixtures.tagComponentBarFoo();
@@ -63,7 +63,7 @@ describe('bit remove command', function () {
   });
   describe('with remote scope without dependencies', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
@@ -105,7 +105,7 @@ describe('bit remove command', function () {
   describe('with remote scope with dependencies', () => {
     const componentName = 'comp2';
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents();
       helper.command.tagAllWithoutBuild();
@@ -125,14 +125,14 @@ describe('bit remove command', function () {
   });
   describe('with imported components, no dependencies', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
       helper.fixtures.tagComponentBarFoo();
       helper.command.export();
 
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
       helper.command.importComponent('bar/foo');
     });
@@ -146,7 +146,7 @@ describe('bit remove command', function () {
   });
   describe('remove modified component', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
@@ -162,7 +162,7 @@ describe('bit remove command', function () {
   describe('remove a component when the main file is missing', () => {
     let output;
     before(() => {
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.fs.createFile('bar', 'foo.js');
       helper.fs.createFile('bar', 'foo-main.js');
       helper.command.addComponent('bar', { m: 'foo-main.js', i: 'bar/foo' });
@@ -180,7 +180,7 @@ describe('bit remove command', function () {
   describe('remove a component when a dependency has a file with the same content as other component file', () => {
     let output;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(2);
       helper.fs.outputFile('comp2/index.js', fixtures.isType);
@@ -194,7 +194,7 @@ describe('bit remove command', function () {
       helper.command.tagIncludeUnmodified('1.0.0');
 
       helper.command.export();
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
       helper.command.importComponent('comp1');
       helper.command.importComponent('comp2');
@@ -220,7 +220,7 @@ describe('bit remove command', function () {
   });
   describe('soft remove', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(2);
       helper.command.tagWithoutBuild();
@@ -278,7 +278,7 @@ describe('bit remove command', function () {
         describe('importing the component to a new workspace', () => {
           let importOutput: string;
           before(() => {
-            helper.scopeHelper.reInitLocalScopeHarmony();
+            helper.scopeHelper.reInitLocalScope();
             helper.scopeHelper.addRemoteScope();
             importOutput = helper.command.importComponent('comp2');
           });
@@ -292,7 +292,7 @@ describe('bit remove command', function () {
         });
         describe('importing the entire scope to a new workspace', () => {
           before(() => {
-            helper.scopeHelper.reInitLocalScopeHarmony();
+            helper.scopeHelper.reInitLocalScope();
             helper.scopeHelper.addRemoteScope();
             helper.command.importComponent('*');
           });

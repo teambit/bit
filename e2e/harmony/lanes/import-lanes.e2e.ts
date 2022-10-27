@@ -21,7 +21,7 @@ describe('import lanes', function () {
     let appOutput: string;
     let laneHash: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       appOutput = helper.fixtures.populateComponents();
       helper.command.createLane('dev');
@@ -33,7 +33,7 @@ describe('import lanes', function () {
     });
     describe('fetching lanes objects', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.scopeHelper.reInitLocalScope();
         helper.scopeHelper.addRemoteScope();
         helper.command.fetchRemoteLane('dev');
       });
@@ -59,7 +59,7 @@ describe('import lanes', function () {
     });
     describe('importing the lane and checking out by bit switch', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.scopeHelper.reInitLocalScope();
         helper.scopeHelper.addRemoteScope();
         helper.command.switchRemoteLane('dev');
       });
@@ -83,7 +83,7 @@ describe('import lanes', function () {
       });
       it('bit lane should show the checked out lane as the active one', () => {
         const lanes = helper.command.listLanes();
-        expect(lanes).to.have.string('current lane - dev');
+        expect(lanes).to.have.string(`current lane - ${helper.scopes.remote}/dev`);
       });
       it('.bitmap should save the component as belong to the lane', () => {
         const bitMap = helper.bitMap.read();
@@ -109,7 +109,7 @@ describe('import lanes', function () {
     });
     describe('importing the lane and checking out with a different local lane-name', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.scopeHelper.reInitLocalScope();
         helper.scopeHelper.addRemoteScope();
         helper.command.switchRemoteLane('dev', '--alias my-new-lane');
       });

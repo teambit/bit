@@ -609,23 +609,6 @@ once done, to continue working, please run "bit cc"`
     return Boolean(comp);
   }
 
-  async getComponentsAndAllLocalUnexportedVersions(ids: BitIds): Promise<ComponentsAndVersions[]> {
-    const componentsObjects = await this.sources.getMany(ids);
-    const componentsAndVersionsP = componentsObjects.map(async (componentObjects) => {
-      if (!componentObjects.component) return null;
-      const component: ModelComponent = componentObjects.component;
-      const localVersions = component.getLocalVersions();
-      return Promise.all(
-        localVersions.map(async (versionStr) => {
-          const version: Version = await component.loadVersion(versionStr, this.objects);
-          return { component, version, versionStr };
-        })
-      );
-    });
-    const componentsAndVersions = await Promise.all(componentsAndVersionsP);
-    return removeNils(R.flatten(componentsAndVersions));
-  }
-
   /**
    * Creates a symlink object with the local-scope which links to the real-object of the remote-scope
    * This way, local components that have dependencies to the exported component won't break.
@@ -734,7 +717,19 @@ once done, to continue working, please run "bit cc"`
 
   async removePendingDir(clientId: string) {
     const pendingDir = pathLib.join(this.path, PENDING_OBJECTS_DIR, clientId);
-    return fs.remove(pendingDir); // no error is thrown if not exists
+    try {
+      await fs.remove(pendingDir); // no error is thrown if not exists
+    } catch (err: any) {
+      if (err.code === 'ENOTEMPTY') {
+        // it rarely happens, but when it does, the export gets stuck. it's probably a bug with fs-extra.
+        // a workaround is to try again after a second.
+        // see this: https://github.com/jprichardson/node-fs-extra/issues/532
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        await fs.remove(pendingDir);
+      } else {
+        throw err;
+      }
+    }
   }
 
   static ensure(path: PathOsBasedAbsolute, name?: string | null, groupName?: string | null): Promise<Scope> {

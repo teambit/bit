@@ -322,10 +322,11 @@ export class Workspace implements ComponentFactory {
   /**
    * list all workspace components.
    */
-  async list(filter?: { offset: number; limit: number }): Promise<Component[]> {
+  async list(filter?: { offset: number; limit: number }, loadOpts?: ComponentLoadOptions): Promise<Component[]> {
     const legacyIds = this.consumer.bitMap.getAllIdsAvailableOnLane();
     const ids = await this.resolveMultipleComponentIds(legacyIds);
-    return this.getMany(filter && filter.limit ? slice(ids, filter.offset, filter.offset + filter.limit) : ids);
+    const idsToGet = filter && filter.limit ? slice(ids, filter.offset, filter.offset + filter.limit) : ids;
+    return this.getMany(idsToGet, loadOpts);
   }
 
   /**
@@ -760,8 +761,8 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     return foundEnv?.components || [];
   }
 
-  async getMany(ids: Array<ComponentID>): Promise<Component[]> {
-    return this.componentLoader.getMany(ids);
+  async getMany(ids: Array<ComponentID>, loadOpts?: ComponentLoadOptions): Promise<Component[]> {
+    return this.componentLoader.getMany(ids, loadOpts);
   }
 
   getManyByLegacy(components: ConsumerComponent[], loadOpts?: ComponentLoadOptions): Promise<Component[]> {
@@ -808,11 +809,12 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     if (!lane) {
       return;
     }
-    this.logger.debug(`current lane ${laneId.toString()} is missing, importing it`);
+    this.logger.info(`current lane ${laneId.toString()} is missing, importing it`);
+    await this.scope.legacyScope.objects.writeObjectsToTheFS([lane]);
     const scopeComponentsImporter = ScopeComponentsImporter.getInstance(this.scope.legacyScope);
     const ids = BitIds.fromArray(lane.toBitIds().filter((id) => id.hasScope()));
     await scopeComponentsImporter.importManyDeltaWithoutDeps(ids, true, lane);
-    await scopeComponentsImporter.importMany({ ids, lanes: lane ? [lane] : undefined });
+    await scopeComponentsImporter.importMany({ ids, lanes: [lane] });
   }
 
   /**
@@ -857,7 +859,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
         ignoreVersion: false,
       }
     );
-    await config.write({ dir: path.dirname(config.path) });
+    await config.write();
     return aspectIdToAdd;
   }
 
@@ -916,7 +918,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
   }
 
   /**
-   * Get the component root dir in the file system (relative to workspace or full)
+   * Get the component root dir in the file system (relative to workspace or full) in Linux format
    * @param componentId
    * @param relative return the path relative to the workspace or full path
    */
@@ -1169,6 +1171,14 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
   private getUnmergedHead(componentId: ComponentID) {
     const unmerged = this.scope.legacyScope.objects.unmergedComponents.getEntry(componentId._legacy.name);
     return unmerged?.head;
+  }
+
+  async getUnmergedComponent(componentId: ComponentID): Promise<Component | undefined> {
+    const unmerged = this.scope.legacyScope.objects.unmergedComponents.getEntry(componentId._legacy.name);
+    if (unmerged?.head) {
+      return this.scope.get(componentId.changeVersion(unmerged?.head.toString()));
+    }
+    return undefined;
   }
 
   private async warnAboutMisconfiguredEnv(componentId: ComponentID, extensionDataList: ExtensionDataList) {
@@ -1514,7 +1524,11 @@ needed-for: ${neededFor || '<unknown>'}`);
         : { manifests: [] };
     const scopeOtherManifestsIds = compact(scopeOtherManifests.map((m) => m.id));
 
-    await this.aspectLoader.loadExtensionsByManifests([...scopeOtherManifests, ...workspaceManifests], throwOnError);
+    await this.aspectLoader.loadExtensionsByManifests(
+      [...scopeOtherManifests, ...workspaceManifests],
+      throwOnError,
+      idsWithoutCore
+    );
     // Try require components for potential plugins
     const pluginsWorkspaceComps = potentialPluginsIndexes.map((index) => {
       return workspaceComps[index];
@@ -2058,7 +2072,7 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
  * instead, long-running commands and those that need the artifacts from the Version objects, should try to re-fetch.
  */
 function shouldReFetchUnBuiltVersion() {
-  const commandsToReFetch = ['build', 'show', 'start', 'tag', 'install', 'link', 'import'];
+  const commandsToReFetch = ['import'];
   return commandsToReFetch.includes(process.argv[2]);
 }
 

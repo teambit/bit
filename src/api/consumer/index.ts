@@ -12,7 +12,6 @@ import { listScope } from './lib/list-scope';
 import login from './lib/login';
 import migrate from './lib/migrate';
 import move from './lib/move';
-import paintGraph from './lib/paint-graph';
 import { add as remoteAdd, list as remoteList, remove as remoteRm } from './lib/remote';
 import show from './lib/show';
 import { clearCache } from './lib/clear-cache';
@@ -36,6 +35,5 @@ export {
   migrate,
   login,
   show,
-  paintGraph,
   clearCache,
 };

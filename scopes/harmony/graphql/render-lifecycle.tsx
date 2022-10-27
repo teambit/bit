@@ -43,7 +43,7 @@ export class GraphqlRenderPlugins implements SSR.RenderPlugin<RenderContext, { s
    * Data will be available in gqlClient.extract()
    */
   onBeforeRender = async (ctx: RenderContext, app: ReactNode) => {
-    await getMarkupFromTree({tree: app, renderFunction: ReactDOMServer.renderToStaticMarkup });
+    await getMarkupFromTree({ tree: app, renderFunction: ReactDOMServer.renderToStaticMarkup });
   };
 
   serialize = (ctx?: RenderContext) => {

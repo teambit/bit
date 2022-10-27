@@ -250,14 +250,20 @@ export class ExportMain {
       allHashes.push(head);
     };
 
-    const getVersionsToExport = async (modelComponent: ModelComponent): Promise<string[]> => {
-      await modelComponent.setDivergeData(scope.objects);
-      const localTagsOrHashes = modelComponent.getLocalTagsOrHashes();
-      if (!allVersions) {
-        // if lane is exported, components from other remotes may be exported to this remote. we need their history.
+    const getVersionsToExport = async (modelComponent: ModelComponent, lane?: Lane): Promise<string[]> => {
+      const localTagsOrHashes = await modelComponent.getLocalTagsOrHashes(scope.objects);
+      if (!allVersions && !lane) {
         return localTagsOrHashes;
       }
-      const allHashes = await getAllVersionHashes({ modelComponent, repo: scope.objects });
+      let stopAt: Ref[] | undefined;
+      if (lane && !allVersions) {
+        // if lane is exported, components from other remotes may be part of this lane. we need their history.
+        // because their history could already exist on the remote from previous exports, we search this id in all
+        // remote-refs files of this lane-scope. while traversing the local history, stop when finding one of the remotes.
+        stopAt = await scope.objects.remoteLanes.getRefsFromAllLanesOnScope(lane.scope, modelComponent.toBitId());
+        if (modelComponent.laneHeadRemote) stopAt.push(modelComponent.laneHeadRemote);
+      }
+      const allHashes = await getAllVersionHashes({ modelComponent, repo: scope.objects, stopAt });
       await addMainHeadIfPossible(allHashes, modelComponent);
       return modelComponent.switchHashesWithTagsIfExist(allHashes);
     };
@@ -269,8 +275,8 @@ export class ExportMain {
     logger.debug(`export-scope-components, export to the following scopes ${groupedByScopeString}`);
     const exportVersions: ExportVersions[] = [];
 
-    const populateExportMetadata = (modelComponent: ModelComponent) => {
-      const localTagsOrHashes = modelComponent.getLocalTagsOrHashes();
+    const populateExportMetadata = async (modelComponent: ModelComponent) => {
+      const localTagsOrHashes = await modelComponent.getLocalTagsOrHashes(scope.objects);
       const head = modelComponent.getHeadRegardlessOfLane();
       if (!head) {
         throw new Error(`unable to export ${modelComponent.id()}, head is missing`);
@@ -294,7 +300,7 @@ export class ExportMain {
       const objectList = new ObjectList();
       const objectListPerName: ObjectListPerName = {};
       const processModelComponent = async (modelComponent: ModelComponent) => {
-        const versionToExport = await getVersionsToExport(modelComponent);
+        const versionToExport = await getVersionsToExport(modelComponent, lane);
         modelComponent.clearStateData();
         const objectItems = await modelComponent.collectVersionsObjects(
           scope.objects,
@@ -304,7 +310,7 @@ export class ExportMain {
         const objectsList = await new ObjectList(objectItems).toBitObjects();
         const componentAndObject = { component: modelComponent, objects: objectsList.getAll() };
         await this.convertToCorrectScopeHarmony(scope, componentAndObject, remoteNameStr, bitIds, idsWithFutureScope);
-        populateExportMetadata(modelComponent);
+        await populateExportMetadata(modelComponent);
         const remoteObj = { url: remote.host, name: remote.name, date: Date.now().toString() };
         modelComponent.addScopeListItem(remoteObj);
         componentsAndObjects.push(componentAndObject);

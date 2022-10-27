@@ -269,7 +269,8 @@ export default class Repository {
 
   async loadManyRaw(refs: Ref[]): Promise<ObjectItem[]> {
     const concurrency = concurrentIOLimit();
-    return pMap(refs, async (ref) => ({ ref, buffer: await this.loadRaw(ref) }), { concurrency });
+    const uniqRefs = uniqBy(refs, 'hash');
+    return pMap(uniqRefs, async (ref) => ({ ref, buffer: await this.loadRaw(ref) }), { concurrency });
   }
 
   async loadManyRawIgnoreMissing(refs: Ref[]): Promise<ObjectItem[]> {

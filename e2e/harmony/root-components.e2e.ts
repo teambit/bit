@@ -30,7 +30,7 @@ describe('app root components', function () {
     let numberOfFilesInVirtualStore!: number;
     before(() => {
       helper = new Helper();
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(4);
       helper.extensions.bitJsonc.addKeyValToDependencyResolver('rootComponents', true);
@@ -100,9 +100,6 @@ module.exports.default = {
           react: '17',
         },
       });
-      helper.command.install();
-      // Only after the second install is bit able to detect apps
-      helper.command.compile();
       helper.command.install();
       virtualStoreDir = path.join(helper.fixtures.scopes.localPath, 'node_modules/.pnpm');
       numberOfFilesInVirtualStore = fs.readdirSync(virtualStoreDir).length;
@@ -424,7 +421,7 @@ module.exports.default = {
   describe('pnpm hoisted linker', function () {
     before(() => {
       helper = new Helper();
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(4);
       helper.extensions.bitJsonc.addKeyValToDependencyResolver('nodeLinker', 'hoisted');
@@ -495,9 +492,6 @@ module.exports.default = {
           react: '17',
         },
       });
-      helper.command.install();
-      // Only after the second install is bit able to detect apps
-      helper.command.compile();
       helper.command.install();
     });
     after(() => {
@@ -826,7 +820,7 @@ module.exports.default = {
   describe('yarn hoisted linker', function () {
     before(() => {
       helper = new Helper();
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(4);
       helper.extensions.bitJsonc.setPackageManager('teambit.dependencies/yarn');
@@ -1169,31 +1163,12 @@ describe('env root components', function () {
   describe('pnpm isolated linker', function () {
     before(() => {
       helper = new Helper();
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.command.create('react-env', 'custom-react/env1', '-p custom-react/env1');
       helper.fs.outputFile(
         `custom-react/env1/env1.main.runtime.ts`,
-        `
-import { MainRuntime } from '@teambit/cli';
-import { ReactAspect, ReactMain } from '@teambit/react';
-import { EnvsAspect, EnvsMain } from '@teambit/envs';
-import { Env1Aspect } from './env1.aspect';
-
-export class EnvMain {
-  static slots = [];
-
-  static dependencies = [ReactAspect, EnvsAspect];
-
-  static runtime = MainRuntime;
-
-  static async provider([react, envs]: [ReactMain, EnvsMain]) {
-    const templatesReactEnv = envs.compose(react.reactEnv, [
-      envs.override({
-        getDependencies: () => ({
-          dependencies: {},
-          devDependencies: {
-          },
+        envSettingDeps('env1', {
           peers: [
             {
               name: 'react',
@@ -1202,39 +1177,11 @@ export class EnvMain {
             },
           ],
         })
-      })
-    ]);
-    envs.registerEnv(templatesReactEnv);
-    return new EnvMain();
-  }
-}
-
-Env1Aspect.addRuntime(EnvMain);
-`
       );
       helper.command.create('react-env', 'custom-react/env2', '-p custom-react/env2');
       helper.fs.outputFile(
         `custom-react/env2/env2.main.runtime.ts`,
-        `
-import { MainRuntime } from '@teambit/cli';
-import { ReactAspect, ReactMain } from '@teambit/react';
-import { EnvsAspect, EnvsMain } from '@teambit/envs';
-import { Env2Aspect } from './env2.aspect';
-
-export class EnvMain {
-  static slots = [];
-
-  static dependencies = [ReactAspect, EnvsAspect];
-
-  static runtime = MainRuntime;
-
-  static async provider([react, envs]: [ReactMain, EnvsMain]) {
-    const templatesReactEnv = envs.compose(react.reactEnv, [
-      envs.override({
-        getDependencies: () => ({
-          dependencies: {},
-          devDependencies: {
-          },
+        envSettingDeps('env2', {
           peers: [
             {
               name: 'react',
@@ -1243,15 +1190,6 @@ export class EnvMain {
             },
           ],
         })
-      })
-    ]);
-    envs.registerEnv(templatesReactEnv);
-    return new EnvMain();
-  }
-}
-
-Env2Aspect.addRuntime(EnvMain);
-`
       );
       helper.fixtures.populateComponents(4);
       helper.extensions.bitJsonc.addKeyValToDependencyResolver('rootComponents', true);
@@ -1295,7 +1233,6 @@ module.exports.default = {
         },
       });
       helper.command.install();
-      helper.command.install();
     });
     after(() => {
       helper.scopeHelper.destroy();
@@ -1333,7 +1270,7 @@ module.exports.default = {
   let npmCiRegistry: NpmCiRegistry;
   before(async () => {
     helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
-    helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+    helper.scopeHelper.setNewLocalAndRemoteScopes();
     helper.bitJsonc.setupDefault();
     helper.bitJsonc.setPackageManager(`teambit.dependencies/pnpm`);
     npmCiRegistry = new NpmCiRegistry(helper);
@@ -1369,7 +1306,6 @@ module.exports.default = {
         },
       },
     });
-    helper.command.compile();
     helper.command.install('react@16.6.3');
     helper.command.tagAllComponents();
     helper.command.export();
@@ -1387,7 +1323,7 @@ module.exports.default = {
     helper.command.tagAllComponents();
     helper.command.export();
 
-    helper.scopeHelper.reInitLocalScopeHarmony({
+    helper.scopeHelper.reInitLocalScope({
       yarnRCConfig: {
         unsafeHttpWhitelist: ['localhost'],
       },
@@ -1529,7 +1465,7 @@ describe('env peer dependencies hoisting', function () {
   describe('pnpm isolated linker', function () {
     before(() => {
       helper = new Helper();
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.extensions.bitJsonc.addKeyValToDependencyResolver('rootComponents', true);
       helper.command.create('react', 'my-button', '-p my-button');
@@ -1543,3 +1479,116 @@ describe('env peer dependencies hoisting', function () {
     });
   });
 });
+
+describe('env peer dependencies hoisting when the env is in the workspace', function () {
+  let helper: Helper;
+  this.timeout(0);
+
+  describe('pnpm isolated linker', function () {
+    before(() => prepare('pnpm'));
+    after(() => {
+      helper.scopeHelper.destroy();
+    });
+    it('should install react to the root of the component', () => {
+      expect(
+        fs.readJsonSync(resolveFrom(path.join(helper.fixtures.scopes.localPath, 'comp1'), ['react/package.json']))
+          .version
+      ).to.match(/^16\./);
+      expect(
+        fs.readJsonSync(resolveFrom(path.join(helper.fixtures.scopes.localPath, 'comp2'), ['react/package.json']))
+          .version
+      ).to.match(/^18\./);
+    });
+  });
+
+  describe('yarn hoisted linker', function () {
+    before(() => prepare('yarn'));
+    after(() => {
+      helper.scopeHelper.destroy();
+    });
+    it('should install react to the root of the component', () => {
+      expect(
+        fs.readJsonSync(resolveFrom(path.join(helper.fixtures.scopes.localPath, 'comp1'), ['react/package.json']))
+          .version
+      ).to.match(/^16\./);
+      expect(
+        fs.readJsonSync(resolveFrom(path.join(helper.fixtures.scopes.localPath, 'comp2'), ['react/package.json']))
+          .version
+      ).to.match(/^18\./);
+    });
+  });
+
+  function prepare(pm: 'yarn' | 'pnpm') {
+    helper = new Helper();
+    helper.scopeHelper.setNewLocalAndRemoteScopes();
+    helper.bitJsonc.setupDefault();
+    helper.extensions.bitJsonc.setPackageManager(`teambit.dependencies/${pm}`);
+    helper.command.create('react-env', 'custom-react/env1', '-p custom-react/env1');
+    helper.fs.outputFile(
+      `custom-react/env1/env1.main.runtime.ts`,
+      envSettingDeps('env1', {
+        peers: [
+          {
+            name: 'react',
+            supportedRange: '^16.8.0',
+            version: '16.14.0',
+          },
+        ],
+      })
+    );
+    helper.command.create('react-env', 'custom-react/env2', '-p custom-react/env2');
+    helper.fs.outputFile(
+      `custom-react/env2/env2.main.runtime.ts`,
+      envSettingDeps('env2', {
+        peers: [
+          {
+            name: 'react',
+            supportedRange: '^18.0.0',
+            version: '18.0.0',
+          },
+        ],
+      })
+    );
+    helper.fixtures.populateComponents(2);
+    helper.extensions.bitJsonc.addKeyValToDependencyResolver('rootComponents', true);
+    helper.fs.outputFile(`comp1/index.js`, `const React = require("react")`);
+    helper.fs.outputFile(
+      `comp2/index.js`,
+      `const React = require("react");const comp1 = require("@${helper.scopes.remote}/comp1");`
+    );
+    helper.extensions.addExtensionToVariant('comp1', `${helper.scopes.remote}/custom-react/env1`, {});
+    helper.extensions.addExtensionToVariant('comp2', `${helper.scopes.remote}/custom-react/env2`, {});
+    helper.extensions.addExtensionToVariant('custom-react', 'teambit.envs/env', {});
+    helper.command.install();
+  }
+});
+
+function envSettingDeps(envName: string, deps: any) {
+  const capitalizedEnvName = envName[0].toUpperCase() + envName.substring(1);
+  return `
+import { MainRuntime } from '@teambit/cli';
+import { ReactAspect, ReactMain } from '@teambit/react';
+import { EnvsAspect, EnvsMain } from '@teambit/envs';
+import { ${capitalizedEnvName}Aspect } from './${envName}.aspect';
+
+export class EnvMain {
+static slots = [];
+
+static dependencies = [ReactAspect, EnvsAspect];
+
+static runtime = MainRuntime;
+
+static async provider([react, envs]: [ReactMain, EnvsMain]) {
+const templatesReactEnv = envs.compose(react.reactEnv, [
+envs.override({
+getDependencies: () => (${JSON.stringify(deps)}),
+})
+]);
+envs.registerEnv(templatesReactEnv);
+return new EnvMain();
+}
+}
+
+${capitalizedEnvName}Aspect.addRuntime(EnvMain);
+`;
+}

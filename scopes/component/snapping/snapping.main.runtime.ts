@@ -3,7 +3,6 @@ import { isFeatureEnabled, BUILD_ON_CI } from '@teambit/legacy/dist/api/consumer
 import { LegacyOnTagResult } from '@teambit/legacy/dist/scope/scope';
 import { FlattenedDependenciesGetter } from '@teambit/legacy/dist/scope/component-ops/get-flattened-dependencies';
 import { Scope as LegacyScope } from '@teambit/legacy/dist/scope';
-import { IssuesClasses } from '@teambit/component-issues';
 import CommunityAspect, { CommunityMain } from '@teambit/community';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import R from 'ramda';
@@ -37,11 +36,18 @@ import {
   removeLocalVersionsForMultipleComponents,
 } from '@teambit/legacy/dist/scope/component-ops/untag-component';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
-import { ModelComponent } from '@teambit/legacy/dist/scope/models';
+import { Lane, ModelComponent } from '@teambit/legacy/dist/scope/models';
 import IssuesAspect, { IssuesMain } from '@teambit/issues';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { BuilderAspect, BuilderMain } from '@teambit/builder';
 import { ExportAspect, ExportMain } from '@teambit/export';
+import UnmergedComponents from '@teambit/legacy/dist/scope/lanes/unmerged-components';
+import { BitObject, Repository } from '@teambit/legacy/dist/scope/objects';
+import {
+  ArtifactFiles,
+  ArtifactSource,
+  getArtifactsFiles,
+} from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
 import { SnapCmd } from './snap-cmd';
 import { SnappingAspect } from './snapping.aspect';
 import { TagCmd } from './tag-cmd';
@@ -53,6 +59,7 @@ import { TagFromScopeCmd } from './tag-from-scope.cmd';
 const HooksManagerInstance = HooksManager.getInstance();
 
 export class SnappingMain {
+  private objectsRepo: Repository;
   constructor(
     private workspace: Workspace,
     private logger: Logger,
@@ -62,7 +69,9 @@ export class SnappingMain {
     private scope: ScopeMain,
     private exporter: ExportMain,
     private builder: BuilderMain
-  ) {}
+  ) {
+    this.objectsRepo = this.scope?.legacyScope?.objects;
+  }
 
   /**
    * tag the given component ids or all modified/new components if "all" param is set.
@@ -439,6 +448,96 @@ there are matching among unmodified components thought. consider using --unmodif
     return compact(publishedPackages);
   }
 
+  async _addCompToObjects({
+    source,
+    consumer,
+    lane,
+    shouldValidateVersion = false,
+  }: {
+    source: ConsumerComponent;
+    consumer: Consumer;
+    lane: Lane | null;
+    shouldValidateVersion?: boolean;
+  }): Promise<ModelComponent> {
+    // if a component exists in the model, add a new version. Otherwise, create a new component on the model
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    const component: ModelComponent = await this.scope.legacyScope.sources.findOrAddComponent(source);
+
+    const artifactFiles = getArtifactsFiles(source.extensions);
+    const artifacts = this.transformArtifactsFromVinylToSource(artifactFiles);
+    const { version, files } = await this.scope.legacyScope.sources.consumerComponentToVersion(source);
+    this.objectsRepo.add(version);
+    if (!source.version) throw new Error(`addSource expects source.version to be set`);
+    component.addVersion(version, source.version, lane, this.objectsRepo);
+
+    const unmergedComponent = consumer.scope.objects.unmergedComponents.getEntry(component.name);
+    if (unmergedComponent) {
+      if (unmergedComponent.unrelated) {
+        this.logger.debug(
+          `sources.addSource, unmerged component "${component.name}". adding an unrelated entry ${unmergedComponent.head.hash}`
+        );
+        version.unrelated = { head: unmergedComponent.head, laneId: unmergedComponent.laneId };
+      } else {
+        version.addParent(unmergedComponent.head);
+        this.logger.debug(
+          `sources.addSource, unmerged component "${component.name}". adding a parent ${unmergedComponent.head.hash}`
+        );
+        version.log.message = version.log.message || UnmergedComponents.buildSnapMessage(unmergedComponent);
+      }
+      consumer.scope.objects.unmergedComponents.removeComponent(component.name);
+    }
+    this.objectsRepo.add(component);
+
+    files.forEach((file) => this.objectsRepo.add(file.file));
+    if (artifacts) artifacts.forEach((file) => this.objectsRepo.add(file.source));
+    if (shouldValidateVersion) version.validate();
+    return component;
+  }
+
+  async _addCompFromScopeToObjects(source: ConsumerComponent, lane: Lane | null): Promise<ModelComponent> {
+    const objectRepo = this.objectsRepo;
+    // if a component exists in the model, add a new version. Otherwise, create a new component on the model
+    const component = await this.scope.legacyScope.sources.findOrAddComponent(source);
+    const artifactFiles = getArtifactsFiles(source.extensions);
+    const artifacts = this.transformArtifactsFromVinylToSource(artifactFiles);
+    const { version, files } = await this.scope.legacyScope.sources.consumerComponentToVersion(source);
+    objectRepo.add(version);
+    if (!source.version) throw new Error(`addSource expects source.version to be set`);
+    component.addVersion(version, source.version, lane, objectRepo);
+    objectRepo.add(component);
+    files.forEach((file) => objectRepo.add(file.file));
+    if (artifacts) artifacts.forEach((file) => objectRepo.add(file.source));
+    return component;
+  }
+
+  async _enrichComp(consumerComponent: ConsumerComponent) {
+    const objects = await this._getObjectsToEnrichComp(consumerComponent);
+    objects.forEach((obj) => this.objectsRepo.add(obj));
+    return consumerComponent;
+  }
+
+  async _getObjectsToEnrichComp(consumerComponent: ConsumerComponent): Promise<BitObject[]> {
+    const component =
+      consumerComponent.modelComponent || (await this.scope.legacyScope.sources.findOrAddComponent(consumerComponent));
+    const version = await component.loadVersion(consumerComponent.id.version as string, this.objectsRepo, true, true);
+    const artifactFiles = getArtifactsFiles(consumerComponent.extensions);
+    const artifacts = this.transformArtifactsFromVinylToSource(artifactFiles);
+    version.extensions = consumerComponent.extensions;
+    version.buildStatus = consumerComponent.buildStatus;
+    const artifactObjects = artifacts.map((file) => file.source);
+    return [version, ...artifactObjects];
+  }
+
+  private transformArtifactsFromVinylToSource(artifactsFiles: ArtifactFiles[]): ArtifactSource[] {
+    const artifacts: ArtifactSource[] = [];
+    artifactsFiles.forEach((artifactFiles) => {
+      const artifactsSource = ArtifactFiles.fromVinylsToSources(artifactFiles.vinyls);
+      if (artifactsSource.length) artifactFiles.populateRefsFromSources(artifactsSource);
+      artifacts.push(...artifactsSource);
+    });
+    return artifacts;
+  }
+
   private async loadComponentsForTag(ids: BitIds): Promise<ConsumerComponent[]> {
     const { components, removedComponents } = await this.workspace.consumer.loadComponents(ids.toVersionLatest());
     components.forEach((component) => {
@@ -459,9 +558,7 @@ there are matching among unmodified components thought. consider using --unmodif
     const issuesToIgnoreFromConfig = this.issues.getIssuesToIgnoreGlobally();
     const issuesToIgnore = [...issuesToIgnoreFromFlag, ...issuesToIgnoreFromConfig];
     const components = await this.workspace.getManyByLegacy(legacyComponents);
-    if (!issuesToIgnore.includes(IssuesClasses.CircularDependencies.name)) {
-      await this.insights.addInsightsAsComponentIssues(components);
-    }
+    await this.issues.triggerAddComponentIssues(components, issuesToIgnore);
     this.issues.removeIgnoredIssuesFromComponents(components);
 
     const componentsWithBlockingIssues = legacyComponents.filter((component) => component.issues?.shouldBlockTagging());

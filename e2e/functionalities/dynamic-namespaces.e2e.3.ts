@@ -22,7 +22,7 @@ describe('dynamic namespaces', function () {
       let catComp;
 
       before(() => {
-        helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+        helper.scopeHelper.setNewLocalAndRemoteScopes();
         helper.bitJsonc.setupDefault();
         helper.fs.createFile('bar', 'foo.js');
         const addOutput = helper.command.addComponent('bar', { i: componentName });
@@ -55,7 +55,7 @@ describe('dynamic namespaces', function () {
       describe('after import', () => {
         before(() => {
           helper.command.export();
-          helper.scopeHelper.reInitLocalScopeHarmony();
+          helper.scopeHelper.reInitLocalScope();
           helper.scopeHelper.addRemoteScope();
           helper.command.importComponent(componentName);
         });
@@ -68,14 +68,14 @@ describe('dynamic namespaces', function () {
   });
   describe('import a component with same id string as a local different component', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fs.createFile('foo', 'foo.js');
       helper.command.addComponent('foo', { i: 'foo' });
       helper.command.tagAllWithoutBuild();
       helper.command.export();
 
-      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
       helper.fs.createFile('bar', 'foo.js');
       helper.command.addComponent('bar', { i: `${helper.scopes.remote}/foo` });

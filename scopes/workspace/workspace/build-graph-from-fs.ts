@@ -104,6 +104,7 @@ export class GraphFromFsBuilder {
       ids: BitIds.uniqFromArray(allDepsWithScope),
       throwForDependencyNotFound: this.shouldThrowOnMissingDep,
       throwForSeederNotFound: this.shouldThrowOnMissingDep,
+      reFetchUnBuiltVersion: false,
     });
   }
 

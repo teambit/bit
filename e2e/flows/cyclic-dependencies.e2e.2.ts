@@ -24,7 +24,7 @@ describe.skip('cyclic dependencies', function () {
   describe('a => b, b => a (component A requires B, component B requires A)', () => {
     let output;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fs.createFile('comp/a', 'a.js', fixtureA);
       helper.fs.createFile('comp/b', 'b.js', fixtureB);
@@ -61,7 +61,7 @@ describe.skip('cyclic dependencies', function () {
       describe('importing to a new environment', () => {
         let importOutput;
         before(() => {
-          helper.scopeHelper.reInitLocalScopeHarmony();
+          helper.scopeHelper.reInitLocalScope();
           helper.scopeHelper.addRemoteScope();
           helper.command.importComponent('comp/a');
           importOutput = helper.command.importComponent('comp/b');
@@ -84,7 +84,7 @@ describe.skip('cyclic dependencies', function () {
   describe('a complex case with a long chain of dependencies', () => {
     let output;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       // isString => isType
       helper.fs.createFile('utils', 'is-type.js', fixtures.isType);
@@ -258,7 +258,7 @@ describe.skip('cyclic dependencies', function () {
       describe('importing to a new environment', () => {
         let importOutput;
         before(() => {
-          helper.scopeHelper.reInitLocalScopeHarmony();
+          helper.scopeHelper.reInitLocalScope();
           helper.scopeHelper.addRemoteScope();
           importOutput = helper.command.importComponent('comp/a1');
         });
@@ -279,7 +279,7 @@ describe.skip('cyclic dependencies', function () {
   describe('same component require itself using module path (@bit/component-name)', () => {
     let tagOutput;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();

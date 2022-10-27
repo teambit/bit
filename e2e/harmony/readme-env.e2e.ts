@@ -16,7 +16,7 @@ describe('readme env', function () {
   describe('set readme env', () => {
     let docFile;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(1);
       helper.fs.outputFile('comp1/comp1.docs.mdx');

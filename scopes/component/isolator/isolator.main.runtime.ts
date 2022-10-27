@@ -5,8 +5,7 @@ import { AspectLoaderMain, AspectLoaderAspect } from '@teambit/aspect-loader';
 import { Component, ComponentMap, ComponentAspect, ComponentID } from '@teambit/component';
 import type { ComponentMain, ComponentFactory } from '@teambit/component';
 import { getComponentPackageVersion, snapToSemver } from '@teambit/component-package-version';
-import { GraphAspect } from '@teambit/graph';
-import type { GraphBuilder } from '@teambit/graph';
+import { GraphAspect, GraphMain } from '@teambit/graph';
 import {
   DependencyResolverAspect,
   DependencyResolverMain,
@@ -169,18 +168,11 @@ export class IsolatorMain {
   static defaultConfig = {};
   _componentsPackagesVersionCache: { [idStr: string]: string } = {}; // cache packages versions of components
 
-  static async provider([
-    dependencyResolver,
-    loggerExtension,
-    componentAspect,
-    graphAspect,
-    globalConfig,
-    aspectLoader,
-  ]: [
+  static async provider([dependencyResolver, loggerExtension, componentAspect, graphMain, globalConfig, aspectLoader]: [
     DependencyResolverMain,
     LoggerMain,
     ComponentMain,
-    GraphBuilder,
+    GraphMain,
     GlobalConfigMain,
     AspectLoaderMain
   ]): Promise<IsolatorMain> {
@@ -189,7 +181,7 @@ export class IsolatorMain {
       dependencyResolver,
       logger,
       componentAspect,
-      graphAspect,
+      graphMain,
       globalConfig,
       aspectLoader
     );
@@ -199,7 +191,7 @@ export class IsolatorMain {
     private dependencyResolver: DependencyResolverMain,
     private logger: Logger,
     private componentAspect: ComponentMain,
-    private graphBuilder: GraphBuilder,
+    private graph: GraphMain,
     private globalConfig: GlobalConfigMain,
     private aspectLoader: AspectLoaderMain
   ) {}
@@ -240,7 +232,7 @@ export class IsolatorMain {
   private async createGraph(seeders: ComponentID[], opts: CreateGraphOptions = {}): Promise<Component[]> {
     const host = this.componentAspect.getHost();
     const getGraphOpts = pick(opts, ['host']);
-    const graph = await this.graphBuilder.getGraph(seeders, getGraphOpts);
+    const graph = await this.graph.getGraph(seeders, getGraphOpts);
     const successorsSubgraph = graph.successorsSubgraph(seeders.map((id) => id.toString()));
     const compsAndDeps = successorsSubgraph.nodes.map((node) => node.attr);
     // do not ignore the version here. a component might be in .bitmap with one version and
@@ -291,6 +283,9 @@ export class IsolatorMain {
       ...opts.installOptions,
       useNesting: this.dependencyResolver.hasRootComponents() && opts.installOptions?.useNesting,
     };
+    if (!opts.emptyRootDir) {
+      installOptions.dedupe = installOptions.dedupe && this.dependencyResolver.supportsDedupingOnExistingRoot();
+    }
     const config = { installPackages: true, ...opts };
     const capsulesDir = this.getCapsulesRootDir(opts.baseDir as string, opts.rootBaseDir);
     if (opts.emptyRootDir) {
