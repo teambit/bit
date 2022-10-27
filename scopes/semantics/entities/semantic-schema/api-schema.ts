@@ -69,12 +69,4 @@ export class APISchema extends SchemaNode {
   static fromObject(obj: Record<string, any>): APISchema {
     return plainToInstance(APISchema, obj);
   }
-
-  static empty(componentId: ComponentID) {
-    return new APISchema(
-      { filePath: '', line: 0, character: 0 },
-      new Module({ filePath: '', line: 0, character: 0 }, []),
-      componentId
-    );
-  }
 }

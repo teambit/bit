@@ -1,6 +1,16 @@
-import { BuildContext, BuiltTaskResult, BuildTask, TaskLocation, ComponentResult } from '@teambit/builder';
+import {
+  BuildContext,
+  BuiltTaskResult,
+  BuildTask,
+  TaskLocation,
+  CAPSULE_ARTIFACTS_DIR,
+  ComponentResult,
+  ArtifactDefinition,
+} from '@teambit/builder';
 import { Logger } from '@teambit/logger';
+import fs from 'fs-extra';
 import pMapSeries from 'p-map-series';
+import { join } from 'path';
 import { SchemaMain } from './schema.main.runtime';
 
 export const SCHEMA_TASK_NAME = 'ExtractSchema';
@@ -20,16 +30,17 @@ export class SchemaTask implements BuildTask {
     const startTime = Date.now();
     const capsules = context.capsuleNetwork.seedersCapsules;
     const schemaResult: ComponentResult[] = [];
+    // persist schema json
     await pMapSeries(capsules, async (capsule) => {
       const component = capsule.component;
       try {
         const schema = await this.schema.getSchema(component);
         const schemaObj = schema.toObject();
+        await fs.outputFile(join(capsule.path, getSchemaArtifactPath()), JSON.stringify(schemaObj, null, 2));
         schemaResult.push({
           component,
           startTime,
           endTime: Date.now(),
-          metadata: schemaObj,
         });
       } catch (e) {
         /**
@@ -46,7 +57,22 @@ export class SchemaTask implements BuildTask {
       }
     });
     return {
+      artifacts: [getSchemaArtifactDef()],
       componentsResults: schemaResult,
     };
   }
+}
+
+export function getSchemaArtifactPath() {
+  return join(CAPSULE_ARTIFACTS_DIR, 'schema.json');
+}
+
+export function getSchemaArtifactDef() {
+  const def: ArtifactDefinition = {
+    name: SCHEMA_ARTIFACT_NAME,
+    rootDir: CAPSULE_ARTIFACTS_DIR,
+    globPatterns: ['schema.json'],
+  };
+
+  return def;
 }

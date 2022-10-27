@@ -4,7 +4,7 @@ import { Slot, SlotRegistry } from '@teambit/harmony';
 import GraphqlAspect, { GraphqlMain } from '@teambit/graphql';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
-import { APISchema, Export } from '@teambit/semantics.entities.semantic-schema';
+import { APISchema, Export, Module } from '@teambit/semantics.entities.semantic-schema';
 import { BuilderMain, BuilderAspect } from '@teambit/builder';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { Parser } from './parser';
@@ -12,7 +12,7 @@ import { SchemaAspect } from './schema.aspect';
 import { SchemaExtractor } from './schema-extractor';
 import { SchemaCommand } from './schema.cmd';
 import { schemaSchema } from './schema.graphql';
-import { SchemaTask } from './schema.task';
+import { SchemaTask, SCHEMA_TASK_NAME } from './schema.task';
 
 export type ParserSlot = SlotRegistry<Parser>;
 
@@ -84,6 +84,7 @@ export class SchemaMain {
    */
   async getSchema(component: Component): Promise<APISchema> {
     this.logger.debug(`getSchema of ${component.id.toString()}`);
+
     // if on workspace get schema from ts server
     if (this.workspace) {
       const env = this.envs.getEnv(component).env;
@@ -93,9 +94,38 @@ export class SchemaMain {
       const schemaExtractor: SchemaExtractor = env.getSchemaExtractor();
       return schemaExtractor.extract(component);
     }
+
     // on scope get schema from builder api
-    const schema = this.builder.getDataByAspect(component, SchemaAspect.id);
-    return schema ? APISchema.fromObject(schema) : APISchema.empty(component.id);
+    const schemaArtifact = await this.builder.getArtifactsVinylByAspectAndTaskName(
+      component,
+      SchemaAspect.id,
+      SCHEMA_TASK_NAME
+    );
+
+    if (schemaArtifact.length === 0) {
+      /**
+       * return empty schema
+       * when tag/snap without build
+       * or backwards compatibility
+       */
+      return new APISchema(
+        { filePath: '', line: 0, character: 0 },
+        new Module({ filePath: '', line: 0, character: 0 }, []),
+        component.id
+      );
+    }
+
+    const schemaJsonStr = schemaArtifact[0].contents.toString('utf-8');
+
+    try {
+      const schemaJson = JSON.parse(schemaJsonStr);
+      return this.getSchemaFromObject(schemaJson);
+    } catch (e) {
+      if (e instanceof SyntaxError) {
+        throw new Error(`Invalid schema.json for ${component.id}`);
+      }
+      throw e;
+    }
   }
 
   getSchemaFromObject(obj: Record<string, any>): APISchema {
