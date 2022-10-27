@@ -108,11 +108,7 @@ export class SchemaMain {
        * when tag/snap without build
        * or backwards compatibility
        */
-      return new APISchema(
-        { filePath: '', line: 0, character: 0 },
-        new Module({ filePath: '', line: 0, character: 0 }, []),
-        component.id
-      );
+      return APISchema.empty(component.id);
     }
 
     const schemaJsonStr = schemaArtifact[0].contents.toString('utf-8');
@@ -122,6 +118,7 @@ export class SchemaMain {
       return this.getSchemaFromObject(schemaJson);
     } catch (e) {
       if (e instanceof SyntaxError) {
+        this.logger.error(e.message);
         throw new Error(`Invalid schema.json for ${component.id}`);
       }
       throw e;
