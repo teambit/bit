@@ -1,8 +1,5 @@
 import chai, { expect } from 'chai';
-import chalk from 'chalk';
-import { uniq } from 'lodash';
 import { Extensions } from '../../src/constants';
-import { SchemaName } from '../../src/consumer/component/component-schema';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
 
