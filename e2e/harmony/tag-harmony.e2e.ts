@@ -4,6 +4,7 @@ import { uniq } from 'lodash';
 import { Extensions } from '../../src/constants';
 import { SchemaName } from '../../src/consumer/component/component-schema';
 import Helper from '../../src/e2e-helper/e2e-helper';
+import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
 
 chai.use(require('chai-fs'));
 
@@ -423,13 +424,18 @@ describe('tag components on Harmony', function () {
       expect(() => helper.command.tagAllComponents()).not.to.throw();
     });
   });
-  describe('tag from scope', () => {
+  (supportNpmCiRegistryTesting ? describe.only : describe.skip)('tag from scope', () => {
     let bareTag;
     let beforeTagging: string;
     let beforeExporting: string;
-    before(() => {
+    let npmCiRegistry: NpmCiRegistry;
+    before(async () => {
+      helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
+      npmCiRegistry = new NpmCiRegistry(helper);
+      await npmCiRegistry.init();
+      npmCiRegistry.configureCiInPackageJsonHarmony();
       helper.fixtures.populateComponents(3);
       helper.command.snapAllComponents();
       helper.command.export();
@@ -460,6 +466,7 @@ describe('tag components on Harmony', function () {
             message: `msg for third comp`,
           },
         ];
+        // console.log('data', JSON.stringify(data));
         helper.command.tagFromScope(bareTag.scopePath, data);
       });
       it('should tag the components in the same version described in the json', () => {
@@ -503,7 +510,7 @@ describe('tag components on Harmony', function () {
         });
       });
     });
-    describe.only('tagging them one by one', () => {
+    describe('tagging them one by one', () => {
       before(() => {
         helper.scopeHelper.getClonedScope(beforeTagging, bareTag.scopePath);
         helper.scopeHelper.getClonedRemoteScope(beforeExporting);
@@ -526,10 +533,21 @@ describe('tag components on Harmony', function () {
             message: `msg for second comp`,
           },
         ];
-        console.log('data2', JSON.stringify(data2));
-        // helper.command.tagFromScope(bareTag.scopePath, data2);
+        // console.log('data2', JSON.stringify(data2));
+        helper.command.tagFromScope(bareTag.scopePath, data2);
       });
-      it.only('should', () => {});
+      it('should save the dependency version according to the version provided in the json', () => {
+        const comp2OnBare = helper.command.catComponent(`${helper.scopes.remote}/comp2@0.0.1`, bareTag.scopePath);
+        expect(comp2OnBare.dependencies[0].id.name).to.equal('comp3');
+        expect(comp2OnBare.dependencies[0].id.version).to.equal('0.0.1');
+
+        expect(comp2OnBare.flattenedDependencies[0].name).to.equal('comp3');
+        expect(comp2OnBare.flattenedDependencies[0].version).to.equal('0.0.1');
+
+        const depResolver = comp2OnBare.extensions.find((e) => e.name === Extensions.dependencyResolver).data;
+        const dep = depResolver.dependencies.find((d) => d.id.includes('comp3'));
+        expect(dep.version).to.equal('0.0.1');
+      });
     });
   });
 });

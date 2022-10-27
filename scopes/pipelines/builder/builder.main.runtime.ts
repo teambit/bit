@@ -120,6 +120,9 @@ export class BuilderMain {
       this.scope.legacyScope
     );
 
+    // console.log('network.capsulesRootDir', network.capsulesRootDir);
+    // throw new Error('stop here!')
+
     let buildEnvsExecutionResults: TaskResultsList | undefined;
     if (!skipBuildPipeline) {
       buildEnvsExecutionResults = await this.build(network.graphCapsules.getAllComponents(), ids, isolateOptions, {

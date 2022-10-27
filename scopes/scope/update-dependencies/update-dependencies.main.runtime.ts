@@ -12,7 +12,6 @@ import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { BuildStatus, LATEST } from '@teambit/legacy/dist/constants';
 import { BitIds } from '@teambit/legacy/dist/bit-id';
 import { LaneId } from '@teambit/lane-id';
-import { BitId } from '@teambit/legacy-bit-id';
 import { getValidVersionOrReleaseType } from '@teambit/legacy/dist/utils/semver-helper';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { ExportAspect, ExportMain } from '@teambit/export';

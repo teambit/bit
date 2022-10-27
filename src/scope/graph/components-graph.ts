@@ -9,7 +9,6 @@ import GeneralError from '../../error/general-error';
 import ComponentWithDependencies from '../component-dependencies';
 import { ComponentsAndVersions } from '../scope';
 import Graph from './graph';
-import ScopeComponentsImporter from '../component-ops/scope-components-importer';
 
 export type AllDependenciesGraphs = {
   graphDeps: GraphLib;
@@ -86,7 +85,7 @@ export async function buildOneGraphForComponentsUsingScope(
 ): Promise<Graph> {
   const components = await scope.getManyConsumerComponents(ids);
   const allFlattened = components.map((component) => component.getAllFlattenedDependencies()).flat();
-  const scopeComponentImporter = new ScopeComponentsImporter(scope);
+  const scopeComponentImporter = scope.scopeImporter;
   await scopeComponentImporter.importMany({ ids: BitIds.uniqFromArray(allFlattened) });
   const dependencies = await scope.getManyConsumerComponents(allFlattened);
   const allComponents: Component[] = [...components, ...dependencies];
