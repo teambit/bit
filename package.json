@@ -273,7 +273,7 @@
     "sinon": "5.1.1",
     "tar": "6.1.11",
     "type-coverage": "2.15.1",
-    "typescript": "4.4.2"
+    "typescript": "4.8.4"
   },
   "pnpm": {
     "neverBuiltDependencies": [
