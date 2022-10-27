@@ -6,6 +6,7 @@ import {
   RemovePendingDir,
   FetchMissingDeps,
   PostSign,
+  FetchMissingHistory,
 } from '../../../scope/actions';
 import ActionNotFound from '../../../scope/exceptions/action-not-found';
 import { AuthData } from '../../../scope/network/http/http';
@@ -28,7 +29,14 @@ export async function action(
     return externalAction.execute(options);
   }
   const scope: Scope = await loadScope(scopePath);
-  const actionList: ActionClassesList[] = [ExportValidate, ExportPersist, RemovePendingDir, FetchMissingDeps, PostSign];
+  const actionList: ActionClassesList[] = [
+    ExportValidate,
+    ExportPersist,
+    RemovePendingDir,
+    FetchMissingDeps,
+    PostSign,
+    FetchMissingHistory,
+  ];
   const ActionClass = actionList.find((a) => a.name === name);
   if (!ActionClass) {
     throw new ActionNotFound(name);
