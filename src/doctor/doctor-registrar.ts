@@ -4,7 +4,7 @@ import Diagnosis from './diagnosis';
  * Setting up block level variable to store class state
  * set's to null by default.
  */
-let instance = null;
+let instance: DoctorRegistrar | null = null;
 
 const _checkName = (name) => (diagnosis: Diagnosis) => {
   return diagnosis.name === name;
@@ -16,12 +16,9 @@ export default class DoctorRegistrar {
 
   constructor() {
     if (!instance) {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       instance = this;
     }
 
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return instance;
   }
 
