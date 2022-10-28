@@ -34,9 +34,7 @@ export function APINodeDetails({
       doc,
       location: { filePath, line, character },
     },
-    renderer: {
-      icon: { url },
-    },
+    renderer: { icon },
     componentId,
   },
   members,
@@ -149,12 +147,16 @@ export function APINodeDetails({
   return (
     <div {...rest} className={classnames(rest.className, styles.apiNodeDetailsContainer)}>
       <div className={styles.apiDetails}>
-        <div className={styles.apiNodeDetailsNameContainer}>
-          <div className={styles.apiTypeIcon}>
-            <img src={url} />
+        {name && (
+          <div className={styles.apiNodeDetailsNameContainer}>
+            {icon && (
+              <div className={styles.apiTypeIcon}>
+                <img src={icon.url} />
+              </div>
+            )}
+            <H5 className={styles.apiNodeDetailsName}>{name}</H5>
           </div>
-          <H5 className={styles.apiNodeDetailsName}>{name}</H5>
-        </div>
+        )}
         {comment && <div className={styles.apiNodeDetailsComment}>{comment}</div>}
         {signature && (
           <div className={classnames(styles.apiNodeDetailsSignatureContainer, styles.codeEditorContainer)}>
@@ -218,7 +220,11 @@ export function APINodeDetails({
         </div>
         {hasMembers && (
           <>
-            <div className={styles.apiNodeDetailsMembersContainer} ref={rootRef}>
+            {/**
+             * the key is set to the the url params to force it to re-render when the query params change
+             * otherwise the rootRef never changes and index is unable to auto detect elements
+             */}
+            <div key={query.toString()} className={styles.apiNodeDetailsMembersContainer} ref={rootRef}>
               {groupedMembers.map(([type, groupedMembersByType]) => {
                 return (
                   <div key={`${type}`} className={styles.groupedMemberContainer}>
@@ -226,7 +232,11 @@ export function APINodeDetails({
                       {type}
                     </div>
                     {groupedMembersByType.map((member) => (
-                      <SchemaNodeSummary key={`${type}-${member.__schema}-${member.name}`} node={member} />
+                      <SchemaNodeSummary
+                        key={`${type}-${member.__schema}-${member.name}`}
+                        node={member}
+                        groupElementClassName={type}
+                      />
                     ))}
                   </div>
                 );
@@ -236,7 +246,7 @@ export function APINodeDetails({
         )}
         {children}
       </div>
-      <SchemaNodesIndex className={styles.schemaNodesIndex} title={'Index'} nodes={members || []} rootRef={rootRef} />
+      <SchemaNodesIndex className={styles.schemaNodesIndex} title={'Index'} rootRef={rootRef} />
     </div>
   );
 }

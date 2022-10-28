@@ -15,9 +15,10 @@ export const trackedElementClassName = 'tracked-element';
 
 export type SchemaNodeSummaryProps = {
   node: SchemaNode;
+  groupElementClassName?: string;
 } & HTMLAttributes<HTMLDivElement>;
 
-export function SchemaNodeSummary({ node }: SchemaNodeSummaryProps) {
+export function SchemaNodeSummary({ node, groupElementClassName }: SchemaNodeSummaryProps) {
   const editorRef = useRef<any>();
   const monacoRef = useRef<any>();
 
@@ -72,7 +73,10 @@ export function SchemaNodeSummary({ node }: SchemaNodeSummaryProps) {
   return (
     <div className={styles.schemaNodeSummary}>
       {displayName && (
-        <div id={displayName} className={classnames(styles.schemaNodeSummaryName, trackedElementClassName)}>
+        <div
+          id={displayName}
+          className={classnames(styles.schemaNodeSummaryName, trackedElementClassName, groupElementClassName)}
+        >
           {displayName}
         </div>
       )}
