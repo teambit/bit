@@ -121,7 +121,7 @@ export default class Remote {
   listLanes(name?: string, mergeData?: boolean): Promise<LaneData[]> {
     return this.connect().then((network) => network.listLanes(name, mergeData));
   }
-  async action<Options, Result>(name: string, options?: Options): Promise<Result> {
+  async action<Options extends Record<string, any>, Result>(name: string, options: Options): Promise<Result> {
     const network = await this.connect();
     logger.debug(`[-] Running action ${name} on a remote ${this.name}, options: ${JSON.stringify(options)}`);
     const results: Result = await network.action(name, options);

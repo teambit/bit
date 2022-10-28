@@ -26,7 +26,7 @@ export class Runtime {
   /**
    * execute a service on a specific env.
    */
-  runEnv<T>(
+  runEnv<T extends ServiceExecutionResult>(
     envRuntimeId: string,
     service: EnvService<T>,
     options?: { [key: string]: any }
@@ -43,7 +43,10 @@ export class Runtime {
   /**
    * execute a service once for all environments.
    */
-  async runOnce<T>(service: EnvService<T>, options?: { [key: string]: any }): Promise<any> {
+  async runOnce<T extends ServiceExecutionResult>(
+    service: EnvService<T>,
+    options?: { [key: string]: any }
+  ): Promise<any> {
     if (!service.runOnce) throw new Error('a service must implement `runOnce()` in order to be executed');
     const envsExecutionContext = this.getEnvExecutionContext();
     const serviceResult = await service.runOnce(envsExecutionContext, options);
@@ -58,7 +61,7 @@ export class Runtime {
   /**
    * execute a service on each one of the environments.
    */
-  async run<T>(
+  async run<T extends ServiceExecutionResult>(
     /**
      * environment service to execute.
      */

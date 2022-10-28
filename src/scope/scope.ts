@@ -732,11 +732,11 @@ once done, to continue working, please run "bit cc"`
     }
   }
 
-  static ensure(path: PathOsBasedAbsolute, name?: string | null, groupName?: string | null): Promise<Scope> {
+  static async ensure(path: PathOsBasedAbsolute, name?: string | null, groupName?: string | null): Promise<Scope> {
     if (pathHasScope(path)) return this.load(path);
     const scopeJson = Scope.ensureScopeJson(path, name, groupName);
-    const repository = Repository.create({ scopePath: path, scopeJson });
-    return Promise.resolve(new Scope({ path, created: true, scopeJson, objects: repository }));
+    const repository = await Repository.create({ scopePath: path, scopeJson });
+    return new Scope({ path, created: true, scopeJson, objects: repository });
   }
 
   static ensureScopeJson(

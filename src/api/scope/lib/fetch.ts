@@ -5,7 +5,6 @@ import { LATEST_BIT_VERSION, POST_SEND_OBJECTS, PRE_SEND_OBJECTS } from '../../.
 import HooksManager from '../../../hooks';
 import logger from '../../../logger/logger';
 import { loadScope, Scope } from '../../../scope';
-import ScopeComponentsImporter from '../../../scope/component-ops/scope-components-importer';
 import { Ref } from '../../../scope/objects';
 import { ObjectList } from '../../../scope/objects/object-list';
 import {
@@ -127,7 +126,7 @@ export default async function fetch(
     }
     case 'component-delta': {
       const bitIdsWithHashToStop: BitIds = BitIds.deserialize(ids);
-      const scopeComponentsImporter = ScopeComponentsImporter.getInstance(scope);
+      const scopeComponentsImporter = scope.scopeImporter;
       const laneId = fetchOptions.laneId ? LaneId.parse(fetchOptions.laneId) : null;
       const lane = laneId ? await scope.loadLane(laneId) : null;
       const bitIdsLatest = bitIdsToLatest(bitIdsWithHashToStop, lane);
