@@ -38,10 +38,13 @@ import {
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import { Lane, ModelComponent } from '@teambit/legacy/dist/scope/models';
 import IssuesAspect, { IssuesMain } from '@teambit/issues';
+import { Component } from '@teambit/component';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
+import { ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config';
 import { BuilderAspect, BuilderMain } from '@teambit/builder';
 import { ExportAspect, ExportMain } from '@teambit/export';
 import UnmergedComponents from '@teambit/legacy/dist/scope/lanes/unmerged-components';
+import { ComponentID } from '@teambit/component-id';
 import { BitObject, Repository } from '@teambit/legacy/dist/scope/objects';
 import {
   ArtifactFiles,
@@ -54,9 +57,17 @@ import { TagCmd } from './tag-cmd';
 import { ComponentsHaveIssues } from './components-have-issues';
 import ResetCmd from './reset-cmd';
 import { tagModelComponent, updateComponentsVersions, BasicTagParams } from './tag-model-component';
-import { TagFromScopeCmd } from './tag-from-scope.cmd';
+import { TagDataPerCompRaw, TagFromScopeCmd } from './tag-from-scope.cmd';
 
 const HooksManagerInstance = HooksManager.getInstance();
+
+export type TagDataPerComp = {
+  componentId: ComponentID;
+  dependencies: ComponentID[];
+  versionToTag: string;
+  prereleaseId?: string;
+  message?: string;
+};
 
 export class SnappingMain {
   private objectsRepo: Repository;
@@ -198,8 +209,8 @@ export class SnappingMain {
   }
 
   async tagFromScope(
+    tagDataPerCompRaw: TagDataPerCompRaw[],
     params: {
-      ids: string[];
       push?: boolean;
       version?: string;
       releaseType?: ReleaseType;
@@ -212,25 +223,47 @@ export class SnappingMain {
         `unable to run this command from a workspace, please create a new bare-scope and run it from there`
       );
     }
-    const componentIds = await this.scope.resolveMultipleComponentIds(params.ids);
+    const tagDataPerComp = await Promise.all(
+      tagDataPerCompRaw.map(async (tagData) => {
+        return {
+          componentId: await this.scope.resolveComponentId(tagData.componentId),
+          dependencies: tagData.dependencies ? await this.scope.resolveMultipleComponentIds(tagData.dependencies) : [],
+          versionToTag: tagData.versionToTag || 'patch',
+          prereleaseId: tagData.prereleaseId,
+          message: tagData.message,
+        };
+      })
+    );
+    const componentIds = tagDataPerComp.map((t) => t.componentId);
+    const bitIds = componentIds.map((c) => c._legacy);
     const componentIdsLatest = componentIds.map((id) => id.changeVersion(LATEST));
     const components = await this.scope.import(componentIdsLatest);
+    await Promise.all(
+      components.map(async (comp) => {
+        const tagData = tagDataPerComp.find((t) => t.componentId.isEqual(comp.id, { ignoreVersion: true }));
+        if (!tagData) throw new Error(`unable to find ${comp.id.toString()} in tagDAtaPerComp`);
+        if (!tagData.dependencies.length) return;
+        await this.updateDependenciesVersionsOfComponent(comp, tagData.dependencies, bitIds);
+      })
+    );
     const consumerComponents = components.map((c) => c.state._consumer);
     const legacyIds = BitIds.fromArray(componentIds.map((id) => id._legacy));
     const results = await tagModelComponent({
       ...params,
       scope: this.scope,
       consumerComponents,
+      tagDataPerComp,
+      skipBuildPipeline: true,
       snapping: this,
       builder: this.builder,
       dependencyResolver: this.dependencyResolver,
-      skipAutoTag: false,
+      skipAutoTag: true,
       persist: true,
       ids: legacyIds,
       message: params.message as string,
     });
 
-    const { taggedComponents, autoTaggedResults, publishedPackages } = results;
+    const { taggedComponents, publishedPackages } = results;
 
     if (params.push) {
       await this.exporter.exportMany({
@@ -243,7 +276,7 @@ export class SnappingMain {
 
     return {
       taggedComponents,
-      autoTaggedResults,
+      autoTaggedResults: [],
       isSoftTag: false,
       publishedPackages,
       warnings: [],
@@ -595,6 +628,56 @@ there are matching among unmodified components thought. consider using --unmodif
       );
     };
     await pMap(components, (component) => throwForComponent(component), { concurrency: concurrentComponentsLimit() });
+  }
+
+  async updateDependenciesVersionsOfComponent(
+    component: Component,
+    dependencies: ComponentID[],
+    currentBitIds: BitId[]
+  ) {
+    const depsBitIds = dependencies.map((d) => d._legacy);
+    const updatedIds = BitIds.fromArray([...currentBitIds, ...depsBitIds]);
+    const componentIdStr = component.id.toString();
+    const legacyComponent: ConsumerComponent = component.state._consumer;
+    const deps = [...legacyComponent.dependencies.get(), ...legacyComponent.devDependencies.get()];
+    const dependenciesList = await this.dependencyResolver.getDependencies(component);
+    deps.forEach((dep) => {
+      const updatedBitId = updatedIds.searchWithoutVersion(dep.id);
+      if (updatedBitId) {
+        const depIdStr = dep.id.toString();
+        const packageName = dependenciesList.findDependency(depIdStr)?.getPackageName?.();
+        if (!packageName) {
+          throw new Error(
+            `unable to find the package-name of "${depIdStr}" dependency inside the dependency-resolver data of "${componentIdStr}"`
+          );
+        }
+        this.logger.debug(`updating "${componentIdStr}", dependency ${depIdStr} to version ${updatedBitId.version}}`);
+        dep.id = updatedBitId;
+        dep.packageName = packageName;
+      }
+    });
+    legacyComponent.extensions.forEach((ext) => {
+      if (!ext.extensionId) return;
+      const updatedBitId = updatedIds.searchWithoutVersion(ext.extensionId);
+      if (updatedBitId) {
+        this.logger.debug(
+          `updating "${componentIdStr}", extension ${ext.extensionId.toString()} to version ${updatedBitId.version}}`
+        );
+        ext.extensionId = updatedBitId;
+      }
+    });
+
+    const dependenciesListSerialized = (await this.dependencyResolver.extractDepsFromLegacy(component)).serialize();
+    const extId = DependencyResolverAspect.id;
+    const data = { dependencies: dependenciesListSerialized };
+    const existingExtension = component.state._consumer.extensions.findExtension(extId);
+    if (existingExtension) {
+      // Only merge top level of extension data
+      Object.assign(existingExtension.data, data);
+      return;
+    }
+    const extension = new ExtensionDataEntry(undefined, undefined, extId, undefined, data);
+    component.state._consumer.extensions.push(extension);
   }
 
   private async getComponentsToTag(

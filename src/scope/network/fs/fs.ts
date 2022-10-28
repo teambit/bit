@@ -6,7 +6,6 @@ import { BitId } from '../../../bit-id';
 import ComponentsList, { ListScopeResult } from '../../../consumer/component/components-list';
 import Component from '../../../consumer/component/consumer-component';
 import ComponentObjects from '../../component-objects';
-import ScopeComponentsImporter from '../../component-ops/scope-components-importer';
 import DependencyGraph from '../../graph/scope-graph';
 import { LaneData } from '../../lanes/lanes';
 import { ComponentLog } from '../../models/model-component';
@@ -71,7 +70,7 @@ export default class Fs implements Network {
   }
 
   show(bitId: BitId): Promise<Component> {
-    const scopeComponentsImporter = ScopeComponentsImporter.getInstance(this.getScope());
+    const scopeComponentsImporter = this.getScope().scopeImporter;
     return scopeComponentsImporter.loadComponent(bitId);
   }
 

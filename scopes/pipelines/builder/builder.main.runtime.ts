@@ -8,6 +8,7 @@ import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { LoggerAspect, LoggerMain } from '@teambit/logger';
+import AspectAspect from '@teambit/aspect';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { IsolateComponentsOptions, IsolatorAspect, IsolatorMain } from '@teambit/isolator';
@@ -36,6 +37,8 @@ export type OnTagOpts = {
   disableTagAndSnapPipelines?: boolean;
   throwOnError?: boolean; // on the CI it helps to save the results on failure so this is set to false
   forceDeploy?: boolean; // whether run the deploy-pipeline although the build-pipeline has failed
+  skipBuildPipeline?: boolean; // helpful for tagging from scope where we want to use the build-artifacts of previous snap.
+  combineBuildDataFromParent?: boolean; // helpful for tagging from scope where we want to save the build-data of parent snap.
   skipTests?: boolean;
   isSnap?: boolean;
 };
@@ -108,26 +111,35 @@ export class BuilderMain {
     isolateOptions: IsolateComponentsOptions = {}
   ): Promise<OnTagResults> {
     const pipeResults: TaskResultsList[] = [];
-    const { throwOnError, forceDeploy, disableTagAndSnapPipelines, isSnap } = options;
-    const envsExecutionResults = await this.build(
+    const allTasksResults: TaskResults[] = [];
+    const { throwOnError, forceDeploy, disableTagAndSnapPipelines, isSnap, skipBuildPipeline } = options;
+    if (options.skipBuildPipeline) isolateOptions.populateArtifactsFromParent = true;
+    const buildEnvsExecutionResults = await this.build(
       components,
       { emptyRootDir: true, ...isolateOptions },
-      { skipTests: options.skipTests }
+      {
+        skipTests: options.skipTests,
+        // even when build is skipped (in case of tag-from-scope), the pre-build/post-build and teambit.harmony/aspect tasks are needed
+        tasks: skipBuildPipeline ? [AspectAspect.id] : undefined,
+      }
     );
-    if (throwOnError && !forceDeploy) envsExecutionResults.throwErrorsIfExist();
-    const allTasksResults = [...envsExecutionResults.tasksResults];
-    pipeResults.push(envsExecutionResults);
-    if (forceDeploy || (!disableTagAndSnapPipelines && !envsExecutionResults.hasErrors())) {
+    if (throwOnError && !forceDeploy) buildEnvsExecutionResults.throwErrorsIfExist();
+    allTasksResults.push(...buildEnvsExecutionResults.tasksResults);
+    pipeResults.push(buildEnvsExecutionResults);
+
+    if (forceDeploy || (!disableTagAndSnapPipelines && !buildEnvsExecutionResults?.hasErrors())) {
       const deployEnvsExecutionResults = isSnap
-        ? await this.runSnapTasks(components, isolateOptions, envsExecutionResults.tasksResults)
-        : await this.runTagTasks(components, isolateOptions, envsExecutionResults.tasksResults);
+        ? await this.runSnapTasks(components, isolateOptions, buildEnvsExecutionResults?.tasksResults)
+        : await this.runTagTasks(components, isolateOptions, buildEnvsExecutionResults?.tasksResults);
       if (throwOnError && !forceDeploy) deployEnvsExecutionResults.throwErrorsIfExist();
       allTasksResults.push(...deployEnvsExecutionResults.tasksResults);
       pipeResults.push(deployEnvsExecutionResults);
     }
     await this.storeArtifacts(allTasksResults);
     const builderDataMap = this.pipelineResultsToBuilderData(components, allTasksResults);
+    if (options.combineBuildDataFromParent) await this.combineBuildDataFromParent(builderDataMap);
     this.validateBuilderDataMap(builderDataMap);
+
     return { builderDataMap, pipeResults };
   }
 
@@ -145,6 +157,41 @@ export class BuilderMain {
         );
       }
     });
+  }
+
+  private async combineBuildDataFromParent(builderDataMap: ComponentMap<RawBuilderData>) {
+    const promises = builderDataMap.map(async (builderData, component) => {
+      const idStr = component.id.toString();
+      const parents = component.head?.parents;
+      if (!parents || parents.length !== 1) {
+        throw new Error(`expect parents of ${idStr} to be 1, got ${parents?.length || 'none'}`);
+      }
+      const parent = parents[0];
+      const parentComp = await this.componentAspect.getHost().get(component.id.changeVersion(parent.toString()));
+      if (!parentComp) throw new Error(`unable to load parent component of ${idStr}. hash: ${parent}`);
+      const parentBuilderData = this.getBuilderData(parentComp);
+      if (!parentBuilderData) throw new Error(`parent of ${idStr} was not built yet. unable to continue`);
+      parentBuilderData.artifacts.forEach((artifact) => {
+        const artifactObj = artifact.toObject();
+        if (!builderData.artifacts) builderData.artifacts = [];
+        if (
+          builderData.artifacts.find((a) => a.task.id === artifactObj.task.id && a.task.name === artifactObj.task.name)
+        ) {
+          return;
+        }
+        builderData.artifacts.push(artifactObj);
+      });
+      parentBuilderData.aspectsData.forEach((aspectData) => {
+        if (builderData.aspectsData.find((a) => a.aspectId === aspectData.aspectId)) return;
+        builderData.aspectsData.push(aspectData);
+      });
+      parentBuilderData.pipeline.forEach((pipeline) => {
+        if (builderData.pipeline.find((p) => p.taskId === pipeline.taskId && p.taskName === pipeline.taskName)) return;
+        builderData.pipeline.push(pipeline);
+      });
+    });
+
+    await Promise.all(promises.flattenValue());
   }
 
   // TODO: merge with getArtifactsVinylByExtensionAndName by getting aspect name and name as object with optional props
@@ -210,27 +257,22 @@ export class BuilderMain {
     if (!data) return undefined;
     const clonedData = cloneDeep(data) as BuilderData;
     let artifactFiles: ArtifactFiles;
-    clonedData.artifacts?.forEach((artifact) => {
+    const artifacts = clonedData.artifacts?.map((artifact) => {
       if (!(artifact.files instanceof ArtifactFiles)) {
         artifactFiles = ArtifactFiles.fromObject(artifact.files);
       } else {
         artifactFiles = artifact.files;
       }
-      if (!(artifact instanceof Artifact)) {
-        Object.assign(artifact, { files: artifactFiles });
-        Object.assign(artifact, Artifact.fromArtifactObject(artifact));
+      if (artifact instanceof Artifact) {
+        return artifact;
       }
+      Object.assign(artifact, { files: artifactFiles });
+      return Artifact.fromArtifactObject(artifact);
     });
-    clonedData.artifacts = ArtifactList.fromArray(clonedData.artifacts || []);
+    clonedData.artifacts = ArtifactList.fromArray(artifacts || []);
     return clonedData;
   }
 
-  /**
-   * build given components for release.
-   * for each one of the envs it runs a series of tasks.
-   * in case of an error in a task, it stops the execution of that env and continue to the next
-   * env. at the end, the results contain the data and errors per env.
-   */
   async build(
     components: Component[],
     isolateOptions?: IsolateComponentsOptions,

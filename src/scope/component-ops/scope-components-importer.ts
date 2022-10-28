@@ -36,20 +36,28 @@ const removeNils = R.reject(R.isNil);
 
 type HashesPerRemote = { [remoteName: string]: string[] };
 
+/**
+ * Helper to import objects/components from remotes.
+ * this class is singleton because it uses Mutex to ensure that the same objects are not fetched and written at the same time.
+ * (if this won't be a singleton, then the mutex will be created for each instance, hence, one instance won't lock the other one).
+ */
 export default class ScopeComponentsImporter {
-  scope: Scope;
-  sources: SourcesRepository;
-  repo: Repository;
-  fetchWithDepsMutex = new Mutex();
-  constructor(scope: Scope) {
+  private static instancePerScope: { [scopeName: string]: ScopeComponentsImporter } = {};
+  private sources: SourcesRepository;
+  private repo: Repository;
+  private fetchWithDepsMutex = new Mutex();
+  private importManyObjectsMutex = new Mutex();
+  private constructor(private scope: Scope) {
     if (!scope) throw new Error('unable to instantiate ScopeComponentsImporter without Scope');
-    this.scope = scope;
     this.sources = scope.sources;
     this.repo = scope.objects;
   }
 
   static getInstance(scope: Scope): ScopeComponentsImporter {
-    return new ScopeComponentsImporter(scope);
+    if (!this.instancePerScope[scope.name]) {
+      this.instancePerScope[scope.name] = new ScopeComponentsImporter(scope);
+    }
+    return this.instancePerScope[scope.name];
   }
 
   /**
@@ -291,24 +299,26 @@ export default class ScopeComponentsImporter {
    * just make sure not to use it for components/lanes, as they require a proper "merge" before
    * persisting them to the filesystem. this method is good for immutable objects.
    */
-  async importManyObjects(groupedHashes: HashesPerRemote) {
-    const groupedHashedMissing = {};
-    await Promise.all(
-      Object.keys(groupedHashes).map(async (scopeName) => {
-        const uniqueHashes: string[] = R.uniq(groupedHashes[scopeName]);
-        const missing = await filter(uniqueHashes, async (hash) => !(await this.repo.has(new Ref(hash))));
-        if (missing.length) {
-          groupedHashedMissing[scopeName] = missing;
-        }
-      })
-    );
-    if (R.isEmpty(groupedHashedMissing)) return;
-    const remotes = await getScopeRemotes(this.scope);
-    const multipleStreams = await remotes.fetch(groupedHashedMissing, this.scope, { type: 'object' });
-    const bitObjectsList = await this.multipleStreamsToBitObjects(multipleStreams);
-    const allObjects = bitObjectsList.getAll();
-    await this.repo.writeObjectsToTheFS(allObjects);
-    this.throwForMissingObjects(groupedHashedMissing, allObjects);
+  async importManyObjects(groupedHashes: HashesPerRemote): Promise<void> {
+    await this.importManyObjectsMutex.runExclusive(async () => {
+      const groupedHashedMissing = {};
+      await Promise.all(
+        Object.keys(groupedHashes).map(async (scopeName) => {
+          const uniqueHashes: string[] = R.uniq(groupedHashes[scopeName]);
+          const missing = await filter(uniqueHashes, async (hash) => !(await this.repo.has(new Ref(hash))));
+          if (missing.length) {
+            groupedHashedMissing[scopeName] = missing;
+          }
+        })
+      );
+      if (R.isEmpty(groupedHashedMissing)) return;
+      const remotes = await getScopeRemotes(this.scope);
+      const multipleStreams = await remotes.fetch(groupedHashedMissing, this.scope, { type: 'object' });
+      const bitObjectsList = await this.multipleStreamsToBitObjects(multipleStreams);
+      const allObjects = bitObjectsList.getAll();
+      await this.repo.writeObjectsToTheFS(allObjects);
+      this.throwForMissingObjects(groupedHashedMissing, allObjects);
+    });
   }
 
   private throwForMissingObjects(groupedHashes: HashesPerRemote, receivedObjects: BitObject[]) {
