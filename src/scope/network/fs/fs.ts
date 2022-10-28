@@ -40,7 +40,7 @@ export default class Fs implements Network {
     return put({ path: this.scopePath, objectList }, pushOptions);
   }
 
-  action<Options, Result>(name: string, options: Options): Promise<Result> {
+  action<Options extends Record<string, any>, Result>(name: string, options: Options): Promise<Result> {
     return action(this.scopePath, name, options);
   }
 
