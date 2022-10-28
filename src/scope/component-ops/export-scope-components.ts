@@ -8,7 +8,6 @@ import ComponentNeedsUpdate from '../exceptions/component-needs-update';
 import { Lane, Version, ModelComponent } from '../models';
 import Scope from '../scope';
 import { getScopeRemotes } from '../scope-remotes';
-import ScopeComponentsImporter from './scope-components-importer';
 import { ObjectList } from '../objects/object-list';
 import { ExportPersist, ExportValidate, RemovePendingDir } from '../actions';
 import loader from '../../cli/loader';
@@ -28,7 +27,7 @@ export async function exportManyBareScope(scope: Scope, objectList: ObjectList):
   logger.debugAndAddBreadCrumb('exportManyBareScope', `started with ${objectList.objects.length} objects`);
   const mergedIds: BitIds = await saveObjects(scope, objectList);
   logger.debugAndAddBreadCrumb('exportManyBareScope', 'will try to importMany in case there are missing dependencies');
-  const scopeComponentsImporter = ScopeComponentsImporter.getInstance(scope);
+  const scopeComponentsImporter = scope.scopeImporter;
   await scopeComponentsImporter.importManyFromOriginalScopes(mergedIds); // resolve dependencies
   logger.debugAndAddBreadCrumb('exportManyBareScope', 'successfully ran importMany');
 

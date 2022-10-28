@@ -439,7 +439,7 @@ export class AspectLoaderMain {
     try {
       await aspectLoader.loadRequireableExtensions(resolvedAspects, true);
     } catch (err: any) {
-      if (err?.error.code === 'MODULE_NOT_FOUND') {
+      if (err?.error?.code === 'MODULE_NOT_FOUND') {
         const resolvedAspectsAgain = await scope.getResolvedAspects(components, { skipIfExists: false });
         await aspectLoader.loadRequireableExtensions(resolvedAspectsAgain, true);
       } else {
