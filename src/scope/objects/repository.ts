@@ -60,10 +60,12 @@ export default class Repository {
     return repository;
   }
 
-  static create({ scopePath, scopeJson }: { scopePath: string; scopeJson: ScopeJson }): Repository {
+  static async create({ scopePath, scopeJson }: { scopePath: string; scopeJson: ScopeJson }): Promise<Repository> {
     const repository = new Repository(scopePath, scopeJson);
     const scopeIndex = ScopeIndex.create(scopePath);
     repository.scopeIndex = scopeIndex;
+    repository.unmergedComponents = await UnmergedComponents.load(scopePath);
+    repository.remoteLanes = new RemoteLanes(scopePath);
     return repository;
   }
 
