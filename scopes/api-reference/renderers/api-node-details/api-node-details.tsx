@@ -220,7 +220,7 @@ export function APINodeDetails({
         </div>
         {hasMembers && (
           <>
-            <div className={styles.apiNodeDetailsMembersContainer} ref={rootRef}>
+            <div key={query.toString()} className={styles.apiNodeDetailsMembersContainer} ref={rootRef}>
               {groupedMembers.map(([type, groupedMembersByType]) => {
                 return (
                   <div key={`${type}`} className={styles.groupedMemberContainer}>
@@ -228,7 +228,11 @@ export function APINodeDetails({
                       {type}
                     </div>
                     {groupedMembersByType.map((member) => (
-                      <SchemaNodeSummary key={`${type}-${member.__schema}-${member.name}`} node={member} />
+                      <SchemaNodeSummary
+                        key={`${type}-${member.__schema}-${member.name}`}
+                        node={member}
+                        groupElementClassName={type}
+                      />
                     ))}
                   </div>
                 );
@@ -238,7 +242,7 @@ export function APINodeDetails({
         )}
         {children}
       </div>
-      <SchemaNodesIndex className={styles.schemaNodesIndex} title={'Index'} nodes={members || []} rootRef={rootRef} />
+      <SchemaNodesIndex className={styles.schemaNodesIndex} title={'Index'} rootRef={rootRef} />
     </div>
   );
 }

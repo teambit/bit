@@ -1,12 +1,7 @@
-import React, { HTMLAttributes, useEffect, useRef } from 'react';
+import React, { HTMLAttributes, useEffect, useRef, useMemo } from 'react';
 import { useElementOnFold } from '@teambit/docs.ui.hooks.use-element-on-fold';
-import { SchemaNode, ConstructorSchema } from '@teambit/semantics.entities.semantic-schema';
 import classnames from 'classnames';
 import { classes } from '@teambit/design.ui.surfaces.menu.item';
-import {
-  groupByNodeSignatureType,
-  sortSignatureType,
-} from '@teambit/api-reference.utils.group-schema-node-by-signature';
 import flatten from 'lodash.flatten';
 import { trackedElementClassName } from '@teambit/api-reference.renderers.schema-node-summary';
 import { useLocation, Link } from '@teambit/base-react.navigation.link';
@@ -14,7 +9,6 @@ import { useLocation, Link } from '@teambit/base-react.navigation.link';
 import styles from './schema-nodes-index.module.scss';
 
 export type SchemaNodesIndexProps = {
-  nodes: SchemaNode[];
   title?: string;
   /**
    * the ref of the parent element. fallback is document.
@@ -22,14 +16,14 @@ export type SchemaNodesIndexProps = {
   rootRef?: React.MutableRefObject<HTMLElement>;
 } & HTMLAttributes<HTMLDivElement>;
 
-export function SchemaNodesIndex({ rootRef, title, nodes, className }: SchemaNodesIndexProps) {
-  const grouped = Array.from(groupByNodeSignatureType(nodes).entries()).sort(sortSignatureType);
-  const hasGroupedElements = flatten(grouped).length > 0;
+export function SchemaNodesIndex({ rootRef, title, className }: SchemaNodesIndexProps) {
   const { elements } = useElementOnFold(rootRef, `.${trackedElementClassName}`);
   const loadedRef = useRef(false);
   const currentLocation = useLocation();
   const hash = currentLocation?.hash.slice(1);
 
+  const grouped = useMemo(() => Array.from(groupElements(elements).entries()), [elements, elements.length]);
+  const hasGroupedElements = flatten(grouped).length > 0;
   // scroll to active link, after first load and after content is loaded
   useEffect(() => {
     if (elements.length === 0) return;
@@ -69,14 +63,13 @@ export function SchemaNodesIndex({ rootRef, title, nodes, className }: SchemaNod
           </div>
           <div className={styles.groupedNodesContainer}>
             {groupedNodes.map((node, nodeIndex) => {
-              const nodeDisplayName = displayName(node);
-              const isActive = nodeDisplayName === hash;
+              const isActive = node === hash;
 
               return (
-                <div key={`${nodeDisplayName}-${nodeIndex}`} className={styles.groupedNode}>
+                <div key={`${node}-${nodeIndex}`} className={styles.groupedNode}>
                   <Link
                     native
-                    href={`#${nodeDisplayName}`}
+                    href={`#${node}`}
                     className={classnames(
                       styles.groupedNodeName,
                       classes.menuItem,
@@ -84,7 +77,7 @@ export function SchemaNodesIndex({ rootRef, title, nodes, className }: SchemaNod
                       isActive && classes.active
                     )}
                   >
-                    {nodeDisplayName}
+                    {node}
                   </Link>
                 </div>
               );
@@ -95,7 +88,34 @@ export function SchemaNodesIndex({ rootRef, title, nodes, className }: SchemaNod
     </div>
   );
 }
-function displayName(node: SchemaNode) {
-  if (node.__schema === ConstructorSchema.name) return 'constructor';
-  return node.name;
+
+function groupElements(elements: Element[]) {
+  const grouped = new Map<string | null, (string | null)[]>();
+
+  let groupedElementId: string | null = null;
+
+  for (let i = 0; i <= elements.length - 1; i += 1) {
+    const curr = elements[i];
+    const next = elements[i + 1];
+
+    // if the next element contains current elements id as class; start a new group
+    if (next && next.classList.contains(curr.id)) {
+      groupedElementId = curr.id;
+      grouped.set(groupedElementId, [next.textContent]);
+      i += 1;
+    }
+
+    // if no groupedElementId; add it to no group
+    if (!groupedElementId) {
+      grouped.set(null, [curr.textContent]);
+    }
+
+    // if it is not a group node and groupElementId exists, add it to existing group
+    if (curr.id !== groupedElementId) {
+      const existing = grouped.get(groupedElementId) || [];
+      grouped.set(groupedElementId, existing.concat(curr.textContent));
+    }
+  }
+
+  return grouped;
 }
