@@ -5,7 +5,6 @@ import { Consumer } from '@teambit/legacy/dist/consumer';
 import { Component, ComponentID } from '@teambit/component';
 import BitIds from '@teambit/legacy/dist/bit-id/bit-ids';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component/consumer-component';
-import ScopeComponentsImporter from '@teambit/legacy/dist/scope/component-ops/scope-components-importer';
 import { ComponentNotFound, ScopeNotFound } from '@teambit/legacy/dist/scope/exceptions';
 import { ComponentNotFound as ComponentNotFoundInScope } from '@teambit/scope';
 import compact from 'lodash.compact';
@@ -110,7 +109,7 @@ export class GraphFromFsBuilder {
   private async importObjects(components: Component[]) {
     const allDeps = (await Promise.all(components.map((c) => this.getAllDepsUnfiltered(c)))).flat();
     const allDepsWithScope = allDeps.filter((dep) => dep._legacy.hasScope()).map((id) => id._legacy);
-    const scopeComponentsImporter = new ScopeComponentsImporter(this.consumer.scope);
+    const scopeComponentsImporter = this.consumer.scope.scopeImporter;
     await scopeComponentsImporter.importMany({
       ids: BitIds.uniqFromArray(allDepsWithScope),
       throwForDependencyNotFound: this.shouldThrowOnMissingDep,
