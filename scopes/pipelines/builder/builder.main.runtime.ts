@@ -114,11 +114,15 @@ export class BuilderMain {
     const allTasksResults: TaskResults[] = [];
     const { throwOnError, forceDeploy, disableTagAndSnapPipelines, isSnap, skipBuildPipeline } = options;
     if (options.skipBuildPipeline) isolateOptions.populateArtifactsFromParent = true;
-    const buildEnvsExecutionResults = await this.build(components, isolateOptions, {
-      skipTests: options.skipTests,
-      // even when build is skipped (in case of tag-from-scope), the pre-build/post-build and teambit.harmony/aspect tasks are needed
-      tasks: skipBuildPipeline ? [AspectAspect.id] : undefined,
-    });
+    const buildEnvsExecutionResults = await this.build(
+      components,
+      { emptyRootDir: true, ...isolateOptions },
+      {
+        skipTests: options.skipTests,
+        // even when build is skipped (in case of tag-from-scope), the pre-build/post-build and teambit.harmony/aspect tasks are needed
+        tasks: skipBuildPipeline ? [AspectAspect.id] : undefined,
+      }
+    );
     if (throwOnError && !forceDeploy) buildEnvsExecutionResults.throwErrorsIfExist();
     allTasksResults.push(...buildEnvsExecutionResults.tasksResults);
     pipeResults.push(buildEnvsExecutionResults);
