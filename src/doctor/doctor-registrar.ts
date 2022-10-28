@@ -16,6 +16,7 @@ export default class DoctorRegistrar {
 
   constructor() {
     if (!instance) {
+      // eslint-disable-next-line @typescript-eslint/no-this-alias
       instance = this;
     }
 
@@ -40,8 +41,7 @@ export default class DoctorRegistrar {
     if (!instance) {
       DoctorRegistrar.init();
     }
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return instance;
+    return instance as DoctorRegistrar;
   }
 
   /**

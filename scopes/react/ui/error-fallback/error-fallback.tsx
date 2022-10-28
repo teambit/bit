@@ -1,4 +1,4 @@
-// eslint-disable-file @typescript-eslint/no-misused-promises
+/* eslint-disable @typescript-eslint/no-misused-promises */
 
 import React, { ReactNode } from 'react';
 import classnames from 'classnames';
