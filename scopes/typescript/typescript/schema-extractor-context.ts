@@ -190,9 +190,9 @@ export class SchemaExtractorContext {
   /**
    * get a definition for a given node.
    */
-  async definition(definitonInfo: protocol.DefinitionInfo): Promise<Node | undefined> {
-    const startPosition = definitonInfo.start;
-    const sourceFile = this.getSourceFileInsideComponent(definitonInfo.file);
+  async definition(definition: protocol.DefinitionInfo): Promise<Node | undefined> {
+    const startPosition = definition.start;
+    const sourceFile = this.getSourceFileInsideComponent(definition.file);
     if (!sourceFile) {
       // it might be an external reference, cant get the node
       return undefined;

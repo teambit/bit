@@ -42,7 +42,7 @@ export function APIRefPage({ host, rendererSlot, className }: APIRefPageProps) {
   }, [apiNodes]);
   const getIcon = (node: TreeNode) => {
     const nodeType = node.id.split('/')[0];
-    const icon = apiModel?.apiByType.get(nodeType)?.[0].renderer.icon.url;
+    const icon = apiModel?.apiByType.get(nodeType)?.[0].renderer.icon?.url;
     return icon;
   };
 
@@ -83,6 +83,7 @@ export function APIRefPage({ host, rendererSlot, className }: APIRefPageProps) {
               className={styles.selectedAPIDetailsComponent}
               apiNode={selectedAPINode}
               apiRefModel={apiModel}
+              renderers={renderers}
             />
           )}
         </div>

@@ -12,6 +12,11 @@ import { functionRenderer } from '@teambit/api-reference.renderers.function';
 import { enumRenderer } from '@teambit/api-reference.renderers.enum';
 import { variableRenderer } from '@teambit/api-reference.renderers.variable';
 import { unresolvedRenderer } from '@teambit/api-reference.renderers.unresolved';
+import { typeRefRenderer } from '@teambit/api-reference.renderers.type-ref';
+import { typeUnionRenderer } from '@teambit/api-reference.renderers.type-union';
+import { typeIntersectionRenderer } from '@teambit/api-reference.renderers.type-intersection';
+import { parameterRenderer } from '@teambit/api-reference.renderers.parameter';
+
 import WorkspaceAspect from '@teambit/workspace';
 
 import { APIReferenceAspect } from './api-reference.aspect';
@@ -34,6 +39,10 @@ export class APIReferenceUI {
     functionRenderer,
     enumRenderer,
     unresolvedRenderer,
+    typeRefRenderer,
+    typeIntersectionRenderer,
+    typeUnionRenderer,
+    parameterRenderer,
   ];
 
   static async provider(

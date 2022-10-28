@@ -34,9 +34,7 @@ export function APINodeDetails({
       doc,
       location: { filePath, line, character },
     },
-    renderer: {
-      icon: { url },
-    },
+    renderer: { icon },
     componentId,
   },
   members,
@@ -149,12 +147,16 @@ export function APINodeDetails({
   return (
     <div {...rest} className={classnames(rest.className, styles.apiNodeDetailsContainer)}>
       <div className={styles.apiDetails}>
-        <div className={styles.apiNodeDetailsNameContainer}>
-          <div className={styles.apiTypeIcon}>
-            <img src={url} />
+        {name && (
+          <div className={styles.apiNodeDetailsNameContainer}>
+            {icon && (
+              <div className={styles.apiTypeIcon}>
+                <img src={icon.url} />
+              </div>
+            )}
+            <H5 className={styles.apiNodeDetailsName}>{name}</H5>
           </div>
-          <H5 className={styles.apiNodeDetailsName}>{name}</H5>
-        </div>
+        )}
         {comment && <div className={styles.apiNodeDetailsComment}>{comment}</div>}
         {signature && (
           <div className={classnames(styles.apiNodeDetailsSignatureContainer, styles.codeEditorContainer)}>

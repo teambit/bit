@@ -11,17 +11,22 @@ export const typeRenderer: APINodeRenderer = {
   default: true,
 };
 
-/**
- * @todo - handle intersection types
- */
 function TypeComponent(props: APINodeRenderProps) {
   const {
     apiNode: { api },
+    renderers,
   } = props;
   const typeNode = api as TypeSchema;
   const { type } = typeNode;
+
+  const subTypeRenderer = renderers.find((renderer) => renderer.predicate(type));
+
   const hasMembers = type.__schema === TypeLiteralSchema.name;
   const members = hasMembers ? (type as TypeLiteralSchema).members : [];
 
-  return <APINodeDetails {...props} members={members} />;
+  return (
+    <APINodeDetails {...props} members={members}>
+      {subTypeRenderer && <subTypeRenderer.Component {...props} apiNode={{ ...props.apiNode, api: type }} />}
+    </APINodeDetails>
+  );
 }

@@ -5,12 +5,13 @@ import { APINode, APIReferenceModel } from '@teambit/api-reference.models.api-re
 export type APINodeRenderProps = {
   apiNode: APINode;
   apiRefModel: APIReferenceModel;
+  renderers: APINodeRenderer[];
 } & HTMLAttributes<HTMLDivElement>;
 
 export type APINodeRenderer = {
   predicate: (node: SchemaNode) => boolean;
   Component: ComponentType<APINodeRenderProps>;
   nodeType: string;
-  icon: { url: string; name: string };
+  icon?: { url: string; name: string };
   default?: boolean;
 };
