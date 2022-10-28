@@ -220,6 +220,10 @@ export function APINodeDetails({
         </div>
         {hasMembers && (
           <>
+            {/**
+             * the key is set to the the url params to force it to re-render when the query params change
+             * otherwise the rootRef never changes and index is unable to auto detect elements
+             */}
             <div key={query.toString()} className={styles.apiNodeDetailsMembersContainer} ref={rootRef}>
               {groupedMembers.map(([type, groupedMembersByType]) => {
                 return (
