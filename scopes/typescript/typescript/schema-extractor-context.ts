@@ -1,5 +1,5 @@
 import { TsserverClient } from '@teambit/ts-server';
-import ts, { ExportDeclaration, Node, TypeNode } from 'typescript';
+import ts, { ExportAssignment, ExportDeclaration, Node, SyntaxKind, TypeNode } from 'typescript';
 import { getTokenAtPosition } from 'tsutils';
 import { head } from 'lodash';
 // eslint-disable-next-line import/no-unresolved
@@ -219,9 +219,10 @@ export class SchemaExtractorContext {
 
   isFromComponent() {}
 
-  async getFileExports(exportDec: ExportDeclaration) {
+  async getFileExports(exportDec: ExportDeclaration | ExportAssignment) {
     const file = exportDec.getSourceFile().fileName;
-    const specifierPathStr = exportDec.moduleSpecifier?.getText() || '';
+    const specifierPathStr =
+      (exportDec.kind === SyntaxKind.ExportDeclaration && exportDec.moduleSpecifier?.getText()) || '';
     const specifierPath = specifierPathStr.substring(1, specifierPathStr.length - 1);
     const absPath = resolve(file, '..', specifierPath);
     const sourceFile = this.getSourceFileInsideComponent(absPath);
