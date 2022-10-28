@@ -8,6 +8,7 @@ import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { LoggerAspect, LoggerMain } from '@teambit/logger';
+import AspectAspect from '@teambit/aspect';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { IsolateComponentsOptions, IsolatorAspect, IsolatorMain } from '@teambit/isolator';
@@ -112,26 +113,15 @@ export class BuilderMain {
     const pipeResults: TaskResultsList[] = [];
     const allTasksResults: TaskResults[] = [];
     const { throwOnError, forceDeploy, disableTagAndSnapPipelines, isSnap, skipBuildPipeline } = options;
-    const ids = components.map((c) => c.id);
     if (options.skipBuildPipeline) isolateOptions.populateArtifactsFromParent = true;
-    const network = await this.isolator.isolateComponents(
-      ids,
-      { ...isolateOptions, emptyRootDir: true },
-      this.scope.legacyScope
-    );
-
-    // console.log('network.capsulesRootDir', network.capsulesRootDir);
-    // throw new Error('stop here!')
-
-    let buildEnvsExecutionResults: TaskResultsList | undefined;
-    if (!skipBuildPipeline) {
-      buildEnvsExecutionResults = await this.build(network.graphCapsules.getAllComponents(), ids, isolateOptions, {
-        skipTests: options.skipTests,
-      });
-      if (throwOnError && !forceDeploy) buildEnvsExecutionResults.throwErrorsIfExist();
-      allTasksResults.push(...buildEnvsExecutionResults.tasksResults);
-      pipeResults.push(buildEnvsExecutionResults);
-    }
+    const buildEnvsExecutionResults = await this.build(components, isolateOptions, {
+      skipTests: options.skipTests,
+      // even when build is skipped (in case of tag-from-scope), the pre-build/post-build and teambit.harmony/aspect tasks are needed
+      tasks: skipBuildPipeline ? [AspectAspect.id] : undefined,
+    });
+    if (throwOnError && !forceDeploy) buildEnvsExecutionResults.throwErrorsIfExist();
+    allTasksResults.push(...buildEnvsExecutionResults.tasksResults);
+    pipeResults.push(buildEnvsExecutionResults);
 
     if (forceDeploy || (!disableTagAndSnapPipelines && !buildEnvsExecutionResults?.hasErrors())) {
       const deployEnvsExecutionResults = isSnap
@@ -279,22 +269,17 @@ export class BuilderMain {
     return clonedData;
   }
 
-  /**
-   * build given components for release.
-   * for each one of the envs it runs a series of tasks.
-   * in case of an error in a task, it stops the execution of that env and continue to the next
-   * env. at the end, the results contain the data and errors per env.
-   */
   async build(
     components: Component[],
-    originalSeeders: ComponentID[],
     isolateOptions?: IsolateComponentsOptions,
     builderOptions?: BuilderServiceOptions
   ): Promise<TaskResultsList> {
-    const envs = await this.envs.createEnvironment(components);
+    const ids = components.map((c) => c.id);
+    const network = await this.isolator.isolateComponents(ids, isolateOptions, this.scope.legacyScope);
+    const envs = await this.envs.createEnvironment(network.graphCapsules.getAllComponents());
     const builderServiceOptions = {
       seedersOnly: isolateOptions?.seedersOnly,
-      originalSeeders,
+      originalSeeders: ids,
       ...(builderOptions || {}),
     };
     const buildResult = await envs.runOnce(this.buildService, builderServiceOptions);
