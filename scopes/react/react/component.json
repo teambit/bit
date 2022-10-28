@@ -47,7 +47,7 @@
           "less": "^4.1.1",
           "less-loader": "10.0.0",
           "@teambit/legacy": "-",
-          "@babel/runtime": "^7.12.18",
+          "@babel/runtime": "7.20.0",
           "react-refresh": "0.10.0"
         },
         "devDependencies": {
