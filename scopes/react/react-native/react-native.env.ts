@@ -52,7 +52,7 @@ export class ReactNativeEnv implements Environment, DependenciesEnv, PreviewEnv 
         '@types/react-dom': '^17.0.5',
         '@types/react-native': '^0.64.1',
         // This is added as dev dep since our jest file transformer uses babel plugins that require this to be installed
-        '@babel/runtime': '7.12.18',
+        '@babel/runtime': '7.20.0',
         '@types/testing-library__jest-dom': '5.9.5',
       },
       peerDependencies: {
