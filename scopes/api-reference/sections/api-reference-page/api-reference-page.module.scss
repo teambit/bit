@@ -2,18 +2,20 @@
 $panelBg: #fafafa;
 
 .apiRefPageContainer {
-  min-height: 100%;
+  height: 100%;
+  width: 100%;
   display: flex;
   flex-direction: column;
-  width: 100%;
 }
 .selectedAPIDetailsContainer {
   padding: 24px 40px;
   display: flex;
   flex-direction: column;
-  height: calc(100% - 48px);
-  overflow-y: auto;
+  height: calc(100% - 80px);
   width: 100%;
+}
+.selectedAPIDetailsComponent {
+  height: 100%;
 }
 .splitter {
   position: relative;

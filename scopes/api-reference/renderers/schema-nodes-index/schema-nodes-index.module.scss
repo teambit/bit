@@ -1,21 +1,23 @@
 .schemaNodeIndexContainer {
   display: flex;
-  padding-bottom: 16px;
   flex-direction: column;
+  overflow-y: auto;
+  min-width: 25%;
+  height: 100%;
 }
 
 .groupName {
   display: flex;
   font-weight: 500;
-  padding-bottom: 16px;
+  padding-bottom: 8px;
   font-size: var(--bit-p-sm);
   text-transform: capitalize;
 }
 
 .groupedNodesContainer {
   display: flex;
-  flex-direction: row;
-  padding-bottom: 16px;
+  flex-direction: column;
+  padding-bottom: 8px;
   width: 100%;
   flex-wrap: wrap;
 }
@@ -24,30 +26,26 @@
   padding-right: 16px;
   display: flex;
   flex-direction: column;
+  border-radius: 4px;
 }
 .paddingTop {
   padding-top: 16px;
 }
 .groupedNode {
   display: flex;
-  flex-direction: row;
   padding-bottom: 8px;
   font-size: var(--bit-p-xs);
-  flex-grow: 1;
-  flex-basis: 50%;
+  padding-left: 16px;
 }
 
 .groupedNodeName {
-  text-decoration: none;
+  border-radius: 4px;
 }
-.schemaNodeIndexDrawer {
-  // drawer name
-  > div:first-child {
-    border: none;
-    border-bottom: 1px solid var(--bit-border-color-lightest, #ededed);
-  }
-  height: 100%;
-  &.noBorder {
-    border-bottom: none;
-  }
+
+.title {
+  padding: 0px 8px 8px 0px;
+  font-weight: 500;
+  font-size: var(--bit-p-md);
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--bit-border-color-lightest, #ededed);
 }

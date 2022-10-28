@@ -1,7 +1,14 @@
 .apiNodeDetailsContainer {
   padding: 24px 0px;
   display: flex;
-  flex-direction: column;
+  height: calc(100% - 40px);
+}
+.apiDetails {
+  overflow-y: auto;
+}
+.schemaNodesIndex {
+  padding: 0px 24px 16px 24px;
+  flex: 0;
   height: 100%;
 }
 .apiNodeDetailsNameContainer {

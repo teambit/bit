@@ -11,6 +11,8 @@ import classnames from 'classnames';
 
 import styles from './schema-node-summary.module.scss';
 
+export const trackedElementClassName = 'tracked-element';
+
 export type SchemaNodeSummaryProps = {
   node: SchemaNode;
 } & HTMLAttributes<HTMLDivElement>;
@@ -70,7 +72,7 @@ export function SchemaNodeSummary({ node }: SchemaNodeSummaryProps) {
   return (
     <div className={styles.schemaNodeSummary}>
       {displayName && (
-        <div id={displayName} className={styles.schemaNodeSummaryName}>
+        <div id={displayName} className={classnames(styles.schemaNodeSummaryName, trackedElementClassName)}>
           {displayName}
         </div>
       )}

@@ -1,1 +1,1 @@
-export { SchemaNodeSummary, SchemaNodeSummaryProps } from './schema-node-summary';
+export { SchemaNodeSummary, SchemaNodeSummaryProps, trackedElementClassName } from './schema-node-summary';
