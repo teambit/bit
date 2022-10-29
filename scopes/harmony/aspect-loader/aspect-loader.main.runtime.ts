@@ -1,4 +1,5 @@
 import { join } from 'path';
+import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
 import { BitId } from '@teambit/legacy-bit-id';
 import LegacyScope from '@teambit/legacy/dist/scope/scope';
 import { GLOBAL_SCOPE, DEFAULT_DIST_DIRNAME } from '@teambit/legacy/dist/constants';
@@ -13,7 +14,7 @@ import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { loadBit } from '@teambit/bit';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import mapSeries from 'p-map-series';
-import { difference, compact, flatten, intersection } from 'lodash';
+import { difference, compact, flatten, intersection, uniqBy } from 'lodash';
 import { AspectDefinition, AspectDefinitionProps } from './aspect-definition';
 import { PluginDefinition } from './plugin-definition';
 import { AspectLoaderAspect } from './aspect-loader.aspect';
@@ -438,7 +439,7 @@ export class AspectLoaderMain {
     try {
       await aspectLoader.loadRequireableExtensions(resolvedAspects, true);
     } catch (err: any) {
-      if (err?.error.code === 'MODULE_NOT_FOUND') {
+      if (err?.error?.code === 'MODULE_NOT_FOUND') {
         const resolvedAspectsAgain = await scope.getResolvedAspects(components, { skipIfExists: false });
         await aspectLoader.loadRequireableExtensions(resolvedAspectsAgain, true);
       } else {
@@ -469,8 +470,11 @@ export class AspectLoaderMain {
     this.pluginSlot.register(pluginDefs);
   }
 
-  // TODO: change to use the new logger, see more info at loadExtensions function in the workspace
-  async loadExtensionsByManifests(extensionsManifests: Array<ExtensionManifest | Aspect>, throwOnError = true) {
+  async loadExtensionsByManifests(
+    extensionsManifests: Array<ExtensionManifest | Aspect>,
+    throwOnError = true,
+    seeders: string[] = []
+  ) {
     try {
       const manifests = extensionsManifests.filter((manifest) => {
         const isValid = this.isValidAspect(manifest);
@@ -478,8 +482,22 @@ export class AspectLoaderMain {
         return isValid;
       });
       const preparedManifests = this.prepareManifests(manifests);
+      // don't let harmony load all aspects. if seeders were sent, find their manifests, check for their static
+      // dependencies, and load only them.
+      const getOnlyDeclaredDependenciesManifests = () => {
+        if (!seeders.length || seeders.length === preparedManifests.length) {
+          return preparedManifests;
+        }
+        const manifestGraph = this.generateManifestGraph(preparedManifests);
+        const nodes = seeders.map((seeder) => manifestGraph.successors(seeder)).flat();
+        const seederNodes = compact(seeders.map((seeder) => manifestGraph.node(seeder)));
+        const allNodes = [...nodes, ...seederNodes];
+        const nodesUniq = uniqBy(allNodes, 'id');
+        return nodesUniq.map((n) => n.attr);
+      };
+      const relevantManifests = getOnlyDeclaredDependenciesManifests();
       // @ts-ignore TODO: fix this
-      await this.harmony.load(preparedManifests);
+      await this.harmony.load(relevantManifests);
     } catch (e: any) {
       const ids = extensionsManifests.map((manifest) => manifest.id || 'unknown');
       // TODO: improve texts
@@ -496,6 +514,20 @@ export class AspectLoaderMain {
         throw e;
       }
     }
+  }
+
+  private generateManifestGraph(manifests: Aspect[]) {
+    const graph = new Graph<Aspect, string>();
+    manifests.forEach((manifest) => graph.setNode(new Node(manifest.id, manifest)));
+    manifests.forEach((manifest) => {
+      const deps = manifest.getRuntime(MainRuntime)?.dependencies?.map((dep) => dep.id);
+      deps?.forEach((dep) => {
+        if (graph.node(dep)) {
+          graph.setEdge(new Edge(manifest.id, dep, 'dep'));
+        }
+      });
+    });
+    return graph;
   }
 
   static runtime = MainRuntime;

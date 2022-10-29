@@ -7,7 +7,7 @@ import { toFunctionLikeSchema } from './utils/to-function-like-schema';
 
 export class FunctionDeclaration implements SchemaTransformer {
   predicate(node: Node) {
-    return node.kind === ts.SyntaxKind.FunctionDeclaration;
+    return node.kind === ts.SyntaxKind.FunctionDeclaration || node.kind === ts.SyntaxKind.ArrowFunction;
   }
 
   // need to check for anonymous functions assigned for vars, const and let.

@@ -53,8 +53,9 @@ export default class GeneralHelper {
     const hash = comp3.hash;
     return this.getHashPathOfObject(hash);
   }
-  getHashPathOfObject(hash: string) {
-    return path.join(hash.slice(0, 2), hash.slice(2));
+  getHashPathOfObject(hash: string, relativeToWorkspace = false) {
+    const objectPath = path.join(hash.slice(0, 2), hash.slice(2));
+    return relativeToWorkspace ? path.join('.bit/objects', objectPath) : objectPath;
   }
   installAndGetTypeScriptCompilerDir(): string {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

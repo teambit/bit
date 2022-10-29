@@ -12,7 +12,7 @@ export async function workspaceConfig({ name, defaultScope }: WorkspaceContext, 
   configParsed['teambit.dependencies/dependency-resolver'].policy = {
     dependencies: {
       '@teambit/eslint-config-bit-react': '~0.0.367',
-      '@typescript-eslint/eslint-plugin': '4.29.3',
+      '@typescript-eslint/eslint-plugin': '5.35.1',
       'eslint-import-resolver-node': '0.3.6',
       'eslint-plugin-import': '2.22.1',
       'eslint-plugin-jest': '24.4.0',

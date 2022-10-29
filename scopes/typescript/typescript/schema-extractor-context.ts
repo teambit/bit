@@ -1,6 +1,6 @@
 import { TsserverClient } from '@teambit/ts-server';
-import ts, { ExportDeclaration, getTextOfJSDocComment, Node, TypeNode } from 'typescript';
 import { getTokenAtPosition, canHaveJsDoc, getJsDoc } from 'tsutils';
+import ts, { ExportAssignment, getTextOfJSDocComment, ExportDeclaration, Node, SyntaxKind, TypeNode } from 'typescript';
 import { head } from 'lodash';
 // eslint-disable-next-line import/no-unresolved
 import protocol from 'typescript/lib/protocol';
@@ -229,9 +229,10 @@ export class SchemaExtractorContext {
 
   isFromComponent() {}
 
-  async getFileExports(exportDec: ExportDeclaration) {
+  async getFileExports(exportDec: ExportDeclaration | ExportAssignment) {
     const file = exportDec.getSourceFile().fileName;
-    const specifierPathStr = exportDec.moduleSpecifier?.getText() || '';
+    const specifierPathStr =
+      (exportDec.kind === SyntaxKind.ExportDeclaration && exportDec.moduleSpecifier?.getText()) || '';
     const specifierPath = specifierPathStr.substring(1, specifierPathStr.length - 1);
     const absPath = resolve(file, '..', specifierPath);
     const sourceFile = this.getSourceFileInsideComponent(absPath);

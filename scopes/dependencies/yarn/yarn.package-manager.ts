@@ -30,7 +30,7 @@ import { getPluginConfiguration } from '@yarnpkg/cli';
 import { npath, PortablePath } from '@yarnpkg/fslib';
 import { Resolution } from '@yarnpkg/parsers';
 import npmPlugin from '@yarnpkg/plugin-npm';
-import parseOverrides from '@pnpm/parse-overrides';
+import { parseOverrides } from '@pnpm/parse-overrides';
 import { omit } from 'lodash';
 import userHome from 'user-home';
 import { Logger } from '@teambit/logger';
@@ -86,7 +86,17 @@ export class YarnPackageManager implements PackageManager {
           rootDir,
           componentDirectoryMap,
         })),
-        ...manifests,
+        ...Object.entries(manifests).reduce((acc, [dir, manifest]) => {
+          acc[dir] = {
+            ...manifest,
+            dependencies: {
+              ...manifest.peerDependencies,
+              ...manifest['defaultPeerDependencies'], // eslint-disable-line
+              ...manifest.dependencies,
+            },
+          };
+          return acc;
+        }, {}),
       };
     } else if (installOptions.useNesting) {
       manifests[rootDir] = workspaceManifest;
@@ -481,6 +491,10 @@ export class YarnPackageManager implements PackageManager {
       }
     }
     return injectedDirs;
+  }
+
+  supportsDedupingOnExistingRoot(): boolean {
+    return true;
   }
 }
 

@@ -28,6 +28,7 @@ import {
   ArtifactFiles,
   deserializeArtifactFiles,
   getArtifactFilesByExtension,
+  getArtifactFilesExcludeExtension,
   importMultipleDistsArtifacts,
 } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
 import { pathNormalizeToLinux, PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
@@ -132,6 +133,12 @@ export type IsolateComponentsOptions = CreateGraphOptions & {
    * do not build graph with all dependencies. isolate the seeders only.
    */
   seedersOnly?: boolean;
+
+  /**
+   * relevant for tagging from scope, where we tag an existing snap without any code-changes.
+   * the idea is to have all build artifacts from the previous snap and run deploy pipeline on top of it.
+   */
+  populateArtifactsFromParent?: boolean;
 
   /**
    * Force specific host to get the component from.
@@ -283,6 +290,9 @@ export class IsolatorMain {
       ...opts.installOptions,
       useNesting: this.dependencyResolver.hasRootComponents() && opts.installOptions?.useNesting,
     };
+    if (!opts.emptyRootDir) {
+      installOptions.dedupe = installOptions.dedupe && this.dependencyResolver.supportsDedupingOnExistingRoot();
+    }
     const config = { installPackages: true, ...opts };
     const capsulesDir = this.getCapsulesRootDir(opts.baseDir as string, opts.rootBaseDir);
     if (opts.emptyRootDir) {
@@ -309,7 +319,7 @@ export class IsolatorMain {
     }
     const capsulesWithPackagesData = await this.getCapsulesPreviousPackageJson(capsules);
 
-    await this.writeComponentsInCapsules(components, capsuleList, legacyScope);
+    await this.writeComponentsInCapsules(components, capsuleList, legacyScope, opts);
     await this.updateWithCurrentPackageJsonData(capsulesWithPackagesData, capsuleList);
     if (installOptions.installPackages) {
       const cachePackagesOnCapsulesRoot = opts.cachePackagesOnCapsulesRoot ?? false;
@@ -433,7 +443,12 @@ export class IsolatorMain {
     return capsulesWithModifiedPackageJson;
   }
 
-  private async writeComponentsInCapsules(components: Component[], capsuleList: CapsuleList, legacyScope?: Scope) {
+  private async writeComponentsInCapsules(
+    components: Component[],
+    capsuleList: CapsuleList,
+    legacyScope?: Scope,
+    opts?: IsolateComponentsOptions
+  ) {
     const modifiedComps: Component[] = [];
     const unmodifiedComps: Component[] = [];
     await Promise.all(
@@ -457,7 +472,7 @@ export class IsolatorMain {
         const capsule = capsuleList.getCapsule(component.id);
         if (!capsule) return;
         const scope = (await component.isModified()) ? undefined : legacyScope;
-        const dataToPersist = await this.populateComponentsFilesToWriteForCapsule(component, allIds, scope);
+        const dataToPersist = await this.populateComponentsFilesToWriteForCapsule(component, allIds, scope, opts);
         await dataToPersist.persistAllToCapsule(capsule, { keepExistingCapsule: true });
       })
     );
@@ -613,7 +628,8 @@ export class IsolatorMain {
   async populateComponentsFilesToWriteForCapsule(
     component: Component,
     ids: BitIds,
-    legacyScope?: Scope
+    legacyScope?: Scope,
+    opts?: IsolateComponentsOptions
   ): Promise<DataToPersist> {
     const legacyComp: ConsumerComponent = component.state._consumer;
     const dataToPersist = new DataToPersist();
@@ -635,7 +651,7 @@ export class IsolatorMain {
     const valuesToMerge = legacyComp.overrides.componentOverridesPackageJsonData;
     packageJson.mergePackageJsonObject(valuesToMerge);
     dataToPersist.addFile(packageJson.toVinylFile());
-    const artifacts = await this.getArtifacts(legacyComp, legacyScope);
+    const artifacts = await this.getArtifacts(component, legacyScope, opts?.populateArtifactsFromParent);
     dataToPersist.addManyFiles(artifacts);
     return dataToPersist;
   }
@@ -686,20 +702,34 @@ export class IsolatorMain {
    * later, this responsibility might move to pkg extension, which could write only artifacts
    * that are set in package.json.files[], to have a similar structure of a package.
    */
-  private async getArtifacts(component: ConsumerComponent, legacyScope?: Scope): Promise<AbstractVinyl[]> {
+  private async getArtifacts(
+    component: Component,
+    legacyScope?: Scope,
+    fetchParentArtifacts = false
+  ): Promise<AbstractVinyl[]> {
+    const legacyComp: ConsumerComponent = component.state._consumer;
     if (!legacyScope) {
       // when capsules are written via the workspace, do not write artifacts, they get created by
       // build-pipeline. when capsules are written via the scope, we do need the dists.
       return [];
     }
-    if (component.buildStatus !== 'succeed') {
+    if (legacyComp.buildStatus !== 'succeed' && !fetchParentArtifacts) {
       // this is important for "bit sign" when on lane to not go to the original scope
       return [];
     }
-    const extensionsNamesForArtifacts = ['teambit.compilation/compiler'];
-    const artifactsFiles = flatten(
-      extensionsNamesForArtifacts.map((extName) => getArtifactFilesByExtension(component.extensions, extName))
-    );
+    const artifactFilesToFetch = async () => {
+      if (fetchParentArtifacts) {
+        const parent = component.head?.parents[0];
+        const compParent = await legacyScope.getConsumerComponent(legacyComp.id.changeVersion(parent?.toString()));
+        return getArtifactFilesExcludeExtension(compParent.extensions, 'teambit.pkg/pkg');
+      }
+      const extensionsNamesForArtifacts = ['teambit.compilation/compiler'];
+      return flatten(
+        extensionsNamesForArtifacts.map((extName) => getArtifactFilesByExtension(legacyComp.extensions, extName))
+      );
+    };
+
+    const artifactsFiles = await artifactFilesToFetch();
     const artifactsVinylFlattened: ArtifactVinyl[] = [];
     await Promise.all(
       artifactsFiles.map(async (artifactFiles) => {
@@ -709,11 +739,11 @@ export class IsolatorMain {
         }
         // fyi, if this is coming from the isolator aspect, it is optimized to import all at once.
         // see artifact-files.importMultipleDistsArtifacts().
-        const vinylFiles = await artifactFiles.getVinylsAndImportIfMissing(component.id, legacyScope);
+        const vinylFiles = await artifactFiles.getVinylsAndImportIfMissing(legacyComp.id, legacyScope);
         artifactsVinylFlattened.push(...vinylFiles);
       })
     );
-    const artifactsDir = component.writtenPath;
+    const artifactsDir = legacyComp.writtenPath;
     if (artifactsDir) {
       artifactsVinylFlattened.forEach((a) => a.updatePaths({ newBase: artifactsDir }));
     }

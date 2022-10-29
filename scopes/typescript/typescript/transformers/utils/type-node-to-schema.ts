@@ -43,9 +43,9 @@ import {
   Modifier,
   ConditionalTypeSchema,
   NamedTupleSchema,
+  UnImplementedSchema,
 } from '@teambit/semantics.entities.semantic-schema';
 import pMapSeries from 'p-map-series';
-
 import { SchemaExtractorContext } from '../../schema-extractor-context';
 import { getParams } from './get-params';
 import { typeElementToSchema } from './type-element-to-schema';
@@ -111,14 +111,15 @@ export async function typeNodeToSchema(node: TypeNode, context: SchemaExtractorC
     case SyntaxKind.JSDocNamepathType:
     case SyntaxKind.JSDocSignature:
     case SyntaxKind.JSDocTypeLiteral:
-      throw new Error(`TypeNode ${node.kind} (probably ${SyntaxKind[node.kind]}) was not implemented yet.
-context: ${node.getText()}`);
+      return unimplementedSchema(node, context);
     default:
-      throw new Error(`Node ${node.kind} (probably ${SyntaxKind[node.kind]}) is not a TypeNode.
-context: ${node.getText()}`);
+      return unimplementedSchema(node, context);
   }
 }
 
+function unimplementedSchema(node: TypeNode, context: SchemaExtractorContext) {
+  return new UnImplementedSchema(context.getLocation(node), node.getText(), SyntaxKind[node.kind]);
+}
 /**
  * whether it's kind of `ts.KeywordTypeSyntaxKind`
  */

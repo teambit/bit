@@ -10,41 +10,35 @@
     "packageManager": "teambit.dependencies/pnpm",
     "policy": {
       "dependencies": {
-        "@babel/core": "7.11.6",
-        "@babel/preset-react": "7.13.13",
-        "@babel/preset-typescript": "7.12.7",
-        "@babel/types": "^7.13.12",
+        "@babel/core": "7.19.6",
+        "@babel/preset-react": "7.18.6",
+        "@babel/preset-typescript": "7.18.6",
+        "@babel/types": "7.20.0",
         "@graphql-modules/core": "0.7.17",
         "@jest/test-result": "26.6.2",
         "@mdx-js/mdx": "1.6.21",
         "@mdx-js/react": "1.6.22",
         "@monaco-editor/react": "4.4.2",
         "@pmmmwh/react-refresh-webpack-plugin": "0.5.4",
-        "@pnpm/client": "7.2.5",
+        "@pnpm/client": "8.0.2",
         "@pnpm/colorize-semver-diff": "1.0.1",
-        "@pnpm/config": "15.10.5",
-        "@pnpm/core": "5.11.5",
-        "@pnpm/default-reporter": "9.1.25",
-        "@pnpm/error": "3.0.1",
-        "@pnpm/fetch": "5.0.7",
-        "@pnpm/fetching-types": "3.0.0",
-        "@pnpm/git-resolver": "6.1.4",
-        "@pnpm/local-resolver": "8.0.11",
-        "@pnpm/logger": "4.0.0",
-        "@pnpm/modules-yaml": "10.0.6",
+        "@pnpm/config": "16.0.2",
+        "@pnpm/core": "7.0.2",
+        "@pnpm/default-reporter": "11.0.2",
+        "@pnpm/error": "4.0.0",
+        "@pnpm/fetch": "6.0.2",
+        "@pnpm/logger": "5.0.0",
+        "@pnpm/modules-yaml": "11.0.1",
         "@pnpm/network.agent": "0.0.3",
         "@pnpm/network.ca-file": "1.0.1",
-        "@pnpm/npm-resolver": "13.1.7",
-        "@pnpm/package-store": "14.2.3",
-        "@pnpm/parse-overrides": "2.0.3",
-        "@pnpm/pick-registry-for-package": "3.0.6",
+        "@pnpm/package-store": "15.0.1",
+        "@pnpm/parse-overrides": "3.0.0",
+        "@pnpm/pick-registry-for-package": "4.0.0",
         "@pnpm/registry-mock": "2.20.0",
-        "@pnpm/resolver-base": "9.1.0",
         "@pnpm/semver-diff": "1.1.0",
-        "@pnpm/sort-packages": "3.0.7",
-        "@pnpm/store-connection-manager": "4.3.9",
-        "@pnpm/tarball-resolver": "6.0.7",
-        "@pnpm/types": "8.5.0",
+        "@pnpm/sort-packages": "4.0.1",
+        "@pnpm/store-connection-manager": "5.0.2",
+        "@pnpm/types": "8.8.0",
         "@react-hook/latest": "1.0.3",
         "@stencil/core": "1.17.4",
         "@stencil/webpack": "0.0.6",
@@ -102,6 +96,7 @@
         "@teambit/design.ui.icon-button": "1.0.16",
         "@teambit/design.ui.input.option-button": "1.0.0",
         "@teambit/design.ui.input.toggle": "1.0.12",
+        "@teambit/design.ui.pill-label": "0.0.356",
         "@teambit/design.ui.separator": "0.0.354",
         "@teambit/design.ui.surfaces.menu.link-item": "1.0.0",
         "@teambit/docs.content.docs-overview": "1.95.9",
@@ -278,12 +273,12 @@
         "parse-package-name": "0.1.0",
         "path-to-regexp": "6.2.0",
         "penpal": "6.2.2",
-        "pkgs-graph": "6.1.3",
+        "pkgs-graph": "8.0.0",
         "pluralize": "8.0.0",
-        "postcss": "8.2.9",
+        "postcss": "8.4.18",
         "postcss-flexbugs-fixes": "5.0.2",
-        "postcss-loader": "6.1.1",
-        "postcss-preset-env": "6.7.0",
+        "postcss-loader": "7.0.1",
+        "postcss-preset-env": "7.8.2",
         "prerender-spa-plugin-next": "4.2.0",
         "pretty-bytes": "5.6.0",
         "pretty-time": "1.1.0",
@@ -303,7 +298,7 @@
         "remark-frontmatter": "2.0.0",
         "reset-css": "5.0.1",
         "resolve-from": "5.0.0",
-        "resolve-url-loader": "4.0.0",
+        "resolve-url-loader": "5.0.0",
         "semver": "7.3.4",
         "semver-intersect": "1.4.0",
         "semver-range-intersect": "0.3.1",
@@ -338,7 +333,7 @@
       "peerDependencies": {
         "@apollo/client": "^3.6.0",
         "@teambit/base-react.navigation.link": "2.0.27",
-        "@teambit/legacy": "1.0.370",
+        "@teambit/legacy": "1.0.379",
         "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
         "browserslist": "4.16.3",
         "core-js": "^3.10.0",
@@ -350,6 +345,9 @@
       }
     },
     "linkCoreAspects": false,
+    "overrides": {
+      "@types/fs-capacitor": "2.0.0"
+    },
     "nodeLinker": "hoisted",
     "nodeVersion": "14.19.3",
     "engineStrict": true,
@@ -425,7 +423,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.370"
+            "@teambit/legacy": "1.0.379"
           }
         }
       },
@@ -660,12 +658,12 @@
             "react": "-",
             "react-dom": "-",
             "css-loader": "6.2.0",
-            "postcss": "8.2.9",
-            "postcss-loader": "6.1.1",
+            "postcss": "8.4.18",
+            "postcss-loader": "7.0.1",
             "babel-loader": "8.2.2",
-            "@babel/preset-react": "7.13.13",
-            "@babel/preset-env": "7.12.17",
-            "resolve-url-loader": "3.1.2",
+            "@babel/preset-react": "7.18.6",
+            "@babel/preset-env": "7.19.4",
+            "resolve-url-loader": "5.0.0",
             "sass-loader": "12.1.0",
             "@svgr/webpack": "5.5.0",
             "new-url-loader": "0.1.1",
@@ -674,7 +672,7 @@
             "less-loader": "10.0.0",
             "babel-preset-react-app": "^10.0.0",
             "postcss-normalize": "10.0.0",
-            "postcss-preset-env": "6.7.0",
+            "postcss-preset-env": "7.8.2",
             "postcss-flexbugs-fixes": "5.0.2"
           },
           "devDependencies": {
@@ -686,7 +684,7 @@
           "peerDependencies": {
             "react": "^16.8.0 || ^17.0.0",
             "react-dom": "^16.8.0 || ^17.0.0",
-            "@teambit/legacy": "1.0.370"
+            "@teambit/legacy": "1.0.379"
           }
         }
       }
@@ -695,8 +693,8 @@
       "teambit.dependencies/dependency-resolver": {
         "policy": {
           "devDependencies": {
-            "@babel/preset-react": "7.13.13",
-            "@babel/preset-env": "7.12.17",
+            "@babel/preset-react": "7.18.6",
+            "@babel/preset-env": "7.19.4",
             "babel-loader": "8.2.2"
           }
         }
@@ -788,7 +786,7 @@
             "@teambit/base-react.navigation.link": "2.0.27",
             "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
             "@apollo/client": "3.6.9",
-            "@teambit/legacy": "1.0.370",
+            "@teambit/legacy": "1.0.379",
             "graphql": "14.7.0",
             "browserslist": "4.16.3",
             "reflect-metadata": "0.1.13",
@@ -800,7 +798,7 @@
             "react-dom": "17.0.2",
             "core-js": "3.13.0",
             // Those are here to make sure we have them in the root with specific versions when installing with bvm
-            "postcss": "8.2.9",
+            "postcss": "8.4.18",
             "buffer": "6.0.3",
             "process": "0.11.10",
             "react-router-dom": "6.3.0"
@@ -894,7 +892,7 @@
       "teambit.dependencies/dependency-resolver": {
         "policy": {
           "dependencies": {
-            "@babel/plugin-proposal-class-properties": "7.12.13",
+            "@babel/plugin-proposal-class-properties": "7.18.6",
             "@babel/plugin-proposal-decorators": "7.12.13",
             "@babel/plugin-proposal-object-rest-spread": "7.12.13",
             "@babel/plugin-transform-modules-commonjs": "7.12.13",
@@ -902,7 +900,7 @@
             "@babel/preset-env": "7.12.17",
             "babel-plugin-transform-typescript-metadata": "0.3.1",
             "@babel/preset-react": "7.13.13",
-            "@babel/preset-typescript": "7.12.7",
+            "@babel/preset-typescript": "7.18.6",
             "jest-environment-node": "27.5.1"
           }
         }
@@ -923,7 +921,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.370"
+            "@teambit/legacy": "1.0.379"
           }
         }
       }

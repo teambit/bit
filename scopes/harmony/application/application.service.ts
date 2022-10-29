@@ -6,6 +6,7 @@ export class AppService implements EnvService<any> {
   async run(context: ExecutionContext) {
     const appContext = Object.assign(context, {
       dev: true,
+      errors: [],
     });
 
     return appContext;

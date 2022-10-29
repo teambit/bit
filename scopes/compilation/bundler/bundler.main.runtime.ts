@@ -52,6 +52,7 @@ export class BundlerMain {
   async devServer(components: Component[]): Promise<ComponentServer[]> {
     const envRuntime = await this.envs.createEnvironment(components);
     // TODO: this must be refactored away from here. this logic should be in the Preview.
+    // @ts-ignore
     const servers: ComponentServer[] = await envRuntime.runOnce<ComponentServer[]>(this.devService, {
       dedicatedEnvDevServers: this.config.dedicatedEnvDevServers,
     });
