@@ -13,7 +13,6 @@ export type APINode = {
   renderer: APINodeRenderer;
   componentId: ComponentID;
 };
-
 export class APIReferenceModel {
   apiByType: Map<string, APINode[]>;
   apiByName: Map<string, APINode>;

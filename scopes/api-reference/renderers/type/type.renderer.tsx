@@ -1,5 +1,5 @@
 import React from 'react';
-import { TypeLiteralSchema, TypeSchema } from '@teambit/semantics.entities.semantic-schema';
+import { TypeSchema } from '@teambit/semantics.entities.semantic-schema';
 import { APINodeRenderProps, APINodeRenderer } from '@teambit/api-reference.models.api-node-renderer';
 import { APINodeDetails } from '@teambit/api-reference.renderers.api-node-details';
 
@@ -21,11 +21,8 @@ function TypeComponent(props: APINodeRenderProps) {
 
   const subTypeRenderer = renderers.find((renderer) => renderer.predicate(type));
 
-  const hasMembers = type.__schema === TypeLiteralSchema.name;
-  const members = hasMembers ? (type as TypeLiteralSchema).members : [];
-
   return (
-    <APINodeDetails {...props} members={members}>
+    <APINodeDetails {...props}>
       {subTypeRenderer && <subTypeRenderer.Component {...props} apiNode={{ ...props.apiNode, api: type }} />}
     </APINodeDetails>
   );

@@ -10,13 +10,15 @@ export const parameterRenderer: APINodeRenderer = {
   default: true,
 };
 
+/**
+ * @todo - implement parameter
+ */
 function ParameterComponent(props: APINodeRenderProps) {
   const {
     apiNode: { api },
-    renderers,
+    // renderers,
   } = props;
   const typeNode = api as ParameterSchema;
-  console.log('🚀 ~ file: parameter.renderer.tsx ~ line 19 ~ ParameterComponent ~ typeNode', typeNode);
 
-  return <APINodeDetails {...props} />;
+  return <APINodeDetails {...props} apiNode={{ ...props.apiNode, api: typeNode.type }} />;
 }

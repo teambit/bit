@@ -24,6 +24,10 @@ import styles from './api-node-details.module.scss';
 export type APINodeDetailsProps = APINodeRenderProps & {
   members?: SchemaNode[];
   displaySignature?: string;
+  options?: {
+    hideImplementation?: boolean;
+    hideIndex?: boolean;
+  };
 };
 
 export function APINodeDetails({
@@ -41,6 +45,7 @@ export function APINodeDetails({
   displaySignature,
   children,
   apiRefModel,
+  options,
   ...rest
 }: APINodeDetailsProps) {
   const routerLocation = useLocation();
@@ -109,20 +114,21 @@ export function APINodeDetails({
   }, []);
 
   useEffect(() => {
-    if (isMounted) {
+    if (isMounted && signature) {
       monacoRef.current.languages.typescript.typescriptDefaults.setCompilerOptions({
         jsx: monacoRef.current.languages.typescript.JsxEmit.Preserve,
         target: monacoRef.current.languages.typescript.ScriptTarget.ES2020,
         esModuleInterop: true,
       });
+      ``;
       monacoRef.current.languages.typescript.typescriptDefaults.setDiagnosticsOptions({
         noSemanticValidation: true,
         noSyntaxValidation: true,
       });
       const container = editorRef.current.getDomNode();
       editorRef.current.onDidContentSizeChange(() => {
-        if (container && isMounted) {
-          const contentHeight = Math.min(1000, editorRef.current.getContentHeight() + 18);
+        if (container && isMounted && signature) {
+          const contentHeight = Math.min(200, editorRef.current.getContentHeight() + 18);
           setSignatureHeight(contentHeight);
         }
       });
@@ -145,7 +151,16 @@ export function APINodeDetails({
   }, []);
 
   return (
-    <div {...rest} className={classnames(rest.className, styles.apiNodeDetailsContainer)}>
+    /**
+     * the key is set to the the url params to force it to re-render when the query params change
+     * otherwise the rootRef never changes and index is unable to auto detect elements
+     */
+    <div
+      ref={rootRef}
+      key={query.toString()}
+      {...rest}
+      className={classnames(rest.className, styles.apiNodeDetailsContainer)}
+    >
       <div className={styles.apiDetails}>
         {name && (
           <div className={styles.apiNodeDetailsNameContainer}>
@@ -192,39 +207,37 @@ export function APINodeDetails({
             </div>
           </div>
         )}
-        <div className={styles.apiNodeImplementationDrawerContainer}>
-          <DrawerUI
-            isOpen={drawerOpen}
-            onToggle={() => onToggleDrawer((open) => !open)}
-            contentClass={styles.apiNodeImplementationDrawerContent}
-            className={styles.apiNodeImplementationDrawer}
-            name={
-              <div className={styles.apiNodeDetailsLocationContainer}>
-                <div className={styles.apiNodeDetailsLocationIcon}>
-                  <img src="https://static.bit.dev/design-system-assets/Icons/external-link.svg"></img>
+        {!options?.hideImplementation && (
+          <div className={styles.apiNodeImplementationDrawerContainer}>
+            <DrawerUI
+              isOpen={drawerOpen}
+              onToggle={() => onToggleDrawer((open) => !open)}
+              contentClass={styles.apiNodeImplementationDrawerContent}
+              className={styles.apiNodeImplementationDrawer}
+              name={
+                <div className={styles.apiNodeDetailsLocationContainer}>
+                  <div className={styles.apiNodeDetailsLocationIcon}>
+                    <img src="https://static.bit.dev/design-system-assets/Icons/external-link.svg"></img>
+                  </div>
+                  <div className={styles.apiNodeDetailsLocation}>
+                    <Link external={true} href={locationUrl} className={styles.apiNodeDetailsLocationLink}>
+                      {locationLabel}
+                    </Link>
+                  </div>
                 </div>
-                <div className={styles.apiNodeDetailsLocation}>
-                  <Link external={true} href={locationUrl} className={styles.apiNodeDetailsLocationLink}>
-                    {locationLabel}
-                  </Link>
-                </div>
-              </div>
-            }
-          >
-            <CodeView
-              componentId={componentId}
-              currentFile={filePath}
-              className={styles.apiNodeImplementationCodeView}
-            />
-          </DrawerUI>
-        </div>
+              }
+            >
+              <CodeView
+                componentId={componentId}
+                currentFile={filePath}
+                className={styles.apiNodeImplementationCodeView}
+              />
+            </DrawerUI>
+          </div>
+        )}
         {hasMembers && (
           <>
-            {/**
-             * the key is set to the the url params to force it to re-render when the query params change
-             * otherwise the rootRef never changes and index is unable to auto detect elements
-             */}
-            <div key={query.toString()} className={styles.apiNodeDetailsMembersContainer} ref={rootRef}>
+            <div className={styles.apiNodeDetailsMembersContainer}>
               {groupedMembers.map(([type, groupedMembersByType]) => {
                 return (
                   <div key={`${type}`} className={styles.groupedMemberContainer}>
@@ -246,7 +259,9 @@ export function APINodeDetails({
         )}
         {children}
       </div>
-      <SchemaNodesIndex className={styles.schemaNodesIndex} title={'Index'} rootRef={rootRef} />
+      {!options?.hideIndex && (
+        <SchemaNodesIndex className={styles.schemaNodesIndex} title={'Index'} rootRef={rootRef} />
+      )}
     </div>
   );
 }

@@ -1061,6 +1061,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/api-reference/renderers/type-intersection"
     },
+    "renderers/type-literal": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/api-reference/renderers/type-literal"
+    },
     "renderers/type-ref": {
         "scope": "",
         "version": "",

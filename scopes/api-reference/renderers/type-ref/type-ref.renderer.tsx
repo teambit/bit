@@ -2,6 +2,9 @@ import React from 'react';
 import { APINodeRenderProps, APINodeRenderer } from '@teambit/api-reference.models.api-node-renderer';
 import { APINodeDetails } from '@teambit/api-reference.renderers.api-node-details';
 import { TypeRefSchema } from '@teambit/semantics.entities.semantic-schema';
+import classnames from 'classnames';
+
+import styles from './type-ref.renderer.module.scss';
 
 export const typeRefRenderer: APINodeRenderer = {
   predicate: (node) => node.__schema === TypeRefSchema.name,
@@ -10,11 +13,20 @@ export const typeRefRenderer: APINodeRenderer = {
   default: true,
 };
 
+/**
+ * @todo figure out how to render a type ref node
+ */
 function TypeRefComponent(props: APINodeRenderProps) {
   const {
     apiNode: { api },
   } = props;
   const typeRefNode = api as TypeRefSchema;
-  console.log('🚀 ~ file: type-ref.renderer.tsx ~ line 18 ~ TypeRefComponent ~ typeRefNode', typeRefNode);
-  return <APINodeDetails {...props} />;
+  return (
+    <APINodeDetails
+      {...props}
+      className={classnames(styles.container, props.className)}
+      apiNode={{ ...props.apiNode, api: typeRefNode }}
+      options={{ hideImplementation: true, hideIndex: true }}
+    />
+  );
 }
