@@ -20,6 +20,7 @@ export class GraphFromFsBuilder {
   private depth = 1;
   private consumer: Consumer;
   private legacyIdStrToComponentId: { [bitIdStr: string]: ComponentID } = {};
+  private importedIds: string[] = [];
   constructor(
     private workspace: Workspace,
     private logger: Logger,
@@ -106,9 +107,18 @@ export class GraphFromFsBuilder {
     if (allDependenciesFlattened.length) await this.processManyComponents(allDependenciesFlattened);
   }
 
+  /**
+   * only for components from the workspace that can be modified to add/remove dependencies, we need to make sure that
+   * all their dependencies are imported.
+   * remember that `importMany` fetches all flattened dependencies. once a component from scope is imported, we know
+   * that all its flattened dependencies are there. no need to call importMany again for them.
+   */
   private async importObjects(components: Component[]) {
-    const allDeps = (await Promise.all(components.map((c) => this.getAllDepsUnfiltered(c)))).flat();
-    const allDepsWithScope = allDeps.filter((dep) => dep._legacy.hasScope()).map((id) => id._legacy);
+    const workspaceIds = await this.workspace.listIds();
+    const compOnWorkspaceOnly = components.filter((comp) => workspaceIds.find((id) => id.isEqual(comp.id)));
+    const allDeps = (await Promise.all(compOnWorkspaceOnly.map((c) => this.getAllDepsUnfiltered(c)))).flat();
+    const allDepsNotImported = allDeps.filter((d) => !this.importedIds.includes(d.toString()));
+    const allDepsWithScope = allDepsNotImported.map((id) => id._legacy).filter((dep) => dep.hasScope());
     const scopeComponentsImporter = this.consumer.scope.scopeImporter;
     await scopeComponentsImporter.importMany({
       ids: BitIds.uniqFromArray(allDepsWithScope),
@@ -116,6 +126,7 @@ export class GraphFromFsBuilder {
       throwForSeederNotFound: this.shouldThrowOnMissingDep,
       reFetchUnBuiltVersion: false,
     });
+    allDepsNotImported.map((id) => this.importedIds.push(id.toString()));
   }
 
   private async processOneComponent(component: Component) {
