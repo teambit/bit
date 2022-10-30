@@ -4,6 +4,7 @@ import { TsConfigTransformer, TypescriptMain } from '@teambit/typescript';
 import { ReactMain } from '@teambit/react';
 import { Tester } from '@teambit/tester';
 import { BuildTask } from '@teambit/builder';
+import { COMPONENT_PREVIEW_STRATEGY_NAME, PreviewStrategyName } from '@teambit/preview';
 
 export const NodeEnvType = 'node';
 
@@ -52,7 +53,7 @@ export class NodeEnv implements DependenciesEnv, PackageEnv {
 
   getPreviewConfig() {
     return {
-      strategyName: 'component',
+      strategyName: COMPONENT_PREVIEW_STRATEGY_NAME as PreviewStrategyName,
       splitComponentBundle: false,
     };
   }
