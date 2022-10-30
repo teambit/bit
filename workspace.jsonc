@@ -10,10 +10,10 @@
     "packageManager": "teambit.dependencies/pnpm",
     "policy": {
       "dependencies": {
-        "@babel/core": "7.11.6",
-        "@babel/preset-react": "7.13.13",
-        "@babel/preset-typescript": "7.12.7",
-        "@babel/types": "^7.13.12",
+        "@babel/core": "7.19.6",
+        "@babel/preset-react": "7.18.6",
+        "@babel/preset-typescript": "7.18.6",
+        "@babel/types": "7.20.0",
         "@graphql-modules/core": "0.7.17",
         "@jest/test-result": "26.6.2",
         "@mdx-js/mdx": "1.6.21",
@@ -331,7 +331,7 @@
       "peerDependencies": {
         "@apollo/client": "^3.6.0",
         "@teambit/base-react.navigation.link": "2.0.27",
-        "@teambit/legacy": "1.0.377",
+        "@teambit/legacy": "1.0.379",
         "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
         "browserslist": "4.16.3",
         "core-js": "^3.10.0",
@@ -421,7 +421,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.377"
+            "@teambit/legacy": "1.0.379"
           }
         }
       },
@@ -659,8 +659,8 @@
             "postcss": "8.4.18",
             "postcss-loader": "7.0.1",
             "babel-loader": "8.2.2",
-            "@babel/preset-react": "7.13.13",
-            "@babel/preset-env": "7.12.17",
+            "@babel/preset-react": "7.18.6",
+            "@babel/preset-env": "7.19.4",
             "resolve-url-loader": "5.0.0",
             "sass-loader": "12.1.0",
             "@svgr/webpack": "5.5.0",
@@ -682,7 +682,7 @@
           "peerDependencies": {
             "react": "^16.8.0 || ^17.0.0",
             "react-dom": "^16.8.0 || ^17.0.0",
-            "@teambit/legacy": "1.0.377"
+            "@teambit/legacy": "1.0.379"
           }
         }
       }
@@ -691,8 +691,8 @@
       "teambit.dependencies/dependency-resolver": {
         "policy": {
           "devDependencies": {
-            "@babel/preset-react": "7.13.13",
-            "@babel/preset-env": "7.12.17",
+            "@babel/preset-react": "7.18.6",
+            "@babel/preset-env": "7.19.4",
             "babel-loader": "8.2.2"
           }
         }
@@ -769,7 +769,7 @@
             "@teambit/base-react.navigation.link": "2.0.27",
             "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
             "@apollo/client": "3.6.9",
-            "@teambit/legacy": "1.0.377",
+            "@teambit/legacy": "1.0.379",
             "graphql": "14.7.0",
             "browserslist": "4.16.3",
             "reflect-metadata": "0.1.13",
@@ -875,7 +875,7 @@
       "teambit.dependencies/dependency-resolver": {
         "policy": {
           "dependencies": {
-            "@babel/plugin-proposal-class-properties": "7.12.13",
+            "@babel/plugin-proposal-class-properties": "7.18.6",
             "@babel/plugin-proposal-decorators": "7.12.13",
             "@babel/plugin-proposal-object-rest-spread": "7.12.13",
             "@babel/plugin-transform-modules-commonjs": "7.12.13",
@@ -883,7 +883,7 @@
             "@babel/preset-env": "7.12.17",
             "babel-plugin-transform-typescript-metadata": "0.3.1",
             "@babel/preset-react": "7.13.13",
-            "@babel/preset-typescript": "7.12.7",
+            "@babel/preset-typescript": "7.18.6",
             "jest-environment-node": "27.5.1"
           }
         }
@@ -904,7 +904,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.377"
+            "@teambit/legacy": "1.0.379"
           }
         }
       }

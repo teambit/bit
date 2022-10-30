@@ -32,9 +32,9 @@ export type AllDependencies = {
 };
 
 export type AllPackagesDependencies = {
-  packageDependencies: Record<string, string> | null | undefined;
-  devPackageDependencies: Record<string, string> | null | undefined;
-  peerPackageDependencies: Record<string, string> | null | undefined;
+  packageDependencies: Record<string, string>;
+  devPackageDependencies: Record<string, string>;
+  peerPackageDependencies: Record<string, string>;
 };
 
 export type FileType = {

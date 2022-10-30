@@ -15,8 +15,8 @@
           "@babel/helper-plugin-test-runner": "7.16.7",
           "@babel/preset-env": "7.12.17",
           "@babel/preset-react": "7.13.13",
-          "@typescript-eslint/parser": "4.30.0",
-          "@typescript-eslint/eslint-plugin": "4.30.0",
+          "@typescript-eslint/parser": "5.35.1",
+          "@typescript-eslint/eslint-plugin": "5.35.1",
           "esbuild": "0.14.28",
           "eslint-plugin-jest": "24.1.5",
           "eslint-plugin-import": "2.22.1",
@@ -47,7 +47,7 @@
           "less": "^4.1.1",
           "less-loader": "10.0.0",
           "@teambit/legacy": "-",
-          "@babel/runtime": "^7.12.18",
+          "@babel/runtime": "7.20.0",
           "react-refresh": "0.10.0"
         },
         "devDependencies": {
@@ -63,7 +63,7 @@
         "peerDependencies": {
           "react": "^16.8.0 || ^17.0.0",
           "react-dom": "^16.8.0 || ^17.0.0",
-          "@teambit/legacy": "1.0.377"
+          "@teambit/legacy": "1.0.379"
         }
       }
     }

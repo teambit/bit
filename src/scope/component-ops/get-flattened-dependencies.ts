@@ -11,7 +11,6 @@ import logger from '../../logger/logger';
 import { buildComponentsGraphCombined } from '../graph/components-graph';
 import Graph from '../graph/graph';
 import VersionDependencies from '../version-dependencies';
-import ScopeComponentsImporter from './scope-components-importer';
 
 export class FlattenedDependenciesGetter {
   private dependenciesGraph: Graph;
@@ -61,7 +60,7 @@ export class FlattenedDependenciesGetter {
       .map((idStr) => this.dependenciesGraph.node(idStr))
       .filter((bitId: BitId) => bitId && bitId.hasScope())
       .filter((bitId) => !this.components.find((c) => c.id.isEqual(bitId)));
-    const scopeComponentsImporter = ScopeComponentsImporter.getInstance(this.scope);
+    const scopeComponentsImporter = this.scope.scopeImporter;
     this.versionDependencies = await scopeComponentsImporter.importMany({
       ids: BitIds.fromArray(bitIds),
       cache: true,

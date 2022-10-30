@@ -1,4 +1,5 @@
 import mapSeries from 'p-map-series';
+import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
 import semver from 'semver';
 import multimatch from 'multimatch';
 import type { AspectLoaderMain } from '@teambit/aspect-loader';
@@ -19,7 +20,7 @@ import type { UiMain } from '@teambit/ui';
 import { UIAspect } from '@teambit/ui';
 import { RequireableComponent } from '@teambit/harmony.modules.requireable-component';
 import { BitId } from '@teambit/legacy-bit-id';
-import { BitIds as ComponentsIds } from '@teambit/legacy/dist/bit-id';
+import { BitIds, BitIds as ComponentsIds } from '@teambit/legacy/dist/bit-id';
 import { ModelComponent, Lane } from '@teambit/legacy/dist/scope/models';
 import { Repository } from '@teambit/legacy/dist/scope/objects';
 import LegacyScope, { LegacyOnTagResult } from '@teambit/legacy/dist/scope/scope';
@@ -27,7 +28,6 @@ import { ComponentLog } from '@teambit/legacy/dist/scope/models/model-component'
 import { loadScopeIfExist } from '@teambit/legacy/dist/scope/scope-loader';
 import { PersistOptions } from '@teambit/legacy/dist/scope/types';
 import { DEFAULT_DIST_DIRNAME } from '@teambit/legacy/dist/constants';
-import LegacyGraph from '@teambit/legacy/dist/scope/graph/graph';
 import { ExportPersist, PostSign } from '@teambit/legacy/dist/scope/actions';
 import { getScopeRemotes } from '@teambit/legacy/dist/scope/scope-remotes';
 import { Remotes } from '@teambit/legacy/dist/remotes';
@@ -37,7 +37,6 @@ import { Types } from '@teambit/legacy/dist/scope/object-registrar';
 import { FETCH_OPTIONS } from '@teambit/legacy/dist/api/scope/lib/fetch';
 import { ObjectList } from '@teambit/legacy/dist/scope/objects/object-list';
 import { Http, DEFAULT_AUTH_TYPE, AuthData, getAuthDataFromHeader } from '@teambit/legacy/dist/scope/network/http/http';
-import { buildOneGraphForComponentsUsingScope } from '@teambit/legacy/dist/scope/graph/components-graph';
 import { remove } from '@teambit/legacy/dist/api/scope';
 import { BitError } from '@teambit/bit-error';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
@@ -739,20 +738,32 @@ needed-for: ${neededFor || '<unknown>'}`);
     return defs;
   }
 
-  async getLegacyGraph(ids?: ComponentID[]): Promise<LegacyGraph> {
-    if (!ids || ids.length < 1) ids = (await this.list()).map((comp) => comp.id) || [];
-    const legacyIds = ids.map((id) => {
-      let bitId = id._legacy;
-      // The resolve bitId in scope will remove the scope name in case it's the same as the scope
-      // We restore it back to use it correctly in the legacy code.
-      if (!bitId.hasScope()) {
-        bitId = bitId.changeScope(this.legacyScope?.name);
-      }
-      return bitId;
-    });
+  async getGraph(ids?: ComponentID[]): Promise<Graph<Component, string>> {
+    if (!ids || !ids.length) ids = (await this.list()).map((comp) => comp.id) || [];
+    const components = await this.getMany(ids);
+    const allFlattened = components.map((component) => component.state._consumer.getAllFlattenedDependencies()).flat();
+    const allFlattenedUniq = BitIds.uniqFromArray(allFlattened);
+    await this.legacyScope.scopeImporter.importMany({ ids: allFlattenedUniq });
+    const allFlattenedCompIds = await this.resolveMultipleComponentIds(allFlattenedUniq);
+    const dependencies = await this.getMany(allFlattenedCompIds);
+    const allComponents: Component[] = [...components, ...dependencies];
 
-    const legacyGraph = await buildOneGraphForComponentsUsingScope(legacyIds, this.legacyScope);
-    return legacyGraph;
+    // build the graph
+    const graph = new Graph<Component, string>();
+    allComponents.forEach((comp) => graph.setNode(new Node(comp.id.toString(), comp)));
+    allComponents.forEach((comp) => {
+      const consumerComp = comp.state._consumer as ConsumerComponent;
+      Object.entries(consumerComp.depsIdsGroupedByType).forEach(([depType, depIds]) => {
+        depIds.forEach((depId) => {
+          const depCompId = this.resolveComponentIdFromBitId(depId);
+          if (!graph.hasNode(depId.toString())) {
+            throw new Error(`scope.getGraph: missing node of ${depId.toString()}`);
+          }
+          graph.setEdge(new Edge(comp.id.toString(), depCompId.toString(), depType));
+        });
+      });
+    });
+    return graph;
   }
 
   /**
@@ -955,6 +966,7 @@ needed-for: ${neededFor || '<unknown>'}`);
    * @param id component ID.
    */
   async resolveComponentId(id: string | ComponentID | BitId): Promise<ComponentID> {
+    if (id instanceof BitId) return this.resolveComponentIdFromBitId(id);
     const idStr = id.toString();
     const component = await this.legacyScope.loadModelComponentByIdStr(idStr);
     const getIdToCheck = () => {
@@ -966,9 +978,12 @@ needed-for: ${neededFor || '<unknown>'}`);
       return idStr;
     };
     const IdToCheck = getIdToCheck();
-    const legacyId = id instanceof BitId ? id : await this.legacyScope.getParsedId(IdToCheck);
-    if (!legacyId.scope) return ComponentID.fromLegacy(legacyId, this.name);
-    return ComponentID.fromLegacy(legacyId);
+    const legacyId = await this.legacyScope.getParsedId(IdToCheck);
+    return this.resolveComponentIdFromBitId(legacyId);
+  }
+
+  private resolveComponentIdFromBitId(id: BitId) {
+    return id.hasScope() ? ComponentID.fromLegacy(id) : ComponentID.fromLegacy(id, this.name);
   }
 
   async resolveMultipleComponentIds(ids: Array<string | ComponentID | BitId>) {

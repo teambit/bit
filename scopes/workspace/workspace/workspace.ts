@@ -1,6 +1,7 @@
 /* eslint-disable max-lines */
 import memoize from 'memoizee';
 import mapSeries from 'p-map-series';
+import { Graph } from '@teambit/graph.cleargraph';
 import type { PubsubMain } from '@teambit/pubsub';
 import { IssuesList } from '@teambit/component-issues';
 import type { AspectLoaderMain, AspectDefinition } from '@teambit/aspect-loader';
@@ -31,7 +32,6 @@ import { isMatchNamespacePatternItem } from '@teambit/workspace.modules.match-pa
 import { RequireableComponent } from '@teambit/harmony.modules.requireable-component';
 import type { VariantsMain } from '@teambit/variants';
 import { link } from '@teambit/legacy/dist/api/consumer';
-import LegacyGraph from '@teambit/legacy/dist/scope/graph/graph';
 import { BitIds } from '@teambit/legacy/dist/bit-id';
 import { BitId, InvalidScopeName, InvalidScopeNameFromRemote, isValidScopeName } from '@teambit/legacy-bit-id';
 import { LaneId } from '@teambit/lane-id';
@@ -423,13 +423,10 @@ export class Workspace implements ComponentFactory {
     return this.scope.getLogs(id, shortHash, startsFrom);
   }
 
-  async getLegacyGraph(ids?: ComponentID[], shouldThrowOnMissingDep = true): Promise<LegacyGraph> {
+  async getGraph(ids?: ComponentID[], shouldThrowOnMissingDep = true): Promise<Graph<Component, string>> {
     if (!ids || ids.length < 1) ids = await this.listIds();
 
-    const legacyIds = ids.map((id) => id._legacy);
-
-    const legacyGraph = await this.buildOneGraphForComponents(legacyIds, undefined, undefined, shouldThrowOnMissingDep);
-    return legacyGraph;
+    return this.buildOneGraphForComponents(ids, undefined, undefined, shouldThrowOnMissingDep);
   }
 
   /**
@@ -1404,10 +1401,9 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
   }
 
   async getAspectsGraphWithoutCore(components: Component[], isAspect?: ShouldLoadFunc) {
-    const ids = components.map((component) => component.id._legacy);
+    const ids = components.map((component) => component.id);
     const coreAspectsStringIds = this.aspectLoader.getCoreAspectIds();
-    const coreAspectsComponentIds = coreAspectsStringIds.map((id) => BitId.parse(id, true));
-    const coreAspectsBitIds = BitIds.fromArray(coreAspectsComponentIds.map((id) => id.changeScope(null)));
+    // const coreAspectsComponentIds = coreAspectsStringIds.map((id) => BitId.parse(id, true));
     // const aspectsIds = components.reduce((acc, curr) => {
     //   const currIds = curr.state.aspects.ids;
     //   acc = acc.concat(currIds);
@@ -1425,8 +1421,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     // We only want to load into the graph components which are aspects and not regular dependencies
     // This come to solve a circular loop when an env aspect use an aspect (as regular dep) and the aspect use the env aspect as its env
     // TODO: @gilad it causes many issues we need to find a better solution. removed for now.
-    const ignoredIds = coreAspectsBitIds.concat([]);
-    return this.buildOneGraphForComponents(ids, BitIds.fromArray(ignoredIds), isAspect);
+    return this.buildOneGraphForComponents(ids, coreAspectsStringIds, isAspect);
   }
 
   /**
@@ -1447,8 +1442,7 @@ needed-for: ${neededFor || '<unknown>'}`);
     const componentIds = await this.resolveMultipleComponentIds(idsWithoutCore);
     const components = await this.importAndGetAspects(componentIds);
 
-    const isAspect = async (bitId: BitId) => {
-      const id = await this.resolveComponentId(bitId);
+    const isAspect = async (id: ComponentID) => {
       const component = await this.get(id);
       const data = this.envs.getEnvData(component);
       const isUsingAspectEnv = this.envs.isUsingAspectEnv(component);
@@ -1469,10 +1463,8 @@ needed-for: ${neededFor || '<unknown>'}`);
     };
 
     const graph = await this.getAspectsGraphWithoutCore(components, isAspect);
-    const idsStr = graph.nodes();
-    this.logger.debug(`${loggerPrefix} found ${idsStr.length} aspects in the aspects-graph`);
-    const compIds = await this.resolveMultipleComponentIds(idsStr);
-    const aspects = await this.getMany(compIds);
+    const aspects = graph.nodes.map((node) => node.attr);
+    this.logger.debug(`${loggerPrefix} found ${aspects.length} aspects in the aspects-graph`);
     const { workspaceComps, scopeComps } = await this.groupComponentsByWorkspaceAndScope(aspects);
     this.logger.debug(
       `${loggerPrefix} found ${workspaceComps.length} components in the workspace:\n${workspaceComps
@@ -1550,11 +1542,11 @@ needed-for: ${neededFor || '<unknown>'}`);
    * type. the nodes content is the Component object.
    */
   async buildOneGraphForComponents(
-    ids: BitId[],
-    ignoreIds?: BitIds,
+    ids: ComponentID[],
+    ignoreIds?: string[],
     shouldLoadFunc?: ShouldLoadFunc,
     shouldThrowOnMissingDep = true
-  ): Promise<LegacyGraph> {
+  ): Promise<Graph<Component, string>> {
     const graphFromFsBuilder = new GraphFromFsBuilder(
       this,
       this.logger,

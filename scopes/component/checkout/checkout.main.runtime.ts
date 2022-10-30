@@ -26,7 +26,6 @@ import { ComponentWithDependencies } from '@teambit/legacy/dist/scope';
 import Version from '@teambit/legacy/dist/scope/models/version';
 import { Tmp } from '@teambit/legacy/dist/scope/repositories';
 import ManyComponentsWriter from '@teambit/legacy/dist/consumer/component-ops/many-components-writer';
-import ScopeComponentsImporter from '@teambit/legacy/dist/scope/component-ops/scope-components-importer';
 import { MergeResultsThreeWay } from '@teambit/legacy/dist/consumer/versions-ops/merge-version/three-way-merge';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { ComponentID } from '@teambit/component-id';
@@ -141,7 +140,7 @@ export class CheckoutMain {
   private async syncNewComponents({ ids, head }: CheckoutProps) {
     if (!head) return;
     const notExported = ids?.filter((id) => !id._legacy.hasScope()).map((id) => id._legacy.changeScope(id.scope));
-    const scopeComponentsImporter = new ScopeComponentsImporter(this.workspace.consumer.scope);
+    const scopeComponentsImporter = this.workspace.consumer.scope.scopeImporter;
     try {
       await scopeComponentsImporter.importManyDeltaWithoutDeps(BitIds.fromArray(notExported || []), true);
     } catch (err) {

@@ -6,7 +6,6 @@ import { createInMemoryCache } from '../../cache/cache-factory';
 import { getMaxSizeForComponents, InMemoryCache } from '../../cache/in-memory-cache';
 import { BIT_MAP } from '../../constants';
 import logger from '../../logger/logger';
-import ScopeComponentsImporter from '../../scope/component-ops/scope-components-importer';
 import { ModelComponent } from '../../scope/models';
 import { getLatestVersionNumber } from '../../utils';
 import { getLastModifiedPathsTimestampMs } from '../../utils/fs/last-modified';
@@ -300,7 +299,7 @@ export default class ComponentLoader {
   }
 
   private async _getRemoteComponent(id: BitId): Promise<ModelComponent | null | undefined> {
-    const scopeComponentsImporter = new ScopeComponentsImporter(this.consumer.scope);
+    const scopeComponentsImporter = this.consumer.scope.scopeImporter;
     const objectList = await scopeComponentsImporter.getRemoteComponent(id);
     if (!objectList) return null;
     const components = objectList.getComponents();

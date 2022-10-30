@@ -79,7 +79,6 @@ specify the task-name (e.g. "TypescriptCompiler") or the task-aspect-id (e.g. te
       );
     }
     this.logger.consoleSuccess(`found ${components.length} components to build`);
-
     const envsExecutionResults = await this.builder.build(
       components,
       {

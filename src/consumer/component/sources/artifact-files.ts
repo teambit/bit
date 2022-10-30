@@ -5,7 +5,6 @@ import { BitId, BitIds } from '../../../bit-id';
 import ShowDoctorError from '../../../error/show-doctor-error';
 import logger from '../../../logger/logger';
 import { Scope } from '../../../scope';
-import ScopeComponentsImporter from '../../../scope/component-ops/scope-components-importer';
 import { Source } from '../../../scope/models';
 import { Ref } from '../../../scope/objects';
 import { pathNormalizeToLinux } from '../../../utils';
@@ -111,7 +110,7 @@ export class ArtifactFiles {
     if (this.isEmpty()) return [];
     if (this.vinyls.length) return this.vinyls;
     const allHashes = this.refs.map((artifact) => artifact.ref.hash);
-    const scopeComponentsImporter = ScopeComponentsImporter.getInstance(scope);
+    const scopeComponentsImporter = scope.scopeImporter;
     const lane = await scope.getCurrentLaneObject();
     const unmergedEntry = scope.objects.unmergedComponents.getEntry(id.name);
     let errorFromUnmergedLaneScope: Error | undefined;
@@ -162,7 +161,7 @@ export async function importMultipleDistsArtifacts(scope: Scope, components: Com
   );
   const extensionsNamesForDistArtifacts = 'teambit.compilation/compiler';
   const lane = await scope.getCurrentLaneObject();
-  const scopeComponentsImporter = ScopeComponentsImporter.getInstance(scope);
+  const scopeComponentsImporter = scope.scopeImporter;
   if (lane) {
     // when on lane, locally, it's possible that not all components have their entire history (e.g. during "bit sign").
     // as a result, the following "scope.isIdOnLane" fails to traverse the history.
@@ -224,6 +223,16 @@ export function getRefsFromExtensions(extensions: ExtensionDataList): Ref[] {
 export function getArtifactFilesByExtension(extensions: ExtensionDataList, extensionName: string): ArtifactFiles[] {
   const buildArtifacts = getBuildArtifacts(extensions);
   return buildArtifacts.filter((artifact) => artifact.task.id === extensionName).map((artifact) => artifact.files);
+}
+
+export function getArtifactFilesExcludeExtension(
+  extensions: ExtensionDataList,
+  extensionNameToExclude: string
+): ArtifactFiles[] {
+  const buildArtifacts = getBuildArtifacts(extensions);
+  return buildArtifacts
+    .filter((artifact) => artifact.task.id !== extensionNameToExclude)
+    .map((artifact) => artifact.files);
 }
 
 export function convertBuildArtifactsToModelObject(extensions: ExtensionDataList) {
