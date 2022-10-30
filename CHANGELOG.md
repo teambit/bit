@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## [[0.0.884] - 2022-10-23](https://github.com/teambit/bit/releases/tag/v0.0.884)
+## [[0.0.888] - 2022-10-27](https://github.com/teambit/bit/releases/tag/v0.0.888)
 
 ### Changes
 - improvement(bit-build): replace "--all" flag with "--unmodified" (#6553)
@@ -32,6 +32,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - improvement(write-tsconfig): group envs that use the same tsconfig.json file (#6531)
 - feat(bit-graph): introduce "--json" flag, also, move the command from legacy to Graph aspect (#6497)
 - improvement(bit-lane-merge): show a nice summary of the components state merged/unchanged/failed/snapped (#6500)
+- feat: add a new "FetchMissingHistory" action (#6595)
+- add parents to graphql component log (#6585)
 
 ### Bug Fixes
 - fix scope ui drawer (#6574)
@@ -65,6 +67,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
   - install peers on root if all components use the same range
 - fix(bit-export): send only objects needed when exporting on lane and do not rely on the cache (#6504)
 - fix(bit-import): exclude lane-only components when importing entire scope (#6499)
+- change config overflow-x to auto from scroll (#6591)
+- refresh envs filter between lanes (#6590)
+- fix: retry to delete pending-objects dir in case of ENOTEMPTY error (#6588)
+- fix ParentNotFound error to be shown when is coming from the remote (#6586)
+- load dependencies from unmerged head of components (#6584)
+- fix: peer dependencies should be hoisted when root components are used (#6562)
 
 ### Performance
 - perf: avoid refetching unbuilt versions when building a graph (#6579)
@@ -73,6 +81,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - fix: keep memory consumption sane when traversing history during fetch (#6541)
 - fix high memory consumption of fetchWithDeps (#6534)
 - improvement(bit-export): improve lane-export performance (#6507)
+- perf: avoid loading aspects that are not declared as dependencies in the manifests (#6587)
 
 ### Internal
 - Update pnpm dependencies (#6547)
@@ -84,6 +93,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - refactor: move some functions from sources to Snapping aspect (#6523)
 - fix: logging network configuration settings (#6513)
 - fix: avoid caching the component-graph (#6501)
+- upgrade post css modules (#6598)
+- chore: update minimatch to 3.0.5 (#6596)
+- recursively parse export specifiers (#6594)
+- eject design pill label component (#6589)
+- extract compositions-overview ui into a dedicated component (#6583)
 
 ## [14.8.9-dev.1] - 2020-07-30
 
