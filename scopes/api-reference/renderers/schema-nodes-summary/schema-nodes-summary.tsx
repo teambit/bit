@@ -11,8 +11,8 @@ import styles from './schema-nodes-summary.module.scss';
 
 export type SchemaNodesSummaryProps = {
   nodes: SchemaNode[];
-  groupBy?: (nodes: SchemaNode[]) => Map<string, SchemaNode[]>;
-  sort?: ([aType]: [string, SchemaNode[]], [bType]: [string, SchemaNode[]]) => 0 | 1 | -1;
+  groupBy?: (nodes: SchemaNode[]) => Map<string | undefined, SchemaNode[]>;
+  sort?: ([aType]: [string | undefined, SchemaNode[]], [bType]: [string | undefined, SchemaNode[]]) => 0 | 1 | -1;
 } & HTMLAttributes<HTMLDivElement>;
 
 export function SchemaNodesSummary({
@@ -28,12 +28,14 @@ export function SchemaNodesSummary({
   return (
     <div {...rest} className={classnames(styles.groupNodesContainer, className)}>
       {groupedNodes.map(([type, groupedMembersByType]) => {
-        const typeId = type.split(' ').join('-');
+        const typeId = type && encodeURIComponent(type);
         return (
-          <div key={`${type}`}>
-            <div id={typeId} className={classnames(styles.groupName, trackedElementClassName)}>
-              {type}
-            </div>
+          <div key={`${typeId}`}>
+            {type && (
+              <div id={typeId} className={classnames(styles.groupName, trackedElementClassName)}>
+                {type}
+              </div>
+            )}
             {groupedMembersByType.map((member) => (
               <SchemaNodeSummary
                 key={`${type}-${member.__schema}-${member.name}`}

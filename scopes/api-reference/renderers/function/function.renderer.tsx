@@ -21,7 +21,7 @@ function FunctionComponent(props: APINodeRenderProps) {
   } = props;
   const functionNode = api as FunctionLikeSchema;
   const { returnType, params, typeParams } = functionNode;
-  const returnTypeRenderer = renderers.find((renderer) => renderer.predicate(returnType));
+  // const returnTypeRenderer = renderers.find((renderer) => renderer.predicate(returnType));
   const hasParams = params.length > 0;
 
   return (
@@ -60,10 +60,13 @@ function FunctionComponent(props: APINodeRenderProps) {
       )}
       <div className={styles.container}>
         <div className={styles.title}>Returns</div>
-        {!returnTypeRenderer && <div className={styles.value}>{returnType.toString()}</div>}
-        {returnTypeRenderer && (
+        {<div className={styles.value}>{returnType.toString()}</div>}
+        {
+          // @todo figure out why monaco renders this to be the same as api signature
+          /* {returnTypeRenderer && (
           <returnTypeRenderer.Component {...props} apiNode={{ ...props.apiNode, api: returnType }} />
-        )}
+        )} */
+        }
       </div>
     </APINodeDetails>
   );

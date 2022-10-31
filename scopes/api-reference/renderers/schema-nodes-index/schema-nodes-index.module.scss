@@ -9,7 +9,7 @@
 .groupName {
   display: flex;
   font-weight: 500;
-  padding-bottom: 8px;
+  // padding-bottom: 8px;
   font-size: var(--bit-p-sm);
   text-transform: capitalize;
 }
@@ -33,9 +33,9 @@
 }
 .groupedNode {
   display: flex;
-  padding-bottom: 8px;
+  // padding-bottom: 8px;
   font-size: var(--bit-p-xs);
-  padding-left: 16px;
+  padding-left: 8px;
 }
 
 .noGroup {

@@ -20,8 +20,7 @@ export function SchemaNodesIndex({ rootRef, title, className, ...rest }: SchemaN
   const { elements } = useElementOnFold(rootRef, `.${trackedElementClassName}`);
   const loadedRef = useRef(false);
   const currentLocation = useLocation();
-  const hash = currentLocation?.hash.slice(1);
-
+  const hash = currentLocation?.hash && decodeURIComponent(currentLocation.hash.slice(1));
   const grouped = useMemo(() => Array.from(groupElements(elements).entries()), [elements, elements.length]);
   const hasGroupedElements = flatten(grouped).length > 0;
   // scroll to active link, after first load and after content is loaded
@@ -33,7 +32,8 @@ export function SchemaNodesIndex({ rootRef, title, className, ...rest }: SchemaN
     const _hash = currentLocation?.hash.slice(1);
     if (!_hash) return;
 
-    const matchingElement = elements.find((el) => el.id === _hash);
+    const matchingElement = elements.find((el) => el.id === decodeURIComponent(_hash));
+
     if (matchingElement) matchingElement.scrollIntoView();
   }, [elements, elements.length]);
 
@@ -47,7 +47,7 @@ export function SchemaNodesIndex({ rootRef, title, className, ...rest }: SchemaN
           return (
             <div key={`group-${groupedIndex}`} className={classnames(styles.groupedNodesContainer, styles.paddingTop)}>
               {groupedNodes.map((node, nodeIndex) => {
-                const isActive = node === hash;
+                const isActive = node && decodeURIComponent(node) === hash;
                 return (
                   <div key={`${node}-${nodeIndex}`} className={classnames(styles.groupedNode, styles.noGroup)}>
                     <Link
@@ -68,7 +68,6 @@ export function SchemaNodesIndex({ rootRef, title, className, ...rest }: SchemaN
             </div>
           );
         }
-
         return (
           <div
             key={`${group}-${groupedIndex}`}
@@ -82,15 +81,15 @@ export function SchemaNodesIndex({ rootRef, title, className, ...rest }: SchemaN
                   styles.groupedNodeName,
                   classes.menuItem,
                   classes.interactive,
-                  hash === group && classes.active
+                  hash === decodeURIComponent(group) && classes.active
                 )}
               >
-                {group}
+                {decodeURIComponent(group)}
               </Link>
             </div>
             <div className={styles.groupedNodesContainer}>
               {groupedNodes.map((node, nodeIndex) => {
-                const isActive = node === hash;
+                const isActive = node && decodeURIComponent(node) === hash;
 
                 return (
                   <div key={`${node}-${nodeIndex}`} className={styles.groupedNode}>
@@ -125,10 +124,10 @@ function groupElements(elements: Element[]) {
   for (let i = 0; i <= elements.length - 1; i += 1) {
     const curr = elements[i];
     const next = elements[i + 1];
-
+    const currDisplayId = curr.id;
     // if the next element contains current elements id as class; start a new group
-    if (next && next.classList.contains(curr.id)) {
-      const groupId = curr.id.split('-').join(' ');
+    if (next && next.classList.contains(currDisplayId)) {
+      const groupId = currDisplayId;
       groupedElementId = groupId;
       grouped.set(groupedElementId, [next.textContent]);
       i += 1;
@@ -141,7 +140,7 @@ function groupElements(elements: Element[]) {
     }
 
     // if it is not a group node and groupElementId exists, add it to existing group
-    if (groupedElementId && curr.id !== groupedElementId) {
+    if (groupedElementId && currDisplayId !== groupedElementId) {
       const existing = grouped.get(groupedElementId) || [];
       grouped.set(groupedElementId, existing.concat(curr.textContent));
     }
