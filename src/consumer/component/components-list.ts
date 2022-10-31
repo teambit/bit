@@ -29,6 +29,7 @@ export type ListScopeResult = {
 };
 
 export type DivergedComponent = { id: BitId; diverge: DivergeData };
+export type OutdatedComponent = { id: BitId; headVersion: string; latestVersion?: string };
 
 export default class ComponentsList {
   consumer: Consumer;
@@ -99,12 +100,13 @@ export default class ComponentsList {
     return this._modifiedComponents.map((component) => component.id);
   }
 
-  async listOutdatedComponents(loadOpts?: ComponentLoadOptions): Promise<Component[]> {
+  async listOutdatedComponents(loadOpts?: ComponentLoadOptions): Promise<OutdatedComponent[]> {
     const fileSystemComponents = await this.getComponentsFromFS(loadOpts);
     const componentsFromModel = await this.getModelComponents();
     const unmergedComponents = this.listDuringMergeStateComponents();
     const mergePendingComponents = await this.listMergePendingComponents();
     const mergePendingComponentsIds = BitIds.fromArray(mergePendingComponents.map((c) => c.id));
+    const outdatedComps: OutdatedComponent[] = [];
     await Promise.all(
       fileSystemComponents.map(async (component) => {
         const modelComponent = componentsFromModel.find((c) => c.toBitId().isEqualWithoutVersion(component.id));
@@ -116,19 +118,21 @@ export default class ComponentsList {
           return;
         }
         const latestVersionLocally = modelComponent.latest();
-        const latestIncludeRemoteHead = await modelComponent.latestIncludeRemote(this.scope.objects);
+        const latestIncludeRemoteHead = await modelComponent.headIncludeRemote(this.scope.objects);
         const isOutdated = (): boolean => {
           if (latestIncludeRemoteHead !== latestVersionLocally) return true;
           return modelComponent.isLatestGreaterThan(component.id.version);
         };
         if (isOutdated()) {
-          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-          component.latestVersion = latestIncludeRemoteHead;
+          outdatedComps.push({
+            id: component.id,
+            headVersion: latestIncludeRemoteHead,
+            latestVersion: modelComponent.latestVersionIfExist(),
+          });
         }
       })
     );
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return fileSystemComponents.filter((f) => f.latestVersion);
+    return outdatedComps;
   }
 
   /**
