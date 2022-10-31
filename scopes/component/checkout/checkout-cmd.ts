@@ -16,7 +16,7 @@ export class CheckoutCmd implements Command {
     {
       name: 'to',
       description:
-        "permitted values: [head, reset, specific-version]. 'head' - last snap/tag. 'reset' - removes local changes",
+        "permitted values: [head, latest, reset, specific-version]. 'head' - last snap/tag. 'latest' - semver latest tag. 'reset' - removes local changes",
     },
     {
       name: 'component-pattern',
@@ -29,6 +29,7 @@ export class CheckoutCmd implements Command {
   extendedDescription = `
   \`bit checkout <version> [component-pattern]\` => checkout the specified ids (or all components when --all is used) to the specified version
   \`bit checkout head [component-pattern]\` => checkout to the last snap/tag, omit [component-pattern] to checkout head for all
+  \`bit checkout latest [component-pattern]\` => checkout to the latest satisfying semver tag, omit [component-pattern] to checkout latest for all
   \`bit checkout reset [component-pattern]\` => remove local modifications from the specified ids (or all components when --all is used)`;
   alias = 'U';
   options = [
@@ -95,8 +96,9 @@ export class CheckoutCmd implements Command {
     };
     const { components, version, failedComponents, leftUnresolvedConflicts }: ApplyVersionResults =
       await this.checkout.checkoutByCLIValues(to, componentPattern || '', checkoutProps);
-    const isLatest = to === 'head';
+    const isHead = to === 'head';
     const isReset = to === 'reset';
+    const isLatest = to === 'latest';
     const getFailureOutput = () => {
       // components that failed for no legitimate reason. e.g. merge-conflict.
       const realFailedComponents = failedComponents?.filter((f) => !f.unchangedLegitimately);
@@ -143,9 +145,8 @@ once ready, snap/tag the components to persist the changes`;
         const componentName = isReset ? component.id.toString() : component.id.toStringWithoutVersion();
         if (isReset) return `successfully reset ${chalk.bold(componentName)}\n`;
         const title = `successfully switched ${chalk.bold(componentName)} to version ${chalk.bold(
-          // $FlowFixMe version is defined when !isReset
-          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-          isLatest ? component.id.version : version
+          // @ts-ignore version is defined when !isReset
+          isHead || isLatest ? component.id.version : version
         )}\n`;
         return `${title} ${applyVersionReport(components, false)}`;
       }
@@ -154,11 +155,16 @@ once ready, snap/tag the components to persist the changes`;
         const body = components.map((component) => chalk.bold(component.id.toString())).join('\n');
         return title + body;
       }
-      // $FlowFixMe version is defined when !isReset
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      const versionOutput = isLatest ? 'their latest version' : `version ${chalk.bold(version)}`;
+
+      const getVerOutput = () => {
+        if (isHead) return 'their head version';
+        if (isLatest) return 'their latest version';
+        // @ts-ignore version is defined when !isReset
+        return `version ${chalk.bold(version)}`;
+      };
+      const versionOutput = getVerOutput();
       const title = `successfully switched the following components to ${versionOutput}\n\n`;
-      const showVersion = isLatest || isReset;
+      const showVersion = isHead || isReset;
       const componentsStr = applyVersionReport(components, true, showVersion);
       return title + componentsStr;
     };

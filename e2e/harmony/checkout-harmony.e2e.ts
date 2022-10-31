@@ -477,4 +477,31 @@ describe('bit checkout command', function () {
       expect(bitMap.comp2.scope).to.equal(helper.scopes.remote);
     });
   });
+  describe('checkout latest vs head', () => {
+    before(() => {
+      helper.scopeHelper.reInitLocalScope();
+      helper.fixtures.populateComponents(1, false);
+      helper.command.tagAllWithoutBuild();
+      helper.command.tagAllWithoutBuild('--unmodified'); // 0.0.2
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.checkoutVersion('0.0.1', 'comp1');
+    });
+    it('bit status should show both, head and latest', () => {
+      const status = helper.command.statusJson();
+      const comp = status.outdatedComponents[0];
+      expect(comp.latestVersion).to.equal('0.0.2');
+      expect(comp.headVersion).to.equal(helper.command.getHead('comp1'));
+    });
+    it('bit checkout latest should checkout to the semver latest and not to the head snap', () => {
+      helper.command.checkout('latest');
+      const bitMap = helper.bitMap.read();
+      expect(bitMap.comp1.version).to.equal('0.0.2');
+    });
+    it('bit checkout head should checkout to the head snap and not to the semver latest', () => {
+      helper.command.checkout('head');
+      const bitMap = helper.bitMap.read();
+      const head = helper.command.getHead('comp1');
+      expect(bitMap.comp1.version).to.equal(head);
+    });
+  });
 });
