@@ -30,4 +30,5 @@ export { ThisTypeSchema } from './this-type';
 export { UnknownSchema } from './unknown-schema';
 export { UnresolvedSchema } from './unresolved-schema';
 export { ConditionalTypeSchema } from './conditional-type';
+export { UnImplementedSchema } from './unimplemented-schema';
 export * from './docs';

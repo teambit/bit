@@ -1,29 +1,30 @@
 import mapSeries from 'p-map-series';
+import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
 import { flatten } from 'lodash';
 import { Consumer } from '@teambit/legacy/dist/consumer';
+import { Component, ComponentID } from '@teambit/component';
 import BitIds from '@teambit/legacy/dist/bit-id/bit-ids';
-import Component from '@teambit/legacy/dist/consumer/component/consumer-component';
-import LegacyGraph from '@teambit/legacy/dist/scope/graph/graph';
-import ScopeComponentsImporter from '@teambit/legacy/dist/scope/component-ops/scope-components-importer';
+import ConsumerComponent from '@teambit/legacy/dist/consumer/component/consumer-component';
 import { ComponentNotFound, ScopeNotFound } from '@teambit/legacy/dist/scope/exceptions';
 import { ComponentNotFound as ComponentNotFoundInScope } from '@teambit/scope';
 import compact from 'lodash.compact';
-import { BitId } from '@teambit/legacy-bit-id';
 import { Logger } from '@teambit/logger';
 import { BitError } from '@teambit/bit-error';
 import { Workspace } from './workspace';
 
-export type ShouldLoadFunc = (bitId: BitId) => Promise<boolean>;
+export type ShouldLoadFunc = (id: ComponentID) => Promise<boolean>;
 
 export class GraphFromFsBuilder {
-  private graph = new LegacyGraph();
+  private graph = new Graph<Component, string>();
   private completed: string[] = [];
   private depth = 1;
   private consumer: Consumer;
+  private legacyIdStrToComponentId: { [bitIdStr: string]: ComponentID } = {};
+  private importedIds: string[] = [];
   constructor(
     private workspace: Workspace,
     private logger: Logger,
-    private ignoreIds = new BitIds(),
+    private ignoreIds: string[] = [],
     private shouldLoadItsDeps?: ShouldLoadFunc,
     private shouldThrowOnMissingDep = true
   ) {
@@ -60,7 +61,7 @@ export class GraphFromFsBuilder {
    * however, since this buildGraph is performed on the workspace, a dependency may be new or
    * modified and as such, we don't know its flattened yet.
    */
-  async buildGraph(ids: BitId[]): Promise<LegacyGraph> {
+  async buildGraph(ids: ComponentID[]): Promise<Graph<Component, string>> {
     this.logger.debug(`GraphFromFsBuilder, buildGraph with ${ids.length} seeders`);
     const start = Date.now();
     const components = await this.loadManyComponents(ids);
@@ -71,20 +72,30 @@ export class GraphFromFsBuilder {
     return this.graph;
   }
 
-  private getAllDepsUnfiltered(component: Component) {
-    return component.getAllDependenciesIds().difference(this.ignoreIds);
+  private async getAllDepsUnfiltered(component: Component): Promise<ComponentID[]> {
+    const consumerComp = component.state._consumer as ConsumerComponent;
+    const legacyDepsIds = consumerComp.getAllDependenciesIds();
+    const depsIds = await Promise.all(
+      legacyDepsIds.map(async (bitId) => {
+        if (!this.legacyIdStrToComponentId[bitId.toString()]) {
+          this.legacyIdStrToComponentId[bitId.toString()] = await this.workspace.resolveComponentId(bitId);
+        }
+        return this.legacyIdStrToComponentId[bitId.toString()];
+      })
+    );
+    return depsIds.filter((depId) => !this.ignoreIds.includes(depId.toString()));
   }
 
-  private async getAllDepsFiltered(component: Component): Promise<BitIds> {
-    const depsWithoutIgnore = this.getAllDepsUnfiltered(component);
+  private async getAllDepsFiltered(component: Component): Promise<ComponentID[]> {
+    const depsWithoutIgnore = await this.getAllDepsUnfiltered(component);
     const shouldLoadFunc = this.shouldLoadItsDeps;
     if (!shouldLoadFunc) return depsWithoutIgnore;
     const deps = await mapSeries(depsWithoutIgnore, async (depId) => {
       const shouldLoad = await shouldLoadFunc(depId);
-      if (!shouldLoad) this.ignoreIds.push(depId);
+      if (!shouldLoad) this.ignoreIds.push(depId.toString());
       return shouldLoad ? depId : null;
     });
-    return BitIds.fromArray(compact(deps));
+    return compact(deps);
   }
 
   private async processManyComponents(components: Component[]) {
@@ -96,16 +107,26 @@ export class GraphFromFsBuilder {
     if (allDependenciesFlattened.length) await this.processManyComponents(allDependenciesFlattened);
   }
 
+  /**
+   * only for components from the workspace that can be modified to add/remove dependencies, we need to make sure that
+   * all their dependencies are imported.
+   * remember that `importMany` fetches all flattened dependencies. once a component from scope is imported, we know
+   * that all its flattened dependencies are there. no need to call importMany again for them.
+   */
   private async importObjects(components: Component[]) {
-    const allDeps = components.map((c) => this.getAllDepsUnfiltered(c)).flat();
-    const allDepsWithScope = allDeps.filter((dep) => dep.hasScope());
-    const scopeComponentsImporter = new ScopeComponentsImporter(this.consumer.scope);
+    const workspaceIds = await this.workspace.listIds();
+    const compOnWorkspaceOnly = components.filter((comp) => workspaceIds.find((id) => id.isEqual(comp.id)));
+    const allDeps = (await Promise.all(compOnWorkspaceOnly.map((c) => this.getAllDepsUnfiltered(c)))).flat();
+    const allDepsNotImported = allDeps.filter((d) => !this.importedIds.includes(d.toString()));
+    const allDepsWithScope = allDepsNotImported.map((id) => id._legacy).filter((dep) => dep.hasScope());
+    const scopeComponentsImporter = this.consumer.scope.scopeImporter;
     await scopeComponentsImporter.importMany({
       ids: BitIds.uniqFromArray(allDepsWithScope),
       throwForDependencyNotFound: this.shouldThrowOnMissingDep,
       throwForSeederNotFound: this.shouldThrowOnMissingDep,
       reFetchUnBuiltVersion: false,
     });
+    allDepsNotImported.map((id) => this.importedIds.push(id.toString()));
   }
 
   private async processOneComponent(component: Component) {
@@ -114,9 +135,12 @@ export class GraphFromFsBuilder {
     const allIds = await this.getAllDepsFiltered(component);
 
     const allDependencies = await this.loadManyComponents(allIds, idStr);
-    Object.entries(component.depsIdsGroupedByType).forEach(([depType, depsIds]) => {
-      depsIds.forEach((depId) => {
-        if (this.ignoreIds.has(depId)) return;
+    const consumerComponent = component.state._consumer as ConsumerComponent;
+    Object.entries(consumerComponent.depsIdsGroupedByType).forEach(([depType, depsIds]) => {
+      depsIds.forEach((depBitId) => {
+        const depId = this.legacyIdStrToComponentId[depBitId.toString()];
+        if (!depId) throw new Error(`unable to find ${depBitId.toString()} inside legacyIdStrToComponentId`);
+        if (this.ignoreIds.includes(depId.toString())) return;
         if (!this.graph.hasNode(depId.toString())) {
           if (this.shouldThrowOnMissingDep) {
             throw new Error(`buildOneComponent: missing node of ${depId.toString()}`);
@@ -124,21 +148,21 @@ export class GraphFromFsBuilder {
           this.logger.warn(`ignoring missing ${depId.toString()}`);
           return;
         }
-        this.graph.setEdge(idStr, depId.toString(), depType);
+        this.graph.setEdge(new Edge(idStr, depId.toString(), depType));
       });
     });
     this.completed.push(idStr);
     return allDependencies;
   }
 
-  private async loadManyComponents(componentsIds: BitId[], dependenciesOf?: string): Promise<Component[]> {
-    const components = await mapSeries(componentsIds, async (comp: BitId) => {
+  private async loadManyComponents(componentsIds: ComponentID[], dependenciesOf?: string): Promise<Component[]> {
+    const components = await mapSeries(componentsIds, async (comp) => {
       const idStr = comp.toString();
-      const fromGraph = this.graph.node(idStr);
+      const fromGraph = this.graph.node(idStr)?.attr;
       if (fromGraph) return fromGraph;
       try {
-        const component = await this.loadComponent(comp);
-        this.graph.setNode(idStr, component);
+        const component = await this.workspace.get(comp);
+        this.graph.setNode(new Node(idStr, component));
         return component;
       } catch (err: any) {
         if (
@@ -163,10 +187,5 @@ export class GraphFromFsBuilder {
       }
     });
     return compact(components);
-  }
-  private async loadComponent(componentId: BitId): Promise<Component> {
-    const compId = await this.workspace.resolveComponentId(componentId);
-    const comp = await this.workspace.get(compId);
-    return comp.state._consumer;
   }
 }

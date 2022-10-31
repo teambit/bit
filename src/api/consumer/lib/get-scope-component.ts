@@ -5,7 +5,6 @@ import { Consumer, loadConsumerIfExist } from '../../../consumer';
 import Component from '../../../consumer/component';
 import getRemoteByName from '../../../remotes/get-remote-by-name';
 import { loadScope, Scope } from '../../../scope';
-import ScopeComponentsImporter from '../../../scope/component-ops/scope-components-importer';
 import { DependenciesInfo } from '../../../scope/graph/scope-graph';
 
 export default async function getScopeComponent({
@@ -57,7 +56,7 @@ export default async function getScopeComponent({
     if (allVersions) {
       return scope.loadAllVersions(bitId);
     }
-    const scopeComponentsImporter = ScopeComponentsImporter.getInstance(scope);
+    const scopeComponentsImporter = scope.scopeImporter;
     return scopeComponentsImporter.loadRemoteComponent(bitId);
   }
 }
