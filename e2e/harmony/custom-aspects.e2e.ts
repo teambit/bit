@@ -78,6 +78,45 @@ describe('custom aspects', function () {
       });
     });
   });
+  describe('aspect with another aspect as regular dep', function () {
+    let output;
+    const LOADING_MSG = 'loading ext2';
+    before(() => {
+      helper = new Helper();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.bitJsonc.setupDefault();
+      helper.bitJsonc.setPackageManager();
+      helper.fixtures.populateExtensions(2, true);
+      helper.extensions.addExtensionToVariant('extensions', 'teambit.harmony/aspect');
+      helper.command.create('aspect', 'main-aspect');
+      helper.fs.outputFile(
+        `${helper.scopes.remoteWithoutOwner}/main-aspect/main-aspect.main.runtime.ts`,
+        getMainAspectWithRegularDep(helper.scopes.remoteWithoutOwner)
+      );
+      helper.fs.prependFile('extensions/ext2/ext2.main.runtime.ts', `console.log('${LOADING_MSG}');`);
+      helper.command.install();
+      helper.command.compile();
+      helper.command.use('main-aspect');
+      output = helper.command.showComponent('main-aspect');
+    });
+    after(() => {
+      helper.scopeHelper.destroy();
+    });
+    it('should run main aspect provider', () => {
+      expect(output).to.have.string('main-aspect');
+    });
+    it('should run aspect dep provider', () => {
+      expect(output).to.have.string('ext 1');
+    });
+    // @todo currently this is failing, although the aspect is not loaded through Harmony,
+    // the manifest is retrieved by running "require" on the main file. another optimization is needed to fix this.
+    it.skip('should not load at all aspect which is regular dep provider', () => {
+      expect(output).to.not.have.string(LOADING_MSG);
+    });
+    it('should not run aspect which is regular dep provider', () => {
+      expect(output).to.not.have.string('ext 2');
+    });
+  });
   (supportNpmCiRegistryTesting ? describe : describe.skip)('simple case of using an external aspect', () => {
     let npmCiRegistry: NpmCiRegistry;
     before(async () => {
@@ -179,4 +218,24 @@ export class DepAspectMain {
 
 DepAspectAspect.addRuntime(DepAspectMain);
 `;
+}
+
+function getMainAspectWithRegularDep(remoteScope: string) {
+  return `import { MainRuntime } from '@teambit/cli';
+  import { Ext1Aspect, Ext1Main } from '@${remoteScope}/ext1';
+  import { Ext2Main } from '@${remoteScope}/ext2';
+  import { MainAspectAspect } from './main-aspect.aspect';
+
+  export class MainAspectMain {
+    static slots = [];
+    static dependencies = [Ext1Aspect];
+    static runtime = MainRuntime;
+    static async provider([ext1Aspect]: [Ext1Main]) {
+      console.log('main aspect');
+      return new MainAspectMain();
+    }
+  }
+
+  MainAspectAspect.addRuntime(MainAspectMain);
+  `;
 }
