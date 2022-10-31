@@ -15,6 +15,7 @@ import { MergingMain } from './merging.main.runtime';
 export class MergeCmd implements Command {
   name = 'merge [values...]';
   description = 'merge changes of different component versions';
+  helpUrl = 'docs/components/merging-changes';
   group = 'development';
   extendedDescription = `merge changes of different component versions
   \`bit merge <version> [ids...]\` => merge changes of the given version into the checked out version

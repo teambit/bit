@@ -3,7 +3,6 @@ import * as path from 'path';
 import R from 'ramda';
 
 import { add } from '../../../api/consumer';
-import { BASE_DOCS_DOMAIN } from '../../../constants';
 import { AddActionResults, AddResult } from '../../../consumer/component-ops/add-components/add-components';
 import GeneralError from '../../../error/general-error';
 import { PathOsBased } from '../../../utils/path';
@@ -14,8 +13,8 @@ export default class Add implements LegacyCommand {
   name = 'add [path...]';
   description = 'Add any subset of files to be tracked as a component(s).';
   group: Group = 'development';
-  extendedDescription = `all flags support glob patterns and {PARENT} {FILE_NAME} annotations
-  https://${BASE_DOCS_DOMAIN}/components/adding-components`;
+  extendedDescription = 'Learn the recommended workflow for tracking directories as components, in the link below.';
+  helpUrl = 'docs/workspace/creating-workspaces?new_existing_project=1';
   alias = 'a';
   opts = [
     ['i', 'id <name>', 'manually set component id'],

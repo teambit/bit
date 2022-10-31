@@ -19,7 +19,7 @@ export class ExportCmd implements Command {
   \`bit export [id...]\` => export the given ids to their current scope
   ${WILDCARD_HELP('export remote-scope')}`;
   alias = 'e';
-  helpUrl = 'components/exporting-components';
+  helpUrl = 'docs/components/exporting-components';
   options = [
     [
       'e',

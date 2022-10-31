@@ -6,6 +6,7 @@ export class UseCmd implements Command {
   name = 'use <component-id>';
   group = 'collaborate';
   description = 'set aspects in the workspace/scope config to make them loadable by the workspace/scope';
+  helpUrl = 'docs/workspace/workspace-json#adding-an-aspect-to-the-workspace';
   arguments = [{ name: 'component-id', description: 'the component ID of the aspect' }];
   alias = '';
   options = [] as CommandOptions;
