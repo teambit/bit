@@ -11,13 +11,13 @@ export default class ClearCacheCmd implements Command {
   options = [['r', 'remote <remote-name>', 'clear memory cache from a remote scope']] as CommandOptions;
   loader = false;
   skipWorkspace = true;
+  helpUrl = 'reference/workspace/clearing-cache';
 
   constructor(private clearCache: ClearCacheMain, private docsDomain: string) {
     this.extendedDescription = `The following gets removed by this command:
 1) V8 compiled code (generated the first time Bit is loaded by v8-compile-cache package)
 2) components cache on the filesystem (mainly the dependencies graph and docs)
-3) scope's index file, which maps the component-id:object-hash
-https://${docsDomain}/workspace/clearing-cache`;
+3) scope's index file, which maps the component-id:object-hash`;
   }
 
   async report(arg, { remote }: { remote?: string }): Promise<string> {

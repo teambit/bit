@@ -17,6 +17,7 @@ type CreateOpts = {
 export class CapsuleCreateCmd implements Command {
   name = 'create [component-id...]';
   description = `create capsules for components`;
+  helpUrl = 'reference/build-pipeline/capsule';
   group = 'capsules';
   alias = '';
   options = [

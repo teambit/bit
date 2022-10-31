@@ -24,7 +24,7 @@ if patterns are entered, you can specify a version per pattern using "@" sign, e
         'a list of component names, IDs or patterns (separated by space). run "bit pattern --help" to get more data about patterns. By default, all modified are tagged.',
     },
   ];
-  helpUrl = 'components/tags';
+  helpUrl = 'docs/components/snaps';
   alias = 't';
   loader = true;
   options = [

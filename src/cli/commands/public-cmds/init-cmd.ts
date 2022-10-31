@@ -23,6 +23,7 @@ export default class Init implements LegacyCommand {
   name = 'init [path]';
   skipWorkspace = true;
   description = 'create or reinitialize an empty workspace';
+  helpUrl = 'docs/workspace/creating-workspaces/?new_existing_project=1';
   group: Group = 'start';
   extendedDescription = `https://${BASE_DOCS_DOMAIN}/workspace/creating-workspaces#initialize-a-workspace-on-an-existing-project`;
   alias = '';
