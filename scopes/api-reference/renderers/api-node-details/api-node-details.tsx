@@ -134,9 +134,9 @@ export function APINodeDetails({
         noSyntaxValidation: true,
       });
       const container = editorRef.current.getDomNode();
-      editorRef.current.onDidContentSizeChange(({ contentHeight, contentWidthChanged }) => {
+      editorRef.current.onDidContentSizeChange(({ contentHeight }) => {
         if (container && isMounted && signature) {
-          const updatedHeight = contentWidthChanged ? Math.min(200, contentHeight + 18) : signatureHeight;
+          const updatedHeight = Math.min(200, contentHeight + 18);
           setSignatureHeight(updatedHeight);
         }
       });
