@@ -601,7 +601,13 @@
         "scope": "teambit.lanes",
         "version": "0.0.460",
         "mainFile": "index.ts",
-        "rootDir": "scopes/lanes/lanes"
+        "rootDir": "scopes/lanes/lanes",
+        "config": {
+            "teambit.harmony/bit-custom-aspect": {},
+            "teambit.envs/envs": {
+                "env": "teambit.harmony/bit-custom-aspect"
+            }
+        }
     },
     "legacy-bit-id": {
         "scope": "teambit.component",
