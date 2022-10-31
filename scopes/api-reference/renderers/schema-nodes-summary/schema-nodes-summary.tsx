@@ -11,25 +11,34 @@ import styles from './schema-nodes-summary.module.scss';
 
 export type SchemaNodesSummaryProps = {
   nodes: SchemaNode[];
+  groupBy?: (nodes: SchemaNode[]) => Map<string, SchemaNode[]>;
+  sort?: ([aType]: [string, SchemaNode[]], [bType]: [string, SchemaNode[]]) => 0 | 1 | -1;
 } & HTMLAttributes<HTMLDivElement>;
 
-export function SchemaNodesSummary({ nodes, className, ...rest }: SchemaNodesSummaryProps) {
+export function SchemaNodesSummary({
+  nodes,
+  groupBy = groupByNodeSignatureType,
+  sort = sortSignatureType,
+  className,
+  ...rest
+}: SchemaNodesSummaryProps) {
   const hasNodes = nodes.length > 0;
-  const groupedNodes = hasNodes ? Array.from(groupByNodeSignatureType(nodes).entries()).sort(sortSignatureType) : [];
+  const groupedNodes = hasNodes ? Array.from(groupBy(nodes).entries()).sort(sort) : [];
 
   return (
     <div {...rest} className={classnames(styles.groupNodesContainer, className)}>
       {groupedNodes.map(([type, groupedMembersByType]) => {
+        const typeId = type.split(' ').join('-');
         return (
           <div key={`${type}`}>
-            <div id={type} className={classnames(styles.groupName, trackedElementClassName)}>
+            <div id={typeId} className={classnames(styles.groupName, trackedElementClassName)}>
               {type}
             </div>
             {groupedMembersByType.map((member) => (
               <SchemaNodeSummary
                 key={`${type}-${member.__schema}-${member.name}`}
                 node={member}
-                groupElementClassName={type}
+                groupElementClassName={typeId}
               />
             ))}
           </div>

@@ -42,49 +42,77 @@ export function SchemaNodesIndex({ rootRef, title, className }: SchemaNodesIndex
   return (
     <div className={classnames(styles.schemaNodeIndexContainer, className)}>
       <div className={styles.title}>{title}</div>
-      {grouped.map(([group, groupedNodes], groupedIndex) => (
-        <div
-          key={`${group}-${groupedIndex}`}
-          className={classnames(styles.group, groupedIndex === 0 && styles.paddingTop)}
-        >
-          <div className={styles.groupName}>
-            <Link
-              native
-              href={`#${group}`}
-              className={classnames(
-                styles.groupedNodeName,
-                classes.menuItem,
-                classes.interactive,
-                hash === group && classes.active
-              )}
-            >
-              {group}
-            </Link>
-          </div>
-          <div className={styles.groupedNodesContainer}>
-            {groupedNodes.map((node, nodeIndex) => {
-              const isActive = node === hash;
+      {grouped.map(([group, groupedNodes], groupedIndex) => {
+        if (!group) {
+          return (
+            <div className={classnames(styles.groupedNodesContainer, styles.paddingTop)}>
+              {groupedNodes.map((node, nodeIndex) => {
+                const isActive = node === hash;
+                return (
+                  <div key={`${node}-${nodeIndex}`} className={classnames(styles.groupedNode, styles.noGroup)}>
+                    <Link
+                      native
+                      href={`#${node}`}
+                      className={classnames(
+                        styles.groupedNodeName,
+                        classes.menuItem,
+                        classes.interactive,
+                        isActive && classes.active
+                      )}
+                    >
+                      {node}
+                    </Link>
+                  </div>
+                );
+              })}
+            </div>
+          );
+        }
 
-              return (
-                <div key={`${node}-${nodeIndex}`} className={styles.groupedNode}>
-                  <Link
-                    native
-                    href={`#${node}`}
-                    className={classnames(
-                      styles.groupedNodeName,
-                      classes.menuItem,
-                      classes.interactive,
-                      isActive && classes.active
-                    )}
-                  >
-                    {node}
-                  </Link>
-                </div>
-              );
-            })}
+        return (
+          <div
+            key={`${group}-${groupedIndex}`}
+            className={classnames(styles.group, groupedIndex === 0 && styles.paddingTop)}
+          >
+            <div className={styles.groupName}>
+              <Link
+                native
+                href={`#${group}`}
+                className={classnames(
+                  styles.groupedNodeName,
+                  classes.menuItem,
+                  classes.interactive,
+                  hash === group && classes.active
+                )}
+              >
+                {group}
+              </Link>
+            </div>
+            <div className={styles.groupedNodesContainer}>
+              {groupedNodes.map((node, nodeIndex) => {
+                const isActive = node === hash;
+
+                return (
+                  <div key={`${node}-${nodeIndex}`} className={styles.groupedNode}>
+                    <Link
+                      native
+                      href={`#${node}`}
+                      className={classnames(
+                        styles.groupedNodeName,
+                        classes.menuItem,
+                        classes.interactive,
+                        isActive && classes.active
+                      )}
+                    >
+                      {node}
+                    </Link>
+                  </div>
+                );
+              })}
+            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
@@ -100,18 +128,20 @@ function groupElements(elements: Element[]) {
 
     // if the next element contains current elements id as class; start a new group
     if (next && next.classList.contains(curr.id)) {
-      groupedElementId = curr.id;
+      const groupId = curr.id.split('-').join(' ');
+      groupedElementId = groupId;
       grouped.set(groupedElementId, [next.textContent]);
       i += 1;
     }
 
     // if no groupedElementId; add it to no group
     if (!groupedElementId) {
-      grouped.set(null, [curr.textContent]);
+      const existing = grouped.get(null) || [];
+      grouped.set(null, existing.concat([curr.textContent]));
     }
 
     // if it is not a group node and groupElementId exists, add it to existing group
-    if (curr.id !== groupedElementId) {
+    if (groupedElementId && curr.id !== groupedElementId) {
       const existing = grouped.get(groupedElementId) || [];
       grouped.set(groupedElementId, existing.concat(curr.textContent));
     }

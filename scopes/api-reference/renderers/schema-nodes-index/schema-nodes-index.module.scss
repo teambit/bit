@@ -38,8 +38,13 @@
   padding-left: 16px;
 }
 
+.noGroup {
+  padding-left: 0;
+}
+
 .groupedNodeName {
   border-radius: 4px;
+  text-transform: capitalize;
 }
 
 .title {

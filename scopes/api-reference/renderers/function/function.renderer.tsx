@@ -17,9 +17,14 @@ export const functionRenderer: APINodeRenderer = {
 function FunctionComponent(props: APINodeRenderProps) {
   const {
     apiNode: { api },
+    renderers,
   } = props;
   const functionNode = api as FunctionLikeSchema;
   const { returnType, params, typeParams } = functionNode;
+  console.log('🚀 ~ file: function.renderer.tsx ~ line 24 ~ FunctionComponent ~ typeParams', params);
+  console.log('🚀 ~ file: function.renderer.tsx ~ line 24 ~ FunctionComponent ~ returnType', returnType);
+  const returnTypeRenderer = renderers.find((renderer) => renderer.predicate(returnType));
+  // const parameterRenderer = para
   const hasParams = params.length > 0;
 
   return (
@@ -46,7 +51,10 @@ function FunctionComponent(props: APINodeRenderProps) {
       )}
       <div className={styles.container}>
         <div className={styles.title}>Returns</div>
-        <div className={styles.value}>{returnType.toString()}</div>
+        {!returnTypeRenderer && <div className={styles.value}>{returnType.toString()}</div>}
+        {returnTypeRenderer && (
+          <returnTypeRenderer.Component {...props} apiNode={{ ...props.apiNode, api: returnType }} />
+        )}
       </div>
     </APINodeDetails>
   );
