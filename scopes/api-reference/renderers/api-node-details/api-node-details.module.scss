@@ -90,13 +90,5 @@
   font-size: var(--bit-p-xs);
 }
 .apiNodeDetailsMembersContainer {
-  display: flex;
   padding-bottom: 16px;
-  flex-direction: column;
-}
-.groupName {
-  padding-bottom: 16px;
-  font-size: var(--bit-p-md);
-  font-weight: 500;
-  text-transform: capitalize;
 }

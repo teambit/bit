@@ -25,8 +25,16 @@ function TypeRefComponent(props: APINodeRenderProps) {
     <APINodeDetails
       {...props}
       className={classnames(styles.container, props.className)}
-      apiNode={{ ...props.apiNode, api: typeRefNode }}
+      apiNode={{
+        ...props.apiNode,
+        api: {
+          ...typeRefNode,
+          name: `${typeRefNode.name}${typeRefNode.typeArgs ? ` <${typeRefNode.typeArgs}>` : ''}`,
+          toObject: typeRefNode.toObject,
+        },
+      }}
+      members={[typeRefNode]}
       options={{ hideImplementation: true, hideIndex: true }}
-    />
+    ></APINodeDetails>
   );
 }

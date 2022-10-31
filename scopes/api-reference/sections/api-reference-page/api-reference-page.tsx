@@ -79,12 +79,7 @@ export function APIRefPage({ host, rendererSlot, className }: APIRefPageProps) {
           </H1>
           <Separator isPresentational className={styles.separator} />
           {SelectedAPIComponent && (
-            <SelectedAPIComponent
-              className={styles.selectedAPIDetailsComponent}
-              apiNode={selectedAPINode}
-              apiRefModel={apiModel}
-              renderers={renderers}
-            />
+            <SelectedAPIComponent apiNode={selectedAPINode} apiRefModel={apiModel} renderers={renderers} />
           )}
         </div>
       </Pane>

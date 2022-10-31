@@ -3,14 +3,10 @@ import { SchemaNode } from '@teambit/semantics.entities.semantic-schema';
 import { H5, H6 } from '@teambit/documenter.ui.heading';
 import Editor from '@monaco-editor/react';
 import { Link, useLocation } from '@teambit/base-react.navigation.link';
-import { SchemaNodeSummary, trackedElementClassName } from '@teambit/api-reference.renderers.schema-node-summary';
+import { SchemaNodesSummary } from '@teambit/api-reference.renderers.schema-nodes-summary';
 import { defaultCodeEditorOptions } from '@teambit/api-reference.utils.code-editor-options';
 import { DrawerUI } from '@teambit/ui-foundation.ui.tree.drawer';
 import classnames from 'classnames';
-import {
-  groupByNodeSignatureType,
-  sortSignatureType,
-} from '@teambit/api-reference.utils.group-schema-node-by-signature';
 import { APINodeRenderProps } from '@teambit/api-reference.models.api-node-renderer';
 import { useQuery } from '@teambit/ui-foundation.ui.react-router.use-query';
 import { APIRefQueryParams } from '@teambit/api-reference.hooks.use-api-ref-url';
@@ -44,6 +40,8 @@ export function APINodeDetails({
   members,
   displaySignature,
   children,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  renderers,
   apiRefModel,
   options,
   ...rest
@@ -84,8 +82,8 @@ export function APINodeDetails({
   }`;
 
   const locationLabel = `${filePath}:${line}`;
-  const hasMembers = members && members.length > 0;
-  const groupedMembers = members ? Array.from(groupByNodeSignatureType(members).entries()).sort(sortSignatureType) : [];
+  // const hasMembers = members && members.length > 0;
+  // const groupedMembers = members ? Array.from(groupByNodeSignatureType(members).entries()).sort(sortSignatureType) : [];
 
   const getAPINodeUrl = useCallback((queryParams: APIRefQueryParams) => {
     const queryObj = Object.fromEntries(query.entries());
@@ -96,7 +94,7 @@ export function APINodeDetails({
 
   const hoverProvider = useCallback((model, position) => {
     const word = model.getWordAtPosition(position);
-    const wordApiNode: APINode | undefined = word ? apiRefModel.apiByName.get(word.word as string) : undefined;
+    const wordApiNode: APINode | undefined = word ? apiRefModel?.apiByName?.get(word.word as string) : undefined;
     const wordApiUrl = wordApiNode
       ? getAPINodeUrl({ selectedAPI: `${wordApiNode.renderer.nodeType}/${wordApiNode.api.name}` })
       : null;
@@ -126,10 +124,10 @@ export function APINodeDetails({
         noSyntaxValidation: true,
       });
       const container = editorRef.current.getDomNode();
-      editorRef.current.onDidContentSizeChange(() => {
+      editorRef.current.onDidContentSizeChange(({ contentHeight, contentWidthChanged }) => {
         if (container && isMounted && signature) {
-          const contentHeight = Math.min(200, editorRef.current.getContentHeight() + 18);
-          setSignatureHeight(contentHeight);
+          const updatedHeight = contentWidthChanged ? Math.min(200, contentHeight + 18) : signatureHeight;
+          setSignatureHeight(updatedHeight);
         }
       });
       routeToAPICmdId.current = editorRef.current.addCommand(0, () => {
@@ -235,28 +233,7 @@ export function APINodeDetails({
             </DrawerUI>
           </div>
         )}
-        {hasMembers && (
-          <>
-            <div className={styles.apiNodeDetailsMembersContainer}>
-              {groupedMembers.map(([type, groupedMembersByType]) => {
-                return (
-                  <div key={`${type}`} className={styles.groupedMemberContainer}>
-                    <div id={type} className={classnames(styles.groupName, trackedElementClassName)}>
-                      {type}
-                    </div>
-                    {groupedMembersByType.map((member) => (
-                      <SchemaNodeSummary
-                        key={`${type}-${member.__schema}-${member.name}`}
-                        node={member}
-                        groupElementClassName={type}
-                      />
-                    ))}
-                  </div>
-                );
-              })}
-            </div>
-          </>
-        )}
+        {members && <SchemaNodesSummary className={styles.apiNodeDetailsMembersContainer} nodes={members} />}
         {children}
       </div>
       {!options?.hideIndex && (
