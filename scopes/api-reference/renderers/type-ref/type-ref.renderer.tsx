@@ -1,10 +1,7 @@
 import React from 'react';
 import { APINodeRenderProps, APINodeRenderer } from '@teambit/api-reference.models.api-node-renderer';
-import { APINodeDetails } from '@teambit/api-reference.renderers.api-node-details';
 import { TypeRefSchema } from '@teambit/semantics.entities.semantic-schema';
-import classnames from 'classnames';
-
-import styles from './type-ref.renderer.module.scss';
+import { SchemaNodeSummary } from '@teambit/api-reference.renderers.schema-node-summary';
 
 export const typeRefRenderer: APINodeRenderer = {
   predicate: (node) => node.__schema === TypeRefSchema.name,
@@ -20,21 +17,15 @@ function TypeRefComponent(props: APINodeRenderProps) {
   const {
     apiNode: { api },
   } = props;
+
   const typeRefNode = api as TypeRefSchema;
   return (
-    <APINodeDetails
-      {...props}
-      className={classnames(styles.container, props.className)}
-      apiNode={{
-        ...props.apiNode,
-        api: {
-          ...typeRefNode,
-          name: `${typeRefNode.name}${typeRefNode.typeArgs ? ` <${typeRefNode.typeArgs}>` : ''}`,
-          toObject: typeRefNode.toObject,
-        },
-      }}
-      members={[typeRefNode]}
-      options={{ hideImplementation: true, hideIndex: true }}
-    ></APINodeDetails>
+    <SchemaNodeSummary
+      name={typeRefNode.name}
+      location={typeRefNode.location}
+      doc={typeRefNode.doc}
+      __schema={typeRefNode.__schema}
+      signature={typeRefNode.signature || typeRefNode.toString()}
+    />
   );
 }

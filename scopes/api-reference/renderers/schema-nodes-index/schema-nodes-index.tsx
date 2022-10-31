@@ -16,7 +16,7 @@ export type SchemaNodesIndexProps = {
   rootRef?: React.MutableRefObject<HTMLElement>;
 } & HTMLAttributes<HTMLDivElement>;
 
-export function SchemaNodesIndex({ rootRef, title, className }: SchemaNodesIndexProps) {
+export function SchemaNodesIndex({ rootRef, title, className, ...rest }: SchemaNodesIndexProps) {
   const { elements } = useElementOnFold(rootRef, `.${trackedElementClassName}`);
   const loadedRef = useRef(false);
   const currentLocation = useLocation();
@@ -40,12 +40,12 @@ export function SchemaNodesIndex({ rootRef, title, className }: SchemaNodesIndex
   if (!hasGroupedElements) return null;
 
   return (
-    <div className={classnames(styles.schemaNodeIndexContainer, className)}>
+    <div {...rest} className={classnames(styles.schemaNodeIndexContainer, className)}>
       <div className={styles.title}>{title}</div>
       {grouped.map(([group, groupedNodes], groupedIndex) => {
         if (!group) {
           return (
-            <div className={classnames(styles.groupedNodesContainer, styles.paddingTop)}>
+            <div key={`group-${groupedIndex}`} className={classnames(styles.groupedNodesContainer, styles.paddingTop)}>
               {groupedNodes.map((node, nodeIndex) => {
                 const isActive = node === hash;
                 return (

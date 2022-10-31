@@ -55,6 +55,7 @@ export function APINodeDetails({
   const apiUrlToRoute = useRef<string | null>(null);
   const hoverProviderDispose = useRef<any>();
   const rootRef = useRef() as React.MutableRefObject<HTMLDivElement>;
+  const currentQueryParams = query.toString();
 
   const componentVersionFromUrl = query.get('version');
   const pathname = routerLocation?.pathname;
@@ -71,7 +72,7 @@ export function APINodeDetails({
    */
 
   const exampleHeight = (example?.comment?.split('\n').length || 0) * 18;
-  const defaultSignatureHeight = 36 + ((signature?.split('\n').length || 0) - 1) * 18;
+  const defaultSignatureHeight = 36 + (signature?.split('\n').length || 0) * 18;
 
   const [signatureHeight, setSignatureHeight] = useState<number>(defaultSignatureHeight);
   const [isMounted, setIsMounted] = useState(false);
@@ -82,8 +83,6 @@ export function APINodeDetails({
   }`;
 
   const locationLabel = `${filePath}:${line}`;
-  // const hasMembers = members && members.length > 0;
-  // const groupedMembers = members ? Array.from(groupByNodeSignatureType(members).entries()).sort(sortSignatureType) : [];
 
   const getAPINodeUrl = useCallback((queryParams: APIRefQueryParams) => {
     const queryObj = Object.fromEntries(query.entries());
@@ -110,6 +109,17 @@ export function APINodeDetails({
       contents,
     };
   }, []);
+
+  useEffect(() => {
+    if (!editorRef.current) return;
+    const signatureContent = editorRef.current.getValue();
+    if (!signatureContent) {
+      setSignatureHeight(defaultSignatureHeight);
+    } else {
+      const updatedSignatureHeight = 36 + (signatureContent?.split('\n').length || 0) * 18;
+      setSignatureHeight(updatedSignatureHeight);
+    }
+  }, [editorRef.current]);
 
   useEffect(() => {
     if (isMounted && signature) {
@@ -155,7 +165,7 @@ export function APINodeDetails({
      */
     <div
       ref={rootRef}
-      key={query.toString()}
+      key={currentQueryParams}
       {...rest}
       className={classnames(rest.className, styles.apiNodeDetailsContainer)}
     >
@@ -174,6 +184,7 @@ export function APINodeDetails({
         {signature && (
           <div className={classnames(styles.apiNodeDetailsSignatureContainer, styles.codeEditorContainer)}>
             <Editor
+              key={`${signature}-api-signature-editor`}
               options={defaultCodeEditorOptions}
               value={signature}
               height={signatureHeight}

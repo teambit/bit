@@ -37,7 +37,11 @@ export function SchemaNodesSummary({
             {groupedMembersByType.map((member) => (
               <SchemaNodeSummary
                 key={`${type}-${member.__schema}-${member.name}`}
-                node={member}
+                name={member.name}
+                location={member.location}
+                doc={member.doc}
+                __schema={member.__schema}
+                signature={member.signature}
                 groupElementClassName={typeId}
               />
             ))}

@@ -1,10 +1,5 @@
 import React, { HTMLAttributes, useState, useRef, useEffect } from 'react';
-import {
-  ConstructorSchema,
-  ParameterSchema,
-  SchemaNode,
-  VariableLikeSchema,
-} from '@teambit/semantics.entities.semantic-schema';
+import { ConstructorSchema, DocSchema, Location } from '@teambit/semantics.entities.semantic-schema';
 import Editor from '@monaco-editor/react';
 import { defaultCodeEditorOptions } from '@teambit/api-reference.utils.code-editor-options';
 import classnames from 'classnames';
@@ -14,15 +9,32 @@ import styles from './schema-node-summary.module.scss';
 export const trackedElementClassName = 'tracked-element';
 
 export type SchemaNodeSummaryProps = {
-  node: SchemaNode;
+  signature?: string;
+  __schema: string;
+  location: Location;
+  isOptional?: boolean;
+  doc?: DocSchema;
+  name?: string;
   groupElementClassName?: string;
 } & HTMLAttributes<HTMLDivElement>;
 
-export function SchemaNodeSummary({ node, groupElementClassName }: SchemaNodeSummaryProps) {
+/**
+ * @todo handle doc.tags
+ */
+export function SchemaNodeSummary({
+  signature,
+  name,
+  doc,
+  location,
+  isOptional,
+  groupElementClassName,
+  __schema,
+  className,
+  ...rest
+}: SchemaNodeSummaryProps) {
   const editorRef = useRef<any>();
   const monacoRef = useRef<any>();
 
-  const { signature, name, __schema, doc, location } = node;
   const displayName = name || (__schema === ConstructorSchema.name && 'constructor') || undefined;
   const signatureLength = signature?.split('\n').length || 0;
   const defaultSignatureHeight = 36 + (signatureLength - 1) * 18;
@@ -38,10 +50,22 @@ export function SchemaNodeSummary({ node, groupElementClassName }: SchemaNodeSum
     const displaySignatureIndex = signature.indexOf(') ') + 1;
     displaySignature = signature?.slice(displaySignatureIndex).trim();
   }
+
   // Monaco requires a unique path that ends with the file extension
   const path = `${location.line}:${location.character}:${location.filePath}`;
-  const tags = getTags(node);
+  const tags = OptionalTag(isOptional);
   const showDocs = doc?.comment || tags.length > 0;
+
+  useEffect(() => {
+    if (!editorRef.current) return;
+    const signatureContent = editorRef.current.getValue();
+    if (!signatureContent) {
+      setSignatureHeight(defaultSignatureHeight);
+    } else {
+      const updatedSignatureHeight = 36 + (signatureContent?.split('\n').length || 0) * 18;
+      setSignatureHeight(updatedSignatureHeight);
+    }
+  }, [editorRef.current]);
 
   useEffect(() => {
     if (isMounted) {
@@ -55,10 +79,10 @@ export function SchemaNodeSummary({ node, groupElementClassName }: SchemaNodeSum
         noSyntaxValidation: true,
       });
       const container = editorRef.current.getDomNode();
-      editorRef.current.onDidContentSizeChange(() => {
-        if (container && isMounted) {
-          const contentHeight = Math.min(1000, editorRef.current.getContentHeight() + 18);
-          setSignatureHeight(contentHeight);
+      editorRef.current.onDidContentSizeChange(({ contentHeight, contentWidthChanged }) => {
+        if (container && isMounted && displaySignature) {
+          const updatedHeight = contentWidthChanged ? Math.min(200, contentHeight + 18) : defaultSignatureHeight;
+          setSignatureHeight(updatedHeight);
         }
       });
     }
@@ -71,7 +95,7 @@ export function SchemaNodeSummary({ node, groupElementClassName }: SchemaNodeSum
   }, []);
 
   return (
-    <div className={styles.schemaNodeSummary}>
+    <div {...rest} className={classnames(styles.schemaNodeSummary, className)}>
       {displayName && (
         <div
           id={displayName}
@@ -101,6 +125,7 @@ export function SchemaNodeSummary({ node, groupElementClassName }: SchemaNodeSum
       {signature && (
         <div className={styles.codeEditorContainer}>
           <Editor
+            key={`node-summary-editor-${signature}`}
             options={defaultCodeEditorOptions}
             value={displaySignature}
             height={signatureHeight}
@@ -121,11 +146,6 @@ export function SchemaNodeSummary({ node, groupElementClassName }: SchemaNodeSum
   );
 }
 
-function getTags(node: SchemaNode): string[] {
-  /**
-   * @todo handle node.doc.tags
-   */
-  if (!(node.__schema === VariableLikeSchema.name || node.__schema === ParameterSchema.name)) return [];
-  const typedNode = node as VariableLikeSchema | ParameterSchema;
-  return typedNode.isOptional ? ['optional'] : [];
+function OptionalTag(isOptional?: boolean): string[] {
+  return isOptional ? ['optional'] : [];
 }

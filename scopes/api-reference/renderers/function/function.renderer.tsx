@@ -21,10 +21,7 @@ function FunctionComponent(props: APINodeRenderProps) {
   } = props;
   const functionNode = api as FunctionLikeSchema;
   const { returnType, params, typeParams } = functionNode;
-  console.log('🚀 ~ file: function.renderer.tsx ~ line 24 ~ FunctionComponent ~ typeParams', params);
-  console.log('🚀 ~ file: function.renderer.tsx ~ line 24 ~ FunctionComponent ~ returnType', returnType);
   const returnTypeRenderer = renderers.find((renderer) => renderer.predicate(returnType));
-  // const parameterRenderer = para
   const hasParams = params.length > 0;
 
   return (
@@ -46,7 +43,19 @@ function FunctionComponent(props: APINodeRenderProps) {
       {hasParams && (
         <div className={styles.container}>
           <div className={styles.title}>Parameters</div>
-          <div className={styles.value}>{params.map((param) => param.toString()).join(', ')}</div>
+          <div>
+            {params.map((param) => {
+              const Component = renderers.find((renderer) => renderer.predicate(param))?.Component;
+              if (Component) {
+                return <Component {...props} key={`param-${param.name}`} apiNode={{ ...props.apiNode, api: param }} />;
+              }
+              return (
+                <div key={`param-${param.name}`} className={styles.value}>
+                  {param.toString()}
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
       <div className={styles.container}>

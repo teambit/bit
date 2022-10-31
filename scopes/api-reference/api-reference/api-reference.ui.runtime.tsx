@@ -17,6 +17,7 @@ import { typeUnionRenderer } from '@teambit/api-reference.renderers.type-union';
 import { typeIntersectionRenderer } from '@teambit/api-reference.renderers.type-intersection';
 import { typeLiteralRenderer } from '@teambit/api-reference.renderers.type-literal';
 import { parameterRenderer } from '@teambit/api-reference.renderers.parameter';
+import { inferenceTypeRenderer } from '@teambit/api-reference.renderers.inference-type';
 
 import WorkspaceAspect from '@teambit/workspace';
 
@@ -45,6 +46,7 @@ export class APIReferenceUI {
     typeUnionRenderer,
     parameterRenderer,
     typeLiteralRenderer,
+    inferenceTypeRenderer,
   ];
 
   static async provider(

@@ -1019,6 +1019,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/api-reference/renderers/function"
     },
+    "renderers/inference-type": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/api-reference/renderers/inference-type"
+    },
     "renderers/interface": {
         "scope": "",
         "version": "",
@@ -2130,6 +2136,12 @@
         "version": "",
         "mainFile": "index.ts",
         "rootDir": "scopes/api-reference/utils/code-editor-options"
+    },
+    "utils/copy-schema-node": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/api-reference/utils/copy-schema-node"
     },
     "utils/group-schema-node-by-signature": {
         "scope": "",
