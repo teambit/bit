@@ -76,7 +76,7 @@ export class StatusCmd implements Command {
       invalidComponents,
       locallySoftRemoved: locallySoftRemoved.map((id) => id.toString()),
       remotelySoftRemoved: remotelySoftRemoved.map((id) => id.toString()),
-      outdatedComponents: outdatedComponents.map((c) => c.id.toString()),
+      outdatedComponents: outdatedComponents.map((c) => ({ ...c, id: c.id.toString() })),
       mergePendingComponents: mergePendingComponents.map((c) => c.id.toString()),
       componentsDuringMergeState: componentsDuringMergeState.map((id) => id.toString()),
       softTaggedComponents: softTaggedComponents.map((s) => s.toString()),
@@ -158,10 +158,13 @@ export class StatusCmd implements Command {
       '(use "bit checkout head" to merge changes)\n(use "bit diff [component_id] [new_version]" to compare changes)\n(use "bit log [component_id]" to list all available versions)\n';
     const outdatedComps = outdatedComponents
       .map((component) => {
-        return `    > ${chalk.cyan(component.id.toStringWithoutVersion())} current: ${component.id.version} latest: ${
-          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-          component.latestVersion
-        }\n`;
+        const latest =
+          component.latestVersion && component.latestVersion !== component.headVersion
+            ? ` latest: ${component.latestVersion}`
+            : '';
+        return `    > ${chalk.cyan(component.id.toStringWithoutVersion())} current: ${component.id.version} head: ${
+          component.headVersion
+        }${latest}\n`;
       })
       .join('');
 

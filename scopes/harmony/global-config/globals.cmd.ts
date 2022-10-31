@@ -9,6 +9,7 @@ export class GlobalsCmd implements Command {
   name = 'globals';
   description = `list all globals`;
   group = 'workspace';
+  helpUrl = 'reference/config/config-files';
   alias = '';
   options = [['j', 'json', 'json format']] as CommandOptions;
 
