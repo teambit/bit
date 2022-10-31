@@ -105,14 +105,21 @@ export type PreviewComponentData = PreviewAnyComponentData & PreviewEnvComponent
  */
 export type PreviewAnyComponentData = {
   doesScaling?: boolean;
+  /**
+   * The strategy configured by the component's env
+   */
+  strategyName?: PreviewStrategyName;
+  /**
+   * Does the component has a bundle for the component itself (separated from the compositions/docs)
+   * Calculated by the component's env
+   */
+  splitComponentBundle?: boolean;
 };
 
 /**
  * Preview data that stored on the component on load if the component is an env
  */
 export type PreviewEnvComponentData = {
-  strategyName?: PreviewStrategyName;
-  splitComponentBundle?: boolean;
   isScaling?: boolean;
 };
 
@@ -229,27 +236,38 @@ export class PreviewMain {
   }
 
   /**
-   * Many of the preview data is stored on the preview data of the component's env
-   * This function will get a component, will get its env, then get preview data of the env
-   * @param component
-   * @returns
-   */
-  async getComponentsEnvPreviewData(component: Component): Promise<PreviewEnvComponentData | undefined> {
-    const envComponent = await this.envs.getEnvComponent(component);
-    return this.getPreviewData(envComponent);
-  }
-
-  /**
    * Calculate preview data on component load
    * @param component
    * @returns
    */
   async calcPreviewData(component: Component): Promise<PreviewComponentData> {
     const doesScaling = await this.calcDoesScalingForComponent(component);
+    const dataFromEnv = await this.calcPreviewDataFromEnv(component);
     const envData = (await this.calculateDataForEnvComponent(component)) || {};
     const data: PreviewComponentData = {
       doesScaling,
+      ...dataFromEnv,
       ...envData,
+    };
+    return data;
+  }
+
+  /**
+   * Calculate preview data on component that configured by its env
+   * @param component
+   * @returns
+   */
+  async calcPreviewDataFromEnv(component: Component): Promise<Omit<PreviewAnyComponentData, 'doesScaling'> | undefined> {
+    const envComponent = await this.envs.getEnvComponent(component);
+    const isEnv = this.envs.isEnv(envComponent);
+    // If the component is not an env, we don't want to store anything in the data
+    if (!isEnv) return undefined;
+    const envDef = this.envs.getEnvFromComponent(envComponent);
+
+    const envPreviewConfig = this.getEnvPreviewConfig(envDef?.env);
+    const data = {
+      strategyName: envPreviewConfig?.strategyName,
+      splitComponentBundle: envPreviewConfig?.splitComponentBundle ?? false,
     };
     return data;
   }
@@ -264,14 +282,12 @@ export class PreviewMain {
     // If the component is not an env, we don't want to store anything in the data
     if (!isEnv) return undefined;
     const previewAspectConfig = this.getPreviewAspectConfig(envComponent);
-    const envDef = this.envs.getEnvFromComponent(envComponent);
-    const envPreviewConfig = this.getEnvPreviewConfig(envDef?.env);
-    return {
+
+    const data = {
       // default to true if the env doesn't have a preview config
       isScaling: previewAspectConfig?.isScaling ?? true,
-      strategyName: envPreviewConfig?.strategyName,
-      splitComponentBundle: envPreviewConfig?.splitComponentBundle ?? false,
     };
+    return data;
   }
 
   /**
@@ -281,11 +297,11 @@ export class PreviewMain {
    * @returns
    */
   async isBundledWithEnv(component: Component): Promise<boolean> {
-    const envData = await this.getComponentsEnvPreviewData(component);
+    const data = await this.getPreviewData(component);
     // For env that tagged in the past we didn't store the data, so we calculate it the old way
     // We comparing the strategyName to undefined to cover a specific case when it doesn't exist at all.
-    if (!envData || envData.strategyName === undefined) return this.isBundledWithEnvBackward(component);
-    return envData.strategyName === ENV_PREVIEW_STRATEGY_NAME;
+    if (!data || data.strategyName === undefined) return this.isBundledWithEnvBackward(component);
+    return data.strategyName === ENV_PREVIEW_STRATEGY_NAME;
   }
 
   /**
