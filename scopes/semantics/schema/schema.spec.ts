@@ -35,7 +35,7 @@ describe('SchemaAspect', function () {
       schema = await loadAspect(SchemaAspect, workspacePath);
       const compId = await workspace.resolveComponentId('button');
       const comp = await workspace.get(compId);
-      apiSchema = await schema.getSchema(comp);
+      apiSchema = await schema.getSchema(comp, true);
     });
     it('should be able to generate JSON object with all schemas', async () => {
       const results = apiSchema.toObject();
