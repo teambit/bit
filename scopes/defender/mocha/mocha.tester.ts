@@ -23,10 +23,9 @@ export class MochaTester implements Tester {
     private MochaModule: typeof Mocha
   ) {}
   async test(context: TesterContext): Promise<Tests> {
+    this.logger.clearStatusLine();
     const specsPerComp = context.specFiles.toArray();
-    const allSpecsFiles = specsPerComp.map(([, specFiles]) => specFiles.map((specFile) => specFile.path)).flat();
     babelRegister({
-      only: [(filePath: string) => allSpecsFiles.includes(filePath)],
       extensions: ['.es6', '.es', '.jsx', '.js', '.mjs', '.ts', '.tsx'],
       ...(this.babelConfig || {}),
     });
