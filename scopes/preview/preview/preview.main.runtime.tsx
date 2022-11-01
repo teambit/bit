@@ -293,12 +293,26 @@ export class PreviewMain {
   /**
    * Check if the component preview bundle contain the env as part of the bundle or only the component code
    * (we used in the past to bundle them together, there might also be specific envs which still uses the env strategy)
+   * This should be used only for calculating the value on load.
+   * otherwise, use the isBundledWithEnv function
+   * @param component
+   * @returns
+   */
+  async calcIsBundledWithEnv(component: Component): Promise<boolean> {
+    const envPreviewData = await this.calcPreviewDataFromEnv(component);
+    return envPreviewData?.strategyName !== 'component';
+  }
+
+
+  /**
+   * Check if the component preview bundle contain the env as part of the bundle or only the component code
+   * (we used in the past to bundle them together, there might also be specific envs which still uses the env strategy)
    * @param component
    * @returns
    */
   async isBundledWithEnv(component: Component): Promise<boolean> {
     const data = await this.getPreviewData(component);
-    // For env that tagged in the past we didn't store the data, so we calculate it the old way
+    // For components that tagged in the past we didn't store the data, so we calculate it the old way
     // We comparing the strategyName to undefined to cover a specific case when it doesn't exist at all.
     if (!data || data.strategyName === undefined) return this.isBundledWithEnvBackward(component);
     return data.strategyName === ENV_PREVIEW_STRATEGY_NAME;
@@ -327,7 +341,7 @@ export class PreviewMain {
   // if you want to get the final result use the `doesScaling` method below
   // This should be used only for component load
   private async calcDoesScalingForComponent(component: Component): Promise<boolean> {
-    const isBundledWithEnv = await this.isBundledWithEnv(component);
+    const isBundledWithEnv = await this.calcIsBundledWithEnv(component);
     // if it's a core env and the env template is apart from the component it means the template bundle already contain the scaling functionality
     if (this.envs.isUsingCoreEnv(component)) {
       // If the component is new, no point to check the is bundle with env (there is no artifacts so it will for sure return false)
