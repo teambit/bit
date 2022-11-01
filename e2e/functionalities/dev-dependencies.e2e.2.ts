@@ -1,4 +1,5 @@
 import chai, { expect } from 'chai';
+import { Extensions } from '../../src/constants';
 import Helper from '../../src/e2e-helper/e2e-helper';
 
 chai.use(require('chai-fs'));
@@ -170,6 +171,11 @@ describe('dev-dependencies functionality', function () {
       helper.command.install();
       helper.command.tagWithoutBuild();
     });
-    it.only('should', () => {});
+    it('should be able to remove it from DevDependency only by "bit deps remove --dev"', () => {
+      helper.command.dependenciesRemove('comp1', 'is-positive', '--dev');
+      const bitMap = helper.bitMap.read();
+      expect(bitMap.comp1.config[Extensions.dependencyResolver].policy).to.have.property('devDependencies');
+      expect(bitMap.comp1.config[Extensions.dependencyResolver].policy.devDependencies['is-positive']).to.equal('-');
+    });
   });
 });
