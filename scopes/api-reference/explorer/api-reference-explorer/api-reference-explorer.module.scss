@@ -6,16 +6,3 @@
   font-size: 14px;
   border-right: 2px solid #ededed;
 }
-
-.apiReferenceExplorerTabDrawer {
-  // drawer name
-  > div:first-child {
-    border: none;
-    border-bottom: 1px solid var(--bit-border-color-lightest, #ededed);
-  }
-  height: 100%;
-}
-
-.apiReferenceExplorerDrawerContent {
-  overflow-y: auto;
-}
