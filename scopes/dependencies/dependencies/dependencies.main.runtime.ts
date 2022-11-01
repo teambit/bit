@@ -14,6 +14,7 @@ import {
   DependenciesGetCmd,
   DependenciesRemoveCmd,
   DependenciesSetCmd,
+  RemoveDependenciesFlags,
   SetDependenciesFlags,
 } from './dependencies-cmd';
 import { DependenciesAspect } from './dependencies.aspect';
@@ -60,7 +61,11 @@ export class DependenciesMain {
     };
   }
 
-  async removeDependency(componentPattern: string, packages: string[]): Promise<RemoveDependencyResult[]> {
+  async removeDependency(
+    componentPattern: string,
+    packages: string[],
+    options: RemoveDependenciesFlags = {}
+  ): Promise<RemoveDependencyResult[]> {
     const compIds = await this.workspace.idsByPattern(componentPattern);
     const results = await Promise.all(
       compIds.map(async (compId) => {
@@ -75,8 +80,13 @@ export class DependenciesMain {
           const [name, version] = this.splitPkgToNameAndVer(pkg);
           const dependency = depList.findByPkgNameOrCompId(name, version);
           if (!dependency) return null;
-          const depField = KEY_NAME_BY_LIFECYCLE_TYPE[dependency.lifecycle];
           const depName = dependency.getPackageName?.() || dependency.id;
+          const getLifeCycle = () => {
+            if (options.dev) return 'dev';
+            if (options.peer) return 'peer';
+            return dependency.lifecycle;
+          };
+          const depField = KEY_NAME_BY_LIFECYCLE_TYPE[getLifeCycle()];
           const existsInSpecificConfig = newDepResolverConfig.policy?.[depField]?.[depName];
           if (existsInSpecificConfig) {
             if (existsInSpecificConfig === '-') return null;
