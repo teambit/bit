@@ -78,6 +78,35 @@ describe('Mocha Tester', function () {
       });
     });
   });
+  describe('typescript component', () => {
+    before(() => {
+      helper.scopeHelper.reInitLocalScope();
+      helper.fixtures.populateComponentsTS(1);
+      helper.command.setEnv('comp1', 'teambit.harmony/bit-custom-aspect');
+      helper.command.install();
+      helper.fs.outputFile(
+        'comp1/foo.ts',
+        `export function addOne(num: number): number {
+  return num + 1;
+}`
+      );
+      helper.fs.outputFile(
+        'comp1/foo.spec.ts',
+        `import { addOne } from './foo';
+import { expect } from 'chai';
+
+describe('addOne', () => {
+  it('should add one', () => {
+    const result = addOne(1);
+    expect(result).to.equal(2);
+  });
+});`
+      );
+    });
+    it('should not throw an error compilation errors', () => {
+      expect(() => helper.command.test()).to.not.throw();
+    });
+  });
 });
 
 function shouldOutputTestPassed(output: string) {

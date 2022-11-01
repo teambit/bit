@@ -15,6 +15,7 @@ export class CreateCmd implements Command {
   description = 'create a new component (source files and config) using a template.';
   alias = '';
   loader = true;
+  helpUrl = 'reference/starters/create-starter';
   arguments = [
     {
       name: 'template-name',

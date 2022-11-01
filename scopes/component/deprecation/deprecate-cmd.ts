@@ -14,6 +14,7 @@ export class DeprecateCmd implements Command {
   loader = true;
   migration = true;
   remoteOp = true;
+  helpUrl = 'docs/components/removing-components';
 
   constructor(private deprecation: DeprecationMain, private workspace: Workspace) {}
 

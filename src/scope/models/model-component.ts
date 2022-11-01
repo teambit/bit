@@ -357,7 +357,7 @@ export default class Component extends BitObject {
    * it's impossible that `this.head.isEqual(this.laneHeadLocal)`, because when snapping it's either
    * on main, which goes to this.head OR on a lane, which goes to this.laneHeadLocal.
    */
-  async latestIncludeRemote(repo: Repository): Promise<string> {
+  async headIncludeRemote(repo: Repository): Promise<string> {
     const latestLocally = this.latest();
     const remoteHead = this.laneHeadRemote;
     if (!remoteHead) return latestLocally;
@@ -373,6 +373,11 @@ export default class Component extends BitObject {
 
   latestVersion(): string {
     if (empty(this.versions)) return VERSION_ZERO;
+    return getLatestVersion(this.listVersions());
+  }
+
+  latestVersionIfExist(): string | undefined {
+    if (empty(this.versions)) return undefined;
     return getLatestVersion(this.listVersions());
   }
 
@@ -739,7 +744,7 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
 
   toComponentVersion(versionStr?: string): ComponentVersion {
     const versionParsed = versionParser(versionStr);
-    const versionNum = versionParsed.latest ? this.latest() : versionParsed.resolve(this.listVersionsIncludeOrphaned());
+    const versionNum = versionParsed.latest ? this.latest() : (versionParsed.versionNum as string);
     if (versionNum === VERSION_ZERO) {
       throw new NoHeadNoVersion(this.id());
     }

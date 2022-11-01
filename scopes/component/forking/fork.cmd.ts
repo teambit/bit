@@ -12,6 +12,7 @@ export type ForkOptions = {
 export class ForkCmd implements Command {
   name = 'fork <source-component-id> [target-component-name]';
   description = 'EXPERIMENTAL. create a new component out of an existing one (copies source files and config)';
+  helpUrl = 'docs/components/importing-components#forking-components';
   arguments = [
     { name: 'source-component-id', description: 'the component id of the source component' },
     {

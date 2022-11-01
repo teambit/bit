@@ -5,6 +5,7 @@ import { ComponentLogMain } from './component-log.main.runtime';
 export default class LogCmd implements Command {
   name = 'log <id>';
   description = 'show components(s) version history';
+  helpUrl = 'docs/components/navigating-history';
   extendedDescription: string;
   group = 'info';
   alias = '';

@@ -113,4 +113,23 @@ describe('bit rename command', function () {
       expect(bitmap.comp1.defaultScope).to.equal('scope2');
     });
   });
+  describe('rename with refactoring when the code has other non-import occurrences', () => {
+    before(() => {
+      helper.scopeHelper.reInitLocalScope();
+      helper.fixtures.populateComponents(2);
+      helper.fs.outputFile(
+        'comp1/index.js',
+        `const comp2 = require('@my-scope/comp2');
+      const comp2Other = require('@my-scope/comp2-other');
+      module.exports = () => 'comp1 and ' + comp2();`
+      );
+      helper.command.rename('comp2', 'my-new-name', '--refactor');
+    });
+    it('should only replace the exact occurrence of the import statement, not others', () => {
+      const content = helper.fs.readFile('comp1/index.js');
+      expect(content).to.have.string('my-scope/my-new-name');
+      expect(content).to.have.string('my-scope/comp2-other');
+      expect(content).to.not.have.string('my-scope/my-new-name-other');
+    });
+  });
 });

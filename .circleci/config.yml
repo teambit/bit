@@ -179,6 +179,7 @@ commands: # reusable commands
     steps:
       - run: npm i -g @teambit/bvm
       - run: "echo 'export PATH=~/.npm-global/bin:$PATH' >> $BASH_ENV"
+      - run: bvm config set RELEASE_TYPE nightly
 
   set_git_credentials:
     steps:
@@ -654,6 +655,7 @@ jobs:
       - restore_cache:
           key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
       - run: bvm config set DEFAULT_LINK bbit
+      - run: bvm config set RELEASE_TYPE nightly
       # - run: bvm install 0.0.428
       - run: bvm upgrade
       - run: bvm link --verbose
@@ -1315,6 +1317,7 @@ jobs:
       - restore_cache:
           key: v2-bvm-folder-{{ checksum "version.txt" }}
       - run: 'npm i -g @teambit/bvm'
+      - run: bvm config set RELEASE_TYPE nightly
       - run:
           name: 'bvm upgrade'
           command: 'bvm upgrade'

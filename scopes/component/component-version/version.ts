@@ -10,21 +10,13 @@ export class Version {
   constructor(versionNum: string | null | undefined, latest: boolean) {
     this.versionNum = versionNum;
     this.latest = latest;
-  }
-
-  /**
-   * @deprecated this is super old method, which is not relevant anymore.
-   */
-  resolve(availableVersion: string[]): string {
-    const getLatest = () => semver.maxSatisfying(availableVersion, '*', { includePrerelease: true });
-
-    if (this.latest) return getLatest() as string;
-    return this.versionNum as string;
+    if (versionNum && latest) {
+      throw new Error(`a component version cannot have both: version and "latest"`);
+    }
   }
 
   toString() {
     if (!this.versionNum && this.latest) return 'latest';
-    if (this.versionNum && this.latest) return `*${this.versionNum}`;
     if (this.versionNum && !this.latest) return this.versionNum.toString();
     throw new InvalidVersion(this.versionNum);
   }
