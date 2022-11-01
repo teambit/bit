@@ -158,4 +158,18 @@ describe('dev-dependencies functionality', function () {
       expect(barFoo.flattenedDependencies).to.deep.include({ name: 'comp3', version: '0.0.1' });
     });
   });
+  describe('component with devDependency coming from an env and is used as prod', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.bitJsonc.setupDefault();
+      const envName = helper.env.setCustomEnv('node-env-dev-dep');
+      const envId = `${helper.scopes.remote}/${envName}`;
+      helper.extensions.addExtensionToVariant('*', envId);
+      helper.fixtures.populateComponents(1, false);
+      helper.fs.outputFile(`comp1/index.js`, `const isPositive = require('is-positive');`);
+      helper.command.install();
+      helper.command.tagWithoutBuild();
+    });
+    it.only('should', () => {});
+  });
 });
