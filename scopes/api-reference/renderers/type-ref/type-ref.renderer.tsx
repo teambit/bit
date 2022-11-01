@@ -9,6 +9,7 @@ export const typeRefRenderer: APINodeRenderer = {
   predicate: (node) => node.__schema === TypeRefSchema.name,
   Component: TypeRefComponent,
   nodeType: 'TypeRefs',
+  icon: { name: 'TypeRef', url: 'https://static.bit.dev/api-reference/type.svg' },
   default: true,
 };
 

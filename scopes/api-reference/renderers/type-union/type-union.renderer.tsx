@@ -24,6 +24,7 @@ function TypeUnionComponent(props: APINodeRenderProps) {
         if (!renderer)
           return (
             <SchemaNodeSummary
+              key={`${index}-${type.name}-union-type`}
               signature={type.signature || type.toString()}
               name={type.name}
               location={type.location}
@@ -33,7 +34,13 @@ function TypeUnionComponent(props: APINodeRenderProps) {
             />
           );
         const Component = renderer.Component;
-        return <Component {...props} key={index} apiNode={{ ...props.apiNode, renderer, api: type }} />;
+        return (
+          <Component
+            {...props}
+            key={`${index}-${type.name}-union-type`}
+            apiNode={{ ...props.apiNode, renderer, api: type }}
+          />
+        );
       })}
     </>
   );

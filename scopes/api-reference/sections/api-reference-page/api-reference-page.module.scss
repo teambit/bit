@@ -12,7 +12,7 @@ $panelBg: #fafafa;
   display: flex;
   flex-direction: column;
   height: calc(100% - 80px);
-  width: 100%;
+  width: calc(100% - 80px);
 }
 .splitter {
   position: relative;
