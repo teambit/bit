@@ -15,6 +15,7 @@ import { APINodeRendererSlot } from '@teambit/api-reference';
 import { sortAPINodes } from '@teambit/api-reference.utils.sort-api-nodes';
 import { TreeNode } from '@teambit/design.ui.tree';
 import { RoundLoader } from '@teambit/design.ui.round-loader';
+import { EmptyBox } from '@teambit/design.ui.empty-box';
 
 import styles from './api-reference-page.module.scss';
 
@@ -35,6 +36,9 @@ export function APIRefPage({ host, rendererSlot, className }: APIRefPageProps) {
   const [selectedAPIType, selectedAPINodeName] = selectedAPIFromUrl?.split('/') || [];
 
   const apiNodes = (apiModel && flatten(Array.from(apiModel.apiByType.values())).sort(sortAPINodes)) || [];
+
+  const isEmpty = apiNodes.length === 0;
+
   const apiTree: string[] = useMemo(() => {
     return apiNodes.map((apiNode) => {
       return `${apiNode.renderer?.nodeType}/${apiNode.api.name}`;
@@ -65,9 +69,8 @@ export function APIRefPage({ host, rendererSlot, className }: APIRefPageProps) {
     );
   }
 
-  // TODO: dont think this will be a valid state - see if we need a blank state
-  if (!apiModel) {
-    return <>missing schema</>;
+  if (!apiModel || isEmpty) {
+    return <EmptyBox title={'There is no API extracted for this component.'} link={''} linkText={''} />;
   }
 
   return (

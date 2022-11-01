@@ -19,8 +19,6 @@ import { typeLiteralRenderer } from '@teambit/api-reference.renderers.type-liter
 import { parameterRenderer } from '@teambit/api-reference.renderers.parameter';
 import { inferenceTypeRenderer } from '@teambit/api-reference.renderers.inference-type';
 
-import WorkspaceAspect from '@teambit/workspace';
-
 import { APIReferenceAspect } from './api-reference.aspect';
 
 export type APINodeRendererSlot = SlotRegistry<APINodeRenderer[]>;
@@ -58,12 +56,10 @@ export class APIReferenceUI {
     const { config } = harmony;
     const host = String(config.get('teambit.harmony/bit'));
     const apiReferenceUI = new APIReferenceUI(host, apiNodeRendererSlot);
-    if (host === WorkspaceAspect.id) {
-      apiReferenceUI.registerAPINodeRenderer(apiReferenceUI.apiNodeRenderers);
-      const apiReferenceSection = new APIRefSection(apiReferenceUI);
-      componentUI.registerNavigation(apiReferenceSection.navigationLink, apiReferenceSection.order);
-      componentUI.registerRoute(apiReferenceSection.route);
-    }
+    apiReferenceUI.registerAPINodeRenderer(apiReferenceUI.apiNodeRenderers);
+    const apiReferenceSection = new APIRefSection(apiReferenceUI);
+    componentUI.registerNavigation(apiReferenceSection.navigationLink, apiReferenceSection.order);
+    componentUI.registerRoute(apiReferenceSection.route);
     return apiReferenceUI;
   }
 
