@@ -159,6 +159,7 @@ export class DependenciesCmd implements Command {
   options = [];
   group = 'info';
   commands: Command[] = [];
+  helpUrl = 'docs/dependencies/configuring-dependencies';
 
   async report([unrecognizedSubcommand]: [string]) {
     return chalk.red(

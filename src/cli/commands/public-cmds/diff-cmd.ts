@@ -8,6 +8,7 @@ export default class Diff implements LegacyCommand {
   name = 'diff [values...]';
   group: Group = 'development';
   description = "show the diff between the components' source files and config";
+  helpUrl = 'docs/components/merging-changes#compare-component-snaps';
   extendedDescription = `bit diff => compare all modified components to their model version
   bit diff [ids...] => compare the specified components against their modified states
   bit diff [id] [version] => compare the specified version to used or modified files

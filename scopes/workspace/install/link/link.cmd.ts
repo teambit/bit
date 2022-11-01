@@ -21,6 +21,7 @@ export class LinkCommand implements Command {
   name = 'link [component-names...]';
   alias = '';
   description = 'create links in the node_modules directory, to core aspects and to components in the workspace';
+  helpUrl = 'reference/workspace/component-links';
   extendedDescription: string;
   group = 'development';
   private = false;

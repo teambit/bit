@@ -54,6 +54,11 @@ export class TypeScriptExtractor implements SchemaExtractor {
     return new APISchema(location, apiScheme, component.id);
   }
 
+  dispose() {
+    if (!this.tsserver) return;
+    this.tsserver.killTsServer();
+  }
+
   async computeExportedIdentifiers(node: Node, context: SchemaExtractorContext) {
     const transformer = this.getTransformer(node, context);
     if (!transformer || !transformer.getIdentifiers) {

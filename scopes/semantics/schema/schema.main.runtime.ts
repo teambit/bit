@@ -82,8 +82,11 @@ export class SchemaMain {
   /**
    * get a schema of a component.
    * @param component target component.
+   * @param shouldDisposeResourcesOnceDone for long-running processes, such as bit-start/bit-watch, this is not
+   * relevant. for calling the API only to get a schema for one component, this is needed to ensure the ts-server is
+   * not kept alive. otherwise, the process will never end.
    */
-  async getSchema(component: Component): Promise<APISchema> {
+  async getSchema(component: Component, shouldDisposeResourcesOnceDone = false): Promise<APISchema> {
     this.logger.debug(`getSchema of ${component.id.toString()}`);
 
     // if on workspace get schema from ts server
@@ -100,7 +103,11 @@ export class SchemaMain {
         throw new Error(`No SchemaExtractor defined for ${env.name}`);
       }
       const schemaExtractor: SchemaExtractor = env.getSchemaExtractor();
-      return schemaExtractor.extract(component, formatter);
+
+      const result = await schemaExtractor.extract(component, formatter);
+      if (shouldDisposeResourcesOnceDone) schemaExtractor.dispose();
+
+      return result;
     }
 
     // on scope get schema from builder api
