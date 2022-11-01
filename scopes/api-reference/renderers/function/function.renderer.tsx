@@ -21,7 +21,7 @@ function FunctionComponent(props: APINodeRenderProps) {
   } = props;
   const functionNode = api as FunctionLikeSchema;
   const { returnType, params, typeParams } = functionNode;
-  // const returnTypeRenderer = renderers.find((renderer) => renderer.predicate(returnType));
+  const returnTypeRenderer = renderers.find((renderer) => renderer.predicate(returnType));
   const hasParams = params.length > 0;
 
   return (
@@ -45,9 +45,15 @@ function FunctionComponent(props: APINodeRenderProps) {
           <div className={styles.title}>Parameters</div>
           <div>
             {params.map((param) => {
-              const Component = renderers.find((renderer) => renderer.predicate(param))?.Component;
-              if (Component) {
-                return <Component {...props} key={`param-${param.name}`} apiNode={{ ...props.apiNode, api: param }} />;
+              const paramRenderer = renderers.find((renderer) => renderer.predicate(param));
+              if (paramRenderer?.Component) {
+                return (
+                  <paramRenderer.Component
+                    {...props}
+                    key={`param-${param.name}`}
+                    apiNode={{ ...props.apiNode, renderer: paramRenderer, api: param }}
+                  />
+                );
               }
               return (
                 <div key={`param-${param.name}`} className={styles.value}>
@@ -60,12 +66,15 @@ function FunctionComponent(props: APINodeRenderProps) {
       )}
       <div className={styles.container}>
         <div className={styles.title}>Returns</div>
-        {<div className={styles.value}>{returnType.toString()}</div>}
+        {!returnTypeRenderer && <div className={styles.value}>{returnType.toString()}</div>}
         {
           // @todo figure out why monaco renders this to be the same as api signature
-          /* {returnTypeRenderer && (
-          <returnTypeRenderer.Component {...props} apiNode={{ ...props.apiNode, api: returnType }} />
-        )} */
+          returnTypeRenderer && (
+            <returnTypeRenderer.Component
+              {...props}
+              apiNode={{ ...props.apiNode, renderer: returnTypeRenderer, api: returnType }}
+            />
+          )
         }
       </div>
     </APINodeDetails>

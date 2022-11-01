@@ -10,14 +10,13 @@ export const inferenceTypeRenderer: APINodeRenderer = {
   default: true,
 };
 
-/**
- * @todo - implement parameter
- */
 function InferenceTypeComponent(props: APINodeRenderProps) {
   const {
     apiNode: { api },
   } = props;
+
   const inferenceType = api as InferenceTypeSchema;
+
   return (
     <SchemaNodeSummary
       key={`inference-type-${inferenceType.type}`}
@@ -25,7 +24,7 @@ function InferenceTypeComponent(props: APINodeRenderProps) {
       location={inferenceType.location}
       doc={inferenceType.doc}
       __schema={inferenceType.__schema}
-      signature={inferenceType.signature || inferenceType.toString()}
+      signature={inferenceType.signature || inferenceType.type}
     />
   );
 }

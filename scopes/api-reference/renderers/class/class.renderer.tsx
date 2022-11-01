@@ -2,6 +2,7 @@ import React from 'react';
 import { ClassSchema } from '@teambit/semantics.entities.semantic-schema';
 import { APINodeRenderProps, APINodeRenderer } from '@teambit/api-reference.models.api-node-renderer';
 import { APINodeDetails } from '@teambit/api-reference.renderers.api-node-details';
+import { SchemaNodesSummary } from '@teambit/api-reference.renderers.schema-nodes-summary';
 
 export const classRenderer: APINodeRenderer = {
   predicate: (node) => node.__schema === ClassSchema.name,
@@ -24,5 +25,9 @@ function ClassComponent(props: APINodeRenderProps) {
     implementsDefinition || ''
   }`;
 
-  return <APINodeDetails {...props} members={members} displaySignature={displaySignature} />;
+  return (
+    <APINodeDetails {...props} displaySignature={displaySignature}>
+      <SchemaNodesSummary nodes={members} />
+    </APINodeDetails>
+  );
 }

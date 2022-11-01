@@ -4,6 +4,7 @@ import {
   groupByNodeSignatureType,
   sortSignatureType,
 } from '@teambit/api-reference.utils.group-schema-node-by-signature';
+import { transformSignature as defaultTransformSignature } from '@teambit/api-reference.utils.schema-node-signature-transform';
 import classnames from 'classnames';
 import { SchemaNodeSummary, trackedElementClassName } from '@teambit/api-reference.renderers.schema-node-summary';
 
@@ -13,12 +14,14 @@ export type SchemaNodesSummaryProps = {
   nodes: SchemaNode[];
   groupBy?: (nodes: SchemaNode[]) => Map<string | undefined, SchemaNode[]>;
   sort?: ([aType]: [string | undefined, SchemaNode[]], [bType]: [string | undefined, SchemaNode[]]) => 0 | 1 | -1;
+  transformSignature?: (node: SchemaNode) => string | undefined;
 } & HTMLAttributes<HTMLDivElement>;
 
 export function SchemaNodesSummary({
   nodes,
   groupBy = groupByNodeSignatureType,
   sort = sortSignatureType,
+  transformSignature = defaultTransformSignature,
   className,
   ...rest
 }: SchemaNodesSummaryProps) {
@@ -43,7 +46,7 @@ export function SchemaNodesSummary({
                 location={member.location}
                 doc={member.doc}
                 __schema={member.__schema}
-                signature={member.signature}
+                signature={transformSignature(member)}
                 groupElementClassName={typeId}
               />
             ))}

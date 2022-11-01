@@ -2,6 +2,7 @@ import React from 'react';
 import { InterfaceSchema } from '@teambit/semantics.entities.semantic-schema';
 import { APINodeRenderProps, APINodeRenderer } from '@teambit/api-reference.models.api-node-renderer';
 import { APINodeDetails } from '@teambit/api-reference.renderers.api-node-details';
+import { SchemaNodesSummary } from '@teambit/api-reference.renderers.schema-nodes-summary';
 
 export const interfaceRenderer: APINodeRenderer = {
   predicate: (node) => node.__schema === InterfaceSchema.name,
@@ -20,5 +21,9 @@ function InterfaceComponent(props: APINodeRenderProps) {
   const extendsSignature = extendsNodes?.[0]?.name;
   const displaySignature = `${signature}${(extendsSignature && ' '.concat(extendsSignature)) || ''}`;
 
-  return <APINodeDetails {...props} members={members} displaySignature={displaySignature} />;
+  return (
+    <APINodeDetails {...props} displaySignature={displaySignature}>
+      <SchemaNodesSummary nodes={members} />
+    </APINodeDetails>
+  );
 }

@@ -11,7 +11,7 @@ export const typeRefRenderer: APINodeRenderer = {
 };
 
 /**
- * @todo figure out how to render a type ref node
+ * @todo figure out how to render a deeply nested typeArgs
  */
 function TypeRefComponent(props: APINodeRenderProps) {
   const {
@@ -19,6 +19,7 @@ function TypeRefComponent(props: APINodeRenderProps) {
   } = props;
 
   const typeRefNode = api as TypeRefSchema;
+
   return (
     <SchemaNodeSummary
       name={typeRefNode.name}

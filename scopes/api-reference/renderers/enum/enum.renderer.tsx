@@ -2,6 +2,7 @@ import React from 'react';
 import { EnumSchema } from '@teambit/semantics.entities.semantic-schema';
 import { APINodeRenderProps, APINodeRenderer } from '@teambit/api-reference.models.api-node-renderer';
 import { APINodeDetails } from '@teambit/api-reference.renderers.api-node-details';
+import { SchemaNodesSummary } from '@teambit/api-reference.renderers.schema-nodes-summary';
 
 export const enumRenderer: APINodeRenderer = {
   predicate: (node) => node.__schema === EnumSchema.name,
@@ -18,5 +19,9 @@ function EnumComponent(props: APINodeRenderProps) {
   const enumNode = api as EnumSchema;
   const { members } = enumNode;
 
-  return <APINodeDetails {...props} members={members} />;
+  return (
+    <APINodeDetails {...props}>
+      <SchemaNodesSummary nodes={members} />
+    </APINodeDetails>
+  );
 }

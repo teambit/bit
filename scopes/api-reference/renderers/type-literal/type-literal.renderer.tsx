@@ -19,12 +19,6 @@ function TypeLiteralComponent(props: APINodeRenderProps) {
 
   const members = typeLiteralNode.members.map((member) => {
     if (member.signature) return member;
-    // return Object.assign(
-    //   {
-    //     signature: member.toString(),
-    //   },
-    //   member
-    // );
     return copySchemaNode(member, { signature: member.toString() });
   });
 

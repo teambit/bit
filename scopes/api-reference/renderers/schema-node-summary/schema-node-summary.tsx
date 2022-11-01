@@ -22,10 +22,10 @@ export type SchemaNodeSummaryProps = {
  * @todo handle doc.tags
  */
 export function SchemaNodeSummary({
-  signature,
   name,
   doc,
   location,
+  signature,
   isOptional,
   groupElementClassName,
   __schema,
@@ -42,17 +42,8 @@ export function SchemaNodeSummary({
   const [signatureHeight, setSignatureHeight] = useState<number>(defaultSignatureHeight);
   const [isMounted, setIsMounted] = useState(false);
 
-  // Remove node type from the signature. i.e (method), (getter), (setter), (property)
-  let displaySignature: string | undefined;
-  if (!signature) displaySignature = undefined;
-  else if (__schema === ConstructorSchema.name && 'constructor') displaySignature = signature;
-  else {
-    const displaySignatureIndex = signature.indexOf(') ') + 1;
-    displaySignature = signature?.slice(displaySignatureIndex).trim();
-  }
-
   // Monaco requires a unique path that ends with the file extension
-  const path = `${location.line}:${location.character}:${location.filePath}`;
+  const path = `summary-${location.line}:${location.character}:${location.filePath}`;
   const tags = OptionalTag(isOptional);
   const showDocs = doc?.comment || tags.length > 0;
 
@@ -80,7 +71,7 @@ export function SchemaNodeSummary({
       });
       const container = editorRef.current.getDomNode();
       editorRef.current.onDidContentSizeChange(({ contentHeight }) => {
-        if (container && isMounted && displaySignature) {
+        if (container && isMounted && signature) {
           const updatedHeight = Math.min(200, contentHeight + 18);
           setSignatureHeight(updatedHeight);
         }
@@ -123,11 +114,10 @@ export function SchemaNodeSummary({
         </div>
       )}
       {signature && (
-        <div className={styles.codeEditorContainer}>
+        <div key={`node-summary-editor-${signature}-${displayName}`} className={styles.codeEditorContainer}>
           <Editor
-            key={`node-summary-editor-${signature}`}
             options={defaultCodeEditorOptions}
-            value={displaySignature}
+            value={signature}
             height={signatureHeight}
             path={path}
             className={styles.editor}

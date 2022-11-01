@@ -2149,6 +2149,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/api-reference/utils/group-schema-node-by-signature"
     },
+    "utils/schema-node-signature-transform": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/api-reference/utils/schema-node-signature-transform"
+    },
     "utils/sort-api-nodes": {
         "scope": "",
         "version": "",

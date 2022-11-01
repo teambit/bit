@@ -1,9 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { SchemaNode } from '@teambit/semantics.entities.semantic-schema';
 import { H5, H6 } from '@teambit/documenter.ui.heading';
 import Editor from '@monaco-editor/react';
 import { Link, useLocation } from '@teambit/base-react.navigation.link';
-import { SchemaNodesSummary } from '@teambit/api-reference.renderers.schema-nodes-summary';
 import { defaultCodeEditorOptions } from '@teambit/api-reference.utils.code-editor-options';
 import { DrawerUI } from '@teambit/ui-foundation.ui.tree.drawer';
 import classnames from 'classnames';
@@ -18,7 +16,7 @@ import { SchemaNodesIndex } from '@teambit/api-reference.renderers.schema-nodes-
 import styles from './api-node-details.module.scss';
 
 export type APINodeDetailsProps = APINodeRenderProps & {
-  members?: SchemaNode[];
+  // members?: SchemaNode[];
   displaySignature?: string;
   options?: {
     hideImplementation?: boolean;
@@ -37,7 +35,7 @@ export function APINodeDetails({
     renderer: { icon },
     componentId,
   },
-  members,
+  // members,
   displaySignature,
   children,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -182,9 +180,11 @@ export function APINodeDetails({
         )}
         {comment && <div className={styles.apiNodeDetailsComment}>{comment}</div>}
         {signature && (
-          <div className={classnames(styles.apiNodeDetailsSignatureContainer, styles.codeEditorContainer)}>
+          <div
+            key={`${signature}-${currentQueryParams}-api-signature-editor`}
+            className={classnames(styles.apiNodeDetailsSignatureContainer, styles.codeEditorContainer)}
+          >
             <Editor
-              key={`${signature}-api-signature-editor`}
               options={defaultCodeEditorOptions}
               value={signature}
               height={signatureHeight}
@@ -244,7 +244,6 @@ export function APINodeDetails({
             </DrawerUI>
           </div>
         )}
-        {members && <SchemaNodesSummary className={styles.apiNodeDetailsMembersContainer} nodes={members} />}
         {children}
       </div>
       {!options?.hideIndex && (
