@@ -16,6 +16,7 @@ type RunOptions = {
 export class RunCmd implements Command {
   name = 'run <app-name>';
   description = "run an app (independent of bit's dev server)";
+  helpUrl = 'docs/apps/apps-overview';
   arguments = [
     {
       name: 'app-name',

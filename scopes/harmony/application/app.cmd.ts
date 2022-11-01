@@ -10,6 +10,7 @@ export class AppListCmd implements Command {
   description = 'list all registered apps';
   alias = '';
   group = 'apps';
+  helpUrl = 'reference/reference/cli-reference';
   options = [['j', 'json', 'return the component data in json format']] as CommandOptions;
 
   constructor(private applicationAspect: ApplicationMain) {}
@@ -31,6 +32,7 @@ export class AppListCmd implements Command {
 export class AppCmd implements Command {
   name = 'app <sub-command>';
   description = 'Manages apps';
+  helpUrl = 'docs/getting-started/composing/create-apps';
   alias = '';
   group = 'apps';
   commands: Command[] = [];

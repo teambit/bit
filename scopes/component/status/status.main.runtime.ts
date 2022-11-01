@@ -32,7 +32,7 @@ export type StatusResult = {
   invalidComponents: { id: ComponentID; error: Error }[];
   locallySoftRemoved: ComponentID[];
   remotelySoftRemoved: ComponentID[];
-  outdatedComponents: { id: ComponentID; latestVersion: string }[];
+  outdatedComponents: { id: ComponentID; headVersion: string; latestVersion?: string }[];
   mergePendingComponents: DivergeDataPerId[];
   componentsDuringMergeState: ComponentID[];
   softTaggedComponents: ComponentID[];
@@ -149,7 +149,8 @@ export class StatusMain {
       remotelySoftRemoved: await convertBitIdToComponentIdsAndSort(remotelySoftRemoved.map((c) => c.id)),
       outdatedComponents: await convertObjToComponentIdsAndSort(
         outdatedComponents.map((c) => ({
-          id: c.id, // @ts-ignore
+          id: c.id,
+          headVersion: c.headVersion,
           latestVersion: c.latestVersion,
         }))
       ),

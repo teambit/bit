@@ -220,7 +220,7 @@
                     "character": 3
                   },
                   "name": "children",
-                  "signature": "(property) children: any",
+                  "signature": "(property) children: ReactNode",
                   "isOptional": false,
                   "type": {
                     "__schema": "InferenceTypeSchema",
@@ -230,6 +230,16 @@
                       "character": 13
                     },
                     "name": "ReactNode"
+                  },
+                  "doc": {
+                    "__schema": "DocSchema",
+                    "location": {
+                      "filePath": "button.tsx",
+                      "line": 10,
+                      "character": 3
+                    },
+                    "raw": "/**\n   * children of the Button.\n   */",
+                    "comment": "children of the Button."
                   }
                 },
                 {
@@ -250,6 +260,16 @@
                       "character": 10
                     },
                     "name": "string"
+                  },
+                  "doc": {
+                    "__schema": "DocSchema",
+                    "location": {
+                      "filePath": "button.tsx",
+                      "line": 15,
+                      "character": 3
+                    },
+                    "raw": "/**\n   * link to target page. once href is used, Button is considered an A tag.\n   */",
+                    "comment": "link to target page. once href is used, Button is considered an A tag."
                   }
                 },
                 {
@@ -270,6 +290,16 @@
                       "character": 15
                     },
                     "name": "string"
+                  },
+                  "doc": {
+                    "__schema": "DocSchema",
+                    "location": {
+                      "filePath": "button.tsx",
+                      "line": 20,
+                      "character": 3
+                    },
+                    "raw": "/**\n   * class names to inject.\n   */",
+                    "comment": "class names to inject."
                   }
                 }
               ]
@@ -732,7 +762,7 @@
               "character": 3
             },
             "name": "getter",
-            "signature": "(property) ClassSomething.getter: string",
+            "signature": "(getter) ClassSomething.getter: string",
             "type": {
               "__schema": "InferenceTypeSchema",
               "location": {
@@ -751,7 +781,7 @@
               "character": 3
             },
             "name": "setter",
-            "signature": "(property) ClassSomething.setter: boolean",
+            "signature": "(setter) ClassSomething.setter: boolean",
             "param": {
               "__schema": "ParameterSchema",
               "location": {
@@ -1716,6 +1746,16 @@
             "type": "(type parameter) N in type If<T, U, Y, N>",
             "name": "N"
           }
+        },
+        "doc": {
+          "__schema": "DocSchema",
+          "location": {
+            "filePath": "index.ts",
+            "line": 124,
+            "character": 1
+          },
+          "raw": "/**\n * Conditional Generic Type\n */",
+          "comment": "Conditional Generic Type"
         }
       }
     ]

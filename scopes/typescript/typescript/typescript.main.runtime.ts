@@ -36,6 +36,7 @@ import {
 import { CheckTypesCmd } from './cmds/check-types.cmd';
 import { TsconfigPathsPerEnv, TsconfigWriter } from './tsconfig-writer';
 import WriteTsconfigCmd from './cmds/write-tsconfig.cmd';
+import { ExportAssignmentDeclaration } from './transformers/export-assignment-declaration';
 
 export type TsMode = 'build' | 'dev';
 
@@ -300,6 +301,7 @@ export class TypescriptMain {
     const tsMain = new TypescriptMain(logger, schemaTransformerSlot, workspace, depResolver, envs, tsconfigWriter);
     schemaTransformerSlot.register([
       new ExportDeclaration(),
+      new ExportAssignmentDeclaration(),
       new FunctionDeclaration(),
       new VariableStatementTransformer(),
       new VariableDeclaration(),

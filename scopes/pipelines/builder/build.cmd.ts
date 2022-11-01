@@ -23,6 +23,7 @@ export class BuilderCmd implements Command {
   name = 'build [component-pattern]';
   description = 'run set of tasks for build';
   arguments = [{ name: 'component-pattern', description: COMPONENT_PATTERN_HELP }];
+  helpUrl = 'reference/build-pipeline/builder-overview';
   alias = '';
   group = 'development';
   options = [
@@ -79,7 +80,6 @@ specify the task-name (e.g. "TypescriptCompiler") or the task-aspect-id (e.g. te
       );
     }
     this.logger.consoleSuccess(`found ${components.length} components to build`);
-
     const envsExecutionResults = await this.builder.build(
       components,
       {

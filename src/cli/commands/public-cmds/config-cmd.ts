@@ -12,6 +12,7 @@ import { LegacyCommand } from '../../legacy-command';
 class ConfigSet implements LegacyCommand {
   name = 'set <key> <val>';
   description = 'set a global configuration';
+  baseUrl = 'reference/config/bit-config/';
   alias = '';
   skipWorkspace = true;
   opts = [];

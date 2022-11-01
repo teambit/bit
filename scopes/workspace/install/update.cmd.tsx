@@ -9,6 +9,7 @@ type UpdateCmdOptions = {
 export default class UpdateCmd implements Command {
   name = 'update';
   description = 'update dependencies';
+  helpUrl = 'docs/dependencies/configuring-dependencies/#update-dependencies';
   alias = 'up';
   group = 'development';
   options = [['y', 'yes', 'automatically update all outdated packages']] as CommandOptions;

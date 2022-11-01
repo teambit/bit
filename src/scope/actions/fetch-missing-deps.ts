@@ -1,7 +1,6 @@
 import { Scope } from '..';
 import { BitIds } from '../../bit-id';
 import logger from '../../logger/logger';
-import ScopeComponentsImporter from '../component-ops/scope-components-importer';
 import { Action } from './action';
 
 type Options = { ids: string[]; fetchFromOriginalScopes: boolean };
@@ -13,7 +12,7 @@ type Options = { ids: string[]; fetchFromOriginalScopes: boolean };
 export class FetchMissingDeps implements Action<Options> {
   async execute(scope: Scope, options: Options): Promise<void> {
     logger.debugAndAddBreadCrumb('FetchMissingDeps', 'trying to importMany in case there are missing dependencies');
-    const scopeComponentsImporter = ScopeComponentsImporter.getInstance(scope);
+    const scopeComponentsImporter = scope.scopeImporter;
     const bitIds: BitIds = BitIds.deserialize(options.ids);
     options.fetchFromOriginalScopes
       ? await scopeComponentsImporter.importManyFromOriginalScopes(bitIds)

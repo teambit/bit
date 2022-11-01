@@ -26,6 +26,7 @@ import { createInMemoryCache } from '../../cache/cache-factory';
 import { getMaxSizeForObjects, InMemoryCache } from '../../cache/in-memory-cache';
 import { Types } from '../object-registrar';
 import { Lane, ModelComponent, Symlink } from '../models';
+import { ComponentFsCache } from '../../consumer/component/component-fs-cache';
 
 const OBJECTS_BACKUP_DIR = `${OBJECTS_DIR}.bak`;
 
@@ -43,12 +44,14 @@ export default class Repository {
   remoteLanes!: RemoteLanes;
   unmergedComponents!: UnmergedComponents;
   persistMutex = new Mutex();
+  componentFsCache: ComponentFsCache;
   constructor(scopePath: string, scopeJson: ScopeJson) {
     this.scopePath = scopePath;
     this.scopeJson = scopeJson;
     this.onRead = onRead(scopePath, scopeJson);
     this.onPersist = onPersist(scopePath, scopeJson);
     this.cache = createInMemoryCache({ maxSize: getMaxSizeForObjects() });
+    this.componentFsCache = new ComponentFsCache(scopePath);
   }
 
   static async load({ scopePath, scopeJson }: { scopePath: string; scopeJson: ScopeJson }): Promise<Repository> {
@@ -60,10 +63,12 @@ export default class Repository {
     return repository;
   }
 
-  static create({ scopePath, scopeJson }: { scopePath: string; scopeJson: ScopeJson }): Repository {
+  static async create({ scopePath, scopeJson }: { scopePath: string; scopeJson: ScopeJson }): Promise<Repository> {
     const repository = new Repository(scopePath, scopeJson);
     const scopeIndex = ScopeIndex.create(scopePath);
     repository.scopeIndex = scopeIndex;
+    repository.unmergedComponents = await UnmergedComponents.load(scopePath);
+    repository.remoteLanes = new RemoteLanes(scopePath);
     return repository;
   }
 

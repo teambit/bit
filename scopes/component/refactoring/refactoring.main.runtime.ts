@@ -1,6 +1,7 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { isBinaryFile } from 'isbinaryfile';
 import { compact } from 'lodash';
+import replacePackageName from '@teambit/legacy/dist/utils/string/replace-package-name';
 import ComponentAspect, { Component, ComponentID, ComponentMain } from '@teambit/component';
 import { BitError } from '@teambit/bit-error';
 import PkgAspect, { PkgMain } from '@teambit/pkg';
@@ -29,7 +30,7 @@ export class RefactoringMain {
     }
     const changedComponents = await Promise.all(
       components.map(async (comp) => {
-        const hasChanged = await this.replaceString(comp, oldPackageName, newPackageName);
+        const hasChanged = await this.replacePackageNameInComponent(comp, oldPackageName, newPackageName);
         return hasChanged ? comp : null;
       })
     );
@@ -102,6 +103,25 @@ export class RefactoringMain {
           return true;
         }
         return false;
+      })
+    );
+    return changed.some((c) => c);
+  }
+
+  private async replacePackageNameInComponent(comp: Component, oldPkg: string, newPkg: string): Promise<boolean> {
+    const changed = await Promise.all(
+      comp.filesystem.files.map(async (file) => {
+        const isBinary = await isBinaryFile(file.contents);
+        if (isBinary) {
+          return false;
+        }
+        const strContent = file.contents.toString();
+        const newStrContent = replacePackageName(strContent, oldPkg, newPkg);
+        if (strContent === newStrContent) {
+          return false;
+        }
+        file.contents = Buffer.from(newStrContent);
+        return true;
       })
     );
     return changed.some((c) => c);

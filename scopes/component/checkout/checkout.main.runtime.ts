@@ -26,7 +26,6 @@ import { ComponentWithDependencies } from '@teambit/legacy/dist/scope';
 import Version from '@teambit/legacy/dist/scope/models/version';
 import { Tmp } from '@teambit/legacy/dist/scope/repositories';
 import ManyComponentsWriter from '@teambit/legacy/dist/consumer/component-ops/many-components-writer';
-import ScopeComponentsImporter from '@teambit/legacy/dist/scope/component-ops/scope-components-importer';
 import { MergeResultsThreeWay } from '@teambit/legacy/dist/consumer/versions-ops/merge-version/three-way-merge';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { ComponentID } from '@teambit/component-id';
@@ -37,6 +36,7 @@ export type CheckoutProps = {
   version?: string; // if reset is true, the version is undefined
   ids?: ComponentID[];
   head?: boolean;
+  latest?: boolean;
   promptMergeOptions?: boolean;
   mergeStrategy?: MergeStrategy | null;
   verbose?: boolean;
@@ -141,7 +141,7 @@ export class CheckoutMain {
   private async syncNewComponents({ ids, head }: CheckoutProps) {
     if (!head) return;
     const notExported = ids?.filter((id) => !id._legacy.hasScope()).map((id) => id._legacy.changeScope(id.scope));
-    const scopeComponentsImporter = new ScopeComponentsImporter(this.workspace.consumer.scope);
+    const scopeComponentsImporter = this.workspace.consumer.scope.scopeImporter;
     try {
       await scopeComponentsImporter.importManyDeltaWithoutDeps(BitIds.fromArray(notExported || []), true);
     } catch (err) {
@@ -152,7 +152,7 @@ export class CheckoutMain {
 
   private async parseValues(to: CheckoutTo, componentPattern: string, checkoutProps: CheckoutProps) {
     if (to === HEAD) checkoutProps.head = true;
-    else if (to === LATEST) throw new BitError(`"latest" was deprecated a while ago, please use "head" instead`);
+    else if (to === LATEST) checkoutProps.latest = true;
     else if (to === 'reset') checkoutProps.reset = true;
     else {
       if (!BitId.isValidVersion(to)) throw new BitError(`the specified version "${to}" is not a valid version`);
@@ -164,6 +164,12 @@ export class CheckoutMain {
       }
       checkoutProps.all = true;
     }
+    if (checkoutProps.latest && !componentPattern) {
+      if (checkoutProps.all) {
+        this.logger.console(`"--all" is deprecated for "bit checkout ${LATEST}", please omit it.`);
+      }
+      checkoutProps.all = true;
+    }
     if (componentPattern && checkoutProps.all) {
       throw new GeneralError('please specify either [component-pattern] or --all, not both');
     }
@@ -171,7 +177,7 @@ export class CheckoutMain {
       throw new GeneralError('please specify [component-pattern] or use --all flag');
     }
     const ids = componentPattern ? await this.workspace.idsByPattern(componentPattern) : await this.workspace.listIds();
-    checkoutProps.ids = ids.map((id) => (checkoutProps.head ? id.changeVersion(LATEST) : id));
+    checkoutProps.ids = ids.map((id) => (checkoutProps.head || checkoutProps.latest ? id.changeVersion(LATEST) : id));
   }
 
   private async getComponentStatus(
@@ -179,7 +185,7 @@ export class CheckoutMain {
     checkoutProps: CheckoutProps
   ): Promise<ComponentStatus> {
     const consumer = this.workspace.consumer;
-    const { version, head: latestVersion, reset } = checkoutProps;
+    const { version, head: headVersion, reset, latest: latestVersion } = checkoutProps;
     const repo = consumer.scope.objects;
     const componentModel = await consumer.scope.getModelComponentIfExist(component.id);
     const componentStatus: ComponentStatus = { id: component.id };
@@ -198,13 +204,15 @@ export class CheckoutMain {
       );
     }
     const getNewVersion = async (): Promise<string> => {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      if (reset) return component.id.version;
+      if (reset) return component.id.version as string;
+
+      if (headVersion) return componentModel.headIncludeRemote(repo);
+      if (latestVersion) return componentModel.latestVersion();
       // @ts-ignore if !reset the version is defined
-      return latestVersion ? componentModel.latestIncludeRemote(repo) : version;
+      return version;
     };
     const newVersion = await getNewVersion();
-    if (version && !latestVersion) {
+    if (version && !headVersion) {
       const hasVersion = await componentModel.hasVersion(version, repo);
       if (!hasVersion)
         return returnFailure(`component ${component.id.toStringWithoutVersion()} doesn't have version ${version}`);
@@ -218,7 +226,7 @@ export class CheckoutMain {
       // it won't be relevant for 'reset' as it doesn't have a version
       return returnFailure(`component ${component.id.toStringWithoutVersion()} is already at version ${version}`);
     }
-    if (latestVersion && currentlyUsedVersion === newVersion) {
+    if (headVersion && currentlyUsedVersion === newVersion) {
       return returnFailure(
         `component ${component.id.toStringWithoutVersion()} is already at the latest version, which is ${newVersion}`,
         true

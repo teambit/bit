@@ -8,3 +8,4 @@ export { ClassDecelerationTransformer } from './class-deceleration';
 export { InterfaceDeclarationTransformer } from './interface-declaration';
 export { EnumDeclarationTransformer } from './enum-declaration';
 export { BindingElementTransformer } from './binding-element';
+export { ExportAssignmentDeclaration } from './export-assignment-declaration';

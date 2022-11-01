@@ -9,6 +9,7 @@ import { LegacyCommand } from '../../legacy-command';
 export default class Move implements LegacyCommand {
   name = 'move <current-component-dir> <new-component-dir>';
   description = 'move a component to a different filesystem path';
+  helpUrl = 'docs/workspace/moving-components';
   arguments = [
     {
       name: 'current-component-dir',
