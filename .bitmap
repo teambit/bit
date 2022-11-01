@@ -962,7 +962,13 @@
         "scope": "teambit.semantics",
         "version": "0.0.889",
         "mainFile": "index.ts",
-        "rootDir": "scopes/semantics/schema"
+        "rootDir": "scopes/semantics/schema",
+        "config": {
+            "teambit.harmony/bit-custom-aspect": {},
+            "teambit.envs/envs": {
+                "env": "teambit.harmony/bit-custom-aspect"
+            }
+        }
     },
     "scope": {
         "scope": "teambit.scope",
