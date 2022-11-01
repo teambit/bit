@@ -350,9 +350,7 @@ export class PreviewMain {
   // if you want to get the final result use the `doesScaling` method below
   // This should be used only for component load
   private async calcDoesScalingForComponent(component: Component): Promise<boolean> {
-    console.log('calcDoesScalingForComponent', component.id.toString());
     const isBundledWithEnv = await this.calcIsBundledWithEnv(component);
-    console.log('calcDoesScalingForComponent 2', component.id.toString());
     // if it's a core env and the env template is apart from the component it means the template bundle already contain the scaling functionality
     if (this.envs.isUsingCoreEnv(component)) {
       // If the component is new, no point to check the is bundle with env (there is no artifacts so it will for sure return false)
