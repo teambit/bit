@@ -376,7 +376,6 @@ export class YarnPackageManager implements PackageManager {
       nodeLinker: options.nodeLinker === 'isolated' ? 'pnpm' : 'node-modules',
       installStatePath: `${rootDirPath}/.yarn/install-state.gz`,
       cacheFolder: join(globalFolder, 'cache'),
-      pnpDataPath: `${rootDirPath}/.pnp.meta.json`,
       npmScopes: scopedRegistries,
       virtualFolder: `${rootDirPath}/.yarn/__virtual__`,
       npmRegistryServer: defaultRegistry.uri || 'https://registry.yarnpkg.com',
@@ -388,6 +387,7 @@ export class YarnPackageManager implements PackageManager {
       globalFolder,
       // We need to disable self-references as say create circular symlinks.
       nmSelfReferences: false,
+      pnpUnpluggedFolder: `${rootDirPath}/.yarn/unplugged`,
 
       // TODO: check about support for the following: (see more here - https://github.com/yarnpkg/berry/issues/1434#issuecomment-801449010)
       // ca?: string;
@@ -464,7 +464,7 @@ export class YarnPackageManager implements PackageManager {
       report,
     };
     // const candidates = await resolver.getCandidates(descriptor, new Map(), resolveOptions);
-    const candidates = await resolver.getCandidates(descriptor, new Map(), resolveOptions);
+    const candidates = await resolver.getCandidates(descriptor, {}, resolveOptions);
     const parsedRange = structUtils.parseRange(candidates[0].reference);
     const version = parsedRange.selector;
     return {
