@@ -37,10 +37,10 @@ export class ListCmd implements Command {
   async report([scopeName]: string[], listFlags: ListFlags) {
     const listScopeResults = await this.getListResults(scopeName, listFlags);
 
-    const { ids, scope = false, outdated = false } = listFlags;
+    const { ids, outdated = false } = listFlags;
 
     function decideHeaderSentence() {
-      if (!scope) return `found ${listScopeResults.length} components\n`;
+      if (!scopeName) return `found ${listScopeResults.length} components\n`;
       return chalk.white(`found ${listScopeResults.length} components in ${chalk.bold(scopeName)}\n`);
     }
 
