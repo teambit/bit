@@ -195,6 +195,7 @@
         "body-parser": "1.19.0",
         "buffer": "6.0.3",
         "camelcase": "6.2.0",
+        "chai-subset": "1.6.0",
         "class-transformer": "0.5.1",
         "classnames": "2.2.6",
         "cli-highlight": "2.1.9",
