@@ -1,5 +1,4 @@
 export { PreviewAspect as default, PreviewAspect, PreviewRuntime } from './preview.aspect';
-export { PREVIEW_TASK_NAME } from './preview.task';
 
 export * from './events';
 export type {
