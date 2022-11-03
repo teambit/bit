@@ -271,7 +271,7 @@ export class EnvsMain {
   getDescriptor(component: Component): Descriptor | null {
     const envsData = this.getEnvData(component);
     return {
-      id: envsData.id,
+      id: this.getEnvId(component),
       icon: envsData.icon,
       services: envsData.services,
     };
