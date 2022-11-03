@@ -46,7 +46,6 @@ import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-i
 import { Capsule } from './capsule';
 import CapsuleList from './capsule-list';
 import { IsolatorAspect } from './isolator.aspect';
-import { symlinkBitLegacyToCapsules } from './symlink-bit-legacy-to-capsules';
 import { symlinkOnCapsuleRoot, symlinkDependenciesToCapsules } from './symlink-dependencies-to-capsules';
 import { Network } from './network';
 
@@ -415,10 +414,6 @@ export class IsolatorMain {
     if (!this.dependencyResolver.hasRootComponents()) {
       await symlinkOnCapsuleRoot(capsuleList, this.logger, capsulesDir);
       await symlinkDependenciesToCapsules(capsulesWithModifiedPackageJson, capsuleList, this.logger);
-      // TODO: this is a hack to have access to the bit bin project in order to access core extensions from user extension
-      // TODO: remove this after exporting core extensions as components
-      await symlinkBitLegacyToCapsules(capsulesWithModifiedPackageJson, this.logger);
-      // await copyBitLegacyToCapsuleRoot(capsulesDir, this.logger);
     } else {
       const coreAspectIds = this.aspectLoader.getCoreAspectIds();
       const coreAspectCapsules = CapsuleList.fromArray(
