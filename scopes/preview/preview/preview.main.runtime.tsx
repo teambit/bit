@@ -267,38 +267,14 @@ export class PreviewMain {
         splitComponentBundle: false,
       }
     }
-    const envId = this.envs.getEnvId(component);
-    if (this.envs.isCoreEnv(envId.split('@')[0])) {
-      return this.calcPreviewDataFromCoreEnv(envId);
-    }
-    const envComponent = await this.envs.getEnvComponent(component);
-    const isEnv = this.envs.isEnv(envComponent);
-    // If the component is not an env, we don't want to store anything in the data
-    if (!isEnv) return undefined;
-    const envDef = this.envs.getEnvFromComponent(envComponent);
 
-    const envPreviewConfig = this.getEnvPreviewConfig(envDef?.env);
+    const env = this.envs.getEnv(component).env;
+    const envPreviewConfig = this.getEnvPreviewConfig(env);
     const data = {
       strategyName: envPreviewConfig?.strategyName,
       splitComponentBundle: envPreviewConfig?.splitComponentBundle ?? false,
     };
     return data;
-  }
-
-  /**
-   * Calculate preview data on component that configured by its env if it's a core env
-   * This is mainly a performance optimization to prevent loading the env component in case of core envs
-   * @param envId
-   */
-  private async calcPreviewDataFromCoreEnv(envId: string): Promise<Omit<PreviewAnyComponentData, 'doesScaling'> | undefined>{
-    const result = {
-      strategyName: COMPONENT_PREVIEW_STRATEGY_NAME as PreviewStrategyName,
-      splitComponentBundle: false,
-    };
-    if (envId === 'teambit.harmony/aspect' || envId === 'teambit.envs/env' || envId === 'teambit.harmony/node'){
-      result.splitComponentBundle = false;
-    }
-    return result;
   }
 
   /**
