@@ -70,7 +70,7 @@ export type PreviewDefinitionRegistry = SlotRegistry<PreviewDefinition>;
 
 export type PreviewStrategyName = 'env' | 'component';
 
-type PreviewFiles = {
+export type PreviewFiles = {
   files: string[];
   isBundledWithEnv: boolean;
 };

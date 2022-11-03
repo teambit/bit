@@ -236,7 +236,7 @@ export class BuilderMain {
     return artifacts;
   }
 
-  getArtifactsbyAspectAndTaskName(component: Component, aspectName: string, taskName: string): ArtifactList<Artifact> {
+  getArtifactsbyAspectAndTaskName(component: IComponent, aspectName: string, taskName: string): ArtifactList<Artifact> {
     const artifacts = this.getArtifacts(component).byAspectNameAndTaskName(aspectName, taskName);
     return artifacts;
   }
@@ -247,7 +247,7 @@ export class BuilderMain {
     return data?.data;
   }
 
-  getArtifacts(component: Component): ArtifactList<Artifact> {
+  getArtifacts(component: IComponent): ArtifactList<Artifact> {
     const artifacts = this.getBuilderData(component)?.artifacts || ArtifactList.fromArray([]);
     return artifacts;
   }
