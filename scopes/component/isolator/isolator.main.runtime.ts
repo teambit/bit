@@ -415,6 +415,10 @@ export class IsolatorMain {
     if (!this.dependencyResolver.hasRootComponents()) {
       await symlinkOnCapsuleRoot(capsuleList, this.logger, capsulesDir);
       await symlinkDependenciesToCapsules(capsulesWithModifiedPackageJson, capsuleList, this.logger);
+      // TODO: this is a hack to have access to the bit bin project in order to access core extensions from user extension
+      // TODO: remove this after exporting core extensions as components
+      await symlinkBitLegacyToCapsules(capsulesWithModifiedPackageJson, this.logger);
+      // await copyBitLegacyToCapsuleRoot(capsulesDir, this.logger);
     } else {
       const coreAspectIds = this.aspectLoader.getCoreAspectIds();
       const coreAspectCapsules = CapsuleList.fromArray(
@@ -425,10 +429,6 @@ export class IsolatorMain {
       );
       await symlinkOnCapsuleRoot(coreAspectCapsules, this.logger, capsulesDir);
     }
-    // TODO: this is a hack to have access to the bit bin project in order to access core extensions from user extension
-    // TODO: remove this after exporting core extensions as components
-    await symlinkBitLegacyToCapsules(capsulesWithModifiedPackageJson, this.logger);
-    // await copyBitLegacyToCapsuleRoot(capsulesDir, this.logger);
   }
 
   private getCapsulesWithModifiedPackageJson(capsulesWithPackagesData: CapsulePackageJsonData[]) {
