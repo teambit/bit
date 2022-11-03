@@ -1,3 +1,5 @@
+import { COMPONENT_PREVIEW_STRATEGY_NAME, PreviewStrategyName } from "@teambit/preview";
+
 export const EnvEnvType = 'env';
 
 /**
@@ -15,7 +17,7 @@ export class EnvEnv {
 
   getPreviewConfig() {
     return {
-      strategyName: 'component',
+      strategyName: COMPONENT_PREVIEW_STRATEGY_NAME as PreviewStrategyName,
       splitComponentBundle: false,
     };
   }
