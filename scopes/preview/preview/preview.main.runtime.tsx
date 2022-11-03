@@ -62,7 +62,7 @@ const DEFAULT_TEMP_DIR = join(CACHE_ROOT, PreviewAspect.id);
 
 export type PreviewDefinitionRegistry = SlotRegistry<PreviewDefinition>;
 
-type PreviewFiles = {
+export type PreviewFiles = {
   files: string[];
   isBundledWithEnv: boolean;
 };
