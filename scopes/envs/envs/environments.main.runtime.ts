@@ -549,7 +549,11 @@ export class EnvsMain {
    * @returns
    */
   isEnv(component: Component): boolean {
-    return this.isUsingEnvEnv(component) || this.isEnvRegistered(component.id.toString());
+    return (
+      this.isUsingEnvEnv(component) ||
+      this.isEnvRegistered(component.id.toString()) ||
+      this.isEnvRegistered(component.id.toStringWithoutVersion())
+    );
   }
 
   /**

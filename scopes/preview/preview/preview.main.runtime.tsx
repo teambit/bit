@@ -38,7 +38,15 @@ import { PreviewAspect, PreviewRuntime } from './preview.aspect';
 import { PreviewRoute } from './preview.route';
 import { PreviewTask, PREVIEW_TASK_NAME } from './preview.task';
 import { BundlingStrategy } from './bundling-strategy';
-import { EnvBundlingStrategy, ComponentBundlingStrategy } from './strategies';
+import {
+  EnvBundlingStrategy,
+  ComponentBundlingStrategy,
+  COMPONENT_STRATEGY_ARTIFACT_NAME,
+  COMPONENT_STRATEGY_SIZE_KEY_NAME,
+  ENV_PREVIEW_STRATEGY_NAME,
+  ENV_STRATEGY_ARTIFACT_NAME,
+  COMPONENT_PREVIEW_STRATEGY_NAME,
+} from './strategies';
 import { ExecutionRef } from './execution-ref';
 import { PreviewStartPlugin } from './preview.start-plugin';
 import {
@@ -48,8 +56,6 @@ import {
 } from './env-preview-template.task';
 import { EnvTemplateRoute } from './env-template.route';
 import { ComponentPreviewRoute } from './component-preview.route';
-import { COMPONENT_STRATEGY_ARTIFACT_NAME, COMPONENT_STRATEGY_SIZE_KEY_NAME } from './strategies/component-strategy';
-import { ENV_STRATEGY_ARTIFACT_NAME } from './strategies/env-strategy';
 import { previewSchema } from './preview.graphql';
 import { PreviewAssetsRoute } from './preview-assets.route';
 
@@ -61,6 +67,8 @@ const noopResult = {
 const DEFAULT_TEMP_DIR = join(CACHE_ROOT, PreviewAspect.id);
 
 export type PreviewDefinitionRegistry = SlotRegistry<PreviewDefinition>;
+
+export type PreviewStrategyName = 'env' | 'component';
 
 type PreviewFiles = {
   files: string[];
@@ -91,8 +99,28 @@ export type PreviewVariantConfig = {
 /**
  * Preview data that stored on the component on load
  */
-export type PreviewComponentData = {
+export type PreviewComponentData = PreviewAnyComponentData & PreviewEnvComponentData;
+
+/**
+ * Preview data that stored on the component on load for any component
+ */
+export type PreviewAnyComponentData = {
   doesScaling?: boolean;
+  /**
+   * The strategy configured by the component's env
+   */
+  strategyName?: PreviewStrategyName;
+  /**
+   * Does the component has a bundle for the component itself (separated from the compositions/docs)
+   * Calculated by the component's env
+   */
+  splitComponentBundle?: boolean;
+};
+
+/**
+ * Preview data that stored on the component on load if the component is an env
+ */
+export type PreviewEnvComponentData = {
   isScaling?: boolean;
 };
 
@@ -108,7 +136,7 @@ export type PreviewConfig = {
 };
 
 export type EnvPreviewConfig = {
-  strategyName?: string;
+  strategyName?: PreviewStrategyName;
   splitComponentBundle?: boolean;
 };
 
@@ -188,12 +216,121 @@ export class PreviewMain {
   }
 
   /**
+   * Get the preview config of the component.
+   * (config that was set by variants or on bitmap)
+   * @param component
+   * @returns
+   */
+  getPreviewAspectConfig(component: Component): PreviewVariantConfig | undefined {
+    return component.state.aspects.get(PreviewAspect.id)?.config;
+  }
+
+  /**
+   * Get the preview data of the component.
+   * (data that was calculated during the on load process)
+   * @param component
+   * @returns
+   */
+  getPreviewData(component: Component): PreviewComponentData | undefined {
+    const previewData = component.state.aspects.get(PreviewAspect.id)?.data;
+    return previewData;
+  }
+
+  /**
+   * Calculate preview data on component load
+   * @param component
+   * @returns
+   */
+  async calcPreviewData(component: Component): Promise<PreviewComponentData> {
+    const doesScaling = await this.calcDoesScalingForComponent(component);
+    const dataFromEnv = await this.calcPreviewDataFromEnv(component);
+    const envData = (await this.calculateDataForEnvComponent(component)) || {};
+    const data: PreviewComponentData = {
+      doesScaling,
+      ...dataFromEnv,
+      ...envData,
+    };
+    return data;
+  }
+
+  /**
+   * Calculate preview data on component that configured by its env
+   * @param component
+   * @returns
+   */
+  async calcPreviewDataFromEnv(component: Component): Promise<Omit<PreviewAnyComponentData, 'doesScaling'> | undefined> {
+    // Prevent infinite loop that caused by the fact that the env of the aspect env or the env env is the same as the component
+    // so we can't load it since during load we are trying to get env component and load it again
+    if (component.id.toStringWithoutVersion() === 'teambit.harmony/aspect' || component.id.toStringWithoutVersion() === 'teambit.envs/env'){
+      return {
+        strategyName: COMPONENT_PREVIEW_STRATEGY_NAME,
+        splitComponentBundle: false,
+      }
+    }
+
+    const env = this.envs.getEnv(component).env;
+    const envPreviewConfig = this.getEnvPreviewConfig(env);
+    const data = {
+      strategyName: envPreviewConfig?.strategyName,
+      splitComponentBundle: envPreviewConfig?.splitComponentBundle ?? false,
+    };
+    return data;
+  }
+
+  /**
+   * calculate extra preview data for env components (on load)
+   * @param envComponent
+   * @returns
+   */
+  private async calculateDataForEnvComponent(envComponent: Component): Promise<PreviewEnvComponentData | undefined> {
+    const isEnv = this.envs.isEnv(envComponent);
+    // If the component is not an env, we don't want to store anything in the data
+    if (!isEnv) return undefined;
+    const previewAspectConfig = this.getPreviewAspectConfig(envComponent);
+
+    const data = {
+      // default to true if the env doesn't have a preview config
+      isScaling: previewAspectConfig?.isScaling ?? true,
+    };
+    return data;
+  }
+
+  /**
+   * Check if the component preview bundle contain the env as part of the bundle or only the component code
+   * (we used in the past to bundle them together, there might also be specific envs which still uses the env strategy)
+   * This should be used only for calculating the value on load.
+   * otherwise, use the isBundledWithEnv function
+   * @param component
+   * @returns
+   */
+  async calcIsBundledWithEnv(component: Component): Promise<boolean> {
+    const envPreviewData = await this.calcPreviewDataFromEnv(component);
+    return envPreviewData?.strategyName !== 'component';
+  }
+
+
+  /**
    * Check if the component preview bundle contain the env as part of the bundle or only the component code
    * (we used in the past to bundle them together, there might also be specific envs which still uses the env strategy)
    * @param component
    * @returns
    */
   async isBundledWithEnv(component: Component): Promise<boolean> {
+    const data = await this.getPreviewData(component);
+    // For components that tagged in the past we didn't store the data, so we calculate it the old way
+    // We comparing the strategyName to undefined to cover a specific case when it doesn't exist at all.
+    if (!data || data.strategyName === undefined) return this.isBundledWithEnvBackward(component);
+    return data.strategyName === ENV_PREVIEW_STRATEGY_NAME;
+  }
+
+  /**
+   * This is a legacy calculation for the isBundledWithEnv
+   * This calc is based on the component artifacts which is very expensive operation as it requires to fetch and load the artifacts
+   * See the new implementation in the isBundledWithEnv method
+   * @param component
+   * @returns
+   */
+  private async isBundledWithEnvBackward(component: Component): Promise<boolean> {
     const artifacts = await this.builder.getArtifactsVinylByAspectAndName(
       component,
       PreviewAspect.id,
@@ -209,7 +346,7 @@ export class PreviewMain {
   // if you want to get the final result use the `doesScaling` method below
   // This should be used only for component load
   private async calcDoesScalingForComponent(component: Component): Promise<boolean> {
-    const isBundledWithEnv = await this.isBundledWithEnv(component);
+    const isBundledWithEnv = await this.calcIsBundledWithEnv(component);
     // if it's a core env and the env template is apart from the component it means the template bundle already contain the scaling functionality
     if (this.envs.isUsingCoreEnv(component)) {
       // If the component is new, no point to check the is bundle with env (there is no artifacts so it will for sure return false)
@@ -241,7 +378,7 @@ export class PreviewMain {
       const envSupportScaling = await this.calculateIsEnvSupportScaling(envComponent);
       return envSupportScaling ?? true;
     }
-    const previewData = component.state.aspects.get(PreviewAspect.id)?.data;
+    const previewData = this.getPreviewData(component);
     if (!previewData) return false;
     // Get the does scaling (the new calculation) or the old calc used in isScaling (between versions (about) 848 and 860)
     if (previewData.doesScaling !== undefined) return previewData.doesScaling;
@@ -262,7 +399,7 @@ export class PreviewMain {
    * @returns
    */
   isEnvSupportScaling(envComponent: Component): boolean {
-    const previewData = envComponent.state.aspects.get(PreviewAspect.id)?.data;
+    const previewData = this.getPreviewData(envComponent);
     return !!previewData?.isScaling;
   }
 
@@ -279,19 +416,9 @@ export class PreviewMain {
     const isEnv = this.envs.isEnv(envComponent);
     // If the component is not an env, we don't want to store anything in the data
     if (!isEnv) return undefined;
-    const previewAspectConfig = this.getPreviewConfig(envComponent);
+    const previewAspectConfig = this.getPreviewAspectConfig(envComponent);
     // default to true if the env doesn't have a preview config
     return previewAspectConfig?.isScaling ?? true;
-  }
-
-  /**
-   * Get the preview config of the component.
-   * (config that was set by variants or on bitmap)
-   * @param component
-   * @returns
-   */
-  getPreviewConfig(component: Component): PreviewVariantConfig | undefined {
-    return component.state.aspects.get(PreviewAspect.id)?.config;
   }
 
   /**
@@ -716,16 +843,7 @@ export class PreviewMain {
         preview.handleComponentChange(c, (currentComponents) => currentComponents.add(c))
       );
       workspace.onComponentLoad(async (component) => {
-        const doesScaling = await preview.calcDoesScalingForComponent(component);
-        const isScaling = await preview.calculateIsEnvSupportScaling(component);
-        const data: PreviewComponentData = {
-          doesScaling,
-        };
-        // If there is no isScaling result at all, it's probably not an env. don't store any data.
-        if (isScaling !== undefined) {
-          data.isScaling = isScaling;
-        }
-        return data;
+        return preview.calcPreviewData(component);
       });
       workspace.registerOnComponentChange((c) =>
         preview.handleComponentChange(c, (currentComponents) => currentComponents.update(c))
