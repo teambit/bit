@@ -111,6 +111,11 @@ export type RuntimeOptions = {
    * determine whether to rebuild the UI before start.
    */
   rebuild?: boolean;
+
+  /**
+   * skip build the UI before start
+   */
+   skipUiBuild?: boolean;
 };
 
 export class UiMain {
@@ -248,7 +253,7 @@ export class UiMain {
   /**
    * create a Bit UI runtime.
    */
-  async createRuntime({ uiRootName, pattern, dev, port, rebuild, verbose }: RuntimeOptions) {
+  async createRuntime({ uiRootName, pattern, dev, port, rebuild, verbose, skipUiBuild }: RuntimeOptions) {
     const maybeUiRoot = this.getUi(uiRootName);
     if (!maybeUiRoot) throw new UnknownUI(uiRootName, this.possibleUis());
 
@@ -277,7 +282,7 @@ export class UiMain {
     if (dev) {
       await uiServer.dev({ portRange: port || this.config.portRange });
     } else {
-      await this.buildUI(name, uiRoot, rebuild);
+      if (!skipUiBuild) await this.buildUI(name, uiRoot, rebuild);
       await uiServer.start({ portRange: port || this.config.portRange });
     }
 
