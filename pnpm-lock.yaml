@@ -92,7 +92,7 @@ importers:
       '@teambit/code.ui.object-formatter': 0.0.1
       '@teambit/community.constants.links': 0.0.2
       '@teambit/compilation.content.compiler-overview': 1.95.0
-      '@teambit/component-version': 0.0.395
+      '@teambit/component-version': 0.0.406
       '@teambit/component.content.component-overview': 1.95.0
       '@teambit/component.content.dev-files': 1.95.9
       '@teambit/component.instructions.exporting-components': 0.0.6
@@ -630,7 +630,7 @@ importers:
       '@teambit/bvm.list': registry.npmjs.org/@teambit/bvm.list/0.0.33_@teambit+legacy@1.0.380
       '@teambit/capsule': registry.npmjs.org/@teambit/capsule/0.0.12
       '@teambit/community.constants.links': 0.0.2
-      '@teambit/component-version': registry.npmjs.org/@teambit/component-version/0.0.395
+      '@teambit/component-version': link:scopes/component/component-version
       '@teambit/component.instructions.exporting-components': registry.npmjs.org/@teambit/component.instructions.exporting-components/0.0.6_3vchbat3xaufo76iz23pb6imoe
       '@teambit/design.elements.icon': registry.npmjs.org/@teambit/design.elements.icon/1.0.5_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/design.inputs.dropdown': registry.npmjs.org/@teambit/design.inputs.dropdown/0.0.7_sfoxds7t5ydpegc3knd667wn6m
