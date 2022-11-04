@@ -6,7 +6,6 @@ import { Analytics, LEVEL } from '../analytics/analytics';
 import ConfigKeyNotFound from '../api/consumer/lib/exceptions/config-key-not-found';
 import DiagnosisNotFound from '../api/consumer/lib/exceptions/diagnosis-not-found';
 import IdExportedAlready from '../api/consumer/lib/exceptions/id-exported-already';
-import InvalidVersion from '../api/consumer/lib/exceptions/invalid-version';
 import MissingDiagnosisName from '../api/consumer/lib/exceptions/missing-diagnosis-name';
 import NoIdMatchWildcard from '../api/consumer/lib/exceptions/no-id-match-wildcard';
 import NothingToCompareTo from '../api/consumer/lib/exceptions/nothing-to-compare-to';
@@ -335,11 +334,6 @@ please use "bit remove" to delete the component or "bit add" with "--main" and "
   [
     IdExportedAlready,
     (err) => `component ${chalk.bold(err.id)} has been already exported to ${chalk.bold(err.remote)}`,
-  ],
-  [
-    InvalidVersion,
-    (err) =>
-      `error: version ${chalk.bold(err.version)} is not a valid semantic version. learn more: https://semver.org`,
   ],
   [
     NoIdMatchWildcard,

@@ -113,7 +113,15 @@ export function builderSchema(builder: BuilderMain) {
                   return { id: path, name: basename, path, content, downloadUrl, externalUrl };
                 }
               );
-              const artifactObj = { ...artifact, files: artifactFiles };
+              const artifactObj = {
+                id: `${id}-${name}-${artifact.name}`,
+                name: artifact.name,
+                description: artifact.description,
+                task: artifact.task,
+                storage: artifact.storage,
+                generatedBy: artifact.generatedBy,
+                files: artifactFiles,
+              };
               return artifactObj;
             })
           );

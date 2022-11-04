@@ -1,6 +1,6 @@
 {
   "name": "@teambit/legacy",
-  "version": "1.0.380",
+  "version": "1.0.381",
   "license": "Apache-2.0",
   "main": "./dist/api.js",
   "preferGlobal": true,
@@ -107,7 +107,7 @@
     "@teambit/toolbox.network.agent": "0.0.116",
     "@babel/core": "7.19.6",
     "@babel/runtime": "7.20.0",
-    "@teambit/component-version": "0.0.395",
+    "@teambit/component-version": "0.0.406",
     "@teambit/bvm.list": "0.0.33",
     "app-module-path": "2.2.0",
     "archy": "1.0.0",
