@@ -16,7 +16,7 @@ export function APIReferenceExplorer({ apiTree, selectedAPIName, className, getI
   return (
     <div className={classNames(styles.apiReferenceExplorer, className)}>
       <FileTree
-        getHref={(node) => useUpdatedUrlFromQuery({ selectedAPI: node.id })}
+        getHref={(node) => useUpdatedUrlFromQuery({ selectedAPI: node.id.split('/')[1] })}
         files={apiTree}
         selected={selectedAPIName}
         getIcon={getIcon}

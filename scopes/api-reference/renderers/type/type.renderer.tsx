@@ -23,7 +23,13 @@ function TypeComponent(props: APINodeRenderProps) {
 
   return (
     <APINodeDetails {...props}>
-      {subTypeRenderer && <subTypeRenderer.Component {...props} apiNode={{ ...props.apiNode, api: type }} />}
+      {subTypeRenderer && (
+        <subTypeRenderer.Component
+          {...props}
+          apiNode={{ ...props.apiNode, api: type }}
+          depth={(props.depth ?? 0) + 1}
+        />
+      )}
     </APINodeDetails>
   );
 }

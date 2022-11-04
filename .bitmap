@@ -1951,6 +1951,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/design/ui/status-message-card"
     },
+    "ui/table-row": {
+        "scope": "teambit.documenter",
+        "version": "4.1.5",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/table-row"
+    },
     "ui/test-compare": {
         "scope": "teambit.defender",
         "version": "0.0.111",
@@ -2142,6 +2148,12 @@
         "version": "",
         "mainFile": "index.ts",
         "rootDir": "scopes/api-reference/utils/copy-schema-node"
+    },
+    "utils/extract-type-from-schema-node": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/api-reference/utils/extract-type-from-schema-node"
     },
     "utils/group-schema-node-by-signature": {
         "scope": "",

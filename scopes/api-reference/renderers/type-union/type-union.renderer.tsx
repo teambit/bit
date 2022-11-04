@@ -39,6 +39,7 @@ function TypeUnionComponent(props: APINodeRenderProps) {
             {...props}
             key={`${index}-${type.name}-union-type`}
             apiNode={{ ...props.apiNode, renderer, api: type }}
+            depth={(props.depth ?? 0) + 1}
           />
         );
       })}

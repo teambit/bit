@@ -1,8 +1,8 @@
 import React from 'react';
 import { APINodeRenderProps, APINodeRenderer } from '@teambit/api-reference.models.api-node-renderer';
+import { extractTypeFromSchemaNode } from '@teambit/api-reference.utils.extract-type-from-schema-node';
 import { ParameterSchema } from '@teambit/semantics.entities.semantic-schema';
-import { SchemaNodeSummary } from '@teambit/api-reference.renderers.schema-node-summary';
-import { copySchemaNode } from '@teambit/api-reference.utils.copy-schema-node';
+import { TableRow } from '@teambit/documenter.ui.table-row';
 
 export const parameterRenderer: APINodeRenderer = {
   predicate: (node) => node.__schema === ParameterSchema.name,
@@ -14,30 +14,22 @@ export const parameterRenderer: APINodeRenderer = {
 function ParameterComponent(props: APINodeRenderProps) {
   const {
     apiNode: { api },
-    renderers,
   } = props;
-  const typeNode = api as ParameterSchema;
-
-  const typeRenderer = renderers.find((renderer) => renderer.predicate(typeNode.type));
-
-  if (typeRenderer) {
-    const apiNode = {
-      ...props.apiNode,
-      renderer: typeRenderer,
-      api: copySchemaNode(typeNode.type, { name: typeNode.name, signature: typeNode.toString() }),
-    };
-
-    return <typeRenderer.Component {...props} apiNode={apiNode} />;
-  }
+  const paramNode = api as ParameterSchema;
+  const { name, isOptional, doc, type, defaultValue } = paramNode;
 
   return (
-    <SchemaNodeSummary
-      key={`${typeNode.name}-param`}
-      name={typeNode.name}
-      location={typeNode.location}
-      doc={typeNode.doc}
-      __schema={typeNode.__schema}
-      signature={typeNode.toString()}
+    <TableRow
+      key={`${name}-param`}
+      headings={['name', 'type', 'default', 'description']}
+      colNumber={4}
+      row={{
+        name,
+        description: doc?.comment || '',
+        required: !isOptional,
+        type: extractTypeFromSchemaNode(type),
+        default: { value: defaultValue },
+      }}
     />
   );
 }

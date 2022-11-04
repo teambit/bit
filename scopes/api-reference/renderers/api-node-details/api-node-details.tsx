@@ -3,14 +3,12 @@ import { H5, H6 } from '@teambit/documenter.ui.heading';
 import Editor from '@monaco-editor/react';
 import { Link, useLocation } from '@teambit/base-react.navigation.link';
 import { defaultCodeEditorOptions } from '@teambit/api-reference.utils.code-editor-options';
-import { DrawerUI } from '@teambit/ui-foundation.ui.tree.drawer';
 import classnames from 'classnames';
 import { APINodeRenderProps } from '@teambit/api-reference.models.api-node-renderer';
 import { useQuery } from '@teambit/ui-foundation.ui.react-router.use-query';
 import { APIRefQueryParams } from '@teambit/api-reference.hooks.use-api-ref-url';
 import { useNavigate } from 'react-router-dom';
 import { APINode } from '@teambit/api-reference.models.api-reference-model';
-import { CodeView } from '@teambit/code.ui.code-view';
 import { SchemaNodesIndex } from '@teambit/api-reference.renderers.schema-nodes-index';
 
 import styles from './api-node-details.module.scss';
@@ -33,7 +31,7 @@ export function APINodeDetails({
       location: { filePath, line, character },
     },
     renderer: { icon },
-    componentId,
+    // componentId,
   },
   // members,
   displaySignature,
@@ -53,6 +51,7 @@ export function APINodeDetails({
   const apiUrlToRoute = useRef<string | null>(null);
   const hoverProviderDispose = useRef<any>();
   const rootRef = useRef() as React.MutableRefObject<HTMLDivElement>;
+  const apiRef = useRef<HTMLDivElement | null>(null);
   const currentQueryParams = query.toString();
 
   const componentVersionFromUrl = query.get('version');
@@ -74,7 +73,6 @@ export function APINodeDetails({
 
   const [signatureHeight, setSignatureHeight] = useState<number>(defaultSignatureHeight);
   const [isMounted, setIsMounted] = useState(false);
-  const [drawerOpen, onToggleDrawer] = useState(false);
 
   const locationUrl = `${componentUrlWithoutVersion}~code/${filePath}${
     componentVersionFromUrl ? `?version=${componentVersionFromUrl}` : ''
@@ -167,7 +165,7 @@ export function APINodeDetails({
       {...rest}
       className={classnames(rest.className, styles.apiNodeDetailsContainer)}
     >
-      <div className={styles.apiDetails}>
+      <div className={styles.apiDetails} ref={apiRef}>
         {name && (
           <div className={styles.apiNodeDetailsNameContainer}>
             {icon && (
@@ -217,37 +215,21 @@ export function APINodeDetails({
           </div>
         )}
         {!options?.hideImplementation && (
-          <div className={styles.apiNodeImplementationDrawerContainer}>
-            <DrawerUI
-              isOpen={drawerOpen}
-              onToggle={() => onToggleDrawer((open) => !open)}
-              contentClass={styles.apiNodeImplementationDrawerContent}
-              className={styles.apiNodeImplementationDrawer}
-              name={
-                <div className={styles.apiNodeDetailsLocationContainer}>
-                  <div className={styles.apiNodeDetailsLocationIcon}>
-                    <img src="https://static.bit.dev/design-system-assets/Icons/external-link.svg"></img>
-                  </div>
-                  <div className={styles.apiNodeDetailsLocation}>
-                    <Link external={true} href={locationUrl} className={styles.apiNodeDetailsLocationLink}>
-                      {locationLabel}
-                    </Link>
-                  </div>
-                </div>
-              }
-            >
-              <CodeView
-                componentId={componentId}
-                currentFile={filePath}
-                className={styles.apiNodeImplementationCodeView}
-              />
-            </DrawerUI>
+          <div className={styles.apiNodeDetailsLocationContainer}>
+            <div className={styles.apiNodeDetailsLocationIcon}>
+              <img src="https://static.bit.dev/design-system-assets/Icons/external-link.svg"></img>
+            </div>
+            <div className={styles.apiNodeDetailsLocation}>
+              <Link external={true} href={locationUrl} className={styles.apiNodeDetailsLocationLink}>
+                {locationLabel}
+              </Link>
+            </div>
           </div>
         )}
         {children}
       </div>
       {!options?.hideIndex && (
-        <SchemaNodesIndex className={styles.schemaNodesIndex} title={'Index'} rootRef={rootRef} />
+        <SchemaNodesIndex className={styles.schemaNodesIndex} title={'ON THIS PAGE'} rootRef={rootRef} />
       )}
     </div>
   );

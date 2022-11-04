@@ -1,9 +1,12 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import React from 'react';
 import { APINodeRenderProps, APINodeRenderer } from '@teambit/api-reference.models.api-node-renderer';
 import { TypeRefSchema } from '@teambit/semantics.entities.semantic-schema';
-import { SchemaNodeSummary } from '@teambit/api-reference.renderers.schema-node-summary';
 import { APINodeDetails } from '@teambit/api-reference.renderers.api-node-details';
 import { copySchemaNode } from '@teambit/api-reference.utils.copy-schema-node';
+import { useUpdatedUrlFromQuery } from '@teambit/api-reference.hooks.use-api-ref-url';
+import { ComponentUrl } from '@teambit/component.modules.component-url';
+import { ComponentID } from '@teambit/component-id';
 
 export const typeRefRenderer: APINodeRenderer = {
   predicate: (node) => node.__schema === TypeRefSchema.name,
@@ -20,13 +23,13 @@ function TypeRefComponent(props: APINodeRenderProps) {
   const {
     apiNode: { api },
     apiRefModel,
+    depth,
+    renderers,
+    ...rest
   } = props;
-
   const typeRefNode = api as TypeRefSchema;
 
-  const isTopLevelExport = apiRefModel.apiByName.get(typeRefNode.name);
-
-  if (isTopLevelExport) {
+  if (props.depth === 0) {
     return (
       <APINodeDetails
         {...props}
@@ -38,13 +41,52 @@ function TypeRefComponent(props: APINodeRenderProps) {
     );
   }
 
-  return (
-    <SchemaNodeSummary
-      name={typeRefNode.name}
-      location={typeRefNode.location}
-      doc={typeRefNode.doc}
-      __schema={typeRefNode.__schema}
-      signature={typeRefNode.signature || typeRefNode.toString()}
-    />
-  );
+  const exportedTypeFromSameComp = apiRefModel.apiByName.get(typeRefNode.name);
+  const exportedTypeUrlFromSameComp =
+    exportedTypeFromSameComp &&
+    useUpdatedUrlFromQuery({
+      selectedAPI: `${exportedTypeFromSameComp.renderer.nodeType}/${exportedTypeFromSameComp.api.name}`,
+    });
+
+  // const exportedTypeUrlFromAnotherComp = typeRefNode.componentId
+  //   ? getExportedTypeUrlFromAnotherComp({
+  //       componentId: typeRefNode.componentId,
+  //       selectedAPI: `${typeRefRenderer.nodeType}/${typeRefNode.name}`,
+  //     })
+  //   : undefined;
+  // console.log(
+  //   '🚀 ~ file: type-ref.renderer.tsx ~ line 55 ~ TypeRefComponent ~ exportedTypeUrlFromAnotherComp',
+  //   exportedTypeUrlFromAnotherComp
+  // );
+
+  if (exportedTypeUrlFromSameComp) {
+    return (
+      <a className={rest.className} href={exportedTypeUrlFromSameComp}>
+        {exportedTypeFromSameComp.api.name}
+      </a>
+    );
+  }
+
+  return <div {...rest}>{typeRefNode.toString()}</div>;
 }
+
+/**
+ * @todo how to figure out what is the type exported at the consumer level
+ */
+// function getExportedTypeUrlFromAnotherComp({
+//   componentId,
+//   selectedAPI,
+// }: {
+//   componentId: ComponentID;
+//   selectedAPI: string;
+// }) {
+//   const componentUrl = ComponentUrl.toUrl(componentId);
+//   const [componentIdUrl, versionQuery] = componentUrl.split('?');
+
+//   const exportedTypeUrl = `${componentIdUrl}/~api-reference?selectedAPI=${encodeURIComponent(
+//     selectedAPI
+//   )}&${versionQuery}`;
+
+//   console.log('🚀 ~ file: type-ref.renderer.tsx ~ line 89 ~ exportedTypeUrl', exportedTypeUrl);
+//   return exportedTypeUrl;
+// }

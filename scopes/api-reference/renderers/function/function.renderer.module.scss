@@ -25,3 +25,16 @@
 .bold {
   font-weight: 500;
 }
+
+.table {
+  > div {
+    grid-gap: 16px 24px;
+  }
+}
+
+.returnType {
+  font-size: var(--bit-p-xxs);
+  // color: #397300;
+  color: #4646c6;
+  font-family: Roboto mono;
+}

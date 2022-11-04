@@ -6,6 +6,7 @@ export type APINodeRenderProps = {
   apiNode: APINode;
   apiRefModel: APIReferenceModel;
   renderers: APINodeRenderer[];
+  depth?: number;
 } & HTMLAttributes<HTMLDivElement>;
 
 export type APINodeRenderer = {

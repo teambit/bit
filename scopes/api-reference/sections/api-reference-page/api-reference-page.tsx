@@ -33,7 +33,6 @@ export function APIRefPage({ host, rendererSlot, className }: APIRefPageProps) {
   const sidebarOpenness = isSidebarOpen ? Layout.row : Layout.left;
 
   const selectedAPIFromUrl = useAPIRefParam('selectedAPI');
-  const [selectedAPIType, selectedAPINodeName] = selectedAPIFromUrl?.split('/') || [];
 
   const apiNodes = (apiModel && flatten(Array.from(apiModel.apiByType.values())).sort(sortAPINodes)) || [];
 
@@ -44,17 +43,14 @@ export function APIRefPage({ host, rendererSlot, className }: APIRefPageProps) {
       return `${apiNode.renderer?.nodeType}/${apiNode.api.name}`;
     });
   }, [apiNodes]);
+
   const getIcon = (node: TreeNode) => {
     const nodeType = node.id.split('/')[0];
     const icon = apiModel?.apiByType.get(nodeType)?.[0].renderer.icon?.url;
     return icon;
   };
 
-  const selectedAPINode =
-    (selectedAPIType &&
-      selectedAPINodeName &&
-      apiModel?.getByType(selectedAPIType)?.find((apiNode) => apiNode.api.name === selectedAPINodeName)) ||
-    apiNodes[0];
+  const selectedAPINode = (selectedAPIFromUrl && apiModel?.apiByName.get(selectedAPIFromUrl)) || apiNodes[0];
 
   const selectedAPIName =
     (selectedAPINode && `${selectedAPINode?.renderer?.nodeType}/${selectedAPINode?.api.name}`) || apiTree[0];
@@ -82,7 +78,7 @@ export function APIRefPage({ host, rendererSlot, className }: APIRefPageProps) {
           </H1>
           <Separator isPresentational className={styles.separator} />
           {SelectedAPIComponent && (
-            <SelectedAPIComponent apiNode={selectedAPINode} apiRefModel={apiModel} renderers={renderers} />
+            <SelectedAPIComponent apiNode={selectedAPINode} apiRefModel={apiModel} renderers={renderers} depth={0} />
           )}
         </div>
       </Pane>

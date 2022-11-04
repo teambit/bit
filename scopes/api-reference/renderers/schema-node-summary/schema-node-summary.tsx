@@ -1,7 +1,7 @@
-import React, { HTMLAttributes, useState, useRef, useEffect } from 'react';
+import React, { HTMLAttributes } from 'react';
 import { ConstructorSchema, DocSchema, Location } from '@teambit/semantics.entities.semantic-schema';
-import Editor from '@monaco-editor/react';
-import { defaultCodeEditorOptions } from '@teambit/api-reference.utils.code-editor-options';
+// import Editor from '@monaco-editor/react';
+import { CodeSnippet } from '@teambit/documenter.ui.code-snippet';
 import classnames from 'classnames';
 
 import styles from './schema-node-summary.module.scss';
@@ -24,7 +24,7 @@ export type SchemaNodeSummaryProps = {
 export function SchemaNodeSummary({
   name,
   doc,
-  location,
+  // location,
   signature,
   isOptional,
   groupElementClassName,
@@ -32,58 +32,10 @@ export function SchemaNodeSummary({
   className,
   ...rest
 }: SchemaNodeSummaryProps) {
-  const editorRef = useRef<any>();
-  const monacoRef = useRef<any>();
-
   const displayName = name || (__schema === ConstructorSchema.name && 'constructor') || undefined;
-  const signatureLength = signature?.split('\n').length || 0;
-  const defaultSignatureHeight = 36 + (signatureLength - 1) * 18;
 
-  const [signatureHeight, setSignatureHeight] = useState<number>(defaultSignatureHeight);
-  const [isMounted, setIsMounted] = useState(false);
-
-  // Monaco requires a unique path that ends with the file extension
-  const path = `summary-${location.line}:${location.character}:${location.filePath}`;
   const tags = OptionalTag(isOptional);
   const showDocs = doc?.comment || tags.length > 0;
-
-  useEffect(() => {
-    if (!editorRef.current) return;
-    const signatureContent = editorRef.current.getValue();
-    if (!signatureContent) {
-      setSignatureHeight(defaultSignatureHeight);
-    } else {
-      const updatedSignatureHeight = 36 + (signatureContent?.split('\n').length || 0) * 18;
-      setSignatureHeight(updatedSignatureHeight);
-    }
-  }, [editorRef.current]);
-
-  useEffect(() => {
-    if (isMounted) {
-      monacoRef.current.languages.typescript.typescriptDefaults.setCompilerOptions({
-        jsx: monacoRef.current.languages.typescript.JsxEmit.Preserve,
-        target: monacoRef.current.languages.typescript.ScriptTarget.ES2020,
-        esModuleInterop: true,
-      });
-      monacoRef.current.languages.typescript.typescriptDefaults.setDiagnosticsOptions({
-        noSemanticValidation: true,
-        noSyntaxValidation: true,
-      });
-      const container = editorRef.current.getDomNode();
-      editorRef.current.onDidContentSizeChange(({ contentHeight }) => {
-        if (container && isMounted && signature) {
-          const updatedHeight = Math.min(200, contentHeight + 18);
-          setSignatureHeight(updatedHeight);
-        }
-      });
-    }
-  }, [isMounted]);
-
-  useEffect(() => {
-    return () => {
-      setIsMounted(false);
-    };
-  }, []);
 
   return (
     <div {...rest} className={classnames(styles.schemaNodeSummary, className)}>
@@ -115,21 +67,7 @@ export function SchemaNodeSummary({
       )}
       {signature && (
         <div key={`node-summary-editor-${signature}-${displayName}`} className={styles.codeEditorContainer}>
-          <Editor
-            options={defaultCodeEditorOptions}
-            value={signature}
-            height={signatureHeight}
-            path={path}
-            className={styles.editor}
-            beforeMount={(monaco) => {
-              monacoRef.current = monaco;
-            }}
-            onMount={(editor) => {
-              editorRef.current = editor;
-              setIsMounted(true);
-            }}
-            theme={'vs-dark'}
-          />
+          <CodeSnippet>{signature}</CodeSnippet>
         </div>
       )}
     </div>

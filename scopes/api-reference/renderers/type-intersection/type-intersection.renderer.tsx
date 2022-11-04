@@ -23,7 +23,9 @@ function TypeIntersectionComponent(props: APINodeRenderProps) {
         const renderer = renderers.find((r) => r.predicate(type));
         if (!renderer) return null;
         const Component = renderer.Component;
-        return <Component {...props} key={index} apiNode={{ ...props.apiNode, api: type }} />;
+        return (
+          <Component {...props} key={index} apiNode={{ ...props.apiNode, api: type }} depth={(props.depth ?? 0) + 1} />
+        );
       })}
     </>
   );
