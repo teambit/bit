@@ -127,24 +127,6 @@ export async function getAllVersionsInfo({
   return results;
 }
 
-export async function getAllVersionsObjects(
-  modelComponent: ModelComponent,
-  repo: Repository,
-  throws = true
-): Promise<Version[]> {
-  const allVersionsInfo = await getAllVersionsInfo({ modelComponent, repo, throws });
-  return allVersionsInfo.map((a) => a.version).filter((a) => a) as Version[];
-}
-
-export async function getAllVersionHashesByVersionsObjects(
-  modelComponent: ModelComponent,
-  versionObjects: Version[],
-  throws = true
-): Promise<Ref[]> {
-  const allVersionsInfo = await getAllVersionsInfo({ modelComponent, throws, versionObjects });
-  return allVersionsInfo.map((v) => v.ref).filter((ref) => ref) as Ref[];
-}
-
 export type GetAllVersionHashesParams = {
   modelComponent: ModelComponent;
   repo: Repository;

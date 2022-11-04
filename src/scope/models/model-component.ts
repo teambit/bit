@@ -1,9 +1,11 @@
 import { clone, equals, forEachObjIndexed } from 'ramda';
 import { isEmpty } from 'lodash';
+import { Mutex } from 'async-mutex';
 import * as semver from 'semver';
 import { versionParser, isHash, isTag } from '@teambit/component-version';
 import { v4 } from 'uuid';
 import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
+import pMapSeries from 'p-map-series';
 import { LegacyComponentLog } from '@teambit/legacy-component-log';
 import { BitId } from '../../bit-id';
 import {
@@ -27,13 +29,20 @@ import { DivergeData } from '../component-ops/diverge-data';
 import { getDivergeData } from '../component-ops/get-diverge-data';
 import { getAllVersionHashes, getAllVersionsInfo } from '../component-ops/traverse-versions';
 import ComponentVersion from '../component-version';
-import { VersionAlreadyExists, VersionNotFound, VersionNotFoundOnFS } from '../exceptions';
+import {
+  HeadNotFound,
+  ParentNotFound,
+  VersionAlreadyExists,
+  VersionNotFound,
+  VersionNotFoundOnFS,
+} from '../exceptions';
 import { BitObject, Ref } from '../objects';
 import Repository from '../objects/repository';
 import { Lane } from '.';
 import ScopeMeta from './scopeMeta';
 import Source from './source';
 import Version from './version';
+import VersionHistory from './version-history';
 import { getLatestVersion } from '../../utils/semver-helper';
 import { ObjectItem } from '../objects/object-list';
 import { getRefsFromExtensions } from '../../consumer/component/sources/artifact-files';
@@ -113,7 +122,7 @@ export default class Component extends BitObject {
   laneDataIsPopulated = false; // doesn't get saved in the scope, used to improve performance of loading the lane data
   schema: string | undefined;
   private divergeData?: DivergeData;
-
+  private populateVersionHistoryMutex = new Mutex();
   constructor(props: ComponentProps) {
     super();
     if (!props.name) throw new TypeError('Model Component constructor expects to get a name parameter');
@@ -979,6 +988,62 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
     if (lane) await this.populateLocalAndRemoteHeads(repo, lane);
     await this.setDivergeData(repo);
     return this.getDivergeData().isLocalAhead();
+  }
+
+  async GetVersionHistory(repo: Repository): Promise<VersionHistory> {
+    const emptyVersionHistory = VersionHistory.fromId(this.name, this.scope || undefined);
+    const versionHistory = await repo.load(emptyVersionHistory.hash());
+    return (versionHistory || emptyVersionHistory) as VersionHistory;
+  }
+
+  async getAndPopulateVersionHistory(repo: Repository, head: Ref): Promise<VersionHistory> {
+    const versionHistory = await this.GetVersionHistory(repo);
+    const { err } = await this.populateVersionHistoryIfMissingGracefully(repo, versionHistory, head);
+    if (err) throw err;
+    return versionHistory;
+  }
+
+  private async populateVersionHistoryIfMissingGracefully(
+    repo: Repository,
+    versionHistory: VersionHistory,
+    head: Ref
+  ): Promise<{ err?: Error; addedRefs?: Ref[] }> {
+    if (versionHistory.hasHash(head)) return {};
+    const getVersionObj = async (ref: Ref) => (await ref.load(repo)) as Version;
+    const versionsToAdd: Version[] = [];
+    let err: Error | undefined;
+    const addParentsRecursively = async (version: Version) => {
+      await pMapSeries(version.parents, async (parent) => {
+        if (versionHistory.hasHash(parent) || versionsToAdd.find((v) => v.hash().isEqual(parent))) {
+          return;
+        }
+        const parentVersion = await getVersionObj(parent);
+        if (!parentVersion) {
+          const tag = this.getTagOfRefIfExists(parent);
+          err = tag
+            ? new VersionNotFound(tag, this.id())
+            : new ParentNotFound(this.id(), version.hash().toString(), parent.toString());
+          return;
+        }
+        versionsToAdd.push(parentVersion);
+        await addParentsRecursively(parentVersion);
+      });
+    };
+    const headVer = await getVersionObj(head);
+    if (!headVer) {
+      return { err: new HeadNotFound(this.id(), head.toString()) };
+    }
+    return this.populateVersionHistoryMutex.runExclusive(async () => {
+      versionsToAdd.push(headVer);
+      await addParentsRecursively(headVer);
+      const addedRefs = versionsToAdd.map((v) => v.hash());
+      if (err) {
+        return { err, addedRefs };
+      }
+      versionHistory.addFromVersionsObjects(versionsToAdd);
+      await repo.writeObjectsToTheFS([versionHistory]);
+      return { addedRefs };
+    });
   }
 
   static parse(contents: string): Component {

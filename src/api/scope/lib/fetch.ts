@@ -23,6 +23,7 @@ export type FETCH_OPTIONS = {
   laneId?: string; // mandatory when fetching "latest" from lane. otherwise, we don't know where to find the latest
   onlyIfBuilt?: boolean; // relevant when fetching with deps. if true, and the component wasn't built successfully, don't fetch it.
   ignoreMissingHead?: boolean; // if asking for id without version and the component has no head, don't throw, just ignore
+  preferVersionHistory?: boolean; // whether bring all history or prefer to get VersionHistory object when exists.
 };
 
 const HooksManagerInstance = HooksManager.getInstance();
@@ -142,6 +143,8 @@ export default async function fetch(
           version: compVersion.version,
           collectArtifacts: fetchOptions.includeArtifacts,
           collectParents: true,
+          lane,
+          preferVersionHistory: fetchOptions.preferVersionHistory,
           collectParentsUntil: hashToStop ? Ref.from(hashToStop) : null,
         };
       });

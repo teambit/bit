@@ -5,7 +5,6 @@ import { Scope } from '..';
 import ShowDoctorError from '../../error/show-doctor-error';
 import logger from '../../logger/logger';
 import { getAllVersionHashesMemoized } from '../component-ops/traverse-versions';
-import { CollectObjectsOpts } from '../component-version';
 import { HashMismatch } from '../exceptions';
 import { Lane, ModelComponent, Version } from '../models';
 import { ObjectItem } from './object-list';
@@ -13,7 +12,11 @@ import { ObjectItem } from './object-list';
 export type ComponentWithCollectOptions = {
   component: ModelComponent;
   version: string;
-} & CollectObjectsOpts;
+  collectParents: boolean;
+  collectParentsUntil?: Ref | null; // stop traversing when this hash found. helps to import only the delta.
+  collectArtifacts: boolean;
+  preferVersionHistory?: boolean; // send VersionHistory object if exists rather than collecting parents
+};
 
 export class ObjectsReadableGenerator {
   public readable: Readable;
@@ -90,7 +93,8 @@ export class ObjectsReadableGenerator {
   }
 
   private async pushComponentObjects(componentWithOptions: ComponentWithCollectOptions): Promise<void> {
-    const { component, collectParents, collectArtifacts, collectParentsUntil } = componentWithOptions;
+    const { component, collectParents, collectArtifacts, collectParentsUntil, preferVersionHistory } =
+      componentWithOptions;
     const version = await component.loadVersion(componentWithOptions.version, this.repo, false);
     if (!version)
       throw new ShowDoctorError(`failed loading version ${componentWithOptions.version} of ${component.id()}`);
@@ -113,19 +117,30 @@ export class ObjectsReadableGenerator {
         };
         this.push(componentData);
       }
-      const allVersions: Version[] = [version];
+      const allVersions: Version[] = [];
       if (collectParents) {
-        const allParentsHashes = await getAllVersionHashesMemoized({
-          modelComponent: component,
-          repo: this.repo,
-          startFrom: version.hash(),
-          stopAt: collectParentsUntil ? [collectParentsUntil] : undefined,
-        });
-        const missingParentsHashes = allParentsHashes.filter((h) => !h.isEqual(version.hash()));
-        const parentVersions = await pMapSeries(missingParentsHashes, (parentHash) => parentHash.load(this.repo));
-        allVersions.push(...(parentVersions as Version[]));
-        // note: don't bring the head. otherwise, component-delta of the head won't bring all history of this comp.
+        if (preferVersionHistory) {
+          const versionHistory = await component.getAndPopulateVersionHistory(this.repo, version.hash());
+          const versionHistoryData = {
+            ref: versionHistory.hash(),
+            buffer: await versionHistory.asRaw(this.repo),
+            type: versionHistory.getType(),
+          };
+          this.push(versionHistoryData);
+        } else {
+          const allParentsHashes = await getAllVersionHashesMemoized({
+            modelComponent: component,
+            repo: this.repo,
+            startFrom: version.hash(),
+            stopAt: collectParentsUntil ? [collectParentsUntil] : undefined,
+          });
+          const missingParentsHashes = allParentsHashes.filter((h) => !h.isEqual(version.hash()));
+          const parentVersions = await pMapSeries(missingParentsHashes, (parentHash) => parentHash.load(this.repo));
+          allVersions.push(...(parentVersions as Version[]));
+          // note: don't bring the head. otherwise, component-delta of the head won't bring all history of this comp.
+        }
       }
+      allVersions.push(version);
       await pMapSeries(allVersions, async (ver) => {
         const versionObjects = await collectVersionObjects(ver);
         this.pushManyObjects(versionObjects);
