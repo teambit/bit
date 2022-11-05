@@ -1,5 +1,5 @@
 /**
- * detemines whether `str` is a string.
+ * determines whether `str` is a string.
  * @name isString
  * @param {*} val
  * @returns {boolean}
