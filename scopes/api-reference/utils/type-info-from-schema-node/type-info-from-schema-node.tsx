@@ -72,6 +72,7 @@ export function TypeInfoFromSchemaNode({ node, apiRefModel }: TypeInfoFromSchema
       return (
         <>
           <TypeRefName
+            key={`typeRef-${typeRefNode.name}`}
             name={typeRefNode.name}
             external={!!exportedTypeUrlFromAnotherComp}
             url={exportedTypeUrlFromSameComp || exportedTypeUrlFromAnotherComp}
@@ -86,6 +87,7 @@ export function TypeInfoFromSchemaNode({ node, apiRefModel }: TypeInfoFromSchema
     }
     return (
       <TypeRefName
+        key={`typeRef-${typeRefNode.name}`}
         name={typeRefNode.name}
         external={!!exportedTypeUrlFromAnotherComp}
         url={exportedTypeUrlFromSameComp || exportedTypeUrlFromAnotherComp}
@@ -94,17 +96,20 @@ export function TypeInfoFromSchemaNode({ node, apiRefModel }: TypeInfoFromSchema
   }
 
   if (node instanceof TypeUnionSchema || node instanceof TypeIntersectionSchema) {
-    const typeUnionNode = node as TypeUnionSchema | TypeIntersectionSchema;
+    const typeUnionOrIntersectionNode = node as TypeUnionSchema | TypeIntersectionSchema;
     const separator = node instanceof TypeUnionSchema ? ' | ' : ' & ';
 
     return (
       <div className={classnames(styles.node)}>
-        {typeUnionNode.types.map((type, index) => {
+        {typeUnionOrIntersectionNode.types.map((type, index) => {
           return (
             <>
-              <TypeInfoFromSchemaNode node={type} apiRefModel={apiRefModel} />
-              {typeUnionNode.types.length > 1 && index !== typeUnionNode.types.length - 1 ? (
-                <div className={classnames(styles.node, styles.padding2)}>{separator}</div>
+              <TypeInfoFromSchemaNode key={`${type.name}-${index}`} node={type} apiRefModel={apiRefModel} />
+              {typeUnionOrIntersectionNode.types.length > 1 &&
+              index !== typeUnionOrIntersectionNode.types.length - 1 ? (
+                <div key={`${type.name}-${index}-${separator}`} className={classnames(styles.node, styles.padding2)}>
+                  {separator}
+                </div>
               ) : null}
             </>
           );
@@ -113,7 +118,11 @@ export function TypeInfoFromSchemaNode({ node, apiRefModel }: TypeInfoFromSchema
     );
   }
 
-  return <div className={classnames(styles.node)}>{node.toString()}</div>;
+  return (
+    <div key={node.toString()} className={classnames(styles.node)}>
+      {node.toString()}
+    </div>
+  );
 }
 
 function TypeRefName({ name, url, external }: { name: string; url?: string; external?: boolean }) {
