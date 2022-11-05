@@ -79,7 +79,11 @@ function FunctionComponent(props: APINodeRenderProps) {
       <div className={styles.container}>
         <div className={styles.title}>Returns</div>
         <div className={styles.returnType}>
-          <TypeInfoFromSchemaNode node={returnType} apiRefModel={apiRefModel} />
+          <TypeInfoFromSchemaNode
+            key={`returnType-${returnType.__schema}`}
+            node={returnType}
+            apiRefModel={apiRefModel}
+          />
         </div>
       </div>
     </APINodeDetails>

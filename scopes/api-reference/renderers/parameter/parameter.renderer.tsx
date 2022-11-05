@@ -24,7 +24,11 @@ function ParameterComponent(props: APINodeRenderProps) {
       key={`${name}-param`}
       headings={['name', 'type', 'default', 'description']}
       colNumber={4}
-      customRow={{ type: <TypeInfoFromSchemaNode node={type} apiRefModel={apiRefModel} /> }}
+      customRow={{
+        type: (
+          <TypeInfoFromSchemaNode key={`${api.__schema}-${api.toString()}`} node={type} apiRefModel={apiRefModel} />
+        ),
+      }}
       row={{
         name,
         description: doc?.comment || '',

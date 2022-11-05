@@ -14,7 +14,6 @@ import { SchemaNodesIndex } from '@teambit/api-reference.renderers.schema-nodes-
 import styles from './api-node-details.module.scss';
 
 export type APINodeDetailsProps = APINodeRenderProps & {
-  // members?: SchemaNode[];
   displaySignature?: string;
   options?: {
     hideImplementation?: boolean;
@@ -28,7 +27,7 @@ export function APINodeDetails({
       name,
       signature: defaultSignature,
       doc,
-      location: { filePath, line, character },
+      location: { filePath, line },
     },
     renderer: { icon },
     // componentId,
@@ -107,17 +106,6 @@ export function APINodeDetails({
   }, []);
 
   useEffect(() => {
-    if (!editorRef.current) return;
-    const signatureContent = editorRef.current.getValue();
-    if (!signatureContent) {
-      setSignatureHeight(defaultSignatureHeight);
-    } else {
-      const updatedSignatureHeight = 36 + (signatureContent?.split('\n').length || 0) * 18;
-      setSignatureHeight(updatedSignatureHeight);
-    }
-  }, [editorRef.current]);
-
-  useEffect(() => {
     if (isMounted && signature) {
       monacoRef.current.languages.typescript.typescriptDefaults.setCompilerOptions({
         jsx: monacoRef.current.languages.typescript.JsxEmit.Preserve,
@@ -186,14 +174,17 @@ export function APINodeDetails({
               options={defaultCodeEditorOptions}
               value={signature}
               height={signatureHeight}
-              path={`${line}:${character}:${filePath}`}
+              path={`${currentQueryParams}-${filePath}`}
               className={styles.editor}
               beforeMount={(monaco) => {
                 monacoRef.current = monaco;
               }}
               onMount={(editor) => {
                 editorRef.current = editor;
+                const signatureContent = editorRef.current.getValue();
+                const updatedSignatureHeight = 36 + (signatureContent?.split('\n').length || 0) * 18;
                 setIsMounted(true);
+                setSignatureHeight(updatedSignatureHeight);
               }}
               theme={'vs-dark'}
             />

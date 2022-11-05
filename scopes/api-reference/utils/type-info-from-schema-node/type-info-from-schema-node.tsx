@@ -24,7 +24,7 @@ export type TypeInfoFromSchemaNodeProps = {
 export function TypeInfoFromSchemaNode({ node, apiRefModel }: TypeInfoFromSchemaNodeProps) {
   if (node instanceof TypeSchema) {
     return (
-      <div className={classnames(styles.node)}>
+      <div key={`type-${node.name}`} className={classnames(styles.node)}>
         <TypeInfoFromSchemaNode node={node.type} apiRefModel={apiRefModel} />
       </div>
     );
@@ -72,7 +72,7 @@ export function TypeInfoFromSchemaNode({ node, apiRefModel }: TypeInfoFromSchema
       return (
         <>
           <TypeRefName
-            key={`typeRef-${typeRefNode.name}`}
+            key={`typeRef-with-args-${typeRefNode.name}`}
             name={typeRefNode.name}
             external={!!exportedTypeUrlFromAnotherComp}
             url={exportedTypeUrlFromSameComp || exportedTypeUrlFromAnotherComp}
@@ -100,11 +100,15 @@ export function TypeInfoFromSchemaNode({ node, apiRefModel }: TypeInfoFromSchema
     const separator = node instanceof TypeUnionSchema ? ' | ' : ' & ';
 
     return (
-      <div className={classnames(styles.node)}>
+      <div key={`${node.__schema}`} className={classnames(styles.node)}>
         {typeUnionOrIntersectionNode.types.map((type, index) => {
           return (
             <>
-              <TypeInfoFromSchemaNode key={`${type.name}-${index}`} node={type} apiRefModel={apiRefModel} />
+              <TypeInfoFromSchemaNode
+                key={`unionOrIntersection-${type.name}-${index}`}
+                node={type}
+                apiRefModel={apiRefModel}
+              />
               {typeUnionOrIntersectionNode.types.length > 1 &&
               index !== typeUnionOrIntersectionNode.types.length - 1 ? (
                 <div key={`${type.name}-${index}-${separator}`} className={classnames(styles.node, styles.padding2)}>
