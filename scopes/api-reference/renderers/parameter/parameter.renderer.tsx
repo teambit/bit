@@ -1,6 +1,6 @@
 import React from 'react';
 import { APINodeRenderProps, APINodeRenderer } from '@teambit/api-reference.models.api-node-renderer';
-import { extractTypeFromSchemaNode } from '@teambit/api-reference.utils.extract-type-from-schema-node';
+import { TypeInfoFromSchemaNode } from '@teambit/api-reference.utils.type-info-from-schema-node';
 import { ParameterSchema } from '@teambit/semantics.entities.semantic-schema';
 import { TableRow } from '@teambit/documenter.ui.table-row';
 
@@ -14,6 +14,7 @@ export const parameterRenderer: APINodeRenderer = {
 function ParameterComponent(props: APINodeRenderProps) {
   const {
     apiNode: { api },
+    apiRefModel,
   } = props;
   const paramNode = api as ParameterSchema;
   const { name, isOptional, doc, type, defaultValue } = paramNode;
@@ -23,11 +24,12 @@ function ParameterComponent(props: APINodeRenderProps) {
       key={`${name}-param`}
       headings={['name', 'type', 'default', 'description']}
       colNumber={4}
+      customRow={{ type: <TypeInfoFromSchemaNode node={type} apiRefModel={apiRefModel} /> }}
       row={{
         name,
         description: doc?.comment || '',
         required: !isOptional,
-        type: extractTypeFromSchemaNode(type),
+        type: '',
         default: { value: defaultValue },
       }}
     />

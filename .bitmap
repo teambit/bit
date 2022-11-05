@@ -2149,12 +2149,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/api-reference/utils/copy-schema-node"
     },
-    "utils/extract-type-from-schema-node": {
-        "scope": "",
-        "version": "",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/api-reference/utils/extract-type-from-schema-node"
-    },
     "utils/group-schema-node-by-signature": {
         "scope": "",
         "version": "",
@@ -2172,6 +2166,12 @@
         "version": "",
         "mainFile": "index.ts",
         "rootDir": "scopes/api-reference/utils/sort-api-nodes"
+    },
+    "utils/type-info-from-schema-node": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/api-reference/utils/type-info-from-schema-node"
     },
     "variants": {
         "scope": "teambit.workspace",

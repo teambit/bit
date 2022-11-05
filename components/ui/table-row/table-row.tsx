@@ -1,4 +1,4 @@
-import React, { ComponentType } from 'react';
+import React from 'react';
 import classNames from 'classnames';
 import { Grid, GridProps } from '@teambit/base-ui.layout.grid-component';
 import { TableColumn } from '@teambit/documenter.ui.table-column';
@@ -23,7 +23,7 @@ export type RowType = {
 };
 
 export type CustomRowType = {
-  [K in keyof RowType]: ComponentType<{ data: RowType[K] }>;
+  [K in keyof RowType]?: JSX.Element;
 };
 
 export type ColNumber = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12; // TODO - export Grid ColProps and use here
@@ -80,15 +80,9 @@ export function TableRow({ row, customRow, colNumber = 4, headings, isListView, 
                 {title}
               </div>
               <div className={styles.columnContent}>
-                <div className={styles.name}>
-                  {(customRow?.name && <customRow.name data={row.name} />) || row[title]}
-                </div>
+                <div className={styles.name}>{customRow?.name || row[title]}</div>
                 {!customRow?.required && row.required && <div className={styles.required}>(Required)</div>}
-                {customRow?.required && (
-                  <div className={styles.required}>
-                    <customRow.required data={row.required} />
-                  </div>
-                )}
+                {customRow?.required && <div className={styles.required}>{customRow.required}</div>}
               </div>
             </TableColumn>
           );
@@ -103,9 +97,12 @@ export function TableRow({ row, customRow, colNumber = 4, headings, isListView, 
               >
                 {title}
               </div>
-              <SyntaxHighlighter theme={xcode} language="javascript" className={styles.highlighted}>
-                {(customRow?.type && <customRow.type data={row[title]} />) || row[title]}
-              </SyntaxHighlighter>
+              {!customRow?.type && (
+                <SyntaxHighlighter theme={xcode} language="javascript" className={styles.highlighted}>
+                  {row[title]}
+                </SyntaxHighlighter>
+              )}
+              {customRow?.type}
             </TableColumn>
           );
         }
@@ -122,19 +119,17 @@ export function TableRow({ row, customRow, colNumber = 4, headings, isListView, 
               {!customRow?.default && (
                 <span className={styles.default}>{(row[title] && row[title]?.value) || '-'}</span>
               )}
-              {customRow?.default && <span className={styles.default}>{<customRow.default data={row[title]} />}</span>}
+              {customRow?.default && <span className={styles.default}>{customRow.default}</span>}
             </TableColumn>
           );
         }
         if (title === 'description') {
           return (
             <TableColumn className={styles.breakWord} key={index}>
-              {(customRow?.description && <customRow.description data={row[title]} />) || row[title]}
+              {customRow?.description || row[title]}
             </TableColumn>
           );
         }
-
-        const DefaultCustomRenderer = customRow?.[title];
         // default
         return (
           <TableColumn className={styles.breakWord} key={index}>
@@ -145,7 +140,7 @@ export function TableRow({ row, customRow, colNumber = 4, headings, isListView, 
             >
               {title}
             </div>
-            {(DefaultCustomRenderer && <DefaultCustomRenderer data={row[title]} />) || row[title]}
+            {customRow?.[title] || row[title]}
           </TableColumn>
         );
       })}

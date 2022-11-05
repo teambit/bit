@@ -4,8 +4,8 @@ import { APINodeRenderProps, APINodeRenderer } from '@teambit/api-reference.mode
 import { APINodeDetails } from '@teambit/api-reference.renderers.api-node-details';
 import { parameterRenderer } from '@teambit/api-reference.renderers.parameter';
 import { HeadingRow } from '@teambit/documenter.ui.table-heading-row';
+import { TypeInfoFromSchemaNode } from '@teambit/api-reference.utils.type-info-from-schema-node';
 import classnames from 'classnames';
-import { extractTypeFromSchemaNode } from '@teambit/api-reference.utils.extract-type-from-schema-node';
 
 import styles from './function.renderer.module.scss';
 
@@ -21,11 +21,10 @@ function FunctionComponent(props: APINodeRenderProps) {
   const {
     apiNode: { api },
     renderers,
+    apiRefModel,
   } = props;
   const functionNode = api as FunctionLikeSchema;
   const { returnType, params, typeParams } = functionNode;
-
-  const extractedReturnType = extractTypeFromSchemaNode(returnType);
 
   const hasParams = params.length > 0;
 
@@ -79,7 +78,9 @@ function FunctionComponent(props: APINodeRenderProps) {
       )}
       <div className={styles.container}>
         <div className={styles.title}>Returns</div>
-        <div className={styles.returnType}>{extractedReturnType}</div>
+        <div className={styles.returnType}>
+          <TypeInfoFromSchemaNode node={returnType} apiRefModel={apiRefModel} />
+        </div>
       </div>
     </APINodeDetails>
   );

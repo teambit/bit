@@ -69,24 +69,3 @@ function TypeRefComponent(props: APINodeRenderProps) {
 
   return <div {...rest}>{typeRefNode.toString()}</div>;
 }
-
-/**
- * @todo how to figure out what is the type exported at the consumer level
- */
-// function getExportedTypeUrlFromAnotherComp({
-//   componentId,
-//   selectedAPI,
-// }: {
-//   componentId: ComponentID;
-//   selectedAPI: string;
-// }) {
-//   const componentUrl = ComponentUrl.toUrl(componentId);
-//   const [componentIdUrl, versionQuery] = componentUrl.split('?');
-
-//   const exportedTypeUrl = `${componentIdUrl}/~api-reference?selectedAPI=${encodeURIComponent(
-//     selectedAPI
-//   )}&${versionQuery}`;
-
-//   console.log('🚀 ~ file: type-ref.renderer.tsx ~ line 89 ~ exportedTypeUrl', exportedTypeUrl);
-//   return exportedTypeUrl;
-// }
