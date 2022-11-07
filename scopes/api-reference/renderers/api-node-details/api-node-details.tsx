@@ -89,9 +89,7 @@ export function APINodeDetails({
   const hoverProvider = useCallback((model, position) => {
     const word = model.getWordAtPosition(position);
     const wordApiNode: APINode | undefined = word ? apiRefModel?.apiByName?.get(word.word as string) : undefined;
-    const wordApiUrl = wordApiNode
-      ? getAPINodeUrl({ selectedAPI: `${wordApiNode.renderer.nodeType}/${wordApiNode.api.name}` })
-      : null;
+    const wordApiUrl = wordApiNode ? getAPINodeUrl({ selectedAPI: wordApiNode.api.name }) : null;
     apiUrlToRoute.current = wordApiUrl;
     if (!wordApiUrl || wordApiNode?.api.name === name) return undefined;
     const contents = [

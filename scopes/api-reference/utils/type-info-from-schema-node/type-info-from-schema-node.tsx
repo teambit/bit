@@ -48,7 +48,7 @@ export function TypeInfoFromSchemaNode({ node, apiRefModel }: TypeInfoFromSchema
     const exportedTypeUrlFromSameComp =
       exportedTypeFromSameComp &&
       useUpdatedUrlFromQuery({
-        selectedAPI: `${exportedTypeFromSameComp.renderer.nodeType}/${exportedTypeFromSameComp.api.name}`,
+        selectedAPI: exportedTypeFromSameComp.api.name,
       });
 
     const exportedTypeUrlFromAnotherComp = typeRefNode.componentId
