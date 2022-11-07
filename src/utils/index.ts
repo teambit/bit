@@ -6,10 +6,7 @@ import splitBy from './array/split-by';
 import { buildCommandMessage } from './build-command-message';
 import sha1 from './encryption/sha1';
 import * as eol from './eol';
-import filterObject from './filter-object';
 import outputFile from './fs-output-file';
-import outputJsonFile from './fs-output-json-sync';
-import rmDir from './fs-rmdir';
 import writeFile from './fs-write-file';
 import { checksum, checksumFile } from './checksum';
 import currentDirName from './fs/current-dir-name';
@@ -20,7 +17,6 @@ import getExt from './fs/get-ext';
 import isDirEmpty from './fs/is-dir-empty';
 import { pathHas, pathHasAll, propogateUntil } from './fs/propogate-until';
 import readDirIgnoreDsStore, { readDirSyncIgnoreDsStore } from './fs/read-dir-ignore-ds-store';
-import getMissingTestFiles from './getMissingTestFiles';
 import glob from './glob';
 import retrieveIgnoreList from './ignore/ignore';
 import immutableUnshift from './immutable-unshift';
@@ -76,8 +72,7 @@ export {
   objectToStringifiedTupleArray,
   resolveGroupId,
   mapToObject,
-  rmDir,
-  filterObject,
+  filter as filterObject,
   sortObject,
   isString,
   removeChalkCharacters,
@@ -132,8 +127,6 @@ export {
   pathJoinLinux,
   pathRelativeLinux,
   pathResolveToLinux,
-  outputJsonFile,
-  getMissingTestFiles,
   retrieveIgnoreList,
   pathIsInside,
   isValidPath,

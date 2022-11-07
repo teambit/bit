@@ -1,7 +1,7 @@
 // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import Module from 'module';
 
-import filterObject from './filter-object';
+import filterObject from './object/filter';
 
 // remove any cached module path for a module name (Module._pathCache)
 export default function removeFromRequireCache(currentRequestName: string) {
