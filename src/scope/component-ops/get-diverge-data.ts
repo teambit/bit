@@ -2,7 +2,7 @@ import R from 'ramda';
 import { ParentNotFound, VersionNotFoundOnFS } from '../exceptions';
 import { NoCommonSnap } from '../exceptions/no-common-snap';
 import { ModelComponent, Version } from '../models';
-import { getVersionParentsFromVersion, VersionParents } from '../models/version-history';
+import { VersionParents } from '../models/version-history';
 import { Ref, Repository } from '../objects';
 import { DivergeData } from './diverge-data';
 import { getAllVersionHashes, getAllVersionParents } from './traverse-versions';
