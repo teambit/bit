@@ -67,7 +67,7 @@ export async function getDivergeData({
   const versionParents = await getAllVersionParents({
     repo,
     modelComponent,
-    head: localHead,
+    heads: [localHead, remoteHead],
     throws: false,
     versionObjects,
   });

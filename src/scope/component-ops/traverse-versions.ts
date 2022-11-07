@@ -144,7 +144,7 @@ export async function getAllVersionHashes(options: GetAllVersionHashesParams): P
   if (!head) {
     return [];
   }
-  const versionParents = await getAllVersionParents({ repo, modelComponent, throws, versionObjects, head });
+  const versionParents = await getAllVersionParents({ repo, modelComponent, throws, versionObjects, heads: [head] });
   const subsetOfVersionParents = getSubsetOfVersionParents(versionParents, head, stopAt);
   return subsetOfVersionParents.map((s) => s.hash);
 }
@@ -168,40 +168,44 @@ export async function hasVersionByRef(
 export async function getAllVersionParents({
   repo,
   modelComponent,
-  head,
+  heads,
   throws,
   versionObjects, // relevant for remote-scope where during export the data is not in the repo yet.
 }: {
   repo: Repository;
   modelComponent: ModelComponent;
-  head: Ref;
+  heads: Ref[];
   throws?: boolean;
   versionObjects?: Version[];
 }): Promise<VersionParents[]> {
   const versionHistory = await modelComponent.GetVersionHistory(repo);
-  const { err, added } = await modelComponent.populateVersionHistoryIfMissingGracefully(repo, versionHistory, head);
   const versionParents: VersionParents[] = [];
-  if (err) {
-    if (throws) {
-      // keep also the current stack. otherwise, the stack will have the recursive traversal data, which won't help much.
-      const newErr = new Error(err.message);
-      err.stack = `${err.stack}\nCurrent stack ${newErr.stack}`;
-      throw err;
+  const push = (versionParentsItem: VersionParents) => {
+    const existing = versionParents.find((v) => v.hash.isEqual(versionParentsItem.hash));
+    if (!existing) versionParents.push(versionParentsItem);
+    else {
+      // override it
+      Object.keys(existing).forEach((field) => (existing[field] = versionParentsItem[field]));
     }
-    if (added) versionParents.push(...added);
-  } else {
-    versionParents.push(...versionHistory.versions);
-  }
+  };
+  await pMapSeries(heads, async (head) => {
+    const { err, added } = await modelComponent.populateVersionHistoryIfMissingGracefully(repo, versionHistory, head);
+    if (err) {
+      if (throws) {
+        // keep also the current stack. otherwise, the stack will have the recursive traversal data, which won't help much.
+        const newErr = new Error(err.message);
+        err.stack = `${err.stack}\nCurrent stack ${newErr.stack}`;
+        throw err;
+      }
+      if (added) added.forEach((a) => push(a));
+    } else {
+      versionHistory.versions.forEach((v) => push(v));
+    }
+  });
+
   if (versionObjects) {
     const versionParentsFromObjects = versionObjects.map((v) => getVersionParentsFromVersion(v));
-    versionParentsFromObjects.forEach((versionParentItem) => {
-      const existing = versionParents.find((v) => v.hash.isEqual(versionParentItem.hash));
-      if (!existing) versionParents.push(versionParentItem);
-      else {
-        // override it
-        Object.keys(existing).forEach((field) => (existing[field] = versionParentItem[field]));
-      }
-    });
+    versionParentsFromObjects.forEach((versionParentItem) => push(versionParentItem));
   }
   return versionParents;
 }
