@@ -13,8 +13,8 @@
 import memoize from 'memoizee';
 import pMapSeries from 'p-map-series';
 import { HeadNotFound, ParentNotFound, VersionNotFound } from '../exceptions';
-import { ModelComponent, Version } from '../models';
-import { getVersionParentsFromVersion, VersionParents } from '../models/version-history';
+import type { ModelComponent, Version } from '../models';
+import type { VersionParents } from '../models/version-history';
 import { Ref, Repository } from '../objects';
 
 export type VersionInfo = {
@@ -232,4 +232,13 @@ function getSubsetOfVersionParents(versionParents: VersionParents[], from: Ref, 
   if (!head) return [];
   addVersionParentRecursively(head);
   return results;
+}
+
+export function getVersionParentsFromVersion(version: Version): VersionParents {
+  return {
+    hash: version.hash(),
+    parents: version.parents,
+    unrelated: version.unrelated?.head,
+    squashed: version.squashed?.previousParents,
+  };
 }

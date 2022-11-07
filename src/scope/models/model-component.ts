@@ -27,7 +27,11 @@ import findDuplications from '../../utils/array/find-duplications';
 import ComponentObjects from '../component-objects';
 import { DivergeData } from '../component-ops/diverge-data';
 import { getDivergeData } from '../component-ops/get-diverge-data';
-import { getAllVersionHashes, getAllVersionsInfo } from '../component-ops/traverse-versions';
+import {
+  getAllVersionHashes,
+  getAllVersionsInfo,
+  getVersionParentsFromVersion,
+} from '../component-ops/traverse-versions';
 import ComponentVersion from '../component-version';
 import {
   HeadNotFound,
@@ -42,7 +46,7 @@ import { Lane } from '.';
 import ScopeMeta from './scopeMeta';
 import Source from './source';
 import Version from './version';
-import VersionHistory, { getVersionParentsFromVersion, VersionParents } from './version-history';
+import VersionHistory, { VersionParents } from './version-history';
 import { getLatestVersion } from '../../utils/semver-helper';
 import { ObjectItem } from '../objects/object-list';
 import { getRefsFromExtensions } from '../../consumer/component/sources/artifact-files';

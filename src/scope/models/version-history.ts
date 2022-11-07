@@ -1,10 +1,11 @@
 import { Graph, Edge, Node } from '@teambit/graph.cleargraph';
 import { difference } from 'lodash';
 import { BitId } from '../../bit-id';
-import { getStringifyArgs } from '../../utils';
-import { Ref } from '../objects';
+import getStringifyArgs from '../../utils/string/get-stringify-args';
+import Ref from '../objects/ref';
 import BitObject from '../objects/object';
-import Version from './version';
+import type Version from './version';
+import { getVersionParentsFromVersion } from '../component-ops/traverse-versions';
 
 export type VersionParents = {
   hash: Ref;
@@ -137,13 +138,4 @@ export default class VersionHistory extends BitObject {
     };
     return new VersionHistory(props);
   }
-}
-
-export function getVersionParentsFromVersion(version: Version): VersionParents {
-  return {
-    hash: version.hash(),
-    parents: version.parents,
-    unrelated: version.unrelated?.head,
-    squashed: version.squashed?.previousParents,
-  };
 }
