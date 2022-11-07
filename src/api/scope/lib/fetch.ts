@@ -88,6 +88,7 @@ export default async function fetch(
             version: compVersion.version,
             collectArtifacts: includeArtifacts,
             collectParents,
+            preferVersionHistory: fetchOptions.preferVersionHistory,
           }));
         }
         const versionsDependencies = await scopeComponentsImporter.fetchWithDeps(
@@ -102,6 +103,7 @@ export default async function fetch(
               version: versionDep.component.version,
               collectArtifacts: includeArtifacts,
               collectParents,
+              preferVersionHistory: fetchOptions.preferVersionHistory,
             },
             ...versionDep.allDependencies.map((verDep) => ({
               component: verDep.component,

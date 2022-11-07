@@ -547,6 +547,7 @@ export default class ScopeComponentsImporter {
       remotes,
       {
         withoutDependencies: false,
+        preferVersionHistory: true,
         onlyIfBuilt,
         laneId: lanes.length ? lanes[0].id() : undefined,
       },
