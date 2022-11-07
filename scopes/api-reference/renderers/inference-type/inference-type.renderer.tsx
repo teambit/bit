@@ -2,7 +2,9 @@
 import React from 'react';
 import { APINodeRenderProps, APINodeRenderer } from '@teambit/api-reference.models.api-node-renderer';
 import { InferenceTypeSchema } from '@teambit/semantics.entities.semantic-schema';
-import { useUpdatedUrlFromQuery } from '@teambit/api-reference.hooks.use-api-ref-url';
+import { TypeInfoFromSchemaNode } from '@teambit/api-reference.utils.type-info-from-schema-node';
+
+import styles from './inference-type.module.scss';
 
 export const inferenceTypeRenderer: APINodeRenderer = {
   predicate: (node) => node.__schema === InferenceTypeSchema.name,
@@ -13,26 +15,13 @@ export const inferenceTypeRenderer: APINodeRenderer = {
 
 function InferenceTypeComponent(props: APINodeRenderProps) {
   const {
-    apiNode: { api },
-    renderers,
     apiRefModel,
-    depth,
-    ...rest
+    apiNode: { api },
   } = props;
 
-  const inferenceType = api as InferenceTypeSchema;
-  const exportedType = apiRefModel.apiByName.get(inferenceType.type);
-  const exportedTypeUrl =
-    exportedType &&
-    useUpdatedUrlFromQuery({ selectedAPI: `${exportedType.renderer.nodeType}/${exportedType.api.name}` });
-
-  if (exportedTypeUrl) {
-    return (
-      <a className={rest.className} href={exportedTypeUrl}>
-        {exportedType.api.name}
-      </a>
-    );
-  }
-
-  return <div {...rest}>{inferenceType.type}</div>;
+  return (
+    <div className={styles.container}>
+      <TypeInfoFromSchemaNode key={`type-ref-${api.__schema}`} node={api} apiRefModel={apiRefModel} />
+    </div>
+  );
 }

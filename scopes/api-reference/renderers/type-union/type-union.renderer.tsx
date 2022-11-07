@@ -1,7 +1,6 @@
 import React from 'react';
 import { APINodeRenderProps, APINodeRenderer } from '@teambit/api-reference.models.api-node-renderer';
 import { TypeUnionSchema } from '@teambit/semantics.entities.semantic-schema';
-import { SchemaNodeSummary } from '@teambit/api-reference.renderers.schema-node-summary';
 
 export const typeUnionRenderer: APINodeRenderer = {
   predicate: (node) => node.__schema === TypeUnionSchema.name,
@@ -21,18 +20,8 @@ function TypeUnionComponent(props: APINodeRenderProps) {
     <>
       {typeNode.types.map((type, index) => {
         const renderer = renderers.find((r) => r.predicate(type));
-        if (!renderer)
-          return (
-            <SchemaNodeSummary
-              key={`${index}-${type.name}-union-type`}
-              signature={type.signature || type.toString()}
-              name={type.name}
-              location={type.location}
-              doc={type.doc}
-              isOptional={(type as any).isOptional}
-              __schema={type.__schema}
-            />
-          );
+        if (!renderer) return null;
+
         const Component = renderer.Component;
         return (
           <Component

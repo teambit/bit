@@ -1,20 +1,18 @@
-.node,
-.nodeLink {
+.table {
+  > div {
+    grid-gap: 8px 16px;
+  }
+}
+
+.signature {
   display: flex;
   margin-right: 5px;
   font-family: Roboto mono;
   font-size: var(--bit-p-xxs);
   word-break: normal;
-}
-
-.node {
   color: rgb(57, 115, 0);
 }
 
-.nodeLink {
-  color: #4646c6;
-}
-
-.padding2 {
-  padding: 0px 2px;
+.row {
+  grid-template-columns: 1fr 2fr 1fr;
 }

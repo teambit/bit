@@ -3,7 +3,7 @@ import { useElementOnFold } from '@teambit/docs.ui.hooks.use-element-on-fold';
 import classnames from 'classnames';
 import { classes } from '@teambit/design.ui.surfaces.menu.item';
 import flatten from 'lodash.flatten';
-import { trackedElementClassName } from '@teambit/api-reference.renderers.schema-node-summary';
+import { trackedElementClassName } from '@teambit/api-reference.renderers.schema-node-member-summary';
 import { useLocation, Link } from '@teambit/base-react.navigation.link';
 
 import styles from './schema-nodes-index.module.scss';

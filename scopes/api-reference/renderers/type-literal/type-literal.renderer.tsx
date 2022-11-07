@@ -1,7 +1,7 @@
 import React from 'react';
 import { APINodeRenderProps, APINodeRenderer } from '@teambit/api-reference.models.api-node-renderer';
 import { copySchemaNode } from '@teambit/api-reference.utils.copy-schema-node';
-import { SchemaNodesSummary } from '@teambit/api-reference.renderers.schema-nodes-summary';
+import { GroupedSchemaNodesSummary } from '@teambit/api-reference.renderers.grouped-schema-nodes-summary';
 import { TypeLiteralSchema } from '@teambit/semantics.entities.semantic-schema';
 
 export const typeLiteralRenderer: APINodeRenderer = {
@@ -22,5 +22,5 @@ function TypeLiteralComponent(props: APINodeRenderProps) {
     return copySchemaNode(member, { signature: member.toString() });
   });
 
-  return <SchemaNodesSummary className={props.className} nodes={members} />;
+  return <GroupedSchemaNodesSummary nodes={members} apiRefModel={props.apiRefModel} />;
 }

@@ -4,9 +4,9 @@ import { APINodeRenderProps, APINodeRenderer } from '@teambit/api-reference.mode
 import { TypeRefSchema } from '@teambit/semantics.entities.semantic-schema';
 import { APINodeDetails } from '@teambit/api-reference.renderers.api-node-details';
 import { copySchemaNode } from '@teambit/api-reference.utils.copy-schema-node';
-import { useUpdatedUrlFromQuery } from '@teambit/api-reference.hooks.use-api-ref-url';
-import { ComponentUrl } from '@teambit/component.modules.component-url';
-import { ComponentID } from '@teambit/component-id';
+import { TypeInfoFromSchemaNode } from '@teambit/api-reference.utils.type-info-from-schema-node';
+
+import styles from './type-ref.renderer.module.scss';
 
 export const typeRefRenderer: APINodeRenderer = {
   predicate: (node) => node.__schema === TypeRefSchema.name,
@@ -41,31 +41,9 @@ function TypeRefComponent(props: APINodeRenderProps) {
     );
   }
 
-  const exportedTypeFromSameComp = apiRefModel.apiByName.get(typeRefNode.name);
-  const exportedTypeUrlFromSameComp =
-    exportedTypeFromSameComp &&
-    useUpdatedUrlFromQuery({
-      selectedAPI: `${exportedTypeFromSameComp.renderer.nodeType}/${exportedTypeFromSameComp.api.name}`,
-    });
-
-  // const exportedTypeUrlFromAnotherComp = typeRefNode.componentId
-  //   ? getExportedTypeUrlFromAnotherComp({
-  //       componentId: typeRefNode.componentId,
-  //       selectedAPI: `${typeRefRenderer.nodeType}/${typeRefNode.name}`,
-  //     })
-  //   : undefined;
-  // console.log(
-  //   '🚀 ~ file: type-ref.renderer.tsx ~ line 55 ~ TypeRefComponent ~ exportedTypeUrlFromAnotherComp',
-  //   exportedTypeUrlFromAnotherComp
-  // );
-
-  if (exportedTypeUrlFromSameComp) {
-    return (
-      <a className={rest.className} href={exportedTypeUrlFromSameComp}>
-        {exportedTypeFromSameComp.api.name}
-      </a>
-    );
-  }
-
-  return <div {...rest}>{typeRefNode.toString()}</div>;
+  return (
+    <div className={styles.container}>
+      <TypeInfoFromSchemaNode key={`type-ref-${typeRefNode.__schema}`} node={typeRefNode} apiRefModel={apiRefModel} />
+    </div>
+  );
 }

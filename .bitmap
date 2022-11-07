@@ -1019,6 +1019,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/api-reference/renderers/function"
     },
+    "renderers/grouped-schema-nodes-summary": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/api-reference/renderers/grouped-schema-nodes-summary"
+    },
     "renderers/inference-type": {
         "scope": "",
         "version": "",
@@ -1037,23 +1043,17 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/api-reference/renderers/parameter"
     },
-    "renderers/schema-node-summary": {
+    "renderers/schema-node-member-summary": {
         "scope": "",
         "version": "",
         "mainFile": "index.ts",
-        "rootDir": "scopes/api-reference/renderers/schema-node-summary"
+        "rootDir": "scopes/api-reference/renderers/schema-node-member-summary"
     },
     "renderers/schema-nodes-index": {
         "scope": "",
         "version": "",
         "mainFile": "index.ts",
         "rootDir": "scopes/api-reference/renderers/schema-nodes-index"
-    },
-    "renderers/schema-nodes-summary": {
-        "scope": "",
-        "version": "",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/api-reference/renderers/schema-nodes-summary"
     },
     "renderers/type": {
         "scope": "",

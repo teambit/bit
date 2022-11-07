@@ -2,6 +2,7 @@ import React from 'react';
 import {
   InferenceTypeSchema,
   SchemaNode,
+  TypeArraySchema,
   TypeIntersectionSchema,
   TypeRefSchema,
   TypeSchema,
@@ -30,6 +31,14 @@ export function TypeInfoFromSchemaNode({ node, apiRefModel }: TypeInfoFromSchema
     );
   }
 
+  if (node instanceof TypeArraySchema) {
+    return (
+      <div key={`typeinfo-${node.__schema}-${node.name}`} className={styles.node}>
+        <TypeInfoFromSchemaNode node={node.type} apiRefModel={apiRefModel} /> {'[]'}
+      </div>
+    );
+  }
+
   if (node instanceof InferenceTypeSchema) {
     const inferenceTypeNode = node as InferenceTypeSchema;
     return (
@@ -41,6 +50,7 @@ export function TypeInfoFromSchemaNode({ node, apiRefModel }: TypeInfoFromSchema
 
   if (node instanceof TypeRefSchema) {
     const typeRefNode = node as TypeRefSchema;
+
     const exportedTypeFromSameComp = typeRefNode.isFromThisComponent()
       ? apiRefModel.apiByName.get(typeRefNode.name)
       : undefined;
