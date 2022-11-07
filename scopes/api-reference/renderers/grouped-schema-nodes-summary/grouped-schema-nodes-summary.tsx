@@ -33,7 +33,7 @@ export function GroupedSchemaNodesSummary({ nodes, apiRefModel, className, ...re
         const headings =
           type === 'methods' || type === 'constructors'
             ? ['name', 'signature', 'description']
-            : ['name', 'type', 'default', 'description'];
+            : ['name', 'type', 'description'];
 
         return (
           <div key={`${typeId}`} className={classnames(styles.table, index !== 0 && styles.paddingTop)}>
@@ -42,11 +42,7 @@ export function GroupedSchemaNodesSummary({ nodes, apiRefModel, className, ...re
                 {type}
               </div>
             )}
-            <HeadingRow
-              className={classnames(headings.length === 3 ? styles.functionRow : styles.propRow)}
-              colNumber={headings.length === 3 ? 3 : 4}
-              headings={headings}
-            />
+            <HeadingRow className={classnames(styles.row)} colNumber={3} headings={headings} />
             {groupedMembersByType.map((member) => {
               if (type === 'methods' || type === 'constructors' || type === 'setters') {
                 return (

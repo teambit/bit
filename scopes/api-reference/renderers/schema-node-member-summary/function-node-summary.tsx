@@ -38,7 +38,7 @@ export function FunctionNodeSummary({
       key={`${__schema}-${name}`}
       className={classnames(className, styles.row)}
       headings={headings}
-      colNumber={4}
+      colNumber={3}
       customRow={{
         name: (
           <div id={name} className={classnames(trackedElementClassName, groupElementClassName)}>
@@ -46,13 +46,6 @@ export function FunctionNodeSummary({
           </div>
         ),
         signature: <div className={styles.signature}>{signature}</div>,
-        // 'return type': (
-        //   <TypeInfoFromSchemaNode
-        //     key={`typeinfo-${returnType.__schema}-${returnType.toString()}`}
-        //     node={returnType}
-        //     apiRefModel={apiRefModel}
-        //   />
-        // ),
       }}
       row={{
         name,
@@ -60,7 +53,6 @@ export function FunctionNodeSummary({
         parameter: '',
         required: false,
         type: '',
-        'return type': '',
         signature,
       }}
     />

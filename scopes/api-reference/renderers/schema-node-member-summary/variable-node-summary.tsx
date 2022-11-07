@@ -40,7 +40,7 @@ export function VariableNodeSummary({
       key={`${__schema}-${name}`}
       className={classnames(className, styles.row)}
       headings={headings}
-      colNumber={4}
+      colNumber={3}
       customRow={{
         name: (
           <div id={name} className={classnames(trackedElementClassName, groupElementClassName, styles.name)}>
