@@ -179,12 +179,15 @@ export async function getAllVersionParents({
   versionObjects?: Version[];
 }): Promise<VersionParents[]> {
   const versionHistory = await modelComponent.GetVersionHistory(repo);
-
   const { err, added } = await modelComponent.populateVersionHistoryIfMissingGracefully(repo, versionHistory, head);
-
   const versionParents: VersionParents[] = [];
   if (err) {
-    if (throws) throw err;
+    if (throws) {
+      // keep also the current stack. otherwise, the stack will have the recursive traversal data, which won't help much.
+      const newErr = new Error(err.message);
+      err.stack = `${err.stack}\nCurrent stack ${newErr.stack}`;
+      throw err;
+    }
     if (added) versionParents.push(...added);
   } else {
     versionParents.push(...versionHistory.versions);

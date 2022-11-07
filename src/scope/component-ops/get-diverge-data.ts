@@ -64,7 +64,13 @@ export async function getDivergeData({
     return new DivergeData();
   }
 
-  const versionParents = await getAllVersionParents({ repo, modelComponent, head: localHead, throws, versionObjects });
+  const versionParents = await getAllVersionParents({
+    repo,
+    modelComponent,
+    head: localHead,
+    throws: false,
+    versionObjects,
+  });
   const getVersionData = (ref: Ref): VersionParents | undefined => versionParents.find((v) => v.hash.isEqual(ref));
 
   const existOnRemote = (ref: Ref) => [remoteHead, ...(otherRemoteHeads || [])].find((r) => r.isEqual(ref));
