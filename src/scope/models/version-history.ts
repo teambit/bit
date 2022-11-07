@@ -6,7 +6,7 @@ import { Ref } from '../objects';
 import BitObject from '../objects/object';
 import Version from './version';
 
-type VersionData = {
+export type VersionParents = {
   hash: Ref;
   parents: Ref[];
   unrelated?: Ref;
@@ -16,13 +16,13 @@ type VersionData = {
 type VersionHistoryProps = {
   name: string;
   scope?: string;
-  versions: VersionData[];
+  versions: VersionParents[];
 };
 
 export default class VersionHistory extends BitObject {
   name: string;
   scope?: string;
-  versions: VersionData[];
+  versions: VersionParents[];
   constructor(props: VersionHistoryProps) {
     super();
     this.name = props.name;
@@ -77,12 +77,7 @@ export default class VersionHistory extends BitObject {
         exists.unrelated = version.unrelated?.head;
         exists.squashed = version.squashed?.previousParents;
       } else {
-        const versionData = {
-          hash: version.hash(),
-          parents: version.parents,
-          unrelated: version.unrelated?.head,
-          squashed: version.squashed?.previousParents,
-        };
+        const versionData = getVersionParentsFromVersion(version);
         this.versions.push(versionData);
       }
     });
@@ -120,7 +115,7 @@ export default class VersionHistory extends BitObject {
     return new BitId({ scope: this.scope, name: this.name });
   }
 
-  static create(name: string, scope: string, versions: VersionData[]) {
+  static create(name: string, scope: string, versions: VersionParents[]) {
     return new VersionHistory({
       name,
       scope,
@@ -142,4 +137,13 @@ export default class VersionHistory extends BitObject {
     };
     return new VersionHistory(props);
   }
+}
+
+export function getVersionParentsFromVersion(version: Version): VersionParents {
+  return {
+    hash: version.hash(),
+    parents: version.parents,
+    unrelated: version.unrelated?.head,
+    squashed: version.squashed?.previousParents,
+  };
 }

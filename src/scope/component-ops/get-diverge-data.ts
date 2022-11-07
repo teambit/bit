@@ -2,9 +2,10 @@ import R from 'ramda';
 import { ParentNotFound, VersionNotFoundOnFS } from '../exceptions';
 import { NoCommonSnap } from '../exceptions/no-common-snap';
 import { ModelComponent, Version } from '../models';
+import { getVersionParentsFromVersion, VersionParents } from '../models/version-history';
 import { Ref, Repository } from '../objects';
 import { DivergeData } from './diverge-data';
-import { getAllVersionHashes } from './traverse-versions';
+import { getAllVersionHashes, getAllVersionParents } from './traverse-versions';
 
 /**
  * traversing the snaps history is not cheap, so we first try to avoid it and if not possible,
@@ -15,6 +16,7 @@ import { getAllVersionHashes } from './traverse-versions';
  * the remote head, all the snaps from this parent will be considered local incorrectly. we need to traverse also the
  * remote to be able to do the diff between the local snaps and the remote snaps.
  */
+// eslint-disable-next-line complexity
 export async function getDivergeData({
   repo,
   modelComponent,
@@ -57,40 +59,13 @@ export async function getDivergeData({
     });
     return new DivergeData([], allRemoteHashes);
   }
-
-  const versionsHistory = await getDataFromCache(repo, modelComponent.id());
-  let isCacheDataChanged = false;
-  const saveDataInCacheIfNeeded = async () => {
-    if (isCacheDataChanged) await saveDataInCache(repo, modelComponent.id(), versionsHistory);
-  };
-  const getVersionObj = async (ref: Ref): Promise<Version | undefined> => {
-    return versionObjects?.find((v) => v.hash().isEqual(ref)) || ((await repo.load(ref)) as Version | undefined);
-  };
-
-  const getVersionData = async (ref: Ref): Promise<VersionData | undefined> => {
-    if (!versionsHistory[ref.toString()]) {
-      const version = await getVersionObj(ref);
-      if (!version) return undefined;
-
-      versionsHistory[ref.toString()] = {
-        parents: version.parents.map((p) => p.toString()),
-        unrelated: version.unrelated?.head.toString(),
-      };
-      isCacheDataChanged = true;
-    }
-
-    const { parents, unrelated } = versionsHistory[ref.toString()];
-    return {
-      hash: ref,
-      parents: parents.map((p) => Ref.from(p)),
-      unrelated: unrelated ? Ref.from(unrelated) : undefined,
-    };
-  };
-
   if (remoteHead.isEqual(localHead)) {
     // no diverge they're the same
     return new DivergeData();
   }
+
+  const versionParents = await getAllVersionParents({ repo, modelComponent, head: localHead, throws, versionObjects });
+  const getVersionData = (ref: Ref): VersionParents | undefined => versionParents.find((v) => v.hash.isEqual(ref));
 
   const existOnRemote = (ref: Ref) => [remoteHead, ...(otherRemoteHeads || [])].find((r) => r.isEqual(ref));
 
@@ -101,7 +76,7 @@ export async function getDivergeData({
   let commonSnapBeforeDiverge: Ref | undefined;
   let hasMultipleParents = false;
   let error: Error | undefined;
-  const addParentsRecursively = async (version: VersionData, snaps: Ref[], isLocal: boolean) => {
+  const addParentsRecursively = (version: VersionData, snaps: Ref[], isLocal: boolean) => {
     if (isLocal && existOnRemote(version.hash)) {
       remoteHeadExistsLocally = true;
       return;
@@ -126,20 +101,18 @@ export async function getDivergeData({
     }
     snaps.push(version.hash);
     if (version.parents.length > 1) hasMultipleParents = true;
-    await Promise.all(
-      version.parents.map(async (parent) => {
-        const parentVersion = await getVersionData(parent);
-        if (parentVersion) {
-          await addParentsRecursively(parentVersion, snaps, isLocal);
-        } else {
-          const err = new ParentNotFound(modelComponent.id(), version.hash.toString(), parent.toString());
-          if (throws) throw err;
-          error = err;
-        }
-      })
-    );
+    version.parents.map(async (parent) => {
+      const parentVersion = getVersionData(parent);
+      if (parentVersion) {
+        addParentsRecursively(parentVersion, snaps, isLocal);
+      } else {
+        const err = new ParentNotFound(modelComponent.id(), version.hash.toString(), parent.toString());
+        if (throws) throw err;
+        error = err;
+      }
+    });
   };
-  const localVersion = await getVersionData(localHead);
+  const localVersion = getVersionData(localHead);
   if (!localVersion) {
     const err =
       new Error(`fatal: a component "${modelComponent.id()}" is missing the local head object (${localHead}) in the filesystem.
@@ -148,20 +121,17 @@ bit import ${modelComponent.id()} --objects`);
     if (throws) throw err;
     return new DivergeData(snapsOnLocal, [], remoteHead, err);
   }
-  await addParentsRecursively(localVersion, snapsOnLocal, true);
+  addParentsRecursively(localVersion, snapsOnLocal, true);
   if (remoteHeadExistsLocally && !hasMultipleParents) {
-    await saveDataInCacheIfNeeded();
     return new DivergeData(snapsOnLocal, [], remoteHead, error);
   }
   const remoteVersion = await getVersionData(remoteHead);
   if (!remoteVersion) {
     const err = new VersionNotFoundOnFS(remoteHead.toString(), modelComponent.id());
-    await saveDataInCacheIfNeeded();
     if (throws) throw err;
     return new DivergeData([], [], undefined, err);
   }
-  await addParentsRecursively(remoteVersion, snapsOnRemote, false);
-  await saveDataInCacheIfNeeded();
+  addParentsRecursively(remoteVersion, snapsOnRemote, false);
   if (localHeadExistsRemotely) {
     return new DivergeData([], R.difference(snapsOnRemote, snapsOnLocal), localHead, error);
   }
@@ -202,13 +172,3 @@ type VersionData = {
 };
 
 export type VersionsHistory = { [hash: string]: VersionDataRaw };
-
-async function getDataFromCache(repo: Repository, idStr: string): Promise<VersionsHistory> {
-  const result = await repo.componentFsCache.getVersionsDataFromCache(idStr);
-  if (!result) return {};
-  return JSON.parse(result.data);
-}
-
-async function saveDataInCache(repo: Repository, idStr: string, data: VersionsHistory) {
-  await repo.componentFsCache.saveVersionsDataInCache(idStr, JSON.stringify(data, undefined, 2));
-}

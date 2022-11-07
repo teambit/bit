@@ -42,7 +42,7 @@ import { Lane } from '.';
 import ScopeMeta from './scopeMeta';
 import Source from './source';
 import Version from './version';
-import VersionHistory from './version-history';
+import VersionHistory, { getVersionParentsFromVersion, VersionParents } from './version-history';
 import { getLatestVersion } from '../../utils/semver-helper';
 import { ObjectItem } from '../objects/object-list';
 import { getRefsFromExtensions } from '../../consumer/component/sources/artifact-files';
@@ -1003,11 +1003,11 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
     return versionHistory;
   }
 
-  private async populateVersionHistoryIfMissingGracefully(
+  async populateVersionHistoryIfMissingGracefully(
     repo: Repository,
     versionHistory: VersionHistory,
     head: Ref
-  ): Promise<{ err?: Error; addedRefs?: Ref[] }> {
+  ): Promise<{ err?: Error; added?: VersionParents[] }> {
     if (versionHistory.hasHash(head)) return {};
     const getVersionObj = async (ref: Ref) => (await ref.load(repo)) as Version;
     const versionsToAdd: Version[] = [];
@@ -1036,13 +1036,13 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
     return this.populateVersionHistoryMutex.runExclusive(async () => {
       versionsToAdd.push(headVer);
       await addParentsRecursively(headVer);
-      const addedRefs = versionsToAdd.map((v) => v.hash());
+      const added = versionsToAdd.map((v) => getVersionParentsFromVersion(v));
       if (err) {
-        return { err, addedRefs };
+        return { err, added };
       }
       versionHistory.addFromVersionsObjects(versionsToAdd);
       await repo.writeObjectsToTheFS([versionHistory]);
-      return { addedRefs };
+      return { added };
     });
   }
 
