@@ -1,12 +1,12 @@
 refactoring to do in Bit:
 
-- config api is far too concete and causes coupling, we need to delegate configuration to harmony.
-  - start by standardizing seralization and deserialization of types.
+- config api is far too concrete and causes coupling, we need to delegate configuration to harmony.
+  - start by standardizing serialization and deserialization of types.
 - refactor all implmentations of the api file to or Bit extensions for now.
-- chanage the name of the debug environment variable from BLUEBIRD_DEBUG to DEBUG.
-- refactor filesystem to be given to Bit so it could be reaplced from the outside.
+- change the name of the debug environment variable from BLUEBIRD_DEBUG to DEBUG.
+- refactor filesystem to be given to Bit so it could be replaced from the outside.
 - consolidate and refactor file system and path selection outside of Bit through workspace.
-- rewrite and replace cli infraturcture
+- rewrite and replace cli infrastructure
   - React components for UI using Ink or anything else.
   - support stdout streaming through extensions.
   - extensions 
