@@ -218,6 +218,7 @@ function getSubsetOfVersionParents(versionParents: VersionParents[], from: Ref, 
     return Boolean(results.find((result) => result.hash.isEqual(ref)));
   };
   const addVersionParentRecursively = (version: VersionParents) => {
+    results.push(version);
     version.parents.forEach((parent) => {
       if (shouldStop(parent)) {
         return;
@@ -226,13 +227,12 @@ function getSubsetOfVersionParents(versionParents: VersionParents[], from: Ref, 
         // happens when there are two parents at some point, and then they merged
         return;
       }
-      results.push(version);
       const parentVersion = getVersionParent(parent);
       if (parentVersion) addVersionParentRecursively(parentVersion);
     });
   };
   const head = getVersionParent(from);
-  if (!head) return [];
+  if (!head || shouldStop(head.hash)) return [];
   addVersionParentRecursively(head);
   return results;
 }
