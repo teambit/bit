@@ -3,6 +3,6 @@
   flex-direction: column;
   overflow: auto;
   height: 100%;
-  font-size: 14px;
+  font-size: var(--bit-p-xs);
   border-right: 2px solid #ededed;
 }
