@@ -2,7 +2,6 @@ import { resolveFrom } from '@teambit/toolbox.modules.module-resolver';
 import chai, { expect } from 'chai';
 import fs from 'fs-extra';
 import path from 'path';
-import { sync as resolveSync } from 'resolve';
 import Helper from '../../../src/e2e-helper/e2e-helper';
 
 chai.use(require('chai-fs'));
