@@ -1197,6 +1197,8 @@ describe('env root components', function () {
   this.timeout(0);
 
   describe('pnpm isolated linker', function () {
+    const env1DefaultPeerVersion = '16.14.0';
+    const env2DefaultPeerVersion = '16.13.1';
     before(() => {
       helper = new Helper();
       helper.scopeHelper.setNewLocalAndRemoteScopes();
@@ -1208,7 +1210,7 @@ describe('env root components', function () {
             {
               name: 'react',
               supportedRange: '^16.8.0',
-              version: '16.14.0',
+              version: env1DefaultPeerVersion,
             },
           ],
         })
@@ -1221,7 +1223,7 @@ describe('env root components', function () {
             {
               name: 'react',
               supportedRange: '^16.8.0',
-              version: '16.13.1',
+              version: env2DefaultPeerVersion,
             },
           ],
         })
@@ -1289,12 +1291,12 @@ module.exports.default = {
         fs.readJsonSync(
           resolveFrom(rootCompDirDep(helper, 'custom-react.env1', 'custom-react.env1'), ['react/package.json'])
         ).version
-      ).to.match(/^17\./);
+      ).to.eq(env1DefaultPeerVersion);
       expect(
         fs.readJsonSync(
-          resolveFrom(rootCompDirDep(helper, 'custom-react.env2', 'custom-react.env1'), ['react/package.json'])
+          resolveFrom(rootCompDirDep(helper, 'custom-react.env2', 'custom-react.env2'), ['react/package.json'])
         ).version
-      ).to.match(/^17\./);
+      ).to.eq(env2DefaultPeerVersion);
     });
   });
 });
