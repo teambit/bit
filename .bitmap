@@ -1061,6 +1061,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/api-reference/renderers/type"
     },
+    "renderers/type-array": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/api-reference/renderers/type-array"
+    },
     "renderers/type-intersection": {
         "scope": "",
         "version": "",
@@ -2166,12 +2172,6 @@
         "version": "",
         "mainFile": "index.ts",
         "rootDir": "scopes/api-reference/utils/sort-api-nodes"
-    },
-    "utils/type-info-from-schema-node": {
-        "scope": "",
-        "version": "",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/api-reference/utils/type-info-from-schema-node"
     },
     "variants": {
         "scope": "teambit.workspace",
