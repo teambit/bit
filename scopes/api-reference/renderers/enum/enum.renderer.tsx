@@ -21,7 +21,7 @@ function EnumComponent(props: APINodeRenderProps) {
 
   return (
     <APINodeDetails {...props}>
-      <GroupedSchemaNodesSummary nodes={members} apiRefModel={props.apiRefModel} />
+      <GroupedSchemaNodesSummary nodes={members} apiNodeRendererProps={props} />
     </APINodeDetails>
   );
 }

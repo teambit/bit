@@ -27,7 +27,7 @@ function ClassComponent(props: APINodeRenderProps) {
 
   return (
     <APINodeDetails {...props} displaySignature={displaySignature}>
-      <GroupedSchemaNodesSummary nodes={members} apiRefModel={props.apiRefModel} />
+      <GroupedSchemaNodesSummary nodes={members} apiNodeRendererProps={props} />
     </APINodeDetails>
   );
 }

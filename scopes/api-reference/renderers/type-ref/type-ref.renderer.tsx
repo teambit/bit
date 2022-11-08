@@ -4,7 +4,11 @@ import { APINodeRenderProps, APINodeRenderer } from '@teambit/api-reference.mode
 import { TypeRefSchema } from '@teambit/semantics.entities.semantic-schema';
 import { APINodeDetails } from '@teambit/api-reference.renderers.api-node-details';
 import { copySchemaNode } from '@teambit/api-reference.utils.copy-schema-node';
-import { TypeInfoFromSchemaNode } from '@teambit/api-reference.utils.type-info-from-schema-node';
+import classnames from 'classnames';
+import { useUpdatedUrlFromQuery } from '@teambit/api-reference.hooks.use-api-ref-url';
+import { ComponentID } from '@teambit/component-id';
+import { ComponentUrl } from '@teambit/component.modules.component-url';
+import { Link } from '@teambit/base-react.navigation.link';
 
 import styles from './type-ref.renderer.module.scss';
 
@@ -25,11 +29,10 @@ function TypeRefComponent(props: APINodeRenderProps) {
     apiRefModel,
     depth,
     renderers,
-    ...rest
   } = props;
   const typeRefNode = api as TypeRefSchema;
 
-  if (props.depth === 0) {
+  if (depth === 0) {
     return (
       <APINodeDetails
         {...props}
@@ -41,9 +44,101 @@ function TypeRefComponent(props: APINodeRenderProps) {
     );
   }
 
+  const exportedTypeFromSameComp = typeRefNode.isFromThisComponent()
+    ? apiRefModel.apiByName.get(typeRefNode.name)
+    : undefined;
+
+  const exportedTypeUrlFromSameComp =
+    exportedTypeFromSameComp &&
+    useUpdatedUrlFromQuery({
+      selectedAPI: exportedTypeFromSameComp.api.name,
+    });
+
+  const exportedTypeUrlFromAnotherComp = typeRefNode.componentId
+    ? getExportedTypeUrlFromAnotherComp({
+        componentId: typeRefNode.componentId,
+        selectedAPI: typeRefNode.name,
+      })
+    : undefined;
+
+  const args =
+    typeRefNode.typeArgs?.map((typeArg, index, typeArgs) => {
+      const typeArgRenderer = renderers.find((renderer) => renderer.predicate(typeArg));
+
+      if (typeArgRenderer) {
+        return (
+          <>
+            <typeArgRenderer.Component
+              {...props}
+              apiNode={{ ...props.apiNode, api: typeArg, renderer: typeArgRenderer }}
+              depth={(props.depth ?? 0) + 1}
+              metadata={{ [typeArg.__schema]: { columnView: true } }}
+            />
+            {(typeArgs?.length ?? 0) > 1 && index !== (typeArgs?.length ?? 0) - 1 ? ', ' : null}
+          </>
+        );
+      }
+
+      return (
+        <>
+          {typeArg.toString()}
+          {(typeArgs?.length ?? 0) > 1 && index !== (typeArgs?.length ?? 0) - 1 ? ', ' : null}
+        </>
+      );
+    }) ?? null;
+
+  if (args) {
+    return (
+      <>
+        <TypeRefName
+          key={`typeRef-with-args-${typeRefNode.name}`}
+          name={typeRefNode.name}
+          external={!!exportedTypeUrlFromAnotherComp}
+          url={exportedTypeUrlFromSameComp || exportedTypeUrlFromAnotherComp}
+        />
+        <div className={classnames(styles.node)}>
+          {'<'}
+          {args.map((arg) => arg)}
+          {'>'}
+        </div>
+      </>
+    );
+  }
+
   return (
-    <div className={styles.container}>
-      <TypeInfoFromSchemaNode key={`type-ref-${typeRefNode.__schema}`} node={typeRefNode} apiRefModel={apiRefModel} />
-    </div>
+    <TypeRefName
+      key={`typeRef-${typeRefNode.name}`}
+      name={typeRefNode.name}
+      external={!!exportedTypeUrlFromAnotherComp}
+      url={exportedTypeUrlFromSameComp || exportedTypeUrlFromAnotherComp}
+    />
   );
+}
+
+function TypeRefName({ name, url, external }: { name: string; url?: string; external?: boolean }) {
+  if (url) {
+    return (
+      <Link href={url} external={external} className={classnames(styles.node, styles.nodeLink)}>
+        {name}
+      </Link>
+    );
+  }
+  return <div className={classnames(styles.node)}>{name}</div>;
+}
+
+function getExportedTypeUrlFromAnotherComp({
+  componentId,
+  selectedAPI,
+}: {
+  componentId: ComponentID;
+  selectedAPI: string;
+}) {
+  const componentUrl = ComponentUrl.toUrl(componentId);
+  const [componentIdUrl, versionQuery] = componentUrl.split('?');
+
+  const exportedTypeUrl = `${componentIdUrl}/~api-reference?selectedAPI=${encodeURIComponent(
+    selectedAPI
+  )}&${versionQuery}`;
+
+  return exportedTypeUrl;
 }

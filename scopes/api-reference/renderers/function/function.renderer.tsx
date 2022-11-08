@@ -4,7 +4,6 @@ import { APINodeRenderProps, APINodeRenderer } from '@teambit/api-reference.mode
 import { APINodeDetails } from '@teambit/api-reference.renderers.api-node-details';
 import { parameterRenderer } from '@teambit/api-reference.renderers.parameter';
 import { HeadingRow } from '@teambit/documenter.ui.table-heading-row';
-import { TypeInfoFromSchemaNode } from '@teambit/api-reference.utils.type-info-from-schema-node';
 import classnames from 'classnames';
 
 import styles from './function.renderer.module.scss';
@@ -21,10 +20,15 @@ function FunctionComponent(props: APINodeRenderProps) {
   const {
     apiNode: { api },
     renderers,
-    apiRefModel,
+    // apiRefModel,
   } = props;
   const functionNode = api as FunctionLikeSchema;
   const { returnType, params, typeParams } = functionNode;
+  const returnTypeRenderer = renderers.find((renderer) => renderer.predicate(returnType));
+
+  if (props.metadata?.[api.__schema]?.columnView) {
+    return <div className={styles.node}>{api.toString()}</div>;
+  }
 
   const hasParams = params.length > 0;
 
@@ -61,6 +65,7 @@ function FunctionComponent(props: APINodeRenderProps) {
                     key={`param-${param.name}`}
                     depth={(props.depth ?? 0) + 1}
                     apiNode={{ ...props.apiNode, renderer: paramRenderer, api: param }}
+                    metadata={{ [param.__schema]: { columnView: true } }}
                   />
                 );
               }
@@ -70,6 +75,7 @@ function FunctionComponent(props: APINodeRenderProps) {
                   key={`param-${param.name}`}
                   depth={(props.depth ?? 0) + 1}
                   apiNode={{ ...props.apiNode, renderer: parameterRenderer, api: param }}
+                  metadata={{ [param.__schema]: { columnView: true } }}
                 />
               );
             })}
@@ -79,11 +85,13 @@ function FunctionComponent(props: APINodeRenderProps) {
       <div className={styles.container}>
         <div className={styles.title}>Returns</div>
         <div className={styles.returnType}>
-          <TypeInfoFromSchemaNode
-            key={`returnType-${returnType.__schema}`}
-            node={returnType}
-            apiRefModel={apiRefModel}
-          />
+          {(returnTypeRenderer && (
+            <returnTypeRenderer.Component
+              {...props}
+              apiNode={{ ...props.apiNode, api: returnType, renderer: returnTypeRenderer }}
+              depth={(props.depth ?? 0) + 1}
+            />
+          )) || <div className={styles.node}>{returnType.toString()}</div>}
         </div>
       </div>
     </APINodeDetails>

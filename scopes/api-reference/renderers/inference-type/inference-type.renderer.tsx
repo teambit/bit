@@ -2,7 +2,6 @@
 import React from 'react';
 import { APINodeRenderProps, APINodeRenderer } from '@teambit/api-reference.models.api-node-renderer';
 import { InferenceTypeSchema } from '@teambit/semantics.entities.semantic-schema';
-import { TypeInfoFromSchemaNode } from '@teambit/api-reference.utils.type-info-from-schema-node';
 
 import styles from './inference-type.module.scss';
 
@@ -15,13 +14,14 @@ export const inferenceTypeRenderer: APINodeRenderer = {
 
 function InferenceTypeComponent(props: APINodeRenderProps) {
   const {
-    apiRefModel,
     apiNode: { api },
   } = props;
 
+  const inferenceTypeNode = api as InferenceTypeSchema;
+
   return (
-    <div className={styles.container}>
-      <TypeInfoFromSchemaNode key={`type-ref-${api.__schema}`} node={api} apiRefModel={apiRefModel} />
+    <div key={`inference-${inferenceTypeNode.name}`} className={styles.node}>
+      {inferenceTypeNode.type}
     </div>
   );
 }

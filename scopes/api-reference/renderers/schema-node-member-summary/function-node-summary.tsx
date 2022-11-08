@@ -1,5 +1,5 @@
 import React, { HTMLAttributes } from 'react';
-import { SchemaNode } from '@teambit/semantics.entities.semantic-schema';
+import { SchemaNode, SetAccessorSchema } from '@teambit/semantics.entities.semantic-schema';
 import { TableRow } from '@teambit/documenter.ui.table-row';
 import { transformSignature } from '@teambit/api-reference.utils.schema-node-signature-transform';
 import { APIReferenceModel } from '@teambit/api-reference.models.api-reference-model';
@@ -30,7 +30,10 @@ export function FunctionNodeSummary({
   ...rest
 }: FunctionNodeSummaryProps) {
   const { __schema, doc } = node;
-  const signature = transformSignature(node)?.split(name)[1];
+  const signature =
+    __schema === SetAccessorSchema.name
+      ? `(${(node as SetAccessorSchema).param.toString()}) => void`
+      : transformSignature(node)?.split(name)[1];
 
   return (
     <TableRow
@@ -41,7 +44,7 @@ export function FunctionNodeSummary({
       colNumber={3}
       customRow={{
         name: (
-          <div id={name} className={classnames(trackedElementClassName, groupElementClassName)}>
+          <div id={name} className={classnames(trackedElementClassName, groupElementClassName, styles.name)}>
             {name}
           </div>
         ),
