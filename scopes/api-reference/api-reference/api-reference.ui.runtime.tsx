@@ -18,6 +18,7 @@ import { typeIntersectionRenderer } from '@teambit/api-reference.renderers.type-
 import { typeLiteralRenderer } from '@teambit/api-reference.renderers.type-literal';
 import { parameterRenderer } from '@teambit/api-reference.renderers.parameter';
 import { inferenceTypeRenderer } from '@teambit/api-reference.renderers.inference-type';
+import { typeArrayRenderer } from '@teambit/api-reference.renderers.type-array';
 
 import { APIReferenceAspect } from './api-reference.aspect';
 
@@ -45,6 +46,7 @@ export class APIReferenceUI {
     parameterRenderer,
     typeLiteralRenderer,
     inferenceTypeRenderer,
+    typeArrayRenderer,
   ];
 
   static async provider(
