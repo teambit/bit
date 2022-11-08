@@ -17,7 +17,7 @@ import logger from '../../logger/logger';
 import { Remotes } from '../../remotes';
 import { splitBy } from '../../utils';
 import ComponentVersion from '../component-version';
-import { ComponentNotFound, ParentNotFound, VersionNotFound } from '../exceptions';
+import { ComponentNotFound, HeadNotFound, ParentNotFound, VersionNotFound } from '../exceptions';
 import { Lane, ModelComponent, Version } from '../models';
 import { BitObject, Ref, Repository } from '../objects';
 import { ObjectItemsStream, ObjectList } from '../objects/object-list';
@@ -30,7 +30,7 @@ import { concurrentComponentsLimit } from '../../utils/concurrency';
 import { BuildStatus } from '../../constants';
 import { NoHeadNoVersion } from '../exceptions/no-head-no-version';
 import { HashesPerRemotes, MissingObjects } from '../exceptions/missing-objects';
-import { getAllVersionHashes } from './traverse-versions';
+import { getAllVersionsInfo } from './traverse-versions';
 
 const removeNils = R.reject(R.isNil);
 
@@ -184,9 +184,9 @@ export default class ScopeComponentsImporter {
       const modelComponent = await this.scope.getModelComponent(id);
       if (!modelComponent.head) return null; // doesn't exist on the remote.
       try {
-        await getAllVersionHashes({ modelComponent, repo: this.repo });
+        await getAllVersionsInfo({ modelComponent, repo: this.repo });
       } catch (err: any) {
-        if (err instanceof ParentNotFound || err instanceof VersionNotFound) {
+        if (err instanceof ParentNotFound || err instanceof VersionNotFound || err instanceof HeadNotFound) {
           return id;
         }
         // we don't care much about other errors here. but it's good to know about them.
@@ -198,7 +198,11 @@ export default class ScopeComponentsImporter {
     const missingHistory = compact(missingHistoryWithNulls);
     if (!missingHistory.length) return;
     logger.debug(`importMissingHistory, total ${missingHistory.length} component has history missing`);
-    await this.importManyDeltaWithoutDeps(BitIds.fromArray(missingHistory), true);
+    await this.importManyDeltaWithoutDeps({
+      ids: BitIds.fromArray(missingHistory),
+      fromHead: true,
+      preferVersionHistory: false,
+    });
   }
 
   async importWithoutDeps(ids: BitIds, cache = true, lanes: Lane[] = []): Promise<ComponentVersion[]> {
@@ -230,19 +234,26 @@ export default class ScopeComponentsImporter {
   /**
    * delta between the local head and the remote head. mainly to improve performance
    */
-  async importManyDeltaWithoutDeps(
-    ids: BitIds,
-    allHistory = false,
-    lane?: Lane,
-    ignoreMissingHead = false
-  ): Promise<void> {
+  async importManyDeltaWithoutDeps({
+    ids,
+    fromHead = false,
+    lane,
+    ignoreMissingHead = false,
+    preferVersionHistory = true,
+  }: {
+    ids: BitIds;
+    fromHead?: boolean;
+    lane?: Lane;
+    ignoreMissingHead?: boolean;
+    preferVersionHistory?: boolean;
+  }): Promise<void> {
     logger.debugAndAddBreadCrumb('importManyDeltaWithoutDeps', `Ids: {ids}`, { ids: ids.toString() });
     const idsWithoutNils = BitIds.uniqFromArray(compact(ids));
     if (R.isEmpty(idsWithoutNils)) return;
 
     const compDef = await this.sources.getMany(idsWithoutNils.toVersionLatest(), true);
     const idsToFetch = await mapSeries(compDef, async ({ id, component }) => {
-      if (!component || allHistory) {
+      if (!component || fromHead) {
         // remove the version to fetch it with all versions.
         return id.changeVersion(undefined);
       }
@@ -261,10 +272,8 @@ export default class ScopeComponentsImporter {
       return id.changeVersion(remoteHead.toString());
     });
     const groupedIds = lane ? groupByLanes(idsToFetch, [lane]) : groupByScopeName(idsToFetch);
-    const idsOnlyDelta = idsToFetch.filter((id) => id.hasVersion());
-    const idsAllHistory = idsToFetch.filter((id) => !id.hasVersion());
     const remotesCount = Object.keys(groupedIds).length;
-    const statusMsg = `fetching ${idsToFetch.length} components from ${remotesCount} remotes. delta-only: ${idsOnlyDelta.length}, all-history: ${idsAllHistory.length}.`;
+    const statusMsg = `fetching ${idsToFetch.length} components from ${remotesCount} remotes.`;
     loader.start(statusMsg);
     logger.debugAndAddBreadCrumb('importManyDeltaWithoutDeps', statusMsg);
     const remotes = await getScopeRemotes(this.scope);
@@ -277,7 +286,7 @@ export default class ScopeComponentsImporter {
         withoutDependencies: true,
         laneId: lane ? lane.id() : undefined,
         ignoreMissingHead,
-        preferVersionHistory: true,
+        preferVersionHistory,
       },
       idsToFetch,
       lane ? [lane] : undefined

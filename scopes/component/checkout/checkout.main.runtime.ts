@@ -143,7 +143,10 @@ export class CheckoutMain {
     const notExported = ids?.filter((id) => !id._legacy.hasScope()).map((id) => id._legacy.changeScope(id.scope));
     const scopeComponentsImporter = this.workspace.consumer.scope.scopeImporter;
     try {
-      await scopeComponentsImporter.importManyDeltaWithoutDeps(BitIds.fromArray(notExported || []), true);
+      await scopeComponentsImporter.importManyDeltaWithoutDeps({
+        ids: BitIds.fromArray(notExported || []),
+        fromHead: true,
+      });
     } catch (err) {
       // don't stop the process. it's possible that the scope doesn't exist yet because these are new components
       this.logger.error(`unable to sync new components due to an error`, err);

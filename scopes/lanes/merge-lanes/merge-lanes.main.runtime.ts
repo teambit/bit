@@ -247,9 +247,18 @@ export class MergeLanesMain {
     const lane = await this.lanes.importLaneObject(laneId);
     const laneIds = lane.toBitIds();
     const scopeComponentsImporter = ScopeComponentsImporter.getInstance(this.scope.legacyScope);
-    await scopeComponentsImporter.importManyDeltaWithoutDeps(laneIds, true, lane, true);
+    await scopeComponentsImporter.importManyDeltaWithoutDeps({
+      ids: laneIds,
+      fromHead: true,
+      lane,
+      ignoreMissingHead: true,
+    });
     // get their main as well
-    await scopeComponentsImporter.importManyDeltaWithoutDeps(laneIds.toVersionLatest(), true, undefined, true);
+    await scopeComponentsImporter.importManyDeltaWithoutDeps({
+      ids: laneIds.toVersionLatest(),
+      fromHead: true,
+      ignoreMissingHead: true,
+    });
     const repo = this.scope.legacyScope.objects;
     // loop through all components, make sure they're all ahead of main (it might not be on main yet).
     // then, change the version object to include an extra parent to point to the main.
