@@ -27,9 +27,10 @@ function TypeIntersectionComponent(props: APINodeRenderProps) {
 
         if (typeRenderer) {
           return (
-            <>
+            <React.Fragment key={`typeIntersectionMember-container-${type.toString()}-${index}}`}>
               <typeRenderer.Component
                 {...props}
+                key={`typeIntersectionMember-${type.toString()}-${index}}`}
                 apiNode={{ ...props.apiNode, api: type, renderer: typeRenderer }}
                 depth={(props.depth ?? 0) + 1}
                 metadata={{ [type.__schema]: { columnView: true } }}
@@ -39,7 +40,7 @@ function TypeIntersectionComponent(props: APINodeRenderProps) {
                   {'&'}
                 </div>
               ) : null}
-            </>
+            </React.Fragment>
           );
         }
 

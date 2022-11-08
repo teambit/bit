@@ -67,41 +67,42 @@ function TypeRefComponent(props: APINodeRenderProps) {
 
       if (typeArgRenderer) {
         return (
-          <>
+          <React.Fragment key={`type-arg-container-${typeArg.__schema}-${typeArg.toString()}-${index}`}>
             <typeArgRenderer.Component
               {...props}
+              key={`type-arg-${typeArg.__schema}-${typeArg.toString()}-${index}`}
               apiNode={{ ...props.apiNode, api: typeArg, renderer: typeArgRenderer }}
               depth={(props.depth ?? 0) + 1}
               metadata={{ [typeArg.__schema]: { columnView: true } }}
             />
             {(typeArgs?.length ?? 0) > 1 && index !== (typeArgs?.length ?? 0) - 1 ? ', ' : null}
-          </>
+          </React.Fragment>
         );
       }
 
       return (
-        <>
+        <React.Fragment key={typeArg.toString()}>
           {typeArg.toString()}
           {(typeArgs?.length ?? 0) > 1 && index !== (typeArgs?.length ?? 0) - 1 ? ', ' : null}
-        </>
+        </React.Fragment>
       );
     }) ?? null;
 
   if (args) {
     return (
-      <>
+      <React.Fragment key={`typeRef-with-args-container-${typeRefNode.name}`}>
         <TypeRefName
           key={`typeRef-with-args-${typeRefNode.name}`}
           name={typeRefNode.name}
           external={!!exportedTypeUrlFromAnotherComp}
           url={exportedTypeUrlFromSameComp || exportedTypeUrlFromAnotherComp}
         />
-        <div className={classnames(styles.node)}>
+        <div key={`typeArgsContainer-${typeRefNode.name}`} className={classnames(styles.node)}>
           {'<'}
           {args.map((arg) => arg)}
           {'>'}
         </div>
-      </>
+      </React.Fragment>
     );
   }
 
