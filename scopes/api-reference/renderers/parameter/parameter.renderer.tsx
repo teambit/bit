@@ -1,6 +1,5 @@
 import React from 'react';
 import { APINodeRenderProps, APINodeRenderer } from '@teambit/api-reference.models.api-node-renderer';
-// import { TypeInfoFromSchemaNode } from '@teambit/api-reference.utils.type-info-from-schema-node';
 import { ParameterSchema } from '@teambit/semantics.entities.semantic-schema';
 import { TableRow } from '@teambit/documenter.ui.table-row';
 
