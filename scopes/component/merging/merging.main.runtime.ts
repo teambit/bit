@@ -24,7 +24,7 @@ import { LaneId } from '@teambit/lane-id';
 import { AutoTagResult } from '@teambit/legacy/dist/scope/component-ops/auto-tag';
 import { getDivergeData } from '@teambit/legacy/dist/scope/component-ops/get-diverge-data';
 import { UnmergedComponent } from '@teambit/legacy/dist/scope/lanes/unmerged-components';
-import { Lane, Version } from '@teambit/legacy/dist/scope/models';
+import { Lane, ModelComponent, Version } from '@teambit/legacy/dist/scope/models';
 import { Ref } from '@teambit/legacy/dist/scope/objects';
 import chalk from 'chalk';
 import { Tmp } from '@teambit/legacy/dist/scope/repositories';
@@ -353,11 +353,6 @@ export class MergingMain {
     if (isComponentModified) {
       return returnUnmerged(`component is modified, please snap/tag it first`);
     }
-    // @todo: is it needed?
-    // const laneHeadIsDifferentThanCheckedOut =
-    //   localLane && existingBitMapId?.version && modelComponent.laneHeadLocal?.toString() !== existingBitMapId?.version;
-    // const localHead = laneHeadIsDifferentThanCheckedOut ? Ref.from(existingBitMapId.version) : null;
-
     if (!otherLaneHead) {
       throw new Error(`merging: unable finding a hash for the version ${version} of ${id.toString()}`);
     }
@@ -365,7 +360,6 @@ export class MergingMain {
       repo,
       modelComponent,
       remoteHead: otherLaneHead,
-      // checkedOutLocalHead: localHead,
       throws: false,
     });
     if (divergeData.err) {

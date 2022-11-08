@@ -12,6 +12,7 @@ import Put from './commands/private-cmds/_put-cmd';
 import DescribeScope from './commands/private-cmds/_scope-cmd';
 import ScopeShow from './commands/private-cmds/_show-cmd';
 import CatComponent from './commands/private-cmds/cat-component-cmd';
+import { CatVersionHistoryCmd } from './commands/private-cmds/cat-version-history-cmd';
 import CatLane from './commands/private-cmds/cat-lane-cmd';
 import CatObject from './commands/private-cmds/cat-object-cmd';
 import CatScope from './commands/private-cmds/cat-scope-cmd';
@@ -55,6 +56,7 @@ export default function registerCommands(): CommandRegistry {
     new DescribeScope(),
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     new CatScope(),
+    new CatVersionHistoryCmd(),
     new ScopeConfig(),
     new DependencyStatus(),
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
