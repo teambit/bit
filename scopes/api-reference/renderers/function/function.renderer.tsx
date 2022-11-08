@@ -2,7 +2,7 @@ import React from 'react';
 import { FunctionLikeSchema } from '@teambit/semantics.entities.semantic-schema';
 import { APINodeRenderProps, APINodeRenderer } from '@teambit/api-reference.models.api-node-renderer';
 import { APINodeDetails } from '@teambit/api-reference.renderers.api-node-details';
-import { parameterRenderer } from '@teambit/api-reference.renderers.parameter';
+import { parameterRenderer as defaultParamRenderer } from '@teambit/api-reference.renderers.parameter';
 import { HeadingRow } from '@teambit/documenter.ui.table-heading-row';
 import classnames from 'classnames';
 
@@ -70,11 +70,11 @@ function FunctionComponent(props: APINodeRenderProps) {
                 );
               }
               return (
-                <parameterRenderer.Component
+                <defaultParamRenderer.Component
                   {...props}
                   key={`param-${param.name}`}
                   depth={(props.depth ?? 0) + 1}
-                  apiNode={{ ...props.apiNode, renderer: parameterRenderer, api: param }}
+                  apiNode={{ ...props.apiNode, renderer: defaultParamRenderer, api: param }}
                   metadata={{ [param.__schema]: { columnView: true } }}
                 />
               );
