@@ -1039,9 +1039,9 @@ export class DependencyResolverMain {
 
     const result = VariantPolicy.mergePolices([
       policiesFromEnv,
-      policiesFromEnvForItself,
       policiesFromSlots,
       policiesFromConfig,
+      policiesFromEnvForItself,
     ]);
     return result;
   }

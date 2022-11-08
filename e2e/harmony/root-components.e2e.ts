@@ -1,7 +1,7 @@
+import { resolveFrom } from '@teambit/toolbox.modules.module-resolver';
 import chai, { expect } from 'chai';
 import fs from 'fs-extra';
 import path from 'path';
-import { sync as resolveSync } from 'resolve';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
 
@@ -1203,9 +1203,9 @@ describe('env root components', function () {
       helper = new Helper();
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.command.create('react-env', 'custom-react/env1', '-p custom-react/env1');
-      helper.fs.outputFile(
-        `custom-react/env1/env1.main.runtime.ts`,
-        envSettingDeps('env1', {
+      helper.fs.envMainRuntimeFile(`custom-react/env1/env1.main.runtime.ts`, {
+        envName: 'env1',
+        dependencies: {
           peers: [
             {
               name: 'react',
@@ -1213,12 +1213,12 @@ describe('env root components', function () {
               version: env1DefaultPeerVersion,
             },
           ],
-        })
-      );
+        },
+      });
       helper.command.create('react-env', 'custom-react/env2', '-p custom-react/env2');
-      helper.fs.outputFile(
-        `custom-react/env2/env2.main.runtime.ts`,
-        envSettingDeps('env2', {
+      helper.fs.envMainRuntimeFile(`custom-react/env2/env2.main.runtime.ts`, {
+        envName: 'env2',
+        dependencies: {
           peers: [
             {
               name: 'react',
@@ -1226,8 +1226,8 @@ describe('env root components', function () {
               version: env2DefaultPeerVersion,
             },
           ],
-        })
-      );
+        },
+      });
       helper.fixtures.populateComponents(4);
       helper.extensions.bitJsonc.addKeyValToDependencyResolver('rootComponents', true);
       helper.bitJsonc.addKeyVal(`${helper.scopes.remote}/comp3`, {});
@@ -1442,14 +1442,6 @@ module.exports.default = {
   });
 });
 
-function resolveFrom(fromDir: string, moduleIds: string[]) {
-  if (moduleIds.length === 0) return fromDir;
-  const [moduleId, ...rest] = moduleIds;
-  // We use the "resolve" library because the native "require.resolve" method uses a cache.
-  // So with the native resolve method we cannot check the same path twice.
-  return resolveFrom(resolveSync(moduleId, { basedir: fromDir, preserveSymlinks: false }), rest);
-}
-
 function getMainAspect(remoteScope: string) {
   return `import { MainRuntime } from '@teambit/cli';
   import { DepAspectAspect, DepAspectMain } from '@ci/${remoteScope}.dep-aspect';
@@ -1558,9 +1550,9 @@ describe('env peer dependencies hoisting when the env is in the workspace', func
     helper.scopeHelper.setNewLocalAndRemoteScopes();
     helper.extensions.bitJsonc.setPackageManager(`teambit.dependencies/${pm}`);
     helper.command.create('react-env', 'custom-react/env1', '-p custom-react/env1');
-    helper.fs.outputFile(
-      `custom-react/env1/env1.main.runtime.ts`,
-      envSettingDeps('env1', {
+    helper.fs.envMainRuntimeFile(`custom-react/env1/env1.main.runtime.ts`, {
+      envName: 'env1',
+      dependencies: {
         peers: [
           {
             name: 'react',
@@ -1568,12 +1560,12 @@ describe('env peer dependencies hoisting when the env is in the workspace', func
             version: '16.14.0',
           },
         ],
-      })
-    );
+      },
+    });
     helper.command.create('react-env', 'custom-react/env2', '-p custom-react/env2');
-    helper.fs.outputFile(
-      `custom-react/env2/env2.main.runtime.ts`,
-      envSettingDeps('env2', {
+    helper.fs.envMainRuntimeFile(`custom-react/env2/env2.main.runtime.ts`, {
+      envName: 'env2',
+      dependencies: {
         peers: [
           {
             name: 'react',
@@ -1581,8 +1573,8 @@ describe('env peer dependencies hoisting when the env is in the workspace', func
             version: '18.0.0',
           },
         ],
-      })
-    );
+      },
+    });
     helper.fixtures.populateComponents(2);
     helper.extensions.bitJsonc.addKeyValToDependencyResolver('rootComponents', true);
     helper.fs.outputFile(`comp1/index.js`, `const React = require("react")`);
@@ -1596,36 +1588,6 @@ describe('env peer dependencies hoisting when the env is in the workspace', func
     helper.command.install();
   }
 });
-
-function envSettingDeps(envName: string, deps: any) {
-  const capitalizedEnvName = envName[0].toUpperCase() + envName.substring(1);
-  return `
-import { MainRuntime } from '@teambit/cli';
-import { ReactAspect, ReactMain } from '@teambit/react';
-import { EnvsAspect, EnvsMain } from '@teambit/envs';
-import { ${capitalizedEnvName}Aspect } from './${envName}.aspect';
-
-export class EnvMain {
-static slots = [];
-
-static dependencies = [ReactAspect, EnvsAspect];
-
-static runtime = MainRuntime;
-
-static async provider([react, envs]: [ReactMain, EnvsMain]) {
-const templatesReactEnv = envs.compose(react.reactEnv, [
-envs.override({
-getDependencies: () => (${JSON.stringify(deps)}),
-})
-]);
-envs.registerEnv(templatesReactEnv);
-return new EnvMain();
-}
-}
-
-${capitalizedEnvName}Aspect.addRuntime(EnvMain);
-`;
-}
 
 describe('create with root components on', function () {
   let helper: Helper;
