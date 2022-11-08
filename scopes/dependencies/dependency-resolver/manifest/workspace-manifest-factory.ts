@@ -173,7 +173,7 @@ export class WorkspaceManifestFactory {
     rootPolicy: WorkspacePolicy,
     dependencyList: DependencyList
   ): Promise<void> {
-    const mergedPolicies = await this.dependencyResolver.mergeVariantPolicies(component.config.extensions);
+    const mergedPolicies = await this.dependencyResolver.getPolicy(component);
     dependencyList.forEach((dep) => {
       updateDependencyVersion(dep, rootPolicy, mergedPolicies);
     });

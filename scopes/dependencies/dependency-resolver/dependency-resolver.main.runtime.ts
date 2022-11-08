@@ -1007,7 +1007,7 @@ export class DependencyResolverMain {
    * 3. props defined by the user (they are the strongest one)
    * @param configuredExtensions
    */
-  async mergeVariantPolicies(configuredExtensions: ExtensionDataList): Promise<VariantPolicy> {
+  async mergeVariantPolicies(configuredExtensions: ExtensionDataList, id: BitId): Promise<VariantPolicy> {
     const variantPolicyFactory = new VariantPolicyFactory();
     let policiesFromSlots: VariantPolicy = variantPolicyFactory.getEmpty();
     let policiesFromConfig: VariantPolicy = variantPolicyFactory.getEmpty();
@@ -1035,9 +1035,23 @@ export class DependencyResolverMain {
     if (currentConfig && currentConfig.policy) {
       policiesFromConfig = variantPolicyFactory.fromConfigObject(currentConfig.policy, 'config');
     }
+    const policiesFromEnvForItself = (await this.getPoliciesFromEnvForItself(id)) ?? variantPolicyFactory.getEmpty();
 
-    const result = VariantPolicy.mergePolices([policiesFromEnv, policiesFromSlots, policiesFromConfig]);
+    const result = VariantPolicy.mergePolices([
+      policiesFromEnv,
+      policiesFromEnvForItself,
+      policiesFromSlots,
+      policiesFromConfig,
+    ]);
     return result;
+  }
+
+  /**
+   * These are the policies that the env itself defines for itself.
+   * So policies installed only locally for the env, not to any components that use the env.
+   */
+  async getPoliciesFromEnvForItself(id: BitId): Promise<VariantPolicy | undefined> {
+    return (await this.getEnvPolicyFromEnvLegacyId(id))?.peersAutoDetectPolicy?.getOwnVariantPolicy();
   }
 
   updateDepsOnLegacyTag(component: LegacyComponent, idTransformer: onTagIdTransformer): LegacyComponent {
@@ -1355,8 +1369,8 @@ export class DependencyResolverMain {
 
     LegacyComponent.registerOnComponentOverridesLoading(
       DependencyResolverAspect.id,
-      async (configuredExtensions: ExtensionDataList) => {
-        const policy = await dependencyResolver.mergeVariantPolicies(configuredExtensions);
+      async (configuredExtensions: ExtensionDataList, id: BitId) => {
+        const policy = await dependencyResolver.mergeVariantPolicies(configuredExtensions, id);
         return policy.toLegacyDepsOverrides();
       }
     );

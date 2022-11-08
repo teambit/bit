@@ -1,6 +1,8 @@
 import { sha1 } from '@teambit/legacy/dist/utils';
 import { uniqWith, sortBy } from 'lodash';
 import { SemverVersion } from '../policy';
+import { VariantPolicyEntry } from '../variant-policy/variant-policy';
+import { VariantPolicy } from '..';
 
 export type EnvPolicyEntryVersion = SemverVersion;
 export type EnvPolicyEntrySupportedRange = SemverVersion;
@@ -26,6 +28,20 @@ export class PeersAutoDetectPolicy {
 
   get names(): string[] {
     return this.entries.map((e) => e.name);
+  }
+
+  getOwnVariantPolicy(): VariantPolicy {
+    const entries: VariantPolicyEntry[] = this.entries.map((entry) => {
+      return {
+        dependencyId: entry.name,
+        value: {
+          version: entry.version,
+        },
+        source: 'env-default-peer',
+        lifecycleType: 'runtime',
+      };
+    });
+    return new VariantPolicy(entries);
   }
 
   find(name: string): PeersAutoDetectPolicyEntry | undefined {
