@@ -41,9 +41,9 @@ export class ReactPreview {
   static async provider([preview]: [PreviewPreview], config, [providerSlot]: [ProviderSlot]) {
     const reactPreview = new ReactPreview(preview, providerSlot);
 
-    // reactPreview.registerProvider([HighlighterProvider]);
+    reactPreview.registerProvider([HighlighterProvider]);
 
-    // preview.registerRenderContext(reactPreview.getRenderingContext);
+    preview.registerRenderContext(reactPreview.getRenderingContext);
 
     return reactPreview;
   }

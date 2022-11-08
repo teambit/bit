@@ -71,12 +71,12 @@ export default function (isEnvProduction = false): Configuration {
       extensions: moduleFileExtensions.map((ext) => `.${ext}`),
 
       alias: {
-        // 'react/jsx-dev-runtime': require.resolve('react/jsx-dev-runtime.js'),
-        // 'react/jsx-runtime': require.resolve('react/jsx-runtime.js'),
-        // 'react-dom/server': require.resolve('react-dom/server'),
+        'react/jsx-dev-runtime': require.resolve('react/jsx-dev-runtime.js'),
+        'react/jsx-runtime': require.resolve('react/jsx-runtime.js'),
+        'react-dom/server': require.resolve('react-dom/server'),
         // Allows for better profiling with ReactDevTools
         ...(isEnvProductionProfile && {
-          // 'react-dom$': 'react-dom/profiling',
+          'react-dom$': 'react-dom/profiling',
           'scheduler/tracing': 'scheduler/tracing-profiling',
         }),
       },
