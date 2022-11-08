@@ -1,4 +1,5 @@
 import { Environment } from '@teambit/envs';
+import { COMPONENT_PREVIEW_STRATEGY_NAME, PreviewStrategyName } from '@teambit/preview';
 
 export const HtmlEnvType = 'html';
 
@@ -23,7 +24,7 @@ export class HtmlEnv implements Environment {
 
   getPreviewConfig() {
     return {
-      strategyName: 'component',
+      strategyName: COMPONENT_PREVIEW_STRATEGY_NAME as PreviewStrategyName,
       splitComponentBundle: true,
     };
   }

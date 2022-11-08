@@ -1,4 +1,5 @@
 import chai, { expect } from 'chai';
+import { Extensions } from '../../src/constants';
 import Helper from '../../src/e2e-helper/e2e-helper';
 
 chai.use(require('chai-fs'));
@@ -156,6 +157,25 @@ describe('dev-dependencies functionality', function () {
     });
     it('should include the prod dependencies inside flattenedDependencies', () => {
       expect(barFoo.flattenedDependencies).to.deep.include({ name: 'comp3', version: '0.0.1' });
+    });
+  });
+  describe('component with devDependency coming from an env and is used as prod', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.bitJsonc.setupDefault();
+      const envName = helper.env.setCustomEnv('node-env-dev-dep');
+      const envId = `${helper.scopes.remote}/${envName}`;
+      helper.extensions.addExtensionToVariant('*', envId);
+      helper.fixtures.populateComponents(1, false);
+      helper.fs.outputFile(`comp1/index.js`, `const isPositive = require('is-positive');`);
+      helper.command.install();
+      helper.command.tagWithoutBuild();
+    });
+    it('should be able to remove it from DevDependency only by "bit deps remove --dev"', () => {
+      helper.command.dependenciesRemove('comp1', 'is-positive', '--dev');
+      const bitMap = helper.bitMap.read();
+      expect(bitMap.comp1.config[Extensions.dependencyResolver].policy).to.have.property('devDependencies');
+      expect(bitMap.comp1.config[Extensions.dependencyResolver].policy.devDependencies['is-positive']).to.equal('-');
     });
   });
 });

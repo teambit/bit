@@ -9,6 +9,7 @@ import type { AspectLoaderMain } from '@teambit/aspect-loader';
 import { Bundler, BundlerContext } from '@teambit/bundler';
 import { WebpackConfigTransformer } from '@teambit/webpack';
 import { Tester } from '@teambit/tester';
+import { COMPONENT_PREVIEW_STRATEGY_NAME, PreviewStrategyName } from '@teambit/preview';
 
 const tsconfig = require('./typescript/tsconfig.json');
 
@@ -80,7 +81,7 @@ export class AspectEnv implements DependenciesEnv, PackageEnv, PreviewEnv {
 
   getPreviewConfig() {
     return {
-      strategyName: 'component',
+      strategyName: COMPONENT_PREVIEW_STRATEGY_NAME as PreviewStrategyName,
       splitComponentBundle: false,
     };
   }
