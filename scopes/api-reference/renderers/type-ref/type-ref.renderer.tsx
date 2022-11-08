@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import React from 'react';
 import { APINodeRenderProps, APINodeRenderer } from '@teambit/api-reference.models.api-node-renderer';
 import { TypeRefSchema } from '@teambit/semantics.entities.semantic-schema';
@@ -20,9 +19,6 @@ export const typeRefRenderer: APINodeRenderer = {
   default: true,
 };
 
-/**
- * @todo figure out how to render deeply nested typeArgs
- */
 function TypeRefComponent(props: APINodeRenderProps) {
   const {
     apiNode: { api },
