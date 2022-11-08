@@ -3,7 +3,7 @@ import { Transform } from 'class-transformer';
 import { Location, SchemaNode } from '../schema-node';
 import { schemaObjArrayToInstances } from '../class-transformers';
 
-export class Module extends SchemaNode {
+export class ModuleSchema extends SchemaNode {
   @Transform(schemaObjArrayToInstances)
   exports: SchemaNode[];
   namespace?: string;
@@ -22,7 +22,7 @@ export class Module extends SchemaNode {
 
   flatExportsRecursively() {
     this.exports = this.exports.reduce((acc, exp) => {
-      if (exp instanceof Module) {
+      if (exp instanceof ModuleSchema) {
         exp.flatExportsRecursively();
         if (exp.namespace) return [...acc, exp];
         return [...acc, ...exp.exports];

@@ -28,7 +28,7 @@ import {
   VariableStatementTransformer,
   VariableDeclaration,
   SourceFileTransformer,
-  ClassDecelerationTransformer,
+  ClassDeclarationTransformer,
   InterfaceDeclarationTransformer,
   EnumDeclarationTransformer,
   BindingElementTransformer,
@@ -305,16 +305,16 @@ export class TypescriptMain {
       new VariableDeclaration(),
       new SourceFileTransformer(),
       new TypeAliasTransformer(),
-      new ClassDecelerationTransformer(),
+      new ClassDeclarationTransformer(),
       new InterfaceDeclarationTransformer(),
       new EnumDeclarationTransformer(),
       new BindingElementTransformer(),
     ]);
 
     if (workspace) {
-      workspace.registerOnPreWatch(tsMain.onPreWatch.bind(this));
-      workspace.registerOnComponentChange(tsMain.onComponentChange.bind(this));
-      workspace.registerOnComponentAdd(tsMain.onComponentChange.bind(this));
+      workspace.registerOnPreWatch(tsMain.onPreWatch.bind(tsMain));
+      workspace.registerOnComponentChange(tsMain.onComponentChange.bind(tsMain));
+      workspace.registerOnComponentAdd(tsMain.onComponentChange.bind(tsMain));
     }
 
     const checkTypesCmd = new CheckTypesCmd(tsMain, workspace, logger);

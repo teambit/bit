@@ -7,16 +7,12 @@ import { Formatter, FormatResults } from './formatter';
 import { FormatterContext, FormatterOptions } from './formatter-context';
 import { FormatterConfig } from './formatter.main.runtime';
 
-export type FormatterServiceOptions = FormatterOptions & {
-  check?: boolean;
-};
-
 export class FormatterService implements EnvService<FormatResults> {
   name = 'formatter';
 
   constructor(private formatterConfig: FormatterConfig) {}
 
-  async run(context: ExecutionContext, options: FormatterServiceOptions): Promise<FormatResults> {
+  async run(context: ExecutionContext, options: FormatterOptions): Promise<FormatResults> {
     const mergedOpts = this.optionsWithDefaults(options);
     const formatterContext: FormatterContext = this.mergeContext(mergedOpts, context);
     const formatter: Formatter = context.env.getFormatter(formatterContext);
@@ -25,11 +21,11 @@ export class FormatterService implements EnvService<FormatResults> {
     return results;
   }
 
-  private optionsWithDefaults(options: FormatterServiceOptions): FormatterServiceOptions {
+  private optionsWithDefaults(options: FormatterOptions): FormatterOptions {
     return defaults(options, this.formatterConfig);
   }
 
-  private mergeContext(options: FormatterServiceOptions, context?: ExecutionContext): FormatterContext {
+  private mergeContext(options: FormatterOptions, context?: ExecutionContext): FormatterContext {
     const formatterContext: FormatterContext = Object.assign({}, options, context);
     return formatterContext;
   }

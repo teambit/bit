@@ -1,7 +1,7 @@
 import ts, { Node, SourceFile } from 'typescript';
 import { compact, flatten } from 'lodash';
 import pMapSeries from 'p-map-series';
-import { Module } from '@teambit/semantics.entities.semantic-schema';
+import { ModuleSchema } from '@teambit/semantics.entities.semantic-schema';
 import { SchemaTransformer } from '../schema-transformer';
 import { ExportIdentifier } from '../export-identifier';
 import { SchemaExtractorContext } from '../schema-extractor-context';
@@ -35,7 +35,7 @@ export class SourceFileTransformer implements SchemaTransformer {
       return context.computeSchema(exportNode);
     });
 
-    return new Module(context.getLocation(node), schemas);
+    return new ModuleSchema(context.getLocation(node), schemas);
   }
 
   /**

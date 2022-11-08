@@ -1,4 +1,4 @@
-import { SchemaNode, Module, UnresolvedSchema } from '@teambit/semantics.entities.semantic-schema';
+import { SchemaNode, ModuleSchema, UnresolvedSchema } from '@teambit/semantics.entities.semantic-schema';
 import ts, {
   Node,
   SyntaxKind,
@@ -54,7 +54,7 @@ export class ExportDeclaration implements SchemaTransformer {
     // e.g. `export { button1, button2 } as Composition from './button';
     if (exportClause.kind === SyntaxKind.NamedExports) {
       const schemas = await namedExport(exportClause, context);
-      return new Module(context.getLocation(exportDec), schemas);
+      return new ModuleSchema(context.getLocation(exportDec), schemas);
     }
     // e.g. `export * as Composition from './button';
     if (exportClause.kind === SyntaxKind.NamespaceExport) {
@@ -128,7 +128,7 @@ async function namespaceExport(
     return context.getTypeRefForExternalPath(namespace, filePath, context.getLocation(exportDec));
   }
   const result = await context.computeSchema(sourceFile);
-  if (!(result instanceof Module)) {
+  if (!(result instanceof ModuleSchema)) {
     throw new Error(`expect result to be instance of Module`);
   }
   result.namespace = namespace;

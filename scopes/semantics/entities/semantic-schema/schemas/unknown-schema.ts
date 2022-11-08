@@ -6,11 +6,11 @@ import { Location, SchemaNode } from '../schema-node';
  * wrapped in this class.
  */
 export class UnknownSchema extends SchemaNode {
-  constructor(readonly location: Location, readonly schemaName: string, readonly schemaObj: Record<string, any>) {
+  constructor(readonly location: Location, readonly name: string, readonly schemaObj: Record<string, any>) {
     super();
   }
 
   toString() {
-    return `<<unknown schema ${this.schemaName}>>`;
+    return `<<unknown schema ${this.name}>>`;
   }
 }

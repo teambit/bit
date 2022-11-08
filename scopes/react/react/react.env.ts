@@ -269,7 +269,7 @@ export class ReactEnv
    */
   getFormatter(context: FormatterContext, transformers: PrettierConfigTransformer[] = []): Formatter {
     return this.prettier.createFormatter(
-      context,
+      { check: context?.check },
       {
         config: prettierConfig,
       },

@@ -26,7 +26,7 @@ export function schemaSchema(schema: SchemaMain) {
           const docs = await schema.getSchema(component);
           if (!docs) return empty;
 
-          return docs;
+          return docs.toObject();
         },
       },
     },
