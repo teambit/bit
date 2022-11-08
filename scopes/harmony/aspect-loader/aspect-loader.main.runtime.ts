@@ -558,6 +558,8 @@ export class AspectLoaderMain {
       pluginSlot
     );
 
+    aspectLoader.registerPlugins([envs.getEnvPlugin()]);
+
     return aspectLoader;
   }
 }

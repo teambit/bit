@@ -7,6 +7,7 @@ import type { AspectDefinition } from '@teambit/aspect-loader';
 import { ExtensionDataList, ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config/extension-data';
 import { BitError } from '@teambit/bit-error';
 import findDuplications from '@teambit/legacy/dist/utils/array/find-duplications';
+import WorkerAspect, { WorkerMain } from '@teambit/worker';
 import { BitId } from '@teambit/legacy-bit-id';
 import { EnvService } from './services';
 import { Environment } from './environment';
@@ -18,6 +19,7 @@ import { EnvServiceList } from './env-service-list';
 import { EnvsCmd, GetEnvCmd, ListEnvsCmd } from './envs.cmd';
 import { EnvFragment } from './env.fragment';
 import { EnvNotFound, EnvNotConfiguredForComponent } from './exceptions';
+import { EnvPlugin } from './env.plugin';
 
 export type EnvsRegistry = SlotRegistry<Environment>;
 
@@ -63,7 +65,7 @@ export class EnvsMain {
     /**
      * harmony context.
      */
-    private context: Harmony,
+    private harmony: Harmony,
 
     /**
      * slot for allowing extensions to register new environment.
@@ -74,7 +76,11 @@ export class EnvsMain {
 
     private serviceSlot: ServiceSlot,
 
-    private componentMain: ComponentMain
+    private componentMain: ComponentMain,
+    
+    private loggerMain: LoggerMain,
+
+    private workerMain: WorkerMain
   ) {}
 
   /**
@@ -285,10 +291,6 @@ export class EnvsMain {
     return matchedEntry?.id;
   }
 
-  createEnv(component: Component) {
-    
-  }
-
   /**
    * This used to calculate the actual env during the component load.
    * Do not use it to get the env (use getEnv instead)
@@ -377,6 +379,10 @@ export class EnvsMain {
 
   getAllRegisteredEnvs(): string[] {
     return this.envSlot.toArray().map((envData) => envData[0]);
+  }
+
+  getEnvPlugin() {
+    return new EnvPlugin(this.envSlot, this.loggerMain, this.workerMain, this.harmony);
   }
 
   /**
@@ -640,16 +646,16 @@ export class EnvsMain {
 
   static slots = [Slot.withType<Environment>(), Slot.withType<EnvService<any>>()];
 
-  static dependencies = [GraphqlAspect, LoggerAspect, ComponentAspect, CLIAspect];
+  static dependencies = [GraphqlAspect, LoggerAspect, ComponentAspect, CLIAspect, WorkerAspect];
 
   static async provider(
-    [graphql, loggerAspect, component, cli]: [GraphqlMain, LoggerMain, ComponentMain, CLIMain],
+    [graphql, loggerAspect, component, cli, worker]: [GraphqlMain, LoggerMain, ComponentMain, CLIMain, WorkerMain],
     config: EnvsConfig,
     [envSlot, serviceSlot]: [EnvsRegistry, ServiceSlot],
     context: Harmony
   ) {
     const logger = loggerAspect.createLogger(EnvsAspect.id);
-    const envs = new EnvsMain(config, context, envSlot, logger, serviceSlot, component);
+    const envs = new EnvsMain(config, context, envSlot, logger, serviceSlot, component, loggerAspect, worker);
     component.registerShowFragments([new EnvFragment(envs)]);
     const envsCmd = new EnvsCmd(envs, component);
     envsCmd.commands = [new ListEnvsCmd(envs, component), new GetEnvCmd(envs, component)];
