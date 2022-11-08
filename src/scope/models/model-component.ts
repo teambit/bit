@@ -7,7 +7,7 @@ import { v4 } from 'uuid';
 import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
 import pMapSeries from 'p-map-series';
 import { LegacyComponentLog } from '@teambit/legacy-component-log';
-import { BitId } from '../../bit-id';
+import { BitId, BitIds } from '../../bit-id';
 import {
   DEFAULT_BINDINGS_PREFIX,
   DEFAULT_BIT_RELEASE_TYPE,
@@ -52,6 +52,8 @@ import { ObjectItem } from '../objects/object-list';
 import { getRefsFromExtensions } from '../../consumer/component/sources/artifact-files';
 import { SchemaName } from '../../consumer/component/component-schema';
 import { NoHeadNoVersion } from '../exceptions/no-head-no-version';
+import { errorIsTypeOfMissingObject } from '../component-ops/scope-components-importer';
+import type Scope from '../scope';
 
 type State = {
   versions?: {
@@ -441,8 +443,28 @@ export default class Component extends BitObject {
   /**
    * get component log and sort by the timestamp in ascending order (from the earliest to the latest)
    */
-  async collectLogs(repo: Repository, shortHash = false, startFrom?: Ref): Promise<ComponentLog[]> {
-    const versionsInfo = await getAllVersionsInfo({ modelComponent: this, repo, throws: false, startFrom });
+  async collectLogs(scope: Scope, shortHash = false, startFrom?: Ref): Promise<ComponentLog[]> {
+    const repo = scope.objects;
+    let versionsInfo = await getAllVersionsInfo({ modelComponent: this, repo, throws: false, startFrom });
+
+    // due to recent changes of getting version-history object rather than fetching the entire history, some version
+    // objects might be missing. import the component from the remote
+    if (
+      versionsInfo.some((v) => v.error && errorIsTypeOfMissingObject(v.error)) &&
+      this.scope !== repo.scopeJson.name
+    ) {
+      logger.info(`collectLogs is unable to find some objects for ${this.id()}. will try to import them`);
+      try {
+        await scope.scopeImporter.importManyDeltaWithoutDeps({
+          ids: BitIds.fromArray([this.toBitId()]),
+          preferVersionHistory: false,
+        });
+        versionsInfo = await getAllVersionsInfo({ modelComponent: this, repo, throws: false, startFrom });
+      } catch (err) {
+        logger.error(`collectLogs failed to import ${this.id()} history`, err);
+      }
+    }
+
     const getRef = (ref: Ref) => (shortHash ? ref.toShortString() : ref.toString());
     const results = versionsInfo.map((versionInfo) => {
       const log = versionInfo.version ? versionInfo.version.log : { message: '<no-data-available>' };

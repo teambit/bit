@@ -186,7 +186,7 @@ export default class ScopeComponentsImporter {
       try {
         await getAllVersionsInfo({ modelComponent, repo: this.repo });
       } catch (err: any) {
-        if (err instanceof ParentNotFound || err instanceof VersionNotFound || err instanceof HeadNotFound) {
+        if (errorIsTypeOfMissingObject(err)) {
           return id;
         }
         // we don't care much about other errors here. but it's good to know about them.
@@ -808,4 +808,8 @@ export function groupByLanes(ids: BitId[], lanes: Lane[]): { [scopeName: string]
   });
 
   return grouped;
+}
+
+export function errorIsTypeOfMissingObject(err: Error) {
+  return err instanceof ParentNotFound || err instanceof VersionNotFound || err instanceof HeadNotFound;
 }
