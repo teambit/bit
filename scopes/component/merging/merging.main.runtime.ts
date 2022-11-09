@@ -514,9 +514,9 @@ export class MergingMain {
     const mergeResults = await threeWayMerge({
       consumer,
       otherComponent,
-      otherLabel: `${otherLaneHead.toString()} (${otherLaneName})`,
+      otherLabel: `${otherLaneHead.toString()} (${otherLaneName === currentLaneName ? 'incoming' : otherLaneName})`,
       currentComponent,
-      currentLabel: `${currentId.version} (${currentLaneName})`,
+      currentLabel: `${currentId.version} (${currentLaneName === otherLaneName ? 'current' : currentLaneName})`,
       baseComponent,
     });
     return { currentComponent, id, mergeResults, divergeData };

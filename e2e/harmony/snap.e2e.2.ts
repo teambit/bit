@@ -393,11 +393,11 @@ describe('bit snap command', function () {
         });
         it('should change the files on the filesystem and mark the conflicts properly', () => {
           const content = helper.fs.readFile('bar/foo.js');
-          expect(content).to.have.string(`<<<<<<< ${localHead} (main)`);
+          expect(content).to.have.string(`<<<<<<< ${localHead} (current)`);
           expect(content).to.have.string(fixtures.fooFixtureV3);
           expect(content).to.have.string('=======');
           expect(content).to.have.string(fixtures.fooFixtureV2);
-          expect(content).to.have.string(`>>>>>>> ${secondSnap} (${helper.scopes.remote}/main)`);
+          expect(content).to.have.string(`>>>>>>> ${secondSnap} (incoming)`);
         });
         it('should not change bitmap version', () => {
           helper.bitMap.expectToHaveIdHarmony('bar/foo', localHead, helper.scopes.remote);
