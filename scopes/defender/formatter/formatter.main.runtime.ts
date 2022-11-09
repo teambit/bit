@@ -4,7 +4,7 @@ import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { LoggerAspect, LoggerMain } from '@teambit/logger';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { FormatterAspect } from './formatter.aspect';
-import { FormatterService, FormatterServiceOptions } from './formatter.service';
+import { FormatterService } from './formatter.service';
 import { FormatTask } from './format.task';
 import { FormatCmd } from './format.cmd';
 import { FormatterOptions } from './formatter-context';
@@ -33,7 +33,7 @@ export class FormatterMain {
     return formatResults;
   }
 
-  private toFormatServiceOptions(opts: FormatterOptions, check = false): FormatterServiceOptions {
+  private toFormatServiceOptions(opts: FormatterOptions, check = false): FormatterOptions {
     return {
       ...opts,
       check,

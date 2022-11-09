@@ -17,7 +17,7 @@ import logger from '../../logger/logger';
 import { Remotes } from '../../remotes';
 import { splitBy } from '../../utils';
 import ComponentVersion from '../component-version';
-import { ComponentNotFound } from '../exceptions';
+import { ComponentNotFound, ParentNotFound, VersionNotFound } from '../exceptions';
 import { Lane, ModelComponent, Version } from '../models';
 import { BitObject, Ref, Repository } from '../objects';
 import { ObjectItemsStream, ObjectList } from '../objects/object-list';
@@ -30,25 +30,34 @@ import { concurrentComponentsLimit } from '../../utils/concurrency';
 import { BuildStatus } from '../../constants';
 import { NoHeadNoVersion } from '../exceptions/no-head-no-version';
 import { HashesPerRemotes, MissingObjects } from '../exceptions/missing-objects';
+import { getAllVersionHashes } from './traverse-versions';
 
 const removeNils = R.reject(R.isNil);
 
 type HashesPerRemote = { [remoteName: string]: string[] };
 
+/**
+ * Helper to import objects/components from remotes.
+ * this class is singleton because it uses Mutex to ensure that the same objects are not fetched and written at the same time.
+ * (if this won't be a singleton, then the mutex will be created for each instance, hence, one instance won't lock the other one).
+ */
 export default class ScopeComponentsImporter {
-  scope: Scope;
-  sources: SourcesRepository;
-  repo: Repository;
-  fetchWithDepsMutex = new Mutex();
-  constructor(scope: Scope) {
+  private static instancePerScope: { [scopeName: string]: ScopeComponentsImporter } = {};
+  private sources: SourcesRepository;
+  private repo: Repository;
+  private fetchWithDepsMutex = new Mutex();
+  private importManyObjectsMutex = new Mutex();
+  private constructor(private scope: Scope) {
     if (!scope) throw new Error('unable to instantiate ScopeComponentsImporter without Scope');
-    this.scope = scope;
     this.sources = scope.sources;
     this.repo = scope.objects;
   }
 
   static getInstance(scope: Scope): ScopeComponentsImporter {
-    return new ScopeComponentsImporter(scope);
+    if (!this.instancePerScope[scope.name]) {
+      this.instancePerScope[scope.name] = new ScopeComponentsImporter(scope);
+    }
+    return this.instancePerScope[scope.name];
   }
 
   /**
@@ -162,6 +171,36 @@ export default class ScopeComponentsImporter {
     return [...versionDeps, ...externalDeps];
   }
 
+  /**
+   * checks whether the given components has all history.
+   * if not, it fetches the history from their remotes without deps.
+   */
+  async importMissingHistory(bitIds: BitIds) {
+    const externals = bitIds.filter((bitId) => !bitId.isLocal(this.scope.name));
+    if (!externals.length) {
+      return;
+    }
+    const missingHistoryWithNulls = await mapSeries(externals, async (id) => {
+      const modelComponent = await this.scope.getModelComponent(id);
+      if (!modelComponent.head) return null; // doesn't exist on the remote.
+      try {
+        await getAllVersionHashes({ modelComponent, repo: this.repo });
+      } catch (err: any) {
+        if (err instanceof ParentNotFound || err instanceof VersionNotFound) {
+          return id;
+        }
+        // we don't care much about other errors here. but it's good to know about them.
+        logger.warn(`importMissingHistory, failed traversing ${id.toString()}, err: ${err.message}`, err);
+        return null;
+      }
+      return null;
+    });
+    const missingHistory = compact(missingHistoryWithNulls);
+    if (!missingHistory.length) return;
+    logger.debug(`importMissingHistory, total ${missingHistory.length} component has history missing`);
+    await this.importManyDeltaWithoutDeps(BitIds.fromArray(missingHistory), true);
+  }
+
   async importWithoutDeps(ids: BitIds, cache = true, lanes: Lane[] = []): Promise<ComponentVersion[]> {
     if (!ids.length) return [];
     logger.debugAndAddBreadCrumb('importWithoutDeps', `total ids: {ids}`, {
@@ -260,24 +299,26 @@ export default class ScopeComponentsImporter {
    * just make sure not to use it for components/lanes, as they require a proper "merge" before
    * persisting them to the filesystem. this method is good for immutable objects.
    */
-  async importManyObjects(groupedHashes: HashesPerRemote) {
-    const groupedHashedMissing = {};
-    await Promise.all(
-      Object.keys(groupedHashes).map(async (scopeName) => {
-        const uniqueHashes: string[] = R.uniq(groupedHashes[scopeName]);
-        const missing = await filter(uniqueHashes, async (hash) => !(await this.repo.has(new Ref(hash))));
-        if (missing.length) {
-          groupedHashedMissing[scopeName] = missing;
-        }
-      })
-    );
-    if (R.isEmpty(groupedHashedMissing)) return;
-    const remotes = await getScopeRemotes(this.scope);
-    const multipleStreams = await remotes.fetch(groupedHashedMissing, this.scope, { type: 'object' });
-    const bitObjectsList = await this.multipleStreamsToBitObjects(multipleStreams);
-    const allObjects = bitObjectsList.getAll();
-    await this.repo.writeObjectsToTheFS(allObjects);
-    this.throwForMissingObjects(groupedHashedMissing, allObjects);
+  async importManyObjects(groupedHashes: HashesPerRemote): Promise<void> {
+    await this.importManyObjectsMutex.runExclusive(async () => {
+      const groupedHashedMissing = {};
+      await Promise.all(
+        Object.keys(groupedHashes).map(async (scopeName) => {
+          const uniqueHashes: string[] = R.uniq(groupedHashes[scopeName]);
+          const missing = await filter(uniqueHashes, async (hash) => !(await this.repo.has(new Ref(hash))));
+          if (missing.length) {
+            groupedHashedMissing[scopeName] = missing;
+          }
+        })
+      );
+      if (R.isEmpty(groupedHashedMissing)) return;
+      const remotes = await getScopeRemotes(this.scope);
+      const multipleStreams = await remotes.fetch(groupedHashedMissing, this.scope, { type: 'object' });
+      const bitObjectsList = await this.multipleStreamsToBitObjects(multipleStreams);
+      const allObjects = bitObjectsList.getAll();
+      await this.repo.writeObjectsToTheFS(allObjects);
+      this.throwForMissingObjects(groupedHashedMissing, allObjects);
+    });
   }
 
   private throwForMissingObjects(groupedHashes: HashesPerRemote, receivedObjects: BitObject[]) {

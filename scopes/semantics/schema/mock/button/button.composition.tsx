@@ -10,6 +10,7 @@ export const BasicButton = () => {
 /**
  * example of passing a JSX Element as a parameter
  */
+// eslint-disable-next-line react/prop-types
 export function Footer({ children = <BasicButton /> }) {
   return <Button>{children}</Button>;
 }

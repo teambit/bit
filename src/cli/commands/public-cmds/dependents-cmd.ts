@@ -6,6 +6,7 @@ import { generateDependentsInfoTable } from '../../templates/component-template'
 
 export default class Dependents implements LegacyCommand {
   name = 'dependents <component-name>';
+  helpUrl = 'docs/dependencies/inspecting-dependencies#review-dependents';
   arguments = [
     {
       names: 'component-name',

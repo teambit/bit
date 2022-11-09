@@ -9,6 +9,7 @@ import type { AspectLoaderMain } from '@teambit/aspect-loader';
 import { Bundler, BundlerContext } from '@teambit/bundler';
 import { WebpackConfigTransformer } from '@teambit/webpack';
 import { Tester } from '@teambit/tester';
+import { COMPONENT_PREVIEW_STRATEGY_NAME, PreviewStrategyName } from '@teambit/preview';
 
 const tsconfig = require('./typescript/tsconfig.json');
 
@@ -80,7 +81,7 @@ export class AspectEnv implements DependenciesEnv, PackageEnv, PreviewEnv {
 
   getPreviewConfig() {
     return {
-      strategyName: 'component',
+      strategyName: COMPONENT_PREVIEW_STRATEGY_NAME as PreviewStrategyName,
       splitComponentBundle: false,
     };
   }
@@ -92,7 +93,7 @@ export class AspectEnv implements DependenciesEnv, PackageEnv, PreviewEnv {
         'react-dom': '-',
         'core-js': '^3.0.0',
         // For aspects the babel runtime should be a runtime dep not only dev as they are compiled by babel
-        '@babel/runtime': '7.12.18',
+        '@babel/runtime': '7.20.0',
       },
       // TODO: add this only if using ts
       devDependencies: {

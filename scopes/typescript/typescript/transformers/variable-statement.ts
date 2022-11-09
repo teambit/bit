@@ -1,4 +1,4 @@
-import { SchemaNode, Module } from '@teambit/semantics.entities.semantic-schema';
+import { SchemaNode, ModuleSchema } from '@teambit/semantics.entities.semantic-schema';
 import { compact } from 'lodash';
 import pMapSeries from 'p-map-series';
 import ts, { Node, VariableStatement } from 'typescript';
@@ -27,6 +27,6 @@ export class VariableStatementTransformer implements SchemaTransformer {
       const schema = await context.visitDefinition(dec.name);
       return schema;
     });
-    return new Module(context.getLocation(node), compact(schemas));
+    return new ModuleSchema(context.getLocation(node), compact(schemas));
   }
 }

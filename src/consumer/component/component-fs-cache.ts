@@ -10,6 +10,7 @@ const COMPONENTS_CACHE = 'components';
 const LAST_TRACK = 'last-track';
 const DOCS = 'docs';
 const DEPS = 'deps';
+const VERSIONS = 'versions';
 const FILE_PATHS = 'file-paths';
 
 export class ComponentFsCache {
@@ -68,6 +69,15 @@ export class ComponentFsCache {
 
   async listDependenciesDataCache() {
     return cacache.ls(this.getCachePath(DEPS));
+  }
+
+  async getVersionsDataFromCache(idStr: string): Promise<{ timestamp: number; data: string } | null> {
+    return this.getStringDataFromCache(idStr, VERSIONS);
+  }
+
+  async saveVersionsDataInCache(idStr: string, versions: string) {
+    const metadata = { timestamp: Date.now() };
+    await this.saveDataInCache(idStr, VERSIONS, versions, metadata);
   }
 
   private async saveStringDataInCache(key: string, cacheName: string, data: any) {

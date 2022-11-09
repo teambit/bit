@@ -222,10 +222,10 @@ module.exports = () => 'comp${index}${additionalStr} and ' + ${nextComp}();`;
    * @returns {string}
    * @memberof FixtureHelper
    */
-  populateExtensions(numOfExtensions = 3): void {
+  populateExtensions(numOfExtensions = 3, printNameInProvider = false): void {
     const aspectImp = (index) => {
       return `
-      import { Aspect } from '@teambit/bit';
+      import { Aspect } from '@teambit/harmony';
 
       export const Ext${index}Aspect = Aspect.create({
         id: 'my-scope/ext${index}',
@@ -237,6 +237,16 @@ module.exports = () => 'comp${index}${additionalStr} and ' + ${nextComp}();`;
       `;
     };
     const mainImp = (index) => {
+      let provider = `static async provider(_deps, config) {
+        return new Ext${index}Main(config);
+      }`;
+      if (printNameInProvider) {
+        provider = `static async provider(_deps, config) {
+          const extMain = new Ext${index}Main(config);
+          extMain.printName();
+          return extMain;
+        }`;
+      }
       return `
       import { MainRuntime } from '@teambit/cli';
       import { Ext${index}Aspect } from './ext${index}.aspect';
@@ -245,15 +255,12 @@ module.exports = () => 'comp${index}${additionalStr} and ' + ${nextComp}();`;
         static runtime: any = MainRuntime;
         static dependencies: any = [];
 
-
         constructor(public config: any) {}
 
         printName() {
           console.log('ext ${index}');
         }
-        static async provider(_deps, config) {
-          return new Ext${index}Main(config);
-        }
+        ${provider}
       }
       export default Ext${index}Main;
       Ext${index}Aspect.addRuntime(Ext${index}Main);

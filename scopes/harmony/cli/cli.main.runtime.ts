@@ -94,7 +94,7 @@ export class CLIMain {
    */
   async run(hasWorkspace: boolean) {
     await this.invokeOnStart(hasWorkspace);
-    const CliParser = new CLIParser(this.commands, this.groups, undefined, this.community.getDocsDomain());
+    const CliParser = new CLIParser(this.commands, this.groups, undefined, this.community.getBaseDomain());
     await CliParser.parse();
   }
 
@@ -120,7 +120,7 @@ export class CLIMain {
       }
     }
     if (command.helpUrl && !isFullUrl(command.helpUrl)) {
-      command.helpUrl = `https://${this.community.getDocsDomain()}/${command.helpUrl}`;
+      command.helpUrl = `https://${this.community.getBaseDomain()}/${command.helpUrl}`;
     }
   }
 

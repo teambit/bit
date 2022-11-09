@@ -22,6 +22,8 @@ export type SetDependenciesFlags = {
   peer?: boolean;
 };
 
+export type RemoveDependenciesFlags = SetDependenciesFlags;
+
 export class DependenciesGetCmd implements Command {
   name = 'get <component-name>';
   arguments = [{ name: 'component-name', description: 'component name or component id' }];
@@ -134,12 +136,15 @@ export class DependenciesRemoveCmd implements Command {
   group = 'info';
   description = 'remove a dependency to component(s)';
   alias = '';
-  options = [] as CommandOptions;
+  options = [
+    ['d', 'dev', 'remove from devDependencies'],
+    ['p', 'peer', 'remove from peerDependencies'],
+  ] as CommandOptions;
 
   constructor(private deps: DependenciesMain) {}
 
-  async report([pattern, packages]: [string, string[]]) {
-    const results = await this.deps.removeDependency(pattern, packages);
+  async report([pattern, packages]: [string, string[]], removeDepsFlags: RemoveDependenciesFlags) {
+    const results = await this.deps.removeDependency(pattern, packages, removeDepsFlags);
     if (!results.length) {
       return chalk.yellow('the specified component-pattern do not use the entered packages. nothing to remove');
     }
@@ -159,6 +164,7 @@ export class DependenciesCmd implements Command {
   options = [];
   group = 'info';
   commands: Command[] = [];
+  helpUrl = 'docs/dependencies/configuring-dependencies';
 
   async report([unrecognizedSubcommand]: [string]) {
     return chalk.red(

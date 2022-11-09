@@ -14,6 +14,10 @@ import { removeChalkCharacters } from '../utils';
 import ScopesData from './e2e-scopes';
 
 const DEFAULT_DEFAULT_INTERVAL_BETWEEN_INPUTS = 200;
+// The default value of maxBuffer is 1024*1024, which is not enough for some of the tests.
+// If a command has a lot of output, it will throw this error:
+// Error: spawnSync /bin/sh ENOBUFS
+const EXEC_SYNC_MAX_BUFFER = 1024 * 1024 * 10; // 10MB
 
 /**
  * to enable a feature for Helper instance, in the e2e-test file add `helper.command.setFeatures('your-feature');`
@@ -57,7 +61,7 @@ export default class CommandHelper {
       ? childProcess
           .spawnSync(cmd.split(' ')[0], cmd.split(' ').slice(1), { cwd, stdio, shell: true })
           .output.toString()
-      : childProcess.execSync(cmdWithFeatures, { cwd, stdio });
+      : childProcess.execSync(cmdWithFeatures, { cwd, stdio, maxBuffer: EXEC_SYNC_MAX_BUFFER });
     if (this.debugMode) console.log(rightpad(chalk.green('output: '), 20, ' '), chalk.cyan(cmdOutput.toString())); // eslint-disable-line no-console
     return cmdOutput.toString();
   }
@@ -477,7 +481,7 @@ export default class CommandHelper {
     return this.runCmd(`bit status ${flags}`);
   }
 
-  statusJson(cwd = this.scopes.localPath) {
+  statusJson(cwd = this.scopes.localPath): Record<string, any> {
     const status = this.runCmd('bit status --json', cwd);
     return JSON.parse(status);
   }
@@ -606,8 +610,8 @@ export default class CommandHelper {
   mergeLaneFromScope(cwd: string, laneName: string, options = '') {
     return this.runCmd(`bit _merge-lane ${laneName} ${options}`, cwd);
   }
-  tagFromScope(cwd: string, ids: string, options = '') {
-    return this.runCmd(`bit _tag ${ids} ${options} -m msg`, cwd);
+  tagFromScope(cwd: string, data: Record<string, any>, options = '') {
+    return this.runCmd(`bit _tag '${JSON.stringify(data)}' ${options}`, cwd);
   }
   diff(id = '') {
     const output = this.runCmd(`bit diff ${id}`);
@@ -626,8 +630,8 @@ export default class CommandHelper {
   runTask(taskName: string) {
     return this.runCmd(`bit run ${taskName}`);
   }
-  create(templateName: string, componentName: string, flags = '') {
-    return this.runCmd(`bit create ${templateName} ${componentName} ${flags}`);
+  create(templateName: string, componentName: string, flags = '', cwd = this.scopes.localPath) {
+    return this.runCmd(`bit create ${templateName} ${componentName} ${flags}`, cwd);
   }
   new(templateName: string, flags = '', workspaceName = 'my-workspace', cwd = this.scopes.localPath) {
     return this.runCmd(`bit new ${templateName} ${workspaceName} ${flags}`, cwd);
@@ -638,9 +642,9 @@ export default class CommandHelper {
   link(flags?: string) {
     return this.runCmd(`bit link ${flags || ''}`);
   }
-  install(packages = '', options?: Record<string, any>) {
+  install(packages = '', options?: Record<string, any>, cwd = this.scopes.localPath) {
     const parsedOpts = this.parseOptions(options);
-    return this.runCmd(`bit install ${packages} ${parsedOpts}`);
+    return this.runCmd(`bit install ${packages} ${parsedOpts}`, cwd);
   }
   update(flags?: string) {
     return this.runCmd(`bit update ${flags || ''}`);
@@ -711,7 +715,9 @@ export default class CommandHelper {
     const parsedOpts = this.parseOptions(options);
     return this.runCmd(`bit eject-conf ${id} ${parsedOpts}`);
   }
-
+  runAction(actionName: string, remote: string, options: Record<string, any>) {
+    return this.runCmd(`bit run-action ${actionName} ${remote} '${JSON.stringify(options)}'`);
+  }
   compile(id = '', options?: Record<string, any>) {
     const parsedOpts = this.parseOptions(options);
     return this.runCmd(`bit compile ${id} ${parsedOpts}`);

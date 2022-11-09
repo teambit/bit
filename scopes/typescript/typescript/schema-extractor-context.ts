@@ -1,6 +1,6 @@
 import { TsserverClient } from '@teambit/ts-server';
-import ts, { ExportDeclaration, Node, TypeNode } from 'typescript';
-import { getTokenAtPosition } from 'tsutils';
+import { getTokenAtPosition, canHaveJsDoc, getJsDoc } from 'tsutils';
+import ts, { ExportAssignment, getTextOfJSDocComment, ExportDeclaration, Node, SyntaxKind, TypeNode } from 'typescript';
 import { head } from 'lodash';
 // eslint-disable-next-line import/no-unresolved
 import protocol from 'typescript/lib/protocol';
@@ -9,20 +9,30 @@ import type { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sour
 import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
 import { resolve, sep, relative } from 'path';
 import { Component, ComponentID } from '@teambit/component';
-import { TypeRefSchema, SchemaNode, InferenceTypeSchema, Location } from '@teambit/semantics.entities.semantic-schema';
+import {
+  TypeRefSchema,
+  SchemaNode,
+  InferenceTypeSchema,
+  Location,
+  DocSchema,
+} from '@teambit/semantics.entities.semantic-schema';
 import { ComponentDependency } from '@teambit/dependency-resolver';
+import { Formatter } from '@teambit/formatter';
+import pMapSeries from 'p-map-series';
 import { TypeScriptExtractor } from './typescript.extractor';
 import { ExportList } from './export-list';
 import { typeNodeToSchema } from './transformers/utils/type-node-to-schema';
 import { TransformerNotFound } from './exceptions';
 import { parseTypeFromQuickInfo } from './transformers/utils/parse-type-from-quick-info';
+import { tagParser } from './transformers/utils/jsdoc-to-doc-schema';
 
 export class SchemaExtractorContext {
   constructor(
     readonly tsserver: TsserverClient,
     readonly component: Component,
     readonly extractor: TypeScriptExtractor,
-    readonly componentDeps: ComponentDependency[]
+    readonly componentDeps: ComponentDependency[],
+    readonly formatter: Formatter
   ) {}
 
   computeSchema(node: Node) {
@@ -180,9 +190,9 @@ export class SchemaExtractorContext {
   /**
    * get a definition for a given node.
    */
-  async definition(definitonInfo: protocol.DefinitionInfo): Promise<Node | undefined> {
-    const startPosition = definitonInfo.start;
-    const sourceFile = this.getSourceFileInsideComponent(definitonInfo.file);
+  async definition(definition: protocol.DefinitionInfo): Promise<Node | undefined> {
+    const startPosition = definition.start;
+    const sourceFile = this.getSourceFileInsideComponent(definition.file);
     if (!sourceFile) {
       // it might be an external reference, cant get the node
       return undefined;
@@ -219,9 +229,10 @@ export class SchemaExtractorContext {
 
   isFromComponent() {}
 
-  async getFileExports(exportDec: ExportDeclaration) {
+  async getFileExports(exportDec: ExportDeclaration | ExportAssignment) {
     const file = exportDec.getSourceFile().fileName;
-    const specifierPathStr = exportDec.moduleSpecifier?.getText() || '';
+    const specifierPathStr =
+      (exportDec.kind === SyntaxKind.ExportDeclaration && exportDec.moduleSpecifier?.getText()) || '';
     const specifierPath = specifierPathStr.substring(1, specifierPathStr.length - 1);
     const absPath = resolve(file, '..', specifierPath);
     const sourceFile = this.getSourceFileInsideComponent(absPath);
@@ -357,5 +368,22 @@ export class SchemaExtractorContext {
       return new TypeRefSchema(location, typeStr, compIdByPkg);
     }
     return new TypeRefSchema(location, typeStr, undefined, pkgName);
+  }
+
+  async jsDocToDocSchema(node: Node): Promise<DocSchema | undefined> {
+    if (!canHaveJsDoc(node)) {
+      return undefined;
+    }
+    const jsDocs = getJsDoc(node);
+    if (!jsDocs.length) {
+      return undefined;
+    }
+    // not sure how common it is to have multiple JSDocs. never seen it before.
+    // regardless, in typescript implementation of methods like `getJSDocDeprecatedTag()`, they use the first one. (`getFirstJSDocTag()`)
+    const jsDoc = jsDocs[0];
+    const location = this.getLocation(jsDoc);
+    const comment = getTextOfJSDocComment(jsDoc.comment);
+    const tags = jsDoc.tags ? await pMapSeries(jsDoc.tags, (tag) => tagParser(tag, this, this.formatter)) : undefined;
+    return new DocSchema(location, jsDoc.getText(), comment, tags);
   }
 }

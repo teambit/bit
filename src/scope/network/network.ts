@@ -18,7 +18,7 @@ export interface Network {
   deleteMany(ids: string[], force: boolean, context: Record<string, any>, idsAreLanes: boolean);
   fetch(ids: string[], fetchOptions: FETCH_OPTIONS, context?: Record<string, any>): Promise<ObjectItemsStream>;
   pushMany(objectList: ObjectList, pushOptions: PushOptions, context?: Record<string, any>): Promise<string[]>;
-  action<Options, Result>(name: string, options: Options): Promise<Result>;
+  action<Options extends Record<string, any>, Result>(name: string, options: Options): Promise<Result>;
   list(namespacesUsingWildcards?: string, strategiesNames?: SSHConnectionStrategyName[]): Promise<ListScopeResult[]>;
   show(bitId: BitId): Promise<Component | null | undefined>;
   log(id: BitId): Promise<ComponentLog[]>;

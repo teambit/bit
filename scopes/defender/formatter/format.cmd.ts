@@ -40,6 +40,7 @@ export class FormatCmd implements Command {
   name = 'format [component...]';
   description = 'format components in the development workspace';
   group = 'development';
+  helpUrl = 'reference/formatting/formatter-overview';
   options = [
     ['c', 'changed', 'format only new and modified components'],
     ['', 'check', 'will output a human-friendly message and a list of unformatted files, if any'],

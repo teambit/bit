@@ -15,8 +15,8 @@
           "@babel/helper-plugin-test-runner": "7.16.7",
           "@babel/preset-env": "7.12.17",
           "@babel/preset-react": "7.13.13",
-          "@typescript-eslint/parser": "4.30.0",
-          "@typescript-eslint/eslint-plugin": "4.30.0",
+          "@typescript-eslint/parser": "5.35.1",
+          "@typescript-eslint/eslint-plugin": "5.35.1",
           "esbuild": "0.14.28",
           "eslint-plugin-jest": "24.1.5",
           "eslint-plugin-import": "2.22.1",
@@ -26,7 +26,7 @@
           "eslint-plugin-mdx": "1.13.0",
           "new-url-loader": "0.1.1",
           "react-app-polyfill": "1.0.6",
-          "resolve-url-loader": "3.1.2",
+          "resolve-url-loader": "5.0.0",
           "@mdx-js/react": "1.6.22",
           "jest": "27.5.1",
           "jest-environment-jsdom": "27.5.1",
@@ -37,17 +37,17 @@
           "babel-preset-react-app": "^10.0.0",
           "style-loader": "^2.0.0",
           "css-loader": "6.2.0",
-          "postcss": "8.2.9",
-          "postcss-loader": "6.1.1",
+          "postcss": "8.4.18",
+          "postcss-loader": "7.0.1",
           "postcss-normalize": "10.0.0",
-          "postcss-preset-env": "6.7.0",
+          "postcss-preset-env": "7.8.2",
           "postcss-flexbugs-fixes": "5.0.2",
           "sanitize.css": "12.0.1",
           "sass-loader": "12.1.0",
           "less": "^4.1.1",
           "less-loader": "10.0.0",
           "@teambit/legacy": "-",
-          "@babel/runtime": "^7.12.18",
+          "@babel/runtime": "7.20.0",
           "react-refresh": "0.10.0"
         },
         "devDependencies": {
@@ -63,7 +63,7 @@
         "peerDependencies": {
           "react": "^16.8.0 || ^17.0.0",
           "react-dom": "^16.8.0 || ^17.0.0",
-          "@teambit/legacy": "1.0.375"
+          "@teambit/legacy": "1.0.382"
         }
       }
     }

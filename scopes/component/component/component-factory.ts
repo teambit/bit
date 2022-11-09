@@ -1,5 +1,5 @@
+import { Graph } from '@teambit/graph.cleargraph';
 import { BitId } from '@teambit/legacy-bit-id';
-import LegacyGraph from '@teambit/legacy/dist/scope/graph/graph';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import type { ComponentLog } from '@teambit/legacy/dist/scope/models/model-component';
 import type { AspectDefinition } from '@teambit/aspect-loader';
@@ -62,7 +62,7 @@ export interface ComponentFactory {
    */
   getRemoteComponent?: (id: ComponentID) => Promise<Component>;
 
-  getLegacyGraph(ids?: ComponentID[], shouldThrowOnMissingDep?: boolean): Promise<LegacyGraph>;
+  getGraph(ids?: ComponentID[], shouldThrowOnMissingDep?: boolean): Promise<Graph<Component, string>>;
 
   getLogs(id: ComponentID, shortHash?: boolean, startsFrom?: string): Promise<ComponentLog[]>;
 

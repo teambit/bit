@@ -81,6 +81,7 @@ export class WatchCommand implements Command {
 
   name = 'watch';
   description = 'automatically recompile modified components (on save)';
+  helpUrl = 'reference/compiling/compiler-overview';
   alias = '';
   group = 'development';
   options = [

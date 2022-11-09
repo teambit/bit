@@ -1,4 +1,9 @@
-export { Module } from './module';
+/**
+ * Ensure that any new Schema class ends with the word 'Schema'
+ * This will make sure that the Class Name is not minimized during prod bundling process
+ * and the schemaObjToClass can match and instantiate the Schema Class correctly
+ */
+export { ModuleSchema } from './module';
 export { FunctionLikeSchema, Modifier } from './function-like';
 export { TypeRefSchema } from './type-ref';
 export { VariableLikeSchema } from './variable-like';
@@ -21,6 +26,7 @@ export { TypeOperatorSchema } from './type-operator';
 export { TupleTypeSchema } from './tuple-type';
 export { ParameterSchema } from './parameter';
 export { EnumSchema } from './enum';
+export { EnumMemberSchema } from './enum-member';
 export { ParenthesizedTypeSchema } from './parenthesized-type';
 export { TypePredicateSchema } from './type-predicate';
 export { IndexedAccessSchema } from './indexed-access-type';
@@ -30,4 +36,7 @@ export { ThisTypeSchema } from './this-type';
 export { UnknownSchema } from './unknown-schema';
 export { UnresolvedSchema } from './unresolved-schema';
 export { ConditionalTypeSchema } from './conditional-type';
+export { ExpressionWithTypeArgumentsSchema } from './expression-with-arguments';
+export { NamedTupleSchema } from './named-tuple';
+export { UnImplementedSchema } from './unimplemented-schema';
 export * from './docs';
