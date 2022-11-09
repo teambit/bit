@@ -43,7 +43,7 @@
                 "line": 15,
                 "character": 24
               },
-              "type": " number"
+              "type": "number"
             }
           },
           {
@@ -63,7 +63,7 @@
                 "line": 15,
                 "character": 31
               },
-              "type": " number"
+              "type": "number"
             }
           }
         ],
@@ -523,7 +523,7 @@
                         "line": 14,
                         "character": 24
                       },
-                      "type": " any",
+                      "type": "any",
                       "name": "children"
                     }
                   ]
@@ -536,7 +536,7 @@
                       "line": 14,
                       "character": 24
                     },
-                    "type": " any",
+                    "type": "any",
                     "name": "children"
                   }
                 ]
@@ -1454,7 +1454,7 @@
                     "line": 96,
                     "character": 45
                   },
-                  "type": " number",
+                  "type": "number",
                   "name": "prop"
                 }
               ]
@@ -1467,7 +1467,7 @@
                   "line": 96,
                   "character": 45
                 },
-                "type": " number",
+                "type": "number",
                 "name": "prop"
               }
             ]
