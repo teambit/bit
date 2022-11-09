@@ -167,12 +167,13 @@ function fileTreeNodeWithArtifactFiles(artifactFiles: Array<ArtifactFile & { id:
     const path = getFileNameFromNode(id);
     const isBinary = isBinaryPath(path);
     const matchingArtifactFile = artifactFiles.find((artifactFile) => artifactFile.id === node.id);
+    const isLink = isBinary || (matchingArtifactFile?.size ?? 0) > FILE_SIZE_THRESHOLD;
 
     if (!node?.children) {
       return (
         <Node
           {...props}
-          className={(isBinary || (matchingArtifactFile?.size ?? 0) > FILE_SIZE_THRESHOLD) && styles.link}
+          className={classNames(isLink && styles.link)}
           onClick={onSelect && ((e) => onSelect(node.id, e))}
           href={href}
           isActive={node?.id === selected}
