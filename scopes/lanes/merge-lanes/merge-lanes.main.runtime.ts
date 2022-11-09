@@ -281,6 +281,9 @@ export class MergeLanesMain {
         ids: bitIds,
         idsWithFutureScope: bitIds,
         allVersions: false,
+        // no need to export anything else other than the head. the normal calculation of what to export won't apply here
+        // as it is done from the scope.
+        exportHeadsOnly: true,
       });
       exportedIds = exported.map((id) => id.toString());
     }
