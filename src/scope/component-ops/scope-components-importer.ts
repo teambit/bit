@@ -306,7 +306,7 @@ export default class ScopeComponentsImporter {
     ignoreMissingHead?: boolean;
     preferVersionHistory?: boolean;
   }): Promise<void> {
-    logger.debugAndAddBreadCrumb('importManyWithoutDeps', `Ids: {ids}`, { ids: ids.toString() });
+    logger.debugAndAddBreadCrumb('importManyIfMissingWithoutDeps', `Ids: {ids}`, { ids: ids.toString() });
     const idsWithoutNils = BitIds.uniqFromArray(compact(ids));
     if (R.isEmpty(idsWithoutNils)) return;
     const idsToImport = fromHead ? idsWithoutNils.toVersionLatest() : idsWithoutNils;
@@ -316,7 +316,7 @@ export default class ScopeComponentsImporter {
     const remotesCount = Object.keys(groupedIds).length;
     const statusMsg = `fetching ${idsToFetch.length} components from ${remotesCount} remotes.`;
     loader.start(statusMsg);
-    logger.debugAndAddBreadCrumb('importManyDeltaWithoutDeps', statusMsg);
+    logger.debugAndAddBreadCrumb('importManyIfMissingWithoutDeps', statusMsg);
     const remotes = await getScopeRemotes(this.scope);
     await new ObjectFetcher(
       this.repo,

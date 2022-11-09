@@ -71,7 +71,7 @@ export class CheckoutMain {
     const { components } = await consumer.loadComponents(bitIds);
 
     const allComponentStatusBeforeMerge = await Promise.all(
-      components.map((component) => this.getComponentStatus(component, checkoutProps))
+      components.map((component) => this.getComponentStatusBeforeMergeAttempt(component, checkoutProps))
     );
     const compsNeedMerge = allComponentStatusBeforeMerge.filter((c) => c.propsForMerge);
     const compsNotNeedMerge = allComponentStatusBeforeMerge.filter((c) => !c.propsForMerge) as ComponentStatus[];
@@ -214,7 +214,7 @@ export class CheckoutMain {
     checkoutProps.ids = ids.map((id) => (checkoutProps.head || checkoutProps.latest ? id.changeVersion(LATEST) : id));
   }
 
-  private async getComponentStatus(
+  private async getComponentStatusBeforeMergeAttempt(
     component: ConsumerComponent,
     checkoutProps: CheckoutProps
   ): Promise<ComponentStatusBeforeMergeAttempt> {

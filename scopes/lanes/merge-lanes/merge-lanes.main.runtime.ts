@@ -115,16 +115,37 @@ export class MergeLanesMain {
     this.logger.debug(`merging the following bitIds: ${bitIds.toString()}`);
     const otherLaneName = isDefaultLane ? DEFAULT_LANE : otherLaneId.toString();
 
-    const getAllComponentsStatus = async (): Promise<ComponentMergeStatus[]> => {
+    const componentStatusBeforeMergeAttempt = await Promise.all(
+      bitIds.map((id) =>
+        this.merging.getComponentStatusBeforeMergeAttempt(id, currentLane, {
+          resolveUnrelated,
+          ignoreConfigChanges,
+        })
+      )
+    );
+
+    const toImport = componentStatusBeforeMergeAttempt
+      .map((compStatus) => {
+        if (!compStatus.divergeData || !compStatus.divergeData.commonSnapBeforeDiverge) return [];
+        return [compStatus.id.changeVersion(compStatus.divergeData.commonSnapBeforeDiverge.toString())];
+      })
+      .flat();
+
+    await this.scope.legacyScope.scopeImporter.importManyIfMissingWithoutDeps({
+      ids: BitIds.fromArray(toImport),
+      lane: otherLane,
+    });
+
+    const compStatusNotNeedMerge = componentStatusBeforeMergeAttempt.filter(
+      (c) => !c.mergeProps
+    ) as ComponentMergeStatus[];
+    const compStatusNeedMerge = componentStatusBeforeMergeAttempt.filter((c) => c.mergeProps);
+
+    const getComponentsStatusNeedMerge = async (): Promise<ComponentMergeStatus[]> => {
       const tmp = new Tmp(consumer.scope);
       try {
         const componentsStatus = await Promise.all(
-          bitIds.map((bitId) =>
-            this.merging.getComponentMergeStatus(bitId, currentLane, otherLaneName, {
-              resolveUnrelated,
-              ignoreConfigChanges,
-            })
-          )
+          compStatusNeedMerge.map((compStatus) => this.merging.getMergeStatus(currentLane, otherLaneName, compStatus))
         );
         await tmp.clear();
         return componentsStatus;
@@ -133,7 +154,8 @@ export class MergeLanesMain {
         throw err;
       }
     };
-    let allComponentsStatus = await getAllComponentsStatus();
+    let allComponentsStatus = await getComponentsStatusNeedMerge();
+    allComponentsStatus.push(...compStatusNotNeedMerge);
 
     if (pattern) {
       const componentIds = await this.workspace.resolveMultipleComponentIds(bitIds);

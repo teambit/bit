@@ -69,6 +69,8 @@ export default async function fetch(
         const laneIds = lane.toBitIds();
         return BitIds.fromArray(
           bitIds.map((bitId) => {
+            if (bitId.hasVersion()) return bitId;
+            // when the client asks for bitId without version and it's on the lane, we need the latest from the lane, not main
             const inLane = laneIds.searchWithoutVersion(bitId);
             return inLane || bitId;
           })
