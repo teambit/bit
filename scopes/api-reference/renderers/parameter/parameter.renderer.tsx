@@ -19,7 +19,7 @@ function ParameterComponent(props: APINodeRenderProps) {
   } = props;
 
   const paramNode = api as ParameterSchema;
-  const { name, isOptional, doc, type, defaultValue } = paramNode;
+  const { name, isOptional, doc, type, defaultValue, objectBindingNodes } = paramNode;
   const typeRenderer = renderers.find((renderer) => renderer.predicate(type));
   const customTypeRow = (typeRenderer && (
     <typeRenderer.Component
@@ -29,6 +29,41 @@ function ParameterComponent(props: APINodeRenderProps) {
       metadata={{ [type.__schema]: { columnView: true } }}
     />
   )) || <div className={styles.node}>{type.toString()}</div>;
+
+  if (objectBindingNodes) {
+    return (
+      <React.Fragment key={`${name}-param`}>
+        {objectBindingNodes.map((bindingNode) => {
+          const bindingNodeRenderer = renderers.find((renderer) => renderer.predicate(bindingNode));
+          const customBindingNodeTypeRow = (bindingNodeRenderer && (
+            <bindingNodeRenderer.Component
+              {...props}
+              apiNode={{ ...props.apiNode, api: bindingNode, renderer: bindingNodeRenderer }}
+              depth={(props.depth ?? 0) + 1}
+              metadata={{ [type.__schema]: { columnView: true } }}
+            />
+          )) || <div className={styles.node}>{bindingNode.toString()}</div>;
+
+          return (
+            <TableRow
+              key={`${bindingNode.name}-param`}
+              headings={['name', 'type', 'default', 'description']}
+              colNumber={4}
+              customRow={{
+                type: customBindingNodeTypeRow,
+              }}
+              row={{
+                name: bindingNode.name || '',
+                description: bindingNode.doc?.comment || '',
+                required: false, // currently we don't have this information
+                type: '',
+              }}
+            />
+          );
+        })}
+      </React.Fragment>
+    );
+  }
 
   return (
     <TableRow
