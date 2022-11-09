@@ -108,6 +108,7 @@ export class PreviewPreview {
     // during build / tag, the component is isolated, so all aspects are relevant, and do not require filtering
     const componentAspects = this.isDev ? await this.getComponentAspects(componentId.toString()) : undefined;
     const previewModule = await this.getPreviewModule(name, componentId);
+    // const providers = [];
     const render = preview.render(componentId, previewModule, includes, this.getRenderingContext(componentAspects));
 
     this.reportSize();

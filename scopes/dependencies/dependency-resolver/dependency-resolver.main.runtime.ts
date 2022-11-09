@@ -1,6 +1,7 @@
 import mapSeries from 'p-map-series';
+import { parse } from 'comment-json';
 import { MainRuntime } from '@teambit/cli';
-import ComponentAspect, { Component, ComponentMap, ComponentMain, IComponent } from '@teambit/component';
+import ComponentAspect, { Component, ComponentMap, ComponentMain, IComponent, ComponentID } from '@teambit/component';
 import type { ConfigMain } from '@teambit/config';
 import { join } from 'path';
 import { get, pick, uniq } from 'lodash';
@@ -953,11 +954,16 @@ export class DependencyResolverMain {
   }
 
   async getComponentEnvPolicyFromExtension(configuredExtensions: ExtensionDataList): Promise<EnvPolicy> {
-    const env = this.envs.calculateEnvFromExtensions(configuredExtensions).env;
-    return this.getComponentEnvPolicyFromEnv(env);
+    const env = this.envs.calculateEnvFromExtensions(configuredExtensions);
+    const fromFile = await this.getEnvPolicyFromFile(env.id);
+    if (fromFile) return fromFile;
+    return this.getComponentEnvPolicyFromEnv(env.env);
   }
 
   async getEnvPolicyFromEnvLegacyId(id: BitId): Promise<EnvPolicy | undefined> {
+    const fromFile = await this.getEnvPolicyFromFile(id.toString());
+    if (fromFile) return fromFile;
+    
     const envDef = await this.envs.getEnvDefinitionByLegacyId(id);
     if (!envDef) return undefined;
     const env = envDef.env;
@@ -965,8 +971,28 @@ export class DependencyResolverMain {
   }
 
   async getComponentEnvPolicy(component: Component): Promise<EnvPolicy> {
+    // const envComponent = await this.envs.getEnvComponent(component);
+    const fromFile = await this.getEnvPolicyFromFile(this.envs.getEnvId(component));
+    if (fromFile) return fromFile;
     const env = this.envs.getEnv(component).env;
     return this.getComponentEnvPolicyFromEnv(env);
+  }
+
+  private async getEnvPolicyFromFile(envId: string): Promise<EnvPolicy|undefined> {
+    const isCoreEnv = this.envs.isCoreEnv(envId);
+    if (isCoreEnv) return undefined;
+    const envComponent = await this.envs.getEnvComponentByEnvId(envId, envId);
+    const envJson = envComponent.filesystem.files.find((file) => {
+      return file.relative === 'env.jsonc' || file.relative === 'env.json';
+    });
+
+    if (!envJson) return undefined;
+
+    const object = parse(envJson.contents.toString('utf8'));
+    const dependencies = object?.dependencies;
+    if (!dependencies) return undefined;
+    const allPoliciesFromEnv = new EnvPolicyFactory().fromConfigObject(dependencies);
+    return allPoliciesFromEnv;
   }
 
   async getComponentEnvPolicyFromEnv(env: DependenciesEnv): Promise<EnvPolicy> {

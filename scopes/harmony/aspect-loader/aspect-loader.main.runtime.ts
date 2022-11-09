@@ -161,16 +161,20 @@ export class AspectLoaderMain {
     }
   }
 
-  getDescriptor(id: string): AspectDescriptor {
-    const instance = this.harmony.get<any>(id);
-    const iconFn = instance.icon;
-
-    const icon = iconFn ? iconFn.apply(instance) : undefined;
-
-    return {
-      id,
-      icon,
-    };
+  getDescriptor(id: string): AspectDescriptor|undefined {
+    try {
+      const instance = this.harmony.get<any>(id);
+      const iconFn = instance.icon;
+  
+      const icon = iconFn ? iconFn.apply(instance) : undefined;
+  
+      return {
+        id,
+        icon,
+      };  
+    } catch(err) {
+      return undefined;
+    }
   }
 
   getNotLoadedConfiguredExtensions() {

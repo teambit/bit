@@ -52,6 +52,7 @@ import { COMPONENT_STRATEGY_ARTIFACT_NAME, COMPONENT_STRATEGY_SIZE_KEY_NAME } fr
 import { ENV_STRATEGY_ARTIFACT_NAME } from './strategies/env-strategy';
 import { previewSchema } from './preview.graphql';
 import { PreviewAssetsRoute } from './preview-assets.route';
+import { ProviderPreviewDefinition } from './provider.preview-definition';
 
 const noopResult = {
   results: [],
@@ -732,6 +733,8 @@ export class PreviewMain {
       );
       workspace.registerOnComponentRemove((cId) => preview.handleComponentRemoval(cId));
     }
+
+    preview.registerDefinition(new ProviderPreviewDefinition());
 
     graphql.register(previewSchema(preview));
 

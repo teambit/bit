@@ -509,7 +509,7 @@ export class Workspace implements ComponentFactory {
       // !important persist services only on the env itself.
       let services: undefined | EnvServiceList;
       if (this.envs.isEnvRegistered(component.id.toString())) services = this.envs.getServices(env);
-      const icon = this.aspectLoader.getDescriptor(env.id).icon || env.env.icon;
+      const icon = this.aspectLoader.getDescriptor(env.id)?.icon || env.env.icon;
 
       return {
         type: systemDescriptor.type,

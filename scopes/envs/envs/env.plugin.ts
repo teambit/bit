@@ -30,15 +30,26 @@ export class EnvPlugin implements PluginDefinition {
     // const 
     const envComponentId = ComponentID.fromString(envId);
     const envContext = this.createContext(envComponentId);
+    const preview = env.preview()(envContext).toLegacyEnv();
 
     return {
       getCompiler: () => env.compiler()(envContext),
-      getTester: () => env.tester()(envContext)
+      getTester: () => env.tester()(envContext),
+      // getDevEnvId: ()
+      name: env.name,
+      icon: env.icon,
+      __getDescriptor: async () => {
+        return {
+          type: env.name,
+        }
+      },
+      id: envId,
+      ...preview,
     }
   }
 
   register(object: any, aspect: Aspect) {
     const env = this.transformToLegacyEnv(aspect.id, object);
-    return this.envSlot.register([env]);
+    return this.envSlot.register(env);
   }
 }
