@@ -715,18 +715,6 @@
     "scopes/api-reference": {
       "defaultScope": "teambit.api-reference"
     },
-    "scopes/api-reference/api-reference": {
-      "teambit.envs/envs": {
-        "env": "teambit.harmony/node"
-      },
-      "teambit.harmony/node": {}
-    },
-    "{scopes/api-reference/**}": {
-      "teambit.envs/envs": {
-        "env": "teambit.react/react"
-      },
-      "teambit.react/react": {}
-    },
     "scopes/harmony/testing/load-aspect": {
       "teambit.component/issues": {
         // This is here because in load-bit, we have to import harmony config from non main file
