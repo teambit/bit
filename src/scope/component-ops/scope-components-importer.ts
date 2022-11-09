@@ -293,6 +293,47 @@ export default class ScopeComponentsImporter {
     ).fetchFromRemoteAndWrite();
   }
 
+  async importManyIfMissingWithoutDeps({
+    ids,
+    fromHead = false,
+    lane,
+    ignoreMissingHead = false,
+    preferVersionHistory = true,
+  }: {
+    ids: BitIds;
+    fromHead?: boolean;
+    lane?: Lane;
+    ignoreMissingHead?: boolean;
+    preferVersionHistory?: boolean;
+  }): Promise<void> {
+    logger.debugAndAddBreadCrumb('importManyWithoutDeps', `Ids: {ids}`, { ids: ids.toString() });
+    const idsWithoutNils = BitIds.uniqFromArray(compact(ids));
+    if (R.isEmpty(idsWithoutNils)) return;
+    const idsToImport = fromHead ? idsWithoutNils.toVersionLatest() : idsWithoutNils;
+    const compDef = await this.sources.getMany(idsToImport);
+    const idsToFetch = compDef.filter((c) => !c.component).map((c) => c.id);
+    const groupedIds = lane ? groupByLanes(idsToFetch, [lane]) : groupByScopeName(idsToFetch);
+    const remotesCount = Object.keys(groupedIds).length;
+    const statusMsg = `fetching ${idsToFetch.length} components from ${remotesCount} remotes.`;
+    loader.start(statusMsg);
+    logger.debugAndAddBreadCrumb('importManyDeltaWithoutDeps', statusMsg);
+    const remotes = await getScopeRemotes(this.scope);
+    await new ObjectFetcher(
+      this.repo,
+      this.scope,
+      remotes,
+      {
+        type: 'component',
+        withoutDependencies: true,
+        laneId: lane ? lane.id() : undefined,
+        ignoreMissingHead,
+        preferVersionHistory,
+      },
+      idsToFetch,
+      lane ? [lane] : undefined
+    ).fetchFromRemoteAndWrite();
+  }
+
   async importLanes(remoteLaneIds: LaneId[]): Promise<Lane[]> {
     const remotes = await getScopeRemotes(this.scope);
     const objectsStreamPerRemote = await remotes.fetch(groupByScopeName(remoteLaneIds), this.scope, { type: 'lane' });
