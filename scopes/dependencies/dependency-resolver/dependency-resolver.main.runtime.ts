@@ -25,6 +25,7 @@ import LegacyComponent from '@teambit/legacy/dist/consumer/component';
 import fs from 'fs-extra';
 import { BitId } from '@teambit/legacy-bit-id';
 import { readCAFileSync } from '@pnpm/network.ca-file';
+import { SourceFile } from '@teambit/legacy/dist/consumer/component/sources';
 import { PeerDependencyRules } from '@pnpm/types';
 import semver, { SemVer } from 'semver';
 import AspectLoaderAspect, { AspectLoaderMain } from '@teambit/aspect-loader';
@@ -960,10 +961,10 @@ export class DependencyResolverMain {
     return this.getComponentEnvPolicyFromEnv(env.env);
   }
 
-  async getEnvPolicyFromEnvLegacyId(id: BitId): Promise<EnvPolicy | undefined> {
-    const fromFile = await this.getEnvPolicyFromFile(id.toString());
+  async getEnvPolicyFromEnvLegacyId(id: BitId, legacyFiles: SourceFile[]): Promise<EnvPolicy | undefined> {
+    const fromFile = await this.getEnvPolicyFromFile(id.toString(), legacyFiles);
     if (fromFile) return fromFile;
-    
+
     const envDef = await this.envs.getEnvDefinitionByLegacyId(id);
     if (!envDef) return undefined;
     const env = envDef.env;
@@ -978,13 +979,21 @@ export class DependencyResolverMain {
     return this.getComponentEnvPolicyFromEnv(env);
   }
 
-  private async getEnvPolicyFromFile(envId: string): Promise<EnvPolicy|undefined> {
+  private async getEnvPolicyFromFile(envId: string, legacyFiles?: SourceFile[]): Promise<EnvPolicy|undefined> {
     const isCoreEnv = this.envs.isCoreEnv(envId);
     if (isCoreEnv) return undefined;
-    const envComponent = await this.envs.getEnvComponentByEnvId(envId, envId);
-    const envJson = envComponent.filesystem.files.find((file) => {
-      return file.relative === 'env.jsonc' || file.relative === 'env.json';
-    });
+    let envJson;
+    if (legacyFiles) {
+      envJson = legacyFiles.find((file) => {
+        return file.relative === 'env.jsonc' || file.relative === 'env.json';
+      });
+    } else {
+      // console.trace('getEnvPolicyFromFile', envId)
+      const envComponent = await this.envs.getEnvComponentByEnvId(envId, envId);
+      envJson = envComponent.filesystem.files.find((file) => {
+        return file.relative === 'env.jsonc' || file.relative === 'env.json';
+      });
+    }
 
     if (!envJson) return undefined;
 
@@ -1396,8 +1405,8 @@ export class DependencyResolverMain {
         return envPolicy.peersAutoDetectPolicy.toNameSupportedRangeMap();
       }
     );
-    DependencyResolver.registerHarmonyEnvPeersPolicyForEnvItselfGetter(async (id: BitId) => {
-      const envPolicy = await dependencyResolver.getEnvPolicyFromEnvLegacyId(id);
+    DependencyResolver.registerHarmonyEnvPeersPolicyForEnvItselfGetter(async (id: BitId, files: SourceFile[]) => {
+      const envPolicy = await dependencyResolver.getEnvPolicyFromEnvLegacyId(id, files);
       if (!envPolicy) return undefined;
       return envPolicy.peersAutoDetectPolicy.toVersionManifest();
     });

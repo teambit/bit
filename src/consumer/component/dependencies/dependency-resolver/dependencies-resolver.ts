@@ -25,6 +25,7 @@ import { DependenciesData } from './dependencies-data';
 import { packageToDefinetlyTyped } from './package-to-definetly-typed';
 import { ExtensionDataList } from '../../../config';
 import PackageJsonFile from '../../../../consumer/component/package-json-file';
+import { SourceFile } from '../../sources';
 
 export type AllDependencies = {
   dependencies: Dependency[];
@@ -67,7 +68,10 @@ type HarmonyEnvPeersPolicyForComponentGetter = (
   configuredExtensions: ExtensionDataList
 ) => Promise<{ [name: string]: string }>;
 
-type HarmonyEnvPeersPolicyForEnvItselfGetter = (componentId: BitId) => Promise<{ [name: string]: string } | undefined>;
+type HarmonyEnvPeersPolicyForEnvItselfGetter = (
+  componentId: BitId,
+  files: SourceFile[]
+) => Promise<{ [name: string]: string } | undefined>;
 
 export default class DependencyResolver {
   component: Component;
@@ -1188,7 +1192,10 @@ either, use the ignore file syntax or change the require statement to have a mod
     this.allPackagesDependencies.peerPackageDependencies = peerDeps;
   }
   async applyAutoDetectedPeersFromEnvOnEnvItSelf(): Promise<void> {
-    const envPolicy = await DependencyResolver.getHarmonyEnvPeersPolicyForEnvItself(this.component.id);
+    const envPolicy = await DependencyResolver.getHarmonyEnvPeersPolicyForEnvItself(
+      this.component.id,
+      this.component.files
+    );
     if (!envPolicy || !Object.keys(envPolicy).length) {
       return;
     }
