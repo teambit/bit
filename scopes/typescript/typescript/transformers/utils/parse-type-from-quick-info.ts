@@ -84,7 +84,7 @@ export function parseTypeFromQuickInfo(quickInfo: protocol.QuickInfoResponse | u
     }
     case 'parameter': {
       const typeColonIndex = displayString.indexOf(':');
-      return displayString.slice(typeColonIndex + 1);
+      return displayString.slice(typeColonIndex + 1).trim();
     }
     default:
       return splitByColon[splitByColon.length - 1].trim();
