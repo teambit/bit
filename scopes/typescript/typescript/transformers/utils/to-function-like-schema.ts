@@ -26,7 +26,6 @@ export async function toFunctionLikeSchema(
   const typeParameters = node.typeParameters?.map((typeParam) => typeParam.name.getText());
   const location = context.getLocation(node);
   const doc = await context.jsDocToDocSchema(node);
-
   return new FunctionLikeSchema(
     location,
     name,
