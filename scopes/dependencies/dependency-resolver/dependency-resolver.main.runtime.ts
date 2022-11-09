@@ -1035,7 +1035,10 @@ export class DependencyResolverMain {
     if (currentConfig && currentConfig.policy) {
       policiesFromConfig = variantPolicyFactory.fromConfigObject(currentConfig.policy, 'config');
     }
-    const policiesFromEnvForItself = (await this.getPoliciesFromEnvForItself(id)) ?? variantPolicyFactory.getEmpty();
+    // We check for the existence of id only because @teambit/legacy in capsules doesn't have the local changes.
+    // We may remove this `id &&` after the change is merged and released.
+    const policiesFromEnvForItself =
+      (id && (await this.getPoliciesFromEnvForItself(id))) ?? variantPolicyFactory.getEmpty();
 
     const result = VariantPolicy.mergePolices([
       policiesFromEnv,
