@@ -20,7 +20,7 @@ import mapSeries from 'p-map-series';
 import { BitId, BitIds } from '@teambit/legacy/dist/bit-id';
 import { BitError } from '@teambit/bit-error';
 import GeneralError from '@teambit/legacy/dist/error/general-error';
-import { LaneId } from '@teambit/lane-id';
+import { DEFAULT_LANE, LaneId } from '@teambit/lane-id';
 import { AutoTagResult } from '@teambit/legacy/dist/scope/component-ops/auto-tag';
 import { getDivergeData } from '@teambit/legacy/dist/scope/component-ops/get-diverge-data';
 import { UnmergedComponent } from '@teambit/legacy/dist/scope/lanes/unmerged-components';
@@ -287,193 +287,54 @@ export class MergingMain {
    * 1. "bit merge <ids...>", when merging a component from a remote to the local.
    * in this case, the remote and local are on the same lane or both on main.
    * 2. "bit lane merge", when merging from one lane to another.
-   * @param id
-   * @param localLane
-   * @param otherLaneName
-   * @param existingOnWorkspaceOnly
-   * @returns
    */
-  async getComponentMergeStatus(
-    id: BitId, // the id.version is the version we want to merge to the current component
-    localLane: Lane | null, // currently checked out lane. if on main, then it's null.
-    otherLaneName: string, // the lane name we want to merged to our lane. (can be also "main").
+  async getMergeStatus(
+    bitIds: BitId[], // the id.version is the version we want to merge to the current component
+    currentLane: Lane | null, // currently checked out lane. if on main, then it's null.
+    otherLane?: Lane | null, // the lane we want to merged to our lane. (null if it's "main").
     options?: { resolveUnrelated?: MergeStrategy; ignoreConfigChanges?: boolean }
-  ): Promise<ComponentMergeStatus> {
-    const consumer = this.workspace.consumer;
-    const componentStatus: ComponentMergeStatus = { id };
-    const returnUnmerged = (msg: string, unmergedLegitimately = false) => {
-      componentStatus.unmergedMessage = msg;
-      componentStatus.unmergedLegitimately = unmergedLegitimately;
-      return componentStatus;
-    };
-    const modelComponent = await consumer.scope.getModelComponentIfExist(id);
-    if (!modelComponent) {
-      return returnUnmerged(
-        `component ${id.toString()} is on the lane/main but its objects were not found, please re-import the lane`
-      );
-    }
-    const unmerged = consumer.scope.objects.unmergedComponents.getEntry(id.name);
-    if (unmerged) {
-      return returnUnmerged(
-        `component ${id.toStringWithoutVersion()} is in during-merge state a previous merge, please snap/tag it first (or use bit merge --resolve/--abort)`
-      );
-    }
-    const repo = consumer.scope.objects;
-    const version = id.version as string;
-    const otherLaneHead = modelComponent.getRef(version);
-    const existingBitMapId = consumer.bitMap.getBitIdIfExist(id, { ignoreVersion: true });
-    const componentOnLane: Version = await modelComponent.loadVersion(version, consumer.scope.objects);
-    if (componentOnLane.isRemoved()) {
-      return returnUnmerged(`component has been removed`, true);
-    }
-    const getCurrentId = () => {
-      if (existingBitMapId) return existingBitMapId;
-      if (localLane) {
-        const idOnLane = localLane.getComponent(id);
-        if (!idOnLane) return null;
-        return idOnLane.id.changeVersion(idOnLane.head.toString());
-      }
-      // it's on main
-      const head = modelComponent.getHeadAsTagIfExist();
-      if (head) {
-        return id.changeVersion(head);
-      }
-      return null;
-    };
-    const currentId = getCurrentId();
-    if (!currentId) {
-      const divergeData = await getDivergeData({ repo, modelComponent, remoteHead: otherLaneHead, throws: false });
-      return { currentComponent: null, componentFromModel: componentOnLane, id, mergeResults: null, divergeData };
-    }
-    const getCurrentComponent = () => {
-      if (existingBitMapId) return consumer.loadComponent(existingBitMapId);
-      return consumer.scope.getConsumerComponent(currentId);
-    };
-    const currentComponent = await getCurrentComponent();
-    const isModified = async () => {
-      const componentModificationStatus = await consumer.getComponentStatusById(currentComponent.id);
-      if (!componentModificationStatus.modified) return false;
-      if (!existingBitMapId) return false;
-      const baseComponent = await modelComponent.loadVersion(
-        existingBitMapId.version as string,
-        consumer.scope.objects
-      );
-      return options?.ignoreConfigChanges
-        ? consumer.isComponentSourceCodeModified(baseComponent, currentComponent)
-        : true;
-    };
+  ): Promise<ComponentMergeStatus[]> {
+    const componentStatusBeforeMergeAttempt = await Promise.all(
+      bitIds.map((id) => this.getComponentStatusBeforeMergeAttempt(id, currentLane, options))
+    );
 
-    const isComponentModified = await isModified();
+    const toImport = componentStatusBeforeMergeAttempt
+      .map((compStatus) => {
+        if (!compStatus.divergeData || !compStatus.divergeData.commonSnapBeforeDiverge) return [];
+        return [compStatus.id.changeVersion(compStatus.divergeData.commonSnapBeforeDiverge.toString())];
+      })
+      .flat();
 
-    if (isComponentModified) {
-      return returnUnmerged(`component is modified, please snap/tag it first`);
-    }
-    if (!otherLaneHead) {
-      throw new Error(`merging: unable finding a hash for the version ${version} of ${id.toString()}`);
-    }
-    const divergeData = await getDivergeData({
-      repo,
-      modelComponent,
-      remoteHead: otherLaneHead,
-      throws: false,
+    await this.consumer.scope.scopeImporter.importManyIfMissingWithoutDeps({
+      ids: BitIds.fromArray(toImport),
+      lane: otherLane || undefined,
     });
-    if (divergeData.err) {
-      const mainHead = modelComponent.head;
-      if (divergeData.err instanceof NoCommonSnap && options?.resolveUnrelated && mainHead) {
-        const hasResolvedFromMain = async (hashToCompare: Ref | null) => {
-          const divergeDataFromMain = await getDivergeData({
-            repo,
-            modelComponent,
-            remoteHead: mainHead,
-            checkedOutLocalHead: hashToCompare,
-            throws: false,
-          });
-          if (!divergeDataFromMain.err) return true;
-          return !(divergeDataFromMain.err instanceof NoCommonSnap);
-        };
-        const hasResolvedLocally = await hasResolvedFromMain(modelComponent.getHeadRegardlessOfLane() as Ref);
-        const hasResolvedRemotely = await hasResolvedFromMain(otherLaneHead);
-        if (!hasResolvedLocally && !hasResolvedRemotely) {
-          return returnUnmerged(
-            `unable to traverse ${currentComponent.id.toString()} history. the main-head ${mainHead.toString()} doesn't appear in both lanes, it was probably created in each lane separately`
-          );
-        }
-        const versionToSaveInLane = hasResolvedLocally ? currentComponent.id.version : id.version;
-        const resolvedRef = modelComponent.getRef(versionToSaveInLane as string);
-        if (!resolvedRef) throw new Error(`unable to get ref of "${versionToSaveInLane}" for "${id.toString()}"`);
-        if (options?.resolveUnrelated === 'theirs') {
-          // just override with the model data
-          return {
-            currentComponent,
-            componentFromModel: componentOnLane,
-            id,
-            mergeResults: null,
-            divergeData,
-            resolvedUnrelated: { strategy: 'theirs', head: resolvedRef },
-          };
-        }
-        if (options?.resolveUnrelated === 'ours') {
-          return {
-            currentComponent,
-            id,
-            mergeResults: null,
-            divergeData,
-            resolvedUnrelated: { strategy: 'ours', head: resolvedRef },
-          };
-        }
-        throw new Error(
-          `unsupported strategy "${options?.resolveUnrelated}" of resolve-unrelated. supported strategies are: [ours, theirs]`
+
+    const compStatusNotNeedMerge = componentStatusBeforeMergeAttempt.filter(
+      (c) => !c.mergeProps
+    ) as ComponentMergeStatus[];
+    const compStatusNeedMerge = componentStatusBeforeMergeAttempt.filter((c) => c.mergeProps);
+
+    const otherLaneName = otherLane ? otherLane.toLaneId().toString() : DEFAULT_LANE;
+    const getComponentsStatusNeedMerge = async (): Promise<ComponentMergeStatus[]> => {
+      const tmp = new Tmp(this.consumer.scope);
+      try {
+        const componentsStatus = await Promise.all(
+          compStatusNeedMerge.map((compStatus) => this.getComponentMergeStatus(currentLane, otherLaneName, compStatus))
         );
+        await tmp.clear();
+        return componentsStatus;
+      } catch (err: any) {
+        await tmp.clear();
+        throw err;
       }
-      return returnUnmerged(
-        `unable to traverse ${currentComponent.id.toString()} history. error: ${divergeData.err.message}`
-      );
-    }
-    if (!divergeData.isDiverged()) {
-      if (divergeData.isLocalAhead()) {
-        // do nothing!
-        return returnUnmerged(`component ${currentComponent.id.toString()} is ahead, nothing to merge`, true);
-      }
-      if (divergeData.isRemoteAhead()) {
-        // just override with the model data
-        return {
-          currentComponent,
-          componentFromModel: componentOnLane,
-          id,
-          mergeResults: null,
-          divergeData,
-        };
-      }
-      // we know that localHead and remoteHead are set, so if none of them is ahead they must be equal
-      return returnUnmerged(`component ${currentComponent.id.toString()} is already merged`, true);
-    }
-    const baseSnap = divergeData.commonSnapBeforeDiverge as Ref; // must be set when isTrueMerge
-    const baseComponent: Version = await modelComponent.loadVersion(baseSnap.toString(), repo);
-    const otherComponent: Version = await modelComponent.loadVersion(otherLaneHead.toString(), repo);
-    const currentLaneName = localLane?.toLaneId().toString() || 'main';
-    const mergeResults = await threeWayMerge({
-      consumer,
-      otherComponent,
-      otherLabel: `${otherLaneHead.toString()} (${otherLaneName})`,
-      currentComponent,
-      currentLabel: `${currentId.version} (${currentLaneName})`,
-      baseComponent,
-    });
-    return { currentComponent, id, mergeResults, divergeData };
+    };
+    const results = await getComponentsStatusNeedMerge();
+    results.push(...compStatusNotNeedMerge);
+    return results;
   }
 
-  /**
-   * this function gets called from two different commands:
-   * 1. "bit merge <ids...>", when merging a component from a remote to the local.
-   * in this case, the remote and local are on the same lane or both on main.
-   * 2. "bit lane merge", when merging from one lane to another.
-   * @param id
-   * @param localLane
-   * @param otherLaneName
-   * @param existingOnWorkspaceOnly
-   * @returns
-   */
-  async getComponentStatusBeforeMergeAttempt(
+  private async getComponentStatusBeforeMergeAttempt(
     id: BitId, // the id.version is the version we want to merge to the current component
     localLane: Lane | null, // currently checked out lane. if on main, then it's null.
     options?: { resolveUnrelated?: MergeStrategy; ignoreConfigChanges?: boolean }
@@ -633,7 +494,7 @@ export class MergingMain {
     return { currentComponent, id, divergeData, mergeProps };
   }
 
-  async getMergeStatus(
+  private async getComponentMergeStatus(
     localLane: Lane | null, // currently checked out lane. if on main, then it's null.
     otherLaneName: string, // the lane name we want to merged to our lane. (can be also "main").
     componentMergeStatusBeforeMergeAttempt: ComponentMergeStatusBeforeMergeAttempt
@@ -797,25 +658,20 @@ export class MergingMain {
     laneId: LaneId,
     localLaneObject: Lane | null
   ): Promise<ComponentMergeStatus[]> {
-    const tmp = new Tmp(this.consumer.scope);
-    try {
-      const componentsStatus = await Promise.all(
-        bitIds.map(async (bitId) => {
-          const remoteScopeName = laneId.isDefault() ? bitId.scope : laneId.scope;
-          const remoteLaneId = LaneId.from(laneId.name, remoteScopeName as string);
-          const remoteHead = await this.consumer.scope.objects.remoteLanes.getRef(remoteLaneId, bitId);
-          const laneIdStr = remoteLaneId.toString();
-          if (!remoteHead)
-            throw new BitError(`unable to find a remote head of "${bitId.toStringWithoutVersion()}" in "${laneIdStr}"`);
-          return this.getComponentMergeStatus(bitId.changeVersion(remoteHead.toString()), localLaneObject, laneIdStr);
-        })
-      );
-      await tmp.clear();
-      return componentsStatus;
-    } catch (err: any) {
-      await tmp.clear();
-      throw err;
-    }
+    const ids = await Promise.all(
+      bitIds.map(async (bitId) => {
+        const remoteScopeName = laneId.isDefault() ? bitId.scope : laneId.scope;
+        const remoteLaneId = LaneId.from(laneId.name, remoteScopeName as string);
+        const remoteHead = await this.consumer.scope.objects.remoteLanes.getRef(remoteLaneId, bitId);
+        const laneIdStr = remoteLaneId.toString();
+        if (!remoteHead) {
+          throw new BitError(`unable to find a remote head of "${bitId.toStringWithoutVersion()}" in "${laneIdStr}"`);
+        }
+        return bitId.changeVersion(remoteHead.toString());
+      })
+    );
+
+    return this.getMergeStatus(ids, localLaneObject, localLaneObject);
   }
 
   private async snapResolvedComponents(

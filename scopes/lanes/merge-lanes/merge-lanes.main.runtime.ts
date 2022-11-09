@@ -14,7 +14,6 @@ import ScopeComponentsImporter from '@teambit/legacy/dist/scope/component-ops/sc
 import { ComponentID } from '@teambit/component-id';
 import { DEFAULT_LANE, LaneId } from '@teambit/lane-id';
 import { Lane, Version } from '@teambit/legacy/dist/scope/models';
-import { Tmp } from '@teambit/legacy/dist/scope/repositories';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { DivergeData } from '@teambit/legacy/dist/scope/component-ops/diverge-data';
 import { RemoveAspect, RemoveMain } from '@teambit/remove';
@@ -113,49 +112,11 @@ export class MergeLanesMain {
     };
     const bitIds = await getBitIds();
     this.logger.debug(`merging the following bitIds: ${bitIds.toString()}`);
-    const otherLaneName = isDefaultLane ? DEFAULT_LANE : otherLaneId.toString();
 
-    const componentStatusBeforeMergeAttempt = await Promise.all(
-      bitIds.map((id) =>
-        this.merging.getComponentStatusBeforeMergeAttempt(id, currentLane, {
-          resolveUnrelated,
-          ignoreConfigChanges,
-        })
-      )
-    );
-
-    const toImport = componentStatusBeforeMergeAttempt
-      .map((compStatus) => {
-        if (!compStatus.divergeData || !compStatus.divergeData.commonSnapBeforeDiverge) return [];
-        return [compStatus.id.changeVersion(compStatus.divergeData.commonSnapBeforeDiverge.toString())];
-      })
-      .flat();
-
-    await this.scope.legacyScope.scopeImporter.importManyIfMissingWithoutDeps({
-      ids: BitIds.fromArray(toImport),
-      lane: otherLane,
+    let allComponentsStatus = await this.merging.getMergeStatus(bitIds, currentLane, otherLane, {
+      resolveUnrelated,
+      ignoreConfigChanges,
     });
-
-    const compStatusNotNeedMerge = componentStatusBeforeMergeAttempt.filter(
-      (c) => !c.mergeProps
-    ) as ComponentMergeStatus[];
-    const compStatusNeedMerge = componentStatusBeforeMergeAttempt.filter((c) => c.mergeProps);
-
-    const getComponentsStatusNeedMerge = async (): Promise<ComponentMergeStatus[]> => {
-      const tmp = new Tmp(consumer.scope);
-      try {
-        const componentsStatus = await Promise.all(
-          compStatusNeedMerge.map((compStatus) => this.merging.getMergeStatus(currentLane, otherLaneName, compStatus))
-        );
-        await tmp.clear();
-        return componentsStatus;
-      } catch (err: any) {
-        await tmp.clear();
-        throw err;
-      }
-    };
-    let allComponentsStatus = await getComponentsStatusNeedMerge();
-    allComponentsStatus.push(...compStatusNotNeedMerge);
 
     if (pattern) {
       const componentIds = await this.workspace.resolveMultipleComponentIds(bitIds);
