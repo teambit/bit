@@ -66,6 +66,7 @@ export function GroupedSchemaNodesSummary({
               if (type === 'enum members') {
                 return (
                   <EnumMemberSummary
+                    key={`${member.__schema}-${member.name}`}
                     headings={headings}
                     apiNodeRendererProps={apiNodeRendererProps}
                     groupElementClassName={typeId}
