@@ -1,0 +1,16 @@
+.name {
+  word-break: normal;
+}
+
+.row {
+  grid-template-columns: 1fr 2fr 1fr;
+}
+
+.node {
+  display: flex;
+  margin-right: 5px;
+  font-family: Roboto mono;
+  font-size: var(--bit-p-xxs);
+  word-break: normal;
+  color: rgb(57, 115, 0);
+}

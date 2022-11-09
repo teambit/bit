@@ -1,0 +1,50 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 16px;
+}
+
+.title {
+  padding-bottom: 16px;
+  font-size: var(--bit-p-md);
+  font-weight: 500;
+}
+
+.value {
+  font-size: var(--bit-p-xs);
+  background: var(--bit-bg-dent);
+  padding: 16px;
+  border-radius: 6px;
+  font-family: Roboto mono;
+}
+
+.typeParams {
+  padding-top: 16px;
+}
+
+.bold {
+  font-weight: 500;
+}
+
+.table {
+  > div {
+    grid-gap: 16px 24px;
+  }
+}
+
+.returnType {
+  font-size: var(--bit-p-xxs);
+  // color: #397300;
+  display: flex;
+  color: #4646c6;
+  font-family: Roboto mono;
+}
+
+.node {
+  display: flex;
+  margin-right: 5px;
+  font-family: Roboto mono;
+  font-size: var(--bit-p-xxs);
+  word-break: normal;
+  color: rgb(57, 115, 0);
+}

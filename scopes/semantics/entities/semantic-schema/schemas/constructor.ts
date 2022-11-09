@@ -7,7 +7,7 @@ import { schemaObjArrayToInstances } from '../class-transformers';
 export class ConstructorSchema extends SchemaNode {
   @Transform(schemaObjArrayToInstances)
   readonly params: ParameterSchema[];
-  constructor(readonly location: Location, params: ParameterSchema[]) {
+  constructor(readonly location: Location, params: ParameterSchema[], readonly signature?: string) {
     super();
     this.params = params;
   }
