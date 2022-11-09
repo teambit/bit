@@ -43,7 +43,7 @@
                 "line": 15,
                 "character": 24
               },
-              "type": "number"
+              "type": " number"
             }
           },
           {
@@ -63,7 +63,7 @@
                 "line": 15,
                 "character": 31
               },
-              "type": "number"
+              "type": " number"
             }
           }
         ],
@@ -523,11 +523,23 @@
                         "line": 14,
                         "character": 24
                       },
-                      "type": "any",
+                      "type": " any",
                       "name": "children"
                     }
                   ]
-                }
+                },
+                "objectBindingNodes": [
+                  {
+                    "__schema": "InferenceTypeSchema",
+                    "location": {
+                      "filePath": "button.composition.tsx",
+                      "line": 14,
+                      "character": 24
+                    },
+                    "type": " any",
+                    "name": "children"
+                  }
+                ]
               }
             ],
             "returnType": {
@@ -1442,11 +1454,23 @@
                     "line": 96,
                     "character": 45
                   },
-                  "type": "number",
+                  "type": " number",
                   "name": "prop"
                 }
               ]
-            }
+            },
+            "objectBindingNodes": [
+              {
+                "__schema": "InferenceTypeSchema",
+                "location": {
+                  "filePath": "index.ts",
+                  "line": 96,
+                  "character": 45
+                },
+                "type": " number",
+                "name": "prop"
+              }
+            ]
           }
         ],
         "returnType": {
