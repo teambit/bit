@@ -19,6 +19,7 @@ import { useCodeParams } from '@teambit/code.ui.hooks.use-code-params';
 import { affix } from '@teambit/base-ui.utils.string.affix';
 import { fileNodeClicked } from './artifact-file-node-clicked';
 import { FILE_SIZE_THRESHOLD } from '.';
+import { formatBytes } from './format-bytes';
 
 import styles from './artifacts-tree.module.scss';
 
@@ -56,7 +57,7 @@ export function ArtifactsTree({
     const _payloadMap =
       (hasArtifacts &&
         artifacts.reduce((accum, next) => {
-          if (!accum.has(next.taskName) && !selected) accum.set(`${next.taskName}/`, { open: false });
+          if (!accum.has(next.taskName)) accum.set(`${next.taskName}/`, { open: false });
           return accum;
         }, new Map<string, { open?: boolean }>())) ||
       new Map<string, { open?: boolean }>();
@@ -84,7 +85,7 @@ export function ArtifactsTree({
     [fileTree]
   );
 
-  const widgets = useMemo(() => [generateWidget(artifactFiles || [])], [fileTree]);
+  const widgets = useMemo(() => [generateWidget(artifactFiles || [], selected)], [fileTree]);
 
   if (!hasArtifacts) return null;
 
@@ -109,7 +110,6 @@ export function ArtifactsTree({
           onTreeNodeSelected={(id: string, e) => {
             const matchingArtifactFile = artifactFiles.find((artifactFile) => artifactFile.id === id);
             if (!matchingArtifactFile) return;
-            payloadMap.set(id, { open: true });
             const fileName = getFileNameFromNode(id);
             if (isBinaryPath(fileName) || matchingArtifactFile.size > FILE_SIZE_THRESHOLD)
               fileNodeClicked(artifactFiles, 'download')(e, { id });
@@ -125,16 +125,18 @@ function getFileNameFromNode(node: string) {
   return node.slice(lastIndex + 1);
 }
 
-function generateWidget(files: (ArtifactFile & { id: string })[]) {
+function generateWidget(files: (ArtifactFile & { id: string })[], selected?: string) {
   return function Widget({ node }: WidgetProps<any>) {
     const id = node.id;
     const artifactFile = files.find((file) => file.id === id);
     const path = getFileNameFromNode(id);
     const isBinary = isBinaryPath(path);
+    const isSelected = selected === id;
 
     if (artifactFile) {
       return (
         <div className={styles.artifactWidgets}>
+          <div className={classNames(styles.size, isSelected && styles.selected)}>{formatBytes(artifactFile.size)}</div>
           {!isBinary && artifactFile.size <= FILE_SIZE_THRESHOLD && (
             <Icon className={styles.icon} of="open-tab" onClick={(e) => fileNodeClicked(files, 'new tab')(e, node)} />
           )}
