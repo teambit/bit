@@ -13,7 +13,6 @@ import styles from './code-tab-tree.module.scss';
 
 export type CodeTabTreeProps = {
   fileTree: any[];
-  host: string;
   dependencies?: DependencyType[];
   artifactsTree: string[];
   artifacts: Array<Artifact>;
@@ -37,7 +36,6 @@ export function CodeTabTree({
   widgets,
   getHref,
   getIcon,
-  host,
 }: CodeTabTreeProps) {
   const defaultDrawer = () => {
     if (currentFile.startsWith('~artifact')) return ['ARTIFACTS'];
@@ -82,7 +80,6 @@ export function CodeTabTree({
       </DrawerUI>
       <ArtifactsTree
         drawerName="ARTIFACTS"
-        host={host}
         artifacts={artifacts}
         artifactFiles={artifactFiles}
         fileTree={artifactsTree}

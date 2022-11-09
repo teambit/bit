@@ -26,6 +26,7 @@ const ARTIFACTS_QUERY = gql`
               path
               content
               downloadUrl
+              size
             }
           }
         }

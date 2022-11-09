@@ -77,7 +77,6 @@ export function CodePage({ className, fileIconSlot, host }: CodePageProps) {
       </HoverSplitter>
       <Pane className={styles.right}>
         <CodeTabTree
-          host={host}
           artifacts={artifacts}
           artifactFiles={artifactFiles}
           artifactsTree={artifactFilesTree}

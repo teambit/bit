@@ -3,6 +3,7 @@ export type ArtifactFile = {
   path: string;
   content?: string;
   downloadUrl?: string;
+  size: number;
 };
 
 export type Artifact = {
