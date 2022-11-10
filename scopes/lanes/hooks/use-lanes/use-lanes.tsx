@@ -20,12 +20,10 @@ const GET_LANES = gql`
             version
           }
         }
-        components {
-          id {
-            name
-            scope
-            version
-          }
+        laneComponentIds {
+          name
+          scope
+          version
         }
       }
       current {
