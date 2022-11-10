@@ -443,10 +443,12 @@ export class LanesMain {
     if (!lane) return [];
 
     const laneComponents = lane.components;
-    const filteredComponentIds = this.workspace
+    const workspace = this.workspace;
+
+    const filteredComponentIds = workspace
       ? laneComponents.filter((laneComponent) => {
           const laneComponentIdWithVersion = laneComponent.id.changeVersion(laneComponent.head);
-          return this.workspace?.consumer?.bitMap
+          return workspace.consumer.bitMap
             .getAllBitIdsFromAllLanes()
             .some((bitmapComponentId) => bitmapComponentId.isEqual(laneComponentIdWithVersion));
         })
