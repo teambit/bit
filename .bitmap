@@ -187,7 +187,13 @@
         "scope": "teambit.harmony",
         "version": "0.0.232",
         "mainFile": "index.ts",
-        "rootDir": "scopes/harmony/bit-custom-aspect"
+        "rootDir": "scopes/harmony/bit-custom-aspect",
+        "config": {
+            "teambit.envs/env": {},
+            "teambit.envs/envs": {
+                "env": "teambit.envs/env"
+            }
+        }
     },
     "bit-error": {
         "scope": "teambit.harmony",
