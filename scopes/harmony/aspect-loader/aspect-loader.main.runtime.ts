@@ -47,6 +47,8 @@ export type ResolvedAspect = {
 type OnAspectLoadError = (err: Error, id: ComponentID) => Promise<boolean>;
 export type OnAspectLoadErrorSlot = SlotRegistry<OnAspectLoadError>;
 
+export type OnAspectLoadErrorHandler = (err: Error, component: Component) => Promise<boolean>
+
 export type OnLoadRequireableExtension = (
   requireableExtension: RequireableComponent,
   manifest: ExtensionManifest | Aspect
@@ -394,7 +396,7 @@ export class AspectLoaderMain {
 
   getPlugins(component: Component, componentPath: string): Plugins {
     const defs = this.getPluginDefs();
-    return Plugins.from(component, defs, (relativePath) => {
+    return Plugins.from(component, defs, this.triggerOnAspectLoadError.bind(this), this.logger, (relativePath) => {
       const compiler = this.getCompiler(component);
       if (!compiler) {
         return join(componentPath, relativePath);
