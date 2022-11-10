@@ -15,6 +15,7 @@ export class ProviderPreviewDefinition implements PreviewDefinition {
   }
 
   async renderTemplatePathByEnv(env: Environment) {
+    if (!env?.getProvider) return undefined;
     return env.getProvider();
   }
 
