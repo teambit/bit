@@ -55,6 +55,7 @@ export class WorkspaceManifestFactory {
       hasRootComponents
     );
     let dedupedDependencies = getEmptyDedupedDependencies();
+    rootPolicy = rootPolicy.filter((dep) => dep.dependencyId !== '@teambit/legacy');
     if (hasRootComponents) {
       dedupedDependencies.rootDependencies = rootPolicy.toManifest();
       const { peerDependencies } = dedupeDependencies(rootPolicy, componentDependenciesMap, [
