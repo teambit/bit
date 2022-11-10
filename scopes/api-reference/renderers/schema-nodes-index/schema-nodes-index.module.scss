@@ -1,0 +1,54 @@
+.schemaNodeIndexContainer {
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  min-width: 150px;
+  max-width: 20%;
+  height: 100%;
+  margin-left: 16px;
+}
+
+.groupName {
+  display: flex;
+  font-weight: 500;
+  // padding-bottom: 8px;
+  font-size: var(--bit-p-sm);
+  text-transform: capitalize;
+}
+
+.groupedNodesContainer {
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 8px;
+  width: 100%;
+  flex-wrap: wrap;
+}
+
+.group {
+  padding-right: 16px;
+  display: flex;
+  flex-direction: column;
+  border-left: 1px solid var(--bit-border-color-lightest, #ededed);
+}
+.paddingTop {
+  padding-top: 16px;
+}
+.groupedNode {
+  display: flex;
+  font-size: var(--bit-p-xs);
+}
+
+.noGroup {
+  padding-left: 0;
+}
+
+.groupedNodeName {
+  border-radius: 4px;
+}
+
+.title {
+  padding-left: 8px;
+  font-weight: 500;
+  font-size: var(--bit-p-xs);
+  text-transform: uppercase;
+}

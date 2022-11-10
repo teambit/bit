@@ -1,16 +1,25 @@
 import { Transform } from 'class-transformer';
 import chalk from 'chalk';
-import { schemaObjToInstance } from '../class-transformers';
+import { schemaObjArrayToInstances, schemaObjToInstance } from '../class-transformers';
 import { Location, SchemaNode } from '../schema-node';
 import { DocSchema } from './docs';
 
 export class EnumSchema extends SchemaNode {
   @Transform(schemaObjToInstance)
   readonly doc?: DocSchema;
+  @Transform(schemaObjArrayToInstances)
+  readonly members: SchemaNode[];
 
-  constructor(readonly location: Location, readonly name: string, readonly members: string[], doc?: DocSchema) {
+  constructor(
+    readonly location: Location,
+    readonly name: string,
+    members: SchemaNode[],
+    readonly signature: string,
+    doc?: DocSchema
+  ) {
     super();
     this.doc = doc;
+    this.members = members;
   }
 
   toString() {

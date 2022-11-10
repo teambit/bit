@@ -1,3 +1,5 @@
+import { SchemaAspect } from './schema.aspect';
+
 export { Parser } from './parser';
 export { SchemaExtractor } from './schema-extractor';
 export {
@@ -8,4 +10,5 @@ export {
   getSchemaArtifactPath,
 } from './schema.task';
 export type { SchemaMain } from './schema.main.runtime';
-export { SchemaAspect } from './schema.aspect';
+export default SchemaAspect;
+export { SchemaAspect };

@@ -6,7 +6,7 @@
     "character": 1
   },
   "module": {
-    "__schema": "Module",
+    "__schema": "ModuleSchema",
     "location": {
       "filePath": "index.ts",
       "line": 15,
@@ -105,7 +105,7 @@
               },
               "tagName": "parameter",
               "comment": "this is A",
-              "paramName": "a",
+              "name": "a",
               "type": {
                 "__schema": "KeywordTypeSchema",
                 "location": {
@@ -125,7 +125,7 @@
               },
               "tagName": "parameter",
               "comment": "this is B",
-              "paramName": "b"
+              "name": "b"
             },
             {
               "__schema": "ReturnTagSchema",
@@ -361,12 +361,15 @@
       },
       {
         "__schema": "ClassSchema",
-        "className": "Bar",
+        "name": "Bar",
         "location": {
           "filePath": "button.tsx",
           "line": 61,
           "character": 1
         },
+        "signature": "class Bar",
+        "extendsNodes": [],
+        "implementNodes": [],
         "members": [
           {
             "__schema": "FunctionLikeSchema",
@@ -455,7 +458,7 @@
         }
       },
       {
-        "__schema": "Module",
+        "__schema": "ModuleSchema",
         "location": {
           "filePath": "button.composition.tsx",
           "line": 3,
@@ -487,7 +490,7 @@
             "__schema": "FunctionLikeSchema",
             "location": {
               "filePath": "button.composition.tsx",
-              "line": 13,
+              "line": 14,
               "character": 1
             },
             "name": "Footer",
@@ -500,7 +503,7 @@
                 "__schema": "ParameterSchema",
                 "location": {
                   "filePath": "button.composition.tsx",
-                  "line": 13,
+                  "line": 14,
                   "character": 24
                 },
                 "name": "{ children = <BasicButton /> }",
@@ -509,7 +512,7 @@
                   "__schema": "TypeLiteralSchema",
                   "location": {
                     "filePath": "button.composition.tsx",
-                    "line": 13,
+                    "line": 14,
                     "character": 24
                   },
                   "members": [
@@ -517,21 +520,33 @@
                       "__schema": "InferenceTypeSchema",
                       "location": {
                         "filePath": "button.composition.tsx",
-                        "line": 13,
+                        "line": 14,
                         "character": 24
                       },
                       "type": "any",
                       "name": "children"
                     }
                   ]
-                }
+                },
+                "objectBindingNodes": [
+                  {
+                    "__schema": "InferenceTypeSchema",
+                    "location": {
+                      "filePath": "button.composition.tsx",
+                      "line": 14,
+                      "character": 24
+                    },
+                    "type": "any",
+                    "name": "children"
+                  }
+                ]
               }
             ],
             "returnType": {
               "__schema": "InferenceTypeSchema",
               "location": {
                 "filePath": "button.composition.tsx",
-                "line": 13,
+                "line": 14,
                 "character": 1
               },
               "type": "any"
@@ -551,7 +566,7 @@
             "__schema": "FunctionLikeSchema",
             "location": {
               "filePath": "button.composition.tsx",
-              "line": 17,
+              "line": 18,
               "character": 14
             },
             "name": "ButtonWithCustomStyles",
@@ -562,7 +577,7 @@
               "__schema": "InferenceTypeSchema",
               "location": {
                 "filePath": "button.composition.tsx",
-                "line": 17,
+                "line": 18,
                 "character": 14
               },
               "type": "any"
@@ -572,7 +587,7 @@
             "__schema": "FunctionLikeSchema",
             "location": {
               "filePath": "button.composition.tsx",
-              "line": 21,
+              "line": 22,
               "character": 14
             },
             "name": "ButtonWithIcon",
@@ -583,7 +598,7 @@
               "__schema": "InferenceTypeSchema",
               "location": {
                 "filePath": "button.composition.tsx",
-                "line": 21,
+                "line": 22,
                 "character": 14
               },
               "type": "any"
@@ -593,7 +608,7 @@
             "__schema": "FunctionLikeSchema",
             "location": {
               "filePath": "button.composition.tsx",
-              "line": 30,
+              "line": 31,
               "character": 14
             },
             "name": "ButtonAsALink",
@@ -604,7 +619,7 @@
               "__schema": "InferenceTypeSchema",
               "location": {
                 "filePath": "button.composition.tsx",
-                "line": 30,
+                "line": 31,
                 "character": 14
               },
               "type": "any"
@@ -677,12 +692,15 @@
       },
       {
         "__schema": "ClassSchema",
-        "className": "ClassSomething",
+        "name": "ClassSomething",
         "location": {
           "filePath": "index.ts",
           "line": 36,
           "character": 1
         },
+        "signature": "class ClassSomething",
+        "extendsNodes": [],
+        "implementNodes": [],
         "members": [
           {
             "__schema": "VariableLikeSchema",
@@ -711,6 +729,7 @@
               "line": 38,
               "character": 3
             },
+            "signature": "constructor ClassSomething(da: 'dsa'): ClassSomething",
             "params": [
               {
                 "__schema": "ParameterSchema",
@@ -870,6 +889,8 @@
           "character": 1
         },
         "name": "Hello",
+        "signature": "interface Hello",
+        "extendsNodes": [],
         "members": [
           {
             "__schema": "VariableLikeSchema",
@@ -972,7 +993,7 @@
             "line": 63,
             "character": 28
           },
-          "operatorName": "keyof",
+          "name": "keyof",
           "type": {
             "__schema": "TypeQuerySchema",
             "location": {
@@ -1133,10 +1154,38 @@
           "character": 1
         },
         "name": "Food",
+        "signature": "enum Food",
         "members": [
-          "Falafel",
-          "Hummus",
-          "Tahini"
+          {
+            "__schema": "EnumMemberSchema",
+            "location": {
+              "filePath": "index.ts",
+              "line": 74,
+              "character": 3
+            },
+            "name": "Falafel",
+            "signature": "(enum member) Food.Falafel = 0"
+          },
+          {
+            "__schema": "EnumMemberSchema",
+            "location": {
+              "filePath": "index.ts",
+              "line": 75,
+              "character": 3
+            },
+            "name": "Hummus",
+            "signature": "(enum member) Food.Hummus = 1"
+          },
+          {
+            "__schema": "EnumMemberSchema",
+            "location": {
+              "filePath": "index.ts",
+              "line": 76,
+              "character": 3
+            },
+            "name": "Tahini",
+            "signature": "(enum member) Food.Tahini = 2"
+          }
         ]
       },
       {
@@ -1291,7 +1340,7 @@
             "line": 90,
             "character": 44
           },
-          "parameterName": "str",
+          "name": "str",
           "hasAssertsModifier": false,
           "type": {
             "__schema": "KeywordTypeSchema",
@@ -1363,7 +1412,7 @@
             "line": 94,
             "character": 70
           },
-          "parameterName": "condition",
+          "name": "condition",
           "hasAssertsModifier": true
         }
       },
@@ -1409,7 +1458,19 @@
                   "name": "prop"
                 }
               ]
-            }
+            },
+            "objectBindingNodes": [
+              {
+                "__schema": "InferenceTypeSchema",
+                "location": {
+                  "filePath": "index.ts",
+                  "line": 96,
+                  "character": 45
+                },
+                "type": "number",
+                "name": "prop"
+              }
+            ]
           }
         ],
         "returnType": {
@@ -1521,6 +1582,8 @@
           "character": 1
         },
         "name": "ComputedNameWithType",
+        "signature": "interface ComputedNameWithType",
+        "extendsNodes": [],
         "members": [
           {
             "__schema": "VariableLikeSchema",
@@ -1552,6 +1615,8 @@
           "character": 1
         },
         "name": "ComputedNameNoType",
+        "signature": "interface ComputedNameNoType",
+        "extendsNodes": [],
         "members": [
           {
             "__schema": "VariableLikeSchema",
@@ -1642,6 +1707,8 @@
           "character": 1
         },
         "name": "CallSignatureWithTypeParams",
+        "signature": "interface CallSignatureWithTypeParams",
+        "extendsNodes": [],
         "members": [
           {
             "__schema": "FunctionLikeSchema",
@@ -1713,7 +1780,7 @@
               "line": 127,
               "character": 30
             },
-            "type": "(type parameter) T in type If<T, U, Y, N>",
+            "type": "T",
             "name": "T"
           },
           "extendsType": {
@@ -1723,7 +1790,7 @@
               "line": 127,
               "character": 40
             },
-            "type": "(type parameter) U in type If<T, U, Y, N>",
+            "type": "U",
             "name": "U"
           },
           "trueType": {
@@ -1733,7 +1800,7 @@
               "line": 127,
               "character": 44
             },
-            "type": "(type parameter) Y in type If<T, U, Y, N>",
+            "type": "Y",
             "name": "Y"
           },
           "falseType": {
@@ -1743,7 +1810,7 @@
               "line": 127,
               "character": 48
             },
-            "type": "(type parameter) N in type If<T, U, Y, N>",
+            "type": "N",
             "name": "N"
           }
         },
@@ -1756,6 +1823,73 @@
           },
           "raw": "/**\n * Conditional Generic Type\n */",
           "comment": "Conditional Generic Type"
+        }
+      },
+      {
+        "__schema": "FunctionLikeSchema",
+        "location": {
+          "filePath": "index.ts",
+          "line": 129,
+          "character": 1
+        },
+        "name": "genericFunction",
+        "signature": "function genericFunction<T>(a: T): <T>(a: T) => void",
+        "modifiers": [
+          "export"
+        ],
+        "typeParams": [
+          "T"
+        ],
+        "params": [
+          {
+            "__schema": "ParameterSchema",
+            "location": {
+              "filePath": "index.ts",
+              "line": 129,
+              "character": 36
+            },
+            "name": "a",
+            "isOptional": false,
+            "type": {
+              "__schema": "InferenceTypeSchema",
+              "location": {
+                "filePath": "index.ts",
+                "line": 129,
+                "character": 39
+              },
+              "type": "T",
+              "name": "T"
+            }
+          }
+        ],
+        "returnType": {
+          "__schema": "InferenceTypeSchema",
+          "location": {
+            "filePath": "index.ts",
+            "line": 129,
+            "character": 1
+          },
+          "type": "<T>(a: T) => void"
+        }
+      },
+      {
+        "__schema": "VariableLikeSchema",
+        "location": {
+          "filePath": "index.ts",
+          "line": 133,
+          "character": 14
+        },
+        "name": "gfnc2",
+        "signature": "const gfnc2: <T>(a: T) => void",
+        "isOptional": false,
+        "type": {
+          "__schema": "InferenceTypeSchema",
+          "location": {
+            "filePath": "index.ts",
+            "line": 133,
+            "character": 14
+          },
+          "type": "<T>(a: T) => void"
         }
       }
     ]

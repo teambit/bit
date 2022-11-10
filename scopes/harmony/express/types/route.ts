@@ -22,4 +22,6 @@ export interface Route {
   disableNamespace?: boolean;
   verb?: Verb;
   middlewares: Middleware[];
+  /** route priority if 2 route with the same name default is 0 */
+  priority?: number;
 }

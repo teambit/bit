@@ -125,3 +125,9 @@ export interface CallSignatureWithTypeParams {
  * Conditional Generic Type
  */
 export type If<T, U, Y, N> = T extends U ? Y : N;
+
+export function genericFunction<T>(a: T) {
+  return function <T>(a: T) {};
+}
+
+export const gfnc2 = genericFunction<string>('');

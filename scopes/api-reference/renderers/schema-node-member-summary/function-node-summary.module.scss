@@ -1,0 +1,22 @@
+.table {
+  > div {
+    grid-gap: 8px 16px;
+  }
+}
+
+.signature {
+  display: flex;
+  margin-right: 5px;
+  font-family: Roboto mono;
+  font-size: var(--bit-p-xxs);
+  word-break: normal;
+  color: rgb(57, 115, 0);
+}
+
+.row {
+  grid-template-columns: 1fr 2fr 1fr;
+}
+
+.name {
+  word-break: normal;
+}

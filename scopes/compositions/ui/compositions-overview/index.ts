@@ -1,1 +1,1 @@
-export {CompositionsOverview} from './compositions-overview';
+export { CompositionsOverview } from './compositions-overview';

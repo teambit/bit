@@ -1,0 +1,90 @@
+.apiNodeDetailsContainer {
+  padding: 24px 0px;
+  display: flex;
+  height: calc(100% - 40px);
+}
+.apiDetails {
+  overflow-y: auto;
+  width: 100%;
+}
+.schemaNodesIndex {
+  flex: 0;
+  height: 100%;
+}
+.apiNodeDetailsNameContainer {
+  display: flex;
+  flex-direction: row;
+  padding-bottom: 24px;
+  align-items: center;
+}
+.apiNodeDetailsName {
+  padding-right: 8px;
+}
+.apiTypeIcon {
+  img {
+    height: 18px;
+  }
+  padding-right: 8px;
+}
+.codeEditorContainer {
+  > section {
+    overflow: hidden;
+    border-radius: 8px;
+  }
+}
+.editor {
+  padding-top: 10px;
+  background-color: var(--editor-bg-color, #1e1e1e);
+  height: 100%;
+  width: 100%;
+}
+.apiNodeDetailsComment {
+  font-size: var(--bit-p-xs);
+  padding-bottom: 24px;
+}
+.apiNodeDetailsSignatureContainer {
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 24px;
+}
+.apiNodeDetailsExample {
+  padding-bottom: 24px;
+}
+.apiNodeDetailsExampleTitle {
+  padding: 16px 0px;
+}
+.apiNodeImplementationDrawer {
+  width: 100%;
+}
+.apiNodeDetailsLocationContainer {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  line-height: 16px;
+  padding-bottom: 24px;
+}
+
+.apiNodeImplementationCodeView {
+  padding: 16px 0px;
+  > h1 {
+    display: none !important;
+  }
+}
+.apiNodeDetailsLocation {
+  display: flex;
+  width: 100%;
+}
+.apiNodeDetailsLocationIcon {
+  display: flex;
+  padding-right: 8px;
+  img {
+    height: 14px;
+  }
+}
+.apiNodeDetailsLocationLink {
+  max-width: fit-content;
+  font-size: var(--bit-p-xs);
+}
+.apiNodeDetailsMembersContainer {
+  padding-bottom: 16px;
+}

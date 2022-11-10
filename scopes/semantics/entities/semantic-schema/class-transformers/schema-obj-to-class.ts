@@ -36,6 +36,7 @@ function transformFromObjectToInstance(obj: Record<string, any>): SchemaNode {
     // for backward and forward compatibility, to not break the users, it's better to return an unknown schema than throwing.
     return new UnknownSchema(obj.location || { path: '', line: 0, character: 0 }, obj.__schema, obj);
   }
+
   return plainToInstance(SchemaClass, obj);
 }
 

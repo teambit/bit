@@ -11,6 +11,7 @@ export abstract class SchemaNode {
   abstract readonly location: Location;
   readonly doc?: DocSchema;
   readonly signature?: string;
+  readonly name?: string;
 
   abstract toString(): string;
 

@@ -40,6 +40,9 @@ export function parseTypeFromQuickInfo(quickInfo: protocol.QuickInfoResponse | u
   const displayString = quickInfo.body.displayString;
   const splitByColon = displayString.split(':');
   switch (quickInfo.body.kind) {
+    case 'type parameter':
+      // (type parameter) T in concat<T, K, V>(array1: T[], array2: T[]): T[]
+      return displayString.replace(`(${quickInfo.body.kind}) `, '').split(' ')[0];
     case 'const':
     case 'property':
     case 'let':
@@ -78,6 +81,10 @@ export function parseTypeFromQuickInfo(quickInfo: protocol.QuickInfoResponse | u
       const splitByEqual = displayString.split('=');
       const [, ...tail] = splitByEqual;
       return tail.join('=').trim();
+    }
+    case 'parameter': {
+      const typeColonIndex = displayString.indexOf(':');
+      return displayString.slice(typeColonIndex + 1).trim();
     }
     default:
       return splitByColon[splitByColon.length - 1].trim();

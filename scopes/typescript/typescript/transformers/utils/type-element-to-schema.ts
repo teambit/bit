@@ -21,7 +21,6 @@ import { SchemaExtractorContext } from '../../schema-extractor-context';
 import { parseTypeFromQuickInfo } from './parse-type-from-quick-info';
 import { typeNodeToSchema } from './type-node-to-schema';
 import { getParams } from './get-params';
-import { jsDocToDocSchema } from './jsdoc-to-doc-schema';
 
 export async function typeElementToSchema(node: TypeElement, context: SchemaExtractorContext): Promise<SchemaNode> {
   switch (node.kind) {
@@ -51,7 +50,7 @@ async function propertySignature(node: ts.PropertySignature, context: SchemaExtr
   const typeStr = parseTypeFromQuickInfo(info);
   const type = await context.resolveType(node, typeStr);
   const isOptional = Boolean(node.questionToken);
-  const doc = await jsDocToDocSchema(node, context);
+  const doc = await context.jsDocToDocSchema(node);
   return new VariableLikeSchema(context.getLocation(node), name, displaySig, type, isOptional, doc);
 }
 
