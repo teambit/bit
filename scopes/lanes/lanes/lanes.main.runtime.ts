@@ -444,14 +444,12 @@ export class LanesMain {
 
     const laneComponents = lane.components;
     const workspace = this.workspace;
+    const bitIdsFromBitmap = workspace ? workspace.consumer.bitMap.getAllBitIdsFromAllLanes() : [];
 
     const filteredComponentIds = workspace
-      ? laneComponents.filter((laneComponent) => {
-          const laneComponentIdWithVersion = laneComponent.id.changeVersion(laneComponent.head);
-          return workspace.consumer.bitMap
-            .getAllBitIdsFromAllLanes()
-            .some((bitmapComponentId) => bitmapComponentId.isEqual(laneComponentIdWithVersion));
-        })
+      ? laneComponents.filter((laneComponent) =>
+          bitIdsFromBitmap.some((bitmapComponentId) => bitmapComponentId.isEqualWithoutVersion(laneComponent.id))
+        )
       : laneComponents;
 
     const host = this.componentAspect.getHost();
