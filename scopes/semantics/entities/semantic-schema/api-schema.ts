@@ -6,7 +6,7 @@ import {
   EnumSchema,
   FunctionLikeSchema,
   InterfaceSchema,
-  Module,
+  ModuleSchema,
   TypeRefSchema,
   TypeSchema,
   UnresolvedSchema,
@@ -18,12 +18,12 @@ import { componentIdTransformer } from './class-transformers/comp-id-transformer
 
 export class APISchema extends SchemaNode {
   @Transform(schemaObjToInstance)
-  readonly module: Module;
+  readonly module: ModuleSchema;
 
   @Transform(componentIdTransformer)
   readonly componentId: ComponentID;
 
-  constructor(readonly location: Location, module: Module, componentId: ComponentID) {
+  constructor(readonly location: Location, module: ModuleSchema, componentId: ComponentID) {
     super();
     this.module = module;
     this.componentId = componentId;
@@ -50,7 +50,7 @@ export class APISchema extends SchemaNode {
 
     return (
       title +
-      getSection(Module, 'Namespaces') +
+      getSection(ModuleSchema, 'Namespaces') +
       getSection(ClassSchema, 'Classes') +
       getSection(InterfaceSchema, 'Interfaces') +
       getSection(FunctionLikeSchema, 'Functions') +
@@ -73,7 +73,7 @@ export class APISchema extends SchemaNode {
   static empty(componentId: ComponentID) {
     return new APISchema(
       { filePath: '', line: 0, character: 0 },
-      new Module({ filePath: '', line: 0, character: 0 }, []),
+      new ModuleSchema({ filePath: '', line: 0, character: 0 }, []),
       componentId
     );
   }

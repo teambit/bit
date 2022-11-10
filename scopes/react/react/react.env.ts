@@ -5,6 +5,7 @@ import { ComponentUrl } from '@teambit/component.modules.component-url';
 import { BuildTask, CAPSULE_ARTIFACTS_DIR } from '@teambit/builder';
 import { merge, cloneDeep } from 'lodash';
 import { Bundler, BundlerContext, DevServer, DevServerContext } from '@teambit/bundler';
+import { COMPONENT_PREVIEW_STRATEGY_NAME, PreviewStrategyName } from '@teambit/preview';
 import { CompilerMain } from '@teambit/compiler';
 import {
   BuilderEnv,
@@ -268,7 +269,7 @@ export class ReactEnv
    */
   getFormatter(context: FormatterContext, transformers: PrettierConfigTransformer[] = []): Formatter {
     return this.prettier.createFormatter(
-      context,
+      { check: context?.check },
       {
         config: prettierConfig,
       },
@@ -400,7 +401,7 @@ export class ReactEnv
 
   getPreviewConfig() {
     return {
-      strategyName: 'component',
+      strategyName: COMPONENT_PREVIEW_STRATEGY_NAME as PreviewStrategyName,
       splitComponentBundle: true,
       isScaling: true,
     };

@@ -9,7 +9,7 @@ import { schemaObjToInstance } from '../../class-transformers';
 export class PropertyLikeTagSchema extends TagSchema {
   @Transform(schemaObjToInstance)
   readonly type?: SchemaNode;
-  constructor(readonly location: Location, readonly paramName: string, readonly comment?: string, type?: SchemaNode) {
+  constructor(readonly location: Location, readonly name: string, readonly comment?: string, type?: SchemaNode) {
     super(location, TagName.parameter, comment);
     this.type = type;
   }
@@ -17,6 +17,6 @@ export class PropertyLikeTagSchema extends TagSchema {
   toString() {
     const comment = this.comment ? ` ${this.comment}` : '';
     const type = this.type ? ` {${this.type.toString()}} ` : '';
-    return `@${this.tagName} ${this.paramName}${type} ${comment}`;
+    return `@${this.tagName} ${this.name}${type} ${comment}`;
   }
 }

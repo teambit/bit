@@ -5,12 +5,12 @@ import { schemaObjToInstance } from '../class-transformers';
 export class TypeOperatorSchema extends SchemaNode {
   @Transform(schemaObjToInstance)
   type: SchemaNode;
-  constructor(readonly location: Location, readonly operatorName: string, type: SchemaNode) {
+  constructor(readonly location: Location, readonly name: string, type: SchemaNode) {
     super();
     this.type = type;
   }
 
   toString() {
-    return `${this.operatorName} ${this.type.toString()}`;
+    return `${this.name} ${this.type.toString()}`;
   }
 }

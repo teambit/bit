@@ -47,5 +47,6 @@ export default function versionParser(versionStr: string | null | undefined): Ve
   if (isLatest(versionStr)) return returnLatest();
   if (isSemverValid(versionStr)) return returnSemver(versionStr);
   if (isHash(versionStr)) return returnSnap(versionStr);
+
   throw new InvalidVersion(versionStr.toString());
 }

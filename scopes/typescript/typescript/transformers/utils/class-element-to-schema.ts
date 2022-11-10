@@ -14,7 +14,6 @@ import { getParams } from './get-params';
 import { getAccessor, indexSignature, setAccessor } from './type-element-to-schema';
 import { parseTypeFromQuickInfo } from './parse-type-from-quick-info';
 import { toFunctionLikeSchema } from './to-function-like-schema';
-import { jsDocToDocSchema } from './jsdoc-to-doc-schema';
 
 export async function classElementToSchema(
   node: ClassElement,
@@ -44,7 +43,9 @@ export async function classElementToSchema(
 
 async function constructor(node: ConstructorDeclaration, context: SchemaExtractorContext) {
   const args = await getParams(node.parameters, context);
-  return new ConstructorSchema(context.getLocation(node), args);
+  const info = await context.getQuickInfo(node);
+  const displaySig = info?.body?.displayString;
+  return new ConstructorSchema(context.getLocation(node), args, displaySig);
 }
 
 async function propertyDeclaration(node: PropertyDeclaration, context: SchemaExtractorContext) {
@@ -54,7 +55,7 @@ async function propertyDeclaration(node: PropertyDeclaration, context: SchemaExt
   const typeStr = parseTypeFromQuickInfo(info);
   const type = await context.resolveType(node, typeStr);
   const isOptional = Boolean(node.questionToken);
-  const doc = await jsDocToDocSchema(node, context);
+  const doc = await context.jsDocToDocSchema(node);
   return new VariableLikeSchema(context.getLocation(node), name, displaySig || '', type, isOptional, doc);
 }
 

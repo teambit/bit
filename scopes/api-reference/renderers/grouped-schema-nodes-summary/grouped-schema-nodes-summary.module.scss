@@ -1,0 +1,25 @@
+.groupName {
+  padding-bottom: 16px;
+  font-size: var(--bit-p-md);
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.groupNodesContainer {
+  display: flex;
+  flex-direction: column;
+}
+
+.table {
+  > div {
+    grid-gap: 16px 24px;
+  }
+}
+
+.paddingTop {
+  padding-top: 16px;
+}
+
+.row {
+  grid-template-columns: 1fr 2fr 1fr;
+}

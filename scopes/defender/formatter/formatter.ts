@@ -37,5 +37,6 @@ export type FormatResults = {
 
 export interface Formatter {
   format(context: FormatterContext): Promise<FormatResults>;
+  formatSnippet(snippet: string): Promise<string>;
   check(context: FormatterContext): Promise<FormatResults>;
 }
