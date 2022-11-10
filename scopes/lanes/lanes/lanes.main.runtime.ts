@@ -14,7 +14,7 @@ import { TrackLane } from '@teambit/legacy/dist/scope/scope-json';
 import { ImporterAspect, ImporterMain, ImportOptions } from '@teambit/importer';
 import { CommunityAspect } from '@teambit/community';
 import type { CommunityMain } from '@teambit/community';
-import ComponentAspect, { Component, ComponentMain } from '@teambit/component';
+import ComponentAspect, { Component, ComponentID, ComponentMain } from '@teambit/component';
 import removeLanes from '@teambit/legacy/dist/consumer/lanes/remove-lanes';
 import { Lane } from '@teambit/legacy/dist/scope/models';
 import { LaneNotFound } from '@teambit/legacy/dist/api/scope/lib/exceptions/lane-not-found';
@@ -433,18 +433,33 @@ export class LanesMain {
   }
 
   async getLaneComponentModels(lane: LaneData): Promise<Component[]> {
+    const host = this.componentAspect.getHost();
+    const laneComponentIds = await this.getLaneComponentIds(lane);
+    const components = await host.getMany(laneComponentIds);
+    return components;
+  }
+
+  async getLaneComponentIds(lane: LaneData): Promise<ComponentID[]> {
     if (!lane) return [];
 
     const laneComponents = lane.components;
+    const workspace = this.workspace;
+    const bitIdsFromBitmap = workspace ? workspace.consumer.bitMap.getAllBitIdsFromAllLanes() : [];
+
+    const filteredComponentIds = workspace
+      ? laneComponents.filter((laneComponent) =>
+          bitIdsFromBitmap.some((bitmapComponentId) => bitmapComponentId.isEqualWithoutVersion(laneComponent.id))
+        )
+      : laneComponents;
+
     const host = this.componentAspect.getHost();
-    const laneComponentIds = await Promise.all(
-      laneComponents.map((laneComponent) => {
+
+    return Promise.all(
+      filteredComponentIds.map((laneComponent) => {
         const legacyIdWithVersion = laneComponent.id.changeVersion(laneComponent.head);
         return host.resolveComponentId(legacyIdWithVersion);
       })
     );
-    const components = await host.getMany(laneComponentIds);
-    return components;
   }
 
   async getLaneReadmeComponent(lane: LaneData): Promise<Component | undefined> {
