@@ -233,6 +233,8 @@ export default class ScopeComponentsImporter {
 
   /**
    * delta between the local head and the remote head. mainly to improve performance
+   * Mainly needed for backward compatibility. once the remotes support version-history (after > 0.0.899),
+   * then no need to calculate delta. just bring the version you want and the version-history object.
    */
   async importManyDeltaWithoutDeps({
     ids,
@@ -293,18 +295,21 @@ export default class ScopeComponentsImporter {
     ).fetchFromRemoteAndWrite();
   }
 
+  /**
+   * this is a minimal import, which runs very fast.
+   * it only brings the version you asked for, nothing else. it doesn't bring dependencies, it doesn't bring previous
+   * versions, it even doesn't bring the version-history object. (for performance reasons).
+   */
   async importManyIfMissingWithoutDeps({
     ids,
     fromHead = false,
     lane,
     ignoreMissingHead = false,
-    preferVersionHistory = true,
   }: {
     ids: BitIds;
     fromHead?: boolean;
     lane?: Lane;
     ignoreMissingHead?: boolean;
-    preferVersionHistory?: boolean;
   }): Promise<void> {
     logger.debugAndAddBreadCrumb('importManyIfMissingWithoutDeps', `Ids: {ids}`, { ids: ids.toString() });
     const idsWithoutNils = BitIds.uniqFromArray(compact(ids));
@@ -327,7 +332,6 @@ export default class ScopeComponentsImporter {
         withoutDependencies: true,
         laneId: lane ? lane.id() : undefined,
         ignoreMissingHead,
-        preferVersionHistory,
       },
       idsToFetch,
       lane ? [lane] : undefined

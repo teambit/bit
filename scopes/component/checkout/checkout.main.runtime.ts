@@ -76,6 +76,7 @@ export class CheckoutMain {
     const compsNeedMerge = allComponentStatusBeforeMerge.filter((c) => c.propsForMerge);
     const compsNotNeedMerge = allComponentStatusBeforeMerge.filter((c) => !c.propsForMerge) as ComponentStatus[];
 
+    // in case the requested versions to checkout don't exist locally, import them.
     const toImport = allComponentStatusBeforeMerge
       .map((compStatus) => {
         const idsToImport = [compStatus.id];
