@@ -568,6 +568,7 @@ importers:
       '@babel/preset-react': registry.npmjs.org/@babel/preset-react/7.13.13_@babel+core@7.19.6
       '@babel/preset-typescript': registry.npmjs.org/@babel/preset-typescript/7.18.6_@babel+core@7.19.6
       '@babel/register': registry.npmjs.org/@babel/register/7.18.9_@babel+core@7.19.6
+      '@babel/runtime': registry.npmjs.org/@babel/runtime/7.20.0
       '@babel/types': registry.npmjs.org/@babel/types/7.20.0
       '@graphql-modules/core': registry.npmjs.org/@graphql-modules/core/0.7.17_47dpehqa77wbfro2ktaldhryyy
       '@jest/test-result': registry.npmjs.org/@jest/test-result/26.6.2
@@ -1030,7 +1031,6 @@ importers:
       yesno: registry.npmjs.org/yesno/0.4.0
       yn: registry.npmjs.org/yn/2.0.0
     devDependencies:
-      '@babel/runtime': registry.npmjs.org/@babel/runtime/7.20.0
       '@teambit/base-ui.theme.theme-provider': registry.npmjs.org/@teambit/base-ui.theme.theme-provider/1.0.1_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/bit.content.what-is-bit': 1.96.2_caq3a63ouqw4mx4pzfilizfl5i
       '@teambit/code.ui.object-formatter': 0.0.1_react@17.0.2

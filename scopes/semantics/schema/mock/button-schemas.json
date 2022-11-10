@@ -527,7 +527,19 @@
                       "name": "children"
                     }
                   ]
-                }
+                },
+                "objectBindingNodes": [
+                  {
+                    "__schema": "InferenceTypeSchema",
+                    "location": {
+                      "filePath": "button.composition.tsx",
+                      "line": 14,
+                      "character": 24
+                    },
+                    "type": "any",
+                    "name": "children"
+                  }
+                ]
               }
             ],
             "returnType": {
@@ -1446,7 +1458,19 @@
                   "name": "prop"
                 }
               ]
-            }
+            },
+            "objectBindingNodes": [
+              {
+                "__schema": "InferenceTypeSchema",
+                "location": {
+                  "filePath": "index.ts",
+                  "line": 96,
+                  "character": 45
+                },
+                "type": "number",
+                "name": "prop"
+              }
+            ]
           }
         ],
         "returnType": {
