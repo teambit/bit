@@ -16,7 +16,7 @@ export class EnvPlugin implements PluginDefinition {
     private harmony: Harmony
   ) {}
 
-  pattern = '*.env.*';
+  pattern = '*.bit-env.*';
 
   runtimes = [MainRuntime.name];
 
@@ -30,7 +30,7 @@ export class EnvPlugin implements PluginDefinition {
     // const 
     const envComponentId = ComponentID.fromString(envId);
     const envContext = this.createContext(envComponentId);
-    const preview = env.preview()(envContext).toLegacyEnv();
+    const preview = env.preview()(envContext);
 
     return {
       getCompiler: () => env.compiler()(envContext),
@@ -38,13 +38,25 @@ export class EnvPlugin implements PluginDefinition {
       // getDevEnvId: ()
       name: env.name,
       icon: env.icon,
+      getDevEnvId: () => {
+        return 'teambit.react/react';
+      },
+      getDevServer: (context) => {
+        return preview.getDevServer(context)(envContext);
+      },
+      getAdditionalHostDependencies: preview.getAdditionalHostDependencies,
+      getProvider: preview.getProvider,
+      getMounter: preview.getMounter,
+      getDocsTemplate: preview.getDocsTemplate,
+      getPreviewConfig: preview.getPreviewConfig,
+      getBundler: (context) => preview.getBundler(context),
       __getDescriptor: async () => {
         return {
           type: env.name,
         }
       },
       id: envId,
-      ...preview,
+      // ...preview.toLegacyEnv(),
     }
   }
 
