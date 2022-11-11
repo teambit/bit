@@ -237,7 +237,7 @@ export default class ImportComponents {
     await scopeComponentsImporter.importManyDeltaWithoutDeps({
       ids,
       fromHead: this.options.allHistory,
-      preferVersionHistory: !this.options.allHistory, // in case user enters --all-history, don't bring version-history object, but the entire history
+      collectParents: this.options.allHistory,
       lane,
       ignoreMissingHead,
     });

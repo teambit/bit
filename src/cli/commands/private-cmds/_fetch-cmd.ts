@@ -41,7 +41,7 @@ export default class Fetch implements LegacyCommand {
     const scopePath = fromBase64(path);
     const fetchOptions: FETCH_OPTIONS = {
       type,
-      withoutDependencies: noDependencies,
+      includeDependencies: !noDependencies,
       includeArtifacts,
       allowExternal: false, // not relevant for SSH. only used in http for lanes.
     };

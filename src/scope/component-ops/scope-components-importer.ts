@@ -201,7 +201,7 @@ export default class ScopeComponentsImporter {
     await this.importManyDeltaWithoutDeps({
       ids: BitIds.fromArray(missingHistory),
       fromHead: true,
-      preferVersionHistory: false,
+      collectParents: true,
     });
   }
 
@@ -241,13 +241,13 @@ export default class ScopeComponentsImporter {
     fromHead = false,
     lane,
     ignoreMissingHead = false,
-    preferVersionHistory = true,
+    collectParents = false,
   }: {
     ids: BitIds;
     fromHead?: boolean;
     lane?: Lane;
     ignoreMissingHead?: boolean;
-    preferVersionHistory?: boolean;
+    collectParents?: boolean;
   }): Promise<void> {
     logger.debugAndAddBreadCrumb('importManyDeltaWithoutDeps', `Ids: {ids}`, { ids: ids.toString() });
     const idsWithoutNils = BitIds.uniqFromArray(compact(ids));
@@ -285,10 +285,11 @@ export default class ScopeComponentsImporter {
       remotes,
       {
         type: 'component-delta',
-        withoutDependencies: true,
+        withoutDependencies: true, // backward compatibility. not needed for remotes > 0.0.900
         laneId: lane ? lane.id() : undefined,
         ignoreMissingHead,
-        preferVersionHistory,
+        includeVersionHistory: true,
+        collectParents,
       },
       idsToFetch,
       lane ? [lane] : undefined
@@ -329,7 +330,7 @@ export default class ScopeComponentsImporter {
       remotes,
       {
         type: 'component',
-        withoutDependencies: true,
+        withoutDependencies: true, // backward compatibility. not needed for remotes > 0.0.900
         laneId: lane ? lane.id() : undefined,
         ignoreMissingHead,
       },
@@ -600,8 +601,9 @@ export default class ScopeComponentsImporter {
       this.scope,
       remotes,
       {
-        withoutDependencies: false,
-        preferVersionHistory: true,
+        withoutDependencies: false, // backward compatibility. not needed for remotes > 0.0.900
+        includeDependencies: true,
+        includeVersionHistory: true,
         onlyIfBuilt,
         laneId: lanes.length ? lanes[0].id() : undefined,
       },
@@ -653,7 +655,7 @@ export default class ScopeComponentsImporter {
       this.scope,
       remotes,
       {
-        withoutDependencies: true,
+        withoutDependencies: true, // backward compatibility. not needed for remotes > 0.0.900
       },
       left.map((def) => def.id),
       lanes,

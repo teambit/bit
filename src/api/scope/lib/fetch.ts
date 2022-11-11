@@ -1,4 +1,5 @@
 import { Readable } from 'stream';
+import semver from 'semver';
 import { LaneId } from '@teambit/lane-id';
 import { BitIds } from '../../../bit-id';
 import { LATEST_BIT_VERSION, POST_SEND_OBJECTS, PRE_SEND_OBJECTS } from '../../../constants';
@@ -17,14 +18,31 @@ import { Lane } from '../../../scope/models';
 export type FETCH_TYPE = 'component' | 'lane' | 'object' | 'component-delta';
 export type FETCH_OPTIONS = {
   type: FETCH_TYPE;
-  withoutDependencies: boolean; // default - true
+  /**
+   * @deprecated (since 0.0.899) use includeDependencies
+   */
+  withoutDependencies?: boolean; // default - true
+  includeDependencies?: boolean; // default - false
   includeArtifacts: boolean; // default - false
   allowExternal: boolean; // allow fetching components of other scope from this scope. needed for lanes.
   laneId?: string; // mandatory when fetching "latest" from lane. otherwise, we don't know where to find the latest
   onlyIfBuilt?: boolean; // relevant when fetching with deps. if true, and the component wasn't built successfully, don't fetch it.
   ignoreMissingHead?: boolean; // if asking for id without version and the component has no head, don't throw, just ignore
-  preferVersionHistory?: boolean; // whether bring all history or prefer to get VersionHistory object when exists.
+  /**
+   * whether include VersionHistory object to get the snaps graph. it's needed to be able to traverse the snaps without
+   * having all Version objects locally
+   */
+  includeVersionHistory?: boolean;
+  /**
+   * avoid this when importing to a workspace. mainly needed for communication between scopes.
+   * it traverses and sends the entire history.
+   */
+  collectParents?: boolean;
+
+  fetchSchema: string;
 };
+
+export const CURRENT_FETCH_SCHEMA = '0.0.2';
 
 const HooksManagerInstance = HooksManager.getInstance();
 
@@ -34,7 +52,7 @@ export default async function fetch(
   fetchOptions: FETCH_OPTIONS,
   headers?: Record<string, any> | null | undefined
 ): Promise<Readable> {
-  logger.debug(`scope.fetch started, path ${path}, options`, fetchOptions);
+  logger.debug(`scope.fetch started, path ${path}, fetchOptions`, fetchOptions);
   if (!fetchOptions.type) fetchOptions.type = 'component'; // for backward compatibility
   const args = { path, ids, ...fetchOptions };
   // This might be undefined in case of fork process like during bit test command
@@ -42,6 +60,8 @@ export default async function fetch(
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     HooksManagerInstance.triggerHook(PRE_SEND_OBJECTS, args, headers);
   }
+  const fetchSchema = fetchOptions.fetchSchema || '0.0.1';
+  const clientSupportsVersionHistory = semver.gte(fetchSchema, '0.0.2');
 
   // it should be safe to use the cached scope. when fetching without deps, there is no risk as it
   // just fetches local objects. when fetching with deps, there is a lock mechanism that allows
@@ -51,11 +71,23 @@ export default async function fetch(
   const scope: Scope = await loadScope(path, useCachedScope);
   const objectList = new ObjectList();
   const objectsReadableGenerator = new ObjectsReadableGenerator(scope.objects);
+  const shouldFetchDependencies = () => {
+    if (fetchOptions.includeDependencies) return true;
+    // backward compatible before 0.0.900
+    return !fetchOptions.withoutDependencies;
+  };
   switch (fetchOptions.type) {
     case 'component': {
       const bitIds: BitIds = BitIds.deserialize(ids);
-      const { withoutDependencies, includeArtifacts, allowExternal, onlyIfBuilt } = fetchOptions;
-      const collectParents = !withoutDependencies;
+      const shouldCollectParents = () => {
+        if (clientSupportsVersionHistory) {
+          return Boolean(fetchOptions.collectParents);
+        }
+        // backward compatible before 0.0.900 - we used to conclude whether the parents need to be collected based on the need for dependencies
+        return !fetchOptions.withoutDependencies;
+      };
+      const { includeArtifacts, allowExternal, onlyIfBuilt } = fetchOptions;
+      const collectParents = shouldCollectParents();
 
       // important! don't create a new instance of ScopeComponentImporter. Otherwise, the Mutex will be created
       // every request, and won't do anything.
@@ -79,50 +111,51 @@ export default async function fetch(
       const bitIdsToFetch = getBitIds();
 
       const getComponentsWithOptions = async (): Promise<ComponentWithCollectOptions[]> => {
-        if (withoutDependencies) {
-          const componentsVersions = await scopeComponentsImporter.fetchWithoutDeps(
+        if (shouldFetchDependencies()) {
+          const versionsDependencies = await scopeComponentsImporter.fetchWithDeps(
             bitIdsToFetch,
             allowExternal,
-            fetchOptions.ignoreMissingHead
+            onlyIfBuilt
           );
-          return componentsVersions.map((compVersion) => ({
-            component: compVersion.component,
-            version: compVersion.version,
-            collectArtifacts: includeArtifacts,
-            collectParents,
-            preferVersionHistory: fetchOptions.preferVersionHistory,
-          }));
+          const flatDeps = versionsDependencies
+            .map((versionDep) => [
+              {
+                component: versionDep.component.component,
+                version: versionDep.component.version,
+                collectArtifacts: includeArtifacts,
+                collectParents,
+                includeVersionHistory: fetchOptions.includeVersionHistory,
+              },
+              ...versionDep.allDependencies.map((verDep) => ({
+                component: verDep.component,
+                version: verDep.version,
+                collectArtifacts: includeArtifacts,
+                collectParents: false, // for dependencies, no need to traverse the entire history
+              })),
+            ])
+            .flat()
+            .reduce((uniqueDeps, dep) => {
+              const key = `${dep.component.id()}@${dep.version}`;
+              if (!uniqueDeps[key] || (!uniqueDeps[key].collectParents && dep.collectParents)) {
+                uniqueDeps[key] = dep;
+              }
+              return uniqueDeps;
+            }, {});
+          return Object.values(flatDeps);
         }
-        const versionsDependencies = await scopeComponentsImporter.fetchWithDeps(
+
+        const componentsVersions = await scopeComponentsImporter.fetchWithoutDeps(
           bitIdsToFetch,
           allowExternal,
-          onlyIfBuilt
+          fetchOptions.ignoreMissingHead
         );
-        const flatDeps = versionsDependencies
-          .map((versionDep) => [
-            {
-              component: versionDep.component.component,
-              version: versionDep.component.version,
-              collectArtifacts: includeArtifacts,
-              collectParents,
-              preferVersionHistory: fetchOptions.preferVersionHistory,
-            },
-            ...versionDep.allDependencies.map((verDep) => ({
-              component: verDep.component,
-              version: verDep.version,
-              collectArtifacts: includeArtifacts,
-              collectParents: false, // for dependencies, no need to traverse the entire history
-            })),
-          ])
-          .flat()
-          .reduce((uniqueDeps, dep) => {
-            const key = `${dep.component.id()}@${dep.version}`;
-            if (!uniqueDeps[key] || (!uniqueDeps[key].collectParents && dep.collectParents)) {
-              uniqueDeps[key] = dep;
-            }
-            return uniqueDeps;
-          }, {});
-        return Object.values(flatDeps);
+        return componentsVersions.map((compVersion) => ({
+          component: compVersion.component,
+          version: compVersion.version,
+          collectArtifacts: includeArtifacts,
+          collectParents,
+          includeVersionHistory: fetchOptions.includeVersionHistory,
+        }));
       };
       const componentsWithOptions = await getComponentsWithOptions();
       // eslint-disable-next-line @typescript-eslint/no-floating-promises
@@ -130,6 +163,13 @@ export default async function fetch(
       break;
     }
     case 'component-delta': {
+      const shouldCollectParents = () => {
+        if (clientSupportsVersionHistory) {
+          return Boolean(fetchOptions.collectParents);
+        }
+        // backward compatible before 0.0.900 - it was always true
+        return true;
+      };
       const bitIdsWithHashToStop: BitIds = BitIds.deserialize(ids);
       const scopeComponentsImporter = scope.scopeImporter;
       const laneId = fetchOptions.laneId ? LaneId.parse(fetchOptions.laneId) : null;
@@ -146,9 +186,9 @@ export default async function fetch(
           component: compVersion.component,
           version: compVersion.version,
           collectArtifacts: fetchOptions.includeArtifacts,
-          collectParents: true,
+          collectParents: shouldCollectParents(),
           lane,
-          preferVersionHistory: fetchOptions.preferVersionHistory,
+          includeVersionHistory: fetchOptions.includeVersionHistory,
           collectParentsUntil: hashToStop ? Ref.from(hashToStop) : null,
         };
       });

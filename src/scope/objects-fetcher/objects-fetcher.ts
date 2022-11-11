@@ -47,7 +47,7 @@ export class ObjectFetcher {
   public async fetchFromRemoteAndWrite() {
     this.fetchOptions = {
       type: 'component',
-      withoutDependencies: true,
+      withoutDependencies: true, // backward compatibility. not needed for remotes > 0.0.900
       includeArtifacts: false,
       allowExternal: Boolean(this.lanes.length),
       ...this.fetchOptions,

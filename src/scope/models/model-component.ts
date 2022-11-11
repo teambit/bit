@@ -457,7 +457,7 @@ export default class Component extends BitObject {
       try {
         await scope.scopeImporter.importManyDeltaWithoutDeps({
           ids: BitIds.fromArray([this.toBitId()]),
-          preferVersionHistory: false,
+          collectParents: true,
         });
         versionsInfo = await getAllVersionsInfo({ modelComponent: this, repo, throws: false, startFrom });
       } catch (err) {

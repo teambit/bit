@@ -1,4 +1,4 @@
-import { FETCH_OPTIONS } from '../api/scope/lib/fetch';
+import { CURRENT_FETCH_SCHEMA, FETCH_OPTIONS } from '../api/scope/lib/fetch';
 import { PushOptions } from '../api/scope/lib/put';
 import { BitId } from '../bit-id';
 import { ListScopeResult } from '../consumer/component/components-list';
@@ -79,6 +79,7 @@ export default class Remote {
     context?: Record<string, any>,
     strategiesNames: SSHConnectionStrategyName[] = DEFAULT_READ_STRATEGIES
   ): Promise<ObjectItemsStream> {
+    fetchOptions.fetchSchema = CURRENT_FETCH_SCHEMA;
     return this.connect(strategiesNames).then((network) => network.fetch(ids, fetchOptions, context));
   }
 

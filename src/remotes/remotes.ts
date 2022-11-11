@@ -1,6 +1,6 @@
 import { groupBy, prop } from 'ramda';
 import pMap from 'p-map';
-import { FETCH_OPTIONS } from '../api/scope/lib/fetch';
+import { CURRENT_FETCH_SCHEMA, FETCH_OPTIONS } from '../api/scope/lib/fetch';
 import { BitId } from '../bit-id';
 import GlobalRemotes from '../global-config/global-remotes';
 import logger from '../logger/logger';
@@ -48,7 +48,8 @@ export default class Remotes extends Map<string, Remote> {
   ): Promise<{ [remoteName: string]: ObjectItemsStream }> {
     const fetchOptions: FETCH_OPTIONS = {
       type: 'component',
-      withoutDependencies: true,
+      fetchSchema: CURRENT_FETCH_SCHEMA,
+      withoutDependencies: true, // backward compatibility. not needed for remotes > 0.0.900
       includeArtifacts: false,
       allowExternal: false,
       ...options,
