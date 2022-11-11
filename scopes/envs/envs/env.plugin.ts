@@ -30,6 +30,7 @@ export class EnvPlugin implements PluginDefinition {
     // const 
     const envComponentId = ComponentID.fromString(envId);
     const envContext = this.createContext(envComponentId);
+    if (!env.preview && !env.compiler) return undefined;
     const preview = env.preview()(envContext);
 
     return {
@@ -41,14 +42,14 @@ export class EnvPlugin implements PluginDefinition {
       getDevEnvId: () => {
         return 'teambit.react/react';
       },
+      getSchemaExtractor: env.schemaExtractor()(envContext),
       getDevServer: (context) => {
         return preview.getDevServer(context)(envContext);
       },
-      getAdditionalHostDependencies: preview.getAdditionalHostDependencies,
-      getProvider: preview.getProvider,
-      getMounter: preview.getMounter,
-      getDocsTemplate: preview.getDocsTemplate,
-      getPreviewConfig: preview.getPreviewConfig,
+      getAdditionalHostDependencies: preview.getAdditionalHostDependencies.bind(preview),
+      getMounter: preview.getMounter.bind(preview),
+      getDocsTemplate: preview.getDocsTemplate.bind(preview),
+      getPreviewConfig: preview.getPreviewConfig.bind(preview),
       getBundler: (context) => preview.getBundler(context),
       __getDescriptor: async () => {
         return {
@@ -56,7 +57,6 @@ export class EnvPlugin implements PluginDefinition {
         }
       },
       id: envId,
-      // ...preview.toLegacyEnv(),
     }
   }
 

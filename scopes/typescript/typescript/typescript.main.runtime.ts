@@ -62,9 +62,9 @@ export type TsConfigTransformer = (
 export class TypescriptMain {
   constructor(
     private logger: Logger,
-    private schemaTransformerSlot: SchemaTransformerSlot,
-    private workspace: Workspace,
-    private depResolver: DependencyResolverMain,
+    readonly schemaTransformerSlot: SchemaTransformerSlot,
+    readonly workspace: Workspace,
+    readonly depResolver: DependencyResolverMain,
     private envs: EnvsMain,
     private tsConfigWriter: TsconfigWriter
   ) {}
