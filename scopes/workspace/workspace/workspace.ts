@@ -810,7 +810,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     await this.scope.legacyScope.objects.writeObjectsToTheFS([lane]);
     const scopeComponentsImporter = ScopeComponentsImporter.getInstance(this.scope.legacyScope);
     const ids = BitIds.fromArray(lane.toBitIds().filter((id) => id.hasScope()));
-    await scopeComponentsImporter.importManyDeltaWithoutDeps(ids, true, lane);
+    await scopeComponentsImporter.importManyDeltaWithoutDeps({ ids, fromHead: true, lane });
     await scopeComponentsImporter.importMany({ ids, lanes: [lane] });
   }
 

@@ -168,6 +168,16 @@ describe('sign command', function () {
       );
       expect(signOutput).to.include('the following 1 component(s) were signed with build-status "succeed"');
     });
+    // todo: support exporting to a non-hub
+    it.skip('should sign the last successfully and export', () => {
+      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, signRemote.scopePath);
+      signOutput = helper.command.sign(
+        [`${secondScopeName}/comp1@${snapHash}`],
+        `--multiple --lane ${helper.scopes.remote}/dev --push`,
+        signRemote.scopePath
+      );
+      expect(signOutput).to.include('the following 1 component(s) were signed with build-status "succeed"');
+    });
   });
   describe.skip('circular dependencies between two scopes', () => {
     let signOutput: string;

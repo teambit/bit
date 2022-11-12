@@ -60,7 +60,6 @@ import {
   CyclicDependencies,
   HashMismatch,
   HashNotFound,
-  HeadNotFound,
   InvalidIndexJson,
   OutdatedIndexJson,
   ParentNotFound,
@@ -174,7 +173,6 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
   this usually happens when a component is old and the migration script was not running or interrupted`,
   ],
   [HashNotFound, (err) => `hash ${chalk.bold(err.hash)} not found`],
-  [HeadNotFound, (err) => `head snap ${chalk.bold(err.headHash)} was not found for a component ${chalk.bold(err.id)}`],
   [
     OutdatedIndexJson,
     (err) => `error: ${chalk.bold(err.id)} found in the index.json file, however, is missing from the scope.

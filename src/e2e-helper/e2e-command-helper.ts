@@ -389,6 +389,9 @@ export default class CommandHelper {
   importComponent(id: string, flags = '') {
     return this.runCmd(`bit import ${this.scopes.remote}/${id} ${flags}`);
   }
+  importComponentWithoutInstall(id: string, flags = '') {
+    return this.runCmd(`bit import ${this.scopes.remote}/${id} ${flags} --skip-dependency-installation`);
+  }
   import(value = '') {
     return this.runCmd(`bit import ${value}`);
   }
