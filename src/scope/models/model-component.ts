@@ -1035,7 +1035,7 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
     head: Ref
   ): Promise<{ err?: Error; added?: VersionParents[] }> {
     if (versionHistory.hasHash(head)) return {};
-    const getVersionObj = async (ref: Ref) => (await ref.load(repo)) as Version;
+    const getVersionObj = async (ref: Ref) => (await ref.load(repo)) as Version | undefined;
     const versionsToAdd: Version[] = [];
     let err: Error | undefined;
     const addParentsRecursively = async (version: Version) => {

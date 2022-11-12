@@ -233,7 +233,7 @@ export default class ScopeComponentsImporter {
 
   /**
    * delta between the local head and the remote head. mainly to improve performance
-   * Mainly needed for backward compatibility. once the remotes support version-history (after > 0.0.899),
+   * Mainly needed for backward compatibility. once the remotes support version-history (after > 0.0.900),
    * then no need to calculate delta. just bring the version you want and the version-history object.
    */
   async importManyDeltaWithoutDeps({
@@ -244,7 +244,7 @@ export default class ScopeComponentsImporter {
     collectParents = false,
   }: {
     ids: BitIds;
-    fromHead?: boolean;
+    fromHead?: boolean; // previously, this was named "allHistory". now with versionHistory, it only instructs fetch to start from head
     lane?: Lane;
     ignoreMissingHead?: boolean;
     collectParents?: boolean;
@@ -256,7 +256,6 @@ export default class ScopeComponentsImporter {
     const compDef = await this.sources.getMany(idsWithoutNils.toVersionLatest(), true);
     const idsToFetch = await mapSeries(compDef, async ({ id, component }) => {
       if (!component || fromHead) {
-        // remove the version to fetch it with all versions.
         return id.changeVersion(undefined);
       }
       const remoteLaneId = lane ? lane.toLaneId() : LaneId.from(DEFAULT_LANE, id.scope as string);

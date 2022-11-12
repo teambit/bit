@@ -61,7 +61,7 @@ export default class VersionHistory extends BitObject {
     return Buffer.from(this.toString(pretty));
   }
 
-  getVersionData(ref: Ref) {
+  getVersionData(ref: Ref): VersionParents | undefined {
     return this.versions.find((v) => v.hash.isEqual(ref));
   }
 

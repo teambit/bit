@@ -19,7 +19,7 @@ export type FETCH_TYPE = 'component' | 'lane' | 'object' | 'component-delta';
 export type FETCH_OPTIONS = {
   type: FETCH_TYPE;
   /**
-   * @deprecated (since 0.0.899) use includeDependencies
+   * @deprecated (since 0.0.900) use includeDependencies
    */
   withoutDependencies?: boolean; // default - true
   includeDependencies?: boolean; // default - false

@@ -16,7 +16,6 @@ import { getAllVersionHashes, getAllVersionParents } from './traverse-versions';
  * the remote head, all the snaps from this parent will be considered local incorrectly. we need to traverse also the
  * remote to be able to do the diff between the local snaps and the remote snaps.
  */
-// eslint-disable-next-line complexity
 export async function getDivergeData({
   repo,
   modelComponent,
@@ -107,7 +106,7 @@ export async function getDivergeData({
     }
     snaps.push(version.hash);
     if (version.parents.length > 1) hasMultipleParents = true;
-    version.parents.map(async (parent) => {
+    version.parents.forEach((parent) => {
       const parentVersion = getVersionData(parent);
       if (parentVersion) {
         addParentsRecursively(parentVersion, snaps, isLocal);
@@ -131,7 +130,7 @@ bit import ${modelComponent.id()} --objects`);
   if (remoteHeadExistsLocally && !hasMultipleParents) {
     return new DivergeData(snapsOnLocal, [], remoteHead, error);
   }
-  const remoteVersion = await getVersionData(remoteHead);
+  const remoteVersion = getVersionData(remoteHead);
   if (!remoteVersion) {
     const err = new VersionNotFoundOnFS(remoteHead.toString(), modelComponent.id());
     if (throws) throw err;
