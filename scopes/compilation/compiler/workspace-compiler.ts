@@ -17,6 +17,7 @@ import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 import RemovePath from '@teambit/legacy/dist/consumer/component/sources/remove-path';
 import { UiMain } from '@teambit/ui';
+import { groupBy, uniq } from 'lodash';
 import type { PreStartOpts } from '@teambit/ui';
 import { PathOsBasedAbsolute, PathOsBasedRelative } from '@teambit/legacy/dist/utils/path';
 import { MultiCompiler } from '@teambit/multi-compiler';
@@ -289,7 +290,19 @@ export class WorkspaceCompiler {
     const componentIds = await this.getIdsToCompile(componentsIds, options.changed);
     const components = await this.workspace.getMany(componentIds);
 
+    const grouped = this.groupByIsEnv(components);
+    const envsResults = grouped.envs ? await this.runCompileComponents(grouped.envs, options, noThrow) : [];
+    const otherResults = grouped.other ? await this.runCompileComponents(grouped.other, options, noThrow) : [];
+    return [...envsResults, ...otherResults];
+  }
+
+  private async runCompileComponents(
+    components: Component[],
+    options: CompileOptions,
+    noThrow?: boolean
+  ): Promise<BuildResult[]> {
     const componentsCompilers: ComponentCompiler[] = [];
+
     components.forEach((c) => {
       const environment = this.envs.getEnv(c).env;
       const compilerInstance = environment.getCompiler?.();
@@ -315,6 +328,23 @@ export class WorkspaceCompiler {
     );
 
     return resultOnWorkspace;
+  }
+
+  /**
+   * This function get's a list of aspect ids and return them grouped by whether any of them is the env of other from the list
+   * @param ids
+   */
+  groupByIsEnv(components: Component[]): { envs?: Component[]; other?: Component[] } {
+    const envsIds = uniq(
+      components
+        .map((component) => this.envs.getEnvId(component))
+        .filter((envId) => !this.aspectLoader.isCoreEnv(envId))
+    );
+    const grouped = groupBy(components, (component) => {
+      if (envsIds.includes(component.id.toString())) return 'envs';
+      return 'other';
+    });
+    return grouped as { envs: Component[]; other: Component[] };
   }
 
   private async getIdsToCompile(
