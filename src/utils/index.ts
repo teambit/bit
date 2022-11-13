@@ -1,8 +1,4 @@
 // @TODO refactor this file to include only exports
-import filterAsync from './array/filter-async';
-import first from './array/first';
-import flatten from './array/flatten';
-import splitBy from './array/split-by';
 import { buildCommandMessage } from './build-command-message';
 import sha1 from './encryption/sha1';
 import * as eol from './eol';
@@ -60,7 +56,6 @@ import inflate from './zlib-inflate';
 export {
   identityFile,
   parseSSHUrl,
-  splitBy,
   sha1,
   objectToStringifiedTupleArray,
   resolveGroupId,
@@ -71,7 +66,6 @@ export {
   getStringifyArgs,
   isNumeric,
   inflate,
-  filterAsync,
   deflate,
   toBase64,
   toBase64ArrayBuffer,
@@ -97,10 +91,8 @@ export {
   propogateUntil,
   pathHas,
   pathHasAll,
-  first,
   isDirEmpty,
   isDirEmptySync,
-  flatten,
   immutableUnshift,
   packCommand,
   unpackCommand,

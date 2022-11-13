@@ -15,7 +15,6 @@ import ShowDoctorError from '../../error/show-doctor-error';
 import enrichContextFromGlobal from '../../hooks/utils/enrich-context-from-global';
 import logger from '../../logger/logger';
 import { Remotes } from '../../remotes';
-import { splitBy } from '../../utils';
 import ComponentVersion from '../component-version';
 import { ComponentNotFound, HeadNotFound, ParentNotFound, VersionNotFound } from '../exceptions';
 import { Lane, ModelComponent, Version } from '../models';
@@ -278,7 +277,7 @@ export default class ScopeComponentsImporter {
     if (!idsWithoutNils.length) return [];
     logger.debug(`importWithoutDeps, total ids: ${ids.length}`);
 
-    const [externals, locals] = splitBy(idsWithoutNils, (id) => id.isLocal(this.scope.name));
+    const [externals, locals] = partition(idsWithoutNils, (id) => id.isLocal(this.scope.name));
 
     const localDefs: ComponentDef[] = await this.sources.getMany(locals);
     const componentVersionArr = localDefs.map((def) => {
@@ -956,7 +955,7 @@ export default class ScopeComponentsImporter {
   }
 
   private throwIfExternalFound(ids: BitIds) {
-    const [externals] = splitBy(ids, (id) => id.isLocal(this.scope.name));
+    const [externals] = partition(ids, (id) => id.isLocal(this.scope.name));
     if (externals.length) {
       const externalStr = externals.map((id) => id.toString()).join(', ');
       // we can't support fetching-with-dependencies of external components as we risk going into an infinite loop
