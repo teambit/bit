@@ -10,6 +10,7 @@ export {
 } from './build-task';
 export type { PipeName } from './builder.service';
 export type { BuilderMain, RawBuilderData, BuilderData, OnTagOpts } from './builder.main.runtime';
+export { Pipeline, Task } from './pipeline';
 export type { PipelineReport } from './build-pipeline-result-list';
 export { BuilderAspect } from './builder.aspect';
 export { WholeArtifactStorageResolver, FileStorageResolver, ArtifactStorageResolver } from './storage';

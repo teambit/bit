@@ -26,6 +26,7 @@ export class EnvPlugin implements PluginDefinition {
 
   private transformToLegacyEnv(envId: string, env: Env) {
     // HACK BECAUSE OF OLD APIS WE SHOULD MIGRATE EACH TO BE HANDLED BY ITS SERVICE
+    // IF YOU ARE THINKING ABOUT IT YOU SHOULD HEAD TO THE SERVICE SLOT INSTEAD.
     // E.G. COMPILER SHOULD BE TRANSFORMED IN COMPILER NOT HERE!
     // const 
     const envComponentId = ComponentID.fromString(envId);
@@ -48,9 +49,26 @@ export class EnvPlugin implements PluginDefinition {
       },
       getAdditionalHostDependencies: preview.getAdditionalHostDependencies.bind(preview),
       getMounter: preview.getMounter.bind(preview),
+      getBuildPipe: () => {
+        // TODO: refactor after defining for an env property
+        const pipeline = env.build()(envContext);
+        if (!pipeline || !pipeline.compute) return [];
+        return pipeline?.compute();
+      },
+      getTagPipe: () => {
+        // TODO: refactor after defining for an env property
+        const pipeline = env.snap()(envContext);
+        if (!pipeline || !pipeline.compute) return [];
+        return pipeline?.compute();
+      },
+      getSnapPipe: () => {
+        const pipeline = env.tag()(envContext);
+        if (!pipeline || !pipeline.compute) return [];
+        return pipeline?.compute();        
+      },
       getDocsTemplate: preview.getDocsTemplate.bind(preview),
       getPreviewConfig: preview.getPreviewConfig.bind(preview),
-      getBundler: (context) => preview.getBundler(context),
+      getBundler: (context) => preview.getBundler(context)(envContext),
       __getDescriptor: async () => {
         return {
           type: env.name,
@@ -62,6 +80,7 @@ export class EnvPlugin implements PluginDefinition {
 
   register(object: any, aspect: Aspect) {
     const env = this.transformToLegacyEnv(aspect.id, object);
+    if (!env) return undefined;
     return this.envSlot.register(env);
   }
 }

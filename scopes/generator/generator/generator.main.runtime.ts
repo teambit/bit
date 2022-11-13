@@ -44,6 +44,11 @@ export type GeneratorConfig = {
    * use this to hide them unless `--show-all` flag of `bit templates` was used
    */
   hideCoreTemplates: boolean;
+
+  /**
+   * default envs.
+   */
+  defaultEnvs?: string[]
 };
 
 export class GeneratorMain {

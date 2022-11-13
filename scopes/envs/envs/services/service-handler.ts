@@ -18,5 +18,5 @@ export interface ServiceHandler {
   /**
    * config of the service. e.g. tsconfig.json
    */
-  config?: string;
+  // config?: string;
 }
