@@ -25,8 +25,6 @@ import mapToObject from './map/to-object';
 import isNumeric from './number/is-numeric';
 import cleanObject from './object-clean';
 import objectToStringifiedTupleArray from './object-to-stringified-tuple-array';
-import empty from './object/empty';
-import forEach from './object/foreach';
 import hasOwnProperty from './object/has-own-property';
 import sortObject from './object/sort';
 import resolveGroupId from './os-resolve-group-id';
@@ -71,7 +69,6 @@ export {
   toBase64ArrayBuffer,
   fromBase64,
   glob,
-  empty,
   cleanChar,
   checksum,
   checksumFile,
@@ -82,7 +79,6 @@ export {
   createSymlinkOrCopy,
   cleanBang,
   prependBang,
-  forEach,
   hasOwnProperty,
   isBitUrl,
   isDir,
