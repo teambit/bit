@@ -1107,7 +1107,7 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
     return Component.from({
       name: rawComponent.box ? `${rawComponent.box}/${rawComponent.name}` : rawComponent.name,
       scope: rawComponent.scope,
-      versions: mapValues(rawComponent.versions).map((val: string) => Ref.from(val)),
+      versions: mapValues(rawComponent.versions as Record<string, string>, (val) => Ref.from(val)),
       lang: rawComponent.lang,
       deprecated: rawComponent.deprecated,
       bindingPrefix: rawComponent.bindingPrefix,
