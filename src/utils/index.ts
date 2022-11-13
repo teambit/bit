@@ -25,7 +25,6 @@ import mapToObject from './map/to-object';
 import isNumeric from './number/is-numeric';
 import cleanObject from './object-clean';
 import objectToStringifiedTupleArray from './object-to-stringified-tuple-array';
-import hasOwnProperty from './object/has-own-property';
 import sortObject from './object/sort';
 import resolveGroupId from './os-resolve-group-id';
 import resolveHomePath from './os-resolve-home-path';
@@ -42,7 +41,6 @@ import cleanChar from './string/clean-char';
 import fromBase64 from './string/from-base64';
 import generateRandomStr from './string/generate-random';
 import getStringifyArgs from './string/get-stringify-args';
-import isString from './string/is-string';
 import removeChalkCharacters from './string/remove-chalk-characters';
 import stripTrailingChar from './string/strip-trailing-char';
 import toBase64 from './string/to-base64';
@@ -59,7 +57,6 @@ export {
   resolveGroupId,
   mapToObject,
   sortObject,
-  isString,
   removeChalkCharacters,
   getStringifyArgs,
   isNumeric,
@@ -79,7 +76,6 @@ export {
   createSymlinkOrCopy,
   cleanBang,
   prependBang,
-  hasOwnProperty,
   isBitUrl,
   isDir,
   mapObject,
