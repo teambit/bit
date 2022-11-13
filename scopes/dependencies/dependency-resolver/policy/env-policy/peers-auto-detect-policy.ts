@@ -37,7 +37,7 @@ export class PeersAutoDetectPolicy {
         value: {
           version: entry.version,
         },
-        source: 'env-default-peer',
+        source: 'env-own',
         lifecycleType: 'runtime',
       };
     });
