@@ -1,5 +1,5 @@
 import { clone, equals, forEachObjIndexed } from 'ramda';
-import { forEach, isEmpty, pickBy } from 'lodash';
+import { forEach, isEmpty, pickBy, mapValues } from 'lodash';
 import { Mutex } from 'async-mutex';
 import * as semver from 'semver';
 import { versionParser, isHash, isTag } from '@teambit/component-version';
@@ -22,7 +22,7 @@ import GeneralError from '../../error/general-error';
 import ShowDoctorError from '../../error/show-doctor-error';
 import ValidationError from '../../error/validation-error';
 import logger from '../../logger/logger';
-import { getStringifyArgs, mapObject, sha1 } from '../../utils';
+import { getStringifyArgs, sha1 } from '../../utils';
 import findDuplications from '../../utils/array/find-duplications';
 import ComponentObjects from '../component-objects';
 import { SnapsDistance } from '../component-ops/snaps-distance';
@@ -1107,13 +1107,13 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
     return Component.from({
       name: rawComponent.box ? `${rawComponent.box}/${rawComponent.name}` : rawComponent.name,
       scope: rawComponent.scope,
-      versions: mapObject(rawComponent.versions, (val) => Ref.from(val)),
+      versions: mapValues(rawComponent.versions).map((val: string) => Ref.from(val)),
       lang: rawComponent.lang,
       deprecated: rawComponent.deprecated,
       bindingPrefix: rawComponent.bindingPrefix,
       local: rawComponent.local,
       state: rawComponent.state,
-      orphanedVersions: mapObject(rawComponent.orphanedVersions || {}, (val) => Ref.from(val)),
+      orphanedVersions: mapValues(rawComponent.orphanedVersions || {}, (val) => Ref.from(val)),
       scopesList: rawComponent.remotes,
       head: rawComponent.head ? Ref.from(rawComponent.head) : undefined,
       schema: rawComponent.schema || (rawComponent.head ? SchemaName.Harmony : SchemaName.Legacy),
