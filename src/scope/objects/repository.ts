@@ -7,7 +7,7 @@ import pMap from 'p-map';
 import { OBJECTS_DIR } from '../../constants';
 import logger from '../../logger/logger';
 import { glob, resolveGroupId, writeFile } from '../../utils';
-import removeFile from '../../utils/fs-remove-file';
+import removeEmptyDir from '../../utils/fs/remove-empty-dir';
 import { ChownOptions } from '../../utils/fs-write-file';
 import { PathOsBasedAbsolute } from '../../utils/path';
 import { HashNotFound, OutdatedIndexJson } from '../exceptions';
@@ -587,4 +587,20 @@ export default class Repository {
     const hash = ref.toString();
     return path.join(hash.slice(0, 2), hash.slice(2));
   }
+}
+
+async function removeFile(filePath: string, propagateDirs = false): Promise<boolean> {
+  try {
+    await fs.unlink(filePath);
+  } catch (err: any) {
+    if (err.code === 'ENOENT') {
+      // the file doesn't exist, that's fine, no need to do anything
+      return false;
+    }
+    throw err;
+  }
+  if (!propagateDirs) return true;
+  const { dir } = path.parse(filePath);
+  await removeEmptyDir(dir);
+  return true;
 }

@@ -27,7 +27,7 @@ import Consumer from '../consumer/consumer';
 import GeneralError from '../error/general-error';
 import logger from '../logger/logger';
 import getMigrationVersions, { MigrationResult } from '../migration/migration-helper';
-import { currentDirName, first, pathHasAll, propogateUntil, readDirSyncIgnoreDsStore } from '../utils';
+import { first, pathHasAll, propogateUntil, readDirSyncIgnoreDsStore } from '../utils';
 import { PathOsBasedAbsolute } from '../utils/path';
 import RemoveModelComponents from './component-ops/remove-model-components';
 import ScopeComponentsImporter from './component-ops/scope-components-importer';
@@ -728,7 +728,7 @@ once done, to continue working, please run "bit cc"`
     name?: string | null | undefined,
     groupName?: string | null | undefined
   ): ScopeJson {
-    if (!name) name = currentDirName();
+    if (!name) name = pathLib.basename(process.cwd());
     if (name === CURRENT_UPSTREAM) {
       throw new GeneralError(`the name "${CURRENT_UPSTREAM}" is a reserved word, please use another name`);
     }
