@@ -1,10 +1,10 @@
 import fs from 'fs-extra';
 import * as path from 'path';
+import { pickBy } from 'lodash';
 import R from 'ramda';
 import { BitIds } from '../../bit-id';
 import { BIT_JSON, DEFAULT_BINDINGS_PREFIX, DEFAULT_EXTENSIONS, DEFAULT_LANGUAGE, PACKAGE_JSON } from '../../constants';
 import logger from '../../logger/logger';
-import { filterObject } from '../../utils';
 import { PathLinux, PathOsBased, PathOsBasedAbsolute, PathOsBasedRelative } from '../../utils/path';
 import PackageJsonFile from '../component/package-json-file';
 import { AbstractVinyl } from '../component/sources';
@@ -62,7 +62,7 @@ export default class AbstractConfig {
       return true;
     };
 
-    return filterObject(
+    return pickBy(
       {
         lang: this.lang,
         bindingPrefix: this.bindingPrefix,
