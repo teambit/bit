@@ -9,6 +9,7 @@ export {
   getSchemaArtifactDef,
   getSchemaArtifactPath,
 } from './schema.task';
+export type { SchemaEnv } from './schema-env';
 export type { SchemaMain } from './schema.main.runtime';
 export default SchemaAspect;
 export { SchemaAspect };

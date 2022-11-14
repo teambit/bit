@@ -1,17 +1,18 @@
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
-import { EnvsAspect, EnvsMain } from '@teambit/envs';
+import { EnvDefinition, EnvsAspect, EnvsMain } from '@teambit/envs';
 import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
 import { CommunityAspect } from '@teambit/community';
 import type { CommunityMain } from '@teambit/community';
 
-import { Component } from '@teambit/component';
+import { Component, ComponentID } from '@teambit/component';
 import { isCoreAspect, loadBit } from '@teambit/bit';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { BitError } from '@teambit/bit-error';
 import AspectLoaderAspect, { AspectLoaderMain } from '@teambit/aspect-loader';
 import NewComponentHelperAspect, { NewComponentHelperMain } from '@teambit/new-component-helper';
+import { compact } from 'lodash';
 import ImporterAspect, { ImporterMain } from '@teambit/importer';
 import { ComponentTemplate } from './component-template';
 import { GeneratorAspect } from './generator.aspect';
@@ -48,7 +49,7 @@ export type GeneratorConfig = {
   /**
    * default envs.
    */
-  defaultEnvs?: string[]
+  envs?: string[];
 };
 
 export class GeneratorMain {
@@ -85,6 +86,8 @@ export class GeneratorMain {
    * workspace is not available
    */
   async listTemplates(): Promise<TemplateDescriptor[]> {
+    const envTemplates = await this.listEnvTemplateDescriptors();
+    if (envTemplates) return envTemplates;
     const getTemplateDescriptor = ({
       id,
       template,
@@ -130,8 +133,12 @@ export class GeneratorMain {
   /**
    * returns a specific component template.
    */
-  getComponentTemplate(name: string, aspectId?: string): { id: string; template: ComponentTemplate } | undefined {
-    const templates = this.getAllComponentTemplatesFlattened();
+  async getComponentTemplate(
+    name: string,
+    aspectId?: string
+  ): Promise<{ id: string; template: ComponentTemplate; envName: string } | undefined> {
+    const fromEnv = await this.listEnvTemplates();
+    const templates = fromEnv || this.getAllComponentTemplatesFlattened();
     const found = templates.find(({ id, template }) => {
       if (aspectId && id !== aspectId) return false;
       return template.name === name;
@@ -202,10 +209,10 @@ export class GeneratorMain {
 
   async searchRegisteredWorkspaceTemplate(name?: string, aspectId?: string): Promise<WorkspaceTemplate | undefined> {
     const templates = this.getAllWorkspaceTemplatesFlattened();
-    const found = templates.find(({ id, template }) => {
-      if (aspectId && name) return aspectId === id && name === template.name;
+    const found = templates.find(({ id, template: tpl }) => {
+      if (aspectId && name) return aspectId === id && name === tpl.name;
       if (aspectId) return aspectId === id;
-      if (name) return name === template.name;
+      if (name) return name === tpl.name;
       throw new Error(`searchRegisteredWorkspaceTemplate expects to get "name" or "aspectId"`);
     });
     return found?.template;
@@ -219,7 +226,7 @@ export class GeneratorMain {
     if (!this.workspace) throw new ConsumerNotFound();
     await this.loadAspects();
     const { namespace, aspect: aspectId } = options;
-    const templateWithId = this.getComponentTemplate(templateName, aspectId);
+    const templateWithId = await this.getComponentTemplate(templateName, aspectId);
     if (!templateWithId) throw new BitError(`template "${templateName}" was not found`);
 
     const componentIds = componentNames.map((componentName) =>
@@ -233,7 +240,8 @@ export class GeneratorMain {
       templateWithId.template,
       this.envs,
       this.newComponentHelper,
-      templateWithId.id
+      templateWithId.id,
+      templateWithId.envName ? ComponentID.fromString(templateWithId.id): undefined
     );
     return componentGenerator.generate();
   }
@@ -263,6 +271,17 @@ export class GeneratorMain {
     return { workspacePath, appName: template.appName };
   }
 
+  async listEnvWorkspaceTemplates(envId: string): Promise<WorkspaceTemplate[]> {
+    const envs = await this.loadEnvs([envId]);
+    const workspaceTemplates = envs.flatMap((env) => {
+      if (!env.env.getWorkspaceGenerators) return undefined;
+      const workspaceGenerators = env.env.getWorkspaceGenerators();
+      return workspaceGenerators;
+    });
+
+    return workspaceTemplates;
+  }
+
   private getAllComponentTemplatesFlattened(): Array<{ id: string; template: ComponentTemplate }> {
     const templatesByAspects = this.componentTemplateSlot.toArray();
     return templatesByAspects.flatMap(([id, componentTemplates]) => {
@@ -283,7 +302,65 @@ export class GeneratorMain {
     });
   }
 
-  private async loadAspects() {
+  /**
+   * list all component templates registered by an env.
+   */
+  async listEnvTemplateDescriptors(ids: string[] = []): Promise<TemplateDescriptor[]> {
+    const envTemplates = await this.listEnvTemplates(ids);
+    const templates: TemplateDescriptor[] = envTemplates.map((envTemplate) => {
+      const componentId = ComponentID.fromString(envTemplate.id);
+      return {
+        aspectId: `${envTemplate.envName} (${componentId.toStringWithoutVersion()})`,
+        ...envTemplate.template,
+      };
+    });
+
+    return templates;
+  }
+
+  async listEnvTemplates(ids: string[] = []) {
+    const configEnvs = this.config.envs || [];
+    const envs = await this.loadEnvs(configEnvs?.concat(ids));
+    const templates = envs.flatMap((env) => {
+      if (!env.env.getGeneratorTemplates) return [];
+      const tpls = env.env.getGeneratorTemplates() || [];
+      return tpls.map((template) => {
+        const componentId = ComponentID.fromString(env.id);
+        return {
+          id: componentId.toString(),
+          envName: env.name,
+          template,
+        };
+      });
+    });
+
+    return templates;
+  }
+
+  async loadEnvs(ids: string[] = this.config.envs || []): Promise<EnvDefinition[]> {
+    const envs = ids.map((id) => {
+      const componentId = ComponentID.fromString(id);
+      return {
+        id: componentId,
+        env: this.envs.getEnvDefinition(componentId),
+      };
+    });
+
+    const toLoad = envs.filter((env) => !env.env);
+    const componentIds = toLoad.map((component) => component.id.toString());
+    await this.workspace.loadAspects(componentIds);
+    const allEnvs = envs.map((env) => {
+      if (env.env) {
+        return env.env;
+      }
+
+      return this.envs.getEnvDefinition(env.id);
+    });
+
+    return compact(allEnvs);
+  }
+
+  async loadAspects() {
     if (this.aspectLoaded) return;
     await this.workspace.loadAspects(this.config.aspects);
     this.aspectLoaded = true;

@@ -8,3 +8,4 @@ export {
 } from './component-template';
 export { WorkspaceContext, WorkspaceTemplate, WorkspaceTemplate as Starter, WorkspaceFile } from './workspace-template';
 export { GeneratorAspect } from './generator.aspect';
+export { TemplateList } from './template-list';

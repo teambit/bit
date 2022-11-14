@@ -18,7 +18,7 @@ export type Preview = {
   /**
    * return a path to a docs template.
    */
-   getDocsTemplate: () => string;
+  getDocsTemplate: () => string;
 
   /**
    * return a dev server instance to use for previews.

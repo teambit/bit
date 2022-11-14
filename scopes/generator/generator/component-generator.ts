@@ -24,7 +24,8 @@ export class ComponentGenerator {
     private template: ComponentTemplate,
     private envs: EnvsMain,
     private newComponentHelper: NewComponentHelperMain,
-    private aspectId: string
+    private aspectId: string,
+    private envId?: ComponentID
   ) {}
 
   async generate(): Promise<GenerateResult[]> {
@@ -86,9 +87,18 @@ export class ComponentGenerator {
     const hasEnvConfiguredOriginally = this.envs.hasEnvConfigured(component);
     const envBeforeConfigChanges = this.envs.getEnv(component);
 
-    let config = this.template.config;
+    let config = this.template.config?.bind(this.template);
     if (config && typeof config === 'function') {
       config = config({ aspectId: this.aspectId });
+    }
+
+    if (!config && this.envId) {
+      config = {
+        [this.envId.toString()]: {},
+        'teambit.envs/envs': {
+          env: this.envId.toStringWithoutVersion(),
+        },
+      };
     }
 
     const templateEnv = config?.[EnvsAspect.id]?.env;

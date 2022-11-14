@@ -49,6 +49,11 @@ export class EnvPlugin implements PluginDefinition {
       },
       getAdditionalHostDependencies: preview.getAdditionalHostDependencies.bind(preview),
       getMounter: preview.getMounter.bind(preview),
+      getGeneratorTemplates: () => {
+        if (!env.generators) return undefined;
+        const generatorList = env.generators()(envContext);
+        return generatorList.compute();
+      },
       getBuildPipe: () => {
         // TODO: refactor after defining for an env property
         const pipeline = env.build()(envContext);
