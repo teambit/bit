@@ -1,4 +1,4 @@
-import React, { HTMLAttributes, useMemo, useContext } from 'react';
+import React, { HTMLAttributes, useMemo, useContext, useState } from 'react';
 import classNames from 'classnames';
 import { Icon } from '@teambit/evangelist.elements.icon';
 import { WidgetProps, TreeNode as Node } from '@teambit/ui-foundation.ui.tree.tree-node';
@@ -46,6 +46,7 @@ export function ArtifactsTree({
 }: ArtifactsTreeProps) {
   const urlParams = useCodeParams();
   const location = useLocation();
+  const [overrideSelected, setOverrideSelected] = useState<string | undefined>(undefined);
 
   const hasArtifacts = artifacts.length > 0;
   const artifactDetailsFromUrl = getArtifactFileDetailsFromUrl(artifacts, urlParams.file);
@@ -61,16 +62,24 @@ export function ArtifactsTree({
           return accum;
         }, new Map<string, { open?: boolean }>())) ||
       new Map<string, { open?: boolean }>();
-    if (artifactDetailsFromUrl) {
-      _payloadMap.set(`${artifactDetailsFromUrl.taskName}/`, { open: true });
-      _payloadMap.set(`${artifactDetailsFromUrl.taskName}/${artifactDetailsFromUrl.artifactName}/`, { open: true });
-      _payloadMap.set(
-        `${artifactDetailsFromUrl.taskName}/${artifactDetailsFromUrl.artifactName}/${artifactDetailsFromUrl.artifactFile.path}`,
-        { open: true }
-      );
+
+    const { taskName, artifactName, artifactFile } = getArtifactFileDetailsFromUrl(
+      artifacts,
+      `~artifact/${overrideSelected}`
+    ) || {
+      taskName: artifactDetailsFromUrl?.taskName,
+      artifactName: artifactDetailsFromUrl?.artifactName,
+      artifactFile: artifactDetailsFromUrl?.artifactFile,
+    };
+
+    if (taskName && artifactName && artifactFile) {
+      _payloadMap.set(`${taskName}/`, { open: true });
+      _payloadMap.set(`${taskName}/${artifactName}/`, { open: true });
+      _payloadMap.set(`${taskName}/${artifactName}/${artifactFile.path}`, { open: true });
     }
+
     return _payloadMap;
-  }, [loading, selected]);
+  }, [loading, selected, overrideSelected]);
 
   const currentHref = `${location?.pathname || ''}`;
 
@@ -82,10 +91,10 @@ export function ArtifactsTree({
       if (!fileName || isBinary || (matchingArtifactFile?.size ?? 0) > FILE_SIZE_THRESHOLD) return currentHref;
       return `~artifact/${node.id}${affix('?version=', urlParams.version)}`;
     },
-    [fileTree]
+    [loading]
   );
 
-  const widgets = useMemo(() => [generateWidget(artifactFiles || [], selected)], [fileTree]);
+  const widgets = useMemo(() => [generateWidget(artifactFiles || [], selected)], [loading]);
 
   if (!hasArtifacts) return null;
 
@@ -106,13 +115,17 @@ export function ArtifactsTree({
           widgets={widgets}
           payloadMap={payloadMap}
           TreeNode={fileTreeNodeWithArtifactFiles(artifactFiles)}
-          selected={selected}
+          selected={overrideSelected || selected}
           onTreeNodeSelected={(id: string, e) => {
             const matchingArtifactFile = artifactFiles.find((artifactFile) => artifactFile.id === id);
             if (!matchingArtifactFile) return;
             const fileName = getFileNameFromNode(id);
-            if (isBinaryPath(fileName) || matchingArtifactFile.size > FILE_SIZE_THRESHOLD)
+            if (isBinaryPath(fileName) || matchingArtifactFile.size > FILE_SIZE_THRESHOLD) {
               fileNodeClicked(artifactFiles, 'download')(e, { id });
+              setOverrideSelected(id);
+            } else {
+              setOverrideSelected(undefined);
+            }
           }}
         />
       )}

@@ -47,6 +47,10 @@
 
 .link {
   color: var(--bit-accent-color, #6c5ce7);
+  pointer-events: none;
+  > div {
+    pointer-events: auto;
+  }
 }
 
 .artifactWidgets {

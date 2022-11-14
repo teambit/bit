@@ -42,7 +42,7 @@ export function CodePage({ className, fileIconSlot, host }: CodePageProps) {
 
     const _artifactFilesTree = files.map((file) => file.id);
     return [files, _artifactFilesTree];
-  }, [artifacts]);
+  }, [loadingArtifacts]);
 
   const currentFile = urlParams.file || mainFile;
   const currentFileContent = getArtifactFileDetailsFromUrl(artifacts, currentFile)?.artifactFile.content;
