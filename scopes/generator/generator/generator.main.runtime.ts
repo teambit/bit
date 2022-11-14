@@ -87,7 +87,7 @@ export class GeneratorMain {
    */
   async listTemplates(): Promise<TemplateDescriptor[]> {
     const envTemplates = await this.listEnvTemplateDescriptors();
-    if (envTemplates) return envTemplates;
+    if (envTemplates && envTemplates.length) return envTemplates;
     const getTemplateDescriptor = ({
       id,
       template,
