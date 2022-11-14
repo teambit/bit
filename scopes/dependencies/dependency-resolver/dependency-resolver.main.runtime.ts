@@ -1,7 +1,7 @@
 import mapSeries from 'p-map-series';
 import { parse } from 'comment-json';
 import { MainRuntime } from '@teambit/cli';
-import ComponentAspect, { Component, ComponentMap, ComponentMain, IComponent, ComponentID } from '@teambit/component';
+import ComponentAspect, { Component, ComponentMap, ComponentMain, IComponent } from '@teambit/component';
 import type { ConfigMain } from '@teambit/config';
 import { join } from 'path';
 import { get, pick, uniq } from 'lodash';
