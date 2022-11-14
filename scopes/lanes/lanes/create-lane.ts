@@ -45,7 +45,7 @@ export async function createLane(
 export async function createLaneInScope(laneName: string, scope: ScopeMain): Promise<Lane> {
   const lanes = await scope.legacyScope.listLanes();
   if (lanes.find((lane) => lane.name === laneName)) {
-    throw new BitError(`lane "${laneName}" already exists, to switch to this lane, please use "bit switch" command`);
+    throw new BitError(`lane "${laneName}" already exists`);
   }
   throwForInvalidLaneName(laneName);
   const newLane = Lane.create(laneName, scope.name);
