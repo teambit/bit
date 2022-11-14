@@ -21,7 +21,7 @@ export type LaneQueryResult = {
   id: { name: string; scope: string };
   remote?: string;
   isMerged: boolean;
-  components: Array<{ id: ComponentIdObj }>;
+  laneComponentIds: Array<ComponentIdObj>;
   readmeComponent?: ComponentModelProps;
   hash: string;
 };
@@ -115,12 +115,12 @@ export class LanesModel {
   };
 
   static mapToLaneModel(laneData: LaneQueryResult, host: string): LaneModel {
-    const { id, components, readmeComponent, hash } = laneData;
+    const { id, laneComponentIds, readmeComponent, hash } = laneData;
 
     const componentIds =
-      components?.map((component) => {
-        const componentModel = ComponentID.fromObject(component.id);
-        return componentModel;
+      laneComponentIds?.map((laneComponentId) => {
+        const componentId = ComponentID.fromObject(laneComponentId);
+        return componentId;
       }) || [];
 
     const readmeComponentModel = readmeComponent && ComponentModel.from({ ...readmeComponent, host });

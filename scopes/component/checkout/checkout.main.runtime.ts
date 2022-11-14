@@ -23,10 +23,9 @@ import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
 import mapSeries from 'p-map-series';
 import { BitIds } from '@teambit/legacy/dist/bit-id';
 import { ComponentWithDependencies } from '@teambit/legacy/dist/scope';
-import Version from '@teambit/legacy/dist/scope/models/version';
+import { Version, ModelComponent } from '@teambit/legacy/dist/scope/models';
 import { Tmp } from '@teambit/legacy/dist/scope/repositories';
 import ManyComponentsWriter from '@teambit/legacy/dist/consumer/component-ops/many-components-writer';
-import { MergeResultsThreeWay } from '@teambit/legacy/dist/consumer/versions-ops/merge-version/three-way-merge';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { ComponentID } from '@teambit/component-id';
 import { CheckoutCmd } from './checkout-cmd';
@@ -46,6 +45,18 @@ export type CheckoutProps = {
   isLane?: boolean;
 };
 
+export type ComponentStatusBeforeMergeAttempt = {
+  componentFromFS?: ConsumerComponent;
+  componentFromModel?: Version;
+  id: BitId;
+  failureMessage?: string;
+  unchangedLegitimately?: boolean; // failed to checkout but for a legitimate reason, such as, up-to-date
+  propsForMerge?: {
+    currentlyUsedVersion: string;
+    componentModel: ModelComponent;
+  };
+};
+
 type CheckoutTo = 'head' | 'reset' | string;
 
 export class CheckoutMain {
@@ -59,20 +70,41 @@ export class CheckoutMain {
     await consumer.scope.import(bitIds, false);
     const { components } = await consumer.loadComponents(bitIds);
 
-    const getAllComponentsStatus = async (): Promise<ComponentStatus[]> => {
+    const allComponentStatusBeforeMerge = await Promise.all(
+      components.map((component) => this.getComponentStatusBeforeMergeAttempt(component, checkoutProps))
+    );
+    const compsNeedMerge = allComponentStatusBeforeMerge.filter((c) => c.propsForMerge);
+    const compsNotNeedMerge = allComponentStatusBeforeMerge.filter((c) => !c.propsForMerge) as ComponentStatus[];
+
+    // in case the requested versions to checkout don't exist locally, import them.
+    const toImport = allComponentStatusBeforeMerge
+      .map((compStatus) => {
+        const idsToImport = [compStatus.id];
+        if (compStatus.propsForMerge) {
+          idsToImport.push(compStatus.id.changeVersion(compStatus.propsForMerge.currentlyUsedVersion));
+        }
+        return idsToImport;
+      })
+      .flat();
+    await this.workspace.scope.legacyScope.scopeImporter.importManyIfMissingWithoutDeps({
+      ids: BitIds.fromArray(toImport),
+    });
+
+    const getComponentsStatusOfMergeNeeded = async (): Promise<ComponentStatus[]> => {
       const tmp = new Tmp(consumer.scope);
       try {
-        const componentsStatusP = components.map((component) => this.getComponentStatus(component, checkoutProps));
-        const componentsStatus = await Promise.all(componentsStatusP);
+        const afterMergeAttempt = await Promise.all(compsNeedMerge.map((c) => this.getMergeStatus(c)));
         await tmp.clear();
-        return componentsStatus;
+        return afterMergeAttempt;
       } catch (err: any) {
         await tmp.clear();
         throw err;
       }
     };
 
-    const allComponentsStatus: ComponentStatus[] = await getAllComponentsStatus();
+    const compStatusMergeNeeded = await getComponentsStatusOfMergeNeeded();
+
+    const allComponentsStatus: ComponentStatus[] = [...compStatusMergeNeeded, ...compsNotNeedMerge];
     const componentWithConflict = allComponentsStatus.find(
       (component) => component.mergeResults && component.mergeResults.hasConflicts
     );
@@ -143,7 +175,10 @@ export class CheckoutMain {
     const notExported = ids?.filter((id) => !id._legacy.hasScope()).map((id) => id._legacy.changeScope(id.scope));
     const scopeComponentsImporter = this.workspace.consumer.scope.scopeImporter;
     try {
-      await scopeComponentsImporter.importManyDeltaWithoutDeps(BitIds.fromArray(notExported || []), true);
+      await scopeComponentsImporter.importManyDeltaWithoutDeps({
+        ids: BitIds.fromArray(notExported || []),
+        fromHead: true,
+      });
     } catch (err) {
       // don't stop the process. it's possible that the scope doesn't exist yet because these are new components
       this.logger.error(`unable to sync new components due to an error`, err);
@@ -180,10 +215,10 @@ export class CheckoutMain {
     checkoutProps.ids = ids.map((id) => (checkoutProps.head || checkoutProps.latest ? id.changeVersion(LATEST) : id));
   }
 
-  private async getComponentStatus(
+  private async getComponentStatusBeforeMergeAttempt(
     component: ConsumerComponent,
     checkoutProps: CheckoutProps
-  ): Promise<ComponentStatus> {
+  ): Promise<ComponentStatusBeforeMergeAttempt> {
     const consumer = this.workspace.consumer;
     const { version, head: headVersion, reset, latest: latestVersion } = checkoutProps;
     const repo = consumer.scope.objects;
@@ -224,7 +259,7 @@ export class CheckoutMain {
     }
     if (version && currentlyUsedVersion === version) {
       // it won't be relevant for 'reset' as it doesn't have a version
-      return returnFailure(`component ${component.id.toStringWithoutVersion()} is already at version ${version}`);
+      return returnFailure(`component ${component.id.toStringWithoutVersion()} is already at version ${version}`, true);
     }
     if (headVersion && currentlyUsedVersion === newVersion) {
       return returnFailure(
@@ -235,8 +270,40 @@ export class CheckoutMain {
     const currentVersionObject: Version = await componentModel.loadVersion(currentlyUsedVersion, repo);
     const isModified = await consumer.isComponentModified(currentVersionObject, component);
     if (!isModified && reset) {
-      return returnFailure(`component ${component.id.toStringWithoutVersion()} is not modified`);
+      return returnFailure(`component ${component.id.toStringWithoutVersion()} is not modified`, true);
     }
+
+    const versionRef = componentModel.getRef(newVersion);
+    if (!versionRef) throw new Error(`unable to get ref ${newVersion} from ${componentModel.id()}`);
+    const componentVersion = (await consumer.scope.getObject(versionRef.hash)) as Version;
+    const newId = component.id.changeVersion(newVersion);
+
+    if (reset || !isModified) {
+      // if the component is not modified, no need to try merge the files, they will be written later on according to the
+      // checked out version. same thing when no version is specified, it'll be reset to the model-version later.
+      return { componentFromFS: component, componentFromModel: componentVersion, id: newId };
+    }
+
+    const propsForMerge = {
+      currentlyUsedVersion,
+      componentModel,
+    };
+
+    return { componentFromFS: component, componentFromModel: componentVersion, id: newId, propsForMerge };
+  }
+
+  private async getMergeStatus({
+    componentFromFS,
+    componentFromModel,
+    id,
+    propsForMerge,
+  }: ComponentStatusBeforeMergeAttempt): Promise<ComponentStatus> {
+    if (!propsForMerge) throw new Error(`propsForMerge is missing for ${id.toString()}`);
+    if (!componentFromFS) throw new Error(`componentFromFS is missing for ${id.toString()}`);
+    const consumer = this.workspace.consumer;
+    const repo = consumer.scope.objects;
+    const { currentlyUsedVersion, componentModel } = propsForMerge;
+
     // this is tricky. imagine the user is 0.0.2+modification and wants to checkout to 0.0.1.
     // the base is 0.0.1, as it's the common version for 0.0.1 and 0.0.2. however, if we let git merge-file use the 0.0.1
     // as the base, then, it'll get the changes done since 0.0.1 to 0.0.1, which is nothing, and put them on top of
@@ -246,27 +313,19 @@ export class CheckoutMain {
     // to be added to 0.0.1
     // if there is no modification, it doesn't go the threeWayMerge anyway, so it doesn't matter what the base is.
     const baseVersion = currentlyUsedVersion;
+    const newVersion = id.version as string;
     const baseComponent: Version = await componentModel.loadVersion(baseVersion, repo);
-    let mergeResults: MergeResultsThreeWay | null | undefined;
-    // if the component is not modified, no need to try merge the files, they will be written later on according to the
-    // checked out version. same thing when no version is specified, it'll be reset to the model-version later.
-    if (!reset && isModified) {
-      const otherComponent: Version = await componentModel.loadVersion(newVersion, repo);
-      mergeResults = await threeWayMerge({
-        consumer,
-        otherComponent,
-        otherLabel: newVersion,
-        currentComponent: component,
-        currentLabel: `${currentlyUsedVersion} modified`,
-        baseComponent,
-      });
-    }
-    const versionRef = componentModel.getRef(newVersion);
-    // @ts-ignore
-    const componentVersion = await consumer.scope.getObject(versionRef.hash);
-    const newId = component.id.changeVersion(newVersion);
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return { componentFromFS: component, componentFromModel: componentVersion, id: newId, mergeResults };
+    const otherComponent: Version = await componentModel.loadVersion(newVersion, repo);
+    const mergeResults = await threeWayMerge({
+      consumer,
+      otherComponent,
+      otherLabel: newVersion,
+      currentComponent: componentFromFS,
+      currentLabel: `${currentlyUsedVersion} modified`,
+      baseComponent,
+    });
+
+    return { componentFromFS, componentFromModel, id, mergeResults };
   }
 
   static slots = [];

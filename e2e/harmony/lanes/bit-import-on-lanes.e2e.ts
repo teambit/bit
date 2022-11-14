@@ -204,13 +204,18 @@ describe('bit lane command', function () {
         helper.scopeHelper.addRemoteScope();
         helper.command.import();
       });
-      // previously, it wasn't importing 0.0.2, because it's not part of the lane history and it's not the head.
-      it('should bring all history of main', () => {
+      it('should not bring all history of main only the head', () => {
         const comp = helper.command.catComponent(`${helper.scopes.remote}/comp1`);
         const v2Hash = comp.versions['0.0.2'];
         const v3Hash = comp.versions['0.0.3'];
+        expect(() => helper.command.catObject(v2Hash)).to.throw();
+        expect(() => helper.command.catObject(v3Hash)).to.not.throw(); // coz it's the head
+      });
+      it('should bring all history if --all-history flag was used', () => {
+        helper.command.import('--all-history');
+        const comp = helper.command.catComponent(`${helper.scopes.remote}/comp1`);
+        const v2Hash = comp.versions['0.0.2'];
         expect(() => helper.command.catObject(v2Hash)).to.not.throw();
-        expect(() => helper.command.catObject(v3Hash)).to.not.throw();
       });
     });
   });

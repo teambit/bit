@@ -28,7 +28,9 @@ export async function getParams(
       getParamName(param),
       await getParamType(param, context),
       Boolean(param.questionToken),
-      param.initializer ? param.initializer.getText() : undefined
+      param.initializer ? param.initializer.getText() : undefined,
+      undefined,
+      await getParamObjectBindingNodes(param, context)
     );
   });
 }
@@ -45,6 +47,18 @@ function getParamName(param: ParameterDeclaration): string {
   }
   // it's an object binding
   return `{ ${elementsStr} }`;
+}
+
+async function getParamObjectBindingNodes(
+  param: ParameterDeclaration,
+  context: SchemaExtractorContext
+): Promise<SchemaNode[] | undefined> {
+  if (param.name.kind !== SyntaxKind.ObjectBindingPattern) return undefined;
+  return pMapSeries(param.name.elements, async (elem: BindingElement) => {
+    const info = await context.getQuickInfo(elem.name);
+    const parsed = parseTypeFromQuickInfo(info);
+    return new InferenceTypeSchema(context.getLocation(param), parsed, elem.name.getText());
+  });
 }
 
 async function getParamType(param: ParameterDeclaration, context: SchemaExtractorContext): Promise<SchemaNode> {

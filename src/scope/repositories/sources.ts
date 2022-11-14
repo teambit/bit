@@ -442,8 +442,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     });
     const hashesOnly = allIncomingVersionsInfoUntilExistingHead
       .filter((v) => !v.tag) // only non-tag, the tagged are already part of the mergedVersion
-      .map((v) => v.ref)
-      .filter((ref) => ref) as Ref[];
+      .map((v) => v.ref);
     return hashesOnly.map((hash) => hash.toString());
   }
 

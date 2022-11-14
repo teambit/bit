@@ -504,4 +504,25 @@ describe('bit checkout command', function () {
       expect(bitMap.comp1.version).to.equal(head);
     });
   });
+  describe('checkout to a version that does not exist locally', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents(1, false);
+      helper.command.tagAllWithoutBuild();
+      helper.fixtures.populateComponents(1, false, 'v2');
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
+      helper.command.importComponentWithoutInstall('comp1');
+    });
+    it('intermediate step - make sure the import does not bring older versions', () => {
+      expect(() => helper.command.catComponent(`${helper.scopes.remote}/comp1@0.0.1`)).to.throw();
+    });
+    it('should be able to checkout to a non-exist older version', () => {
+      expect(() => helper.command.checkoutVersion('0.0.1', `${helper.scopes.remote}/comp1`)).to.not.throw();
+    });
+  });
 });
