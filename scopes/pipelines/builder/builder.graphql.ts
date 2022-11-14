@@ -29,6 +29,10 @@ type ArtifactGQLFile = {
    * Remote storage url to resolve artifact file from
    */
   externalUrl?: string;
+  /**
+   * Size in bytes
+   */
+  size: number;
 };
 
 type ArtifactGQLData = {
@@ -72,6 +76,8 @@ export function builderSchema(builder: BuilderMain) {
         downloadUrl: String
         # Remote storage url to resolve artifact file from
         externalUrl: String
+        # size in bytes
+        size: Int!
       }
 
       type Artifact {
@@ -106,11 +112,12 @@ export function builderSchema(builder: BuilderMain) {
                   const { basename, path, contents } = vinyl || {};
                   const isBinary = path && isBinaryPath(path);
                   const content = !isBinary ? contents?.toString('utf-8') : undefined;
+                  const size = contents.byteLength;
                   const downloadUrl = encodeURI(
                     builder.getDownloadUrlForArtifact(component.id, artifact.task.aspectId, path)
                   );
                   const externalUrl = vinyl.url;
-                  return { id: path, name: basename, path, content, downloadUrl, externalUrl };
+                  return { id: path, name: basename, path, content, downloadUrl, externalUrl, size };
                 }
               );
               const artifactObj = {
