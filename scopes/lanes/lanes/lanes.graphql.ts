@@ -114,7 +114,10 @@ export function lanesSchema(lanesMainRuntime: LanesMain): Schema {
       },
       Lane: {
         id: (lane: LaneData) => lane.id.toObject(),
-        laneComponentIds: async (lane: LaneData) => lanesMainRuntime.getLaneComponentIds(lane),
+        laneComponentIds: async (lane: LaneData) => {
+          const componentIds = await lanesMainRuntime.getLaneComponentIds(lane);
+          return componentIds.map((componentId) => componentId.toObject());
+        },
         components: async (lane: LaneData) => {
           const laneComponents = await lanesMainRuntime.getLaneComponentModels(lane);
           return laneComponents;

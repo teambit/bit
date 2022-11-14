@@ -40,7 +40,7 @@ export function FileTree({
     const tree = inflateToTree(filePaths, (c) => c);
     payloadMap && attachPayload(tree, payloadMap);
     return tree;
-  }, [files]);
+  }, [files, payloadMap]);
 
   return (
     <div style={{ ...indentStyle(1), ...rest.style }} {...rest}>

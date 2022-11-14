@@ -12,13 +12,19 @@ import styles from './code-view.module.scss';
 export type CodeViewProps = {
   componentId: ComponentID;
   currentFile?: string;
+  currentFileContent?: string;
   icon?: string;
 } & HTMLAttributes<HTMLDivElement>;
 
 SyntaxHighlighter.registerLanguage('md', markDownSyntax);
 
-export function CodeView({ className, componentId, currentFile, icon }: CodeViewProps) {
-  const { fileContent, loading } = useFileContent(componentId, currentFile);
+export function CodeView({ className, componentId, currentFile, icon, currentFileContent }: CodeViewProps) {
+  const { fileContent: downloadedFileContent, loading } = useFileContent(
+    componentId,
+    currentFile,
+    !!currentFileContent
+  );
+  const fileContent = currentFileContent || downloadedFileContent;
   const title = useMemo(() => currentFile?.split('/').pop(), [currentFile]);
   const lang = useMemo(() => {
     const langFromFileEnding = currentFile?.split('.').pop();
@@ -30,6 +36,7 @@ export function CodeView({ className, componentId, currentFile, icon }: CodeView
   }, [fileContent]);
 
   if (!fileContent && !loading && currentFile) return <EmptyCodeView />;
+
   return (
     <div className={classNames(styles.codeView, className)}>
       <H1 size="sm" className={styles.fileName}>
