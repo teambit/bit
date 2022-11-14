@@ -36,6 +36,7 @@ export function CodeView({ className, componentId, currentFile, icon, currentFil
   }, [fileContent]);
 
   if (!fileContent && !loading && currentFile) return <EmptyCodeView />;
+
   return (
     <div className={classNames(styles.codeView, className)}>
       <H1 size="sm" className={styles.fileName}>

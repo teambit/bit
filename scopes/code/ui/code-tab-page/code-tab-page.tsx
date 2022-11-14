@@ -17,7 +17,12 @@ import { useCodeParams } from '@teambit/code.ui.hooks.use-code-params';
 import { TreeNode } from '@teambit/design.ui.tree';
 import { affix } from '@teambit/base-ui.utils.string.affix';
 import { useComponentArtifacts } from '@teambit/component.ui.artifacts.queries.use-component-artifacts';
-import { getArtifactFileDetailsFromUrl } from '@teambit/component.ui.artifacts.models.component-artifacts-model';
+import {
+  ArtifactFile,
+  getArtifactFileDetailsFromUrl,
+} from '@teambit/component.ui.artifacts.models.component-artifacts-model';
+import isBinaryPath from 'is-binary-path';
+import { FILE_SIZE_THRESHOLD } from '@teambit/component.ui.artifacts.artifacts-tree';
 
 import styles from './code-tab-page.module.scss';
 
@@ -33,7 +38,8 @@ export function CodePage({ className, fileIconSlot, host }: CodePageProps) {
   const { data: artifacts = [] } = useComponentArtifacts(host, component.id.toString());
 
   const currentFile = urlParams.file || mainFile;
-  const currentFileContent = getArtifactFileDetailsFromUrl(artifacts, currentFile)?.artifactFile.content;
+  const currentArtifactFile = getArtifactFileDetailsFromUrl(artifacts, currentFile)?.artifactFile;
+  const currentArtifactFileContent = getCurrentArtifactFileContent(currentArtifactFile);
 
   const isMobile = useIsMobile();
   const [isSidebarOpen, setSidebarOpenness] = useState(!isMobile);
@@ -48,7 +54,7 @@ export function CodePage({ className, fileIconSlot, host }: CodePageProps) {
           componentId={component.id}
           currentFile={currentFile}
           icon={icon}
-          currentFileContent={currentFileContent}
+          currentFileContent={currentArtifactFileContent}
         />
       </Pane>
       <HoverSplitter className={styles.splitter}>
@@ -93,4 +99,10 @@ export function generateIcon(fileIconMatchers: FileIconMatch[]) {
   return function Icon({ id }: TreeNode) {
     return getFileIcon(fileIconMatchers, id);
   };
+}
+
+function getCurrentArtifactFileContent(file?: ArtifactFile | undefined): string | undefined {
+  if (!file) return undefined;
+  if (isBinaryPath(file.path) || (file.size ?? 0) > FILE_SIZE_THRESHOLD) return undefined;
+  return file.content;
 }
