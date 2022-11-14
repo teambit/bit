@@ -1,11 +1,13 @@
 import { clone, equals, forEachObjIndexed } from 'ramda';
 import { isEmpty } from 'lodash';
+import { Mutex } from 'async-mutex';
 import * as semver from 'semver';
 import { versionParser, isHash, isTag } from '@teambit/component-version';
 import { v4 } from 'uuid';
 import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
+import pMapSeries from 'p-map-series';
 import { LegacyComponentLog } from '@teambit/legacy-component-log';
-import { BitId } from '../../bit-id';
+import { BitId, BitIds } from '../../bit-id';
 import {
   DEFAULT_BINDINGS_PREFIX,
   DEFAULT_BIT_RELEASE_TYPE,
@@ -25,20 +27,33 @@ import findDuplications from '../../utils/array/find-duplications';
 import ComponentObjects from '../component-objects';
 import { DivergeData } from '../component-ops/diverge-data';
 import { getDivergeData } from '../component-ops/get-diverge-data';
-import { getAllVersionHashes, getAllVersionsInfo } from '../component-ops/traverse-versions';
+import {
+  getAllVersionHashes,
+  getAllVersionsInfo,
+  getVersionParentsFromVersion,
+} from '../component-ops/traverse-versions';
 import ComponentVersion from '../component-version';
-import { VersionAlreadyExists, VersionNotFound, VersionNotFoundOnFS } from '../exceptions';
+import {
+  HeadNotFound,
+  ParentNotFound,
+  VersionAlreadyExists,
+  VersionNotFound,
+  VersionNotFoundOnFS,
+} from '../exceptions';
 import { BitObject, Ref } from '../objects';
 import Repository from '../objects/repository';
 import { Lane } from '.';
 import ScopeMeta from './scopeMeta';
 import Source from './source';
 import Version from './version';
+import VersionHistory, { VersionParents } from './version-history';
 import { getLatestVersion } from '../../utils/semver-helper';
 import { ObjectItem } from '../objects/object-list';
 import { getRefsFromExtensions } from '../../consumer/component/sources/artifact-files';
 import { SchemaName } from '../../consumer/component/component-schema';
 import { NoHeadNoVersion } from '../exceptions/no-head-no-version';
+import { errorIsTypeOfMissingObject } from '../component-ops/scope-components-importer';
+import type Scope from '../scope';
 
 type State = {
   versions?: {
@@ -113,7 +128,7 @@ export default class Component extends BitObject {
   laneDataIsPopulated = false; // doesn't get saved in the scope, used to improve performance of loading the lane data
   schema: string | undefined;
   private divergeData?: DivergeData;
-
+  private populateVersionHistoryMutex = new Mutex();
   constructor(props: ComponentProps) {
     super();
     if (!props.name) throw new TypeError('Model Component constructor expects to get a name parameter');
@@ -428,8 +443,28 @@ export default class Component extends BitObject {
   /**
    * get component log and sort by the timestamp in ascending order (from the earliest to the latest)
    */
-  async collectLogs(repo: Repository, shortHash = false, startFrom?: Ref): Promise<ComponentLog[]> {
-    const versionsInfo = await getAllVersionsInfo({ modelComponent: this, repo, throws: false, startFrom });
+  async collectLogs(scope: Scope, shortHash = false, startFrom?: Ref): Promise<ComponentLog[]> {
+    const repo = scope.objects;
+    let versionsInfo = await getAllVersionsInfo({ modelComponent: this, repo, throws: false, startFrom });
+
+    // due to recent changes of getting version-history object rather than fetching the entire history, some version
+    // objects might be missing. import the component from the remote
+    if (
+      versionsInfo.some((v) => v.error && errorIsTypeOfMissingObject(v.error)) &&
+      this.scope !== repo.scopeJson.name
+    ) {
+      logger.info(`collectLogs is unable to find some objects for ${this.id()}. will try to import them`);
+      try {
+        await scope.scopeImporter.importManyDeltaWithoutDeps({
+          ids: BitIds.fromArray([this.toBitId()]),
+          collectParents: true,
+        });
+        versionsInfo = await getAllVersionsInfo({ modelComponent: this, repo, throws: false, startFrom });
+      } catch (err) {
+        logger.error(`collectLogs failed to import ${this.id()} history`, err);
+      }
+    }
+
     const getRef = (ref: Ref) => (shortHash ? ref.toShortString() : ref.toString());
     const results = versionsInfo.map((versionInfo) => {
       const log = versionInfo.version ? versionInfo.version.log : { message: '<no-data-available>' };
@@ -979,6 +1014,62 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
     if (lane) await this.populateLocalAndRemoteHeads(repo, lane);
     await this.setDivergeData(repo);
     return this.getDivergeData().isLocalAhead();
+  }
+
+  async GetVersionHistory(repo: Repository): Promise<VersionHistory> {
+    const emptyVersionHistory = VersionHistory.fromId(this.name, this.scope || undefined);
+    const versionHistory = await repo.load(emptyVersionHistory.hash());
+    return (versionHistory || emptyVersionHistory) as VersionHistory;
+  }
+
+  async getAndPopulateVersionHistory(repo: Repository, head: Ref): Promise<VersionHistory> {
+    const versionHistory = await this.GetVersionHistory(repo);
+    const { err } = await this.populateVersionHistoryIfMissingGracefully(repo, versionHistory, head);
+    if (err) throw err;
+    return versionHistory;
+  }
+
+  async populateVersionHistoryIfMissingGracefully(
+    repo: Repository,
+    versionHistory: VersionHistory,
+    head: Ref
+  ): Promise<{ err?: Error; added?: VersionParents[] }> {
+    if (versionHistory.hasHash(head)) return {};
+    const getVersionObj = async (ref: Ref) => (await ref.load(repo)) as Version | undefined;
+    const versionsToAdd: Version[] = [];
+    let err: Error | undefined;
+    const addParentsRecursively = async (version: Version) => {
+      await pMapSeries(version.parents, async (parent) => {
+        if (versionHistory.hasHash(parent) || versionsToAdd.find((v) => v.hash().isEqual(parent))) {
+          return;
+        }
+        const parentVersion = await getVersionObj(parent);
+        if (!parentVersion) {
+          const tag = this.getTagOfRefIfExists(parent);
+          err = tag
+            ? new VersionNotFound(tag, this.id())
+            : new ParentNotFound(this.id(), version.hash().toString(), parent.toString());
+          return;
+        }
+        versionsToAdd.push(parentVersion);
+        await addParentsRecursively(parentVersion);
+      });
+    };
+    const headVer = await getVersionObj(head);
+    if (!headVer) {
+      return { err: new HeadNotFound(this.id(), head.toString()) };
+    }
+    return this.populateVersionHistoryMutex.runExclusive(async () => {
+      versionsToAdd.push(headVer);
+      await addParentsRecursively(headVer);
+      const added = versionsToAdd.map((v) => getVersionParentsFromVersion(v));
+      if (err) {
+        return { err, added };
+      }
+      versionHistory.addFromVersionsObjects(versionsToAdd);
+      await repo.writeObjectsToTheFS([versionHistory]);
+      return { added };
+    });
   }
 
   static parse(contents: string): Component {

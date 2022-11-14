@@ -46,6 +46,7 @@ export default class BitRawObject {
       case 'Component':
       case 'Symlink':
       case 'ScopeMeta':
+      case 'VersionHistory':
         parsedContent = JSON.parse(this.content.toString());
         break;
 
@@ -62,6 +63,7 @@ export default class BitRawObject {
       case 'Component':
       case 'Symlink':
       case 'ScopeMeta':
+      case 'VersionHistory':
         return JSON.stringify(this.parsedContent, ...args);
 
       default:

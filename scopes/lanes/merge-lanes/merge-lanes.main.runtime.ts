@@ -14,7 +14,6 @@ import ScopeComponentsImporter from '@teambit/legacy/dist/scope/component-ops/sc
 import { ComponentID } from '@teambit/component-id';
 import { DEFAULT_LANE, LaneId } from '@teambit/lane-id';
 import { Lane, Version } from '@teambit/legacy/dist/scope/models';
-import { Tmp } from '@teambit/legacy/dist/scope/repositories';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { DivergeData } from '@teambit/legacy/dist/scope/component-ops/diverge-data';
 import { RemoveAspect, RemoveMain } from '@teambit/remove';
@@ -113,27 +112,11 @@ export class MergeLanesMain {
     };
     const bitIds = await getBitIds();
     this.logger.debug(`merging the following bitIds: ${bitIds.toString()}`);
-    const otherLaneName = isDefaultLane ? DEFAULT_LANE : otherLaneId.toString();
 
-    const getAllComponentsStatus = async (): Promise<ComponentMergeStatus[]> => {
-      const tmp = new Tmp(consumer.scope);
-      try {
-        const componentsStatus = await Promise.all(
-          bitIds.map((bitId) =>
-            this.merging.getComponentMergeStatus(bitId, currentLane, otherLaneName, {
-              resolveUnrelated,
-              ignoreConfigChanges,
-            })
-          )
-        );
-        await tmp.clear();
-        return componentsStatus;
-      } catch (err: any) {
-        await tmp.clear();
-        throw err;
-      }
-    };
-    let allComponentsStatus = await getAllComponentsStatus();
+    let allComponentsStatus = await this.merging.getMergeStatus(bitIds, currentLane, otherLane, {
+      resolveUnrelated,
+      ignoreConfigChanges,
+    });
 
     if (pattern) {
       const componentIds = await this.workspace.resolveMultipleComponentIds(bitIds);
@@ -247,9 +230,18 @@ export class MergeLanesMain {
     const lane = await this.lanes.importLaneObject(laneId);
     const laneIds = lane.toBitIds();
     const scopeComponentsImporter = ScopeComponentsImporter.getInstance(this.scope.legacyScope);
-    await scopeComponentsImporter.importManyDeltaWithoutDeps(laneIds, true, lane, true);
+    await scopeComponentsImporter.importManyDeltaWithoutDeps({
+      ids: laneIds,
+      fromHead: true,
+      lane,
+      ignoreMissingHead: true,
+    });
     // get their main as well
-    await scopeComponentsImporter.importManyDeltaWithoutDeps(laneIds.toVersionLatest(), true, undefined, true);
+    await scopeComponentsImporter.importManyDeltaWithoutDeps({
+      ids: laneIds.toVersionLatest(),
+      fromHead: true,
+      ignoreMissingHead: true,
+    });
     const repo = this.scope.legacyScope.objects;
     // loop through all components, make sure they're all ahead of main (it might not be on main yet).
     // then, change the version object to include an extra parent to point to the main.
@@ -289,6 +281,9 @@ export class MergeLanesMain {
         ids: bitIds,
         idsWithFutureScope: bitIds,
         allVersions: false,
+        // no need to export anything else other than the head. the normal calculation of what to export won't apply here
+        // as it is done from the scope.
+        exportHeadsOnly: true,
       });
       exportedIds = exported.map((id) => id.toString());
     }

@@ -1,6 +1,6 @@
 import { APISchema, SchemaNode } from '@teambit/semantics.entities.semantic-schema';
 import { APINodeRenderer } from '@teambit/api-reference.models.api-node-renderer';
-import { ComponentID } from '@teambit/component-id';
+import { ComponentID, ComponentIdObj } from '@teambit/component-id';
 
 export type SchemaQueryResult = {
   getHost: {
@@ -63,7 +63,14 @@ export class APIReferenceModel {
   }
 
   static from(result: SchemaQueryResult, renderers: APINodeRenderer[]): APIReferenceModel {
-    const apiSchema = APISchema.fromObject(result.getHost.getSchema);
-    return new APIReferenceModel(apiSchema, renderers);
+    try {
+      const apiSchema = APISchema.fromObject(result.getHost.getSchema);
+      return new APIReferenceModel(apiSchema, renderers);
+    } catch (e) {
+      return new APIReferenceModel(
+        APISchema.empty(ComponentID.fromObject((result.getHost.getSchema as any).componentId as ComponentIdObj)),
+        renderers
+      );
+    }
   }
 }

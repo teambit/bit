@@ -121,7 +121,6 @@ export default class ImportComponents {
       : logger.debug(`importObjectsOnLane, the lane does not exist on the remote. importing only the main components`);
     const beforeImportVersions = await this._getCurrentVersions(bitIds);
     const versionDependenciesArr = await this._importComponentsObjects(bitIds, {
-      allHistory: this.options.allHistory,
       lane,
     });
 
@@ -135,7 +134,6 @@ export default class ImportComponents {
       // scope and once from the lane-scope.
       const mainIdsLatest = BitIds.fromArray(lane.toBitIds().map((m) => m.changeVersion(undefined)));
       await this._importComponentsObjects(mainIdsLatest, {
-        allHistory: this.options.allHistory,
         ignoreMissingHead: true,
       });
     }
@@ -227,18 +225,22 @@ export default class ImportComponents {
     ids: BitIds,
     {
       fromOriginalScope = false,
-      allHistory = false,
       lane,
       ignoreMissingHead = false,
     }: {
       fromOriginalScope?: boolean;
-      allHistory?: boolean;
       lane?: Lane;
       ignoreMissingHead?: boolean;
     }
   ): Promise<VersionDependencies[]> {
     const scopeComponentsImporter = ScopeComponentsImporter.getInstance(this.scope);
-    await scopeComponentsImporter.importManyDeltaWithoutDeps(ids, allHistory, lane, ignoreMissingHead);
+    await scopeComponentsImporter.importManyDeltaWithoutDeps({
+      ids,
+      fromHead: this.options.allHistory,
+      collectParents: this.options.allHistory,
+      lane,
+      ignoreMissingHead,
+    });
     loader.start(`import ${ids.length} components with their dependencies (if missing)`);
     const results = fromOriginalScope
       ? await scopeComponentsImporter.importManyFromOriginalScopes(ids)
@@ -389,7 +391,6 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
     }
     const versionDependenciesArr = await this._importComponentsObjects(componentsIdsToImport, {
       fromOriginalScope: this.options.fromOriginalScope,
-      allHistory: this.options.allHistory,
     });
     let writtenComponents: Component[] = [];
     if (!this.options.objectsOnly) {
