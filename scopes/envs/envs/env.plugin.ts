@@ -37,6 +37,7 @@ export class EnvPlugin implements PluginDefinition {
     return {
       getCompiler: () => env.compiler()(envContext),
       getTester: () => env.tester()(envContext),
+      getLinter: () => env.linter()(envContext),
       // getDevEnvId: ()
       name: env.name,
       icon: env.icon,
