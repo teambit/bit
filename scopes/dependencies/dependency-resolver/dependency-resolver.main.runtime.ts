@@ -988,7 +988,6 @@ export class DependencyResolverMain {
         return file.relative === 'env.jsonc' || file.relative === 'env.json';
       });
     } else {
-      // console.trace('getEnvPolicyFromFile', envId)
       const envComponent = await this.envs.getEnvComponentByEnvId(envId, envId);
       envJson = envComponent.filesystem.files.find((file) => {
         return file.relative === 'env.jsonc' || file.relative === 'env.json';

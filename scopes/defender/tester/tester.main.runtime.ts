@@ -179,7 +179,7 @@ export class TesterMain {
    * @returns
    */
   getPatterns() {
-    return this.patterns;
+    return {name: 'tests', pattern: this.patterns};
   }
 
   getComponentDevPatterns(component: Component) {

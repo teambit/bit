@@ -127,7 +127,7 @@ export class CompositionsMain {
       ? env.getCompositionsDevPatterns(component)
       : [];
     const componentPatterns = componentEnvCompositionsDevPatterns.concat(this.getCompositionFilePattern());
-    return componentPatterns;
+    return {name: 'compositions', pattern: componentPatterns};
   }
 
   getDevPatternToRegister() {
