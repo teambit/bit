@@ -629,6 +629,7 @@ export default class Consumer {
     });
     await consumer.setBitMap();
     scope.setCurrentLaneId(consumer.bitMap.laneId);
+    logger.commandHistory.fileBasePath = scope.getPath();
     return consumer;
   }
 
