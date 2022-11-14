@@ -375,7 +375,7 @@ export class LanesMain {
   }
 
   async removeLanes(laneNames: string[], opts?: { remote: boolean; force: boolean }): Promise<string[]> {
-    if (!this.workspace) {
+    if (!this.workspace && !opts?.remote) {
       await this.scope.legacyScope.lanes.removeLanes(this.scope.legacyScope, laneNames, true);
       return laneNames;
     }
