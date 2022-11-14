@@ -6,7 +6,6 @@ import { DrawerUI } from '@teambit/ui-foundation.ui.tree.drawer';
 import { FileTree, useFileTreeContext } from '@teambit/ui-foundation.ui.tree.file-tree';
 import { useLocation } from '@teambit/base-react.navigation.link';
 import {
-  Artifact,
   ArtifactFile,
   getArtifactFileDetailsFromUrl,
 } from '@teambit/component.ui.artifacts.models.component-artifacts-model';
@@ -17,6 +16,8 @@ import isBinaryPath from 'is-binary-path';
 import { FolderTreeNode } from '@teambit/ui-foundation.ui.tree.folder-tree-node';
 import { useCodeParams } from '@teambit/code.ui.hooks.use-code-params';
 import { affix } from '@teambit/base-ui.utils.string.affix';
+import { ComponentContext } from '@teambit/component';
+import { useComponentArtifacts } from '@teambit/component.ui.artifacts.queries.use-component-artifacts';
 import { fileNodeClicked } from './artifact-file-node-clicked';
 import { FILE_SIZE_THRESHOLD } from '.';
 import { formatBytes } from './format-bytes';
@@ -28,25 +29,28 @@ export type ArtifactsTreeProps = {
   drawerOpen: boolean;
   onToggleDrawer: () => void;
   drawerName: string;
-  fileTree: string[];
-  artifacts: Array<Artifact>;
-  artifactFiles: Array<ArtifactFile & { id: string }>;
-  loading?: boolean;
+  host: string;
 } & HTMLAttributes<HTMLDivElement>;
 
-export function ArtifactsTree({
-  getIcon,
-  drawerName,
-  drawerOpen,
-  onToggleDrawer,
-  fileTree,
-  artifacts,
-  artifactFiles,
-  loading,
-}: ArtifactsTreeProps) {
+export function ArtifactsTree({ getIcon, drawerName, drawerOpen, onToggleDrawer, host }: ArtifactsTreeProps) {
   const urlParams = useCodeParams();
   const location = useLocation();
   const [overrideSelected, setOverrideSelected] = useState<string | undefined>(undefined);
+  const component = useContext(ComponentContext);
+
+  const { data: artifacts = [], loading } = useComponentArtifacts(host, component.id.toString());
+
+  const [artifactFiles, artifactFilesTree] = useMemo(() => {
+    const files =
+      (artifacts.length > 0 &&
+        artifacts.flatMap((artifact) =>
+          artifact.files.map((file) => ({ ...file, id: `${artifact.taskName}/${artifact.name}/${file.path}` }))
+        )) ||
+      [];
+
+    const _artifactFilesTree = files.map((file) => file.id);
+    return [files, _artifactFilesTree];
+  }, [loading]);
 
   const hasArtifacts = artifacts.length > 0;
   const artifactDetailsFromUrl = getArtifactFileDetailsFromUrl(artifacts, urlParams.file);
@@ -111,7 +115,7 @@ export function ArtifactsTree({
         <FileTree
           getIcon={getIcon}
           getHref={getHref}
-          files={fileTree}
+          files={artifactFilesTree}
           widgets={widgets}
           payloadMap={payloadMap}
           TreeNode={fileTreeNodeWithArtifactFiles(artifactFiles)}
@@ -186,7 +190,7 @@ function fileTreeNodeWithArtifactFiles(artifactFiles: Array<ArtifactFile & { id:
       return (
         <Node
           {...props}
-          className={classNames(isLink && styles.link)}
+          className={classNames(styles.node, isLink && styles.link)}
           onClick={onSelect && ((e) => onSelect(node.id, e))}
           href={href}
           isActive={node?.id === selected}

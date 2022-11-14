@@ -30,19 +30,7 @@ export function CodePage({ className, fileIconSlot, host }: CodePageProps) {
   const urlParams = useCodeParams();
   const component = useContext(ComponentContext);
   const { mainFile, fileTree = [], dependencies, devFiles } = useCode(component.id);
-  const { data: artifacts = [], loading: loadingArtifacts } = useComponentArtifacts(host, component.id.toString());
-
-  const [artifactFiles, artifactFilesTree] = useMemo(() => {
-    const files =
-      (artifacts.length > 0 &&
-        artifacts.flatMap((artifact) =>
-          artifact.files.map((file) => ({ ...file, id: `${artifact.taskName}/${artifact.name}/${file.path}` }))
-        )) ||
-      [];
-
-    const _artifactFilesTree = files.map((file) => file.id);
-    return [files, _artifactFilesTree];
-  }, [loadingArtifacts]);
+  const { data: artifacts = [] } = useComponentArtifacts(host, component.id.toString());
 
   const currentFile = urlParams.file || mainFile;
   const currentFileContent = getArtifactFileDetailsFromUrl(artifacts, currentFile)?.artifactFile.content;
@@ -56,14 +44,12 @@ export function CodePage({ className, fileIconSlot, host }: CodePageProps) {
   return (
     <SplitPane layout={sidebarOpenness} size="85%" className={classNames(styles.codePage, className)}>
       <Pane className={styles.left}>
-        {loadingArtifacts || (
-          <CodeView
-            componentId={component.id}
-            currentFile={currentFile}
-            icon={icon}
-            currentFileContent={currentFileContent}
-          />
-        )}
+        <CodeView
+          componentId={component.id}
+          currentFile={currentFile}
+          icon={icon}
+          currentFileContent={currentFileContent}
+        />
       </Pane>
       <HoverSplitter className={styles.splitter}>
         <Collapser
@@ -77,10 +63,7 @@ export function CodePage({ className, fileIconSlot, host }: CodePageProps) {
       </HoverSplitter>
       <Pane className={styles.right}>
         <CodeTabTree
-          artifacts={artifacts}
-          artifactFiles={artifactFiles}
-          artifactsTree={artifactFilesTree}
-          loadingArtifacts={loadingArtifacts}
+          host={host}
           currentFile={currentFile}
           dependencies={dependencies}
           fileTree={fileTree}

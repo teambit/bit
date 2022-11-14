@@ -7,17 +7,13 @@ import { DependencyTree } from '@teambit/code.ui.dependency-tree';
 import { TreeNode } from '@teambit/design.ui.tree';
 import { WidgetProps } from '@teambit/ui-foundation.ui.tree.tree-node';
 import { ArtifactsTree } from '@teambit/component.ui.artifacts.artifacts-tree';
-import { Artifact, ArtifactFile } from '@teambit/component.ui.artifacts.models.component-artifacts-model';
 
 import styles from './code-tab-tree.module.scss';
 
 export type CodeTabTreeProps = {
   fileTree: any[];
   dependencies?: DependencyType[];
-  artifactsTree: string[];
-  artifacts: Array<Artifact>;
-  artifactFiles: Array<ArtifactFile & { id: string }>;
-  loadingArtifacts?: boolean;
+  host: string;
   currentFile?: string;
   widgets?: ComponentType<WidgetProps<any>>[];
   getHref?: (node: TreeNode) => string;
@@ -29,10 +25,7 @@ export function CodeTabTree({
   fileTree,
   dependencies,
   currentFile = '',
-  artifactFiles,
-  artifactsTree,
-  artifacts,
-  loadingArtifacts,
+  host,
   widgets,
   getHref,
   getIcon,
@@ -80,10 +73,7 @@ export function CodeTabTree({
       </DrawerUI>
       <ArtifactsTree
         drawerName="ARTIFACTS"
-        artifacts={artifacts}
-        artifactFiles={artifactFiles}
-        fileTree={artifactsTree}
-        loading={loadingArtifacts}
+        host={host}
         getIcon={getIcon}
         drawerOpen={openDrawerList.includes('ARTIFACTS')}
         onToggleDrawer={() => handleDrawerToggle('ARTIFACTS')}
