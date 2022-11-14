@@ -139,7 +139,7 @@ export class LanesMain {
   }
 
   async createLane(name: string, { remoteScope, alias }: CreateLaneOptions = {}): Promise<TrackLane> {
-    if (!this.workspace || !remoteScope) {
+    if (!this.workspace) {
       const newLane = await createLaneInScope(name, this.scope);
       return {
         localLane: newLane.name,
