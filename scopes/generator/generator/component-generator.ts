@@ -86,10 +86,10 @@ export class ComponentGenerator {
     const component = await this.workspace.get(componentId);
     const hasEnvConfiguredOriginally = this.envs.hasEnvConfigured(component);
     const envBeforeConfigChanges = this.envs.getEnv(component);
-
-    let config = this.template.config?.bind(this.template);
+    let config = this.template.config;
     if (config && typeof config === 'function') {
-      config = config({ aspectId: this.aspectId });
+      const boundConfig = this.template.config?.bind(this.template);
+      config = boundConfig({ aspectId: this.aspectId });
     }
 
     if (!config && this.envId) {

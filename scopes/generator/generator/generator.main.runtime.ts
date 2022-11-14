@@ -138,7 +138,7 @@ export class GeneratorMain {
     aspectId?: string
   ): Promise<{ id: string; template: ComponentTemplate; envName: string } | undefined> {
     const fromEnv = await this.listEnvTemplates();
-    const templates = fromEnv || this.getAllComponentTemplatesFlattened();
+    const templates = (fromEnv && fromEnv.length) ? fromEnv : this.getAllComponentTemplatesFlattened();
     const found = templates.find(({ id, template }) => {
       if (aspectId && id !== aspectId) return false;
       return template.name === name;
