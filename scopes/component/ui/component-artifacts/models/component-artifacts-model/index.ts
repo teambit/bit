@@ -1,1 +1,7 @@
-export { mapToArtifacts, ArtifactFile, Artifact, ComponentArtifactsGQLResponse } from './component-artifacts.model';
+export {
+  mapToArtifacts,
+  ArtifactFile,
+  Artifact,
+  ComponentArtifactsGQLResponse,
+  getArtifactFileDetailsFromUrl,
+} from './component-artifacts.model';
