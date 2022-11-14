@@ -41,7 +41,7 @@ import {
 import { lanesSchema } from './lanes.graphql';
 import { SwitchCmd } from './switch.cmd';
 import { LaneSwitcher } from './switch-lanes';
-import { createLane, throwForInvalidLaneName } from './create-lane';
+import { createLane, createLaneInScope, throwForInvalidLaneName } from './create-lane';
 
 export { Lane };
 
@@ -140,7 +140,12 @@ export class LanesMain {
 
   async createLane(name: string, { remoteScope, alias }: CreateLaneOptions = {}): Promise<TrackLane> {
     if (!this.workspace) {
-      throw new BitError(`unable to create a lane outside of Bit workspace`);
+      const newLane = await createLaneInScope(name, this.scope);
+      return {
+        localLane: newLane.name,
+        remoteLane: newLane.name,
+        remoteScope: this.scope.name,
+      };
     }
     if (alias) {
       throwForInvalidLaneName(alias);
@@ -369,8 +374,12 @@ export class LanesMain {
     return lane;
   }
 
-  async removeLanes(laneNames: string[], { remote, force }: { remote: boolean; force: boolean }): Promise<string[]> {
-    const results = await removeLanes(this.workspace?.consumer, laneNames, remote, force);
+  async removeLanes(laneNames: string[], opts?: { remote: boolean; force: boolean }): Promise<string[]> {
+    if (!this.workspace) {
+      await this.scope.legacyScope.lanes.removeLanes(this.scope.legacyScope, laneNames, true);
+      return laneNames;
+    }
+    const results = await removeLanes(this.workspace?.consumer, laneNames, !!opts?.remote, !!opts?.force);
     if (this.workspace) await this.workspace.consumer.onDestroy();
 
     return results.laneResults;
