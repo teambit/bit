@@ -28,7 +28,7 @@ export class EnvPlugin implements PluginDefinition {
     // HACK BECAUSE OF OLD APIS WE SHOULD MIGRATE EACH TO BE HANDLED BY ITS SERVICE
     // IF YOU ARE THINKING ABOUT IT YOU SHOULD HEAD TO THE SERVICE SLOT INSTEAD.
     // E.G. COMPILER SHOULD BE TRANSFORMED IN COMPILER NOT HERE!
-    // const 
+    // const
     const envComponentId = ComponentID.fromString(envId);
     const envContext = this.createContext(envComponentId);
     if (!env.preview && !env.compiler) return undefined;
@@ -38,6 +38,7 @@ export class EnvPlugin implements PluginDefinition {
       getCompiler: () => env.compiler()(envContext),
       getTester: () => env.tester()(envContext),
       getLinter: () => env.linter()(envContext),
+      getFormatter: () => env.formatter()(envContext),
       // getDevEnvId: ()
       name: env.name,
       icon: env.icon,
@@ -70,7 +71,7 @@ export class EnvPlugin implements PluginDefinition {
       getSnapPipe: () => {
         const pipeline = env.tag()(envContext);
         if (!pipeline || !pipeline.compute) return [];
-        return pipeline?.compute();        
+        return pipeline?.compute();
       },
       getDocsTemplate: preview.getDocsTemplate.bind(preview),
       getPreviewConfig: preview.getPreviewConfig.bind(preview),
