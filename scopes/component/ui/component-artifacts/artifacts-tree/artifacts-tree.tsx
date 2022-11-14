@@ -17,9 +17,9 @@ import { useCodeParams } from '@teambit/code.ui.hooks.use-code-params';
 import { affix } from '@teambit/base-ui.utils.string.affix';
 import { ComponentContext } from '@teambit/component';
 import { useComponentArtifacts } from '@teambit/component.ui.artifacts.queries.use-component-artifacts';
+import prettyBytes from 'pretty-bytes';
 import { fileNodeClicked } from './artifact-file-node-clicked';
 import { FILE_SIZE_THRESHOLD } from '.';
-import { formatBytes } from './format-bytes';
 
 import styles from './artifacts-tree.module.scss';
 
@@ -138,7 +138,7 @@ function generateWidget(files: (ArtifactFile & { id: string })[], selected?: str
     if (artifactFile) {
       return (
         <div className={styles.artifactWidgets}>
-          <div className={classNames(styles.size, isSelected && styles.selected)}>{formatBytes(artifactFile.size)}</div>
+          <div className={classNames(styles.size, isSelected && styles.selected)}>{prettyBytes(artifactFile.size)}</div>
           {!isBinary && artifactFile.size <= FILE_SIZE_THRESHOLD && (
             <Icon className={styles.icon} of="open-tab" onClick={(e) => fileNodeClicked(files, 'new tab')(e, node)} />
           )}
