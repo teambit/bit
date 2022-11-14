@@ -346,8 +346,11 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
     return files.map((file) => join(capsule.path, compiler.getDistPathBySrcPath(file.relative)));
   }
 
-  private getComponentOutputPath(capsule: Capsule) {
-    return resolve(`${capsule.path}`);
+  private getComponentOutputPath(capsule: Capsule, context: ComputeTargetsContext) {
+    const capsulePath = resolve(`${capsule.path}`);
+    const compiler: Compiler = context.env.getCompiler();
+    const distDir = compiler.getDistDir?.() || 'dist';
+    return join(capsulePath, distDir);
   }
 
   private async computePaths(
@@ -381,7 +384,8 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
     const moduleMaps = await Promise.all(moduleMapsPromise);
 
     const contents = generateComponentLink(moduleMaps);
-    return this.preview.writeLinkContents(contents, this.getComponentOutputPath(capsule), 'preview');
-    // return flatten(moduleMaps);
+    const targetDir = this.getComponentOutputPath(capsule, context);
+
+    return this.preview.writeLinkContents(contents, targetDir, 'preview');
   }
 }
