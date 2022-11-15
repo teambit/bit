@@ -1394,12 +1394,12 @@ describe('bit lane command', function () {
       helper.command.import();
     });
     it('bit checkout without --entire-lane flag', () => {
-      helper.command.checkoutHead();
+      helper.command.checkoutHead('--skip-dependency-installation');
       const list = helper.command.listParsed();
       expect(list).to.have.lengthOf(1);
     });
     it('bit checkout with --entire-lane flag', () => {
-      helper.command.checkoutHead('--entire-lane');
+      helper.command.checkoutHead('--entire-lane --skip-dependency-installation');
       const list = helper.command.listParsed();
       expect(list).to.have.lengthOf(2);
     });
