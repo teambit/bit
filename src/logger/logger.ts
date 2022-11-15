@@ -185,14 +185,17 @@ class BitLogger implements IBitLogger {
     // finalLogger[level](msg);
     this.logger[level](msg);
     this.commandHistory.completed = `${new Date().toISOString()} end ${process.argv.slice(2).join(' ')}, code: ${code}`;
-    await this.writeCommandHistory();
+    this.writeCommandHistory();
     if (!this.isDaemon) process.exit(code);
   }
 
-  async writeCommandHistory() {
+  /**
+   * keep this method sync. for some reason, if it's promise, the exit-code is zero when Jest/Mocha tests fail.
+   */
+  writeCommandHistory() {
     if (!this.commandHistory.fileBasePath) return;
     try {
-      await fs.appendFile(
+      fs.appendFileSync(
         path.join(this.commandHistory.fileBasePath, commandHistoryFile),
         `${this.commandHistory.started}\n${this.commandHistory.completed}\n`
       );
