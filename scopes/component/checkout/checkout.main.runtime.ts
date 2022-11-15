@@ -137,12 +137,17 @@ export class CheckoutMain {
 
     const componentsWithDependencies = compact(componentsResults.map((c) => c.component));
 
-    if (checkoutProps.entireLane) {
-      const newFromLane = await this.getNewComponentsFromLane(checkoutProps.ids || []);
-      const compsNewFromLane = await Promise.all(
-        newFromLane.map((id) => consumer.loadComponentWithDependenciesFromModel(id._legacy))
-      );
-      componentsWithDependencies.push(...compsNewFromLane);
+    let newFromLane: ComponentID[] | undefined;
+    let newFromLaneAdded = false;
+    if (checkoutProps.head) {
+      newFromLane = await this.getNewComponentsFromLane(checkoutProps.ids || []);
+      if (checkoutProps.entireLane) {
+        const compsNewFromLane = await Promise.all(
+          newFromLane.map((id) => consumer.loadComponentWithDependenciesFromModel(id._legacy))
+        );
+        componentsWithDependencies.push(...compsNewFromLane);
+        newFromLaneAdded = true;
+      }
     }
 
     const leftUnresolvedConflicts = componentWithConflict && checkoutProps.mergeStrategy === 'manual';
@@ -161,7 +166,14 @@ export class CheckoutMain {
 
     const appliedVersionComponents = componentsResults.map((c) => c.applyVersionResult);
 
-    return { components: appliedVersionComponents, version, failedComponents, leftUnresolvedConflicts };
+    return {
+      components: appliedVersionComponents,
+      version,
+      failedComponents,
+      leftUnresolvedConflicts,
+      newFromLane: newFromLane?.map((n) => n.toString()),
+      newFromLaneAdded,
+    };
   }
 
   async checkoutByCLIValues(
@@ -218,6 +230,9 @@ export class CheckoutMain {
     }
     if (!componentPattern && !checkoutProps.all) {
       throw new GeneralError('please specify [component-pattern] or use --all flag');
+    }
+    if (checkoutProps.entireLane && !checkoutProps.head) {
+      throw new BitError(`--entire-lane flag can only be used with "head" (bit checkout head --entire-lane)`);
     }
     const ids = componentPattern ? await this.workspace.idsByPattern(componentPattern) : await this.workspace.listIds();
     checkoutProps.ids = ids.map((id) => (checkoutProps.head || checkoutProps.latest ? id.changeVersion(LATEST) : id));
