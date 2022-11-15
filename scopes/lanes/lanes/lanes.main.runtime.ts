@@ -18,11 +18,13 @@ import ComponentAspect, { Component, ComponentID, ComponentMain } from '@teambit
 import removeLanes from '@teambit/legacy/dist/consumer/lanes/remove-lanes';
 import { Lane } from '@teambit/legacy/dist/scope/models';
 import { LaneNotFound } from '@teambit/legacy/dist/api/scope/lib/exceptions/lane-not-found';
+import { getDivergeData } from '@teambit/legacy/dist/scope/component-ops/get-diverge-data';
 import ScopeComponentsImporter from '@teambit/legacy/dist/scope/component-ops/scope-components-importer';
 import { Scope as LegacyScope } from '@teambit/legacy/dist/scope';
 import { BitId } from '@teambit/legacy-bit-id';
 import { ExportAspect, ExportMain } from '@teambit/export';
 import { BitIds } from '@teambit/legacy/dist/bit-id';
+import { Ref } from '@teambit/legacy/dist/scope/objects';
 import { MergingMain, MergingAspect } from '@teambit/merging';
 import { LanesAspect } from './lanes.aspect';
 import {
@@ -130,6 +132,12 @@ export class LanesMain {
     return this.workspace.consumer.getCurrentLaneId();
   }
 
+  async getCurrentLane(): Promise<Lane | null> {
+    const laneId = this.getCurrentLaneId();
+    if (!laneId || laneId.isDefault()) return null;
+    return this.loadLane(laneId);
+  }
+
   getDefaultLaneId(): LaneId {
     return LaneId.from(DEFAULT_LANE, this.scope.name);
   }
@@ -166,6 +174,10 @@ export class LanesMain {
     return trackLaneData;
   }
 
+  async loadLane(id: LaneId): Promise<Lane | null> {
+    return this.scope.legacyScope.lanes.loadLane(id);
+  }
+
   async trackLane(
     localName: string,
     remoteScope: string,
@@ -175,7 +187,7 @@ export class LanesMain {
       throw new BitError(`unable to track a lane outside of Bit workspace`);
     }
     const laneId = await this.scope.legacyScope.lanes.parseLaneIdFromString(localName);
-    const lane = await this.scope.legacyScope.lanes.loadLane(laneId);
+    const lane = await this.loadLane(laneId);
     if (!lane) {
       throw new BitError(`unable to find a local lane "${localName}"`);
     }
@@ -203,7 +215,7 @@ export class LanesMain {
       throw new BitError(`an alias cannot be the same as the lane name`);
     }
     const laneId = await this.scope.legacyScope.lanes.parseLaneIdFromString(laneName);
-    const lane = await this.scope.legacyScope.lanes.loadLane(laneId);
+    const lane = await this.loadLane(laneId);
     if (!lane) {
       throw new BitError(`unable to find a local lane "${laneName}"`);
     }
@@ -230,7 +242,7 @@ export class LanesMain {
       ? laneName.split(LANE_REMOTE_DELIMITER)[1]
       : laneName;
     const laneId = await this.scope.legacyScope.lanes.parseLaneIdFromString(laneName);
-    const lane = await this.scope.legacyScope.lanes.loadLane(laneId);
+    const lane = await this.loadLane(laneId);
     if (!lane) {
       throw new BitError(`unable to find a local lane "${laneName}"`);
     }
@@ -267,7 +279,7 @@ export class LanesMain {
       ? currentName.split(LANE_REMOTE_DELIMITER)[1]
       : currentName;
     const laneId = await this.scope.legacyScope.lanes.parseLaneIdFromString(currentName);
-    const lane = await this.scope.legacyScope.lanes.loadLane(laneId);
+    const lane = await this.loadLane(laneId);
     if (!lane) {
       throw new BitError(`unable to find a local lane "${currentName}"`);
     }
@@ -428,6 +440,53 @@ export class LanesMain {
       all: false,
     };
     return new LaneSwitcher(this.workspace, this.logger, switchProps, checkoutProps, this).switch();
+  }
+
+  async isLaneUpToDate(laneToCheck: Lane, checkAgainst?: Lane) {
+    const upToDateIds: BitId[] = [];
+    const notUpToDateIds: BitId[] = [];
+    const getHashOnAnotherLane = async (id: BitId): Promise<Ref | undefined> => {
+      if (checkAgainst) {
+        const idOnLane = checkAgainst.getComponent(id);
+        return idOnLane?.head;
+      }
+      const modelComp = await this.scope.legacyScope.getModelComponent(id);
+      return modelComp.head;
+    };
+    await Promise.all(
+      laneToCheck.components.map(async (comp) => {
+        const refOnOtherLane = await getHashOnAnotherLane(comp.id);
+        if (!refOnOtherLane) {
+          upToDateIds.push(comp.id);
+          return;
+        }
+        if (comp.head.isEqual(refOnOtherLane)) {
+          upToDateIds.push(comp.id);
+          return;
+        }
+        const modelComponent = await this.scope.legacyScope.getModelComponent(comp.id);
+        const divergeData = await getDivergeData({
+          repo: this.scope.legacyScope.objects,
+          modelComponent,
+          remoteHead: refOnOtherLane,
+          checkedOutLocalHead: comp.head,
+        });
+        if (divergeData.isRemoteAhead() || divergeData.isDiverged()) {
+          notUpToDateIds.push(comp.id);
+          return;
+        }
+        if (!divergeData.isLocalAhead()) {
+          throw new Error(
+            `invalid state - component ${comp.id.toString()} is not diverged, not local-ahead and not-remote-ahead.`
+          );
+        }
+        upToDateIds.push(comp.id);
+      })
+    );
+
+    const isUpToDate = !notUpToDateIds.length;
+
+    return isUpToDate;
   }
 
   /**

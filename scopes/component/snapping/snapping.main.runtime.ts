@@ -122,7 +122,7 @@ export class SnappingMain {
     scope?: string | boolean;
     incrementBy?: number;
   } & Partial<BasicTagParams>): Promise<TagResults | null> {
-    build = isFeatureEnabled(BUILD_ON_CI) ? Boolean(build) : true;
+    build = typeof build === 'boolean' ? build : !isFeatureEnabled(BUILD_ON_CI);
     if (soft) build = false;
     if (disableTagAndSnapPipelines && forceDeploy) {
       throw new BitError('you can use either force-deploy or disable-tag-pipeline, but not both');
