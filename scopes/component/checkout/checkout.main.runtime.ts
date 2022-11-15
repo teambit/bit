@@ -3,6 +3,7 @@ import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import { BitId } from '@teambit/legacy-bit-id';
 import { BitError } from '@teambit/bit-error';
+import { compact } from 'lodash';
 import { BEFORE_CHECKOUT } from '@teambit/legacy/dist/cli/loader/loader-messages';
 import { HEAD, LATEST } from '@teambit/legacy/dist/constants';
 import {
@@ -22,7 +23,6 @@ import GeneralError from '@teambit/legacy/dist/error/general-error';
 import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
 import mapSeries from 'p-map-series';
 import { BitIds } from '@teambit/legacy/dist/bit-id';
-import { ComponentWithDependencies } from '@teambit/legacy/dist/scope';
 import { Version, ModelComponent } from '@teambit/legacy/dist/scope/models';
 import { Tmp } from '@teambit/legacy/dist/scope/repositories';
 import ManyComponentsWriter from '@teambit/legacy/dist/consumer/component-ops/many-components-writer';
@@ -43,6 +43,7 @@ export type CheckoutProps = {
   reset?: boolean; // remove local changes. if set, the version is undefined.
   all?: boolean; // checkout all ids
   isLane?: boolean;
+  entireLane?: boolean;
 };
 
 export type ComponentStatusBeforeMergeAttempt = {
@@ -134,9 +135,16 @@ export class CheckoutMain {
 
     markFilesToBeRemovedIfNeeded(succeededComponents, componentsResults);
 
-    const componentsWithDependencies = componentsResults
-      .map((c) => c.component)
-      .filter((c) => c) as ComponentWithDependencies[];
+    const componentsWithDependencies = compact(componentsResults.map((c) => c.component));
+
+    if (checkoutProps.entireLane) {
+      const newFromLane = await this.getNewComponentsFromLane(checkoutProps.ids || []);
+      const compsNewFromLane = await Promise.all(
+        newFromLane.map((id) => consumer.loadComponentWithDependenciesFromModel(id._legacy))
+      );
+      componentsWithDependencies.push(...compsNewFromLane);
+    }
+
     const leftUnresolvedConflicts = componentWithConflict && checkoutProps.mergeStrategy === 'manual';
     if (componentsWithDependencies.length) {
       const manyComponentsWriter = new ManyComponentsWriter({
@@ -213,6 +221,17 @@ export class CheckoutMain {
     }
     const ids = componentPattern ? await this.workspace.idsByPattern(componentPattern) : await this.workspace.listIds();
     checkoutProps.ids = ids.map((id) => (checkoutProps.head || checkoutProps.latest ? id.changeVersion(LATEST) : id));
+  }
+
+  private async getNewComponentsFromLane(ids: ComponentID[]): Promise<ComponentID[]> {
+    const lane = await this.workspace.consumer.getCurrentLaneObject();
+    if (!lane) {
+      return [];
+    }
+    const laneBitIds = lane.toBitIds();
+    const newIds = laneBitIds.filter((bitId) => !ids.find((id) => id._legacy.isEqualWithoutVersion(bitId)));
+    const newComponentIds = await this.workspace.resolveMultipleComponentIds(newIds);
+    return newComponentIds;
   }
 
   private async getComponentStatusBeforeMergeAttempt(

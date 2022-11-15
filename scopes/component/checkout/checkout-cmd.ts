@@ -43,6 +43,7 @@ export class CheckoutCmd implements Command {
     ['m', 'manual', 'in case of a conflict, leave the files with a conflict state to resolve them manually later'],
     ['r', 'reset', 'revert changes that were not snapped/tagged'],
     ['a', 'all', 'all components'],
+    ['e', 'entire-lane', 'write also new components that were introduced on the remote lane and do not exist locally'],
     ['v', 'verbose', 'showing verbose output for inspection'],
     ['', 'reset', 'DEPRECATED. run "bit checkout reset" instead'],
     ['', 'skip-npm-install', 'DEPRECATED. use "--skip-dependency-installation" instead'],
@@ -61,6 +62,7 @@ export class CheckoutCmd implements Command {
       manual = false,
       reset = false,
       all = false,
+      entireLane = false,
       verbose = false,
       skipNpmInstall = false,
       skipDependencyInstallation = false,
@@ -71,6 +73,7 @@ export class CheckoutCmd implements Command {
       manual?: boolean;
       reset?: boolean;
       all?: boolean;
+      entireLane?: boolean;
       verbose?: boolean;
       skipNpmInstall?: boolean;
       skipDependencyInstallation?: boolean;
@@ -93,6 +96,7 @@ export class CheckoutCmd implements Command {
       verbose,
       isLane: false,
       skipNpmInstall: skipDependencyInstallation,
+      entireLane,
     };
     const { components, version, failedComponents, leftUnresolvedConflicts }: ApplyVersionResults =
       await this.checkout.checkoutByCLIValues(to, componentPattern || '', checkoutProps);
