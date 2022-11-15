@@ -2,6 +2,7 @@ import fs from 'graceful-fs';
 import path from 'path';
 import semver from 'semver';
 import parsePackageName from 'parse-package-name';
+import { hardLinkDirectory } from '@teambit/toolbox.fs.hard-link-directory';
 import { initDefaultReporter } from '@pnpm/default-reporter';
 import { streamParser } from '@pnpm/logger';
 import { readModulesManifest } from '@pnpm/modules-yaml';
@@ -399,6 +400,17 @@ async function linkManifestsToInjectedDeps({
       const pkgJsonPath = path.join(rootDir, 'node_modules', pkgName, 'package.json');
       if (fs.existsSync(pkgJsonPath)) {
         await Promise.all(targetDirs.map((targetDir) => link(pkgJsonPath, path.join(targetDir, 'package.json'))));
+      }
+      // When installing, pnpm recreates the injected directories by copying the files of the component from its source directory.
+      // But the source directory doesn't have the dist directory, so after installation, the component package will miss
+      // the dist directory even if it had it before installation.
+      // Hence, we need to readd the dist directory.
+      const distDir = path.join(rootDir, 'node_modules', pkgName, 'dist');
+      if (fs.existsSync(distDir)) {
+        await hardLinkDirectory(
+          distDir,
+          targetDirs.map((targetDir) => path.join(targetDir, 'dist'))
+        );
       }
     })
   );
