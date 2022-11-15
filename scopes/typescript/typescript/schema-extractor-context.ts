@@ -220,6 +220,9 @@ export class SchemaExtractorContext {
   }
 
   async visit(node: Node): Promise<SchemaNode> {
+    if (node.kind === SyntaxKind.Identifier && node.parent.parent !== undefined) {
+      return this.visit(node.parent);
+    }
     return this.extractor.computeSchema(node, this);
   }
 
@@ -249,32 +252,6 @@ export class SchemaExtractorContext {
 
   getExportedIdentifiers(node: Node) {
     return this.extractor.computeExportedIdentifiers(node, this);
-  }
-
-  async jump(file: AbstractVinyl, start: any): Promise<SchemaNode | undefined> {
-    const sourceFile = this.extractor.parseSourceFile(file);
-    const pos = this.getPosition(sourceFile, start.line, start.offset);
-    const nodeAtPos = getTokenAtPosition(sourceFile, pos);
-    if (!nodeAtPos) return undefined;
-
-    // this causes some infinite loops. it's helpful for getting more data from types that are not exported.
-    // e.g.
-    // ```ts
-    // class Bar {}
-    // export const getBar = () => new Bar();
-    // ```
-    // if (nodeAtPos.kind === ts.SyntaxKind.Identifier) {
-    //   // @todo: make sure with Ran that it's fine. Maybe it's better to do: `this.visit(nodeAtPos.parent);`
-    //   return this.visitDefinition(nodeAtPos);
-    // }
-    try {
-      return await this.visit(nodeAtPos);
-    } catch (err) {
-      if (err instanceof TransformerNotFound) {
-        return undefined;
-      }
-      throw err;
-    }
   }
 
   /**
@@ -310,8 +287,8 @@ export class SchemaExtractorContext {
       const definition = await this.tsserver.getDefinition(node.getSourceFile().fileName, this.getLocation(node));
       return head(definition?.body);
     };
-    const definition = await getDef();
 
+    const definition = await getDef();
     // when we can't figure out the component/package/type of this node, we'll use the typeStr as the type.
     const unknownExactType = async () => {
       if (isTypeStrFromQuickInfo) {
@@ -321,6 +298,7 @@ export class SchemaExtractorContext {
       const type = parseTypeFromQuickInfo(info);
       return new InferenceTypeSchema(location, type, typeStr);
     };
+
     if (!definition) {
       return unknownExactType();
     }
@@ -339,8 +317,25 @@ export class SchemaExtractorContext {
       if (isDefInSameLocation()) {
         return unknownExactType();
       }
-      const schemaNode = await this.jump(file, definition.start);
-      return schemaNode || unknownExactType();
+      const definitionNode = await this.definition(definition);
+      const definitionNodeName = definitionNode?.getText();
+      if (!definitionNode) {
+        return unknownExactType();
+      }
+
+      if (definitionNodeName && this._exports?.includes(definitionNodeName)) {
+        return new TypeRefSchema(location, definitionNodeName);
+      }
+
+      try {
+        const schemaNode = await this.visit(definitionNode);
+        return schemaNode || unknownExactType();
+      } catch (err) {
+        if (err instanceof TransformerNotFound) {
+          return unknownExactType();
+        }
+        throw err;
+      }
     }
     return this.getTypeRefForExternalPath(typeStr, definition.file, location);
   }

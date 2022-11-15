@@ -764,13 +764,17 @@
             "modifiers": [],
             "params": [],
             "returnType": {
-              "__schema": "InferenceTypeSchema",
+              "__schema": "ClassSchema",
+              "name": "Foo",
               "location": {
                 "filePath": "index.ts",
-                "line": 40,
-                "character": 3
+                "line": 34,
+                "character": 1
               },
-              "type": "Foo"
+              "signature": "class Foo",
+              "extendsNodes": [],
+              "implementNodes": [],
+              "members": []
             }
           },
           {
@@ -1234,14 +1238,21 @@
         "name": "TypeRefWithArgs",
         "signature": "type TypeRefWithArgs = T3<T1, T2>",
         "type": {
-          "__schema": "InferenceTypeSchema",
+          "__schema": "ClassSchema",
+          "name": "T3",
           "location": {
             "filePath": "index.ts",
-            "line": 86,
-            "character": 31
+            "line": 85,
+            "character": 1
           },
-          "type": "class T3<T, K>",
-          "name": "T3"
+          "signature": "class T3<T, K>",
+          "typeParams": [
+            "T",
+            "K"
+          ],
+          "extendsNodes": [],
+          "implementNodes": [],
+          "members": []
         }
       },
       {
@@ -1276,24 +1287,30 @@
               },
               "types": [
                 {
-                  "__schema": "InferenceTypeSchema",
+                  "__schema": "ClassSchema",
+                  "name": "T1",
                   "location": {
                     "filePath": "index.ts",
-                    "line": 88,
-                    "character": 34
+                    "line": 83,
+                    "character": 1
                   },
-                  "type": "class T1",
-                  "name": "T1"
+                  "signature": "class T1",
+                  "extendsNodes": [],
+                  "implementNodes": [],
+                  "members": []
                 },
                 {
-                  "__schema": "InferenceTypeSchema",
+                  "__schema": "ClassSchema",
+                  "name": "T2",
                   "location": {
                     "filePath": "index.ts",
-                    "line": 88,
-                    "character": 39
+                    "line": 84,
+                    "character": 1
                   },
-                  "type": "class T2",
-                  "name": "T2"
+                  "signature": "class T2",
+                  "extendsNodes": [],
+                  "implementNodes": [],
+                  "members": []
                 }
               ]
             }
@@ -1554,14 +1571,78 @@
             "character": 33
           },
           "objectType": {
-            "__schema": "InferenceTypeSchema",
+            "__schema": "InterfaceSchema",
             "location": {
               "filePath": "index.ts",
-              "line": 106,
-              "character": 33
+              "line": 103,
+              "character": 1
             },
-            "type": "interface config",
-            "name": "config"
+            "name": "config",
+            "signature": "interface config",
+            "extendsNodes": [],
+            "members": [
+              {
+                "__schema": "VariableLikeSchema",
+                "location": {
+                  "filePath": "index.ts",
+                  "line": 104,
+                  "character": 3
+                },
+                "name": "someField",
+                "signature": "(property) config.someField: {\n    a: string;\n    b: boolean;\n}",
+                "isOptional": false,
+                "type": {
+                  "__schema": "TypeLiteralSchema",
+                  "location": {
+                    "filePath": "index.ts",
+                    "line": 104,
+                    "character": 14
+                  },
+                  "members": [
+                    {
+                      "__schema": "VariableLikeSchema",
+                      "location": {
+                        "filePath": "index.ts",
+                        "line": 104,
+                        "character": 16
+                      },
+                      "name": "a",
+                      "signature": "(property) a: string",
+                      "isOptional": false,
+                      "type": {
+                        "__schema": "KeywordTypeSchema",
+                        "location": {
+                          "filePath": "index.ts",
+                          "line": 104,
+                          "character": 19
+                        },
+                        "name": "string"
+                      }
+                    },
+                    {
+                      "__schema": "VariableLikeSchema",
+                      "location": {
+                        "filePath": "index.ts",
+                        "line": 104,
+                        "character": 27
+                      },
+                      "name": "b",
+                      "signature": "(property) b: boolean",
+                      "isOptional": false,
+                      "type": {
+                        "__schema": "KeywordTypeSchema",
+                        "location": {
+                          "filePath": "index.ts",
+                          "line": 104,
+                          "character": 30
+                        },
+                        "name": "boolean"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
           },
           "indexType": {
             "__schema": "LiteralTypeSchema",
@@ -1667,14 +1748,42 @@
               },
               "literal": " hi ",
               "type": {
-                "__schema": "InferenceTypeSchema",
+                "__schema": "TypeSchema",
                 "location": {
                   "filePath": "index.ts",
-                  "line": 118,
-                  "character": 44
+                  "line": 116,
+                  "character": 1
                 },
-                "type": "\"world1-a\" | \"world1-b\"",
-                "name": "World1"
+                "name": "World1",
+                "signature": "type World1 = \"world1-a\" | \"world1-b\"",
+                "type": {
+                  "__schema": "TypeUnionSchema",
+                  "location": {
+                    "filePath": "index.ts",
+                    "line": 116,
+                    "character": 15
+                  },
+                  "types": [
+                    {
+                      "__schema": "LiteralTypeSchema",
+                      "location": {
+                        "filePath": "index.ts",
+                        "line": 116,
+                        "character": 15
+                      },
+                      "name": "'world1-a'"
+                    },
+                    {
+                      "__schema": "LiteralTypeSchema",
+                      "location": {
+                        "filePath": "index.ts",
+                        "line": 116,
+                        "character": 28
+                      },
+                      "name": "'world1-b'"
+                    }
+                  ]
+                }
               }
             },
             {
@@ -1686,14 +1795,23 @@
               },
               "literal": "",
               "type": {
-                "__schema": "InferenceTypeSchema",
+                "__schema": "TypeSchema",
                 "location": {
                   "filePath": "index.ts",
-                  "line": 118,
-                  "character": 57
+                  "line": 117,
+                  "character": 1
                 },
-                "type": "\"world2\"",
-                "name": "World2"
+                "name": "World2",
+                "signature": "type World2 = \"world2\"",
+                "type": {
+                  "__schema": "LiteralTypeSchema",
+                  "location": {
+                    "filePath": "index.ts",
+                    "line": 117,
+                    "character": 15
+                  },
+                  "name": "'world2'"
+                }
               }
             }
           ]
