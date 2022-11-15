@@ -44,6 +44,8 @@ export type ApplyVersionResults = {
   mergeSnapError?: Error;
   leftUnresolvedConflicts?: boolean;
   verbose?: boolean;
+  newFromLane?: string[];
+  newFromLaneAdded?: boolean;
 };
 type ComponentStatus = {
   componentFromFS: Component;
