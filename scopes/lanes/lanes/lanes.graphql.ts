@@ -58,6 +58,17 @@ export function lanesSchema(lanesMainRuntime: LanesMain): Schema {
         current: Lane
       }
 
+      type Mutation {
+        """
+        create lane
+        """
+        createLane(name: String!): LaneId!
+        """
+        delete lanes
+        """
+        deleteLanes(names: [String!]!): [String!]!
+      }
+
       type Query {
         lanes: Lanes
       }
@@ -103,7 +114,10 @@ export function lanesSchema(lanesMainRuntime: LanesMain): Schema {
       },
       Lane: {
         id: (lane: LaneData) => lane.id.toObject(),
-        laneComponentIds: async (lane: LaneData) => lanesMainRuntime.getLaneComponentIds(lane),
+        laneComponentIds: async (lane: LaneData) => {
+          const componentIds = await lanesMainRuntime.getLaneComponentIds(lane);
+          return componentIds.map((componentId) => componentId.toObject());
+        },
         components: async (lane: LaneData) => {
           const laneComponents = await lanesMainRuntime.getLaneComponentModels(lane);
           return laneComponents;
@@ -115,6 +129,15 @@ export function lanesSchema(lanesMainRuntime: LanesMain): Schema {
       },
       Query: {
         lanes: () => lanesMainRuntime,
+      },
+      Mutation: {
+        createLane: async (_, { name }: { name: string }) => {
+          const result = await lanesMainRuntime.createLane(name);
+          return LaneId.from(result.localLane, result.remoteScope);
+        },
+        deleteLanes: async (_, { names }: { names: string[] }) => {
+          return lanesMainRuntime.removeLanes(names);
+        },
       },
     },
   };
