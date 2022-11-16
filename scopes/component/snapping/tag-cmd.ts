@@ -1,4 +1,5 @@
 import chalk from 'chalk';
+import { isFeatureEnabled, BUILD_ON_CI } from '@teambit/legacy/dist/api/consumer/lib/feature-toggle';
 import { Command, CommandOptions } from '@teambit/cli';
 import { TagResults, NOTHING_TO_TAG_MSG, AUTO_TAGGED_MSG } from '@teambit/legacy/dist/api/consumer/lib/tag';
 import { DEFAULT_BIT_RELEASE_TYPE } from '@teambit/legacy/dist/constants';
@@ -205,6 +206,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
     };
 
     const disableTagAndSnapPipelines = disableTagPipeline || disableDeployPipeline;
+    build = isFeatureEnabled(BUILD_ON_CI) ? Boolean(build) : true;
 
     const params = {
       ids: patterns,

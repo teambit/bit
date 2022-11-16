@@ -1,5 +1,4 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import { isFeatureEnabled, BUILD_ON_CI } from '@teambit/legacy/dist/api/consumer/lib/feature-toggle';
 import { LegacyOnTagResult } from '@teambit/legacy/dist/scope/scope';
 import { FlattenedDependenciesGetter } from '@teambit/legacy/dist/scope/component-ops/get-flattened-dependencies';
 import { Scope as LegacyScope } from '@teambit/legacy/dist/scope';
@@ -122,7 +121,6 @@ export class SnappingMain {
     scope?: string | boolean;
     incrementBy?: number;
   } & Partial<BasicTagParams>): Promise<TagResults | null> {
-    build = isFeatureEnabled(BUILD_ON_CI) ? Boolean(build) : true;
     if (soft) build = false;
     if (disableTagAndSnapPipelines && forceDeploy) {
       throw new BitError('you can use either force-deploy or disable-tag-pipeline, but not both');
