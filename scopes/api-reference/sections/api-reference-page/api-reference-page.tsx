@@ -4,7 +4,8 @@ import classNames from 'classnames';
 import { ComponentContext } from '@teambit/component';
 import { H1 } from '@teambit/documenter.ui.heading';
 import { useIsMobile } from '@teambit/ui-foundation.ui.hooks.use-is-mobile';
-import { Separator } from '@teambit/design.ui.separator';
+import { useLocation, Link } from '@teambit/base-react.navigation.link';
+import { useQuery } from '@teambit/ui-foundation.ui.react-router.use-query';
 import { Collapser } from '@teambit/ui-foundation.ui.buttons.collapser';
 import { HoverSplitter } from '@teambit/base-ui.surfaces.split-pane.hover-splitter';
 import { SplitPane, Pane, Layout } from '@teambit/base-ui.surfaces.split-pane.split-pane';
@@ -56,6 +57,8 @@ export function APIRefPage({ host, rendererSlot, className }: APIRefPageProps) {
     (selectedAPINode && `${selectedAPINode?.renderer?.nodeType}/${selectedAPINode?.api.name}`) || apiTree[0];
 
   const SelectedAPIComponent = selectedAPINode && selectedAPINode.renderer.Component;
+  const location = useLocation();
+  const query = useQuery();
 
   if (loading) {
     return (
@@ -69,14 +72,31 @@ export function APIRefPage({ host, rendererSlot, className }: APIRefPageProps) {
     return <EmptyBox title={'There is no API extracted for this component.'} link={''} linkText={''} />;
   }
 
+  const icon = selectedAPINode.renderer.icon;
+  const name = selectedAPINode.api.name;
+  const componentVersionFromUrl = query.get('version');
+  const filePath = selectedAPINode.api.location.filePath;
+  const pathname = location?.pathname;
+  const componentUrlWithoutVersion = pathname?.split('~')[0];
+  const locationUrl = `${componentUrlWithoutVersion}~code/${filePath}${
+    componentVersionFromUrl ? `?version=${componentVersionFromUrl}` : ''
+  }`;
+
   return (
     <SplitPane layout={sidebarOpenness} size="85%" className={classNames(className, styles.apiRefPageContainer)}>
       <Pane className={styles.left}>
         <div className={styles.selectedAPIDetailsContainer}>
-          <H1 size={'md'} className={styles.title}>
-            API Reference
-          </H1>
-          <Separator isPresentational className={styles.separator} />
+          <div className={styles.apiNodeDetailsNameContainer}>
+            {icon && (
+              <div className={styles.apiTypeIcon}>
+                <img src={icon.url} />
+              </div>
+            )}
+            <H1 size={'md'} className={styles.name}>
+              {name}
+            </H1>
+            <SelectedAPILocation locationUrl={locationUrl} />
+          </div>
           {SelectedAPIComponent && (
             <SelectedAPIComponent apiNode={selectedAPINode} apiRefModel={apiModel} renderers={renderers} depth={0} />
           )}
@@ -96,5 +116,16 @@ export function APIRefPage({ host, rendererSlot, className }: APIRefPageProps) {
         <APIReferenceExplorer selectedAPIName={selectedAPIName} apiTree={apiTree} getIcon={getIcon} />
       </Pane>
     </SplitPane>
+  );
+}
+
+function SelectedAPILocation({ locationUrl }: { locationUrl: string }) {
+  return (
+    <Link external={true} href={locationUrl} className={styles.locationLink}>
+      <div className={styles.locationLabel}>View Code</div>
+      <div className={styles.locationIcon}>
+        <img src="https://static.bit.dev/design-system-assets/Icons/external-link.svg"></img>
+      </div>
+    </Link>
   );
 }

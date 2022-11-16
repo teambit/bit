@@ -47,3 +47,60 @@ $panelBg: #fafafa;
   height: 100%;
   width: 100%;
 }
+
+.apiNodeDetailsNameContainer {
+  display: flex;
+  flex-direction: row;
+}
+
+.apiTypeIcon {
+  img {
+    height: var(--bit-h-md, 26px);
+  }
+  padding-right: 8px;
+}
+
+.name {
+  margin: 0;
+}
+
+.selectedAPILocationContainer {
+  display: flex;
+  align-items: center;
+  margin-left: 8px;
+  padding-right: 8px;
+  border: 1px solid var(--bit-border-color-lightest);
+  border-radius: 6px;
+  &:hover {
+    background-color: var(--bit-bg-heavy);
+  }
+}
+
+.locationLabel {
+  display: flex;
+  color: var(--bit-text-color-light);
+  padding: 6px 8px;
+}
+.locationIcon {
+  display: flex;
+  img {
+    height: 14px;
+  }
+}
+
+.locationLink {
+  display: flex;
+  align-items: center;
+  align-self: baseline;
+  min-width: fit-content;
+  padding-right: 8px;
+  margin-left: 12px;
+  font-size: var(--bit-p-xs);
+  color: var(--bit-text-color-light);
+  text-decoration: none;
+  border: 1px solid var(--bit-border-color-lightest);
+  border-radius: 6px;
+  &:hover {
+    background-color: var(--bit-bg-heavy);
+  }
+}

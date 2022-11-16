@@ -33,10 +33,7 @@ function FunctionComponent(props: APINodeRenderProps) {
   const hasParams = params.length > 0;
 
   return (
-    <APINodeDetails
-      {...props}
-      options={{ hideIndex: (props.depth ?? 0) > 0, hideImplementation: (props.depth ?? 0) > 0 }}
-    >
+    <APINodeDetails {...props} options={{ hideIndex: (props.depth ?? 0) > 0 }}>
       {typeParams && (
         <div className={classnames(styles.container, styles.typeParams)}>
           <div className={styles.title}>Type Parameters</div>
