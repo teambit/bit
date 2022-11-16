@@ -515,7 +515,7 @@ export class Workspace implements ComponentFactory {
         type: systemDescriptor.type,
         // Make sure to store the env id in the data without the version
         // The version should always come from the aspect id configured on the component
-        id: env.id,
+        id: env.id.split('@')[0],
         name: env.name,
         icon,
         description: env.description,
