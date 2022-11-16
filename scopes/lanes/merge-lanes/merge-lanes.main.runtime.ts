@@ -229,16 +229,23 @@ export class MergeLanesMain {
     const laneId = LaneId.parse(laneName);
     const lane = await this.lanes.importLaneObject(laneId);
     const laneIds = lane.toBitIds();
+    const getIdsToMerge = async (): Promise<BitIds> => {
+      if (!options.pattern) return laneIds;
+      const laneCompIds = await this.scope.resolveMultipleComponentIds(laneIds);
+      const ids = this.scope.filterIdsFromPoolIdsByPattern(options.pattern, laneCompIds);
+      return BitIds.fromArray(ids.map((id) => id._legacy));
+    };
+    const idsToMerge = await getIdsToMerge();
     const scopeComponentsImporter = ScopeComponentsImporter.getInstance(this.scope.legacyScope);
     await scopeComponentsImporter.importManyDeltaWithoutDeps({
-      ids: laneIds,
+      ids: idsToMerge,
       fromHead: true,
       lane,
       ignoreMissingHead: true,
     });
     // get their main as well
     await scopeComponentsImporter.importManyDeltaWithoutDeps({
-      ids: laneIds.toVersionLatest(),
+      ids: idsToMerge.toVersionLatest(),
       fromHead: true,
       ignoreMissingHead: true,
     });
@@ -248,7 +255,7 @@ export class MergeLanesMain {
     // then, change the component object head to point to this changed version
     const mergedPreviously: BitId[] = [];
     const mergedNow: BitId[] = [];
-    const bitObjectsPerComp = await pMapSeries(laneIds, async (id) => {
+    const bitObjectsPerComp = await pMapSeries(idsToMerge, async (id) => {
       const modelComponent = await this.scope.legacyScope.getModelComponent(id);
       const versionObj = await modelComponent.loadVersion(id.version as string, repo);
       const laneHead = modelComponent.getRef(id.version as string);
