@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { H5, H6 } from '@teambit/documenter.ui.heading';
+import { H6 } from '@teambit/documenter.ui.heading';
 import Editor from '@monaco-editor/react';
-import { Link, useLocation } from '@teambit/base-react.navigation.link';
+import { useLocation } from '@teambit/base-react.navigation.link';
 import { defaultCodeEditorOptions } from '@teambit/api-reference.utils.code-editor-options';
 import classnames from 'classnames';
 import { APINodeRenderProps } from '@teambit/api-reference.models.api-node-renderer';
@@ -16,7 +16,6 @@ import styles from './api-node-details.module.scss';
 export type APINodeDetailsProps = APINodeRenderProps & {
   displaySignature?: string;
   options?: {
-    hideImplementation?: boolean;
     hideIndex?: boolean;
   };
 };
@@ -27,12 +26,9 @@ export function APINodeDetails({
       name,
       signature: defaultSignature,
       doc,
-      location: { filePath, line },
+      location: { filePath },
     },
-    renderer: { icon },
-    // componentId,
   },
-  // members,
   displaySignature,
   children,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -53,10 +49,6 @@ export function APINodeDetails({
   const apiRef = useRef<HTMLDivElement | null>(null);
   const currentQueryParams = query.toString();
 
-  const componentVersionFromUrl = query.get('version');
-  const pathname = routerLocation?.pathname;
-  const componentUrlWithoutVersion = pathname?.split('~')[0];
-
   const example = (doc?.tags || []).find((tag) => tag.tagName === 'example');
   const comment = doc?.comment;
   const signature = displaySignature || defaultSignature;
@@ -72,12 +64,6 @@ export function APINodeDetails({
 
   const [signatureHeight, setSignatureHeight] = useState<number>(defaultSignatureHeight);
   const [isMounted, setIsMounted] = useState(false);
-
-  const locationUrl = `${componentUrlWithoutVersion}~code/${filePath}${
-    componentVersionFromUrl ? `?version=${componentVersionFromUrl}` : ''
-  }`;
-
-  const locationLabel = `${filePath}:${line}`;
 
   const getAPINodeUrl = useCallback((queryParams: APIRefQueryParams) => {
     const queryObj = Object.fromEntries(query.entries());
@@ -152,16 +138,6 @@ export function APINodeDetails({
       className={classnames(rest.className, styles.apiNodeDetailsContainer)}
     >
       <div className={styles.apiDetails} ref={apiRef}>
-        {name && (
-          <div className={styles.apiNodeDetailsNameContainer}>
-            {icon && (
-              <div className={styles.apiTypeIcon}>
-                <img src={icon.url} />
-              </div>
-            )}
-            <H5 className={styles.apiNodeDetailsName}>{name}</H5>
-          </div>
-        )}
         {comment && <div className={styles.apiNodeDetailsComment}>{comment}</div>}
         {signature && (
           <div
@@ -200,18 +176,6 @@ export function APINodeDetails({
                 theme={'vs-dark'}
                 className={styles.editor}
               />
-            </div>
-          </div>
-        )}
-        {!options?.hideImplementation && (
-          <div className={styles.apiNodeDetailsLocationContainer}>
-            <div className={styles.apiNodeDetailsLocationIcon}>
-              <img src="https://static.bit.dev/design-system-assets/Icons/external-link.svg"></img>
-            </div>
-            <div className={styles.apiNodeDetailsLocation}>
-              <Link external={true} href={locationUrl} className={styles.apiNodeDetailsLocationLink}>
-                {locationLabel}
-              </Link>
             </div>
           </div>
         )}
