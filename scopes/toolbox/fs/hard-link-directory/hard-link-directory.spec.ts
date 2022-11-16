@@ -11,7 +11,6 @@ test('hardLinkDirectory()', async () => {
 
   fs.mkdirpSync(srcDir);
   fs.mkdirpSync(dest1Dir);
-  fs.mkdirpSync(dest2Dir);
   fs.mkdirpSync(path.join(srcDir, 'node_modules'));
   fs.mkdirpSync(path.join(srcDir, 'subdir'));
 
