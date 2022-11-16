@@ -69,16 +69,16 @@ $panelBg: #fafafa;
   align-items: center;
   margin-left: 8px;
   padding-right: 8px;
-  border: 1px solid var(--bit-border-color-lightest);
+  border: 1px solid var(--bit-border-color-lightest, #ededed);
   border-radius: 6px;
   &:hover {
-    background-color: var(--bit-bg-heavy);
+    background-color: var(--bit-bg-heavy, #f4f5f6);
   }
 }
 
 .locationLabel {
   display: flex;
-  color: var(--bit-text-color-light);
+  color: var(--bit-text-color-light, '#707279');
   padding: 6px 8px;
 }
 .locationIcon {
@@ -95,12 +95,12 @@ $panelBg: #fafafa;
   min-width: fit-content;
   padding-right: 8px;
   margin-left: 12px;
-  font-size: var(--bit-p-xs);
-  color: var(--bit-text-color-light);
+  font-size: var(--bit-p-xs, '14px');
+  color: var(--bit-text-color-light, '#707279');
   text-decoration: none;
-  border: 1px solid var(--bit-border-color-lightest);
+  border: 1px solid var(--bit-border-color-lightest, #ededed);
   border-radius: 6px;
   &:hover {
-    background-color: var(--bit-bg-heavy);
+    background-color: var(--bit-bg-heavy, #f4f5f6);
   }
 }
