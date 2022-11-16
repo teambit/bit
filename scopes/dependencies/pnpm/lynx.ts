@@ -232,6 +232,7 @@ export async function install(
     hooks: { readPackage },
     hoistingLimits,
     strictPeerDependencies: false,
+    resolveSymlinksInInjectedDirs: true,
     ...options,
     peerDependencyRules: {
       allowAny: ['*'],
