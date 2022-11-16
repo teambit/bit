@@ -1,4 +1,3 @@
-import fs from 'graceful-fs';
 import { mapValues } from 'lodash';
 import path from 'path';
 import semver from 'semver';
@@ -30,13 +29,11 @@ import { pickRegistryForPackage } from '@pnpm/pick-registry-for-package';
 import { PackageManifest, ProjectManifest, ReadPackageHook } from '@pnpm/types';
 import { Logger } from '@teambit/logger';
 import toNerfDart from 'nerf-dart';
-import { promisify } from 'util';
 import { createPkgGraph } from 'pkgs-graph';
 import userHome from 'user-home';
 import { pnpmErrorToBitError } from './pnpm-error-to-bit-error';
 import { readConfig } from './read-config';
 
-const link = promisify(fs.link);
 const installsRunning: Record<string, Promise<any>> = {};
 
 type RegistriesMap = {
