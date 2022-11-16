@@ -148,6 +148,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       ignoreNewestVersion,
       skipTests,
       build: true,
+      persist: true,
       disableTagAndSnapPipelines: disableTagPipeline,
       forceDeploy,
       incrementBy,

@@ -132,6 +132,9 @@ export class LanesMain {
     return this.workspace.consumer.getCurrentLaneId();
   }
 
+  /**
+   * get the currently checked out lane object, if on main - return null.
+   */
   async getCurrentLane(): Promise<Lane | null> {
     const laneId = this.getCurrentLaneId();
     if (!laneId || laneId.isDefault()) return null;
@@ -442,7 +445,10 @@ export class LanesMain {
     return new LaneSwitcher(this.workspace, this.logger, switchProps, checkoutProps, this).switch();
   }
 
-  async isLaneUpToDate(laneToCheck: Lane, checkAgainst?: Lane) {
+  /**
+   * check whether the given lane is up-to-date against "checkAgainst", if this param is null, it checks it against main.
+   */
+  async isLaneUpToDate(laneToCheck: Lane, checkAgainst?: Lane): Promise<boolean> {
     const upToDateIds: BitId[] = [];
     const notUpToDateIds: BitId[] = [];
     const getHashOnAnotherLane = async (id: BitId): Promise<Ref | undefined> => {
