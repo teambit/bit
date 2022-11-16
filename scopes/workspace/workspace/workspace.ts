@@ -1588,11 +1588,14 @@ needed-for: ${neededFor || '<unknown>'}`);
         ? await this.aspectLoader.getRuntimePath(component, localPath, runtimeName)
         : null;
 
+      const aspectFilePath = await this.aspectLoader.getAspectFilePath(component, localPath);
+
       this.logger.debug(
         `workspace resolveAspects, resolving id: ${compStringId}, localPath: ${localPath}, runtimePath: ${runtimePath}`
       );
       return {
         aspectPath: localPath,
+        aspectFilePath,
         runtimePath,
       };
     });

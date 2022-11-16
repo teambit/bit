@@ -42,12 +42,13 @@ export type AspectResolver = (component: Component) => Promise<ResolvedAspect>;
 export type ResolvedAspect = {
   aspectPath: string;
   runtimePath: string | null;
+  aspectFilePath: string | null;
 };
 
 type OnAspectLoadError = (err: Error, id: ComponentID) => Promise<boolean>;
 export type OnAspectLoadErrorSlot = SlotRegistry<OnAspectLoadError>;
 
-export type OnAspectLoadErrorHandler = (err: Error, component: Component) => Promise<boolean>
+export type OnAspectLoadErrorHandler = (err: Error, component: Component) => Promise<boolean>;
 
 export type OnLoadRequireableExtension = (
   requireableExtension: RequireableComponent,
@@ -154,6 +155,33 @@ export class AspectLoaderMain {
     }
   }
 
+  async getAspectFilePath(component: Component, modulePath: string): Promise<string | null> {
+    const aspectFile = component.filesystem.files.find((file: any) => {
+      return file.relative.includes(`.aspect.ts`) || file.relative.includes(`.aspect.js`);
+    });
+
+    // @david we should add a compiler api for this.
+    if (!aspectFile) return null;
+    try {
+      const compiler = this.getCompiler(component);
+
+      if (!compiler) {
+        return join(modulePath, aspectFile.relative);
+      }
+
+      const dist = compiler.getDistPathBySrcPath(aspectFile.relative);
+      return join(modulePath, dist);
+    } catch (e) {
+      this.logger.info(`got an error during get runtime path, probably the env is not loaded yet ${e}`);
+      // TODO: we are manually adding the dist here and replace the file name to handle case when
+      // we load aspects from scope, and their env in the same iteration, but we get into the aspect before its
+      // env, so it's env doesn't exist yet
+      // we should make sure to first load the env correctly before loading the aspect
+      const distPath = join(modulePath, DEFAULT_DIST_DIRNAME, replaceFileExtToJs(aspectFile.relative));
+      return distPath;
+    }
+  }
+
   isAspectLoaded(id: string) {
     if (this.failedAspects.includes(id)) return true;
     try {
@@ -163,18 +191,18 @@ export class AspectLoaderMain {
     }
   }
 
-  getDescriptor(id: string): AspectDescriptor|undefined {
+  getDescriptor(id: string): AspectDescriptor | undefined {
     try {
       const instance = this.harmony.get<any>(id);
       const iconFn = instance.icon;
-  
+
       const icon = iconFn ? iconFn.apply(instance) : undefined;
-  
+
       return {
         id,
         icon,
-      };  
-    } catch(err) {
+      };
+    } catch (err) {
       return undefined;
     }
   }
@@ -247,7 +275,12 @@ export class AspectLoaderMain {
   async resolveAspects(components: Component[], resolver: AspectResolver): Promise<AspectDefinition[]> {
     const promises = components.map(async (component) => {
       const resolvedAspect = await resolver(component);
-      return new AspectDefinition(resolvedAspect.aspectPath, resolvedAspect.runtimePath, component);
+      return new AspectDefinition(
+        resolvedAspect.aspectPath,
+        resolvedAspect.aspectFilePath,
+        resolvedAspect.runtimePath,
+        component
+      );
     });
 
     const aspectDefs = await Promise.all(promises);

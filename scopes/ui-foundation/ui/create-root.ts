@@ -64,7 +64,7 @@ function createImports(aspectDefs: AspectDefinition[]) {
   const defs = aspectDefs.filter((def) => def.runtimePath);
 
   return `import { Harmony } from '@teambit/harmony';
-${getImportStatements(aspectDefs, 'aspectPath', 'Aspect')}
+${getImportStatements(aspectDefs, 'aspectFilePath', 'Aspect')}
 ${getImportStatements(defs, 'runtimePath', 'Runtime')}`;
 }
 
