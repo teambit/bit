@@ -224,7 +224,7 @@ export class DevFilesMain {
     if (workspace) {
       workspace.onComponentLoad(async (component) => {
         return {
-          devPatterns: devFiles.computeDevPatterns(component),
+          devPatterns: await devFiles.computeDevPatterns(component),
           devFiles: (await devFiles.computeDevFiles(component)).toObject(),
         };
       });
