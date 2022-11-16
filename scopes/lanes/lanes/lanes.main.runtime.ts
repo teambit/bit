@@ -18,11 +18,13 @@ import ComponentAspect, { Component, ComponentID, ComponentMain } from '@teambit
 import removeLanes from '@teambit/legacy/dist/consumer/lanes/remove-lanes';
 import { Lane } from '@teambit/legacy/dist/scope/models';
 import { LaneNotFound } from '@teambit/legacy/dist/api/scope/lib/exceptions/lane-not-found';
+import { getDivergeData } from '@teambit/legacy/dist/scope/component-ops/get-diverge-data';
 import ScopeComponentsImporter from '@teambit/legacy/dist/scope/component-ops/scope-components-importer';
 import { Scope as LegacyScope } from '@teambit/legacy/dist/scope';
 import { BitId } from '@teambit/legacy-bit-id';
 import { ExportAspect, ExportMain } from '@teambit/export';
 import { BitIds } from '@teambit/legacy/dist/bit-id';
+import { Ref } from '@teambit/legacy/dist/scope/objects';
 import { MergingMain, MergingAspect } from '@teambit/merging';
 import { LanesAspect } from './lanes.aspect';
 import {
@@ -41,7 +43,7 @@ import {
 import { lanesSchema } from './lanes.graphql';
 import { SwitchCmd } from './switch.cmd';
 import { LaneSwitcher } from './switch-lanes';
-import { createLane, throwForInvalidLaneName } from './create-lane';
+import { createLane, createLaneInScope, throwForInvalidLaneName } from './create-lane';
 
 export { Lane };
 
@@ -130,6 +132,15 @@ export class LanesMain {
     return this.workspace.consumer.getCurrentLaneId();
   }
 
+  /**
+   * get the currently checked out lane object, if on main - return null.
+   */
+  async getCurrentLane(): Promise<Lane | null> {
+    const laneId = this.getCurrentLaneId();
+    if (!laneId || laneId.isDefault()) return null;
+    return this.loadLane(laneId);
+  }
+
   getDefaultLaneId(): LaneId {
     return LaneId.from(DEFAULT_LANE, this.scope.name);
   }
@@ -140,7 +151,12 @@ export class LanesMain {
 
   async createLane(name: string, { remoteScope, alias }: CreateLaneOptions = {}): Promise<TrackLane> {
     if (!this.workspace) {
-      throw new BitError(`unable to create a lane outside of Bit workspace`);
+      const newLane = await createLaneInScope(name, this.scope);
+      return {
+        localLane: newLane.name,
+        remoteLane: newLane.name,
+        remoteScope: this.scope.name,
+      };
     }
     if (alias) {
       throwForInvalidLaneName(alias);
@@ -161,6 +177,10 @@ export class LanesMain {
     return trackLaneData;
   }
 
+  async loadLane(id: LaneId): Promise<Lane | null> {
+    return this.scope.legacyScope.lanes.loadLane(id);
+  }
+
   async trackLane(
     localName: string,
     remoteScope: string,
@@ -170,7 +190,7 @@ export class LanesMain {
       throw new BitError(`unable to track a lane outside of Bit workspace`);
     }
     const laneId = await this.scope.legacyScope.lanes.parseLaneIdFromString(localName);
-    const lane = await this.scope.legacyScope.lanes.loadLane(laneId);
+    const lane = await this.loadLane(laneId);
     if (!lane) {
       throw new BitError(`unable to find a local lane "${localName}"`);
     }
@@ -198,7 +218,7 @@ export class LanesMain {
       throw new BitError(`an alias cannot be the same as the lane name`);
     }
     const laneId = await this.scope.legacyScope.lanes.parseLaneIdFromString(laneName);
-    const lane = await this.scope.legacyScope.lanes.loadLane(laneId);
+    const lane = await this.loadLane(laneId);
     if (!lane) {
       throw new BitError(`unable to find a local lane "${laneName}"`);
     }
@@ -225,7 +245,7 @@ export class LanesMain {
       ? laneName.split(LANE_REMOTE_DELIMITER)[1]
       : laneName;
     const laneId = await this.scope.legacyScope.lanes.parseLaneIdFromString(laneName);
-    const lane = await this.scope.legacyScope.lanes.loadLane(laneId);
+    const lane = await this.loadLane(laneId);
     if (!lane) {
       throw new BitError(`unable to find a local lane "${laneName}"`);
     }
@@ -262,7 +282,7 @@ export class LanesMain {
       ? currentName.split(LANE_REMOTE_DELIMITER)[1]
       : currentName;
     const laneId = await this.scope.legacyScope.lanes.parseLaneIdFromString(currentName);
-    const lane = await this.scope.legacyScope.lanes.loadLane(laneId);
+    const lane = await this.loadLane(laneId);
     if (!lane) {
       throw new BitError(`unable to find a local lane "${currentName}"`);
     }
@@ -369,8 +389,12 @@ export class LanesMain {
     return lane;
   }
 
-  async removeLanes(laneNames: string[], { remote, force }: { remote: boolean; force: boolean }): Promise<string[]> {
-    const results = await removeLanes(this.workspace?.consumer, laneNames, remote, force);
+  async removeLanes(laneNames: string[], opts?: { remote: boolean; force: boolean }): Promise<string[]> {
+    if (!this.workspace && !opts?.remote) {
+      await this.scope.legacyScope.lanes.removeLanes(this.scope.legacyScope, laneNames, true);
+      return laneNames;
+    }
+    const results = await removeLanes(this.workspace?.consumer, laneNames, !!opts?.remote, !!opts?.force);
     if (this.workspace) await this.workspace.consumer.onDestroy();
 
     return results.laneResults;
@@ -419,6 +443,56 @@ export class LanesMain {
       all: false,
     };
     return new LaneSwitcher(this.workspace, this.logger, switchProps, checkoutProps, this).switch();
+  }
+
+  /**
+   * check whether the given lane is up-to-date against "checkAgainst", if this param is null, it checks it against main.
+   */
+  async isLaneUpToDate(laneToCheck: Lane, checkAgainst?: Lane): Promise<boolean> {
+    const upToDateIds: BitId[] = [];
+    const notUpToDateIds: BitId[] = [];
+    const getHashOnAnotherLane = async (id: BitId): Promise<Ref | undefined> => {
+      if (checkAgainst) {
+        const idOnLane = checkAgainst.getComponent(id);
+        return idOnLane?.head;
+      }
+      const modelComp = await this.scope.legacyScope.getModelComponent(id);
+      return modelComp.head;
+    };
+    await Promise.all(
+      laneToCheck.components.map(async (comp) => {
+        const refOnOtherLane = await getHashOnAnotherLane(comp.id);
+        if (!refOnOtherLane) {
+          upToDateIds.push(comp.id);
+          return;
+        }
+        if (comp.head.isEqual(refOnOtherLane)) {
+          upToDateIds.push(comp.id);
+          return;
+        }
+        const modelComponent = await this.scope.legacyScope.getModelComponent(comp.id);
+        const divergeData = await getDivergeData({
+          repo: this.scope.legacyScope.objects,
+          modelComponent,
+          remoteHead: refOnOtherLane,
+          checkedOutLocalHead: comp.head,
+        });
+        if (divergeData.isRemoteAhead() || divergeData.isDiverged()) {
+          notUpToDateIds.push(comp.id);
+          return;
+        }
+        if (!divergeData.isLocalAhead()) {
+          throw new Error(
+            `invalid state - component ${comp.id.toString()} is not diverged, not local-ahead and not-remote-ahead.`
+          );
+        }
+        upToDateIds.push(comp.id);
+      })
+    );
+
+    const isUpToDate = !notUpToDateIds.length;
+
+    return isUpToDate;
   }
 
   /**

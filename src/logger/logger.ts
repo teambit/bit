@@ -5,6 +5,8 @@
  * and it throws an error if the file doesn't exists on Docker/CI.
  */
 import chalk from 'chalk';
+import fs from 'fs-extra';
+import path from 'path';
 import { serializeError } from 'serialize-error';
 import format from 'string-format';
 import { Logger as PinoLogger, Level } from 'pino';
@@ -47,6 +49,9 @@ export interface IBitLogger {
   console(msg: string): void;
 }
 
+type CommandHistory = { started?: string; completed?: string; fileBasePath?: string };
+const commandHistoryFile = 'command-history';
+
 /**
  * the method signatures of debug/info/error/etc are similar to Winston.logger.
  * the way how it is formatted in the log file is according to the `customPrint` function above.
@@ -68,7 +73,11 @@ class BitLogger implements IBitLogger {
    * is actually "json". that's why this variable is overridden once the command-registrar is up.
    */
   shouldWriteToConsole = !process.argv.includes('--json') && !process.argv.includes('-j');
-
+  /**
+   * helpful to get a list in the .bit/command-history of all commands that were running on this workspace.
+   * it's written only if the consumer is loaded. otherwise, the commandHistory.fileBasePath is undefined
+   */
+  commandHistory: CommandHistory = { started: `${new Date().toISOString()} start ${process.argv.slice(2).join(' ')}` };
   constructor(logger: PinoLogger) {
     this.logger = logger;
     this.profiler = new Profiler();
@@ -175,7 +184,24 @@ class BitLogger implements IBitLogger {
     // const finalLogger = pino.final(pinoLogger);
     // finalLogger[level](msg);
     this.logger[level](msg);
+    this.commandHistory.completed = `${new Date().toISOString()} end ${process.argv.slice(2).join(' ')}, code: ${code}`;
+    this.writeCommandHistory();
     if (!this.isDaemon) process.exit(code);
+  }
+
+  /**
+   * keep this method sync. for some reason, if it's promise, the exit-code is zero when Jest/Mocha tests fail.
+   */
+  writeCommandHistory() {
+    if (!this.commandHistory.fileBasePath) return;
+    try {
+      fs.appendFileSync(
+        path.join(this.commandHistory.fileBasePath, commandHistoryFile),
+        `${this.commandHistory.started}\n${this.commandHistory.completed}\n`
+      );
+    } catch (error) {
+      // never mind
+    }
   }
 
   debugAndAddBreadCrumb(

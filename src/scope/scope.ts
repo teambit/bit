@@ -175,7 +175,7 @@ export default class Scope {
 
   setCurrentLaneId(laneId?: LaneId) {
     if (!laneId) return;
-    if (laneId.isDefault()) return;
+    if (laneId.isDefault()) this.currentLaneId = undefined;
     this.currentLaneId = laneId;
   }
 

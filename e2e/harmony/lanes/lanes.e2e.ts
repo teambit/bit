@@ -1373,4 +1373,35 @@ describe('bit lane command', function () {
       expect(() => helper.command.export()).not.to.throw();
     });
   });
+  describe('getting new components from the lane', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.bitJsonc.setupDefault();
+      helper.command.createLane();
+      helper.fixtures.populateComponents(1);
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      const firstWorkspace = helper.scopeHelper.cloneLocalScope();
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
+      helper.command.importLane('dev');
+      const secondWorkspace = helper.scopeHelper.cloneLocalScope();
+      helper.scopeHelper.getClonedLocalScope(firstWorkspace);
+      helper.fixtures.populateComponents(2);
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      helper.scopeHelper.getClonedLocalScope(secondWorkspace);
+      helper.command.import();
+    });
+    it('bit checkout without --entire-lane flag', () => {
+      helper.command.checkoutHead('--skip-dependency-installation');
+      const list = helper.command.listParsed();
+      expect(list).to.have.lengthOf(1);
+    });
+    it('bit checkout with --entire-lane flag', () => {
+      helper.command.checkoutHead('--entire-lane --skip-dependency-installation');
+      const list = helper.command.listParsed();
+      expect(list).to.have.lengthOf(2);
+    });
+  });
 });

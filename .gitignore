@@ -102,3 +102,6 @@ package-lock.json
 
 # component issues
 scopes/component/component-issues/dist/
+
+# component version
+scopes/component/component-version/dist/
