@@ -1,11 +1,10 @@
 import fs from 'graceful-fs';
+import { mapValues } from 'lodash';
 import path from 'path';
 import semver from 'semver';
 import parsePackageName from 'parse-package-name';
-import { hardLinkDirectory } from '@teambit/toolbox.fs.hard-link-directory';
 import { initDefaultReporter } from '@pnpm/default-reporter';
 import { streamParser } from '@pnpm/logger';
-import { readModulesManifest } from '@pnpm/modules-yaml';
 import { StoreController, WantedDependency } from '@pnpm/package-store';
 import { createOrConnectStoreController, CreateStoreControllerOptions } from '@pnpm/store-connection-manager';
 import { sortPackages } from '@pnpm/sort-packages';
@@ -76,6 +75,7 @@ async function createStoreController(
     networkConcurrency: options.networkConfig.networkConcurrency,
     packageImportMethod: options.packageImportMethod,
     pnpmHomeDir: path.join(userHome, '.pnpm'), // This is not actually used in our case
+    resolveSymlinksInInjectedDirs: true,
   };
   // We should avoid the recreation of store.
   // The store holds cache that makes subsequent resolutions faster.
@@ -192,7 +192,16 @@ export async function install(
     const { rootComponentWrappers, rootComponents } = createRootComponentWrapperManifests(rootDir, manifestsByPaths);
     manifestsByPaths = {
       ...rootComponentWrappers,
-      ...manifestsByPaths,
+      ...mapValues(manifestsByPaths, (manifest, dir) => {
+        if (!manifest.name || dir === rootDir) return manifest;
+        return {
+          ...manifest,
+          publishConfig: {
+            directory: path.relative(dir, path.join(rootDir, 'node_modules', manifest.name)),
+            linkDirectory: true,
+          },
+        };
+      }),
     };
     readPackage.push(readPackageHook as ReadPackageHook);
     hoistingLimits = new Map();
@@ -253,16 +262,6 @@ export async function install(
     throw pnpmErrorToBitError(err);
   } finally {
     stopReporting();
-  }
-  if (options.rootComponents) {
-    const modulesState = await readModulesManifest(path.join(rootDir, 'node_modules'));
-    if (modulesState?.injectedDeps) {
-      await linkManifestsToInjectedDeps({
-        injectedDeps: modulesState.injectedDeps,
-        manifestsByPaths,
-        rootDir,
-      });
-    }
   }
 }
 
@@ -378,42 +377,6 @@ function readWorkspacePackageHook(pkg: PackageManifest): PackageManifest {
       ...newDeps,
     },
   };
-}
-
-/*
- * The package.json files of the components are generated into node_modules/<component pkg name>/package.json
- * This function copies the generated package.json file into all the locations of the component.
- */
-async function linkManifestsToInjectedDeps({
-  rootDir,
-  manifestsByPaths,
-  injectedDeps,
-}: {
-  rootDir: string;
-  manifestsByPaths: Record<string, ProjectManifest>;
-  injectedDeps: Record<string, string[]>;
-}) {
-  await Promise.all(
-    Object.entries(injectedDeps).map(async ([compDir, targetDirs]) => {
-      const pkgName = manifestsByPaths[path.join(rootDir, compDir)]?.name;
-      if (!pkgName) return;
-      const pkgJsonPath = path.join(rootDir, 'node_modules', pkgName, 'package.json');
-      if (fs.existsSync(pkgJsonPath)) {
-        await Promise.all(targetDirs.map((targetDir) => link(pkgJsonPath, path.join(targetDir, 'package.json'))));
-      }
-      // When installing, pnpm recreates the injected directories by copying the files of the component from its source directory.
-      // But the source directory doesn't have the dist directory, so after installation, the component package will miss
-      // the dist directory even if it had it before installation.
-      // Hence, we need to readd the dist directory.
-      const distDir = path.join(rootDir, 'node_modules', pkgName, 'dist');
-      if (fs.existsSync(distDir)) {
-        await hardLinkDirectory(
-          distDir,
-          targetDirs.map((targetDir) => path.join(targetDir, 'dist'))
-        );
-      }
-    })
-  );
 }
 
 function groupPkgs(manifestsByPaths: Record<string, ProjectManifest>) {
