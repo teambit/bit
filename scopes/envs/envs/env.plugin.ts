@@ -33,12 +33,15 @@ export class EnvPlugin implements PluginDefinition {
     const envContext = this.createContext(envComponentId);
     if (!env.preview && !env.compiler) return undefined;
     const preview = env.preview()(envContext);
+    const packageGenerator = env.package()(envContext);
 
     return {
       getCompiler: () => env.compiler()(envContext),
       getTester: () => env.tester()(envContext),
       getLinter: () => env.linter()(envContext),
       getFormatter: () => env.formatter()(envContext),
+      getPackageJsonProps: () => packageGenerator.packageJsonProps,
+      getNpmIgnore: () => packageGenerator.npmIgnore,
       // getDevEnvId: ()
       name: env.name,
       icon: env.icon,
