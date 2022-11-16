@@ -60,7 +60,7 @@ export function APINodeDetails({
    */
 
   const exampleHeight = (example?.comment?.split('\n').length || 0) * 18;
-  const defaultSignatureHeight = 36 + (signature?.split('\n').length || 0) * 18;
+  const defaultSignatureHeight = 36 + ((signature?.split('\n').length || 0) - 1) * 18;
 
   const [signatureHeight, setSignatureHeight] = useState<number>(defaultSignatureHeight);
   const [isMounted, setIsMounted] = useState(false);
@@ -156,11 +156,12 @@ export function APINodeDetails({
               onMount={(editor) => {
                 editorRef.current = editor;
                 const signatureContent = editorRef.current.getValue();
-                const updatedSignatureHeight = 36 + (signatureContent?.split('\n').length || 0) * 18;
+                const updatedSignatureHeight = 36 + ((signatureContent?.split('\n').length || 0) - 1) * 18;
+                editor.setSelection(new monacoRef.current.Selection(0, 0, 0, 0));
                 setIsMounted(true);
                 setSignatureHeight(updatedSignatureHeight);
               }}
-              theme={'vs-dark'}
+              theme={'light'}
             />
           </div>
         )}
@@ -173,7 +174,7 @@ export function APINodeDetails({
                 value={example.comment}
                 path={`${example?.location.line}:${example?.location.filePath}`}
                 height={exampleHeight}
-                theme={'vs-dark'}
+                theme={'light'}
                 className={styles.editor}
               />
             </div>
