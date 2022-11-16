@@ -28,7 +28,7 @@ import { HttpHelper } from '../http-helper';
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.exportLane();
     });
-    it('lane list -r should show the remote lanes', () => {
+    it.only('lane list -r should show the remote lanes', () => {
       const output = helper.command.listRemoteLanesParsed();
       expect(output.lanes).to.have.lengthOf(2);
       expect(output.lanes[0].id.name).to.have.string('dev');
