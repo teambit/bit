@@ -1,39 +1,35 @@
 import chalk from 'chalk';
 import { IssuesClasses } from '@teambit/component-issues';
 import { Command, CommandOptions } from '@teambit/cli';
-import { isFeatureEnabled, BUILD_ON_CI } from '@teambit/legacy/dist/api/consumer/lib/feature-toggle';
-import {
-  WILDCARD_HELP,
-  NOTHING_TO_SNAP_MSG,
-  AUTO_SNAPPED_MSG,
-  COMPONENT_PATTERN_HELP,
-} from '@teambit/legacy/dist/constants';
+import { NOTHING_TO_SNAP_MSG, AUTO_SNAPPED_MSG } from '@teambit/legacy/dist/constants';
 import { BitError } from '@teambit/bit-error';
 import { Logger } from '@teambit/logger';
 import { SnappingMain, SnapResults } from './snapping.main.runtime';
 
-export class SnapCmd implements Command {
-  name = 'snap [component-pattern]';
-  description = 'EXPERIMENTAL. create an immutable and exportable component snapshot (no release version)';
-  extendedDescription: string;
-  arguments = [
-    {
-      name: 'component-pattern',
-      description: `${COMPONENT_PATTERN_HELP}. By default, all new and modified components are snapped.`,
-    },
-  ];
+export type SnapDataPerCompRaw = {
+  componentId: string;
+  dependencies?: string[];
+  message?: string;
+};
+
+export class SnapFromScopeCmd implements Command {
+  name = '_snap <data>';
+  description = 'snap components from a bare-scope';
+  extendedDescription = `this command should be running from a new bare scope, it first imports the components it needs and then processes the snap.
+the input data is a stringified JSON of an array of the following object.
+{
+  componentId: string;    // ids always have scope, so it's safe to parse them from string
+  dependencies?: string[]; // e.g. [teambit/compiler@1.0.0, teambit/tester@1.0.0]
+  message?: string;       // tag-message.
+}
+an example of the final data: '[{"componentId":"ci.remote2/comp-b","message": "first snap"}]'
+`;
   alias = '';
   options = [
+    ['', 'push', 'export the updated objects to the original scopes once done'],
     ['m', 'message <message>', 'log message describing the latest changes'],
-    ['', 'unmodified', 'include unmodified components (by default, only new and modified components are snapped)'],
-    ['', 'unmerged', 'EXPERIMENTAL. complete a merge process by snapping the unmerged components'],
-    [
-      'b',
-      'build',
-      'EXPERIMENTAL. not needed for now. run the build pipeline in case the feature-flag build-on-ci is enabled',
-    ],
+    ['', 'build', 'run the build pipeline'],
     ['', 'skip-tests', 'skip running component tests during snap process'],
-    ['', 'skip-auto-snap', 'skip auto snapping dependents'],
     ['', 'disable-snap-pipeline', 'skip the snap pipeline'],
     ['', 'force-deploy', 'run the deploy pipeline although the build failed'],
     [
@@ -43,84 +39,48 @@ export class SnapCmd implements Command {
 [${Object.keys(IssuesClasses).join(', ')}]
 to ignore multiple issues, separate them by a comma and wrap with quotes. to ignore all issues, specify "*".`,
     ],
-    ['a', 'all', 'DEPRECATED (not needed anymore, it is the default now). snap all new and modified components'],
-    [
-      'f',
-      'force',
-      'DEPRECATED (use "--skip-tests" or "--unmodified" instead). force-snap even if tests are failing and even when component has not changed',
-    ],
   ] as CommandOptions;
   loader = true;
   private = true;
   migration = true;
 
-  constructor(docsDomain: string, private snapping: SnappingMain, private logger: Logger) {
-    this.extendedDescription = `https://${docsDomain}/components/snaps
-${WILDCARD_HELP('snap')}`;
-  }
+  constructor(private snapping: SnappingMain, private logger: Logger) {}
 
   async report(
-    [pattern]: string[],
+    [data]: [string],
     {
+      push = false,
       message = '',
-      all = false,
-      force = false,
-      unmerged = false,
       ignoreIssues,
-      build,
+      build = false,
       skipTests = false,
-      skipAutoSnap = false,
       disableSnapPipeline = false,
       forceDeploy = false,
-      unmodified = false,
     }: {
+      push?: boolean;
       message?: string;
-      all?: boolean;
-      force?: boolean;
-      unmerged?: boolean;
       ignoreIssues?: string;
       build?: boolean;
       skipTests?: boolean;
-      skipAutoSnap?: boolean;
       disableSnapPipeline?: boolean;
       forceDeploy?: boolean;
-      unmodified?: boolean;
     }
   ) {
-    build = isFeatureEnabled(BUILD_ON_CI) ? Boolean(build) : true;
     const disableTagAndSnapPipelines = disableSnapPipeline;
     if (disableTagAndSnapPipelines && forceDeploy) {
       throw new BitError('you can use either force-deploy or disable-snap-pipeline, but not both');
     }
 
-    if (all) {
-      this.logger.consoleWarning(
-        `--all is deprecated, please omit it. "bit snap" by default will snap all new and modified components`
-      );
-    }
-    if (force) {
-      this.logger.consoleWarning(
-        `--force is deprecated, use either --skip-tests or --unmodified depending on the use case`
-      );
-      if (pattern) unmodified = true;
-    }
-    if (!message) {
-      this.logger.consoleWarning(
-        `--message will be mandatory in the next few releases. make sure to add a message with your snap`
-      );
-    }
+    const snapDataPerCompRaw = this.parseData(data);
 
-    const results = await this.snapping.snap({
-      pattern,
+    const results = await this.snapping.snapFromScope(snapDataPerCompRaw, {
+      push,
       message,
-      unmerged,
       ignoreIssues,
       build,
       skipTests,
-      skipAutoSnap,
       disableTagAndSnapPipelines,
       forceDeploy,
-      unmodified,
     });
 
     if (!results) return chalk.yellow(NOTHING_TO_SNAP_MSG);
@@ -165,5 +125,20 @@ ${WILDCARD_HELP('snap')}`;
       outputIfExists('new components', 'first version for components', addedComponents) +
       outputIfExists('changed components', 'components that got a version bump', changedComponents)
     );
+  }
+  private parseData(data: string): SnapDataPerCompRaw[] {
+    let dataParsed: unknown;
+    try {
+      dataParsed = JSON.parse(data);
+    } catch (err: any) {
+      throw new Error(`failed parsing the data entered as JSON. err ${err.message}`);
+    }
+    if (!Array.isArray(dataParsed)) {
+      throw new Error('expect data to be an array');
+    }
+    dataParsed.forEach((dataItem) => {
+      if (!dataItem.componentId) throw new Error('expect data item to have "componentId" prop');
+    });
+    return dataParsed;
   }
 }

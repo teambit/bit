@@ -14,7 +14,7 @@ import {
   MergeOptions,
 } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
 import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
-import SnappingAspect, { SnappingMain } from '@teambit/snapping';
+import SnappingAspect, { SnappingMain, TagResults } from '@teambit/snapping';
 import hasWildcard from '@teambit/legacy/dist/utils/string/has-wildcard';
 import mapSeries from 'p-map-series';
 import { BitId, BitIds } from '@teambit/legacy/dist/bit-id';
@@ -40,7 +40,6 @@ import { NoCommonSnap } from '@teambit/legacy/dist/scope/exceptions/no-common-sn
 import { CheckoutAspect, CheckoutMain } from '@teambit/checkout';
 import { ComponentID } from '@teambit/component-id';
 import { DivergeData } from '@teambit/legacy/dist/scope/component-ops/diverge-data';
-import { TagResults } from '@teambit/legacy/dist/api/consumer/lib/tag';
 import { InstallMain, InstallAspect } from '@teambit/install';
 import { MergeCmd } from './merge-cmd';
 import { MergingAspect } from './merging.aspect';
