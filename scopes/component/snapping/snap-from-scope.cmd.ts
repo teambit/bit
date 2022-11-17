@@ -9,6 +9,7 @@ import { SnappingMain, SnapResults } from './snapping.main.runtime';
 export type SnapDataPerCompRaw = {
   componentId: string;
   dependencies?: string[];
+  aspects?: Record<string, any>;
   message?: string;
 };
 
@@ -20,6 +21,7 @@ the input data is a stringified JSON of an array of the following object.
 {
   componentId: string;    // ids always have scope, so it's safe to parse them from string
   dependencies?: string[]; // e.g. [teambit/compiler@1.0.0, teambit/tester@1.0.0]
+  aspects?: Record<string,any> // e.g. { "teambit.react/react": {}, "teambit.envs/envs": { "env": "teambit.react/react" } }
   message?: string;       // tag-message.
 }
 an example of the final data: '[{"componentId":"ci.remote2/comp-b","message": "first snap"}]'
