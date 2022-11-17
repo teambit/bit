@@ -310,7 +310,7 @@ export class GeneratorMain {
     const templates: TemplateDescriptor[] = envTemplates.map((envTemplate) => {
       const componentId = ComponentID.fromString(envTemplate.id);
       return {
-        aspectId: `${envTemplate.envName} (${componentId.toStringWithoutVersion()})`,
+        aspectId: componentId.toStringWithoutVersion(),
         ...envTemplate.template,
       };
     });
