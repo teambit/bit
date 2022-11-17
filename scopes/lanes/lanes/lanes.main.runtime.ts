@@ -1,6 +1,7 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { ScopeMain, ScopeAspect } from '@teambit/scope';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
+import { ExpressAspect, ExpressMain } from '@teambit/express';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import getRemoteByName from '@teambit/legacy/dist/remotes/get-remote-by-name';
 import { LaneDiffCmd, LaneDiffGenerator, LaneDiffResults } from '@teambit/lanes.modules.diff';
@@ -44,6 +45,8 @@ import { lanesSchema } from './lanes.graphql';
 import { SwitchCmd } from './switch.cmd';
 import { LaneSwitcher } from './switch-lanes';
 import { createLane, createLaneInScope, throwForInvalidLaneName } from './create-lane';
+import { LanesCreateRoute } from './lanes.create.route';
+import { LanesDeleteRoute } from './lanes.delete.route';
 
 export { Lane };
 
@@ -656,6 +659,14 @@ export class LanesMain {
     };
   }
 
+  get createRoutePath() {
+    return '/lanes/create';
+  }
+
+  get deleteRoutePath() {
+    return '/lanes/delete';
+  }
+
   static slots = [];
   static dependencies = [
     CLIAspect,
@@ -668,6 +679,7 @@ export class LanesMain {
     LoggerAspect,
     ImporterAspect,
     ExportAspect,
+    ExpressAspect,
   ];
   static runtime = MainRuntime;
   static async provider([
@@ -681,6 +693,7 @@ export class LanesMain {
     loggerMain,
     importer,
     exporter,
+    express,
   ]: [
     CLIMain,
     ScopeMain,
@@ -691,7 +704,8 @@ export class LanesMain {
     ComponentMain,
     LoggerMain,
     ImporterMain,
-    ExportMain
+    ExportMain,
+    ExpressMain
   ]) {
     const logger = loggerMain.createLogger(LanesAspect.id);
     const lanesMain = new LanesMain(workspace, scope, merging, component, logger, importer, exporter);
@@ -713,6 +727,7 @@ export class LanesMain {
     ];
     cli.register(laneCmd, switchCmd);
     graphql.register(lanesSchema(lanesMain));
+    express.register([new LanesCreateRoute(lanesMain, logger), new LanesDeleteRoute(lanesMain, logger)]);
     return lanesMain;
   }
 }
