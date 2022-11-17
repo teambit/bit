@@ -20,4 +20,7 @@ export const defaultCodeEditorOptions: monaco.editor.IStandaloneEditorConstructi
   parameterHints: {
     enabled: false,
   },
+  renderLineHighlight: 'none',
+  lineHeight: 18,
+  padding: { top: 8 },
 };

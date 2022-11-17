@@ -30,13 +30,13 @@
   > section {
     overflow: hidden;
     border-radius: 8px;
+    background-color: var(--bit-bg-heavy, #f4f5f6);
+    border: 1px solid var(--bit-bg-heaviest, #eeeff2);
+    width: unset !important;
   }
 }
 .editor {
-  padding-top: 10px;
-  background-color: var(--editor-bg-color, #1e1e1e);
-  height: 100%;
-  width: 100%;
+  background-color: var(--bit-bg-heavy, #f4f5f6);
 }
 .apiNodeDetailsComment {
   font-size: var(--bit-p-xs);
