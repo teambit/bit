@@ -14,12 +14,10 @@ import { Consumer } from '@teambit/legacy/dist/consumer';
 import ComponentsList from '@teambit/legacy/dist/consumer/component/components-list';
 import HooksManager from '@teambit/legacy/dist/hooks';
 import pMapSeries from 'p-map-series';
-import { TagResults } from '@teambit/legacy/dist/api/consumer/lib/tag';
 import hasWildcard from '@teambit/legacy/dist/utils/string/has-wildcard';
 import { validateVersion } from '@teambit/legacy/dist/utils/semver-helper';
 import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
 import loader from '@teambit/legacy/dist/cli/loader';
-import { SnapResults } from '@teambit/legacy/dist/api/consumer/lib/snap';
 import ComponentsPendingImport from '@teambit/legacy/dist/consumer/component-ops/exceptions/components-pending-import';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { BitError } from '@teambit/bit-error';
@@ -50,6 +48,7 @@ import {
   ArtifactSource,
   getArtifactsFiles,
 } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
+import { AutoTagResult } from '@teambit/legacy/dist/scope/component-ops/auto-tag';
 import { SnapCmd } from './snap-cmd';
 import { SnappingAspect } from './snapping.aspect';
 import { TagCmd } from './tag-cmd';
@@ -57,15 +56,33 @@ import { ComponentsHaveIssues } from './components-have-issues';
 import ResetCmd from './reset-cmd';
 import { tagModelComponent, updateComponentsVersions, BasicTagParams } from './tag-model-component';
 import { TagDataPerCompRaw, TagFromScopeCmd } from './tag-from-scope.cmd';
+import { SnapFromScopeCmd } from './snap-from-scope';
 
 const HooksManagerInstance = HooksManager.getInstance();
 
 export type TagDataPerComp = {
   componentId: ComponentID;
   dependencies: ComponentID[];
-  versionToTag: string;
+  versionToTag?: string; // must be set for tag. undefined for snap.
   prereleaseId?: string;
   message?: string;
+};
+
+export type SnapResults = {
+  snappedComponents: ConsumerComponent[];
+  autoSnappedResults: AutoTagResult[];
+  warnings: string[];
+  newComponents: BitIds;
+  laneName: string | null; // null if default
+};
+
+export type TagResults = {
+  taggedComponents: ConsumerComponent[];
+  autoTaggedResults: AutoTagResult[];
+  warnings: string[];
+  newComponents: BitIds;
+  isSoftTag: boolean;
+  publishedPackages: string[];
 };
 
 export class SnappingMain {
@@ -282,6 +299,76 @@ export class SnappingMain {
     };
   }
 
+  async snapFromScope(
+    snapDataPerCompRaw: TagDataPerCompRaw[],
+    params: {
+      push?: boolean;
+      ignoreIssues?: string;
+    } & Partial<BasicTagParams>
+  ): Promise<SnapResults | null> {
+    if (this.workspace) {
+      throw new BitError(
+        `unable to run this command from a workspace, please create a new bare-scope and run it from there`
+      );
+    }
+    const snapDataPerComp = await Promise.all(
+      snapDataPerCompRaw.map(async (tagData) => {
+        return {
+          componentId: await this.scope.resolveComponentId(tagData.componentId),
+          dependencies: tagData.dependencies ? await this.scope.resolveMultipleComponentIds(tagData.dependencies) : [],
+          message: tagData.message,
+        };
+      })
+    );
+    const componentIds = snapDataPerComp.map((t) => t.componentId);
+    const bitIds = componentIds.map((c) => c._legacy);
+    const componentIdsLatest = componentIds.map((id) => id.changeVersion(LATEST));
+    const components = await this.scope.import(componentIdsLatest);
+    await Promise.all(
+      components.map(async (comp) => {
+        const snapData = snapDataPerComp.find((t) => t.componentId.isEqual(comp.id, { ignoreVersion: true }));
+        if (!snapData) throw new Error(`unable to find ${comp.id.toString()} in snapDataPerComp`);
+        if (!snapData.dependencies.length) return;
+        await this.updateDependenciesVersionsOfComponent(comp, snapData.dependencies, bitIds);
+      })
+    );
+    const consumerComponents = components.map((c) => c.state._consumer);
+    const legacyIds = BitIds.fromArray(componentIds.map((id) => id._legacy));
+    const results = await tagModelComponent({
+      ...params,
+      scope: this.scope,
+      consumerComponents,
+      tagDataPerComp: snapDataPerComp,
+      snapping: this,
+      builder: this.builder,
+      dependencyResolver: this.dependencyResolver,
+      skipAutoTag: true,
+      persist: true,
+      isSnap: true,
+      ids: legacyIds,
+      message: params.message as string,
+    });
+
+    const { taggedComponents } = results;
+
+    if (params.push) {
+      await this.exporter.exportMany({
+        scope: this.scope.legacyScope,
+        ids: legacyIds,
+        idsWithFutureScope: legacyIds,
+        allVersions: false,
+      });
+    }
+
+    return {
+      snappedComponents: taggedComponents,
+      autoSnappedResults: [],
+      warnings: [],
+      newComponents: new BitIds(),
+      laneName: null,
+    };
+  }
+
   /**
    * save the local changes of a component(s) into the scope. snap can be done on main or on a lane.
    * once a component is snapped on a lane, it becomes part of it.
@@ -345,8 +432,11 @@ export class SnappingMain {
       packageManagerConfigRootDir: this.workspace.path,
       dependencyResolver: this.dependencyResolver,
     });
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const snapResults: SnapResults = { snappedComponents: taggedComponents, autoSnappedResults: autoTaggedResults };
+
+    const snapResults: Partial<SnapResults> = {
+      snappedComponents: taggedComponents,
+      autoSnappedResults: autoTaggedResults,
+    };
 
     snapResults.newComponents = newComponents;
     const currentLane = consumer.getCurrentLaneId();
@@ -794,8 +884,9 @@ there are matching among unmodified components thought. consider using --unmodif
     const snapCmd = new SnapCmd(community.getBaseDomain(), snapping, logger);
     const tagCmd = new TagCmd(snapping, logger);
     const tagFromScopeCmd = new TagFromScopeCmd(snapping, logger);
+    const snapFromScopeCmd = new SnapFromScopeCmd(snapping, logger);
     const resetCmd = new ResetCmd(snapping);
-    cli.register(tagCmd, snapCmd, resetCmd, tagFromScopeCmd);
+    cli.register(tagCmd, snapCmd, resetCmd, tagFromScopeCmd, snapFromScopeCmd);
     return snapping;
   }
 }
