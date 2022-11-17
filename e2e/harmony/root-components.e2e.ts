@@ -111,6 +111,9 @@ module.exports.default = {
       expect(rootCompDirDep(helper, 'comp3', 'comp3')).to.be.a.path();
       expect(rootCompDirDep(helper, 'comp4', 'comp4')).to.be.a.path();
     });
+    it('should hoist dependencies to the root of the workspace', () => {
+      expect(path.join(helper.fixtures.scopes.localPath, 'node_modules', '@types/jest')).to.be.a.path();
+    });
     it('should install the dependencies of the root component that has react 17 in the dependencies with react 17', () => {
       expect(
         fs.readJsonSync(
