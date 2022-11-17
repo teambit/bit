@@ -56,7 +56,7 @@ import { ComponentsHaveIssues } from './components-have-issues';
 import ResetCmd from './reset-cmd';
 import { tagModelComponent, updateComponentsVersions, BasicTagParams } from './tag-model-component';
 import { TagDataPerCompRaw, TagFromScopeCmd } from './tag-from-scope.cmd';
-import { SnapFromScopeCmd } from './snap-from-scope';
+import { SnapDataPerCompRaw, SnapFromScopeCmd } from './snap-from-scope.cmd';
 
 const HooksManagerInstance = HooksManager.getInstance();
 
@@ -300,7 +300,7 @@ export class SnappingMain {
   }
 
   async snapFromScope(
-    snapDataPerCompRaw: TagDataPerCompRaw[],
+    snapDataPerCompRaw: SnapDataPerCompRaw[],
     params: {
       push?: boolean;
       ignoreIssues?: string;
@@ -312,11 +312,14 @@ export class SnappingMain {
       );
     }
     const snapDataPerComp = await Promise.all(
-      snapDataPerCompRaw.map(async (tagData) => {
+      snapDataPerCompRaw.map(async (snapData) => {
         return {
-          componentId: await this.scope.resolveComponentId(tagData.componentId),
-          dependencies: tagData.dependencies ? await this.scope.resolveMultipleComponentIds(tagData.dependencies) : [],
-          message: tagData.message,
+          componentId: await this.scope.resolveComponentId(snapData.componentId),
+          dependencies: snapData.dependencies
+            ? await this.scope.resolveMultipleComponentIds(snapData.dependencies)
+            : [],
+          aspects: snapData.aspects,
+          message: snapData.message,
         };
       })
     );
@@ -326,10 +329,14 @@ export class SnappingMain {
     const components = await this.scope.import(componentIdsLatest);
     await Promise.all(
       components.map(async (comp) => {
-        const snapData = snapDataPerComp.find((t) => t.componentId.isEqual(comp.id, { ignoreVersion: true }));
+        const snapData = snapDataPerComp.find((t) => {
+          return t.componentId.isEqual(comp.id, { ignoreVersion: true });
+        });
         if (!snapData) throw new Error(`unable to find ${comp.id.toString()} in snapDataPerComp`);
-        if (!snapData.dependencies.length) return;
-        await this.updateDependenciesVersionsOfComponent(comp, snapData.dependencies, bitIds);
+        if (snapData.aspects) await this.scope.addAspectsFromConfigObject(comp, snapData.aspects);
+        if (snapData.dependencies.length) {
+          await this.updateDependenciesVersionsOfComponent(comp, snapData.dependencies, bitIds);
+        }
       })
     );
     const consumerComponents = components.map((c) => c.state._consumer);
