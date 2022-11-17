@@ -616,6 +616,9 @@ export default class CommandHelper {
   tagFromScope(cwd: string, data: Record<string, any>, options = '') {
     return this.runCmd(`bit _tag '${JSON.stringify(data)}' ${options}`, cwd);
   }
+  snapFromScope(cwd: string, data: Record<string, any>, options = '') {
+    return this.runCmd(`bit _snap '${JSON.stringify(data)}' ${options}`, cwd);
+  }
   diff(id = '') {
     const output = this.runCmd(`bit diff ${id}`);
     return removeChalkCharacters(output);
