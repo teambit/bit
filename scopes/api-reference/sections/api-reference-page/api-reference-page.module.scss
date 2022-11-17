@@ -79,7 +79,7 @@ $panelBg: #fafafa;
 .locationLabel {
   display: flex;
   color: var(--bit-text-color-light, '#707279');
-  padding: 6px;
+  padding: 4px;
 }
 .locationIcon {
   display: flex;
@@ -91,9 +91,9 @@ $panelBg: #fafafa;
 .locationLink {
   display: flex;
   align-items: center;
-  align-self: baseline;
+  align-self: center;
   min-width: fit-content;
-  padding-right: 6px;
+  padding-right: 4px;
   margin-left: 12px;
   font-size: var(--bit-p-xxs, '12px');
   color: var(--bit-text-color-light, '#707279');
