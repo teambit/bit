@@ -9,7 +9,15 @@ import { resolve, join } from 'path';
 import { AspectLoaderAspect, AspectDefinition } from '@teambit/aspect-loader';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import type { ComponentMain, ComponentMap, ResolveAspectsOptions } from '@teambit/component';
-import { Component, ComponentAspect, ComponentFactory, ComponentID, Snap, State } from '@teambit/component';
+import {
+  Component,
+  ComponentAspect,
+  ComponentFactory,
+  ComponentID,
+  Snap,
+  State,
+  AspectEntry,
+} from '@teambit/component';
 import type { GraphqlMain } from '@teambit/graphql';
 import { GraphqlAspect } from '@teambit/graphql';
 import { Harmony, Slot, SlotRegistry, ExtensionManifest, Aspect } from '@teambit/harmony';
@@ -41,7 +49,7 @@ import { remove } from '@teambit/legacy/dist/api/scope';
 import { BitError } from '@teambit/bit-error';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { resumeExport } from '@teambit/legacy/dist/scope/component-ops/export-scope-components';
-import { ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config';
+import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy/dist/consumer/config';
 import EnvsAspect, { EnvsMain } from '@teambit/envs';
 import { Compiler } from '@teambit/compiler';
 import { compact, uniq, slice, uniqBy, difference, groupBy } from 'lodash';
@@ -1085,6 +1093,24 @@ needed-for: ${neededFor || '<unknown>'}`);
   async loadComponentsAspect(component: Component) {
     const aspectIds = component.state.aspects.ids;
     await this.loadAspects(aspectIds, true, component.id.toString());
+  }
+
+  async addAspectsFromConfigObject(component: Component, configObject: Record<string, any>) {
+    const extensionsFromConfigObject = ExtensionDataList.fromConfigObject(configObject);
+    const extensionDataList = ExtensionDataList.mergeConfigs([
+      extensionsFromConfigObject,
+      component.state._consumer.extensions,
+    ]).filterRemovedExtensions();
+    component.state._consumer.extensions = extensionDataList;
+  }
+
+  public async createAspectListFromExtensionDataList(extensionDataList: ExtensionDataList) {
+    const entries = await Promise.all(extensionDataList.map((entry) => this.extensionDataEntryToAspectEntry(entry)));
+    return this.componentExtension.createAspectListFromEntries(entries);
+  }
+
+  private async extensionDataEntryToAspectEntry(dataEntry: ExtensionDataEntry): Promise<AspectEntry> {
+    return new AspectEntry(await this.resolveComponentId(dataEntry.id), dataEntry);
   }
 
   async isModified(): Promise<boolean> {
