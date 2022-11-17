@@ -40,7 +40,8 @@ export class TemplatesCmd implements Command {
     const output = Object.keys(grouped)
       .map((aspectId) => {
         const names = grouped[aspectId].map(templateOutput).join('\n');
-        return `${chalk.blue.bold(aspectId)}\n${names}\n`;
+        const groupTitle = grouped[aspectId][0].titlePrefix ? `${grouped[aspectId][0].titlePrefix} (${aspectId})` : aspectId;
+        return `${chalk.blue.bold(groupTitle)}\n${names}\n`;
       })
       .join('\n');
     return title + output;

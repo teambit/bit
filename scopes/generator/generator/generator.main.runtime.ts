@@ -31,7 +31,13 @@ import { StarterPlugin } from './starter.plugin';
 export type ComponentTemplateSlot = SlotRegistry<ComponentTemplate[]>;
 export type WorkspaceTemplateSlot = SlotRegistry<WorkspaceTemplate[]>;
 
-export type TemplateDescriptor = { aspectId: string; name: string; description?: string; hidden?: boolean };
+export type TemplateDescriptor = {
+  aspectId: string;
+  titlePrefix?: string;
+  name: string;
+  description?: string;
+  hidden?: boolean;
+};
 export type GenerateWorkspaceTemplateResult = { workspacePath: string; appName?: string };
 
 export type GeneratorConfig = {
@@ -138,7 +144,7 @@ export class GeneratorMain {
     aspectId?: string
   ): Promise<{ id: string; template: ComponentTemplate; envName: string } | undefined> {
     const fromEnv = await this.listEnvTemplates();
-    const templates = (fromEnv && fromEnv.length) ? fromEnv : this.getAllComponentTemplatesFlattened();
+    const templates = fromEnv && fromEnv.length ? fromEnv : this.getAllComponentTemplatesFlattened();
     const found = templates.find(({ id, template }) => {
       if (aspectId && id !== aspectId) return false;
       return template.name === name;
@@ -241,7 +247,7 @@ export class GeneratorMain {
       this.envs,
       this.newComponentHelper,
       templateWithId.id,
-      templateWithId.envName ? ComponentID.fromString(templateWithId.id): undefined
+      templateWithId.envName ? ComponentID.fromString(templateWithId.id) : undefined
     );
     return componentGenerator.generate();
   }
@@ -311,6 +317,7 @@ export class GeneratorMain {
       const componentId = ComponentID.fromString(envTemplate.id);
       return {
         aspectId: componentId.toStringWithoutVersion(),
+        titlePrefix: envTemplate.envName,
         ...envTemplate.template,
       };
     });
