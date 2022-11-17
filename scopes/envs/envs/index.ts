@@ -4,7 +4,7 @@ export type { ServiceHandlerContext as EnvContext, ServiceHandlerFactory as EnvH
 export { DEFAULT_ENV } from './environments.main.runtime';
 export * from './environment';
 export { ExecutionContext } from './context';
-export { EnvService, ConcreteService } from './services';
+export { EnvService, ConcreteService, reduceServiceHandlersFactories } from './services';
 export { EnvRuntime } from './runtime/env-runtime';
 export type { Env } from './env-interface';
 export type { EnvsMain, EnvTransformer, Descriptor } from './environments.main.runtime';
