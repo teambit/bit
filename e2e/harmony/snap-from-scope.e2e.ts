@@ -1,7 +1,6 @@
 import chai, { expect } from 'chai';
-import { BuildStatus } from '../../src/constants';
+import { BuildStatus, Extensions } from '../../src/constants';
 import Helper from '../../src/e2e-helper/e2e-helper';
-import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
 
 chai.use(require('chai-fs'));
 
@@ -14,18 +13,13 @@ describe('snap components from scope', function () {
   after(() => {
     helper.scopeHelper.destroy();
   });
-  (supportNpmCiRegistryTesting ? describe : describe.skip)('tag from scope', () => {
+  describe('snap from scope', () => {
     let bareTag;
     let beforeSnappingOnScope: string;
-    // let beforeExporting: string;
-    let npmCiRegistry: NpmCiRegistry;
     before(async () => {
-      helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
+      helper = new Helper();
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setupDefault();
-      npmCiRegistry = new NpmCiRegistry(helper);
-      await npmCiRegistry.init();
-      npmCiRegistry.configureCiInPackageJsonHarmony();
       helper.fixtures.populateComponents(3);
       helper.command.snapAllComponents();
       helper.command.export();
@@ -33,12 +27,8 @@ describe('snap components from scope', function () {
       bareTag = helper.scopeHelper.getNewBareScope('-bare-merge');
       helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, bareTag.scopePath);
       beforeSnappingOnScope = helper.scopeHelper.cloneScope(bareTag.scopePath);
-      // beforeExporting = helper.scopeHelper.cloneRemoteScope();
     });
-    after(() => {
-      npmCiRegistry.destroy();
-    });
-    describe('snapping them all at the same time', () => {
+    describe('snapping them all at the same time without dependencies changes', () => {
       let data;
       before(() => {
         data = [
@@ -84,65 +74,40 @@ describe('snap components from scope', function () {
         });
       });
     });
-    // describe('tagging them one by one', () => {
-    //   before(() => {
-    //     helper.scopeHelper.getClonedScope(beforeSnappingOnScope, bareTag.scopePath);
-    //     helper.scopeHelper.getClonedRemoteScope(beforeExporting);
-    //     // tag comp3 first
-    //     const data = [
-    //       {
-    //         componentId: `${helper.scopes.remote}/comp3`,
-    //         versionToTag: `0.0.1`,
-    //         message: `msg for third comp`,
-    //       },
-    //     ];
-    //     helper.command.tagFromScope(bareTag.scopePath, data, '--push');
+    describe('snapping with dependencies changes', () => {
+      before(() => {
+        helper = new Helper();
+        helper.scopeHelper.setNewLocalAndRemoteScopes();
+        helper.bitJsonc.setupDefault();
+        helper.fixtures.populateComponents(3);
+        helper.command.tagWithoutBuild();
+        helper.command.tagWithoutBuild('comp3', '--skip-auto-tag --unmodified');
+        helper.command.export();
+        bareTag = helper.scopeHelper.getNewBareScope('-bare-merge');
+        helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, bareTag.scopePath);
+        beforeSnappingOnScope = helper.scopeHelper.cloneScope(bareTag.scopePath);
+        const data = [
+          {
+            componentId: `${helper.scopes.remote}/comp2`,
+            dependencies: [`${helper.scopes.remote}/comp3@0.0.2`],
+            message: `msg for second comp`,
+          },
+        ];
+        // console.log('data2', JSON.stringify(data2));
+        helper.command.snapFromScope(bareTag.scopePath, data);
+      });
+      it('should save the dependency version according to the version provided in the json', () => {
+        const comp2OnBare = helper.command.catComponent(`${helper.scopes.remote}/comp2@latest`, bareTag.scopePath);
+        expect(comp2OnBare.dependencies[0].id.name).to.equal('comp3');
+        expect(comp2OnBare.dependencies[0].id.version).to.equal('0.0.2');
 
-    //     // then tag comp2
-    //     const data2 = [
-    //       {
-    //         componentId: `${helper.scopes.remote}/comp2`,
-    //         dependencies: [`${helper.scopes.remote}/comp3@0.0.1`],
-    //         versionToTag: `0.0.1`,
-    //         message: `msg for second comp`,
-    //       },
-    //     ];
-    //     // console.log('data2', JSON.stringify(data2));
-    //     helper.command.tagFromScope(bareTag.scopePath, data2);
+        expect(comp2OnBare.flattenedDependencies[0].name).to.equal('comp3');
+        expect(comp2OnBare.flattenedDependencies[0].version).to.equal('0.0.2');
 
-    //     // then tag comp1
-    //     const data3 = [
-    //       {
-    //         componentId: `${helper.scopes.remote}/comp1`,
-    //         dependencies: [`${helper.scopes.remote}/comp2@0.0.1`],
-    //         versionToTag: `0.0.1`,
-    //         message: `msg for first comp`,
-    //       },
-    //     ];
-    //     // console.log('data2', JSON.stringify(data3));
-    //     helper.command.tagFromScope(bareTag.scopePath, data3);
-    //   });
-    //   it('should save the dependency version according to the version provided in the json', () => {
-    //     const comp2OnBare = helper.command.catComponent(`${helper.scopes.remote}/comp2@0.0.1`, bareTag.scopePath);
-    //     expect(comp2OnBare.dependencies[0].id.name).to.equal('comp3');
-    //     expect(comp2OnBare.dependencies[0].id.version).to.equal('0.0.1');
-
-    //     expect(comp2OnBare.flattenedDependencies[0].name).to.equal('comp3');
-    //     expect(comp2OnBare.flattenedDependencies[0].version).to.equal('0.0.1');
-
-    //     const depResolver = comp2OnBare.extensions.find((e) => e.name === Extensions.dependencyResolver).data;
-    //     const dep = depResolver.dependencies.find((d) => d.id.includes('comp3'));
-    //     expect(dep.version).to.equal('0.0.1');
-    //   });
-    //   it('should save the dependency version according to the version provided in the json', () => {
-    //     const comp2OnBare = helper.command.catComponent(`${helper.scopes.remote}/comp1@0.0.1`, bareTag.scopePath);
-    //     expect(comp2OnBare.dependencies[0].id.name).to.equal('comp2');
-    //     expect(comp2OnBare.dependencies[0].id.version).to.equal('0.0.1');
-
-    //     const depResolver = comp2OnBare.extensions.find((e) => e.name === Extensions.dependencyResolver).data;
-    //     const dep = depResolver.dependencies.find((d) => d.id.includes('comp2'));
-    //     expect(dep.version).to.equal('0.0.1');
-    //   });
-    // });
+        const depResolver = comp2OnBare.extensions.find((e) => e.name === Extensions.dependencyResolver).data;
+        const dep = depResolver.dependencies.find((d) => d.id.includes('comp3'));
+        expect(dep.version).to.equal('0.0.2');
+      });
+    });
   });
 });
