@@ -79,12 +79,12 @@ $panelBg: #fafafa;
 .locationLabel {
   display: flex;
   color: var(--bit-text-color-light, '#707279');
-  padding: 6px 8px;
+  padding: 6px;
 }
 .locationIcon {
   display: flex;
   img {
-    height: 14px;
+    height: 12px;
   }
 }
 
@@ -93,9 +93,9 @@ $panelBg: #fafafa;
   align-items: center;
   align-self: baseline;
   min-width: fit-content;
-  padding-right: 8px;
+  padding-right: 6px;
   margin-left: 12px;
-  font-size: var(--bit-p-xs, '14px');
+  font-size: var(--bit-p-xxs, '12px');
   color: var(--bit-text-color-light, '#707279');
   text-decoration: none;
   border: 1px solid var(--bit-border-color-lightest, #ededed);
