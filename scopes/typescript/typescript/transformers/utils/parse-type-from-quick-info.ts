@@ -46,6 +46,7 @@ export function parseTypeFromQuickInfo(quickInfo: protocol.QuickInfoResponse | u
     case 'const':
     case 'property':
     case 'let':
+    case 'getter':
     case 'var': {
       const [, ...tail] = splitByColon;
       return tail.join(':').trim();

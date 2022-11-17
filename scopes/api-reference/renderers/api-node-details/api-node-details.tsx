@@ -157,11 +157,10 @@ export function APINodeDetails({
                 editorRef.current = editor;
                 const signatureContent = editorRef.current.getValue();
                 const updatedSignatureHeight = 36 + ((signatureContent?.split('\n').length || 0) - 1) * 18;
-                editor.setSelection(new monacoRef.current.Selection(0, 0, 0, 0));
                 setIsMounted(true);
                 setSignatureHeight(updatedSignatureHeight);
               }}
-              theme={'light'}
+              theme={'vs-dark'}
             />
           </div>
         )}
@@ -174,7 +173,7 @@ export function APINodeDetails({
                 value={example.comment}
                 path={`${example?.location.line}:${example?.location.filePath}`}
                 height={exampleHeight}
-                theme={'light'}
+                theme={'vs-dark'}
                 className={styles.editor}
               />
             </div>
