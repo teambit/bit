@@ -1,10 +1,10 @@
 import { BuildTask } from "@teambit/builder";
-import { EnvContext, EnvHandler } from "@teambit/envs";
+import { EnvContext, EnvHandler, reduceServiceHandlersFactories } from "@teambit/envs";
 
 export type Task = EnvHandler<BuildTask>;
 
 /**
- * create and maintain build pipelines for component 
+ * create and maintain build pipelines for component
  * dev environments.
  */
 export class Pipeline {
@@ -55,13 +55,22 @@ export class Pipeline {
   }
 
   /**
+   * return a new pipeline with the tasks from the pipeline args added.
+   * @param pipeline
+   * @returns
+   */
+  concat(pipeline: Pipeline) {
+    return new Pipeline(this._tasks.concat(pipeline.tasks), this.context);
+  }
+
+  /**
    * compute the pipeline.
    */
   compute() {
     return this._tasks;
   }
 
-  static from(tasks: Task[]) {    
+  static from(tasks: Task[]) {
     return (context: EnvContext) => {
       const buildTasks = tasks.map((taskFn) => {
         return taskFn(context);
@@ -69,5 +78,11 @@ export class Pipeline {
 
       return new Pipeline(buildTasks, context);
     }
+  }
+
+  static concat(...pipelines: EnvHandler<Pipeline>[]) {
+    return reduceServiceHandlersFactories(pipelines, (acc, pipeline) => {
+      return acc.concat(pipeline);
+    });
   }
 }
