@@ -55,7 +55,7 @@ export type TableRowProps = {
  *
  * Renders a row in the table according to the order of the headings.
  */
-export function TableRow({ row, customRow, colNumber = 4, headings, isListView, className }: TableRowProps) {
+export function TableRow({ row, customRow, colNumber = 4, headings, isListView, className, ...rest }: TableRowProps) {
   return (
     <Grid
       col={colNumber}
@@ -66,6 +66,7 @@ export function TableRow({ row, customRow, colNumber = 4, headings, isListView, 
         },
         className
       )}
+      {...rest}
     >
       {headings.map((title, index) => {
         if (title === 'required') return null;
