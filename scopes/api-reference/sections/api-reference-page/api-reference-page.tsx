@@ -17,6 +17,7 @@ import { sortAPINodes } from '@teambit/api-reference.utils.sort-api-nodes';
 import { TreeNode } from '@teambit/design.ui.tree';
 import { RoundLoader } from '@teambit/design.ui.round-loader';
 import { EmptyBox } from '@teambit/design.ui.empty-box';
+import { ComponentUrl } from '@teambit/component.modules.component-url';
 
 import styles from './api-reference-page.module.scss';
 
@@ -76,7 +77,11 @@ export function APIRefPage({ host, rendererSlot, className }: APIRefPageProps) {
   const name = selectedAPINode.api.name;
   const componentVersionFromUrl = query.get('version');
   const filePath = selectedAPINode.api.location.filePath;
-  const pathname = location?.pathname;
+  const pathname =
+    location?.pathname && window?.location?.hostname?.startsWith('localhost')
+      ? location?.pathname
+      : `${ComponentUrl.toUrl(component.id, { includeVersion: false })}/`;
+
   const componentUrlWithoutVersion = pathname?.split('~')[0];
   const locationUrl = `${componentUrlWithoutVersion}~code/${filePath}${
     componentVersionFromUrl ? `?version=${componentVersionFromUrl}` : ''

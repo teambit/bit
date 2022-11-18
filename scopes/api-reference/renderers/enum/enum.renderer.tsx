@@ -20,7 +20,7 @@ function EnumComponent(props: APINodeRenderProps) {
   const { members } = enumNode;
 
   return (
-    <APINodeDetails {...props}>
+    <APINodeDetails {...props} options={{ hideIndex: true }}>
       <GroupedSchemaNodesSummary nodes={members} apiNodeRendererProps={props} />
     </APINodeDetails>
   );
