@@ -17,9 +17,9 @@ import { sortAPINodes } from '@teambit/api-reference.utils.sort-api-nodes';
 import { TreeNode } from '@teambit/design.ui.tree';
 import { RoundLoader } from '@teambit/design.ui.round-loader';
 import { EmptyBox } from '@teambit/design.ui.empty-box';
+import { ComponentUrl } from '@teambit/component.modules.component-url';
 
 import styles from './api-reference-page.module.scss';
-import { ComponentUrl } from '@teambit/component.modules.component-url';
 
 export type APIRefPageProps = {
   host: string;
