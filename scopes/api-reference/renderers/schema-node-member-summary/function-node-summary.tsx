@@ -1,4 +1,4 @@
-import React, { HTMLAttributes } from 'react';
+import React, { HTMLAttributes, useState } from 'react';
 import { SchemaNode, SetAccessorSchema } from '@teambit/semantics.entities.semantic-schema';
 import { TableRow } from '@teambit/documenter.ui.table-row';
 import { transformSignature } from '@teambit/api-reference.utils.schema-node-signature-transform';
@@ -35,6 +35,8 @@ export function FunctionNodeSummary({
       ? `(${(node as SetAccessorSchema).param.toString()}) => void`
       : transformSignature(node)?.split(name)[1];
 
+  const [, setShowSignature] = useState<boolean>(false);
+
   return (
     <TableRow
       {...rest}
@@ -48,7 +50,9 @@ export function FunctionNodeSummary({
             {name}
           </div>
         ),
-        signature: <div className={styles.signature}>{signature}</div>,
+        signature: (
+          <CustomSignatureRenderer signature={signature} onClick={() => setShowSignature((value) => !value)} />
+        ),
       }}
       row={{
         name,
@@ -59,5 +63,27 @@ export function FunctionNodeSummary({
         signature,
       }}
     />
+  );
+}
+
+function CustomSignatureRenderer({
+  signature,
+  onClick,
+}: {
+  signature?: string;
+  onClick: React.MouseEventHandler<HTMLDivElement>;
+}) {
+  return (
+    <div className={styles.signatureContainer}>
+      <div className={styles.signatureContent}>
+        {signature}
+        <div className={styles.viewSignature} onClick={onClick}>
+          <div className={styles.viewSignatureText}>View Signature</div>
+          <div className={styles.viewSignatureIcon}>
+            <img src={'https://static.bit.dev/bit-icons/eye.svg'} />
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }

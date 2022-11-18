@@ -4,17 +4,56 @@
   }
 }
 
-.signature {
+.signatureContainer {
   display: flex;
   margin-right: 5px;
+  background-color: var(--bit-bg-heaviest, #eeeff2);
+  background: linear-gradient(rgba(238, 239, 242, 1), rgba(238, 239, 242, 0.2));
+  padding: 4px;
+  border-radius: 6px;
+  width: 100%;
+}
+
+.signatureContent {
+  display: flex;
   font-family: Roboto mono;
   font-size: var(--bit-p-xxs);
   word-break: normal;
   color: rgb(57, 115, 0);
+  flex-direction: column;
+  transform: translateY(10px);
+  width: 100%;
+}
+
+.viewSignature {
+  display: flex;
+  padding: 8px;
+  background-color: var(--bit-bg-color, #ffffff);
+  border: 1px solid var(--bit-border-color-lightest, #ededed);
+  border-radius: 6px;
+  align-items: center;
+  width: fit-content;
+  align-self: end;
+  transform: translateY(-10px);
+  font-family: sans-serif;
+}
+
+.viewSignatureText {
+  display: flex;
+  color: var(--bit-text-color, #2b2b2b);
+  font-size: var(--bit-p-xxs);
+}
+
+.viewSignatureIcon {
+  img {
+    height: 12px;
+  }
+  display: flex;
+  padding: 0px 4px;
 }
 
 .row {
-  grid-template-columns: 1fr 2fr 1fr;
+  grid-template-columns: 1fr 1fr 2fr;
 }
 
 .name {
