@@ -591,7 +591,9 @@ there are matching among unmodified components thought. consider using --unmodif
       const flattenedEdges = component.flattenedDependencies.map((dep) => graph.outEdges(dep.toString())).flat();
       const allEdges = [...edges, ...flattenedEdges];
       const edgesWithBitIds: DepEdge[] = allEdges.map((edge) => ({
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         source: graph.node(edge.source)!.attr,
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         target: graph.node(edge.target)!.attr,
         type: edge.attr as DepEdgeType,
       }));
