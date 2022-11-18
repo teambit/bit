@@ -20,8 +20,12 @@
   word-break: normal;
   color: rgb(57, 115, 0);
   flex-direction: column;
-  transform: translateY(10px);
   width: 100%;
+  padding: 8px 0px;
+  &.isHovering {
+    transform: translateY(10px);
+    padding: 0;
+  }
 }
 
 .viewSignature {
@@ -33,9 +37,19 @@
   align-items: center;
   width: fit-content;
   align-self: end;
-  transform: translateY(-10px);
   font-family: sans-serif;
   cursor: pointer;
+  transform: translateY(-10px);
+  transition: visibility 0s, opacity 0.5s ease-out;
+  opacity: 0;
+  visibility: hidden;
+  height: 0;
+
+  &.isVisible {
+    visibility: visible;
+    opacity: 1;
+    height: fit-content;
+  }
 }
 
 .viewSignatureText {

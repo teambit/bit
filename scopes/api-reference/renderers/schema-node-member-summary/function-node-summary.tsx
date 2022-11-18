@@ -141,11 +141,20 @@ function CustomSignatureRenderer({
   onClick: React.MouseEventHandler<HTMLDivElement>;
   showSignature: boolean;
 }) {
+  const [isHovering, setIsHovering] = useState<boolean>(false);
+
   return (
-    <div className={styles.signatureContainer}>
-      <div className={styles.signatureContent}>
+    <div
+      className={styles.signatureContainer}
+      onMouseOver={() => setIsHovering(true)}
+      onMouseOut={() => setIsHovering(false)}
+    >
+      <div className={classnames(styles.signatureContent, (isHovering || showSignature) && styles.isHovering)}>
         {signature}
-        <div className={styles.viewSignature} onClick={onClick}>
+        <div
+          className={classnames(styles.viewSignature, (isHovering || showSignature) && styles.isVisible)}
+          onClick={onClick}
+        >
           <div className={styles.viewSignatureText}>{!showSignature ? 'View Signature' : 'Close'}</div>
           <div className={styles.viewSignatureIcon}>
             {!showSignature && <img src={'https://static.bit.dev/bit-icons/eye.svg'} />}
