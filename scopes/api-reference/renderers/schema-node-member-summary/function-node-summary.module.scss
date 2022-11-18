@@ -7,67 +7,26 @@
 .signatureContainer {
   display: flex;
   margin-right: 5px;
-  background: linear-gradient(rgba(238, 239, 242, 1), rgba(238, 239, 242, 0.2));
+  background-color: #ffffff;
   padding: 4px;
   border-radius: 6px;
   width: 100%;
-}
-
-.signatureContent {
-  display: flex;
+  color: rgb(57, 115, 0);
   font-family: Roboto mono;
   font-size: var(--bit-p-xxs);
   word-break: normal;
-  color: rgb(57, 115, 0);
-  flex-direction: column;
-  width: 100%;
-  padding: 8px 0px;
   &.isHovering {
-    transform: translateY(10px);
-    padding: 0;
+    background-color: #f4f5f6;
+    cursor: pointer;
   }
-}
-
-.viewSignature {
-  display: flex;
-  padding: 8px;
-  background-color: var(--bit-bg-color, #ffffff);
-  border: 1px solid var(--bit-border-color-lightest, #ededed);
-  border-radius: 6px;
-  align-items: center;
-  width: fit-content;
-  align-self: end;
-  font-family: sans-serif;
-  cursor: pointer;
-  transform: translateY(-10px);
-  transition: visibility 0s, opacity 0.5s ease-out;
-  opacity: 0;
-  visibility: hidden;
-  height: 0;
-
-  &.isVisible {
-    visibility: visible;
-    opacity: 1;
-    height: fit-content;
-  }
-}
-
-.viewSignatureText {
-  display: flex;
-  color: var(--bit-text-color, #2b2b2b);
-  font-size: var(--bit-p-xxs);
-}
-
-.viewSignatureIcon {
-  img {
-    height: 12px;
-  }
-  display: flex;
-  padding: 0px 4px;
 }
 
 .row {
   grid-template-columns: 1fr 1fr 2fr;
+  &.isHovering {
+    background-color: #f4f5f6;
+    cursor: pointer;
+  }
 }
 
 .name {
@@ -76,6 +35,7 @@
 
 .rowWithSignatureDetails {
   border-bottom: 1px solid var(--bit-border-color-lightest, var(--bit-border-color-lightest, #ededed));
+  margin-bottom: 8px;
 }
 
 .showSignature {

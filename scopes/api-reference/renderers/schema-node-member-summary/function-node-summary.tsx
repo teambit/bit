@@ -34,9 +34,13 @@ export function FunctionNodeSummary({
   params,
   returnType,
   apiNodeRendererProps,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  apiRefModel,
   ...rest
 }: FunctionNodeSummaryProps) {
   const { __schema, doc } = node;
+  const [isHovering, setIsHovering] = useState<boolean>(false);
+
   const signature =
     __schema === SetAccessorSchema.name
       ? `(${(node as SetAccessorSchema).param.toString()}) => void`
@@ -48,7 +52,15 @@ export function FunctionNodeSummary({
     <TableRow
       {...rest}
       key={`${__schema}-${name}`}
-      className={classnames(className, styles.row, showSignature && styles.showSignature)}
+      onClick={() => setShowSignature((value) => !value)}
+      onMouseOver={() => setIsHovering(true)}
+      onMouseOut={() => setIsHovering(false)}
+      className={classnames(
+        className,
+        styles.row,
+        showSignature && styles.showSignature,
+        (isHovering || showSignature) && styles.isHovering
+      )}
       headings={headings}
       colNumber={3}
       customRow={{
@@ -58,11 +70,9 @@ export function FunctionNodeSummary({
           </div>
         ),
         signature: (
-          <CustomSignatureRenderer
-            signature={signature}
-            onClick={() => setShowSignature((value) => !value)}
-            showSignature={showSignature}
-          />
+          <div className={classnames(styles.signatureContainer, (isHovering || showSignature) && styles.isHovering)}>
+            {signature}
+          </div>
         ),
       }}
       row={{
@@ -127,40 +137,6 @@ export function FunctionNodeSummary({
             </div>
           </div>
         )}
-      </div>
-    </div>
-  );
-}
-
-function CustomSignatureRenderer({
-  signature,
-  onClick,
-  showSignature,
-}: {
-  signature?: string;
-  onClick: React.MouseEventHandler<HTMLDivElement>;
-  showSignature: boolean;
-}) {
-  const [isHovering, setIsHovering] = useState<boolean>(false);
-
-  return (
-    <div
-      className={styles.signatureContainer}
-      onMouseOver={() => setIsHovering(true)}
-      onMouseOut={() => setIsHovering(false)}
-    >
-      <div className={classnames(styles.signatureContent, (isHovering || showSignature) && styles.isHovering)}>
-        {signature}
-        <div
-          className={classnames(styles.viewSignature, (isHovering || showSignature) && styles.isVisible)}
-          onClick={onClick}
-        >
-          <div className={styles.viewSignatureText}>{!showSignature ? 'View Signature' : 'Close'}</div>
-          <div className={styles.viewSignatureIcon}>
-            {!showSignature && <img src={'https://static.bit.dev/bit-icons/eye.svg'} />}
-            {showSignature && <img src={'https://static.bit.dev/bit-icons/close-x.svg'} />}
-          </div>
-        </div>
       </div>
     </div>
   );
