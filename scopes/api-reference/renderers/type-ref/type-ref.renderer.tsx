@@ -36,6 +36,7 @@ function TypeRefComponent(props: APINodeRenderProps) {
           ...props.apiNode,
           api: copySchemaNode(typeRefNode, { signature: typeRefNode.signature || typeRefNode.toString() }),
         }}
+        options={{ hideIndex: true }}
       />
     );
   }
