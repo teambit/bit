@@ -43,6 +43,9 @@ export type Log = {
   email: string | undefined;
 };
 
+export type DepEdgeType = 'prod' | 'dev' | 'ext';
+export type DepEdge = { source: BitId; target: BitId; type: DepEdgeType };
+
 type ExternalHead = { head: Ref; laneId: LaneId };
 type SquashData = { previousParents: Ref[]; laneId: LaneId };
 
@@ -54,6 +57,7 @@ export type VersionProps = {
   dependencies?: Dependency[];
   devDependencies?: Dependency[];
   flattenedDependencies?: BitIds;
+  flattenedEdges?: DepEdge[];
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   packageDependencies?: { [key: string]: string };
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -85,6 +89,7 @@ export default class Version extends BitObject {
   dependencies: Dependencies;
   devDependencies: Dependencies;
   flattenedDependencies: BitIds;
+  flattenedEdges: DepEdge[];
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   packageDependencies: { [key: string]: string };
   devPackageDependencies: { [key: string]: string };
@@ -111,6 +116,7 @@ export default class Version extends BitObject {
     this.devDependencies = new Dependencies(props.devDependencies);
     this.docs = props.docs;
     this.flattenedDependencies = props.flattenedDependencies || new BitIds();
+    this.flattenedEdges = props.flattenedEdges || [];
     this.packageDependencies = props.packageDependencies || {};
     this.devPackageDependencies = props.devPackageDependencies || {};
     this.peerPackageDependencies = props.peerPackageDependencies || {};
@@ -312,6 +318,13 @@ export default class Version extends BitObject {
         test: file.test,
       };
     };
+    const depEdgeToObject = (depEdge: DepEdge) => {
+      return {
+        source: depEdge.source.serialize(),
+        target: depEdge.target.serialize(),
+        type: depEdge.type,
+      };
+    };
     return filterObject(
       {
         files: this.files ? this.files.map(_convertFileToObject) : null,
@@ -328,6 +341,7 @@ export default class Version extends BitObject {
         dependencies: this.dependencies.cloneAsObject(),
         devDependencies: this.devDependencies.cloneAsObject(),
         flattenedDependencies: this.flattenedDependencies.map((dep) => dep.serialize()),
+        flattenedEdges: this.flattenedEdges.map((f) => depEdgeToObject(f)),
         extensions: this.extensions.toModelObjects(),
         packageDependencies: this.packageDependencies,
         devPackageDependencies: this.devPackageDependencies,
@@ -379,6 +393,7 @@ export default class Version extends BitObject {
       dependencies,
       devDependencies,
       flattenedDependencies,
+      flattenedEdges,
       flattenedDevDependencies,
       devPackageDependencies,
       peerPackageDependencies,
@@ -426,6 +441,14 @@ export default class Version extends BitObject {
 
     const _getFlattenedDependencies = (deps = []): BitId[] => {
       return deps.map((dep) => BitId.parseBackwardCompatible(dep));
+    };
+
+    const _getDepEdge = (depEdgeObj): DepEdge => {
+      return {
+        source: new BitId(depEdgeObj.source),
+        target: new BitId(depEdgeObj.target),
+        type: depEdgeObj.type,
+      };
     };
 
     const _groupFlattenedDependencies = () => {
@@ -481,6 +504,7 @@ export default class Version extends BitObject {
       dependencies: _getDependencies(dependencies),
       devDependencies: _getDependencies(devDependencies),
       flattenedDependencies: _groupFlattenedDependencies(),
+      flattenedEdges: flattenedEdges?.map((f) => _getDepEdge(f)) || [],
       devPackageDependencies,
       peerPackageDependencies,
       packageDependencies,
@@ -533,6 +557,7 @@ export default class Version extends BitObject {
       devPackageDependencies: component.devPackageDependencies,
       peerPackageDependencies: component.peerPackageDependencies,
       flattenedDependencies: component.flattenedDependencies,
+      flattenedEdges: component.flattenedEdges,
       schema: component.schema,
       overrides: component.overrides.componentOverridesData,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

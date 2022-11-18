@@ -591,6 +591,11 @@ export class ExportMain {
       const needsChange = ids.some((id) => id.scope !== remoteScope);
       if (needsChange) {
         version.flattenedDependencies = getBitIdsWithUpdatedScope(ids);
+        version.flattenedEdges = version.flattenedEdges.map((edge) => ({
+          ...edge,
+          source: getIdWithUpdatedScope(edge.source),
+          target: getIdWithUpdatedScope(edge.target),
+        }));
         hasChanged = true;
       }
       return hasChanged;
