@@ -13,6 +13,8 @@ import { SchemaNodesIndex } from '@teambit/api-reference.renderers.schema-nodes-
 
 import styles from './api-node-details.module.scss';
 
+const INDEX_THRESHOLD_WIDTH = 600;
+
 export type APINodeDetailsProps = APINodeRenderProps & {
   displaySignature?: string;
   options?: {
@@ -48,6 +50,11 @@ export function APINodeDetails({
   const rootRef = useRef() as React.MutableRefObject<HTMLDivElement>;
   const apiRef = useRef<HTMLDivElement | null>(null);
   const currentQueryParams = query.toString();
+  const [containerSize, setContainerSize] = useState<{ width?: number; height?: number }>({
+    width: undefined,
+    height: undefined,
+  });
+  const indexHidden = (containerSize.width ?? 0) < INDEX_THRESHOLD_WIDTH;
 
   const example = (doc?.tags || []).find((tag) => tag.tagName === 'example');
   const comment = doc?.comment;
@@ -58,7 +65,6 @@ export function APINodeDetails({
    * default line height: 18px;
    * totalHeight: (no of lines * default line height)
    */
-
   const exampleHeight = (example?.comment?.split('\n').length || 0) * 18;
   const defaultSignatureHeight = 36 + ((signature?.split('\n').length || 0) - 1) * 18;
 
@@ -119,12 +125,27 @@ export function APINodeDetails({
     }
   }, [isMounted]);
 
+  const handleSize = useCallback(() => {
+    setContainerSize({
+      width: rootRef.current.offsetWidth,
+      height: rootRef.current.offsetHeight,
+    });
+  }, []);
+
   useEffect(() => {
+    if (window) window.addEventListener('resize', handleSize);
+    // Call handler right away so state gets updated with initial container size
+    handleSize();
     return () => {
       hoverProviderDispose.current?.dispose();
+      if (window) window.removeEventListener('resize', handleSize);
       setIsMounted(false);
     };
   }, []);
+
+  useEffect(() => {
+    handleSize();
+  }, [rootRef?.current?.offsetHeight, rootRef?.current?.offsetWidth]);
 
   return (
     /**
@@ -181,7 +202,7 @@ export function APINodeDetails({
         )}
         {children}
       </div>
-      {!options?.hideIndex && (
+      {!options?.hideIndex && !indexHidden && (
         <SchemaNodesIndex className={styles.schemaNodesIndex} title={'ON THIS PAGE'} rootRef={rootRef} />
       )}
     </div>
