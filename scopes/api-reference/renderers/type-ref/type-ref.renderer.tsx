@@ -132,7 +132,12 @@ function TypeRefName({
       </Link>
     );
   }
-  return <div className={classnames(styles.node)}>{name}</div>;
+  return (
+    <div className={classnames(styles.node)}>
+      {name}
+      {children}
+    </div>
+  );
 }
 
 function getExportedTypeUrlFromAnotherComp({
