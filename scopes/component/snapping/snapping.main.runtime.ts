@@ -1,4 +1,5 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
+import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
 import { LegacyOnTagResult } from '@teambit/legacy/dist/scope/scope';
 import { FlattenedDependenciesGetter } from '@teambit/legacy/dist/scope/component-ops/get-flattened-dependencies';
 import { Scope as LegacyScope } from '@teambit/legacy/dist/scope';
@@ -49,6 +50,7 @@ import {
   getArtifactsFiles,
 } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
 import { AutoTagResult } from '@teambit/legacy/dist/scope/component-ops/auto-tag';
+import { DepEdge, DepEdgeType } from '@teambit/legacy/dist/scope/models/version';
 import { SnapCmd } from './snap-cmd';
 import { SnappingAspect } from './snapping.aspect';
 import { TagCmd } from './tag-cmd';
@@ -554,6 +556,49 @@ there are matching among unmodified components thought. consider using --unmodif
     const flattenedDependenciesGetter = new FlattenedDependenciesGetter(scope, components);
     await flattenedDependenciesGetter.populateFlattenedDependencies();
     loader.stop();
+    await this._addFlattenedDepsGraphToComponents(components);
+  }
+
+  async _addFlattenedDepsGraphToComponents(components: ConsumerComponent[]) {
+    const graph = new Graph<BitId, string>();
+    const addEdges = (compId: BitId, dependencies: ConsumerComponent['dependencies'], label: DepEdgeType) => {
+      dependencies.get().forEach((dep) => {
+        graph.setNode(new Node(dep.id.toString(), dep.id));
+        graph.setEdge(new Edge(compId.toString(), dep.id.toString(), label));
+      });
+    };
+    components.forEach((comp) => {
+      graph.setNode(new Node(comp.id.toString(), comp.id));
+      addEdges(comp.id, comp.dependencies, 'prod');
+      addEdges(comp.id, comp.devDependencies, 'dev');
+      addEdges(comp.id, comp.extensionDependencies, 'ext');
+    });
+    const allFlattened = components.map((comp) => comp.flattenedDependencies);
+    const allFlattenedUniq = BitIds.uniqFromArray(allFlattened.flat());
+    const allFlattenedWithoutCurrent = allFlattenedUniq.filter((id) => !components.find((c) => c.id.isEqual(id)));
+    const componentsAndVersions = await this.scope.legacyScope.getComponentsAndVersions(
+      BitIds.fromArray(allFlattenedWithoutCurrent)
+    );
+    componentsAndVersions.forEach(({ component, version, versionStr }) => {
+      const compId = component.toBitId().changeVersion(versionStr);
+      graph.setNode(new Node(compId.toString(), compId));
+      addEdges(compId, version.dependencies, 'prod');
+      addEdges(compId, version.devDependencies, 'dev');
+      addEdges(compId, version.extensionDependencies, 'ext');
+    });
+    components.forEach((component) => {
+      const edges = graph.outEdges(component.id.toString());
+      const flattenedEdges = component.flattenedDependencies.map((dep) => graph.outEdges(dep.toString())).flat();
+      const allEdges = [...edges, ...flattenedEdges];
+      const edgesWithBitIds: DepEdge[] = allEdges.map((edge) => ({
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        source: graph.node(edge.source)!.attr,
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        target: graph.node(edge.target)!.attr,
+        type: edge.attr as DepEdgeType,
+      }));
+      component.flattenedEdges = edgesWithBitIds;
+    });
   }
 
   _updateComponentsByTagResult(components: ConsumerComponent[], tagResult: LegacyOnTagResult[]) {
