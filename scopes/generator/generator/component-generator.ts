@@ -82,6 +82,7 @@ export class ComponentGenerator {
       componentName: componentId.fullName,
       defaultScope: this.options.scope,
     });
+    await this.workspace.triggerOnComponentAdd(componentId);
     const component = await this.workspace.get(componentId);
     const hasEnvConfiguredOriginally = this.envs.hasEnvConfigured(component);
     const envBeforeConfigChanges = this.envs.getEnv(component);
