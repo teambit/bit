@@ -1,5 +1,6 @@
 import { EnvHandler } from "@teambit/envs";
 import { TemplateList } from "./template-list";
+import { StarterList } from "./starter-list";
 
 export interface GeneratorEnv {
   /**
@@ -7,7 +8,7 @@ export interface GeneratorEnv {
    */
   generators(): EnvHandler<TemplateList>;
   /**
-   * TODO: complete this interface.
+   * return a starter list instance.
    */
-  // starters(): EnvHandler<TemplateList>;
+  starters(): EnvHandler<StarterList>;
 }

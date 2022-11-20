@@ -38,6 +38,12 @@ export type TemplateDescriptor = {
   description?: string;
   hidden?: boolean;
 };
+
+type TemplateWithId = { id: string; envName?: string };
+type WorkspaceTemplateWithId = TemplateWithId & { template: WorkspaceTemplate };
+type ComponentTemplateWithId = TemplateWithId & { template: ComponentTemplate };
+type AnyTemplateWithId = TemplateWithId & { template: ComponentTemplate | WorkspaceTemplate };
+
 export type GenerateWorkspaceTemplateResult = { workspacePath: string; appName?: string };
 
 export type GeneratorConfig = {
@@ -91,38 +97,32 @@ export class GeneratorMain {
    * list all component templates registered in the workspace or workspace templates in case the
    * workspace is not available
    */
-  async listTemplates(): Promise<TemplateDescriptor[]> {
-    const envTemplates = await this.listEnvTemplateDescriptors();
-    if (envTemplates && envTemplates.length) return envTemplates;
-    const getTemplateDescriptor = ({
-      id,
-      template,
-    }: {
-      id: string;
-      template: WorkspaceTemplate | ComponentTemplate;
-    }) => {
-      const shouldBeHidden = () => {
-        if (template.hidden) return true;
-        if (this.config.hideCoreTemplates && isCoreAspect(id)) return true;
-        return false;
-      };
-      return {
-        aspectId: id,
-        name: template.name,
-        description: template.description,
-        hidden: shouldBeHidden(),
-      };
-    };
-    return this.isRunningInsideWorkspace()
-      ? this.getAllComponentTemplatesFlattened().map(getTemplateDescriptor)
-      : this.getAllWorkspaceTemplatesFlattened().map(getTemplateDescriptor);
+  async listTemplates({ aspect }: { aspect?: string }): Promise<TemplateDescriptor[]> {
+    if (this.isRunningInsideWorkspace()) {
+      return this.getAllComponentTemplatesDescriptorsFlattened(aspect);
+    }
+    return this.getAllWorkspaceTemplatesDescriptorFlattened(aspect);
   }
+
+  private getTemplateDescriptor = ({ id, template }: AnyTemplateWithId): TemplateDescriptor => {
+    const shouldBeHidden = () => {
+      if (template.hidden) return true;
+      if (this.config.hideCoreTemplates && isCoreAspect(id)) return true;
+      return false;
+    };
+    return {
+      aspectId: id,
+      name: template.name,
+      description: template.description,
+      hidden: shouldBeHidden(),
+    };
+  };
 
   /**
    * @deprecated use this.listTemplates()
    */
-  async listComponentTemplates(): Promise<TemplateDescriptor[]> {
-    return this.listTemplates();
+  async listComponentTemplates(opts: { aspect?: string }): Promise<TemplateDescriptor[]> {
+    return this.listTemplates(opts);
   }
 
   isRunningInsideWorkspace(): boolean {
@@ -139,12 +139,24 @@ export class GeneratorMain {
   /**
    * returns a specific component template.
    */
-  async getComponentTemplate(
+  async getComponentTemplate(name: string, aspectId?: string): Promise<ComponentTemplateWithId | undefined> {
+    const fromEnv = await this.listEnvComponentTemplates();
+    if (fromEnv && fromEnv.length){
+      const found = this.findTemplateByAspectIdAndName<ComponentTemplateWithId>(aspectId, name, fromEnv);
+      if (found) return found;
+    }
+    // fallback to aspect id not from env if provided
+    const templates = await this.getAllComponentTemplatesFlattened();
+    const found = this.findTemplateByAspectIdAndName<ComponentTemplateWithId>(aspectId, name, templates);
+    return found;
+  }
+
+  private findTemplateByAspectIdAndName<T>(
+    aspectId: string | undefined,
     name: string,
-    aspectId?: string
-  ): Promise<{ id: string; template: ComponentTemplate; envName: string } | undefined> {
-    const fromEnv = await this.listEnvTemplates();
-    const templates = fromEnv && fromEnv.length ? fromEnv : this.getAllComponentTemplatesFlattened();
+    templates: Array<T>
+  ): T | undefined {
+    // @ts-ignore (should set T to be extends ComponentTemplateWithId or WorkspaceTemplateWithId)
     const found = templates.find(({ id, template }) => {
       if (aspectId && id !== aspectId) return false;
       return template.name === name;
@@ -214,13 +226,18 @@ export class GeneratorMain {
   }
 
   async searchRegisteredWorkspaceTemplate(name?: string, aspectId?: string): Promise<WorkspaceTemplate | undefined> {
-    const templates = this.getAllWorkspaceTemplatesFlattened();
+    let fromEnv;
+    if (aspectId) {
+      fromEnv = await this.listEnvWorkspaceTemplates(aspectId);
+    }
+    const templates = fromEnv || this.getAllWorkspaceTemplatesFlattened();
     const found = templates.find(({ id, template: tpl }) => {
       if (aspectId && name) return aspectId === id && name === tpl.name;
       if (aspectId) return aspectId === id;
       if (name) return name === tpl.name;
       throw new Error(`searchRegisteredWorkspaceTemplate expects to get "name" or "aspectId"`);
     });
+
     return found?.template;
   }
 
@@ -277,25 +294,38 @@ export class GeneratorMain {
     return { workspacePath, appName: template.appName };
   }
 
-  async listEnvWorkspaceTemplates(envId: string): Promise<WorkspaceTemplate[]> {
-    const envs = await this.loadEnvs([envId]);
-    const workspaceTemplates = envs.flatMap((env) => {
-      if (!env.env.getWorkspaceGenerators) return undefined;
-      const workspaceGenerators = env.env.getWorkspaceGenerators();
-      return workspaceGenerators;
-    });
+  private async getAllComponentTemplatesDescriptorsFlattened(aspectId?: string): Promise<Array<TemplateDescriptor>> {
+    const envTemplates = await this.listEnvComponentTemplateDescriptors();
+    if (envTemplates && envTemplates.length) {
+      if (!aspectId) return envTemplates;
+      const filtered = envTemplates.filter((template) => template.aspectId === aspectId);
+      if (filtered.length) return filtered;
+    }
 
-    return workspaceTemplates;
+    const flattened = this.getAllComponentTemplatesFlattened();
+    const filtered = flattened.filter((template) => template.id === aspectId);
+    return filtered.map((template) => this.getTemplateDescriptor(template));
   }
 
   private getAllComponentTemplatesFlattened(): Array<{ id: string; template: ComponentTemplate }> {
     const templatesByAspects = this.componentTemplateSlot.toArray();
-    return templatesByAspects.flatMap(([id, componentTemplates]) => {
+    const flattened = templatesByAspects.flatMap(([id, componentTemplates]) => {
       return componentTemplates.map((template) => ({
         id,
         template,
       }));
     });
+    return flattened;
+  }
+
+  private async getAllWorkspaceTemplatesDescriptorFlattened(aspectId?: string): Promise<Array<TemplateDescriptor>> {
+    let envTemplates;
+    if (aspectId) {
+      envTemplates = await this.listEnvWorkspaceTemplates(aspectId);
+    }
+
+    const templates = envTemplates && envTemplates.length ? envTemplates : this.getAllWorkspaceTemplatesFlattened();
+    return templates.map((template) => this.getTemplateDescriptor(template));
   }
 
   private getAllWorkspaceTemplatesFlattened(): Array<{ id: string; template: WorkspaceTemplate }> {
@@ -309,10 +339,33 @@ export class GeneratorMain {
   }
 
   /**
+   * list all starter templates registered by an env.
+   */
+  async listEnvWorkspaceTemplates(
+    envId: string
+  ): Promise<Array<WorkspaceTemplateWithId>> {
+    const envs = await this.loadEnvs([envId]);
+    const workspaceTemplates = envs.flatMap((env) => {
+      if (!env.env.getGeneratorStarters) return undefined;
+      const envStarters = env.env.getGeneratorStarters();
+      return envStarters.map((starter) => {
+        const componentId = ComponentID.fromString(env.id);
+        return {
+          id: componentId.toString(),
+          envName: env.name,
+          template: starter,
+        };
+      });
+    });
+
+    return workspaceTemplates;
+  }
+
+  /**
    * list all component templates registered by an env.
    */
-  async listEnvTemplateDescriptors(ids: string[] = []): Promise<TemplateDescriptor[]> {
-    const envTemplates = await this.listEnvTemplates(ids);
+  async listEnvComponentTemplateDescriptors(ids: string[] = []): Promise<TemplateDescriptor[]> {
+    const envTemplates = await this.listEnvComponentTemplates(ids);
     const templates: TemplateDescriptor[] = envTemplates.map((envTemplate) => {
       const componentId = ComponentID.fromString(envTemplate.id);
       return {
@@ -325,7 +378,9 @@ export class GeneratorMain {
     return templates;
   }
 
-  async listEnvTemplates(ids: string[] = []) {
+  async listEnvComponentTemplates(
+    ids: string[] = []
+  ): Promise<Array<ComponentTemplateWithId>> {
     const configEnvs = this.config.envs || [];
     const envs = await this.loadEnvs(configEnvs?.concat(ids));
     const templates = envs.flatMap((env) => {

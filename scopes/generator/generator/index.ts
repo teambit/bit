@@ -10,3 +10,4 @@ export { WorkspaceContext, WorkspaceTemplate, WorkspaceTemplate as Starter, Work
 export { GeneratorEnv } from './generator-env-type';
 export { GeneratorAspect } from './generator.aspect';
 export { TemplateList } from './template-list';
+export { StarterList } from './starter-list';
