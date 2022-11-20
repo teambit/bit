@@ -12,6 +12,7 @@ type InstallCmdOptions = {
   type: WorkspaceDependencyLifecycleType;
   skipDedupe: boolean;
   skipImport: boolean;
+  skipCompile: boolean;
   updateExisting: boolean;
   savePrefix: string;
   addMissingPeers: boolean;
@@ -33,6 +34,7 @@ export default class InstallCmd implements Command {
     ['', 'save-prefix [savePrefix]', 'set the prefix to use when adding dependency to workspace.jsonc'],
     ['', 'skip-dedupe [skipDedupe]', 'do not dedupe dependencies on installation'],
     ['', 'skip-import [skipImport]', 'do not import bit objects post installation'],
+    ['', 'skip-compile [skipCompile]', 'do not compile components'],
     ['', 'add-missing-peers [addMissingPeers]', 'install all missing peer dependencies'],
   ] as CommandOptions;
 
@@ -61,6 +63,7 @@ export default class InstallCmd implements Command {
       updateExisting: options.updateExisting,
       savePrefix: options.savePrefix,
       addMissingPeers: options.addMissingPeers,
+      compile: !options.skipCompile,
     };
     const components = await this.install.install(packages, installOpts);
     const endTime = Date.now();
