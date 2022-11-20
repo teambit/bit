@@ -3,7 +3,7 @@ import { CompilerMain, CompilerAspect, CompilationInitiator } from '@teambit/com
 import ManyComponentsWriter from '@teambit/legacy/dist/consumer/component-ops/many-components-writer';
 import { CLIMain, CommandList, CLIAspect, MainRuntime } from '@teambit/cli';
 import chalk from 'chalk';
-import { WorkspaceAspect, Workspace, ComponentConfigFile } from '@teambit/workspace';
+import { WorkspaceAspect, Workspace, ComponentConfigFile, SerializableResults } from '@teambit/workspace';
 import { pick, isEqual } from 'lodash';
 import { ProjectManifest } from '@pnpm/types';
 import { NothingToImport } from '@teambit/legacy/dist/consumer/exceptions';
@@ -43,11 +43,11 @@ export type WorkspaceInstallOptions = {
   addMissingPeers?: boolean;
   variants?: string;
   lifecycleType?: WorkspaceDependencyLifecycleType;
-  dedupe: boolean;
-  import: boolean;
+  dedupe?: boolean;
+  import?: boolean;
   copyPeerToRuntimeOnRoot?: boolean;
   copyPeerToRuntimeOnComponents?: boolean;
-  updateExisting: boolean;
+  updateExisting?: boolean;
   savePrefix?: string;
   compile?: boolean;
 };
@@ -484,6 +484,15 @@ export class InstallMain {
       new LinkCommand(installExt, workspace, logger, community.getDocsDomain()),
     ];
     cli.register(...commands);
+    if (dependencyResolver.hasRootComponents()) {
+      workspace.registerOnComponentAdd(async (): Promise<SerializableResults> => {
+        await installExt.install(undefined, { compile: true });
+        return {
+          results: [],
+          toString: () => '',
+        };
+      });
+    }
     return installExt;
   }
 }
