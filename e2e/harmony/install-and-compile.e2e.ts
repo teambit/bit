@@ -204,3 +204,23 @@ Env1Aspect.addRuntime(Env1Main);
     });
   }
 );
+
+describe('skipping compilation on install', function () {
+  this.timeout(0);
+  let helper: Helper;
+  before(() => {
+    helper = new Helper();
+    helper.scopeHelper.setNewLocalAndRemoteScopes();
+    helper.bitJsonc.setupDefault();
+    helper.fixtures.populateComponents(1, true, '', false); // don't compile
+    helper.command.install(undefined, { skipCompile: true });
+  });
+  it('should link the component', () => {
+    expect(
+      path.join(helper.scopes.localPath, `node_modules/@${helper.scopes.remote}/comp1/package.json`)
+    ).to.be.a.path();
+  });
+  it('should not compile the component', () => {
+    expect(path.join(helper.scopes.localPath, `node_modules/@${helper.scopes.remote}/comp1/dist`)).to.not.be.a.path();
+  });
+});
