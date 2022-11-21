@@ -486,7 +486,7 @@ export class InstallMain {
     cli.register(...commands);
     if (dependencyResolver.hasRootComponents()) {
       workspace.registerOnComponentAdd(async (): Promise<SerializableResults> => {
-        await installExt.install(undefined, { compile: true });
+        await installExt.install(undefined, { compile: true, import: false });
         return {
           results: [],
           toString: () => '',
