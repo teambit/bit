@@ -97,7 +97,7 @@ export class GeneratorMain {
    * list all component templates registered in the workspace or workspace templates in case the
    * workspace is not available
    */
-  async listTemplates({ aspect }: { aspect?: string }): Promise<TemplateDescriptor[]> {
+  async listTemplates({ aspect }: { aspect?: string } = {}): Promise<TemplateDescriptor[]> {
     if (this.isRunningInsideWorkspace()) {
       return this.getAllComponentTemplatesDescriptorsFlattened(aspect);
     }
