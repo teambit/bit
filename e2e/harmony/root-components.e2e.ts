@@ -330,21 +330,26 @@ module.exports.default = {
     });
     describe('compilation', () => {
       before(() => {
+        helper.fs.outputFile(`comp1/foo.ts`, ``);
         helper.command.compile();
       });
-      it('should create the dist folder in all the locations of the component', () => {
+      it('should create the dist folder in the linked directories', () => {
+        const resolveFromLocal = resolveFrom.bind(null, helper.fixtures.scopes.localPath);
+        expect(resolveFromLocal([`@${helper.scopes.remote}/comp1/dist/index.js`])).to.be.a.path();
+        expect(resolveFromLocal([`@${helper.scopes.remote}/comp1/dist/foo.js`])).to.be.a.path();
+        expect(resolveFromLocal([`@${helper.scopes.remote}/comp2/dist/index.js`])).to.be.a.path();
+        expect(resolveFromLocal([`@${helper.scopes.remote}/comp3/dist/index.js`])).to.be.a.path();
+        expect(resolveFromLocal([`@${helper.scopes.remote}/comp4/dist/index.js`])).to.be.a.path();
+      });
+      it('should create the dist folder in the root injected folder', () => {
         expect(
-          resolveFrom(helper.fixtures.scopes.localPath, [`@${helper.scopes.remote}/comp1/dist/index.js`])
+          path.join(
+            helper.fixtures.scopes.localPath,
+            `node_modules/@${helper.scopes.remote}/comp1/node_modules/@${helper.scopes.remote}/comp1/dist/foo.js`
+          )
         ).to.be.a.path();
-        expect(
-          resolveFrom(helper.fixtures.scopes.localPath, [`@${helper.scopes.remote}/comp2/dist/index.js`])
-        ).to.be.a.path();
-        expect(
-          resolveFrom(helper.fixtures.scopes.localPath, [`@${helper.scopes.remote}/comp3/dist/index.js`])
-        ).to.be.a.path();
-        expect(
-          resolveFrom(helper.fixtures.scopes.localPath, [`@${helper.scopes.remote}/comp4/dist/index.js`])
-        ).to.be.a.path();
+      });
+      it('should create the dist folders in nested injected directories of the components', () => {
         expect(
           resolveFrom(rootCompDir(helper, 'comp3'), [`@${helper.scopes.remote}/comp3/dist/index.js`])
         ).to.be.a.path();
@@ -359,6 +364,13 @@ module.exports.default = {
             `@${helper.scopes.remote}/comp3`,
             `@${helper.scopes.remote}/comp2`,
             `@${helper.scopes.remote}/comp1/dist/index.js`,
+          ])
+        ).to.be.a.path();
+        expect(
+          resolveFrom(rootCompDir(helper, 'comp3'), [
+            `@${helper.scopes.remote}/comp3`,
+            `@${helper.scopes.remote}/comp2`,
+            `@${helper.scopes.remote}/comp1/dist/foo.js`,
           ])
         ).to.be.a.path();
         expect(
@@ -729,21 +741,26 @@ module.exports.default = {
     });
     describe('compilation', () => {
       before(() => {
+        helper.fs.outputFile(`comp1/foo.ts`, ``);
         helper.command.compile();
       });
-      it('should create the dist folder in all the locations of the component', () => {
+      it('should create the dist folder in the linked directories', () => {
+        const resolveFromLocal = resolveFrom.bind(null, helper.fixtures.scopes.localPath);
+        expect(resolveFromLocal([`@${helper.scopes.remote}/comp1/dist/index.js`])).to.be.a.path();
+        expect(resolveFromLocal([`@${helper.scopes.remote}/comp1/dist/foo.js`])).to.be.a.path();
+        expect(resolveFromLocal([`@${helper.scopes.remote}/comp2/dist/index.js`])).to.be.a.path();
+        expect(resolveFromLocal([`@${helper.scopes.remote}/comp3/dist/index.js`])).to.be.a.path();
+        expect(resolveFromLocal([`@${helper.scopes.remote}/comp4/dist/index.js`])).to.be.a.path();
+      });
+      it('should create the dist folder in the root injected folder', () => {
         expect(
-          resolveFrom(helper.fixtures.scopes.localPath, [`@${helper.scopes.remote}/comp1/dist/index.js`])
+          path.join(
+            helper.fixtures.scopes.localPath,
+            `node_modules/@${helper.scopes.remote}/comp1/node_modules/@${helper.scopes.remote}/comp1/dist/foo.js`
+          )
         ).to.be.a.path();
-        expect(
-          resolveFrom(helper.fixtures.scopes.localPath, [`@${helper.scopes.remote}/comp2/dist/index.js`])
-        ).to.be.a.path();
-        expect(
-          resolveFrom(helper.fixtures.scopes.localPath, [`@${helper.scopes.remote}/comp3/dist/index.js`])
-        ).to.be.a.path();
-        expect(
-          resolveFrom(helper.fixtures.scopes.localPath, [`@${helper.scopes.remote}/comp4/dist/index.js`])
-        ).to.be.a.path();
+      });
+      it('should create the dist folders in nested injected directories of the components', () => {
         expect(
           resolveFrom(rootCompDir(helper, 'comp3'), [`@${helper.scopes.remote}/comp3/dist/index.js`])
         ).to.be.a.path();
@@ -758,6 +775,13 @@ module.exports.default = {
             `@${helper.scopes.remote}/comp3`,
             `@${helper.scopes.remote}/comp2`,
             `@${helper.scopes.remote}/comp1/dist/index.js`,
+          ])
+        ).to.be.a.path();
+        expect(
+          resolveFrom(rootCompDir(helper, 'comp3'), [
+            `@${helper.scopes.remote}/comp3`,
+            `@${helper.scopes.remote}/comp2`,
+            `@${helper.scopes.remote}/comp1/dist/foo.js`,
           ])
         ).to.be.a.path();
         expect(
@@ -1067,21 +1091,26 @@ module.exports.default = {
     });
     describe('compilation', () => {
       before(() => {
+        helper.fs.outputFile(`comp1/foo.ts`, ``);
         helper.command.compile();
       });
-      it('should create the dist folder in all the locations of the component', () => {
+      it('should create the dist folder in the linked directories', () => {
+        const resolveFromLocal = resolveFrom.bind(null, helper.fixtures.scopes.localPath);
+        expect(resolveFromLocal([`@${helper.scopes.remote}/comp1/dist/index.js`])).to.be.a.path();
+        expect(resolveFromLocal([`@${helper.scopes.remote}/comp1/dist/foo.js`])).to.be.a.path();
+        expect(resolveFromLocal([`@${helper.scopes.remote}/comp2/dist/index.js`])).to.be.a.path();
+        expect(resolveFromLocal([`@${helper.scopes.remote}/comp3/dist/index.js`])).to.be.a.path();
+        expect(resolveFromLocal([`@${helper.scopes.remote}/comp4/dist/index.js`])).to.be.a.path();
+      });
+      it('should create the dist folder in the root injected folder', () => {
         expect(
-          resolveFrom(helper.fixtures.scopes.localPath, [`@${helper.scopes.remote}/comp1/dist/index.js`])
+          path.join(
+            helper.fixtures.scopes.localPath,
+            `node_modules/@${helper.scopes.remote}/comp1/node_modules/@${helper.scopes.remote}/comp1/dist/foo.js`
+          )
         ).to.be.a.path();
-        expect(
-          resolveFrom(helper.fixtures.scopes.localPath, [`@${helper.scopes.remote}/comp2/dist/index.js`])
-        ).to.be.a.path();
-        expect(
-          resolveFrom(helper.fixtures.scopes.localPath, [`@${helper.scopes.remote}/comp3/dist/index.js`])
-        ).to.be.a.path();
-        expect(
-          resolveFrom(helper.fixtures.scopes.localPath, [`@${helper.scopes.remote}/comp4/dist/index.js`])
-        ).to.be.a.path();
+      });
+      it('should create the dist folders in nested injected directories of the components', () => {
         expect(
           resolveFrom(rootCompDir(helper, 'comp3'), [`@${helper.scopes.remote}/comp3/dist/index.js`])
         ).to.be.a.path();
@@ -1096,6 +1125,13 @@ module.exports.default = {
             `@${helper.scopes.remote}/comp3`,
             `@${helper.scopes.remote}/comp2`,
             `@${helper.scopes.remote}/comp1/dist/index.js`,
+          ])
+        ).to.be.a.path();
+        expect(
+          resolveFrom(rootCompDir(helper, 'comp3'), [
+            `@${helper.scopes.remote}/comp3`,
+            `@${helper.scopes.remote}/comp2`,
+            `@${helper.scopes.remote}/comp1/dist/foo.js`,
           ])
         ).to.be.a.path();
         expect(
