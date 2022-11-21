@@ -5,7 +5,7 @@ import mapSeries from 'p-map-series';
 import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
 import groupArray from 'group-array';
 import R from 'ramda';
-import { compact, flatten, uniq } from 'lodash';
+import { compact, flatten, partition, uniq } from 'lodash';
 import loader from '../../cli/loader';
 import { Scope } from '..';
 import { BitId, BitIds } from '../../bit-id';
@@ -211,8 +211,17 @@ export default class ScopeComponentsImporter {
    */
   async importMissingVersionHistory(externalComponents: ModelComponent[]) {
     logger.profile(`importMissingVersionHistory, ${externalComponents.length} externalComponents`);
-    const missingHistoryWithNulls = await mapSeries(externalComponents, async (modelComponent) => {
-      if (!modelComponent.head) return modelComponent.toBitId();
+    const [compsWithHead, compsWithoutHead] = partition(externalComponents, (comp) => comp.hasHead());
+    try {
+      await this.importManyDeltaWithoutDeps({
+        ids: BitIds.fromArray(compsWithoutHead.map((c) => c.toBitId())),
+        fromHead: true,
+      });
+    } catch (err) {
+      // probably scope doesn't exist, which is fine.
+      logger.debug(`importMissingVersionHistory failed getting a component without head from the other scope`, err);
+    }
+    const missingHistoryWithNulls = await mapSeries(compsWithHead, async (modelComponent) => {
       try {
         await getAllVersionHashes({ modelComponent, repo: this.repo, throws: true, startFrom: modelComponent.head });
       } catch (err: any) {
