@@ -30,7 +30,7 @@ import { concurrentComponentsLimit } from '../../utils/concurrency';
 import { BuildStatus } from '../../constants';
 import { NoHeadNoVersion } from '../exceptions/no-head-no-version';
 import { HashesPerRemotes, MissingObjects } from '../exceptions/missing-objects';
-import { getAllVersionsInfo } from './traverse-versions';
+import { getAllVersionHashes, getAllVersionsInfo } from './traverse-versions';
 
 const removeNils = R.reject(R.isNil);
 
@@ -203,6 +203,36 @@ export default class ScopeComponentsImporter {
       fromHead: true,
       collectParents: true,
     });
+  }
+
+  /**
+   * checks whether the given components has all history graph to it is able to traverse the history.
+   * if not, it fetches the history from their remotes without deps.
+   */
+  async importMissingVersionHistory(externalComponents: ModelComponent[]) {
+    logger.profile(`importMissingVersionHistory, ${externalComponents.length} externalComponents`);
+    const missingHistoryWithNulls = await mapSeries(externalComponents, async (modelComponent) => {
+      if (!modelComponent.head) return modelComponent.toBitId();
+      try {
+        await getAllVersionHashes({ modelComponent, repo: this.repo, throws: true, startFrom: modelComponent.head });
+      } catch (err: any) {
+        if (errorIsTypeOfMissingObject(err)) {
+          return modelComponent.toBitId();
+        }
+        // we don't care much about other errors here. but it's good to know about them.
+        logger.warn(`importMissingVersionHistory, failed traversing ${modelComponent.id()}, err: ${err.message}`, err);
+        return null;
+      }
+      return null;
+    });
+    const missingHistory = compact(missingHistoryWithNulls);
+    if (!missingHistory.length) return;
+    logger.debug(`importMissingVersionHistory, total ${missingHistory.length} component has version-history missing`);
+    await this.importManyDeltaWithoutDeps({
+      ids: BitIds.fromArray(missingHistory),
+      fromHead: true,
+    });
+    logger.profile(`importMissingVersionHistory, ${externalComponents.length} externalComponents`);
   }
 
   async importWithoutDeps(ids: BitIds, cache = true, lanes: Lane[] = []): Promise<ComponentVersion[]> {

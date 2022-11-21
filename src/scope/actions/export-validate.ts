@@ -6,6 +6,8 @@ import { mergeObjects } from '../component-ops/export-scope-components';
 import { Action } from './action';
 import logger from '../../logger/logger';
 import ServerIsBusy from '../exceptions/server-is-busy';
+import { BitObjectList } from '../objects/bit-object-list';
+import { getAllVersionHashes } from '../component-ops/traverse-versions';
 
 type Options = { clientId: string; isResumingExport: boolean };
 const NUM_OF_RETRIES = 60;
@@ -27,16 +29,30 @@ export class ExportValidate implements Action<Options> {
       // pending-dir was deleted.
       return;
     }
-
-    await this.waitIfNeeded();
     const objectList = await scope.readObjectsFromPendingDir(options.clientId);
+    const bitObjectList = await objectList.toBitObjects();
+    await this.importAndThrowForMissingHistoryOnLane(bitObjectList);
+    await this.waitIfNeeded();
     try {
-      await mergeObjects(scope, objectList, true); // if fails, it throws merge-conflict/component-not-found
+      await mergeObjects(scope, bitObjectList, true); // if fails, it throws merge-conflict/component-not-found
     } catch (err) {
       scope.objects.clearCache(); // we don't want to persist anything by mistake.
       throw err;
     }
     scope.objects.clearCache();
+  }
+
+  private async importAndThrowForMissingHistoryOnLane(bitObjectList: BitObjectList) {
+    const modelComponents = bitObjectList.getComponents();
+    const externalComponents = modelComponents.filter((comp) => comp.scope !== this.scope.name);
+    if (!externalComponents.length) return;
+    await this.scope.scopeImporter.importMissingVersionHistory(externalComponents);
+    // this will throw in case the history is missing
+    await Promise.all(
+      externalComponents.map((modelComponent) =>
+        getAllVersionHashes({ modelComponent, repo: this.scope.objects, throws: true })
+      )
+    );
   }
 
   private async waitIfNeeded() {
