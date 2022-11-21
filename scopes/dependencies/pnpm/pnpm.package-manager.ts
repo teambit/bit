@@ -194,8 +194,7 @@ export class PnpmPackageManager implements PackageManager {
 
   async getInjectedDirs(rootDir: string, componentDir: string, packageName: string): Promise<string[]> {
     const modulesState = await readModulesManifest(join(rootDir, 'node_modules'));
-    return (
-      modulesState?.injectedDeps?.[`node_modules/${packageName}`] ?? modulesState?.injectedDeps?.[componentDir] ?? []
-    );
+    if (modulesState?.injectedDeps == null) return [];
+    return modulesState.injectedDeps[`node_modules/${packageName}`] ?? modulesState.injectedDeps[componentDir] ?? [];
   }
 }
