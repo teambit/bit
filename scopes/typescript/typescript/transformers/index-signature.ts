@@ -5,7 +5,7 @@ import { SchemaTransformer } from '../schema-transformer';
 import { SchemaExtractorContext } from '../schema-extractor-context';
 import { ExportIdentifier } from '../export-identifier';
 
-export class IndexSignatureDeclarationTransformer implements SchemaTransformer {
+export class IndexSignatureTransformer implements SchemaTransformer {
   predicate(node: Node) {
     return node.kind === ts.SyntaxKind.IndexSignature;
   }

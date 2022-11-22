@@ -5,7 +5,7 @@ import { SchemaExtractorContext } from '../schema-extractor-context';
 import { ExportIdentifier } from '../export-identifier';
 import { parseTypeFromQuickInfo } from './utils/parse-type-from-quick-info';
 
-export class GetAccessorDeclarationTransformer implements SchemaTransformer {
+export class GetAccessorTransformer implements SchemaTransformer {
   predicate(node: Node) {
     return node.kind === ts.SyntaxKind.GetAccessor;
   }

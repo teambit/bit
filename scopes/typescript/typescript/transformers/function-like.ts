@@ -6,7 +6,7 @@ import { SchemaTransformer } from '../schema-transformer';
 import { ExportIdentifier } from '../export-identifier';
 import { parseTypeFromQuickInfo } from './utils/parse-type-from-quick-info';
 
-export class FunctionDeclaration implements SchemaTransformer {
+export class FunctionLikeTransformer implements SchemaTransformer {
   predicate(node: Node) {
     return (
       node.kind === ts.SyntaxKind.FunctionDeclaration ||

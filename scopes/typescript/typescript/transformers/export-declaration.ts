@@ -11,7 +11,7 @@ import { SchemaExtractorContext } from '../schema-extractor-context';
 import { SchemaTransformer } from '../schema-transformer';
 import { ExportIdentifier } from '../export-identifier';
 
-export class ExportDeclaration implements SchemaTransformer {
+export class ExportDeclarationTransformer implements SchemaTransformer {
   predicate(node: Node) {
     return node.kind === SyntaxKind.ExportDeclaration;
   }
@@ -54,7 +54,7 @@ export class ExportDeclaration implements SchemaTransformer {
     // e.g. `export { button1, button2 } as Composition from './button';
     if (exportClause.kind === SyntaxKind.NamedExports) {
       const schemas = await namedExport(exportClause, context);
-      return new ModuleSchema(context.getLocation(exportDec), schemas);
+      return new ModuleSchema(context.getLocation(exportDec), schemas, context.getPath(exportDec));
     }
     // e.g. `export * as Composition from './button';
     if (exportClause.kind === SyntaxKind.NamespaceExport) {

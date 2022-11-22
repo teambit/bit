@@ -3,7 +3,7 @@ import { Node, SyntaxKind, ExportAssignment as ExportAssignmentNode } from 'type
 import { SchemaExtractorContext } from '../schema-extractor-context';
 import { SchemaTransformer } from '../schema-transformer';
 
-export class ExportAssignmentDeclaration implements SchemaTransformer {
+export class ExportAssignmentTransformer implements SchemaTransformer {
   predicate(node: Node) {
     return node.kind === SyntaxKind.ExportAssignment;
   }

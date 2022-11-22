@@ -5,7 +5,7 @@ import { SchemaTransformer } from '../schema-transformer';
 import { SchemaExtractorContext } from '../schema-extractor-context';
 import { ExportIdentifier } from '../export-identifier';
 
-export class SetAccessorDeclarationTransformer implements SchemaTransformer {
+export class SetAccessorTransformer implements SchemaTransformer {
   predicate(node: Node) {
     return node.kind === ts.SyntaxKind.SetAccessor;
   }

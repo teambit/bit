@@ -19,7 +19,7 @@ import { SchemaExtractorContext } from '../schema-extractor-context';
 import { ExportIdentifier } from '../export-identifier';
 import { parseTypeFromQuickInfo } from './utils/parse-type-from-quick-info';
 
-export class ParameterDeclarationTransformer implements SchemaTransformer {
+export class ParameterTransformer implements SchemaTransformer {
   predicate(node: Node) {
     return node.kind === ts.SyntaxKind.Parameter;
   }

@@ -22,9 +22,14 @@ import { TypeScriptParser } from './typescript.parser';
 import { SchemaTransformer } from './schema-transformer';
 import { SchemaTransformerPlugin } from './schema-transformer.plugin';
 import {
-  ExportDeclaration,
+  ExportDeclarationTransformer,
   TypeAliasTransformer,
-  FunctionDeclaration,
+  FunctionLikeTransformer,
+  SetAccessorTransformer,
+  GetAccessorTransformer,
+  IndexSignatureTransformer,
+  PropertyDeclarationTransformer,
+  ParameterTransformer,
   VariableStatementTransformer,
   VariableDeclaration,
   SourceFileTransformer,
@@ -32,11 +37,11 @@ import {
   InterfaceDeclarationTransformer,
   EnumDeclarationTransformer,
   BindingElementTransformer,
+  ExportAssignmentTransformer,
 } from './transformers';
 import { CheckTypesCmd } from './cmds/check-types.cmd';
 import { TsconfigPathsPerEnv, TsconfigWriter } from './tsconfig-writer';
 import WriteTsconfigCmd from './cmds/write-tsconfig.cmd';
-import { ExportAssignmentDeclaration } from './transformers/export-assignment-declaration';
 
 export type TsMode = 'build' | 'dev';
 
@@ -298,9 +303,14 @@ export class TypescriptMain {
     const tsconfigWriter = new TsconfigWriter(workspace, logger);
     const tsMain = new TypescriptMain(logger, schemaTransformerSlot, workspace, depResolver, envs, tsconfigWriter);
     schemaTransformerSlot.register([
-      new ExportDeclaration(),
-      new ExportAssignmentDeclaration(),
-      new FunctionDeclaration(),
+      new ExportDeclarationTransformer(),
+      new ExportAssignmentTransformer(),
+      new FunctionLikeTransformer(),
+      new ParameterTransformer(),
+      new SetAccessorTransformer(),
+      new GetAccessorTransformer(),
+      new IndexSignatureTransformer(),
+      new PropertyDeclarationTransformer(),
       new VariableStatementTransformer(),
       new VariableDeclaration(),
       new SourceFileTransformer(),
