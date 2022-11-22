@@ -21,7 +21,7 @@ import { parseTypeFromQuickInfo } from './utils/parse-type-from-quick-info';
 
 export class ParameterDeclarationTransformer implements SchemaTransformer {
   predicate(node: Node) {
-    return node.kind === ts.SyntaxKind.Constructor;
+    return node.kind === ts.SyntaxKind.Parameter;
   }
 
   async getIdentifiers(): Promise<ExportIdentifier[]> {
@@ -56,10 +56,9 @@ export class ParameterDeclarationTransformer implements SchemaTransformer {
 
   async getType(param: ParameterDeclaration, context: SchemaExtractorContext): Promise<SchemaNode> {
     if (param.type) {
-      //   const type = param.type;
-      //   return typeNodeToSchema(type, context);
       return context.computeSchema(param.type);
     }
+
     if (isIdentifier(param.name)) {
       const info = await context.getQuickInfo(param.name);
       const parsed = parseTypeFromQuickInfo(info);
