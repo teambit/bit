@@ -42,11 +42,10 @@ export class EnvPlugin implements PluginDefinition {
       getFormatter: () => env.formatter()(envContext),
       getPackageJsonProps: () => packageGenerator.packageJsonProps,
       getNpmIgnore: () => packageGenerator.npmIgnore,
-      // getDevEnvId: ()
       name: env.name,
       icon: env.icon,
       getDevEnvId: () => {
-        return 'teambit.react/react';
+        return 'teambit.react/react-env';
       },
       getSchemaExtractor: env.schemaExtractor()(envContext),
       getDevServer: (context) => {
