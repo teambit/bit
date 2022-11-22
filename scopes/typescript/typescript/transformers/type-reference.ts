@@ -5,6 +5,13 @@ import { SchemaTransformer } from '../schema-transformer';
 import { SchemaExtractorContext } from '../schema-extractor-context';
 import { ExportIdentifier } from '../export-identifier';
 
+/**
+ * In the following example, `AriaButtonProps` is a type reference
+ * ```ts
+ * import type { AriaButtonProps } from '@react-types/button';
+ * export type ButtonProps = AriaButtonProps & { a: string };
+ * ```
+ */
 export class TypeReferenceTransformer implements SchemaTransformer {
   predicate(node: Node) {
     return node.kind === ts.SyntaxKind.TypeReference;
