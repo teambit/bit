@@ -5,6 +5,7 @@ export { VariableDeclaration } from './variable-declaration';
 export { SourceFileTransformer } from './source-file-transformer';
 export { TypeAliasTransformer } from './type-alias';
 export { ClassDeclarationTransformer } from './class-declaration';
+export { ConstructorDeclarationTransformer } from './contructor-declaration';
 export { InterfaceDeclarationTransformer } from './interface-declaration';
 export { EnumDeclarationTransformer } from './enum-declaration';
 export { BindingElementTransformer } from './binding-element';
