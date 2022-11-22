@@ -97,6 +97,19 @@ describe('bit dependencies command', function () {
         expect(show).to.have.string('@scoped/button@3.3.1');
       });
     });
+    describe('adding prod dep, tagging then adding devDep', () => {
+      before(() => {
+        helper.scopeHelper.setNewLocalAndRemoteScopes();
+        helper.fixtures.populateComponents(1);
+        helper.command.dependenciesSet('comp1', 'lodash@3.3.1');
+        helper.command.tagAllWithoutBuild();
+        helper.command.dependenciesSet('comp1', 'ramda@0.0.20', '--dev');
+      });
+      it('should not remove the previously added dependencies', () => {
+        const show = helper.command.showComponent('comp1');
+        expect(show).to.have.string('lodash');
+      });
+    });
   });
   describe('bit deps remove - removing components', () => {
     describe('removing a component', () => {

@@ -49,7 +49,7 @@ export class DependenciesMain {
     };
     await Promise.all(
       compIds.map(async (compId) => {
-        await this.workspace.addSpecificComponentConfig(compId, DependencyResolverAspect.id, config, true);
+        await this.workspace.addSpecificComponentConfig(compId, DependencyResolverAspect.id, config, true, true);
       })
     );
 
