@@ -1,5 +1,6 @@
 export { ExportDeclaration } from './export-declaration';
 export { FunctionDeclaration } from './function-declaration';
+export { ParameterDeclarationTransformer } from './parameter-declaration';
 export { VariableStatementTransformer } from './variable-statement';
 export { VariableDeclaration } from './variable-declaration';
 export { SourceFileTransformer } from './source-file-transformer';
