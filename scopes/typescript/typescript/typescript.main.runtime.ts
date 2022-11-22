@@ -51,6 +51,7 @@ import {
   ParenthesizedTypeTransformer,
   TypePredicateTransformer,
   IndexedAccessTypeTransformer,
+  TemplateLiteralTypeSpanTransformer,
 } from './transformers';
 import { CheckTypesCmd } from './cmds/check-types.cmd';
 import { TsconfigPathsPerEnv, TsconfigWriter } from './tsconfig-writer';
@@ -346,6 +347,7 @@ export class TypescriptMain {
       new ParenthesizedTypeTransformer(),
       new TypePredicateTransformer(),
       new IndexedAccessTypeTransformer(),
+      new TemplateLiteralTypeSpanTransformer(),
     ]);
 
     if (workspace) {

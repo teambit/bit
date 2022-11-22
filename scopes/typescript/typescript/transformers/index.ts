@@ -17,6 +17,7 @@ export { TupleTypeTransformer } from './tuple-type';
 export { ParenthesizedTypeTransformer } from './parenthesized-type';
 export { TypePredicateTransformer } from './type-predicate';
 export { IndexedAccessTypeTransformer } from './indexed-access-type';
+export { TemplateLiteralTypeSpanTransformer } from './template-literal-type-span';
 export { ArrayTypeTransformer } from './array-type';
 export { ClassDeclarationTransformer } from './class-declaration';
 export { ConstructorTransformer } from './contructor';
