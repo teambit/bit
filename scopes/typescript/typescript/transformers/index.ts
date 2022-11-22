@@ -9,6 +9,7 @@ export { IntersectionTypeTransformer } from './intersection-type';
 export { UnionTypeTransformer } from './union-type';
 export { TypeReferenceTransformer } from './type-reference';
 export { TypeLiteralTransformer } from './type-literal';
+export { LiteralTypeTransformer } from './literal-type';
 export { ClassDeclarationTransformer } from './class-declaration';
 export { ConstructorTransformer } from './contructor';
 export { PropertyDeclarationTransformer } from './property-declaration';
