@@ -732,7 +732,7 @@ describe('bit snap command', function () {
         helper.command.tagAllWithoutBuild('-s 0.0.4');
         beforeUntag = helper.scopeHelper.cloneLocalScope();
       });
-      describe.only('reset all local versions', () => {
+      describe('reset all local versions', () => {
         before(() => {
           helper.command.untagAll();
         });
