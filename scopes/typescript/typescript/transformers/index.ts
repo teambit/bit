@@ -6,6 +6,7 @@ export { VariableDeclaration } from './variable-declaration';
 export { SourceFileTransformer } from './source-file-transformer';
 export { TypeAliasTransformer } from './type-alias';
 export { IntersectionTypeTransformer } from './intersection-type';
+export { UnionTypeTransformer } from './union-type';
 export { ClassDeclarationTransformer } from './class-declaration';
 export { ConstructorTransformer } from './contructor';
 export { PropertyDeclarationTransformer } from './property-declaration';
