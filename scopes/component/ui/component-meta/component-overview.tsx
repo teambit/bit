@@ -5,7 +5,9 @@ import { ConsumableLink } from '@teambit/documenter.ui.consumable-link';
 import { H1 } from '@teambit/documenter.ui.heading';
 import { LabelList } from '@teambit/documenter.ui.label-list';
 import { Section, SectionProps } from '@teambit/documenter.ui.section';
+import { CopyBox } from '@teambit/documenter.ui.copy-box';
 import { Separator } from '@teambit/design.ui.separator';
+import { ContentTabs } from '@teambit/design.navigation.content-tabs';
 import { Subtitle } from '@teambit/documenter.ui.sub-title';
 import { isBrowser } from '@teambit/ui-foundation.ui.is-browser';
 import { Row } from '@teambit/base-react.layout.row';
@@ -37,6 +39,7 @@ export function ComponentOverview({
   component,
   ...rest
 }: ComponentOverviewProps) {
+  const { id } = component;
   let finalElementsUrl = elementsUrl;
   if (finalElementsUrl && !finalElementsUrl.startsWith('http')) {
     const origin = isBrowser ? window.location.origin : undefined;
@@ -80,7 +83,22 @@ export function ComponentOverview({
           />
         </Row>
         <Row>
-          <ConsumableLink title="Package name" link={packageName}></ConsumableLink>
+          <ContentTabs
+            priority="folder"
+            tabs={[
+              {
+                title: 'Component ID',
+                content: <CopyBox className={styles.copyBox}>{id.toStringWithoutVersion()}</CopyBox>,
+              },
+              {
+                title: 'Package',
+                content: <CopyBox className={styles.copyBox}>{packageName}</CopyBox>,
+              },
+            ]}
+            className={styles.contentTabs}
+            navClassName={styles.nav}
+            tabClassName={styles.tab}
+          />
           <BadgeSection
             position={BadgePosition.Package}
             componentDescriptor={componentDescriptor}
