@@ -5,7 +5,7 @@ import mapSeries from 'p-map-series';
 import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
 import groupArray from 'group-array';
 import R from 'ramda';
-import { compact, flatten, uniq } from 'lodash';
+import { compact, flatten, partition, uniq } from 'lodash';
 import loader from '../../cli/loader';
 import { Scope } from '..';
 import { BitId, BitIds } from '../../bit-id';
@@ -30,7 +30,7 @@ import { concurrentComponentsLimit } from '../../utils/concurrency';
 import { BuildStatus } from '../../constants';
 import { NoHeadNoVersion } from '../exceptions/no-head-no-version';
 import { HashesPerRemotes, MissingObjects } from '../exceptions/missing-objects';
-import { getAllVersionsInfo } from './traverse-versions';
+import { getAllVersionHashes, getAllVersionsInfo } from './traverse-versions';
 
 const removeNils = R.reject(R.isNil);
 
@@ -203,6 +203,49 @@ export default class ScopeComponentsImporter {
       fromHead: true,
       collectParents: true,
     });
+  }
+
+  /**
+   * this is relevant when a lane has components from other scopes, otherwise, the scope always have the entire history
+   * of its own components.
+   * checks whether the given components has all history graph so then it's possible to traverse the history.
+   * if missing, go to their origin-scope and fetch their version-history. (currently, it also fetches the head
+   * Version object, but it can be optimized to not fetch it)
+   */
+  async importMissingVersionHistory(externalComponents: ModelComponent[]) {
+    // profiler is here temporarily to make sure this doesn't cost too much for some reason
+    logger.profile(`importMissingVersionHistory, ${externalComponents.length} externalComponents`);
+    const [compsWithHead, compsWithoutHead] = partition(externalComponents, (comp) => comp.hasHead());
+    try {
+      await this.importManyDeltaWithoutDeps({
+        ids: BitIds.fromArray(compsWithoutHead.map((c) => c.toBitId())),
+        fromHead: true,
+      });
+    } catch (err) {
+      // probably scope doesn't exist, which is fine.
+      logger.debug(`importMissingVersionHistory failed getting a component without head from the other scope`, err);
+    }
+    const missingHistoryWithNulls = await mapSeries(compsWithHead, async (modelComponent) => {
+      try {
+        await getAllVersionHashes({ modelComponent, repo: this.repo, throws: true, startFrom: modelComponent.head });
+      } catch (err: any) {
+        if (errorIsTypeOfMissingObject(err)) {
+          return modelComponent.toBitId();
+        }
+        // we don't care much about other errors here. but it's good to know about them.
+        logger.warn(`importMissingVersionHistory, failed traversing ${modelComponent.id()}, err: ${err.message}`, err);
+        return null;
+      }
+      return null;
+    });
+    const missingHistory = compact(missingHistoryWithNulls);
+    if (!missingHistory.length) return;
+    logger.debug(`importMissingVersionHistory, total ${missingHistory.length} component has version-history missing`);
+    await this.importManyDeltaWithoutDeps({
+      ids: BitIds.fromArray(missingHistory),
+      fromHead: true,
+    });
+    logger.profile(`importMissingVersionHistory, ${externalComponents.length} externalComponents`);
   }
 
   async importWithoutDeps(ids: BitIds, cache = true, lanes: Lane[] = []): Promise<ComponentVersion[]> {
