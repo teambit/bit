@@ -1292,7 +1292,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
      * relevant only when writing to .bitmap.
      * eject config of the given aspect-id, so then it won't override previous config. (see "adding prod dep, tagging then adding devDep" e2e-test)
      */
-    shouldEjectPrevious = false
+    shouldMergeWithPrevious = false
   ) {
     const componentConfigFile = await this.componentConfigFile(id);
     if (componentConfigFile) {
@@ -1304,7 +1304,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
       );
       await componentConfigFile.write({ override: true });
     } else {
-      if (shouldEjectPrevious) {
+      if (shouldMergeWithPrevious) {
         const extensions = await this.getSpecificExtensionsFromScope(id);
         const obj = extensions.toConfigObject();
         config = obj[aspectId] ? merge(obj[aspectId], config) : config;
