@@ -19,6 +19,7 @@ export { TypePredicateTransformer } from './type-predicate';
 export { IndexedAccessTypeTransformer } from './indexed-access-type';
 export { TemplateLiteralTypeSpanTransformer } from './template-literal-type-span';
 export { TemplateLiteralTypeTransformer } from './template-literal-type';
+export { ThisTypeTransformer } from './this-type';
 export { ArrayTypeTransformer } from './array-type';
 export { ClassDeclarationTransformer } from './class-declaration';
 export { ConstructorTransformer } from './contructor';

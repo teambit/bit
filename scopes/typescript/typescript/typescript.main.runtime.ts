@@ -53,6 +53,7 @@ import {
   IndexedAccessTypeTransformer,
   TemplateLiteralTypeSpanTransformer,
   TemplateLiteralTypeTransformer,
+  ThisTypeTransformer,
 } from './transformers';
 import { CheckTypesCmd } from './cmds/check-types.cmd';
 import { TsconfigPathsPerEnv, TsconfigWriter } from './tsconfig-writer';
@@ -350,6 +351,7 @@ export class TypescriptMain {
       new IndexedAccessTypeTransformer(),
       new TemplateLiteralTypeSpanTransformer(),
       new TemplateLiteralTypeTransformer(),
+      new ThisTypeTransformer(),
     ]);
 
     if (workspace) {
