@@ -1,12 +1,13 @@
-import ts, { Node, SourceFile } from 'typescript';
+import ts, { Node, SourceFile, SyntaxKind } from 'typescript';
 import { SchemaExtractor } from '@teambit/schema';
 import { TsserverClient } from '@teambit/ts-server';
 import type { Workspace } from '@teambit/workspace';
 import { ComponentDependency, DependencyResolverMain } from '@teambit/dependency-resolver';
-import { SchemaNode, APISchema, ModuleSchema } from '@teambit/semantics.entities.semantic-schema';
+import { SchemaNode, APISchema, ModuleSchema, UnImplementedSchema } from '@teambit/semantics.entities.semantic-schema';
 import { Component } from '@teambit/component';
 import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 import { Formatter } from '@teambit/formatter';
+import { Logger } from '@teambit/logger';
 import { flatten } from 'lodash';
 import { TypescriptMain, SchemaTransformerSlot } from './typescript.main.runtime';
 import { TransformerNotFound } from './exceptions';
@@ -20,7 +21,8 @@ export class TypeScriptExtractor implements SchemaExtractor {
     private tsMain: TypescriptMain,
     private rootPath: string,
     private depResolver: DependencyResolverMain,
-    private workspace: Workspace | undefined
+    private workspace: Workspace | undefined,
+    private logger: Logger
   ) {}
 
   parseSourceFile(file: AbstractVinyl): SourceFile {
@@ -45,13 +47,14 @@ export class TypeScriptExtractor implements SchemaExtractor {
     const mainAst = this.parseSourceFile(mainFile);
     const context = await this.createContext(tsserver, component, formatter);
     const exportNames = await this.computeExportedIdentifiers(mainAst, context);
-    context.setExports(new ExportList(exportNames));
+    context.setExports(component.mainFile.path, new ExportList(exportNames));
     const moduleSchema = (await this.computeSchema(mainAst, context)) as ModuleSchema;
     moduleSchema.flatExportsRecursively();
     const apiScheme = moduleSchema;
     const location = context.getLocation(mainAst);
 
-    return new APISchema(location, apiScheme, component.id);
+    // @todo
+    return new APISchema(location, apiScheme, [], component.id);
   }
 
   dispose() {
@@ -62,7 +65,8 @@ export class TypeScriptExtractor implements SchemaExtractor {
   async computeExportedIdentifiers(node: Node, context: SchemaExtractorContext) {
     const transformer = this.getTransformer(node, context);
     if (!transformer || !transformer.getIdentifiers) {
-      throw new TransformerNotFound(node, context.component, context.getLocation(node));
+      this.logger.warn(new TransformerNotFound(node, context.component, context.getLocation(node)).toString());
+      return [];
     }
     return transformer.getIdentifiers(node, context);
   }
@@ -103,6 +107,9 @@ export class TypeScriptExtractor implements SchemaExtractor {
     const transformer = this.getTransformer(node, context);
     // leave the next line commented out, it is used for debugging
     // console.log('transformer', transformer.constructor.name, node.getText());
+    if (!transformer) {
+      return new UnImplementedSchema(context.getLocation(node), node.getText(), SyntaxKind[node.kind]);
+    }
     return transformer.transform(node, context);
   }
 
@@ -120,7 +127,10 @@ export class TypeScriptExtractor implements SchemaExtractor {
     const transformers = flatten(this.schemaTransformerSlot.values());
     const transformer = transformers.find((singleTransformer) => singleTransformer.predicate(node));
 
-    if (!transformer) throw new TransformerNotFound(node, context.component, context.getLocation(node));
+    if (!transformer) {
+      this.logger.warn(new TransformerNotFound(node, context.component, context.getLocation(node)).toString());
+      return undefined;
+    }
 
     return transformer;
   }

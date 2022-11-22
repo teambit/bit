@@ -190,7 +190,8 @@ export class TypescriptMain {
       this,
       path || this.workspace.path,
       this.depResolver,
-      this.workspace
+      this.workspace,
+      this.logger
     );
   }
 
