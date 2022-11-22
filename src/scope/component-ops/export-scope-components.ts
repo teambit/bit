@@ -14,6 +14,7 @@ import loader from '../../cli/loader';
 import { PersistFailed } from '../exceptions/persist-failed';
 import { MergeResult } from '../repositories/sources';
 import { Ref } from '../objects';
+import { BitObjectList } from '../objects/bit-object-list';
 
 /**
  * ** Legacy and "bit sign" Only **
@@ -46,7 +47,7 @@ export async function saveObjects(scope: Scope, objectList: ObjectList): Promise
   const bitObjectList = await objectList.toBitObjects();
   const objectsNotRequireMerge = bitObjectList.getObjectsNotRequireMerge();
   // components and lanes can't be just added, they need to be carefully merged.
-  const { mergedIds, mergedComponentsResults, mergedLanes } = await mergeObjects(scope, objectList);
+  const { mergedIds, mergedComponentsResults, mergedLanes } = await mergeObjects(scope, bitObjectList);
 
   const mergedComponents = mergedComponentsResults.map((_) => _.mergedComponent);
   const allObjects = [...mergedComponents, ...mergedLanes, ...objectsNotRequireMerge];
@@ -68,10 +69,9 @@ type MergeObjectsResult = { mergedIds: BitIds; mergedComponentsResults: MergeRes
  */
 export async function mergeObjects(
   scope: Scope,
-  objectList: ObjectList,
+  bitObjectList: BitObjectList,
   throwForMissingDeps = false
 ): Promise<MergeObjectsResult> {
-  const bitObjectList = await objectList.toBitObjects();
   const components = bitObjectList.getComponents();
   const lanesObjects = bitObjectList.getLanes();
   const versions = bitObjectList.getVersions();
