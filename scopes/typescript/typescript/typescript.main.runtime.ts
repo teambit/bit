@@ -54,6 +54,7 @@ import {
   TemplateLiteralTypeSpanTransformer,
   TemplateLiteralTypeTransformer,
   ThisTypeTransformer,
+  ConditionalTypeTransformer,
 } from './transformers';
 import { CheckTypesCmd } from './cmds/check-types.cmd';
 import { TsconfigPathsPerEnv, TsconfigWriter } from './tsconfig-writer';
@@ -352,6 +353,7 @@ export class TypescriptMain {
       new TemplateLiteralTypeSpanTransformer(),
       new TemplateLiteralTypeTransformer(),
       new ThisTypeTransformer(),
+      new ConditionalTypeTransformer(),
     ]);
 
     if (workspace) {
