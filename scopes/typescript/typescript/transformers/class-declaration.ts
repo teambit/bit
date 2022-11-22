@@ -9,7 +9,6 @@ import ts, { Node, ClassDeclaration } from 'typescript';
 import { SchemaTransformer } from '../schema-transformer';
 import { SchemaExtractorContext } from '../schema-extractor-context';
 import { ExportIdentifier } from '../export-identifier';
-import { classElementToSchema } from './utils/class-element-to-schema';
 import { typeNodeToSchema } from './utils/type-node-to-schema';
 
 export class ClassDeclarationTransformer implements SchemaTransformer {
@@ -75,7 +74,7 @@ export class ClassDeclarationTransformer implements SchemaTransformer {
       if (isPrivate) {
         return null;
       }
-      return classElementToSchema(member, context);
+      return context.computeSchema(member);
     });
     const doc = await context.jsDocToDocSchema(node);
 
