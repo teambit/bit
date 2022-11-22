@@ -6,7 +6,6 @@
 .node,
 .nodeLink {
   display: flex;
-  margin-right: 5px;
   font-family: Roboto mono;
   font-size: var(--bit-p-xxs);
   word-break: normal;
@@ -18,8 +17,4 @@
 
 .nodeLink {
   color: #4646c6;
-}
-
-.padding2 {
-  padding: 0px 2px;
 }

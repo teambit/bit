@@ -4,19 +4,69 @@
   }
 }
 
-.signature {
+.signatureContainer {
   display: flex;
   margin-right: 5px;
+  background-color: #ffffff;
+  padding: 4px;
+  border-radius: 6px;
+  width: 100%;
+  color: rgb(57, 115, 0);
   font-family: Roboto mono;
   font-size: var(--bit-p-xxs);
   word-break: normal;
-  color: rgb(57, 115, 0);
+  &.isHovering {
+    background-color: #f4f5f6;
+    cursor: pointer;
+  }
 }
 
 .row {
-  grid-template-columns: 1fr 2fr 1fr;
+  grid-template-columns: 1fr 1fr 2fr;
+  &.isHovering {
+    background-color: #f4f5f6;
+    cursor: pointer;
+  }
 }
 
 .name {
   word-break: normal;
+}
+
+.rowWithSignatureDetails {
+  border-bottom: 1px solid var(--bit-border-color-lightest, var(--bit-border-color-lightest, #ededed));
+  margin-bottom: 8px;
+}
+
+.showSignature {
+  border-bottom: none;
+}
+
+.signatureDetails {
+  background-color: var(--bit-bg-heavy, #f4f5f6);
+}
+
+.returnContainer,
+.returnTitle,
+.returnType {
+  display: flex;
+}
+
+.returnContainer {
+  padding: 18px 20px;
+}
+
+.returnTitle {
+  font-weight: 500;
+  text-transform: uppercase;
+  font-size: var(--bit-p-xxs);
+  padding-right: 16px;
+}
+
+.node {
+  display: flex;
+  font-family: Roboto mono;
+  font-size: var(--bit-p-xxs);
+  word-break: normal;
+  color: rgb(57, 115, 0);
 }

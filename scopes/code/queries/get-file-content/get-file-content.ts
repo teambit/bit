@@ -33,11 +33,11 @@ type FileResult = {
   };
 };
 
-export function useFileContent(componentId?: ComponentID, filePath?: string) {
+export function useFileContent(componentId?: ComponentID, filePath?: string, skip?: boolean) {
   const id = componentId?.toString();
   const { data, ...rest } = useDataQuery<FileResult>(getFile, {
     variables: { id, path: filePath },
-    skip: !componentId || filePath === undefined,
+    skip: skip || !componentId || filePath === undefined,
   });
 
   const fileContent = data?.getHost?.get.getFile;

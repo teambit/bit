@@ -10,8 +10,7 @@ import {
 } from '@teambit/legacy/dist/constants';
 import { BitError } from '@teambit/bit-error';
 import { Logger } from '@teambit/logger';
-import { SnapResults } from '@teambit/legacy/dist/api/consumer/lib/snap';
-import { SnappingMain } from './snapping.main.runtime';
+import { SnappingMain, SnapResults } from './snapping.main.runtime';
 
 export class SnapCmd implements Command {
   name = 'snap [component-pattern]';
@@ -28,11 +27,15 @@ export class SnapCmd implements Command {
     ['m', 'message <message>', 'log message describing the latest changes'],
     ['', 'unmodified', 'include unmodified components (by default, only new and modified components are snapped)'],
     ['', 'unmerged', 'EXPERIMENTAL. complete a merge process by snapping the unmerged components'],
-    ['', 'build', 'Harmony only. run the pipeline build and complete the tag'],
+    [
+      'b',
+      'build',
+      'EXPERIMENTAL. not needed for now. run the build pipeline in case the feature-flag build-on-ci is enabled',
+    ],
     ['', 'skip-tests', 'skip running component tests during snap process'],
     ['', 'skip-auto-snap', 'skip auto snapping dependents'],
     ['', 'disable-snap-pipeline', 'skip the snap pipeline'],
-    ['', 'force-deploy', 'Harmony only. run the deploy pipeline although the build failed'],
+    ['', 'force-deploy', 'run the deploy pipeline although the build failed'],
     [
       'i',
       'ignore-issues [issues]',

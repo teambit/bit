@@ -194,6 +194,7 @@ export class ExportMain {
     resumeExportId,
     ignoreMissingArtifacts,
     isOnMain = true,
+    exportHeadsOnly, // relevant when exporting from bare-scope, especially when re-exporting existing versions, the normal calculation based on getDivergeData won't work
   }: {
     scope: Scope;
     ids: BitIds;
@@ -204,6 +205,7 @@ export class ExportMain {
     resumeExportId?: string | undefined;
     ignoreMissingArtifacts?: boolean;
     isOnMain?: boolean;
+    exportHeadsOnly?: boolean;
   }): Promise<{ exported: BitIds; updatedLocally: BitIds; newIdsOnRemote: BitId[] }> {
     logger.debugAndAddBreadCrumb('scope.exportMany', 'ids: {ids}', { ids: ids.toString() });
     const scopeRemotes: Remotes = await getScopeRemotes(scope);
@@ -251,6 +253,14 @@ export class ExportMain {
     };
 
     const getVersionsToExport = async (modelComponent: ModelComponent, lane?: Lane): Promise<string[]> => {
+      if (exportHeadsOnly) {
+        const head = modelComponent.head;
+        if (!head)
+          throw new Error(
+            `getVersionsToExport should export the head only, but the head of ${modelComponent.id()} is missing`
+          );
+        return modelComponent.switchHashesWithTagsIfExist([head]);
+      }
       const localTagsOrHashes = await modelComponent.getLocalTagsOrHashes(scope.objects);
       if (!allVersions && !lane) {
         return localTagsOrHashes;
@@ -581,6 +591,11 @@ export class ExportMain {
       const needsChange = ids.some((id) => id.scope !== remoteScope);
       if (needsChange) {
         version.flattenedDependencies = getBitIdsWithUpdatedScope(ids);
+        version.flattenedEdges = version.flattenedEdges.map((edge) => ({
+          ...edge,
+          source: getIdWithUpdatedScope(edge.source),
+          target: getIdWithUpdatedScope(edge.target),
+        }));
         hasChanged = true;
       }
       return hasChanged;

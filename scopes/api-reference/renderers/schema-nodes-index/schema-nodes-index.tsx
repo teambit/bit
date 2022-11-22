@@ -45,7 +45,7 @@ export function SchemaNodesIndex({ rootRef, title, className, ...rest }: SchemaN
       {grouped.map(([group, groupedNodes], groupedIndex) => {
         if (!group) {
           return (
-            <div key={`group-${groupedIndex}`} className={classnames(styles.groupedNodesContainer, styles.paddingTop)}>
+            <div key={`group-${groupedIndex}`} className={classnames(styles.groupedNodesContainer, styles.firstNode)}>
               {groupedNodes.map((node, nodeIndex) => {
                 const isActive = node && decodeURIComponent(node) === hash;
                 return (
@@ -57,7 +57,8 @@ export function SchemaNodesIndex({ rootRef, title, className, ...rest }: SchemaN
                         styles.groupedNodeName,
                         classes.menuItem,
                         classes.interactive,
-                        isActive && classes.active
+                        isActive && classes.active,
+                        nodeIndex === 0 && styles.firstNodeLink
                       )}
                     >
                       {node}
@@ -71,7 +72,7 @@ export function SchemaNodesIndex({ rootRef, title, className, ...rest }: SchemaN
         return (
           <div
             key={`${group}-${groupedIndex}`}
-            className={classnames(styles.group, groupedIndex === 0 && styles.paddingTop)}
+            className={classnames(styles.group, groupedIndex === 0 && styles.firstNode)}
           >
             <div className={styles.groupName}>
               <Link
@@ -81,7 +82,8 @@ export function SchemaNodesIndex({ rootRef, title, className, ...rest }: SchemaN
                   styles.groupedNodeName,
                   classes.menuItem,
                   classes.interactive,
-                  hash === decodeURIComponent(group) && classes.active
+                  hash === decodeURIComponent(group) && classes.active,
+                  groupedIndex === 0 && styles.firstNodeLink
                 )}
               >
                 {decodeURIComponent(group)}

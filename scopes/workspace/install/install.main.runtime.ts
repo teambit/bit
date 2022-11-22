@@ -49,6 +49,7 @@ export type WorkspaceInstallOptions = {
   copyPeerToRuntimeOnComponents?: boolean;
   updateExisting: boolean;
   savePrefix?: string;
+  compile?: boolean;
 };
 
 export type ModulesInstallOptions = Omit<WorkspaceInstallOptions, 'updateExisting' | 'lifecycleType' | 'import'>;
@@ -204,7 +205,9 @@ export class InstallMain {
         linkTeambitBit: false,
         linkCoreAspects: this.dependencyResolver.linkCoreAspects(),
       });
-      await this.compiler.compileOnWorkspace([], { initiator: CompilationInitiator.Install });
+      if (options?.compile) {
+        await this.compiler.compileOnWorkspace([], { initiator: CompilationInitiator.Install });
+      }
       await this.link(linkOpts);
       prev = current;
       current = await this._getComponentsManifests(installer, mergedRootPolicy, pmInstallOptions);

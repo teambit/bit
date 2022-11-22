@@ -35,7 +35,7 @@ function TypeUnionComponent(props: APINodeRenderProps) {
                 metadata={{ [type.__schema]: { columnView: true } }}
               />
               {types.length > 1 && index !== types.length - 1 ? (
-                <div key={`${type.name}-${index}-|`} className={classnames(styles.node, styles.padding2)}>
+                <div key={`${type.name}-${index}-|`} className={classnames(styles.node, styles.separator)}>
                   {'|'}
                 </div>
               ) : null}
@@ -47,7 +47,7 @@ function TypeUnionComponent(props: APINodeRenderProps) {
           <div key={`${type.name}-${index}`} className={styles.node}>
             {type.toString()}
             {types.length > 1 && index !== types.length - 1 ? (
-              <div key={`${type.name}-${index}-|`} className={classnames(styles.node, styles.padding2)}>
+              <div key={`${type.name}-${index}-|`} className={classnames(styles.node, styles.separator)}>
                 {'|'}
               </div>
             ) : null}

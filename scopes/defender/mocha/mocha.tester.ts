@@ -23,6 +23,10 @@ export class MochaTester implements Tester {
     private MochaModule: typeof Mocha
   ) {}
   async test(context: TesterContext): Promise<Tests> {
+    if (context.ui) {
+      // @todo: maybe support UI tests at some point
+      return new Tests([]);
+    }
     this.logger.clearStatusLine();
     const specsPerComp = context.specFiles.toArray();
     babelRegister({
@@ -55,13 +59,13 @@ export class MochaTester implements Tester {
   /**
    * @todo: make this work. currently, it doesn't update the UI upon changes.
    */
-  async watch(context: TesterContext): Promise<Tests> {
-    const results = await this.test(context);
-    if (this._callback) {
-      this._callback(results);
-    }
-    return results;
-  }
+  // async watch(context: TesterContext): Promise<Tests> {
+  //   const results = await this.test(context);
+  //   if (this._callback) {
+  //     this._callback(results);
+  //   }
+  //   return results;
+  // }
 
   async onTestRunComplete(callback: CallbackFn) {
     this._callback = callback;

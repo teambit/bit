@@ -16,6 +16,13 @@ import { getFileIcon, FileIconMatch } from '@teambit/code.ui.utils.get-file-icon
 import { useCodeParams } from '@teambit/code.ui.hooks.use-code-params';
 import { TreeNode } from '@teambit/design.ui.tree';
 import { affix } from '@teambit/base-ui.utils.string.affix';
+import { useComponentArtifacts } from '@teambit/component.ui.artifacts.queries.use-component-artifacts';
+import {
+  ArtifactFile,
+  getArtifactFileDetailsFromUrl,
+} from '@teambit/component.ui.artifacts.models.component-artifacts-model';
+import isBinaryPath from 'is-binary-path';
+import { FILE_SIZE_THRESHOLD } from '@teambit/component.ui.artifacts.artifacts-tree';
 
 import styles from './code-tab-page.module.scss';
 
@@ -28,8 +35,12 @@ export function CodePage({ className, fileIconSlot, host }: CodePageProps) {
   const urlParams = useCodeParams();
   const component = useContext(ComponentContext);
   const { mainFile, fileTree = [], dependencies, devFiles } = useCode(component.id);
+  const { data: artifacts = [] } = useComponentArtifacts(host, component.id.toString());
 
   const currentFile = urlParams.file || mainFile;
+  const currentArtifactFile = getArtifactFileDetailsFromUrl(artifacts, currentFile)?.artifactFile;
+  const currentArtifactFileContent = getCurrentArtifactFileContent(currentArtifactFile);
+
   const isMobile = useIsMobile();
   const [isSidebarOpen, setSidebarOpenness] = useState(!isMobile);
   const sidebarOpenness = isSidebarOpen ? Layout.row : Layout.left;
@@ -39,7 +50,12 @@ export function CodePage({ className, fileIconSlot, host }: CodePageProps) {
   return (
     <SplitPane layout={sidebarOpenness} size="85%" className={classNames(styles.codePage, className)}>
       <Pane className={styles.left}>
-        <CodeView componentId={component.id} currentFile={currentFile} icon={icon} />
+        <CodeView
+          componentId={component.id}
+          currentFile={currentFile}
+          icon={icon}
+          currentFileContent={currentArtifactFileContent}
+        />
       </Pane>
       <HoverSplitter className={styles.splitter}>
         <Collapser
@@ -54,7 +70,6 @@ export function CodePage({ className, fileIconSlot, host }: CodePageProps) {
       <Pane className={styles.right}>
         <CodeTabTree
           host={host}
-          componentId={component.id}
           currentFile={currentFile}
           dependencies={dependencies}
           fileTree={fileTree}
@@ -84,4 +99,10 @@ export function generateIcon(fileIconMatchers: FileIconMatch[]) {
   return function Icon({ id }: TreeNode) {
     return getFileIcon(fileIconMatchers, id);
   };
+}
+
+function getCurrentArtifactFileContent(file?: ArtifactFile | undefined): string | undefined {
+  if (!file) return undefined;
+  if (isBinaryPath(file.path) || (file.size ?? 0) > FILE_SIZE_THRESHOLD) return undefined;
+  return file.content;
 }

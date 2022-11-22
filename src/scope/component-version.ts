@@ -2,7 +2,6 @@ import { BitId, BitIds } from '../bit-id';
 import ConsumerComponent from '../consumer/component';
 import ModelComponent from './models/model-component';
 import Version from './models/version';
-import { Ref } from './objects';
 import Repository from './objects/repository';
 
 export default class ComponentVersion {
@@ -43,9 +42,3 @@ export default class ComponentVersion {
     return this.component.toConsumerComponent(this.version, this.component.scope, repo);
   }
 }
-
-export type CollectObjectsOpts = {
-  collectParents: boolean;
-  collectParentsUntil?: Ref | null; // stop traversing when this hash found. helps to import only the delta.
-  collectArtifacts: boolean;
-};

@@ -1,10 +1,9 @@
-import fs from 'graceful-fs';
+import { mapValues } from 'lodash';
 import path from 'path';
 import semver from 'semver';
 import parsePackageName from 'parse-package-name';
 import { initDefaultReporter } from '@pnpm/default-reporter';
 import { streamParser } from '@pnpm/logger';
-import { readModulesManifest } from '@pnpm/modules-yaml';
 import { StoreController, WantedDependency } from '@pnpm/package-store';
 import { createOrConnectStoreController, CreateStoreControllerOptions } from '@pnpm/store-connection-manager';
 import { sortPackages } from '@pnpm/sort-packages';
@@ -30,13 +29,11 @@ import { pickRegistryForPackage } from '@pnpm/pick-registry-for-package';
 import { PackageManifest, ProjectManifest, ReadPackageHook } from '@pnpm/types';
 import { Logger } from '@teambit/logger';
 import toNerfDart from 'nerf-dart';
-import { promisify } from 'util';
 import { createPkgGraph } from 'pkgs-graph';
 import userHome from 'user-home';
 import { pnpmErrorToBitError } from './pnpm-error-to-bit-error';
 import { readConfig } from './read-config';
 
-const link = promisify(fs.link);
 const installsRunning: Record<string, Promise<any>> = {};
 
 type RegistriesMap = {
@@ -75,6 +72,7 @@ async function createStoreController(
     networkConcurrency: options.networkConfig.networkConcurrency,
     packageImportMethod: options.packageImportMethod,
     pnpmHomeDir: path.join(userHome, '.pnpm'), // This is not actually used in our case
+    resolveSymlinksInInjectedDirs: true,
   };
   // We should avoid the recreation of store.
   // The store holds cache that makes subsequent resolutions faster.
@@ -191,7 +189,16 @@ export async function install(
     const { rootComponentWrappers, rootComponents } = createRootComponentWrapperManifests(rootDir, manifestsByPaths);
     manifestsByPaths = {
       ...rootComponentWrappers,
-      ...manifestsByPaths,
+      ...mapValues(manifestsByPaths, (manifest, dir) => {
+        if (!manifest.name || dir === rootDir) return manifest;
+        return {
+          ...manifest,
+          publishConfig: {
+            directory: path.relative(dir, path.join(rootDir, 'node_modules', manifest.name)),
+            linkDirectory: true,
+          },
+        };
+      }),
     };
     readPackage.push(readPackageHook as ReadPackageHook);
     hoistingLimits = new Map();
@@ -225,6 +232,7 @@ export async function install(
     hooks: { readPackage },
     hoistingLimits,
     strictPeerDependencies: false,
+    resolveSymlinksInInjectedDirs: true,
     ...options,
     peerDependencyRules: {
       allowAny: ['*'],
@@ -252,16 +260,6 @@ export async function install(
     throw pnpmErrorToBitError(err);
   } finally {
     stopReporting();
-  }
-  if (options.rootComponents) {
-    const modulesState = await readModulesManifest(path.join(rootDir, 'node_modules'));
-    if (modulesState?.injectedDeps) {
-      await linkManifestsToInjectedDeps({
-        injectedDeps: modulesState.injectedDeps,
-        manifestsByPaths,
-        rootDir,
-      });
-    }
   }
 }
 
@@ -377,31 +375,6 @@ function readWorkspacePackageHook(pkg: PackageManifest): PackageManifest {
       ...newDeps,
     },
   };
-}
-
-/*
- * The package.json files of the components are generated into node_modules/<component pkg name>/package.json
- * This function copies the generated package.json file into all the locations of the component.
- */
-async function linkManifestsToInjectedDeps({
-  rootDir,
-  manifestsByPaths,
-  injectedDeps,
-}: {
-  rootDir: string;
-  manifestsByPaths: Record<string, ProjectManifest>;
-  injectedDeps: Record<string, string[]>;
-}) {
-  await Promise.all(
-    Object.entries(injectedDeps).map(async ([compDir, targetDirs]) => {
-      const pkgName = manifestsByPaths[path.join(rootDir, compDir)]?.name;
-      if (!pkgName) return;
-      const pkgJsonPath = path.join(rootDir, 'node_modules', pkgName, 'package.json');
-      if (fs.existsSync(pkgJsonPath)) {
-        await Promise.all(targetDirs.map((targetDir) => link(pkgJsonPath, path.join(targetDir, 'package.json'))));
-      }
-    })
-  );
 }
 
 function groupPkgs(manifestsByPaths: Record<string, ProjectManifest>) {

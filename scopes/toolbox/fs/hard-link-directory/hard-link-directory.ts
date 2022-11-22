@@ -18,7 +18,7 @@ export async function hardLinkDirectory(src: string, destDirs: string[]) {
           destDirs.map(async (destDir) => {
             const destFile = path.join(destDir, file);
             try {
-              await fs.mkdir(destFile);
+              await fs.mkdir(destFile, { recursive: true });
             } catch (err: any) {
               if (err.code !== 'EEXIST') throw err;
             }

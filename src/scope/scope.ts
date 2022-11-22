@@ -175,7 +175,7 @@ export default class Scope {
 
   setCurrentLaneId(laneId?: LaneId) {
     if (!laneId) return;
-    if (laneId.isDefault()) return;
+    if (laneId.isDefault()) this.currentLaneId = undefined;
     this.currentLaneId = laneId;
   }
 
@@ -507,7 +507,7 @@ once done, to continue working, please run "bit cc"`
     const componentModel = await this.getModelComponentIfExist(id);
     if (!componentModel) return [];
     const startFromRef = startFrom ? componentModel.getRef(startFrom) ?? undefined : undefined;
-    const logs = await componentModel.collectLogs(this.objects, shortHash, startFromRef);
+    const logs = await componentModel.collectLogs(this, shortHash, startFromRef);
     return logs;
   }
 

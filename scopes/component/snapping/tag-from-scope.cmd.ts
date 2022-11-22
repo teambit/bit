@@ -1,12 +1,12 @@
 import chalk from 'chalk';
 import { Command, CommandOptions } from '@teambit/cli';
-import { TagResults, NOTHING_TO_TAG_MSG, AUTO_TAGGED_MSG } from '@teambit/legacy/dist/api/consumer/lib/tag';
+import { NOTHING_TO_TAG_MSG, AUTO_TAGGED_MSG } from '@teambit/legacy/dist/api/consumer/lib/tag';
 import { DEFAULT_BIT_RELEASE_TYPE } from '@teambit/legacy/dist/constants';
 import { IssuesClasses } from '@teambit/component-issues';
 import { ReleaseType } from 'semver';
 import { BitError } from '@teambit/bit-error';
 import { Logger } from '@teambit/logger';
-import { SnappingMain } from './snapping.main.runtime';
+import { SnappingMain, TagResults } from './snapping.main.runtime';
 import { BasicTagParams } from './tag-model-component';
 
 const RELEASE_TYPES = ['major', 'premajor', 'minor', 'preminor', 'patch', 'prepatch', 'prerelease'];
@@ -23,12 +23,13 @@ export class TagFromScopeCmd implements Command {
   name = '_tag <data>';
   group = 'development';
   private = true;
-  description = 'create an immutable and exportable component snapshot, tagged with a release version.';
+  description =
+    'tag components from a bare-scope by using build artifacts from previous snap and running the deploy-pipeline only';
   extendedDescription = `this command should be running from a new bare scope, it first imports the components it needs and then processes the tag.
 the input data is a stringified JSON of an array of the following object.
 {
   componentId: string;    // ids always have scope, so it's safe to parse them from string
-  dependencies: string[]; // e.g. [teambit/compiler@1.0.0, teambit/tester@1.0.0]
+  dependencies?: string[]; // e.g. [teambit/compiler@1.0.0, teambit/tester@1.0.0]
   versionToTag?: string;  // specific version (e.g. '1.0.0') or semver (e.g. 'minor', 'patch')
   prereleaseId?: string;  // applicable when versionToTag is a pre-release. (e.g. "dev", for 1.0.0-dev.1)
   message?: string;       // tag-message.
@@ -148,6 +149,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       ignoreNewestVersion,
       skipTests,
       build: true,
+      persist: true,
       disableTagAndSnapPipelines: disableTagPipeline,
       forceDeploy,
       incrementBy,

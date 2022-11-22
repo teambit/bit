@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { H5, H6 } from '@teambit/documenter.ui.heading';
+import { H6 } from '@teambit/documenter.ui.heading';
 import Editor from '@monaco-editor/react';
-import { Link, useLocation } from '@teambit/base-react.navigation.link';
+import { useLocation } from '@teambit/base-react.navigation.link';
 import { defaultCodeEditorOptions } from '@teambit/api-reference.utils.code-editor-options';
 import classnames from 'classnames';
 import { APINodeRenderProps } from '@teambit/api-reference.models.api-node-renderer';
@@ -13,10 +13,11 @@ import { SchemaNodesIndex } from '@teambit/api-reference.renderers.schema-nodes-
 
 import styles from './api-node-details.module.scss';
 
+const INDEX_THRESHOLD_WIDTH = 600;
+
 export type APINodeDetailsProps = APINodeRenderProps & {
   displaySignature?: string;
   options?: {
-    hideImplementation?: boolean;
     hideIndex?: boolean;
   };
 };
@@ -27,12 +28,9 @@ export function APINodeDetails({
       name,
       signature: defaultSignature,
       doc,
-      location: { filePath, line },
+      location: { filePath },
     },
-    renderer: { icon },
-    // componentId,
   },
-  // members,
   displaySignature,
   children,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -52,10 +50,11 @@ export function APINodeDetails({
   const rootRef = useRef() as React.MutableRefObject<HTMLDivElement>;
   const apiRef = useRef<HTMLDivElement | null>(null);
   const currentQueryParams = query.toString();
-
-  const componentVersionFromUrl = query.get('version');
-  const pathname = routerLocation?.pathname;
-  const componentUrlWithoutVersion = pathname?.split('~')[0];
+  const [containerSize, setContainerSize] = useState<{ width?: number; height?: number }>({
+    width: undefined,
+    height: undefined,
+  });
+  const indexHidden = (containerSize.width ?? 0) < INDEX_THRESHOLD_WIDTH;
 
   const example = (doc?.tags || []).find((tag) => tag.tagName === 'example');
   const comment = doc?.comment;
@@ -66,18 +65,11 @@ export function APINodeDetails({
    * default line height: 18px;
    * totalHeight: (no of lines * default line height)
    */
-
   const exampleHeight = (example?.comment?.split('\n').length || 0) * 18;
-  const defaultSignatureHeight = 36 + (signature?.split('\n').length || 0) * 18;
+  const defaultSignatureHeight = 36 + ((signature?.split('\n').length || 0) - 1) * 18;
 
   const [signatureHeight, setSignatureHeight] = useState<number>(defaultSignatureHeight);
   const [isMounted, setIsMounted] = useState(false);
-
-  const locationUrl = `${componentUrlWithoutVersion}~code/${filePath}${
-    componentVersionFromUrl ? `?version=${componentVersionFromUrl}` : ''
-  }`;
-
-  const locationLabel = `${filePath}:${line}`;
 
   const getAPINodeUrl = useCallback((queryParams: APIRefQueryParams) => {
     const queryObj = Object.fromEntries(query.entries());
@@ -133,12 +125,27 @@ export function APINodeDetails({
     }
   }, [isMounted]);
 
+  const handleSize = useCallback(() => {
+    setContainerSize({
+      width: rootRef.current.offsetWidth,
+      height: rootRef.current.offsetHeight,
+    });
+  }, []);
+
   useEffect(() => {
+    if (window) window.addEventListener('resize', handleSize);
+    // Call handler right away so state gets updated with initial container size
+    handleSize();
     return () => {
       hoverProviderDispose.current?.dispose();
+      if (window) window.removeEventListener('resize', handleSize);
       setIsMounted(false);
     };
   }, []);
+
+  useEffect(() => {
+    handleSize();
+  }, [rootRef?.current?.offsetHeight, rootRef?.current?.offsetWidth]);
 
   return (
     /**
@@ -152,16 +159,6 @@ export function APINodeDetails({
       className={classnames(rest.className, styles.apiNodeDetailsContainer)}
     >
       <div className={styles.apiDetails} ref={apiRef}>
-        {name && (
-          <div className={styles.apiNodeDetailsNameContainer}>
-            {icon && (
-              <div className={styles.apiTypeIcon}>
-                <img src={icon.url} />
-              </div>
-            )}
-            <H5 className={styles.apiNodeDetailsName}>{name}</H5>
-          </div>
-        )}
         {comment && <div className={styles.apiNodeDetailsComment}>{comment}</div>}
         {signature && (
           <div
@@ -180,7 +177,7 @@ export function APINodeDetails({
               onMount={(editor) => {
                 editorRef.current = editor;
                 const signatureContent = editorRef.current.getValue();
-                const updatedSignatureHeight = 36 + (signatureContent?.split('\n').length || 0) * 18;
+                const updatedSignatureHeight = 36 + ((signatureContent?.split('\n').length || 0) - 1) * 18;
                 setIsMounted(true);
                 setSignatureHeight(updatedSignatureHeight);
               }}
@@ -203,21 +200,9 @@ export function APINodeDetails({
             </div>
           </div>
         )}
-        {!options?.hideImplementation && (
-          <div className={styles.apiNodeDetailsLocationContainer}>
-            <div className={styles.apiNodeDetailsLocationIcon}>
-              <img src="https://static.bit.dev/design-system-assets/Icons/external-link.svg"></img>
-            </div>
-            <div className={styles.apiNodeDetailsLocation}>
-              <Link external={true} href={locationUrl} className={styles.apiNodeDetailsLocationLink}>
-                {locationLabel}
-              </Link>
-            </div>
-          </div>
-        )}
         {children}
       </div>
-      {!options?.hideIndex && (
+      {!options?.hideIndex && !indexHidden && (
         <SchemaNodesIndex className={styles.schemaNodesIndex} title={'ON THIS PAGE'} rootRef={rootRef} />
       )}
     </div>

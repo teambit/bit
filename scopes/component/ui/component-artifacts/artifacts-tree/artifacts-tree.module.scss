@@ -48,3 +48,28 @@
 .link {
   color: var(--bit-accent-color, #6c5ce7);
 }
+
+.node {
+  pointer-events: none;
+  > div {
+    pointer-events: auto;
+  }
+}
+
+.artifactWidgets {
+  display: flex;
+}
+
+.size {
+  margin-right: 8px;
+  padding: 4px;
+  font-size: var(--bit-p-xxs, '12px');
+  line-height: 1em;
+  border-radius: 4px;
+  background-color: var(--bit-accent-bg, #edebfc);
+  color: var(--bit-accent-text, #6c5ce7);
+
+  &.selected {
+    border: 1px solid var(--bit-accent-text, #6c5ce7);
+  }
+}

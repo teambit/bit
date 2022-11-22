@@ -43,6 +43,7 @@ export class CheckoutCmd implements Command {
     ['m', 'manual', 'in case of a conflict, leave the files with a conflict state to resolve them manually later'],
     ['r', 'reset', 'revert changes that were not snapped/tagged'],
     ['a', 'all', 'all components'],
+    ['e', 'entire-lane', 'write also new components that were introduced on the remote lane and do not exist locally'],
     ['v', 'verbose', 'showing verbose output for inspection'],
     ['', 'reset', 'DEPRECATED. run "bit checkout reset" instead'],
     ['', 'skip-npm-install', 'DEPRECATED. use "--skip-dependency-installation" instead'],
@@ -61,6 +62,7 @@ export class CheckoutCmd implements Command {
       manual = false,
       reset = false,
       all = false,
+      entireLane = false,
       verbose = false,
       skipNpmInstall = false,
       skipDependencyInstallation = false,
@@ -71,6 +73,7 @@ export class CheckoutCmd implements Command {
       manual?: boolean;
       reset?: boolean;
       all?: boolean;
+      entireLane?: boolean;
       verbose?: boolean;
       skipNpmInstall?: boolean;
       skipDependencyInstallation?: boolean;
@@ -93,42 +96,49 @@ export class CheckoutCmd implements Command {
       verbose,
       isLane: false,
       skipNpmInstall: skipDependencyInstallation,
+      entireLane,
     };
-    const { components, version, failedComponents, leftUnresolvedConflicts }: ApplyVersionResults =
-      await this.checkout.checkoutByCLIValues(to, componentPattern || '', checkoutProps);
+    const {
+      components,
+      version,
+      failedComponents,
+      leftUnresolvedConflicts,
+      newFromLane,
+      newFromLaneAdded,
+    }: ApplyVersionResults = await this.checkout.checkoutByCLIValues(to, componentPattern || '', checkoutProps);
     const isHead = to === 'head';
     const isReset = to === 'reset';
     const isLatest = to === 'latest';
+    // components that failed for no legitimate reason. e.g. merge-conflict.
+    const realFailedComponents = (failedComponents || []).filter((f) => !f.unchangedLegitimately);
+    // components that weren't checked out for legitimate reasons, e.g. up-to-date.
+    const notCheckedOutComponents = (failedComponents || []).filter((f) => f.unchangedLegitimately);
+
     const getFailureOutput = () => {
-      // components that failed for no legitimate reason. e.g. merge-conflict.
-      const realFailedComponents = failedComponents?.filter((f) => !f.unchangedLegitimately);
-      if (!realFailedComponents || !realFailedComponents.length) return '';
-      const title = 'the checkout has been canceled on the following component(s)';
+      if (!realFailedComponents.length) return '';
+      const title = 'the checkout has been failed on the following component(s)';
       const body = realFailedComponents
         .map(
           (failedComponent) =>
             `${chalk.bold(failedComponent.id.toString())} - ${chalk.red(failedComponent.failureMessage)}`
         )
         .join('\n');
-      return `${title}\n${body}\n\n`;
+      return `${chalk.underline(title)}\n${body}\n\n`;
     };
-    const getNeutralOutput = () => {
-      // components that weren't checked out for legitimate reasons, e.g. up-to-date.
-      const neutralComponents = (failedComponents || []).filter((f) => f.unchangedLegitimately);
-      if (!neutralComponents.length) return '';
+    const getNotCheckedOutOutput = () => {
+      if (!notCheckedOutComponents.length) return '';
       if (!verbose && all) {
         return chalk.green(
           `checkout was not needed for ${chalk.bold(
-            neutralComponents.length.toString()
+            notCheckedOutComponents.length.toString()
           )} components (use --verbose to get more details)\n`
         );
       }
-
       const title = 'the checkout was not needed on the following component(s)';
-      const body = neutralComponents
-        .map((failedComponent) => `${chalk.bold(failedComponent.id.toString())} - ${failedComponent.failureMessage}`)
+      const body = notCheckedOutComponents
+        .map((failedComponent) => `${failedComponent.id.toString()} - ${failedComponent.failureMessage}`)
         .join('\n');
-      return `${title}\n${body}\n\n`;
+      return `${chalk.underline(title)}\n${body}\n\n`;
     };
     const getConflictSummary = () => {
       if (!components || !components.length || !leftUnresolvedConflicts) return '';
@@ -137,7 +147,6 @@ export class CheckoutCmd implements Command {
 once ready, snap/tag the components to persist the changes`;
       return chalk.underline(title) + conflictSummaryReport(components) + chalk.yellow(suggestion);
     };
-
     const getSuccessfulOutput = () => {
       if (!components || !components.length) return '';
       if (components.length === 1) {
@@ -148,14 +157,13 @@ once ready, snap/tag the components to persist the changes`;
           // @ts-ignore version is defined when !isReset
           isHead || isLatest ? component.id.version : version
         )}\n`;
-        return `${title} ${applyVersionReport(components, false)}`;
+        return `${chalk.underline(title)} ${applyVersionReport(components, false)}`;
       }
       if (isReset) {
         const title = 'successfully reset the following components\n\n';
         const body = components.map((component) => chalk.bold(component.id.toString())).join('\n');
-        return title + body;
+        return chalk.underline(title) + body;
       }
-
       const getVerOutput = () => {
         if (isHead) return 'their head version';
         if (isLatest) return 'their latest version';
@@ -166,9 +174,41 @@ once ready, snap/tag the components to persist the changes`;
       const title = `successfully switched the following components to ${versionOutput}\n\n`;
       const showVersion = isHead || isReset;
       const componentsStr = applyVersionReport(components, true, showVersion);
-      return title + componentsStr;
+      return chalk.underline(title) + componentsStr;
+    };
+    const getNewOnLaneOutput = () => {
+      if (!newFromLane?.length) return '';
+      const title = newFromLaneAdded
+        ? `successfully added the following components from the lane`
+        : `the following components introduced on the lane and were not added. use --entire-lane flag to add them`;
+      const body = newFromLane.join('\n');
+      return `\n\n${chalk.underline(title)}\n${body}`;
+    };
+    const getSummary = () => {
+      const checkedOut = components?.length || 0;
+      const notCheckedOutLegitimately = notCheckedOutComponents.length;
+      const failedToCheckOut = realFailedComponents.length;
+      const newLines = '\n\n';
+      const title = chalk.bold.underline('Checkout Summary');
+      const checkedOutStr = `\nTotal CheckedOut: ${chalk.bold(checkedOut.toString())}`;
+      const unchangedLegitimatelyStr = `\nTotal Unchanged: ${chalk.bold(notCheckedOutLegitimately.toString())}`;
+      const failedToCheckOutStr = `\nTotal Failed: ${chalk.bold(failedToCheckOut.toString())}`;
+      const newOnLaneNum = newFromLane?.length || 0;
+      const newOnLaneAddedStr = newFromLaneAdded ? ' (added)' : ' (not added)';
+      const newOnLaneStr = newOnLaneNum
+        ? `\nNew on lane${newOnLaneAddedStr}: ${chalk.bold(newOnLaneNum.toString())}`
+        : '';
+
+      return newLines + title + checkedOutStr + unchangedLegitimatelyStr + failedToCheckOutStr + newOnLaneStr;
     };
 
-    return getFailureOutput() + getNeutralOutput() + getSuccessfulOutput() + getConflictSummary();
+    return (
+      getFailureOutput() +
+      getNotCheckedOutOutput() +
+      getSuccessfulOutput() +
+      getNewOnLaneOutput() +
+      getConflictSummary() +
+      getSummary()
+    );
   }
 }

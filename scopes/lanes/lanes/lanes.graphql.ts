@@ -45,6 +45,7 @@ export function lanesSchema(lanesMainRuntime: LanesMain): Schema {
       type Lane {
         id: LaneId!
         hash: String
+        laneComponentIds: [ComponentID!]!
         components(offset: Int, limit: Int): [Component!]!
         readmeComponent: Component
       }
@@ -102,6 +103,10 @@ export function lanesSchema(lanesMainRuntime: LanesMain): Schema {
       },
       Lane: {
         id: (lane: LaneData) => lane.id.toObject(),
+        laneComponentIds: async (lane: LaneData) => {
+          const componentIds = await lanesMainRuntime.getLaneComponentIds(lane);
+          return componentIds.map((componentId) => componentId.toObject());
+        },
         components: async (lane: LaneData) => {
           const laneComponents = await lanesMainRuntime.getLaneComponentModels(lane);
           return laneComponents;

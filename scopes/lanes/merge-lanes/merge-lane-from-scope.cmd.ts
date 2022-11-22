@@ -27,8 +27,8 @@ the lane must be up-to-date with main, otherwise, conflicts might occur which ar
     ['', 'push', 'export the updated objects to the original scopes once done'],
     ['', 'keep-readme', 'skip deleting the lane readme component after merging'],
     ['', 'no-squash', 'EXPERIMENTAL. relevant for merging lanes into main, which by default squash.'],
-    // ['', 'verbose', 'show details of components that were not merged legitimately'],
     ['', 'include-deps', 'EXPERIMENTAL. relevant for "--pattern". merge also dependencies of the given components'],
+    ['j', 'json', 'output as json format'],
   ] as CommandOptions;
   loader = true;
   private = true;
@@ -44,13 +44,11 @@ the lane must be up-to-date with main, otherwise, conflicts might occur which ar
       keepReadme = false,
       noSquash = false,
       includeDeps = false,
-    }: // verbose = false,
-    {
+    }: {
       push?: boolean;
       keepReadme?: boolean;
       noSquash: boolean;
       includeDeps?: boolean;
-      // verbose?: boolean;
     }
   ): Promise<string> {
     if (includeDeps && !pattern) {
@@ -76,5 +74,42 @@ the lane must be up-to-date with main, otherwise, conflicts might occur which ar
     const exportedOutput = exportedIds.length ? `\n${exportedTitle}\n${exportedIds.join('\n')}` : '';
 
     return mergedOutput + nonMergedOutput + exportedOutput;
+  }
+  async json(
+    [name, pattern]: [string, string],
+    {
+      push = false,
+      keepReadme = false,
+      noSquash = false,
+      includeDeps = false,
+    }: {
+      push?: boolean;
+      keepReadme?: boolean;
+      noSquash: boolean;
+      includeDeps?: boolean;
+    }
+  ) {
+    if (includeDeps && !pattern) {
+      throw new BitError(`"--include-deps" flag is relevant only for --pattern flag`);
+    }
+    let results: any;
+    try {
+      results = await this.mergeLanes.mergeFromScope(name, {
+        push,
+        keepReadme,
+        noSquash,
+        pattern,
+        includeDeps,
+      });
+      return {
+        code: 0,
+        data: results,
+      };
+    } catch (err: any) {
+      return {
+        code: 1,
+        error: err.message,
+      };
+    }
   }
 }

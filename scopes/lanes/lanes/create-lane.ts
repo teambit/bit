@@ -1,6 +1,7 @@
 import { BitError } from '@teambit/bit-error';
 import { LaneId } from '@teambit/lane-id';
 import { Consumer } from '@teambit/legacy/dist/consumer';
+import { ScopeMain } from '@teambit/scope';
 // import { BitIds } from '@teambit/legacy/dist/bit-id';
 import Lane, { LaneComponent } from '@teambit/legacy/dist/scope/models/lane';
 
@@ -38,6 +39,17 @@ export async function createLane(
 
   await consumer.scope.lanes.saveLane(newLane);
 
+  return newLane;
+}
+
+export async function createLaneInScope(laneName: string, scope: ScopeMain): Promise<Lane> {
+  const lanes = await scope.legacyScope.listLanes();
+  if (lanes.find((lane) => lane.name === laneName)) {
+    throw new BitError(`lane "${laneName}" already exists`);
+  }
+  throwForInvalidLaneName(laneName);
+  const newLane = Lane.create(laneName, scope.name);
+  await scope.legacyScope.lanes.saveLane(newLane);
   return newLane;
 }
 

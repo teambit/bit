@@ -9,8 +9,9 @@ import { Workspace } from '@teambit/workspace';
 import { Logger } from '@teambit/logger';
 import chalk from 'chalk';
 import { TsconfigWriterOptions } from './typescript.main.runtime';
+import { TypescriptAspect } from '.';
 
-export type TsconfigPathsPerEnv = { envIds: string[]; tsconfig: Record<string, any>; paths: string[] };
+export type TsconfigPathsPerEnv = { envIds: string[]; tsconfig: string; paths: string[] };
 
 type PathsPerEnv = { env: Environment; ids: string[]; paths: string[] };
 
@@ -24,13 +25,21 @@ export class TsconfigWriter {
     const pathsPerEnvs = this.getPathsPerEnv(envsExecutionContext, options);
     const tsconfigPathsPerEnv = pathsPerEnvs.map((pathsPerEnv) => ({
       envIds: pathsPerEnv.ids,
-      tsconfig: pathsPerEnv.env.getTsConfig(),
+      tsconfig: this.getTsconfigFromEnv(pathsPerEnv.env), // pathsPerEnv.env.getTsConfig(),
       paths: pathsPerEnv.paths,
     }));
     if (options.dryRun) return tsconfigPathsPerEnv;
     if (!options.silent) await this.promptForWriting(tsconfigPathsPerEnv.map((p) => p.paths).flat());
     await this.writeFiles(tsconfigPathsPerEnv);
     return tsconfigPathsPerEnv;
+  }
+
+  private getTsconfigFromEnv(env: Environment) {
+    const compiler = env.getCompiler();
+    if (compiler.id === TypescriptAspect.id) {
+      return compiler.displayConfig() as string;
+    }
+    return JSON.stringify(env.getTsConfig(), undefined, 2);
   }
 
   async clean(envsExecutionContext: ExecutionContext[], { dryRun, silent }: TsconfigWriterOptions): Promise<string[]> {
@@ -79,7 +88,7 @@ ${chalk.bold('Do you want to continue? [yes(y)/no(n)]')}`,
     await Promise.all(
       tsconfigPathsPerEnvs.map((pathsPerEnv) => {
         return Promise.all(
-          pathsPerEnv.paths.map((p) => fs.writeJSON(path.join(p, 'tsconfig.json'), pathsPerEnv.tsconfig, { spaces: 2 }))
+          pathsPerEnv.paths.map((p) => fs.writeFile(path.join(p, 'tsconfig.json'), pathsPerEnv.tsconfig))
         );
       })
     );

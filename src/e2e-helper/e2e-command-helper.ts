@@ -389,6 +389,9 @@ export default class CommandHelper {
   importComponent(id: string, flags = '') {
     return this.runCmd(`bit import ${this.scopes.remote}/${id} ${flags}`);
   }
+  importComponentWithoutInstall(id: string, flags = '') {
+    return this.runCmd(`bit import ${this.scopes.remote}/${id} ${flags} --skip-dependency-installation`);
+  }
   import(value = '') {
     return this.runCmd(`bit import ${value}`);
   }
@@ -612,6 +615,9 @@ export default class CommandHelper {
   }
   tagFromScope(cwd: string, data: Record<string, any>, options = '') {
     return this.runCmd(`bit _tag '${JSON.stringify(data)}' ${options}`, cwd);
+  }
+  snapFromScope(cwd: string, data: Record<string, any>, options = '') {
+    return this.runCmd(`bit _snap '${JSON.stringify(data)}' ${options}`, cwd);
   }
   diff(id = '') {
     const output = this.runCmd(`bit diff ${id}`);
