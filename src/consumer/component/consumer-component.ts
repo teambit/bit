@@ -17,7 +17,7 @@ import { Doclet } from '../../jsdoc/types';
 import logger from '../../logger/logger';
 import ComponentWithDependencies from '../../scope/component-dependencies';
 import { ScopeListItem } from '../../scope/models/model-component';
-import Version, { Log } from '../../scope/models/version';
+import Version, { DepEdge, Log } from '../../scope/models/version';
 import { pathNormalizeToLinux } from '../../utils';
 import { PathLinux, PathOsBased, PathOsBasedRelative } from '../../utils/path';
 import ComponentMap from '../bit-map/component-map';
@@ -56,6 +56,7 @@ export type ComponentProps = {
   dependencies?: Dependency[];
   devDependencies?: Dependency[];
   flattenedDependencies?: BitIds;
+  flattenedEdges?: DepEdge[];
   packageDependencies?: Record<string, string>;
   devPackageDependencies?: Record<string, string>;
   peerPackageDependencies?: Record<string, string>;
@@ -105,6 +106,7 @@ export default class Component {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   devDependencies: Dependencies;
   flattenedDependencies: BitIds;
+  flattenedEdges: DepEdge[];
   packageDependencies: Record<string, string>;
   devPackageDependencies: Record<string, string>;
   peerPackageDependencies: Record<string, string>;
@@ -160,6 +162,7 @@ export default class Component {
     dependencies,
     devDependencies,
     flattenedDependencies,
+    flattenedEdges,
     packageDependencies,
     devPackageDependencies,
     peerPackageDependencies,
@@ -190,6 +193,7 @@ export default class Component {
     this.setDependencies(dependencies);
     this.setDevDependencies(devDependencies);
     this.flattenedDependencies = flattenedDependencies || new BitIds();
+    this.flattenedEdges = flattenedEdges || [];
     this.packageDependencies = packageDependencies || {};
     this.devPackageDependencies = devPackageDependencies || {};
     this.peerPackageDependencies = peerPackageDependencies || {};

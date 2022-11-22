@@ -374,7 +374,7 @@ export default class Component extends BitObject {
    */
   async headIncludeRemote(repo: Repository): Promise<string> {
     const latestLocally = this.latest();
-    const remoteHead = this.laneHeadRemote;
+    const remoteHead = this.laneHeadRemote || this.remoteHead;
     if (!remoteHead) return latestLocally;
     if (!this.getHeadRegardlessOfLane()) {
       return remoteHead.toString(); // user never merged the remote version, so remote is the latest

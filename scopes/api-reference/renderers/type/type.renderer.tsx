@@ -22,7 +22,7 @@ function TypeComponent(props: APINodeRenderProps) {
   const subTypeRenderer = renderers.find((renderer) => renderer.predicate(type));
 
   return (
-    <APINodeDetails {...props}>
+    <APINodeDetails {...props} options={{ hideIndex: true }}>
       {subTypeRenderer && (
         <subTypeRenderer.Component
           {...props}

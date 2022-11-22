@@ -54,6 +54,7 @@ export function GroupedSchemaNodesSummary({
                   <FunctionNodeSummary
                     key={`${member.__schema}-${member.name}`}
                     node={member}
+                    apiNodeRendererProps={apiNodeRendererProps}
                     groupElementClassName={typeId}
                     headings={headings}
                     apiRefModel={apiRefModel}

@@ -1,6 +1,7 @@
 import { AspectLoaderMain } from '@teambit/aspect-loader';
 import { Component } from '@teambit/component';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
+import { pickBy, mapValues } from 'lodash';
 import { SemVer } from 'semver';
 import { snapToSemver } from '@teambit/component-package-version';
 import { ComponentDependency, DependencyList, PackageName } from '../dependencies';
@@ -10,7 +11,7 @@ import { DependencyResolverMain } from '../dependency-resolver.main.runtime';
 import { ComponentsManifestsMap } from '../types';
 import { ComponentManifest } from './component-manifest';
 import { dedupeDependencies, DedupedDependencies, getEmptyDedupedDependencies } from './deduping';
-import { ManifestToJsonOptions, ManifestDependenciesObject } from './manifest';
+import { ManifestToJsonOptions, ManifestDependenciesObject, DepObjectValue } from './manifest';
 import { updateDependencyVersion } from './update-dependency-version';
 import { WorkspaceManifest } from './workspace-manifest';
 
@@ -57,17 +58,14 @@ export class WorkspaceManifestFactory {
     let dedupedDependencies = getEmptyDedupedDependencies();
     rootPolicy = rootPolicy.filter((dep) => dep.dependencyId !== '@teambit/legacy');
     if (hasRootComponents) {
-      dedupedDependencies.rootDependencies = rootPolicy.toManifest();
-      const { peerDependencies } = dedupeDependencies(rootPolicy, componentDependenciesMap, [
-        'peerDependencies',
-      ]).rootDependencies;
-      // We hoist peer dependencies in order for the IDE to work.
+      const { rootDependencies } = dedupeDependencies(rootPolicy, componentDependenciesMap);
+      // We hoist dependencies in order for the IDE to work.
       // For runtime, the peer dependencies are installed inside:
       // <ws root>/node_module/<comp name>/node_module/<comp name>/node_modules
-      dedupedDependencies.rootDependencies.dependencies = {
-        ...peerDependencies,
-        ...dedupedDependencies.rootDependencies.dependencies,
-      };
+      dedupedDependencies.rootDependencies = mapValues(
+        rootDependencies,
+        (deps) => deps && excludeWorkspaceDependencies(deps)
+      );
       dedupedDependencies.componentDependenciesMap = componentDependenciesMap;
     } else if (options.dedupe) {
       dedupedDependencies = dedupeDependencies(rootPolicy, componentDependenciesMap);
@@ -272,4 +270,8 @@ function filterResolvedFromEnv(dependencyList: DependencyList, componentPolicy: 
     return true;
   });
   return filtered;
+}
+
+function excludeWorkspaceDependencies(deps: DepObjectValue): DepObjectValue {
+  return pickBy(deps, (versionSpec) => !versionSpec.startsWith('workspace:'));
 }

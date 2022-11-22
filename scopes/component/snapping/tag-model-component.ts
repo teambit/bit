@@ -122,6 +122,8 @@ async function setFutureVersions(
       if (tagDataPerComp) {
         const tagData = tagDataPerComp.find((t) => t.componentId._legacy.isEqualWithoutVersion(componentToTag.id));
         if (!tagData) throw new Error(`tag-data is missing for ${componentToTag.id.toStringWithoutVersion()}`);
+        if (!tagData.versionToTag)
+          throw new Error(`tag-data.TagResults is missing for ${componentToTag.id.toStringWithoutVersion()}`);
         const exactVersionOrReleaseType = getValidVersionOrReleaseType(tagData.versionToTag);
         componentToTag.version = modelComponent.getVersionToAdd(
           exactVersionOrReleaseType.releaseType,

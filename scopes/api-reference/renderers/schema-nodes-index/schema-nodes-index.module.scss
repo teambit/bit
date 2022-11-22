@@ -5,7 +5,6 @@
   min-width: 150px;
   max-width: 20%;
   height: 100%;
-  margin-left: 16px;
 }
 
 .groupName {
@@ -30,8 +29,11 @@
   flex-direction: column;
   border-left: 1px solid var(--bit-border-color-lightest, #ededed);
 }
-.paddingTop {
-  padding-top: 16px;
+.firstNode {
+  margin-top: 16px;
+}
+.firstNodeLink {
+  padding-top: 0px;
 }
 .groupedNode {
   display: flex;
@@ -47,8 +49,8 @@
 }
 
 .title {
-  padding-left: 8px;
   font-weight: 500;
   font-size: var(--bit-p-xs);
   text-transform: uppercase;
+  margin-bottom: 8px;
 }

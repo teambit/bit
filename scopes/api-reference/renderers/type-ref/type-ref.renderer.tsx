@@ -36,6 +36,7 @@ function TypeRefComponent(props: APINodeRenderProps) {
           ...props.apiNode,
           api: copySchemaNode(typeRefNode, { signature: typeRefNode.signature || typeRefNode.toString() }),
         }}
+        options={{ hideIndex: true }}
       />
     );
   }
@@ -92,12 +93,13 @@ function TypeRefComponent(props: APINodeRenderProps) {
           name={typeRefNode.name}
           external={!!exportedTypeUrlFromAnotherComp}
           url={exportedTypeUrlFromSameComp || exportedTypeUrlFromAnotherComp}
-        />
-        <div key={`typeArgsContainer-${typeRefNode.name}`} className={classnames(styles.node)}>
-          {'<'}
-          {args.map((arg) => arg)}
-          {'>'}
-        </div>
+        >
+          <div key={`typeArgsContainer-${typeRefNode.name}`} className={classnames(styles.node)}>
+            {'<'}
+            {args.map((arg) => arg)}
+            {'>'}
+          </div>
+        </TypeRefName>
       </React.Fragment>
     );
   }
@@ -112,15 +114,31 @@ function TypeRefComponent(props: APINodeRenderProps) {
   );
 }
 
-function TypeRefName({ name, url, external }: { name: string; url?: string; external?: boolean }) {
+function TypeRefName({
+  name,
+  url,
+  external,
+  children,
+}: {
+  name: string;
+  url?: string;
+  external?: boolean;
+  children?: React.ReactChild;
+}) {
   if (url) {
     return (
       <Link href={url} external={external} className={classnames(styles.node, styles.nodeLink)}>
         {name}
+        {children}
       </Link>
     );
   }
-  return <div className={classnames(styles.node)}>{name}</div>;
+  return (
+    <div className={classnames(styles.node)}>
+      {name}
+      {children}
+    </div>
+  );
 }
 
 function getExportedTypeUrlFromAnotherComp({

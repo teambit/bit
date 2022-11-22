@@ -65,8 +65,8 @@ export default class ComponentMap {
   isAvailableOnCurrentLane? = true; // if a component was created on another lane, it might not be available on the current lane
   nextVersion?: NextVersion; // for soft-tag (harmony only), this data is used in the CI to persist
   recentlyTracked?: boolean; // eventually the timestamp is saved in the filesystem cache so it won't be re-tracked if not changed
-  scope?: string | null; // Harmony only. empty string if new/staged. (undefined if legacy).
-  version?: string; // Harmony only. empty string if new. (undefined if legacy).
+  scope?: string | null; // empty string if new/staged. (undefined if legacy).
+  version?: string; // empty string if new. (undefined if legacy).
   noFilesError?: Error; // set if during finding the files an error was found
   config?: { [aspectId: string]: Record<string, any> | '-' };
   constructor({

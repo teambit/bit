@@ -6,6 +6,7 @@
 .apiDetails {
   overflow-y: auto;
   width: 100%;
+  padding-right: 16px;
 }
 .schemaNodesIndex {
   flex: 0;
@@ -30,13 +31,12 @@
   > section {
     overflow: hidden;
     border-radius: 8px;
+    // to prevent monaco from overflowing from its parent
+    width: unset !important;
   }
 }
 .editor {
-  padding-top: 10px;
   background-color: var(--editor-bg-color, #1e1e1e);
-  height: 100%;
-  width: 100%;
 }
 .apiNodeDetailsComment {
   font-size: var(--bit-p-xs);

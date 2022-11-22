@@ -278,13 +278,6 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     const getNewHead = () => {
       if (!removeOnlyHead) {
         const divergeData = component.getDivergeData();
-        if (divergeData.isDiverged()) {
-          // if it's diverged, the Component object might have versions from the remote as part of the last import.
-          // run snap.e2e - 'bit reset a diverge component' case to understand why it's better to pick the remoteHead
-          // than the commonSnapBeforeDiverge. If it would set to commonSnapBeforeDiverge
-          if (!component.remoteHead) throw new Error(`remoteHead must be set when component is diverged`);
-          return component.remoteHead;
-        }
         if (divergeData.commonSnapBeforeDiverge) {
           return divergeData.commonSnapBeforeDiverge;
         }
