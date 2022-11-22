@@ -1,5 +1,5 @@
 import ts, { Node, ConstructorDeclaration } from 'typescript';
-import { ConstructorSchema, ParameterSchema } from '@teambit/semantics.entities.semantic-schema';
+import { ConstructorSchema, ParameterSchema, ThisTypeSchema } from '@teambit/semantics.entities.semantic-schema';
 import pMapSeries from 'p-map-series';
 import { SchemaTransformer } from '../schema-transformer';
 import { SchemaExtractorContext } from '../schema-extractor-context';
@@ -18,6 +18,9 @@ export class ConstructorDeclarationTransformer implements SchemaTransformer {
     const args = await pMapSeries(node.parameters, async (param) => context.computeSchema(param));
     const info = await context.getQuickInfo(node);
     const displaySig = info?.body?.displayString;
-    return new ConstructorSchema(context.getLocation(node), args as ParameterSchema[], displaySig);
+
+    const returns = new ThisTypeSchema(context.getLocation(node.parent));
+
+    return new ConstructorSchema(context.getLocation(node), args as ParameterSchema[], returns, displaySig);
   }
 }

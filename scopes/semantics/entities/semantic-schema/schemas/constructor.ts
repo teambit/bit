@@ -1,19 +1,18 @@
-import { Transform } from 'class-transformer';
-import chalk from 'chalk';
-import { Location, SchemaNode } from '../schema-node';
+import { Location } from '../schema-node';
 import { ParameterSchema } from './parameter';
-import { schemaObjArrayToInstances } from '../class-transformers';
+import { FunctionLikeSchema, Modifier } from './function-like';
+import { DocSchema } from './docs';
+import { ThisTypeSchema } from './this-type';
 
-export class ConstructorSchema extends SchemaNode {
-  @Transform(schemaObjArrayToInstances)
-  readonly params: ParameterSchema[];
-  constructor(readonly location: Location, params: ParameterSchema[], readonly signature?: string) {
-    super();
-    this.params = params;
-  }
-
-  toString() {
-    const paramsStr = this.params.map((param) => param.toString()).join(', ');
-    return `${chalk.bold('constructor')}(${paramsStr})`;
+export class ConstructorSchema extends FunctionLikeSchema {
+  constructor(
+    location: Location,
+    params: ParameterSchema[],
+    returns: ThisTypeSchema,
+    signature: string,
+    modifiers: Modifier[] = [],
+    doc?: DocSchema
+  ) {
+    super(location, 'constructor', params, returns, signature, modifiers, doc, undefined);
   }
 }
