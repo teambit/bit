@@ -40,6 +40,7 @@ import {
   ExportAssignmentTransformer,
   IntersectionTypeTransformer,
   UnionTypeTransformer,
+  TypeReferenceTransformer,
 } from './transformers';
 import { CheckTypesCmd } from './cmds/check-types.cmd';
 import { TsconfigPathsPerEnv, TsconfigWriter } from './tsconfig-writer';
@@ -323,6 +324,7 @@ export class TypescriptMain {
       new BindingElementTransformer(),
       new IntersectionTypeTransformer(),
       new UnionTypeTransformer(),
+      new TypeReferenceTransformer(),
     ]);
 
     if (workspace) {
