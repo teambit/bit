@@ -6,9 +6,9 @@ import { sep } from 'path';
 import type { BundlerContext, BundlerHtmlConfig, Target } from '@teambit/bundler';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import WebpackAssetsManifest from 'webpack-assets-manifest';
+import { fallbacks } from './webpack-fallbacks';
 import { fallbacksProvidePluginConfig } from './webpack-fallbacks-provide-plugin-config';
 import { fallbacksAliases } from './webpack-fallbacks-aliases';
-import { fallbacks } from './webpack-fallbacks';
 
 export function configFactory(target: Target, context: BundlerContext): Configuration {
   let truthyEntries =
