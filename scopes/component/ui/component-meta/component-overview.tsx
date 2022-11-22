@@ -1,13 +1,13 @@
 import React from 'react';
 import type { ComponentDescriptor } from '@teambit/component-descriptor';
 import { textColumn } from '@teambit/base-ui.layout.page-frame';
-import { ConsumableLink } from '@teambit/documenter.ui.consumable-link';
 import { H1 } from '@teambit/documenter.ui.heading';
 import { LabelList } from '@teambit/documenter.ui.label-list';
 import { Section, SectionProps } from '@teambit/documenter.ui.section';
 import { CopyBox } from '@teambit/documenter.ui.copy-box';
 import { Separator } from '@teambit/design.ui.separator';
 import { ContentTabs } from '@teambit/design.navigation.content-tabs';
+import type { Content } from '@teambit/design.navigation.content-tabs';
 import { Subtitle } from '@teambit/documenter.ui.sub-title';
 import { isBrowser } from '@teambit/ui-foundation.ui.is-browser';
 import { Row } from '@teambit/base-react.layout.row';
@@ -39,11 +39,28 @@ export function ComponentOverview({
   component,
   ...rest
 }: ComponentOverviewProps) {
-  const { id } = component;
+  const componentId = component?.id;
+  const tabsComponentId: Content[] = [
+    {
+      title: 'Component ID',
+      content: <CopyBox className={styles.copyBox}>{componentId ? componentId.toStringWithoutVersion() : ''}</CopyBox>,
+    },
+    {
+      title: 'Package',
+      content: <CopyBox className={styles.copyBox}>{packageName}</CopyBox>,
+    },
+  ];
+
   let finalElementsUrl = elementsUrl;
   if (finalElementsUrl && !finalElementsUrl.startsWith('http')) {
     const origin = isBrowser ? window.location.origin : undefined;
     finalElementsUrl = origin && elementsUrl ? `${origin}${elementsUrl}` : undefined;
+    if (finalElementsUrl) {
+      tabsComponentId.push({
+        title: 'Elements url',
+        content: <CopyBox className={styles.copyBox}>{finalElementsUrl}</CopyBox>,
+      });
+    }
   }
 
   return (
@@ -85,16 +102,7 @@ export function ComponentOverview({
         <Row>
           <ContentTabs
             priority="folder"
-            tabs={[
-              {
-                title: 'Component ID',
-                content: <CopyBox className={styles.copyBox}>{id.toStringWithoutVersion()}</CopyBox>,
-              },
-              {
-                title: 'Package',
-                content: <CopyBox className={styles.copyBox}>{packageName}</CopyBox>,
-              },
-            ]}
+            tabs={tabsComponentId}
             className={styles.contentTabs}
             navClassName={styles.nav}
             tabClassName={styles.tab}
@@ -108,7 +116,6 @@ export function ComponentOverview({
         </Row>
         {finalElementsUrl && (
           <Row>
-            <ConsumableLink title="Elements url" link={finalElementsUrl}></ConsumableLink>
             <BadgeSection
               position={BadgePosition.ElementsPackage}
               componentDescriptor={componentDescriptor}
