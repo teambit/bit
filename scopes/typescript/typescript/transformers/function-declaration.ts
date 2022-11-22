@@ -1,9 +1,10 @@
-import { SchemaNode } from '@teambit/semantics.entities.semantic-schema';
+import { FunctionLikeSchema, ParameterSchema, SchemaNode, Modifier } from '@teambit/semantics.entities.semantic-schema';
 import ts, { Node, SignatureDeclaration } from 'typescript';
+import pMapSeries from 'p-map-series';
 import { SchemaExtractorContext } from '../schema-extractor-context';
 import { SchemaTransformer } from '../schema-transformer';
 import { ExportIdentifier } from '../export-identifier';
-import { toFunctionLikeSchema } from './utils/to-function-like-schema';
+import { parseTypeFromQuickInfo } from './utils/parse-type-from-quick-info';
 
 export class FunctionDeclaration implements SchemaTransformer {
   predicate(node: Node) {
@@ -28,7 +29,36 @@ export class FunctionDeclaration implements SchemaTransformer {
     return funcDec.name?.getText() || '';
   }
 
-  async transform(funcDec: SignatureDeclaration, context: SchemaExtractorContext): Promise<SchemaNode> {
-    return toFunctionLikeSchema(funcDec, context);
+  async transform(node: SignatureDeclaration, context: SchemaExtractorContext): Promise<SchemaNode> {
+    const name = this.getName(node);
+    const getQuickInfoFromDefaultModifier = async () => {
+      const defaultModifier = node.modifiers?.find((modifier) => modifier.kind === ts.SyntaxKind.DefaultKeyword);
+      if (defaultModifier) return context.getQuickInfo(defaultModifier);
+      if (node.kind === ts.SyntaxKind.ArrowFunction) return context.getQuickInfo(node.equalsGreaterThanToken);
+      return null;
+    };
+    const info = node.name ? await context.getQuickInfo(node.name) : await getQuickInfoFromDefaultModifier();
+    const returnTypeStr = info ? parseTypeFromQuickInfo(info) : 'any';
+    const displaySig = info?.body?.displayString || '';
+    const args = (await pMapSeries(node.parameters, async (param) =>
+      context.computeSchema(param)
+    )) as ParameterSchema[];
+
+    const returnType = await context.resolveType(node, returnTypeStr, Boolean(info));
+    const modifiers = node.modifiers?.map((modifier) => modifier.getText()) || [];
+    const typeParameters = node.typeParameters?.map((typeParam) => typeParam.name.getText());
+    const location = context.getLocation(node);
+    const doc = await context.jsDocToDocSchema(node);
+
+    return new FunctionLikeSchema(
+      location,
+      name,
+      args,
+      returnType,
+      displaySig,
+      modifiers as Modifier[],
+      doc,
+      typeParameters
+    );
   }
 }
