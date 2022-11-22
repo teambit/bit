@@ -4,6 +4,9 @@ import { SchemaTransformer } from '../schema-transformer';
 import { SchemaExtractorContext } from '../schema-extractor-context';
 import { ExportIdentifier } from '../export-identifier';
 
+/**
+ * e.g. `typeof Foo`
+ */
 export class TypeQueryTransformer implements SchemaTransformer {
   predicate(node: Node) {
     return node.kind === ts.SyntaxKind.TypeQuery;
