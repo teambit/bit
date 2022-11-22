@@ -14,9 +14,11 @@ const NUM_OF_RETRIES = 60;
 const WAIT_BEFORE_RETRY_IN_MS = 1000;
 
 /**
- * do not save anything. just make sure the objects can be merged and there are no conflicts.
+ * do not save the exported objects. just make sure the objects can be merged and there are no conflicts.
  * once done, clear the objects from the memory so then they won't be used by mistake later on.
  * this also makes sure that non-external dependencies are not missing.
+ * also, in case the lane is exported and there are non-local components coming from the lane, it imports them from
+ * their original scopes and throw if they're missing from there.
  */
 export class ExportValidate implements Action<Options> {
   scope: Scope;

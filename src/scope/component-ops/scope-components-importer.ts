@@ -206,10 +206,14 @@ export default class ScopeComponentsImporter {
   }
 
   /**
-   * checks whether the given components has all history graph to it is able to traverse the history.
-   * if not, it fetches the history from their remotes without deps.
+   * this is relevant when a lane has components from other scopes, otherwise, the scope always have the entire history
+   * of its own components.
+   * checks whether the given components has all history graph so then it's possible to traverse the history.
+   * if missing, go to their origin-scope and fetch their version-history. (currently, it also fetches the head
+   * Version object, but it can be optimized to not fetch it)
    */
   async importMissingVersionHistory(externalComponents: ModelComponent[]) {
+    // profiler is here temporarily to make sure this doesn't cost too much for some reason
     logger.profile(`importMissingVersionHistory, ${externalComponents.length} externalComponents`);
     const [compsWithHead, compsWithoutHead] = partition(externalComponents, (comp) => comp.hasHead());
     try {
