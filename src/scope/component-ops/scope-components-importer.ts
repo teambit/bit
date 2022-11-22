@@ -288,7 +288,7 @@ export default class ScopeComponentsImporter {
   }: {
     ids: BitIds;
     fromHead?: boolean; // previously, this was named "allHistory". now with versionHistory, it only instructs fetch to start from head
-    lane?: Lane;
+    lane?: Lane | null;
     ignoreMissingHead?: boolean;
     collectParents?: boolean;
   }): Promise<void> {
