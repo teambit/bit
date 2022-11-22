@@ -11,6 +11,7 @@ export { TypeReferenceTransformer } from './type-reference';
 export { TypeLiteralTransformer } from './type-literal';
 export { LiteralTypeTransformer } from './literal-type';
 export { TypeQueryTransformer } from './type-query';
+export { ArrayTypeTransformer } from './array-type';
 export { ClassDeclarationTransformer } from './class-declaration';
 export { ConstructorTransformer } from './contructor';
 export { PropertyDeclarationTransformer } from './property-declaration';

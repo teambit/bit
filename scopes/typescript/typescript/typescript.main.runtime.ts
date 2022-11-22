@@ -44,6 +44,7 @@ import {
   TypeLiteralTransformer,
   LiteralTypeTransformer,
   TypeQueryTransformer,
+  ArrayTypeTransformer,
 } from './transformers';
 import { CheckTypesCmd } from './cmds/check-types.cmd';
 import { TsconfigPathsPerEnv, TsconfigWriter } from './tsconfig-writer';
@@ -332,6 +333,7 @@ export class TypescriptMain {
       new TypeLiteralTransformer(),
       new LiteralTypeTransformer(),
       new TypeQueryTransformer(),
+      new ArrayTypeTransformer(),
     ]);
 
     if (workspace) {
