@@ -5,3 +5,5 @@ export const NodeAspect = Aspect.create({
   dependencies: [],
   defaultConfig: {},
 });
+
+export default NodeAspect;

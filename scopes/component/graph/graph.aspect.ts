@@ -5,3 +5,5 @@ export const GraphAspect = Aspect.create({
   dependencies: [],
   defaultConfig: {},
 });
+
+export default GraphAspect;
