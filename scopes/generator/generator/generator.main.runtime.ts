@@ -6,7 +6,9 @@ import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
 import { CommunityAspect } from '@teambit/community';
 import type { CommunityMain } from '@teambit/community';
 
-import { Component, ComponentID } from '@teambit/component';
+import ComponentAspect, { ComponentID } from '@teambit/component';
+import type { ComponentMain, Component } from '@teambit/component';
+
 import { isCoreAspect, loadBit } from '@teambit/bit';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { BitError } from '@teambit/bit-error';
@@ -74,7 +76,8 @@ export class GeneratorMain {
     private envs: EnvsMain,
     private aspectLoader: AspectLoaderMain,
     private newComponentHelper: NewComponentHelperMain,
-    private importer: ImporterMain
+    private importer: ImporterMain,
+    private componentAspect: ComponentMain
   ) {}
 
   /**
@@ -400,6 +403,10 @@ export class GeneratorMain {
   }
 
   async loadEnvs(ids: string[] = this.config.envs || []): Promise<EnvDefinition[]> {
+    // TODO: this will probably won't work for bit new with aspect id and without loadFrom
+    // as this getEnvDefinition will probably return nothing, as the env is not loaded yet, therefore, not register to the slot
+    // we need to check if that id is an aspect id and load it as an aspect
+    // and only after it, we can get the env definition
     const envs = ids.map((id) => {
       const componentId = ComponentID.fromString(id);
       return {
@@ -408,9 +415,12 @@ export class GeneratorMain {
       };
     });
 
+    const host = this.componentAspect.getHost();
+    if (!host) return [];
+
     const toLoad = envs.filter((env) => !env.env);
     const componentIds = toLoad.map((component) => component.id.toString());
-    await this.workspace.loadAspects(componentIds);
+    await host.loadAspects(componentIds);
     const allEnvs = envs.map((env) => {
       if (env.env) {
         return env.env;
@@ -439,12 +449,13 @@ export class GeneratorMain {
     NewComponentHelperAspect,
     CommunityAspect,
     ImporterAspect,
+    ComponentAspect
   ];
 
   static runtime = MainRuntime;
 
   static async provider(
-    [workspace, cli, graphql, envs, aspectLoader, newComponentHelper, community, importer]: [
+    [workspace, cli, graphql, envs, aspectLoader, newComponentHelper, community, importer, componentAspect]: [
       Workspace,
       CLIMain,
       GraphqlMain,
@@ -452,7 +463,8 @@ export class GeneratorMain {
       AspectLoaderMain,
       NewComponentHelperMain,
       CommunityMain,
-      ImporterMain
+      ImporterMain,
+      ComponentMain
     ],
     config: GeneratorConfig,
     [componentTemplateSlot, workspaceTemplateSlot]: [ComponentTemplateSlot, WorkspaceTemplateSlot]
@@ -465,7 +477,8 @@ export class GeneratorMain {
       envs,
       aspectLoader,
       newComponentHelper,
-      importer
+      importer,
+      componentAspect
     );
     const commands = [
       new CreateCmd(generator, community.getDocsDomain()),
