@@ -48,6 +48,7 @@ import {
   TypeOperatorTransformer,
   KeywordTypeTransformer,
   TupleTypeTransformer,
+  ParenthesizedTypeTransformer,
 } from './transformers';
 import { CheckTypesCmd } from './cmds/check-types.cmd';
 import { TsconfigPathsPerEnv, TsconfigWriter } from './tsconfig-writer';
@@ -340,6 +341,7 @@ export class TypescriptMain {
       new TypeOperatorTransformer(),
       new KeywordTypeTransformer(),
       new TupleTypeTransformer(),
+      new ParenthesizedTypeTransformer(),
     ]);
 
     if (workspace) {
