@@ -8,7 +8,6 @@ import {
 import { SchemaTransformer } from '../schema-transformer';
 import { SchemaExtractorContext } from '../schema-extractor-context';
 import { ExportIdentifier } from '../export-identifier';
-import { typeNodeToSchema } from './utils/type-node-to-schema';
 
 export class InterfaceDeclarationTransformer implements SchemaTransformer {
   predicate(node: Node) {
@@ -32,7 +31,7 @@ export class InterfaceDeclarationTransformer implements SchemaTransformer {
         }),
       async (expressionWithTypeArgs: ts.ExpressionWithTypeArguments & { name: string }) => {
         const { typeArguments, expression, name } = expressionWithTypeArgs;
-        const typeArgsNodes = typeArguments ? await pMapSeries(typeArguments, (t) => typeNodeToSchema(t, context)) : [];
+        const typeArgsNodes = typeArguments ? await pMapSeries(typeArguments, (t) => context.computeSchema(t)) : [];
         const location = context.getLocation(expression);
         const expressionNode =
           (await context.visitDefinition(expression)) || new UnresolvedSchema(location, expression.getText());

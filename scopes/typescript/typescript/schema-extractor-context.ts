@@ -2,10 +2,9 @@ import { TsserverClient } from '@teambit/ts-server';
 import { getTokenAtPosition, canHaveJsDoc, getJsDoc } from 'tsutils';
 import ts, { ExportAssignment, getTextOfJSDocComment, ExportDeclaration, Node, SyntaxKind, TypeNode } from 'typescript';
 import { head } from 'lodash';
+// @ts-ignore david we should figure fix this.
 // eslint-disable-next-line import/no-unresolved
 import protocol from 'typescript/lib/protocol';
-// @ts-ignore david we should figure fix this.
-import type { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
 import { resolve, sep, relative } from 'path';
 import { Component, ComponentID } from '@teambit/component';
@@ -21,7 +20,6 @@ import { Formatter } from '@teambit/formatter';
 import pMapSeries from 'p-map-series';
 import { TypeScriptExtractor } from './typescript.extractor';
 import { ExportList } from './export-list';
-import { typeNodeToSchema } from './transformers/utils/type-node-to-schema';
 import { TransformerNotFound } from './exceptions';
 import { parseTypeFromQuickInfo } from './transformers/utils/parse-type-from-quick-info';
 import { tagParser } from './transformers/utils/jsdoc-to-doc-schema';
@@ -34,6 +32,15 @@ export class SchemaExtractorContext {
     readonly componentDeps: ComponentDependency[],
     readonly formatter: Formatter
   ) {}
+
+  _exports: Map<string, ExportList> = new Map<string, ExportList>();
+
+  // computedNodes: Map<`fileName:pos`, SchemaNode>
+
+  setExports(filePath: string, exports: ExportList) {
+    this._exports.set(filePath, exports);
+    return this;
+  }
 
   computeSchema(node: Node) {
     return this.extractor.computeSchema(node, this);
@@ -243,13 +250,6 @@ export class SchemaExtractorContext {
     return this.extractor.computeExportedIdentifiers(sourceFile, this);
   }
 
-  _exports: ExportList | undefined = undefined;
-
-  setExports(exports: ExportList) {
-    this._exports = exports;
-    return this;
-  }
-
   getExportedIdentifiers(node: Node) {
     return this.extractor.computeExportedIdentifiers(node, this);
   }
@@ -263,13 +263,17 @@ export class SchemaExtractorContext {
     isTypeStrFromQuickInfo = true
   ): Promise<SchemaNode> {
     const location = this.getLocation(node);
-    if (this._exports?.includes(typeStr)) {
+
+    const exportList = this._exports?.get(node.getSourceFile().fileName);
+
+    if (exportList?.includes(typeStr)) {
       return new TypeRefSchema(location, typeStr);
     }
+
     if (node.type && ts.isTypeNode(node.type)) {
       // if a node has "type" prop, it has the type data of the node. this normally happens when the code has the type
       // explicitly, e.g. `const str: string` vs implicitly `const str = 'some-string'`, which the node won't have "type"
-      return typeNodeToSchema(node.type, this);
+      return this.computeSchema(node.type);
     }
     /**
      * tsserver has two different calls: "definition" and "typeDefinition".
@@ -323,7 +327,7 @@ export class SchemaExtractorContext {
         return unknownExactType();
       }
 
-      if (definitionNodeName && this._exports?.includes(definitionNodeName)) {
+      if (definitionNodeName && exportList?.includes(definitionNodeName)) {
         return new TypeRefSchema(location, definitionNodeName);
       }
 

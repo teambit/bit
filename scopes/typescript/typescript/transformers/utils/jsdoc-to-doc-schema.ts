@@ -16,7 +16,6 @@ import {
 } from '@teambit/semantics.entities.semantic-schema';
 import { Formatter } from '@teambit/formatter';
 import { SchemaExtractorContext } from '../../schema-extractor-context';
-import { typeNodeToSchema } from './type-node-to-schema';
 
 export async function tagParser(
   tag: JSDocTag,
@@ -24,7 +23,6 @@ export async function tagParser(
   formatter: Formatter
 ): Promise<TagSchema> {
   // for some reason, in some cases, if `tag.getSourceFile()` is not provided to the `getText()`, it throws "Cannot read property 'text' of undefined"
-
   switch (tag.kind) {
     case SyntaxKind.JSDocReturnTag:
       return returnTag(tag as JSDocReturnTag, context);
@@ -87,12 +85,12 @@ function simpleTag(tag: JSDocTag, tagName: TagName | string, context: SchemaExtr
 }
 
 async function returnTag(tag: JSDocReturnTag, context: SchemaExtractorContext) {
-  const type = tag.typeExpression?.type ? await typeNodeToSchema(tag.typeExpression?.type, context) : undefined;
+  const type = tag.typeExpression?.type ? await context.computeSchema(tag.typeExpression?.type) : undefined;
   return new ReturnTagSchema(context.getLocation(tag), getTextOfJSDocComment(tag.comment), type);
 }
 
 async function propertyLikeTag(tag: JSDocPropertyLikeTag, context: SchemaExtractorContext) {
-  const type = tag.typeExpression?.type ? await typeNodeToSchema(tag.typeExpression?.type, context) : undefined;
+  const type = tag.typeExpression?.type ? await context.computeSchema(tag.typeExpression?.type) : undefined;
   return new PropertyLikeTagSchema(
     context.getLocation(tag),
     tag.name.getText(),
