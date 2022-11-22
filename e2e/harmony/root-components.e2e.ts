@@ -1631,3 +1631,23 @@ return new EnvMain();
 ${capitalizedEnvName}Aspect.addRuntime(EnvMain);
 `;
 }
+
+describe('create with root components on', function () {
+  let helper: Helper;
+  this.timeout(0);
+  before(() => {
+    helper = new Helper();
+    helper.scopeHelper.setNewLocalAndRemoteScopes();
+    helper.bitJsonc.setupDefault();
+    helper.extensions.bitJsonc.addKeyValToDependencyResolver('rootComponents', true);
+    helper.command.create('react', 'my-button');
+  });
+  it('should create the runtime component directory for the created component', () => {
+    expect(
+      path.join(
+        helper.fixtures.scopes.localPath,
+        `node_modules/@${helper.scopes.remote}/my-button/node_modules/@${helper.scopes.remote}/my-button/dist/index.js`
+      )
+    ).to.be.a.path();
+  });
+});
