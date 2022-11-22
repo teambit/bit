@@ -57,7 +57,7 @@ import {
   pathNormalizeToLinux,
 } from '@teambit/legacy/dist/utils/path';
 import fs from 'fs-extra';
-import { slice, uniqBy, difference, compact, partition, isEmpty } from 'lodash';
+import { slice, uniqBy, difference, compact, partition, isEmpty, merge } from 'lodash';
 import path from 'path';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import type { ComponentLog } from '@teambit/legacy/dist/scope/models/model-component';
@@ -648,12 +648,7 @@ export class Workspace implements ComponentFactory {
 
   async ejectConfig(id: ComponentID, options: EjectConfOptions): Promise<EjectConfResult> {
     const componentId = await this.resolveComponentId(id);
-    const component = await this.get(componentId);
-    const componentFromScope = await this.scope.get(id);
-    const { extensions } = await this.componentExtensions(component.id, componentFromScope, [
-      'WorkspaceDefault',
-      'WorkspaceVariants',
-    ]);
+    const extensions = await this.getSpecificExtensionsFromScope(id);
     const aspects = await this.createAspectList(extensions);
     const componentDir = this.componentDir(id, { ignoreVersion: true });
     const componentConfigFile = new ComponentConfigFile(componentId, aspects, componentDir, options.propagate);
@@ -664,6 +659,16 @@ export class Workspace implements ComponentFactory {
     return {
       configPath: ComponentConfigFile.composePath(componentDir),
     };
+  }
+
+  private async getSpecificExtensionsFromScope(id: ComponentID): Promise<ExtensionDataList> {
+    const componentFromScope = await this.scope.get(id);
+    const { extensions } = await this.componentExtensions(id, componentFromScope, [
+      'WorkspaceDefault',
+      'WorkspaceVariants',
+    ]);
+
+    return extensions;
   }
 
   /**
@@ -1282,7 +1287,12 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     id: ComponentID,
     aspectId: string,
     config: Record<string, any> = {},
-    shouldMergeWithExisting = false
+    shouldMergeWithExisting = false,
+    /**
+     * relevant only when writing to .bitmap.
+     * eject config of the given aspect-id, so then it won't override previous config. (see "adding prod dep, tagging then adding devDep" e2e-test)
+     */
+    shouldMergeWithPrevious = false
   ) {
     const componentConfigFile = await this.componentConfigFile(id);
     if (componentConfigFile) {
@@ -1294,6 +1304,11 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
       );
       await componentConfigFile.write({ override: true });
     } else {
+      if (shouldMergeWithPrevious) {
+        const extensions = await this.getSpecificExtensionsFromScope(id);
+        const obj = extensions.toConfigObject();
+        config = obj[aspectId] ? merge(obj[aspectId], config) : config;
+      }
       this.bitMap.addComponentConfig(id, aspectId, config, shouldMergeWithExisting);
     }
   }
