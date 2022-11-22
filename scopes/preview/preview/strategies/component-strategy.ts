@@ -61,7 +61,7 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
 
     const chunks = chunkSize ? chunk(entriesArr, chunkSize) : [entriesArr];
 
-    const peers = await this.dependencyResolver.getPeerDependenciesListFromEnv(context.env);
+    const peers = await this.dependencyResolver.getPeerDependenciesListFromEnvDef(context.envDefinition);
 
     const targets = chunks.map((currentChunk) => {
       const entries: BundlerEntryMap = {};

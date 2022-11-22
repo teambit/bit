@@ -6,7 +6,7 @@ import type { ConfigMain } from '@teambit/config';
 import { join } from 'path';
 import { get, pick, uniq } from 'lodash';
 import { ConfigAspect } from '@teambit/config';
-import { DependenciesEnv, EnvsAspect, EnvsMain } from '@teambit/envs';
+import { DependenciesEnv, EnvDefinition, EnvsAspect, EnvsMain } from '@teambit/envs';
 import { Slot, SlotRegistry, ExtensionManifest, Aspect, RuntimeManifest } from '@teambit/harmony';
 import { RequireableComponent } from '@teambit/harmony.modules.requireable-component';
 import type { LoggerMain } from '@teambit/logger';
@@ -1014,7 +1014,36 @@ export class DependencyResolverMain {
     return new EnvPolicyFactory().getEmpty();
   }
 
+  async getComponentEnvPolicyFromEnvDefinition(envDef: EnvDefinition): Promise<EnvPolicy> {
+    const fromFile = await this.getEnvPolicyFromFile(envDef.id);
+    if (fromFile) return fromFile;
+    return this.getComponentEnvPolicyFromEnv(envDef.env);
+  }
+
   /**
+   * Get a list of peer dependencies applied from an env
+   * This will merge different peers list like:
+   * 1. peerDependencies from the env.jsonc or getDependencies
+   * 2. peers from the env.jsonc or getDependencies
+   * 3. getAdditionalHostDependencies
+   * @param env
+   */
+  async getPeerDependenciesListFromEnvDef(envDef: EnvDefinition): Promise<string[]> {
+    const envPolicy = await this.getComponentEnvPolicyFromEnvDefinition(envDef);
+    const env = envDef.env;
+    const peers = uniq(
+      envPolicy.peersAutoDetectPolicy.names.concat(envPolicy.variantPolicy.byLifecycleType('peer').names)
+    );
+    let additionalHostDeps: string[] = [];
+    if (env.getAdditionalHostDependencies && typeof env.getAdditionalHostDependencies === 'function') {
+      additionalHostDeps = await env.getAdditionalHostDependencies();
+    }
+    return uniq(peers.concat(additionalHostDeps));
+  }
+
+
+  /**
+   * In most cases you want to use getPeerDependenciesListFromEnvDef above (which also use the env.jsonc for calculation)
    * Get a list of peer dependencies applied from an env
    * This will merge different peers list like:
    * 1. peerDependencies from the getDependencies

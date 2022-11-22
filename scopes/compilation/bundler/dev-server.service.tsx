@@ -143,7 +143,7 @@ export class DevServerService implements EnvService<ComponentServer, DevServerDe
   ): Promise<DevServerContext> {
     context.relatedContexts = additionalContexts.map((ctx) => ctx.envDefinition.id);
     context.components = context.components.concat(this.getComponentsFromContexts(additionalContexts));
-    const peers = await this.dependencyResolver.getPeerDependenciesListFromEnv(context.env);
+    const peers = await this.dependencyResolver.getPeerDependenciesListFromEnvDef(context.envDefinition);
     const hostRootDir = context.envRuntime.envAspectDefinition?.aspectPath;
 
     return Object.assign(context, {
