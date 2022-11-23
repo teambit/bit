@@ -75,13 +75,12 @@ export function ComponentCompare({
 
   const compare = _compareId ? compareComponent : component;
 
-  const nothingToCompare = !loading && !compareIsLocalChanges && (component.logs?.length || []) < 2;
+  const nothingToCompare = !loading && !compareIsLocalChanges && (compare?.logs?.length || []) < 2;
   const showSubMenus = !loading && !nothingToCompare;
 
-  const logsByVersion = useMemo(
-    () => allVersionInfo.reduce(groupByVersion, new Map<string, LegacyComponentLog>()),
-    [compare?.id, baseId]
-  );
+  const logsByVersion = useMemo(() => {
+    return (compare?.logs || []).slice().reduce(groupByVersion, new Map<string, LegacyComponentLog>());
+  }, [compare?.id, baseId]);
 
   const componentCompareModel: ComponentCompareModel = {
     compare: compare && {
