@@ -141,7 +141,7 @@ describe('bit dependencies command', function () {
           helper.command.dependenciesSet('comp1', `${helper.general.getPackageNameByCompName('bar/foo')}@0.0.1`);
         });
         it('bit status should show it as missing', () => {
-          helper.command.expectStatusToHaveIssue(IssuesClasses.MissingPackagesDependenciesOnFs.name);
+          helper.command.expectStatusToHaveIssue(IssuesClasses.MissingManuallyConfiguredPackages.name);
         });
         it('bit install should fix it', () => {
           helper.command.install();
