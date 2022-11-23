@@ -64,6 +64,8 @@ export interface ComponentFactory {
 
   getGraph(ids?: ComponentID[], shouldThrowOnMissingDep?: boolean): Promise<Graph<Component, string>>;
 
+  getGraphIds(ids?: ComponentID[], shouldThrowOnMissingDep?: boolean): Promise<Graph<ComponentID, string>>;
+
   getLogs(id: ComponentID, shortHash?: boolean, startsFrom?: string): Promise<ComponentLog[]>;
 
   /**

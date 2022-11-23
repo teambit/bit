@@ -68,6 +68,7 @@ import loader from '@teambit/legacy/dist/cli/loader';
 import { Lane } from '@teambit/legacy/dist/scope/models';
 import { LaneNotFound } from '@teambit/legacy/dist/api/scope/lib/exceptions/lane-not-found';
 import { ScopeNotFoundOrDenied } from '@teambit/legacy/dist/remotes/exceptions/scope-not-found-or-denied';
+import { DepEdgeType } from '@teambit/legacy/dist/scope/models/version';
 import { ComponentLoadOptions } from '@teambit/legacy/dist/consumer/component/component-loader';
 import { ComponentConfigFile } from './component-config-file';
 import {
@@ -95,6 +96,7 @@ import { WorkspaceComponentLoader } from './workspace-component/workspace-compon
 import { GraphFromFsBuilder, ShouldLoadFunc } from './build-graph-from-fs';
 import { BitMap } from './bit-map';
 import { WorkspaceAspect } from './workspace.aspect';
+import { GraphIdsFromFsBuilder } from './build-graph-ids-from-fs';
 
 export type EjectConfResult = {
   configPath: string;
@@ -435,6 +437,13 @@ export class Workspace implements ComponentFactory {
     if (!ids || ids.length < 1) ids = await this.listIds();
 
     return this.buildOneGraphForComponents(ids, undefined, undefined, shouldThrowOnMissingDep);
+  }
+
+  async getGraphIds(ids?: ComponentID[], shouldThrowOnMissingDep = true): Promise<Graph<ComponentID, DepEdgeType>> {
+    if (!ids || ids.length < 1) ids = await this.listIds();
+
+    const graphIdsFromFsBuilder = new GraphIdsFromFsBuilder(this, this.logger, shouldThrowOnMissingDep);
+    return graphIdsFromFsBuilder.buildGraph(ids);
   }
 
   /**
@@ -1565,7 +1574,6 @@ needed-for: ${neededFor || '<unknown>'}`);
   }
 
   /**
-   * Note - this gets called from Harmony only.
    * returns one graph that includes all dependencies types. each edge has a label of the dependency
    * type. the nodes content is the Component object.
    */
