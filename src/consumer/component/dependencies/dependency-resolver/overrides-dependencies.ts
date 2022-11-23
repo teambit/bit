@@ -109,7 +109,7 @@ export default class OverridesDependencies {
         const dependencyValue = overrides[depField][dependency];
         if (dependencyValue === MANUALLY_REMOVE_DEPENDENCY) return;
         const componentData = this._getComponentIdToAdd(depField, dependency);
-        if (componentData && componentData.componentId) {
+        if (componentData?.componentId) {
           const dependencyExist = existingDependencies[depField].find((d) =>
             d.id.isEqualWithoutScopeAndVersion(componentData.componentId)
           );
@@ -122,6 +122,9 @@ export default class OverridesDependencies {
         const addedPkg = this._manuallyAddPackage(depField, dependency, dependencyValue, packageJson);
         if (addedPkg) {
           packages[depField] = Object.assign(packages[depField] || {}, addedPkg);
+          if (!componentData?.packageName) {
+            this.missingPackageDependencies.push(dependency);
+          }
         }
       });
     });

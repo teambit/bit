@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 import ConsumerComponent from '../../consumer/component/consumer-component';
 
-export const MISSING_PACKAGES_FROM_OVERRIDES_LABEL = 'from overrides configuration';
+export const MISSING_PACKAGES_FROM_OVERRIDES_LABEL = 'manually configured';
 
 export function getInvalidComponentLabel(error: Error) {
   switch (error.name) {
