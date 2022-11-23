@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
-import { useCompareQueryParam, useComponentCompare } from '@teambit/component.ui.compare';
+import { useComponentCompare } from '@teambit/component.ui.component-compare.context';
+import { useCompareQueryParam } from '@teambit/component.ui.component-compare.hooks.use-component-compare-url';
 import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
 import { gql } from '@apollo/client';
 import { ComponentCompareAspectsModel } from './compare-aspects-context';
@@ -36,12 +37,12 @@ const GET_COMPONENT_ASPECT_DATA = gql`
 export function useCompareAspectsQuery(host: string): ComponentCompareAspectsModel {
   const componentCompareContext = useComponentCompare();
   const base = componentCompareContext?.base?.model;
-  const compare = componentCompareContext?.compare.model;
+  const compare = componentCompareContext?.compare?.model;
 
-  const isCompareVersionWorkspace = componentCompareContext?.compare.hasLocalChanges;
+  const isCompareVersionWorkspace = componentCompareContext?.compare?.hasLocalChanges;
 
-  const baseId = `${base?.id.fullName}@${base?.id.version}`;
-  const compareId = isCompareVersionWorkspace ? compare?.id.fullName : `${compare?.id.fullName}@${compare?.id.version}`;
+  const baseId = base?.id.toString();
+  const compareId = isCompareVersionWorkspace ? compare?.id.fullName : compare?.id.toString();
 
   const { data: baseAspectData, loading: baseLoading } = useDataQuery(GET_COMPONENT_ASPECT_DATA, {
     variables: { id: baseId, extensionId: host },

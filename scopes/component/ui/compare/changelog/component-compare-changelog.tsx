@@ -1,5 +1,5 @@
 import React, { HTMLAttributes, useMemo, useContext } from 'react';
-import { useComponentCompare } from '@teambit/component.ui.compare';
+import { useComponentCompare } from '@teambit/component.ui.component-compare.context';
 import { LegacyComponentLog } from '@teambit/legacy-component-log';
 import { VersionBlock } from '@teambit/component.ui.version-block';
 import { ComponentContext } from '@teambit/component';

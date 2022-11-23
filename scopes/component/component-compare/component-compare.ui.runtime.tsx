@@ -1,6 +1,6 @@
 import { NavLinkProps } from '@teambit/base-ui.routing.nav-link';
-import ComponentAspect, { ComponentUI } from '@teambit/component';
-import { ComponentCompare } from '@teambit/component.ui.compare';
+import ComponentAspect, { ComponentID, ComponentUI } from '@teambit/component';
+import { ComponentCompare } from '@teambit/component.ui.component-compare.component-compare';
 import { Harmony, Slot, SlotRegistry } from '@teambit/harmony';
 import { UIRuntime } from '@teambit/ui';
 import { RouteSlot } from '@teambit/ui-foundation.ui.react-router.slot-router';
@@ -26,9 +26,18 @@ export class ComponentCompareUI {
 
   static dependencies = [ComponentAspect];
 
-  getComponentComparePage = () => (
-    <ComponentCompare navSlot={this.navSlot} routeSlot={this.routeSlot} host={this.host} />
-  );
+  getComponentComparePage = (props?: { baseId?: ComponentID; compareId?: ComponentID }) => {
+    const { baseId, compareId } = props || {};
+    return (
+      <ComponentCompare
+        navSlot={this.navSlot}
+        routeSlot={this.routeSlot}
+        host={this.host}
+        baseId={baseId}
+        compareId={compareId}
+      />
+    );
+  };
 
   registerNavigation(route: ComponentCompareNav | Array<ComponentCompareNav>) {
     if (Array.isArray(route)) {

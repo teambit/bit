@@ -14,13 +14,14 @@ export type UseComponentOptions = {
   version?: string;
   logFilters?: Filters;
   customUseComponent?: UseComponentType;
+  skip?: boolean;
 };
 
-export type UseComponentType = (id: string, host: string, filters?: Filters) => Component;
+export type UseComponentType = (id: string, host: string, filters?: Filters, skip?: boolean) => Component;
 
 export function useComponent(host: string, id?: string, options?: UseComponentOptions): Component {
   const query = useQuery();
-  const { version, logFilters, customUseComponent } = options || {};
+  const { version, logFilters, customUseComponent, skip } = options || {};
   const componentVersion = (version || query.get('version')) ?? undefined;
 
   if (!id) throw new TypeError('useComponent received no component id');
@@ -28,7 +29,7 @@ export function useComponent(host: string, id?: string, options?: UseComponentOp
   const componentIdStr = withVersion(id, componentVersion);
   const targetUseComponent = customUseComponent || useComponentQuery;
 
-  return targetUseComponent(componentIdStr, host, logFilters);
+  return targetUseComponent(componentIdStr, host, logFilters, skip);
 }
 
 function withVersion(id: string, version?: string) {

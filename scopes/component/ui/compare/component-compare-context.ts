@@ -9,7 +9,7 @@ export type ComponentCompareComponentModel = {
 
 export type ComponentCompareModel = {
   base?: ComponentCompareComponentModel;
-  compare: ComponentCompareComponentModel;
+  compare?: ComponentCompareComponentModel;
   loading?: boolean;
   logsByVersion: Map<string, LegacyComponentLog>;
 };
