@@ -967,7 +967,10 @@ needed-for: ${neededFor || '<unknown>'}`);
   }
 
   async getSnap(id: ComponentID, hash: string): Promise<Snap> {
-    return this.componentLoader.getSnap(id, hash);
+    const modelComponent = await this.legacyScope.getModelComponent(id._legacy);
+    const ref = modelComponent.getRef(hash);
+    if (!ref) throw new Error(`ref was not found: ${id.toString()} with tag ${hash}`);
+    return this.componentLoader.getSnap(id, ref.toString());
   }
 
   async getLogs(id: ComponentID, shortHash = false, startsFrom?: string): Promise<ComponentLog[]> {

@@ -43,11 +43,11 @@ export type WorkspaceInstallOptions = {
   addMissingPeers?: boolean;
   variants?: string;
   lifecycleType?: WorkspaceDependencyLifecycleType;
-  dedupe: boolean;
-  import: boolean;
+  dedupe?: boolean;
+  import?: boolean;
   copyPeerToRuntimeOnRoot?: boolean;
   copyPeerToRuntimeOnComponents?: boolean;
-  updateExisting: boolean;
+  updateExisting?: boolean;
   savePrefix?: string;
   compile?: boolean;
 };
@@ -484,6 +484,11 @@ export class InstallMain {
       new LinkCommand(installExt, workspace, logger, community.getDocsDomain()),
     ];
     cli.register(...commands);
+    if (dependencyResolver.hasRootComponents()) {
+      workspace.registerOnMultipleComponentsAdd(async () => {
+        await installExt.install(undefined, { compile: true, import: false });
+      });
+    }
     return installExt;
   }
 }
