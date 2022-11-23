@@ -220,7 +220,11 @@ export class WorkspaceCompiler {
   ) {
     if (this.workspace) {
       this.workspace.registerOnComponentChange(this.onComponentChange.bind(this));
-      this.workspace.registerOnComponentAdd(this.onComponentChange.bind(this));
+      // When root components are on, register happens in the installer instead
+      // and the installer runs both installation and compilation.
+      if (!this.dependencyResolver.hasRootComponents()) {
+        this.workspace.registerOnComponentAdd(this.onComponentChange.bind(this));
+      }
       this.workspace.registerOnPreWatch(this.onPreWatch.bind(this));
       this.ui.registerPreStart(this.onPreStart.bind(this));
     }

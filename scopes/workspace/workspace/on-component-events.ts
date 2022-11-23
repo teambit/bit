@@ -11,6 +11,7 @@ export type OnComponentChange = (
 export type OnComponentAdd = (component: Component, files: string[]) => Promise<SerializableResults>;
 export type OnComponentRemove = (componentId: ComponentID) => Promise<SerializableResults>;
 export type OnComponentEventResult = { extensionId: string; results: SerializableResults };
+export type OnMultipleComponentsAdd = () => Promise<void>;
 
 export type OnComponentLoad = (
   component: Component,
