@@ -1,0 +1,48 @@
+.componentCompareContainer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+.top {
+  display: flex;
+  flex-direction: column;
+  padding: 24px 24px 16px 24px;
+}
+.bottom {
+  display: flex;
+  overflow-y: hidden;
+  flex-direction: column;
+  height: 100%;
+}
+.navContainer {
+  display: flex;
+  align-items: center;
+  min-height: 48px;
+  border-bottom: 1px solid var(--bit-border-color-lightest, #ededed);
+  font-size: var(--bit-p-xs, 14px);
+}
+
+.navigation {
+  display: flex;
+  list-style: none;
+  height: 100%;
+
+  @media screen and (max-width: 768px) {
+    padding-left: 6px;
+  }
+
+  > li {
+    display: block;
+    margin-right: 16px;
+    height: 100%;
+  }
+}
+
+.loader {
+  display: flex;
+  align-items: center;
+  justify-items: center;
+  height: 100%;
+  width: 100%;
+}
