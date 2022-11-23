@@ -12,6 +12,7 @@ import CommandHelper from './e2e-command-helper';
 import FsHelper from './e2e-fs-helper';
 import NpmHelper from './e2e-npm-helper';
 import ScopesData, { DEFAULT_OWNER } from './e2e-scopes';
+import BitJsoncHelper from './e2e-bit-jsonc-helper';
 
 export default class ScopeHelper {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -22,6 +23,7 @@ export default class ScopeHelper {
   command: CommandHelper;
   fs: FsHelper;
   npm: NpmHelper;
+  bitJsonc: BitJsoncHelper;
   cache?: Record<string, any>;
   keepEnvs: boolean;
   clonedScopes: string[] = [];
@@ -31,7 +33,8 @@ export default class ScopeHelper {
     scopes: ScopesData,
     commandHelper: CommandHelper,
     fsHelper: FsHelper,
-    npmHelper: NpmHelper
+    npmHelper: NpmHelper,
+    bitJsonc: BitJsoncHelper
   ) {
     this.debugMode = debugMode;
     this.keepEnvs = !!process.env.npm_config_keep_envs; // default = false
@@ -39,6 +42,7 @@ export default class ScopeHelper {
     this.command = commandHelper;
     this.fs = fsHelper;
     this.npm = npmHelper;
+    this.bitJsonc = bitJsonc;
   }
   clean() {
     fs.emptyDirSync(this.scopes.localPath);
@@ -87,6 +91,7 @@ export default class ScopeHelper {
         this._writeNpmrc(opts.npmrcConfig);
       }
     }
+    this.bitJsonc.setupDefault();
   }
   private _writeYarnRC(yarnRCConfig: any) {
     this.fs.writeFile('.yarnrc.yml', yaml.stringify(yarnRCConfig));
