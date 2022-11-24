@@ -90,6 +90,7 @@ export default class ScopeHelper {
     const disablePreview = opts?.disablePreview || opts?.disablePreview === undefined;
     if (addRemoteScopeAsDefaultScope) this.bitJsonc.addDefaultScope();
     if (disablePreview) this.bitJsonc.disablePreview();
+    this.bitJsonc.disableMissingManuallyConfiguredPackagesIssue();
 
     if (opts?.registry) {
       this._writeNpmrc({
