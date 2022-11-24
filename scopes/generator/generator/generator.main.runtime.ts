@@ -233,7 +233,7 @@ export class GeneratorMain {
     if (aspectId) {
       fromEnv = await this.listEnvWorkspaceTemplates(aspectId);
     }
-    const templates = fromEnv || this.getAllWorkspaceTemplatesFlattened();
+    const templates = (fromEnv && fromEnv.length) ? fromEnv : this.getAllWorkspaceTemplatesFlattened();
     const found = templates.find(({ id, template: tpl }) => {
       if (aspectId && name) return aspectId === id && name === tpl.name;
       if (aspectId) return aspectId === id;
