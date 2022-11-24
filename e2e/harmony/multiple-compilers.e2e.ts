@@ -20,7 +20,7 @@ describe('multiple compilers - babel and typescript', function () {
     describe('compile simple ts component', () => {
       let distDir;
       before(() => {
-        helper.scopeHelper.setNewLocalAndRemoteScopes({ addRemoteScopeAsDefaultScope: false });
+        helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
 
         // add a new env that compiles with Babel
         const envName = helper.env.setBabelWithTsHarmony();

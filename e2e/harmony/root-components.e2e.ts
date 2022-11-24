@@ -845,7 +845,7 @@ module.exports.default = {
   describe('yarn hoisted linker', function () {
     before(() => {
       helper = new Helper();
-      helper.scopeHelper.setNewLocalAndRemoteScopes({ addRemoteScopeAsDefaultScope: false });
+      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
       helper.fixtures.populateComponents(4);
       helper.extensions.bitJsonc.setPackageManager('teambit.dependencies/yarn');
       helper.extensions.bitJsonc.addKeyValToDependencyResolver('rootComponents', true);
