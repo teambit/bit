@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import classnames from 'classnames';
+import { ResponsiveNavbar } from '@teambit/design.navigation.responsive-navbar';
 import { TopBarNav } from '../top-bar-nav';
 import styles from './menu.module.scss';
 import { NavPlugin, OrderedNavigationSlot } from './nav-plugin';
@@ -17,6 +18,16 @@ export function MenuNav({ navigationSlot, className }: MenuNavProps) {
         return <TopBarNav key={id} {...menuItem.props} />;
       })}
     </nav>
+  );
+}
+
+export function CollapsableMenuNav({ navigationSlot, className }: MenuNavProps) {
+  const plugins = useMemo(() => navigationSlot.toArray().sort(sortFn), [navigationSlot]);
+  const links = plugins.map(([id, menuItem]) => {
+    return {component: () => <TopBarNav style={{height: '100%'}} key={id} {...menuItem.props} />};
+  });
+  return (
+    <ResponsiveNavbar navClassName={styles.tab} style={{width: '100%', height: '100%'}} priority='none' tabs={links} />
   );
 }
 

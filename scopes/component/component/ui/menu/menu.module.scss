@@ -6,12 +6,15 @@
   align-items: center;
   width: 100%;
   height: 100%;
+  min-width: 0;
 }
 
 .leftSide {
   display: flex;
   align-items: center;
   height: 100%;
+  flex-grow: 1;
+  min-width: 0;
 }
 
 .navigation {
@@ -90,4 +93,16 @@
 
 .componentVersionMenu {
   width: 350px;
+}
+
+.tab {
+  > div {
+    padding: 0;
+  }
+}
+
+.hideOnMobile {
+  @media screen and (max-width: $br-md) {
+    display: none;
+  }
 }

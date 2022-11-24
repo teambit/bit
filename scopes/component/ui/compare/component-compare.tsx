@@ -3,6 +3,7 @@ import { ComponentCompareNav, ComponentCompareNavSlot } from '@teambit/component
 import { RouteSlot, SlotRouter } from '@teambit/ui-foundation.ui.react-router.slot-router';
 import flatten from 'lodash.flatten';
 import { useLocation } from '@teambit/base-react.navigation.link';
+import { ResponsiveNavbar } from '@teambit/design.navigation.responsive-navbar';
 import { LegacyComponentLog } from '@teambit/legacy-component-log';
 import { RoundLoader } from '@teambit/design.ui.round-loader';
 import React, { HTMLAttributes, useContext, useMemo } from 'react';
@@ -114,13 +115,19 @@ function CompareMenuNav({ navSlot }: { navSlot: ComponentCompareNavSlot }) {
     })
   ).sort(sortFn);
 
+  const links = plugins.map((menuItem, index) => {
+    return { component: () => <TopBarNav key={`${menuItem.id}-${index}`} {...menuItem.props} className={styles.compareMenuLink} /> };
+  });
+
   return (
     <div className={styles.navContainer}>
-      <nav className={styles.navigation}>
-        {plugins.map((menuItem, index) => {
-          return <TopBarNav key={`${menuItem.id}-${index}`} {...menuItem.props} />;
-        })}
-      </nav>
+      <ResponsiveNavbar
+        className={styles.navigation}
+        navClassName={styles.tab}
+        style={{ width: '100%', height: '100%' }}
+        priority="none"
+        tabs={links}
+      />
     </div>
   );
 }

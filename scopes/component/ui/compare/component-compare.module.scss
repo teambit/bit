@@ -46,3 +46,13 @@
   height: 100%;
   width: 100%;
 }
+
+.compareMenuLink {
+  height: 100%;
+}
+
+.tab {
+  > div {
+    padding: 0;
+  }
+}
