@@ -23,7 +23,7 @@ import { BitError } from '@teambit/bit-error';
 import { REMOVE_EXTENSION_SPECIAL_SIGN } from '@teambit/legacy/dist/consumer/config';
 import { ComponentScopeDirMap, ConfigMain } from '@teambit/config';
 import { DependencyResolverMain } from '@teambit/dependency-resolver';
-import { EnvsMain, EnvsAspect, EnvServiceList, DEFAULT_ENV } from '@teambit/envs';
+import { EnvsMain, EnvsAspect, EnvServiceList } from '@teambit/envs';
 import { GraphqlMain } from '@teambit/graphql';
 import { Harmony } from '@teambit/harmony';
 import { Logger } from '@teambit/logger';
@@ -92,7 +92,6 @@ import {
   OnPreWatchSlot,
 } from './workspace.provider';
 import { WorkspaceComponentLoader } from './workspace-component/workspace-component-loader';
-import { IncorrectEnvAspect } from './exceptions/incorrect-env-aspect';
 import { GraphFromFsBuilder, ShouldLoadFunc } from './build-graph-from-fs';
 import { BitMap } from './bit-map';
 import { WorkspaceAspect } from './workspace.aspect';
@@ -1473,21 +1472,21 @@ needed-for: ${neededFor || '<unknown>'}`);
 
     const isAspect = async (id: ComponentID) => {
       const component = await this.get(id);
-      const data = this.envs.getEnvData(component);
       const isUsingAspectEnv = this.envs.isUsingAspectEnv(component);
       const isUsingEnvEnv = this.envs.isUsingEnvEnv(component);
       const isValidAspect = isUsingAspectEnv || isUsingEnvEnv;
-      if (!isValidAspect && idsWithoutCore.includes(component.id.toString())) {
-        const err = new IncorrectEnvAspect(component.id.toString(), data.type, data.id);
-        if (data.id === DEFAULT_ENV) {
-          // when cloning a project, or when the node-modules dir is deleted, nothing works and all
-          // components are default to the DEFAULT_ENV, which is node-env. we must allow "bit
-          // install" to prepare the workspace and let the proper the envs to be loaded
-          this.logger.error(err.message);
-        } else {
-          throw err;
-        }
-      }
+      // if (!isValidAspect && idsWithoutCore.includes(component.id.toString())) {
+      //   const data = this.envs.getEnvData(component);
+      //   const err = new IncorrectEnvAspect(component.id.toString(), data.type, data.id);
+      //   if (data.id === DEFAULT_ENV) {
+      //     // when cloning a project, or when the node-modules dir is deleted, nothing works and all
+      //     // components are default to the DEFAULT_ENV, which is node-env. we must allow "bit
+      //     // install" to prepare the workspace and let the proper the envs to be loaded
+      //     this.logger.error(err.message);
+      //   } else {
+      //     throw err;
+      //   }
+      // }
       return isValidAspect;
     };
 

@@ -114,16 +114,6 @@ export function ComponentOverview({
             badges={titleBadges}
           />
         </Row>
-        {finalElementsUrl && (
-          <Row>
-            <BadgeSection
-              position={BadgePosition.ElementsPackage}
-              componentDescriptor={componentDescriptor}
-              component={component}
-              badges={titleBadges}
-            />
-          </Row>
-        )}
       </div>
       <Separator isPresentational />
     </Section>
