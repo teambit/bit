@@ -19,12 +19,10 @@ export type UseComponentOptions = {
 
 export type UseComponentType = (id: string, host: string, filters?: Filters, skip?: boolean) => Component;
 
-export function useComponent(host: string, id?: string, options?: UseComponentOptions): Component {
+export function useComponent(host: string, id: string, options?: UseComponentOptions): Component {
   const query = useQuery();
   const { version, logFilters, customUseComponent, skip } = options || {};
   const componentVersion = (version || query.get('version')) ?? undefined;
-
-  if (!id) throw new TypeError('useComponent received no component id');
 
   const componentIdStr = withVersion(id, componentVersion);
   const targetUseComponent = customUseComponent || useComponentQuery;

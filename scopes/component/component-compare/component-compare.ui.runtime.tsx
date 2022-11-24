@@ -1,11 +1,12 @@
 import { NavLinkProps } from '@teambit/base-ui.routing.nav-link';
-import ComponentAspect, { ComponentID, ComponentUI } from '@teambit/component';
-import { ComponentCompare } from '@teambit/component.ui.component-compare.component-compare';
+import ComponentAspect, { ComponentUI } from '@teambit/component';
+import { ComponentCompare, ComponentCompareProps } from '@teambit/component.ui.component-compare.component-compare';
 import { Harmony, Slot, SlotRegistry } from '@teambit/harmony';
 import { UIRuntime } from '@teambit/ui';
 import { RouteSlot } from '@teambit/ui-foundation.ui.react-router.slot-router';
 import React from 'react';
 import { RouteProps } from 'react-router-dom';
+import flatten from 'lodash.flatten';
 import { AspectsCompareSection } from './component-compare-aspects.section';
 import { ComponentCompareAspect } from './component-compare.aspect';
 import { ComponentCompareSection } from './component-compare.section';
@@ -26,17 +27,12 @@ export class ComponentCompareUI {
 
   static dependencies = [ComponentAspect];
 
-  getComponentComparePage = (props?: { baseId?: ComponentID; compareId?: ComponentID }) => {
-    const { baseId, compareId } = props || {};
-    return (
-      <ComponentCompare
-        navSlot={this.navSlot}
-        routeSlot={this.routeSlot}
-        host={this.host}
-        baseId={baseId}
-        compareId={compareId}
-      />
-    );
+  getComponentComparePage = (props?: ComponentCompareProps) => {
+    const tabs = props?.tabs || (() => flatten(this.navSlot.values()));
+    const routes = props?.routes || (() => flatten(this.routeSlot.values()));
+    const host = props?.host || this.host;
+
+    return <ComponentCompare {...(props || {})} tabs={tabs} routes={routes} host={host} />;
   };
 
   registerNavigation(route: ComponentCompareNav | Array<ComponentCompareNav>) {

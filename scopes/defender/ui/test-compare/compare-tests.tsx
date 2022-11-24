@@ -1,4 +1,5 @@
-import { CompareSplitLayoutPreset, useComponentCompare } from '@teambit/component.ui.compare';
+import { CompareSplitLayoutPreset } from '@teambit/component.ui.component-compare.layouts.compare-split-layout-preset';
+import { useComponentCompare } from '@teambit/component.ui.component-compare.context';
 import { EmptyStateSlot } from '@teambit/compositions';
 import { Toggle } from '@teambit/design.ui.input.toggle';
 import { RoundLoader } from '@teambit/design.ui.round-loader';
