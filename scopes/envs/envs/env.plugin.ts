@@ -45,7 +45,7 @@ export class EnvPlugin implements PluginDefinition {
       name: env.name,
       icon: env.icon,
       getDevEnvId: () => {
-        return 'teambit.react/react-env';
+        return preview.getDevEnvId();
       },
       getSchemaExtractor: env.schemaExtractor()(envContext),
       getDevServer: (context) => {

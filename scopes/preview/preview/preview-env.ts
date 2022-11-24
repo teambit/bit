@@ -29,4 +29,10 @@ export type Preview = {
    * return an instance for a preview bundler.
    */
   getBundler: (context: BundlerContext) => EnvHandler<Bundler>;
+
+  /**
+   * return the id of the dev server.
+   * used for deduplication of dev servers
+   */
+  getDevEnvId: () => string;
 }
