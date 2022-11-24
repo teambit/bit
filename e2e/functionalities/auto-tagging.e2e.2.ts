@@ -18,7 +18,7 @@ describe('auto tagging functionality', function () {
     let tagOutput;
     let beforeSecondTag: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateComponents();
       helper.command.tagAllWithoutBuild();
 
@@ -85,7 +85,7 @@ describe('auto tagging functionality', function () {
   describe.skip('with cyclic dependencies', () => {
     let scopeBeforeTag;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJson.addKeyVal('packageManager', 'yarn');
       helper.fs.createFile('bar/a', 'a.js', 'require("../b/b")');
       helper.fs.createFile('bar/b', 'b.js', 'require("../c/c")');
@@ -200,7 +200,7 @@ describe('auto tagging functionality', function () {
   });
   describe('with same component as direct and indirect dependent (A in: A => B => C, A => C)', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fs.createFile('bar/a', 'a.js', 'require("../b/b"); require("../c/c");');
       helper.fs.createFile('bar/b', 'b.js', 'require("../c/c")');
       helper.fs.createFile('bar/c', 'c.js', 'console.log("I am C v1")');

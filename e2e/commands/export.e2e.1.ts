@@ -16,7 +16,7 @@ describe('bit export command', function () {
   });
   describe('with no components to export', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
     });
     it('should print nothing to export', () => {
       const output = helper.command.export();
@@ -25,7 +25,7 @@ describe('bit export command', function () {
   });
   describe('with multiple versions', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
       helper.fixtures.tagComponentBarFoo();
@@ -42,7 +42,7 @@ describe('bit export command', function () {
   });
   describe('imported (v1), exported (v2) and then exported again (v3)', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
       helper.fixtures.tagComponentBarFoo();
@@ -70,7 +70,7 @@ describe('bit export command', function () {
     let pngSize;
     let destPngFile;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.createComponentBarFoo();
       const sourcePngFile = path.join(__dirname, '..', 'fixtures', 'png_fixture.png');
       destPngFile = path.join(helper.scopes.localPath, 'bar', 'png_fixture.png');
@@ -101,7 +101,7 @@ describe('bit export command', function () {
   describe('export a component, do not modify it and export again to the same scope', () => {
     let output;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
       helper.fixtures.tagComponentBarFoo();
@@ -114,7 +114,7 @@ describe('bit export command', function () {
   });
   describe('export a component when the checked out version is not the latest', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.createComponentBarFoo('// v2');
       helper.fixtures.addComponentBarFooAsDir();
       helper.command.tagIncludeUnmodified('2.0.0');
@@ -187,7 +187,7 @@ describe('bit export command', function () {
   });
   describe('export after re-creating the remote', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllComponents();
       helper.command.export();
@@ -223,7 +223,7 @@ describe('bit export command', function () {
   describe('re-export using the component name without the scope name', () => {
     let output;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
       helper.command.tagAllComponents();

@@ -20,7 +20,7 @@ describe('custom env', function () {
   });
   describe('non existing env', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateComponents(1);
       helper.extensions.addExtensionToVariant('*', 'company.scope/envs/fake-env');
     });
@@ -36,7 +36,7 @@ describe('custom env', function () {
     let envId;
     let envName;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setPackageManager();
       envName = helper.env.setCustomEnv();
       envId = `${helper.scopes.remote}/${envName}`;
@@ -91,7 +91,7 @@ describe('custom env', function () {
   });
   describe('change an env after tag', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setPackageManager();
       const envName = helper.env.setCustomEnv();
       const envId = `${helper.scopes.remote}/${envName}`;
@@ -112,7 +112,7 @@ describe('custom env', function () {
     let npmCiRegistry: NpmCiRegistry;
     before(async () => {
       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
-      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setPackageManager();
       npmCiRegistry = new NpmCiRegistry(helper);
       await npmCiRegistry.init();
@@ -268,7 +268,7 @@ describe('custom env', function () {
   describe('when the env is exported to a remote scope and is not exist locally', () => {
     let envId: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       const envName = helper.env.setCustomEnv();
       envId = `${helper.scopes.remote}/${envName}`;
       helper.command.tagAllWithoutBuild();

@@ -17,7 +17,7 @@ describe('relative paths flow (components requiring each other by relative paths
   describe('adding directories and using relative-paths', () => {
     let appOutput;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       appOutput = helper.fixtures.populateComponents(2, false);
     });
     it('bit status should show it as an invalid component', () => {

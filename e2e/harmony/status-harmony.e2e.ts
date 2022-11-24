@@ -76,7 +76,7 @@ describe('status command on Harmony', function () {
   });
   describe('components that imports itself', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fs.outputFile('bar/index.js', 'export const a = "b";');
       helper.fs.outputFile('bar/foo.js', `import { a } from '@${helper.scopes.remote}/bar';`);
       helper.command.add('bar');
@@ -90,7 +90,7 @@ describe('status command on Harmony', function () {
   });
   describe('deleting a dependency from the filesystem when the record is still in bitmap', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateComponents(2);
       helper.command.tagWithoutBuild();
       helper.command.export();

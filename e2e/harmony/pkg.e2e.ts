@@ -24,7 +24,7 @@ describe('pkg extension', function () {
     let isTypeCapsuleDir;
 
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
       helper.fixtures.createComponentUtilsIsType();

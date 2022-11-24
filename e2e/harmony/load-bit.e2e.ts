@@ -9,7 +9,7 @@ describe('loadBit()', function () {
   let helper: Helper;
   before(() => {
     helper = new Helper();
-    helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
+    helper.scopeHelper.setNewLocalAndRemoteScopes();
   });
 
   it('should return a valid workspace instance', async () => {
@@ -37,7 +37,7 @@ describe('loadBit()', function () {
   });
 
   it('should throw when defaultScope is invalid', async () => {
-    helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
+    helper.scopeHelper.setNewLocalAndRemoteScopes();
     const bitJsonc = helper.bitJsonc.read();
     bitJsonc['teambit.workspace/workspace'].defaultScope = 'hi/';
     helper.bitJsonc.write(bitJsonc);

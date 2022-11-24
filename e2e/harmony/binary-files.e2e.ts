@@ -14,7 +14,7 @@ describe('handling binary files in Bit', function () {
   describe('checkout with a binary file', () => {
     let afterFirstTag: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateComponents(1);
       helper.fixtures.copyFixtureFile('png/png-fixture1.png', 'comp1/icon.png');
       helper.command.tagAllWithoutBuild();

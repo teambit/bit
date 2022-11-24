@@ -16,7 +16,7 @@ describe('aspect', function () {
   });
   describe('run bit aspect set then generate component.json', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateComponents(1);
       helper.command.setAspect('comp1', Extensions.forking, { configKey: 'configVal' });
       helper.command.ejectConf('comp1');
@@ -63,7 +63,7 @@ describe('aspect', function () {
   describe('bit aspect update command', () => {
     let output: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.command.create('aspect', 'my-aspect');
       helper.command.compile();
       helper.command.install();

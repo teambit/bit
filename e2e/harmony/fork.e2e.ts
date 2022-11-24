@@ -7,7 +7,7 @@ describe('bit fork command', function () {
   let helper: Helper;
   before(() => {
     helper = new Helper();
-    helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
+    helper.scopeHelper.setNewLocalAndRemoteScopes();
     helper.fixtures.populateComponents(1);
     helper.command.tagAllWithoutBuild();
     helper.command.export();

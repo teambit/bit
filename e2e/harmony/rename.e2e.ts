@@ -17,7 +17,7 @@ describe('bit rename command', function () {
   describe('rename an exported component', () => {
     let scopeAfterExport: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllWithoutBuild();
       helper.command.export();
@@ -83,7 +83,7 @@ describe('bit rename command', function () {
   });
   describe('rename a new component', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateComponents(1);
       helper.command.rename('comp1', 'comp2');
     });

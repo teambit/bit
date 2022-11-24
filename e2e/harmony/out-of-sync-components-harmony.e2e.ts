@@ -15,7 +15,7 @@ describe('components that are not synced between the scope and the consumer', fu
   describe('consumer with a new component and scope with the same component as exported with defaultScope configured', () => {
     let scopeOutOfSync;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
       const bitMap = helper.bitMap.read();
@@ -48,7 +48,7 @@ describe('components that are not synced between the scope and the consumer', fu
   describe('consumer with a tagged component and scope with no components', () => {
     let scopeOutOfSync;
     before(() => {
-      helper.scopeHelper.reInitLocalScopeWithDefault();
+      helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
       helper.command.tagAllWithoutBuild();

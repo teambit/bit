@@ -15,7 +15,7 @@ describe('bit artifacts command', function () {
   });
   describe('staged component that was never exported', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScopeWithDefault();
+      helper.scopeHelper.reInitLocalScope();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllComponents();
     });

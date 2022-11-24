@@ -18,7 +18,7 @@ import { HttpHelper } from '../http-helper';
   describe('export lane', () => {
     before(async () => {
       httpHelper = new HttpHelper(helper);
-      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       await httpHelper.start();
       helper.scopeHelper.addRemoteHttpScope();
       helper.command.createLane();
@@ -58,7 +58,7 @@ import { HttpHelper } from '../http-helper';
   describe('export with removed components', () => {
     before(async () => {
       httpHelper = new HttpHelper(helper);
-      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       await httpHelper.start();
       helper.scopeHelper.addRemoteHttpScope();
       helper.fixtures.populateComponents(2);
@@ -83,7 +83,7 @@ import { HttpHelper } from '../http-helper';
     let scopeAfterExport: string;
     before(async () => {
       httpHelper = new HttpHelper(helper);
-      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.extensions.addExtensionToVariant('*', 'teambit.react/react', {});
       await httpHelper.start();
       helper.scopeHelper.addRemoteHttpScope();

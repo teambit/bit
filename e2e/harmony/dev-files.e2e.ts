@@ -21,7 +21,7 @@ describe('dev files', function () {
     const ENV_NAME = 'dev-files-env';
     const COMP_NAME = 'custom-dev-files';
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.setPackageManager();
       envName = helper.env.setCustomEnv(ENV_NAME);
       envId = `${helper.scopes.remote}/${envName}`;

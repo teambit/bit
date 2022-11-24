@@ -13,7 +13,7 @@ describe('bit show command', function () {
   describe('running bit show --remote on an empty workspace', () => {
     let showOutput: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllWithoutBuild();
       helper.command.export();

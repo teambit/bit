@@ -22,7 +22,7 @@ describe('basic flow with dependencies', function () {
   });
   describe('after adding components', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateComponents();
     });
     describe('bit status', () => {

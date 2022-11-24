@@ -14,7 +14,7 @@ describe('untag components on Harmony', function () {
   });
   describe('when an old version is missing from the scope', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllWithoutBuild();
       const v1Head = helper.command.getHead('comp1');
@@ -34,7 +34,7 @@ describe('untag components on Harmony', function () {
   });
   describe('untagging multiple versions', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateComponents(1);
       helper.command.tagIncludeUnmodifiedWithoutBuild(); // 0.0.1
       helper.command.tagIncludeUnmodifiedWithoutBuild(); // 0.0.2
@@ -47,7 +47,7 @@ describe('untag components on Harmony', function () {
   });
   describe('untagging multiple versions when the new head is exported', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateComponents(1);
       helper.command.tagIncludeUnmodifiedWithoutBuild(); // 0.0.1
       helper.command.export();

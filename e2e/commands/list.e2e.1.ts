@@ -50,7 +50,7 @@ describe('bit list command', function () {
     describe('when a remote component has a higher version than the local component', () => {
       let output;
       before(() => {
-        helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
+        helper.scopeHelper.setNewLocalAndRemoteScopes();
         helper.fixtures.createComponentBarFoo();
         helper.fixtures.addComponentBarFooAsDir();
         helper.fixtures.tagComponentBarFoo();
@@ -78,7 +78,7 @@ describe('bit list command', function () {
     describe('when a remote component has the same version as the local component', () => {
       let output;
       before(() => {
-        helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
+        helper.scopeHelper.setNewLocalAndRemoteScopes();
         helper.fs.createFile('bar', 'baz.js');
         helper.command.addComponent('bar', { i: 'bar/baz' });
         helper.command.tagWithoutBuild('bar/baz');

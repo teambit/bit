@@ -15,7 +15,7 @@ describe('scope with a symlink object reference to a non-exist component', funct
     helper.scopeHelper.destroy();
   });
   before(() => {
-    helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
+    helper.scopeHelper.setNewLocalAndRemoteScopes();
     helper.fixtures.createComponentBarFoo();
     helper.fixtures.addComponentBarFooAsDir();
     helper.command.tagAllWithoutBuild();

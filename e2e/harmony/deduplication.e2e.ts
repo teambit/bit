@@ -15,7 +15,7 @@ chai.use(require('chai-fs'));
   this.timeout(0);
   before(async () => {
     helper = new Helper();
-    helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
+    helper.scopeHelper.setNewLocalAndRemoteScopes();
     scopeWithoutOwner = helper.scopes.remoteWithoutOwner;
     remote = helper.scopes.remote;
 
@@ -69,7 +69,7 @@ chai.use(require('chai-fs'));
   });
   describe('complex scenario', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
 
       randomStr = generateRandomStr(4); // to avoid publishing the same package every time the test is running
       const name = `@ci/${randomStr}.{name}`;

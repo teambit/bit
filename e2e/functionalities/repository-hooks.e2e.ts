@@ -18,7 +18,7 @@ describe('repository-hooks', function () {
   });
   describe('export to remote scope with manipulation hook', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.copyFixtureFile(
         path.join('scopes', 'repository-hooks-fixture.js'),
         'repository-hooks.js',

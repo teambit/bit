@@ -20,7 +20,7 @@ describe('bit lane command', function () {
     describe('importing the lane objects and switching to that lane', () => {
       let beforeLaneSwitch;
       before(() => {
-        helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
+        helper.scopeHelper.setNewLocalAndRemoteScopes();
         helper.fixtures.createComponentBarFoo();
         helper.fixtures.addComponentBarFooAsDir();
         helper.command.snapAllComponents();
@@ -123,7 +123,7 @@ describe('bit lane command', function () {
   });
   describe('switching lanes with deleted files', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllWithoutBuild();
       helper.command.createLane('migration');
@@ -142,7 +142,7 @@ describe('bit lane command', function () {
     let mainScope;
     let laneScope;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
 
       mainScope = helper.scopeHelper.cloneLocalScope();
       helper.command.createLane('dev');
@@ -188,7 +188,7 @@ describe('bit lane command', function () {
   });
   describe('switch to main after importing a lane', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllWithoutBuild(); // main has 0.0.1
       helper.command.export();

@@ -19,7 +19,7 @@ describe('import functionality on Harmony', function () {
   describe('workspace with TS components', () => {
     let scopeWithoutOwner: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       scopeWithoutOwner = helper.scopes.remoteWithoutOwner;
       helper.fixtures.populateComponentsTS(3);
       npmCiRegistry = new NpmCiRegistry(helper);
@@ -125,7 +125,7 @@ describe('import functionality on Harmony', function () {
   });
   describe('tag, export, clean scope objects, tag and export', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllComponents();
       helper.command.export();
@@ -142,7 +142,7 @@ describe('import functionality on Harmony', function () {
   describe('import delta (bit import without ids) when local is behind', () => {
     let afterFirstExport: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllWithoutBuild();
       helper.fixtures.populateComponents(1, undefined, ' v2');
@@ -166,7 +166,7 @@ describe('import functionality on Harmony', function () {
   describe('multiple components some are directory of others', () => {
     let scopeBeforeImport: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fs.outputFile('foo/index.js');
       helper.fs.outputFile('bar/index.js');
       helper.command.addComponent('foo');
@@ -214,7 +214,7 @@ describe('import functionality on Harmony', function () {
     () => {
       let scopeWithoutOwner: string;
       before(async () => {
-        helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
+        helper.scopeHelper.setNewLocalAndRemoteScopes();
         scopeWithoutOwner = helper.scopes.remoteWithoutOwner;
         helper.fixtures.populateComponents(3);
         npmCiRegistry = new NpmCiRegistry(helper);
@@ -257,7 +257,7 @@ describe('import functionality on Harmony', function () {
   describe('changing the component default directory', () => {
     let beforeImport: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllWithoutBuild();
       helper.command.export();
@@ -282,7 +282,7 @@ describe('import functionality on Harmony', function () {
   });
   describe('importing a component with @types dependency when current workspace does not have it', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fs.outputFile('bar/foo.ts', `import cors from 'cors'; console.log(cors);`);
       helper.command.add('bar');
       helper.command.install('cors@2.8.5 @types/cors@2.8.10');

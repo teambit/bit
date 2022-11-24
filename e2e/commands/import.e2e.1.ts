@@ -22,14 +22,14 @@ describe('bit import', function () {
   describe('stand alone component (without dependencies)', () => {
     let importOutput;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       // export a new simple component
       helper.fs.createFile('global', 'simple.js');
       helper.command.addComponent('global', { i: 'global/simple' });
       helper.command.tagWithoutBuild('global/simple');
       helper.command.exportIds('global/simple');
 
-      helper.scopeHelper.reInitLocalScopeWithDefault();
+      helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
       importOutput = helper.command.importComponent('global/simple');
     });
@@ -284,7 +284,7 @@ describe('bit import', function () {
   describe.skip('with an existing component in bit.map (as author)', () => {
     let localConsumerFiles;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
       helper.command.tagAllComponents();
@@ -325,7 +325,7 @@ describe('bit import', function () {
   describe('import a component when the local version is modified', () => {
     let localScope;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
       helper.command.tagAllWithoutBuild();
@@ -385,7 +385,7 @@ describe('bit import', function () {
   });
   describe('importing a component when it has a local tag', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
       helper.command.tagAllWithoutBuild();
@@ -431,7 +431,7 @@ describe('bit import', function () {
   });
   describe('import with wildcards', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateComponents();
       helper.command.tagAllWithoutBuild();
       helper.command.export();

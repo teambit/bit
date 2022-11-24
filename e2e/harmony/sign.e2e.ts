@@ -17,7 +17,7 @@ describe('sign command', function () {
   describe('simple case with one scope with --push flag', () => {
     let signOutput: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateComponents(2);
       helper.command.tagAllWithoutBuild();
       helper.command.export();
@@ -53,7 +53,7 @@ describe('sign command', function () {
   describe('simple case with one scope without --push flag', () => {
     let signOutput: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateComponents(2);
       helper.command.tagAllWithoutBuild();
       helper.command.export();
@@ -72,7 +72,7 @@ describe('sign command', function () {
   describe('without specifying the ids', () => {
     let signOutput: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateComponents(2);
       helper.command.tagAllWithoutBuild();
       helper.command.export();
@@ -86,7 +86,7 @@ describe('sign command', function () {
   describe('failure case', () => {
     let signOutput: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fs.outputFile('bar/index.js');
       helper.fs.outputFile('bar/foo.spec.js'); // it will fail as it doesn't have any test
       helper.command.addComponent('bar');
@@ -128,7 +128,7 @@ describe('sign command', function () {
     let firstSnapHash: string;
     let signRemote;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
 
       const secondRemote = helper.scopeHelper.getNewBareScope();
       helper.scopeHelper.addRemoteScope(secondRemote.scopePath);
@@ -177,7 +177,7 @@ describe('sign command', function () {
   describe.skip('circular dependencies between two scopes', () => {
     let signOutput: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       const secondRemote = helper.scopeHelper.getNewBareScope();
       helper.scopeHelper.addRemoteScope(secondRemote.scopePath);
       helper.scopeHelper.addRemoteScope(secondRemote.scopePath, helper.scopes.remotePath);

@@ -8,7 +8,7 @@ describe('local is diverged from the remote', function () {
   let helper: Helper;
   before(() => {
     helper = new Helper();
-    helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
+    helper.scopeHelper.setNewLocalAndRemoteScopes();
     helper.command.createLane();
     helper.fixtures.populateComponents(1, false);
     helper.command.snapAllComponentsWithoutBuild();

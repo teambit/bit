@@ -14,7 +14,7 @@ describe('bit reset command', function () {
   describe('untag single component', () => {
     let localScope;
     before(() => {
-      helper.scopeHelper.reInitLocalScopeWithDefault();
+      helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
       helper.fixtures.tagComponentBarFoo();
@@ -116,7 +116,7 @@ describe('bit reset command', function () {
   describe('untag multiple components (--all flag)', () => {
     let localScope;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
       helper.fs.createFile('bar2', 'foo2.js');
@@ -164,7 +164,7 @@ describe('bit reset command', function () {
   describe('components with dependencies', () => {
     let localScope;
     before(() => {
-      helper.scopeHelper.reInitLocalScopeWithDefault();
+      helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentIsType();
       helper.fixtures.addComponentUtilsIsTypeAsDir();
       helper.fixtures.createComponentIsString();
@@ -285,7 +285,7 @@ describe('bit reset command', function () {
   });
   describe('components with config in the .bitmap file', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateComponents(2);
       helper.command.tagWithoutBuild();
       helper.command.deprecateComponent('comp1');

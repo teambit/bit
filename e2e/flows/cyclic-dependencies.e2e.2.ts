@@ -24,7 +24,7 @@ describe.skip('cyclic dependencies', function () {
   describe('a => b, b => a (component A requires B, component B requires A)', () => {
     let output;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fs.createFile('comp/a', 'a.js', fixtureA);
       helper.fs.createFile('comp/b', 'b.js', fixtureB);
       helper.command.addComponent('comp/a', { i: 'comp/a' });
@@ -83,7 +83,7 @@ describe.skip('cyclic dependencies', function () {
   describe('a complex case with a long chain of dependencies', () => {
     let output;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       // isString => isType
       helper.fs.createFile('utils', 'is-type.js', fixtures.isType);
       helper.fs.createFile('utils', 'is-string.js', fixtures.isString);
@@ -277,7 +277,7 @@ describe.skip('cyclic dependencies', function () {
   describe('same component require itself using module path (@bit/component-name)', () => {
     let tagOutput;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
       helper.command.tagAllWithoutBuild();

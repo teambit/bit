@@ -13,7 +13,7 @@ describe('bit deprecate and undeprecate commands', function () {
   });
   describe('deprecate tagged component', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateComponents();
       helper.command.tagAllWithoutBuild();
       helper.command.deprecateComponent('comp2');
@@ -95,7 +95,7 @@ describe('bit deprecate and undeprecate commands', function () {
   });
   describe('reverting the deprecation by "bit checkout reset"', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllWithoutBuild();
       helper.command.deprecateComponent('comp1');

@@ -39,7 +39,7 @@ describe('recovery after component/scope deletion', function () {
         return helper.command.runCmd(`bit run-action FetchMissingDeps ${remote} '${JSON.stringify(options)}'`);
       }
       before(async () => {
-        helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
+        helper.scopeHelper.setNewLocalAndRemoteScopes();
         scopeWithoutOwner = helper.scopes.remoteWithoutOwner;
         npmCiRegistry = new NpmCiRegistry(helper);
         npmCiRegistry.configureCiInPackageJsonHarmony();
@@ -264,7 +264,7 @@ describe('recovery after component/scope deletion', function () {
         before(() => {
           helper.scopeHelper.getClonedRemoteScope(remoteScopeClone);
           helper.scopeHelper.reInitRemoteScope(remote2Path);
-          helper.scopeHelper.reInitLocalScopeWithDefault();
+          helper.scopeHelper.reInitLocalScope();
           npmCiRegistry.setResolver({ [remote2Name]: remote2Path });
           helper.command.importComponent('comp2');
           // delete the comp3 from the scope.

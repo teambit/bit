@@ -161,7 +161,7 @@ describe('dependency-resolver extension', function () {
     let npmCiRegistry: NpmCiRegistry;
     let randomStr;
     before(async () => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
 
       npmCiRegistry = new NpmCiRegistry(helper);
       randomStr = generateRandomStr(4); // to avoid publishing the same package every time the test is running

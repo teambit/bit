@@ -80,10 +80,6 @@ export default class ScopeHelper {
     this.packageManager = packageManager;
   }
 
-  reInitLocalScopeWithDefault() {
-    return this.reInitLocalScope();
-  }
-
   reInitLocalScope(opts?: SetupWorkspaceOpts) {
     this.cleanLocalScope();
     if (opts?.initGit) this.command.runCmd('git init');
@@ -145,10 +141,6 @@ export default class ScopeHelper {
     this.reInitLocalScope(opts);
     this.reInitRemoteScope();
     this.addRemoteScope();
-  }
-
-  setNewLocalAndRemoteScopesWithDefault() {
-    this.setNewLocalAndRemoteScopes();
   }
 
   initNewLocalScope(deleteCurrentScope = true) {

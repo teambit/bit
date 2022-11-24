@@ -62,7 +62,7 @@ describe('many components Harmony', function () {
   });
   describe('basic commands', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       const getImp = (index) => {
         if (index === 0) return '';
         if (index > maxFlattenedDependencies) {
