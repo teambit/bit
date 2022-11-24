@@ -38,7 +38,7 @@ export interface DevServer {
    * hash of the dev server.
    * This is used in order to determine if we should spin a different dev server.
    */
-  hash(): string;
+  hash?(): string;
 
   /**
    * return the dev server version.
