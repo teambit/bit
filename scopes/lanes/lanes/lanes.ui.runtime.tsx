@@ -22,6 +22,7 @@ import { LanesProvider, useLanes } from '@teambit/lanes.hooks.use-lanes';
 import { LaneSwitcher } from '@teambit/lanes.ui.navigation.lane-switcher';
 import { LaneId } from '@teambit/lane-id';
 import { useViewedLaneFromUrl } from '@teambit/lanes.hooks.use-viewed-lane-from-url';
+import { LaneComparePage } from '@teambit/lanes.ui.compare.lane-compare-page';
 
 export class LanesUI {
   static dependencies = [UIAspect, ComponentAspect, WorkspaceAspect, ScopeAspect, SidebarAspect];
@@ -69,6 +70,7 @@ export class LanesUI {
             <Route path={LanesModel.lanePath}>
               <Route index element={this.getLaneOverview()} />
               <Route path="~component/*" element={this.getLaneComponent()} />
+              <Route path="~compare/*" element={this.getLanesComparePage()} />
               <Route path="*" element={<NotFoundPage />} />
             </Route>
             <Route path="*" element={<NotFoundPage />} />
@@ -148,7 +150,7 @@ export class LanesUI {
         path: LanesModel.lanesPrefix,
         children: (
           <Route path={`${LanesModel.lanePath}/*`}>
-            <Route path="*" element={this.getLanesOverviewMenu()} />
+            <Route path={'*'} element={this.getLanesOverviewMenu()} />
             <Route path="~component/*" element={this.getLaneComponentMenu()} />
           </Route>
         ),
@@ -158,6 +160,10 @@ export class LanesUI {
 
   getLanesOverviewMenu() {
     return <LanesOverviewMenu navigationSlot={this.navSlot} widgetSlot={this.menuWidgetSlot} />;
+  }
+
+  getLanesComparePage() {
+    return <LaneComparePage />;
   }
 
   registerMenuWidget(...menuItems: MenuWidget[]) {
@@ -185,6 +191,13 @@ export class LanesUI {
           children: 'Overview',
         },
         order: 1,
+      },
+      {
+        props: {
+          href: '~compare',
+          children: 'Lane Compare',
+        },
+        order: 2,
       },
     ]);
   }
