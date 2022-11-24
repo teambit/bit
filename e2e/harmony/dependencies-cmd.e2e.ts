@@ -115,7 +115,7 @@ describe('bit dependencies command', function () {
     describe('removing a component', () => {
       let beforeRemove: string;
       before(() => {
-        helper.scopeHelper.setNewLocalAndRemoteScopes();
+        helper.scopeHelper.setNewLocalAndRemoteScopes({ addRemoteScopeAsDefaultScope: false });
         helper.fixtures.populateComponents(2);
         beforeRemove = helper.scopeHelper.cloneLocalScope();
       });

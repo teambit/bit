@@ -16,7 +16,6 @@ describe('bit artifacts command', function () {
   describe('staged component that was never exported', () => {
     before(() => {
       helper.scopeHelper.reInitLocalScope();
-      helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllComponents();
     });

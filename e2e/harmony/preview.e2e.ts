@@ -16,7 +16,7 @@ describe('preview feature (during build)', function () {
   });
   describe('jsx component', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopes({ disablePreview: false });
       helper.fs.outputFile(
         'button/button.jsx',
         `import React from 'react'

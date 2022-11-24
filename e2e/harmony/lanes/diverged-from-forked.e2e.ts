@@ -9,7 +9,6 @@ describe('lane-b was forked from lane-a and they are now diverged', function () 
   before(() => {
     helper = new Helper();
     helper.scopeHelper.setNewLocalAndRemoteScopes();
-    helper.bitJsonc.setupDefault();
     helper.command.createLane('lane-a');
     helper.fixtures.populateComponents(1, false);
     helper.command.snapAllComponentsWithoutBuild();
