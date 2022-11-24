@@ -22,8 +22,7 @@ describe('merge lanes', function () {
     let importedScope;
     let appOutput: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
       appOutput = helper.fixtures.populateComponents();
       helper.command.createLane('dev');
       helper.command.snapAllComponentsWithoutBuild();
@@ -163,8 +162,7 @@ describe('merge lanes', function () {
   describe('merging main into local lane', () => {
     let mergeOutput: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
       helper.command.createLane('dev');
       helper.fixtures.populateComponents(1);
       helper.command.snapAllComponentsWithoutBuild();
@@ -177,8 +175,7 @@ describe('merge lanes', function () {
   describe('merging main into local lane when main has tagged versions', () => {
     let mergeOutput: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllWithoutBuild();
       helper.command.createLane('dev');
@@ -193,8 +190,7 @@ describe('merge lanes', function () {
   describe('merging main lane with no snapped components', () => {
     let mergeOutput: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
       helper.fixtures.populateComponents(1);
       helper.command.createLane('dev');
       mergeOutput = helper.command.mergeLane('main');
@@ -208,8 +204,7 @@ describe('merge lanes', function () {
   describe('merging a lane into main when main is empty', () => {
     let mergeOutput: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
       helper.fixtures.populateComponents(1);
       helper.command.createLane('dev');
       helper.command.snapAllComponentsWithoutBuild();
@@ -228,8 +223,7 @@ describe('merge lanes', function () {
     let headOnMain: string;
     let headOnLane: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllWithoutBuild();
       headOnMain = helper.command.getHead('comp1');
@@ -260,8 +254,7 @@ describe('merge lanes', function () {
       let comp2HeadOnLane: string;
       let comp3HeadOnLane: string;
       before(() => {
-        helper.scopeHelper.setNewLocalAndRemoteScopes();
-        helper.bitJsonc.setupDefault();
+        helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
         helper.fixtures.populateComponents(3);
         helper.command.tagAllWithoutBuild();
         helper.command.export();
@@ -305,8 +298,7 @@ describe('merge lanes', function () {
     let workspaceOnLane: string;
     let comp2HeadOnMain: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
       helper.fixtures.populateComponents(2);
       helper.command.tagAllWithoutBuild();
       helper.command.export();
@@ -380,8 +372,7 @@ describe('merge lanes', function () {
   });
   describe('getting new files when lane is diverge from another lane', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllWithoutBuild();
       helper.command.export();
@@ -411,8 +402,7 @@ describe('merge lanes', function () {
     let authorScope;
     let appOutputV2: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
       helper.fixtures.populateComponents();
       helper.command.createLane('dev');
       helper.command.snapAllComponentsWithoutBuild();
@@ -441,8 +431,7 @@ describe('merge lanes', function () {
     let laneScopeHead: string;
     let remoteScopeAfterExport: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
       const { scopeName, scopePath } = helper.scopeHelper.getNewBareScope();
       originRemote = scopeName;
       originPath = scopePath;
@@ -610,8 +599,7 @@ describe('merge lanes', function () {
   });
   describe('merge lanes when local-lane has soft-removed components and the other lane is behind', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
       helper.fixtures.populateComponents(2);
       helper.command.createLane();
       helper.command.snapAllComponentsWithoutBuild();
@@ -633,8 +621,7 @@ describe('merge lanes', function () {
   });
   describe('merge lanes when local-lane has soft-removed components and the other lane is diverge', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
       helper.fixtures.populateComponents(2);
       helper.command.createLane();
       helper.command.snapAllComponentsWithoutBuild();
@@ -666,7 +653,7 @@ describe('merge lanes', function () {
   });
   describe('merge a diverged lane into main with --tag', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllWithoutBuild();
       helper.command.createLane();
@@ -693,8 +680,7 @@ describe('merge lanes', function () {
     let comp2HeadOnMain: string;
     let beforeMerging: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
       helper.fixtures.populateComponents(2);
       helper.command.tagWithoutBuild('comp2');
       comp2HeadOnMain = helper.command.getHead('comp2');
@@ -751,8 +737,7 @@ describe('merge lanes', function () {
     let scope2Name;
     let scope2Path;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
       helper.fixtures.populateComponents(2);
       helper.command.tagWithoutBuild('comp2');
       helper.command.createLane();
@@ -789,8 +774,7 @@ describe('merge lanes', function () {
   });
   describe('merge lane with comp-1 to an empty lane with .bitmap has the component', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
       helper.fixtures.populateComponents(1, false);
       helper.command.createLane();
       helper.command.snapAllComponentsWithoutBuild();

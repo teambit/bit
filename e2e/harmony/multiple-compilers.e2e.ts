@@ -20,9 +20,7 @@ describe('multiple compilers - babel and typescript', function () {
     describe('compile simple ts component', () => {
       let distDir;
       before(() => {
-        helper.scopeHelper.setNewLocalAndRemoteScopes();
-        helper.bitJsonc.addDefaultScope();
-        helper.bitJsonc.disablePreview();
+        helper.scopeHelper.setNewLocalAndRemoteScopes({ addRemoteScopeAsDefaultScope: false });
 
         // add a new env that compiles with Babel
         const envName = helper.env.setBabelWithTsHarmony();
@@ -88,9 +86,7 @@ describe('multiple compilers - babel and typescript', function () {
   describe('different envs in the dependency graph', () => {
     let buildOutput;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.disablePreview();
-      helper.bitJsonc.addDefaultScope();
+      helper.scopeHelper.setNewLocalAndRemoteScopes({ addRemoteScopeAsDefaultScope: false });
       helper.fixtures.populateComponentsTS(4);
       const babelEnv = helper.env.setBabelWithTsHarmony();
       helper.extensions.addExtensionToVariant('comp1', `my-scope/${babelEnv}`);

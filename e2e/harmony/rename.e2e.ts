@@ -17,8 +17,7 @@ describe('bit rename command', function () {
   describe('rename an exported component', () => {
     let scopeAfterExport: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllWithoutBuild();
       helper.command.export();
@@ -84,8 +83,7 @@ describe('bit rename command', function () {
   });
   describe('rename a new component', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
       helper.fixtures.populateComponents(1);
       helper.command.rename('comp1', 'comp2');
     });
@@ -115,7 +113,7 @@ describe('bit rename command', function () {
   });
   describe('rename with refactoring when the code has other non-import occurrences', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitLocalScope({ addRemoteScopeAsDefaultScope: false });
       helper.fixtures.populateComponents(2);
       helper.fs.outputFile(
         'comp1/index.js',

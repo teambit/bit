@@ -53,8 +53,7 @@ describe('bit move command', function () {
     const oldPath = path.join('components', 'bar');
     const newPath = path.join('components', 'utils');
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
       helper.fixtures.tagComponentBarFoo();

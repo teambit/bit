@@ -15,8 +15,7 @@ describe('write-tsconfig command', function () {
   });
   describe('multiple components, most using one env', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
       helper.fixtures.populateComponentsTS();
       helper.command.setEnv('comp3', 'teambit.harmony/aspect');
       helper.command.writeTsconfig();
@@ -34,8 +33,7 @@ describe('write-tsconfig command', function () {
     let envName;
     let dryRunResults: Record<string, any>;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
       helper.fixtures.populateComponentsTS();
       envName = helper.env.setCustomEnv();
       helper.command.setEnv('comp3', envName);

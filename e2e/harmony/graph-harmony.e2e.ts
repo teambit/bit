@@ -20,7 +20,7 @@ describe('graph aspect', function () {
   describe('tag a few components', () => {
     before(() => {
       helper = new Helper();
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
       helper.fixtures.populateComponents(3);
       helper.command.tagAllWithoutBuild();
     });

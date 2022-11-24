@@ -22,8 +22,7 @@ describe('basic flow with dependencies', function () {
   });
   describe('after adding components', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
       helper.fixtures.populateComponents();
     });
     describe('bit status', () => {

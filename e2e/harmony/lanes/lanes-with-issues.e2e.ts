@@ -14,8 +14,7 @@ describe('lanes with various issues', function () {
   });
   describe('issue - object of head of main is missing from the filesystem and remote', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
       helper.fixtures.populateComponents(3);
       helper.command.tagWithoutBuild();
       const comp2Head = helper.command.getHead('comp2');

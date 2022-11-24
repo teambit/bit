@@ -115,7 +115,7 @@ describe('dependency-resolver extension', function () {
       const EXTENSIONS_BASE_FOLDER = 'extension-add-dependencies';
       const config = {};
       before(() => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitLocalScope({ addRemoteScopeAsDefaultScope: false });
         helper.fixtures.createComponentBarFoo();
         helper.fixtures.addComponentBarFooAsDir();
         helper.fixtures.createComponentUtilsIsType();
@@ -161,8 +161,7 @@ describe('dependency-resolver extension', function () {
     let npmCiRegistry: NpmCiRegistry;
     let randomStr;
     before(async () => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
 
       npmCiRegistry = new NpmCiRegistry(helper);
       randomStr = generateRandomStr(4); // to avoid publishing the same package every time the test is running

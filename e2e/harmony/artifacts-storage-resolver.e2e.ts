@@ -11,8 +11,7 @@ describe('artifacts storage resolver', function () {
   let envName;
   before(() => {
     helper = new Helper();
-    helper.scopeHelper.setNewLocalAndRemoteScopes();
-    helper.bitJsonc.setupDefault();
+    helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
     // helper.bitJsonc.setPackageManager();
     envName = helper.env.setCustomEnv('elements-storage-resolver-env');
     envId = `${helper.scopes.remote}/${envName}`;

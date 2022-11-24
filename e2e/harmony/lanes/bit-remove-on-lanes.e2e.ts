@@ -16,8 +16,7 @@ describe('bit lane command', function () {
   describe('remove components when on a lane', () => {
     let beforeRemoval: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
       helper.fixtures.populateComponents();
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
@@ -91,8 +90,7 @@ describe('bit lane command', function () {
   });
   describe('remove a non-lane component when on a lane with --from-lane flag', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
       helper.fixtures.populateComponents(1);
       helper.command.tagWithoutBuild();
       helper.command.export();
@@ -106,8 +104,7 @@ describe('bit lane command', function () {
   });
   describe('soft remove on lane', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
       helper.fixtures.populateComponents(2);
       helper.command.createLane();
       helper.command.snapAllComponentsWithoutBuild();

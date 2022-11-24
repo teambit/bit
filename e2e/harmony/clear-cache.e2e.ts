@@ -16,8 +16,7 @@ describe('bit clear-cache', function () {
   // not relevant now that we disabled this feature. revisit again later if needed
   describe.skip('fs cache corrupted', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
       helper.fixtures.populateComponents(1);
       helper.command.status(); // to populate the cache.
 

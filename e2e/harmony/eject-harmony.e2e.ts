@@ -23,8 +23,7 @@ describe('eject command on Harmony', function () {
     let scopeBeforeEject: string;
     before(async () => {
       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
       scopeWithoutOwner = helper.scopes.remoteWithoutOwner;
       helper.fixtures.populateComponents(3);
       npmCiRegistry = new NpmCiRegistry(helper);

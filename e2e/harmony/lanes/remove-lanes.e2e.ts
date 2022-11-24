@@ -16,8 +16,7 @@ describe('remove lanes', function () {
   });
   describe('switching to a new lane and snapping', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
       helper.fixtures.populateComponents();
       helper.command.snapAllComponents();
       helper.command.export();
@@ -80,8 +79,7 @@ describe('remove lanes', function () {
   });
   describe('removing a remote lane', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
       helper.command.createLane();
       helper.fixtures.populateComponents();
       helper.command.snapAllComponentsWithoutBuild();

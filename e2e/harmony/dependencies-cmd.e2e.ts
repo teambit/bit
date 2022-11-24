@@ -25,7 +25,7 @@ describe('bit dependencies command', function () {
   describe('bit deps set', () => {
     describe('adding prod dep', () => {
       before(() => {
-        helper.scopeHelper.setNewLocalAndRemoteScopes();
+        helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
         helper.fixtures.populateComponents(3);
         helper.command.dependenciesSet('comp1', 'lodash@3.3.1');
       });
@@ -99,7 +99,7 @@ describe('bit dependencies command', function () {
     });
     describe('adding prod dep, tagging then adding devDep', () => {
       before(() => {
-        helper.scopeHelper.setNewLocalAndRemoteScopes();
+        helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
         helper.fixtures.populateComponents(1);
         helper.command.dependenciesSet('comp1', 'lodash@3.3.1');
         helper.command.tagAllWithoutBuild();
@@ -115,7 +115,7 @@ describe('bit dependencies command', function () {
     describe('removing a component', () => {
       let beforeRemove: string;
       before(() => {
-        helper.scopeHelper.setNewLocalAndRemoteScopes();
+        helper.scopeHelper.setNewLocalAndRemoteScopes({ addRemoteScopeAsDefaultScope: false });
         helper.fixtures.populateComponents(2);
         beforeRemove = helper.scopeHelper.cloneLocalScope();
       });

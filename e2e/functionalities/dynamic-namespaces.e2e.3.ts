@@ -22,8 +22,7 @@ describe('dynamic namespaces', function () {
       let catComp;
 
       before(() => {
-        helper.scopeHelper.setNewLocalAndRemoteScopes();
-        helper.bitJsonc.setupDefault();
+        helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
         helper.fs.createFile('bar', 'foo.js');
         const addOutput = helper.command.addComponent('bar', { i: componentName });
         expect(addOutput).to.have.string('added');
@@ -68,8 +67,7 @@ describe('dynamic namespaces', function () {
   });
   describe('import a component with same id string as a local different component', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
       helper.fs.createFile('foo', 'foo.js');
       helper.command.addComponent('foo', { i: 'foo' });
       helper.command.tagAllWithoutBuild();

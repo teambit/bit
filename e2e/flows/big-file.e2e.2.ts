@@ -18,8 +18,7 @@ describe('big text file', function () {
   describe('Windows format (\\r\\n)', () => {
     let tagOutput;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
       const bigFilePath = path.join(__dirname, '..', 'fixtures', 'big-text-file-fixture.txt');
       const bigFileContent = fs.readFileSync(bigFilePath).toString();
       const windowsFormatContent = bigFileContent.replace(/\r\n|\r|\n/g, '\r\n');

@@ -19,8 +19,7 @@ describe('components that are not synced between the scope and the consumer', fu
   describe('consumer with a new component and scope with the same component as staged', () => {
     let scopeOutOfSync;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
       const bitMap = helper.bitMap.read();
@@ -72,8 +71,7 @@ describe('components that are not synced between the scope and the consumer', fu
   describe('consumer with a tagged component and scope with the same component as exported', () => {
     let scopeOutOfSync;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
       helper.fixtures.tagComponentBarFoo();
@@ -104,8 +102,7 @@ describe('components that are not synced between the scope and the consumer', fu
   describe('consumer with no components and scope with staged components', () => {
     let scopeOutOfSync;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
       helper.fixtures.tagComponentBarFoo();
@@ -165,8 +162,7 @@ describe('components that are not synced between the scope and the consumer', fu
   describe('consumer with no components and scope with exported components', () => {
     let scopeOutOfSync;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
       helper.fixtures.tagComponentBarFoo();
@@ -190,8 +186,7 @@ describe('components that are not synced between the scope and the consumer', fu
   describe('consumer has exported components and scope is empty', () => {
     let scopeOutOfSync;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
       helper.fixtures.tagComponentBarFoo();
@@ -219,8 +214,7 @@ describe('components that are not synced between the scope and the consumer', fu
   describe('consumer has tagged component with a version that not exist in the scope', () => {
     let scopeOutOfSync;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
       helper.fixtures.tagComponentBarFoo();
@@ -253,8 +247,7 @@ describe('components that are not synced between the scope and the consumer', fu
     describe('when the remote component has this missing version', () => {
       let scopeAfterV1;
       before(() => {
-        helper.scopeHelper.setNewLocalAndRemoteScopes();
-        helper.bitJsonc.setupDefault();
+        helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
         helper.fixtures.createComponentBarFoo();
         helper.fixtures.addComponentBarFooAsDir();
         helper.fixtures.tagComponentBarFoo();
@@ -289,8 +282,7 @@ describe('components that are not synced between the scope and the consumer', fu
       let scopeAfterV1;
       let scopeOutOfSync;
       before(() => {
-        helper.scopeHelper.setNewLocalAndRemoteScopes();
-        helper.bitJsonc.setupDefault();
+        helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
         helper.fixtures.createComponentBarFoo();
         helper.fixtures.addComponentBarFooAsDir();
         helper.fixtures.tagComponentBarFoo();

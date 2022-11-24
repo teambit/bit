@@ -21,8 +21,7 @@ describe('workspace config', function () {
     // on harmony, when both components in the workspace, it doesn't really override.
     describe.skip('changing component dependencies versions', () => {
       before(() => {
-        helper.scopeHelper.setNewLocalAndRemoteScopes();
-        helper.bitJsonc.setupDefault();
+        helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
         helper.fs.createFile('foo', 'foo.js');
         helper.fs.createFile('bar', 'bar.js', "require('../foo/foo');");
         helper.command.addComponent('foo');
@@ -63,8 +62,7 @@ describe('workspace config', function () {
     describe('ignoring components dependencies', () => {
       let scopeAfterAdding;
       before(() => {
-        helper.scopeHelper.setNewLocalAndRemoteScopes();
-        helper.bitJsonc.setupDefault();
+        helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
         helper.fs.createFile('foo1', 'foo1.js');
         helper.fs.createFile('foo2', 'foo2.js');
         helper.fs.createFile('bar', 'bar.js', "require('../foo1/foo1'); require('../foo2/foo2'); ");
@@ -238,8 +236,7 @@ describe('workspace config', function () {
     });
     describe('ignoring dependencies components entire flow', () => {
       before(() => {
-        helper.scopeHelper.setNewLocalAndRemoteScopes();
-        helper.bitJsonc.setupDefault();
+        helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
         helper.fs.createFile('foo1', 'foo1.js');
         helper.fs.createFile('foo2', 'foo2.js');
         helper.fs.createFile('bar', 'bar.js', "require('../foo1/foo1'); require('../foo2/foo2'); ");
@@ -406,8 +403,7 @@ describe('workspace config', function () {
       describe.skip('adding a component with a version', () => {
         let showBar;
         before(() => {
-          helper.scopeHelper.setNewLocalAndRemoteScopes();
-          helper.bitJsonc.setupDefault();
+          helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
           helper.fs.createFile('', 'bar.js');
           helper.fs.createFile('', 'foo.js');
           helper.command.addComponent('bar.js');
@@ -540,8 +536,7 @@ describe('workspace config', function () {
       describe.skip('adding a component without a version', () => {
         let showBar;
         before(() => {
-          helper.scopeHelper.setNewLocalAndRemoteScopes();
-          helper.bitJsonc.setupDefault();
+          helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
           helper.fs.createFile('', 'bar.js');
           helper.fs.createFile('', 'foo.js');
           helper.command.addComponent('bar.js');

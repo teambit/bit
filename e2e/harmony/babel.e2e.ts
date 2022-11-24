@@ -22,9 +22,7 @@ describe('babel compiler', function () {
     describe('compile simple javascript component', () => {
       let distDir;
       before(() => {
-        helper.scopeHelper.setNewLocalAndRemoteScopes();
-        helper.bitJsonc.addDefaultScope();
-        helper.bitJsonc.disablePreview();
+        helper.scopeHelper.setNewLocalAndRemoteScopes({ addRemoteScopeAsDefaultScope: false });
 
         // add a new env that compiles with Babel
         helper.fixtures.copyFixtureExtensions(EXTENSIONS_BASE_FOLDER);

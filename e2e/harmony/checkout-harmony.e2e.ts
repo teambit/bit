@@ -113,8 +113,7 @@ describe('bit checkout command', function () {
     let outputV2: string;
     let localScope: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
       helper.fixtures.populateComponents(3);
       helper.command.tagAllWithoutBuild();
       outputV2 = helper.fixtures.populateComponents(3, undefined, 'v2');
@@ -214,8 +213,7 @@ describe('bit checkout command', function () {
     let scopeAfterFirstVersion: string;
     let scopeBeforeCheckout: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
       helper.fixtures.populateComponents(1);
       helper.fs.outputFile('comp1/foo.ts');
       helper.command.tagAllWithoutBuild();
@@ -251,8 +249,7 @@ describe('bit checkout command', function () {
   describe('when a file was added in the new version (and not exists locally)', () => {
     let afterFirstExport: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllWithoutBuild();
       helper.command.export();
@@ -434,8 +431,7 @@ describe('bit checkout command', function () {
   describe('checkout-head when the local head is not up to date', () => {
     let localHeadScope: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
       helper.fixtures.populateComponents(1, false);
       helper.command.tagAllWithoutBuild();
       helper.fixtures.populateComponents(1, false, 'v2');
@@ -456,8 +452,7 @@ describe('bit checkout command', function () {
   });
   describe('sync new components', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
       helper.fixtures.populateComponents(2);
       const scopeBeforeTag = helper.scopeHelper.cloneLocalScope();
       helper.command.tagWithoutBuild('comp2');
@@ -506,8 +501,7 @@ describe('bit checkout command', function () {
   });
   describe('checkout to a version that does not exist locally', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
       helper.fixtures.populateComponents(1, false);
       helper.command.tagAllWithoutBuild();
       helper.fixtures.populateComponents(1, false, 'v2');

@@ -30,8 +30,7 @@ describe('app root components', function () {
     let numberOfFilesInVirtualStore!: number;
     before(() => {
       helper = new Helper();
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
       helper.fixtures.populateComponents(4);
       helper.extensions.bitJsonc.addKeyValToDependencyResolver('rootComponents', true);
       helper.bitJsonc.addKeyVal(`${helper.scopes.remote}/comp3`, {});
@@ -436,8 +435,7 @@ module.exports.default = {
   describe('pnpm hoisted linker', function () {
     before(() => {
       helper = new Helper();
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
       helper.fixtures.populateComponents(4);
       helper.extensions.bitJsonc.addKeyValToDependencyResolver('nodeLinker', 'hoisted');
       helper.extensions.bitJsonc.addKeyValToDependencyResolver('rootComponents', true);
@@ -847,8 +845,7 @@ module.exports.default = {
   describe('yarn hoisted linker', function () {
     before(() => {
       helper = new Helper();
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopes({ addRemoteScopeAsDefaultScope: false });
       helper.fixtures.populateComponents(4);
       helper.extensions.bitJsonc.setPackageManager('teambit.dependencies/yarn');
       helper.extensions.bitJsonc.addKeyValToDependencyResolver('rootComponents', true);
@@ -1202,8 +1199,7 @@ describe('env root components', function () {
   describe('pnpm isolated linker', function () {
     before(() => {
       helper = new Helper();
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
       helper.command.create('react-env', 'custom-react/env1', '-p custom-react/env1');
       helper.fs.outputFile(
         `custom-react/env1/env1.main.runtime.ts`,
@@ -1309,8 +1305,7 @@ module.exports.default = {
   let npmCiRegistry: NpmCiRegistry;
   before(async () => {
     helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
-    helper.scopeHelper.setNewLocalAndRemoteScopes();
-    helper.bitJsonc.setupDefault();
+    helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
     helper.bitJsonc.setPackageManager(`teambit.dependencies/pnpm`);
     npmCiRegistry = new NpmCiRegistry(helper);
     await npmCiRegistry.init();
@@ -1504,8 +1499,7 @@ describe('env peer dependencies hoisting', function () {
   describe('pnpm isolated linker', function () {
     before(() => {
       helper = new Helper();
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
       helper.extensions.bitJsonc.addKeyValToDependencyResolver('rootComponents', true);
       helper.command.create('react', 'my-button', '-p my-button');
       helper.command.install();
@@ -1559,8 +1553,7 @@ describe('env peer dependencies hoisting when the env is in the workspace', func
 
   function prepare(pm: 'yarn' | 'pnpm') {
     helper = new Helper();
-    helper.scopeHelper.setNewLocalAndRemoteScopes();
-    helper.bitJsonc.setupDefault();
+    helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
     helper.extensions.bitJsonc.setPackageManager(`teambit.dependencies/${pm}`);
     helper.command.create('react-env', 'custom-react/env1', '-p custom-react/env1');
     helper.fs.outputFile(
@@ -1637,8 +1630,7 @@ describe('create with root components on', function () {
   this.timeout(0);
   before(() => {
     helper = new Helper();
-    helper.scopeHelper.setNewLocalAndRemoteScopes();
-    helper.bitJsonc.setupDefault();
+    helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
     helper.extensions.bitJsonc.addKeyValToDependencyResolver('rootComponents', true);
     helper.command.create('react', 'my-button');
   });

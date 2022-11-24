@@ -14,8 +14,7 @@ describe('Mocha Tester', function () {
   });
   describe('component that use Mocha as a tester', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
       helper.fixtures.populateComponents(1);
       helper.command.setEnv('comp1', 'teambit.harmony/bit-custom-aspect');
       helper.command.install();

@@ -14,6 +14,15 @@ import NpmHelper from './e2e-npm-helper';
 import ScopesData, { DEFAULT_OWNER } from './e2e-scopes';
 import BitJsoncHelper from './e2e-bit-jsonc-helper';
 
+type SetupWorkspaceOpts = {
+  addRemoteScopeAsDefaultScope?: boolean; // default to true, otherwise, the scope is "my-scope"
+  disablePreview?: boolean; // default to true to speed up the tag
+  registry?: string;
+  initGit?: boolean;
+  yarnRCConfig?: any;
+  npmrcConfig?: any;
+};
+
 export default class ScopeHelper {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   debugMode: boolean;
@@ -70,10 +79,22 @@ export default class ScopeHelper {
   usePackageManager(packageManager: string) {
     this.packageManager = packageManager;
   }
-  reInitLocalScope(opts?: { registry?: string; initGit?: boolean; yarnRCConfig?: any; npmrcConfig?: any }) {
+
+  reInitLocalScopeWithDefault() {
+    return this.reInitLocalScope();
+  }
+
+  reInitLocalScope(opts?: SetupWorkspaceOpts) {
     this.cleanLocalScope();
     if (opts?.initGit) this.command.runCmd('git init');
     this.initWorkspace();
+
+    const addRemoteScopeAsDefaultScope =
+      opts?.addRemoteScopeAsDefaultScope || opts?.addRemoteScopeAsDefaultScope === undefined;
+    const disablePreview = opts?.disablePreview || opts?.disablePreview === undefined;
+    if (addRemoteScopeAsDefaultScope) this.bitJsonc.addDefaultScope();
+    if (disablePreview) this.bitJsonc.disablePreview();
+
     if (opts?.registry) {
       this._writeNpmrc({
         registry: opts.registry,
@@ -91,7 +112,6 @@ export default class ScopeHelper {
         this._writeNpmrc(opts.npmrcConfig);
       }
     }
-    this.bitJsonc.setupDefault();
   }
   private _writeYarnRC(yarnRCConfig: any) {
     this.fs.writeFile('.yarnrc.yml', yaml.stringify(yarnRCConfig));
@@ -121,10 +141,14 @@ export default class ScopeHelper {
       .join(' ');
     return this.command.runCmd(`bit init ${value}`);
   }
-  setNewLocalAndRemoteScopes(opts?: { yarnRCConfig?: any }) {
+  setNewLocalAndRemoteScopes(opts?: SetupWorkspaceOpts) {
     this.reInitLocalScope(opts);
     this.reInitRemoteScope();
     this.addRemoteScope();
+  }
+
+  setNewLocalAndRemoteScopesWithDefault() {
+    this.setNewLocalAndRemoteScopes();
   }
 
   initNewLocalScope(deleteCurrentScope = true) {

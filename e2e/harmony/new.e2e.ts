@@ -12,7 +12,7 @@ describe('new command', function () {
     helper.scopeHelper.destroy();
   });
   it('entering a non-exist workspace, should throw a descriptive error', () => {
-    helper.scopeHelper.setNewLocalAndRemoteScopes();
+    helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
     helper.scopeHelper.cleanLocalScope(); // it deletes all content without bit-init
     expect(() =>
       helper.command.new('non-exist', '--aspect non.exist/aspect --load-from /non/exist/workspace')
@@ -20,14 +20,12 @@ describe('new command', function () {
   });
   describe('export a workspace-template aspect', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllWithoutBuild();
       helper.command.export();
 
-      helper.scopeHelper.reInitLocalScope();
-      helper.bitJsonc.setupDefault();
+      helper.scopeHelper.reInitLocalScopeWithDefault();
       helper.scopeHelper.addRemoteScope(undefined, undefined, true);
       helper.command.create('starter', 'workspace-example');
       helper.bitJsonc.addToVariant('*', 'teambit.harmony/aspect', {});

@@ -16,8 +16,7 @@ describe('component id with wildcard', function () {
   describe('adding components with various namespaces', () => {
     let scopeAfterAdd;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
       helper.fs.createFile('utils/is/string', 'string.js');
       helper.fs.createFile('utils/is/type', 'type.js');
       helper.fs.createFile('utils/fs/read', 'read.js');

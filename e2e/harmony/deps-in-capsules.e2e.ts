@@ -18,8 +18,7 @@ chai.use(require('chai-string'));
   let npmCiRegistry: NpmCiRegistry;
   before(async () => {
     helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
-    helper.scopeHelper.setNewLocalAndRemoteScopes();
-    helper.bitJsonc.setupDefault();
+    helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
     helper.bitJsonc.setPackageManager();
     npmCiRegistry = new NpmCiRegistry(helper);
     await npmCiRegistry.init();

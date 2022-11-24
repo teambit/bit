@@ -15,9 +15,8 @@ chai.use(require('chai-fs'));
   this.timeout(0);
   before(async () => {
     helper = new Helper();
-    helper.scopeHelper.setNewLocalAndRemoteScopes();
+    helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
     scopeWithoutOwner = helper.scopes.remoteWithoutOwner;
-    helper.bitJsonc.setupDefault();
     remote = helper.scopes.remote;
 
     npmCiRegistry = new NpmCiRegistry(helper);
@@ -70,8 +69,7 @@ chai.use(require('chai-fs'));
   });
   describe('complex scenario', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
 
       randomStr = generateRandomStr(4); // to avoid publishing the same package every time the test is running
       const name = `@ci/${randomStr}.{name}`;

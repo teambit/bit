@@ -15,8 +15,7 @@ describe('bit use command', function () {
   });
   describe('when the aspect is new', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
       helper.command.create('aspect', 'my-aspect');
     });
     it('should not throw an error', () => {

@@ -22,16 +22,14 @@ describe('bit import', function () {
   describe('stand alone component (without dependencies)', () => {
     let importOutput;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
       // export a new simple component
       helper.fs.createFile('global', 'simple.js');
       helper.command.addComponent('global', { i: 'global/simple' });
       helper.command.tagWithoutBuild('global/simple');
       helper.command.exportIds('global/simple');
 
-      helper.scopeHelper.reInitLocalScope();
-      helper.bitJsonc.setupDefault();
+      helper.scopeHelper.reInitLocalScopeWithDefault();
       helper.scopeHelper.addRemoteScope();
       importOutput = helper.command.importComponent('global/simple');
     });
@@ -286,8 +284,7 @@ describe('bit import', function () {
   describe.skip('with an existing component in bit.map (as author)', () => {
     let localConsumerFiles;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
       helper.command.tagAllComponents();
@@ -328,8 +325,7 @@ describe('bit import', function () {
   describe('import a component when the local version is modified', () => {
     let localScope;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
       helper.command.tagAllWithoutBuild();
@@ -389,8 +385,7 @@ describe('bit import', function () {
   });
   describe('importing a component when it has a local tag', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
       helper.command.tagAllWithoutBuild();
@@ -436,8 +431,7 @@ describe('bit import', function () {
   });
   describe('import with wildcards', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
       helper.fixtures.populateComponents();
       helper.command.tagAllWithoutBuild();
       helper.command.export();

@@ -15,8 +15,7 @@ describe('merge functionality', function () {
   });
   describe('re-exporting/importing an existing version', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
       helper.fixtures.tagComponentBarFoo();
@@ -59,8 +58,7 @@ describe('merge functionality', function () {
   describe('importing a component with --merge flag', () => {
     let beforeImport;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
       helper.fixtures.populateComponents(2);
       helper.fs.outputFile('comp2/is-type.js', fixtures.isType);
       helper.command.tagAllWithoutBuild();

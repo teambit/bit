@@ -20,8 +20,7 @@ describe('custom env', function () {
   });
   describe('non existing env', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
       helper.fixtures.populateComponents(1);
       helper.extensions.addExtensionToVariant('*', 'company.scope/envs/fake-env');
     });
@@ -37,8 +36,7 @@ describe('custom env', function () {
     let envId;
     let envName;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
       helper.bitJsonc.setPackageManager();
       envName = helper.env.setCustomEnv();
       envId = `${helper.scopes.remote}/${envName}`;
@@ -93,8 +91,7 @@ describe('custom env', function () {
   });
   describe('change an env after tag', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
       helper.bitJsonc.setPackageManager();
       const envName = helper.env.setCustomEnv();
       const envId = `${helper.scopes.remote}/${envName}`;
@@ -115,8 +112,7 @@ describe('custom env', function () {
     let npmCiRegistry: NpmCiRegistry;
     before(async () => {
       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
       helper.bitJsonc.setPackageManager();
       npmCiRegistry = new NpmCiRegistry(helper);
       await npmCiRegistry.init();
@@ -215,7 +211,7 @@ describe('custom env', function () {
     });
     describe('tag and change the env version', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitLocalScope({ addRemoteScopeAsDefaultScope: false });
         helper.scopeHelper.addRemoteScope();
         helper.fixtures.populateComponents(1);
         helper.command.setEnv('comp1', `${envId}@0.0.1`);
@@ -272,8 +268,7 @@ describe('custom env', function () {
   describe('when the env is exported to a remote scope and is not exist locally', () => {
     let envId: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
       const envName = helper.env.setCustomEnv();
       envId = `${helper.scopes.remote}/${envName}`;
       helper.command.tagAllWithoutBuild();

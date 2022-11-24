@@ -15,8 +15,7 @@ describe('install command', function () {
     let npmCiRegistry: NpmCiRegistry;
     before(async () => {
       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
       helper.fixtures.populateComponents(1);
       npmCiRegistry = new NpmCiRegistry(helper);
       npmCiRegistry.configureCiInPackageJsonHarmony();

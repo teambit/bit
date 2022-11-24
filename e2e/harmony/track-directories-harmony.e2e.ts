@@ -17,7 +17,7 @@ describe('track directories functionality', function () {
   describe('add a directory as authored', () => {
     let localScope;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
       helper.fs.createFile('utils/bar', 'foo.js');
       helper.command.addComponent('utils/bar', { i: 'utils/bar' });
       localScope = helper.scopeHelper.cloneLocalScope();

@@ -15,8 +15,7 @@ describe('bit lane command', function () {
   describe('importing a component when checked out to a lane', () => {
     let beforeImport;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
       helper.command.tagAllComponents();
@@ -71,8 +70,7 @@ describe('bit lane command', function () {
   describe('importing a (non-lane) component from another scope when checked out to a lane', () => {
     let anotherRemote: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
       const { scopeName, scopePath } = helper.scopeHelper.getNewBareScope();
       anotherRemote = scopeName;
       helper.scopeHelper.addRemoteScope(scopePath);
@@ -107,8 +105,7 @@ describe('bit lane command', function () {
   });
   describe('import a non-lane component that has dependencies into a lane', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
+      helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
       helper.fixtures.populateComponents();
       helper.command.tagAllWithoutBuild();
       helper.command.export();
@@ -127,8 +124,7 @@ describe('bit lane command', function () {
     describe('when the lane is new', () => {
       let importOutput: string;
       before(() => {
-        helper.scopeHelper.setNewLocalAndRemoteScopes();
-        helper.bitJsonc.setupDefault();
+        helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
         helper.command.createLane('dev');
         helper.fixtures.populateComponents(1);
         helper.command.snapAllComponentsWithoutBuild();
@@ -141,8 +137,7 @@ describe('bit lane command', function () {
     describe('when the lane is exported', () => {
       let importOutput: string;
       before(() => {
-        helper.scopeHelper.setNewLocalAndRemoteScopes();
-        helper.bitJsonc.setupDefault();
+        helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
         helper.command.createLane('dev');
         helper.fixtures.populateComponents();
         helper.command.snapAllComponents();
@@ -161,8 +156,7 @@ describe('bit lane command', function () {
     });
     describe('when the objects were deleted and a workspace has an aspect with deps', () => {
       before(() => {
-        helper.scopeHelper.setNewLocalAndRemoteScopes();
-        helper.bitJsonc.setupDefault();
+        helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
         helper.command.createLane();
         helper.command.create('aspect', 'my-aspect');
         helper.fixtures.populateComponents();
@@ -188,8 +182,7 @@ describe('bit lane command', function () {
     describe('when the components on the lane have history other than head on main', () => {
       let localScope: string;
       before(() => {
-        helper.scopeHelper.setNewLocalAndRemoteScopes();
-        helper.bitJsonc.setupDefault();
+        helper.scopeHelper.setNewLocalAndRemoteScopesWithDefault();
         helper.fixtures.populateComponents(1);
         helper.command.tagAllWithoutBuild(); // 0.0.1
         helper.command.export();
