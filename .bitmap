@@ -1318,7 +1318,12 @@
         "scope": "teambit.component",
         "version": "0.0.127",
         "mainFile": "index.ts",
-        "rootDir": "scopes/component/ui/compare"
+        "rootDir": "scopes/component/ui/compare",
+        "config": {
+            "teambit.component/deprecation": {
+                "deprecate": true
+            }
+        }
     },
     "ui/component-compare/component-compare": {
         "scope": "teambit.component",
