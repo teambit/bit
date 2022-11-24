@@ -1,6 +1,1 @@
-export {
-  ComponentCompareComponentModel,
-  ComponentCompareModel,
-  ComponentCompareContext,
-  useComponentCompare,
-} from './component-compare-context';
+export { ComponentCompareContext, useComponentCompare } from './component-compare-context';

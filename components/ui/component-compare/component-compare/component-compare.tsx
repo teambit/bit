@@ -1,33 +1,37 @@
-import { ComponentContext, ComponentID, TopBarNav, useComponent } from '@teambit/component';
-import { SlotRouter } from '@teambit/ui-foundation.ui.react-router.slot-router';
-import { RouteProps } from 'react-router-dom';
-import { useLocation } from '@teambit/base-react.navigation.link';
-import { LegacyComponentLog } from '@teambit/legacy-component-log';
-import { RoundLoader } from '@teambit/design.ui.round-loader';
 import React, { HTMLAttributes, useContext, useMemo } from 'react';
-import { ComponentCompareContext, ComponentCompareModel } from '@teambit/component.ui.component-compare.context';
+import { RouteProps } from 'react-router-dom';
+import { isFunction } from 'lodash';
+import { ComponentContext, ComponentID, TopBarNav, useComponent } from '@teambit/component';
+import { ComponentCompareContext } from '@teambit/component.ui.component-compare.context';
 import { useCompareQueryParam } from '@teambit/component.ui.component-compare.hooks.use-component-compare-url';
 import { ComponentCompareVersionPicker } from '@teambit/component.ui.component-compare.version-picker';
 import { ComponentCompareBlankState } from '@teambit/component.ui.component-compare.blank-state';
+import { ComponentCompareState } from '@teambit/component.ui.component-compare.models.component-compare-state';
 import { NavLinkProps } from '@teambit/base-ui.routing.nav-link';
-import { isFunction } from 'lodash';
+import { RoundLoader } from '@teambit/design.ui.round-loader';
+import { useLocation } from '@teambit/base-react.navigation.link';
+import { SlotRouter } from '@teambit/ui-foundation.ui.react-router.slot-router';
+import { LegacyComponentLog } from '@teambit/legacy-component-log';
+import { ComponentCompareModel } from '@teambit/component.ui.component-compare.models.component-compare-model';
 
 import styles from './component-compare.module.scss';
 
 export type TabItem = {
-  props: NavLinkProps;
+  id?: string;
+  props?: NavLinkProps;
   order: number;
 };
 
-type MaybeLazyLoaded<T> = T | (() => T);
-function extractLazyLoadedData<T>(data: MaybeLazyLoaded<T>): T {
+export type MaybeLazyLoaded<T> = T | (() => T);
+function extractLazyLoadedData<T>(data?: MaybeLazyLoaded<T>): T | undefined {
   if (isFunction(data)) return data();
   return data;
 }
 
 export type ComponentCompareProps = {
-  tabs: MaybeLazyLoaded<TabItem[]>;
-  routes: MaybeLazyLoaded<RouteProps[]>;
+  state?: ComponentCompareState;
+  tabs?: MaybeLazyLoaded<TabItem[]>;
+  routes?: MaybeLazyLoaded<RouteProps[]>;
   host: string;
   baseId?: ComponentID;
   compareId?: ComponentID;
@@ -49,13 +53,8 @@ const groupByVersion = (accum: Map<string, LegacyComponentLog>, current: LegacyC
   return accum;
 };
 
-export function ComponentCompare({
-  tabs,
-  host,
-  routes,
-  baseId: _baseId,
-  compareId: _compareId,
-}: ComponentCompareProps) {
+export function ComponentCompare(props: ComponentCompareProps) {
+  const { host, baseId: _baseId, compareId: _compareId } = props;
   const baseVersion = useCompareQueryParam('baseVersion');
   const component = useContext(ComponentContext);
   const location = useLocation();
@@ -87,8 +86,9 @@ export function ComponentCompare({
 
   const compare = _compareId ? compareComponent : component;
 
-  const nothingToCompare = !loading && !compareIsLocalChanges && (compare?.logs?.length || []) < 2;
-  const showSubMenus = !loading && !nothingToCompare;
+  const nothingToCompare = !loading && !compareIsLocalChanges && !compare && !base;
+
+  const visible = !loading && !nothingToCompare;
 
   const logsByVersion = useMemo(() => {
     return (compare?.logs || []).slice().reduce(groupByVersion, new Map<string, LegacyComponentLog>());
@@ -114,31 +114,51 @@ export function ComponentCompare({
             <RoundLoader />
           </div>
         )}
-        {showSubMenus && (
-          <>
-            <div className={styles.top}>
-              <ComponentCompareVersionPicker />
-            </div>
-            <div className={styles.bottom}>
-              <CompareMenuNav tabs={extractLazyLoadedData(tabs)} />
-              <SlotRouter routes={extractLazyLoadedData(routes)} />
-            </div>
-          </>
-        )}
+        {visible && <RenderCompareScreen {...props} model={componentCompareModel} />}
         {nothingToCompare && <ComponentCompareBlankState />}
       </div>
     </ComponentCompareContext.Provider>
   );
 }
 
-function CompareMenuNav({ tabs }: { tabs: TabItem[] }) {
-  const sortedTabs = tabs.sort(sortFn);
+function RenderCompareScreen({ tabs, routes, state, model }: ComponentCompareProps & { model: ComponentCompareModel }) {
+  return (
+    <>
+      <div className={styles.top}>
+        {(!state?.versionPicker && <ComponentCompareVersionPicker />) ||
+          state?.versionPicker?.element({ model, state })}
+      </div>
+      <div className={styles.bottom}>
+        <CompareMenuNav tabs={extractLazyLoadedData(tabs) || []} state={state} />
+        {(extractLazyLoadedData(routes) || []).length > 0 && (
+          <SlotRouter routes={extractLazyLoadedData(routes) || []} />
+        )}
+        {state && state.tabs.element({ model, state })}
+      </div>
+    </>
+  );
+}
 
+function CompareMenuNav({ tabs, state }: { tabs: TabItem[]; state?: ComponentCompareState }) {
+  const sortedTabs = tabs.sort(sortFn);
+  const activeTabFromState = state?.tabs.activeId;
   return (
     <div className={styles.navContainer}>
       <nav className={styles.navigation}>
         {sortedTabs.map((tabItem, index) => {
-          return <TopBarNav key={`compare-menu-nav-${index}`} {...tabItem.props} />;
+          const isActive = !state
+            ? undefined
+            : !!activeTabFromState && !!tabItem.id && activeTabFromState === tabItem.id;
+
+          return (
+            <TopBarNav
+              {...(tabItem.props || {})}
+              key={`compare-menu-nav-${index}-${tabItem.id}`}
+              active={isActive}
+              onClick={state?.tabs.onTabClicked(tabItem.id)}
+              href={(!state && tabItem.props?.href) || undefined}
+            />
+          );
         })}
       </nav>
     </div>

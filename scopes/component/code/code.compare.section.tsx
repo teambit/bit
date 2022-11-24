@@ -4,7 +4,7 @@ import { Section } from '@teambit/component';
 import { CodeCompare } from '@teambit/code.ui.code-compare';
 
 export class CodeCompareSection implements Section {
-  constructor(private fileIconSlot: FileIconSlot) {}
+  constructor(private fileIconSlot?: FileIconSlot) {}
 
   navigationLink = {
     href: 'code',

@@ -1363,6 +1363,26 @@
         "mainFile": "index.ts",
         "rootDir": "components/ui/component-compare/context"
     },
+    "ui/component-compare/models/component-compare-model": {
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.component",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/component-compare/models/component-compare-model",
+        "config": {
+            "teambit.react/react": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react"
+            }
+        }
+    },
+    "ui/component-compare/models/component-compare-state": {
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.component",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/component-compare/models/component-compare-state"
+    },
     "ui/component-deprecated": {
         "scope": "teambit.component",
         "version": "0.0.28",

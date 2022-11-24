@@ -163,7 +163,7 @@ export class LanesUI {
   }
 
   getLanesComparePage() {
-    return <LaneComparePage />;
+    return <LaneComparePage host={this.host} />;
   }
 
   registerMenuWidget(...menuItems: MenuWidget[]) {
