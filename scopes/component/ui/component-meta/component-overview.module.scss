@@ -29,8 +29,9 @@
   @media screen and (max-width: $br-l) {
     width: 100%;
   }
-  .nav {
-    margin-left: 16px;
+  .nav > div {
+    font-size: 12px;
+    padding: 6px 12px;
   }
   .tab {
     border-bottom: 0;
@@ -38,4 +39,5 @@
 }
 .copyBox {
   background: var(--background-color, #ffffff);
+  border-top-left-radius: 0;
 }
