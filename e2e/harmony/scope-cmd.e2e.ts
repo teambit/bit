@@ -17,7 +17,6 @@ describe('bit scope command', function () {
     let output: string;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(3);
       helper.command.tagAllWithoutBuild();
       helper.command.export();
@@ -39,7 +38,7 @@ describe('bit scope command', function () {
   });
   describe('bit scope rename --refactor', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopes({ addRemoteScopeAsDefaultScope: false });
       helper.fixtures.populateComponents(3);
       helper.bitJsonc.addKeyVal('my-scope/comp2', {});
       helper.command.renameScope('my-scope', helper.scopes.remote, '--refactor');

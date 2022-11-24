@@ -42,7 +42,7 @@ describe('bit tag command', function () {
     let output;
     describe('tag specific component', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitLocalScope({ addRemoteScopeAsDefaultScope: false });
         helper.fs.createFile('components/patch', 'patch.js');
         helper.fs.createFile('components/minor', 'minor.js');
         helper.fs.createFile('components/major', 'major.js');

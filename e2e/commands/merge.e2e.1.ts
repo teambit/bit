@@ -66,7 +66,7 @@ describe('bit merge command', function () {
   describe('component with conflicts', () => {
     let localScope;
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitLocalScope({ addRemoteScopeAsDefaultScope: false });
       helper.fixtures.createComponentBarFoo(barFooV1);
       helper.fixtures.addComponentBarFooAsDir();
       helper.fixtures.tagComponentBarFoo();

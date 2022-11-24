@@ -11,7 +11,6 @@ describe('all custom envs are compiled during installation', function () {
   function prepare() {
     helper = new Helper();
     helper.scopeHelper.setNewLocalAndRemoteScopes();
-    helper.bitJsonc.setupDefault();
     helper.command.create('node-env', 'custom-env1');
     helper.fs.outputFile(
       `${helper.scopes.remoteWithoutOwner}/custom-env1/custom-env1.main.runtime.ts`,
@@ -139,7 +138,6 @@ export function comp() {
     before(async () => {
       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.bitJsonc.setPackageManager(`teambit.dependencies/pnpm`);
       npmCiRegistry = new NpmCiRegistry(helper);
       await npmCiRegistry.init();
@@ -211,7 +209,6 @@ describe('skipping compilation on install', function () {
   before(() => {
     helper = new Helper();
     helper.scopeHelper.setNewLocalAndRemoteScopes();
-    helper.bitJsonc.setupDefault();
     helper.fixtures.populateComponents(1, true, '', false); // don't compile
     helper.command.install(undefined, { skipCompile: true });
   });

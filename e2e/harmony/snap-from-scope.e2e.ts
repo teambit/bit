@@ -19,7 +19,6 @@ describe('snap components from scope', function () {
     before(async () => {
       helper = new Helper();
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(3);
       helper.command.snapAllComponents();
       helper.command.export();
@@ -78,7 +77,6 @@ describe('snap components from scope', function () {
       before(() => {
         helper = new Helper();
         helper.scopeHelper.setNewLocalAndRemoteScopes();
-        helper.bitJsonc.setupDefault();
         helper.fixtures.populateComponents(3);
         helper.command.tagWithoutBuild();
         helper.command.tagWithoutBuild('comp3', '--skip-auto-tag --unmodified');

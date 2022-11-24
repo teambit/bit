@@ -15,7 +15,6 @@ describe('untag components on Harmony', function () {
   describe('when an old version is missing from the scope', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllWithoutBuild();
       const v1Head = helper.command.getHead('comp1');
@@ -49,7 +48,6 @@ describe('untag components on Harmony', function () {
   describe('untagging multiple versions when the new head is exported', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(1);
       helper.command.tagIncludeUnmodifiedWithoutBuild(); // 0.0.1
       helper.command.export();

@@ -14,7 +14,6 @@ describe('bit deprecate and undeprecate commands', function () {
   describe('deprecate tagged component', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents();
       helper.command.tagAllWithoutBuild();
       helper.command.deprecateComponent('comp2');
