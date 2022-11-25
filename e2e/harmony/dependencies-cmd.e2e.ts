@@ -135,7 +135,7 @@ describe('bit dependencies command', function () {
       });
       describe('adding a component dependency when it is not installed locally', () => {
         before(() => {
-          helper.scopeHelper.reInitLocalScope();
+          helper.scopeHelper.reInitLocalScope({ disableMissingManuallyConfiguredPackagesIssue: false });
           helper.scopeHelper.addRemoteScope();
           helper.command.importComponent('comp1');
           helper.command.dependenciesSet('comp1', `${helper.general.getPackageNameByCompName('bar/foo')}@0.0.1`);

@@ -1,7 +1,6 @@
 import chai, { expect } from 'chai';
 import * as path from 'path';
 import { IssuesClasses } from '@teambit/component-issues';
-import { MISSING_PACKAGES_FROM_OVERRIDES_LABEL } from '../../src/cli/templates/component-issues-template';
 import { OVERRIDE_COMPONENT_PREFIX, statusFailureMsg } from '../../src/constants';
 import Helper from '../../src/e2e-helper/e2e-helper';
 
@@ -396,7 +395,6 @@ describe('workspace config', function () {
           const output = helper.command.status().replace(/\n/g, '');
           helper.command.expectStatusToHaveIssue(IssuesClasses.MissingPackagesDependenciesOnFs.name);
           expect(output).to.have.string('foo.js -> chai');
-          expect(output).to.have.string(`${MISSING_PACKAGES_FROM_OVERRIDES_LABEL} -> chai`);
         });
       });
       // skipped for now. see the first test for more details.
