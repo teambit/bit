@@ -41,8 +41,8 @@ export function CodeCompare({ fileIconSlot, className }: CodeCompareProps) {
   const [isSidebarOpen, setSidebarOpenness] = useState(!isMobile);
   const sidebarOpenness = isSidebarOpen ? Layout.row : Layout.left;
 
-  const { fileTree: baseFileTree = [], mainFile, dependencies: baseDependencies } = useCode(base?.model.id);
-  const { fileTree: compareFileTree = [], dependencies: compareDependencies } = useCode(compare?.model.id);
+  const { fileTree: baseFileTree = [], mainFile } = useCode(base?.model.id);
+  const { fileTree: compareFileTree = [] } = useCode(compare?.model.id);
 
   const compCompareQueryResult = useComponentCompareQuery(base?.model.id.toString(), compare?.model.id.toString());
 
