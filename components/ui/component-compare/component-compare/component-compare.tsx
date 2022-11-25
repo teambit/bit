@@ -1,44 +1,21 @@
-import React, { HTMLAttributes, useContext, useMemo } from 'react';
-import { RouteProps } from 'react-router-dom';
-import { isFunction } from 'lodash';
+import React, { useContext, useMemo } from 'react';
 import classnames from 'classnames';
 import { LegacyComponentLog } from '@teambit/legacy-component-log';
-import { ComponentContext, ComponentID, TopBarNav, useComponent } from '@teambit/component';
+import { ComponentContext, TopBarNav, useComponent } from '@teambit/component';
 import { ComponentCompareContext } from '@teambit/component.ui.component-compare.context';
 import { useCompareQueryParam } from '@teambit/component.ui.component-compare.hooks.use-component-compare-url';
 import { ComponentCompareVersionPicker } from '@teambit/component.ui.component-compare.version-picker';
 import { ComponentCompareBlankState } from '@teambit/component.ui.component-compare.blank-state';
-import { ComponentCompareState } from '@teambit/component.ui.component-compare.models.component-compare-state';
 import { ComponentCompareHooks } from '@teambit/component.ui.component-compare.models.component-compare-hooks';
-import { NavLinkProps } from '@teambit/base-ui.routing.nav-link';
 import { RoundLoader } from '@teambit/design.ui.round-loader';
 import { useLocation } from '@teambit/base-react.navigation.link';
 import { SlotRouter } from '@teambit/ui-foundation.ui.react-router.slot-router';
+import { ComponentCompareProps } from '@teambit/component.ui.component-compare.models.component-compare-props';
+import { groupByVersion } from '@teambit/component.ui.component-compare.utils.group-by-version';
+import { sortTabs } from '@teambit/component.ui.component-compare.utils.sort-tabs';
+import { extractLazyLoadedData } from '@teambit/component.ui.component-compare.utils.lazy-loading';
 
 import styles from './component-compare.module.scss';
-
-export type TabItem = {
-  id?: string;
-  props?: NavLinkProps;
-  order: number;
-  element?: React.ReactNode | null;
-};
-
-export type MaybeLazyLoaded<T> = T | (() => T);
-export function extractLazyLoadedData<T>(data?: MaybeLazyLoaded<T>): T | undefined {
-  if (isFunction(data)) return data();
-  return data;
-}
-
-export type ComponentCompareProps = {
-  state?: ComponentCompareState;
-  hooks?: ComponentCompareHooks;
-  tabs?: MaybeLazyLoaded<TabItem[]>;
-  routes?: MaybeLazyLoaded<RouteProps[]>;
-  host: string;
-  baseId?: ComponentID;
-  compareId?: ComponentID;
-} & HTMLAttributes<HTMLDivElement>;
 
 const findPrevVersionFromCurrent = (compareVersion) => (_, index: number, logs: LegacyComponentLog[]) => {
   if (index === 0) return false;
@@ -47,13 +24,6 @@ const findPrevVersionFromCurrent = (compareVersion) => (_, index: number, logs: 
   const prevIndex = index - 1;
 
   return logs[prevIndex].tag === compareVersion || logs[prevIndex].hash === compareVersion;
-};
-
-const groupByVersion = (accum: Map<string, LegacyComponentLog>, current: LegacyComponentLog) => {
-  if (!accum.has(current.tag || current.hash)) {
-    accum.set(current.tag || current.hash, current);
-  }
-  return accum;
 };
 
 export function ComponentCompare(props: ComponentCompareProps) {
@@ -177,8 +147,4 @@ function CompareMenuNav({ tabs, state, hooks }: ComponentCompareProps) {
 function onNavClicked({ hooks, id }: { hooks?: ComponentCompareHooks; id?: string }) {
   if (!hooks?.tabs?.onClick) return undefined;
   return (e) => hooks?.tabs?.onClick?.(id, e);
-}
-
-export function sortTabs({ order: first }: TabItem, { order: second }: TabItem) {
-  return (first ?? 0) - (second ?? 0);
 }

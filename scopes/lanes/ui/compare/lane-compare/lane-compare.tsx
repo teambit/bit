@@ -1,17 +1,14 @@
 import React, { HTMLAttributes, useState, useCallback } from 'react';
 import { ComponentID } from '@teambit/component-id';
-import {
-  ComponentCompare,
-  extractLazyLoadedData,
-  MaybeLazyLoaded,
-  TabItem,
-  sortTabs,
-} from '@teambit/component.ui.component-compare.component-compare';
+import { ComponentCompare } from '@teambit/component.ui.component-compare.component-compare';
 import {
   ComponentCompareState,
   ComponentCompareStateKey,
 } from '@teambit/component.ui.component-compare.models.component-compare-state';
+import { extractLazyLoadedData, MaybeLazyLoaded } from '@teambit/component.ui.component-compare.utils.lazy-loading';
+import { TabItem } from '@teambit/component.ui.component-compare.models.component-compare-props';
 import { ComponentCompareHooks } from '@teambit/component.ui.component-compare.models.component-compare-hooks';
+import { sortTabs } from '@teambit/component.ui.component-compare.utils.sort-tabs';
 import { LaneModel } from '@teambit/lanes.ui.models.lanes-model';
 import { LaneCompareState, computeStateKey } from '@teambit/lanes.ui.compare.lane-compare-state';
 import { useUpdatedUrlFromQuery } from '@teambit/component.ui.component-compare.hooks.use-component-compare-url';
@@ -28,7 +25,6 @@ export type LaneCompareProps = {
 export function LaneCompare({ host, compare, base, tabs, ...rest }: LaneCompareProps) {
   const baseMap = new Map<string, ComponentID>(base.components.map((c) => [c.toStringWithoutVersion(), c]));
   const compareMap = new Map<string, ComponentID>(compare.components.map((c) => [c.toStringWithoutVersion(), c]));
-  const uniqueBase = base.components.filter((componentId) => !compareMap.has(componentId.toStringWithoutVersion()));
   const uniqueCompare = compare.components.filter((componentId) => !baseMap.has(componentId.toStringWithoutVersion()));
   const commonComponents = compare.components.filter((componentId) =>
     baseMap.has(componentId.toStringWithoutVersion())
@@ -38,12 +34,6 @@ export function LaneCompare({ host, compare, base, tabs, ...rest }: LaneCompareP
       baseMap.get(cc.toStringWithoutVersion()) as ComponentID,
       compareMap.get(cc.toStringWithoutVersion()) as ComponentID,
     ])
-    .concat(
-      uniqueBase.map((c) => [
-        baseMap.get(c.toStringWithoutVersion()) as ComponentID,
-        baseMap.get(c.toStringWithoutVersion()) as ComponentID,
-      ])
-    )
     .concat(
       uniqueCompare.map((c) => [
         compareMap.get(c.toStringWithoutVersion()) as ComponentID,
@@ -127,6 +117,7 @@ export function LaneCompare({ host, compare, base, tabs, ...rest }: LaneCompareP
       {componentsToCompare.map(([baseId, compareId]) => {
         return (
           <ComponentCompare
+            className={styles.componentCompareContainer}
             key={`lane-compare-component-compare-${baseId.toString()}-${compareId.toString()}`}
             host={host}
             tabs={tabs}
