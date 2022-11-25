@@ -1,1 +1,1 @@
-export { ComponentCompareHooks } from './component-compare-hooks';
+export { ComponentCompareHooks, ComponentCompareHooksData } from './component-compare-hooks';

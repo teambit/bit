@@ -1,7 +1,7 @@
 export type ComponentCompareStateData = {
   id?: string;
   element?: React.ReactNode | null;
-  controlled?: boolean;
+  controlled?: true;
 };
 
 export type ComponentCompareStateKey =

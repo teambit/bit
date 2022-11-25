@@ -17,15 +17,20 @@ import styles from './compare-aspects.module.scss';
 export type ComponentCompareAspectsProps = { host: string } & HTMLAttributes<HTMLDivElement>;
 
 export function ComponentCompareAspects({ host, className }: ComponentCompareAspectsProps) {
-  const { base, compare, loading, selectedBase, selectedCompare, selected } = useCompareAspectsQuery(host);
+  const context = useCompareAspectsQuery(host);
+  const { loading, selectedBase, selectedCompare, selected, state, hook, aspectNames } = context;
+
   const isMobile = useIsMobile();
   const [isSidebarOpen, setSidebarOpenness] = useState(!isMobile);
   const sidebarOpenness = isSidebarOpen ? Layout.row : Layout.left;
 
-  const aspectNames = base.concat(compare).map((aspect) => aspect.aspectId);
+  const selectedFile = state?.id || selected;
+
+  const _useUpdatedUrlFromQuery = hook?.useUpdatedUrlFromQuery || useUpdatedUrlFromQuery;
+  const getHref = (node) => _useUpdatedUrlFromQuery({ aspect: node.id });
 
   return (
-    <ComponentCompareAspectsContext.Provider value={{ base, compare, loading, selectedBase, selectedCompare }}>
+    <ComponentCompareAspectsContext.Provider value={context}>
       <SplitPane
         layout={sidebarOpenness}
         size="85%"
@@ -39,7 +44,7 @@ export function ComponentCompareAspects({ host, className }: ComponentCompareAsp
           )}
           {loading || (
             <CompareAspectView
-              name={selected}
+              name={selectedFile}
               baseAspectData={selectedBase}
               compareAspectData={selectedCompare}
               loading={loading}
@@ -59,10 +64,11 @@ export function ComponentCompareAspects({ host, className }: ComponentCompareAsp
         <Pane className={classNames(styles.right, styles.dark)}>
           <CodeCompareTree
             fileTree={aspectNames}
-            currentFile={selected}
+            currentFile={selectedFile}
             drawerName={'ASPECTS'}
             widgets={[Widget]}
-            getHref={(node) => useUpdatedUrlFromQuery({ aspect: node.id })}
+            getHref={getHref}
+            onTreeNodeSelected={hook?.onClick}
           />
         </Pane>
       </SplitPane>

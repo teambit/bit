@@ -7,7 +7,10 @@ import {
   TabItem,
   sortTabs,
 } from '@teambit/component.ui.component-compare.component-compare';
-import { ComponentCompareState } from '@teambit/component.ui.component-compare.models.component-compare-state';
+import {
+  ComponentCompareState,
+  ComponentCompareStateKey,
+} from '@teambit/component.ui.component-compare.models.component-compare-state';
 import { ComponentCompareHooks } from '@teambit/component.ui.component-compare.models.component-compare-hooks';
 import { LaneModel } from '@teambit/lanes.ui.models.lanes-model';
 import { LaneCompareState, computeStateKey } from '@teambit/lanes.ui.compare.lane-compare-state';
@@ -53,11 +56,14 @@ export function LaneCompare({ host, compare, base, tabs, ...rest }: LaneCompareP
 
     const value: ComponentCompareState = {
       tabs: {
-        id: _tabs && _tabs[0].id,
         controlled: true,
+        id: _tabs && _tabs[0].id,
         element: _tabs && _tabs[0].element,
       },
       code: {
+        controlled: true,
+      },
+      aspects: {
         controlled: true,
       },
       versionPicker: {
@@ -86,24 +92,13 @@ export function LaneCompare({ host, compare, base, tabs, ...rest }: LaneCompareP
     const key = computeStateKey(_base, _compare);
     const _tabs = extractLazyLoadedData(tabs);
 
-    const onTabClicked = (id) =>
+    const onClicked = (prop: ComponentCompareStateKey) => (id) =>
       setState((value) => {
         let existingState = value.get(key);
-        if (existingState?.tabs) {
-          existingState.tabs.id = id;
-          existingState.tabs.element = _tabs?.find((_tab) => _tab.id === id)?.element;
-        } else {
-          existingState = defaultState([_base, _compare]);
-        }
-        return new Map(value);
-      });
-
-    const onCodeNodeClicked = (id?: string) =>
-      setState((value) => {
-        let existingState = value.get(key);
-        if (existingState?.code) {
-          existingState.code.id = id;
-          existingState.code.element = _tabs?.find((_tab) => _tab.id === id)?.element;
+        const propState = existingState?.[prop];
+        if (propState) {
+          propState.id = id;
+          propState.element = _tabs?.find((_tab) => _tab.id === id)?.element;
         } else {
           existingState = defaultState([_base, _compare]);
         }
@@ -112,11 +107,15 @@ export function LaneCompare({ host, compare, base, tabs, ...rest }: LaneCompareP
 
     const _hooks: ComponentCompareHooks = {
       code: {
-        onClick: onCodeNodeClicked,
+        onClick: onClicked('code'),
+        useUpdatedUrlFromQuery: () => useUpdatedUrlFromQuery({}),
+      },
+      aspects: {
+        onClick: onClicked('aspects'),
         useUpdatedUrlFromQuery: () => useUpdatedUrlFromQuery({}),
       },
       tabs: {
-        onClick: onTabClicked,
+        onClick: onClicked('tabs'),
       },
     };
 

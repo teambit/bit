@@ -1,8 +1,10 @@
 import { useMemo } from 'react';
+import { TreeNode } from '@teambit/design.ui.tree';
 import { useComponentCompare } from '@teambit/component.ui.component-compare.context';
 import { useCompareQueryParam } from '@teambit/component.ui.component-compare.hooks.use-component-compare-url';
 import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
 import { gql } from '@apollo/client';
+import { inflateToTree } from '@teambit/base-ui.graph.tree.inflate-paths';
 import { ComponentCompareAspectsModel } from './compare-aspects-context';
 
 export type ComponentAspectData = {
@@ -60,7 +62,14 @@ export function useCompareAspectsQuery(host: string): ComponentCompareAspectsMod
 
   const selectedAspect = useCompareQueryParam('aspect');
 
-  const selected = selectedAspect || (compareAspectList?.length > 0 && compareAspectList[0].aspectId) || undefined;
+  const aspectNames = baseAspectList.concat(compareAspectList).map((aspect) => aspect.aspectId);
+  // make sure that Windows paths are converted to posix
+  const sortedAspectNames = inflateToTree(
+    aspectNames.map((aspectName) => aspectName.replace(/\\/g, '/')),
+    (a) => a
+  );
+
+  const selected = selectedAspect || firstChild(sortedAspectNames).id;
 
   const selectedBase = useMemo(
     () => baseAspectList?.find((baseAspect) => baseAspect.aspectId === selected),
@@ -74,10 +83,18 @@ export function useCompareAspectsQuery(host: string): ComponentCompareAspectsMod
 
   return {
     loading,
+    aspectNames,
     selectedBase,
     selectedCompare,
     base: baseAspectList,
     compare: compareAspectList,
     selected,
+    hook: componentCompareContext?.hooks?.aspects,
+    state: componentCompareContext?.state?.aspects,
   };
+}
+
+function firstChild(node: TreeNode<any>): TreeNode<any> {
+  if (node.children && node.children.length > 0) return firstChild(node.children[0]);
+  return node;
 }
