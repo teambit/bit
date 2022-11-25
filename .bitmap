@@ -1402,6 +1402,13 @@
             }
         }
     },
+    "ui/component-compare/models/component-compare-props": {
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.component",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/component-compare/models/component-compare-props"
+    },
     "ui/component-compare/models/component-compare-state": {
         "scope": "",
         "version": "",
@@ -1414,6 +1421,27 @@
                 "env": "teambit.react/react"
             }
         }
+    },
+    "ui/component-compare/utils/group-by-version": {
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.component",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/component-compare/utils/group-by-version"
+    },
+    "ui/component-compare/utils/lazy-loading": {
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.component",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/component-compare/utils/lazy-loading"
+    },
+    "ui/component-compare/utils/sort-tabs": {
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.component",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/component-compare/utils/sort-tabs"
     },
     "ui/component-deprecated": {
         "scope": "teambit.component",
