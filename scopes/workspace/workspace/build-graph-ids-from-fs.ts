@@ -20,7 +20,7 @@ export class GraphIdsFromFsBuilder {
   private depth = 1;
   private consumer: Consumer;
   private legacyIdStrToComponentId: { [bitIdStr: string]: ComponentID } = {};
-  private loadedComponents: { [idStr: string]: Component };
+  private loadedComponents: { [idStr: string]: Component } = {};
   private importedIds: string[] = [];
   constructor(private workspace: Workspace, private logger: Logger, private shouldThrowOnMissingDep = true) {
     this.consumer = this.workspace.consumer;

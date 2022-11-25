@@ -58,6 +58,7 @@ export type ImportOptions = {
     lanes: Lane[]; // it can be an empty array when a lane is a local lane and doesn't exist on the remote
   };
   allHistory?: boolean;
+  fetchDeps?: boolean; // by default, if a component was tagged with > 0.0.900, it has the flattened-deps-graph in the object
 };
 type ComponentMergeStatus = {
   componentWithDependencies: ComponentWithDependencies;
@@ -244,7 +245,12 @@ export default class ImportComponents {
     loader.start(`import ${ids.length} components with their dependencies (if missing)`);
     const results = fromOriginalScope
       ? await scopeComponentsImporter.importManyFromOriginalScopes(ids)
-      : await scopeComponentsImporter.importMany({ ids, ignoreMissingHead, lanes: lane ? [lane] : undefined });
+      : await scopeComponentsImporter.importMany({
+          ids,
+          ignoreMissingHead,
+          lanes: lane ? [lane] : undefined,
+          preferDependencyGraph: !this.options.fetchDeps,
+        });
 
     return results;
   }
@@ -465,7 +471,7 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
         latestVersion: versionDifference.includes(latestVersion) ? latestVersion : null,
         status: getStatus(),
         filesStatus,
-        missingDeps: component.getMissingDependencies(),
+        missingDeps: this.options.fetchDeps ? component.getMissingDependencies() : [],
         deprecated,
         removed,
       };
