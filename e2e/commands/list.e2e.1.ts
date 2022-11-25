@@ -23,8 +23,7 @@ describe('bit list command', function () {
   });
   describe('when a component is created but not tagged', () => {
     before(() => {
-      helper.scopeHelper.clean();
-      helper.scopeHelper.initWorkspace();
+      helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
     });
@@ -35,8 +34,7 @@ describe('bit list command', function () {
   });
   describe('when a component is created and tagged', () => {
     before(() => {
-      helper.scopeHelper.clean();
-      helper.scopeHelper.initWorkspace();
+      helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
       helper.fixtures.tagComponentBarFoo();
