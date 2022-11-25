@@ -41,6 +41,7 @@ import { getScopeRemotes } from '@teambit/legacy/dist/scope/scope-remotes';
 import { Remotes } from '@teambit/legacy/dist/remotes';
 import { isMatchNamespacePatternItem } from '@teambit/workspace.modules.match-pattern';
 import { Scope } from '@teambit/legacy/dist/scope';
+import { CompIdGraph, DepEdgeType } from '@teambit/graph';
 import { Types } from '@teambit/legacy/dist/scope/object-registrar';
 import { FETCH_OPTIONS } from '@teambit/legacy/dist/api/scope/lib/fetch';
 import { ObjectList } from '@teambit/legacy/dist/scope/objects/object-list';
@@ -48,7 +49,6 @@ import { Http, DEFAULT_AUTH_TYPE, AuthData, getAuthDataFromHeader } from '@teamb
 import { remove } from '@teambit/legacy/dist/api/scope';
 import { BitError } from '@teambit/bit-error';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
-import { DepEdgeType } from '@teambit/legacy/dist/scope/models/version';
 import { resumeExport } from '@teambit/legacy/dist/scope/component-ops/export-scope-components';
 import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy/dist/consumer/config';
 import EnvsAspect, { EnvsMain } from '@teambit/envs';
@@ -775,7 +775,7 @@ needed-for: ${neededFor || '<unknown>'}`);
     return graph;
   }
 
-  async getGraphIds(ids?: ComponentID[]): Promise<Graph<ComponentID, DepEdgeType>> {
+  async getGraphIds(ids?: ComponentID[]): Promise<CompIdGraph> {
     if (!ids || !ids.length) ids = (await this.list()).map((comp) => comp.id) || [];
     const components = await this.getMany(ids);
     const graph = new Graph<ComponentID, DepEdgeType>();

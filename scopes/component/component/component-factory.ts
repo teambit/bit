@@ -1,6 +1,7 @@
 import { Graph } from '@teambit/graph.cleargraph';
 import { BitId } from '@teambit/legacy-bit-id';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
+import { CompIdGraph } from '@teambit/graph';
 import type { ComponentLog } from '@teambit/legacy/dist/scope/models/model-component';
 import type { AspectDefinition } from '@teambit/aspect-loader';
 import { ComponentID } from '@teambit/component-id';
@@ -64,7 +65,7 @@ export interface ComponentFactory {
 
   getGraph(ids?: ComponentID[], shouldThrowOnMissingDep?: boolean): Promise<Graph<Component, string>>;
 
-  getGraphIds(ids?: ComponentID[], shouldThrowOnMissingDep?: boolean): Promise<Graph<ComponentID, string>>;
+  getGraphIds(ids?: ComponentID[], shouldThrowOnMissingDep?: boolean): Promise<CompIdGraph>;
 
   getLogs(id: ComponentID, shortHash?: boolean, startsFrom?: string): Promise<ComponentLog[]>;
 
