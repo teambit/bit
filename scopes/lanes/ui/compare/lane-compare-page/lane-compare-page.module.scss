@@ -1,0 +1,14 @@
+.laneComparePage {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+}
+.top {
+  display: flex;
+  padding: 40px 20px 0px 20px;
+}
+.bottom {
+  display: flex;
+  overflow-y: auto;
+}

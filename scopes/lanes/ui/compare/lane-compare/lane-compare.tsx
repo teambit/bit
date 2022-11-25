@@ -1,8 +1,10 @@
+import React, { HTMLAttributes } from 'react';
 import { ComponentID } from '@teambit/component-id';
 import { ComponentCompare, MaybeLazyLoaded, TabItem } from '@teambit/component.ui.component-compare.component-compare';
 import { ComponentCompareState } from '@teambit/component.ui.component-compare.models.component-compare-state';
 import { LaneModel } from '@teambit/lanes.ui.models.lanes-model';
-import React, { HTMLAttributes } from 'react';
+
+import styles from './lane-compare.module.scss';
 
 export type LaneCompareProps = {
   base: LaneModel;
@@ -39,21 +41,29 @@ export function LaneCompare({ host, compare, base, tabs, state, ...rest }: LaneC
     );
 
   return (
-    <div {...rest}>
-      <div>
-        {componentsToCompare.map(([baseId, compareId]) => {
-          return (
-            <ComponentCompare
-              key={`lane-compare-component-compare-${baseId.toString()}-${compareId.toString()}`}
-              host={host}
-              tabs={tabs}
-              state={state(baseId, compareId)}
-              baseId={baseId}
-              compareId={compareId}
-            />
-          );
-        })}
-      </div>
+    <div {...rest} className={styles.laneCompareContainer}>
+      {componentsToCompare.map(([baseId, compareId]) => {
+        return (
+          <ComponentCompare
+            key={`lane-compare-component-compare-${baseId.toString()}-${compareId.toString()}`}
+            host={host}
+            tabs={tabs}
+            state={{
+              ...state(baseId, compareId),
+              versionPicker: {
+                element: (
+                  <div>
+                    {`Comparing Component ${baseId.toStringWithoutVersion()}`}
+                    <div>{`${baseId.version} with ${compareId.version}`}</div>
+                  </div>
+                ),
+              },
+            }}
+            baseId={baseId}
+            compareId={compareId}
+          />
+        );
+      })}
     </div>
   );
 }

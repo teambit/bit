@@ -3,15 +3,23 @@ import { ComponentCompareModel } from '@teambit/component.ui.component-compare.m
 export type RenderProps = { model: ComponentCompareModel; state: ComponentCompareState };
 
 export type ComponentCompareState = {
-  tabs: {
-    activeId: string;
-    onTabClicked: (id?: string) => React.MouseEventHandler<HTMLAnchorElement>;
-    element: (props: RenderProps) => React.ReactNode | null;
+  tabs?: {
+    activeId?: string;
+    onTabClicked?: (id?: string, _?: React.MouseEventHandler<HTMLAnchorElement>) => void;
+    element?: React.ReactNode | null;
   };
   versionPicker?: {
-    element: (props: RenderProps) => React.ReactNode | null;
+    element?: React.ReactNode | null;
   };
-  metadata?: {
-    [TabId in string]: Record<string, any>;
+  code?: {
+    activeId?: string;
+    onNodeClicked?: (id: string) => void;
   };
+  aspects?: {
+    activeId?: string;
+    onNodeClicked?: (id: string) => void;
+  };
+  compositions?: {};
+  overview?: {};
+  metadata?: {};
 };

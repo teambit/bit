@@ -17,6 +17,7 @@ export type CodeCompareTreeProps = {
   drawerName: string;
   widgets?: ComponentType<WidgetProps<any>>[];
   getHref?: (node: TreeNode) => string;
+  onTreeNodeSelected?: (id: string, event?: React.MouseEvent) => void;
 } & HTMLAttributes<HTMLDivElement>;
 
 export function CodeCompareTree({
@@ -27,6 +28,7 @@ export function CodeCompareTree({
   drawerName,
   widgets,
   getHref,
+  onTreeNodeSelected,
 }: CodeCompareTreeProps) {
   const fileIconMatchers: FileIconMatch[] = useMemo(() => flatten(fileIconSlot?.values()), [fileIconSlot]);
   const [drawerOpen, onToggleDrawer] = useState(true);
@@ -46,6 +48,7 @@ export function CodeCompareTree({
           selected={currentFile}
           widgets={widgets}
           getIcon={getIcon(fileIconMatchers)}
+          onTreeNodeSelected={onTreeNodeSelected}
         />
       </DrawerUI>
     </div>

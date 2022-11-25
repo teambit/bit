@@ -16,6 +16,8 @@ import {
   FileCompareResult,
 } from '@teambit/component.ui.component-compare.models.component-compare-model';
 import { useCode } from '@teambit/code.ui.queries.get-component-code';
+import { useLocation } from '@teambit/base-react.navigation.link';
+// import { useComponentArtifacts } from '@teambit/component.ui.artifacts.queries.use-component-artifacts';
 import { CodeCompareTree } from './code-compare-tree';
 import { CodeCompareView } from './code-compare-view';
 import { Widget } from './code-compare.widgets';
@@ -31,7 +33,9 @@ export type CodeCompareProps = {
 
 export function CodeCompare({ fileIconSlot, className }: CodeCompareProps) {
   const componentCompareContext = useComponentCompare();
-  const { base, compare } = componentCompareContext || {};
+  const { base, compare, state: compareState } = componentCompareContext || {};
+
+  const state = compareState && compareState.code;
 
   const isMobile = useIsMobile();
   const [isSidebarOpen, setSidebarOpenness] = useState(!isMobile);
@@ -46,8 +50,16 @@ export function CodeCompare({ fileIconSlot, className }: CodeCompareProps) {
 
   const selectedFileFromParams = useCompareQueryParam('file');
 
-  const selectedFile = selectedFileFromParams || mainFile || DEFAULT_FILE;
+  const selectedFile = state?.activeId || selectedFileFromParams || mainFile || DEFAULT_FILE;
   const codeCompareContextData = mapToCodeCompareData(compCompareQueryResult);
+  const location = useLocation();
+  const currentHref = `${location?.pathname}`;
+  // const { data: artifacts = [] } = useComponentArtifacts(host, component.id.toString(), );
+
+  // const currentFile = urlParams.file || mainFile;
+  // const currentArtifactFile = getArtifactFileDetailsFromUrl(artifacts, currentFile)?.artifactFile;
+  // const currentArtifactFileContent = getCurrentArtifactFileContent(currentArtifactFile);
+
   return (
     <CodeCompareContext.Provider value={codeCompareContextData}>
       <SplitPane
@@ -75,7 +87,8 @@ export function CodeCompare({ fileIconSlot, className }: CodeCompareProps) {
             currentFile={selectedFile}
             drawerName={'FILES'}
             widgets={[Widget]}
-            getHref={(node) => useUpdatedUrlFromQuery({ file: node.id })}
+            getHref={(!state?.activeId && ((node) => useUpdatedUrlFromQuery({ file: node.id }))) || (() => currentHref)}
+            onTreeNodeSelected={state?.onNodeClicked}
           />
         </Pane>
       </SplitPane>

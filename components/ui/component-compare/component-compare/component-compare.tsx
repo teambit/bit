@@ -12,7 +12,7 @@ import { RoundLoader } from '@teambit/design.ui.round-loader';
 import { useLocation } from '@teambit/base-react.navigation.link';
 import { SlotRouter } from '@teambit/ui-foundation.ui.react-router.slot-router';
 import { LegacyComponentLog } from '@teambit/legacy-component-log';
-import { ComponentCompareModel } from '@teambit/component.ui.component-compare.models.component-compare-model';
+import classnames from 'classnames';
 
 import styles from './component-compare.module.scss';
 
@@ -54,7 +54,8 @@ const groupByVersion = (accum: Map<string, LegacyComponentLog>, current: LegacyC
 };
 
 export function ComponentCompare(props: ComponentCompareProps) {
-  const { host, baseId: _baseId, compareId: _compareId } = props;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { host, baseId: _baseId, compareId: _compareId, routes, state, tabs, className, ...rest } = props;
   const baseVersion = useCompareQueryParam('baseVersion');
   const component = useContext(ComponentContext);
   const location = useLocation();
@@ -94,7 +95,7 @@ export function ComponentCompare(props: ComponentCompareProps) {
     return (compare?.logs || []).slice().reduce(groupByVersion, new Map<string, LegacyComponentLog>());
   }, [compare?.id, baseId]);
 
-  const componentCompareModel: ComponentCompareModel = {
+  const componentCompareModel = {
     compare: compare && {
       model: compare,
       hasLocalChanges: compareIsLocalChanges,
@@ -104,36 +105,36 @@ export function ComponentCompare(props: ComponentCompareProps) {
     },
     loading,
     logsByVersion,
+    state,
   };
 
   return (
     <ComponentCompareContext.Provider value={componentCompareModel}>
-      <div className={styles.componentCompareContainer}>
+      <div className={classnames(styles.componentCompareContainer, className)} {...rest}>
         {loading && (
           <div className={styles.loader}>
             <RoundLoader />
           </div>
         )}
-        {visible && <RenderCompareScreen {...props} model={componentCompareModel} />}
+        {visible && <RenderCompareScreen {...props} />}
         {nothingToCompare && <ComponentCompareBlankState />}
       </div>
     </ComponentCompareContext.Provider>
   );
 }
 
-function RenderCompareScreen({ tabs, routes, state, model }: ComponentCompareProps & { model: ComponentCompareModel }) {
+function RenderCompareScreen({ tabs, routes, state }: ComponentCompareProps) {
   return (
     <>
       <div className={styles.top}>
-        {(!state?.versionPicker && <ComponentCompareVersionPicker />) ||
-          state?.versionPicker?.element({ model, state })}
+        {(!state?.versionPicker && <ComponentCompareVersionPicker />) || state?.versionPicker?.element}
       </div>
       <div className={styles.bottom}>
         <CompareMenuNav tabs={extractLazyLoadedData(tabs) || []} state={state} />
         {(extractLazyLoadedData(routes) || []).length > 0 && (
           <SlotRouter routes={extractLazyLoadedData(routes) || []} />
         )}
-        {state && state.tabs.element({ model, state })}
+        {state?.tabs && state.tabs.element}
       </div>
     </>
   );
@@ -141,7 +142,7 @@ function RenderCompareScreen({ tabs, routes, state, model }: ComponentComparePro
 
 function CompareMenuNav({ tabs, state }: { tabs: TabItem[]; state?: ComponentCompareState }) {
   const sortedTabs = tabs.sort(sortFn);
-  const activeTabFromState = state?.tabs.activeId;
+  const activeTabFromState = state?.tabs?.activeId;
   return (
     <div className={styles.navContainer}>
       <nav className={styles.navigation}>
@@ -155,7 +156,7 @@ function CompareMenuNav({ tabs, state }: { tabs: TabItem[]; state?: ComponentCom
               {...(tabItem.props || {})}
               key={`compare-menu-nav-${index}-${tabItem.id}`}
               active={isActive}
-              onClick={state?.tabs.onTabClicked(tabItem.id)}
+              onClick={onNavClicked({ id: tabItem.id, state })}
               href={(!state && tabItem.props?.href) || undefined}
             />
           );
@@ -163,6 +164,11 @@ function CompareMenuNav({ tabs, state }: { tabs: TabItem[]; state?: ComponentCom
       </nav>
     </div>
   );
+}
+
+function onNavClicked({ state, id }: { state?: ComponentCompareState; id?: string }) {
+  if (!state?.tabs?.onTabClicked) return undefined;
+  return (e) => state?.tabs?.onTabClicked?.(id, e);
 }
 
 function sortFn({ order: first }: TabItem, { order: second }: TabItem) {
