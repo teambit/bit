@@ -25,7 +25,6 @@ describe.skip('cyclic dependencies', function () {
     let output;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.fs.createFile('comp/a', 'a.js', fixtureA);
       helper.fs.createFile('comp/b', 'b.js', fixtureB);
       helper.command.addComponent('comp/a', { i: 'comp/a' });
@@ -85,7 +84,6 @@ describe.skip('cyclic dependencies', function () {
     let output;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       // isString => isType
       helper.fs.createFile('utils', 'is-type.js', fixtures.isType);
       helper.fs.createFile('utils', 'is-string.js', fixtures.isString);
@@ -280,7 +278,6 @@ describe.skip('cyclic dependencies', function () {
     let tagOutput;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
       helper.command.tagAllWithoutBuild();

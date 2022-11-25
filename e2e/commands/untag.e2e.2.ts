@@ -15,7 +15,6 @@ describe('bit reset command', function () {
     let localScope;
     before(() => {
       helper.scopeHelper.reInitLocalScope();
-      helper.bitJsonc.setupDefault();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
       helper.fixtures.tagComponentBarFoo();
@@ -118,7 +117,6 @@ describe('bit reset command', function () {
     let localScope;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
       helper.fs.createFile('bar2', 'foo2.js');
@@ -167,7 +165,6 @@ describe('bit reset command', function () {
     let localScope;
     before(() => {
       helper.scopeHelper.reInitLocalScope();
-      helper.bitJsonc.setupDefault();
       helper.fixtures.createComponentIsType();
       helper.fixtures.addComponentUtilsIsTypeAsDir();
       helper.fixtures.createComponentIsString();
@@ -289,7 +286,6 @@ describe('bit reset command', function () {
   describe('components with config in the .bitmap file', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(2);
       helper.command.tagWithoutBuild();
       helper.command.deprecateComponent('comp1');

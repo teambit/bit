@@ -14,7 +14,6 @@ export enum BadgePosition {
   SubTitle,
   Labels,
   Package,
-  ElementsPackage,
 }
 
 export type TitleBadge = {

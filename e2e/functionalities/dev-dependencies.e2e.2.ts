@@ -18,7 +18,6 @@ describe('dev-dependencies functionality', function () {
       let comp1;
       before(() => {
         helper.scopeHelper.setNewLocalAndRemoteScopes();
-        helper.bitJsonc.setupDefault();
         helper.fixtures.populateComponents();
         helper.fs.outputFile('comp1/foo.spec.js', 'require("chai");');
         helper.npm.addFakeNpmPackage('chai', '4.1.2');
@@ -49,7 +48,6 @@ describe('dev-dependencies functionality', function () {
       let comp1;
       before(() => {
         helper.scopeHelper.setNewLocalAndRemoteScopes();
-        helper.bitJsonc.setupDefault();
         // foo.js doesn't have any dependencies. foo.spec.js does have dependencies.
         helper.fixtures.populateComponents();
         helper.fs.outputFile('comp1/foo.spec.js', `require("chai"); require('@${helper.scopes.remote}/comp2');`);
@@ -90,7 +88,6 @@ describe('dev-dependencies functionality', function () {
     let output;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(4);
       helper.fs.moveSync('comp2/index.js', 'comp2/foo.spec.js');
       helper.fs.outputFile('comp2/index.js');
@@ -118,7 +115,6 @@ describe('dev-dependencies functionality', function () {
   describe('dev-dependency of a nested component that originated from a dev dep', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(3);
 
       helper.fs.moveSync('comp1/index.js', 'comp1/foo.spec.js');
@@ -162,7 +158,6 @@ describe('dev-dependencies functionality', function () {
   describe('component with devDependency coming from an env and is used as prod', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       const envName = helper.env.setCustomEnv('node-env-dev-dep');
       const envId = `${helper.scopes.remote}/${envName}`;
       helper.extensions.addExtensionToVariant('*', envId);

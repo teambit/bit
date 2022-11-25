@@ -19,7 +19,6 @@ describe('objects in scope are corrupted', function () {
   describe('objects are empty, which are invalid zlib', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(1, false);
       helper.command.tagAllWithoutBuild();
       helper.command.export();
