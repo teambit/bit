@@ -2,7 +2,7 @@ import React from 'react';
 import { WidgetProps } from '@teambit/ui-foundation.ui.tree.tree-node';
 import { useCodeCompare } from '@teambit/code.ui.code-compare';
 import { useComponentCompare } from '@teambit/component.ui.component-compare.context';
-import { CompareStatusResolver } from '@teambit/component.ui.component-compare.status-resolver';
+import { CompareStatusResolver, CompareStatus } from '@teambit/component.ui.component-compare.status-resolver';
 
 export function Widget({ node }: WidgetProps<any>) {
   const fileName = node.id;
