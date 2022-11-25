@@ -1,8 +1,17 @@
-import React, { HTMLAttributes } from 'react';
+import React, { HTMLAttributes, useState, useCallback } from 'react';
 import { ComponentID } from '@teambit/component-id';
-import { ComponentCompare, MaybeLazyLoaded, TabItem } from '@teambit/component.ui.component-compare.component-compare';
+import {
+  ComponentCompare,
+  extractLazyLoadedData,
+  MaybeLazyLoaded,
+  TabItem,
+  sortTabs,
+} from '@teambit/component.ui.component-compare.component-compare';
 import { ComponentCompareState } from '@teambit/component.ui.component-compare.models.component-compare-state';
+import { ComponentCompareHooks } from '@teambit/component.ui.component-compare.models.component-compare-hooks';
 import { LaneModel } from '@teambit/lanes.ui.models.lanes-model';
+import { LaneCompareState, computeStateKey } from '@teambit/lanes.ui.compare.lane-compare-state';
+import { useUpdatedUrlFromQuery } from '@teambit/component.ui.component-compare.hooks.use-component-compare-url';
 
 import styles from './lane-compare.module.scss';
 
@@ -11,10 +20,9 @@ export type LaneCompareProps = {
   compare: LaneModel;
   host: string;
   tabs?: MaybeLazyLoaded<TabItem[]>;
-  state: (base: ComponentID, compare: ComponentID) => ComponentCompareState;
 } & HTMLAttributes<HTMLDivElement>;
 
-export function LaneCompare({ host, compare, base, tabs, state, ...rest }: LaneCompareProps) {
+export function LaneCompare({ host, compare, base, tabs, ...rest }: LaneCompareProps) {
   const baseMap = new Map<string, ComponentID>(base.components.map((c) => [c.toStringWithoutVersion(), c]));
   const compareMap = new Map<string, ComponentID>(compare.components.map((c) => [c.toStringWithoutVersion(), c]));
   const uniqueBase = base.components.filter((componentId) => !compareMap.has(componentId.toStringWithoutVersion()));
@@ -40,6 +48,81 @@ export function LaneCompare({ host, compare, base, tabs, state, ...rest }: LaneC
       ])
     );
 
+  const defaultState = useCallback(([_base, _compare]) => {
+    const _tabs = extractLazyLoadedData(tabs)?.sort(sortTabs);
+
+    const value: ComponentCompareState = {
+      tabs: {
+        id: _tabs && _tabs[0].id,
+        controlled: true,
+        element: _tabs && _tabs[0].element,
+      },
+      code: {
+        controlled: true,
+      },
+      versionPicker: {
+        element: (
+          <div>
+            {`Comparing Component ${_base.toStringWithoutVersion()}`}
+            <div>{`${_base.version} with ${_compare.version}`}</div>
+          </div>
+        ),
+      },
+    };
+    return value;
+  }, []);
+
+  const [state, setState] = useState<LaneCompareState>(
+    new Map(
+      componentsToCompare.map(([_base, _compare]) => {
+        const key = computeStateKey(_base, _compare);
+        const value = defaultState([_base, _compare]);
+        return [key, value];
+      })
+    )
+  );
+
+  const hooks = useCallback((_base: ComponentID, _compare: ComponentID) => {
+    const key = computeStateKey(_base, _compare);
+    const _tabs = extractLazyLoadedData(tabs);
+
+    const onTabClicked = (id) =>
+      setState((value) => {
+        let existingState = value.get(key);
+        if (existingState?.tabs) {
+          existingState.tabs.id = id;
+          existingState.tabs.element = _tabs?.find((_tab) => _tab.id === id)?.element;
+        } else {
+          existingState = defaultState([_base, _compare]);
+        }
+        return new Map(value);
+      });
+
+    const onCodeNodeClicked = (id?: string) =>
+      setState((value) => {
+        let existingState = value.get(key);
+        if (existingState?.code) {
+          existingState.code.id = id;
+          existingState.code.element = _tabs?.find((_tab) => _tab.id === id)?.element;
+        } else {
+          existingState = defaultState([_base, _compare]);
+        }
+        return new Map(value);
+      });
+
+    const _hooks: ComponentCompareHooks = {
+      code: {
+        onClick: onCodeNodeClicked,
+        useUpdatedUrlFromQuery: () => useUpdatedUrlFromQuery({}),
+      },
+      tabs: {
+        onClick: onTabClicked,
+      },
+    };
+
+    return _hooks;
+  }, []);
+
   return (
     <div {...rest} className={styles.laneCompareContainer}>
       {componentsToCompare.map(([baseId, compareId]) => {
@@ -48,17 +131,8 @@ export function LaneCompare({ host, compare, base, tabs, state, ...rest }: LaneC
             key={`lane-compare-component-compare-${baseId.toString()}-${compareId.toString()}`}
             host={host}
             tabs={tabs}
-            state={{
-              ...state(baseId, compareId),
-              versionPicker: {
-                element: (
-                  <div>
-                    {`Comparing Component ${baseId.toStringWithoutVersion()}`}
-                    <div>{`${baseId.version} with ${compareId.version}`}</div>
-                  </div>
-                ),
-              },
-            }}
+            state={state.get(computeStateKey(baseId, compareId))}
+            hooks={hooks(baseId, compareId)}
             baseId={baseId}
             compareId={compareId}
           />

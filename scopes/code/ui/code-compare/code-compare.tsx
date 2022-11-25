@@ -16,7 +16,6 @@ import {
   FileCompareResult,
 } from '@teambit/component.ui.component-compare.models.component-compare-model';
 import { useCode } from '@teambit/code.ui.queries.get-component-code';
-import { useLocation } from '@teambit/base-react.navigation.link';
 // import { useComponentArtifacts } from '@teambit/component.ui.artifacts.queries.use-component-artifacts';
 import { CodeCompareTree } from './code-compare-tree';
 import { CodeCompareView } from './code-compare-view';
@@ -33,9 +32,10 @@ export type CodeCompareProps = {
 
 export function CodeCompare({ fileIconSlot, className }: CodeCompareProps) {
   const componentCompareContext = useComponentCompare();
-  const { base, compare, state: compareState } = componentCompareContext || {};
+  const { base, compare, state: compareState, hooks: compareHooks } = componentCompareContext || {};
 
   const state = compareState && compareState.code;
+  const hook = compareHooks && compareHooks.code;
 
   const isMobile = useIsMobile();
   const [isSidebarOpen, setSidebarOpenness] = useState(!isMobile);
@@ -50,15 +50,18 @@ export function CodeCompare({ fileIconSlot, className }: CodeCompareProps) {
 
   const selectedFileFromParams = useCompareQueryParam('file');
 
-  const selectedFile = state?.activeId || selectedFileFromParams || mainFile || DEFAULT_FILE;
+  const selectedFile = state?.id || selectedFileFromParams || mainFile || DEFAULT_FILE;
   const codeCompareContextData = mapToCodeCompareData(compCompareQueryResult);
-  const location = useLocation();
-  const currentHref = `${location?.pathname}`;
-  // const { data: artifacts = [] } = useComponentArtifacts(host, component.id.toString(), );
 
+  // const { data: artifacts = [] } = useComponentArtifacts(host, component.id.toString(), );
   // const currentFile = urlParams.file || mainFile;
   // const currentArtifactFile = getArtifactFileDetailsFromUrl(artifacts, currentFile)?.artifactFile;
   // const currentArtifactFileContent = getCurrentArtifactFileContent(currentArtifactFile);
+  // const getHref = (!state?.id && ((node) => useUpdatedUrlFromQuery({ file: node.id }))) || (() => currentHref)
+
+  const _useUpdatedUrlFromQuery = hook?.useUpdatedUrlFromQuery || useUpdatedUrlFromQuery;
+
+  const getHref = (node) => _useUpdatedUrlFromQuery({ file: node.id });
 
   return (
     <CodeCompareContext.Provider value={codeCompareContextData}>
@@ -87,8 +90,8 @@ export function CodeCompare({ fileIconSlot, className }: CodeCompareProps) {
             currentFile={selectedFile}
             drawerName={'FILES'}
             widgets={[Widget]}
-            getHref={(!state?.activeId && ((node) => useUpdatedUrlFromQuery({ file: node.id }))) || (() => currentHref)}
-            onTreeNodeSelected={state?.onNodeClicked}
+            getHref={getHref}
+            onTreeNodeSelected={hook?.onClick}
           />
         </Pane>
       </SplitPane>

@@ -1,1 +1,1 @@
-export { ComponentCompareState, RenderProps } from './component-compare-state';
+export { ComponentCompareState, ComponentCompareStateKey, ComponentCompareStateData } from './component-compare-state';

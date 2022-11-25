@@ -1351,6 +1351,19 @@
             }
         }
     },
+    "ui/compare/lane-compare-state": {
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.lanes",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/lanes/ui/compare/lane-compare-state",
+        "config": {
+            "teambit.react/react": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react"
+            }
+        }
+    },
     "ui/component-compare/component-compare": {
         "scope": "teambit.component",
         "version": "0.0.1",
@@ -1362,6 +1375,19 @@
         "version": "0.0.3",
         "mainFile": "index.ts",
         "rootDir": "components/ui/component-compare/context"
+    },
+    "ui/component-compare/models/component-compare-hooks": {
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.component",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/component-compare/models/component-compare-hooks",
+        "config": {
+            "teambit.react/react": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react"
+            }
+        }
     },
     "ui/component-compare/models/component-compare-model": {
         "scope": "",
@@ -1381,7 +1407,13 @@
         "version": "",
         "defaultScope": "teambit.component",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/component-compare/models/component-compare-state"
+        "rootDir": "components/ui/component-compare/models/component-compare-state",
+        "config": {
+            "teambit.react/react": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react"
+            }
+        }
     },
     "ui/component-deprecated": {
         "scope": "teambit.component",
