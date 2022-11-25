@@ -129,6 +129,6 @@ export default class GeneralHelper {
   }
 
   getPackageNameByCompName(compName: string) {
-    return `@${DEFAULT_OWNER}/${this.scopes.remoteWithoutOwner}.${compName}`;
+    return `@${DEFAULT_OWNER}/${this.scopes.remoteWithoutOwner}.${compName.replaceAll('/', '.')}`;
   }
 }

@@ -117,12 +117,20 @@ export default class BitJsoncHelper {
     const bitJsoncPath = composePath(this.scopes.localPath);
     fs.writeFileSync(bitJsoncPath, '"corrupted');
   }
+  disableMissingManuallyConfiguredPackagesIssue() {
+    this.addKeyVal('teambit.component/issues', {
+      ignoreIssues: ['MissingManuallyConfiguredPackages'],
+    });
+  }
   disablePreview() {
     this.addKeyVal('teambit.preview/preview', { disabled: true });
   }
   setupDefault() {
     this.disablePreview();
     this.addDefaultScope();
+    // otherwise, "bit tag" and "bit status" will always fail with "MissingManuallyConfiguredPackages" for jest/babel
+    // until "bit install" is running, because they're coming from the default env.
+    this.disableMissingManuallyConfiguredPackagesIssue();
   }
 }
 

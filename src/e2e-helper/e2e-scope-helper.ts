@@ -17,6 +17,7 @@ import BitJsoncHelper from './e2e-bit-jsonc-helper';
 type SetupWorkspaceOpts = {
   addRemoteScopeAsDefaultScope?: boolean; // default to true, otherwise, the scope is "my-scope"
   disablePreview?: boolean; // default to true to speed up the tag
+  disableMissingManuallyConfiguredPackagesIssue?: boolean; // default to true. otherwise, it'll always show missing babel/jest from react-env
   registry?: string;
   initGit?: boolean;
   yarnRCConfig?: any;
@@ -85,11 +86,10 @@ export default class ScopeHelper {
     if (opts?.initGit) this.command.runCmd('git init');
     this.initWorkspace();
 
-    const addRemoteScopeAsDefaultScope =
-      opts?.addRemoteScopeAsDefaultScope || opts?.addRemoteScopeAsDefaultScope === undefined;
-    const disablePreview = opts?.disablePreview || opts?.disablePreview === undefined;
-    if (addRemoteScopeAsDefaultScope) this.bitJsonc.addDefaultScope();
-    if (disablePreview) this.bitJsonc.disablePreview();
+    if (opts?.addRemoteScopeAsDefaultScope ?? true) this.bitJsonc.addDefaultScope();
+    if (opts?.disablePreview ?? true) this.bitJsonc.disablePreview();
+    if (opts?.disableMissingManuallyConfiguredPackagesIssue ?? true)
+      this.bitJsonc.disableMissingManuallyConfiguredPackagesIssue();
 
     if (opts?.registry) {
       this._writeNpmrc({
