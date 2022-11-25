@@ -35,6 +35,7 @@ export class CodeUI {
     this.fileIconSlot?.register(icons);
     return this;
   }
+
   static dependencies = [ComponentAspect, ComponentCompareAspect];
 
   static runtime = UIRuntime;

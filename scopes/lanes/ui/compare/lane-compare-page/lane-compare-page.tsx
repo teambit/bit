@@ -33,12 +33,12 @@ export function LaneComparePage({ host, ...rest }: LaneComparePageProps) {
     },
   ];
 
-  const baseLane = lanesModel.lanes[0];
-  const compareLane = lanesModel.lanes[1] || baseLane;
+  const baseLane = lanesModel.getDefaultLane() || lanesModel.lanes[0];
+  const compareLane = lanesModel.getNonMainLanes()[0] || baseLane;
 
   return (
     <div {...rest} className={styles.laneComparePage}>
-      <div className={styles.top}>{`Comparing Lane ${baseLane.id.toString()} with ${compareLane.id.toString()}`}</div>
+      <div className={styles.top}>{`Comparing Lane ${compareLane.id.toString()} with ${baseLane.id.toString()}`}</div>
       <div className={styles.bottom}>
         <LaneCompare host={host} tabs={tabs} base={baseLane} compare={compareLane} />
       </div>

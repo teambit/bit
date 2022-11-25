@@ -3,4 +3,5 @@ import { ComponentCompareState } from '@teambit/component.ui.component-compare.m
 
 export type LaneCompareState = Map<string, ComponentCompareState>;
 export const defaultState: LaneCompareState = new Map<string, ComponentCompareState>();
-export const computeStateKey = (base: ComponentID, compare: ComponentID) => `${base.toString()}-${compare.toString()}`;
+export const computeStateKey = (base?: ComponentID, compare?: ComponentID) =>
+  `${base?.toString()}-${compare?.toString()}`;

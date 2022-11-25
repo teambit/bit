@@ -1,4 +1,4 @@
-import React, { HTMLAttributes, useState, useCallback } from 'react';
+import React, { HTMLAttributes, useState, useCallback, useMemo } from 'react';
 import { ComponentID } from '@teambit/component-id';
 import { ComponentCompare } from '@teambit/component.ui.component-compare.component-compare';
 import {
@@ -23,25 +23,36 @@ export type LaneCompareProps = {
 } & HTMLAttributes<HTMLDivElement>;
 
 export function LaneCompare({ host, compare, base, tabs, ...rest }: LaneCompareProps) {
-  const baseMap = new Map<string, ComponentID>(base.components.map((c) => [c.toStringWithoutVersion(), c]));
-  const compareMap = new Map<string, ComponentID>(compare.components.map((c) => [c.toStringWithoutVersion(), c]));
-  const uniqueCompare = compare.components.filter((componentId) => !baseMap.has(componentId.toStringWithoutVersion()));
-  const commonComponents = compare.components.filter((componentId) =>
-    baseMap.has(componentId.toStringWithoutVersion())
+  const baseMap = useMemo(
+    () => new Map<string, ComponentID>(base.components.map((c) => [c.toStringWithoutVersion(), c])),
+    [base.components]
   );
-  const componentsToCompare = commonComponents
-    .map((cc) => [
-      baseMap.get(cc.toStringWithoutVersion()) as ComponentID,
-      compareMap.get(cc.toStringWithoutVersion()) as ComponentID,
-    ])
-    .concat(
-      uniqueCompare.map((c) => [
-        compareMap.get(c.toStringWithoutVersion()) as ComponentID,
-        compareMap.get(c.toStringWithoutVersion()) as ComponentID,
-      ])
-    );
+  const compareMap = useMemo(
+    () => new Map<string, ComponentID>(compare.components.map((c) => [c.toStringWithoutVersion(), c])),
+    [compare.components]
+  );
 
-  const defaultState = useCallback(([_base, _compare]) => {
+  const uniqueCompare = useMemo(
+    () =>
+      compare.components
+        .filter((componentId) => !baseMap.has(componentId.toStringWithoutVersion()))
+        .map((c) => [undefined, compareMap.get(c.toStringWithoutVersion()) as ComponentID]),
+    [base, compare]
+  );
+  const commonComponents = useMemo(
+    () =>
+      compare.components
+        .filter((componentId) => baseMap.has(componentId.toStringWithoutVersion()))
+        .map((cc) => [
+          baseMap.get(cc.toStringWithoutVersion()) as ComponentID,
+          compareMap.get(cc.toStringWithoutVersion()) as ComponentID,
+        ]),
+    [base.components, compare.components]
+  );
+
+  const allComponents = useMemo(() => [...commonComponents, ...uniqueCompare], [base.components, compare.components]);
+
+  const defaultState = useCallback(([_base, _compare]: [ComponentID | undefined, ComponentID | undefined]) => {
     const _tabs = extractLazyLoadedData(tabs)?.sort(sortTabs);
 
     const value: ComponentCompareState = {
@@ -59,8 +70,8 @@ export function LaneCompare({ host, compare, base, tabs, ...rest }: LaneCompareP
       versionPicker: {
         element: (
           <div>
-            {`Comparing Component ${_base.toStringWithoutVersion()}`}
-            <div>{`${_base.version} with ${_compare.version}`}</div>
+            {`${(_base && 'Comparing Component') || 'Component'} ${_compare?.toStringWithoutVersion()}`}
+            <div>{`${_compare?.version} ${(_base && ` with ${_base.version}`) || ''}`}</div>
           </div>
         ),
       },
@@ -70,7 +81,7 @@ export function LaneCompare({ host, compare, base, tabs, ...rest }: LaneCompareP
 
   const [state, setState] = useState<LaneCompareState>(
     new Map(
-      componentsToCompare.map(([_base, _compare]) => {
+      allComponents.map(([_base, _compare]) => {
         const key = computeStateKey(_base, _compare);
         const value = defaultState([_base, _compare]);
         return [key, value];
@@ -78,7 +89,7 @@ export function LaneCompare({ host, compare, base, tabs, ...rest }: LaneCompareP
     )
   );
 
-  const hooks = useCallback((_base: ComponentID, _compare: ComponentID) => {
+  const hooks = useCallback((_base?: ComponentID, _compare?: ComponentID) => {
     const key = computeStateKey(_base, _compare);
     const _tabs = extractLazyLoadedData(tabs);
 
@@ -114,11 +125,11 @@ export function LaneCompare({ host, compare, base, tabs, ...rest }: LaneCompareP
 
   return (
     <div {...rest} className={styles.laneCompareContainer}>
-      {componentsToCompare.map(([baseId, compareId]) => {
+      {allComponents.map(([baseId, compareId]) => {
         return (
           <ComponentCompare
             className={styles.componentCompareContainer}
-            key={`lane-compare-component-compare-${baseId.toString()}-${compareId.toString()}`}
+            key={`lane-compare-component-compare-${computeStateKey(baseId, compareId)}`}
             host={host}
             tabs={tabs}
             state={state.get(computeStateKey(baseId, compareId))}
