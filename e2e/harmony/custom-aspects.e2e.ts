@@ -23,7 +23,6 @@ describe('custom aspects', function () {
     before(async () => {
       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.bitJsonc.setPackageManager();
       npmCiRegistry = new NpmCiRegistry(helper);
       await npmCiRegistry.init();
@@ -84,7 +83,6 @@ describe('custom aspects', function () {
     before(() => {
       helper = new Helper();
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.bitJsonc.setPackageManager();
       helper.fixtures.populateExtensions(2, true);
       helper.extensions.addExtensionToVariant('extensions', 'teambit.harmony/aspect');
@@ -122,7 +120,6 @@ describe('custom aspects', function () {
     before(async () => {
       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.bitJsonc.setPackageManager();
       npmCiRegistry = new NpmCiRegistry(helper);
       await npmCiRegistry.init();

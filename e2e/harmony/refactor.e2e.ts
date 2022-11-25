@@ -15,7 +15,6 @@ describe('bit refactor command and flag', function () {
   describe('refactoring with refactor command', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(2);
       helper.command.rename('comp2', 'new-comp2');
     });
@@ -33,7 +32,6 @@ describe('bit refactor command and flag', function () {
   describe('rename a new component with --refactor flag', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(2);
       helper.command.rename('comp2', 'new-comp2', '--refactor');
     });
@@ -45,7 +43,6 @@ describe('bit refactor command and flag', function () {
   describe('rename an exported component with --refactor flag', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(2);
       helper.command.tagAllWithoutBuild();
       helper.command.export();
@@ -59,7 +56,6 @@ describe('bit refactor command and flag', function () {
   describe('fork command with --refactor flag', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(2);
       helper.command.tagAllWithoutBuild();
       helper.command.export();

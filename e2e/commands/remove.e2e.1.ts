@@ -64,7 +64,6 @@ describe('bit remove command', function () {
   describe('with remote scope without dependencies', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
       helper.fixtures.tagComponentBarFoo();
@@ -106,7 +105,6 @@ describe('bit remove command', function () {
     const componentName = 'comp2';
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents();
       helper.command.tagAllWithoutBuild();
       helper.command.export();
@@ -126,7 +124,6 @@ describe('bit remove command', function () {
   describe('with imported components, no dependencies', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
       helper.fixtures.tagComponentBarFoo();
@@ -147,7 +144,6 @@ describe('bit remove command', function () {
   describe('remove modified component', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
       helper.fixtures.tagComponentBarFoo();
@@ -181,7 +177,6 @@ describe('bit remove command', function () {
     let output;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(2);
       helper.fs.outputFile('comp2/index.js', fixtures.isType);
       helper.fs.outputFile('comp2-b/index.js', fixtures.isType);
@@ -221,7 +216,6 @@ describe('bit remove command', function () {
   describe('soft remove', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(2);
       helper.command.tagWithoutBuild();
       helper.command.export();

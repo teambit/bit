@@ -21,8 +21,6 @@ describe('compile extension', function () {
     let appOutput: string;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.addDefaultScope();
-      helper.bitJsonc.disablePreview();
       helper.extensions.addExtensionToVariant('*', 'teambit.harmony/node', {});
       appOutput = helper.fixtures.populateComponentsTS(3);
       scopeBeforeTag = helper.scopeHelper.cloneLocalScope();
@@ -146,7 +144,6 @@ describe('compile extension', function () {
   describe('component with unsupported compiler files', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.addDefaultScope();
       helper.extensions.addExtensionToVariant('*', 'teambit.harmony/node', {});
       helper.fixtures.populateComponentsTS(1);
       helper.fs.outputFile('comp1/style.css', 'h1{}');
@@ -182,7 +179,7 @@ describe('compile extension', function () {
   });
   describe('component with nested directories', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopes({ addRemoteScopeAsDefaultScope: false });
       helper.fixtures.populateComponentsTS(1);
       helper.fs.outputFile('comp1/nested/foo.ts');
       helper.command.compile();
