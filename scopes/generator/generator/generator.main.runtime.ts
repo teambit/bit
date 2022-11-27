@@ -361,7 +361,7 @@ export class GeneratorMain {
       });
     });
 
-    return workspaceTemplates;
+    return compact(workspaceTemplates);
   }
 
   /**
