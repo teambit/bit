@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import classnames from 'classnames';
 import { ResponsiveNavbar } from '@teambit/design.navigation.responsive-navbar';
+import type { TabProps } from '@teambit/design.navigation.responsive-navbar';
 import { TopBarNav } from '../top-bar-nav';
 import styles from './menu.module.scss';
 import { NavPlugin, OrderedNavigationSlot } from './nav-plugin';
@@ -25,7 +26,7 @@ export function CollapsableMenuNav({ navigationSlot, className }: MenuNavProps) 
   const plugins = useMemo(() => navigationSlot.toArray().sort(sortFn), [navigationSlot]);
   const links = plugins.map(([id, menuItem]) => {
     return {
-      component: ({ isInMenu }) => (
+      component: ({ isInMenu }: TabProps) => (
         <TopBarNav className={classnames(styles.topBarNav, isInMenu && styles.noBorder)} key={id} {...menuItem.props} />
       ),
     };
