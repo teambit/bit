@@ -1,3 +1,4 @@
+/* eslint-disable react/display-name */
 import React from 'react';
 import type { ComponentDescriptor } from '@teambit/component-descriptor';
 import { textColumn } from '@teambit/base-ui.layout.page-frame';
@@ -100,14 +101,8 @@ export function ComponentOverview({
           />
         </Row>
         <Row>
-          <div className={styles.contentTabWrapper}>
-            <ContentTabs
-              priority="folder"
-              tabs={tabsComponentId}
-              className={styles.contentTabs}
-              navClassName={styles.nav}
-              tabClassName={styles.tab}
-            />
+          <div className={styles.contentTabs}>
+            <ContentTabs priority="folder" tabs={tabsComponentId} navClassName={styles.nav} tabClassName={styles.tab} />
           </div>
           <BadgeSection
             position={BadgePosition.Package}
