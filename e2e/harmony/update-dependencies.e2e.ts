@@ -23,8 +23,6 @@ describe('update-dependencies command', function () {
     let secondScopeBeforeUpdate: string;
     before(async () => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.addDefaultScope();
-      helper.bitJsonc.disablePreview();
       scopeWithoutOwner = helper.scopes.remoteWithoutOwner;
       helper.fixtures.populateComponents(1);
       npmCiRegistry = new NpmCiRegistry(helper);
@@ -163,7 +161,6 @@ describe('update-dependencies command', function () {
     let headSnapComp2: string;
     before(async () => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.disablePreview();
       // original scope
       const secondRemote = helper.scopeHelper.getNewBareScope(undefined, true);
       secondRemotePath = secondRemote.scopePath;

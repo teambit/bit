@@ -19,8 +19,6 @@ import { HttpHelper } from '../http-helper';
     before(async () => {
       httpHelper = new HttpHelper(helper);
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.addDefaultScope();
-      helper.bitJsonc.disablePreview();
       await httpHelper.start();
       helper.scopeHelper.addRemoteHttpScope();
       helper.command.createLane();
@@ -61,7 +59,6 @@ import { HttpHelper } from '../http-helper';
     before(async () => {
       httpHelper = new HttpHelper(helper);
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       await httpHelper.start();
       helper.scopeHelper.addRemoteHttpScope();
       helper.fixtures.populateComponents(2);
@@ -87,8 +84,6 @@ import { HttpHelper } from '../http-helper';
     before(async () => {
       httpHelper = new HttpHelper(helper);
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.addDefaultScope();
-      helper.bitJsonc.disablePreview();
       helper.extensions.addExtensionToVariant('*', 'teambit.react/react', {});
       await httpHelper.start();
       helper.scopeHelper.addRemoteHttpScope();

@@ -40,7 +40,6 @@ describe('recovery after component/scope deletion', function () {
       }
       before(async () => {
         helper.scopeHelper.setNewLocalAndRemoteScopes();
-        helper.bitJsonc.setupDefault();
         scopeWithoutOwner = helper.scopes.remoteWithoutOwner;
         npmCiRegistry = new NpmCiRegistry(helper);
         npmCiRegistry.configureCiInPackageJsonHarmony();
@@ -266,7 +265,6 @@ describe('recovery after component/scope deletion', function () {
           helper.scopeHelper.getClonedRemoteScope(remoteScopeClone);
           helper.scopeHelper.reInitRemoteScope(remote2Path);
           helper.scopeHelper.reInitLocalScope();
-          helper.bitJsonc.setupDefault();
           npmCiRegistry.setResolver({ [remote2Name]: remote2Path });
           helper.command.importComponent('comp2');
           // delete the comp3 from the scope.

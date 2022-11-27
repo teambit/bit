@@ -21,13 +21,11 @@ describe('new command', function () {
   describe('export a workspace-template aspect', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllWithoutBuild();
       helper.command.export();
 
       helper.scopeHelper.reInitLocalScope();
-      helper.bitJsonc.setupDefault();
       helper.scopeHelper.addRemoteScope(undefined, undefined, true);
       helper.command.create('starter', 'workspace-example');
       helper.bitJsonc.addToVariant('*', 'teambit.harmony/aspect', {});

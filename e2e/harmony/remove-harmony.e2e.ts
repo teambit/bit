@@ -16,7 +16,6 @@ describe('remove components on Harmony', function () {
   describe('remove new component with --keep-files flag', () => {
     before(() => {
       helper.scopeHelper.reInitLocalScope();
-      helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(1);
       helper.command.removeComponent('comp1', '--keep-files');
     });
@@ -34,7 +33,6 @@ describe('remove components on Harmony', function () {
   describe('remove new component without --keep-files flag', () => {
     before(() => {
       helper.scopeHelper.reInitLocalScope();
-      helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(1);
       helper.command.removeComponent('comp1');
     });
