@@ -122,11 +122,9 @@ export default class OverridesDependencies {
         const addedPkg = this._manuallyAddPackage(depField, dependency, dependencyValue, packageJson);
         if (addedPkg) {
           packages[depField] = Object.assign(packages[depField] || {}, addedPkg);
-          // Commented out as this change caused issues with bit status
-          // "bit status" started to show missing package issues even though the packages were present
-          // if (!componentData?.packageName) {
-            // this.missingPackageDependencies.push(dependency);
-          // }
+          if (componentData && !componentData.packageName) {
+            this.missingPackageDependencies.push(dependency);
+          }
         }
       });
     });
