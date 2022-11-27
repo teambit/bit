@@ -16,7 +16,6 @@ describe('importing internal files flow (component imports from a non-index file
   describe('importing of a non-main .js file', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(2, false);
       helper.fs.outputFile('comp2/non-main.js', 'export function nonMain(){}');
       helper.fs.outputFile('comp1/index.js', `import { nonMain } from '@${helper.scopes.remote}/comp2/non-main';`);
@@ -48,7 +47,6 @@ describe('importing internal files flow (component imports from a non-index file
   describe('importing of a non-main json file (or any not .js(x)/.ts(x) file)', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(2, false);
       helper.fs.outputFile('comp2/non-main.json', '{}');
       helper.fs.outputFile('comp1/index.js', `import nonMain from '@${helper.scopes.remote}/comp2/non-main.json';`);

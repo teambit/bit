@@ -13,7 +13,7 @@ describe('status command on Harmony', function () {
   });
   describe('main filename is not index and dists are missing', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitLocalScope({ addRemoteScopeAsDefaultScope: false });
       helper.fs.outputFile('comp1/comp1.ts', "require('@my-scope/comp2');");
       helper.fs.outputFile('comp2/comp2.ts');
       helper.command.addComponent('comp1');
@@ -26,7 +26,7 @@ describe('status command on Harmony', function () {
   });
   describe('dists dir is deleted after caching the components', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitLocalScope({ addRemoteScopeAsDefaultScope: false });
       helper.fixtures.populateComponents(1);
       helper.command.status(); // to populate the cache
       // as an intermediate step, make sure the missing-dist is not an issue.
@@ -49,7 +49,7 @@ describe('status command on Harmony', function () {
   });
   describe('package dir is deleted from node-modules', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitLocalScope({ addRemoteScopeAsDefaultScope: false });
       helper.fixtures.populateComponents(1);
       helper.command.status(); // to populate the cache
       // as an intermediate step, make sure the missing-links is not an issue.
@@ -77,7 +77,6 @@ describe('status command on Harmony', function () {
   describe('components that imports itself', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.fs.outputFile('bar/index.js', 'export const a = "b";');
       helper.fs.outputFile('bar/foo.js', `import { a } from '@${helper.scopes.remote}/bar';`);
       helper.command.add('bar');
@@ -92,7 +91,6 @@ describe('status command on Harmony', function () {
   describe('deleting a dependency from the filesystem when the record is still in bitmap', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(2);
       helper.command.tagWithoutBuild();
       helper.command.export();

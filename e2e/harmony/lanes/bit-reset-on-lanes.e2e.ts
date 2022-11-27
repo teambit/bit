@@ -16,7 +16,6 @@ describe('bit reset when on lane', function () {
     let headOnLane: string;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(1, false);
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
@@ -40,7 +39,6 @@ describe('bit reset when on lane', function () {
   describe('reset on lane after export from main', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(1, false);
       helper.command.tagAllWithoutBuild();
       helper.command.export();
@@ -54,7 +52,6 @@ describe('bit reset when on lane', function () {
   describe('reset on lane after fork from another non-exported lane', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(1, false);
       helper.command.createLane();
       helper.command.snapAllComponentsWithoutBuild();
@@ -74,7 +71,6 @@ describe('bit reset when on lane', function () {
   describe('reset on lane after fork from another exported lane', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(1, false);
       helper.command.createLane();
       helper.command.snapAllComponentsWithoutBuild();
@@ -93,7 +89,6 @@ describe('bit reset when on lane', function () {
   describe('reset on lane after merging from another lane', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(1, false);
       helper.command.createLane();
       helper.command.snapAllComponentsWithoutBuild();

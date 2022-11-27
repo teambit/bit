@@ -14,7 +14,6 @@ describe('two components with the same name but different scope-name', function 
   describe('importing from another scope', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       const { scopeName, scopePath } = helper.scopeHelper.getNewBareScope();
       helper.scopeHelper.addRemoteScope(scopePath);
       helper.fixtures.createComponentBarFoo();
@@ -25,7 +24,6 @@ describe('two components with the same name but different scope-name', function 
       helper.command.exportIds('bar/foo');
 
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
       helper.scopeHelper.addRemoteScope(scopePath);

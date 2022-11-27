@@ -25985,7 +25985,7 @@ packages:
       react-is: registry.npmjs.org/react-is/16.13.1
 
   registry.npmjs.org/hosted-git-info/2.8.9:
-    resolution: {integrity: sha512-mxIDAb9Lsm6DoOJ7xH+5+X4y1LU/4Hi50L9C5sIswK3JzULS4bwk1FvjdBgvYR4bzT4tuUQiC15FE2f5HbLvYw==, registry: https://node.bit.cloud/, tarball: https://registry.npmjs.org/hosted-git-info/-/hosted-git-info-2.8.9.tgz}
+    resolution: {integrity: sha512-mxIDAb9Lsm6DoOJ7xH+5+X4y1LU/4Hi50L9C5sIswK3JzULS4bwk1FvjdBgvYR4bzT4tuUQiC15FE2f5HbLvYw==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/hosted-git-info/-/hosted-git-info-2.8.9.tgz}
     name: hosted-git-info
     version: 2.8.9
     dev: false
@@ -29521,7 +29521,7 @@ packages:
     dev: false
 
   registry.npmjs.org/lru-cache/7.14.0:
-    resolution: {integrity: sha512-EIRtP1GrSJny0dqb50QXRUNBxHJhcpxHC++M5tD7RYbvLLn5KVWKsbyswSSqDuU15UFi3bgTQIY8nhDMeF6aDQ==, registry: https://node.bit.cloud/, tarball: https://registry.npmjs.org/lru-cache/-/lru-cache-7.14.0.tgz}
+    resolution: {integrity: sha512-EIRtP1GrSJny0dqb50QXRUNBxHJhcpxHC++M5tD7RYbvLLn5KVWKsbyswSSqDuU15UFi3bgTQIY8nhDMeF6aDQ==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/lru-cache/-/lru-cache-7.14.0.tgz}
     name: lru-cache
     version: 7.14.0
     engines: {node: '>=12'}

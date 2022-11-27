@@ -24,8 +24,7 @@ describe('set default owner and scope', function () {
     let componentId;
     let componentPackageName;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.disablePreview();
+      helper.scopeHelper.setNewLocalAndRemoteScopes({ addRemoteScopeAsDefaultScope: false });
       scopeWithoutOwner = helper.scopes.remoteWithoutOwner;
       defaultScope = helper.scopes.remote;
       componentId = `${defaultScope}/utils/is-type`;

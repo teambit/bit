@@ -22,7 +22,6 @@ describe('import lanes', function () {
     let laneHash: string;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       appOutput = helper.fixtures.populateComponents();
       helper.command.createLane('dev');
       helper.command.snapAllComponents();

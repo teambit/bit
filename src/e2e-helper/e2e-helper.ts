@@ -59,7 +59,7 @@ export default class Helper {
     this.bitMap = new BitMapHelper(this.scopes, this.fs);
     this.config = new ConfigHelper(this.command);
     this.npm = new NpmHelper(this.scopes, this.fs, this.command);
-    this.scopeHelper = new ScopeHelper(this.debugMode, this.scopes, this.command, this.fs, this.npm);
+    this.scopeHelper = new ScopeHelper(this.debugMode, this.scopes, this.command, this.fs, this.npm, this.bitJsonc);
     this.git = new GitHelper(this.scopes, this.command, this.scopeHelper);
     this.fixtures = new FixtureHelper(
       this.fs,
