@@ -24,10 +24,19 @@ export function MenuNav({ navigationSlot, className }: MenuNavProps) {
 export function CollapsableMenuNav({ navigationSlot, className }: MenuNavProps) {
   const plugins = useMemo(() => navigationSlot.toArray().sort(sortFn), [navigationSlot]);
   const links = plugins.map(([id, menuItem]) => {
-    return {component: () => <TopBarNav style={{height: '100%'}} key={id} {...menuItem.props} />};
+    return {
+      component: ({ isInMenu }) => (
+        <TopBarNav className={classnames(styles.topBarNav, isInMenu && styles.noBorder)} key={id} {...menuItem.props} />
+      ),
+    };
   });
   return (
-    <ResponsiveNavbar navClassName={styles.tab} style={{width: '100%', height: '100%'}} priority='none' tabs={links} />
+    <ResponsiveNavbar
+      navClassName={classnames(styles.tab, className)}
+      style={{ width: '100%', height: '100%' }}
+      priority="none"
+      tabs={links}
+    />
   );
 }
 

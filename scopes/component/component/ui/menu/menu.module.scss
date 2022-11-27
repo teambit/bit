@@ -100,6 +100,13 @@
     padding: 0;
   }
 }
+.topBarNav {
+  height: 100%;
+
+  &.noBorder::after {
+    display: none;
+  }
+}
 
 .hideOnMobile {
   @media screen and (max-width: $br-md) {

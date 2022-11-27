@@ -1,4 +1,3 @@
-/* eslint-disable react/display-name */
 import React from 'react';
 import type { ComponentDescriptor } from '@teambit/component-descriptor';
 import { textColumn } from '@teambit/base-ui.layout.page-frame';
