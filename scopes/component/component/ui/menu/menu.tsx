@@ -15,7 +15,6 @@ import { LegacyComponentLog } from '@teambit/legacy-component-log';
 import type { ComponentModel } from '../component-model';
 import { useComponent as useComponentQuery, UseComponentType } from '../use-component';
 import { MenuNav, CollapsableMenuNav } from './menu-nav';
-// import { MobileMenuNav } from './mobile-menu-nav'; // TODO - delete component if not used anympre
 import styles from './menu.module.scss';
 import { OrderedNavigationSlot, ConsumeMethodSlot } from './nav-plugin';
 import { useIdFromLocation } from '../use-component-from-location';
