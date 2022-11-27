@@ -103,7 +103,6 @@ module.exports = {
 
     // ERRORS OF plugin:react/recommended
     'react/no-unescaped-entities': 'off',
-    'react/display-name': 'off',
   },
   // return the no-cycle once "import type" is working
   // overrides: [

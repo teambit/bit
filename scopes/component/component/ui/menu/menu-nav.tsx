@@ -26,9 +26,15 @@ export function CollapsableMenuNav({ navigationSlot, className }: MenuNavProps) 
   const plugins = useMemo(() => navigationSlot.toArray().sort(sortFn), [navigationSlot]);
   const links = plugins.map(([id, menuItem]) => {
     return {
-      component: ({ isInMenu }: TabProps) => (
-        <TopBarNav className={classnames(styles.topBarNav, isInMenu && styles.noBorder)} key={id} {...menuItem.props} />
-      ),
+      component: function TopBarNavComponent({ isInMenu }: TabProps) {
+        return (
+          <TopBarNav
+            className={classnames(styles.topBarNav, isInMenu && styles.noBorder)}
+            key={id}
+            {...menuItem.props}
+          />
+        );
+      },
     };
   });
   return (

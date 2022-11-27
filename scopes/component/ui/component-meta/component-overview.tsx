@@ -42,11 +42,15 @@ export function ComponentOverview({
   const componentId = component?.id;
   const tabsComponentId: ContentTab[] = [
     {
-      component: () => <span>Component ID</span>,
+      component: function TabComponentID() {
+        return <span>Component ID</span>;
+      },
       content: <CopyBox className={styles.copyBox}>{componentId ? componentId.toStringWithoutVersion() : ''}</CopyBox>,
     },
     {
-      component: () => <span>Package</span>,
+      component: function TabPackageName() {
+        return <span>Package</span>;
+      },
       content: <CopyBox className={styles.copyBox}>{packageName}</CopyBox>,
     },
   ];
@@ -57,7 +61,9 @@ export function ComponentOverview({
     finalElementsUrl = origin && elementsUrl ? `${origin}${elementsUrl}` : undefined;
     if (finalElementsUrl) {
       tabsComponentId.push({
-        component: () => <span>Elements url</span>,
+        component: function TabElementUrl() {
+          return <span>Elements url</span>;
+        },
         content: <CopyBox className={styles.copyBox}>{finalElementsUrl}</CopyBox>,
       });
     }
