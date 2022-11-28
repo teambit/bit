@@ -656,8 +656,8 @@ jobs:
           key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
       - run: bvm config set DEFAULT_LINK bbit
       - run: bvm config set RELEASE_TYPE nightly
-      # - run: bvm install 0.0.428
-      - run: bvm upgrade
+      - run: bvm install 0.0.910
+      # - run: bvm upgrade
       - run: bvm link --verbose
       - run: bbit
       - save_cache:
@@ -759,8 +759,8 @@ jobs:
       - run:
           name: tag persist
           # command: cd bit && bit tag --ignore-newest-version
-          command: cd bit && bit tag --increment-by 2
-          # command: cd bit && bit tag
+          # command: cd bit && bit tag --increment-by 2
+          command: cd bit && bit tag
           # command: cd bit && bit tag --persist --ignore-newest-version
           no_output_timeout: '25m'
           environment:
