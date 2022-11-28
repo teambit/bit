@@ -4,17 +4,20 @@
   height: 100%;
   overflow: hidden;
 }
+
 .top {
   display: flex;
   flex-direction: column;
   padding: 24px 24px 16px 24px;
 }
+
 .bottom {
   display: flex;
   overflow-y: hidden;
   flex-direction: column;
-  height: 100%;
+  flex: 1;
 }
+
 .navContainer {
   display: flex;
   align-items: center;
@@ -41,8 +44,7 @@
 
 .loader {
   display: flex;
-  align-items: center;
-  justify-items: center;
   height: 100%;
   width: 100%;
+  margin: auto;
 }
