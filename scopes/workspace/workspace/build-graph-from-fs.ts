@@ -19,7 +19,6 @@ export class GraphFromFsBuilder {
   private completed: string[] = [];
   private depth = 1;
   private consumer: Consumer;
-  private legacyIdStrToComponentId: { [bitIdStr: string]: ComponentID } = {};
   private importedIds: string[] = [];
   constructor(
     private workspace: Workspace,
