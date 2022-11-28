@@ -1198,7 +1198,6 @@ either, use the ignore file syntax or change the require statement to have a mod
     ['packageDependencies', 'devPackageDependencies', 'peerPackageDependencies'].forEach((field) => {
       R.forEachObjIndexed((_pkgVal, pkgName) => {
         const peerVersionFromEnvPolicy = envPolicy[pkgName];
-        if (this.overridesDependencies.shouldIgnorePackageByType(pkgName, 'dependencies')) return;
         if (peerVersionFromEnvPolicy) {
           delete this.allPackagesDependencies[field][pkgName];
         }
