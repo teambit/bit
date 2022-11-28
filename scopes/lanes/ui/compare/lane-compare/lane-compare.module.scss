@@ -1,10 +1,18 @@
 .laneCompareContainer {
   display: flex;
-  flex: 1;
   flex-direction: column;
+  flex: 1;
+  height: 100%;
+  min-height: min-content;
   overflow-y: auto;
 }
 
 .componentCompareContainer {
   min-height: 45%;
+}
+
+.versionPicker {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
 }

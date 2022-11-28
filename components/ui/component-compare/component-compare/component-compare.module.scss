@@ -13,9 +13,10 @@
 
 .bottom {
   display: flex;
-  overflow-y: hidden;
+  overflow: hidden;
   flex-direction: column;
   flex: 1;
+  padding-bottom: 16px;
 }
 
 .navContainer {

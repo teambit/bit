@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import type { DependencyType } from '@teambit/code.ui.queries.get-component-code';
-import { buildDependencyTree } from './build-depndency-tree';
+import { buildDependencyTree } from './build-dependency-tree';
 import { DependencyDrawer } from './dependency-drawer/dependency-drawer'; // TODO - find out why this explodes when I direct to index.ts
 
 export function DependencyTree({ dependenciesArray }: { dependenciesArray?: DependencyType[] }) {
@@ -13,6 +13,7 @@ export function DependencyTree({ dependenciesArray }: { dependenciesArray?: Depe
   const [isDependenciesOpen, toggleDependencies] = useState(true);
   const [isDevDependenciesOpen, toggleDevDependencies] = useState(true);
   const [isPeerDependenciesOpen, togglePeerDependencies] = useState(true);
+
   return (
     <>
       <DependencyDrawer

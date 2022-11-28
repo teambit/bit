@@ -1,16 +1,26 @@
-import React from 'react';
+import React, { HTMLAttributes } from 'react';
+import classnames from 'classnames';
 import { DrawerUI, DrawerProps } from '@teambit/ui-foundation.ui.tree.drawer';
 import { Link } from '@teambit/base-react.navigation.link';
 import { ComponentUrl } from '@teambit/component.modules.component-url';
-import { ComponentID } from '@teambit/component-id';
 import type { DependencyType } from '@teambit/code.ui.queries.get-component-code';
+import { ComponentID } from '@teambit/component-id';
+
 import styles from './dependency-drawer.module.scss';
 
 export type DependencyDrawerProps = {
   dependencies?: DependencyType[];
+  dependencyItemProps?: (dep: DependencyType) => HTMLAttributes<HTMLDivElement>;
 } & DrawerProps;
 
-export function DependencyDrawer({ name, isOpen, onToggle, dependencies }: DependencyDrawerProps) {
+export function DependencyDrawer({
+  name,
+  isOpen,
+  onToggle,
+  dependencies,
+  dependencyItemProps,
+  ...rest
+}: DependencyDrawerProps) {
   if (!dependencies || dependencies.length === 0) return null;
   return (
     <DrawerUI
@@ -19,20 +29,29 @@ export function DependencyDrawer({ name, isOpen, onToggle, dependencies }: Depen
       name={name}
       className={styles.dependencyDrawer}
       contentClass={styles.dependencyDrawerContent}
+      {...rest}
     >
-      <DependencyList deps={dependencies} />
+      <DependencyList deps={dependencies} dependencyItemProps={dependencyItemProps} />
     </DrawerUI>
   );
 }
 
-function DependencyList({ deps }: { deps: DependencyType[] }) {
+function DependencyList({
+  deps,
+  dependencyItemProps,
+}: {
+  deps: DependencyType[];
+  dependencyItemProps?: (dep: DependencyType) => HTMLAttributes<HTMLDivElement>;
+}) {
   if (!deps || deps.length === 0) return null;
   return (
     <>
       {deps.map((dep: DependencyType) => {
         const dependency = getDependencyLink(dep);
+        const itemProps = (dependencyItemProps && dependencyItemProps(dep)) || {};
+
         return (
-          <div className={styles.depNode} key={dep.id}>
+          <div {...itemProps} className={classnames(styles.depNode, itemProps.className)} key={dep.id}>
             <Link className={styles.dependencyLink} external href={dependency.link}>
               <span>{`${dependency.name}@${dep.version}`}</span>
             </Link>

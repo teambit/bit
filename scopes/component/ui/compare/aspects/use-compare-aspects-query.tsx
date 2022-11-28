@@ -69,7 +69,10 @@ export function useCompareAspectsQuery(host: string): ComponentCompareAspectsMod
     (a) => a
   );
 
-  const selected = selectedAspect || firstChild(sortedAspectNames).id;
+  const state = componentCompareContext?.state?.aspects;
+  const hook = componentCompareContext?.hooks?.aspects;
+
+  const selected = state?.id || selectedAspect || firstChild(sortedAspectNames).id;
 
   const selectedBase = useMemo(
     () => baseAspectList?.find((baseAspect) => baseAspect.aspectId === selected),
@@ -89,8 +92,8 @@ export function useCompareAspectsQuery(host: string): ComponentCompareAspectsMod
     base: baseAspectList,
     compare: compareAspectList,
     selected,
-    hook: componentCompareContext?.hooks?.aspects,
-    state: componentCompareContext?.state?.aspects,
+    hook,
+    state,
   };
 }
 

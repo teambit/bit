@@ -1,19 +1,14 @@
-/**
-  *
-  * Monaco container is not flex so providing it a fixed calculated height
-  * so it can fill up the remaining space correctly instead of overflowing
-  * editor header: h4 (18px) + padding (32px) + 
-  * ignoreWhitespace (24px) + 
-  * editor padding (8px)= 82px
-  */
-$editor-padding: 82px;
-
 .componentCompareCodeViewContainer {
   width: 100%;
   height: 100%;
+  display: flex;
+  flex-direction: column;
 }
+
 .componentCompareCodeDiffEditorContainer {
-  height: calc(100% - $editor-padding);
+  display: flex;
+  flex: 1;
+  height: 100%;
   padding: 8px 16px 0px 16px;
 
   > section {
@@ -33,6 +28,7 @@ $editor-padding: 82px;
   width: fit-content;
   padding: 0px 8px;
   height: 24px;
+  display: flex;
 }
 
 .toggleContainer {

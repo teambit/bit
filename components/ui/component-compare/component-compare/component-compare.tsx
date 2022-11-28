@@ -28,8 +28,20 @@ const findPrevVersionFromCurrent = (compareVersion) => (_, index: number, logs: 
 };
 
 export function ComponentCompare(props: ComponentCompareProps) {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { host, baseId: _baseId, compareId: _compareId, routes, state, tabs, className, hooks, ...rest } = props;
+  const {
+    host,
+    baseId: _baseId,
+    compareId: _compareId,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    routes,
+    state,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    tabs,
+    className,
+    hooks,
+    customUseComponent,
+    ...rest
+  } = props;
   const baseVersion = useCompareQueryParam('baseVersion');
   const component = useContext(ComponentContext);
   const location = useLocation();
@@ -52,9 +64,10 @@ export function ComponentCompare(props: ComponentCompareProps) {
     (lastVersionInfo && component.id.changeVersion(lastVersionInfo.tag || lastVersionInfo.hash)) ||
     component.id;
 
-  const { component: base, loading: loadingBase } = useComponent(host, baseId.toString());
+  const { component: base, loading: loadingBase } = useComponent(host, baseId.toString(), { customUseComponent });
   const { component: compareComponent, loading: loadingCompare } = useComponent(host, _compareId?.toString() || '', {
     skip: !_compareId,
+    customUseComponent,
   });
 
   const loading = loadingBase || loadingCompare;

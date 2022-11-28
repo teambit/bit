@@ -12,6 +12,7 @@ import { sortTabs } from '@teambit/component.ui.component-compare.utils.sort-tab
 import { LaneModel } from '@teambit/lanes.ui.models.lanes-model';
 import { LaneCompareState, computeStateKey } from '@teambit/lanes.ui.compare.lane-compare-state';
 import { useUpdatedUrlFromQuery } from '@teambit/component.ui.component-compare.hooks.use-component-compare-url';
+import { UseComponentType } from '@teambit/component';
 
 import styles from './lane-compare.module.scss';
 
@@ -20,9 +21,10 @@ export type LaneCompareProps = {
   compare: LaneModel;
   host: string;
   tabs?: MaybeLazyLoaded<TabItem[]>;
+  customUseComponent?: UseComponentType;
 } & HTMLAttributes<HTMLDivElement>;
 
-export function LaneCompare({ host, compare, base, tabs, ...rest }: LaneCompareProps) {
+export function LaneCompare({ host, compare, base, tabs, customUseComponent, ...rest }: LaneCompareProps) {
   const baseMap = useMemo(
     () => new Map<string, ComponentID>(base.components.map((c) => [c.toStringWithoutVersion(), c])),
     [base.components]
@@ -69,7 +71,7 @@ export function LaneCompare({ host, compare, base, tabs, ...rest }: LaneCompareP
       },
       versionPicker: {
         element: (
-          <div>
+          <div className={styles.versionPicker}>
             {`${(_base && 'Comparing Component') || 'Component'} ${_compare?.toStringWithoutVersion()}`}
             <div>{`${_compare?.version} ${(_base && ` with ${_base.version}`) || ''}`}</div>
           </div>
@@ -136,6 +138,7 @@ export function LaneCompare({ host, compare, base, tabs, ...rest }: LaneCompareP
             hooks={hooks(baseId, compareId)}
             baseId={baseId}
             compareId={compareId}
+            customUseComponent={customUseComponent}
           />
         );
       })}

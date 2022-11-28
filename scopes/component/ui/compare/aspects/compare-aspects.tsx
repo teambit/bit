@@ -18,13 +18,11 @@ export type ComponentCompareAspectsProps = { host: string } & HTMLAttributes<HTM
 
 export function ComponentCompareAspects({ host, className }: ComponentCompareAspectsProps) {
   const context = useCompareAspectsQuery(host);
-  const { loading, selectedBase, selectedCompare, selected, state, hook, aspectNames } = context;
+  const { loading, selectedBase, selectedCompare, selected, hook, aspectNames } = context;
 
   const isMobile = useIsMobile();
   const [isSidebarOpen, setSidebarOpenness] = useState(!isMobile);
   const sidebarOpenness = isSidebarOpen ? Layout.row : Layout.left;
-
-  const selectedFile = state?.id || selected;
 
   const _useUpdatedUrlFromQuery = hook?.useUpdatedUrlFromQuery || useUpdatedUrlFromQuery;
   const getHref = (node) => _useUpdatedUrlFromQuery({ aspect: node.id });
@@ -44,7 +42,7 @@ export function ComponentCompareAspects({ host, className }: ComponentCompareAsp
           )}
           {loading || (
             <CompareAspectView
-              name={selectedFile}
+              name={selected}
               baseAspectData={selectedBase}
               compareAspectData={selectedCompare}
               loading={loading}
@@ -64,7 +62,7 @@ export function ComponentCompareAspects({ host, className }: ComponentCompareAsp
         <Pane className={classNames(styles.right, styles.dark)}>
           <CodeCompareTree
             fileTree={aspectNames}
-            currentFile={selectedFile}
+            currentFile={selected}
             drawerName={'ASPECTS'}
             widgets={[Widget]}
             getHref={getHref}

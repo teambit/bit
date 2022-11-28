@@ -5,6 +5,8 @@ import { RoundLoader } from '@teambit/design.ui.round-loader';
 import { ComponentAspectData } from '@teambit/component.ui.compare';
 import { DiffEditor } from '@monaco-editor/react';
 import { darkMode } from '@teambit/base-ui.theme.dark-theme';
+import { useComponentCompare } from '@teambit/component.ui.component-compare.context';
+
 import styles from './compare-aspect-view.module.scss';
 
 export type CompareAspectViewProps = {
@@ -16,12 +18,18 @@ export type CompareAspectViewProps = {
 
 export function CompareAspectView({ baseAspectData, compareAspectData, name, className }: CompareAspectViewProps) {
   const title = useMemo(() => name?.split('/').pop(), [name]);
+  const componentCompareContext = useComponentCompare();
+
+  const baseId = componentCompareContext?.base?.model.id;
+  const compareId = componentCompareContext?.compare?.model.id;
 
   const configDiffEditor = (
     <DiffEditor
       key={`aspect-config-diff-editor-${title}`}
       modified={JSON.stringify(compareAspectData?.config, null, 2)}
       original={JSON.stringify(baseAspectData?.config, null, 2)}
+      originalModelPath={`config-${name}-${baseId}`}
+      modifiedModelPath={`config-${name}-${compareId}`}
       language={'json'}
       className={darkMode}
       theme={'vs-dark'}
@@ -41,6 +49,8 @@ export function CompareAspectView({ baseAspectData, compareAspectData, name, cla
       key={`aspect-data-diff-editor-${title}`}
       modified={JSON.stringify(compareAspectData?.data, null, 2)}
       original={JSON.stringify(baseAspectData?.data, null, 2)}
+      originalModelPath={`data-${name}-${baseId}`}
+      modifiedModelPath={`data-${name}-${compareId}`}
       language={'json'}
       className={styles.diffEditor}
       theme={'vs-dark'}

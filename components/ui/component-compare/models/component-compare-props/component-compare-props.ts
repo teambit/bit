@@ -5,6 +5,7 @@ import { ComponentCompareHooks } from '@teambit/component.ui.component-compare.m
 import { ComponentCompareState } from '@teambit/component.ui.component-compare.models.component-compare-state';
 import { NavLinkProps } from '@teambit/base-ui.routing.nav-link';
 import { MaybeLazyLoaded } from '@teambit/component.ui.component-compare.utils.lazy-loading';
+import { UseComponentType } from '@teambit/component';
 
 export type TabItem = {
   id?: string;
@@ -21,4 +22,5 @@ export type ComponentCompareProps = {
   host: string;
   baseId?: ComponentID;
   compareId?: ComponentID;
+  customUseComponent?: UseComponentType;
 } & HTMLAttributes<HTMLDivElement>;
