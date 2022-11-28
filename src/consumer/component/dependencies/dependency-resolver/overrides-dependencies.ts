@@ -122,7 +122,7 @@ export default class OverridesDependencies {
         const addedPkg = this._manuallyAddPackage(depField, dependency, dependencyValue, packageJson);
         if (addedPkg) {
           packages[depField] = Object.assign(packages[depField] || {}, addedPkg);
-          if (!componentData?.packageName) {
+          if (componentData && !componentData.packageName) {
             this.missingPackageDependencies.push(dependency);
           }
         }
