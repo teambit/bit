@@ -1,4 +1,3 @@
-/* eslint-disable react/display-name */
 import React from 'react';
 import type { ComponentDescriptor } from '@teambit/component-descriptor';
 import { textColumn } from '@teambit/base-ui.layout.page-frame';
@@ -8,6 +7,7 @@ import { Section, SectionProps } from '@teambit/documenter.ui.section';
 import { CopyBox } from '@teambit/documenter.ui.copy-box';
 import { Separator } from '@teambit/design.ui.separator';
 import { ContentTabs } from '@teambit/design.navigation.content-tabs';
+import type { ContentTab } from '@teambit/design.navigation.content-tabs';
 import { Subtitle } from '@teambit/documenter.ui.sub-title';
 import { isBrowser } from '@teambit/ui-foundation.ui.is-browser';
 import { Row } from '@teambit/base-react.layout.row';
@@ -40,13 +40,17 @@ export function ComponentOverview({
   ...rest
 }: ComponentOverviewProps) {
   const componentId = component?.id;
-  const tabsComponentId = [
+  const tabsComponentId: ContentTab[] = [
     {
-      component: () => <span>Component ID</span>,
+      component: function TabComponentID() {
+        return <span>Component ID</span>;
+      },
       content: <CopyBox className={styles.copyBox}>{componentId ? componentId.toStringWithoutVersion() : ''}</CopyBox>,
     },
     {
-      component: () => <span>Package</span>,
+      component: function TabPackageName() {
+        return <span>Package</span>;
+      },
       content: <CopyBox className={styles.copyBox}>{packageName}</CopyBox>,
     },
   ];
@@ -57,7 +61,9 @@ export function ComponentOverview({
     finalElementsUrl = origin && elementsUrl ? `${origin}${elementsUrl}` : undefined;
     if (finalElementsUrl) {
       tabsComponentId.push({
-        component: () => <span>Elements url</span>,
+        component: function TabElementUrl() {
+          return <span>Elements url</span>;
+        },
         content: <CopyBox className={styles.copyBox}>{finalElementsUrl}</CopyBox>,
       });
     }
