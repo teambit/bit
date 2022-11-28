@@ -790,6 +790,13 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/pipelines/modules/merge-component-results"
     },
+    "modules/module-resolver": {
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.toolbox",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/toolbox/modules/module-resolver"
+    },
     "modules/packages-excluder": {
         "scope": "teambit.dependencies",
         "version": "0.0.62",

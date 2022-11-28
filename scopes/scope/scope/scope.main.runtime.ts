@@ -37,6 +37,7 @@ import { loadScopeIfExist } from '@teambit/legacy/dist/scope/scope-loader';
 import { PersistOptions } from '@teambit/legacy/dist/scope/types';
 import { DEFAULT_DIST_DIRNAME } from '@teambit/legacy/dist/constants';
 import { ExportPersist, PostSign } from '@teambit/legacy/dist/scope/actions';
+import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { getScopeRemotes } from '@teambit/legacy/dist/scope/scope-remotes';
 import { Remotes } from '@teambit/legacy/dist/remotes';
 import { isMatchNamespacePatternItem } from '@teambit/workspace.modules.match-pattern';
@@ -130,7 +131,9 @@ export class ScopeMain implements ComponentFactory {
 
     private logger: Logger,
 
-    private envs: EnvsMain
+    private envs: EnvsMain,
+
+    private dependencyResolver: DependencyResolverMain
   ) {
     this.componentLoader = new ScopeComponentLoader(this, this.logger);
   }
@@ -760,18 +763,18 @@ needed-for: ${neededFor || '<unknown>'}`);
     // build the graph
     const graph = new Graph<Component, string>();
     allComponents.forEach((comp) => graph.setNode(new Node(comp.id.toString(), comp)));
-    allComponents.forEach((comp) => {
-      const consumerComp = comp.state._consumer as ConsumerComponent;
-      Object.entries(consumerComp.depsIdsGroupedByType).forEach(([depType, depIds]) => {
-        depIds.forEach((depId) => {
-          const depCompId = this.resolveComponentIdFromBitId(depId);
-          if (!graph.hasNode(depId.toString())) {
-            throw new Error(`scope.getGraph: missing node of ${depId.toString()}`);
+    await Promise.all(
+      allComponents.map(async (comp) => {
+        const deps = await this.dependencyResolver.getComponentDependencies(comp);
+        deps.forEach((dep) => {
+          const depCompId = dep.componentId;
+          if (!graph.hasNode(depCompId.toString())) {
+            throw new Error(`scope.getGraph: missing node of ${depCompId.toString()}`);
           }
-          graph.setEdge(new Edge(comp.id.toString(), depCompId.toString(), depType));
+          graph.setEdge(new Edge(comp.id.toString(), depCompId.toString(), dep.lifecycle));
         });
-      });
-    });
+      })
+    );
     return graph;
   }
 
@@ -1219,6 +1222,7 @@ needed-for: ${neededFor || '<unknown>'}`);
     ExpressAspect,
     LoggerAspect,
     EnvsAspect,
+    DependencyResolverAspect,
   ];
 
   static defaultConfig: ScopeConfig = {
@@ -1226,7 +1230,7 @@ needed-for: ${neededFor || '<unknown>'}`);
   };
 
   static async provider(
-    [componentExt, ui, graphql, cli, isolator, aspectLoader, express, loggerMain, envs]: [
+    [componentExt, ui, graphql, cli, isolator, aspectLoader, express, loggerMain, envs, depsResolver]: [
       ComponentMain,
       UiMain,
       GraphqlMain,
@@ -1235,7 +1239,8 @@ needed-for: ${neededFor || '<unknown>'}`);
       AspectLoaderMain,
       ExpressMain,
       LoggerMain,
-      EnvsMain
+      EnvsMain,
+      DependencyResolverMain
     ],
     config: ScopeConfig,
     [postPutSlot, postDeleteSlot, postExportSlot, postObjectsPersistSlot, preFetchObjectsSlot]: [
@@ -1267,7 +1272,8 @@ needed-for: ${neededFor || '<unknown>'}`);
       isolator,
       aspectLoader,
       logger,
-      envs
+      envs,
+      depsResolver
     );
     cli.registerOnStart(async (hasWorkspace: boolean) => {
       if (hasWorkspace) return;
