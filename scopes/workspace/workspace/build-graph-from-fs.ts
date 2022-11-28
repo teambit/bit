@@ -3,8 +3,8 @@ import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
 import { flatten } from 'lodash';
 import { Consumer } from '@teambit/legacy/dist/consumer';
 import { Component, ComponentID } from '@teambit/component';
+import { DependencyResolverMain } from '@teambit/dependency-resolver';
 import BitIds from '@teambit/legacy/dist/bit-id/bit-ids';
-import ConsumerComponent from '@teambit/legacy/dist/consumer/component/consumer-component';
 import { ComponentNotFound, ScopeNotFound } from '@teambit/legacy/dist/scope/exceptions';
 import { ComponentNotFound as ComponentNotFoundInScope } from '@teambit/scope';
 import compact from 'lodash.compact';
@@ -24,6 +24,7 @@ export class GraphFromFsBuilder {
   constructor(
     private workspace: Workspace,
     private logger: Logger,
+    private dependencyResolver: DependencyResolverMain,
     private ignoreIds: string[] = [],
     private shouldLoadItsDeps?: ShouldLoadFunc,
     private shouldThrowOnMissingDep = true
@@ -73,16 +74,9 @@ export class GraphFromFsBuilder {
   }
 
   private async getAllDepsUnfiltered(component: Component): Promise<ComponentID[]> {
-    const consumerComp = component.state._consumer as ConsumerComponent;
-    const legacyDepsIds = consumerComp.getAllDependenciesIds();
-    const depsIds = await Promise.all(
-      legacyDepsIds.map(async (bitId) => {
-        if (!this.legacyIdStrToComponentId[bitId.toString()]) {
-          this.legacyIdStrToComponentId[bitId.toString()] = await this.workspace.resolveComponentId(bitId);
-        }
-        return this.legacyIdStrToComponentId[bitId.toString()];
-      })
-    );
+    const deps = await this.dependencyResolver.getComponentDependencies(component);
+    const depsIds = deps.map((dep) => dep.componentId);
+
     return depsIds.filter((depId) => !this.ignoreIds.includes(depId.toString()));
   }
 
@@ -134,25 +128,23 @@ export class GraphFromFsBuilder {
     if (this.completed.includes(idStr)) return [];
     const allIds = await this.getAllDepsFiltered(component);
 
-    const allDependencies = await this.loadManyComponents(allIds, idStr);
-    const consumerComponent = component.state._consumer as ConsumerComponent;
-    Object.entries(consumerComponent.depsIdsGroupedByType).forEach(([depType, depsIds]) => {
-      depsIds.forEach((depBitId) => {
-        const depId = this.legacyIdStrToComponentId[depBitId.toString()];
-        if (!depId) throw new Error(`unable to find ${depBitId.toString()} inside legacyIdStrToComponentId`);
-        if (this.ignoreIds.includes(depId.toString())) return;
-        if (!this.graph.hasNode(depId.toString())) {
-          if (this.shouldThrowOnMissingDep) {
-            throw new Error(`buildOneComponent: missing node of ${depId.toString()}`);
-          }
-          this.logger.warn(`ignoring missing ${depId.toString()}`);
-          return;
+    const allDependenciesComps = await this.loadManyComponents(allIds, idStr);
+    const deps = await this.dependencyResolver.getComponentDependencies(component);
+    deps.forEach((dep) => {
+      const depId = dep.componentId;
+      if (this.ignoreIds.includes(depId.toString())) return;
+      if (!this.graph.hasNode(depId.toString())) {
+        if (this.shouldThrowOnMissingDep) {
+          throw new Error(`buildOneComponent: missing node of ${depId.toString()}`);
         }
-        this.graph.setEdge(new Edge(idStr, depId.toString(), depType));
-      });
+        this.logger.warn(`ignoring missing ${depId.toString()}`);
+        return;
+      }
+      this.graph.setEdge(new Edge(idStr, depId.toString(), dep.lifecycle));
     });
+
     this.completed.push(idStr);
-    return allDependencies;
+    return allDependenciesComps;
   }
 
   private async loadManyComponents(componentsIds: ComponentID[], dependenciesOf?: string): Promise<Component[]> {
