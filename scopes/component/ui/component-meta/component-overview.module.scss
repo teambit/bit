@@ -25,7 +25,8 @@
 
 .contentTabs {
   margin-bottom: 16px;
-  width: 70%;
+  min-width: 70%;
+  max-width: 100%;
   @media screen and (max-width: $br-l) {
     width: 100%;
   }

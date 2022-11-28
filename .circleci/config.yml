@@ -702,6 +702,8 @@ jobs:
       - restore_cache:
           key: bitsrc-registry9
       # - update_ssh_agent
+      # temporary, check if we can remove it
+      - run: cd bit && bit cc
       - run:
           name: 'bit status'
           command: 'cd bit && bit status'
@@ -741,6 +743,8 @@ jobs:
           command: echo "//registry.npmjs.org/:_authToken=${npmjsRegistryToken}" >> ~/.npmrc
       - run: cd bit && node scripts/bump-bit-legacy-ver.js
       - run: bvm link
+      # temporary, check if we can remove it
+      - run: cd bit && bit cc
       - run: cd bit && bit status
       - run: cd bit && npm run generate-cli-reference
       - run: cd bit && npm run generate-cli-reference-json
