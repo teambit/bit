@@ -1,8 +1,8 @@
+import React, { HTMLAttributes, useMemo, useRef, useState } from 'react';
 import { DiffEditor, DiffOnMount } from '@monaco-editor/react';
 import { Toggle } from '@teambit/design.ui.input.toggle';
 import { H4 } from '@teambit/documenter.ui.heading';
 import classNames from 'classnames';
-import React, { HTMLAttributes, useMemo, useRef, useState } from 'react';
 import { useCodeCompare } from '@teambit/code.ui.code-compare';
 import { RoundLoader } from '@teambit/design.ui.round-loader';
 import { darkMode } from '@teambit/base-ui.theme.dark-theme';
@@ -70,11 +70,16 @@ export function CodeCompareView({ className, fileName }: CodeCompareViewProps) {
     setIgnoreWhitespace((exsitingState) => !exsitingState);
   };
 
+  const originalPath = `${componentCompareContext?.base?.model.id.toString()}-${fileName}`;
+  const modifiedPath = `${componentCompareContext?.compare?.model.id.toString()}-${fileName}`;
+
   const diffEditor = (
     <DiffEditor
       modified={modifiedFileContent}
       original={originalFileContent}
       language={language}
+      originalModelPath={originalPath}
+      modifiedModelPath={modifiedPath}
       height={'100%'}
       onMount={handleEditorDidMount}
       className={darkMode}
