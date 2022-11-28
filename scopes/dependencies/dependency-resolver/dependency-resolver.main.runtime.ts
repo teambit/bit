@@ -68,6 +68,7 @@ import {
   ComponentDependencyFactory,
   COMPONENT_DEP_TYPE,
   DependencyList,
+  ComponentDependency,
 } from './dependencies';
 import { DependenciesFragment, DevDependenciesFragment, PeerDependenciesFragment } from './show-fragments';
 import { dependencyResolverSchema } from './dependency-resolver.graphql';
@@ -444,6 +445,14 @@ export class DependencyResolverMain {
     }
     const serializedDependencies: SerializedDependency[] = entry?.data?.dependencies || [];
     return this.getDependenciesFromSerializedDependencies(serializedDependencies);
+  }
+
+  /**
+   * returns only the dependencies that are bit-components.
+   */
+  async getComponentDependencies(component: IComponent): Promise<ComponentDependency[]> {
+    const dependencyList = await this.getDependencies(component);
+    return dependencyList.getComponentDependencies();
   }
 
   private async getDependenciesFromSerializedDependencies(

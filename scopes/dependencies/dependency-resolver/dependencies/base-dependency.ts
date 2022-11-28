@@ -11,7 +11,7 @@ export abstract class BaseDependency implements Dependency {
     private _source?: DependencySource
   ) {}
 
-  get id() {
+  get id(): string {
     return this._id;
   }
 
