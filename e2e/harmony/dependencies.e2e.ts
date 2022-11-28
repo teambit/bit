@@ -41,6 +41,11 @@ describe('dependencies', function () {
         const scope = helper.command.catScope();
         expect(scope).to.have.lengthOf(1);
       });
+      it('bit status should not bring the dependencies during find-cycle process', () => {
+        helper.command.status();
+        const scope = helper.command.catScope();
+        expect(scope).to.have.lengthOf(1);
+      });
     });
     describe('import with --fetch-deps', () => {
       before(() => {

@@ -1,11 +1,10 @@
 import mapSeries from 'p-map-series';
 import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
-import { flatten } from 'lodash';
+import { flatten, partition } from 'lodash';
 import { Consumer } from '@teambit/legacy/dist/consumer';
-import { BitId } from '@teambit/legacy-bit-id';
 import { Component, ComponentID } from '@teambit/component';
 import BitIds from '@teambit/legacy/dist/bit-id/bit-ids';
-import ConsumerComponent from '@teambit/legacy/dist/consumer/component/consumer-component';
+import { ComponentDependency, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { DepEdgeType } from '@teambit/graph';
 import { ComponentNotFound, ScopeNotFound } from '@teambit/legacy/dist/scope/exceptions';
 import { ComponentNotFound as ComponentNotFoundInScope } from '@teambit/scope';
@@ -14,15 +13,31 @@ import { Logger } from '@teambit/logger';
 import { BitError } from '@teambit/bit-error';
 import { Workspace } from './workspace';
 
+export function lifecycleToDepType(compDep: ComponentDependency): DepEdgeType {
+  if (compDep.isExtension) return 'ext';
+  switch (compDep.lifecycle) {
+    case 'dev':
+      return 'dev';
+    case 'runtime':
+      return 'prod';
+    default:
+      throw new Error(`lifecycle ${compDep.lifecycle} is not support`);
+  }
+}
+
 export class GraphIdsFromFsBuilder {
   private graph = new Graph<ComponentID, DepEdgeType>();
   private completed: string[] = [];
   private depth = 1;
   private consumer: Consumer;
-  private legacyIdStrToComponentId: { [bitIdStr: string]: ComponentID } = {};
   private loadedComponents: { [idStr: string]: Component } = {};
   private importedIds: string[] = [];
-  constructor(private workspace: Workspace, private logger: Logger, private shouldThrowOnMissingDep = true) {
+  constructor(
+    private workspace: Workspace,
+    private logger: Logger,
+    private dependencyResolver: DependencyResolverMain,
+    private shouldThrowOnMissingDep = true
+  ) {
     this.consumer = this.workspace.consumer;
   }
 
@@ -62,27 +77,23 @@ export class GraphIdsFromFsBuilder {
     const components = await this.loadManyComponents(ids);
     await this.processManyComponents(components);
     this.logger.debug(
-      `GraphFromFsBuilder, buildGraph with ${ids.length} seeders completed (${(Date.now() - start) / 1000} sec)`
+      `GraphIdsFromFsBuilder, buildGraph with ${ids.length} seeders completed (${(Date.now() - start) / 1000} sec)`
     );
     return this.graph;
   }
 
+  /**
+   * get all direct dependencies
+   */
   private async getAllDeps(component: Component): Promise<ComponentID[]> {
-    const consumerComp = component.state._consumer as ConsumerComponent;
-    const legacyDepsIds = consumerComp.getAllDependenciesIds();
-    const depsIds = await Promise.all(
-      legacyDepsIds.map(async (bitId) => {
-        if (!this.legacyIdStrToComponentId[bitId.toString()]) {
-          this.legacyIdStrToComponentId[bitId.toString()] = await this.workspace.resolveComponentId(bitId);
-        }
-        return this.legacyIdStrToComponentId[bitId.toString()];
-      })
-    );
-    return depsIds;
+    const deps = await this.dependencyResolver.getComponentDependencies(component);
+    return deps.map((dep) => dep.componentId);
   }
 
   private async processManyComponents(components: Component[]) {
-    this.logger.debug(`GraphFromFsBuilder.processManyComponents depth ${this.depth}, ${components.length} components`);
+    this.logger.debug(
+      `GraphIdsFromFsBuilder.processManyComponents depth ${this.depth}, ${components.length} components`
+    );
     this.depth += 1;
     await this.importObjects(components);
     const allDependencies = await mapSeries(components, (component) => this.processOneComponent(component));
@@ -99,74 +110,67 @@ export class GraphIdsFromFsBuilder {
   private async importObjects(components: Component[]) {
     const workspaceIds = await this.workspace.listIds();
     const compOnWorkspaceOnly = components.filter((comp) => workspaceIds.find((id) => id.isEqual(comp.id)));
-    const allDeps = (await Promise.all(compOnWorkspaceOnly.map((c) => this.getAllDeps(c)))).flat();
-    const allDepsNotImported = allDeps.filter((d) => !this.importedIds.includes(d.toString()));
-    const allDepsWithScope = allDepsNotImported.map((id) => id._legacy).filter((dep) => dep.hasScope());
+    // const allDeps = (await Promise.all(compOnWorkspaceOnly.map((c) => this.getAllDeps(c)))).flat();
+    const notImported = compOnWorkspaceOnly.map((c) => c.id).filter((id) => !this.importedIds.includes(id.toString()));
+    const withScope = notImported.map((id) => id._legacy).filter((dep) => dep.hasScope());
     const scopeComponentsImporter = this.consumer.scope.scopeImporter;
     await scopeComponentsImporter.importMany({
-      ids: BitIds.uniqFromArray(allDepsWithScope),
+      ids: BitIds.uniqFromArray(withScope),
       throwForDependencyNotFound: this.shouldThrowOnMissingDep,
       throwForSeederNotFound: this.shouldThrowOnMissingDep,
       reFetchUnBuiltVersion: false,
       preferDependencyGraph: true,
     });
-    allDepsNotImported.map((id) => this.importedIds.push(id.toString()));
+    notImported.map((id) => this.importedIds.push(id.toString()));
   }
 
   private async processOneComponent(component: Component) {
     const idStr = component.id.toString();
     if (this.completed.includes(idStr)) return [];
-    const consumerComponent = component.state._consumer as ConsumerComponent;
-    if (consumerComponent.flattenedEdges.length && !(await this.workspace.hasId(component.id))) {
-      const getCompId = (bitId: BitId) => {
-        if (!bitId.hasScope())
-          throw new Error(
-            `component ${idStr} is from scope, not workspace, but its dep ${bitId.toString()} has no scope`
-          );
-        return ComponentID.fromLegacy(bitId);
-      };
-      consumerComponent.flattenedEdges.forEach((flattenEdge) => {
-        const source = getCompId(flattenEdge.source);
-        const target = getCompId(flattenEdge.target);
-        this.graph.setNode(new Node(source.toString(), source));
-        this.graph.setNode(new Node(target.toString(), target));
-        this.graph.setEdge(new Edge(source.toString(), target.toString(), flattenEdge.type));
-      });
+    const graphFromScope = await this.workspace.getSavedGraphOfComponentIfExist(component);
+    if (graphFromScope?.edges.length) {
+      const isOnWorkspace = await this.workspace.hasId(component.id);
+      if (isOnWorkspace) {
+        const deps = await this.dependencyResolver.getComponentDependencies(component);
+        const [depsInScopeGraph, depsNotInScopeGraph] = partition(deps, (dep) =>
+          graphFromScope.hasNode(dep.componentId.toString())
+        );
+        const subGraphs = depsInScopeGraph.map((dep) =>
+          graphFromScope.successorsSubgraph([dep.componentId.toString()])
+        );
+        this.graph.merge(subGraphs);
+
+        const allDepsIds = depsNotInScopeGraph.map((d) => d.componentId);
+        const allDependenciesComps = await this.loadManyComponents(allDepsIds, idStr);
+        deps.forEach((dep) => this.addDepEdge(idStr, dep));
+        this.completed.push(idStr);
+        return allDependenciesComps;
+      }
+      this.graph.merge([graphFromScope]);
       this.completed.push(idStr);
       return [];
     }
 
-    const allIds = await this.getAllDeps(component);
+    const deps = await this.dependencyResolver.getComponentDependencies(component);
+    const allDepsIds = deps.map((d) => d.componentId);
+    const allDependenciesComps = await this.loadManyComponents(allDepsIds, idStr);
 
-    const allDependencies = await this.loadManyComponents(allIds, idStr);
-    Object.entries(consumerComponent.depsIdsGroupedByType).forEach(([depType, depsIds]) => {
-      const getType = (): DepEdgeType => {
-        switch (depType) {
-          case 'devDependencies':
-            return 'dev';
-          case 'dependencies':
-            return 'prod';
-          case 'extensionDependencies':
-            return 'ext';
-          default:
-            throw new Error(`depType ${depType} is not recognized`);
-        }
-      };
-      depsIds.forEach((depBitId) => {
-        const depId = this.legacyIdStrToComponentId[depBitId.toString()];
-        if (!depId) throw new Error(`unable to find ${depBitId.toString()} inside legacyIdStrToComponentId`);
-        if (!this.graph.hasNode(depId.toString())) {
-          if (this.shouldThrowOnMissingDep) {
-            throw new Error(`buildOneComponent: missing node of ${depId.toString()}`);
-          }
-          this.logger.warn(`ignoring missing ${depId.toString()}`);
-          return;
-        }
-        this.graph.setEdge(new Edge(idStr, depId.toString(), getType()));
-      });
-    });
+    deps.forEach((dep) => this.addDepEdge(idStr, dep));
     this.completed.push(idStr);
-    return allDependencies;
+
+    return allDependenciesComps;
+  }
+
+  private addDepEdge(idStr: string, dep: ComponentDependency) {
+    const depId = dep.componentId;
+    if (!this.graph.hasNode(depId.toString())) {
+      if (this.shouldThrowOnMissingDep) {
+        throw new Error(`buildOneComponent: missing node of ${depId.toString()}`);
+      }
+      this.logger.warn(`ignoring missing ${depId.toString()}`);
+      return;
+    }
+    this.graph.setEdge(new Edge(idStr, depId.toString(), lifecycleToDepType(dep)));
   }
 
   private async loadManyComponents(componentsIds: ComponentID[], dependenciesOf?: string): Promise<Component[]> {
