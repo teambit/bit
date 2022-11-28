@@ -1965,6 +1965,9 @@ importers:
   scopes/toolbox/fs/hard-link-directory:
     specifiers: {}
 
+  scopes/toolbox/modules/module-resolver:
+    specifiers: {}
+
   scopes/toolbox/network/agent:
     specifiers: {}
 
