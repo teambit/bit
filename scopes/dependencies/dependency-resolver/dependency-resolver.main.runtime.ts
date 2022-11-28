@@ -961,10 +961,9 @@ export class DependencyResolverMain {
     return this.getComponentEnvPolicyFromEnv(env.env);
   }
 
-  async getEnvPolicyFromEnvLegacyId(id: BitId, legacyFiles: SourceFile[]): Promise<EnvPolicy | undefined> {
+  async getEnvPolicyFromEnvLegacyId(id: BitId, legacyFiles?: SourceFile[]): Promise<EnvPolicy | undefined> {
     const fromFile = await this.getEnvPolicyFromFile(id.toString(), legacyFiles);
     if (fromFile) return fromFile;
-
     const envDef = await this.envs.getEnvDefinitionByLegacyId(id);
     if (!envDef) return undefined;
     const env = envDef.env;
@@ -979,7 +978,7 @@ export class DependencyResolverMain {
     return this.getComponentEnvPolicyFromEnv(env);
   }
 
-  private async getEnvPolicyFromFile(envId: string, legacyFiles?: SourceFile[]): Promise<EnvPolicy|undefined> {
+  private async getEnvPolicyFromFile(envId: string, legacyFiles?: SourceFile[]): Promise<EnvPolicy | undefined> {
     const isCoreEnv = this.envs.isCoreEnv(envId);
     if (isCoreEnv) return undefined;
     let envJson;
@@ -1041,7 +1040,6 @@ export class DependencyResolverMain {
     return uniq(peers.concat(additionalHostDeps));
   }
 
-
   /**
    * In most cases you want to use getPeerDependenciesListFromEnvDef above (which also use the env.jsonc for calculation)
    * Get a list of peer dependencies applied from an env
@@ -1070,7 +1068,11 @@ export class DependencyResolverMain {
    * 3. props defined by the user (they are the strongest one)
    * @param configuredExtensions
    */
-  async mergeVariantPolicies(configuredExtensions: ExtensionDataList, id: BitId): Promise<VariantPolicy> {
+  async mergeVariantPolicies(
+    configuredExtensions: ExtensionDataList,
+    id: BitId,
+    legacyFiles?: SourceFile[]
+  ): Promise<VariantPolicy> {
     const variantPolicyFactory = new VariantPolicyFactory();
     let policiesFromSlots: VariantPolicy = variantPolicyFactory.getEmpty();
     let policiesFromConfig: VariantPolicy = variantPolicyFactory.getEmpty();
@@ -1098,7 +1100,8 @@ export class DependencyResolverMain {
     if (currentConfig && currentConfig.policy) {
       policiesFromConfig = variantPolicyFactory.fromConfigObject(currentConfig.policy, 'config');
     }
-    const policiesFromEnvForItself = (await this.getPoliciesFromEnvForItself(id)) ?? variantPolicyFactory.getEmpty();
+    const policiesFromEnvForItself =
+    (await this.getPoliciesFromEnvForItself(id, legacyFiles)) ?? variantPolicyFactory.getEmpty();
 
     const result = VariantPolicy.mergePolices([
       policiesFromEnv,
@@ -1113,8 +1116,8 @@ export class DependencyResolverMain {
    * These are the policies that the env itself defines for itself.
    * So policies installed only locally for the env, not to any components that use the env.
    */
-  async getPoliciesFromEnvForItself(id: BitId): Promise<VariantPolicy | undefined> {
-    return (await this.getEnvPolicyFromEnvLegacyId(id))?.peersAutoDetectPolicy?.getOwnVariantPolicy();
+  async getPoliciesFromEnvForItself(id: BitId, legacyFiles?: SourceFile[]): Promise<VariantPolicy | undefined> {
+    return (await this.getEnvPolicyFromEnvLegacyId(id, legacyFiles))?.peersAutoDetectPolicy?.getOwnVariantPolicy();
   }
 
   updateDepsOnLegacyTag(component: LegacyComponent, idTransformer: onTagIdTransformer): LegacyComponent {
@@ -1432,8 +1435,8 @@ export class DependencyResolverMain {
 
     LegacyComponent.registerOnComponentOverridesLoading(
       DependencyResolverAspect.id,
-      async (configuredExtensions: ExtensionDataList, id: BitId) => {
-        const policy = await dependencyResolver.mergeVariantPolicies(configuredExtensions, id);
+      async (configuredExtensions: ExtensionDataList, id: BitId, legacyFiles: SourceFile[]) => {
+        const policy = await dependencyResolver.mergeVariantPolicies(configuredExtensions, id, legacyFiles);
         return policy.toLegacyDepsOverrides();
       }
     );
