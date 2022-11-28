@@ -116,7 +116,11 @@ function CompareMenuNav({ navSlot }: { navSlot: ComponentCompareNavSlot }) {
   ).sort(sortFn);
 
   const links = plugins.map((menuItem, index) => {
-    return { component: () => <TopBarNav key={`${menuItem.id}-${index}`} {...menuItem.props} className={styles.compareMenuLink} /> };
+    return {
+      component: function TopBarNavItem() {
+        return <TopBarNav key={`${menuItem.id}-${index}`} {...menuItem.props} className={styles.compareMenuLink} />;
+      },
+    };
   });
 
   return (
