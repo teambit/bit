@@ -372,15 +372,8 @@ export class ReactEnv
     return this.webpack.createBundler(context, transformers);
   }
 
-  /**
-   * Get the peers configured by the env on the components + the host deps configured by the env
-   */
-  getPeerDependenciesList() {
-    return this.dependencyResolver.getPeerDependenciesListFromEnv(this);
-  }
-
   getAdditionalHostDependencies(): string[] {
-    return ['@teambit/mdx.ui.mdx-scope-context', '@mdx-js/react', 'react'];
+    return ['@teambit/mdx.ui.mdx-scope-context', '@mdx-js/react', 'react', 'react-dom'];
   }
 
   /**

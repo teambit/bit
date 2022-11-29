@@ -319,12 +319,12 @@ export class ReactApp implements Application {
       publicPath: `public/${this.name}`,
       title: this.name,
       favicon: this.favicon,
-      hostDependencies: await this.getPeers(),
+      hostDependencies: await this.getHostDependencies(),
       aliasHostDependencies: true,
     });
   }
 
-  private getPeers(): Promise<string[]> {
-    return this.reactEnv.getPeerDependenciesList();
+  private getHostDependencies(): string[] {
+    return this.reactEnv.getAdditionalHostDependencies();
   }
 }

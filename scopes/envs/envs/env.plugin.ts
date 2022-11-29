@@ -51,7 +51,7 @@ export class EnvPlugin implements PluginDefinition {
       getDevServer: (context) => {
         return preview.getDevServer(context)(envContext);
       },
-      getAdditionalHostDependencies: preview.getAdditionalHostDependencies.bind(preview),
+      getAdditionalHostDependencies: preview.getHostDependencies.bind(preview),
       getMounter: preview.getMounter.bind(preview),
       getGeneratorTemplates: () => {
         if (!env.generators) return undefined;

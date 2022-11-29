@@ -35,4 +35,12 @@ export type Preview = {
    * used for deduplication of dev servers
    */
   getDevEnvId: () => string;
+
+  /**
+   * dependencies that will bundled as part of the env template and will configured as externals for the component bundle
+   * these dependencies will be available in the preview on the window.
+   * these dependencies will have only one instance on the page.
+   * for dev server these dependencies will be aliased
+   */
+  getHostDependencies: () => string[];
 }

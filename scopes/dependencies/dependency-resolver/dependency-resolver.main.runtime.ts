@@ -1040,45 +1040,20 @@ export class DependencyResolverMain {
   }
 
   /**
-   * Get a list of peer dependencies applied from an env
-   * This will merge different peers list like:
-   * 1. peerDependencies from the env.jsonc or getDependencies
-   * 2. peers from the env.jsonc or getDependencies
-   * 3. getAdditionalHostDependencies
+   *
+   * dependencies that will bundled as part of the env template and will configured as externals for the component bundle
+   * these dependencies will be available in the preview on the window.
+   * these dependencies will have only one instance on the page.
+   * for dev server these dependencies will be aliased.
+   * TODO: this should probably moved to the preview aspect. the main issue is that is used for dev server which can't bring the preview aspect.
    * @param env
    */
-  async getPeerDependenciesListFromEnvDef(envDef: EnvDefinition): Promise<string[]> {
-    const envPolicy = await this.getComponentEnvPolicyFromEnvDefinition(envDef);
-    const env = envDef.env;
-    const peers = uniq(
-      envPolicy.peersAutoDetectPolicy.names.concat(envPolicy.variantPolicy.byLifecycleType('peer').names)
-    );
-    let additionalHostDeps: string[] = [];
+  async getPreviewHostDependenciesFromEnv(env: DependenciesEnv): Promise<string[]> {
+    let hostDeps: string[] = [];
     if (env.getAdditionalHostDependencies && typeof env.getAdditionalHostDependencies === 'function') {
-      additionalHostDeps = await env.getAdditionalHostDependencies();
+      hostDeps = await env.getAdditionalHostDependencies();
     }
-    return uniq(peers.concat(additionalHostDeps));
-  }
-
-  /**
-   * In most cases you want to use getPeerDependenciesListFromEnvDef above (which also use the env.jsonc for calculation)
-   * Get a list of peer dependencies applied from an env
-   * This will merge different peers list like:
-   * 1. peerDependencies from the getDependencies
-   * 2. peers from getDependencies
-   * 3. getAdditionalHostDependencies
-   * @param env
-   */
-  async getPeerDependenciesListFromEnv(env: DependenciesEnv): Promise<string[]> {
-    const envPolicy = await this.getComponentEnvPolicyFromEnv(env);
-    const peers = uniq(
-      envPolicy.peersAutoDetectPolicy.names.concat(envPolicy.variantPolicy.byLifecycleType('peer').names)
-    );
-    let additionalHostDeps: string[] = [];
-    if (env.getAdditionalHostDependencies && typeof env.getAdditionalHostDependencies === 'function') {
-      additionalHostDeps = await env.getAdditionalHostDependencies();
-    }
-    return uniq(peers.concat(additionalHostDeps));
+    return uniq(hostDeps);
   }
 
   /**

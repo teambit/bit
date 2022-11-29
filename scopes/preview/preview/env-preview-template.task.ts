@@ -135,7 +135,7 @@ export class EnvPreviewTemplateTask implements BuildTask {
   ): Promise<Target | undefined> {
     const envPreviewConfig = this.preview.getEnvPreviewConfig(envDef.env);
 
-    const peers = await this.dependencyResolver.getPeerDependenciesListFromEnvDef(envDef);
+    const peers = await this.dependencyResolver.getPreviewHostDependenciesFromEnv(envDef.env);
     // const module = await this.getPreviewModule(envComponent);
     // const entries = Object.keys(module).map((key) => module.exposes[key]);
     const capsule = context.capsuleNetwork.graphCapsules.getCapsule(envComponent.id);
