@@ -11,8 +11,8 @@ import { TestResult as JestTestResult, AggregatedResult } from '@jest/test-resul
 import { formatResultsErrors } from 'jest-message-util';
 import { Component, ComponentMap } from '@teambit/component';
 import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
-import { Environment } from '@teambit/envs';
-import { EnvPolicyConfigObject, PeersAutoDetectPolicy } from '@teambit/dependency-resolver';
+// import { Environment } from '@teambit/envs';
+// import { EnvPolicyConfigObject, PeersAutoDetectPolicy } from '@teambit/dependency-resolver';
 import type jest from 'jest';
 import { JestError } from './error';
 import type { JestWorker } from './jest.worker';
