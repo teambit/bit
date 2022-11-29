@@ -12,7 +12,7 @@ export abstract class BaseDependency implements Dependency {
     private _hidden?: boolean
   ) {}
 
-  get id() {
+  get id(): string {
     return this._id;
   }
 

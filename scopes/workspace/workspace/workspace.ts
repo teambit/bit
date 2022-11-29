@@ -1578,6 +1578,7 @@ needed-for: ${neededFor || '<unknown>'}`);
     const graphFromFsBuilder = new GraphFromFsBuilder(
       this,
       this.logger,
+      this.dependencyResolver,
       ignoreIds,
       shouldLoadFunc,
       shouldThrowOnMissingDep
