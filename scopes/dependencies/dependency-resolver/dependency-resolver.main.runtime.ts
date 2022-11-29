@@ -15,6 +15,7 @@ import { Logger, LoggerAspect } from '@teambit/logger';
 import { CFG_PACKAGE_MANAGER_CACHE, CFG_USER_TOKEN_KEY } from '@teambit/legacy/dist/constants';
 // TODO: it's weird we take it from here.. think about it../workspace/utils
 import { DependencyResolver } from '@teambit/legacy/dist/consumer/component/dependencies/dependency-resolver';
+import type { EnvPolicyForComponent as LegacyEnvPolicyForComponent } from '@teambit/legacy/dist/consumer/component/dependencies/dependency-resolver';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 import { DetectorHook } from '@teambit/legacy/dist/consumer/component/dependencies/files-dependency-builder/detector-hook';
@@ -1471,7 +1472,7 @@ export class DependencyResolverMain {
         },
         components: envPolicy.variantPolicy.toLegacyAutoDetectOverrides(),
       };
-      return res;
+      return res as LegacyEnvPolicyForComponent;
     });
     DependencyResolver.registerHarmonyEnvPeersPolicyForEnvItselfGetter(async (id: BitId, files: SourceFile[]) => {
       const envPolicy = await dependencyResolver.getEnvPolicyFromEnvLegacyId(id, files);

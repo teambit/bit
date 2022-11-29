@@ -64,7 +64,7 @@ type WorkspacePolicyGetter = () => {
   peerDependencies?: Record<string, string>;
 };
 
-type EnvPolicyForComponent = {
+export type EnvPolicyForComponent = {
   env: {
     peers: { [name: string]: string };
   };

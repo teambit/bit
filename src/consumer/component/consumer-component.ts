@@ -89,7 +89,7 @@ export default class Component {
     ComponentConfig.registerOnComponentConfigLegacyLoading(extId, func);
   }
 
-  static registerOnComponentOverridesLoading(extId, func: (id, config) => any) {
+  static registerOnComponentOverridesLoading(extId, func: (id, config, legacyFiles) => any) {
     ComponentOverrides.registerOnComponentOverridesLoading(extId, func);
   }
 
