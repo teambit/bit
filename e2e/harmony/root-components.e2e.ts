@@ -1207,7 +1207,7 @@ describe('env root components', function () {
       helper = new Helper();
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.command.create('react-env', 'custom-react/env1', '-p custom-react/env1');
-      helper.fs.envMainRuntimeFile(`custom-react/env1/env1.main.runtime.ts`, {
+      helper.fixtures.populateEnvMainRuntime(`custom-react/env1/env1.main.runtime.ts`, {
         envName: 'env1',
         dependencies: {
           peers: [
@@ -1220,7 +1220,7 @@ describe('env root components', function () {
         },
       });
       helper.command.create('react-env', 'custom-react/env2', '-p custom-react/env2');
-      helper.fs.envMainRuntimeFile(`custom-react/env2/env2.main.runtime.ts`, {
+      helper.fixtures.populateEnvMainRuntime(`custom-react/env2/env2.main.runtime.ts`, {
         envName: 'env2',
         dependencies: {
           peers: [
@@ -1554,7 +1554,7 @@ describe('env peer dependencies hoisting when the env is in the workspace', func
     helper.scopeHelper.setNewLocalAndRemoteScopes();
     helper.extensions.bitJsonc.setPackageManager(`teambit.dependencies/${pm}`);
     helper.command.create('react-env', 'custom-react/env1', '-p custom-react/env1');
-    helper.fs.envMainRuntimeFile(`custom-react/env1/env1.main.runtime.ts`, {
+    helper.fixtures.populateEnvMainRuntime(`custom-react/env1/env1.main.runtime.ts`, {
       envName: 'env1',
       dependencies: {
         peers: [
@@ -1567,7 +1567,7 @@ describe('env peer dependencies hoisting when the env is in the workspace', func
       },
     });
     helper.command.create('react-env', 'custom-react/env2', '-p custom-react/env2');
-    helper.fs.envMainRuntimeFile(`custom-react/env2/env2.main.runtime.ts`, {
+    helper.fixtures.populateEnvMainRuntime(`custom-react/env2/env2.main.runtime.ts`, {
       envName: 'env2',
       dependencies: {
         peers: [
