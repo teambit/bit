@@ -982,7 +982,7 @@ needed-for: ${neededFor || '<unknown>'}`);
 
   async getStagedConfig() {
     const currentLaneId = this.legacyScope.currentLaneId;
-    return StagedConfig.load(this.path, currentLaneId);
+    return StagedConfig.load(this.path, this.logger, currentLaneId);
   }
 
   /**
