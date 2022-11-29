@@ -61,42 +61,6 @@ export default class FsHelper {
     return fs.outputFileSync(path.join(this.scopes.localPath, filePathRelativeToLocalScope), data);
   }
 
-  envMainRuntimeFile(
-    filePathRelativeToLocalScope: string,
-    { envName, dependencies }: { envName: string; dependencies: any }
-  ): void {
-    const capitalizedEnvName = envName[0].toUpperCase() + envName.substring(1);
-    return this.outputFile(
-      filePathRelativeToLocalScope,
-      `
-import { MainRuntime } from '@teambit/cli';
-import { ReactAspect, ReactMain } from '@teambit/react';
-import { EnvsAspect, EnvsMain } from '@teambit/envs';
-import { ${capitalizedEnvName}Aspect } from './${envName}.aspect';
-
-export class EnvMain {
-  static slots = [];
-
-  static dependencies = [ReactAspect, EnvsAspect];
-
-  static runtime = MainRuntime;
-
-  static async provider([react, envs]: [ReactMain, EnvsMain]) {
-    const templatesReactEnv = envs.compose(react.reactEnv, [
-      envs.override({
-      getDependencies: () => (${JSON.stringify(dependencies)}),
-      })
-    ]);
-    envs.registerEnv(templatesReactEnv);
-    return new EnvMain();
-  }
-}
-
-${capitalizedEnvName}Aspect.addRuntime(EnvMain);
-`
-    );
-  }
-
   appendFile(filePathRelativeToLocalScope: string, data = '\n'): void {
     return fs.appendFileSync(path.join(this.scopes.localPath, filePathRelativeToLocalScope), data);
   }
