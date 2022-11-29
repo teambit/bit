@@ -46,8 +46,7 @@ export class TypeScriptExtractor implements SchemaExtractor {
     const mainFile = component.mainFile;
     const mainAst = this.parseSourceFile(mainFile);
     const context = await this.createContext(tsserver, component, formatter);
-    const exportNames = await this.computeExportedIdentifiers(mainAst, context);
-    context.setIdentifiers(component.mainFile.path, new IdentifierList(exportNames));
+    await this.computeIdentifiers(mainAst, context);
     const moduleSchema = (await this.computeSchema(mainAst, context)) as ModuleSchema;
     moduleSchema.flatExportsRecursively();
     const apiScheme = moduleSchema;
@@ -61,7 +60,7 @@ export class TypeScriptExtractor implements SchemaExtractor {
     this.tsserver.killTsServer();
   }
 
-  async computeExportedIdentifiers(node: Node, context: SchemaExtractorContext) {
+  async computeIdentifiers(node: Node, context: SchemaExtractorContext) {
     const transformer = this.getTransformer(node, context);
     if (!transformer || !transformer.getIdentifiers) {
       this.logger.warn(new TransformerNotFound(node, context.component, context.getLocation(node)).toString());
@@ -107,13 +106,13 @@ export class TypeScriptExtractor implements SchemaExtractor {
     // leave the next line commented out, it is used for debugging
     // console.log('transformer', transformer.constructor.name, node.getText());
     if (!transformer) {
-      console.log(
-        '🚀🚀🚀\n\n\n ~ file: typescript.extractor.ts ~ line 110 ~ TypeScriptExtractor ~ computeSchema ~ transformer',
-        node.kind,
-        context.getLocation(node),
-        node.getText(),
-        SyntaxKind[node.kind]
-      );
+      // console.trace(
+      //   '🚀🚀🚀\n\n\n ~ file: typescript.extractor.ts ~ line 110 ~ TypeScriptExtractor ~ computeSchema ~ transformer',
+      //   node.kind,
+      //   context.getLocation(node),
+      //   node.getText(),
+      //   SyntaxKind[node.kind]
+      // );
       return new UnImplementedSchema(context.getLocation(node), node.getText(), SyntaxKind[node.kind]);
     }
     return transformer.transform(node, context);

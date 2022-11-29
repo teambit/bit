@@ -3,7 +3,7 @@ import { Identifier } from './identifier';
 export class ExportIdentifier extends Identifier {
   exported: true;
 
-  constructor(id, filePath) {
+  constructor(id: string, filePath: string) {
     super(id, filePath);
     this.exported = true;
   }

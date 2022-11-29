@@ -66,8 +66,7 @@ export class SchemaExtractorContext {
   }
 
   getIdentifierKey(filePath: string) {
-    const relativePath = this.getPathRelativeToComponent(filePath);
-    return pathNormalizeToLinux(relativePath);
+    return pathNormalizeToLinux(filePath);
   }
 
   setComputedVisitor(node: SchemaNode) {
@@ -171,20 +170,27 @@ export class SchemaExtractorContext {
 
   visitTypeDefinition() {}
 
-  private findFileInComponent(filePath: string) {
-    return this.component.filesystem.files.find((file) => {
+  findFileInComponent(filePath: string) {
+    const matchingFile = this.component.filesystem.files.find((file) => {
       // TODO: fix this line to support further extensions.
       if (file.path.includes(filePath)) {
         const strings = ['ts', 'tsx', 'js', 'jsx'].map((format) => {
           if (filePath.endsWith(format)) return filePath;
+          // check if it is an index file export
           return `${filePath}.${format}`;
         });
 
-        return strings.find((string) => string === file.path);
+        const matchesWithExtension = !!strings.find((string) => string === file.path);
+
+        const matchesIndexFile = `${filePath}/index.ts` === file.path;
+
+        return matchesWithExtension || matchesIndexFile;
       }
 
       return false;
     });
+
+    return matchingFile;
   }
 
   private parsePackageNameFromPath(path: string) {
@@ -210,8 +216,7 @@ export class SchemaExtractorContext {
    */
   getSourceFileInsideComponent(filePath: string) {
     const file = this.findFileInComponent(filePath);
-    if (!file) return undefined;
-    return this.extractor.parseSourceFile(file);
+    return file && this.extractor.parseSourceFile(file);
   }
 
   async getSourceFileFromNode(node: Node) {
@@ -285,7 +290,7 @@ export class SchemaExtractorContext {
 
   isFromComponent() {}
 
-  async getFileExports(exportDec: ExportDeclaration | ExportAssignment) {
+  async getFileIdentifiers(exportDec: ExportDeclaration | ExportAssignment) {
     const file = exportDec.getSourceFile().fileName;
     const specifierPathStr =
       (exportDec.kind === SyntaxKind.ExportDeclaration && exportDec.moduleSpecifier?.getText()) || '';
@@ -293,11 +298,21 @@ export class SchemaExtractorContext {
     const absPath = resolve(file, '..', specifierPath);
     const sourceFile = this.getSourceFileInsideComponent(absPath);
     if (!sourceFile) return [];
-    return this.extractor.computeExportedIdentifiers(sourceFile, this);
+    return this.getIdentifiers(sourceFile);
   }
 
-  getExportedIdentifiers(node: Node) {
-    return this.extractor.computeExportedIdentifiers(node, this);
+  async getFileExports(exportDec: ExportDeclaration | ExportAssignment) {
+    const identifiers = await this.getFileIdentifiers(exportDec);
+    return identifiers.filter((identifier) => ExportIdentifier.isExportIdentifier(identifier));
+  }
+
+  async getFileInternals(exportDec: ExportDeclaration | ExportAssignment) {
+    const identifiers = await this.getFileIdentifiers(exportDec);
+    return identifiers.filter((identifier) => !ExportIdentifier.isExportIdentifier(identifier));
+  }
+
+  getIdentifiers(node: Node) {
+    return this.extractor.computeIdentifiers(node, this);
   }
 
   /**
@@ -377,19 +392,9 @@ export class SchemaExtractorContext {
         return unknownExactType();
       }
       const definitionNodeName = definitionNode?.getText();
-      const definitionIdentifier = new Identifier(definitionNodeName, this.getLocation(definitionNode).filePath);
-      console.log(
-        '🚀 ~ file: schema-extractor-context.ts ~ line 381 ~ SchemaExtractorContext ~ definitionIdentifier',
-        definitionIdentifier
-      );
+      const definitionIdentifier = new Identifier(definitionNodeName, await this.getPath(definitionNode));
 
-      console.log(
-        '🚀 ~ file: schema-extractor-context.ts ~ line 384 ~ SchemaExtractorContext ~ identifierList',
-        identifierList
-      );
       if (definitionNodeName && identifierList?.includes(definitionIdentifier)) {
-        console.log('🚀🚀🚀\n TypeRef');
-
         return new TypeRefSchema(location, definitionNodeName);
       }
 
@@ -403,8 +408,6 @@ export class SchemaExtractorContext {
         throw err;
       }
     }
-
-    console.log('🚀🚀🚀\n ExternalTypeRef');
 
     return this.getTypeRefForExternalPath(typeStr, definition.file, location);
   }

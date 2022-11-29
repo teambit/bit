@@ -7,9 +7,11 @@ import ts, {
   NamespaceExport,
   ExportSpecifier,
 } from 'typescript';
+import { resolve } from 'path';
 import { SchemaExtractorContext } from '../schema-extractor-context';
 import { SchemaTransformer } from '../schema-transformer';
 import { ExportIdentifier } from '../export-identifier';
+import { IdentifierList } from '../identifier-list';
 
 export class ExportDeclarationTransformer implements SchemaTransformer {
   predicate(node: Node) {
@@ -18,10 +20,24 @@ export class ExportDeclarationTransformer implements SchemaTransformer {
 
   async getIdentifiers(exportDec: ExportDeclarationNode, context: SchemaExtractorContext) {
     if (exportDec.exportClause?.kind === ts.SyntaxKind.NamedExports) {
-      exportDec.exportClause as NamedExports;
-      return exportDec.exportClause.elements.map((elm) => {
+      const file = exportDec.getSourceFile().fileName;
+      const specifierPathStr =
+        (exportDec.kind === SyntaxKind.ExportDeclaration && exportDec.moduleSpecifier?.getText()) || '';
+      const specifierPath = specifierPathStr.substring(1, specifierPathStr.length - 1);
+      const absPath = resolve(file, '..', specifierPath);
+      const filePath = context.findFileInComponent(absPath)?.path || absPath;
+
+      const exportedIdentifiers = exportDec.exportClause.elements.map((elm) => {
         return new ExportIdentifier(elm.name.getText(), elm.getSourceFile().fileName);
       });
+
+      const cacheKey = context.getIdentifierKey(filePath);
+      const cachedData = context.identifiers.get(cacheKey);
+
+      const internalIdentifiers = cachedData?.identifiers || (await context.getFileInternals(exportDec));
+
+      const allIdentifiers = [...exportedIdentifiers, ...internalIdentifiers];
+      return allIdentifiers;
     }
 
     if (exportDec.exportClause?.kind === ts.SyntaxKind.NamespaceExport) {
@@ -54,7 +70,7 @@ export class ExportDeclarationTransformer implements SchemaTransformer {
     // e.g. `export { button1, button2 } as Composition from './button';
     if (exportClause.kind === SyntaxKind.NamedExports) {
       const schemas = await namedExport(exportClause, context);
-      return new ModuleSchema(context.getLocation(exportDec), schemas, context.getPath(exportDec));
+      return new ModuleSchema(context.getLocation(exportDec), schemas, [], context.getPath(exportDec));
     }
     // e.g. `export * as Composition from './button';
     if (exportClause.kind === SyntaxKind.NamespaceExport) {

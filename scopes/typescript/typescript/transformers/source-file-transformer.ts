@@ -5,6 +5,8 @@ import { ModuleSchema } from '@teambit/semantics.entities.semantic-schema';
 import { SchemaTransformer } from '../schema-transformer';
 import { ExportIdentifier } from '../export-identifier';
 import { SchemaExtractorContext } from '../schema-extractor-context';
+import { Identifier } from '../identifier';
+import { IdentifierList } from '../identifier-list';
 
 export class SourceFileTransformer implements SchemaTransformer {
   predicate(node: Node) {
@@ -12,30 +14,57 @@ export class SourceFileTransformer implements SchemaTransformer {
   }
 
   async getIdentifiers(sourceFile: SourceFile, context: SchemaExtractorContext) {
+    const cacheKey = sourceFile.fileName;
+    const cachedIdentifiers = context.identifiers.get(cacheKey);
+
+    if (cachedIdentifiers) return cachedIdentifiers.identifiers;
+
     const exports = this.listExports(sourceFile);
+    const internals = this.listInternalNodes(sourceFile);
 
-    const exportNames = await Promise.all(
-      exports.map((node: Node) => {
-        return context.getExportedIdentifiers(node);
-      })
-    );
-
-    const exportIds = flatten(exportNames).reduce<ExportIdentifier[]>((acc, current) => {
+    const exportIdentifiers = flatten(
+      await Promise.all(
+        exports.map((node: Node) => {
+          return context.getIdentifiers(node);
+        })
+      )
+    ).reduce<ExportIdentifier[]>((acc, current) => {
       const item = acc.find((exportName) => exportName.id === current.id);
       if (!item) acc.push(new ExportIdentifier(current.id, current.filePath));
       return acc;
     }, []);
 
-    return exportIds;
+    const internalIdentifiers = flatten(
+      await Promise.all(
+        internals.map((node: Node) => {
+          return context.getIdentifiers(node);
+        })
+      )
+    ).reduce<Identifier[]>((acc, current) => {
+      const item = acc.find((exportName) => exportName.id === current.id);
+      if (!item) acc.push(current);
+      return acc;
+    }, []);
+
+    const identifiers = [...exportIdentifiers, ...internalIdentifiers];
+
+    context.setIdentifiers(sourceFile.fileName, new IdentifierList(identifiers));
+    return identifiers;
   }
 
   async transform(node: SourceFile, context: SchemaExtractorContext) {
     const exports = this.listExports(node);
-    const schemas = await pMapSeries(exports, (exportNode) => {
+    const internals = this.listInternalNodes(node);
+
+    const exportDeclarations = await pMapSeries(exports, (exportNode) => {
       return context.computeSchema(exportNode);
     });
 
-    return new ModuleSchema(context.getLocation(node), schemas, node.fileName);
+    const internalDeclarations = await pMapSeries(internals, (internalNode) => {
+      return context.computeSchema(internalNode);
+    });
+
+    return new ModuleSchema(context.getLocation(node), exportDeclarations, internalDeclarations, node.fileName);
   }
 
   /**
@@ -43,22 +72,30 @@ export class SourceFileTransformer implements SchemaTransformer {
    */
   private listExports(ast: SourceFile): Node[] {
     return compact(
-      ast.statements.map((statement) => {
-        if (statement.kind === ts.SyntaxKind.ExportDeclaration) return statement;
+      ast.statements.filter((statement) => {
+        if (statement.kind === ts.SyntaxKind.ExportDeclaration) return true;
         const isExport = Boolean(
           statement.modifiers?.find((modifier) => {
             return modifier.kind === ts.SyntaxKind.ExportKeyword;
           })
         );
-
-        // eslint-disable-next-line consistent-return
-        if (!isExport) return;
-        return statement;
+        return isExport;
       })
     );
   }
 
-  // private listInternalNodes(ast: SourceFile): Node[] {
-  //   return compact(ast.statements)
-  // }
+  private listInternalNodes(ast: SourceFile): Node[] {
+    return compact(ast.statements).filter((statement) => {
+      if (
+        !(statement.kind === ts.SyntaxKind.ExportDeclaration) &&
+        !statement.modifiers?.find((modifier) => {
+          return modifier.kind === ts.SyntaxKind.ExportKeyword;
+        })
+      ) {
+        return true;
+      }
+
+      return false;
+    });
+  }
 }
