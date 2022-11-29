@@ -8,6 +8,6 @@ export class IdentifierList {
   }
 
   includes(identifier: Identifier) {
-    return Boolean(this.identifiers.find((_identifier) => _identifier.isEqual(identifier)));
+    return Boolean(this.find(identifier));
   }
 }
