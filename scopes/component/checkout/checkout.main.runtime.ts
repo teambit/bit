@@ -145,7 +145,8 @@ export class CheckoutMain {
         const compsNewFromLane = await Promise.all(
           newFromLane.map((id) => consumer.loadComponentWithDependenciesFromModel(id._legacy))
         );
-        componentsWithDependencies.push(...compsNewFromLane);
+        const compsNewFromLaneNotDeleted = compsNewFromLane.filter((c) => !c.component.removed);
+        componentsWithDependencies.push(...compsNewFromLaneNotDeleted);
         newFromLaneAdded = true;
       }
     }

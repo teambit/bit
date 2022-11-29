@@ -113,6 +113,10 @@ module.exports.default = {
     it('should hoist dependencies to the root of the workspace', () => {
       expect(path.join(helper.fixtures.scopes.localPath, 'node_modules', '@types/jest')).to.be.a.path();
     });
+    it('should not nest a dependency to a component directory if it is already in the root', () => {
+      expect(path.join(helper.fixtures.scopes.localPath, 'comp4/node_modules/react')).to.not.be.a.path();
+      expect(path.join(helper.fixtures.scopes.localPath, 'comp4/node_modules/react-dom')).to.not.be.a.path();
+    });
     it('should install the dependencies of the root component that has react 17 in the dependencies with react 17', () => {
       expect(
         fs.readJsonSync(
@@ -1203,7 +1207,7 @@ describe('env root components', function () {
       helper = new Helper();
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.command.create('react-env', 'custom-react/env1', '-p custom-react/env1');
-      helper.fs.envMainRuntimeFile(`custom-react/env1/env1.main.runtime.ts`, {
+      helper.fixtures.populateEnvMainRuntime(`custom-react/env1/env1.main.runtime.ts`, {
         envName: 'env1',
         dependencies: {
           peers: [
@@ -1216,7 +1220,7 @@ describe('env root components', function () {
         },
       });
       helper.command.create('react-env', 'custom-react/env2', '-p custom-react/env2');
-      helper.fs.envMainRuntimeFile(`custom-react/env2/env2.main.runtime.ts`, {
+      helper.fixtures.populateEnvMainRuntime(`custom-react/env2/env2.main.runtime.ts`, {
         envName: 'env2',
         dependencies: {
           peers: [
@@ -1550,7 +1554,7 @@ describe('env peer dependencies hoisting when the env is in the workspace', func
     helper.scopeHelper.setNewLocalAndRemoteScopes();
     helper.extensions.bitJsonc.setPackageManager(`teambit.dependencies/${pm}`);
     helper.command.create('react-env', 'custom-react/env1', '-p custom-react/env1');
-    helper.fs.envMainRuntimeFile(`custom-react/env1/env1.main.runtime.ts`, {
+    helper.fixtures.populateEnvMainRuntime(`custom-react/env1/env1.main.runtime.ts`, {
       envName: 'env1',
       dependencies: {
         peers: [
@@ -1563,7 +1567,7 @@ describe('env peer dependencies hoisting when the env is in the workspace', func
       },
     });
     helper.command.create('react-env', 'custom-react/env2', '-p custom-react/env2');
-    helper.fs.envMainRuntimeFile(`custom-react/env2/env2.main.runtime.ts`, {
+    helper.fixtures.populateEnvMainRuntime(`custom-react/env2/env2.main.runtime.ts`, {
       envName: 'env2',
       dependencies: {
         peers: [
