@@ -1,3 +1,4 @@
+import { compact } from 'lodash';
 import { PolicyConfigKeysNames } from '../policy';
 import {
   VariantPolicy,
@@ -41,9 +42,11 @@ function entriesFromKey(
   }
   const lifecycleType = LIFECYCLE_TYPE_BY_KEY_NAME[keyName];
   const entries = Object.entries(obj).map(([depId, value]: [string, VariantPolicyConfigEntryValue]) => {
-    return createEntry(depId, value, lifecycleType, source, hidden, usedOnly);
+    if (value){
+      return createEntry(depId, value, lifecycleType, source, hidden, usedOnly);
+    }
   });
-  return entries;
+  return compact(entries);
 }
 
 function createEntry(
