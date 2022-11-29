@@ -113,6 +113,10 @@ module.exports.default = {
     it('should hoist dependencies to the root of the workspace', () => {
       expect(path.join(helper.fixtures.scopes.localPath, 'node_modules', '@types/jest')).to.be.a.path();
     });
+    it('should not nest a dependency to a component directory if it is already in the root', () => {
+      expect(path.join(helper.fixtures.scopes.localPath, 'comp4/node_modules/react')).to.not.be.a.path();
+      expect(path.join(helper.fixtures.scopes.localPath, 'comp4/node_modules/react-dom')).to.not.be.a.path();
+    });
     it('should install the dependencies of the root component that has react 17 in the dependencies with react 17', () => {
       expect(
         fs.readJsonSync(
