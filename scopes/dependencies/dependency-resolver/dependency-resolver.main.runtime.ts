@@ -75,7 +75,7 @@ import { DependenciesFragment, DevDependenciesFragment, PeerDependenciesFragment
 import { dependencyResolverSchema } from './dependency-resolver.graphql';
 import { DependencyDetector } from './dependency-detector';
 import { DependenciesService } from './dependencies.service';
-import { EnvPolicy, EnvPolicyFactory } from './policy/env-policy';
+import { EnvPolicy } from './policy/env-policy';
 
 /**
  * @deprecated use BIT_CLOUD_REGISTRY instead
@@ -277,6 +277,10 @@ export type GetLinkerOptions = {
   linkingOptions?: LinkingOptions;
 };
 
+export type GetDependenciesOptions = {
+  includeHidden?: boolean;
+};
+
 export type GetVersionResolverOptions = {
   cacheRootDirectory?: string;
 };
@@ -421,6 +425,7 @@ export class DependencyResolverMain {
       const found = componentPolicy.find(dep.id);
       // if no policy found, the dependency was auto-resolved from the source code
       dep.source = found?.source || 'auto';
+      dep.hidden = found?.hidden;
     });
     return dependencyList;
   }
@@ -439,13 +444,18 @@ export class DependencyResolverMain {
    * Main function to get the dependency list of a given component
    * @param component
    */
-  async getDependencies(component: IComponent): Promise<DependencyList> {
+  async getDependencies(
+    component: IComponent,
+    { includeHidden = false }: GetDependenciesOptions = {}
+  ): Promise<DependencyList> {
     const entry = component.get(DependencyResolverAspect.id);
     if (!entry) {
       return DependencyList.fromArray([]);
     }
     const serializedDependencies: SerializedDependency[] = entry?.data?.dependencies || [];
-    return this.getDependenciesFromSerializedDependencies(serializedDependencies);
+    const depList = await this.getDependenciesFromSerializedDependencies(serializedDependencies);
+    if (includeHidden) return depList;
+    return depList.filterHidden();
   }
 
   private async getDependenciesFromSerializedDependencies(
@@ -996,9 +1006,9 @@ export class DependencyResolverMain {
     if (!envJson) return undefined;
 
     const object = parse(envJson.contents.toString('utf8'));
-    const dependencies = object?.dependencies;
-    if (!dependencies) return undefined;
-    const allPoliciesFromEnv = new EnvPolicyFactory().fromConfigObject(dependencies);
+    const dependenciesPolicy = object?.dependenciesPolicy;
+    if (!dependenciesPolicy) return undefined;
+    const allPoliciesFromEnv = EnvPolicy.fromConfigObject(dependenciesPolicy);
     return allPoliciesFromEnv;
   }
 
@@ -1006,11 +1016,11 @@ export class DependencyResolverMain {
     if (env.getDependencies && typeof env.getDependencies === 'function') {
       const policiesFromEnvConfig = await env.getDependencies();
       if (policiesFromEnvConfig) {
-        const allPoliciesFromEnv = new EnvPolicyFactory().fromConfigObject(policiesFromEnvConfig);
+        const allPoliciesFromEnv = EnvPolicy.fromConfigObject(policiesFromEnvConfig);
         return allPoliciesFromEnv;
       }
     }
-    return new EnvPolicyFactory().getEmpty();
+    return EnvPolicy.getEmpty();
   }
 
   async getComponentEnvPolicyFromEnvDefinition(envDef: EnvDefinition): Promise<EnvPolicy> {
@@ -1101,7 +1111,7 @@ export class DependencyResolverMain {
       policiesFromConfig = variantPolicyFactory.fromConfigObject(currentConfig.policy, 'config');
     }
     const policiesFromEnvForItself =
-    (await this.getPoliciesFromEnvForItself(id, legacyFiles)) ?? variantPolicyFactory.getEmpty();
+      (await this.getPoliciesFromEnvForItself(id, legacyFiles)) ?? variantPolicyFactory.getEmpty();
 
     const result = VariantPolicy.mergePolices([
       policiesFromEnv,
@@ -1444,12 +1454,16 @@ export class DependencyResolverMain {
       const workspacePolicy = dependencyResolver.getWorkspacePolicy();
       return workspacePolicy.toManifest();
     });
-    DependencyResolver.registerHarmonyEnvPeersPolicyForComponentGetter(
-      async (configuredExtensions: ExtensionDataList) => {
-        const envPolicy = await dependencyResolver.getComponentEnvPolicyFromExtension(configuredExtensions);
-        return envPolicy.peersAutoDetectPolicy.toNameSupportedRangeMap();
-      }
-    );
+    DependencyResolver.registerHarmonyEnvPolicyForComponentGetter(async (configuredExtensions: ExtensionDataList) => {
+      const envPolicy = await dependencyResolver.getComponentEnvPolicyFromExtension(configuredExtensions);
+      const res = {
+        env: {
+          peers: envPolicy.peersAutoDetectPolicy.toNameSupportedRangeMap(),
+        },
+        components: envPolicy.variantPolicy.toLegacyAutoDetectOverrides(),
+      };
+      return res;
+    });
     DependencyResolver.registerHarmonyEnvPeersPolicyForEnvItselfGetter(async (id: BitId, files: SourceFile[]) => {
       const envPolicy = await dependencyResolver.getEnvPolicyFromEnvLegacyId(id, files);
       if (!envPolicy) return undefined;

@@ -6,7 +6,7 @@ import { uniq, isEmpty, union } from 'lodash';
 import { IssuesList, IssuesClasses } from '@teambit/component-issues';
 import { Dependency } from '..';
 import { BitId, BitIds } from '../../../../bit-id';
-import { DEFAULT_DIST_DIRNAME, DEPENDENCIES_FIELDS } from '../../../../constants';
+import { DEFAULT_DIST_DIRNAME, DEPENDENCIES_FIELDS, MANUALLY_REMOVE_DEPENDENCY } from '../../../../constants';
 import Consumer from '../../../../consumer/consumer';
 import GeneralError from '../../../../error/general-error';
 import ShowDoctorError from '../../../../error/show-doctor-error';
@@ -64,14 +64,29 @@ type WorkspacePolicyGetter = () => {
   peerDependencies?: Record<string, string>;
 };
 
-type HarmonyEnvPeersPolicyForComponentGetter = (
-  configuredExtensions: ExtensionDataList
-) => Promise<{ [name: string]: string }>;
+type EnvPolicyForComponent = {
+  env: {
+    peers: { [name: string]: string };
+  };
+  components: {
+    dependencies: { [name: string]: string };
+    devDependencies: { [name: string]: string };
+    peerDependencies: { [name: string]: string };
+  };
+};
+
+type HarmonyEnvPolicyForComponentGetter = (configuredExtensions: ExtensionDataList) => Promise<EnvPolicyForComponent>;
 
 type HarmonyEnvPeersPolicyForEnvItselfGetter = (
   componentId: BitId,
   files: SourceFile[]
 ) => Promise<{ [name: string]: string } | undefined>;
+
+const DepsKeysToAllPackagesDepsKeys = {
+  dependencies: 'packageDependencies',
+  devDependencies: 'devPackageDependencies',
+  peerDependencies: 'peerPackageDependencies',
+}
 
 export default class DependencyResolver {
   component: Component;
@@ -97,9 +112,9 @@ export default class DependencyResolver {
   /**
    * This will get the peers policy provided by the env of the component
    */
-  static getHarmonyEnvPeersPolicyForComponent: HarmonyEnvPeersPolicyForComponentGetter;
-  static registerHarmonyEnvPeersPolicyForComponentGetter(func: HarmonyEnvPeersPolicyForComponentGetter) {
-    this.getHarmonyEnvPeersPolicyForComponent = func;
+  static getHarmonyEnvPolicyForComponent: HarmonyEnvPolicyForComponentGetter;
+  static registerHarmonyEnvPolicyForComponentGetter(func: HarmonyEnvPolicyForComponentGetter) {
+    this.getHarmonyEnvPolicyForComponent = func;
   }
 
   /**
@@ -237,7 +252,7 @@ export default class DependencyResolver {
     this.applyPeersFromComponentModel();
     this.applyPackageJson();
     this.applyWorkspacePolicy();
-    await this.applyAutoDetectedPeersFromEnvOnComponent();
+    await this.applyEnvPolicyOnComponent();
     this.manuallyAddDependencies();
     // Doing this here (after manuallyAddDependencies) because usually the env of the env is adding dependencies as peer of the env
     // which will make this not work if it come before
@@ -1153,17 +1168,67 @@ either, use the ignore file syntax or change the require statement to have a mod
     this.allPackagesDependencies.peerPackageDependencies = peerDeps;
   }
 
-  async applyAutoDetectedPeersFromEnvOnComponent(): Promise<void> {
-    const envPolicy = await DependencyResolver.getHarmonyEnvPeersPolicyForComponent(this.component.extensions);
+  async applyEnvPolicyOnComponent(): Promise<void> {
+    const envPolicy = await DependencyResolver.getHarmonyEnvPolicyForComponent(this.component.extensions);
     if (!envPolicy || !Object.keys(envPolicy).length) {
       return;
     }
+    if (envPolicy.env.peers) {
+      await this.applyAutoDetectedPeersFromEnvOnComponent(envPolicy.env);
+    }
+    if (envPolicy.components) {
+      await this.applyComponentPolicyFromEnvOnComponent(envPolicy.components);
+    }
+  }
+
+  private async applyComponentPolicyFromEnvOnComponent(policy: EnvPolicyForComponent['components']): Promise<void> {
+    const originallyExists: string[] = [];
+    ['dependencies', 'devDependencies', 'peerDependencies'].forEach((field) => {
+      R.forEachObjIndexed((pkgVal, pkgName) => {
+        if (this.overridesDependencies.shouldIgnorePeerPackage(pkgName)) return;
+        // Validate it was auto detected, we only affect stuff that were detected
+        if (
+          !this.allPackagesDependencies.packageDependencies[pkgName] &&
+          !this.allPackagesDependencies.devPackageDependencies[pkgName] &&
+          !this.allPackagesDependencies.peerPackageDependencies[pkgName] &&
+          // Check if it was orignally exists in the component
+          // as we might have a policy which looks like this:
+          // "components": {
+          //   "dependencies": {
+          //       "my-dep": "-"
+          //    },
+          //   "devDependencies": {
+          //       "my-dep": "1.0.0"
+          //    },
+          // }
+          // in that case we might remove it before getting to the devDeps then we will think that it wasn't required in the component
+          // which is incorrect
+          !originallyExists.includes(pkgName)
+        ) {
+          return;
+        }
+        originallyExists.push(pkgName);
+        const key = DepsKeysToAllPackagesDepsKeys[field];
+
+        delete this.allPackagesDependencies[key][pkgName];
+        // delete this.allPackagesDependencies.packageDependencies[pkgName];
+        // delete this.allPackagesDependencies.devPackageDependencies[pkgName];
+        // delete this.allPackagesDependencies.peerPackageDependencies[pkgName];
+        if (pkgVal !== MANUALLY_REMOVE_DEPENDENCY) {
+          this.allPackagesDependencies[key][pkgName] = pkgVal;
+        }
+      }, policy[field]);
+    });
+  }
+
+  private async applyAutoDetectedPeersFromEnvOnComponent(envPolicy: EnvPolicyForComponent['env']): Promise<void> {
+    const peersFromPolicy = envPolicy.peers || {};
     const peerDeps = this.allPackagesDependencies.peerPackageDependencies || {};
     // we are not iterate component deps since they are resolved from what actually installed
     // the policy used for installation only in that case
     ['packageDependencies', 'devPackageDependencies', 'peerPackageDependencies'].forEach((field) => {
       R.forEachObjIndexed((_pkgVal, pkgName) => {
-        const peerVersionFromEnvPolicy = envPolicy[pkgName];
+        const peerVersionFromEnvPolicy = peersFromPolicy[pkgName];
         if (this.overridesDependencies.shouldIgnorePeerPackage(pkgName)) return;
         if (peerVersionFromEnvPolicy) {
           delete this.allPackagesDependencies[field][pkgName];
