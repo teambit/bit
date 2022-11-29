@@ -1,4 +1,9 @@
 @import '~@teambit/base-ui.layout.breakpoints/_breakpoints.scss';
+@import '~@teambit/ui-foundation.ui.constants.z-indexes/z-indexes.module.scss';
+
+.useBox {
+  z-index: $modal-z-index;
+}
 
 .menu {
   padding: 0;

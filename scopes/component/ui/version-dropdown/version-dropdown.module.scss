@@ -1,5 +1,9 @@
+@import '~@teambit/ui-foundation.ui.constants.z-indexes/z-indexes.module.scss';
+
 .versionDropdown {
   height: 100%;
+  z-index: $modal-z-index;
+
   > div {
     height: 100%;
     display: flex;
