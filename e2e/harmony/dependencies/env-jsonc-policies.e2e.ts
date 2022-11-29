@@ -47,7 +47,7 @@ describe('env-jsonc-policies', function () {
     helper.command.create('react', 'button', '-p button');
     helper.fs.prependFile('button/button.tsx', 'import isPositive from "is-positive";\n');
     // TODO: change to use new format of envs once everything is merged and exported
-    helper.fs.envMainRuntimeFile(`custom-react/env1/env1.main.runtime.ts`, {
+    helper.fixtures.populateEnvMainRuntime(`custom-react/env1/env1.main.runtime.ts`, {
       envName: 'env1',
       dependencies: {},
     });

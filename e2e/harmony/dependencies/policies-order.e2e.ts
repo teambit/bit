@@ -11,9 +11,8 @@ describe('policies order', function () {
     before(() => {
       helper = new Helper();
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.command.create('react-env', 'custom-react/env1', '-p custom-react/env1');
-      helper.fs.envMainRuntimeFile(`custom-react/env1/env1.main.runtime.ts`, {
+      helper.fixtures.populateEnvMainRuntime(`custom-react/env1/env1.main.runtime.ts`, {
         envName: 'env1',
         dependencies: {
           peers: [
@@ -49,9 +48,8 @@ describe('policies order', function () {
     before(() => {
       helper = new Helper();
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.command.create('react-env', 'custom-react/env1', '-p custom-react/env1');
-      helper.fs.envMainRuntimeFile(`custom-react/env1/env1.main.runtime.ts`, {
+      helper.fixtures.populateEnvMainRuntime(`custom-react/env1/env1.main.runtime.ts`, {
         envName: 'env1',
         dependencies: {
           peers: [

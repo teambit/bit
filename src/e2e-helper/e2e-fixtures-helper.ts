@@ -387,7 +387,7 @@ export default () => 'comp${index} and ' + ${nextComp}();`;
       cwd: destDir,
     });
   }
-
+  
   generateEnvJsoncFile(componentDir: string, options: GenerateEnvJsoncOptions = {}) {
     const envJsoncFile = path.join(componentDir, 'env.jsonc');
     const defaultPatterns = {
@@ -403,5 +403,41 @@ export default () => 'comp${index} and ' + ${nextComp}();`;
       patterns: options.patterns || defaultPatterns
     }
     this.fs.outputFile(envJsoncFile, JSON.stringify(envJsoncFileContentJson, null, 2))
+  }
+
+  populateEnvMainRuntime(
+    filePathRelativeToLocalScope: string,
+    { envName, dependencies }: { envName: string; dependencies: any }
+  ): void {
+    const capitalizedEnvName = envName[0].toUpperCase() + envName.substring(1);
+    return this.fs.outputFile(
+      filePathRelativeToLocalScope,
+      `
+import { MainRuntime } from '@teambit/cli';
+import { ReactAspect, ReactMain } from '@teambit/react';
+import { EnvsAspect, EnvsMain } from '@teambit/envs';
+import { ${capitalizedEnvName}Aspect } from './${envName}.aspect';
+
+export class EnvMain {
+  static slots = [];
+
+  static dependencies = [ReactAspect, EnvsAspect];
+
+  static runtime = MainRuntime;
+
+  static async provider([react, envs]: [ReactMain, EnvsMain]) {
+    const templatesReactEnv = envs.compose(react.reactEnv, [
+      envs.override({
+      getDependencies: () => (${JSON.stringify(dependencies)}),
+      })
+    ]);
+    envs.registerEnv(templatesReactEnv);
+    return new EnvMain();
+  }
+}
+
+${capitalizedEnvName}Aspect.addRuntime(EnvMain);
+`
+    );
   }
 }
