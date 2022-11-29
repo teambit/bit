@@ -50,6 +50,7 @@ import { getAllVersionHashes } from '@teambit/legacy/dist/scope/component-ops/tr
 import { ExportAspect } from './export.aspect';
 import { ExportCmd } from './export-cmd';
 import { ResumeExportCmd } from './resume-export-cmd';
+import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 
 const HooksManagerInstance = HooksManager.getInstance();
 
@@ -79,7 +80,12 @@ type ExportParams = {
 };
 
 export class ExportMain {
-  constructor(private workspace: Workspace, private remove: RemoveMain, private depResolver: DependencyResolverMain) {}
+  constructor(
+    private workspace: Workspace,
+    private remove: RemoveMain,
+    private depResolver: DependencyResolverMain,
+    private logger: Logger
+  ) {}
 
   async export(params: ExportParams) {
     HooksManagerInstance.triggerHook(PRE_EXPORT_HOOK, params);
@@ -636,6 +642,7 @@ export class ExportMain {
   }
 
   private async removeFromStagedConfig(ids: BitId[]) {
+    this.logger.debug(`removeFromStagedConfig, ${ids.length} ids`);
     const componentIds = await this.workspace.resolveMultipleComponentIds(ids);
     const stagedConfig = await this.workspace.scope.getStagedConfig();
     componentIds.map((compId) => stagedConfig.removeComponentConfig(compId));
@@ -734,15 +741,17 @@ export class ExportMain {
   }
 
   static runtime = MainRuntime;
-  static dependencies = [CLIAspect, ScopeAspect, WorkspaceAspect, RemoveAspect, DependencyResolverAspect];
-  static async provider([cli, scope, workspace, remove, depResolver]: [
+  static dependencies = [CLIAspect, ScopeAspect, WorkspaceAspect, RemoveAspect, DependencyResolverAspect, LoggerAspect];
+  static async provider([cli, scope, workspace, remove, depResolver, loggerMain]: [
     CLIMain,
     ScopeMain,
     Workspace,
     RemoveMain,
-    DependencyResolverMain
+    DependencyResolverMain,
+    LoggerMain
   ]) {
-    const exportMain = new ExportMain(workspace, remove, depResolver);
+    const logger = loggerMain.createLogger(ExportAspect.id);
+    const exportMain = new ExportMain(workspace, remove, depResolver, logger);
     cli.register(new ResumeExportCmd(scope), new ExportCmd(exportMain));
     return exportMain;
   }
