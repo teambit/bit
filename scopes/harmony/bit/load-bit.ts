@@ -214,13 +214,13 @@ export async function loadBit(path = process.cwd()) {
   logger.info(`*** Loading Bit *** argv:\n${process.argv.join('\n')}`);
   const config = await getConfig(path);
   registerCoreExtensions();
-  // await loadLegacyConfig(config);
+  await loadLegacyConfig(config);
   const configMap = config.toObject();
   configMap[BitAspect.id] ||= {};
   configMap[BitAspect.id].cwd = path;
   verifyEngine(configMap[BitAspect.id]);
 
-  const aspectsToLoad = [CLIAspect, ConfigAspect];
+  const aspectsToLoad = [CLIAspect];
   const loadCLIOnly = shouldLoadInSafeMode();
   if (!loadCLIOnly) {
     aspectsToLoad.push(BitAspect);
