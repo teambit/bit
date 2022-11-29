@@ -115,6 +115,9 @@ describe('bit lane command', function () {
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
     });
+    it('bit status should be clean', () => {
+      helper.command.expectStatusToBeClean();
+    });
     describe('merge a lane with removed component to main', () => {
       let mergeOutput: string;
       before(() => {
