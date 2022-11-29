@@ -24,12 +24,12 @@ import GeneralError from '@teambit/legacy/dist/error/general-error';
 import HooksManager from '@teambit/legacy/dist/hooks';
 import { RemoveAspect, RemoveMain } from '@teambit/remove';
 import { NodeModuleLinker } from '@teambit/legacy/dist/links';
-import logger from '@teambit/legacy/dist/logger/logger';
 import { Lane, ModelComponent, Symlink, Version, ExportMetadata } from '@teambit/legacy/dist/scope/models';
 import hasWildcard from '@teambit/legacy/dist/utils/string/has-wildcard';
 import { Scope } from '@teambit/legacy/dist/scope';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
+import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { LaneReadmeComponent } from '@teambit/legacy/dist/scope/models/lane';
 import { Http } from '@teambit/legacy/dist/scope/network/http';
 import { ObjectList, ObjectItem } from '@teambit/legacy/dist/scope/objects/object-list';
@@ -50,7 +50,6 @@ import { getAllVersionHashes } from '@teambit/legacy/dist/scope/component-ops/tr
 import { ExportAspect } from './export.aspect';
 import { ExportCmd } from './export-cmd';
 import { ResumeExportCmd } from './resume-export-cmd';
-import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 
 const HooksManagerInstance = HooksManager.getInstance();
 
@@ -92,7 +91,7 @@ export class ExportMain {
     const { updatedIds, nonExistOnBitMap, missingScope, exported, removedIds, exportedLanes } =
       await this.exportComponents(params);
     let ejectResults;
-    if (params.eject) ejectResults = await ejectExportedComponents(updatedIds);
+    if (params.eject) ejectResults = await ejectExportedComponents(updatedIds, this.logger);
     const exportResults = {
       componentsIds: exported,
       nonExistOnBitMap,
@@ -104,7 +103,7 @@ export class ExportMain {
     HooksManagerInstance.triggerHook(POST_EXPORT_HOOK, exportResults);
     if (Scope.onPostExport) {
       await Scope.onPostExport(exported, exportedLanes).catch((err) => {
-        logger.error('fatal: onPostExport encountered an error (this error does not stop the process)', err);
+        this.logger.error('fatal: onPostExport encountered an error (this error does not stop the process)', err);
       });
     }
     return exportResults;
@@ -213,7 +212,7 @@ export class ExportMain {
     isOnMain?: boolean;
     exportHeadsOnly?: boolean;
   }): Promise<{ exported: BitIds; updatedLocally: BitIds; newIdsOnRemote: BitId[] }> {
-    logger.debugAndAddBreadCrumb('scope.exportMany', 'ids: {ids}', { ids: ids.toString() });
+    this.logger.debug(`scope.exportMany, ids: ${ids.toString()}`);
     const scopeRemotes: Remotes = await getScopeRemotes(scope);
     const idsGroupedByScope = ids.toGroupByScopeName(idsWithFutureScope);
 
@@ -281,7 +280,7 @@ export class ExportMain {
     const groupedByScopeString = Object.keys(idsGroupedByScope)
       .map((scopeName) => `scope "${scopeName}": ${idsGroupedByScope[scopeName].toString()}`)
       .join(', ');
-    logger.debug(`export-scope-components, export to the following scopes ${groupedByScopeString}`);
+    this.logger.debug(`export-scope-components, export to the following scopes ${groupedByScopeString}`);
     const exportVersions: ExportVersions[] = [];
 
     const populateExportMetadata = async (modelComponent: ModelComponent) => {
@@ -498,7 +497,7 @@ export class ExportMain {
     resumeExportId?: string
   ): Promise<void> {
     if (resumeExportId) {
-      logger.debug('pushRemotesPendingDir - skip as the resumeExportId was passed');
+      this.logger.debug('pushRemotesPendingDir - skip as the resumeExportId was passed');
       // no need to transfer the objects, they're already on the server. also, since this clientId
       // exists already on the remote pending-dir, it'll cause a collision.
       return;
@@ -510,13 +509,12 @@ export class ExportMain {
       loader.start(`transferring ${objectList.count()} objects to the remote "${remote.name}"...`);
       try {
         await remote.pushMany(objectList, pushOptions, {});
-        logger.debugAndAddBreadCrumb(
-          'export-scope-components.pushRemotesPendingDir',
-          'successfully pushed all objects to the pending-dir directory on the remote'
+        this.logger.debug(
+          'pushRemotesPendingDir, successfully pushed all objects to the pending-dir directory on the remote'
         );
         pushedRemotes.push(remote);
       } catch (err: any) {
-        logger.warnAndAddBreadCrumb('exportMany', 'failed pushing objects to the remote');
+        this.logger.warn('exportMany, failed pushing objects to the remote');
         await removePendingDirs(pushedRemotes, clientId);
         throw err;
       }
@@ -795,7 +793,7 @@ async function linkComponents(ids: BitId[], consumer: Consumer): Promise<void> {
   await nodeModuleLinker.link();
 }
 
-async function ejectExportedComponents(componentsIds): Promise<EjectResults> {
+async function ejectExportedComponents(componentsIds, logger: Logger): Promise<EjectResults> {
   const consumer: Consumer = await loadConsumer(undefined, true);
   let ejectResults: EjectResults;
   try {
