@@ -1,5 +1,4 @@
 import React, { useState, useMemo, ReactNode } from 'react';
-import classNames from 'classnames';
 import { Icon } from '@teambit/evangelist.elements.icon';
 import orderBy from 'lodash.orderby';
 import flatten from 'lodash.flatten';
@@ -34,7 +33,7 @@ export function Menu({ methods, componentName, ...rest }: MenuProps) {
   const { Component } = OrderedMethods[activeTab] || {};
 
   return (
-    <div {...rest} className={classNames(rest.className, styles.container)}>
+    <div {...rest}>
       <div className={styles.top}>
         <div className={styles.title}>
           <Icon of="terminal" />

@@ -1,7 +1,6 @@
 @import '~@teambit/ui-foundation.ui.constants.z-indexes/z-indexes.module.scss';
 
 .dropdown {
-  border-radius: 8px;
   // otherwise when the dropdown is open it clashes with the content of the tree
   // (this is bizarre, the tree has no position absolute)
   z-index: $nav-z-index;

@@ -1,9 +1,5 @@
 @import '~@teambit/base-ui.layout.breakpoints/_breakpoints.scss';
 
-.useBox {
-  z-index: 5000;
-}
-
 .menu {
   padding: 0;
   font-size: var(--bit-p-xs, 14px);
