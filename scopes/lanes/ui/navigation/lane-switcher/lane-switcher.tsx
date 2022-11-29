@@ -17,9 +17,9 @@ export function LaneSwitcher({ className, groupByScope = true, ...rest }: LaneSw
   const [viewedLane, setViewedLane] = useState(lanesModel?.viewedLane);
 
   useEffect(() => {
-    if (viewedLane?.id && lanesModel?.viewedLane?.id.isEqual(viewedLane?.id)) return undefined;
-    setViewedLane(lanesModel?.viewedLane);
-    return undefined;
+    if (viewedLane?.id && !lanesModel?.viewedLane?.id.isEqual(viewedLane?.id)) {
+      setViewedLane(lanesModel?.viewedLane);
+    }
   }, [lanesModel?.viewedLane?.id.toString()]);
 
   const mainLaneId = lanesModel?.getDefaultLane()?.id;
