@@ -80,7 +80,7 @@ describe('recovery after component/scope deletion', function () {
           helper.scopeHelper.addRemoteScope(remote2Path);
           helper.bitJsonc.disablePreview();
           npmCiRegistry.setResolver();
-          helper.command.importComponent('comp1');
+          helper.command.importComponent('comp1', '--fetch-deps');
           // delete the comp3 from the scope.
           const hashPath = helper.general.getHashPathOfComponent('comp3');
           fs.removeSync(path.join(helper.scopes.localPath, '.bit/objects', hashPath));
@@ -110,7 +110,7 @@ describe('recovery after component/scope deletion', function () {
           describe('bit import', () => {
             before(() => {
               helper.scopeHelper.getClonedLocalScope(scopeWithMissingDep);
-              helper.command.importAllComponents();
+              helper.command.import('--fetch-deps');
             });
             it('should bring the missing dep from the dependent', () => {
               const scope = helper.command.catScope(true);
