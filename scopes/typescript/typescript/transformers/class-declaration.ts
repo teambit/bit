@@ -8,7 +8,7 @@ import {
 import ts, { Node, ClassDeclaration } from 'typescript';
 import { SchemaTransformer } from '../schema-transformer';
 import { SchemaExtractorContext } from '../schema-extractor-context';
-import { ExportIdentifier } from '../export-identifier';
+import { Identifier } from '../identifier';
 
 export class ClassDeclarationTransformer implements SchemaTransformer {
   predicate(node: Node) {
@@ -21,7 +21,7 @@ export class ClassDeclarationTransformer implements SchemaTransformer {
   }
 
   async getIdentifiers(node: ClassDeclaration) {
-    return [new ExportIdentifier(this.getName(node), node.getSourceFile().fileName)];
+    return [new Identifier(this.getName(node), node.getSourceFile().fileName)];
   }
 
   private async getExpressionWithTypeArgs(

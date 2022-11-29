@@ -2,7 +2,7 @@ import ts, { LiteralTypeNode, Node } from 'typescript';
 import { LiteralTypeSchema } from '@teambit/semantics.entities.semantic-schema';
 import { SchemaTransformer } from '../schema-transformer';
 import { SchemaExtractorContext } from '../schema-extractor-context';
-import { ExportIdentifier } from '../export-identifier';
+import { Identifier } from '../identifier';
 
 /**
  * e.g. string/boolean
@@ -12,7 +12,7 @@ export class LiteralTypeTransformer implements SchemaTransformer {
     return node.kind === ts.SyntaxKind.LiteralType;
   }
 
-  async getIdentifiers(): Promise<ExportIdentifier[]> {
+  async getIdentifiers(): Promise<Identifier[]> {
     return [];
   }
 

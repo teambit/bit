@@ -3,7 +3,7 @@ import { TypeRefSchema } from '@teambit/semantics.entities.semantic-schema';
 import pMapSeries from 'p-map-series';
 import { SchemaTransformer } from '../schema-transformer';
 import { SchemaExtractorContext } from '../schema-extractor-context';
-import { ExportIdentifier } from '../export-identifier';
+import { Identifier } from '../identifier';
 
 /**
  * In the following example, `AriaButtonProps` is a type reference
@@ -17,7 +17,7 @@ export class TypeReferenceTransformer implements SchemaTransformer {
     return node.kind === ts.SyntaxKind.TypeReference;
   }
 
-  async getIdentifiers(): Promise<ExportIdentifier[]> {
+  async getIdentifiers(): Promise<Identifier[]> {
     return [];
   }
 

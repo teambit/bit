@@ -4,7 +4,7 @@ import pMapSeries from 'p-map-series';
 import ts, { Node, VariableStatement } from 'typescript';
 import { SchemaTransformer } from '../schema-transformer';
 import { SchemaExtractorContext } from '../schema-extractor-context';
-import { ExportIdentifier } from '../export-identifier';
+import { Identifier } from '../identifier';
 
 /**
  * variable statement is a collection of variable declarations.
@@ -17,7 +17,7 @@ export class VariableStatementTransformer implements SchemaTransformer {
 
   async getIdentifiers(node: VariableStatement) {
     return node.declarationList.declarations.map((dec) => {
-      return new ExportIdentifier(dec.name.getText(), dec.getSourceFile().fileName);
+      return new Identifier(dec.name.getText(), dec.getSourceFile().fileName);
     });
   }
 
@@ -27,6 +27,6 @@ export class VariableStatementTransformer implements SchemaTransformer {
       const schema = await context.visitDefinition(dec.name);
       return schema;
     });
-    return new ModuleSchema(context.getLocation(node), compact(schemas));
+    return new ModuleSchema(context.getLocation(node), compact(schemas), context.getPath(node));
   }
 }

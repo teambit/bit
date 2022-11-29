@@ -1,7 +1,7 @@
 import { Node } from 'typescript';
 import { SchemaNode } from '@teambit/semantics.entities.semantic-schema';
 import { SchemaExtractorContext } from './schema-extractor-context';
-import { ExportIdentifier } from './export-identifier';
+import { Identifier } from './identifier';
 
 export type SchemaTransformer = {
   /**
@@ -9,7 +9,7 @@ export type SchemaTransformer = {
    */
   predicate(node: Node): boolean;
 
-  getIdentifiers(node: Node, context: SchemaExtractorContext): Promise<ExportIdentifier[]>;
+  getIdentifiers(node: Node, context: SchemaExtractorContext): Promise<Identifier[]>;
 
   /**
    * transform the node into JSONSchema.

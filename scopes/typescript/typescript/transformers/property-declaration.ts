@@ -1,21 +1,21 @@
-import ts, { Node, PropertyDeclaration } from 'typescript';
+import { Node, PropertyDeclaration, PropertySignature, SyntaxKind } from 'typescript';
 import { VariableLikeSchema } from '@teambit/semantics.entities.semantic-schema';
 import { SchemaTransformer } from '../schema-transformer';
 import { SchemaExtractorContext } from '../schema-extractor-context';
-import { ExportIdentifier } from '../export-identifier';
 import { parseTypeFromQuickInfo } from './utils/parse-type-from-quick-info';
+import { Identifier } from '../identifier';
 
 export class PropertyDeclarationTransformer implements SchemaTransformer {
   predicate(node: Node) {
-    return node.kind === ts.SyntaxKind.PropertyDeclaration;
+    return node.kind === SyntaxKind.PropertyDeclaration || node.kind === SyntaxKind.PropertySignature;
   }
 
-  async getIdentifiers(): Promise<ExportIdentifier[]> {
+  async getIdentifiers(): Promise<Identifier[]> {
     return [];
   }
 
   // @todo - handle arrow function objects
-  async transform(node: PropertyDeclaration, context: SchemaExtractorContext) {
+  async transform(node: PropertyDeclaration | PropertySignature, context: SchemaExtractorContext) {
     const name = node.name.getText();
     const info = await context.getQuickInfo(node.name);
     const displaySig = info?.body?.displayString;

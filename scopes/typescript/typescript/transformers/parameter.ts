@@ -16,15 +16,15 @@ import {
 import pMapSeries from 'p-map-series';
 import { SchemaTransformer } from '../schema-transformer';
 import { SchemaExtractorContext } from '../schema-extractor-context';
-import { ExportIdentifier } from '../export-identifier';
 import { parseTypeFromQuickInfo } from './utils/parse-type-from-quick-info';
+import { Identifier } from '../identifier';
 
 export class ParameterTransformer implements SchemaTransformer {
   predicate(node: Node) {
     return node.kind === ts.SyntaxKind.Parameter;
   }
 
-  async getIdentifiers(): Promise<ExportIdentifier[]> {
+  async getIdentifiers(): Promise<Identifier[]> {
     return [];
   }
 

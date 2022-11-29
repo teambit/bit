@@ -2,14 +2,14 @@ import { Node, SyntaxKind, TemplateLiteralTypeSpan } from 'typescript';
 import { TemplateLiteralTypeSpanSchema } from '@teambit/semantics.entities.semantic-schema';
 import { SchemaTransformer } from '../schema-transformer';
 import { SchemaExtractorContext } from '../schema-extractor-context';
-import { ExportIdentifier } from '../export-identifier';
+import { Identifier } from '../identifier';
 
 export class TemplateLiteralTypeSpanTransformer implements SchemaTransformer {
   predicate(node: Node) {
     return node.kind === SyntaxKind.TemplateLiteralTypeSpan;
   }
 
-  async getIdentifiers(): Promise<ExportIdentifier[]> {
+  async getIdentifiers(): Promise<Identifier[]> {
     return [];
   }
 

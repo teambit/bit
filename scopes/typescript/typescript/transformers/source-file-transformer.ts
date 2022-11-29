@@ -22,7 +22,7 @@ export class SourceFileTransformer implements SchemaTransformer {
 
     const exportIds = flatten(exportNames).reduce<ExportIdentifier[]>((acc, current) => {
       const item = acc.find((exportName) => exportName.id === current.id);
-      if (!item) acc.push(current);
+      if (!item) acc.push(new ExportIdentifier(current.id, current.filePath));
       return acc;
     }, []);
 
@@ -35,7 +35,7 @@ export class SourceFileTransformer implements SchemaTransformer {
       return context.computeSchema(exportNode);
     });
 
-    return new ModuleSchema(context.getLocation(node), schemas);
+    return new ModuleSchema(context.getLocation(node), schemas, node.fileName);
   }
 
   /**
@@ -57,4 +57,8 @@ export class SourceFileTransformer implements SchemaTransformer {
       })
     );
   }
+
+  // private listInternalNodes(ast: SourceFile): Node[] {
+  //   return compact(ast.statements)
+  // }
 }

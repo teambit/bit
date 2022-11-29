@@ -2,14 +2,14 @@ import { Node, SyntaxKind, NamedTupleMember } from 'typescript';
 import { NamedTupleSchema } from '@teambit/semantics.entities.semantic-schema';
 import { SchemaTransformer } from '../schema-transformer';
 import { SchemaExtractorContext } from '../schema-extractor-context';
-import { ExportIdentifier } from '../export-identifier';
+import { Identifier } from '../identifier';
 
 export class NamedTupleTransformer implements SchemaTransformer {
   predicate(node: Node) {
     return node.kind === SyntaxKind.NamedTupleMember;
   }
 
-  async getIdentifiers(): Promise<ExportIdentifier[]> {
+  async getIdentifiers(): Promise<Identifier[]> {
     return [];
   }
 

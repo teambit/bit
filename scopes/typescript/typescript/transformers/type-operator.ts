@@ -2,7 +2,7 @@ import { Node, TypeOperatorNode, SyntaxKind } from 'typescript';
 import { TypeOperatorSchema } from '@teambit/semantics.entities.semantic-schema';
 import { SchemaTransformer } from '../schema-transformer';
 import { SchemaExtractorContext } from '../schema-extractor-context';
-import { ExportIdentifier } from '../export-identifier';
+import { Identifier } from '../identifier';
 
 /**
  * e.g. keyof typeof Foo
@@ -12,7 +12,7 @@ export class TypeOperatorTransformer implements SchemaTransformer {
     return node.kind === SyntaxKind.TypeOperator;
   }
 
-  async getIdentifiers(): Promise<ExportIdentifier[]> {
+  async getIdentifiers(): Promise<Identifier[]> {
     return [];
   }
 

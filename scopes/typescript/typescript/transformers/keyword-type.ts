@@ -2,7 +2,7 @@ import { Node, SyntaxKind } from 'typescript';
 import { KeywordTypeSchema } from '@teambit/semantics.entities.semantic-schema';
 import { SchemaTransformer } from '../schema-transformer';
 import { SchemaExtractorContext } from '../schema-extractor-context';
-import { ExportIdentifier } from '../export-identifier';
+import { Identifier } from '../identifier';
 
 /**
  * whether it's kind of `ts.KeywordTypeSyntaxKind`
@@ -28,7 +28,7 @@ export class KeywordTypeTransformer implements SchemaTransformer {
     }
   }
 
-  async getIdentifiers(): Promise<ExportIdentifier[]> {
+  async getIdentifiers(): Promise<Identifier[]> {
     return [];
   }
 

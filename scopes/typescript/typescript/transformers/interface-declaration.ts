@@ -7,15 +7,15 @@ import {
 } from '@teambit/semantics.entities.semantic-schema';
 import { SchemaTransformer } from '../schema-transformer';
 import { SchemaExtractorContext } from '../schema-extractor-context';
-import { ExportIdentifier } from '../export-identifier';
+import { Identifier } from '../identifier';
 
 export class InterfaceDeclarationTransformer implements SchemaTransformer {
   predicate(node: Node) {
     return node.kind === SyntaxKind.InterfaceDeclaration;
   }
 
-  async getIdentifiers(node: InterfaceDeclaration): Promise<ExportIdentifier[]> {
-    return [new ExportIdentifier(node.name.getText(), node.getSourceFile().fileName)];
+  async getIdentifiers(node: InterfaceDeclaration): Promise<Identifier[]> {
+    return [new Identifier(node.name.getText(), node.getSourceFile().fileName)];
   }
 
   private async getExpressionWithTypeArgs(node: InterfaceDeclaration, context: SchemaExtractorContext) {

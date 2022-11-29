@@ -3,14 +3,14 @@ import { IndexSignatureSchema, ParameterSchema } from '@teambit/semantics.entiti
 import pMapSeries from 'p-map-series';
 import { SchemaTransformer } from '../schema-transformer';
 import { SchemaExtractorContext } from '../schema-extractor-context';
-import { ExportIdentifier } from '../export-identifier';
+import { Identifier } from '../identifier';
 
 export class IndexSignatureTransformer implements SchemaTransformer {
   predicate(node: Node) {
     return node.kind === ts.SyntaxKind.IndexSignature;
   }
 
-  async getIdentifiers(): Promise<ExportIdentifier[]> {
+  async getIdentifiers(): Promise<Identifier[]> {
     return [];
   }
 

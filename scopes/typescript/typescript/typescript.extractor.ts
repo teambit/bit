@@ -12,7 +12,7 @@ import { flatten } from 'lodash';
 import { TypescriptMain, SchemaTransformerSlot } from './typescript.main.runtime';
 import { TransformerNotFound } from './exceptions';
 import { SchemaExtractorContext } from './schema-extractor-context';
-import { ExportList } from './export-list';
+import { IdentifierList } from './identifier-list';
 
 export class TypeScriptExtractor implements SchemaExtractor {
   constructor(
@@ -47,12 +47,11 @@ export class TypeScriptExtractor implements SchemaExtractor {
     const mainAst = this.parseSourceFile(mainFile);
     const context = await this.createContext(tsserver, component, formatter);
     const exportNames = await this.computeExportedIdentifiers(mainAst, context);
-    context.setExports(component.mainFile.path, new ExportList(exportNames));
+    context.setIdentifiers(component.mainFile.path, new IdentifierList(exportNames));
     const moduleSchema = (await this.computeSchema(mainAst, context)) as ModuleSchema;
     moduleSchema.flatExportsRecursively();
     const apiScheme = moduleSchema;
     const location = context.getLocation(mainAst);
-
     // @todo
     return new APISchema(location, apiScheme, [], component.id);
   }
@@ -108,6 +107,13 @@ export class TypeScriptExtractor implements SchemaExtractor {
     // leave the next line commented out, it is used for debugging
     // console.log('transformer', transformer.constructor.name, node.getText());
     if (!transformer) {
+      console.log(
+        '🚀🚀🚀\n\n\n ~ file: typescript.extractor.ts ~ line 110 ~ TypeScriptExtractor ~ computeSchema ~ transformer',
+        node.kind,
+        context.getLocation(node),
+        node.getText(),
+        SyntaxKind[node.kind]
+      );
       return new UnImplementedSchema(context.getLocation(node), node.getText(), SyntaxKind[node.kind]);
     }
     return transformer.transform(node, context);
@@ -125,8 +131,9 @@ export class TypeScriptExtractor implements SchemaExtractor {
    */
   private getTransformer(node: Node, context: SchemaExtractorContext) {
     const transformers = flatten(this.schemaTransformerSlot.values());
-    const transformer = transformers.find((singleTransformer) => singleTransformer.predicate(node));
-
+    const transformer = transformers.find((singleTransformer) => {
+      return singleTransformer.predicate(node);
+    });
     if (!transformer) {
       this.logger.warn(new TransformerNotFound(node, context.component, context.getLocation(node)).toString());
       return undefined;

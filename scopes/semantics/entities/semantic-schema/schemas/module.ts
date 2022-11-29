@@ -6,8 +6,10 @@ import { schemaObjArrayToInstances } from '../class-transformers';
 export class ModuleSchema extends SchemaNode {
   @Transform(schemaObjArrayToInstances)
   exports: SchemaNode[];
+
   namespace?: string;
-  constructor(readonly location: Location, exports: SchemaNode[]) {
+
+  constructor(readonly location: Location, exports: SchemaNode[], readonly filePath: string) {
     super();
     this.exports = exports;
   }

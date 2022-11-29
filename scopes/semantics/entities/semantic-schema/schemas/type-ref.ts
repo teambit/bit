@@ -14,8 +14,9 @@ export type PlainTypeRefSchema = {
 /**
  * can be one of the following:
  * 1. a reference to another "export" in the same component
- * 2. a reference to another component.
- * 3. a reference to a package.
+ * 2  a reference to another declaration in the same file (internal)
+ * 3. a reference to another component.
+ * 4. a reference to a package.
  */
 export class TypeRefSchema extends SchemaNode {
   @Transform(schemaObjArrayToInstances)
@@ -42,7 +43,9 @@ export class TypeRefSchema extends SchemaNode {
     /**
      * target package name. existing if type is defined in different package.
      */
-    readonly packageName?: string
+    readonly packageName?: string,
+
+    readonly internal?: boolean
   ) {
     super();
     this.componentId = componentId;

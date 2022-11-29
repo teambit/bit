@@ -2,14 +2,14 @@ import { IndexedAccessTypeNode, Node, SyntaxKind } from 'typescript';
 import { IndexedAccessSchema } from '@teambit/semantics.entities.semantic-schema';
 import { SchemaTransformer } from '../schema-transformer';
 import { SchemaExtractorContext } from '../schema-extractor-context';
-import { ExportIdentifier } from '../export-identifier';
+import { Identifier } from '../identifier';
 
 export class IndexedAccessTypeTransformer implements SchemaTransformer {
   predicate(node: Node) {
     return node.kind === SyntaxKind.IndexedAccessType;
   }
 
-  async getIdentifiers(): Promise<ExportIdentifier[]> {
+  async getIdentifiers(): Promise<Identifier[]> {
     return [];
   }
 

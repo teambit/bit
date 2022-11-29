@@ -3,7 +3,7 @@ import { TypeLiteralSchema } from '@teambit/semantics.entities.semantic-schema';
 import pMapSeries from 'p-map-series';
 import { SchemaTransformer } from '../schema-transformer';
 import { SchemaExtractorContext } from '../schema-extractor-context';
-import { ExportIdentifier } from '../export-identifier';
+import { Identifier } from '../identifier';
 
 /**
  * not to be confused with "LiteralType", which is string/boolean/null.
@@ -14,7 +14,7 @@ export class TypeLiteralTransformer implements SchemaTransformer {
     return node.kind === ts.SyntaxKind.TypeLiteral;
   }
 
-  async getIdentifiers(): Promise<ExportIdentifier[]> {
+  async getIdentifiers(): Promise<Identifier[]> {
     return [];
   }
 

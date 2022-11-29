@@ -3,8 +3,8 @@ import ts, { Node, SignatureDeclaration } from 'typescript';
 import pMapSeries from 'p-map-series';
 import { SchemaExtractorContext } from '../schema-extractor-context';
 import { SchemaTransformer } from '../schema-transformer';
-import { ExportIdentifier } from '../export-identifier';
 import { parseTypeFromQuickInfo } from './utils/parse-type-from-quick-info';
+import { Identifier } from '../identifier';
 
 export class FunctionLikeTransformer implements SchemaTransformer {
   predicate(node: Node) {
@@ -21,7 +21,7 @@ export class FunctionLikeTransformer implements SchemaTransformer {
 
   // need to check for anonymous functions assigned for vars, const and let.
   async getIdentifiers(funcDec: SignatureDeclaration) {
-    return [new ExportIdentifier(this.getName(funcDec), funcDec.getSourceFile().fileName)];
+    return [new Identifier(this.getName(funcDec), funcDec.getSourceFile().fileName)];
   }
 
   private getName(funcDec: SignatureDeclaration) {

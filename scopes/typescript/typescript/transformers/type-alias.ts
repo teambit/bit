@@ -2,7 +2,7 @@ import ts, { Node, TypeAliasDeclaration } from 'typescript';
 import { TypeSchema } from '@teambit/semantics.entities.semantic-schema';
 import { SchemaTransformer } from '../schema-transformer';
 import { SchemaExtractorContext } from '../schema-extractor-context';
-import { ExportIdentifier } from '../export-identifier';
+import { Identifier } from '../identifier';
 
 export class TypeAliasTransformer implements SchemaTransformer {
   predicate(node: Node) {
@@ -10,7 +10,7 @@ export class TypeAliasTransformer implements SchemaTransformer {
   }
 
   async getIdentifiers(node: TypeAliasDeclaration) {
-    return [new ExportIdentifier(node.name.getText(), node.getSourceFile().fileName)];
+    return [new Identifier(node.name.getText(), node.getSourceFile().fileName)];
   }
 
   private getName(node: TypeAliasDeclaration): string {

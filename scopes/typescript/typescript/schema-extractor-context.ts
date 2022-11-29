@@ -19,12 +19,35 @@ import { ComponentDependency } from '@teambit/dependency-resolver';
 import { Formatter } from '@teambit/formatter';
 import pMapSeries from 'p-map-series';
 import { TypeScriptExtractor } from './typescript.extractor';
-import { ExportList } from './export-list';
+import { IdentifierList } from './identifier-list';
 import { TransformerNotFound } from './exceptions';
 import { parseTypeFromQuickInfo } from './transformers/utils/parse-type-from-quick-info';
 import { tagParser } from './transformers/utils/jsdoc-to-doc-schema';
+import { Identifier } from './identifier';
+import { ExportIdentifier } from './export-identifier';
 
 export class SchemaExtractorContext {
+  /**
+   * list of all declared identifiers (exported and internal) by filename
+   */
+  private _identifiers = new Map<string, IdentifierList>();
+  /**
+   * computed nodes by filename and position (line:character)
+   */
+  private _nodes = new Map<string, SchemaNode>();
+
+  get mainFile() {
+    return pathNormalizeToLinux(this.getPathRelativeToComponent(this.component.mainFile.path));
+  }
+
+  get identifiers() {
+    return this._identifiers;
+  }
+
+  get nodes() {
+    return this._nodes;
+  }
+
   constructor(
     readonly tsserver: TsserverClient,
     readonly component: Component,
@@ -33,17 +56,40 @@ export class SchemaExtractorContext {
     readonly formatter: Formatter
   ) {}
 
-  _exports: Map<string, ExportList> = new Map<string, ExportList>();
-
-  // computedNodes: Map<`fileName:pos`, SchemaNode>
-
-  setExports(filePath: string, exports: ExportList) {
-    this._exports.set(filePath, exports);
-    return this;
+  getVisitorKey({ filePath, line, character }: Location) {
+    return `${filePath}:${line}:${character}`;
   }
 
-  computeSchema(node: Node) {
-    return this.extractor.computeSchema(node, this);
+  getIdentifierKeyForNode(node: Node) {
+    const filePath = node.getSourceFile().fileName;
+    return this.getIdentifierKey(filePath);
+  }
+
+  getIdentifierKey(filePath: string) {
+    const relativePath = this.getPathRelativeToComponent(filePath);
+    return pathNormalizeToLinux(relativePath);
+  }
+
+  setComputedVisitor(node: SchemaNode) {
+    const { location } = node;
+    const key = this.getVisitorKey(location);
+    this.nodes.set(key, node);
+  }
+
+  setIdentifiers(filePath: string, identifiers: IdentifierList) {
+    this._identifiers.set(this.getIdentifierKey(filePath), identifiers);
+  }
+
+  async computeSchema(node: Node) {
+    const location = this.getLocation(node);
+    const key = this.getVisitorKey(location);
+    const existingComputedSchema = this.nodes.get(key);
+    if (existingComputedSchema) {
+      return existingComputedSchema;
+    }
+    const computedSchema = await this.extractor.computeSchema(node, this);
+    this.setComputedVisitor(computedSchema);
+    return computedSchema;
   }
 
   /**
@@ -264,13 +310,17 @@ export class SchemaExtractorContext {
   ): Promise<SchemaNode> {
     const location = this.getLocation(node);
 
-    const exportList = this._exports?.get(node.getSourceFile().fileName);
+    const identifierKey = this.getIdentifierKeyForNode(node);
+    const identifierList = this.identifiers.get(identifierKey);
+    const nodeIdentifier = new Identifier(typeStr, identifierKey);
+    const parsedIdentifier = identifierList?.find(nodeIdentifier);
 
-    if (exportList?.includes(typeStr)) {
+    if (parsedIdentifier && !ExportIdentifier.isExportIdentifier(parsedIdentifier)) {
       return new TypeRefSchema(location, typeStr);
     }
 
     if (node.type && ts.isTypeNode(node.type)) {
+      // console.log("🚀 ~ file: schema-extractor-context.ts ~ line 323 ~ SchemaExtractorContext ~ node.type", node.type)
       // if a node has "type" prop, it has the type data of the node. this normally happens when the code has the type
       // explicitly, e.g. `const str: string` vs implicitly `const str = 'some-string'`, which the node won't have "type"
       return this.computeSchema(node.type);
@@ -317,17 +367,29 @@ export class SchemaExtractorContext {
     };
 
     const file = this.findFileInComponent(definition.file);
+
     if (file) {
       if (isDefInSameLocation()) {
         return unknownExactType();
       }
       const definitionNode = await this.definition(definition);
-      const definitionNodeName = definitionNode?.getText();
       if (!definitionNode) {
         return unknownExactType();
       }
+      const definitionNodeName = definitionNode?.getText();
+      const definitionIdentifier = new Identifier(definitionNodeName, this.getLocation(definitionNode).filePath);
+      console.log(
+        '🚀 ~ file: schema-extractor-context.ts ~ line 381 ~ SchemaExtractorContext ~ definitionIdentifier',
+        definitionIdentifier
+      );
 
-      if (definitionNodeName && exportList?.includes(definitionNodeName)) {
+      console.log(
+        '🚀 ~ file: schema-extractor-context.ts ~ line 384 ~ SchemaExtractorContext ~ identifierList',
+        identifierList
+      );
+      if (definitionNodeName && identifierList?.includes(definitionIdentifier)) {
+        console.log('🚀🚀🚀\n TypeRef');
+
         return new TypeRefSchema(location, definitionNodeName);
       }
 
@@ -341,6 +403,9 @@ export class SchemaExtractorContext {
         throw err;
       }
     }
+
+    console.log('🚀🚀🚀\n ExternalTypeRef');
+
     return this.getTypeRefForExternalPath(typeStr, definition.file, location);
   }
 

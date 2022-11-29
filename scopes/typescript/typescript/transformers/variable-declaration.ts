@@ -3,13 +3,14 @@ import {
   VariableLikeSchema,
   FunctionLikeSchema,
   Modifier,
+  ParameterSchema,
 } from '@teambit/semantics.entities.semantic-schema';
 import ts, { Node, VariableDeclaration as VariableDeclarationNode, ArrowFunction } from 'typescript';
+import pMapSeries from 'p-map-series';
 import { SchemaTransformer } from '../schema-transformer';
 import { SchemaExtractorContext } from '../schema-extractor-context';
-import { ExportIdentifier } from '../export-identifier';
-import { getParams } from './utils/get-params';
 import { parseReturnTypeFromQuickInfo, parseTypeFromQuickInfo } from './utils/parse-type-from-quick-info';
+import { Identifier } from '../identifier';
 
 export class VariableDeclaration implements SchemaTransformer {
   predicate(node: Node) {
@@ -21,7 +22,7 @@ export class VariableDeclaration implements SchemaTransformer {
   }
 
   async getIdentifiers(node: VariableDeclarationNode) {
-    return [new ExportIdentifier(node.name.getText(), node.getSourceFile().fileName)];
+    return [new Identifier(node.name.getText(), node.getSourceFile().fileName)];
   }
 
   async transform(varDec: VariableDeclarationNode, context: SchemaExtractorContext): Promise<SchemaNode> {
@@ -32,7 +33,9 @@ export class VariableDeclaration implements SchemaTransformer {
     const doc = await context.jsDocToDocSchema(varDec);
     const modifiers = varDec.modifiers?.map((modifier) => modifier.getText()) || [];
     if (varDec.initializer?.kind === ts.SyntaxKind.ArrowFunction) {
-      const args = await getParams((varDec.initializer as ArrowFunction).parameters, context);
+      const args = (await pMapSeries((varDec.initializer as ArrowFunction).parameters, async (param) =>
+        context.computeSchema(param)
+      )) as ParameterSchema[];
       // example => export const useLanesContext: () => LanesContextModel | undefined = () => {
       if (varDec.type) {
         const funcType = await context.resolveType(varDec, '');

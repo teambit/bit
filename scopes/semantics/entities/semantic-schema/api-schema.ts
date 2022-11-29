@@ -14,19 +14,28 @@ import {
   VariableLikeSchema,
 } from './schemas';
 import { Location, SchemaNode } from './schema-node';
-import { schemaObjToInstance } from './class-transformers';
+import { schemaObjArrayToInstances, schemaObjToInstance } from './class-transformers';
 import { componentIdTransformer } from './class-transformers/comp-id-transformer';
 
 export class APISchema extends SchemaNode {
   @Transform(schemaObjToInstance)
-  readonly module: ModuleSchema;
+  readonly module: ModuleSchema; // index
+
+  @Transform(schemaObjArrayToInstances)
+  readonly internalModules: Array<ModuleSchema>; // non index
 
   @Transform(componentIdTransformer)
   readonly componentId: ComponentID;
 
-  constructor(readonly location: Location, module: ModuleSchema, componentId: ComponentID) {
+  constructor(
+    readonly location: Location,
+    module: ModuleSchema,
+    internalModules: Array<ModuleSchema>,
+    componentId: ComponentID
+  ) {
     super();
     this.module = module;
+    this.internalModules = internalModules;
     this.componentId = componentId;
   }
 
@@ -75,7 +84,8 @@ export class APISchema extends SchemaNode {
   static empty(componentId: ComponentID) {
     return new APISchema(
       { filePath: '', line: 0, character: 0 },
-      new ModuleSchema({ filePath: '', line: 0, character: 0 }, []),
+      new ModuleSchema({ filePath: '', line: 0, character: 0 }, [], ''),
+      [],
       componentId
     );
   }
