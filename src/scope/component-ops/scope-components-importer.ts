@@ -145,7 +145,7 @@ export default class ScopeComponentsImporter {
       throwForSeederNotFound,
       preferDependencyGraph
     );
-    const versionDeps = await this.bitIdsToVersionDeps(idsToImport, throwForSeederNotFound);
+    const versionDeps = await this.bitIdsToVersionDeps(idsToImport, throwForSeederNotFound, preferDependencyGraph);
     logger.debug('importMany, completed!');
     return versionDeps;
   }
@@ -837,7 +837,11 @@ export default class ScopeComponentsImporter {
    * convert ids to VersionDependencies with performance in mind.
    * it doesn't go to any remote and it fetches each component only once.
    */
-  private async bitIdsToVersionDeps(ids: BitId[], throwForSeederNotFound = true): Promise<VersionDependencies[]> {
+  private async bitIdsToVersionDeps(
+    ids: BitId[],
+    throwForSeederNotFound = true,
+    preferDependencyGraph = false
+  ): Promise<VersionDependencies[]> {
     logger.debug(`bitIdsToVersionDeps, ${ids.length} ids`);
     const compDefs = await this.sources.getMany(ids);
     const versionDepsWithNulls = await mapSeries(compDefs, async ({ component, id }) => {
@@ -861,7 +865,10 @@ export default class ScopeComponentsImporter {
       return new VersionDependencies(versionComp, [], version);
     });
     const versionDeps = compact(versionDepsWithNulls);
-    const allFlattened = versionDeps.map((v) => v.version.getAllFlattenedDependencies());
+    const allFlattened = versionDeps.map((v) => {
+      if (preferDependencyGraph && v.version.flattenedEdges.length) return [];
+      return v.version.getAllFlattenedDependencies();
+    });
     const allFlattenedUniq = BitIds.uniqFromArray(flatten(allFlattened));
     const allFlattenedDefs = await this.sources.getMany(allFlattenedUniq);
     const flattenedComponentVersions = compact(
