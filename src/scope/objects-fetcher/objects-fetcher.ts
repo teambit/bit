@@ -144,6 +144,9 @@ the remote scope "${scopeName}" was not found`);
   }
 
   private showProgress(objectsQueue: WriteObjectsQueue, componentsQueue: WriteComponentsQueue) {
+    if (process.env.CI) {
+      return; // don't show progress on CI.
+    }
     let objectsAdded = 0;
     let objectsCompleted = 0;
     let componentsAdded = 0;

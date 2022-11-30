@@ -325,6 +325,7 @@ export class IsolatorMain {
     if (installOptions.installPackages) {
       const cachePackagesOnCapsulesRoot = opts.cachePackagesOnCapsulesRoot ?? false;
       const linkingOptions = opts.linkingOptions ?? {};
+      const longProcessLogger = this.logger.createLongProcessLogger('install packages');
       if (installOptions.useNesting) {
         await Promise.all(
           capsuleList.map(async (capsule) => {
@@ -341,6 +342,8 @@ export class IsolatorMain {
         await this.installInCapsules(rootDir, capsuleList, installOptions, cachePackagesOnCapsulesRoot);
         await this.linkInCapsules(capsulesDir, capsuleList, capsulesWithPackagesData, linkingOptions);
       }
+      longProcessLogger.end();
+      this.logger.consoleSuccess();
     }
 
     // rewrite the package-json with the component dependencies in it. the original package.json
