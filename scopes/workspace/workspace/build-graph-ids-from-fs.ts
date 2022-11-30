@@ -5,7 +5,7 @@ import { Consumer } from '@teambit/legacy/dist/consumer';
 import { Component, ComponentID } from '@teambit/component';
 import BitIds from '@teambit/legacy/dist/bit-id/bit-ids';
 import { ComponentDependency, DependencyResolverMain } from '@teambit/dependency-resolver';
-import { DepEdgeType } from '@teambit/graph';
+import { CompIdGraph, DepEdgeType } from '@teambit/graph';
 import { ComponentNotFound, ScopeNotFound } from '@teambit/legacy/dist/scope/exceptions';
 import { ComponentNotFound as ComponentNotFoundInScope } from '@teambit/scope';
 import compact from 'lodash.compact';
@@ -43,33 +43,8 @@ export class GraphIdsFromFsBuilder {
 
   /**
    * create a graph with all dependencies and flattened dependencies of the given components.
-   * the nodes are components and the edges has a label of the dependency type.
-   *
-   * the way how it is done is iterations by depths. each depth we gather all the dependencies of
-   * that depths, make sure all objects exist and then check their dependencies for the next depth.
-   * once there is no dependency left, we're on the last depth level and the graph is ready.
-   *
-   * for example, imagine the following graph:
-   * A1 -> A2 -> A3
-   * B1 -> B2 -> B3
-   * C1 -> C2 -> C3
-   *
-   * where the buildGraph is given [A1, B1, C1].
-   * first, it saves all these components as nodes in the graph. then, it finds the dependencies of
-   * the next level, in this case they're [A2, B2, C2]. it runs `importMany` in case some objects
-   * are missing. then, it loads them all (some from FS, some from the model) and sets the edges
-   * between the component and the dependencies.
-   * once done, it finds all their dependencies, which are [A3, B3, C3] and repeat the process
-   * above. since there are no more dependencies, the graph is completed.
-   * in this case, the total depth levels are 3.
-   *
-   * even with a huge project, there are not many depth levels. by iterating through depth levels
-   * we keep performance sane as the importMany doesn't run multiple time and therefore the round
-   * trips to the remotes are minimal.
-   *
-   * normally, one importMany of the seeders is enough as importMany knows to fetch all flattened.
-   * however, since this buildGraph is performed on the workspace, a dependency may be new or
-   * modified and as such, we don't know its flattened yet.
+   * the nodes are component-ids and the edges has a label of the dependency type.
+   * to get some info about this the graph build take a look into build-graph-from-fs.buildGraph() docs.
    */
   async buildGraph(ids: ComponentID[]): Promise<Graph<ComponentID, DepEdgeType>> {
     this.logger.debug(`GraphIdsFromFsBuilder, buildGraph with ${ids.length} seeders`);
@@ -80,14 +55,6 @@ export class GraphIdsFromFsBuilder {
       `GraphIdsFromFsBuilder, buildGraph with ${ids.length} seeders completed (${(Date.now() - start) / 1000} sec)`
     );
     return this.graph;
-  }
-
-  /**
-   * get all direct dependencies
-   */
-  private async getAllDeps(component: Component): Promise<ComponentID[]> {
-    const deps = await this.dependencyResolver.getComponentDependencies(component);
-    return deps.map((dep) => dep.componentId);
   }
 
   private async processManyComponents(components: Component[]) {
@@ -104,13 +71,11 @@ export class GraphIdsFromFsBuilder {
   /**
    * only for components from the workspace that can be modified to add/remove dependencies, we need to make sure that
    * all their dependencies are imported.
-   * remember that `importMany` fetches all flattened dependencies. once a component from scope is imported, we know
-   * that all its flattened dependencies are there. no need to call importMany again for them.
+   * once a component from scope is imported, we know that either we have its dependency graph or all flattened deps
    */
   private async importObjects(components: Component[]) {
     const workspaceIds = await this.workspace.listIds();
     const compOnWorkspaceOnly = components.filter((comp) => workspaceIds.find((id) => id.isEqual(comp.id)));
-    // const allDeps = (await Promise.all(compOnWorkspaceOnly.map((c) => this.getAllDeps(c)))).flat();
     const notImported = compOnWorkspaceOnly.map((c) => c.id).filter((id) => !this.importedIds.includes(id.toString()));
     const withScope = notImported.map((id) => id._legacy).filter((dep) => dep.hasScope());
     const scopeComponentsImporter = this.consumer.scope.scopeImporter;
@@ -131,18 +96,7 @@ export class GraphIdsFromFsBuilder {
     if (graphFromScope?.edges.length) {
       const isOnWorkspace = await this.workspace.hasId(component.id);
       if (isOnWorkspace) {
-        const deps = await this.dependencyResolver.getComponentDependencies(component);
-        const [depsInScopeGraph, depsNotInScopeGraph] = partition(deps, (dep) =>
-          graphFromScope.hasNode(dep.componentId.toString())
-        );
-        const subGraphs = depsInScopeGraph.map((dep) =>
-          graphFromScope.successorsSubgraph([dep.componentId.toString()])
-        );
-        this.graph.merge(subGraphs);
-
-        const allDepsIds = depsNotInScopeGraph.map((d) => d.componentId);
-        const allDependenciesComps = await this.loadManyComponents(allDepsIds, idStr);
-        deps.forEach((dep) => this.addDepEdge(idStr, dep));
+        const allDependenciesComps = await this.processCompFromWorkspaceWithGraph(graphFromScope, component);
         this.completed.push(idStr);
         return allDependenciesComps;
       }
@@ -158,6 +112,32 @@ export class GraphIdsFromFsBuilder {
     deps.forEach((dep) => this.addDepEdge(idStr, dep));
     this.completed.push(idStr);
 
+    return allDependenciesComps;
+  }
+
+  /**
+   * this is tricky.
+   * the component is in the workspace so it can be modified. dependencies can be added/removed/updated/downgraded.
+   * we have the graph-dependencies from the last snap, so we prefer to use it whenever possible for performance reasons.
+   * if we can't use it, we have to recursively load dependencies components and get the data from there.
+   * to maximize the performance, we iterate the direct dependencies, if we find a dep with the same id in the graph,
+   * then ask the graph for all its successors. otherwise, if it's not there, fallback to load the deps components.
+   */
+  private async processCompFromWorkspaceWithGraph(
+    graphFromScope: CompIdGraph,
+    component: Component
+  ): Promise<Component[]> {
+    const deps = await this.dependencyResolver.getComponentDependencies(component);
+    const [depsInScopeGraph, depsNotInScopeGraph] = partition(deps, (dep) =>
+      graphFromScope.hasNode(dep.componentId.toString())
+    );
+    const subGraphs = depsInScopeGraph.map((dep) => graphFromScope.successorsSubgraph([dep.componentId.toString()]));
+    this.graph.merge(subGraphs);
+
+    const allDepsIds = depsNotInScopeGraph.map((d) => d.componentId);
+    const idStr = component.id.toString();
+    const allDependenciesComps = await this.loadManyComponents(allDepsIds, idStr);
+    deps.forEach((dep) => this.addDepEdge(idStr, dep));
     return allDependenciesComps;
   }
 
