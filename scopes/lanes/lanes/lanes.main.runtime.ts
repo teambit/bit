@@ -13,8 +13,6 @@ import { DiffOptions } from '@teambit/legacy/dist/consumer/component-ops/compone
 import { MergeStrategy, MergeOptions } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
 import { TrackLane } from '@teambit/legacy/dist/scope/scope-json';
 import { ImporterAspect, ImporterMain, ImportOptions } from '@teambit/importer';
-import { CommunityAspect } from '@teambit/community';
-import type { CommunityMain } from '@teambit/community';
 import ComponentAspect, { Component, ComponentID, ComponentMain } from '@teambit/component';
 import removeLanes from '@teambit/legacy/dist/consumer/lanes/remove-lanes';
 import { Lane } from '@teambit/legacy/dist/scope/models';
@@ -673,7 +671,6 @@ export class LanesMain {
     ScopeAspect,
     WorkspaceAspect,
     GraphqlAspect,
-    CommunityAspect,
     MergingAspect,
     ComponentAspect,
     LoggerAspect,
@@ -682,24 +679,11 @@ export class LanesMain {
     ExpressAspect,
   ];
   static runtime = MainRuntime;
-  static async provider([
-    cli,
-    scope,
-    workspace,
-    graphql,
-    community,
-    merging,
-    component,
-    loggerMain,
-    importer,
-    exporter,
-    express,
-  ]: [
+  static async provider([cli, scope, workspace, graphql, merging, component, loggerMain, importer, exporter, express]: [
     CLIMain,
     ScopeMain,
     Workspace,
     GraphqlMain,
-    CommunityMain,
     MergingMain,
     ComponentMain,
     LoggerMain,
@@ -710,7 +694,7 @@ export class LanesMain {
     const logger = loggerMain.createLogger(LanesAspect.id);
     const lanesMain = new LanesMain(workspace, scope, merging, component, logger, importer, exporter);
     const switchCmd = new SwitchCmd(lanesMain);
-    const laneCmd = new LaneCmd(lanesMain, workspace, scope, community.getDocsDomain());
+    const laneCmd = new LaneCmd(lanesMain, workspace, scope);
     laneCmd.commands = [
       new LaneListCmd(lanesMain, workspace, scope),
       switchCmd,

@@ -9,7 +9,6 @@ import Component from '../../consumer-component';
 import { DependenciesData } from './dependencies-data';
 import DependencyResolver from './dependencies-resolver';
 import { COMPONENT_CONFIG_FILE_NAME } from '../../../../constants';
-import { MISSING_PACKAGES_FROM_OVERRIDES_LABEL } from '../../../../cli/templates/component-issues-template';
 
 type Opts = {
   cacheResolvedDependencies: Record<string, any>;
@@ -84,9 +83,7 @@ export class DependenciesLoader {
     this.component.peerPackageDependencies = dependenciesData.allPackagesDependencies.peerPackageDependencies ?? {};
     const missingFromOverrides = dependenciesData.overridesDependencies.missingPackageDependencies;
     if (!R.isEmpty(missingFromOverrides)) {
-      dependenciesData.issues.getOrCreate(IssuesClasses.MissingPackagesDependenciesOnFs).data[
-        MISSING_PACKAGES_FROM_OVERRIDES_LABEL
-      ] = missingFromOverrides;
+      dependenciesData.issues.getOrCreate(IssuesClasses.MissingManuallyConfiguredPackages).data = missingFromOverrides;
     }
     if (!dependenciesData.issues.isEmpty()) this.component.issues = dependenciesData.issues;
     this.component.manuallyRemovedDependencies = dependenciesData.overridesDependencies.manuallyRemovedDependencies;

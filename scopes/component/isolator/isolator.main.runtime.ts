@@ -238,23 +238,25 @@ export class IsolatorMain {
   private async createGraph(seeders: ComponentID[], opts: CreateGraphOptions = {}): Promise<Component[]> {
     const host = this.componentAspect.getHost();
     const getGraphOpts = pick(opts, ['host']);
-    const graph = await this.graph.getGraph(seeders, getGraphOpts);
+    const graph = await this.graph.getGraphIds(seeders, getGraphOpts);
     const successorsSubgraph = graph.successorsSubgraph(seeders.map((id) => id.toString()));
-    const compsAndDeps = successorsSubgraph.nodes.map((node) => node.attr);
+    const compsAndDepsIds = successorsSubgraph.nodes.map((node) => node.attr);
     // do not ignore the version here. a component might be in .bitmap with one version and
     // installed as a package with another version. we don't want them both.
-    const existingCompsP = compsAndDeps.map(async (c) => {
-      let existing;
-      if (opts.includeFromNestedHosts) {
-        existing = await host.hasIdNested(c.id, true);
-      } else {
-        existing = await host.hasId(c.id);
-      }
-      if (existing) return c;
-      return undefined;
-    });
-    const existingComps = await Promise.all(existingCompsP);
-    return compact(existingComps);
+    const existingCompsIds = await Promise.all(
+      compsAndDepsIds.map(async (id) => {
+        let existing;
+        if (opts.includeFromNestedHosts) {
+          existing = await host.hasIdNested(id, true);
+        } else {
+          existing = await host.hasId(id);
+        }
+        if (existing) return id;
+        return undefined;
+      })
+    );
+    const existingComps = await host.getMany(compact(existingCompsIds));
+    return existingComps;
   }
 
   /**
@@ -323,6 +325,7 @@ export class IsolatorMain {
     if (installOptions.installPackages) {
       const cachePackagesOnCapsulesRoot = opts.cachePackagesOnCapsulesRoot ?? false;
       const linkingOptions = opts.linkingOptions ?? {};
+      const longProcessLogger = this.logger.createLongProcessLogger('install packages');
       if (installOptions.useNesting) {
         await Promise.all(
           capsuleList.map(async (capsule) => {
@@ -339,6 +342,8 @@ export class IsolatorMain {
         await this.installInCapsules(rootDir, capsuleList, installOptions, cachePackagesOnCapsulesRoot);
         await this.linkInCapsules(capsulesDir, capsuleList, capsulesWithPackagesData, linkingOptions);
       }
+      longProcessLogger.end();
+      this.logger.consoleSuccess();
     }
 
     // rewrite the package-json with the component dependencies in it. the original package.json

@@ -235,7 +235,7 @@ export class WorkspaceUI {
       component: function Gallery() {
         return (
           <MenuLinkItem exact href="/" icon="comps">
-            Workspace Overview
+            Workspace overview
           </MenuLinkItem>
         );
       },

@@ -559,11 +559,8 @@ export default class Consumer {
   ): Promise<Consumer> {
     const resolvedScopePath = Consumer._getScopePath(projectPath, standAlone);
     let existingGitHooks;
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const scopeP = Scope.ensure(resolvedScopePath);
-
-    const configP = WorkspaceConfig.ensure(projectPath, standAlone, workspaceConfigProps);
-    const [scope, config] = await Promise.all([scopeP, configP]);
+    const scope = await Scope.ensure(resolvedScopePath);
+    const config = await WorkspaceConfig.ensure(projectPath, standAlone, workspaceConfigProps);
     const consumer = new Consumer({
       projectPath,
       created: true,

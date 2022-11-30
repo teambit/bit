@@ -37,10 +37,12 @@ import { loadScopeIfExist } from '@teambit/legacy/dist/scope/scope-loader';
 import { PersistOptions } from '@teambit/legacy/dist/scope/types';
 import { DEFAULT_DIST_DIRNAME } from '@teambit/legacy/dist/constants';
 import { ExportPersist, PostSign } from '@teambit/legacy/dist/scope/actions';
+import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { getScopeRemotes } from '@teambit/legacy/dist/scope/scope-remotes';
 import { Remotes } from '@teambit/legacy/dist/remotes';
 import { isMatchNamespacePatternItem } from '@teambit/workspace.modules.match-pattern';
 import { Scope } from '@teambit/legacy/dist/scope';
+import { CompIdGraph, DepEdgeType } from '@teambit/graph';
 import { Types } from '@teambit/legacy/dist/scope/object-registrar';
 import { FETCH_OPTIONS } from '@teambit/legacy/dist/api/scope/lib/fetch';
 import { ObjectList } from '@teambit/legacy/dist/scope/objects/object-list';
@@ -129,7 +131,9 @@ export class ScopeMain implements ComponentFactory {
 
     private logger: Logger,
 
-    private envs: EnvsMain
+    private envs: EnvsMain,
+
+    private dependencyResolver: DependencyResolverMain
   ) {
     this.componentLoader = new ScopeComponentLoader(this, this.logger);
   }
@@ -759,18 +763,90 @@ needed-for: ${neededFor || '<unknown>'}`);
     // build the graph
     const graph = new Graph<Component, string>();
     allComponents.forEach((comp) => graph.setNode(new Node(comp.id.toString(), comp)));
-    allComponents.forEach((comp) => {
-      const consumerComp = comp.state._consumer as ConsumerComponent;
-      Object.entries(consumerComp.depsIdsGroupedByType).forEach(([depType, depIds]) => {
-        depIds.forEach((depId) => {
-          const depCompId = this.resolveComponentIdFromBitId(depId);
-          if (!graph.hasNode(depId.toString())) {
-            throw new Error(`scope.getGraph: missing node of ${depId.toString()}`);
+    await Promise.all(
+      allComponents.map(async (comp) => {
+        const deps = await this.dependencyResolver.getComponentDependencies(comp);
+        deps.forEach((dep) => {
+          const depCompId = dep.componentId;
+          if (!graph.hasNode(depCompId.toString())) {
+            throw new Error(`scope.getGraph: missing node of ${depCompId.toString()}`);
           }
-          graph.setEdge(new Edge(comp.id.toString(), depCompId.toString(), depType));
+          graph.setEdge(new Edge(comp.id.toString(), depCompId.toString(), dep.lifecycle));
         });
-      });
+      })
+    );
+    return graph;
+  }
+
+  async getGraphIds(ids?: ComponentID[]): Promise<CompIdGraph> {
+    if (!ids || !ids.length) ids = (await this.list()).map((comp) => comp.id) || [];
+    const components = await this.getMany(ids);
+    const graph = new Graph<ComponentID, DepEdgeType>();
+    const componentsWithoutSavedGraph: Component[] = [];
+
+    // try to add from saved graph
+    components.forEach((component) => {
+      const compGraph = this.getSavedGraphOfComponentIfExist(component);
+      if (!compGraph) {
+        componentsWithoutSavedGraph.push(component);
+        return;
+      }
+      graph.merge([graph]);
     });
+    if (!componentsWithoutSavedGraph.length) {
+      return graph;
+    }
+
+    // there are components that don't have the graph saved, create the graph by using Version objects of all flattened
+    const lane = (await this.legacyScope.getCurrentLaneObject()) || undefined;
+    await this.import(
+      componentsWithoutSavedGraph.map((c) => c.id),
+      { reFetchUnBuiltVersion: false, lane }
+    );
+
+    const allFlattened = componentsWithoutSavedGraph
+      .map((component) => component.state._consumer.getAllFlattenedDependencies())
+      .flat();
+    const allFlattenedUniq = BitIds.uniqFromArray(allFlattened);
+
+    const addEdges = (compId: ComponentID, dependencies: ConsumerComponent['dependencies'], label: DepEdgeType) => {
+      dependencies.get().forEach((dep) => {
+        const depId = this.resolveComponentIdFromBitId(dep.id);
+        graph.setNode(new Node(depId.toString(), depId));
+        graph.setEdge(new Edge(compId.toString(), depId.toString(), label));
+      });
+    };
+    const componentsAndVersions = await this.legacyScope.getComponentsAndVersions(allFlattenedUniq);
+    componentsAndVersions.forEach(({ component, version, versionStr }) => {
+      const compBitId = component.toBitId().changeVersion(versionStr);
+      const compId = this.resolveComponentIdFromBitId(compBitId);
+      graph.setNode(new Node(compId.toString(), compId));
+      addEdges(compId, version.dependencies, 'prod');
+      addEdges(compId, version.devDependencies, 'dev');
+      addEdges(compId, version.extensionDependencies, 'ext');
+    });
+
+    return graph;
+  }
+
+  private getSavedGraphOfComponentIfExist(component: Component): Graph<ComponentID, DepEdgeType> | null {
+    const consumerComponent = component.state._consumer as ConsumerComponent;
+    const flattenedEdges = consumerComponent.flattenedEdges;
+    if (!flattenedEdges.length && consumerComponent.flattenedDependencies.length) {
+      // there are flattenedDependencies, so must be edges, if they're empty, it's because the component was tagged
+      // with a version < ~0.0.901, so this flattenedEdges wasn't exist.
+      return null;
+    }
+    const edges = flattenedEdges.map((edge) => ({
+      ...edge,
+      source: this.resolveComponentIdFromBitId(edge.source),
+      target: this.resolveComponentIdFromBitId(edge.target),
+    }));
+    const nodes = consumerComponent.flattenedDependencies.map((depId) => this.resolveComponentIdFromBitId(depId));
+
+    const graph = new Graph<ComponentID, DepEdgeType>();
+    nodes.forEach((node) => graph.setNode(new Node(node.toString(), node)));
+    edges.forEach((edge) => graph.setEdge(new Edge(edge.source.toString(), edge.target.toString(), edge.type)));
     return graph;
   }
 
@@ -969,7 +1045,7 @@ needed-for: ${neededFor || '<unknown>'}`);
 
   async getStagedConfig() {
     const currentLaneId = this.legacyScope.currentLaneId;
-    return StagedConfig.load(this.path, currentLaneId);
+    return StagedConfig.load(this.path, this.logger, currentLaneId);
   }
 
   /**
@@ -1146,6 +1222,7 @@ needed-for: ${neededFor || '<unknown>'}`);
     ExpressAspect,
     LoggerAspect,
     EnvsAspect,
+    DependencyResolverAspect,
   ];
 
   static defaultConfig: ScopeConfig = {
@@ -1153,7 +1230,7 @@ needed-for: ${neededFor || '<unknown>'}`);
   };
 
   static async provider(
-    [componentExt, ui, graphql, cli, isolator, aspectLoader, express, loggerMain, envs]: [
+    [componentExt, ui, graphql, cli, isolator, aspectLoader, express, loggerMain, envs, depsResolver]: [
       ComponentMain,
       UiMain,
       GraphqlMain,
@@ -1162,7 +1239,8 @@ needed-for: ${neededFor || '<unknown>'}`);
       AspectLoaderMain,
       ExpressMain,
       LoggerMain,
-      EnvsMain
+      EnvsMain,
+      DependencyResolverMain
     ],
     config: ScopeConfig,
     [postPutSlot, postDeleteSlot, postExportSlot, postObjectsPersistSlot, preFetchObjectsSlot]: [
@@ -1194,7 +1272,8 @@ needed-for: ${neededFor || '<unknown>'}`);
       isolator,
       aspectLoader,
       logger,
-      envs
+      envs,
+      depsResolver
     );
     cli.registerOnStart(async (hasWorkspace: boolean) => {
       if (hasWorkspace) return;

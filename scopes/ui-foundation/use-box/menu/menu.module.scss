@@ -1,3 +1,9 @@
+@import '~@teambit/ui-foundation.ui.constants.z-indexes/z-indexes.module.scss';
+
+.container {
+  z-index: $modal-z-index;
+}
+
 .top {
   padding: 16px 24px 24px 24px;
   color: var(--bit-text-color-heavy, #2b2b2b);

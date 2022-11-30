@@ -93,7 +93,8 @@ export default class ComponentOverrides {
     if (!isLegacy) {
       extensionsAddedOverrides = await runOnLoadOverridesEvent(
         this.componentOverridesLoadingRegistry,
-        componentConfig.parseExtensions()
+        componentConfig.parseExtensions(),
+        componentId
       );
     }
     const mergedLegacyConsumerOverridesWithExtensions = mergeOverrides(
@@ -223,12 +224,13 @@ function mergeExtensionsOverrides(configs: DependenciesOverridesData[]): any {
  */
 async function runOnLoadOverridesEvent(
   configsRegistry: OverridesLoadRegistry,
-  extensions: ExtensionDataList
+  extensions: ExtensionDataList,
+  id: BitId
 ): Promise<DependenciesOverridesData> {
   const extensionsAddedOverridesP = Object.keys(configsRegistry).map((extId) => {
     // TODO: only running func for relevant extensions
     const func = configsRegistry[extId];
-    return func(extensions);
+    return func(extensions, id);
   });
   const extensionsAddedOverrides = await Promise.all(extensionsAddedOverridesP);
   let extensionsConfigModificationsObject = mergeExtensionsOverrides(extensionsAddedOverrides);
