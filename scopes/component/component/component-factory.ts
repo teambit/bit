@@ -63,8 +63,16 @@ export interface ComponentFactory {
    */
   getRemoteComponent?: (id: ComponentID) => Promise<Component>;
 
+  /**
+   * important - prefer using `getGraphIds()` if you don't need the component objects.
+   * this method has a performance penalty. it must import all flattened-dependencies objects from the remotes.
+   */
   getGraph(ids?: ComponentID[], shouldThrowOnMissingDep?: boolean): Promise<Graph<Component, string>>;
 
+  /**
+   * get graph of the given component-ids and all their dependencies (recursively/flattened).
+   * the nodes are ComponentIds and is much faster than `this.getGraph()`.
+   */
   getGraphIds(ids?: ComponentID[], shouldThrowOnMissingDep?: boolean): Promise<CompIdGraph>;
 
   getLogs(id: ComponentID, shortHash?: boolean, startsFrom?: string): Promise<ComponentLog[]>;

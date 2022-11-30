@@ -11,6 +11,9 @@ export type GetGraphOpts = {
 export class GraphBuilder {
   constructor(private componentAspect: ComponentMain) {}
 
+  /**
+   * important - prefer using `getGraphIds()` it's way better in terms of performance.
+   */
   async getGraph(ids?: ComponentID[], opts: GetGraphOpts = {}): Promise<ComponentGraph> {
     const componentHost = opts.host || this.componentAspect.getHost();
 

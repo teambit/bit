@@ -12,6 +12,9 @@ import { ComponentIdGraph } from './component-id-graph';
 export class GraphMain {
   constructor(private componentAspect: ComponentMain, private logger: Logger) {}
 
+  /**
+   * important - prefer using `getGraphIds()` it's way better in terms of performance.
+   */
   async getGraph(ids?: ComponentID[], opts: GetGraphOpts = {}): Promise<ComponentGraph> {
     const graphBuilder = new GraphBuilder(this.componentAspect);
     return graphBuilder.getGraph(ids, opts);
