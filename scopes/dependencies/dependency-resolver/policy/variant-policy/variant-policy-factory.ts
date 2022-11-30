@@ -45,6 +45,7 @@ function entriesFromKey(
     if (value){
       return createEntry(depId, value, lifecycleType, source, hidden, usedOnly);
     }
+    return undefined;
   });
   return compact(entries);
 }
