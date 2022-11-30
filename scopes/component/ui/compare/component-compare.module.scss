@@ -60,9 +60,7 @@
 }
 
 .collapsedMenuLink {
-  // > a {
-    &::after {
-      display: none;
-    }
-  // }
+  &::after {
+    display: none;
+  }
 }
