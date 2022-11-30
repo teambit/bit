@@ -1246,7 +1246,7 @@ either, use the ignore file syntax or change the require statement to have a mod
       const missingPackages: string[] = union(...(Object.values(missingsData) || []));
 
       missingPackages.forEach((pkgName) => {
-        const peerVersionFromEnvPolicy = envPolicy[pkgName];
+        const peerVersionFromEnvPolicy = peersFromPolicy[pkgName];
         if (peerVersionFromEnvPolicy) {
           peerDeps[pkgName] = peerVersionFromEnvPolicy;
         }
