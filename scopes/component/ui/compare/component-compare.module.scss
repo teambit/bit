@@ -52,7 +52,17 @@
 }
 
 .tab {
+  // TODO - create z-index pallete system.
+  z-index: 10; // to prevent it from hiding behind aspect tab content.
   > div {
     padding: 0;
   }
+}
+
+.collapsedMenuLink {
+  // > a {
+    &::after {
+      display: none;
+    }
+  // }
 }

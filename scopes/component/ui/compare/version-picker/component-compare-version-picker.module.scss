@@ -25,6 +25,8 @@
   min-width: 0;
   align-items: center;
   font-size: 14px;
+  // TODO - create z-index pallete system.
+  z-index: $nav-z-index; // to prevent it from going over the responsive navbar dropdown, but still keep it above the content below.
 
   &.left {
     padding-right: 16px;
