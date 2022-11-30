@@ -1,6 +1,8 @@
 import React, { ReactNode } from 'react';
 import { Route, RouteProps } from 'react-router-dom';
+import { flatten } from 'lodash';
 import { Slot, Harmony } from '@teambit/harmony';
+import { LaneCompare, LaneCompareProps as DefaultLaneCompareProps } from '@teambit/lanes.ui.compare.lane-compare';
 import { UIRuntime, UiUI, UIAspect } from '@teambit/ui';
 import { LanesAspect } from '@teambit/lanes';
 import { NavigationSlot, RouteSlot } from '@teambit/ui-foundation.ui.react-router.slot-router';
@@ -8,7 +10,6 @@ import { NotFoundPage } from '@teambit/design.ui.pages.not-found';
 import ScopeAspect, { ScopeUI } from '@teambit/scope';
 import WorkspaceAspect, { WorkspaceUI } from '@teambit/workspace';
 import ComponentAspect, { ComponentID, ComponentUI, useIdFromLocation } from '@teambit/component';
-import SidebarAspect, { SidebarUI } from '@teambit/sidebar';
 import { MenuWidget, MenuWidgetSlot } from '@teambit/ui-foundation.ui.menu';
 import { LaneOverview, LaneOverviewLine, LaneOverviewLineSlot } from '@teambit/lanes.ui.lane-overview';
 import {
@@ -23,9 +24,14 @@ import { LaneSwitcher } from '@teambit/lanes.ui.navigation.lane-switcher';
 import { LaneId } from '@teambit/lane-id';
 import { useViewedLaneFromUrl } from '@teambit/lanes.hooks.use-viewed-lane-from-url';
 import { LaneComparePage } from '@teambit/lanes.ui.compare.lane-compare-page';
+import { TabItem } from '@teambit/component.ui.component-compare.models.component-compare-props';
+import { ComponentCompareAspect, ComponentCompareUI } from '@teambit/component-compare';
+
+export type LaneCompareProps = Omit<DefaultLaneCompareProps, 'host'> & Partial<Pick<DefaultLaneCompareProps, 'host'>>;
 
 export class LanesUI {
-  static dependencies = [UIAspect, ComponentAspect, WorkspaceAspect, ScopeAspect, SidebarAspect];
+  static dependencies = [UIAspect, ComponentAspect, WorkspaceAspect, ScopeAspect, ComponentCompareAspect];
+
   static runtime = UIRuntime;
   static slots = [
     Slot.withType<RouteProps>(),
@@ -35,7 +41,8 @@ export class LanesUI {
   ];
 
   constructor(
-    private componentUi: ComponentUI,
+    private componentUI: ComponentUI,
+    private componentCompareUI: ComponentCompareUI,
     private routeSlot: RouteSlot,
     private navSlot: LanesOrderedNavigationSlot,
     private menuWidgetSlot: MenuWidgetSlot,
@@ -127,14 +134,14 @@ export class LanesUI {
   };
 
   getLaneComponent() {
-    return this.componentUi.getComponentUI(this.host, {
+    return this.componentUI.getComponentUI(this.host, {
       componentId: this.useComponentId,
       useComponentFilters: this.useComponentFilters,
     });
   }
 
   getLaneComponentMenu() {
-    return this.componentUi.getMenu(this.host, {
+    return this.componentUI.getMenu(this.host, {
       componentId: this.useComponentId,
       useComponentFilters: this.useComponentFilters,
     });
@@ -163,7 +170,7 @@ export class LanesUI {
   }
 
   getLanesComparePage() {
-    return <LaneComparePage host={this.host} />;
+    return <LaneComparePage getLaneCompare={this.getLaneCompare} />;
   }
 
   registerMenuWidget(...menuItems: MenuWidget[]) {
@@ -252,8 +259,42 @@ export class LanesUI {
     this.navSlot.register(routes);
   }
 
+  getLaneCompare = (props: LaneCompareProps) => {
+    const routes = this.componentCompareUI.routes;
+    const navLinks = this.componentCompareUI.navLinks;
+
+    const getElement = (routeProps: RouteProps[], href?: string) => {
+      if (routeProps.length === 1) return routeProps[0].element;
+      if (!href) return undefined;
+      return routeProps.find((route) => route.path?.startsWith(href))?.element;
+    };
+
+    const tabs: TabItem[] = flatten(
+      Array.from(navLinks.entries()).map(([id, navProps]) => {
+        const maybeRoutesForId = routes.get(id);
+        const routesForId =
+          (maybeRoutesForId && (Array.isArray(maybeRoutesForId) ? [...maybeRoutesForId] : [maybeRoutesForId])) || [];
+
+        return navProps.map((navProp) => ({
+          id: `${id}-${navProp.props.href}`,
+          order: navProp.order,
+          props: navProp.props,
+          element: getElement(routesForId, navProp.props.href),
+        }));
+      })
+    );
+
+    return <LaneCompare {...props} host={props.host || this.host} tabs={props.tabs || tabs} />;
+  };
+
   static async provider(
-    [uiUi, componentUi, workspaceUi, scopeUi]: [UiUI, ComponentUI, WorkspaceUI, ScopeUI, SidebarUI],
+    [uiUi, componentUI, workspaceUi, scopeUi, componentCompareUI]: [
+      UiUI,
+      ComponentUI,
+      WorkspaceUI,
+      ScopeUI,
+      ComponentCompareUI
+    ],
     _,
     [routeSlot, overviewSlot, navSlot, menuWidgetSlot]: [
       RouteSlot,
@@ -273,7 +314,16 @@ export class LanesUI {
     if (host === ScopeAspect.id) {
       scope = scopeUi;
     }
-    const lanesUi = new LanesUI(componentUi, routeSlot, navSlot, overviewSlot, menuWidgetSlot, workspace, scope);
+    const lanesUi = new LanesUI(
+      componentUI,
+      componentCompareUI,
+      routeSlot,
+      navSlot,
+      overviewSlot,
+      menuWidgetSlot,
+      workspace,
+      scope
+    );
     if (uiUi) uiUi.registerRenderHooks({ reactContext: lanesUi.renderContext });
     lanesUi.registerRoutes();
     lanesUi.registerMenuWidget(() => {

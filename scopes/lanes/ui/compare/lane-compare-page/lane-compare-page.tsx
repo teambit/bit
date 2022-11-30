@@ -1,47 +1,26 @@
 import React, { HTMLAttributes } from 'react';
-import { LaneCompare } from '@teambit/lanes.ui.compare.lane-compare';
+import { LaneCompareProps } from '@teambit/lanes';
 import { useLanes } from '@teambit/lanes.hooks.use-lanes';
-import { CodeCompareSection } from '@teambit/code';
-import { AspectsCompareSection } from '@teambit/component-compare';
 
 import styles from './lane-compare-page.module.scss';
 
 export type LaneComparePageProps = {
-  host: string;
+  getLaneCompare: (props: LaneCompareProps) => JSX.Element;
 } & HTMLAttributes<HTMLDivElement>;
 
-export function LaneComparePage({ host, ...rest }: LaneComparePageProps) {
+export function LaneComparePage({ getLaneCompare, ...rest }: LaneComparePageProps) {
   const { lanesModel } = useLanes();
 
   if (!lanesModel) return null;
 
-  const code = new CodeCompareSection();
-  const aspect = new AspectsCompareSection(host);
-
-  const tabs = [
-    {
-      order: code.navigationLink.order,
-      props: code.navigationLink,
-      id: code.navigationLink.children,
-      element: code.route.element,
-    },
-    {
-      order: aspect.navigationLink.order,
-      props: aspect.navigationLink,
-      id: aspect.navigationLink.children,
-      element: aspect.route.element,
-    },
-  ];
-
-  const baseLane = lanesModel.getDefaultLane() || lanesModel.lanes[0];
-  const compareLane = lanesModel.getNonMainLanes()[0] || baseLane;
+  const base = lanesModel.getDefaultLane() || lanesModel.lanes[0];
+  const compare = lanesModel.getNonMainLanes()[0] || base;
+  const LaneCompareComponent = getLaneCompare({ base, compare });
 
   return (
     <div {...rest} className={styles.laneComparePage}>
-      <div className={styles.top}>{`Comparing Lane ${compareLane.id.toString()} with ${baseLane.id.toString()}`}</div>
-      <div className={styles.bottom}>
-        <LaneCompare host={host} tabs={tabs} base={baseLane} compare={compareLane} />
-      </div>
+      <div className={styles.top}>{`Comparing Lane ${compare.id.toString()} with ${base.id.toString()}`}</div>
+      {LaneCompareComponent}
     </div>
   );
 }

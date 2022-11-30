@@ -8,6 +8,8 @@ import { ComponentCompare } from '@teambit/component.ui.component-compare.compon
 import { UIRuntime } from '@teambit/ui';
 import { RouteSlot } from '@teambit/ui-foundation.ui.react-router.slot-router';
 import { ComponentCompareProps } from '@teambit/component.ui.component-compare.models.component-compare-props';
+import { ComponentCompareChangelog } from '@teambit/component.ui.component-compare.changelog';
+import { ComponentCompareAspects } from '@teambit/component.ui.component-compare.compare-aspects.compare-aspects';
 import { AspectsCompareSection } from './component-compare-aspects.section';
 import { ComponentCompareAspect } from './component-compare.aspect';
 import { ComponentCompareSection } from './component-compare.section';
@@ -36,6 +38,14 @@ export class ComponentCompareUI {
     return <ComponentCompare {...(props || {})} tabs={tabs} routes={routes} host={host} />;
   };
 
+  getAspectsComparePage = () => {
+    return <ComponentCompareAspects host={this.host} />;
+  };
+
+  getChangelogComparePage = () => {
+    return <ComponentCompareChangelog />;
+  };
+
   registerNavigation(route: ComponentCompareNav | Array<ComponentCompareNav>) {
     if (Array.isArray(route)) {
       this.navSlot.register(route);
@@ -50,6 +60,14 @@ export class ComponentCompareUI {
     return this;
   }
 
+  get routes() {
+    return this.routeSlot.map;
+  }
+
+  get navLinks() {
+    return this.navSlot.map;
+  }
+
   static async provider(
     [componentUi]: [ComponentUI],
     _,
@@ -62,8 +80,8 @@ export class ComponentCompareUI {
     const componentCompareSection = new ComponentCompareSection(componentCompareUI);
     componentUi.registerRoute([componentCompareSection.route]);
     componentUi.registerWidget(componentCompareSection.navigationLink, componentCompareSection.order);
-    const aspectCompareSection = new AspectsCompareSection(host);
-    const compareChangelog = new CompareChangelogSection();
+    const aspectCompareSection = new AspectsCompareSection(componentCompareUI);
+    const compareChangelog = new CompareChangelogSection(componentCompareUI);
     componentCompareUI.registerNavigation([
       {
         props: aspectCompareSection.navigationLink,

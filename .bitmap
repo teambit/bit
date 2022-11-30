@@ -1296,6 +1296,13 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/code/ui/code-compare"
     },
+    "ui/code-compare-section": {
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.code",
+        "mainFile": "index.ts",
+        "rootDir": "components/code-compare-section"
+    },
     "ui/code-tab-page": {
         "scope": "teambit.code",
         "version": "0.0.602",
@@ -1363,6 +1370,24 @@
                 "env": "teambit.react/react"
             }
         }
+    },
+    "ui/component-compare/changelog": {
+        "scope": "teambit.component",
+        "version": "0.0.3",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/component-compare/changelog"
+    },
+    "ui/component-compare/compare-aspects/compare-aspects": {
+        "scope": "teambit.component",
+        "version": "0.0.3",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/component-compare/compare-aspects/compare-aspects"
+    },
+    "ui/component-compare/compare-aspects/hooks/use-compare-aspects": {
+        "scope": "teambit.component",
+        "version": "0.0.2",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/component-compare/compare-aspects/hooks/use-compare-aspects"
     },
     "ui/component-compare/component-compare": {
         "scope": "teambit.component",
@@ -1539,6 +1564,13 @@
         "version": "0.0.127",
         "mainFile": "index.ts",
         "rootDir": "scopes/compositions/ui/composition-compare"
+    },
+    "ui/composition-compare-section": {
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.compositions",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/compositions/ui/composition-compare-section"
     },
     "ui/compositions-app": {
         "scope": "teambit.react",
@@ -1936,6 +1968,13 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/docs/ui/overview-compare"
     },
+    "ui/overview-compare-section": {
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.docs",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/docs/ui/overview-compare-section"
+    },
     "ui/pages/not-found": {
         "scope": "teambit.design",
         "version": "0.0.364",
@@ -2103,6 +2142,13 @@
         "version": "0.0.127",
         "mainFile": "index.ts",
         "rootDir": "scopes/defender/ui/test-compare"
+    },
+    "ui/test-compare-section": {
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.defender",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/defender/ui/test-compare-section"
     },
     "ui/test-loader": {
         "scope": "teambit.defender",

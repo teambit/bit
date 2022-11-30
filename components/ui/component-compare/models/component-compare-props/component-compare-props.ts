@@ -9,8 +9,9 @@ import { UseComponentType } from '@teambit/component';
 
 export type TabItem = {
   id?: string;
+  order?: number;
+  name?: string;
   props?: NavLinkProps;
-  order: number;
   element?: React.ReactNode | null;
 };
 
