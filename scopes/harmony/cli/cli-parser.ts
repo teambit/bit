@@ -50,8 +50,9 @@ export class CLIParser {
   private setHelpMiddleware() {
     yargs.middleware((argv) => {
       if (argv._.length === 0 && argv.help) {
+        const shouldShowInternalCommands = Boolean(argv.internal);
         // this is the main help page
-        this.printHelp();
+        this.printHelp(shouldShowInternalCommands);
         process.exit(0);
       }
       if (argv.help) {
@@ -109,8 +110,8 @@ export class CLIParser {
     });
   }
 
-  private printHelp() {
-    const help = formatHelp(this.commands, this.groups, this.docsDomain);
+  private printHelp(shouldShowInternalCommands = false) {
+    const help = formatHelp(this.commands, this.groups, this.docsDomain, shouldShowInternalCommands);
     // eslint-disable-next-line no-console
     console.log(help);
   }
