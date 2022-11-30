@@ -9,6 +9,7 @@ export class ComponentIssuesCmd implements Command {
   group = 'development';
   options = [['j', 'json', 'json format']] as CommandOptions;
   loader = true;
+  private = true;
 
   constructor(private issues: IssuesMain) {}
 
