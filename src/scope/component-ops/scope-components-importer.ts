@@ -867,7 +867,7 @@ export default class ScopeComponentsImporter {
     const flattenedComponentVersions = compact(
       allFlattenedDefs.map(({ id, component }) => {
         if (!component) {
-          logger.warn(`fetchWithoutDeps failed finding a local component ${id.toString()}`);
+          logger.warn(`bitIdsToVersionDeps failed finding a local component ${id.toString()}`);
           return null;
         }
         return component.toComponentVersion(id.version);
