@@ -11,7 +11,7 @@ import LegacyWorkspaceConfig, {
   WorkspaceConfigLoadFunction,
 } from '@teambit/legacy/dist/consumer/config/workspace-config';
 import { PathOsBased, PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
-import { CLIAspect, MainRuntime } from '@teambit/cli';
+import { MainRuntime } from '@teambit/cli';
 import { GlobalConfig } from '@teambit/harmony';
 import path from 'path';
 import { transformLegacyPropsToExtensions, WorkspaceConfig, WorkspaceConfigFileProps } from './workspace-config';
@@ -90,7 +90,7 @@ export class ConfigMain {
 
   static runtime = MainRuntime;
   static slots = [];
-  static dependencies = [CLIAspect];
+  static dependencies = [];
   static config = {};
   static async provider() {
     LegacyWorkspaceConfig.registerOnWorkspaceConfigIsExist(onLegacyWorkspaceConfigIsExist());
