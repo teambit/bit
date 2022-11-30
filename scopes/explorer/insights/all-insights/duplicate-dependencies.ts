@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { GraphBuilder, VersionSubgraph } from '@teambit/graph';
+import { GraphMain, VersionSubgraph } from '@teambit/graph';
 import { rcompare } from 'semver';
 // import { ComponentID } from '../../../component/component-id';
 import { ComponentID } from '@teambit/component';
@@ -28,8 +28,8 @@ type FormattedEntry = {
 export default class DuplicateDependencies implements Insight {
   name = INSIGHT_NAME;
   description = 'Get all duplicate dependencies in component graph';
-  graphBuilder: GraphBuilder;
-  constructor(graphBuilder: GraphBuilder) {
+  graphBuilder: GraphMain;
+  constructor(graphBuilder: GraphMain) {
     this.graphBuilder = graphBuilder;
   }
   private async runInsight(): Promise<RawResult> {

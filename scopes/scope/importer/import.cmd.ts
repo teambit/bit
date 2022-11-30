@@ -64,6 +64,7 @@ export class ImportCmd implements Command {
       'all-history',
       'relevant for fetching all components objects. avoid optimizations, fetch all history versions, always',
     ],
+    ['', 'fetch-deps', 'fetch dependencies objects'],
   ] as CommandOptions;
   loader = true;
   migration = true;
@@ -92,6 +93,7 @@ ${WILDCARD_HELP('import')}`;
       dependencies = false,
       dependents = false,
       allHistory = false,
+      fetchDeps = false,
     }: {
       path?: string;
       objects?: boolean;
@@ -107,6 +109,7 @@ ${WILDCARD_HELP('import')}`;
       dependencies?: boolean;
       dependents?: boolean;
       allHistory?: boolean;
+      fetchDeps?: boolean;
     }
   ): Promise<any> {
     if (objects && merge) {
@@ -151,6 +154,7 @@ ${WILDCARD_HELP('import')}`;
       importDependenciesDirectly: dependencies,
       importDependents: dependents,
       allHistory,
+      fetchDeps,
     };
     const importResults = await this.importer.import(importOptions, this._packageManagerArgs);
     const { importDetails, importedIds, importedDeps } = importResults;

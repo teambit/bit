@@ -1,4 +1,5 @@
 export type { ComponentGraph } from './component-graph';
+export type { CompIdGraph, DepEdgeType } from './component-id-graph';
 export { DuplicateDependency, VersionSubgraph } from './duplicate-dependency';
 export { EdgeType } from './edge-type';
 export type { GraphBuilder } from './graph-builder';
