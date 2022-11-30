@@ -1,6 +1,5 @@
 import { Component, ComponentID } from '@teambit/component';
 import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
-import { uniq } from 'lodash';
 
 import { Dependency } from '../model/dependency';
 import { DuplicateDependency, VersionSubgraph } from '../duplicate-dependency';
@@ -21,34 +20,7 @@ export class ComponentGraph extends Graph<Component, Dependency> {
   }
 
   /**
-   * check all the routes from the sources to targets and return the components found during this traversal.
-   * e.g.
-   * A -> B -> C -> N.
-   * A -> E -> N.
-   * B -> F -> G.
-   * given source: A, targets: N. The results will be: B, C, E
-   */
-  findIdsFromSourcesToTargets(sources: ComponentID[], targets: ComponentID[]): ComponentID[] {
-    const removeVerFromIdStr = (idStr: string) => idStr.split('@')[0];
-    const sourcesStr = sources.map((s) => s.toStringWithoutVersion());
-    const targetsStr = targets.map((t) => t.toStringWithoutVersion());
-    const allFlattened = sources.map((source) => this.successors(source.toString())).flat();
-    const allFlattenedIds = uniq(allFlattened.map((f) => f.id));
-    const results: string[] = [];
-    allFlattenedIds.forEach((id) => {
-      const idWithNoVer = removeVerFromIdStr(id);
-      if (sourcesStr.includes(idWithNoVer) || targetsStr.includes(idWithNoVer)) return;
-      const allSuccessors = this.successors(id);
-      const allSuccessorsWithNoVersion = allSuccessors.map((s) => removeVerFromIdStr(s.id));
-      if (allSuccessorsWithNoVersion.find((s) => targetsStr.includes(s))) results.push(id);
-    });
-    const components = this.getNodes(results).map((n) => n.attr);
-
-    return components.map((c) => c.id);
-  }
-
-  /**
-   * overrides the super class to eliminate non-seeders components
+   * @deprecate use graph.getGraphIds().findCycles()
    */
   findCycles(graph?: this): string[][] {
     const cycles = super.findCycles(graph);

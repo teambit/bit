@@ -80,7 +80,7 @@ describe('recovery after component/scope deletion', function () {
           helper.scopeHelper.addRemoteScope(remote2Path);
           helper.bitJsonc.disablePreview();
           npmCiRegistry.setResolver();
-          helper.command.importComponent('comp1');
+          helper.command.importComponent('comp1', '--fetch-deps');
           // delete the comp3 from the scope.
           const hashPath = helper.general.getHashPathOfComponent('comp3');
           fs.removeSync(path.join(helper.scopes.localPath, '.bit/objects', hashPath));
@@ -110,7 +110,7 @@ describe('recovery after component/scope deletion', function () {
           describe('bit import', () => {
             before(() => {
               helper.scopeHelper.getClonedLocalScope(scopeWithMissingDep);
-              helper.command.importAllComponents();
+              helper.command.import('--fetch-deps');
             });
             it('should bring the missing dep from the dependent', () => {
               const scope = helper.command.catScope(true);
@@ -185,7 +185,7 @@ describe('recovery after component/scope deletion', function () {
           helper.scopeHelper.addRemoteScope(remote2Path);
           helper.bitJsonc.disablePreview();
           npmCiRegistry.setResolver();
-          helper.command.importComponent('comp1');
+          helper.command.importComponent('comp1', '--fetch-deps');
           // delete the comp3 from the scope.
           const hashPath = helper.general.getHashPathOfComponent('comp3');
           fs.removeSync(path.join(helper.scopes.localPath, '.bit/objects', hashPath));
@@ -218,7 +218,7 @@ describe('recovery after component/scope deletion', function () {
           describe('bit import', () => {
             before(() => {
               helper.scopeHelper.getClonedLocalScope(scopeWithMissingDep);
-              helper.command.importAllComponents();
+              helper.command.import('--fetch-deps');
             });
             it('should bring the missing dep from the dependent', () => {
               const scope = helper.command.catScope(true);
@@ -266,7 +266,7 @@ describe('recovery after component/scope deletion', function () {
           helper.scopeHelper.reInitRemoteScope(remote2Path);
           helper.scopeHelper.reInitLocalScope();
           npmCiRegistry.setResolver({ [remote2Name]: remote2Path });
-          helper.command.importComponent('comp2');
+          helper.command.importComponent('comp2', '--fetch-deps');
           // delete the comp3 from the scope.
           const hashPath = helper.general.getHashPathOfComponent('comp3');
           fs.removeSync(path.join(helper.scopes.localPath, '.bit/objects', hashPath));
@@ -282,7 +282,7 @@ describe('recovery after component/scope deletion', function () {
           describe('bit import', () => {
             before(() => {
               helper.scopeHelper.getClonedLocalScope(scopeWithMissingDep);
-              helper.command.importAllComponents();
+              helper.command.import('--fetch-deps');
             });
             it('should bring the missing dep from the dependent', () => {
               const scope = helper.command.catScope(true);
@@ -323,7 +323,7 @@ describe('recovery after component/scope deletion', function () {
           describe('bit import', () => {
             let importOutput: string;
             before(() => {
-              importOutput = helper.command.importAllComponents();
+              importOutput = helper.command.import('--fetch-deps');
             });
             it('should not throw an error and not bring the missing dep', () => {
               const scope = helper.command.catScope(true);
@@ -372,7 +372,7 @@ describe('recovery after component/scope deletion', function () {
           beforeImportScope = helper.scopeHelper.cloneLocalScope();
         });
         it('should import comp1 successfully and bring comp3@0.0.1 from the cache of comp1', () => {
-          helper.command.importComponent('comp1');
+          helper.command.importComponent('comp1', '--fetch-deps');
           const scope = helper.command.catScope(true);
           const comp3 = scope.find((item) => item.name === 'comp3');
           expect(comp3).to.not.be.undefined;
@@ -381,7 +381,7 @@ describe('recovery after component/scope deletion', function () {
         });
         it('should import comp2 successfully and bring comp3@0.0.1 from the cache of comp2', () => {
           helper.scopeHelper.getClonedLocalScope(beforeImportScope);
-          helper.command.importComponent('comp2');
+          helper.command.importComponent('comp2', '--fetch-deps');
           const scope = helper.command.catScope(true);
           const comp3 = scope.find((item) => item.name === 'comp3');
           expect(comp3).to.not.be.undefined;
@@ -424,7 +424,7 @@ describe('recovery after component/scope deletion', function () {
           // before, it was throwing NoCommonSnap in this case.
           describe('importing comp1 (comp3 as cached) first then comp3 (comp3 as direct)', () => {
             before(() => {
-              helper.command.importComponent('comp1');
+              helper.command.importComponent('comp1', '--fetch-deps');
               helper.command.import(`${remote2Name}/comp3`);
             });
             expectToImportProperly();
@@ -434,7 +434,7 @@ describe('recovery after component/scope deletion', function () {
             before(() => {
               helper.scopeHelper.getClonedLocalScope(beforeImportScope);
               helper.command.import(`${remote2Name}/comp3`);
-              helper.command.importComponent('comp1');
+              helper.command.importComponent('comp1', '--fetch-deps');
             });
             expectToImportProperly();
           });
@@ -442,7 +442,7 @@ describe('recovery after component/scope deletion', function () {
           describe('importing comp3 (comp3 as direct) and comp1 (comp3 as cached) at the same time', () => {
             before(() => {
               helper.scopeHelper.getClonedLocalScope(beforeImportScope);
-              helper.command.import(`${helper.scopes.remote}/comp1 ${remote2Name}/comp3`);
+              helper.command.import(`${helper.scopes.remote}/comp1 ${remote2Name}/comp3 --fetch-deps`);
             });
             expectToImportProperly();
           });
@@ -452,7 +452,7 @@ describe('recovery after component/scope deletion', function () {
           describe('importing comp2 (comp3 as cached) and then comp3', () => {
             before(() => {
               helper.scopeHelper.getClonedLocalScope(beforeImportScope);
-              helper.command.importComponent('comp2');
+              helper.command.importComponent('comp2', '--fetch-deps');
               helper.command.import(`${remote2Name}/comp3`);
             });
             expectToImportProperly();
@@ -461,14 +461,14 @@ describe('recovery after component/scope deletion', function () {
             before(() => {
               helper.scopeHelper.getClonedLocalScope(beforeImportScope);
               helper.command.import(`${remote2Name}/comp3`);
-              helper.command.importComponent('comp2');
+              helper.command.importComponent('comp2', '--fetch-deps');
             });
             expectToImportProperly();
           });
           describe('importing comp3 and comp2 at the same time', () => {
             before(() => {
               helper.scopeHelper.getClonedLocalScope(beforeImportScope);
-              helper.command.import(`${helper.scopes.remote}/comp2 ${remote2Name}/comp3`);
+              helper.command.import(`${helper.scopes.remote}/comp2 ${remote2Name}/comp3 --fetch-deps`);
             });
             expectToImportProperly();
             it('should be able to tag', () => {
@@ -513,7 +513,7 @@ describe('recovery after component/scope deletion', function () {
             before(() => {
               helper.scopeHelper.getClonedLocalScope(beforeImportScope);
               helper.command.import(`${remote2Name}/comp3`);
-              importComp1Output = helper.command.importComponent('comp1');
+              importComp1Output = helper.command.importComponent('comp1', '--fetch-deps');
             });
             it('should not indicate that dependencies are missing', () => {
               expect(importComp1Output).to.not.include('missing dependencies');
