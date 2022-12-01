@@ -547,8 +547,8 @@ otherwise, to collaborate on the same lane as the remote, you'll need to remove 
         const divergeResults = await getDivergeData({
           repo,
           modelComponent,
-          remoteHead: component.head,
-          checkedOutLocalHead: existingComponent.head,
+          targetHead: component.head,
+          sourceHead: existingComponent.head,
           versionObjects,
         });
         if (divergeResults.isDiverged()) {
@@ -560,11 +560,11 @@ otherwise, to collaborate on the same lane as the remote, you'll need to remove 
           mergeErrors.push(new ComponentNeedsUpdate(component.id.toString(), existingComponent.head.toString()));
           return;
         }
-        if (divergeResults.isRemoteAhead()) {
+        if (divergeResults.isTargetAhead()) {
           existingComponent.head = component.head;
           mergeResults.push({
             mergedComponent: modelComponent,
-            mergedVersions: divergeResults.snapsOnRemoteOnly.map((h) => h.toString()),
+            mergedVersions: divergeResults.snapsOnTargetOnly.map((h) => h.toString()),
           });
           return;
         }
