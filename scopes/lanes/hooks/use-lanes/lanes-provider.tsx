@@ -1,4 +1,4 @@
-import React, { ReactNode, useState, useEffect, useCallback } from 'react';
+import React, { ReactNode, useState, useEffect } from 'react';
 import { useLanes } from '@teambit/lanes.hooks.use-lanes';
 import { LanesModel } from '@teambit/lanes.ui.models.lanes-model';
 import { useQuery } from '@teambit/ui-foundation.ui.react-router.use-query';
