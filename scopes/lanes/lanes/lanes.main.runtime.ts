@@ -24,6 +24,7 @@ import { BitId } from '@teambit/legacy-bit-id';
 import { ExportAspect, ExportMain } from '@teambit/export';
 import { BitIds } from '@teambit/legacy/dist/bit-id';
 import { Ref } from '@teambit/legacy/dist/scope/objects';
+import type { DivergeData } from '@teambit/legacy/dist/scope/component-ops/diverge-data';
 import { MergingMain, MergingAspect } from '@teambit/merging';
 import { LanesAspect } from './lanes.aspect';
 import {
@@ -362,6 +363,19 @@ export class LanesMain {
     }
 
     return laneObject;
+  }
+
+  /**
+   * get diverge data from the current
+   */
+  async getDivergeData(componentId: ComponentID, sourceHead: string, targetHead?: string): Promise<DivergeData> {
+    const modelComponent = await this.scope.legacyScope.getModelComponent(componentId._legacy);
+    return getDivergeData({
+      modelComponent,
+      repo: this.scope.legacyScope.objects,
+      remoteHead: targetHead ? Ref.from(targetHead) : modelComponent.head,
+      checkedOutLocalHead: Ref.from(sourceHead),
+    });
   }
 
   /**
