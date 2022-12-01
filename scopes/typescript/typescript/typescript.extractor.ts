@@ -1,4 +1,5 @@
 import ts, { Node, SourceFile } from 'typescript';
+import { getTsconfig } from 'get-tsconfig';
 import { SchemaExtractor } from '@teambit/schema';
 import { TsserverClient } from '@teambit/ts-server';
 import type { Workspace } from '@teambit/workspace';
@@ -6,12 +7,15 @@ import { ComponentDependency, DependencyResolverMain } from '@teambit/dependency
 import { SchemaNode, APISchema, ModuleSchema } from '@teambit/semantics.entities.semantic-schema';
 import { Component } from '@teambit/component';
 import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
+import { EnvContext } from '@teambit/envs';
 import { Formatter } from '@teambit/formatter';
 import { flatten } from 'lodash';
 import { TypescriptMain, SchemaTransformerSlot } from './typescript.main.runtime';
 import { TransformerNotFound } from './exceptions';
 import { SchemaExtractorContext } from './schema-extractor-context';
 import { ExportList } from './export-list';
+import { ExtractorOptions } from './extractor-options';
+import { TypescriptAspect } from './typescript.aspect';
 
 export class TypeScriptExtractor implements SchemaExtractor {
   constructor(
@@ -123,5 +127,20 @@ export class TypeScriptExtractor implements SchemaExtractor {
     if (!transformer) throw new TransformerNotFound(node, context.component, context.getLocation(node));
 
     return transformer;
+  }
+
+  static from(options: ExtractorOptions) {
+    return (context: EnvContext) => {
+      const tsconfig = getTsconfig(options.tsconfig)?.config || { compilerOptions: options.compilerOptions };
+      const tsMain = context.getAspect<TypescriptMain>(TypescriptAspect.id);
+      return new TypeScriptExtractor(
+        tsconfig,
+        tsMain.schemaTransformerSlot,
+        tsMain,
+        tsMain.workspace.path,
+        tsMain.depResolver,
+        tsMain.workspace,
+      );
+    };
   }
 }

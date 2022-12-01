@@ -1,5 +1,6 @@
 import { BuildContext, BuildTask, BuiltTaskResult, TaskResultsList } from '@teambit/builder';
 import type { Component } from '@teambit/component';
+import { ServiceHandler } from '@teambit/envs';
 
 export type TranspileFileParams = {
   componentDir: string; // absolute path of the component's root directory
@@ -64,7 +65,7 @@ export interface CompilerOptions {
   artifactName?: string;
 }
 
-export interface Compiler extends CompilerOptions {
+export interface Compiler extends CompilerOptions, ServiceHandler {
   /**
    * id of the compiler.
    */

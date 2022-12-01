@@ -567,6 +567,11 @@ export default class CommandHelper {
     return show.find((_) => _.title === 'configuration').json.find((_) => _.id === aspectId);
   }
 
+  showComponentParsedHarmonyByTitle(compId: string, title: string) {
+    const show = this.showComponentParsedHarmony(compId);
+    return show.find((_) => _.title === title).json;
+  }
+
   getComponentFiles(id: string): string[] {
     const output = this.runCmd(`bit show ${id} --json`);
     const comp = JSON.parse(output);

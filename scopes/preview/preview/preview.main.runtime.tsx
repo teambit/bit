@@ -851,6 +851,7 @@ export class PreviewMain {
       workspace.registerOnComponentRemove((cId) => preview.handleComponentRemoval(cId));
     }
 
+
     graphql.register(previewSchema(preview));
 
     return preview;

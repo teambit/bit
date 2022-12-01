@@ -330,6 +330,11 @@ export class ScopeMain implements ComponentFactory {
     return files.find((path) => path.includes(`${runtime}.runtime.js`));
   }
 
+  private findAspectFile(dirPath: string) {
+    const files = readdirSync(join(dirPath, 'dist'));
+    return files.find((path) => path.includes(`.aspect.js`));
+  }
+
   private async loadAspectFromPath(localAspects: string[]) {
     const dirPaths = this.parseLocalAspect(localAspects);
     const manifests = dirPaths.map((dirPath) => {
@@ -474,8 +479,10 @@ needed-for: ${neededFor || '<unknown>'}`);
 
     return dirs.map((dir) => {
       const runtimeManifest = runtime ? this.findRuntime(dir, runtime) : undefined;
+      const aspectFilePath = runtime ? this.findAspectFile(dir) : undefined;
       return new AspectDefinition(
         dir,
+        aspectFilePath ? join(dir, 'dist', aspectFilePath) : null,
         runtimeManifest ? join(dir, 'dist', runtimeManifest) : null,
         undefined,
         undefined,
@@ -670,6 +677,8 @@ needed-for: ${neededFor || '<unknown>'}`);
       const runtimePath = runtimeName
         ? await this.aspectLoader.getRuntimePath(component, localPath, runtimeName)
         : null;
+      const aspectFilePath = await this.aspectLoader.getAspectFilePath(component, localPath);
+
       this.logger.debug(
         `scope resolveUserAspects, resolving id: ${component.id.toString()}, localPath: ${localPath}, runtimePath: ${runtimePath}`
       );
@@ -677,6 +686,7 @@ needed-for: ${neededFor || '<unknown>'}`);
       return {
         id: capsule.component.id,
         aspectPath: localPath,
+        aspectFilePath,
         runtimePath,
       };
     });

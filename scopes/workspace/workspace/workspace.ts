@@ -570,7 +570,7 @@ export class Workspace implements ComponentFactory {
       // !important persist services only on the env itself.
       let services: undefined | EnvServiceList;
       if (this.envs.isEnvRegistered(component.id.toString())) services = this.envs.getServices(env);
-      const icon = this.aspectLoader.getDescriptor(env.id).icon || env.env.icon;
+      const icon = this.aspectLoader.getDescriptor(env.id)?.icon || env.env.icon;
 
       return {
         type: systemDescriptor.type,
@@ -1669,11 +1669,14 @@ needed-for: ${neededFor || '<unknown>'}`);
         ? await this.aspectLoader.getRuntimePath(component, localPath, runtimeName)
         : null;
 
+      const aspectFilePath = await this.aspectLoader.getAspectFilePath(component, localPath);
+
       this.logger.debug(
         `workspace resolveAspects, resolving id: ${compStringId}, localPath: ${localPath}, runtimePath: ${runtimePath}`
       );
       return {
         aspectPath: localPath,
+        aspectFilePath,
         runtimePath,
       };
     });

@@ -62,9 +62,9 @@ export type TsConfigTransformer = (
 export class TypescriptMain {
   constructor(
     private logger: Logger,
-    private schemaTransformerSlot: SchemaTransformerSlot,
-    private workspace: Workspace,
-    private depResolver: DependencyResolverMain,
+    readonly schemaTransformerSlot: SchemaTransformerSlot,
+    readonly workspace: Workspace,
+    readonly depResolver: DependencyResolverMain,
     private envs: EnvsMain,
     private tsConfigWriter: TsconfigWriter
   ) {}
@@ -164,7 +164,9 @@ export class TypescriptMain {
    */
   getEsmTransformer(): TsConfigTransformer {
     const esmTransformer = (config: TypescriptConfigMutator) => {
-      config.setModule('ES2020');
+      config.setTarget('ES2017');
+      config.raw.tsconfig.compilerOptions.module = 'es2020';
+      config.raw.tsconfig.compilerOptions.lib = ['es2021', 'dom', 'ESNext.String', 'dom.Iterable'];
       return config;
     };
     return esmTransformer;
