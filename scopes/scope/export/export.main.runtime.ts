@@ -168,6 +168,7 @@ export class ExportMain {
     if (laneObject) await updateLanesAfterExport(consumer, laneObject);
     const removedIds = await this.getRemovedStagedBitIds();
     const { updatedIds, nonExistOnBitMap } = _updateIdsOnBitMap(consumer.bitMap, updatedLocally);
+    await linkComponents(updatedIds, consumer);
     await this.removeFromStagedConfig(exported);
     Analytics.setExtraData('num_components', exported.length);
     // it is important to have consumer.onDestroy() before running the eject operation, we want the
@@ -781,6 +782,18 @@ async function getParsedId(consumer: Consumer, id: string): Promise<BitId> {
     // not in the consumer, just return the one parsed without the scope name
     return parsedId;
   }
+}
+
+/**
+ * re-generate the package.json, this way, it has the correct data in the componentId prop.
+ */
+async function linkComponents(ids: BitId[], consumer: Consumer): Promise<void> {
+  // we don't have much of a choice here, we have to load all the exported components in order to link them
+  // some of the components might be authored, some might be imported.
+  // when a component has dists, we need the consumer-component object to retrieve the dists info.
+  const components = await Promise.all(ids.map((id) => consumer.loadComponentFromModel(id)));
+  const nodeModuleLinker = new NodeModuleLinker(components, consumer, consumer.bitMap);
+  await nodeModuleLinker.link();
 }
 
 async function ejectExportedComponents(componentsIds, logger: Logger): Promise<EjectResults> {
