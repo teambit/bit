@@ -25,7 +25,7 @@ const ENV_POLICY = {
   dev: {
     '@types/react': "18.0.25",
     '@types/react-dom': "^18.0.0",
-    '@types/jest': "^29.2.2"
+    '@types/jest': "29.2.2"
   }
 }
 
@@ -97,32 +97,52 @@ describe('env-jsonc-policies', function () {
         })
       })
       describe('devs effect', () => {
-        it('should remove devs deps configured by env.jsonc from component', () => {
-          const newDeps = helper.command.showComponentParsedHarmonyByTitle('button', 'dependencies');
-          expect(newDeps).to.not.be.empty;
-          const typesReactEntry = newDeps.find(dep => dep.id === '@types/react');
-          expect(typesReactEntry).to.be.undefined;
+        describe('used deps', () => {
+          it('should remove devs deps configured by env.jsonc from component', () => {
+            const newDeps = helper.command.showComponentParsedHarmonyByTitle('button', 'dependencies');
+            expect(newDeps).to.not.be.empty;
+            const typesReactEntry = newDeps.find(dep => dep.id === '@types/react');
+            expect(typesReactEntry).to.be.undefined;
+          })
+
+          it('should save used dep as hidden in the deps resolver deps', () => {
+            const depResolverAspectEntry = helper.command.showAspectConfig('button', 'teambit.dependencies/dependency-resolver');
+            const typesReactEntry = depResolverAspectEntry.data.dependencies.find(dep => dep.id === '@types/react');
+            expect(typesReactEntry).to.include({'version' : "18.0.25"});
+            expect(typesReactEntry).to.include({'hidden' : true});
+          })
+
+          it('should have used dev deps with the version configured in the env.jsonc in the legacy dev deps', () => {
+            expect(componentShowParsed.devPackageDependencies).to.include({'@types/react' : "18.0.25"});
+          })
+
+          it('should install used dev deps specified by the env dev deps', () => {
+            const typesReactVersion =
+            fs.readJsonSync(
+              resolveFrom(path.join(helper.fixtures.scopes.localPath, 'button'), ['@types/react/package.json'])
+            ).version
+            expect(typesReactVersion).to.eq('18.0.25');
+          })
         })
+        describe('not used deps', () => {
+          it('should save unused dep as hidden in the deps resolver deps', () => {
+            const depResolverAspectEntry = helper.command.showAspectConfig('button', 'teambit.dependencies/dependency-resolver');
+            const typesJestEntry = depResolverAspectEntry.data.dependencies.find(dep => dep.id === '@types/jest');
+            expect(typesJestEntry).to.include({'version' : "29.2.2"});
+            expect(typesJestEntry).to.include({'hidden' : true});
+          })
 
-        it('should save used dep as hidden in the deps resolver deps', () => {
-          const depResolverAspectEntry = helper.command.showAspectConfig('button', 'teambit.dependencies/dependency-resolver');
-          const typesReactEntry = depResolverAspectEntry.data.dependencies.find(dep => dep.id === '@types/react');
-          expect(typesReactEntry).to.include({'version' : "18.0.25"});
-          expect(typesReactEntry).to.include({'hidden' : true});
-        })
+          it('should have unused dev deps with the version configured in the env.jsonc in the legacy dev deps', () => {
+            expect(componentShowParsed.devPackageDependencies).to.include({'@types/jest' : "29.2.2"});
+          })
 
-        it('should should have the dev deps with the version configured in the env.jsonc in the legacy dev deps', () => {
-          expect(componentShowParsed.devPackageDependencies).to.include({'@types/react' : "18.0.25"});
-        })
-
-
-        // TODO: add as hidden
-        it('should install used dev deps specified by the env dev deps', () => {
-          const typesReactVersion =
-          fs.readJsonSync(
-            resolveFrom(path.join(helper.fixtures.scopes.localPath, 'button'), ['@types/react/package.json'])
-          ).version
-          expect(typesReactVersion).to.eq('18.0.25');
+          it('should install unused dev deps specified by the env dev deps', () => {
+            const typesJestVersion =
+            fs.readJsonSync(
+              resolveFrom(path.join(helper.fixtures.scopes.localPath, 'button'), ['@types/jest/package.json'])
+            ).version
+            expect(typesJestVersion).to.eq('29.2.2');
+          })
         })
       })
     })

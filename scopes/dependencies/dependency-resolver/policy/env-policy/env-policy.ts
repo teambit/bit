@@ -46,8 +46,8 @@ export class EnvPolicy {
      * Set the used only, so only if component is using that dependency, it will affect it.
      */
     const componentsVariantsPolicy = variantPolicyFactory.fromConfigObject(variantConfigObject, 'env', undefined, true);
-    const componentHiddenDevDeps = env.dev ? variantPolicyFactory.fromConfigObject({devDependencies:env.dev}, 'env', true, true) : variantPolicyFactory.getEmpty();
-    const variantPolicy = VariantPolicy.mergePolices([componentsVariantsPolicy, componentHiddenDevDeps]);
+    const componentHiddenDevDeps = env.dev ? variantPolicyFactory.fromConfigObject({devDependencies:env.dev}, 'env', true, false) : variantPolicyFactory.getEmpty();
+    const variantPolicy = VariantPolicy.mergePolices([componentHiddenDevDeps, componentsVariantsPolicy]);
     const peersAutoDetectEntries = env.peers ?? [];
     const peersAutoDetectPolicy = new PeersAutoDetectPolicy(peersAutoDetectEntries);
     return new EnvPolicy(variantPolicy, peersAutoDetectPolicy);
