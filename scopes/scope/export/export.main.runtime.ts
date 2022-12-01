@@ -168,8 +168,7 @@ export class ExportMain {
     if (laneObject) await updateLanesAfterExport(consumer, laneObject);
     const removedIds = await this.getRemovedStagedBitIds();
     const { updatedIds, nonExistOnBitMap } = _updateIdsOnBitMap(consumer.bitMap, updatedLocally);
-    await this.removeFromStagedConfig([...updatedIds, ...nonExistOnBitMap]);
-    await linkComponents(updatedIds, consumer);
+    await this.removeFromStagedConfig(exported);
     Analytics.setExtraData('num_components', exported.length);
     // it is important to have consumer.onDestroy() before running the eject operation, we want the
     // export and eject operations to function independently. we don't want to lose the changes to
@@ -303,7 +302,7 @@ export class ExportMain {
     ): Promise<ObjectsPerRemoteExtended> => {
       bitIds.throwForDuplicationIgnoreVersion();
       const remote: Remote = await scopeRemotes.resolve(remoteNameStr, scope);
-      const idsToChangeLocally = BitIds.fromArray(bitIds.filter((id) => !id.scope || id.scope === remoteNameStr));
+      const idsToChangeLocally = BitIds.fromArray(bitIds.filter((id) => !id.scope));
       const componentsAndObjects: ModelComponentAndObjects[] = [];
       const objectList = new ObjectList();
       const objectListPerName: ObjectListPerName = {};
@@ -405,14 +404,11 @@ export class ExportMain {
         const { remote, idsToChangeLocally, componentsAndObjects, exportedIds } = objectsPerRemote;
         const remoteNameStr = remote.name;
         // on Harmony, version hashes don't change, the new versions will replace the old ones.
-        // on the legacy, even when the hash changed, it's fine to have the old objects laying around.
-        // (could be removed in the future by some garbage collection).
         const removeComponentVersions = false;
         const refsToRemove = await Promise.all(
           idsToChangeLocally.map((id) => scope.sources.getRefsForComponentRemoval(id, removeComponentVersions))
         );
         scope.objects.removeManyObjects(refsToRemove.flat());
-        // @ts-ignore
         idsToChangeLocally.forEach((id) => {
           scope.createSymlink(id, idsWithFutureScope.searchWithoutScopeAndVersion(id)?.scope || remoteNameStr);
         });
@@ -757,12 +753,15 @@ export class ExportMain {
 
 ExportAspect.addRuntime(ExportMain);
 
+/**
+ * the componentsIds passed here are the ones that didn't have scope-name before, and now they have.
+ * so if the bitMap.updateComponentId returns bitId without scope-name is because it couldn't find it there
+ */
 function _updateIdsOnBitMap(bitMap: BitMap, componentsIds: BitIds): { updatedIds: BitId[]; nonExistOnBitMap: BitIds } {
-  const updatedIds = [];
+  const updatedIds: BitId[] = [];
   const nonExistOnBitMap = new BitIds();
   componentsIds.forEach((componentsId) => {
     const resultId = bitMap.updateComponentId(componentsId, true);
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (resultId.hasVersion()) updatedIds.push(resultId);
     else nonExistOnBitMap.push(resultId);
   });
@@ -782,15 +781,6 @@ async function getParsedId(consumer: Consumer, id: string): Promise<BitId> {
     // not in the consumer, just return the one parsed without the scope name
     return parsedId;
   }
-}
-
-async function linkComponents(ids: BitId[], consumer: Consumer): Promise<void> {
-  // we don't have much of a choice here, we have to load all the exported components in order to link them
-  // some of the components might be authored, some might be imported.
-  // when a component has dists, we need the consumer-component object to retrieve the dists info.
-  const components = await Promise.all(ids.map((id) => consumer.loadComponentFromModel(id)));
-  const nodeModuleLinker = new NodeModuleLinker(components, consumer, consumer.bitMap);
-  await nodeModuleLinker.link();
 }
 
 async function ejectExportedComponents(componentsIds, logger: Logger): Promise<EjectResults> {
