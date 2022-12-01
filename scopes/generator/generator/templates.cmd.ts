@@ -5,6 +5,7 @@ import { GeneratorMain, TemplateDescriptor } from './generator.main.runtime';
 
 export type TemplatesOptions = {
   showAll?: boolean;
+  aspect?: string;
 };
 
 export class TemplatesCmd implements Command {
@@ -15,13 +16,20 @@ export class TemplatesCmd implements Command {
   alias = '';
   loader = true;
   group = 'development';
-  options = [['s', 'show-all', 'show hidden templates']] as CommandOptions;
+  options = [
+    ['s', 'show-all', 'show hidden templates'],
+    [
+      'a',
+      'aspect <aspect-id>',
+      'show templates provided by the aspect-id',
+    ],
+  ] as CommandOptions;
 
   constructor(private generator: GeneratorMain) {}
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async report(args: [], templatesOptions: TemplatesOptions) {
-    let results = await this.generator.listTemplates();
+    let results = await this.generator.listTemplates(templatesOptions);
 
     // Make sure that we don't list hidden templates
     if (!templatesOptions.showAll) {
@@ -40,7 +48,10 @@ export class TemplatesCmd implements Command {
     const output = Object.keys(grouped)
       .map((aspectId) => {
         const names = grouped[aspectId].map(templateOutput).join('\n');
-        return `${chalk.blue.bold(aspectId)}\n${names}\n`;
+        const groupTitle = grouped[aspectId][0].titlePrefix
+          ? `${grouped[aspectId][0].titlePrefix} (${aspectId})`
+          : aspectId;
+        return `${chalk.blue.bold(groupTitle)}\n${names}\n`;
       })
       .join('\n');
     return title + output;

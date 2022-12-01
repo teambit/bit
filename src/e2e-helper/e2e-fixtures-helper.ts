@@ -1,5 +1,6 @@
 import chalk from 'chalk';
 import fs from 'fs-extra';
+import { capitalize } from 'lodash';
 import * as path from 'path';
 import tar from 'tar';
 
@@ -10,6 +11,12 @@ import NpmHelper from './e2e-npm-helper';
 import PackageJsonHelper from './e2e-package-json-helper';
 import ScopeHelper from './e2e-scope-helper';
 import ScopesData from './e2e-scopes';
+
+type GenerateEnvJsoncOptions = {
+  envPolicy?: Record<string, any>;
+  componentsPolicy?: Record<string, any>;
+  patterns?: Record<string, string[]>;
+}
 
 export default class FixtureHelper {
   fs: FsHelper;
@@ -381,12 +388,29 @@ export default () => 'comp${index} and ' + ${nextComp}();`;
       cwd: destDir,
     });
   }
+  
+  generateEnvJsoncFile(componentDir: string, options: GenerateEnvJsoncOptions = {}) {
+    const envJsoncFile = path.join(componentDir, 'env.jsonc');
+    const defaultPatterns = {
+      "compositions": ["**/*.composition.*", "**/*.preview.*"],
+      "docs": ["**/*.docs.*"],
+      "tests": ["**/*.spec.*", "**/*.test.*"]
+    }
+    const envJsoncFileContentJson = {
+      dependenciesPolicy: {
+        env: options.envPolicy || {},
+        components: options.componentsPolicy || {},
+      },
+      patterns: options.patterns || defaultPatterns
+    }
+    this.fs.outputFile(envJsoncFile, JSON.stringify(envJsoncFileContentJson, null, 2))
+  }
 
   populateEnvMainRuntime(
     filePathRelativeToLocalScope: string,
     { envName, dependencies }: { envName: string; dependencies: any }
   ): void {
-    const capitalizedEnvName = envName[0].toUpperCase() + envName.substring(1);
+    const capitalizedEnvName = capitalize(envName);
     return this.fs.outputFile(
       filePathRelativeToLocalScope,
       `
@@ -395,7 +419,7 @@ import { ReactAspect, ReactMain } from '@teambit/react';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { ${capitalizedEnvName}Aspect } from './${envName}.aspect';
 
-export class EnvMain {
+export class ${capitalizedEnvName}Main {
   static slots = [];
 
   static dependencies = [ReactAspect, EnvsAspect];
@@ -405,15 +429,15 @@ export class EnvMain {
   static async provider([react, envs]: [ReactMain, EnvsMain]) {
     const templatesReactEnv = envs.compose(react.reactEnv, [
       envs.override({
-      getDependencies: () => (${JSON.stringify(dependencies)}),
+        getDependencies: () => (${JSON.stringify(dependencies)}),
       })
     ]);
     envs.registerEnv(templatesReactEnv);
-    return new EnvMain();
+    return new ${capitalizedEnvName}Main();
   }
 }
 
-${capitalizedEnvName}Aspect.addRuntime(EnvMain);
+${capitalizedEnvName}Aspect.addRuntime(${capitalizedEnvName}Main);
 `
     );
   }
