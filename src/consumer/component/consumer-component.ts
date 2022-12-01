@@ -89,7 +89,7 @@ export default class Component {
     ComponentConfig.registerOnComponentConfigLegacyLoading(extId, func);
   }
 
-  static registerOnComponentOverridesLoading(extId, func: (id, config) => any) {
+  static registerOnComponentOverridesLoading(extId, func: (id, config, legacyFiles) => any) {
     ComponentOverrides.registerOnComponentOverridesLoading(extId, func);
   }
 
@@ -543,16 +543,18 @@ export default class Component {
     const bindingPrefix = componentFromModel?.bindingPrefix || componentConfig.bindingPrefix || DEFAULT_BINDINGS_PREFIX;
 
     const overridesFromModel = componentFromModel ? componentFromModel.overrides.componentOverridesData : undefined;
+    const files = await getLoadedFiles(consumer, componentMap, id, compDirAbs);
+
     const overrides = await ComponentOverrides.loadFromConsumer(
       id,
       workspaceConfig,
       overridesFromModel,
       componentConfig,
-      consumer.isLegacy
+      consumer.isLegacy,
+      files
     );
     const packageJsonFile = (componentConfig && componentConfig.packageJsonFile) || undefined;
     const packageJsonChangedProps = componentFromModel ? componentFromModel.packageJsonChangedProps : undefined;
-    const files = await getLoadedFiles(consumer, componentMap, id, compDirAbs);
     const docsP = _getDocsForFiles(files, consumer.componentFsCache);
     const docs = await Promise.all(docsP);
     const flattenedDocs = docs ? R.flatten(docs) : [];

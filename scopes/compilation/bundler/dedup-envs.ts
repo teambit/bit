@@ -16,7 +16,10 @@ export async function dedupEnvs(
   dedicatedEnvDevServers?: string[]
 ) {
   const idsGroups = groupByEnvId(contexts, dedicatedEnvDevServers);
-  const finalGroups = await splitByPeers(idsGroups, dependencyResolver);
+  const hasRootComponents = dependencyResolver.hasRootComponents();
+  // Do not split envs by peers if root components is enabled as it should be already handled by the package manager
+  // this will improve the performance of the dev server when root components is enabled
+  const finalGroups = hasRootComponents ? idsGroups : await splitByPeers(idsGroups, dependencyResolver);
   return finalGroups;
 }
 

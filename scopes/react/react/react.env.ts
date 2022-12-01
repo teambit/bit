@@ -372,15 +372,8 @@ export class ReactEnv
     return this.webpack.createBundler(context, transformers);
   }
 
-  /**
-   * Get the peers configured by the env on the components + the host deps configured by the env
-   */
-  getPeerDependenciesList() {
-    return this.dependencyResolver.getPeerDependenciesListFromEnv(this);
-  }
-
   getAdditionalHostDependencies(): string[] {
-    return ['@teambit/mdx.ui.mdx-scope-context', '@mdx-js/react', 'react'];
+    return ['@teambit/mdx.ui.mdx-scope-context', '@mdx-js/react', 'react', 'react-dom'];
   }
 
   /**
@@ -461,7 +454,7 @@ export class ReactEnv
       dependencies: {
         react: '-',
         'react-dom': '-',
-        'core-js': '^3.0.0',
+        // 'core-js': '^3.0.0',
       },
       // TODO: add this only if using ts
       devDependencies: {
@@ -473,7 +466,7 @@ export class ReactEnv
         '@types/react-dom': '^17.0.5',
         '@types/jest': '^26.0.0',
         // This is added as dev dep since our jest file transformer uses babel plugins that require this to be installed
-        '@babel/runtime': '7.20.0',
+        // '@babel/runtime': '7.20.0',
         '@types/testing-library__jest-dom': '5.9.5',
       },
       peerDependencies: {

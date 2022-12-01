@@ -11,8 +11,8 @@ import { TestResult as JestTestResult, AggregatedResult } from '@jest/test-resul
 import { formatResultsErrors } from 'jest-message-util';
 import { Component, ComponentMap } from '@teambit/component';
 import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
-import { Environment } from '@teambit/envs';
-import { EnvPolicyConfigObject, PeersAutoDetectPolicy } from '@teambit/dependency-resolver';
+// import { Environment } from '@teambit/envs';
+// import { EnvPolicyConfigObject, PeersAutoDetectPolicy } from '@teambit/dependency-resolver';
 import type jest from 'jest';
 import { JestError } from './error';
 import type { JestWorker } from './jest.worker';
@@ -269,31 +269,31 @@ export class JestTester implements Tester {
     });
   }
 
-  private async calculateModuleNameMapper(
-    env: Environment,
-    rootPath: string,
-    additionalHostDependencies?: string[]
-  ): Promise<Record<string, Array<string>>> {
-    const peerDepsConfig: EnvPolicyConfigObject = await env.getDependencies();
-    const peersAutoDetectPolicy = new PeersAutoDetectPolicy(peerDepsConfig.peers || []);
-    const peers = Object.keys(peerDepsConfig.peerDependencies || {}).concat(peersAutoDetectPolicy?.names);
-    const depsToMap = peers.concat(additionalHostDependencies || []);
+  // private async calculateModuleNameMapper(
+  //   env: Environment,
+  //   rootPath: string,
+  //   additionalHostDependencies?: string[]
+  // ): Promise<Record<string, Array<string>>> {
+  //   const peerDepsConfig: EnvPolicyConfigObject = await env.getDependencies();
+  //   const peersAutoDetectPolicy = new PeersAutoDetectPolicy(peerDepsConfig.peers || []);
+  //   const peers = Object.keys(peerDepsConfig.peerDependencies || {}).concat(peersAutoDetectPolicy?.names);
+  //   const depsToMap = peers.concat(additionalHostDependencies || []);
 
-    /**
-     * Try to resolve the dependency from the rootDir (the env dir) or from the root path (workspace/capsule root)
-     */
-    const mappedValues = ['<rootDir>/node_modules/$1', `${rootPath}/node_modules/$1`];
+  //   /**
+  //    * Try to resolve the dependency from the rootDir (the env dir) or from the root path (workspace/capsule root)
+  //    */
+  //   const mappedValues = ['<rootDir>/node_modules/$1', `${rootPath}/node_modules/$1`];
 
-    const moduleNameMapper = depsToMap.reduce((acc, peerName) => {
-      const keyName = `^(${peerName})$`;
-      acc[keyName] = mappedValues;
-      const internalPathKeyName = `^(${peerName}/.*)$`;
-      acc[internalPathKeyName] = mappedValues;
-      return acc;
-    }, {});
+  //   const moduleNameMapper = depsToMap.reduce((acc, peerName) => {
+  //     const keyName = `^(${peerName})$`;
+  //     acc[keyName] = mappedValues;
+  //     const internalPathKeyName = `^(${peerName}/.*)$`;
+  //     acc[internalPathKeyName] = mappedValues;
+  //     return acc;
+  //   }, {});
 
-    return moduleNameMapper;
-  }
+  //   return moduleNameMapper;
+  // }
 
   private patternsToArray(context: TesterContext): string[] {
     return flatten(
