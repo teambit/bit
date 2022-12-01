@@ -388,6 +388,9 @@ export class YarnPackageManager implements PackageManager {
       globalFolder,
       // We need to disable self-references as say create circular symlinks.
       nmSelfReferences: false,
+      // Hardlink the files from the global content-addressable store.
+      // This increases the speed of installation and reduces disk space usage.
+      nmMode: 'hardlinks-global',
 
       // TODO: check about support for the following: (see more here - https://github.com/yarnpkg/berry/issues/1434#issuecomment-801449010)
       // ca?: string;
