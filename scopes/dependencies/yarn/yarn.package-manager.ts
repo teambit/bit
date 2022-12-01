@@ -400,7 +400,7 @@ export class YarnPackageManager implements PackageManager {
       data[defaultAuthProp.keyName] = defaultAuthProp.value;
     }
     // TODO: node-modules is hardcoded now until adding support for pnp.
-    config.use('<bit>', data, rootDirPath, {});
+    config.use('<bit>', data, rootDirPath, { overwrite: true });
 
     return config;
   }
