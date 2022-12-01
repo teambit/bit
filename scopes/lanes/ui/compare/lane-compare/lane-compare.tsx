@@ -125,23 +125,27 @@ export function LaneCompare({ host, compare, base, tabs, customUseComponent, ...
     return _hooks;
   }, []);
 
+  const ComponentCompares = useMemo(() => {
+    return allComponents.map(([baseId, compareId]) => {
+      return (
+        <ComponentCompare
+          className={styles.componentCompareContainer}
+          key={`lane-compare-component-compare-${computeStateKey(baseId, compareId)}`}
+          host={host}
+          tabs={tabs}
+          state={state.get(computeStateKey(baseId, compareId))}
+          hooks={hooks(baseId, compareId)}
+          baseId={baseId}
+          compareId={compareId}
+          customUseComponent={customUseComponent}
+        />
+      );
+    });
+  }, [base.id.toString(), compare.id.toString()]);
+
   return (
     <div {...rest} className={styles.laneCompareContainer}>
-      {allComponents.map(([baseId, compareId]) => {
-        return (
-          <ComponentCompare
-            className={styles.componentCompareContainer}
-            key={`lane-compare-component-compare-${computeStateKey(baseId, compareId)}`}
-            host={host}
-            tabs={tabs}
-            state={state.get(computeStateKey(baseId, compareId))}
-            hooks={hooks(baseId, compareId)}
-            baseId={baseId}
-            compareId={compareId}
-            customUseComponent={customUseComponent}
-          />
-        );
-      })}
+      {...ComponentCompares}
     </div>
   );
 }

@@ -5,7 +5,7 @@ import { useLanes } from '@teambit/lanes.hooks.use-lanes';
 import styles from './lane-compare-page.module.scss';
 
 export type LaneComparePageProps = {
-  getLaneCompare: (props: LaneCompareProps) => JSX.Element;
+  getLaneCompare: (props: LaneCompareProps) => React.ReactNode;
 } & HTMLAttributes<HTMLDivElement>;
 
 export function LaneComparePage({ getLaneCompare, ...rest }: LaneComparePageProps) {

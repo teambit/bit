@@ -27,8 +27,7 @@ import { LaneComparePage } from '@teambit/lanes.ui.compare.lane-compare-page';
 import { TabItem } from '@teambit/component.ui.component-compare.models.component-compare-props';
 import { ComponentCompareAspect, ComponentCompareUI } from '@teambit/component-compare';
 
-export type LaneCompareProps = Omit<DefaultLaneCompareProps, 'host'> & Partial<Pick<DefaultLaneCompareProps, 'host'>>;
-
+export type LaneCompareProps = Partial<DefaultLaneCompareProps>;
 export class LanesUI {
   static dependencies = [UIAspect, ComponentAspect, WorkspaceAspect, ScopeAspect, ComponentCompareAspect];
 
@@ -284,7 +283,17 @@ export class LanesUI {
       })
     );
 
-    return <LaneCompare {...props} host={props.host || this.host} tabs={props.tabs || tabs} />;
+    if (!props.base || !props.compare) return null;
+
+    return (
+      <LaneCompare
+        {...props}
+        base={props.base}
+        compare={props.compare}
+        host={props.host || this.host}
+        tabs={props.tabs || tabs}
+      />
+    );
   };
 
   static async provider(
