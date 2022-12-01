@@ -41,8 +41,8 @@ export function Overview({ titleBadges }: OverviewProps) {
       </StatusMessageCard>
     );
 
-  // if (component?.buildStatus === 'failed' && component?.host === 'teambit.scope/scope')
-  //   return <StatusMessageCard style={{ margin: 'auto' }} status="FAILURE" title="failed to get component preview " />;
+  if (component?.buildStatus === 'failed' && component?.host === 'teambit.scope/scope')
+    return <StatusMessageCard style={{ margin: 'auto' }} status="FAILURE" title="failed to get component preview " />;
 
   const isScaling = component.preview?.isScaling;
 
