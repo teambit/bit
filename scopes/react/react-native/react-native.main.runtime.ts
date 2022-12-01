@@ -119,7 +119,7 @@ export class ReactNativeMain {
     };
 
     const reactNativeComposedEnv: ReactNativeEnv = envs.merge<ReactNativeEnv, ReactEnv>(
-      new ReactNativeEnv(react, aspect),
+      new ReactNativeEnv(aspect),
       react.compose([react.useWebpack(webpackModifiers), react.overrideJestConfig(jestConfig)])
     );
     envs.registerEnv(reactNativeComposedEnv);

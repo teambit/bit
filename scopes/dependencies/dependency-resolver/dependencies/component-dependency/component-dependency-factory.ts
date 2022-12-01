@@ -47,7 +47,8 @@ export class ComponentDependencyFactory implements DependencyFactory {
       serialized.id,
       serialized.version,
       serialized.lifecycle as DependencyLifecycleType,
-      serialized.source
+      serialized.source,
+      serialized.hidden
     ) as unknown as ComponentDependency;
   }
 
