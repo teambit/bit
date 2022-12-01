@@ -19,8 +19,8 @@ type GroupContent = {
   description: string;
 };
 
-export function formatHelp(commands: CommandList, groups: GroupsType, docsDomain: string) {
-  const helpProps = groupCommands(commands, groups);
+export function formatHelp(commands: CommandList, groups: GroupsType, docsDomain: string, showPrivateCommands = false) {
+  const helpProps = groupCommands(commands, groups, showPrivateCommands);
   const commandsStr = formatCommandsHelp(helpProps);
 
   return `${getHeader(docsDomain)}
@@ -30,9 +30,9 @@ ${commandsStr}
 ${getFooter()}`;
 }
 
-function groupCommands(commands: CommandList, groups: GroupsType): HelpProps {
+function groupCommands(commands: CommandList, groups: GroupsType, showPrivateCommands = false): HelpProps {
   const help: HelpProps = commands
-    .filter((command) => !command.private && command.description)
+    .filter((command) => (showPrivateCommands ? true : !command.private && command.description))
     .reduce(function (partialHelp, command) {
       const groupName = command.group as string; // at this stage, it must be set
       partialHelp[groupName] = partialHelp[groupName] || {

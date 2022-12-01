@@ -1,5 +1,6 @@
 import chalk from 'chalk';
 import fs from 'fs-extra';
+import { capitalize } from 'lodash';
 import * as path from 'path';
 import tar from 'tar';
 
@@ -409,7 +410,7 @@ export default () => 'comp${index} and ' + ${nextComp}();`;
     filePathRelativeToLocalScope: string,
     { envName, dependencies }: { envName: string; dependencies: any }
   ): void {
-    const capitalizedEnvName = envName[0].toUpperCase() + envName.substring(1);
+    const capitalizedEnvName = capitalize(envName);
     return this.fs.outputFile(
       filePathRelativeToLocalScope,
       `
@@ -418,7 +419,7 @@ import { ReactAspect, ReactMain } from '@teambit/react';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { ${capitalizedEnvName}Aspect } from './${envName}.aspect';
 
-export class EnvMain {
+export class ${capitalizedEnvName}Main {
   static slots = [];
 
   static dependencies = [ReactAspect, EnvsAspect];
@@ -428,15 +429,15 @@ export class EnvMain {
   static async provider([react, envs]: [ReactMain, EnvsMain]) {
     const templatesReactEnv = envs.compose(react.reactEnv, [
       envs.override({
-      getDependencies: () => (${JSON.stringify(dependencies)}),
+        getDependencies: () => (${JSON.stringify(dependencies)}),
       })
     ]);
     envs.registerEnv(templatesReactEnv);
-    return new EnvMain();
+    return new ${capitalizedEnvName}Main();
   }
 }
 
-${capitalizedEnvName}Aspect.addRuntime(EnvMain);
+${capitalizedEnvName}Aspect.addRuntime(${capitalizedEnvName}Main);
 `
     );
   }

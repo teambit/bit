@@ -26055,7 +26055,7 @@ packages:
     dev: false
 
   registry.npmjs.org/hosted-git-info/4.1.0:
-    resolution: {integrity: sha512-kyCuEOWjJqZuDbRHzL8V93NzQhwIB71oFWSyzVo+KPZI+pnQPPxucdkrOZvkLRnrf5URsQM+IJ09Dw29cRALIA==, registry: https://node.bit.cloud/, tarball: https://registry.npmjs.org/hosted-git-info/-/hosted-git-info-4.1.0.tgz}
+    resolution: {integrity: sha512-kyCuEOWjJqZuDbRHzL8V93NzQhwIB71oFWSyzVo+KPZI+pnQPPxucdkrOZvkLRnrf5URsQM+IJ09Dw29cRALIA==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/hosted-git-info/-/hosted-git-info-4.1.0.tgz}
     name: hosted-git-info
     version: 4.1.0
     engines: {node: '>=10'}
@@ -26064,7 +26064,7 @@ packages:
     dev: false
 
   registry.npmjs.org/hosted-git-info/5.1.0:
-    resolution: {integrity: sha512-Ek+QmMEqZF8XrbFdwoDjSbm7rT23pCgEMOJmz6GPk/s4yH//RQfNPArhIxbguNxROq/+5lNBwCDHMhA903Kx1Q==, registry: https://node.bit.cloud/, tarball: https://registry.npmjs.org/hosted-git-info/-/hosted-git-info-5.1.0.tgz}
+    resolution: {integrity: sha512-Ek+QmMEqZF8XrbFdwoDjSbm7rT23pCgEMOJmz6GPk/s4yH//RQfNPArhIxbguNxROq/+5lNBwCDHMhA903Kx1Q==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/hosted-git-info/-/hosted-git-info-5.1.0.tgz}
     name: hosted-git-info
     version: 5.1.0
     engines: {node: ^12.13.0 || ^14.15.0 || >=16.0.0}
