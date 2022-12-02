@@ -3,7 +3,7 @@ import R from 'ramda';
 import NoIdMatchWildcard from '../../api/consumer/lib/exceptions/no-id-match-wildcard';
 import { BitId, BitIds } from '../../bit-id';
 import { LATEST } from '../../constants';
-import { DivergeData } from '../../scope/component-ops/diverge-data';
+import { SnapsDistance } from '../../scope/component-ops/snaps-distance';
 import { getDivergeData } from '../../scope/component-ops/get-diverge-data';
 import { Lane } from '../../scope/models';
 import ModelComponent from '../../scope/models/model-component';
@@ -18,7 +18,7 @@ import { InvalidComponent } from '../component/consumer-component';
 import Consumer from '../consumer';
 import { ComponentLoadOptions } from './component-loader';
 
-export type DivergeDataPerId = { id: BitId; divergeData: DivergeData };
+export type DivergeDataPerId = { id: BitId; divergeData: SnapsDistance };
 export type ListScopeResult = {
   id: BitId;
   currentlyUsedVersion?: string | null | undefined;
@@ -28,7 +28,7 @@ export type ListScopeResult = {
   laneReadmeOf?: string[];
 };
 
-export type DivergedComponent = { id: BitId; diverge: DivergeData };
+export type DivergedComponent = { id: BitId; diverge: SnapsDistance };
 export type OutdatedComponent = { id: BitId; headVersion: string; latestVersion?: string };
 
 export default class ComponentsList {
@@ -179,11 +179,11 @@ export default class ComponentsList {
         const divergeData = await getDivergeData({
           repo: this.scope.objects,
           modelComponent,
-          remoteHead: headOnMain,
-          checkedOutLocalHead: headOnLane,
+          targetHead: headOnMain,
+          sourceHead: headOnLane,
           throws: false,
         });
-        if (!divergeData.snapsOnRemoteOnly.length && !divergeData.err) return undefined;
+        if (!divergeData.snapsOnTargetOnly.length && !divergeData.err) return undefined;
         return { id: modelComponent.toBitId(), divergeData };
       })
     );
@@ -227,11 +227,11 @@ export default class ComponentsList {
         const divergeData = await getDivergeData({
           repo: this.scope.objects,
           modelComponent,
-          remoteHead: headOnForked.head,
-          checkedOutLocalHead: headOnLane,
+          targetHead: headOnForked.head,
+          sourceHead: headOnLane,
           throws: false,
         });
-        if (!divergeData.snapsOnRemoteOnly.length && !divergeData.err) return undefined;
+        if (!divergeData.snapsOnTargetOnly.length && !divergeData.err) return undefined;
         return { id: modelComponent.toBitId(), divergeData };
       })
     );
