@@ -16,18 +16,29 @@ export type VersionBlockProps = {
   isLatest: boolean;
   snap: LegacyComponentLog;
   isCurrent: boolean;
+  href?: string;
 } & HTMLAttributes<HTMLDivElement>;
 /**
  * change log section
  * @name VersionBlock
  */
-export function VersionBlock({ isLatest, className, snap, componentId, isCurrent, ...rest }: VersionBlockProps) {
+export function VersionBlock({
+  isLatest,
+  className,
+  snap,
+  componentId,
+  isCurrent,
+  href: hrefFromProps,
+  ...rest
+}: VersionBlockProps) {
   const { username, email, message, tag, hash, date } = snap;
   const { lanesModel } = useLanes();
   const currentLaneUrl = lanesModel?.viewedLane
     ? `${LanesModel.getLaneUrl(lanesModel?.viewedLane?.id)}${LanesModel.baseLaneComponentRoute}`
     : '';
   const version = tag || hash;
+  const href = hrefFromProps || `${currentLaneUrl}/${componentId}?version=${version}`;
+  // const href =
   const author = useMemo(() => {
     return {
       displayName: username,
@@ -50,7 +61,7 @@ export function VersionBlock({ isLatest, className, snap, componentId, isCurrent
       </div>
       <div className={classNames(styles.right, className)} {...rest}>
         <Tooltip placement="right" content={hash}>
-          <Link className={styles.titleLink} href={`${currentLaneUrl}/${componentId}?version=${version}`}>
+          <Link className={styles.titleLink} href={href}>
             <H3 size="xs" className={styles.versionTitle}>
               {tag ? `v${tag}` : hash}
             </H3>
