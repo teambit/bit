@@ -24,6 +24,7 @@ import { BitId } from '@teambit/legacy-bit-id';
 import { ExportAspect, ExportMain } from '@teambit/export';
 import { BitIds } from '@teambit/legacy/dist/bit-id';
 import { Ref } from '@teambit/legacy/dist/scope/objects';
+import { SnapsDistance } from '@teambit/legacy/dist/scope/component-ops/snaps-distance';
 import { MergingMain, MergingAspect } from '@teambit/merging';
 import { LanesAspect } from './lanes.aspect';
 import {
@@ -365,6 +366,33 @@ export class LanesMain {
   }
 
   /**
+   * get the distance for a component between two lanes. for example, lane-b forked from lane-a and lane-b added some new snaps
+   * @param componentId
+   * @param sourceHead head on the source lane. leave empty if the source is main
+   * @param targetHead head on the target lane. leave empty if the target is main
+   * @returns
+   */
+  async getSnapsDistance(componentId: ComponentID, sourceHead?: string, targetHead?: string): Promise<SnapsDistance> {
+    if (!sourceHead && !targetHead)
+      throw new Error(`getDivergeData got sourceHead and targetHead empty. at least one of them should be populated`);
+    const modelComponent = await this.scope.legacyScope.getModelComponent(componentId._legacy);
+    return getDivergeData({
+      modelComponent,
+      repo: this.scope.legacyScope.objects,
+      sourceHead: sourceHead ? Ref.from(sourceHead) : modelComponent.head || null,
+      targetHead: targetHead ? Ref.from(targetHead) : modelComponent.head || null,
+    });
+  }
+
+  /**
+   * get the head hash (snap) of main. return undefined if the component exists only on a lane and was never merged to main
+   */
+  async getHeadOnMain(componentId: ComponentID): Promise<string | undefined> {
+    const modelComponent = await this.scope.legacyScope.getModelComponent(componentId._legacy);
+    return modelComponent.head?.toString();
+  }
+
+  /**
    * fetch the lane object and its components from the remote.
    * save the objects to the local scope.
    * this method doesn't change anything in the workspace.
@@ -475,14 +503,14 @@ export class LanesMain {
         const divergeData = await getDivergeData({
           repo: this.scope.legacyScope.objects,
           modelComponent,
-          remoteHead: refOnOtherLane,
-          checkedOutLocalHead: comp.head,
+          sourceHead: comp.head,
+          targetHead: refOnOtherLane,
         });
-        if (divergeData.isRemoteAhead() || divergeData.isDiverged()) {
+        if (divergeData.isTargetAhead() || divergeData.isDiverged()) {
           notUpToDateIds.push(comp.id);
           return;
         }
-        if (!divergeData.isLocalAhead()) {
+        if (!divergeData.isSourceAhead()) {
           throw new Error(
             `invalid state - component ${comp.id.toString()} is not diverged, not local-ahead and not-remote-ahead.`
           );

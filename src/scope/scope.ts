@@ -379,11 +379,11 @@ once done, to continue working, please run "bit cc"`
     const divergeData = await getDivergeData({
       repo: this.objects,
       modelComponent: component,
-      remoteHead: component.head,
-      checkedOutLocalHead: Ref.from(laneIdWithDifferentVersion.version as string),
+      targetHead: component.head,
+      sourceHead: Ref.from(laneIdWithDifferentVersion.version as string),
     });
     // if the snap found "locally", then it's on the lane.
-    return Boolean(divergeData.snapsOnLocalOnly.find((snap) => snap.toString() === id.version));
+    return Boolean(divergeData.snapsOnSourceOnly.find((snap) => snap.toString() === id.version));
   }
 
   async latestVersions(componentIds: BitId[], throwOnFailure = true): Promise<BitIds> {

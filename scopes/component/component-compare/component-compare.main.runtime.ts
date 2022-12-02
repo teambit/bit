@@ -5,6 +5,7 @@ import GeneralError from '@teambit/legacy/dist/error/general-error';
 import {
   diffBetweenVersionsObjects,
   DiffResults,
+  FieldsDiff,
   FileDiff,
 } from '@teambit/legacy/dist/consumer/component-ops/components-diff';
 import ComponentAspect, { ComponentMain } from '@teambit/component';
@@ -14,6 +15,7 @@ import { ComponentCompareAspect } from './component-compare.aspect';
 export type ComponentCompareResult = {
   id: string;
   code: FileDiff[];
+  fields: FieldsDiff[];
 };
 
 export class ComponentCompareMain {
@@ -46,6 +48,7 @@ export class ComponentCompareMain {
     const compareResult = {
       id: `${baseCompId}-${compareCompId}`,
       code: diff.filesDiff || [],
+      fields: diff.fieldsDiff || [],
     };
 
     return compareResult;
