@@ -419,10 +419,7 @@ async function squashSnaps(allComponentsStatus: ComponentMergeStatus[], otherLan
       if (modifiedComp) {
         consumer.scope.objects.add(modifiedComp);
         const modelComponent = await consumer.scope.getModelComponent(id);
-        const versionHistory = await modelComponent.updateVersionHistoryWithSquashData(
-          consumer.scope.objects,
-          modifiedComp
-        );
+        const versionHistory = await modelComponent.updateRebasedVersionHistory(consumer.scope.objects, [modifiedComp]);
         if (versionHistory) consumer.scope.objects.add(versionHistory);
       }
     })

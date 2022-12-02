@@ -126,6 +126,10 @@ export default class CommandHelper {
     const result = this.runCmd(`bit cat-lane ${id}`, cwd);
     return JSON.parse(result);
   }
+  catVersionHistory(id: string, cwd?: string): Record<string, any> {
+    const result = this.runCmd(`bit cat-version-history ${id} --json`, cwd);
+    return JSON.parse(result);
+  }
   add(dir: string, flag = '') {
     return this.runCmd(`bit add ${dir} ${flag}`);
   }

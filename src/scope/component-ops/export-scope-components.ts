@@ -1,11 +1,12 @@
 import mapSeries from 'p-map-series';
+import { compact } from 'lodash';
 import R from 'ramda';
 import { BitId, BitIds } from '../../bit-id';
 import logger from '../../logger/logger';
 import { Remote, Remotes } from '../../remotes';
 import { ComponentNotFound, MergeConflict, MergeConflictOnRemote } from '../exceptions';
 import ComponentNeedsUpdate from '../exceptions/component-needs-update';
-import { Lane, Version, ModelComponent } from '../models';
+import { Lane, Version, ModelComponent, VersionHistory } from '../models';
 import Scope from '../scope';
 import { getScopeRemotes } from '../scope-remotes';
 import { ObjectList } from '../objects/object-list';
@@ -48,14 +49,41 @@ export async function saveObjects(scope: Scope, objectList: ObjectList): Promise
   const objectsNotRequireMerge = bitObjectList.getObjectsNotRequireMerge();
   // components and lanes can't be just added, they need to be carefully merged.
   const { mergedIds, mergedComponentsResults, mergedLanes } = await mergeObjects(scope, bitObjectList);
-
   const mergedComponents = mergedComponentsResults.map((_) => _.mergedComponent);
-  const allObjects = [...mergedComponents, ...mergedLanes, ...objectsNotRequireMerge];
+  const versionObjects = objectsNotRequireMerge.filter((o) => o instanceof Version) as Version[];
+  const versionsHistory = await updateVersionHistoryIfNeeded(scope, mergedComponents, versionObjects);
+  const allObjects = [...mergedComponents, ...mergedLanes, ...objectsNotRequireMerge, ...versionsHistory];
   scope.objects.validateObjects(true, allObjects);
   await scope.objects.writeObjectsToTheFS(allObjects);
   logger.debugAndAddBreadCrumb('exportManyBareScope', 'objects were written successfully to the filesystem');
 
   return mergedIds;
+}
+
+/**
+ * in case of rebase (squash / unrelated) where the version history is changed, make the necessary changes in the
+ * VersionHistory. Because we only know about this from the Version object, and the Version object has no info about
+ * what the component-id is, we have to iterate all model-components, grab their version-history and check whether
+ * the version-hash is inside their VersionHistory.
+ * it's not ideal performance wise. however, in most cases, this rebase is about squashing, and when squashing, it's
+ * done for the entire lane, so all components need to be updated regardless.
+ */
+async function updateVersionHistoryIfNeeded(
+  scope: Scope,
+  mergedComponents: ModelComponent[],
+  versionObjects: Version[]
+): Promise<VersionHistory[]> {
+  const mutatedVersionObjects = versionObjects.filter((v) => v.squashed || v.unrelated);
+  logger.debug(`updateVersionHistoryIfNeeded, found ${mutatedVersionObjects.length} mutated version`);
+  const versionsHistory = await Promise.all(
+    mergedComponents.map(async (modelComp) =>
+      modelComp.updateRebasedVersionHistory(scope.objects, mutatedVersionObjects)
+    )
+  );
+  const versionsHistoryNoNull = compact(versionsHistory);
+  logger.debug(`updateVersionHistoryIfNeeded, found ${versionsHistoryNoNull.length} versionsHistory to update
+${versionsHistoryNoNull.map((v) => v.bitId.toString()).join(', ')}`);
+  return versionsHistoryNoNull;
 }
 
 type MergeObjectsResult = { mergedIds: BitIds; mergedComponentsResults: MergeResult[]; mergedLanes: Lane[] };

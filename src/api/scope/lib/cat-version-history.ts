@@ -6,5 +6,7 @@ export async function catVersionHistory(id: string) {
   const bitId: BitId = await scope.getParsedId(id);
   const component = await scope.getModelComponent(bitId);
   const versionHistory = await component.GetVersionHistory(scope.objects);
-  return versionHistory.toObject();
+  const versionHistoryObj = versionHistory.toObject();
+  versionHistoryObj.hash = versionHistory.hash().toString();
+  return versionHistoryObj;
 }
