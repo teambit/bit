@@ -31,7 +31,6 @@ export function LanesProvider({ children, viewedLaneId: viewedIdFromProps, targe
 
     const viewedLaneIdToSet =
       viewedLaneIdFromUrl ||
-      lanesState?.viewedLane?.id ||
       (onHomeRoute && lanesModel?.currentLane?.id) ||
       lanesModel?.lanes.find((lane) => lane.id.isDefault())?.id;
 
