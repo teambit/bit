@@ -8,23 +8,30 @@ export class SnapsDistance {
     public err?: Error
   ) {}
   /**
-   * when a local and remote history have diverged, a true merge is needed.
+   * whether the source and the target history have diverged at some point. (in which case, a true merge is needed).
    */
   isDiverged(): boolean {
     return Boolean(this.snapsOnSourceOnly.length && this.snapsOnTargetOnly.length);
   }
 
   /**
-   * when a local is ahead of the remote, no merge is needed.
+   * whether the source is ahead of the target (in which case, no merge is needed).
    */
   isSourceAhead(): boolean {
     return Boolean(this.snapsOnSourceOnly.length);
   }
 
   /**
-   * when a remote is ahead of the local, but local has no new commits, a fast-forward merge is possible.
+   * whether the target is ahead of the source. (in which case, a fast-forward merge is possible).
    */
   isTargetAhead(): boolean {
     return Boolean(this.snapsOnTargetOnly.length);
+  }
+
+  /**
+   * whether the source is up to date. (it has all snaps from the target).
+   */
+  isUpToDate(): boolean {
+    return !this.isTargetAhead();
   }
 }

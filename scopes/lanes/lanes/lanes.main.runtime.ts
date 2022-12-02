@@ -385,6 +385,14 @@ export class LanesMain {
   }
 
   /**
+   * get the head hash (snap) of main. return undefined if the component exists only on a lane and was never merged to main
+   */
+  async getHeadOnMain(componentId: ComponentID): Promise<string | undefined> {
+    const modelComponent = await this.scope.legacyScope.getModelComponent(componentId._legacy);
+    return modelComponent.head?.toString();
+  }
+
+  /**
    * fetch the lane object and its components from the remote.
    * save the objects to the local scope.
    * this method doesn't change anything in the workspace.
