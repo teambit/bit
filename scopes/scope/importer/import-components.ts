@@ -215,8 +215,8 @@ export default class ImportComponents {
     if (divergedComponents.length) {
       const divergeData = divergedComponents.map((modelComponent) => ({
         id: modelComponent.id(),
-        snapsLocal: modelComponent.getDivergeData().snapsOnLocalOnly.length,
-        snapsRemote: modelComponent.getDivergeData().snapsOnRemoteOnly.length,
+        snapsLocal: modelComponent.getDivergeData().snapsOnSourceOnly.length,
+        snapsRemote: modelComponent.getDivergeData().snapsOnTargetOnly.length,
       }));
       throw new ComponentsPendingMerge(divergeData);
     }

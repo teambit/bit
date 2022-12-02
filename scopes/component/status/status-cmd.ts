@@ -2,7 +2,7 @@ import chalk from 'chalk';
 import R from 'ramda';
 import { Command, CommandOptions } from '@teambit/cli';
 import { ComponentID } from '@teambit/component-id';
-import { DivergeData } from '@teambit/legacy/dist/scope/component-ops/diverge-data';
+import { SnapsDistance } from '@teambit/legacy/dist/scope/component-ops/snaps-distance';
 import { immutableUnshift } from '@teambit/legacy/dist/utils';
 import { IssuesList } from '@teambit/component-issues';
 import { formatBitString } from '@teambit/legacy/dist/cli/chalk-box';
@@ -176,8 +176,8 @@ alternatively, to keep local tags/snaps history, use "bit merge <remote-name>/<l
     const pendingMergeComps = mergePendingComponents
       .map((component) => {
         return `    > ${chalk.cyan(component.id.toString())} local and remote have diverged and have ${
-          component.divergeData.snapsOnLocalOnly.length
-        } and ${component.divergeData.snapsOnRemoteOnly.length} different snaps each, respectively\n`;
+          component.divergeData.snapsOnSourceOnly.length
+        } and ${component.divergeData.snapsOnTargetOnly.length} different snaps each, respectively\n`;
       })
       .join('');
 
@@ -252,10 +252,10 @@ or use "bit merge [component-id] --abort" to cancel the merge operation)\n`;
       snappedComponents.length ? chalk.underline.white('snapped components') + snappedDesc : ''
     ).join('\n');
 
-    const getUpdateFromMsg = (divergeData: DivergeData, from = 'main'): string => {
+    const getUpdateFromMsg = (divergeData: SnapsDistance, from = 'main'): string => {
       if (divergeData.err) return divergeData.err.message;
-      let msg = `${from} is ahead by ${divergeData.snapsOnRemoteOnly.length || 0} snaps`;
-      if (divergeData.snapsOnLocalOnly && verbose) {
+      let msg = `${from} is ahead by ${divergeData.snapsOnTargetOnly.length || 0} snaps`;
+      if (divergeData.snapsOnSourceOnly && verbose) {
         msg += ` (diverged since ${divergeData.commonSnapBeforeDiverge?.toShortString()})`;
       }
       return msg;
