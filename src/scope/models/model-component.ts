@@ -1038,6 +1038,18 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
     return versionHistory;
   }
 
+  async updateRebasedVersionHistory(repo: Repository, versions: Version[]): Promise<VersionHistory | undefined> {
+    const versionHistory = await this.GetVersionHistory(repo);
+    const hasUpdated = versions.some((version) => {
+      const versionData = versionHistory.getVersionData(version.hash());
+      if (!versionData) return false;
+      versionHistory.addFromVersionsObjects([version]);
+      return true;
+    });
+
+    return hasUpdated ? versionHistory : undefined;
+  }
+
   async populateVersionHistoryIfMissingGracefully(
     repo: Repository,
     versionHistory: VersionHistory,
