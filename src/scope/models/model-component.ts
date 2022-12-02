@@ -1032,6 +1032,16 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
     return versionHistory;
   }
 
+  async updateVersionHistoryWithSquashData(repo: Repository, version: Version) {
+    if (!version.squashed) return undefined;
+    const versionHistory = await this.GetVersionHistory(repo);
+    const versionData = versionHistory.getVersionData(version.hash());
+    if (!versionData) return undefined;
+    versionData.parents = version.parents;
+    versionData.squashed = version.squashed.previousParents;
+    return versionHistory;
+  }
+
   async populateVersionHistoryIfMissingGracefully(
     repo: Repository,
     versionHistory: VersionHistory,

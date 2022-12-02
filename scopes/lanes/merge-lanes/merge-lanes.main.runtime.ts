@@ -157,7 +157,7 @@ export class MergeLanesMain {
     throwForFailures();
 
     if (currentLaneId.isDefault() && !noSquash) {
-      squashSnaps(allComponentsStatus, otherLaneId, consumer);
+      await squashSnaps(allComponentsStatus, otherLaneId, consumer);
     }
 
     const mergeResults = await this.merging.mergeSnaps({
@@ -407,16 +407,26 @@ ${depsOnLane.map((d) => d.toString()).join('\n')}`);
   return filteredComponentStatus;
 }
 
-function squashSnaps(allComponentsStatus: ComponentMergeStatus[], otherLaneId: LaneId, consumer: Consumer) {
+async function squashSnaps(allComponentsStatus: ComponentMergeStatus[], otherLaneId: LaneId, consumer: Consumer) {
   const currentLaneName = consumer.getCurrentLaneId().name;
   const succeededComponents = allComponentsStatus.filter((c) => !c.unmergedMessage);
-  succeededComponents.forEach(({ id, divergeData, componentFromModel }) => {
-    if (!divergeData) {
-      throw new Error(`unable to squash. divergeData is missing from ${id.toString()}`);
-    }
-    const modifiedComp = squashOneComp(currentLaneName, otherLaneId, id, divergeData, componentFromModel);
-    if (modifiedComp) consumer.scope.objects.add(modifiedComp);
-  });
+  await Promise.all(
+    succeededComponents.map(async ({ id, divergeData, componentFromModel }) => {
+      if (!divergeData) {
+        throw new Error(`unable to squash. divergeData is missing from ${id.toString()}`);
+      }
+      const modifiedComp = squashOneComp(currentLaneName, otherLaneId, id, divergeData, componentFromModel);
+      if (modifiedComp) {
+        consumer.scope.objects.add(modifiedComp);
+        const modelComponent = await consumer.scope.getModelComponent(id);
+        const versionHistory = await modelComponent.updateVersionHistoryWithSquashData(
+          consumer.scope.objects,
+          modifiedComp
+        );
+        if (versionHistory) consumer.scope.objects.add(versionHistory);
+      }
+    })
+  );
 }
 
 /**
