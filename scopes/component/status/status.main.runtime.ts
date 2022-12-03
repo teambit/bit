@@ -15,12 +15,12 @@ import ComponentsList from '@teambit/legacy/dist/consumer/component/components-l
 import { ModelComponent } from '@teambit/legacy/dist/scope/models';
 import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
 import { InsightsAspect, InsightsMain } from '@teambit/insights';
-import { DivergeData } from '@teambit/legacy/dist/scope/component-ops/diverge-data';
+import { SnapsDistance } from '@teambit/legacy/dist/scope/component-ops/snaps-distance';
 import IssuesAspect, { IssuesMain } from '@teambit/issues';
 import { StatusCmd } from './status-cmd';
 import { StatusAspect } from './status.aspect';
 
-type DivergeDataPerId = { id: ComponentID; divergeData: DivergeData };
+type DivergeDataPerId = { id: ComponentID; divergeData: SnapsDistance };
 
 export type StatusResult = {
   newComponents: ComponentID[];

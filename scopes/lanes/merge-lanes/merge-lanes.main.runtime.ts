@@ -15,7 +15,7 @@ import { ComponentID } from '@teambit/component-id';
 import { DEFAULT_LANE, LaneId } from '@teambit/lane-id';
 import { Lane, Version } from '@teambit/legacy/dist/scope/models';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
-import { DivergeData } from '@teambit/legacy/dist/scope/component-ops/diverge-data';
+import { SnapsDistance } from '@teambit/legacy/dist/scope/component-ops/snaps-distance';
 import { RemoveAspect, RemoveMain } from '@teambit/remove';
 import { compact } from 'lodash';
 import { ExportAspect, ExportMain } from '@teambit/export';
@@ -157,7 +157,7 @@ export class MergeLanesMain {
     throwForFailures();
 
     if (currentLaneId.isDefault() && !noSquash) {
-      squashSnaps(allComponentsStatus, otherLaneId, consumer);
+      await squashSnaps(allComponentsStatus, otherLaneId, consumer);
     }
 
     const mergeResults = await this.merging.mergeSnaps({
@@ -268,8 +268,8 @@ export class MergeLanesMain {
       const divergeData = await getDivergeData({
         repo,
         modelComponent,
-        remoteHead: laneHead,
-        checkedOutLocalHead: mainHead,
+        sourceHead: mainHead,
+        targetHead: laneHead,
       });
       const modifiedVersion = squashOneComp(DEFAULT_LANE, laneId, id, divergeData, versionObj);
       modelComponent.setHead(laneHead);
@@ -359,7 +359,7 @@ async function filterComponentsStatus(
     if (!divergeData) {
       throw new Error(`filterComponentsStatus: unable to find divergeData for ${compId.toString()}`);
     }
-    const remoteVersions = divergeData.snapsOnRemoteOnly;
+    const remoteVersions = divergeData.snapsOnTargetOnly;
     if (!remoteVersions.length) {
       return;
     }
@@ -407,16 +407,23 @@ ${depsOnLane.map((d) => d.toString()).join('\n')}`);
   return filteredComponentStatus;
 }
 
-function squashSnaps(allComponentsStatus: ComponentMergeStatus[], otherLaneId: LaneId, consumer: Consumer) {
+async function squashSnaps(allComponentsStatus: ComponentMergeStatus[], otherLaneId: LaneId, consumer: Consumer) {
   const currentLaneName = consumer.getCurrentLaneId().name;
   const succeededComponents = allComponentsStatus.filter((c) => !c.unmergedMessage);
-  succeededComponents.forEach(({ id, divergeData, componentFromModel }) => {
-    if (!divergeData) {
-      throw new Error(`unable to squash. divergeData is missing from ${id.toString()}`);
-    }
-    const modifiedComp = squashOneComp(currentLaneName, otherLaneId, id, divergeData, componentFromModel);
-    if (modifiedComp) consumer.scope.objects.add(modifiedComp);
-  });
+  await Promise.all(
+    succeededComponents.map(async ({ id, divergeData, componentFromModel }) => {
+      if (!divergeData) {
+        throw new Error(`unable to squash. divergeData is missing from ${id.toString()}`);
+      }
+      const modifiedComp = squashOneComp(currentLaneName, otherLaneId, id, divergeData, componentFromModel);
+      if (modifiedComp) {
+        consumer.scope.objects.add(modifiedComp);
+        const modelComponent = await consumer.scope.getModelComponent(id);
+        const versionHistory = await modelComponent.updateRebasedVersionHistory(consumer.scope.objects, [modifiedComp]);
+        if (versionHistory) consumer.scope.objects.add(versionHistory);
+      }
+    })
+  );
 }
 
 /**
@@ -426,7 +433,7 @@ function squashOneComp(
   currentLaneName: string,
   otherLaneId: LaneId,
   id: BitId,
-  divergeData: DivergeData,
+  divergeData: SnapsDistance,
   componentFromModel?: Version
 ): Version | undefined {
   if (divergeData.isDiverged()) {
@@ -438,16 +445,16 @@ consider switching to "${
     }"
 alternatively, use "--no-squash" flag to keep the entire history of "${otherLaneId.name}"`);
   }
-  if (divergeData.isLocalAhead()) {
+  if (divergeData.isSourceAhead()) {
     // nothing to do. current is ahead, nothing to merge. (it was probably filtered out already as a "failedComponent")
     return undefined;
   }
-  if (!divergeData.isRemoteAhead()) {
+  if (!divergeData.isTargetAhead()) {
     // nothing to do. current and remote are the same, nothing to merge. (it was probably filtered out already as a "failedComponent")
     return undefined;
   }
   // remote is ahead and was not diverge.
-  const remoteSnaps = divergeData.snapsOnRemoteOnly;
+  const remoteSnaps = divergeData.snapsOnTargetOnly;
   if (remoteSnaps.length === 0) {
     throw new Error(`remote is ahead but it has no snaps. it's impossible`);
   }

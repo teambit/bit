@@ -215,8 +215,8 @@ export default class ImportComponents {
     if (divergedComponents.length) {
       const divergeData = divergedComponents.map((modelComponent) => ({
         id: modelComponent.id(),
-        snapsLocal: modelComponent.getDivergeData().snapsOnLocalOnly.length,
-        snapsRemote: modelComponent.getDivergeData().snapsOnRemoteOnly.length,
+        snapsLocal: modelComponent.getDivergeData().snapsOnSourceOnly.length,
+        snapsRemote: modelComponent.getDivergeData().snapsOnTargetOnly.length,
       }));
       throw new ComponentsPendingMerge(divergeData);
     }
@@ -240,7 +240,9 @@ export default class ImportComponents {
       fromHead: this.options.allHistory,
       collectParents: this.options.allHistory,
       lane,
-      ignoreMissingHead,
+      // in case a user is merging a lane into a new workspace, then, locally main has head, but remotely the head is
+      // empty, until it's exported. going to the remote and asking this component will throw an error if ignoreMissingHead is false
+      ignoreMissingHead: true,
     });
     loader.start(`import ${ids.length} components with their dependencies (if missing)`);
     const results = fromOriginalScope

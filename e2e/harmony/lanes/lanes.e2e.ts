@@ -778,6 +778,11 @@ describe('bit lane command', function () {
       it('should not throw an error', () => {
         expect(() => helper.command.export()).to.not.throw();
       });
+      // previously, it would remove the staged-config only when the component-scope was the same as the lane-scope or when the comp is new
+      it('should remove the content of the staged-config', () => {
+        const stagedConfig = helper.general.getStagedConfig(`${helper.scopes.remote}/dev`);
+        expect(stagedConfig).to.have.lengthOf(0);
+      });
       // previously, it was changing the scope-name of bar2 to the first remote.
       it('the components scope should not be changed on the remote', () => {
         const catRemote = helper.command.catScope(false, helper.scopes.remotePath);
