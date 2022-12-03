@@ -13,6 +13,7 @@ import { LaneModel } from '@teambit/lanes.ui.models.lanes-model';
 import { LaneCompareState, computeStateKey } from '@teambit/lanes.ui.compare.lane-compare-state';
 import { useUpdatedUrlFromQuery } from '@teambit/component.ui.component-compare.hooks.use-component-compare-url';
 import { UseComponentType } from '@teambit/component';
+import { DrawerUI } from '@teambit/ui-foundation.ui.tree.drawer';
 
 import styles from './lane-compare.module.scss';
 
@@ -44,7 +45,11 @@ export function LaneCompare({ host, compare, base, tabs, customUseComponent, ...
   const commonComponents = useMemo(
     () =>
       compare.components
-        .filter((componentId) => baseMap.has(componentId.toStringWithoutVersion()))
+        .filter((componentId) => {
+          const compIdStr = componentId.toStringWithoutVersion();
+          const baseCompId = baseMap.get(compIdStr);
+          return baseCompId && !baseCompId.isEqual(componentId);
+        })
         .map((cc) => [
           baseMap.get(cc.toStringWithoutVersion()) as ComponentID,
           compareMap.get(cc.toStringWithoutVersion()) as ComponentID,
@@ -91,6 +96,17 @@ export function LaneCompare({ host, compare, base, tabs, customUseComponent, ...
     )
   );
 
+  const [openDrawerList, onToggleDrawer] = useState<string[]>([]);
+
+  const handleDrawerToggle = (id: string) => {
+    const isDrawerOpen = openDrawerList.includes(id);
+    if (isDrawerOpen) {
+      onToggleDrawer((list) => list.filter((drawer) => drawer !== id));
+      return;
+    }
+    onToggleDrawer((list) => list.concat(id));
+  };
+
   const hooks = useCallback((_base?: ComponentID, _compare?: ComponentID) => {
     const key = computeStateKey(_base, _compare);
     const _tabs = extractLazyLoadedData(tabs);
@@ -127,21 +143,30 @@ export function LaneCompare({ host, compare, base, tabs, customUseComponent, ...
 
   const ComponentCompares = useMemo(() => {
     return allComponents.map(([baseId, compareId]) => {
+      const key = computeStateKey(baseId, compareId);
+
       return (
-        <ComponentCompare
-          className={styles.componentCompareContainer}
-          key={`lane-compare-component-compare-${computeStateKey(baseId, compareId)}`}
-          host={host}
-          tabs={tabs}
-          state={state.get(computeStateKey(baseId, compareId))}
-          hooks={hooks(baseId, compareId)}
-          baseId={baseId}
-          compareId={compareId}
-          customUseComponent={customUseComponent}
-        />
+        <DrawerUI
+          key={`${key}-drawer`}
+          isOpen={openDrawerList.includes(key)}
+          onToggle={() => handleDrawerToggle(key)}
+          name={compareId?.toStringWithoutVersion()}
+        >
+          <ComponentCompare
+            className={styles.componentCompareContainer}
+            key={`lane-compare-component-compare-${key}`}
+            host={host}
+            tabs={tabs}
+            state={state.get(key)}
+            hooks={hooks(baseId, compareId)}
+            baseId={baseId}
+            compareId={compareId}
+            customUseComponent={customUseComponent}
+          />
+        </DrawerUI>
       );
     });
-  }, [base.id.toString(), compare.id.toString()]);
+  }, [base.id.toString(), compare.id.toString(), openDrawerList.length]);
 
   return (
     <div {...rest} className={styles.laneCompareContainer}>
