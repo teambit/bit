@@ -96,15 +96,15 @@ export function LaneCompare({ host, compare, base, tabs, customUseComponent, ...
     )
   );
 
-  const [openDrawerList, onToggleDrawer] = useState<string[]>([]);
+  const [closeDrawerList, onToggleDrawer] = useState<string[]>([]);
 
   const handleDrawerToggle = (id: string) => {
-    const isDrawerOpen = openDrawerList.includes(id);
+    const isDrawerOpen = !closeDrawerList.includes(id);
     if (isDrawerOpen) {
-      onToggleDrawer((list) => list.filter((drawer) => drawer !== id));
+      onToggleDrawer((list) => list.concat(id));
       return;
     }
-    onToggleDrawer((list) => list.concat(id));
+    onToggleDrawer((list) => list.filter((drawer) => drawer !== id));
   };
 
   const hooks = useCallback((_base?: ComponentID, _compare?: ComponentID) => {
@@ -148,9 +148,11 @@ export function LaneCompare({ host, compare, base, tabs, customUseComponent, ...
       return (
         <DrawerUI
           key={`${key}-drawer`}
-          isOpen={openDrawerList.includes(key)}
+          isOpen={!closeDrawerList.includes(key)}
           onToggle={() => handleDrawerToggle(key)}
           name={compareId?.toStringWithoutVersion()}
+          className={styles.componentCompareDrawer}
+          contentClass={styles.componentCompareDrawerContent}
         >
           <ComponentCompare
             className={styles.componentCompareContainer}
@@ -166,7 +168,7 @@ export function LaneCompare({ host, compare, base, tabs, customUseComponent, ...
         </DrawerUI>
       );
     });
-  }, [base.id.toString(), compare.id.toString(), openDrawerList.length]);
+  }, [base.id.toString(), compare.id.toString(), closeDrawerList.length]);
 
   return (
     <div {...rest} className={styles.laneCompareContainer}>

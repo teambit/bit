@@ -16,7 +16,6 @@ import {
   FileCompareResult,
 } from '@teambit/component.ui.component-compare.models.component-compare-model';
 import { useCode } from '@teambit/code.ui.queries.get-component-code';
-// import { useComponentArtifacts } from '@teambit/component.ui.artifacts.queries.use-component-artifacts';
 import { CodeCompareTree } from './code-compare-tree';
 import { CodeCompareView } from './code-compare-view';
 import { Widget } from './code-compare.widgets';
@@ -41,8 +40,8 @@ export function CodeCompare({ fileIconSlot, className }: CodeCompareProps) {
   const [isSidebarOpen, setSidebarOpenness] = useState(!isMobile);
   const sidebarOpenness = isSidebarOpen ? Layout.row : Layout.left;
 
-  const { fileTree: baseFileTree = [], mainFile, dependencies: baseDependencies } = useCode(base?.model.id);
-  const { fileTree: compareFileTree = [], dependencies: compareDependencies } = useCode(compare?.model.id);
+  const { fileTree: baseFileTree = [], mainFile } = useCode(base?.model.id);
+  const { fileTree: compareFileTree = [] } = useCode(compare?.model.id);
 
   const compCompareQueryResult = useComponentCompareQuery(base?.model.id.toString(), compare?.model.id.toString());
 
@@ -52,12 +51,6 @@ export function CodeCompare({ fileIconSlot, className }: CodeCompareProps) {
 
   const selectedFile = state?.id || selectedFileFromParams || mainFile || DEFAULT_FILE;
   const codeCompareContextData = mapToCodeCompareData(compCompareQueryResult);
-
-  // const { data: artifacts = [] } = useComponentArtifacts(host, component.id.toString(), );
-  // const currentFile = urlParams.file || mainFile;
-  // const currentArtifactFile = getArtifactFileDetailsFromUrl(artifacts, currentFile)?.artifactFile;
-  // const currentArtifactFileContent = getCurrentArtifactFileContent(currentArtifactFile);
-  // const getHref = (!state?.id && ((node) => useUpdatedUrlFromQuery({ file: node.id }))) || (() => currentHref)
 
   const _useUpdatedUrlFromQuery = hook?.useUpdatedUrlFromQuery || useUpdatedUrlFromQuery;
 
@@ -92,8 +85,6 @@ export function CodeCompare({ fileIconSlot, className }: CodeCompareProps) {
             widgets={[Widget]}
             getHref={getHref}
             onTreeNodeSelected={hook?.onClick}
-            compareDependencies={compareDependencies}
-            baseDependencies={baseDependencies}
           />
         </Pane>
       </SplitPane>

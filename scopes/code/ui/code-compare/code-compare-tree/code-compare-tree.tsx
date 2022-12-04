@@ -7,8 +7,6 @@ import { DrawerUI } from '@teambit/ui-foundation.ui.tree.drawer';
 import { FileTree } from '@teambit/ui-foundation.ui.tree.file-tree';
 import { FileIconMatch, getFileIcon } from '@teambit/code.ui.utils.get-file-icon';
 import { TreeNode } from '@teambit/design.ui.tree';
-import { DependencyType } from '@teambit/code.ui.queries.get-component-code';
-import { CompareDependencyTree } from '@teambit/code.ui.code-compare';
 
 import styles from './code-compare-tree.module.scss';
 
@@ -20,8 +18,6 @@ export type CodeCompareTreeProps = {
   widgets?: ComponentType<WidgetProps<any>>[];
   getHref?: (node: TreeNode) => string;
   onTreeNodeSelected?: (id: string, event?: React.MouseEvent) => void;
-  baseDependencies?: DependencyType[];
-  compareDependencies?: DependencyType[];
 } & HTMLAttributes<HTMLDivElement>;
 
 export function CodeCompareTree({
@@ -33,8 +29,6 @@ export function CodeCompareTree({
   widgets,
   getHref,
   onTreeNodeSelected,
-  baseDependencies,
-  compareDependencies,
 }: CodeCompareTreeProps) {
   const fileIconMatchers: FileIconMatch[] = useMemo(() => flatten(fileIconSlot?.values()), [fileIconSlot]);
   const defaultDrawer = () => {
@@ -50,8 +44,6 @@ export function CodeCompareTree({
     }
     onToggleDrawer((list) => list.concat(id));
   };
-
-  const hasDependencies = (baseDependencies || []).concat(compareDependencies || []).length > 0;
 
   return (
     <div className={classNames(styles.componentCompareCodeTreeContainer, className)}>
@@ -71,20 +63,6 @@ export function CodeCompareTree({
           onTreeNodeSelected={onTreeNodeSelected}
         />
       </DrawerUI>
-      {hasDependencies && (
-        <DrawerUI
-          isOpen={openDrawerList.includes('DEPENDENCIES')}
-          onToggle={() => handleDrawerToggle('DEPENDENCIES')}
-          className={classNames(styles.codeTabDrawer, openDrawerList.includes('DEPENDENCIES') && styles.openDrawer)}
-          contentClass={styles.codeDrawerContent}
-          name="DEPENDENCIES"
-        >
-          <CompareDependencyTree
-            baseDependenciesArray={baseDependencies}
-            compareDependenciesArray={compareDependencies}
-          />
-        </DrawerUI>
-      )}
     </div>
   );
 }

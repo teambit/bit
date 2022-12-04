@@ -1434,8 +1434,8 @@
         }
     },
     "ui/component-compare/models/component-compare-model": {
-        "scope": "",
-        "version": "",
+        "scope": "teambit.component",
+        "version": "0.0.1",
         "defaultScope": "teambit.component",
         "mainFile": "index.ts",
         "rootDir": "components/ui/component-compare/models/component-compare-model",
