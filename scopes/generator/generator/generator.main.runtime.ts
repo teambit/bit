@@ -306,7 +306,7 @@ export class GeneratorMain {
     }
 
     const flattened = this.getAllComponentTemplatesFlattened();
-    const filtered = flattened.filter((template) => template.id === aspectId);
+    const filtered = aspectId ? flattened.filter((template) => template.id === aspectId) : flattened;
     return filtered.map((template) => this.getTemplateDescriptor(template));
   }
 
