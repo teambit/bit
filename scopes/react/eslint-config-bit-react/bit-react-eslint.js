@@ -10,6 +10,12 @@ module.exports = {
         '@typescript-eslint/camelcase': 'off',
         'import/no-extraneous-dependencies': 'off',
         'import/prefer-default-export': 'off',
+        'react/jsx-props-no-spreading': 'off',
+        'trailing-comma': 'off',
+        '@typescript-eslint/comma-dangle': 'off',
+        'object-curly-newline': 'off',
+        'react/react-in-jsx-scope': 'off',
+        'class-methods-use-this': 'off'
       },
     },
     {
