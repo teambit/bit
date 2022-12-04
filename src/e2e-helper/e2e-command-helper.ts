@@ -126,6 +126,10 @@ export default class CommandHelper {
     const result = this.runCmd(`bit cat-lane ${id}`, cwd);
     return JSON.parse(result);
   }
+  catVersionHistory(id: string, cwd?: string): Record<string, any> {
+    const result = this.runCmd(`bit cat-version-history ${id} --json`, cwd);
+    return JSON.parse(result);
+  }
   add(dir: string, flag = '') {
     return this.runCmd(`bit add ${dir} ${flag}`);
   }
@@ -325,6 +329,10 @@ export default class CommandHelper {
   listRemoteLanesParsed(options = '') {
     const results = this.runCmd(`bit lane list --remote ${this.scopes.remote} ${options} --json`);
     return JSON.parse(results);
+  }
+  listRemoteLanes(options = '') {
+    const results = this.runCmd(`bit lane list --remote ${this.scopes.remote} ${options}`);
+    return results;
   }
   diffLane(args = '', onScope = false) {
     const cwd = onScope ? this.scopes.remotePath : this.scopes.localPath;

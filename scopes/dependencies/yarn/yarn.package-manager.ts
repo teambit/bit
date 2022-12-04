@@ -388,6 +388,9 @@ export class YarnPackageManager implements PackageManager {
       // We need to disable self-references as say create circular symlinks.
       nmSelfReferences: false,
       pnpUnpluggedFolder: `${rootDirPath}/.yarn/unplugged`,
+      // Hardlink the files from the global content-addressable store.
+      // This increases the speed of installation and reduces disk space usage.
+      nmMode: 'hardlinks-global',
 
       // TODO: check about support for the following: (see more here - https://github.com/yarnpkg/berry/issues/1434#issuecomment-801449010)
       // ca?: string;
@@ -400,7 +403,7 @@ export class YarnPackageManager implements PackageManager {
       data[defaultAuthProp.keyName] = defaultAuthProp.value;
     }
     // TODO: node-modules is hardcoded now until adding support for pnp.
-    config.use('<bit>', data, rootDirPath, {});
+    config.use('<bit>', data, rootDirPath, { overwrite: true });
 
     // Yarn  v4 stopped automatically creating the cache folder.
     // If we don't do it ourselves, Yarn will fail with: "ENOENT: no such file or directory, copyfile..."

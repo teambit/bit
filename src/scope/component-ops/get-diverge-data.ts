@@ -4,7 +4,7 @@ import { NoCommonSnap } from '../exceptions/no-common-snap';
 import { ModelComponent, Version } from '../models';
 import { VersionParents } from '../models/version-history';
 import { Ref, Repository } from '../objects';
-import { DivergeData } from './diverge-data';
+import { SnapsDistance } from './snaps-distance';
 import { getAllVersionHashes, getAllVersionParents } from './traverse-versions';
 
 /**
@@ -19,60 +19,60 @@ import { getAllVersionHashes, getAllVersionParents } from './traverse-versions';
 export async function getDivergeData({
   repo,
   modelComponent,
-  remoteHead,
-  otherRemoteHeads, // when remoteHead empty, instead of returning all local snaps, stop if found one of these snaps
-  checkedOutLocalHead, // in case locally on the workspace it has a different version
-  throws = true, // otherwise, save the error instance in the `DivergeData` object,
+  sourceHead, // if empty, use the local head (if on lane - lane head. if on main - component head)
+  targetHead,
+  otherTargetsHeads, // when targetHead empty, instead of returning all local snaps, stop if found one of these snaps
+  throws = true, // otherwise, save the error instance in the `SnapsDistance` object,
   versionObjects, // relevant for remote-scope where during export the data is not in the repo yet.
 }: {
   repo: Repository;
   modelComponent: ModelComponent;
-  remoteHead: Ref | null;
-  otherRemoteHeads?: Ref[];
-  checkedOutLocalHead?: Ref | null;
+  sourceHead?: Ref | null;
+  targetHead: Ref | null;
+  otherTargetsHeads?: Ref[];
   throws?: boolean;
   versionObjects?: Version[];
-}): Promise<DivergeData> {
+}): Promise<SnapsDistance> {
   const isOnLane = modelComponent.laneHeadLocal || modelComponent.laneHeadLocal === null;
-  const localHead = checkedOutLocalHead || (isOnLane ? modelComponent.laneHeadLocal : modelComponent.getHead());
-  if (!remoteHead) {
+  const localHead = sourceHead || (isOnLane ? modelComponent.laneHeadLocal : modelComponent.getHead());
+  if (!targetHead) {
     if (localHead) {
       const allLocalHashes = await getAllVersionHashes({
         modelComponent,
         repo,
         throws: false,
         versionObjects,
-        stopAt: otherRemoteHeads,
+        stopAt: otherTargetsHeads,
       });
-      return new DivergeData(allLocalHashes);
+      return new SnapsDistance(allLocalHashes);
     }
-    return new DivergeData();
+    return new SnapsDistance();
   }
   if (!localHead) {
     const allRemoteHashes = await getAllVersionHashes({
       modelComponent,
       repo,
       throws: false,
-      startFrom: remoteHead,
+      startFrom: targetHead,
       versionObjects,
     });
-    return new DivergeData([], allRemoteHashes);
+    return new SnapsDistance([], allRemoteHashes);
   }
-  if (remoteHead.isEqual(localHead)) {
+  if (targetHead.isEqual(localHead)) {
     // no diverge they're the same
-    return new DivergeData();
+    return new SnapsDistance();
   }
 
   const versionParents = await getAllVersionParents({
     repo,
     modelComponent,
-    heads: [localHead, remoteHead],
+    heads: [localHead, targetHead],
     throws: false,
     versionObjects,
   });
   const getVersionData = (ref: Ref): VersionParents | undefined => versionParents.find((v) => v.hash.isEqual(ref));
 
-  const existOnRemote = (ref: Ref) => [remoteHead, ...(otherRemoteHeads || [])].find((r) => r.isEqual(ref));
+  const existOnRemote = (ref: Ref) => [targetHead, ...(otherTargetsHeads || [])].find((r) => r.isEqual(ref));
 
   const snapsOnLocal: Ref[] = [];
   const snapsOnRemote: Ref[] = [];
@@ -90,7 +90,7 @@ export async function getDivergeData({
       localHeadExistsRemotely = true;
       return;
     }
-    if (isLocal && version.unrelated?.isEqual(remoteHead)) {
+    if (isLocal && version.unrelated?.isEqual(targetHead)) {
       remoteHeadExistsLocally = true;
       snaps.push(version.hash);
       return;
@@ -124,40 +124,40 @@ export async function getDivergeData({
 run the following command to fix it:
 bit import ${modelComponent.id()} --objects`);
     if (throws) throw err;
-    return new DivergeData(snapsOnLocal, [], remoteHead, err);
+    return new SnapsDistance(snapsOnLocal, [], targetHead, err);
   }
   addParentsRecursively(localVersion, snapsOnLocal, true);
   if (remoteHeadExistsLocally && !hasMultipleParents) {
-    return new DivergeData(snapsOnLocal, [], remoteHead, error);
+    return new SnapsDistance(snapsOnLocal, [], targetHead, error);
   }
-  const remoteVersion = getVersionData(remoteHead);
+  const remoteVersion = getVersionData(targetHead);
   if (!remoteVersion) {
-    const err = new VersionNotFoundOnFS(remoteHead.toString(), modelComponent.id());
+    const err = new VersionNotFoundOnFS(targetHead.toString(), modelComponent.id());
     if (throws) throw err;
-    return new DivergeData([], [], undefined, err);
+    return new SnapsDistance([], [], undefined, err);
   }
   addParentsRecursively(remoteVersion, snapsOnRemote, false);
   if (localHeadExistsRemotely) {
-    return new DivergeData([], R.difference(snapsOnRemote, snapsOnLocal), localHead, error);
+    return new SnapsDistance([], R.difference(snapsOnRemote, snapsOnLocal), localHead, error);
   }
 
   if (remoteHeadExistsLocally) {
     // happens when `hasMultipleParents` is true. now that remote was traversed as well, it's possible to find the diff
-    return new DivergeData(R.difference(snapsOnLocal, snapsOnRemote), [], remoteHead, error);
+    return new SnapsDistance(R.difference(snapsOnLocal, snapsOnRemote), [], targetHead, error);
   }
 
   if (!commonSnapBeforeDiverge) {
     const unmergedData = repo.unmergedComponents.getEntry(modelComponent.name);
-    const isUnrelatedFromUnmerged = unmergedData?.unrelated && unmergedData.head.isEqual(remoteHead);
-    const isUnrelatedFromVersionObj = localVersion.unrelated?.isEqual(remoteHead);
+    const isUnrelatedFromUnmerged = unmergedData?.unrelated && unmergedData.head.isEqual(targetHead);
+    const isUnrelatedFromVersionObj = localVersion.unrelated?.isEqual(targetHead);
     if (isUnrelatedFromUnmerged || isUnrelatedFromVersionObj) {
-      return new DivergeData(snapsOnLocal, snapsOnRemote, undefined);
+      return new SnapsDistance(snapsOnLocal, snapsOnRemote, undefined);
     }
     const err = new NoCommonSnap(modelComponent.id());
     if (throws) throw err;
-    return new DivergeData(snapsOnLocal, snapsOnRemote, undefined, err);
+    return new SnapsDistance(snapsOnLocal, snapsOnRemote, undefined, err);
   }
-  return new DivergeData(
+  return new SnapsDistance(
     R.difference(snapsOnLocal, snapsOnRemote),
     R.difference(snapsOnRemote, snapsOnLocal),
     commonSnapBeforeDiverge,
