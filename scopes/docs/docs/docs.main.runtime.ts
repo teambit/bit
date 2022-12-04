@@ -76,7 +76,7 @@ export class DocsMain {
   }
 
   getDocsFiles(component: Component): AbstractVinyl[] {
-    const devFiles = this.devFiles.computeDevFiles(component);
+    const devFiles = this.devFiles.getDevFiles(component);
     const docFiles = devFiles.get(DocsAspect.id);
     return component.state.filesystem.files.filter((file) => docFiles.includes(file.relative));
   }
@@ -140,7 +140,7 @@ export class DocsMain {
     const env = this.envs.calculateEnv(component).env;
     const componentEnvDocsDevPatterns: string[] = env.getDocsDevPatterns ? env.getDocsDevPatterns(component) : [];
     const componentPatterns = componentEnvDocsDevPatterns.concat(this.getPatterns());
-    return componentPatterns;
+    return {name: 'docs', pattern: componentPatterns};
   }
 
   getDevPatternToRegister() {
@@ -215,10 +215,12 @@ export class DocsMain {
     if (workspace) {
       workspace.onComponentLoad(async (component, opts) => {
         if (opts?.loadDocs === false) return undefined;
+        // const docFiles = await docs.computeDocs(component);
         const doc = await docs.computeDoc(component);
 
         return {
           doc: doc?.toObject(),
+          // docFiles
         };
       });
     }

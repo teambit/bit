@@ -1,11 +1,24 @@
 import { BuildContext, BuiltTaskResult, BuildTask, TaskResultsList } from '@teambit/builder';
 import { Capsule } from '@teambit/isolator';
 import { hardLinkDirectory } from '@teambit/toolbox.fs.hard-link-directory';
+import { EnvContext, EnvHandler } from '@teambit/envs';
 import { DependencyResolverMain } from '@teambit/dependency-resolver';
 import fs from 'fs-extra';
 import path from 'path';
-
 import { Compiler } from './types';
+import { CompilerAspect } from './compiler.aspect';
+
+export type CompilerTaskOptions = {
+  /**
+   * instance of compiler to use.
+   */
+  compiler: EnvHandler<Compiler>;
+
+  /**
+   * name of compiler task
+   */
+  name?: string;
+};
 
 /**
  * compiler build task. Allows to compile components during component build.
@@ -78,5 +91,14 @@ export class CompilerTask implements BuildTask {
         await fs.outputFile(path.join(capsule.path, compiler.distDir, file.relative), content);
       })
     );
+  }
+
+  static from(options: CompilerTaskOptions) {
+    return (context: EnvContext) => {
+      const aspectId = CompilerAspect.id;
+      const name = options.name || 'compiler-task';
+      const depResolve = context.getAspect<any>('teambit.dependencies/dependency-resolver');
+      return new CompilerTask(aspectId, name, options.compiler(context), depResolve);
+    }
   }
 }

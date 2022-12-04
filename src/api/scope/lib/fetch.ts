@@ -38,6 +38,11 @@ export type FETCH_OPTIONS = {
    * it traverses and sends the entire history.
    */
   collectParents?: boolean;
+  /**
+   * in case dependencies are needed (includeDependencies=true) and a component was tagged with bit version >= 0.0.907, so then
+   * the graph is saved inside the Version object, then don't send all dependencies.
+   */
+  preferDependencyGraph?: boolean;
 
   fetchSchema: string;
 };
@@ -86,7 +91,7 @@ export default async function fetch(
         // backward compatible before 0.0.900 - we used to conclude whether the parents need to be collected based on the need for dependencies
         return !fetchOptions.withoutDependencies;
       };
-      const { includeArtifacts, allowExternal, onlyIfBuilt } = fetchOptions;
+      const { includeArtifacts, allowExternal } = fetchOptions;
       const collectParents = shouldCollectParents();
 
       // important! don't create a new instance of ScopeComponentImporter. Otherwise, the Mutex will be created
@@ -115,7 +120,7 @@ export default async function fetch(
           const versionsDependencies = await scopeComponentsImporter.fetchWithDeps(
             bitIdsToFetch,
             allowExternal,
-            onlyIfBuilt
+            fetchOptions
           );
           const flatDeps = versionsDependencies
             .map((versionDep) => [

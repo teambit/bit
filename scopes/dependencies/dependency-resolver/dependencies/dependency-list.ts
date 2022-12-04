@@ -71,6 +71,10 @@ export class DependencyList {
     return DependencyList.fromArray(filtered);
   }
 
+  filterHidden(): DependencyList {
+    return this.filter((dep) => !dep.hidden);
+  }
+
   toTypeArray<T extends Dependency>(typeName: string): T[] {
     const list: T[] = this.dependencies.filter((dep) => dep.type === typeName) as any as T[];
     return list;

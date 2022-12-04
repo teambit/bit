@@ -1,6 +1,6 @@
 import { Component } from '@teambit/component';
 import { IssuesClasses } from '@teambit/component-issues';
-import { GraphBuilder } from '@teambit/graph';
+import { GraphMain } from '@teambit/graph';
 import { uniq } from 'lodash';
 import { Insight, InsightResult, RawResult } from '../insight';
 
@@ -9,12 +9,12 @@ export const INSIGHT_CIRCULAR_DEPS_NAME = 'circular';
 export default class FindCycles implements Insight {
   name = INSIGHT_CIRCULAR_DEPS_NAME;
   description = 'Get all circular dependencies in component graph';
-  graphBuilder: GraphBuilder;
-  constructor(graphBuilder: GraphBuilder) {
+  graphBuilder: GraphMain;
+  constructor(graphBuilder: GraphMain) {
     this.graphBuilder = graphBuilder;
   }
   private async runInsight(): Promise<RawResult> {
-    const graph = await this.graphBuilder.getGraph();
+    const graph = await this.graphBuilder.getGraphIds();
     if (!graph) {
       return {
         message: '',

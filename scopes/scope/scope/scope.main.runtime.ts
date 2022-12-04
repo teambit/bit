@@ -42,6 +42,7 @@ import { getScopeRemotes } from '@teambit/legacy/dist/scope/scope-remotes';
 import { Remotes } from '@teambit/legacy/dist/remotes';
 import { isMatchNamespacePatternItem } from '@teambit/workspace.modules.match-pattern';
 import { Scope } from '@teambit/legacy/dist/scope';
+import { CompIdGraph, DepEdgeType } from '@teambit/graph';
 import { Types } from '@teambit/legacy/dist/scope/object-registrar';
 import { FETCH_OPTIONS } from '@teambit/legacy/dist/api/scope/lib/fetch';
 import { ObjectList } from '@teambit/legacy/dist/scope/objects/object-list';
@@ -329,6 +330,11 @@ export class ScopeMain implements ComponentFactory {
     return files.find((path) => path.includes(`${runtime}.runtime.js`));
   }
 
+  private findAspectFile(dirPath: string) {
+    const files = readdirSync(join(dirPath, 'dist'));
+    return files.find((path) => path.includes(`.aspect.js`));
+  }
+
   private async loadAspectFromPath(localAspects: string[]) {
     const dirPaths = this.parseLocalAspect(localAspects);
     const manifests = dirPaths.map((dirPath) => {
@@ -473,8 +479,10 @@ needed-for: ${neededFor || '<unknown>'}`);
 
     return dirs.map((dir) => {
       const runtimeManifest = runtime ? this.findRuntime(dir, runtime) : undefined;
+      const aspectFilePath = runtime ? this.findAspectFile(dir) : undefined;
       return new AspectDefinition(
         dir,
+        aspectFilePath ? join(dir, 'dist', aspectFilePath) : null,
         runtimeManifest ? join(dir, 'dist', runtimeManifest) : null,
         undefined,
         undefined,
@@ -669,6 +677,8 @@ needed-for: ${neededFor || '<unknown>'}`);
       const runtimePath = runtimeName
         ? await this.aspectLoader.getRuntimePath(component, localPath, runtimeName)
         : null;
+      const aspectFilePath = await this.aspectLoader.getAspectFilePath(component, localPath);
+
       this.logger.debug(
         `scope resolveUserAspects, resolving id: ${component.id.toString()}, localPath: ${localPath}, runtimePath: ${runtimePath}`
       );
@@ -676,6 +686,7 @@ needed-for: ${neededFor || '<unknown>'}`);
       return {
         id: capsule.component.id,
         aspectPath: localPath,
+        aspectFilePath,
         runtimePath,
       };
     });
@@ -774,6 +785,78 @@ needed-for: ${neededFor || '<unknown>'}`);
         });
       })
     );
+    return graph;
+  }
+
+  async getGraphIds(ids?: ComponentID[]): Promise<CompIdGraph> {
+    if (!ids || !ids.length) ids = (await this.list()).map((comp) => comp.id) || [];
+    const components = await this.getMany(ids);
+    const graph = new Graph<ComponentID, DepEdgeType>();
+    const componentsWithoutSavedGraph: Component[] = [];
+
+    // try to add from saved graph
+    components.forEach((component) => {
+      const compGraph = this.getSavedGraphOfComponentIfExist(component);
+      if (!compGraph) {
+        componentsWithoutSavedGraph.push(component);
+        return;
+      }
+      graph.merge([graph]);
+    });
+    if (!componentsWithoutSavedGraph.length) {
+      return graph;
+    }
+
+    // there are components that don't have the graph saved, create the graph by using Version objects of all flattened
+    const lane = (await this.legacyScope.getCurrentLaneObject()) || undefined;
+    await this.import(
+      componentsWithoutSavedGraph.map((c) => c.id),
+      { reFetchUnBuiltVersion: false, lane }
+    );
+
+    const allFlattened = componentsWithoutSavedGraph
+      .map((component) => component.state._consumer.getAllFlattenedDependencies())
+      .flat();
+    const allFlattenedUniq = BitIds.uniqFromArray(allFlattened);
+
+    const addEdges = (compId: ComponentID, dependencies: ConsumerComponent['dependencies'], label: DepEdgeType) => {
+      dependencies.get().forEach((dep) => {
+        const depId = this.resolveComponentIdFromBitId(dep.id);
+        graph.setNode(new Node(depId.toString(), depId));
+        graph.setEdge(new Edge(compId.toString(), depId.toString(), label));
+      });
+    };
+    const componentsAndVersions = await this.legacyScope.getComponentsAndVersions(allFlattenedUniq);
+    componentsAndVersions.forEach(({ component, version, versionStr }) => {
+      const compBitId = component.toBitId().changeVersion(versionStr);
+      const compId = this.resolveComponentIdFromBitId(compBitId);
+      graph.setNode(new Node(compId.toString(), compId));
+      addEdges(compId, version.dependencies, 'prod');
+      addEdges(compId, version.devDependencies, 'dev');
+      addEdges(compId, version.extensionDependencies, 'ext');
+    });
+
+    return graph;
+  }
+
+  private getSavedGraphOfComponentIfExist(component: Component): Graph<ComponentID, DepEdgeType> | null {
+    const consumerComponent = component.state._consumer as ConsumerComponent;
+    const flattenedEdges = consumerComponent.flattenedEdges;
+    if (!flattenedEdges.length && consumerComponent.flattenedDependencies.length) {
+      // there are flattenedDependencies, so must be edges, if they're empty, it's because the component was tagged
+      // with a version < ~0.0.901, so this flattenedEdges wasn't exist.
+      return null;
+    }
+    const edges = flattenedEdges.map((edge) => ({
+      ...edge,
+      source: this.resolveComponentIdFromBitId(edge.source),
+      target: this.resolveComponentIdFromBitId(edge.target),
+    }));
+    const nodes = consumerComponent.flattenedDependencies.map((depId) => this.resolveComponentIdFromBitId(depId));
+
+    const graph = new Graph<ComponentID, DepEdgeType>();
+    nodes.forEach((node) => graph.setNode(new Node(node.toString(), node)));
+    edges.forEach((edge) => graph.setEdge(new Edge(edge.source.toString(), edge.target.toString(), edge.type)));
     return graph;
   }
 

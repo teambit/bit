@@ -25,7 +25,7 @@ import logger from '../../logger/logger';
 import { empty, filterObject, forEach, getStringifyArgs, mapObject, sha1 } from '../../utils';
 import findDuplications from '../../utils/array/find-duplications';
 import ComponentObjects from '../component-objects';
-import { DivergeData } from '../component-ops/diverge-data';
+import { SnapsDistance } from '../component-ops/snaps-distance';
 import { getDivergeData } from '../component-ops/get-diverge-data';
 import {
   getAllVersionHashes,
@@ -127,7 +127,7 @@ export default class Component extends BitObject {
   laneId?: LaneId; // doesn't get saved in the scope.
   laneDataIsPopulated = false; // doesn't get saved in the scope, used to improve performance of loading the lane data
   schema: string | undefined;
-  private divergeData?: DivergeData;
+  private divergeData?: SnapsDistance;
   private populateVersionHistoryMutex = new Mutex();
   constructor(props: ComponentProps) {
     super();
@@ -267,7 +267,7 @@ export default class Component extends BitObject {
   /**
    * on main - it checks local-head vs remote-head.
    * on lane - it checks local-head on lane vs remote-head on lane.
-   * however, to get an accurate `divergeData.snapsOnLocalOnly`, the above is not enough.
+   * however, to get an accurate `divergeData.snapsOnSourceOnly`, the above is not enough.
    * for example, comp-a@snap-x from lane-a is merged into lane-b. we don't want this snap-x to be "local", because
    * then, bit-status will show it as "staged" and bit-reset will remove it unexpectedly.
    * if we only check by the local-head and remote-head on lane, it'll be local because the remote-head of lane-b is empty.
@@ -283,11 +283,17 @@ export default class Component extends BitObject {
         otherRemoteHeads = await repo.remoteLanes.getRefsFromAllLanes(this.toBitId());
         if (this.remoteHead) otherRemoteHeads.push(this.remoteHead);
       }
-      this.divergeData = await getDivergeData({ repo, modelComponent: this, remoteHead, throws, otherRemoteHeads });
+      this.divergeData = await getDivergeData({
+        repo,
+        modelComponent: this,
+        targetHead: remoteHead,
+        throws,
+        otherTargetsHeads: otherRemoteHeads,
+      });
     }
   }
 
-  getDivergeData(): DivergeData {
+  getDivergeData(): SnapsDistance {
     if (!this.divergeData)
       throw new Error(
         `getDivergeData() expects divergeData to be populate, please use this.setDivergeData() for id: ${this.id()}`
@@ -383,7 +389,7 @@ export default class Component extends BitObject {
     // either a user is on main or a lane, check whether the remote is ahead of the local
     await this.setDivergeData(repo, false);
     const divergeData = this.getDivergeData();
-    return divergeData.isRemoteAhead() ? remoteHead.toString() : latestLocally;
+    return divergeData.isTargetAhead() ? remoteHead.toString() : latestLocally;
   }
 
   latestVersion(): string {
@@ -989,14 +995,14 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
   async getLocalTagsOrHashes(repo: Repository): Promise<string[]> {
     await this.setDivergeData(repo);
     const divergeData = this.getDivergeData();
-    const localHashes = divergeData.snapsOnLocalOnly;
+    const localHashes = divergeData.snapsOnSourceOnly;
     if (!localHashes.length) return [];
     return this.switchHashesWithTagsIfExist(localHashes).reverse(); // reverse to get the older first
   }
 
   getLocalHashes(): Ref[] {
     const divergeData = this.getDivergeData();
-    const localHashes = divergeData.snapsOnLocalOnly;
+    const localHashes = divergeData.snapsOnSourceOnly;
     if (!localHashes.length) return [];
     return localHashes.reverse(); // reverse to get the older first
   }
@@ -1016,7 +1022,7 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
   async isLocallyChanged(repo: Repository, lane?: Lane | null): Promise<boolean> {
     if (lane) await this.populateLocalAndRemoteHeads(repo, lane);
     await this.setDivergeData(repo);
-    return this.getDivergeData().isLocalAhead();
+    return this.getDivergeData().isSourceAhead();
   }
 
   async GetVersionHistory(repo: Repository): Promise<VersionHistory> {
@@ -1030,6 +1036,18 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
     const { err } = await this.populateVersionHistoryIfMissingGracefully(repo, versionHistory, head);
     if (err) throw err;
     return versionHistory;
+  }
+
+  async updateRebasedVersionHistory(repo: Repository, versions: Version[]): Promise<VersionHistory | undefined> {
+    const versionHistory = await this.GetVersionHistory(repo);
+    const hasUpdated = versions.some((version) => {
+      const versionData = versionHistory.getVersionData(version.hash());
+      if (!versionData) return false;
+      versionHistory.addFromVersionsObjects([version]);
+      return true;
+    });
+
+    return hasUpdated ? versionHistory : undefined;
   }
 
   async populateVersionHistoryIfMissingGracefully(

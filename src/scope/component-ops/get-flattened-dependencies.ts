@@ -14,7 +14,6 @@ import VersionDependencies from '../version-dependencies';
 
 export class FlattenedDependenciesGetter {
   private dependenciesGraph: Graph;
-  private prodGraph: Graph;
   private versionDependencies: VersionDependencies[];
   private cache: { [idStr: string]: BitIds } = {};
   constructor(private scope: Scope, private components: Component[]) {}
@@ -36,18 +35,12 @@ export class FlattenedDependenciesGetter {
    */
   async populateFlattenedDependencies() {
     logger.debug(`populateFlattenedDependencies starts with ${this.components.length} components`);
-    this.createGraphs(this.components);
+    this.dependenciesGraph = buildComponentsGraphCombined(this.components);
+    // console.log("this.dependenciesGraph", this.dependenciesGraph.toString())
     await this.importExternalDependenciesInBulk();
     await mapSeries(this.components, async (component) => {
       component.flattenedDependencies = await this.getFlattened(component.id);
     });
-  }
-
-  private createGraphs(components: Component[]) {
-    this.dependenciesGraph = buildComponentsGraphCombined(components);
-    // uncomment to see the graph nicely. very helpful for debugging
-    // console.log("this.dependenciesGraph", this.dependenciesGraph.toString())
-    this.prodGraph = this.dependenciesGraph.getSubGraphByEdgeType('dependencies');
   }
 
   private async importExternalDependenciesInBulk() {
@@ -114,6 +107,9 @@ this dependency was not included in the tag command.`);
   }
 }
 
+/**
+ * get all successors edges recursively (flatten)
+ */
 function getEdges(graph: GraphLib, id: BitIdStr): BitIdStr[] | null {
   if (!graph.hasNode(id)) return null;
   // @ts-ignore

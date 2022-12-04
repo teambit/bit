@@ -39,7 +39,7 @@ import threeWayMerge, {
 import { NoCommonSnap } from '@teambit/legacy/dist/scope/exceptions/no-common-snap';
 import { CheckoutAspect, CheckoutMain } from '@teambit/checkout';
 import { ComponentID } from '@teambit/component-id';
-import { DivergeData } from '@teambit/legacy/dist/scope/component-ops/diverge-data';
+import { SnapsDistance } from '@teambit/legacy/dist/scope/component-ops/snaps-distance';
 import { InstallMain, InstallAspect } from '@teambit/install';
 import { MergeCmd } from './merge-cmd';
 import { MergingAspect } from './merging.aspect';
@@ -53,7 +53,7 @@ export type ComponentMergeStatus = {
   unmergedMessage?: string;
   unmergedLegitimately?: boolean; // failed to merge but for a legitimate reason, such as, up-to-date
   mergeResults?: MergeResultsThreeWay | null;
-  divergeData?: DivergeData;
+  divergeData?: SnapsDistance;
   resolvedUnrelated?: ResolveUnrelatedData;
 };
 
@@ -63,7 +63,7 @@ export type ComponentMergeStatusBeforeMergeAttempt = {
   id: BitId;
   unmergedMessage?: string;
   unmergedLegitimately?: boolean; // failed to merge but for a legitimate reason, such as, up-to-date
-  divergeData?: DivergeData;
+  divergeData?: SnapsDistance;
   resolvedUnrelated?: ResolveUnrelatedData;
   mergeProps?: {
     otherLaneHead: Ref;
@@ -381,7 +381,7 @@ export class MergingMain {
     };
     const currentId = getCurrentId();
     if (!currentId) {
-      const divergeData = await getDivergeData({ repo, modelComponent, remoteHead: otherLaneHead, throws: false });
+      const divergeData = await getDivergeData({ repo, modelComponent, targetHead: otherLaneHead, throws: false });
       return { currentComponent: null, componentFromModel: componentOnLane, id, divergeData };
     }
     const getCurrentComponent = () => {
@@ -413,7 +413,7 @@ export class MergingMain {
     const divergeData = await getDivergeData({
       repo,
       modelComponent,
-      remoteHead: otherLaneHead,
+      targetHead: otherLaneHead,
       throws: false,
     });
     if (divergeData.err) {
@@ -423,8 +423,8 @@ export class MergingMain {
           const divergeDataFromMain = await getDivergeData({
             repo,
             modelComponent,
-            remoteHead: mainHead,
-            checkedOutLocalHead: hashToCompare,
+            sourceHead: hashToCompare,
+            targetHead: mainHead,
             throws: false,
           });
           if (!divergeDataFromMain.err) return true;
@@ -467,11 +467,11 @@ export class MergingMain {
       );
     }
     if (!divergeData.isDiverged()) {
-      if (divergeData.isLocalAhead()) {
+      if (divergeData.isSourceAhead()) {
         // do nothing!
         return returnUnmerged(`component ${currentComponent.id.toString()} is ahead, nothing to merge`, true);
       }
-      if (divergeData.isRemoteAhead()) {
+      if (divergeData.isTargetAhead()) {
         // just override with the model data
         return {
           currentComponent,

@@ -1,7 +1,7 @@
 /* eslint-disable max-lines */
 import memoize from 'memoizee';
 import mapSeries from 'p-map-series';
-import { Graph } from '@teambit/graph.cleargraph';
+import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
 import type { PubsubMain } from '@teambit/pubsub';
 import { IssuesList } from '@teambit/component-issues';
 import type { AspectLoaderMain, AspectDefinition } from '@teambit/aspect-loader';
@@ -57,6 +57,7 @@ import {
   pathNormalizeToLinux,
 } from '@teambit/legacy/dist/utils/path';
 import fs from 'fs-extra';
+import { CompIdGraph, DepEdgeType } from '@teambit/graph';
 import { slice, uniqBy, difference, compact, partition, isEmpty, merge } from 'lodash';
 import path from 'path';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
@@ -65,7 +66,7 @@ import { CompilationInitiator } from '@teambit/compiler';
 import ScopeComponentsImporter from '@teambit/legacy/dist/scope/component-ops/scope-components-importer';
 import { MissingBitMapComponent } from '@teambit/legacy/dist/consumer/bit-map/exceptions';
 import loader from '@teambit/legacy/dist/cli/loader';
-import { Lane } from '@teambit/legacy/dist/scope/models';
+import { Lane, Version } from '@teambit/legacy/dist/scope/models';
 import { LaneNotFound } from '@teambit/legacy/dist/api/scope/lib/exceptions/lane-not-found';
 import { ScopeNotFoundOrDenied } from '@teambit/legacy/dist/remotes/exceptions/scope-not-found-or-denied';
 import { ComponentLoadOptions } from '@teambit/legacy/dist/consumer/component/component-loader';
@@ -95,6 +96,7 @@ import { WorkspaceComponentLoader } from './workspace-component/workspace-compon
 import { GraphFromFsBuilder, ShouldLoadFunc } from './build-graph-from-fs';
 import { BitMap } from './bit-map';
 import { WorkspaceAspect } from './workspace.aspect';
+import { GraphIdsFromFsBuilder } from './build-graph-ids-from-fs';
 
 export type EjectConfResult = {
   configPath: string;
@@ -437,6 +439,57 @@ export class Workspace implements ComponentFactory {
     return this.buildOneGraphForComponents(ids, undefined, undefined, shouldThrowOnMissingDep);
   }
 
+  async getGraphIds(ids?: ComponentID[], shouldThrowOnMissingDep = true): Promise<CompIdGraph> {
+    if (!ids || ids.length < 1) ids = await this.listIds();
+
+    const graphIdsFromFsBuilder = new GraphIdsFromFsBuilder(
+      this,
+      this.logger,
+      this.dependencyResolver,
+      shouldThrowOnMissingDep
+    );
+    return graphIdsFromFsBuilder.buildGraph(ids);
+  }
+
+  async getSavedGraphOfComponentIfExist(component: Component) {
+    let versionObj: Version;
+    try {
+      versionObj = await this.scope.legacyScope.getVersionInstance(component.id._legacy);
+    } catch (err) {
+      return null;
+    }
+
+    const flattenedEdges = versionObj.flattenedEdges;
+    if (!flattenedEdges.length && versionObj.flattenedDependencies.length) {
+      // there are flattenedDependencies, so must be edges, if they're empty, it's because the component was tagged
+      // with a version < ~0.0.901, so this flattenedEdges wasn't exist.
+      return null;
+    }
+    const flattenedBitIdCompIdMap: { [bitIdStr: string]: ComponentID } = {};
+    flattenedBitIdCompIdMap[component.id._legacy.toString()] = component.id;
+    await Promise.all(
+      versionObj.flattenedDependencies.map(async (bitId) => {
+        flattenedBitIdCompIdMap[bitId.toString()] = await this.resolveComponentId(bitId);
+      })
+    );
+    const getCompIdByIdStr = (idStr: string): ComponentID => {
+      const compId = flattenedBitIdCompIdMap[idStr];
+      if (!compId) throw new Error(`id ${idStr} exists in flattenedEdges but not in flattened`);
+      return compId;
+    };
+    const nodes = Object.values(flattenedBitIdCompIdMap);
+    const edges = flattenedEdges.map((edge) => ({
+      ...edge,
+      source: getCompIdByIdStr(edge.source.toString()),
+      target: getCompIdByIdStr(edge.target.toString()),
+    }));
+
+    const graph = new Graph<ComponentID, DepEdgeType>();
+    nodes.forEach((node) => graph.setNode(new Node(node.toString(), node)));
+    edges.forEach((edge) => graph.setEdge(new Edge(edge.source.toString(), edge.target.toString(), edge.type)));
+    return graph;
+  }
+
   /**
    * given component ids, find their dependents in the workspace
    */
@@ -517,7 +570,7 @@ export class Workspace implements ComponentFactory {
       // !important persist services only on the env itself.
       let services: undefined | EnvServiceList;
       if (this.envs.isEnvRegistered(component.id.toString())) services = this.envs.getServices(env);
-      const icon = this.aspectLoader.getDescriptor(env.id).icon || env.env.icon;
+      const icon = this.aspectLoader.getDescriptor(env.id)?.icon || env.env.icon;
 
       return {
         type: systemDescriptor.type,
@@ -1565,7 +1618,6 @@ needed-for: ${neededFor || '<unknown>'}`);
   }
 
   /**
-   * Note - this gets called from Harmony only.
    * returns one graph that includes all dependencies types. each edge has a label of the dependency
    * type. the nodes content is the Component object.
    */
@@ -1617,11 +1669,14 @@ needed-for: ${neededFor || '<unknown>'}`);
         ? await this.aspectLoader.getRuntimePath(component, localPath, runtimeName)
         : null;
 
+      const aspectFilePath = await this.aspectLoader.getAspectFilePath(component, localPath);
+
       this.logger.debug(
         `workspace resolveAspects, resolving id: ${compStringId}, localPath: ${localPath}, runtimePath: ${runtimePath}`
       );
       return {
         aspectPath: localPath,
+        aspectFilePath,
         runtimePath,
       };
     });

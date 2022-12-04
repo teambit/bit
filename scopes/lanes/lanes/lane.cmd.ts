@@ -335,7 +335,7 @@ export class LaneImportCmd implements Command {
 
 export class LaneCmd implements Command {
   name = 'lane [lane-name]';
-  description = 'show lanes details';
+  description = 'manage lanes';
   alias = '';
   options = [
     ['d', 'details', 'show more details on the state of each component in each lane'],
@@ -349,12 +349,10 @@ export class LaneCmd implements Command {
   migration = true;
   remoteOp = true;
   skipWorkspace = true;
+  helpUrl = 'docs/components/lanes';
   commands: Command[] = [];
 
-  constructor(private lanes: LanesMain, private workspace: Workspace, private scope: ScopeMain, docsDomain: string) {
-    this.description = `show lanes details
-https://${docsDomain}/components/lanes`;
-  }
+  constructor(private lanes: LanesMain, private workspace: Workspace, private scope: ScopeMain) {}
 
   async report([name]: [string], laneOptions: LaneOptions): Promise<string> {
     return new LaneListCmd(this.lanes, this.workspace, this.scope).report([name], laneOptions);

@@ -13,8 +13,6 @@ import { DiffOptions } from '@teambit/legacy/dist/consumer/component-ops/compone
 import { MergeStrategy, MergeOptions } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
 import { TrackLane } from '@teambit/legacy/dist/scope/scope-json';
 import { ImporterAspect, ImporterMain, ImportOptions } from '@teambit/importer';
-import { CommunityAspect } from '@teambit/community';
-import type { CommunityMain } from '@teambit/community';
 import ComponentAspect, { Component, ComponentID, ComponentMain } from '@teambit/component';
 import removeLanes from '@teambit/legacy/dist/consumer/lanes/remove-lanes';
 import { Lane } from '@teambit/legacy/dist/scope/models';
@@ -26,6 +24,7 @@ import { BitId } from '@teambit/legacy-bit-id';
 import { ExportAspect, ExportMain } from '@teambit/export';
 import { BitIds } from '@teambit/legacy/dist/bit-id';
 import { Ref } from '@teambit/legacy/dist/scope/objects';
+import { SnapsDistance } from '@teambit/legacy/dist/scope/component-ops/snaps-distance';
 import { MergingMain, MergingAspect } from '@teambit/merging';
 import { LanesAspect } from './lanes.aspect';
 import {
@@ -367,6 +366,33 @@ export class LanesMain {
   }
 
   /**
+   * get the distance for a component between two lanes. for example, lane-b forked from lane-a and lane-b added some new snaps
+   * @param componentId
+   * @param sourceHead head on the source lane. leave empty if the source is main
+   * @param targetHead head on the target lane. leave empty if the target is main
+   * @returns
+   */
+  async getSnapsDistance(componentId: ComponentID, sourceHead?: string, targetHead?: string): Promise<SnapsDistance> {
+    if (!sourceHead && !targetHead)
+      throw new Error(`getDivergeData got sourceHead and targetHead empty. at least one of them should be populated`);
+    const modelComponent = await this.scope.legacyScope.getModelComponent(componentId._legacy);
+    return getDivergeData({
+      modelComponent,
+      repo: this.scope.legacyScope.objects,
+      sourceHead: sourceHead ? Ref.from(sourceHead) : modelComponent.head || null,
+      targetHead: targetHead ? Ref.from(targetHead) : modelComponent.head || null,
+    });
+  }
+
+  /**
+   * get the head hash (snap) of main. return undefined if the component exists only on a lane and was never merged to main
+   */
+  async getHeadOnMain(componentId: ComponentID): Promise<string | undefined> {
+    const modelComponent = await this.scope.legacyScope.getModelComponent(componentId._legacy);
+    return modelComponent.head?.toString();
+  }
+
+  /**
    * fetch the lane object and its components from the remote.
    * save the objects to the local scope.
    * this method doesn't change anything in the workspace.
@@ -477,14 +503,14 @@ export class LanesMain {
         const divergeData = await getDivergeData({
           repo: this.scope.legacyScope.objects,
           modelComponent,
-          remoteHead: refOnOtherLane,
-          checkedOutLocalHead: comp.head,
+          sourceHead: comp.head,
+          targetHead: refOnOtherLane,
         });
-        if (divergeData.isRemoteAhead() || divergeData.isDiverged()) {
+        if (divergeData.isTargetAhead() || divergeData.isDiverged()) {
           notUpToDateIds.push(comp.id);
           return;
         }
-        if (!divergeData.isLocalAhead()) {
+        if (!divergeData.isSourceAhead()) {
           throw new Error(
             `invalid state - component ${comp.id.toString()} is not diverged, not local-ahead and not-remote-ahead.`
           );
@@ -673,7 +699,6 @@ export class LanesMain {
     ScopeAspect,
     WorkspaceAspect,
     GraphqlAspect,
-    CommunityAspect,
     MergingAspect,
     ComponentAspect,
     LoggerAspect,
@@ -682,24 +707,11 @@ export class LanesMain {
     ExpressAspect,
   ];
   static runtime = MainRuntime;
-  static async provider([
-    cli,
-    scope,
-    workspace,
-    graphql,
-    community,
-    merging,
-    component,
-    loggerMain,
-    importer,
-    exporter,
-    express,
-  ]: [
+  static async provider([cli, scope, workspace, graphql, merging, component, loggerMain, importer, exporter, express]: [
     CLIMain,
     ScopeMain,
     Workspace,
     GraphqlMain,
-    CommunityMain,
     MergingMain,
     ComponentMain,
     LoggerMain,
@@ -710,7 +722,7 @@ export class LanesMain {
     const logger = loggerMain.createLogger(LanesAspect.id);
     const lanesMain = new LanesMain(workspace, scope, merging, component, logger, importer, exporter);
     const switchCmd = new SwitchCmd(lanesMain);
-    const laneCmd = new LaneCmd(lanesMain, workspace, scope, community.getDocsDomain());
+    const laneCmd = new LaneCmd(lanesMain, workspace, scope);
     laneCmd.commands = [
       new LaneListCmd(lanesMain, workspace, scope),
       switchCmd,

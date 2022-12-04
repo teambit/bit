@@ -1,3 +1,4 @@
+import { BuildContext } from '@teambit/builder';
 import { Component } from '@teambit/component';
 import { LinterContext } from './linter-context';
 
@@ -150,5 +151,5 @@ export type LintResults = {
 };
 
 export interface Linter {
-  lint(context: LinterContext): Promise<LintResults>;
+  lint(context: LinterContext, buildContext?: BuildContext): Promise<LintResults>;
 }

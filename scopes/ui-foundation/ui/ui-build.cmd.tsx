@@ -9,6 +9,7 @@ export class UIBuildCmd implements Command {
   alias = 'c';
   group = 'development';
   options = [];
+  private = true;
 
   constructor(
     /**

@@ -51,6 +51,7 @@ export class SignMain {
   async sign(ids: ComponentID[], isMultiple?: boolean, push?: boolean, laneIdStr?: string): Promise<SignResult | null> {
     let lane: Lane | undefined;
     if (isMultiple) {
+      const longProcessLogger = this.logger.createLongProcessLogger('import objects');
       if (laneIdStr) {
         const laneId = LaneId.parse(laneIdStr);
         lane = await this.lanes.importLaneObject(laneId);
@@ -59,6 +60,8 @@ export class SignMain {
         this.scope.legacyScope.setCurrentLaneId(laneId);
       }
       await this.scope.import(ids, { lane });
+      longProcessLogger.end();
+      this.logger.consoleSuccess();
     }
     const { componentsToSkip, componentsToSign } = await this.getComponentIdsToSign(ids);
     if (ids.length && componentsToSkip.length) {
@@ -169,7 +172,7 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
     const componentsToSkip: ComponentID[] = [];
     components.forEach((component) => {
       if (component.state._consumer.buildStatus === BuildStatus.Succeed) {
-        componentsToSkip.push(component.id);
+        componentsToSign.push(component.id);
       } else {
         componentsToSign.push(component.id);
       }

@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import { loadAspect } from '@teambit/harmony.testing.load-aspect';
 import SnappingAspect, { SnappingMain } from '@teambit/snapping';
 import { mockWorkspace, destroyWorkspace, WorkspaceData } from '@teambit/workspace.testing.mock-workspace';
-import { mockComponents } from '@teambit/component.testing.mock-components';
+import { mockComponents, modifyMockedComponents } from '@teambit/component.testing.mock-components';
 import { LanesAspect } from './lanes.aspect';
 import { LanesMain } from './lanes.main.runtime';
 
@@ -41,7 +41,8 @@ describe('LanesAspect', function () {
       await snapping.tag({ ids: ['comp1'], build: false });
       lanes = await loadAspect(LanesAspect, workspacePath);
       await lanes.createLane('stage');
-      const result = await snapping.snap({ pattern: 'comp1', build: false, unmodified: true });
+      await modifyMockedComponents(workspacePath, 'v2');
+      const result = await snapping.snap({ pattern: 'comp1', build: false });
       // intermediate step, make sure it is snapped
       expect(result?.snappedComponents.length).to.equal(1);
     });

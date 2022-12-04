@@ -241,7 +241,8 @@ export class WorkspaceComponentLoader {
     // Move to deps resolver main runtime once we switch ws<> deps resolver direction
     const policy = await this.dependencyResolver.mergeVariantPolicies(
       component.config.extensions,
-      component.id._legacy
+      component.id._legacy,
+      component.state._consumer.files
     );
     const dependenciesList = await this.dependencyResolver.extractDepsFromLegacy(component, policy);
     let dependenciesFromUnmergedHead;

@@ -58,6 +58,7 @@ export type ImportOptions = {
     lanes: Lane[]; // it can be an empty array when a lane is a local lane and doesn't exist on the remote
   };
   allHistory?: boolean;
+  fetchDeps?: boolean; // by default, if a component was tagged with > 0.0.900, it has the flattened-deps-graph in the object
 };
 type ComponentMergeStatus = {
   componentWithDependencies: ComponentWithDependencies;
@@ -214,8 +215,8 @@ export default class ImportComponents {
     if (divergedComponents.length) {
       const divergeData = divergedComponents.map((modelComponent) => ({
         id: modelComponent.id(),
-        snapsLocal: modelComponent.getDivergeData().snapsOnLocalOnly.length,
-        snapsRemote: modelComponent.getDivergeData().snapsOnRemoteOnly.length,
+        snapsLocal: modelComponent.getDivergeData().snapsOnSourceOnly.length,
+        snapsRemote: modelComponent.getDivergeData().snapsOnTargetOnly.length,
       }));
       throw new ComponentsPendingMerge(divergeData);
     }
@@ -239,12 +240,19 @@ export default class ImportComponents {
       fromHead: this.options.allHistory,
       collectParents: this.options.allHistory,
       lane,
-      ignoreMissingHead,
+      // in case a user is merging a lane into a new workspace, then, locally main has head, but remotely the head is
+      // empty, until it's exported. going to the remote and asking this component will throw an error if ignoreMissingHead is false
+      ignoreMissingHead: true,
     });
     loader.start(`import ${ids.length} components with their dependencies (if missing)`);
     const results = fromOriginalScope
       ? await scopeComponentsImporter.importManyFromOriginalScopes(ids)
-      : await scopeComponentsImporter.importMany({ ids, ignoreMissingHead, lanes: lane ? [lane] : undefined });
+      : await scopeComponentsImporter.importMany({
+          ids,
+          ignoreMissingHead,
+          lanes: lane ? [lane] : undefined,
+          preferDependencyGraph: !this.options.fetchDeps,
+        });
 
     return results;
   }
@@ -327,7 +335,7 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
         bitIds.push(...dependenciesIds);
       }
       if (this.options.importDependents) {
-        const graph = await this.graph.getGraph();
+        const graph = await this.graph.getGraphIds();
         const targetCompIds = await this.workspace.resolveMultipleComponentIds(bitIds);
         const sourceIds = await this.workspace.listIds();
         const ids = graph.findIdsFromSourcesToTargets(sourceIds, targetCompIds);
@@ -465,7 +473,7 @@ bit import ${idsFromRemote.map((id) => id.toStringWithoutVersion()).join(' ')}`)
         latestVersion: versionDifference.includes(latestVersion) ? latestVersion : null,
         status: getStatus(),
         filesStatus,
-        missingDeps: component.getMissingDependencies(),
+        missingDeps: this.options.fetchDeps ? component.getMissingDependencies() : [],
         deprecated,
         removed,
       };
