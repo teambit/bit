@@ -26,8 +26,7 @@ module.exports = {
     'plugin:react/recommended',
     // 'plugin:unicorn/recommended',
     // 'plugin:mocha/recommended',
-    'prettier',
-    'prettier/@typescript-eslint',
+    'prettier'
   ],
   plugins: [
     '@typescript-eslint',
@@ -39,6 +38,8 @@ module.exports = {
   ],
   rules: {
     complexity: ['error', { max: 25 }],
+    'arrow-body-style': 'off',
+    'prefer-arrow-callback': 'off',
     'no-console': ['error'],
     '@typescript-eslint/no-unused-vars': ['error', { args: 'after-used' }],
     '@typescript-eslint/no-use-before-define': [
