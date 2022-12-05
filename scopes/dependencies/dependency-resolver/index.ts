@@ -52,6 +52,7 @@ export {
   SerializedVariantPolicy,
   EnvPolicyConfigObject,
   EnvPolicy,
+  EnvPolicyLegacyConfigObject,
   PeersAutoDetectPolicy,
 } from './policy';
 export {
