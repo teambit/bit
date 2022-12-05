@@ -21,7 +21,12 @@ import { WebpackAspect } from '@teambit/webpack';
 import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { DevServerContext, BundlerContext } from '@teambit/bundler';
-import { DependencyResolverAspect, DependencyResolverMain, EnvPolicyConfigObject } from '@teambit/dependency-resolver';
+import {
+  DependencyResolverAspect,
+  DependencyResolverMain,
+  EnvPolicyConfigObject,
+  EnvPolicyLegacyConfigObject,
+} from '@teambit/dependency-resolver';
 import ts from 'typescript';
 import { ApplicationAspect, ApplicationMain } from '@teambit/application';
 import { FormatterContext } from '@teambit/formatter';
@@ -330,7 +335,17 @@ export class ReactMain {
   overrideDependencies(dependencyPolicy: EnvPolicyConfigObject) {
     return this.envs.override({
       getDependencies: async () => {
-        const reactDeps = await this.reactEnv.getDependencies();
+        const {
+          dependencies,
+          devDependencies,
+          peers: peersFromEnv,
+          peerDependencies: peerDepsFromEnv,
+        } = await this.reactEnv.getDependencies();
+        const { peers: peersFromUser, peerDependencies: peerDepsFromUser } =
+          dependencyPolicy as EnvPolicyLegacyConfigObject;
+        const calculatedPeers = peersFromUser ? peersFromEnv : {};
+        const calculatedPeerDependencies = peerDepsFromUser ? peerDepsFromEnv : {};
+        const reactDeps = { dependencies, devDependencies, calculatedPeers, calculatedPeerDependencies };
         return mergeDeepLeft(dependencyPolicy, reactDeps);
       },
     });
