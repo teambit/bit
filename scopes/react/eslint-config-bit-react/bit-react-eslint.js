@@ -5,7 +5,7 @@ module.exports = {
   overrides: [
     {
       files: ['*.ts', '*.tsx', '*.js', '*.jsx', '*.mjs'],
-      extends: [require.resolve('eslint-config-airbnb-typescript')],
+      extends: [require.resolve('eslint-config-airbnb-typescript'), require.resolve('eslint-config-prettier')],
       rules: {
         '@typescript-eslint/camelcase': 'off',
         'import/no-extraneous-dependencies': 'off',
@@ -15,7 +15,10 @@ module.exports = {
         '@typescript-eslint/comma-dangle': 'off',
         'object-curly-newline': 'off',
         'react/react-in-jsx-scope': 'off',
-        'class-methods-use-this': 'off'
+        'class-methods-use-this': 'off',
+        'arrow-body-style': 'off',
+        'prefer-arrow-callback': 'off',
+        'no-underscore-dangle': 'off'
       },
     },
     {
