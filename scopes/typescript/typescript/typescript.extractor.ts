@@ -133,11 +133,13 @@ export class TypeScriptExtractor implements SchemaExtractor {
     return (context: EnvContext) => {
       const tsconfig = getTsconfig(options.tsconfig)?.config || { compilerOptions: options.compilerOptions };
       const tsMain = context.getAspect<TypescriptMain>(TypescriptAspect.id);
+      // When loading the env from a scope you don't have a workspace
+      const wsPath = tsMain.workspace?.path || '';
       return new TypeScriptExtractor(
         tsconfig,
         tsMain.schemaTransformerSlot,
         tsMain,
-        tsMain.workspace.path,
+        wsPath,
         tsMain.depResolver,
         tsMain.workspace,
       );
