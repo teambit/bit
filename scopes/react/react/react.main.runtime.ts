@@ -333,19 +333,38 @@ export class ReactMain {
    * override the dependency configuration of the component environment.
    */
   overrideDependencies(dependencyPolicy: EnvPolicyConfigObject) {
+    const defaultAutoDetectPeers = {
+      peers: [
+        {
+          name: 'react',
+          /**
+           * specific version used for development.
+           */
+          version: '^17.0.0',
+
+          /**
+           * range used for the component peer dependencies.
+           */
+          supportedRange: '^16.8.0 || ^17.0.0',
+        },
+        {
+          name: 'react-dom',
+          version: '^17.0.0',
+          supportedRange: '^16.8.0 || ^17.0.0',
+        },
+      ],
+    };
     return this.envs.override({
       getDependencies: async () => {
         const {
           dependencies,
           devDependencies,
-          peers: peersFromEnv,
           peerDependencies: peerDepsFromEnv,
         } = await this.reactEnv.getDependencies();
-        const { peers: peersFromUser, peerDependencies: peerDepsFromUser } =
-          dependencyPolicy as EnvPolicyLegacyConfigObject;
-        const calculatedPeers = peersFromUser ? peersFromEnv : {};
-        const calculatedPeerDependencies = peerDepsFromUser ? peerDepsFromEnv : {};
-        const reactDeps = { dependencies, devDependencies, calculatedPeers, calculatedPeerDependencies };
+        const { peers: peersFromUser } = dependencyPolicy as EnvPolicyLegacyConfigObject;
+        // Hack for backwards compatibility - if user is using new peers syntax, merge with peers version of env's peerDependencies
+        const calculatedPeers = peersFromUser ? defaultAutoDetectPeers : peerDepsFromEnv;
+        const reactDeps = { dependencies, devDependencies, calculatedPeers };
         return mergeDeepLeft(dependencyPolicy, reactDeps);
       },
     });
