@@ -252,7 +252,7 @@ export function outputDiffResults(diffResults: DiffResults[]): string {
         const fields = diffResult.fieldsDiff ? diffResult.fieldsDiff.map((field) => field.diffOutput).join('\n') : '';
         return `${title}\n${files}\n${fields}`;
       }
-      return `no diff for ${chalk.bold(diffResult.id.toString())}`;
+      return `no diff for ${chalk.bold(diffResult.id.toString())} (consider running with --verbose)`;
     })
     .join('\n\n');
 }
