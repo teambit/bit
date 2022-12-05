@@ -65,20 +65,6 @@
       margin-right: 8px;
     }
   }
-  .widgets {
-    height: 100%;
-    margin-right: 20px;
-    display: flex;
-    align-items: center;
-    > nav {
-      > a {
-        padding: 0;
-        &:last-child {
-          margin-right: 0;
-        }
-      }
-    }
-  }
   .widget {
     font-size: 17px;
   }
