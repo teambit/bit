@@ -30,7 +30,7 @@
 .navigation {
   display: flex;
   list-style: none;
-  height: 100%;
+  min-height: 48px;
 
   @media screen and (max-width: 768px) {
     padding-left: 6px;

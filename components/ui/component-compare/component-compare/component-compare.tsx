@@ -112,8 +112,8 @@ export function ComponentCompare(props: ComponentCompareProps) {
 }
 
 function RenderCompareScreen(props: ComponentCompareProps) {
-  const ref = useRef(null);
   const { routes, state } = props;
+  const ref = useRef(null);
   const onScreen = useOnScreen(ref, '200px 0px');
 
   return (
