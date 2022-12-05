@@ -469,6 +469,25 @@ export class ReactEnv
         '@babel/runtime': '7.20.0',
         '@types/testing-library__jest-dom': '5.9.5',
       },
+      peers: [
+        {
+          name: 'react',
+          /**
+           * specific version used for development.
+           */
+          version: '^17.0.0',
+
+          /**
+           * range used for the component peer dependencies.
+           */
+          supportedRange: '^16.8.0 || ^17.0.0',
+        },
+        {
+          name: 'react-dom',
+          version: '^17.0.0',
+          supportedRange: '^16.8.0 || ^17.0.0',
+        },
+      ],
       peerDependencies: {
         react: '^16.8.0 || ^17.0.0',
         'react-dom': '^16.8.0 || ^17.0.0',
