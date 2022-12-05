@@ -10,6 +10,7 @@ import Component from '../component/consumer-component';
 import { ExtensionDataList } from '../config';
 import { DiffOptions, FieldsDiff } from './components-diff';
 import { BitIds } from '../../bit-id';
+import { sortObject } from '../../utils';
 
 type ConfigDiff = {
   fieldName: string;
@@ -326,6 +327,19 @@ export function diffBetweenComponentsObjects(
     return depsDiff;
   };
 
+  const getAllOverridesOutput = (): FieldsDiff[] => {
+    const diffs = ['dependencies', 'devDependencies', 'peerDependencies'].map((fieldName) => {
+      return configsOutput(
+        `overrides ${fieldName}`,
+        sortObject(componentLeft.overrides.overrides[fieldName]),
+        sortObject(componentRight.overrides.overrides[fieldName]),
+        labelLeft(leftVersion, rightVersion),
+        labelRight(leftVersion, rightVersion)
+      );
+    });
+    return compact(diffs);
+  };
+
   const fieldsEnvsConfigOutput = getEnvsConfigOutput(componentLeft, componentRight);
   const extensionsConfigOutput = getExtensionsConfigOutput(componentLeft, componentRight);
 
@@ -335,6 +349,7 @@ export function diffBetweenComponentsObjects(
     ...extensionsConfigOutput,
     ...dependenciesRelativePathsOutput(),
     ...getAllDepsOutput(),
+    ...getAllOverridesOutput(),
   ];
 
   return R.isEmpty(allDiffs) ? undefined : allDiffs;
