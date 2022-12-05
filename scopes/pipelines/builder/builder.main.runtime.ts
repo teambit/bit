@@ -434,7 +434,7 @@ export class BuilderMain {
       snapTaskSlot
     );
     component.registerRoute([new BuilderRoute(builder, scope, logger)]);
-    graphql.register(builderSchema(builder));
+    graphql.register(builderSchema(builder, logger));
     generator.registerComponentTemplate([buildTaskTemplate]);
     const commands = [new BuilderCmd(builder, workspace, logger), new ArtifactsCmd(builder, scope)];
     cli.register(...commands);
