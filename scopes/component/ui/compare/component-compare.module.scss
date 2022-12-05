@@ -63,6 +63,7 @@
 }
 
 .collapsedMenuLink {
+  // remove underline when active link in dropdown menu
   &::after {
     display: none;
   }
