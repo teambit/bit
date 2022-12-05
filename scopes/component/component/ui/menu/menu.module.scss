@@ -34,7 +34,7 @@
   // show desktop nav on larger res
   &.desktopNav {
     display: flex;
-    @media screen and (max-width: $br-lg) {
+    @media screen and (max-width: $br-md) {
       display: none;
     }
   }
@@ -78,9 +78,6 @@
         }
       }
     }
-    @media screen and (max-width: $br-lg) {
-      display: none;
-    }
   }
   .widget {
     font-size: 17px;
@@ -97,6 +94,7 @@
 
 .tab {
   > div {
+    color: var(--on-background-color, #2B2B2B);
     padding: 0;
   }
 }

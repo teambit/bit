@@ -52,10 +52,13 @@
 }
 
 .tab {
-  // TODO - create z-index pallete system.
-  z-index: 10; // to prevent it from hiding behind aspect tab content.
   > div {
     padding: 0;
+    > div {
+      // TODO - create z-index pallete system.
+      z-index: 10; // to prevent it from hiding behind aspect tab content.
+      
+    }
   }
 }
 
