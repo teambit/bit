@@ -30,6 +30,14 @@ export type DeploymentProviderSlot = SlotRegistry<DeploymentProvider[]>;
 
 export type ApplicationAspectConfig = {};
 
+/**
+ * Application meta data that is stored on the component on load if it's an application.
+ */
+export type ApplicationMetadata = {
+  appName?: string;
+  type?: string;
+};
+
 export type ServeAppOptions = {
   /**
    * default port range used to serve applications.
