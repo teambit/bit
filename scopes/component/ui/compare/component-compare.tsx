@@ -118,7 +118,7 @@ function CompareMenuNav({ navSlot }: { navSlot: ComponentCompareNavSlot }) {
 
   const links = plugins.map((menuItem, index) => {
     return {
-      component: function TopBarNavItem({isInMenu}) {
+      component: function TopBarNavItem({isInMenu}: {isInMenu: boolean}) {
         return <TopBarNav key={`${menuItem.id}-${index}`} {...menuItem.props} className={classnames(styles.compareMenuLink, isInMenu && styles.collapsedMenuLink)} />;
       },
     };

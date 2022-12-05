@@ -18,21 +18,19 @@ export function CollapsableMenuNav({ navigationSlot, widgetSlot, className }: Me
   const links = [...plugins, ...widgets].map(([id, menuItem]) => {
 
     // these styles keep plugins to the left and widgets to the right.
-    const lastPluginStyle = menuItem.props.href === plugins[-1]?.[1].props.href ? {marginRight: 'auto'} : {}
-    const firstWidgetStyle = menuItem.props.href === widgets[0]?.[1].props.href ? {marginLeft: 'auto'} : {}
-    
+    const lastPluginStyle = menuItem.props.href === plugins[-1]?.[1].props.href ? { marginRight: 'auto' } : {};
+    const firstWidgetStyle = menuItem.props.href === widgets[0]?.[1].props.href ? { marginLeft: 'auto' } : {};
+
     return {
       component: function TopBarNavComponent({ isInMenu }: TabProps) {
-        const widgetDisplayText = (menuItem.props.displayName && isInMenu) && menuItem.props.displayName
+        const widgetDisplayText = (menuItem.props.displayName && isInMenu) && menuItem.props.displayName;
         return (
-          <TopBarNav
-            className={classnames(styles.topBarNav, isInMenu && styles.noBorder)}
-            key={id}
-            {...menuItem.props}
-          >{widgetDisplayText || menuItem.props.children}</TopBarNav>
+          <TopBarNav className={classnames(styles.topBarNav, isInMenu && styles.noBorder)} key={id} {...menuItem.props}>
+            {widgetDisplayText || menuItem.props.children}
+          </TopBarNav>
         );
       },
-      style: {...firstWidgetStyle, ...lastPluginStyle}
+      style: { ...firstWidgetStyle, ...lastPluginStyle },
     };
   });
   return (
