@@ -376,7 +376,6 @@ export class YarnPackageManager implements PackageManager {
       nodeLinker: options.nodeLinker === 'isolated' ? 'pnpm' : 'node-modules',
       installStatePath: `${rootDirPath}/.yarn/install-state.gz`,
       cacheFolder: join(globalFolder, 'cache'),
-      pnpDataPath: `${rootDirPath}/.pnp.meta.json`,
       npmScopes: scopedRegistries,
       virtualFolder: `${rootDirPath}/.yarn/__virtual__`,
       npmRegistryServer: defaultRegistry.uri || 'https://registry.yarnpkg.com',
@@ -388,6 +387,7 @@ export class YarnPackageManager implements PackageManager {
       globalFolder,
       // We need to disable self-references as say create circular symlinks.
       nmSelfReferences: false,
+      pnpUnpluggedFolder: `${rootDirPath}/.yarn/unplugged`,
       // Hardlink the files from the global content-addressable store.
       // This increases the speed of installation and reduces disk space usage.
       nmMode: 'hardlinks-global',
@@ -404,6 +404,10 @@ export class YarnPackageManager implements PackageManager {
     }
     // TODO: node-modules is hardcoded now until adding support for pnp.
     config.use('<bit>', data, rootDirPath, { overwrite: true });
+
+    // Yarn  v4 stopped automatically creating the cache folder.
+    // If we don't do it ourselves, Yarn will fail with: "ENOENT: no such file or directory, copyfile..."
+    await fs.mkdir(config.values.get('cacheFolder'), { recursive: true });
 
     return config;
   }
@@ -467,7 +471,7 @@ export class YarnPackageManager implements PackageManager {
       report,
     };
     // const candidates = await resolver.getCandidates(descriptor, new Map(), resolveOptions);
-    const candidates = await resolver.getCandidates(descriptor, new Map(), resolveOptions);
+    const candidates = await resolver.getCandidates(descriptor, {}, resolveOptions);
     const parsedRange = structUtils.parseRange(candidates[0].reference);
     const version = parsedRange.selector;
     return {
