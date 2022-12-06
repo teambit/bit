@@ -101,7 +101,7 @@ Commands that are marked as workspace only must be executed inside a workspace. 
       const [alias, flag, description] = opt;
       const aliasFormatted = alias ? `\`-${alias}\`` : '   ';
       const flagFormatted = `--${flag}`;
-      output += `|\`${flagFormatted}\`|${aliasFormatted}|${description}|\n`;
+      output += `|\`${flagFormatted}\`|${aliasFormatted}|${description.replaceAll('\n', ' ')}|\n`;
     });
     output += `\n`;
     return output;
