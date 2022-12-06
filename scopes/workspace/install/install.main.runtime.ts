@@ -1,4 +1,3 @@
-import crypto from 'crypto'
 import { CommunityMain, CommunityAspect } from '@teambit/community';
 import { CompilerMain, CompilerAspect, CompilationInitiator } from '@teambit/compiler';
 import ManyComponentsWriter from '@teambit/legacy/dist/consumer/component-ops/many-components-writer';
@@ -30,6 +29,7 @@ import {
 import { ImporterAspect, ImporterMain, ImportOptions } from '@teambit/importer';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { IssuesAspect, IssuesMain } from '@teambit/issues';
+import hash from 'object-hash';
 import { DependencyTypeNotSupportedInPolicy } from './exceptions';
 import { InstallAspect } from './install.aspect';
 import { pickOutdatedPkgs } from './pick-outdated-pkgs';
@@ -211,10 +211,10 @@ export class InstallMain {
         await this.compiler.compileOnWorkspace([], { initiator: CompilationInitiator.Install });
       }
       await this.link(linkOpts);
-      prevManifests.add(createHashFromObj(current.manifests));
+      prevManifests.add(hash(current.manifests));
       current = await this._getComponentsManifests(installer, mergedRootPolicy, pmInstallOptions);
       installCycle += 1;
-    } while (!prevManifests.has(createHashFromObj(current.manifests)) && installCycle < 5);
+    } while (!prevManifests.has(hash(current.manifests)) && installCycle < 5);
     /* eslint-enable no-await-in-loop */
     return current.componentDirectoryMap;
   }
@@ -494,10 +494,6 @@ export class InstallMain {
     }
     return installExt;
   }
-}
-
-function createHashFromObj(obj: any): string {
-  return crypto.createHash('md5').update(JSON.stringify(obj)).digest('base64');
 }
 
 InstallAspect.addRuntime(InstallMain);
