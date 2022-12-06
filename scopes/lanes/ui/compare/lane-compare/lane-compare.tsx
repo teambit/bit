@@ -11,10 +11,10 @@ import { ComponentCompareHooks } from '@teambit/component.ui.component-compare.m
 import { sortTabs } from '@teambit/component.ui.component-compare.utils.sort-tabs';
 import { LaneModel } from '@teambit/lanes.ui.models.lanes-model';
 import { LaneCompareState, computeStateKey } from '@teambit/lanes.ui.compare.lane-compare-state';
-import { useUpdatedUrlFromQuery } from '@teambit/component.ui.component-compare.hooks.use-component-compare-url';
 import { UseComponentType } from '@teambit/component';
 import { DrawerUI } from '@teambit/ui-foundation.ui.tree.drawer';
 import AnimateHeight from 'react-animate-height';
+
 import styles from './lane-compare.module.scss';
 
 export type LaneCompareProps = {
@@ -127,11 +127,9 @@ export function LaneCompare({ host, compare, base, tabs, customUseComponent, ...
     const _hooks: ComponentCompareHooks = {
       code: {
         onClick: onClicked('code'),
-        useUpdatedUrlFromQuery: () => useUpdatedUrlFromQuery({}),
       },
       aspects: {
         onClick: onClicked('aspects'),
-        useUpdatedUrlFromQuery: () => useUpdatedUrlFromQuery({}),
       },
       tabs: {
         onClick: onClicked('tabs'),
