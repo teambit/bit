@@ -812,6 +812,7 @@ function validateNoDuplicateIds(addComponents: Record<string, any>[]) {
 export async function getFilesByDir(dir: string, consumerPath: string, gitIgnore: any): Promise<ComponentMapFile[]> {
   const matches = await globby(dir, {
     cwd: consumerPath,
+    dot: true,
     onlyFiles: true,
   });
   if (!matches.length) throw new ComponentNotFoundInPath(dir);
