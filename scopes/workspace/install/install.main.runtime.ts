@@ -169,7 +169,7 @@ export class InstallMain {
     // TODO: pass get install options
     const installer = this.dependencyResolver.getInstaller({});
     let current = await this._getComponentsManifests(installer, mergedRootPolicy, pmInstallOptions);
-    let prev: typeof current;
+    const prevManifests = new Set<string>();
     // TODO: this make duplicate
     // this.logger.consoleSuccess();
     // TODO: add the links results to the output
@@ -187,6 +187,7 @@ export class InstallMain {
       linkDepsResolvedFromEnv: !hasRootComponents,
       linkNestedDepsInNM: !this.workspace.isLegacy && !hasRootComponents,
     };
+    let installCycle = 0
     /* eslint-disable no-await-in-loop */
     do {
       this.workspace.consumer.componentLoader.clearComponentsCache();
@@ -209,9 +210,9 @@ export class InstallMain {
         await this.compiler.compileOnWorkspace([], { initiator: CompilationInitiator.Install });
       }
       await this.link(linkOpts);
-      prev = current;
+      prevManifests.add(JSON.stringify(current.manifests));
       current = await this._getComponentsManifests(installer, mergedRootPolicy, pmInstallOptions);
-    } while (!isEqual(prev.manifests, current.manifests));
+    } while (!prevManifests.has(JSON.stringify(current.manifests)) && ++installCycle < 10);
     /* eslint-enable no-await-in-loop */
     return current.componentDirectoryMap;
   }
