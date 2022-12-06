@@ -41,6 +41,9 @@ export function CodeCompareView({ className, fileName }: CodeCompareViewProps) {
   }, [fileName]);
 
   const codeCompareDataForFile = codeCompareContext?.fileCompareDataByName.get(fileName);
+  /**
+   * when there is no component to compare with, fetch file content
+   */
   const { fileContent: downloadedCompareFileContent, loading } = useFileContent(
     componentCompareContext?.compare?.model.id,
     fileName,
@@ -50,6 +53,7 @@ export function CodeCompareView({ className, fileName }: CodeCompareViewProps) {
   if (!codeCompareContext || codeCompareContext.loading || loading) return null;
 
   const originalFileContent = codeCompareDataForFile?.baseContent;
+
   const modifiedFileContent = codeCompareDataForFile?.compareContent || downloadedCompareFileContent;
 
   const handleEditorDidMount: DiffOnMount = (_, monaco) => {
