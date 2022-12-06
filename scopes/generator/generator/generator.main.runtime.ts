@@ -144,7 +144,7 @@ export class GeneratorMain {
    */
   async getComponentTemplate(name: string, aspectId?: string): Promise<ComponentTemplateWithId | undefined> {
     const fromEnv = await this.listEnvComponentTemplates();
-    if (fromEnv && fromEnv.length){
+    if (fromEnv && fromEnv.length) {
       const found = this.findTemplateByAspectIdAndName<ComponentTemplateWithId>(aspectId, name, fromEnv);
       if (found) return found;
     }
@@ -177,12 +177,14 @@ export class GeneratorMain {
   ): Promise<{ workspaceTemplate?: WorkspaceTemplate; aspect?: Component }> {
     const { globalScopeHarmony, components } = await this.aspectLoader.loadAspectsFromGlobalScope([aspectId]);
     const remoteGenerator = globalScopeHarmony.get<GeneratorMain>(GeneratorAspect.id);
+    const remoteEnvsAspect = globalScopeHarmony.get<EnvsMain>(EnvsAspect.id);
     const aspect = components[0];
     const fullAspectId = aspect.id.toString();
     const fromGlobal = await remoteGenerator.searchRegisteredWorkspaceTemplate.call(
       remoteGenerator,
       name,
-      fullAspectId
+      fullAspectId,
+      remoteEnvsAspect
     );
     return { workspaceTemplate: fromGlobal, aspect };
   }
@@ -228,12 +230,17 @@ export class GeneratorMain {
     throw new BitError(`template "${name}" was not found`);
   }
 
-  async searchRegisteredWorkspaceTemplate(name?: string, aspectId?: string): Promise<WorkspaceTemplate | undefined> {
+  async searchRegisteredWorkspaceTemplate(
+    name?: string,
+    aspectId?: string,
+    remoteEnvsAspect?: EnvsMain
+  ): Promise<WorkspaceTemplate | undefined> {
     let fromEnv;
+
     if (aspectId) {
-      fromEnv = await this.listEnvWorkspaceTemplates(aspectId);
+      fromEnv = await this.listEnvWorkspaceTemplates(aspectId, remoteEnvsAspect);
     }
-    const templates = (fromEnv && fromEnv.length) ? fromEnv : this.getAllWorkspaceTemplatesFlattened();
+    const templates = fromEnv && fromEnv.length ? fromEnv : this.getAllWorkspaceTemplatesFlattened();
     const found = templates.find(({ id, template: tpl }) => {
       if (aspectId && name) return aspectId === id && name === tpl.name;
       if (aspectId) return aspectId === id;
@@ -306,7 +313,7 @@ export class GeneratorMain {
     }
 
     const flattened = this.getAllComponentTemplatesFlattened();
-    const filtered = flattened.filter((template) => template.id === aspectId);
+    const filtered = aspectId ? flattened.filter((template) => template.id === aspectId) : flattened;
     return filtered.map((template) => this.getTemplateDescriptor(template));
   }
 
@@ -344,10 +351,8 @@ export class GeneratorMain {
   /**
    * list all starter templates registered by an env.
    */
-  async listEnvWorkspaceTemplates(
-    envId: string
-  ): Promise<Array<WorkspaceTemplateWithId>> {
-    const envs = await this.loadEnvs([envId]);
+  async listEnvWorkspaceTemplates(envId: string, remoteEnvsAspect?: EnvsMain): Promise<Array<WorkspaceTemplateWithId>> {
+    const envs = await this.loadEnvs([envId], remoteEnvsAspect);
     const workspaceTemplates = envs.flatMap((env) => {
       if (!env.env.getGeneratorStarters) return undefined;
       const envStarters = env.env.getGeneratorStarters();
@@ -381,9 +386,7 @@ export class GeneratorMain {
     return templates;
   }
 
-  async listEnvComponentTemplates(
-    ids: string[] = []
-  ): Promise<Array<ComponentTemplateWithId>> {
+  async listEnvComponentTemplates(ids: string[] = []): Promise<Array<ComponentTemplateWithId>> {
     const configEnvs = this.config.envs || [];
     const envs = await this.loadEnvs(configEnvs?.concat(ids));
     const templates = envs.flatMap((env) => {
@@ -402,34 +405,24 @@ export class GeneratorMain {
     return templates;
   }
 
-  async loadEnvs(ids: string[] = this.config.envs || []): Promise<EnvDefinition[]> {
-    // TODO: this will probably won't work for bit new with aspect id and without loadFrom
-    // as this getEnvDefinition will probably return nothing, as the env is not loaded yet, therefore, not register to the slot
-    // we need to check if that id is an aspect id and load it as an aspect
-    // and only after it, we can get the env definition
-    const envs = ids.map((id) => {
+  async loadEnvs(ids: string[] = this.config.envs || [], remoteEnvsAspect?: EnvsMain): Promise<EnvDefinition[]> {
+    // In case we have remoteEnvsAspect it means that we are running from the global scope
+    // in that case the aspect / env were already loaded before to the global scope harmony instance
+    // so no reason to load it here
+    if (!remoteEnvsAspect) {
+      const host = this.componentAspect.getHost();
+      if (!host) return [];
+      await host.loadAspects(ids);
+    }
+
+    const envsAspect = remoteEnvsAspect || this.envs;
+
+    const potentialEnvs = ids.map((id) => {
       const componentId = ComponentID.fromString(id);
-      return {
-        id: componentId,
-        env: this.envs.getEnvDefinition(componentId),
-      };
+      return envsAspect.getEnvDefinition(componentId);
     });
 
-    const host = this.componentAspect.getHost();
-    if (!host) return [];
-
-    const toLoad = envs.filter((env) => !env.env);
-    const componentIds = toLoad.map((component) => component.id.toString());
-    await host.loadAspects(componentIds);
-    const allEnvs = envs.map((env) => {
-      if (env.env) {
-        return env.env;
-      }
-
-      return this.envs.getEnvDefinition(env.id);
-    });
-
-    return compact(allEnvs);
+    return compact(potentialEnvs);
   }
 
   async loadAspects() {
@@ -449,7 +442,7 @@ export class GeneratorMain {
     NewComponentHelperAspect,
     CommunityAspect,
     ImporterAspect,
-    ComponentAspect
+    ComponentAspect,
   ];
 
   static runtime = MainRuntime;

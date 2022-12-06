@@ -36,6 +36,7 @@
           "@typescript-eslint/eslint-plugin": "5.35.1",
           "@typescript-eslint/parser": "5.35.1",
           "eslint-config-airbnb-typescript": "12.0.0",
+          "eslint-config-prettier": "8.5.0",
           "@teambit/legacy": "-"
         },
         "devDependencies": {
@@ -43,7 +44,7 @@
         },
         "peerDependencies": {
           "eslint": "> 7.0.0",
-          "@teambit/legacy": "1.0.397"
+          "@teambit/legacy": "1.0.400"
         }
       }
     }

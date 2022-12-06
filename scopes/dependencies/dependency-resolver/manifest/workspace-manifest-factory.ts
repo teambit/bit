@@ -128,7 +128,6 @@ export class WorkspaceManifestFactory {
           if (
             !comp.isExtension &&
             !coreAspectIds.includes(compIdWithoutVersion) &&
-            comp.lifecycle === 'runtime' &&
             components.some((c) => c.id.isEqual(comp.componentId))
           ) {
             const pkgName = comp.getPackageName();

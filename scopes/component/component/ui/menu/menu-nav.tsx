@@ -8,33 +8,29 @@ import { NavPlugin, OrderedNavigationSlot } from './nav-plugin';
 
 export type MenuNavProps = {
   navigationSlot: OrderedNavigationSlot;
+  widgetSlot: OrderedNavigationSlot;
 } & React.HTMLAttributes<HTMLElement>;
 
-export function MenuNav({ navigationSlot, className }: MenuNavProps) {
+export function CollapsableMenuNav({ navigationSlot, widgetSlot, className }: MenuNavProps) {
   const plugins = useMemo(() => navigationSlot.toArray().sort(sortFn), [navigationSlot]);
+  const widgets = useMemo(() => widgetSlot.toArray().sort(sortFn), [widgetSlot]);
 
-  return (
-    <nav className={classnames(styles.navigation, styles.desktopNav, className)}>
-      {plugins.map(([id, menuItem]) => {
-        return <TopBarNav key={id} {...menuItem.props} />;
-      })}
-    </nav>
-  );
-}
+  const links = [...plugins, ...widgets].map(([id, menuItem]) => {
 
-export function CollapsableMenuNav({ navigationSlot, className }: MenuNavProps) {
-  const plugins = useMemo(() => navigationSlot.toArray().sort(sortFn), [navigationSlot]);
-  const links = plugins.map(([id, menuItem]) => {
+    // these styles keep plugins to the left and widgets to the right.
+    const lastPluginStyle = menuItem.props.href === plugins[-1]?.[1].props.href ? { marginRight: 'auto' } : {};
+    const firstWidgetStyle = menuItem.props.href === widgets[0]?.[1].props.href ? { marginLeft: 'auto' } : {};
+
     return {
       component: function TopBarNavComponent({ isInMenu }: TabProps) {
+        const widgetDisplayText = (menuItem.props.displayName && isInMenu) && menuItem.props.displayName;
         return (
-          <TopBarNav
-            className={classnames(styles.topBarNav, isInMenu && styles.noBorder)}
-            key={id}
-            {...menuItem.props}
-          />
+          <TopBarNav className={classnames(styles.topBarNav, isInMenu && styles.noBorder)} key={id} {...menuItem.props}>
+            {widgetDisplayText || menuItem.props.children}
+          </TopBarNav>
         );
       },
+      style: { ...firstWidgetStyle, ...lastPluginStyle },
     };
   });
   return (

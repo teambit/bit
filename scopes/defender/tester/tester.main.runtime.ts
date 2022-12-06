@@ -219,7 +219,7 @@ export class TesterMain {
     /**
      * determine whether to watch on start.
      */
-    watchOnStart: true,
+    watchOnStart: false,
   };
 
   static async provider(
