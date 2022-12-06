@@ -1,10 +1,11 @@
+import crypto from 'crypto'
 import { CommunityMain, CommunityAspect } from '@teambit/community';
 import { CompilerMain, CompilerAspect, CompilationInitiator } from '@teambit/compiler';
 import ManyComponentsWriter from '@teambit/legacy/dist/consumer/component-ops/many-components-writer';
 import { CLIMain, CommandList, CLIAspect, MainRuntime } from '@teambit/cli';
 import chalk from 'chalk';
 import { WorkspaceAspect, Workspace, ComponentConfigFile } from '@teambit/workspace';
-import { pick, isEqual } from 'lodash';
+import { pick } from 'lodash';
 import { ProjectManifest } from '@pnpm/types';
 import { NothingToImport } from '@teambit/legacy/dist/consumer/exceptions';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
@@ -210,9 +211,10 @@ export class InstallMain {
         await this.compiler.compileOnWorkspace([], { initiator: CompilationInitiator.Install });
       }
       await this.link(linkOpts);
-      prevManifests.add(JSON.stringify(current.manifests));
+      prevManifests.add(createHashFromObj(current.manifests));
       current = await this._getComponentsManifests(installer, mergedRootPolicy, pmInstallOptions);
-    } while (!prevManifests.has(JSON.stringify(current.manifests)) && ++installCycle < 10);
+      installCycle += 1;
+    } while (!prevManifests.has(createHashFromObj(current.manifests)) && installCycle < 5);
     /* eslint-enable no-await-in-loop */
     return current.componentDirectoryMap;
   }
@@ -492,6 +494,10 @@ export class InstallMain {
     }
     return installExt;
   }
+}
+
+function createHashFromObj(obj: any): string {
+  return crypto.createHash('md5').update(JSON.stringify(obj)).digest('base64');
 }
 
 InstallAspect.addRuntime(InstallMain);
