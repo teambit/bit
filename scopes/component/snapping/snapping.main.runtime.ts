@@ -732,7 +732,7 @@ there are matching among unmodified components thought. consider using --unmodif
     const issuesToIgnore = [...issuesToIgnoreFromFlag, ...issuesToIgnoreFromConfig];
     const components = await this.workspace.getManyByLegacy(legacyComponents);
     await this.issues.triggerAddComponentIssues(components, issuesToIgnore);
-    this.issues.removeIgnoredIssuesFromComponents(components);
+    this.issues.removeIgnoredIssuesFromComponents(components, issuesToIgnore);
 
     const componentsWithBlockingIssues = legacyComponents.filter((component) => component.issues?.shouldBlockTagging());
     if (!R.isEmpty(componentsWithBlockingIssues)) {
