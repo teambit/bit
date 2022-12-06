@@ -38,7 +38,7 @@ describe('LanesAspect', function () {
       const { workspacePath } = workspaceData;
       await mockComponents(workspacePath);
       snapping = await loadAspect(SnappingAspect, workspacePath);
-      await snapping.tag({ ids: ['comp1'], build: false });
+      await snapping.tag({ ids: ['comp1'], build: false, ignoreIssues: 'MissingManuallyConfiguredPackages' });
       lanes = await loadAspect(LanesAspect, workspacePath);
       await lanes.createLane('stage');
       await modifyMockedComponents(workspacePath, 'v2');
