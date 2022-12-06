@@ -1371,7 +1371,8 @@ module.exports.default = {
     helper.scopeHelper.addRemoteScope();
     helper.bitJsonc.setupDefault();
   });
-  describe('using Yarn', () => {
+  // this test became unstable recently. skipped for now. will be fixed later.
+  describe.skip('using Yarn', () => {
     let scopeAspectsCapsulesRootDir!: string;
     before(() => {
       helper.extensions.bitJsonc.setPackageManager(`teambit.dependencies/yarn`);
