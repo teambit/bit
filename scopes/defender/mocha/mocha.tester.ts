@@ -1,6 +1,6 @@
 import { Logger } from '@teambit/logger';
 import { ComponentsResults, Tester, CallbackFn, TesterContext, Tests } from '@teambit/tester';
-import Mocha from 'mocha';
+import Mocha, { Test } from 'mocha';
 import babelRegister from '@babel/register';
 import type { TransformOptions } from '@babel/core';
 import { TestResult, TestsFiles, TestsResult } from '@teambit/tests-results';
@@ -75,14 +75,23 @@ export class MochaTester implements Tester {
     const mocha = new this.MochaModule(this.mochaConfig);
     mocha.addFile(file.path);
     const testResults: TestResult[] = [];
+    const handleTest = (test: Test) => {
+      const state = test.state;
+      if (!state) {
+        throw new Error(`the test.state of "${test.title}", file "${file.path}" is neither passed nor failed`);
+      }
+      testResults.push(new TestResult(test.titlePath(), test.title, state, test.duration, undefined, test.err));
+    };
     return new Promise((resolve) => {
       const runner = mocha
         .run()
-        .on('test end', function (test) {
-          const state = test.state;
-          if (!state)
-            throw new Error(`the test.state of "${test.title}", file "${file.path}" is neither passed nor failed`);
-          testResults.push(new TestResult(test.titlePath(), test.title, state, test.duration, undefined, test.err));
+        .on('test end', (test) => handleTest(test))
+        .on('fail', (test) => {
+          if (test.type !== 'test') {
+            // otherwise, it was handled already in "test end" event.
+            // this is mainly for test.type of "hook", e.g. "before", "after", "beforeAll", "afterAll"
+            handleTest(test);
+          }
         })
         .on('end', function () {
           const stats = runner.stats;

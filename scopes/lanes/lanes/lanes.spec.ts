@@ -38,11 +38,15 @@ describe('LanesAspect', function () {
       const { workspacePath } = workspaceData;
       await mockComponents(workspacePath);
       snapping = await loadAspect(SnappingAspect, workspacePath);
-      await snapping.tag({ ids: ['comp1'], build: false });
+      await snapping.tag({ ids: ['comp1'], build: false, ignoreIssues: 'MissingManuallyConfiguredPackages' });
       lanes = await loadAspect(LanesAspect, workspacePath);
       await lanes.createLane('stage');
       await modifyMockedComponents(workspacePath, 'v2');
-      const result = await snapping.snap({ pattern: 'comp1', build: false });
+      const result = await snapping.snap({
+        pattern: 'comp1',
+        build: false,
+        ignoreIssues: 'MissingManuallyConfiguredPackages',
+      });
       // intermediate step, make sure it is snapped
       expect(result?.snappedComponents.length).to.equal(1);
     });
@@ -59,7 +63,12 @@ describe('LanesAspect', function () {
       const currentLane = await lanes.getCurrentLane();
       if (!currentLane) throw new Error('unable to get the current lane');
       await lanes.switchLanes('main', { skipDependencyInstallation: true });
-      await snapping.snap({ pattern: 'comp1', build: false, unmodified: true });
+      await snapping.snap({
+        pattern: 'comp1',
+        build: false,
+        unmodified: true,
+        ignoreIssues: 'MissingManuallyConfiguredPackages',
+      });
       const isUpToDate = await lanes.isLaneUpToDate(currentLane);
       expect(isUpToDate).to.be.false;
     });

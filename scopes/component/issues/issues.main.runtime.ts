@@ -54,11 +54,11 @@ export class IssuesMain {
     });
   }
 
-  removeIgnoredIssuesFromComponents(components: Component[]) {
+  removeIgnoredIssuesFromComponents(components: Component[], extraIssuesToIgnore: string[] = []) {
     const issuesToIgnoreGlobally = this.getIssuesToIgnoreGlobally();
     components.forEach((component) => {
       const issuesToIgnoreForThisComp = this.getIssuesToIgnorePerComponent(component);
-      const issuesToIgnore = [...issuesToIgnoreGlobally, ...issuesToIgnoreForThisComp];
+      const issuesToIgnore = [...issuesToIgnoreGlobally, ...issuesToIgnoreForThisComp, ...extraIssuesToIgnore];
       issuesToIgnore.forEach((issueToIgnore) => {
         component.state.issues.delete(IssuesClasses[issueToIgnore]);
       });
