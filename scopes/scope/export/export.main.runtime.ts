@@ -24,7 +24,7 @@ import GeneralError from '@teambit/legacy/dist/error/general-error';
 import HooksManager from '@teambit/legacy/dist/hooks';
 import { RemoveAspect, RemoveMain } from '@teambit/remove';
 import { NodeModuleLinker } from '@teambit/legacy/dist/links';
-import { Lane, ModelComponent, Symlink, Version, ExportMetadata } from '@teambit/legacy/dist/scope/models';
+import { Lane, ModelComponent, Symlink, Version } from '@teambit/legacy/dist/scope/models';
 import hasWildcard from '@teambit/legacy/dist/utils/string/has-wildcard';
 import { Scope } from '@teambit/legacy/dist/scope';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
@@ -32,7 +32,7 @@ import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { LaneReadmeComponent } from '@teambit/legacy/dist/scope/models/lane';
 import { Http } from '@teambit/legacy/dist/scope/network/http';
-import { ObjectList, ObjectItem } from '@teambit/legacy/dist/scope/objects/object-list';
+import { ObjectList } from '@teambit/legacy/dist/scope/objects/object-list';
 import mapSeries from 'p-map-series';
 import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
 import { Remote, Remotes } from '@teambit/legacy/dist/remotes';
@@ -281,20 +281,6 @@ export class ExportMain {
       .map((scopeName) => `scope "${scopeName}": ${idsGroupedByScope[scopeName].toString()}`)
       .join(', ');
     this.logger.debug(`export-scope-components, export to the following scopes ${groupedByScopeString}`);
-    const exportVersions: ExportVersions[] = [];
-
-    const populateExportMetadata = async (modelComponent: ModelComponent) => {
-      const localTagsOrHashes = await modelComponent.getLocalTagsOrHashes(scope.objects);
-      const head = modelComponent.getHeadRegardlessOfLane();
-      if (!head) {
-        throw new Error(`unable to export ${modelComponent.id()}, head is missing`);
-      }
-      exportVersions.push({
-        id: modelComponent.toBitId(),
-        versions: localTagsOrHashes,
-        head,
-      });
-    };
 
     const getUpdatedObjectsToExport = async (
       remoteNameStr: string,
@@ -318,7 +304,6 @@ export class ExportMain {
         const objectsList = await new ObjectList(objectItems).toBitObjects();
         const componentAndObject = { component: modelComponent, objects: objectsList.getAll() };
         await this.convertToCorrectScopeHarmony(scope, componentAndObject, remoteNameStr, bitIds, idsWithFutureScope);
-        await populateExportMetadata(modelComponent);
         const remoteObj = { url: remote.host, name: remote.name, date: Date.now().toString() };
         modelComponent.addScopeListItem(remoteObj);
         componentsAndObjects.push(componentAndObject);
@@ -364,20 +349,8 @@ export class ExportMain {
           getUpdatedObjectsToExport(scopeName, idsGroupedByScope[scopeName], laneObject)
         );
 
-    const getExportMetadata = async (): Promise<ObjectItem> => {
-      const exportMetadata = new ExportMetadata({ exportVersions });
-      const exportMetadataObj = await exportMetadata.compress();
-      const exportMetadataItem: ObjectItem = {
-        ref: exportMetadata.hash(),
-        buffer: exportMetadataObj,
-        type: ExportMetadata.name,
-      };
-      return exportMetadataItem;
-    };
-
     const pushAllToCentralHub = async () => {
       const objectList = this.transformToOneObjectListWithScopeData(manyObjectsPerRemote);
-      objectList.addIfNotExist([await getExportMetadata()]);
       const http = await Http.connect(CENTRAL_BIT_HUB_URL, CENTRAL_BIT_HUB_NAME);
       const pushResults = await http.pushToCentralHub(objectList);
       const { failedScopes, successIds, errors } = pushResults;
