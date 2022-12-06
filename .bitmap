@@ -1407,19 +1407,6 @@
         "mainFile": "index.ts",
         "rootDir": "components/ui/component-compare/context"
     },
-    "ui/component-compare/hooks/use-on-screen": {
-        "scope": "",
-        "version": "",
-        "defaultScope": "teambit.component",
-        "mainFile": "index.ts",
-        "rootDir": "components/ui/component-compare/hooks/use-on-screen",
-        "config": {
-            "teambit.react/react": {},
-            "teambit.envs/envs": {
-                "env": "teambit.react/react"
-            }
-        }
-    },
     "ui/component-compare/models/component-compare-hooks": {
         "scope": "",
         "version": "",

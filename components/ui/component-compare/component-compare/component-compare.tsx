@@ -1,4 +1,4 @@
-import React, { useContext, useMemo, useRef } from 'react';
+import React, { useContext, useMemo } from 'react';
 import classnames from 'classnames';
 import { LegacyComponentLog } from '@teambit/legacy-component-log';
 import { ComponentContext, TopBarNav, useComponent } from '@teambit/component';
@@ -73,9 +73,7 @@ export function ComponentCompare(props: ComponentCompareProps) {
 
   const compare = _compareId ? compareComponent : component;
 
-  const nothingToCompare = !loading && !compareIsLocalChanges && !compare && !base;
-
-  const visible = !loading && !nothingToCompare;
+  const isEmpty = !loading && !compareIsLocalChanges && !compare && !base;
 
   const logsByVersion = useMemo(() => {
     return (compare?.logs || []).slice().reduce(groupByVersion, new Map<string, LegacyComponentLog>());
@@ -103,8 +101,8 @@ export function ComponentCompare(props: ComponentCompareProps) {
             <RoundLoader />
           </div>
         )}
-        {visible && <RenderCompareScreen {...props} />}
-        {nothingToCompare && <ComponentCompareBlankState />}
+        {isEmpty && <ComponentCompareBlankState />}
+        {!isEmpty && <RenderCompareScreen {...props} />}
       </div>
     </ComponentCompareContext.Provider>
   );
@@ -112,19 +110,18 @@ export function ComponentCompare(props: ComponentCompareProps) {
 
 function RenderCompareScreen(props: ComponentCompareProps) {
   const { routes, state } = props;
-  const ref = useRef(null);
 
   return (
     <>
       <div className={styles.top}>
         {(!state?.versionPicker && <ComponentCompareVersionPicker />) || state?.versionPicker?.element}
       </div>
-      <div className={styles.bottom} ref={ref}>
+      <div className={styles.bottom}>
         <CompareMenuNav {...props} />
         {(extractLazyLoadedData(routes) || []).length > 0 && (
           <SlotRouter routes={extractLazyLoadedData(routes) || []} />
         )}
-        {state?.tabs && state.tabs.element}
+        {state?.tabs?.element}
       </div>
     </>
   );
@@ -133,16 +130,14 @@ function RenderCompareScreen(props: ComponentCompareProps) {
 function CompareMenuNav({ tabs, state, hooks }: ComponentCompareProps) {
   const sortedTabs = (extractLazyLoadedData(tabs) || []).sort(sortTabs);
 
-  const activeTabFromState = state?.tabs?.id;
+  const activeTab = state?.tabs?.id;
   const isControlled = state?.tabs?.controlled;
 
   return (
     <div className={styles.navContainer}>
       <nav className={styles.navigation}>
         {sortedTabs.map((tabItem, index) => {
-          const isActive = !state
-            ? undefined
-            : !!activeTabFromState && !!tabItem.id && activeTabFromState === tabItem.id;
+          const isActive = !state ? undefined : !!activeTab && !!tabItem.id && activeTab === tabItem.id;
 
           return (
             <TopBarNav
