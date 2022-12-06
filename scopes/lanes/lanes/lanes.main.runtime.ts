@@ -23,6 +23,7 @@ import { Scope as LegacyScope } from '@teambit/legacy/dist/scope';
 import { BitId } from '@teambit/legacy-bit-id';
 import { ExportAspect, ExportMain } from '@teambit/export';
 import { BitIds } from '@teambit/legacy/dist/bit-id';
+import { ComponentCompareMain, ComponentCompareAspect } from '@teambit/component-compare';
 import { Ref } from '@teambit/legacy/dist/scope/objects';
 import { SnapsDistance } from '@teambit/legacy/dist/scope/component-ops/snaps-distance';
 import { MergingMain, MergingAspect } from '@teambit/merging';
@@ -68,6 +69,20 @@ export type SwitchLaneOptions = {
   override?: boolean;
 };
 
+export enum ChangeType {
+  NONE = 'NONE',
+  NEW = 'NEW',
+  SOURCE_CODE = 'SOURCE_CODE',
+  DEPENDENCY = 'DEPENDENCY',
+  CONFIG = 'CONFIG',
+}
+
+type LaneComponentDiff = {
+  componentId: ComponentID;
+  changeType: ChangeType;
+  upToDate: boolean;
+};
+
 export class LanesMain {
   constructor(
     private workspace: Workspace | undefined,
@@ -76,7 +91,8 @@ export class LanesMain {
     private componentAspect: ComponentMain,
     public logger: Logger,
     private importer: ImporterMain,
-    private exporter: ExportMain
+    private exporter: ExportMain,
+    private componentCompare: ComponentCompareMain
   ) {}
 
   async getLanes({
@@ -619,6 +635,41 @@ export class LanesMain {
     return { result: true };
   }
 
+  async laneDiff(sourceLaneId: LaneId, targetLaneId?: LaneId): Promise<LaneComponentDiff[]> {
+    const sourceLane = await this.loadLane(sourceLaneId);
+    if (!sourceLane) throw new Error(`unable to find ${sourceLaneId.toString()} in the scope`);
+    const targetLane = targetLaneId ? await this.loadLane(targetLaneId) : undefined;
+    const targetLaneIds = targetLane?.toBitIds();
+    const host = this.componentAspect.getHost();
+    const results = await Promise.all(
+      sourceLane.components.map(async (comp) => {
+        const componentId = await host.resolveComponentId(comp.id);
+        const headOnTargetLane = targetLaneIds
+          ? targetLaneIds.searchWithoutVersion(comp.id)?.version
+          : await this.getHeadOnMain(componentId);
+        const snapsDistance = await this.getSnapsDistance(componentId, comp.head.toString(), headOnTargetLane);
+        const getChangeType = async (): Promise<ChangeType> => {
+          if (!headOnTargetLane) return ChangeType.NEW;
+          const compare = await this.componentCompare.compare(
+            comp.id.changeVersion(comp.head.toString()).toString(),
+            comp.id.changeVersion(headOnTargetLane).toString()
+          );
+          if (compare.code.length && compare.code.some((f) => f.status !== 'UNCHANGED')) {
+            return ChangeType.SOURCE_CODE;
+          }
+          if (!compare.fields.length) return ChangeType.NONE;
+          const depsFields = ['dependencies', 'devDependencies', 'extensionDependencies'];
+          if (compare.fields.some((field) => depsFields.includes(field.fieldName))) return ChangeType.DEPENDENCY;
+          return ChangeType.CONFIG;
+        };
+        const changeType = await getChangeType();
+        return { componentId, changeType, upToDate: snapsDistance.isUpToDate() };
+      })
+    );
+
+    return results;
+  }
+
   async addLaneReadme(readmeComponentIdStr: string, laneName?: string): Promise<{ result: boolean; message?: string }> {
     if (!this.workspace) {
       throw new BitError(`unable to track a lane readme component outside of Bit workspace`);
@@ -705,9 +756,22 @@ export class LanesMain {
     ImporterAspect,
     ExportAspect,
     ExpressAspect,
+    ComponentCompareAspect,
   ];
   static runtime = MainRuntime;
-  static async provider([cli, scope, workspace, graphql, merging, component, loggerMain, importer, exporter, express]: [
+  static async provider([
+    cli,
+    scope,
+    workspace,
+    graphql,
+    merging,
+    component,
+    loggerMain,
+    importer,
+    exporter,
+    express,
+    componentCompare,
+  ]: [
     CLIMain,
     ScopeMain,
     Workspace,
@@ -717,10 +781,11 @@ export class LanesMain {
     LoggerMain,
     ImporterMain,
     ExportMain,
-    ExpressMain
+    ExpressMain,
+    ComponentCompareMain
   ]) {
     const logger = loggerMain.createLogger(LanesAspect.id);
-    const lanesMain = new LanesMain(workspace, scope, merging, component, logger, importer, exporter);
+    const lanesMain = new LanesMain(workspace, scope, merging, component, logger, importer, exporter, componentCompare);
     const switchCmd = new SwitchCmd(lanesMain);
     const laneCmd = new LaneCmd(lanesMain, workspace, scope);
     laneCmd.commands = [

@@ -51,11 +51,11 @@ describe('Mocha Tester', function () {
       it('bit test should exit with non-zero code', () => {
         expect(() => helper.command.test()).to.throw();
       });
-      it('bit test should show the failing component via Jest output', () => {
+      it('bit test should show the failing component via Mocha output', () => {
         const output = helper.general.runWithTryCatch('bit test');
         expect(output).to.have.string('1 failing');
       });
-      it('bit build should show the failing component via Jest output', () => {
+      it('bit build should show the failing component via Mocha output', () => {
         const output = helper.general.runWithTryCatch('bit build');
         expect(output).to.have.string('1 failing');
       });
@@ -63,6 +63,22 @@ describe('Mocha Tester', function () {
     describe('component with an errored test', () => {
       before(() => {
         helper.fs.outputFile('comp1/comp1.spec.ts', specFileErroringFixture());
+      });
+      it('bit test should exit with non-zero code', () => {
+        expect(() => helper.command.test()).to.throw();
+      });
+      it('bit test should show the error', () => {
+        const output = helper.general.runWithTryCatch('bit test');
+        expect(output).to.have.string('SomeError');
+      });
+      it('bit build should show the error', () => {
+        const output = helper.general.runWithTryCatch('bit build');
+        expect(output).to.have.string('SomeError');
+      });
+    });
+    describe('component with an errored before hook', () => {
+      before(() => {
+        helper.fs.outputFile('comp1/comp1.spec.ts', specFileWithErrorInBeforeHook());
       });
       it('bit test should exit with non-zero code', () => {
         expect(() => helper.command.test()).to.throw();
@@ -138,6 +154,21 @@ function specFileErroringFixture() {
   return `import { expect } from 'chai';
 describe('test', () => {
     throw new Error('SomeError');
+  it('should not reach here', () => {
+    expect(true).to.be.true;
+  });
+});
+`;
+}
+
+function specFileWithErrorInBeforeHook() {
+  return `import { expect } from 'chai';
+
+describe('test', () => {
+  // @ts-ignore
+  before(() => {
+    throw new Error('SomeError');
+  });
   it('should not reach here', () => {
     expect(true).to.be.true;
   });
