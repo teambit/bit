@@ -13,7 +13,6 @@ import { SlotRouter } from '@teambit/ui-foundation.ui.react-router.slot-router';
 import { ComponentCompareProps } from '@teambit/component.ui.component-compare.models.component-compare-props';
 import { groupByVersion } from '@teambit/component.ui.component-compare.utils.group-by-version';
 import { sortTabs } from '@teambit/component.ui.component-compare.utils.sort-tabs';
-import { useOnScreen } from '@teambit/component.ui.component-compare.hooks.use-on-screen';
 import { extractLazyLoadedData } from '@teambit/component.ui.component-compare.utils.lazy-loading';
 
 import styles from './component-compare.module.scss';
@@ -114,7 +113,6 @@ export function ComponentCompare(props: ComponentCompareProps) {
 function RenderCompareScreen(props: ComponentCompareProps) {
   const { routes, state } = props;
   const ref = useRef(null);
-  const onScreen = useOnScreen(ref, '200px 0px');
 
   return (
     <>
@@ -123,10 +121,10 @@ function RenderCompareScreen(props: ComponentCompareProps) {
       </div>
       <div className={styles.bottom} ref={ref}>
         <CompareMenuNav {...props} />
-        {(extractLazyLoadedData(routes) || []).length > 0 && onScreen && (
+        {(extractLazyLoadedData(routes) || []).length > 0 && (
           <SlotRouter routes={extractLazyLoadedData(routes) || []} />
         )}
-        {state?.tabs && onScreen && state.tabs.element}
+        {state?.tabs && state.tabs.element}
       </div>
     </>
   );

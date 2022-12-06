@@ -1,7 +1,7 @@
 import { CompareSplitLayoutPreset } from '@teambit/component.ui.component-compare.layouts.compare-split-layout-preset';
 import { useComponentCompare } from '@teambit/component.ui.component-compare.context';
 import { EmptyStateSlot } from '@teambit/compositions';
-import { Toggle } from '@teambit/design.ui.input.toggle';
+import { Toggle } from '@teambit/design.inputs.toggle-switch';
 import { RoundLoader } from '@teambit/design.ui.round-loader';
 import React, { HTMLAttributes, UIEvent, useMemo, useRef, useState } from 'react';
 import { CompareTestsPage } from './compare-tests-page';

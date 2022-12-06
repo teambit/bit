@@ -14,7 +14,7 @@ import { LaneCompareState, computeStateKey } from '@teambit/lanes.ui.compare.lan
 import { useUpdatedUrlFromQuery } from '@teambit/component.ui.component-compare.hooks.use-component-compare-url';
 import { UseComponentType } from '@teambit/component';
 import { DrawerUI } from '@teambit/ui-foundation.ui.tree.drawer';
-
+import AnimateHeight from 'react-animate-height';
 import styles from './lane-compare.module.scss';
 
 export type LaneCompareProps = {
@@ -144,27 +144,33 @@ export function LaneCompare({ host, compare, base, tabs, customUseComponent, ...
   const ComponentCompares = useMemo(() => {
     return allComponents.map(([baseId, compareId]) => {
       const key = computeStateKey(baseId, compareId);
+      const open = closeDrawerList.includes(key);
 
       return (
         <DrawerUI
           key={`${key}-drawer`}
-          isOpen={!closeDrawerList.includes(key)}
+          isOpen={open}
           onToggle={() => handleDrawerToggle(key)}
           name={compareId?.toStringWithoutVersion()}
           className={styles.componentCompareDrawer}
           contentClass={styles.componentCompareDrawerContent}
         >
-          <ComponentCompare
-            className={styles.componentCompareContainer}
-            key={`lane-compare-component-compare-${key}`}
-            host={host}
-            tabs={tabs}
-            state={state.get(key)}
-            hooks={hooks(baseId, compareId)}
-            baseId={baseId}
-            compareId={compareId}
-            customUseComponent={customUseComponent}
-          />
+          <AnimateHeight height={open ? 'auto' : 0}>
+            {(!!open && (
+              <ComponentCompare
+                className={styles.componentCompareContainer}
+                key={`lane-compare-component-compare-${key}`}
+                host={host}
+                tabs={tabs}
+                state={state.get(key)}
+                hooks={hooks(baseId, compareId)}
+                baseId={baseId}
+                compareId={compareId}
+                customUseComponent={customUseComponent}
+              />
+            )) ||
+              null}
+          </AnimateHeight>
         </DrawerUI>
       );
     });

@@ -1,7 +1,7 @@
 import { ComponentProvider } from '@teambit/component';
 import { CompareSplitLayoutPreset } from '@teambit/component.ui.component-compare.layouts.compare-split-layout-preset';
 import { useComponentCompare } from '@teambit/component.ui.component-compare.context';
-import { Toggle } from '@teambit/design.ui.input.toggle';
+import { Toggle } from '@teambit/design.inputs.toggle-switch';
 import { RoundLoader } from '@teambit/design.ui.round-loader';
 import { Overview } from '@teambit/docs';
 import type { TitleBadgeSlot } from '@teambit/docs';

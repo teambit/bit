@@ -1,6 +1,6 @@
 import React, { HTMLAttributes, useMemo, useRef, useState } from 'react';
 import { DiffEditor, DiffOnMount } from '@monaco-editor/react';
-import { Toggle } from '@teambit/design.ui.input.toggle';
+import { Toggle } from '@teambit/design.inputs.toggle-switch';
 import { H4 } from '@teambit/documenter.ui.heading';
 import classNames from 'classnames';
 import { useCodeCompare } from '@teambit/code.ui.code-compare';

@@ -93,6 +93,7 @@
         "@teambit/design.elements.icon": "1.0.5",
         "@teambit/design.inputs.dropdown": "0.0.7",
         "@teambit/design.inputs.selectors.multi-select": "0.0.20",
+        "@teambit/design.inputs.toggle-switch": "0.0.6",
         "@teambit/design.navigation.content-tabs": "0.0.5",
         "@teambit/design.navigation.responsive-navbar": "0.0.1",
         "@teambit/design.themes.theme-toggler": "0.1.3",
