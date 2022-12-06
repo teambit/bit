@@ -1351,19 +1351,6 @@
             }
         }
     },
-    "ui/compare/lane-compare-page": {
-        "scope": "",
-        "version": "",
-        "defaultScope": "teambit.lanes",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/lanes/ui/compare/lane-compare-page",
-        "config": {
-            "teambit.react/react": {},
-            "teambit.envs/envs": {
-                "env": "teambit.react/react"
-            }
-        }
-    },
     "ui/compare/lane-compare-state": {
         "scope": "",
         "version": "",
@@ -1389,11 +1376,23 @@
         "mainFile": "index.ts",
         "rootDir": "components/ui/component-compare/compare-aspects/compare-aspects"
     },
+    "ui/component-compare/compare-aspects/context": {
+        "scope": "teambit.component",
+        "version": "0.0.2",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/component-compare/compare-aspects/context"
+    },
     "ui/component-compare/compare-aspects/hooks/use-compare-aspects": {
         "scope": "teambit.component",
         "version": "0.0.2",
         "mainFile": "index.ts",
         "rootDir": "components/ui/component-compare/compare-aspects/hooks/use-compare-aspects"
+    },
+    "ui/component-compare/compare-aspects/models/component-compare-aspects-model": {
+        "scope": "teambit.component",
+        "version": "0.0.1",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/component-compare/compare-aspects/models/component-compare-aspects-model"
     },
     "ui/component-compare/component-compare": {
         "scope": "teambit.component",
@@ -1473,6 +1472,12 @@
         "defaultScope": "teambit.component",
         "mainFile": "index.ts",
         "rootDir": "components/ui/component-compare/utils/sort-tabs"
+    },
+    "ui/component-compare/version-picker": {
+        "scope": "teambit.component",
+        "version": "0.0.3",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/component-compare/version-picker"
     },
     "ui/component-deprecated": {
         "scope": "teambit.component",

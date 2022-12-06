@@ -35,7 +35,7 @@ export function LaneCompare({ host, compare, base, tabs, customUseComponent, ...
     [compare.components]
   );
 
-  const uniqueCompare = useMemo(
+  const newComponents = useMemo(
     () =>
       compare.components
         .filter((componentId) => !baseMap.has(componentId.toStringWithoutVersion()))
@@ -57,7 +57,7 @@ export function LaneCompare({ host, compare, base, tabs, customUseComponent, ...
     [base.components, compare.components]
   );
 
-  const allComponents = useMemo(() => [...commonComponents, ...uniqueCompare], [base.components, compare.components]);
+  const allComponents = useMemo(() => [...commonComponents, ...newComponents], [base.components, compare.components]);
 
   const defaultState = useCallback(([_base, _compare]: [ComponentID | undefined, ComponentID | undefined]) => {
     const _tabs = extractLazyLoadedData(tabs)?.sort(sortTabs);
@@ -168,8 +168,7 @@ export function LaneCompare({ host, compare, base, tabs, customUseComponent, ...
                 compareId={compareId}
                 customUseComponent={customUseComponent}
               />
-            )) ||
-              null}
+            )) || <></>}
           </AnimateHeight>
         </DrawerUI>
       );

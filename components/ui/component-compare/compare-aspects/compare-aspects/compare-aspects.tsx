@@ -18,15 +18,17 @@ import styles from './compare-aspects.module.scss';
 export type ComponentCompareAspectsProps = { host: string } & HTMLAttributes<HTMLDivElement>;
 
 export function ComponentCompareAspects({ host, className }: ComponentCompareAspectsProps) {
-  const { base, compare, loading, selectedBase, selectedCompare, selected } = useCompareAspectsQuery(host);
+  const context = useCompareAspectsQuery(host);
+  const { loading, selectedBase, selectedCompare, selected, hook, aspectNames } = context;
   const isMobile = useIsMobile();
   const [isSidebarOpen, setSidebarOpenness] = useState(!isMobile);
   const sidebarOpenness = isSidebarOpen ? Layout.row : Layout.left;
 
-  const aspectNames = base.concat(compare).map((aspect) => aspect.aspectId);
+  const _useUpdatedUrlFromQuery = hook?.useUpdatedUrlFromQuery || useUpdatedUrlFromQuery;
+  const getHref = (node) => _useUpdatedUrlFromQuery({ aspect: node.id });
 
   return (
-    <ComponentCompareAspectsContext.Provider value={{ base, compare, loading, selectedBase, selectedCompare }}>
+    <ComponentCompareAspectsContext.Provider value={context}>
       <SplitPane
         layout={sidebarOpenness}
         size="85%"
@@ -63,7 +65,8 @@ export function ComponentCompareAspects({ host, className }: ComponentCompareAsp
             currentFile={selected}
             drawerName={'ASPECTS'}
             widgets={[Widget]}
-            getHref={(node) => useUpdatedUrlFromQuery({ aspect: node.id })}
+            getHref={getHref}
+            onTreeNodeSelected={hook?.onClick}
           />
         </Pane>
       </SplitPane>

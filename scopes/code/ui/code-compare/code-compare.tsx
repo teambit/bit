@@ -33,8 +33,8 @@ export function CodeCompare({ fileIconSlot, className }: CodeCompareProps) {
   const componentCompareContext = useComponentCompare();
   const { base, compare, state: compareState, hooks: compareHooks } = componentCompareContext || {};
 
-  const state = compareState && compareState.code;
-  const hook = compareHooks && compareHooks.code;
+  const state = compareState?.code;
+  const hook = compareHooks?.code;
 
   const isMobile = useIsMobile();
   const [isSidebarOpen, setSidebarOpenness] = useState(!isMobile);
@@ -52,7 +52,8 @@ export function CodeCompare({ fileIconSlot, className }: CodeCompareProps) {
   const selectedFile = state?.id || selectedFileFromParams || mainFile || DEFAULT_FILE;
   const codeCompareContextData = mapToCodeCompareData(compCompareQueryResult);
 
-  const _useUpdatedUrlFromQuery = hook?.useUpdatedUrlFromQuery || useUpdatedUrlFromQuery;
+  const _useUpdatedUrlFromQuery =
+    hook?.useUpdatedUrlFromQuery || (state?.controlled && (() => useUpdatedUrlFromQuery({}))) || useUpdatedUrlFromQuery;
 
   const getHref = (node) => _useUpdatedUrlFromQuery({ file: node.id });
 

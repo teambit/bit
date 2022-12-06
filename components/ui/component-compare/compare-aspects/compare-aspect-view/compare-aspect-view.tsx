@@ -2,9 +2,10 @@ import React, { HTMLAttributes, useMemo } from 'react';
 import classNames from 'classnames';
 import { H4 } from '@teambit/documenter.ui.heading';
 import { RoundLoader } from '@teambit/design.ui.round-loader';
-import { ComponentAspectData } from '@teambit/component.ui.compare';
 import { DiffEditor } from '@monaco-editor/react';
 import { darkMode } from '@teambit/base-ui.theme.dark-theme';
+import { ComponentAspectData } from '@teambit/component.ui.component-compare.compare-aspects.models.component-compare-aspects-model';
+
 import styles from './compare-aspect-view.module.scss';
 
 export type CompareAspectViewProps = {

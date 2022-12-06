@@ -26,6 +26,17 @@ const findPrevVersionFromCurrent = (compareVersion) => (_, index: number, logs: 
   return logs[prevIndex].tag === compareVersion || logs[prevIndex].hash === compareVersion;
 };
 
+const sortByDateDsc: (logA?: LegacyComponentLog, logB?: LegacyComponentLog) => 1 | -1 | 0 = (logA, logB) => {
+  const { date: dateStrB } = logB || {};
+  const { date: dateStrA } = logA || {};
+
+  const dateA = dateStrA ? new Date(parseInt(dateStrA)) : new Date();
+  const dateB = dateStrB ? new Date(parseInt(dateStrB)) : new Date();
+
+  if (dateA > dateB) return -1;
+  return 1;
+};
+
 export function ComponentCompare(props: ComponentCompareProps) {
   const {
     host,
@@ -46,7 +57,7 @@ export function ComponentCompare(props: ComponentCompareProps) {
   const location = useLocation();
 
   const isWorkspace = host === 'teambit.workspace/workspace';
-  const allVersionInfo = component.logs?.slice() || [];
+  const allVersionInfo = useMemo(() => component.logs?.slice().sort(sortByDateDsc) || [], [component.id.toString()]);
   const isNew = allVersionInfo.length === 0;
   const compareVersion =
     isWorkspace && !isNew && !location?.search.includes('version') ? 'workspace' : component.id.version;
@@ -77,7 +88,7 @@ export function ComponentCompare(props: ComponentCompareProps) {
 
   const logsByVersion = useMemo(() => {
     return (compare?.logs || []).slice().reduce(groupByVersion, new Map<string, LegacyComponentLog>());
-  }, [compare?.id, baseId]);
+  }, [compare?.id.toString()]);
 
   const componentCompareModel = {
     compare: compare && {

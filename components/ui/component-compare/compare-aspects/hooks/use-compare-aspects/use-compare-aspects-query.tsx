@@ -1,12 +1,18 @@
 import { useMemo } from 'react';
-import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
+import { TreeNode } from '@teambit/design.ui.tree';
 import { useComponentCompare } from '@teambit/component.ui.component-compare.context';
 import { useCompareQueryParam } from '@teambit/component.ui.component-compare.hooks.use-component-compare-url';
-import {
-  ComponentCompareAspectsModel,
-  ComponentAspectData,
-} from '@teambit/component.ui.component-compare.compare-aspects.models.component-compare-aspects-model';
+import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
 import { gql } from '@apollo/client';
+import { inflateToTree } from '@teambit/base-ui.graph.tree.inflate-paths';
+
+export type ComponentAspectData = {
+  icon?: string;
+  name?: string;
+  config: any;
+  data: any;
+  aspectId: string;
+};
 
 export const GET_COMPONENT_ASPECT_DATA = gql`
   query GetComponentAspectData($id: String!, $extensionId: String!) {
@@ -29,7 +35,7 @@ export const GET_COMPONENT_ASPECT_DATA = gql`
   }
 `;
 
-export function useCompareAspectsQuery(host: string): ComponentCompareAspectsModel {
+export function useCompareAspectsQuery(host: string) {
   const componentCompareContext = useComponentCompare();
   const base = componentCompareContext?.base?.model;
   const compare = componentCompareContext?.compare?.model;
@@ -55,7 +61,17 @@ export function useCompareAspectsQuery(host: string): ComponentCompareAspectsMod
 
   const selectedAspect = useCompareQueryParam('aspect');
 
-  const selected = selectedAspect || (compareAspectList?.length > 0 && compareAspectList[0].aspectId) || undefined;
+  const aspectNames = baseAspectList.concat(compareAspectList).map((aspect) => aspect.aspectId);
+  // make sure that Windows paths are converted to posix
+  const sortedAspectNames = inflateToTree(
+    aspectNames.map((aspectName) => aspectName.replace(/\\/g, '/')),
+    (a) => a
+  );
+
+  const state = componentCompareContext?.state?.aspects;
+  const hook = componentCompareContext?.hooks?.aspects;
+
+  const selected = state?.id || selectedAspect || firstChild(sortedAspectNames).id;
 
   const selectedBase = useMemo(
     () => baseAspectList?.find((baseAspect) => baseAspect.aspectId === selected),
@@ -69,10 +85,18 @@ export function useCompareAspectsQuery(host: string): ComponentCompareAspectsMod
 
   return {
     loading,
+    aspectNames,
     selectedBase,
     selectedCompare,
     base: baseAspectList,
     compare: compareAspectList,
     selected,
+    hook,
+    state,
   };
+}
+
+function firstChild(node: TreeNode<any>): TreeNode<any> {
+  if (node.children && node.children.length > 0) return firstChild(node.children[0]);
+  return node;
 }

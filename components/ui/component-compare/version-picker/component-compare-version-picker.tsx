@@ -2,9 +2,11 @@ import React, { HTMLAttributes, useContext, useMemo } from 'react';
 import compact from 'lodash.compact';
 import { LegacyComponentLog } from '@teambit/legacy-component-log';
 import { DropdownComponentVersion, VersionDropdown } from '@teambit/component.ui.version-dropdown';
-import { useComponentCompare, useUpdatedUrlFromQuery } from '@teambit/component.ui.compare';
+import { useUpdatedUrlFromQuery } from '@teambit/component.ui.component-compare.hooks.use-component-compare-url';
+import { useComponentCompare } from '@teambit/component.ui.component-compare.context';
 import { ComponentContext } from '@teambit/component';
 import classNames from 'classnames';
+
 import styles from './component-compare-version-picker.module.scss';
 
 export type ComponentCompareVersionPickerProps = {} & HTMLAttributes<HTMLDivElement>;
@@ -38,13 +40,13 @@ export function ComponentCompareVersionPicker({ className }: ComponentCompareVer
     ).map((tag) => ({ ...tag, version: tag.tag as string }));
   }, [component?.logs]);
 
-  const compareVersion = componentCompare?.compare.hasLocalChanges
+  const compareVersion = componentCompare?.compare?.hasLocalChanges
     ? 'workspace'
-    : componentCompare?.compare.model.version;
+    : componentCompare?.compare?.model.version;
 
   const baseVersion = componentCompare?.base?.model.version;
 
-  const key = `base-compare-version-dropdown-${componentCompare?.compare.model.id.toString()}`;
+  const key = `base-compare-version-dropdown-${componentCompare?.compare?.model.id.toString()}`;
 
   return (
     <div className={styles.componentCompareVersionPicker}>
