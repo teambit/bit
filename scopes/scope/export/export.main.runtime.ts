@@ -38,7 +38,6 @@ import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
 import { Remote, Remotes } from '@teambit/legacy/dist/remotes';
 import { getScopeRemotes } from '@teambit/legacy/dist/scope/scope-remotes';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
-import { ExportVersions } from '@teambit/legacy/dist/scope/models/export-metadata';
 import {
   persistRemotes,
   validateRemotes,
