@@ -1,10 +1,11 @@
 import { useMemo } from 'react';
 import { TreeNode } from '@teambit/design.ui.tree';
+import { gql } from '@apollo/client';
 import { useComponentCompare } from '@teambit/component.ui.component-compare.context';
 import { useCompareQueryParam } from '@teambit/component.ui.component-compare.hooks.use-component-compare-url';
 import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
-import { gql } from '@apollo/client';
 import { inflateToTree } from '@teambit/base-ui.graph.tree.inflate-paths';
+import { ComponentCompareAspectsModel } from '@teambit/component.ui.component-compare.compare-aspects.models.component-compare-aspects-model';
 
 export type ComponentAspectData = {
   icon?: string;
@@ -35,7 +36,7 @@ export const GET_COMPONENT_ASPECT_DATA = gql`
   }
 `;
 
-export function useCompareAspectsQuery(host: string) {
+export function useCompareAspectsQuery(host: string): ComponentCompareAspectsModel {
   const componentCompareContext = useComponentCompare();
   const base = componentCompareContext?.base?.model;
   const compare = componentCompareContext?.compare?.model;
