@@ -5,14 +5,16 @@ import { Collapser } from '@teambit/ui-foundation.ui.buttons.collapser';
 import { SplitPane, Pane, Layout } from '@teambit/base-ui.surfaces.split-pane.split-pane';
 import { useIsMobile } from '@teambit/ui-foundation.ui.hooks.use-is-mobile';
 import { FileIconSlot } from '@teambit/code';
+import { useComponentCompare } from '@teambit/component.ui.component-compare.context';
 import {
-  useComponentCompare,
   useCompareQueryParam,
   useUpdatedUrlFromQuery,
-  useComponentCompareQuery,
+} from '@teambit/component.ui.component-compare.hooks.use-component-compare-url';
+import { useComponentCompareQuery } from '@teambit/component.ui.component-compare.hooks.use-component-compare';
+import {
   ComponentCompareQueryResponse,
   FileCompareResult,
-} from '@teambit/component.ui.compare';
+} from '@teambit/component.ui.component-compare.models.component-compare-model';
 import { useCode } from '@teambit/code.ui.queries.get-component-code';
 import { CodeCompareTree } from './code-compare-tree';
 import { CodeCompareView } from './code-compare-view';
@@ -29,7 +31,10 @@ export type CodeCompareProps = {
 
 export function CodeCompare({ fileIconSlot, className }: CodeCompareProps) {
   const componentCompareContext = useComponentCompare();
-  const { base, compare } = componentCompareContext || {};
+  const { base, compare, state: compareState, hooks: compareHooks } = componentCompareContext || {};
+
+  const state = compareState?.code;
+  const hook = compareHooks?.code;
 
   const isMobile = useIsMobile();
   const [isSidebarOpen, setSidebarOpenness] = useState(!isMobile);
@@ -44,8 +49,14 @@ export function CodeCompare({ fileIconSlot, className }: CodeCompareProps) {
 
   const selectedFileFromParams = useCompareQueryParam('file');
 
-  const selectedFile = selectedFileFromParams || mainFile || DEFAULT_FILE;
+  const selectedFile = state?.id || selectedFileFromParams || mainFile || DEFAULT_FILE;
   const codeCompareContextData = mapToCodeCompareData(compCompareQueryResult);
+
+  const _useUpdatedUrlFromQuery =
+    hook?.useUpdatedUrlFromQuery || (state?.controlled && (() => useUpdatedUrlFromQuery({}))) || useUpdatedUrlFromQuery;
+
+  const getHref = (node) => _useUpdatedUrlFromQuery({ file: node.id });
+
   return (
     <CodeCompareContext.Provider value={codeCompareContextData}>
       <SplitPane
@@ -73,7 +84,8 @@ export function CodeCompare({ fileIconSlot, className }: CodeCompareProps) {
             currentFile={selectedFile}
             drawerName={'FILES'}
             widgets={[Widget]}
-            getHref={(node) => useUpdatedUrlFromQuery({ file: node.id })}
+            getHref={getHref}
+            onTreeNodeSelected={hook?.onClick}
           />
         </Pane>
       </SplitPane>

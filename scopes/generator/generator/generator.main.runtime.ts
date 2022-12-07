@@ -203,9 +203,11 @@ export class GeneratorMain {
     }
     const aspectComponentId = await workspace.resolveComponentId(aspectId);
     await workspace.loadAspects([aspectId], true);
+    const aspectComponent = await workspace.get(aspectComponentId);
     const aspectFullId = aspectComponentId.toString();
     const generator = harmony.get<GeneratorMain>(GeneratorAspect.id);
-    return generator.searchRegisteredWorkspaceTemplate(name, aspectFullId);
+    const workspaceTemplate = await generator.searchRegisteredWorkspaceTemplate(name, aspectFullId);
+    return { workspaceTemplate, aspect: aspectComponent };
   }
 
   /**
@@ -288,20 +290,15 @@ export class GeneratorMain {
       throw new BitError('Error: unable to generate a new workspace inside of an existing workspace');
     }
     const { aspect: aspectId, loadFrom } = options;
-    let template: WorkspaceTemplate | undefined;
-    let aspectComponent: Component | undefined;
-    if (loadFrom) {
-      template = await this.findTemplateInOtherWorkspace(loadFrom, templateName, aspectId);
-    } else {
-      const { workspaceTemplate, aspect } = await this.getWorkspaceTemplate(templateName, aspectId);
-      template = workspaceTemplate;
-      aspectComponent = aspect;
-    }
-    if (!template) throw new BitError(`template "${templateName}" was not found`);
-    const workspaceGenerator = new WorkspaceGenerator(workspaceName, options, template, aspectComponent);
+    const { workspaceTemplate, aspect } = loadFrom
+      ? await this.findTemplateInOtherWorkspace(loadFrom, templateName, aspectId)
+      : await this.getWorkspaceTemplate(templateName, aspectId);
+
+    if (!workspaceTemplate) throw new BitError(`template "${templateName}" was not found`);
+    const workspaceGenerator = new WorkspaceGenerator(workspaceName, options, workspaceTemplate, aspect);
     const workspacePath = await workspaceGenerator.generate();
 
-    return { workspacePath, appName: template.appName };
+    return { workspacePath, appName: workspaceTemplate.appName };
   }
 
   private async getAllComponentTemplatesDescriptorsFlattened(aspectId?: string): Promise<Array<TemplateDescriptor>> {

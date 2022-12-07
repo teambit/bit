@@ -17,6 +17,7 @@ export type CodeCompareTreeProps = {
   drawerName: string;
   widgets?: ComponentType<WidgetProps<any>>[];
   getHref?: (node: TreeNode) => string;
+  onTreeNodeSelected?: (id: string, event?: React.MouseEvent) => void;
 } & HTMLAttributes<HTMLDivElement>;
 
 export function CodeCompareTree({
@@ -27,15 +28,28 @@ export function CodeCompareTree({
   drawerName,
   widgets,
   getHref,
+  onTreeNodeSelected,
 }: CodeCompareTreeProps) {
   const fileIconMatchers: FileIconMatch[] = useMemo(() => flatten(fileIconSlot?.values()), [fileIconSlot]);
-  const [drawerOpen, onToggleDrawer] = useState(true);
+  const defaultDrawer = () => {
+    return ['FILES'];
+  };
+  const [openDrawerList, onToggleDrawer] = useState(defaultDrawer);
+
+  const handleDrawerToggle = (id: string) => {
+    const isDrawerOpen = openDrawerList.includes(id);
+    if (isDrawerOpen) {
+      onToggleDrawer((list) => list.filter((drawer) => drawer !== id));
+      return;
+    }
+    onToggleDrawer((list) => list.concat(id));
+  };
 
   return (
     <div className={classNames(styles.componentCompareCodeTreeContainer, className)}>
       <DrawerUI
-        isOpen={drawerOpen}
-        onToggle={() => onToggleDrawer((open) => !open)}
+        isOpen={openDrawerList.includes('FILES')}
+        onToggle={() => handleDrawerToggle('FILES')}
         name={drawerName}
         contentClass={styles.componentCompareCodeDrawerContent}
         className={classNames(styles.componentCompareCodeTabDrawer)}
@@ -46,6 +60,7 @@ export function CodeCompareTree({
           selected={currentFile}
           widgets={widgets}
           getIcon={getIcon(fileIconMatchers)}
+          onTreeNodeSelected={onTreeNodeSelected}
         />
       </DrawerUI>
     </div>

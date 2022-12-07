@@ -37,10 +37,12 @@ const ARTIFACTS_QUERY = gql`
 
 export function useComponentArtifacts(
   host: string,
-  componentId: string
+  componentId: string,
+  skip?: boolean
 ): DataQueryResult<Artifact[], { id: string; extensionId: string }> {
   const { data, ...rest } = useDataQuery(ARTIFACTS_QUERY, {
     variables: { id: componentId, extensionId: host },
+    skip,
   });
 
   const artifacts = mapToArtifacts(data?.getHost?.get?.pipelineReport || []);

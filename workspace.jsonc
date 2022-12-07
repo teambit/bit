@@ -83,12 +83,17 @@
         "@teambit/component.content.component-overview": "1.95.0",
         "@teambit/component.content.dev-files": "1.95.9",
         "@teambit/component.instructions.exporting-components": "0.0.6",
+        "@teambit/component.ui.component-compare.hooks.use-component-compare": "0.0.2",
+        "@teambit/component.ui.component-compare.hooks.use-component-compare-url": "0.0.1",
+        "@teambit/component.ui.component-compare.layouts.compare-split-layout-preset": "0.0.1",
+        "@teambit/component.ui.component-compare.status-resolver": "0.0.2",
         "@teambit/defender.content.formatter-overview": "1.96.1",
         "@teambit/defender.content.linter-overview": "1.95.0",
         "@teambit/defender.content.tester-overview": "1.95.0",
         "@teambit/design.elements.icon": "1.0.5",
         "@teambit/design.inputs.dropdown": "0.0.7",
         "@teambit/design.inputs.selectors.multi-select": "0.0.20",
+        "@teambit/design.inputs.toggle-switch": "0.0.6",
         "@teambit/design.navigation.content-tabs": "0.0.5",
         "@teambit/design.navigation.responsive-navbar": "0.0.2",
         "@teambit/design.themes.theme-toggler": "0.1.3",
@@ -337,7 +342,7 @@
       "peerDependencies": {
         "@apollo/client": "^3.6.0",
         "@teambit/base-react.navigation.link": "2.0.27",
-        "@teambit/legacy": "1.0.400",
+        "@teambit/legacy": "1.0.401",
         "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
         "browserslist": "4.16.3",
         "core-js": "^3.10.0",
@@ -427,7 +432,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.400"
+            "@teambit/legacy": "1.0.401"
           }
         }
       },
@@ -688,7 +693,7 @@
           "peerDependencies": {
             "react": "^16.8.0 || ^17.0.0",
             "react-dom": "^16.8.0 || ^17.0.0",
-            "@teambit/legacy": "1.0.400"
+            "@teambit/legacy": "1.0.401"
           }
         }
       }
@@ -778,7 +783,7 @@
             "@teambit/base-react.navigation.link": "2.0.27",
             "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
             "@apollo/client": "3.6.9",
-            "@teambit/legacy": "1.0.400",
+            "@teambit/legacy": "1.0.401",
             "graphql": "14.7.0",
             "browserslist": "4.16.3",
             "reflect-metadata": "0.1.13",
@@ -913,7 +918,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.400"
+            "@teambit/legacy": "1.0.401"
           }
         }
       }
