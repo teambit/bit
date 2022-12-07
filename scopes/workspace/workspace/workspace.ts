@@ -1162,7 +1162,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
       const extsWithoutSelf = selfInMergedExtensions?.extensionId
         ? extsWithoutLoaded.remove(selfInMergedExtensions.extensionId)
         : extsWithoutLoaded;
-      await this.loadExtensions(extsWithoutSelf, componentId);
+      // await this.loadExtensions(extsWithoutSelf, componentId);
       const { extensionDataListFiltered, envIsCurrentlySet } = this.filterEnvsFromExtensionsIfNeeded(
         extsWithoutSelf,
         envWasFoundPreviously
@@ -1174,9 +1174,9 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
 
       extensionsToMerge.push({ origin, extensions: extensionDataListFiltered, extraData });
 
-      loadedExtensionIds.push(
-        ...compact(extensionDataListFiltered.map((e) => e.extensionId?.toStringWithoutVersion()))
-      );
+      // loadedExtensionIds.push(
+      //   ...compact(extensionDataListFiltered.map((e) => e.extensionId?.toStringWithoutVersion()))
+      // );
     };
     const setDataListAsSpecific = (extensions: ExtensionDataList) => {
       extensions.forEach((dataEntry) => (dataEntry.config[AspectSpecificField] = true));
@@ -1228,6 +1228,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     // coming from scope with local scope name, as opposed to the same extension comes from the workspace with default scope name
     await Promise.all(extensionsToMerge.map((list) => this.resolveExtensionListIds(list.extensions)));
     const afterMerge = ExtensionDataList.mergeConfigs(extensionsToMerge.map((ext) => ext.extensions));
+    await this.loadExtensions(afterMerge);
     const withoutRemoved = afterMerge.filter((extData) => !removedExtensionIds.includes(extData.stringId));
     const extensions = ExtensionDataList.fromArray(withoutRemoved);
     return {
@@ -1288,11 +1289,12 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
   private filterEnvsFromExtensionsIfNeeded(extensionDataList: ExtensionDataList, envWasFoundPreviously: boolean) {
     const envAspect = extensionDataList.findExtension(EnvsAspect.id);
     const envFromEnvsAspect = envAspect?.config.env;
-    const [envsNotFromEnvsAspect, nonEnvs] = partition(extensionDataList, (ext) =>
-      this.envs.isEnvRegistered(ext.stringId)
-    );
+    const nonEnvs = extensionDataList.filter((e) => e.id !== envFromEnvsAspect);
+    // const [envsNotFromEnvsAspect, nonEnvs] = partition(extensionDataList, (ext) =>
+    //   this.envs.isEnvRegistered(ext.stringId)
+    // );
     const extensionDataListFiltered = new ExtensionDataList(...nonEnvs);
-    const envIsCurrentlySet = envFromEnvsAspect || envsNotFromEnvsAspect.length;
+    const envIsCurrentlySet = Boolean(envFromEnvsAspect); // || envsNotFromEnvsAspect.length;
     const shouldIgnoreCurrentEnv = envIsCurrentlySet && envWasFoundPreviously;
     if (shouldIgnoreCurrentEnv) {
       // still, aspect env may have other data other then config.env.
@@ -1300,10 +1302,10 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
         delete envAspect.config.env;
         extensionDataListFiltered.push(envAspect);
       }
-    } else {
+    } else if (envAspect) {
       // add the envs
-      if (envAspect) extensionDataListFiltered.push(envAspect);
-      extensionDataListFiltered.push(...envsNotFromEnvsAspect);
+      extensionDataListFiltered.push(envAspect);
+      // extensionDataListFiltered.push(...envsNotFromEnvsAspect);
     }
     return { extensionDataListFiltered, envIsCurrentlySet };
   }
