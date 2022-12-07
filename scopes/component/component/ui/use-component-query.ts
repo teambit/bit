@@ -151,11 +151,12 @@ export type Filters = {
   log?: { logType?: string; logOffset?: number; logLimit?: number; logHead?: string; logSort?: string };
 };
 /** provides data to component ui page, making sure both variables and return value are safely typed and memoized */
-export function useComponentQuery(componentId: string, host: string, filters?: Filters) {
+export function useComponentQuery(componentId: string, host: string, filters?: Filters, skip?: boolean) {
   const idRef = useRef(componentId);
   idRef.current = componentId;
   const { data, error, loading, subscribeToMore, ...rest } = useDataQuery(GET_COMPONENT, {
     variables: { id: componentId, extensionId: host, ...(filters?.log || {}) },
+    skip,
   });
 
   useEffect(() => {

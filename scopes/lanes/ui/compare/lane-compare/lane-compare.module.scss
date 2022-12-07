@@ -1,0 +1,28 @@
+.laneCompareContainer {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  // overflow: auto;
+}
+
+.componentCompareContainer {
+  height: 55vh;
+}
+
+.versionPicker {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+}
+
+.componentCompareDrawer {
+  // drawer name
+  > div:first-child {
+    border: none;
+    border-bottom: 1px solid var(--bit-border-color-lightest, #ededed);
+  }
+}
+
+.componentCompareDrawerContent {
+  overflow-y: auto;
+}
