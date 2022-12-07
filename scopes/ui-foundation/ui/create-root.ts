@@ -72,7 +72,7 @@ function getImportStatements(aspectDefs: AspectDefinition[], pathProp: string, s
   return aspectDefs
     .map(
       (aspectDef) =>
-        `import ${getIdentifier(aspectDef, suffix)} from '${toWindowsCompatiblePath(aspectDef[pathProp])}';`
+        `import ${getIdentifier(aspectDef, suffix, pathProp)} from '${toWindowsCompatiblePath(aspectDef[pathProp])}';`
     )
     .join('\n');
 }
@@ -90,15 +90,30 @@ function getIdSetters(defs: AspectDefinition[], suffix: string) {
     .filter((val) => !!val);
 }
 
-function getIdentifier(aspectDef: AspectDefinition, suffix: string): string {
+function getIdentifier(aspectDef: AspectDefinition, suffix: string, pathProp?: string): string {
   if (!aspectDef.component && !aspectDef.local) {
     return getCoreIdentifier(aspectDef.aspectPath, suffix);
   }
-  return getRegularAspectIdentifier(aspectDef, suffix);
+  return getRegularAspectIdentifier(aspectDef, suffix, pathProp);
 }
 
-function getRegularAspectIdentifier(aspectDef: AspectDefinition, suffix: string): string {
-  return camelCase(`${parse(aspectDef.aspectPath).base.replace(/\./, '__').replace('@', '__')}${suffix}`);
+function getRegularAspectIdentifier(aspectDef: AspectDefinition, suffix: string, pathProp?: string): string {
+  const targetName = camelCase(`${parse(aspectDef.aspectPath).base.replace(/\./, '__').replace('@', '__')}${suffix}`);
+  const sourceName = pathProp ? getDefaultOrOnlyExport(aspectDef[pathProp]) : undefined;
+  const identifier = sourceName ? `{${sourceName} as ${targetName}}` : targetName;
+  return identifier;
+}
+
+function getDefaultOrOnlyExport(filePath: string): string | undefined {
+  try {
+    // eslint-disable-next-line import/no-dynamic-require, global-require
+    const exports = require(filePath);
+    if (exports.default) return undefined;
+    if (Object.keys(exports).length === 1) return Object.keys(exports)[0];
+  } catch(e) {
+    // ignore this error, fallback to just using the default export
+  }
+  return undefined;
 }
 
 function getCoreIdentifier(path: string, suffix: string): string {

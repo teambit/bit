@@ -105,7 +105,7 @@ importers:
       '@teambit/design.inputs.dropdown': 0.0.7
       '@teambit/design.inputs.selectors.multi-select': 0.0.20
       '@teambit/design.navigation.content-tabs': 0.0.5
-      '@teambit/design.navigation.responsive-navbar': 0.0.1
+      '@teambit/design.navigation.responsive-navbar': 0.0.2
       '@teambit/design.themes.theme-toggler': 0.1.3
       '@teambit/design.ui.avatar': 0.1.2
       '@teambit/design.ui.brand.logo': 1.96.2
@@ -645,7 +645,7 @@ importers:
       '@teambit/design.inputs.dropdown': registry.npmjs.org/@teambit/design.inputs.dropdown/0.0.7_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/design.inputs.selectors.multi-select': registry.npmjs.org/@teambit/design.inputs.selectors.multi-select/0.0.20_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/design.navigation.content-tabs': 0.0.5_676cxok7chrvapczunc5qatg6m
-      '@teambit/design.navigation.responsive-navbar': 0.0.1_foy4f5uudmzx6x46zk2kggw6ni
+      '@teambit/design.navigation.responsive-navbar': 0.0.2_foy4f5uudmzx6x46zk2kggw6ni
       '@teambit/design.themes.theme-toggler': 0.1.3_cuf6fvcrkey6ktqfghqvi47tva
       '@teambit/design.ui.avatar': registry.npmjs.org/@teambit/design.ui.avatar/0.1.2_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/design.ui.icon-button': registry.npmjs.org/@teambit/design.ui.icon-button/1.0.16_sfoxds7t5ydpegc3knd667wn6m
@@ -2722,6 +2722,22 @@ packages:
 
   /@teambit/design.navigation.responsive-navbar/0.0.1_foy4f5uudmzx6x46zk2kggw6ni:
     resolution: {integrity: sha1-XcXtpFdOvn4Gs7wKdgDmvCKGVCs=, tarball: '@teambit/design.navigation.responsive-navbar/-/@teambit-design.navigation.responsive-navbar-0.0.1.tgz'}
+    peerDependencies:
+      '@types/react': ^17.0.2
+      react: ^16.8.0 || ^17.0.0
+    dependencies:
+      '@teambit/design.inputs.dropdown': registry.npmjs.org/@teambit/design.inputs.dropdown/1.2.10_sfoxds7t5ydpegc3knd667wn6m
+      '@teambit/design.inputs.selectors.menu-item': registry.npmjs.org/@teambit/design.inputs.selectors.menu-item/1.0.13_react@17.0.2
+      '@types/react': registry.npmjs.org/@types/react/17.0.8
+      classnames: registry.npmjs.org/classnames/2.3.1
+      core-js: registry.npmjs.org/core-js/3.25.5
+      react: registry.npmjs.org/react/17.0.2
+    transitivePeerDependencies:
+      - react-dom
+    dev: false
+
+  /@teambit/design.navigation.responsive-navbar/0.0.2_foy4f5uudmzx6x46zk2kggw6ni:
+    resolution: {integrity: sha1-WX5hTbkvogP10DaM7pq7eNm/uek=, tarball: '@teambit/design.navigation.responsive-navbar/-/@teambit-design.navigation.responsive-navbar-0.0.2.tgz'}
     peerDependencies:
       '@types/react': ^17.0.2
       react: ^16.8.0 || ^17.0.0
@@ -11407,7 +11423,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/base-ui.hook.use-click-outside/1.0.1_sfoxds7t5ydpegc3knd667wn6m:
-    resolution: {integrity: sha512-0D9ElpTO7vjIbxWfmj0luoTigjcscNWmH0HGnfo0Ojn/hS6R9HS8YqmdVHojOoHSQKEA/cT9U0Tr9u2w5oYEKA==, registry: https://node.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.hook.use-click-outside/-/base-ui.hook.use-click-outside-1.0.1.tgz}
+    resolution: {integrity: sha512-0D9ElpTO7vjIbxWfmj0luoTigjcscNWmH0HGnfo0Ojn/hS6R9HS8YqmdVHojOoHSQKEA/cT9U0Tr9u2w5oYEKA==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/@teambit/base-ui.hook.use-click-outside/-/base-ui.hook.use-click-outside-1.0.1.tgz}
     id: registry.npmjs.org/@teambit/base-ui.hook.use-click-outside/1.0.1
     name: '@teambit/base-ui.hook.use-click-outside'
     version: 1.0.1
@@ -11887,7 +11903,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/base-ui.surfaces.drawer/1.1.3_sfoxds7t5ydpegc3knd667wn6m:
-    resolution: {integrity: sha512-3iNKrCujxTXmLjN6BbqKtl7fMebCmzYDW+tzrV0955eZXz4kFQA4YlY/3eFg0/YE8CVdZ4iV4n2B6otGcLcS9A==, registry: https://node.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/base-ui.surfaces.drawer/-/base-ui.surfaces.drawer-1.1.3.tgz}
+    resolution: {integrity: sha512-3iNKrCujxTXmLjN6BbqKtl7fMebCmzYDW+tzrV0955eZXz4kFQA4YlY/3eFg0/YE8CVdZ4iV4n2B6otGcLcS9A==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/@teambit/base-ui.surfaces.drawer/-/base-ui.surfaces.drawer-1.1.3.tgz}
     id: registry.npmjs.org/@teambit/base-ui.surfaces.drawer/1.1.3
     name: '@teambit/base-ui.surfaces.drawer'
     version: 1.1.3
@@ -12633,7 +12649,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/design.inputs.dropdown/1.2.10_sfoxds7t5ydpegc3knd667wn6m:
-    resolution: {integrity: sha512-H3UXus8Bgxk919QfNRJ+6frI2iD0XPpxr6fWe98/hRKKfhmDxodqiprgGpSL5y0smGZkBQuS93dL3gNayWHjDQ==, registry: https://node.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/design.inputs.dropdown/-/design.inputs.dropdown-1.2.10.tgz}
+    resolution: {integrity: sha512-H3UXus8Bgxk919QfNRJ+6frI2iD0XPpxr6fWe98/hRKKfhmDxodqiprgGpSL5y0smGZkBQuS93dL3gNayWHjDQ==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/@teambit/design.inputs.dropdown/-/design.inputs.dropdown-1.2.10.tgz}
     id: registry.npmjs.org/@teambit/design.inputs.dropdown/1.2.10
     name: '@teambit/design.inputs.dropdown'
     version: 1.2.10
@@ -12688,7 +12704,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/design.inputs.selectors.menu-item/1.0.13_react@17.0.2:
-    resolution: {integrity: sha512-C1QdKtTTX6AAbR9Nz0k4HcAsrfrZ2U+LopaCGBPNeuAYbIHhkwbnIraHf06Pa76M70ARkFcRYq/cftSnFEWRig==, registry: https://node.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/design.inputs.selectors.menu-item/-/design.inputs.selectors.menu-item-1.0.13.tgz}
+    resolution: {integrity: sha512-C1QdKtTTX6AAbR9Nz0k4HcAsrfrZ2U+LopaCGBPNeuAYbIHhkwbnIraHf06Pa76M70ARkFcRYq/cftSnFEWRig==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/@teambit/design.inputs.selectors.menu-item/-/design.inputs.selectors.menu-item-1.0.13.tgz}
     id: registry.npmjs.org/@teambit/design.inputs.selectors.menu-item/1.0.13
     name: '@teambit/design.inputs.selectors.menu-item'
     version: 1.0.13
@@ -12806,7 +12822,7 @@ packages:
     dev: false
 
   registry.npmjs.org/@teambit/design.ui.icon-button/1.1.15_sfoxds7t5ydpegc3knd667wn6m:
-    resolution: {integrity: sha512-zfrEo31oJ9SP9v3aH/J4udK14JwDPms4Iu8l+ye+mxfgDL+RJHFPiy95Ed8qFecjVP9sWpwBfm5NcuQH20V9nQ==, registry: https://node.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/design.ui.icon-button/-/design.ui.icon-button-1.1.15.tgz}
+    resolution: {integrity: sha512-zfrEo31oJ9SP9v3aH/J4udK14JwDPms4Iu8l+ye+mxfgDL+RJHFPiy95Ed8qFecjVP9sWpwBfm5NcuQH20V9nQ==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/@teambit/design.ui.icon-button/-/design.ui.icon-button-1.1.15.tgz}
     id: registry.npmjs.org/@teambit/design.ui.icon-button/1.1.15
     name: '@teambit/design.ui.icon-button'
     version: 1.1.15
@@ -19959,7 +19975,7 @@ packages:
     version: 2.2.6
 
   registry.npmjs.org/classnames/2.3.1:
-    resolution: {integrity: sha512-OlQdbZ7gLfGarSqxesMesDa5uz7KFbID8Kpq/SxIoNGDqY8lSYs0D+hhtBXhcdB3rcbXArFr7vlHheLk1voeNA==, registry: https://node.bit.cloud/, tarball: https://registry.npmjs.org/classnames/-/classnames-2.3.1.tgz}
+    resolution: {integrity: sha512-OlQdbZ7gLfGarSqxesMesDa5uz7KFbID8Kpq/SxIoNGDqY8lSYs0D+hhtBXhcdB3rcbXArFr7vlHheLk1voeNA==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/classnames/-/classnames-2.3.1.tgz}
     name: classnames
     version: 2.3.1
 

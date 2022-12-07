@@ -69,7 +69,7 @@ export class IssuesList {
   }
 
   delete(IssueClass: typeof ComponentIssue) {
-    this.issues = this.issues.filter((issue) => !(issue instanceof IssueClass));
+    this.issues = this.issues.filter((issue) => issue.constructor.name !== IssueClass.name);
   }
 
   getIssue<T extends ComponentIssue>(IssueClass: { new (): T }): T | undefined {
