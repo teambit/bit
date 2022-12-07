@@ -178,12 +178,12 @@
         "@types/url-parse": "1.4.3",
         "@types/webpack": "5.28.0",
         "@types/webpack-dev-server": "4.0.3",
-        "@yarnpkg/cli": "4.0.0-rc.31",
-        "@yarnpkg/core": "^4.0.0-rc.31",
-        "@yarnpkg/fslib": "3.0.0-rc.31",
-        "@yarnpkg/parsers": "3.0.0-rc.31",
-        "@yarnpkg/plugin-npm": "3.0.0-rc.31",
-        "@yarnpkg/plugin-pack": "4.0.0-rc.31",
+        "@yarnpkg/cli": "3.2.1",
+        "@yarnpkg/core": "^3.2.2",
+        "@yarnpkg/fslib": "2.6.2",
+        "@yarnpkg/parsers": "2.5.1",
+        "@yarnpkg/plugin-npm": "2.7.1",
+        "@yarnpkg/plugin-pack": "3.1.0",
         "agentkeepalive": "4.1.4",
         "ansi-to-html": "0.6.14",
         "apollo-link-context": "1.0.20",
@@ -337,7 +337,7 @@
       "peerDependencies": {
         "@apollo/client": "^3.6.0",
         "@teambit/base-react.navigation.link": "2.0.27",
-        "@teambit/legacy": "1.0.400",
+        "@teambit/legacy": "1.0.401",
         "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
         "browserslist": "4.16.3",
         "core-js": "^3.10.0",
@@ -427,7 +427,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.400"
+            "@teambit/legacy": "1.0.401"
           }
         }
       },
@@ -688,7 +688,7 @@
           "peerDependencies": {
             "react": "^16.8.0 || ^17.0.0",
             "react-dom": "^16.8.0 || ^17.0.0",
-            "@teambit/legacy": "1.0.400"
+            "@teambit/legacy": "1.0.401"
           }
         }
       }
@@ -778,7 +778,7 @@
             "@teambit/base-react.navigation.link": "2.0.27",
             "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
             "@apollo/client": "3.6.9",
-            "@teambit/legacy": "1.0.400",
+            "@teambit/legacy": "1.0.401",
             "graphql": "14.7.0",
             "browserslist": "4.16.3",
             "reflect-metadata": "0.1.13",
@@ -913,7 +913,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.400"
+            "@teambit/legacy": "1.0.401"
           }
         }
       }

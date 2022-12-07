@@ -93,10 +93,13 @@ async function setFutureVersions(
   autoTagIds: BitIds,
   ids: BitIds,
   incrementBy?: number,
-  preRelease?: string,
+  preReleaseId?: string,
   soft?: boolean,
   tagDataPerComp?: TagDataPerComp[]
 ): Promise<void> {
+  const isPreReleaseLike = releaseType
+    ? ['prerelease', 'premajor', 'preminor', 'prepatch'].includes(releaseType)
+    : false;
   await Promise.all(
     componentsToTag.map(async (componentToTag) => {
       const isAutoTag = autoTagIds.hasWithoutVersion(componentToTag.id);
@@ -124,15 +127,21 @@ async function setFutureVersions(
           componentToTag.componentMap?.nextVersion?.preRelease
         );
       } else if (isAutoTag) {
-        // auto-tag always bumped as patch
-        componentToTag.version = soft
-          ? 'patch'
-          : modelComponent.getVersionToAdd('patch', undefined, incrementBy, preRelease);
+        // auto-tag always bumped as patch unless it's pre-release
+        if (isPreReleaseLike) {
+          componentToTag.version = soft
+            ? releaseType
+            : modelComponent.getVersionToAdd(releaseType, exactVersion, incrementBy, preReleaseId);
+        } else {
+          componentToTag.version = soft
+            ? 'patch'
+            : modelComponent.getVersionToAdd('patch', undefined, incrementBy, preReleaseId);
+        }
       } else {
         const versionByEnteredId = getVersionByEnteredId(ids, componentToTag, modelComponent);
         componentToTag.version = soft
           ? versionByEnteredId || exactVersion || releaseType
-          : versionByEnteredId || modelComponent.getVersionToAdd(releaseType, exactVersion, incrementBy, preRelease);
+          : versionByEnteredId || modelComponent.getVersionToAdd(releaseType, exactVersion, incrementBy, preReleaseId);
       }
     })
   );
