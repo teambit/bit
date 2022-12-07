@@ -4,6 +4,7 @@ import { VersionBlock } from '@teambit/component.ui.version-block';
 import { ComponentContext } from '@teambit/component';
 import classNames from 'classnames';
 import { useComponentCompare } from '@teambit/component.ui.component-compare.context';
+import { sortByDateDsc } from '@teambit/component.ui.component-compare.utils.sort-logs';
 
 import styles from './component-compare-changelog.module.scss';
 
@@ -21,17 +22,6 @@ const orderByDateDsc: (
 
   if (dateA <= dateB) return [logB, logA];
   return [logA, logB];
-};
-
-const sortByDateDsc: (logA?: LegacyComponentLog, logB?: LegacyComponentLog) => 1 | -1 | 0 = (logA, logB) => {
-  const { date: dateStrB } = logB || {};
-  const { date: dateStrA } = logA || {};
-
-  const dateA = dateStrA ? new Date(parseInt(dateStrA)) : new Date();
-  const dateB = dateStrB ? new Date(parseInt(dateStrB)) : new Date();
-
-  if (dateA > dateB) return -1;
-  return 1;
 };
 
 const getLogsBetweenVersions: (

@@ -13,6 +13,7 @@ import { SlotRouter } from '@teambit/ui-foundation.ui.react-router.slot-router';
 import { ComponentCompareProps } from '@teambit/component.ui.component-compare.models.component-compare-props';
 import { groupByVersion } from '@teambit/component.ui.component-compare.utils.group-by-version';
 import { sortTabs } from '@teambit/component.ui.component-compare.utils.sort-tabs';
+import { sortByDateDsc } from '@teambit/component.ui.component-compare.utils.sort-logs';
 import { extractLazyLoadedData } from '@teambit/component.ui.component-compare.utils.lazy-loading';
 
 import styles from './component-compare.module.scss';
@@ -25,17 +26,6 @@ const findPrevVersionFromCurrent = (compareVersion) => (_, index: number, logs: 
   const prevIndex = index - 1;
 
   return logs[prevIndex].tag === compareVersion || logs[prevIndex].hash === compareVersion;
-};
-
-const sortByDateDsc: (logA?: LegacyComponentLog, logB?: LegacyComponentLog) => 1 | -1 | 0 = (logA, logB) => {
-  const { date: dateStrB } = logB || {};
-  const { date: dateStrA } = logA || {};
-
-  const dateA = dateStrA ? new Date(parseInt(dateStrA)) : new Date();
-  const dateB = dateStrB ? new Date(parseInt(dateStrB)) : new Date();
-
-  if (dateA > dateB) return -1;
-  return 1;
 };
 
 export function ComponentCompare(props: ComponentCompareProps) {
