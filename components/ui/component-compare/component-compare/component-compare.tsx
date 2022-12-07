@@ -18,8 +18,9 @@ import { extractLazyLoadedData } from '@teambit/component.ui.component-compare.u
 import styles from './component-compare.module.scss';
 
 const findPrevVersionFromCurrent = (compareVersion) => (_, index: number, logs: LegacyComponentLog[]) => {
+  if (compareVersion === 'workspace' || logs.length === 1) return true;
+
   if (index === 0) return false;
-  if (logs.length === 1) return true;
 
   const prevIndex = index - 1;
 
