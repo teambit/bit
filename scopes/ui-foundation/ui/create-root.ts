@@ -1,4 +1,5 @@
 import { AspectDefinition } from '@teambit/aspect-loader';
+import { ComponentID } from '@teambit/component-id';
 import { toWindowsCompatiblePath } from '@teambit/toolbox.path.to-windows-compatible-path';
 import { camelCase } from 'lodash';
 import { parse } from 'path';
@@ -10,12 +11,13 @@ export async function createRoot(
   rootExtensionName?: string,
   rootAspect = UIAspect.id,
   runtime = 'ui',
-  config = {}
+  config = {},
+  ignoreVersion?: boolean
 ) {
   const rootId = rootExtensionName ? `'${rootExtensionName}'` : '';
   const identifiers = getIdentifiers(aspectDefs, 'Aspect');
 
-  const idSetters = getIdSetters(aspectDefs, 'Aspect');
+  const idSetters = getIdSetters(aspectDefs, 'Aspect', ignoreVersion);
   config['teambit.harmony/bit'] = rootExtensionName;
   // Escaping "'" in case for example in the config you have something like:
   // description: "team's scope"
@@ -81,11 +83,12 @@ function getIdentifiers(aspectDefs: AspectDefinition[], suffix: string): string[
   return aspectDefs.map((aspectDef) => `${getIdentifier(aspectDef, suffix)}`);
 }
 
-function getIdSetters(defs: AspectDefinition[], suffix: string) {
+function getIdSetters(defs: AspectDefinition[], suffix: string, ignoreVersion?: boolean) {
   return defs
     .map((def) => {
       if (!def.getId) return undefined;
-      return `${getIdentifier(def, suffix)}.id = '${def.getId}';`;
+      const id = ComponentID.fromString(def.getId);
+      return `${getIdentifier(def, suffix)}.id = '${ignoreVersion ? id.toStringWithoutVersion() : id.toString()}';`;
     })
     .filter((val) => !!val);
 }
@@ -110,7 +113,7 @@ function getDefaultOrOnlyExport(filePath: string): string | undefined {
     const exports = require(filePath);
     if (exports.default) return undefined;
     if (Object.keys(exports).length === 1) return Object.keys(exports)[0];
-  } catch(e) {
+  } catch (e) {
     // ignore this error, fallback to just using the default export
   }
   return undefined;
