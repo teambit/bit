@@ -1386,6 +1386,18 @@
         "mainFile": "index.ts",
         "rootDir": "components/ui/component-compare/context"
     },
+    "ui/component-compare/hooks/use-component-compare": {
+        "scope": "teambit.component",
+        "version": "0.0.2",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/component-compare/hooks/use-component-compare"
+    },
+    "ui/component-compare/hooks/use-component-compare-url": {
+        "scope": "teambit.component",
+        "version": "0.0.1",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/component-compare/hooks/use-component-compare-url"
+    },
     "ui/component-compare/models/component-compare-hooks": {
         "scope": "teambit.component",
         "version": "0.0.1",
