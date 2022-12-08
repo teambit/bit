@@ -1277,8 +1277,8 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
 
   private filterEnvsFromExtensionsIfNeeded(extensionDataList: ExtensionDataList, envWasFoundPreviously: boolean) {
     const envAspect = extensionDataList.findExtension(EnvsAspect.id);
-    const envFromEnvsAspect = envAspect?.config.env;
-    const nonEnvs = extensionDataList.filter((e) => e.id !== envFromEnvsAspect);
+    const envFromEnvsAspect: string | undefined = envAspect?.config.env;
+    const nonEnvs = extensionDataList.filter((e) => e.stringId !== envFromEnvsAspect);
     const extensionDataListFiltered = new ExtensionDataList(...nonEnvs);
     const envIsCurrentlySet = Boolean(envFromEnvsAspect); // || envsNotFromEnvsAspect.length;
     const shouldIgnoreCurrentEnv = envIsCurrentlySet && envWasFoundPreviously;
