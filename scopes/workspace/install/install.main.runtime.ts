@@ -189,8 +189,14 @@ export class InstallMain {
       linkNestedDepsInNM: !this.workspace.isLegacy && !hasRootComponents,
     };
     let installCycle = 0
+    let hasMissingLocalComponents = true;
     /* eslint-disable no-await-in-loop */
     do {
+      // In case there are missing local components,
+      // we'll need to make another round of installation as on the first round the missing local components
+      // are not added to the manifests.
+      // This is an issue when installation is done using root components.
+      hasMissingLocalComponents = hasRootComponents && hasComponentsFromWorkspaceInMissingDeps(current);
       this.workspace.consumer.componentLoader.clearComponentsCache();
       this.workspace.clearCache();
       await installer.installComponents(
@@ -214,7 +220,7 @@ export class InstallMain {
       prevManifests.add(hash(current.manifests));
       current = await this._getComponentsManifests(installer, mergedRootPolicy, pmInstallOptions);
       installCycle += 1;
-    } while (!prevManifests.has(hash(current.manifests)) && installCycle < 5);
+    } while ((!prevManifests.has(hash(current.manifests)) || hasMissingLocalComponents) && installCycle < 5);
     /* eslint-enable no-await-in-loop */
     return current.componentDirectoryMap;
   }
@@ -226,10 +232,7 @@ export class InstallMain {
       PackageManagerInstallOptions,
       'dedupe' | 'dependencyFilterFn' | 'copyPeerToRuntimeOnComponents'
     >
-  ): Promise<{
-    componentDirectoryMap: ComponentMap<string>;
-    manifests: Record<string, ProjectManifest>;
-  }> {
+  ): Promise<ComponentsAndManifests> {
     const componentDirectoryMap = await this.getComponentsDirectory([]);
     const manifests = await dependencyInstaller.getComponentManifests({
       ...installOptions,
@@ -494,6 +497,27 @@ export class InstallMain {
     }
     return installExt;
   }
+}
+
+type ComponentsAndManifests = {
+  componentDirectoryMap: ComponentMap<string>;
+  manifests: Record<string, ProjectManifest>;
+}
+
+function hasComponentsFromWorkspaceInMissingDeps(
+  { componentDirectoryMap, manifests }: ComponentsAndManifests
+): boolean {
+  const missingDeps = new Set<string>(
+    componentDirectoryMap
+      .toArray()
+      .map(([{ state }]) => {
+        const issue = state.issues.getIssue(IssuesClasses.MissingPackagesDependenciesOnFs);
+        if (!issue) return [];
+        return Object.values(issue.data).flat();
+      })
+      .flat()
+  );
+  return Object.values(manifests).some(({ name }) => name && missingDeps.has(name));
 }
 
 InstallAspect.addRuntime(InstallMain);
