@@ -8,10 +8,12 @@ import { Component } from '@teambit/component';
 import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 import { Formatter } from '@teambit/formatter';
 import { Logger } from '@teambit/logger';
+import pMapSeries from 'p-map-series';
 import { flatten } from 'lodash';
 import { TypescriptMain, SchemaTransformerSlot } from './typescript.main.runtime';
 import { TransformerNotFound } from './exceptions';
 import { SchemaExtractorContext } from './schema-extractor-context';
+import { Identifier } from './identifier';
 import { IdentifierList } from './identifier-list';
 
 export class TypeScriptExtractor implements SchemaExtractor {
@@ -44,14 +46,32 @@ export class TypeScriptExtractor implements SchemaExtractor {
   async extract(component: Component, formatter: Formatter): Promise<APISchema> {
     const tsserver = await this.getTsServer();
     const mainFile = component.mainFile;
-    const mainAst = this.parseSourceFile(mainFile);
+    const compatibleExts = ['.tsx', '.jsx', '.ts', '.js'];
+    const internalFiles = component.filesystem.files.filter(
+      (file) => compatibleExts.includes(file.extname) && file.path !== mainFile.path
+    );
+    const allFiles = [mainFile, ...internalFiles];
+    // console.log(
+    //   '🚀 ~ file: typescript.extractor.ts:53 ~ TypeScriptExtractor ~ extract ~ internalFiles',
+    //   internalFiles.map((i) => i.path)
+    // );
     const context = await this.createContext(tsserver, component, formatter);
-    await this.computeIdentifiers(mainAst, context);
+
+    await pMapSeries(allFiles, async (file) => {
+      const ast = this.parseSourceFile(file);
+      const identifiers = await this.computeIdentifiers(ast, context); // compute for every file
+      const cacheKey = context.getIdentifierKeyForNode(ast);
+      context.setIdentifiers(cacheKey, new IdentifierList(identifiers));
+    });
+    // console.log(
+    //   '🚀 ~ file: typescript.extractor.ts:65 ~ TypeScriptExtractor ~ awaitpMapSeries ~ context',
+    //   Array.from(context.identifiers.entries()).map((e) => [e[0], e[1].identifiers])
+    // );
+    const mainAst = this.parseSourceFile(mainFile);
     const moduleSchema = (await this.computeSchema(mainAst, context)) as ModuleSchema;
     moduleSchema.flatExportsRecursively();
     const apiScheme = moduleSchema;
     const location = context.getLocation(mainAst);
-    // @todo
     return new APISchema(location, apiScheme, [], component.id);
   }
 
@@ -62,11 +82,13 @@ export class TypeScriptExtractor implements SchemaExtractor {
 
   async computeIdentifiers(node: Node, context: SchemaExtractorContext) {
     const transformer = this.getTransformer(node, context);
+    let identifiers: Identifier[] = [];
     if (!transformer || !transformer.getIdentifiers) {
       this.logger.warn(new TransformerNotFound(node, context.component, context.getLocation(node)).toString());
-      return [];
+    } else {
+      identifiers = await transformer.getIdentifiers(node, context);
     }
-    return transformer.getIdentifiers(node, context);
+    return identifiers;
   }
 
   private async createContext(
@@ -106,13 +128,13 @@ export class TypeScriptExtractor implements SchemaExtractor {
     // leave the next line commented out, it is used for debugging
     // console.log('transformer', transformer.constructor.name, node.getText());
     if (!transformer) {
-      // console.trace(
-      //   '🚀🚀🚀\n\n\n ~ file: typescript.extractor.ts ~ line 110 ~ TypeScriptExtractor ~ computeSchema ~ transformer',
-      //   node.kind,
-      //   context.getLocation(node),
-      //   node.getText(),
-      //   SyntaxKind[node.kind]
-      // );
+      this.logger.warn(
+        '🚀🚀🚀\n\n\n ~ file: typescript.extractor.ts ~ line 110 ~ TypeScriptExtractor ~ computeSchema ~ transformer',
+        node.kind,
+        context.getLocation(node),
+        node.getText(),
+        SyntaxKind[node.kind]
+      );
       return new UnImplementedSchema(context.getLocation(node), node.getText(), SyntaxKind[node.kind]);
     }
     return transformer.transform(node, context);

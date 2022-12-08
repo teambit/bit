@@ -56,6 +56,8 @@ import {
   ThisTypeTransformer,
   ConditionalTypeTransformer,
   NamedTupleTransformer,
+  ConstructorTransformer,
+  ImportDeclarationTransformer,
 } from './transformers';
 import { CheckTypesCmd } from './cmds/check-types.cmd';
 import { TsconfigPathsPerEnv, TsconfigWriter } from './tsconfig-writer';
@@ -356,6 +358,8 @@ export class TypescriptMain {
       new ThisTypeTransformer(),
       new ConditionalTypeTransformer(),
       new NamedTupleTransformer(),
+      new ConstructorTransformer(),
+      new ImportDeclarationTransformer(),
     ]);
 
     if (workspace) {

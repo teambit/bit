@@ -56,7 +56,7 @@ export class SchemaExtractorContext {
     readonly formatter: Formatter
   ) {}
 
-  getVisitorKey({ filePath, line, character }: Location) {
+  getComputedNodeKey({ filePath, line, character }: Location) {
     return `${filePath}:${line}:${character}`;
   }
 
@@ -69,9 +69,9 @@ export class SchemaExtractorContext {
     return pathNormalizeToLinux(filePath);
   }
 
-  setComputedVisitor(node: SchemaNode) {
+  setComputed(node: SchemaNode) {
     const { location } = node;
-    const key = this.getVisitorKey(location);
+    const key = this.getComputedNodeKey(location);
     this.nodes.set(key, node);
   }
 
@@ -81,13 +81,22 @@ export class SchemaExtractorContext {
 
   async computeSchema(node: Node) {
     const location = this.getLocation(node);
-    const key = this.getVisitorKey(location);
+    const key = this.getComputedNodeKey(location);
+    // console.trace(
+    //   '🚀 ~ file: schema-extractor-context.ts:85 ~ SchemaExtractorContext ~ computeSchema ~ key',
+    //   key,
+    //   node.kind
+    // );
     const existingComputedSchema = this.nodes.get(key);
     if (existingComputedSchema) {
+      // console.log(
+      //   '🚀 ~ file: schema-extractor-context.ts:88 ~ SchemaExtractorContext ~ computeSchema ~ existingComputedSchema'
+      // );
       return existingComputedSchema;
     }
     const computedSchema = await this.extractor.computeSchema(node, this);
-    this.setComputedVisitor(computedSchema);
+    // console.log('🚀 ~ file: schema-extractor-context.ts:92 ~ SchemaExtractorContext ~ computeSchema ~ Computing ');
+    this.setComputed(computedSchema);
     return computedSchema;
   }
 
@@ -324,18 +333,33 @@ export class SchemaExtractorContext {
     isTypeStrFromQuickInfo = true
   ): Promise<SchemaNode> {
     const location = this.getLocation(node);
-
+    // if (node.getText() === 'React.HTMLAttributes<HTMLDivElement>') {
+    //   console.log('\n\n\n🚀 line 327 ~ SchemaExtractorContext \n\n\n', location, node.getText(), node);
+    // }
     const identifierKey = this.getIdentifierKeyForNode(node);
     const identifierList = this.identifiers.get(identifierKey);
     const nodeIdentifier = new Identifier(typeStr, identifierKey);
+    // console.log("🚀 ~ file: schema-extractor-context.ts:342 ~ SchemaExtractorContext ~ nodeIdentifier", nodeIdentifier)
     const parsedIdentifier = identifierList?.find(nodeIdentifier);
+    // console.log(
+    //   '🚀 ~ file: schema-extractor-context.ts ~ line 334 ~ SchemaExtractorContext ~ parsedIdentifier',
+    //   parsedIdentifier
+    // );
 
     if (parsedIdentifier && !ExportIdentifier.isExportIdentifier(parsedIdentifier)) {
+      // console.log(
+      //   '🚀 ~ file: schema-extractor-context.ts:345 ~ SchemaExtractorContext ~ parsedIdentifier',
+      //   parsedIdentifier
+      // );
       return new TypeRefSchema(location, typeStr);
     }
 
     if (node.type && ts.isTypeNode(node.type)) {
-      // console.log("🚀 ~ file: schema-extractor-context.ts ~ line 323 ~ SchemaExtractorContext ~ node.type", node.type)
+      // console.log("🚀 ~ file: schema-extractor-context.ts:357 ~ SchemaExtractorContext ~ node.type", node.type)
+      // console.log(
+      //   '🚀 ~ file: schema-extractor-context.ts ~ line 339 ~ SchemaExtractorContext ~ node.type',
+      //   node.type.getText()
+      // );
       // if a node has "type" prop, it has the type data of the node. this normally happens when the code has the type
       // explicitly, e.g. `const str: string` vs implicitly `const str = 'some-string'`, which the node won't have "type"
       return this.computeSchema(node.type);
@@ -395,6 +419,10 @@ export class SchemaExtractorContext {
       const definitionIdentifier = new Identifier(definitionNodeName, await this.getPath(definitionNode));
 
       if (definitionNodeName && identifierList?.includes(definitionIdentifier)) {
+        // console.log(
+        //   '🚀 ~ file: schema-extractor-context.ts:412 ~ SchemaExtractorContext ~ definitionIdentifier',
+        //   definitionIdentifier
+        // );
         return new TypeRefSchema(location, definitionNodeName);
       }
 
@@ -409,6 +437,7 @@ export class SchemaExtractorContext {
       }
     }
 
+    // console.log('\n\n🚀EXTERNAL REF SchemaExtractorContext ~ typeStr\n\n', typeStr);
     return this.getTypeRefForExternalPath(typeStr, definition.file, location);
   }
 

@@ -3,13 +3,21 @@ import { Node, SyntaxKind, ExportAssignment as ExportAssignmentNode } from 'type
 import { SchemaExtractorContext } from '../schema-extractor-context';
 import { SchemaTransformer } from '../schema-transformer';
 
+/**
+ * This is either an export = or an export default declaration.
+ * Unless isExportEquals is set, this node was parsed as an export default
+ */
 export class ExportAssignmentTransformer implements SchemaTransformer {
   predicate(node: Node) {
     return node.kind === SyntaxKind.ExportAssignment;
   }
 
+  /**
+   * @todo
+   */
   async getIdentifiers(exportDec: ExportAssignmentNode, context: SchemaExtractorContext) {
-    return context.getFileExports(exportDec);
+    // return context.getFileExports(exportDec);
+    return [];
   }
 
   async transform(exportDec: ExportAssignmentNode, context: SchemaExtractorContext): Promise<SchemaNode> {

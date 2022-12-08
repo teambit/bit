@@ -1,12 +1,11 @@
 import ts, { Node, SourceFile } from 'typescript';
-import { compact, flatten } from 'lodash';
+import { flatten } from 'lodash';
 import pMapSeries from 'p-map-series';
 import { ModuleSchema } from '@teambit/semantics.entities.semantic-schema';
 import { SchemaTransformer } from '../schema-transformer';
 import { ExportIdentifier } from '../export-identifier';
 import { SchemaExtractorContext } from '../schema-extractor-context';
 import { Identifier } from '../identifier';
-import { IdentifierList } from '../identifier-list';
 
 export class SourceFileTransformer implements SchemaTransformer {
   predicate(node: Node) {
@@ -14,20 +13,14 @@ export class SourceFileTransformer implements SchemaTransformer {
   }
 
   async getIdentifiers(sourceFile: SourceFile, context: SchemaExtractorContext) {
-    const cacheKey = sourceFile.fileName;
-    const cachedIdentifiers = context.identifiers.get(cacheKey);
-
-    if (cachedIdentifiers) return cachedIdentifiers.identifiers;
-
     const exports = this.listExports(sourceFile);
     const internals = this.listInternalNodes(sourceFile);
 
+    // change to pMap series
     const exportIdentifiers = flatten(
-      await Promise.all(
-        exports.map((node: Node) => {
-          return context.getIdentifiers(node);
-        })
-      )
+      await pMapSeries(exports, (node) => {
+        return context.getIdentifiers(node);
+      })
     ).reduce<ExportIdentifier[]>((acc, current) => {
       const item = acc.find((exportName) => exportName.id === current.id);
       if (!item) acc.push(new ExportIdentifier(current.id, current.filePath));
@@ -35,11 +28,9 @@ export class SourceFileTransformer implements SchemaTransformer {
     }, []);
 
     const internalIdentifiers = flatten(
-      await Promise.all(
-        internals.map((node: Node) => {
-          return context.getIdentifiers(node);
-        })
-      )
+      await pMapSeries(internals, (node) => {
+        return context.getIdentifiers(node);
+      })
     ).reduce<Identifier[]>((acc, current) => {
       const item = acc.find((exportName) => exportName.id === current.id);
       if (!item) acc.push(current);
@@ -48,7 +39,7 @@ export class SourceFileTransformer implements SchemaTransformer {
 
     const identifiers = [...exportIdentifiers, ...internalIdentifiers];
 
-    context.setIdentifiers(sourceFile.fileName, new IdentifierList(identifiers));
+    // context.setIdentifiers(sourceFile.fileName, new IdentifierList(identifiers));
     return identifiers;
   }
 
@@ -71,23 +62,22 @@ export class SourceFileTransformer implements SchemaTransformer {
    * list all exports of a source file.
    */
   private listExports(ast: SourceFile): Node[] {
-    return compact(
-      ast.statements.filter((statement) => {
-        if (statement.kind === ts.SyntaxKind.ExportDeclaration) return true;
-        const isExport = Boolean(
-          statement.modifiers?.find((modifier) => {
-            return modifier.kind === ts.SyntaxKind.ExportKeyword;
-          })
-        );
-        return isExport;
-      })
-    );
+    return ast.statements.filter((statement) => {
+      if (statement.kind === ts.SyntaxKind.ExportDeclaration || statement.kind === ts.SyntaxKind.ExportAssignment)
+        return true;
+      const isExport = Boolean(
+        statement.modifiers?.find((modifier) => {
+          return modifier.kind === ts.SyntaxKind.ExportKeyword;
+        })
+      );
+      return isExport;
+    });
   }
 
   private listInternalNodes(ast: SourceFile): Node[] {
-    return compact(ast.statements).filter((statement) => {
+    return ast.statements.filter((statement) => {
       if (
-        !(statement.kind === ts.SyntaxKind.ExportDeclaration) &&
+        !(statement.kind === ts.SyntaxKind.ExportDeclaration || statement.kind === ts.SyntaxKind.ExportAssignment) &&
         !statement.modifiers?.find((modifier) => {
           return modifier.kind === ts.SyntaxKind.ExportKeyword;
         })
