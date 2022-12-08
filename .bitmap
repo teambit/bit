@@ -1350,6 +1350,12 @@
         "mainFile": "index.ts",
         "rootDir": "components/ui/component-compare/changelog"
     },
+    "ui/component-compare/compare-aspects/compare-aspect-view": {
+        "scope": "teambit.component",
+        "version": "0.0.1",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/component-compare/compare-aspects/compare-aspect-view"
+    },
     "ui/component-compare/compare-aspects/compare-aspects": {
         "scope": "teambit.component",
         "version": "0.0.4",
