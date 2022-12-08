@@ -1,9 +1,8 @@
-import React from 'react';
 import { Section } from '@teambit/component';
-import { ComponentCompareAspects } from '@teambit/component.ui.compare';
+import { ComponentCompareUI } from './component-compare.ui.runtime';
 
 export class AspectsCompareSection implements Section {
-  constructor(private host: string) {}
+  constructor(private compareUI: ComponentCompareUI) {}
 
   navigationLink = {
     href: 'aspects',
@@ -13,6 +12,6 @@ export class AspectsCompareSection implements Section {
 
   route = {
     path: 'aspects/*',
-    element: <ComponentCompareAspects host={this.host} />,
+    element: this.compareUI.getAspectsComparePage(),
   };
 }

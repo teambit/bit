@@ -358,13 +358,15 @@ once done, to continue working, please run "bit cc"`
   }
 
   /**
+   * returns null if we can't determine whether it's on the lane or not.
+   *
    * sadly, there are not good tests for this. it pretty complex to create them as it involves multiple scopes and
    * packages installations. be careful when changing this.
    * the goal is to check whether a given id with the given version exits on the given lane or it's on main.
    * it's needed for importing artifacts to know whether the artifact could be found on the origin scope or on the
    * lane-scope
    */
-  async isIdOnLane(id: BitId, lane?: Lane | null): Promise<boolean> {
+  async isIdOnLane(id: BitId, lane?: Lane | null): Promise<boolean | null> {
     if (!lane) return false;
     const laneIds = lane.toBitIds();
     if (laneIds.has(id)) return true; // in the lane with the same version
@@ -379,11 +381,16 @@ once done, to continue working, please run "bit cc"`
     const divergeData = await getDivergeData({
       repo: this.objects,
       modelComponent: component,
-      targetHead: component.head,
-      sourceHead: Ref.from(laneIdWithDifferentVersion.version as string),
+      targetHead: component.head, // target is main
+      sourceHead: Ref.from(laneIdWithDifferentVersion.version as string), // source is lane
     });
     // if the snap found "locally", then it's on the lane.
-    return Boolean(divergeData.snapsOnSourceOnly.find((snap) => snap.toString() === id.version));
+    const foundOnLane = Boolean(divergeData.snapsOnSourceOnly.find((snap) => snap.toString() === id.version));
+    if (foundOnLane) return true;
+    const foundOnMain = Boolean(divergeData.snapsOnTargetOnly.find((snap) => snap.toString() === id.version));
+    if (foundOnMain) return false;
+    // we don't have enough data to determine whether it's on the lane or not.
+    return null;
   }
 
   async latestVersions(componentIds: BitId[], throwOnFailure = true): Promise<BitIds> {

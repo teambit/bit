@@ -1,13 +1,14 @@
+import React from 'react';
 import { flatten } from 'lodash';
 import { ComponentAspect, ComponentUI } from '@teambit/component';
 import { Slot } from '@teambit/harmony';
 import { UIRuntime } from '@teambit/ui';
 import ComponentCompareAspect, { ComponentCompareUI } from '@teambit/component-compare';
-
+import { OverviewCompare } from '@teambit/docs.ui.overview-compare';
+import { OverviewCompareSection } from '@teambit/docs.ui.overview-compare-section';
 import { DocsAspect } from './docs.aspect';
 import { OverviewSection } from './overview.section';
 import type { TitleBadgeSlot, TitleBadge } from './overview';
-import { OverviewCompareSection } from './docs.compare.section';
 
 export class DocsUI {
   constructor(readonly titleBadgeSlot: TitleBadgeSlot) {}
@@ -28,6 +29,10 @@ export class DocsUI {
     return flatten(this.titleBadgeSlot.values());
   }
 
+  getDocsCompare() {
+    return <OverviewCompare titleBadges={this.titleBadgeSlot} />;
+  }
+
   static dependencies = [ComponentAspect, ComponentCompareAspect];
 
   static runtime = UIRuntime;
@@ -41,7 +46,7 @@ export class DocsUI {
   ) {
     const docs = new DocsUI(titleBadgeSlot);
     const section = new OverviewSection(titleBadgeSlot);
-    const compareSection = new OverviewCompareSection(titleBadgeSlot);
+    const compareSection = new OverviewCompareSection(docs);
 
     component.registerRoute(section.route);
     component.registerNavigation(section.navigationLink, section.order);

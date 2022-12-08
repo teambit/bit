@@ -1,11 +1,11 @@
-import {
-  CompareSplitLayoutPreset,
-  useCompareQueryParam,
-  useComponentCompare,
-  useUpdatedUrlFromQuery,
-} from '@teambit/component.ui.compare';
+import { useComponentCompare } from '@teambit/component.ui.component-compare.context';
 import { CompositionContent, EmptyStateSlot } from '@teambit/compositions';
 import { CompositionContextProvider } from '@teambit/compositions.ui.hooks.use-composition';
+import { CompareSplitLayoutPreset } from '@teambit/component.ui.component-compare.layouts.compare-split-layout-preset';
+import {
+  useCompareQueryParam,
+  useUpdatedUrlFromQuery,
+} from '@teambit/component.ui.component-compare.hooks.use-component-compare-url';
 import { RoundLoader } from '@teambit/design.ui.round-loader';
 import queryString from 'query-string';
 import React, { useMemo, useState } from 'react';

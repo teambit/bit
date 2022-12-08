@@ -1,11 +1,14 @@
+import React, { HTMLAttributes, useMemo, useRef, useState } from 'react';
 import { DiffEditor, DiffOnMount } from '@monaco-editor/react';
-import { Toggle } from '@teambit/design.ui.input.toggle';
+import { Toggle } from '@teambit/design.inputs.toggle-switch';
 import { H4 } from '@teambit/documenter.ui.heading';
 import classNames from 'classnames';
-import React, { HTMLAttributes, useMemo, useRef, useState } from 'react';
 import { useCodeCompare } from '@teambit/code.ui.code-compare';
 import { RoundLoader } from '@teambit/design.ui.round-loader';
 import { darkMode } from '@teambit/base-ui.theme.dark-theme';
+import { useFileContent } from '@teambit/code.ui.queries.get-file-content';
+import { useComponentCompare } from '@teambit/component.ui.component-compare.context';
+
 import styles from './code-compare-view.module.scss';
 
 export type CodeCompareViewProps = {
@@ -24,6 +27,7 @@ const languageOverrides = {
 
 export function CodeCompareView({ className, fileName }: CodeCompareViewProps) {
   const codeCompareContext = useCodeCompare();
+  const componentCompareContext = useComponentCompare();
 
   const [ignoreWhitespace, setIgnoreWhitespace] = useState(true);
   const monacoRef = useRef<any>();
@@ -37,11 +41,20 @@ export function CodeCompareView({ className, fileName }: CodeCompareViewProps) {
   }, [fileName]);
 
   const codeCompareDataForFile = codeCompareContext?.fileCompareDataByName.get(fileName);
+  /**
+   * when there is no component to compare with, fetch file content
+   */
+  const { fileContent: downloadedCompareFileContent, loading } = useFileContent(
+    componentCompareContext?.compare?.model.id,
+    fileName,
+    !!componentCompareContext?.compare && !!codeCompareDataForFile?.compareContent
+  );
 
-  if (!codeCompareContext || codeCompareContext.loading || !codeCompareDataForFile) return null;
+  if (!codeCompareContext || codeCompareContext.loading || loading) return null;
 
-  const originalFileContent = codeCompareDataForFile.baseContent;
-  const modifiedFileContent = codeCompareDataForFile.compareContent;
+  const originalFileContent = codeCompareDataForFile?.baseContent;
+
+  const modifiedFileContent = codeCompareDataForFile?.compareContent || downloadedCompareFileContent;
 
   const handleEditorDidMount: DiffOnMount = (_, monaco) => {
     /**
@@ -61,11 +74,16 @@ export function CodeCompareView({ className, fileName }: CodeCompareViewProps) {
     setIgnoreWhitespace((exsitingState) => !exsitingState);
   };
 
+  const originalPath = `${componentCompareContext?.base?.model.id.toString()}-${fileName}`;
+  const modifiedPath = `${componentCompareContext?.compare?.model.id.toString()}-${fileName}`;
+
   const diffEditor = (
     <DiffEditor
       modified={modifiedFileContent}
       original={originalFileContent}
       language={language}
+      originalModelPath={originalPath}
+      modifiedModelPath={modifiedPath}
       height={'100%'}
       onMount={handleEditorDidMount}
       className={darkMode}

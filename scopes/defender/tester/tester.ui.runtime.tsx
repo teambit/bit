@@ -1,11 +1,12 @@
-import { ComponentType } from 'react';
+import React, { ComponentType } from 'react';
 import { UIRuntime } from '@teambit/ui';
 import { SlotRegistry, Slot } from '@teambit/harmony';
 import { ComponentAspect, ComponentUI } from '@teambit/component';
+import { CompareTests } from '@teambit/defender.ui.test-compare';
 import { ComponentCompareUI, ComponentCompareAspect } from '@teambit/component-compare';
+import { TestCompareSection } from '@teambit/defender.ui.test-compare-section';
 import { TestsSection } from './tests.section';
 import { TesterAspect } from './tester.aspect';
-import { TesterCompareSection } from './tester.compare.section';
 
 export type EmptyStateSlot = SlotRegistry<ComponentType>;
 export class TesterUI {
@@ -25,6 +26,10 @@ export class TesterUI {
     return this;
   }
 
+  getTesterCompare() {
+    return <CompareTests emptyState={this.emptyStateSlot} />;
+  }
+
   static slots = [Slot.withType<ComponentType>()];
 
   static async provider(
@@ -34,7 +39,7 @@ export class TesterUI {
   ) {
     const testerUi = new TesterUI(component, emptyStateSlot);
     const section = new TestsSection(emptyStateSlot);
-    const testerCompareSection = new TesterCompareSection(emptyStateSlot);
+    const testerCompareSection = new TestCompareSection(testerUi);
     component.registerRoute(section.route);
     component.registerNavigation(section.navigationLink, section.order);
     componentCompare.registerNavigation({

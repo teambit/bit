@@ -1,5 +1,4 @@
 import classNames from 'classnames';
-import { useComponentCompare } from '@teambit/component.ui.compare';
 import { RoundLoader } from '@teambit/design.ui.round-loader';
 import {
   calcElements,
@@ -10,6 +9,7 @@ import {
   graphPageStyles,
   useGraphQuery,
 } from '@teambit/graph';
+import { useComponentCompare } from '@teambit/component.ui.component-compare.context';
 import React, { useEffect, useRef, useState } from 'react';
 import ReactFlow, {
   Background,
