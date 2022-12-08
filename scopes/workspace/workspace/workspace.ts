@@ -1278,21 +1278,13 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
   private filterEnvsFromExtensionsIfNeeded(extensionDataList: ExtensionDataList, envWasFoundPreviously: boolean) {
     const envAspect = extensionDataList.findExtension(EnvsAspect.id);
     const envFromEnvsAspect: string | undefined = envAspect?.config.env;
-    const nonEnvs = extensionDataList.filter((e) => e.stringId !== envFromEnvsAspect);
-    const extensionDataListFiltered = new ExtensionDataList(...nonEnvs);
-    const envIsCurrentlySet = Boolean(envFromEnvsAspect); // || envsNotFromEnvsAspect.length;
-    const shouldIgnoreCurrentEnv = envIsCurrentlySet && envWasFoundPreviously;
-    if (shouldIgnoreCurrentEnv) {
+    if (envWasFoundPreviously && envAspect) {
+      const nonEnvs = extensionDataList.filter((e) => e.stringId !== envFromEnvsAspect);
       // still, aspect env may have other data other then config.env.
-      if (envAspect) {
-        delete envAspect.config.env;
-        extensionDataListFiltered.push(envAspect);
-      }
-    } else if (envAspect) {
-      // add the envs
-      extensionDataListFiltered.push(envAspect);
+      delete envAspect.config.env;
+      return { extensionDataListFiltered: new ExtensionDataList(...nonEnvs), envIsCurrentlySet: true };
     }
-    return { extensionDataListFiltered, envIsCurrentlySet };
+    return { extensionDataListFiltered: extensionDataList, envIsCurrentlySet: Boolean(envFromEnvsAspect) };
   }
 
   async triggerOnPreWatch(componentIds: ComponentID[], watchOpts: WatchOptions) {
