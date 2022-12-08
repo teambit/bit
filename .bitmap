@@ -1404,6 +1404,12 @@
         "mainFile": "index.ts",
         "rootDir": "components/ui/component-compare/hooks/use-component-compare-url"
     },
+    "ui/component-compare/layouts/compare-split-layout-preset": {
+        "scope": "teambit.component",
+        "version": "0.0.1",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/component-compare/layouts/compare-split-layout-preset"
+    },
     "ui/component-compare/models/component-compare-hooks": {
         "scope": "teambit.component",
         "version": "0.0.1",
@@ -1428,6 +1434,12 @@
         "version": "0.0.1",
         "mainFile": "index.ts",
         "rootDir": "components/ui/component-compare/models/component-compare-state"
+    },
+    "ui/component-compare/status-resolver": {
+        "scope": "teambit.component",
+        "version": "0.0.2",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/component-compare/status-resolver"
     },
     "ui/component-compare/utils/group-by-version": {
         "scope": "teambit.component",
