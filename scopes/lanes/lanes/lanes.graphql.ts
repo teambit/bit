@@ -42,6 +42,19 @@ export function lanesSchema(lanesMainRuntime: LanesMain): Schema {
         scope: String!
       }
 
+      type LaneComponentDiffStatus {
+        componentId: ComponentID!
+        type: String!
+        upToDate: boolean!
+      }
+
+      type LaneDiffStatus {
+        source: LaneId!
+        target: LaneId!
+        upToDate: boolean!
+        componentsStatus: [LaneComponentDiffStatus!]!
+      }
+
       type Lane {
         id: LaneId!
         hash: String
@@ -55,6 +68,7 @@ export function lanesSchema(lanesMainRuntime: LanesMain): Schema {
         id: String!
         list(ids: [String!], offset: Int, limit: Int): [Lane!]!
         diff(from: String!, to: String!, options: DiffOptions): GetDiffResult
+        diffStatus(source: String!, target: String): LaneDiffStatus!
         current: Lane
       }
 
@@ -99,6 +113,11 @@ export function lanesSchema(lanesMainRuntime: LanesMain): Schema {
             ...getDiffResults,
             compsWithDiff: getDiffResults.compsWithDiff.map((item) => ({ ...item, id: item.id.toString() })),
           };
+        },
+        diffStatus: async (lanesMain: LanesMain, { source, target }: { source: string; target?: string }) => {
+          const sourceLaneId = LaneId.parse(source);
+          const targetLaneId = target ? LaneId.parse(target) : undefined;
+          return lanesMain.diffStatus(sourceLaneId, targetLaneId);
         },
       },
       Lane: {
