@@ -474,7 +474,8 @@ export class Workspace implements ComponentFactory {
     );
     const getCompIdByIdStr = (idStr: string): ComponentID => {
       const compId = flattenedBitIdCompIdMap[idStr];
-      if (!compId) throw new Error(`id ${idStr} exists in flattenedEdges but not in flattened`);
+      if (!compId)
+        throw new Error(`id ${idStr} exists in flattenedEdges but not in flattened of ${component.id.toString()}`);
       return compId;
     };
     const nodes = Object.values(flattenedBitIdCompIdMap);
@@ -1140,29 +1141,22 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     // in the case the same extension pushed twice, the former takes precedence (opposite of Object.assign)
     const extensionsToMerge: Array<{ origin: ExtensionsOrigin; extensions: ExtensionDataList; extraData: any }> = [];
     let envWasFoundPreviously = false;
-    const loadedExtensionIds: string[] = [];
     const removedExtensionIds: string[] = [];
 
-    const addAndLoadExtensions = async (extensions: ExtensionDataList, origin: ExtensionsOrigin, extraData?: any) => {
+    const addExtensionsToMerge = async (extensions: ExtensionDataList, origin: ExtensionsOrigin, extraData?: any) => {
       if (!extensions.length) {
         return;
       }
       removedExtensionIds.push(...extensions.filter((extData) => extData.isRemoved).map((extData) => extData.stringId));
       const extsWithoutRemoved = extensions.filterRemovedExtensions();
-      const extsWithoutLoaded = ExtensionDataList.fromArray(
-        extsWithoutRemoved.filter(
-          (ext) => !loadedExtensionIds.includes(ext.extensionId?.toStringWithoutVersion() || '')
-        )
-      );
-      const selfInMergedExtensions = extsWithoutLoaded.findExtension(
+      const selfInMergedExtensions = extsWithoutRemoved.findExtension(
         componentId._legacy.toStringWithoutScopeAndVersion(),
         true,
         true
       );
       const extsWithoutSelf = selfInMergedExtensions?.extensionId
-        ? extsWithoutLoaded.remove(selfInMergedExtensions.extensionId)
-        : extsWithoutLoaded;
-      await this.loadExtensions(extsWithoutSelf, componentId);
+        ? extsWithoutRemoved.remove(selfInMergedExtensions.extensionId)
+        : extsWithoutRemoved;
       const { extensionDataListFiltered, envIsCurrentlySet } = this.filterEnvsFromExtensionsIfNeeded(
         extsWithoutSelf,
         envWasFoundPreviously
@@ -1173,10 +1167,6 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
       }
 
       extensionsToMerge.push({ origin, extensions: extensionDataListFiltered, extraData });
-
-      loadedExtensionIds.push(
-        ...compact(extensionDataListFiltered.map((e) => e.extensionId?.toStringWithoutVersion()))
-      );
     };
     const setDataListAsSpecific = (extensions: ExtensionDataList) => {
       extensions.forEach((dataEntry) => (dataEntry.config[AspectSpecificField] = true));
@@ -1184,22 +1174,22 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     if (bitMapExtensions && !excludeOrigins.includes('BitmapFile')) {
       const extensionDataList = ExtensionDataList.fromConfigObject(bitMapExtensions);
       setDataListAsSpecific(extensionDataList);
-      await addAndLoadExtensions(extensionDataList, 'BitmapFile');
+      await addExtensionsToMerge(extensionDataList, 'BitmapFile');
     }
     if (configFileExtensions && !excludeOrigins.includes('ComponentJsonFile')) {
       setDataListAsSpecific(configFileExtensions);
-      await addAndLoadExtensions(configFileExtensions, 'ComponentJsonFile');
+      await addExtensionsToMerge(configFileExtensions, 'ComponentJsonFile');
     }
     if (unmergedExtensionsSpecific && !excludeOrigins.includes('UnmergedSpecific')) {
-      await addAndLoadExtensions(ExtensionDataList.fromArray(unmergedExtensionsSpecific), 'UnmergedSpecific');
+      await addExtensionsToMerge(ExtensionDataList.fromArray(unmergedExtensionsSpecific), 'UnmergedSpecific');
     }
     if (!excludeOrigins.includes('ModelSpecific')) {
-      await addAndLoadExtensions(ExtensionDataList.fromArray(scopeExtensionsSpecific), 'ModelSpecific');
+      await addExtensionsToMerge(ExtensionDataList.fromArray(scopeExtensionsSpecific), 'ModelSpecific');
     }
     let continuePropagating = componentConfigFile?.propagate ?? true;
     if (variantsExtensions && continuePropagating && !excludeOrigins.includes('WorkspaceVariants')) {
       const appliedRules = variantConfig?.sortedMatches.map(({ pattern, specificity }) => ({ pattern, specificity }));
-      await addAndLoadExtensions(variantsExtensions, 'WorkspaceVariants', { appliedRules });
+      await addExtensionsToMerge(variantsExtensions, 'WorkspaceVariants', { appliedRules });
     }
     continuePropagating = continuePropagating && (variantConfig?.propagate ?? true);
     // Do not apply default extensions on the default extensions (it will create infinite loop when loading them)
@@ -1210,7 +1200,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
       !isDefaultExtension &&
       !excludeOrigins.includes('WorkspaceDefault')
     ) {
-      await addAndLoadExtensions(wsDefaultExtensions, 'WorkspaceDefault');
+      await addExtensionsToMerge(wsDefaultExtensions, 'WorkspaceDefault');
     }
     if (
       unmergedExtensionsNonSpecific &&
@@ -1218,16 +1208,17 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
       continuePropagating &&
       !excludeOrigins.includes('UnmergedNonSpecific')
     ) {
-      await addAndLoadExtensions(unmergedExtensionsNonSpecific, 'UnmergedNonSpecific');
+      await addExtensionsToMerge(unmergedExtensionsNonSpecific, 'UnmergedNonSpecific');
     }
     if (mergeFromScope && continuePropagating && !excludeOrigins.includes('ModelNonSpecific')) {
-      await addAndLoadExtensions(scopeExtensionsNonSpecific, 'ModelNonSpecific');
+      await addExtensionsToMerge(scopeExtensionsNonSpecific, 'ModelNonSpecific');
     }
 
     // It's important to do this resolution before the merge, otherwise we have issues with extensions
     // coming from scope with local scope name, as opposed to the same extension comes from the workspace with default scope name
     await Promise.all(extensionsToMerge.map((list) => this.resolveExtensionListIds(list.extensions)));
     const afterMerge = ExtensionDataList.mergeConfigs(extensionsToMerge.map((ext) => ext.extensions));
+    await this.loadExtensions(afterMerge);
     const withoutRemoved = afterMerge.filter((extData) => !removedExtensionIds.includes(extData.stringId));
     const extensions = ExtensionDataList.fromArray(withoutRemoved);
     return {
@@ -1287,25 +1278,14 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
 
   private filterEnvsFromExtensionsIfNeeded(extensionDataList: ExtensionDataList, envWasFoundPreviously: boolean) {
     const envAspect = extensionDataList.findExtension(EnvsAspect.id);
-    const envFromEnvsAspect = envAspect?.config.env;
-    const [envsNotFromEnvsAspect, nonEnvs] = partition(extensionDataList, (ext) =>
-      this.envs.isEnvRegistered(ext.stringId)
-    );
-    const extensionDataListFiltered = new ExtensionDataList(...nonEnvs);
-    const envIsCurrentlySet = envFromEnvsAspect || envsNotFromEnvsAspect.length;
-    const shouldIgnoreCurrentEnv = envIsCurrentlySet && envWasFoundPreviously;
-    if (shouldIgnoreCurrentEnv) {
+    const envFromEnvsAspect: string | undefined = envAspect?.config.env;
+    if (envWasFoundPreviously && envAspect) {
+      const nonEnvs = extensionDataList.filter((e) => e.stringId !== envFromEnvsAspect);
       // still, aspect env may have other data other then config.env.
-      if (envAspect) {
-        delete envAspect.config.env;
-        extensionDataListFiltered.push(envAspect);
-      }
-    } else {
-      // add the envs
-      if (envAspect) extensionDataListFiltered.push(envAspect);
-      extensionDataListFiltered.push(...envsNotFromEnvsAspect);
+      delete envAspect.config.env;
+      return { extensionDataListFiltered: new ExtensionDataList(...nonEnvs), envIsCurrentlySet: true };
     }
-    return { extensionDataListFiltered, envIsCurrentlySet };
+    return { extensionDataListFiltered: extensionDataList, envIsCurrentlySet: Boolean(envFromEnvsAspect) };
   }
 
   async triggerOnPreWatch(componentIds: ComponentID[], watchOpts: WatchOptions) {

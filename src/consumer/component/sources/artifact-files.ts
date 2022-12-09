@@ -187,7 +187,14 @@ export async function importMultipleDistsArtifacts(scope: Scope, components: Com
     components.map(async (component) => {
       const artifactsFiles = getArtifactFilesByExtension(component.extensions, extensionsNamesForDistArtifacts);
       const isIdOnLane = await scope.isIdOnLane(component.id, lane);
-      const scopeName = isIdOnLane ? (lane?.scope as string) : (component.scope as string);
+      const getScopes = () => {
+        if (isIdOnLane === null) {
+          // we're not sure wether it's on the lane or not. try to fetch from both.
+          return [lane?.scope as string, component.scope as string];
+        }
+        return isIdOnLane ? [lane?.scope as string] : [component.scope as string];
+      };
+      const scopes = getScopes();
       artifactsFiles.forEach((artifactFiles) => {
         if (!artifactFiles) return;
         if (!(artifactFiles instanceof ArtifactFiles)) {
@@ -196,7 +203,7 @@ export async function importMultipleDistsArtifacts(scope: Scope, components: Com
         if (artifactFiles.isEmpty()) return;
         if (artifactFiles.vinyls.length) return;
         const allHashes = artifactFiles.refs.map((artifact) => artifact.ref.hash);
-        (groupedHashes[scopeName] ||= []).push(...allHashes);
+        scopes.forEach((scopeName) => (groupedHashes[scopeName] ||= []).push(...allHashes));
         allHashes.forEach(
           (hash) => (debugHashesOrigin[hash] = `id: ${component.id.toString()}. isIdOnLane: ${isIdOnLane}`)
         );
