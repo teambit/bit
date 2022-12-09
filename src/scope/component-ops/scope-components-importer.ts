@@ -621,6 +621,10 @@ export default class ScopeComponentsImporter {
     const flattenedDepsToFetch = new BitIds();
     componentsWithVersion.forEach((compWithVer) => {
       if (skipComponentsWithDepsGraph && compWithVer.versionObj.flattenedEdges.length) return;
+      if (skipComponentsWithDepsGraph)
+        logger.debug(
+          `scopeComponentImporter, unable to get dependencies graph from ${compWithVer.componentVersion.id.toString()}, will import all its deps`
+        );
       flattenedDepsToFetch.add(compWithVer.versionObj.flattenedDependencies);
     });
 
@@ -683,7 +687,12 @@ export default class ScopeComponentsImporter {
       throwOnUnavailableScope
     ).fetchFromRemoteAndWrite();
     const componentDefs = await this.sources.getMany(ids);
-    const versionDeps = await this.multipleCompsDefsToVersionDeps(componentDefs, lanes);
+    const versionDeps = await this.multipleCompsDefsToVersionDeps(
+      componentDefs,
+      lanes,
+      undefined,
+      preferDependencyGraph
+    );
     if (throwForDependencyNotFound) {
       versionDeps.forEach((verDep) => verDep.throwForMissingDependencies());
     }
