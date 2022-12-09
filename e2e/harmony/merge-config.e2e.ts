@@ -89,4 +89,34 @@ describe('merge config scenarios', function () {
       });
     });
   });
+  describe('diverge with different config', () => {
+    let mainBeforeDiverge: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      mainBeforeDiverge = helper.scopeHelper.cloneLocalScope();
+
+      helper.command.createLane();
+      helper.command.deprecateComponent('comp1');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+
+      helper.scopeHelper.getClonedLocalScope(mainBeforeDiverge);
+      helper.command.deprecateComponent('comp1');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.undeprecateComponent('comp1');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
+      helper.command.importLane('dev');
+      helper.command.mergeLane('main', '--no-snap --skip-dependency-installation');
+    });
+    it('bit status should show the component with an issue of ConfigMergeConflict', () => {});
+    describe('fixing the conflict with ours', () => {});
+    describe('fixing the conflict with theirs', () => {});
+  });
 });
