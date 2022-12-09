@@ -148,7 +148,8 @@ function CompareMenuNav({ tabs, state, hooks }: ComponentCompareProps) {
             active: isActive,
             onClick: onNavClicked({ id: tab.id, hooks }),
             href: (!isControlled && tab.props?.href) || undefined,
-            activeClassName: isActive && styles.activeNav,
+            activeClassName: styles.activeNav,
+            className: styles.navItem,
           },
         },
       ];

@@ -47,7 +47,11 @@ export function CollapsableMenuNav({
       component: function TopBarNavComponent({ isInMenu }: TabProps) {
         const widgetDisplayText = menuItem.props.displayName && isInMenu && menuItem.props.displayName;
         return (
-          <TopBarNav className={classnames(styles.topBarNav, isInMenu && styles.noBorder)} key={id} {...menuItem.props}>
+          <TopBarNav
+            className={classnames(menuItem.props.className, styles.topBarNav, isInMenu && styles.noBorder)}
+            key={id}
+            {...menuItem.props}
+          >
             {widgetDisplayText || menuItem.props.children}
           </TopBarNav>
         );
