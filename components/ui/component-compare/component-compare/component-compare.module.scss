@@ -21,11 +21,26 @@
 
 .navContainer {
   display: flex;
-  min-height: 48px;
   align-items: center;
-  justify-content: space-between;
+  min-height: 48px;
   border-bottom: 1px solid var(--bit-border-color-lightest, #ededed);
   font-size: var(--bit-p-xs, 14px);
+}
+
+.navigation {
+  display: flex;
+  min-height: 48px;
+  align-items: center;
+
+  @media screen and (max-width: 768px) {
+    padding-left: 6px;
+  }
+
+  > li {
+    display: block;
+    margin-right: 16px;
+    height: 100%;
+  }
 }
 
 .loader {
@@ -33,4 +48,17 @@
   height: 100%;
   width: 100%;
   margin: auto;
+}
+
+.activeNav {
+  > div {
+    color: var(--bit-accent-color, #6c5ce7);
+    border-radius: 5px;
+    background-color: var(--bit-accent-bg, #edebfc);
+  }
+
+  &:after {
+    // unset default selection styles
+    height: 0 !important;
+  }
 }

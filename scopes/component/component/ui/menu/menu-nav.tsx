@@ -37,10 +37,11 @@ export function CollapsableMenuNav({
     return (_widgetPlugins || []).sort(sortFn);
   }, [widgetSlot, widgetPlugins]);
 
-  const links = [...plugins, ...widgets].map(([id, menuItem]) => {
+  const links = [...plugins, ...widgets].map(([id, menuItem], index) => {
     // these styles keep plugins to the left and widgets to the right.
-    const lastPluginStyle = menuItem.props.href === plugins[-1]?.[1].props.href ? { marginRight: 'auto' } : {};
-    const firstWidgetStyle = menuItem.props.href === widgets[0]?.[1].props.href ? { marginLeft: 'auto' } : {};
+    const lastPluginStyle = plugins.length - 1 === index ? { marginRight: 'auto' } : {};
+
+    const firstWidgetStyle = plugins.length === index ? { marginLeft: 'auto' } : {};
 
     return {
       component: function TopBarNavComponent({ isInMenu }: TabProps) {

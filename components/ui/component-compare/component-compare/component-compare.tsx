@@ -141,12 +141,14 @@ function CompareMenuNav({ tabs, state, hooks }: ComponentCompareProps) {
         tab.id || `tab-${index}`,
         {
           ...tab,
+          widget: tab.widget || typeof tab.props?.children !== 'string',
           props: {
             ...(tab.props || {}),
             displayName: tab.displayName,
             active: isActive,
             onClick: onNavClicked({ id: tab.id, hooks }),
             href: (!isControlled && tab.props?.href) || undefined,
+            activeClassName: isActive && styles.activeNav,
           },
         },
       ];

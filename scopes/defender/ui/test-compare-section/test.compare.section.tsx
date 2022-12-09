@@ -7,11 +7,12 @@ export class TestCompareSection implements Section {
   navigationLink = {
     href: 'tests',
     children: 'Tests',
-    order: 3,
   };
 
   route = {
     path: 'tests/*',
     element: this.tester.getTesterCompare(),
   };
+
+  order = 30;
 }

@@ -67,7 +67,7 @@ export class CodeUI {
     const codeCompare = new CodeCompareSection(ui);
     componentCompare.registerNavigation({
       props: codeCompare.navigationLink,
-      order: codeCompare.navigationLink.order,
+      order: codeCompare.order,
     });
     componentCompare.registerRoutes([codeCompare.route]);
     return ui;

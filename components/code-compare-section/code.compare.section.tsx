@@ -7,7 +7,6 @@ export class CodeCompareSection implements Section {
   navigationLink = {
     href: '.',
     children: 'Code',
-    order: 0,
     exact: true,
   };
 
@@ -15,4 +14,6 @@ export class CodeCompareSection implements Section {
     path: '*',
     element: this.codeUI.getCodeCompare(),
   };
+
+  order = 0;
 }

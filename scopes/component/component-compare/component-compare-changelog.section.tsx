@@ -17,5 +17,6 @@ export class CompareChangelogSection implements Section {
     element: this.compareUI.getChangelogComparePage(),
   };
 
-  order = 50;
+  order = 70;
+  widget = true;
 }

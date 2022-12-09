@@ -54,7 +54,7 @@ export class GraphUI {
     componentUI.registerRoute(section.route);
     componentCompare.registerNavigation({
       props: graphSection.navigationLink,
-      order: graphSection.navigationLink.order,
+      order: graphSection.order,
     });
     componentCompare.registerRoutes([graphSection.route]);
     return graphUI;

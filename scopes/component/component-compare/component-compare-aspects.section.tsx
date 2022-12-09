@@ -17,5 +17,6 @@ export class AspectsCompareSection implements Section {
     element: this.compareUI.getAspectsComparePage(),
   };
 
-  order: 60;
+  order = 60;
+  widget = true;
 }

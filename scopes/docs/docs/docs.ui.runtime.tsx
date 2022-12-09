@@ -52,7 +52,7 @@ export class DocsUI {
     component.registerNavigation(section.navigationLink, section.order);
     componentCompare.registerNavigation({
       props: compareSection.navigationLink,
-      order: compareSection.navigationLink.order,
+      order: compareSection.order,
     });
     componentCompare.registerRoutes([compareSection.route]);
     return docs;
