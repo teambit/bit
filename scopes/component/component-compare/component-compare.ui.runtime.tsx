@@ -85,11 +85,11 @@ export class ComponentCompareUI {
     componentCompareUI.registerNavigation([
       {
         props: aspectCompareSection.navigationLink,
-        order: aspectCompareSection.navigationLink.order,
+        order: aspectCompareSection.order,
       },
       {
         props: compareChangelog.navigationLink,
-        order: compareChangelog.navigationLink.order,
+        order: compareChangelog.order,
       },
     ]);
 

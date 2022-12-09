@@ -10,9 +10,10 @@ import { UseComponentType } from '@teambit/component';
 export type TabItem = {
   id?: string;
   order?: number;
-  name?: string;
-  props?: NavLinkProps;
+  displayName?: string;
+  props?: NavLinkProps & { displayName?: string };
   element?: React.ReactNode | null;
+  widget?: boolean;
 };
 
 export type ComponentCompareProps = {

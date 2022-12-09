@@ -1,7 +1,7 @@
 import React, { useContext, useMemo } from 'react';
 import classnames from 'classnames';
 import { LegacyComponentLog } from '@teambit/legacy-component-log';
-import { ComponentContext, TopBarNav, useComponent } from '@teambit/component';
+import { CollapsableMenuNav, ComponentContext, NavPlugin, TopBarNav, useComponent } from '@teambit/component';
 import { ComponentCompareContext } from '@teambit/component.ui.component-compare.context';
 import { useCompareQueryParam } from '@teambit/component.ui.component-compare.hooks.use-component-compare-url';
 import { ComponentCompareVersionPicker } from '@teambit/component.ui.component-compare.version-picker';
@@ -10,7 +10,7 @@ import { ComponentCompareHooks } from '@teambit/component.ui.component-compare.m
 import { RoundLoader } from '@teambit/design.ui.round-loader';
 import { useLocation } from '@teambit/base-react.navigation.link';
 import { SlotRouter } from '@teambit/ui-foundation.ui.react-router.slot-router';
-import { ComponentCompareProps } from '@teambit/component.ui.component-compare.models.component-compare-props';
+import { ComponentCompareProps, TabItem } from '@teambit/component.ui.component-compare.models.component-compare-props';
 import { groupByVersion } from '@teambit/component.ui.component-compare.utils.group-by-version';
 import { sortTabs } from '@teambit/component.ui.component-compare.utils.sort-tabs';
 import { sortByDateDsc } from '@teambit/component.ui.component-compare.utils.sort-logs';
@@ -46,7 +46,6 @@ export function ComponentCompare(props: ComponentCompareProps) {
   const baseVersion = useCompareQueryParam('baseVersion');
   const component = useContext(ComponentContext);
   const location = useLocation();
-
   const isWorkspace = host === 'teambit.workspace/workspace';
   const allVersionInfo = useMemo(() => component.logs?.slice().sort(sortByDateDsc) || [], [component.id.toString()]);
   const isNew = allVersionInfo.length === 0;
@@ -132,17 +131,33 @@ function RenderCompareScreen(props: ComponentCompareProps) {
 }
 
 function CompareMenuNav({ tabs, state, hooks }: ComponentCompareProps) {
-  const sortedTabs = (extractLazyLoadedData(tabs) || []).sort(sortTabs);
-
   const activeTab = state?.tabs?.id;
   const isControlled = state?.tabs?.controlled;
+  const extractedTabs: [string, NavPlugin & TabItem][] = (extractLazyLoadedData(tabs) || [])
+    .sort(sortTabs)
+    .map((tab, index) => {
+      const isActive = !state ? undefined : !!activeTab && !!tab?.id && activeTab === tab.id;
+      return [
+        tab.id || `tab-${index}`,
+        {
+          ...tab,
+          props: {
+            ...(tab.props || {}),
+            displayName: tab.displayName,
+            active: isActive,
+            onClick: onNavClicked({ id: tab.id, hooks }),
+            href: (!isControlled && tab.props?.href) || undefined,
+          },
+        },
+      ];
+    });
+  const sortedTabs = extractedTabs.filter(([, tab]) => !tab.widget);
+  const sortedWidgets = extractedTabs.filter(([, tab]) => tab.widget);
 
   return (
     <div className={styles.navContainer}>
-      <nav className={styles.navigation}>
+      {/* <nav className={styles.navigation}>
         {sortedTabs.map((tabItem, index) => {
-          const isActive = !state ? undefined : !!activeTab && !!tabItem.id && activeTab === tabItem.id;
-
           return (
             <TopBarNav
               {...(tabItem.props || {})}
@@ -153,7 +168,8 @@ function CompareMenuNav({ tabs, state, hooks }: ComponentCompareProps) {
             />
           );
         })}
-      </nav>
+      </nav> */}
+      <CollapsableMenuNav navPlugins={sortedTabs} widgetPlugins={sortedWidgets} />
     </div>
   );
 }

@@ -1,4 +1,6 @@
+import React from 'react';
 import { Section } from '@teambit/component';
+import { MenuWidgetIcon } from '@teambit/ui-foundation.ui.menu-widget-icon';
 import { ComponentCompareUI } from './component-compare.ui.runtime';
 
 export class CompareChangelogSection implements Section {
@@ -6,12 +8,14 @@ export class CompareChangelogSection implements Section {
 
   navigationLink = {
     href: 'changelog',
-    children: 'Changelog',
-    order: 5,
+    children: <MenuWidgetIcon icon="changelog" tooltipContent="Change log" />,
+    displayName: 'Change log',
   };
 
   route = {
     path: 'changelog/*',
     element: this.compareUI.getChangelogComparePage(),
   };
+
+  order = 50;
 }

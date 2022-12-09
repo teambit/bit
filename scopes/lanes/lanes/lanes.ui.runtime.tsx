@@ -280,6 +280,7 @@ export class LanesUI {
           order: navProp.order,
           props: navProp.props,
           element: getElement(routesForId, navProp.props.href),
+          widget: typeof navProp.props.children !== 'string',
         }));
       })
     );

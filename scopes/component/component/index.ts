@@ -29,7 +29,8 @@ export { ComponentContext, ComponentDescriptorContext, useComponentDescriptor } 
 export type { ComponentProviderProps, ComponentDescriptorProviderProps } from './ui/context';
 export { ComponentProvider, ComponentDescriptorProvider } from './ui/context';
 export { componentFields, componentIdFields, componentOverviewFields } from './ui';
-export { ConsumePlugin } from './ui/menu';
+export { NavPlugin, ConsumePlugin, CollapsableMenuNav, MenuNavProps } from './ui/menu';
+
 export { RegisteredComponentRoute, ComponentUrlParams } from './component.route';
 export { ComponentModel, ComponentModelProps } from './ui/component-model';
 export { TopBarNav } from './ui/top-bar-nav';
