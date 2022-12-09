@@ -45,13 +45,13 @@ export function lanesSchema(lanesMainRuntime: LanesMain): Schema {
       type LaneComponentDiffStatus {
         componentId: ComponentID!
         type: String!
-        upToDate: boolean!
+        upToDate: Boolean!
       }
 
       type LaneDiffStatus {
         source: LaneId!
         target: LaneId!
-        upToDate: boolean!
+        upToDate: Boolean!
         componentsStatus: [LaneComponentDiffStatus!]!
       }
 
