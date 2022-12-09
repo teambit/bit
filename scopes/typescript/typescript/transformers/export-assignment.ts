@@ -15,7 +15,7 @@ export class ExportAssignmentTransformer implements SchemaTransformer {
   /**
    * @todo
    */
-  async getIdentifiers(exportDec: ExportAssignmentNode, context: SchemaExtractorContext) {
+  async getIdentifiers() {
     // return context.getFileExports(exportDec);
     return [];
   }

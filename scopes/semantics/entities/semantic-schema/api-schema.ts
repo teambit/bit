@@ -84,7 +84,7 @@ export class APISchema extends SchemaNode {
   static empty(componentId: ComponentID) {
     return new APISchema(
       { filePath: '', line: 0, character: 0 },
-      new ModuleSchema({ filePath: '', line: 0, character: 0 }, [], ''),
+      new ModuleSchema({ filePath: '', line: 0, character: 0 }, [], [], ''),
       [],
       componentId
     );
