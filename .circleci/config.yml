@@ -675,6 +675,7 @@ jobs:
 
       # temporary hack to fix the flattenedEdge issue with this component
       - run: cd bit && bbit import teambit.component/ui/component-compare/utils/sort-logs@0.0.1 --objects --all-history
+      - run: cd bit && bbit import teambit.component/ui/component-compare/utils/group-by-version@0.0.1 --objects --all-history
 
       - run:
           name: 'Build bit source code'
