@@ -100,7 +100,7 @@ describe('LanesAspect', function () {
       expect(laneDiffResults.componentsStatus[0].upToDate).to.be.true;
       expect(laneDiffResults.componentsStatus[0].changeType).to.equal(ChangeType.NONE);
     });
-    it.only('should return that the lane is not up to date when main is ahead', async () => {
+    it('should return that the lane is not up to date when main is ahead', async () => {
       const currentLane = await lanes.getCurrentLane();
       if (!currentLane) throw new Error('unable to get the current lane');
       await lanes.switchLanes('main', { skipDependencyInstallation: true });
