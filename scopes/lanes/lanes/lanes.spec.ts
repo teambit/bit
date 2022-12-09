@@ -97,18 +97,18 @@ describe('LanesAspect', function () {
       const currentLane = await lanes.getCurrentLane();
       if (!currentLane) throw new Error('unable to get the current lane');
       const laneDiffResults = await lanes.diffStatus(currentLane.toLaneId());
-      expect(laneDiffResults[0].upToDate).to.be.true;
-      expect(laneDiffResults[0].changeType).to.equal(ChangeType.NONE);
+      expect(laneDiffResults.componentsStatus[0].upToDate).to.be.true;
+      expect(laneDiffResults.componentsStatus[0].changeType).to.equal(ChangeType.NONE);
     });
-    it('should return that the lane is not up to date when main is ahead', async () => {
+    it.only('should return that the lane is not up to date when main is ahead', async () => {
       const currentLane = await lanes.getCurrentLane();
       if (!currentLane) throw new Error('unable to get the current lane');
       await lanes.switchLanes('main', { skipDependencyInstallation: true });
       await snapping.snap({ pattern: 'comp1', build: false, unmodified: true });
 
       const laneDiffResults = await lanes.diffStatus(currentLane.toLaneId());
-      expect(laneDiffResults[0].upToDate).to.be.false;
-      expect(laneDiffResults[0].changeType).to.equal(ChangeType.NONE);
+      expect(laneDiffResults.componentsStatus[0].upToDate).to.be.false;
+      expect(laneDiffResults.componentsStatus[0].changeType).to.equal(ChangeType.NONE);
     });
   });
 });
