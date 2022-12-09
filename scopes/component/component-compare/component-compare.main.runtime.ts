@@ -25,6 +25,7 @@ export class ComponentCompareMain {
     const host = this.componentAspect.getHost();
     const [baseCompId, compareCompId] = await host.resolveMultipleComponentIds([baseIdStr, compareIdStr]);
     const modelComponent = await this.scope.legacyScope.getModelComponentIfExist(compareCompId._legacy);
+
     if (!modelComponent) {
       throw new GeneralError(`component ${compareCompId.toString()} doesn't have any version yet`);
     }
@@ -35,6 +36,7 @@ export class ComponentCompareMain {
     const repository = this.scope.legacyScope.objects;
     const baseVersionObject = await modelComponent.loadVersion(baseVersion, repository);
     const compareVersionObject = await modelComponent.loadVersion(compareVersion, repository);
+
     const diff: DiffResults = await diffBetweenVersionsObjects(
       modelComponent,
       baseVersionObject,

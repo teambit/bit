@@ -5,14 +5,24 @@ export class OverviewCompareSection implements Section {
   constructor(private docs: DocsUI) {}
 
   navigationLink = {
-    href: '.',
-    children: 'Overview',
-    exact: true,
-    order: 0,
+    href: 'docs',
+    children: 'Docs',
+    order: 4,
   };
 
   route = {
-    path: '*',
+    path: 'docs/*',
     element: this.docs.getDocsCompare(),
   };
+  // navigationLink = {
+  //   href: '.',
+  //   children: 'Overview',
+  //   exact: true,
+  //   order: 0,
+  // };
+
+  // route = {
+  //   path: '*',
+  //   element: this.docs.getDocsCompare(),
+  // };
 }

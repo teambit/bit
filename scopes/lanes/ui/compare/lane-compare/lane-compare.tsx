@@ -1,6 +1,5 @@
 import React, { HTMLAttributes, useState, useCallback, useMemo } from 'react';
 import { ComponentID } from '@teambit/component-id';
-import { ComponentCompare } from '@teambit/component.ui.component-compare.component-compare';
 import {
   ComponentCompareState,
   ComponentCompareStateKey,
@@ -11,9 +10,12 @@ import { ComponentCompareHooks } from '@teambit/component.ui.component-compare.m
 import { sortTabs } from '@teambit/component.ui.component-compare.utils.sort-tabs';
 import { LaneModel } from '@teambit/lanes.ui.models.lanes-model';
 import { LaneCompareState, computeStateKey } from '@teambit/lanes.ui.compare.lane-compare-state';
+import {
+  LaneCompareDrawer,
+  LaneCompareDrawerName,
+  LaneCompareDrawerProps,
+} from '@teambit/lanes.ui.compare.lane-compare-drawer';
 import { UseComponentType } from '@teambit/component';
-import { DrawerUI } from '@teambit/ui-foundation.ui.tree.drawer';
-import AnimateHeight from 'react-animate-height';
 
 import styles from './lane-compare.module.scss';
 
@@ -23,9 +25,18 @@ export type LaneCompareProps = {
   host: string;
   tabs?: MaybeLazyLoaded<TabItem[]>;
   customUseComponent?: UseComponentType;
+  Drawer?: React.ComponentType<LaneCompareDrawerProps>;
 } & HTMLAttributes<HTMLDivElement>;
 
-export function LaneCompare({ host, compare, base, tabs, customUseComponent, ...rest }: LaneCompareProps) {
+export function LaneCompare({
+  host,
+  compare,
+  base,
+  tabs,
+  customUseComponent,
+  Drawer = LaneCompareDrawer,
+  ...rest
+}: LaneCompareProps) {
   const baseMap = useMemo(
     () => new Map<string, ComponentID>(base.components.map((c) => [c.toStringWithoutVersion(), c])),
     [base.components]
@@ -59,7 +70,7 @@ export function LaneCompare({ host, compare, base, tabs, customUseComponent, ...
 
   const allComponents = useMemo(() => [...commonComponents, ...newComponents], [base.components, compare.components]);
 
-  const defaultState = useCallback(([_base, _compare]: [ComponentID | undefined, ComponentID | undefined]) => {
+  const defaultState = useCallback(() => {
     const _tabs = extractLazyLoadedData(tabs)?.sort(sortTabs);
 
     const value: ComponentCompareState = {
@@ -75,12 +86,7 @@ export function LaneCompare({ host, compare, base, tabs, customUseComponent, ...
         controlled: true,
       },
       versionPicker: {
-        element: (
-          <div className={styles.versionPicker}>
-            {`${(_base && 'Comparing Component') || 'Component'} ${_compare?.toStringWithoutVersion()}`}
-            <div>{`${_compare?.version} ${(_base && ` with ${_base.version}`) || ''}`}</div>
-          </div>
-        ),
+        element: null,
       },
     };
     return value;
@@ -90,7 +96,7 @@ export function LaneCompare({ host, compare, base, tabs, customUseComponent, ...
     new Map(
       allComponents.map(([_base, _compare]) => {
         const key = computeStateKey(_base, _compare);
-        const value = defaultState([_base, _compare]);
+        const value = defaultState();
         return [key, value];
       })
     )
@@ -119,7 +125,7 @@ export function LaneCompare({ host, compare, base, tabs, customUseComponent, ...
           propState.id = id;
           propState.element = _tabs?.find((_tab) => _tab.id === id)?.element;
         } else {
-          existingState = defaultState([_base, _compare]);
+          existingState = defaultState();
         }
         return new Map(value);
       });
@@ -145,30 +151,26 @@ export function LaneCompare({ host, compare, base, tabs, customUseComponent, ...
       const open = closeDrawerList.includes(key);
 
       return (
-        <DrawerUI
+        <Drawer
           key={`${key}-drawer`}
-          isOpen={open}
-          onToggle={() => handleDrawerToggle(key)}
-          name={compareId?.toStringWithoutVersion()}
-          className={styles.componentCompareDrawer}
-          contentClass={styles.componentCompareDrawerContent}
-        >
-          <AnimateHeight height={open ? 'auto' : 0}>
-            {(!!open && (
-              <ComponentCompare
-                className={styles.componentCompareContainer}
-                key={`lane-compare-component-compare-${key}`}
-                host={host}
-                tabs={tabs}
-                state={state.get(key)}
-                hooks={hooks(baseId, compareId)}
-                baseId={baseId}
-                compareId={compareId}
-                customUseComponent={customUseComponent}
-              />
-            )) || <></>}
-          </AnimateHeight>
-        </DrawerUI>
+          drawerProps={{
+            isOpen: open,
+            onToggle: () => handleDrawerToggle(key),
+            name: <LaneCompareDrawerName compareId={compareId} baseId={baseId} open={open} />,
+            className: styles.componentCompareDrawer,
+            contentClass: styles.componentCompareDrawerContent,
+          }}
+          compareProps={{
+            host,
+            tabs,
+            baseId,
+            compareId,
+            className: styles.componentCompareContainer,
+            state: state.get(key),
+            hooks: hooks(baseId, compareId),
+            customUseComponent,
+          }}
+        />
       );
     });
   }, [base.id.toString(), compare.id.toString(), closeDrawerList.length]);

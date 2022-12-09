@@ -5,15 +5,10 @@ import { useComponentCompare } from '@teambit/component.ui.component-compare.con
 import { useCompareQueryParam } from '@teambit/component.ui.component-compare.hooks.use-component-compare-url';
 import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
 import { inflateToTree } from '@teambit/base-ui.graph.tree.inflate-paths';
-import { ComponentCompareAspectsModel } from '@teambit/component.ui.component-compare.compare-aspects.models.component-compare-aspects-model';
-
-export type ComponentAspectData = {
-  icon?: string;
-  name?: string;
-  config: any;
-  data: any;
-  aspectId: string;
-};
+import {
+  ComponentAspectData,
+  ComponentCompareAspectsModel,
+} from '@teambit/component.ui.component-compare.compare-aspects.models.component-compare-aspects-model';
 
 export const GET_COMPONENT_ASPECT_DATA = gql`
   query GetComponentAspectData($id: String!, $extensionId: String!) {

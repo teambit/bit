@@ -5,13 +5,14 @@ export class CodeCompareSection implements Section {
   constructor(private codeUI: CodeUI) {}
 
   navigationLink = {
-    href: 'code',
+    href: '.',
     children: 'Code',
-    order: 4,
+    order: 0,
+    exact: true,
   };
 
   route = {
-    path: 'code/*',
+    path: '*',
     element: this.codeUI.getCodeCompare(),
   };
 }

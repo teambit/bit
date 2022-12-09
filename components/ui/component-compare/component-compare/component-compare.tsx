@@ -104,7 +104,7 @@ export function ComponentCompare(props: ComponentCompareProps) {
           </div>
         )}
         {isEmpty && <ComponentCompareBlankState />}
-        {!isEmpty && <RenderCompareScreen {...props} />}
+        {!loading && !isEmpty && <RenderCompareScreen {...props} />}
       </div>
     </ComponentCompareContext.Provider>
   );
@@ -115,9 +115,11 @@ function RenderCompareScreen(props: ComponentCompareProps) {
 
   return (
     <>
-      <div className={styles.top}>
-        {(!state?.versionPicker && <ComponentCompareVersionPicker />) || state?.versionPicker?.element}
-      </div>
+      {(state?.versionPicker?.element === undefined || !!state.versionPicker.element) && (
+        <div className={styles.top}>
+          {(!state?.versionPicker && <ComponentCompareVersionPicker />) || state?.versionPicker?.element}
+        </div>
+      )}
       <div className={styles.bottom}>
         <CompareMenuNav {...props} />
         {(extractLazyLoadedData(routes) || []).length > 0 && (

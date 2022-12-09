@@ -1351,6 +1351,20 @@
             }
         }
     },
+    "ui/compare/lane-compare-drawer": {
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.lanes",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/lanes/ui/compare/lane-compare-drawer"
+    },
+    "ui/compare/lane-compare-page": {
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.lanes",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/lanes/ui/compare/lane-compare-page"
+    },
     "ui/compare/lane-compare-state": {
         "scope": "",
         "version": "",
@@ -1451,6 +1465,12 @@
                 "env": "teambit.react/react"
             }
         }
+    },
+    "ui/component-compare/status-resolver": {
+        "scope": "teambit.component",
+        "version": "0.0.2",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/component-compare/status-resolver"
     },
     "ui/component-compare/utils/group-by-version": {
         "scope": "",

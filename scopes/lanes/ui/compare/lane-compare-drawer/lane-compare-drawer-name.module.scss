@@ -1,0 +1,42 @@
+.drawerNameContainer {
+  display: flex;
+  align-items: baseline;
+  padding: 4px 0px;
+}
+
+.versionContainer {
+  display: flex;
+}
+
+.compId,
+.status,
+.versionContainer,
+.versionIcon {
+  padding-right: 8px;
+}
+
+.compId,
+.status {
+  padding-top: 2px;
+}
+
+.version {
+  width: 50px;
+  padding: 2px 8px;
+  margin-right: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  border-radius: 6px;
+  background-color: var(--bit-bg-heavy, #f4f5f6);
+}
+
+.versionIcon {
+  display: flex;
+  justify-self: center;
+  img {
+    height: 12px;
+    display: flex;
+    align-self: center;
+  }
+}

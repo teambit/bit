@@ -25,6 +25,7 @@ import { LaneId } from '@teambit/lane-id';
 import { useViewedLaneFromUrl } from '@teambit/lanes.hooks.use-viewed-lane-from-url';
 import { TabItem } from '@teambit/component.ui.component-compare.models.component-compare-props';
 import { ComponentCompareAspect, ComponentCompareUI } from '@teambit/component-compare';
+import { LaneComparePage } from '@teambit/lanes.ui.compare.lane-compare-page';
 
 export type LaneCompareProps = Partial<DefaultLaneCompareProps>;
 export class LanesUI {
@@ -75,7 +76,7 @@ export class LanesUI {
             <Route path={LanesModel.lanePath}>
               <Route index element={this.getLaneOverview()} />
               <Route path="~component/*" element={this.getLaneComponent()} />
-              {/* <Route path="~compare/*" element={this.getLanesComparePage()} /> */}
+              <Route path="~compare/*" element={this.getLanesComparePage()} />
               <Route path="*" element={<NotFoundPage />} />
             </Route>
             <Route path="*" element={<NotFoundPage />} />
@@ -149,6 +150,10 @@ export class LanesUI {
     return <LaneOverview routeSlot={this.routeSlot} overviewSlot={this.overviewSlot} host={this.lanesHost} />;
   }
 
+  getLanesComparePage() {
+    return <LaneComparePage getLaneCompare={this.getLaneCompare} />;
+  }
+
   getMenuRoutes() {
     return [
       {
@@ -199,7 +204,7 @@ export class LanesUI {
           children: 'Lane Compare',
         },
         order: 2,
-        hide: () => true,
+        // hide: () => true,
       },
     ]);
   }
