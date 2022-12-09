@@ -90,8 +90,20 @@ export class ParameterTransformer implements SchemaTransformer {
   ): Promise<SchemaNode[] | undefined> {
     if (param.name.kind !== SyntaxKind.ObjectBindingPattern) return undefined;
     return pMapSeries(param.name.elements, async (elem: BindingElement) => {
-      const info = await context.getQuickInfo(elem.name);
-      const parsed = parseTypeFromQuickInfo(info);
+      const info =
+        elem.name.kind === SyntaxKind.ObjectBindingPattern ? undefined : await context.getQuickInfo(elem.name);
+      // @todo look into extracting nested objected binding patters
+      /**
+         * apiNode: {
+            api: {
+              name,
+              signature: defaultSignature,
+              doc, 
+              location: { filePath },
+            },
+          },
+         */
+      const parsed = info ? parseTypeFromQuickInfo(info) : elem.getText();
       return new InferenceTypeSchema(context.getLocation(param), parsed, elem.name.getText());
     });
   }

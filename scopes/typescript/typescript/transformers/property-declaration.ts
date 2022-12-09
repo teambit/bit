@@ -14,17 +14,23 @@ export class PropertyDeclarationTransformer implements SchemaTransformer {
     return [];
   }
 
+  // [computedName]: string
+  private isComputedProperty(node: PropertyDeclaration | PropertySignature) {
+    return node.name.kind === SyntaxKind.ComputedPropertyName;
+  }
+
   // @todo - handle arrow function objects
   async transform(node: PropertyDeclaration | PropertySignature, context: SchemaExtractorContext) {
     // console.log("🚀 ~ file: property-declaration.ts:19 ~ PropertyDeclarationTransformer ~ transform ~ node", node)
+
     const name = node.name.getText();
-    const info = await context.getQuickInfo(node.name);
-    const displaySig = info?.body?.displayString;
+    const info = this.isComputedProperty(node) ? undefined : await context.getQuickInfo(node.name);
+    const displaySig = info?.body?.displayString || node.getText();
     const typeStr = parseTypeFromQuickInfo(info);
     // console.log("🚀 ~ file: property-declaration.ts:24 ~ PropertyDeclarationTransformer ~ transform ~ typeStr", typeStr)
     const type = await context.resolveType(node, typeStr);
     const isOptional = Boolean(node.questionToken);
     const doc = await context.jsDocToDocSchema(node);
-    return new VariableLikeSchema(context.getLocation(node), name, displaySig || '', type, isOptional, doc);
+    return new VariableLikeSchema(context.getLocation(node), name, displaySig, type, isOptional, doc);
   }
 }
