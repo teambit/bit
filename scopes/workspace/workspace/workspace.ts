@@ -474,7 +474,8 @@ export class Workspace implements ComponentFactory {
     );
     const getCompIdByIdStr = (idStr: string): ComponentID => {
       const compId = flattenedBitIdCompIdMap[idStr];
-      if (!compId) throw new Error(`id ${idStr} exists in flattenedEdges but not in flattened`);
+      if (!compId)
+        throw new Error(`id ${idStr} exists in flattenedEdges but not in flattened of ${component.id.toString()}`);
       return compId;
     };
     const nodes = Object.values(flattenedBitIdCompIdMap);
