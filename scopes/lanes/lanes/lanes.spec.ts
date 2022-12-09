@@ -96,7 +96,7 @@ describe('LanesAspect', function () {
     it('should return that the lane is up to date when the lane is ahead of main', async () => {
       const currentLane = await lanes.getCurrentLane();
       if (!currentLane) throw new Error('unable to get the current lane');
-      const laneDiffResults = await lanes.laneDiff(currentLane.toLaneId());
+      const laneDiffResults = await lanes.diffStatus(currentLane.toLaneId());
       expect(laneDiffResults[0].upToDate).to.be.true;
       expect(laneDiffResults[0].changeType).to.equal(ChangeType.NONE);
     });
@@ -106,7 +106,7 @@ describe('LanesAspect', function () {
       await lanes.switchLanes('main', { skipDependencyInstallation: true });
       await snapping.snap({ pattern: 'comp1', build: false, unmodified: true });
 
-      const laneDiffResults = await lanes.laneDiff(currentLane.toLaneId());
+      const laneDiffResults = await lanes.diffStatus(currentLane.toLaneId());
       expect(laneDiffResults[0].upToDate).to.be.false;
       expect(laneDiffResults[0].changeType).to.equal(ChangeType.NONE);
     });
