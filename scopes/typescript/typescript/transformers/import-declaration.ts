@@ -42,6 +42,21 @@ export class ImportDeclarationTransformer implements SchemaTransformer {
   async transform(node: ImportDeclaration, context: SchemaExtractorContext) {
     const location = context.getLocation(node);
 
+    // if (node?.importClause?.namedBindings?.kind === SyntaxKind.NamedImports) {
+    //   const { elements } = node.importClause.namedBindings;
+
+    //   return elements.map(({ name, propertyName }) => {
+    //     const id = propertyName?.getText() || name.getText();
+    //     const identifier = new Identifier(id, fileName);
+    //     return identifier;
+    //   });
+    // }
+
+    // console.log(
+    //   '🚀🚀🚀\n\n\n ~ file: import-declaration.ts:45 ~ ImportDeclarationTransformer ~ transform ~  new UnImplementedSchema(location, node.getText(), node.kind.toString());',
+    //   new UnImplementedSchema(location, node.getText(), node.kind.toString())
+    // );
+
     return new UnImplementedSchema(location, node.getText(), node.kind.toString());
   }
 }

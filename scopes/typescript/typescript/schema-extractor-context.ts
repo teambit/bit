@@ -69,6 +69,11 @@ export class SchemaExtractorContext {
     return pathNormalizeToLinux(filePath);
   }
 
+  getMainFileIdentifierKey() {
+    const mainFile = this.component.mainFile;
+    return this.getIdentifierKey(mainFile.path);
+  }
+
   setComputed(node: SchemaNode) {
     const { location } = node;
     const key = this.getComputedNodeKey(location);
@@ -325,6 +330,42 @@ export class SchemaExtractorContext {
   }
 
   /**
+   * tsserver has two different calls: "definition" and "typeDefinition".
+   * normally, we need the "typeDefinition" to get the type data of a node.
+   * sometimes, it has no data, for example when the node is of type TypeReference, and then using "definition" is
+   * helpful. (couldn't find a rule when to use each one. e.g. "VariableDeclaration" sometimes has data only in
+   * "definition" but it's not clear when/why).
+   */
+  async getDefinition(node: Node) {
+    const typeDefinition = await this.typeDefinition(node);
+    const headTypeDefinition = head(typeDefinition?.body);
+    if (headTypeDefinition) {
+      return headTypeDefinition;
+    }
+    const definition = await this.tsserver.getDefinition(node.getSourceFile().fileName, this.getLocation(node));
+    return head(definition?.body);
+  }
+
+  // when we can't figure out the component/package/type of this node, we'll use the typeStr as the type.
+  private async unknownExactType(node: Node, location: Location, typeStr = 'any', isTypeStrFromQuickInfo = true) {
+    if (isTypeStrFromQuickInfo) {
+      return new InferenceTypeSchema(location, typeStr || 'any');
+    }
+    const info = await this.getQuickInfo(node);
+    const type = parseTypeFromQuickInfo(info);
+    return new InferenceTypeSchema(location, type, typeStr);
+  }
+
+  // the reason for this check is to avoid infinite loop when calling `this.jump` with the same file+location
+  private isDefInSameLocation(node: Node, definition: protocol.FileSpanWithContext) {
+    if (definition.file !== node.getSourceFile().fileName) {
+      return false;
+    }
+    const loc = this.getLocation(node);
+    return loc.line === definition.start.line && loc.character === definition.start.offset;
+  }
+
+  /**
    * resolve a type by a node and its identifier.
    */
   async resolveType(
@@ -333,116 +374,110 @@ export class SchemaExtractorContext {
     isTypeStrFromQuickInfo = true
   ): Promise<SchemaNode> {
     const location = this.getLocation(node);
-    // if (node.getText() === 'React.HTMLAttributes<HTMLDivElement>') {
-    //   console.log('\n\n\n🚀 line 327 ~ SchemaExtractorContext \n\n\n', location, node.getText(), node);
-    // }
-    const identifierKey = this.getIdentifierKeyForNode(node);
-    const identifierList = this.identifiers.get(identifierKey);
-    const nodeIdentifier = new Identifier(typeStr, identifierKey);
-    // console.log("🚀 ~ file: schema-extractor-context.ts:342 ~ SchemaExtractorContext ~ nodeIdentifier", nodeIdentifier)
-    const parsedIdentifier = identifierList?.find(nodeIdentifier);
-    // console.log(
-    //   '🚀 ~ file: schema-extractor-context.ts ~ line 334 ~ SchemaExtractorContext ~ parsedIdentifier',
-    //   parsedIdentifier
-    // );
 
-    if (parsedIdentifier && !ExportIdentifier.isExportIdentifier(parsedIdentifier)) {
-      // console.log(
-      //   '🚀 ~ file: schema-extractor-context.ts:345 ~ SchemaExtractorContext ~ parsedIdentifier',
-      //   parsedIdentifier
-      // );
-      return new TypeRefSchema(location, typeStr);
-    }
+    // check if internal ref with typeInfo
+    const internalRef = await this.getTypeRefForInternalNode(typeStr, this.getIdentifierKeyForNode(node), location);
 
+    if (internalRef) return internalRef;
+
+    // if a node has "type" prop, it has the type data of the node. this normally happens when the code has the type
+    // explicitly, e.g. `const str: string` vs implicitly `const str = 'some-string'`, which the node won't have "type"
     if (node.type && ts.isTypeNode(node.type)) {
-      // console.log("🚀 ~ file: schema-extractor-context.ts:357 ~ SchemaExtractorContext ~ node.type", node.type)
-      // console.log(
-      //   '🚀 ~ file: schema-extractor-context.ts ~ line 339 ~ SchemaExtractorContext ~ node.type',
-      //   node.type.getText()
-      // );
-      // if a node has "type" prop, it has the type data of the node. this normally happens when the code has the type
-      // explicitly, e.g. `const str: string` vs implicitly `const str = 'some-string'`, which the node won't have "type"
+      // console.log('\n🚀 ~ node has type 386 \n\n\n', node.type);
       return this.computeSchema(node.type);
     }
-    /**
-     * tsserver has two different calls: "definition" and "typeDefinition".
-     * normally, we need the "typeDefinition" to get the type data of a node.
-     * sometimes, it has no data, for example when the node is of type TypeReference, and then using "definition" is
-     * helpful. (couldn't find a rule when to use each one. e.g. "VariableDeclaration" sometimes has data only in
-     * "definition" but it's not clear when/why).
-     */
-    const getDef = async () => {
-      const typeDefinition = await this.typeDefinition(node);
-      const headTypeDefinition = head(typeDefinition?.body);
-      if (headTypeDefinition) {
-        return headTypeDefinition;
-      }
-      const definition = await this.tsserver.getDefinition(node.getSourceFile().fileName, this.getLocation(node));
-      return head(definition?.body);
-    };
 
-    const definition = await getDef();
-    // when we can't figure out the component/package/type of this node, we'll use the typeStr as the type.
-    const unknownExactType = async () => {
-      if (isTypeStrFromQuickInfo) {
-        return new InferenceTypeSchema(location, typeStr || 'any');
-      }
-      const info = await this.getQuickInfo(node);
-      const type = parseTypeFromQuickInfo(info);
-      return new InferenceTypeSchema(location, type, typeStr);
-    };
+    const definition = await this.getDefinition(node);
 
     if (!definition) {
-      return unknownExactType();
+      // console.log('\n🚀 ~ node has no definition 393 \n\n\n', typeStr);
+      return this.unknownExactType(node, location, typeStr, isTypeStrFromQuickInfo);
     }
-
-    // the reason for this check is to avoid infinite loop when calling `this.jump` with the same file+location
-    const isDefInSameLocation = () => {
-      if (definition.file !== node.getSourceFile().fileName) {
-        return false;
-      }
-      const loc = this.getLocation(node);
-      return loc.line === definition.start.line && loc.character === definition.start.offset;
-    };
 
     const file = this.findFileInComponent(definition.file);
 
-    if (file) {
-      if (isDefInSameLocation()) {
-        return unknownExactType();
-      }
-      const definitionNode = await this.definition(definition);
-      if (!definitionNode) {
-        return unknownExactType();
-      }
-      const definitionNodeName = definitionNode?.getText();
-      const definitionIdentifier = new Identifier(definitionNodeName, await this.getPath(definitionNode));
+    if (!file) return this.getTypeRefForExternalPath(typeStr, definition.file, location);
 
-      if (definitionNodeName && identifierList?.includes(definitionIdentifier)) {
-        // console.log(
-        //   '🚀 ~ file: schema-extractor-context.ts:412 ~ SchemaExtractorContext ~ definitionIdentifier',
-        //   definitionIdentifier
-        // );
-        return new TypeRefSchema(location, definitionNodeName);
-      }
+    if (this.isDefInSameLocation(node, definition)) {
+      return this.unknownExactType(node, location, typeStr, isTypeStrFromQuickInfo);
+    }
+    const definitionNode = await this.definition(definition);
+    if (!definitionNode) {
+      return this.unknownExactType(node, location, typeStr, isTypeStrFromQuickInfo);
+    }
+    const definitionNodeName = definitionNode?.getText();
+    // check if internal ref with definition info
+    const definitionInternalRef = await this.getTypeRefForInternalNode(
+      definitionNodeName,
+      this.getIdentifierKeyForNode(definitionNode),
+      location
+    );
 
-      try {
-        const schemaNode = await this.visit(definitionNode);
-        return schemaNode || unknownExactType();
-      } catch (err) {
-        if (err instanceof TransformerNotFound) {
-          return unknownExactType();
-        }
-        throw err;
+    if (definitionInternalRef) return definitionInternalRef;
+
+    try {
+      const schemaNode = await this.visit(definitionNode);
+      // if (schemaNode) console.log('\n\n\n 426 compute schema node \n', schemaNode.name);
+      return schemaNode || this.unknownExactType(node, location, typeStr, isTypeStrFromQuickInfo);
+    } catch (err) {
+      if (err instanceof TransformerNotFound) {
+        return this.unknownExactType(node, location, typeStr, isTypeStrFromQuickInfo);
       }
+      throw err;
     }
 
     // console.log('\n\n🚀EXTERNAL REF SchemaExtractorContext ~ typeStr\n\n', typeStr);
-    return this.getTypeRefForExternalPath(typeStr, definition.file, location);
   }
 
   private getCompIdByPkgName(pkgName: string): ComponentID | undefined {
     return this.componentDeps.find((dep) => dep.packageName === pkgName)?.componentId;
+  }
+
+  async getTypeRefForInternalNode(
+    typeStr: string,
+    filePath: string,
+    location: Location
+  ): Promise<TypeRefSchema | undefined> {
+    const nodeIdentifierKey = this.getIdentifierKey(filePath);
+    const mainFileIdentifierKey = this.getMainFileIdentifierKey();
+
+    // console.log(
+    //   '🚀 ~ file: schema-extractor-context.ts:378 ~ SchemaExtractorContext ~ nodeIdentifierKey',
+    //   nodeIdentifierKey
+    // );
+
+    // console.log(
+    //   '🚀 ~ file: schema-extractor-context.ts:379 ~ SchemaExtractorContext ~ mainFileIdentifierKey',
+    //   mainFileIdentifierKey
+    // );
+
+    const nodeIdentifierList = this.identifiers.get(nodeIdentifierKey);
+    const mainIdentifierList = this.identifiers.get(mainFileIdentifierKey);
+
+    const nodeIdentifier = new Identifier(typeStr, nodeIdentifierKey);
+    const mainIdentifier = new Identifier(typeStr, mainFileIdentifierKey);
+
+    // console.log('🚀 ~ file: schema-extractor-context.ts:392 ~ SchemaExtractorContext ~ nodeIdentifier', nodeIdentifier);
+    // console.log('🚀 ~ file: schema-extractor-context.ts:394 ~ SchemaExtractorContext ~ mainIdentifier', mainIdentifier);
+
+    const parsedNodeIdentifier = nodeIdentifierList?.find(nodeIdentifier);
+    const parsedMainIdentifier = mainIdentifierList?.find(mainIdentifier);
+    // console.log(
+    //   '🚀 ~ file: schema-extractor-context.ts:398 ~ SchemaExtractorContext ~ parsedMainIdentifier',
+    //   parsedMainIdentifier
+    // );
+
+    const isExportedIdentifier = parsedNodeIdentifier && ExportIdentifier.isExportIdentifier(parsedNodeIdentifier);
+    const isExportedFromMain = parsedMainIdentifier && ExportIdentifier.isExportIdentifier(parsedMainIdentifier);
+    // console.log(
+    //   '🚀 ~ file: schema-extractor-context.ts:402 ~ SchemaExtractorContext ~ isExportedFromMain',
+    //   isExportedFromMain
+    // );
+
+    if (!isExportedIdentifier) return undefined;
+
+    // internal
+    return new TypeRefSchema(location, typeStr, undefined, undefined, !isExportedFromMain);
   }
 
   async getTypeRefForExternalNode(node: Node): Promise<TypeRefSchema> {

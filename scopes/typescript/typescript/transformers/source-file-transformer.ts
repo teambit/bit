@@ -39,13 +39,14 @@ export class SourceFileTransformer implements SchemaTransformer {
 
     const identifiers = [...exportIdentifiers, ...internalIdentifiers];
 
-    // context.setIdentifiers(sourceFile.fileName, new IdentifierList(identifiers));
     return identifiers;
   }
 
   async transform(node: SourceFile, context: SchemaExtractorContext) {
     const exports = this.listExports(node);
-    const internals = this.listInternalNodes(node);
+    const internals = this.listInternalNodes(node).filter(
+      (internal) => internal.kind !== ts.SyntaxKind.ImportDeclaration
+    );
 
     const exportDeclarations = await pMapSeries(exports, (exportNode) => {
       return context.computeSchema(exportNode);
