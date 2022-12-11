@@ -12,4 +12,4 @@ export {
   SerializedVariantPolicy,
 } from './variant-policy';
 
-export { EnvPolicy } from './env-policy';
+export { EnvPolicy, EnvPolicyConfigObject } from './env-policy';
