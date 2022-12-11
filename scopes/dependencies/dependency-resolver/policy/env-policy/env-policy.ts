@@ -52,8 +52,9 @@ export class EnvPolicy extends VariantPolicy {
 
     /**
      * Calculate the policy for the env itself.
+     * Always force it for the env itself
      */
-    const selfPeersEntries = entriesFromKey(configObject, 'peers', 'version', 'peer', 'env-own');
+    const selfPeersEntries = entriesFromKey(configObject, 'peers', 'version', 'peer', 'env-own', true);
 
     const selfPolicy = VariantPolicy.fromArray(selfPeersEntries);
 
@@ -62,7 +63,7 @@ export class EnvPolicy extends VariantPolicy {
      * when we used to configure dependencies, devDependencies, peerDependencies as objects of dependencyId: version
      * Those were always forced on the components as visible dependencies.
      */
-    const legacyPolicy = VariantPolicy.fromConfigObject(configObject, 'env', false, false);
+    const legacyPolicy = VariantPolicy.fromConfigObject(configObject, 'env', false, true);
     const componentPeersEntries = entriesFromKey(configObject, 'peers', 'supportedRange', 'peer', 'env');
     const otherKeyNames: EnvJsoncPolicyConfigKey[] = ['dev', 'runtime'];
     const otherEntries: VariantPolicyEntry[] = otherKeyNames.reduce(
@@ -87,14 +88,23 @@ function entriesFromKey(
   keyName: EnvJsoncPolicyConfigKey,
   versionKey: VersionKeyName = 'version',
   lifecycleType: DependencyLifecycleType,
-  source: DependencySource = 'env'
+  source: DependencySource = 'env',
+  force?: boolean
 ): VariantPolicyEntry[] {
   const configEntries: Array<EnvJsoncPolicyPeerEntry | EnvJsoncPolicyEntry> = configObject[keyName];
   if (!configEntries) {
     return [];
   }
   const entries = configEntries.map((entry) => {
-    return createVariantPolicyEntry(entry.name, entry[versionKey], lifecycleType, source, entry.hidden, !entry.force);
+    return createVariantPolicyEntry(
+      entry.name,
+      entry[versionKey],
+      lifecycleType,
+      source,
+      entry.hidden,
+      // allow override the entry's force value (used for the env itself)
+      force ?? !!entry.force
+    );
   });
   return entries;
 }

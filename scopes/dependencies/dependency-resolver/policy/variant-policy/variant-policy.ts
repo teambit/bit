@@ -33,9 +33,9 @@ export type VariantPolicyEntry = PolicyEntry & {
    */
   hidden?: boolean;
   /**
-   * add to component dependencies only if it's used by the component.
+   * force add to component dependencies even if it's not used by the component.
    */
-  usedOnly?: boolean;
+  force?: boolean;
 };
 
 export type SerializedVariantPolicyEntry = VariantPolicyEntry;
@@ -172,13 +172,8 @@ export class VariantPolicy implements Policy<VariantPolicyConfigObject> {
       peerDependencies: {},
     };
     this._policiesEntries.reduce((acc, entry) => {
-      if (!entry.usedOnly) return acc;
+      if (entry.force) return acc;
       const keyName = KEY_NAME_BY_LIFECYCLE_TYPE[entry.lifecycleType];
-      // if (entry.hidden){
-      //   acc[keyName][entry.dependencyId] = '-';
-      // } else {
-      //   acc[keyName][entry.dependencyId] = entry.value.version;
-      // }
       acc[keyName][entry.dependencyId] = entry.value.version;
       return acc;
     }, res);
@@ -192,9 +187,8 @@ export class VariantPolicy implements Policy<VariantPolicyConfigObject> {
       peerDependencies: {},
     };
     this._policiesEntries.reduce((acc, entry) => {
-      // entries that marked with used only, will be handled by the legacy deps resolver and will not be added to the overrides
-      // if (entry.usedOnly || entry.hidden) return acc;
-      if (entry.usedOnly) return acc;
+      // entries that not marked with force, will be handled by the legacy deps resolver and will not be added to the overrides
+      if (!entry.force) return acc;
       const keyName = KEY_NAME_BY_LIFECYCLE_TYPE[entry.lifecycleType];
       acc[keyName][entry.dependencyId] = entry.value.version;
       return acc;
@@ -206,11 +200,11 @@ export class VariantPolicy implements Policy<VariantPolicyConfigObject> {
     configObject,
     source?: DependencySource,
     hidden?: boolean,
-    usedOnly?: boolean
+    force = true
   ): VariantPolicy {
-    const runtimeEntries = entriesFromKey(configObject, 'dependencies', source, hidden, usedOnly);
-    const devEntries = entriesFromKey(configObject, 'devDependencies', source, hidden, usedOnly);
-    const peerEntries = entriesFromKey(configObject, 'peerDependencies', source, hidden, usedOnly);
+    const runtimeEntries = entriesFromKey(configObject, 'dependencies', source, hidden, force);
+    const devEntries = entriesFromKey(configObject, 'devDependencies', source, hidden, force);
+    const peerEntries = entriesFromKey(configObject, 'peerDependencies', source, hidden, force);
     const entries = runtimeEntries.concat(devEntries).concat(peerEntries);
     return new VariantPolicy(entries);
   }
@@ -250,7 +244,7 @@ function entriesFromKey(
   keyName: PolicyConfigKeysNames,
   source?: DependencySource,
   hidden?: boolean,
-  usedOnly?: boolean
+  force?: boolean
 ): VariantPolicyEntry[] {
   const obj = configObject[keyName];
   if (!obj) {
@@ -259,7 +253,7 @@ function entriesFromKey(
   const lifecycleType = LIFECYCLE_TYPE_BY_KEY_NAME[keyName];
   const entries = Object.entries(obj).map(([depId, value]: [string, VariantPolicyConfigEntryValue]) => {
     if (value) {
-      return createVariantPolicyEntry(depId, value, lifecycleType, source, hidden, usedOnly);
+      return createVariantPolicyEntry(depId, value, lifecycleType, source, hidden, force);
     }
     return undefined;
   });
@@ -272,7 +266,7 @@ export function createVariantPolicyEntry(
   lifecycleType: DependencyLifecycleType,
   source?: DependencySource,
   hidden?: boolean,
-  usedOnly?: boolean
+  force?: boolean
 ): VariantPolicyEntry {
   const version = typeof value === 'string' ? value : value.version;
   const resolveFromEnv = typeof value === 'string' ? false : value.resolveFromEnv;
@@ -287,7 +281,7 @@ export function createVariantPolicyEntry(
     lifecycleType,
     source,
     hidden,
-    usedOnly,
+    force,
   };
   return entry;
 }
