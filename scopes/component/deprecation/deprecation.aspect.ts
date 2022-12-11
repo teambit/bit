@@ -5,3 +5,5 @@ export const DeprecationAspect = Aspect.create({
   dependencies: [],
   defaultConfig: {},
 });
+
+export default DeprecationAspect;

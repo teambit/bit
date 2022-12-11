@@ -1,4 +1,6 @@
+
 import ts, { Node, SourceFile, SyntaxKind } from 'typescript';
+import { getTsconfig } from 'get-tsconfig';
 import { SchemaExtractor } from '@teambit/schema';
 import { TsserverClient } from '@teambit/ts-server';
 import type { Workspace } from '@teambit/workspace';
@@ -6,6 +8,7 @@ import { ComponentDependency, DependencyResolverMain } from '@teambit/dependency
 import { SchemaNode, APISchema, ModuleSchema, UnImplementedSchema } from '@teambit/semantics.entities.semantic-schema';
 import { Component } from '@teambit/component';
 import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
+import { EnvContext } from '@teambit/envs';
 import { Formatter } from '@teambit/formatter';
 import { Logger } from '@teambit/logger';
 import pMapSeries from 'p-map-series';
@@ -15,6 +18,9 @@ import { TransformerNotFound } from './exceptions';
 import { SchemaExtractorContext } from './schema-extractor-context';
 import { Identifier } from './identifier';
 import { IdentifierList } from './identifier-list';
+import { ExportList } from './export-list';
+import { ExtractorOptions } from './extractor-options';
+import { TypescriptAspect } from './typescript.aspect';
 
 export class TypeScriptExtractor implements SchemaExtractor {
   constructor(
@@ -148,5 +154,22 @@ export class TypeScriptExtractor implements SchemaExtractor {
     }
 
     return transformer;
+  }
+
+  static from(options: ExtractorOptions) {
+    return (context: EnvContext) => {
+      const tsconfig = getTsconfig(options.tsconfig)?.config || { compilerOptions: options.compilerOptions };
+      const tsMain = context.getAspect<TypescriptMain>(TypescriptAspect.id);
+      // When loading the env from a scope you don't have a workspace
+      const wsPath = tsMain.workspace?.path || '';
+      return new TypeScriptExtractor(
+        tsconfig,
+        tsMain.schemaTransformerSlot,
+        tsMain,
+        wsPath,
+        tsMain.depResolver,
+        tsMain.workspace,
+      );
+    };
   }
 }

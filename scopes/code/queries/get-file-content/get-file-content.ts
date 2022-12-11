@@ -40,7 +40,7 @@ export function useFileContent(componentId?: ComponentID, filePath?: string, ski
     skip: skip || !componentId || filePath === undefined,
   });
 
-  const fileContent = data?.getHost?.get.getFile;
+  const fileContent = data?.getHost?.get?.getFile;
 
   return { fileContent, ...rest };
 }

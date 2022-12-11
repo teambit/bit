@@ -1,5 +1,8 @@
+@import '~@teambit/ui-foundation.ui.constants.z-indexes/z-indexes.module.scss';
+
 .versionDropdown {
   height: 100%;
+
   > div {
     height: 100%;
     display: flex;
@@ -11,6 +14,7 @@
     // top: 43px;
     font-size: var(--bit-p-xs);
     border-radius: 6px;
+    z-index: $modal-z-index;
   }
 }
 

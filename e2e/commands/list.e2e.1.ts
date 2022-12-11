@@ -23,8 +23,7 @@ describe('bit list command', function () {
   });
   describe('when a component is created but not tagged', () => {
     before(() => {
-      helper.scopeHelper.clean();
-      helper.scopeHelper.initWorkspace();
+      helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
     });
@@ -35,8 +34,7 @@ describe('bit list command', function () {
   });
   describe('when a component is created and tagged', () => {
     before(() => {
-      helper.scopeHelper.clean();
-      helper.scopeHelper.initWorkspace();
+      helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
       helper.fixtures.tagComponentBarFoo();
@@ -51,7 +49,6 @@ describe('bit list command', function () {
       let output;
       before(() => {
         helper.scopeHelper.setNewLocalAndRemoteScopes();
-        helper.bitJsonc.setupDefault();
         helper.fixtures.createComponentBarFoo();
         helper.fixtures.addComponentBarFooAsDir();
         helper.fixtures.tagComponentBarFoo();
@@ -80,7 +77,6 @@ describe('bit list command', function () {
       let output;
       before(() => {
         helper.scopeHelper.setNewLocalAndRemoteScopes();
-        helper.bitJsonc.setupDefault();
         helper.fs.createFile('bar', 'baz.js');
         helper.command.addComponent('bar', { i: 'bar/baz' });
         helper.command.tagWithoutBuild('bar/baz');
@@ -98,7 +94,7 @@ describe('bit list command', function () {
     describe('when a component is local only (never exported)', () => {
       let output;
       before(() => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitLocalScope({ addRemoteScopeAsDefaultScope: false });
         helper.fs.createFile('bar', 'local');
         helper.command.addComponent('bar', { i: 'bar/local' });
         helper.command.tagWithoutBuild('bar/local');

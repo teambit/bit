@@ -11,7 +11,6 @@ describe('all custom envs are compiled during installation', function () {
   function prepare() {
     helper = new Helper();
     helper.scopeHelper.setNewLocalAndRemoteScopes();
-    helper.bitJsonc.setupDefault();
     helper.command.create('node-env', 'custom-env1');
     helper.fs.outputFile(
       `${helper.scopes.remoteWithoutOwner}/custom-env1/custom-env1.main.runtime.ts`,
@@ -139,51 +138,28 @@ export function comp() {
     before(async () => {
       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.bitJsonc.setPackageManager(`teambit.dependencies/pnpm`);
       npmCiRegistry = new NpmCiRegistry(helper);
       await npmCiRegistry.init();
       npmCiRegistry.configureCiInPackageJsonHarmony();
       helper.command.create('react-env', 'custom-react/env1', '-p custom-react/env1');
-      helper.fs.outputFile(
+      helper.fixtures.populateEnvMainRuntime(
         `custom-react/env1/env1.main.runtime.ts`,
-        `
-import { MainRuntime } from '@teambit/cli';
-import { ReactAspect, ReactMain } from '@teambit/react';
-import { EnvsAspect, EnvsMain } from '@teambit/envs';
-import { Env1Aspect } from './env1.aspect';
-
-export class Env1Main {
-  static slots = [];
-
-  static dependencies = [ReactAspect, EnvsAspect];
-
-  static runtime = MainRuntime;
-
-  static async provider([react, envs]: [ReactMain, EnvsMain]) {
-    const templatesReactEnv = envs.compose(react.reactEnv, [
-      envs.override({
-        getDependencies: () => ({
-          dependencies: {},
-          devDependencies: {
-          },
-          peers: [
-            {
-              name: 'react',
-              supportedRange: '^16.8.0',
-              version: '16.14.0',
+        {
+          envName: 'env1',
+          dependencies: {
+            dependencies: {},
+            devDependencies: {
             },
-          ],
-        })
-      })
-    ]);
-    envs.registerEnv(templatesReactEnv);
-    return new Env1Main();
-  }
-}
-
-Env1Aspect.addRuntime(Env1Main);
-`
+            peers: [
+              {
+                name: 'react',
+                supportedRange: '^16.8.0',
+                version: '16.14.0',
+              },
+            ],
+          },
+        }
       );
       helper.command.install();
       helper.command.tagAllComponents();
@@ -211,7 +187,6 @@ describe('skipping compilation on install', function () {
   before(() => {
     helper = new Helper();
     helper.scopeHelper.setNewLocalAndRemoteScopes();
-    helper.bitJsonc.setupDefault();
     helper.fixtures.populateComponents(1, true, '', false); // don't compile
     helper.command.install(undefined, { skipCompile: true });
   });

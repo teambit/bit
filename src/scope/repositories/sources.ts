@@ -275,17 +275,9 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
       return ref;
     });
 
-    const getNewHead = (isLane = false) => {
+    const getNewHead = () => {
       if (!removeOnlyHead) {
         const divergeData = component.getDivergeData();
-        if (divergeData.isDiverged()) {
-          // if it's diverged, the Component object might have versions from the remote as part of the last import.
-          // run snap.e2e - 'bit reset a diverge component' case to understand why it's better to pick the remoteHead
-          // than the commonSnapBeforeDiverge.
-          const remoteHead = isLane ? component.laneHeadRemote : component.remoteHead;
-          if (!remoteHead) throw new Error(`remoteHead must be set when component is diverged (id: ${component.id()})`);
-          return remoteHead;
-        }
         if (divergeData.commonSnapBeforeDiverge) {
           return divergeData.commonSnapBeforeDiverge;
         }
@@ -304,7 +296,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
       component.setHead(newHead);
     }
     if (laneItem && refWasDeleted(laneItem.head)) {
-      const newHead = getNewHead(true);
+      const newHead = getNewHead();
       if (newHead) {
         laneItem.head = newHead;
       } else {
@@ -555,8 +547,8 @@ otherwise, to collaborate on the same lane as the remote, you'll need to remove 
         const divergeResults = await getDivergeData({
           repo,
           modelComponent,
-          remoteHead: component.head,
-          checkedOutLocalHead: existingComponent.head,
+          targetHead: component.head,
+          sourceHead: existingComponent.head,
           versionObjects,
         });
         if (divergeResults.isDiverged()) {
@@ -568,11 +560,11 @@ otherwise, to collaborate on the same lane as the remote, you'll need to remove 
           mergeErrors.push(new ComponentNeedsUpdate(component.id.toString(), existingComponent.head.toString()));
           return;
         }
-        if (divergeResults.isRemoteAhead()) {
+        if (divergeResults.isTargetAhead()) {
           existingComponent.head = component.head;
           mergeResults.push({
             mergedComponent: modelComponent,
-            mergedVersions: divergeResults.snapsOnRemoteOnly.map((h) => h.toString()),
+            mergedVersions: divergeResults.snapsOnTargetOnly.map((h) => h.toString()),
           });
           return;
         }

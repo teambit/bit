@@ -15,7 +15,7 @@ export function TopBarNav({ href, className, activeClassName, children, displayN
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const preventPassingDisplayNameToLink = displayName;
 
-  const target = `${href}${search}`;
+  const target = href && `${href}${search}`;
 
   return (
     <Link

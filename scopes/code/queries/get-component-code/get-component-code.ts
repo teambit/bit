@@ -55,10 +55,10 @@ export function useCode(componentId?: ComponentID) {
     skip: !componentId,
   });
 
-  const fileTree = data?.getHost?.get.fs;
-  const mainFile = data?.getHost?.get.mainFile;
-  const devFiles = data?.getHost?.get.devFiles;
-  const dependencies = data?.getHost?.get.dependencies;
+  const fileTree = data?.getHost?.get?.fs;
+  const mainFile = data?.getHost?.get?.mainFile;
+  const devFiles = data?.getHost?.get?.devFiles;
+  const dependencies = data?.getHost?.get?.dependencies;
 
   return { fileTree, mainFile, dependencies, devFiles, ...rest };
 }

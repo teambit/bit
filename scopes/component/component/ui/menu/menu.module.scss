@@ -6,12 +6,15 @@
   align-items: center;
   width: 100%;
   height: 100%;
+  min-width: 0;
 }
 
 .leftSide {
   display: flex;
   align-items: center;
   height: 100%;
+  flex-grow: 1;
+  min-width: 0;
 }
 
 .navigation {
@@ -31,7 +34,7 @@
   // show desktop nav on larger res
   &.desktopNav {
     display: flex;
-    @media screen and (max-width: $br-lg) {
+    @media screen and (max-width: $br-md) {
       display: none;
     }
   }
@@ -51,6 +54,7 @@
   display: flex;
   align-items: center;
   height: 100%;
+  padding-left: 16px;
   > * {
     margin-right: 12px;
     &:last-child {
@@ -60,23 +64,6 @@
   @media screen and (max-width: $br-lg) {
     > * {
       margin-right: 8px;
-    }
-  }
-  .widgets {
-    height: 100%;
-    margin-right: 20px;
-    display: flex;
-    align-items: center;
-    > nav {
-      > a {
-        padding: 0;
-        &:last-child {
-          margin-right: 0;
-        }
-      }
-    }
-    @media screen and (max-width: $br-lg) {
-      display: none;
     }
   }
   .widget {
@@ -90,4 +77,24 @@
 
 .componentVersionMenu {
   width: 350px;
+}
+
+.tab {
+  > div {
+    color: var(--on-background-color, #2B2B2B);
+    padding: 0;
+  }
+}
+.topBarNav {
+  height: 100%;
+
+  &.noBorder::after {
+    display: none;
+  }
+}
+
+.hideOnMobile {
+  @media screen and (max-width: $br-md) {
+    display: none;
+  }
 }

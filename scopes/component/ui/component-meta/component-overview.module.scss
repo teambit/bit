@@ -1,3 +1,5 @@
+@import '~@teambit/base-ui.layout.breakpoints/_breakpoints.scss';
+
 .componentTitle {
   > h1 {
     margin: 0;
@@ -19,4 +21,24 @@
 
 .titleRow {
   margin-bottom: 20px;
+}
+
+.contentTabs {
+  margin-bottom: 16px;
+  min-width: 70%;
+  max-width: 100%;
+  @media screen and (max-width: $br-l) {
+    width: 100%;
+  }
+  .nav > div {
+    font-size: 12px;
+    padding: 6px 12px;
+  }
+  .tab {
+    border-bottom: 0;
+  }
+}
+.copyBox {
+  background: var(--background-color, #ffffff);
+  border-top-left-radius: 0;
 }

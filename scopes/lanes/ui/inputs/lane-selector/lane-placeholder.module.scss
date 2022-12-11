@@ -3,8 +3,9 @@
   align-items: center;
   padding: 4px 8px 4px 4px;
   line-height: var(--bit-p-md, 16px);
-  font-size: var(--bit-p-md, 16px);
+  // font-size: var(--bit-p-md, 16px);
   border-radius: 6px;
+  font-size: 14px;
   border: 1px solid var(--bit-border-color-light, #cccfd4);
   background-color: var(--bit-border-color-lightest, #ededed);
   &.disabled {
@@ -20,4 +21,8 @@
 
 .icon {
   padding-left: 8px;
+}
+
+.menu {
+  border-radius: 8px;
 }

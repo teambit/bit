@@ -1,7 +1,7 @@
+import { resolveFrom } from '@teambit/toolbox.modules.module-resolver';
 import chai, { expect } from 'chai';
 import fs from 'fs-extra';
 import path from 'path';
-import { sync as resolveSync } from 'resolve';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
 
@@ -31,7 +31,6 @@ describe('app root components', function () {
     before(() => {
       helper = new Helper();
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(4);
       helper.extensions.bitJsonc.addKeyValToDependencyResolver('rootComponents', true);
       helper.bitJsonc.addKeyVal(`${helper.scopes.remote}/comp3`, {});
@@ -113,6 +112,10 @@ module.exports.default = {
     });
     it('should hoist dependencies to the root of the workspace', () => {
       expect(path.join(helper.fixtures.scopes.localPath, 'node_modules', '@types/jest')).to.be.a.path();
+    });
+    it('should not nest a dependency to a component directory if it is already in the root', () => {
+      expect(path.join(helper.fixtures.scopes.localPath, 'comp4/node_modules/react')).to.not.be.a.path();
+      expect(path.join(helper.fixtures.scopes.localPath, 'comp4/node_modules/react-dom')).to.not.be.a.path();
     });
     it('should install the dependencies of the root component that has react 17 in the dependencies with react 17', () => {
       expect(
@@ -330,21 +333,26 @@ module.exports.default = {
     });
     describe('compilation', () => {
       before(() => {
+        helper.fs.outputFile(`comp1/foo.ts`, ``);
         helper.command.compile();
       });
-      it('should create the dist folder in all the locations of the component', () => {
+      it('should create the dist folder in the linked directories', () => {
+        const resolveFromLocal = resolveFrom.bind(null, helper.fixtures.scopes.localPath);
+        expect(resolveFromLocal([`@${helper.scopes.remote}/comp1/dist/index.js`])).to.be.a.path();
+        expect(resolveFromLocal([`@${helper.scopes.remote}/comp1/dist/foo.js`])).to.be.a.path();
+        expect(resolveFromLocal([`@${helper.scopes.remote}/comp2/dist/index.js`])).to.be.a.path();
+        expect(resolveFromLocal([`@${helper.scopes.remote}/comp3/dist/index.js`])).to.be.a.path();
+        expect(resolveFromLocal([`@${helper.scopes.remote}/comp4/dist/index.js`])).to.be.a.path();
+      });
+      it('should create the dist folder in the root injected folder', () => {
         expect(
-          resolveFrom(helper.fixtures.scopes.localPath, [`@${helper.scopes.remote}/comp1/dist/index.js`])
+          path.join(
+            helper.fixtures.scopes.localPath,
+            `node_modules/@${helper.scopes.remote}/comp1/node_modules/@${helper.scopes.remote}/comp1/dist/foo.js`
+          )
         ).to.be.a.path();
-        expect(
-          resolveFrom(helper.fixtures.scopes.localPath, [`@${helper.scopes.remote}/comp2/dist/index.js`])
-        ).to.be.a.path();
-        expect(
-          resolveFrom(helper.fixtures.scopes.localPath, [`@${helper.scopes.remote}/comp3/dist/index.js`])
-        ).to.be.a.path();
-        expect(
-          resolveFrom(helper.fixtures.scopes.localPath, [`@${helper.scopes.remote}/comp4/dist/index.js`])
-        ).to.be.a.path();
+      });
+      it('should create the dist folders in nested injected directories of the components', () => {
         expect(
           resolveFrom(rootCompDir(helper, 'comp3'), [`@${helper.scopes.remote}/comp3/dist/index.js`])
         ).to.be.a.path();
@@ -359,6 +367,13 @@ module.exports.default = {
             `@${helper.scopes.remote}/comp3`,
             `@${helper.scopes.remote}/comp2`,
             `@${helper.scopes.remote}/comp1/dist/index.js`,
+          ])
+        ).to.be.a.path();
+        expect(
+          resolveFrom(rootCompDir(helper, 'comp3'), [
+            `@${helper.scopes.remote}/comp3`,
+            `@${helper.scopes.remote}/comp2`,
+            `@${helper.scopes.remote}/comp1/dist/foo.js`,
           ])
         ).to.be.a.path();
         expect(
@@ -425,7 +440,6 @@ module.exports.default = {
     before(() => {
       helper = new Helper();
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(4);
       helper.extensions.bitJsonc.addKeyValToDependencyResolver('nodeLinker', 'hoisted');
       helper.extensions.bitJsonc.addKeyValToDependencyResolver('rootComponents', true);
@@ -729,21 +743,26 @@ module.exports.default = {
     });
     describe('compilation', () => {
       before(() => {
+        helper.fs.outputFile(`comp1/foo.ts`, ``);
         helper.command.compile();
       });
-      it('should create the dist folder in all the locations of the component', () => {
+      it('should create the dist folder in the linked directories', () => {
+        const resolveFromLocal = resolveFrom.bind(null, helper.fixtures.scopes.localPath);
+        expect(resolveFromLocal([`@${helper.scopes.remote}/comp1/dist/index.js`])).to.be.a.path();
+        expect(resolveFromLocal([`@${helper.scopes.remote}/comp1/dist/foo.js`])).to.be.a.path();
+        expect(resolveFromLocal([`@${helper.scopes.remote}/comp2/dist/index.js`])).to.be.a.path();
+        expect(resolveFromLocal([`@${helper.scopes.remote}/comp3/dist/index.js`])).to.be.a.path();
+        expect(resolveFromLocal([`@${helper.scopes.remote}/comp4/dist/index.js`])).to.be.a.path();
+      });
+      it('should create the dist folder in the root injected folder', () => {
         expect(
-          resolveFrom(helper.fixtures.scopes.localPath, [`@${helper.scopes.remote}/comp1/dist/index.js`])
+          path.join(
+            helper.fixtures.scopes.localPath,
+            `node_modules/@${helper.scopes.remote}/comp1/node_modules/@${helper.scopes.remote}/comp1/dist/foo.js`
+          )
         ).to.be.a.path();
-        expect(
-          resolveFrom(helper.fixtures.scopes.localPath, [`@${helper.scopes.remote}/comp2/dist/index.js`])
-        ).to.be.a.path();
-        expect(
-          resolveFrom(helper.fixtures.scopes.localPath, [`@${helper.scopes.remote}/comp3/dist/index.js`])
-        ).to.be.a.path();
-        expect(
-          resolveFrom(helper.fixtures.scopes.localPath, [`@${helper.scopes.remote}/comp4/dist/index.js`])
-        ).to.be.a.path();
+      });
+      it('should create the dist folders in nested injected directories of the components', () => {
         expect(
           resolveFrom(rootCompDir(helper, 'comp3'), [`@${helper.scopes.remote}/comp3/dist/index.js`])
         ).to.be.a.path();
@@ -758,6 +777,13 @@ module.exports.default = {
             `@${helper.scopes.remote}/comp3`,
             `@${helper.scopes.remote}/comp2`,
             `@${helper.scopes.remote}/comp1/dist/index.js`,
+          ])
+        ).to.be.a.path();
+        expect(
+          resolveFrom(rootCompDir(helper, 'comp3'), [
+            `@${helper.scopes.remote}/comp3`,
+            `@${helper.scopes.remote}/comp2`,
+            `@${helper.scopes.remote}/comp1/dist/foo.js`,
           ])
         ).to.be.a.path();
         expect(
@@ -824,7 +850,6 @@ module.exports.default = {
     before(() => {
       helper = new Helper();
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(4);
       helper.extensions.bitJsonc.setPackageManager('teambit.dependencies/yarn');
       helper.extensions.bitJsonc.addKeyValToDependencyResolver('rootComponents', true);
@@ -1067,21 +1092,26 @@ module.exports.default = {
     });
     describe('compilation', () => {
       before(() => {
+        helper.fs.outputFile(`comp1/foo.ts`, ``);
         helper.command.compile();
       });
-      it('should create the dist folder in all the locations of the component', () => {
+      it('should create the dist folder in the linked directories', () => {
+        const resolveFromLocal = resolveFrom.bind(null, helper.fixtures.scopes.localPath);
+        expect(resolveFromLocal([`@${helper.scopes.remote}/comp1/dist/index.js`])).to.be.a.path();
+        expect(resolveFromLocal([`@${helper.scopes.remote}/comp1/dist/foo.js`])).to.be.a.path();
+        expect(resolveFromLocal([`@${helper.scopes.remote}/comp2/dist/index.js`])).to.be.a.path();
+        expect(resolveFromLocal([`@${helper.scopes.remote}/comp3/dist/index.js`])).to.be.a.path();
+        expect(resolveFromLocal([`@${helper.scopes.remote}/comp4/dist/index.js`])).to.be.a.path();
+      });
+      it('should create the dist folder in the root injected folder', () => {
         expect(
-          resolveFrom(helper.fixtures.scopes.localPath, [`@${helper.scopes.remote}/comp1/dist/index.js`])
+          path.join(
+            helper.fixtures.scopes.localPath,
+            `node_modules/@${helper.scopes.remote}/comp1/node_modules/@${helper.scopes.remote}/comp1/dist/foo.js`
+          )
         ).to.be.a.path();
-        expect(
-          resolveFrom(helper.fixtures.scopes.localPath, [`@${helper.scopes.remote}/comp2/dist/index.js`])
-        ).to.be.a.path();
-        expect(
-          resolveFrom(helper.fixtures.scopes.localPath, [`@${helper.scopes.remote}/comp3/dist/index.js`])
-        ).to.be.a.path();
-        expect(
-          resolveFrom(helper.fixtures.scopes.localPath, [`@${helper.scopes.remote}/comp4/dist/index.js`])
-        ).to.be.a.path();
+      });
+      it('should create the dist folders in nested injected directories of the components', () => {
         expect(
           resolveFrom(rootCompDir(helper, 'comp3'), [`@${helper.scopes.remote}/comp3/dist/index.js`])
         ).to.be.a.path();
@@ -1096,6 +1126,13 @@ module.exports.default = {
             `@${helper.scopes.remote}/comp3`,
             `@${helper.scopes.remote}/comp2`,
             `@${helper.scopes.remote}/comp1/dist/index.js`,
+          ])
+        ).to.be.a.path();
+        expect(
+          resolveFrom(rootCompDir(helper, 'comp3'), [
+            `@${helper.scopes.remote}/comp3`,
+            `@${helper.scopes.remote}/comp2`,
+            `@${helper.scopes.remote}/comp1/dist/foo.js`,
           ])
         ).to.be.a.path();
         expect(
@@ -1164,36 +1201,37 @@ describe('env root components', function () {
   this.timeout(0);
 
   describe('pnpm isolated linker', function () {
+    const env1DefaultPeerVersion = '16.14.0';
+    const env2DefaultPeerVersion = '16.13.1';
     before(() => {
       helper = new Helper();
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.command.create('react-env', 'custom-react/env1', '-p custom-react/env1');
-      helper.fs.outputFile(
-        `custom-react/env1/env1.main.runtime.ts`,
-        envSettingDeps('env1', {
+      helper.fixtures.populateEnvMainRuntime(`custom-react/env1/env1.main.runtime.ts`, {
+        envName: 'env1',
+        dependencies: {
           peers: [
             {
               name: 'react',
               supportedRange: '^16.8.0',
-              version: '16.14.0',
+              version: env1DefaultPeerVersion,
             },
           ],
-        })
-      );
+        },
+      });
       helper.command.create('react-env', 'custom-react/env2', '-p custom-react/env2');
-      helper.fs.outputFile(
-        `custom-react/env2/env2.main.runtime.ts`,
-        envSettingDeps('env2', {
+      helper.fixtures.populateEnvMainRuntime(`custom-react/env2/env2.main.runtime.ts`, {
+        envName: 'env2',
+        dependencies: {
           peers: [
             {
               name: 'react',
               supportedRange: '^16.8.0',
-              version: '16.13.1',
+              version: env2DefaultPeerVersion,
             },
           ],
-        })
-      );
+        },
+      });
       helper.fixtures.populateComponents(4);
       helper.extensions.bitJsonc.addKeyValToDependencyResolver('rootComponents', true);
       helper.bitJsonc.addKeyVal(`${helper.scopes.remote}/comp3`, {});
@@ -1257,12 +1295,12 @@ module.exports.default = {
         fs.readJsonSync(
           resolveFrom(rootCompDirDep(helper, 'custom-react.env1', 'custom-react.env1'), ['react/package.json'])
         ).version
-      ).to.match(/^17\./);
+      ).to.eq(env1DefaultPeerVersion);
       expect(
         fs.readJsonSync(
-          resolveFrom(rootCompDirDep(helper, 'custom-react.env2', 'custom-react.env1'), ['react/package.json'])
+          resolveFrom(rootCompDirDep(helper, 'custom-react.env2', 'custom-react.env2'), ['react/package.json'])
         ).version
-      ).to.match(/^17\./);
+      ).to.eq(env2DefaultPeerVersion);
     });
   });
 });
@@ -1274,7 +1312,6 @@ module.exports.default = {
   before(async () => {
     helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
     helper.scopeHelper.setNewLocalAndRemoteScopes();
-    helper.bitJsonc.setupDefault();
     helper.bitJsonc.setPackageManager(`teambit.dependencies/pnpm`);
     npmCiRegistry = new NpmCiRegistry(helper);
     await npmCiRegistry.init();
@@ -1409,14 +1446,6 @@ module.exports.default = {
   });
 });
 
-function resolveFrom(fromDir: string, moduleIds: string[]) {
-  if (moduleIds.length === 0) return fromDir;
-  const [moduleId, ...rest] = moduleIds;
-  // We use the "resolve" library because the native "require.resolve" method uses a cache.
-  // So with the native resolve method we cannot check the same path twice.
-  return resolveFrom(resolveSync(moduleId, { basedir: fromDir, preserveSymlinks: false }), rest);
-}
-
 function getMainAspect(remoteScope: string) {
   return `import { MainRuntime } from '@teambit/cli';
   import { DepAspectAspect, DepAspectMain } from '@ci/${remoteScope}.dep-aspect';
@@ -1469,7 +1498,6 @@ describe('env peer dependencies hoisting', function () {
     before(() => {
       helper = new Helper();
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.extensions.bitJsonc.addKeyValToDependencyResolver('rootComponents', true);
       helper.command.create('react', 'my-button', '-p my-button');
       helper.command.install();
@@ -1524,12 +1552,11 @@ describe('env peer dependencies hoisting when the env is in the workspace', func
   function prepare(pm: 'yarn' | 'pnpm') {
     helper = new Helper();
     helper.scopeHelper.setNewLocalAndRemoteScopes();
-    helper.bitJsonc.setupDefault();
     helper.extensions.bitJsonc.setPackageManager(`teambit.dependencies/${pm}`);
     helper.command.create('react-env', 'custom-react/env1', '-p custom-react/env1');
-    helper.fs.outputFile(
-      `custom-react/env1/env1.main.runtime.ts`,
-      envSettingDeps('env1', {
+    helper.fixtures.populateEnvMainRuntime(`custom-react/env1/env1.main.runtime.ts`, {
+      envName: 'env1',
+      dependencies: {
         peers: [
           {
             name: 'react',
@@ -1537,12 +1564,12 @@ describe('env peer dependencies hoisting when the env is in the workspace', func
             version: '16.14.0',
           },
         ],
-      })
-    );
+      },
+    });
     helper.command.create('react-env', 'custom-react/env2', '-p custom-react/env2');
-    helper.fs.outputFile(
-      `custom-react/env2/env2.main.runtime.ts`,
-      envSettingDeps('env2', {
+    helper.fixtures.populateEnvMainRuntime(`custom-react/env2/env2.main.runtime.ts`, {
+      envName: 'env2',
+      dependencies: {
         peers: [
           {
             name: 'react',
@@ -1550,8 +1577,8 @@ describe('env peer dependencies hoisting when the env is in the workspace', func
             version: '18.0.0',
           },
         ],
-      })
-    );
+      },
+    });
     helper.fixtures.populateComponents(2);
     helper.extensions.bitJsonc.addKeyValToDependencyResolver('rootComponents', true);
     helper.fs.outputFile(`comp1/index.js`, `const React = require("react")`);
@@ -1566,32 +1593,21 @@ describe('env peer dependencies hoisting when the env is in the workspace', func
   }
 });
 
-function envSettingDeps(envName: string, deps: any) {
-  const capitalizedEnvName = envName[0].toUpperCase() + envName.substring(1);
-  return `
-import { MainRuntime } from '@teambit/cli';
-import { ReactAspect, ReactMain } from '@teambit/react';
-import { EnvsAspect, EnvsMain } from '@teambit/envs';
-import { ${capitalizedEnvName}Aspect } from './${envName}.aspect';
-
-export class EnvMain {
-static slots = [];
-
-static dependencies = [ReactAspect, EnvsAspect];
-
-static runtime = MainRuntime;
-
-static async provider([react, envs]: [ReactMain, EnvsMain]) {
-const templatesReactEnv = envs.compose(react.reactEnv, [
-envs.override({
-getDependencies: () => (${JSON.stringify(deps)}),
-})
-]);
-envs.registerEnv(templatesReactEnv);
-return new EnvMain();
-}
-}
-
-${capitalizedEnvName}Aspect.addRuntime(EnvMain);
-`;
-}
+describe('create with root components on', function () {
+  let helper: Helper;
+  this.timeout(0);
+  before(() => {
+    helper = new Helper();
+    helper.scopeHelper.setNewLocalAndRemoteScopes();
+    helper.extensions.bitJsonc.addKeyValToDependencyResolver('rootComponents', true);
+    helper.command.create('react', 'my-button');
+  });
+  it('should create the runtime component directory for the created component', () => {
+    expect(
+      path.join(
+        helper.fixtures.scopes.localPath,
+        `node_modules/@${helper.scopes.remote}/my-button/node_modules/@${helper.scopes.remote}/my-button/dist/index.js`
+      )
+    ).to.be.a.path();
+  });
+});

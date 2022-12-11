@@ -93,6 +93,9 @@ export function componentSchema(componentExtension: ComponentMain) {
         # list of component releases.
         tags: [Tag]!
 
+        # Log entry of the component.
+        log: LogEntry!
+
         """
         component logs
         """
@@ -158,6 +161,16 @@ export function componentSchema(componentExtension: ComponentMain) {
         displayName: (component: Component) => component.displayName,
         fs: (component: Component) => {
           return component.state.filesystem.files.map((file) => file.relative);
+        },
+        log: async (component: Component) => {
+          const snap = await component.loadSnap(component.id.version);
+          return {
+            ...snap,
+            date: snap.timestamp.getTime(),
+            email: snap.author.email,
+            username: snap.author.displayName,
+            id: snap.hash,
+          };
         },
         getFile: (component: Component, { path }: { path: string }) => {
           const maybeFile = component.state.filesystem.files.find(

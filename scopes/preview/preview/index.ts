@@ -1,6 +1,7 @@
 export { PreviewAspect as default, PreviewAspect, PreviewRuntime } from './preview.aspect';
 
 export * from './events';
+export { PreviewEnv, Preview } from './preview-env';
 export type {
   PreviewMain,
   EnvPreviewConfig,

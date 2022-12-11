@@ -118,7 +118,7 @@ export class WorkspaceManifestFactory {
   ): Promise<ComponentDependenciesMap> {
     const buildResultsP = components.map(async (component) => {
       const packageName = componentIdToPackageName(component.state._consumer);
-      let depList = await this.dependencyResolver.getDependencies(component);
+      let depList = await this.dependencyResolver.getDependencies(component, {includeHidden: true});
       const componentPolicy = await this.dependencyResolver.getPolicy(component);
       const additionalDeps = {};
       if (hasRootComponents) {
@@ -128,7 +128,6 @@ export class WorkspaceManifestFactory {
           if (
             !comp.isExtension &&
             !coreAspectIds.includes(compIdWithoutVersion) &&
-            comp.lifecycle === 'runtime' &&
             components.some((c) => c.id.isEqual(comp.componentId))
           ) {
             const pkgName = comp.getPackageName();
@@ -173,7 +172,7 @@ export class WorkspaceManifestFactory {
     rootPolicy: WorkspacePolicy,
     dependencyList: DependencyList
   ): Promise<void> {
-    const mergedPolicies = await this.dependencyResolver.mergeVariantPolicies(component.config.extensions);
+    const mergedPolicies = await this.dependencyResolver.getPolicy(component);
     dependencyList.forEach((dep) => {
       updateDependencyVersion(dep, rootPolicy, mergedPolicies);
     });

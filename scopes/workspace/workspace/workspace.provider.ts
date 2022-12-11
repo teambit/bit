@@ -18,7 +18,13 @@ import LegacyComponentLoader from '@teambit/legacy/dist/consumer/component/compo
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
 import { EXT_NAME } from './constants';
 import EjectConfCmd from './eject-conf.cmd';
-import { OnComponentLoad, OnComponentAdd, OnComponentChange, OnComponentRemove } from './on-component-events';
+import {
+  OnComponentLoad,
+  OnComponentAdd,
+  OnComponentChange,
+  OnComponentRemove,
+  OnMultipleComponentsAdd,
+} from './on-component-events';
 import { WorkspaceExtConfig } from './types';
 import { WatchCommand } from './watch/watch.cmd';
 import { Watcher, WatchOptions } from './watch/watcher';
@@ -57,6 +63,8 @@ export type OnComponentAddSlot = SlotRegistry<OnComponentAdd>;
 
 export type OnComponentRemoveSlot = SlotRegistry<OnComponentRemove>;
 
+export type OnMultipleComponentsAddSlot = SlotRegistry<OnMultipleComponentsAdd>;
+
 export type OnPreWatch = (components: Component[], watchOpts: WatchOptions) => Promise<void>;
 export type OnPreWatchSlot = SlotRegistry<OnPreWatch>;
 
@@ -77,11 +85,19 @@ export default async function provideWorkspace(
     envs,
   ]: WorkspaceDeps,
   config: WorkspaceExtConfig,
-  [onComponentLoadSlot, onComponentChangeSlot, onComponentAddSlot, onComponentRemoveSlot, onPreWatchSlot]: [
+  [
+    onComponentLoadSlot,
+    onComponentChangeSlot,
+    onComponentAddSlot,
+    onComponentRemoveSlot,
+    onMultipleComponentsAddSlot,
+    onPreWatchSlot,
+  ]: [
     OnComponentLoadSlot,
     OnComponentChangeSlot,
     OnComponentAddSlot,
     OnComponentRemoveSlot,
+    OnMultipleComponentsAddSlot,
     OnPreWatchSlot
   ],
   harmony: Harmony
@@ -108,6 +124,7 @@ export default async function provideWorkspace(
     envs,
     onComponentAddSlot,
     onComponentRemoveSlot,
+    onMultipleComponentsAddSlot,
     onPreWatchSlot,
     graphql
   );

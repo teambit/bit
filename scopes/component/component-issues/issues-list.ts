@@ -5,6 +5,7 @@ import { MissingComponents } from './missing-components';
 import { MissingDependenciesOnFs } from './missing-dependencies-on-fs';
 import { MissingDists } from './missing-dists';
 import { MissingPackagesDependenciesOnFs } from './missing-packages-dependencies-on-fs';
+import { MissingManuallyConfiguredPackages } from './missing-manually-configured-packages';
 import { ParseErrors } from './parse-errors';
 import { RelativeComponents } from './relative-components';
 import { RelativeComponentsAuthored } from './relative-components-authored';
@@ -18,6 +19,7 @@ import { DuplicateComponentAndPackage } from './duplicate-component-and-package'
 
 export const IssuesClasses = {
   MissingPackagesDependenciesOnFs,
+  MissingManuallyConfiguredPackages,
   MissingComponents,
   UntrackedDependencies,
   ResolveErrors,
@@ -67,7 +69,7 @@ export class IssuesList {
   }
 
   delete(IssueClass: typeof ComponentIssue) {
-    this.issues = this.issues.filter((issue) => !(issue instanceof IssueClass));
+    this.issues = this.issues.filter((issue) => issue.constructor.name !== IssueClass.name);
   }
 
   getIssue<T extends ComponentIssue>(IssueClass: { new (): T }): T | undefined {

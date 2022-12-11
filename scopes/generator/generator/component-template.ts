@@ -69,6 +69,11 @@ export interface ComponentTemplate {
   hidden?: boolean;
 
   /**
+   * env to use for the component.
+   */
+  env?: string;
+
+  /**
    * template function for generating the file of a certain component.,
    */
   generateFiles(context: ComponentContext): ComponentFile[];

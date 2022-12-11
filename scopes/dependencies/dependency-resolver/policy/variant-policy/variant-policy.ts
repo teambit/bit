@@ -23,11 +23,19 @@ export type VariantPolicyEntryValue = {
   resolveFromEnv?: boolean;
 };
 
-export type DependencySource = 'auto' | 'env' | 'slots' | 'config';
+export type DependencySource = 'auto' | 'env' | 'env-own' | 'slots' | 'config';
 
 export type VariantPolicyEntry = PolicyEntry & {
   value: VariantPolicyEntryValue;
   source?: DependencySource; // determines where the dependency was resolved from, e.g. from its env, or config
+    /**
+   * hide the dependency from the component's package.json / dependencies list
+   */
+  hidden?: boolean;
+  /**
+  * add to component dependencies only if it's used by the component.
+  */
+  usedOnly?: boolean;
 };
 
 export type SerializedVariantPolicyEntry = VariantPolicyEntry;
@@ -84,6 +92,10 @@ export class VariantPolicy implements Policy<VariantPolicyConfigObject> {
     return new VariantPolicy(filtered);
   }
 
+  hiddenOnly(): VariantPolicy {
+    return this.filter((dep) => !!dep.hidden);
+  }
+
   /**
    * Filter only deps which should be resolved from the env
    */
@@ -129,6 +141,32 @@ export class VariantPolicy implements Policy<VariantPolicyConfigObject> {
     return res;
   }
 
+  /**
+   * This used in in the legacy to apply env component policy on stuff that were auto detected
+   * it will take used only entries (which means entries that component are really uses)
+   * and in case of hidden deps it will mark them as removed using the "-" value to remove them from the component
+   * @returns
+   */
+  toLegacyAutoDetectOverrides(): DependenciesOverridesData {
+    const res: DependenciesOverridesData = {
+      dependencies: {},
+      devDependencies: {},
+      peerDependencies: {},
+    };
+    this._policiesEntries.reduce((acc, entry) => {
+      if (!entry.usedOnly) return acc;
+      const keyName = KEY_NAME_BY_LIFECYCLE_TYPE[entry.lifecycleType];
+      // if (entry.hidden){
+      //   acc[keyName][entry.dependencyId] = '-';
+      // } else {
+      //   acc[keyName][entry.dependencyId] = entry.value.version;
+      // }
+      acc[keyName][entry.dependencyId] = entry.value.version;
+      return acc;
+    }, res);
+    return res;
+  }
+
   toLegacyDepsOverrides(): DependenciesOverridesData {
     const res: DependenciesOverridesData = {
       dependencies: {},
@@ -136,6 +174,9 @@ export class VariantPolicy implements Policy<VariantPolicyConfigObject> {
       peerDependencies: {},
     };
     this._policiesEntries.reduce((acc, entry) => {
+      // entries that marked with used only, will be handled by the legacy deps resolver and will not be added to the overrides
+      // if (entry.usedOnly || entry.hidden) return acc;
+      if (entry.usedOnly) return acc;
       const keyName = KEY_NAME_BY_LIFECYCLE_TYPE[entry.lifecycleType];
       acc[keyName][entry.dependencyId] = entry.value.version;
       return acc;

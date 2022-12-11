@@ -12,6 +12,17 @@ import CommandHelper from './e2e-command-helper';
 import FsHelper from './e2e-fs-helper';
 import NpmHelper from './e2e-npm-helper';
 import ScopesData, { DEFAULT_OWNER } from './e2e-scopes';
+import BitJsoncHelper from './e2e-bit-jsonc-helper';
+
+type SetupWorkspaceOpts = {
+  addRemoteScopeAsDefaultScope?: boolean; // default to true, otherwise, the scope is "my-scope"
+  disablePreview?: boolean; // default to true to speed up the tag
+  disableMissingManuallyConfiguredPackagesIssue?: boolean; // default to true. otherwise, it'll always show missing babel/jest from react-env
+  registry?: string;
+  initGit?: boolean;
+  yarnRCConfig?: any;
+  npmrcConfig?: any;
+};
 
 export default class ScopeHelper {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -22,6 +33,7 @@ export default class ScopeHelper {
   command: CommandHelper;
   fs: FsHelper;
   npm: NpmHelper;
+  bitJsonc: BitJsoncHelper;
   cache?: Record<string, any>;
   keepEnvs: boolean;
   clonedScopes: string[] = [];
@@ -31,7 +43,8 @@ export default class ScopeHelper {
     scopes: ScopesData,
     commandHelper: CommandHelper,
     fsHelper: FsHelper,
-    npmHelper: NpmHelper
+    npmHelper: NpmHelper,
+    bitJsonc: BitJsoncHelper
   ) {
     this.debugMode = debugMode;
     this.keepEnvs = !!process.env.npm_config_keep_envs; // default = false
@@ -39,6 +52,7 @@ export default class ScopeHelper {
     this.command = commandHelper;
     this.fs = fsHelper;
     this.npm = npmHelper;
+    this.bitJsonc = bitJsonc;
   }
   clean() {
     fs.emptyDirSync(this.scopes.localPath);
@@ -66,10 +80,17 @@ export default class ScopeHelper {
   usePackageManager(packageManager: string) {
     this.packageManager = packageManager;
   }
-  reInitLocalScope(opts?: { registry?: string; initGit?: boolean; yarnRCConfig?: any; npmrcConfig?: any }) {
+
+  reInitLocalScope(opts?: SetupWorkspaceOpts) {
     this.cleanLocalScope();
     if (opts?.initGit) this.command.runCmd('git init');
     this.initWorkspace();
+
+    if (opts?.addRemoteScopeAsDefaultScope ?? true) this.bitJsonc.addDefaultScope();
+    if (opts?.disablePreview ?? true) this.bitJsonc.disablePreview();
+    if (opts?.disableMissingManuallyConfiguredPackagesIssue ?? true)
+      this.bitJsonc.disableMissingManuallyConfiguredPackagesIssue();
+
     if (opts?.registry) {
       this._writeNpmrc({
         registry: opts.registry,
@@ -116,7 +137,7 @@ export default class ScopeHelper {
       .join(' ');
     return this.command.runCmd(`bit init ${value}`);
   }
-  setNewLocalAndRemoteScopes(opts?: { yarnRCConfig?: any }) {
+  setNewLocalAndRemoteScopes(opts?: SetupWorkspaceOpts) {
     this.reInitLocalScope(opts);
     this.reInitRemoteScope();
     this.addRemoteScope();

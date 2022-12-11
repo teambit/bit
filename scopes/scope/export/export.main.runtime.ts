@@ -24,21 +24,20 @@ import GeneralError from '@teambit/legacy/dist/error/general-error';
 import HooksManager from '@teambit/legacy/dist/hooks';
 import { RemoveAspect, RemoveMain } from '@teambit/remove';
 import { NodeModuleLinker } from '@teambit/legacy/dist/links';
-import logger from '@teambit/legacy/dist/logger/logger';
-import { Lane, ModelComponent, Symlink, Version, ExportMetadata } from '@teambit/legacy/dist/scope/models';
+import { Lane, ModelComponent, Symlink, Version } from '@teambit/legacy/dist/scope/models';
 import hasWildcard from '@teambit/legacy/dist/utils/string/has-wildcard';
 import { Scope } from '@teambit/legacy/dist/scope';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
+import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { LaneReadmeComponent } from '@teambit/legacy/dist/scope/models/lane';
 import { Http } from '@teambit/legacy/dist/scope/network/http';
-import { ObjectList, ObjectItem } from '@teambit/legacy/dist/scope/objects/object-list';
+import { ObjectList } from '@teambit/legacy/dist/scope/objects/object-list';
 import mapSeries from 'p-map-series';
 import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
 import { Remote, Remotes } from '@teambit/legacy/dist/remotes';
 import { getScopeRemotes } from '@teambit/legacy/dist/scope/scope-remotes';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
-import { ExportVersions } from '@teambit/legacy/dist/scope/models/export-metadata';
 import {
   persistRemotes,
   validateRemotes,
@@ -79,14 +78,19 @@ type ExportParams = {
 };
 
 export class ExportMain {
-  constructor(private workspace: Workspace, private remove: RemoveMain, private depResolver: DependencyResolverMain) {}
+  constructor(
+    private workspace: Workspace,
+    private remove: RemoveMain,
+    private depResolver: DependencyResolverMain,
+    private logger: Logger
+  ) {}
 
   async export(params: ExportParams) {
     HooksManagerInstance.triggerHook(PRE_EXPORT_HOOK, params);
     const { updatedIds, nonExistOnBitMap, missingScope, exported, removedIds, exportedLanes } =
       await this.exportComponents(params);
     let ejectResults;
-    if (params.eject) ejectResults = await ejectExportedComponents(updatedIds);
+    if (params.eject) ejectResults = await ejectExportedComponents(updatedIds, this.logger);
     const exportResults = {
       componentsIds: exported,
       nonExistOnBitMap,
@@ -98,7 +102,7 @@ export class ExportMain {
     HooksManagerInstance.triggerHook(POST_EXPORT_HOOK, exportResults);
     if (Scope.onPostExport) {
       await Scope.onPostExport(exported, exportedLanes).catch((err) => {
-        logger.error('fatal: onPostExport encountered an error (this error does not stop the process)', err);
+        this.logger.error('fatal: onPostExport encountered an error (this error does not stop the process)', err);
       });
     }
     return exportResults;
@@ -163,8 +167,8 @@ export class ExportMain {
     if (laneObject) await updateLanesAfterExport(consumer, laneObject);
     const removedIds = await this.getRemovedStagedBitIds();
     const { updatedIds, nonExistOnBitMap } = _updateIdsOnBitMap(consumer.bitMap, updatedLocally);
-    await this.removeFromStagedConfig([...updatedIds, ...nonExistOnBitMap]);
     await linkComponents(updatedIds, consumer);
+    await this.removeFromStagedConfig(exported);
     Analytics.setExtraData('num_components', exported.length);
     // it is important to have consumer.onDestroy() before running the eject operation, we want the
     // export and eject operations to function independently. we don't want to lose the changes to
@@ -207,7 +211,7 @@ export class ExportMain {
     isOnMain?: boolean;
     exportHeadsOnly?: boolean;
   }): Promise<{ exported: BitIds; updatedLocally: BitIds; newIdsOnRemote: BitId[] }> {
-    logger.debugAndAddBreadCrumb('scope.exportMany', 'ids: {ids}', { ids: ids.toString() });
+    this.logger.debug(`scope.exportMany, ids: ${ids.toString()}`);
     const scopeRemotes: Remotes = await getScopeRemotes(scope);
     const idsGroupedByScope = ids.toGroupByScopeName(idsWithFutureScope);
 
@@ -252,7 +256,7 @@ export class ExportMain {
       allHashes.push(head);
     };
 
-    const getVersionsToExport = async (modelComponent: ModelComponent, lane?: Lane): Promise<string[]> => {
+    const getVersionsToExport = async (modelComponent: ModelComponent): Promise<string[]> => {
       if (exportHeadsOnly) {
         const head = modelComponent.head;
         if (!head)
@@ -262,18 +266,11 @@ export class ExportMain {
         return modelComponent.switchHashesWithTagsIfExist([head]);
       }
       const localTagsOrHashes = await modelComponent.getLocalTagsOrHashes(scope.objects);
-      if (!allVersions && !lane) {
+      if (!allVersions) {
         return localTagsOrHashes;
       }
-      let stopAt: Ref[] | undefined;
-      if (lane && !allVersions) {
-        // if lane is exported, components from other remotes may be part of this lane. we need their history.
-        // because their history could already exist on the remote from previous exports, we search this id in all
-        // remote-refs files of this lane-scope. while traversing the local history, stop when finding one of the remotes.
-        stopAt = await scope.objects.remoteLanes.getRefsFromAllLanesOnScope(lane.scope, modelComponent.toBitId());
-        if (modelComponent.laneHeadRemote) stopAt.push(modelComponent.laneHeadRemote);
-      }
-      const allHashes = await getAllVersionHashes({ modelComponent, repo: scope.objects, stopAt });
+
+      const allHashes = await getAllVersionHashes({ modelComponent, repo: scope.objects });
       await addMainHeadIfPossible(allHashes, modelComponent);
       return modelComponent.switchHashesWithTagsIfExist(allHashes);
     };
@@ -282,21 +279,7 @@ export class ExportMain {
     const groupedByScopeString = Object.keys(idsGroupedByScope)
       .map((scopeName) => `scope "${scopeName}": ${idsGroupedByScope[scopeName].toString()}`)
       .join(', ');
-    logger.debug(`export-scope-components, export to the following scopes ${groupedByScopeString}`);
-    const exportVersions: ExportVersions[] = [];
-
-    const populateExportMetadata = async (modelComponent: ModelComponent) => {
-      const localTagsOrHashes = await modelComponent.getLocalTagsOrHashes(scope.objects);
-      const head = modelComponent.getHeadRegardlessOfLane();
-      if (!head) {
-        throw new Error(`unable to export ${modelComponent.id()}, head is missing`);
-      }
-      exportVersions.push({
-        id: modelComponent.toBitId(),
-        versions: localTagsOrHashes,
-        head,
-      });
-    };
+    this.logger.debug(`export-scope-components, export to the following scopes ${groupedByScopeString}`);
 
     const getUpdatedObjectsToExport = async (
       remoteNameStr: string,
@@ -305,12 +288,12 @@ export class ExportMain {
     ): Promise<ObjectsPerRemoteExtended> => {
       bitIds.throwForDuplicationIgnoreVersion();
       const remote: Remote = await scopeRemotes.resolve(remoteNameStr, scope);
-      const idsToChangeLocally = BitIds.fromArray(bitIds.filter((id) => !id.scope || id.scope === remoteNameStr));
+      const idsToChangeLocally = BitIds.fromArray(bitIds.filter((id) => !id.scope));
       const componentsAndObjects: ModelComponentAndObjects[] = [];
       const objectList = new ObjectList();
       const objectListPerName: ObjectListPerName = {};
       const processModelComponent = async (modelComponent: ModelComponent) => {
-        const versionToExport = await getVersionsToExport(modelComponent, lane);
+        const versionToExport = await getVersionsToExport(modelComponent);
         modelComponent.clearStateData();
         const objectItems = await modelComponent.collectVersionsObjects(
           scope.objects,
@@ -320,7 +303,6 @@ export class ExportMain {
         const objectsList = await new ObjectList(objectItems).toBitObjects();
         const componentAndObject = { component: modelComponent, objects: objectsList.getAll() };
         await this.convertToCorrectScopeHarmony(scope, componentAndObject, remoteNameStr, bitIds, idsWithFutureScope);
-        await populateExportMetadata(modelComponent);
         const remoteObj = { url: remote.host, name: remote.name, date: Date.now().toString() };
         modelComponent.addScopeListItem(remoteObj);
         componentsAndObjects.push(componentAndObject);
@@ -366,20 +348,8 @@ export class ExportMain {
           getUpdatedObjectsToExport(scopeName, idsGroupedByScope[scopeName], laneObject)
         );
 
-    const getExportMetadata = async (): Promise<ObjectItem> => {
-      const exportMetadata = new ExportMetadata({ exportVersions });
-      const exportMetadataObj = await exportMetadata.compress();
-      const exportMetadataItem: ObjectItem = {
-        ref: exportMetadata.hash(),
-        buffer: exportMetadataObj,
-        type: ExportMetadata.name,
-      };
-      return exportMetadataItem;
-    };
-
     const pushAllToCentralHub = async () => {
       const objectList = this.transformToOneObjectListWithScopeData(manyObjectsPerRemote);
-      objectList.addIfNotExist([await getExportMetadata()]);
       const http = await Http.connect(CENTRAL_BIT_HUB_URL, CENTRAL_BIT_HUB_NAME);
       const pushResults = await http.pushToCentralHub(objectList);
       const { failedScopes, successIds, errors } = pushResults;
@@ -407,14 +377,11 @@ export class ExportMain {
         const { remote, idsToChangeLocally, componentsAndObjects, exportedIds } = objectsPerRemote;
         const remoteNameStr = remote.name;
         // on Harmony, version hashes don't change, the new versions will replace the old ones.
-        // on the legacy, even when the hash changed, it's fine to have the old objects laying around.
-        // (could be removed in the future by some garbage collection).
         const removeComponentVersions = false;
         const refsToRemove = await Promise.all(
           idsToChangeLocally.map((id) => scope.sources.getRefsForComponentRemoval(id, removeComponentVersions))
         );
         scope.objects.removeManyObjects(refsToRemove.flat());
-        // @ts-ignore
         idsToChangeLocally.forEach((id) => {
           scope.createSymlink(id, idsWithFutureScope.searchWithoutScopeAndVersion(id)?.scope || remoteNameStr);
         });
@@ -499,7 +466,7 @@ export class ExportMain {
     resumeExportId?: string
   ): Promise<void> {
     if (resumeExportId) {
-      logger.debug('pushRemotesPendingDir - skip as the resumeExportId was passed');
+      this.logger.debug('pushRemotesPendingDir - skip as the resumeExportId was passed');
       // no need to transfer the objects, they're already on the server. also, since this clientId
       // exists already on the remote pending-dir, it'll cause a collision.
       return;
@@ -511,13 +478,12 @@ export class ExportMain {
       loader.start(`transferring ${objectList.count()} objects to the remote "${remote.name}"...`);
       try {
         await remote.pushMany(objectList, pushOptions, {});
-        logger.debugAndAddBreadCrumb(
-          'export-scope-components.pushRemotesPendingDir',
-          'successfully pushed all objects to the pending-dir directory on the remote'
+        this.logger.debug(
+          'pushRemotesPendingDir, successfully pushed all objects to the pending-dir directory on the remote'
         );
         pushedRemotes.push(remote);
       } catch (err: any) {
-        logger.warnAndAddBreadCrumb('exportMany', 'failed pushing objects to the remote');
+        this.logger.warn('exportMany, failed pushing objects to the remote');
         await removePendingDirs(pushedRemotes, clientId);
         throw err;
       }
@@ -581,23 +547,29 @@ export class ExportMain {
     function changeDependencyScope(version: Version): boolean {
       let hasChanged = false;
       version.getAllDependencies().forEach((dependency) => {
-        const updatedScope = getIdWithUpdatedScope(dependency.id);
-        if (!updatedScope.isEqual(dependency.id)) {
+        const updatedIdWithScope = getIdWithUpdatedScope(dependency.id);
+        if (!dependency.id.scope) {
           hasChanged = true;
-          dependency.id = updatedScope;
+          dependency.id = updatedIdWithScope;
         }
       });
-      const ids: BitIds = version.flattenedDependencies;
-      const needsChange = ids.some((id) => id.scope !== remoteScope);
+      const flattenedIds: BitIds = version.flattenedDependencies;
+      const needsChange = flattenedIds.some((id) => !id.scope);
       if (needsChange) {
-        version.flattenedDependencies = getBitIdsWithUpdatedScope(ids);
-        version.flattenedEdges = version.flattenedEdges.map((edge) => ({
+        version.flattenedDependencies = getBitIdsWithUpdatedScope(flattenedIds);
+        hasChanged = true;
+      }
+      version.flattenedEdges = version.flattenedEdges.map((edge) => {
+        if (edge.source.scope && edge.target.scope) {
+          return edge;
+        }
+        hasChanged = true;
+        return {
           ...edge,
           source: getIdWithUpdatedScope(edge.source),
           target: getIdWithUpdatedScope(edge.target),
-        }));
-        hasChanged = true;
-      }
+        };
+      });
       return hasChanged;
     }
 
@@ -616,26 +588,21 @@ export class ExportMain {
     }
 
     function getIdWithUpdatedScope(dependencyId: BitId): BitId {
-      if (dependencyId.scope === remoteScope) {
-        return dependencyId; // nothing has changed
+      if (dependencyId.scope) {
+        return dependencyId; // it's not new
       }
-      // either, dependencyId is new, or this dependency is among the components to export (in case of fork)
-      if (!dependencyId.scope || exportingIds.hasWithoutVersion(dependencyId)) {
-        const depId = ModelComponent.fromBitId(dependencyId);
-        // todo: use 'load' for async and switch the foreach with map.
-        const dependencyObject = scope.objects.loadSync(depId.hash());
-        if (dependencyObject instanceof Symlink) {
-          return dependencyId.changeScope(dependencyObject.realScope);
-        }
-        const currentlyExportedDep = idsWithFutureScope.searchWithoutScopeAndVersion(dependencyId);
-        if (currentlyExportedDep && currentlyExportedDep.scope) {
-          // it's possible that a dependency has a different defaultScope settings.
-          return dependencyId.changeScope(currentlyExportedDep.scope);
-        }
-        return dependencyId.changeScope(remoteScope);
+      const depId = ModelComponent.fromBitId(dependencyId);
+      // todo: use 'load' for async and switch the foreach with map.
+      const dependencyObject = scope.objects.loadSync(depId.hash());
+      if (dependencyObject instanceof Symlink) {
+        return dependencyId.changeScope(dependencyObject.realScope);
       }
-      return dependencyId;
+      const currentlyExportedDep = idsWithFutureScope.searchWithoutScopeAndVersion(dependencyId);
+      const scopeName = currentlyExportedDep?.scope || remoteScope;
+      if (!scopeName) throw new Error(`unable to find scopeName for ${dependencyId.toString()}`);
+      return dependencyId.changeScope(scopeName);
     }
+
     function getBitIdsWithUpdatedScope(bitIds: BitIds): BitIds {
       const updatedIds = bitIds.map((id) => getIdWithUpdatedScope(id));
       return BitIds.fromArray(updatedIds);
@@ -643,6 +610,7 @@ export class ExportMain {
   }
 
   private async removeFromStagedConfig(ids: BitId[]) {
+    this.logger.debug(`removeFromStagedConfig, ${ids.length} ids`);
     const componentIds = await this.workspace.resolveMultipleComponentIds(ids);
     const stagedConfig = await this.workspace.scope.getStagedConfig();
     componentIds.map((compId) => stagedConfig.removeComponentConfig(compId));
@@ -741,15 +709,17 @@ export class ExportMain {
   }
 
   static runtime = MainRuntime;
-  static dependencies = [CLIAspect, ScopeAspect, WorkspaceAspect, RemoveAspect, DependencyResolverAspect];
-  static async provider([cli, scope, workspace, remove, depResolver]: [
+  static dependencies = [CLIAspect, ScopeAspect, WorkspaceAspect, RemoveAspect, DependencyResolverAspect, LoggerAspect];
+  static async provider([cli, scope, workspace, remove, depResolver, loggerMain]: [
     CLIMain,
     ScopeMain,
     Workspace,
     RemoveMain,
-    DependencyResolverMain
+    DependencyResolverMain,
+    LoggerMain
   ]) {
-    const exportMain = new ExportMain(workspace, remove, depResolver);
+    const logger = loggerMain.createLogger(ExportAspect.id);
+    const exportMain = new ExportMain(workspace, remove, depResolver, logger);
     cli.register(new ResumeExportCmd(scope), new ExportCmd(exportMain));
     return exportMain;
   }
@@ -757,12 +727,15 @@ export class ExportMain {
 
 ExportAspect.addRuntime(ExportMain);
 
+/**
+ * the componentsIds passed here are the ones that didn't have scope-name before, and now they have.
+ * so if the bitMap.updateComponentId returns bitId without scope-name is because it couldn't find it there
+ */
 function _updateIdsOnBitMap(bitMap: BitMap, componentsIds: BitIds): { updatedIds: BitId[]; nonExistOnBitMap: BitIds } {
-  const updatedIds = [];
+  const updatedIds: BitId[] = [];
   const nonExistOnBitMap = new BitIds();
   componentsIds.forEach((componentsId) => {
     const resultId = bitMap.updateComponentId(componentsId, true);
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (resultId.hasVersion()) updatedIds.push(resultId);
     else nonExistOnBitMap.push(resultId);
   });
@@ -784,6 +757,9 @@ async function getParsedId(consumer: Consumer, id: string): Promise<BitId> {
   }
 }
 
+/**
+ * re-generate the package.json, this way, it has the correct data in the componentId prop.
+ */
 async function linkComponents(ids: BitId[], consumer: Consumer): Promise<void> {
   // we don't have much of a choice here, we have to load all the exported components in order to link them
   // some of the components might be authored, some might be imported.
@@ -793,7 +769,7 @@ async function linkComponents(ids: BitId[], consumer: Consumer): Promise<void> {
   await nodeModuleLinker.link();
 }
 
-async function ejectExportedComponents(componentsIds): Promise<EjectResults> {
+async function ejectExportedComponents(componentsIds, logger: Logger): Promise<EjectResults> {
   const consumer: Consumer = await loadConsumer(undefined, true);
   let ejectResults: EjectResults;
   try {

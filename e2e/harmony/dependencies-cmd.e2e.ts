@@ -1,6 +1,8 @@
+import { IssuesClasses } from '@teambit/component-issues';
 import { expect } from 'chai';
 import { Extensions } from '../../src/constants';
 import Helper from '../../src/e2e-helper/e2e-helper';
+import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
 
 describe('bit dependencies command', function () {
   let helper: Helper;
@@ -97,12 +99,66 @@ describe('bit dependencies command', function () {
         expect(show).to.have.string('@scoped/button@3.3.1');
       });
     });
+    describe('adding prod dep, tagging then adding devDep', () => {
+      before(() => {
+        helper.scopeHelper.setNewLocalAndRemoteScopes();
+        helper.fixtures.populateComponents(1);
+        helper.command.dependenciesSet('comp1', 'lodash@3.3.1');
+        helper.command.tagAllWithoutBuild();
+        helper.command.dependenciesSet('comp1', 'ramda@0.0.20', '--dev');
+      });
+      it('should not remove the previously added dependencies', () => {
+        const show = helper.command.showComponent('comp1');
+        expect(show).to.have.string('lodash');
+      });
+    });
+    (supportNpmCiRegistryTesting ? describe : describe.skip)('adding component dependency', () => {
+      let npmCiRegistry: NpmCiRegistry;
+      before(async () => {
+        helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
+        helper.scopeHelper.setNewLocalAndRemoteScopes();
+        helper.bitJsonc.setupDefault();
+        npmCiRegistry = new NpmCiRegistry(helper);
+        await npmCiRegistry.init();
+        npmCiRegistry.configureCiInPackageJsonHarmony();
+        helper.fixtures.populateComponents(1, false);
+        helper.fixtures.createComponentBarFoo();
+        helper.fixtures.addComponentBarFooAsDir();
+        helper.command.compile();
+        helper.command.install();
+        helper.command.tagAllComponents();
+        helper.command.export();
+      });
+      after(() => {
+        npmCiRegistry.destroy();
+        helper = new Helper();
+      });
+      describe('adding a component dependency when it is not installed locally', () => {
+        before(() => {
+          helper.scopeHelper.reInitLocalScope({ disableMissingManuallyConfiguredPackagesIssue: false });
+          helper.scopeHelper.addRemoteScope();
+          helper.command.importComponent('comp1');
+          helper.command.dependenciesSet('comp1', `${helper.general.getPackageNameByCompName('bar/foo')}@0.0.1`);
+        });
+        it('bit status should show it as missing', () => {
+          helper.command.expectStatusToHaveIssue(IssuesClasses.MissingManuallyConfiguredPackages.name);
+        });
+        it('bit install should fix it', () => {
+          helper.command.install();
+          helper.command.expectStatusToNotHaveIssues();
+        });
+        it('should recognize it as a component after the installation', () => {
+          const deps = helper.command.dependenciesGet('comp1');
+          expect(deps).to.include('bar/foo@0.0.1');
+        });
+      });
+    });
   });
   describe('bit deps remove - removing components', () => {
     describe('removing a component', () => {
       let beforeRemove: string;
       before(() => {
-        helper.scopeHelper.setNewLocalAndRemoteScopes();
+        helper.scopeHelper.setNewLocalAndRemoteScopes({ addRemoteScopeAsDefaultScope: false });
         helper.fixtures.populateComponents(2);
         beforeRemove = helper.scopeHelper.cloneLocalScope();
       });

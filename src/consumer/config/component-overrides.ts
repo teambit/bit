@@ -8,6 +8,7 @@ import {
   OVERRIDE_FILE_PREFIX,
 } from '../../constants';
 import { filterObject } from '../../utils';
+import { SourceFile } from '../component/sources';
 import ComponentConfig from './component-config';
 import {
   ConsumerOverridesOfComponent,
@@ -39,7 +40,7 @@ export default class ComponentOverrides {
     this.overrides = overrides || {};
   }
   static componentOverridesLoadingRegistry: OverridesLoadRegistry = {};
-  static registerOnComponentOverridesLoading(extId, func: (id, config) => any) {
+  static registerOnComponentOverridesLoading(extId, func: (id, config, legacyFiles) => any) {
     this.componentOverridesLoadingRegistry[extId] = func;
   }
 
@@ -70,7 +71,8 @@ export default class ComponentOverrides {
     workspaceConfig: ILegacyWorkspaceConfig,
     overridesFromModel: ComponentOverridesData | undefined,
     componentConfig: ComponentConfig,
-    isLegacy: boolean
+    isLegacy: boolean,
+    files: SourceFile[]
   ): Promise<ComponentOverrides> {
     // overrides from consumer-config is not relevant and should not affect imported
     let legacyOverridesFromConsumer = workspaceConfig?.getComponentConfig(componentId);
@@ -93,7 +95,9 @@ export default class ComponentOverrides {
     if (!isLegacy) {
       extensionsAddedOverrides = await runOnLoadOverridesEvent(
         this.componentOverridesLoadingRegistry,
-        componentConfig.parseExtensions()
+        componentConfig.parseExtensions(),
+        componentId,
+        files
       );
     }
     const mergedLegacyConsumerOverridesWithExtensions = mergeOverrides(
@@ -223,12 +227,14 @@ function mergeExtensionsOverrides(configs: DependenciesOverridesData[]): any {
  */
 async function runOnLoadOverridesEvent(
   configsRegistry: OverridesLoadRegistry,
-  extensions: ExtensionDataList
+  extensions: ExtensionDataList,
+  id: BitId,
+  files: SourceFile[]
 ): Promise<DependenciesOverridesData> {
   const extensionsAddedOverridesP = Object.keys(configsRegistry).map((extId) => {
     // TODO: only running func for relevant extensions
     const func = configsRegistry[extId];
-    return func(extensions);
+    return func(extensions, id, files);
   });
   const extensionsAddedOverrides = await Promise.all(extensionsAddedOverridesP);
   let extensionsConfigModificationsObject = mergeExtensionsOverrides(extensionsAddedOverrides);

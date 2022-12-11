@@ -5,6 +5,7 @@ export type AspectDefinitionProps = {
   component?: Component;
   aspectPath: string;
   runtimePath: string | null;
+  aspectFilePath: string | null;
 };
 
 export class AspectDefinition {
@@ -13,6 +14,11 @@ export class AspectDefinition {
      * path the the root directory of the aspect module.
      */
     readonly aspectPath: string,
+
+    /**
+     * path the the aspect file (.aspect).
+     */
+    readonly aspectFilePath: string | null,
 
     /**
      * path to the runtime entry
@@ -29,7 +35,8 @@ export class AspectDefinition {
     /**
      * aspect defined using 'file://' protocol
      */
-    readonly local?: boolean
+    readonly local?: boolean,
+
   ) {}
 
   get getId() {
@@ -38,7 +45,7 @@ export class AspectDefinition {
     return null;
   }
 
-  static from({ component, aspectPath, runtimePath, id }: AspectDefinitionProps) {
-    return new AspectDefinition(aspectPath, runtimePath, component, id);
+  static from({ component, aspectPath, aspectFilePath, runtimePath, id }: AspectDefinitionProps) {
+    return new AspectDefinition(aspectPath, aspectFilePath, runtimePath, component, id);
   }
 }

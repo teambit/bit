@@ -179,7 +179,7 @@ export class TesterMain {
    * @returns
    */
   getPatterns() {
-    return this.patterns;
+    return {name: 'tests', pattern: this.patterns};
   }
 
   getComponentDevPatterns(component: Component) {
@@ -219,7 +219,7 @@ export class TesterMain {
     /**
      * determine whether to watch on start.
      */
-    watchOnStart: true,
+    watchOnStart: false,
   };
 
   static async provider(

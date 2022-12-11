@@ -46,3 +46,25 @@
   height: 100%;
   width: 100%;
 }
+
+.compareMenuLink {
+  height: 100%;
+}
+
+.tab {
+  > div {
+    padding: 0;
+    > div {
+      // TODO - create z-index pallete system.
+      z-index: 10; // to prevent it from hiding behind aspect tab content.
+      
+    }
+  }
+}
+
+.collapsedMenuLink {
+  // remove underline when active link in dropdown menu
+  &::after {
+    display: none;
+  }
+}

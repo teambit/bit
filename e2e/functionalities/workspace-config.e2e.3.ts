@@ -1,7 +1,6 @@
 import chai, { expect } from 'chai';
 import * as path from 'path';
 import { IssuesClasses } from '@teambit/component-issues';
-import { MISSING_PACKAGES_FROM_OVERRIDES_LABEL } from '../../src/cli/templates/component-issues-template';
 import { OVERRIDE_COMPONENT_PREFIX, statusFailureMsg } from '../../src/constants';
 import Helper from '../../src/e2e-helper/e2e-helper';
 
@@ -22,7 +21,6 @@ describe('workspace config', function () {
     describe.skip('changing component dependencies versions', () => {
       before(() => {
         helper.scopeHelper.setNewLocalAndRemoteScopes();
-        helper.bitJsonc.setupDefault();
         helper.fs.createFile('foo', 'foo.js');
         helper.fs.createFile('bar', 'bar.js', "require('../foo/foo');");
         helper.command.addComponent('foo');
@@ -64,7 +62,6 @@ describe('workspace config', function () {
       let scopeAfterAdding;
       before(() => {
         helper.scopeHelper.setNewLocalAndRemoteScopes();
-        helper.bitJsonc.setupDefault();
         helper.fs.createFile('foo1', 'foo1.js');
         helper.fs.createFile('foo2', 'foo2.js');
         helper.fs.createFile('bar', 'bar.js', "require('../foo1/foo1'); require('../foo2/foo2'); ");
@@ -239,7 +236,6 @@ describe('workspace config', function () {
     describe('ignoring dependencies components entire flow', () => {
       before(() => {
         helper.scopeHelper.setNewLocalAndRemoteScopes();
-        helper.bitJsonc.setupDefault();
         helper.fs.createFile('foo1', 'foo1.js');
         helper.fs.createFile('foo2', 'foo2.js');
         helper.fs.createFile('bar', 'bar.js', "require('../foo1/foo1'); require('../foo2/foo2'); ");
@@ -399,7 +395,6 @@ describe('workspace config', function () {
           const output = helper.command.status().replace(/\n/g, '');
           helper.command.expectStatusToHaveIssue(IssuesClasses.MissingPackagesDependenciesOnFs.name);
           expect(output).to.have.string('foo.js -> chai');
-          expect(output).to.have.string(`${MISSING_PACKAGES_FROM_OVERRIDES_LABEL} -> chai`);
         });
       });
       // skipped for now. see the first test for more details.
@@ -407,7 +402,6 @@ describe('workspace config', function () {
         let showBar;
         before(() => {
           helper.scopeHelper.setNewLocalAndRemoteScopes();
-          helper.bitJsonc.setupDefault();
           helper.fs.createFile('', 'bar.js');
           helper.fs.createFile('', 'foo.js');
           helper.command.addComponent('bar.js');
@@ -541,7 +535,6 @@ describe('workspace config', function () {
         let showBar;
         before(() => {
           helper.scopeHelper.setNewLocalAndRemoteScopes();
-          helper.bitJsonc.setupDefault();
           helper.fs.createFile('', 'bar.js');
           helper.fs.createFile('', 'foo.js');
           helper.command.addComponent('bar.js');

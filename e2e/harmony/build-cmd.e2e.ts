@@ -24,7 +24,6 @@ describe('build command', function () {
   describe('an mdx dependency of a react env', () => {
     before(() => {
       helper.scopeHelper.reInitLocalScope();
-      helper.bitJsonc.setupDefault();
       helper.command.create('mdx-component', 'my-mdx');
       helper.command.create('react-env', 'my-env');
       const importStatement = `import { MyMdx } from '@${helper.scopes.remote}/my-mdx';\n`;
@@ -68,7 +67,7 @@ describe('build command', function () {
 
   describe('registering the publish task for the snap pipeline in a new-custom env', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitLocalScope({ addRemoteScopeAsDefaultScope: false });
       helper.command.create('node-env', 'my-env');
       helper.fixtures.populateComponents(1);
       helper.fs.outputFile('my-scope/my-env/my-env.main.runtime.ts', getMyEnvMainRuntime());
@@ -92,7 +91,6 @@ describe('build command', function () {
     let errorOutput: string;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllComponents();
       helper.command.export();

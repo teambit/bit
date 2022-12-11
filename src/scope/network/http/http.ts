@@ -6,6 +6,7 @@ import HttpAgent from 'agentkeepalive';
 import { HttpsProxyAgent } from 'https-proxy-agent';
 import { SocksProxyAgent } from 'socks-proxy-agent';
 import { HttpProxyAgent } from 'http-proxy-agent';
+import { LaneId } from '@teambit/lane-id';
 import { getAgent, AgentOptions } from '@teambit/toolbox.network.agent';
 import { Network } from '../network';
 import { getHarmonyVersion } from '../../../bootstrap';
@@ -512,12 +513,10 @@ export class Http implements Network {
               name
               scope
             }
-            components {
-              id {
-                name
-                scope
-                version
-              }
+            components: laneComponentIds {
+              name
+              scope
+              version
             }
           }
         }
@@ -526,7 +525,11 @@ export class Http implements Network {
 
     const res = await this.graphClientRequest(LIST_LANES, Verb.READ);
 
-    return res.lanes.list;
+    return res.lanes.list.map((lane) => ({
+      ...lane,
+      id: LaneId.from(lane.id.name, lane.id.scope),
+      components: lane.components.map((id) => ({ id: new BitId(id), head: id.version })),
+    }));
   }
 
   private getHeaders(headers: { [key: string]: string } = {}) {

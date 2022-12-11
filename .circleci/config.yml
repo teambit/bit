@@ -656,7 +656,7 @@ jobs:
           key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
       - run: bvm config set DEFAULT_LINK bbit
       - run: bvm config set RELEASE_TYPE nightly
-      # - run: bvm install 0.0.428
+      # - run: bvm install 0.0.910
       - run: bvm upgrade
       - run: bvm link --verbose
       - run: bbit
@@ -672,6 +672,10 @@ jobs:
       - run: cd bit && ls -l node_modules/@babel
       - run: cd bit && ls -l node_modules/@babel/cli/bin
       - run: cd bit && ls -l node_modules/.bin
+
+      # temporary hack to fix the flattenedEdge issue with this component
+      - run: cd bit && bbit import teambit.component/ui/component-compare/utils/sort-logs@0.0.1 --objects --all-history
+      - run: cd bit && bbit import teambit.component/ui/component-compare/utils/group-by-version@0.0.1 --objects --all-history
 
       - run:
           name: 'Build bit source code'
@@ -702,6 +706,8 @@ jobs:
       - restore_cache:
           key: bitsrc-registry9
       # - update_ssh_agent
+      # temporary, check if we can remove it
+      - run: cd bit && bit cc
       - run:
           name: 'bit status'
           command: 'cd bit && bit status'
@@ -741,6 +747,8 @@ jobs:
           command: echo "//registry.npmjs.org/:_authToken=${npmjsRegistryToken}" >> ~/.npmrc
       - run: cd bit && node scripts/bump-bit-legacy-ver.js
       - run: bvm link
+      # temporary, check if we can remove it
+      - run: cd bit && bit cc
       - run: cd bit && bit status
       - run: cd bit && npm run generate-cli-reference
       - run: cd bit && npm run generate-cli-reference-json
@@ -754,13 +762,15 @@ jobs:
       - run: cd bit && bbit install --skip-import
       - run: cd bit && bbit compile
       - run: cd bit && npm run link-bit-legacy
+      # temporary, check if we can remove it
+      - run: cd bit && bit cc
       # - run: cd bit && bit config set cache.max.objects 100000
       # - run: cd bit && node scripts/soft-tag-scope-teambit.js
       - run:
           name: tag persist
           # command: cd bit && bit tag --ignore-newest-version
-          command: cd bit && bit tag --increment-by 2
-          # command: cd bit && bit tag
+          # command: cd bit && bit tag --increment-by 2
+          command: cd bit && bit tag
           # command: cd bit && bit tag --persist --ignore-newest-version
           no_output_timeout: '25m'
           environment:

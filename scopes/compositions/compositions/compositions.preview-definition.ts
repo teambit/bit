@@ -17,6 +17,8 @@ export class CompositionPreviewDefinition implements PreviewDefinition {
   }
 
   async renderTemplatePathByEnv(env: Environment) {
+    const mounter = env.getMounter();
+    if (!mounter) return undefined;
     return env.getMounter();
   }
 

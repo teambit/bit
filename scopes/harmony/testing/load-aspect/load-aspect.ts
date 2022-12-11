@@ -41,8 +41,7 @@ export async function loadAspect<T>(targetAspect: Aspect, cwd = process.cwd(), r
 
   await harmony.run(async (aspect, runtimeDef) => {
     const id = ComponentID.fromString(aspect.id);
-    const packageName = getPackageName(aspect, id);
-    const mainFilePath = require.resolve(packageName);
+    const mainFilePath = getMainFilePath(aspect, id);
     const packagePath = resolve(join(mainFilePath, '..'));
     const files = readdirSync(packagePath);
     const runtimePath = files.find((path) => path.includes(`.${runtimeDef.name}.runtime.js`));
@@ -61,6 +60,18 @@ go to the aspect-main file and add a new line with "export default YourAspectMai
   });
 
   return harmony.get(targetAspect.id);
+}
+
+function getMainFilePath(aspect: any, id: ComponentID) {
+  let packageName = getPackageName(aspect, id);
+  try {
+    // try core aspects
+    return require.resolve(packageName);
+  } catch (err) {
+    // fallback to a naive way of converting componentId to pkg-name. (it won't work when the component has special pkg name settings)
+    packageName = `@${id.scope.replace('.', '/')}.${id.fullName.replaceAll('/', '.')}`;
+    return require.resolve(packageName);
+  }
 }
 
 export async function getConfig(cwd = process.cwd()) {

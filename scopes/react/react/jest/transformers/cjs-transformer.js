@@ -10,7 +10,7 @@ const presets = [
     require('@babel/preset-env'),
     {
       targets: {
-        node: 12,
+        node: 16,
       },
       useBuiltIns: 'usage',
       corejs: 3,

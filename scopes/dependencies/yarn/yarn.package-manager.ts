@@ -52,8 +52,8 @@ export class YarnPackageManager implements PackageManager {
     this.logger.setStatusLine('installing dependencies');
 
     const rootDirPath = npath.toPortablePath(rootDir);
-    const cacheDir = this.getCacheFolder(installOptions.cacheRootDir);
-    const config = await this.computeConfiguration(rootDirPath, cacheDir, {
+    const config = await this.computeConfiguration(rootDirPath, {
+      cacheRootDir: installOptions.cacheRootDir,
       nodeLinker: installOptions.nodeLinker,
       packageManagerConfigRootDir: installOptions.packageManagerConfigRootDir,
     });
@@ -342,15 +342,15 @@ export class YarnPackageManager implements PackageManager {
     return undefined;
   }
 
-  private getCacheFolder(baseDir: string = userHome) {
-    return `${baseDir}/.yarn/cache`;
+  private getGlobalFolder(baseDir: string = userHome) {
+    return `${baseDir}/.yarn/global`;
   }
 
   // TODO: implement this to automate configuration.
   private async computeConfiguration(
     rootDirPath: PortablePath,
-    cacheFolder: string,
     options: {
+      cacheRootDir?: string;
       nodeLinker?: 'hoisted' | 'isolated';
       packageManagerConfigRootDir?: string;
     }
@@ -370,10 +370,12 @@ export class YarnPackageManager implements PackageManager {
     const defaultRegistry = registries.defaultRegistry;
     const defaultAuthProp = this.getAuthProp(defaultRegistry);
 
+    const globalFolder = this.getGlobalFolder(options.cacheRootDir);
     const data = {
+      enableGlobalCache: true,
       nodeLinker: options.nodeLinker === 'isolated' ? 'pnpm' : 'node-modules',
       installStatePath: `${rootDirPath}/.yarn/install-state.gz`,
-      cacheFolder,
+      cacheFolder: join(globalFolder, 'cache'),
       pnpDataPath: `${rootDirPath}/.pnp.meta.json`,
       npmScopes: scopedRegistries,
       virtualFolder: `${rootDirPath}/.yarn/__virtual__`,
@@ -383,9 +385,12 @@ export class YarnPackageManager implements PackageManager {
       httpsProxy: proxyConfig?.httpsProxy,
       enableStrictSsl: networkConfig?.strictSSL,
       // enableInlineBuilds: true,
-      globalFolder: `${userHome}/.yarn/global`,
+      globalFolder,
       // We need to disable self-references as say create circular symlinks.
       nmSelfReferences: false,
+      // Hardlink the files from the global content-addressable store.
+      // This increases the speed of installation and reduces disk space usage.
+      nmMode: 'hardlinks-global',
 
       // TODO: check about support for the following: (see more here - https://github.com/yarnpkg/berry/issues/1434#issuecomment-801449010)
       // ca?: string;
@@ -398,7 +403,7 @@ export class YarnPackageManager implements PackageManager {
       data[defaultAuthProp.keyName] = defaultAuthProp.value;
     }
     // TODO: node-modules is hardcoded now until adding support for pnp.
-    config.use('<bit>', data, rootDirPath, {});
+    config.use('<bit>', data, rootDirPath, { overwrite: true });
 
     return config;
   }
@@ -439,8 +444,8 @@ export class YarnPackageManager implements PackageManager {
     const ident = structUtils.parseIdent(parsedPackage.name);
     let range = 'npm:*';
     const rootDirPath = npath.toPortablePath(options.rootDir);
-    const cacheDir = this.getCacheFolder(options.cacheRootDir);
-    const config = await this.computeConfiguration(rootDirPath, cacheDir, {
+    const config = await this.computeConfiguration(rootDirPath, {
+      cacheRootDir: options.cacheRootDir,
       packageManagerConfigRootDir: options.packageManagerConfigRootDir,
     });
 

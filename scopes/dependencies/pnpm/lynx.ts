@@ -233,6 +233,7 @@ export async function install(
     hoistingLimits,
     strictPeerDependencies: false,
     resolveSymlinksInInjectedDirs: true,
+    dedupeDirectDeps: true,
     ...options,
     peerDependencyRules: {
       allowAny: ['*'],

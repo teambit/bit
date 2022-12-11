@@ -23,7 +23,6 @@ describe('bit import', function () {
     let importOutput;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       // export a new simple component
       helper.fs.createFile('global', 'simple.js');
       helper.command.addComponent('global', { i: 'global/simple' });
@@ -31,7 +30,6 @@ describe('bit import', function () {
       helper.command.exportIds('global/simple');
 
       helper.scopeHelper.reInitLocalScope();
-      helper.bitJsonc.setupDefault();
       helper.scopeHelper.addRemoteScope();
       importOutput = helper.command.importComponent('global/simple');
     });
@@ -287,7 +285,6 @@ describe('bit import', function () {
     let localConsumerFiles;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
       helper.command.tagAllComponents();
@@ -329,7 +326,6 @@ describe('bit import', function () {
     let localScope;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
       helper.command.tagAllWithoutBuild();
@@ -390,7 +386,6 @@ describe('bit import', function () {
   describe('importing a component when it has a local tag', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
       helper.command.tagAllWithoutBuild();
@@ -437,7 +432,6 @@ describe('bit import', function () {
   describe('import with wildcards', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents();
       helper.command.tagAllWithoutBuild();
       helper.command.export();

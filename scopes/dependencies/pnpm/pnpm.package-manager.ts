@@ -75,7 +75,7 @@ export class PnpmPackageManager implements PackageManager {
         nodeVersion: installOptions.nodeVersion ?? config.nodeVersion,
         overrides: installOptions.overrides,
         hoistPattern: config.hoistPattern,
-        publicHoistPattern: ['*eslint*', '@prettier/plugin-*', '*prettier-plugin-*'],
+        publicHoistPattern: ['@eslint/plugin-*', '*eslint-plugin*', '@prettier/plugin-*', '*prettier-plugin-*'],
         packageImportMethod: installOptions.packageImportMethod ?? config.packageImportMethod,
         rootComponents: installOptions.rootComponents,
         rootComponentsForCapsules: installOptions.rootComponentsForCapsules,
@@ -192,8 +192,9 @@ export class PnpmPackageManager implements PackageManager {
     return new Registries(defaultRegistry, scopesRegistries);
   }
 
-  async getInjectedDirs(rootDir: string, componentDir: string): Promise<string[]> {
+  async getInjectedDirs(rootDir: string, componentDir: string, packageName: string): Promise<string[]> {
     const modulesState = await readModulesManifest(join(rootDir, 'node_modules'));
-    return modulesState?.injectedDeps?.[componentDir] ?? [];
+    if (modulesState?.injectedDeps == null) return [];
+    return modulesState.injectedDeps[`node_modules/${packageName}`] ?? modulesState.injectedDeps[componentDir] ?? [];
   }
 }

@@ -9,7 +9,6 @@ describe('local is diverged from the remote', function () {
   before(() => {
     helper = new Helper();
     helper.scopeHelper.setNewLocalAndRemoteScopes();
-    helper.bitJsonc.setupDefault();
     helper.command.createLane();
     helper.fixtures.populateComponents(1, false);
     helper.command.snapAllComponentsWithoutBuild();

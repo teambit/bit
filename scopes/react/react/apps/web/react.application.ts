@@ -105,7 +105,7 @@ export class ReactApp implements Application {
           entries: await this.getEntries(),
           components: [context.appComponent],
           outputPath: resolve(context.workdir, calcOutputPath(context.appName, 'browser')),
-          hostDependencies: await this.getPeers(),
+          hostDependencies: this.getHostDependencies(),
           aliasHostDependencies: true,
         },
       ],
@@ -133,7 +133,7 @@ export class ReactApp implements Application {
           entries: await this.getSsrEntries(),
           components: [context.appComponent],
           outputPath: resolve(context.workdir, calcOutputPath(context.appName, 'ssr')),
-          hostDependencies: await this.getPeers(),
+          hostDependencies: this.getHostDependencies(),
           aliasHostDependencies: true,
         },
       ],
@@ -281,7 +281,7 @@ export class ReactApp implements Application {
           entries,
           outputPath,
           hostRootDir: capsule?.path,
-          hostDependencies: await this.getPeers(),
+          hostDependencies: this.getHostDependencies(),
           aliasHostDependencies: true,
         },
       ],
@@ -319,12 +319,12 @@ export class ReactApp implements Application {
       publicPath: `public/${this.name}`,
       title: this.name,
       favicon: this.favicon,
-      hostDependencies: await this.getPeers(),
+      hostDependencies: await this.getHostDependencies(),
       aliasHostDependencies: true,
     });
   }
 
-  private getPeers(): Promise<string[]> {
-    return this.reactEnv.getPeerDependenciesList();
+  private getHostDependencies(): string[] {
+    return this.reactEnv.getAdditionalHostDependencies();
   }
 }

@@ -78,7 +78,6 @@ describe('bit snap command', function () {
   describe('components with dependencies', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents();
       helper.command.snapAllComponents();
     });
@@ -139,7 +138,6 @@ describe('bit snap command', function () {
     let secondSnap: string;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
       helper.command.snapComponent('bar/foo');
@@ -609,7 +607,6 @@ describe('bit snap command', function () {
     let isTypeHead;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents();
       helper.command.snapAllComponents();
 
@@ -672,7 +669,6 @@ describe('bit snap command', function () {
   describe('tag after tag', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllWithoutBuild();
       helper.fixtures.populateComponents(1, undefined, ' v2');
@@ -691,12 +687,13 @@ describe('bit snap command', function () {
   });
   describe('merge tags', () => {
     let authorFirstTag;
+    let headBeforeDiverge;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllWithoutBuild();
       helper.command.export();
+      headBeforeDiverge = helper.command.getHead('comp1');
       authorFirstTag = helper.scopeHelper.cloneLocalScope();
       helper.fixtures.populateComponents(1, undefined, ' v2');
       helper.command.tagAllWithoutBuild();
@@ -734,13 +731,17 @@ describe('bit snap command', function () {
         before(() => {
           helper.command.untagAll();
         });
-        it('should change the head to point to the remote head and not to the parent of the untagged version', () => {
+        it('should change the head to point to the parent of the untagged version not to the remote head', () => {
           const head = helper.command.getHead('comp1');
           const remoteHead = helper.general.getRemoteHead('comp1');
-          expect(head).to.be.equal(remoteHead);
+          expect(head).to.not.be.equal(remoteHead);
+          expect(head).to.be.equal(headBeforeDiverge);
         });
-        it('bit status after untag should show the component as modified only', () => {
-          helper.command.expectStatusToBeClean(['modifiedComponents']);
+        it('bit status after untag should show the component not only as modified but also as outdated', () => {
+          const status = helper.command.statusJson();
+          expect(status.modifiedComponents).to.have.lengthOf(1);
+          expect(status.outdatedComponents).to.have.lengthOf(1);
+          helper.command.expectStatusToBeClean(['modifiedComponents', 'outdatedComponents']);
         });
       });
       describe('reset only head', () => {
