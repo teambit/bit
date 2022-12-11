@@ -1208,6 +1208,11 @@ either, use the ignore file syntax or change the require statement to have a mod
         const key = DepsKeysToAllPackagesDepsKeys[field];
 
         delete this.allPackagesDependencies[key][pkgName];
+        // When changing peer dependency we want it to be stronger than the other types
+        if (field === 'peerDependencies') {
+          delete this.allPackagesDependencies.devPackageDependencies[pkgName];
+          delete this.allPackagesDependencies.packageDependencies[pkgName];
+        }
         // delete this.allPackagesDependencies.packageDependencies[pkgName];
         // delete this.allPackagesDependencies.devPackageDependencies[pkgName];
         // delete this.allPackagesDependencies.peerPackageDependencies[pkgName];
