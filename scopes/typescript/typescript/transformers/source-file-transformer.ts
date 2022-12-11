@@ -56,7 +56,7 @@ export class SourceFileTransformer implements SchemaTransformer {
       return context.computeSchema(internalNode);
     });
 
-    return new ModuleSchema(context.getLocation(node), exportDeclarations, internalDeclarations, node.fileName);
+    return new ModuleSchema(context.getLocation(node), exportDeclarations, internalDeclarations);
   }
 
   /**

@@ -12,7 +12,7 @@ export class ModuleSchema extends SchemaNode {
 
   namespace?: string;
 
-  constructor(readonly location: Location, exports: SchemaNode[], internals: SchemaNode[], readonly filePath: string) {
+  constructor(readonly location: Location, exports: SchemaNode[], internals: SchemaNode[]) {
     super();
     this.exports = exports;
     this.internals = internals;

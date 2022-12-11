@@ -1,4 +1,3 @@
-
 import ts, { Node, SourceFile, SyntaxKind } from 'typescript';
 import { getTsconfig } from 'get-tsconfig';
 import { SchemaExtractor } from '@teambit/schema';
@@ -18,7 +17,6 @@ import { TransformerNotFound } from './exceptions';
 import { SchemaExtractorContext } from './schema-extractor-context';
 import { Identifier } from './identifier';
 import { IdentifierList } from './identifier-list';
-import { ExportList } from './export-list';
 import { ExtractorOptions } from './extractor-options';
 import { TypescriptAspect } from './typescript.aspect';
 
@@ -169,6 +167,7 @@ export class TypeScriptExtractor implements SchemaExtractor {
         wsPath,
         tsMain.depResolver,
         tsMain.workspace,
+        context.createLogger(options.name)
       );
     };
   }

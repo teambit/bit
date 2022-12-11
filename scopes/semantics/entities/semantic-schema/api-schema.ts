@@ -2,7 +2,6 @@ import { Transform, plainToInstance } from 'class-transformer';
 import chalk from 'chalk';
 import { ComponentID } from '@teambit/component-id';
 import {
-  AliasSchema,
   ClassSchema,
   EnumSchema,
   FunctionLikeSchema,
@@ -59,8 +58,7 @@ export class APISchema extends SchemaNode {
       getSection(TypeSchema, 'Types') +
       getSection(EnumSchema, 'Enums') +
       getSection(TypeRefSchema, 'TypeReferences') +
-      getSection(UnresolvedSchema, 'Unresolved') +
-      getSection(AliasSchema, 'Alias')
+      getSection(UnresolvedSchema, 'Unresolved')
     );
   }
 
@@ -75,7 +73,7 @@ export class APISchema extends SchemaNode {
   static empty(componentId: ComponentID) {
     return new APISchema(
       { filePath: '', line: 0, character: 0 },
-      new ModuleSchema({ filePath: '', line: 0, character: 0 }, [], [], ''),
+      new ModuleSchema({ filePath: '', line: 0, character: 0 }, [], []),
       componentId
     );
   }

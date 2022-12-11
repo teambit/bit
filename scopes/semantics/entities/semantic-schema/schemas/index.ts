@@ -39,5 +39,4 @@ export { ConditionalTypeSchema } from './conditional-type';
 export { ExpressionWithTypeArgumentsSchema } from './expression-with-arguments';
 export { NamedTupleSchema } from './named-tuple';
 export { UnImplementedSchema } from './unimplemented-schema';
-export { AliasSchema } from './alias-schema';
 export * from './docs';

@@ -53,7 +53,7 @@ export class ExportDeclarationTransformer implements SchemaTransformer {
     // e.g. `export { button1, button2 } as Composition from './button';
     if (exportClause.kind === SyntaxKind.NamedExports) {
       const schemas = await namedExport(exportClause, context);
-      return new ModuleSchema(context.getLocation(exportDec), schemas, [], context.getPath(exportDec));
+      return new ModuleSchema(context.getLocation(exportDec), schemas, []);
     }
     // e.g. `export * as Composition from './button';
     if (exportClause.kind === SyntaxKind.NamespaceExport) {
