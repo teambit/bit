@@ -77,10 +77,17 @@ export enum ChangeType {
   CONFIG = 'CONFIG',
 }
 
-type LaneComponentDiff = {
+export type LaneComponentDiffStatus = {
   componentId: ComponentID;
   changeType: ChangeType;
   upToDate: boolean;
+};
+
+export type LaneDiffStatus = {
+  upToDate: boolean;
+  source: LaneId;
+  target: LaneId;
+  componentsStatus: LaneComponentDiffStatus[];
 };
 
 export class LanesMain {
@@ -635,7 +642,7 @@ export class LanesMain {
     return { result: true };
   }
 
-  async laneDiff(sourceLaneId: LaneId, targetLaneId?: LaneId): Promise<LaneComponentDiff[]> {
+  async diffStatus(sourceLaneId: LaneId, targetLaneId?: LaneId): Promise<LaneDiffStatus> {
     const sourceLane = await this.loadLane(sourceLaneId);
     if (!sourceLane) throw new Error(`unable to find ${sourceLaneId.toString()} in the scope`);
     const targetLane = targetLaneId ? await this.loadLane(targetLaneId) : undefined;
@@ -667,7 +674,14 @@ export class LanesMain {
       })
     );
 
-    return results;
+    const isLaneUptoDate = results.every((r) => r.upToDate);
+
+    return {
+      source: sourceLaneId,
+      target: targetLaneId || this.getDefaultLaneId(),
+      upToDate: isLaneUptoDate,
+      componentsStatus: results,
+    };
   }
 
   async addLaneReadme(readmeComponentIdStr: string, laneName?: string): Promise<{ result: boolean; message?: string }> {
