@@ -59,7 +59,7 @@ export class SignMain {
         // from the original scope instead of the lane-scope.
         this.scope.legacyScope.setCurrentLaneId(laneId);
       }
-      await this.scope.import(ids, { lane });
+      await this.scope.import(ids, { lane, preferDependencyGraph: true });
       longProcessLogger.end();
       this.logger.consoleSuccess();
     }

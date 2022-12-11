@@ -98,11 +98,6 @@ importers:
       '@teambit/component.content.dev-files': 1.95.9
       '@teambit/component.instructions.exporting-components': 0.0.6
       '@teambit/component.ui.component-compare.blank-state': 0.0.1
-      '@teambit/component.ui.component-compare.compare-aspects.compare-aspect-view': 0.0.1
-      '@teambit/component.ui.component-compare.hooks.use-component-compare': 0.0.2
-      '@teambit/component.ui.component-compare.hooks.use-component-compare-url': 0.0.1
-      '@teambit/component.ui.component-compare.layouts.compare-split-layout-preset': 0.0.1
-      '@teambit/component.ui.component-compare.status-resolver': 0.0.2
       '@teambit/defender.content.formatter-overview': 1.96.1
       '@teambit/defender.content.linter-overview': 1.95.0
       '@teambit/defender.content.tester-overview': 1.95.0
@@ -649,11 +644,6 @@ importers:
       '@teambit/component-version': registry.npmjs.org/@teambit/component-version/0.0.406
       '@teambit/component.instructions.exporting-components': registry.npmjs.org/@teambit/component.instructions.exporting-components/0.0.6_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/component.ui.component-compare.blank-state': 0.0.1_sfoxds7t5ydpegc3knd667wn6m
-      '@teambit/component.ui.component-compare.compare-aspects.compare-aspect-view': 0.0.1_m23risk2t2ktwbmyoufat5z4ue
-      '@teambit/component.ui.component-compare.hooks.use-component-compare': 0.0.2_roe5erhgkobpyh5piuida3dzbe
-      '@teambit/component.ui.component-compare.hooks.use-component-compare-url': 0.0.1_676cxok7chrvapczunc5qatg6m
-      '@teambit/component.ui.component-compare.layouts.compare-split-layout-preset': 0.0.1_sfoxds7t5ydpegc3knd667wn6m
-      '@teambit/component.ui.component-compare.status-resolver': 0.0.2_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/design.elements.icon': registry.npmjs.org/@teambit/design.elements.icon/1.0.5_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/design.inputs.dropdown': registry.npmjs.org/@teambit/design.inputs.dropdown/0.0.7_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/design.inputs.selectors.multi-select': registry.npmjs.org/@teambit/design.inputs.selectors.multi-select/0.0.20_sfoxds7t5ydpegc3knd667wn6m
@@ -1131,6 +1121,9 @@ importers:
   components/ui/component-compare/changelog:
     specifiers: {}
 
+  components/ui/component-compare/compare-aspects/compare-aspect-view:
+    specifiers: {}
+
   components/ui/component-compare/compare-aspects/compare-aspects:
     specifiers: {}
 
@@ -1149,6 +1142,15 @@ importers:
   components/ui/component-compare/context:
     specifiers: {}
 
+  components/ui/component-compare/hooks/use-component-compare:
+    specifiers: {}
+
+  components/ui/component-compare/hooks/use-component-compare-url:
+    specifiers: {}
+
+  components/ui/component-compare/layouts/compare-split-layout-preset:
+    specifiers: {}
+
   components/ui/component-compare/models/component-compare-hooks:
     specifiers: {}
 
@@ -1159,6 +1161,9 @@ importers:
     specifiers: {}
 
   components/ui/component-compare/models/component-compare-state:
+    specifiers: {}
+
+  components/ui/component-compare/status-resolver:
     specifiers: {}
 
   components/ui/component-compare/utils/group-by-version:
@@ -2574,89 +2579,6 @@ packages:
       react-dom: ^16.8.0 || ^17.0.0
     dependencies:
       '@teambit/design.ui.empty-box': registry.npmjs.org/@teambit/design.ui.empty-box/0.0.361_sfoxds7t5ydpegc3knd667wn6m
-      core-js: registry.npmjs.org/core-js/3.25.5
-      react: registry.npmjs.org/react/17.0.2
-      react-dom: registry.npmjs.org/react-dom/17.0.2_react@17.0.2
-    dev: false
-
-  /@teambit/component.ui.component-compare.compare-aspects.compare-aspect-view/0.0.1_m23risk2t2ktwbmyoufat5z4ue:
-    resolution: {integrity: sha1-QP2pVxpADird0UaZyPfiGjiRy9E=, tarball: '@teambit/component.ui.component-compare.compare-aspects.compare-aspect-view/-/@teambit-component.ui.component-compare.compare-aspects.compare-aspect-view-0.0.1.tgz'}
-    peerDependencies:
-      react: ^16.8.0 || ^17.0.0
-      react-dom: ^16.8.0 || ^17.0.0
-    dependencies:
-      '@monaco-editor/react': registry.npmjs.org/@monaco-editor/react/4.4.6_m23risk2t2ktwbmyoufat5z4ue
-      '@teambit/base-ui.theme.dark-theme': registry.npmjs.org/@teambit/base-ui.theme.dark-theme/1.0.2_sfoxds7t5ydpegc3knd667wn6m
-      '@teambit/component.ui.component-compare.compare-aspects.models.component-compare-aspects-model': 0.0.1
-      '@teambit/design.ui.round-loader': registry.npmjs.org/@teambit/design.ui.round-loader/0.0.353_sfoxds7t5ydpegc3knd667wn6m
-      '@teambit/documenter.ui.heading': registry.npmjs.org/@teambit/documenter.ui.heading/4.1.1_sfoxds7t5ydpegc3knd667wn6m
-      classnames: registry.npmjs.org/classnames/2.2.6
-      core-js: registry.npmjs.org/core-js/3.25.5
-      react: registry.npmjs.org/react/17.0.2
-      react-dom: registry.npmjs.org/react-dom/17.0.2_react@17.0.2
-    transitivePeerDependencies:
-      - monaco-editor
-    dev: false
-
-  /@teambit/component.ui.component-compare.compare-aspects.models.component-compare-aspects-model/0.0.1:
-    resolution: {integrity: sha1-Rd7rsk9ej2e41sXsAqUZH2qIFb4=, tarball: '@teambit/component.ui.component-compare.compare-aspects.models.component-compare-aspects-model/-/@teambit-component.ui.component-compare.compare-aspects.models.component-compare-aspects-model-0.0.1.tgz'}
-    dev: false
-
-  /@teambit/component.ui.component-compare.hooks.use-component-compare-url/0.0.1_676cxok7chrvapczunc5qatg6m:
-    resolution: {integrity: sha1-YUoJEtDmxirwJ3GaEgN5IiricCo=, tarball: '@teambit/component.ui.component-compare.hooks.use-component-compare-url/-/@teambit-component.ui.component-compare.hooks.use-component-compare-url-0.0.1.tgz'}
-    peerDependencies:
-      react: ^16.8.0 || ^17.0.0
-      react-dom: ^16.8.0 || ^17.0.0
-    dependencies:
-      '@teambit/base-react.navigation.link': 2.0.27_676cxok7chrvapczunc5qatg6m
-      '@teambit/ui-foundation.ui.react-router.use-query': registry.npmjs.org/@teambit/ui-foundation.ui.react-router.use-query/0.0.494_676cxok7chrvapczunc5qatg6m
-      core-js: registry.npmjs.org/core-js/3.25.5
-      react: registry.npmjs.org/react/17.0.2
-      react-dom: registry.npmjs.org/react-dom/17.0.2_react@17.0.2
-    transitivePeerDependencies:
-      - '@testing-library/react'
-      - '@types/react'
-    dev: false
-
-  /@teambit/component.ui.component-compare.hooks.use-component-compare/0.0.2_roe5erhgkobpyh5piuida3dzbe:
-    resolution: {integrity: sha1-YzNoE+o5MJE1Z2NQRfoPHjxwyZU=, tarball: '@teambit/component.ui.component-compare.hooks.use-component-compare/-/@teambit-component.ui.component-compare.hooks.use-component-compare-0.0.2.tgz'}
-    peerDependencies:
-      '@apollo/client': ^3.6.0
-      react: ^16.8.0 || ^17.0.0
-      react-dom: ^16.8.0 || ^17.0.0
-    dependencies:
-      '@apollo/client': registry.npmjs.org/@apollo/client/3.6.9_cm7dmat4tatiymdnjnpg7tvksm
-      '@teambit/component.ui.component-compare.models.component-compare-model': 0.0.1
-      '@teambit/ui-foundation.ui.hooks.use-data-query': registry.npmjs.org/@teambit/ui-foundation.ui.hooks.use-data-query/0.0.498_roe5erhgkobpyh5piuida3dzbe
-      core-js: registry.npmjs.org/core-js/3.25.5
-      react: registry.npmjs.org/react/17.0.2
-      react-dom: registry.npmjs.org/react-dom/17.0.2_react@17.0.2
-    dev: false
-
-  /@teambit/component.ui.component-compare.layouts.compare-split-layout-preset/0.0.1_sfoxds7t5ydpegc3knd667wn6m:
-    resolution: {integrity: sha1-9an/UrE7Eoi0J0kbo8bl3PlcpEg=, tarball: '@teambit/component.ui.component-compare.layouts.compare-split-layout-preset/-/@teambit-component.ui.component-compare.layouts.compare-split-layout-preset-0.0.1.tgz'}
-    peerDependencies:
-      react: ^16.8.0 || ^17.0.0
-      react-dom: ^16.8.0 || ^17.0.0
-    dependencies:
-      classnames: registry.npmjs.org/classnames/2.2.6
-      core-js: registry.npmjs.org/core-js/3.25.5
-      react: registry.npmjs.org/react/17.0.2
-      react-dom: registry.npmjs.org/react-dom/17.0.2_react@17.0.2
-    dev: false
-
-  /@teambit/component.ui.component-compare.models.component-compare-model/0.0.1:
-    resolution: {integrity: sha1-4l6q5ZCa+6nJfpOMlVItrIZMhhQ=, tarball: '@teambit/component.ui.component-compare.models.component-compare-model/-/@teambit-component.ui.component-compare.models.component-compare-model-0.0.1.tgz'}
-    dev: false
-
-  /@teambit/component.ui.component-compare.status-resolver/0.0.2_sfoxds7t5ydpegc3knd667wn6m:
-    resolution: {integrity: sha1-7idIVftTyNt02gcVx0pLg2K3F5g=, tarball: '@teambit/component.ui.component-compare.status-resolver/-/@teambit-component.ui.component-compare.status-resolver-0.0.2.tgz'}
-    peerDependencies:
-      react: ^16.8.0 || ^17.0.0
-      react-dom: ^16.8.0 || ^17.0.0
-    dependencies:
-      '@teambit/design.ui.tooltip': registry.npmjs.org/@teambit/design.ui.tooltip/0.0.359_sfoxds7t5ydpegc3knd667wn6m
-      classnames: registry.npmjs.org/classnames/2.2.6
       core-js: registry.npmjs.org/core-js/3.25.5
       react: registry.npmjs.org/react/17.0.2
       react-dom: registry.npmjs.org/react-dom/17.0.2_react@17.0.2
@@ -13110,22 +13032,6 @@ packages:
       react-dom: registry.npmjs.org/react-dom/17.0.2_react@17.0.2
     dev: false
 
-  registry.npmjs.org/@teambit/design.ui.round-loader/0.0.353_sfoxds7t5ydpegc3knd667wn6m:
-    resolution: {integrity: sha512-wD1QPB1nkp/rQRpW5YVOZ7BBQPZ+/MHZPYjKh+3RksUbSH4Vh+tY0V5uAbbn8ux7xzYOzmyCw9EC5Fge9xWBOA==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/@teambit/design.ui.round-loader/-/design.ui.round-loader-0.0.353.tgz}
-    id: registry.npmjs.org/@teambit/design.ui.round-loader/0.0.353
-    name: '@teambit/design.ui.round-loader'
-    version: 0.0.353
-    engines: {node: '>=12.22.0'}
-    peerDependencies:
-      react: ^16.8.0 || ^17.0.0
-      react-dom: ^16.8.0 || ^17.0.0
-    dependencies:
-      classnames: registry.npmjs.org/classnames/2.2.6
-      core-js: registry.npmjs.org/core-js/3.25.5
-      react: registry.npmjs.org/react/17.0.2
-      react-dom: registry.npmjs.org/react-dom/17.0.2_react@17.0.2
-    dev: false
-
   registry.npmjs.org/@teambit/design.ui.separator/0.0.354_sfoxds7t5ydpegc3knd667wn6m:
     resolution: {integrity: sha512-CSLllajMbyuRC8lfLMk30Yo+gOSrUBZ+JscBybSQGceiFnYxZa2dwkVLCxy6Snx00SqfpQFydo3c8+4tBmBHig==, registry: https://node.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/design.ui.separator/-/design.ui.separator-0.0.354.tgz}
     id: registry.npmjs.org/@teambit/design.ui.separator/0.0.354
@@ -13225,25 +13131,6 @@ packages:
     transitivePeerDependencies:
       - '@testing-library/react'
       - '@types/react'
-    dev: false
-
-  registry.npmjs.org/@teambit/design.ui.tooltip/0.0.359_sfoxds7t5ydpegc3knd667wn6m:
-    resolution: {integrity: sha512-DRbbUTfvqtD7gaFYeUTxdoZSmcxPy6QijLJCI9zq6toGOMoEe1Mg//gb+KuhQXyg9iITPUCLQo6hZTm33w9BFA==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/@teambit/design.ui.tooltip/-/design.ui.tooltip-0.0.359.tgz}
-    id: registry.npmjs.org/@teambit/design.ui.tooltip/0.0.359
-    name: '@teambit/design.ui.tooltip'
-    version: 0.0.359
-    engines: {node: '>=12.22.0'}
-    peerDependencies:
-      react: ^16.8.0 || ^17.0.0
-      react-dom: ^16.8.0 || ^17.0.0
-    dependencies:
-      '@teambit/base-ui.theme.dark-theme': registry.npmjs.org/@teambit/base-ui.theme.dark-theme/1.0.2_sfoxds7t5ydpegc3knd667wn6m
-      '@tippyjs/react': registry.npmjs.org/@tippyjs/react/4.2.0_sfoxds7t5ydpegc3knd667wn6m
-      classnames: registry.npmjs.org/classnames/2.2.6
-      core-js: registry.npmjs.org/core-js/3.25.5
-      react: registry.npmjs.org/react/17.0.2
-      react-dom: registry.npmjs.org/react-dom/17.0.2_react@17.0.2
-      tippy.js: registry.npmjs.org/tippy.js/6.2.7
     dev: false
 
   registry.npmjs.org/@teambit/docs.entities.doc/0.0.2:
@@ -14667,91 +14554,6 @@ packages:
       react-dom: registry.npmjs.org/react-dom/17.0.2_react@17.0.2
       uuid: registry.npmjs.org/uuid/3.4.0
     dev: true
-
-  registry.npmjs.org/@teambit/ui-foundation.ui.global-loader/0.0.495_sfoxds7t5ydpegc3knd667wn6m:
-    resolution: {integrity: sha512-fDobEdA7NF8wVSYVgTJLVLzBphl6Ng7mMo689ssqckcy9KH9Mxq3cEolLJGRQ8Xya40OtAEno3YfI/RYk5zGqA==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/@teambit/ui-foundation.ui.global-loader/-/ui-foundation.ui.global-loader-0.0.495.tgz}
-    id: registry.npmjs.org/@teambit/ui-foundation.ui.global-loader/0.0.495
-    name: '@teambit/ui-foundation.ui.global-loader'
-    version: 0.0.495
-    engines: {node: '>=12.22.0'}
-    peerDependencies:
-      react: ^16.8.0 || ^17.0.0
-      react-dom: ^16.8.0 || ^17.0.0
-    dependencies:
-      core-js: registry.npmjs.org/core-js/3.25.5
-      react: registry.npmjs.org/react/17.0.2
-      react-dom: registry.npmjs.org/react-dom/17.0.2_react@17.0.2
-      uuid: registry.npmjs.org/uuid/8.3.2
-    dev: false
-
-  registry.npmjs.org/@teambit/ui-foundation.ui.hooks.use-data-query/0.0.498_roe5erhgkobpyh5piuida3dzbe:
-    resolution: {integrity: sha512-iqitRlax7ShNJsnJuZa8CE8RJW/e0/VffxOBFgkmsJN0auESqNDXCnnL7nV3hHmQJ+RW0Sy/atBSl0RAd4IDjw==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/@teambit/ui-foundation.ui.hooks.use-data-query/-/ui-foundation.ui.hooks.use-data-query-0.0.498.tgz}
-    id: registry.npmjs.org/@teambit/ui-foundation.ui.hooks.use-data-query/0.0.498
-    name: '@teambit/ui-foundation.ui.hooks.use-data-query'
-    version: 0.0.498
-    engines: {node: '>=12.22.0'}
-    peerDependencies:
-      '@apollo/client': ^3.6.0
-      react: ^16.8.0 || ^17.0.0
-      react-dom: ^16.8.0 || ^17.0.0
-    dependencies:
-      '@apollo/client': registry.npmjs.org/@apollo/client/3.6.9_cm7dmat4tatiymdnjnpg7tvksm
-      '@teambit/ui-foundation.ui.global-loader': registry.npmjs.org/@teambit/ui-foundation.ui.global-loader/0.0.495_sfoxds7t5ydpegc3knd667wn6m
-      '@teambit/ui-foundation.ui.notifications.notification-context': registry.npmjs.org/@teambit/ui-foundation.ui.notifications.notification-context/0.0.494_sfoxds7t5ydpegc3knd667wn6m
-      core-js: registry.npmjs.org/core-js/3.25.5
-      react: registry.npmjs.org/react/17.0.2
-      react-dom: registry.npmjs.org/react-dom/17.0.2_react@17.0.2
-    dev: false
-
-  registry.npmjs.org/@teambit/ui-foundation.ui.notifications.notification-context/0.0.494_sfoxds7t5ydpegc3knd667wn6m:
-    resolution: {integrity: sha512-3McGt3Ks6r5528Jh23a9m7LJVOrtjFQ8iYC4/JrfRqEa4HHvq/B/9vItY7bOipSW8Ze3Jije4e8timtGNjtJuA==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/@teambit/ui-foundation.ui.notifications.notification-context/-/ui-foundation.ui.notifications.notification-context-0.0.494.tgz}
-    id: registry.npmjs.org/@teambit/ui-foundation.ui.notifications.notification-context/0.0.494
-    name: '@teambit/ui-foundation.ui.notifications.notification-context'
-    version: 0.0.494
-    engines: {node: '>=12.22.0'}
-    peerDependencies:
-      react: ^16.8.0 || ^17.0.0
-      react-dom: ^16.8.0 || ^17.0.0
-    dependencies:
-      '@teambit/ui-foundation.ui.notifications.store': registry.npmjs.org/@teambit/ui-foundation.ui.notifications.store/0.0.493_sfoxds7t5ydpegc3knd667wn6m
-      core-js: registry.npmjs.org/core-js/3.25.5
-      react: registry.npmjs.org/react/17.0.2
-      react-dom: registry.npmjs.org/react-dom/17.0.2_react@17.0.2
-    dev: false
-
-  registry.npmjs.org/@teambit/ui-foundation.ui.notifications.store/0.0.493_sfoxds7t5ydpegc3knd667wn6m:
-    resolution: {integrity: sha512-TVQmexflDWkOt6flqNt/lh8ZIITtwYMYDVQecb93Ly4XSfFE4ojGSsasvkJZgsveNMFgSdFrKbe6gN8rpOjnGQ==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/@teambit/ui-foundation.ui.notifications.store/-/ui-foundation.ui.notifications.store-0.0.493.tgz}
-    id: registry.npmjs.org/@teambit/ui-foundation.ui.notifications.store/0.0.493
-    name: '@teambit/ui-foundation.ui.notifications.store'
-    version: 0.0.493
-    engines: {node: '>=12.22.0'}
-    peerDependencies:
-      react: ^16.8.0 || ^17.0.0
-      react-dom: ^16.8.0 || ^17.0.0
-    dependencies:
-      core-js: registry.npmjs.org/core-js/3.25.5
-      react: registry.npmjs.org/react/17.0.2
-      react-dom: registry.npmjs.org/react-dom/17.0.2_react@17.0.2
-    dev: false
-
-  registry.npmjs.org/@teambit/ui-foundation.ui.react-router.use-query/0.0.494_676cxok7chrvapczunc5qatg6m:
-    resolution: {integrity: sha512-+K9H/y3sxRxEdOyF8G/GmzNsAPYFcMr5BWR46T2ccsCp6KgjCkwazl1+pvgjBfsehw9+KYQZmAdwaSeILR4ivQ==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/@teambit/ui-foundation.ui.react-router.use-query/-/ui-foundation.ui.react-router.use-query-0.0.494.tgz}
-    id: registry.npmjs.org/@teambit/ui-foundation.ui.react-router.use-query/0.0.494
-    name: '@teambit/ui-foundation.ui.react-router.use-query'
-    version: 0.0.494
-    engines: {node: '>=12.22.0'}
-    peerDependencies:
-      react: ^16.8.0 || ^17.0.0
-      react-dom: ^16.8.0 || ^17.0.0
-    dependencies:
-      '@teambit/base-react.navigation.link': 2.0.27_676cxok7chrvapczunc5qatg6m
-      core-js: registry.npmjs.org/core-js/3.25.5
-      react: registry.npmjs.org/react/17.0.2
-      react-dom: registry.npmjs.org/react-dom/17.0.2_react@17.0.2
-    transitivePeerDependencies:
-      - '@testing-library/react'
-      - '@types/react'
-    dev: false
 
   registry.npmjs.org/@teambit/ui-foundation.ui.rendering.html/0.0.69_sfoxds7t5ydpegc3knd667wn6m:
     resolution: {integrity: sha512-Nc9/VZob3n3LPg9/tBmxqTs56Bo+NSkq0J5j6WaW+s+vLEnxf/viU7aJUBAgSQEM+++iCLsjNId4xmkJIr6lew==, registry: https://node.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/ui-foundation.ui.rendering.html/-/ui-foundation.ui.rendering.html-0.0.69.tgz}

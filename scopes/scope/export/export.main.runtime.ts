@@ -547,23 +547,29 @@ export class ExportMain {
     function changeDependencyScope(version: Version): boolean {
       let hasChanged = false;
       version.getAllDependencies().forEach((dependency) => {
-        const updatedScope = getIdWithUpdatedScope(dependency.id);
-        if (!updatedScope.isEqual(dependency.id)) {
+        const updatedIdWithScope = getIdWithUpdatedScope(dependency.id);
+        if (!dependency.id.scope) {
           hasChanged = true;
-          dependency.id = updatedScope;
+          dependency.id = updatedIdWithScope;
         }
       });
-      const ids: BitIds = version.flattenedDependencies;
-      const needsChange = ids.some((id) => id.scope !== remoteScope);
+      const flattenedIds: BitIds = version.flattenedDependencies;
+      const needsChange = flattenedIds.some((id) => !id.scope);
       if (needsChange) {
-        version.flattenedDependencies = getBitIdsWithUpdatedScope(ids);
-        version.flattenedEdges = version.flattenedEdges.map((edge) => ({
+        version.flattenedDependencies = getBitIdsWithUpdatedScope(flattenedIds);
+        hasChanged = true;
+      }
+      version.flattenedEdges = version.flattenedEdges.map((edge) => {
+        if (edge.source.scope && edge.target.scope) {
+          return edge;
+        }
+        hasChanged = true;
+        return {
           ...edge,
           source: getIdWithUpdatedScope(edge.source),
           target: getIdWithUpdatedScope(edge.target),
-        }));
-        hasChanged = true;
-      }
+        };
+      });
       return hasChanged;
     }
 
@@ -582,26 +588,21 @@ export class ExportMain {
     }
 
     function getIdWithUpdatedScope(dependencyId: BitId): BitId {
-      if (dependencyId.scope === remoteScope) {
-        return dependencyId; // nothing has changed
+      if (dependencyId.scope) {
+        return dependencyId; // it's not new
       }
-      // either, dependencyId is new, or this dependency is among the components to export (in case of fork)
-      if (!dependencyId.scope || exportingIds.hasWithoutVersion(dependencyId)) {
-        const depId = ModelComponent.fromBitId(dependencyId);
-        // todo: use 'load' for async and switch the foreach with map.
-        const dependencyObject = scope.objects.loadSync(depId.hash());
-        if (dependencyObject instanceof Symlink) {
-          return dependencyId.changeScope(dependencyObject.realScope);
-        }
-        const currentlyExportedDep = idsWithFutureScope.searchWithoutScopeAndVersion(dependencyId);
-        if (currentlyExportedDep && currentlyExportedDep.scope) {
-          // it's possible that a dependency has a different defaultScope settings.
-          return dependencyId.changeScope(currentlyExportedDep.scope);
-        }
-        return dependencyId.changeScope(remoteScope);
+      const depId = ModelComponent.fromBitId(dependencyId);
+      // todo: use 'load' for async and switch the foreach with map.
+      const dependencyObject = scope.objects.loadSync(depId.hash());
+      if (dependencyObject instanceof Symlink) {
+        return dependencyId.changeScope(dependencyObject.realScope);
       }
-      return dependencyId;
+      const currentlyExportedDep = idsWithFutureScope.searchWithoutScopeAndVersion(dependencyId);
+      const scopeName = currentlyExportedDep?.scope || remoteScope;
+      if (!scopeName) throw new Error(`unable to find scopeName for ${dependencyId.toString()}`);
+      return dependencyId.changeScope(scopeName);
     }
+
     function getBitIdsWithUpdatedScope(bitIds: BitIds): BitIds {
       const updatedIds = bitIds.map((id) => getIdWithUpdatedScope(id));
       return BitIds.fromArray(updatedIds);
