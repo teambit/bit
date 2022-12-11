@@ -1,9 +1,9 @@
 import { sha1 } from '@teambit/legacy/dist/utils';
-import { sortBy, uniqWith } from 'lodash';
+import { compact, sortBy, uniqWith } from 'lodash';
 import { snapToSemver } from '@teambit/component-package-version';
 import { DependenciesOverridesData } from '@teambit/legacy/dist/consumer/config/component-overrides';
-import { Policy, PolicyConfigKeys, PolicyEntry, SemverVersion } from '../policy';
-import { DependencyLifecycleType, KEY_NAME_BY_LIFECYCLE_TYPE } from '../../dependencies';
+import { Policy, PolicyConfigKeys, PolicyConfigKeysNames, PolicyEntry, SemverVersion } from '../policy';
+import { DependencyLifecycleType, KEY_NAME_BY_LIFECYCLE_TYPE, LIFECYCLE_TYPE_BY_KEY_NAME } from '../../dependencies';
 
 export type VariantPolicyConfigObject = Partial<Record<keyof PolicyConfigKeys, VariantPolicyLifecycleConfigObject>>;
 
@@ -28,13 +28,13 @@ export type DependencySource = 'auto' | 'env' | 'env-own' | 'slots' | 'config';
 export type VariantPolicyEntry = PolicyEntry & {
   value: VariantPolicyEntryValue;
   source?: DependencySource; // determines where the dependency was resolved from, e.g. from its env, or config
-    /**
+  /**
    * hide the dependency from the component's package.json / dependencies list
    */
   hidden?: boolean;
   /**
-  * add to component dependencies only if it's used by the component.
-  */
+   * add to component dependencies only if it's used by the component.
+   */
   usedOnly?: boolean;
 };
 
@@ -142,6 +142,24 @@ export class VariantPolicy implements Policy<VariantPolicyConfigObject> {
   }
 
   /**
+   * Create a manifest object in the form of a package.json entries
+   * a.k.a { [depId]: version }
+   * @returns
+   */
+  toVersionManifest(): { [name: string]: string } {
+    return this.entries.reduce((acc, entry) => {
+      acc[entry.dependencyId] = entry.value.version;
+      return acc;
+    }, {});
+  }
+
+  toNameVersionTuple(): [string, string][] {
+    return this.entries.map((entry) => {
+      return [entry.dependencyId, entry.value.version];
+    });
+  }
+
+  /**
    * This used in in the legacy to apply env component policy on stuff that were auto detected
    * it will take used only entries (which means entries that component are really uses)
    * and in case of hidden deps it will mark them as removed using the "-" value to remove them from the component
@@ -184,6 +202,31 @@ export class VariantPolicy implements Policy<VariantPolicyConfigObject> {
     return res;
   }
 
+  static fromConfigObject(
+    configObject,
+    source?: DependencySource,
+    hidden?: boolean,
+    usedOnly?: boolean
+  ): VariantPolicy {
+    const runtimeEntries = entriesFromKey(configObject, 'dependencies', source, hidden, usedOnly);
+    const devEntries = entriesFromKey(configObject, 'devDependencies', source, hidden, usedOnly);
+    const peerEntries = entriesFromKey(configObject, 'peerDependencies', source, hidden, usedOnly);
+    const entries = runtimeEntries.concat(devEntries).concat(peerEntries);
+    return new VariantPolicy(entries);
+  }
+
+  static fromArray(entries: VariantPolicyEntry[]): VariantPolicy {
+    return new VariantPolicy(entries);
+  }
+
+  static parse(serializedEntries: SerializedVariantPolicy): VariantPolicy {
+    return new VariantPolicy(serializedEntries);
+  }
+
+  static getEmpty(): VariantPolicy {
+    return new VariantPolicy([]);
+  }
+
   static mergePolices(policies: VariantPolicy[]): VariantPolicy {
     let allEntries: VariantPolicyEntry[] = [];
     allEntries = policies.reduce((acc, curr) => {
@@ -200,4 +243,51 @@ function uniqEntries(entries: Array<VariantPolicyEntry>): Array<VariantPolicyEnt
     return entry1.dependencyId === entry2.dependencyId && entry1.lifecycleType === entry2.lifecycleType;
   });
   return uniq;
+}
+
+function entriesFromKey(
+  configObject: VariantPolicyConfigObject,
+  keyName: PolicyConfigKeysNames,
+  source?: DependencySource,
+  hidden?: boolean,
+  usedOnly?: boolean
+): VariantPolicyEntry[] {
+  const obj = configObject[keyName];
+  if (!obj) {
+    return [];
+  }
+  const lifecycleType = LIFECYCLE_TYPE_BY_KEY_NAME[keyName];
+  const entries = Object.entries(obj).map(([depId, value]: [string, VariantPolicyConfigEntryValue]) => {
+    if (value) {
+      return createVariantPolicyEntry(depId, value, lifecycleType, source, hidden, usedOnly);
+    }
+    return undefined;
+  });
+  return compact(entries);
+}
+
+export function createVariantPolicyEntry(
+  depId: string,
+  value: VariantPolicyConfigEntryValue,
+  lifecycleType: DependencyLifecycleType,
+  source?: DependencySource,
+  hidden?: boolean,
+  usedOnly?: boolean
+): VariantPolicyEntry {
+  const version = typeof value === 'string' ? value : value.version;
+  const resolveFromEnv = typeof value === 'string' ? false : value.resolveFromEnv;
+
+  const entryValue: VariantPolicyEntryValue = {
+    version,
+    resolveFromEnv,
+  };
+  const entry: VariantPolicyEntry = {
+    dependencyId: depId,
+    value: entryValue,
+    lifecycleType,
+    source,
+    hidden,
+    usedOnly,
+  };
+  return entry;
 }

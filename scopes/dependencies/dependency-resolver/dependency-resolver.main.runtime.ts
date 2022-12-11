@@ -52,7 +52,6 @@ import {
   WorkspacePolicy,
   WorkspacePolicyFactory,
   VariantPolicy,
-  VariantPolicyFactory,
   WorkspacePolicyAddEntryOptions,
   WorkspacePolicyEntry,
   SerializedVariantPolicy,
@@ -401,12 +400,11 @@ export class DependencyResolverMain {
 
   async getPolicy(component: Component): Promise<VariantPolicy> {
     const entry = component.state.aspects.get(DependencyResolverAspect.id);
-    const factory = new VariantPolicyFactory();
     if (!entry) {
-      return factory.getEmpty();
+      return VariantPolicy.getEmpty();
     }
     const serializedPolicy: SerializedVariantPolicy = get(entry, ['data', 'policy'], []);
-    return factory.parse(serializedPolicy);
+    return VariantPolicy.parse(serializedPolicy);
   }
 
   /**
@@ -1012,13 +1010,12 @@ export class DependencyResolverMain {
         return file.relative === 'env.jsonc' || file.relative === 'env.json';
       });
     }
-
     if (!envJson) return undefined;
 
     const object = parse(envJson.contents.toString('utf8'));
-    const dependenciesPolicy = object?.dependenciesPolicy;
-    if (!dependenciesPolicy) return undefined;
-    const allPoliciesFromEnv = EnvPolicy.fromConfigObject(dependenciesPolicy);
+    const policy = object?.policy;
+    if (!policy) return undefined;
+    const allPoliciesFromEnv = EnvPolicy.fromConfigObject(policy);
     return allPoliciesFromEnv;
   }
 
@@ -1068,11 +1065,9 @@ export class DependencyResolverMain {
     id: BitId,
     legacyFiles?: SourceFile[]
   ): Promise<VariantPolicy> {
-    const variantPolicyFactory = new VariantPolicyFactory();
-    let policiesFromSlots: VariantPolicy = variantPolicyFactory.getEmpty();
-    let policiesFromConfig: VariantPolicy = variantPolicyFactory.getEmpty();
-    const policiesFromEnv: VariantPolicy = (await this.getComponentEnvPolicyFromExtension(configuredExtensions))
-      ?.variantPolicy;
+    let policiesFromSlots: VariantPolicy = VariantPolicy.getEmpty();
+    let policiesFromConfig: VariantPolicy = VariantPolicy.getEmpty();
+    const policiesFromEnv: VariantPolicy = await this.getComponentEnvPolicyFromExtension(configuredExtensions);
     const configuredIds = configuredExtensions.ids;
     const policiesTuples = this.policiesRegistry.toArray();
     configuredIds.forEach((extId) => {
@@ -1086,17 +1081,17 @@ export class DependencyResolverMain {
       });
 
       if (policyTupleToApply && policyTupleToApply[1]) {
-        const currentPolicy = variantPolicyFactory.fromConfigObject(policyTupleToApply[1], 'slots');
+        const currentPolicy = VariantPolicy.fromConfigObject(policyTupleToApply[1], 'slots');
         policiesFromSlots = VariantPolicy.mergePolices([policiesFromSlots, currentPolicy]);
       }
     });
     const currentExtension = configuredExtensions.findExtension(DependencyResolverAspect.id);
     const currentConfig = currentExtension?.config as unknown as DependencyResolverVariantConfig;
     if (currentConfig && currentConfig.policy) {
-      policiesFromConfig = variantPolicyFactory.fromConfigObject(currentConfig.policy, 'config');
+      policiesFromConfig = VariantPolicy.fromConfigObject(currentConfig.policy, 'config');
     }
     const policiesFromEnvForItself =
-      (await this.getPoliciesFromEnvForItself(id, legacyFiles)) ?? variantPolicyFactory.getEmpty();
+      (await this.getPoliciesFromEnvForItself(id, legacyFiles)) ?? VariantPolicy.getEmpty();
 
     const result = VariantPolicy.mergePolices([
       policiesFromEnv,
@@ -1112,7 +1107,7 @@ export class DependencyResolverMain {
    * So policies installed only locally for the env, not to any components that use the env.
    */
   async getPoliciesFromEnvForItself(id: BitId, legacyFiles?: SourceFile[]): Promise<VariantPolicy | undefined> {
-    return (await this.getEnvPolicyFromEnvLegacyId(id, legacyFiles))?.peersAutoDetectPolicy?.getOwnVariantPolicy();
+    return (await this.getEnvPolicyFromEnvLegacyId(id, legacyFiles))?.selfPolicy;
   }
 
   updateDepsOnLegacyTag(component: LegacyComponent, idTransformer: onTagIdTransformer): LegacyComponent {
@@ -1441,18 +1436,12 @@ export class DependencyResolverMain {
     });
     DependencyResolver.registerHarmonyEnvPolicyForComponentGetter(async (configuredExtensions: ExtensionDataList) => {
       const envPolicy = await dependencyResolver.getComponentEnvPolicyFromExtension(configuredExtensions);
-      const res = {
-        env: {
-          peers: envPolicy.peersAutoDetectPolicy.toNameSupportedRangeMap(),
-        },
-        components: envPolicy.variantPolicy.toLegacyAutoDetectOverrides(),
-      };
-      return res as LegacyEnvPolicyForComponent;
+      return envPolicy.toLegacyAutoDetectOverrides() as LegacyEnvPolicyForComponent;
     });
     DependencyResolver.registerHarmonyEnvPeersPolicyForEnvItselfGetter(async (id: BitId, files: SourceFile[]) => {
       const envPolicy = await dependencyResolver.getEnvPolicyFromEnvLegacyId(id, files);
       if (!envPolicy) return undefined;
-      return envPolicy.peersAutoDetectPolicy.toVersionManifest();
+      return envPolicy.selfPolicy.toVersionManifest();
     });
     aspectLoader.registerOnLoadRequireableExtensionSlot(
       dependencyResolver.onLoadRequireableExtensionSubscriber.bind(dependencyResolver)

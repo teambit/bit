@@ -1,20 +1,13 @@
 import { BitError } from '@teambit/bit-error';
-import type { EnvAutoDetectPeersPolicyConfigEntryValue, EnvPolicyEnvJsoncConfigObject, EnvPolicyLegacyConfigObject } from './env-policy';
+import type { EnvJsoncPolicyPeerEntry, EnvPolicyConfigObject } from './env-policy';
 
-export function validateEnvPolicyLegacyConfigObject(configObject: EnvPolicyLegacyConfigObject) {
+export function validateEnvPolicyConfigObject(configObject: EnvPolicyConfigObject) {
   if (configObject.peers) {
     validateEnvPeers(configObject.peers);
   }
 }
 
-export function validateEnvPolicyJsoncConfigObject(configObject: EnvPolicyEnvJsoncConfigObject) {
-  if (configObject.env.peers) {
-    validateEnvPeers(configObject.env.peers);
-  }
-
-}
-
-function validateEnvPeers(peers: EnvAutoDetectPeersPolicyConfigEntryValue[]){
+function validateEnvPeers(peers: EnvJsoncPolicyPeerEntry[]){
   for (const peer of peers) {
     if (peer.supportedRange === '') {
       throw new BitError(`Peer "${peer.name}" has an empty supportedRange`);
