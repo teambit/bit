@@ -87,20 +87,14 @@ export class SchemaExtractorContext {
   async computeSchema(node: Node) {
     const location = this.getLocation(node);
     const key = this.getComputedNodeKey(location);
-    // console.trace(
-    //   '🚀 ~ file: schema-extractor-context.ts:85 ~ SchemaExtractorContext ~ computeSchema ~ key',
-    //   key,
-    //   node.kind
-    // );
+
     const existingComputedSchema = this.nodes.get(key);
+
     if (existingComputedSchema) {
-      // console.log(
-      //   '🚀 ~ file: schema-extractor-context.ts:88 ~ SchemaExtractorContext ~ computeSchema ~ existingComputedSchema'
-      // );
       return existingComputedSchema;
     }
+
     const computedSchema = await this.extractor.computeSchema(node, this);
-    // console.log('🚀 ~ file: schema-extractor-context.ts:92 ~ SchemaExtractorContext ~ computeSchema ~ Computing ');
     this.setComputed(computedSchema);
     return computedSchema;
   }
@@ -383,14 +377,12 @@ export class SchemaExtractorContext {
     // if a node has "type" prop, it has the type data of the node. this normally happens when the code has the type
     // explicitly, e.g. `const str: string` vs implicitly `const str = 'some-string'`, which the node won't have "type"
     if (node.type && ts.isTypeNode(node.type)) {
-      // console.log('\n🚀 ~ node has type 386 \n\n\n', node.type);
       return this.computeSchema(node.type);
     }
 
     const definition = await this.getDefinition(node);
 
     if (!definition) {
-      // console.log('\n🚀 ~ node has no definition 393 \n\n\n', typeStr);
       return this.unknownExactType(node, location, typeStr, isTypeStrFromQuickInfo);
     }
 
@@ -425,8 +417,6 @@ export class SchemaExtractorContext {
       }
       throw err;
     }
-
-    // console.log('\n\n🚀EXTERNAL REF SchemaExtractorContext ~ typeStr\n\n', typeStr);
   }
 
   private getCompIdByPkgName(pkgName: string): ComponentID | undefined {
@@ -441,42 +431,20 @@ export class SchemaExtractorContext {
     const nodeIdentifierKey = this.getIdentifierKey(filePath);
     const mainFileIdentifierKey = this.getMainFileIdentifierKey();
 
-    // console.log(
-    //   '🚀 ~ file: schema-extractor-context.ts:378 ~ SchemaExtractorContext ~ nodeIdentifierKey',
-    //   nodeIdentifierKey
-    // );
-
-    // console.log(
-    //   '🚀 ~ file: schema-extractor-context.ts:379 ~ SchemaExtractorContext ~ mainFileIdentifierKey',
-    //   mainFileIdentifierKey
-    // );
-
     const nodeIdentifierList = this.identifiers.get(nodeIdentifierKey);
     const mainIdentifierList = this.identifiers.get(mainFileIdentifierKey);
 
     const nodeIdentifier = new Identifier(typeStr, nodeIdentifierKey);
     const mainIdentifier = new Identifier(typeStr, mainFileIdentifierKey);
 
-    // console.log('🚀 ~ file: schema-extractor-context.ts:392 ~ SchemaExtractorContext ~ nodeIdentifier', nodeIdentifier);
-    // console.log('🚀 ~ file: schema-extractor-context.ts:394 ~ SchemaExtractorContext ~ mainIdentifier', mainIdentifier);
-
     const parsedNodeIdentifier = nodeIdentifierList?.find(nodeIdentifier);
     const parsedMainIdentifier = mainIdentifierList?.find(mainIdentifier);
-    // console.log(
-    //   '🚀 ~ file: schema-extractor-context.ts:398 ~ SchemaExtractorContext ~ parsedMainIdentifier',
-    //   parsedMainIdentifier
-    // );
 
     const isExportedIdentifier = parsedNodeIdentifier && ExportIdentifier.isExportIdentifier(parsedNodeIdentifier);
     const isExportedFromMain = parsedMainIdentifier && ExportIdentifier.isExportIdentifier(parsedMainIdentifier);
-    // console.log(
-    //   '🚀 ~ file: schema-extractor-context.ts:402 ~ SchemaExtractorContext ~ isExportedFromMain',
-    //   isExportedFromMain
-    // );
 
     if (!isExportedIdentifier) return undefined;
 
-    // internal
     return new TypeRefSchema(location, typeStr, undefined, undefined, !isExportedFromMain);
   }
 

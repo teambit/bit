@@ -17,6 +17,7 @@ export abstract class SchemaNode {
   abstract toString(): string;
 
   toObject() {
+    console.log(this);
     return instanceToPlain(this);
   }
 }

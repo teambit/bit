@@ -91,7 +91,7 @@ async function exportSpecifierToSchemaNode(element: ExportSpecifier, context: Sc
   const definitionNode = await context.definition(definitionInfo);
 
   if (!definitionNode) {
-    return context.getTypeRefForExternalNode(element);
+    return context.resolveType(element, element.name.getText(), false);
   }
 
   // if it is reexported from another export

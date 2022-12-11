@@ -51,10 +51,7 @@ export class TypeScriptExtractor implements SchemaExtractor {
       (file) => compatibleExts.includes(file.extname) && file.path !== mainFile.path
     );
     const allFiles = [mainFile, ...internalFiles];
-    // console.log(
-    //   '🚀 ~ file: typescript.extractor.ts:53 ~ TypeScriptExtractor ~ extract ~ internalFiles',
-    //   internalFiles.map((i) => i.path)
-    // );
+
     const context = await this.createContext(tsserver, component, formatter);
 
     await pMapSeries(allFiles, async (file) => {
@@ -63,16 +60,13 @@ export class TypeScriptExtractor implements SchemaExtractor {
       const cacheKey = context.getIdentifierKeyForNode(ast);
       context.setIdentifiers(cacheKey, new IdentifierList(identifiers));
     });
-    // console.log(
-    //   '🚀 ~ file: typescript.extractor.ts:65 ~ TypeScriptExtractor ~ awaitpMapSeries ~ context',
-    //   Array.from(context.identifiers.entries()).map((e) => [e[0], e[1].identifiers])
-    // );
+
     const mainAst = this.parseSourceFile(mainFile);
     const moduleSchema = (await this.computeSchema(mainAst, context)) as ModuleSchema;
     moduleSchema.flatExportsRecursively();
     const apiScheme = moduleSchema;
     const location = context.getLocation(mainAst);
-    return new APISchema(location, apiScheme, [], component.id);
+    return new APISchema(location, apiScheme, component.id);
   }
 
   dispose() {
@@ -128,13 +122,6 @@ export class TypeScriptExtractor implements SchemaExtractor {
     // leave the next line commented out, it is used for debugging
     // console.log('transformer', transformer.constructor.name, node.getText());
     if (!transformer) {
-      this.logger.warn(
-        '🚀🚀🚀\n\n\n ~ file: typescript.extractor.ts ~ line 110 ~ TypeScriptExtractor ~ computeSchema ~ transformer',
-        node.kind,
-        context.getLocation(node),
-        node.getText(),
-        SyntaxKind[node.kind]
-      );
       return new UnImplementedSchema(context.getLocation(node), node.getText(), SyntaxKind[node.kind]);
     }
     return transformer.transform(node, context);

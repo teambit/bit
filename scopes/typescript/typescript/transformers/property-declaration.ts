@@ -21,13 +21,10 @@ export class PropertyDeclarationTransformer implements SchemaTransformer {
 
   // @todo - handle arrow function objects
   async transform(node: PropertyDeclaration | PropertySignature, context: SchemaExtractorContext) {
-    // console.log("🚀 ~ file: property-declaration.ts:19 ~ PropertyDeclarationTransformer ~ transform ~ node", node)
-
     const name = node.name.getText();
     const info = this.isComputedProperty(node) ? undefined : await context.getQuickInfo(node.name);
     const displaySig = info?.body?.displayString || node.getText();
     const typeStr = parseTypeFromQuickInfo(info);
-    // console.log("🚀 ~ file: property-declaration.ts:24 ~ PropertyDeclarationTransformer ~ transform ~ typeStr", typeStr)
     const type = await context.resolveType(node, typeStr);
     const isOptional = Boolean(node.questionToken);
     const doc = await context.jsDocToDocSchema(node);
