@@ -67,8 +67,8 @@ export class CheckoutMain {
     const consumer = this.workspace.consumer;
     const { version, ids, promptMergeOptions } = checkoutProps;
     await this.syncNewComponents(checkoutProps);
+    await this.workspace.scope.import(ids || [], { useCache: false, preferDependencyGraph: true });
     const bitIds = BitIds.fromArray(ids?.map((id) => id._legacy) || []);
-    await consumer.scope.import(bitIds, false);
     const { components } = await consumer.loadComponents(bitIds);
 
     const allComponentStatusBeforeMerge = await Promise.all(
