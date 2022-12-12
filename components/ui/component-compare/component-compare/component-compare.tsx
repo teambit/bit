@@ -1,7 +1,7 @@
 import React, { useContext, useMemo } from 'react';
 import classnames from 'classnames';
 import { LegacyComponentLog } from '@teambit/legacy-component-log';
-import { CollapsableMenuNav, ComponentContext, NavPlugin, TopBarNav, useComponent } from '@teambit/component';
+import { CollapsibleMenuNav, ComponentContext, NavPlugin, useComponent } from '@teambit/component';
 import { ComponentCompareContext } from '@teambit/component.ui.component-compare.context';
 import { useCompareQueryParam } from '@teambit/component.ui.component-compare.hooks.use-component-compare-url';
 import { ComponentCompareVersionPicker } from '@teambit/component.ui.component-compare.version-picker';
@@ -133,46 +133,37 @@ function RenderCompareScreen(props: ComponentCompareProps) {
 function CompareMenuNav({ tabs, state, hooks }: ComponentCompareProps) {
   const activeTab = state?.tabs?.id;
   const isControlled = state?.tabs?.controlled;
-  const extractedTabs: [string, NavPlugin & TabItem][] = (extractLazyLoadedData(tabs) || [])
-    .sort(sortTabs)
-    .map((tab, index) => {
-      const isActive = !state ? undefined : !!activeTab && !!tab?.id && activeTab === tab.id;
-      return [
-        tab.id || `tab-${index}`,
-        {
-          ...tab,
-          widget: tab.widget || typeof tab.props?.children !== 'string',
-          props: {
-            ...(tab.props || {}),
-            displayName: tab.displayName,
-            active: isActive,
-            onClick: onNavClicked({ id: tab.id, hooks }),
-            href: (!isControlled && tab.props?.href) || undefined,
-            activeClassName: styles.activeNav,
-            className: styles.navItem,
+  const _tabs = extractLazyLoadedData(tabs) || [];
+  const extractedTabs: [string, NavPlugin & TabItem][] = useMemo(
+    () =>
+      _tabs.sort(sortTabs).map((tab, index) => {
+        const isActive = !state ? undefined : !!activeTab && !!tab?.id && activeTab === tab.id;
+        return [
+          tab.id || `tab-${index}`,
+          {
+            ...tab,
+            widget: tab.widget || typeof tab.props?.children !== 'string',
+            props: {
+              ...(tab.props || {}),
+              displayName: tab.displayName,
+              active: isActive,
+              onClick: onNavClicked({ id: tab.id, hooks }),
+              href: (!isControlled && tab.props?.href) || undefined,
+              activeClassName: styles.activeNav,
+              className: styles.navItem,
+            },
           },
-        },
-      ];
-    });
-  const sortedTabs = extractedTabs.filter(([, tab]) => !tab.widget);
-  const sortedWidgets = extractedTabs.filter(([, tab]) => tab.widget);
+        ];
+      }),
+    [_tabs.length, activeTab]
+  );
+
+  const sortedTabs = useMemo(() => extractedTabs.filter(([, tab]) => !tab.widget), [extractedTabs.length, activeTab]);
+  const sortedWidgets = useMemo(() => extractedTabs.filter(([, tab]) => tab.widget), [extractedTabs.length, activeTab]);
 
   return (
     <div className={styles.navContainer}>
-      {/* <nav className={styles.navigation}>
-        {sortedTabs.map((tabItem, index) => {
-          return (
-            <TopBarNav
-              {...(tabItem.props || {})}
-              key={`compare-menu-nav-${index}-${tabItem.id}`}
-              active={isActive}
-              onClick={onNavClicked({ id: tabItem.id, hooks })}
-              href={(!isControlled && tabItem.props?.href) || undefined}
-            />
-          );
-        })}
-      </nav> */}
-      <CollapsableMenuNav navPlugins={sortedTabs} widgetPlugins={sortedWidgets} />
+      <CollapsibleMenuNav navPlugins={sortedTabs} widgetPlugins={sortedWidgets} />
     </div>
   );
 }

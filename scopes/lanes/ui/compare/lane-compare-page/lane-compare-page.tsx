@@ -15,6 +15,7 @@ export function LaneComparePage({ getLaneCompare, ...rest }: LaneComparePageProp
 
   const base = lanesModel.getDefaultLane() || lanesModel.lanes[0];
   const compare = lanesModel.getNonMainLanes()[0] || base;
+
   const LaneCompareComponent = getLaneCompare({ base, compare });
 
   return (

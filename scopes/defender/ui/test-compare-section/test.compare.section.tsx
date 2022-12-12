@@ -14,5 +14,5 @@ export class TestCompareSection implements Section {
     element: this.tester.getTesterCompare(),
   };
 
-  order = 30;
+  order = 50;
 }

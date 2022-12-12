@@ -102,15 +102,15 @@ export function LaneCompare({
     )
   );
 
-  const [closeDrawerList, onToggleDrawer] = useState<string[]>([]);
+  const [openDrawerList, onToggleDrawer] = useState<string[]>([]);
 
   const handleDrawerToggle = (id: string) => {
-    const isDrawerOpen = !closeDrawerList.includes(id);
+    const isDrawerOpen = openDrawerList.includes(id);
     if (isDrawerOpen) {
-      onToggleDrawer((list) => list.concat(id));
+      onToggleDrawer((list) => list.filter((drawer) => drawer !== id));
       return;
     }
-    onToggleDrawer((list) => list.filter((drawer) => drawer !== id));
+    onToggleDrawer((list) => list.concat(id));
   };
 
   const hooks = useCallback((_base?: ComponentID, _compare?: ComponentID) => {
@@ -148,7 +148,7 @@ export function LaneCompare({
   const ComponentCompares = useMemo(() => {
     return allComponents.map(([baseId, compareId]) => {
       const key = computeStateKey(baseId, compareId);
-      const open = closeDrawerList.includes(key);
+      const open = openDrawerList.includes(key);
 
       return (
         <Drawer
@@ -173,7 +173,7 @@ export function LaneCompare({
         />
       );
     });
-  }, [base.id.toString(), compare.id.toString(), closeDrawerList.length]);
+  }, [base.id.toString(), compare.id.toString(), openDrawerList.length]);
 
   return (
     <div {...rest} className={styles.laneCompareContainer}>

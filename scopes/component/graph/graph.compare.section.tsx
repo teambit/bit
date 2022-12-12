@@ -13,5 +13,5 @@ export class GraphCompareSection implements Section {
     element: <DependenciesCompare />,
   };
 
-  order = 30;
+  order = 25;
 }

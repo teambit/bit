@@ -21,7 +21,7 @@ export type MenuNavProps = {
   widgetPlugins?: [string, NavPlugin][];
 } & React.HTMLAttributes<HTMLElement>;
 
-export function CollapsableMenuNav({
+export function CollapsibleMenuNav({
   navigationSlot,
   widgetSlot,
   navPlugins = [],

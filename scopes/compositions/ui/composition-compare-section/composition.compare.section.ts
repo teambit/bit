@@ -6,7 +6,7 @@ export class CompositionCompareSection implements Section {
 
   navigationLink = {
     href: 'compositions',
-    children: 'Compositions',
+    children: 'Preview',
     order: 1,
   };
 
