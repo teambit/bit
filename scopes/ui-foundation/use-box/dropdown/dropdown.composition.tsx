@@ -37,8 +37,8 @@ export const UseBoxExample = () => {
           position='bottom-end'
           Menu={
             <div>
-              {methods.map(({ Title, Component }) => (
-                <div>
+              {methods.map(({ Title, Component }, index) => (
+                <div key={index}>
                   {Title}
                   {Component}
                 </div>
