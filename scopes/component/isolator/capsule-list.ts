@@ -55,4 +55,12 @@ export default class CapsuleList extends Array<Capsule> {
   static fromArray(capsules: Capsule[]) {
     return new CapsuleList(...capsules);
   }
+  /**
+   * determines whether or not a capsule can theoretically use the dists saved in the last snap, rather than re-compile them.
+   * practically, this optimization is used for components that have typescript as their compiler.
+   */
+  static async capsuleUsePreviouslySavedDists(component: Component): Promise<boolean> {
+    const isModified = await component.isModified();
+    return component.buildStatus === 'succeed' && !isModified;
+  }
 }

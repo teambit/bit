@@ -73,9 +73,10 @@ export class Network {
         if (originalSeedersCapsules.getCapsule(seederCapsule.component.id)) {
           return seederCapsule;
         }
-        const isModified = await seederCapsule.component.isModified();
-        const shouldCompile = isModified || seederCapsule.component.buildStatus !== 'succeed';
-        return shouldCompile ? seederCapsule : null;
+        const capsuleUsePreviouslySavedDists = await CapsuleList.capsuleUsePreviouslySavedDists(
+          seederCapsule.component
+        );
+        return capsuleUsePreviouslySavedDists ? null : seederCapsule;
       })
     );
     return CapsuleList.fromArray(compact(capsules));
