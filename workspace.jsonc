@@ -131,7 +131,7 @@
         "@teambit/explorer.ui.command-bar": "2.0.3",
         "@teambit/graph.cleargraph": "0.0.1",
         "@teambit/graphql.hooks.use-query-light": "1.0.0",
-        "@teambit/harmony": "0.4.5",
+        "@teambit/harmony": "0.4.6",
         "@teambit/pkg.content.packages-overview": "1.95.9",
         "@teambit/react.content.react-overview": "1.95.0",
         "@teambit/react.instructions.react-native.adding-tests": "0.0.1",
