@@ -194,7 +194,7 @@ export class VariantPolicy implements Policy<VariantPolicyConfigObject> {
       // We don't want the same entry to appear many times in different lifecycle types
       // this is important for example when a peer is configured by an env (on itself) which will make it a runtime dep of the env
       // but the env of the env is configure the same dep as peer in general (like with react)
-      if (!used.includes(entry.dependencyId)) {
+      if (!used.includes(entry.dependencyId) || entry.value.version === '-') {
         acc[keyName][entry.dependencyId] = entry.value.version;
         if (entry.value.version !== '-') {
           used.push(entry.dependencyId);
