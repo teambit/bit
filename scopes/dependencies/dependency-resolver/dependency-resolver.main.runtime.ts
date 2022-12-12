@@ -1,7 +1,7 @@
 import mapSeries from 'p-map-series';
 import { parse } from 'comment-json';
 import { MainRuntime } from '@teambit/cli';
-import ComponentAspect, { Component, ComponentMap, ComponentMain, IComponent } from '@teambit/component';
+import ComponentAspect, { Component, ComponentMap, ComponentMain, IComponent, ComponentID } from '@teambit/component';
 import type { ConfigMain } from '@teambit/config';
 import { join } from 'path';
 import { get, pick, uniq } from 'lodash';
@@ -979,6 +979,10 @@ export class DependencyResolverMain {
     return this.getComponentEnvPolicyFromEnv(env.env);
   }
 
+  async getEnvPolicyFromEnvId(id: ComponentID, legacyFiles?: SourceFile[]): Promise<EnvPolicy | undefined> {
+    return this.getEnvPolicyFromEnvLegacyId(id._legacy, legacyFiles);
+  }
+
   async getEnvPolicyFromEnvLegacyId(id: BitId, legacyFiles?: SourceFile[]): Promise<EnvPolicy | undefined> {
     const fromFile = await this.getEnvPolicyFromFile(id.toString(), legacyFiles);
     if (fromFile) return fromFile;
@@ -1107,7 +1111,8 @@ export class DependencyResolverMain {
    * So policies installed only locally for the env, not to any components that use the env.
    */
   async getPoliciesFromEnvForItself(id: BitId, legacyFiles?: SourceFile[]): Promise<VariantPolicy | undefined> {
-    return (await this.getEnvPolicyFromEnvLegacyId(id, legacyFiles))?.selfPolicy;
+    const envPolicy = await this.getEnvPolicyFromEnvLegacyId(id, legacyFiles);
+    return envPolicy?.selfPolicy;
   }
 
   updateDepsOnLegacyTag(component: LegacyComponent, idTransformer: onTagIdTransformer): LegacyComponent {
