@@ -74,7 +74,8 @@ export class Network {
           return seederCapsule;
         }
         const isModified = await seederCapsule.component.isModified();
-        return isModified ? seederCapsule : null;
+        const shouldCompile = isModified || seederCapsule.component.buildStatus !== 'succeed';
+        return shouldCompile ? seederCapsule : null;
       })
     );
     return CapsuleList.fromArray(compact(capsules));

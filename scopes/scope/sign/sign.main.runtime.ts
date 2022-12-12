@@ -172,7 +172,7 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
     const componentsToSkip: ComponentID[] = [];
     components.forEach((component) => {
       if (component.state._consumer.buildStatus === BuildStatus.Succeed) {
-        componentsToSign.push(component.id);
+        componentsToSkip.push(component.id);
       } else {
         componentsToSign.push(component.id);
       }
