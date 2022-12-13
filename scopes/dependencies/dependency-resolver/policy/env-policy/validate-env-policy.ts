@@ -7,7 +7,7 @@ export function validateEnvPolicyConfigObject(configObject: EnvPolicyConfigObjec
   }
 }
 
-function validateEnvPeers(peers: EnvJsoncPolicyPeerEntry[]) {
+function validateEnvPeers(peers: EnvJsoncPolicyPeerEntry[]){
   for (const peer of peers) {
     if (peer.supportedRange === '') {
       throw new BitError(`Peer "${peer.name}" has an empty supportedRange`);

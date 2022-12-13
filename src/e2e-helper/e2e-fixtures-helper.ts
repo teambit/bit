@@ -397,9 +397,9 @@ export default () => 'comp${index} and ' + ${nextComp}();`;
     };
     const envJsoncFileContentJson = {
       policy: options.policy || {},
-      patterns: options.patterns || defaultPatterns,
-    };
-    this.fs.outputFile(envJsoncFile, JSON.stringify(envJsoncFileContentJson, null, 2));
+      patterns: options.patterns || defaultPatterns
+    }
+    this.fs.outputFile(envJsoncFile, JSON.stringify(envJsoncFileContentJson, null, 2))
   }
 
   populateEnvMainRuntime(

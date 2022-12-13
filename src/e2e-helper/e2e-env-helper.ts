@@ -240,11 +240,7 @@ export default class EnvHelper {
    * @param extensionsBaseFolder
    * @returns
    */
-  setCustomNewEnv(
-    extensionsBaseFolder = 'react-based-env',
-    basePackages: string[] = ['@teambit/react.react-env'],
-    envJsoncOptions: GenerateEnvJsoncOptions
-  ): string {
+  setCustomNewEnv(extensionsBaseFolder = 'react-based-env', basePackages: string[] = ['@teambit/react.react-env'], envJsoncOptions: GenerateEnvJsoncOptions): string {
     this.fixtures.copyFixtureExtensions(extensionsBaseFolder);
     this.command.addComponent(extensionsBaseFolder);
     this.fixtures.generateEnvJsoncFile(extensionsBaseFolder, envJsoncOptions);

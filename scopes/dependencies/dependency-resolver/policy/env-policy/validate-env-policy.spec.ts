@@ -7,9 +7,9 @@ describe('validateEnvPolicyConfigObject', () => {
     );
   });
   it('should throw an exception if peer supportedRange is null', () => {
-    expect(() =>
-      validateEnvPolicyConfigObject({ peers: [{ name: 'peer', supportedRange: null }] } as any)
-    ).toThrowError('Peer "peer" has no supportedRange set');
+    expect(() => validateEnvPolicyConfigObject({ peers: [{ name: 'peer', supportedRange: null }] } as any)).toThrowError(
+      'Peer "peer" has no supportedRange set'
+    );
   });
   it('should throw an exception if peer version is empty', () => {
     expect(() =>
