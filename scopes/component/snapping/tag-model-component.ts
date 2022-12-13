@@ -23,6 +23,7 @@ import { NewerVersionFound } from '@teambit/legacy/dist/consumer/exceptions';
 import ShowDoctorError from '@teambit/legacy/dist/error/show-doctor-error';
 import logger from '@teambit/legacy/dist/logger/logger';
 import { sha1 } from '@teambit/legacy/dist/utils';
+import { ComponentID } from '@teambit/component-id';
 import { AutoTagResult, getAutoTagInfo } from '@teambit/legacy/dist/scope/component-ops/auto-tag';
 import { getValidVersionOrReleaseType } from '@teambit/legacy/dist/utils/semver-helper';
 import { BuilderMain, OnTagOpts } from '@teambit/builder';
@@ -36,7 +37,6 @@ import { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { ScopeMain } from '@teambit/scope';
 import { Workspace } from '@teambit/workspace';
 import { SnappingMain, TagDataPerComp } from './snapping.main.runtime';
-import { ComponentID } from '@teambit/component-id';
 
 export type onTagIdTransformer = (id: BitId) => BitId | null;
 

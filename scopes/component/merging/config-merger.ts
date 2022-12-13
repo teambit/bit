@@ -192,8 +192,9 @@ function depResolverStrategy(params: MergeStrategyParams): MergeStrategyResult |
     });
   });
   const otherKeysFromCurrent = omit(currentConfig, ['policy']);
+  const config = { ...otherKeysFromCurrent, policy: mergedPolicy };
   if (hasConflict) {
-    const mergedConfigSplit = JSON.stringify(mergedPolicy, undefined, 2).split('\n');
+    const mergedConfigSplit = JSON.stringify(config, undefined, 2).split('\n');
     const conflictLines = mergedConfigSplit.map((line) => {
       if (!line.includes(conflictIndicator)) return line;
       const [, pkgName, currentVal, otherVal, endLine] = line.split('::');
@@ -210,7 +211,7 @@ ${'>'.repeat(7)} ${params.otherLabel}`;
     conflictLines.unshift(`  "${params.id}": {`);
     // the first conflict indicator is indented, remove the indentation. join all lines with indentation of 2.
     const conflict = conflictLines.join('\n  ').replace(`  ${'<'.repeat(7)}`, '<'.repeat(7));
-    return { id: params.id, config: { ...otherKeysFromCurrent, policy: mergedPolicy }, conflict, isMerged };
+    return { id: params.id, config, conflict, isMerged };
   }
-  return { id: params.id, config: { ...otherKeysFromCurrent, policy: mergedPolicy }, isMerged };
+  return { id: params.id, config, isMerged };
 }
