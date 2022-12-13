@@ -18,6 +18,7 @@ import ComponentNotFoundInPath from '@teambit/legacy/dist/consumer/component/exc
 import { ComponentLoadOptions } from '@teambit/legacy/dist/consumer/component/component-loader';
 import { Workspace } from '../workspace';
 import { WorkspaceComponent } from './workspace-component';
+import { MergeConfigConflict } from '../exceptions/merge-config-conflict';
 
 export class WorkspaceComponentLoader {
   private componentsCache: InMemoryCache<Component>; // cache loaded components
@@ -145,7 +146,11 @@ export class WorkspaceComponentLoader {
       if (!componentFromScope) throw new MissingBitMapComponent(id.toString());
       return componentFromScope;
     }
-    const { extensions } = await this.workspace.componentExtensions(id, componentFromScope);
+    const { extensions, errors } = await this.workspace.componentExtensions(id, componentFromScope);
+    if (errors?.some((err) => err instanceof MergeConfigConflict)) {
+      consumerComponent.issues.getOrCreate(IssuesClasses.MergeConfigHasConflict).data = true;
+    }
+
     const extensionsFromConsumerComponent = consumerComponent.extensions || new ExtensionDataList();
     // Merge extensions added by the legacy code in memory (for example data of dependency resolver)
     const extensionDataList = ExtensionDataList.mergeConfigs([

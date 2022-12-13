@@ -98,6 +98,7 @@ import { GraphFromFsBuilder, ShouldLoadFunc } from './build-graph-from-fs';
 import { BitMap } from './bit-map';
 import { WorkspaceAspect } from './workspace.aspect';
 import { GraphIdsFromFsBuilder } from './build-graph-ids-from-fs';
+import { MergeConfigConflict } from './exceptions/merge-config-conflict';
 
 export type EjectConfResult = {
   configPath: string;
@@ -1089,12 +1090,14 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
   ): Promise<{
     extensions: ExtensionDataList;
     beforeMerge: Array<{ extensions: ExtensionDataList; origin: ExtensionsOrigin; extraData: any }>; // useful for debugging
+    errors?: Error[];
   }> {
     // TODO: consider caching this result
     let configFileExtensions: ExtensionDataList | undefined;
     let variantsExtensions: ExtensionDataList | undefined;
     let wsDefaultExtensions: ExtensionDataList | undefined;
     const mergeFromScope = true;
+    const errors: Error[] = [];
 
     const bitMapEntry = this.consumer.bitMap.getComponentIfExist(componentId._legacy);
     const bitMapExtensions = bitMapEntry?.config;
@@ -1102,7 +1105,19 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     let configMergeExtensions: ExtensionDataList | undefined;
     let configMergeExtensionsSpecific: ExtensionDataList | undefined;
     let configMergeExtensionsNonSpecific: ExtensionDataList | undefined;
-    if (configMergeExtensions) {
+    let configMergeFile;
+    try {
+      configMergeFile = await this.getConfigMergeFile(componentId);
+    } catch (err) {
+      if (!(err instanceof MergeConfigConflict)) {
+        throw err;
+      }
+      this.logger.error(`unable to parse the config file for ${componentId.toString()} due to conflicts`);
+      errors.push(err);
+    }
+
+    if (configMergeFile) {
+      configMergeExtensions = ExtensionDataList.fromConfigObject(configMergeFile);
       const [specific, nonSpecific] = partition(
         configMergeExtensions,
         (entry) => entry.config[AspectSpecificField] === true
@@ -1115,11 +1130,6 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     const [specific, nonSpecific] = partition(scopeExtensions, (entry) => entry.config[AspectSpecificField] === true);
     const scopeExtensionsNonSpecific = new ExtensionDataList(...nonSpecific);
     const scopeExtensionsSpecific = new ExtensionDataList(...specific);
-
-    const configMergeFile = await this.getConfigMergeFile(componentId);
-    if (configMergeFile) {
-      configMergeExtensions = ExtensionDataList.fromConfigObject(configMergeFile);
-    }
 
     const componentConfigFile = await this.componentConfigFile(componentId);
     if (componentConfigFile) {
@@ -1225,12 +1235,13 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     return {
       extensions,
       beforeMerge: extensionsToMerge,
+      errors,
     };
   }
 
   private async getConfigMergeFile(componentId: ComponentID): Promise<Record<string, any> | undefined> {
     const compDir = this.componentDir(componentId, { ignoreVersion: true });
-    const configMergePath = path.join(this.path, compDir, MergeConfigFilename);
+    const configMergePath = path.join(compDir, MergeConfigFilename);
     let fileContent: string;
     try {
       fileContent = await fs.readFile(configMergePath, 'utf-8');
@@ -1243,7 +1254,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     try {
       return JSON.parse(fileContent);
     } catch (err: any) {
-      throw new Error(`failed parsing ${configMergePath}. resolve the conflicts manually and try again`);
+      throw new MergeConfigConflict(configMergePath);
     }
   }
 
