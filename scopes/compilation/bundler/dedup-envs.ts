@@ -64,13 +64,11 @@ async function groupByPeersHash(contexts: ExecutionContext[], dependencyResolver
     contexts.map(async (context) => {
       const env = context.env;
       const policy = await dependencyResolver.getComponentEnvPolicyFromEnv(env);
-      const autoDetectPeersHash = policy.peersAutoDetectPolicy.hashNameVersion();
-      const regularPeersHash = policy.variantPolicy.byLifecycleType('peer').hashNameVersion();
-      const combinedHash = `${autoDetectPeersHash}:${regularPeersHash}`;
-      if (!peerGroups[combinedHash]) {
-        peerGroups[combinedHash] = [];
+      const peersHash = policy.byLifecycleType('peer').hashNameVersion();
+      if (!peerGroups[peersHash]) {
+        peerGroups[peersHash] = [];
       }
-      peerGroups[combinedHash].push(context);
+      peerGroups[peersHash].push(context);
     })
   );
   return indexPeerGroupsById(peerGroups);

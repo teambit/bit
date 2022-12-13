@@ -218,7 +218,7 @@ export class DependencyInstaller {
         if (manifest) {
           acc[dir] = manifest.toJson({ copyPeerToRuntime: copyPeerToRuntimeOnComponents });
           acc[dir].defaultPeerDependencies = fromPairs(
-            manifest.envPolicy.peersAutoDetectPolicy.entries.map(({ name, version }) => [name, version])
+            manifest.envPolicy.selfPolicy.toNameVersionTuple()
           );
         }
         return acc;

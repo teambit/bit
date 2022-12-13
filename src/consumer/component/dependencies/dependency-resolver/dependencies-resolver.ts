@@ -65,14 +65,9 @@ type WorkspacePolicyGetter = () => {
 };
 
 export type EnvPolicyForComponent = {
-  env: {
-    peers: { [name: string]: string };
-  };
-  components: {
-    dependencies: { [name: string]: string };
-    devDependencies: { [name: string]: string };
-    peerDependencies: { [name: string]: string };
-  };
+  dependencies: { [name: string]: string };
+  devDependencies: { [name: string]: string };
+  peerDependencies: { [name: string]: string };
 };
 
 type HarmonyEnvPolicyForComponentGetter = (configuredExtensions: ExtensionDataList) => Promise<EnvPolicyForComponent>;
@@ -1173,16 +1168,17 @@ either, use the ignore file syntax or change the require statement to have a mod
     if (!envPolicy || !Object.keys(envPolicy).length) {
       return;
     }
-    if (envPolicy.env.peers) {
-      await this.applyAutoDetectedPeersFromEnvOnComponent(envPolicy.env);
-    }
-    if (envPolicy.components) {
-      await this.applyComponentPolicyFromEnvOnComponent(envPolicy.components);
-    }
-  }
-
-  private async applyComponentPolicyFromEnvOnComponent(policy: EnvPolicyForComponent['components']): Promise<void> {
     const originallyExists: string[] = [];
+    let missingPackages: string[] = [];
+    // We want to also add missing packages to the peer list as we know to resolve the version from the env anyway
+    // @ts-ignore
+    const missingsData = this.issues.getIssueByName<IssuesClasses.MissingPackagesDependenciesOnFs>(
+      'MissingPackagesDependenciesOnFs'
+    )?.data;
+    if (missingsData) {
+      // @ts-ignore
+      missingPackages = union(...(Object.values(missingsData) || []));
+    }
     ['dependencies', 'devDependencies', 'peerDependencies'].forEach((field) => {
       R.forEachObjIndexed((pkgVal, pkgName) => {
         if (this.overridesDependencies.shouldIgnorePeerPackage(pkgName)) return;
@@ -1203,7 +1199,8 @@ either, use the ignore file syntax or change the require statement to have a mod
           // }
           // in that case we might remove it before getting to the devDeps then we will think that it wasn't required in the component
           // which is incorrect
-          !originallyExists.includes(pkgName)
+          !originallyExists.includes(pkgName) &&
+          !missingPackages.includes(pkgName)
         ) {
           return;
         }
@@ -1211,51 +1208,21 @@ either, use the ignore file syntax or change the require statement to have a mod
         const key = DepsKeysToAllPackagesDepsKeys[field];
 
         delete this.allPackagesDependencies[key][pkgName];
+        // When changing peer dependency we want it to be stronger than the other types
+        if (field === 'peerDependencies') {
+          delete this.allPackagesDependencies.devPackageDependencies[pkgName];
+          delete this.allPackagesDependencies.packageDependencies[pkgName];
+        }
         // delete this.allPackagesDependencies.packageDependencies[pkgName];
         // delete this.allPackagesDependencies.devPackageDependencies[pkgName];
         // delete this.allPackagesDependencies.peerPackageDependencies[pkgName];
         if (pkgVal !== MANUALLY_REMOVE_DEPENDENCY) {
           this.allPackagesDependencies[key][pkgName] = pkgVal;
         }
-      }, policy[field]);
+      }, envPolicy[field]);
     });
   }
 
-  private async applyAutoDetectedPeersFromEnvOnComponent(envPolicy: EnvPolicyForComponent['env']): Promise<void> {
-    const peersFromPolicy = envPolicy.peers || {};
-    const peerDeps = this.allPackagesDependencies.peerPackageDependencies || {};
-    // we are not iterate component deps since they are resolved from what actually installed
-    // the policy used for installation only in that case
-    ['packageDependencies', 'devPackageDependencies', 'peerPackageDependencies'].forEach((field) => {
-      R.forEachObjIndexed((_pkgVal, pkgName) => {
-        const peerVersionFromEnvPolicy = peersFromPolicy[pkgName];
-        if (this.overridesDependencies.shouldIgnorePeerPackage(pkgName)) return;
-        if (peerVersionFromEnvPolicy) {
-          delete this.allPackagesDependencies[field][pkgName];
-          peerDeps[pkgName] = peerVersionFromEnvPolicy;
-        }
-      }, this.allPackagesDependencies[field]);
-    });
-    // We want to also add missing packages to the peer list as we know to resolve the version from the env anyway
-    // @ts-ignore
-    const missingsData = this.issues.getIssueByName<IssuesClasses.MissingPackagesDependenciesOnFs>(
-      'MissingPackagesDependenciesOnFs'
-    )?.data;
-    if (missingsData) {
-      // @ts-ignore
-      const missingPackages: string[] = union(...(Object.values(missingsData) || []));
-
-      missingPackages.forEach((pkgName) => {
-        const peerVersionFromEnvPolicy = peersFromPolicy[pkgName];
-        if (peerVersionFromEnvPolicy) {
-          peerDeps[pkgName] = peerVersionFromEnvPolicy;
-        }
-      });
-    }
-
-    // TODO: handle component deps once we support peers between components
-    this.allPackagesDependencies.peerPackageDependencies = peerDeps;
-  }
   async applyAutoDetectedPeersFromEnvOnEnvItSelf(): Promise<void> {
     const envPolicy = await DependencyResolver.getHarmonyEnvPeersPolicyForEnvItself(
       this.component.id,
