@@ -1,18 +1,29 @@
 import { DependencyResolverAspect } from '@teambit/dependency-resolver';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
+import { omit, uniq } from 'lodash';
 import { ConfigMergeResult } from './config-merge-result';
 
+type GenericConfig = Record<string, any>;
 type GenericConfigOrRemoved = Record<string, any> | '-';
+
 export type MergeStrategyResult = {
   id: string;
   config: GenericConfigOrRemoved | null;
   conflict?: string;
   isMerged?: boolean;
 };
-type MergeStrategyParams = {
+type MergeStrategyParamsWithRemoved = {
   id: string;
   currentConfig: GenericConfigOrRemoved;
   otherConfig: GenericConfigOrRemoved;
+  baseConfig?: GenericConfigOrRemoved;
+  currentLabel: string;
+  otherLabel: string;
+};
+type MergeStrategyParams = {
+  id: string;
+  currentConfig: GenericConfig;
+  otherConfig: GenericConfig;
   baseConfig?: GenericConfigOrRemoved;
   currentLabel: string;
   otherLabel: string;
@@ -76,7 +87,7 @@ export class ConfigMerger {
       return { id, config: otherConfig, isMerged: true };
     }
     // either no baseConfig, or baseConfig is also different from both: other and local. that's a conflict.
-    const mergeStrategyParams: MergeStrategyParams = {
+    const mergeStrategyParams: MergeStrategyParamsWithRemoved = {
       id,
       currentConfig,
       otherConfig,
@@ -90,7 +101,7 @@ export class ConfigMerger {
     }
     const strategies: MergeStrategy[] = [depResolverStrategy];
     for (const strategy of strategies) {
-      const result = strategy(mergeStrategyParams);
+      const result = strategy(mergeStrategyParams as MergeStrategyParams);
       if (result) {
         return result;
       }
@@ -105,22 +116,101 @@ function basicStrategy({
   otherConfig,
   currentLabel,
   otherLabel,
-}: MergeStrategyParams): MergeStrategyResult {
-  const conflict = `"${id}":
+}: MergeStrategyParamsWithRemoved): MergeStrategyResult {
+  const formatConfig = (conf: GenericConfigOrRemoved) => {
+    const confStr = JSON.stringify(conf, undefined, 2);
+    const confStrSplit = confStr.split('\n');
+    confStrSplit.shift(); // remove first {
+    confStrSplit.pop(); // remove last }
+    return confStrSplit.join('\n  ');
+  };
+  const conflict = `"${id}": {
 ${'<'.repeat(7)} ${currentLabel}
-    ${JSON.stringify(currentConfig, undefined, 2).replaceAll('\n', '\n    ')}
+  ${formatConfig(currentConfig)}
 =======
-    ${JSON.stringify(otherConfig, undefined, 2).replaceAll('\n', '\n    ')}
-${'>'.repeat(7)} ${otherLabel}`;
+  ${formatConfig(otherConfig)}
+${'>'.repeat(7)} ${otherLabel}
+  }`;
   return { id, config: { currentConfig, otherConfig }, conflict };
 }
 
-function depResolverStrategy({
-  id,
-  currentConfig,
-  otherConfig,
-  baseConfig,
-}: MergeStrategyParams): MergeStrategyResult | undefined {
-  if (id !== DependencyResolverAspect.id) return undefined;
-  return undefined;
+function depResolverStrategy(params: MergeStrategyParams): MergeStrategyResult | undefined {
+  if (params.id !== DependencyResolverAspect.id) return undefined;
+  const { currentConfig, otherConfig, baseConfig } = params;
+  if (!currentConfig.policy && !otherConfig.policy) return undefined; // fallback to basic strategy
+
+  // if one of them specific and the other one, take the one that is specific.
+  if (currentConfig.__specific && !otherConfig.__specific) {
+    return { id: params.id, config: currentConfig };
+  }
+  if (!currentConfig.__specific && otherConfig.__specific) {
+    return { id: params.id, config: otherConfig, isMerged: true };
+  }
+
+  // if there other fields other than "policy" are different, fall back to basic strategy.
+  const allKeys = uniq([...Object.keys(currentConfig), ...Object.keys(otherConfig)]);
+  const otherKeys = allKeys.filter((key) => key !== 'policy' && key !== '_specific');
+  const hasDiffInOtherKeys = otherKeys.some(
+    (key) => JSON.stringify(currentConfig[key]) !== JSON.stringify(otherConfig[key])
+  );
+  if (hasDiffInOtherKeys) return undefined;
+
+  const mergedPolicy = {
+    dependencies: {},
+    devDependencies: {},
+    peerDependencies: {},
+  };
+  let isMerged = false;
+  let hasConflict = false;
+  const conflictIndicator = 'CONFLICT::';
+  ['dependencies', 'devDependencies', 'peerDependencies'].forEach((depType) => {
+    const currentPolicy = currentConfig.policy?.[depType];
+    const otherPolicy = otherConfig.policy?.[depType];
+    const allPolicyKeys = uniq(Object.keys(currentPolicy || {}).concat(Object.keys(otherPolicy || {})));
+    if (!allPolicyKeys.length) return;
+
+    allPolicyKeys.forEach((pkgName) => {
+      const currentVal = currentPolicy?.[pkgName];
+      const otherVal = otherPolicy?.[pkgName];
+      const baseVal = baseConfig !== '-' && baseConfig?.policy?.[depType]?.[pkgName];
+      if (currentVal === otherVal) {
+        mergedPolicy[depType][pkgName] = currentVal;
+        return;
+      }
+      if (baseVal === otherVal) {
+        mergedPolicy[depType][pkgName] = currentVal;
+        return;
+      }
+      if (baseVal === currentVal) {
+        mergedPolicy[depType][pkgName] = otherVal;
+        isMerged = true;
+        return;
+      }
+      // either no baseVal, or baseVal is also different from both: other and local. that's a conflict.
+      hasConflict = true;
+      mergedPolicy[depType][pkgName] = `${conflictIndicator}${pkgName}::${currentVal}::${otherVal}::`;
+    });
+  });
+  const otherKeysFromCurrent = omit(currentConfig, ['policy']);
+  if (hasConflict) {
+    const mergedConfigSplit = JSON.stringify(mergedPolicy, undefined, 2).split('\n');
+    const conflictLines = mergedConfigSplit.map((line) => {
+      if (!line.includes(conflictIndicator)) return line;
+      const [, pkgName, currentVal, otherVal, endLine] = line.split('::');
+      const shouldEndWithComma = endLine.includes(',');
+      const comma = shouldEndWithComma ? ',' : '';
+      return `${'<'.repeat(7)} ${params.currentLabel}
+      "${pkgName}": "${currentVal}${comma}"
+=======
+      "${pkgName}": "${otherVal}${comma}"
+${'>'.repeat(7)} ${params.otherLabel}`;
+    });
+    // replace the first line with line with the id
+    conflictLines.shift();
+    conflictLines.unshift(`  "${params.id}": {`);
+    // the first conflict indicator is indented, remove the indentation. join all lines with indentation of 2.
+    const conflict = conflictLines.join('\n  ').replace(`  ${'<'.repeat(7)}`, '<'.repeat(7));
+    return { id: params.id, config: { ...otherKeysFromCurrent, policy: mergedPolicy }, conflict, isMerged };
+  }
+  return { id: params.id, config: { ...otherKeysFromCurrent, policy: mergedPolicy }, isMerged };
 }

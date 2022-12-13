@@ -633,8 +633,9 @@ export class MergingMain {
     await manyComponentsWriter.writeAll();
 
     if (configMergeResult) {
-      if (!componentWithDependencies.component.writtenPath)
+      if (!componentWithDependencies.component.writtenPath) {
         throw new Error(`componentWithDependencies.component.writtenPath is missing for ${id.toString()}`);
+      }
       const configMergeFile = configMergeResult.generateConfigMergeFile();
       if (configMergeFile) {
         const configMergePath = path.join(

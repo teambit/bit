@@ -119,4 +119,37 @@ describe('merge config scenarios', function () {
     describe('fixing the conflict with ours', () => {});
     describe('fixing the conflict with theirs', () => {});
   });
+  describe('diverge with different dependencies config', () => {
+    let mainBeforeDiverge: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1);
+      helper.command.dependenciesSet('comp1', 'lodash@3.3.1');
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      mainBeforeDiverge = helper.scopeHelper.cloneLocalScope();
+
+      helper.command.createLane();
+      helper.command.deprecateComponent('comp1');
+      helper.command.dependenciesSet('comp1', 'ramda@0.0.20', '--dev');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+
+      helper.scopeHelper.getClonedLocalScope(mainBeforeDiverge);
+      helper.command.deprecateComponent('comp1');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.undeprecateComponent('comp1');
+      helper.command.dependenciesSet('comp1', 'ramda@0.0.21', '--dev');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
+      helper.command.importLane('dev', '--skip-dependency-installation');
+      helper.command.mergeLane('main', '--no-snap --skip-dependency-installation');
+    });
+    it('bit status should show the component with an issue of ConfigMergeConflict', () => {});
+    describe('fixing the conflict with ours', () => {});
+    describe('fixing the conflict with theirs', () => {});
+  });
 });

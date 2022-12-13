@@ -13,10 +13,9 @@ export class ConfigMergeResult {
       if (conflict) return conflict;
       return JSON.stringify({ [id]: config }, null, 2);
     });
-    return `[
-  {
-    ${configMergeAspects.join(',\n')}}
-  }
-]`;
+    return `{
+  ${configMergeAspects.join(',\n')}
+}
+`;
   }
 }
