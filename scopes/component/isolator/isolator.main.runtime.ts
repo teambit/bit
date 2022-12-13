@@ -453,9 +453,7 @@ export class IsolatorMain {
     const unmodifiedComps: Component[] = [];
     await Promise.all(
       components.map(async (component) => {
-        const isModified = await component.isModified();
-        if (!isModified && component.buildStatus === 'succeed') {
-          // the "component.buildStatus" check is important for "bit sign" when on lane to not go to the original scope
+        if (await CapsuleList.capsuleUsePreviouslySavedDists(component)) {
           unmodifiedComps.push(component);
         } else {
           modifiedComps.push(component);
@@ -471,7 +469,7 @@ export class IsolatorMain {
       components.map(async (component) => {
         const capsule = capsuleList.getCapsule(component.id);
         if (!capsule) return;
-        const scope = (await component.isModified()) ? undefined : legacyScope;
+        const scope = (await CapsuleList.capsuleUsePreviouslySavedDists(component)) ? legacyScope : undefined;
         const dataToPersist = await this.populateComponentsFilesToWriteForCapsule(component, allIds, scope, opts);
         await dataToPersist.persistAllToCapsule(capsule, { keepExistingCapsule: true });
       })
