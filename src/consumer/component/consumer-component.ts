@@ -550,7 +550,6 @@ export default class Component {
       workspaceConfig,
       overridesFromModel,
       componentConfig,
-      consumer.isLegacy,
       files
     );
     const packageJsonFile = (componentConfig && componentConfig.packageJsonFile) || undefined;
