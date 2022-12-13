@@ -154,6 +154,7 @@ describe('merge config scenarios', function () {
   });
   describe('diverge with different dependencies config', () => {
     let mainBeforeDiverge: string;
+    let beforeConfigResolved: string;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateComponents(1);
@@ -180,6 +181,7 @@ describe('merge config scenarios', function () {
       helper.scopeHelper.addRemoteScope();
       helper.command.importLane('dev', '--skip-dependency-installation');
       helper.command.mergeLane('main', '--no-snap --skip-dependency-installation');
+      beforeConfigResolved = helper.scopeHelper.cloneLocalScope();
     });
     it('bit status should show the component with an issue of MergeConfigHasConflict', () => {
       helper.command.expectStatusToHaveIssue(IssuesClasses.MergeConfigHasConflict.name);
@@ -188,11 +190,23 @@ describe('merge config scenarios', function () {
       before(() => {
         helper.general.fixMergeConfigConflict('ours', 'comp1');
       });
-      it('should show the component deprecated', () => {
-        const deprecationData = helper.command.showAspectConfig('comp1', Extensions.deprecation);
-        expect(deprecationData.config.deprecate).to.be.true;
+      it('should show the dev-dependency as it was set on the lane', () => {
+        const showConfig = helper.command.showAspectConfig('comp1', Extensions.dependencyResolver);
+        const ramdaDep = showConfig.data.dependencies.find((d) => d.id === 'ramda');
+        expect(ramdaDep.version).to.equal('0.0.20');
+        expect(ramdaDep.lifecycle).to.equal('dev');
       });
     });
-    describe('fixing the conflict with theirs', () => {});
+    describe('fixing the conflict with theirs', () => {
+      before(() => {
+        helper.scopeHelper.getClonedLocalScope(beforeConfigResolved);
+        helper.general.fixMergeConfigConflict('theirs', 'comp1');
+      });
+      it('should show the dev-dependency as it was set on main', () => {
+        const showConfig = helper.command.showAspectConfig('comp1', Extensions.dependencyResolver);
+        const ramdaDep = showConfig.data.dependencies.find((d) => d.id === 'ramda');
+        expect(ramdaDep.version).to.equal('0.0.21');
+      });
+    });
   });
 });
