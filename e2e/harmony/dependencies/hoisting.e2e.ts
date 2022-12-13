@@ -29,9 +29,8 @@ describe('pnpm with hoisted node linker, when there is a dependency that has the
     // The "once" from the registry doesn't have a dist directory
     expect(path.join(helper.fixtures.scopes.localPath, 'node_modules/once/dist')).to.be.a.path();
   });
-  it("should nest the dependency from the registry into the dependent package's node_modules", () => {
-    expect(
-      path.join(helper.fixtures.scopes.localPath, 'node_modules/map-limit/node_modules/once/package.json')
-    ).to.be.a.path();
+  it('should nest the dependency from the registry into the dependent package\'s node_modules', () => {
+    expect(path.join(helper.fixtures.scopes.localPath, 'node_modules/map-limit/node_modules/once/package.json')).to.be.a.path();
   });
 });
+

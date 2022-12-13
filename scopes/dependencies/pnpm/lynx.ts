@@ -177,9 +177,7 @@ export async function install(
   let externalDependencies: Set<string> | undefined;
   if (options?.rootComponents) {
     externalDependencies = new Set(
-      Object.values(manifestsByPaths)
-        .map(({ name }) => name)
-        .filter(Boolean) as string[]
+      Object.values(manifestsByPaths).map(({ name }) => name).filter(Boolean) as string[]
     );
   }
   if (!manifestsByPaths[rootDir].dependenciesMeta) {
