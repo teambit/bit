@@ -151,7 +151,7 @@ importers:
       '@teambit/explorer.ui.command-bar': 2.0.3
       '@teambit/graph.cleargraph': 0.0.1
       '@teambit/graphql.hooks.use-query-light': 1.0.0
-      '@teambit/harmony': 0.3.3
+      '@teambit/harmony': 0.4.6
       '@teambit/pkg.content.packages-overview': 1.95.9
       '@teambit/react.content.react-overview': 1.95.0
       '@teambit/react.instructions.react-native.adding-tests': 0.0.1
@@ -689,7 +689,7 @@ importers:
       '@teambit/explorer.ui.command-bar': 2.0.3_4optbk6zf66nf2nntaphzfhyoy
       '@teambit/graph.cleargraph': 0.0.1
       '@teambit/graphql.hooks.use-query-light': 1.0.0_n2jujwadezxebf7l7774r46zly
-      '@teambit/harmony': registry.npmjs.org/@teambit/harmony/0.3.3
+      '@teambit/harmony': registry.npmjs.org/@teambit/harmony/0.4.6
       '@teambit/react.instructions.react-native.adding-tests': 0.0.1_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/react.instructions.react.adding-compositions': registry.npmjs.org/@teambit/react.instructions.react.adding-compositions/0.0.6_sfoxds7t5ydpegc3knd667wn6m
       '@teambit/react.instructions.react.adding-tests': registry.npmjs.org/@teambit/react.instructions.react.adding-tests/0.0.6_sfoxds7t5ydpegc3knd667wn6m
@@ -14246,10 +14246,10 @@ packages:
       - supports-color
     dev: false
 
-  registry.npmjs.org/@teambit/harmony/0.3.3:
-    resolution: {integrity: sha512-gjUrfjEvEI46K0OlLbolRWRsLns8oNUmg8IGlb0DExKYwHtF77dn2ZZM4dXVBFT7+xiscBVTcYpUA4eORbbm1g==, registry: https://node.bit.cloud/, tarball: https://registry.npmjs.org/@teambit/harmony/-/harmony-0.3.3.tgz}
+  registry.npmjs.org/@teambit/harmony/0.4.6:
+    resolution: {integrity: sha512-9cWKyOVauMc56GQnosRqez22qz+4YrydJs1X1qXQJSToUA3Op874NFgjawRXp8g+V9MF2XT4NZIM3jzNXyQhIQ==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/@teambit/harmony/-/harmony-0.4.6.tgz}
     name: '@teambit/harmony'
-    version: 0.3.3
+    version: 0.4.6
     engines: {node: '>=12.22.0'}
     dependencies:
       cleargraph: registry.npmjs.org/cleargraph/5.8.0
@@ -20142,7 +20142,7 @@ packages:
     dev: false
 
   registry.npmjs.org/cleargraph/5.8.0:
-    resolution: {integrity: sha512-72ZcdfWOwa1w3IfvKQFBp9lbgeZVlx9VFzUEKuGebaWprKIRs+kLIz48cNPAE8A6ZhuIbDsdFbYPQBH85+viRw==, registry: https://node.bit.cloud/, tarball: https://registry.npmjs.org/cleargraph/-/cleargraph-5.8.0.tgz}
+    resolution: {integrity: sha512-72ZcdfWOwa1w3IfvKQFBp9lbgeZVlx9VFzUEKuGebaWprKIRs+kLIz48cNPAE8A6ZhuIbDsdFbYPQBH85+viRw==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/cleargraph/-/cleargraph-5.8.0.tgz}
     name: cleargraph
     version: 5.8.0
     dependencies:
@@ -24989,7 +24989,7 @@ packages:
       universalify: registry.npmjs.org/universalify/2.0.0
 
   registry.npmjs.org/fs-extra/7.0.1:
-    resolution: {integrity: sha512-YJDaCJZEnBmcbw13fvdAM9AwNOJwOzrE4pqMqBq5nFiEqXUqHwlK4B+3pUw6JNvfSPtX05xFHtYy/1ni01eGCw==, registry: https://node.bit.cloud/, tarball: https://registry.npmjs.org/fs-extra/-/fs-extra-7.0.1.tgz}
+    resolution: {integrity: sha512-YJDaCJZEnBmcbw13fvdAM9AwNOJwOzrE4pqMqBq5nFiEqXUqHwlK4B+3pUw6JNvfSPtX05xFHtYy/1ni01eGCw==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/fs-extra/-/fs-extra-7.0.1.tgz}
     name: fs-extra
     version: 7.0.1
     engines: {node: '>=6 <7 || >=8'}
@@ -25000,7 +25000,7 @@ packages:
     dev: false
 
   registry.npmjs.org/fs-extra/8.1.0:
-    resolution: {integrity: sha512-yhlQgA6mnOJUKOsRUFsgJdQCvkKhcz8tlZG5HBQfReYZy46OwLcY+Zia0mtdHsOo9y/hP+CxMN0TU9QxoOtG4g==, registry: https://node.bit.cloud/, tarball: https://registry.npmjs.org/fs-extra/-/fs-extra-8.1.0.tgz}
+    resolution: {integrity: sha512-yhlQgA6mnOJUKOsRUFsgJdQCvkKhcz8tlZG5HBQfReYZy46OwLcY+Zia0mtdHsOo9y/hP+CxMN0TU9QxoOtG4g==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/fs-extra/-/fs-extra-8.1.0.tgz}
     name: fs-extra
     version: 8.1.0
     engines: {node: '>=6 <7 || >=8'}
@@ -28846,7 +28846,7 @@ packages:
     hasBin: true
 
   registry.npmjs.org/jsonfile/4.0.0:
-    resolution: {integrity: sha512-m6F1R3z8jjlf2imQHS2Qez5sjKWQzbuuhuJ/FKYFRZvPE3PuHcSMVZzfsLhGVOkfd20obL5SWEBew5ShlquNxg==, registry: https://node.bit.cloud/, tarball: https://registry.npmjs.org/jsonfile/-/jsonfile-4.0.0.tgz}
+    resolution: {integrity: sha512-m6F1R3z8jjlf2imQHS2Qez5sjKWQzbuuhuJ/FKYFRZvPE3PuHcSMVZzfsLhGVOkfd20obL5SWEBew5ShlquNxg==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/jsonfile/-/jsonfile-4.0.0.tgz}
     name: jsonfile
     version: 4.0.0
     optionalDependencies:
@@ -38977,14 +38977,14 @@ packages:
     dev: false
 
   registry.npmjs.org/universalify/0.1.2:
-    resolution: {integrity: sha512-rBJeI5CXAlmy1pV+617WB9J63U6XcazHHF2f2dbJix4XzpUF0RS3Zbj0FGIOCAva5P/d/GBOYaACQ1w+0azUkg==, registry: https://node.bit.cloud/, tarball: https://registry.npmjs.org/universalify/-/universalify-0.1.2.tgz}
+    resolution: {integrity: sha512-rBJeI5CXAlmy1pV+617WB9J63U6XcazHHF2f2dbJix4XzpUF0RS3Zbj0FGIOCAva5P/d/GBOYaACQ1w+0azUkg==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/universalify/-/universalify-0.1.2.tgz}
     name: universalify
     version: 0.1.2
     engines: {node: '>= 4.0.0'}
     dev: false
 
   registry.npmjs.org/universalify/0.2.0:
-    resolution: {integrity: sha512-CJ1QgKmNg3CwvAv/kOFmtnEN05f0D/cn9QntgNOQlQF9dgvVTHj3t+8JPdjqawCHk7V/KA+fbUqzZ9XWhcqPUg==, registry: https://node.bit.cloud/, tarball: https://registry.npmjs.org/universalify/-/universalify-0.2.0.tgz}
+    resolution: {integrity: sha512-CJ1QgKmNg3CwvAv/kOFmtnEN05f0D/cn9QntgNOQlQF9dgvVTHj3t+8JPdjqawCHk7V/KA+fbUqzZ9XWhcqPUg==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/universalify/-/universalify-0.2.0.tgz}
     name: universalify
     version: 0.2.0
     engines: {node: '>= 4.0.0'}
