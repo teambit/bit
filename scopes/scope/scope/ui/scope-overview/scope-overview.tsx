@@ -22,7 +22,7 @@ export function ScopeOverview({ badgeSlot, overviewSlot, TargetOverview }: Scope
 
   return (
     <div className={styles.container}>
-      <ScopeDetails
+      {!TargetOverview ? <ScopeDetails
         scopeName={scope.name}
         icon={scope.icon}
         backgroundIconColor={scope.backgroundIconColor}
@@ -30,7 +30,7 @@ export function ScopeOverview({ badgeSlot, overviewSlot, TargetOverview }: Scope
         overviewSlot={overviewSlot}
         description={scope.description}
         componentCount={scope.components.length}
-      />
+      />: <></>}
       {TargetOverview ? (
         <TargetOverview />
       ) : (
