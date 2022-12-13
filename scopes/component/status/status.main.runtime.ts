@@ -89,18 +89,27 @@ export class StatusMain {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const invalidComponents = allInvalidComponents.filter((c) => !(c.error instanceof ComponentsPendingImport));
     const outdatedComponents = await componentsList.listOutdatedComponents();
+    const idsDuringMergeState = componentsList.listDuringMergeStateComponents();
+    const { components: componentsDuringMergeState } = await this.workspace.consumer.loadComponents(
+      idsDuringMergeState,
+      false
+    );
     const mergePendingComponents = await componentsList.listMergePendingComponents();
-    const newAndModifiedLegacy: ConsumerComponent[] = newComponents.concat(modifiedComponents);
+    const legacyCompsWithPotentialIssues: ConsumerComponent[] = [
+      ...newComponents,
+      ...modifiedComponents,
+      ...componentsDuringMergeState,
+    ];
     const issuesToIgnore = this.issues.getIssuesToIgnoreGlobally();
-    if (newAndModifiedLegacy.length) {
-      const newAndModified = await this.workspace.getManyByLegacy(newAndModifiedLegacy, loadOpts);
-      await this.issues.triggerAddComponentIssues(newAndModified, issuesToIgnore);
-      this.issues.removeIgnoredIssuesFromComponents(newAndModified);
+    if (legacyCompsWithPotentialIssues.length) {
+      const compsWithPotentialIssues = await this.workspace.getManyByLegacy(legacyCompsWithPotentialIssues, loadOpts);
+      await this.issues.triggerAddComponentIssues(compsWithPotentialIssues, issuesToIgnore);
+      this.issues.removeIgnoredIssuesFromComponents(compsWithPotentialIssues);
     }
-    const componentsWithIssues = newAndModifiedLegacy.filter((component: ConsumerComponent) => {
+    const componentsWithIssues = legacyCompsWithPotentialIssues.filter((component: ConsumerComponent) => {
       return component.issues && !component.issues.isEmpty();
     });
-    const componentsDuringMergeState = componentsList.listDuringMergeStateComponents();
+
     const softTaggedComponents = componentsList.listSoftTaggedComponents();
     const snappedComponents = (await componentsList.listSnappedComponentsOnMain()).map((c) => c.toBitId());
     const pendingUpdatesFromMain = await componentsList.listUpdatesFromMainPending();
@@ -157,7 +166,7 @@ export class StatusMain {
       mergePendingComponents: await convertObjToComponentIdsAndSort(
         mergePendingComponents.map((c) => ({ id: c.id, divergeData: c.diverge }))
       ),
-      componentsDuringMergeState: await convertBitIdToComponentIdsAndSort(componentsDuringMergeState),
+      componentsDuringMergeState: await convertBitIdToComponentIdsAndSort(idsDuringMergeState),
       softTaggedComponents: await convertBitIdToComponentIdsAndSort(softTaggedComponents),
       snappedComponents: await convertBitIdToComponentIdsAndSort(snappedComponents),
       pendingUpdatesFromMain: await convertObjToComponentIdsAndSort(pendingUpdatesFromMain),

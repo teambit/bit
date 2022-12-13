@@ -91,6 +91,7 @@ export class StatusCmd implements Command {
     };
   }
 
+  // eslint-disable-next-line complexity
   async report(_args, { strict, verbose }: { strict?: boolean; verbose?: boolean }) {
     const {
       newComponents,
@@ -188,11 +189,8 @@ alternatively, to keep local tags/snaps history, use "bit merge <remote-name>/<l
     const compDuringMergeTitle = chalk.underline.white('components during merge state');
     const compDuringMergeDesc = `(use "bit snap/tag [--unmerged]" to complete the merge process
 or use "bit merge [component-id] --abort" to cancel the merge operation)\n`;
-    const compDuringMergeComps = componentsDuringMergeState
-      .map((id) => {
-        return `    > ${chalk.cyan(id.toString())}`;
-      })
-      .join('\n');
+
+    const compDuringMergeComps = componentsDuringMergeState.map((c) => format(c, true)).join('\n');
 
     const compDuringMergeStr = compDuringMergeComps.length
       ? [compDuringMergeTitle, compDuringMergeDesc, compDuringMergeComps].join('\n')
