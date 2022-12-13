@@ -1239,9 +1239,19 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     };
   }
 
-  private async getConfigMergeFile(componentId: ComponentID): Promise<Record<string, any> | undefined> {
+  getConfigMergeFilePath(componentId: ComponentID): string {
     const compDir = this.componentDir(componentId, { ignoreVersion: true });
-    const configMergePath = path.join(compDir, MergeConfigFilename);
+    return path.join(compDir, MergeConfigFilename);
+  }
+
+  async listComponentsDuringMerge(): Promise<ComponentID[]> {
+    const unmergedComps = this.scope.legacyScope.objects.unmergedComponents.getComponents();
+    const bitIds = unmergedComps.map((u) => new BitId(u.id));
+    return this.resolveMultipleComponentIds(bitIds);
+  }
+
+  private async getConfigMergeFile(componentId: ComponentID): Promise<Record<string, any> | undefined> {
+    const configMergePath = this.getConfigMergeFilePath(componentId);
     let fileContent: string;
     try {
       fileContent = await fs.readFile(configMergePath, 'utf-8');
@@ -1256,11 +1266,6 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     } catch (err: any) {
       throw new MergeConfigConflict(configMergePath);
     }
-  }
-
-  private getUnmergedHead(componentId: ComponentID) {
-    const unmerged = this.scope.legacyScope.objects.unmergedComponents.getEntry(componentId._legacy.name);
-    return unmerged?.head;
   }
 
   async getUnmergedComponent(componentId: ComponentID): Promise<Component | undefined> {

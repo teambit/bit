@@ -1,3 +1,4 @@
+import { IssuesClasses } from '@teambit/component-issues';
 import chai, { expect } from 'chai';
 import { Extensions } from '../../src/constants';
 import Helper from '../../src/e2e-helper/e2e-helper';
@@ -91,6 +92,7 @@ describe('merge config scenarios', function () {
   });
   describe('diverge with different config', () => {
     let mainBeforeDiverge: string;
+    let beforeConfigResolved: string;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateComponents(1);
@@ -114,10 +116,41 @@ describe('merge config scenarios', function () {
       helper.scopeHelper.addRemoteScope();
       helper.command.importLane('dev');
       helper.command.mergeLane('main', '--no-snap --skip-dependency-installation');
+      beforeConfigResolved = helper.scopeHelper.cloneLocalScope();
     });
-    it('bit status should show the component with an issue of ConfigMergeConflict', () => {});
-    describe('fixing the conflict with ours', () => {});
-    describe('fixing the conflict with theirs', () => {});
+    it('bit status should show the component with an issue of MergeConfigHasConflict', () => {
+      helper.command.expectStatusToHaveIssue(IssuesClasses.MergeConfigHasConflict.name);
+    });
+    describe('fixing the conflict with ours', () => {
+      before(() => {
+        helper.general.fixMergeConfigConflict('ours', 'comp1');
+      });
+      it('should show the component deprecated', () => {
+        const deprecationData = helper.command.showAspectConfig('comp1', Extensions.deprecation);
+        expect(deprecationData.config.deprecate).to.be.true;
+      });
+    });
+    describe('fixing the conflict with theirs', () => {
+      before(() => {
+        helper.scopeHelper.getClonedLocalScope(beforeConfigResolved);
+        helper.general.fixMergeConfigConflict('theirs', 'comp1');
+      });
+      it('should show the component as undeprecated', () => {
+        const deprecationData = helper.command.showAspectConfig('comp1', Extensions.deprecation);
+        expect(deprecationData.config.deprecate).to.be.false;
+      });
+    });
+    describe('snapping the components', () => {
+      before(() => {
+        helper.scopeHelper.getClonedLocalScope(beforeConfigResolved);
+        helper.general.fixMergeConfigConflict('theirs', 'comp1');
+        helper.command.snapAllComponentsWithoutBuild();
+      });
+      it('should delete the config-merge file', () => {
+        const configMergePath = helper.general.getConfigMergePath('comp1');
+        expect(configMergePath).to.not.be.a.path();
+      });
+    });
   });
   describe('diverge with different dependencies config', () => {
     let mainBeforeDiverge: string;
@@ -148,8 +181,18 @@ describe('merge config scenarios', function () {
       helper.command.importLane('dev', '--skip-dependency-installation');
       helper.command.mergeLane('main', '--no-snap --skip-dependency-installation');
     });
-    it('bit status should show the component with an issue of ConfigMergeConflict', () => {});
-    describe('fixing the conflict with ours', () => {});
+    it('bit status should show the component with an issue of MergeConfigHasConflict', () => {
+      helper.command.expectStatusToHaveIssue(IssuesClasses.MergeConfigHasConflict.name);
+    });
+    describe('fixing the conflict with ours', () => {
+      before(() => {
+        helper.general.fixMergeConfigConflict('ours', 'comp1');
+      });
+      it('should show the component deprecated', () => {
+        const deprecationData = helper.command.showAspectConfig('comp1', Extensions.deprecation);
+        expect(deprecationData.config.deprecate).to.be.true;
+      });
+    });
     describe('fixing the conflict with theirs', () => {});
   });
 });

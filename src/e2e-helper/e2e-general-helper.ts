@@ -4,12 +4,13 @@ import * as path from 'path';
 import tar from 'tar';
 import { DEFAULT_LANE } from '@teambit/lane-id';
 import defaultErrorHandler from '../cli/default-error-handler';
-import { BIT_HIDDEN_DIR, BIT_VERSION, REMOTE_REFS_DIR, WORKSPACE_JSONC } from '../constants';
+import { BIT_HIDDEN_DIR, BIT_VERSION, MergeConfigFilename, REMOTE_REFS_DIR, WORKSPACE_JSONC } from '../constants';
 import { generateRandomStr, removeChalkCharacters } from '../utils';
 import CommandHelper from './e2e-command-helper';
 import { ensureAndWriteJson } from './e2e-helper';
 import NpmHelper from './e2e-npm-helper';
 import ScopesData, { DEFAULT_OWNER } from './e2e-scopes';
+import { compact } from 'lodash';
 
 export default class GeneralHelper {
   scopes: ScopesData;
@@ -130,5 +131,48 @@ export default class GeneralHelper {
 
   getPackageNameByCompName(compName: string) {
     return `@${DEFAULT_OWNER}/${this.scopes.remoteWithoutOwner}.${compName.replaceAll('/', '.')}`;
+  }
+
+  getConfigMergePath(compId: string) {
+    return path.join(this.scopes.localPath, this.scopes.remote, compId, MergeConfigFilename);
+  }
+
+  fixMergeConfigConflict(strategy: string, compId: string) {
+    const filePath = this.getConfigMergePath(compId);
+    const fileContent = fs.readFileSync(filePath).toString();
+    const toRemove = strategy === 'ours' ? '>>>>>>>' : '<<<<<<<';
+    const toKeep = strategy === 'ours' ? '<<<<<<<' : '>>>>>>>';
+    let shouldBeRemoving = false;
+    let shouldKeep = false;
+    const lines = fileContent.split('\n').map((line) => {
+      if (line.startsWith(toRemove)) {
+        if (shouldBeRemoving) {
+          shouldBeRemoving = false;
+        } else {
+          shouldBeRemoving = true;
+        }
+        return '';
+      }
+      if (line.startsWith('=======')) {
+        if (shouldKeep) {
+          shouldKeep = false;
+          shouldBeRemoving = true;
+        } else {
+          shouldKeep = true;
+          shouldBeRemoving = false;
+        }
+        return '';
+      }
+      if (line.startsWith(toKeep)) {
+        if (shouldKeep) {
+          shouldKeep = false;
+        } else {
+          shouldKeep = true;
+        }
+        return '';
+      }
+      return shouldBeRemoving ? '' : line;
+    });
+    fs.writeFileSync(filePath, compact(lines).join('\n'));
   }
 }

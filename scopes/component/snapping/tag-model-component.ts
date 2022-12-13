@@ -1,4 +1,5 @@
 import mapSeries from 'p-map-series';
+import fs from 'fs-extra';
 import fetch from 'node-fetch';
 import R from 'ramda';
 import { isEmpty } from 'lodash';
@@ -35,6 +36,7 @@ import { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { ScopeMain } from '@teambit/scope';
 import { Workspace } from '@teambit/workspace';
 import { SnappingMain, TagDataPerComp } from './snapping.main.runtime';
+import { ComponentID } from '@teambit/component-id';
 
 export type onTagIdTransformer = (id: BitId) => BitId | null;
 
@@ -288,7 +290,8 @@ export async function tagModelComponent({
   updateDependenciesVersions(allComponentsToTag, dependencyResolver);
 
   await addLogToComponents(componentsToTag, autoTagComponents, persist, message, messagePerId);
-
+  // don't move it down. otherwise, it'll be empty and we don't know which components were during merge.
+  const unmergedComps = workspace ? await workspace.listComponentsDuringMerge() : [];
   if (soft) {
     if (!consumer) throw new Error(`unable to soft-tag without consumer`);
     consumer.updateNextVersionOnBitmap(allComponentsToTag, preReleaseId);
@@ -297,6 +300,7 @@ export async function tagModelComponent({
     emptyBuilderData(allComponentsToTag);
     addBuildStatus(allComponentsToTag, BuildStatus.Pending);
     await addComponentsToScope(legacyScope, snapping, allComponentsToTag, Boolean(build), consumer);
+
     if (workspace) await updateComponentsVersions(workspace, allComponentsToTag);
   }
 
@@ -328,6 +332,7 @@ export async function tagModelComponent({
   if (!soft) {
     await removeDeletedComponentsFromBitmap(allComponentsToTag, workspace);
     await legacyScope.objects.persist();
+    await removeMergeConfigFromComponents(unmergedComps, allComponentsToTag, workspace);
   }
 
   return { taggedComponents: componentsToTag, autoTaggedResults: autoTagData, publishedPackages };
@@ -342,6 +347,25 @@ async function removeDeletedComponentsFromBitmap(comps: Component[], workspace?:
       if (comp.removed) {
         const compId = await workspace.resolveComponentId(comp.id);
         workspace.bitMap.removeComponent(compId);
+      }
+    })
+  );
+}
+
+async function removeMergeConfigFromComponents(
+  unmergedComps: ComponentID[],
+  components: Component[],
+  workspace?: Workspace
+) {
+  if (!workspace || !unmergedComps.length) {
+    return;
+  }
+  await Promise.all(
+    unmergedComps.map(async (compId) => {
+      const isNowSnapped = components.find((c) => c.id.isEqualWithoutVersion(compId._legacy));
+      if (isNowSnapped) {
+        const mergeConfigPath = workspace.getConfigMergeFilePath(compId);
+        await fs.remove(mergeConfigPath);
       }
     })
   );
