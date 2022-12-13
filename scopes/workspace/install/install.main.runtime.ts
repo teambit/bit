@@ -4,7 +4,7 @@ import ManyComponentsWriter from '@teambit/legacy/dist/consumer/component-ops/ma
 import { CLIMain, CommandList, CLIAspect, MainRuntime } from '@teambit/cli';
 import chalk from 'chalk';
 import { WorkspaceAspect, Workspace, ComponentConfigFile } from '@teambit/workspace';
-import { pick, isEqual } from 'lodash';
+import { pick } from 'lodash';
 import { ProjectManifest } from '@pnpm/types';
 import { NothingToImport } from '@teambit/legacy/dist/consumer/exceptions';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
@@ -29,6 +29,7 @@ import {
 import { ImporterAspect, ImporterMain, ImportOptions } from '@teambit/importer';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { IssuesAspect, IssuesMain } from '@teambit/issues';
+import hash from 'object-hash';
 import { DependencyTypeNotSupportedInPolicy } from './exceptions';
 import { InstallAspect } from './install.aspect';
 import { pickOutdatedPkgs } from './pick-outdated-pkgs';
@@ -169,7 +170,7 @@ export class InstallMain {
     // TODO: pass get install options
     const installer = this.dependencyResolver.getInstaller({});
     let current = await this._getComponentsManifests(installer, mergedRootPolicy, pmInstallOptions);
-    let prev: typeof current;
+    const prevManifests = new Set<string>();
     // TODO: this make duplicate
     // this.logger.consoleSuccess();
     // TODO: add the links results to the output
@@ -187,8 +188,15 @@ export class InstallMain {
       linkDepsResolvedFromEnv: !hasRootComponents,
       linkNestedDepsInNM: !this.workspace.isLegacy && !hasRootComponents,
     };
+    let installCycle = 0
+    let hasMissingLocalComponents = true;
     /* eslint-disable no-await-in-loop */
     do {
+      // In case there are missing local components,
+      // we'll need to make another round of installation as on the first round the missing local components
+      // are not added to the manifests.
+      // This is an issue when installation is done using root components.
+      hasMissingLocalComponents = hasRootComponents && hasComponentsFromWorkspaceInMissingDeps(current);
       this.workspace.consumer.componentLoader.clearComponentsCache();
       this.workspace.clearCache();
       await installer.installComponents(
@@ -209,9 +217,10 @@ export class InstallMain {
         await this.compiler.compileOnWorkspace([], { initiator: CompilationInitiator.Install });
       }
       await this.link(linkOpts);
-      prev = current;
+      prevManifests.add(hash(current.manifests));
       current = await this._getComponentsManifests(installer, mergedRootPolicy, pmInstallOptions);
-    } while (!isEqual(prev.manifests, current.manifests));
+      installCycle += 1;
+    } while ((!prevManifests.has(hash(current.manifests)) || hasMissingLocalComponents) && installCycle < 5);
     /* eslint-enable no-await-in-loop */
     return current.componentDirectoryMap;
   }
@@ -223,10 +232,7 @@ export class InstallMain {
       PackageManagerInstallOptions,
       'dedupe' | 'dependencyFilterFn' | 'copyPeerToRuntimeOnComponents'
     >
-  ): Promise<{
-    componentDirectoryMap: ComponentMap<string>;
-    manifests: Record<string, ProjectManifest>;
-  }> {
+  ): Promise<ComponentsAndManifests> {
     const componentDirectoryMap = await this.getComponentsDirectory([]);
     const manifests = await dependencyInstaller.getComponentManifests({
       ...installOptions,
@@ -491,6 +497,27 @@ export class InstallMain {
     }
     return installExt;
   }
+}
+
+type ComponentsAndManifests = {
+  componentDirectoryMap: ComponentMap<string>;
+  manifests: Record<string, ProjectManifest>;
+}
+
+function hasComponentsFromWorkspaceInMissingDeps(
+  { componentDirectoryMap, manifests }: ComponentsAndManifests
+): boolean {
+  const missingDeps = new Set<string>(
+    componentDirectoryMap
+      .toArray()
+      .map(([{ state }]) => {
+        const issue = state.issues.getIssue(IssuesClasses.MissingPackagesDependenciesOnFs);
+        if (!issue) return [];
+        return Object.values(issue.data).flat();
+      })
+      .flat()
+  );
+  return Object.values(manifests).some(({ name }) => name && missingDeps.has(name));
 }
 
 InstallAspect.addRuntime(InstallMain);
