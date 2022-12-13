@@ -12,9 +12,8 @@ import PackageJsonHelper from './e2e-package-json-helper';
 import ScopeHelper from './e2e-scope-helper';
 import ScopesData from './e2e-scopes';
 
-type GenerateEnvJsoncOptions = {
-  envPolicy?: Record<string, any>;
-  componentsPolicy?: Record<string, any>;
+export type GenerateEnvJsoncOptions = {
+  policy?: Record<string, any>;
   patterns?: Record<string, string[]>;
 }
 
@@ -388,7 +387,7 @@ export default () => 'comp${index} and ' + ${nextComp}();`;
       cwd: destDir,
     });
   }
-  
+
   generateEnvJsoncFile(componentDir: string, options: GenerateEnvJsoncOptions = {}) {
     const envJsoncFile = path.join(componentDir, 'env.jsonc');
     const defaultPatterns = {
@@ -397,10 +396,7 @@ export default () => 'comp${index} and ' + ${nextComp}();`;
       "tests": ["**/*.spec.*", "**/*.test.*"]
     }
     const envJsoncFileContentJson = {
-      dependenciesPolicy: {
-        env: options.envPolicy || {},
-        components: options.componentsPolicy || {},
-      },
+      policy: options.policy || {},
       patterns: options.patterns || defaultPatterns
     }
     this.fs.outputFile(envJsoncFile, JSON.stringify(envJsoncFileContentJson, null, 2))

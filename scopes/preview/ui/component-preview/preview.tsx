@@ -28,6 +28,11 @@ export interface ComponentPreviewProps extends Omit<IframeHTMLAttributes<HTMLIFr
   queryParams?: string | string[];
 
   /**
+   * event to be fired when iframe loads
+   */
+  onLoad?: () => void;
+
+  /**
    * establish a pubsub connection to the iframe,
    * allowing sending and receiving messages
    */
@@ -66,6 +71,7 @@ export function ComponentPreview({
   // fitView = 1280,
   viewport = 1280,
   fullContentHeight = false,
+  onLoad,
   style,
   ...rest
 }: ComponentPreviewProps) {
@@ -94,6 +100,7 @@ export function ComponentPreview({
         },
       },
     });
+    onLoad && onLoad();
   }, [iframeRef?.current]);
 
   const params = Array.isArray(queryParams)
