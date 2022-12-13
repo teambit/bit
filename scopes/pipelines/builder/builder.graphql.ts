@@ -1,5 +1,6 @@
 import { Component, ComponentID } from '@teambit/component';
 import gql from 'graphql-tag';
+import { Logger } from '@teambit/logger';
 import isBinaryPath from 'is-binary-path';
 import { BuilderMain } from './builder.main.runtime';
 import { PipelineReport } from './build-pipeline-result-list';
@@ -47,7 +48,7 @@ type TaskReport = PipelineReport & {
   componentId: ComponentID;
 };
 
-export function builderSchema(builder: BuilderMain) {
+export function builderSchema(builder: BuilderMain, logger: Logger) {
   return {
     typeDefs: gql`
       type TaskReport {
@@ -99,48 +100,66 @@ export function builderSchema(builder: BuilderMain) {
     resolvers: {
       Component: {
         pipelineReport: async (component: Component, { taskId }: { taskId?: string }) => {
-          const builderData = builder.getBuilderData(component);
-          const pipeline = builderData?.pipeline || [];
-          const artifacts = taskId ? builder.getArtifactsByAspect(component, taskId) : builder.getArtifacts(component);
-
-          const artifactsWithVinyl = await Promise.all(
-            artifacts.map(async (artifact) => {
-              const id = artifact.task.aspectId;
-              const name = artifact.task.name as string;
-              const artifactFiles = (await builder.getArtifactsVinylByAspectAndTaskName(component, id, name)).map(
-                (vinyl) => {
-                  const { basename, path, contents } = vinyl || {};
-                  const isBinary = path && isBinaryPath(path);
-                  const content = !isBinary ? contents?.toString('utf-8') : undefined;
-                  const size = contents.byteLength;
-                  const downloadUrl = encodeURI(
-                    builder.getDownloadUrlForArtifact(component.id, artifact.task.aspectId, path)
+          try {
+            const builderData = builder.getBuilderData(component);
+            const pipeline = builderData?.pipeline || [];
+            const artifacts = taskId
+              ? builder.getArtifactsByAspect(component, taskId)
+              : builder.getArtifacts(component);
+            const artifactsWithVinyl = await Promise.all(
+              artifacts.map(async (artifact) => {
+                const id = artifact.task.aspectId;
+                const name = artifact.task.name as string;
+                try {
+                  const artifactFiles = (await builder.getArtifactsVinylByAspectAndTaskName(component, id, name)).map(
+                    (vinyl) => {
+                      const { basename, path, contents } = vinyl || {};
+                      const isBinary = path && isBinaryPath(path);
+                      const content = !isBinary ? contents?.toString('utf-8') : undefined;
+                      const size = contents.byteLength;
+                      const downloadUrl = encodeURI(
+                        builder.getDownloadUrlForArtifact(component.id, artifact.task.aspectId, path)
+                      );
+                      const externalUrl = vinyl.url;
+                      return { id: path, name: basename, path, content, downloadUrl, externalUrl, size };
+                    }
                   );
-                  const externalUrl = vinyl.url;
-                  return { id: path, name: basename, path, content, downloadUrl, externalUrl, size };
+                  return {
+                    id: `${id}-${name}-${artifact.name}`,
+                    name: artifact.name,
+                    description: artifact.description,
+                    task: artifact.task,
+                    storage: artifact.storage,
+                    generatedBy: artifact.generatedBy,
+                    files: artifactFiles,
+                  };
+                } catch (e: any) {
+                  logger.error(e.toString());
+                  return {
+                    id: `${id}-${name}-${artifact.name}`,
+                    name: artifact.name,
+                    description: artifact.description,
+                    task: artifact.task,
+                    storage: artifact.storage,
+                    generatedBy: artifact.generatedBy,
+                    files: [],
+                  };
                 }
-              );
-              const artifactObj = {
-                id: `${id}-${name}-${artifact.name}`,
-                name: artifact.name,
-                description: artifact.description,
-                task: artifact.task,
-                storage: artifact.storage,
-                generatedBy: artifact.generatedBy,
-                files: artifactFiles,
-              };
-              return artifactObj;
-            })
-          );
+              })
+            );
 
-          const result = pipeline.map((task) => ({
-            ...task,
-            artifact: artifactsWithVinyl.find(
-              (data) => data.task.aspectId === task.taskId && data.task.name === task.taskName
-            ),
-          }));
+            const result = pipeline.map((task) => ({
+              ...task,
+              artifact: artifactsWithVinyl.find(
+                (data) => data.task.aspectId === task.taskId && data.task.name === task.taskName
+              ),
+            }));
 
-          return result;
+            return result;
+          } catch (e: any) {
+            logger.error(e.toString());
+            return [];
+          }
         },
       },
       TaskReport: {
