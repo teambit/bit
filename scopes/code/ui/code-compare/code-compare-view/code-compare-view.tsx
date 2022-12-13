@@ -1,10 +1,10 @@
 import React, { HTMLAttributes, useMemo, useRef, useState } from 'react';
+import { BlockSkeleton } from '@teambit/base-ui.loaders.skeleton';
 import { DiffEditor, DiffOnMount } from '@monaco-editor/react';
 import { Toggle } from '@teambit/design.inputs.toggle-switch';
 import { H4 } from '@teambit/documenter.ui.heading';
 import classNames from 'classnames';
 import { useCodeCompare } from '@teambit/code.ui.code-compare';
-import { RoundLoader } from '@teambit/design.ui.round-loader';
 import { darkMode } from '@teambit/base-ui.theme.dark-theme';
 import { useFileContent } from '@teambit/code.ui.queries.get-file-content';
 import { useComponentCompare } from '@teambit/component.ui.component-compare.context';
@@ -44,13 +44,14 @@ export function CodeCompareView({ className, fileName }: CodeCompareViewProps) {
   /**
    * when there is no component to compare with, fetch file content
    */
-  const { fileContent: downloadedCompareFileContent, loading } = useFileContent(
+  const { fileContent: downloadedCompareFileContent, loading: loadingDownloadedCompareFileContent } = useFileContent(
     componentCompareContext?.compare?.model.id,
     fileName,
-    !!componentCompareContext?.compare && !!codeCompareDataForFile?.compareContent
+    codeCompareContext?.loading || (!!componentCompareContext?.compare && !!codeCompareDataForFile?.compareContent)
   );
 
-  if (!codeCompareContext || codeCompareContext.loading || loading) return null;
+  const loading =
+    codeCompareContext?.loading || loadingDownloadedCompareFileContent || componentCompareContext?.loading;
 
   const originalFileContent = codeCompareDataForFile?.baseContent;
 
@@ -92,11 +93,7 @@ export function CodeCompareView({ className, fileName }: CodeCompareViewProps) {
         ignoreTrimWhitespace: ignoreWhitespace,
         readOnly: true,
       }}
-      loading={
-        <div className={styles.loader}>
-          <RoundLoader />
-        </div>
-      }
+      loading={<CodeCompareViewLoader />}
     />
   );
 
@@ -116,7 +113,13 @@ export function CodeCompareView({ className, fileName }: CodeCompareViewProps) {
           Ignore Whitespace
         </div>
       </div>
-      <div className={styles.componentCompareCodeDiffEditorContainer}>{diffEditor}</div>
+      <div className={styles.componentCompareCodeDiffEditorContainer}>
+        {loading ? <CodeCompareViewLoader /> : diffEditor}
+      </div>
     </div>
   );
+}
+
+function CodeCompareViewLoader() {
+  return <BlockSkeleton className={styles.loader} lines={36} />;
 }

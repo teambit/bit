@@ -7,7 +7,6 @@ import { useCompareQueryParam } from '@teambit/component.ui.component-compare.ho
 import { ComponentCompareVersionPicker } from '@teambit/component.ui.component-compare.version-picker';
 import { ComponentCompareBlankState } from '@teambit/component.ui.component-compare.blank-state';
 import { ComponentCompareHooks } from '@teambit/component.ui.component-compare.models.component-compare-hooks';
-import { RoundLoader } from '@teambit/design.ui.round-loader';
 import { useLocation } from '@teambit/base-react.navigation.link';
 import { SlotRouter } from '@teambit/ui-foundation.ui.react-router.slot-router';
 import { ComponentCompareProps, TabItem } from '@teambit/component.ui.component-compare.models.component-compare-props';
@@ -15,6 +14,7 @@ import { groupByVersion } from '@teambit/component.ui.component-compare.utils.gr
 import { sortTabs } from '@teambit/component.ui.component-compare.utils.sort-tabs';
 import { sortByDateDsc } from '@teambit/component.ui.component-compare.utils.sort-logs';
 import { extractLazyLoadedData } from '@teambit/component.ui.component-compare.utils.lazy-loading';
+import { BlockSkeleton } from '@teambit/base-ui.loaders.skeleton';
 
 import styles from './component-compare.module.scss';
 
@@ -97,11 +97,7 @@ export function ComponentCompare(props: ComponentCompareProps) {
   return (
     <ComponentCompareContext.Provider value={componentCompareModel}>
       <div className={classnames(styles.componentCompareContainer, className)} {...rest}>
-        {loading && (
-          <div className={styles.loader}>
-            <RoundLoader />
-          </div>
-        )}
+        {loading && <CompareLoader />}
         {isEmpty && <ComponentCompareBlankState />}
         {!loading && !isEmpty && <RenderCompareScreen {...props} />}
       </div>
@@ -171,4 +167,20 @@ function CompareMenuNav({ tabs, state, hooks }: ComponentCompareProps) {
 function onNavClicked({ hooks, id }: { hooks?: ComponentCompareHooks; id?: string }) {
   if (!hooks?.tabs?.onClick) return undefined;
   return (e) => hooks?.tabs?.onClick?.(id, e);
+}
+
+function CompareLoader({ className, ...rest }: React.HTMLAttributes<HTMLDivElement>) {
+  return (
+    <div className={classnames(className, styles.loader)} {...rest}>
+      <BlockSkeleton className={styles.navLoader} lines={3} />
+      <div className={styles.compareLoader}>
+        <div className={styles.compareViewLoader}>
+          <BlockSkeleton lines={30} />
+        </div>
+        <div className={styles.compareSidebarLoader}>
+          <BlockSkeleton lines={30} />
+        </div>
+      </div>
+    </div>
+  );
 }

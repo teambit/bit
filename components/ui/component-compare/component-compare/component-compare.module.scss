@@ -44,10 +44,22 @@
 }
 
 .loader {
+  padding: 16px 24px;
+  color: var(--bit-bg-dent, #f6f6f6);
+}
+
+.compareLoader {
   display: flex;
-  height: 100%;
-  width: 100%;
-  margin: auto;
+  padding-top: 16px;
+}
+
+.compareSidebarLoader {
+  width: 30%;
+}
+
+.compareViewLoader {
+  width: 70%;
+  padding-right: 16px;
 }
 
 .activeNav {

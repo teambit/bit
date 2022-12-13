@@ -4,7 +4,6 @@ import { HoverSplitter } from '@teambit/base-ui.surfaces.split-pane.hover-splitt
 import { Collapser } from '@teambit/ui-foundation.ui.buttons.collapser';
 import { SplitPane, Pane, Layout } from '@teambit/base-ui.surfaces.split-pane.split-pane';
 import { useIsMobile } from '@teambit/ui-foundation.ui.hooks.use-is-mobile';
-import { RoundLoader } from '@teambit/design.ui.round-loader';
 import { CodeCompareTree } from '@teambit/code.ui.code-compare';
 import { useUpdatedUrlFromQuery } from '@teambit/component.ui.component-compare.hooks.use-component-compare-url';
 import { ComponentCompareAspectsContext } from '@teambit/component.ui.component-compare.compare-aspects.context';
@@ -35,19 +34,12 @@ export function ComponentCompareAspects({ host, className }: ComponentCompareAsp
         className={classNames(styles.componentCompareAspectContainer, className)}
       >
         <Pane className={styles.left}>
-          {loading && (
-            <div className={styles.loader}>
-              <RoundLoader />
-            </div>
-          )}
-          {loading || (
-            <CompareAspectView
-              name={selected}
-              baseAspectData={selectedBase}
-              compareAspectData={selectedCompare}
-              loading={loading}
-            />
-          )}
+          <CompareAspectView
+            name={selected}
+            baseAspectData={selectedBase}
+            compareAspectData={selectedCompare}
+            loading={loading}
+          />
         </Pane>
         <HoverSplitter className={styles.splitter}>
           <Collapser

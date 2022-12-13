@@ -217,6 +217,10 @@ export class LanesModel {
     this.viewedLane = viewedLaneId ? this.lanes.find((lane) => lane.id.isEqual(viewedLaneId)) : undefined;
   };
 
+  setViewedOrDefaultLane = (viewedLaneId?: LaneId) => {
+    this.viewedLane = viewedLaneId ? this.lanes.find((lane) => lane.id.isEqual(viewedLaneId)) : this.getDefaultLane();
+  };
+
   resolveComponentByFullName = (fullName: string, laneId?: LaneId) =>
     ((laneId && this.lanes.find((lane) => lane.id.isEqual(laneId))) || this.viewedLane)?.components.find(
       (component) => component.fullName === fullName

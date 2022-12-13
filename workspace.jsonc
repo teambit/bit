@@ -83,6 +83,7 @@
         "@teambit/component.content.component-overview": "1.95.0",
         "@teambit/component.content.dev-files": "1.95.9",
         "@teambit/component.instructions.exporting-components": "0.0.6",
+        "@teambit/component.ui.compare": "0.0.141",
         "@teambit/defender.content.formatter-overview": "1.96.1",
         "@teambit/defender.content.linter-overview": "1.95.0",
         "@teambit/defender.content.tester-overview": "1.95.0",
