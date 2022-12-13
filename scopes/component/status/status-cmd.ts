@@ -189,7 +189,6 @@ alternatively, to keep local tags/snaps history, use "bit merge <remote-name>/<l
     const compDuringMergeTitle = chalk.underline.white('components during merge state');
     const compDuringMergeDesc = `(use "bit snap/tag [--unmerged]" to complete the merge process
 or use "bit merge [component-id] --abort" to cancel the merge operation)\n`;
-
     const compDuringMergeComps = componentsDuringMergeState.map((c) => format(c, true)).join('\n');
 
     const compDuringMergeStr = compDuringMergeComps.length
