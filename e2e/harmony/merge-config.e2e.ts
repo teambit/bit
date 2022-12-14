@@ -94,6 +94,7 @@ describe('merge config scenarios', function () {
     let mainBeforeDiverge: string;
     let beforeConfigResolved: string;
     before(() => {
+      helper = new Helper();
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllWithoutBuild();
