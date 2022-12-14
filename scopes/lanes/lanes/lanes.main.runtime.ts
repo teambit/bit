@@ -15,7 +15,7 @@ import { TrackLane } from '@teambit/legacy/dist/scope/scope-json';
 import { ImporterAspect, ImporterMain, ImportOptions } from '@teambit/importer';
 import ComponentAspect, { Component, ComponentID, ComponentMain } from '@teambit/component';
 import removeLanes from '@teambit/legacy/dist/consumer/lanes/remove-lanes';
-import { Lane } from '@teambit/legacy/dist/scope/models';
+import { Lane, Version } from '@teambit/legacy/dist/scope/models';
 import { LaneNotFound } from '@teambit/legacy/dist/api/scope/lib/exceptions/lane-not-found';
 import { getDivergeData } from '@teambit/legacy/dist/scope/component-ops/get-diverge-data';
 import ScopeComponentsImporter from '@teambit/legacy/dist/scope/component-ops/scope-components-importer';
@@ -23,6 +23,7 @@ import { Scope as LegacyScope } from '@teambit/legacy/dist/scope';
 import { BitId } from '@teambit/legacy-bit-id';
 import { ExportAspect, ExportMain } from '@teambit/export';
 import { BitIds } from '@teambit/legacy/dist/bit-id';
+import { compact } from 'lodash';
 import { ComponentCompareMain, ComponentCompareAspect } from '@teambit/component-compare';
 import { Ref } from '@teambit/legacy/dist/scope/objects';
 import { SnapsDistance } from '@teambit/legacy/dist/scope/component-ops/snaps-distance';
@@ -648,12 +649,22 @@ export class LanesMain {
     const targetLane = targetLaneId ? await this.loadLane(targetLaneId) : undefined;
     const targetLaneIds = targetLane?.toBitIds();
     const host = this.componentAspect.getHost();
-    const results = await Promise.all(
+    const resultsWithNulls = await Promise.all(
       sourceLane.components.map(async (comp) => {
         const componentId = await host.resolveComponentId(comp.id);
+        const sourceVersionObj = (await this.scope.legacyScope.objects.load(comp.head)) as Version;
+        if (sourceVersionObj.isRemoved()) {
+          return null;
+        }
         const headOnTargetLane = targetLaneIds
           ? targetLaneIds.searchWithoutVersion(comp.id)?.version
           : await this.getHeadOnMain(componentId);
+        if (headOnTargetLane) {
+          const targetVersionObj = (await this.scope.legacyScope.objects.load(Ref.from(headOnTargetLane))) as Version;
+          if (targetVersionObj.isRemoved()) {
+            return null;
+          }
+        }
         const snapsDistance = await this.getSnapsDistance(componentId, comp.head.toString(), headOnTargetLane);
         const getChangeType = async (): Promise<ChangeType> => {
           if (!headOnTargetLane) return ChangeType.NEW;
@@ -673,6 +684,7 @@ export class LanesMain {
         return { componentId, changeType, upToDate: snapsDistance.isUpToDate() };
       })
     );
+    const results = compact(resultsWithNulls);
 
     const isLaneUptoDate = results.every((r) => r.upToDate);
 

@@ -102,7 +102,7 @@ export default class ScopeComponentsImporter {
   }): Promise<VersionDependencies[]> {
     logger.debugAndAddBreadCrumb(
       'importMany',
-      `cache ${cache}, reFetchUnBuiltVersion: ${reFetchUnBuiltVersion}, throwForDependencyNotFound: ${throwForDependencyNotFound}. ids: {ids}, lanes: {lanes}`,
+      `cache ${cache}, preferDependencyGraph: ${preferDependencyGraph}, reFetchUnBuiltVersion: ${reFetchUnBuiltVersion}, throwForDependencyNotFound: ${throwForDependencyNotFound}. ids: {ids}, lanes: {lanes}`,
       {
         ids: ids.toString(),
         lanes: lanes ? lanes.map((lane) => lane.id()).join(', ') : undefined,

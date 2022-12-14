@@ -75,7 +75,7 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
 
     // using `loadMany` instead of `getMany` to make sure component aspects are loaded.
     this.logger.setStatusLine(`loading ${componentsToSign.length} components and their aspects...`);
-    const components = await this.scope.loadMany(componentsToSign);
+    const components = await this.scope.loadMany(componentsToSign, lane);
     this.logger.clearStatusLine();
     const { builderDataMap, pipeResults } = await this.builder.tagListener(
       components,
