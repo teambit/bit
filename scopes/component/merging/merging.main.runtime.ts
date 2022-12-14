@@ -361,8 +361,8 @@ export class MergingMain {
     const version = id.version as string;
     const otherLaneHead = modelComponent.getRef(version);
     const existingBitMapId = consumer.bitMap.getBitIdIfExist(id, { ignoreVersion: true });
-    const componentOnLane: Version = await modelComponent.loadVersion(version, consumer.scope.objects);
-    if (componentOnLane.isRemoved()) {
+    const componentOnOther: Version = await modelComponent.loadVersion(version, consumer.scope.objects);
+    if (componentOnOther.isRemoved()) {
       return returnUnmerged(`component has been removed`, true);
     }
     const getCurrentId = () => {
@@ -382,7 +382,7 @@ export class MergingMain {
     const currentId = getCurrentId();
     if (!currentId) {
       const divergeData = await getDivergeData({ repo, modelComponent, targetHead: otherLaneHead, throws: false });
-      return { currentComponent: null, componentFromModel: componentOnLane, id, divergeData };
+      return { currentComponent: null, componentFromModel: componentOnOther, id, divergeData };
     }
     const getCurrentComponent = () => {
       if (existingBitMapId) return consumer.loadComponent(existingBitMapId);
@@ -417,6 +417,11 @@ export class MergingMain {
       throws: false,
     });
     if (divergeData.err) {
+      if (currentComponent.removed) {
+        // if current component is removed and there is no divergeData errors, it's ok to merge, because on the other
+        // lane it might be re-imported and might be needed.
+        return returnUnmerged(`component has been removed`, true);
+      }
       const mainHead = modelComponent.head;
       if (divergeData.err instanceof NoCommonSnap && options?.resolveUnrelated && mainHead) {
         const hasResolvedFromMain = async (hashToCompare: Ref | null) => {
@@ -444,7 +449,7 @@ export class MergingMain {
           // just override with the model data
           return {
             currentComponent,
-            componentFromModel: componentOnLane,
+            componentFromModel: componentOnOther,
             id,
             divergeData,
             resolvedUnrelated: { strategy: 'theirs', head: resolvedRef },
@@ -475,7 +480,7 @@ export class MergingMain {
         // just override with the model data
         return {
           currentComponent,
-          componentFromModel: componentOnLane,
+          componentFromModel: componentOnOther,
           id,
           divergeData,
         };

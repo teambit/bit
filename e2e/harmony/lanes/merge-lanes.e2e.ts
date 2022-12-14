@@ -639,6 +639,19 @@ describe('merge lanes', function () {
         });
       });
     });
+    describe('bit lane merge after soft-removed the unrelated component', () => {
+      before(() => {
+        helper.scopeHelper.getClonedRemoteScope(remoteScopeAfterExport);
+        helper.scopeHelper.getClonedLocalScope(afterLaneExport);
+        helper.command.import();
+        helper.command.removeComponent('comp1', '--soft');
+        helper.command.snapAllComponentsWithoutBuild();
+        helper.command.export();
+      });
+      it('should not throw', () => {
+        expect(() => helper.command.mergeLane('main')).to.not.throw();
+      });
+    });
   });
   describe('merge lanes when local-lane has soft-removed components and the other lane is behind', () => {
     before(() => {
