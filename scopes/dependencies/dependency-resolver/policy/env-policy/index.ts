@@ -1,2 +1,1 @@
-export * from './env-policy';
-export { PeersAutoDetectPolicy } from './peers-auto-detect-policy';
+export { EnvPolicy, EnvPolicyConfigObject } from './env-policy';

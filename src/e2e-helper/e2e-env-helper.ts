@@ -4,7 +4,7 @@ import * as path from 'path';
 import { generateRandomStr } from '../utils';
 import CommandHelper from './e2e-command-helper';
 import ExtensionsHelper from './e2e-extensions-helper';
-import FixtureHelper from './e2e-fixtures-helper';
+import FixtureHelper, { GenerateEnvJsoncOptions } from './e2e-fixtures-helper';
 import FsHelper from './e2e-fs-helper';
 import { ensureAndWriteJson } from './e2e-helper';
 import ScopeHelper from './e2e-scope-helper';
@@ -232,6 +232,27 @@ export default class EnvHelper {
     this.command.link();
     this.command.install();
     this.command.compile();
+    return extensionsBaseFolder;
+  }
+
+  /**
+   * This will generate env in the new format (using the *.bit-env.* plugin)
+   * @param extensionsBaseFolder
+   * @returns
+   */
+  setCustomNewEnv(
+    extensionsBaseFolder = 'react-based-env',
+    basePackages: string[] = ['@teambit/react.react-env'],
+    envJsoncOptions: GenerateEnvJsoncOptions
+  ): string {
+    this.fixtures.copyFixtureExtensions(extensionsBaseFolder);
+    this.command.addComponent(extensionsBaseFolder);
+    this.fixtures.generateEnvJsoncFile(extensionsBaseFolder, envJsoncOptions);
+    this.extensions.addExtensionToVariant(extensionsBaseFolder, 'teambit.envs/env');
+    this.command.setEnv(extensionsBaseFolder, 'teambit.envs/env');
+    this.command.link();
+    this.command.install(basePackages.join(' '));
+    // this.command.compile();
     return extensionsBaseFolder;
   }
 

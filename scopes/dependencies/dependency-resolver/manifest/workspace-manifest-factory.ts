@@ -5,7 +5,7 @@ import { pickBy, mapValues } from 'lodash';
 import { SemVer } from 'semver';
 import { snapToSemver } from '@teambit/component-package-version';
 import { ComponentDependency, DependencyList, PackageName } from '../dependencies';
-import { VariantPolicy, WorkspacePolicy, EnvPolicy, PeersAutoDetectPolicy } from '../policy';
+import { VariantPolicy, WorkspacePolicy, EnvPolicy } from '../policy';
 
 import { DependencyResolverMain } from '../dependency-resolver.main.runtime';
 import { ComponentsManifestsMap } from '../types';
@@ -78,27 +78,27 @@ export class WorkspaceManifestFactory {
       components,
       optsWithDefaults.createManifestForComponentsWithoutDependencies
     );
-    const envPeers = this.getEnvsPeersPolicy(componentsManifestsMap);
+    const envSelfPeers = this.getEnvsSelfPeersPolicy(componentsManifestsMap);
     const workspaceManifest = new WorkspaceManifest(
       name,
       version,
       dedupedDependencies.rootDependencies,
-      envPeers,
+      envSelfPeers,
       rootDir,
       componentsManifestsMap
     );
     return workspaceManifest;
   }
 
-  private getEnvsPeersPolicy(componentsManifestsMap: ComponentsManifestsMap) {
+  private getEnvsSelfPeersPolicy(componentsManifestsMap: ComponentsManifestsMap) {
     const foundEnvs: EnvPolicy[] = [];
     for (const component of componentsManifestsMap.values()) {
       foundEnvs.push(component.envPolicy);
     }
-    const peersPolicies = foundEnvs.map((policy) => policy.peersAutoDetectPolicy);
+    const peersPolicies = foundEnvs.map((policy) => policy.selfPolicy);
     // TODO: At the moment we are just merge everything, so in case of conflicts one will be taken
     // TODO: once we have root for each env, we should know to handle it differently
-    const mergedPolicies = PeersAutoDetectPolicy.mergePolices(peersPolicies);
+    const mergedPolicies = VariantPolicy.mergePolices(peersPolicies);
     return mergedPolicies;
   }
 
@@ -118,7 +118,7 @@ export class WorkspaceManifestFactory {
   ): Promise<ComponentDependenciesMap> {
     const buildResultsP = components.map(async (component) => {
       const packageName = componentIdToPackageName(component.state._consumer);
-      let depList = await this.dependencyResolver.getDependencies(component, {includeHidden: true});
+      let depList = await this.dependencyResolver.getDependencies(component, { includeHidden: true });
       const componentPolicy = await this.dependencyResolver.getPolicy(component);
       const additionalDeps = {};
       if (hasRootComponents) {
