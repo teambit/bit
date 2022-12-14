@@ -361,8 +361,8 @@ export class MergingMain {
     const version = id.version as string;
     const otherLaneHead = modelComponent.getRef(version);
     const existingBitMapId = consumer.bitMap.getBitIdIfExist(id, { ignoreVersion: true });
-    const componentOnLane: Version = await modelComponent.loadVersion(version, consumer.scope.objects);
-    if (componentOnLane.isRemoved()) {
+    const componentOnOther: Version = await modelComponent.loadVersion(version, consumer.scope.objects);
+    if (componentOnOther.isRemoved()) {
       return returnUnmerged(`component has been removed`, true);
     }
     const getCurrentId = () => {
@@ -382,13 +382,16 @@ export class MergingMain {
     const currentId = getCurrentId();
     if (!currentId) {
       const divergeData = await getDivergeData({ repo, modelComponent, targetHead: otherLaneHead, throws: false });
-      return { currentComponent: null, componentFromModel: componentOnLane, id, divergeData };
+      return { currentComponent: null, componentFromModel: componentOnOther, id, divergeData };
     }
     const getCurrentComponent = () => {
       if (existingBitMapId) return consumer.loadComponent(existingBitMapId);
       return consumer.scope.getConsumerComponent(currentId);
     };
     const currentComponent = await getCurrentComponent();
+    if (currentComponent.removed) {
+      return returnUnmerged(`component has been removed`, true);
+    }
     const isModified = async () => {
       const componentModificationStatus = await consumer.getComponentStatusById(currentComponent.id);
       if (!componentModificationStatus.modified) return false;
@@ -444,7 +447,7 @@ export class MergingMain {
           // just override with the model data
           return {
             currentComponent,
-            componentFromModel: componentOnLane,
+            componentFromModel: componentOnOther,
             id,
             divergeData,
             resolvedUnrelated: { strategy: 'theirs', head: resolvedRef },
@@ -475,7 +478,7 @@ export class MergingMain {
         // just override with the model data
         return {
           currentComponent,
-          componentFromModel: componentOnLane,
+          componentFromModel: componentOnOther,
           id,
           divergeData,
         };
