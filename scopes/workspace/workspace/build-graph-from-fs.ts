@@ -5,6 +5,7 @@ import { Consumer } from '@teambit/legacy/dist/consumer';
 import { Component, ComponentID } from '@teambit/component';
 import { DependencyResolverMain } from '@teambit/dependency-resolver';
 import BitIds from '@teambit/legacy/dist/bit-id/bit-ids';
+import { Lane } from '@teambit/legacy/dist/scope/models';
 import { ComponentNotFound, ScopeNotFound } from '@teambit/legacy/dist/scope/exceptions';
 import { ComponentNotFound as ComponentNotFoundInScope } from '@teambit/scope';
 import compact from 'lodash.compact';
@@ -20,6 +21,7 @@ export class GraphFromFsBuilder {
   private depth = 1;
   private consumer: Consumer;
   private importedIds: string[] = [];
+  private currentLane: Lane | null;
   constructor(
     private workspace: Workspace,
     private logger: Logger,
@@ -65,6 +67,7 @@ export class GraphFromFsBuilder {
     this.logger.debug(`GraphFromFsBuilder, buildGraph with ${ids.length} seeders`);
     const start = Date.now();
     const components = await this.loadManyComponents(ids);
+    this.currentLane = await this.workspace.consumer.getCurrentLaneObject();
     await this.processManyComponents(components);
     this.logger.debug(
       `GraphFromFsBuilder, buildGraph with ${ids.length} seeders completed (${(Date.now() - start) / 1000} sec)`
@@ -118,6 +121,7 @@ export class GraphFromFsBuilder {
       throwForDependencyNotFound: this.shouldThrowOnMissingDep,
       throwForSeederNotFound: this.shouldThrowOnMissingDep,
       reFetchUnBuiltVersion: false,
+      lanes: this.currentLane ? [this.currentLane] : [],
     });
     allDepsNotImported.map((id) => this.importedIds.push(id.toString()));
   }
