@@ -32,6 +32,7 @@ type MergeStrategy = (mergeStrategyParams: MergeStrategyParams) => MergeStrategy
 
 export class ConfigMerger {
   constructor(
+    private compIdStr: string,
     private currentAspects: ExtensionDataList,
     private baseAspects: ExtensionDataList,
     private otherAspects: ExtensionDataList,
@@ -62,7 +63,7 @@ export class ConfigMerger {
       return { id, config: extInCurrent };
     });
 
-    return new ConfigMergeResult(results);
+    return new ConfigMergeResult(this.compIdStr, results);
   }
 
   private areConfigsEqual(configA: GenericConfigOrRemoved, configB: GenericConfigOrRemoved) {

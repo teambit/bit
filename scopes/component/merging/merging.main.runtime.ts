@@ -242,8 +242,9 @@ export class MergingMain {
 
     await consumer.writeBitMap();
 
+    const componentsHasConfigMergeConflicts = allComponentsStatus.some((c) => c.configMergeResult?.hasConflicts());
     const leftUnresolvedConflicts = componentWithConflict && mergeStrategy === 'manual';
-    if (!skipDependencyInstallation && !leftUnresolvedConflicts) {
+    if (!skipDependencyInstallation && !leftUnresolvedConflicts && !componentsHasConfigMergeConflicts) {
       try {
         await this.install.install(undefined, {
           dedupe: true,
@@ -259,7 +260,7 @@ export class MergingMain {
     const getSnapOrTagResults = async () => {
       // if one of the component has conflict, don't snap-merge. otherwise, some of the components would be snap-merged
       // and some not. besides the fact that it could by mistake tag dependent, it's a confusing state. better not snap.
-      if (noSnap || leftUnresolvedConflicts) {
+      if (noSnap || leftUnresolvedConflicts || componentsHasConfigMergeConflicts) {
         return null;
       }
       if (tag) {
@@ -524,6 +525,7 @@ export class MergingMain {
     })`;
 
     const configMerger = new ConfigMerger(
+      id.toStringWithoutVersion(),
       currentComponent.extensions,
       baseComponent.extensions,
       otherComponent.extensions,

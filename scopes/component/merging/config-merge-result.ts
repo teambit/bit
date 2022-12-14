@@ -1,7 +1,7 @@
 import { MergeStrategyResult } from './config-merger';
 
 export class ConfigMergeResult {
-  constructor(private results: MergeStrategyResult[]) {}
+  constructor(readonly compIdStr: string, private results: MergeStrategyResult[]) {}
   hasConflicts(): boolean {
     return this.results.some((result) => result.conflict);
   }
