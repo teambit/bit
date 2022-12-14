@@ -1,6 +1,7 @@
 import { expect } from 'chai';
 import fs from 'fs-extra';
 import * as path from 'path';
+import { compact } from 'lodash';
 import tar from 'tar';
 import { DEFAULT_LANE } from '@teambit/lane-id';
 import defaultErrorHandler from '../cli/default-error-handler';
@@ -10,7 +11,6 @@ import CommandHelper from './e2e-command-helper';
 import { ensureAndWriteJson } from './e2e-helper';
 import NpmHelper from './e2e-npm-helper';
 import ScopesData, { DEFAULT_OWNER } from './e2e-scopes';
-import { compact } from 'lodash';
 
 export default class GeneralHelper {
   scopes: ScopesData;
