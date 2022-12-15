@@ -1564,12 +1564,14 @@ needed-for: ${neededFor || '<unknown>'}`);
             'workspace.loadAspects loading scope aspects'
           )
         : [];
+    const currentLane = await this.consumer.getCurrentLaneObject();
     const { manifests: scopeOtherManifests } =
       scopeIdsGrouped.other && scopeIdsGrouped.other.length
         ? await this.scope.getManifestsGraphRecursively(
             scopeIdsGrouped.other,
             compact(workspaceManifestsIds),
             throwOnError,
+            currentLane || undefined,
             {
               packageManagerConfigRootDir: this.path,
             }
