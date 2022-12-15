@@ -135,7 +135,7 @@ once ready, snap/tag the components to complete the merge.`;
     return chalk.underline(title) + conflictSummaryReport(components) + chalk.yellow(suggestion);
   };
 
-  const configMergeWithConflicts = configMergeResults?.filter((c) => c.hasConflicts) || [];
+  const configMergeWithConflicts = configMergeResults?.filter((c) => c.hasConflicts()) || [];
   const getConfigMergeConflictSummary = () => {
     if (!configMergeWithConflicts.length) return '';
     const comps = configMergeWithConflicts.map((c) => c.compIdStr).join('\n');
