@@ -3,7 +3,7 @@ import { buildRegistry } from '@teambit/legacy/dist/cli';
 import { Command } from '@teambit/legacy/dist/cli/command';
 import { CommunityAspect } from '@teambit/community';
 import type { CommunityMain } from '@teambit/community';
-
+import pMapSeries from 'p-map-series';
 import { groups, GroupsType } from '@teambit/legacy/dist/cli/command-groups';
 import { loadConsumerIfExist } from '@teambit/legacy/dist/consumer';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
@@ -100,8 +100,7 @@ export class CLIMain {
 
   private async invokeOnStart(hasWorkspace: boolean) {
     const onStartFns = this.onStartSlot.values();
-    const promises = onStartFns.map(async (onStart) => onStart(hasWorkspace));
-    return Promise.all(promises);
+    await pMapSeries(onStartFns, (onStart) => onStart(hasWorkspace));
   }
 
   private setDefaults(command: Command) {

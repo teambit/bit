@@ -1,4 +1,5 @@
 import pino, { Logger as PinoLogger, LoggerOptions } from 'pino';
+import prettifier from 'pino-pretty';
 import { DEBUG_LOG } from '../constants';
 
 export function getPinoLogger(
@@ -31,12 +32,12 @@ export function getPinoLogger(
   const prettyPrint = {
     colorize: true,
     translateTime: 'SYS:standard',
-    ignore: 'hostname',
+    ignore: 'hostname,severity',
   };
 
   const prettyPrintConsole = {
     colorize: true,
-    ignore: 'hostname,pid,time,level',
+    ignore: 'hostname,pid,time,level,severity',
   };
 
   /**
@@ -59,17 +60,24 @@ export function getPinoLogger(
   const opts: LoggerOptions = {
     hooks,
     formatters,
+    level: logLevel,
   };
 
-  if (!jsonFormat) {
-    opts.prettyPrint = prettyPrint;
-  }
+  const prettyStream = prettifier({
+    ...(!jsonFormat ? prettyPrint : {}),
+    destination: dest,
+    sync: true,
+  });
 
-  const pinoLogger: PinoLogger = pino(opts, dest);
-  pinoLogger.level = logLevel;
+  const prettyConsoleStream = prettifier({
+    ...(!jsonFormat ? prettyPrintConsole : {}),
+    destination: 1,
+    sync: true,
+  });
 
-  const pinoLoggerConsole = pino({ hooks, formatters, prettyPrint: jsonFormat ? false : prettyPrintConsole });
-  pinoLoggerConsole.level = logLevel;
+  const pinoLogger = pino(opts, prettyStream);
+
+  const pinoLoggerConsole = pino(opts, prettyConsoleStream);
 
   return { pinoLogger, pinoLoggerConsole };
 }
