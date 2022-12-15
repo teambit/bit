@@ -3,8 +3,7 @@ import { LaneId } from '@teambit/lane-id';
 import { LaneData } from '@teambit/legacy/dist/scope/lanes/lanes';
 import gql from 'graphql-tag';
 import { flatten, slice } from 'lodash';
-
-import { LanesMain } from './lanes.main.runtime';
+import { LaneDiffStatusOptions, LanesMain } from './lanes.main.runtime';
 
 export function lanesSchema(lanesMainRuntime: LanesMain): Schema {
   return {
@@ -37,6 +36,11 @@ export function lanesSchema(lanesMainRuntime: LanesMain): Schema {
         color: Boolean
       }
 
+      input DiffStatusOptions {
+        skipChanges: Boolean
+        skipUpToDate: Boolean
+      }
+
       type LaneId {
         name: String!
         scope: String!
@@ -44,14 +48,13 @@ export function lanesSchema(lanesMainRuntime: LanesMain): Schema {
 
       type LaneComponentDiffStatus {
         componentId: ComponentID!
-        changeType: String!
-        upToDate: Boolean!
+        changeType: String
+        upToDate: Boolean
       }
 
       type LaneDiffStatus {
         source: LaneId!
         target: LaneId!
-        upToDate: Boolean!
         componentsStatus: [LaneComponentDiffStatus!]!
       }
 
@@ -68,7 +71,7 @@ export function lanesSchema(lanesMainRuntime: LanesMain): Schema {
         id: String!
         list(ids: [String!], offset: Int, limit: Int): [Lane!]!
         diff(from: String!, to: String!, options: DiffOptions): GetDiffResult
-        diffStatus(source: String!, target: String): LaneDiffStatus!
+        diffStatus(source: String!, target: String, options: DiffStatusOptions): LaneDiffStatus!
         current: Lane
       }
 
@@ -114,10 +117,13 @@ export function lanesSchema(lanesMainRuntime: LanesMain): Schema {
             compsWithDiff: getDiffResults.compsWithDiff.map((item) => ({ ...item, id: item.id.toString() })),
           };
         },
-        diffStatus: async (lanesMain: LanesMain, { source, target }: { source: string; target?: string }) => {
+        diffStatus: async (
+          lanesMain: LanesMain,
+          { source, target, options }: { source: string; target?: string; options?: LaneDiffStatusOptions }
+        ) => {
           const sourceLaneId = LaneId.parse(source);
           const targetLaneId = target ? LaneId.parse(target) : undefined;
-          return lanesMain.diffStatus(sourceLaneId, targetLaneId);
+          return lanesMain.diffStatus(sourceLaneId, targetLaneId, options);
         },
       },
       Lane: {

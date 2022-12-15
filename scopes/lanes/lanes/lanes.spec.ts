@@ -56,7 +56,10 @@ describe('LanesAspect', function () {
     it('should return that the lane is up to date when the lane is ahead of main', async () => {
       const currentLane = await lanes.getCurrentLane();
       if (!currentLane) throw new Error('unable to get the current lane');
-      const isUpToDate = await lanes.isLaneUpToDate(currentLane);
+      const isUpToDate = (
+        await lanes.diffStatus(currentLane.toLaneId(), undefined, { skipChanges: true })
+      ).componentsStatus.every((c) => c.upToDate);
+
       expect(isUpToDate).to.be.true;
     });
     it('should return that the lane is not up to date when main is ahead', async () => {
@@ -69,7 +72,10 @@ describe('LanesAspect', function () {
         unmodified: true,
         ignoreIssues: 'MissingManuallyConfiguredPackages',
       });
-      const isUpToDate = await lanes.isLaneUpToDate(currentLane);
+      const isUpToDate = (
+        await lanes.diffStatus(currentLane.toLaneId(), undefined, { skipChanges: true })
+      ).componentsStatus.every((c) => c.upToDate);
+
       expect(isUpToDate).to.be.false;
     });
   });
