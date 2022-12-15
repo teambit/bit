@@ -81,7 +81,7 @@ const DepsKeysToAllPackagesDepsKeys = {
   dependencies: 'packageDependencies',
   devDependencies: 'devPackageDependencies',
   peerDependencies: 'peerPackageDependencies',
-};
+}
 
 export default class DependencyResolver {
   component: Component;

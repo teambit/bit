@@ -15,7 +15,7 @@ import ScopesData from './e2e-scopes';
 export type GenerateEnvJsoncOptions = {
   policy?: Record<string, any>;
   patterns?: Record<string, string[]>;
-};
+}
 
 export default class FixtureHelper {
   fs: FsHelper;
@@ -391,10 +391,10 @@ export default () => 'comp${index} and ' + ${nextComp}();`;
   generateEnvJsoncFile(componentDir: string, options: GenerateEnvJsoncOptions = {}) {
     const envJsoncFile = path.join(componentDir, 'env.jsonc');
     const defaultPatterns = {
-      compositions: ['**/*.composition.*', '**/*.preview.*'],
-      docs: ['**/*.docs.*'],
-      tests: ['**/*.spec.*', '**/*.test.*'],
-    };
+      "compositions": ["**/*.composition.*", "**/*.preview.*"],
+      "docs": ["**/*.docs.*"],
+      "tests": ["**/*.spec.*", "**/*.test.*"]
+    }
     const envJsoncFileContentJson = {
       policy: options.policy || {},
       patterns: options.patterns || defaultPatterns

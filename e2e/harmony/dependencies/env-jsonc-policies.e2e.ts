@@ -7,20 +7,20 @@ import Helper from '../../../src/e2e-helper/e2e-helper';
 const ENV_POLICY = {
   peers: [
     {
-      name: 'react',
-      version: '^18.0.0',
-      supportedRange: '^17.0.0 || ^18.0.0',
+      name: "react",
+      version: "^18.0.0",
+      supportedRange: "^17.0.0 || ^18.0.0"
     },
     {
-      name: 'react-dom',
-      version: '^18.0.0',
-      supportedRange: '^17.0.0 || ^18.0.0',
+      name: "react-dom",
+      version: "^18.0.0",
+      supportedRange: "^17.0.0 || ^18.0.0"
     },
     {
-      name: 'graphql',
-      version: '14.7.0',
-      supportedRange: '^14.7.0',
-    },
+      name: "graphql",
+      version: "14.7.0",
+      supportedRange: "^14.7.0"
+    }
   ],
   dev: [
     {
@@ -192,3 +192,4 @@ describe('env-jsonc-policies', function () {
   })
 
 });
+
