@@ -655,7 +655,24 @@
         "scope": "teambit.harmony",
         "version": "0.0.718",
         "mainFile": "index.ts",
-        "rootDir": "scopes/harmony/logger"
+        "rootDir": "scopes/harmony/logger",
+        "config": {
+            "teambit.dependencies/dependency-resolver": {
+                "policy": {
+                    "dependencies": {
+                        "@teambit/legacy": "-",
+                        "pino-pretty": "9.1.0"
+                    },
+                    "devDependencies": {
+                        "@types/mocha": "9.1.0",
+                        "@teambit/legacy": "-"
+                    },
+                    "peerDependencies": {
+                        "@teambit/legacy": "1.0.404"
+                    }
+                }
+            }
+        }
     },
     "mdx": {
         "scope": "teambit.mdx",
