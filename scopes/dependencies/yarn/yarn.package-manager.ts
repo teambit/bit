@@ -76,7 +76,13 @@ export class YarnPackageManager implements PackageManager {
     }
     const workspaceManifest = manifests[rootDir];
     manifests = omit(manifests, rootDir);
-    const rootWs = await this.createWorkspace(rootDir, project, workspaceManifest, installOptions.overrides);
+    const rootWs = await this.createWorkspace({
+      rootDir,
+      project,
+      manifest: workspaceManifest,
+      overrides: installOptions.overrides,
+      neverBuiltDependencies: installOptions.neverBuiltDependencies,
+    });
     if (installOptions.rootComponents) {
       rootWs.manifest.installConfig = {
         hoistingLimits: 'dependencies',
@@ -119,7 +125,7 @@ export class YarnPackageManager implements PackageManager {
 
     const workspacesP = Object.keys(manifests).map(async (path) => {
       const manifest = manifests[path];
-      const workspace = await this.createWorkspace(path, project, manifest);
+      const workspace = await this.createWorkspace({ rootDir: path, project, manifest });
       return workspace;
     });
 
@@ -242,7 +248,19 @@ export class YarnPackageManager implements PackageManager {
     return result;
   }
 
-  private async createWorkspace(rootDir: string, project: Project, manifest: any, overrides?: Record<string, string>) {
+  private async createWorkspace({
+    rootDir,
+    project,
+    manifest,
+    overrides,
+    neverBuiltDependencies,
+  }: {
+    rootDir: string;
+    project: Project;
+    manifest: any;
+    overrides?: Record<string, string>;
+    neverBuiltDependencies?: string[];
+  }) {
     const wsPath = npath.toPortablePath(rootDir);
     const name = manifest.name || 'workspace';
 
@@ -256,6 +274,10 @@ export class YarnPackageManager implements PackageManager {
     ws.manifest.devDependencies = this.computeDeps(manifest.devDependencies);
     ws.manifest.peerDependencies = this.computeDeps(manifest.peerDependencies);
     ws.manifest.installConfig = manifest.installConfig;
+    if (neverBuiltDependencies) {
+      const disableBuild = new Map([[null, { built: false }]]);
+      ws.manifest.dependenciesMeta = new Map(neverBuiltDependencies.map((dep) => [dep, disableBuild]));
+    }
     if (overrides) {
       ws.manifest.resolutions = convertOverridesToResolutions(overrides);
     }
