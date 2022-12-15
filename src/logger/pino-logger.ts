@@ -32,12 +32,12 @@ export function getPinoLogger(
   const prettyPrint = {
     colorize: true,
     translateTime: 'SYS:standard',
-    ignore: 'hostname',
+    ignore: 'hostname,severity',
   };
 
   const prettyPrintConsole = {
     colorize: true,
-    ignore: 'hostname,pid,time,level',
+    ignore: 'hostname,pid,time,level,severity',
   };
 
   /**
