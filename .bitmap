@@ -655,7 +655,10 @@
         "scope": "teambit.harmony",
         "version": "0.0.717",
         "mainFile": "index.ts",
-        "rootDir": "scopes/harmony/logger"
+        "rootDir": "scopes/harmony/logger",
+        "config": {
+          "teambit.dependencies/dependency-resolver": "-"
+        }
     },
     "mdx": {
         "scope": "teambit.mdx",
