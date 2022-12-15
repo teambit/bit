@@ -657,13 +657,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/logger",
         "config": {
-            "teambit.dependencies/dependency-resolver": {
-                "policy": {
-                    "dependencies": {
-                        "pino-pretty": "9.1.0"
-                    }
-                }
-            }
+          "teambit.dependencies/dependency-resolver": "-"
         }
     },
     "mdx": {
