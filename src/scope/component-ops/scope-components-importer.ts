@@ -48,6 +48,7 @@ export default class ScopeComponentsImporter {
   private repo: Repository;
   private fetchWithDepsMutex = new Mutex();
   private importManyObjectsMutex = new Mutex();
+  shouldOnlyFetchFromCurrentLane = false;
   private constructor(private scope: Scope) {
     if (!scope) throw new Error('unable to instantiate ScopeComponentsImporter without Scope');
     this.sources = scope.sources;
@@ -345,7 +346,7 @@ export default class ScopeComponentsImporter {
         collectParents,
       },
       idsToFetch,
-      lane ? [lane] : undefined
+      await this.getLanesForFetcher(lane ? [lane] : undefined)
     ).fetchFromRemoteAndWrite();
   }
 
@@ -388,7 +389,7 @@ export default class ScopeComponentsImporter {
         ignoreMissingHead,
       },
       idsToFetch,
-      lane ? [lane] : undefined
+      await this.getLanesForFetcher(lane ? [lane] : undefined)
     ).fetchFromRemoteAndWrite();
   }
 
@@ -682,7 +683,7 @@ export default class ScopeComponentsImporter {
         laneId: lanes.length ? lanes[0].id() : undefined,
       },
       ids,
-      lanes,
+      await this.getLanesForFetcher(lanes),
       context,
       throwOnUnavailableScope
     ).fetchFromRemoteAndWrite();
@@ -737,7 +738,7 @@ export default class ScopeComponentsImporter {
         withoutDependencies: true, // backward compatibility. not needed for remotes > 0.0.900
       },
       left.map((def) => def.id),
-      lanes,
+      await this.getLanesForFetcher(lanes),
       context
     ).fetchFromRemoteAndWrite();
 
@@ -745,6 +746,14 @@ export default class ScopeComponentsImporter {
 
     // @todo: should we warn about the non-missing?
     return compact(finalDefs.map((def) => def.component?.toComponentVersion(def.id.version)));
+  }
+
+  private async getLanesForFetcher(lanes?: Lane[]): Promise<Lane[]> {
+    if (lanes?.length) return lanes;
+    if (!this.shouldOnlyFetchFromCurrentLane) return [];
+    const currentLane = await this.scope.getCurrentLaneObject();
+    if (!currentLane) return [];
+    return [currentLane];
   }
 
   private async _getComponentVersion(id: BitId): Promise<ComponentVersion> {
