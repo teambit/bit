@@ -653,6 +653,7 @@ export default class ScopeComponentsImporter {
     preferDependencyGraph = false
   ): Promise<VersionDependencies[]> {
     if (!ids.length) return [];
+    lanes = await this.getLanesForFetcher(lanes);
     if (lanes.length > 1) throw new Error(`getExternalMany support only one lane`);
     logger.debugAndAddBreadCrumb(
       'ScopeComponentsImporter.getExternalMany',
@@ -683,7 +684,7 @@ export default class ScopeComponentsImporter {
         laneId: lanes.length ? lanes[0].id() : undefined,
       },
       ids,
-      await this.getLanesForFetcher(lanes),
+      lanes,
       context,
       throwOnUnavailableScope
     ).fetchFromRemoteAndWrite();
