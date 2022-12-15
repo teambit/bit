@@ -16,6 +16,7 @@ import {
   LaneCompareDrawerProps,
 } from '@teambit/lanes.ui.compare.lane-compare-drawer';
 import { UseComponentType } from '@teambit/component';
+import { useLaneDiffStatus } from '@teambit/lanes.ui.compare.lane-compare-hooks.use-lane-diff-status';
 
 import styles from './lane-compare.module.scss';
 
@@ -37,6 +38,9 @@ export function LaneCompare({
   Drawer = LaneCompareDrawer,
   ...rest
 }: LaneCompareProps) {
+  const { loading: laneDiffLoading, laneDiff } = useLaneDiffStatus(base.id.toString(), compare.id.toString());
+  console.log('🚀 ~ file: lane-compare.tsx:42 ~ laneDiff', laneDiff, laneDiffLoading);
+
   const baseMap = useMemo(
     () => new Map<string, ComponentID>(base.components.map((c) => [c.toStringWithoutVersion(), c])),
     [base.components]
@@ -68,7 +72,7 @@ export function LaneCompare({
     [base.components, compare.components]
   );
 
-  const allComponents = useMemo(() => [...commonComponents, ...newComponents], [base.components, compare.components]);
+  const allComponents = useMemo(() => [...newComponents, ...commonComponents], [base.components, compare.components]);
 
   const defaultState = useCallback(() => {
     const _tabs = extractLazyLoadedData(tabs)?.sort(sortTabs);

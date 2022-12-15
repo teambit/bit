@@ -1,5 +1,6 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { ScopeMain, ScopeAspect } from '@teambit/scope';
+import pMapSeries from 'p-map-series';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { ExpressAspect, ExpressMain } from '@teambit/express';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
@@ -24,6 +25,7 @@ import { BitId } from '@teambit/legacy-bit-id';
 import { ExportAspect, ExportMain } from '@teambit/export';
 import { BitIds } from '@teambit/legacy/dist/bit-id';
 import { compact } from 'lodash';
+import pMapSeries from 'p-map-series';
 import { ComponentCompareMain, ComponentCompareAspect } from '@teambit/component-compare';
 import { Ref } from '@teambit/legacy/dist/scope/objects';
 import { SnapsDistance } from '@teambit/legacy/dist/scope/component-ops/snaps-distance';
@@ -80,12 +82,16 @@ export enum ChangeType {
 
 export type LaneComponentDiffStatus = {
   componentId: ComponentID;
-  changeType: ChangeType;
-  upToDate: boolean;
+  changeType?: ChangeType;
+  upToDate?: boolean;
+};
+
+export type LaneDiffStatusOptions = {
+  skipChanges?: boolean;
+  skipUpToDate?: boolean;
 };
 
 export type LaneDiffStatus = {
-  upToDate: boolean;
   source: LaneId;
   target: LaneId;
   componentsStatus: LaneComponentDiffStatus[];
@@ -499,56 +505,6 @@ export class LanesMain {
   }
 
   /**
-   * check whether the given lane is up-to-date against "checkAgainst", if this param is null, it checks it against main.
-   */
-  async isLaneUpToDate(laneToCheck: Lane, checkAgainst?: Lane): Promise<boolean> {
-    const upToDateIds: BitId[] = [];
-    const notUpToDateIds: BitId[] = [];
-    const getHashOnAnotherLane = async (id: BitId): Promise<Ref | undefined> => {
-      if (checkAgainst) {
-        const idOnLane = checkAgainst.getComponent(id);
-        return idOnLane?.head;
-      }
-      const modelComp = await this.scope.legacyScope.getModelComponent(id);
-      return modelComp.head;
-    };
-    await Promise.all(
-      laneToCheck.components.map(async (comp) => {
-        const refOnOtherLane = await getHashOnAnotherLane(comp.id);
-        if (!refOnOtherLane) {
-          upToDateIds.push(comp.id);
-          return;
-        }
-        if (comp.head.isEqual(refOnOtherLane)) {
-          upToDateIds.push(comp.id);
-          return;
-        }
-        const modelComponent = await this.scope.legacyScope.getModelComponent(comp.id);
-        const divergeData = await getDivergeData({
-          repo: this.scope.legacyScope.objects,
-          modelComponent,
-          sourceHead: comp.head,
-          targetHead: refOnOtherLane,
-        });
-        if (divergeData.isTargetAhead() || divergeData.isDiverged()) {
-          notUpToDateIds.push(comp.id);
-          return;
-        }
-        if (!divergeData.isSourceAhead()) {
-          throw new Error(
-            `invalid state - component ${comp.id.toString()} is not diverged, not local-ahead and not-remote-ahead.`
-          );
-        }
-        upToDateIds.push(comp.id);
-      })
-    );
-
-    const isUpToDate = !notUpToDateIds.length;
-
-    return isUpToDate;
-  }
-
-  /**
    * the values array may include zero to two values and will be processed as following:
    * [] => diff between the current lane and default lane. (only inside workspace).
    * [to] => diff between the current lane (or default-lane when in scope) and "to" lane.
@@ -643,55 +599,58 @@ export class LanesMain {
     return { result: true };
   }
 
-  async diffStatus(sourceLaneId: LaneId, targetLaneId?: LaneId): Promise<LaneDiffStatus> {
+  async diffStatus(
+    sourceLaneId: LaneId,
+    targetLaneId?: LaneId,
+    options?: LaneDiffStatusOptions
+  ): Promise<LaneDiffStatus> {
     const sourceLane = await this.loadLane(sourceLaneId);
     if (!sourceLane) throw new Error(`unable to find ${sourceLaneId.toString()} in the scope`);
     const targetLane = targetLaneId ? await this.loadLane(targetLaneId) : undefined;
     const targetLaneIds = targetLane?.toBitIds();
     const host = this.componentAspect.getHost();
-    const resultsWithNulls = await Promise.all(
-      sourceLane.components.map(async (comp) => {
-        const componentId = await host.resolveComponentId(comp.id);
-        const sourceVersionObj = (await this.scope.legacyScope.objects.load(comp.head)) as Version;
-        if (sourceVersionObj.isRemoved()) {
+    const resultsWithNulls = await pMapSeries(sourceLane.components, async (comp) => {
+      const componentId = await host.resolveComponentId(comp.id);
+      const sourceVersionObj = (await this.scope.legacyScope.objects.load(comp.head)) as Version;
+      if (sourceVersionObj.isRemoved()) {
+        return null;
+      }
+      const headOnTargetLane = targetLaneIds
+        ? targetLaneIds.searchWithoutVersion(comp.id)?.version
+        : await this.getHeadOnMain(componentId);
+      if (headOnTargetLane) {
+        const targetVersionObj = (await this.scope.legacyScope.objects.load(Ref.from(headOnTargetLane))) as Version;
+        if (targetVersionObj.isRemoved()) {
           return null;
         }
-        const headOnTargetLane = targetLaneIds
-          ? targetLaneIds.searchWithoutVersion(comp.id)?.version
-          : await this.getHeadOnMain(componentId);
-        if (headOnTargetLane) {
-          const targetVersionObj = (await this.scope.legacyScope.objects.load(Ref.from(headOnTargetLane))) as Version;
-          if (targetVersionObj.isRemoved()) {
-            return null;
-          }
-        }
-        const snapsDistance = await this.getSnapsDistance(componentId, comp.head.toString(), headOnTargetLane);
-        const getChangeType = async (): Promise<ChangeType> => {
-          if (!headOnTargetLane) return ChangeType.NEW;
-          const compare = await this.componentCompare.compare(
-            comp.id.changeVersion(comp.head.toString()).toString(),
-            comp.id.changeVersion(headOnTargetLane).toString()
-          );
-          if (compare.code.length && compare.code.some((f) => f.status !== 'UNCHANGED')) {
-            return ChangeType.SOURCE_CODE;
-          }
-          if (!compare.fields.length) return ChangeType.NONE;
-          const depsFields = ['dependencies', 'devDependencies', 'extensionDependencies'];
-          if (compare.fields.some((field) => depsFields.includes(field.fieldName))) return ChangeType.DEPENDENCY;
-          return ChangeType.CONFIG;
-        };
-        const changeType = await getChangeType();
-        return { componentId, changeType, upToDate: snapsDistance.isUpToDate() };
-      })
-    );
-    const results = compact(resultsWithNulls);
+      }
+      const snapsDistance = !options?.skipUpToDate
+        ? await this.getSnapsDistance(componentId, comp.head.toString(), headOnTargetLane)
+        : undefined;
 
-    const isLaneUptoDate = results.every((r) => r.upToDate);
+      const getChangeType = async (): Promise<ChangeType> => {
+        if (!headOnTargetLane) return ChangeType.NEW;
+        const compare = await this.componentCompare.compare(
+          comp.id.changeVersion(comp.head.toString()).toString(),
+          comp.id.changeVersion(headOnTargetLane).toString()
+        );
+        if (compare.code.length && compare.code.some((f) => f.status !== 'UNCHANGED')) {
+          return ChangeType.SOURCE_CODE;
+        }
+        if (!compare.fields.length) return ChangeType.NONE;
+        const depsFields = ['dependencies', 'devDependencies', 'extensionDependencies'];
+        if (compare.fields.some((field) => depsFields.includes(field.fieldName))) return ChangeType.DEPENDENCY;
+        return ChangeType.CONFIG;
+      };
+      const changeType = !options?.skipChanges ? await getChangeType() : undefined;
+      return { componentId, changeType, upToDate: snapsDistance?.isUpToDate() };
+    });
+
+    const results = compact(resultsWithNulls);
 
     return {
       source: sourceLaneId,
       target: targetLaneId || this.getDefaultLaneId(),
-      upToDate: isLaneUptoDate,
       componentsStatus: results,
     };
   }

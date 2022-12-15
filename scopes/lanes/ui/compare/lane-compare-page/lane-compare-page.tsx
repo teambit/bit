@@ -13,14 +13,14 @@ export function LaneComparePage({ getLaneCompare, ...rest }: LaneComparePageProp
 
   if (!lanesModel) return null;
 
-  const base = lanesModel.getDefaultLane() || lanesModel.lanes[0];
-  const compare = lanesModel.getNonMainLanes()[0] || base;
+  const base = lanesModel.lanes.find((l) => l.id.name === 'bit-cloud');
+  const compare = lanesModel.lanes.find((l) => l.id.name === 'lane-compare');
 
   const LaneCompareComponent = getLaneCompare({ base, compare });
 
   return (
     <div {...rest} className={styles.laneComparePage}>
-      <div className={styles.top}>{`Comparing Lane ${compare.id.toString()} with ${base.id.toString()}`}</div>
+      <div className={styles.top}>{`Comparing Lane ${compare?.id.toString()} with ${base?.id.toString()}`}</div>
       {LaneCompareComponent}
     </div>
   );

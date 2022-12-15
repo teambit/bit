@@ -18,12 +18,14 @@ export type ComponentCompareAspectsProps = { host: string } & HTMLAttributes<HTM
 
 export function ComponentCompareAspects({ host, className }: ComponentCompareAspectsProps) {
   const context = useCompareAspectsQuery(host);
-  const { loading, selectedBase, selectedCompare, selected, hook, aspectNames } = context;
+  const { loading, selectedBase, selectedCompare, selected, hook, aspectNames, state } = context;
   const isMobile = useIsMobile();
   const [isSidebarOpen, setSidebarOpenness] = useState(!isMobile);
   const sidebarOpenness = isSidebarOpen ? Layout.row : Layout.left;
 
-  const _useUpdatedUrlFromQuery = hook?.useUpdatedUrlFromQuery || useUpdatedUrlFromQuery;
+  const _useUpdatedUrlFromQuery =
+    hook?.useUpdatedUrlFromQuery || state?.controlled ? () => useUpdatedUrlFromQuery({}) : useUpdatedUrlFromQuery;
+
   const getHref = (node) => _useUpdatedUrlFromQuery({ aspect: node.id });
 
   return (
