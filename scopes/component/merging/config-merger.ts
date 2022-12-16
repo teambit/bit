@@ -106,21 +106,44 @@ export class ConfigMerger {
     currentConfig,
     otherConfig,
   }: MergeStrategyParamsWithRemoved): MergeStrategyResult {
-    const formatConfig = (conf: GenericConfigOrRemoved) => {
-      const confStr = JSON.stringify(conf, undefined, 2);
-      const confStrSplit = confStr.split('\n');
-      confStrSplit.shift(); // remove first {
-      confStrSplit.pop(); // remove last }
-      return confStrSplit.join('\n  ');
-    };
-    const conflict = `"${id}": {
+    console.log(
+      'basicConflictGenerator',
+      this.compIdStr,
+      id,
+      'currentConfig',
+      currentConfig,
+      'otherConfig',
+      otherConfig
+    );
+    let conflict: string;
+    if (currentConfig === '-') {
+      conflict = `${'<'.repeat(7)} ${this.currentLabel}
+=======
+  "${id}": ${JSON.stringify(otherConfig, undefined, 2)}
+${'>'.repeat(7)} ${this.otherLabel}`;
+    } else if (otherConfig === '-') {
+      conflict = `${'<'.repeat(7)} ${this.currentLabel}
+  "${id}": ${JSON.stringify(otherConfig, undefined, 2)}
+=======
+${'>'.repeat(7)} ${this.otherLabel}`;
+    } else {
+      const formatConfig = (conf: GenericConfigOrRemoved) => {
+        const confStr = JSON.stringify(conf, undefined, 2);
+        const confStrSplit = confStr.split('\n');
+        confStrSplit.shift(); // remove first {
+        confStrSplit.pop(); // remove last }
+        return confStrSplit.join('\n  ');
+      };
+      conflict = `"${id}": {
 ${'<'.repeat(7)} ${this.currentLabel}
     ${formatConfig(currentConfig)}
 =======
     ${formatConfig(otherConfig)}
 ${'>'.repeat(7)} ${this.otherLabel}
     }`;
-    return { id, mergedConfig: { currentConfig, otherConfig }, conflict };
+    }
+
+    return { id, conflict };
   }
 
   private depResolverStrategy(params: MergeStrategyParams): MergeStrategyResult | undefined {

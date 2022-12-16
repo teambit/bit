@@ -9,10 +9,11 @@ export class ConfigMergeResult {
     const resultsWithConflict = this.results.filter((result) => result.conflict);
     if (!resultsWithConflict.length) return null;
     const configMergeAspects = resultsWithConflict.map((result) => result.conflict);
-    return `{
+    const conflictStr = `{
   ${configMergeAspects.join(',\n')}
 }
 `;
+    return this.formatConflict(conflictStr);
   }
   getSuccessfullyMergedConfig(): Record<string, any> {
     const resultsWithMergedConfig = this.results.filter((result) => result.mergedConfig);
@@ -20,5 +21,15 @@ export class ConfigMergeResult {
       const currObject = { [curr.id]: curr.mergedConfig };
       return { ...acc, ...currObject };
     }, {});
+  }
+
+  private formatConflict(conflict: string) {
+    return (
+      conflict
+        .split('\n')
+        // remove the white spaces before the conflict indicators
+        .map((line) => line.replace(/ *(<<<<<<<|>>>>>>>|=======)/g, '$1'))
+        .join('\n')
+    );
   }
 }
