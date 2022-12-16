@@ -1,10 +1,8 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { BitId } from '@teambit/legacy-bit-id';
-import WorkspaceAspect, { Workspace } from '@teambit/workspace';
+import WorkspaceAspect, { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import { CommunityAspect } from '@teambit/community';
 import type { CommunityMain } from '@teambit/community';
-
-import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
 import chalk from 'chalk';
 import getRemoteByName from '@teambit/legacy/dist/remotes/get-remote-by-name';
 import { ComponentLogAspect } from './component-log.aspect';
@@ -21,7 +19,7 @@ export class ComponentLogMain {
       const remote = await getRemoteByName(bitId.scope as string, consumer);
       return remote.log(bitId);
     }
-    if (!this.workspace) throw new ConsumerNotFound();
+    if (!this.workspace) throw new OutsideWorkspaceError();
     const componentId = await this.workspace.resolveComponentId(id);
     const logs = await this.workspace.scope.getLogs(componentId, shortHash);
     logs.forEach((log) => {

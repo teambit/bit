@@ -1,13 +1,11 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
-import WorkspaceAspect, { Workspace } from '@teambit/workspace';
+import WorkspaceAspect, { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import { CommunityAspect } from '@teambit/community';
 import type { CommunityMain } from '@teambit/community';
 import { Analytics } from '@teambit/legacy/dist/analytics/analytics';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
-import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
-
 import { InvalidScopeName, InvalidScopeNameFromRemote } from '@teambit/legacy-bit-id';
 import logger from '@teambit/legacy/dist/logger/logger';
 import { LaneId } from '@teambit/lane-id';
@@ -27,7 +25,7 @@ export class ImporterMain {
   constructor(private workspace: Workspace, private depResolver: DependencyResolverMain, private graph: GraphMain) {}
 
   async import(importOptions: ImportOptions, packageManagerArgs: string[]): Promise<ImportResult> {
-    if (!this.workspace) throw new ConsumerNotFound();
+    if (!this.workspace) throw new OutsideWorkspaceError();
     const consumer = this.workspace.consumer;
     consumer.packageManagerArgs = packageManagerArgs;
     if (!importOptions.ids.length) {
@@ -59,7 +57,7 @@ export class ImporterMain {
    * @todo: combine with this.import()
    */
   async importWithOptions(importOptions: ImportOptions) {
-    if (!this.workspace) throw new ConsumerNotFound();
+    if (!this.workspace) throw new OutsideWorkspaceError();
     const importComponents = new ImportComponents(this.workspace, this.graph, importOptions);
     return importComponents.importComponents();
   }
@@ -71,7 +69,7 @@ export class ImporterMain {
       );
     }
     loader.start('fetching objects...');
-    if (!this.workspace) throw new ConsumerNotFound();
+    if (!this.workspace) throw new OutsideWorkspaceError();
     const consumer = this.workspace.consumer;
     const importOptions: ImportOptions = {
       ids,
