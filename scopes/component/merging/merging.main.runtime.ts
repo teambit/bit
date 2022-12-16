@@ -337,6 +337,7 @@ export class MergingMain {
       }
     };
     const results = await getComponentsStatusNeedMerge();
+    // throw new Error('stop!')
     results.push(...compStatusNotNeedMerge);
     return results;
   }
@@ -520,6 +521,16 @@ export class MergingMain {
     if (!currentComponent) throw new Error(`getDivergedMergeStatus, currentComponent is missing for ${id.toString()}`);
 
     const baseSnap = divergeData.commonSnapBeforeDiverge as Ref; // must be set when isTrueMerge
+    console.log(
+      'id',
+      id.toStringWithoutVersion(),
+      'baseSnap',
+      baseSnap,
+      'currrent',
+      currentId.version,
+      'other',
+      otherLaneHead.toString()
+    );
     const baseComponent: Version = await modelComponent.loadVersion(baseSnap.toString(), repo);
     const otherComponent: Version = await modelComponent.loadVersion(otherLaneHead.toString(), repo);
 
@@ -528,9 +539,10 @@ export class MergingMain {
     const otherLabel = `${otherLaneHead.toString()} (${
       otherLaneName === currentLaneName ? 'incoming' : otherLaneName
     })`;
-
+    const workspaceIds = await this.workspace.listIds();
     const configMerger = new ConfigMerger(
       id.toStringWithoutVersion(),
+      workspaceIds,
       currentComponent.extensions,
       baseComponent.extensions,
       otherComponent.extensions,

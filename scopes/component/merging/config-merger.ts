@@ -1,3 +1,4 @@
+import { ComponentID } from '@teambit/component-id';
 import { DependencyResolverAspect, SerializedDependency } from '@teambit/dependency-resolver';
 import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
 import { compact, omit, uniq } from 'lodash';
@@ -35,6 +36,7 @@ type MergeStrategy = (mergeStrategyParams: MergeStrategyParams) => MergeStrategy
 export class ConfigMerger {
   constructor(
     private compIdStr: string,
+    private workspaceIds: ComponentID[],
     private currentAspects: ExtensionDataList,
     private baseAspects: ExtensionDataList,
     private otherAspects: ExtensionDataList,
@@ -74,6 +76,7 @@ export class ConfigMerger {
     const { id, currentExt, otherExt, baseExt } = mergeStrategyParams;
     const depResolverResult = this.depResolverStrategy(mergeStrategyParams);
     if (depResolverResult) {
+      console.log('\n\n*** DepResolverResult', depResolverResult.id, '\n', depResolverResult.conflict);
       return depResolverResult;
     }
     const currentConfig = currentExt.rawConfig;
@@ -190,6 +193,7 @@ export class ConfigMerger {
     };
     const addSerializedDepToPolicy = (dep: SerializedDependency) => {
       const depType = lifecycleToDepType[dep.lifecycle];
+
       if (mergedPolicy[depType][dep.id]) {
         return; // there is already config for it.
       }
@@ -200,23 +204,54 @@ export class ConfigMerger {
     const getAutoDeps = (ext: ExtensionDataList): SerializedDependency[] => {
       const data = ext.findCoreExtension(DependencyResolverAspect.id)?.data.dependencies;
       if (!data) return [];
-      return data.filter((d) => d.source === 'auto');
+      return data
+        .filter((d) => d.source === 'auto')
+        .map((d) => {
+          return {
+            ...d,
+            id: d.__type === 'package' ? d.id : d.id.split('@')[0],
+          };
+        });
     };
 
     const currentData = getAutoDeps(this.currentAspects);
     const otherData = getAutoDeps(this.otherAspects);
     const baseData = getAutoDeps(this.baseAspects);
 
+    console.log('\n\n**************', this.compIdStr, '**************');
+    console.log(
+      'currentData',
+      currentData.length,
+      '\n',
+      currentData.map((d) => `${d.__type} ${d.id} ${d.version}`).join('\n')
+    );
+    console.log(
+      'otherData',
+      otherData.length,
+      '\n',
+      otherData.map((d) => `${d.__type} ${d.id} ${d.version}`).join('\n')
+    );
+    console.log('otherData', baseData.length, '\n', baseData.map((d) => `${d.__type} ${d.id} ${d.version}`).join('\n'));
+    console.log('** END **\n\n');
+
     currentData.forEach((currentDep) => {
-      const otherDep = otherData.find((d) => d.id === currentDep.id);
+      const currentId = currentDep.id;
+      const otherDep = otherData.find((d) => d.id === currentId);
       if (!otherDep) {
         return;
       }
       if (currentDep.version === otherDep.version) {
         return;
       }
-      const baseDep = baseData.find((d) => d.id === currentDep.id);
+      const baseDep = baseData.find((d) => d.id === currentId);
       if (baseDep && baseDep.version === otherDep.version) {
+        return;
+      }
+      if (
+        currentDep.__type === 'component' &&
+        this.workspaceIds.find((c) => c.toStringWithoutVersion() === currentId)
+      ) {
+        // dependencies that exist in the workspace, should be ignored. they'll be resolved later to the version in the ws.
         return;
       }
       if (baseDep && baseDep.version === currentDep.version) {
@@ -243,9 +278,9 @@ export class ConfigMerger {
         const comma = shouldEndWithComma ? ',' : '';
         return `${'<'.repeat(7)} ${this.currentLabel}
         "${pkgName}": "${currentVal}${comma}"
-  =======
+=======
         "${pkgName}": "${otherVal}${comma}"
-  ${'>'.repeat(7)} ${this.otherLabel}`;
+${'>'.repeat(7)} ${this.otherLabel}`;
       });
       // replace the first line with line with the id
       conflictLines.shift();
