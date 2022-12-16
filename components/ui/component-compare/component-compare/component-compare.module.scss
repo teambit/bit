@@ -77,4 +77,11 @@
 
 .navItem {
   color: var(--bit-text-color-light, #707279);
+  &.dependency,
+  &.code,
+  &.aspects {
+    > div {
+      opacity: 50%;
+    }
+  }
 }

@@ -1,8 +1,11 @@
 import React, { useContext, useMemo } from 'react';
 import classnames from 'classnames';
 import { LegacyComponentLog } from '@teambit/legacy-component-log';
-import { CollapsibleMenuNav, ComponentContext, NavPlugin, useComponent } from '@teambit/component';
+import { CollapsibleMenuNav, ComponentContext, ComponentID, NavPlugin, useComponent } from '@teambit/component';
 import { ComponentCompareContext } from '@teambit/component.ui.component-compare.context';
+import { useComponentCompareQuery } from '@teambit/component.ui.component-compare.hooks.use-component-compare';
+import { FileCompareResult } from '@teambit/component.ui.component-compare.models.component-compare-model';
+import { FieldCompareResult } from '@teambit/component.ui.component-compare.models.component-compare-model/component-compare-model';
 import { useCompareQueryParam } from '@teambit/component.ui.component-compare.hooks.use-component-compare-url';
 import { ComponentCompareVersionPicker } from '@teambit/component.ui.component-compare.version-picker';
 import { ComponentCompareBlankState } from '@teambit/component.ui.component-compare.blank-state';
@@ -15,6 +18,7 @@ import { sortTabs } from '@teambit/component.ui.component-compare.utils.sort-tab
 import { sortByDateDsc } from '@teambit/component.ui.component-compare.utils.sort-logs';
 import { extractLazyLoadedData } from '@teambit/component.ui.component-compare.utils.lazy-loading';
 import { BlockSkeleton } from '@teambit/base-ui.loaders.skeleton';
+import { ChangeType } from '@teambit/dot-lanes.entities.lane-diff';
 
 import styles from './component-compare.module.scss';
 
@@ -40,7 +44,9 @@ export function ComponentCompare(props: ComponentCompareProps) {
     tabs,
     className,
     hooks,
+    changeType: changeTypeFromProps,
     customUseComponent,
+    Loader = CompareLoader,
     ...rest
   } = props;
   const baseVersion = useCompareQueryParam('baseVersion');
@@ -80,6 +86,32 @@ export function ComponentCompare(props: ComponentCompareProps) {
     return (compare?.logs || []).slice().reduce(groupByVersion, new Map<string, LegacyComponentLog>());
   }, [compare?.id.toString()]);
 
+  const { loading: compCompareLoading, componentCompareData } = useComponentCompareQuery(
+    base?.id.toString(),
+    compare?.id.toString()
+  );
+
+  const fileCompareDataByName = useMemo(() => {
+    if (loading || compCompareLoading) return undefined;
+    if (!compCompareLoading && !componentCompareData) return null;
+
+    const _fileCompareDataByName = new Map<string, FileCompareResult>();
+    (componentCompareData?.code || []).forEach((codeCompareData) => {
+      _fileCompareDataByName.set(codeCompareData.fileName, codeCompareData);
+    });
+    return _fileCompareDataByName;
+  }, [compCompareLoading, loading]);
+
+  const fieldCompareDataByName = useMemo(() => {
+    if (loading || compCompareLoading) return undefined;
+    if (!compCompareLoading && !componentCompareData) return null;
+    const _fieldCompareDataByName = new Map<string, FieldCompareResult>();
+    (componentCompareData?.aspects || []).forEach((aspectCompareData) => {
+      _fieldCompareDataByName.set(aspectCompareData.fieldName, aspectCompareData);
+    });
+    return _fieldCompareDataByName;
+  }, [compCompareLoading, loading]);
+
   const componentCompareModel = {
     compare: compare && {
       model: compare,
@@ -92,14 +124,19 @@ export function ComponentCompare(props: ComponentCompareProps) {
     logsByVersion,
     state,
     hooks,
+    fieldCompareDataByName,
+    fileCompareDataByName,
   };
+
+  const changeType =
+    changeTypeFromProps || deriveChangeType(baseId, compare?.id, fileCompareDataByName, fieldCompareDataByName);
 
   return (
     <ComponentCompareContext.Provider value={componentCompareModel}>
       <div className={classnames(styles.componentCompareContainer, className)} {...rest}>
-        {loading && <CompareLoader />}
+        <Loader className={styles.loader} loading={loading} />
         {isEmpty && <ComponentCompareBlankState />}
-        {!loading && !isEmpty && <RenderCompareScreen {...props} />}
+        {!loading && !isEmpty && <RenderCompareScreen {...props} changeType={changeType} />}
       </div>
     </ComponentCompareContext.Provider>
   );
@@ -126,14 +163,17 @@ function RenderCompareScreen(props: ComponentCompareProps) {
   );
 }
 
-function CompareMenuNav({ tabs, state, hooks }: ComponentCompareProps) {
+function CompareMenuNav({ tabs, state, hooks, changeType }: ComponentCompareProps) {
   const activeTab = state?.tabs?.id;
   const isControlled = state?.tabs?.controlled;
   const _tabs = extractLazyLoadedData(tabs) || [];
+
   const extractedTabs: [string, NavPlugin & TabItem][] = useMemo(
     () =>
       _tabs.sort(sortTabs).map((tab, index) => {
         const isActive = !state ? undefined : !!activeTab && !!tab?.id && activeTab === tab.id;
+        const changeTypeCss = deriveChangeTypeCssForNav(tab, changeType);
+
         return [
           tab.id || `tab-${index}`,
           {
@@ -146,16 +186,22 @@ function CompareMenuNav({ tabs, state, hooks }: ComponentCompareProps) {
               onClick: onNavClicked({ id: tab.id, hooks }),
               href: (!isControlled && tab.props?.href) || undefined,
               activeClassName: styles.activeNav,
-              className: styles.navItem,
+              className: classnames(styles.navItem, changeTypeCss),
             },
           },
         ];
       }),
-    [_tabs.length, activeTab]
+    [_tabs.length, activeTab, changeType]
   );
 
-  const sortedTabs = useMemo(() => extractedTabs.filter(([, tab]) => !tab.widget), [extractedTabs.length, activeTab]);
-  const sortedWidgets = useMemo(() => extractedTabs.filter(([, tab]) => tab.widget), [extractedTabs.length, activeTab]);
+  const sortedTabs = useMemo(
+    () => extractedTabs.filter(([, tab]) => !tab.widget),
+    [extractedTabs.length, activeTab, changeType]
+  );
+  const sortedWidgets = useMemo(
+    () => extractedTabs.filter(([, tab]) => tab.widget),
+    [extractedTabs.length, activeTab, changeType]
+  );
 
   return (
     <div className={styles.navContainer}>
@@ -169,9 +215,10 @@ function onNavClicked({ hooks, id }: { hooks?: ComponentCompareHooks; id?: strin
   return (e) => hooks?.tabs?.onClick?.(id, e);
 }
 
-function CompareLoader({ className, ...rest }: React.HTMLAttributes<HTMLDivElement>) {
+function CompareLoader({ loading, className, ...rest }: { loading?: boolean } & React.HTMLAttributes<HTMLDivElement>) {
+  if (!loading) return null;
   return (
-    <div className={classnames(className, styles.loader)} {...rest}>
+    <div className={className} {...rest}>
       <BlockSkeleton className={styles.navLoader} lines={3} />
       <div className={styles.compareLoader}>
         <div className={styles.compareViewLoader}>
@@ -183,4 +230,45 @@ function CompareLoader({ className, ...rest }: React.HTMLAttributes<HTMLDivEleme
       </div>
     </div>
   );
+}
+function deriveChangeType(
+  baseId?: ComponentID,
+  compareId?: ComponentID,
+  fileCompareDataByName?: Map<string, FileCompareResult> | null,
+  fieldCompareDataByName?: Map<string, FieldCompareResult> | null
+): ChangeType | undefined | null {
+  if (!baseId && !compareId) return null;
+  if (!baseId?.version) return ChangeType.NEW;
+
+  if (fileCompareDataByName === null || fieldCompareDataByName === null) return null;
+  if (fileCompareDataByName === undefined || fieldCompareDataByName === undefined) return undefined;
+
+  if (fileCompareDataByName.size > 0 && [...fileCompareDataByName.values()].some((f) => f.status !== 'UNCHANGED')) {
+    return ChangeType.SOURCE_CODE;
+  }
+  if (fieldCompareDataByName.size === 0) return ChangeType.NONE;
+
+  const depsFields = ['dependencies', 'devDependencies', 'extensionDependencies'];
+  if ([...fieldCompareDataByName.values()].some((field) => depsFields.includes(field.fieldName))) {
+    return ChangeType.DEPENDENCY;
+  }
+
+  return ChangeType.ASPECTS;
+}
+function deriveChangeTypeCssForNav(tab: TabItem, changeType: ChangeType | null | undefined): string | null {
+  if (changeType === null) return null;
+  if (changeType === undefined) return styles.changeTypeLoading;
+
+  switch (changeType) {
+    case ChangeType.ASPECTS:
+      return !tab.id?.toLowerCase().includes('aspects') && styles.aspects;
+    case ChangeType.SOURCE_CODE:
+      return !tab.id?.toLowerCase().includes('code') && styles.code;
+    case ChangeType.DEPENDENCY:
+      return !tab.id?.toLowerCase().includes('dependencies') && styles.dependency;
+    case ChangeType.NEW:
+      return styles.new;
+    default:
+      return null;
+  }
 }

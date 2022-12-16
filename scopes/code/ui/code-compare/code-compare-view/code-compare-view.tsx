@@ -4,7 +4,6 @@ import { DiffEditor, DiffOnMount } from '@monaco-editor/react';
 import { Toggle } from '@teambit/design.inputs.toggle-switch';
 import { H4 } from '@teambit/documenter.ui.heading';
 import classNames from 'classnames';
-import { useCodeCompare } from '@teambit/code.ui.code-compare';
 import { darkMode } from '@teambit/base-ui.theme.dark-theme';
 import { useFileContent } from '@teambit/code.ui.queries.get-file-content';
 import { useComponentCompare } from '@teambit/component.ui.component-compare.context';
@@ -26,8 +25,9 @@ const languageOverrides = {
 };
 
 export function CodeCompareView({ className, fileName }: CodeCompareViewProps) {
-  const codeCompareContext = useCodeCompare();
   const componentCompareContext = useComponentCompare();
+  const loadingFromContext =
+    componentCompareContext?.loading || componentCompareContext?.fileCompareDataByName === undefined;
 
   const [ignoreWhitespace, setIgnoreWhitespace] = useState(true);
   const monacoRef = useRef<any>();
@@ -40,18 +40,17 @@ export function CodeCompareView({ className, fileName }: CodeCompareViewProps) {
     return languageOverrides[fileEnding || ''] || fileEnding;
   }, [fileName]);
 
-  const codeCompareDataForFile = codeCompareContext?.fileCompareDataByName.get(fileName);
+  const codeCompareDataForFile = componentCompareContext?.fileCompareDataByName?.get(fileName);
   /**
    * when there is no component to compare with, fetch file content
    */
   const { fileContent: downloadedCompareFileContent, loading: loadingDownloadedCompareFileContent } = useFileContent(
     componentCompareContext?.compare?.model.id,
     fileName,
-    codeCompareContext?.loading || (!!componentCompareContext?.compare && !!codeCompareDataForFile?.compareContent)
+    loadingFromContext || !!codeCompareDataForFile?.compareContent
   );
 
-  const loading =
-    codeCompareContext?.loading || loadingDownloadedCompareFileContent || componentCompareContext?.loading;
+  const loading = loadingFromContext || loadingDownloadedCompareFileContent || componentCompareContext?.loading;
 
   const originalFileContent = codeCompareDataForFile?.baseContent;
 
@@ -60,7 +59,7 @@ export function CodeCompareView({ className, fileName }: CodeCompareViewProps) {
   const handleEditorDidMount: DiffOnMount = (_, monaco) => {
     /**
      * disable syntax check
-     * ts cant validate all types because imported files arent available to the editor
+     * ts cant validate all types because imported files aren't available to the editor
      */
     monacoRef.current = monaco;
     if (monacoRef.current) {
@@ -72,7 +71,7 @@ export function CodeCompareView({ className, fileName }: CodeCompareViewProps) {
   };
 
   const onIgnoreWhitespaceToggled = () => {
-    setIgnoreWhitespace((exsitingState) => !exsitingState);
+    setIgnoreWhitespace((existingState) => !existingState);
   };
 
   const originalPath = `${componentCompareContext?.base?.model.id.toString()}-${fileName}`;

@@ -10,13 +10,18 @@ import { ComponentCompareHooks } from '@teambit/component.ui.component-compare.m
 import { sortTabs } from '@teambit/component.ui.component-compare.utils.sort-tabs';
 import { LaneModel } from '@teambit/lanes.ui.models.lanes-model';
 import { LaneCompareState, computeStateKey } from '@teambit/lanes.ui.compare.lane-compare-state';
+import { LaneCompareLoader as DefaultLaneCompareLoader } from '@teambit/lanes.ui.compare.lane-compare-loader';
 import {
   LaneCompareDrawer,
   LaneCompareDrawerName,
   LaneCompareDrawerProps,
 } from '@teambit/lanes.ui.compare.lane-compare-drawer';
 import { UseComponentType } from '@teambit/component';
-import { useLaneDiffStatus } from '@teambit/lanes.ui.compare.lane-compare-hooks.use-lane-diff-status';
+import {
+  useLaneDiffStatus as defaultUseLaneDiffStatus,
+  UseLaneDiffStatus,
+} from '@teambit/lanes.ui.compare.lane-compare-hooks.use-lane-diff-status';
+import { LaneComponentDiff } from '@teambit/dot-lanes.entities.lane-diff';
 
 import styles from './lane-compare.module.scss';
 
@@ -26,7 +31,10 @@ export type LaneCompareProps = {
   host: string;
   tabs?: MaybeLazyLoaded<TabItem[]>;
   customUseComponent?: UseComponentType;
+  customUseLaneDiff?: UseLaneDiffStatus;
   Drawer?: React.ComponentType<LaneCompareDrawerProps>;
+  LaneCompareLoader?: React.ComponentType<{ loading?: boolean }>;
+  ComponentCompareLoader?: React.ComponentType<{ loading?: boolean }>;
 } & HTMLAttributes<HTMLDivElement>;
 
 export function LaneCompare({
@@ -35,11 +43,20 @@ export function LaneCompare({
   base,
   tabs,
   customUseComponent,
+  customUseLaneDiff: useLaneDiffStatus = defaultUseLaneDiffStatus,
   Drawer = LaneCompareDrawer,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  LaneCompareLoader = DefaultLaneCompareLoader,
+  ComponentCompareLoader,
   ...rest
 }: LaneCompareProps) {
-  const { loading: laneDiffLoading, laneDiff } = useLaneDiffStatus(base.id.toString(), compare.id.toString());
-  console.log('🚀 ~ file: lane-compare.tsx:42 ~ laneDiff', laneDiff, laneDiffLoading);
+  const { loading: laneDiffLoading, laneDiff } = useLaneDiffStatus({
+    baseId: base.id.toString(),
+    compareId: compare.id.toString(),
+    options: {
+      skipUpToDate: true,
+    },
+  });
 
   const baseMap = useMemo(
     () => new Map<string, ComponentID>(base.components.map((c) => [c.toStringWithoutVersion(), c])),
@@ -149,10 +166,23 @@ export function LaneCompare({
     return _hooks;
   }, []);
 
+  const laneComponentDiffByCompId = useMemo(() => {
+    if (!laneDiff) return new Map<string, LaneComponentDiff>();
+    return laneDiff.changed.reduce((accum, next) => {
+      accum.set(next.componentId.toStringWithoutVersion(), next);
+      return accum;
+    }, new Map<string, LaneComponentDiff>());
+  }, [laneDiffLoading]);
+
   const ComponentCompares = useMemo(() => {
     return allComponents.map(([baseId, compareId]) => {
       const key = computeStateKey(baseId, compareId);
       const open = openDrawerList.includes(key);
+      const compareIdStrWithoutVersion = compareId?.toStringWithoutVersion();
+      const changeType =
+        !compareIdStrWithoutVersion || laneDiffLoading === undefined
+          ? undefined
+          : laneComponentDiffByCompId.get(compareIdStrWithoutVersion)?.changeType;
 
       return (
         <Drawer
@@ -169,15 +199,17 @@ export function LaneCompare({
             tabs,
             baseId,
             compareId,
+            changeType,
             className: styles.componentCompareContainer,
             state: state.get(key),
             hooks: hooks(baseId, compareId),
             customUseComponent,
+            Loader: ComponentCompareLoader,
           }}
         />
       );
     });
-  }, [base.id.toString(), compare.id.toString(), openDrawerList.length]);
+  }, [base.id.toString(), compare.id.toString(), openDrawerList.length, laneComponentDiffByCompId]);
 
   return (
     <div {...rest} className={styles.laneCompareContainer}>
