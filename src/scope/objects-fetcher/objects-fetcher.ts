@@ -55,7 +55,7 @@ export class ObjectFetcher {
     const idsGrouped = this.lanes.length ? groupByLanes(this.ids, this.lanes) : groupByScopeName(this.ids);
     const scopes = Object.keys(idsGrouped);
     logger.debug(
-      `[-] Running fetch on ${scopes.length} remote(s), to get ${this.ids.length} id(s), with the following options`,
+      `[-] Running fetch on ${scopes.length} remote(s), to get ${this.ids.length} id(s), lanes: ${this.lanes.length}, with the following options`,
       this.fetchOptions
     );
     const objectsQueue = new WriteObjectsQueue();
