@@ -68,6 +68,7 @@ import ScopeComponentsImporter from '@teambit/legacy/dist/scope/component-ops/sc
 import { MissingBitMapComponent } from '@teambit/legacy/dist/consumer/bit-map/exceptions';
 import loader from '@teambit/legacy/dist/cli/loader';
 import { Lane, Version } from '@teambit/legacy/dist/scope/models';
+import { UnmergedComponent } from '@teambit/legacy/dist/scope/lanes/unmerged-components';
 import { LaneNotFound } from '@teambit/legacy/dist/api/scope/lib/exceptions/lane-not-found';
 import { ScopeNotFoundOrDenied } from '@teambit/legacy/dist/remotes/exceptions/scope-not-found-or-denied';
 import { ComponentLoadOptions } from '@teambit/legacy/dist/consumer/component/component-loader';
@@ -126,8 +127,7 @@ export type ExtensionsOrigin =
   | 'BitmapFile'
   | 'ModelSpecific'
   | 'ModelNonSpecific'
-  | 'ConfigMergeSpecific'
-  | 'ConfigMergeNonSpecific'
+  | 'ConfigMerge'
   | 'WorkspaceVariants'
   | 'ComponentJsonFile'
   | 'WorkspaceDefault'
@@ -1103,8 +1103,6 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     const bitMapExtensions = bitMapEntry?.config;
 
     let configMergeExtensions: ExtensionDataList | undefined;
-    let configMergeExtensionsSpecific: ExtensionDataList | undefined;
-    let configMergeExtensionsNonSpecific: ExtensionDataList | undefined;
     let configMergeFile;
     try {
       configMergeFile = await this.getConfigMergeFile(componentId);
@@ -1118,13 +1116,12 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
 
     if (configMergeFile) {
       configMergeExtensions = ExtensionDataList.fromConfigObject(configMergeFile);
-      const [specific, nonSpecific] = partition(
-        configMergeExtensions,
-        (entry) => entry.config[AspectSpecificField] === true
-      );
-      configMergeExtensionsSpecific = new ExtensionDataList(...specific);
-      configMergeExtensionsNonSpecific = new ExtensionDataList(...nonSpecific);
     }
+
+    const unmergedData = this.getUnmergedData(componentId);
+    const unmergedExtensions = unmergedData?.mergedConfig
+      ? ExtensionDataList.fromConfigObject(unmergedData?.mergedConfig)
+      : undefined;
 
     const scopeExtensions = componentFromScope?.config?.extensions || new ExtensionDataList();
     const [specific, nonSpecific] = partition(scopeExtensions, (entry) => entry.config[AspectSpecificField] === true);
@@ -1182,8 +1179,11 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     const setDataListAsSpecific = (extensions: ExtensionDataList) => {
       extensions.forEach((dataEntry) => (dataEntry.config[AspectSpecificField] = true));
     };
-    if (configMergeExtensionsSpecific && !excludeOrigins.includes('ConfigMergeSpecific')) {
-      await addExtensionsToMerge(ExtensionDataList.fromArray(configMergeExtensionsSpecific), 'ConfigMergeSpecific');
+    if (unmergedExtensions && !excludeOrigins.includes('ConfigMerge')) {
+      await addExtensionsToMerge(unmergedExtensions, 'ConfigMerge');
+    }
+    if (configMergeExtensions && !excludeOrigins.includes('ConfigMerge')) {
+      await addExtensionsToMerge(ExtensionDataList.fromArray(configMergeExtensions), 'ConfigMerge');
     }
     if (bitMapExtensions && !excludeOrigins.includes('BitmapFile')) {
       const extensionDataList = ExtensionDataList.fromConfigObject(bitMapExtensions);
@@ -1198,14 +1198,6 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
       await addExtensionsToMerge(ExtensionDataList.fromArray(scopeExtensionsSpecific), 'ModelSpecific');
     }
     let continuePropagating = componentConfigFile?.propagate ?? true;
-    if (
-      configMergeExtensionsNonSpecific &&
-      mergeFromScope &&
-      continuePropagating &&
-      !excludeOrigins.includes('ConfigMergeNonSpecific')
-    ) {
-      await addExtensionsToMerge(configMergeExtensionsNonSpecific, 'ConfigMergeNonSpecific');
-    }
     if (variantsExtensions && continuePropagating && !excludeOrigins.includes('WorkspaceVariants')) {
       const appliedRules = variantConfig?.sortedMatches.map(({ pattern, specificity }) => ({ pattern, specificity }));
       await addExtensionsToMerge(variantsExtensions, 'WorkspaceVariants', { appliedRules });
@@ -1274,6 +1266,10 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
       return this.scope.get(componentId.changeVersion(unmerged?.head.toString()));
     }
     return undefined;
+  }
+
+  private getUnmergedData(componentId: ComponentID): UnmergedComponent | undefined {
+    return this.scope.legacyScope.objects.unmergedComponents.getEntry(componentId._legacy.name);
   }
 
   private async warnAboutMisconfiguredEnv(componentId: ComponentID, extensionDataList: ExtensionDataList) {

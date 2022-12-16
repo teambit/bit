@@ -655,14 +655,20 @@ export class MergingMain {
       if (!componentWithDependencies.component.writtenPath) {
         throw new Error(`componentWithDependencies.component.writtenPath is missing for ${id.toString()}`);
       }
-      const configMergeFile = configMergeResult.generateConfigMergeFile();
-      if (configMergeFile) {
+      const configMergeConflictFile = configMergeResult.generateMergeConflictFile();
+      if (configMergeConflictFile) {
         const configMergePath = path.join(
           consumer.getPath(),
           componentWithDependencies.component.writtenPath,
           MergeConfigFilename
         );
-        await fs.outputFile(configMergePath, configMergeFile);
+        await fs.outputFile(configMergePath, configMergeConflictFile);
+      }
+      const successfullyMergedConfig = configMergeResult.getSuccessfullyMergedConfig();
+      if (successfullyMergedConfig) {
+        unmergedComponent.mergedConfig = successfullyMergedConfig;
+        // no need to `unmergedComponents.addEntry` here. it'll be added in the next lines inside `if (mergeResults)`.
+        // because if `configMergeResult` is set, `mergeResults` must be set as well. both happen on diverge.
       }
     }
 

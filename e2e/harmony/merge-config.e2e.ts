@@ -90,7 +90,38 @@ describe('merge config scenarios', function () {
       });
     });
   });
-  describe('diverge with different config', () => {
+  describe('diverge with config that is possible to merge', () => {
+    before(() => {
+      helper = new Helper();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      const mainBeforeDiverge = helper.scopeHelper.cloneLocalScope();
+
+      helper.command.createLane();
+      helper.command.deprecateComponent('comp1');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+
+      helper.scopeHelper.getClonedLocalScope(mainBeforeDiverge);
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.export();
+      helper.command.mergeLane(`${helper.scopes.remote}/dev`, '--no-snap --skip-dependency-installation --no-squash');
+    });
+    it('bit status should not show the component with an issue of MergeConfigHasConflict', () => {
+      helper.command.expectStatusToNotHaveIssue(IssuesClasses.MergeConfigHasConflict.name);
+    });
+    it('should show the component deprecated due to the successful merge-config', () => {
+      const deprecationData = helper.command.showAspectConfig('comp1', Extensions.deprecation);
+      expect(deprecationData.config.deprecate).to.be.true;
+    });
+    it('should not generate merge-conflict file, instead, the merge data should be in unmerged file', () => {
+      const configPath = helper.general.getConfigMergePath('comp1');
+      expect(configPath).to.not.be.a.path();
+    });
+  });
+  describe('diverge with conflicted config', () => {
     let mainBeforeDiverge: string;
     let beforeConfigResolved: string;
     before(() => {

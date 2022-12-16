@@ -5,17 +5,20 @@ export class ConfigMergeResult {
   hasConflicts(): boolean {
     return this.results.some((result) => result.conflict);
   }
-  generateConfigMergeFile(): string | null {
-    const relevantAspects = this.results.filter((result) => result.conflict || result.isMerged);
-    if (!relevantAspects.length) return null;
-    const configMergeAspects = relevantAspects.map((result) => {
-      const { id, config, conflict } = result;
-      if (conflict) return conflict;
-      return JSON.stringify({ [id]: config }, null, 2);
-    });
+  generateMergeConflictFile(): string | null {
+    const resultsWithConflict = this.results.filter((result) => result.conflict);
+    if (!resultsWithConflict.length) return null;
+    const configMergeAspects = resultsWithConflict.map((result) => result.conflict);
     return `{
   ${configMergeAspects.join(',\n')}
 }
 `;
+  }
+  getSuccessfullyMergedConfig(): Record<string, any> {
+    const resultsWithMergedConfig = this.results.filter((result) => result.mergedConfig);
+    return resultsWithMergedConfig.reduce((acc, curr) => {
+      const currObject = { [curr.id]: curr.mergedConfig };
+      return { ...acc, ...currObject };
+    }, {});
   }
 }

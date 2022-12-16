@@ -4,14 +4,12 @@ import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy/dist/cons
 import { compact, omit, uniq } from 'lodash';
 import { ConfigMergeResult } from './config-merge-result';
 
-type GenericConfig = Record<string, any>;
 type GenericConfigOrRemoved = Record<string, any> | '-';
 
 export type MergeStrategyResult = {
   id: string;
-  config: GenericConfigOrRemoved | null;
+  mergedConfig?: GenericConfigOrRemoved;
   conflict?: string;
-  isMerged?: boolean;
 };
 type MergeStrategyParamsWithRemoved = {
   id: string;
@@ -19,19 +17,12 @@ type MergeStrategyParamsWithRemoved = {
   otherConfig: GenericConfigOrRemoved;
   baseConfig?: GenericConfigOrRemoved;
 };
-// type MergeConfigStrategyParams = {
-//   id: string;
-//   currentConfig: GenericConfig;
-//   otherConfig: GenericConfig;
-//   baseConfig?: GenericConfigOrRemoved;
-// };
 type MergeStrategyParams = {
   id: string;
   currentExt: ExtensionDataEntry;
   otherExt: ExtensionDataEntry;
   baseExt?: ExtensionDataEntry;
 };
-type MergeStrategy = (mergeStrategyParams: MergeStrategyParams) => MergeStrategyResult | undefined;
 
 export class ConfigMerger {
   constructor(
@@ -46,7 +37,7 @@ export class ConfigMerger {
 
   merge(): ConfigMergeResult {
     const handledExtIds: string[] = [];
-    const results: MergeStrategyResult[] = this.currentAspects.map((currentExt) => {
+    const results = this.currentAspects.map((currentExt) => {
       const id = currentExt.stringId;
       handledExtIds.push(id);
       const baseExt = this.baseAspects.findExtension(id, true);
@@ -58,54 +49,56 @@ export class ConfigMerger {
       // exist in current but not in other
       if (baseExt) {
         // was removed on other
-        return this.basicConflictGenerator({ id, currentConfig: currentExt.rawConfig, otherConfig: '-' });
+        return this.basicConflictGenerator({ id, currentConfig: this.getConfig(currentExt), otherConfig: '-' });
       }
-      // exist in current but not in other and base.
-      // so it got created on current.
-      return { id, config: currentExt };
+      // exist in current but not in other and base, so it got created on current. nothing to do.
+      return null;
     });
-
-    return new ConfigMergeResult(this.compIdStr, compact(results));
+    const otherAspectsNotHandled = this.otherAspects.filter((otherExt) => !handledExtIds.includes(otherExt.stringId));
+    const otherAspectsNotHandledResults = otherAspectsNotHandled.map((otherExt) => {
+      const id = otherExt.stringId;
+      handledExtIds.push(id);
+      const baseExt = this.baseAspects.findExtension(id, true);
+      if (baseExt) {
+        // was removed on current
+        return this.basicConflictGenerator({ id, currentConfig: '-', otherConfig: this.getConfig(otherExt) });
+      }
+      // exist in other but not in current and base, so it got created on other.
+      return { id, mergedConfig: this.getConfig(otherExt) };
+    });
+    // console.log('...results, ...otherAspectsNotHandledResults', ...results, ...otherAspectsNotHandledResults);
+    return new ConfigMergeResult(this.compIdStr, compact([...results, ...otherAspectsNotHandledResults]));
   }
 
   private areConfigsEqual(configA: GenericConfigOrRemoved, configB: GenericConfigOrRemoved) {
     return JSON.stringify(configA) === JSON.stringify(configB);
   }
 
-  private mergePerStrategy(mergeStrategyParams: MergeStrategyParams): MergeStrategyResult {
+  private mergePerStrategy(mergeStrategyParams: MergeStrategyParams): MergeStrategyResult | null {
     const { id, currentExt, otherExt, baseExt } = mergeStrategyParams;
     const depResolverResult = this.depResolverStrategy(mergeStrategyParams);
     if (depResolverResult) {
       console.log('\n\n*** DepResolverResult', depResolverResult.id, '\n', depResolverResult.conflict);
       return depResolverResult;
     }
-    const currentConfig = currentExt.rawConfig;
-    const otherConfig = otherExt.rawConfig;
-    const baseConfig = baseExt?.rawConfig;
-    const mergeStrategyConfigParams = { id, currentConfig, otherConfig, baseConfig };
-    const basicResult = this.basicConfigMerge(mergeStrategyConfigParams);
-    if (basicResult) {
-      return basicResult;
-    }
-    // either no baseConfig, or baseConfig is also different from both: other and local. that's a conflict.
-    return this.basicConflictGenerator(mergeStrategyConfigParams);
-  }
+    const currentConfig = this.getConfig(currentExt);
+    const otherConfig = this.getConfig(otherExt);
+    const baseConfig = baseExt ? this.getConfig(baseExt) : undefined;
 
-  private basicConfigMerge(mergeStrategyParams: MergeStrategyParamsWithRemoved): MergeStrategyResult | undefined {
-    const { id, currentConfig, otherConfig, baseConfig } = mergeStrategyParams;
     if (this.areConfigsEqual(currentConfig, otherConfig)) {
-      return { id, config: currentConfig };
+      return null;
     }
     if (baseConfig && this.areConfigsEqual(baseConfig, otherConfig)) {
       // was changed on current
-      return { id, config: currentConfig };
+      return null;
     }
     if (baseConfig && this.areConfigsEqual(baseConfig, currentConfig)) {
       // was changed on other
-      return { id, config: otherConfig, isMerged: true };
+      return { id, mergedConfig: otherConfig };
     }
-
-    return undefined;
+    // either no baseConfig, or baseConfig is also different from both: other and local. that's a conflict.
+    const mergeStrategyConfigParams = { id, currentConfig, otherConfig, baseConfig };
+    return this.basicConflictGenerator(mergeStrategyConfigParams);
   }
 
   private basicConflictGenerator({
@@ -121,34 +114,23 @@ export class ConfigMerger {
       return confStrSplit.join('\n  ');
     };
     const conflict = `"${id}": {
-  ${'<'.repeat(7)} ${this.currentLabel}
+${'<'.repeat(7)} ${this.currentLabel}
     ${formatConfig(currentConfig)}
-  =======
+=======
     ${formatConfig(otherConfig)}
-  ${'>'.repeat(7)} ${this.otherLabel}
+${'>'.repeat(7)} ${this.otherLabel}
     }`;
-    return { id, config: { currentConfig, otherConfig }, conflict };
+    return { id, mergedConfig: { currentConfig, otherConfig }, conflict };
   }
 
   private depResolverStrategy(params: MergeStrategyParams): MergeStrategyResult | undefined {
     if (params.id !== DependencyResolverAspect.id) return undefined;
-    const { id, currentExt, otherExt, baseExt } = params;
+    const { currentExt, otherExt, baseExt } = params;
 
-    const currentConfig = currentExt.rawConfig;
-    const otherConfig = otherExt.rawConfig;
-    const baseConfig = baseExt?.rawConfig;
-    const mergeStrategyConfigParams = { id, currentConfig, otherConfig, baseConfig };
-    const basicMerge = this.basicConfigMerge(mergeStrategyConfigParams);
-
-    // if (!currentConfig.policy && !otherConfig.policy) return undefined; // fallback to basic strategy
-
-    // if there other fields other than "policy" are different, fall back to basic strategy.
-    const allKeys = uniq([...Object.keys(currentConfig), ...Object.keys(otherConfig)]);
-    const otherKeys = allKeys.filter((key) => key !== 'policy' && key !== '_specific');
-    const hasDiffInOtherKeys = otherKeys.some(
-      (key) => JSON.stringify(currentConfig[key]) !== JSON.stringify(otherConfig[key])
-    );
-    // if (hasDiffInOtherKeys) return undefined;
+    const currentConfig = this.getConfig(currentExt);
+    const otherConfig = this.getConfig(otherExt);
+    const baseConfig = baseExt ? this.getConfig(baseExt) : undefined;
+    // const mergeStrategyConfigParams = { id, currentConfig, otherConfig, baseConfig };
 
     const mergedPolicy = {
       dependencies: {},
@@ -158,34 +140,92 @@ export class ConfigMerger {
     let isMerged = false;
     let hasConflict = false;
     const conflictIndicator = 'CONFLICT::';
-    ['dependencies', 'devDependencies', 'peerDependencies'].forEach((depType) => {
-      const currentPolicy = currentConfig.policy?.[depType];
-      const otherPolicy = otherConfig.policy?.[depType];
-      const allPolicyKeys = uniq(Object.keys(currentPolicy || {}).concat(Object.keys(otherPolicy || {})));
-      if (!allPolicyKeys.length) return;
+    const nonPolicyConfigToMerged = {};
+    const nonPolicyConfigConflict = {};
+    const handleConfigMerge = () => {
+      if (this.areConfigsEqual(currentConfig, otherConfig)) {
+        return;
+      }
+      if (baseConfig && this.areConfigsEqual(baseConfig, otherConfig)) {
+        // was changed on current
+        return;
+      }
+      if (currentConfig === '-' || otherConfig === '-') {
+        throw new Error('not implemented. Is it possible to have it as minus?');
+      }
+      const allKeys = uniq([...Object.keys(currentConfig), ...Object.keys(otherConfig)]);
+      const otherKeys = allKeys.filter((key) => key !== 'policy');
+      if (baseConfig && this.areConfigsEqual(baseConfig, currentConfig)) {
+        // was changed on other
+        otherKeys.forEach((key) => {
+          if (otherConfig[key]) {
+            nonPolicyConfigToMerged[key] = otherConfig[key];
+          }
+        });
+        if (otherConfig.policy) {
+          mergedPolicy.dependencies = otherConfig.policy.dependencies || {};
+          mergedPolicy.devDependencies = otherConfig.policy.devDependencies || {};
+          mergedPolicy.peerDependencies = otherConfig.policy.peerDependencies || {};
+        }
+        isMerged = true;
+        return;
+      }
 
-      allPolicyKeys.forEach((pkgName) => {
-        const currentVal = currentPolicy?.[pkgName];
-        const otherVal = otherPolicy?.[pkgName];
-        const baseVal = baseConfig !== '-' && baseConfig?.policy?.[depType]?.[pkgName];
-        if (currentVal === otherVal) {
-          mergedPolicy[depType][pkgName] = currentVal;
+      // either no baseConfig, or baseConfig is also different from both: other and local. that's a conflict.
+      // we have to differentiate between a conflict in the policy, which might be merged with conflict with dependencies data.
+      // and a conflict with other fields of config.
+
+      otherKeys.forEach((key) => {
+        if (JSON.stringify(currentConfig[key]) === JSON.stringify(otherConfig[key])) {
           return;
         }
-        if (baseVal === otherVal) {
-          mergedPolicy[depType][pkgName] = currentVal;
+        if (baseConfig && JSON.stringify(baseConfig[key]) === JSON.stringify(otherConfig[key])) {
+          // was changed on current
           return;
         }
-        if (baseVal === currentVal) {
-          mergedPolicy[depType][pkgName] = otherVal;
-          isMerged = true;
+        if (baseConfig && JSON.stringify(baseConfig[key]) === JSON.stringify(currentConfig[key])) {
+          // was changed on other
+          nonPolicyConfigToMerged[key] = otherConfig[key];
           return;
         }
-        // either no baseVal, or baseVal is also different from both: other and local. that's a conflict.
-        hasConflict = true;
-        mergedPolicy[depType][pkgName] = `${conflictIndicator}${pkgName}::${currentVal}::${otherVal}::`;
+        // conflict
+        nonPolicyConfigConflict[key] = { current: currentConfig[key], other: otherConfig[key] };
       });
-    });
+
+      if (!currentConfig.policy && !otherConfig.policy) return;
+
+      ['dependencies', 'devDependencies', 'peerDependencies'].forEach((depType) => {
+        const currentPolicy = currentConfig.policy?.[depType];
+        const otherPolicy = otherConfig.policy?.[depType];
+        const allPolicyKeys = uniq(Object.keys(currentPolicy || {}).concat(Object.keys(otherPolicy || {})));
+        if (!allPolicyKeys.length) return;
+
+        allPolicyKeys.forEach((pkgName) => {
+          const currentVal = currentPolicy?.[pkgName];
+          const otherVal = otherPolicy?.[pkgName];
+          const baseVal = baseConfig !== '-' && baseConfig?.policy?.[depType]?.[pkgName];
+          if (currentVal === otherVal) {
+            mergedPolicy[depType][pkgName] = currentVal;
+            return;
+          }
+          if (baseVal === otherVal) {
+            mergedPolicy[depType][pkgName] = currentVal;
+            return;
+          }
+          if (baseVal === currentVal) {
+            mergedPolicy[depType][pkgName] = otherVal;
+            isMerged = true;
+            return;
+          }
+          // either no baseVal, or baseVal is also different from both: other and local. that's a conflict.
+          hasConflict = true;
+          mergedPolicy[depType][pkgName] = `${conflictIndicator}${pkgName}::${currentVal}::${otherVal}::`;
+        });
+      });
+    };
+
+    handleConfigMerge();
+
     const lifecycleToDepType = {
       runtime: 'dependencies',
       dev: 'devDependencies',
@@ -267,8 +307,7 @@ export class ConfigMerger {
       ] = `${conflictIndicator}${currentDep.id}::${currentDep.version}::${otherDep.version}::`;
     });
 
-    const otherKeysFromCurrent = omit(currentConfig, ['policy']);
-    const config = { ...otherKeysFromCurrent, policy: mergedPolicy };
+    const config = { ...nonPolicyConfigToMerged, policy: mergedPolicy };
     if (hasConflict) {
       const mergedConfigSplit = JSON.stringify(config, undefined, 2).split('\n');
       const conflictLines = mergedConfigSplit.map((line) => {
@@ -287,8 +326,14 @@ ${'>'.repeat(7)} ${this.otherLabel}`;
       conflictLines.unshift(`  "${params.id}": {`);
       // the first conflict indicator is indented, remove the indentation. join all lines with indentation of 2.
       const conflict = conflictLines.join('\n  ').replace(`  ${'<'.repeat(7)}`, '<'.repeat(7));
-      return { id: params.id, config, conflict, isMerged };
+      return { id: params.id, conflict };
     }
-    return { id: params.id, config, isMerged };
+    if (!isMerged) return undefined;
+    return { id: params.id, mergedConfig: config };
+  }
+
+  private getConfig(ext: ExtensionDataEntry) {
+    if (ext.rawConfig === '-') return ext.rawConfig;
+    return omit(ext.rawConfig, ['__specific']);
   }
 }
