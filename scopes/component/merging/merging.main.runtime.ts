@@ -389,6 +389,9 @@ export class MergingMain {
       return consumer.scope.getConsumerComponent(currentId);
     };
     const currentComponent = await getCurrentComponent();
+    if (currentComponent.removed) {
+      return returnUnmerged(`component has been removed`, true);
+    }
     const isModified = async () => {
       const componentModificationStatus = await consumer.getComponentStatusById(currentComponent.id);
       if (!componentModificationStatus.modified) return false;
@@ -417,11 +420,6 @@ export class MergingMain {
       throws: false,
     });
     if (divergeData.err) {
-      if (currentComponent.removed) {
-        // if current component is removed and there is no divergeData errors, it's ok to merge, because on the other
-        // lane it might be re-imported and might be needed.
-        return returnUnmerged(`component has been removed`, true);
-      }
       const mainHead = modelComponent.head;
       if (divergeData.err instanceof NoCommonSnap && options?.resolveUnrelated && mainHead) {
         const hasResolvedFromMain = async (hashToCompare: Ref | null) => {

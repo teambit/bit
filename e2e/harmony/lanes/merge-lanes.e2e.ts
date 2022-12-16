@@ -692,11 +692,12 @@ describe('merge lanes', function () {
       helper.command.export();
       helper.command.mergeLane('dev2');
     });
-    it('should bring the removed component because it may have changed and these changes are needed for other components', () => {
+    // made a decision (according to Ran) to not merge the component in this case.
+    it.skip('should bring the removed component because it may have changed and these changes are needed for other components', () => {
       const bitMap = helper.bitMap.read();
       expect(bitMap).to.have.property('comp2');
     });
-    it('should show the removed components as remotelySoftRemoved because of the merge-config mechanism', () => {
+    it.skip('should show the removed components as remotelySoftRemoved because of the merge-config mechanism', () => {
       const status = helper.command.statusJson();
       expect(status.remotelySoftRemoved).to.have.lengthOf(1);
       expect(status.remotelySoftRemoved[0]).to.include('comp2');
