@@ -1,4 +1,4 @@
-import React, { useContext, useMemo } from 'react';
+import React, { useContext, useMemo, HTMLAttributes } from 'react';
 import classnames from 'classnames';
 import { LegacyComponentLog } from '@teambit/legacy-component-log';
 import { CollapsibleMenuNav, ComponentContext, ComponentID, NavPlugin, useComponent } from '@teambit/component';
@@ -17,7 +17,7 @@ import { groupByVersion } from '@teambit/component.ui.component-compare.utils.gr
 import { sortTabs } from '@teambit/component.ui.component-compare.utils.sort-tabs';
 import { sortByDateDsc } from '@teambit/component.ui.component-compare.utils.sort-logs';
 import { extractLazyLoadedData } from '@teambit/component.ui.component-compare.utils.lazy-loading';
-import { BlockSkeleton } from '@teambit/base-ui.loaders.skeleton';
+import { BlockSkeleton, WordSkeleton } from '@teambit/base-ui.loaders.skeleton';
 import { ChangeType } from '@teambit/dot-lanes.entities.lane-diff';
 
 import styles from './component-compare.module.scss';
@@ -82,6 +82,8 @@ export function ComponentCompare(props: ComponentCompareProps) {
 
   const isEmpty = !loading && !compareIsLocalChanges && !compare && !base;
 
+  const compCompareId = `${base?.id.toString()}-${compare?.id.toString()}`;
+
   const logsByVersion = useMemo(() => {
     return (compare?.logs || []).slice().reduce(groupByVersion, new Map<string, LegacyComponentLog>());
   }, [compare?.id.toString()]);
@@ -100,7 +102,7 @@ export function ComponentCompare(props: ComponentCompareProps) {
       _fileCompareDataByName.set(codeCompareData.fileName, codeCompareData);
     });
     return _fileCompareDataByName;
-  }, [compCompareLoading, loading]);
+  }, [compCompareLoading, loading, compCompareId]);
 
   const fieldCompareDataByName = useMemo(() => {
     if (loading || compCompareLoading) return undefined;
@@ -110,7 +112,7 @@ export function ComponentCompare(props: ComponentCompareProps) {
       _fieldCompareDataByName.set(aspectCompareData.fieldName, aspectCompareData);
     });
     return _fieldCompareDataByName;
-  }, [compCompareLoading, loading]);
+  }, [compCompareLoading, loading, compCompareId]);
 
   const componentCompareModel = {
     compare: compare && {
@@ -134,9 +136,9 @@ export function ComponentCompare(props: ComponentCompareProps) {
   return (
     <ComponentCompareContext.Provider value={componentCompareModel}>
       <div className={classnames(styles.componentCompareContainer, className)} {...rest}>
-        <Loader className={styles.loader} loading={loading} />
+        <Loader className={classnames(styles.loader)} loading={loading} />
         {isEmpty && <ComponentCompareBlankState />}
-        {!loading && !isEmpty && <RenderCompareScreen {...props} changeType={changeType} />}
+        {!loading && !isEmpty && <RenderCompareScreen key={compCompareId} {...props} changeType={changeType} />}
       </div>
     </ComponentCompareContext.Provider>
   );
@@ -173,7 +175,8 @@ function CompareMenuNav({ tabs, state, hooks, changeType }: ComponentCompareProp
       _tabs.sort(sortTabs).map((tab, index) => {
         const isActive = !state ? undefined : !!activeTab && !!tab?.id && activeTab === tab.id;
         const changeTypeCss = deriveChangeTypeCssForNav(tab, changeType);
-
+        const loading = changeType === undefined;
+        const key = `${tab.id || tab.displayName || tab.props?.href || index}-tab-${changeTypeCss}`;
         return [
           tab.id || `tab-${index}`,
           {
@@ -181,12 +184,18 @@ function CompareMenuNav({ tabs, state, hooks, changeType }: ComponentCompareProp
             widget: tab.widget || typeof tab.props?.children !== 'string',
             props: {
               ...(tab.props || {}),
-              displayName: tab.displayName,
+              key,
+              displayName: (!loading && tab.displayName) || undefined,
               active: isActive,
               onClick: onNavClicked({ id: tab.id, hooks }),
               href: (!isControlled && tab.props?.href) || undefined,
-              activeClassName: styles.activeNav,
+              activeClassName: (!loading && styles.activeNav) || styles.loadingNav,
               className: classnames(styles.navItem, changeTypeCss),
+              children: (
+                <CompareMenuTab key={key} loading={loading} changeTypeCss={changeTypeCss} changeType={changeType}>
+                  {tab.props?.children}
+                </CompareMenuTab>
+              ),
             },
           },
         ];
@@ -231,6 +240,11 @@ function CompareLoader({ loading, className, ...rest }: { loading?: boolean } & 
     </div>
   );
 }
+
+function TabLoader() {
+  return <WordSkeleton className={styles.tabLoader} length={5} />;
+}
+
 function deriveChangeType(
   baseId?: ComponentID,
   compareId?: ComponentID,
@@ -256,19 +270,48 @@ function deriveChangeType(
   return ChangeType.ASPECTS;
 }
 function deriveChangeTypeCssForNav(tab: TabItem, changeType: ChangeType | null | undefined): string | null {
-  if (changeType === null) return null;
-  if (changeType === undefined) return styles.changeTypeLoading;
+  if (!changeType) return null;
+
+  const idFromChildren = typeof tab.props?.children === 'string' ? (tab.props.children as string) : undefined;
+  const id = tab.id || tab.displayName || idFromChildren || tab.props?.href;
+
+  if (!id) return null;
 
   switch (changeType) {
     case ChangeType.ASPECTS:
-      return !tab.id?.toLowerCase().includes('aspects') && styles.aspects;
+      return id.toLowerCase().includes('aspects') && styles.aspects;
     case ChangeType.SOURCE_CODE:
-      return !tab.id?.toLowerCase().includes('code') && styles.code;
+      return id.toLowerCase().includes('code') && styles.code;
     case ChangeType.DEPENDENCY:
-      return !tab.id?.toLowerCase().includes('dependencies') && styles.dependency;
+      return id.toLowerCase().includes('dependencies') && styles.dependency;
     case ChangeType.NEW:
       return styles.new;
+    case ChangeType.NONE:
+      return styles.none;
     default:
       return null;
   }
+}
+
+function CompareMenuTab({
+  children,
+  changeType,
+  changeTypeCss,
+  loading,
+  className,
+  ...rest
+}: HTMLAttributes<HTMLDivElement> & {
+  changeTypeCss?: string | null;
+  loading?: boolean;
+  changeType?: ChangeType | null;
+}) {
+  if (loading) return <TabLoader />;
+  return (
+    <div {...rest} className={classnames(styles.compareMenuTab, className)}>
+      {changeTypeCss && changeType !== ChangeType.NONE && (
+        <div className={classnames(styles.indicator, changeTypeCss)}></div>
+      )}
+      <div className={classnames(styles.menuTab)}>{children}</div>
+    </div>
+  );
 }

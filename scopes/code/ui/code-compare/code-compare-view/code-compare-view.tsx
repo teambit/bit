@@ -1,7 +1,7 @@
-import React, { HTMLAttributes, useMemo, useRef, useState } from 'react';
-import { BlockSkeleton } from '@teambit/base-ui.loaders.skeleton';
+import React, { HTMLAttributes, useMemo, useRef } from 'react';
+import { BlockSkeleton, WordSkeleton } from '@teambit/base-ui.loaders.skeleton';
 import { DiffEditor, DiffOnMount } from '@monaco-editor/react';
-import { Toggle } from '@teambit/design.inputs.toggle-switch';
+// import { Toggle } from '@teambit/design.inputs.toggle-switch';
 import { H4 } from '@teambit/documenter.ui.heading';
 import classNames from 'classnames';
 import { darkMode } from '@teambit/base-ui.theme.dark-theme';
@@ -29,7 +29,7 @@ export function CodeCompareView({ className, fileName }: CodeCompareViewProps) {
   const loadingFromContext =
     componentCompareContext?.loading || componentCompareContext?.fileCompareDataByName === undefined;
 
-  const [ignoreWhitespace, setIgnoreWhitespace] = useState(true);
+  // const [ignoreWhitespace, setIgnoreWhitespace] = useState(true);
   const monacoRef = useRef<any>();
 
   const title = useMemo(() => fileName?.split('/').pop(), [fileName]);
@@ -70,9 +70,13 @@ export function CodeCompareView({ className, fileName }: CodeCompareViewProps) {
     }
   };
 
-  const onIgnoreWhitespaceToggled = () => {
-    setIgnoreWhitespace((existingState) => !existingState);
-  };
+  /**
+   * @todo - redesign this
+   */
+
+  // const onIgnoreWhitespaceToggled = () => {
+  //   setIgnoreWhitespace((existingState) => !existingState);
+  // };
 
   const originalPath = `${componentCompareContext?.base?.model.id.toString()}-${fileName}`;
   const modifiedPath = `${componentCompareContext?.compare?.model.id.toString()}-${fileName}`;
@@ -89,7 +93,7 @@ export function CodeCompareView({ className, fileName }: CodeCompareViewProps) {
       className={darkMode}
       theme={'vs-dark'}
       options={{
-        ignoreTrimWhitespace: ignoreWhitespace,
+        // ignoreTrimWhitespace: ignoreWhitespace,
         readOnly: true,
       }}
       loading={<CodeCompareViewLoader />}
@@ -103,15 +107,17 @@ export function CodeCompareView({ className, fileName }: CodeCompareViewProps) {
     >
       <div className={styles.fileName}>
         <H4 size="xs" className={styles.fileName}>
-          <span>{title}</span>
+          {loading || <span>{title}</span>}
+          {loading && <WordSkeleton className={styles.loader} length={6} />}
         </H4>
       </div>
-      <div className={styles.ignoreWhitespaceControlContainer}>
+
+      {/* <div className={styles.ignoreWhitespaceControlContainer}>
         <div className={styles.toggleContainer}>
           <Toggle checked={ignoreWhitespace} onInputChanged={onIgnoreWhitespaceToggled} className={styles.toggle} />
           Ignore Whitespace
         </div>
-      </div>
+      </div> */}
       <div className={styles.componentCompareCodeDiffEditorContainer}>
         {loading ? <CodeCompareViewLoader /> : diffEditor}
       </div>

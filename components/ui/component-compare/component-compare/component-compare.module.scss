@@ -48,6 +48,10 @@
   color: var(--bit-bg-dent, #f6f6f6);
 }
 
+.tabLoader {
+  color: var(--bit-bg-dent, #f6f6f6);
+}
+
 .compareLoader {
   display: flex;
   padding-top: 16px;
@@ -75,13 +79,47 @@
   }
 }
 
+.loadingNav {
+  // > div {
+  //   color: var(--bit-accent-color, #6c5ce7);
+  //   border-radius: 5px;
+  //   background-color: var(--bit-accent-bg, #edebfc);
+  // }
+
+  &:after {
+    // unset default selection styles
+    height: 0 !important;
+  }
+}
+
 .navItem {
+  position: relative;
   color: var(--bit-text-color-light, #707279);
   &.dependency,
   &.code,
   &.aspects {
-    > div {
-      opacity: 50%;
+    // trigger re-render to show indicator
+    > div:first-of-type > div:first-of-type > div:first-of-type {
+      position: absolute;
     }
   }
+
+  &.none {
+    > div {
+      opacity: 65%;
+    }
+  }
+}
+
+.compareMenuTab {
+  position: relative;
+}
+
+.indicator {
+  top: -8px;
+  right: -8px;
+  border-radius: 100%;
+  padding: 4px;
+  background-color: var(--bit-accent-impulsive-color, #e62e5c);
+  box-sizing: border-box;
 }
