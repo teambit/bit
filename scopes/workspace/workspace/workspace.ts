@@ -728,7 +728,7 @@ export class Workspace implements ComponentFactory {
     };
   }
 
-  private async getSpecificExtensionsFromScope(id: ComponentID): Promise<ExtensionDataList> {
+  async getSpecificExtensionsFromScope(id: ComponentID): Promise<ExtensionDataList> {
     const componentFromScope = await this.scope.get(id);
     const { extensions } = await this.componentExtensions(id, componentFromScope, [
       'WorkspaceDefault',
