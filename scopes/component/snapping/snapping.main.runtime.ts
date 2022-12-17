@@ -4,7 +4,7 @@ import { LegacyOnTagResult } from '@teambit/legacy/dist/scope/scope';
 import { FlattenedDependenciesGetter } from '@teambit/legacy/dist/scope/component-ops/get-flattened-dependencies';
 import { Scope as LegacyScope } from '@teambit/legacy/dist/scope';
 import CommunityAspect, { CommunityMain } from '@teambit/community';
-import WorkspaceAspect, { Workspace } from '@teambit/workspace';
+import WorkspaceAspect, { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import R from 'ramda';
 import semver, { ReleaseType } from 'semver';
 import { compact } from 'lodash';
@@ -17,7 +17,6 @@ import HooksManager from '@teambit/legacy/dist/hooks';
 import pMapSeries from 'p-map-series';
 import hasWildcard from '@teambit/legacy/dist/utils/string/has-wildcard';
 import { validateVersion } from '@teambit/legacy/dist/utils/semver-helper';
-import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
 import loader from '@teambit/legacy/dist/cli/loader';
 import ComponentsPendingImport from '@teambit/legacy/dist/consumer/component-ops/exceptions/components-pending-import';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
@@ -152,7 +151,7 @@ export class SnappingMain {
     }
 
     const exactVersion = version;
-    if (!this.workspace) throw new ConsumerNotFound();
+    if (!this.workspace) throw new OutsideWorkspaceError();
     const idsHasWildcard = hasWildcard(ids);
     const isAll = Boolean(!ids.length || idsHasWildcard);
     const validExactVersion = validateVersion(exactVersion);
@@ -407,7 +406,7 @@ export class SnappingMain {
     forceDeploy?: boolean;
     unmodified?: boolean;
   }): Promise<SnapResults | null> {
-    if (!this.workspace) throw new ConsumerNotFound();
+    if (!this.workspace) throw new OutsideWorkspaceError();
     if (pattern && legacyBitIds) throw new Error(`please pass either pattern or legacyBitIds, not both`);
     const consumer: Consumer = this.workspace.consumer;
     const componentsList = new ComponentsList(consumer);
@@ -503,7 +502,7 @@ there are matching among unmodified components thought. consider using --unmodif
     force = false,
     soft = false
   ): Promise<{ results: untagResult[]; isSoftUntag: boolean }> {
-    if (!this.workspace) throw new ConsumerNotFound();
+    if (!this.workspace) throw new OutsideWorkspaceError();
     const consumer = this.workspace.consumer;
     const currentLane = await consumer.getCurrentLaneObject();
     const untag = async (): Promise<untagResult[]> => {

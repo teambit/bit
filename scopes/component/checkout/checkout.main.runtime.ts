@@ -1,6 +1,6 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
-import WorkspaceAspect, { Workspace } from '@teambit/workspace';
+import WorkspaceAspect, { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import { BitId } from '@teambit/legacy-bit-id';
 import { BitError } from '@teambit/bit-error';
 import { compact } from 'lodash';
@@ -20,7 +20,6 @@ import {
   threeWayMerge,
 } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
 import GeneralError from '@teambit/legacy/dist/error/general-error';
-import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
 import mapSeries from 'p-map-series';
 import { BitIds } from '@teambit/legacy/dist/bit-id';
 import { Version, ModelComponent } from '@teambit/legacy/dist/scope/models';
@@ -183,7 +182,7 @@ export class CheckoutMain {
     checkoutProps: CheckoutProps
   ): Promise<ApplyVersionResults> {
     this.logger.setStatusLine(BEFORE_CHECKOUT);
-    if (!this.workspace) throw new ConsumerNotFound();
+    if (!this.workspace) throw new OutsideWorkspaceError();
     const consumer = this.workspace.consumer;
     await this.parseValues(to, componentPattern, checkoutProps);
     const checkoutResults = await this.checkout(checkoutProps);

@@ -1,8 +1,7 @@
 import { Command, CommandOptions } from '@teambit/cli';
 import { Logger } from '@teambit/logger';
-import { Workspace } from '@teambit/workspace';
+import { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
-import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
 import chalk from 'chalk';
 import { BuilderMain } from './builder.main.runtime';
 
@@ -63,7 +62,7 @@ specify the task-name (e.g. "TypescriptCompiler") or the task-aspect-id (e.g. te
       skipTests,
     }: BuildOpts
   ): Promise<string> {
-    if (!this.workspace) throw new ConsumerNotFound();
+    if (!this.workspace) throw new OutsideWorkspaceError();
     if (all) {
       this.logger.consoleWarning(`--all is deprecated, please use --unmodified instead`);
       unmodified = true;

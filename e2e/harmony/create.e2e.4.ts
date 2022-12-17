@@ -1,4 +1,5 @@
 import chai, { expect } from 'chai';
+import { OutsideWorkspaceError } from '@teambit/workspace';
 import path from 'path';
 import os from 'os';
 import Helper from '../../src/e2e-helper/e2e-helper';
@@ -16,7 +17,9 @@ describe('create extension', function () {
   });
   describe('when running outside the workspace', () => {
     it('should throw ConsumerNotFound error', () => {
-      expect(() => helper.command.runCmd('bit create aspect my-aspect', os.tmpdir())).to.throw('workspace not found');
+      const cmd = () => helper.command.runCmd('bit create aspect my-aspect', os.tmpdir());
+      const error = new OutsideWorkspaceError();
+      helper.general.expectToThrow(cmd, error);
     });
   });
   describe('with --namespace flag', () => {

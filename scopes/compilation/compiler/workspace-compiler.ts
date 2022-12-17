@@ -3,7 +3,7 @@ import mapSeries from 'p-map-series';
 import { Component, ComponentID } from '@teambit/component';
 import { EnvsMain } from '@teambit/envs';
 import type { PubsubMain } from '@teambit/pubsub';
-import { SerializableResults, Workspace, WatchOptions } from '@teambit/workspace';
+import { SerializableResults, Workspace, WatchOptions, OutsideWorkspaceError } from '@teambit/workspace';
 import path from 'path';
 import { BitId } from '@teambit/legacy-bit-id';
 import { Logger } from '@teambit/logger';
@@ -13,7 +13,6 @@ import { AbstractVinyl, Dist } from '@teambit/legacy/dist/consumer/component/sou
 import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-to-persist';
 import { AspectLoaderMain } from '@teambit/aspect-loader';
 import { DependencyResolverMain } from '@teambit/dependency-resolver';
-import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 import RemovePath from '@teambit/legacy/dist/consumer/component/sources/remove-path';
 import { UiMain } from '@teambit/ui';
@@ -290,7 +289,7 @@ export class WorkspaceCompiler {
     options: CompileOptions,
     noThrow?: boolean
   ): Promise<BuildResult[]> {
-    if (!this.workspace) throw new ConsumerNotFound();
+    if (!this.workspace) throw new OutsideWorkspaceError();
     const componentIds = await this.getIdsToCompile(componentsIds, options.changed);
     const components = await this.workspace.getMany(componentIds);
 

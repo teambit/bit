@@ -2,7 +2,7 @@ import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import pMapSeries from 'p-map-series';
 import { LaneId } from '@teambit/lane-id';
 import { IssuesList } from '@teambit/component-issues';
-import WorkspaceAspect, { Workspace } from '@teambit/workspace';
+import WorkspaceAspect, { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import { ComponentID } from '@teambit/component-id';
 import { Analytics } from '@teambit/legacy/dist/analytics/analytics';
 import loader from '@teambit/legacy/dist/cli/loader';
@@ -13,7 +13,6 @@ import ComponentsPendingImport from '@teambit/legacy/dist/consumer/component-ops
 import { BitId } from '@teambit/legacy-bit-id';
 import ComponentsList from '@teambit/legacy/dist/consumer/component/components-list';
 import { ModelComponent } from '@teambit/legacy/dist/scope/models';
-import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
 import { InsightsAspect, InsightsMain } from '@teambit/insights';
 import { SnapsDistance } from '@teambit/legacy/dist/scope/component-ops/snaps-distance';
 import IssuesAspect, { IssuesMain } from '@teambit/issues';
@@ -52,7 +51,7 @@ export class StatusMain {
   ) {}
 
   async status(): Promise<StatusResult> {
-    if (!this.workspace) throw new ConsumerNotFound();
+    if (!this.workspace) throw new OutsideWorkspaceError();
     loader.start(BEFORE_STATUS);
     const consumer = this.workspace.consumer;
     const laneObj = await consumer.getCurrentLaneObject();

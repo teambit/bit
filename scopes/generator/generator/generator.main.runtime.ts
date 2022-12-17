@@ -1,8 +1,7 @@
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import WorkspaceAspect, { Workspace } from '@teambit/workspace';
+import WorkspaceAspect, { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import { EnvDefinition, EnvsAspect, EnvsMain } from '@teambit/envs';
-import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
 import { CommunityAspect } from '@teambit/community';
 import type { CommunityMain } from '@teambit/community';
 
@@ -258,7 +257,7 @@ export class GeneratorMain {
     templateName: string,
     options: CreateOptions
   ): Promise<GenerateResult[]> {
-    if (!this.workspace) throw new ConsumerNotFound();
+    if (!this.workspace) throw new OutsideWorkspaceError();
     await this.loadAspects();
     const { namespace, aspect: aspectId } = options;
     const templateWithId = await this.getComponentTemplate(templateName, aspectId);

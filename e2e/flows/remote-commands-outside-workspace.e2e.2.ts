@@ -1,3 +1,4 @@
+import { OutsideWorkspaceError } from '@teambit/workspace';
 import { expect } from 'chai';
 
 import { ConsumerNotFound } from '../../src/consumer/exceptions';
@@ -27,8 +28,8 @@ describe('bit remote command', function () {
     after(() => {
       helper.command.runCmd(`bit remote del ${helper.scopes.remote} --global`);
     });
-    it('bit status should throw an error ConsumerNotFound', () => {
-      const error = new ConsumerNotFound();
+    it('bit status should throw an error OutsideWorkspaceError', () => {
+      const error = new OutsideWorkspaceError();
       const func = () => helper.command.status();
       helper.general.expectToThrow(func, error);
     });
