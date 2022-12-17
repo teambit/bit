@@ -69,6 +69,28 @@ describe('sign command', function () {
       expect(signOutput).to.include('the following 2 component(s) were signed with build-status "succeed"');
     });
   });
+  describe('sign a built component', () => {
+    let signRemote;
+    let firstSnap;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1);
+      helper.command.snapComponent('comp1', undefined, '--build');
+      firstSnap = helper.command.getHead('comp1');
+      helper.command.export();
+      signRemote = helper.scopeHelper.getNewBareScope('-remote-sign');
+    });
+    it('should sign the last successfully', () => {
+      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, signRemote.scopePath);
+      const signOutput = helper.command.sign(
+        [`${helper.scopes.remote}/comp1@${firstSnap}`],
+        `--multiple`,
+        signRemote.scopePath
+      );
+      expect(signOutput).to.include('the following component(s) were already signed successfully');
+      expect(signOutput).to.include('no more components left to sign');
+    });
+  });
   describe('without specifying the ids', () => {
     let signOutput: string;
     before(() => {
