@@ -8,4 +8,4 @@ export {
 } from './workspace-policy';
 export { VariantPolicy, VariantPolicyConfigObject, SerializedVariantPolicy } from './variant-policy';
 
-export { EnvPolicyConfigObject, EnvPolicy, PeersAutoDetectPolicy } from './env-policy';
+export { EnvPolicyConfigObject, EnvPolicy, EnvPolicyLegacyConfigObject } from './env-policy';
