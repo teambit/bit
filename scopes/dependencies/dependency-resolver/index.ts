@@ -48,12 +48,9 @@ export {
   PolicyConfigKeysNames,
   PolicyEntry,
   VariantPolicy,
-  VariantPolicyFactory,
   SerializedVariantPolicy,
   EnvPolicyConfigObject,
   EnvPolicy,
-  EnvPolicyLegacyConfigObject,
-  PeersAutoDetectPolicy,
 } from './policy';
 export {
   CoreAspectLinkResult,

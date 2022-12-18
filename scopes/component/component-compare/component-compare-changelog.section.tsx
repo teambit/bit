@@ -1,8 +1,9 @@
-import React from 'react';
 import { Section } from '@teambit/component';
-import { ComponentCompareChangelog } from '@teambit/component.ui.compare';
+import { ComponentCompareUI } from './component-compare.ui.runtime';
 
 export class CompareChangelogSection implements Section {
+  constructor(private compareUI: ComponentCompareUI) {}
+
   navigationLink = {
     href: 'changelog',
     children: 'Changelog',
@@ -11,6 +12,6 @@ export class CompareChangelogSection implements Section {
 
   route = {
     path: 'changelog/*',
-    element: <ComponentCompareChangelog />,
+    element: this.compareUI.getChangelogComparePage(),
   };
 }

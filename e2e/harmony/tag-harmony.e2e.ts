@@ -346,6 +346,18 @@ describe('tag components on Harmony', function () {
       });
     });
   });
+  describe('auto-tag with pre-release', () => {
+    let tagOutput: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(3);
+      helper.command.tagAllWithoutBuild();
+      tagOutput = helper.command.tagWithoutBuild('comp3', '--unmodified --increment prerelease --prerelease-id dev');
+    });
+    it('should auto-tag dependents according to the pre-release version', () => {
+      expect(tagOutput).to.have.string('comp1@0.0.2-dev.0');
+    });
+  });
   describe('soft-tag pre-release', () => {
     let tagOutput: string;
     before(() => {

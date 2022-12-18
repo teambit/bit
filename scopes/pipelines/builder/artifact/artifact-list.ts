@@ -1,4 +1,5 @@
 import { Component } from '@teambit/component';
+import pMapSeries from 'p-map-series';
 import type { ArtifactObject } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
 import { BitId } from '@teambit/legacy/dist/bit-id';
 import { Scope } from '@teambit/legacy/dist/scope';
@@ -81,7 +82,7 @@ export class ArtifactList<T extends Artifact> extends Array<T> {
 
   async getVinylsAndImportIfMissing(id: BitId, scope: Scope): Promise<ArtifactVinyl[]> {
     if (this.isEmpty()) return [];
-    const vinyls = await Promise.all(this.map((artifact) => artifact.files.getVinylsAndImportIfMissing(id, scope)));
+    const vinyls = await pMapSeries(this, (artifact) => artifact.files.getVinylsAndImportIfMissing(id, scope));
     return vinyls.flat();
   }
 

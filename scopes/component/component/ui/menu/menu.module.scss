@@ -34,7 +34,7 @@
   // show desktop nav on larger res
   &.desktopNav {
     display: flex;
-    @media screen and (max-width: $br-lg) {
+    @media screen and (max-width: $br-md) {
       display: none;
     }
   }
@@ -54,6 +54,7 @@
   display: flex;
   align-items: center;
   height: 100%;
+  padding-left: 16px;
   > * {
     margin-right: 12px;
     &:last-child {
@@ -63,23 +64,6 @@
   @media screen and (max-width: $br-lg) {
     > * {
       margin-right: 8px;
-    }
-  }
-  .widgets {
-    height: 100%;
-    margin-right: 20px;
-    display: flex;
-    align-items: center;
-    > nav {
-      > a {
-        padding: 0;
-        &:last-child {
-          margin-right: 0;
-        }
-      }
-    }
-    @media screen and (max-width: $br-lg) {
-      display: none;
     }
   }
   .widget {
@@ -97,6 +81,7 @@
 
 .tab {
   > div {
+    color: var(--on-background-color, #2b2b2b);
     padding: 0;
   }
 }

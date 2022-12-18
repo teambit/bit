@@ -59,7 +59,7 @@ export class SignMain {
         // from the original scope instead of the lane-scope.
         this.scope.legacyScope.setCurrentLaneId(laneId);
       }
-      await this.scope.import(ids, { lane });
+      await this.scope.import(ids, { lane, preferDependencyGraph: true });
       longProcessLogger.end();
       this.logger.consoleSuccess();
     }
@@ -172,7 +172,7 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
     const componentsToSkip: ComponentID[] = [];
     components.forEach((component) => {
       if (component.state._consumer.buildStatus === BuildStatus.Succeed) {
-        componentsToSign.push(component.id);
+        componentsToSkip.push(component.id);
       } else {
         componentsToSign.push(component.id);
       }

@@ -673,6 +673,10 @@ jobs:
       - run: cd bit && ls -l node_modules/@babel/cli/bin
       - run: cd bit && ls -l node_modules/.bin
 
+      # temporary hack to fix the flattenedEdge issue with this component
+      - run: cd bit && bbit import teambit.component/ui/component-compare/utils/sort-logs@0.0.1 --objects --all-history
+      - run: cd bit && bbit import teambit.component/ui/component-compare/utils/group-by-version@0.0.1 --objects --all-history
+
       - run:
           name: 'Build bit source code'
           command: 'cd bit && npm run build'
@@ -762,6 +766,9 @@ jobs:
       - run: cd bit && bit cc
       # - run: cd bit && bit config set cache.max.objects 100000
       # - run: cd bit && node scripts/soft-tag-scope-teambit.js
+      # temporary hack to fix the flattenedEdge issue with this component
+      - run: cd bit && bbit import teambit.component/ui/component-compare/utils/sort-logs@0.0.1 --objects --all-history
+      - run: cd bit && bbit import teambit.component/ui/component-compare/utils/group-by-version@0.0.1 --objects --all-history
       - run:
           name: tag persist
           # command: cd bit && bit tag --ignore-newest-version

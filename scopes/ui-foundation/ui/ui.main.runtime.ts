@@ -115,7 +115,7 @@ export type RuntimeOptions = {
   /**
    * skip build the UI before start
    */
-   skipUiBuild?: boolean;
+  skipUiBuild?: boolean;
 };
 
 export class UiMain {
@@ -423,14 +423,16 @@ export class UiMain {
     runtimeName = UIRuntime.name,
     rootAspect = UIAspect.id,
     config?: object,
-    path?: string
+    path?: string,
+    ignoreVersion?: boolean
   ) {
     const contents = await createRoot(
       aspectDefs,
       rootExtensionName,
       rootAspect,
       runtimeName,
-      config || this.harmony.config.toObject()
+      config || this.harmony.config.toObject(),
+      ignoreVersion
     );
     const filepath = resolve(join(path || __dirname, `${runtimeName}.root${sha1(contents)}.js`));
     if (fs.existsSync(filepath)) return filepath;

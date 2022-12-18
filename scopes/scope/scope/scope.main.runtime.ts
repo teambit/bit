@@ -469,7 +469,7 @@ needed-for: ${neededFor || '<unknown>'}`);
     await this.loadAspectFromPath(localAspects);
     const componentIds = await this.resolveMultipleComponentIds(aspectIds);
     if (!componentIds || !componentIds.length) return [];
-    const components = await this.import(componentIds, { reFetchUnBuiltVersion: false });
+    const components = await this.import(componentIds, { reFetchUnBuiltVersion: false, preferDependencyGraph: true });
 
     return components;
   }
@@ -869,6 +869,7 @@ needed-for: ${neededFor || '<unknown>'}`);
       useCache = true,
       throwIfNotExist = false,
       reFetchUnBuiltVersion = true,
+      preferDependencyGraph = false,
       lane,
     }: {
       /**
@@ -886,6 +887,10 @@ needed-for: ${neededFor || '<unknown>'}`);
        * not from the component-scope.
        */
       lane?: Lane;
+      /**
+       * if an external is missing and the remote has it with the dependency graph, don't fetch all its dependencies
+       */
+      preferDependencyGraph?: boolean;
     } = {}
   ): Promise<Component[]> {
     const legacyIds = ids.map((id) => {
@@ -898,12 +903,14 @@ needed-for: ${neededFor || '<unknown>'}`);
       return id.scope !== this.name && id.hasScope();
     });
     const lanes = lane ? [lane] : undefined;
-    await this.legacyScope.import(
-      ComponentsIds.fromArray(withoutOwnScopeAndLocals),
-      useCache,
+    await this.legacyScope.scopeImporter.importMany({
+      ids: ComponentsIds.fromArray(withoutOwnScopeAndLocals),
+      cache: useCache,
+      throwForDependencyNotFound: false,
       reFetchUnBuiltVersion,
-      lanes
-    );
+      lanes,
+      preferDependencyGraph,
+    });
 
     return this.getMany(ids, throwIfNotExist);
   }

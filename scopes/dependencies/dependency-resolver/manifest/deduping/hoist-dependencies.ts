@@ -435,12 +435,12 @@ function groupByRangeOrVersion(indexItems: PackageNameIndexComponentItem[]): Ite
   };
   indexItems.forEach((item) => {
     const validRange = semver.validRange(item.range);
-    if (!validRange && !isHash(item.range)) {
-      throw new Error(
-        `fatal: the version "${item.range}" originated from a dependent "${item.origin}" is invalid semver range and not a hash`
-      );
-    }
-    if (!validRange && isHash(item.range)) {
+    if (!validRange) {
+      if (!isHash(item.range) && !item.range.startsWith('workspace:')) {
+        throw new Error(
+          `fatal: the version "${item.range}" originated from a dependent "${item.origin}" is invalid semver range and not a hash`
+        );
+      }
       result.versions.push(item);
       return;
     }
