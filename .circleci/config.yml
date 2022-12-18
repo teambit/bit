@@ -662,6 +662,8 @@ jobs:
       # - run: bvm install 0.0.910
       - run: bvm upgrade
       - run: bvm link --verbose
+      - bit_config:
+          env: "hub"
       - run: bbit
       - save_cache:
           key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
@@ -672,9 +674,9 @@ jobs:
       - run: cd bit && bbit compile
 
       # the following 3 commands should help debugging a random error on Circle: "sh: 1: babel: not found"
-      - run: cd bit && ls -l node_modules/@babel
-      - run: cd bit && ls -l node_modules/@babel/cli/bin
-      - run: cd bit && ls -l node_modules/.bin
+      # - run: cd bit && ls -l node_modules/@babel
+      # - run: cd bit && ls -l node_modules/@babel/cli/bin
+      # - run: cd bit && ls -l node_modules/.bin
 
       # temporary hack to fix the flattenedEdge issue with this component
       - run: cd bit && bbit import teambit.component/ui/component-compare/utils/sort-logs@0.0.1 --objects --all-history
