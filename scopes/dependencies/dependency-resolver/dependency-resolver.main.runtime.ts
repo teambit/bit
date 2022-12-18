@@ -12,7 +12,7 @@ import { RequireableComponent } from '@teambit/harmony.modules.requireable-compo
 import type { LoggerMain } from '@teambit/logger';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { Logger, LoggerAspect } from '@teambit/logger';
-import { CFG_PACKAGE_MANAGER_CACHE, CFG_USER_TOKEN_KEY } from '@teambit/legacy/dist/constants';
+import { CFG_PACKAGE_MANAGER_CACHE, CFG_REGISTRY_URL_KEY, CFG_USER_TOKEN_KEY } from '@teambit/legacy/dist/constants';
 // TODO: it's weird we take it from here.. think about it../workspace/utils
 import { DependencyResolver } from '@teambit/legacy/dist/consumer/component/dependencies/dependency-resolver';
 import type { EnvPolicyForComponent as LegacyEnvPolicyForComponent } from '@teambit/legacy/dist/consumer/component/dependencies/dependency-resolver';
@@ -841,7 +841,8 @@ export class DependencyResolverMain {
     const bitScope = registries.scopes.bit;
 
     const getDefaultBitRegistry = (): Registry => {
-      const bitRegistry = bitScope?.uri || BIT_DEV_REGISTRY;
+      const bitGlobalConfigRegistry = this.globalConfig.getSync(CFG_REGISTRY_URL_KEY);
+      const bitRegistry = bitGlobalConfigRegistry || bitScope?.uri || BIT_DEV_REGISTRY;
 
       const { bitOriginalAuthType, bitAuthHeaderValue, bitOriginalAuthValue } = this.getBitAuthConfig(bitScope);
 
