@@ -139,7 +139,7 @@
         "@teambit/react.instructions.react.adding-compositions": "0.0.6",
         "@teambit/react.instructions.react.adding-tests": "0.0.6",
         "@teambit/react.rendering.ssr": "0.0.3",
-        "@teambit/react.ui.component-highlighter": "0.2.0",
+        "@teambit/react.ui.component-highlighter": "0.2.1",
         "@teambit/scope.content.scope-overview": "1.95.0",
         "@teambit/workspace.content.variants": "1.95.9",
         "@teambit/workspace.content.workspace-overview": "1.95.0",
