@@ -95,14 +95,6 @@
 .navItem {
   position: relative;
   color: var(--bit-text-color-light, #707279);
-  &.dependency,
-  &.code,
-  &.aspects {
-    // trigger re-render to show indicator
-    > div:first-of-type > div:first-of-type > div:first-of-type {
-      position: absolute;
-    }
-  }
 
   &.none {
     > div {
@@ -116,10 +108,20 @@
 }
 
 .indicator {
+  position: absolute;
   top: -8px;
   right: -8px;
   border-radius: 100%;
   padding: 4px;
-  background-color: var(--bit-accent-impulsive-color, #e62e5c);
   box-sizing: border-box;
+
+  &.hasChanges {
+    background-color: #ff8b00;
+  }
+
+  &.new {
+    // @todo - review styles
+    display: none;
+    background-color: var(--bit-accent-success-color, #37b26c);
+  }
 }

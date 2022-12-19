@@ -190,7 +190,7 @@ function CompareMenuNav({ tabs, state, hooks, changeType }: ComponentCompareProp
               onClick: onNavClicked({ id: tab.id, hooks }),
               href: (!isControlled && tab.props?.href) || undefined,
               activeClassName: (!loading && styles.activeNav) || styles.loadingNav,
-              className: classnames(styles.navItem, changeTypeCss),
+              className: classnames(styles.navItem),
               children: (
                 <CompareMenuTab key={key} loading={loading} changeTypeCss={changeTypeCss} changeType={changeType}>
                   {tab.props?.children}
@@ -279,11 +279,11 @@ function deriveChangeTypeCssForNav(tab: TabItem, changeType: ChangeType | null |
 
   switch (changeType) {
     case ChangeType.ASPECTS:
-      return id.toLowerCase().includes('aspects') && styles.aspects;
+      return id.toLowerCase().includes('aspects') && styles.hasChanges;
     case ChangeType.SOURCE_CODE:
-      return id.toLowerCase().includes('code') && styles.code;
+      return id.toLowerCase().includes('code') && styles.hasChanges;
     case ChangeType.DEPENDENCY:
-      return id.toLowerCase().includes('dependencies') && styles.dependency;
+      return id.toLowerCase().includes('dependencies') && styles.hasChanges;
     case ChangeType.NEW:
       return styles.new;
     case ChangeType.NONE:

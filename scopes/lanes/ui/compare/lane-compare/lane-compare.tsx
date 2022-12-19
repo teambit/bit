@@ -21,9 +21,13 @@ import {
   useLaneDiffStatus as defaultUseLaneDiffStatus,
   UseLaneDiffStatus,
 } from '@teambit/lanes.ui.compare.lane-compare-hooks.use-lane-diff-status';
-import { LaneComponentDiff } from '@teambit/dot-lanes.entities.lane-diff';
+import { ChangeType, LaneComponentDiff } from '@teambit/dot-lanes.entities.lane-diff';
+// import { BlockSkeleton } from '@teambit/base-ui.loaders.skeleton';
+// import { MultiSelect, ItemType } from '@teambit/design.inputs.selectors.multi-select';
 
 import styles from './lane-compare.module.scss';
+
+export type LaneFilterType = ChangeType | 'ALL';
 
 export type LaneCompareProps = {
   base: LaneModel;
@@ -50,7 +54,7 @@ export function LaneCompare({
   ComponentCompareLoader,
   ...rest
 }: LaneCompareProps) {
-  const { loading: laneDiffLoading, laneDiff } = useLaneDiffStatus({
+  const { loading: loadingLaneDiff, laneDiff } = useLaneDiffStatus({
     baseId: base.id.toString(),
     compareId: compare.id.toString(),
     options: {
@@ -124,6 +128,7 @@ export function LaneCompare({
   );
 
   const [openDrawerList, onToggleDrawer] = useState<string[]>([]);
+  // const [filtersState, setFiltersState] = useState<LaneFilterType[]>(['ALL']);
 
   const handleDrawerToggle = (id: string) => {
     const isDrawerOpen = openDrawerList.includes(id);
@@ -172,7 +177,7 @@ export function LaneCompare({
       accum.set(next.componentId.toStringWithoutVersion(), next);
       return accum;
     }, new Map<string, LaneComponentDiff>());
-  }, [laneDiffLoading]);
+  }, [loadingLaneDiff]);
 
   const ComponentCompares = useMemo(() => {
     return allComponents.map(([baseId, compareId]) => {
@@ -180,7 +185,7 @@ export function LaneCompare({
       const open = openDrawerList.includes(key);
       const compareIdStrWithoutVersion = compareId?.toStringWithoutVersion();
       const changeType =
-        !compareIdStrWithoutVersion || laneDiffLoading === undefined
+        !compareIdStrWithoutVersion || loadingLaneDiff === undefined
           ? undefined
           : laneComponentDiffByCompId.get(compareIdStrWithoutVersion)?.changeType;
 
@@ -210,6 +215,40 @@ export function LaneCompare({
       );
     });
   }, [base.id.toString(), compare.id.toString(), openDrawerList.length, laneComponentDiffByCompId]);
+
+  // const Filter = useMemo(() => {
+  //   if (loadingLaneDiff) {
+  //     return (
+  //       <div className={styles.loader}>
+  //         <BlockSkeleton lines={1} />
+  //       </div>
+  //     );
+  //   }
+
+  //   if (laneComponentDiffByCompId.size === 0) return null;
+  //   const laneCompDiffs = laneDiff?.changed || [];
+  //   const uniqueChangeTypes: LaneFilterType[] = ['ALL', ...new Set(laneCompDiffs.map((l) => l.changeType)).values()];
+  //   const selectList: ItemType[] = uniqueChangeTypes.map((filter) => ({
+  //     value: filter,
+  //     checked: !!filtersState.find((filterState) => filterState === filter),
+  //   }));
+  //   const onCheck = (value, e: React.ChangeEvent<HTMLInputElement>) => {
+  //     const checked = e.target.checked;
+
+  //     setFiltersState((currentState) => {
+  //       if (checked) {
+  //         currentState.push(value);
+  //         return currentState;
+  //       }
+  //       return currentState.filter((c) => c !== value);
+  //     });
+  //   };
+  //   return (
+  //     <div className={styles.laneFilterContainer}>
+  //       <MultiSelect itemsList={selectList} onCheck={onCheck} />
+  //     </div>
+  //   );
+  // }, [loadingLaneDiff]);
 
   return (
     <div {...rest} className={styles.laneCompareContainer}>
