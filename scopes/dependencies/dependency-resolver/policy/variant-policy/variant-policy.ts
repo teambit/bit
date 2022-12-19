@@ -11,6 +11,19 @@ type VariantPolicyLifecycleConfigObject = {
   [dependencyId: string]: VariantPolicyConfigEntryValue;
 };
 
+type VariantPolicyLifecycleConfigEntryObject = {
+  name: string;
+  version: string;
+  /**
+   * hide the dependency from the component's package.json / dependencies list
+   */
+  hidden?: boolean;
+  /**
+   * force add to component dependencies even if it's not used by the component.
+   */
+  force?: boolean;
+};
+
 export type VariantPolicyConfigEntryValue = VariantPolicyEntryValue | VariantPolicyEntryVersion;
 
 /**
@@ -260,6 +273,22 @@ function entriesFromKey(
     return [];
   }
   const lifecycleType = LIFECYCLE_TYPE_BY_KEY_NAME[keyName];
+  if (Array.isArray(obj)) {
+    return entriesFromArrayKey(obj, lifecycleType, source, hidden, force);
+  }
+  return entriesFromObjectKey(obj, lifecycleType, source, hidden, force);
+}
+
+function entriesFromObjectKey(
+  obj: Record<string, VariantPolicyConfigEntryValue> | undefined,
+  lifecycleType: DependencyLifecycleType,
+  source?: DependencySource,
+  hidden?: boolean,
+  force?: boolean
+): VariantPolicyEntry[] {
+  if (!obj) {
+    return [];
+  }
   const entries = Object.entries(obj).map(([depId, value]: [string, VariantPolicyConfigEntryValue]) => {
     if (value) {
       return createVariantPolicyEntry(depId, value, lifecycleType, source, hidden, force);
@@ -267,6 +296,30 @@ function entriesFromKey(
     return undefined;
   });
   return compact(entries);
+}
+
+function entriesFromArrayKey(
+  configEntries: Array<VariantPolicyLifecycleConfigEntryObject> | undefined,
+  lifecycleType: DependencyLifecycleType,
+  source: DependencySource = 'config',
+  hidden?: boolean,
+  force?: boolean
+): VariantPolicyEntry[] {
+  if (!configEntries) {
+    return [];
+  }
+  const entries = configEntries.map((entry) => {
+    return createVariantPolicyEntry(
+      entry.name,
+      entry.version,
+      lifecycleType,
+      source,
+      hidden ?? !!entry.hidden,
+      // allow override the entry's force value (used for the env itself)
+      force ?? !!entry.force
+    );
+  });
+  return entries;
 }
 
 export function createVariantPolicyEntry(
