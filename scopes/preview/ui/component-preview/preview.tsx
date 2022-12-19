@@ -1,4 +1,5 @@
 import React, { IframeHTMLAttributes, useState, useRef, useEffect } from 'react';
+import classNames from 'classnames';
 import { compact } from 'lodash';
 import { connectToChild } from 'penpal';
 import { usePubSubIframe } from '@teambit/pubsub';
@@ -39,6 +40,11 @@ export interface ComponentPreviewProps extends Omit<IframeHTMLAttributes<HTMLIFr
   pubsub?: boolean;
 
   /**
+   * class name to override preview style.
+   */
+  className?: string;
+
+  /**
    * set specific height for the iframe.
    */
   forceHeight?: number | string;
@@ -65,6 +71,7 @@ export interface ComponentPreviewProps extends Omit<IframeHTMLAttributes<HTMLIFr
 export function ComponentPreview({
   component,
   previewName,
+  className,
   forceHeight,
   queryParams,
   pubsub,
@@ -121,7 +128,7 @@ export function ComponentPreview({
   const legacyIframeHeight = (iframeHeight || 0) > 400 ? iframeHeight : defaultLegacyHeight;
 
   return (
-    <div ref={containerRef} className={styles.preview} style={{ height: forceHeight }}>
+    <div ref={containerRef} className={classNames(styles.preview, className)} style={{ height: forceHeight }}>
       <iframe
         {...rest}
         ref={currentRef}
