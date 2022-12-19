@@ -88,15 +88,18 @@ commands: # reusable commands
       token:
         default: $BIT_CLOUD_PROD_TOKEN
         type: string
+      bin_name:
+        default: bit
+        type: string
     steps:
-      - run: 'bit config set analytics_reporting false'
-      - run: 'bit config set error_reporting false'
-      - run: 'bit config set user.name tester'
-      - run: 'bit config set user.email ci@bit.dev'
-      - run: 'bit config set registry https://node-registry.bit.cloud'
-      # - run: 'bit config set user.token <<parameters.token>>'
-      - run: 'bit config set hub_domain <<parameters.env>>.bit.dev'
-      - run: 'bit config set package-manager.cache /home/circleci/package-manager-cache'
+      - run: '<<parameters.bin_name>> config set analytics_reporting false'
+      - run: '<<parameters.bin_name>> config set error_reporting false'
+      - run: '<<parameters.bin_name>> config set user.name tester'
+      - run: '<<parameters.bin_name>> config set user.email ci@bit.dev'
+      - run: '<<parameters.bin_name>> config set registry https://node-registry.bit.cloud'
+      # - run: '<<parameters.bin_name>> config set user.token <<parameters.token>>'
+      - run: '<<parameters.bin_name>> config set hub_domain <<parameters.env>>.bit.dev'
+      - run: '<<parameters.bin_name>> config set package-manager.cache /home/circleci/package-manager-cache'
   docker_build_and_push:
     parameters:
       docker_build_arg_name:
@@ -664,6 +667,7 @@ jobs:
       - run: bvm link --verbose
       - bit_config:
           env: "hub"
+          bin_name: "bbit"
       - run: bbit
       - save_cache:
           key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
