@@ -1,16 +1,10 @@
 import pino, { Logger as PinoLogger, LoggerOptions } from 'pino';
-import prettifier from 'pino-pretty';
 import { DEBUG_LOG } from '../constants';
 
 export function getPinoLogger(
   logLevel: string,
   jsonFormat: string
 ): { pinoLogger: PinoLogger; pinoLoggerConsole: PinoLogger } {
-  const dest = pino.destination({
-    dest: DEBUG_LOG, // omit for stdout
-    sync: true, // no choice here :( otherwise, it looses data especially when an error is thrown (although pino.final is used to flush)
-  });
-
   // https://cloud.google.com/logging/docs/reference/v2/rest/v2/LogEntry#logseverity
   const PinoLevelToSeverityLookup = {
     trace: 'DEBUG',
@@ -28,16 +22,6 @@ export function getPinoLogger(
         level: number,
       };
     },
-  };
-  const prettyPrint = {
-    colorize: true,
-    translateTime: 'SYS:standard',
-    ignore: 'hostname,severity',
-  };
-
-  const prettyPrintConsole = {
-    colorize: true,
-    ignore: 'hostname,pid,time,level,severity',
   };
 
   /**
@@ -63,21 +47,39 @@ export function getPinoLogger(
     level: logLevel,
   };
 
-  const prettyStream = prettifier({
-    ...(!jsonFormat ? prettyPrint : {}),
-    destination: dest,
-    sync: true,
-  });
+  const prettyPrint = {
+    colorize: true,
+    translateTime: 'SYS:standard',
+    ignore: 'hostname,severity',
+  };
 
-  const prettyConsoleStream = prettifier({
-    ...(!jsonFormat ? prettyPrintConsole : {}),
-    destination: 1,
-    sync: true,
-  });
+  const prettyPrintConsole = {
+    colorize: true,
+    ignore: 'hostname,pid,time,level,severity',
+  };
 
-  const pinoLogger = pino(opts, prettyStream);
+  const transportFile = {
+    target: 'pino-pretty',
+    options: { ...(!jsonFormat ? prettyPrint : {}), destination: DEBUG_LOG, sync:true, mkdir: true }, // use 2 for stderr
+  };
 
-  const pinoLoggerConsole = pino(opts, prettyConsoleStream);
+  const transportConsole = {
+    target: 'pino-pretty',
+    options: { ...(!jsonFormat ? prettyPrintConsole : {}), destination: 1, sync: true }, // use 2 for stderr
+  };
+
+  const pinoFileOpts = {
+    ...opts,
+    transport: transportFile,
+  }
+
+  const pinoConsoleOpts = {
+    ...opts,
+    transport: transportConsole,
+  }
+
+  const pinoLogger = pino(pinoFileOpts);
+  const pinoLoggerConsole = pino(pinoConsoleOpts);
 
   return { pinoLogger, pinoLoggerConsole };
 }
