@@ -279,11 +279,11 @@ function deriveChangeTypeCssForNav(tab: TabItem, changeType: ChangeType | null |
 
   switch (changeType) {
     case ChangeType.ASPECTS:
-      return id.toLowerCase().includes('aspects') && styles.hasChanges;
+      return id.toLowerCase().includes('aspects') ? styles.hasChanges : null;
     case ChangeType.SOURCE_CODE:
-      return id.toLowerCase().includes('code') && styles.hasChanges;
+      return id.toLowerCase().includes('code') ? styles.hasChanges : null;
     case ChangeType.DEPENDENCY:
-      return id.toLowerCase().includes('dependencies') && styles.hasChanges;
+      return id.toLowerCase().includes('dependencies') ? styles.hasChanges : null;
     case ChangeType.NEW:
       return styles.new;
     case ChangeType.NONE:
