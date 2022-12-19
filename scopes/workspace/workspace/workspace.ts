@@ -730,7 +730,7 @@ export class Workspace implements ComponentFactory {
     };
   }
 
-  private async getSpecificExtensionsFromScope(id: ComponentID): Promise<ExtensionDataList> {
+  async getSpecificExtensionsFromScope(id: ComponentID): Promise<ExtensionDataList> {
     const componentFromScope = await this.scope.get(id);
     const { extensions } = await this.componentExtensions(id, componentFromScope, [
       'WorkspaceDefault',
@@ -1661,6 +1661,7 @@ needed-for: ${neededFor || '<unknown>'}`);
     const defaultOpts: ResolveAspectsOptions = {
       excludeCore: false,
       requestedOnly: false,
+      filterByRuntime: true,
     };
     const mergedOpts = { ...defaultOpts, ...opts };
     let missingPaths = false;
@@ -1708,7 +1709,7 @@ needed-for: ${neededFor || '<unknown>'}`);
     );
 
     // due to lack of workspace and scope runtimes. TODO: fix after adding them.
-    if (runtimeName) {
+    if (runtimeName && mergedOpts.filterByRuntime) {
       coreAspectDefs = coreAspectDefs.filter((coreAspect) => {
         return coreAspect.runtimePath;
       });
@@ -1732,7 +1733,7 @@ needed-for: ${neededFor || '<unknown>'}`);
 
     const uniqDefs = uniqBy(afterExclusion, (def) => `${def.aspectPath}-${def.runtimePath}`);
     let defs = uniqDefs;
-    if (runtimeName) {
+    if (runtimeName && mergedOpts.filterByRuntime) {
       defs = defs.filter((def) => def.runtimePath);
     }
 

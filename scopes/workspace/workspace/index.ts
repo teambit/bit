@@ -13,6 +13,7 @@ export type { SerializableResults, OnComponentLoad, OnComponentEventResult } fro
 export { ComponentStatus } from './workspace-component';
 export { WorkspaceModelComponent, Workspace as WorkspaceModel } from './ui/workspace/workspace-model';
 export { WorkspaceContext } from './ui/workspace/workspace-context';
+export { OutsideWorkspaceError } from './exceptions/outside-workspace';
 export type { WorkspaceComponent } from './workspace-component';
 export type { ComponentConfigFile } from './component-config-file';
 

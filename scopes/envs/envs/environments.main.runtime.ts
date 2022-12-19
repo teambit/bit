@@ -78,7 +78,7 @@ export class EnvsMain {
     private serviceSlot: ServiceSlot,
 
     private componentMain: ComponentMain,
-    
+
     private loggerMain: LoggerMain,
 
     private workerMain: WorkerMain
@@ -203,7 +203,7 @@ export class EnvsMain {
     const withVersionMatchId = withVersionMatch?.[0];
     if (withVersionMatchId) return withVersionMatchId;
 
-    // Handle core envs 
+    // Handle core envs
     const exactMatch = this.envSlot.toArray().find(([envId]) => {
       return envIdFromEnvData === envId;
     });
@@ -646,7 +646,14 @@ export class EnvsMain {
   private async getEnvAspectDef(envId: string): Promise<AspectDefinition> {
     const host = this.componentMain.getHost();
     const id = await host.resolveComponentId(envId);
-    const def = (await host.resolveAspects(MainRuntime.name, [id], { requestedOnly: true }))[0];
+    // We don't want to filter by runtime here as we want to also get envs that configured as plugins. so they don't
+    // contain the runtime path.
+    const resolvedAspects = await host.resolveAspects(MainRuntime.name, [id], {
+      requestedOnly: true,
+      filterByRuntime: false,
+    });
+    const def = resolvedAspects[0];
+
     return def;
   }
 

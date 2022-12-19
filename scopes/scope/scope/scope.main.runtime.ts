@@ -712,6 +712,7 @@ needed-for: ${neededFor || '<unknown>'}`);
     const defaultOpts: ResolveAspectsOptions = {
       excludeCore: false,
       requestedOnly: false,
+      filterByRuntime: true,
     };
     const mergedOpts = { ...defaultOpts, ...opts };
     const coreAspectsIds = this.aspectLoader.getCoreAspectIds();
@@ -751,7 +752,7 @@ needed-for: ${neededFor || '<unknown>'}`);
 
     const uniqDefs = uniqBy(afterExclusion, (def) => `${def.aspectPath}-${def.runtimePath}`);
     let defs = uniqDefs;
-    if (runtimeName) {
+    if (runtimeName && mergedOpts.filterByRuntime) {
       defs = defs.filter((def) => def.runtimePath);
     }
 

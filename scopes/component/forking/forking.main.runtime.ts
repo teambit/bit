@@ -1,9 +1,8 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { BitId } from '@teambit/legacy-bit-id';
-import WorkspaceAspect, { Workspace } from '@teambit/workspace';
+import WorkspaceAspect, { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import { BitIds } from '@teambit/legacy/dist/bit-id';
-import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
 import { uniqBy } from 'lodash';
 import ComponentAspect, { Component, ComponentID, ComponentMain } from '@teambit/component';
 import { ComponentIdObj } from '@teambit/component-id';
@@ -58,7 +57,7 @@ export class ForkingMain {
    * if refactor option is enable, change the source-code to update all dependencies with the new name.
    */
   async fork(sourceId: string, targetId?: string, options?: ForkOptions): Promise<ComponentID> {
-    if (!this.workspace) throw new ConsumerNotFound();
+    if (!this.workspace) throw new OutsideWorkspaceError();
     const sourceCompId = await this.workspace.resolveComponentId(sourceId);
     const exists = this.workspace.exists(sourceCompId);
     if (exists) {
