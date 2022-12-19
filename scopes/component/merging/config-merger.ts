@@ -136,9 +136,9 @@ ${'>'.repeat(7)} ${this.otherLabel}`;
       };
       conflict = `"${id}": {
 ${'<'.repeat(7)} ${this.currentLabel}
-    ${formatConfig(currentConfig)}
+  ${formatConfig(currentConfig)}
 =======
-    ${formatConfig(otherConfig)}
+  ${formatConfig(otherConfig)}
 ${'>'.repeat(7)} ${this.otherLabel}
     }`;
     }
@@ -156,9 +156,14 @@ ${'>'.repeat(7)} ${this.otherLabel}
     // const mergeStrategyConfigParams = { id, currentConfig, otherConfig, baseConfig };
 
     const mergedPolicy = {
-      dependencies: {},
-      devDependencies: {},
-      peerDependencies: {},
+      dependencies: [],
+      devDependencies: [],
+      peerDependencies: [],
+    };
+    const conflictedPolicy = {
+      dependencies: [],
+      devDependencies: [],
+      peerDependencies: [],
     };
     let isMerged = false;
     let hasConflict = false;
@@ -186,9 +191,16 @@ ${'>'.repeat(7)} ${this.otherLabel}
           }
         });
         if (otherConfig.policy) {
-          mergedPolicy.dependencies = otherConfig.policy.dependencies || {};
-          mergedPolicy.devDependencies = otherConfig.policy.devDependencies || {};
-          mergedPolicy.peerDependencies = otherConfig.policy.peerDependencies || {};
+          ['dependencies', 'devDependencies', 'peerDependencies'].forEach((depType) => {
+            if (!otherConfig.policy[depType]) return;
+            Object.keys(otherConfig.policy[depType]).forEach((depName) => {
+              mergedPolicy[depType].push({
+                name: depName,
+                version: otherConfig.policy[depType][depName],
+                force: true,
+              });
+            });
+          });
         }
         isMerged = true;
         return;
@@ -197,7 +209,6 @@ ${'>'.repeat(7)} ${this.otherLabel}
       // either no baseConfig, or baseConfig is also different from both: other and local. that's a conflict.
       // we have to differentiate between a conflict in the policy, which might be merged with conflict with dependencies data.
       // and a conflict with other fields of config.
-
       otherKeys.forEach((key) => {
         if (JSON.stringify(currentConfig[key]) === JSON.stringify(otherConfig[key])) {
           return;
@@ -228,21 +239,29 @@ ${'>'.repeat(7)} ${this.otherLabel}
           const otherVal = otherPolicy?.[pkgName];
           const baseVal = baseConfig !== '-' && baseConfig?.policy?.[depType]?.[pkgName];
           if (currentVal === otherVal) {
-            mergedPolicy[depType][pkgName] = currentVal;
+            // mergedPolicy[depType][pkgName] = currentVal;
             return;
           }
           if (baseVal === otherVal) {
-            mergedPolicy[depType][pkgName] = currentVal;
+            // mergedPolicy[depType][pkgName] = currentVal;
             return;
           }
           if (baseVal === currentVal) {
-            mergedPolicy[depType][pkgName] = otherVal;
+            mergedPolicy[depType].push({
+              name: pkgName,
+              version: otherVal,
+              force: true,
+            });
             isMerged = true;
             return;
           }
           // either no baseVal, or baseVal is also different from both: other and local. that's a conflict.
           hasConflict = true;
-          mergedPolicy[depType][pkgName] = `${conflictIndicator}${pkgName}::${currentVal}::${otherVal}::`;
+          conflictedPolicy[depType].push({
+            name: pkgName,
+            version: `${conflictIndicator}${currentVal}::${otherVal}::`,
+            force: true,
+          });
         });
       });
     };
@@ -254,10 +273,11 @@ ${'>'.repeat(7)} ${this.otherLabel}
       dev: 'devDependencies',
       peer: 'peerDependencies',
     };
+    const hasConfigForDep = (depType: string, depName: string) => mergedPolicy[depType].find((d) => d.name === depName);
     const addSerializedDepToPolicy = (dep: SerializedDependency) => {
       const depType = lifecycleToDepType[dep.lifecycle];
 
-      if (mergedPolicy[depType][dep.id]) {
+      if (hasConfigForDep(depType, dep.id)) {
         return; // there is already config for it.
       }
       mergedPolicy[depType][dep.id] = dep.version;
@@ -324,35 +344,40 @@ ${'>'.repeat(7)} ${this.otherLabel}
       // either no baseVal, or baseVal is also different from both: other and local. that's a conflict.
       hasConflict = true;
       const depType = lifecycleToDepType[currentDep.lifecycle];
-      if (mergedPolicy[depType][currentDep.id]) return; // there is already config for it.
-      mergedPolicy[depType][
-        currentDep.id
-      ] = `${conflictIndicator}${currentDep.id}::${currentDep.version}::${otherDep.version}::`;
+      if (hasConfigForDep(depType, currentDep.id)) return; // there is already config for it.
+      conflictedPolicy[depType].push({
+        name: currentDep.id,
+        version: `${conflictIndicator}${currentDep.version}::${otherDep.version}::`,
+        force: false,
+      });
     });
 
-    const config = { ...nonPolicyConfigToMerged, policy: mergedPolicy };
+    ['dependencies', 'devDependencies', 'peerDependencies'].forEach((depType) => {
+      if (!mergedPolicy[depType].length) delete mergedPolicy[depType];
+      if (!conflictedPolicy[depType].length) delete conflictedPolicy[depType];
+    });
+
+    let conflictStr: string | undefined;
     if (hasConflict) {
-      const mergedConfigSplit = JSON.stringify(config, undefined, 2).split('\n');
+      const mergedConfigSplit = JSON.stringify({ policy: conflictedPolicy }, undefined, 2).split('\n');
       const conflictLines = mergedConfigSplit.map((line) => {
         if (!line.includes(conflictIndicator)) return line;
-        const [, pkgName, currentVal, otherVal, endLine] = line.split('::');
-        const shouldEndWithComma = endLine.includes(',');
-        const comma = shouldEndWithComma ? ',' : '';
+        const [, currentVal, otherVal] = line.split('::');
         return `${'<'.repeat(7)} ${this.currentLabel}
-        "${pkgName}": "${currentVal}${comma}"
+          "version": "${currentVal}",
 =======
-        "${pkgName}": "${otherVal}${comma}"
+          "version": "${otherVal}",
 ${'>'.repeat(7)} ${this.otherLabel}`;
       });
       // replace the first line with line with the id
       conflictLines.shift();
       conflictLines.unshift(`  "${params.id}": {`);
-      // the first conflict indicator is indented, remove the indentation. join all lines with indentation of 2.
-      const conflict = conflictLines.join('\n  ').replace(`  ${'<'.repeat(7)}`, '<'.repeat(7));
-      return { id: params.id, conflict };
+      // join all lines with indentation of 2.
+      conflictStr = conflictLines.join('\n  ');
     }
-    if (!isMerged) return undefined;
-    return { id: params.id, mergedConfig: config };
+    const config = isMerged ? { ...nonPolicyConfigToMerged, policy: mergedPolicy } : undefined;
+
+    return { id: params.id, mergedConfig: config, conflict: conflictStr };
   }
 
   private getConfig(ext: ExtensionDataEntry) {

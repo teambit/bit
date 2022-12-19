@@ -129,7 +129,7 @@ export function mergeReport({
 
   const getConflictSummary = () => {
     if (!components || !components.length || !leftUnresolvedConflicts) return '';
-    const title = `\nfiles with conflicts summary\n`;
+    const title = `\n\nfiles with conflicts summary\n`;
     const suggestion = `\n\nthe merge process wasn't completed due to the conflicts above. fix them manually and then run "bit install".
 once ready, snap/tag the components to complete the merge.`;
     return chalk.underline(title) + conflictSummaryReport(components) + chalk.yellow(suggestion);
@@ -139,7 +139,7 @@ once ready, snap/tag the components to complete the merge.`;
   const getConfigMergeConflictSummary = () => {
     if (!configMergeWithConflicts.length) return '';
     const comps = configMergeWithConflicts.map((c) => c.compIdStr).join('\n');
-    const title = `\ncomponents with config-merge conflicts\n`;
+    const title = `\n\ncomponents with config-merge conflicts\n`;
     const suggestion = `\nconflicts were found while trying to merge the config. fix them manually by editing the ${MergeConfigFilename} file in the component's dir.
 once ready, snap/tag the components to complete the merge.`;
     return chalk.underline(title) + comps + chalk.yellow(suggestion);
