@@ -280,7 +280,11 @@ ${'>'.repeat(7)} ${this.otherLabel}
       if (hasConfigForDep(depType, dep.id)) {
         return; // there is already config for it.
       }
-      mergedPolicy[depType][dep.id] = dep.version;
+      mergedPolicy[depType].push({
+        name: dep.id,
+        version: dep.version,
+        force: false,
+      });
       isMerged = true;
     };
 
