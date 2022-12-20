@@ -8,7 +8,7 @@ import { MissingBitMapComponent } from '@teambit/legacy/dist/consumer/bit-map/ex
 import { getLatestVersionNumber } from '@teambit/legacy/dist/utils';
 import { IssuesClasses } from '@teambit/component-issues';
 import { ComponentNotFound } from '@teambit/legacy/dist/scope/exceptions';
-import { DependencyList, DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
+import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { Logger } from '@teambit/logger';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config';
@@ -250,19 +250,9 @@ export class WorkspaceComponentLoader {
       component.state._consumer.files
     );
     const dependenciesList = await this.dependencyResolver.extractDepsFromLegacy(component, policy);
-    let dependenciesFromUnmergedHead;
-    // Get dependencies from unmerged head if needed
-    // we take it from there, as they might not be installed yet and we need to get their versions from the model
-    const unmergedComponent = await this.workspace.getUnmergedComponent(component.id);
-    if (unmergedComponent) {
-      dependenciesFromUnmergedHead = await this.dependencyResolver.extractDepsFromLegacy(unmergedComponent, policy);
-    }
-    const mergedDependencies = dependenciesFromUnmergedHead
-      ? DependencyList.merge([dependenciesList, dependenciesFromUnmergedHead])
-      : dependenciesList;
 
     const depResolverData = {
-      dependencies: mergedDependencies.serialize(),
+      dependencies: dependenciesList.serialize(),
       policy: policy.serialize(),
     };
 

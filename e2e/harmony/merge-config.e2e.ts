@@ -1,4 +1,5 @@
 import { IssuesClasses } from '@teambit/component-issues';
+import fs from 'fs-extra';
 import chai, { expect } from 'chai';
 import { Extensions } from '../../src/constants';
 import Helper from '../../src/e2e-helper/e2e-helper';
@@ -238,6 +239,99 @@ describe('merge config scenarios', function () {
         const showConfig = helper.command.showAspectConfig('comp1', Extensions.dependencyResolver);
         const ramdaDep = showConfig.data.dependencies.find((d) => d.id === 'ramda');
         expect(ramdaDep.version).to.equal('0.0.21');
+      });
+    });
+  });
+  describe('diverge with envs changes', () => {
+    let mainBeforeDiverge: string;
+    let beforeConfigResolved: string;
+    let envName: string;
+    let envId: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1);
+      envName = helper.env.setCustomEnv();
+      envId = `${helper.scopes.remote}/${envName}`;
+      helper.command.setEnv('comp1', envId);
+      helper.command.tagAllWithoutBuild();
+      helper.command.tagWithoutBuild(envName, '--skip-auto-tag --unmodified'); // 0.0.2
+      helper.command.tagWithoutBuild(envName, '--skip-auto-tag --unmodified'); // 0.0.3
+
+      helper.command.export();
+      mainBeforeDiverge = helper.scopeHelper.cloneLocalScope();
+
+      helper.command.createLane();
+      helper.command.setEnv('comp1', `${envId}@0.0.2`);
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+
+      helper.scopeHelper.getClonedLocalScope(mainBeforeDiverge);
+      helper.command.setEnv('comp1', `${envId}@0.0.3`);
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
+      helper.command.importLane('dev', '--skip-dependency-installation');
+      helper.command.mergeLane('main', '--no-snap --skip-dependency-installation');
+      beforeConfigResolved = helper.scopeHelper.cloneLocalScope();
+    });
+    it('bit status should show the component with an issue of MergeConfigHasConflict', () => {
+      helper.command.expectStatusToHaveIssue(IssuesClasses.MergeConfigHasConflict.name);
+    });
+    it('the conflict file should only contain env data and not dependencyResolver data', () => {
+      const conflictFile = helper.general.getConfigMergePath('comp1');
+      const conflictFileContent = fs.readFileSync(conflictFile).toString();
+      expect(conflictFileContent).to.have.string(Extensions.envs);
+      expect(conflictFileContent).to.not.have.string(Extensions.dependencyResolver);
+    });
+    describe('fixing the conflict with ours', () => {
+      before(() => {
+        helper.general.fixMergeConfigConflict('ours', 'comp1');
+      });
+      it('should set the env according to the lane', () => {
+        const envConfig = helper.command.showAspectConfig('comp1', Extensions.envs);
+        expect(envConfig.config.env).to.equal(envId);
+
+        const env = helper.command.showAspectConfig('comp1', `${envId}@0.0.2`);
+        expect(env.config).to.deep.equal({});
+
+        const nonEnv = helper.command.showAspectConfig('comp1', `${envId}@0.0.3`);
+        expect(nonEnv).to.be.undefined;
+      });
+      it('should show the dev-dependency as it was set on the lane', () => {
+        const showConfig = helper.command.showAspectConfig('comp1', Extensions.dependencyResolver);
+        const nodeDep = showConfig.data.dependencies.find((d) => d.id === `${envId}@0.0.2`);
+        expect(nodeDep.version).to.equal('0.0.2');
+        expect(nodeDep.lifecycle).to.equal('dev');
+
+        const nonDep = showConfig.data.dependencies.find((d) => d.id === `${envId}@0.0.3`);
+        expect(nonDep).to.be.undefined;
+      });
+    });
+    describe('fixing the conflict with theirs', () => {
+      before(() => {
+        helper.scopeHelper.getClonedLocalScope(beforeConfigResolved);
+        helper.general.fixMergeConfigConflict('theirs', 'comp1');
+      });
+      it('should set the env according to the lane', () => {
+        const envConfig = helper.command.showAspectConfig('comp1', Extensions.envs);
+        expect(envConfig.config.env).to.equal(envId);
+
+        const env = helper.command.showAspectConfig('comp1', `${envId}@0.0.3`);
+        expect(env.config).to.deep.equal({});
+
+        const nonEnv = helper.command.showAspectConfig('comp1', `${envId}@0.0.2`);
+        expect(nonEnv).to.be.undefined;
+      });
+      it('should show the dev-dependency as it was set on main', () => {
+        const showConfig = helper.command.showAspectConfig('comp1', Extensions.dependencyResolver);
+        const nodeDep = showConfig.data.dependencies.find((d) => d.id === `${envId}@0.0.3`);
+        expect(nodeDep.version).to.equal('0.0.3');
+        expect(nodeDep.lifecycle).to.equal('dev');
+
+        const nonDep = showConfig.data.dependencies.find((d) => d.id === `${envId}@0.0.2`);
+        expect(nonDep).to.be.undefined;
       });
     });
   });

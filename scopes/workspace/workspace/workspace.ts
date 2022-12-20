@@ -1114,13 +1114,24 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
       errors.push(err);
     }
 
+    const adjustEnvsOnConfigMerge = (conf: Record<string, any>) => {
+      const env = conf[EnvsAspect.id]?.env;
+      if (!env) return;
+      const [id] = env.split('@');
+      conf[EnvsAspect.id] = { env: id };
+      conf[env] = {};
+    };
+
     if (configMergeFile) {
+      adjustEnvsOnConfigMerge(configMergeFile);
       configMergeExtensions = ExtensionDataList.fromConfigObject(configMergeFile);
     }
 
     const unmergedData = this.getUnmergedData(componentId);
-    const unmergedExtensions = unmergedData?.mergedConfig
-      ? ExtensionDataList.fromConfigObject(unmergedData?.mergedConfig)
+    const unmergedDataMergeConf = unmergedData?.mergedConfig;
+    adjustEnvsOnConfigMerge(unmergedDataMergeConf || {});
+    const unmergedExtensions = unmergedDataMergeConf
+      ? ExtensionDataList.fromConfigObject(unmergedDataMergeConf)
       : undefined;
 
     const scopeExtensions = componentFromScope?.config?.extensions || new ExtensionDataList();
