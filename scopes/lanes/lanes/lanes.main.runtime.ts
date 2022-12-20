@@ -82,6 +82,11 @@ export enum ChangeType {
 export type LaneComponentDiffStatus = {
   componentId: ComponentID;
   changeType?: ChangeType;
+  /**
+   * @deprecated
+   * use changed to get list of all the changes
+   */
+  changed?: ChangeType[];
   upToDate?: boolean;
 };
 
@@ -637,22 +642,30 @@ export class LanesMain {
         ? await this.getSnapsDistance(componentId, comp.head.toString(), headOnTargetLane)
         : undefined;
 
-      const getChangeType = async (): Promise<ChangeType> => {
-        if (!headOnTargetLane) return ChangeType.NEW;
+      const getChanged = async (): Promise<ChangeType[]> => {
+        if (!headOnTargetLane) return [ChangeType.NEW];
         const compare = await this.componentCompare.compare(
           comp.id.changeVersion(comp.head.toString()).toString(),
           comp.id.changeVersion(headOnTargetLane).toString()
         );
+        if (!compare.fields.length) return [ChangeType.NONE];
+
+        const changed: ChangeType[] = [ChangeType.CONFIG];
+
         if (compare.code.length && compare.code.some((f) => f.status !== 'UNCHANGED')) {
-          return ChangeType.SOURCE_CODE;
+          changed.push(ChangeType.SOURCE_CODE);
         }
-        if (!compare.fields.length) return ChangeType.NONE;
         const depsFields = ['dependencies', 'devDependencies', 'extensionDependencies'];
-        if (compare.fields.some((field) => depsFields.includes(field.fieldName))) return ChangeType.DEPENDENCY;
-        return ChangeType.CONFIG;
+        if (compare.fields.some((field) => depsFields.includes(field.fieldName))) {
+          changed.push(ChangeType.DEPENDENCY);
+        }
+        return changed;
       };
-      const changeType = !options?.skipChanges ? await getChangeType() : undefined;
-      return { componentId, changeType, upToDate: snapsDistance?.isUpToDate() };
+
+      const changed = !options?.skipChanges ? await getChanged() : undefined;
+      const changeType = changed ? changed[0] : undefined;
+
+      return { componentId, changeType, changed, upToDate: snapsDistance?.isUpToDate() };
     });
 
     const results = compact(resultsWithNulls);

@@ -49,6 +49,7 @@ export function lanesSchema(lanesMainRuntime: LanesMain): Schema {
       type LaneComponentDiffStatus {
         componentId: ComponentID!
         changeType: String
+        changed: [String!]
         upToDate: Boolean
       }
 
