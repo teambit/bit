@@ -28,7 +28,9 @@ export class LinterService implements EnvService<LintResults> {
   }
 
   private mergeContext(options: LinterOptions, context?: ExecutionContext): LinterContext {
-    const componentsDirMap = context?.components ? this.getComponentsDirectory(context.components) : undefined;
+    const componentsDirMap = context?.components
+      ? this.getComponentsDirectory(context.components)
+      : ComponentMap.create<string>([]);
     const linterContext: LinterContext = Object.assign(
       {},
       {

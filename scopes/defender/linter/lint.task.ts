@@ -9,11 +9,16 @@ export class LintTask implements BuildTask {
 
   async execute(context: BuildContext): Promise<BuiltTaskResult> {
     const linter: Linter = context.env.getLinter();
-    const componentsDirMap = this.getComponentsDirectory(context.components, context.capsuleNetwork.graphCapsules);
+    const rootDir = context.capsuleNetwork.capsulesRootDir;
+    const componentsDirMap = this.getComponentsDirectory(
+      rootDir,
+      context.components,
+      context.capsuleNetwork.graphCapsules
+    );
 
     // @ts-ignore TODO: fix this
     const linterContext: LinterContext = {
-      rootDir: context.capsuleNetwork.capsulesRootDir,
+      rootDir,
       componentsDirMap,
       ...context,
     };
@@ -34,10 +39,15 @@ export class LintTask implements BuildTask {
     };
   }
 
-  private getComponentsDirectory(components: Component[], capsuleList: CapsuleList): ComponentMap<string> {
+  private getComponentsDirectory(
+    capsuleRootDir: string,
+    components: Component[],
+    capsuleList: CapsuleList
+  ): ComponentMap<string> {
     return ComponentMap.as<string>(components, (component) => {
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      return capsuleList.getCapsule(component.id)!.path;
+      const fullPath = capsuleList.getCapsule(component.id)?.path || '';
+      const relativePath = path.relative(capsuleRootDir, fullPath);
+      return relativePath;
     });
   }
 }
