@@ -1,6 +1,6 @@
 import { ComponentID } from '@teambit/component-id';
 import { DependencyResolverAspect, SerializedDependency } from '@teambit/dependency-resolver';
-import { EnvsAspect, DEFAULT_ENV } from '@teambit/envs';
+import { EnvsAspect } from '@teambit/envs';
 import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
 import { compact, omit, uniq, uniqBy } from 'lodash';
 import { ConfigMergeResult } from './config-merge-result';
