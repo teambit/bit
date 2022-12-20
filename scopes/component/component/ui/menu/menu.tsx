@@ -23,6 +23,12 @@ import { Filters } from '../use-component-query';
 
 export type MenuProps = {
   className?: string;
+
+  /**
+   * skip the right side.
+   */
+  skipRightSide?: boolean;
+
   /**
    * slot for top bar menu nav items
    */
@@ -62,6 +68,7 @@ export function ComponentMenu({
   menuItemSlot,
   consumeMethodSlot,
   componentIdStr,
+  skipRightSide,
   useComponent,
   path,
   useComponentFilters,
@@ -88,10 +95,10 @@ export function ComponentMenu({
             <div className={styles.leftSide}>
               <CollapsableMenuNav navigationSlot={navigationSlot} widgetSlot={widgetSlot} />
             </div>
-            <div className={styles.rightSide}>
+            {!skipRightSide && <div className={styles.rightSide}>
               <VersionRelatedDropdowns component={component} consumeMethods={consumeMethodSlot} host={host} />
               <MainDropdown className={styles.hideOnMobile} menuItems={mainMenuItems} />
-            </div>
+            </div>}
           </div>
         }
       />
@@ -99,7 +106,7 @@ export function ComponentMenu({
   );
 }
 
-function VersionRelatedDropdowns({
+export function VersionRelatedDropdowns({
   component,
   consumeMethods,
   host,
