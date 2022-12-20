@@ -1,6 +1,6 @@
 import { ComponentID } from '@teambit/component-id';
 import { DependencyResolverAspect, SerializedDependency } from '@teambit/dependency-resolver';
-import EnvsAspect from '@teambit/envs';
+import { EnvsAspect, DEFAULT_ENV } from '@teambit/envs';
 import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
 import { compact, omit, uniq, uniqBy } from 'lodash';
 import { ConfigMergeResult } from './config-merge-result';
@@ -103,14 +103,19 @@ export class ConfigMerger {
 
   private populateEnvs() {
     // populate ids
-    const getEnvId = (ext?: ExtensionDataList) => ext?.findCoreExtension(EnvsAspect.id)?.config.env;
+    const getEnvId = (ext: ExtensionDataList) => {
+      const envsAspect = ext.findCoreExtension(EnvsAspect.id);
+      if (!envsAspect) throw new Error(`unable to find ${EnvsAspect.id} aspect for ${this.compIdStr}`);
+      const env = envsAspect.config.env || envsAspect.data.id;
+      if (!env)
+        throw new Error(`unable to find env for ${this.compIdStr}, the config and data of ${EnvsAspect.id} are empty}`);
+      return env;
+    };
     const currentEnv = getEnvId(this.currentAspects);
-    if (!currentEnv) throw new Error(`env is missing for ${this.compIdStr} (current)`);
     this.currentEnv = { id: currentEnv };
     const otherEnv = getEnvId(this.otherAspects);
-    if (!otherEnv) throw new Error(`env is missing for ${this.compIdStr} (other)`);
     this.otherEnv = { id: otherEnv };
-    const baseEnv = getEnvId(this.baseAspects);
+    const baseEnv = this.baseAspects ? getEnvId(this.baseAspects) : undefined;
     if (baseEnv) this.baseEnv = { id: baseEnv };
 
     // populate version
@@ -149,6 +154,10 @@ export class ConfigMerger {
       };
     }
     if (this.currentEnv.id === this.otherEnv.id && this.currentEnv.version === this.otherEnv.version) {
+      return null;
+    }
+    if (this.isIdInWorkspace(this.currentEnv.id)) {
+      // the env currently used is part of the workspace, that's what the user needs. don't try to resolve anything.
       return null;
     }
     return this.basicConfigMerge(mergeStrategyParams);
@@ -421,10 +430,7 @@ ${'>'.repeat(7)} ${this.otherLabel}
       if (baseDep && baseDep.version === otherDep.version) {
         return;
       }
-      if (
-        currentDep.__type === 'component' &&
-        this.workspaceIds.find((c) => c.toStringWithoutVersion() === currentId)
-      ) {
+      if (currentDep.__type === 'component' && this.isIdInWorkspace(currentId)) {
         // dependencies that exist in the workspace, should be ignored. they'll be resolved later to the version in the ws.
         return;
       }
@@ -469,6 +475,10 @@ ${'>'.repeat(7)} ${this.otherLabel}`;
     const config = isMerged ? { ...nonPolicyConfigToMerged, policy: mergedPolicy } : undefined;
 
     return { id: params.id, mergedConfig: config, conflict: conflictStr };
+  }
+
+  private isIdInWorkspace(id: string): boolean {
+    return Boolean(this.workspaceIds.find((c) => c.toStringWithoutVersion() === id));
   }
 
   private isEnv(id: string) {

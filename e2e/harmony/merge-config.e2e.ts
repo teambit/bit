@@ -315,6 +315,8 @@ describe('merge config scenarios', function () {
         helper.general.fixMergeConfigConflict('theirs', 'comp1');
       });
       it('should set the env according to the lane', () => {
+        // run the status, so then, the pkg manager will install everything and the next "show --json" will be a valid json
+        helper.command.status();
         const envConfig = helper.command.showAspectConfig('comp1', Extensions.envs);
         expect(envConfig.config.env).to.equal(envId);
 
