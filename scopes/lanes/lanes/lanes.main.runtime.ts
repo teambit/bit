@@ -76,7 +76,7 @@ export enum ChangeType {
   NEW = 'NEW',
   SOURCE_CODE = 'SOURCE_CODE',
   DEPENDENCY = 'DEPENDENCY',
-  CONFIG = 'CONFIG',
+  ASPECTS = 'ASPECTS',
 }
 
 export type LaneComponentDiffStatus = {
@@ -657,7 +657,7 @@ export class LanesMain {
         }
 
         if (compare.fields.length > 0) {
-          changed.push(ChangeType.CONFIG);
+          changed.push(ChangeType.ASPECTS);
         }
 
         const depsFields = ['dependencies', 'devDependencies', 'extensionDependencies'];
