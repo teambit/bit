@@ -209,11 +209,11 @@ export class ConfigMerger {
     if (currentConfig === '-') {
       conflict = `${'<'.repeat(7)} ${this.currentLabel}
 =======
-  "${id}": ${JSON.stringify(otherConfig, undefined, 2)}
+"${id}": ${JSON.stringify(otherConfig, undefined, 2)}
 ${'>'.repeat(7)} ${this.otherLabel}`;
     } else if (otherConfig === '-') {
       conflict = `${'<'.repeat(7)} ${this.currentLabel}
-  "${id}": ${JSON.stringify(otherConfig, undefined, 2)}
+"${id}": ${JSON.stringify(otherConfig, undefined, 2)}
 =======
 ${'>'.repeat(7)} ${this.otherLabel}`;
     } else {

@@ -45,7 +45,7 @@ ${this.concatenateConflicts(configMergeFormatted)}
       // the comma should be added after the last line with a closing brace.
       const conflictSplit = conflict.split('\n');
       // find the last line with '}' and add a comma after it
-      const lastLineWithClosingBrace = conflictSplit.lastIndexOf('}');
+      const lastLineWithClosingBrace = conflictSplit.lastIndexOf('  }');
       conflictSplit[lastLineWithClosingBrace] += ',';
       return conflictSplit.join('\n');
     });
