@@ -655,7 +655,8 @@ export class LanesMain {
           comp.id.changeVersion(sourceHead).toString()
         );
 
-        if (!compare.fields.length && !compare.code.length) return [ChangeType.NONE];
+        if (!compare.fields.length && (!compare.code.length || compare.code.every((c) => c.status === 'UNCHANGED')))
+          return [ChangeType.NONE];
 
         const changed: ChangeType[] = [];
 
