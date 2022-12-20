@@ -2,7 +2,9 @@ import React from 'react';
 import { defaults } from 'lodash';
 import { EnvService, ExecutionContext, EnvDefinition } from '@teambit/envs';
 import { Text, Newline } from 'ink';
+import { Workspace } from '@teambit/workspace';
 import highlight from 'cli-highlight';
+import { Component, ComponentMap } from '@teambit/component';
 import { Linter, LintResults } from './linter';
 import { LinterContext, LinterOptions } from './linter-context';
 import { LinterConfig } from './linter.main.runtime';
@@ -10,7 +12,7 @@ import { LinterConfig } from './linter.main.runtime';
 export class LinterService implements EnvService<LintResults> {
   name = 'linter';
 
-  constructor(private linterConfig: LinterConfig, private rootDir?: string) {}
+  constructor(private linterConfig: LinterConfig, private workspace: Workspace) {}
 
   async run(context: ExecutionContext, options: LinterOptions): Promise<LintResults> {
     const mergedOpts = this.optionsWithDefaults(options);
@@ -26,18 +28,26 @@ export class LinterService implements EnvService<LintResults> {
   }
 
   private mergeContext(options: LinterOptions, context?: ExecutionContext): LinterContext {
+    const componentsDirMap = context?.components ? this.getComponentsDirectory(context.components) : undefined;
     const linterContext: LinterContext = Object.assign(
       {},
       {
-        rootDir: this.rootDir,
+        rootDir: this.workspace?.path,
         quiet: false,
         extensionFormats: options.extensionFormats,
         fixTypes: options.fixTypes,
         fix: options.fix,
+        componentsDirMap,
       },
       context
     );
     return linterContext;
+  }
+
+  private getComponentsDirectory(components: Component[]): ComponentMap<string> {
+    return ComponentMap.as<string>(components, (component) =>
+      this.workspace.componentDir(component.id, undefined, { relative: true })
+    );
   }
 
   render(env: EnvDefinition) {
