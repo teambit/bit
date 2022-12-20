@@ -83,7 +83,7 @@ export type LaneComponentDiffStatus = {
   componentId: ComponentID;
   /**
    * @deprecated
-   * use changed to get list of all the changes
+   * use changes to get list of all the changes
    */
   changeType?: ChangeType;
   changes?: ChangeType[];

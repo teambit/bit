@@ -48,9 +48,7 @@ export function lanesSchema(lanesMainRuntime: LanesMain): Schema {
 
       type LaneComponentDiffStatus {
         componentId: ComponentID!
-
-        changeType: String @deprecated(reason: "Use changed")
-
+        changeType: String @deprecated(reason: "Use changes")
         """
         list of all change types - Source Code, Dependency, Aspects, etc
         """
