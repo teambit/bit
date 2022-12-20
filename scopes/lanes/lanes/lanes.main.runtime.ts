@@ -81,11 +81,11 @@ export enum ChangeType {
 
 export type LaneComponentDiffStatus = {
   componentId: ComponentID;
-  changeType?: ChangeType;
   /**
    * @deprecated
    * use changed to get list of all the changes
    */
+  changeType?: ChangeType;
   changed?: ChangeType[];
   upToDate?: boolean;
 };
