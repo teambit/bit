@@ -3,7 +3,7 @@ import { LaneId } from '@teambit/lane-id';
 import { LaneData } from '@teambit/legacy/dist/scope/lanes/lanes';
 import gql from 'graphql-tag';
 import { flatten, slice } from 'lodash';
-import { LaneDiffStatusOptions, LanesMain } from './lanes.main.runtime';
+import { LaneComponentDiffStatus, LaneDiffStatus, LaneDiffStatusOptions, LanesMain } from './lanes.main.runtime';
 
 export function lanesSchema(lanesMainRuntime: LanesMain): Schema {
   return {
@@ -47,6 +47,12 @@ export function lanesSchema(lanesMainRuntime: LanesMain): Schema {
       }
 
       type LaneComponentDiffStatus {
+        """
+        for apollo caching - component id
+        """
+        id: String!
+        sourceHead: String!
+        targetHead: String
         componentId: ComponentID!
         changeType: String @deprecated(reason: "Use changes")
         """
@@ -57,6 +63,10 @@ export function lanesSchema(lanesMainRuntime: LanesMain): Schema {
       }
 
       type LaneDiffStatus {
+        """
+        for apollo caching - source + target
+        """
+        id: String!
         source: LaneId!
         target: LaneId!
         componentsStatus: [LaneComponentDiffStatus!]!
@@ -129,6 +139,12 @@ export function lanesSchema(lanesMainRuntime: LanesMain): Schema {
           const targetLaneId = target ? LaneId.parse(target) : undefined;
           return lanesMain.diffStatus(sourceLaneId, targetLaneId, options);
         },
+      },
+      LaneDiffStatus: {
+        id: (diffStatus: LaneDiffStatus) => `${diffStatus.source.toString()}-${diffStatus.target.toString()}`,
+      },
+      LaneComponentDiffStatus: {
+        id: (diffCompStatus: LaneComponentDiffStatus) => diffCompStatus.componentId.toString(),
       },
       Lane: {
         id: (lane: LaneData) => lane.id.toObject(),
