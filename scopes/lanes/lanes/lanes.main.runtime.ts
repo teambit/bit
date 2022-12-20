@@ -648,17 +648,23 @@ export class LanesMain {
           comp.id.changeVersion(comp.head.toString()).toString(),
           comp.id.changeVersion(headOnTargetLane).toString()
         );
-        if (!compare.fields.length) return [ChangeType.NONE];
+        if (!compare.fields.length && !compare.code.length) return [ChangeType.NONE];
 
-        const changed: ChangeType[] = [ChangeType.CONFIG];
+        const changed: ChangeType[] = [];
 
-        if (compare.code.length && compare.code.some((f) => f.status !== 'UNCHANGED')) {
+        if (compare.code.some((f) => f.status !== 'UNCHANGED')) {
           changed.push(ChangeType.SOURCE_CODE);
         }
+
+        if (compare.fields.length > 0) {
+          changed.push(ChangeType.CONFIG);
+        }
+
         const depsFields = ['dependencies', 'devDependencies', 'extensionDependencies'];
         if (compare.fields.some((field) => depsFields.includes(field.fieldName))) {
           changed.push(ChangeType.DEPENDENCY);
         }
+
         return changed;
       };
 
