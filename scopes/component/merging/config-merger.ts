@@ -222,15 +222,15 @@ ${'>'.repeat(7)} ${this.otherLabel}`;
         const confStrSplit = confStr.split('\n');
         confStrSplit.shift(); // remove first {
         confStrSplit.pop(); // remove last }
-        return confStrSplit.join('\n  ');
+        return confStrSplit.join('\n');
       };
       conflict = `"${id}": {
 ${'<'.repeat(7)} ${this.currentLabel}
-  ${formatConfig(currentConfig)}
+${formatConfig(currentConfig)}
 =======
-  ${formatConfig(otherConfig)}
+${formatConfig(otherConfig)}
 ${'>'.repeat(7)} ${this.otherLabel}
-    }`;
+}`;
     }
 
     return { id, conflict };
@@ -461,16 +461,15 @@ ${'>'.repeat(7)} ${this.otherLabel}
         if (!line.includes(conflictIndicator)) return line;
         const [, currentVal, otherVal] = line.split('::');
         return `${'<'.repeat(7)} ${this.currentLabel}
-          "version": "${currentVal}",
+        "version": "${currentVal}",
 =======
-          "version": "${otherVal}",
+        "version": "${otherVal}",
 ${'>'.repeat(7)} ${this.otherLabel}`;
       });
       // replace the first line with line with the id
       conflictLines.shift();
-      conflictLines.unshift(`  "${params.id}": {`);
-      // join all lines with indentation of 2.
-      conflictStr = conflictLines.join('\n  ');
+      conflictLines.unshift(`"${params.id}": {`);
+      conflictStr = conflictLines.join('\n');
     }
     const config = isMerged ? { ...nonPolicyConfigToMerged, policy: mergedPolicy } : undefined;
 

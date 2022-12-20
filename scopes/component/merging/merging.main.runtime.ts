@@ -518,16 +518,8 @@ export class MergingMain {
     if (!currentComponent) throw new Error(`getDivergedMergeStatus, currentComponent is missing for ${id.toString()}`);
 
     const baseSnap = divergeData.commonSnapBeforeDiverge as Ref; // must be set when isTrueMerge
-    console.log(
-      'id',
-      id.toStringWithoutVersion(),
-      'baseSnap',
-      baseSnap,
-      'currrent',
-      currentId.version,
-      'other',
-      otherLaneHead.toString()
-    );
+    // uncomment for debugging
+    // console.log('id', id.toStringWithoutVersion(), 'baseSnap', baseSnap.toString(), 'current', currentId.version, 'other', otherLaneHead.toString());
     const baseComponent: Version = await modelComponent.loadVersion(baseSnap.toString(), repo);
     const otherComponent: Version = await modelComponent.loadVersion(otherLaneHead.toString(), repo);
 
