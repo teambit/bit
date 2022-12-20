@@ -148,6 +148,7 @@ export function lanesSchema(lanesMainRuntime: LanesMain): Schema {
           `${diffCompStatus.componentId.toStringWithoutVersion()}-${diffCompStatus.sourceHead}-${
             diffCompStatus.targetHead
           }`,
+        componentId: (diffCompStatus: LaneComponentDiffStatus) => diffCompStatus.componentId.toObject(),
       },
       Lane: {
         id: (lane: LaneData) => lane.id.toObject(),
