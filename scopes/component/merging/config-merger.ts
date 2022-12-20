@@ -1,5 +1,6 @@
 import { ComponentID } from '@teambit/component-id';
-import { DependencyResolverAspect, SerializedDependency } from '@teambit/dependency-resolver';
+import semver from 'semver';
+import { DependencyResolverAspect, isRange, SerializedDependency } from '@teambit/dependency-resolver';
 import { EnvsAspect } from '@teambit/envs';
 import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
 import { compact, omit, uniq, uniqBy } from 'lodash';
@@ -8,6 +9,8 @@ import { ConfigMergeResult } from './config-merge-result';
 type GenericConfigOrRemoved = Record<string, any> | '-';
 
 type EnvData = { id: string; version?: string; config?: GenericConfigOrRemoved };
+
+type SerializedDependencyWithPolicy = SerializedDependency & { policy?: string };
 
 export type MergeStrategyResult = {
   id: string;
@@ -368,7 +371,7 @@ ${'>'.repeat(7)} ${this.otherLabel}
       peer: 'peerDependencies',
     };
     const hasConfigForDep = (depType: string, depName: string) => mergedPolicy[depType].find((d) => d.name === depName);
-    const addSerializedDepToPolicy = (dep: SerializedDependency) => {
+    const addSerializedDepToPolicy = (dep: SerializedDependencyWithPolicy) => {
       const depType = lifecycleToDepType[dep.lifecycle];
 
       if (hasConfigForDep(depType, dep.id)) {
@@ -376,21 +379,31 @@ ${'>'.repeat(7)} ${this.otherLabel}
       }
       mergedPolicy[depType].push({
         name: dep.id,
-        version: dep.version,
+        version: dep.policy || dep.version,
         force: false,
       });
       isMerged = true;
     };
 
-    const getAutoDeps = (ext: ExtensionDataList): SerializedDependency[] => {
+    const getAutoDeps = (ext: ExtensionDataList): SerializedDependencyWithPolicy[] => {
       const data = ext.findCoreExtension(DependencyResolverAspect.id)?.data.dependencies;
       if (!data) return [];
+      const policy = ext.findCoreExtension(DependencyResolverAspect.id)?.data.policy || [];
       return data
         .filter((d) => d.source === 'auto')
         .map((d) => {
+          const idWithoutVersion = d.__type === 'package' ? d.id : d.id.split('@')[0];
+          const existingPolicy = policy.find((p) => p.dependencyId === idWithoutVersion);
+          const getPolicyVer = () => {
+            if (d.__type === 'package') return undefined; // for packages, the policy is already the version
+            if (existingPolicy) return existingPolicy.value.version; // currently it's missing, will be implemented by @Gilad
+            // default to `^` or ~ if starts with zero, until we save the policy from the workspace during tag/snap.
+            return d.version.startsWith('0') ? `~${d.version}` : `^${d.version}`;
+          };
           return {
             ...d,
-            id: d.__type === 'package' ? d.id : d.id.split('@')[0],
+            id: idWithoutVersion,
+            policy: getPolicyVer(),
           };
         });
     };
@@ -423,28 +436,48 @@ ${'>'.repeat(7)} ${this.otherLabel}
         return;
       }
       const currentId = currentDep.id;
-      if (currentDep.version === otherDep.version) {
+      const currentVer = currentDep.policy || currentDep.version;
+      const otherVer = otherDep.policy || otherDep.version;
+      if (currentVer === otherVer) {
         return;
       }
       const baseDep = baseData.find((d) => d.id === currentId);
-      if (baseDep && baseDep.version === otherDep.version) {
+      const baseVer = baseDep?.policy || baseDep?.version;
+      if (baseVer && baseVer === otherVer) {
         return;
       }
       if (currentDep.__type === 'component' && this.isIdInWorkspace(currentId)) {
         // dependencies that exist in the workspace, should be ignored. they'll be resolved later to the version in the ws.
         return;
       }
-      if (baseDep && baseDep.version === currentDep.version) {
+      if (baseVer && baseVer === currentVer) {
         addSerializedDepToPolicy(otherDep);
         return;
       }
-      // either no baseVal, or baseVal is also different from both: other and local. that's a conflict.
-      hasConflict = true;
+      // either no baseVal, or baseVal is also different from both: other and local. that's probably a conflict.
       const depType = lifecycleToDepType[currentDep.lifecycle];
-      if (hasConfigForDep(depType, currentDep.id)) return; // there is already config for it.
+      if (hasConfigForDep(depType, currentDep.id)) {
+        return; // there is already config for it.
+      }
+      // try to resolve according to semver
+      if (
+        currentDep.policy &&
+        otherDep.policy &&
+        isRange(currentDep.policy, currentDep.id) &&
+        isRange(otherDep.policy, otherDep.id)
+      ) {
+        if (semver.satisfies(currentDep.version, otherDep.policy)) {
+          return;
+        }
+        if (semver.satisfies(otherDep.version, currentDep.policy)) {
+          addSerializedDepToPolicy(otherDep);
+          return;
+        }
+      }
+      hasConflict = true;
       conflictedPolicy[depType].push({
         name: currentDep.id,
-        version: `${conflictIndicator}${currentDep.version}::${otherDep.version}::`,
+        version: `${conflictIndicator}${currentVer}::${otherVer}::`,
         force: false,
       });
     });

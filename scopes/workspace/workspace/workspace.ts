@@ -1129,6 +1129,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
 
       return mergeWith(configMergeFile, unmergedDataMergeConf, (objValue, srcValue) => {
         if (Array.isArray(objValue)) {
+          // critical for dependencyResolver.policy.*dependencies. otherwise, it will override the array
           return objValue.concat(srcValue);
         }
         return undefined;
