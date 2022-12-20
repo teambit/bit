@@ -58,7 +58,7 @@ import {
 } from '@teambit/legacy/dist/utils/path';
 import fs from 'fs-extra';
 import { CompIdGraph, DepEdgeType } from '@teambit/graph';
-import { slice, uniqBy, difference, compact, partition, isEmpty, merge } from 'lodash';
+import { slice, uniqBy, difference, compact, partition, isEmpty, merge, mergeWith } from 'lodash';
 import { MergeConfigFilename } from '@teambit/legacy/dist/constants';
 import path from 'path';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
@@ -1102,8 +1102,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     const bitMapEntry = this.consumer.bitMap.getComponentIfExist(componentId._legacy);
     const bitMapExtensions = bitMapEntry?.config;
 
-    let configMergeExtensions: ExtensionDataList | undefined;
-    let configMergeFile;
+    let configMergeFile: Record<string, any> | undefined;
     try {
       configMergeFile = await this.getConfigMergeFile(componentId);
     } catch (err) {
@@ -1121,17 +1120,24 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
       conf[EnvsAspect.id] = { env: id };
       conf[env] = {};
     };
-
-    if (configMergeFile) {
-      adjustEnvsOnConfigMerge(configMergeFile);
-      configMergeExtensions = ExtensionDataList.fromConfigObject(configMergeFile);
-    }
-
     const unmergedData = this.getUnmergedData(componentId);
     const unmergedDataMergeConf = unmergedData?.mergedConfig;
-    adjustEnvsOnConfigMerge(unmergedDataMergeConf || {});
-    const unmergedExtensions = unmergedDataMergeConf
-      ? ExtensionDataList.fromConfigObject(unmergedDataMergeConf)
+    const getMergeConfigCombined = () => {
+      if (!configMergeFile && !unmergedDataMergeConf) return undefined;
+      if (!configMergeFile) return unmergedDataMergeConf;
+      if (!unmergedDataMergeConf) return configMergeFile;
+
+      return mergeWith(configMergeFile, unmergedDataMergeConf, (objValue, srcValue) => {
+        if (Array.isArray(objValue)) {
+          return objValue.concat(srcValue);
+        }
+        return undefined;
+      });
+    };
+    const mergeConfigCombined = getMergeConfigCombined();
+    adjustEnvsOnConfigMerge(mergeConfigCombined || {});
+    const configMergeExtensions = mergeConfigCombined
+      ? ExtensionDataList.fromConfigObject(mergeConfigCombined)
       : undefined;
 
     const scopeExtensions = componentFromScope?.config?.extensions || new ExtensionDataList();
@@ -1190,9 +1196,6 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     const setDataListAsSpecific = (extensions: ExtensionDataList) => {
       extensions.forEach((dataEntry) => (dataEntry.config[AspectSpecificField] = true));
     };
-    if (unmergedExtensions && !excludeOrigins.includes('ConfigMerge')) {
-      await addExtensionsToMerge(unmergedExtensions, 'ConfigMerge');
-    }
     if (configMergeExtensions && !excludeOrigins.includes('ConfigMerge')) {
       await addExtensionsToMerge(ExtensionDataList.fromArray(configMergeExtensions), 'ConfigMerge');
     }
