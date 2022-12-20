@@ -86,7 +86,7 @@ export type LaneComponentDiffStatus = {
    * use changed to get list of all the changes
    */
   changeType?: ChangeType;
-  changed?: ChangeType[];
+  changes?: ChangeType[];
   upToDate?: boolean;
 };
 
@@ -642,7 +642,7 @@ export class LanesMain {
         ? await this.getSnapsDistance(componentId, comp.head.toString(), headOnTargetLane)
         : undefined;
 
-      const getChanged = async (): Promise<ChangeType[]> => {
+      const getChanges = async (): Promise<ChangeType[]> => {
         if (!headOnTargetLane) return [ChangeType.NEW];
         const compare = await this.componentCompare.compare(
           comp.id.changeVersion(comp.head.toString()).toString(),
@@ -668,10 +668,10 @@ export class LanesMain {
         return changed;
       };
 
-      const changed = !options?.skipChanges ? await getChanged() : undefined;
-      const changeType = changed ? changed[0] : undefined;
+      const changes = !options?.skipChanges ? await getChanges() : undefined;
+      const changeType = changes ? changes[0] : undefined;
 
-      return { componentId, changeType, changed, upToDate: snapsDistance?.isUpToDate() };
+      return { componentId, changeType, changes, upToDate: snapsDistance?.isUpToDate() };
     });
 
     const results = compact(resultsWithNulls);

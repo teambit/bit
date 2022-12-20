@@ -54,7 +54,7 @@ export function lanesSchema(lanesMainRuntime: LanesMain): Schema {
         """
         list of all change types - Source Code, Dependency, Aspects, etc
         """
-        changed: [String!]
+        changes: [String!]
         upToDate: Boolean
       }
 
