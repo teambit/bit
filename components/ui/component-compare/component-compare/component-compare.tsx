@@ -256,7 +256,13 @@ function deriveChangeType(
 
   if (fileCompareDataByName === null || fieldCompareDataByName === null) return null;
   if (fileCompareDataByName === undefined || fieldCompareDataByName === undefined) return undefined;
-  if (fieldCompareDataByName.size === 0 && fileCompareDataByName.size === 0) return [ChangeType.NONE];
+
+  if (
+    fieldCompareDataByName.size === 0 &&
+    (fileCompareDataByName.size === 0 || [...fileCompareDataByName.values()].every((f) => f.status === 'UNCHANGED'))
+  ) {
+    return [ChangeType.NONE];
+  }
 
   const changed: ChangeType[] = [];
 

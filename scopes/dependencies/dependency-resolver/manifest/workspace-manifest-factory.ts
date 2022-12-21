@@ -118,7 +118,7 @@ export class WorkspaceManifestFactory {
   ): Promise<ComponentDependenciesMap> {
     const buildResultsP = components.map(async (component) => {
       const packageName = componentIdToPackageName(component.state._consumer);
-      let depList = await this.dependencyResolver.getDependencies(component, { includeHidden: true });
+      let depList = await this.dependencyResolver.getDependencies(component, {includeHidden: true});
       const componentPolicy = await this.dependencyResolver.getPolicy(component);
       const additionalDeps = {};
       if (hasRootComponents) {
