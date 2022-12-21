@@ -22,6 +22,11 @@ export interface ComponentPreviewProps extends Omit<IframeHTMLAttributes<HTMLIFr
   previewName?: string;
 
   /**
+   * add inner padding to the iframe.
+   */
+   innerBottomPadding?: number;
+
+  /**
    * query params to append at the end of the *hash*. Changing this property will not reload the preview
    *
    * e.g. 'foo=bar&bar=there', or ['foo=bar', 'bar=there']
@@ -75,6 +80,7 @@ export function ComponentPreview({
   forceHeight,
   queryParams,
   pubsub,
+  innerBottomPadding = 0,
   // fitView = 1280,
   viewport = 1280,
   fullContentHeight = false,
@@ -134,7 +140,7 @@ export function ComponentPreview({
         ref={currentRef}
         style={{
           ...style,
-          height: forceHeight || (isScaling ? finalHeight : legacyIframeHeight),
+          height: forceHeight || (isScaling ? finalHeight + innerBottomPadding : legacyIframeHeight),
           width: isScaling ? targetWidth : legacyCurrentWidth,
           visibility: width === 0 && isScaling && !fullContentHeight ? 'hidden' : undefined,
           transform: fullContentHeight ? '' : computePreviewScale(width, containerWidth),
