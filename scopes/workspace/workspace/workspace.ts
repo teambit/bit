@@ -58,7 +58,8 @@ import {
 } from '@teambit/legacy/dist/utils/path';
 import fs from 'fs-extra';
 import { CompIdGraph, DepEdgeType } from '@teambit/graph';
-import { slice, uniqBy, difference, compact, partition, isEmpty, merge } from 'lodash';
+import { slice, uniqBy, difference, compact, partition, isEmpty, merge, mergeWith } from 'lodash';
+import { MergeConfigFilename } from '@teambit/legacy/dist/constants';
 import path from 'path';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import type { ComponentLog } from '@teambit/legacy/dist/scope/models/model-component';
@@ -67,6 +68,7 @@ import ScopeComponentsImporter from '@teambit/legacy/dist/scope/component-ops/sc
 import { MissingBitMapComponent } from '@teambit/legacy/dist/consumer/bit-map/exceptions';
 import loader from '@teambit/legacy/dist/cli/loader';
 import { Lane, Version } from '@teambit/legacy/dist/scope/models';
+import { UnmergedComponent } from '@teambit/legacy/dist/scope/lanes/unmerged-components';
 import { LaneNotFound } from '@teambit/legacy/dist/api/scope/lib/exceptions/lane-not-found';
 import { ScopeNotFoundOrDenied } from '@teambit/legacy/dist/remotes/exceptions/scope-not-found-or-denied';
 import { ComponentLoadOptions } from '@teambit/legacy/dist/consumer/component/component-loader';
@@ -97,6 +99,7 @@ import { GraphFromFsBuilder, ShouldLoadFunc } from './build-graph-from-fs';
 import { BitMap } from './bit-map';
 import { WorkspaceAspect } from './workspace.aspect';
 import { GraphIdsFromFsBuilder } from './build-graph-ids-from-fs';
+import { MergeConfigConflict } from './exceptions/merge-config-conflict';
 
 export type EjectConfResult = {
   configPath: string;
@@ -124,8 +127,7 @@ export type ExtensionsOrigin =
   | 'BitmapFile'
   | 'ModelSpecific'
   | 'ModelNonSpecific'
-  | 'UnmergedSpecific'
-  | 'UnmergedNonSpecific'
+  | 'ConfigMerge'
   | 'WorkspaceVariants'
   | 'ComponentJsonFile'
   | 'WorkspaceDefault'
@@ -1088,32 +1090,56 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
   ): Promise<{
     extensions: ExtensionDataList;
     beforeMerge: Array<{ extensions: ExtensionDataList; origin: ExtensionsOrigin; extraData: any }>; // useful for debugging
+    errors?: Error[];
   }> {
     // TODO: consider caching this result
     let configFileExtensions: ExtensionDataList | undefined;
     let variantsExtensions: ExtensionDataList | undefined;
     let wsDefaultExtensions: ExtensionDataList | undefined;
     const mergeFromScope = true;
+    const errors: Error[] = [];
 
     const bitMapEntry = this.consumer.bitMap.getComponentIfExist(componentId._legacy);
     const bitMapExtensions = bitMapEntry?.config;
 
-    const unmergedHead = this.getUnmergedHead(componentId);
-    let unmergedExtensions: ExtensionDataList | undefined;
-    let unmergedExtensionsSpecific: ExtensionDataList | undefined;
-    let unmergedExtensionsNonSpecific: ExtensionDataList | undefined;
-    if (unmergedHead) {
-      const versionInstance = await this.scope.legacyScope.getVersionInstance(
-        componentId._legacy.changeVersion(unmergedHead.toString())
-      );
-      unmergedExtensions = versionInstance.extensions;
-      const [specific, nonSpecific] = partition(
-        unmergedExtensions,
-        (entry) => entry.config[AspectSpecificField] === true
-      );
-      unmergedExtensionsSpecific = new ExtensionDataList(...specific);
-      unmergedExtensionsNonSpecific = new ExtensionDataList(...nonSpecific);
+    let configMergeFile: Record<string, any> | undefined;
+    try {
+      configMergeFile = await this.getConfigMergeFile(componentId);
+    } catch (err) {
+      if (!(err instanceof MergeConfigConflict)) {
+        throw err;
+      }
+      this.logger.error(`unable to parse the config file for ${componentId.toString()} due to conflicts`);
+      errors.push(err);
     }
+
+    const adjustEnvsOnConfigMerge = (conf: Record<string, any>) => {
+      const env = conf[EnvsAspect.id]?.env;
+      if (!env) return;
+      const [id] = env.split('@');
+      conf[EnvsAspect.id] = { env: id };
+      conf[env] = {};
+    };
+    const unmergedData = this.getUnmergedData(componentId);
+    const unmergedDataMergeConf = unmergedData?.mergedConfig;
+    const getMergeConfigCombined = () => {
+      if (!configMergeFile && !unmergedDataMergeConf) return undefined;
+      if (!configMergeFile) return unmergedDataMergeConf;
+      if (!unmergedDataMergeConf) return configMergeFile;
+
+      return mergeWith(configMergeFile, unmergedDataMergeConf, (objValue, srcValue) => {
+        if (Array.isArray(objValue)) {
+          // critical for dependencyResolver.policy.*dependencies. otherwise, it will override the array
+          return objValue.concat(srcValue);
+        }
+        return undefined;
+      });
+    };
+    const mergeConfigCombined = getMergeConfigCombined();
+    adjustEnvsOnConfigMerge(mergeConfigCombined || {});
+    const configMergeExtensions = mergeConfigCombined
+      ? ExtensionDataList.fromConfigObject(mergeConfigCombined)
+      : undefined;
 
     const scopeExtensions = componentFromScope?.config?.extensions || new ExtensionDataList();
     const [specific, nonSpecific] = partition(scopeExtensions, (entry) => entry.config[AspectSpecificField] === true);
@@ -1171,6 +1197,9 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     const setDataListAsSpecific = (extensions: ExtensionDataList) => {
       extensions.forEach((dataEntry) => (dataEntry.config[AspectSpecificField] = true));
     };
+    if (configMergeExtensions && !excludeOrigins.includes('ConfigMerge')) {
+      await addExtensionsToMerge(ExtensionDataList.fromArray(configMergeExtensions), 'ConfigMerge');
+    }
     if (bitMapExtensions && !excludeOrigins.includes('BitmapFile')) {
       const extensionDataList = ExtensionDataList.fromConfigObject(bitMapExtensions);
       setDataListAsSpecific(extensionDataList);
@@ -1179,9 +1208,6 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     if (configFileExtensions && !excludeOrigins.includes('ComponentJsonFile')) {
       setDataListAsSpecific(configFileExtensions);
       await addExtensionsToMerge(configFileExtensions, 'ComponentJsonFile');
-    }
-    if (unmergedExtensionsSpecific && !excludeOrigins.includes('UnmergedSpecific')) {
-      await addExtensionsToMerge(ExtensionDataList.fromArray(unmergedExtensionsSpecific), 'UnmergedSpecific');
     }
     if (!excludeOrigins.includes('ModelSpecific')) {
       await addExtensionsToMerge(ExtensionDataList.fromArray(scopeExtensionsSpecific), 'ModelSpecific');
@@ -1202,14 +1228,6 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     ) {
       await addExtensionsToMerge(wsDefaultExtensions, 'WorkspaceDefault');
     }
-    if (
-      unmergedExtensionsNonSpecific &&
-      mergeFromScope &&
-      continuePropagating &&
-      !excludeOrigins.includes('UnmergedNonSpecific')
-    ) {
-      await addExtensionsToMerge(unmergedExtensionsNonSpecific, 'UnmergedNonSpecific');
-    }
     if (mergeFromScope && continuePropagating && !excludeOrigins.includes('ModelNonSpecific')) {
       await addExtensionsToMerge(scopeExtensionsNonSpecific, 'ModelNonSpecific');
     }
@@ -1224,12 +1242,37 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     return {
       extensions,
       beforeMerge: extensionsToMerge,
+      errors,
     };
   }
 
-  private getUnmergedHead(componentId: ComponentID) {
-    const unmerged = this.scope.legacyScope.objects.unmergedComponents.getEntry(componentId._legacy.name);
-    return unmerged?.head;
+  getConfigMergeFilePath(componentId: ComponentID): string {
+    const compDir = this.componentDir(componentId, { ignoreVersion: true });
+    return path.join(compDir, MergeConfigFilename);
+  }
+
+  async listComponentsDuringMerge(): Promise<ComponentID[]> {
+    const unmergedComps = this.scope.legacyScope.objects.unmergedComponents.getComponents();
+    const bitIds = unmergedComps.map((u) => new BitId(u.id));
+    return this.resolveMultipleComponentIds(bitIds);
+  }
+
+  private async getConfigMergeFile(componentId: ComponentID): Promise<Record<string, any> | undefined> {
+    const configMergePath = this.getConfigMergeFilePath(componentId);
+    let fileContent: string;
+    try {
+      fileContent = await fs.readFile(configMergePath, 'utf-8');
+    } catch (err: any) {
+      if (err.code === 'ENOENT') {
+        return undefined;
+      }
+      throw err;
+    }
+    try {
+      return JSON.parse(fileContent);
+    } catch (err: any) {
+      throw new MergeConfigConflict(configMergePath);
+    }
   }
 
   async getUnmergedComponent(componentId: ComponentID): Promise<Component | undefined> {
@@ -1238,6 +1281,10 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
       return this.scope.get(componentId.changeVersion(unmerged?.head.toString()));
     }
     return undefined;
+  }
+
+  private getUnmergedData(componentId: ComponentID): UnmergedComponent | undefined {
+    return this.scope.legacyScope.objects.unmergedComponents.getEntry(componentId._legacy.name);
   }
 
   private async warnAboutMisconfiguredEnv(componentId: ComponentID, extensionDataList: ExtensionDataList) {
@@ -1629,7 +1676,7 @@ needed-for: ${neededFor || '<unknown>'}`);
     const defaultOpts: ResolveAspectsOptions = {
       excludeCore: false,
       requestedOnly: false,
-      filterByRuntime: true
+      filterByRuntime: true,
     };
     const mergedOpts = { ...defaultOpts, ...opts };
     let missingPaths = false;
