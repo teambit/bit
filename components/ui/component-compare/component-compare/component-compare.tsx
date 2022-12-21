@@ -4,8 +4,10 @@ import { LegacyComponentLog } from '@teambit/legacy-component-log';
 import { CollapsibleMenuNav, ComponentContext, ComponentID, NavPlugin, useComponent } from '@teambit/component';
 import { ComponentCompareContext } from '@teambit/component.ui.component-compare.context';
 import { useComponentCompareQuery } from '@teambit/component.ui.component-compare.hooks.use-component-compare';
-import { FileCompareResult } from '@teambit/component.ui.component-compare.models.component-compare-model';
-import { FieldCompareResult } from '@teambit/component.ui.component-compare.models.component-compare-model/component-compare-model';
+import {
+  FileCompareResult,
+  FieldCompareResult,
+} from '@teambit/component.ui.component-compare.models.component-compare-model';
 import { useCompareQueryParam } from '@teambit/component.ui.component-compare.hooks.use-component-compare-url';
 import { ComponentCompareVersionPicker } from '@teambit/component.ui.component-compare.version-picker';
 import { ComponentCompareBlankState } from '@teambit/component.ui.component-compare.blank-state';
