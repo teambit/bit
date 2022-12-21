@@ -3,7 +3,7 @@ import { LaneId } from '@teambit/lane-id';
 import { LaneData } from '@teambit/legacy/dist/scope/lanes/lanes';
 import gql from 'graphql-tag';
 import { flatten, slice } from 'lodash';
-import { LaneDiffStatusOptions, LanesMain, LaneDiffStatus, LaneComponentDiffStatus } from './lanes.main.runtime';
+import { LaneComponentDiffStatus, LaneDiffStatus, LaneDiffStatusOptions, LanesMain } from './lanes.main.runtime';
 
 export function lanesSchema(lanesMainRuntime: LanesMain): Schema {
   return {
@@ -51,9 +51,9 @@ export function lanesSchema(lanesMainRuntime: LanesMain): Schema {
         for apollo caching - component id
         """
         id: String!
-        componentId: ComponentID!
         sourceHead: String!
         targetHead: String
+        componentId: ComponentID!
         changeType: String @deprecated(reason: "Use changes")
         """
         list of all change types - Source Code, Dependency, Aspects, etc
