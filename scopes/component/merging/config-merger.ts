@@ -397,8 +397,9 @@ ${'>'.repeat(7)} ${this.otherLabel}
           const getPolicyVer = () => {
             if (d.__type === 'package') return undefined; // for packages, the policy is already the version
             if (existingPolicy) return existingPolicy.value.version; // currently it's missing, will be implemented by @Gilad
+            if (!semver.valid(d.version)) return d.version; // could be a hash
             // default to `^` or ~ if starts with zero, until we save the policy from the workspace during tag/snap.
-            return d.version.startsWith('0') ? `~${d.version}` : `^${d.version}`;
+            return d.version.startsWith('0.') ? `~${d.version}` : `^${d.version}`;
           };
           return {
             ...d,
