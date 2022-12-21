@@ -112,7 +112,7 @@ export class LanesUI {
     const laneFromUrl = useViewedLaneFromUrl();
     const laneComponentId =
       idFromLocation && !laneFromUrl?.isDefault()
-        ? lanesModel?.resolveComponentByFullName(idFromLocation, laneFromUrl)
+        ? lanesModel?.resolveComponentFromUrl(idFromLocation, laneFromUrl)
         : undefined;
     return laneComponentId;
   };
