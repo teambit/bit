@@ -76,12 +76,19 @@ export enum ChangeType {
   NEW = 'NEW',
   SOURCE_CODE = 'SOURCE_CODE',
   DEPENDENCY = 'DEPENDENCY',
-  CONFIG = 'CONFIG',
+  ASPECTS = 'ASPECTS',
 }
 
 export type LaneComponentDiffStatus = {
   componentId: ComponentID;
+  sourceHead: string;
+  targetHead?: string;
+  /**
+   * @deprecated
+   * use changes to get list of all the changes
+   */
   changeType?: ChangeType;
+  changes?: ChangeType[];
   upToDate?: boolean;
 };
 
@@ -637,22 +644,42 @@ export class LanesMain {
         ? await this.getSnapsDistance(componentId, comp.head.toString(), headOnTargetLane)
         : undefined;
 
-      const getChangeType = async (): Promise<ChangeType> => {
-        if (!headOnTargetLane) return ChangeType.NEW;
+      const sourceHead = comp.head.toString();
+      const targetHead = headOnTargetLane;
+
+      const getChanges = async (): Promise<ChangeType[]> => {
+        if (!headOnTargetLane) return [ChangeType.NEW];
+
         const compare = await this.componentCompare.compare(
-          comp.id.changeVersion(comp.head.toString()).toString(),
-          comp.id.changeVersion(headOnTargetLane).toString()
+          comp.id.changeVersion(targetHead).toString(),
+          comp.id.changeVersion(sourceHead).toString()
         );
-        if (compare.code.length && compare.code.some((f) => f.status !== 'UNCHANGED')) {
-          return ChangeType.SOURCE_CODE;
+
+        if (!compare.fields.length && (!compare.code.length || compare.code.every((c) => c.status === 'UNCHANGED')))
+          return [ChangeType.NONE];
+
+        const changed: ChangeType[] = [];
+
+        if (compare.code.some((f) => f.status !== 'UNCHANGED')) {
+          changed.push(ChangeType.SOURCE_CODE);
         }
-        if (!compare.fields.length) return ChangeType.NONE;
+
+        if (compare.fields.length > 0) {
+          changed.push(ChangeType.ASPECTS);
+        }
+
         const depsFields = ['dependencies', 'devDependencies', 'extensionDependencies'];
-        if (compare.fields.some((field) => depsFields.includes(field.fieldName))) return ChangeType.DEPENDENCY;
-        return ChangeType.CONFIG;
+        if (compare.fields.some((field) => depsFields.includes(field.fieldName))) {
+          changed.push(ChangeType.DEPENDENCY);
+        }
+
+        return changed;
       };
-      const changeType = !options?.skipChanges ? await getChangeType() : undefined;
-      return { componentId, changeType, upToDate: snapsDistance?.isUpToDate() };
+
+      const changes = !options?.skipChanges ? await getChanges() : undefined;
+      const changeType = changes ? changes[0] : undefined;
+
+      return { componentId, changeType, changes, sourceHead, targetHead, upToDate: snapsDistance?.isUpToDate() };
     });
 
     const results = compact(resultsWithNulls);
