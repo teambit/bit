@@ -1,7 +1,7 @@
 import { BitError } from '@teambit/bit-error';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { LanesAspect, LanesMain } from '@teambit/lanes';
-import MergingAspect, { MergingMain, ComponentMergeStatus } from '@teambit/merging';
+import MergingAspect, { MergingMain, ComponentMergeStatus, ConfigMergeResult } from '@teambit/merging';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import chalk from 'chalk';
 import { BitId } from '@teambit/legacy-bit-id';
@@ -56,7 +56,7 @@ export class MergeLanesMain {
   async mergeLane(
     laneName: string,
     options: MergeLaneOptions
-  ): Promise<{ mergeResults: ApplyVersionResults; deleteResults: any }> {
+  ): Promise<{ mergeResults: ApplyVersionResults; deleteResults: any; configMergeResults: ConfigMergeResult[] }> {
     if (!this.workspace) {
       throw new BitError(`unable to merge a lane outside of Bit workspace`);
     }
@@ -195,10 +195,11 @@ export class MergeLanesMain {
     } else if (otherLane && !otherLane.readmeComponent) {
       deleteResults = { readmeResult: `\nlane ${otherLane.name} doesn't have a readme component` };
     }
+    const configMergeResults = allComponentsStatus.map((c) => c.configMergeResult);
 
     await this.workspace.consumer.onDestroy();
 
-    return { mergeResults, deleteResults };
+    return { mergeResults, deleteResults, configMergeResults: compact(configMergeResults) };
 
     function throwForFailures() {
       const failedComponents = allComponentsStatus.filter((c) => c.unmergedMessage && !c.unmergedLegitimately);

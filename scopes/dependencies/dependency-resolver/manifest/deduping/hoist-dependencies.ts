@@ -434,31 +434,36 @@ function groupByRangeOrVersion(indexItems: PackageNameIndexComponentItem[]): Ite
     versions: [],
   };
   indexItems.forEach((item) => {
-    const validRange = semver.validRange(item.range);
-    if (!validRange) {
-      if (!isHash(item.range) && !item.range.startsWith('workspace:')) {
-        throw new Error(
-          `fatal: the version "${item.range}" originated from a dependent "${item.origin}" is invalid semver range and not a hash`
-        );
-      }
-      result.versions.push(item);
-      return;
-    }
-    // parseRange does not support `*` as version
-    // `*` does not affect resulted version, it might be just ignored
-    if (validRange === '*') {
-      // to prevent empty `result.ranges`, it needs to be pushed
+    const isVersionRange = isRange(item.range, item.origin);
+    if (isVersionRange) {
       result.ranges.push(item);
-      return;
-    }
-    const parsed = parseRange(validRange);
-    if (parsed.condition === '=') {
+    } else {
       result.versions.push(item);
-      return;
     }
-    result.ranges.push(item);
   });
   return result;
+}
+
+export function isRange(version: string, compIdStr: string) {
+  const validRange = semver.validRange(version);
+  if (!validRange) {
+    if (!isHash(version) && !version.startsWith('workspace:')) {
+      throw new Error(
+        `fatal: the version "${version}" originated from a dependent "${compIdStr}" is invalid semver range and not a hash`
+      );
+    }
+    return false;
+  }
+  // parseRange does not support `*` as version
+  // `*` does not affect resulted version, it might be just ignored
+  if (validRange === '*') {
+    return true;
+  }
+  const parsed = parseRange(validRange);
+  if (parsed.condition === '=') {
+    return false;
+  }
+  return true;
 }
 
 // Taken from https://web.archive.org/web/20140418004051/http://dzone.com/snippets/calculate-all-combinations
