@@ -217,10 +217,14 @@ export class LanesModel {
     this.viewedLane = viewedLaneId ? this.lanes.find((lane) => lane.id.isEqual(viewedLaneId)) : undefined;
   };
 
-  resolveComponentByFullName = (fullName: string, laneId?: LaneId) =>
-    ((laneId && this.lanes.find((lane) => lane.id.isEqual(laneId))) || this.viewedLane)?.components.find(
-      (component) => component.fullName === fullName
-    );
+  resolveComponentFromUrl = (idFromUrl: string, laneId?: LaneId) => {
+    const comps = ((laneId && this.lanes.find((lane) => lane.id.isEqual(laneId))) || this.viewedLane)?.components || [];
+    const includesScope = idFromUrl.includes('.');
+    if (includesScope) {
+      return comps.find((component) => component.toStringWithoutVersion() === idFromUrl);
+    }
+    return comps.find((component) => component.fullName === idFromUrl);
+  };
 
   getDefaultLane = () => this.lanes.find((lane) => lane.id.isDefault());
   getNonMainLanes = () => this.lanes.filter((lane) => !lane.id.isDefault());
