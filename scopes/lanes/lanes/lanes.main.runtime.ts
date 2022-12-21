@@ -76,12 +76,19 @@ export enum ChangeType {
   NEW = 'NEW',
   SOURCE_CODE = 'SOURCE_CODE',
   DEPENDENCY = 'DEPENDENCY',
-  CONFIG = 'CONFIG',
+  ASPECTS = 'ASPECTS',
 }
 
 export type LaneComponentDiffStatus = {
   componentId: ComponentID;
+  sourceHead: string;
+  targetHead?: string;
+  /**
+   * @deprecated
+   * use changes to get list of all the changes
+   */
   changeType?: ChangeType;
+  changes?: ChangeType[];
   upToDate?: boolean;
 };
 
@@ -94,6 +101,12 @@ export type LaneDiffStatus = {
   source: LaneId;
   target: LaneId;
   componentsStatus: LaneComponentDiffStatus[];
+};
+
+type CreateLaneResult = {
+  laneId: LaneId;
+  hash: string;
+  alias?: string;
 };
 
 export class LanesMain {
@@ -180,20 +193,19 @@ export class LanesMain {
     this.workspace?.consumer.setCurrentLane(laneId, exported);
   }
 
-  async createLane(name: string, { remoteScope, alias }: CreateLaneOptions = {}): Promise<TrackLane> {
+  async createLane(name: string, { remoteScope, alias }: CreateLaneOptions = {}): Promise<CreateLaneResult> {
     if (!this.workspace) {
       const newLane = await createLaneInScope(name, this.scope);
       return {
-        localLane: newLane.name,
-        remoteLane: newLane.name,
-        remoteScope: this.scope.name,
+        laneId: newLane.toLaneId(),
+        hash: newLane.hash().toString(),
       };
     }
     if (alias) {
       throwForInvalidLaneName(alias);
     }
     const scope = remoteScope || this.workspace.defaultScope;
-    await createLane(this.workspace.consumer, name, scope);
+    const laneObj = await createLane(this.workspace.consumer, name, scope);
     const laneId = LaneId.from(name, scope);
     this.setCurrentLane(laneId, alias, false);
     const trackLaneData = {
@@ -205,7 +217,12 @@ export class LanesMain {
     this.scope.legacyScope.scopeJson.setLaneAsNew(name);
     await this.workspace.consumer.onDestroy();
 
-    return trackLaneData;
+    const results = {
+      alias,
+      laneId: laneObj.toLaneId(),
+      hash: laneObj.hash().toString(),
+    };
+    return results;
   }
 
   async loadLane(id: LaneId): Promise<Lane | null> {
@@ -627,22 +644,42 @@ export class LanesMain {
         ? await this.getSnapsDistance(componentId, comp.head.toString(), headOnTargetLane)
         : undefined;
 
-      const getChangeType = async (): Promise<ChangeType> => {
-        if (!headOnTargetLane) return ChangeType.NEW;
+      const sourceHead = comp.head.toString();
+      const targetHead = headOnTargetLane;
+
+      const getChanges = async (): Promise<ChangeType[]> => {
+        if (!headOnTargetLane) return [ChangeType.NEW];
+
         const compare = await this.componentCompare.compare(
-          comp.id.changeVersion(comp.head.toString()).toString(),
-          comp.id.changeVersion(headOnTargetLane).toString()
+          comp.id.changeVersion(targetHead).toString(),
+          comp.id.changeVersion(sourceHead).toString()
         );
-        if (compare.code.length && compare.code.some((f) => f.status !== 'UNCHANGED')) {
-          return ChangeType.SOURCE_CODE;
+
+        if (!compare.fields.length && (!compare.code.length || compare.code.every((c) => c.status === 'UNCHANGED')))
+          return [ChangeType.NONE];
+
+        const changed: ChangeType[] = [];
+
+        if (compare.code.some((f) => f.status !== 'UNCHANGED')) {
+          changed.push(ChangeType.SOURCE_CODE);
         }
-        if (!compare.fields.length) return ChangeType.NONE;
+
+        if (compare.fields.length > 0) {
+          changed.push(ChangeType.ASPECTS);
+        }
+
         const depsFields = ['dependencies', 'devDependencies', 'extensionDependencies'];
-        if (compare.fields.some((field) => depsFields.includes(field.fieldName))) return ChangeType.DEPENDENCY;
-        return ChangeType.CONFIG;
+        if (compare.fields.some((field) => depsFields.includes(field.fieldName))) {
+          changed.push(ChangeType.DEPENDENCY);
+        }
+
+        return changed;
       };
-      const changeType = !options?.skipChanges ? await getChangeType() : undefined;
-      return { componentId, changeType, upToDate: snapsDistance?.isUpToDate() };
+
+      const changes = !options?.skipChanges ? await getChanges() : undefined;
+      const changeType = changes ? changes[0] : undefined;
+
+      return { componentId, changeType, changes, sourceHead, targetHead, upToDate: snapsDistance?.isUpToDate() };
     });
 
     const results = compact(resultsWithNulls);
