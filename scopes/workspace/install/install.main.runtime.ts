@@ -188,7 +188,7 @@ export class InstallMain {
       linkDepsResolvedFromEnv: !hasRootComponents,
       linkNestedDepsInNM: !this.workspace.isLegacy && !hasRootComponents,
     };
-    let installCycle = 0;
+    let installCycle = 0
     let hasMissingLocalComponents = true;
     /* eslint-disable no-await-in-loop */
     do {
@@ -502,12 +502,11 @@ export class InstallMain {
 type ComponentsAndManifests = {
   componentDirectoryMap: ComponentMap<string>;
   manifests: Record<string, ProjectManifest>;
-};
+}
 
-function hasComponentsFromWorkspaceInMissingDeps({
-  componentDirectoryMap,
-  manifests,
-}: ComponentsAndManifests): boolean {
+function hasComponentsFromWorkspaceInMissingDeps(
+  { componentDirectoryMap, manifests }: ComponentsAndManifests
+): boolean {
   const missingDeps = new Set<string>(
     componentDirectoryMap
       .toArray()
