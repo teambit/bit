@@ -70,6 +70,8 @@ export function Overview({ titleBadges }: OverviewProps) {
         fullContentHeight
         scrolling="no"
       />
+      {/* TODO: oded get the compositions carousel to work from here using `Preview` instead of directly rendering */}
+      {/* {component.preview?.skipIncludes && <div></div>} */}
     </div>
   );
 }
