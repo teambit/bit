@@ -276,11 +276,9 @@ export class LanesUI {
           (maybeRoutesForId && (Array.isArray(maybeRoutesForId) ? [...maybeRoutesForId] : [maybeRoutesForId])) || [];
 
         return navProps.map((navProp) => ({
-          id: `${id}-${navProp.props.href}`,
-          order: navProp.order,
-          props: navProp.props,
-          element: getElement(routesForId, navProp.props.href),
-          widget: typeof navProp.props.children !== 'string',
+          ...navProp,
+          id: `${id}-${navProp?.id}`,
+          element: getElement(routesForId, navProp?.props?.href),
         }));
       })
     );

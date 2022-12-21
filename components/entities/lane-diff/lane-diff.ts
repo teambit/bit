@@ -1,6 +1,5 @@
 import { ComponentID } from '@teambit/component-id';
 import { LaneId } from '@teambit/lane-id';
-import { ChangeType } from './change-type';
 import { LaneComponentDiff, PlainLaneComponentDiff } from './lane-component-diff';
 
 export type PlainLaneDiff = {
@@ -67,15 +66,11 @@ export class LaneDiff {
   }
 
   get new() {
-    return this.diff.filter((diff) => {
-      return diff.changeType === ChangeType.NEW;
-    });
+    return this.diff.filter((diff) => diff.new);
   }
 
   get changed() {
-    return this.diff.filter((diff) => {
-      return diff.changeType !== ChangeType.NEW;
-    });
+    return this.diff.filter((diff) => diff.changed);
   }
 
   toObject(): PlainLaneDiff {

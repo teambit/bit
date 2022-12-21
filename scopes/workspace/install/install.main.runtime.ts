@@ -188,7 +188,7 @@ export class InstallMain {
       linkDepsResolvedFromEnv: !hasRootComponents,
       linkNestedDepsInNM: !this.workspace.isLegacy && !hasRootComponents,
     };
-    let installCycle = 0
+    let installCycle = 0;
     let hasMissingLocalComponents = true;
     /* eslint-disable no-await-in-loop */
     do {
@@ -284,8 +284,12 @@ export class InstallMain {
   async addDuplicateComponentAndPackageIssue(components: Component[]) {
     const workspacePolicy = this.dependencyResolver.getWorkspacePolicy();
     components.forEach((component) => {
+      if (component.state._consumer.removed) return;
+
       const pkgName = componentIdToPackageName(component.state._consumer);
+
       const found = workspacePolicy.find(pkgName);
+
       if (found) {
         component.state.issues.getOrCreate(IssuesClasses.DuplicateComponentAndPackage).data = found.dependencyId;
       }
@@ -502,11 +506,12 @@ export class InstallMain {
 type ComponentsAndManifests = {
   componentDirectoryMap: ComponentMap<string>;
   manifests: Record<string, ProjectManifest>;
-}
+};
 
-function hasComponentsFromWorkspaceInMissingDeps(
-  { componentDirectoryMap, manifests }: ComponentsAndManifests
-): boolean {
+function hasComponentsFromWorkspaceInMissingDeps({
+  componentDirectoryMap,
+  manifests,
+}: ComponentsAndManifests): boolean {
   const missingDeps = new Set<string>(
     componentDirectoryMap
       .toArray()

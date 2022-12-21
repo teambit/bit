@@ -12,8 +12,10 @@ export type LaneDiffStatusQueryResponse = {
       upToDate: boolean;
       componentsStatus: Array<{
         componentId: ComponentIdObj;
-        changeType: ChangeType;
+        changes: ChangeType[];
         upToDate: boolean;
+        sourceHead: string;
+        targetHead?: string;
       }>;
     };
   };
@@ -23,6 +25,7 @@ export const QUERY_LANE_DIFF_STATUS = gql`
   query LaneDiffStatus($source: String!, $target: String!, $options: DiffStatusOptions) {
     lanes {
       diffStatus(source: $source, target: $target, options: $options) {
+        id
         source {
           name
           scope
@@ -32,12 +35,15 @@ export const QUERY_LANE_DIFF_STATUS = gql`
           scope
         }
         componentsStatus {
+          id
           componentId {
             scope
             name
             version
           }
-          changeType
+          sourceHead
+          targetHead
+          changes
           upToDate
         }
       }
@@ -61,8 +67,8 @@ export type UseLaneDiffStatusProps = {
 export const useLaneDiffStatus: UseLaneDiffStatus = ({ baseId, compareId, options }) => {
   const { data, loading } = useDataQuery<LaneDiffStatusQueryResponse>(QUERY_LANE_DIFF_STATUS, {
     variables: {
-      target: baseId,
       source: compareId,
+      target: baseId,
       options,
     },
     skip: !baseId || !compareId,

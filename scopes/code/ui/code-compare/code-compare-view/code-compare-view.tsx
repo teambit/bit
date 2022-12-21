@@ -81,23 +81,26 @@ export function CodeCompareView({ className, fileName }: CodeCompareViewProps) {
   const originalPath = `${componentCompareContext?.base?.model.id.toString()}-${fileName}`;
   const modifiedPath = `${componentCompareContext?.compare?.model.id.toString()}-${fileName}`;
 
-  const diffEditor = (
-    <DiffEditor
-      modified={modifiedFileContent}
-      original={originalFileContent}
-      language={language}
-      originalModelPath={originalPath}
-      modifiedModelPath={modifiedPath}
-      height={'100%'}
-      onMount={handleEditorDidMount}
-      className={darkMode}
-      theme={'vs-dark'}
-      options={{
-        // ignoreTrimWhitespace: ignoreWhitespace,
-        readOnly: true,
-      }}
-      loading={<CodeCompareViewLoader />}
-    />
+  const diffEditor = useMemo(
+    () => (
+      <DiffEditor
+        modified={modifiedFileContent}
+        original={originalFileContent}
+        language={language}
+        originalModelPath={originalPath}
+        modifiedModelPath={modifiedPath}
+        height={'100%'}
+        onMount={handleEditorDidMount}
+        className={darkMode}
+        theme={'vs-dark'}
+        options={{
+          // ignoreTrimWhitespace: ignoreWhitespace,
+          readOnly: true,
+        }}
+        loading={<CodeCompareViewLoader />}
+      />
+    ),
+    [modifiedFileContent, originalFileContent]
   );
 
   return (

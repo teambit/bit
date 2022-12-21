@@ -24,11 +24,17 @@ export const QUERY_COMPONENT_COMPARE = gql`
   }
 `;
 
-export function useComponentCompareQuery(
+export type UseComponentCompareQuery = (
   baseId?: string,
   compareId?: string,
   options?: { fileName?: string; aspectName?: string }
-): { loading?: boolean; componentCompareData?: ComponentCompareQueryResponse } {
+) => { loading?: boolean; componentCompareData?: ComponentCompareQueryResponse };
+
+export const useComponentCompareQuery: UseComponentCompareQuery = (
+  baseId?: string,
+  compareId?: string,
+  options?: { fileName?: string; aspectName?: string }
+) => {
   const { data, loading } = useDataQuery<{ getHost: { compareComponent: ComponentCompareQueryResponse } }>(
     QUERY_COMPONENT_COMPARE,
     {
@@ -45,4 +51,4 @@ export function useComponentCompareQuery(
     loading,
     componentCompareData: data?.getHost.compareComponent,
   };
-}
+};

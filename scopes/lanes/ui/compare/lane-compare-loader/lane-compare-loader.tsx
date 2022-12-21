@@ -17,10 +17,6 @@ export function LaneCompareLoader({ className, ...rest }: LaneCompareLoaderProps
       <BlockSkeleton />
       <BlockSkeleton />
       <BlockSkeleton />
-      <BlockSkeleton />
-      <BlockSkeleton />
-      <BlockSkeleton />
-      <BlockSkeleton />
     </div>
   );
 }

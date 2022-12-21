@@ -1,3 +1,5 @@
+@import '~@teambit/ui-foundation.ui.constants.z-indexes/z-indexes.module.scss';
+
 .laneCompareContainer {
   display: flex;
   flex-direction: column;
@@ -25,4 +27,16 @@
 
 .componentCompareDrawerContent {
   overflow-y: auto;
+}
+
+.groupedComponentCompareContainer {
+  padding: 0px 24px;
+}
+
+.changeTypeTitle {
+  padding: 16px 0px;
+  top: 0;
+  position: sticky;
+  background: #fff;
+  z-index: $topBar-zIndex;
 }
