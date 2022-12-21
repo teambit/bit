@@ -9,7 +9,7 @@ import {
 } from '@teambit/dependency-resolver';
 import { EnvsAspect } from '@teambit/envs';
 import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
-import { compact, omit, uniq, uniqBy } from 'lodash';
+import { compact, omit, uniqBy } from 'lodash';
 import { ConfigMergeResult } from './config-merge-result';
 
 type GenericConfigOrRemoved = Record<string, any> | '-';
