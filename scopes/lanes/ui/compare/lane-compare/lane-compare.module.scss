@@ -18,6 +18,9 @@
 }
 
 .componentCompareDrawer {
+  border-bottom: none;
+  padding: 8px 0px;
+
   // drawer name
   > div:first-child {
     border: 1px solid var(--bit-border-color-lightest, #ededed);

@@ -22,7 +22,7 @@ import {
   useLaneDiffStatus as defaultUseLaneDiffStatus,
   UseLaneDiffStatus,
 } from '@teambit/lanes.ui.compare.lane-compare-hooks.use-lane-diff-status';
-import { ChangeType, LaneComponentDiff } from '@teambit/dot-lanes.entities.lane-diff';
+import { ChangeType, LaneComponentDiff } from '@teambit/lanes.entities.lane-diff';
 import classnames from 'classnames';
 
 import styles from './lane-compare.module.scss';

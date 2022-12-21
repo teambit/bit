@@ -2,7 +2,7 @@ import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
 import { gql } from '@apollo/client';
 import { LaneId } from '@teambit/lane-id';
 import { ComponentID, ComponentIdObj } from '@teambit/component-id';
-import { LaneDiff, PlainLaneDiff, ChangeType } from '@teambit/dot-lanes.entities.lane-diff';
+import { LaneDiff, PlainLaneDiff, ChangeType } from '@teambit/lanes.entities.lane-diff';
 
 export type LaneDiffStatusQueryResponse = {
   lanes: {
@@ -24,6 +24,7 @@ export type LaneDiffStatusQueryResponse = {
 export const QUERY_LANE_DIFF_STATUS = gql`
   query LaneDiffStatus($source: String!, $target: String!, $options: DiffStatusOptions) {
     lanes {
+      id
       diffStatus(source: $source, target: $target, options: $options) {
         id
         source {

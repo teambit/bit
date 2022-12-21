@@ -436,10 +436,11 @@
         "rootDir": "components/entities/doc"
     },
     "entities/lane-diff": {
-        "scope": "teambit.dot-lanes",
-        "version": "0.1.2",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.lanes",
         "mainFile": "index.ts",
-        "rootDir": "components/entities/lane-diff"
+        "rootDir": "scopes/lanes/entities/lane-diff"
     },
     "entities/semantic-schema": {
         "scope": "teambit.semantics",
