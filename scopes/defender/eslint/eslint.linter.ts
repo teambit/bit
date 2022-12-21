@@ -5,6 +5,7 @@ import { Linter, LinterContext, LintResults, ComponentLintResult } from '@teambi
 import { ESLint as ESLintLib } from 'eslint';
 import mapSeries from 'p-map-series';
 import objectHash from 'object-hash';
+import { ComponentMap } from '@teambit/component';
 import { Logger } from '@teambit/logger';
 import { ESLintOptions } from './eslint.main.runtime';
 
@@ -30,13 +31,20 @@ export class ESLintLinter implements Linter {
     const longProcessLogger = this.logger.createLongProcessLogger('linting components', context.components.length);
     const eslint = this.createEslint(this.options.config, this.ESLint);
     if (this.options.tsConfig && context.rootDir) {
-      const tsConfigPath = this.createTempTsConfigFile(context.rootDir, context.envRuntime.id, this.options.tsConfig);
+      const tsConfigPath = this.createTempTsConfigFile(
+        context.rootDir,
+        context.componentsDirMap,
+        context.envRuntime.id,
+        this.options.tsConfig
+      );
       if (this.options?.config?.overrideConfig?.parserOptions) {
         this.options.config.overrideConfig.parserOptions.project = tsConfigPath;
       }
     }
     const resultsP = mapSeries(context.components, async (component) => {
-      longProcessLogger.logProgress(component.id.toString());
+      longProcessLogger.logProgress(
+        `component: ${component.id.toString()}, # of files: ${component.filesystem.files.length}`
+      );
       const filesP = component.filesystem.files.map(async (file) => {
         // TODO: now that we moved to lint files, maybe it's not required anymore
         // The eslint api will not ignore extensions by default when using lintText, so we do it manually
@@ -105,15 +113,25 @@ export class ESLintLinter implements Linter {
     };
   }
 
-  private createTempTsConfigFile(rootDir: string, envId: string, tsConfig: Record<string, any>): string {
+  private createTempTsConfigFile(
+    rootDir: string,
+    componentDirMap: ComponentMap<string>,
+    envId: string,
+    tsConfig: Record<string, any>
+  ): string {
     const newTsConfig = {
       ...tsConfig,
     };
+    const compDirs: string[] = componentDirMap.toArray().map(([, compDir]) => compDir);
     if (tsConfig.include) {
-      newTsConfig.include = tsConfig.include.map((includedPath) => `../../${includedPath}`);
+      newTsConfig.include = flatten(tsConfig.include.map((includedPath) => {
+        return compDirs.map((compDir) => `../../${compDir}/${includedPath}`);
+      }));
     }
     if (tsConfig.exclude) {
-      newTsConfig.exclude = tsConfig.exclude.map((excludedPath) => `../../${excludedPath}`);
+      newTsConfig.exclude = flatten(tsConfig.exclude.map((excludedPath) => {
+        return compDirs.map((compDir) => `../../${compDir}/${excludedPath}`);
+      }));
     }
     const cacheDir = getCacheDir(rootDir);
     const hash = objectHash(newTsConfig);
