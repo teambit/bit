@@ -60,7 +60,7 @@ export function getPinoLogger(
 
   const transportFile = {
     target: 'pino-pretty',
-    options: { ...(!jsonFormat ? prettyPrint : {}), destination: DEBUG_LOG, sync:true, mkdir: true }, // use 2 for stderr
+    options: { ...(!jsonFormat ? prettyPrint : {}), destination: DEBUG_LOG, sync: true, mkdir: true }, // use 2 for stderr
   };
 
   const transportConsole = {
@@ -71,12 +71,12 @@ export function getPinoLogger(
   const pinoFileOpts = {
     ...opts,
     transport: transportFile,
-  }
+  };
 
   const pinoConsoleOpts = {
     ...opts,
     transport: transportConsole,
-  }
+  };
 
   const pinoLogger = pino(pinoFileOpts);
   const pinoLoggerConsole = pino(pinoConsoleOpts);

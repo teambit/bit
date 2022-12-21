@@ -712,7 +712,7 @@ needed-for: ${neededFor || '<unknown>'}`);
     const defaultOpts: ResolveAspectsOptions = {
       excludeCore: false,
       requestedOnly: false,
-      filterByRuntime: true
+      filterByRuntime: true,
     };
     const mergedOpts = { ...defaultOpts, ...opts };
     const coreAspectsIds = this.aspectLoader.getCoreAspectIds();

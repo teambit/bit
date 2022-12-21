@@ -674,7 +674,13 @@
         "version": "0.0.252",
         "defaultScope": "teambit.component",
         "mainFile": "index.ts",
-        "rootDir": "scopes/component/merging"
+        "rootDir": "scopes/component/merging",
+        "config": {
+            "teambit.harmony/bit-custom-aspect": {},
+            "teambit.envs/envs": {
+                "env": "teambit.harmony/bit-custom-aspect"
+            }
+        }
     },
     "mocha": {
         "scope": "teambit.defender",
