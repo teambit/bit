@@ -8,7 +8,7 @@ import { MissingBitMapComponent } from '@teambit/legacy/dist/consumer/bit-map/ex
 import { getLatestVersionNumber } from '@teambit/legacy/dist/utils';
 import { IssuesClasses } from '@teambit/component-issues';
 import { ComponentNotFound } from '@teambit/legacy/dist/scope/exceptions';
-import { DependencyList, DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
+import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { Logger } from '@teambit/logger';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config';
@@ -18,6 +18,7 @@ import ComponentNotFoundInPath from '@teambit/legacy/dist/consumer/component/exc
 import { ComponentLoadOptions } from '@teambit/legacy/dist/consumer/component/component-loader';
 import { Workspace } from '../workspace';
 import { WorkspaceComponent } from './workspace-component';
+import { MergeConfigConflict } from '../exceptions/merge-config-conflict';
 
 export class WorkspaceComponentLoader {
   private componentsCache: InMemoryCache<Component>; // cache loaded components
@@ -145,7 +146,11 @@ export class WorkspaceComponentLoader {
       if (!componentFromScope) throw new MissingBitMapComponent(id.toString());
       return componentFromScope;
     }
-    const { extensions } = await this.workspace.componentExtensions(id, componentFromScope);
+    const { extensions, errors } = await this.workspace.componentExtensions(id, componentFromScope);
+    if (errors?.some((err) => err instanceof MergeConfigConflict)) {
+      consumerComponent.issues.getOrCreate(IssuesClasses.MergeConfigHasConflict).data = true;
+    }
+
     const extensionsFromConsumerComponent = consumerComponent.extensions || new ExtensionDataList();
     // Merge extensions added by the legacy code in memory (for example data of dependency resolver)
     const extensionDataList = ExtensionDataList.mergeConfigs([
@@ -245,19 +250,9 @@ export class WorkspaceComponentLoader {
       component.state._consumer.files
     );
     const dependenciesList = await this.dependencyResolver.extractDepsFromLegacy(component, policy);
-    let dependenciesFromUnmergedHead;
-    // Get dependencies from unmerged head if needed
-    // we take it from there, as they might not be installed yet and we need to get their versions from the model
-    const unmergedComponent = await this.workspace.getUnmergedComponent(component.id);
-    if (unmergedComponent) {
-      dependenciesFromUnmergedHead = await this.dependencyResolver.extractDepsFromLegacy(unmergedComponent, policy);
-    }
-    const mergedDependencies = dependenciesFromUnmergedHead
-      ? DependencyList.merge([dependenciesList, dependenciesFromUnmergedHead])
-      : dependenciesList;
 
     const depResolverData = {
-      dependencies: mergedDependencies.serialize(),
+      dependencies: dependenciesList.serialize(),
       policy: policy.serialize(),
     };
 

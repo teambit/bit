@@ -103,6 +103,12 @@ export type LaneDiffStatus = {
   componentsStatus: LaneComponentDiffStatus[];
 };
 
+type CreateLaneResult = {
+  laneId: LaneId;
+  hash: string;
+  alias?: string;
+};
+
 export class LanesMain {
   constructor(
     private workspace: Workspace | undefined,
@@ -187,20 +193,19 @@ export class LanesMain {
     this.workspace?.consumer.setCurrentLane(laneId, exported);
   }
 
-  async createLane(name: string, { remoteScope, alias }: CreateLaneOptions = {}): Promise<TrackLane> {
+  async createLane(name: string, { remoteScope, alias }: CreateLaneOptions = {}): Promise<CreateLaneResult> {
     if (!this.workspace) {
       const newLane = await createLaneInScope(name, this.scope);
       return {
-        localLane: newLane.name,
-        remoteLane: newLane.name,
-        remoteScope: this.scope.name,
+        laneId: newLane.toLaneId(),
+        hash: newLane.hash().toString(),
       };
     }
     if (alias) {
       throwForInvalidLaneName(alias);
     }
     const scope = remoteScope || this.workspace.defaultScope;
-    await createLane(this.workspace.consumer, name, scope);
+    const laneObj = await createLane(this.workspace.consumer, name, scope);
     const laneId = LaneId.from(name, scope);
     this.setCurrentLane(laneId, alias, false);
     const trackLaneData = {
@@ -212,7 +217,12 @@ export class LanesMain {
     this.scope.legacyScope.scopeJson.setLaneAsNew(name);
     await this.workspace.consumer.onDestroy();
 
-    return trackLaneData;
+    const results = {
+      alias,
+      laneId: laneObj.toLaneId(),
+      hash: laneObj.hash().toString(),
+    };
+    return results;
   }
 
   async loadLane(id: LaneId): Promise<Lane | null> {

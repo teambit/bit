@@ -18,6 +18,10 @@ export type ResolveAspectsOptions = {
    * Only return results for the provided list of ids
    */
   requestedOnly?: boolean;
+  /**
+   * Only return results for aspects that have a path to the specified runtime name
+   */
+  filterByRuntime?: boolean;
 };
 
 export interface ComponentFactory {
