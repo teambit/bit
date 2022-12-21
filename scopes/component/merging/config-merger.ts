@@ -371,6 +371,14 @@ ${'>'.repeat(7)} ${this.otherLabel}
       peer: 'peerDependencies',
     };
     const hasConfigForDep = (depType: string, depName: string) => mergedPolicy[depType].find((d) => d.name === depName);
+    const getDepIdAsPkgName = (dep: SerializedDependencyWithPolicy) => {
+      if (dep.__type !== 'component') {
+        return dep.id;
+      }
+      // @ts-ignore
+      return dep.packageName;
+    };
+
     const addSerializedDepToPolicy = (dep: SerializedDependencyWithPolicy) => {
       const depType = lifecycleToDepType[dep.lifecycle];
 
@@ -378,7 +386,7 @@ ${'>'.repeat(7)} ${this.otherLabel}
         return; // there is already config for it.
       }
       mergedPolicy[depType].push({
-        name: dep.id,
+        name: getDepIdAsPkgName(dep),
         version: dep.policy || dep.version,
         force: false,
       });
@@ -477,7 +485,7 @@ ${'>'.repeat(7)} ${this.otherLabel}
       }
       hasConflict = true;
       conflictedPolicy[depType].push({
-        name: currentDep.id,
+        name: getDepIdAsPkgName(currentDep),
         version: `${conflictIndicator}${currentVer}::${otherVer}::`,
         force: false,
       });
