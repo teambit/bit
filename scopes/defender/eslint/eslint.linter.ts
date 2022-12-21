@@ -124,18 +124,14 @@ export class ESLintLinter implements Linter {
     };
     const compDirs: string[] = componentDirMap.toArray().map(([, compDir]) => compDir);
     if (tsConfig.include) {
-      newTsConfig.include = flatten(
-        tsConfig.include.map((includedPath) => {
-          return compDirs.map((compDir) => `../../${compDir}/${includedPath}`);
-        })
-      );
+      newTsConfig.include = flatten(tsConfig.include.map((includedPath) => {
+        return compDirs.map((compDir) => `../../${compDir}/${includedPath}`);
+      }));
     }
     if (tsConfig.exclude) {
-      newTsConfig.exclude = flatten(
-        tsConfig.exclude.map((excludedPath) => {
-          return compDirs.map((compDir) => `../../${compDir}/${excludedPath}`);
-        })
-      );
+      newTsConfig.exclude = flatten(tsConfig.exclude.map((excludedPath) => {
+        return compDirs.map((compDir) => `../../${compDir}/${excludedPath}`);
+      }));
     }
     const cacheDir = getCacheDir(rootDir);
     const hash = objectHash(newTsConfig);

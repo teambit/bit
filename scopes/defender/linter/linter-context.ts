@@ -31,5 +31,5 @@ export interface LinterContext extends ExecutionContext, LinterOptions {
   /**
    * Component map with the path to the component in the fs
    */
-  componentsDirMap: ComponentMap<string>;
+  componentsDirMap: ComponentMap<string>
 }
