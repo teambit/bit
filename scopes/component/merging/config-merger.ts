@@ -1,9 +1,15 @@
 import { ComponentID } from '@teambit/component-id';
 import semver from 'semver';
-import { DependencyResolverAspect, isRange, SerializedDependency } from '@teambit/dependency-resolver';
+import {
+  DependencyResolverAspect,
+  isRange,
+  SerializedDependency,
+  VariantPolicy,
+  VariantPolicyEntry,
+} from '@teambit/dependency-resolver';
 import { EnvsAspect } from '@teambit/envs';
 import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
-import { compact, omit, uniq, uniqBy } from 'lodash';
+import { compact, omit, uniqBy } from 'lodash';
 import { ConfigMergeResult } from './config-merge-result';
 
 type GenericConfigOrRemoved = Record<string, any> | '-';
@@ -244,9 +250,12 @@ ${'>'.repeat(7)} ${this.otherLabel}
     const { currentExt, otherExt, baseExt } = params;
 
     const currentConfig = this.getConfig(currentExt);
+    const currentPolicy = this.getPolicy(currentConfig);
     const otherConfig = this.getConfig(otherExt);
+    const otherPolicy = this.getPolicy(otherConfig);
+
     const baseConfig = baseExt ? this.getConfig(baseExt) : undefined;
-    // const mergeStrategyConfigParams = { id, currentConfig, otherConfig, baseConfig };
+    const basePolicy = baseConfig ? this.getPolicy(baseConfig) : undefined;
 
     const mergedPolicy = {
       dependencies: [],
@@ -261,9 +270,22 @@ ${'>'.repeat(7)} ${this.otherLabel}
     let isMerged = false;
     let hasConflict = false;
     const conflictIndicator = 'CONFLICT::';
-    const nonPolicyConfigToMerged = {};
-    const nonPolicyConfigConflict = {};
+    const lifecycleToDepType = {
+      runtime: 'dependencies',
+      dev: 'devDependencies',
+      peer: 'peerDependencies',
+    };
     const handleConfigMerge = () => {
+      const addVariantPolicyEntryToPolicy = (dep: VariantPolicyEntry) => {
+        const depType = lifecycleToDepType[dep.lifecycleType];
+        mergedPolicy[depType].push({
+          name: dep.dependencyId,
+          version: dep.value.version,
+          force: dep.force,
+        });
+        isMerged = true;
+      };
+
       if (this.areConfigsEqual(currentConfig, otherConfig)) {
         return;
       }
@@ -274,25 +296,11 @@ ${'>'.repeat(7)} ${this.otherLabel}
       if (currentConfig === '-' || otherConfig === '-') {
         throw new Error('not implemented. Is it possible to have it as minus?');
       }
-      const allKeys = uniq([...Object.keys(currentConfig), ...Object.keys(otherConfig)]);
-      const otherKeys = allKeys.filter((key) => key !== 'policy');
       if (baseConfig && this.areConfigsEqual(baseConfig, currentConfig)) {
         // was changed on other
-        otherKeys.forEach((key) => {
-          if (otherConfig[key]) {
-            nonPolicyConfigToMerged[key] = otherConfig[key];
-          }
-        });
-        if (otherConfig.policy) {
-          ['dependencies', 'devDependencies', 'peerDependencies'].forEach((depType) => {
-            if (!otherConfig.policy[depType]) return;
-            Object.keys(otherConfig.policy[depType]).forEach((depName) => {
-              mergedPolicy[depType].push({
-                name: depName,
-                version: otherConfig.policy[depType][depName],
-                force: true,
-              });
-            });
+        if (otherPolicy.length) {
+          otherPolicy.forEach((dep) => {
+            addVariantPolicyEntryToPolicy(dep);
           });
         }
         isMerged = true;
@@ -300,76 +308,52 @@ ${'>'.repeat(7)} ${this.otherLabel}
       }
 
       // either no baseConfig, or baseConfig is also different from both: other and local. that's a conflict.
-      // we have to differentiate between a conflict in the policy, which might be merged with conflict with dependencies data.
-      // and a conflict with other fields of config.
-      otherKeys.forEach((key) => {
-        if (JSON.stringify(currentConfig[key]) === JSON.stringify(otherConfig[key])) {
-          return;
-        }
-        if (baseConfig && JSON.stringify(baseConfig[key]) === JSON.stringify(otherConfig[key])) {
-          // was changed on current
-          return;
-        }
-        if (baseConfig && JSON.stringify(baseConfig[key]) === JSON.stringify(currentConfig[key])) {
-          // was changed on other
-          nonPolicyConfigToMerged[key] = otherConfig[key];
-          return;
-        }
-        // conflict
-        nonPolicyConfigConflict[key] = { current: currentConfig[key], other: otherConfig[key] };
-      });
-
       if (!currentConfig.policy && !otherConfig.policy) return;
+      const currentAndOtherConfig = uniqBy(currentPolicy.concat(otherPolicy), (d) => d.dependencyId);
+      currentAndOtherConfig.forEach((dep) => {
+        const depType = lifecycleToDepType[dep.lifecycleType];
+        const currentDep = currentPolicy.find((d) => d.dependencyId === dep.dependencyId);
+        const otherDep = otherPolicy.find((d) => d.dependencyId === dep.dependencyId);
+        const baseDep = basePolicy?.find((d) => d.dependencyId === dep.dependencyId);
 
-      ['dependencies', 'devDependencies', 'peerDependencies'].forEach((depType) => {
-        const currentPolicy = currentConfig.policy?.[depType];
-        const otherPolicy = otherConfig.policy?.[depType];
-        const allPolicyKeys = uniq(Object.keys(currentPolicy || {}).concat(Object.keys(otherPolicy || {})));
-        if (!allPolicyKeys.length) return;
+        if (!otherDep) {
+          return;
+        }
+        if (!currentDep) {
+          // only on other
+          addVariantPolicyEntryToPolicy(otherDep);
+          return;
+        }
+        const currentVer = currentDep.value.version;
+        const otherVer = otherDep.value.version;
+        if (currentVer === otherVer) {
+          return;
+        }
+        const baseVer = baseDep?.value.version;
+        if (baseVer && baseVer === otherVer) {
+          return;
+        }
+        // @todo: needs to ignore if it's in the workspace somehow.
+        // if (currentDep.__type === 'component' && this.isIdInWorkspace(currentId)) {
+        //   // dependencies that exist in the workspace, should be ignored. they'll be resolved later to the version in the ws.
+        //   return;
+        // }
+        if (baseVer && baseVer === currentVer) {
+          addVariantPolicyEntryToPolicy(otherDep);
+          return;
+        }
 
-        allPolicyKeys.forEach((pkgName) => {
-          const currentVal = currentPolicy?.[pkgName];
-          const otherVal = otherPolicy?.[pkgName];
-          const baseVal = baseConfig !== '-' && baseConfig?.policy?.[depType]?.[pkgName];
-          if (this.isEnv(pkgName)) {
-            // ignore the envs
-            return;
-          }
-          if (currentVal === otherVal) {
-            // mergedPolicy[depType][pkgName] = currentVal;
-            return;
-          }
-          if (baseVal === otherVal) {
-            // mergedPolicy[depType][pkgName] = currentVal;
-            return;
-          }
-          if (baseVal === currentVal) {
-            mergedPolicy[depType].push({
-              name: pkgName,
-              version: otherVal,
-              force: true,
-            });
-            isMerged = true;
-            return;
-          }
-          // either no baseVal, or baseVal is also different from both: other and local. that's a conflict.
-          hasConflict = true;
-          conflictedPolicy[depType].push({
-            name: pkgName,
-            version: `${conflictIndicator}${currentVal}::${otherVal}::`,
-            force: true,
-          });
+        hasConflict = true;
+        conflictedPolicy[depType].push({
+          name: currentDep.dependencyId,
+          version: `${conflictIndicator}${currentVer}::${otherVer}::`,
+          force: currentDep.force,
         });
       });
     };
 
     handleConfigMerge();
 
-    const lifecycleToDepType = {
-      runtime: 'dependencies',
-      dev: 'devDependencies',
-      peer: 'peerDependencies',
-    };
     const hasConfigForDep = (depType: string, depName: string) => mergedPolicy[depType].find((d) => d.name === depName);
     const getDepIdAsPkgName = (dep: SerializedDependencyWithPolicy) => {
       if (dep.__type !== 'component') {
@@ -513,7 +497,7 @@ ${'>'.repeat(7)} ${this.otherLabel}`;
       conflictLines.unshift(`"${params.id}": {`);
       conflictStr = conflictLines.join('\n');
     }
-    const config = isMerged ? { ...nonPolicyConfigToMerged, policy: mergedPolicy } : undefined;
+    const config = isMerged ? { policy: mergedPolicy } : undefined;
 
     return { id: params.id, mergedConfig: config, conflict: conflictStr };
   }
@@ -529,5 +513,10 @@ ${'>'.repeat(7)} ${this.otherLabel}`;
   private getConfig(ext: ExtensionDataEntry) {
     if (ext.rawConfig === '-') return ext.rawConfig;
     return omit(ext.rawConfig, ['__specific']);
+  }
+
+  private getPolicy(config): VariantPolicyEntry[] {
+    if (!config.policy) return [];
+    return VariantPolicy.fromConfigObject(config.policy).entries;
   }
 }
