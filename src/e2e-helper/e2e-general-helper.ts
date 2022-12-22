@@ -133,12 +133,13 @@ export default class GeneralHelper {
     return `@${DEFAULT_OWNER}/${this.scopes.remoteWithoutOwner}.${compName.replaceAll('/', '.')}`;
   }
 
-  getConfigMergePath(compId: string) {
-    return path.join(this.scopes.localPath, this.scopes.remote, compId, MergeConfigFilename);
+  getConfigMergePath(compId: string, remoteWithOwner = true) {
+    const remote = remoteWithOwner ? this.scopes.remote : this.scopes.remoteWithoutOwner;
+    return path.join(this.scopes.localPath, remote, compId, MergeConfigFilename);
   }
 
-  fixMergeConfigConflict(strategy: string, compId: string) {
-    const filePath = this.getConfigMergePath(compId);
+  fixMergeConfigConflict(strategy: string, compId: string, remoteWithOwner = true) {
+    const filePath = this.getConfigMergePath(compId, remoteWithOwner);
     const fileContent = fs.readFileSync(filePath).toString();
     const toRemove = strategy === 'ours' ? '>>>>>>>' : '<<<<<<<';
     const toKeep = strategy === 'ours' ? '<<<<<<<' : '>>>>>>>';
