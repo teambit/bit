@@ -59,13 +59,14 @@ export function getPinoLogger(
   };
 
   const transportFile = {
-    target: 'pino-pretty',
+    target: jsonFormat ? 'pino/file' : 'pino-pretty',
     options: { ...(!jsonFormat ? prettyPrint : {}), destination: DEBUG_LOG, sync: true, mkdir: true }, // use 2 for stderr
   };
 
   const transportConsole = {
-    target: 'pino-pretty',
-    options: { ...(!jsonFormat ? prettyPrintConsole : {}), destination: 1, sync: true }, // use 2 for stderr
+    // target: 'pino-pretty',
+    target: jsonFormat ? 'pino/file' : 'pino-pretty',
+    options: { ...(!jsonFormat ? prettyPrintConsole : {}), destination: 1, sync: true, mkdir: false }, // use 2 for stderr
   };
 
   const pinoFileOpts = {
@@ -76,6 +77,10 @@ export function getPinoLogger(
   const pinoConsoleOpts = {
     ...opts,
     transport: transportConsole,
+    // transport: jsonFormat
+    // ? { targets: [{...transportFile, level: logLevel}, {...transportConsole, level: logLevel}] }
+    // ? { targets: [transportFile, transportConsole] }
+    // : transportConsole,
   };
 
   const pinoLogger = pino(pinoFileOpts);
