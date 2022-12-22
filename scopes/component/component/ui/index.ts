@@ -1,4 +1,5 @@
 export { Component } from './component';
+export { ConsumeMethodSlot, ComponentMenu, VersionRelatedDropdowns } from './menu';
 export { ComponentModel, ComponentModelProps } from './component-model';
 export { ComponentContext, ComponentProvider } from './context';
 export { useComponent } from './use-component';

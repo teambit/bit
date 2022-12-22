@@ -95,10 +95,12 @@ export function ComponentMenu({
             <div className={styles.leftSide}>
               <CollapsableMenuNav navigationSlot={navigationSlot} widgetSlot={widgetSlot} />
             </div>
-            {!skipRightSide && <div className={styles.rightSide}>
-              <VersionRelatedDropdowns component={component} consumeMethods={consumeMethodSlot} host={host} />
-              <MainDropdown className={styles.hideOnMobile} menuItems={mainMenuItems} />
-            </div>}
+            {!skipRightSide && (
+              <div className={styles.rightSide}>
+                <VersionRelatedDropdowns component={component} consumeMethods={consumeMethodSlot} host={host} />
+                <MainDropdown className={styles.hideOnMobile} menuItems={mainMenuItems} />
+              </div>
+            )}
           </div>
         }
       />
@@ -112,7 +114,7 @@ export function VersionRelatedDropdowns({
   host,
 }: {
   component: ComponentModel;
-  consumeMethods: ConsumeMethodSlot;
+  consumeMethods?: ConsumeMethodSlot;
   host: string;
 }) {
   const location = useLocation();
@@ -150,10 +152,10 @@ export function VersionRelatedDropdowns({
   const currentVersion =
     isWorkspace && !isNew && !location?.search.includes('version') ? 'workspace' : component.version;
 
-  const methods = useConsumeMethods(consumeMethods, component, currentLane);
+  const methods = useConsumeMethods(component, consumeMethods, currentLane);
   return (
     <>
-      {tags.length > 0 && (
+      {consumeMethods && tags.length > 0 && (
         <UseBoxDropdown
           position="bottom-end"
           className={classnames(styles.useBox, styles.hideOnMobile)}
@@ -175,14 +177,16 @@ export function VersionRelatedDropdowns({
 }
 
 function useConsumeMethods(
-  consumeMethods: ConsumeMethodSlot,
-  componentModel: ComponentModel,
+  componentModel?: ComponentModel,
+  consumeMethods?: ConsumeMethodSlot,
   currentLane?: LaneModel
 ): ConsumeMethod[] {
+  // if (!consumeMethods || !componentModel) return [];
   return useMemo(
     () =>
-      flatten(consumeMethods.values())
+      flatten(consumeMethods?.values())
         .map((method) => {
+          if (!componentModel) return undefined;
           return method?.(componentModel, { currentLane });
         })
         .filter((x) => !!x && x.Component && x.Title) as ConsumeMethod[],
