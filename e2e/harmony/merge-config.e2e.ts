@@ -67,17 +67,18 @@ describe('merge config scenarios', function () {
         const deprecationData = helper.command.showAspectConfig('comp1', Extensions.deprecation);
         expect(deprecationData.config.deprecate).to.be.true;
       });
-      describe('snapping the components', () => {
+      // todo: implement this test
+      describe.skip('snapping the components', () => {
         before(() => {
           helper.command.install();
           helper.command.compile();
           helper.command.snapAllComponentsWithoutBuild();
         });
         it('should not save it with force: true in the model after snapping', () => {
-          const cmp = helper.command.catComponent(`${originalRemote}/comp1`);
-          const depResolver = cmp.extensions.find((e) => e.name === Extensions.dependencyResolver);
-          const policy = depResolver.data.policy;
-          const dep = helper.command.getConfig;
+          // const cmp = helper.command.catComponent(`${originalRemote}/comp1`);
+          // const depResolver = cmp.extensions.find((e) => e.name === Extensions.dependencyResolver);
+          // const policy = depResolver.data.policy;
+          // const dep = helper.command.getConfig;
         });
       });
     });
