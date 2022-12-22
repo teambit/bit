@@ -1,3 +1,8 @@
+type MainModuleExports = {
+  (...args: any[]): void;
+  apiObject?: boolean;
+};
+
 /**
  * A full index of the preview data
  */
@@ -11,11 +16,13 @@ export type PreviewModule<T = any> = {
   componentMapMetadata: Record<string, unknown>;
 
   /** The 'main file' for this Preview type */
-  mainModule: {
+  modulesMap: {
     default: {
-      (...args: any[]): void;
-      apiObject?: boolean;
-    };
+      default: MainModuleExports;
+    }
+    [envId: string]: {
+      default: MainModuleExports;
+    }
   };
 
   isSplitComponentBundle?: boolean;

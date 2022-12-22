@@ -19,6 +19,7 @@ import { docsSchema } from './docs.graphql';
 import { DocReader } from './doc-reader';
 import { DefaultDocReader } from './default-doc-reader';
 import { FileExtensionNotSupported } from './exceptions';
+import { isFunction } from 'lodash';
 
 export type ComponentDocs = {
   files: string[];
@@ -94,8 +95,11 @@ export class DocsMain {
     return fromJsDocs?.description || '';
   }
 
-  async getTemplate(env: Environment) {
-    return env.getDocsTemplate();
+  async getTemplate(env: Environment): Promise<string | undefined> {
+    if (env.getDocsTemplate && isFunction(env.getDocsTemplate)){
+      return env.getDocsTemplate();
+    }
+    return undefined;
   }
 
   getDocReader(extension: string) {
