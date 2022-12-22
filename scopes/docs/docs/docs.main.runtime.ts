@@ -12,6 +12,7 @@ import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { Doc, DocPropList } from '@teambit/docs.entities.doc';
+import { isFunction } from 'lodash';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { DocsAspect } from './docs.aspect';
 import { DocsPreviewDefinition } from './docs.preview-definition';
@@ -19,7 +20,6 @@ import { docsSchema } from './docs.graphql';
 import { DocReader } from './doc-reader';
 import { DefaultDocReader } from './default-doc-reader';
 import { FileExtensionNotSupported } from './exceptions';
-import { isFunction } from 'lodash';
 
 export type ComponentDocs = {
   files: string[];

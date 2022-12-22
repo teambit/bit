@@ -180,7 +180,7 @@ export class PreviewPreview {
     const metadata = componentPreviews[`${previewName}_metadata`];
 
     return {
-      mainModule: relevantModel.mainModule,
+      modulesMap: relevantModel.modulesMap,
       componentMap: {
         [id.fullName]: component,
       },
