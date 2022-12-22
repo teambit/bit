@@ -54,13 +54,30 @@ describe('merge config scenarios', function () {
       before(() => {
         helper.command.mergeLane(`${helper.scopes.remote}/dev`, '--manual --no-squash');
         // fixes the conflicts
-        helper.fs.outputFile(`${helper.scopes.remote}/comp1/index.js`);
-        helper.fs.outputFile(`${helper.scopes.remote}/comp2/index.js`);
-        helper.fs.outputFile(`${helper.scopes.remote}/comp3/index.js`);
+        helper.fs.outputFile(`${helper.scopes.remoteWithoutOwner}/comp1/index.js`);
+        helper.fs.outputFile(`${helper.scopes.remoteWithoutOwner}/comp2/index.js`);
+        helper.fs.outputFile(`${helper.scopes.remoteWithoutOwner}/comp3/index.js`);
+        // fixing the dependencies conflicts
+        helper.general.fixMergeConfigConflict('ours', 'comp1', false);
+        helper.general.fixMergeConfigConflict('ours', 'comp2', false);
       });
       it('should keep the configuration from the lane', () => {
         const deprecationData = helper.command.showAspectConfig('comp1', Extensions.deprecation);
         expect(deprecationData.config.deprecate).to.be.true;
+      });
+      describe('snapping the components', () => {
+        before(() => {
+          helper.command.install();
+          helper.command.compile();
+          helper.command.snapAllComponentsWithoutBuild();
+        });
+        it('should not save it with force: true in the model after snapping', () => {
+          const cmp = helper.command.catComponent(`${helper.scopes.remote}/comp1@latest`);
+          const depResolver = cmp.extensions.find((e) => e.name === Extensions.dependencyResolver);
+          const policy = depResolver.data.policy;
+          const comp2 = policy.find((p) => p.dependencyId === `${helper.general.getPackageNameByCompName('comp2')}`);
+          expect(comp2.force).to.equal(false);
+        });
       });
     });
     describe('switching to the lane', () => {

@@ -218,7 +218,7 @@ export class VariantPolicy implements Policy<VariantPolicyConfigObject> {
     return res;
   }
 
-  static fromConfigObject(configObject, source?: DependencySource, hidden?: boolean, force = true): VariantPolicy {
+  static fromConfigObject(configObject, source?: DependencySource, hidden?: boolean, force?: boolean): VariantPolicy {
     const runtimeEntries = entriesFromKey(configObject, 'dependencies', source, hidden, force);
     const devEntries = entriesFromKey(configObject, 'devDependencies', source, hidden, force);
     const peerEntries = entriesFromKey(configObject, 'peerDependencies', source, hidden, force);
@@ -279,7 +279,7 @@ function entriesFromObjectKey(
   lifecycleType: DependencyLifecycleType,
   source?: DependencySource,
   hidden?: boolean,
-  force?: boolean
+  force = true
 ): VariantPolicyEntry[] {
   if (!obj) {
     return [];
