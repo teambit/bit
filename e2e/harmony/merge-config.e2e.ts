@@ -20,6 +20,7 @@ describe('merge config scenarios', function () {
     let npmCiRegistry: NpmCiRegistry;
     let beforeDiverge: string;
     let beforeMerges: string;
+    let originalRemote: string;
     before(async () => {
       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
       helper.scopeHelper.setNewLocalAndRemoteScopes();
@@ -29,6 +30,7 @@ describe('merge config scenarios', function () {
       await npmCiRegistry.init();
       helper.command.tagAllComponents();
       helper.command.export();
+      originalRemote = helper.scopes.remote;
       beforeDiverge = helper.scopeHelper.cloneLocalScope();
       helper.command.createLane();
       helper.fixtures.populateComponents(3, undefined, 'on-lane');
@@ -54,13 +56,29 @@ describe('merge config scenarios', function () {
       before(() => {
         helper.command.mergeLane(`${helper.scopes.remote}/dev`, '--manual --no-squash');
         // fixes the conflicts
-        helper.fs.outputFile(`${helper.scopes.remote}/comp1/index.js`);
-        helper.fs.outputFile(`${helper.scopes.remote}/comp2/index.js`);
-        helper.fs.outputFile(`${helper.scopes.remote}/comp3/index.js`);
+        helper.fs.outputFile(`${originalRemote}/comp1/index.js`);
+        helper.fs.outputFile(`${originalRemote}/comp2/index.js`);
+        helper.fs.outputFile(`${originalRemote}/comp3/index.js`);
+        // fixing the dependencies conflicts
+        helper.general.fixMergeConfigConflict('ours', 'comp1');
+        helper.general.fixMergeConfigConflict('ours', 'comp2');
       });
       it('should keep the configuration from the lane', () => {
         const deprecationData = helper.command.showAspectConfig('comp1', Extensions.deprecation);
         expect(deprecationData.config.deprecate).to.be.true;
+      });
+      describe('snapping the components', () => {
+        before(() => {
+          helper.command.install();
+          helper.command.compile();
+          helper.command.snapAllComponentsWithoutBuild();
+        });
+        it('should not save it with force: true in the model after snapping', () => {
+          const cmp = helper.command.catComponent(`${originalRemote}/comp1`);
+          const depResolver = cmp.extensions.find((e) => e.name === Extensions.dependencyResolver);
+          const policy = depResolver.data.policy;
+          const dep = helper.command.getConfig;
+        });
       });
     });
     describe('switching to the lane', () => {
