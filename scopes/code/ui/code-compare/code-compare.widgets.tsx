@@ -10,13 +10,13 @@ export function Widget({ node }: WidgetProps<any>) {
   const fileName = node.id;
   const componentCompareContext = useComponentCompare();
 
-  if (!componentCompareContext || componentCompareContext.fileCompareDataByName === null) return null;
+  if (!componentCompareContext) return null;
   if (componentCompareContext.fileCompareDataByName === undefined)
     return <WordSkeleton className={styles.loader} length={5} />;
 
   const { fileCompareDataByName } = componentCompareContext;
 
-  const codeCompareDataForFile = fileCompareDataByName.get(fileName);
+  const codeCompareDataForFile = fileCompareDataByName?.get(fileName) ?? null;
 
   if (componentCompareContext?.compare && !componentCompareContext.base && !codeCompareDataForFile?.status)
     return <CompareStatusResolver status={'new'} />;

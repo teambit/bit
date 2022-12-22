@@ -204,7 +204,7 @@ export class LanesUI {
           children: 'Lane Compare',
         },
         order: 2,
-        // hide: () => true,
+        hide: () => true,
       },
     ]);
   }
