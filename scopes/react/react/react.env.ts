@@ -127,11 +127,15 @@ export class ReactEnv
   ) {}
 
   getTsConfig(targetTsConfig?: TsConfigSourceFile): TsConfigSourceFile {
-    return targetTsConfig ? merge({}, defaultTsConfig, targetTsConfig) : defaultTsConfig;
+    return targetTsConfig
+      ? merge({ compilerOptions: this.config.tsCompilerOptions || {} }, defaultTsConfig, targetTsConfig)
+      : defaultTsConfig;
   }
 
   getBuildTsConfig(targetTsConfig?: TsConfigSourceFile): TsConfigSourceFile {
-    return targetTsConfig ? merge({}, buildTsConfig, targetTsConfig) : buildTsConfig;
+    return targetTsConfig
+      ? merge({ compilerOptions: this.config.tsCompilerOptions || {} }, buildTsConfig, targetTsConfig)
+      : buildTsConfig;
   }
 
   /**
@@ -188,7 +192,7 @@ export class ReactEnv
     const compileJs = true;
     const compileJsx = true;
     return {
-      tsconfig,
+      tsconfig: merge({}, tsconfig, { compilerOptions: this.config.tsCompilerOptions || {} }),
       // TODO: @david please remove this line and refactor to be something that makes sense.
       types: [resolve(pathToSource, './typescript/style.d.ts'), resolve(pathToSource, './typescript/asset.d.ts')],
       compileJs,

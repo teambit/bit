@@ -71,6 +71,11 @@ export type ReactMainConfig = {
    * version of React to configure.
    */
   reactVersion: string;
+
+  /**
+   * configure default typescript compiler options(for all modes)
+   */
+  tsCompilerOptions?: ts.CompilerOptions;
 };
 
 export type UseWebpackModifiers = {
