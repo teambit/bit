@@ -95,9 +95,14 @@ export class ConfigMerger {
       return null;
     });
     const otherAspectsNotHandledResults = this.otherAspects.map((otherExt) => {
-      const id = otherExt.stringId;
+      let id = otherExt.stringId;
       if (this.handledExtIds.includes(id)) return null;
       this.handledExtIds.push(id);
+      if (otherExt.extensionId && otherExt.extensionId.hasVersion()) {
+        // avoid using the id from the other lane if it exits in the workspace. prefer the id from the workspace.
+        const idFromWorkspace = this.getIdFromWorkspace(otherExt.extensionId.toStringWithoutVersion());
+        if (idFromWorkspace) id = idFromWorkspace._legacy.toString();
+      }
       const baseExt = this.baseAspects.findExtension(id, true);
       if (baseExt) {
         // was removed on current
@@ -503,7 +508,11 @@ ${'>'.repeat(7)} ${this.otherLabel}`;
   }
 
   private isIdInWorkspace(id: string): boolean {
-    return Boolean(this.workspaceIds.find((c) => c.toStringWithoutVersion() === id));
+    return Boolean(this.getIdFromWorkspace(id));
+  }
+
+  private getIdFromWorkspace(id: string): ComponentID | undefined {
+    return this.workspaceIds.find((c) => c.toStringWithoutVersion() === id);
   }
 
   private isEnv(id: string) {
