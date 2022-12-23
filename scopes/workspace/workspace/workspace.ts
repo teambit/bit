@@ -717,7 +717,7 @@ export class Workspace implements ComponentFactory {
 
   async ejectConfig(id: ComponentID, options: EjectConfOptions): Promise<EjectConfResult> {
     const componentId = await this.resolveComponentId(id);
-    const extensions = await this.getSpecificExtensionsFromScope(id);
+    const extensions = await this.getExtensionsFromScopeAndSpecific(id);
     const aspects = await this.createAspectList(extensions);
     const componentDir = this.componentDir(id, { ignoreVersion: true });
     const componentConfigFile = new ComponentConfigFile(componentId, aspects, componentDir, options.propagate);
@@ -730,7 +730,7 @@ export class Workspace implements ComponentFactory {
     };
   }
 
-  async getSpecificExtensionsFromScope(id: ComponentID): Promise<ExtensionDataList> {
+  async getExtensionsFromScopeAndSpecific(id: ComponentID): Promise<ExtensionDataList> {
     const componentFromScope = await this.scope.get(id);
     const { extensions } = await this.componentExtensions(id, componentFromScope, [
       'WorkspaceDefault',
@@ -1398,7 +1398,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
       await componentConfigFile.write({ override: true });
     } else {
       if (shouldMergeWithPrevious) {
-        const extensions = await this.getSpecificExtensionsFromScope(id);
+        const extensions = await this.getExtensionsFromScopeAndSpecific(id);
         const obj = extensions.toConfigObject();
         config = obj[aspectId] ? merge(obj[aspectId], config) : config;
       }
@@ -1421,13 +1421,9 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     aspectIdStr: string,
     ignoreAspectVersion = false
   ): Promise<string | undefined> {
-    const aspectId = await this.resolveComponentId(aspectIdStr);
-    const componentConfigFile = await this.componentConfigFile(componentId);
-    if (componentConfigFile) {
-      const aspectEntry = componentConfigFile.aspects.find(aspectId, ignoreAspectVersion);
-      return aspectEntry?.id.toString();
-    }
-    return this.bitMap.getAspectIdFromConfig(componentId, aspectId, ignoreAspectVersion);
+    const config = await this.getExtensionsFromScopeAndSpecific(componentId);
+    const aspectEntry = config.findExtension(aspectIdStr, ignoreAspectVersion);
+    return aspectEntry?.id.toString();
   }
 
   async getSpecificComponentConfig(id: ComponentID, aspectId: string): Promise<any> {
@@ -2152,15 +2148,16 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
     const unchanged: ComponentID[] = [];
     await Promise.all(
       ids.map(async (id) => {
-        const envsAspect = await this.getSpecificComponentConfig(id, EnvsAspect.id);
+        const extensions = await this.getExtensionsFromScopeAndSpecific(id);
+        const envsAspect = extensions.findCoreExtension(EnvsAspect.id)?.rawConfig;
         const currentEnv = envsAspect && envsAspect !== REMOVE_EXTENSION_SPECIAL_SIGN ? envsAspect.env : null;
         if (!currentEnv) {
           unchanged.push(id);
           return;
         }
         const currentEnvWithPotentialVersion = await this.getAspectIdFromConfig(id, currentEnv, true);
-        await this.removeSpecificComponentConfig(id, currentEnvWithPotentialVersion || currentEnv, false);
-        await this.removeSpecificComponentConfig(id, EnvsAspect.id, false);
+        await this.removeSpecificComponentConfig(id, currentEnvWithPotentialVersion || currentEnv, true);
+        await this.removeSpecificComponentConfig(id, EnvsAspect.id, true);
         changed.push(id);
       })
     );
