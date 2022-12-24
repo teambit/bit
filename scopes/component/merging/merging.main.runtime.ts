@@ -336,7 +336,7 @@ export class MergingMain {
       }
     };
     const results = await getComponentsStatusNeedMerge();
-    // throw new Error('stop!')
+
     results.push(...compStatusNotNeedMerge);
     return results;
   }
