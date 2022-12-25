@@ -375,6 +375,7 @@ export class YarnPackageManager implements PackageManager {
       enableGlobalCache: true,
       nodeLinker: options.nodeLinker === 'isolated' ? 'pnpm' : 'node-modules',
       installStatePath: `${rootDirPath}/.yarn/install-state.gz`,
+      pnpUnpluggedFolder: `${rootDirPath}/.yarn/unplugged`,
       cacheFolder: join(globalFolder, 'cache'),
       pnpDataPath: `${rootDirPath}/.pnp.meta.json`,
       npmScopes: scopedRegistries,
