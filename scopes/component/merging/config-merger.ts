@@ -95,9 +95,14 @@ export class ConfigMerger {
       return null;
     });
     const otherAspectsNotHandledResults = this.otherAspects.map((otherExt) => {
-      const id = otherExt.stringId;
+      let id = otherExt.stringId;
       if (this.handledExtIds.includes(id)) return null;
       this.handledExtIds.push(id);
+      if (otherExt.extensionId && otherExt.extensionId.hasVersion()) {
+        // avoid using the id from the other lane if it exits in the workspace. prefer the id from the workspace.
+        const idFromWorkspace = this.getIdFromWorkspace(otherExt.extensionId.toStringWithoutVersion());
+        if (idFromWorkspace) id = idFromWorkspace._legacy.toString();
+      }
       const baseExt = this.baseAspects.findExtension(id, true);
       if (baseExt) {
         // was removed on current
@@ -106,8 +111,8 @@ export class ConfigMerger {
       // exist in other but not in current and base, so it got created on other.
       return { id, mergedConfig: this.getConfig(otherExt) };
     });
-    const envResult = this.envStrategy();
-    return new ConfigMergeResult(this.compIdStr, compact([...results, ...otherAspectsNotHandledResults, envResult]));
+    const envResult = [this.envStrategy()] || [];
+    return new ConfigMergeResult(this.compIdStr, compact([...results, ...otherAspectsNotHandledResults, ...envResult]));
   }
 
   private populateEnvs() {
@@ -132,19 +137,19 @@ export class ConfigMerger {
     if (currentEnvAspect) {
       this.handledExtIds.push(currentEnvAspect.stringId);
       this.currentEnv.version = currentEnvAspect.extensionId?.version;
-      this.currentEnv.config = currentEnvAspect.rawConfig;
+      this.currentEnv.config = this.getConfig(currentEnvAspect);
     }
     const otherEnvAspect = this.otherAspects.findExtension(otherEnv, true);
     if (otherEnvAspect) {
       this.handledExtIds.push(otherEnvAspect.stringId);
       this.otherEnv.version = otherEnvAspect.extensionId?.version;
-      this.otherEnv.config = otherEnvAspect.rawConfig;
+      this.otherEnv.config = this.getConfig(otherEnvAspect);
     }
     if (this.baseEnv) {
       const baseEnvAspect = this.baseAspects.findExtension(baseEnv, true);
       if (baseEnvAspect) {
         this.baseEnv.version = baseEnvAspect.extensionId?.version;
-        this.baseEnv.config = baseEnvAspect.rawConfig;
+        this.baseEnv.config = this.getConfig(baseEnvAspect);
       }
     }
   }
@@ -217,13 +222,15 @@ export class ConfigMerger {
     let conflict: string;
     if (currentConfig === '-') {
       conflict = `${'<'.repeat(7)} ${this.currentLabel}
+"${id}": "-"
 =======
 "${id}": ${JSON.stringify(otherConfig, undefined, 2)}
 ${'>'.repeat(7)} ${this.otherLabel}`;
     } else if (otherConfig === '-') {
       conflict = `${'<'.repeat(7)} ${this.currentLabel}
-"${id}": ${JSON.stringify(otherConfig, undefined, 2)}
+"${id}": ${JSON.stringify(currentConfig, undefined, 2)}
 =======
+"${id}": "-"
 ${'>'.repeat(7)} ${this.otherLabel}`;
     } else {
       const formatConfig = (conf: GenericConfigOrRemoved) => {
@@ -503,14 +510,18 @@ ${'>'.repeat(7)} ${this.otherLabel}`;
   }
 
   private isIdInWorkspace(id: string): boolean {
-    return Boolean(this.workspaceIds.find((c) => c.toStringWithoutVersion() === id));
+    return Boolean(this.getIdFromWorkspace(id));
+  }
+
+  private getIdFromWorkspace(id: string): ComponentID | undefined {
+    return this.workspaceIds.find((c) => c.toStringWithoutVersion() === id);
   }
 
   private isEnv(id: string) {
     return id === this.currentEnv.id || id === this.otherEnv.id;
   }
 
-  private getConfig(ext: ExtensionDataEntry) {
+  private getConfig(ext: ExtensionDataEntry): GenericConfigOrRemoved {
     if (ext.rawConfig === '-') return ext.rawConfig;
     return omit(ext.rawConfig, ['__specific']);
   }
