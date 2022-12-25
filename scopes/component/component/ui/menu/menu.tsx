@@ -111,10 +111,12 @@ export function ComponentMenu({
 export function VersionRelatedDropdowns({
   component,
   consumeMethods,
+  className,
   host,
 }: {
   component: ComponentModel;
   consumeMethods?: ConsumeMethodSlot;
+  className?: string,
   host: string;
 }) {
   const location = useLocation();
@@ -170,6 +172,7 @@ export function VersionRelatedDropdowns({
         currentVersion={currentVersion}
         latestVersion={component.latest}
         currentLane={currentLane}
+        className={className}
         menuClassName={styles.componentVersionMenu}
       />
     </>

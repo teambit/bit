@@ -21,7 +21,7 @@ export class CompositionsSection implements Section {
   };
 
   route = {
-    path: '~compositions',
+    path: '~compositions/*',
     element: <Compositions menuBarWidgets={this.options.menuBarWidgetSlot} emptyState={this.emptyStateSlot} />,
   };
 

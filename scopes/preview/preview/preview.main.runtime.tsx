@@ -411,7 +411,7 @@ export class PreviewMain {
 
   async isSupportSkipIncludes(component: Component) {
     const isCore = this.envs.isUsingCoreEnv(component);
-    if (isCore) return true;
+    if (isCore) return false;
 
     const envComponent = await this.envs.getEnvComponent(component);
     const previewData = this.getPreviewData(envComponent);
