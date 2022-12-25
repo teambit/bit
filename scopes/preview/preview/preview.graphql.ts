@@ -39,7 +39,7 @@ export function previewSchema(previewExtension: PreviewMain) {
           return previewExtension.isLegacyHeader(component);
         },
         skipIncludes: ({ component }) => {
-          return true;
+          // return true;
           return previewExtension.isSupportSkipIncludes(component);
         }
       },
