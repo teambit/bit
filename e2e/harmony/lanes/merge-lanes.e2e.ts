@@ -639,6 +639,19 @@ describe('merge lanes', function () {
         });
       });
     });
+    describe('bit lane merge after soft-removed the unrelated component', () => {
+      before(() => {
+        helper.scopeHelper.getClonedRemoteScope(remoteScopeAfterExport);
+        helper.scopeHelper.getClonedLocalScope(afterLaneExport);
+        helper.command.import();
+        helper.command.removeComponent('comp1', '--soft');
+        helper.command.snapAllComponentsWithoutBuild();
+        helper.command.export();
+      });
+      it('should not throw', () => {
+        expect(() => helper.command.mergeLane('main')).to.not.throw();
+      });
+    });
   });
   describe('merge lanes when local-lane has soft-removed components and the other lane is behind', () => {
     before(() => {
@@ -679,11 +692,12 @@ describe('merge lanes', function () {
       helper.command.export();
       helper.command.mergeLane('dev2');
     });
-    it('should bring the removed component because it may have changed and these changes are needed for other components', () => {
+    // made a decision (according to Ran) to not merge the component in this case.
+    it.skip('should bring the removed component because it may have changed and these changes are needed for other components', () => {
       const bitMap = helper.bitMap.read();
       expect(bitMap).to.have.property('comp2');
     });
-    it('should show the removed components as remotelySoftRemoved because of the merge-config mechanism', () => {
+    it.skip('should show the removed components as remotelySoftRemoved because of the merge-config mechanism', () => {
       const status = helper.command.statusJson();
       expect(status.remotelySoftRemoved).to.have.lengthOf(1);
       expect(status.remotelySoftRemoved[0]).to.include('comp2');

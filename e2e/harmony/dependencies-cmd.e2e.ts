@@ -175,4 +175,17 @@ describe('bit dependencies command', function () {
       });
     });
   });
+  describe('bit deps remove - when other deps were set previously before tag', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1);
+      helper.command.dependenciesSet('comp1', 'ramda@0.20.0 lodash@3.3.1');
+      helper.command.tagWithoutBuild();
+    });
+    it('should remove only the dependency specified and leave the rest', () => {
+      helper.command.dependenciesRemove('comp1', 'ramda');
+      const showConfig = helper.command.showAspectConfig('comp1', Extensions.dependencyResolver);
+      expect(showConfig.config.policy.dependencies).to.deep.equal({ lodash: '3.3.1' });
+    });
+  });
 });

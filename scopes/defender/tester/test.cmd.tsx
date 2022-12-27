@@ -1,8 +1,7 @@
 import { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
 import { Logger } from '@teambit/logger';
-import { Workspace } from '@teambit/workspace';
-import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
+import { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import { Timer } from '@teambit/legacy/dist/toolbox/timer';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
 import { Box, Text } from 'ink';
@@ -60,7 +59,7 @@ export class TestCmd implements Command {
       );
     }
     timer.start();
-    if (!this.workspace) throw new ConsumerNotFound();
+    if (!this.workspace) throw new OutsideWorkspaceError();
 
     const getPatternWithScope = () => {
       if (!userPattern && !scope) return undefined;

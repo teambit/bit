@@ -1,5 +1,7 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import WorkspaceAspect, { Workspace } from '@teambit/workspace';
+import path from 'path';
+import fs from 'fs-extra';
+import WorkspaceAspect, { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import R from 'ramda';
 import { Consumer } from '@teambit/legacy/dist/consumer';
 import ComponentsList from '@teambit/legacy/dist/consumer/component/components-list';
@@ -13,7 +15,6 @@ import {
   getMergeStrategyInteractive,
   MergeOptions,
 } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
-import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
 import SnappingAspect, { SnappingMain, TagResults } from '@teambit/snapping';
 import hasWildcard from '@teambit/legacy/dist/utils/string/has-wildcard';
 import mapSeries from 'p-map-series';
@@ -39,10 +40,13 @@ import threeWayMerge, {
 import { NoCommonSnap } from '@teambit/legacy/dist/scope/exceptions/no-common-snap';
 import { CheckoutAspect, CheckoutMain } from '@teambit/checkout';
 import { ComponentID } from '@teambit/component-id';
+import { MergeConfigFilename } from '@teambit/legacy/dist/constants';
 import { SnapsDistance } from '@teambit/legacy/dist/scope/component-ops/snaps-distance';
 import { InstallMain, InstallAspect } from '@teambit/install';
 import { MergeCmd } from './merge-cmd';
 import { MergingAspect } from './merging.aspect';
+import { ConfigMerger } from './config-merger';
+import { ConfigMergeResult } from './config-merge-result';
 
 type ResolveUnrelatedData = { strategy: MergeStrategy; head: Ref };
 
@@ -55,6 +59,7 @@ export type ComponentMergeStatus = {
   mergeResults?: MergeResultsThreeWay | null;
   divergeData?: SnapsDistance;
   resolvedUnrelated?: ResolveUnrelatedData;
+  configMergeResult?: ConfigMergeResult;
 };
 
 export type ComponentMergeStatusBeforeMergeAttempt = {
@@ -99,7 +104,7 @@ export class MergingMain {
     build: boolean,
     skipDependencyInstallation: boolean
   ): Promise<ApplyVersionResults> {
-    if (!this.workspace) throw new ConsumerNotFound();
+    if (!this.workspace) throw new OutsideWorkspaceError();
     const consumer: Consumer = this.workspace.consumer;
     let mergeResults;
     const firstValue = R.head(values);
@@ -211,7 +216,7 @@ export class MergingMain {
     // which can be an issue when some components are also dependencies of others
     const componentsResults = await mapSeries(
       succeededComponents,
-      async ({ currentComponent, id, mergeResults, resolvedUnrelated }) => {
+      async ({ currentComponent, id, mergeResults, resolvedUnrelated, configMergeResult }) => {
         const modelComponent = await consumer.scope.getModelComponent(id);
         const updatedLaneId = laneId.isDefault() ? LaneId.from(laneId.name, id.scope as string) : laneId;
         return this.applyVersion({
@@ -223,6 +228,7 @@ export class MergingMain {
           laneId: updatedLaneId,
           localLane,
           resolvedUnrelated,
+          configMergeResult,
         });
       }
     );
@@ -235,8 +241,9 @@ export class MergingMain {
 
     await consumer.writeBitMap();
 
+    const componentsHasConfigMergeConflicts = allComponentsStatus.some((c) => c.configMergeResult?.hasConflicts());
     const leftUnresolvedConflicts = componentWithConflict && mergeStrategy === 'manual';
-    if (!skipDependencyInstallation && !leftUnresolvedConflicts) {
+    if (!skipDependencyInstallation && !leftUnresolvedConflicts && !componentsHasConfigMergeConflicts) {
       try {
         await this.install.install(undefined, {
           dedupe: true,
@@ -252,7 +259,7 @@ export class MergingMain {
     const getSnapOrTagResults = async () => {
       // if one of the component has conflict, don't snap-merge. otherwise, some of the components would be snap-merged
       // and some not. besides the fact that it could by mistake tag dependent, it's a confusing state. better not snap.
-      if (noSnap || leftUnresolvedConflicts) {
+      if (noSnap || leftUnresolvedConflicts || componentsHasConfigMergeConflicts) {
         return null;
       }
       if (tag) {
@@ -329,6 +336,7 @@ export class MergingMain {
       }
     };
     const results = await getComponentsStatusNeedMerge();
+
     results.push(...compStatusNotNeedMerge);
     return results;
   }
@@ -361,8 +369,8 @@ export class MergingMain {
     const version = id.version as string;
     const otherLaneHead = modelComponent.getRef(version);
     const existingBitMapId = consumer.bitMap.getBitIdIfExist(id, { ignoreVersion: true });
-    const componentOnLane: Version = await modelComponent.loadVersion(version, consumer.scope.objects);
-    if (componentOnLane.isRemoved()) {
+    const componentOnOther: Version = await modelComponent.loadVersion(version, consumer.scope.objects);
+    if (componentOnOther.isRemoved()) {
       return returnUnmerged(`component has been removed`, true);
     }
     const getCurrentId = () => {
@@ -382,13 +390,16 @@ export class MergingMain {
     const currentId = getCurrentId();
     if (!currentId) {
       const divergeData = await getDivergeData({ repo, modelComponent, targetHead: otherLaneHead, throws: false });
-      return { currentComponent: null, componentFromModel: componentOnLane, id, divergeData };
+      return { currentComponent: null, componentFromModel: componentOnOther, id, divergeData };
     }
     const getCurrentComponent = () => {
       if (existingBitMapId) return consumer.loadComponent(existingBitMapId);
       return consumer.scope.getConsumerComponent(currentId);
     };
     const currentComponent = await getCurrentComponent();
+    if (currentComponent.removed) {
+      return returnUnmerged(`component has been removed`, true);
+    }
     const isModified = async () => {
       const componentModificationStatus = await consumer.getComponentStatusById(currentComponent.id);
       if (!componentModificationStatus.modified) return false;
@@ -444,7 +455,7 @@ export class MergingMain {
           // just override with the model data
           return {
             currentComponent,
-            componentFromModel: componentOnLane,
+            componentFromModel: componentOnOther,
             id,
             divergeData,
             resolvedUnrelated: { strategy: 'theirs', head: resolvedRef },
@@ -475,7 +486,7 @@ export class MergingMain {
         // just override with the model data
         return {
           currentComponent,
-          componentFromModel: componentOnLane,
+          componentFromModel: componentOnOther,
           id,
           divergeData,
         };
@@ -507,18 +518,37 @@ export class MergingMain {
     if (!currentComponent) throw new Error(`getDivergedMergeStatus, currentComponent is missing for ${id.toString()}`);
 
     const baseSnap = divergeData.commonSnapBeforeDiverge as Ref; // must be set when isTrueMerge
+    // uncomment for debugging
+    // console.log('id', id.toStringWithoutVersion(), 'baseSnap', baseSnap.toString(), 'current', currentId.version, 'other', otherLaneHead.toString());
     const baseComponent: Version = await modelComponent.loadVersion(baseSnap.toString(), repo);
     const otherComponent: Version = await modelComponent.loadVersion(otherLaneHead.toString(), repo);
+
     const currentLaneName = localLane?.toLaneId().toString() || 'main';
+    const currentLabel = `${currentId.version} (${currentLaneName === otherLaneName ? 'current' : currentLaneName})`;
+    const otherLabel = `${otherLaneHead.toString()} (${
+      otherLaneName === currentLaneName ? 'incoming' : otherLaneName
+    })`;
+    const workspaceIds = await this.workspace.listIds();
+    const configMerger = new ConfigMerger(
+      id.toStringWithoutVersion(),
+      workspaceIds,
+      currentComponent.extensions,
+      baseComponent.extensions,
+      otherComponent.extensions,
+      currentLabel,
+      otherLabel
+    );
+    const configMergeResult = configMerger.merge();
+
     const mergeResults = await threeWayMerge({
       consumer,
       otherComponent,
-      otherLabel: `${otherLaneHead.toString()} (${otherLaneName === currentLaneName ? 'incoming' : otherLaneName})`,
+      otherLabel,
       currentComponent,
-      currentLabel: `${currentId.version} (${currentLaneName === otherLaneName ? 'current' : currentLaneName})`,
+      currentLabel,
       baseComponent,
     });
-    return { currentComponent, id, mergeResults, divergeData };
+    return { currentComponent, id, mergeResults, divergeData, configMergeResult };
   }
 
   private async applyVersion({
@@ -530,6 +560,7 @@ export class MergingMain {
     laneId,
     localLane,
     resolvedUnrelated,
+    configMergeResult,
   }: {
     currentComponent: ConsumerComponent | null | undefined;
     id: BitId;
@@ -539,6 +570,7 @@ export class MergingMain {
     laneId: LaneId;
     localLane: Lane | null;
     resolvedUnrelated?: ResolveUnrelatedData;
+    configMergeResult?: ConfigMergeResult;
   }): Promise<ApplyVersionResult> {
     const consumer = this.workspace.consumer;
     let filesStatus = {};
@@ -607,6 +639,27 @@ export class MergingMain {
       verbose: false, // @todo: do we need a flag here?
     });
     await manyComponentsWriter.writeAll();
+
+    if (configMergeResult) {
+      if (!componentWithDependencies.component.writtenPath) {
+        throw new Error(`componentWithDependencies.component.writtenPath is missing for ${id.toString()}`);
+      }
+      const configMergeConflictFile = configMergeResult.generateMergeConflictFile();
+      if (configMergeConflictFile) {
+        const configMergePath = path.join(
+          consumer.getPath(),
+          componentWithDependencies.component.writtenPath,
+          MergeConfigFilename
+        );
+        await fs.outputFile(configMergePath, configMergeConflictFile);
+      }
+      const successfullyMergedConfig = configMergeResult.getSuccessfullyMergedConfig();
+      if (successfullyMergedConfig) {
+        unmergedComponent.mergedConfig = successfullyMergedConfig;
+        // no need to `unmergedComponents.addEntry` here. it'll be added in the next lines inside `if (mergeResults)`.
+        // because if `configMergeResult` is set, `mergeResults` must be set as well. both happen on diverge.
+      }
+    }
 
     // if mergeResults, the head snap is going to be updated on a later phase when snapping with two parents
     // otherwise, update the head of the current lane or main

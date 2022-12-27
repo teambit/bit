@@ -7,3 +7,5 @@ export const CLIAspect = Aspect.create({
   dependencies: [],
   declareRuntime: MainRuntime,
 });
+
+export default CLIAspect;

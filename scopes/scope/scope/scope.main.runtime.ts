@@ -354,20 +354,21 @@ export class ScopeMain implements ComponentFactory {
 
   private localAspects: string[] = [];
 
-  async loadAspects(ids: string[], throwOnError = false, neededFor?: string): Promise<string[]> {
+  async loadAspects(ids: string[], throwOnError = false, neededFor?: string, lane?: Lane): Promise<string[]> {
+    if (!ids.length) return [];
     // generate a random callId to be able to identify the call from the logs
     const callId = Math.floor(Math.random() * 1000);
     const loggerPrefix = `[${callId}] loadAspects,`;
     this.logger.info(`${loggerPrefix} loading ${ids.length} aspects.
 ids: ${ids.join(', ')}
 needed-for: ${neededFor || '<unknown>'}`);
-    const grouped = await this.groupAspectIdsByEnvOfTheList(ids);
+    const grouped = await this.groupAspectIdsByEnvOfTheList(ids, lane);
     this.logger.info(`${loggerPrefix} getManifestsAndLoadAspects for grouped.envs, total ${grouped.envs?.length || 0}`);
-    const envsManifestsIds = await this.getManifestsAndLoadAspects(grouped.envs, throwOnError);
+    const envsManifestsIds = await this.getManifestsAndLoadAspects(grouped.envs, throwOnError, lane);
     this.logger.info(
       `${loggerPrefix} getManifestsAndLoadAspects for grouped.other, total ${grouped.other?.length || 0}`
     );
-    const otherManifestsIds = await this.getManifestsAndLoadAspects(grouped.other, throwOnError);
+    const otherManifestsIds = await this.getManifestsAndLoadAspects(grouped.other, throwOnError, lane);
     this.logger.debug(`${loggerPrefix} finish loading aspects`);
     return envsManifestsIds.concat(otherManifestsIds);
   }
@@ -376,8 +377,8 @@ needed-for: ${neededFor || '<unknown>'}`);
    * This function get's a list of aspect ids and return them grouped by whether any of them is the env of other from the list
    * @param ids
    */
-  async groupAspectIdsByEnvOfTheList(ids: string[]): Promise<{ envs?: string[]; other?: string[] }> {
-    const components = await this.getNonLoadedAspects(ids);
+  async groupAspectIdsByEnvOfTheList(ids: string[], lane?: Lane): Promise<{ envs?: string[]; other?: string[] }> {
+    const components = await this.getNonLoadedAspects(ids, lane);
     const envsIds = uniq(
       components
         .map((component) => this.envs.getEnvId(component))
@@ -390,17 +391,19 @@ needed-for: ${neededFor || '<unknown>'}`);
     return grouped as { envs: string[]; other: string[] };
   }
 
-  private async getManifestsAndLoadAspects(ids: string[] = [], throwOnError = false): Promise<string[]> {
+  private async getManifestsAndLoadAspects(ids: string[] = [], throwOnError = false, lane?: Lane): Promise<string[]> {
     const { manifests: scopeManifests, potentialPluginsIds } = await this.getManifestsGraphRecursively(
       ids,
       [],
-      throwOnError
+      throwOnError,
+      lane
     );
     await this.aspectLoader.loadExtensionsByManifests(scopeManifests);
     const { manifests: scopePluginsManifests } = await this.getManifestsGraphRecursively(
       potentialPluginsIds,
       [],
-      throwOnError
+      throwOnError,
+      lane
     );
     await this.aspectLoader.loadExtensionsByManifests(scopePluginsManifests);
     const allManifests = scopeManifests.concat(scopePluginsManifests);
@@ -411,6 +414,7 @@ needed-for: ${neededFor || '<unknown>'}`);
     ids: string[],
     visited: string[] = [],
     throwOnError = false,
+    lane?: Lane,
     opts: {
       packageManagerConfigRootDir?: string;
     } = {}
@@ -421,13 +425,13 @@ needed-for: ${neededFor || '<unknown>'}`);
     if (!nonVisitedId.length) {
       return { manifests: [], potentialPluginsIds: [] };
     }
-    const components = await this.getNonLoadedAspects(nonVisitedId);
+    const components = await this.getNonLoadedAspects(nonVisitedId, lane);
     // Adding all the envs ids to the array to support case when one (or more) of the aspects has custom aspect env
     const customEnvsIds = components
       .map((component) => this.envs.getEnvId(component))
       .filter((envId) => !this.aspectLoader.isCoreEnv(envId));
     // In case there is custom env we need to load it right away, otherwise we will fail during the require aspects
-    await this.getManifestsAndLoadAspects(customEnvsIds);
+    await this.getManifestsAndLoadAspects(customEnvsIds, undefined, lane);
     visited.push(...nonVisitedId);
     const manifests = await this.requireAspects(components, throwOnError, opts);
     const potentialPluginsIds = compact(
@@ -449,14 +453,14 @@ needed-for: ${neededFor || '<unknown>'}`);
       this.logger.debug(
         `getManifestsGraphRecursively, id: ${manifest.id || '<unknown>'}, found ${depIds.length}: ${depIds.join(', ')}`
       );
-      const { manifests: loaded } = await this.getManifestsGraphRecursively(depIds, visited, throwOnError);
+      const { manifests: loaded } = await this.getManifestsGraphRecursively(depIds, visited, throwOnError, lane);
       manifests.push(...loaded);
     });
 
     return { manifests, potentialPluginsIds };
   }
 
-  private async getNonLoadedAspects(ids: string[]): Promise<Component[]> {
+  private async getNonLoadedAspects(ids: string[], lane?: Lane): Promise<Component[]> {
     const notLoadedIds = ids.filter((id) => !this.aspectLoader.isAspectLoaded(id));
     if (!notLoadedIds.length) return [];
     const coreAspectsStringIds = this.aspectLoader.getCoreAspectIds();
@@ -469,7 +473,11 @@ needed-for: ${neededFor || '<unknown>'}`);
     await this.loadAspectFromPath(localAspects);
     const componentIds = await this.resolveMultipleComponentIds(aspectIds);
     if (!componentIds || !componentIds.length) return [];
-    const components = await this.import(componentIds, { reFetchUnBuiltVersion: false, preferDependencyGraph: true });
+    const components = await this.import(componentIds, {
+      reFetchUnBuiltVersion: false,
+      preferDependencyGraph: true,
+      lane,
+    });
 
     return components;
   }
@@ -704,6 +712,7 @@ needed-for: ${neededFor || '<unknown>'}`);
     const defaultOpts: ResolveAspectsOptions = {
       excludeCore: false,
       requestedOnly: false,
+      filterByRuntime: true,
     };
     const mergedOpts = { ...defaultOpts, ...opts };
     const coreAspectsIds = this.aspectLoader.getCoreAspectIds();
@@ -743,7 +752,7 @@ needed-for: ${neededFor || '<unknown>'}`);
 
     const uniqDefs = uniqBy(afterExclusion, (def) => `${def.aspectPath}-${def.runtimePath}`);
     let defs = uniqDefs;
-    if (runtimeName) {
+    if (runtimeName && mergedOpts.filterByRuntime) {
       defs = defs.filter((def) => def.runtimePath);
     }
 
@@ -1025,8 +1034,8 @@ needed-for: ${neededFor || '<unknown>'}`);
   /**
    * load components from a scope and load their aspects
    */
-  async loadMany(ids: ComponentID[]): Promise<Component[]> {
-    const components = await mapSeries(ids, (id) => this.load(id));
+  async loadMany(ids: ComponentID[], lane?: Lane): Promise<Component[]> {
+    const components = await mapSeries(ids, (id) => this.load(id, lane));
     return compact(components);
   }
 
@@ -1173,7 +1182,7 @@ needed-for: ${neededFor || '<unknown>'}`);
   /**
    * get a component and load its aspect
    */
-  async load(id: ComponentID): Promise<Component | undefined> {
+  async load(id: ComponentID, lane?: Lane): Promise<Component | undefined> {
     const component = await this.get(id);
     if (!component) return undefined;
     const aspectIds = component.state.aspects.ids;
@@ -1181,7 +1190,7 @@ needed-for: ${neededFor || '<unknown>'}`);
     if (this.aspectLoader.isAspectComponent(component)) {
       aspectIds.push(component.id.toString());
     }
-    await this.loadAspects(aspectIds, true, id.toString());
+    await this.loadAspects(aspectIds, true, id.toString(), lane);
 
     return component;
   }

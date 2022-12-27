@@ -284,6 +284,7 @@ export class InstallMain {
   async addDuplicateComponentAndPackageIssue(components: Component[]) {
     const workspacePolicy = this.dependencyResolver.getWorkspacePolicy();
     components.forEach((component) => {
+      if (component.state._consumer.removed) return;
       const pkgName = componentIdToPackageName(component.state._consumer);
       const found = workspacePolicy.find(pkgName);
       if (found) {

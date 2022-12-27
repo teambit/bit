@@ -1,5 +1,6 @@
 import R from 'ramda';
 import path from 'path';
+import { uniq } from 'lodash';
 import { IssuesClasses } from '@teambit/component-issues';
 import { Consumer } from '../../..';
 import logger from '../../../../logger/logger';
@@ -83,7 +84,8 @@ export class DependenciesLoader {
     this.component.peerPackageDependencies = dependenciesData.allPackagesDependencies.peerPackageDependencies ?? {};
     const missingFromOverrides = dependenciesData.overridesDependencies.missingPackageDependencies;
     if (!R.isEmpty(missingFromOverrides)) {
-      dependenciesData.issues.getOrCreate(IssuesClasses.MissingManuallyConfiguredPackages).data = missingFromOverrides;
+      dependenciesData.issues.getOrCreate(IssuesClasses.MissingManuallyConfiguredPackages).data =
+        uniq(missingFromOverrides);
     }
     if (!dependenciesData.issues.isEmpty()) this.component.issues = dependenciesData.issues;
     this.component.manuallyRemovedDependencies = dependenciesData.overridesDependencies.manuallyRemovedDependencies;

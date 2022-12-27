@@ -5,11 +5,6 @@ export function getPinoLogger(
   logLevel: string,
   jsonFormat: string
 ): { pinoLogger: PinoLogger; pinoLoggerConsole: PinoLogger } {
-  const dest = pino.destination({
-    dest: DEBUG_LOG, // omit for stdout
-    sync: true, // no choice here :( otherwise, it looses data especially when an error is thrown (although pino.final is used to flush)
-  });
-
   // https://cloud.google.com/logging/docs/reference/v2/rest/v2/LogEntry#logseverity
   const PinoLevelToSeverityLookup = {
     trace: 'DEBUG',
@@ -27,16 +22,6 @@ export function getPinoLogger(
         level: number,
       };
     },
-  };
-  const prettyPrint = {
-    colorize: true,
-    translateTime: 'SYS:standard',
-    ignore: 'hostname',
-  };
-
-  const prettyPrintConsole = {
-    colorize: true,
-    ignore: 'hostname,pid,time,level',
   };
 
   /**
@@ -59,17 +44,47 @@ export function getPinoLogger(
   const opts: LoggerOptions = {
     hooks,
     formatters,
+    level: logLevel,
   };
 
-  if (!jsonFormat) {
-    opts.prettyPrint = prettyPrint;
-  }
+  const prettyPrint = {
+    colorize: true,
+    translateTime: 'SYS:standard',
+    ignore: 'hostname,severity',
+  };
 
-  const pinoLogger: PinoLogger = pino(opts, dest);
-  pinoLogger.level = logLevel;
+  const prettyPrintConsole = {
+    colorize: true,
+    ignore: 'hostname,pid,time,level,severity',
+  };
 
-  const pinoLoggerConsole = pino({ hooks, formatters, prettyPrint: jsonFormat ? false : prettyPrintConsole });
-  pinoLoggerConsole.level = logLevel;
+  const transportFile = {
+    target: jsonFormat ? 'pino/file' : 'pino-pretty',
+    options: { ...(!jsonFormat ? prettyPrint : {}), destination: DEBUG_LOG, sync: true, mkdir: true }, // use 2 for stderr
+  };
+
+  const transportConsole = {
+    // target: 'pino-pretty',
+    target: jsonFormat ? 'pino/file' : 'pino-pretty',
+    options: { ...(!jsonFormat ? prettyPrintConsole : {}), destination: 1, sync: true, mkdir: false }, // use 2 for stderr
+  };
+
+  const pinoFileOpts = {
+    ...opts,
+    transport: transportFile,
+  };
+
+  const pinoConsoleOpts = {
+    ...opts,
+    transport: transportConsole,
+    // transport: jsonFormat
+    // ? { targets: [{...transportFile, level: logLevel}, {...transportConsole, level: logLevel}] }
+    // ? { targets: [transportFile, transportConsole] }
+    // : transportConsole,
+  };
+
+  const pinoLogger = pino(pinoFileOpts);
+  const pinoLoggerConsole = pino(pinoConsoleOpts);
 
   return { pinoLogger, pinoLoggerConsole };
 }
