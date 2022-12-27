@@ -1,7 +1,6 @@
 import chalk from 'chalk';
 import { IssuesClasses } from '@teambit/component-issues';
 import { Command, CommandOptions } from '@teambit/cli';
-import { AUTO_SNAPPED_MSG } from '@teambit/legacy/dist/constants';
 import { BitError } from '@teambit/bit-error';
 import { Logger } from '@teambit/logger';
 import { SnappingMain } from './snapping.main.runtime';
