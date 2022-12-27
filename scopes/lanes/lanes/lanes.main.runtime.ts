@@ -16,9 +16,7 @@ import { ImporterAspect, ImporterMain, ImportOptions } from '@teambit/importer';
 import ComponentAspect, { Component, ComponentID, ComponentMain } from '@teambit/component';
 import removeLanes from '@teambit/legacy/dist/consumer/lanes/remove-lanes';
 import { Lane, Version } from '@teambit/legacy/dist/scope/models';
-import { LaneNotFound } from '@teambit/legacy/dist/api/scope/lib/exceptions/lane-not-found';
 import { getDivergeData } from '@teambit/legacy/dist/scope/component-ops/get-diverge-data';
-import ScopeComponentsImporter from '@teambit/legacy/dist/scope/component-ops/scope-components-importer';
 import { Scope as LegacyScope } from '@teambit/legacy/dist/scope';
 import { BitId } from '@teambit/legacy-bit-id';
 import { ExportAspect, ExportMain } from '@teambit/export';
@@ -387,28 +385,8 @@ export class LanesMain {
     });
   }
 
-  /**
-   * get a Lane object from the remote.
-   * `persistIfNotExists` saves the object in the local scope only if the lane is not there yet.
-   * otherwise, it needs some merging mechanism, which is done differently whether it's export or import.
-   * see `sources.mergeLane()` for export and `import-components._saveLaneDataIfNeeded()` for import.
-   * in this case, because we only bring the lane object and not the components, it's not easy to do the merge.
-   */
   async importLaneObject(laneId: LaneId, persistIfNotExists = true): Promise<Lane> {
-    const legacyScope = this.scope.legacyScope;
-    const scopeComponentImporter = ScopeComponentsImporter.getInstance(legacyScope);
-    const results = await scopeComponentImporter.importLanes([laneId]);
-    const laneObject = results[0];
-    if (!laneObject) throw new LaneNotFound(laneId.scope, laneId.name);
-
-    if (persistIfNotExists) {
-      const exists = await legacyScope.loadLane(laneId);
-      if (!exists) {
-        await legacyScope.lanes.saveLane(laneObject);
-      }
-    }
-
-    return laneObject;
+    return this.importer.importLaneObject(laneId, persistIfNotExists);
   }
 
   /**
@@ -448,7 +426,7 @@ export class LanesMain {
     if (!this.workspace) {
       throw new BitError('unable to fetch lanes outside of Bit workspace');
     }
-    const lane = await this.importLaneObject(laneId);
+    const lane = await this.importer.importLaneObject(laneId);
     if (!lane) throw new Error(`unable to import lane ${laneId.toString()} from the remote`);
     const importOptions: ImportOptions = {
       ids: [],
