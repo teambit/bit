@@ -345,7 +345,7 @@ async function filterComponentsStatus(
   allBitIds: BitId[],
   workspace: Workspace,
   includeDeps = false,
-  otherLane?: Lane,
+  otherLane?: Lane, // lane that gets merged into the current lane. if not provided, it's main that gets merged into the current lane
   shouldSquash?: boolean
 ): Promise<ComponentMergeStatus[]> {
   const bitIdsFromPattern = BitIds.fromArray(compIdsToKeep.map((c) => c._legacy));
@@ -359,6 +359,10 @@ async function filterComponentsStatus(
     }
     filteredComponentStatus.push(fromStatus);
     if (fromStatus.unmergedMessage) {
+      return;
+    }
+    if (!otherLane) {
+      // if merging main, no need to check whether the deps are included in the pattern.
       return;
     }
     const { divergeData } = fromStatus;
