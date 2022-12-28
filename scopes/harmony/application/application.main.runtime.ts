@@ -95,30 +95,24 @@ export class ApplicationMain {
   /**
    * list all registered apps.
    */
-  async listApps(): Promise<Application[]> {
-    await this.registerEnvsAppsAndReloadApps();
+  listApps(): Application[] {
+    // await this.registerEnvsAppsAndReloadApps();
     return flatten(this.appSlot.values());
   }
 
   /**
    * map all apps by component ID.
    */
-  async mapApps() {
-    const countAppTypesWithoutEnvs = this.appTypeSlot.map.size;
-    await this.registerEnvsAppsAndReloadApps();
-    const countAppTypesWithEnvs = this.appTypeSlot.map.size;
-    if (countAppTypesWithoutEnvs !== countAppTypesWithEnvs) {
-      await this.workspace.loadAspects(this.aspectLoader.getNotLoadedConfiguredExtensions(), undefined, 'load apps');
-    }
+  mapApps() {
     return this.appSlot.toArray();
   }
 
   /**
    * list apps by a component id.
    */
-  async listAppsById(id?: ComponentID): Promise<Application[] | undefined> {
+  listAppsById(id?: ComponentID): Application[] | undefined {
     if (!id) return undefined;
-    await this.registerEnvsAppsAndReloadApps(id);
+    // await this.registerEnvsAppsAndReloadApps(id);
     return this.appSlot.get(id.toString());
   }
 
@@ -145,14 +139,14 @@ export class ApplicationMain {
   /**
    * get an app.
    */
-  async getApp(appName: string, id?: ComponentID): Promise<Application | undefined> {
-    const apps = id ? await this.listAppsById(id) : await this.listApps();
+  getApp(appName: string, id?: ComponentID): Application | undefined {
+    const apps = id ? this.listAppsById(id) : this.listApps();
     if (!apps) return undefined;
     return apps.find((app) => app.name === appName);
   }
 
-  async getAppByNameOrId(appNameOrId: string): Promise<Application | undefined> {
-    const byName = await this.getApp(appNameOrId);
+  getAppByNameOrId(appNameOrId: string): Application | undefined {
+    const byName = this.getApp(appNameOrId);
     if (byName) return byName;
     const byId = this.appSlot.get(appNameOrId);
     if (!byId || !byId.length) return undefined;
@@ -184,8 +178,8 @@ export class ApplicationMain {
   /**
    * get app to throw.
    */
-  async getAppOrThrow(appName: string): Promise<Application> {
-    const app = await this.getAppByNameOrId(appName);
+  getAppOrThrow(appName: string): Application {
+    const app = this.getAppByNameOrId(appName);
     if (!app) throw new AppNotFound(appName);
     return app;
   }

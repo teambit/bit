@@ -16,7 +16,7 @@ export class AppListCmd implements Command {
   constructor(private applicationAspect: ApplicationMain) {}
 
   async report(args: [string], { json }: { json: boolean }) {
-    const appComponents = await this.applicationAspect.mapApps();
+    const appComponents = this.applicationAspect.mapApps();
     if (json) return JSON.stringify(appComponents, null, 2);
     if (!appComponents.length) return chalk.yellow('no apps found');
 
