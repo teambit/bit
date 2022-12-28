@@ -5,8 +5,6 @@
   // (this is bizarre, the tree has no position absolute)
   z-index: $nav-z-index;
   border-radius: 8px;
-  padding: 0;
-  padding-top: 8px;
   width: 230px;
 
   &.disabled {
@@ -31,6 +29,8 @@
 .menu {
   width: calc(100% - 24px);
   border-radius: 8px;
+  padding: 0;
+  padding-top: 8px;
   // border: 1px solid var(--border-medium-color);
   box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.16);
 }
