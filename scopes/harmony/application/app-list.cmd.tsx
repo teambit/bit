@@ -18,7 +18,7 @@ export class AppListCmdDeprecated implements Command {
   constructor(private applicationAspect: ApplicationMain) {}
 
   async report(args: [string], { json }: { json: boolean }) {
-    const apps = this.applicationAspect.listApps();
+    const apps = await this.applicationAspect.listApps();
     if (json) return JSON.stringify(apps, null, 2);
     const deprecationStr = `this command is deprecated. please use "bit app list" instead\n`;
     // eslint-disable-next-line no-console

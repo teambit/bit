@@ -1,13 +1,13 @@
 import { MainRuntime, CLIMain, CLIAspect } from '@teambit/cli';
-import { flatten, head } from 'lodash';
+import { compact, flatten, head } from 'lodash';
 import { AspectLoaderMain, AspectLoaderAspect } from '@teambit/aspect-loader';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import { BitError } from '@teambit/bit-error';
 import { BuilderAspect, BuilderMain } from '@teambit/builder';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
-import { EnvsAspect, EnvsMain } from '@teambit/envs';
-import ComponentAspect, { ComponentMain, ComponentID } from '@teambit/component';
+import { EnvDefinition, EnvsAspect, EnvsMain } from '@teambit/envs';
+import ComponentAspect, { ComponentMain, ComponentID, Component } from '@teambit/component';
 import { ApplicationType } from './application-type';
 import { Application } from './application';
 import { DeploymentProvider } from './deployment-provider';
@@ -28,7 +28,12 @@ export type ApplicationTypeSlot = SlotRegistry<ApplicationType<unknown>[]>;
 export type ApplicationSlot = SlotRegistry<Application[]>;
 export type DeploymentProviderSlot = SlotRegistry<DeploymentProvider[]>;
 
-export type ApplicationAspectConfig = {};
+export type ApplicationAspectConfig = {
+  /**
+   * envs ids to load app types.
+   */
+  envs?: string[];
+};
 
 /**
  * Application meta data that is stored on the component on load if it's an application.
@@ -63,11 +68,14 @@ export type ServeAppOptions = {
 };
 
 export class ApplicationMain {
+  envsAppsLoaded = false;
+
   constructor(
     private appSlot: ApplicationSlot,
     // TODO unused
     private appTypeSlot: ApplicationTypeSlot,
     private deploymentProviderSlot: DeploymentProviderSlot,
+    private config: ApplicationAspectConfig,
     private envs: EnvsMain,
     private componentAspect: ComponentMain,
     private appService: AppService,
@@ -87,30 +95,49 @@ export class ApplicationMain {
   /**
    * list all registered apps.
    */
-  listApps(): Application[] {
+  async listApps(): Promise<Application[]> {
+    await this.registerEnvsAppsAndReloadApps();
     return flatten(this.appSlot.values());
   }
 
   /**
    * map all apps by component ID.
    */
-  mapApps() {
+  async mapApps() {
+    const countAppTypesWithoutEnvs = this.appTypeSlot.map.size;
+    await this.registerEnvsAppsAndReloadApps();
+    const countAppTypesWithEnvs = this.appTypeSlot.map.size;
+    if (countAppTypesWithoutEnvs !== countAppTypesWithEnvs) {
+      await this.workspace.loadAspects(this.aspectLoader.getNotLoadedConfiguredExtensions(), undefined, 'load apps');
+    }
     return this.appSlot.toArray();
   }
 
   /**
    * list apps by a component id.
    */
-  listAppsById(id?: ComponentID): Application[] | undefined {
+  async listAppsById(id?: ComponentID): Promise<Application[] | undefined> {
     if (!id) return undefined;
+    await this.registerEnvsAppsAndReloadApps(id);
     return this.appSlot.get(id.toString());
   }
 
   /**
    * get an application by a component id.
    */
-  getAppById(id: ComponentID) {
-    const apps = this.listAppsById(id);
+  async getAppById(id: ComponentID) {
+    const apps = await this.listAppsById(id);
+    if (!apps) return undefined;
+    return head(apps);
+  }
+
+  /**
+   * calculate an application by a component.
+   * This should be only used during the on component load slot
+   */
+  async calculateAppByComponent(component: Component) {
+    await this.registerEnvsAppsAndReloadApps(component);
+    const apps = this.appSlot.get(component.id.toString());
     if (!apps) return undefined;
     return head(apps);
   }
@@ -118,13 +145,14 @@ export class ApplicationMain {
   /**
    * get an app.
    */
-  getApp(appName: string, id?: ComponentID): Application | undefined {
-    const apps = this.listAppsById(id) || this.listApps();
+  async getApp(appName: string, id?: ComponentID): Promise<Application | undefined> {
+    const apps = id ? await this.listAppsById(id) : await this.listApps();
+    if (!apps) return undefined;
     return apps.find((app) => app.name === appName);
   }
 
-  getAppByNameOrId(appNameOrId: string): Application | undefined {
-    const byName = this.getApp(appNameOrId);
+  async getAppByNameOrId(appNameOrId: string): Promise<Application | undefined> {
+    const byName = await this.getApp(appNameOrId);
     if (byName) return byName;
     const byId = this.appSlot.get(appNameOrId);
     if (!byId || !byId.length) return undefined;
@@ -156,8 +184,8 @@ export class ApplicationMain {
   /**
    * get app to throw.
    */
-  getAppOrThrow(appName: string) {
-    const app = this.getAppByNameOrId(appName);
+  async getAppOrThrow(appName: string): Promise<Application> {
+    const app = await this.getAppByNameOrId(appName);
     if (!app) throw new AppNotFound(appName);
     return app;
   }
@@ -177,7 +205,7 @@ export class ApplicationMain {
 
   async runApp(appName: string, options?: ServeAppOptions) {
     options = this.computeOptions(options);
-    const app = this.getAppOrThrow(appName);
+    const app = await this.getAppOrThrow(appName);
     const context = await this.createAppContext(app.name);
     if (!context) throw new AppNotFound(appName);
 
@@ -214,13 +242,74 @@ export class ApplicationMain {
     return ComponentID.fromString(maybeApp[0]);
   }
 
+  /**
+   * This will register the app types coming from the envs as plugins
+   * Then it will reload the aspects configured in the workspace.jsonc if necessary
+   */
+  async registerEnvsAppsAndReloadApps(originComponent?: Component) {
+    const countAppTypesWithoutEnvs = this.appTypeSlot.map.size;
+    await this.registerEnvsApps(originComponent);
+    const countAppTypesWithEnvs = this.appTypeSlot.map.size;
+    /**
+     * In case the envs added new plugins, we need to reload the aspects configured in the workspace.jsonc
+     */
+    if (countAppTypesWithoutEnvs !== countAppTypesWithEnvs) {
+      await this.workspace.loadAspects(this.aspectLoader.getNotLoadedConfiguredExtensions(), undefined, 'load apps');
+    }
+  }
+
+  async registerEnvsApps(originComponent?: Component) {
+    if (this.envsAppsLoaded) return;
+    const appTypes = await this.listEnvAppTypes(undefined, originComponent);
+    if (!appTypes || !appTypes.length) return;
+    appTypes.forEach((appType) => this.registerAppType(appType));
+    this.envsAppsLoaded = true;
+  }
+
+  async listEnvAppTypes(ids: string[] = [], originComponent?: Component): Promise<Array<ApplicationType<any>>> {
+    const originId = originComponent?.id;
+    const configEnvs = this.config.envs || [];
+    if (
+      originId
+      ) {
+      // If the component we are loading now is core aspect we want to skip this
+      if (this.aspectLoader.isCoreAspect(originId.toStringWithoutVersion())) return [];
+      // If we are now loading the env itself, no point to continue the process
+      if (configEnvs.includes(originId.toString()) || configEnvs.includes(originId.toStringWithoutVersion())) return [];
+      const originEnvId = this.envs.getEnvId(originComponent);
+      const originEnvIdWithoutVersion = originEnvId.split('@')[0];
+      // If the env of the current component is not in the list of configured envs, no point to load them now
+      if (!configEnvs.includes(originEnvId) && !configEnvs.includes(originEnvIdWithoutVersion)) return [];
+    }
+    const envs = await this.loadEnvs(configEnvs?.concat(ids));
+    const appTypes = envs.flatMap((env) => {
+      if (!env.env.getAppTypes) return [];
+      const currAppTypes = env.env.getAppTypes() || [];
+      return currAppTypes;
+    });
+
+    return appTypes;
+  }
+
+  private async loadEnvs(ids: string[] = this.config.envs || []): Promise<EnvDefinition[]> {
+    const host = this.componentAspect.getHost();
+    if (!host) return [];
+    await host.loadAspects(ids);
+
+    const potentialEnvs = ids.map((id) => {
+      const componentId = ComponentID.fromString(id);
+      return this.envs.getEnvDefinition(componentId);
+    });
+
+    return compact(potentialEnvs);
+  }
+
   private async createAppContext(appName: string): Promise<AppContext> {
     const host = this.componentAspect.getHost();
     const components = await host.list();
     const id = this.getAppIdOrThrow(appName);
     const component = components.find((c) => c.id.isEqual(id));
     if (!component) throw new AppNotFound(appName);
-    // console.log(comp)
 
     const env = await this.envs.createEnvironment([component]);
     const res = await env.run(this.appService);
@@ -267,6 +356,7 @@ export class ApplicationMain {
       appSlot,
       appTypeSlot,
       deploymentProviderSlot,
+      config,
       envs,
       component,
       appService,
@@ -277,6 +367,7 @@ export class ApplicationMain {
     const appCmd = new AppCmd();
     appCmd.commands = [new AppListCmd(application), new RunCmd(application, logger)];
     aspectLoader.registerPlugins([new AppPlugin(appSlot)]);
+    // await application.registerEnvsApps();
     builder.registerBuildTasks([new AppsBuildTask(application)]);
     builder.registerSnapTasks([new DeployTask(application, builder)]);
     builder.registerTagTasks([new DeployTask(application, builder)]);
@@ -284,7 +375,7 @@ export class ApplicationMain {
     cli.register(new RunCmd(application, logger), new AppListCmdDeprecated(application), appCmd);
     if (workspace) {
       workspace.onComponentLoad(async (loadedComponent) => {
-        const app = application.getAppById(loadedComponent.id);
+        const app = await application.calculateAppByComponent(loadedComponent);
         if (!app) return {};
         return {
           appName: app?.name,
