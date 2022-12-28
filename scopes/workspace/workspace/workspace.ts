@@ -1550,31 +1550,8 @@ needed-for: ${neededFor || '<unknown>'}`);
     const idsWithoutCore: string[] = difference(notLoadedIds, coreAspectsStringIds);
     const componentIds = await this.resolveMultipleComponentIds(idsWithoutCore);
     const components = await this.importAndGetAspects(componentIds);
+    const { workspaceComps, scopeComps } = await this.groupComponentsByWorkspaceAndScope(components);
 
-    const isAspect = async (id: ComponentID) => {
-      const component = await this.get(id);
-      const isUsingAspectEnv = this.envs.isUsingAspectEnv(component);
-      const isUsingEnvEnv = this.envs.isUsingEnvEnv(component);
-      const isValidAspect = isUsingAspectEnv || isUsingEnvEnv;
-      // if (!isValidAspect && idsWithoutCore.includes(component.id.toString())) {
-      //   const data = this.envs.getEnvData(component);
-      //   const err = new IncorrectEnvAspect(component.id.toString(), data.type, data.id);
-      //   if (data.id === DEFAULT_ENV) {
-      //     // when cloning a project, or when the node-modules dir is deleted, nothing works and all
-      //     // components are default to the DEFAULT_ENV, which is node-env. we must allow "bit
-      //     // install" to prepare the workspace and let the proper the envs to be loaded
-      //     this.logger.error(err.message);
-      //   } else {
-      //     throw err;
-      //   }
-      // }
-      return isValidAspect;
-    };
-
-    const graph = await this.getAspectsGraphWithoutCore(components, isAspect);
-    const aspects = graph.nodes.map((node) => node.attr);
-    this.logger.debug(`${loggerPrefix} found ${aspects.length} aspects in the aspects-graph`);
-    const { workspaceComps, scopeComps } = await this.groupComponentsByWorkspaceAndScope(aspects);
     this.logger.debug(
       `${loggerPrefix} found ${workspaceComps.length} components in the workspace:\n${workspaceComps
         .map((c) => c.id.toString())
