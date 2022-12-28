@@ -8,6 +8,7 @@ import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 import { InvalidScopeName, InvalidScopeNameFromRemote } from '@teambit/legacy-bit-id';
 import logger from '@teambit/legacy/dist/logger/logger';
+import ScopeAspect, { ScopeMain } from '@teambit/scope';
 import { LaneId } from '@teambit/lane-id';
 import ScopeComponentsImporter from '@teambit/legacy/dist/scope/component-ops/scope-components-importer';
 import loader from '@teambit/legacy/dist/cli/loader';
@@ -22,7 +23,12 @@ import { FetchCmd } from './fetch-cmd';
 import ImportComponents, { ImportOptions, ImportResult } from './import-components';
 
 export class ImporterMain {
-  constructor(private workspace: Workspace, private depResolver: DependencyResolverMain, private graph: GraphMain) {}
+  constructor(
+    private workspace: Workspace,
+    private depResolver: DependencyResolverMain,
+    private graph: GraphMain,
+    private scope: ScopeMain
+  ) {}
 
   async import(importOptions: ImportOptions, packageManagerArgs: string[]): Promise<ImportResult> {
     if (!this.workspace) throw new OutsideWorkspaceError();
@@ -126,6 +132,29 @@ export class ImporterMain {
     }
   }
 
+  /**
+   * get a Lane object from the remote.
+   * `persistIfNotExists` saves the object in the local scope only if the lane is not there yet.
+   * otherwise, it needs some merging mechanism, which is done differently whether it's export or import.
+   * see `sources.mergeLane()` for export and `import-components._saveLaneDataIfNeeded()` for import.
+   * in this case, because we only bring the lane object and not the components, it's not easy to do the merge.
+   */
+  async importLaneObject(laneId: LaneId, persistIfNotExists = true): Promise<Lane> {
+    const legacyScope = this.scope.legacyScope;
+    const results = await legacyScope.scopeImporter.importLanes([laneId]);
+    const laneObject = results[0];
+    if (!laneObject) throw new LaneNotFound(laneId.scope, laneId.name);
+
+    if (persistIfNotExists) {
+      const exists = await legacyScope.loadLane(laneId);
+      if (!exists) {
+        await legacyScope.lanes.saveLane(laneObject);
+      }
+    }
+
+    return laneObject;
+  }
+
   private async removeFromWorkspaceConfig(component: ConsumerComponent[]) {
     const importedPackageNames = this.getImportedPackagesNames(component);
     this.depResolver.removeFromRootPolicy(importedPackageNames);
@@ -137,16 +166,24 @@ export class ImporterMain {
   }
 
   static slots = [];
-  static dependencies = [CLIAspect, WorkspaceAspect, DependencyResolverAspect, CommunityAspect, GraphAspect];
+  static dependencies = [
+    CLIAspect,
+    WorkspaceAspect,
+    DependencyResolverAspect,
+    CommunityAspect,
+    GraphAspect,
+    ScopeAspect,
+  ];
   static runtime = MainRuntime;
-  static async provider([cli, workspace, depResolver, community, graph]: [
+  static async provider([cli, workspace, depResolver, community, graph, scope]: [
     CLIMain,
     Workspace,
     DependencyResolverMain,
     CommunityMain,
-    GraphMain
+    GraphMain,
+    ScopeMain
   ]) {
-    const importerMain = new ImporterMain(workspace, depResolver, graph);
+    const importerMain = new ImporterMain(workspace, depResolver, graph, scope);
     cli.register(new ImportCmd(importerMain, community.getDocsDomain()), new FetchCmd(importerMain));
     return importerMain;
   }
