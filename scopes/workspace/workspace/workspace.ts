@@ -1328,6 +1328,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     const envFromEnvsAspect: string | undefined = envAspect?.config.env || envAspect?.data.id;
     if (envWasFoundPreviously && envAspect) {
       const nonEnvs = extensionDataList.filter((e) => {
+        // normally the env-id inside the envs aspect doesn't have a version, but the aspect itself has a version.
         if (e.stringId === envFromEnvsAspect || e.extensionId?.toStringWithoutVersion() === envFromEnvsAspect)
           return false;
         return true;
