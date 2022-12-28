@@ -1328,8 +1328,9 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     const envFromEnvsAspect: string | undefined = envAspect?.config.env || envAspect?.data.id;
     if (envWasFoundPreviously && envAspect) {
       const nonEnvs = extensionDataList.filter((e) => {
-        if (e.extensionId) return e.extensionId.toStringWithoutVersion() !== envFromEnvsAspect;
-        return e.stringId !== envFromEnvsAspect;
+        if (e.stringId === envFromEnvsAspect || e.extensionId?.toStringWithoutVersion() === envFromEnvsAspect)
+          return false;
+        return true;
       });
       // still, aspect env may have other data other then config.env.
       delete envAspect.config.env;
