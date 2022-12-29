@@ -296,7 +296,7 @@ export async function tagModelComponent({
     if (!consumer) throw new Error(`unable to soft-tag without consumer`);
     consumer.updateNextVersionOnBitmap(allComponentsToTag, preReleaseId);
   } else {
-    await snapping._addFlattenedDependenciesToComponents(legacyScope, allComponentsToTag);
+    await snapping._addFlattenedDependenciesToComponents(allComponentsToTag);
     emptyBuilderData(allComponentsToTag);
     addBuildStatus(allComponentsToTag, BuildStatus.Pending);
     await addComponentsToScope(legacyScope, snapping, allComponentsToTag, Boolean(build), consumer);
