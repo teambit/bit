@@ -2,7 +2,7 @@ import { Logger } from '@teambit/logger';
 import { resolve } from 'path';
 import React from 'react';
 import { Text, Newline } from 'ink';
-import { EnvService, ExecutionContext, EnvDefinition } from '@teambit/envs';
+import { EnvService, ExecutionContext, EnvDefinition, Env, EnvContext, ServiceTransformationMap } from '@teambit/envs';
 import { ComponentMap } from '@teambit/component';
 import { Workspace } from '@teambit/workspace';
 import highlight from 'cli-highlight';
@@ -16,6 +16,10 @@ import { detectTestFiles } from './utils';
 const chalk = require('chalk');
 
 export const OnTestsChanged = 'OnTestsChanged';
+
+type TesterTransformationMap = ServiceTransformationMap  & {
+  getTester: () => Tester;
+}
 
 export type TesterDescriptor = {
   /**
@@ -89,6 +93,15 @@ export class TesterService implements EnvService<Tests, TesterDescriptor> {
       config: tester.displayConfig ? tester.displayConfig() : '',
       version: tester.version ? tester.version() : '?',
     };
+  }
+
+  transform(env: Env, context: EnvContext): TesterTransformationMap | undefined {
+    // Old env
+    if (!env?.tester) return undefined;
+
+    return {
+      getTester: () => env.tester()(context),
+    }
   }
 
   onTestRunComplete(callback: CallbackFn) {
