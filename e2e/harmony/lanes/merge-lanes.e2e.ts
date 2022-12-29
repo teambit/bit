@@ -729,7 +729,7 @@ describe('merge lanes', function () {
       expect(headVer.parents).to.have.lengthOf(2);
     });
   });
-  describe('merge from scope', () => {
+  describe('merge from scope lane to main (squash)', () => {
     let bareMerge;
     let comp1HeadOnLane: string;
     let comp2HeadOnLane: string;
@@ -786,6 +786,73 @@ describe('merge lanes', function () {
         const comp2OnBare = helper.command.catComponent(`${helper.scopes.remote}/comp2`, bareMerge.scopePath);
         const comp2OnRemote = helper.command.catComponent(`${helper.scopes.remote}/comp2`, helper.scopes.remotePath);
         expect(comp2OnBare.head).to.equal(comp2OnRemote.head);
+      });
+    });
+  });
+  describe('merge from scope lane to another lane (no squash)', () => {
+    let bareMerge;
+    let comp1HeadOnLaneB: string;
+    let comp2HeadOnLaneB: string;
+    let comp2PreviousHeadOnLaneB: string;
+    let comp2HeadOnLaneA: string;
+    let beforeMerging: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(2);
+      helper.command.createLane('lane-a');
+      helper.command.snapComponentWithoutBuild('comp2');
+      comp2HeadOnLaneA = helper.command.getHeadOfLane('lane-a', 'comp2');
+      helper.command.export();
+
+      helper.command.createLane('lane-b');
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      comp2PreviousHeadOnLaneB = helper.command.getHeadOfLane('lane-b', 'comp2');
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      comp1HeadOnLaneB = helper.command.getHeadOfLane('lane-b', 'comp1');
+      comp2HeadOnLaneB = helper.command.getHeadOfLane('lane-b', 'comp2');
+      helper.command.export();
+      bareMerge = helper.scopeHelper.getNewBareScope('-bare-merge');
+      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, bareMerge.scopePath);
+      beforeMerging = helper.scopeHelper.cloneScope(bareMerge.scopePath);
+      helper.command.mergeLaneFromScope(
+        bareMerge.scopePath,
+        `${helper.scopes.remote}/lane-b`,
+        `${helper.scopes.remote}/lane-a`
+      );
+    });
+    it('should merge to lane-a', () => {
+      expect(helper.command.getHeadOfLane(`${helper.scopes.remote}/lane-a`, `comp1`, bareMerge.scopePath)).to.equal(
+        comp1HeadOnLaneB
+      );
+      expect(helper.command.getHeadOfLane(`${helper.scopes.remote}/lane-a`, `comp2`, bareMerge.scopePath)).to.equal(
+        comp2HeadOnLaneB
+      );
+    });
+    it('should not squash by default', () => {
+      const head = helper.command.getHeadOfLane(`${helper.scopes.remote}/lane-a`, `comp2`, bareMerge.scopePath);
+      const cat = helper.command.catComponent(`${helper.scopes.remote}/comp2@${head}`, bareMerge.scopePath);
+      expect(cat.parents).to.have.lengthOf(1);
+      const parent = cat.parents[0];
+      expect(parent).to.equal(comp2PreviousHeadOnLaneB);
+      expect(parent).to.not.equal(comp2HeadOnLaneA);
+    });
+    describe('running with --push flag', () => {
+      before(() => {
+        helper.scopeHelper.getClonedScope(beforeMerging, bareMerge.scopePath);
+        helper.command.mergeLaneFromScope(
+          bareMerge.scopePath,
+          `${helper.scopes.remote}/lane-b`,
+          `${helper.scopes.remote}/lane-a --push`
+        );
+      });
+      it('should export the modified lane to the remote', () => {
+        const headOnBare = helper.command.getHeadOfLane(`${helper.scopes.remote}/lane-a`, `comp2`, bareMerge.scopePath);
+        const headOnRemote = helper.command.getHeadOfLane(
+          `${helper.scopes.remote}/lane-a`,
+          `comp2`,
+          helper.scopes.remotePath
+        );
+        expect(headOnBare).to.equal(headOnRemote);
       });
     });
   });
