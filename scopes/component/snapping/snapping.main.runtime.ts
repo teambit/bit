@@ -227,6 +227,7 @@ export class SnappingMain {
       R.concat(tagResults.taggedComponents, tagResults.autoTaggedResults, tagResults.newComponents).length
     );
     await consumer.onDestroy();
+    await (await this.workspace.scope.getStagedConfig()).write();
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return tagResults;
   }
@@ -470,6 +471,7 @@ export class SnappingMain {
     const currentLane = consumer.getCurrentLaneId();
     snapResults.laneName = currentLane.isDefault() ? null : currentLane.name;
     await consumer.onDestroy();
+    await (await this.workspace.scope.getStagedConfig()).write();
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return snapResults;
 

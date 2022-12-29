@@ -515,5 +515,4 @@ export async function updateComponentsVersions(
   // imagine tagging comp1 with auto-tagged comp2, comp1 package.json is written while comp2 is
   // trying to get the dependencies of comp1 using its package.json.
   await mapSeries(components, updateVersions);
-  await stagedConfig.write();
 }
