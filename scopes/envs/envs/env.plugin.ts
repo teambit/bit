@@ -6,11 +6,13 @@ import { MainRuntime } from '@teambit/cli';
 import { LoggerMain } from '@teambit/logger';
 import { ServiceHandlerContext as EnvContext } from './services/service-handler-context';
 import { Env } from './env-interface';
-import { EnvsRegistry } from './environments.main.runtime';
+import { EnvsRegistry, ServicesRegistry } from './environments.main.runtime';
+import { flatten } from 'lodash';
 
 export class EnvPlugin implements PluginDefinition {
   constructor(
     private envSlot: EnvsRegistry,
+    private servicesRegistry: ServicesRegistry,
     private loggerMain: LoggerMain,
     private workerMain: WorkerMain,
     private harmony: Harmony
@@ -31,11 +33,20 @@ export class EnvPlugin implements PluginDefinition {
     // const
     const envComponentId = ComponentID.fromString(envId);
     const envContext = this.createContext(envComponentId);
+    const allServices = flatten(this.servicesRegistry.values());
+    const transformers = allServices.reduce((acc, service) => {
+      if (!service.transform) return acc;
+      const currTransformer = service.transform(env, envContext);
+      if (!currTransformer) return acc;
+      return {...acc, ...currTransformer};
+    }, {})
+
     if (!env.preview && !env.compiler) return undefined;
     const preview = env.preview()(envContext);
     const packageGenerator = env.package()(envContext);
 
     return {
+      ...transformers,
       getCompiler: () => env.compiler()(envContext),
       getTester: () => env.tester()(envContext),
       getLinter: () => env.linter()(envContext),

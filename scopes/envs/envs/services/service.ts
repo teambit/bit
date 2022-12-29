@@ -1,5 +1,8 @@
 import { Component } from '@teambit/component';
+import { Env } from '../env-interface';
 import { Environment } from '../environment';
+import { ServiceHandler } from './service-handler';
+import { ServiceHandlerContext } from './service-handler-context';
 
 export type EnvContext = {
   components: Component[];
@@ -7,6 +10,21 @@ export type EnvContext = {
 
 export interface ServiceExecutionResult {
   errors?: Error[];
+}
+
+export type ServiceTransformHandlerFactory<T> = () => (ServiceHandler & T) | Promise<ServiceHandler & T> ;
+
+/**
+ * definition of the service handler type
+ * This used to define new types of handlers like
+ * Compiler, Tester, Preview, etc.
+ */
+export type TransformationMap = {
+  /**
+   * The name of the function that will be called on the service run/run once later.
+   * This func will be exist on the final env object
+   */
+  [funcName: string]: ServiceTransformHandlerFactory<any>
 }
 
 /**
@@ -49,4 +67,11 @@ export interface Service<TExecResponse extends ServiceExecutionResult, TData = {
    * run the service only once.
    */
   runOnce?(context: EnvContext[], options?: TOpts): Promise<any>;
+
+  /**
+   * Return a map of functions that will be called on the service run/run once later.
+   * @param env the original env plugin object
+   * @param context ServiceHandlerContext(EnvContext)
+   */
+  transform?(env: Env, context: ServiceHandlerContext): TransformationMap | undefined;
 }
