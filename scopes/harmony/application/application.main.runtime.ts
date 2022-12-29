@@ -7,7 +7,7 @@ import { BitError } from '@teambit/bit-error';
 import { BuilderAspect, BuilderMain } from '@teambit/builder';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
-import ComponentAspect, { ComponentMain, ComponentID } from '@teambit/component';
+import ComponentAspect, { ComponentMain, ComponentID, Component } from '@teambit/component';
 import { ApplicationType } from './application-type';
 import { Application } from './application';
 import { DeploymentProvider } from './deployment-provider';
@@ -28,7 +28,12 @@ export type ApplicationTypeSlot = SlotRegistry<ApplicationType<unknown>[]>;
 export type ApplicationSlot = SlotRegistry<Application[]>;
 export type DeploymentProviderSlot = SlotRegistry<DeploymentProvider[]>;
 
-export type ApplicationAspectConfig = {};
+export type ApplicationAspectConfig = {
+  /**
+   * envs ids to load app types.
+   */
+  envs?: string[];
+};
 
 /**
  * Application meta data that is stored on the component on load if it's an application.
@@ -68,6 +73,7 @@ export class ApplicationMain {
     // TODO unused
     private appTypeSlot: ApplicationTypeSlot,
     private deploymentProviderSlot: DeploymentProviderSlot,
+    private config: ApplicationAspectConfig,
     private envs: EnvsMain,
     private componentAspect: ComponentMain,
     private appService: AppService,
@@ -109,8 +115,18 @@ export class ApplicationMain {
   /**
    * get an application by a component id.
    */
-  getAppById(id: ComponentID) {
-    const apps = this.listAppsById(id);
+  async getAppById(id: ComponentID) {
+    const apps = await this.listAppsById(id);
+    if (!apps) return undefined;
+    return head(apps);
+  }
+
+  /**
+   * calculate an application by a component.
+   * This should be only used during the on component load slot
+   */
+  calculateAppByComponent(component: Component) {
+    const apps = this.appSlot.get(component.id.toString());
     if (!apps) return undefined;
     return head(apps);
   }
@@ -119,7 +135,8 @@ export class ApplicationMain {
    * get an app.
    */
   getApp(appName: string, id?: ComponentID): Application | undefined {
-    const apps = this.listAppsById(id) || this.listApps();
+    const apps = id ? this.listAppsById(id) : this.listApps();
+    if (!apps) return undefined;
     return apps.find((app) => app.name === appName);
   }
 
@@ -156,7 +173,7 @@ export class ApplicationMain {
   /**
    * get app to throw.
    */
-  getAppOrThrow(appName: string) {
+  getAppOrThrow(appName: string): Application {
     const app = this.getAppByNameOrId(appName);
     if (!app) throw new AppNotFound(appName);
     return app;
@@ -220,7 +237,6 @@ export class ApplicationMain {
     const id = this.getAppIdOrThrow(appName);
     const component = components.find((c) => c.id.isEqual(id));
     if (!component) throw new AppNotFound(appName);
-    // console.log(comp)
 
     const env = await this.envs.createEnvironment([component]);
     const res = await env.run(this.appService);
@@ -267,6 +283,7 @@ export class ApplicationMain {
       appSlot,
       appTypeSlot,
       deploymentProviderSlot,
+      config,
       envs,
       component,
       appService,
@@ -274,17 +291,19 @@ export class ApplicationMain {
       workspace,
       logger
     );
+    appService.registerAppType = application.registerAppType.bind(application);
     const appCmd = new AppCmd();
     appCmd.commands = [new AppListCmd(application), new RunCmd(application, logger)];
     aspectLoader.registerPlugins([new AppPlugin(appSlot)]);
     builder.registerBuildTasks([new AppsBuildTask(application)]);
     builder.registerSnapTasks([new DeployTask(application, builder)]);
     builder.registerTagTasks([new DeployTask(application, builder)]);
+    envs.registerService(appService);
     cli.registerGroup('apps', 'Applications');
     cli.register(new RunCmd(application, logger), new AppListCmdDeprecated(application), appCmd);
     if (workspace) {
       workspace.onComponentLoad(async (loadedComponent) => {
-        const app = application.getAppById(loadedComponent.id);
+        const app = application.calculateAppByComponent(loadedComponent);
         if (!app) return {};
         return {
           appName: app?.name,

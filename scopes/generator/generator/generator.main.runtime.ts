@@ -389,8 +389,8 @@ export class GeneratorMain {
     const templates = envs.flatMap((env) => {
       if (!env.env.getGeneratorTemplates) return [];
       const tpls = env.env.getGeneratorTemplates() || [];
+      const componentId = ComponentID.fromString(env.id);
       return tpls.map((template) => {
-        const componentId = ComponentID.fromString(env.id);
         return {
           id: componentId.toString(),
           envName: env.name,
