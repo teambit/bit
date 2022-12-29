@@ -1,6 +1,11 @@
 import { EnvsAspect } from './environments.aspect';
 
-export type { ServiceHandlerContext as EnvContext, ServiceHandlerFactory as EnvHandler, ServiceHandler } from './services';
+export type {
+  ServiceHandlerContext as EnvContext,
+  ServiceHandlerFactory as EnvHandler,
+  ServiceHandler,
+  ServiceTransformationMap,
+} from './services';
 export { DEFAULT_ENV } from './environments.main.runtime';
 export * from './environment';
 export { ExecutionContext } from './context';

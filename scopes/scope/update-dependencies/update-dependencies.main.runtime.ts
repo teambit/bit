@@ -88,7 +88,7 @@ export class UpdateDependenciesMain {
     await this.updateAllDeps();
     this.addLogToComponents();
     if (!updateDepsOptions.simulation) {
-      await this.snapping._addFlattenedDependenciesToComponents(this.scope.legacyScope, this.legacyComponents);
+      await this.snapping._addFlattenedDependenciesToComponents(this.legacyComponents);
     }
     this.addBuildStatus();
     await this.addComponentsToScope();

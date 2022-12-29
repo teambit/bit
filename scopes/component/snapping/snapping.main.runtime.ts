@@ -2,12 +2,11 @@ import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
 import { LegacyOnTagResult } from '@teambit/legacy/dist/scope/scope';
 import { FlattenedDependenciesGetter } from '@teambit/legacy/dist/scope/component-ops/get-flattened-dependencies';
-import { Scope as LegacyScope } from '@teambit/legacy/dist/scope';
 import CommunityAspect, { CommunityMain } from '@teambit/community';
 import WorkspaceAspect, { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import R from 'ramda';
 import semver, { ReleaseType } from 'semver';
-import { compact } from 'lodash';
+import { compact, difference, uniq } from 'lodash';
 import { Analytics } from '@teambit/legacy/dist/analytics/analytics';
 import { BitId, BitIds } from '@teambit/legacy/dist/bit-id';
 import { POST_TAG_ALL_HOOK, POST_TAG_HOOK, Extensions, LATEST } from '@teambit/legacy/dist/constants';
@@ -39,6 +38,8 @@ import { Component } from '@teambit/component';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config';
 import { BuilderAspect, BuilderMain } from '@teambit/builder';
+import { LaneId } from '@teambit/lane-id';
+import ImporterAspect, { ImporterMain } from '@teambit/importer';
 import { ExportAspect, ExportMain } from '@teambit/export';
 import UnmergedComponents from '@teambit/legacy/dist/scope/lanes/unmerged-components';
 import { ComponentID } from '@teambit/component-id';
@@ -77,6 +78,11 @@ export type SnapResults = {
   laneName: string | null; // null if default
 };
 
+export type SnapFromScopeResults = {
+  snappedIds: string[];
+  exportedIds?: string[];
+};
+
 export type TagResults = {
   taggedComponents: ConsumerComponent[];
   autoTaggedResults: AutoTagResult[];
@@ -96,7 +102,8 @@ export class SnappingMain {
     private dependencyResolver: DependencyResolverMain,
     private scope: ScopeMain,
     private exporter: ExportMain,
-    private builder: BuilderMain
+    private builder: BuilderMain,
+    private importer: ImporterMain
   ) {
     this.objectsRepo = this.scope?.legacyScope?.objects;
   }
@@ -305,8 +312,9 @@ export class SnappingMain {
     params: {
       push?: boolean;
       ignoreIssues?: string;
+      lane?: string;
     } & Partial<BasicTagParams>
-  ): Promise<SnapResults | null> {
+  ): Promise<SnapFromScopeResults> {
     if (this.workspace) {
       throw new BitError(
         `unable to run this command from a workspace, please create a new bare-scope and run it from there`
@@ -327,7 +335,19 @@ export class SnappingMain {
     const componentIds = snapDataPerComp.map((t) => t.componentId);
     const bitIds = componentIds.map((c) => c._legacy);
     const componentIdsLatest = componentIds.map((id) => id.changeVersion(LATEST));
-    const components = await this.scope.import(componentIdsLatest);
+
+    let lane: Lane | undefined;
+    const laneIdStr = params.lane;
+    if (laneIdStr) {
+      const laneId = LaneId.parse(laneIdStr);
+      lane = await this.importer.importLaneObject(laneId);
+      // this is critical. otherwise, later on, when loading aspects and isolating capsules, we'll try to fetch dists
+      // from the original scope instead of the lane-scope.
+      this.scope.legacyScope.setCurrentLaneId(laneId);
+      this.scope.legacyScope.scopeImporter.shouldOnlyFetchFromCurrentLane = true;
+    }
+
+    const components = await this.scope.import(componentIdsLatest, { lane });
     await Promise.all(
       components.map(async (comp) => {
         const snapData = snapDataPerComp.find((t) => {
@@ -358,22 +378,22 @@ export class SnappingMain {
     });
 
     const { taggedComponents } = results;
-
+    let exportedIds: string[] | undefined;
     if (params.push) {
-      await this.exporter.exportMany({
+      const updatedLane = lane ? await this.scope.legacyScope.loadLane(lane.toLaneId()) : undefined;
+      const { exported } = await this.exporter.exportMany({
         scope: this.scope.legacyScope,
         ids: legacyIds,
         idsWithFutureScope: legacyIds,
         allVersions: false,
+        laneObject: updatedLane || undefined,
       });
+      exportedIds = exported.map((e) => e.toString());
     }
 
     return {
-      snappedComponents: taggedComponents,
-      autoSnappedResults: [],
-      warnings: [],
-      newComponents: new BitIds(),
-      laneName: null,
+      snappedIds: taggedComponents.map((comp) => comp.id.toString()),
+      exportedIds,
     };
   }
 
@@ -550,9 +570,9 @@ there are matching among unmodified components thought. consider using --unmodif
     return { results, isSoftUntag: !isRealUntag };
   }
 
-  async _addFlattenedDependenciesToComponents(scope: LegacyScope, components: ConsumerComponent[]) {
+  async _addFlattenedDependenciesToComponents(components: ConsumerComponent[]) {
     loader.start('importing missing dependencies...');
-    const flattenedDependenciesGetter = new FlattenedDependenciesGetter(scope, components);
+    const flattenedDependenciesGetter = new FlattenedDependenciesGetter(this.scope.legacyScope, components);
     await flattenedDependenciesGetter.populateFlattenedDependencies();
     loader.stop();
     await this._addFlattenedDepsGraphToComponents(components);
@@ -585,6 +605,7 @@ there are matching among unmodified components thought. consider using --unmodif
       addEdges(compId, version.devDependencies, 'dev');
       addEdges(compId, version.extensionDependencies, 'ext');
     });
+    let someCompsHaveMissingFlattened = false;
     components.forEach((component) => {
       const edges = graph.outEdges(component.id.toString());
       const flattenedEdges = component.flattenedDependencies.map((dep) => graph.outEdges(dep.toString())).flat();
@@ -597,7 +618,30 @@ there are matching among unmodified components thought. consider using --unmodif
         type: edge.attr as DepEdgeType,
       }));
       component.flattenedEdges = edgesWithBitIds;
+
+      // due to some previous bugs, some components might have missing flattened dependencies.
+      // as a result, the flattenedEdges may have more components than the flattenedDependencies, which will cause
+      // issues later on when the graph is built. this fixes it by adding the missing flattened dependencies, and
+      // then recursively adding the flattenedEdge accordingly.
+      const flattened = component.flattenedDependencies.map((dep) => dep.toString());
+      const flattenedFromEdges = uniq(
+        edgesWithBitIds.map((edge) => [edge.target.toString(), edge.source.toString()]).flat()
+      );
+      const missingFlattened = difference(flattenedFromEdges, flattened).filter((id) => id !== component.id.toString());
+
+      if (missingFlattened.length) {
+        someCompsHaveMissingFlattened = true;
+        this.logger.warn(`missing flattened for ${component.id.toString()}: ${missingFlattened.join(', ')}`);
+        const missingBitIds = missingFlattened.map((id) => {
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          return graph.node(id)!.attr;
+        });
+        component.flattenedDependencies.push(...missingBitIds);
+      }
     });
+    if (someCompsHaveMissingFlattened) {
+      await this._addFlattenedDepsGraphToComponents(components);
+    }
   }
 
   _updateComponentsByTagResult(components: ConsumerComponent[], tagResult: LegacyOnTagResult[]) {
@@ -896,6 +940,7 @@ there are matching among unmodified components thought. consider using --unmodif
     ScopeAspect,
     ExportAspect,
     BuilderAspect,
+    ImporterAspect,
   ];
   static runtime = MainRuntime;
   static async provider([
@@ -909,6 +954,7 @@ there are matching among unmodified components thought. consider using --unmodif
     scope,
     exporter,
     builder,
+    importer,
   ]: [
     Workspace,
     CLIMain,
@@ -919,7 +965,8 @@ there are matching among unmodified components thought. consider using --unmodif
     DependencyResolverMain,
     ScopeMain,
     ExportMain,
-    BuilderMain
+    BuilderMain,
+    ImporterMain
   ]) {
     const logger = loggerMain.createLogger(SnappingAspect.id);
     const snapping = new SnappingMain(
@@ -930,7 +977,8 @@ there are matching among unmodified components thought. consider using --unmodif
       dependencyResolver,
       scope,
       exporter,
-      builder
+      builder,
+      importer
     );
     const snapCmd = new SnapCmd(community.getBaseDomain(), snapping, logger);
     const tagCmd = new TagCmd(snapping, logger);

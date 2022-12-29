@@ -117,6 +117,7 @@ export class MergeLanesMain {
       resolveUnrelated,
       ignoreConfigChanges,
     });
+    const shouldSquash = currentLaneId.isDefault() && !noSquash;
 
     if (pattern) {
       const componentIds = await this.workspace.resolveMultipleComponentIds(bitIds);
@@ -127,7 +128,8 @@ export class MergeLanesMain {
         bitIds,
         this.workspace,
         includeDeps,
-        otherLane || undefined
+        otherLane || undefined,
+        shouldSquash
       );
       bitIds.forEach((bitId) => {
         if (!allComponentsStatus.find((c) => c.id.isEqualWithoutVersion(bitId))) {
@@ -145,7 +147,9 @@ export class MergeLanesMain {
         compIdsFromPattern,
         bitIds,
         this.workspace,
-        includeDeps
+        includeDeps,
+        otherLane || undefined,
+        shouldSquash
       );
       bitIds.forEach((bitId) => {
         if (!allComponentsStatus.find((c) => c.id.isEqualWithoutVersion(bitId))) {
@@ -156,7 +160,7 @@ export class MergeLanesMain {
 
     throwForFailures();
 
-    if (currentLaneId.isDefault() && !noSquash) {
+    if (shouldSquash) {
       await squashSnaps(allComponentsStatus, otherLaneId, consumer);
     }
 
@@ -341,7 +345,8 @@ async function filterComponentsStatus(
   allBitIds: BitId[],
   workspace: Workspace,
   includeDeps = false,
-  lane?: Lane
+  otherLane?: Lane, // lane that gets merged into the current lane. if not provided, it's main that gets merged into the current lane
+  shouldSquash?: boolean
 ): Promise<ComponentMergeStatus[]> {
   const bitIdsFromPattern = BitIds.fromArray(compIdsToKeep.map((c) => c._legacy));
   const bitIdsNotFromPattern = allBitIds.filter((bitId) => !bitIdsFromPattern.hasWithoutVersion(bitId));
@@ -356,17 +361,29 @@ async function filterComponentsStatus(
     if (fromStatus.unmergedMessage) {
       return;
     }
+    if (!otherLane) {
+      // if merging main, no need to check whether the deps are included in the pattern.
+      return;
+    }
     const { divergeData } = fromStatus;
     if (!divergeData) {
       throw new Error(`filterComponentsStatus: unable to find divergeData for ${compId.toString()}`);
     }
-    const remoteVersions = divergeData.snapsOnTargetOnly;
-    if (!remoteVersions.length) {
+    let targetVersions = divergeData.snapsOnTargetOnly;
+    if (!targetVersions.length) {
       return;
     }
     const modelComponent = await workspace.consumer.scope.getModelComponent(compId._legacy);
-    // optimization suggestion: if squash is given, check only the last version.
-    await pMapSeries(remoteVersions, async (remoteVersion) => {
+    if (shouldSquash) {
+      // no need to check all versions, we merge only the head
+      const headOnTarget = otherLane ? otherLane.getComponent(compId._legacy)?.head : modelComponent.head;
+      if (!headOnTarget) {
+        throw new Error(`filterComponentsStatus: unable to find head for ${compId.toString()}`);
+      }
+      targetVersions = [headOnTarget];
+    }
+
+    await pMapSeries(targetVersions, async (remoteVersion) => {
       const versionObj = await modelComponent.loadVersion(remoteVersion.toString(), workspace.consumer.scope.objects);
       const flattenedDeps = versionObj.getAllFlattenedDependencies();
       const depsNotIncludeInPattern = flattenedDeps.filter((id) =>
@@ -378,7 +395,7 @@ async function filterComponentsStatus(
       const depsOnLane: BitId[] = [];
       await Promise.all(
         depsNotIncludeInPattern.map(async (dep) => {
-          const isOnLane = await workspace.consumer.scope.isIdOnLane(dep, lane);
+          const isOnLane = await workspace.consumer.scope.isIdOnLane(dep, otherLane);
           if (isOnLane) {
             depsOnLane.push(dep);
           }

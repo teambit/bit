@@ -77,7 +77,7 @@ export class DependenciesMain {
             DependencyResolverAspect.id
           );
           if (currentConfigFromWorkspace) return currentConfigFromWorkspace;
-          const extFromScope = await this.workspace.getSpecificExtensionsFromScope(compId);
+          const extFromScope = await this.workspace.getExtensionsFromScopeAndSpecific(compId);
           return extFromScope?.toConfigObject()[DependencyResolverAspect.id];
         };
         const currentDepResolverConfig = await getCurrentConfig();

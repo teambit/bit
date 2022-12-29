@@ -81,7 +81,7 @@ const DepsKeysToAllPackagesDepsKeys = {
   dependencies: 'packageDependencies',
   devDependencies: 'devPackageDependencies',
   peerDependencies: 'peerPackageDependencies',
-}
+};
 
 export default class DependencyResolver {
   component: Component;
@@ -247,6 +247,7 @@ export default class DependencyResolver {
     this.applyPeersFromComponentModel();
     this.applyPackageJson();
     this.applyWorkspacePolicy();
+    this.makeLegacyAsPeer();
     await this.applyEnvPolicyOnComponent();
     this.manuallyAddDependencies();
     // Doing this here (after manuallyAddDependencies) because usually the env of the env is adding dependencies as peer of the env
@@ -1161,6 +1162,25 @@ either, use the ignore file syntax or change the require statement to have a mod
       }, this.allPackagesDependencies[field]);
     });
     this.allPackagesDependencies.peerPackageDependencies = peerDeps;
+  }
+
+  /**
+   * It removes the @teambit/legacy dependency from the dependencies/devDeps and adds it as a peer dependency with ^.
+   */
+  makeLegacyAsPeer(): void {
+    let version;
+    if (this.allPackagesDependencies.packageDependencies['@teambit/legacy']) {
+      version = this.allPackagesDependencies.packageDependencies['@teambit/legacy'];
+      delete this.allPackagesDependencies.packageDependencies['@teambit/legacy'];
+    }
+    if (this.allPackagesDependencies.devPackageDependencies['@teambit/legacy']) {
+      if (!version) version = this.allPackagesDependencies.devPackageDependencies['@teambit/legacy'];
+      delete this.allPackagesDependencies.devPackageDependencies['@teambit/legacy'];
+    }
+    if (version) {
+      if (!Number.isNaN(version[0])) version = `^${version}`;
+      this.allPackagesDependencies.peerPackageDependencies['@teambit/legacy'] = version;
+    }
   }
 
   async applyEnvPolicyOnComponent(): Promise<void> {

@@ -33,7 +33,7 @@ export type EnvOptions = {};
 
 export type EnvTransformer = (env: Environment) => Environment;
 
-export type ServiceSlot = SlotRegistry<Array<EnvService<any>>>;
+export type ServicesRegistry = SlotRegistry<Array<EnvService<any>>>;
 
 export type Descriptor = {
   id: string;
@@ -75,7 +75,7 @@ export class EnvsMain {
 
     private logger: Logger,
 
-    private serviceSlot: ServiceSlot,
+    private servicesRegistry: ServicesRegistry,
 
     private componentMain: ComponentMain,
 
@@ -383,7 +383,7 @@ export class EnvsMain {
   }
 
   getEnvPlugin() {
-    return new EnvPlugin(this.envSlot, this.loggerMain, this.workerMain, this.harmony);
+    return new EnvPlugin(this.envSlot, this.servicesRegistry, this.loggerMain, this.workerMain, this.harmony);
   }
 
   /**
@@ -580,7 +580,7 @@ export class EnvsMain {
    * register a new environment service.
    */
   registerService(...envServices: EnvService<any>[]) {
-    this.serviceSlot.register(envServices);
+    this.servicesRegistry.register(envServices);
     return this;
   }
 
@@ -588,7 +588,7 @@ export class EnvsMain {
    * get list of services enabled on an env.
    */
   getServices(env: EnvDefinition): EnvServiceList {
-    const allServices = this.serviceSlot.toArray();
+    const allServices = this.servicesRegistry.toArray();
     const services: [string, EnvService<any>][] = [];
     allServices.forEach(([id, currentServices]) => {
       currentServices.forEach((service) => {
@@ -672,11 +672,11 @@ export class EnvsMain {
   static async provider(
     [graphql, loggerAspect, component, cli, worker]: [GraphqlMain, LoggerMain, ComponentMain, CLIMain, WorkerMain],
     config: EnvsConfig,
-    [envSlot, serviceSlot]: [EnvsRegistry, ServiceSlot],
+    [envSlot, servicesRegistry]: [EnvsRegistry, ServicesRegistry],
     context: Harmony
   ) {
     const logger = loggerAspect.createLogger(EnvsAspect.id);
-    const envs = new EnvsMain(config, context, envSlot, logger, serviceSlot, component, loggerAspect, worker);
+    const envs = new EnvsMain(config, context, envSlot, logger, servicesRegistry, component, loggerAspect, worker);
     component.registerShowFragments([new EnvFragment(envs)]);
     const envsCmd = new EnvsCmd(envs, component);
     envsCmd.commands = [new ListEnvsCmd(envs, component), new GetEnvCmd(envs, component)];
