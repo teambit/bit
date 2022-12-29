@@ -133,6 +133,10 @@ export default class Scope {
 
   static onPostExport: (ids: BitId[], lanes: Lane[]) => Promise<void>; // enable extensions to hook after the export process
 
+  public async refreshScopeIndex(force = false) {
+    await this.objects.reloadScopeIndexIfNeed(force);
+  }
+
   /**
    * import components to the `Scope.
    */
