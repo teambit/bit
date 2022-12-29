@@ -2,8 +2,8 @@ import { ComponentModel } from '@teambit/component';
 import classNames from 'classnames';
 import React, { useCallback, useEffect } from 'react';
 
-import { Composition } from '../../composition';
 import { CompositionCard } from '@teambit/composition-card';
+import { Composition } from '../../composition';
 import styles from './compositions-panel.module.scss';
 
 export type CompositionsPanelProps = {

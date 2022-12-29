@@ -4,8 +4,8 @@ import type { ComponentModel } from '@teambit/component';
 import type { Composition } from '@teambit/compositions';
 import { Icon } from '@teambit/evangelist.elements.icon';
 import { ComponentComposition } from '@teambit/compositions';
-import styles from './composition-card.module.scss';
 import { ellipsis } from '@teambit/design.ui.styles.ellipsis';
+import styles from './composition-card.module.scss';
 
 export type CompositionCardProps = {
   component: ComponentModel;

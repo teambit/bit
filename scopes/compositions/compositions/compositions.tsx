@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState, useMemo, useRef, ReactNode } from 'react';
-import { useParams, generatePath, matchRoutes } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import head from 'lodash.head';
 import queryString from 'query-string';
 import { ThemeContext } from '@teambit/documenter.theme.theme-context';
@@ -128,6 +128,11 @@ export function Compositions({ menuBarWidgets, emptyState }: CompositionsProp) {
                     );
 
                     if (!path) return;
+                    if(!path.includes(composition.identifier.toLowerCase())) {
+                      const nextPath = location.pathname.concat(`/${composition.identifier.toLowerCase()}`)
+                      navigate(nextPath)
+                      return;
+                    }
                     navigate(path);
                   }}
                   url={compositionUrl}

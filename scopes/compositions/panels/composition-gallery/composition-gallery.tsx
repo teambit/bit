@@ -16,7 +16,7 @@ export function CompositionGallery({ component }: { component: ComponentModel })
       </LinkedHeading>
       <div className={styles.carousel}>
         {component.compositions.map((composition) => {
-          return <CompositionCard onClick={() => navigate(`~compositions/${composition.identifier.toLowerCase()}`)} className={styles.compositionCard} previewClass={styles.preview} composition={composition} component={component} />;
+          return <CompositionCard key={composition.identifier.toLowerCase()} onClick={() => navigate(`~compositions/${composition.identifier.toLowerCase()}`)} className={styles.compositionCard} previewClass={styles.preview} composition={composition} component={component} />;
         })}
       </div>
     </div>
