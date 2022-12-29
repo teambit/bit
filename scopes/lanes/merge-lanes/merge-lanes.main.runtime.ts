@@ -228,13 +228,14 @@ export class MergeLanesMain {
     mergedNow: string[];
     exportedIds: string[];
   }> {
-    if (this.workspace)
+    if (this.workspace) {
       throw new BitError(
         `unable to run this command from a workspace, please create a new bare-scope and run it from there`
       );
+    }
     const fromLaneId = LaneId.parse(fromLane);
     const fromLaneObj = await this.lanes.importLaneObject(fromLaneId);
-    const toLaneId = LaneId.parse(toLane);
+    const toLaneId = toLane === DEFAULT_LANE ? this.lanes.getDefaultLaneId() : LaneId.parse(toLane);
     const toLaneObj = toLaneId.isDefault() ? undefined : await this.lanes.importLaneObject(toLaneId);
     const fromLaneBitIds = fromLaneObj.toBitIds();
     const getIdsToMerge = async (): Promise<BitIds> => {
@@ -258,6 +259,7 @@ export class MergeLanesMain {
       ignoreMissingHead: true,
       lane: toLaneObj,
     });
+    await this.throwIfNotUpToDate(fromLaneId, toLaneId);
     const repo = this.scope.legacyScope.objects;
     // loop through all components, make sure they're all ahead of main (it might not be on main yet).
     // then, change the version object to include an extra parent to point to the main.
@@ -324,6 +326,14 @@ export class MergeLanesMain {
       mergedNow: mergedNow.map((id) => id.toString()),
       exportedIds,
     };
+  }
+  private async throwIfNotUpToDate(fromLaneId: LaneId, toLaneId: LaneId) {
+    const status = await this.lanes.diffStatus(fromLaneId, toLaneId, { skipChanges: true });
+    const compsNotUpToDate = status.componentsStatus.filter((s) => !s.upToDate);
+    if (compsNotUpToDate.length) {
+      throw new Error(`unable to merge, the following components are not up-to-date:
+${compsNotUpToDate.map((s) => s.componentId.toString()).join('\n')}`);
+    }
   }
 
   static slots = [];

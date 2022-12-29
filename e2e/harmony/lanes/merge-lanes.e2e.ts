@@ -896,6 +896,27 @@ describe('merge lanes', function () {
       expect(() => helper.command.import(`${scope2Name}/comp1`)).to.not.throw();
     });
   });
+  describe('merge from scope lane to main when it is not up to date', () => {
+    let bareMerge;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(2);
+      helper.command.tagWithoutBuild('comp2');
+      helper.command.createLane();
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.export();
+      helper.command.switchLocalLane('main');
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.export();
+      bareMerge = helper.scopeHelper.getNewBareScope('-bare-merge');
+      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, bareMerge.scopePath);
+    });
+    it('should throw', () => {
+      const mergeFunc = () => helper.command.mergeLaneFromScope(bareMerge.scopePath, `${helper.scopes.remote}/dev`);
+      expect(mergeFunc).to.throw('unable to merge, the following components are not up-to-date');
+    });
+  });
   describe('merge lane with comp-1 to an empty lane with .bitmap has the component', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
