@@ -8,13 +8,21 @@ import camelcase from 'camelcase';
 import { BitError } from '@teambit/bit-error';
 import { PathOsBasedRelative } from '@teambit/legacy/dist/utils/path';
 import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
+import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-to-persist';
 import { NewComponentHelperMain } from '@teambit/new-component-helper';
 import { ComponentID } from '@teambit/component-id';
 import { ComponentTemplate, ComponentFile, ComponentConfig } from './component-template';
 import { CreateOptions } from './create.cmd';
 
-export type GenerateResult = { id: ComponentID; dir: string; files: string[]; envId: string; envSetBy: string };
+export type GenerateResult = {
+  id: ComponentID;
+  dir: string;
+  files: string[];
+  envId: string;
+  envSetBy: string;
+  packageName: string;
+};
 
 export class ComponentGenerator {
   constructor(
@@ -140,6 +148,7 @@ export class ComponentGenerator {
       id: componentId,
       dir: componentPath,
       files: addResults.files,
+      packageName: componentIdToPackageName(component.state._consumer),
       envId,
       envSetBy: setBy,
     };
