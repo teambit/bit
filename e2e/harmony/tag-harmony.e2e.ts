@@ -234,6 +234,8 @@ describe('tag components on Harmony', function () {
       expect(() => helper.command.tagAllComponents()).to.throw(
         'Failed task 1: "teambit.defender/tester:TestComponents" of env "teambit.harmony/node"'
       );
+      const stagedConfigPath = helper.general.getStagedConfigPath();
+      expect(stagedConfigPath).to.not.be.a.path();
     });
     it('should succeed with --skip-tests', () => {
       helper.scopeHelper.getClonedLocalScope(beforeTagScope);
