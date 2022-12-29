@@ -4,10 +4,10 @@ import { ComponentID } from '@teambit/component';
 import { WorkerMain } from '@teambit/worker';
 import { MainRuntime } from '@teambit/cli';
 import { LoggerMain } from '@teambit/logger';
+import { flatten } from 'lodash';
 import { ServiceHandlerContext as EnvContext } from './services/service-handler-context';
 import { Env } from './env-interface';
 import { EnvsRegistry, ServicesRegistry } from './environments.main.runtime';
-import { flatten } from 'lodash';
 
 export class EnvPlugin implements PluginDefinition {
   constructor(
@@ -27,10 +27,6 @@ export class EnvPlugin implements PluginDefinition {
   }
 
   private transformToLegacyEnv(envId: string, env: Env) {
-    // HACK BECAUSE OF OLD APIS WE SHOULD MIGRATE EACH TO BE HANDLED BY ITS SERVICE
-    // IF YOU ARE THINKING ABOUT IT YOU SHOULD HEAD TO THE SERVICE SLOT INSTEAD.
-    // E.G. COMPILER SHOULD BE TRANSFORMED IN COMPILER NOT HERE!
-    // const
     const envComponentId = ComponentID.fromString(envId);
     const envContext = this.createContext(envComponentId);
     const allServices = flatten(this.servicesRegistry.values());
@@ -49,7 +45,6 @@ export class EnvPlugin implements PluginDefinition {
       ...transformers,
       getCompiler: () => env.compiler()(envContext),
       getTester: () => env.tester()(envContext),
-      getLinter: () => env.linter()(envContext),
       getPackageJsonProps: () => packageGenerator.packageJsonProps,
       getNpmIgnore: () => packageGenerator.npmIgnore,
       name: env.name,
