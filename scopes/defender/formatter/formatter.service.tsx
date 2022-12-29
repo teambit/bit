@@ -1,12 +1,15 @@
 import { defaults } from 'lodash';
 import React from 'react';
-import { EnvService, ExecutionContext, EnvDefinition } from '@teambit/envs';
+import { EnvService, ExecutionContext, EnvDefinition, Env, EnvContext, ServiceTransformationMap } from '@teambit/envs';
 import { Text, Newline } from 'ink';
 import highlight from 'cli-highlight';
 import { Formatter, FormatResults } from './formatter';
 import { FormatterContext, FormatterOptions } from './formatter-context';
 import { FormatterConfig } from './formatter.main.runtime';
 
+type FormatterTransformationMap = ServiceTransformationMap  & {
+  getFormatter: () => Formatter;
+}
 export class FormatterService implements EnvService<FormatResults> {
   name = 'formatter';
 
@@ -48,6 +51,14 @@ export class FormatterService implements EnvService<FormatResults> {
         <Newline />
       </Text>
     );
+  }
+
+  transform(env: Env, context: EnvContext): FormatterTransformationMap | undefined {
+    // Old env
+    if (!env?.formatter) return undefined;
+    return {
+      getFormatter: () => env.formatter()(context),
+    }
   }
 
   getDescriptor(env: EnvDefinition) {

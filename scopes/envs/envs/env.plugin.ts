@@ -4,13 +4,15 @@ import { ComponentID } from '@teambit/component';
 import { WorkerMain } from '@teambit/worker';
 import { MainRuntime } from '@teambit/cli';
 import { LoggerMain } from '@teambit/logger';
+import { flatten } from 'lodash';
 import { ServiceHandlerContext as EnvContext } from './services/service-handler-context';
 import { Env } from './env-interface';
-import { EnvsRegistry } from './environments.main.runtime';
+import { EnvsRegistry, ServicesRegistry } from './environments.main.runtime';
 
 export class EnvPlugin implements PluginDefinition {
   constructor(
     private envSlot: EnvsRegistry,
+    private servicesRegistry: ServicesRegistry,
     private loggerMain: LoggerMain,
     private workerMain: WorkerMain,
     private harmony: Harmony
@@ -25,64 +27,22 @@ export class EnvPlugin implements PluginDefinition {
   }
 
   private transformToLegacyEnv(envId: string, env: Env) {
-    // HACK BECAUSE OF OLD APIS WE SHOULD MIGRATE EACH TO BE HANDLED BY ITS SERVICE
-    // IF YOU ARE THINKING ABOUT IT YOU SHOULD HEAD TO THE SERVICE SLOT INSTEAD.
-    // E.G. COMPILER SHOULD BE TRANSFORMED IN COMPILER NOT HERE!
-    // const
     const envComponentId = ComponentID.fromString(envId);
     const envContext = this.createContext(envComponentId);
+    const allServices = flatten(this.servicesRegistry.values());
+    const transformers = allServices.reduce((acc, service) => {
+      if (!service.transform) return acc;
+      const currTransformer = service.transform(env, envContext);
+      if (!currTransformer) return acc;
+      return {...acc, ...currTransformer};
+    }, {})
+
     if (!env.preview && !env.compiler) return undefined;
-    const preview = env.preview()(envContext);
-    const packageGenerator = env.package()(envContext);
 
     return {
-      getCompiler: () => env.compiler()(envContext),
-      getTester: () => env.tester()(envContext),
-      getLinter: () => env.linter()(envContext),
-      getFormatter: () => env.formatter()(envContext),
-      getPackageJsonProps: () => packageGenerator.packageJsonProps,
-      getNpmIgnore: () => packageGenerator.npmIgnore,
+      ...transformers,
       name: env.name,
       icon: env.icon,
-      getDevEnvId: () => {
-        return preview.getDevEnvId();
-      },
-      getSchemaExtractor: env.schemaExtractor()(envContext),
-      getDevServer: (context) => {
-        return preview.getDevServer(context)(envContext);
-      },
-      getAdditionalHostDependencies: preview.getHostDependencies.bind(preview),
-      getMounter: preview.getMounter.bind(preview),
-      getGeneratorTemplates: () => {
-        if (!env.generators) return undefined;
-        const generatorList = env.generators()(envContext);
-        return generatorList.compute();
-      },
-      getGeneratorStarters: () => {
-        if (!env.starters) return undefined;
-        const starterList = env.starters()(envContext);
-        return starterList.compute();
-      },
-      getBuildPipe: () => {
-        // TODO: refactor after defining for an env property
-        const pipeline = env.build()(envContext);
-        if (!pipeline || !pipeline.compute) return [];
-        return pipeline?.compute();
-      },
-      getTagPipe: () => {
-        // TODO: refactor after defining for an env property
-        const pipeline = env.snap()(envContext);
-        if (!pipeline || !pipeline.compute) return [];
-        return pipeline?.compute();
-      },
-      getSnapPipe: () => {
-        const pipeline = env.tag()(envContext);
-        if (!pipeline || !pipeline.compute) return [];
-        return pipeline?.compute();
-      },
-      getDocsTemplate: preview.getDocsTemplate.bind(preview),
-      getPreviewConfig: preview.getPreviewConfig.bind(preview),
-      getBundler: (context) => preview.getBundler(context)(envContext),
       __getDescriptor: async () => {
         return {
           type: env.name,
