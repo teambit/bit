@@ -9,7 +9,7 @@ import { Component, ComponentID } from '@teambit/component';
 import { BuildPipe, TaskResults } from './build-pipe';
 import { TaskResultsList } from './task-results-list';
 import { TaskSlot } from './builder.main.runtime';
-import { BuildContext, BuildTaskHelper } from './build-task';
+import { BuildContext, BuildTask, BuildTaskHelper } from './build-task';
 import { ArtifactFactory } from './artifact';
 import { calculatePipelineOrder } from './build-pipeline-order';
 import { BuilderAspect } from './builder.aspect';
