@@ -12,7 +12,7 @@ export class ReactNativeEnv implements Environment, DependenciesEnv, PreviewEnv 
   constructor(private aspect: AspectMain) {}
 
   getAdditionalHostDependencies(): string[] {
-    return ['@teambit/mdx.ui.mdx-scope-context', '@mdx-js/react', 'react'];
+    return ['@teambit/mdx.ui.mdx-scope-context', '@mdx-js/react', 'react', 'react-native-web'];
   }
 
   async getTemplateBundler(context: BundlerContext, transformers: WebpackConfigTransformer[] = []): Promise<Bundler> {
