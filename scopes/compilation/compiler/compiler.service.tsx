@@ -1,13 +1,18 @@
 import React from 'react';
 import { Text, Newline } from 'ink';
-import { EnvService, EnvDefinition } from '@teambit/envs';
+import { EnvService, EnvDefinition, Env, EnvContext, ServiceTransformationMap } from '@teambit/envs';
 import highlight from 'cli-highlight';
+import { Compiler } from './types';
 
 export type CompilerDescriptor = {
   id: string;
   icon?: string;
   config?: string;
 };
+
+type CompilerTransformationMap = ServiceTransformationMap  & {
+  getCompiler: () => Compiler;
+}
 
 export class CompilerService implements EnvService<{}, CompilerDescriptor> {
   name = 'Compile';
@@ -30,6 +35,14 @@ export class CompilerService implements EnvService<{}, CompilerDescriptor> {
         <Newline />
       </Text>
     );
+  }
+
+  transform(env: Env, context: EnvContext): CompilerTransformationMap | undefined {
+    // Old env
+    if (!env?.compiler) return undefined;
+    return {
+      getCompiler: () => env.compiler()(context),
+    }
   }
 
   getDescriptor(env: EnvDefinition) {

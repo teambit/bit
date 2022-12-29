@@ -1,4 +1,4 @@
-import { EnvDefinition, EnvService, ExecutionContext } from '@teambit/envs';
+import { EnvService, ExecutionContext, EnvDefinition, Env, EnvContext, ServiceTransformationMap } from '@teambit/envs';
 import React from 'react';
 import { ScopeMain } from '@teambit/scope';
 import pMapSeries from 'p-map-series';
@@ -9,7 +9,7 @@ import { Component, ComponentID } from '@teambit/component';
 import { BuildPipe, TaskResults } from './build-pipe';
 import { TaskResultsList } from './task-results-list';
 import { TaskSlot } from './builder.main.runtime';
-import { BuildContext, BuildTaskHelper } from './build-task';
+import { BuildContext, BuildTask, BuildTaskHelper } from './build-task';
 import { ArtifactFactory } from './artifact';
 import { calculatePipelineOrder } from './build-pipeline-order';
 import { BuilderAspect } from './builder.aspect';
@@ -29,6 +29,12 @@ export type BuilderServiceOptions = {
   previousTasksResults?: TaskResults[];
   dev?: boolean;
 };
+
+type BuilderTransformationMap = ServiceTransformationMap  & {
+  getBuildPipe: () => BuildTask[];
+  getTagPipe: () => BuildTask[];
+  getSnapPipe: () => BuildTask[];
+}
 
 export type EnvsBuildContext = { [envId: string]: BuildContext };
 
@@ -136,6 +142,30 @@ export class BuilderService implements EnvService<BuildServiceResults, BuilderDe
     return (
       <Text key={BuilderAspect.id}>{pipes.map(({ pipeName, tasks }) => this.renderOnePipe(pipeName, tasks))}</Text>
     );
+  }
+
+  transform(env: Env, envContext: EnvContext): BuilderTransformationMap | undefined {
+    // Old env
+    if (!env?.build) return undefined;
+    return {
+      getBuildPipe: () => {
+        // TODO: refactor after defining for an env property
+        const pipeline = env.build()(envContext);
+        if (!pipeline || !pipeline.compute) return [];
+        return pipeline?.compute();
+      },
+      getTagPipe: () => {
+        // TODO: refactor after defining for an env property
+        const pipeline = env.snap()(envContext);
+        if (!pipeline || !pipeline.compute) return [];
+        return pipeline?.compute();
+      },
+      getSnapPipe: () => {
+        const pipeline = env.tag()(envContext);
+        if (!pipeline || !pipeline.compute) return [];
+        return pipeline?.compute();
+      },
+    }
   }
 
   private renderOnePipe(pipeName, tasks) {
