@@ -22,7 +22,6 @@ export class AppService implements EnvService<any> {
     if (!env?.apps) return undefined;
     const appTypesList = env.apps()(context);
     const appTypes = appTypesList.compute();
-    console.log('appTypes', appTypes)
     appTypes.forEach(appType => {
       this.registerAppType(appType);
     });
