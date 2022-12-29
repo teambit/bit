@@ -12,7 +12,9 @@ export interface ServiceExecutionResult {
   errors?: Error[];
 }
 
-export type ServiceTransformHandlerFactory<T> = () => (ServiceHandler & T) | Promise<ServiceHandler & T> ;
+export type ServiceTransformHandlerFactory<T> = (
+  handlerContext?: any
+) => (ServiceHandler & T) | Promise<ServiceHandler & T>;
 
 /**
  * definition of the service handler type
@@ -24,8 +26,8 @@ export type TransformationMap = {
    * The name of the function that will be called on the service run/run once later.
    * This func will be exist on the final env object
    */
-  [funcName: string]: ServiceTransformHandlerFactory<any>
-}
+  [funcName: string]: ServiceTransformHandlerFactory<any>;
+};
 
 /**
  * services allows to reuse and standardize services for development environments.
