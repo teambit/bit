@@ -38,56 +38,12 @@ export class EnvPlugin implements PluginDefinition {
     }, {})
 
     if (!env.preview && !env.compiler) return undefined;
-    const preview = env.preview()(envContext);
-    const packageGenerator = env.package()(envContext);
 
     return {
       ...transformers,
-      getCompiler: () => env.compiler()(envContext),
-      getTester: () => env.tester()(envContext),
-      getPackageJsonProps: () => packageGenerator.packageJsonProps,
-      getNpmIgnore: () => packageGenerator.npmIgnore,
       name: env.name,
       icon: env.icon,
-      getDevEnvId: () => {
-        return preview.getDevEnvId();
-      },
       getSchemaExtractor: env.schemaExtractor()(envContext),
-      getDevServer: (context) => {
-        return preview.getDevServer(context)(envContext);
-      },
-      getAdditionalHostDependencies: preview.getHostDependencies.bind(preview),
-      getMounter: preview.getMounter.bind(preview),
-      getGeneratorTemplates: () => {
-        if (!env.generators) return undefined;
-        const generatorList = env.generators()(envContext);
-        return generatorList.compute();
-      },
-      getGeneratorStarters: () => {
-        if (!env.starters) return undefined;
-        const starterList = env.starters()(envContext);
-        return starterList.compute();
-      },
-      getBuildPipe: () => {
-        // TODO: refactor after defining for an env property
-        const pipeline = env.build()(envContext);
-        if (!pipeline || !pipeline.compute) return [];
-        return pipeline?.compute();
-      },
-      getTagPipe: () => {
-        // TODO: refactor after defining for an env property
-        const pipeline = env.snap()(envContext);
-        if (!pipeline || !pipeline.compute) return [];
-        return pipeline?.compute();
-      },
-      getSnapPipe: () => {
-        const pipeline = env.tag()(envContext);
-        if (!pipeline || !pipeline.compute) return [];
-        return pipeline?.compute();
-      },
-      getDocsTemplate: preview.getDocsTemplate.bind(preview),
-      getPreviewConfig: preview.getPreviewConfig.bind(preview),
-      getBundler: (context) => preview.getBundler(context)(envContext),
       __getDescriptor: async () => {
         return {
           type: env.name,
