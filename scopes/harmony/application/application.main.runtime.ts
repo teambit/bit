@@ -68,8 +68,6 @@ export type ServeAppOptions = {
 };
 
 export class ApplicationMain {
-  envsAppsLoaded = false;
-
   constructor(
     private appSlot: ApplicationSlot,
     // TODO unused
@@ -127,7 +125,7 @@ export class ApplicationMain {
    * calculate an application by a component.
    * This should be only used during the on component load slot
    */
-  async calculateAppByComponent(component: Component) {
+  calculateAppByComponent(component: Component) {
     const apps = this.appSlot.get(component.id.toString());
     if (!apps) return undefined;
     return head(apps);
@@ -196,7 +194,7 @@ export class ApplicationMain {
 
   async runApp(appName: string, options?: ServeAppOptions) {
     options = this.computeOptions(options);
-    const app = await this.getAppOrThrow(appName);
+    const app = this.getAppOrThrow(appName);
     const context = await this.createAppContext(app.name);
     if (!context) throw new AppNotFound(appName);
 
@@ -297,7 +295,6 @@ export class ApplicationMain {
     const appCmd = new AppCmd();
     appCmd.commands = [new AppListCmd(application), new RunCmd(application, logger)];
     aspectLoader.registerPlugins([new AppPlugin(appSlot)]);
-    // await application.registerEnvsApps();
     builder.registerBuildTasks([new AppsBuildTask(application)]);
     builder.registerSnapTasks([new DeployTask(application, builder)]);
     builder.registerTagTasks([new DeployTask(application, builder)]);
@@ -306,7 +303,7 @@ export class ApplicationMain {
     cli.register(new RunCmd(application, logger), new AppListCmdDeprecated(application), appCmd);
     if (workspace) {
       workspace.onComponentLoad(async (loadedComponent) => {
-        const app = await application.calculateAppByComponent(loadedComponent);
+        const app = application.calculateAppByComponent(loadedComponent);
         if (!app) return {};
         return {
           appName: app?.name,
