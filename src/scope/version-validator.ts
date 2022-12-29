@@ -25,7 +25,7 @@ import Version from './models/version';
  */
 export default function validateVersionInstance(version: Version): void {
   const message = `unable to save Version object${
-    version.componentId ? ` of "${version.componentId.toString()}"` : ''
+    version.componentId ? ` of "${version.componentId.toString()}"` : ` hash ${version.hash().toString()}`
   }`;
   const validateBitId = (bitId: BitId, field: string, validateVersion = true, validateScope = true) => {
     if (validateVersion && !bitId.hasVersion()) {
