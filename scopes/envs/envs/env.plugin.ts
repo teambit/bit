@@ -43,11 +43,6 @@ export class EnvPlugin implements PluginDefinition {
       ...transformers,
       name: env.name,
       icon: env.icon,
-      getAppTypes: () => {
-        if (!env.apps) return undefined;
-        const appTypesList = env.apps()(envContext);
-        return appTypesList.compute();
-      },
       __getDescriptor: async () => {
         return {
           type: env.name,
