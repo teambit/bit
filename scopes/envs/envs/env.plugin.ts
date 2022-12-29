@@ -43,7 +43,6 @@ export class EnvPlugin implements PluginDefinition {
       ...transformers,
       name: env.name,
       icon: env.icon,
-      getSchemaExtractor: env.schemaExtractor()(envContext),
       __getDescriptor: async () => {
         return {
           type: env.name,
