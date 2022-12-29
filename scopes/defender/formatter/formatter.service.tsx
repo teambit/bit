@@ -7,7 +7,6 @@ import { Formatter, FormatResults } from './formatter';
 import { FormatterContext, FormatterOptions } from './formatter-context';
 import { FormatterConfig } from './formatter.main.runtime';
 
-
 type FormatterTransformationMap = ServiceTransformationMap  & {
   getFormatter: () => Formatter;
 }
