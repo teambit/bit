@@ -188,7 +188,7 @@ export class SnappingMain {
     await this.throwForComponentIssues(components, ignoreIssues);
     this.throwForPendingImport(components);
 
-    const { taggedComponents, autoTaggedResults, publishedPackages } = await tagModelComponent({
+    const { taggedComponents, autoTaggedResults, publishedPackages, stagedConfig } = await tagModelComponent({
       workspace: this.workspace,
       scope: this.scope,
       snapping: this,
@@ -227,7 +227,7 @@ export class SnappingMain {
       R.concat(tagResults.taggedComponents, tagResults.autoTaggedResults, tagResults.newComponents).length
     );
     await consumer.onDestroy();
-    await (await this.workspace.scope.getStagedConfig()).write();
+    await stagedConfig?.write();
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return tagResults;
   }
@@ -441,7 +441,7 @@ export class SnappingMain {
     await this.throwForComponentIssues(components, ignoreIssues);
     this.throwForPendingImport(components);
 
-    const { taggedComponents, autoTaggedResults } = await tagModelComponent({
+    const { taggedComponents, autoTaggedResults, stagedConfig } = await tagModelComponent({
       workspace: this.workspace,
       scope: this.scope,
       snapping: this,
@@ -471,7 +471,7 @@ export class SnappingMain {
     const currentLane = consumer.getCurrentLaneId();
     snapResults.laneName = currentLane.isDefault() ? null : currentLane.name;
     await consumer.onDestroy();
-    await (await this.workspace.scope.getStagedConfig()).write();
+    await stagedConfig?.write();
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return snapResults;
 
