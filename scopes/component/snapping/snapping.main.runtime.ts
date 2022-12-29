@@ -7,7 +7,7 @@ import CommunityAspect, { CommunityMain } from '@teambit/community';
 import WorkspaceAspect, { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import R from 'ramda';
 import semver, { ReleaseType } from 'semver';
-import { compact } from 'lodash';
+import { compact, difference, uniq } from 'lodash';
 import { Analytics } from '@teambit/legacy/dist/analytics/analytics';
 import { BitId, BitIds } from '@teambit/legacy/dist/bit-id';
 import { POST_TAG_ALL_HOOK, POST_TAG_HOOK, Extensions, LATEST } from '@teambit/legacy/dist/constants';
@@ -571,9 +571,9 @@ there are matching among unmodified components thought. consider using --unmodif
     return { results, isSoftUntag: !isRealUntag };
   }
 
-  async _addFlattenedDependenciesToComponents(scope: LegacyScope, components: ConsumerComponent[]) {
+  async _addFlattenedDependenciesToComponents(components: ConsumerComponent[]) {
     loader.start('importing missing dependencies...');
-    const flattenedDependenciesGetter = new FlattenedDependenciesGetter(scope, components);
+    const flattenedDependenciesGetter = new FlattenedDependenciesGetter(this.scope.legacyScope, components);
     await flattenedDependenciesGetter.populateFlattenedDependencies();
     loader.stop();
     await this._addFlattenedDepsGraphToComponents(components);
@@ -606,6 +606,7 @@ there are matching among unmodified components thought. consider using --unmodif
       addEdges(compId, version.devDependencies, 'dev');
       addEdges(compId, version.extensionDependencies, 'ext');
     });
+    let someCompsHaveMissingFlattened = false;
     components.forEach((component) => {
       const edges = graph.outEdges(component.id.toString());
       const flattenedEdges = component.flattenedDependencies.map((dep) => graph.outEdges(dep.toString())).flat();
@@ -618,7 +619,30 @@ there are matching among unmodified components thought. consider using --unmodif
         type: edge.attr as DepEdgeType,
       }));
       component.flattenedEdges = edgesWithBitIds;
+
+      // due to some previous bugs, some components might have missing flattened dependencies.
+      // as a result, the flattenedEdges may have more components than the flattenedDependencies, which will cause
+      // issues later on when the graph is built. this fixes it by adding the missing flattened dependencies, and
+      // then recursively adding the flattenedEdge accordingly.
+      const flattened = component.flattenedDependencies.map((dep) => dep.toString());
+      const flattenedFromEdges = uniq(
+        edgesWithBitIds.map((edge) => [edge.target.toString(), edge.source.toString()]).flat()
+      );
+      const missingFlattened = difference(flattenedFromEdges, flattened).filter((id) => id !== component.id.toString());
+
+      if (missingFlattened.length) {
+        someCompsHaveMissingFlattened = true;
+        this.logger.warn(`missing flattened for ${component.id.toString()}: ${missingFlattened.join(', ')}`);
+        const missingBitIds = missingFlattened.map((id) => {
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          return graph.node(id)!.attr;
+        });
+        component.flattenedDependencies.push(...missingBitIds);
+      }
     });
+    if (someCompsHaveMissingFlattened) {
+      await this._addFlattenedDepsGraphToComponents(components);
+    }
   }
 
   _updateComponentsByTagResult(components: ConsumerComponent[], tagResult: LegacyOnTagResult[]) {
