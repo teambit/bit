@@ -1,32 +1,31 @@
-
-.compositionPreview {
-  height: 225px;
-  overflow: hidden;
-  padding: 5px;
-  border: 1px solid var(--border-medium-color);
-  border-radius: 8px;
-}
-
-.compositionCard {
-  min-width: 330px;
-  margin: 5px;  
-  position: relative;
-}
-
 .carousel {
   display: flex;
   cursor: pointer;
   align-items: center;
   overflow-x: auto;
+  // prevent navigation when overflowing.
+  overscroll-behavior-x: contain;
 }
 
-.previewOverlay {
-  position: absolute;
-  height: 100%;
-  width: 100%;
-  background-color: transparent;
-  cursor: pointer;
-  // z-index: 10;
-  top: 0;
-  left: 0;
+
+.title {
+  > h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  }
+}
+
+
+.compositionGallery {
+  padding: 20px 40px 10px 40px;
+}
+
+.compositionCard {
+  min-width: 330px;
+}
+.preview {
+  height: 234px;
+  width: 264px;
 }

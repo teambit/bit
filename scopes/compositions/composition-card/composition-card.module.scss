@@ -1,0 +1,58 @@
+.compositionPreview {
+  overflow: hidden;
+  padding: 5px;
+  position: relative;
+}
+
+.compositionCard {
+  border: 1px solid var(--border-high-color, #BABEC9);
+  border-radius: 8px;
+  box-sizing: border-box;
+  width: 100%;
+  .icon {
+    transition: visibility 300ms, ease-in-out;
+    visibility: hidden;
+  }
+  &:hover {
+    border-color: var(--border-high-active-color, #8C8F96);
+    .icon {
+      transition: visibility 300ms, ease-in-out;
+      visibility: visible;
+    }
+  }
+}
+
+.previewOverlay {
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  background-color: transparent;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+}
+
+.bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 14px;
+  padding: 8px 12px;
+  border-top: 1px solid var(--border-medium-color, #EDEDED);
+}
+
+.displayName {
+  padding-right: 8px;
+}
+
+.link {
+  text-decoration: none;
+  
+  font-size: 12px;
+  color: var(--on-background-medium-color, #707279);
+  &:hover {
+    color: var(--primary-color, #6C5CE7);
+  }
+}
+
+

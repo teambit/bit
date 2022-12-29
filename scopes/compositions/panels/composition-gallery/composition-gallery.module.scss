@@ -1,0 +1,33 @@
+.carousel {
+    display: flex;
+    cursor: pointer;
+    align-items: center;
+    overflow-x: auto;
+    gap: 24px;
+    padding-bottom: 12px;
+    // prevent navigation when overflowing.
+    overscroll-behavior-x: contain;
+  }
+  
+  
+  .title {
+    > h3 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  
+    }
+  }
+  
+  
+  .compositionGallery {
+    padding: 20px 40px 10px 40px;
+  }
+  
+  .compositionCard {
+    min-width: 270px;
+  }
+  .preview {
+    width: 264px;
+    height: 200px;
+  }

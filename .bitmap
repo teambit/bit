@@ -363,6 +363,13 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/component-version"
     },
+    "composition-card": {
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.compositions",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/compositions/composition-card"
+    },
     "compositions": {
         "scope": "teambit.compositions",
         "version": "0.0.940",
@@ -885,6 +892,13 @@
         "version": "0.0.631",
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/panels"
+    },
+    "panels/composition-gallery": {
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.compositions",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/compositions/panels/composition-gallery"
     },
     "path/is-path-inside": {
         "scope": "teambit.toolbox",

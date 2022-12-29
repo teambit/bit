@@ -7,8 +7,9 @@ import { ComponentPreview } from '@teambit/preview.ui.component-preview';
 import { StatusMessageCard } from '@teambit/design.ui.surfaces.status-message-card';
 import { ComponentOverview } from '@teambit/component.ui.component-meta';
 
-import styles from './overview.module.scss';
 import { CompositionsCarousel } from '@teambit/react.ui.docs.compositions-carousel';
+import { CompositionGallery } from '@teambit/compositions.panels.composition-gallery';
+import styles from './overview.module.scss';
 
 export enum BadgePosition {
   Title,
@@ -66,6 +67,12 @@ export function Overview({ titleBadges }: OverviewProps) {
       {component.preview?.skipIncludes && (
         <CompositionsCarousel className={styles.compositions} component={component}></CompositionsCarousel>
       )}
+      {
+      !component.preview?.skipIncludes && (
+        <CompositionGallery component={component} />
+      )
+      }
+
 
       {/* replace with new panel card same for compositions. */}
       README
