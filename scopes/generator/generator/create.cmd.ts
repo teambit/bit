@@ -67,6 +67,7 @@ export class CreateCmd implements Command {
         return `${chalk.bold(result.id.toString())}
     location: ${result.dir}
     env:      ${result.envId} (set by ${result.envSetBy})
+    package:  ${result.packageName}
 `;
       })
       .join('\n');
