@@ -50,7 +50,7 @@ export class StatusMain {
     private remove: RemoveMain
   ) {}
 
-  async status(): Promise<StatusResult> {
+  async status({ lanes }: { lanes?: boolean }): Promise<StatusResult> {
     if (!this.workspace) throw new OutsideWorkspaceError();
     loader.start(BEFORE_STATUS);
     const consumer = this.workspace.consumer;
@@ -111,8 +111,8 @@ export class StatusMain {
 
     const softTaggedComponents = componentsList.listSoftTaggedComponents();
     const snappedComponents = (await componentsList.listSnappedComponentsOnMain()).map((c) => c.toBitId());
-    const pendingUpdatesFromMain = await componentsList.listUpdatesFromMainPending();
-    const updatesFromForked = await componentsList.listUpdatesFromForked();
+    const pendingUpdatesFromMain = lanes ? await componentsList.listUpdatesFromMainPending() : [];
+    const updatesFromForked = lanes ? await componentsList.listUpdatesFromForked() : [];
     const currentLaneId = consumer.getCurrentLaneId();
     const currentLane = await consumer.getCurrentLaneObject();
     const forkedLaneId = currentLane?.forkedFrom;
