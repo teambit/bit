@@ -11,6 +11,14 @@ import {
 const Parser = require('@typescript-eslint/typescript-estree');
 const Walker = require('node-source-walk');
 
+const shouldBeIgnored = (node) => {
+  const comments = node?.parent?.parent?.comments;
+  if (!comments) return false;
+  const commentAboveNode = comments.find((c) => c.loc.start.line === node.loc.start.line - 1);
+  if (!commentAboveNode) return false;
+  return commentAboveNode.value.includes('@bit-ignore');
+};
+
 /**
  * Extracts the dependencies of the supplied TypeScript module
  *
@@ -20,6 +28,8 @@ const Walker = require('node-source-walk');
  */
 export default function (src, options: Record<string, any> = {}) {
   options.parser = Parser;
+  options.comment = true;
+  options.loc = true;
 
   const walker = new Walker(options);
 
@@ -62,6 +72,7 @@ export default function (src, options: Record<string, any> = {}) {
       case 'ImportDeclaration':
         if (node.source && node.source.value) {
           const dependency = node.source.value;
+          if (shouldBeIgnored(node)) return;
           addDependency(dependency);
 
           node.specifiers.forEach((specifier) => {
