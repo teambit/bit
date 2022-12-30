@@ -32,7 +32,9 @@ export default class Lanes {
     const filter = (lane: LaneItem) => lane.toLaneId().isEqual(id);
     const hash = this.objects.getHashFromIndex(IndexType.lanes, filter);
     if (!hash) return null;
-    const lane = (await this.objects.load(new Ref(hash))) as Lane;
+    // this makes sure to delete index.json in case it's outdated
+    const obj = await this.objects._getBitObjectsByHashes([hash]);
+    const lane = obj[0] as Lane;
     lane.isNew = Boolean(this.scopeJson.lanes.new?.find((l) => l === lane.name));
     return lane;
   }
