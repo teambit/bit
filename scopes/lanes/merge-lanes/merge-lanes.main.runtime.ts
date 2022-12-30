@@ -226,7 +226,7 @@ export class MergeLanesMain {
     }
     const workspaceIds = (await this.workspace.listIds()).map((id) => id._legacy);
     const mainNotOnLane = workspaceIds.filter((id) => !laneIds.find((laneId) => laneId.isEqualWithoutVersion(id)));
-    const ids = [...laneIds, ...mainNotOnLane];
+    const ids = [...laneIds, ...mainNotOnLane].filter((id) => id.hasScope());
     const modelComponents = await Promise.all(ids.map((id) => this.scope.legacyScope.getModelComponent(id)));
     return compact(
       modelComponents.map((c) => {
