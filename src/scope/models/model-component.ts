@@ -371,6 +371,8 @@ export default class Component extends BitObject {
   }
 
   /**
+   * get the recent head. if locally is ahead, return the local head. otherwise, return the remote head.
+   *
    * a user can be checked out to a lane, in which case, `this.laneHeadLocal` and `this.laneHeadRemote`
    * may be populated.
    * `this.head` may not be populated, e.g. when a component was created on
@@ -383,7 +385,7 @@ export default class Component extends BitObject {
     const remoteHead = this.laneHeadRemote || this.remoteHead;
     if (!remoteHead) return latestLocally;
     if (!this.getHeadRegardlessOfLane()) {
-      return remoteHead.toString(); // user never merged the remote version, so remote is the latest
+      return remoteHead.toString(); // in case a snap was created on another lane
     }
 
     // either a user is on main or a lane, check whether the remote is ahead of the local

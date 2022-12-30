@@ -106,6 +106,8 @@ export default class ComponentsList {
     const unmergedComponents = this.listDuringMergeStateComponents();
     const mergePendingComponents = await this.listMergePendingComponents();
     const mergePendingComponentsIds = BitIds.fromArray(mergePendingComponents.map((c) => c.id));
+    const currentLane = await this.consumer.getCurrentLaneObject();
+    const currentLaneIds = currentLane?.toBitIds();
     const outdatedComps: OutdatedComponent[] = [];
     await Promise.all(
       fileSystemComponents.map(async (component) => {
@@ -115,6 +117,11 @@ export default class ComponentsList {
         if (mergePendingComponentsIds.hasWithoutVersion(component.id)) {
           // by default, outdated include merge-pending since the remote-head and local-head are
           // different, however we want them both to be separated as they need different treatment
+          return;
+        }
+        if (currentLaneIds && !currentLaneIds.hasWithoutVersion(component.id)) {
+          // it's not on the current lane, it's on main. although it's available in the workspace, we don't want to
+          // show it in the section of outdated components. because "checkout head" won't work on it.
           return;
         }
         const latestVersionLocally = modelComponent.latest();
@@ -161,21 +168,26 @@ export default class ComponentsList {
     if (this.consumer.isOnMain()) {
       return [];
     }
-    const authoredAndImportedIds = this.bitMap.getAllBitIds();
+    const allIds = this.bitMap.getAllBitIds();
 
     const duringMergeIds = this.listDuringMergeStateComponents();
 
     const componentsFromModel = await this.getModelComponents();
     const compFromModelOnWorkspace = componentsFromModel
-      .filter((c) => authoredAndImportedIds.hasWithoutVersion(c.toBitId()))
+      .filter((c) => allIds.hasWithoutVersion(c.toBitId()))
       // if a component is merge-pending, it needs to be resolved first before getting more updates from main
       .filter((c) => !duringMergeIds.hasWithoutVersion(c.toBitId()));
 
     const results = await Promise.all(
       compFromModelOnWorkspace.map(async (modelComponent) => {
         const headOnMain = modelComponent.head;
-        const headOnLane = modelComponent.laneHeadLocal;
-        if (!headOnMain || !headOnLane) return undefined;
+        if (!headOnMain) return undefined;
+        const checkedOutVersion = allIds.searchWithoutVersion(modelComponent.toBitId())?.version;
+        if (!checkedOutVersion) {
+          throw new Error(`listUpdatesFromMainPending: unable to find ${modelComponent.toBitId()} in the workspace`);
+        }
+        const headOnLane = modelComponent.getRef(checkedOutVersion);
+
         const divergeData = await getDivergeData({
           repo: this.scope.objects,
           modelComponent,

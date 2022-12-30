@@ -363,7 +363,7 @@ describe('merge lanes', function () {
       expect(head).to.equal(comp2HeadOnMain);
     });
     it('bit status should indicate that the main is ahead', () => {
-      const status = helper.command.status();
+      const status = helper.command.status('--lanes');
       expect(status).to.have.string(`${helper.scopes.remote}/comp1 ... main is ahead by 1 snaps`);
     });
     let afterMergeToMain: string;
@@ -502,7 +502,7 @@ describe('merge lanes', function () {
       helper.command.import();
     });
     it('bit status should have the component as pendingUpdatesFromMain with an noCommonSnap error', () => {
-      const status = helper.command.statusJson();
+      const status = helper.command.statusJson(undefined, '--lanes');
       expect(status.pendingUpdatesFromMain).to.have.lengthOf(1);
       expect(status.pendingUpdatesFromMain[0].divergeData.err.name).to.equal('NoCommonSnap');
     });
