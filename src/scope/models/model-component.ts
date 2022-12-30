@@ -642,7 +642,7 @@ export default class Component extends BitObject {
   }
 
   toBitIdWithLatestVersion(): BitId {
-    return new BitId({ scope: this.scope, name: this.name, version: this.getHeadRegardlessOfLaneAsTagOrHash() });
+    return new BitId({ scope: this.scope, name: this.name, version: this.getHeadRegardlessOfLaneAsTagOrHash(true) });
   }
 
   toBitIdWithHead(): BitId {
@@ -793,7 +793,7 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
   toComponentVersion(versionStr?: string): ComponentVersion {
     const versionParsed = versionParser(versionStr);
     const versionNum = versionParsed.latest
-      ? this.getHeadRegardlessOfLaneAsTagOrHash()
+      ? this.getHeadRegardlessOfLaneAsTagOrHash(true)
       : (versionParsed.versionNum as string);
     if (versionNum === VERSION_ZERO) {
       throw new NoHeadNoVersion(this.id());
