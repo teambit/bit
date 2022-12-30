@@ -286,7 +286,12 @@ use "bit fetch ${forkedLaneId.toString()} --lanes" to update ${forkedLaneId.name
       ].join('\n');
     }
 
-    const laneStr = currentLaneId.isDefault() ? '' : `\non ${chalk.bold(currentLaneId.toString())} lane`;
+    const getLaneStr = () => {
+      if (currentLaneId.isDefault()) return '';
+      const prefix = `\non ${chalk.bold(currentLaneId.toString())} lane`;
+      if (lanes) return prefix;
+      return `${prefix}\nconsider adding "--lanes" flag to see updates from main/forked`;
+    };
 
     const troubleshootingStr = showTroubleshootingLink ? `\n${TROUBLESHOOTING_MESSAGE}` : '';
 
@@ -309,7 +314,7 @@ use "bit fetch ${forkedLaneId.toString()} --lanes" to update ${forkedLaneId.name
       ]).join(chalk.underline('\n                         \n') + chalk.white('\n')) +
       troubleshootingStr;
 
-    const results = (statusMsg || chalk.yellow(statusWorkspaceIsCleanMsg)) + laneStr;
+    const results = (statusMsg || chalk.yellow(statusWorkspaceIsCleanMsg)) + getLaneStr();
 
     const exitCode = componentsWithIssues.length && strict ? 1 : 0;
 
