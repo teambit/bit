@@ -53,7 +53,7 @@ describe('updates from main and lane', function () {
       const comp2 = status.pendingUpdatesFromMain.find((c) => c.id.includes('comp2'));
       expect(comp2.divergeData.snapsOnTargetOnly).to.have.lengthOf(1);
     });
-    describe('bit checkout', () => {
+    describe('bit checkout head', () => {
       let checkoutOutput: string;
       before(() => {
         checkoutOutput = helper.command.checkoutHead('--skip-dependency-installation');
@@ -61,6 +61,19 @@ describe('updates from main and lane', function () {
       it('should update only components from the current lane', () => {
         expect(checkoutOutput).to.have.string('comp1');
         expect(checkoutOutput).not.to.have.string('comp2');
+      });
+    });
+    describe('bit lane merge main', () => {
+      let mergeOutput: string;
+      before(() => {
+        mergeOutput = helper.command.mergeLane('main', '--skip-dependency-installation --no-snap');
+      });
+      it('should update not only components belong to the main but also components that are available on the workspace and have updates from main', () => {
+        expect(mergeOutput).to.have.string('comp1');
+        expect(mergeOutput).to.have.string('comp2');
+
+        const status = helper.command.statusJson(undefined, '--lanes');
+        expect(status.pendingUpdatesFromMain).to.have.lengthOf(0);
       });
     });
   });

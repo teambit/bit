@@ -1,7 +1,6 @@
 import fs from 'fs-extra';
 import * as pathLib from 'path';
 import R from 'ramda';
-import { compact } from 'lodash';
 import { LaneId } from '@teambit/lane-id';
 import semver from 'semver';
 import { Analytics } from '../analytics/analytics';
@@ -696,20 +695,6 @@ once done, to continue working, please run "bit cc"`
     }
     // it's probably new, we assume it doesn't have scope.
     return BitId.parse(id, false);
-  }
-
-  /**
-   * returns the main ids of the given lane
-   */
-  async getDefaultLaneIdsFromLane(lane: Lane): Promise<BitId[]> {
-    const laneIds = lane.toBitIds();
-    const modelComponents = await Promise.all(laneIds.map((id) => this.getModelComponent(id)));
-    return compact(
-      modelComponents.map((c) => {
-        if (!c.head) return null; // probably the component was never merged to main
-        return c.toBitId().changeVersion(c.head.toString());
-      })
-    );
   }
 
   async writeObjectsToPendingDir(objectList: ObjectList, clientId: string): Promise<void> {

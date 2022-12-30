@@ -105,7 +105,7 @@ export class MergeLanesMain {
     const getBitIds = async () => {
       if (isDefaultLane) {
         if (!currentLane) throw new Error(`unable to merge ${DEFAULT_LANE}, the current lane was not found`);
-        return consumer.scope.getDefaultLaneIdsFromLane(currentLane);
+        return this.getMainIdsToMerge(currentLane);
       }
       if (!otherLane) throw new Error(`lane must be defined for non-default`);
       return otherLane.toBitIds();
@@ -217,6 +217,23 @@ export class MergeLanesMain {
         throw new BitError(`unable to merge due to the following failures:\n${failureMsgs}`);
       }
     }
+  }
+
+  private async getMainIdsToMerge(lane: Lane) {
+    const laneIds = lane.toBitIds();
+    if (!this.workspace) {
+      throw new BitError(`getMainIdsToMerge needs workspace`);
+    }
+    const workspaceIds = (await this.workspace.listIds()).map((id) => id._legacy);
+    const mainNotOnLane = workspaceIds.filter((id) => !laneIds.find((laneId) => laneId.isEqualWithoutVersion(id)));
+    const ids = [...laneIds, ...mainNotOnLane];
+    const modelComponents = await Promise.all(ids.map((id) => this.scope.legacyScope.getModelComponent(id)));
+    return compact(
+      modelComponents.map((c) => {
+        if (!c.head) return null; // probably the component was never merged to main
+        return c.toBitId().changeVersion(c.head.toString());
+      })
+    );
   }
 
   async mergeFromScope(

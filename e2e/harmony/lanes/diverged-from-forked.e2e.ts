@@ -22,7 +22,7 @@ describe('lane-b was forked from lane-a and they are now diverged', function () 
     helper.command.switchLocalLane('lane-b');
   });
   it('bit status should have the diverged component in the updatesFromForked section', () => {
-    const status = helper.command.statusJson();
+    const status = helper.command.statusJson(undefined, '--lanes');
     expect(status.updatesFromForked).to.have.lengthOf(1);
   });
   after(() => {
