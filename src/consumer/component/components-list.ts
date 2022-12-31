@@ -66,7 +66,7 @@ export default class ComponentsList {
         return new BitId({
           scope: componentObjects.scope,
           name: componentObjects.name,
-          version: componentObjects.scope ? componentObjects.latest() : undefined,
+          version: componentObjects.scope ? componentObjects.getHeadRegardlessOfLaneAsTagOrHash(true) : undefined,
         });
       });
     }
@@ -124,7 +124,7 @@ export default class ComponentsList {
           // show it in the section of outdated components. because "checkout head" won't work on it.
           return;
         }
-        const latestVersionLocally = modelComponent.latest();
+        const latestVersionLocally = modelComponent.getHeadRegardlessOfLaneAsTagOrHash();
         const latestIncludeRemoteHead = await modelComponent.headIncludeRemote(this.scope.objects);
         const isOutdated = (): boolean => {
           if (latestIncludeRemoteHead !== latestVersionLocally) return true;
