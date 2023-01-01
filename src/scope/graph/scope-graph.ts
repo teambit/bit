@@ -140,7 +140,7 @@ export default class DependencyGraph {
     const graph = new Graph();
     const allModelComponents: ModelComponent[] = await consumer.scope.list();
     const buildGraphP = allModelComponents.map(async (modelComponent) => {
-      const latestVersion = modelComponent.latest();
+      const latestVersion = modelComponent.getHeadRegardlessOfLaneAsTagOrHash(true);
       const buildVersionP = modelComponent.listVersionsIncludeOrphaned().map(async (versionNum) => {
         if (onlyLatest && latestVersion !== versionNum) return;
         const id = modelComponent.toBitId().changeVersion(versionNum);

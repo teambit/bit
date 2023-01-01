@@ -492,8 +492,8 @@ export default class CommandHelper {
     return this.runCmd(`bit status ${flags}`);
   }
 
-  statusJson(cwd = this.scopes.localPath): Record<string, any> {
-    const status = this.runCmd('bit status --json', cwd);
+  statusJson(cwd = this.scopes.localPath, flags = ''): Record<string, any> {
+    const status = this.runCmd(`bit status --json ${flags}`, cwd);
     return JSON.parse(status);
   }
 

@@ -312,7 +312,7 @@ describe('bit lane command', function () {
       // main
       helper.fs.outputFile('utils/is-type/is-type.js', fixtures.isType);
       helper.command.addComponent('utils/is-type', { i: 'utils/is-type' });
-      helper.command.snapAllComponents();
+      helper.command.snapAllComponentsWithoutBuild();
 
       // laneA
       helper.command.createLane('lane-a');
@@ -323,13 +323,13 @@ describe('bit lane command', function () {
       helper.command.addComponent('utils/is-string', { i: 'utils/is-string' });
       helper.command.linkAndRewire();
       helper.command.compile();
-      helper.command.snapAllComponents();
+      helper.command.snapAllComponentsWithoutBuild();
 
       // laneB
       helper.command.createLane('lane-b');
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
-      helper.command.snapAllComponents();
+      helper.command.snapAllComponentsWithoutBuild();
 
       beforeSwitchingBack = helper.scopeHelper.cloneLocalScope();
     });

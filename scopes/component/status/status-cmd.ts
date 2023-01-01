@@ -35,6 +35,7 @@ export class StatusCmd implements Command {
       'verbose',
       'show extra data: full snap hashes for staged, divergence point for lanes and updates-from-main for forked lanes',
     ],
+    ['l', 'lanes', 'when on a lane, show updates from main and updates from forked lanes'],
     ['', 'strict', 'in case issues found, exit with code 1'],
   ] as CommandOptions;
   loader = true;
@@ -42,7 +43,7 @@ export class StatusCmd implements Command {
 
   constructor(private status: StatusMain) {}
 
-  async json() {
+  async json(_args, { lanes }: { lanes?: boolean }) {
     const {
       newComponents,
       modifiedComponents,
@@ -62,7 +63,7 @@ export class StatusCmd implements Command {
       updatesFromForked,
       currentLaneId,
       forkedLaneId,
-    }: StatusResult = await this.status.status();
+    }: StatusResult = await this.status.status({ lanes });
     return {
       newComponents: newComponents.map((c) => c.toStringWithoutVersion()),
       modifiedComponents: modifiedComponents.map((c) => c.toString()),
@@ -92,7 +93,7 @@ export class StatusCmd implements Command {
   }
 
   // eslint-disable-next-line complexity
-  async report(_args, { strict, verbose }: { strict?: boolean; verbose?: boolean }) {
+  async report(_args, { strict, verbose, lanes }: { strict?: boolean; verbose?: boolean; lanes?: boolean }) {
     const {
       newComponents,
       modifiedComponents,
@@ -112,7 +113,7 @@ export class StatusCmd implements Command {
       updatesFromForked,
       currentLaneId,
       forkedLaneId,
-    }: StatusResult = await this.status.status();
+    }: StatusResult = await this.status.status({ lanes });
     // If there is problem with at least one component we want to show a link to the
     // troubleshooting doc
     let showTroubleshootingLink = false;
@@ -285,7 +286,12 @@ use "bit fetch ${forkedLaneId.toString()} --lanes" to update ${forkedLaneId.name
       ].join('\n');
     }
 
-    const laneStr = currentLaneId.isDefault() ? '' : `\non ${chalk.bold(currentLaneId.toString())} lane`;
+    const getLaneStr = () => {
+      if (currentLaneId.isDefault()) return '';
+      const prefix = `\non ${chalk.bold(currentLaneId.toString())} lane`;
+      if (lanes) return prefix;
+      return `${prefix}\nconsider adding "--lanes" flag to see updates from main/forked`;
+    };
 
     const troubleshootingStr = showTroubleshootingLink ? `\n${TROUBLESHOOTING_MESSAGE}` : '';
 
@@ -308,7 +314,7 @@ use "bit fetch ${forkedLaneId.toString()} --lanes" to update ${forkedLaneId.name
       ]).join(chalk.underline('\n                         \n') + chalk.white('\n')) +
       troubleshootingStr;
 
-    const results = (statusMsg || chalk.yellow(statusWorkspaceIsCleanMsg)) + laneStr;
+    const results = (statusMsg || chalk.yellow(statusWorkspaceIsCleanMsg)) + getLaneStr();
 
     const exitCode = componentsWithIssues.length && strict ? 1 : 0;
 
