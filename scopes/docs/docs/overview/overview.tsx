@@ -7,7 +7,7 @@ import { ComponentPreview } from '@teambit/preview.ui.component-preview';
 import { StatusMessageCard } from '@teambit/design.ui.surfaces.status-message-card';
 import { ComponentOverview } from '@teambit/component.ui.component-meta';
 
-import { CompositionsCarousel } from '@teambit/react.ui.docs.compositions-carousel';
+// import { CompositionsCarousel } from '@teambit/react.ui.docs.compositions-carousel';
 import { CompositionGallery } from '@teambit/compositions.panels.composition-gallery';
 import styles from './overview.module.scss';
 
@@ -64,9 +64,9 @@ export function Overview({ titleBadges }: OverviewProps) {
         />
       )}
       {/* TODO: oded get the compositions carousel to work from here using `Preview` instead of directly rendering */}
-      {component.preview?.skipIncludes && (
+      {/* {component.preview?.skipIncludes && (
         <CompositionsCarousel className={styles.compositions} component={component}></CompositionsCarousel>
-      )}
+      )} */}
       {
       !component.preview?.skipIncludes && (
         <CompositionGallery component={component} />
