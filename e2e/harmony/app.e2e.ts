@@ -78,7 +78,7 @@ describe('app command', function () {
           helper.fs.deletePath(join('my-scope', 'my-app','my-app.react-app.ts'))
           helper.env.setCustomNewEnv(undefined, undefined, { policy: ENV_POLICY });
           helper.command.setEnv('my-app', envId);
-          helper.command.install();
+          helper.command.install('react-router-dom@6.4.3');
           helper.bitJsonc.addKeyVal('my-scope/my-app', {});
           helper.bitJsonc.addKeyVal('teambit.harmony/application', {envs: [envId]});
         });
