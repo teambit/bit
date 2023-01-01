@@ -34,6 +34,15 @@ const ENV_POLICY = {
   ],
 };
 
+export const REACT_CJS_APP = `module.exports.default = {
+  name: 'my-app',
+  entry: [require.resolve('./my-app.app-root')],
+  prerender: {
+    routes: ['/']
+  }
+};
+`
+
 describe('app command', function () {
   this.timeout(0);
   let helper: Helper;
@@ -58,14 +67,15 @@ describe('app command', function () {
         expect(output).to.have.string('my-scope/my-app app is running on');
       });
     });
-    describe.only('env apps API', () => {
+    describe('env apps API', () => {
       describe('React app', () => {
         before(() => {
           helper.scopeHelper.setNewLocalAndRemoteScopes({ addRemoteScopeAsDefaultScope: false });
           const envId = 'my-scope/react-based-env';
           // Replace with new app template of the new react env when it's ready
           helper.command.create('react-app', 'my-app');
-          helper.fs.changeFileName(join('my-scope', 'my-app','my-app.react-app.ts'), join('my-scope', 'my-app', 'my-app.react-18-app.ts'))
+          helper.fs.writeFile(join('my-scope', 'my-app', 'my-app.react-18-app.cjs'), REACT_CJS_APP);
+          helper.fs.deletePath(join('my-scope', 'my-app','my-app.react-app.ts'))
           helper.env.setCustomNewEnv(undefined, undefined, { policy: ENV_POLICY });
           helper.command.setEnv('my-app', envId);
           helper.command.install();
