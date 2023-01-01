@@ -8,3 +8,5 @@ export { AppDeployContext } from './app-deploy-context';
 export { AppBuildContext } from './app-build-context';
 export { AppBuildResult } from './app-build-result';
 export { ARTIFACTS_DIR_NAME as APPS_ARTIFACTS_DIR_NAME } from './build.task';
+export type { AppsEnv } from './apps-env-type';
+export { AppTypeList } from './app-type-list';

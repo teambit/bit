@@ -1,6 +1,6 @@
 import { PJV } from 'package-json-validator';
 import R from 'ramda';
-import { lt } from 'semver';
+import { lt, gt } from 'semver';
 import packageNameValidate from 'validate-npm-package-name';
 
 import { BitId, BitIds } from '../bit-id';
@@ -25,7 +25,7 @@ import Version from './models/version';
  */
 export default function validateVersionInstance(version: Version): void {
   const message = `unable to save Version object${
-    version.componentId ? ` of "${version.componentId.toString()}"` : ''
+    version.componentId ? ` of "${version.componentId.toString()}"` : ` hash ${version.hash().toString()}`
   }`;
   const validateBitId = (bitId: BitId, field: string, validateVersion = true, validateScope = true) => {
     if (validateVersion && !bitId.hasVersion()) {
@@ -187,6 +187,16 @@ export default function validateVersionInstance(version: Version): void {
         );
       }
     });
+    // before 0.0.947, there was a bug that didn't save some extensions in the flattenedDependencies for some unknown reason.
+    if (version.bitVersion && gt(version.bitVersion, '0.0.947')) {
+      version.extensions.extensionsBitIds.forEach((extensionId) => {
+        if (!dependencies.has(extensionId)) {
+          throw new VersionInvalid(
+            `${message}, the extension ${extensionId.toString()} is missing from the flattenedDependencies`
+          );
+        }
+      });
+    }
   };
   validateFlattenedDependencies(version.flattenedDependencies);
   // extensions can be duplicate with other dependencies type. e.g. "test" can have "compile" as a

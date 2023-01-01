@@ -11,6 +11,7 @@ import { ComponentServer } from './component-server';
 import { BundlerContext } from './bundler-context';
 import { devServerSchema } from './dev-server.graphql';
 import { DevServerService } from './dev-server.service';
+import { BundlerService } from './bundler.service';
 
 export type BrowserRuntimeSlot = SlotRegistry<BrowserRuntime>;
 
@@ -129,7 +130,7 @@ export class BundlerMain {
   ) {
     const devServerService = new DevServerService(pubsub, dependencyResolver, runtimeSlot);
     const bundler = new BundlerMain(config, pubsub, envs, devServerService, runtimeSlot);
-    envs.registerService(devServerService);
+    envs.registerService(devServerService, new BundlerService());
 
     graphql.register(devServerSchema(bundler));
 

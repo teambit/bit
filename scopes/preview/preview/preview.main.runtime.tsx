@@ -58,6 +58,7 @@ import { EnvTemplateRoute } from './env-template.route';
 import { ComponentPreviewRoute } from './component-preview.route';
 import { previewSchema } from './preview.graphql';
 import { PreviewAssetsRoute } from './preview-assets.route';
+import { PreviewService } from './preview.service';
 
 const noopResult = {
   results: [],
@@ -866,6 +867,7 @@ export class PreviewMain {
       workspace.registerOnComponentRemove((cId) => preview.handleComponentRemoval(cId));
     }
 
+    envs.registerService(new PreviewService());
 
     graphql.register(previewSchema(preview));
 

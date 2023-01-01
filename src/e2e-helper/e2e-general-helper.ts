@@ -125,8 +125,12 @@ export default class GeneralHelper {
     return component.extensions.find((e) => e.name === extName);
   }
 
+  getStagedConfigPath(laneName = 'main') {
+    return path.join(this.scopes.localPath, '.bit', 'staged-config', `${laneName}.json`);
+  }
+
   getStagedConfig(laneName = 'main') {
-    return fs.readJSONSync(path.join(this.scopes.localPath, '.bit', 'staged-config', `${laneName}.json`));
+    return fs.readJSONSync(this.getStagedConfigPath(laneName));
   }
 
   getPackageNameByCompName(compName: string) {

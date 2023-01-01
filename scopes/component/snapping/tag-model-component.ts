@@ -34,7 +34,7 @@ import {
 } from '@teambit/legacy/dist/scope/component-ops/message-per-component';
 import { ModelComponent } from '@teambit/legacy/dist/scope/models';
 import { DependencyResolverMain } from '@teambit/dependency-resolver';
-import { ScopeMain } from '@teambit/scope';
+import { ScopeMain, StagedConfig } from '@teambit/scope';
 import { Workspace } from '@teambit/workspace';
 import { SnappingMain, TagDataPerComp } from './snapping.main.runtime';
 
@@ -210,6 +210,7 @@ export async function tagModelComponent({
   taggedComponents: Component[];
   autoTaggedResults: AutoTagResult[];
   publishedPackages: string[];
+  stagedConfig?: StagedConfig;
 }> {
   const consumer = workspace?.consumer;
   const legacyScope = scope.legacyScope;
@@ -292,16 +293,19 @@ export async function tagModelComponent({
   await addLogToComponents(componentsToTag, autoTagComponents, persist, message, messagePerId);
   // don't move it down. otherwise, it'll be empty and we don't know which components were during merge.
   const unmergedComps = workspace ? await workspace.listComponentsDuringMerge() : [];
+  let stagedConfig;
   if (soft) {
     if (!consumer) throw new Error(`unable to soft-tag without consumer`);
     consumer.updateNextVersionOnBitmap(allComponentsToTag, preReleaseId);
   } else {
-    await snapping._addFlattenedDependenciesToComponents(legacyScope, allComponentsToTag);
+    await snapping._addFlattenedDependenciesToComponents(allComponentsToTag);
     emptyBuilderData(allComponentsToTag);
     addBuildStatus(allComponentsToTag, BuildStatus.Pending);
     await addComponentsToScope(legacyScope, snapping, allComponentsToTag, Boolean(build), consumer);
 
-    if (workspace) await updateComponentsVersions(workspace, allComponentsToTag);
+    if (workspace) {
+      stagedConfig = await updateComponentsVersions(workspace, allComponentsToTag);
+    }
   }
 
   const publishedPackages: string[] = [];
@@ -335,7 +339,7 @@ export async function tagModelComponent({
     await removeMergeConfigFromComponents(unmergedComps, allComponentsToTag, workspace);
   }
 
-  return { taggedComponents: componentsToTag, autoTaggedResults: autoTagData, publishedPackages };
+  return { taggedComponents: componentsToTag, autoTaggedResults: autoTagData, publishedPackages, stagedConfig };
 }
 
 async function removeDeletedComponentsFromBitmap(comps: Component[], workspace?: Workspace) {
@@ -472,7 +476,7 @@ export async function updateComponentsVersions(
   workspace: Workspace,
   components: Array<ModelComponent | Component>,
   isTag = true
-): Promise<any> {
+): Promise<StagedConfig> {
   const consumer = workspace.consumer;
   const currentLane = consumer.getCurrentLaneId();
   const stagedConfig = await workspace.scope.getStagedConfig();
@@ -515,5 +519,6 @@ export async function updateComponentsVersions(
   // imagine tagging comp1 with auto-tagged comp2, comp1 package.json is written while comp2 is
   // trying to get the dependencies of comp1 using its package.json.
   await mapSeries(components, updateVersions);
-  await stagedConfig.write();
+
+  return stagedConfig;
 }
