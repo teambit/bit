@@ -5,11 +5,13 @@ import {
   DependencyResolverMain,
   PackageManager,
   PackageManagerInstallOptions,
+  PackageImportMethod,
   Registries,
   Registry,
   PackageManagerResolveRemoteVersionOptions,
   ResolvedPackageVersion,
 } from '@teambit/dependency-resolver';
+import { BitError } from '@teambit/bit-error';
 import { ComponentMap, Component } from '@teambit/component';
 import fs from 'fs-extra';
 import { join, relative, resolve } from 'path';
@@ -56,6 +58,7 @@ export class YarnPackageManager implements PackageManager {
       cacheRootDir: installOptions.cacheRootDir,
       nodeLinker: installOptions.nodeLinker,
       packageManagerConfigRootDir: installOptions.packageManagerConfigRootDir,
+      packageImportMethod: installOptions.packageImportMethod,
     });
 
     const project = new Project(rootDirPath, { configuration: config });
@@ -353,8 +356,13 @@ export class YarnPackageManager implements PackageManager {
       cacheRootDir?: string;
       nodeLinker?: 'hoisted' | 'isolated';
       packageManagerConfigRootDir?: string;
+      packageImportMethod?: PackageImportMethod;
     }
   ): Promise<Configuration> {
+    const packageImportMethod = options.packageImportMethod || 'hardlink';
+    if (!['hardlink', 'copy'].includes(packageImportMethod)) {
+      throw new BitError(`packageImportMethod ${packageImportMethod} is not supported with Yarn`);
+    }
     const registries = await this.depResolver.getRegistries();
     const proxyConfig = await this.depResolver.getProxyConfig();
     const networkConfig = await this.depResolver.getNetworkConfig();
@@ -391,7 +399,7 @@ export class YarnPackageManager implements PackageManager {
       nmSelfReferences: false,
       // Hardlink the files from the global content-addressable store.
       // This increases the speed of installation and reduces disk space usage.
-      nmMode: 'hardlinks-global',
+      nmMode: packageImportMethod === 'hardlink' ? 'hardlinks-global' : 'classic',
 
       // TODO: check about support for the following: (see more here - https://github.com/yarnpkg/berry/issues/1434#issuecomment-801449010)
       // ca?: string;
