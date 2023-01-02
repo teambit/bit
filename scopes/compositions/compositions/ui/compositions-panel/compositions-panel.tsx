@@ -1,8 +1,7 @@
-import { ComponentModel } from '@teambit/component';
+import { Icon } from '@teambit/evangelist.elements.icon';
 import classNames from 'classnames';
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback } from 'react';
 
-import { CompositionCard } from '@teambit/composition-card';
 import { Composition } from '../../composition';
 import styles from './compositions-panel.module.scss';
 
@@ -11,10 +10,6 @@ export type CompositionsPanelProps = {
    * list of compositions
    */
   compositions: Composition[];
-  /**
-   * list of compositions
-   */
-  component: ComponentModel;
   /**
    * select composition to display
    */
@@ -31,12 +26,11 @@ export type CompositionsPanelProps = {
    * checks if a component is using the new preview api. if false, doesnt scale to support new preview
    */
   isScaling?: boolean;
-} & React.HTMLAttributes<HTMLDivElement>;
+} & React.HTMLAttributes<HTMLUListElement>;
 
 export function CompositionsPanel({
   url,
   compositions,
-  component,
   isScaling,
   onSelectComposition: onSelect,
   active,
@@ -50,30 +44,29 @@ export function CompositionsPanel({
     [onSelect]
   );
 
-  useEffect(() => {
-    // first load should scroll down to show the active card in the fold.
-    active?.identifier && document.getElementById(active?.identifier)?.scrollIntoView({block: 'center'});
-  }, []);
-
   return (
-    <div {...rest} className={classNames(styles.compositionGrid, className)}>
+    <ul {...rest} className={classNames(className)}>
       {compositions.map((composition) => {
         const href = isScaling ? `${url}&name=${composition.identifier}` : `${url}&${composition.identifier}`;
 
         // TODO - move to composition panel node
         return (
-          <CompositionCard
+          <li
             key={composition.identifier}
-            id={composition.identifier}
-            onClick={() => handleSelect(composition)}
-            openCompositionLink={href}
-            className={classNames(styles.compositionCard, composition === active && styles.active)}
-            previewClass={styles.preview}
-            composition={composition}
-            component={component}
-          />
+            className={classNames(styles.linkWrapper, composition === active && styles.active)}
+          >
+            <a className={styles.panelLink} onClick={() => handleSelect(composition)}>
+              <span className={styles.box}></span>
+              <span className={styles.name}>{composition.displayName}</span>
+            </a>
+            <div className={styles.right}>
+              <a className={styles.panelLink} target="_blank" rel="noopener noreferrer" href={href}>
+                <Icon className={styles.icon} of="open-tab" />
+              </a>
+            </div>
+          </li>
         );
       })}
-    </div>
+    </ul>
   );
 }

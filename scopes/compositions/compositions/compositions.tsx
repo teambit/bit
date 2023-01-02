@@ -80,7 +80,7 @@ export function Compositions({ menuBarWidgets, emptyState }: CompositionsProp) {
   useEffect(() => setSidebarOpenness(showSidebar), [showSidebar]);
   return (
     <CompositionContextProvider queryParams={compositionParams} setQueryParams={setCompositionParams}>
-      <SplitPane layout={sidebarOpenness} size="70%" className={styles.compositionsPage}>
+      <SplitPane layout={sidebarOpenness} size="85%" className={styles.compositionsPage}>
         <Pane className={styles.left}>
           <CompositionsMenuBar menuBarWidgets={menuBarWidgets} className={styles.menuBar}>
             <Link external href={currentCompositionFullUrl} className={styles.openInNewTab}>
@@ -113,7 +113,6 @@ export function Compositions({ menuBarWidgets, emptyState }: CompositionsProp) {
               </TabList>
               <TabPanel className={styles.tabContent}>
                 <CompositionsPanel
-                  component={component}
                   isScaling={isScaling}
                   onSelectComposition={(composition) => {
                     if (!currentComposition || !location) return;

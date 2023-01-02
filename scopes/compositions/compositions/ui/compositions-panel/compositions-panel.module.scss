@@ -1,20 +1,119 @@
-.compositionGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
-  gap: 16px;
-  max-width: 1280px;
-  transition: all 0.15s ease;
-  padding: 16px;
-  min-width: 0;
-  min-height: 0;
-}
+.linkWrapper {
+  padding: 0 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 40px;
+  font-size: var(--bit-p-xs);
+  transition: all 300ms ease-in-out;
 
-.compositionCard {
+  &:hover {
+    background-color: var(--bit-border-color-lightest, #ededed);
+    // border-radius: 8px;
+    transition: background-color 300ms ease-in-out;
+    .right {
+      visibility: unset;
+      opacity: 1;
+      color: var(--bit-text-color-light, #6c707c);
+      //TODO - fix hover effect and timing of icon
+      transition: visibility 200ms, opacity 100ms ease-in-out;
+      .icon {
+        &:hover {
+          color: var(--bit-text-color-heavy);
+        }
+      }
+    }
+  }
   &.active {
-    border-color: var(--primary-color, #5d4aec);
+    display: flex;
+    align-items: center;
+    background-color: var(--bit-accent-color, #6c5ce7);
+    color: var(--bit-bg-color, #ffffff);
+
+    // overrides
+    &:hover {
+      background-color: #5d4aec;
+    }
+
+    .box {
+      background-color: var(--bit-bg-color, #ffffff);
+    }
+
+    .right {
+      visibility: unset;
+      opacity: 1;
+      color: var(--bit-accent-bg, #eceaff);
+      .icon {
+        &:hover {
+          color: var(--bit-bg-color, #ffffff);
+        }
+      }
+    }
+  }
+  .right {
+    opacity: 0;
+    visibility: hidden;
+    font-size: 13px;
+    transition: visibility 200ms, opacity 100ms ease-in-out;
   }
 }
 
-.preview {
-  max-height: 168px;
+.box {
+  width: 10px;
+  height: 10px;
+  flex-shrink: 0;
+  background-color: var(--bit-text-color-heavy);
+  margin-right: 11px;
+  border-radius: 1px;
+}
+.name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-right: 8px;
+}
+.panelLink {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+  width: 100%;
+  height: 100%;
+  text-decoration: none;
+  color: inherit;
+  min-width: 0;
+
+  &:active {
+    color: inherit;
+  }
+}
+
+.tabs {
+  display: flex;
+  align-items: center;
+  margin-bottom: 17px;
+  > div {
+    position: relative;
+    padding: 8px;
+    text-transform: uppercase;
+    font-size: 12px;
+    font-weight: bold;
+    &:not(:first-child) {
+      color: #878c9a;
+    }
+
+    &:first-child {
+      &:before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        background-color: var(--bit-accent-color, #6c5ce7);
+        height: 3px;
+        border-radius: 10px;
+        transition: background-color 300ms, height 300ms;
+      }
+    }
+  }
 }

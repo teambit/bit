@@ -50,23 +50,16 @@ $panelBg: #fafafa;
 .tabsContainer {
   display: flex;
   flex-direction: column;
-  position: relative;
   height: 100%;
 }
 
 .tabs {
   flex: none;
-  position: fixed;
-  z-index: 100;
-  height: 32px;
-  width: 100%;
-  background-color: var(--surface-color, white);
 }
 
 .tabContent {
   flex: 1 1;
   overflow: auto;
-  padding-top: 32px;
   &:empty {
     display: none;
   }
