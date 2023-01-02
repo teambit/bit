@@ -734,7 +734,9 @@ once done, to continue working, please run "bit cc"`
     if (pathHasScope(path)) return this.load(path);
     const scopeJson = Scope.ensureScopeJson(path, name, groupName);
     const repository = await Repository.create({ scopePath: path, scopeJson });
-    return new Scope({ path, created: true, scopeJson, objects: repository });
+    const scope = new Scope({ path, created: true, scopeJson, objects: repository });
+    Scope.scopeCache[path] = scope;
+    return scope;
   }
 
   static ensureScopeJson(
