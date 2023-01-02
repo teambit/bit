@@ -1185,7 +1185,8 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
         : extsWithoutRemoved;
       const { extensionDataListFiltered, envIsCurrentlySet } = await this.filterEnvsFromExtensionsIfNeeded(
         extsWithoutSelf,
-        envWasFoundPreviously
+        envWasFoundPreviously,
+        origin
       );
       if (envIsCurrentlySet) {
         await this.warnAboutMisconfiguredEnv(componentId, extensions);
@@ -1323,7 +1324,11 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     return componentStatus.modified === true;
   }
 
-  private async filterEnvsFromExtensionsIfNeeded(extensionDataList: ExtensionDataList, envWasFoundPreviously: boolean) {
+  private async filterEnvsFromExtensionsIfNeeded(
+    extensionDataList: ExtensionDataList,
+    envWasFoundPreviously: boolean,
+    origin: ExtensionsOrigin
+  ) {
     const envAspect = extensionDataList.findExtension(EnvsAspect.id);
     const envFromEnvsAspect: string | undefined = envAspect?.config.env || envAspect?.data.id;
     if (envWasFoundPreviously && envAspect) {
@@ -1337,7 +1342,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
       delete envAspect.config.env;
       return { extensionDataListFiltered: new ExtensionDataList(...nonEnvs), envIsCurrentlySet: true };
     }
-    if (envFromEnvsAspect) {
+    if (envFromEnvsAspect && (origin === 'ModelNonSpecific' || origin === 'ModelSpecific')) {
       // if env was found, search for this env in the workspace and if found, replace the env-id with the one from the workspace
       const envAspectExt = extensionDataList.find((e) => e.extensionId?.toStringWithoutVersion() === envFromEnvsAspect);
       const ids = await this.listIds();
