@@ -88,8 +88,8 @@ describe('app command', function () {
           expect(output).to.have.string('my-scope/my-app');
         });
         it('should run the app', () => {
-          const output = helper.command.runApp('my-app');
-          expect(output).to.have.string('my-scope/my-app app is running on');
+          const output = helper.general.runWithTryCatch('bit app run my-app');
+          expect(output).to.have.string('my-app app is running on');
         });
       });
     });
