@@ -7,6 +7,7 @@ import {
   VariantPolicy,
   VariantPolicyEntry,
 } from '@teambit/dependency-resolver';
+import { Lane } from '@teambit/legacy/dist/scope/models';
 import { EnvsAspect } from '@teambit/envs';
 import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
 import { compact, omit, uniqBy } from 'lodash';
@@ -16,7 +17,7 @@ type GenericConfigOrRemoved = Record<string, any> | '-';
 
 type EnvData = { id: string; version?: string; config?: GenericConfigOrRemoved };
 
-type SerializedDependencyWithPolicy = SerializedDependency & { policy?: string };
+type SerializedDependencyWithPolicy = SerializedDependency & { policy?: string; packageName?: string };
 
 export type MergeStrategyResult = {
   id: string;
@@ -64,15 +65,19 @@ export class ConfigMerger {
   private otherEnv: EnvData;
   private baseEnv?: EnvData;
   private handledExtIds: string[] = [];
+  private otherLaneIdsStr: string[];
   constructor(
     private compIdStr: string,
     private workspaceIds: ComponentID[],
+    private otherLane: Lane | undefined,
     private currentAspects: ExtensionDataList,
     private baseAspects: ExtensionDataList,
     private otherAspects: ExtensionDataList,
     private currentLabel: string,
     private otherLabel: string
-  ) {}
+  ) {
+    this.otherLaneIdsStr = otherLane?.components.map((c) => c.id.toStringWithoutVersion()) || [];
+  }
 
   merge(): ConfigMergeResult {
     this.populateEnvs();
@@ -185,6 +190,7 @@ export class ConfigMerger {
     const { id, currentExt, otherExt, baseExt } = mergeStrategyParams;
     const depResolverResult = this.depResolverStrategy(mergeStrategyParams);
     if (depResolverResult) {
+      // if (depResolverResult.mergedConfig || depResolverResult?.conflict) console.log("\n\nDepResolverResult", this.compIdStr, '\n', JSON.stringify(depResolverResult, undefined, 2))
       return depResolverResult;
     }
     const currentConfig = this.getConfig(currentExt);
@@ -264,6 +270,41 @@ ${'>'.repeat(7)} ${this.otherLabel}
     const baseConfig = baseExt ? this.getConfig(baseExt) : undefined;
     const basePolicy = baseConfig ? this.getPolicy(baseConfig) : undefined;
 
+    const getAutoDeps = (ext: ExtensionDataList): SerializedDependencyWithPolicy[] => {
+      const data = ext.findCoreExtension(DependencyResolverAspect.id)?.data.dependencies;
+      if (!data) return [];
+      const policy = ext.findCoreExtension(DependencyResolverAspect.id)?.data.policy || [];
+      return data
+        .filter((d) => d.source === 'auto')
+        .map((d) => {
+          const idWithoutVersion = d.__type === 'package' ? d.id : d.id.split('@')[0];
+          const existingPolicy = policy.find((p) => p.dependencyId === idWithoutVersion);
+          const getPolicyVer = () => {
+            if (d.__type === 'package') return undefined; // for packages, the policy is already the version
+            if (existingPolicy) return existingPolicy.value.version; // currently it's missing, will be implemented by @Gilad
+            if (!semver.valid(d.version)) return d.version; // could be a hash
+            // default to `^` or ~ if starts with zero, until we save the policy from the workspace during tag/snap.
+            return d.version.startsWith('0.') ? `~${d.version}` : `^${d.version}`;
+          };
+          return {
+            ...d,
+            id: idWithoutVersion,
+            policy: getPolicyVer(),
+          };
+        });
+    };
+
+    const currentData = getAutoDeps(this.currentAspects);
+    const otherData = getAutoDeps(this.otherAspects);
+    const currentAndOtherData = uniqBy(currentData.concat(otherData), (d) => d.id);
+    const currentAndOtherComponentsData = currentAndOtherData.filter((c) => c.__type === 'component');
+    const baseData = getAutoDeps(this.baseAspects);
+
+    const getCompIdStrByPkgNameFromData = (pkgName: string): string | undefined => {
+      const found = currentAndOtherComponentsData.find((d) => d.packageName === pkgName);
+      return found?.id;
+    };
+
     const mergedPolicy = {
       dependencies: [],
       devDependencies: [],
@@ -284,6 +325,11 @@ ${'>'.repeat(7)} ${this.otherLabel}
     };
     const handleConfigMerge = () => {
       const addVariantPolicyEntryToPolicy = (dep: VariantPolicyEntry) => {
+        const compIdStr = getCompIdStrByPkgNameFromData(dep.dependencyId);
+        if (compIdStr && this.isIdInWorkspace(compIdStr)) {
+          // no need to add if the id exists in the workspace (regardless the version)
+          return;
+        }
         const depType = lifecycleToDepType[dep.lifecycleType];
         mergedPolicy[depType].push({
           name: dep.dependencyId,
@@ -340,13 +386,13 @@ ${'>'.repeat(7)} ${this.otherLabel}
         if (baseVer && baseVer === otherVer) {
           return;
         }
-        // @todo: needs to ignore if it's in the workspace somehow.
-        // if (currentDep.__type === 'component' && this.isIdInWorkspace(currentId)) {
-        //   // dependencies that exist in the workspace, should be ignored. they'll be resolved later to the version in the ws.
-        //   return;
-        // }
         if (baseVer && baseVer === currentVer) {
           addVariantPolicyEntryToPolicy(otherDep);
+          return;
+        }
+        const compIdStr = getCompIdStrByPkgNameFromData(dep.dependencyId);
+        if (compIdStr && this.isIdInWorkspace(compIdStr)) {
+          // no need to add if the id exists in the workspace (regardless the version)
           return;
         }
 
@@ -372,7 +418,9 @@ ${'>'.repeat(7)} ${this.otherLabel}
 
     const addSerializedDepToPolicy = (dep: SerializedDependencyWithPolicy) => {
       const depType = lifecycleToDepType[dep.lifecycle];
-
+      if (dep.__type === 'component' && this.isIdInWorkspace(dep.id)) {
+        return;
+      }
       if (hasConfigForDep(depType, dep.id)) {
         return; // there is already config for it.
       }
@@ -383,35 +431,6 @@ ${'>'.repeat(7)} ${this.otherLabel}
       });
       isMerged = true;
     };
-
-    const getAutoDeps = (ext: ExtensionDataList): SerializedDependencyWithPolicy[] => {
-      const data = ext.findCoreExtension(DependencyResolverAspect.id)?.data.dependencies;
-      if (!data) return [];
-      const policy = ext.findCoreExtension(DependencyResolverAspect.id)?.data.policy || [];
-      return data
-        .filter((d) => d.source === 'auto')
-        .map((d) => {
-          const idWithoutVersion = d.__type === 'package' ? d.id : d.id.split('@')[0];
-          const existingPolicy = policy.find((p) => p.dependencyId === idWithoutVersion);
-          const getPolicyVer = () => {
-            if (d.__type === 'package') return undefined; // for packages, the policy is already the version
-            if (existingPolicy) return existingPolicy.value.version; // currently it's missing, will be implemented by @Gilad
-            if (!semver.valid(d.version)) return d.version; // could be a hash
-            // default to `^` or ~ if starts with zero, until we save the policy from the workspace during tag/snap.
-            return d.version.startsWith('0.') ? `~${d.version}` : `^${d.version}`;
-          };
-          return {
-            ...d,
-            id: idWithoutVersion,
-            policy: getPolicyVer(),
-          };
-        });
-    };
-
-    const currentData = getAutoDeps(this.currentAspects);
-    const otherData = getAutoDeps(this.otherAspects);
-    const currentAndOtherData = uniqBy(currentData.concat(otherData), (d) => d.id);
-    const baseData = getAutoDeps(this.baseAspects);
 
     // uncomment to debug
     // console.log('\n\n**************', this.compIdStr, '**************');
@@ -510,7 +529,7 @@ ${'>'.repeat(7)} ${this.otherLabel}`;
   }
 
   private isIdInWorkspace(id: string): boolean {
-    return Boolean(this.getIdFromWorkspace(id));
+    return Boolean(this.getIdFromWorkspace(id)) || this.otherLaneIdsStr.includes(id);
   }
 
   private getIdFromWorkspace(id: string): ComponentID | undefined {
