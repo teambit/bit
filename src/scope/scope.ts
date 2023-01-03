@@ -402,7 +402,7 @@ once done, to continue working, please run "bit cc"`
     const ids = components.map((component) => {
       const getVersion = () => {
         if (component.component) {
-          return component.component.latest();
+          return component.component.getHeadRegardlessOfLaneAsTagOrHash();
         }
         if (throwOnFailure) throw new ComponentNotFound(component.id.toString());
         return DEFAULT_BIT_VERSION;
@@ -506,7 +506,9 @@ once done, to continue working, please run "bit cc"`
     const components = componentsObjects.map((componentObject) => {
       const component = componentObject.component;
       if (!component) return null;
-      const version = componentObject.id.hasVersion() ? componentObject.id.version : component.latest();
+      const version = componentObject.id.hasVersion()
+        ? componentObject.id.version
+        : component.getHeadRegardlessOfLaneAsTagOrHash(true);
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       return component.toComponentVersion(version);
     });
@@ -604,7 +606,7 @@ once done, to continue working, please run "bit cc"`
         if (componentObjects.id.hasVersion()) return componentObjects.id.getVersion().toString();
         if (!defaultToLatestVersion)
           throw new Error(`getComponentsAndVersions expect ${componentObjects.id.toString()} to have a version`);
-        return componentObjects.component?.latest() as string;
+        return componentObjects.component?.getHeadRegardlessOfLaneAsTagOrHash() as string;
       };
       const versionStr = getVersionStr();
       const version: Version = await component.loadVersion(versionStr, this.objects);
@@ -732,7 +734,9 @@ once done, to continue working, please run "bit cc"`
     if (pathHasScope(path)) return this.load(path);
     const scopeJson = Scope.ensureScopeJson(path, name, groupName);
     const repository = await Repository.create({ scopePath: path, scopeJson });
-    return new Scope({ path, created: true, scopeJson, objects: repository });
+    const scope = new Scope({ path, created: true, scopeJson, objects: repository });
+    Scope.scopeCache[path] = scope;
+    return scope;
   }
 
   static ensureScopeJson(

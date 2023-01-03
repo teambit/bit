@@ -283,7 +283,7 @@ describe('merge config scenarios', function () {
       helper.command.export();
 
       helper.scopeHelper.getClonedLocalScope(mainBeforeDiverge);
-      helper.command.setEnv('comp1', `${envId}@0.0.3`);
+      // helper.command.setEnv('comp1', `${envId}@0.0.3`);
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
 

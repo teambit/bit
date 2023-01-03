@@ -250,7 +250,7 @@ export async function tagModelComponent({
         const modelComponent = await legacyScope.getModelComponentIfExist(component.id);
         if (!modelComponent) throw new ShowDoctorError(`component ${component.id} was not found in the model`);
         if (!modelComponent.listVersions().length) return null; // no versions yet, no issues.
-        const latest = modelComponent.latest();
+        const latest = modelComponent.getHeadRegardlessOfLaneAsTagOrHash();
         if (latest !== component.version) {
           return {
             componentId: component.id.toStringWithoutVersion(),

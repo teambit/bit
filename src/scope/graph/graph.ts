@@ -106,7 +106,7 @@ export default class Graph extends GraphLib {
     const scope = await loadScope(process.cwd());
     await Promise.all(
       allModelComponents.map(async (modelComponent) => {
-        const latestVersion = modelComponent.latest();
+        const latestVersion = modelComponent.getHeadRegardlessOfLaneAsTagOrHash(true);
         const buildVersionP = modelComponent.listVersionsIncludeOrphaned().map(async (versionNum) => {
           if (onlyLatest && latestVersion !== versionNum) return;
           const id = modelComponent.toBitId().changeVersion(versionNum);
