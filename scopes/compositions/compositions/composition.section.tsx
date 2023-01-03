@@ -17,7 +17,7 @@ export class CompositionsSection implements Section {
 
   navigationLink = {
     href: '~compositions',
-    children: 'Compositions',
+    children: 'Preview',
   };
 
   route = {

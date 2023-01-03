@@ -12,7 +12,7 @@ export function CompositionGallery({ component }: { component: ComponentModel })
   return (
     <div className={styles.compositionGallery}>
       <LinkedHeading size="xs" className={styles.title}>
-        <Icon of="compositions" /> <span>Compositions</span>
+        <Icon of="eye" /> <span>PREVIEW</span>
       </LinkedHeading>
       <div className={styles.carousel}>
         {component.compositions.map((composition) => {
