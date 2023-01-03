@@ -1,19 +1,16 @@
 import React, { useContext, ComponentType, useState } from 'react';
 import classNames from 'classnames';
 import { flatten } from 'lodash';
-import { Icon } from '@teambit/design.elements.icon';
+// import { Icon } from '@teambit/design.elements.icon';
 import { PropertiesTable } from '@teambit/react.ui.docs.properties-table';
-import { LinkedHeading } from '@teambit/documenter.ui.linked-heading';
+// import { LinkedHeading } from '@teambit/documenter.ui.linked-heading';
 import { ComponentContext, useComponentDescriptor } from '@teambit/component';
 import type { SlotRegistry } from '@teambit/harmony';
 import { ComponentPreview } from '@teambit/preview.ui.component-preview';
 import { StatusMessageCard } from '@teambit/design.ui.surfaces.status-message-card';
 import { ComponentOverview } from '@teambit/component.ui.component-meta';
-import { CompositionsCarousel } from '@teambit/react.ui.docs.compositions-carousel';
-
-// import { CompositionsCarousel } from '@teambit/react.ui.docs.compositions-carousel';
 import { CompositionGallery } from '@teambit/compositions.panels.composition-gallery';
-import { ReadmeSkeleton } from './readme-skeleton';
+// import { ReadmeSkeleton } from './readme-skeleton';
 import styles from './overview.module.scss';
 
 export enum BadgePosition {
@@ -78,7 +75,7 @@ export function Overview({ titleBadges }: OverviewProps) {
         <Icon of="text" /> <span>README</span>
       </LinkedHeading> */}
       <div className={styles.readme}>
-        {isLoading && <ReadmeSkeleton />}
+        {/* {isLoading && <ReadmeSkeleton />} */}
         <ComponentPreview
           onLoad={() => setLoading(false)}
           component={component}

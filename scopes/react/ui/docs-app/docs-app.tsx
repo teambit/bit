@@ -21,8 +21,8 @@ export function DocsApp({ componentId, docs = defaultDocs, compositions, context
   // Next 2 lines are to support legacy code (ExamplesOverview)
   const { examples = [] } = docs;
   const Content: any = isFunction(docs.default) ? docs.default : () => null;
-  const params = new URLSearchParams(location.href);
-  const isSkipInclude = params.get('skipIncludes')
+  const params = new URLSearchParams(window.location.href);
+  const isSkipInclude = params.get('skipIncludes');
 
   return (
     <DocsTheme>
