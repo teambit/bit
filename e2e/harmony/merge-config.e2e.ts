@@ -62,20 +62,21 @@ describe('merge config scenarios', function () {
         const deprecationData = helper.command.showAspectConfig('comp1', Extensions.deprecation);
         expect(deprecationData.config.deprecate).to.be.true;
       });
-      describe('snapping the components', () => {
-        before(() => {
-          helper.command.install();
-          helper.command.compile();
-          helper.command.snapAllComponentsWithoutBuild();
-        });
-        it('should not save it with force: true in the model after snapping', () => {
-          const cmp = helper.command.catComponent(`${helper.scopes.remote}/comp1@latest`);
-          const depResolver = cmp.extensions.find((e) => e.name === Extensions.dependencyResolver);
-          const policy = depResolver.data.policy;
-          const comp2 = policy.find((p) => p.dependencyId === `${helper.general.getPackageNameByCompName('comp2')}`);
-          expect(comp2.force).to.equal(false);
-        });
-      });
+      // not relevant anymore, we don't auto-merge when the dep is in the workspace or in the lane.
+      // describe('snapping the components', () => {
+      //   before(() => {
+      //     helper.command.install();
+      //     helper.command.compile();
+      //     helper.command.snapAllComponentsWithoutBuild();
+      //   });
+      //   it('should not save it with force: true in the model after snapping', () => {
+      //     const cmp = helper.command.catComponent(`${helper.scopes.remote}/comp1@latest`);
+      //     const depResolver = cmp.extensions.find((e) => e.name === Extensions.dependencyResolver);
+      //     const policy = depResolver.data.policy;
+      //     const comp2 = policy.find((p) => p.dependencyId === `${helper.general.getPackageNameByCompName('comp2')}`);
+      //     expect(comp2.force).to.equal(false);
+      //   });
+      // });
     });
     describe('switching to the lane', () => {
       before(() => {
