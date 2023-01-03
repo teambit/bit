@@ -74,11 +74,11 @@ export function Overview({ titleBadges }: OverviewProps) {
 
       {/* TODO - @oded replace with new panel card same for compositions. */}
 
-      <LinkedHeading size="xs" className={styles.title}>
+      {/* <LinkedHeading size="xs" className={styles.title}>
         <Icon of="text" /> <span>README</span>
-      </LinkedHeading>
+      </LinkedHeading> */}
       <div className={styles.readme}>
-        {isLoading && <ReadmeSkeleton />}
+        {/* {isLoading && <ReadmeSkeleton />} */}
         <ComponentPreview
           onLoad={() => setLoading(false)}
           component={component}
