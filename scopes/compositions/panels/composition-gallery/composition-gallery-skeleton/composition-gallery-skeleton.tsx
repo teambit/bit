@@ -15,7 +15,7 @@ export function ComponentGallerySkeleton({ compositionsLength, className, ...res
       <LineSkeleton width="100px" className={styles.title} />
       <div className={classnames(styles.compositionGalleryGrid)}>
         {length.map((i) => (
-          <CompositionCardSkeleton />
+          <CompositionCardSkeleton key={i} />
         ))}
       </div>
     </div>
