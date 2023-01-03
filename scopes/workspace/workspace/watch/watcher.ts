@@ -216,21 +216,40 @@ export class Watcher {
     files: string[],
     initiator?: CompilationInitiator
   ): Promise<OnComponentEventResult[]> {
-    this.workspace.clearComponentCache(componentId);
-    const component = await this.workspace.get(componentId);
+    let updatedComponentId: ComponentID | undefined = componentId;
+    if (!(await this.workspace.hasId(componentId))) {
+      // bitmap has changed meanwhile, which triggered `handleBitmapChanges`, which re-loaded consumer and updated versions
+      // so the original componentId might not be in the workspace now, and we need to find the updated one
+      const ids = await this.workspace.listIds();
+      updatedComponentId = ids.find((id) => id.isEqual(componentId, { ignoreVersion: true }));
+      if (!updatedComponentId) {
+        // the component was removed
+        return [];
+      }
+    }
+    this.workspace.clearComponentCache(updatedComponentId);
+    const component = await this.workspace.get(updatedComponentId);
     const componentMap: ComponentMap = component.state._consumer.componentMap;
+    if (!componentMap) {
+      throw new Error(
+        `unable to find componentMap for ${updatedComponentId.toString()}, make sure this component is in .bitmap`
+      );
+    }
     const compFiles = files.filter((filePath) => {
       const relativeFile = this.getRelativePathLinux(filePath);
       const isCompFile = Boolean(componentMap.getFilesRelativeToConsumer().find((p) => p === relativeFile));
       if (!isCompFile) {
-        logger.debug(`file ${filePath} is inside the component ${componentId.toString()} but configured to be ignored`);
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        logger.debug(
+          `file ${filePath} is inside the component ${updatedComponentId!.toString()} but configured to be ignored`
+        );
       }
       return isCompFile;
     });
     if (!compFiles.length) {
       return [];
     }
-    const buildResults = await this.executeWatchOperationsOnComponent(componentId, compFiles, true, initiator);
+    const buildResults = await this.executeWatchOperationsOnComponent(updatedComponentId, compFiles, true, initiator);
     return buildResults;
   }
 
