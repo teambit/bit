@@ -8,6 +8,19 @@
     margin-bottom: 0;
     // TODO: talk with oded.
   }
+  
+  .title {
+    position: relative;
+    z-index: 1;
+    padding-top: 24px;
+    margin-bottom: 0;
+    padding-left: 40px;
+    > h3 {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+  }
 }
 
 .legacyPreview {

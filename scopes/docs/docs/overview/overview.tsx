@@ -1,6 +1,8 @@
-import React, { useContext, ComponentType } from 'react';
+import React, { useContext, ComponentType, useState } from 'react';
 import classNames from 'classnames';
 import { flatten } from 'lodash';
+import { Icon } from '@teambit/design.elements.icon';
+import { LinkedHeading } from '@teambit/documenter.ui.linked-heading';
 import { ComponentContext, useComponentDescriptor } from '@teambit/component';
 import type { SlotRegistry } from '@teambit/harmony';
 import { ComponentPreview } from '@teambit/preview.ui.component-preview';
@@ -35,6 +37,7 @@ export function Overview({ titleBadges }: OverviewProps) {
   const componentDescriptor = useComponentDescriptor();
 
   const showHeader = !component.preview?.legacyHeader;
+  const [isLoading, setLoading] = useState(true);
 
   if (component?.buildStatus === 'pending' && component?.host === 'teambit.scope/scope')
     return (
@@ -67,16 +70,15 @@ export function Overview({ titleBadges }: OverviewProps) {
       {/* {component.preview?.skipIncludes && (
         <CompositionsCarousel className={styles.compositions} component={component}></CompositionsCarousel>
       )} */}
-      {
-      !component.preview?.skipIncludes && (
-        <CompositionGallery component={component} />
-      )
-      }
+      {component.preview?.skipIncludes && <CompositionGallery isLoading={isLoading} component={component} />}
 
+      {/* TODO - @oded replace with new panel card same for compositions. */}
 
-      {/* replace with new panel card same for compositions. */}
-      README
+      <LinkedHeading size="xs" className={styles.title}>
+        <Icon of="text" /> <span>README</span>
+      </LinkedHeading>
       <ComponentPreview
+        onLoad={() => setTimeout(() => setLoading(false), 1000)}
         component={component}
         style={{ width: '100%', height: '100%' }}
         previewName="overview"
