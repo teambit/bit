@@ -1,5 +1,5 @@
-import { EnvContext, EnvHandler } from '@teambit/envs';
-import { ApplicationType } from './application-type';
+import { EnvContext, EnvHandler } from "@teambit/envs";
+import { ApplicationType } from "./application-type";
 
 export type AppTypeListOptions = {
   name?: string;
@@ -13,7 +13,7 @@ export class AppTypeList {
   ) {}
 
   compute(): ApplicationType<any>[] {
-    return this.appTypes.map((appType) => appType(this.context));
+    return this.appTypes.map((appType) => appType(this.context))
   }
 
   static from(appTypes: EnvHandler<ApplicationType<any>>[], options: AppTypeListOptions = {}): EnvHandler<AppTypeList> {

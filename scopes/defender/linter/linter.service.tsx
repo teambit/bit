@@ -9,9 +9,9 @@ import { Linter, LintResults } from './linter';
 import { LinterContext, LinterOptions } from './linter-context';
 import { LinterConfig } from './linter.main.runtime';
 
-type LinterTransformationMap = ServiceTransformationMap & {
+type LinterTransformationMap = ServiceTransformationMap  & {
   getLinter: () => Linter;
-};
+}
 
 export class LinterService implements EnvService<LintResults> {
   name = 'linter';
@@ -81,7 +81,7 @@ export class LinterService implements EnvService<LintResults> {
     if (!env?.linter) return undefined;
     return {
       getLinter: () => env.linter()(context),
-    };
+    }
   }
 
   getDescriptor(env: EnvDefinition) {

@@ -17,9 +17,9 @@ const chalk = require('chalk');
 
 export const OnTestsChanged = 'OnTestsChanged';
 
-type TesterTransformationMap = ServiceTransformationMap & {
+type TesterTransformationMap = ServiceTransformationMap  & {
   getTester: () => Tester;
-};
+}
 
 export type TesterDescriptor = {
   /**
@@ -101,7 +101,7 @@ export class TesterService implements EnvService<Tests, TesterDescriptor> {
 
     return {
       getTester: () => env.tester()(context),
-    };
+    }
   }
 
   onTestRunComplete(callback: CallbackFn) {

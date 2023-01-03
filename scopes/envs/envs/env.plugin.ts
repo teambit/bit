@@ -34,8 +34,8 @@ export class EnvPlugin implements PluginDefinition {
       if (!service.transform) return acc;
       const currTransformer = service.transform(env, envContext);
       if (!currTransformer) return acc;
-      return { ...acc, ...currTransformer };
-    }, {});
+      return {...acc, ...currTransformer};
+    }, {})
 
     if (!env.preview && !env.compiler) return undefined;
 
@@ -46,10 +46,10 @@ export class EnvPlugin implements PluginDefinition {
       __getDescriptor: async () => {
         return {
           type: env.name,
-        };
+        }
       },
       id: envId,
-    };
+    }
   }
 
   register(object: any, aspect: Aspect) {

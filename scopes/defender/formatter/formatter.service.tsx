@@ -7,9 +7,9 @@ import { Formatter, FormatResults } from './formatter';
 import { FormatterContext, FormatterOptions } from './formatter-context';
 import { FormatterConfig } from './formatter.main.runtime';
 
-type FormatterTransformationMap = ServiceTransformationMap & {
+type FormatterTransformationMap = ServiceTransformationMap  & {
   getFormatter: () => Formatter;
-};
+}
 export class FormatterService implements EnvService<FormatResults> {
   name = 'formatter';
 
@@ -58,7 +58,7 @@ export class FormatterService implements EnvService<FormatResults> {
     if (!env?.formatter) return undefined;
     return {
       getFormatter: () => env.formatter()(context),
-    };
+    }
   }
 
   getDescriptor(env: EnvDefinition) {

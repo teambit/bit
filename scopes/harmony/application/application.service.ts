@@ -1,9 +1,9 @@
 import { EnvService, Env, EnvContext, ServiceTransformationMap, ExecutionContext } from '@teambit/envs';
 import { ApplicationType } from './application-type';
 
-type ApplicationTransformationMap = ServiceTransformationMap & {
+type ApplicationTransformationMap = ServiceTransformationMap  & {
   getAppTypes: () => ApplicationType<any>[];
-};
+}
 export class AppService implements EnvService<any> {
   name = 'application';
   registerAppType: (appType: ApplicationType<any>) => void;
@@ -22,13 +22,13 @@ export class AppService implements EnvService<any> {
     if (!env?.apps) return undefined;
     const appTypesList = env.apps()(context);
     const appTypes = appTypesList.compute();
-    appTypes.forEach((appType) => {
+    appTypes.forEach(appType => {
       this.registerAppType(appType);
     });
     return {
       getAppTypes: () => {
         return appTypes;
       },
-    };
+    }
   }
 }
