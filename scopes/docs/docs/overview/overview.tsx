@@ -2,6 +2,7 @@ import React, { useContext, ComponentType, useState } from 'react';
 import classNames from 'classnames';
 import { flatten } from 'lodash';
 import { Icon } from '@teambit/design.elements.icon';
+import { PropertiesTable } from '@teambit/react.ui.docs.properties-table';
 import { LinkedHeading } from '@teambit/documenter.ui.linked-heading';
 import { ComponentContext, useComponentDescriptor } from '@teambit/component';
 import type { SlotRegistry } from '@teambit/harmony';
@@ -11,6 +12,7 @@ import { ComponentOverview } from '@teambit/component.ui.component-meta';
 
 // import { CompositionsCarousel } from '@teambit/react.ui.docs.compositions-carousel';
 import { CompositionGallery } from '@teambit/compositions.panels.composition-gallery';
+import { ReadmeSkeleton } from './readme-skeleton';
 import styles from './overview.module.scss';
 
 export enum BadgePosition {
@@ -51,8 +53,8 @@ export function Overview({ titleBadges }: OverviewProps) {
 
   const isScaling = component.preview?.isScaling;
 
-  const iframeQueryParams = `skipIncludes=${component.preview?.skipIncludes || 'false'}`
-  
+  const iframeQueryParams = `skipIncludes=${component.preview?.skipIncludes || 'false'}`;
+
   return (
     <div className={styles.overviewWrapper}>
       {showHeader && (
@@ -68,28 +70,30 @@ export function Overview({ titleBadges }: OverviewProps) {
           component={component}
         />
       )}
-      {/* TODO: oded get the compositions carousel to work from here using `Preview` instead of directly rendering */}
-      {/* {component.preview?.skipIncludes && (
-        <CompositionsCarousel className={styles.compositions} component={component}></CompositionsCarousel>
-      )} */}
-      {component.preview?.skipIncludes && <CompositionGallery isLoading={isLoading} component={component} />}
 
       {/* TODO - @oded replace with new panel card same for compositions. */}
 
       <LinkedHeading size="xs" className={styles.title}>
         <Icon of="text" /> <span>README</span>
       </LinkedHeading>
-      <ComponentPreview
-        onLoad={() => setTimeout(() => setLoading(false), 1000)}
-        component={component}
-        style={{ width: '100%', height: '100%' }}
-        previewName="overview"
-        pubsub={true}
-        queryParams={[iframeQueryParams]}
-        viewport={null}
-        fullContentHeight
-        scrolling="no"
-      />
+      <div className={styles.readme}>
+        {isLoading && <ReadmeSkeleton />}
+        <ComponentPreview
+          onLoad={() => setLoading(false)}
+          component={component}
+          style={{ width: '100%', height: '100%' }}
+          previewName="overview"
+          pubsub={true}
+          queryParams={[iframeQueryParams]}
+          viewport={null}
+          fullContentHeight
+          scrolling="no"
+        />
+        {component.preview?.skipIncludes && <CompositionGallery isLoading={isLoading} component={component} />}
+        {component.preview?.skipIncludes && (
+          <PropertiesTable className={styles.overviewPropsTable} componentId={component.id.toString()} />
+        )}
+      </div>
     </div>
   );
 }

@@ -1,6 +1,5 @@
 .carousel {
     display: flex;
-    cursor: pointer;
     align-items: center;
     overflow-x: auto;
     gap: 24px;
@@ -9,6 +8,7 @@
     overscroll-behavior-x: contain;
     .compositionGalleryCard {
       width: 300px;
+      cursor: pointer;
     }
   }
   

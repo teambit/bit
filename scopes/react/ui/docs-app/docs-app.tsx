@@ -21,6 +21,8 @@ export function DocsApp({ componentId, docs = defaultDocs, compositions, context
   // Next 2 lines are to support legacy code (ExamplesOverview)
   const { examples = [] } = docs;
   const Content: any = isFunction(docs.default) ? docs.default : () => null;
+  const params = new URLSearchParams(location.href);
+  const isSkipInclude = params.get('skipIncludes')
 
   return (
     <DocsTheme>
@@ -32,7 +34,7 @@ export function DocsApp({ componentId, docs = defaultDocs, compositions, context
           className={styles.compositionSection}
           compositionCardClass={styles.compositionCard}
         />
-        <PropertiesTable componentId={componentId} />
+        {(!isSkipInclude || isSkipInclude === 'false') && <PropertiesTable componentId={componentId} />}
         <ExamplesOverview examples={Content.examples || examples} />
       </>
     </DocsTheme>

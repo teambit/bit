@@ -2,6 +2,8 @@
   overflow: hidden;
   padding: 5px;
   position: relative;
+  width: 264px;
+  height: 170px;
 }
 
 .compositionCard {
@@ -37,12 +39,12 @@
   align-items: center;
   justify-content: space-between;
   font-size: 14px;
-  padding: 8px 12px;
   border-top: 1px solid var(--border-medium-color, #EDEDED);
 }
 
 .displayName {
   padding-right: 8px;
+  padding: 8px 12px;
 }
 
 .link {

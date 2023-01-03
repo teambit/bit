@@ -8,7 +8,7 @@
     margin-bottom: 0;
     // TODO: talk with oded.
   }
-  
+
   .title {
     position: relative;
     z-index: 1;
@@ -30,4 +30,35 @@
 .compositions {
   padding-left: 40px;
   margin-top: 10px;
+}
+
+// readme skeleton styles
+.readme {
+  position: relative;
+}
+
+.readmeSkeleton {
+  position: absolute;
+  background-color: var(--surface-color, #FFFFFF);
+  padding: 20px 40px 10px 40px;
+  max-width: 1440px;
+  width: 100%;
+  box-sizing: border-box;
+  // covers the content so that it doesnt flicker before the skeleton is removed
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  color: var(--border-medium-color, #ededed);
+  > * {
+    margin-bottom: 8px;
+  }
+}
+.block {
+  width: 300px;
+}
+
+.overviewPropsTable {
+  padding: 20px 40px 10px 40px;
+
 }

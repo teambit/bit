@@ -4,7 +4,6 @@ import { Icon } from '@teambit/design.elements.icon';
 import { LinkedHeading } from '@teambit/documenter.ui.linked-heading';
 import { useNavigate } from '@teambit/base-react.navigation.link';
 import { CompositionCard } from '@teambit/composition-card';
-import { ComponentGallerySkeleton } from './composition-gallery-skeleton';
 import styles from './composition-gallery.module.scss';
 
 export type CompositionGalleryProps = {
@@ -14,9 +13,6 @@ export type CompositionGalleryProps = {
 
 export function CompositionGallery({ component, isLoading }: CompositionGalleryProps) {
   const navigate = useNavigate();
-  if (isLoading) {
-    return <ComponentGallerySkeleton compositionsLength={component.compositions.length} />;
-  }
   return (
     <div className={styles.compositionGallery}>
       {/* TODO - @oded replace with panelCard */}
@@ -27,6 +23,7 @@ export function CompositionGallery({ component, isLoading }: CompositionGalleryP
         {component.compositions.map((composition) => {
           return (
             <CompositionCard
+              isLoading={isLoading}
               key={composition.identifier.toLowerCase()}
               onClick={() => navigate(`~compositions/${composition.identifier.toLowerCase()}`)}
               className={styles.compositionGalleryCard}
