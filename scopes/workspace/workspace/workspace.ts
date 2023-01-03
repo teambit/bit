@@ -1183,9 +1183,10 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
       const extsWithoutSelf = selfInMergedExtensions?.extensionId
         ? extsWithoutRemoved.remove(selfInMergedExtensions.extensionId)
         : extsWithoutRemoved;
-      const { extensionDataListFiltered, envIsCurrentlySet } = this.filterEnvsFromExtensionsIfNeeded(
+      const { extensionDataListFiltered, envIsCurrentlySet } = await this.filterEnvsFromExtensionsIfNeeded(
         extsWithoutSelf,
-        envWasFoundPreviously
+        envWasFoundPreviously,
+        origin
       );
       if (envIsCurrentlySet) {
         await this.warnAboutMisconfiguredEnv(componentId, extensions);
@@ -1323,7 +1324,11 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     return componentStatus.modified === true;
   }
 
-  private filterEnvsFromExtensionsIfNeeded(extensionDataList: ExtensionDataList, envWasFoundPreviously: boolean) {
+  private async filterEnvsFromExtensionsIfNeeded(
+    extensionDataList: ExtensionDataList,
+    envWasFoundPreviously: boolean,
+    origin: ExtensionsOrigin
+  ) {
     const envAspect = extensionDataList.findExtension(EnvsAspect.id);
     const envFromEnvsAspect: string | undefined = envAspect?.config.env || envAspect?.data.id;
     if (envWasFoundPreviously && envAspect) {
@@ -1336,6 +1341,16 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
       // still, aspect env may have other data other then config.env.
       delete envAspect.config.env;
       return { extensionDataListFiltered: new ExtensionDataList(...nonEnvs), envIsCurrentlySet: true };
+    }
+    if (envFromEnvsAspect && (origin === 'ModelNonSpecific' || origin === 'ModelSpecific')) {
+      // if env was found, search for this env in the workspace and if found, replace the env-id with the one from the workspace
+      const envAspectExt = extensionDataList.find((e) => e.extensionId?.toStringWithoutVersion() === envFromEnvsAspect);
+      const ids = await this.listIds();
+      const envAspectId = envAspectExt?.extensionId;
+      const found = envAspectId && ids.find((id) => id._legacy.isEqualWithoutVersion(envAspectId));
+      if (found) {
+        envAspectExt.extensionId = found._legacy;
+      }
     }
     return { extensionDataListFiltered: extensionDataList, envIsCurrentlySet: Boolean(envFromEnvsAspect) };
   }
