@@ -38,8 +38,7 @@ export class GraphBuilder {
       newGraph.setNode(node);
     });
     graph.edges.forEach((edge) => {
-      const edgeObj =
-        edge.attr === 'dependencies' || edge.attr === 'runtime' ? new Dependency('runtime') : new Dependency('dev');
+      const edgeObj = (edge.attr === 'dependencies' || edge.attr === 'runtime') ? new Dependency('runtime') : new Dependency('dev');
       newGraph.setEdge(new Edge(edge.sourceId, edge.targetId, edgeObj));
     });
     return newGraph;
