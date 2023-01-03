@@ -57,9 +57,6 @@ describe('merge config scenarios', function () {
         helper.fs.outputFile(`${helper.scopes.remoteWithoutOwner}/comp1/index.js`);
         helper.fs.outputFile(`${helper.scopes.remoteWithoutOwner}/comp2/index.js`);
         helper.fs.outputFile(`${helper.scopes.remoteWithoutOwner}/comp3/index.js`);
-        // fixing the dependencies conflicts
-        helper.general.fixMergeConfigConflict('ours', 'comp1', false);
-        helper.general.fixMergeConfigConflict('ours', 'comp2', false);
       });
       it('should keep the configuration from the lane', () => {
         const deprecationData = helper.command.showAspectConfig('comp1', Extensions.deprecation);
