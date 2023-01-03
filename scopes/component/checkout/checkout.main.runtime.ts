@@ -234,7 +234,14 @@ export class CheckoutMain {
     if (checkoutProps.entireLane && !checkoutProps.head) {
       throw new BitError(`--entire-lane flag can only be used with "head" (bit checkout head --entire-lane)`);
     }
-    const ids = componentPattern ? await this.workspace.idsByPattern(componentPattern) : await this.workspace.listIds();
+    const idsOnWorkspace = componentPattern
+      ? await this.workspace.idsByPattern(componentPattern)
+      : await this.workspace.listIds();
+    const currentLane = await this.workspace.consumer.getCurrentLaneObject();
+    const currentLaneIds = currentLane?.toBitIds();
+    const ids = currentLaneIds
+      ? idsOnWorkspace.filter((id) => currentLaneIds.hasWithoutVersion(id._legacy))
+      : idsOnWorkspace;
     checkoutProps.ids = ids.map((id) => (checkoutProps.head || checkoutProps.latest ? id.changeVersion(LATEST) : id));
   }
 
