@@ -2,10 +2,10 @@ import { EnvService, Env, EnvContext, ServiceTransformationMap } from '@teambit/
 import { ComponentTemplate } from './component-template';
 import { WorkspaceTemplate } from './workspace-template';
 
-type GeneratorTransformationMap = ServiceTransformationMap & {
+type GeneratorTransformationMap = ServiceTransformationMap  & {
   getGeneratorTemplates: () => ComponentTemplate;
   getGeneratorStarters: () => WorkspaceTemplate;
-};
+}
 export class GeneratorService implements EnvService<any> {
   name = 'generator';
 
@@ -23,6 +23,6 @@ export class GeneratorService implements EnvService<any> {
         const starterList = env.starters()(context);
         return starterList.compute();
       },
-    };
+    }
   }
 }
