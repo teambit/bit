@@ -1,6 +1,6 @@
 .compositionCardSkeleton {
   color: var(--border-medium-color, #ededed);
-  border: 1px solid var(--border-high-color, #babec9);
+  border: 1px solid var(--border-medium-color, #ededed);
   font-size: 14px;
   border-radius: 8px;
   box-sizing: border-box;
@@ -12,6 +12,9 @@
   border-radius:  8px 8px 0 0;
   > * {
     margin-bottom: 8px;
+  }
+  .block {
+    width: 140px;
   }
 }
 .bottom {

@@ -1,1 +1,1 @@
-export { CompositionCardSkeleton } from './composition-card-skeleton';
+export { CompositionCardSkeleton, PreviewSkeleton } from './composition-card-skeleton';
