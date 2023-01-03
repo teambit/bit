@@ -8,6 +8,7 @@ export {
 export { Registries, Registry } from './registry';
 export {
   InstallationContext,
+  PackageImportMethod,
   PackageManager,
   PackageManagerInstallOptions,
   PackageManagerResolveRemoteVersionOptions,

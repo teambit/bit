@@ -188,7 +188,7 @@ export class SnappingMain {
     await this.throwForComponentIssues(components, ignoreIssues);
     this.throwForPendingImport(components);
 
-    const { taggedComponents, autoTaggedResults, publishedPackages } = await tagModelComponent({
+    const { taggedComponents, autoTaggedResults, publishedPackages, stagedConfig } = await tagModelComponent({
       workspace: this.workspace,
       scope: this.scope,
       snapping: this,
@@ -227,6 +227,7 @@ export class SnappingMain {
       R.concat(tagResults.taggedComponents, tagResults.autoTaggedResults, tagResults.newComponents).length
     );
     await consumer.onDestroy();
+    await stagedConfig?.write();
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return tagResults;
   }
@@ -440,7 +441,7 @@ export class SnappingMain {
     await this.throwForComponentIssues(components, ignoreIssues);
     this.throwForPendingImport(components);
 
-    const { taggedComponents, autoTaggedResults } = await tagModelComponent({
+    const { taggedComponents, autoTaggedResults, stagedConfig } = await tagModelComponent({
       workspace: this.workspace,
       scope: this.scope,
       snapping: this,
@@ -470,6 +471,7 @@ export class SnappingMain {
     const currentLane = consumer.getCurrentLaneId();
     snapResults.laneName = currentLane.isDefault() ? null : currentLane.name;
     await consumer.onDestroy();
+    await stagedConfig?.write();
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return snapResults;
 
@@ -694,6 +696,7 @@ there are matching among unmodified components thought. consider using --unmodif
         );
         version.unrelated = { head: unmergedComponent.head, laneId: unmergedComponent.laneId };
       } else {
+        // this is adding a second parent to the version. the order is important. the first parent is coming from the current-lane.
         version.addParent(unmergedComponent.head);
         this.logger.debug(
           `sources.addSource, unmerged component "${component.name}". adding a parent ${unmergedComponent.head.hash}`
