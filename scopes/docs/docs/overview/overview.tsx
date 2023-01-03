@@ -6,9 +6,9 @@ import type { SlotRegistry } from '@teambit/harmony';
 import { ComponentPreview } from '@teambit/preview.ui.component-preview';
 import { StatusMessageCard } from '@teambit/design.ui.surfaces.status-message-card';
 import { ComponentOverview } from '@teambit/component.ui.component-meta';
+import { CompositionsCarousel } from '@teambit/react.ui.docs.compositions-carousel';
 
 import styles from './overview.module.scss';
-import { CompositionsCarousel } from '@teambit/react.ui.docs.compositions-carousel';
 
 export enum BadgePosition {
   Title,
