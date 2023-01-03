@@ -9,6 +9,7 @@ import type { SlotRegistry } from '@teambit/harmony';
 import { ComponentPreview } from '@teambit/preview.ui.component-preview';
 import { StatusMessageCard } from '@teambit/design.ui.surfaces.status-message-card';
 import { ComponentOverview } from '@teambit/component.ui.component-meta';
+import { CompositionsCarousel } from '@teambit/react.ui.docs.compositions-carousel';
 
 // import { CompositionsCarousel } from '@teambit/react.ui.docs.compositions-carousel';
 import { CompositionGallery } from '@teambit/compositions.panels.composition-gallery';
