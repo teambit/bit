@@ -29767,7 +29767,7 @@ packages:
     dev: false
 
   registry.npmjs.org/lru-cache/7.14.1:
-    resolution: {integrity: sha512-ysxwsnTKdAx96aTRdhDOCQfDgbHnt8SK0KY8SEjO0wHinhWOFTESbjVCMPbU1uGXg/ch4lifqx0wfjOawU2+WA==, registry: https://node.bit.cloud/, tarball: https://registry.npmjs.org/lru-cache/-/lru-cache-7.14.1.tgz}
+    resolution: {integrity: sha512-ysxwsnTKdAx96aTRdhDOCQfDgbHnt8SK0KY8SEjO0wHinhWOFTESbjVCMPbU1uGXg/ch4lifqx0wfjOawU2+WA==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/lru-cache/-/lru-cache-7.14.1.tgz}
     name: lru-cache
     version: 7.14.1
     engines: {node: '>=12'}
