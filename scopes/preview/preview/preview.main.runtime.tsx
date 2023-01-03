@@ -297,7 +297,8 @@ export class PreviewMain {
     const data = {
       // default to true if the env doesn't have a preview config
       isScaling: previewAspectConfig?.isScaling ?? true,
-      skipIncludes: true,
+      // disalbe it for now, we will re-enable it later
+      // skipIncludes: true,
     };
     return data;
   }
