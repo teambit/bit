@@ -78,7 +78,7 @@ export function Overview({ titleBadges }: OverviewProps) {
         <Icon of="text" /> <span>README</span>
       </LinkedHeading> */}
       <div className={styles.readme}>
-        {/* {isLoading && <ReadmeSkeleton />} */}
+        {isLoading && <ReadmeSkeleton />}
         <ComponentPreview
           onLoad={() => setLoading(false)}
           component={component}
