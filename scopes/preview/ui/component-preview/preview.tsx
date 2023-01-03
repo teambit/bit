@@ -110,10 +110,10 @@ export function ComponentPreview({
             setWidth(message.data.width);
             setHeight(message.data.height);
           }
+          (onLoad && event) && onLoad();
         },
       },
     });
-    onLoad && onLoad();
   }, [iframeRef?.current]);
 
   const params = Array.isArray(queryParams)
