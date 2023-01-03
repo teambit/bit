@@ -10,9 +10,9 @@ export type CompilerDescriptor = {
   config?: string;
 };
 
-type CompilerTransformationMap = ServiceTransformationMap & {
+type CompilerTransformationMap = ServiceTransformationMap  & {
   getCompiler: () => Compiler;
-};
+}
 
 export class CompilerService implements EnvService<{}, CompilerDescriptor> {
   name = 'Compile';
@@ -42,7 +42,7 @@ export class CompilerService implements EnvService<{}, CompilerDescriptor> {
     if (!env?.compiler) return undefined;
     return {
       getCompiler: () => env.compiler()(context),
-    };
+    }
   }
 
   getDescriptor(env: EnvDefinition) {

@@ -2,9 +2,9 @@ import { EnvService, Env, EnvContext, ServiceTransformationMap } from '@teambit/
 import { Bundler } from './bundler';
 import { BundlerContext } from './bundler-context';
 
-type BundlerTransformationMap = ServiceTransformationMap & {
+type BundlerTransformationMap = ServiceTransformationMap  & {
   getBundler?: (context: BundlerContext) => Promise<Bundler>;
-};
+}
 export class BundlerService implements EnvService<any> {
   name = 'bundler';
 
@@ -15,6 +15,6 @@ export class BundlerService implements EnvService<any> {
 
     return {
       getBundler: (context) => preview.getBundler(context)(envContext),
-    };
+    }
   }
 }
