@@ -2125,8 +2125,7 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
   async setEnvToComponents(envId: ComponentID, componentIds: ComponentID[]) {
     const envStrWithPossiblyVersion = await this.resolveEnvIdWithPotentialVersionForConfig(envId);
     const envIdStrNoVersion = envId.toStringWithoutVersion();
-    // no need to unset, when loading the component, we load the first one, and ignore the rest.
-    // await this.unsetEnvFromComponents(componentIds);
+    await this.unsetEnvFromComponents(componentIds);
     await Promise.all(
       componentIds.map(async (componentId) => {
         await this.addSpecificComponentConfig(componentId, envStrWithPossiblyVersion);
