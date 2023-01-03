@@ -51,6 +51,8 @@ export function Overview({ titleBadges }: OverviewProps) {
 
   const isScaling = component.preview?.isScaling;
 
+  const iframeQueryParams = `skipIncludes=${component.preview?.skipIncludes || 'false'}`
+  
   return (
     <div className={styles.overviewWrapper}>
       {showHeader && (
@@ -83,7 +85,7 @@ export function Overview({ titleBadges }: OverviewProps) {
         style={{ width: '100%', height: '100%' }}
         previewName="overview"
         pubsub={true}
-        queryParams={['skipIncludes=true']}
+        queryParams={[iframeQueryParams]}
         viewport={null}
         fullContentHeight
         scrolling="no"

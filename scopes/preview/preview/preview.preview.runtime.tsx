@@ -108,7 +108,7 @@ export class PreviewPreview {
     const query = this.getQuery();
     const skipIncludes = this.getParam(query, 'skipIncludes');
 
-    const includes = skipIncludes ? [] : includesAll.filter((module) => !!module);
+    const includes = skipIncludes === 'true' ? [] : includesAll.filter((module) => !!module);
     // during build / tag, the component is isolated, so all aspects are relevant, and do not require filtering
     const componentAspects = this.isDev ? await this.getComponentAspects(componentId.toString()) : undefined;
     const previewModule = await this.getPreviewModule(name, componentId);
