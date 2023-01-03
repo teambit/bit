@@ -30,11 +30,11 @@ export type BuilderServiceOptions = {
   dev?: boolean;
 };
 
-type BuilderTransformationMap = ServiceTransformationMap & {
+type BuilderTransformationMap = ServiceTransformationMap  & {
   getBuildPipe: () => BuildTask[];
   getTagPipe: () => BuildTask[];
   getSnapPipe: () => BuildTask[];
-};
+}
 
 export type EnvsBuildContext = { [envId: string]: BuildContext };
 
@@ -165,7 +165,7 @@ export class BuilderService implements EnvService<BuildServiceResults, BuilderDe
         if (!pipeline || !pipeline.compute) return [];
         return pipeline?.compute();
       },
-    };
+    }
   }
 
   private renderOnePipe(pipeName, tasks) {

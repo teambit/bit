@@ -26,6 +26,7 @@ import { packageToDefinetlyTyped } from './package-to-definetly-typed';
 import { ExtensionDataList } from '../../../config';
 import PackageJsonFile from '../../../../consumer/component/package-json-file';
 import { SourceFile } from '../../sources';
+import { DependenciesOverridesData } from '../../../config/component-overrides';
 
 export type AllDependencies = {
   dependencies: Dependency[];
@@ -70,12 +71,16 @@ export type EnvPolicyForComponent = {
   peerDependencies: { [name: string]: string };
 };
 
-type HarmonyEnvPolicyForComponentGetter = (configuredExtensions: ExtensionDataList) => Promise<EnvPolicyForComponent>;
-
 type HarmonyEnvPeersPolicyForEnvItselfGetter = (
   componentId: BitId,
   files: SourceFile[]
 ) => Promise<{ [name: string]: string } | undefined>;
+
+type OnComponentAutoDetectOverrides = (
+  configuredExtensions: ExtensionDataList,
+  componentId: BitId,
+  files: SourceFile[]
+) => Promise<DependenciesOverridesData>;
 
 const DepsKeysToAllPackagesDepsKeys = {
   dependencies: 'packageDependencies',
@@ -104,12 +109,9 @@ export default class DependencyResolver {
     this.getWorkspacePolicy = func;
   }
 
-  /**
-   * This will get the peers policy provided by the env of the component
-   */
-  static getHarmonyEnvPolicyForComponent: HarmonyEnvPolicyForComponentGetter;
-  static registerHarmonyEnvPolicyForComponentGetter(func: HarmonyEnvPolicyForComponentGetter) {
-    this.getHarmonyEnvPolicyForComponent = func;
+  static getOnComponentAutoDetectOverrides: OnComponentAutoDetectOverrides;
+  static registerOnComponentAutoDetectOverridesGetter(func: OnComponentAutoDetectOverrides) {
+    this.getOnComponentAutoDetectOverrides = func;
   }
 
   /**
@@ -248,7 +250,7 @@ export default class DependencyResolver {
     this.applyPackageJson();
     this.applyWorkspacePolicy();
     this.makeLegacyAsPeer();
-    await this.applyEnvPolicyOnComponent();
+    await this.applyAutoDetectOverridesOnComponent();
     this.manuallyAddDependencies();
     // Doing this here (after manuallyAddDependencies) because usually the env of the env is adding dependencies as peer of the env
     // which will make this not work if it come before
@@ -1183,21 +1185,25 @@ either, use the ignore file syntax or change the require statement to have a mod
     }
   }
 
-  async applyEnvPolicyOnComponent(): Promise<void> {
-    const envPolicy = await DependencyResolver.getHarmonyEnvPolicyForComponent(this.component.extensions);
-    if (!envPolicy || !Object.keys(envPolicy).length) {
+  async applyAutoDetectOverridesOnComponent(): Promise<void> {
+    const autoDetectOverrides = await DependencyResolver.getOnComponentAutoDetectOverrides(
+      this.component.extensions,
+      this.component.id,
+      this.component.files
+    );
+    if (!autoDetectOverrides || !Object.keys(autoDetectOverrides).length) {
       return;
     }
     const originallyExists: string[] = [];
     let missingPackages: string[] = [];
     // We want to also add missing packages to the peer list as we know to resolve the version from the env anyway
     // @ts-ignore
-    const missingsData = this.issues.getIssueByName<IssuesClasses.MissingPackagesDependenciesOnFs>(
+    const missingData = this.issues.getIssueByName<IssuesClasses.MissingPackagesDependenciesOnFs>(
       'MissingPackagesDependenciesOnFs'
     )?.data;
-    if (missingsData) {
+    if (missingData) {
       // @ts-ignore
-      missingPackages = union(...(Object.values(missingsData) || []));
+      missingPackages = union(...(Object.values(missingData) || []));
     }
     ['dependencies', 'devDependencies', 'peerDependencies'].forEach((field) => {
       R.forEachObjIndexed((pkgVal, pkgName) => {
@@ -1239,7 +1245,7 @@ either, use the ignore file syntax or change the require statement to have a mod
         if (pkgVal !== MANUALLY_REMOVE_DEPENDENCY) {
           this.allPackagesDependencies[key][pkgName] = pkgVal;
         }
-      }, envPolicy[field]);
+      }, autoDetectOverrides[field]);
     });
   }
 
