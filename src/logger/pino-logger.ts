@@ -76,11 +76,11 @@ export function getPinoLogger(
 
   const pinoConsoleOpts = {
     ...opts,
-    transport: transportConsole,
+    transport: transportConsole
     // transport: jsonFormat
-    // ? { targets: [{...transportFile, level: logLevel}, {...transportConsole, level: logLevel}] }
-    // ? { targets: [transportFile, transportConsole] }
-    // : transportConsole,
+      // ? { targets: [{...transportFile, level: logLevel}, {...transportConsole, level: logLevel}] }
+      // ? { targets: [transportFile, transportConsole] }
+      // : transportConsole,
   };
 
   const pinoLogger = pino(pinoFileOpts);
