@@ -129,15 +129,15 @@ export default class ImportComponents {
     // don't use `scope.getDefaultLaneIdsFromLane()`. we need all components, because it's possible that a component
     // does't have "head" locally although it exits in the origin-scope. it happens when the component was created on
     // the origin-scope after a component with the same-name was created on the lane
-    if (lane) {
-      // @todo: optimize this maybe. currently, it imports twice.
-      // try to make the previous `importComponentsObjectsHarmony` import the same component once from the original
-      // scope and once from the lane-scope.
-      const mainIdsLatest = BitIds.fromArray(lane.toBitIds().map((m) => m.changeVersion(undefined)));
-      await this._importComponentsObjects(mainIdsLatest, {
-        ignoreMissingHead: true,
-      });
-    }
+    // if (lane) {
+    //   // @todo: optimize this maybe. currently, it imports twice.
+    //   // try to make the previous `importComponentsObjectsHarmony` import the same component once from the original
+    //   // scope and once from the lane-scope.
+    //   const mainIdsLatest = BitIds.fromArray(lane.toBitIds().map((m) => m.changeVersion(undefined)));
+    //   await this._importComponentsObjects(mainIdsLatest, {
+    //     ignoreMissingHead: true,
+    //   });
+    // }
 
     // merge the lane objects
     const mergeAllLanesResults = await pMapSeries(this.laneObjects, (laneObject) =>
@@ -252,6 +252,7 @@ export default class ImportComponents {
           ignoreMissingHead,
           lanes: lane ? [lane] : undefined,
           preferDependencyGraph: !this.options.fetchDeps,
+          reFetchUnBuiltVersion: false,
         });
 
     return results;

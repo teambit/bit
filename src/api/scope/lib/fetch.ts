@@ -30,7 +30,7 @@ export type FETCH_OPTIONS = {
   ignoreMissingHead?: boolean; // if asking for id without version and the component has no head, don't throw, just ignore
   /**
    * whether include VersionHistory object to get the snaps graph. it's needed to be able to traverse the snaps without
-   * having all Version objects locally
+   * having all Version objects locally. default - false.
    */
   includeVersionHistory?: boolean;
   /**

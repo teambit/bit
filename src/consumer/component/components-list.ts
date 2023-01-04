@@ -178,6 +178,15 @@ export default class ComponentsList {
       // if a component is merge-pending, it needs to be resolved first before getting more updates from main
       .filter((c) => !duringMergeIds.hasWithoutVersion(c.toBitId()));
 
+    // by default, when on a lane, main is not fetched. we need to fetch it to get the latest updates.
+    await this.scope.scopeImporter.importWithoutDeps(
+      BitIds.fromArray(compFromModelOnWorkspace.map((c) => c.toBitId())),
+      {
+        cache: false,
+        includeVersionHistory: true,
+        ignoreMissingHead: true,
+      }
+    );
     const results = await Promise.all(
       compFromModelOnWorkspace.map(async (modelComponent) => {
         const headOnMain = modelComponent.head;
@@ -218,15 +227,26 @@ export default class ComponentsList {
     const forkedFromLane = await this.scope.loadLane(forkedFromLaneId);
     if (!forkedFromLane) return []; // should we fetch it here?
 
-    const authoredAndImportedIds = this.bitMap.getAllBitIds();
+    const workspaceIds = this.bitMap.getAllBitIds();
 
     const duringMergeIds = this.listDuringMergeStateComponents();
 
     const componentsFromModel = await this.getModelComponents();
     const compFromModelOnWorkspace = componentsFromModel
-      .filter((c) => authoredAndImportedIds.hasWithoutVersion(c.toBitId()))
+      .filter((c) => workspaceIds.hasWithoutVersion(c.toBitId()))
       // if a component is merge-pending, it needs to be resolved first before getting more updates from main
       .filter((c) => !duringMergeIds.hasWithoutVersion(c.toBitId()));
+
+    // by default, when on a lane, forked is not fetched. we need to fetch it to get the latest updates.
+    await this.scope.scopeImporter.importWithoutDeps(
+      BitIds.fromArray(compFromModelOnWorkspace.map((c) => c.toBitId())),
+      {
+        cache: false,
+        includeVersionHistory: true,
+        lanes: [forkedFromLane],
+        ignoreMissingHead: true,
+      }
+    );
 
     const remoteForkedLane = await this.scope.objects.remoteLanes.getRemoteLane(forkedFromLaneId);
     if (!remoteForkedLane.length) return [];

@@ -4,7 +4,6 @@ import { Logger } from '@teambit/logger';
 import { SemVer } from 'semver';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { ModelComponent, Version } from '@teambit/legacy/dist/scope/models';
-import { BitIds } from '@teambit/legacy/dist/bit-id';
 import { Ref } from '@teambit/legacy/dist/scope/objects';
 import { getMaxSizeForComponents, InMemoryCache } from '@teambit/legacy/dist/cache/in-memory-cache';
 import { createInMemoryCache } from '@teambit/legacy/dist/cache/cache-factory';
@@ -34,7 +33,7 @@ export class ScopeComponentLoader {
       id._legacy.hasScope() &&
       !this.importedComponentsCache.get(id.toString())
     ) {
-      await this.scope.legacyScope.import(BitIds.fromArray([id._legacy]));
+      await this.scope.import([id]);
       this.importedComponentsCache.set(id.toString(), true);
       modelComponent = await this.scope.legacyScope.getModelComponentIfExist(id._legacy);
     }

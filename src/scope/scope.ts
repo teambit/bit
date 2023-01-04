@@ -46,7 +46,6 @@ import RemovedObjects from './removed-components';
 import { Tmp } from './repositories';
 import SourcesRepository from './repositories/sources';
 import { getPath as getScopeJsonPath, ScopeJson, getHarmonyPath } from './scope-json';
-import VersionDependencies from './version-dependencies';
 import { ObjectItem, ObjectList } from './objects/object-list';
 import ClientIdInUse from './exceptions/client-id-in-use';
 import { UnexpectedPackageName } from '../consumer/exceptions/unexpected-package-name';
@@ -134,24 +133,6 @@ export default class Scope {
 
   public async refreshScopeIndex(force = false) {
     await this.objects.reloadScopeIndexIfNeed(force);
-  }
-
-  /**
-   * import components to the `Scope.
-   */
-  async import(
-    ids: BitIds,
-    cache = true,
-    reFetchUnBuiltVersion = true,
-    lanes?: Lane[]
-  ): Promise<VersionDependencies[]> {
-    return this.scopeImporter.importMany({
-      ids,
-      cache,
-      throwForDependencyNotFound: false,
-      reFetchUnBuiltVersion,
-      lanes,
-    });
   }
 
   async getDependencyGraph(): Promise<DependencyGraph> {

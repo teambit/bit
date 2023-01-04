@@ -116,6 +116,9 @@ export default class SourceRepository {
         return fromCache;
       }
       this.cacheUnBuiltIds.set(bitIdStr, component);
+      logger.trace(
+        `sources.get, found ${bitId.toString()}, however the version has build-status of ${version.buildStatus}`
+      );
       return undefined;
     };
 
@@ -127,7 +130,7 @@ export default class SourceRepository {
       // @ts-ignore
       const snap = await this.objects().load(new Ref(bitId.version));
       if (!snap) {
-        logger.debugAndAddBreadCrumb('sources.get', `${msg} object was not found on the filesystem`);
+        logger.trace(`sources.get, ${msg} object was not found on the filesystem`);
         return undefined;
       }
       return returnComponent(snap as Version);
@@ -141,7 +144,7 @@ export default class SourceRepository {
     const versionHash = component.versionsIncludeOrphaned[bitId.version];
     const version = (await this.objects().load(versionHash)) as Version;
     if (!version) {
-      logger.debugAndAddBreadCrumb('sources.get', `${msg} object was not found on the filesystem`);
+      logger.trace(`sources.get, ${msg} object was not found on the filesystem`);
       return undefined;
     }
     // workaround an issue when a component has a dependency with the same id as the component itself
@@ -166,7 +169,7 @@ export default class SourceRepository {
     } catch (err: any) {
       logger.error(`findComponent got an error ${err}`);
     }
-    logger.debug(`failed finding a component ${component.id()} with hash: ${component.hash().toString()}`);
+    logger.trace(`failed finding a component ${component.id()} with hash: ${component.hash().toString()}`);
     return undefined;
   }
 
