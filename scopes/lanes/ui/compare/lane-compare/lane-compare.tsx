@@ -40,10 +40,26 @@ export type LaneCompareProps = {
   compare: LaneModel;
   host: string;
   tabs?: MaybeLazyLoaded<TabItem[]>;
+  /**
+   * hook to override fetching component data for component compare
+   */
   customUseComponent?: UseComponentType;
+  /**
+   * hook to override fetching lane diff status for base and compare
+   */
   customUseLaneDiff?: UseLaneDiffStatus;
+  /**
+   * @default LaneCompareDrawer
+   * override each Lane Component Compare Drawer Component
+   */
   Drawer?: React.ComponentType<LaneCompareDrawerProps>;
+  /**
+   * loader to show when fetching lane diff status
+   */
   LaneCompareLoader?: React.ComponentType;
+  /**
+   * loader to show when loading component compare data
+   */
   ComponentCompareLoader?: React.ComponentType;
 } & HTMLAttributes<HTMLDivElement>;
 
