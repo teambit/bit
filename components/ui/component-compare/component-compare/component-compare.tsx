@@ -148,13 +148,12 @@ export function ComponentCompare(props: ComponentCompareProps) {
 
 function RenderCompareScreen(props: ComponentCompareProps) {
   const { routes, state } = props;
+  const showVersionPicker = state?.versionPicker?.element !== null;
 
   return (
     <>
-      {(state?.versionPicker?.element === undefined || !!state.versionPicker.element) && (
-        <div className={styles.top}>
-          {(!state?.versionPicker && <ComponentCompareVersionPicker />) || state?.versionPicker?.element}
-        </div>
+      {showVersionPicker && (
+        <div className={styles.top}>{state?.versionPicker?.element || <ComponentCompareVersionPicker />}</div>
       )}
       <div className={styles.bottom}>
         <CompareMenuNav {...props} />
