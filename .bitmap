@@ -442,6 +442,13 @@
         "mainFile": "index.ts",
         "rootDir": "components/entities/doc"
     },
+    "entities/lane-diff": {
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.lanes",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/lanes/entities/lane-diff"
+    },
     "entities/semantic-schema": {
         "scope": "teambit.semantics",
         "version": "0.0.48",
@@ -1340,17 +1347,39 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/code/ui/code-view"
     },
-    "ui/compare": {
-        "scope": "teambit.component",
-        "version": "0.0.156",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/component/ui/compare"
-    },
     "ui/compare/lane-compare": {
         "scope": "teambit.lanes",
         "version": "0.0.18",
         "mainFile": "index.ts",
         "rootDir": "scopes/lanes/ui/compare/lane-compare"
+    },
+    "ui/compare/lane-compare-drawer": {
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.lanes",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/lanes/ui/compare/lane-compare-drawer"
+    },
+    "ui/compare/lane-compare-hooks/use-lane-diff-status": {
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.lanes",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/lanes/ui/compare/lane-compare-hooks/use-lane-diff-status"
+    },
+    "ui/compare/lane-compare-loader": {
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.lanes",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/lanes/ui/compare/lane-compare-loader"
+    },
+    "ui/compare/lane-compare-page": {
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.lanes",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/lanes/ui/compare/lane-compare-page"
     },
     "ui/compare/lane-compare-state": {
         "scope": "teambit.lanes",
@@ -1423,6 +1452,13 @@
         "version": "0.0.2",
         "mainFile": "index.ts",
         "rootDir": "components/ui/component-compare/layouts/compare-split-layout-preset"
+    },
+    "ui/component-compare/models/component-compare-change-type": {
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.component",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/component-compare/models/component-compare-change-type"
     },
     "ui/component-compare/models/component-compare-hooks": {
         "scope": "teambit.component",

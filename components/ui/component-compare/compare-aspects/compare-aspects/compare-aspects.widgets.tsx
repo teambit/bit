@@ -15,8 +15,8 @@ export function Widget({ node }: WidgetProps<any>) {
   const base = componentCompareAspectsContext?.base;
   const compare = componentCompareAspectsContext?.compare;
 
-  const matchingBaseAspect = base?.find((baseAspect) => baseAspect.aspectId === fileName);
-  const matchingCompareAspect = compare?.find((compareAspect) => compareAspect.aspectId === fileName);
+  const matchingBaseAspect = base?.find((baseAspect) => baseAspect.id === fileName);
+  const matchingCompareAspect = compare?.find((compareAspect) => compareAspect.id === fileName);
 
   if (!matchingBaseAspect && !matchingCompareAspect) return null;
 
