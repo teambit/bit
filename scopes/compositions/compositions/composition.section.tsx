@@ -17,11 +17,11 @@ export class CompositionsSection implements Section {
 
   navigationLink = {
     href: '~compositions',
-    children: 'Compositions',
+    children: 'Preview',
   };
 
   route = {
-    path: '~compositions',
+    path: '~compositions/*',
     element: <Compositions menuBarWidgets={this.options.menuBarWidgetSlot} emptyState={this.emptyStateSlot} />,
   };
 

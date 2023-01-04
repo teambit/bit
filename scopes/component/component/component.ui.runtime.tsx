@@ -11,11 +11,11 @@ import PreviewAspect, { ClickInsideAnIframeEvent } from '@teambit/preview';
 import PubsubAspect, { BitBaseEvent, PubsubUI } from '@teambit/pubsub';
 import ReactRouterAspect, { ReactRouterUI } from '@teambit/react-router';
 import { UIRuntime } from '@teambit/ui';
+import { groupBy } from 'lodash';
 import { isBrowser } from '@teambit/ui-foundation.ui.is-browser';
 import { MenuItem, MenuItemSlot } from '@teambit/ui-foundation.ui.main-dropdown';
 import { NavigationSlot, RouteSlot } from '@teambit/ui-foundation.ui.react-router.slot-router';
 import { Import } from '@teambit/ui-foundation.ui.use-box.menu';
-
 import { AspectSection } from './aspect.section';
 import { ComponentAspect } from './component.aspect';
 import { ComponentModel } from './ui';
@@ -53,7 +53,7 @@ export class ComponentUI {
 
     private navSlot: OrderedNavigationSlot,
 
-    private consumeMethodSlot: ConsumeMethodSlot,
+    readonly consumeMethodSlot: ConsumeMethodSlot,
 
     /**
      * slot for registering a new widget to the menu.
@@ -188,6 +188,7 @@ export class ComponentUI {
   getMenu(host: string, options: GetComponentsOptions = {}) {
     return (
       <ComponentMenu
+        skipRightSide={options.skipRightSide}
         navigationSlot={this.navSlot}
         consumeMethodSlot={this.consumeMethodSlot}
         widgetSlot={this.widgetSlot}
@@ -199,6 +200,11 @@ export class ComponentUI {
         useComponentFilters={options.useComponentFilters}
       />
     );
+  }
+
+  listMenuItems() {
+    const mainMenuItems = groupBy(flatten(this.menuItemSlot.values()), 'category');
+    return mainMenuItems;
   }
 
   registerRoute(routes: RouteProps[] | RouteProps) {

@@ -1075,6 +1075,18 @@ needed-for: ${neededFor || '<unknown>'}`);
   }
 
   /**
+   * wether a component is soft-removed.
+   * the version is required as it can be removed on a lane. in which case, the version is the head in the lane.
+   */
+  async isComponentRemoved(id: ComponentID): Promise<Boolean> {
+    const version = id.version;
+    if (!version) throw new Error(`isComponentRemoved expect to get version, got ${id.toString()}`);
+    const modelComponent = await this.legacyScope.getModelComponent(id._legacy);
+    const versionObj = await modelComponent.loadVersion(version, this.legacyScope.objects);
+    return versionObj.isRemoved();
+  }
+
+  /**
    * resolve a component ID.
    * @param id component ID.
    */
