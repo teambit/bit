@@ -264,6 +264,7 @@ function deriveChangeType(
   }
 
   const changed: ChangeType[] = [];
+  const DEPS_FIELD = ['dependencies', 'devDependencies', 'extensionDependencies'];
 
   if (fileCompareDataByName.size > 0 && [...fileCompareDataByName.values()].some((f) => f.status !== 'UNCHANGED')) {
     changed.push(ChangeType.SOURCE_CODE);
@@ -273,8 +274,7 @@ function deriveChangeType(
     changed.push(ChangeType.ASPECTS);
   }
 
-  const depsFields = ['dependencies', 'devDependencies', 'extensionDependencies'];
-  if ([...fieldCompareDataByName.values()].some((field) => depsFields.includes(field.fieldName))) {
+  if ([...fieldCompareDataByName.values()].some((field) => DEPS_FIELD.includes(field.fieldName))) {
     changed.push(ChangeType.DEPENDENCY);
   }
 
