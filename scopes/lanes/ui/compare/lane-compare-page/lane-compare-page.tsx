@@ -13,8 +13,8 @@ export function LaneComparePage({ getLaneCompare, ...rest }: LaneComparePageProp
 
   if (!lanesModel) return null;
 
-  const base = lanesModel.lanes.find((l) => l.id.name === 'bit-cloud');
-  const compare = lanesModel.lanes.find((l) => l.id.name === 'lane-compare');
+  const base = lanesModel.lanes[0];
+  const compare = lanesModel.lanes[1];
 
   const LaneCompareComponent = getLaneCompare({ base, compare });
 

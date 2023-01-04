@@ -76,7 +76,7 @@ export class LanesUI {
             <Route path={LanesModel.lanePath}>
               <Route index element={this.getLaneOverview()} />
               <Route path="~component/*" element={this.getLaneComponent()} />
-              <Route path="~compare/*" element={this.getLanesComparePage()} />
+              {/* <Route path="~compare/*" element={this.getLanesComparePage()} /> */}
               <Route path="*" element={<NotFoundPage />} />
             </Route>
             <Route path="*" element={<NotFoundPage />} />
