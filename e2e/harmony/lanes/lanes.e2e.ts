@@ -1346,6 +1346,8 @@ describe('bit lane command', function () {
     });
   });
   describe('getting new components from the lane', () => {
+    let firstWorkspaceAfterExport: string;
+    let secondWorkspace: string;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.command.createLane();
@@ -1356,23 +1358,49 @@ describe('bit lane command', function () {
       helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
       helper.command.importLane('dev');
-      const secondWorkspace = helper.scopeHelper.cloneLocalScope();
+      secondWorkspace = helper.scopeHelper.cloneLocalScope();
       helper.scopeHelper.getClonedLocalScope(firstWorkspace);
       helper.fixtures.populateComponents(2);
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
+      firstWorkspaceAfterExport = helper.scopeHelper.cloneLocalScope();
       helper.scopeHelper.getClonedLocalScope(secondWorkspace);
       helper.command.import();
     });
-    it('bit checkout without --entire-lane flag', () => {
-      helper.command.checkoutHead('--skip-dependency-installation');
+    it('bit checkout without --entire-lane flag should not add the component and should suggest using --entire-lane flag', () => {
+      const output = helper.command.checkoutHead('--skip-dependency-installation');
       const list = helper.command.listParsed();
       expect(list).to.have.lengthOf(1);
+      expect(output).to.have.string('use --entire-lane flag to add them');
     });
     it('bit checkout with --entire-lane flag', () => {
       helper.command.checkoutHead('--entire-lane --skip-dependency-installation');
       const list = helper.command.listParsed();
       expect(list).to.have.lengthOf(2);
+    });
+    describe('when the new component is soft-removed', () => {
+      let beforeCheckout: string;
+      before(() => {
+        helper.scopeHelper.getClonedLocalScope(firstWorkspaceAfterExport);
+        helper.command.removeComponent('comp2', '--soft');
+        helper.fs.writeFile('comp1/index.js', ''); // remove the comp2 dependency from the code
+        helper.command.snapAllComponentsWithoutBuild();
+        helper.command.export();
+        helper.scopeHelper.getClonedLocalScope(secondWorkspace);
+        helper.command.import();
+        beforeCheckout = helper.scopeHelper.cloneLocalScope();
+      });
+      it('bit checkout without --entire-lane flag, should not suggest adding it', () => {
+        const output = helper.command.checkoutHead('--skip-dependency-installation');
+        expect(output).to.not.have.string('use --entire-lane flag to add them');
+        expect(output).to.not.have.string('comp2');
+      });
+      it('bit checkout with --entire-lane flag should not add it', () => {
+        helper.scopeHelper.getClonedLocalScope(beforeCheckout);
+        helper.command.checkoutHead('--entire-lane --skip-dependency-installation');
+        const list = helper.command.listParsed();
+        expect(list).to.have.lengthOf(1);
+      });
     });
   });
 });
