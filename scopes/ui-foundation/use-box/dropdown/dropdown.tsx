@@ -7,9 +7,11 @@ import styles from './dropdown.module.scss';
 export type UseBoxDropdownProps = {
   Menu: React.ReactElement;
   containerClass?: string;
+  actionName?: string;
+  actionIcon?: string;
 } & Omit<DropdownProps, 'placeholder'>;
 
-export function UseBoxDropdown({ className, Menu, ...rest }: UseBoxDropdownProps) {
+export function UseBoxDropdown({ className, Menu, actionName, actionIcon, ...rest }: UseBoxDropdownProps) {
   const [key, setKey] = useState(0);
   const DropdownMenu = React.cloneElement(Menu, { key });
   return (
@@ -18,7 +20,7 @@ export function UseBoxDropdown({ className, Menu, ...rest }: UseBoxDropdownProps
       {...rest}
       onChange={(_e, open) => open && setKey((x) => x + 1)} // to reset menu to initial state when toggling
       dropClass={styles.menu}
-      placeholder={<Placeholder />}
+      placeholder={<Placeholder actionName={actionName} actionIcon={actionIcon} />}
       clickToggles={false}
       clickPlaceholderToggles={true}
     >
@@ -27,11 +29,16 @@ export function UseBoxDropdown({ className, Menu, ...rest }: UseBoxDropdownProps
   );
 }
 
-function Placeholder(props: React.HTMLAttributes<HTMLDivElement>) {
+export type PlaceholderProps = {
+  actionName?: string;
+  actionIcon?: string;
+} & React.HTMLAttributes<HTMLDivElement>;
+
+function Placeholder({ actionName = 'Use', actionIcon = 'package', ...rest }: PlaceholderProps) {
   return (
-    <div className={classNames(styles.placeholder)} {...props}>
-      <Icon of="package" />
-      <div className={styles.content}>Use</div>
+    <div className={classNames(styles.placeholder)} {...rest}>
+      <Icon of={actionIcon} />
+      <div className={styles.content}>{actionName}</div>
       <Icon className={styles.content} of="fat-arrow-down" />
     </div>
   );

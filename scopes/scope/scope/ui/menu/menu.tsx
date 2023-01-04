@@ -13,9 +13,20 @@ export function ScopeMenu({ className, ...rest }: MenuProps) {
   return <Menu {...rest} className={classNames(styles.scopMenu, className)} />;
 }
 
-export function ScopeUseBox() {
+export type ScopeUseBoxProps = {
+  actionName?: string;
+  actionIcon?: string;
+};
+
+export function ScopeUseBox({ actionName, actionIcon }: ScopeUseBoxProps) {
   const scope = useContext(ScopeContext);
   return (
-    <UseBoxDropdown position="bottom-end" className={styles.useBox} Menu={<ScopeUseBoxMenu scopeName={scope.name} />} />
+    <UseBoxDropdown
+      position="bottom-end"
+      className={styles.useBox}
+      actionIcon={actionIcon}
+      actionName={actionName}
+      Menu={<ScopeUseBoxMenu scopeName={scope.name} />}
+    />
   );
 }

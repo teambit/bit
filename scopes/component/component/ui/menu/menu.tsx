@@ -23,6 +23,12 @@ import { Filters } from '../use-component-query';
 
 export type MenuProps = {
   className?: string;
+
+  /**
+   * skip the right side.
+   */
+  skipRightSide?: boolean;
+
   /**
    * slot for top bar menu nav items
    */
@@ -62,6 +68,7 @@ export function ComponentMenu({
   menuItemSlot,
   consumeMethodSlot,
   componentIdStr,
+  skipRightSide,
   useComponent,
   path,
   useComponentFilters,
@@ -88,10 +95,12 @@ export function ComponentMenu({
             <div className={styles.leftSide}>
               <CollapsableMenuNav navigationSlot={navigationSlot} widgetSlot={widgetSlot} />
             </div>
-            <div className={styles.rightSide}>
-              <VersionRelatedDropdowns component={component} consumeMethods={consumeMethodSlot} host={host} />
-              <MainDropdown className={styles.hideOnMobile} menuItems={mainMenuItems} />
-            </div>
+            {!skipRightSide && (
+              <div className={styles.rightSide}>
+                <VersionRelatedDropdowns component={component} consumeMethods={consumeMethodSlot} host={host} />
+                <MainDropdown className={styles.hideOnMobile} menuItems={mainMenuItems} />
+              </div>
+            )}
           </div>
         }
       />
@@ -99,13 +108,15 @@ export function ComponentMenu({
   );
 }
 
-function VersionRelatedDropdowns({
+export function VersionRelatedDropdowns({
   component,
   consumeMethods,
+  className,
   host,
 }: {
   component: ComponentModel;
-  consumeMethods: ConsumeMethodSlot;
+  consumeMethods?: ConsumeMethodSlot;
+  className?: string,
   host: string;
 }) {
   const location = useLocation();
@@ -143,10 +154,10 @@ function VersionRelatedDropdowns({
   const currentVersion =
     isWorkspace && !isNew && !location?.search.includes('version') ? 'workspace' : component.version;
 
-  const methods = useConsumeMethods(consumeMethods, component, currentLane);
+  const methods = useConsumeMethods(component, consumeMethods, currentLane);
   return (
     <>
-      {tags.length > 0 && (
+      {consumeMethods && tags.length > 0 && (
         <UseBoxDropdown
           position="bottom-end"
           className={classnames(styles.useBox, styles.hideOnMobile)}
@@ -161,6 +172,7 @@ function VersionRelatedDropdowns({
         currentVersion={currentVersion}
         latestVersion={component.latest}
         currentLane={currentLane}
+        className={className}
         menuClassName={styles.componentVersionMenu}
       />
     </>
@@ -168,14 +180,16 @@ function VersionRelatedDropdowns({
 }
 
 function useConsumeMethods(
-  consumeMethods: ConsumeMethodSlot,
-  componentModel: ComponentModel,
+  componentModel?: ComponentModel,
+  consumeMethods?: ConsumeMethodSlot,
   currentLane?: LaneModel
 ): ConsumeMethod[] {
+  // if (!consumeMethods || !componentModel) return [];
   return useMemo(
     () =>
-      flatten(consumeMethods.values())
+      flatten(consumeMethods?.values())
         .map((method) => {
+          if (!componentModel) return undefined;
           return method?.(componentModel, { currentLane });
         })
         .filter((x) => !!x && x.Component && x.Title) as ConsumeMethod[],
