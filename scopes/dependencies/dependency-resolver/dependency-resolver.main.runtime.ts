@@ -1102,6 +1102,7 @@ export class DependencyResolverMain {
       policiesFromEnvForItself,
       policiesFromSlots,
       policiesFromConfig,
+      unmergedPolicy,
     ]);
     return result;
   }
