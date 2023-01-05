@@ -105,6 +105,7 @@ async function generateResolverAndFetcher(
     noProxy: proxyConfig?.noProxy,
     strictSsl: networkConfig.strictSSL,
     timeout: networkConfig.fetchTimeout,
+    rawConfig: pnpmConfig.config.rawConfig,
     retry: {
       factor: networkConfig.fetchRetryFactor,
       maxTimeout: networkConfig.fetchRetryMaxtimeout,
@@ -236,6 +237,7 @@ export async function install(
     externalDependencies,
     strictPeerDependencies: false,
     resolveSymlinksInInjectedDirs: true,
+    resolvePeersFromWorkspaceRoot: true,
     dedupeDirectDeps: true,
     ...options,
     peerDependencyRules: {
