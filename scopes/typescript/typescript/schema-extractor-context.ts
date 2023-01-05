@@ -454,10 +454,9 @@ export class SchemaExtractorContext {
 
     const parsedNodeIdentifier = nodeIdentifierList?.find(nodeIdentifier);
     const parsedMainIdentifier = mainIdentifierList?.find(mainIdentifier);
-    const isExportedIdentifier = parsedNodeIdentifier && ExportIdentifier.isExportIdentifier(parsedNodeIdentifier);
     const isExportedFromMain = parsedMainIdentifier && ExportIdentifier.isExportIdentifier(parsedMainIdentifier);
 
-    if (!isExportedIdentifier) return undefined;
+    if (!parsedNodeIdentifier) return undefined;
 
     if (!isExportedFromMain) {
       this.setInternalIdentifiers(filePath, new IdentifierList([parsedNodeIdentifier]));
