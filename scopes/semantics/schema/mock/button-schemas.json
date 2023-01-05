@@ -223,14 +223,13 @@
                   "signature": "(property) children: ReactNode",
                   "isOptional": false,
                   "type": {
-                    "__schema": "UnImplementedSchema",
+                    "__schema": "InferenceTypeSchema",
                     "location": {
                       "filePath": "button.tsx",
-                      "line": 2,
-                      "character": 17
+                      "line": 13,
+                      "character": 13
                     },
-                    "name": "ReactNode",
-                    "type": "ImportSpecifier"
+                    "name": "ReactNode"
                   },
                   "doc": {
                     "__schema": "DocSchema",
@@ -306,14 +305,13 @@
               ]
             },
             {
-              "__schema": "UnImplementedSchema",
+              "__schema": "InferenceTypeSchema",
               "location": {
                 "filePath": "button.tsx",
-                "line": 2,
-                "character": 8
+                "line": 24,
+                "character": 5
               },
-              "name": "React, { ReactNode, useRef }",
-              "type": "ImportClause"
+              "name": "React.ButtonHTMLAttributes"
             }
           ]
         }
@@ -1788,12 +1786,13 @@
               }
             ],
             "returnType": {
-              "__schema": "TypeParameterSchema",
+              "__schema": "InferenceTypeSchema",
               "location": {
                 "filePath": "index.ts",
                 "line": 121,
-                "character": 4
+                "character": 19
               },
+              "type": "T",
               "name": "T"
             }
           }
@@ -1816,39 +1815,43 @@
             "character": 30
           },
           "checkType": {
-            "__schema": "TypeParameterSchema",
+            "__schema": "InferenceTypeSchema",
             "location": {
               "filePath": "index.ts",
               "line": 127,
-              "character": 16
+              "character": 30
             },
+            "type": "T",
             "name": "T"
           },
           "extendsType": {
-            "__schema": "TypeParameterSchema",
+            "__schema": "InferenceTypeSchema",
             "location": {
               "filePath": "index.ts",
               "line": 127,
-              "character": 19
+              "character": 40
             },
+            "type": "U",
             "name": "U"
           },
           "trueType": {
-            "__schema": "TypeParameterSchema",
+            "__schema": "InferenceTypeSchema",
             "location": {
               "filePath": "index.ts",
               "line": 127,
-              "character": 22
+              "character": 44
             },
+            "type": "Y",
             "name": "Y"
           },
           "falseType": {
-            "__schema": "TypeParameterSchema",
+            "__schema": "InferenceTypeSchema",
             "location": {
               "filePath": "index.ts",
               "line": 127,
-              "character": 25
+              "character": 48
             },
+            "type": "N",
             "name": "N"
           }
         },
@@ -1889,12 +1892,13 @@
             "name": "a",
             "isOptional": false,
             "type": {
-              "__schema": "TypeParameterSchema",
+              "__schema": "InferenceTypeSchema",
               "location": {
                 "filePath": "index.ts",
                 "line": 129,
-                "character": 33
+                "character": 39
               },
+              "type": "T",
               "name": "T"
             }
           }
@@ -1920,14 +1924,13 @@
         "signature": "const gfnc2: <T>(a: T) => void",
         "isOptional": false,
         "type": {
-          "__schema": "UnImplementedSchema",
+          "__schema": "InferenceTypeSchema",
           "location": {
             "filePath": "index.ts",
-            "line": 130,
-            "character": 10
+            "line": 133,
+            "character": 14
           },
-          "name": "function",
-          "type": "FunctionKeyword"
+          "type": "<T>(a: T) => void"
         }
       }
     ],
@@ -2108,14 +2111,13 @@
             "signature": "const obj: {\n    a: number;\n    b: number;\n}",
             "isOptional": false,
             "type": {
-              "__schema": "UnImplementedSchema",
+              "__schema": "InferenceTypeSchema",
               "location": {
                 "filePath": "index.ts",
                 "line": 59,
-                "character": 13
+                "character": 7
               },
-              "name": "{",
-              "type": "FirstPunctuation"
+              "type": "{\n    a: number;\n    b: number;\n}"
             }
           }
         ],
@@ -2446,14 +2448,13 @@
                     "signature": "(property) children: ReactNode",
                     "isOptional": false,
                     "type": {
-                      "__schema": "UnImplementedSchema",
+                      "__schema": "InferenceTypeSchema",
                       "location": {
                         "filePath": "button.tsx",
-                        "line": 2,
-                        "character": 17
+                        "line": 13,
+                        "character": 13
                       },
-                      "name": "ReactNode",
-                      "type": "ImportSpecifier"
+                      "name": "ReactNode"
                     },
                     "doc": {
                       "__schema": "DocSchema",
@@ -2529,14 +2530,13 @@
                 ]
               },
               {
-                "__schema": "UnImplementedSchema",
+                "__schema": "InferenceTypeSchema",
                 "location": {
                   "filePath": "button.tsx",
-                  "line": 2,
-                  "character": 8
+                  "line": 24,
+                  "character": 5
                 },
-                "name": "React, { ReactNode, useRef }",
-                "type": "ImportClause"
+                "name": "React.ButtonHTMLAttributes"
               }
             ]
           }

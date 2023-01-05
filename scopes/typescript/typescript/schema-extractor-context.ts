@@ -412,11 +412,15 @@ export class SchemaExtractorContext {
     if (this.isDefInSameLocation(node, definition)) {
       return this.unknownExactType(node, location, typeStr, isTypeStrFromQuickInfo);
     }
+
     const definitionNode = await this.definition(definition);
+
     if (!definitionNode) {
       return this.unknownExactType(node, location, typeStr, isTypeStrFromQuickInfo);
     }
+
     const definitionNodeName = definitionNode?.getText();
+
     // check if internal ref with definition info
     const definitionInternalRef = await this.getTypeRefForInternalPath(
       definitionNodeName,
@@ -426,7 +430,8 @@ export class SchemaExtractorContext {
 
     if (definitionInternalRef) return definitionInternalRef;
 
-    const transformer = this.extractor.getTransformer(node, this);
+    const transformer = this.extractor.getTransformer(definitionNode, this);
+
     if (transformer === undefined) {
       return this.unknownExactType(node, location, typeStr, isTypeStrFromQuickInfo);
     }
