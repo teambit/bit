@@ -38,5 +38,6 @@ export { UnresolvedSchema } from './unresolved-schema';
 export { ConditionalTypeSchema } from './conditional-type';
 export { ExpressionWithTypeArgumentsSchema } from './expression-with-arguments';
 export { NamedTupleSchema } from './named-tuple';
+export { TypeParameterSchema } from './type-parameter';
 export { UnImplementedSchema } from './unimplemented-schema';
 export * from './docs';

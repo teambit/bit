@@ -12,7 +12,6 @@ export abstract class SchemaNode {
   readonly doc?: DocSchema;
   readonly signature?: string;
   readonly name?: string;
-  readonly exported: boolean;
 
   abstract toString(): string;
 

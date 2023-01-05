@@ -1,7 +1,7 @@
 import { TsserverClient } from '@teambit/ts-server';
 import { getTokenAtPosition, canHaveJsDoc, getJsDoc } from 'tsutils';
 import ts, { ExportAssignment, getTextOfJSDocComment, ExportDeclaration, Node, SyntaxKind, TypeNode } from 'typescript';
-import { head } from 'lodash';
+import { head, uniqBy } from 'lodash';
 // @ts-ignore david we should figure fix this.
 // eslint-disable-next-line import/no-unresolved
 import protocol from 'typescript/lib/protocol';
@@ -20,7 +20,6 @@ import { Formatter } from '@teambit/formatter';
 import pMapSeries from 'p-map-series';
 import { TypeScriptExtractor } from './typescript.extractor';
 import { IdentifierList } from './identifier-list';
-import { TransformerNotFound } from './exceptions';
 import { parseTypeFromQuickInfo } from './transformers/utils/parse-type-from-quick-info';
 import { tagParser } from './transformers/utils/jsdoc-to-doc-schema';
 import { Identifier } from './identifier';
@@ -31,10 +30,12 @@ export class SchemaExtractorContext {
    * list of all declared identifiers (exported and internal) by filename
    */
   private _identifiers = new Map<string, IdentifierList>();
+  private _internalIdentifiers = new Map<string, IdentifierList>();
+
   /**
-   * computed nodes by filename and position (line:character)
+   * computed nodes by filename and (position (line:character))
    */
-  private _nodes = new Map<string, SchemaNode>();
+  private _computed = new Map<string, SchemaNode>();
 
   get mainFile() {
     return pathNormalizeToLinux(this.getPathRelativeToComponent(this.component.mainFile.path));
@@ -44,8 +45,21 @@ export class SchemaExtractorContext {
     return this._identifiers;
   }
 
-  get nodes() {
-    return this._nodes;
+  get internalIdentifiers() {
+    return this._internalIdentifiers;
+  }
+
+  get computed() {
+    return this._computed;
+  }
+
+  get mainFileIdentifierKey() {
+    const mainFile = this.component.mainFile;
+    return this.getIdentifierKey(mainFile.path);
+  }
+
+  get mainModuleIdentifiers() {
+    return this.identifiers.get(this.mainFileIdentifierKey);
   }
 
   constructor(
@@ -69,26 +83,30 @@ export class SchemaExtractorContext {
     return pathNormalizeToLinux(filePath);
   }
 
-  getMainFileIdentifierKey() {
-    const mainFile = this.component.mainFile;
-    return this.getIdentifierKey(mainFile.path);
-  }
-
   setComputed(node: SchemaNode) {
     const { location } = node;
     const key = this.getComputedNodeKey(location);
-    this.nodes.set(key, node);
+    this.computed.set(key, node);
   }
 
   setIdentifiers(filePath: string, identifiers: IdentifierList) {
     this._identifiers.set(this.getIdentifierKey(filePath), identifiers);
   }
 
+  setInternalIdentifiers(filePath: string, identifiers: IdentifierList) {
+    const existing = this._internalIdentifiers.get(filePath);
+    if (!existing) {
+      this._internalIdentifiers.set(filePath, identifiers);
+    } else {
+      const uniqueIdentifiers = uniqBy(existing.identifiers.concat(identifiers.identifiers), (k) => k.aliasId || k.id);
+      this._internalIdentifiers.set(filePath, new IdentifierList(uniqueIdentifiers));
+    }
+  }
+
   async computeSchema(node: Node) {
     const location = this.getLocation(node);
     const key = this.getComputedNodeKey(location);
-
-    const existingComputedSchema = this.nodes.get(key);
+    const existingComputedSchema = this.computed.get(key);
 
     if (existingComputedSchema) {
       return existingComputedSchema;
@@ -286,7 +304,7 @@ export class SchemaExtractorContext {
   }
 
   async visit(node: Node): Promise<SchemaNode> {
-    if (node.kind === SyntaxKind.Identifier && node.parent.parent !== undefined) {
+    if (node.kind === SyntaxKind.Identifier && node.parent.parent.kind !== SyntaxKind.SourceFile) {
       return this.visit(node.parent);
     }
     return this.extractor.computeSchema(node, this);
@@ -356,6 +374,7 @@ export class SchemaExtractorContext {
       return false;
     }
     const loc = this.getLocation(node);
+
     return loc.line === definition.start.line && loc.character === definition.start.offset;
   }
 
@@ -370,7 +389,7 @@ export class SchemaExtractorContext {
     const location = this.getLocation(node);
 
     // check if internal ref with typeInfo
-    const internalRef = await this.getTypeRefForInternalNode(typeStr, this.getIdentifierKeyForNode(node), location);
+    const internalRef = await this.getTypeRefForInternalPath(typeStr, this.getIdentifierKeyForNode(node), location);
 
     if (internalRef) return internalRef;
 
@@ -399,7 +418,7 @@ export class SchemaExtractorContext {
     }
     const definitionNodeName = definitionNode?.getText();
     // check if internal ref with definition info
-    const definitionInternalRef = await this.getTypeRefForInternalNode(
+    const definitionInternalRef = await this.getTypeRefForInternalPath(
       definitionNodeName,
       this.getIdentifierKeyForNode(definitionNode),
       location
@@ -407,29 +426,25 @@ export class SchemaExtractorContext {
 
     if (definitionInternalRef) return definitionInternalRef;
 
-    try {
-      const schemaNode = await this.visit(definitionNode);
-      // if (schemaNode) console.log('\n\n\n 426 compute schema node \n', schemaNode.name);
-      return schemaNode || this.unknownExactType(node, location, typeStr, isTypeStrFromQuickInfo);
-    } catch (err) {
-      if (err instanceof TransformerNotFound) {
-        return this.unknownExactType(node, location, typeStr, isTypeStrFromQuickInfo);
-      }
-      throw err;
+    const transformer = this.extractor.getTransformer(node, this);
+    if (transformer === undefined) {
+      return this.unknownExactType(node, location, typeStr, isTypeStrFromQuickInfo);
     }
+    const schemaNode = await this.visit(definitionNode);
+    return schemaNode || this.unknownExactType(node, location, typeStr, isTypeStrFromQuickInfo);
   }
 
   private getCompIdByPkgName(pkgName: string): ComponentID | undefined {
     return this.componentDeps.find((dep) => dep.packageName === pkgName)?.componentId;
   }
 
-  async getTypeRefForInternalNode(
+  async getTypeRefForInternalPath(
     typeStr: string,
     filePath: string,
     location: Location
   ): Promise<TypeRefSchema | undefined> {
     const nodeIdentifierKey = this.getIdentifierKey(filePath);
-    const mainFileIdentifierKey = this.getMainFileIdentifierKey();
+    const mainFileIdentifierKey = this.mainFileIdentifierKey;
 
     const nodeIdentifierList = this.identifiers.get(nodeIdentifierKey);
     const mainIdentifierList = this.identifiers.get(mainFileIdentifierKey);
@@ -439,11 +454,14 @@ export class SchemaExtractorContext {
 
     const parsedNodeIdentifier = nodeIdentifierList?.find(nodeIdentifier);
     const parsedMainIdentifier = mainIdentifierList?.find(mainIdentifier);
-
     const isExportedIdentifier = parsedNodeIdentifier && ExportIdentifier.isExportIdentifier(parsedNodeIdentifier);
     const isExportedFromMain = parsedMainIdentifier && ExportIdentifier.isExportIdentifier(parsedMainIdentifier);
 
     if (!isExportedIdentifier) return undefined;
+
+    if (!isExportedFromMain) {
+      this.setInternalIdentifiers(filePath, new IdentifierList([parsedNodeIdentifier]));
+    }
 
     return new TypeRefSchema(location, typeStr, undefined, undefined, !isExportedFromMain);
   }

@@ -11,7 +11,7 @@ import { EnvContext } from '@teambit/envs';
 import { Formatter } from '@teambit/formatter';
 import { Logger } from '@teambit/logger';
 import pMapSeries from 'p-map-series';
-import { flatten } from 'lodash';
+import { compact, flatten } from 'lodash';
 import { TypescriptMain, SchemaTransformerSlot } from './typescript.main.runtime';
 import { TransformerNotFound } from './exceptions';
 import { SchemaExtractorContext } from './schema-extractor-context';
@@ -69,8 +69,27 @@ export class TypeScriptExtractor implements SchemaExtractor {
     const moduleSchema = (await this.computeSchema(mainAst, context)) as ModuleSchema;
     moduleSchema.flatExportsRecursively();
     const apiScheme = moduleSchema;
+    const internals = await this.computeInternalModules(context, internalFiles);
+
     const location = context.getLocation(mainAst);
-    return new APISchema(location, apiScheme, component.id);
+
+    return new APISchema(location, apiScheme, internals, component.id);
+  }
+
+  async computeInternalModules(context: SchemaExtractorContext, internalFiles: AbstractVinyl[]) {
+    const internals = compact(
+      await Promise.all(
+        [...context.internalIdentifiers.entries()].map(async ([filePath]) => {
+          const file = internalFiles.find((internalFile) => internalFile.path === filePath);
+          if (!file) return undefined;
+          const fileAst = this.parseSourceFile(file);
+          const moduleSchema = (await this.computeSchema(fileAst, context)) as ModuleSchema;
+          moduleSchema.flatExportsRecursively();
+          return moduleSchema;
+        })
+      )
+    );
+    return internals;
   }
 
   dispose() {
@@ -123,6 +142,11 @@ export class TypeScriptExtractor implements SchemaExtractor {
 
   async computeSchema(node: Node, context: SchemaExtractorContext): Promise<SchemaNode> {
     const transformer = this.getTransformer(node, context);
+    // console.log(
+    //   '\n\n\n🚀 ~ file: typescript.extractor.ts:148 ~ TypeScriptExtractor ~ computeSchema ~ node',
+    //   node.getText(),
+    //   transformer
+    // );
     // leave the next line commented out, it is used for debugging
     // console.log('transformer', transformer.constructor.name, node.getText());
     if (!transformer) {
@@ -141,7 +165,7 @@ export class TypeScriptExtractor implements SchemaExtractor {
   /**
    * select the correct transformer for a node.
    */
-  private getTransformer(node: Node, context: SchemaExtractorContext) {
+  getTransformer(node: Node, context: SchemaExtractorContext) {
     const transformers = flatten(this.schemaTransformerSlot.values());
     const transformer = transformers.find((singleTransformer) => {
       return singleTransformer.predicate(node);
