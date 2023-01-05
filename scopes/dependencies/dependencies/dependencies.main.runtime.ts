@@ -71,10 +71,16 @@ export class DependenciesMain {
       compIds.map(async (compId) => {
         const component = await this.workspace.get(compId);
         const depList = await this.dependencyResolver.getDependencies(component);
-        const currentDepResolverConfig = await this.workspace.getSpecificComponentConfig(
-          compId,
-          DependencyResolverAspect.id
-        );
+        const getCurrentConfig = async () => {
+          const currentConfigFromWorkspace = await this.workspace.getSpecificComponentConfig(
+            compId,
+            DependencyResolverAspect.id
+          );
+          if (currentConfigFromWorkspace) return currentConfigFromWorkspace;
+          const extFromScope = await this.workspace.getExtensionsFromScopeAndSpecific(compId);
+          return extFromScope?.toConfigObject()[DependencyResolverAspect.id];
+        };
+        const currentDepResolverConfig = await getCurrentConfig();
         const newDepResolverConfig = cloneDeep(currentDepResolverConfig || {});
         const removedPackagesWithNulls = await pMapSeries(packages, async (pkg) => {
           const [name, version] = this.splitPkgToNameAndVer(pkg);

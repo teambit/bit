@@ -118,7 +118,7 @@ it will snap-merge these components to complete the merge. use "no-snap" to opt-
     if (resolveUnrelated && typeof resolveUnrelated === 'boolean') {
       resolveUnrelated = 'ours';
     }
-    const { mergeResults, deleteResults } = await this.mergeLanes.mergeLane(name, {
+    const { mergeResults, deleteResults, configMergeResults } = await this.mergeLanes.mergeLane(name, {
       build,
       // @ts-ignore
       mergeStrategy,
@@ -136,7 +136,7 @@ it will snap-merge these components to complete the merge. use "no-snap" to opt-
       includeDeps,
     });
 
-    const mergeResult = mergeReport({ ...mergeResults, verbose });
+    const mergeResult = mergeReport({ ...mergeResults, configMergeResults, verbose });
     const deleteResult = `${deleteResults.localResult ? paintRemoved(deleteResults.localResult, false) : ''}${(
       deleteResults.remoteResult || []
     ).map((item) => paintRemoved(item, true))}${

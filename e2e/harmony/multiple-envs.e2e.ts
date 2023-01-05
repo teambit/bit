@@ -51,4 +51,18 @@ describe('multiple envs', function () {
       helper.command.expectStatusToNotHaveIssue(IssuesClasses.MultipleEnvs.name);
     });
   });
+  describe('env was set in previous tag and another non-core env is set now', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1);
+      helper.command.setEnv('comp1', 'teambit.mdx/mdx');
+      helper.command.tagAllWithoutBuild();
+      // it's important to have here a non-core env. otherwise, the issue won't be shown.
+      helper.command.setEnv('comp1', 'teambit.community/envs/community-mdx');
+      helper.command.status(); // run any command to get rid of pnpm output so the next command will be a valid json.
+    });
+    it('bit status should not show it as an issue', () => {
+      helper.command.expectStatusToNotHaveIssue(IssuesClasses.MultipleEnvs.name);
+    });
+  });
 });

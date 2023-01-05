@@ -1,3 +1,4 @@
+import { ComponentMap } from '@teambit/component';
 import { ExecutionContext } from '@teambit/envs';
 
 export type FixType = 'problem' | 'suggestion' | 'layout';
@@ -26,4 +27,9 @@ export interface LinterContext extends ExecutionContext, LinterOptions {
    * Usually it's the workspace root dir or the capsule root dir
    */
   rootDir?: string;
+
+  /**
+   * Component map with the path to the component in the fs
+   */
+  componentsDirMap: ComponentMap<string>
 }

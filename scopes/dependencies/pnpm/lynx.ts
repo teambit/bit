@@ -26,10 +26,10 @@ import {
 import * as pnpm from '@pnpm/core';
 import { createClient, ClientOptions } from '@pnpm/client';
 import { pickRegistryForPackage } from '@pnpm/pick-registry-for-package';
+import { createPkgGraph } from '@pnpm/workspace.pkgs-graph';
 import { PackageManifest, ProjectManifest, ReadPackageHook } from '@pnpm/types';
 import { Logger } from '@teambit/logger';
 import toNerfDart from 'nerf-dart';
-import { createPkgGraph } from 'pkgs-graph';
 import userHome from 'user-home';
 import { pnpmErrorToBitError } from './pnpm-error-to-bit-error';
 import { readConfig } from './read-config';
@@ -174,6 +174,12 @@ export async function install(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   logger?: Logger
 ) {
+  let externalDependencies: Set<string> | undefined;
+  if (options?.rootComponents) {
+    externalDependencies = new Set(
+      Object.values(manifestsByPaths).map(({ name }) => name).filter(Boolean) as string[]
+    );
+  }
   if (!manifestsByPaths[rootDir].dependenciesMeta) {
     manifestsByPaths = {
       ...manifestsByPaths,
@@ -184,9 +190,8 @@ export async function install(
     };
   }
   const readPackage: ReadPackageHook[] = [];
-  let hoistingLimits = new Map();
   if (options?.rootComponents) {
-    const { rootComponentWrappers, rootComponents } = createRootComponentWrapperManifests(rootDir, manifestsByPaths);
+    const rootComponentWrappers = createRootComponentWrapperManifests(rootDir, manifestsByPaths);
     manifestsByPaths = {
       ...rootComponentWrappers,
       ...mapValues(manifestsByPaths, (manifest, dir) => {
@@ -201,8 +206,6 @@ export async function install(
       }),
     };
     readPackage.push(readPackageHook as ReadPackageHook);
-    hoistingLimits = new Map();
-    hoistingLimits.set('.@', new Set(rootComponents));
   } else if (options?.rootComponentsForCapsules) {
     readPackage.push(readPackageHookForCapsules as ReadPackageHook);
   }
@@ -230,7 +233,7 @@ export async function install(
     registries: registriesMap,
     rawConfig: authConfig,
     hooks: { readPackage },
-    hoistingLimits,
+    externalDependencies,
     strictPeerDependencies: false,
     resolveSymlinksInInjectedDirs: true,
     dedupeDirectDeps: true,
@@ -273,12 +276,9 @@ export async function install(
  */
 function createRootComponentWrapperManifests(rootDir: string, manifestsByPaths: Record<string, ProjectManifest>) {
   const rootComponentWrappers: Record<string, ProjectManifest> = {};
-  const rootComponents: string[] = [];
   for (const manifest of Object.values(manifestsByPaths)) {
     const name = manifest.name!.toString(); // eslint-disable-line
     const compDir = path.join(rootDir, 'node_modules', name);
-    const id = path.relative(rootDir, compDir).replace(/\\/g, '/');
-    rootComponents.push(encodeURIComponent(id));
     rootComponentWrappers[compDir] = {
       name: `${name}__root`,
       dependencies: {
@@ -291,10 +291,7 @@ function createRootComponentWrapperManifests(rootDir: string, manifestsByPaths: 
       },
     };
   }
-  return {
-    rootComponentWrappers,
-    rootComponents,
-  };
+  return rootComponentWrappers;
 }
 
 /**

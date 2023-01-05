@@ -1,6 +1,6 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
-import WorkspaceAspect, { Workspace } from '@teambit/workspace';
+import WorkspaceAspect, { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import { BitId } from '@teambit/legacy-bit-id';
 import { BitError } from '@teambit/bit-error';
 import { compact } from 'lodash';
@@ -20,7 +20,6 @@ import {
   threeWayMerge,
 } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
 import GeneralError from '@teambit/legacy/dist/error/general-error';
-import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
 import mapSeries from 'p-map-series';
 import { BitIds } from '@teambit/legacy/dist/bit-id';
 import { Version, ModelComponent } from '@teambit/legacy/dist/scope/models';
@@ -67,8 +66,8 @@ export class CheckoutMain {
     const consumer = this.workspace.consumer;
     const { version, ids, promptMergeOptions } = checkoutProps;
     await this.syncNewComponents(checkoutProps);
+    await this.workspace.scope.import(ids || [], { useCache: false, preferDependencyGraph: true });
     const bitIds = BitIds.fromArray(ids?.map((id) => id._legacy) || []);
-    await consumer.scope.import(bitIds, false);
     const { components } = await consumer.loadComponents(bitIds);
 
     const allComponentStatusBeforeMerge = await Promise.all(
@@ -145,8 +144,7 @@ export class CheckoutMain {
         const compsNewFromLane = await Promise.all(
           newFromLane.map((id) => consumer.loadComponentWithDependenciesFromModel(id._legacy))
         );
-        const compsNewFromLaneNotDeleted = compsNewFromLane.filter((c) => !c.component.removed);
-        componentsWithDependencies.push(...compsNewFromLaneNotDeleted);
+        componentsWithDependencies.push(...compsNewFromLane);
         newFromLaneAdded = true;
       }
     }
@@ -183,7 +181,7 @@ export class CheckoutMain {
     checkoutProps: CheckoutProps
   ): Promise<ApplyVersionResults> {
     this.logger.setStatusLine(BEFORE_CHECKOUT);
-    if (!this.workspace) throw new ConsumerNotFound();
+    if (!this.workspace) throw new OutsideWorkspaceError();
     const consumer = this.workspace.consumer;
     await this.parseValues(to, componentPattern, checkoutProps);
     const checkoutResults = await this.checkout(checkoutProps);
@@ -235,7 +233,14 @@ export class CheckoutMain {
     if (checkoutProps.entireLane && !checkoutProps.head) {
       throw new BitError(`--entire-lane flag can only be used with "head" (bit checkout head --entire-lane)`);
     }
-    const ids = componentPattern ? await this.workspace.idsByPattern(componentPattern) : await this.workspace.listIds();
+    const idsOnWorkspace = componentPattern
+      ? await this.workspace.idsByPattern(componentPattern)
+      : await this.workspace.listIds();
+    const currentLane = await this.workspace.consumer.getCurrentLaneObject();
+    const currentLaneIds = currentLane?.toBitIds();
+    const ids = currentLaneIds
+      ? idsOnWorkspace.filter((id) => currentLaneIds.hasWithoutVersion(id._legacy))
+      : idsOnWorkspace;
     checkoutProps.ids = ids.map((id) => (checkoutProps.head || checkoutProps.latest ? id.changeVersion(LATEST) : id));
   }
 
@@ -247,7 +252,14 @@ export class CheckoutMain {
     const laneBitIds = lane.toBitIds();
     const newIds = laneBitIds.filter((bitId) => !ids.find((id) => id._legacy.isEqualWithoutVersion(bitId)));
     const newComponentIds = await this.workspace.resolveMultipleComponentIds(newIds);
-    return newComponentIds;
+    const nonRemovedNewIds: ComponentID[] = [];
+    await Promise.all(
+      newComponentIds.map(async (id) => {
+        const isRemoved = await this.workspace.scope.isComponentRemoved(id);
+        if (!isRemoved) nonRemovedNewIds.push(id);
+      })
+    );
+    return nonRemovedNewIds;
   }
 
   private async getComponentStatusBeforeMergeAttempt(

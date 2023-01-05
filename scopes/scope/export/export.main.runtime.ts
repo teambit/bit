@@ -27,8 +27,7 @@ import { NodeModuleLinker } from '@teambit/legacy/dist/links';
 import { Lane, ModelComponent, Symlink, Version } from '@teambit/legacy/dist/scope/models';
 import hasWildcard from '@teambit/legacy/dist/utils/string/has-wildcard';
 import { Scope } from '@teambit/legacy/dist/scope';
-import WorkspaceAspect, { Workspace } from '@teambit/workspace';
-import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
+import WorkspaceAspect, { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { LaneReadmeComponent } from '@teambit/legacy/dist/scope/models/lane';
 import { Http } from '@teambit/legacy/dist/scope/network/http';
@@ -131,7 +130,7 @@ export class ExportMain {
     exportedLanes: Lane[];
     newIdsOnRemote: BitId[];
   }> {
-    if (!this.workspace) throw new ConsumerNotFound();
+    if (!this.workspace) throw new OutsideWorkspaceError();
     const consumer: Consumer = this.workspace.consumer;
     const { idsToExport, missingScope, idsWithFutureScope, laneObject } = await this.getComponentsToExport(
       ids,

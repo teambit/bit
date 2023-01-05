@@ -2,7 +2,7 @@ import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import pMapSeries from 'p-map-series';
 import { LaneId } from '@teambit/lane-id';
 import { IssuesList } from '@teambit/component-issues';
-import WorkspaceAspect, { Workspace } from '@teambit/workspace';
+import WorkspaceAspect, { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import { ComponentID } from '@teambit/component-id';
 import { Analytics } from '@teambit/legacy/dist/analytics/analytics';
 import loader from '@teambit/legacy/dist/cli/loader';
@@ -13,7 +13,6 @@ import ComponentsPendingImport from '@teambit/legacy/dist/consumer/component-ops
 import { BitId } from '@teambit/legacy-bit-id';
 import ComponentsList from '@teambit/legacy/dist/consumer/component/components-list';
 import { ModelComponent } from '@teambit/legacy/dist/scope/models';
-import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
 import { InsightsAspect, InsightsMain } from '@teambit/insights';
 import { SnapsDistance } from '@teambit/legacy/dist/scope/component-ops/snaps-distance';
 import IssuesAspect, { IssuesMain } from '@teambit/issues';
@@ -51,8 +50,8 @@ export class StatusMain {
     private remove: RemoveMain
   ) {}
 
-  async status(): Promise<StatusResult> {
-    if (!this.workspace) throw new ConsumerNotFound();
+  async status({ lanes }: { lanes?: boolean }): Promise<StatusResult> {
+    if (!this.workspace) throw new OutsideWorkspaceError();
     loader.start(BEFORE_STATUS);
     const consumer = this.workspace.consumer;
     const laneObj = await consumer.getCurrentLaneObject();
@@ -89,22 +88,31 @@ export class StatusMain {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const invalidComponents = allInvalidComponents.filter((c) => !(c.error instanceof ComponentsPendingImport));
     const outdatedComponents = await componentsList.listOutdatedComponents();
+    const idsDuringMergeState = componentsList.listDuringMergeStateComponents();
+    const { components: componentsDuringMergeState } = await this.workspace.consumer.loadComponents(
+      idsDuringMergeState,
+      false
+    );
     const mergePendingComponents = await componentsList.listMergePendingComponents();
-    const newAndModifiedLegacy: ConsumerComponent[] = newComponents.concat(modifiedComponents);
+    const legacyCompsWithPotentialIssues: ConsumerComponent[] = [
+      ...newComponents,
+      ...modifiedComponents,
+      ...componentsDuringMergeState,
+    ];
     const issuesToIgnore = this.issues.getIssuesToIgnoreGlobally();
-    if (newAndModifiedLegacy.length) {
-      const newAndModified = await this.workspace.getManyByLegacy(newAndModifiedLegacy, loadOpts);
-      await this.issues.triggerAddComponentIssues(newAndModified, issuesToIgnore);
-      this.issues.removeIgnoredIssuesFromComponents(newAndModified);
+    if (legacyCompsWithPotentialIssues.length) {
+      const compsWithPotentialIssues = await this.workspace.getManyByLegacy(legacyCompsWithPotentialIssues, loadOpts);
+      await this.issues.triggerAddComponentIssues(compsWithPotentialIssues, issuesToIgnore);
+      this.issues.removeIgnoredIssuesFromComponents(compsWithPotentialIssues);
     }
-    const componentsWithIssues = newAndModifiedLegacy.filter((component: ConsumerComponent) => {
+    const componentsWithIssues = legacyCompsWithPotentialIssues.filter((component: ConsumerComponent) => {
       return component.issues && !component.issues.isEmpty();
     });
-    const componentsDuringMergeState = componentsList.listDuringMergeStateComponents();
+
     const softTaggedComponents = componentsList.listSoftTaggedComponents();
     const snappedComponents = (await componentsList.listSnappedComponentsOnMain()).map((c) => c.toBitId());
-    const pendingUpdatesFromMain = await componentsList.listUpdatesFromMainPending();
-    const updatesFromForked = await componentsList.listUpdatesFromForked();
+    const pendingUpdatesFromMain = lanes ? await componentsList.listUpdatesFromMainPending() : [];
+    const updatesFromForked = lanes ? await componentsList.listUpdatesFromForked() : [];
     const currentLaneId = consumer.getCurrentLaneId();
     const currentLane = await consumer.getCurrentLaneObject();
     const forkedLaneId = currentLane?.forkedFrom;
@@ -157,7 +165,7 @@ export class StatusMain {
       mergePendingComponents: await convertObjToComponentIdsAndSort(
         mergePendingComponents.map((c) => ({ id: c.id, divergeData: c.diverge }))
       ),
-      componentsDuringMergeState: await convertBitIdToComponentIdsAndSort(componentsDuringMergeState),
+      componentsDuringMergeState: await convertBitIdToComponentIdsAndSort(idsDuringMergeState),
       softTaggedComponents: await convertBitIdToComponentIdsAndSort(softTaggedComponents),
       snappedComponents: await convertBitIdToComponentIdsAndSort(snappedComponents),
       pendingUpdatesFromMain: await convertObjToComponentIdsAndSort(pendingUpdatesFromMain),

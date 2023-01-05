@@ -71,7 +71,6 @@ export default class ComponentOverrides {
     workspaceConfig: ILegacyWorkspaceConfig,
     overridesFromModel: ComponentOverridesData | undefined,
     componentConfig: ComponentConfig,
-    isLegacy: boolean,
     files: SourceFile[]
   ): Promise<ComponentOverrides> {
     // overrides from consumer-config is not relevant and should not affect imported
@@ -90,16 +89,12 @@ export default class ComponentOverrides {
       // return isAuthor ? null : overridesFromModel;
       return null;
     };
-    let extensionsAddedOverrides = {};
-    // Do not run the hook for legacy projects since it will use the default env in that case for takeing dependencies and will change the main file
-    if (!isLegacy) {
-      extensionsAddedOverrides = await runOnLoadOverridesEvent(
-        this.componentOverridesLoadingRegistry,
-        componentConfig.parseExtensions(),
-        componentId,
-        files
-      );
-    }
+    const extensionsAddedOverrides = await runOnLoadOverridesEvent(
+      this.componentOverridesLoadingRegistry,
+      componentConfig.parseExtensions(),
+      componentId,
+      files
+    );
     const mergedLegacyConsumerOverridesWithExtensions = mergeOverrides(
       legacyOverridesFromConsumer || {},
       extensionsAddedOverrides

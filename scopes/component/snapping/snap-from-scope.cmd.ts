@@ -1,16 +1,26 @@
 import chalk from 'chalk';
 import { IssuesClasses } from '@teambit/component-issues';
 import { Command, CommandOptions } from '@teambit/cli';
-import { NOTHING_TO_SNAP_MSG, AUTO_SNAPPED_MSG } from '@teambit/legacy/dist/constants';
 import { BitError } from '@teambit/bit-error';
 import { Logger } from '@teambit/logger';
-import { SnappingMain, SnapResults } from './snapping.main.runtime';
+import { SnappingMain } from './snapping.main.runtime';
 
 export type SnapDataPerCompRaw = {
   componentId: string;
   dependencies?: string[];
   aspects?: Record<string, any>;
   message?: string;
+};
+
+type SnapFromScopeOptions = {
+  push?: boolean;
+  message?: string;
+  lane?: string;
+  ignoreIssues?: string;
+  build?: boolean;
+  skipTests?: boolean;
+  disableSnapPipeline?: boolean;
+  forceDeploy?: boolean;
 };
 
 export class SnapFromScopeCmd implements Command {
@@ -30,6 +40,7 @@ an example of the final data: '[{"componentId":"ci.remote2/comp-b","message": "f
   options = [
     ['', 'push', 'export the updated objects to the original scopes once done'],
     ['m', 'message <message>', 'log message describing the latest changes'],
+    ['', 'lane <lane-id>', 'fetch the components from the given lane'],
     ['', 'build', 'run the build pipeline'],
     ['', 'skip-tests', 'skip running component tests during snap process'],
     ['', 'disable-snap-pipeline', 'skip the snap pipeline'],
@@ -41,6 +52,7 @@ an example of the final data: '[{"componentId":"ci.remote2/comp-b","message": "f
 [${Object.keys(IssuesClasses).join(', ')}]
 to ignore multiple issues, separate them by a comma and wrap with quotes. to ignore all issues, specify "*".`,
     ],
+    ['j', 'json', 'output as json format'],
   ] as CommandOptions;
   loader = true;
   private = true;
@@ -48,25 +60,29 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
 
   constructor(private snapping: SnappingMain, private logger: Logger) {}
 
-  async report(
+  async report([data]: [string], options: SnapFromScopeOptions) {
+    const results = await this.json([data], options);
+
+    const { snappedIds, exportedIds } = results;
+
+    const snappedOutput = `${chalk.bold('snapped components')}\n${snappedIds.join('\n')}`;
+    const exportedOutput =
+      exportedIds && exportedIds.length ? `\n\n${chalk.bold('exported components')}\n${exportedIds.join('\n')}` : '';
+
+    return `${snappedOutput}${exportedOutput}`;
+  }
+  async json(
     [data]: [string],
     {
       push = false,
       message = '',
+      lane,
       ignoreIssues,
       build = false,
       skipTests = false,
       disableSnapPipeline = false,
       forceDeploy = false,
-    }: {
-      push?: boolean;
-      message?: string;
-      ignoreIssues?: string;
-      build?: boolean;
-      skipTests?: boolean;
-      disableSnapPipeline?: boolean;
-      forceDeploy?: boolean;
-    }
+    }: SnapFromScopeOptions
   ) {
     const disableTagAndSnapPipelines = disableSnapPipeline;
     if (disableTagAndSnapPipelines && forceDeploy) {
@@ -78,6 +94,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
     const results = await this.snapping.snapFromScope(snapDataPerCompRaw, {
       push,
       message,
+      lane,
       ignoreIssues,
       build,
       skipTests,
@@ -85,48 +102,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       forceDeploy,
     });
 
-    if (!results) return chalk.yellow(NOTHING_TO_SNAP_MSG);
-    const { snappedComponents, autoSnappedResults, warnings, newComponents, laneName }: SnapResults = results;
-    const changedComponents = snappedComponents.filter(
-      (component) => !newComponents.searchWithoutVersion(component.id)
-    );
-    const addedComponents = snappedComponents.filter((component) => newComponents.searchWithoutVersion(component.id));
-    const autoTaggedCount = autoSnappedResults ? autoSnappedResults.length : 0;
-
-    const warningsOutput = warnings && warnings.length ? `${chalk.yellow(warnings.join('\n'))}\n\n` : '';
-    const tagExplanation = `\n(use "bit export" to push these components to a remote")
-(use "bit reset" to unstage versions)\n`;
-
-    const outputComponents = (comps) => {
-      return comps
-        .map((component) => {
-          let componentOutput = `     > ${component.id.toString()}`;
-          const autoTag = autoSnappedResults.filter((result) =>
-            result.triggeredBy.searchWithoutScopeAndVersion(component.id)
-          );
-          if (autoTag.length) {
-            const autoTagComp = autoTag.map((a) => a.component.id.toString());
-            componentOutput += `\n       ${AUTO_SNAPPED_MSG} (${autoTagComp.length} total):
-            ${autoTagComp.join('\n            ')}`;
-          }
-          return componentOutput;
-        })
-        .join('\n');
-    };
-
-    const outputIfExists = (label, explanation, components) => {
-      if (!components.length) return '';
-      return `\n${chalk.underline(label)}\n(${explanation})\n${outputComponents(components)}\n`;
-    };
-    const laneStr = laneName ? ` on "${laneName}" lane` : '';
-
-    return (
-      warningsOutput +
-      chalk.green(`${snappedComponents.length + autoTaggedCount} component(s) snapped${laneStr}`) +
-      tagExplanation +
-      outputIfExists('new components', 'first version for components', addedComponents) +
-      outputIfExists('changed components', 'components that got a version bump', changedComponents)
-    );
+    return results;
   }
   private parseData(data: string): SnapDataPerCompRaw[] {
     let dataParsed: unknown;

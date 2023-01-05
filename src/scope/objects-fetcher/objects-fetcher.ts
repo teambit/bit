@@ -55,7 +55,7 @@ export class ObjectFetcher {
     const idsGrouped = this.lanes.length ? groupByLanes(this.ids, this.lanes) : groupByScopeName(this.ids);
     const scopes = Object.keys(idsGrouped);
     logger.debug(
-      `[-] Running fetch on ${scopes.length} remote(s), to get ${this.ids.length} id(s), with the following options`,
+      `[-] Running fetch on ${scopes.length} remote(s), to get ${this.ids.length} id(s), lanes: ${this.lanes.length}, with the following options`,
       this.fetchOptions
     );
     const objectsQueue = new WriteObjectsQueue();
@@ -127,6 +127,7 @@ the remote scope "${scopeName}" was not found`);
     // remote and errors happening inside the Writable.
     let readableError: Error | undefined;
     objectsStream.on('error', (err) => {
+      logger.error(`writeFromSingleRemote, got an error from the remote ${scopeName}`, err);
       readableError = err;
     });
     try {

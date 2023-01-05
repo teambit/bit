@@ -16,8 +16,7 @@ describe('snap components from scope', function () {
   describe('snap from scope', () => {
     let bareTag;
     let beforeSnappingOnScope: string;
-    before(async () => {
-      helper = new Helper();
+    before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateComponents(3);
       helper.command.snapAllComponents();
@@ -105,6 +104,65 @@ describe('snap components from scope', function () {
         const depResolver = comp2OnBare.extensions.find((e) => e.name === Extensions.dependencyResolver).data;
         const dep = depResolver.dependencies.find((d) => d.id.includes('comp3'));
         expect(dep.version).to.equal('0.0.2');
+      });
+    });
+  });
+  describe('snap on lane', () => {
+    let bareScope;
+    let comp1FirstSnap: string;
+    let beforeSnappingOnScope: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.command.createLane();
+      helper.fixtures.populateComponents(3);
+      helper.command.snapAllComponentsWithoutBuild();
+      comp1FirstSnap = helper.command.getHeadOfLane('dev', 'comp1');
+      helper.command.export();
+
+      bareScope = helper.scopeHelper.getNewBareScope('-bare-merge');
+      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, bareScope.scopePath);
+      beforeSnappingOnScope = helper.scopeHelper.cloneScope(bareScope.scopePath);
+    });
+    describe('snapping them all at the same time without dependencies changes', () => {
+      let data;
+      before(() => {
+        data = [
+          {
+            componentId: `${helper.scopes.remote}/comp1`,
+            message: `msg for first comp`,
+          },
+          {
+            componentId: `${helper.scopes.remote}/comp2`,
+            message: `msg for second comp`,
+          },
+          {
+            componentId: `${helper.scopes.remote}/comp3`,
+            message: `msg for third comp`,
+          },
+        ];
+        // console.log('data', JSON.stringify(data));
+        helper.command.snapFromScope(bareScope.scopePath, data, `--lane ${helper.scopes.remote}/dev`);
+      });
+      it('should not snap on main', () => {
+        const comp1OnBare = helper.command.catComponent(`${helper.scopes.remote}/comp1`, bareScope.scopePath);
+        expect(comp1OnBare.head).to.be.undefined;
+      });
+      it('should snap on the lane', () => {
+        const snapOnLane = helper.command.getHeadOfLane('dev', 'comp1', bareScope.scopePath);
+        expect(snapOnLane).to.not.equal(comp1FirstSnap);
+        const snapObj = helper.command.catObject(snapOnLane, true, bareScope.scopePath);
+        expect(snapObj.parents[0]).to.equal(comp1FirstSnap);
+      });
+      describe('running with --push flag', () => {
+        before(() => {
+          helper.scopeHelper.getClonedScope(beforeSnappingOnScope, bareScope.scopePath);
+          helper.command.snapFromScope(bareScope.scopePath, data, `--push --lane ${helper.scopes.remote}/dev`);
+        });
+        it('should export the modified components to the remote', () => {
+          const snapOnLaneOnBareScope = helper.command.getHeadOfLane('dev', 'comp1', bareScope.scopePath);
+          const snapOnLaneOnRemote = helper.command.getHeadOfLane('dev', 'comp1', helper.scopes.remotePath);
+          expect(snapOnLaneOnBareScope).to.equal(snapOnLaneOnRemote);
+        });
       });
     });
   });

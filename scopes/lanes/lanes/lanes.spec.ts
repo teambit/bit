@@ -3,8 +3,9 @@ import { loadAspect } from '@teambit/harmony.testing.load-aspect';
 import SnappingAspect, { SnappingMain } from '@teambit/snapping';
 import { mockWorkspace, destroyWorkspace, WorkspaceData } from '@teambit/workspace.testing.mock-workspace';
 import { mockComponents, modifyMockedComponents } from '@teambit/component.testing.mock-components';
+import { ChangeType } from '@teambit/lanes.entities.lane-diff';
 import { LanesAspect } from './lanes.aspect';
-import { ChangeType, LanesMain } from './lanes.main.runtime';
+import { LanesMain } from './lanes.main.runtime';
 
 describe('LanesAspect', function () {
   this.timeout(0);
@@ -56,7 +57,10 @@ describe('LanesAspect', function () {
     it('should return that the lane is up to date when the lane is ahead of main', async () => {
       const currentLane = await lanes.getCurrentLane();
       if (!currentLane) throw new Error('unable to get the current lane');
-      const isUpToDate = await lanes.isLaneUpToDate(currentLane);
+      const isUpToDate = (
+        await lanes.diffStatus(currentLane.toLaneId(), undefined, { skipChanges: true })
+      ).componentsStatus.every((c) => c.upToDate);
+
       expect(isUpToDate).to.be.true;
     });
     it('should return that the lane is not up to date when main is ahead', async () => {
@@ -69,7 +73,10 @@ describe('LanesAspect', function () {
         unmodified: true,
         ignoreIssues: 'MissingManuallyConfiguredPackages',
       });
-      const isUpToDate = await lanes.isLaneUpToDate(currentLane);
+      const isUpToDate = (
+        await lanes.diffStatus(currentLane.toLaneId(), undefined, { skipChanges: true })
+      ).componentsStatus.every((c) => c.upToDate);
+
       expect(isUpToDate).to.be.false;
     });
   });

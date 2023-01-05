@@ -204,8 +204,12 @@ a lane created from another lane has all the components of the original lane.`;
     const result = await this.lanes.createLane(name, createLaneOptions);
     const remoteScopeOrDefaultScope = createLaneOptions.remoteScope
       ? `the remote scope ${chalk.bold(createLaneOptions.remoteScope)}`
-      : `the default-scope ${chalk.bold(result.remoteScope)}. to change it, please run "bit lane change-scope" command`;
-    const title = chalk.green(`successfully added and checked out to a new lane ${chalk.bold(result.localLane)}`);
+      : `the default-scope ${chalk.bold(
+          result.laneId.scope
+        )}. to change it, please run "bit lane change-scope" command`;
+    const title = chalk.green(
+      `successfully added and checked out to a new lane ${chalk.bold(result.alias || result.laneId.name)}`
+    );
     const remoteScopeOutput = `this lane will be exported to ${remoteScopeOrDefaultScope}`;
     return `${title}\n${remoteScopeOutput}`;
   }

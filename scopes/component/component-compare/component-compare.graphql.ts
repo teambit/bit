@@ -12,10 +12,16 @@ export function componentCompareSchema(componentCompareMain: ComponentCompareMai
         diffOutput: String
       }
 
+      type FieldCompareResult {
+        fieldName: String!
+        diffOutput: String
+      }
+
       type ComponentCompareResult {
         # unique id for graphql - baseId + compareId
         id: String!
         code(fileName: String): [FileCompareResult!]!
+        aspects(aspectName: String): [FieldCompareResult!]!
       }
 
       extend type ComponentHost {
@@ -43,6 +49,12 @@ export function componentCompareSchema(componentCompareMain: ComponentCompareMai
             baseContent: c.fromContent,
             compareContent: c.toContent,
           }));
+        },
+        aspects: (result: ComponentCompareResult, { fieldName }: { fieldName?: string }) => {
+          if (fieldName) {
+            return result.fields.filter((field) => field.fieldName === fieldName);
+          }
+          return result.fields;
         },
       },
     },

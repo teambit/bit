@@ -1,6 +1,6 @@
 import fs from 'fs-extra';
 import { Mutex } from 'async-mutex';
-import { compact, uniqBy } from 'lodash';
+import { compact, uniqBy, differenceWith, isEqual } from 'lodash';
 import { isHash } from '@teambit/component-version';
 import * as path from 'path';
 import pMap from 'p-map';
@@ -81,6 +81,27 @@ export default class Repository {
   }
 
   static onPostObjectsPersist: () => Promise<void>;
+
+  // if current scope index difference with <scope_folder>/index.json content, reload it
+  public async reloadScopeIndexIfNeed(force = false) {
+    const latestScopeIndex = await this.loadOptionallyCreateScopeIndex();
+    if (force) {
+      this.scopeIndex = latestScopeIndex;
+      return;
+    }
+
+    const currentAllScopeIndexItems = this.scopeIndex.getAll();
+    const latestAllScopeIndexItems = latestScopeIndex.getAll();
+
+    if (currentAllScopeIndexItems.length !== latestAllScopeIndexItems.length) {
+      this.scopeIndex = latestScopeIndex;
+      return;
+    }
+
+    if (differenceWith(currentAllScopeIndexItems, latestAllScopeIndexItems, isEqual).length) {
+      this.scopeIndex = latestScopeIndex;
+    }
+  }
 
   ensureDir() {
     return fs.ensureDir(this.getPath());

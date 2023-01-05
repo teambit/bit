@@ -72,44 +72,58 @@ export async function getDivergeData({
   });
   const getVersionData = (ref: Ref): VersionParents | undefined => versionParents.find((v) => v.hash.isEqual(ref));
 
-  const existOnRemote = (ref: Ref) => [targetHead, ...(otherTargetsHeads || [])].find((r) => r.isEqual(ref));
+  const existOnTarget = (ref: Ref) => [targetHead, ...(otherTargetsHeads || [])].find((r) => r.isEqual(ref));
 
-  const snapsOnLocal: Ref[] = [];
-  const snapsOnRemote: Ref[] = [];
-  let remoteHeadExistsLocally = false;
-  let localHeadExistsRemotely = false;
+  const snapsOnSource: Ref[] = [];
+  const snapsOnTarget: Ref[] = [];
+  let targetHeadExistsInSource = false;
+  let sourceHeadExistsInTarget = false;
   let commonSnapBeforeDiverge: Ref | undefined;
   let hasMultipleParents = false;
   let error: Error | undefined;
-  const addParentsRecursively = (version: VersionData, snaps: Ref[], isLocal: boolean) => {
-    if (isLocal && existOnRemote(version.hash)) {
-      remoteHeadExistsLocally = true;
+
+  const commonSnapsWithDepths = {};
+
+  const addParentsRecursively = (version: VersionData, snaps: Ref[], isSource: boolean, depth = 0) => {
+    if (snaps.find((snap) => snap.isEqual(version.hash))) return;
+
+    if (isSource && existOnTarget(version.hash)) {
+      targetHeadExistsInSource = true;
       return;
     }
-    if (!isLocal && version.hash.isEqual(localHead)) {
-      localHeadExistsRemotely = true;
+    if (!isSource && version.hash.isEqual(localHead)) {
+      sourceHeadExistsInTarget = true;
       return;
     }
-    if (isLocal && version.unrelated?.isEqual(targetHead)) {
-      remoteHeadExistsLocally = true;
+    if (isSource && version.unrelated?.isEqual(targetHead)) {
+      targetHeadExistsInSource = true;
       snaps.push(version.hash);
       return;
     }
-    if (!isLocal && version.unrelated?.isEqual(localHead)) {
-      localHeadExistsRemotely = true;
+    if (!isSource && version.unrelated?.isEqual(localHead)) {
+      sourceHeadExistsInTarget = true;
       snaps.push(version.hash);
       return;
     }
-    if (!isLocal && !commonSnapBeforeDiverge) {
-      const snapExistLocally = snapsOnLocal.find((snap) => snap.isEqual(version.hash));
-      if (snapExistLocally) commonSnapBeforeDiverge = snapExistLocally;
+    if (!isSource) {
+      const snapExistsInSource = snapsOnSource.find((snap) => snap.isEqual(version.hash));
+      if (snapExistsInSource) {
+        if (!commonSnapBeforeDiverge) commonSnapBeforeDiverge = snapExistsInSource;
+        else {
+          const depthOfCommonSnap = commonSnapsWithDepths[commonSnapBeforeDiverge.toString()];
+          if (depthOfCommonSnap > depth) commonSnapBeforeDiverge = snapExistsInSource;
+        }
+        commonSnapsWithDepths[version.hash.toString()] = depth;
+      }
     }
+
     snaps.push(version.hash);
+
     if (version.parents.length > 1) hasMultipleParents = true;
     version.parents.forEach((parent) => {
       const parentVersion = getVersionData(parent);
       if (parentVersion) {
-        addParentsRecursively(parentVersion, snaps, isLocal);
+        addParentsRecursively(parentVersion, snaps, isSource, depth + 1);
       } else {
         const err = new ParentNotFound(modelComponent.id(), version.hash.toString(), parent.toString());
         if (throws) throw err;
@@ -124,26 +138,26 @@ export async function getDivergeData({
 run the following command to fix it:
 bit import ${modelComponent.id()} --objects`);
     if (throws) throw err;
-    return new SnapsDistance(snapsOnLocal, [], targetHead, err);
+    return new SnapsDistance(snapsOnSource, [], targetHead, err);
   }
-  addParentsRecursively(localVersion, snapsOnLocal, true);
-  if (remoteHeadExistsLocally && !hasMultipleParents) {
-    return new SnapsDistance(snapsOnLocal, [], targetHead, error);
+  addParentsRecursively(localVersion, snapsOnSource, true);
+  if (targetHeadExistsInSource && !hasMultipleParents) {
+    return new SnapsDistance(snapsOnSource, [], targetHead, error);
   }
-  const remoteVersion = getVersionData(targetHead);
-  if (!remoteVersion) {
+  const targetVersion = getVersionData(targetHead);
+  if (!targetVersion) {
     const err = new VersionNotFoundOnFS(targetHead.toString(), modelComponent.id());
     if (throws) throw err;
     return new SnapsDistance([], [], undefined, err);
   }
-  addParentsRecursively(remoteVersion, snapsOnRemote, false);
-  if (localHeadExistsRemotely) {
-    return new SnapsDistance([], R.difference(snapsOnRemote, snapsOnLocal), localHead, error);
+  addParentsRecursively(targetVersion, snapsOnTarget, false);
+  if (sourceHeadExistsInTarget) {
+    return new SnapsDistance([], R.difference(snapsOnTarget, snapsOnSource), localHead, error);
   }
 
-  if (remoteHeadExistsLocally) {
+  if (targetHeadExistsInSource) {
     // happens when `hasMultipleParents` is true. now that remote was traversed as well, it's possible to find the diff
-    return new SnapsDistance(R.difference(snapsOnLocal, snapsOnRemote), [], targetHead, error);
+    return new SnapsDistance(R.difference(snapsOnSource, snapsOnTarget), [], targetHead, error);
   }
 
   if (!commonSnapBeforeDiverge) {
@@ -151,15 +165,16 @@ bit import ${modelComponent.id()} --objects`);
     const isUnrelatedFromUnmerged = unmergedData?.unrelated && unmergedData.head.isEqual(targetHead);
     const isUnrelatedFromVersionObj = localVersion.unrelated?.isEqual(targetHead);
     if (isUnrelatedFromUnmerged || isUnrelatedFromVersionObj) {
-      return new SnapsDistance(snapsOnLocal, snapsOnRemote, undefined);
+      return new SnapsDistance(snapsOnSource, snapsOnTarget, undefined);
     }
     const err = new NoCommonSnap(modelComponent.id());
     if (throws) throw err;
-    return new SnapsDistance(snapsOnLocal, snapsOnRemote, undefined, err);
+    return new SnapsDistance(snapsOnSource, snapsOnTarget, undefined, err);
   }
+
   return new SnapsDistance(
-    R.difference(snapsOnLocal, snapsOnRemote),
-    R.difference(snapsOnRemote, snapsOnLocal),
+    R.difference(snapsOnSource, snapsOnTarget),
+    R.difference(snapsOnTarget, snapsOnSource),
     commonSnapBeforeDiverge,
     error
   );

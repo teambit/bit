@@ -3,8 +3,7 @@ import { LaneId } from '@teambit/lane-id';
 import { LaneData } from '@teambit/legacy/dist/scope/lanes/lanes';
 import gql from 'graphql-tag';
 import { flatten, slice } from 'lodash';
-
-import { LanesMain } from './lanes.main.runtime';
+import { LaneComponentDiffStatus, LaneDiffStatus, LaneDiffStatusOptions, LanesMain } from './lanes.main.runtime';
 
 export function lanesSchema(lanesMainRuntime: LanesMain): Schema {
   return {
@@ -37,21 +36,39 @@ export function lanesSchema(lanesMainRuntime: LanesMain): Schema {
         color: Boolean
       }
 
+      input DiffStatusOptions {
+        skipChanges: Boolean
+        skipUpToDate: Boolean
+      }
+
       type LaneId {
         name: String!
         scope: String!
       }
 
       type LaneComponentDiffStatus {
+        """
+        for apollo caching - component id
+        """
+        id: String!
+        sourceHead: String!
+        targetHead: String
         componentId: ComponentID!
-        changeType: String!
-        upToDate: Boolean!
+        changeType: String @deprecated(reason: "Use changes")
+        """
+        list of all change types - Source Code, Dependency, Aspects, etc
+        """
+        changes: [String!]
+        upToDate: Boolean
       }
 
       type LaneDiffStatus {
+        """
+        for apollo caching - source + target
+        """
+        id: String!
         source: LaneId!
         target: LaneId!
-        upToDate: Boolean!
         componentsStatus: [LaneComponentDiffStatus!]!
       }
 
@@ -68,7 +85,7 @@ export function lanesSchema(lanesMainRuntime: LanesMain): Schema {
         id: String!
         list(ids: [String!], offset: Int, limit: Int): [Lane!]!
         diff(from: String!, to: String!, options: DiffOptions): GetDiffResult
-        diffStatus(source: String!, target: String): LaneDiffStatus!
+        diffStatus(source: String!, target: String, options: DiffStatusOptions): LaneDiffStatus!
         current: Lane
       }
 
@@ -114,11 +131,24 @@ export function lanesSchema(lanesMainRuntime: LanesMain): Schema {
             compsWithDiff: getDiffResults.compsWithDiff.map((item) => ({ ...item, id: item.id.toString() })),
           };
         },
-        diffStatus: async (lanesMain: LanesMain, { source, target }: { source: string; target?: string }) => {
+        diffStatus: async (
+          lanesMain: LanesMain,
+          { source, target, options }: { source: string; target?: string; options?: LaneDiffStatusOptions }
+        ) => {
           const sourceLaneId = LaneId.parse(source);
           const targetLaneId = target ? LaneId.parse(target) : undefined;
-          return lanesMain.diffStatus(sourceLaneId, targetLaneId);
+          return lanesMain.diffStatus(sourceLaneId, targetLaneId, options);
         },
+      },
+      LaneDiffStatus: {
+        id: (diffStatus: LaneDiffStatus) => `${diffStatus.source.toString()}-${diffStatus.target.toString()}`,
+      },
+      LaneComponentDiffStatus: {
+        id: (diffCompStatus: LaneComponentDiffStatus) =>
+          `${diffCompStatus.componentId.toStringWithoutVersion()}-${diffCompStatus.sourceHead}-${
+            diffCompStatus.targetHead
+          }`,
+        componentId: (diffCompStatus: LaneComponentDiffStatus) => diffCompStatus.componentId.toObject(),
       },
       Lane: {
         id: (lane: LaneData) => lane.id.toObject(),

@@ -16,6 +16,7 @@ import { MultipleEnvs } from './multiple-envs';
 import { MissingLinksFromNodeModulesToSrc } from './missing-links-from-nm-to-src';
 import { CircularDependencies } from './circular-dependencies';
 import { DuplicateComponentAndPackage } from './duplicate-component-and-package';
+import { MergeConfigHasConflict } from './merge-config-has-conflict';
 
 export const IssuesClasses = {
   MissingPackagesDependenciesOnFs,
@@ -35,6 +36,7 @@ export const IssuesClasses = {
   MissingLinksFromNodeModulesToSrc,
   CircularDependencies,
   DuplicateComponentAndPackage,
+  MergeConfigHasConflict,
 };
 export type IssuesNames = keyof typeof IssuesClasses;
 

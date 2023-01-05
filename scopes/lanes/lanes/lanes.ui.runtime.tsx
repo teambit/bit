@@ -25,6 +25,7 @@ import { LaneId } from '@teambit/lane-id';
 import { useViewedLaneFromUrl } from '@teambit/lanes.hooks.use-viewed-lane-from-url';
 import { TabItem } from '@teambit/component.ui.component-compare.models.component-compare-props';
 import { ComponentCompareAspect, ComponentCompareUI } from '@teambit/component-compare';
+import { LaneComparePage } from '@teambit/lanes.ui.compare.lane-compare-page';
 
 export type LaneCompareProps = Partial<DefaultLaneCompareProps>;
 export class LanesUI {
@@ -112,7 +113,7 @@ export class LanesUI {
     const laneFromUrl = useViewedLaneFromUrl();
     const laneComponentId =
       idFromLocation && !laneFromUrl?.isDefault()
-        ? lanesModel?.resolveComponentByFullName(idFromLocation, laneFromUrl)
+        ? lanesModel?.resolveComponentFromUrl(idFromLocation, laneFromUrl)
         : undefined;
     return laneComponentId;
   };
@@ -147,6 +148,10 @@ export class LanesUI {
 
   getLaneOverview() {
     return <LaneOverview routeSlot={this.routeSlot} overviewSlot={this.overviewSlot} host={this.lanesHost} />;
+  }
+
+  getLanesComparePage() {
+    return <LaneComparePage getLaneCompare={this.getLaneCompare} />;
   }
 
   getMenuRoutes() {
@@ -271,10 +276,9 @@ export class LanesUI {
           (maybeRoutesForId && (Array.isArray(maybeRoutesForId) ? [...maybeRoutesForId] : [maybeRoutesForId])) || [];
 
         return navProps.map((navProp) => ({
-          id: `${id}-${navProp.props.href}`,
-          order: navProp.order,
-          props: navProp.props,
-          element: getElement(routesForId, navProp.props.href),
+          ...navProp,
+          id: `${id}-${navProp?.id}`,
+          element: getElement(routesForId, navProp?.props?.href),
         }));
       })
     );

@@ -1,4 +1,4 @@
-import { EnvService, ExecutionContext, EnvDefinition } from '@teambit/envs';
+import { EnvService, ExecutionContext, EnvDefinition, Env, EnvContext, ServiceTransformationMap } from '@teambit/envs';
 import { PubsubMain } from '@teambit/pubsub';
 import { flatten } from 'lodash';
 import React from 'react';
@@ -14,6 +14,21 @@ import { DevServerContext } from './dev-server-context';
 import { getEntry } from './get-entry';
 
 export type DevServerServiceOptions = { dedicatedEnvDevServers?: string[] };
+
+type DevServiceTransformationMap = ServiceTransformationMap  & {
+  /**
+   * Required for `bit start`
+   */
+  getDevEnvId?: (context?: any) => string;
+
+  /**
+   * Returns and configures the dev server
+   * Required for `bit start`
+   */
+  getDevServer?: (
+    context: DevServerContext,
+  ) => DevServer | Promise<DevServer>;
+}
 
 export type DevServerDescriptor = {
   /**
@@ -93,6 +108,21 @@ export class DevServerService implements EnvService<ComponentServer, DevServerDe
       config: devServer.displayConfig ? devServer.displayConfig() : '',
       version: devServer.version ? devServer.version() : '?',
     };
+  }
+
+  transform(env: Env, envContext: EnvContext): DevServiceTransformationMap | undefined {
+    // Old env
+    if (!env?.preview) return undefined;
+    const preview = env.preview()(envContext);
+
+    return {
+      getDevEnvId: () => {
+        return preview.getDevEnvId();
+      },
+      getDevServer: (context) => {
+        return preview.getDevServer(context)(envContext);
+      },
+    }
   }
 
   // async run(context: ExecutionContext): Promise<ComponentServer[]> {

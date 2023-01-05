@@ -88,7 +88,7 @@ export class UpdateDependenciesMain {
     await this.updateAllDeps();
     this.addLogToComponents();
     if (!updateDepsOptions.simulation) {
-      await this.snapping._addFlattenedDependenciesToComponents(this.scope.legacyScope, this.legacyComponents);
+      await this.snapping._addFlattenedDependenciesToComponents(this.legacyComponents);
     }
     this.addBuildStatus();
     await this.addComponentsToScope();
@@ -133,6 +133,7 @@ export class UpdateDependenciesMain {
       // this is critical. otherwise, later on, when loading aspects and isolating capsules, we'll try to fetch dists
       // from the original scope instead of the lane-scope.
       this.scope.legacyScope.setCurrentLaneId(laneId);
+      this.scope.legacyScope.scopeImporter.shouldOnlyFetchFromCurrentLane = true;
     }
   }
 

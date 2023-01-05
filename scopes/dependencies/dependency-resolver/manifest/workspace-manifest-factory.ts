@@ -3,10 +3,10 @@ import { Component } from '@teambit/component';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 import { pickBy, mapValues } from 'lodash';
 import { SemVer } from 'semver';
+import pMapSeries from 'p-map-series';
 import { snapToSemver } from '@teambit/component-package-version';
 import { ComponentDependency, DependencyList, PackageName } from '../dependencies';
-import { VariantPolicy, WorkspacePolicy, EnvPolicy, PeersAutoDetectPolicy } from '../policy';
-
+import { VariantPolicy, WorkspacePolicy, EnvPolicy } from '../policy';
 import { DependencyResolverMain } from '../dependency-resolver.main.runtime';
 import { ComponentsManifestsMap } from '../types';
 import { ComponentManifest } from './component-manifest';
@@ -78,27 +78,27 @@ export class WorkspaceManifestFactory {
       components,
       optsWithDefaults.createManifestForComponentsWithoutDependencies
     );
-    const envPeers = this.getEnvsPeersPolicy(componentsManifestsMap);
+    const envSelfPeers = this.getEnvsSelfPeersPolicy(componentsManifestsMap);
     const workspaceManifest = new WorkspaceManifest(
       name,
       version,
       dedupedDependencies.rootDependencies,
-      envPeers,
+      envSelfPeers,
       rootDir,
       componentsManifestsMap
     );
     return workspaceManifest;
   }
 
-  private getEnvsPeersPolicy(componentsManifestsMap: ComponentsManifestsMap) {
+  private getEnvsSelfPeersPolicy(componentsManifestsMap: ComponentsManifestsMap) {
     const foundEnvs: EnvPolicy[] = [];
     for (const component of componentsManifestsMap.values()) {
       foundEnvs.push(component.envPolicy);
     }
-    const peersPolicies = foundEnvs.map((policy) => policy.peersAutoDetectPolicy);
+    const peersPolicies = foundEnvs.map((policy) => policy.selfPolicy);
     // TODO: At the moment we are just merge everything, so in case of conflicts one will be taken
     // TODO: once we have root for each env, we should know to handle it differently
-    const mergedPolicies = PeersAutoDetectPolicy.mergePolices(peersPolicies);
+    const mergedPolicies = VariantPolicy.mergePolices(peersPolicies);
     return mergedPolicies;
   }
 
@@ -118,7 +118,7 @@ export class WorkspaceManifestFactory {
   ): Promise<ComponentDependenciesMap> {
     const buildResultsP = components.map(async (component) => {
       const packageName = componentIdToPackageName(component.state._consumer);
-      let depList = await this.dependencyResolver.getDependencies(component, {includeHidden: true});
+      let depList = await this.dependencyResolver.getDependencies(component, { includeHidden: true });
       const componentPolicy = await this.dependencyResolver.getPolicy(component);
       const additionalDeps = {};
       if (hasRootComponents) {
@@ -191,35 +191,35 @@ export class WorkspaceManifestFactory {
     createManifestForComponentsWithoutDependencies = true
   ): Promise<ComponentsManifestsMap> {
     const componentsManifests: ComponentsManifestsMap = new Map();
-    await Promise.all(
-      components.map(async (component) => {
-        const packageName = componentIdToPackageName(component.state._consumer);
-        if (
-          dedupedDependencies.componentDependenciesMap.has(packageName) ||
-          createManifestForComponentsWithoutDependencies
-        ) {
-          const blankDependencies: ManifestDependenciesObject = {
-            dependencies: {},
-            devDependencies: {},
-            peerDependencies: {},
-          };
-          let dependencies = blankDependencies;
-          if (dedupedDependencies.componentDependenciesMap.has(packageName)) {
-            dependencies = dedupedDependencies.componentDependenciesMap.get(packageName) as ManifestDependenciesObject;
-          }
-
-          const getVersion = (): string => {
-            if (!component.id.hasVersion()) return '0.0.1-new';
-            return snapToSemver(component.id.version as string);
-          };
-
-          const version = getVersion();
-          const envPolicy = await this.dependencyResolver.getComponentEnvPolicy(component);
-          const manifest = new ComponentManifest(packageName, new SemVer(version), dependencies, component, envPolicy);
-          componentsManifests.set(packageName, manifest);
+    // don't use Promise.all, along the road this code might import an env from a remote, which can't be done in parallel.
+    // otherwise, it may import the same component multiple times, and if fails, the ref (remote-lane) files may be corrupted.
+    await pMapSeries(components, async (component) => {
+      const packageName = componentIdToPackageName(component.state._consumer);
+      if (
+        dedupedDependencies.componentDependenciesMap.has(packageName) ||
+        createManifestForComponentsWithoutDependencies
+      ) {
+        const blankDependencies: ManifestDependenciesObject = {
+          dependencies: {},
+          devDependencies: {},
+          peerDependencies: {},
+        };
+        let dependencies = blankDependencies;
+        if (dedupedDependencies.componentDependenciesMap.has(packageName)) {
+          dependencies = dedupedDependencies.componentDependenciesMap.get(packageName) as ManifestDependenciesObject;
         }
-      })
-    );
+
+        const getVersion = (): string => {
+          if (!component.id.hasVersion()) return '0.0.1-new';
+          return snapToSemver(component.id.version as string);
+        };
+
+        const version = getVersion();
+        const envPolicy = await this.dependencyResolver.getComponentEnvPolicy(component);
+        const manifest = new ComponentManifest(packageName, new SemVer(version), dependencies, component, envPolicy);
+        componentsManifests.set(packageName, manifest);
+      }
+    });
     return componentsManifests;
   }
 }
