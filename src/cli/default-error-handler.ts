@@ -10,7 +10,7 @@ import MissingDiagnosisName from '../api/consumer/lib/exceptions/missing-diagnos
 import NoIdMatchWildcard from '../api/consumer/lib/exceptions/no-id-match-wildcard';
 import NothingToCompareTo from '../api/consumer/lib/exceptions/nothing-to-compare-to';
 import ObjectsWithoutConsumer from '../api/consumer/lib/exceptions/objects-without-consumer';
-import { BASE_DOCS_DOMAIN, BASE_LEGACY_DOCS_DOMAIN, DEBUG_LOG, IMPORT_PENDING_MSG } from '../constants';
+import { BASE_DOCS_DOMAIN, BASE_LEGACY_DOCS_DOMAIN, DEBUG_LOG } from '../constants';
 import { InvalidBitMap, MissingMainFile } from '../consumer/bit-map/exceptions';
 import OutsideRootDir from '../consumer/bit-map/exceptions/outside-root-dir';
 import {
@@ -24,7 +24,6 @@ import {
   VersionShouldBeRemoved,
 } from '../consumer/component-ops/add-components/exceptions';
 import { AddingIndividualFiles } from '../consumer/component-ops/add-components/exceptions/adding-individual-files';
-import ComponentsPendingImport from '../consumer/component-ops/exceptions/components-pending-import';
 import ComponentsPendingMerge from '../consumer/component-ops/exceptions/components-pending-merge';
 import EjectNoDir from '../consumer/component-ops/exceptions/eject-no-dir';
 import ComponentNotFoundInPath from '../consumer/component/exceptions/component-not-found-in-path';
@@ -123,7 +122,6 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
   ],
   [RemoteScopeNotFound, (err) => `error: remote scope "${chalk.bold(err.name)}" was not found.`],
   [InjectNonEjected, () => 'error: could not inject config for already injected component'],
-  [ComponentsPendingImport, () => IMPORT_PENDING_MSG],
   // TODO: improve error
   [
     ComponentsPendingMerge,
