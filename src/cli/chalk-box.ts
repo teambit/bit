@@ -24,28 +24,3 @@ export const paintHeader = (value: string) => {
   if (!value) return '';
   return `${c.underline(value)}\n`;
 };
-
-const paintAuthor = (email: string | null | undefined, username: string | null | undefined) => {
-  if (email && username) {
-    return c.white(`author: ${username} <${email}>\n`);
-  }
-  if (email && !username) {
-    return c.white(`author: <${email}>\n`);
-  }
-  if (!email && username) {
-    return c.white(`author: ${username}\n`);
-  }
-
-  return '';
-};
-
-export const paintLog = (log: ComponentLog): string => {
-  const { message, date, tag, hash, username, email } = log;
-  const title = tag ? `tag ${tag} (${hash})\n` : `snap ${hash}\n`;
-  return (
-    c.yellow(title) +
-    paintAuthor(email, username) +
-    (date ? c.white(`date: ${date}\n`) : '') +
-    (message ? c.white(`\n      ${message}\n`) : '')
-  );
-};
