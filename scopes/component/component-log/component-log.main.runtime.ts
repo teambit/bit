@@ -1,5 +1,6 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { BitId } from '@teambit/legacy-bit-id';
+import moment from 'moment';
 import WorkspaceAspect, { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import { CommunityAspect } from '@teambit/community';
 import type { CommunityMain } from '@teambit/community';
@@ -23,7 +24,7 @@ export class ComponentLogMain {
     const componentId = await this.workspace.resolveComponentId(id);
     const logs = await this.workspace.scope.getLogs(componentId, shortHash);
     logs.forEach((log) => {
-      log.date = log.date ? new Date(parseInt(log.date)).toLocaleString() : undefined;
+      log.date = log.date ? moment(new Date(parseInt(log.date))).format('YYYY-MM-DD HH:mm:ss') : undefined;
     });
     return logs;
   }
