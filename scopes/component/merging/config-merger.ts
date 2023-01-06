@@ -1,5 +1,6 @@
 import { ComponentID } from '@teambit/component-id';
 import semver from 'semver';
+import { isHash } from '@teambit/component-version';
 import {
   DependencyResolverAspect,
   isRange,
@@ -69,7 +70,7 @@ export class ConfigMerger {
   constructor(
     private compIdStr: string,
     private workspaceIds: ComponentID[],
-    private otherLane: Lane | undefined,
+    otherLane: Lane | undefined,
     private currentAspects: ExtensionDataList,
     private baseAspects: ExtensionDataList,
     private otherAspects: ExtensionDataList,
@@ -104,9 +105,14 @@ export class ConfigMerger {
       if (this.handledExtIds.includes(id)) return null;
       this.handledExtIds.push(id);
       if (otherExt.extensionId && otherExt.extensionId.hasVersion()) {
+        // if (this.compIdStr === 'teambit.dot-cloud/community-cloud') console.log('current', this.currentAspects);
         // avoid using the id from the other lane if it exits in the workspace. prefer the id from the workspace.
         const idFromWorkspace = this.getIdFromWorkspace(otherExt.extensionId.toStringWithoutVersion());
-        if (idFromWorkspace) id = idFromWorkspace._legacy.toString();
+        if (idFromWorkspace) {
+          const existingExt = this.currentAspects.findExtension(otherExt.extensionId.toStringWithoutVersion(), true);
+          if (existingExt) return null; // the aspect is set currently, no need to add it again.
+          id = idFromWorkspace._legacy.toString();
+        }
       }
       const baseExt = this.baseAspects.findExtension(id, true);
       if (baseExt) {
@@ -270,39 +276,58 @@ ${'>'.repeat(7)} ${this.otherLabel}
     const baseConfig = baseExt ? this.getConfig(baseExt) : undefined;
     const basePolicy = baseConfig ? this.getPolicy(baseConfig) : undefined;
 
-    const getAutoDeps = (ext: ExtensionDataList): SerializedDependencyWithPolicy[] => {
+    const getAllDeps = (ext: ExtensionDataList): SerializedDependencyWithPolicy[] => {
       const data = ext.findCoreExtension(DependencyResolverAspect.id)?.data.dependencies;
       if (!data) return [];
       const policy = ext.findCoreExtension(DependencyResolverAspect.id)?.data.policy || [];
-      return data
-        .filter((d) => d.source === 'auto')
-        .map((d) => {
-          const idWithoutVersion = d.__type === 'package' ? d.id : d.id.split('@')[0];
-          const existingPolicy = policy.find((p) => p.dependencyId === idWithoutVersion);
-          const getPolicyVer = () => {
-            if (d.__type === 'package') return undefined; // for packages, the policy is already the version
-            if (existingPolicy) return existingPolicy.value.version; // currently it's missing, will be implemented by @Gilad
-            if (!semver.valid(d.version)) return d.version; // could be a hash
-            // default to `^` or ~ if starts with zero, until we save the policy from the workspace during tag/snap.
-            return d.version.startsWith('0.') ? `~${d.version}` : `^${d.version}`;
-          };
-          return {
-            ...d,
-            id: idWithoutVersion,
-            policy: getPolicyVer(),
-          };
-        });
+      return data.map((d) => {
+        const idWithoutVersion = d.__type === 'package' ? d.id : d.id.split('@')[0];
+        const existingPolicy = policy.find((p) => p.dependencyId === idWithoutVersion);
+        const getPolicyVer = () => {
+          if (d.__type === 'package') return undefined; // for packages, the policy is already the version
+          if (existingPolicy) return existingPolicy.value.version; // currently it's missing, will be implemented by @Gilad
+          if (!semver.valid(d.version)) return d.version; // could be a hash
+          // default to `^` or ~ if starts with zero, until we save the policy from the workspace during tag/snap.
+          return d.version.startsWith('0.') ? `~${d.version}` : `^${d.version}`;
+        };
+        return {
+          ...d,
+          id: idWithoutVersion,
+          policy: getPolicyVer(),
+        };
+      });
+    };
+    const getDataPolicy = (ext: ExtensionDataList): VariantPolicyEntry[] => {
+      return ext.findCoreExtension(DependencyResolverAspect.id)?.data.policy || [];
     };
 
-    const currentData = getAutoDeps(this.currentAspects);
+    const getAutoDeps = (ext: ExtensionDataList): SerializedDependencyWithPolicy[] => {
+      const allDeps = getAllDeps(ext);
+      return allDeps.filter((d) => d.source === 'auto');
+    };
+
+    const currentAutoData = getAutoDeps(this.currentAspects);
+    const currentAllData = getAllDeps(this.currentAspects);
+    const currentDataPolicy = getDataPolicy(this.currentAspects);
     const otherData = getAutoDeps(this.otherAspects);
-    const currentAndOtherData = uniqBy(currentData.concat(otherData), (d) => d.id);
+    const currentAndOtherData = uniqBy(currentAutoData.concat(otherData), (d) => d.id);
     const currentAndOtherComponentsData = currentAndOtherData.filter((c) => c.__type === 'component');
     const baseData = getAutoDeps(this.baseAspects);
 
     const getCompIdStrByPkgNameFromData = (pkgName: string): string | undefined => {
       const found = currentAndOtherComponentsData.find((d) => d.packageName === pkgName);
       return found?.id;
+    };
+
+    const getFromCurrentDataByPackageName = (pkgName: string) => {
+      return currentAllData.find((d) => {
+        if (d.__type === 'package') return d.id === pkgName;
+        return d.packageName === pkgName;
+      });
+    };
+
+    const getFromCurrentDataPolicyByPackageName = (pkgName: string) => {
+      return currentDataPolicy.find((d) => d.dependencyId === pkgName);
     };
 
     const mergedPolicy = {
@@ -315,7 +340,6 @@ ${'>'.repeat(7)} ${this.otherLabel}
       devDependencies: [],
       peerDependencies: [],
     };
-    let isMerged = false;
     let hasConflict = false;
     const conflictIndicator = 'CONFLICT::';
     const lifecycleToDepType = {
@@ -330,13 +354,28 @@ ${'>'.repeat(7)} ${this.otherLabel}
           // no need to add if the id exists in the workspace (regardless the version)
           return;
         }
+        const fromCurrentData = getFromCurrentDataByPackageName(dep.dependencyId);
+        if (fromCurrentData && !dep.force) {
+          if (fromCurrentData.version === dep.value.version) return;
+          if (
+            !isHash(fromCurrentData.version) &&
+            !isHash(dep.value.version) &&
+            semver.satisfies(fromCurrentData.version, dep.value.version)
+          ) {
+            return;
+          }
+        }
+        const fromCurrentDataPolicy = getFromCurrentDataPolicyByPackageName(dep.dependencyId);
+        if (fromCurrentDataPolicy && fromCurrentDataPolicy.value.version === dep.value.version) {
+          // that's a bug. if it's in the data.policy, it should be in data.dependencies.
+          return;
+        }
         const depType = lifecycleToDepType[dep.lifecycleType];
         mergedPolicy[depType].push({
           name: dep.dependencyId,
           version: dep.value.version,
           force: dep.force,
         });
-        isMerged = true;
       };
 
       if (this.areConfigsEqual(currentConfig, otherConfig)) {
@@ -356,7 +395,6 @@ ${'>'.repeat(7)} ${this.otherLabel}
             addVariantPolicyEntryToPolicy(dep);
           });
         }
-        isMerged = true;
         return;
       }
 
@@ -429,7 +467,6 @@ ${'>'.repeat(7)} ${this.otherLabel}
         version: dep.policy || dep.version,
         force: false,
       });
-      isMerged = true;
     };
 
     // uncomment to debug
@@ -439,12 +476,13 @@ ${'>'.repeat(7)} ${this.otherLabel}
     // console.log('otherData', baseData.length, '\n', baseData.map((d) => `${d.__type} ${d.id} ${d.version}`).join('\n'));
     // console.log('** END **\n\n');
 
+    // eslint-disable-next-line complexity
     currentAndOtherData.forEach((depData) => {
       if (this.isEnv(depData.id)) {
         // ignore the envs
         return;
       }
-      const currentDep = currentData.find((d) => d.id === depData.id);
+      const currentDep = currentAllData.find((d) => d.id === depData.id);
       const otherDep = otherData.find((d) => d.id === depData.id);
       if (!otherDep) {
         return;
@@ -453,6 +491,19 @@ ${'>'.repeat(7)} ${this.otherLabel}
         // only on other
         addSerializedDepToPolicy(otherDep);
         return;
+      }
+      if (
+        currentDep.policy &&
+        otherDep.policy &&
+        isRange(currentDep.policy, currentDep.id) &&
+        isRange(otherDep.policy, otherDep.id)
+      ) {
+        if (semver.satisfies(currentDep.version, otherDep.policy)) {
+          return;
+        }
+        if (semver.satisfies(otherDep.version, currentDep.policy)) {
+          return;
+        }
       }
       const currentId = currentDep.id;
       const currentVer = currentDep.policy || currentDep.version;
@@ -469,30 +520,34 @@ ${'>'.repeat(7)} ${this.otherLabel}
         // dependencies that exist in the workspace, should be ignored. they'll be resolved later to the version in the ws.
         return;
       }
+      const depType = lifecycleToDepType[currentDep.lifecycle];
+      if (hasConfigForDep(depType, currentDep.id)) {
+        return; // there is already config for it.
+      }
       if (baseVer && baseVer === currentVer) {
         addSerializedDepToPolicy(otherDep);
         return;
       }
       // either no baseVal, or baseVal is also different from both: other and local. that's probably a conflict.
-      const depType = lifecycleToDepType[currentDep.lifecycle];
-      if (hasConfigForDep(depType, currentDep.id)) {
-        return; // there is already config for it.
-      }
+
+      // @todo: this should be the correct way to check satisfies. currently, it doesn't work correctly because there is no policy
       // try to resolve according to semver
-      if (
-        currentDep.policy &&
-        otherDep.policy &&
-        isRange(currentDep.policy, currentDep.id) &&
-        isRange(otherDep.policy, otherDep.id)
-      ) {
-        if (semver.satisfies(currentDep.version, otherDep.policy)) {
-          return;
-        }
-        if (semver.satisfies(otherDep.version, currentDep.policy)) {
-          addSerializedDepToPolicy(otherDep);
-          return;
-        }
-      }
+      // if (
+      //   currentDep.policy &&
+      //   otherDep.policy &&
+      //   isRange(currentDep.policy, currentDep.id) &&
+      //   isRange(otherDep.policy, otherDep.id)
+      // ) {
+      //   if (this.compIdStr.includes('teambit.dot-graph/ui/graph!')) console.log('DATA working on ', depData.id, 'POLICY');
+      //   if (semver.satisfies(currentDep.version, otherDep.policy)) {
+      //     return;
+      //   }
+      //   if (semver.satisfies(otherDep.version, currentDep.policy)) {
+      //     if (this.compIdStr.includes('teambit.dot-graph/ui/graph!')) console.log('DATA working on ', depData.id, 'FINAL');
+      //     addSerializedDepToPolicy(otherDep);
+      //     return;
+      //   }
+      // }
       hasConflict = true;
       conflictedPolicy[depType].push({
         name: getDepIdAsPkgName(currentDep),
@@ -523,7 +578,7 @@ ${'>'.repeat(7)} ${this.otherLabel}`;
       conflictLines.unshift(`"${params.id}": {`);
       conflictStr = conflictLines.join('\n');
     }
-    const config = isMerged ? { policy: mergedPolicy } : undefined;
+    const config = Object.keys(mergedPolicy).length ? { policy: mergedPolicy } : undefined;
 
     return { id: params.id, mergedConfig: config, conflict: conflictStr };
   }

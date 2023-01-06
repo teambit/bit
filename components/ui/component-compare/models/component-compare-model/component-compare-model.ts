@@ -11,6 +11,8 @@ export type ComponentCompareModel = {
   compare?: ComponentCompareComponentModel;
   loading?: boolean;
   logsByVersion: Map<string, LegacyComponentLog>;
+  fileCompareDataByName?: Map<string, FileCompareResult> | null;
+  fieldCompareResultByName?: Map<string, FieldCompareResult> | null;
 };
 
 export type FileCompareResult = {
@@ -21,7 +23,13 @@ export type FileCompareResult = {
   diffOutput?: string;
 };
 
+export type FieldCompareResult = {
+  fieldName: string;
+  diffOutput?: string;
+};
+
 export type ComponentCompareQueryResponse = {
   id: string;
   code: Array<FileCompareResult>;
+  aspects: Array<FieldCompareResult>;
 };
