@@ -31,7 +31,6 @@ export function CodeCompareView({ className, fileName }: CodeCompareViewProps) {
 
   // const [ignoreWhitespace, setIgnoreWhitespace] = useState(true);
   const monacoRef = useRef<any>();
-
   const title = useMemo(() => fileName?.split('/').pop(), [fileName]);
 
   const language = useMemo(() => {
@@ -68,6 +67,15 @@ export function CodeCompareView({ className, fileName }: CodeCompareViewProps) {
         noSyntaxValidation: true,
       });
     }
+    monaco.editor.defineTheme('bit', {
+      base: 'vs-dark',
+      inherit: true,
+      rules: [],
+      colors: {
+        'scrollbar.shadow': '#222222',
+      },
+    });
+    monaco.editor.setTheme('bit');
   };
 
   /**
@@ -96,6 +104,18 @@ export function CodeCompareView({ className, fileName }: CodeCompareViewProps) {
         options={{
           // ignoreTrimWhitespace: ignoreWhitespace,
           readOnly: true,
+          minimap: { enabled: false },
+          scrollbar: { alwaysConsumeMouseWheel: false },
+          scrollBeyondLastLine: false,
+          folding: false,
+          overviewRulerLanes: 0,
+          overviewRulerBorder: false,
+          wordWrap: 'on',
+          wrappingStrategy: 'advanced',
+          fixedOverflowWidgets: true,
+          renderLineHighlight: 'none',
+          lineHeight: 18,
+          padding: { top: 8 },
         }}
         loading={<CodeCompareViewLoader />}
       />
