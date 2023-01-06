@@ -1,5 +1,4 @@
 import c from 'chalk';
-import { ComponentLog } from '../scope/models/model-component';
 
 export const formatNewBit = ({ name }: any): string => c.white('     > ') + c.cyan(name);
 
