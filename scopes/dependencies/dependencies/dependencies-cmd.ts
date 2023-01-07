@@ -167,7 +167,7 @@ export class DependenciesBlameCmd implements Command {
     },
   ];
   group = 'info';
-  description = 'find out which snap/tag changed a dependency version';
+  description = 'EXPERIMENTAL. find out which snap/tag changed a dependency version';
   alias = '';
   options = [] as CommandOptions;
 
