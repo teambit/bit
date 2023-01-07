@@ -203,7 +203,7 @@ async function getOneFileDiff(
     .replace(regExpB, `+++ ${fileName} (${fileBLabel})\n`);
 }
 
-async function getFilesDiff(
+export async function getFilesDiff(
   filesA: SourceFile[],
   filesB: SourceFile[],
   filesAVersion: string,

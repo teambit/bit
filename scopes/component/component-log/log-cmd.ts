@@ -50,7 +50,7 @@ export default class LogCmd implements Command {
   }
 }
 
-function paintAuthor(email: string | null | undefined, username: string | null | undefined) {
+export function paintAuthor(email: string | null | undefined, username: string | null | undefined) {
   if (email && username) {
     return c.white(`author: ${username} <${email}>\n`);
   }
@@ -75,9 +75,11 @@ function paintLog(log: LegacyComponentLog): string {
   );
 }
 
-function logOneLine(logs: LegacyComponentLog[]) {
-  // table with no style and no borders, just to align the columns.
-  const table = new Table({
+/**
+ * table with no style and no borders, just to align the columns.
+ */
+export function getEmptyTableWithoutStyle() {
+  return new Table({
     chars: {
       top: '',
       'top-mid': '',
@@ -97,6 +99,10 @@ function logOneLine(logs: LegacyComponentLog[]) {
     },
     style: { 'padding-left': 0, 'padding-right': 0 },
   });
+}
+
+function logOneLine(logs: LegacyComponentLog[]) {
+  const table = getEmptyTableWithoutStyle();
 
   logs.map(({ hash, tag, username, date, message }) =>
     table.push([hash, tag || '', username || '', date || '', message || ''])
