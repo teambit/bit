@@ -179,7 +179,7 @@ export class DependencyLinker {
     });
     result = {
       ...result,
-      ...(await this.linkCoreAspectsAndLegacy(rootDir, componentIds, linkingOpts)),
+      ...(await this.linkCoreAspectsAndLegacy(rootDir, componentIds, rootPolicy, linkingOpts)),
     };
     this.logger.consoleSuccess('linking components');
     return result;
@@ -188,6 +188,7 @@ export class DependencyLinker {
   public async linkCoreAspectsAndLegacy(
     rootDir: string | undefined,
     componentIds: ComponentID[] = [],
+    rootPolicy: WorkspacePolicy,
     options: Pick<LinkingOptions, 'linkTeambitBit' | 'linkCoreAspects'> = {}
   ) {
     const result: LinkResults = {};
@@ -219,9 +220,9 @@ export class DependencyLinker {
       result.coreAspectsLinks = coreAspectsLinks;
     }
 
-    const teambitLegacyLink = this.linkTeambitLegacy(finalRootDir);
+    const teambitLegacyLink = this.linkTeambitLegacy(finalRootDir, rootPolicy);
     result.teambitLegacyLink = teambitLegacyLink;
-    const harmonyLink = this.linkHarmony(finalRootDir);
+    const harmonyLink = this.linkHarmony(finalRootDir, rootPolicy);
     result.harmonyLink = harmonyLink;
     return result;
   }
@@ -571,7 +572,8 @@ export class DependencyLinker {
     rootDir: string,
     name: string,
     packageName = `@teambit/${name}`,
-    skipExisting = false
+    skipExisting = false,
+    existInRootPolicy = false
   ): LinkDetail | undefined {
     if (!this.aspectLoader.mainAspect) return undefined;
     if (!this.aspectLoader.mainAspect.packageName) {
@@ -585,7 +587,15 @@ export class DependencyLinker {
     if (skipExisting && isTargetExisting) {
       return undefined;
     }
-    const shouldSymlink = this.removeSymlinkTarget(target);
+    let shouldSymlink;
+    // In case it's not part of the workspace policy we want to remove it anyway, as we want it to be linked to
+    // bit version
+    if (isTargetExisting && !existInRootPolicy) {
+      fs.removeSync(target);
+      shouldSymlink = true;
+    } else {
+      shouldSymlink = this.removeSymlinkTarget(target);
+    }
     if (!shouldSymlink) return undefined;
     const isDistDirExist = fs.pathExistsSync(distDir);
     if (!isDistDirExist) {
@@ -610,14 +620,20 @@ export class DependencyLinker {
     }
   }
 
-  private linkHarmony(rootDir: string): LinkDetail | undefined {
+  private linkHarmony(rootDir: string, rootPolicy: WorkspacePolicy): LinkDetail | undefined {
     const name = 'harmony';
-    return this.linkNonAspectCorePackages(rootDir, name);
+    const packageName = `@teambit/${name}`;
+    const existInRootPolicy = rootPolicy ? !!rootPolicy.find(packageName) : false;
+
+    return this.linkNonAspectCorePackages(rootDir, name, packageName, undefined, existInRootPolicy);
   }
 
-  private linkTeambitLegacy(rootDir: string): LinkDetail | undefined {
+  private linkTeambitLegacy(rootDir: string, rootPolicy: WorkspacePolicy): LinkDetail | undefined {
     const name = 'legacy';
-    return this.linkNonAspectCorePackages(rootDir, name);
+    const packageName = `@teambit/${name}`;
+
+    const existInRootPolicy = rootPolicy ? !!rootPolicy.find(packageName) : false;
+    return this.linkNonAspectCorePackages(rootDir, name, packageName, undefined, existInRootPolicy);
   }
 }
 
