@@ -19,10 +19,11 @@ export function ScopeOverview({ badgeSlot, overviewSlot, TargetOverview }: Scope
   const scope = useContext(ScopeContext);
   const { components } = scope;
   if (!components || components.length === 0) return <EmptyScope name={scope.name} />;
+  if (TargetOverview) return <TargetOverview />;
 
   return (
     <div className={styles.container}>
-      {!TargetOverview ? <ScopeDetails
+      <ScopeDetails
         scopeName={scope.name}
         icon={scope.icon}
         backgroundIconColor={scope.backgroundIconColor}
@@ -30,21 +31,17 @@ export function ScopeOverview({ badgeSlot, overviewSlot, TargetOverview }: Scope
         overviewSlot={overviewSlot}
         description={scope.description}
         componentCount={scope.components.length}
-      />: <></>}
-      {TargetOverview ? (
-        <TargetOverview />
-      ) : (
-        <ComponentGrid>
-          {components.map((component, index) => {
-            if (component.deprecation?.isDeprecate) return null;
-            return (
-              <div key={index}>
-                <ScopeComponentCard component={component} />
-              </div>
-            );
-          })}
-        </ComponentGrid>
-      )}
+      />
+      <ComponentGrid>
+        {components.map((component, index) => {
+          if (component.deprecation?.isDeprecate) return null;
+          return (
+            <div key={index}>
+              <ScopeComponentCard component={component} />
+            </div>
+          );
+        })}
+      </ComponentGrid>
     </div>
   );
 }
