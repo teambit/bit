@@ -136,9 +136,14 @@ export class GraphIdsFromFsBuilder {
       (dep) =>
         graphFromScope.hasNode(dep.componentId.toString()) && !workspaceIds.find((id) => id.isEqual(dep.componentId))
     );
-    const subGraphs = depsInScopeGraph.map((dep) => graphFromScope.successorsSubgraph([dep.componentId.toString()]));
 
-    this.graph.merge(subGraphs);
+    const depsInScopeGraphIds = depsInScopeGraph.map((dep) => dep.componentId.toString());
+    const depsInScopeGraphIdsNotCompleted = depsInScopeGraphIds.filter((id) => !this.completed.includes(id));
+    if (depsInScopeGraphIdsNotCompleted.length) {
+      const subGraphs = graphFromScope.successorsSubgraph(depsInScopeGraphIdsNotCompleted);
+      this.graph.merge([subGraphs]);
+      this.completed.push(...depsInScopeGraphIdsNotCompleted);
+    }
 
     const allDepsIds = depsNotInScopeGraph.map((d) => d.componentId);
     const idStr = component.id.toString();
