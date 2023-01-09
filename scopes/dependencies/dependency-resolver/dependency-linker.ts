@@ -573,7 +573,7 @@ export class DependencyLinker {
     name: string,
     packageName = `@teambit/${name}`,
     skipExisting = false,
-    existInRootPolicy = false
+    existsInRootPolicy = false
   ): LinkDetail | undefined {
     if (!this.aspectLoader.mainAspect) return undefined;
     if (!this.aspectLoader.mainAspect.packageName) {
