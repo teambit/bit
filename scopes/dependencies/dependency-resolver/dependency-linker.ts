@@ -590,7 +590,7 @@ export class DependencyLinker {
     let shouldSymlink;
     // In case it's not part of the workspace policy we want to remove it anyway, as we want it to be linked to
     // bit version
-    if (isTargetExisting && !existInRootPolicy) {
+    if (isTargetExisting && !existsInRootPolicy) {
       fs.removeSync(target);
       shouldSymlink = true;
     } else {
@@ -623,17 +623,17 @@ export class DependencyLinker {
   private linkHarmony(rootDir: string, rootPolicy: WorkspacePolicy): LinkDetail | undefined {
     const name = 'harmony';
     const packageName = `@teambit/${name}`;
-    const existInRootPolicy = Boolean(rootPolicy?.find(packageName));
+    const existsInRootPolicy = Boolean(rootPolicy?.find(packageName));
 
-    return this.linkNonAspectCorePackages(rootDir, name, packageName, undefined, existInRootPolicy);
+    return this.linkNonAspectCorePackages(rootDir, name, packageName, undefined, existsInRootPolicy);
   }
 
   private linkTeambitLegacy(rootDir: string, rootPolicy: WorkspacePolicy): LinkDetail | undefined {
     const name = 'legacy';
     const packageName = `@teambit/${name}`;
 
-    const existInRootPolicy = rootPolicy ? !!rootPolicy.find(packageName) : false;
-    return this.linkNonAspectCorePackages(rootDir, name, packageName, undefined, existInRootPolicy);
+    const existsInRootPolicy = rootPolicy ? !!rootPolicy.find(packageName) : false;
+    return this.linkNonAspectCorePackages(rootDir, name, packageName, undefined, existsInRootPolicy);
   }
 }
 
