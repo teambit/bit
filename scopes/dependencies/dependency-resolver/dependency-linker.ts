@@ -623,7 +623,7 @@ export class DependencyLinker {
   private linkHarmony(rootDir: string, rootPolicy: WorkspacePolicy): LinkDetail | undefined {
     const name = 'harmony';
     const packageName = `@teambit/${name}`;
-    const existInRootPolicy = rootPolicy ? !!rootPolicy.find(packageName) : false;
+    const existInRootPolicy = Boolean(rootPolicy?.find(packageName));
 
     return this.linkNonAspectCorePackages(rootDir, name, packageName, undefined, existInRootPolicy);
   }
