@@ -121,17 +121,23 @@ export class GraphIdsFromFsBuilder {
    * we have the graph-dependencies from the last snap, so we prefer to use it whenever possible for performance reasons.
    * if we can't use it, we have to recursively load dependencies components and get the data from there.
    * to maximize the performance, we iterate the direct dependencies, if we find a dep with the same id in the graph,
-   * then ask the graph for all its successors. otherwise, if it's not there, fallback to load the deps components.
+   * and that id is not in the workspace then ask the graph for all its successors. otherwise, if it's not there, or
+   * it's there but it's also in the workspace (which therefore can be modified), we recursively load the dep components
+   * and get its dependencies.
    */
   private async processCompFromWorkspaceWithGraph(
     graphFromScope: CompIdGraph,
     component: Component
   ): Promise<Component[]> {
     const deps = await this.dependencyResolver.getComponentDependencies(component);
-    const [depsInScopeGraph, depsNotInScopeGraph] = partition(deps, (dep) =>
-      graphFromScope.hasNode(dep.componentId.toString())
+    const workspaceIds = await this.workspace.listIds();
+    const [depsInScopeGraph, depsNotInScopeGraph] = partition(
+      deps,
+      (dep) =>
+        graphFromScope.hasNode(dep.componentId.toString()) && !workspaceIds.find((id) => id.isEqual(dep.componentId))
     );
     const subGraphs = depsInScopeGraph.map((dep) => graphFromScope.successorsSubgraph([dep.componentId.toString()]));
+
     this.graph.merge(subGraphs);
 
     const allDepsIds = depsNotInScopeGraph.map((d) => d.componentId);
