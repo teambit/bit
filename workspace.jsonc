@@ -279,6 +279,7 @@
         "parse-package-name": "0.1.0",
         "path-to-regexp": "6.2.0",
         "penpal": "6.2.2",
+        "pino-pretty": "9.1.1",
         "pluralize": "8.0.0",
         "postcss": "8.4.18",
         "postcss-flexbugs-fixes": "5.0.2",

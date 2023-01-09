@@ -58,7 +58,7 @@ export default function render(...props){
     });
 }
 
-if (isBrowser) render();
+if (isBrowser || '${runtime}' === 'main') render();
 `;
 }
 
