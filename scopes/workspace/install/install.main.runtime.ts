@@ -38,7 +38,9 @@ import InstallCmd from './install.cmd';
 import UninstallCmd from './uninstall.cmd';
 import UpdateCmd from './update.cmd';
 
-export type WorkspaceLinkOptions = LinkingOptions;
+export type WorkspaceLinkOptions = LinkingOptions & {
+  rootPolicy?: WorkspacePolicy;
+};
 
 export type WorkspaceInstallOptions = {
   addMissingPeers?: boolean;
@@ -212,6 +214,7 @@ export class InstallMain {
       await this.linkCoreAspectsAndLegacy({
         linkTeambitBit: false,
         linkCoreAspects: this.dependencyResolver.linkCoreAspects(),
+        rootPolicy: mergedRootPolicy,
       });
       if (options?.compile) {
         await this.compiler.compileOnWorkspace([], { initiator: CompilationInitiator.Install });
@@ -362,7 +365,7 @@ export class InstallMain {
       linkingOptions: options,
     });
     const compIds = await this.workspace.listIds();
-    const res = await linker.linkCoreAspectsAndLegacy(this.workspace.path, compIds, options);
+    const res = await linker.linkCoreAspectsAndLegacy(this.workspace.path, compIds, options.rootPolicy, options);
     return res;
   }
 

@@ -1149,6 +1149,9 @@ importers:
   components/ui/component-compare/layouts/compare-split-layout-preset:
     specifiers: {}
 
+  components/ui/component-compare/models/component-compare-change-type:
+    specifiers: {}
+
   components/ui/component-compare/models/component-compare-hooks:
     specifiers: {}
 
@@ -1452,9 +1455,6 @@ importers:
   scopes/component/ui/badges/component-count:
     specifiers: {}
 
-  scopes/component/ui/compare:
-    specifiers: {}
-
   scopes/component/ui/component-artifacts/artifacts-tree:
     specifiers: {}
 
@@ -1503,6 +1503,9 @@ importers:
   scopes/compositions/aspect-docs/compositions:
     specifiers: {}
 
+  scopes/compositions/composition-card:
+    specifiers: {}
+
   scopes/compositions/compositions:
     specifiers: {}
 
@@ -1510,6 +1513,9 @@ importers:
     specifiers: {}
 
   scopes/compositions/model/composition-type:
+    specifiers: {}
+
+  scopes/compositions/panels/composition-gallery:
     specifiers: {}
 
   scopes/compositions/ui/composition-card:
@@ -1806,6 +1812,9 @@ importers:
   scopes/lanes/diff:
     specifiers: {}
 
+  scopes/lanes/entities/lane-diff:
+    specifiers: {}
+
   scopes/lanes/hooks/use-lane-components:
     specifiers: {}
 
@@ -1828,6 +1837,18 @@ importers:
     specifiers: {}
 
   scopes/lanes/ui/compare/lane-compare:
+    specifiers: {}
+
+  scopes/lanes/ui/compare/lane-compare-drawer:
+    specifiers: {}
+
+  scopes/lanes/ui/compare/lane-compare-hooks/use-lane-diff-status:
+    specifiers: {}
+
+  scopes/lanes/ui/compare/lane-compare-loader:
+    specifiers: {}
+
+  scopes/lanes/ui/compare/lane-compare-page:
     specifiers: {}
 
   scopes/lanes/ui/compare/lane-compare-state:
@@ -29767,7 +29788,7 @@ packages:
     dev: false
 
   registry.npmjs.org/lru-cache/7.14.1:
-    resolution: {integrity: sha512-ysxwsnTKdAx96aTRdhDOCQfDgbHnt8SK0KY8SEjO0wHinhWOFTESbjVCMPbU1uGXg/ch4lifqx0wfjOawU2+WA==, registry: https://node.bit.cloud/, tarball: https://registry.npmjs.org/lru-cache/-/lru-cache-7.14.1.tgz}
+    resolution: {integrity: sha512-ysxwsnTKdAx96aTRdhDOCQfDgbHnt8SK0KY8SEjO0wHinhWOFTESbjVCMPbU1uGXg/ch4lifqx0wfjOawU2+WA==, registry: https://node.bit.dev/, tarball: https://registry.npmjs.org/lru-cache/-/lru-cache-7.14.1.tgz}
     name: lru-cache
     version: 7.14.1
     engines: {node: '>=12'}

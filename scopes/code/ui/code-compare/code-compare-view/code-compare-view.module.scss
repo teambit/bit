@@ -38,14 +38,14 @@
   margin-bottom: 8px;
 
   .toggle {
+    position: relative;
     margin-right: 8px;
   }
 }
 
 .loader {
-  display: flex;
-  align-items: center;
-  justify-items: center;
   height: 100%;
   width: 100%;
+  padding: 16px 24px;
+  color: var(--bit-bg-dent, #f6f6f6);
 }

@@ -1,7 +1,6 @@
 import fs from 'fs-extra';
 import * as pathLib from 'path';
 import R from 'ramda';
-import { compact } from 'lodash';
 import { LaneId } from '@teambit/lane-id';
 import semver from 'semver';
 import { Analytics } from '../analytics/analytics';
@@ -132,6 +131,10 @@ export default class Scope {
   }
 
   static onPostExport: (ids: BitId[], lanes: Lane[]) => Promise<void>; // enable extensions to hook after the export process
+
+  public async refreshScopeIndex(force = false) {
+    await this.objects.reloadScopeIndexIfNeed(force);
+  }
 
   /**
    * import components to the `Scope.
@@ -399,7 +402,7 @@ once done, to continue working, please run "bit cc"`
     const ids = components.map((component) => {
       const getVersion = () => {
         if (component.component) {
-          return component.component.latest();
+          return component.component.getHeadRegardlessOfLaneAsTagOrHash();
         }
         if (throwOnFailure) throw new ComponentNotFound(component.id.toString());
         return DEFAULT_BIT_VERSION;
@@ -503,7 +506,9 @@ once done, to continue working, please run "bit cc"`
     const components = componentsObjects.map((componentObject) => {
       const component = componentObject.component;
       if (!component) return null;
-      const version = componentObject.id.hasVersion() ? componentObject.id.version : component.latest();
+      const version = componentObject.id.hasVersion()
+        ? componentObject.id.version
+        : component.getHeadRegardlessOfLaneAsTagOrHash(true);
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       return component.toComponentVersion(version);
     });
@@ -601,7 +606,7 @@ once done, to continue working, please run "bit cc"`
         if (componentObjects.id.hasVersion()) return componentObjects.id.getVersion().toString();
         if (!defaultToLatestVersion)
           throw new Error(`getComponentsAndVersions expect ${componentObjects.id.toString()} to have a version`);
-        return componentObjects.component?.latest() as string;
+        return componentObjects.component?.getHeadRegardlessOfLaneAsTagOrHash() as string;
       };
       const versionStr = getVersionStr();
       const version: Version = await component.loadVersion(versionStr, this.objects);
@@ -694,20 +699,6 @@ once done, to continue working, please run "bit cc"`
     return BitId.parse(id, false);
   }
 
-  /**
-   * returns the main ids of the given lane
-   */
-  async getDefaultLaneIdsFromLane(lane: Lane): Promise<BitId[]> {
-    const laneIds = lane.toBitIds();
-    const modelComponents = await Promise.all(laneIds.map((id) => this.getModelComponent(id)));
-    return compact(
-      modelComponents.map((c) => {
-        if (!c.head) return null; // probably the component was never merged to main
-        return c.toBitId().changeVersion(c.head.toString());
-      })
-    );
-  }
-
   async writeObjectsToPendingDir(objectList: ObjectList, clientId: string): Promise<void> {
     const pendingDir = pathLib.join(this.path, PENDING_OBJECTS_DIR, clientId);
     if (fs.pathExistsSync(pendingDir)) {
@@ -743,7 +734,9 @@ once done, to continue working, please run "bit cc"`
     if (pathHasScope(path)) return this.load(path);
     const scopeJson = Scope.ensureScopeJson(path, name, groupName);
     const repository = await Repository.create({ scopePath: path, scopeJson });
-    return new Scope({ path, created: true, scopeJson, objects: repository });
+    const scope = new Scope({ path, created: true, scopeJson, objects: repository });
+    Scope.scopeCache[path] = scope;
+    return scope;
   }
 
   static ensureScopeJson(

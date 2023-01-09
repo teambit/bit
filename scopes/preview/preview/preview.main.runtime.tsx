@@ -58,6 +58,7 @@ import { EnvTemplateRoute } from './env-template.route';
 import { ComponentPreviewRoute } from './component-preview.route';
 import { previewSchema } from './preview.graphql';
 import { PreviewAssetsRoute } from './preview-assets.route';
+import { PreviewService } from './preview.service';
 
 const noopResult = {
   results: [],
@@ -115,6 +116,11 @@ export type PreviewAnyComponentData = {
    * Calculated by the component's env
    */
   splitComponentBundle?: boolean;
+
+  /**
+   * don't allow other aspects implementing a preview definition to be included in your preview.
+   */
+  skipIncludes?: boolean;
 };
 
 /**
@@ -258,14 +264,19 @@ export class PreviewMain {
    * @param component
    * @returns
    */
-  async calcPreviewDataFromEnv(component: Component): Promise<Omit<PreviewAnyComponentData, 'doesScaling'> | undefined> {
+  async calcPreviewDataFromEnv(
+    component: Component
+  ): Promise<Omit<PreviewAnyComponentData, 'doesScaling'> | undefined> {
     // Prevent infinite loop that caused by the fact that the env of the aspect env or the env env is the same as the component
     // so we can't load it since during load we are trying to get env component and load it again
-    if (component.id.toStringWithoutVersion() === 'teambit.harmony/aspect' || component.id.toStringWithoutVersion() === 'teambit.envs/env'){
+    if (
+      component.id.toStringWithoutVersion() === 'teambit.harmony/aspect' ||
+      component.id.toStringWithoutVersion() === 'teambit.envs/env'
+    ) {
       return {
         strategyName: COMPONENT_PREVIEW_STRATEGY_NAME,
         splitComponentBundle: false,
-      }
+      };
     }
 
     const env = this.envs.getEnv(component).env;
@@ -291,6 +302,8 @@ export class PreviewMain {
     const data = {
       // default to true if the env doesn't have a preview config
       isScaling: previewAspectConfig?.isScaling ?? true,
+      // disalbe it for now, we will re-enable it later
+      // skipIncludes: true,
     };
     return data;
   }
@@ -307,7 +320,6 @@ export class PreviewMain {
     const envPreviewData = await this.calcPreviewDataFromEnv(component);
     return envPreviewData?.strategyName !== 'component';
   }
-
 
   /**
    * Check if the component preview bundle contain the env as part of the bundle or only the component code
@@ -401,6 +413,15 @@ export class PreviewMain {
   isEnvSupportScaling(envComponent: Component): boolean {
     const previewData = this.getPreviewData(envComponent);
     return !!previewData?.isScaling;
+  }
+
+  async isSupportSkipIncludes(component: Component) {
+    const isCore = this.envs.isUsingCoreEnv(component);
+    if (isCore) return false;
+
+    const envComponent = await this.envs.getEnvComponent(component);
+    const previewData = this.getPreviewData(envComponent);
+    return !!previewData?.skipIncludes;
   }
 
   /**
@@ -851,6 +872,7 @@ export class PreviewMain {
       workspace.registerOnComponentRemove((cId) => preview.handleComponentRemoval(cId));
     }
 
+    envs.registerService(new PreviewService());
 
     graphql.register(previewSchema(preview));
 

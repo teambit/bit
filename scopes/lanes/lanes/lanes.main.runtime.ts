@@ -1,5 +1,6 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { ScopeMain, ScopeAspect } from '@teambit/scope';
+import pMapSeries from 'p-map-series';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { ExpressAspect, ExpressMain } from '@teambit/express';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
@@ -16,19 +17,17 @@ import { ImporterAspect, ImporterMain, ImportOptions } from '@teambit/importer';
 import ComponentAspect, { Component, ComponentID, ComponentMain } from '@teambit/component';
 import removeLanes from '@teambit/legacy/dist/consumer/lanes/remove-lanes';
 import { Lane, Version } from '@teambit/legacy/dist/scope/models';
-import { LaneNotFound } from '@teambit/legacy/dist/api/scope/lib/exceptions/lane-not-found';
 import { getDivergeData } from '@teambit/legacy/dist/scope/component-ops/get-diverge-data';
-import ScopeComponentsImporter from '@teambit/legacy/dist/scope/component-ops/scope-components-importer';
 import { Scope as LegacyScope } from '@teambit/legacy/dist/scope';
 import { BitId } from '@teambit/legacy-bit-id';
 import { ExportAspect, ExportMain } from '@teambit/export';
 import { BitIds } from '@teambit/legacy/dist/bit-id';
 import { compact } from 'lodash';
-import pMapSeries from 'p-map-series';
 import { ComponentCompareMain, ComponentCompareAspect } from '@teambit/component-compare';
 import { Ref } from '@teambit/legacy/dist/scope/objects';
 import { SnapsDistance } from '@teambit/legacy/dist/scope/component-ops/snaps-distance';
 import { MergingMain, MergingAspect } from '@teambit/merging';
+import { ChangeType } from '@teambit/lanes.entities.lane-diff';
 import { LanesAspect } from './lanes.aspect';
 import {
   LaneCmd,
@@ -70,14 +69,6 @@ export type SwitchLaneOptions = {
   verbose?: boolean;
   override?: boolean;
 };
-
-export enum ChangeType {
-  NONE = 'NONE',
-  NEW = 'NEW',
-  SOURCE_CODE = 'SOURCE_CODE',
-  DEPENDENCY = 'DEPENDENCY',
-  ASPECTS = 'ASPECTS',
-}
 
 export type LaneComponentDiffStatus = {
   componentId: ComponentID;
@@ -387,28 +378,8 @@ export class LanesMain {
     });
   }
 
-  /**
-   * get a Lane object from the remote.
-   * `persistIfNotExists` saves the object in the local scope only if the lane is not there yet.
-   * otherwise, it needs some merging mechanism, which is done differently whether it's export or import.
-   * see `sources.mergeLane()` for export and `import-components._saveLaneDataIfNeeded()` for import.
-   * in this case, because we only bring the lane object and not the components, it's not easy to do the merge.
-   */
   async importLaneObject(laneId: LaneId, persistIfNotExists = true): Promise<Lane> {
-    const legacyScope = this.scope.legacyScope;
-    const scopeComponentImporter = ScopeComponentsImporter.getInstance(legacyScope);
-    const results = await scopeComponentImporter.importLanes([laneId]);
-    const laneObject = results[0];
-    if (!laneObject) throw new LaneNotFound(laneId.scope, laneId.name);
-
-    if (persistIfNotExists) {
-      const exists = await legacyScope.loadLane(laneId);
-      if (!exists) {
-        await legacyScope.lanes.saveLane(laneObject);
-      }
-    }
-
-    return laneObject;
+    return this.importer.importLaneObject(laneId, persistIfNotExists);
   }
 
   /**
@@ -448,7 +419,7 @@ export class LanesMain {
     if (!this.workspace) {
       throw new BitError('unable to fetch lanes outside of Bit workspace');
     }
-    const lane = await this.importLaneObject(laneId);
+    const lane = await this.importer.importLaneObject(laneId);
     if (!lane) throw new Error(`unable to import lane ${laneId.toString()} from the remote`);
     const importOptions: ImportOptions = {
       ids: [],
@@ -625,70 +596,88 @@ export class LanesMain {
     const targetLane = targetLaneId ? await this.loadLane(targetLaneId) : undefined;
     const targetLaneIds = targetLane?.toBitIds();
     const host = this.componentAspect.getHost();
-    const resultsWithNulls = await pMapSeries(sourceLane.components, async (comp) => {
-      const componentId = await host.resolveComponentId(comp.id);
-      const sourceVersionObj = (await this.scope.legacyScope.objects.load(comp.head)) as Version;
-      if (sourceVersionObj.isRemoved()) {
-        return null;
-      }
-      const headOnTargetLane = targetLaneIds
-        ? targetLaneIds.searchWithoutVersion(comp.id)?.version
-        : await this.getHeadOnMain(componentId);
-      if (headOnTargetLane) {
-        const targetVersionObj = (await this.scope.legacyScope.objects.load(Ref.from(headOnTargetLane))) as Version;
-        if (targetVersionObj.isRemoved()) {
-          return null;
-        }
-      }
-      const snapsDistance = !options?.skipUpToDate
-        ? await this.getSnapsDistance(componentId, comp.head.toString(), headOnTargetLane)
-        : undefined;
+    const diffProps = compact(
+      await Promise.all(
+        sourceLane.components.map(async (comp) => {
+          const componentId = await host.resolveComponentId(comp.id);
+          const sourceVersionObj = (await this.scope.legacyScope.objects.load(comp.head)) as Version;
+          if (sourceVersionObj.isRemoved()) {
+            return null;
+          }
+          const headOnTargetLane = targetLaneIds
+            ? targetLaneIds.searchWithoutVersion(comp.id)?.version
+            : await this.getHeadOnMain(componentId);
 
-      const sourceHead = comp.head.toString();
-      const targetHead = headOnTargetLane;
+          if (headOnTargetLane) {
+            const targetVersionObj = (await this.scope.legacyScope.objects.load(Ref.from(headOnTargetLane))) as Version;
+            if (targetVersionObj.isRemoved()) {
+              return null;
+            }
+          }
 
-      const getChanges = async (): Promise<ChangeType[]> => {
-        if (!headOnTargetLane) return [ChangeType.NEW];
+          const sourceHead = comp.head.toString();
+          const targetHead = headOnTargetLane;
 
-        const compare = await this.componentCompare.compare(
-          comp.id.changeVersion(targetHead).toString(),
-          comp.id.changeVersion(sourceHead).toString()
-        );
+          return { componentId, sourceHead, targetHead };
+        })
+      )
+    );
 
-        if (!compare.fields.length && (!compare.code.length || compare.code.every((c) => c.status === 'UNCHANGED')))
-          return [ChangeType.NONE];
-
-        const changed: ChangeType[] = [];
-
-        if (compare.code.some((f) => f.status !== 'UNCHANGED')) {
-          changed.push(ChangeType.SOURCE_CODE);
-        }
-
-        if (compare.fields.length > 0) {
-          changed.push(ChangeType.ASPECTS);
-        }
-
-        const depsFields = ['dependencies', 'devDependencies', 'extensionDependencies'];
-        if (compare.fields.some((field) => depsFields.includes(field.fieldName))) {
-          changed.push(ChangeType.DEPENDENCY);
-        }
-
-        return changed;
-      };
-
-      const changes = !options?.skipChanges ? await getChanges() : undefined;
-      const changeType = changes ? changes[0] : undefined;
-
-      return { componentId, changeType, changes, sourceHead, targetHead, upToDate: snapsDistance?.isUpToDate() };
-    });
-
-    const results = compact(resultsWithNulls);
+    const results = await pMapSeries(diffProps, async ({ componentId, sourceHead, targetHead }) =>
+      this.componentDiffStatus(componentId, sourceHead, targetHead, options)
+    );
 
     return {
       source: sourceLaneId,
       target: targetLaneId || this.getDefaultLaneId(),
       componentsStatus: results,
     };
+  }
+
+  async componentDiffStatus(
+    componentId: ComponentID,
+    sourceHead: string,
+    targetHead?: string,
+    options?: LaneDiffStatusOptions
+  ) {
+    const snapsDistance = !options?.skipUpToDate
+      ? await this.getSnapsDistance(componentId, sourceHead, targetHead)
+      : undefined;
+
+    const getChanges = async (): Promise<ChangeType[]> => {
+      if (!targetHead) return [ChangeType.NEW];
+
+      const compare = await this.componentCompare.compare(
+        componentId.changeVersion(targetHead).toString(),
+        componentId.changeVersion(sourceHead).toString()
+      );
+
+      if (!compare.fields.length && (!compare.code.length || !compare.code.some((c) => c.status !== 'UNCHANGED'))) {
+        return [ChangeType.NONE];
+      }
+
+      const changed: ChangeType[] = [];
+
+      if (compare.code.some((f) => f.status !== 'UNCHANGED')) {
+        changed.push(ChangeType.SOURCE_CODE);
+      }
+
+      if (compare.fields.length > 0) {
+        changed.push(ChangeType.ASPECTS);
+      }
+
+      const depsFields = ['dependencies', 'devDependencies', 'extensionDependencies'];
+      if (compare.fields.some((field) => depsFields.includes(field.fieldName))) {
+        changed.push(ChangeType.DEPENDENCY);
+      }
+
+      return changed;
+    };
+
+    const changes = !options?.skipChanges ? await getChanges() : undefined;
+    const changeType = changes ? changes[0] : undefined;
+
+    return { componentId, changeType, changes, sourceHead, targetHead, upToDate: snapsDistance?.isUpToDate() };
   }
 
   async addLaneReadme(readmeComponentIdStr: string, laneName?: string): Promise<{ result: boolean; message?: string }> {

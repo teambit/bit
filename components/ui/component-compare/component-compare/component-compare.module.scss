@@ -29,8 +29,8 @@
 
 .navigation {
   display: flex;
-  list-style: none;
   min-height: 48px;
+  align-items: center;
 
   @media screen and (max-width: 768px) {
     padding-left: 6px;
@@ -44,8 +44,84 @@
 }
 
 .loader {
+  padding: 16px 24px;
+  color: var(--bit-bg-dent, #f6f6f6);
+}
+
+.tabLoader {
+  color: var(--bit-bg-dent, #f6f6f6);
+}
+
+.compareLoader {
   display: flex;
-  height: 100%;
-  width: 100%;
-  margin: auto;
+  padding-top: 16px;
+}
+
+.compareSidebarLoader {
+  width: 30%;
+}
+
+.compareViewLoader {
+  width: 70%;
+  padding-right: 16px;
+}
+
+.activeNav {
+  > div {
+    color: var(--bit-accent-color, #6c5ce7);
+    border-radius: 5px;
+    background-color: var(--bit-accent-bg, #edebfc);
+  }
+
+  &:after {
+    // unset default selection styles
+    height: 0 !important;
+  }
+}
+
+.loadingNav {
+  // > div {
+  //   color: var(--bit-accent-color, #6c5ce7);
+  //   border-radius: 5px;
+  //   background-color: var(--bit-accent-bg, #edebfc);
+  // }
+
+  &:after {
+    // unset default selection styles
+    height: 0 !important;
+  }
+}
+
+.navItem {
+  position: relative;
+  color: var(--bit-text-color-light, #707279);
+
+  &.none {
+    > div {
+      opacity: 65%;
+    }
+  }
+}
+
+.compareMenuTab {
+  position: relative;
+}
+
+.indicator {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  border-radius: 100%;
+  padding: 4px;
+  box-sizing: border-box;
+
+  &.hasChanged {
+    background-color: #ff8b00;
+  }
+
+  &.new {
+    // @todo - review styles
+    display: none;
+    background-color: var(--bit-accent-success-color, #37b26c);
+  }
 }

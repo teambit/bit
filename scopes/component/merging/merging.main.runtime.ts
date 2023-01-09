@@ -321,12 +321,13 @@ export class MergingMain {
     ) as ComponentMergeStatus[];
     const compStatusNeedMerge = componentStatusBeforeMergeAttempt.filter((c) => c.mergeProps);
 
-    const otherLaneName = otherLane ? otherLane.toLaneId().toString() : DEFAULT_LANE;
     const getComponentsStatusNeedMerge = async (): Promise<ComponentMergeStatus[]> => {
       const tmp = new Tmp(this.consumer.scope);
       try {
         const componentsStatus = await Promise.all(
-          compStatusNeedMerge.map((compStatus) => this.getComponentMergeStatus(currentLane, otherLaneName, compStatus))
+          compStatusNeedMerge.map((compStatus) =>
+            this.getComponentMergeStatus(currentLane, otherLane || undefined, compStatus)
+          )
         );
         await tmp.clear();
         return componentsStatus;
@@ -506,7 +507,7 @@ export class MergingMain {
 
   private async getComponentMergeStatus(
     localLane: Lane | null, // currently checked out lane. if on main, then it's null.
-    otherLaneName: string, // the lane name we want to merged to our lane. (can be also "main").
+    otherLane: Lane | undefined, // the lane name we want to merged to our lane. (can be also "main").
     componentMergeStatusBeforeMergeAttempt: ComponentMergeStatusBeforeMergeAttempt
   ) {
     const { id, divergeData, currentComponent, mergeProps } = componentMergeStatusBeforeMergeAttempt;
@@ -518,12 +519,16 @@ export class MergingMain {
     if (!currentComponent) throw new Error(`getDivergedMergeStatus, currentComponent is missing for ${id.toString()}`);
 
     const baseSnap = divergeData.commonSnapBeforeDiverge as Ref; // must be set when isTrueMerge
-    // uncomment for debugging
-    // console.log('id', id.toStringWithoutVersion(), 'baseSnap', baseSnap.toString(), 'current', currentId.version, 'other', otherLaneHead.toString());
+    this.logger.debug(`merging snaps details:
+id:      ${id.toStringWithoutVersion()}
+base:    ${baseSnap.toString()}
+current: ${currentId.version}
+other:   ${otherLaneHead.toString()}`);
     const baseComponent: Version = await modelComponent.loadVersion(baseSnap.toString(), repo);
     const otherComponent: Version = await modelComponent.loadVersion(otherLaneHead.toString(), repo);
 
     const currentLaneName = localLane?.toLaneId().toString() || 'main';
+    const otherLaneName = otherLane ? otherLane.toLaneId().toString() : DEFAULT_LANE;
     const currentLabel = `${currentId.version} (${currentLaneName === otherLaneName ? 'current' : currentLaneName})`;
     const otherLabel = `${otherLaneHead.toString()} (${
       otherLaneName === currentLaneName ? 'incoming' : otherLaneName
@@ -532,6 +537,7 @@ export class MergingMain {
     const configMerger = new ConfigMerger(
       id.toStringWithoutVersion(),
       workspaceIds,
+      otherLane,
       currentComponent.extensions,
       baseComponent.extensions,
       otherComponent.extensions,

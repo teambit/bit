@@ -1,5 +1,5 @@
-import { Bundler, BundlerContext, DevServer, DevServerContext } from "@teambit/bundler";
-import { EnvHandler } from "@teambit/envs";
+import { Bundler, BundlerContext, DevServer, DevServerContext } from '@teambit/bundler';
+import { AsyncEnvHandler, EnvHandler } from '@teambit/envs';
 
 /**
  * interface for implementing component previews
@@ -13,7 +13,7 @@ export type Preview = {
   /**
    * return an instance of a mounter.
    */
-  getMounter: () => string
+  getMounter: () => string;
 
   /**
    * return a path to a docs template.
@@ -23,12 +23,12 @@ export type Preview = {
   /**
    * return a dev server instance to use for previews.
    */
-  getDevServer: (context: DevServerContext) => EnvHandler<DevServer>;
+  getDevServer: (context: DevServerContext) => EnvHandler<DevServer> | AsyncEnvHandler<DevServer>;
 
   /**
    * return an instance for a preview bundler.
    */
-  getBundler: (context: BundlerContext) => EnvHandler<Bundler>;
+  getBundler: (context: BundlerContext) => EnvHandler<Bundler> | AsyncEnvHandler<Bundler>;
 
   /**
    * return the id of the dev server.
@@ -43,4 +43,4 @@ export type Preview = {
    * for dev server these dependencies will be aliased
    */
   getHostDependencies: () => string[];
-}
+};

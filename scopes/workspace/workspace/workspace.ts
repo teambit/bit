@@ -1183,9 +1183,10 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
       const extsWithoutSelf = selfInMergedExtensions?.extensionId
         ? extsWithoutRemoved.remove(selfInMergedExtensions.extensionId)
         : extsWithoutRemoved;
-      const { extensionDataListFiltered, envIsCurrentlySet } = this.filterEnvsFromExtensionsIfNeeded(
+      const { extensionDataListFiltered, envIsCurrentlySet } = await this.filterEnvsFromExtensionsIfNeeded(
         extsWithoutSelf,
-        envWasFoundPreviously
+        envWasFoundPreviously,
+        origin
       );
       if (envIsCurrentlySet) {
         await this.warnAboutMisconfiguredEnv(componentId, extensions);
@@ -1236,7 +1237,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     // coming from scope with local scope name, as opposed to the same extension comes from the workspace with default scope name
     await Promise.all(extensionsToMerge.map((list) => this.resolveExtensionListIds(list.extensions)));
     const afterMerge = ExtensionDataList.mergeConfigs(extensionsToMerge.map((ext) => ext.extensions));
-    await this.loadExtensions(afterMerge);
+    await this.loadExtensions(afterMerge, componentId);
     const withoutRemoved = afterMerge.filter((extData) => !removedExtensionIds.includes(extData.stringId));
     const extensions = ExtensionDataList.fromArray(withoutRemoved);
     return {
@@ -1323,14 +1324,33 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     return componentStatus.modified === true;
   }
 
-  private filterEnvsFromExtensionsIfNeeded(extensionDataList: ExtensionDataList, envWasFoundPreviously: boolean) {
+  private async filterEnvsFromExtensionsIfNeeded(
+    extensionDataList: ExtensionDataList,
+    envWasFoundPreviously: boolean,
+    origin: ExtensionsOrigin
+  ) {
     const envAspect = extensionDataList.findExtension(EnvsAspect.id);
-    const envFromEnvsAspect: string | undefined = envAspect?.config.env;
+    const envFromEnvsAspect: string | undefined = envAspect?.config.env || envAspect?.data.id;
     if (envWasFoundPreviously && envAspect) {
-      const nonEnvs = extensionDataList.filter((e) => e.stringId !== envFromEnvsAspect);
+      const nonEnvs = extensionDataList.filter((e) => {
+        // normally the env-id inside the envs aspect doesn't have a version, but the aspect itself has a version.
+        if (e.stringId === envFromEnvsAspect || e.extensionId?.toStringWithoutVersion() === envFromEnvsAspect)
+          return false;
+        return true;
+      });
       // still, aspect env may have other data other then config.env.
       delete envAspect.config.env;
       return { extensionDataListFiltered: new ExtensionDataList(...nonEnvs), envIsCurrentlySet: true };
+    }
+    if (envFromEnvsAspect && (origin === 'ModelNonSpecific' || origin === 'ModelSpecific')) {
+      // if env was found, search for this env in the workspace and if found, replace the env-id with the one from the workspace
+      const envAspectExt = extensionDataList.find((e) => e.extensionId?.toStringWithoutVersion() === envFromEnvsAspect);
+      const ids = await this.listIds();
+      const envAspectId = envAspectExt?.extensionId;
+      const found = envAspectId && ids.find((id) => id._legacy.isEqualWithoutVersion(envAspectId));
+      if (found) {
+        envAspectExt.extensionId = found._legacy;
+      }
     }
     return { extensionDataListFiltered: extensionDataList, envIsCurrentlySet: Boolean(envFromEnvsAspect) };
   }

@@ -7,7 +7,7 @@ import { SchemaName } from '../../consumer/component/component-schema';
 import Version from '../../scope/models/version';
 
 const getVersionWithDepsFixture = () => {
-  return Version.parse(JSON.stringify(R.clone(versionWithDepsFixture)), '');
+  return Version.parse(JSON.stringify(R.clone(versionWithDepsFixture)), '12c830ed25854dc731b58e014c6b4960ccb59092');
 };
 
 describe('Version', () => {

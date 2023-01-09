@@ -1,4 +1,5 @@
 import React, { IframeHTMLAttributes, useState, useRef, useEffect } from 'react';
+import classNames from 'classnames';
 import { compact } from 'lodash';
 import { connectToChild } from 'penpal';
 import { usePubSubIframe } from '@teambit/pubsub';
@@ -21,6 +22,11 @@ export interface ComponentPreviewProps extends Omit<IframeHTMLAttributes<HTMLIFr
   previewName?: string;
 
   /**
+   * add inner padding to the iframe.
+   */
+  innerBottomPadding?: number;
+
+  /**
    * query params to append at the end of the *hash*. Changing this property will not reload the preview
    *
    * e.g. 'foo=bar&bar=there', or ['foo=bar', 'bar=there']
@@ -37,6 +43,11 @@ export interface ComponentPreviewProps extends Omit<IframeHTMLAttributes<HTMLIFr
    * allowing sending and receiving messages
    */
   pubsub?: boolean;
+
+  /**
+   * class name to override preview style.
+   */
+  className?: string;
 
   /**
    * set specific height for the iframe.
@@ -65,9 +76,11 @@ export interface ComponentPreviewProps extends Omit<IframeHTMLAttributes<HTMLIFr
 export function ComponentPreview({
   component,
   previewName,
+  className,
   forceHeight,
   queryParams,
   pubsub,
+  innerBottomPadding = 0,
   // fitView = 1280,
   viewport = 1280,
   fullContentHeight = false,
@@ -97,10 +110,10 @@ export function ComponentPreview({
             setWidth(message.data.width);
             setHeight(message.data.height);
           }
+          onLoad && event && onLoad();
         },
       },
     });
-    onLoad && onLoad();
   }, [iframeRef?.current]);
 
   const params = Array.isArray(queryParams)
@@ -121,13 +134,13 @@ export function ComponentPreview({
   const legacyIframeHeight = (iframeHeight || 0) > 400 ? iframeHeight : defaultLegacyHeight;
 
   return (
-    <div ref={containerRef} className={styles.preview} style={{ height: forceHeight }}>
+    <div ref={containerRef} className={classNames(styles.preview, className)} style={{ height: forceHeight }}>
       <iframe
         {...rest}
         ref={currentRef}
         style={{
           ...style,
-          height: forceHeight || (isScaling ? finalHeight : legacyIframeHeight),
+          height: forceHeight || (isScaling ? finalHeight + innerBottomPadding : legacyIframeHeight),
           width: isScaling ? targetWidth : legacyCurrentWidth,
           visibility: width === 0 && isScaling && !fullContentHeight ? 'hidden' : undefined,
           transform: fullContentHeight ? '' : computePreviewScale(width, containerWidth),
