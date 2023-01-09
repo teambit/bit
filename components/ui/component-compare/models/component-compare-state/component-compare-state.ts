@@ -4,14 +4,7 @@ export type ComponentCompareStateData = {
   controlled?: true;
 };
 
-export type ComponentCompareStateKey =
-  | 'code'
-  | 'aspects'
-  | 'composition'
-  | 'changelog'
-  | 'overview'
-  | 'versionPicker'
-  | 'tabs';
+export type ComponentCompareStateKey = 'code' | 'aspects' | 'preview' | 'changelog' | 'docs' | 'versionPicker' | 'tabs';
 
 export type ComponentCompareState<
   K extends ComponentCompareStateKey = ComponentCompareStateKey,

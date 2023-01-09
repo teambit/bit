@@ -223,7 +223,7 @@ export class Watcher {
       const ids = await this.workspace.listIds();
       updatedComponentId = ids.find((id) => id.isEqual(componentId, { ignoreVersion: true }));
       if (!updatedComponentId) {
-        // the component was removed
+        logger.debug(`triggerCompChanges, the component ${componentId.toString()} was probably removed from .bitmap`);
         return [];
       }
     }
@@ -238,15 +238,14 @@ export class Watcher {
     const compFiles = files.filter((filePath) => {
       const relativeFile = this.getRelativePathLinux(filePath);
       const isCompFile = Boolean(componentMap.getFilesRelativeToConsumer().find((p) => p === relativeFile));
-      if (!isCompFile) {
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        logger.debug(
-          `file ${filePath} is inside the component ${updatedComponentId!.toString()} but configured to be ignored`
-        );
-      }
       return isCompFile;
     });
     if (!compFiles.length) {
+      logger.debug(
+        `the following files are part of the component ${componentId.toStringWithoutVersion()} but configured to be ignored:\n${files.join(
+          '\n'
+        )}'`
+      );
       return [];
     }
     const buildResults = await this.executeWatchOperationsOnComponent(updatedComponentId, compFiles, true, initiator);
@@ -305,18 +304,21 @@ export class Watcher {
       this.pubsub.pub(WorkspaceAspect.id, this.creatOnComponentAddEvent(idStr, 'OnComponentAdd'));
     }
 
-    let buildResults: OnComponentEventResult[];
-    try {
-      buildResults = isChange
-        ? await this.workspace.triggerOnComponentChange(componentId, files, initiator)
-        : await this.workspace.triggerOnComponentAdd(componentId);
-    } catch (err: any) {
-      // do not exit the watch process on errors, just print them
-      const msg = `found an issue during onComponentChange or onComponentAdd hooks`;
-      logger.error(msg, err);
-      logger.console(`\n${msg}: ${err.message || err}`);
-      return [];
-    }
+    // the try/catch is probably not needed here because this gets called by `handleChange()` which already has a try/catch
+    // I left it here commented out for now just in case, but it should be removed as soon as we're more confident
+
+    // let buildResults: OnComponentEventResult[];
+    // try {
+    const buildResults = isChange
+      ? await this.workspace.triggerOnComponentChange(componentId, files, initiator)
+      : await this.workspace.triggerOnComponentAdd(componentId);
+    // } catch (err: any) {
+    //   // do not exit the watch process on errors, just print them
+    //   const msg = `found an issue during onComponentChange or onComponentAdd hooks for ${idStr}`;
+    //   logger.error(msg, err);
+    //   logger.console(`\n${msg}: ${err.message || err}`);
+    //   return [];
+    // }
     return buildResults;
   }
 

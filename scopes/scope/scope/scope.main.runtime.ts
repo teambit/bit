@@ -1065,6 +1065,9 @@ needed-for: ${neededFor || '<unknown>'}`);
     return this.componentLoader.getSnap(id, ref.toString());
   }
 
+  /**
+   * get component log sorted by the timestamp in ascending order (from the earliest to the latest)
+   */
   async getLogs(id: ComponentID, shortHash = false, startsFrom?: string): Promise<ComponentLog[]> {
     return this.legacyScope.loadComponentLogs(id._legacy, shortHash, startsFrom);
   }
