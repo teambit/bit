@@ -188,7 +188,7 @@ export class DependencyLinker {
   public async linkCoreAspectsAndLegacy(
     rootDir: string | undefined,
     componentIds: ComponentID[] = [],
-    rootPolicy: WorkspacePolicy,
+    rootPolicy: WorkspacePolicy = new WorkspacePolicy([]),
     options: Pick<LinkingOptions, 'linkTeambitBit' | 'linkCoreAspects'> = {}
   ) {
     const result: LinkResults = {};
