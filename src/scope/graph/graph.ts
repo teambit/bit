@@ -3,8 +3,6 @@ import R from 'ramda';
 
 import { BitId } from '../../bit-id';
 import Component from '../../consumer/component';
-import ComponentsList from '../../consumer/component/components-list';
-import Consumer from '../../consumer/consumer';
 import { loadScope } from '../index';
 import { ModelComponent, Version } from '../models';
 import Scope from '../scope';
@@ -124,31 +122,6 @@ export default class Graph extends GraphLib {
         await Promise.all(buildVersionP);
       })
     );
-  }
-
-  static async buildGraphFromWorkspace(consumer: Consumer, onlyLatest = false): Promise<Graph> {
-    const componentsList = new ComponentsList(consumer);
-    const allModelComponents: ModelComponent[] = await consumer.scope.list();
-    const workspaceComponents: Component[] = await componentsList.getFromFileSystem();
-    const graph = new Graph();
-    workspaceComponents.forEach((component: Component) => {
-      const id = component.id.toString();
-      graph.setNode(id, component);
-    });
-    await this.addScopeComponentsAsNodes(allModelComponents, graph, workspaceComponents, onlyLatest);
-    R.forEach((componentId: string) => {
-      const component: Component = graph.node(componentId);
-      Object.entries(component.depsIdsGroupedByType).forEach(([depType, depIds]) => {
-        depIds.forEach((dependencyId) => {
-          const depIdStr = dependencyId.toString();
-          if (graph.hasNode(depIdStr)) {
-            graph.setEdge(componentId, depIdStr, depType);
-          }
-        });
-      });
-    }, graph.nodes());
-
-    return graph;
   }
 
   findCycles(): string[][] {
