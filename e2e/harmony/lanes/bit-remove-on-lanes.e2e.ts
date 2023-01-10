@@ -30,15 +30,6 @@ describe('bit lane command', function () {
       const lane = helper.command.showOneLaneParsed('dev');
       expect(lane.components).to.have.lengthOf(3);
     });
-    describe('removing a component that has dependents', () => {
-      let output;
-      before(() => {
-        output = helper.command.removeComponent('comp3');
-      });
-      it('should stop the process and indicate that a component has dependents', () => {
-        expect(output).to.have.string('error: unable to delete');
-      });
-    });
     describe('removing a component that has no dependents with --from-lane', () => {
       let output;
       before(() => {
