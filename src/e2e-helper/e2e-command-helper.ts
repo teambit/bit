@@ -655,6 +655,9 @@ export default class CommandHelper {
   new(templateName: string, flags = '', workspaceName = 'my-workspace', cwd = this.scopes.localPath) {
     return this.runCmd(`bit new ${templateName} ${workspaceName} ${flags}`, cwd);
   }
+  listApps() {
+    return this.runCmd('bit app list');
+  }
   runApp(name: string) {
     return this.runCmd(`bit app run ${name}`);
   }

@@ -91,6 +91,14 @@ export default class FsHelper {
     fs.outputFileSync(absPath, `\n${content}`);
   }
 
+  changeFileName(filePath: string, newFilePath: string, basePath = this.scopes.localPath) {
+    const absPath = basePath ? path.join(basePath, filePath) : filePath;
+    const absNewPath = basePath ? path.join(basePath, newFilePath) : newFilePath;
+    const content = fs.readFileSync(absPath);
+    fs.outputFileSync(absNewPath, content);
+    fs.removeSync(absPath);
+  }
+
   deletePath(relativePathToLocalScope: string) {
     return fs.removeSync(path.join(this.scopes.localPath, relativePathToLocalScope));
   }

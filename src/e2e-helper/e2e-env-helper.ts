@@ -240,7 +240,8 @@ export default class EnvHelper {
    * @param extensionsBaseFolder
    * @returns
    */
-  setCustomNewEnv(extensionsBaseFolder = 'react-based-env', basePackages: string[] = ['@teambit/react.react-env'], envJsoncOptions: GenerateEnvJsoncOptions): string {
+  // TODO: remove the 0.0.22 version from here. it's here becasue of temporary issue with the regsitry that bring v0.0.20 when no specific version is specified
+  setCustomNewEnv(extensionsBaseFolder = 'react-based-env', basePackages: string[] = ['@teambit/react.react-env@0.0.22'], envJsoncOptions: GenerateEnvJsoncOptions): string {
     this.fixtures.copyFixtureExtensions(extensionsBaseFolder);
     this.command.addComponent(extensionsBaseFolder);
     this.fixtures.generateEnvJsoncFile(extensionsBaseFolder, envJsoncOptions);
