@@ -358,8 +358,8 @@ export class ReactMain {
         } = await this.reactEnv.getDependencies();
         const { peers: peersFromUser } = dependencyPolicy;
         // Hack for backwards compatibility - if user is using new peers syntax, merge with peers version of env's peerDependencies
-        const currentPeersToUse = peersFromUser ? defaultAutoDetectPeers : peerDepsFromEnv;
-        const reactDeps = { dependencies, devDependencies, currentPeersToUse };
+        const currentPeersToUse = peersFromUser ? defaultAutoDetectPeers : { peerDependencies: peerDepsFromEnv };
+        const reactDeps = { dependencies, devDependencies, ...currentPeersToUse };
         return mergeDeepLeft(dependencyPolicy, reactDeps);
       },
     });
