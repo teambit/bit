@@ -167,7 +167,11 @@ ${WILDCARD_HELP('import')}`;
       return chalk.yellow(importResults.cancellationMessage || 'nothing to import');
     }
 
-    const summaryPrefix = `successfully imported ${importedIds.length} component(s)`;
+    const summaryPrefix =
+      importedIds.length === 1
+        ? 'successfully imported one component'
+        : `successfully imported ${importedIds.length} components`;
+
     let upToDateCount = 0;
     const importedComponents = importedIds.map((bitId) => {
       const details = importDetails.find((c) => c.id === bitId.toStringWithoutVersion());
