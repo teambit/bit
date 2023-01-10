@@ -6,7 +6,7 @@ export interface SchemaExtractor {
   /**
    * extract a semantic schema from a component.
    */
-  extract(component: Component, formatter: Formatter): Promise<APISchema>;
+  extract(component: Component, formatter?: Formatter): Promise<APISchema>;
   /**
    * release resources if no schemas are needed for this process.
    * for typescript, this will kill the tsserver process.
