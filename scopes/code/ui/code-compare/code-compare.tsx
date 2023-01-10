@@ -1,7 +1,7 @@
 import React, { HTMLAttributes, useState } from 'react';
+import { uniq } from 'lodash';
 import classNames from 'classnames';
 import { HoverSplitter } from '@teambit/base-ui.surfaces.split-pane.hover-splitter';
-import { Collapser } from '@teambit/ui-foundation.ui.buttons.collapser';
 import { SplitPane, Pane, Layout } from '@teambit/base-ui.surfaces.split-pane.split-pane';
 import { useIsMobile } from '@teambit/ui-foundation.ui.hooks.use-is-mobile';
 import { FileIconSlot } from '@teambit/code';
@@ -37,7 +37,7 @@ export function CodeCompare({ fileIconSlot, className }: CodeCompareProps) {
   const { fileTree: baseFileTree = [], mainFile } = useCode(base?.model.id);
   const { fileTree: compareFileTree = [] } = useCode(compare?.model.id);
 
-  const fileTree = baseFileTree.concat(compareFileTree);
+  const fileTree = uniq(baseFileTree.concat(compareFileTree));
 
   const selectedFileFromParams = useCompareQueryParam('file');
 
@@ -51,23 +51,10 @@ export function CodeCompare({ fileIconSlot, className }: CodeCompareProps) {
   return (
     <SplitPane
       layout={sidebarOpenness}
-      size="85%"
+      size={200}
       className={classNames(styles.componentCompareCodeContainer, className)}
     >
       <Pane className={styles.left}>
-        <CodeCompareView fileName={selectedFile} />
-      </Pane>
-      <HoverSplitter className={styles.splitter}>
-        <Collapser
-          placement="left"
-          isOpen={isSidebarOpen}
-          onMouseDown={(e) => e.stopPropagation()} // avoid split-pane drag
-          onClick={() => setSidebarOpenness((x) => !x)}
-          tooltipContent={`${isSidebarOpen ? 'Hide' : 'Show'} file tree`}
-          className={styles.collapser}
-        />
-      </HoverSplitter>
-      <Pane className={classNames(styles.right, styles.dark)}>
         <CodeCompareTree
           fileIconSlot={fileIconSlot}
           fileTree={fileTree}
@@ -78,6 +65,51 @@ export function CodeCompare({ fileIconSlot, className }: CodeCompareProps) {
           onTreeNodeSelected={hook?.onClick}
         />
       </Pane>
+      <HoverSplitter className={styles.splitter}>
+        {/* <Collapser
+          placement="left"
+          isOpen={isSidebarOpen}
+          onMouseDown={(e) => e.stopPropagation()} // avoid split-pane drag
+          onClick={() => setSidebarOpenness((x) => !x)}
+          tooltipContent={`${isSidebarOpen ? 'Hide' : 'Show'} file tree`}
+          className={styles.collapser}
+        /> */}
+      </HoverSplitter>
+      <Pane className={classNames(styles.right, styles.dark)}>
+        <CodeCompareView fileName={selectedFile} files={fileTree} getHref={getHref} onTabClicked={hook?.onClick} />
+      </Pane>
     </SplitPane>
   );
+  // return (
+  //   <SplitPane
+  //     layout={sidebarOpenness}
+  //     size="85%"
+  //     className={classNames(styles.componentCompareCodeContainer, className)}
+  //   >
+  //     <Pane className={styles.left}>
+  //       <CodeCompareView fileName={selectedFile} />
+  //     </Pane>
+  //     <HoverSplitter className={styles.splitter}>
+  //       <Collapser
+  //         placement="left"
+  //         isOpen={isSidebarOpen}
+  //         onMouseDown={(e) => e.stopPropagation()} // avoid split-pane drag
+  //         onClick={() => setSidebarOpenness((x) => !x)}
+  //         tooltipContent={`${isSidebarOpen ? 'Hide' : 'Show'} file tree`}
+  //         className={styles.collapser}
+  //       />
+  //     </HoverSplitter>
+  //     <Pane className={classNames(styles.right, styles.dark)}>
+  //       <CodeCompareTree
+  //         fileIconSlot={fileIconSlot}
+  //         fileTree={fileTree}
+  //         currentFile={selectedFile}
+  //         drawerName={'FILES'}
+  //         widgets={[Widget]}
+  //         getHref={getHref}
+  //         onTreeNodeSelected={hook?.onClick}
+  //       />
+  //     </Pane>
+  //   </SplitPane>
+  // );
 }

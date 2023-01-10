@@ -1,13 +1,14 @@
-import React, { HTMLAttributes, useState, useMemo, ComponentType } from 'react';
+import React, { HTMLAttributes, useState, useMemo, ComponentType, useContext } from 'react';
 import classNames from 'classnames';
 import { FileIconSlot } from '@teambit/code';
 import { flatten } from 'lodash';
-import { WidgetProps } from '@teambit/ui-foundation.ui.tree.tree-node';
+import { WidgetProps, TreeNode as Node } from '@teambit/ui-foundation.ui.tree.tree-node';
 import { DrawerUI } from '@teambit/ui-foundation.ui.tree.drawer';
-import { FileTree } from '@teambit/ui-foundation.ui.tree.file-tree';
+import { FileTree, useFileTreeContext } from '@teambit/ui-foundation.ui.tree.file-tree';
+import { FolderTreeNode } from '@teambit/ui-foundation.ui.tree.folder-tree-node';
 import { FileIconMatch, getFileIcon } from '@teambit/code.ui.utils.get-file-icon';
-import { TreeNode } from '@teambit/design.ui.tree';
-
+import { TreeNode, TreeNodeProps } from '@teambit/design.ui.tree';
+import { TreeContext } from '@teambit/base-ui.graph.tree.tree-context';
 import styles from './code-compare-tree.module.scss';
 
 export type CodeCompareTreeProps = {
@@ -31,6 +32,7 @@ export function CodeCompareTree({
   onTreeNodeSelected,
 }: CodeCompareTreeProps) {
   const fileIconMatchers: FileIconMatch[] = useMemo(() => flatten(fileIconSlot?.values()), [fileIconSlot]);
+
   const defaultDrawer = () => {
     return ['FILES'];
   };
@@ -56,11 +58,12 @@ export function CodeCompareTree({
       >
         <FileTree
           getHref={getHref}
-          files={fileTree || ['']}
+          files={fileTree}
           selected={currentFile}
           widgets={widgets}
           getIcon={getIcon(fileIconMatchers)}
           onTreeNodeSelected={onTreeNodeSelected}
+          TreeNode={CompareFileTreeNode}
         />
       </DrawerUI>
     </div>
@@ -71,4 +74,30 @@ function getIcon(fileIconMatchers: FileIconMatch[]) {
   return function Icon({ id }: TreeNode) {
     return getFileIcon(fileIconMatchers, id);
   };
+}
+
+function CompareFileTreeNode(props: TreeNodeProps<any>) {
+  const { node } = props;
+  const { id } = node;
+  const fileTreeContext = useFileTreeContext();
+  const { selected } = useContext(TreeContext);
+  const href = fileTreeContext?.getHref?.(node);
+  const widgets = fileTreeContext?.widgets;
+  const icon = fileTreeContext?.getIcon?.(node);
+  const isActive = id === selected;
+
+  if (!node?.children) {
+    return (
+      <Node
+        {...props}
+        className={classNames(styles.node)}
+        activeClassName={styles.active}
+        href={href}
+        isActive={isActive}
+        icon={icon}
+        widgets={widgets}
+      />
+    );
+  }
+  return <FolderTreeNode className={classNames(styles.node)} {...props} />;
 }

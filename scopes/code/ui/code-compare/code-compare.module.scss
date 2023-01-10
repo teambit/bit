@@ -1,5 +1,4 @@
 @import '~@teambit/ui-foundation.ui.constants.z-indexes/z-indexes.module.scss';
-$panelBg: #fafafa;
 
 .componentCompareCodeContainer {
   /**
@@ -11,16 +10,16 @@ $panelBg: #fafafa;
   width: 100%;
 }
 
-.left {
+.right {
   min-width: 200px;
   //cannot assign max-width directly to right side
   max-width: calc(100% - 200px);
   display: flex;
 }
 
-.right {
+.left {
   position: relative;
-  background: $panelBg;
+  background: var(--on-surface-color, #2b2b2b);
   overflow-y: auto;
   // this is to fix the right panel when it gets too big or too small
   min-width: 200px;
@@ -29,6 +28,7 @@ $panelBg: #fafafa;
 
 .splitter {
   position: relative;
+  background: var(--on-surface-color, #2b2b2b);
 
   > :first-child {
     z-index: $pane-splitter-zIndex;

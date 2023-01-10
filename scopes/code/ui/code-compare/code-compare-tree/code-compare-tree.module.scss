@@ -4,14 +4,15 @@
   overflow: auto;
   height: 100%;
   font-size: 14px;
-  border-right: 2px solid #ededed;
+  border-right: 2px solid var(--on-surface-color, #2b2b2b);
+  color: #fff;
 }
 
 .componentCompareCodeTabDrawer {
   // drawer name
   > div:first-child {
     border: none;
-    border-bottom: 1px solid var(--bit-border-color-lightest, #ededed);
+    border-bottom: 1px solid var(--on-surface-color, #2b2b2b);
   }
   height: 100%;
 }
@@ -29,4 +30,13 @@
   font-size: 10px;
   font-weight: unset;
   padding: 4px;
+}
+
+.node {
+  &:hover {
+    background-color: var(--primary-color, #6c5ce7) !important;
+  }
+  &.active {
+    background-color: var(--primary-color, #6c5ce7) !important;
+  }
 }

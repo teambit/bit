@@ -34,6 +34,7 @@ const findPrevVersionFromCurrent = (compareVersion) => (_, index: number, logs: 
   return logs[prevIndex].tag === compareVersion || logs[prevIndex].hash === compareVersion;
 };
 
+// eslint-disable-next-line complexity
 export function ComponentCompare(props: ComponentCompareProps) {
   const {
     host,
@@ -59,6 +60,7 @@ export function ComponentCompare(props: ComponentCompareProps) {
   const isNew = allVersionInfo.length === 0;
   const compareVersion =
     isWorkspace && !isNew && !location?.search.includes('version') ? 'workspace' : component.id.version;
+
   const compareIsLocalChanges = compareVersion === 'workspace';
 
   const lastVersionInfo = useMemo(() => {
@@ -82,7 +84,8 @@ export function ComponentCompare(props: ComponentCompareProps) {
 
   const compare = _compareId ? compareComponent : component;
 
-  const isEmpty = !loading && !compareIsLocalChanges && !compare && !base;
+  const isEmpty =
+    !compareIsLocalChanges && ((!loading && !compare && !base) || compare?.id.toString() === base?.id.toString());
 
   const compCompareId = `${base?.id.toString()}-${compare?.id.toString()}`;
 
@@ -90,9 +93,13 @@ export function ComponentCompare(props: ComponentCompareProps) {
     return (compare?.logs || []).slice().reduce(groupByVersion, new Map<string, LegacyComponentLog>());
   }, [compare?.id.toString()]);
 
+  const skipComponentCompareQuery = compareIsLocalChanges || !base?.id.version || !compare?.id.version;
+
   const { loading: compCompareLoading, componentCompareData } = useComponentCompareQuery(
     base?.id.toString(),
-    compare?.id.toString()
+    compare?.id.toString(),
+    undefined,
+    skipComponentCompareQuery
   );
 
   const fileCompareDataByName = useMemo(() => {

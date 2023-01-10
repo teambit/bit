@@ -6,6 +6,7 @@ import { ComponentModel } from '../../ui';
 
 export type NavPluginProps = {
   displayName?: string;
+  ignoreStickyQueryParams?: boolean;
 } & LinkProps;
 
 export type NavPlugin = {

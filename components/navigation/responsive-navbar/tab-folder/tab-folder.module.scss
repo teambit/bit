@@ -1,0 +1,11 @@
+.tabFolder {
+  height: 100%;
+  left: 0;
+  bottom: 0;
+  position: absolute;
+  transition: transform 150ms ease-in-out, width 150ms ease-in-out;
+  background-color: var(--primary-surface-color, #f6f5fe);
+  border: 1px solid var(--border-medium-color, #ededed);
+  border-radius: 8px 8px 0px 0px;
+  box-sizing: border-box;
+}

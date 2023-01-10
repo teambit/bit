@@ -19,6 +19,10 @@ export type MenuNavProps = {
   widgetSlot?: OrderedNavigationSlot;
   navPlugins?: [string, NavPlugin][];
   widgetPlugins?: [string, NavPlugin][];
+  /**
+   * A className to pass to the secondary nav, i.e dropdown
+   */
+  secondaryNavClassName?: string;
 } & React.HTMLAttributes<HTMLElement>;
 
 export function CollapsibleMenuNav({
@@ -27,6 +31,7 @@ export function CollapsibleMenuNav({
   navPlugins = [],
   widgetPlugins = [],
   className,
+  secondaryNavClassName,
 }: MenuNavProps) {
   const plugins = useMemo(() => {
     const _navPlugins = navPlugins.length > 0 ? navPlugins : navigationSlot?.toArray();
@@ -48,20 +53,22 @@ export function CollapsibleMenuNav({
         const widgetDisplayText = menuItem.props.displayName && isInMenu && menuItem.props.displayName;
         return (
           <TopBarNav
+            {...menuItem.props}
             className={classnames(menuItem.props.className, styles.topBarNav, isInMenu && styles.noBorder)}
             key={id}
-            {...menuItem.props}
           >
             {widgetDisplayText || menuItem.props.children}
           </TopBarNav>
         );
       },
       style: { ...firstWidgetStyle, ...lastPluginStyle },
+      className: menuItem.props.className,
     };
   });
   return (
     <ResponsiveNavbar
       navClassName={classnames(styles.tab, className)}
+      secondaryNavClassName={secondaryNavClassName}
       style={{ width: '100%', height: '100%' }}
       priority="none"
       tabs={links}

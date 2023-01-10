@@ -9,11 +9,11 @@
   display: flex;
   flex: 1;
   height: 100%;
-  padding: 8px 16px 0px 16px;
+  // padding: 8px 16px 0px 16px;
 
   > section {
     overflow: hidden;
-    border-radius: 8px;
+    // border-radius: 8px;
   }
 }
 
@@ -48,4 +48,27 @@
   width: 100%;
   padding: 16px 24px;
   color: var(--bit-bg-dent, #f6f6f6);
+}
+
+.compareNavItem {
+  color: #fff !important;
+  &:hover {
+    > div {
+      background-color: var(--surface-primary-hover-color, #3a2980) !important;
+      border-bottom: unset !important;
+    }
+  }
+}
+
+.activeNav {
+  background-color: var(--primary-color, #6c5ce7);
+  border-bottom: unset !important;
+}
+
+.compareNav {
+  background-color: var(--on-surface-color, #2b2b2b);
+}
+
+.compareSecondaryNav {
+  background: var(--on-surface-color, #2b2b2b) !important;
 }

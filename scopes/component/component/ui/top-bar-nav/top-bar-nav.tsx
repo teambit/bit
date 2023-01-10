@@ -6,7 +6,15 @@ import { NavPluginProps } from '../menu/nav-plugin';
 
 import styles from './top-bar-nav.module.scss';
 
-export function TopBarNav({ href, className, activeClassName, children, displayName, ...rest }: NavPluginProps) {
+export function TopBarNav({
+  href,
+  className,
+  activeClassName,
+  children,
+  displayName,
+  ignoreStickyQueryParams,
+  ...rest
+}: NavPluginProps) {
   const { search } = useLocation(); // sticky query params
 
   // @hack - this is so that the displayName will not pass to the link and cause a warning in the console.
@@ -15,7 +23,7 @@ export function TopBarNav({ href, className, activeClassName, children, displayN
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const preventPassingDisplayNameToLink = displayName;
 
-  const target = href && `${href}${search}`;
+  const target = (href && !ignoreStickyQueryParams && `${href}${search}`) || href;
 
   return (
     <Link

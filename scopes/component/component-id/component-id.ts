@@ -56,7 +56,7 @@ export class ComponentID {
    */
   get fullName() {
     return this._legacy.name;
-  }
+  } // short name
 
   /**
    * resolves the name of the component.
@@ -114,7 +114,7 @@ export class ComponentID {
     }
 
     return id.toStringWithoutVersion();
-  }
+  } // full name
 
   /**
    * serialize the component ID.
