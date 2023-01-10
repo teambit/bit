@@ -187,6 +187,8 @@ it's not an existing component, nor existing package (in a package.json)`);
   }
 
   _addManuallyAddedDep(field: string, value: string) {
+    if (this.manuallyAddedDependencies?.[field]?.includes(value)) return;
+
     this.manuallyAddedDependencies[field]
       ? this.manuallyAddedDependencies[field].push(value)
       : (this.manuallyAddedDependencies[field] = [value]);
