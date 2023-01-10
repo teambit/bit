@@ -158,6 +158,42 @@ export class DependenciesRemoveCmd implements Command {
   }
 }
 
+export class DependenciesResetCmd implements Command {
+  name = 'reset <component-pattern>';
+  arguments = [{ name: 'component-pattern', description: COMPONENT_PATTERN_HELP }];
+  group = 'info';
+  description = 'reset dependencies to the default values (revert any previously "bit deps set")';
+  alias = '';
+  options = [] as CommandOptions;
+
+  constructor(private deps: DependenciesMain) {}
+
+  async report([pattern]: [string]) {
+    const results = await this.deps.reset(pattern);
+    const comps = results.map((id) => id.toString());
+
+    return `${chalk.green('successfully reset dependencies for the following component(s)')}\n${comps}`;
+  }
+}
+
+export class DependenciesEjectCmd implements Command {
+  name = 'eject <component-pattern>';
+  arguments = [{ name: 'component-pattern', description: COMPONENT_PATTERN_HELP }];
+  group = 'info';
+  description = 'write dependencies that were previously set via "bit deps set" into .bitmap';
+  alias = '';
+  options = [] as CommandOptions;
+
+  constructor(private deps: DependenciesMain) {}
+
+  async report([pattern]: [string]) {
+    const results = await this.deps.eject(pattern);
+    const comps = results.map((id) => id.toString());
+
+    return `${chalk.green('successfully ejected dependencies for the following component(s)')}\n${comps}`;
+  }
+}
+
 export class DependenciesBlameCmd implements Command {
   name = 'blame <component-name> <dependency-name>';
   arguments = [
