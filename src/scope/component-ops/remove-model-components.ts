@@ -41,12 +41,17 @@ export default class RemoveModelComponents {
   async remove(): Promise<RemovedObjects> {
     const { missingComponents, foundComponents } = await this.scope.filterFoundAndMissingComponents(this.bitIds);
     logger.debug(`RemoveModelComponents.remove, found ${foundComponents.length} components to remove`);
-    const dependentBits = await this.scope.getDependentsBitIds(foundComponents);
-    logger.debug(`RemoveModelComponents.remove, found ${Object.keys(dependentBits).length} dependents`);
-    if (Object.keys(dependentBits).length && !this.force) {
-      // some of the components have dependents, don't remove them
-      return new RemovedObjects({ missingComponents, dependentBits });
+    // if this is in the workspace, it's ok to remove components that have dependents.
+    // the user can always install it as a package or re-import.
+    if (!this.consumer) {
+      const dependentBits = await this.scope.getDependentsBitIds(foundComponents);
+      logger.debug(`RemoveModelComponents.remove, found ${Object.keys(dependentBits).length} dependents`);
+      if (Object.keys(dependentBits).length && !this.force) {
+        // some of the components have dependents, don't remove them
+        return new RemovedObjects({ missingComponents, dependentBits });
+      }
     }
+
     const removedFromLane: BitId[] = [];
     const removalDataWithNulls = await mapSeries(foundComponents, (bitId) => {
       if (this.currentLane && this.fromLane) {

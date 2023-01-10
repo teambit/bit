@@ -299,4 +299,20 @@ describe('bit remove command', function () {
       });
     });
   });
+  describe('removing from workspace when it had dependents previously in old tags', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(2);
+      helper.command.tagWithoutBuild();
+      helper.command.export();
+      helper.fs.writeFile('comp1/index.js', ''); // remove the dependency of comp2
+      helper.command.tagWithoutBuild();
+      helper.command.export();
+      helper.command.removeComponent('comp2');
+    });
+    // only removing from scope needs the --force. from workspace it's not an irreversible action.
+    it('should remove successfully without the need for --force flag', () => {
+      helper.bitMap.expectNotToHaveId('comp2');
+    });
+  });
 });

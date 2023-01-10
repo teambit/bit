@@ -55,7 +55,7 @@ describe('bit lane command', function () {
       });
       it('should not remove the component from .bitmap', () => {
         const head = helper.command.getHead('comp1');
-        helper.bitMap.expectToHaveIdHarmony('comp1', head, helper.scopes.remote);
+        helper.bitMap.expectToHaveId('comp1', head, helper.scopes.remote);
       });
       it('should not delete the files from the filesystem', () => {
         expect(path.join(helper.scopes.localPath, 'comp1/index.js')).to.be.a.file();
