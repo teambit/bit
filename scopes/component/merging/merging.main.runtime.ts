@@ -33,6 +33,7 @@ import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
 import ManyComponentsWriter from '@teambit/legacy/dist/consumer/component-ops/many-components-writer';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component/consumer-component';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
+import { compact } from 'lodash';
 import { applyModifiedVersion } from '@teambit/legacy/dist/consumer/versions-ops/checkout-version';
 import threeWayMerge, {
   MergeResultsThreeWay,
@@ -233,6 +234,9 @@ export class MergingMain {
       }
     );
 
+    const allConfigMerge = succeededComponents.map((c) => c.configMergeResult);
+    await this.generateConfigMergeConflictFileForAll(compact(allConfigMerge));
+
     if (localLane) consumer.scope.objects.add(localLane);
 
     await consumer.scope.objects.persist(); // persist anyway, if localLane is null it should save all main heads
@@ -286,6 +290,22 @@ export class MergingMain {
       mergeSnapError,
       leftUnresolvedConflicts,
     };
+  }
+
+  private async generateConfigMergeConflictFileForAll(allConfigMerge: ConfigMergeResult[]) {
+    let conflictExists = false;
+    let content = '[\n';
+    allConfigMerge.forEach((configMerge) => {
+      const conflict = configMerge.generateMergeConflictFile();
+      if (!conflict) return;
+      conflictExists = true;
+      content += `// ******* ${configMerge.compIdStr}\n`;
+      content += conflict;
+      content += ',\n';
+    });
+    content += '\n]';
+    // todo: remove the last comma
+    if (conflictExists) await fs.writeFile(path.join(this.workspace.consumer.getPath(), MergeConfigFilename), content);
   }
 
   /**
@@ -649,15 +669,6 @@ other:   ${otherLaneHead.toString()}`);
     if (configMergeResult) {
       if (!componentWithDependencies.component.writtenPath) {
         throw new Error(`componentWithDependencies.component.writtenPath is missing for ${id.toString()}`);
-      }
-      const configMergeConflictFile = configMergeResult.generateMergeConflictFile();
-      if (configMergeConflictFile) {
-        const configMergePath = path.join(
-          consumer.getPath(),
-          componentWithDependencies.component.writtenPath,
-          MergeConfigFilename
-        );
-        await fs.outputFile(configMergePath, configMergeConflictFile);
       }
       const successfullyMergedConfig = configMergeResult.getSuccessfullyMergedConfig();
       if (successfullyMergedConfig) {
