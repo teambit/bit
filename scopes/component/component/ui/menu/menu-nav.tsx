@@ -65,6 +65,7 @@ export function CollapsibleMenuNav({
       className: menuItem.props.className,
     };
   });
+
   return (
     <ResponsiveNavbar
       navClassName={classnames(styles.tab, className)}

@@ -94,11 +94,13 @@ export function ResponsiveNavbar({
     });
   };
 
+  let hiddenItems: number[] = [];
+
   const toggleTabs = () => {
     resetStyle();
+    hiddenItems = [];
     const containerRefWidth = containerRef.current?.offsetWidth || 0;
     const buttonWidth = moreBtnRef.current?.offsetWidth || 0;
-    const hiddenItems: number[] = [];
 
     for (let index = primaryTabRefs.current.length - 1; index > 0; index -= 1) {
       const tabRef = primaryTabRefs.current[index];
@@ -122,6 +124,7 @@ export function ResponsiveNavbar({
       });
     }
   };
+
   useEffect(() => {
     setSelectedTab(primaryTabRefs.current[tabIndex]);
     toggleTabs();
@@ -134,9 +137,10 @@ export function ResponsiveNavbar({
     setTabIndex(index);
   };
 
-  useEffect(() => {
-    setTabIndex(defaultActiveIndex);
-  }, [defaultActiveIndex]);
+  // useEffect(() => {
+  //   console.log('🚀 ~ file: responsive-navbar.tsx:143 ~ useEffect ~ defaultActiveIndex', defaultActiveIndex);
+  //   setTabIndex(defaultActiveIndex);
+  // }, [defaultActiveIndex]);
 
   const getTabStyle = () => {
     switch (priority) {
@@ -188,7 +192,10 @@ export function ResponsiveNavbar({
       <div className={classNames(styles.more, styles.hidden)} ref={moreBtnRef}>
         <Dropdown
           placeholderContent={
-            <div className={styles.dots} data-priority="menu">
+            <div
+              className={classNames(styles.dots, hiddenItems.includes(tabIndex) && styles.active)}
+              data-priority="menu"
+            >
               <img src="https://static.bit.dev/bit-icons/more-h.svg" />
             </div>
           }

@@ -8,6 +8,12 @@
   color: #fff;
 }
 
+.componentCompareDrawerName {
+  &:hover {
+    border-color: var(--on-surface-neutral-high-color, #2b2b2b);
+    background: var(--on-surface-neutral-high-color, #2b2b2b);
+  }
+}
 .componentCompareCodeTabDrawer {
   // drawer name
   > div:first-child {
@@ -34,9 +40,9 @@
 
 .node {
   &:hover {
-    background-color: var(--primary-color, #6c5ce7) !important;
+    background-color: var(--surface-primary-hover-color, #3a2980) !important;
   }
   &.active {
-    background-color: var(--primary-color, #6c5ce7) !important;
+    background-color: var(--surface-primary-color, #140068) !important;
   }
 }

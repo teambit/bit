@@ -52,23 +52,52 @@
 
 .compareNavItem {
   color: #fff !important;
-  &:hover {
+  border-right: 0.5px solid var(--on-surface-neutral-high-color, #2b2b2b);
+
+  &.first {
+    border-left: 0.5px solid var(--on-surface-neutral-high-color, #2b2b2b);
+  }
+
+  &:hover:not(.activeNav) {
+    background-color: var(--on-surface-neutral-high-color, #2b2b2b) !important;
     > div {
-      background-color: var(--surface-primary-hover-color, #3a2980) !important;
-      border-bottom: unset !important;
+      background-color: var(--on-surface-neutral-high-color, #2b2b2b) !important;
     }
   }
 }
 
 .activeNav {
-  background-color: var(--primary-color, #6c5ce7);
-  border-bottom: unset !important;
+  background-color: var(--on-surface-neutral-high-color, #2b2b2b);
+  &::after {
+    background-color: var(--on-surface-neutral-high-color, #2b2b2b) !important;
+  }
 }
 
 .compareNav {
-  background-color: var(--on-surface-color, #2b2b2b);
+  // @todo get token for this color
+  background-color: #414141;
+  gap: 0px !important;
 }
 
 .compareSecondaryNav {
-  background: var(--on-surface-color, #2b2b2b) !important;
+  // @todo get token for this color
+  background: #414141 !important;
+}
+
+.codeCompareTab {
+  display: flex;
+  align-items: center;
+  > span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding-left: 4px; // to align to sibling with icon
+    margin-right: 8px;
+  }
+
+  img {
+    width: 16px;
+    height: 16px;
+    margin-right: 4px;
+  }
 }

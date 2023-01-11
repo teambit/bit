@@ -1,7 +1,7 @@
 import React, { HTMLAttributes, useState, useMemo, ComponentType, useContext } from 'react';
 import classNames from 'classnames';
 import { FileIconSlot } from '@teambit/code';
-import { flatten } from 'lodash';
+import flatten from 'lodash.flatten';
 import { WidgetProps, TreeNode as Node } from '@teambit/ui-foundation.ui.tree.tree-node';
 import { DrawerUI } from '@teambit/ui-foundation.ui.tree.drawer';
 import { FileTree, useFileTreeContext } from '@teambit/ui-foundation.ui.tree.file-tree';
@@ -55,6 +55,7 @@ export function CodeCompareTree({
         name={drawerName}
         contentClass={styles.componentCompareCodeDrawerContent}
         className={classNames(styles.componentCompareCodeTabDrawer)}
+        drawerNameClass={styles.componentCompareDrawerName}
       >
         <FileTree
           getHref={getHref}

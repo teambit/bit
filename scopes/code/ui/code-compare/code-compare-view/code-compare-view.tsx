@@ -1,14 +1,16 @@
 import React, { HTMLAttributes, useMemo, useRef } from 'react';
-import { BlockSkeleton, WordSkeleton } from '@teambit/base-ui.loaders.skeleton';
+import { BlockSkeleton } from '@teambit/base-ui.loaders.skeleton';
 import { DiffEditor, DiffOnMount } from '@monaco-editor/react';
 // import { Toggle } from '@teambit/design.inputs.toggle-switch';
-import { H4 } from '@teambit/documenter.ui.heading';
-
+// import { H4 } from '@teambit/documenter.ui.heading';
+import { FileIconSlot } from '@teambit/code';
+import flatten from 'lodash.flatten';
 import classNames from 'classnames';
 import { darkMode } from '@teambit/base-ui.theme.dark-theme';
 import { useFileContent } from '@teambit/code.ui.queries.get-file-content';
 import { useComponentCompare } from '@teambit/component.ui.component-compare.context';
 import { CollapsibleMenuNav, NavPlugin } from '@teambit/component';
+import { FileIconMatch, getFileIcon } from '@teambit/code.ui.utils.get-file-icon';
 
 import styles from './code-compare-view.module.scss';
 
@@ -17,6 +19,7 @@ export type CodeCompareViewProps = {
   files: string[];
   onTabClicked?: (id: string, event?: React.MouseEvent) => void;
   getHref: (node: { id: string }) => string;
+  fileIconSlot?: FileIconSlot;
 } & HTMLAttributes<HTMLDivElement>;
 
 // a translation list of specific monaco languages that are not the same as their file ending.
@@ -29,7 +32,16 @@ const languageOverrides = {
   md: 'markdown',
 };
 
-export function CodeCompareView({ className, fileName, files, onTabClicked, getHref }: CodeCompareViewProps) {
+export function CodeCompareView({
+  className,
+  fileName,
+  files,
+  onTabClicked,
+  getHref,
+  fileIconSlot,
+}: CodeCompareViewProps) {
+  const fileIconMatchers: FileIconMatch[] = useMemo(() => flatten(fileIconSlot?.values()), [fileIconSlot]);
+
   const componentCompareContext = useComponentCompare();
   const loadingFromContext =
     componentCompareContext?.loading || componentCompareContext?.fileCompareDataByName === undefined;
@@ -166,7 +178,13 @@ export function CodeCompareView({ className, fileName, files, onTabClicked, getH
           Ignore Whitespace
         </div>
       </div> */}
-      <CodeCompareNav files={files} selectedFile={fileName} onTabClicked={onTabClicked} getHref={getHref} />
+      <CodeCompareNav
+        files={files}
+        selectedFile={fileName}
+        fileIconMatchers={fileIconMatchers}
+        onTabClicked={onTabClicked}
+        getHref={getHref}
+      />
       <div className={styles.componentCompareCodeDiffEditorContainer}>
         {loading ? <CodeCompareViewLoader /> : diffEditor}
       </div>
@@ -181,15 +199,17 @@ function CodeCompareViewLoader() {
 function CodeCompareNav({
   files,
   selectedFile,
+  fileIconMatchers,
   onTabClicked,
   getHref,
 }: {
   files: string[];
   selectedFile: string;
+  fileIconMatchers: FileIconMatch[];
   getHref: (node: { id: string }) => string;
   onTabClicked?: (id: string, event?: React.MouseEvent) => void;
 }) {
-  const extractedTabs: [string, NavPlugin][] = files.map((file) => {
+  const extractedTabs: [string, NavPlugin][] = files.map((file, index) => {
     const isActive = file === selectedFile;
     const href = getHref({ id: file });
 
@@ -202,8 +222,13 @@ function CodeCompareNav({
           active: isActive,
           onClick: onTabClicked && ((e) => onTabClicked(file, e)),
           activeClassName: styles.activeNav,
-          className: styles.compareNavItem,
-          children: file,
+          className: classNames(styles.compareNavItem, index === 0 && styles.first),
+          children: (
+            <div className={styles.codeCompareTab}>
+              <img src={getFileIcon(fileIconMatchers, file)}></img>
+              <span>{file}</span>
+            </div>
+          ),
           ignoreStickyQueryParams: true,
         },
       },

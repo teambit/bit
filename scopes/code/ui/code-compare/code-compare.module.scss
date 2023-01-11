@@ -15,20 +15,34 @@
   //cannot assign max-width directly to right side
   max-width: calc(100% - 200px);
   display: flex;
+  &.collapsed {
+    min-width: 32px;
+    //cannot assign max-width directly to right side
+    max-width: calc(100% - 32px);
+  }
 }
 
 .left {
   position: relative;
-  background: var(--on-surface-color, #2b2b2b);
+
+  // @todo get token for this color
+  background: #414141;
+
   overflow-y: auto;
   // this is to fix the right panel when it gets too big or too small
   min-width: 200px;
   max-width: calc(100% - 200px);
+  &.collapsed {
+    min-width: 32px;
+    //cannot assign max-width directly to right side
+    max-width: calc(100% - 32px);
+  }
 }
 
 .splitter {
   position: relative;
-  background: var(--on-surface-color, #2b2b2b);
+  // @todo get token for this color
+  background: #414141;
 
   > :first-child {
     z-index: $pane-splitter-zIndex;
@@ -48,5 +62,18 @@
 }
 
 .loader {
-  color: var(--bit-bg-dent, #f6f6f6);
+  // @todo get token for this color
+  background: #414141;
+}
+
+.codeCompareTreeCollapse {
+  padding: 8px;
+  // @todo get token for this color
+  background: #414141;
+  cursor: pointer;
+
+  img {
+    width: 16px;
+    filter: brightness(0) invert(1);
+  }
 }
