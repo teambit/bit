@@ -294,18 +294,28 @@ export class MergingMain {
 
   private async generateConfigMergeConflictFileForAll(allConfigMerge: ConfigMergeResult[]) {
     let conflictExists = false;
-    let content = '[\n';
+    let content = `/* Resolve configuration conflicts per component and make sure the Component ID remain in place */
+[
+`;
     allConfigMerge.forEach((configMerge) => {
       const conflict = configMerge.generateMergeConflictFile();
       if (!conflict) return;
       conflictExists = true;
-      content += `// ******* ${configMerge.compIdStr}\n`;
+      content += `// ${'*'.repeat(60)}\n`;
+      content += `// ${'*'.repeat(7)} ${configMerge.compIdStr}\n`;
+      content += `// ${'*'.repeat(60)}\n`;
       content += conflict;
       content += ',\n';
     });
-    content += '\n]';
-    // todo: remove the last comma
-    if (conflictExists) await fs.writeFile(path.join(this.workspace.consumer.getPath(), MergeConfigFilename), content);
+    if (!conflictExists) return;
+    // remove the last comma, it's not needed
+    const pos = content.lastIndexOf(',');
+    content = content.substring(0, pos) + content.substring(pos + 1);
+
+    content += `
+]`;
+
+    await fs.writeFile(path.join(this.workspace.consumer.getPath(), MergeConfigFilename), content);
   }
 
   /**
