@@ -2184,6 +2184,79 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
     await this.bitMap.write();
     return { changed, unchanged };
   }
+
+  async updateEnvForComponents(envIdStr?: string, pattern?: string) {
+    const allWsComps = await this.list();
+    const allWsIds = await this.listIds();
+    const isInWs = (envId: ComponentID) => allWsIds.find((id) => id.isEqual(envId, { ignoreVersion: true }));
+    const allEnvs = await this.envs.createEnvironment(allWsComps);
+    const getEnvWithVersion = async (envId: ComponentID) => {
+      if (envId.hasVersion()) return envId;
+      try {
+        const fromRemote = await this.scope.getRemoteComponent(envId);
+        return envId.changeVersion(fromRemote.id.version);
+      } catch (err) {
+        throw new BitError(`unable to find ${envIdStr} in the remote`);
+      }
+    };
+    const getEnvs = async (): Promise<ComponentID[]> => {
+      if (envIdStr) {
+        const envCompId = await this.resolveComponentId(envIdStr);
+        if (isInWs(envCompId)) {
+          throw new BitError(
+            `error: unable to update the env ${envCompId.toString()}, it's already part of the workspace, as such, it's always using the workspace version`
+          );
+        }
+        const envWithVer = await getEnvWithVersion(envCompId);
+        return [envWithVer];
+      }
+      // get all non-local envs.
+      const allEnvsIds = allEnvs.runtimeEnvs.map((env) => env.id);
+      const allEnvsCompIds = await this.resolveMultipleComponentIds(allEnvsIds);
+      // also check the envId has version, otherwise, it's a core env.
+      const nonLocalEnvs = allEnvsCompIds.filter((envId) => !isInWs(envId) && envId.hasVersion());
+      if (!nonLocalEnvs.length) {
+        throw new BitError(
+          `error: unable to update envs ${allEnvsIds
+            .map((e) => e.toString())
+            .join(', ')}, they're already part of the workspace`
+        );
+      }
+      const envsWithVersions = await mapSeries(nonLocalEnvs, (envId) =>
+        getEnvWithVersion(envId.changeVersion(undefined))
+      );
+      return envsWithVersions;
+    };
+    const envsWithVerToUpdate = await getEnvs();
+
+    const compIdsToUpdate = pattern ? await this.idsByPattern(pattern) : allWsIds;
+    const compsToUpdate = await this.getMany(compIdsToUpdate);
+    const alreadyUpToDate: ComponentID[] = [];
+    const updated: { [envId: string]: ComponentID[] } = {};
+    await Promise.all(
+      compsToUpdate.map(async (comp) => {
+        const compEnvs = compact(
+          envsWithVerToUpdate.map((envId) => comp.state.aspects.get(envId.toStringWithoutVersion()))
+        );
+        if (!compEnvs.length) return;
+        const compEnv = compEnvs[0]; // should not be more than one
+        const envToUpdate = envsWithVerToUpdate.find((e) => e.isEqual(compEnv.id, { ignoreVersion: true }));
+        if (!envToUpdate) throw new Error(`unable to find ${compEnv.id.toString()} in the envs to update`);
+        if (compEnv.id.version === envToUpdate.version) {
+          // nothing to update
+          alreadyUpToDate.push(comp.id);
+          return;
+        }
+        // don't mark with minus if not exist in .bitmap. it's not needed. when the component is loaded, the
+        // merge-operation of the aspects removes duplicate aspect-id with different versions.
+        await this.removeSpecificComponentConfig(comp.id, compEnv.id.toString(), false);
+        await this.addSpecificComponentConfig(comp.id, envToUpdate.toString(), compEnv.config);
+        (updated[envToUpdate.toString()] ||= []).push(comp.id);
+      })
+    );
+    await this.bitMap.write();
+    return { updated, alreadyUpToDate };
+  }
 }
 
 /**
