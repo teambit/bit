@@ -1530,7 +1530,6 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
       this.aspectLoader,
       this.envs,
       this.dependencyResolver,
-      this.scope,
       this.logger,
       this.harmony
     );
@@ -1568,7 +1567,6 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
       this.aspectLoader,
       this.envs,
       this.dependencyResolver,
-      this.scope,
       this.logger,
       this.harmony
     );
@@ -1589,7 +1587,6 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
       this.aspectLoader,
       this.envs,
       this.dependencyResolver,
-      this.scope,
       this.logger,
       this.harmony
     );

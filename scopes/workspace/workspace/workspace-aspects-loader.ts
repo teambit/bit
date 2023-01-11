@@ -18,7 +18,6 @@ import { ComponentNotFound } from '@teambit/legacy/dist/scope/exceptions';
 import { uniqBy, difference, compact } from 'lodash';
 import { Consumer } from '@teambit/legacy/dist/consumer';
 import { Component, ComponentID, FilterAspectsOptions, ResolveAspectsOptions } from '@teambit/component';
-import { ScopeMain } from '@teambit/scope';
 import { Logger } from '@teambit/logger';
 import { BitError } from '@teambit/bit-error';
 import { EnvsMain } from '@teambit/envs';
@@ -36,7 +35,6 @@ export class WorkspaceAspectsLoader {
     private aspectLoader: AspectLoaderMain,
     private envs: EnvsMain,
     private dependencyResolver: DependencyResolverMain,
-    private scope: ScopeMain,
     private logger: Logger,
     private harmony: Harmony
   ) {
@@ -45,7 +43,7 @@ export class WorkspaceAspectsLoader {
   }
 
   /**
-   * load aspects from the workspace and if not exists in the workspace, load from the scope.
+   * load aspects from the workspace and if not exists in the workspace, load from the node_modules.
    * keep in mind that the graph may have circles.
    */
   async loadAspects(ids: string[] = [], throwOnError = false, neededFor?: string): Promise<string[]> {
@@ -115,13 +113,12 @@ needed-for: ${neededFor || '<unknown>'}`);
     const coreAspectsIds = this.aspectLoader.getCoreAspectIds();
     const userAspectsIds: string[] = difference(idsToResolve, coreAspectsIds);
     const componentIdsToResolve = await this.workspace.resolveMultipleComponentIds(userAspectsIds);
-    // const { workspaceIds, scopeIds } = await this.groupIdsByWorkspaceAndScope(componentIdsToResolve);
     const components = await this.importAndGetAspects(componentIdsToResolve);
 
     const graph = await this.getAspectsGraphWithoutCore(components, this.isAspect.bind(this));
     const aspects = graph.nodes.map((node) => node.attr);
     this.logger.debug(`${loggerPrefix} found ${aspects.length} aspects in the aspects-graph`);
-    const { workspaceComps, scopeComps } = await this.groupComponentsByWorkspaceAndScope(aspects);
+    const { workspaceComps, nonWorkspaceComps } = await this.groupComponentsByWorkspaceExistence(aspects);
     const workspaceCompsIds = workspaceComps.map((c) => c.id);
     this.logger.debug(
       `${loggerPrefix} found ${workspaceComps.length} components in the workspace:\n${workspaceComps
@@ -130,8 +127,8 @@ needed-for: ${neededFor || '<unknown>'}`);
     );
     this.logger.debug(
       `${loggerPrefix} ${
-        scopeComps.length
-      } components are not in the workspace and are loaded from the scope:\n${scopeComps
+        nonWorkspaceComps.length
+      } components are not in the workspace and are loaded from the node_modules:\n${nonWorkspaceComps
         .map((c) => c.id.toString())
         .join('\n')}`
     );
@@ -144,10 +141,8 @@ needed-for: ${neededFor || '<unknown>'}`);
 
     await this.linkIfMissingWorkspaceAspects(wsAspectDefs, workspaceCompsIds);
 
-    const scopeCompsStringIds = scopeComps.map((c) => c.id);
-
-    const scopeAspectDefs = await this.aspectLoader.resolveAspects(
-      scopeComps,
+    const installedAspectDefs = await this.aspectLoader.resolveAspects(
+      nonWorkspaceComps,
       this.getInstalledAspectResolver(graph, userAspectsIds, runtimeName)
     );
 
@@ -165,7 +160,7 @@ needed-for: ${neededFor || '<unknown>'}`);
       });
     }
 
-    const allDefs = wsAspectDefs.concat(coreAspectDefs).concat(scopeAspectDefs);
+    const allDefs = wsAspectDefs.concat(coreAspectDefs).concat(installedAspectDefs);
     const idsToFilter = idsToResolve.map((idStr) => ComponentID.fromString(idStr));
     const filteredDefs = this.filterAspectDefs(allDefs, idsToFilter, coreAspectsIds, runtimeName, mergedOpts);
     return filteredDefs;
@@ -428,31 +423,17 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
     }
   }
 
-  private async groupIdsByWorkspaceAndScope(
-    ids: ComponentID[]
-  ): Promise<{ workspaceIds: ComponentID[]; scopeIds: ComponentID[] }> {
-    const workspaceIds: ComponentID[] = [];
-    const scopeIds: ComponentID[] = [];
-    await Promise.all(
-      ids.map(async (id) => {
-        const existOnWorkspace = await this.workspace.hasId(id);
-        existOnWorkspace ? workspaceIds.push(id) : scopeIds.push(id);
-      })
-    );
-    return { workspaceIds, scopeIds };
-  }
-
-  private async groupComponentsByWorkspaceAndScope(
+  private async groupComponentsByWorkspaceExistence(
     components: Component[]
-  ): Promise<{ workspaceComps: Component[]; scopeComps: Component[] }> {
+  ): Promise<{ workspaceComps: Component[]; nonWorkspaceComps: Component[] }> {
     const workspaceComps: Component[] = [];
-    const scopeComps: Component[] = [];
+    const nonWorkspaceComps: Component[] = [];
     await Promise.all(
       components.map(async (component) => {
         const existOnWorkspace = await this.workspace.hasId(component.id);
-        existOnWorkspace ? workspaceComps.push(component) : scopeComps.push(component);
+        existOnWorkspace ? workspaceComps.push(component) : nonWorkspaceComps.push(component);
       })
     );
-    return { workspaceComps, scopeComps };
+    return { workspaceComps, nonWorkspaceComps };
   }
 }
