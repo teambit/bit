@@ -231,6 +231,7 @@ export async function install(
     preferFrozenLockfile: true,
     pruneLockfileImporters: true,
     modulesCacheMaxAge: 0,
+    neverBuiltDependencies: ['core-js'],
     registries: registriesMap,
     rawConfig: authConfig,
     hooks: { readPackage },
