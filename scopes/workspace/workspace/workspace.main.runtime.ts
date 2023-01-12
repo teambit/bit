@@ -22,7 +22,7 @@ import {
   OnMultipleComponentsAdd,
 } from './on-component-events';
 import { WorkspaceAspect } from './workspace.aspect';
-import workspaceProvider, { OnAspectsResolve, OnPreWatch } from './workspace.provider';
+import workspaceProvider, { OnAspectsResolve, OnPreWatch, OnRootAspectAdded } from './workspace.provider';
 
 export const WorkspaceMain = {
   name: EXT_NAME,
@@ -50,6 +50,7 @@ export const WorkspaceMain = {
     Slot.withType<OnMultipleComponentsAdd>(),
     Slot.withType<OnPreWatch>(),
     Slot.withType<OnAspectsResolve>(),
+    Slot.withType<OnRootAspectAdded>(),
   ],
   provider: workspaceProvider,
   defineRuntime: 'browser',

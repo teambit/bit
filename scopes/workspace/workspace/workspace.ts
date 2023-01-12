@@ -90,6 +90,8 @@ import {
   OnMultipleComponentsAddSlot,
   OnPreWatch,
   OnPreWatchSlot,
+  OnRootAspectAdded,
+  OnRootAspectAddedSlot,
 } from './workspace.provider';
 import { WorkspaceComponentLoader } from './workspace-component/workspace-component-loader';
 import { GraphFromFsBuilder, ShouldLoadFunc } from './build-graph-from-fs';
@@ -209,6 +211,8 @@ export class Workspace implements ComponentFactory {
 
     private onAspectsResolveSlot: OnAspectsResolveSlot,
 
+    private onRootAspectAddedSlot: OnRootAspectAddedSlot,
+
     private graphql: GraphqlMain
   ) {
     this.componentLoadedSelfAsAspects = createInMemoryCache({ maxSize: getMaxSizeForComponents() });
@@ -293,6 +297,11 @@ export class Workspace implements ComponentFactory {
 
   registerOnAspectsResolve(onAspectsResolveFunc: OnAspectsResolve) {
     this.onAspectsResolveSlot.register(onAspectsResolveFunc);
+    return this;
+  }
+  
+  registerOnRootAspectAdded(onRootAspectAddedFunc: OnRootAspectAdded) {
+    this.onRootAspectAddedSlot.register(onRootAspectAddedFunc);
     return this;
   }
 
@@ -1597,7 +1606,8 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
       this.dependencyResolver,
       this.logger,
       this.harmony,
-      this.onAspectsResolveSlot
+      this.onAspectsResolveSlot,
+      this.onRootAspectAddedSlot
     );
     return workspaceAspectsLoader;
   }

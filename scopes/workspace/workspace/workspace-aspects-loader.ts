@@ -26,13 +26,13 @@ import { ConfigMain } from '@teambit/config';
 import { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { ShouldLoadFunc } from './build-graph-from-fs';
 import type { Workspace } from './workspace';
-import { OnAspectsResolve, OnAspectsResolveSlot } from './workspace.provider';
+import { OnAspectsResolve, OnAspectsResolveSlot, OnRootAspectAdded, OnRootAspectAddedSlot } from './workspace.provider';
 
 export type GetConfiguredUserAspectsPackagesOptions = {
   externalsOnly?: boolean;
 };
 
-export type AspectPackage = {packageName: string, version: string};
+export type AspectPackage = { packageName: string; version: string };
 
 export class WorkspaceAspectsLoader {
   private consumer: Consumer;
@@ -45,7 +45,8 @@ export class WorkspaceAspectsLoader {
     private dependencyResolver: DependencyResolverMain,
     private logger: Logger,
     private harmony: Harmony,
-    private onAspectsResolveSlot: OnAspectsResolveSlot
+    private onAspectsResolveSlot: OnAspectsResolveSlot,
+    private onRootAspectAddedSlot: OnRootAspectAddedSlot
   ) {
     this.consumer = this.workspace.consumer;
     this.resolvedInstalledAspects = new Map();
@@ -72,7 +73,7 @@ needed-for: ${neededFor || '<unknown>'}`);
     const aspectsDefs = await this.resolveAspects(undefined, componentIds, {
       excludeCore: true,
       requestedOnly: false,
-      throwOnError
+      throwOnError,
     });
     const requireableComponents = this.aspectDefsToRequireableComponents(aspectsDefs);
     const manifests = await this.aspectLoader.getManifestsFromRequireableExtensions(
@@ -156,7 +157,7 @@ needed-for: ${neededFor || '<unknown>'}`);
 
     const installedAspectDefs = await this.aspectLoader.resolveAspects(
       nonWorkspaceComps,
-      this.getInstalledAspectResolver(graph, userAspectsIds, runtimeName, {throwOnError: opts?.throwOnError ?? false})
+      this.getInstalledAspectResolver(graph, userAspectsIds, runtimeName, { throwOnError: opts?.throwOnError ?? false })
     );
 
     let coreAspectDefs = await Promise.all(
@@ -180,15 +181,21 @@ needed-for: ${neededFor || '<unknown>'}`);
   }
 
   async use(aspectIdStr: string): Promise<string> {
-    const aspectId = await this.workspace.resolveComponentId(aspectIdStr);
-    let aspectIdToAdd = aspectId.toStringWithoutVersion();
+    let aspectId = await this.workspace.resolveComponentId(aspectIdStr);
     const inWs = await this.workspace.hasId(aspectId);
+    let aspectIdToAdd = aspectId.toStringWithoutVersion();
+
+    let aspectsComponent;
+    // let aspectPackage;
     if (!inWs) {
       const aspectsComponents = await this.importAndGetAspects([aspectId]);
-      if (aspectsComponents[0]){
-        aspectIdToAdd = aspectsComponents[0].id.toString();
-      } 
+      if (aspectsComponents[0]) {
+        aspectsComponent = aspectsComponents[0];
+        aspectId = aspectsComponent.id;
+        aspectIdToAdd = aspectId.toString();
+      }
     }
+
     const config = this.harmony.get<ConfigMain>('teambit.harmony/config').workspaceConfig;
     if (!config) {
       throw new Error(`use() unable to get the workspace config`);
@@ -202,6 +209,8 @@ needed-for: ${neededFor || '<unknown>'}`);
       }
     );
     await config.write();
+    this.aspectLoader.addInMemoryConfiguredAspect(aspectIdToAdd);
+    await this.runOnRootAspectAddedFunctions(aspectId, inWs);
     return aspectIdToAdd;
   }
 
@@ -221,7 +230,7 @@ needed-for: ${neededFor || '<unknown>'}`);
     const packages = componentsToGetPackages.map((aspectComponent) => {
       const packageName = this.dependencyResolver.getPackageName(aspectComponent);
       const version = aspectComponent.id.version || '*';
-      return {packageName, version};
+      return { packageName, version };
     });
     return packages;
   }
@@ -351,6 +360,22 @@ needed-for: ${neededFor || '<unknown>'}`);
     return aspectsResolveFunctions;
   }
 
+  private async runOnRootAspectAddedFunctions(aspectsId: ComponentID, inWs: boolean): Promise<void> {
+    const funcs = this.getOnRootAspectAddedFunctions();
+    await pMapSeries(funcs, async (func) => {
+      try {
+        await func(aspectsId, inWs);
+      } catch (err) {
+        this.logger.error('failed running onRootAspectAdded function', err);
+      }
+    });
+  }
+
+  private getOnRootAspectAddedFunctions(): OnRootAspectAdded[] {
+    const RootAspectAddedFunctions = this.onRootAspectAddedSlot.values();
+    return RootAspectAddedFunctions;
+  }
+
   /**
    * This will return a resolver that knows to resolve aspects which are not part of the workspace.
    * means aspects that does not exist in the bitmap file
@@ -364,7 +389,7 @@ needed-for: ${neededFor || '<unknown>'}`);
     graph: Graph<Component, string>,
     rootIds: string[],
     runtimeName?: string,
-    opts: {throwOnError: boolean} = {throwOnError: false}
+    opts: { throwOnError: boolean } = { throwOnError: false }
   ): AspectResolver {
     const installedAspectsResolver = async (component: Component): Promise<ResolvedAspect | undefined> => {
       const compStringId = component.id._legacy.toString();
@@ -394,7 +419,7 @@ needed-for: ${neededFor || '<unknown>'}`);
     aspectComponent: Component,
     rootIds: string[],
     graph: Graph<Component, string>,
-    opts: {throwOnError: boolean} = {throwOnError: false}
+    opts: { throwOnError: boolean } = { throwOnError: false }
   ): string | null | undefined {
     const aspectStringId = aspectComponent.id._legacy.toString();
     if (this.resolvedInstalledAspects.has(aspectStringId)) {
@@ -418,12 +443,14 @@ needed-for: ${neededFor || '<unknown>'}`);
       const localPath = findRoot(resolvedPath);
       this.resolvedInstalledAspects.set(aspectStringId, localPath);
       return localPath;
-    } catch (error: any){
+    } catch (error: any) {
       this.resolvedInstalledAspects.set(aspectStringId, null);
-      if (opts.throwOnError){
+      if (opts.throwOnError) {
         throw error;
       }
-      this.logger.consoleWarning(`failed resolving aspect ${aspectStringId} from ${parentPath}, error: ${error.message}`);
+      this.logger.consoleWarning(
+        `failed resolving aspect ${aspectStringId} from ${parentPath}, error: ${error.message}`
+      );
       return undefined;
     }
   }

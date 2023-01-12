@@ -455,6 +455,11 @@ export class InstallMain {
     return ComponentMap.as<string>(components, (component) => this.workspace.componentDir(component.id));
   }
 
+  private async onRootAspectAddedSubscriber(_aspectId: ComponentID, inWs: boolean): Promise<void> {
+    if (!inWs) {
+      await this.install();
+    }
+  }
   private async onAspectsResolveSubscriber(aspectComponents: Component[]): Promise<void> {
     let needLink = false;
     let needInstall = false;
@@ -544,6 +549,7 @@ export class InstallMain {
     ];
     // For now do not automate installation during aspect resolving
     // workspace.registerOnAspectsResolve(installExt.onAspectsResolveSubscriber.bind(installExt));
+    workspace.registerOnRootAspectAdded(installExt.onRootAspectAddedSubscriber.bind(installExt));
     cli.register(...commands);
     if (dependencyResolver.hasRootComponents()) {
       workspace.registerOnMultipleComponentsAdd(async () => {

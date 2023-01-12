@@ -2,7 +2,7 @@ import { PubsubMain } from '@teambit/pubsub';
 import type { AspectLoaderMain } from '@teambit/aspect-loader';
 import { BundlerMain } from '@teambit/bundler';
 import { CLIMain, CommandList } from '@teambit/cli';
-import type { ComponentMain, Component } from '@teambit/component';
+import type { ComponentMain, Component, ComponentID } from '@teambit/component';
 import { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { EnvsMain } from '@teambit/envs';
 import { GraphqlMain } from '@teambit/graphql';
@@ -71,6 +71,8 @@ export type OnPreWatchSlot = SlotRegistry<OnPreWatch>;
 export type OnAspectsResolve = (aspectsComponents: Component[]) => Promise<void>;
 export type OnAspectsResolveSlot = SlotRegistry<OnAspectsResolve>;
 
+export type OnRootAspectAdded = (aspectsId: ComponentID, inWs: boolean) => Promise<void>;
+export type OnRootAspectAddedSlot = SlotRegistry<OnRootAspectAdded>;
 
 export default async function provideWorkspace(
   [
@@ -97,6 +99,7 @@ export default async function provideWorkspace(
     onMultipleComponentsAddSlot,
     onPreWatchSlot,
     onAspectsResolveSlot,
+    onRootAspectAddedSlot,
   ]: [
     OnComponentLoadSlot,
     OnComponentChangeSlot,
@@ -104,7 +107,8 @@ export default async function provideWorkspace(
     OnComponentRemoveSlot,
     OnMultipleComponentsAddSlot,
     OnPreWatchSlot,
-    OnAspectsResolveSlot
+    OnAspectsResolveSlot,
+    OnRootAspectAddedSlot
   ],
   harmony: Harmony
 ) {
@@ -133,6 +137,7 @@ export default async function provideWorkspace(
     onMultipleComponentsAddSlot,
     onPreWatchSlot,
     onAspectsResolveSlot,
+    onRootAspectAddedSlot,
     graphql
   );
 

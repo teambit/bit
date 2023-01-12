@@ -1,3 +1,4 @@
+import { Config, ConfigOptions } from '@teambit/harmony/dist/harmony-config';
 import { join } from 'path';
 import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
 import { BitId } from '@teambit/legacy-bit-id';
@@ -92,6 +93,8 @@ export type MainAspect = {
 };
 
 export class AspectLoaderMain {
+  private inMemoryConfiguredAspects: string[] = [];
+
   constructor(
     private logger: Logger,
     private envs: EnvsMain,
@@ -208,11 +211,24 @@ export class AspectLoaderMain {
   }
 
   /**
+   * This is used when adding aspects to workspace.jsonc during the process (like in bit use command)
+   * and we want to make sure that follow operation (like bit install) will recognize those aspects
+   * but the harmony config is already in memory.
+   * Probably a better to do it is to make sure we can re-load the config somehow
+   * ideally by adding the config class in harmony a reload API
+   * @param aspectId 
+   */
+  addInMemoryConfiguredAspect(aspectId: string): void {
+    this.inMemoryConfiguredAspects.push(aspectId);
+  }
+
+  /**
    * get all the configured aspects in the config file (workspace.jsonc / bit.jsonc)
    */
   getConfiguredAspects(): string[] {
     const configuredAspects = Array.from(this.harmony.config.raw.keys());
-    return configuredAspects;
+    const iMemoryConfiguredAspects = this.inMemoryConfiguredAspects;
+    return configuredAspects.concat(iMemoryConfiguredAspects);
   }
   getNotLoadedConfiguredExtensions() {
     const configuredAspects = this.getConfiguredAspects();
