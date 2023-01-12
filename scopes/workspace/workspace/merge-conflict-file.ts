@@ -1,8 +1,8 @@
+import { MergeConfigFilename } from '@teambit/legacy/dist/constants';
 import path from 'path';
 import fs from 'fs-extra';
 import { MergeConfigConflict } from './exceptions/merge-config-conflict';
 
-const MergeConfigFilename = 'merge-conflict';
 const idPrefix = `[*]`;
 const idDivider = '-'.repeat(80);
 type ConflictPerId = { [compIdWithoutVersion: string]: string };
