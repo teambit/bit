@@ -1,6 +1,4 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import path from 'path';
-import fs from 'fs-extra';
 import WorkspaceAspect, { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import R from 'ramda';
 import { Consumer } from '@teambit/legacy/dist/consumer';
@@ -41,7 +39,6 @@ import threeWayMerge, {
 import { NoCommonSnap } from '@teambit/legacy/dist/scope/exceptions/no-common-snap';
 import { CheckoutAspect, CheckoutMain } from '@teambit/checkout';
 import { ComponentID } from '@teambit/component-id';
-import { MergeConfigFilename } from '@teambit/legacy/dist/constants';
 import { SnapsDistance } from '@teambit/legacy/dist/scope/component-ops/snaps-distance';
 import { InstallMain, InstallAspect } from '@teambit/install';
 import { MergeCmd } from './merge-cmd';
@@ -293,29 +290,15 @@ export class MergingMain {
   }
 
   private async generateConfigMergeConflictFileForAll(allConfigMerge: ConfigMergeResult[]) {
-    let conflictExists = false;
-    let content = `/* Resolve configuration conflicts per component and make sure the Component ID remain in place */
-[
-`;
+    const configMergeFile = this.workspace.getConflictMergeFile();
     allConfigMerge.forEach((configMerge) => {
       const conflict = configMerge.generateMergeConflictFile();
       if (!conflict) return;
-      conflictExists = true;
-      content += `// ${'*'.repeat(60)}\n`;
-      content += `// ${'*'.repeat(7)} ${configMerge.compIdStr}\n`;
-      content += `// ${'*'.repeat(60)}\n`;
-      content += conflict;
-      content += ',\n';
+      configMergeFile.addConflict(configMerge.compIdStr, conflict);
     });
-    if (!conflictExists) return;
-    // remove the last comma, it's not needed
-    const pos = content.lastIndexOf(',');
-    content = content.substring(0, pos) + content.substring(pos + 1);
-
-    content += `
-]`;
-
-    await fs.writeFile(path.join(this.workspace.consumer.getPath(), MergeConfigFilename), content);
+    if (configMergeFile.hasConflict()) {
+      await configMergeFile.write();
+    }
   }
 
   /**
