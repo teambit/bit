@@ -1,4 +1,3 @@
-import { Config, ConfigOptions } from '@teambit/harmony/dist/harmony-config';
 import { join } from 'path';
 import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
 import { BitId } from '@teambit/legacy-bit-id';
