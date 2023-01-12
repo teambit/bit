@@ -224,7 +224,7 @@ the reason is that the refactor changes the components using ${sourceId.toString
   private async extractDeps(component: Component) {
     const deps = await this.dependencyResolver.getDependencies(component);
     const excludePackages = ['@teambit/legacy'];
-    const excludeCompIds = this.dependencyResolver.getCompIdsThatShouldNeverBeInPolicy();
+    const excludeCompIds = this.dependencyResolver.getCompIdsThatShouldNotBeInPolicy();
     return deps
       .filter((dep) => dep.source === 'auto')
       .filter((dep) => {

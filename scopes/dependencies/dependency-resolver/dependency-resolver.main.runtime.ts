@@ -665,10 +665,12 @@ export class DependencyResolverMain {
   }
 
   /**
-   * these ids should not be in the dependencyResolver policy.
+   * these ids should not be in the dependencyResolver policy normally.
+   * one exception is bit itself, which needs teambit.harmony/harmony in the dependencies.
+   *
    * returns component-ids string without a version.
    */
-  getCompIdsThatShouldNeverBeInPolicy(): string[] {
+  getCompIdsThatShouldNotBeInPolicy(): string[] {
     return [...getAllCoreAspectsIds(), 'teambit.harmony/harmony'];
   }
 
