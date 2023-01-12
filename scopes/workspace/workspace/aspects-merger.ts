@@ -267,7 +267,7 @@ export class AspectsMerger {
    * Load all unloaded extensions from a list
    * @param extensions list of extensions with config to load
    */
-  async loadExtensions(
+  private async loadExtensions(
     extensions: ExtensionDataList,
     originatedFrom?: ComponentID,
     throwOnError = false
