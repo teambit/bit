@@ -1,5 +1,5 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
+import { ComponentDependency, DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { BitId } from '@teambit/legacy-bit-id';
 import WorkspaceAspect, { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import { BitIds } from '@teambit/legacy/dist/bit-id';
@@ -223,8 +223,17 @@ the reason is that the refactor changes the components using ${sourceId.toString
 
   private async extractDeps(component: Component) {
     const deps = await this.dependencyResolver.getDependencies(component);
+    const excludePackages = ['@teambit/legacy'];
+    const excludeCompIds = this.dependencyResolver.getCompIdsThatShouldNeverBeInPolicy();
     return deps
       .filter((dep) => dep.source === 'auto')
+      .filter((dep) => {
+        if (dep instanceof ComponentDependency) {
+          const compIdStr = dep.componentId.toStringWithoutVersion();
+          return !excludeCompIds.includes(compIdStr);
+        }
+        return !excludePackages.includes(dep.id);
+      })
       .map((dep) => ({
         dependencyId: dep.getPackageName?.() || dep.id,
         lifecycleType: dep.lifecycle === 'dev' ? 'runtime' : dep.lifecycle,

@@ -1,6 +1,7 @@
 import mapSeries from 'p-map-series';
 import { parse } from 'comment-json';
 import { MainRuntime } from '@teambit/cli';
+import { getAllCoreAspectsIds } from '@teambit/bit';
 import ComponentAspect, { Component, ComponentMap, ComponentMain, IComponent, ComponentID } from '@teambit/component';
 import type { ConfigMain } from '@teambit/config';
 import { join } from 'path';
@@ -661,6 +662,14 @@ export class DependencyResolverMain {
     const { networkConcurrency } = await this.getNetworkConfig();
     // TODO: we should somehow pass the cache root dir to the package manager constructor
     return new DependencyVersionResolver(packageManager, cacheRootDir, networkConcurrency);
+  }
+
+  /**
+   * these ids should not be in the dependencyResolver policy.
+   * returns component-ids string without a version.
+   */
+  getCompIdsThatShouldNeverBeInPolicy(): string[] {
+    return [...getAllCoreAspectsIds(), 'teambit.harmony/harmony'];
   }
 
   /**
