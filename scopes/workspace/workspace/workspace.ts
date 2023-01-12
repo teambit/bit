@@ -571,15 +571,7 @@ export class Workspace implements ComponentFactory {
   }
 
   async getConfiguredUserAspectsPackages(options: GetConfiguredUserAspectsPackagesOptions): Promise<AspectPackage[]> {
-    const workspaceAspectsLoader = new WorkspaceAspectsLoader(
-      this,
-      this.aspectLoader,
-      this.envs,
-      this.dependencyResolver,
-      this.logger,
-      this.harmony,
-      this.onAspectsResolveSlot
-    );
+    const workspaceAspectsLoader = this.getWorkspaceAspectsLoader();
     return workspaceAspectsLoader.getConfiguredUserAspectsPackages(options);
   }
 
@@ -930,26 +922,8 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
   }
 
   async use(aspectIdStr: string): Promise<string> {
-    const aspectId = await this.resolveComponentId(aspectIdStr);
-    let aspectIdToAdd = aspectId.toStringWithoutVersion();
-    if (!(await this.hasId(aspectId))) {
-      const loadedIds = await this.scope.loadAspects([aspectIdStr], true, 'bit use command');
-      if (loadedIds[0]) aspectIdToAdd = loadedIds[0];
-    }
-    const config = this.harmony.get<ConfigMain>('teambit.harmony/config').workspaceConfig;
-    if (!config) {
-      throw new Error(`use() unable to get the workspace config`);
-    }
-    config.setExtension(
-      aspectIdToAdd,
-      {},
-      {
-        overrideExisting: false,
-        ignoreVersion: false,
-      }
-    );
-    await config.write();
-    return aspectIdToAdd;
+    const workspaceAspectsLoader = this.getWorkspaceAspectsLoader();
+    return workspaceAspectsLoader.use(aspectIdStr);
   }
 
   /**
@@ -1547,15 +1521,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
    * keep in mind that the graph may have circles.
    */
   async loadAspects(ids: string[] = [], throwOnError = false, neededFor?: string): Promise<string[]> {
-    const workspaceAspectsLoader = new WorkspaceAspectsLoader(
-      this,
-      this.aspectLoader,
-      this.envs,
-      this.dependencyResolver,
-      this.logger,
-      this.harmony,
-      this.onAspectsResolveSlot
-    );
+    const workspaceAspectsLoader = this.getWorkspaceAspectsLoader();
     return workspaceAspectsLoader.loadAspects(ids, throwOnError, neededFor);
   }
 
@@ -1585,15 +1551,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     componentIds?: ComponentID[],
     opts?: ResolveAspectsOptions
   ): Promise<AspectDefinition[]> {
-    const workspaceAspectsLoader = new WorkspaceAspectsLoader(
-      this,
-      this.aspectLoader,
-      this.envs,
-      this.dependencyResolver,
-      this.logger,
-      this.harmony,
-      this.onAspectsResolveSlot
-    );
+    const workspaceAspectsLoader = this.getWorkspaceAspectsLoader();
     return workspaceAspectsLoader.resolveAspects(runtimeName, componentIds, opts);
   }
 
@@ -1606,15 +1564,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     originatedFrom?: ComponentID,
     throwOnError = false
   ): Promise<void> {
-    const workspaceAspectsLoader = new WorkspaceAspectsLoader(
-      this,
-      this.aspectLoader,
-      this.envs,
-      this.dependencyResolver,
-      this.logger,
-      this.harmony,
-      this.onAspectsResolveSlot
-    );
+    const workspaceAspectsLoader = this.getWorkspaceAspectsLoader();
     return workspaceAspectsLoader.loadExtensions(extensions, originatedFrom, throwOnError);
   }
 
@@ -1637,6 +1587,19 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     }
 
     return cacheDir;
+  }
+
+  private getWorkspaceAspectsLoader(): WorkspaceAspectsLoader{
+    const workspaceAspectsLoader = new WorkspaceAspectsLoader(
+      this,
+      this.aspectLoader,
+      this.envs,
+      this.dependencyResolver,
+      this.logger,
+      this.harmony,
+      this.onAspectsResolveSlot
+    );
+    return workspaceAspectsLoader;
   }
 
   /**

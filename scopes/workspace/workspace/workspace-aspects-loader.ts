@@ -179,6 +179,32 @@ needed-for: ${neededFor || '<unknown>'}`);
     return filteredDefs;
   }
 
+  async use(aspectIdStr: string): Promise<string> {
+    const aspectId = await this.workspace.resolveComponentId(aspectIdStr);
+    let aspectIdToAdd = aspectId.toStringWithoutVersion();
+    const inWs = await this.workspace.hasId(aspectId);
+    if (!inWs) {
+      const aspectsComponents = await this.importAndGetAspects([aspectId]);
+      if (aspectsComponents[0]){
+        aspectIdToAdd = aspectsComponents[0].id.toString();
+      } 
+    }
+    const config = this.harmony.get<ConfigMain>('teambit.harmony/config').workspaceConfig;
+    if (!config) {
+      throw new Error(`use() unable to get the workspace config`);
+    }
+    config.setExtension(
+      aspectIdToAdd,
+      {},
+      {
+        overrideExisting: false,
+        ignoreVersion: false,
+      }
+    );
+    await config.write();
+    return aspectIdToAdd;
+  }
+
   async getConfiguredUserAspectsPackages(
     options: GetConfiguredUserAspectsPackagesOptions = {}
   ): Promise<AspectPackage[]> {
