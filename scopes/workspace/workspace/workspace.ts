@@ -81,6 +81,8 @@ import { WorkspaceExtConfig } from './types';
 import { Watcher, WatchOptions } from './watch/watcher';
 import { ComponentStatus } from './workspace-component/component-status';
 import {
+  OnAspectsResolve,
+  OnAspectsResolveSlot,
   OnComponentAddSlot,
   OnComponentChangeSlot,
   OnComponentLoadSlot,
@@ -95,7 +97,7 @@ import { BitMap } from './bit-map';
 import { WorkspaceAspect } from './workspace.aspect';
 import { GraphIdsFromFsBuilder } from './build-graph-ids-from-fs';
 import { MergeConfigConflict } from './exceptions/merge-config-conflict';
-import { WorkspaceAspectsLoader } from './workspace-aspects-loader';
+import { AspectPackage, GetConfiguredUserAspectsPackagesOptions, WorkspaceAspectsLoader } from './workspace-aspects-loader';
 
 export type EjectConfResult = {
   configPath: string;
@@ -205,6 +207,8 @@ export class Workspace implements ComponentFactory {
 
     private onPreWatchSlot: OnPreWatchSlot,
 
+    private onAspectsResolveSlot: OnAspectsResolveSlot,
+
     private graphql: GraphqlMain
   ) {
     this.componentLoadedSelfAsAspects = createInMemoryCache({ maxSize: getMaxSizeForComponents() });
@@ -284,6 +288,11 @@ export class Workspace implements ComponentFactory {
 
   registerOnPreWatch(onPreWatchFunc: OnPreWatch) {
     this.onPreWatchSlot.register(onPreWatchFunc);
+    return this;
+  }
+
+  registerOnAspectsResolve(onAspectsResolveFunc: OnAspectsResolve) {
+    this.onAspectsResolveSlot.register(onAspectsResolveFunc);
     return this;
   }
 
@@ -559,6 +568,19 @@ export class Workspace implements ComponentFactory {
     this.componentLoadedSelfAsAspects.set(component.id.toString(), false);
 
     return component;
+  }
+
+  async getConfiguredUserAspectsPackages(options: GetConfiguredUserAspectsPackagesOptions): Promise<AspectPackage[]> {
+    const workspaceAspectsLoader = new WorkspaceAspectsLoader(
+      this,
+      this.aspectLoader,
+      this.envs,
+      this.dependencyResolver,
+      this.logger,
+      this.harmony,
+      this.onAspectsResolveSlot
+    );
+    return workspaceAspectsLoader.getConfiguredUserAspectsPackages(options);
   }
 
   // TODO: @gilad we should refactor this asap into to the envs aspect.
@@ -1531,7 +1553,8 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
       this.envs,
       this.dependencyResolver,
       this.logger,
-      this.harmony
+      this.harmony,
+      this.onAspectsResolveSlot
     );
     return workspaceAspectsLoader.loadAspects(ids, throwOnError, neededFor);
   }
@@ -1568,7 +1591,8 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
       this.envs,
       this.dependencyResolver,
       this.logger,
-      this.harmony
+      this.harmony,
+      this.onAspectsResolveSlot
     );
     return workspaceAspectsLoader.resolveAspects(runtimeName, componentIds, opts);
   }
@@ -1588,7 +1612,8 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
       this.envs,
       this.dependencyResolver,
       this.logger,
-      this.harmony
+      this.harmony,
+      this.onAspectsResolveSlot
     );
     return workspaceAspectsLoader.loadExtensions(extensions, originatedFrom, throwOnError);
   }

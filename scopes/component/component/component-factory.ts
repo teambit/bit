@@ -9,7 +9,9 @@ import { Component, InvalidComponent } from './component';
 import { State } from './state';
 import { Snap } from './snap';
 
-export type ResolveAspectsOptions = FilterAspectsOptions;
+export type ResolveAspectsOptions = FilterAspectsOptions & {
+  throwOnError?: boolean
+};
 
 export type FilterAspectsOptions = {
   /**

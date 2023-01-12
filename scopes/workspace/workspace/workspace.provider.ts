@@ -68,6 +68,10 @@ export type OnMultipleComponentsAddSlot = SlotRegistry<OnMultipleComponentsAdd>;
 export type OnPreWatch = (components: Component[], watchOpts: WatchOptions) => Promise<void>;
 export type OnPreWatchSlot = SlotRegistry<OnPreWatch>;
 
+export type OnAspectsResolve = (aspectsComponents: Component[]) => Promise<void>;
+export type OnAspectsResolveSlot = SlotRegistry<OnAspectsResolve>;
+
+
 export default async function provideWorkspace(
   [
     pubsub,
@@ -92,13 +96,15 @@ export default async function provideWorkspace(
     onComponentRemoveSlot,
     onMultipleComponentsAddSlot,
     onPreWatchSlot,
+    onAspectsResolveSlot,
   ]: [
     OnComponentLoadSlot,
     OnComponentChangeSlot,
     OnComponentAddSlot,
     OnComponentRemoveSlot,
     OnMultipleComponentsAddSlot,
-    OnPreWatchSlot
+    OnPreWatchSlot,
+    OnAspectsResolveSlot
   ],
   harmony: Harmony
 ) {
@@ -126,6 +132,7 @@ export default async function provideWorkspace(
     onComponentRemoveSlot,
     onMultipleComponentsAddSlot,
     onPreWatchSlot,
+    onAspectsResolveSlot,
     graphql
   );
 

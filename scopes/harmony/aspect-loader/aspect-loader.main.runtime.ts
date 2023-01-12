@@ -37,7 +37,7 @@ export type AspectDescriptor = {
   icon?: string;
 };
 
-export type AspectResolver = (component: Component) => Promise<ResolvedAspect>;
+export type AspectResolver = (component: Component) => Promise<ResolvedAspect | undefined>;
 
 export type ResolvedAspect = {
   aspectPath: string;
@@ -207,8 +207,15 @@ export class AspectLoaderMain {
     }
   }
 
-  getNotLoadedConfiguredExtensions() {
+  /**
+   * get all the configured aspects in the config file (workspace.jsonc / bit.jsonc)
+   */
+  getConfiguredAspects(): string[] {
     const configuredAspects = Array.from(this.harmony.config.raw.keys());
+    return configuredAspects;
+  }
+  getNotLoadedConfiguredExtensions() {
+    const configuredAspects = this.getConfiguredAspects();
     const loadedExtensions = this.harmony.extensionsIds;
     const extensionsToLoad = difference(configuredAspects, loadedExtensions);
     return extensionsToLoad;
@@ -275,6 +282,7 @@ export class AspectLoaderMain {
   async resolveAspects(components: Component[], resolver: AspectResolver): Promise<AspectDefinition[]> {
     const promises = components.map(async (component) => {
       const resolvedAspect = await resolver(component);
+      if (!resolvedAspect) return undefined;
       return new AspectDefinition(
         resolvedAspect.aspectPath,
         resolvedAspect.aspectFilePath,
@@ -285,7 +293,7 @@ export class AspectLoaderMain {
 
     const aspectDefs = await Promise.all(promises);
     // return aspectDefs.filter((def) => def.runtimePath);
-    return aspectDefs;
+    return compact(aspectDefs);
   }
 
   private _mainAspect: MainAspect;
