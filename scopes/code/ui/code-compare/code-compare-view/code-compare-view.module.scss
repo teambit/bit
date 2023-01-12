@@ -188,3 +188,16 @@
     }
   }
 }
+
+.codeCompareTabRight {
+  display: flex;
+  align-items: center;
+  font-size: 12px;
+
+  > * {
+    margin-right: 4px;
+  }
+  > :last-child() {
+    margin-right: 0px;
+  }
+}

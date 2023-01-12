@@ -81,7 +81,7 @@ function CompareFileTreeNode(props: TreeNodeProps<any>) {
   const { node } = props;
   const { id } = node;
   const fileTreeContext = useFileTreeContext();
-  const { selected } = useContext(TreeContext);
+  const { selected, onSelect } = useContext(TreeContext);
   const href = fileTreeContext?.getHref?.(node);
   const widgets = fileTreeContext?.widgets;
   const icon = fileTreeContext?.getIcon?.(node);
@@ -97,6 +97,7 @@ function CompareFileTreeNode(props: TreeNodeProps<any>) {
         isActive={isActive}
         icon={icon}
         widgets={widgets}
+        onClick={onSelect && ((e) => onSelect(node.id, e))}
       />
     );
   }

@@ -72,7 +72,13 @@ export function CodeCompare({ fileIconSlot, className }: CodeCompareProps) {
       </Pane>
       <HoverSplitter className={styles.splitter}></HoverSplitter>
       <Pane className={classNames(styles.right, styles.dark, !isSidebarOpen && styles.collapsed)}>
-        <CodeCompareView fileName={selectedFile} files={fileTree} getHref={getHref} onTabClicked={hook?.onClick} />
+        <CodeCompareView
+          widgets={[Widget]}
+          fileName={selectedFile}
+          files={fileTree}
+          getHref={getHref}
+          onTabClicked={hook?.onClick}
+        />
       </Pane>
     </SplitPane>
   );

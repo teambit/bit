@@ -1,5 +1,5 @@
-import React, { HTMLAttributes, useMemo, useRef, useState } from 'react';
-import { BlockSkeleton, LineSkeleton } from '@teambit/base-ui.loaders.skeleton';
+import React, { HTMLAttributes, useMemo, useRef, useState, ComponentType } from 'react';
+import { LineSkeleton } from '@teambit/base-ui.loaders.skeleton';
 import { DiffEditor, DiffOnMount } from '@monaco-editor/react';
 import { FileIconSlot } from '@teambit/code';
 import flatten from 'lodash.flatten';
@@ -12,6 +12,7 @@ import { FileIconMatch, getFileIcon } from '@teambit/code.ui.utils.get-file-icon
 import { Dropdown } from '@teambit/evangelist.surfaces.dropdown';
 import { Radio } from '@teambit/design.ui.input.radio';
 import { CheckboxItem } from '@teambit/design.inputs.selectors.checkbox-item';
+import { WidgetProps } from '@teambit/ui-foundation.ui.tree.tree-node';
 import styles from './code-compare-view.module.scss';
 
 export type CodeCompareViewProps = {
@@ -20,6 +21,7 @@ export type CodeCompareViewProps = {
   onTabClicked?: (id: string, event?: React.MouseEvent) => void;
   getHref: (node: { id: string }) => string;
   fileIconSlot?: FileIconSlot;
+  widgets?: ComponentType<WidgetProps<any>>[];
 } & HTMLAttributes<HTMLDivElement>;
 
 // a translation list of specific monaco languages that are not the same as their file ending.
@@ -41,6 +43,7 @@ export function CodeCompareView({
   onTabClicked,
   getHref,
   fileIconSlot,
+  widgets,
 }: CodeCompareViewProps) {
   const fileIconMatchers: FileIconMatch[] = useMemo(() => flatten(fileIconSlot?.values()), [fileIconSlot]);
 
@@ -49,7 +52,7 @@ export function CodeCompareView({
     componentCompareContext?.loading || componentCompareContext?.fileCompareDataByName === undefined;
   const comparingLocalChanges = componentCompareContext?.compare?.hasLocalChanges;
 
-  const [ignoreWhitespace, setIgnoreWhitespace] = useState<boolean>(true);
+  const [ignoreWhitespace, setIgnoreWhitespace] = useState<boolean>(false);
   const [view, setView] = useState<CodeCompareView>('inline');
   const [wrap, setWrap] = useState<boolean>(false);
 
@@ -167,6 +170,7 @@ export function CodeCompareView({
           fileIconMatchers={fileIconMatchers}
           onTabClicked={onTabClicked}
           getHref={getHref}
+          widgets={widgets}
         >
           <Dropdown
             className={styles.codeCompareWidgets}
@@ -217,7 +221,6 @@ export function CodeCompareView({
         </CodeCompareNav>
       )}
       {loading && <LineSkeleton className={styles.loader} count={3} />}
-      {/* </div> */}
       <div className={classNames(styles.componentCompareCodeDiffEditorContainer, loading && styles.loading)}>
         {loading ? <CodeCompareViewLoader /> : diffEditor}
       </div>
@@ -236,6 +239,7 @@ function CodeCompareNav({
   onTabClicked,
   getHref,
   children,
+  widgets,
 }: {
   files: string[];
   selectedFile: string;
@@ -243,6 +247,7 @@ function CodeCompareNav({
   getHref: (node: { id: string }) => string;
   onTabClicked?: (id: string, event?: React.MouseEvent) => void;
   children: React.ReactNode;
+  widgets?: ComponentType<WidgetProps<any>>[];
 }) {
   const extractedTabs: [string, NavPlugin][] = files.map((file, index) => {
     const isActive = file === selectedFile;
@@ -262,6 +267,11 @@ function CodeCompareNav({
             <div className={styles.codeCompareTab}>
               <img src={getFileIcon(fileIconMatchers, file)}></img>
               <span>{file}</span>
+              <div className={styles.codeCompareTabRight}>
+                {widgets?.map((Widget, widgetIndex) => (
+                  <Widget key={widgetIndex} node={{ id: file }} />
+                ))}
+              </div>
             </div>
           ),
           ignoreStickyQueryParams: true,
