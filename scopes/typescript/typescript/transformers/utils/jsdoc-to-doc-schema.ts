@@ -21,7 +21,7 @@ import { typeNodeToSchema } from './type-node-to-schema';
 export async function tagParser(
   tag: JSDocTag,
   context: SchemaExtractorContext,
-  formatter: Formatter
+  formatter?: Formatter
 ): Promise<TagSchema> {
   // for some reason, in some cases, if `tag.getSourceFile()` is not provided to the `getText()`, it throws "Cannot read property 'text' of undefined"
 
@@ -70,6 +70,7 @@ export async function tagParser(
       const tagName: TagName | string = tag.tagName.getText(tag.getSourceFile());
       if (tagName === 'example') {
         const comment = getTextOfJSDocComment(tag.comment);
+        if (!formatter) return simpleTag(tag, tagName, context);
         try {
           const formattedComment = comment && (await formatter.formatSnippet(comment));
           return new TagSchema(context.getLocation(tag), tagName, formattedComment);

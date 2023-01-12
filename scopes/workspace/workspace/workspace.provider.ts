@@ -38,6 +38,7 @@ import { PatternCommand } from './pattern.cmd';
 import { EnvsReplaceCmd } from './envs-subcommands/envs-replace.cmd';
 import { ScopeSetCmd } from './scope-subcommands/scope-set.cmd';
 import { UseCmd } from './use.cmd';
+import { EnvsUpdateCmd } from './envs-subcommands/envs-update.cmd';
 
 export type WorkspaceDeps = [
   PubsubMain,
@@ -209,6 +210,7 @@ export default async function provideWorkspace(
   envsCommand?.commands?.push(new EnvsSetCmd(workspace)); // bit envs set
   envsCommand?.commands?.push(new EnvsUnsetCmd(workspace)); // bit envs unset
   envsCommand?.commands?.push(new EnvsReplaceCmd(workspace)); // bit envs replace
+  envsCommand?.commands?.push(new EnvsUpdateCmd(workspace)); // bit envs replace
 
   // add sub-command "set" to scope command.
   const scopeCommand = cli.getCommand('scope');
