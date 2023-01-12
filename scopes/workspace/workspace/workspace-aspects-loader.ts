@@ -19,6 +19,7 @@ import pMapSeries from 'p-map-series';
 import { uniqBy, difference, compact } from 'lodash';
 import { Consumer } from '@teambit/legacy/dist/consumer';
 import { Component, ComponentID, FilterAspectsOptions, ResolveAspectsOptions } from '@teambit/component';
+import { ScopeMain } from '@teambit/scope';
 import { Logger } from '@teambit/logger';
 import { BitError } from '@teambit/bit-error';
 import { EnvsMain } from '@teambit/envs';
@@ -32,6 +33,10 @@ export type GetConfiguredUserAspectsPackagesOptions = {
   externalsOnly?: boolean;
 };
 
+export type WorkspaceLoadAspectsOptions = {
+  useScopeAspectsCapsule?: boolean;
+};
+
 export type AspectPackage = { packageName: string; version: string };
 
 export class WorkspaceAspectsLoader {
@@ -40,6 +45,7 @@ export class WorkspaceAspectsLoader {
 
   constructor(
     private workspace: Workspace,
+    private scope: ScopeMain,
     private aspectLoader: AspectLoaderMain,
     private envs: EnvsMain,
     private dependencyResolver: DependencyResolverMain,
@@ -56,13 +62,23 @@ export class WorkspaceAspectsLoader {
    * load aspects from the workspace and if not exists in the workspace, load from the node_modules.
    * keep in mind that the graph may have circles.
    */
-  async loadAspects(ids: string[] = [], throwOnError = false, neededFor?: string): Promise<string[]> {
+  async loadAspects(
+    ids: string[] = [],
+    throwOnError = false,
+    neededFor?: string,
+    opts: WorkspaceLoadAspectsOptions = {}
+  ): Promise<string[]> {
+    const defaultOpts: WorkspaceLoadAspectsOptions = {
+      useScopeAspectsCapsule: false,
+    };
+    const mergedOpts = { ...defaultOpts, ...opts };
+
     // generate a random callId to be able to identify the call from the logs
     const callId = Math.floor(Math.random() * 1000);
     const loggerPrefix = `[${callId}] loadAspects,`;
     this.logger.info(`${loggerPrefix} loading ${ids.length} aspects.
 ids: ${ids.join(', ')}
-needed-for: ${neededFor || '<unknown>'}`);
+needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts, null, 2)}`);
     const notLoadedIds = ids.filter((id) => !this.aspectLoader.isAspectLoaded(id));
     if (!notLoadedIds.length) return [];
     const coreAspectsStringIds = this.aspectLoader.getCoreAspectIds();
@@ -74,6 +90,7 @@ needed-for: ${neededFor || '<unknown>'}`);
       excludeCore: true,
       requestedOnly: false,
       throwOnError,
+      ...mergedOpts,
     });
     const requireableComponents = this.aspectDefsToRequireableComponents(aspectsDefs);
     const manifests = await this.aspectLoader.getManifestsFromRequireableExtensions(
@@ -118,6 +135,7 @@ needed-for: ${neededFor || '<unknown>'}`);
       excludeCore: false,
       requestedOnly: false,
       filterByRuntime: true,
+      useScopeAspectsCapsule: false,
     };
     const mergedOpts = { ...defaultOpts, ...opts };
     const idsToResolve = componentIds ? componentIds.map((id) => id.toString()) : this.harmony.extensionsIds;
@@ -155,10 +173,21 @@ needed-for: ${neededFor || '<unknown>'}`);
 
     await this.linkIfMissingWorkspaceAspects(wsAspectDefs, workspaceCompsIds);
 
-    const installedAspectDefs = await this.aspectLoader.resolveAspects(
-      nonWorkspaceComps,
-      this.getInstalledAspectResolver(graph, userAspectsIds, runtimeName, { throwOnError: opts?.throwOnError ?? false })
-    );
+    let nonWorkspaceAspectsDefs: AspectDefinition[] = [];
+
+    if (mergedOpts.useScopeAspectsCapsule) {
+      const scopeIds = nonWorkspaceComps.map((c) => c.id);
+      if (scopeIds.length) {
+        nonWorkspaceAspectsDefs = await this.scope.resolveAspects(runtimeName, scopeIds, mergedOpts);
+      }
+    } else {
+      nonWorkspaceAspectsDefs = await this.aspectLoader.resolveAspects(
+        nonWorkspaceComps,
+        this.getInstalledAspectResolver(graph, userAspectsIds, runtimeName, {
+          throwOnError: opts?.throwOnError ?? false,
+        })
+      );
+    }
 
     let coreAspectDefs = await Promise.all(
       coreAspectsIds.map(async (coreId) => {
@@ -174,7 +203,7 @@ needed-for: ${neededFor || '<unknown>'}`);
       });
     }
 
-    const allDefs = wsAspectDefs.concat(coreAspectDefs).concat(installedAspectDefs);
+    const allDefs = wsAspectDefs.concat(coreAspectDefs).concat(nonWorkspaceAspectsDefs);
     const idsToFilter = idsToResolve.map((idStr) => ComponentID.fromString(idStr));
     const filteredDefs = this.filterAspectDefs(allDefs, idsToFilter, coreAspectsIds, runtimeName, mergedOpts);
     return filteredDefs;
@@ -489,10 +518,18 @@ needed-for: ${neededFor || '<unknown>'}`);
   }
 
   /**
-   * Load all unloaded extensions from a list
+   * Load all unloaded extensions from an extension list
+   * this will resolve the extensions from the scope aspects capsules if they are not in the ws
+   * Only use it for component extensions
+   * for workspace/scope root aspect use the load aspects directly
+   * 
+   * The reason we are loading component extensions with "scope aspects capsules" is becasuse for component extensions
+   * we might have the same extension in multiple versions 
+   * (for example I might have 2 components using different versions of the same env)
+   * in such case, I can't install both version into the root of the node_modules so I need to place it somewhere else (capsules)
    * @param extensions list of extensions with config to load
    */
-  async loadExtensions(
+  async loadComponentsExtensions(
     extensions: ExtensionDataList,
     originatedFrom?: ComponentID,
     throwOnError = false
@@ -511,7 +548,7 @@ needed-for: ${neededFor || '<unknown>'}`);
     const loadedExtensions = this.harmony.extensionsIds;
     const extensionsToLoad = difference(extensionsIds, loadedExtensions);
     if (!extensionsToLoad.length) return;
-    await this.loadAspects(extensionsToLoad, throwOnError, originatedFrom?.toString());
+    await this.loadAspects(extensionsToLoad, throwOnError, originatedFrom?.toString(), {useScopeAspectsCapsule: true});
   }
 
   private async isAspect(id: ComponentID) {

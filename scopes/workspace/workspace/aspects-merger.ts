@@ -273,7 +273,7 @@ export class AspectsMerger {
     throwOnError = false
   ): Promise<void> {
     const workspaceAspectsLoader = this.workspace.getWorkspaceAspectsLoader();
-    return workspaceAspectsLoader.loadExtensions(extensions, originatedFrom, throwOnError);
+    return workspaceAspectsLoader.loadComponentsExtensions(extensions, originatedFrom, throwOnError);
   }
   
   /**

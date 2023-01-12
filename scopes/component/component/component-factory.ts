@@ -11,7 +11,12 @@ import { Snap } from './snap';
 
 export type ResolveAspectsOptions = FilterAspectsOptions & {
   throwOnError?: boolean
+  useScopeAspectsCapsule?: boolean
 };
+
+export type LoadAspectsOptions = {
+  [key: string]: any
+}
 
 export type FilterAspectsOptions = {
   /**

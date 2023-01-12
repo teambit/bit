@@ -1339,6 +1339,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
   getWorkspaceAspectsLoader(): WorkspaceAspectsLoader{
     const workspaceAspectsLoader = new WorkspaceAspectsLoader(
       this,
+      this.scope,
       this.aspectLoader,
       this.envs,
       this.dependencyResolver,
