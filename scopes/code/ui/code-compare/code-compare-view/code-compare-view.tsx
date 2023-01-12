@@ -208,12 +208,12 @@ export function CodeCompareView({
               </div>
               <div className={styles.ignoreWhitespaceSettings}>
                 <CheckboxItem checked={ignoreWhitespace} onInputChanged={() => setIgnoreWhitespace((value) => !value)}>
-                  Hide Whitespace
+                  Hide whitespace
                 </CheckboxItem>
               </div>
               <div className={styles.wordWrapSettings}>
                 <CheckboxItem checked={wrap} onInputChanged={() => setWrap((value) => !value)}>
-                  Word Wrap
+                  Word wrap
                 </CheckboxItem>
               </div>
             </div>
