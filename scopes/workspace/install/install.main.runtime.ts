@@ -549,7 +549,9 @@ export class InstallMain {
     ];
     // For now do not automate installation during aspect resolving
     // workspace.registerOnAspectsResolve(installExt.onAspectsResolveSubscriber.bind(installExt));
-    workspace.registerOnRootAspectAdded(installExt.onRootAspectAddedSubscriber.bind(installExt));
+    if (workspace){
+      workspace.registerOnRootAspectAdded(installExt.onRootAspectAddedSubscriber.bind(installExt));
+    }
     cli.register(...commands);
     if (dependencyResolver.hasRootComponents()) {
       workspace.registerOnMultipleComponentsAdd(async () => {
