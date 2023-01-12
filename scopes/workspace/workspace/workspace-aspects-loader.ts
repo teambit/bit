@@ -397,7 +397,7 @@ needed-for: ${neededFor || '<unknown>'}`);
       if (opts.throwOnError){
         throw error;
       }
-      this.logger.console(`failed resolving aspect ${aspectStringId} from ${parentPath}, error: ${error.message}`);
+      this.logger.consoleWarning(`failed resolving aspect ${aspectStringId} from ${parentPath}, error: ${error.message}`);
       return undefined;
     }
   }

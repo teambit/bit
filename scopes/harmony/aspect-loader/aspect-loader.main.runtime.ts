@@ -415,7 +415,7 @@ export class AspectLoaderMain {
     if (this.logger.isLoaderStarted) {
       this.logger.consoleFailure(msg);
     } else {
-      this.logger.console(msg);
+      this.logger.consoleWarning(msg);
     }
   }
 
@@ -554,8 +554,8 @@ export class AspectLoaderMain {
       if (this.logger.isLoaderStarted) {
         this.logger.consoleFailure(warning);
       } else {
-        this.logger.console(warning);
-        this.logger.console(e);
+        this.logger.consoleWarning(warning);
+        this.logger.consoleWarning(e);
       }
       if (throwOnError) {
         throw e;
