@@ -165,7 +165,7 @@ please specify the target-id arg`);
     }
     const targetCompId = this.newComponentHelper.getNewComponentId(targetId, undefined, options?.scope);
 
-    const config = await this.getConfig(existing);
+    const config = await this.getConfig(existing, options);
     await this.newComponentHelper.writeAndAddNewComp(existing, targetCompId, options, config);
     if (options?.refactor) {
       const allComponents = await this.workspace.list();
@@ -199,7 +199,7 @@ the reason is that the refactor changes the components using ${sourceId.toString
         },
       ]
     );
-    const config = await this.getConfig(component);
+    const config = await this.getConfig(component, options);
     await this.newComponentHelper.writeAndAddNewComp(component, targetCompId, options, config);
 
     return { targetCompId, component };
@@ -234,8 +234,10 @@ the reason is that the refactor changes the components using ${sourceId.toString
       }));
   }
 
-  private async getConfig(comp: Component) {
-    const fromExisting = await this.newComponentHelper.getConfigFromExistingToNewComponent(comp);
+  private async getConfig(comp: Component, options?: ForkOptions) {
+    const fromExisting = options?.skipConfig
+      ? {}
+      : await this.newComponentHelper.getConfigFromExistingToNewComponent(comp);
     return {
       ...fromExisting,
       [ForkingAspect.id]: {

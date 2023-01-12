@@ -459,14 +459,14 @@ describe('bit lane command', function () {
       helper.command.switchLocalLane('main');
     });
     it('should checkout to the head of the origin branch', () => {
-      helper.bitMap.expectToHaveIdHarmony('bar/foo', '0.0.2');
+      helper.bitMap.expectToHaveId('bar/foo', '0.0.2');
     });
     it('bit status should be clean', () => {
       helper.command.expectStatusToBeClean();
     });
     // previously, the behavior was to checkout to the same version it had before
     it.skip('should checkout to the same version the origin branch had before the switch', () => {
-      helper.bitMap.expectToHaveIdHarmony('bar/foo', '0.0.1');
+      helper.bitMap.expectToHaveId('bar/foo', '0.0.1');
     });
     // previously, the behavior was to checkout to the same version it had before
     it.skip('bit status should not show the component as modified only as pending update', () => {

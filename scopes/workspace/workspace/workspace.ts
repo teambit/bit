@@ -53,7 +53,7 @@ import {
 } from '@teambit/legacy/dist/utils/path';
 import fs from 'fs-extra';
 import { CompIdGraph, DepEdgeType } from '@teambit/graph';
-import { slice, partition, isEmpty, merge, mergeWith } from 'lodash';
+import { slice, isEmpty, merge, compact } from 'lodash';
 import { MergeConfigFilename } from '@teambit/legacy/dist/constants';
 import path from 'path';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
@@ -63,7 +63,6 @@ import ScopeComponentsImporter from '@teambit/legacy/dist/scope/component-ops/sc
 import { MissingBitMapComponent } from '@teambit/legacy/dist/consumer/bit-map/exceptions';
 import loader from '@teambit/legacy/dist/cli/loader';
 import { Lane, Version } from '@teambit/legacy/dist/scope/models';
-import { UnmergedComponent } from '@teambit/legacy/dist/scope/lanes/unmerged-components';
 import { LaneNotFound } from '@teambit/legacy/dist/api/scope/lib/exceptions/lane-not-found';
 import { ScopeNotFoundOrDenied } from '@teambit/legacy/dist/remotes/exceptions/scope-not-found-or-denied';
 import { ComponentLoadOptions } from '@teambit/legacy/dist/consumer/component/component-loader';
@@ -98,7 +97,7 @@ import { GraphFromFsBuilder, ShouldLoadFunc } from './build-graph-from-fs';
 import { BitMap } from './bit-map';
 import { WorkspaceAspect } from './workspace.aspect';
 import { GraphIdsFromFsBuilder } from './build-graph-ids-from-fs';
-import { MergeConfigConflict } from './exceptions/merge-config-conflict';
+import { AspectsMerger } from './aspects-merger';
 import { AspectPackage, GetConfiguredUserAspectsPackagesOptions, WorkspaceAspectsLoader } from './workspace-aspects-loader';
 
 export type EjectConfResult = {
@@ -148,7 +147,7 @@ export class Workspace implements ComponentFactory {
   bitMap: BitMap;
   private _cachedListIds?: ComponentID[];
   private componentLoadedSelfAsAspects: InMemoryCache<boolean>; // cache loaded components
-  private warnedAboutMisconfiguredEnvs: string[] = []; // cache env-ids that have been errored about not having "env" type
+  private aspectsMerger: AspectsMerger;
   constructor(
     /**
      * private pubsub.
@@ -173,11 +172,11 @@ export class Workspace implements ComponentFactory {
 
     private dependencyResolver: DependencyResolverMain,
 
-    private variants: VariantsMain,
+    readonly variants: VariantsMain,
 
     private aspectLoader: AspectLoaderMain,
 
-    private logger: Logger,
+    readonly logger: Logger,
 
     private componentList: ComponentsList = new ComponentsList(consumer),
 
@@ -196,7 +195,7 @@ export class Workspace implements ComponentFactory {
      */
     private onComponentChangeSlot: OnComponentChangeSlot,
 
-    private envs: EnvsMain,
+    readonly envs: EnvsMain,
 
     /**
      * on component add slot.
@@ -231,6 +230,7 @@ export class Workspace implements ComponentFactory {
         maxAge: 60 * 1000, // 1 min
       }
     );
+    this.aspectsMerger = new AspectsMerger(this, this.harmony);
   }
 
   private validateConfig() {
@@ -1083,7 +1083,6 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
    * defaults extensions from workspace config
    * extensions from the model.
    */
-  // eslint-disable-next-line complexity
   async componentExtensions(
     componentId: ComponentID,
     componentFromScope?: Component,
@@ -1093,159 +1092,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     beforeMerge: Array<{ extensions: ExtensionDataList; origin: ExtensionsOrigin; extraData: any }>; // useful for debugging
     errors?: Error[];
   }> {
-    // TODO: consider caching this result
-    let configFileExtensions: ExtensionDataList | undefined;
-    let variantsExtensions: ExtensionDataList | undefined;
-    let wsDefaultExtensions: ExtensionDataList | undefined;
-    const mergeFromScope = true;
-    const errors: Error[] = [];
-
-    const bitMapEntry = this.consumer.bitMap.getComponentIfExist(componentId._legacy);
-    const bitMapExtensions = bitMapEntry?.config;
-
-    let configMergeFile: Record<string, any> | undefined;
-    try {
-      configMergeFile = await this.getConfigMergeFile(componentId);
-    } catch (err) {
-      if (!(err instanceof MergeConfigConflict)) {
-        throw err;
-      }
-      this.logger.error(`unable to parse the config file for ${componentId.toString()} due to conflicts`);
-      errors.push(err);
-    }
-
-    const adjustEnvsOnConfigMerge = (conf: Record<string, any>) => {
-      const env = conf[EnvsAspect.id]?.env;
-      if (!env) return;
-      const [id] = env.split('@');
-      conf[EnvsAspect.id] = { env: id };
-      conf[env] = {};
-    };
-    const unmergedData = this.getUnmergedData(componentId);
-    const unmergedDataMergeConf = unmergedData?.mergedConfig;
-    const getMergeConfigCombined = () => {
-      if (!configMergeFile && !unmergedDataMergeConf) return undefined;
-      if (!configMergeFile) return unmergedDataMergeConf;
-      if (!unmergedDataMergeConf) return configMergeFile;
-
-      return mergeWith(configMergeFile, unmergedDataMergeConf, (objValue, srcValue) => {
-        if (Array.isArray(objValue)) {
-          // critical for dependencyResolver.policy.*dependencies. otherwise, it will override the array
-          return objValue.concat(srcValue);
-        }
-        return undefined;
-      });
-    };
-    const mergeConfigCombined = getMergeConfigCombined();
-    adjustEnvsOnConfigMerge(mergeConfigCombined || {});
-    const configMergeExtensions = mergeConfigCombined
-      ? ExtensionDataList.fromConfigObject(mergeConfigCombined)
-      : undefined;
-
-    const scopeExtensions = componentFromScope?.config?.extensions || new ExtensionDataList();
-    const [specific, nonSpecific] = partition(scopeExtensions, (entry) => entry.config[AspectSpecificField] === true);
-    const scopeExtensionsNonSpecific = new ExtensionDataList(...nonSpecific);
-    const scopeExtensionsSpecific = new ExtensionDataList(...specific);
-
-    const componentConfigFile = await this.componentConfigFile(componentId);
-    if (componentConfigFile) {
-      configFileExtensions = componentConfigFile.aspects.toLegacy();
-    }
-    const relativeComponentDir = this.componentDir(componentId, { ignoreVersion: true }, { relative: true });
-    const variantConfig = this.variants.byRootDirAndName(relativeComponentDir, componentId.fullName);
-    if (variantConfig) {
-      variantsExtensions = variantConfig.extensions.clone();
-      // Do not merge from scope when there is specific variant (which is not *) that match the component
-      // if (variantConfig.maxSpecificity > 0) {
-      //   mergeFromScope = false;
-      // }
-    }
-    const isVendor = this.isVendorComponentByComponentDir(relativeComponentDir);
-    if (!isVendor) {
-      wsDefaultExtensions = this.getDefaultExtensions();
-    }
-    // We don't stop on each step because we want to merge the default scope even if propagate=false but the default scope is not defined
-    // in the case the same extension pushed twice, the former takes precedence (opposite of Object.assign)
-    const extensionsToMerge: Array<{ origin: ExtensionsOrigin; extensions: ExtensionDataList; extraData: any }> = [];
-    let envWasFoundPreviously = false;
-    const removedExtensionIds: string[] = [];
-
-    const addExtensionsToMerge = async (extensions: ExtensionDataList, origin: ExtensionsOrigin, extraData?: any) => {
-      if (!extensions.length) {
-        return;
-      }
-      removedExtensionIds.push(...extensions.filter((extData) => extData.isRemoved).map((extData) => extData.stringId));
-      const extsWithoutRemoved = extensions.filterRemovedExtensions();
-      const selfInMergedExtensions = extsWithoutRemoved.findExtension(
-        componentId._legacy.toStringWithoutScopeAndVersion(),
-        true,
-        true
-      );
-      const extsWithoutSelf = selfInMergedExtensions?.extensionId
-        ? extsWithoutRemoved.remove(selfInMergedExtensions.extensionId)
-        : extsWithoutRemoved;
-      const { extensionDataListFiltered, envIsCurrentlySet } = await this.filterEnvsFromExtensionsIfNeeded(
-        extsWithoutSelf,
-        envWasFoundPreviously,
-        origin
-      );
-      if (envIsCurrentlySet) {
-        await this.warnAboutMisconfiguredEnv(componentId, extensions);
-        envWasFoundPreviously = true;
-      }
-
-      extensionsToMerge.push({ origin, extensions: extensionDataListFiltered, extraData });
-    };
-    const setDataListAsSpecific = (extensions: ExtensionDataList) => {
-      extensions.forEach((dataEntry) => (dataEntry.config[AspectSpecificField] = true));
-    };
-    if (configMergeExtensions && !excludeOrigins.includes('ConfigMerge')) {
-      await addExtensionsToMerge(ExtensionDataList.fromArray(configMergeExtensions), 'ConfigMerge');
-    }
-    if (bitMapExtensions && !excludeOrigins.includes('BitmapFile')) {
-      const extensionDataList = ExtensionDataList.fromConfigObject(bitMapExtensions);
-      setDataListAsSpecific(extensionDataList);
-      await addExtensionsToMerge(extensionDataList, 'BitmapFile');
-    }
-    if (configFileExtensions && !excludeOrigins.includes('ComponentJsonFile')) {
-      setDataListAsSpecific(configFileExtensions);
-      await addExtensionsToMerge(configFileExtensions, 'ComponentJsonFile');
-    }
-    if (!excludeOrigins.includes('ModelSpecific')) {
-      await addExtensionsToMerge(ExtensionDataList.fromArray(scopeExtensionsSpecific), 'ModelSpecific');
-    }
-    let continuePropagating = componentConfigFile?.propagate ?? true;
-    if (variantsExtensions && continuePropagating && !excludeOrigins.includes('WorkspaceVariants')) {
-      const appliedRules = variantConfig?.sortedMatches.map(({ pattern, specificity }) => ({ pattern, specificity }));
-      await addExtensionsToMerge(variantsExtensions, 'WorkspaceVariants', { appliedRules });
-    }
-    continuePropagating = continuePropagating && (variantConfig?.propagate ?? true);
-    // Do not apply default extensions on the default extensions (it will create infinite loop when loading them)
-    const isDefaultExtension = wsDefaultExtensions?.findExtension(componentId.toString(), true, true);
-    if (
-      wsDefaultExtensions &&
-      continuePropagating &&
-      !isDefaultExtension &&
-      !excludeOrigins.includes('WorkspaceDefault')
-    ) {
-      await addExtensionsToMerge(wsDefaultExtensions, 'WorkspaceDefault');
-    }
-    if (mergeFromScope && continuePropagating && !excludeOrigins.includes('ModelNonSpecific')) {
-      await addExtensionsToMerge(scopeExtensionsNonSpecific, 'ModelNonSpecific');
-    }
-
-    // It's important to do this resolution before the merge, otherwise we have issues with extensions
-    // coming from scope with local scope name, as opposed to the same extension comes from the workspace with default scope name
-    await Promise.all(extensionsToMerge.map((list) => this.resolveExtensionListIds(list.extensions)));
-    const afterMerge = ExtensionDataList.mergeConfigs(extensionsToMerge.map((ext) => ext.extensions));
-    await this.loadExtensions(afterMerge, componentId);
-    const withoutRemoved = afterMerge.filter((extData) => !removedExtensionIds.includes(extData.stringId));
-    const extensions = ExtensionDataList.fromArray(withoutRemoved);
-    return {
-      extensions,
-      beforeMerge: extensionsToMerge,
-      errors,
-    };
+    return this.aspectsMerger.merge(componentId, componentFromScope, excludeOrigins);
   }
 
   getConfigMergeFilePath(componentId: ComponentID): string {
@@ -1259,59 +1106,12 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     return this.resolveMultipleComponentIds(bitIds);
   }
 
-  private async getConfigMergeFile(componentId: ComponentID): Promise<Record<string, any> | undefined> {
-    const configMergePath = this.getConfigMergeFilePath(componentId);
-    let fileContent: string;
-    try {
-      fileContent = await fs.readFile(configMergePath, 'utf-8');
-    } catch (err: any) {
-      if (err.code === 'ENOENT') {
-        return undefined;
-      }
-      throw err;
-    }
-    try {
-      return JSON.parse(fileContent);
-    } catch (err: any) {
-      throw new MergeConfigConflict(configMergePath);
-    }
-  }
-
   async getUnmergedComponent(componentId: ComponentID): Promise<Component | undefined> {
     const unmerged = this.scope.legacyScope.objects.unmergedComponents.getEntry(componentId._legacy.name);
     if (unmerged?.head) {
       return this.scope.get(componentId.changeVersion(unmerged?.head.toString()));
     }
     return undefined;
-  }
-
-  private getUnmergedData(componentId: ComponentID): UnmergedComponent | undefined {
-    return this.scope.legacyScope.objects.unmergedComponents.getEntry(componentId._legacy.name);
-  }
-
-  private async warnAboutMisconfiguredEnv(componentId: ComponentID, extensionDataList: ExtensionDataList) {
-    if (!(await this.hasId(componentId))) {
-      // if this is a dependency and not belong to the workspace, don't show the warning
-      return;
-    }
-    const envAspect = extensionDataList.findExtension(EnvsAspect.id);
-    const envFromEnvsAspect = envAspect?.config.env;
-    if (!envFromEnvsAspect) return;
-    if (this.envs.getCoreEnvsIds().includes(envFromEnvsAspect)) return;
-    if (this.warnedAboutMisconfiguredEnvs.includes(envFromEnvsAspect)) return;
-    let env: Component;
-    try {
-      const envId = await this.resolveComponentId(envFromEnvsAspect);
-      env = await this.get(envId);
-    } catch (err) {
-      return; // unable to get the component for some reason. don't sweat it. forget about the warning
-    }
-    if (!this.envs.isUsingEnvEnv(env)) {
-      this.warnedAboutMisconfiguredEnvs.push(envFromEnvsAspect);
-      this.logger.consoleWarning(
-        `env "${envFromEnvsAspect}" is not of type env. (correct the env's type, or component config with "bit env set ${envFromEnvsAspect} teambit.envs/env")`
-      );
-    }
   }
 
   async isModified(component: Component): Promise<boolean> {
@@ -1323,37 +1123,6 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     if (typeof consumerComp._isModified === 'boolean') return consumerComp._isModified;
     const componentStatus = await this.consumer.getComponentStatusById(component.id._legacy);
     return componentStatus.modified === true;
-  }
-
-  private async filterEnvsFromExtensionsIfNeeded(
-    extensionDataList: ExtensionDataList,
-    envWasFoundPreviously: boolean,
-    origin: ExtensionsOrigin
-  ) {
-    const envAspect = extensionDataList.findExtension(EnvsAspect.id);
-    const envFromEnvsAspect: string | undefined = envAspect?.config.env || envAspect?.data.id;
-    if (envWasFoundPreviously && envAspect) {
-      const nonEnvs = extensionDataList.filter((e) => {
-        // normally the env-id inside the envs aspect doesn't have a version, but the aspect itself has a version.
-        if (e.stringId === envFromEnvsAspect || e.extensionId?.toStringWithoutVersion() === envFromEnvsAspect)
-          return false;
-        return true;
-      });
-      // still, aspect env may have other data other then config.env.
-      delete envAspect.config.env;
-      return { extensionDataListFiltered: new ExtensionDataList(...nonEnvs), envIsCurrentlySet: true };
-    }
-    if (envFromEnvsAspect && (origin === 'ModelNonSpecific' || origin === 'ModelSpecific')) {
-      // if env was found, search for this env in the workspace and if found, replace the env-id with the one from the workspace
-      const envAspectExt = extensionDataList.find((e) => e.extensionId?.toStringWithoutVersion() === envFromEnvsAspect);
-      const ids = await this.listIds();
-      const envAspectId = envAspectExt?.extensionId;
-      const found = envAspectId && ids.find((id) => id._legacy.isEqualWithoutVersion(envAspectId));
-      if (found) {
-        envAspectExt.extensionId = found._legacy;
-      }
-    }
-    return { extensionDataListFiltered: extensionDataList, envIsCurrentlySet: Boolean(envFromEnvsAspect) };
   }
 
   async triggerOnPreWatch(componentIds: ComponentID[], watchOpts: WatchOptions) {
@@ -1455,24 +1224,6 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     return this.bitMap.getBitmapEntry(id, { ignoreVersion: true }).config?.[aspectId];
   }
 
-  /**
-   * This will mutate the entries with extensionId prop to have resolved legacy id
-   * This should be worked on the extension data list not the new aspect list
-   * @param extensionList
-   */
-  private async resolveExtensionListIds(extensionList: ExtensionDataList): Promise<ExtensionDataList> {
-    const promises = extensionList.map(async (entry) => {
-      if (entry.extensionId) {
-        const id = await this.resolveComponentId(entry.extensionId);
-        entry.extensionId = id._legacy;
-      }
-
-      return entry;
-    });
-    await Promise.all(promises);
-    return extensionList;
-  }
-
   private isVendorComponentByComponentDir(relativeComponentDir: PathOsBasedRelative): boolean {
     const vendorDir = this.config.vendor?.directory || DEFAULT_VENDOR_DIR;
     if (pathIsInside(relativeComponentDir, vendorDir)) {
@@ -1565,19 +1316,6 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
   }
 
   /**
-   * Load all unloaded extensions from a list
-   * @param extensions list of extensions with config to load
-   */
-  async loadExtensions(
-    extensions: ExtensionDataList,
-    originatedFrom?: ComponentID,
-    throwOnError = false
-  ): Promise<void> {
-    const workspaceAspectsLoader = this.getWorkspaceAspectsLoader();
-    return workspaceAspectsLoader.loadExtensions(extensions, originatedFrom, throwOnError);
-  }
-
-  /**
    * Provides a cache folder, unique per key.
    * Return value may be undefined, if workspace folder is unconventional (bare-scope, no node_modules, etc)
    */
@@ -1598,7 +1336,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     return cacheDir;
   }
 
-  private getWorkspaceAspectsLoader(): WorkspaceAspectsLoader{
+  getWorkspaceAspectsLoader(): WorkspaceAspectsLoader{
     const workspaceAspectsLoader = new WorkspaceAspectsLoader(
       this,
       this.aspectLoader,
@@ -1884,6 +1622,79 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     );
     await this.bitMap.write();
     return { changed, unchanged };
+  }
+
+  async updateEnvForComponents(envIdStr?: string, pattern?: string) {
+    const allWsComps = await this.list();
+    const allWsIds = await this.listIds();
+    const isInWs = (envId: ComponentID) => allWsIds.find((id) => id.isEqual(envId, { ignoreVersion: true }));
+    const allEnvs = await this.envs.createEnvironment(allWsComps);
+    const getEnvWithVersion = async (envId: ComponentID) => {
+      if (envId.hasVersion()) return envId;
+      try {
+        const fromRemote = await this.scope.getRemoteComponent(envId);
+        return envId.changeVersion(fromRemote.id.version);
+      } catch (err) {
+        throw new BitError(`unable to find ${envIdStr} in the remote`);
+      }
+    };
+    const getEnvs = async (): Promise<ComponentID[]> => {
+      if (envIdStr) {
+        const envCompId = await this.resolveComponentId(envIdStr);
+        if (isInWs(envCompId)) {
+          throw new BitError(
+            `error: unable to update the env ${envCompId.toString()}, it's already part of the workspace, as such, it's always using the workspace version`
+          );
+        }
+        const envWithVer = await getEnvWithVersion(envCompId);
+        return [envWithVer];
+      }
+      // get all non-local envs.
+      const allEnvsIds = allEnvs.runtimeEnvs.map((env) => env.id);
+      const allEnvsCompIds = await this.resolveMultipleComponentIds(allEnvsIds);
+      // also check the envId has version, otherwise, it's a core env.
+      const nonLocalEnvs = allEnvsCompIds.filter((envId) => !isInWs(envId) && envId.hasVersion());
+      if (!nonLocalEnvs.length) {
+        throw new BitError(
+          `error: unable to update envs ${allEnvsIds
+            .map((e) => e.toString())
+            .join(', ')}, they're already part of the workspace`
+        );
+      }
+      const envsWithVersions = await mapSeries(nonLocalEnvs, (envId) =>
+        getEnvWithVersion(envId.changeVersion(undefined))
+      );
+      return envsWithVersions;
+    };
+    const envsWithVerToUpdate = await getEnvs();
+
+    const compIdsToUpdate = pattern ? await this.idsByPattern(pattern) : allWsIds;
+    const compsToUpdate = await this.getMany(compIdsToUpdate);
+    const alreadyUpToDate: ComponentID[] = [];
+    const updated: { [envId: string]: ComponentID[] } = {};
+    await Promise.all(
+      compsToUpdate.map(async (comp) => {
+        const compEnvs = compact(
+          envsWithVerToUpdate.map((envId) => comp.state.aspects.get(envId.toStringWithoutVersion()))
+        );
+        if (!compEnvs.length) return;
+        const compEnv = compEnvs[0]; // should not be more than one
+        const envToUpdate = envsWithVerToUpdate.find((e) => e.isEqual(compEnv.id, { ignoreVersion: true }));
+        if (!envToUpdate) throw new Error(`unable to find ${compEnv.id.toString()} in the envs to update`);
+        if (compEnv.id.version === envToUpdate.version) {
+          // nothing to update
+          alreadyUpToDate.push(comp.id);
+          return;
+        }
+        // don't mark with minus if not exist in .bitmap. it's not needed. when the component is loaded, the
+        // merge-operation of the aspects removes duplicate aspect-id with different versions.
+        await this.removeSpecificComponentConfig(comp.id, compEnv.id.toString(), false);
+        await this.addSpecificComponentConfig(comp.id, envToUpdate.toString(), compEnv.config);
+        (updated[envToUpdate.toString()] ||= []).push(comp.id);
+      })
+    );
+    await this.bitMap.write();
+    return { updated, alreadyUpToDate };
   }
 }
 
