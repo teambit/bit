@@ -5,7 +5,7 @@
   height: 100%;
   display: flex;
   flex-direction: column;
-  background: #414141 !important;
+  background: var(--on-surface-neutral-low-color, #282828) !important;
   &.loading {
     padding: 0px 24px;
   }
@@ -30,7 +30,7 @@
 }
 
 .ignoreWhitespaceControlContainer {
-  color: var(--bit-text-color, #414141);
+  color: var(--bit-text-color, var(--on-surface-neutral-low-color, #282828));
   width: fit-content;
   padding: 0px 8px;
   height: 24px;
@@ -52,7 +52,7 @@
 .loader {
   width: calc(100% - 48px);
   padding: 16px 24px;
-  color: #414141;
+  color: var(--on-surface-neutral-low-color, #282828);
   background-image: linear-gradient(to right, currentColor 0%, #2b2b2b 30%, #2b2b2b 50%, currentColor 100%);
   > div {
     background-image: linear-gradient(to right, currentColor 0%, #2b2b2b 30%, #2b2b2b 50%, currentColor 100%);
@@ -61,36 +61,36 @@
 
 .compareNavItem {
   color: #fff !important;
-  border-right: 0.5px solid var(--on-surface-neutral-high-color, #2b2b2b);
+  border-right: 0.5px solid var(--surface-neutral-color, #121212);
 
   &.first {
-    border-left: 0.5px solid var(--on-surface-neutral-high-color, #2b2b2b);
+    border-left: 0.5px solid var(--surface-neutral-color, #121212);
   }
 
   &:hover:not(.activeNav) {
-    background-color: var(--on-surface-neutral-high-color, #2b2b2b) !important;
+    background-color: var(--surface-neutral-color, #121212) !important;
     > div {
-      background-color: var(--on-surface-neutral-high-color, #2b2b2b) !important;
+      background-color: var(--surface-neutral-color, #121212) !important;
     }
   }
 }
 
 .activeNav {
-  background-color: var(--on-surface-neutral-high-color, #2b2b2b);
+  background-color: var(--surface-neutral-color, #121212);
   &::after {
-    background-color: var(--on-surface-neutral-high-color, #2b2b2b) !important;
+    background-color: var(--surface-neutral-color, #121212) !important;
   }
 }
 
 .compareNav {
   // @todo get token for this color
-  background-color: #414141;
+  background-color: var(--on-surface-neutral-low-color, #282828);
   gap: 0px !important;
 }
 
 .compareSecondaryNav {
   // @todo get token for this color
-  background: #414141 !important;
+  background: var(--on-surface-neutral-low-color, #282828) !important;
 }
 
 .codeCompareTab {
@@ -116,7 +116,7 @@
 }
 
 .codeCompareToolbar {
-  background: #414141 !important;
+  background: var(--on-surface-neutral-low-color, #282828) !important;
 }
 
 .codeCompareWidgets {
@@ -129,6 +129,7 @@
     cursor: pointer;
 
     img {
+      display: flex;
       width: 16px;
     }
   }
@@ -138,7 +139,7 @@
   z-index: $modal-z-index;
   top: 100%;
   right: 50%;
-  background: #414141 !important;
+  background: var(--on-surface-neutral-low-color, #282828) !important;
   color: #fff;
 }
 
@@ -174,7 +175,7 @@
 .splitSettings {
   padding-bottom: 8px;
   &:hover {
-    background: #414141;
+    background: var(--on-surface-neutral-low-color, #282828);
   }
 }
 
@@ -184,7 +185,7 @@
     padding: 8px 8px 8px 0px;
     color: #fff;
     &:hover {
-      background: #414141 !important;
+      background: var(--on-surface-neutral-low-color, #282828) !important;
     }
   }
 }

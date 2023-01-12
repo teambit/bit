@@ -4,16 +4,14 @@
   overflow: auto;
   height: 100%;
   font-size: 14px;
-  // border-right: 2px solid var(--on-surface-color, #2b2b2b);
   color: #fff;
-  // @todo get token for this color
-  background: #414141;
+  background: var(--on-surface-neutral-low-color, #282828);
 }
 
 .componentCompareDrawerName {
   &:hover {
-    border-color: var(--on-surface-neutral-high-color, #2b2b2b);
-    background: var(--on-surface-neutral-high-color, #2b2b2b);
+    border-color: var(--surface-neutral-color, #121212);
+    background: var(--surface-neutral-color, #121212);
   }
 }
 .componentCompareCodeTabDrawer {

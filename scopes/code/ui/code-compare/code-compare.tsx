@@ -10,6 +10,8 @@ import {
   useUpdatedUrlFromQuery,
 } from '@teambit/component.ui.component-compare.hooks.use-component-compare-url';
 import { useCode } from '@teambit/code.ui.queries.get-component-code';
+import { ThemeSwitcher } from '@teambit/design.themes.theme-toggler';
+import { DarkTheme } from '@teambit/design.themes.dark-theme';
 import { CodeCompareTree } from './code-compare-tree';
 import { CodeCompareView } from './code-compare-view';
 import { Widget } from './code-compare.widgets';
@@ -47,39 +49,42 @@ export function CodeCompare({ fileIconSlot, className }: CodeCompareProps) {
   const sidebarIconUrl = isSidebarOpen
     ? 'https://static.bit.dev/design-system-assets/Icons/sidebar-close.svg'
     : 'https://static.bit.dev/design-system-assets/Icons/sidebar-open.svg';
+
   return (
-    <SplitPane
-      layout={Layout.row}
-      size={isSidebarOpen ? 200 : 32}
-      className={classNames(styles.componentCompareCodeContainer, className)}
-    >
-      <Pane className={classNames(styles.left, !isSidebarOpen && styles.collapsed)}>
-        <div className={styles.codeCompareTreeCollapse} onClick={() => setSidebarOpenness((value) => !value)}>
-          <img src={sidebarIconUrl} />
-        </div>
-        {isSidebarOpen && (
-          <CodeCompareTree
-            className={styles.codeCompareTree}
-            fileIconSlot={fileIconSlot}
-            fileTree={fileTree}
-            currentFile={selectedFile}
-            drawerName={'FILES'}
+    <ThemeSwitcher themes={[DarkTheme]} className={classNames(styles.themeContainer, className)}>
+      <SplitPane
+        layout={Layout.row}
+        size={isSidebarOpen ? 200 : 32}
+        className={classNames(styles.componentCompareCodeContainer, className)}
+      >
+        <Pane className={classNames(styles.left, !isSidebarOpen && styles.collapsed)}>
+          <div className={styles.codeCompareTreeCollapse} onClick={() => setSidebarOpenness((value) => !value)}>
+            <img src={sidebarIconUrl} />
+          </div>
+          {isSidebarOpen && (
+            <CodeCompareTree
+              className={styles.codeCompareTree}
+              fileIconSlot={fileIconSlot}
+              fileTree={fileTree}
+              currentFile={selectedFile}
+              drawerName={'FILES'}
+              widgets={[Widget]}
+              getHref={getHref}
+              onTreeNodeSelected={hook?.onClick}
+            />
+          )}
+        </Pane>
+        <HoverSplitter className={styles.splitter}></HoverSplitter>
+        <Pane className={classNames(styles.right, styles.dark, !isSidebarOpen && styles.collapsed)}>
+          <CodeCompareView
             widgets={[Widget]}
+            fileName={selectedFile}
+            files={fileTree}
             getHref={getHref}
-            onTreeNodeSelected={hook?.onClick}
+            onTabClicked={hook?.onClick}
           />
-        )}
-      </Pane>
-      <HoverSplitter className={styles.splitter}></HoverSplitter>
-      <Pane className={classNames(styles.right, styles.dark, !isSidebarOpen && styles.collapsed)}>
-        <CodeCompareView
-          widgets={[Widget]}
-          fileName={selectedFile}
-          files={fileTree}
-          getHref={getHref}
-          onTabClicked={hook?.onClick}
-        />
-      </Pane>
-    </SplitPane>
+        </Pane>
+      </SplitPane>
+    </ThemeSwitcher>
   );
 }
