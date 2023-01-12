@@ -6,6 +6,9 @@
   display: flex;
   flex-direction: column;
   background: #414141 !important;
+  &.loading {
+    padding: 0px 24px;
+  }
 }
 
 .componentCompareCodeDiffEditorContainer {
@@ -47,10 +50,13 @@
 }
 
 .loader {
-  height: 100%;
-  width: 100%;
+  width: calc(100% - 48px);
   padding: 16px 24px;
   color: #414141;
+  background-image: linear-gradient(to right, currentColor 0%, #2b2b2b 30%, #2b2b2b 50%, currentColor 100%);
+  > div {
+    background-image: linear-gradient(to right, currentColor 0%, #2b2b2b 30%, #2b2b2b 50%, currentColor 100%);
+  }
 }
 
 .compareNavItem {

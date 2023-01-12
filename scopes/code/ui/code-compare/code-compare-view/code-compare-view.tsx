@@ -1,5 +1,5 @@
 import React, { HTMLAttributes, useMemo, useRef, useState } from 'react';
-import { BlockSkeleton } from '@teambit/base-ui.loaders.skeleton';
+import { BlockSkeleton, LineSkeleton } from '@teambit/base-ui.loaders.skeleton';
 import { DiffEditor, DiffOnMount } from '@monaco-editor/react';
 import { FileIconSlot } from '@teambit/code';
 import flatten from 'lodash.flatten';
@@ -158,7 +158,7 @@ export function CodeCompareView({
   return (
     <div
       key={`component-compare-code-view-${fileName}`}
-      className={classNames(styles.componentCompareCodeViewContainer, className)}
+      className={classNames(styles.componentCompareCodeViewContainer, className, loading && styles.loading)}
     >
       {!loading && (
         <CodeCompareNav
@@ -216,8 +216,9 @@ export function CodeCompareView({
           </Dropdown>
         </CodeCompareNav>
       )}
+      {loading && <LineSkeleton className={styles.loader} count={3} />}
       {/* </div> */}
-      <div className={styles.componentCompareCodeDiffEditorContainer}>
+      <div className={classNames(styles.componentCompareCodeDiffEditorContainer, loading && styles.loading)}>
         {loading ? <CodeCompareViewLoader /> : diffEditor}
       </div>
     </div>
@@ -225,7 +226,7 @@ export function CodeCompareView({
 }
 
 function CodeCompareViewLoader() {
-  return <BlockSkeleton className={styles.loader} lines={36} />;
+  return <LineSkeleton className={styles.loader} count={50} />;
 }
 
 function CodeCompareNav({
