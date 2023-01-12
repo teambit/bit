@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { ResponsiveNavbar } from './responsive-navbar';
 
 const style = {
@@ -6,9 +6,22 @@ const style = {
 };
 
 const contentTabs = [
-  { component: () => <div>Tab 1</div> },
-  { component: () => <div>Tab 2</div> },
-  { component: () => <div>Tab 3</div>, style: { marginLeft: 'auto' } },
+  {
+    component: function Tab() {
+      return <div>Tab 1</div>;
+    },
+  },
+  {
+    component: function Tab() {
+      return <div>Tab 2</div>;
+    },
+  },
+  {
+    component: function Tab() {
+      return <div>Tab 3</div>;
+    },
+    style: { marginLeft: 'auto' },
+  },
 ];
 
 export function LineTabs() {

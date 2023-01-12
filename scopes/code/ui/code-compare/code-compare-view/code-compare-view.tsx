@@ -1,8 +1,6 @@
-import React, { HTMLAttributes, useMemo, useRef } from 'react';
+import React, { HTMLAttributes, useMemo, useRef, useState } from 'react';
 import { BlockSkeleton } from '@teambit/base-ui.loaders.skeleton';
 import { DiffEditor, DiffOnMount } from '@monaco-editor/react';
-// import { Toggle } from '@teambit/design.inputs.toggle-switch';
-// import { H4 } from '@teambit/documenter.ui.heading';
 import { FileIconSlot } from '@teambit/code';
 import flatten from 'lodash.flatten';
 import classNames from 'classnames';
@@ -11,7 +9,9 @@ import { useFileContent } from '@teambit/code.ui.queries.get-file-content';
 import { useComponentCompare } from '@teambit/component.ui.component-compare.context';
 import { CollapsibleMenuNav, NavPlugin } from '@teambit/component';
 import { FileIconMatch, getFileIcon } from '@teambit/code.ui.utils.get-file-icon';
-
+import { Dropdown } from '@teambit/evangelist.surfaces.dropdown';
+import { Radio } from '@teambit/design.ui.input.radio';
+import { CheckboxItem } from '@teambit/design.inputs.selectors.checkbox-item';
 import styles from './code-compare-view.module.scss';
 
 export type CodeCompareViewProps = {
@@ -32,6 +32,8 @@ const languageOverrides = {
   md: 'markdown',
 };
 
+type CodeCompareView = 'split' | 'inline';
+
 export function CodeCompareView({
   className,
   fileName,
@@ -47,9 +49,11 @@ export function CodeCompareView({
     componentCompareContext?.loading || componentCompareContext?.fileCompareDataByName === undefined;
   const comparingLocalChanges = componentCompareContext?.compare?.hasLocalChanges;
 
-  // const [ignoreWhitespace, setIgnoreWhitespace] = useState(true);
+  const [ignoreWhitespace, setIgnoreWhitespace] = useState<boolean>(true);
+  const [view, setView] = useState<CodeCompareView>('inline');
+  const [wrap, setWrap] = useState<boolean>(false);
+
   const monacoRef = useRef<any>();
-  // const title = useMemo(() => fileName?.split('/').pop(), [fileName]);
 
   const language = useMemo(() => {
     if (!fileName) return languageOverrides.ts;
@@ -113,14 +117,6 @@ export function CodeCompareView({
     monaco.editor.setTheme('bit');
   };
 
-  /**
-   * @todo - redesign this
-   */
-
-  // const onIgnoreWhitespaceToggled = () => {
-  //   setIgnoreWhitespace((existingState) => !existingState);
-  // };
-
   const originalPath = `${componentCompareContext?.base?.model.id.toString()}-${fileName}`;
   const modifiedPath = `${componentCompareContext?.compare?.model.id.toString()}-${fileName}`;
 
@@ -137,18 +133,17 @@ export function CodeCompareView({
         className={darkMode}
         theme={'vs-dark'}
         options={{
-          // ignoreTrimWhitespace: ignoreWhitespace,
+          ignoreTrimWhitespace: ignoreWhitespace,
           readOnly: true,
-          // split or inline
-          renderSideBySide: false,
+          renderSideBySide: view === 'split',
           minimap: { enabled: false },
           scrollbar: { alwaysConsumeMouseWheel: false },
           scrollBeyondLastLine: false,
           folding: false,
           overviewRulerLanes: 0,
           overviewRulerBorder: false,
-          wordWrap: 'on',
-          wrappingStrategy: 'advanced',
+          wordWrap: (wrap && 'on') || 'off',
+          wrappingStrategy: (wrap && 'advanced') || undefined,
           fixedOverflowWidgets: true,
           renderLineHighlight: 'none',
           lineHeight: 18,
@@ -157,7 +152,7 @@ export function CodeCompareView({
         loading={<CodeCompareViewLoader />}
       />
     ),
-    [modifiedFileContent, originalFileContent]
+    [modifiedFileContent, originalFileContent, ignoreWhitespace, view, wrap]
   );
 
   return (
@@ -165,26 +160,63 @@ export function CodeCompareView({
       key={`component-compare-code-view-${fileName}`}
       className={classNames(styles.componentCompareCodeViewContainer, className)}
     >
-      {/* <div className={styles.fileName}>
-        <H4 size="xs" className={styles.fileName}>
-          {loading || <span>{title}</span>}
-          {loading && <WordSkeleton className={styles.loader} length={6} />}
-        </H4>
-      </div> */}
-
-      {/* <div className={styles.ignoreWhitespaceControlContainer}>
-        <div className={styles.toggleContainer}>
-          <Toggle checked={ignoreWhitespace} onInputChanged={onIgnoreWhitespaceToggled} className={styles.toggle} />
-          Ignore Whitespace
-        </div>
-      </div> */}
-      <CodeCompareNav
-        files={files}
-        selectedFile={fileName}
-        fileIconMatchers={fileIconMatchers}
-        onTabClicked={onTabClicked}
-        getHref={getHref}
-      />
+      {!loading && (
+        <CodeCompareNav
+          files={files}
+          selectedFile={fileName}
+          fileIconMatchers={fileIconMatchers}
+          onTabClicked={onTabClicked}
+          getHref={getHref}
+        >
+          <Dropdown
+            className={styles.codeCompareWidgets}
+            dropClass={styles.codeCompareMenu}
+            placeholder={
+              <div className={styles.codeCompareWidgets}>
+                <div className={styles.settings}>
+                  <img src={'https://static.bit.dev/bit-icons/setting.svg'}></img>
+                </div>
+              </div>
+            }
+            clickPlaceholderToggles={true}
+            position={'left-start'}
+            clickToggles={false}
+          >
+            <div className={styles.settingsMenu}>
+              <div className={styles.settingsTitle}>Diff View</div>
+              <div className={styles.splitSettings}>
+                <Radio
+                  className={styles.splitOption}
+                  checked={view === 'inline'}
+                  value={'inline'}
+                  onInputChanged={() => setView('inline')}
+                >
+                  <span>Inline</span>
+                </Radio>
+                <Radio
+                  className={styles.splitOption}
+                  checked={view === 'split'}
+                  value={'split'}
+                  onInputChanged={() => setView('split')}
+                >
+                  <span>Split</span>
+                </Radio>
+              </div>
+              <div className={styles.ignoreWhitespaceSettings}>
+                <CheckboxItem checked={ignoreWhitespace} onInputChanged={() => setIgnoreWhitespace((value) => !value)}>
+                  Hide Whitespace
+                </CheckboxItem>
+              </div>
+              <div className={styles.wordWrapSettings}>
+                <CheckboxItem checked={wrap} onInputChanged={() => setWrap((value) => !value)}>
+                  Word Wrap
+                </CheckboxItem>
+              </div>
+            </div>
+          </Dropdown>
+        </CodeCompareNav>
+      )}
+      {/* </div> */}
       <div className={styles.componentCompareCodeDiffEditorContainer}>
         {loading ? <CodeCompareViewLoader /> : diffEditor}
       </div>
@@ -202,12 +234,14 @@ function CodeCompareNav({
   fileIconMatchers,
   onTabClicked,
   getHref,
+  children,
 }: {
   files: string[];
   selectedFile: string;
   fileIconMatchers: FileIconMatch[];
   getHref: (node: { id: string }) => string;
   onTabClicked?: (id: string, event?: React.MouseEvent) => void;
+  children: React.ReactNode;
 }) {
   const extractedTabs: [string, NavPlugin][] = files.map((file, index) => {
     const isActive = file === selectedFile;
@@ -241,7 +275,9 @@ function CodeCompareNav({
         className={styles.compareNav}
         secondaryNavClassName={styles.compareSecondaryNav}
         navPlugins={extractedTabs}
-      />
+      >
+        {children}
+      </CollapsibleMenuNav>
     </div>
   );
 }

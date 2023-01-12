@@ -43,6 +43,7 @@
   position: relative;
   // @todo get token for this color
   background: #414141;
+  display: none;
 
   > :first-child {
     z-index: $pane-splitter-zIndex;
@@ -76,4 +77,8 @@
     width: 16px;
     filter: brightness(0) invert(1);
   }
+}
+
+.codeCompareTree {
+  height: calc(100% - 32px);
 }

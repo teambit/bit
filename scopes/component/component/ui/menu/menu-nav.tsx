@@ -32,6 +32,7 @@ export function CollapsibleMenuNav({
   widgetPlugins = [],
   className,
   secondaryNavClassName,
+  children,
 }: MenuNavProps) {
   const plugins = useMemo(() => {
     const _navPlugins = navPlugins.length > 0 ? navPlugins : navigationSlot?.toArray();
@@ -73,7 +74,9 @@ export function CollapsibleMenuNav({
       style={{ width: '100%', height: '100%' }}
       priority="none"
       tabs={links}
-    />
+    >
+      {children}
+    </ResponsiveNavbar>
   );
 }
 

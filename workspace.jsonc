@@ -96,6 +96,7 @@
         "@teambit/design.ui.brand.logo": "1.96.2",
         "@teambit/design.ui.icon-button": "1.0.16",
         "@teambit/design.ui.input.option-button": "1.0.0",
+        "@teambit/design.ui.input.radio": "1.1.13",
         "@teambit/design.ui.input.toggle": "1.0.12",
         "@teambit/design.ui.pill-label": "0.0.356",
         "@teambit/design.ui.separator": "0.0.354",

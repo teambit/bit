@@ -4,8 +4,10 @@
   overflow: auto;
   height: 100%;
   font-size: 14px;
-  border-right: 2px solid var(--on-surface-color, #2b2b2b);
+  // border-right: 2px solid var(--on-surface-color, #2b2b2b);
   color: #fff;
+  // @todo get token for this color
+  background: #414141;
 }
 
 .componentCompareDrawerName {

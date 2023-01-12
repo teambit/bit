@@ -44,7 +44,9 @@ export function CodeCompare({ fileIconSlot, className }: CodeCompareProps) {
     hook?.useUpdatedUrlFromQuery || (state?.controlled && (() => useUpdatedUrlFromQuery({}))) || useUpdatedUrlFromQuery;
 
   const getHref = (node) => _useUpdatedUrlFromQuery({ file: node.id });
-
+  const sidebarIconUrl = isSidebarOpen
+    ? 'https://static.bit.dev/design-system-assets/Icons/sidebar-close.svg'
+    : 'https://static.bit.dev/design-system-assets/Icons/sidebar-open.svg';
   return (
     <SplitPane
       layout={Layout.row}
@@ -53,10 +55,11 @@ export function CodeCompare({ fileIconSlot, className }: CodeCompareProps) {
     >
       <Pane className={classNames(styles.left, !isSidebarOpen && styles.collapsed)}>
         <div className={styles.codeCompareTreeCollapse} onClick={() => setSidebarOpenness((value) => !value)}>
-          <img src="https://static.bit.dev/bit-icons/arrow-left.svg"></img>
+          <img src={sidebarIconUrl} />
         </div>
         {isSidebarOpen && (
           <CodeCompareTree
+            className={styles.codeCompareTree}
             fileIconSlot={fileIconSlot}
             fileTree={fileTree}
             currentFile={selectedFile}

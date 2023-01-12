@@ -47,13 +47,13 @@ export function Dropdown({
 }: DropdownProps) {
   return (
     <Drawer
+      {...rest}
       margin={margin}
       className={classNames(!placeholderBorder && styles.removePlaceholderBorder, className)}
       placeholderContent={
         typeof placeholderContent === 'string' ? <Placeholder>{placeholderContent}</Placeholder> : placeholderContent
       }
       clickToggles={clickToggles}
-      {...rest}
     >
       <DropdownMenu position={position} elevation={elevation} roundness={roundness} className={dropClass}>
         {topPlugin}

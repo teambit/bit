@@ -1,8 +1,11 @@
+@import '~@teambit/ui-foundation.ui.constants.z-indexes/z-indexes.module.scss';
+
 .componentCompareCodeViewContainer {
   width: 100%;
   height: 100%;
   display: flex;
   flex-direction: column;
+  background: #414141 !important;
 }
 
 .componentCompareCodeDiffEditorContainer {
@@ -47,7 +50,7 @@
   height: 100%;
   width: 100%;
   padding: 16px 24px;
-  color: var(--bit-bg-dent, #f6f6f6);
+  color: #414141;
 }
 
 .compareNavItem {
@@ -87,6 +90,10 @@
 .codeCompareTab {
   display: flex;
   align-items: center;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
   > span {
     overflow: hidden;
     text-overflow: ellipsis;
@@ -99,5 +106,79 @@
     width: 16px;
     height: 16px;
     margin-right: 4px;
+  }
+}
+
+.codeCompareToolbar {
+  background: #414141 !important;
+}
+
+.codeCompareWidgets {
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+  margin-right: 32px;
+
+  .settings {
+    cursor: pointer;
+
+    img {
+      width: 16px;
+    }
+  }
+}
+
+.codeCompareMenu {
+  z-index: $modal-z-index;
+  top: 100%;
+  right: 50%;
+  background: #414141 !important;
+  color: #fff;
+}
+
+.settingsMenu {
+  padding: 8px;
+}
+
+.settingsTitle {
+  font-weight: 500;
+  font-size: var(--bit-p-md, 16px);
+  padding-bottom: 8px;
+}
+
+.splitSettings {
+  padding: 8px 0px;
+  display: flex;
+  align-items: center;
+}
+
+.splitOption {
+  display: flex;
+  align-items: center;
+  padding-right: 8px;
+  color: #fff;
+
+  > span {
+    padding-left: 8px;
+  }
+}
+
+.ignoreWhitespaceSettings,
+.wordWrapSettings,
+.splitSettings {
+  padding-bottom: 8px;
+  &:hover {
+    background: #414141;
+  }
+}
+
+.ignoreWhitespaceSettings,
+.wordWrapSettings {
+  > label {
+    padding: 8px 8px 8px 0px;
+    color: #fff;
+    &:hover {
+      background: #414141 !important;
+    }
   }
 }

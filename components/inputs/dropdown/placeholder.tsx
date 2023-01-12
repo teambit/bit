@@ -13,7 +13,7 @@ type PlaceholderProps = {
 export function Placeholder({ dropdownIcon, children, className, ...rest }: PlaceholderProps) {
   return (
     <MenuItem className={classNames(styles.dropdownPlaceholder, className)} {...rest}>
-      {children} {dropdownIcon ? dropdownIcon : <FatArrowDown />}
+      {children} {dropdownIcon || <FatArrowDown />}
     </MenuItem>
   );
 }

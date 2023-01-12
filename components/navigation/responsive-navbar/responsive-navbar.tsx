@@ -62,6 +62,7 @@ export function ResponsiveNavbar({
   tabs,
   dropdownPosition = 'bottom-end',
   priority,
+  children,
   ...rest
 }: ResponsiveNavbarProps) {
   const [tabIndex, setTabIndex] = useState(defaultActiveIndex);
@@ -94,11 +95,9 @@ export function ResponsiveNavbar({
     });
   };
 
-  let hiddenItems: number[] = [];
-
   const toggleTabs = () => {
     resetStyle();
-    hiddenItems = [];
+    const hiddenItems: number[] = [];
     const containerRefWidth = containerRef.current?.offsetWidth || 0;
     const buttonWidth = moreBtnRef.current?.offsetWidth || 0;
 
@@ -137,10 +136,9 @@ export function ResponsiveNavbar({
     setTabIndex(index);
   };
 
-  // useEffect(() => {
-  //   console.log('🚀 ~ file: responsive-navbar.tsx:143 ~ useEffect ~ defaultActiveIndex', defaultActiveIndex);
-  //   setTabIndex(defaultActiveIndex);
-  // }, [defaultActiveIndex]);
+  useEffect(() => {
+    setTabIndex(defaultActiveIndex);
+  }, [defaultActiveIndex]);
 
   const getTabStyle = () => {
     switch (priority) {
@@ -192,10 +190,7 @@ export function ResponsiveNavbar({
       <div className={classNames(styles.more, styles.hidden)} ref={moreBtnRef}>
         <Dropdown
           placeholderContent={
-            <div
-              className={classNames(styles.dots, hiddenItems.includes(tabIndex) && styles.active)}
-              data-priority="menu"
-            >
+            <div className={classNames(styles.dots)} data-priority="menu">
               <img src="https://static.bit.dev/bit-icons/more-h.svg" />
             </div>
           }
@@ -227,6 +222,7 @@ export function ResponsiveNavbar({
           })}
         </Dropdown>
       </div>
+      {children}
     </nav>
   );
 }
