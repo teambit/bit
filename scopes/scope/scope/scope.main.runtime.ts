@@ -60,6 +60,7 @@ import { ScopeCmd } from './scope-cmd';
 import { StagedConfig } from './staged-config';
 import { NoIdMatchPattern } from './exceptions/no-id-match-pattern';
 import { ScopeAspectsLoader } from './scope-aspects-loader';
+import { RequireableComponent } from '@teambit/harmony.modules.requireable-component';
 
 type RemoteEventMetadata = { auth?: AuthData; headers?: {} };
 type RemoteEvent<Data> = (data: Data, metadata: RemoteEventMetadata, errors?: Array<string | Error>) => Promise<void>;
@@ -220,6 +221,19 @@ export class ScopeMain implements ComponentFactory {
   ): Promise<AspectDefinition[]> {
     const scopeAspectsLoader = this.getScopeAspectsLoader();
     return scopeAspectsLoader.resolveAspects(runtimeName, componentIds, opts);
+  }
+
+  async getResolvedAspects(
+    components: Component[],
+    opts?: { skipIfExists?: boolean; packageManagerConfigRootDir?: string }
+  ): Promise<RequireableComponent[]> {
+    const scopeAspectsLoader = this.getScopeAspectsLoader();
+    return scopeAspectsLoader.getResolvedAspects(components, opts);
+  }
+
+  getAspectCapsulePath() {
+    const scopeAspectsLoader = this.getScopeAspectsLoader();
+    return scopeAspectsLoader.getAspectCapsulePath();
   }
 
   getManyByLegacy(components: ConsumerComponent[]): Promise<Component[]> {
