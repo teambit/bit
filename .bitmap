@@ -1320,6 +1320,19 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/code/ui/code-compare"
     },
+    "ui/code-compare-review": {
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.code",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/code/ui/code-compare-review",
+        "config": {
+            "teambit.react/react": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react"
+            }
+        }
+    },
     "ui/code-compare-section": {
         "scope": "teambit.code",
         "version": "0.0.2",

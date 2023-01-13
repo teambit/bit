@@ -315,6 +315,15 @@ export function devConfig(workspaceDir, entryFiles, title): WebpackConfigWithDev
           test: stylesRegexps.cssNoModulesRegex,
           use: [require.resolve('style-loader'), require.resolve('css-loader')],
         },
+        {
+          test: /\.ttf$/,
+          use: [
+            require.resolve('file-loader'),
+            {
+              loader: require.resolve('file-loader'),
+            },
+          ],
+        },
       ],
     },
 

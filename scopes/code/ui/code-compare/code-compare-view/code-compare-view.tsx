@@ -1,12 +1,13 @@
 import React, { HTMLAttributes, useMemo, useRef } from 'react';
 import { BlockSkeleton, WordSkeleton } from '@teambit/base-ui.loaders.skeleton';
-import { DiffEditor, DiffOnMount } from '@monaco-editor/react';
+import { DiffEditor, DiffOnMount, DiffBeforeMount } from '@monaco-editor/react';
 // import { Toggle } from '@teambit/design.inputs.toggle-switch';
 import { H4 } from '@teambit/documenter.ui.heading';
 import classNames from 'classnames';
 import { darkMode } from '@teambit/base-ui.theme.dark-theme';
 import { useFileContent } from '@teambit/code.ui.queries.get-file-content';
 import { useComponentCompare } from '@teambit/component.ui.component-compare.context';
+import { createReviewManager } from '@teambit/code.ui.code-compare-review';
 
 import styles from './code-compare-view.module.scss';
 
@@ -76,6 +77,30 @@ export function CodeCompareView({ className, fileName }: CodeCompareViewProps) {
       },
     });
     monaco.editor.setTheme('bit');
+    createReviewManager(
+      _.getOriginalEditor(),
+      'luv',
+      (actions) => {
+        console.log(actions);
+      },
+      [],
+      {},
+      true
+    );
+    createReviewManager(
+      _.getModifiedEditor(),
+      'luv',
+      (actions) => {
+        console.log(actions);
+      },
+      [],
+      {},
+      true
+    );
+  };
+
+  const handleEditorWillMount: DiffBeforeMount = (monaco) => {
+    console.log('🚀 ~ file: code-compare-view.tsx:159 ~ CodeCompareView ~ monaco', monaco);
   };
 
   /**
@@ -101,6 +126,7 @@ export function CodeCompareView({ className, fileName }: CodeCompareViewProps) {
         onMount={handleEditorDidMount}
         className={darkMode}
         theme={'vs-dark'}
+        beforeMount={handleEditorWillMount}
         options={{
           // ignoreTrimWhitespace: ignoreWhitespace,
           readOnly: true,
