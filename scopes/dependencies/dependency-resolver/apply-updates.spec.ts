@@ -22,6 +22,7 @@ describe('applyUpdates()', () => {
         componentPoliciesById: {},
       }
     );
+    // @ts-ignore
     expect(updatedWorkspacePolicyEntries).toStrictEqual(
       [
         {
@@ -39,7 +40,6 @@ describe('applyUpdates()', () => {
           lifecycleType: 'peer',
         },
       ],
-      // @ts-ignore
       { updateExisting: true }
     );
   });
